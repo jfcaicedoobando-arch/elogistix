@@ -29,6 +29,13 @@ export default function NuevoEmbarque() {
   const [modo, setModo] = useState<string>('');
   const [tipo, setTipo] = useState<string>('');
   const [clienteId, setClienteId] = useState<string>('');
+  const [shipper, setShipper] = useState<string>('');
+  const [shipperManual, setShipperManual] = useState('');
+  const [consignatario, setConsignatario] = useState<string>('');
+  const [consignatarioManual, setConsignatarioManual] = useState('');
+
+  const selectedCliente = clientes.find(c => c.id === clienteId);
+  const contactos = selectedCliente?.contactos || [];
 
   const handleFinish = () => {
     toast({ title: "Embarque creado", description: "El nuevo embarque se ha registrado correctamente." });
@@ -100,11 +107,25 @@ export default function NuevoEmbarque() {
               </div>
               <div className="space-y-2 md:col-span-2">
                 <Label>Shipper (Exportador)</Label>
-                <Input placeholder="Nombre del exportador" />
+                <Select value={shipper} onValueChange={(v) => { setShipper(v); if (v !== '__otro__') setShipperManual(''); }}>
+                  <SelectTrigger><SelectValue placeholder="Seleccionar shipper" /></SelectTrigger>
+                  <SelectContent>
+                    {contactos.map(ct => <SelectItem key={ct.id} value={ct.id}>{ct.nombre} — {ct.tipo} ({ct.pais})</SelectItem>)}
+                    <SelectItem value="__otro__">Otro (escribir manualmente)</SelectItem>
+                  </SelectContent>
+                </Select>
+                {shipper === '__otro__' && <Input placeholder="Nombre del exportador" value={shipperManual} onChange={e => setShipperManual(e.target.value)} className="mt-2" />}
               </div>
               <div className="space-y-2 md:col-span-2">
                 <Label>Consignatario</Label>
-                <Input placeholder="Nombre del consignatario" />
+                <Select value={consignatario} onValueChange={(v) => { setConsignatario(v); if (v !== '__otro__') setConsignatarioManual(''); }}>
+                  <SelectTrigger><SelectValue placeholder="Seleccionar consignatario" /></SelectTrigger>
+                  <SelectContent>
+                    {contactos.map(ct => <SelectItem key={ct.id} value={ct.id}>{ct.nombre} — {ct.tipo} ({ct.pais})</SelectItem>)}
+                    <SelectItem value="__otro__">Otro (escribir manualmente)</SelectItem>
+                  </SelectContent>
+                </Select>
+                {consignatario === '__otro__' && <Input placeholder="Nombre del consignatario" value={consignatarioManual} onChange={e => setConsignatarioManual(e.target.value)} className="mt-2" />}
               </div>
               <div className="space-y-2 md:col-span-2">
                 <Label>Descripción de la Mercancía</Label>

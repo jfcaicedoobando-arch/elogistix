@@ -10,6 +10,7 @@ import EmbarqueDetalle from "./pages/EmbarqueDetalle";
 import NuevoEmbarque from "./pages/NuevoEmbarque";
 import Facturacion from "./pages/Facturacion";
 import Clientes from "./pages/Clientes";
+import ClienteDetalle from "./pages/ClienteDetalle";
 import Proveedores from "./pages/Proveedores";
 import Reportes from "./pages/Reportes";
 import NotFound from "./pages/NotFound";
@@ -30,6 +31,7 @@ const App = () => (
             <Route path="/embarques/:id" element={<EmbarqueDetalle />} />
             <Route path="/facturacion" element={<Facturacion />} />
             <Route path="/clientes" element={<Clientes />} />
+            <Route path="/clientes/:id" element={<ClienteDetalle />} />
             <Route path="/proveedores" element={<Proveedores />} />
             <Route path="/reportes" element={<Reportes />} />
           </Route>

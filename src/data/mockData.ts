@@ -1,11 +1,23 @@
-import { Cliente, Proveedor, Embarque, Factura } from './types';
+import { Cliente, Proveedor, Embarque, Factura, ContactoCliente } from './types';
 
 export const clientes: Cliente[] = [
-  { id: 'C001', nombre: 'Grupo Industrial Saltillo S.A. de C.V.', rfc: 'GIS850101AB3', direccion: 'Av. Industria Automotriz 500', ciudad: 'Saltillo', estado: 'Coahuila', cp: '25070', contacto: 'Ing. Roberto Garza', email: 'rgarza@gis.com.mx', telefono: '+52 844 411 1000' },
-  { id: 'C002', nombre: 'Alimentos del Valle S.A. de C.V.', rfc: 'AVA900315KL9', direccion: 'Blvd. Puerta de Hierro 4965', ciudad: 'Zapopan', estado: 'Jalisco', cp: '45116', contacto: 'Lic. María Fernanda López', email: 'mflopez@alivalle.com', telefono: '+52 33 3648 2000' },
-  { id: 'C003', nombre: 'Electrónica Avanzada del Norte S. de R.L.', rfc: 'EAN070820QR5', direccion: 'Parque Industrial Apodaca Lote 12', ciudad: 'Apodaca', estado: 'Nuevo León', cp: '66600', contacto: 'Ing. Carlos Mendoza', email: 'cmendoza@ean.com.mx', telefono: '+52 81 8369 3000' },
-  { id: 'C004', nombre: 'Textiles Modernos de Puebla S.A.', rfc: 'TMP950610JK2', direccion: 'Calle 5 de Mayo 2200', ciudad: 'Puebla', estado: 'Puebla', cp: '72000', contacto: 'Sra. Ana Patricia Ruiz', email: 'apruiz@texmod.com', telefono: '+52 222 246 1500' },
-  { id: 'C005', nombre: 'Farmacéutica Nacional S.A. de C.V.', rfc: 'FNA880225MN8', direccion: 'Av. Revolución 1877', ciudad: 'Ciudad de México', estado: 'CDMX', cp: '01040', contacto: 'Dr. Alejandro Vega', email: 'avega@farmanac.com.mx', telefono: '+52 55 5550 3000' },
+  { id: 'C001', nombre: 'Grupo Industrial Saltillo S.A. de C.V.', rfc: 'GIS850101AB3', direccion: 'Av. Industria Automotriz 500', ciudad: 'Saltillo', estado: 'Coahuila', cp: '25070', contacto: 'Ing. Roberto Garza', email: 'rgarza@gis.com.mx', telefono: '+52 844 411 1000', contactos: [
+    { id: 'CT001', clienteId: 'C001', nombre: 'Bosch GmbH', rfc: 'N/A', tipo: 'Proveedor', pais: 'Alemania', ciudad: 'Stuttgart', direccion: 'Robert-Bosch-Platz 1', contacto: 'Hans Mueller', email: 'hmueller@bosch.de', telefono: '+49 711 400 040' },
+    { id: 'CT002', clienteId: 'C001', nombre: 'Continental AG', rfc: 'N/A', tipo: 'Proveedor', pais: 'Alemania', ciudad: 'Hannover', direccion: 'Vahrenwalder Str. 9', contacto: 'Klaus Weber', email: 'kweber@continental.de', telefono: '+49 511 938 01' },
+  ] },
+  { id: 'C002', nombre: 'Alimentos del Valle S.A. de C.V.', rfc: 'AVA900315KL9', direccion: 'Blvd. Puerta de Hierro 4965', ciudad: 'Zapopan', estado: 'Jalisco', cp: '45116', contacto: 'Lic. María Fernanda López', email: 'mflopez@alivalle.com', telefono: '+52 33 3648 2000', contactos: [
+    { id: 'CT003', clienteId: 'C002', nombre: 'Fresh Foods Distribution LLC', rfc: 'N/A', tipo: 'Exportador', pais: 'USA', ciudad: 'Los Angeles', direccion: '1200 S Main St', contacto: 'John Smith', email: 'jsmith@freshfoods.com', telefono: '+1 213 555 1200' },
+  ] },
+  { id: 'C003', nombre: 'Electrónica Avanzada del Norte S. de R.L.', rfc: 'EAN070820QR5', direccion: 'Parque Industrial Apodaca Lote 12', ciudad: 'Apodaca', estado: 'Nuevo León', cp: '66600', contacto: 'Ing. Carlos Mendoza', email: 'cmendoza@ean.com.mx', telefono: '+52 81 8369 3000', contactos: [
+    { id: 'CT004', clienteId: 'C003', nombre: 'Samsung Electronics', rfc: 'N/A', tipo: 'Proveedor', pais: 'Corea del Sur', ciudad: 'Incheon', direccion: '129 Samsung-ro', contacto: 'Kim Joon', email: 'kjoon@samsung.kr', telefono: '+82 32 510 3114' },
+    { id: 'CT005', clienteId: 'C003', nombre: 'Texas Instruments Inc.', rfc: 'N/A', tipo: 'Proveedor', pais: 'USA', ciudad: 'Dallas', direccion: '12500 TI Blvd', contacto: 'Mike Johnson', email: 'mjohnson@ti.com', telefono: '+1 972 995 2011' },
+  ] },
+  { id: 'C004', nombre: 'Textiles Modernos de Puebla S.A.', rfc: 'TMP950610JK2', direccion: 'Calle 5 de Mayo 2200', ciudad: 'Puebla', estado: 'Puebla', cp: '72000', contacto: 'Sra. Ana Patricia Ruiz', email: 'apruiz@texmod.com', telefono: '+52 222 246 1500', contactos: [
+    { id: 'CT006', clienteId: 'C004', nombre: 'Zhejiang Textile Co. Ltd', rfc: 'N/A', tipo: 'Proveedor', pais: 'China', ciudad: 'Shanghai', direccion: 'Pudong New Area, 200120', contacto: 'Li Wei', email: 'lwei@zjtextile.cn', telefono: '+86 21 5888 6666' },
+  ] },
+  { id: 'C005', nombre: 'Farmacéutica Nacional S.A. de C.V.', rfc: 'FNA880225MN8', direccion: 'Av. Revolución 1877', ciudad: 'Ciudad de México', estado: 'CDMX', cp: '01040', contacto: 'Dr. Alejandro Vega', email: 'avega@farmanac.com.mx', telefono: '+52 55 5550 3000', contactos: [
+    { id: 'CT007', clienteId: 'C005', nombre: 'Pfizer Inc.', rfc: 'N/A', tipo: 'Proveedor', pais: 'USA', ciudad: 'New York', direccion: '235 E 42nd St', contacto: 'Sarah Williams', email: 'swilliams@pfizer.com', telefono: '+1 212 733 2323' },
+  ] },
   { id: 'C006', nombre: 'Aceros y Metales del Bajío S.A.', rfc: 'AMB010430PQ1', direccion: 'Carretera León-Silao Km 8', ciudad: 'León', estado: 'Guanajuato', cp: '37530', contacto: 'Ing. Miguel Ángel Torres', email: 'matorres@acerosb.com', telefono: '+52 477 710 2000' },
   { id: 'C007', nombre: 'Distribuidora Comercial del Sureste S.A.', rfc: 'DCS960715RS4', direccion: 'Calle 60 No. 456', ciudad: 'Mérida', estado: 'Yucatán', cp: '97000', contacto: 'Lic. Gabriela Cámara', email: 'gcamara@discsur.com', telefono: '+52 999 920 4000' },
   { id: 'C008', nombre: 'Autopartes Premium de México S.A.', rfc: 'APM030912TU6', direccion: 'Av. de la Convención 302', ciudad: 'Aguascalientes', estado: 'Aguascalientes', cp: '20230', contacto: 'Ing. Fernando Rivas', email: 'frivas@autoprem.com.mx', telefono: '+52 449 994 1000' },
