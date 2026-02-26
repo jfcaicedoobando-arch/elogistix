@@ -6,6 +6,7 @@ import {
   Truck,
   BarChart3,
   Anchor,
+  PackageCheck,
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
@@ -27,6 +28,7 @@ const menuItems = [
   { title: "Embarques", url: "/embarques", icon: Ship },
   { title: "Facturación", url: "/facturacion", icon: FileText },
   { title: "Clientes", url: "/clientes", icon: Users },
+  { title: "Shippers", url: "/shippers", icon: PackageCheck },
   { title: "Proveedores", url: "/proveedores", icon: Truck },
   { title: "Reportes", url: "/reportes", icon: BarChart3 },
 ];

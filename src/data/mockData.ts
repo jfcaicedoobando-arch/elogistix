@@ -1,4 +1,15 @@
-import { Cliente, Proveedor, Embarque, Factura } from './types';
+import { Cliente, Proveedor, Embarque, Factura, Shipper } from './types';
+
+export const shippers: Shipper[] = [
+  { id: 'S001', nombre: 'Bosch GmbH', pais: 'Alemania', ciudad: 'Stuttgart', direccion: 'Robert-Bosch-Platz 1, 70839 Gerlingen', contacto: 'Hans Mueller', email: 'exports@bosch.de', telefono: '+49 711 400 40990' },
+  { id: 'S002', nombre: 'Zhejiang Textile Co. Ltd', pais: 'China', ciudad: 'Shanghai', direccion: '888 Pudong Ave, Pudong District', contacto: 'Wei Zhang', email: 'sales@zjtextile.cn', telefono: '+86 21 5888 6000' },
+  { id: 'S003', nombre: 'Samsung Electronics', pais: 'Corea del Sur', ciudad: 'Incheon', direccion: '129 Samsung-ro, Yeongtong-gu, Suwon', contacto: 'Kim Soo-Jin', email: 'logistics@samsung.co.kr', telefono: '+82 31 200 1114' },
+  { id: 'S004', nombre: 'Pfizer Inc.', pais: 'USA', ciudad: 'New York', direccion: '235 E 42nd St, New York, NY 10017', contacto: 'John Smith', email: 'shipping@pfizer.com', telefono: '+1 212 733 2323' },
+  { id: 'S005', nombre: 'US Steel Corp', pais: 'USA', ciudad: 'Houston', direccion: '1 N Broadway, Houston, TX 77002', contacto: 'Robert Johnson', email: 'exports@ussteel.com', telefono: '+1 713 629 6000' },
+  { id: 'S006', nombre: 'Procter & Gamble', pais: 'USA', ciudad: 'Cincinnati', direccion: '1 P&G Plaza, Cincinnati, OH 45202', contacto: 'Sarah Williams', email: 'logistics@pg.com', telefono: '+1 513 983 1100' },
+  { id: 'S007', nombre: 'Alimentos del Valle S.A. de C.V.', pais: 'México', ciudad: 'Zapopan', direccion: 'Blvd. Puerta de Hierro 4965, Zapopan, Jalisco', contacto: 'Lic. María Fernanda López', email: 'exports@alivalle.com', telefono: '+52 33 3648 2000' },
+  { id: 'S008', nombre: 'Mitsubishi Heavy Industries', pais: 'Japón', ciudad: 'Tokio', direccion: '2-3, Marunouchi 3-chome, Chiyoda-ku', contacto: 'Takeshi Yamamoto', email: 'export@mhi.co.jp', telefono: '+81 3 6275 6200' },
+];
 
 export const clientes: Cliente[] = [
   { id: 'C001', nombre: 'Grupo Industrial Saltillo S.A. de C.V.', rfc: 'GIS850101AB3', direccion: 'Av. Industria Automotriz 500', ciudad: 'Saltillo', estado: 'Coahuila', cp: '25070', contacto: 'Ing. Roberto Garza', email: 'rgarza@gis.com.mx', telefono: '+52 844 411 1000' },
