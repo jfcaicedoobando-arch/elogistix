@@ -11,7 +11,6 @@ import NuevoEmbarque from "./pages/NuevoEmbarque";
 import Facturacion from "./pages/Facturacion";
 import Clientes from "./pages/Clientes";
 import Proveedores from "./pages/Proveedores";
-import Shippers from "./pages/Shippers";
 import Reportes from "./pages/Reportes";
 import NotFound from "./pages/NotFound";
 
@@ -31,7 +30,6 @@ const App = () => (
             <Route path="/embarques/:id" element={<EmbarqueDetalle />} />
             <Route path="/facturacion" element={<Facturacion />} />
             <Route path="/clientes" element={<Clientes />} />
-            <Route path="/shippers" element={<Shippers />} />
             <Route path="/proveedores" element={<Proveedores />} />
             <Route path="/reportes" element={<Reportes />} />
           </Route>
