@@ -23,6 +23,18 @@ export interface Cliente {
   telefono: string;
 }
 
+export interface Shipper {
+  id: string;
+  nombre: string;
+  pais: string;
+  ciudad: string;
+  direccion: string;
+  contacto: string;
+  email: string;
+  telefono: string;
+  notas?: string;
+}
+
 export interface Proveedor {
   id: string;
   nombre: string;
