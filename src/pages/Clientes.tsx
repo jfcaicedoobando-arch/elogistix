@@ -39,7 +39,7 @@ export default function Clientes() {
   const handleChange = (field: string, value: string) => setForm(prev => ({ ...prev, [field]: value }));
 
   const handleSave = () => {
-    if (!form.nombre.trim() || !form.rfc.trim()) return;
+    if (!form.nombre.trim() || !form.rfc.trim() || !form.cp.trim()) return;
     const nuevo: Cliente = { id: `CLI-${Date.now()}`, ...form };
     setClientesList(prev => [...prev, nuevo]);
     setForm(emptyCliente);
@@ -140,18 +140,18 @@ export default function Clientes() {
           </DialogHeader>
           <div className="grid grid-cols-2 gap-4">
             {[
-              { label: "Nombre / Razón Social", field: "nombre", full: true },
-              { label: "RFC", field: "rfc" },
-              { label: "Código Postal", field: "cp" },
+              { label: "Nombre / Razón Social", field: "nombre", full: true, required: true },
+              { label: "RFC", field: "rfc", required: true },
+              { label: "Código Postal", field: "cp", required: true },
               { label: "Dirección", field: "direccion", full: true },
               { label: "Ciudad", field: "ciudad" },
               { label: "Estado", field: "estado" },
               { label: "Contacto", field: "contacto" },
               { label: "Email", field: "email" },
               { label: "Teléfono", field: "telefono" },
-            ].map(({ label, field, full }) => (
+            ].map(({ label, field, full, required }) => (
               <div key={field} className={full ? "col-span-2" : ""}>
-                <Label className="text-xs">{label}</Label>
+                <Label className="text-xs">{label}{required && <span className="text-destructive ml-0.5">*</span>}</Label>
                 <Input
                   value={(form as any)[field]}
                   onChange={(e) => handleChange(field, e.target.value)}
@@ -162,7 +162,7 @@ export default function Clientes() {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setDialogOpen(false)}>Cancelar</Button>
-            <Button onClick={handleSave} disabled={!form.nombre.trim() || !form.rfc.trim()}>Guardar</Button>
+            <Button onClick={handleSave} disabled={!form.nombre.trim() || !form.rfc.trim() || !form.cp.trim()}>Guardar</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
