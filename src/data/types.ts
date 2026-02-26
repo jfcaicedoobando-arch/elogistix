@@ -10,6 +10,22 @@ export type TipoContenedor = "20'" | "40'" | "40'HC";
 export type TipoServicioMaritimo = 'FCL' | 'LCL';
 export type Incoterm = 'EXW' | 'FOB' | 'CIF' | 'DAP' | 'DDP' | 'FCA' | 'CFR' | 'CPT' | 'CIP' | 'DAT';
 
+export type TipoContacto = 'Proveedor' | 'Exportador' | 'Importador';
+
+export interface ContactoCliente {
+  id: string;
+  clienteId: string;
+  nombre: string;
+  rfc: string;
+  tipo: TipoContacto;
+  pais: string;
+  ciudad: string;
+  direccion: string;
+  contacto: string;
+  email: string;
+  telefono: string;
+}
+
 export interface Cliente {
   id: string;
   nombre: string;
@@ -21,6 +37,7 @@ export interface Cliente {
   contacto: string;
   email: string;
   telefono: string;
+  contactos?: ContactoCliente[];
 }
 
 export interface Proveedor {

@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Search, Users, Plus } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -19,6 +20,7 @@ const emptyCliente = {
 };
 
 export default function Clientes() {
+  const navigate = useNavigate();
   const [search, setSearch] = useState("");
   const [selected, setSelected] = useState<string | null>(null);
   const [clientesList, setClientesList] = useState<Cliente[]>(clientesIniciales);
@@ -81,7 +83,7 @@ export default function Clientes() {
                 </TableHeader>
                 <TableBody>
                   {filtered.map(c => (
-                    <TableRow key={c.id} className={`cursor-pointer ${selected === c.id ? 'bg-accent/10' : ''}`} onClick={() => setSelected(c.id)}>
+                    <TableRow key={c.id} className={`cursor-pointer ${selected === c.id ? 'bg-accent/10' : ''}`} onClick={() => navigate(`/clientes/${c.id}`)}>
                       <TableCell className="font-medium max-w-[200px] truncate">{c.nombre}</TableCell>
                       <TableCell className="text-xs font-mono">{c.rfc}</TableCell>
                       <TableCell className="text-xs">{c.ciudad}, {c.estado}</TableCell>
