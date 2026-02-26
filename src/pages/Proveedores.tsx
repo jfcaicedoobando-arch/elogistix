@@ -7,7 +7,7 @@ import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { proveedores } from "@/data/mockData";
+import { useProveedores } from "@/hooks/useProveedores";
 import type { TipoProveedor } from "@/data/types";
 
 const TABS: { label: string; tipo: TipoProveedor }[] = [
@@ -19,7 +19,7 @@ const TABS: { label: string; tipo: TipoProveedor }[] = [
   { label: 'Aseguradoras', tipo: 'Aseguradora' },
 ];
 
-function ProveedorTable({ tipo, search, onSelect }: { tipo: TipoProveedor; search: string; onSelect: (id: string) => void }) {
+function ProveedorTable({ tipo, search, onSelect, proveedores }: { tipo: TipoProveedor; search: string; onSelect: (id: string) => void; proveedores: ReturnType<typeof useProveedores>['proveedores'] }) {
   const filtered = proveedores.filter(p => p.tipo === tipo && (!search || p.nombre.toLowerCase().includes(search.toLowerCase())));
 
   return (
@@ -57,6 +57,7 @@ function ProveedorTable({ tipo, search, onSelect }: { tipo: TipoProveedor; searc
 export default function Proveedores() {
   const [search, setSearch] = useState("");
   const navigate = useNavigate();
+  const { proveedores } = useProveedores();
 
   return (
     <div className="space-y-6">
@@ -82,7 +83,7 @@ export default function Proveedores() {
         </TabsList>
         {TABS.map(t => (
           <TabsContent key={t.tipo} value={t.tipo}>
-            <ProveedorTable tipo={t.tipo} search={search} onSelect={(id) => navigate(`/proveedores/${id}`)} />
+            <ProveedorTable tipo={t.tipo} search={search} onSelect={(id) => navigate(`/proveedores/${id}`)} proveedores={proveedores} />
           </TabsContent>
         ))}
       </Tabs>

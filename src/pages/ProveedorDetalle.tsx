@@ -1,16 +1,22 @@
+import { useState } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
-import { ArrowLeft, Truck } from "lucide-react";
+import { ArrowLeft, Truck, Pencil } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
-import { proveedores, embarques, formatCurrency, getEstadoColor } from "@/data/mockData";
+import { embarques, formatCurrency, getEstadoColor } from "@/data/mockData";
+import { useProveedores } from "@/hooks/useProveedores";
+import EditarProveedorDialog from "@/components/EditarProveedorDialog";
 
 export default function ProveedorDetalle() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const { proveedores, updateProveedor } = useProveedores();
+  const [editOpen, setEditOpen] = useState(false);
+
   const prov = proveedores.find(p => p.id === id);
 
   if (!prov) {
@@ -36,15 +42,20 @@ export default function ProveedorDetalle() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center gap-4">
-        <Button variant="ghost" size="icon" onClick={() => navigate("/proveedores")}>
-          <ArrowLeft className="h-5 w-5" />
-        </Button>
-        <Truck className="h-6 w-6 text-accent" />
-        <div className="flex items-center gap-3">
-          <h1 className="text-2xl font-bold">{prov.nombre}</h1>
-          <Badge variant="secondary">{prov.tipo}</Badge>
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-4">
+          <Button variant="ghost" size="icon" onClick={() => navigate("/proveedores")}>
+            <ArrowLeft className="h-5 w-5" />
+          </Button>
+          <Truck className="h-6 w-6 text-accent" />
+          <div className="flex items-center gap-3">
+            <h1 className="text-2xl font-bold">{prov.nombre}</h1>
+            <Badge variant="secondary">{prov.tipo}</Badge>
+          </div>
         </div>
+        <Button variant="outline" onClick={() => setEditOpen(true)}>
+          <Pencil className="mr-2 h-4 w-4" /> Editar
+        </Button>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -120,6 +131,13 @@ export default function ProveedorDetalle() {
           )}
         </CardContent>
       </Card>
+
+      <EditarProveedorDialog
+        proveedor={prov}
+        open={editOpen}
+        onOpenChange={setEditOpen}
+        onSave={updateProveedor}
+      />
     </div>
   );
 }
