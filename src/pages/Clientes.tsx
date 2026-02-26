@@ -1,33 +1,59 @@
 import { useState } from "react";
-import { Search, Users } from "lucide-react";
+import { Search, Users, Plus } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
+import {
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription,
+} from "@/components/ui/dialog";
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
-import { clientes, embarques, facturas, formatCurrency } from "@/data/mockData";
+import { clientes as clientesIniciales, embarques, facturas, formatCurrency } from "@/data/mockData";
+import { Cliente } from "@/data/types";
+
+const emptyCliente = {
+  nombre: "", rfc: "", direccion: "", ciudad: "", estado: "", cp: "", contacto: "", email: "", telefono: "",
+};
 
 export default function Clientes() {
   const [search, setSearch] = useState("");
   const [selected, setSelected] = useState<string | null>(null);
+  const [clientesList, setClientesList] = useState<Cliente[]>(clientesIniciales);
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [form, setForm] = useState(emptyCliente);
 
-  const filtered = clientes.filter(c =>
+  const filtered = clientesList.filter(c =>
     !search || c.nombre.toLowerCase().includes(search.toLowerCase()) || c.rfc.toLowerCase().includes(search.toLowerCase())
   );
 
-  const selectedCliente = clientes.find(c => c.id === selected);
+  const selectedCliente = clientesList.find(c => c.id === selected);
   const clienteEmbarques = embarques.filter(e => e.clienteId === selected);
   const clienteFacturas = facturas.filter(f => f.clienteId === selected);
   const saldoPendiente = clienteFacturas
     .filter(f => ['Emitida', 'Vencida'].includes(f.estado))
     .reduce((sum, f) => sum + f.total, 0);
 
+  const handleChange = (field: string, value: string) => setForm(prev => ({ ...prev, [field]: value }));
+
+  const handleSave = () => {
+    if (!form.nombre.trim() || !form.rfc.trim()) return;
+    const nuevo: Cliente = { id: `CLI-${Date.now()}`, ...form };
+    setClientesList(prev => [...prev, nuevo]);
+    setForm(emptyCliente);
+    setDialogOpen(false);
+  };
+
   return (
     <div className="space-y-6">
-      <div className="flex items-center gap-3">
-        <Users className="h-6 w-6 text-accent" />
-        <h1 className="text-2xl font-bold">Clientes</h1>
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <Users className="h-6 w-6 text-accent" />
+          <h1 className="text-2xl font-bold">Clientes</h1>
+        </div>
+        <Button onClick={() => setDialogOpen(true)}><Plus className="h-4 w-4 mr-1" />Nuevo Cliente</Button>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -105,6 +131,41 @@ export default function Clientes() {
           )}
         </div>
       </div>
+
+      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Nuevo Cliente</DialogTitle>
+            <DialogDescription>Ingresa los datos del nuevo cliente.</DialogDescription>
+          </DialogHeader>
+          <div className="grid grid-cols-2 gap-4">
+            {[
+              { label: "Nombre / Razón Social", field: "nombre", full: true },
+              { label: "RFC", field: "rfc" },
+              { label: "Código Postal", field: "cp" },
+              { label: "Dirección", field: "direccion", full: true },
+              { label: "Ciudad", field: "ciudad" },
+              { label: "Estado", field: "estado" },
+              { label: "Contacto", field: "contacto" },
+              { label: "Email", field: "email" },
+              { label: "Teléfono", field: "telefono" },
+            ].map(({ label, field, full }) => (
+              <div key={field} className={full ? "col-span-2" : ""}>
+                <Label className="text-xs">{label}</Label>
+                <Input
+                  value={(form as any)[field]}
+                  onChange={(e) => handleChange(field, e.target.value)}
+                  className="mt-1"
+                />
+              </div>
+            ))}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setDialogOpen(false)}>Cancelar</Button>
+            <Button onClick={handleSave} disabled={!form.nombre.trim() || !form.rfc.trim()}>Guardar</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
