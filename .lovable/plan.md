@@ -1,50 +1,25 @@
 
 
-# Drilldown de Clientes con Proveedores/Exportadores
+# Proveedores con pestañas por tipo
 
-## Concepto
-
-Crear una página de detalle por cliente (`/clientes/:id`) donde se puedan gestionar los proveedores y exportadores asociados a ese cliente. Estos contactos se usarán como opciones de Shipper y Consignatario al crear un nuevo embarque.
-
-## Cambios al modelo de datos
+## Cambios
 
 **`src/data/types.ts`:**
-- Nuevo tipo `ContactoCliente` con campos: `id`, `clienteId`, `nombre`, `rfc`, `tipo` (`'Proveedor' | 'Exportador' | 'Importador'`), `pais`, `ciudad`, `direccion`, `contacto`, `email`, `telefono`
-- Agregar campo `contactos: ContactoCliente[]` a la interfaz `Cliente`
+- Actualizar `TipoProveedor` para incluir los nuevos tipos: `'Naviera' | 'Aerolínea' | 'Transportista' | 'Agente Aduanal' | 'Agente de Carga' | 'Aseguradora'` (reemplaza `'Terminal'`, agrega `'Agente de Carga'` y `'Aseguradora'`)
 
 **`src/data/mockData.ts`:**
-- Agregar contactos de ejemplo a 3-4 clientes existentes (proveedores chinos, exportadores americanos, etc.)
+- Agregar proveedores mock para los nuevos tipos (Agente de Carga, Aseguradora)
+- Actualizar proveedores existentes de tipo `'Terminal'` si los hay
 
-## Nueva página: Detalle de Cliente
-
-**`src/pages/ClienteDetalle.tsx`:**
-- Ruta: `/clientes/:id`
-- Header con nombre del cliente y botón "Volver a Clientes"
-- Datos generales del cliente (info, RFC, dirección)
-- Sección de embarques y saldo pendiente (lo que ya existe en el panel lateral)
-- **Sección principal: tabla de Proveedores/Exportadores** del cliente con:
-  - Columnas: Nombre, Tipo, País/Ciudad, Contacto, Email
-  - Botón "Agregar Contacto" que abre un dialog con formulario
-  - Acciones por fila: editar, eliminar
-
-## Cambios en páginas existentes
-
-**`src/pages/Clientes.tsx`:**
-- Al hacer clic en un cliente en la tabla, navegar a `/clientes/:id` en vez de solo seleccionarlo en el panel lateral
-
-**`src/App.tsx`:**
-- Agregar ruta `/clientes/:id` → `ClienteDetalle`
-
-**`src/pages/NuevoEmbarque.tsx`:**
-- En Paso 1, al seleccionar un cliente, cargar sus contactos
-- Campos Shipper y Consignatario cambian de `Input` libre a `Select` con los contactos del cliente como opciones, más opción "Otro" para escribir manualmente
+**`src/pages/Proveedores.tsx`:**
+- Reemplazar el layout actual (filtro por Select + tabla única) con un componente `Tabs` de 6 pestañas: Navieras, Aerolíneas, Transportistas, Agentes Aduanales, Agentes de Carga, Aseguradoras
+- Cada pestaña muestra solo los proveedores de ese tipo, con su buscador y tabla
+- Mantener el panel lateral de detalle al seleccionar un proveedor
+- Eliminar el filtro de tipo (ya no es necesario, las pestañas lo reemplazan)
 
 ## Pasos de implementación
 
-1. Actualizar `types.ts` con `ContactoCliente` y actualizar `Cliente`
-2. Agregar datos mock de contactos a clientes existentes
-3. Crear `ClienteDetalle.tsx` con info del cliente + tabla CRUD de contactos
-4. Agregar ruta en `App.tsx`
-5. Modificar `Clientes.tsx` para navegar al detalle al hacer clic
-6. Actualizar `NuevoEmbarque.tsx` para usar contactos del cliente como opciones de Shipper/Consignatario
+1. Actualizar `TipoProveedor` en types.ts
+2. Agregar proveedores mock para nuevos tipos
+3. Refactorizar `Proveedores.tsx` con `Tabs` por tipo de proveedor
 
