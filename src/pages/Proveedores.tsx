@@ -6,30 +6,62 @@ import { Badge } from "@/components/ui/badge";
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
-import {
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
-} from "@/components/ui/select";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { proveedores, embarques, formatCurrency, getEstadoColor } from "@/data/mockData";
 import type { TipoProveedor } from "@/data/types";
 
-const TIPOS: TipoProveedor[] = ['Naviera', 'Aerolínea', 'Transportista', 'Agente Aduanal', 'Terminal'];
+const TABS: { label: string; tipo: TipoProveedor }[] = [
+  { label: 'Navieras', tipo: 'Naviera' },
+  { label: 'Aerolíneas', tipo: 'Aerolínea' },
+  { label: 'Transportistas', tipo: 'Transportista' },
+  { label: 'Agentes Aduanales', tipo: 'Agente Aduanal' },
+  { label: 'Agentes de Carga', tipo: 'Agente de Carga' },
+  { label: 'Aseguradoras', tipo: 'Aseguradora' },
+];
+
+function ProveedorTable({ tipo, selected, onSelect, search }: { tipo: TipoProveedor; selected: string | null; onSelect: (id: string) => void; search: string }) {
+  const filtered = proveedores.filter(p => p.tipo === tipo && (!search || p.nombre.toLowerCase().includes(search.toLowerCase())));
+
+  return (
+    <Card>
+      <CardContent className="p-0">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Nombre</TableHead>
+              <TableHead>RFC</TableHead>
+              <TableHead>Contacto</TableHead>
+              <TableHead>Moneda</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {filtered.length > 0 ? filtered.map(p => (
+              <TableRow key={p.id} className={`cursor-pointer ${selected === p.id ? 'bg-accent/10' : ''}`} onClick={() => onSelect(p.id)}>
+                <TableCell className="font-medium">{p.nombre}</TableCell>
+                <TableCell className="text-xs font-mono">{p.rfc}</TableCell>
+                <TableCell className="text-xs">{p.contacto}</TableCell>
+                <TableCell className="text-xs">{p.monedaPreferida}</TableCell>
+              </TableRow>
+            )) : (
+              <TableRow>
+                <TableCell colSpan={4} className="text-center text-muted-foreground py-8">Sin proveedores registrados</TableCell>
+              </TableRow>
+            )}
+          </TableBody>
+        </Table>
+      </CardContent>
+    </Card>
+  );
+}
 
 export default function Proveedores() {
   const [search, setSearch] = useState("");
-  const [filterTipo, setFilterTipo] = useState<string>("todos");
   const [selected, setSelected] = useState<string | null>(null);
-
-  const filtered = proveedores.filter(p => {
-    const matchSearch = !search || p.nombre.toLowerCase().includes(search.toLowerCase());
-    const matchTipo = filterTipo === "todos" || p.tipo === filterTipo;
-    return matchSearch && matchTipo;
-  });
 
   const selectedProv = proveedores.find(p => p.id === selected);
   const provGastos = embarques.flatMap(e =>
     e.conceptosCosto.filter(c => c.proveedorId === selected).map(c => ({ ...c, expediente: e.expediente }))
   );
-  const totalGastos = provGastos.reduce((sum, g) => sum + g.monto, 0);
 
   return (
     <div className="space-y-6">
@@ -41,47 +73,26 @@ export default function Proveedores() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 space-y-4">
           <Card>
-            <CardContent className="p-4 flex flex-wrap gap-3">
-              <div className="relative flex-1 min-w-[200px]">
+            <CardContent className="p-4">
+              <div className="relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input placeholder="Buscar proveedor..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9" />
               </div>
-              <Select value={filterTipo} onValueChange={setFilterTipo}>
-                <SelectTrigger className="w-[180px]"><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="todos">Todos los tipos</SelectItem>
-                  {TIPOS.map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}
-                </SelectContent>
-              </Select>
             </CardContent>
           </Card>
 
-          <Card>
-            <CardContent className="p-0">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Nombre</TableHead>
-                    <TableHead>Tipo</TableHead>
-                    <TableHead>RFC</TableHead>
-                    <TableHead>Contacto</TableHead>
-                    <TableHead>Moneda</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filtered.map(p => (
-                    <TableRow key={p.id} className={`cursor-pointer ${selected === p.id ? 'bg-accent/10' : ''}`} onClick={() => setSelected(p.id)}>
-                      <TableCell className="font-medium">{p.nombre}</TableCell>
-                      <TableCell><Badge variant="secondary" className="text-xs">{p.tipo}</Badge></TableCell>
-                      <TableCell className="text-xs font-mono">{p.rfc}</TableCell>
-                      <TableCell className="text-xs">{p.contacto}</TableCell>
-                      <TableCell className="text-xs">{p.monedaPreferida}</TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </CardContent>
-          </Card>
+          <Tabs defaultValue="Naviera" onValueChange={() => setSelected(null)}>
+            <TabsList className="w-full flex flex-wrap h-auto gap-1">
+              {TABS.map(t => (
+                <TabsTrigger key={t.tipo} value={t.tipo} className="text-xs">{t.label}</TabsTrigger>
+              ))}
+            </TabsList>
+            {TABS.map(t => (
+              <TabsContent key={t.tipo} value={t.tipo}>
+                <ProveedorTable tipo={t.tipo} selected={selected} onSelect={setSelected} search={search} />
+              </TabsContent>
+            ))}
+          </Tabs>
         </div>
 
         <div>

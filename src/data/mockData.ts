@@ -33,7 +33,10 @@ export const proveedores: Proveedor[] = [
   { id: 'P007', nombre: 'TIF Transportes Internacionales', tipo: 'Transportista', rfc: 'TTI860715TT7', contacto: 'Mario Díaz', email: 'trafico@tifmx.com', telefono: '+52 55 5399 2000', monedaPreferida: 'MXN' },
   { id: 'P008', nombre: 'Agencia Aduanal Martínez & Asociados', tipo: 'Agente Aduanal', rfc: 'AAM700901SS8', contacto: 'Lic. Arturo Martínez', email: 'despachos@aamartinez.com', telefono: '+52 55 5260 1000', monedaPreferida: 'MXN' },
   { id: 'P009', nombre: 'Despacho Aduanero del Puerto', tipo: 'Agente Aduanal', rfc: 'DAP820215RR9', contacto: 'C.P. Elena Vargas', email: 'operaciones@dapuerto.com', telefono: '+52 314 332 1000', monedaPreferida: 'MXN' },
-  { id: 'P010', nombre: 'Terminal Internacional de Manzanillo', tipo: 'Terminal', rfc: 'TIM950630QQ0', contacto: 'Ing. Pablo Nava', email: 'servicios@timsa.com.mx', telefono: '+52 314 331 2000', monedaPreferida: 'USD' },
+  { id: 'P010', nombre: 'Kuehne+Nagel México', tipo: 'Agente de Carga', rfc: 'KNM910530QQ0', contacto: 'Ing. Pablo Nava', email: 'mexico@kuehne-nagel.com', telefono: '+52 55 5089 1000', monedaPreferida: 'USD' },
+  { id: 'P011', nombre: 'DB Schenker México', tipo: 'Agente de Carga', rfc: 'DSM880715AA1', contacto: 'Carolina Reyes', email: 'freight@dbschenker.mx', telefono: '+52 55 5093 2000', monedaPreferida: 'USD' },
+  { id: 'P012', nombre: 'Seguros Atlas S.A.', tipo: 'Aseguradora', rfc: 'SAT650101BB2', contacto: 'Lic. Roberto Medina', email: 'carga@segurosatlas.com.mx', telefono: '+52 55 5169 1000', monedaPreferida: 'MXN' },
+  { id: 'P013', nombre: 'AXA Seguros Cargo', tipo: 'Aseguradora', rfc: 'ASC900320CC3', contacto: 'Martha Domínguez', email: 'cargo@axa.mx', telefono: '+52 55 5169 3000', monedaPreferida: 'USD' },
 ];
 
 export const embarques: Embarque[] = [
