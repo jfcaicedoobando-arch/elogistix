@@ -1,25 +1,26 @@
 
 
-# Proveedores con pestañas por tipo
+# Página de Detalle de Proveedor
 
 ## Cambios
 
-**`src/data/types.ts`:**
-- Actualizar `TipoProveedor` para incluir los nuevos tipos: `'Naviera' | 'Aerolínea' | 'Transportista' | 'Agente Aduanal' | 'Agente de Carga' | 'Aseguradora'` (reemplaza `'Terminal'`, agrega `'Agente de Carga'` y `'Aseguradora'`)
-
-**`src/data/mockData.ts`:**
-- Agregar proveedores mock para los nuevos tipos (Agente de Carga, Aseguradora)
-- Actualizar proveedores existentes de tipo `'Terminal'` si los hay
+**Nueva página `src/pages/ProveedorDetalle.tsx`** (ruta `/proveedores/:id`):
+- Header con nombre, tipo (badge) y botón "Volver a Proveedores"
+- Card de datos generales: RFC, contacto, email, teléfono, moneda preferida
+- Resumen financiero: total facturado, pendiente de pago, pagado
+- Tabla de historial de operaciones: todos los embarques donde aparece como proveedor en `conceptosCosto`, con columnas: Expediente, Cliente, Concepto, Monto, Estado de Liquidación, Fecha Vencimiento
+- Click en expediente navega a `/embarques/:id`
 
 **`src/pages/Proveedores.tsx`:**
-- Reemplazar el layout actual (filtro por Select + tabla única) con un componente `Tabs` de 6 pestañas: Navieras, Aerolíneas, Transportistas, Agentes Aduanales, Agentes de Carga, Aseguradoras
-- Cada pestaña muestra solo los proveedores de ese tipo, con su buscador y tabla
-- Mantener el panel lateral de detalle al seleccionar un proveedor
-- Eliminar el filtro de tipo (ya no es necesario, las pestañas lo reemplazan)
+- Cambiar `onSelect` para navegar a `/proveedores/:id` con `useNavigate` en vez de mostrar panel lateral
+- Eliminar el panel lateral de detalle (columna derecha)
+- La tabla ocupa todo el ancho
 
-## Pasos de implementación
+**`src/App.tsx`:**
+- Agregar ruta `/proveedores/:id` → `ProveedorDetalle`
 
-1. Actualizar `TipoProveedor` en types.ts
-2. Agregar proveedores mock para nuevos tipos
-3. Refactorizar `Proveedores.tsx` con `Tabs` por tipo de proveedor
+## Pasos
+1. Crear `ProveedorDetalle.tsx` con info del proveedor y tabla de historial de operaciones
+2. Agregar ruta en `App.tsx`
+3. Modificar `Proveedores.tsx` para navegar al detalle al hacer clic y eliminar panel lateral
 
