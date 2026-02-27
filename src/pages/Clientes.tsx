@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { Search, Users, Plus } from "lucide-react";
+import { Search, Users, Plus, Check, Upload, ArrowLeft, ArrowRight } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -19,6 +19,25 @@ const emptyCliente = {
   nombre: "", rfc: "", direccion: "", ciudad: "", estado: "", cp: "", contacto: "", email: "", telefono: "",
 };
 
+const DOCS_OBLIGATORIOS = [
+  'CIF',
+  'Opinión fiscal',
+  'Acta constitutiva',
+  'INE RL',
+  'Poder notarial',
+  'Comprobante de domicilio',
+  'Datos bancarios',
+  'Opinión de cumplimiento IMSS/Infonavit',
+  'Contrato de servicios con Elogistix',
+  'Estados financieros último corte',
+];
+
+interface DocCliente {
+  nombre: string;
+  archivo?: string;
+  adjuntado: boolean;
+}
+
 export default function Clientes() {
   const navigate = useNavigate();
   const [search, setSearch] = useState("");
@@ -26,6 +45,9 @@ export default function Clientes() {
   const [clientesList, setClientesList] = useState<Cliente[]>(clientesIniciales);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [form, setForm] = useState(emptyCliente);
+  const [step, setStep] = useState<1 | 2>(1);
+  const [documentos, setDocumentos] = useState<DocCliente[]>([]);
+  const fileInputRefs = useRef<Record<string, HTMLInputElement | null>>({});
 
   const filtered = clientesList.filter(c =>
     !search || c.nombre.toLowerCase().includes(search.toLowerCase()) || c.rfc.toLowerCase().includes(search.toLowerCase())
@@ -40,11 +62,37 @@ export default function Clientes() {
 
   const handleChange = (field: string, value: string) => setForm(prev => ({ ...prev, [field]: value }));
 
+  const isStep1Valid = () => form.nombre.trim() && form.rfc.trim() && form.cp.trim();
+
+  const handleNext = () => {
+    if (!isStep1Valid()) return;
+    setDocumentos(DOCS_OBLIGATORIOS.map(nombre => ({ nombre, adjuntado: false })));
+    setStep(2);
+  };
+
+  const handleFileChange = (docNombre: string, file: File | undefined) => {
+    setDocumentos(prev =>
+      prev.map(d =>
+        d.nombre === docNombre
+          ? { ...d, archivo: file?.name, adjuntado: !!file }
+          : d
+      )
+    );
+  };
+
+  const allDocsAdjuntados = documentos.length > 0 && documentos.every(d => d.adjuntado);
+
   const handleSave = () => {
-    if (!form.nombre.trim() || !form.rfc.trim() || !form.cp.trim()) return;
+    if (!allDocsAdjuntados) return;
     const nuevo: Cliente = { id: `CLI-${Date.now()}`, ...form };
     setClientesList(prev => [...prev, nuevo]);
+    resetAndClose();
+  };
+
+  const resetAndClose = () => {
     setForm(emptyCliente);
+    setStep(1);
+    setDocumentos([]);
     setDialogOpen(false);
   };
 
@@ -134,37 +182,97 @@ export default function Clientes() {
         </div>
       </div>
 
-      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="max-w-lg">
+      <Dialog open={dialogOpen} onOpenChange={(o) => { if (!o) resetAndClose(); else setDialogOpen(o); }}>
+        <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Nuevo Cliente</DialogTitle>
-            <DialogDescription>Ingresa los datos del nuevo cliente.</DialogDescription>
+            <DialogTitle>Nuevo Cliente — Paso {step} de 2</DialogTitle>
+            <DialogDescription>
+              {step === 1 ? 'Ingresa los datos del nuevo cliente.' : 'Adjunta todos los documentos obligatorios para crear el cliente.'}
+            </DialogDescription>
           </DialogHeader>
-          <div className="grid grid-cols-2 gap-4">
-            {[
-              { label: "Nombre / Razón Social", field: "nombre", full: true, required: true },
-              { label: "RFC", field: "rfc", required: true },
-              { label: "Código Postal", field: "cp", required: true },
-              { label: "Dirección", field: "direccion", full: true },
-              { label: "Ciudad", field: "ciudad" },
-              { label: "Estado", field: "estado" },
-              { label: "Contacto", field: "contacto" },
-              { label: "Email", field: "email" },
-              { label: "Teléfono", field: "telefono" },
-            ].map(({ label, field, full, required }) => (
-              <div key={field} className={full ? "col-span-2" : ""}>
-                <Label className="text-xs">{label}{required && <span className="text-destructive ml-0.5">*</span>}</Label>
-                <Input
-                  value={(form as any)[field]}
-                  onChange={(e) => handleChange(field, e.target.value)}
-                  className="mt-1"
-                />
-              </div>
-            ))}
-          </div>
+
+          {step === 1 && (
+            <div className="grid grid-cols-2 gap-4">
+              {[
+                { label: "Nombre / Razón Social", field: "nombre", full: true, required: true },
+                { label: "RFC", field: "rfc", required: true },
+                { label: "Código Postal", field: "cp", required: true },
+                { label: "Dirección", field: "direccion", full: true },
+                { label: "Ciudad", field: "ciudad" },
+                { label: "Estado", field: "estado" },
+                { label: "Contacto", field: "contacto" },
+                { label: "Email", field: "email" },
+                { label: "Teléfono", field: "telefono" },
+              ].map(({ label, field, full, required }) => (
+                <div key={field} className={full ? "col-span-2" : ""}>
+                  <Label className="text-xs">{label}{required && <span className="text-destructive ml-0.5">*</span>}</Label>
+                  <Input
+                    value={(form as any)[field]}
+                    onChange={(e) => handleChange(field, e.target.value)}
+                    className="mt-1"
+                  />
+                </div>
+              ))}
+            </div>
+          )}
+
+          {step === 2 && (
+            <div className="space-y-3">
+              <p className="text-sm text-muted-foreground">
+                Todos los documentos deben estar adjuntados para poder crear el cliente.
+              </p>
+              {documentos.map((doc) => (
+                <div key={doc.nombre} className="flex items-center justify-between gap-2 rounded-md border p-3">
+                  <div className="flex items-center gap-2 min-w-0">
+                    {doc.adjuntado ? (
+                      <Check className="h-4 w-4 shrink-0 text-primary" />
+                    ) : (
+                      <div className="h-4 w-4 shrink-0 rounded-full border-2 border-muted-foreground/40" />
+                    )}
+                    <div className="min-w-0">
+                      <span className="text-sm font-medium">{doc.nombre}</span>
+                      {doc.archivo && (
+                        <p className="text-xs text-muted-foreground truncate">{doc.archivo}</p>
+                      )}
+                    </div>
+                  </div>
+                  <Button
+                    type="button"
+                    variant={doc.adjuntado ? "secondary" : "outline"}
+                    size="sm"
+                    onClick={() => fileInputRefs.current[doc.nombre]?.click()}
+                  >
+                    <Upload className="h-3.5 w-3.5 mr-1" />
+                    {doc.adjuntado ? 'Cambiar' : 'Adjuntar'}
+                  </Button>
+                  <input
+                    ref={el => { fileInputRefs.current[doc.nombre] = el; }}
+                    type="file"
+                    className="hidden"
+                    onChange={e => handleFileChange(doc.nombre, e.target.files?.[0])}
+                  />
+                </div>
+              ))}
+            </div>
+          )}
+
           <DialogFooter>
-            <Button variant="outline" onClick={() => setDialogOpen(false)}>Cancelar</Button>
-            <Button onClick={handleSave} disabled={!form.nombre.trim() || !form.rfc.trim() || !form.cp.trim()}>Guardar</Button>
+            {step === 1 && (
+              <>
+                <Button variant="outline" onClick={resetAndClose}>Cancelar</Button>
+                <Button onClick={handleNext} disabled={!isStep1Valid()}>
+                  Siguiente <ArrowRight className="h-4 w-4 ml-1" />
+                </Button>
+              </>
+            )}
+            {step === 2 && (
+              <>
+                <Button variant="outline" onClick={() => setStep(1)}>
+                  <ArrowLeft className="h-4 w-4 mr-1" /> Atrás
+                </Button>
+                <Button onClick={handleSave} disabled={!allDocsAdjuntados}>Crear</Button>
+              </>
+            )}
           </DialogFooter>
         </DialogContent>
       </Dialog>
