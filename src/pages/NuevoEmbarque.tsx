@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/select";
 import { clientes, proveedores } from "@/data/mockData";
 import type { ModoTransporte, TipoOperacion, Incoterm } from "@/data/types";
+import { containerTypes } from "@/data/containerTypes";
 import { toast } from "@/hooks/use-toast";
 import PortSelect from "@/components/PortSelect";
 import ShippingLineSelect from "@/components/ShippingLineSelect";
@@ -174,8 +175,8 @@ export default function NuevoEmbarque() {
                 <div className="space-y-2"><Label># Contenedor</Label><Input /></div>
                 <div className="space-y-2">
                   <Label>Tipo Contenedor</Label>
-                  <Select><SelectTrigger><SelectValue /></SelectTrigger>
-                    <SelectContent><SelectItem value="20'">20'</SelectItem><SelectItem value="40'">40'</SelectItem><SelectItem value="40'HC">40'HC</SelectItem></SelectContent>
+                  <Select><SelectTrigger><SelectValue placeholder="Seleccionar tipo" /></SelectTrigger>
+                    <SelectContent>{containerTypes.map(ct => <SelectItem key={ct.code} value={ct.code}>{ct.name}</SelectItem>)}</SelectContent>
                   </Select>
                 </div>
               </>)}

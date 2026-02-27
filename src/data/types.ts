@@ -6,7 +6,7 @@ export type EstadoFactura = 'Borrador' | 'Emitida' | 'Pagada' | 'Vencida' | 'Can
 export type EstadoLiquidacion = 'Pendiente' | 'Pagado';
 export type Moneda = 'MXN' | 'USD' | 'EUR';
 export type TipoProveedor = 'Naviera' | 'Aerolínea' | 'Transportista' | 'Agente Aduanal' | 'Agente de Carga' | 'Aseguradora';
-export type TipoContenedor = "20'" | "40'" | "40'HC";
+export type TipoContenedor = string;
 export type TipoServicioMaritimo = 'FCL' | 'LCL';
 export type Incoterm = 'EXW' | 'FOB' | 'CIF' | 'DAP' | 'DDP' | 'FCA' | 'CFR' | 'CPT' | 'CIP' | 'DAT';
 
