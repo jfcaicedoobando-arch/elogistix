@@ -24,5 +24,11 @@ export function useProveedores() {
     notify();
   };
 
-  return { proveedores: _proveedores, updateProveedor };
+  const addProveedor = (data: Omit<Proveedor, 'id'>) => {
+    const id = `PROV-${String(_proveedores.length + 1).padStart(3, '0')}`;
+    _proveedores = [..._proveedores, { ...data, id }];
+    notify();
+  };
+
+  return { proveedores: _proveedores, updateProveedor, addProveedor };
 }
