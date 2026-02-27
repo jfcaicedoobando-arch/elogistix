@@ -44,6 +44,7 @@ export interface Proveedor {
   id: string;
   nombre: string;
   tipo: TipoProveedor;
+  pais?: string;
   rfc: string;
   contacto: string;
   email: string;

@@ -9,6 +9,12 @@ import type { Proveedor, TipoProveedor, Moneda } from "@/data/types";
 const TIPOS: TipoProveedor[] = ['Naviera', 'Aerolínea', 'Transportista', 'Agente Aduanal', 'Agente de Carga', 'Aseguradora', 'Custodia', 'Almacenes', 'Acondicionamiento de Carga', 'Materiales Peligrosos'];
 const MONEDAS: Moneda[] = ['MXN', 'USD', 'EUR'];
 
+const PAISES = [
+  'México', 'Estados Unidos', 'Canadá', 'China', 'Alemania', 'España',
+  'Francia', 'Italia', 'Japón', 'Corea del Sur', 'Brasil', 'Colombia',
+  'Chile', 'Argentina', 'Perú', 'Reino Unido', 'India', 'Otro',
+];
+
 interface Props {
   proveedor: Proveedor;
   open: boolean;
@@ -23,9 +29,21 @@ export default function EditarProveedorDialog({ proveedor, open, onOpenChange, o
     if (open) setForm({ ...proveedor });
   }, [open, proveedor]);
 
+  const isAgenteCarga = form.tipo === 'Agente de Carga';
+  const isMexico = form.pais === 'México';
+  const rfcLabel = isAgenteCarga && !isMexico && form.pais ? 'Tax ID' : 'RFC';
+
   const handleSave = () => {
     onSave(proveedor.id, form);
     onOpenChange(false);
+  };
+
+  const handleTipoChange = (v: string) => {
+    setForm(f => ({
+      ...f,
+      tipo: v as TipoProveedor,
+      pais: v === 'Agente de Carga' ? f.pais : '',
+    }));
   };
 
   return (
@@ -41,17 +59,37 @@ export default function EditarProveedorDialog({ proveedor, open, onOpenChange, o
           </div>
           <div className="space-y-2">
             <Label>Tipo</Label>
-            <Select value={form.tipo} onValueChange={v => setForm(f => ({ ...f, tipo: v as TipoProveedor }))}>
+            <Select value={form.tipo} onValueChange={handleTipoChange}>
               <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>
                 {TIPOS.map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}
               </SelectContent>
             </Select>
           </div>
-          <div className="space-y-2">
-            <Label>RFC</Label>
-            <Input value={form.rfc} onChange={e => setForm(f => ({ ...f, rfc: e.target.value }))} />
-          </div>
+
+          {isAgenteCarga && (
+            <div className="space-y-2">
+              <Label>País *</Label>
+              <Select value={form.pais || ''} onValueChange={v => setForm(f => ({ ...f, pais: v, rfc: '' }))}>
+                <SelectTrigger><SelectValue placeholder="Selecciona un país" /></SelectTrigger>
+                <SelectContent>
+                  {PAISES.map(p => <SelectItem key={p} value={p}>{p}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
+
+          {(!isAgenteCarga || form.pais) && (
+            <div className="space-y-2">
+              <Label>{rfcLabel}</Label>
+              <Input
+                value={form.rfc}
+                onChange={e => setForm(f => ({ ...f, rfc: e.target.value }))}
+                placeholder={isAgenteCarga && !isMexico ? 'Ingresa el Tax ID' : 'Ingresa el RFC'}
+              />
+            </div>
+          )}
+
           <div className="space-y-2">
             <Label>Contacto</Label>
             <Input value={form.contacto} onChange={e => setForm(f => ({ ...f, contacto: e.target.value }))} />
