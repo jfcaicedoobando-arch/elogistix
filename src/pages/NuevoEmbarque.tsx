@@ -36,12 +36,23 @@ export default function NuevoEmbarque() {
   const [shipperManual, setShipperManual] = useState('');
   const [consignatario, setConsignatario] = useState<string>('');
   const [consignatarioManual, setConsignatarioManual] = useState('');
+  const [incoterm, setIncoterm] = useState<string>('');
+  const [descripcionMercancia, setDescripcionMercancia] = useState('');
+  const [pesoKg, setPesoKg] = useState('');
+  const [volumenM3, setVolumenM3] = useState('');
+  const [piezas, setPiezas] = useState('');
   const [puertoOrigen, setPuertoOrigen] = useState('');
   const [puertoDestino, setPuertoDestino] = useState('');
   const [naviera, setNaviera] = useState('');
 
   const selectedCliente = clientes.find(c => c.id === clienteId);
   const contactos = selectedCliente?.contactos || [];
+
+  const isStep1Valid = () => {
+    const shipperVal = shipper === '__otro__' ? shipperManual.trim() : shipper;
+    const consigVal = consignatario === '__otro__' ? consignatarioManual.trim() : consignatario;
+    return modo && tipo && clienteId && incoterm && shipperVal && consigVal && descripcionMercancia.trim() && pesoKg && volumenM3 && piezas;
+  };
 
   const handleFinish = () => {
     toast({ title: "Embarque creado", description: "El nuevo embarque se ha registrado correctamente." });
@@ -105,14 +116,14 @@ export default function NuevoEmbarque() {
                 </Select>
               </div>
               <div className="space-y-2">
-                <Label>Incoterm</Label>
-                <Select>
+                <Label>Incoterm *</Label>
+                <Select value={incoterm} onValueChange={setIncoterm}>
                   <SelectTrigger><SelectValue placeholder="Seleccionar" /></SelectTrigger>
                   <SelectContent>{INCOTERMS.map(i => <SelectItem key={i} value={i}>{i}</SelectItem>)}</SelectContent>
                 </Select>
               </div>
               <div className="space-y-2 md:col-span-2">
-                <Label>Shipper (Exportador)</Label>
+                <Label>Shipper (Exportador) *</Label>
                 <Select value={shipper} onValueChange={(v) => { setShipper(v); if (v !== '__otro__') setShipperManual(''); }}>
                   <SelectTrigger><SelectValue placeholder="Seleccionar shipper" /></SelectTrigger>
                   <SelectContent>
@@ -123,7 +134,7 @@ export default function NuevoEmbarque() {
                 {shipper === '__otro__' && <Input placeholder="Nombre del exportador" value={shipperManual} onChange={e => setShipperManual(e.target.value)} className="mt-2" />}
               </div>
               <div className="space-y-2 md:col-span-2">
-                <Label>Consignatario</Label>
+                <Label>Consignatario *</Label>
                 <Select value={consignatario} onValueChange={(v) => { setConsignatario(v); if (v !== '__otro__') setConsignatarioManual(''); }}>
                   <SelectTrigger><SelectValue placeholder="Seleccionar consignatario" /></SelectTrigger>
                   <SelectContent>
@@ -134,20 +145,20 @@ export default function NuevoEmbarque() {
                 {consignatario === '__otro__' && <Input placeholder="Nombre del consignatario" value={consignatarioManual} onChange={e => setConsignatarioManual(e.target.value)} className="mt-2" />}
               </div>
               <div className="space-y-2 md:col-span-2">
-                <Label>Descripción de la Mercancía</Label>
-                <Input placeholder="Descripción detallada" />
+                <Label>Descripción de la Mercancía *</Label>
+                <Input placeholder="Descripción detallada" value={descripcionMercancia} onChange={e => setDescripcionMercancia(e.target.value)} />
               </div>
               <div className="space-y-2">
-                <Label>Peso (kg)</Label>
-                <Input type="number" placeholder="0" />
+                <Label>Peso (kg) *</Label>
+                <Input type="number" placeholder="0" value={pesoKg} onChange={e => setPesoKg(e.target.value)} />
               </div>
               <div className="space-y-2">
-                <Label>Volumen (m³)</Label>
-                <Input type="number" placeholder="0" />
+                <Label>Volumen (m³) *</Label>
+                <Input type="number" placeholder="0" value={volumenM3} onChange={e => setVolumenM3(e.target.value)} />
               </div>
               <div className="space-y-2">
-                <Label>Piezas</Label>
-                <Input type="number" placeholder="0" />
+                <Label>Piezas *</Label>
+                <Input type="number" placeholder="0" value={piezas} onChange={e => setPiezas(e.target.value)} />
               </div>
             </div>
           </CardContent>
@@ -288,7 +299,16 @@ export default function NuevoEmbarque() {
         <Button variant="outline" onClick={() => currentStep > 1 ? setCurrentStep(s => s - 1) : navigate("/embarques")}>
           {currentStep === 1 ? 'Cancelar' : 'Anterior'}
         </Button>
-        <Button onClick={() => currentStep < 4 ? setCurrentStep(s => s + 1) : handleFinish()}>
+        <Button 
+          disabled={currentStep === 1 && !isStep1Valid()}
+          onClick={() => {
+            if (currentStep === 1 && !isStep1Valid()) {
+              toast({ title: "Campos incompletos", description: "Completa todos los campos obligatorios (*) antes de continuar.", variant: "destructive" });
+              return;
+            }
+            currentStep < 4 ? setCurrentStep(s => s + 1) : handleFinish();
+          }}
+        >
           {currentStep === 4 ? 'Crear Embarque' : 'Siguiente'}
         </Button>
       </div>
