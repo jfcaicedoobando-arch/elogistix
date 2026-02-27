@@ -54,6 +54,16 @@ export default function EditarProveedorDialog({ proveedor, open, onOpenChange, o
         </DialogHeader>
         <div className="space-y-4">
           <div className="space-y-2">
+            <Label>Origen</Label>
+            <Select value={form.origenProveedor || ''} onValueChange={v => setForm(f => ({ ...f, origenProveedor: v as 'Nacional' | 'Extranjero' }))}>
+              <SelectTrigger><SelectValue placeholder="Selecciona origen" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="Nacional">Nacional</SelectItem>
+                <SelectItem value="Extranjero">Extranjero</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-2">
             <Label>Nombre</Label>
             <Input value={form.nombre} onChange={e => setForm(f => ({ ...f, nombre: e.target.value }))} />
           </div>
