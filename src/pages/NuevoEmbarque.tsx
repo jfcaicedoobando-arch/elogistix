@@ -12,6 +12,7 @@ import { clientes, proveedores } from "@/data/mockData";
 import type { ModoTransporte, TipoOperacion, Incoterm } from "@/data/types";
 import { toast } from "@/hooks/use-toast";
 import PortSelect from "@/components/PortSelect";
+import ShippingLineSelect from "@/components/ShippingLineSelect";
 
 const MODOS: ModoTransporte[] = ['Marítimo', 'Aéreo', 'Terrestre', 'Multimodal'];
 const TIPOS: TipoOperacion[] = ['Importación', 'Exportación', 'Nacional'];
@@ -36,6 +37,7 @@ export default function NuevoEmbarque() {
   const [consignatarioManual, setConsignatarioManual] = useState('');
   const [puertoOrigen, setPuertoOrigen] = useState('');
   const [puertoDestino, setPuertoDestino] = useState('');
+  const [naviera, setNaviera] = useState('');
 
   const selectedCliente = clientes.find(c => c.id === clienteId);
   const contactos = selectedCliente?.contactos || [];
@@ -160,7 +162,7 @@ export default function NuevoEmbarque() {
               {(modo === 'Marítimo' || !modo) && (<>
                 <div className="space-y-2"><Label>Puerto Origen</Label><PortSelect value={puertoOrigen} onValueChange={setPuertoOrigen} placeholder="Seleccionar puerto origen" /></div>
                 <div className="space-y-2"><Label>Puerto Destino</Label><PortSelect value={puertoDestino} onValueChange={setPuertoDestino} placeholder="Seleccionar puerto destino" /></div>
-                <div className="space-y-2"><Label>Naviera</Label><Input placeholder="Ej: Maersk Line" /></div>
+                <div className="space-y-2"><Label>Naviera</Label><ShippingLineSelect value={naviera} onValueChange={setNaviera} /></div>
                 <div className="space-y-2"><Label># BL Master</Label><Input placeholder="Número de BL" /></div>
                 <div className="space-y-2"><Label># BL House</Label><Input /></div>
                 <div className="space-y-2">
