@@ -40,6 +40,12 @@ export interface Cliente {
   contactos?: ContactoCliente[];
 }
 
+export interface DocumentoProveedor {
+  nombre: string;
+  archivo?: string;
+  adjuntado: boolean;
+}
+
 export interface Proveedor {
   id: string;
   nombre: string;
@@ -50,6 +56,7 @@ export interface Proveedor {
   email: string;
   telefono: string;
   monedaPreferida: Moneda;
+  origenProveedor?: 'Nacional' | 'Extranjero';
 }
 
 export interface DocumentoEmbarque {
