@@ -102,6 +102,7 @@ export default function Embarques() {
                 <TableHead>Modo</TableHead>
                 <TableHead>Origen</TableHead>
                 <TableHead>Destino</TableHead>
+                <TableHead>Contenedor</TableHead>
                 <TableHead>ETD</TableHead>
                 <TableHead>ETA</TableHead>
                 <TableHead>Estado</TableHead>
@@ -123,6 +124,7 @@ export default function Embarques() {
                     </TableCell>
                     <TableCell className="text-xs">{origen}</TableCell>
                     <TableCell className="text-xs">{destino}</TableCell>
+                    <TableCell className="text-xs">{e.tipoContenedor || '-'}</TableCell>
                     <TableCell className="text-xs">{formatDate(e.etd)}</TableCell>
                     <TableCell className="text-xs">{formatDate(e.eta)}</TableCell>
                     <TableCell>
