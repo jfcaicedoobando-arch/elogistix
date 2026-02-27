@@ -1,20 +1,18 @@
 
 
-# Agregar dropdown de navieras en el formulario de Nuevo Embarque
+# Ampliar dropdown de Tipo de Contenedor con todos los tipos existentes
 
 ## Cambios
 
-### 1. Crear catálogo de navieras — `src/data/shippingLines.ts`
-- Lista de ~40 navieras principales del mundo
-- Estructura: `{ code: string, name: string }` (ej: `{ code: "MAERSK", name: "Maersk Line" }`)
-- Incluir: Maersk, MSC, CMA CGM, COSCO, Hapag-Lloyd, Evergreen, ONE, Yang Ming, HMM, ZIM, PIL, Wan Hai, KMTC, etc.
+### 1. Crear catálogo de contenedores — `src/data/containerTypes.ts`
+- Lista completa de tipos de contenedor estándar ISO
+- Estructura: `{ code: string, name: string }`
+- Incluir: 20' Dry, 40' Dry, 40' HC, 20' Reefer, 40' Reefer, 40' HC Reefer, 20' Open Top, 40' Open Top, 20' Flat Rack, 40' Flat Rack, 20' Tank, 40' Tank, 45' HC, 20' Ventilado, 40' Ventilado, 20' Hard Top, 40' Hard Top, 53' HC (doméstico), etc.
 
-### 2. Crear componente combobox — `src/components/ShippingLineSelect.tsx`
-- Mismo patrón que `PortSelect`: combobox buscable con `Popover` + `Command`
-- Filtrar por nombre o código
-- Props: `value`, `onValueChange`, `placeholder`
+### 2. Actualizar tipo — `src/data/types.ts`
+- Ampliar `TipoContenedor` para aceptar `string` o agregar los nuevos valores al union type
 
 ### 3. Actualizar formulario — `src/pages/NuevoEmbarque.tsx`
-- Reemplazar el `<Input>` de Naviera (línea 163) por `<ShippingLineSelect>`
-- Agregar estado `naviera`
+- Reemplazar el `<Select>` hardcodeado de Tipo Contenedor (que solo tiene 20', 40', 40'HC) por un Select que itere sobre el catálogo importado
+- Mostrar nombre descriptivo en cada opción
 
