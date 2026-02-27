@@ -44,6 +44,11 @@ export default function NuevoEmbarque() {
   const [puertoOrigen, setPuertoOrigen] = useState('');
   const [puertoDestino, setPuertoDestino] = useState('');
   const [naviera, setNaviera] = useState('');
+  const [tipoServicio, setTipoServicio] = useState('');
+  const [contenedor, setContenedor] = useState('');
+  const [tipoContenedor, setTipoContenedor] = useState('');
+  const [etd, setEtd] = useState('');
+  const [eta, setEta] = useState('');
 
   const selectedCliente = clientes.find(c => c.id === clienteId);
   const contactos = selectedCliente?.contactos || [];
@@ -52,6 +57,13 @@ export default function NuevoEmbarque() {
     const shipperVal = shipper === '__otro__' ? shipperManual.trim() : shipper;
     const consigVal = consignatario === '__otro__' ? consignatarioManual.trim() : consignatario;
     return modo && tipo && clienteId && incoterm && shipperVal && consigVal && descripcionMercancia.trim() && pesoKg && volumenM3 && piezas;
+  };
+
+  const isStep2Valid = () => {
+    if (modo === 'Marítimo' || !modo) {
+      return puertoOrigen && puertoDestino && naviera && tipoServicio && contenedor && tipoContenedor && etd && eta;
+    }
+    return etd && eta;
   };
 
   const handleFinish = () => {
@@ -172,21 +184,21 @@ export default function NuevoEmbarque() {
           <CardContent className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {(modo === 'Marítimo' || !modo) && (<>
-                <div className="space-y-2"><Label>Puerto Origen</Label><PortSelect value={puertoOrigen} onValueChange={setPuertoOrigen} placeholder="Seleccionar puerto origen" /></div>
-                <div className="space-y-2"><Label>Puerto Destino</Label><PortSelect value={puertoDestino} onValueChange={setPuertoDestino} placeholder="Seleccionar puerto destino" /></div>
-                <div className="space-y-2"><Label>Naviera</Label><ShippingLineSelect value={naviera} onValueChange={setNaviera} /></div>
+                <div className="space-y-2"><Label>Puerto Origen *</Label><PortSelect value={puertoOrigen} onValueChange={setPuertoOrigen} placeholder="Seleccionar puerto origen" /></div>
+                <div className="space-y-2"><Label>Puerto Destino *</Label><PortSelect value={puertoDestino} onValueChange={setPuertoDestino} placeholder="Seleccionar puerto destino" /></div>
+                <div className="space-y-2"><Label>Naviera *</Label><ShippingLineSelect value={naviera} onValueChange={setNaviera} /></div>
                 <div className="space-y-2"><Label># BL Master</Label><Input placeholder="Número de BL" /></div>
                 <div className="space-y-2"><Label># BL House</Label><Input /></div>
                 <div className="space-y-2">
-                  <Label>Tipo de Servicio</Label>
-                  <Select><SelectTrigger><SelectValue placeholder="FCL / LCL" /></SelectTrigger>
+                  <Label>Tipo de Servicio *</Label>
+                  <Select value={tipoServicio} onValueChange={setTipoServicio}><SelectTrigger><SelectValue placeholder="FCL / LCL" /></SelectTrigger>
                     <SelectContent><SelectItem value="FCL">FCL</SelectItem><SelectItem value="LCL">LCL</SelectItem></SelectContent>
                   </Select>
                 </div>
-                <div className="space-y-2"><Label># Contenedor</Label><Input /></div>
+                <div className="space-y-2"><Label># Contenedor *</Label><Input value={contenedor} onChange={e => setContenedor(e.target.value)} /></div>
                 <div className="space-y-2">
-                  <Label>Tipo Contenedor</Label>
-                  <Select><SelectTrigger><SelectValue placeholder="Seleccionar tipo" /></SelectTrigger>
+                  <Label>Tipo Contenedor *</Label>
+                  <Select value={tipoContenedor} onValueChange={setTipoContenedor}><SelectTrigger><SelectValue placeholder="Seleccionar tipo" /></SelectTrigger>
                     <SelectContent>{containerTypes.map(ct => <SelectItem key={ct.code} value={ct.code}>{ct.name}</SelectItem>)}</SelectContent>
                   </Select>
                 </div>
@@ -204,8 +216,8 @@ export default function NuevoEmbarque() {
                 <div className="space-y-2"><Label>Transportista</Label><Input /></div>
                 <div className="space-y-2"><Label># Carta Porte</Label><Input /></div>
               </>)}
-              <div className="space-y-2"><Label>ETD (Fecha Salida)</Label><Input type="date" /></div>
-              <div className="space-y-2"><Label>ETA (Fecha Llegada Estimada)</Label><Input type="date" /></div>
+              <div className="space-y-2"><Label>ETD (Fecha Salida) *</Label><Input type="date" value={etd} onChange={e => setEtd(e.target.value)} /></div>
+              <div className="space-y-2"><Label>ETA (Fecha Llegada Estimada) *</Label><Input type="date" value={eta} onChange={e => setEta(e.target.value)} /></div>
             </div>
           </CardContent>
         </Card>
@@ -300,10 +312,14 @@ export default function NuevoEmbarque() {
           {currentStep === 1 ? 'Cancelar' : 'Anterior'}
         </Button>
         <Button 
-          disabled={currentStep === 1 && !isStep1Valid()}
+          disabled={(currentStep === 1 && !isStep1Valid()) || (currentStep === 2 && !isStep2Valid())}
           onClick={() => {
             if (currentStep === 1 && !isStep1Valid()) {
               toast({ title: "Campos incompletos", description: "Completa todos los campos obligatorios (*) antes de continuar.", variant: "destructive" });
+              return;
+            }
+            if (currentStep === 2 && !isStep2Valid()) {
+              toast({ title: "Campos incompletos", description: "Completa todos los campos obligatorios (*) de la ruta antes de continuar.", variant: "destructive" });
               return;
             }
             currentStep < 4 ? setCurrentStep(s => s + 1) : handleFinish();
