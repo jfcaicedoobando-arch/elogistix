@@ -1,29 +1,27 @@
 
 
-# Wizard de 2 pasos para Nuevo Cliente con documentos obligatorios
+# Subtotal/Total con IVA y dropdown de conceptos marítimos en Step 4
 
-## Archivo a modificar: `src/pages/Clientes.tsx`
+## Archivo: `src/pages/NuevoEmbarque.tsx`
 
-### Cambios
-- Agregar estado `step` (1 o 2) y `documentos` (array de `{ nombre: string, adjuntado: boolean }`)
-- **Paso 1:** Formulario actual (datos generales). Botón "Siguiente" en vez de "Guardar" (valida nombre, RFC, CP)
-- **Paso 2:** Lista de 10 documentos obligatorios con botón de adjuntar archivo para cada uno:
-  1. CIF
-  2. Opinión fiscal
-  3. Acta constitutiva
-  4. INE RL
-  5. Poder notarial
-  6. Comprobante de domicilio
-  7. Datos bancarios
-  8. Opinión de cumplimiento IMSS/Infonavit
-  9. Contrato de servicios con Elogistix
-  10. Estados financieros último corte
-- Cada documento muestra: nombre + botón "Adjuntar" (input file) + ícono check si adjuntado
-- Botón "Crear" deshabilitado hasta que **todos** los documentos estén adjuntados
-- Botón "Atrás" para volver al paso 1
-- Al cerrar o crear, resetear step a 1 y limpiar documentos
-- Los archivos se guardan solo como nombre de referencia en memoria (sin backend)
+### 1. Estado funcional para conceptos de venta y costo
+- Agregar estado `conceptosVenta` y `conceptosCosto` como arrays de objetos `{ concepto, cantidad, precioUnitario, moneda }`
+- Calcular `total = cantidad * precioUnitario` por fila
+- Calcular `subtotal` (suma de totales), `iva` (16%), y `totalConIva`
 
-### Referencia de patrón
-Se seguirá el mismo patrón usado en `NuevoProveedorDialog.tsx` para el wizard de 2 pasos con documentos.
+### 2. Dropdown de concepto en embarques marítimos
+- En **Conceptos de Venta**: si `modo === 'Marítimo'`, reemplazar el Input de "Concepto" por un `<Select>` con opciones: "Flete marítimo" y "Revalidación"
+- En **Conceptos de Costo**: igual, reemplazar el Input de "Concepto" por un `<Select>` con las mismas opciones cuando sea marítimo
+- Para otros modos, mantener el Input de texto libre
+
+### 3. Mostrar Subtotal y Total con IVA
+- Debajo de la tabla de Conceptos de Venta, agregar:
+  - **Subtotal (Sin IVA):** suma de totales de venta
+  - **IVA (16%):** subtotal × 0.16
+  - **Total (Con IVA):** subtotal + IVA
+- Mostrar formateados con símbolo de moneda
+
+### 4. Botones funcionales de agregar/eliminar
+- "+ Agregar concepto" y "+ Agregar costo" agregan filas al array correspondiente
+- Cada fila con botón de eliminar
 
