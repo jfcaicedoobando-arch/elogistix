@@ -1,19 +1,22 @@
 
 
-# Actualizar lista de documentos requeridos en Step 3
+# Agregar 4 nuevos tipos de proveedor
 
-## Cambio único en `src/pages/NuevoEmbarque.tsx`
+## Archivos a modificar
 
-En el Step 3 (Documentos Requeridos), modificar la lista de documentos para modo Marítimo:
+### 1. `src/data/types.ts` (línea 8)
+Agregar al union type `TipoProveedor`: `'Custodia' | 'Almacenes' | 'Acondicionamiento de Carga' | 'Materiales Peligrosos'`
 
-**Eliminar:** `'Bill of Lading (BL)'`
+### 2. `src/pages/Proveedores.tsx` (líneas 15-22)
+Agregar 4 pestañas nuevas al array `TABS`:
+- `{ label: 'Custodia', tipo: 'Custodia' }`
+- `{ label: 'Almacenes', tipo: 'Almacenes' }`
+- `{ label: 'Acondicionamiento', tipo: 'Acondicionamiento de Carga' }`
+- `{ label: 'Mat. Peligrosos', tipo: 'Materiales Peligrosos' }`
 
-**Lista final para Marítimo:**
-1. Bill of Lading (BL Master)
-2. Bill of Lading (BL House)
-3. Packing List
-4. Factura Comercial
-5. Certificado de Origen
-6. Ficha Técnica
-7. Otros
+### 3. `src/components/NuevoProveedorDialog.tsx` (línea 9)
+Agregar los 4 tipos al array `TIPOS`
+
+### 4. `src/components/EditarProveedorDialog.tsx` (línea 9)
+Agregar los 4 tipos al array `TIPOS`
 
