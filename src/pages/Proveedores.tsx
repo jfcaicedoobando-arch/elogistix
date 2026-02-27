@@ -19,6 +19,10 @@ const TABS: { label: string; tipo: TipoProveedor }[] = [
   { label: 'Agentes Aduanales', tipo: 'Agente Aduanal' },
   { label: 'Agentes de Carga', tipo: 'Agente de Carga' },
   { label: 'Aseguradoras', tipo: 'Aseguradora' },
+  { label: 'Custodia', tipo: 'Custodia' },
+  { label: 'Almacenes', tipo: 'Almacenes' },
+  { label: 'Acondicionamiento', tipo: 'Acondicionamiento de Carga' },
+  { label: 'Mat. Peligrosos', tipo: 'Materiales Peligrosos' },
 ];
 
 function ProveedorTable({ tipo, search, onSelect, proveedores }: { tipo: TipoProveedor; search: string; onSelect: (id: string) => void; proveedores: ReturnType<typeof useProveedores>['proveedores'] }) {
