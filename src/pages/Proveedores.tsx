@@ -1,13 +1,15 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Search, Truck } from "lucide-react";
+import { Search, Truck, Plus } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useProveedores } from "@/hooks/useProveedores";
+import NuevoProveedorDialog from "@/components/NuevoProveedorDialog";
 import type { TipoProveedor } from "@/data/types";
 
 const TABS: { label: string; tipo: TipoProveedor }[] = [
@@ -56,14 +58,20 @@ function ProveedorTable({ tipo, search, onSelect, proveedores }: { tipo: TipoPro
 
 export default function Proveedores() {
   const [search, setSearch] = useState("");
+  const [nuevoOpen, setNuevoOpen] = useState(false);
   const navigate = useNavigate();
-  const { proveedores } = useProveedores();
+  const { proveedores, addProveedor } = useProveedores();
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center gap-3">
-        <Truck className="h-6 w-6 text-accent" />
-        <h1 className="text-2xl font-bold">Proveedores</h1>
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <Truck className="h-6 w-6 text-accent" />
+          <h1 className="text-2xl font-bold">Proveedores</h1>
+        </div>
+        <Button onClick={() => setNuevoOpen(true)}>
+          <Plus className="mr-2 h-4 w-4" /> Nuevo Proveedor
+        </Button>
       </div>
 
       <Card>
@@ -87,6 +95,8 @@ export default function Proveedores() {
           </TabsContent>
         ))}
       </Tabs>
+
+      <NuevoProveedorDialog open={nuevoOpen} onOpenChange={setNuevoOpen} onSave={addProveedor} />
     </div>
   );
 }
