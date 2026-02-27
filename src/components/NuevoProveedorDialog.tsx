@@ -9,6 +9,12 @@ import type { Proveedor, TipoProveedor, Moneda } from "@/data/types";
 const TIPOS: TipoProveedor[] = ['Naviera', 'Aerolínea', 'Transportista', 'Agente Aduanal', 'Agente de Carga', 'Aseguradora', 'Custodia', 'Almacenes', 'Acondicionamiento de Carga', 'Materiales Peligrosos'];
 const MONEDAS: Moneda[] = ['MXN', 'USD', 'EUR'];
 
+const PAISES = [
+  'México', 'Estados Unidos', 'Canadá', 'China', 'Alemania', 'España',
+  'Francia', 'Italia', 'Japón', 'Corea del Sur', 'Brasil', 'Colombia',
+  'Chile', 'Argentina', 'Perú', 'Reino Unido', 'India', 'Otro',
+];
+
 interface Props {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -18,6 +24,7 @@ interface Props {
 const emptyForm: Omit<Proveedor, 'id'> = {
   nombre: '',
   tipo: 'Naviera',
+  pais: '',
   rfc: '',
   contacto: '',
   email: '',
@@ -28,11 +35,34 @@ const emptyForm: Omit<Proveedor, 'id'> = {
 export default function NuevoProveedorDialog({ open, onOpenChange, onSave }: Props) {
   const [form, setForm] = useState({ ...emptyForm });
 
+  const isAgenteCarga = form.tipo === 'Agente de Carga';
+  const isMexico = form.pais === 'México';
+  const rfcLabel = isAgenteCarga && !isMexico && form.pais ? 'Tax ID' : 'RFC';
+
+  const isValid = () => {
+    if (!form.nombre.trim()) return false;
+    if (isAgenteCarga) {
+      if (!form.pais) return false;
+      if (!form.rfc.trim()) return false;
+    } else {
+      if (!form.rfc.trim()) return false;
+    }
+    return true;
+  };
+
   const handleSave = () => {
-    if (!form.nombre.trim() || !form.rfc.trim()) return;
+    if (!isValid()) return;
     onSave(form);
     setForm({ ...emptyForm });
     onOpenChange(false);
+  };
+
+  const handleTipoChange = (v: string) => {
+    setForm(f => ({
+      ...f,
+      tipo: v as TipoProveedor,
+      pais: v === 'Agente de Carga' ? f.pais : '',
+    }));
   };
 
   return (
@@ -48,17 +78,37 @@ export default function NuevoProveedorDialog({ open, onOpenChange, onSave }: Pro
           </div>
           <div className="space-y-2">
             <Label>Tipo</Label>
-            <Select value={form.tipo} onValueChange={v => setForm(f => ({ ...f, tipo: v as TipoProveedor }))}>
+            <Select value={form.tipo} onValueChange={handleTipoChange}>
               <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>
                 {TIPOS.map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}
               </SelectContent>
             </Select>
           </div>
-          <div className="space-y-2">
-            <Label>RFC *</Label>
-            <Input value={form.rfc} onChange={e => setForm(f => ({ ...f, rfc: e.target.value }))} />
-          </div>
+
+          {isAgenteCarga && (
+            <div className="space-y-2">
+              <Label>País *</Label>
+              <Select value={form.pais || ''} onValueChange={v => setForm(f => ({ ...f, pais: v, rfc: '' }))}>
+                <SelectTrigger><SelectValue placeholder="Selecciona un país" /></SelectTrigger>
+                <SelectContent>
+                  {PAISES.map(p => <SelectItem key={p} value={p}>{p}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
+
+          {(!isAgenteCarga || form.pais) && (
+            <div className="space-y-2">
+              <Label>{rfcLabel} *</Label>
+              <Input
+                value={form.rfc}
+                onChange={e => setForm(f => ({ ...f, rfc: e.target.value }))}
+                placeholder={isAgenteCarga && !isMexico ? 'Ingresa el Tax ID' : 'Ingresa el RFC'}
+              />
+            </div>
+          )}
+
           <div className="space-y-2">
             <Label>Contacto</Label>
             <Input value={form.contacto} onChange={e => setForm(f => ({ ...f, contacto: e.target.value }))} />
@@ -83,7 +133,7 @@ export default function NuevoProveedorDialog({ open, onOpenChange, onSave }: Pro
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>
-          <Button onClick={handleSave} disabled={!form.nombre.trim() || !form.rfc.trim()}>Crear</Button>
+          <Button onClick={handleSave} disabled={!isValid()}>Crear</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
