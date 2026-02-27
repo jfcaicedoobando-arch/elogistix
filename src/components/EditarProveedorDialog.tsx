@@ -31,7 +31,7 @@ export default function EditarProveedorDialog({ proveedor, open, onOpenChange, o
 
   const isAgenteCarga = form.tipo === 'Agente de Carga';
   const isMexico = form.pais === 'México';
-  const rfcLabel = isAgenteCarga && !isMexico && form.pais ? 'Tax ID' : 'RFC';
+  const rfcLabel = form.origenProveedor === 'Extranjero' ? 'Tax ID' : 'RFC';
 
   const handleSave = () => {
     onSave(proveedor.id, form);
@@ -95,7 +95,7 @@ export default function EditarProveedorDialog({ proveedor, open, onOpenChange, o
               <Input
                 value={form.rfc}
                 onChange={e => setForm(f => ({ ...f, rfc: e.target.value }))}
-                placeholder={isAgenteCarga && !isMexico ? 'Ingresa el Tax ID' : 'Ingresa el RFC'}
+                placeholder={form.origenProveedor === 'Extranjero' ? 'Ingresa el Tax ID' : 'Ingresa el RFC'}
               />
             </div>
           )}

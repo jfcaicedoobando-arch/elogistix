@@ -53,7 +53,7 @@ export default function NuevoProveedorDialog({ open, onOpenChange, onSave }: Pro
 
   const isAgenteCarga = form.tipo === 'Agente de Carga';
   const isMexico = form.pais === 'México';
-  const rfcLabel = isAgenteCarga && !isMexico && form.pais ? 'Tax ID' : 'RFC';
+  const rfcLabel = form.origenProveedor === 'Extranjero' ? 'Tax ID' : 'RFC';
 
   const isStep1Valid = () => {
     if (!form.nombre.trim()) return false;
@@ -157,7 +157,7 @@ export default function NuevoProveedorDialog({ open, onOpenChange, onSave }: Pro
                 <Input
                   value={form.rfc}
                   onChange={e => setForm(f => ({ ...f, rfc: e.target.value }))}
-                  placeholder={isAgenteCarga && !isMexico ? 'Ingresa el Tax ID' : 'Ingresa el RFC'}
+                  placeholder={form.origenProveedor === 'Extranjero' ? 'Ingresa el Tax ID' : 'Ingresa el RFC'}
                 />
               </div>
             )}
