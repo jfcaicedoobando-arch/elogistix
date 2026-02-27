@@ -206,7 +206,7 @@ export default function NuevoEmbarque() {
           <CardHeader><CardTitle>Documentos Requeridos</CardTitle></CardHeader>
           <CardContent>
             <div className="space-y-3">
-              {(modo === 'Marítimo' || !modo ? ['Bill of Lading (BL)', 'Packing List', 'Factura Comercial', 'Certificado de Origen'] :
+              {(modo === 'Marítimo' || !modo ? ['Bill of Lading (BL Master)', 'Bill of Lading (BL House)', 'Packing List', 'Factura Comercial', 'Certificado de Origen', 'Ficha Técnica', 'Otros'] :
                 modo === 'Aéreo' ? ['Air Waybill (AWB)', 'Packing List', 'Factura Comercial'] :
                 ['Carta Porte', 'Factura', 'Lista de Empaque']
               ).map((doc) => (
