@@ -13,6 +13,14 @@ interface ChangelogEntry {
 
 const changelog: ChangelogEntry[] = [
   {
+    version: "1.5.1",
+    date: "2026-02-28",
+    type: "patch",
+    title: "Módulo de Clientes conectado a base de datos",
+    description:
+      "El listado de clientes, creación de nuevos clientes y gestión de contactos (CRUD) ahora persisten en la base de datos real. Se eliminó la dependencia de datos mock para este módulo.",
+  },
+  {
     version: "1.5.0",
     date: "2026-02-28",
     type: "minor",
