@@ -13,6 +13,14 @@ interface ChangelogEntry {
 
 const changelog: ChangelogEntry[] = [
   {
+    version: "1.4.1",
+    date: "2026-02-28",
+    type: "patch",
+    title: "Alta de usuarios desde el panel de administración",
+    description:
+      "Los administradores ahora pueden registrar nuevos usuarios directamente desde el módulo de Gestión de Usuarios, asignando email, contraseña y rol.",
+  },
+  {
     version: "1.4.0",
     date: "2026-02-28",
     type: "minor",
