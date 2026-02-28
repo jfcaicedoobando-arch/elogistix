@@ -8,9 +8,11 @@ import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Skeleton } from "@/components/ui/skeleton";
 import { useProveedores } from "@/hooks/useProveedores";
 import NuevoProveedorDialog from "@/components/NuevoProveedorDialog";
-import type { TipoProveedor } from "@/data/types";
+import { toast } from "sonner";
+import type { TipoProveedor, Proveedor } from "@/data/types";
 
 const TABS: { label: string; tipo: TipoProveedor }[] = [
   { label: 'Navieras', tipo: 'Naviera' },
@@ -25,8 +27,12 @@ const TABS: { label: string; tipo: TipoProveedor }[] = [
   { label: 'Mat. Peligrosos', tipo: 'Materiales Peligrosos' },
 ];
 
-function ProveedorTable({ tipo, search, onSelect, proveedores }: { tipo: TipoProveedor; search: string; onSelect: (id: string) => void; proveedores: ReturnType<typeof useProveedores>['proveedores'] }) {
+function ProveedorTable({ tipo, search, onSelect, proveedores, isLoading }: { tipo: TipoProveedor; search: string; onSelect: (id: string) => void; proveedores: Proveedor[]; isLoading: boolean }) {
   const filtered = proveedores.filter(p => p.tipo === tipo && (!search || p.nombre.toLowerCase().includes(search.toLowerCase())));
+
+  if (isLoading) {
+    return <Card><CardContent className="p-6 space-y-3">{[1,2,3].map(i => <Skeleton key={i} className="h-10 w-full" />)}</CardContent></Card>;
+  }
 
   return (
     <Card>
@@ -64,7 +70,16 @@ export default function Proveedores() {
   const [search, setSearch] = useState("");
   const [nuevoOpen, setNuevoOpen] = useState(false);
   const navigate = useNavigate();
-  const { proveedores, addProveedor } = useProveedores();
+  const { proveedores, addProveedor, isLoading } = useProveedores();
+
+  const handleAdd = async (data: Omit<Proveedor, 'id'>) => {
+    try {
+      await addProveedor(data);
+      toast.success("Proveedor creado correctamente");
+    } catch {
+      toast.error("Error al crear proveedor");
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -95,12 +110,12 @@ export default function Proveedores() {
         </TabsList>
         {TABS.map(t => (
           <TabsContent key={t.tipo} value={t.tipo}>
-            <ProveedorTable tipo={t.tipo} search={search} onSelect={(id) => navigate(`/proveedores/${id}`)} proveedores={proveedores} />
+            <ProveedorTable tipo={t.tipo} search={search} onSelect={(id) => navigate(`/proveedores/${id}`)} proveedores={proveedores} isLoading={isLoading} />
           </TabsContent>
         ))}
       </Tabs>
 
-      <NuevoProveedorDialog open={nuevoOpen} onOpenChange={setNuevoOpen} onSave={addProveedor} />
+      <NuevoProveedorDialog open={nuevoOpen} onOpenChange={setNuevoOpen} onSave={handleAdd} />
     </div>
   );
 }

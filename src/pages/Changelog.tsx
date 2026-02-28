@@ -13,6 +13,14 @@ interface ChangelogEntry {
 
 const changelog: ChangelogEntry[] = [
   {
+    version: "1.6.0",
+    date: "2026-02-28",
+    type: "minor",
+    title: "Módulo de Proveedores conectado a base de datos",
+    description:
+      "El listado, detalle, creación y edición de proveedores ahora persisten en la base de datos real con react-query. Se eliminó el store en memoria y se agregaron estados de carga.",
+  },
+  {
     version: "1.5.1",
     date: "2026-02-28",
     type: "patch",
