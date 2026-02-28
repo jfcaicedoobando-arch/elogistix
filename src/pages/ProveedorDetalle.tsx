@@ -4,20 +4,51 @@ import { ArrowLeft, Truck, Pencil } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
-import { embarques, formatCurrency, getEstadoColor } from "@/data/mockData";
-import { useProveedores } from "@/hooks/useProveedores";
+import { useProveedor, useProveedores } from "@/hooks/useProveedores";
+import { formatCurrency } from "@/lib/formatters";
+import { getEstadoColor } from "@/data/mockData";
 import EditarProveedorDialog from "@/components/EditarProveedorDialog";
+import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
+import { useQuery } from "@tanstack/react-query";
 
 export default function ProveedorDetalle() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { proveedores, updateProveedor } = useProveedores();
+  const { data: prov, isLoading } = useProveedor(id);
+  const { updateProveedor } = useProveedores();
   const [editOpen, setEditOpen] = useState(false);
 
-  const prov = proveedores.find(p => p.id === id);
+  // Fetch operaciones (conceptos_costo) for this provider with embarque info
+  const { data: operaciones = [] } = useQuery({
+    queryKey: ["proveedor-operaciones", id],
+    enabled: !!id,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("conceptos_costo")
+        .select("*, embarques!conceptos_costo_embarque_id_fkey(expediente, id, cliente_nombre)")
+        .eq("proveedor_id", id!);
+      if (error) throw error;
+      return (data ?? []).map((row: any) => ({
+        concepto: row.concepto,
+        monto: Number(row.monto),
+        moneda: row.moneda,
+        estadoLiquidacion: row.estado_liquidacion,
+        fechaVencimiento: row.fecha_vencimiento,
+        expediente: row.embarques?.expediente ?? '',
+        embarqueId: row.embarques?.id ?? '',
+        clienteNombre: row.embarques?.cliente_nombre ?? '',
+      }));
+    },
+  });
+
+  if (isLoading) {
+    return <div className="space-y-4 p-8">{[1,2,3].map(i => <Skeleton key={i} className="h-24 w-full" />)}</div>;
+  }
 
   if (!prov) {
     return (
@@ -30,15 +61,18 @@ export default function ProveedorDetalle() {
     );
   }
 
-  const operaciones = embarques.flatMap(e =>
-    e.conceptosCosto
-      .filter(c => c.proveedorId === id)
-      .map(c => ({ ...c, expediente: e.expediente, embarqueId: e.id, clienteNombre: e.clienteNombre }))
-  );
-
   const totalFacturado = operaciones.reduce((sum, o) => sum + o.monto, 0);
   const totalPagado = operaciones.filter(o => o.estadoLiquidacion === 'Pagado').reduce((sum, o) => sum + o.monto, 0);
   const totalPendiente = totalFacturado - totalPagado;
+
+  const handleUpdate = async (id: string, data: any) => {
+    try {
+      await updateProveedor(id, data);
+      toast.success("Proveedor actualizado");
+    } catch {
+      toast.error("Error al actualizar");
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -136,7 +170,7 @@ export default function ProveedorDetalle() {
         proveedor={prov}
         open={editOpen}
         onOpenChange={setEditOpen}
-        onSave={updateProveedor}
+        onSave={handleUpdate}
       />
     </div>
   );
