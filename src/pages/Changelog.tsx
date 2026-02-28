@@ -13,6 +13,14 @@ interface ChangelogEntry {
 
 const changelog: ChangelogEntry[] = [
   {
+    version: "1.5.0",
+    date: "2026-02-28",
+    type: "minor",
+    title: "Esquema de base de datos para entidades core",
+    description:
+      "Se crearon las tablas clientes, proveedores, embarques, facturas y sus subtablas relacionales (contactos, conceptos de venta/costo, documentos, notas) con políticas RLS por rol, triggers de updated_at e índices de rendimiento.",
+  },
+  {
     version: "1.4.1",
     date: "2026-02-28",
     type: "patch",

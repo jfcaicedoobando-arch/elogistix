@@ -14,6 +14,594 @@ export type Database = {
   }
   public: {
     Tables: {
+      clientes: {
+        Row: {
+          ciudad: string
+          contacto: string
+          cp: string
+          created_at: string
+          direccion: string
+          email: string
+          estado: string
+          id: string
+          nombre: string
+          rfc: string
+          telefono: string
+          updated_at: string
+        }
+        Insert: {
+          ciudad?: string
+          contacto?: string
+          cp?: string
+          created_at?: string
+          direccion?: string
+          email?: string
+          estado?: string
+          id?: string
+          nombre: string
+          rfc?: string
+          telefono?: string
+          updated_at?: string
+        }
+        Update: {
+          ciudad?: string
+          contacto?: string
+          cp?: string
+          created_at?: string
+          direccion?: string
+          email?: string
+          estado?: string
+          id?: string
+          nombre?: string
+          rfc?: string
+          telefono?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      conceptos_costo: {
+        Row: {
+          concepto: string
+          created_at: string
+          embarque_id: string
+          estado_liquidacion: Database["public"]["Enums"]["estado_liquidacion"]
+          fecha_pago: string | null
+          fecha_vencimiento: string | null
+          id: string
+          moneda: Database["public"]["Enums"]["moneda"]
+          monto: number
+          proveedor_id: string | null
+          proveedor_nombre: string
+          referencia_pago: string | null
+        }
+        Insert: {
+          concepto: string
+          created_at?: string
+          embarque_id: string
+          estado_liquidacion?: Database["public"]["Enums"]["estado_liquidacion"]
+          fecha_pago?: string | null
+          fecha_vencimiento?: string | null
+          id?: string
+          moneda?: Database["public"]["Enums"]["moneda"]
+          monto?: number
+          proveedor_id?: string | null
+          proveedor_nombre?: string
+          referencia_pago?: string | null
+        }
+        Update: {
+          concepto?: string
+          created_at?: string
+          embarque_id?: string
+          estado_liquidacion?: Database["public"]["Enums"]["estado_liquidacion"]
+          fecha_pago?: string | null
+          fecha_vencimiento?: string | null
+          id?: string
+          moneda?: Database["public"]["Enums"]["moneda"]
+          monto?: number
+          proveedor_id?: string | null
+          proveedor_nombre?: string
+          referencia_pago?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "conceptos_costo_embarque_id_fkey"
+            columns: ["embarque_id"]
+            isOneToOne: false
+            referencedRelation: "embarques"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "conceptos_costo_proveedor_id_fkey"
+            columns: ["proveedor_id"]
+            isOneToOne: false
+            referencedRelation: "proveedores"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      conceptos_factura: {
+        Row: {
+          cantidad: number
+          created_at: string
+          descripcion: string
+          factura_id: string
+          id: string
+          moneda: Database["public"]["Enums"]["moneda"]
+          precio_unitario: number
+          total: number
+        }
+        Insert: {
+          cantidad?: number
+          created_at?: string
+          descripcion: string
+          factura_id: string
+          id?: string
+          moneda?: Database["public"]["Enums"]["moneda"]
+          precio_unitario?: number
+          total?: number
+        }
+        Update: {
+          cantidad?: number
+          created_at?: string
+          descripcion?: string
+          factura_id?: string
+          id?: string
+          moneda?: Database["public"]["Enums"]["moneda"]
+          precio_unitario?: number
+          total?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "conceptos_factura_factura_id_fkey"
+            columns: ["factura_id"]
+            isOneToOne: false
+            referencedRelation: "facturas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      conceptos_venta: {
+        Row: {
+          cantidad: number
+          created_at: string
+          descripcion: string
+          embarque_id: string
+          id: string
+          moneda: Database["public"]["Enums"]["moneda"]
+          precio_unitario: number
+          total: number
+        }
+        Insert: {
+          cantidad?: number
+          created_at?: string
+          descripcion: string
+          embarque_id: string
+          id?: string
+          moneda?: Database["public"]["Enums"]["moneda"]
+          precio_unitario?: number
+          total?: number
+        }
+        Update: {
+          cantidad?: number
+          created_at?: string
+          descripcion?: string
+          embarque_id?: string
+          id?: string
+          moneda?: Database["public"]["Enums"]["moneda"]
+          precio_unitario?: number
+          total?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "conceptos_venta_embarque_id_fkey"
+            columns: ["embarque_id"]
+            isOneToOne: false
+            referencedRelation: "embarques"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      contactos_cliente: {
+        Row: {
+          ciudad: string
+          cliente_id: string
+          contacto: string
+          created_at: string
+          direccion: string
+          email: string
+          id: string
+          nombre: string
+          pais: string
+          rfc: string
+          telefono: string
+          tipo: Database["public"]["Enums"]["tipo_contacto"]
+        }
+        Insert: {
+          ciudad?: string
+          cliente_id: string
+          contacto?: string
+          created_at?: string
+          direccion?: string
+          email?: string
+          id?: string
+          nombre: string
+          pais?: string
+          rfc?: string
+          telefono?: string
+          tipo?: Database["public"]["Enums"]["tipo_contacto"]
+        }
+        Update: {
+          ciudad?: string
+          cliente_id?: string
+          contacto?: string
+          created_at?: string
+          direccion?: string
+          email?: string
+          id?: string
+          nombre?: string
+          pais?: string
+          rfc?: string
+          telefono?: string
+          tipo?: Database["public"]["Enums"]["tipo_contacto"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "contactos_cliente_cliente_id_fkey"
+            columns: ["cliente_id"]
+            isOneToOne: false
+            referencedRelation: "clientes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      documentos_embarque: {
+        Row: {
+          archivo: string | null
+          created_at: string
+          embarque_id: string
+          estado: Database["public"]["Enums"]["estado_documento"]
+          id: string
+          nombre: string
+          notas: string | null
+        }
+        Insert: {
+          archivo?: string | null
+          created_at?: string
+          embarque_id: string
+          estado?: Database["public"]["Enums"]["estado_documento"]
+          id?: string
+          nombre: string
+          notas?: string | null
+        }
+        Update: {
+          archivo?: string | null
+          created_at?: string
+          embarque_id?: string
+          estado?: Database["public"]["Enums"]["estado_documento"]
+          id?: string
+          nombre?: string
+          notas?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "documentos_embarque_embarque_id_fkey"
+            columns: ["embarque_id"]
+            isOneToOne: false
+            referencedRelation: "embarques"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      embarques: {
+        Row: {
+          aerolinea: string | null
+          aeropuerto_destino: string | null
+          aeropuerto_origen: string | null
+          bl_house: string | null
+          bl_master: string | null
+          carta_porte: string | null
+          ciudad_destino: string | null
+          ciudad_origen: string | null
+          cliente_id: string
+          cliente_nombre: string
+          consignatario: string
+          contenedor: string | null
+          created_at: string
+          descripcion_mercancia: string
+          estado: Database["public"]["Enums"]["estado_embarque"]
+          eta: string | null
+          etd: string | null
+          expediente: string
+          fecha_creacion: string
+          fecha_llegada_real: string | null
+          hawb: string | null
+          id: string
+          incoterm: Database["public"]["Enums"]["incoterm"]
+          mawb: string | null
+          modo: Database["public"]["Enums"]["modo_transporte"]
+          naviera: string | null
+          operador: string
+          peso_kg: number
+          piezas: number
+          puerto_destino: string | null
+          puerto_origen: string | null
+          shipper: string
+          tipo: Database["public"]["Enums"]["tipo_operacion"]
+          tipo_cambio_eur: number
+          tipo_cambio_usd: number
+          tipo_contenedor: string | null
+          tipo_servicio:
+            | Database["public"]["Enums"]["tipo_servicio_maritimo"]
+            | null
+          transportista: string | null
+          updated_at: string
+          volumen_m3: number
+        }
+        Insert: {
+          aerolinea?: string | null
+          aeropuerto_destino?: string | null
+          aeropuerto_origen?: string | null
+          bl_house?: string | null
+          bl_master?: string | null
+          carta_porte?: string | null
+          ciudad_destino?: string | null
+          ciudad_origen?: string | null
+          cliente_id: string
+          cliente_nombre?: string
+          consignatario?: string
+          contenedor?: string | null
+          created_at?: string
+          descripcion_mercancia?: string
+          estado?: Database["public"]["Enums"]["estado_embarque"]
+          eta?: string | null
+          etd?: string | null
+          expediente: string
+          fecha_creacion?: string
+          fecha_llegada_real?: string | null
+          hawb?: string | null
+          id?: string
+          incoterm?: Database["public"]["Enums"]["incoterm"]
+          mawb?: string | null
+          modo: Database["public"]["Enums"]["modo_transporte"]
+          naviera?: string | null
+          operador?: string
+          peso_kg?: number
+          piezas?: number
+          puerto_destino?: string | null
+          puerto_origen?: string | null
+          shipper?: string
+          tipo: Database["public"]["Enums"]["tipo_operacion"]
+          tipo_cambio_eur?: number
+          tipo_cambio_usd?: number
+          tipo_contenedor?: string | null
+          tipo_servicio?:
+            | Database["public"]["Enums"]["tipo_servicio_maritimo"]
+            | null
+          transportista?: string | null
+          updated_at?: string
+          volumen_m3?: number
+        }
+        Update: {
+          aerolinea?: string | null
+          aeropuerto_destino?: string | null
+          aeropuerto_origen?: string | null
+          bl_house?: string | null
+          bl_master?: string | null
+          carta_porte?: string | null
+          ciudad_destino?: string | null
+          ciudad_origen?: string | null
+          cliente_id?: string
+          cliente_nombre?: string
+          consignatario?: string
+          contenedor?: string | null
+          created_at?: string
+          descripcion_mercancia?: string
+          estado?: Database["public"]["Enums"]["estado_embarque"]
+          eta?: string | null
+          etd?: string | null
+          expediente?: string
+          fecha_creacion?: string
+          fecha_llegada_real?: string | null
+          hawb?: string | null
+          id?: string
+          incoterm?: Database["public"]["Enums"]["incoterm"]
+          mawb?: string | null
+          modo?: Database["public"]["Enums"]["modo_transporte"]
+          naviera?: string | null
+          operador?: string
+          peso_kg?: number
+          piezas?: number
+          puerto_destino?: string | null
+          puerto_origen?: string | null
+          shipper?: string
+          tipo?: Database["public"]["Enums"]["tipo_operacion"]
+          tipo_cambio_eur?: number
+          tipo_cambio_usd?: number
+          tipo_contenedor?: string | null
+          tipo_servicio?:
+            | Database["public"]["Enums"]["tipo_servicio_maritimo"]
+            | null
+          transportista?: string | null
+          updated_at?: string
+          volumen_m3?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "embarques_cliente_id_fkey"
+            columns: ["cliente_id"]
+            isOneToOne: false
+            referencedRelation: "clientes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      facturas: {
+        Row: {
+          cliente_id: string
+          cliente_nombre: string
+          created_at: string
+          embarque_id: string
+          estado: Database["public"]["Enums"]["estado_factura"]
+          expediente: string
+          fecha_emision: string
+          fecha_vencimiento: string
+          id: string
+          iva: number
+          moneda: Database["public"]["Enums"]["moneda"]
+          notas: string | null
+          numero: string
+          referencia_bl: string | null
+          subtotal: number
+          tipo_cambio: number
+          total: number
+          updated_at: string
+        }
+        Insert: {
+          cliente_id: string
+          cliente_nombre?: string
+          created_at?: string
+          embarque_id: string
+          estado?: Database["public"]["Enums"]["estado_factura"]
+          expediente?: string
+          fecha_emision?: string
+          fecha_vencimiento?: string
+          id?: string
+          iva?: number
+          moneda?: Database["public"]["Enums"]["moneda"]
+          notas?: string | null
+          numero: string
+          referencia_bl?: string | null
+          subtotal?: number
+          tipo_cambio?: number
+          total?: number
+          updated_at?: string
+        }
+        Update: {
+          cliente_id?: string
+          cliente_nombre?: string
+          created_at?: string
+          embarque_id?: string
+          estado?: Database["public"]["Enums"]["estado_factura"]
+          expediente?: string
+          fecha_emision?: string
+          fecha_vencimiento?: string
+          id?: string
+          iva?: number
+          moneda?: Database["public"]["Enums"]["moneda"]
+          notas?: string | null
+          numero?: string
+          referencia_bl?: string | null
+          subtotal?: number
+          tipo_cambio?: number
+          total?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "facturas_cliente_id_fkey"
+            columns: ["cliente_id"]
+            isOneToOne: false
+            referencedRelation: "clientes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "facturas_embarque_id_fkey"
+            columns: ["embarque_id"]
+            isOneToOne: false
+            referencedRelation: "embarques"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      notas_embarque: {
+        Row: {
+          contenido: string
+          created_at: string
+          embarque_id: string
+          fecha: string
+          id: string
+          tipo: Database["public"]["Enums"]["tipo_nota"]
+          usuario: string
+        }
+        Insert: {
+          contenido: string
+          created_at?: string
+          embarque_id: string
+          fecha?: string
+          id?: string
+          tipo?: Database["public"]["Enums"]["tipo_nota"]
+          usuario?: string
+        }
+        Update: {
+          contenido?: string
+          created_at?: string
+          embarque_id?: string
+          fecha?: string
+          id?: string
+          tipo?: Database["public"]["Enums"]["tipo_nota"]
+          usuario?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notas_embarque_embarque_id_fkey"
+            columns: ["embarque_id"]
+            isOneToOne: false
+            referencedRelation: "embarques"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      proveedores: {
+        Row: {
+          contacto: string
+          created_at: string
+          email: string
+          id: string
+          moneda_preferida: Database["public"]["Enums"]["moneda"]
+          nombre: string
+          origen_proveedor:
+            | Database["public"]["Enums"]["origen_proveedor"]
+            | null
+          pais: string | null
+          rfc: string
+          telefono: string
+          tipo: Database["public"]["Enums"]["tipo_proveedor"]
+          updated_at: string
+        }
+        Insert: {
+          contacto?: string
+          created_at?: string
+          email?: string
+          id?: string
+          moneda_preferida?: Database["public"]["Enums"]["moneda"]
+          nombre: string
+          origen_proveedor?:
+            | Database["public"]["Enums"]["origen_proveedor"]
+            | null
+          pais?: string | null
+          rfc?: string
+          telefono?: string
+          tipo: Database["public"]["Enums"]["tipo_proveedor"]
+          updated_at?: string
+        }
+        Update: {
+          contacto?: string
+          created_at?: string
+          email?: string
+          id?: string
+          moneda_preferida?: Database["public"]["Enums"]["moneda"]
+          nombre?: string
+          origen_proveedor?:
+            | Database["public"]["Enums"]["origen_proveedor"]
+            | null
+          pais?: string | null
+          rfc?: string
+          telefono?: string
+          tipo?: Database["public"]["Enums"]["tipo_proveedor"]
+          updated_at?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           id: string
@@ -47,6 +635,50 @@ export type Database = {
     }
     Enums: {
       app_role: "admin" | "operador" | "viewer"
+      estado_documento: "Pendiente" | "Recibido" | "Validado"
+      estado_embarque:
+        | "Cotización"
+        | "Confirmado"
+        | "En Tránsito"
+        | "Llegada"
+        | "En Proceso"
+        | "Cerrado"
+      estado_factura:
+        | "Borrador"
+        | "Emitida"
+        | "Pagada"
+        | "Vencida"
+        | "Cancelada"
+      estado_liquidacion: "Pendiente" | "Pagado"
+      incoterm:
+        | "EXW"
+        | "FOB"
+        | "CIF"
+        | "DAP"
+        | "DDP"
+        | "FCA"
+        | "CFR"
+        | "CPT"
+        | "CIP"
+        | "DAT"
+      modo_transporte: "Marítimo" | "Aéreo" | "Terrestre" | "Multimodal"
+      moneda: "MXN" | "USD" | "EUR"
+      origen_proveedor: "Nacional" | "Extranjero"
+      tipo_contacto: "Proveedor" | "Exportador" | "Importador"
+      tipo_nota: "nota" | "cambio_estado" | "documento" | "factura" | "sistema"
+      tipo_operacion: "Importación" | "Exportación" | "Nacional"
+      tipo_proveedor:
+        | "Naviera"
+        | "Aerolínea"
+        | "Transportista"
+        | "Agente Aduanal"
+        | "Agente de Carga"
+        | "Aseguradora"
+        | "Custodia"
+        | "Almacenes"
+        | "Acondicionamiento de Carga"
+        | "Materiales Peligrosos"
+      tipo_servicio_maritimo: "FCL" | "LCL"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -175,6 +807,48 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["admin", "operador", "viewer"],
+      estado_documento: ["Pendiente", "Recibido", "Validado"],
+      estado_embarque: [
+        "Cotización",
+        "Confirmado",
+        "En Tránsito",
+        "Llegada",
+        "En Proceso",
+        "Cerrado",
+      ],
+      estado_factura: ["Borrador", "Emitida", "Pagada", "Vencida", "Cancelada"],
+      estado_liquidacion: ["Pendiente", "Pagado"],
+      incoterm: [
+        "EXW",
+        "FOB",
+        "CIF",
+        "DAP",
+        "DDP",
+        "FCA",
+        "CFR",
+        "CPT",
+        "CIP",
+        "DAT",
+      ],
+      modo_transporte: ["Marítimo", "Aéreo", "Terrestre", "Multimodal"],
+      moneda: ["MXN", "USD", "EUR"],
+      origen_proveedor: ["Nacional", "Extranjero"],
+      tipo_contacto: ["Proveedor", "Exportador", "Importador"],
+      tipo_nota: ["nota", "cambio_estado", "documento", "factura", "sistema"],
+      tipo_operacion: ["Importación", "Exportación", "Nacional"],
+      tipo_proveedor: [
+        "Naviera",
+        "Aerolínea",
+        "Transportista",
+        "Agente Aduanal",
+        "Agente de Carga",
+        "Aseguradora",
+        "Custodia",
+        "Almacenes",
+        "Acondicionamiento de Carga",
+        "Materiales Peligrosos",
+      ],
+      tipo_servicio_maritimo: ["FCL", "LCL"],
     },
   },
 } as const
