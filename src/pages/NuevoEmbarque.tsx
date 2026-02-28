@@ -86,8 +86,6 @@ export default function NuevoEmbarque() {
   };
 
   const subtotalVenta = conceptosVenta.reduce((acc, c) => acc + (c.cantidad * c.precioUnitario), 0);
-  const ivaVenta = subtotalVenta * 0.16;
-  const totalConIva = subtotalVenta + ivaVenta;
 
   const totalCosto = conceptosCosto.reduce((acc, c) => acc + c.monto, 0);
   const utilidadEstimada = subtotalVenta - totalCosto;
@@ -324,11 +322,9 @@ export default function NuevoEmbarque() {
                   </div>
                 ))}
                 <Button variant="outline" size="sm" onClick={addConceptoVenta}>+ Agregar concepto</Button>
-                {/* Subtotal / IVA / Total */}
-                <div className="border-t pt-3 mt-3 space-y-1 text-sm text-right">
-                  <div className="flex justify-end gap-4"><span className="text-muted-foreground">Subtotal (Sin IVA):</span><span className="font-medium w-28 text-right">${subtotalVenta.toFixed(2)}</span></div>
-                  <div className="flex justify-end gap-4"><span className="text-muted-foreground">IVA (16%):</span><span className="font-medium w-28 text-right">${ivaVenta.toFixed(2)}</span></div>
-                  <div className="flex justify-end gap-4"><span className="font-semibold">Total (Con IVA):</span><span className="font-bold w-28 text-right">${totalConIva.toFixed(2)}</span></div>
+                {/* Subtotal */}
+                <div className="border-t pt-3 mt-3 text-sm text-right">
+                  <div className="flex justify-end gap-4"><span className="font-semibold">Subtotal (Sin IVA):</span><span className="font-bold w-28 text-right">${subtotalVenta.toFixed(2)}</span></div>
                 </div>
               </div>
             </CardContent>
