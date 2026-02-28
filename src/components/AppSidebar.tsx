@@ -6,6 +6,7 @@ import {
   Truck,
   BarChart3,
   Anchor,
+  ScrollText,
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
@@ -29,6 +30,7 @@ const menuItems = [
   { title: "Clientes", url: "/clientes", icon: Users },
   { title: "Proveedores", url: "/proveedores", icon: Truck },
   { title: "Reportes", url: "/reportes", icon: BarChart3 },
+  { title: "Changelog", url: "/changelog", icon: ScrollText },
 ];
 
 export function AppSidebar() {
