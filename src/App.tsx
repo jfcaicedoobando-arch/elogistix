@@ -4,6 +4,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { Layout } from "./components/Layout";
+import { ProtectedRoute } from "./components/ProtectedRoute";
 import Dashboard from "./pages/Dashboard";
 import Embarques from "./pages/Embarques";
 import EmbarqueDetalle from "./pages/EmbarqueDetalle";
@@ -15,6 +16,8 @@ import Proveedores from "./pages/Proveedores";
 import ProveedorDetalle from "./pages/ProveedorDetalle";
 import Reportes from "./pages/Reportes";
 import Changelog from "./pages/Changelog";
+import Usuarios from "./pages/Usuarios";
+import Login from "./pages/Login";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -26,7 +29,14 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <Routes>
-          <Route element={<Layout />}>
+          <Route path="/login" element={<Login />} />
+          <Route
+            element={
+              <ProtectedRoute>
+                <Layout />
+              </ProtectedRoute>
+            }
+          >
             <Route path="/" element={<Dashboard />} />
             <Route path="/embarques" element={<Embarques />} />
             <Route path="/embarques/nuevo" element={<NuevoEmbarque />} />
@@ -38,6 +48,14 @@ const App = () => (
             <Route path="/proveedores/:id" element={<ProveedorDetalle />} />
             <Route path="/reportes" element={<Reportes />} />
             <Route path="/changelog" element={<Changelog />} />
+            <Route
+              path="/usuarios"
+              element={
+                <ProtectedRoute allowedRoles={["admin"]}>
+                  <Usuarios />
+                </ProtectedRoute>
+              }
+            />
           </Route>
           <Route path="*" element={<NotFound />} />
         </Routes>
