@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { ArrowLeft, Plus, Pencil, Trash2, Users, Building2 } from "lucide-react";
+import { ArrowLeft, Plus, Pencil, Trash2, Users, Building2, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -15,7 +15,8 @@ import {
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
-import { clientes as clientesIniciales, embarques, facturas, formatCurrency } from "@/data/mockData";
+import { useCliente, useContactosCliente, useCreateContacto, useUpdateContacto, useDeleteContacto } from "@/hooks/useClientes";
+import { useToast } from "@/hooks/use-toast";
 import type { ContactoCliente, TipoContacto } from "@/data/types";
 
 const TIPOS_CONTACTO: TipoContacto[] = ['Proveedor', 'Exportador', 'Importador'];
@@ -27,12 +28,25 @@ const emptyContacto = {
 export default function ClienteDetalle() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const { toast } = useToast();
 
-  const cliente = clientesIniciales.find(c => c.id === id);
-  const [contactos, setContactos] = useState<ContactoCliente[]>(cliente?.contactos || []);
+  const { data: cliente, isLoading: loadingCliente } = useCliente(id);
+  const { data: contactos = [], isLoading: loadingContactos } = useContactosCliente(id);
+  const createContacto = useCreateContacto();
+  const updateContacto = useUpdateContacto();
+  const deleteContacto = useDeleteContacto();
+
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState(emptyContacto);
+
+  if (loadingCliente) {
+    return (
+      <div className="flex items-center justify-center py-20">
+        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
 
   if (!cliente) {
     return (
@@ -42,12 +56,6 @@ export default function ClienteDetalle() {
       </div>
     );
   }
-
-  const clienteEmbarques = embarques.filter(e => e.clienteId === id);
-  const clienteFacturas = facturas.filter(f => f.clienteId === id);
-  const saldoPendiente = clienteFacturas
-    .filter(f => ['Emitida', 'Vencida'].includes(f.estado))
-    .reduce((sum, f) => sum + f.total, 0);
 
   const handleChange = (field: string, value: string) => setForm(prev => ({ ...prev, [field]: value }));
 
@@ -63,21 +71,31 @@ export default function ClienteDetalle() {
     setDialogOpen(true);
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!form.nombre.trim()) return;
-    if (editingId) {
-      setContactos(prev => prev.map(c => c.id === editingId ? { ...c, ...form } : c));
-    } else {
-      const nuevo: ContactoCliente = { id: `CT-${Date.now()}`, clienteId: cliente.id, ...form };
-      setContactos(prev => [...prev, nuevo]);
+    try {
+      if (editingId) {
+        await updateContacto.mutateAsync({ id: editingId, clienteId: cliente.id, ...form });
+        toast({ title: "Contacto actualizado" });
+      } else {
+        await createContacto.mutateAsync({ clienteId: cliente.id, ...form });
+        toast({ title: "Contacto creado" });
+      }
+      setDialogOpen(false);
+      setForm(emptyContacto);
+      setEditingId(null);
+    } catch (error: any) {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
     }
-    setDialogOpen(false);
-    setForm(emptyContacto);
-    setEditingId(null);
   };
 
-  const handleDelete = (ctId: string) => {
-    setContactos(prev => prev.filter(c => c.id !== ctId));
+  const handleDelete = async (ctId: string) => {
+    try {
+      await deleteContacto.mutateAsync({ id: ctId, clienteId: cliente.id });
+      toast({ title: "Contacto eliminado" });
+    } catch (error: any) {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+    }
   };
 
   const tipoBadgeVariant = (tipo: TipoContacto) => {
@@ -87,6 +105,8 @@ export default function ClienteDetalle() {
       case 'Importador': return 'outline';
     }
   };
+
+  const isSaving = createContacto.isPending || updateContacto.isPending;
 
   return (
     <div className="space-y-6">
@@ -116,17 +136,8 @@ export default function ClienteDetalle() {
         </Card>
         <Card>
           <CardContent className="p-4">
-            <p className="text-xs text-muted-foreground">Saldo Pendiente</p>
-            <p className={`text-xl font-bold ${saldoPendiente > 0 ? 'text-destructive' : 'text-success'}`}>
-              {formatCurrency(saldoPendiente)}
-            </p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4">
-            <p className="text-xs text-muted-foreground">Actividad</p>
-            <p className="text-xl font-bold">{clienteEmbarques.length} <span className="text-sm font-normal text-muted-foreground">embarques</span></p>
-            <p className="text-sm text-muted-foreground">{clienteFacturas.length} facturas</p>
+            <p className="text-xs text-muted-foreground">Contactos Registrados</p>
+            <p className="text-xl font-bold">{contactos.length}</p>
           </CardContent>
         </Card>
       </div>
@@ -138,7 +149,11 @@ export default function ClienteDetalle() {
           <Button size="sm" onClick={openNew}><Plus className="h-4 w-4 mr-1" />Agregar Contacto</Button>
         </CardHeader>
         <CardContent className="p-0">
-          {contactos.length === 0 ? (
+          {loadingContactos ? (
+            <div className="flex items-center justify-center py-8">
+              <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+            </div>
+          ) : contactos.length === 0 ? (
             <div className="p-8 text-center text-muted-foreground text-sm">
               No hay contactos registrados. Agrega proveedores o exportadores para usarlos en embarques.
             </div>
@@ -230,7 +245,10 @@ export default function ClienteDetalle() {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setDialogOpen(false)}>Cancelar</Button>
-            <Button onClick={handleSave} disabled={!form.nombre.trim()}>{editingId ? 'Guardar Cambios' : 'Agregar'}</Button>
+            <Button onClick={handleSave} disabled={!form.nombre.trim() || isSaving}>
+              {isSaving ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : null}
+              {editingId ? 'Guardar Cambios' : 'Agregar'}
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

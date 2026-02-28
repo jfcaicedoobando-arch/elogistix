@@ -1,9 +1,8 @@
 import { useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { Search, Users, Plus, Check, Upload, ArrowLeft, ArrowRight } from "lucide-react";
+import { Search, Users, Plus, Check, Upload, ArrowLeft, ArrowRight, Loader2 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import {
@@ -12,24 +11,17 @@ import {
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
-import { clientes as clientesIniciales, embarques, facturas, formatCurrency } from "@/data/mockData";
-import { Cliente } from "@/data/types";
+import { useClientes, useCreateCliente } from "@/hooks/useClientes";
+import { useToast } from "@/hooks/use-toast";
 
 const emptyCliente = {
   nombre: "", rfc: "", direccion: "", ciudad: "", estado: "", cp: "", contacto: "", email: "", telefono: "",
 };
 
 const DOCS_OBLIGATORIOS = [
-  'CIF',
-  'Opinión fiscal',
-  'Acta constitutiva',
-  'INE RL',
-  'Poder notarial',
-  'Comprobante de domicilio',
-  'Datos bancarios',
-  'Opinión de cumplimiento IMSS/Infonavit',
-  'Contrato de servicios con Elogistix',
-  'Estados financieros último corte',
+  'CIF', 'Opinión fiscal', 'Acta constitutiva', 'INE RL', 'Poder notarial',
+  'Comprobante de domicilio', 'Datos bancarios', 'Opinión de cumplimiento IMSS/Infonavit',
+  'Contrato de servicios con Elogistix', 'Estados financieros último corte',
 ];
 
 interface DocCliente {
@@ -40,9 +32,11 @@ interface DocCliente {
 
 export default function Clientes() {
   const navigate = useNavigate();
+  const { toast } = useToast();
+  const { data: clientesList = [], isLoading } = useClientes();
+  const createCliente = useCreateCliente();
+
   const [search, setSearch] = useState("");
-  const [selected, setSelected] = useState<string | null>(null);
-  const [clientesList, setClientesList] = useState<Cliente[]>(clientesIniciales);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [form, setForm] = useState(emptyCliente);
   const [step, setStep] = useState<1 | 2>(1);
@@ -53,15 +47,7 @@ export default function Clientes() {
     !search || c.nombre.toLowerCase().includes(search.toLowerCase()) || c.rfc.toLowerCase().includes(search.toLowerCase())
   );
 
-  const selectedCliente = clientesList.find(c => c.id === selected);
-  const clienteEmbarques = embarques.filter(e => e.clienteId === selected);
-  const clienteFacturas = facturas.filter(f => f.clienteId === selected);
-  const saldoPendiente = clienteFacturas
-    .filter(f => ['Emitida', 'Vencida'].includes(f.estado))
-    .reduce((sum, f) => sum + f.total, 0);
-
   const handleChange = (field: string, value: string) => setForm(prev => ({ ...prev, [field]: value }));
-
   const isStep1Valid = () => form.nombre.trim() && form.rfc.trim() && form.cp.trim();
 
   const handleNext = () => {
@@ -72,21 +58,21 @@ export default function Clientes() {
 
   const handleFileChange = (docNombre: string, file: File | undefined) => {
     setDocumentos(prev =>
-      prev.map(d =>
-        d.nombre === docNombre
-          ? { ...d, archivo: file?.name, adjuntado: !!file }
-          : d
-      )
+      prev.map(d => d.nombre === docNombre ? { ...d, archivo: file?.name, adjuntado: !!file } : d)
     );
   };
 
   const allDocsAdjuntados = documentos.length > 0 && documentos.every(d => d.adjuntado);
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!allDocsAdjuntados) return;
-    const nuevo: Cliente = { id: `CLI-${Date.now()}`, ...form };
-    setClientesList(prev => [...prev, nuevo]);
-    resetAndClose();
+    try {
+      await createCliente.mutateAsync(form);
+      toast({ title: "Cliente creado exitosamente" });
+      resetAndClose();
+    } catch (error: any) {
+      toast({ title: "Error al crear cliente", description: error.message, variant: "destructive" });
+    }
   };
 
   const resetAndClose = () => {
@@ -106,81 +92,51 @@ export default function Clientes() {
         <Button onClick={() => setDialogOpen(true)}><Plus className="h-4 w-4 mr-1" />Nuevo Cliente</Button>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2 space-y-4">
-          <Card>
-            <CardContent className="p-4">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input placeholder="Buscar por nombre o RFC..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9" />
-              </div>
-            </CardContent>
-          </Card>
+      <Card>
+        <CardContent className="p-4">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input placeholder="Buscar por nombre o RFC..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9" />
+          </div>
+        </CardContent>
+      </Card>
 
-          <Card>
-            <CardContent className="p-0">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Nombre</TableHead>
-                    <TableHead>RFC</TableHead>
-                    <TableHead>Ciudad</TableHead>
-                    <TableHead>Contacto</TableHead>
-                    <TableHead>Teléfono</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filtered.map(c => (
-                    <TableRow key={c.id} className={`cursor-pointer ${selected === c.id ? 'bg-accent/10' : ''}`} onClick={() => navigate(`/clientes/${c.id}`)}>
-                      <TableCell className="font-medium max-w-[200px] truncate">{c.nombre}</TableCell>
-                      <TableCell className="text-xs font-mono">{c.rfc}</TableCell>
-                      <TableCell className="text-xs">{c.ciudad}, {c.estado}</TableCell>
-                      <TableCell className="text-xs">{c.contacto}</TableCell>
-                      <TableCell className="text-xs">{c.telefono}</TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </CardContent>
-          </Card>
-        </div>
-
-        <div>
-          {selectedCliente ? (
-            <div className="space-y-4">
-              <Card>
-                <CardHeader className="pb-3"><CardTitle className="text-sm">Detalle del Cliente</CardTitle></CardHeader>
-                <CardContent className="space-y-2 text-sm">
-                  <p className="font-medium">{selectedCliente.nombre}</p>
-                  <p className="text-muted-foreground">{selectedCliente.rfc}</p>
-                  <p className="text-muted-foreground">{selectedCliente.direccion}</p>
-                  <p className="text-muted-foreground">{selectedCliente.ciudad}, {selectedCliente.estado} {selectedCliente.cp}</p>
-                  <div className="pt-2 border-t space-y-1">
-                    <p><span className="text-muted-foreground">Contacto:</span> {selectedCliente.contacto}</p>
-                    <p><span className="text-muted-foreground">Email:</span> {selectedCliente.email}</p>
-                    <p><span className="text-muted-foreground">Tel:</span> {selectedCliente.telefono}</p>
-                  </div>
-                </CardContent>
-              </Card>
-              <Card>
-                <CardContent className="p-4">
-                  <p className="text-xs text-muted-foreground">Saldo Pendiente</p>
-                  <p className={`text-xl font-bold ${saldoPendiente > 0 ? 'text-destructive' : 'text-success'}`}>
-                    {formatCurrency(saldoPendiente)}
-                  </p>
-                  <p className="text-xs text-muted-foreground mt-2">{clienteEmbarques.length} embarques · {clienteFacturas.length} facturas</p>
-                </CardContent>
-              </Card>
+      <Card>
+        <CardContent className="p-0">
+          {isLoading ? (
+            <div className="flex items-center justify-center py-12">
+              <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+            </div>
+          ) : filtered.length === 0 ? (
+            <div className="py-12 text-center text-sm text-muted-foreground">
+              {search ? "No se encontraron clientes" : "No hay clientes registrados"}
             </div>
           ) : (
-            <Card>
-              <CardContent className="p-8 text-center text-muted-foreground text-sm">
-                Selecciona un cliente para ver su detalle
-              </CardContent>
-            </Card>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Nombre</TableHead>
+                  <TableHead>RFC</TableHead>
+                  <TableHead>Ciudad</TableHead>
+                  <TableHead>Contacto</TableHead>
+                  <TableHead>Teléfono</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {filtered.map(c => (
+                  <TableRow key={c.id} className="cursor-pointer" onClick={() => navigate(`/clientes/${c.id}`)}>
+                    <TableCell className="font-medium max-w-[200px] truncate">{c.nombre}</TableCell>
+                    <TableCell className="text-xs font-mono">{c.rfc}</TableCell>
+                    <TableCell className="text-xs">{c.ciudad}, {c.estado}</TableCell>
+                    <TableCell className="text-xs">{c.contacto}</TableCell>
+                    <TableCell className="text-xs">{c.telefono}</TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
           )}
-        </div>
-      </div>
+        </CardContent>
+      </Card>
 
       <Dialog open={dialogOpen} onOpenChange={(o) => { if (!o) resetAndClose(); else setDialogOpen(o); }}>
         <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto">
@@ -231,26 +187,16 @@ export default function Clientes() {
                     )}
                     <div className="min-w-0">
                       <span className="text-sm font-medium">{doc.nombre}</span>
-                      {doc.archivo && (
-                        <p className="text-xs text-muted-foreground truncate">{doc.archivo}</p>
-                      )}
+                      {doc.archivo && <p className="text-xs text-muted-foreground truncate">{doc.archivo}</p>}
                     </div>
                   </div>
-                  <Button
-                    type="button"
-                    variant={doc.adjuntado ? "secondary" : "outline"}
-                    size="sm"
-                    onClick={() => fileInputRefs.current[doc.nombre]?.click()}
-                  >
+                  <Button type="button" variant={doc.adjuntado ? "secondary" : "outline"} size="sm"
+                    onClick={() => fileInputRefs.current[doc.nombre]?.click()}>
                     <Upload className="h-3.5 w-3.5 mr-1" />
                     {doc.adjuntado ? 'Cambiar' : 'Adjuntar'}
                   </Button>
-                  <input
-                    ref={el => { fileInputRefs.current[doc.nombre] = el; }}
-                    type="file"
-                    className="hidden"
-                    onChange={e => handleFileChange(doc.nombre, e.target.files?.[0])}
-                  />
+                  <input ref={el => { fileInputRefs.current[doc.nombre] = el; }} type="file" className="hidden"
+                    onChange={e => handleFileChange(doc.nombre, e.target.files?.[0])} />
                 </div>
               ))}
             </div>
@@ -270,7 +216,10 @@ export default function Clientes() {
                 <Button variant="outline" onClick={() => setStep(1)}>
                   <ArrowLeft className="h-4 w-4 mr-1" /> Atrás
                 </Button>
-                <Button onClick={handleSave} disabled={!allDocsAdjuntados}>Crear</Button>
+                <Button onClick={handleSave} disabled={!allDocsAdjuntados || createCliente.isPending}>
+                  {createCliente.isPending ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : null}
+                  Crear
+                </Button>
               </>
             )}
           </DialogFooter>
