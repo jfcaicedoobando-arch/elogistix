@@ -13,6 +13,14 @@ interface ChangelogEntry {
 
 const changelog: ChangelogEntry[] = [
   {
+    version: "1.4.0",
+    date: "2026-02-28",
+    type: "minor",
+    title: "Módulo de usuarios con login y roles",
+    description:
+      "Sistema de autenticación con login/registro, gestión de roles (admin, operador, viewer), protección de rutas por rol y página de administración de usuarios.",
+  },
+  {
     version: "1.3.2",
     date: "2026-02-28",
     type: "patch",

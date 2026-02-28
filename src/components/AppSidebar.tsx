@@ -2,14 +2,17 @@ import {
   LayoutDashboard,
   Ship,
   FileText,
-  Users,
+  UserCheck,
   Truck,
   BarChart3,
   Anchor,
   ScrollText,
+  ShieldCheck,
+  LogOut,
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
 import {
   Sidebar,
   SidebarContent,
@@ -22,26 +25,34 @@ import {
   SidebarFooter,
   useSidebar,
 } from "@/components/ui/sidebar";
+import { Button } from "@/components/ui/button";
 
 const menuItems = [
   { title: "Dashboard", url: "/", icon: LayoutDashboard },
   { title: "Embarques", url: "/embarques", icon: Ship },
   { title: "Facturación", url: "/facturacion", icon: FileText },
-  { title: "Clientes", url: "/clientes", icon: Users },
+  { title: "Clientes", url: "/clientes", icon: UserCheck },
   { title: "Proveedores", url: "/proveedores", icon: Truck },
   { title: "Reportes", url: "/reportes", icon: BarChart3 },
   { title: "Changelog", url: "/changelog", icon: ScrollText },
+];
+
+const adminItems = [
+  { title: "Usuarios", url: "/usuarios", icon: ShieldCheck },
 ];
 
 export function AppSidebar() {
   const { state } = useSidebar();
   const collapsed = state === "collapsed";
   const location = useLocation();
+  const { user, role, signOut } = useAuth();
 
   const isActive = (path: string) => {
     if (path === "/") return location.pathname === "/";
     return location.pathname.startsWith(path);
   };
+
+  const allItems = role === "admin" ? [...menuItems, ...adminItems] : menuItems;
 
   return (
     <Sidebar collapsible="icon">
@@ -67,7 +78,7 @@ export function AppSidebar() {
         <SidebarGroup>
           <SidebarGroupContent>
             <SidebarMenu>
-              {menuItems.map((item) => (
+              {allItems.map((item) => (
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton
                     asChild
@@ -91,10 +102,24 @@ export function AppSidebar() {
         </SidebarGroup>
       </SidebarContent>
 
-      <SidebarFooter className="border-t border-sidebar-border p-4">
+      <SidebarFooter className="border-t border-sidebar-border p-4 space-y-2">
+        {!collapsed && user && (
+          <div className="text-xs text-sidebar-foreground/70 truncate">
+            {user.email}
+          </div>
+        )}
+        <Button
+          variant="ghost"
+          size={collapsed ? "icon" : "sm"}
+          className="w-full justify-start text-sidebar-foreground/60 hover:text-sidebar-foreground"
+          onClick={signOut}
+        >
+          <LogOut className="h-4 w-4" />
+          {!collapsed && <span className="ml-2">Cerrar sesión</span>}
+        </Button>
         {!collapsed && (
           <div className="text-xs text-sidebar-foreground/50">
-            v1.0 · Operaciones MX
+            v1.4.0 · Operaciones MX
           </div>
         )}
       </SidebarFooter>
