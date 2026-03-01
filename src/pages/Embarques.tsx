@@ -13,40 +13,13 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { useNavigate } from "react-router-dom";
 import { useEmbarques, useClientesForSelect } from "@/hooks/useEmbarques";
-import { formatCurrency } from "@/lib/formatters";
 import { usePermissions } from "@/hooks/usePermissions";
+import { formatDate, getEstadoColor, getModoIcon } from "@/lib/helpers";
 import type { ModoTransporte, EstadoEmbarque } from "@/data/types";
 
 const ESTADOS: EstadoEmbarque[] = ['Cotización', 'Confirmado', 'En Tránsito', 'Llegada', 'En Proceso', 'Cerrado'];
 const MODOS: ModoTransporte[] = ['Marítimo', 'Aéreo', 'Terrestre', 'Multimodal'];
 const PAGE_SIZE = 10;
-
-const getModoIcon = (modo: string) => {
-  switch (modo) {
-    case 'Marítimo': return '🚢';
-    case 'Aéreo': return '✈️';
-    case 'Terrestre': return '🚛';
-    case 'Multimodal': return '📦';
-    default: return '📦';
-  }
-};
-
-const getEstadoColor = (estado: string) => {
-  switch (estado) {
-    case 'Cotización': return 'bg-muted text-muted-foreground';
-    case 'Confirmado': return 'bg-info/20 text-info';
-    case 'En Tránsito': return 'bg-warning/20 text-warning';
-    case 'Llegada': return 'bg-success/20 text-success';
-    case 'En Proceso': return 'bg-accent/20 text-accent';
-    case 'Cerrado': return 'bg-muted text-muted-foreground';
-    default: return '';
-  }
-};
-
-const formatDate = (dateStr: string | null) => {
-  if (!dateStr) return '-';
-  return new Date(dateStr).toLocaleDateString('es-MX', { day: '2-digit', month: 'short', year: 'numeric' });
-};
 
 export default function Embarques() {
   const navigate = useNavigate();
@@ -174,8 +147,8 @@ export default function Embarques() {
                     <TableCell className="text-xs">{origen}</TableCell>
                     <TableCell className="text-xs">{destino}</TableCell>
                     <TableCell className="text-xs">{e.tipo_contenedor || '-'}</TableCell>
-                    <TableCell className="text-xs">{formatDate(e.etd)}</TableCell>
-                    <TableCell className="text-xs">{formatDate(e.eta)}</TableCell>
+                    <TableCell className="text-xs">{formatDate(e.etd || '')}</TableCell>
+                    <TableCell className="text-xs">{formatDate(e.eta || '')}</TableCell>
                     <TableCell>
                       <Badge variant="secondary" className={`text-xs ${getEstadoColor(e.estado)}`}>{e.estado}</Badge>
                     </TableCell>

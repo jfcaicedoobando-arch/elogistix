@@ -5,18 +5,10 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import type { TipoProveedor, Moneda } from "@/data/types";
+import { TIPOS_PROVEEDOR as TIPOS, MONEDAS_PROVEEDOR as MONEDAS, PAISES_PROVEEDOR as PAISES } from "@/data/proveedorConstants";
 import type { Tables, TablesUpdate } from "@/integrations/supabase/types";
 
 type Proveedor = Tables<'proveedores'>;
-
-const TIPOS: TipoProveedor[] = ['Naviera', 'Aerolínea', 'Transportista', 'Agente Aduanal', 'Agente de Carga', 'Aseguradora', 'Custodia', 'Almacenes', 'Acondicionamiento de Carga', 'Materiales Peligrosos'];
-const MONEDAS: Moneda[] = ['MXN', 'USD', 'EUR'];
-
-const PAISES = [
-  'México', 'Estados Unidos', 'Canadá', 'China', 'Alemania', 'España',
-  'Francia', 'Italia', 'Japón', 'Corea del Sur', 'Brasil', 'Colombia',
-  'Chile', 'Argentina', 'Perú', 'Reino Unido', 'India', 'Otro',
-];
 
 interface Props {
   proveedor: Proveedor;

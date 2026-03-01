@@ -86,7 +86,7 @@ export default function Usuarios() {
     }
   };
 
-  const formatDate = (dateStr: string) => {
+  const formatDateLocal = (dateStr: string) => {
     if (!dateStr) return "-";
     return new Date(dateStr).toLocaleDateString("es-MX", { day: "2-digit", month: "short", year: "numeric" });
   };
@@ -128,7 +128,7 @@ export default function Usuarios() {
               {users.map((u) => (
                 <TableRow key={u.user_id}>
                   <TableCell className="font-medium">{u.email}</TableCell>
-                  <TableCell className="text-xs text-muted-foreground">{formatDate(u.created_at)}</TableCell>
+                  <TableCell className="text-xs text-muted-foreground">{formatDateLocal(u.created_at)}</TableCell>
                   <TableCell>
                     <Badge className={roleBadge[u.role]}>{u.role}</Badge>
                   </TableCell>
