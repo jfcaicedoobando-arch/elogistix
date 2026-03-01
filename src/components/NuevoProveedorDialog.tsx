@@ -5,7 +5,8 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Check, Upload, ArrowLeft, ArrowRight } from "lucide-react";
-import type { Proveedor, TipoProveedor, Moneda, DocumentoProveedor } from "@/data/types";
+import type { TipoProveedor, Moneda, DocumentoProveedor } from "@/data/types";
+import type { TablesInsert } from "@/integrations/supabase/types";
 
 const TIPOS: TipoProveedor[] = ['Naviera', 'Aerolínea', 'Transportista', 'Agente Aduanal', 'Agente de Carga', 'Aseguradora', 'Custodia', 'Almacenes', 'Acondicionamiento de Carga', 'Materiales Peligrosos'];
 const MONEDAS: Moneda[] = ['MXN', 'USD', 'EUR'];
@@ -30,19 +31,19 @@ const DOCS_EXTRANJERO = [
 interface Props {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onSave: (data: Omit<Proveedor, 'id'>) => void;
+  onSave: (data: TablesInsert<"proveedores">) => void;
 }
 
-const emptyForm: Omit<Proveedor, 'id'> = {
+const emptyForm = {
   nombre: '',
-  tipo: 'Naviera',
+  tipo: 'Naviera' as TipoProveedor,
   pais: '',
   rfc: '',
   contacto: '',
   email: '',
   telefono: '',
-  monedaPreferida: 'MXN',
-  origenProveedor: undefined,
+  moneda_preferida: 'MXN' as Moneda,
+  origen_proveedor: null as 'Nacional' | 'Extranjero' | null,
 };
 
 export default function NuevoProveedorDialog({ open, onOpenChange, onSave }: Props) {
@@ -52,12 +53,11 @@ export default function NuevoProveedorDialog({ open, onOpenChange, onSave }: Pro
   const fileInputRefs = useRef<Record<string, HTMLInputElement | null>>({});
 
   const isAgenteCarga = form.tipo === 'Agente de Carga';
-  const isMexico = form.pais === 'México';
-  const rfcLabel = form.origenProveedor === 'Extranjero' ? 'Tax ID' : 'RFC';
+  const rfcLabel = form.origen_proveedor === 'Extranjero' ? 'Tax ID' : 'RFC';
 
   const isStep1Valid = () => {
     if (!form.nombre.trim()) return false;
-    if (!form.origenProveedor) return false;
+    if (!form.origen_proveedor) return false;
     if (isAgenteCarga) {
       if (!form.pais) return false;
       if (!form.rfc.trim()) return false;
@@ -69,7 +69,7 @@ export default function NuevoProveedorDialog({ open, onOpenChange, onSave }: Pro
 
   const handleNext = () => {
     if (!isStep1Valid()) return;
-    const docNames = form.origenProveedor === 'Nacional' ? DOCS_NACIONAL : DOCS_EXTRANJERO;
+    const docNames = form.origen_proveedor === 'Nacional' ? DOCS_NACIONAL : DOCS_EXTRANJERO;
     setDocumentos(docNames.map(nombre => ({ nombre, adjuntado: false })));
     setStep(2);
   };
@@ -117,7 +117,7 @@ export default function NuevoProveedorDialog({ open, onOpenChange, onSave }: Pro
           <div className="space-y-4">
             <div className="space-y-2">
               <Label>Origen *</Label>
-              <Select value={form.origenProveedor || ''} onValueChange={v => setForm(f => ({ ...f, origenProveedor: v as 'Nacional' | 'Extranjero' }))}>
+              <Select value={form.origen_proveedor || ''} onValueChange={v => setForm(f => ({ ...f, origen_proveedor: v as 'Nacional' | 'Extranjero' }))}>
                 <SelectTrigger><SelectValue placeholder="Selecciona origen" /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="Nacional">Nacional</SelectItem>
@@ -157,7 +157,7 @@ export default function NuevoProveedorDialog({ open, onOpenChange, onSave }: Pro
                 <Input
                   value={form.rfc}
                   onChange={e => setForm(f => ({ ...f, rfc: e.target.value }))}
-                  placeholder={form.origenProveedor === 'Extranjero' ? 'Ingresa el Tax ID' : 'Ingresa el RFC'}
+                  placeholder={form.origen_proveedor === 'Extranjero' ? 'Ingresa el Tax ID' : 'Ingresa el RFC'}
                 />
               </div>
             )}
@@ -176,7 +176,7 @@ export default function NuevoProveedorDialog({ open, onOpenChange, onSave }: Pro
             </div>
             <div className="space-y-2">
               <Label>Moneda Preferida</Label>
-              <Select value={form.monedaPreferida} onValueChange={v => setForm(f => ({ ...f, monedaPreferida: v as Moneda }))}>
+              <Select value={form.moneda_preferida} onValueChange={v => setForm(f => ({ ...f, moneda_preferida: v as Moneda }))}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
                   {MONEDAS.map(m => <SelectItem key={m} value={m}>{m}</SelectItem>)}
@@ -189,7 +189,7 @@ export default function NuevoProveedorDialog({ open, onOpenChange, onSave }: Pro
         {step === 2 && (
           <div className="space-y-3">
             <p className="text-sm text-muted-foreground">
-              Documentos requeridos para proveedor <strong>{form.origenProveedor}</strong>. Puedes adjuntarlos ahora o después.
+              Documentos requeridos para proveedor <strong>{form.origen_proveedor}</strong>. Puedes adjuntarlos ahora o después.
             </p>
             {documentos.map((doc) => (
               <div key={doc.nombre} className="flex items-center justify-between gap-2 rounded-md border p-3">
