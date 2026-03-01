@@ -13,6 +13,14 @@ interface ChangelogEntry {
 
 const changelog: ChangelogEntry[] = [
   {
+    version: "3.4.0",
+    date: "2026-03-01",
+    type: "minor",
+    title: "Edición de embarques existentes",
+    description:
+      "Nueva página para editar embarques con wizard de 3 pasos (Datos Generales, Datos de Ruta, Costos y Pricing) pre-cargados con los valores actuales. Sincronización completa de conceptos de venta y costo. Registro automático en bitácora. Botón Editar conectado desde el detalle del embarque.",
+  },
+  {
     version: "3.3.1",
     date: "2026-03-01",
     type: "patch",
