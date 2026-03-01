@@ -52,7 +52,7 @@ export function useContactosCliente(clienteId: string | undefined) {
 }
 
 export function useCreateCliente() {
-  const qc = useQueryClient();
+  const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (cliente: TablesInsert<"clientes">) => {
       const { data, error } = await supabase
@@ -63,12 +63,12 @@ export function useCreateCliente() {
       if (error) throw error;
       return data;
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["clientes"] }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["clientes"] }),
   });
 }
 
 export function useCreateContacto() {
-  const qc = useQueryClient();
+  const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (contacto: TablesInsert<"contactos_cliente">) => {
       const { data, error } = await supabase
@@ -79,12 +79,12 @@ export function useCreateContacto() {
       if (error) throw error;
       return data;
     },
-    onSuccess: (_d, vars) => qc.invalidateQueries({ queryKey: ["contactos_cliente", vars.cliente_id] }),
+    onSuccess: (_resultado, vars) => queryClient.invalidateQueries({ queryKey: ["contactos_cliente", vars.cliente_id] }),
   });
 }
 
 export function useUpdateContacto() {
-  const qc = useQueryClient();
+  const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async ({ id, cliente_id, ...updates }: Partial<ContactoCliente> & { id: string; cliente_id: string }) => {
       const { error } = await supabase
@@ -93,12 +93,12 @@ export function useUpdateContacto() {
         .eq("id", id);
       if (error) throw error;
     },
-    onSuccess: (_d, vars) => qc.invalidateQueries({ queryKey: ["contactos_cliente", vars.cliente_id] }),
+    onSuccess: (_resultado, vars) => queryClient.invalidateQueries({ queryKey: ["contactos_cliente", vars.cliente_id] }),
   });
 }
 
 export function useDeleteContacto() {
-  const qc = useQueryClient();
+  const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async ({ id, cliente_id }: { id: string; cliente_id: string }) => {
       const { error } = await supabase
@@ -107,6 +107,6 @@ export function useDeleteContacto() {
         .eq("id", id);
       if (error) throw error;
     },
-    onSuccess: (_d, vars) => qc.invalidateQueries({ queryKey: ["contactos_cliente", vars.cliente_id] }),
+    onSuccess: (_resultado, vars) => queryClient.invalidateQueries({ queryKey: ["contactos_cliente", vars.cliente_id] }),
   });
 }

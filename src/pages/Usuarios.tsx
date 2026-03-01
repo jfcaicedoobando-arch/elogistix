@@ -49,19 +49,19 @@ export default function Usuarios() {
     try {
       const { data: usersData, error: fnError } = await supabase.functions.invoke("list-users");
       if (!fnError && Array.isArray(usersData)) {
-        usersData.forEach((u: any) => {
-          emailMap[u.id] = { email: u.email, created_at: u.created_at };
+        usersData.forEach((usuario: any) => {
+          emailMap[usuario.id] = { email: usuario.email, created_at: usuario.created_at };
         });
       }
     } catch {
       // If edge function fails, we'll show user_id instead
     }
 
-    const rows: UserRow[] = (rolesData ?? []).map((r: any) => ({
-      user_id: r.user_id,
-      email: emailMap[r.user_id]?.email || r.user_id,
-      role: r.role as AppRole,
-      created_at: emailMap[r.user_id]?.created_at || "",
+    const rows: UserRow[] = (rolesData ?? []).map((rolUsuario: any) => ({
+      user_id: rolUsuario.user_id,
+      email: emailMap[rolUsuario.user_id]?.email || rolUsuario.user_id,
+      role: rolUsuario.role as AppRole,
+      created_at: emailMap[rolUsuario.user_id]?.created_at || "",
     }));
 
     setUsers(rows);
@@ -125,17 +125,17 @@ export default function Usuarios() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {users.map((u) => (
-                <TableRow key={u.user_id}>
-                  <TableCell className="font-medium">{u.email}</TableCell>
-                  <TableCell className="text-xs text-muted-foreground">{formatDateLocal(u.created_at)}</TableCell>
+              {users.map((usuario) => (
+                <TableRow key={usuario.user_id}>
+                  <TableCell className="font-medium">{usuario.email}</TableCell>
+                  <TableCell className="text-xs text-muted-foreground">{formatDateLocal(usuario.created_at)}</TableCell>
                   <TableCell>
-                    <Badge className={roleBadge[u.role]}>{u.role}</Badge>
+                    <Badge className={roleBadge[usuario.role]}>{usuario.role}</Badge>
                   </TableCell>
                   <TableCell>
                     <Select
-                      value={u.role}
-                      onValueChange={(val) => handleRoleChange(u.user_id, val as AppRole)}
+                      value={usuario.role}
+                      onValueChange={(val) => handleRoleChange(usuario.user_id, val as AppRole)}
                     >
                       <SelectTrigger className="w-[140px]">
                         <SelectValue />

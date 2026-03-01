@@ -20,7 +20,7 @@ import { useQuery } from "@tanstack/react-query";
 export default function ProveedorDetalle() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { data: prov, isLoading } = useProveedor(id);
+  const { data: proveedor, isLoading } = useProveedor(id);
   const { updateProveedor } = useProveedores();
   const [editOpen, setEditOpen] = useState(false);
   const { canEdit } = usePermissions();
@@ -49,10 +49,10 @@ export default function ProveedorDetalle() {
   });
 
   if (isLoading) {
-    return <div className="space-y-4 p-8">{[1,2,3].map(i => <Skeleton key={i} className="h-24 w-full" />)}</div>;
+    return <div className="space-y-4 p-8">{[1,2,3].map(indice => <Skeleton key={indice} className="h-24 w-full" />)}</div>;
   }
 
-  if (!prov) {
+  if (!proveedor) {
     return (
       <div className="flex flex-col items-center justify-center py-20 space-y-4">
         <p className="text-muted-foreground">Proveedor no encontrado</p>
@@ -63,8 +63,8 @@ export default function ProveedorDetalle() {
     );
   }
 
-  const totalFacturado = operaciones.reduce((sum, o) => sum + o.monto, 0);
-  const totalPagado = operaciones.filter(o => o.estadoLiquidacion === 'Pagado').reduce((sum, o) => sum + o.monto, 0);
+  const totalFacturado = operaciones.reduce((sum, operacion) => sum + operacion.monto, 0);
+  const totalPagado = operaciones.filter(operacion => operacion.estadoLiquidacion === 'Pagado').reduce((sum, operacion) => sum + operacion.monto, 0);
   const totalPendiente = totalFacturado - totalPagado;
 
   const handleUpdate = async (id: string, data: any) => {
@@ -85,8 +85,8 @@ export default function ProveedorDetalle() {
           </Button>
           <Truck className="h-6 w-6 text-accent" />
           <div className="flex items-center gap-3">
-            <h1 className="text-2xl font-bold">{prov.nombre}</h1>
-            <Badge variant="secondary">{prov.tipo}</Badge>
+            <h1 className="text-2xl font-bold">{proveedor.nombre}</h1>
+            <Badge variant="secondary">{proveedor.tipo}</Badge>
           </div>
         </div>
         {canEdit && (
@@ -100,18 +100,18 @@ export default function ProveedorDetalle() {
         <Card>
           <CardHeader className="pb-2"><CardTitle className="text-sm">Datos Generales</CardTitle></CardHeader>
           <CardContent className="space-y-2 text-sm">
-            <p><span className="text-muted-foreground">RFC:</span> {prov.rfc}</p>
-            <p><span className="text-muted-foreground">Contacto:</span> {prov.contacto}</p>
-            <p><span className="text-muted-foreground">Email:</span> {prov.email}</p>
-            <p><span className="text-muted-foreground">Teléfono:</span> {prov.telefono}</p>
-            <p><span className="text-muted-foreground">Moneda preferida:</span> {prov.moneda_preferida}</p>
+            <p><span className="text-muted-foreground">RFC:</span> {proveedor.rfc}</p>
+            <p><span className="text-muted-foreground">Contacto:</span> {proveedor.contacto}</p>
+            <p><span className="text-muted-foreground">Email:</span> {proveedor.email}</p>
+            <p><span className="text-muted-foreground">Teléfono:</span> {proveedor.telefono}</p>
+            <p><span className="text-muted-foreground">Moneda preferida:</span> {proveedor.moneda_preferida}</p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="pb-2"><CardTitle className="text-sm">Total Facturado</CardTitle></CardHeader>
           <CardContent>
-            <p className="text-2xl font-bold">{formatCurrency(totalFacturado, prov.moneda_preferida)}</p>
+            <p className="text-2xl font-bold">{formatCurrency(totalFacturado, proveedor.moneda_preferida)}</p>
             <p className="text-xs text-muted-foreground">{operaciones.length} operaciones</p>
           </CardContent>
         </Card>
@@ -120,13 +120,13 @@ export default function ProveedorDetalle() {
           <Card>
             <CardHeader className="pb-2"><CardTitle className="text-sm text-green-600">Pagado</CardTitle></CardHeader>
             <CardContent>
-              <p className="text-lg font-bold">{formatCurrency(totalPagado, prov.moneda_preferida)}</p>
+              <p className="text-lg font-bold">{formatCurrency(totalPagado, proveedor.moneda_preferida)}</p>
             </CardContent>
           </Card>
           <Card>
             <CardHeader className="pb-2"><CardTitle className="text-sm text-orange-600">Pendiente</CardTitle></CardHeader>
             <CardContent>
-              <p className="text-lg font-bold">{formatCurrency(totalPendiente, prov.moneda_preferida)}</p>
+              <p className="text-lg font-bold">{formatCurrency(totalPendiente, proveedor.moneda_preferida)}</p>
             </CardContent>
           </Card>
         </div>
@@ -148,18 +148,18 @@ export default function ProveedorDetalle() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {operaciones.map((o, i) => (
-                  <TableRow key={i}>
+                {operaciones.map((operacion, indice) => (
+                  <TableRow key={indice}>
                     <TableCell>
-                      <Link to={`/embarques/${o.embarqueId}`} className="text-primary hover:underline font-medium text-xs">
-                        {o.expediente}
+                      <Link to={`/embarques/${operacion.embarqueId}`} className="text-primary hover:underline font-medium text-xs">
+                        {operacion.expediente}
                       </Link>
                     </TableCell>
-                    <TableCell className="text-xs">{o.clienteNombre}</TableCell>
-                    <TableCell className="text-xs">{o.concepto}</TableCell>
-                    <TableCell className="text-xs font-medium">{formatCurrency(o.monto, o.moneda)}</TableCell>
-                    <TableCell><Badge className={`text-xs ${getEstadoColor(o.estadoLiquidacion)}`}>{o.estadoLiquidacion}</Badge></TableCell>
-                    <TableCell className="text-xs">{o.fechaVencimiento || '—'}</TableCell>
+                    <TableCell className="text-xs">{operacion.clienteNombre}</TableCell>
+                    <TableCell className="text-xs">{operacion.concepto}</TableCell>
+                    <TableCell className="text-xs font-medium">{formatCurrency(operacion.monto, operacion.moneda)}</TableCell>
+                    <TableCell><Badge className={`text-xs ${getEstadoColor(operacion.estadoLiquidacion)}`}>{operacion.estadoLiquidacion}</Badge></TableCell>
+                    <TableCell className="text-xs">{operacion.fechaVencimiento || '—'}</TableCell>
                   </TableRow>
                 ))}
               </TableBody>
@@ -171,7 +171,7 @@ export default function ProveedorDetalle() {
       </Card>
 
       <EditarProveedorDialog
-        proveedor={prov}
+        proveedor={proveedor}
         open={editOpen}
         onOpenChange={setEditOpen}
         onSave={handleUpdate}

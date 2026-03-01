@@ -30,8 +30,8 @@ export function TabCostos({ conceptosVenta, conceptosCosto, totalVenta, totalCos
           <Table>
             <TableHeader><TableRow><TableHead>Concepto</TableHead><TableHead>Cant.</TableHead><TableHead>P. Unitario</TableHead><TableHead>Moneda</TableHead><TableHead>Total</TableHead></TableRow></TableHeader>
             <TableBody>
-              {conceptosVenta.map(c => (
-                <TableRow key={c.id}><TableCell>{c.descripcion}</TableCell><TableCell>{c.cantidad}</TableCell><TableCell>{formatCurrency(Number(c.precio_unitario), c.moneda)}</TableCell><TableCell>{c.moneda}</TableCell><TableCell className="font-medium">{formatCurrency(Number(c.total), c.moneda)}</TableCell></TableRow>
+              {conceptosVenta.map(concepto => (
+                <TableRow key={concepto.id}><TableCell>{concepto.descripcion}</TableCell><TableCell>{concepto.cantidad}</TableCell><TableCell>{formatCurrency(Number(concepto.precio_unitario), concepto.moneda)}</TableCell><TableCell>{concepto.moneda}</TableCell><TableCell className="font-medium">{formatCurrency(Number(concepto.total), concepto.moneda)}</TableCell></TableRow>
               ))}
             </TableBody>
           </Table>
@@ -44,9 +44,9 @@ export function TabCostos({ conceptosVenta, conceptosCosto, totalVenta, totalCos
           <Table>
             <TableHeader><TableRow><TableHead>Proveedor</TableHead><TableHead>Concepto</TableHead><TableHead>Monto</TableHead><TableHead>Moneda</TableHead><TableHead>Liquidación</TableHead></TableRow></TableHeader>
             <TableBody>
-              {conceptosCosto.map(c => (
-                <TableRow key={c.id}><TableCell>{c.proveedor_nombre}</TableCell><TableCell>{c.concepto}</TableCell><TableCell className="font-medium">{formatCurrency(Number(c.monto), c.moneda)}</TableCell><TableCell>{c.moneda}</TableCell>
-                  <TableCell><Badge className={getEstadoColor(c.estado_liquidacion)}>{c.estado_liquidacion}</Badge></TableCell>
+              {conceptosCosto.map(concepto => (
+                <TableRow key={concepto.id}><TableCell>{concepto.proveedor_nombre}</TableCell><TableCell>{concepto.concepto}</TableCell><TableCell className="font-medium">{formatCurrency(Number(concepto.monto), concepto.moneda)}</TableCell><TableCell>{concepto.moneda}</TableCell>
+                  <TableCell><Badge className={getEstadoColor(concepto.estado_liquidacion)}>{concepto.estado_liquidacion}</Badge></TableCell>
                 </TableRow>
               ))}
             </TableBody>

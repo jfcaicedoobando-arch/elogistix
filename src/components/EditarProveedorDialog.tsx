@@ -32,11 +32,11 @@ export default function EditarProveedorDialog({ proveedor, open, onOpenChange, o
     onOpenChange(false);
   };
 
-  const handleTipoChange = (v: string) => {
-    setForm(f => ({
-      ...f,
-      tipo: v as TipoProveedor,
-      pais: v === 'Agente de Carga' ? f.pais : '',
+  const handleTipoChange = (valorSeleccionado: string) => {
+    setForm(formularioActual => ({
+      ...formularioActual,
+      tipo: valorSeleccionado as TipoProveedor,
+      pais: valorSeleccionado === 'Agente de Carga' ? formularioActual.pais : '',
     }));
   };
 
@@ -49,7 +49,7 @@ export default function EditarProveedorDialog({ proveedor, open, onOpenChange, o
         <div className="space-y-4">
           <div className="space-y-2">
             <Label>Origen</Label>
-            <Select value={form.origen_proveedor || ''} onValueChange={v => setForm(f => ({ ...f, origen_proveedor: v as 'Nacional' | 'Extranjero' }))}>
+            <Select value={form.origen_proveedor || ''} onValueChange={valorSeleccionado => setForm(formularioActual => ({ ...formularioActual, origen_proveedor: valorSeleccionado as 'Nacional' | 'Extranjero' }))}>
               <SelectTrigger><SelectValue placeholder="Selecciona origen" /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="Nacional">Nacional</SelectItem>
@@ -59,14 +59,14 @@ export default function EditarProveedorDialog({ proveedor, open, onOpenChange, o
           </div>
           <div className="space-y-2">
             <Label>Nombre</Label>
-            <Input value={form.nombre} onChange={e => setForm(f => ({ ...f, nombre: e.target.value }))} />
+            <Input value={form.nombre} onChange={e => setForm(formularioActual => ({ ...formularioActual, nombre: e.target.value }))} />
           </div>
           <div className="space-y-2">
             <Label>Tipo</Label>
             <Select value={form.tipo} onValueChange={handleTipoChange}>
               <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>
-                {TIPOS.map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}
+                {TIPOS.map(tipoProveedor => <SelectItem key={tipoProveedor} value={tipoProveedor}>{tipoProveedor}</SelectItem>)}
               </SelectContent>
             </Select>
           </div>
@@ -74,10 +74,10 @@ export default function EditarProveedorDialog({ proveedor, open, onOpenChange, o
           {isAgenteCarga && (
             <div className="space-y-2">
               <Label>País *</Label>
-              <Select value={form.pais || ''} onValueChange={v => setForm(f => ({ ...f, pais: v, rfc: '' }))}>
+              <Select value={form.pais || ''} onValueChange={valorSeleccionado => setForm(formularioActual => ({ ...formularioActual, pais: valorSeleccionado, rfc: '' }))}>
                 <SelectTrigger><SelectValue placeholder="Selecciona un país" /></SelectTrigger>
                 <SelectContent>
-                  {PAISES.map(p => <SelectItem key={p} value={p}>{p}</SelectItem>)}
+                  {PAISES.map(pais => <SelectItem key={pais} value={pais}>{pais}</SelectItem>)}
                 </SelectContent>
               </Select>
             </div>
@@ -88,7 +88,7 @@ export default function EditarProveedorDialog({ proveedor, open, onOpenChange, o
               <Label>{rfcLabel}</Label>
               <Input
                 value={form.rfc}
-                onChange={e => setForm(f => ({ ...f, rfc: e.target.value }))}
+                onChange={e => setForm(formularioActual => ({ ...formularioActual, rfc: e.target.value }))}
                 placeholder={form.origen_proveedor === 'Extranjero' ? 'Ingresa el Tax ID' : 'Ingresa el RFC'}
               />
             </div>
@@ -96,22 +96,22 @@ export default function EditarProveedorDialog({ proveedor, open, onOpenChange, o
 
           <div className="space-y-2">
             <Label>Contacto</Label>
-            <Input value={form.contacto} onChange={e => setForm(f => ({ ...f, contacto: e.target.value }))} />
+            <Input value={form.contacto} onChange={e => setForm(formularioActual => ({ ...formularioActual, contacto: e.target.value }))} />
           </div>
           <div className="space-y-2">
             <Label>Email</Label>
-            <Input type="email" value={form.email} onChange={e => setForm(f => ({ ...f, email: e.target.value }))} />
+            <Input type="email" value={form.email} onChange={e => setForm(formularioActual => ({ ...formularioActual, email: e.target.value }))} />
           </div>
           <div className="space-y-2">
             <Label>Teléfono</Label>
-            <Input value={form.telefono} onChange={e => setForm(f => ({ ...f, telefono: e.target.value }))} />
+            <Input value={form.telefono} onChange={e => setForm(formularioActual => ({ ...formularioActual, telefono: e.target.value }))} />
           </div>
           <div className="space-y-2">
             <Label>Moneda Preferida</Label>
-            <Select value={form.moneda_preferida} onValueChange={v => setForm(f => ({ ...f, moneda_preferida: v as Moneda }))}>
+            <Select value={form.moneda_preferida} onValueChange={valorSeleccionado => setForm(formularioActual => ({ ...formularioActual, moneda_preferida: valorSeleccionado as Moneda }))}>
               <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>
-                {MONEDAS.map(m => <SelectItem key={m} value={m}>{m}</SelectItem>)}
+                {MONEDAS.map(moneda => <SelectItem key={moneda} value={moneda}>{moneda}</SelectItem>)}
               </SelectContent>
             </Select>
           </div>

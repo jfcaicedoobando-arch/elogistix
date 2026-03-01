@@ -56,10 +56,10 @@ export default function EmbarqueDetalle() {
     }
   };
 
-  const handleDownload = async (docArchivo: string, docId: string) => {
+  const handleDownload = async (rutaArchivo: string, docId: string) => {
     setDownloadingDocId(docId);
     try {
-      const url = await getSignedUrl(docArchivo);
+      const url = await getSignedUrl(rutaArchivo);
       window.open(url, "_blank");
     } catch (err: any) {
       toast({ title: "Error al descargar", description: err.message, variant: "destructive" });
@@ -87,20 +87,20 @@ export default function EmbarqueDetalle() {
     );
   }
 
-  const tcUSD = Number(embarque.tipo_cambio_usd) || 1;
-  const tcEUR = Number(embarque.tipo_cambio_eur) || 1;
+  const tipoCambioUSD = Number(embarque.tipo_cambio_usd) || 1;
+  const tipoCambioEUR = Number(embarque.tipo_cambio_eur) || 1;
 
-  const totalVenta = conceptosVenta.reduce((sum, c) => {
-    const t = Number(c.total);
-    if (c.moneda === 'USD') return sum + t * tcUSD;
-    if (c.moneda === 'EUR') return sum + t * tcEUR;
-    return sum + t;
+  const totalVenta = conceptosVenta.reduce((sum, concepto) => {
+    const totalConcepto = Number(concepto.total);
+    if (concepto.moneda === 'USD') return sum + totalConcepto * tipoCambioUSD;
+    if (concepto.moneda === 'EUR') return sum + totalConcepto * tipoCambioEUR;
+    return sum + totalConcepto;
   }, 0);
-  const totalCosto = conceptosCosto.reduce((sum, c) => {
-    const m = Number(c.monto);
-    if (c.moneda === 'USD') return sum + m * tcUSD;
-    if (c.moneda === 'EUR') return sum + m * tcEUR;
-    return sum + m;
+  const totalCosto = conceptosCosto.reduce((sum, concepto) => {
+    const montoConcepto = Number(concepto.monto);
+    if (concepto.moneda === 'USD') return sum + montoConcepto * tipoCambioUSD;
+    if (concepto.moneda === 'EUR') return sum + montoConcepto * tipoCambioEUR;
+    return sum + montoConcepto;
   }, 0);
   const utilidad = totalVenta - totalCosto;
   const margen = totalVenta > 0 ? (utilidad / totalVenta) * 100 : 0;

@@ -67,9 +67,9 @@ export default function ClienteDetalle() {
     setDialogOpen(true);
   };
 
-  const openEdit = (ct: ContactoCliente) => {
-    setEditingId(ct.id);
-    setForm({ nombre: ct.nombre, rfc: ct.rfc, tipo: ct.tipo, pais: ct.pais, ciudad: ct.ciudad, direccion: ct.direccion, contacto: ct.contacto, email: ct.email, telefono: ct.telefono });
+  const openEdit = (contacto: ContactoCliente) => {
+    setEditingId(contacto.id);
+    setForm({ nombre: contacto.nombre, rfc: contacto.rfc, tipo: contacto.tipo, pais: contacto.pais, ciudad: contacto.ciudad, direccion: contacto.direccion, contacto: contacto.contacto, email: contacto.email, telefono: contacto.telefono });
     setDialogOpen(true);
   };
 
@@ -91,9 +91,9 @@ export default function ClienteDetalle() {
     }
   };
 
-  const handleDelete = async (ctId: string) => {
+  const handleDelete = async (contactoId: string) => {
     try {
-      await deleteContacto.mutateAsync({ id: ctId, cliente_id: cliente.id });
+      await deleteContacto.mutateAsync({ id: contactoId, cliente_id: cliente.id });
       toast({ title: "Contacto eliminado" });
     } catch (error: any) {
       toast({ title: "Error", description: error.message, variant: "destructive" });
@@ -172,20 +172,20 @@ export default function ClienteDetalle() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {contactos.map(ct => (
-                  <TableRow key={ct.id}>
-                    <TableCell className="font-medium">{ct.nombre}</TableCell>
-                    <TableCell><Badge variant={tipoBadgeVariant(ct.tipo)}>{ct.tipo}</Badge></TableCell>
-                    <TableCell className="text-xs">{ct.pais}, {ct.ciudad}</TableCell>
-                    <TableCell className="text-xs">{ct.contacto}</TableCell>
-                    <TableCell className="text-xs">{ct.email}</TableCell>
+                {contactos.map(contacto => (
+                  <TableRow key={contacto.id}>
+                    <TableCell className="font-medium">{contacto.nombre}</TableCell>
+                    <TableCell><Badge variant={tipoBadgeVariant(contacto.tipo)}>{contacto.tipo}</Badge></TableCell>
+                    <TableCell className="text-xs">{contacto.pais}, {contacto.ciudad}</TableCell>
+                    <TableCell className="text-xs">{contacto.contacto}</TableCell>
+                    <TableCell className="text-xs">{contacto.email}</TableCell>
                     <TableCell>
                       {canEdit && (
                         <div className="flex gap-1">
-                          <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => openEdit(ct)}>
+                          <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => openEdit(contacto)}>
                             <Pencil className="h-3.5 w-3.5" />
                           </Button>
-                          <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={() => handleDelete(ct.id)}>
+                          <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={() => handleDelete(contacto.id)}>
                             <Trash2 className="h-3.5 w-3.5" />
                           </Button>
                         </div>
@@ -213,9 +213,9 @@ export default function ClienteDetalle() {
             </div>
             <div>
               <Label className="text-xs">Tipo</Label>
-              <Select value={form.tipo} onValueChange={v => handleChange('tipo', v)}>
+              <Select value={form.tipo} onValueChange={valorSeleccionado => handleChange('tipo', valorSeleccionado)}>
                 <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
-                <SelectContent>{TIPOS_CONTACTO.map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}</SelectContent>
+                <SelectContent>{TIPOS_CONTACTO.map(tipoContacto => <SelectItem key={tipoContacto} value={tipoContacto}>{tipoContacto}</SelectItem>)}</SelectContent>
               </Select>
             </div>
             <div>

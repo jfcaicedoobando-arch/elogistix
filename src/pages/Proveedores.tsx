@@ -29,10 +29,10 @@ const TABS: { label: string; tipo: TipoProveedor }[] = [
 ];
 
 function ProveedorTable({ tipo, search, onSelect, proveedores, isLoading }: { tipo: TipoProveedor; search: string; onSelect: (id: string) => void; proveedores: Proveedor[]; isLoading: boolean }) {
-  const filtered = proveedores.filter(p => p.tipo === tipo && (!search || p.nombre.toLowerCase().includes(search.toLowerCase())));
+  const filtered = proveedores.filter(proveedor => proveedor.tipo === tipo && (!search || proveedor.nombre.toLowerCase().includes(search.toLowerCase())));
 
   if (isLoading) {
-    return <Card><CardContent className="p-6 space-y-3">{[1,2,3].map(i => <Skeleton key={i} className="h-10 w-full" />)}</CardContent></Card>;
+    return <Card><CardContent className="p-6 space-y-3">{[1,2,3].map(indice => <Skeleton key={indice} className="h-10 w-full" />)}</CardContent></Card>;
   }
 
   return (
@@ -48,12 +48,12 @@ function ProveedorTable({ tipo, search, onSelect, proveedores, isLoading }: { ti
             </TableRow>
           </TableHeader>
           <TableBody>
-            {filtered.length > 0 ? filtered.map(p => (
-              <TableRow key={p.id} className="cursor-pointer" onClick={() => onSelect(p.id)}>
-                <TableCell className="font-medium">{p.nombre}</TableCell>
-                <TableCell className="text-xs font-mono">{p.rfc}</TableCell>
-                <TableCell className="text-xs">{p.contacto}</TableCell>
-                <TableCell className="text-xs">{p.moneda_preferida}</TableCell>
+            {filtered.length > 0 ? filtered.map(proveedor => (
+              <TableRow key={proveedor.id} className="cursor-pointer" onClick={() => onSelect(proveedor.id)}>
+                <TableCell className="font-medium">{proveedor.nombre}</TableCell>
+                <TableCell className="text-xs font-mono">{proveedor.rfc}</TableCell>
+                <TableCell className="text-xs">{proveedor.contacto}</TableCell>
+                <TableCell className="text-xs">{proveedor.moneda_preferida}</TableCell>
               </TableRow>
             )) : (
               <TableRow>
@@ -108,13 +108,13 @@ export default function Proveedores() {
 
       <Tabs defaultValue="Naviera">
         <TabsList className="w-full flex flex-wrap h-auto gap-1">
-          {TABS.map(t => (
-            <TabsTrigger key={t.tipo} value={t.tipo} className="text-xs">{t.label}</TabsTrigger>
+          {TABS.map(tabConfig => (
+            <TabsTrigger key={tabConfig.tipo} value={tabConfig.tipo} className="text-xs">{tabConfig.label}</TabsTrigger>
           ))}
         </TabsList>
-        {TABS.map(t => (
-          <TabsContent key={t.tipo} value={t.tipo}>
-            <ProveedorTable tipo={t.tipo} search={search} onSelect={(id) => navigate(`/proveedores/${id}`)} proveedores={proveedores} isLoading={isLoading} />
+        {TABS.map(tabConfig => (
+          <TabsContent key={tabConfig.tipo} value={tabConfig.tipo}>
+            <ProveedorTable tipo={tabConfig.tipo} search={search} onSelect={(id) => navigate(`/proveedores/${id}`)} proveedores={proveedores} isLoading={isLoading} />
           </TabsContent>
         ))}
       </Tabs>

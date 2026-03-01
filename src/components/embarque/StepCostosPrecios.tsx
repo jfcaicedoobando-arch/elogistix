@@ -51,24 +51,24 @@ export function StepCostosPrecios(props: Props) {
             <div className="grid grid-cols-[1fr_80px_100px_90px_100px_40px] gap-2 text-xs font-medium text-muted-foreground">
               <span>Concepto</span><span>Cantidad</span><span>P. Unitario</span><span>Moneda</span><span>Total</span><span></span>
             </div>
-            {conceptosVenta.map(cv => (
-              <div key={cv.id} className="grid grid-cols-[1fr_80px_100px_90px_100px_40px] gap-2 items-center">
+            {conceptosVenta.map(venta => (
+              <div key={venta.id} className="grid grid-cols-[1fr_80px_100px_90px_100px_40px] gap-2 items-center">
                 {modo === 'Marítimo' ? (
-                  <Select value={cv.concepto} onValueChange={v => updateConceptoVenta(cv.id, 'concepto', v)}>
+                  <Select value={venta.concepto} onValueChange={valorSeleccionado => updateConceptoVenta(venta.id, 'concepto', valorSeleccionado)}>
                     <SelectTrigger className="text-sm"><SelectValue placeholder="Seleccionar" /></SelectTrigger>
-                    <SelectContent>{CONCEPTOS_MARITIMOS.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}</SelectContent>
+                    <SelectContent>{CONCEPTOS_MARITIMOS.map(conceptoMaritimo => <SelectItem key={conceptoMaritimo} value={conceptoMaritimo}>{conceptoMaritimo}</SelectItem>)}</SelectContent>
                   </Select>
                 ) : (
-                  <Input placeholder="Concepto" className="text-sm" value={cv.concepto} onChange={e => updateConceptoVenta(cv.id, 'concepto', e.target.value)} />
+                  <Input placeholder="Concepto" className="text-sm" value={venta.concepto} onChange={e => updateConceptoVenta(venta.id, 'concepto', e.target.value)} />
                 )}
-                <Input type="number" min={1} className="text-sm" value={cv.cantidad} onChange={e => updateConceptoVenta(cv.id, 'cantidad', Number(e.target.value))} />
-                <Input type="number" min={0} step="0.01" className="text-sm" value={cv.precioUnitario || ''} onChange={e => updateConceptoVenta(cv.id, 'precioUnitario', Number(e.target.value))} />
-                <Select value={cv.moneda} onValueChange={v => updateConceptoVenta(cv.id, 'moneda', v)}>
+                <Input type="number" min={1} className="text-sm" value={venta.cantidad} onChange={e => updateConceptoVenta(venta.id, 'cantidad', Number(e.target.value))} />
+                <Input type="number" min={0} step="0.01" className="text-sm" value={venta.precioUnitario || ''} onChange={e => updateConceptoVenta(venta.id, 'precioUnitario', Number(e.target.value))} />
+                <Select value={venta.moneda} onValueChange={valorSeleccionado => updateConceptoVenta(venta.id, 'moneda', valorSeleccionado)}>
                   <SelectTrigger className="text-sm"><SelectValue /></SelectTrigger>
                   <SelectContent><SelectItem value="MXN">MXN</SelectItem><SelectItem value="USD">USD</SelectItem><SelectItem value="EUR">EUR</SelectItem></SelectContent>
                 </Select>
-                <Input readOnly value={`$${(cv.cantidad * cv.precioUnitario).toFixed(2)}`} className="text-sm bg-muted" />
-                <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => removeConceptoVenta(cv.id)} disabled={conceptosVenta.length <= 1}>
+                <Input readOnly value={`$${(venta.cantidad * venta.precioUnitario).toFixed(2)}`} className="text-sm bg-muted" />
+                <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => removeConceptoVenta(venta.id)} disabled={conceptosVenta.length <= 1}>
                   <Trash2 className="h-4 w-4 text-destructive" />
                 </Button>
               </div>
@@ -87,27 +87,27 @@ export function StepCostosPrecios(props: Props) {
             <div className="grid grid-cols-[1fr_1fr_100px_90px_100px_40px] gap-2 text-xs font-medium text-muted-foreground">
               <span>Proveedor</span><span>Concepto</span><span>Monto</span><span>Moneda</span><span>Total</span><span></span>
             </div>
-            {conceptosCosto.map(cc => (
-              <div key={cc.id} className="grid grid-cols-[1fr_1fr_100px_90px_100px_40px] gap-2 items-center">
-                <Select value={cc.proveedorId} onValueChange={v => updateConceptoCosto(cc.id, 'proveedorId', v)}>
+            {conceptosCosto.map(costo => (
+              <div key={costo.id} className="grid grid-cols-[1fr_1fr_100px_90px_100px_40px] gap-2 items-center">
+                <Select value={costo.proveedorId} onValueChange={valorSeleccionado => updateConceptoCosto(costo.id, 'proveedorId', valorSeleccionado)}>
                   <SelectTrigger className="text-sm"><SelectValue placeholder="Proveedor" /></SelectTrigger>
-                  <SelectContent>{proveedoresDb.map(p => <SelectItem key={p.id} value={p.id}>{p.nombre.split(' ').slice(0, 2).join(' ')}</SelectItem>)}</SelectContent>
+                  <SelectContent>{proveedoresDb.map(proveedor => <SelectItem key={proveedor.id} value={proveedor.id}>{proveedor.nombre.split(' ').slice(0, 2).join(' ')}</SelectItem>)}</SelectContent>
                 </Select>
                 {modo === 'Marítimo' ? (
-                  <Select value={cc.concepto} onValueChange={v => updateConceptoCosto(cc.id, 'concepto', v)}>
+                  <Select value={costo.concepto} onValueChange={valorSeleccionado => updateConceptoCosto(costo.id, 'concepto', valorSeleccionado)}>
                     <SelectTrigger className="text-sm"><SelectValue placeholder="Seleccionar" /></SelectTrigger>
-                    <SelectContent>{CONCEPTOS_MARITIMOS.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}</SelectContent>
+                    <SelectContent>{CONCEPTOS_MARITIMOS.map(conceptoMaritimo => <SelectItem key={conceptoMaritimo} value={conceptoMaritimo}>{conceptoMaritimo}</SelectItem>)}</SelectContent>
                   </Select>
                 ) : (
-                  <Input placeholder="Concepto" className="text-sm" value={cc.concepto} onChange={e => updateConceptoCosto(cc.id, 'concepto', e.target.value)} />
+                  <Input placeholder="Concepto" className="text-sm" value={costo.concepto} onChange={e => updateConceptoCosto(costo.id, 'concepto', e.target.value)} />
                 )}
-                <Input type="number" min={0} step="0.01" className="text-sm" value={cc.monto || ''} onChange={e => updateConceptoCosto(cc.id, 'monto', Number(e.target.value))} />
-                <Select value={cc.moneda} onValueChange={v => updateConceptoCosto(cc.id, 'moneda', v)}>
+                <Input type="number" min={0} step="0.01" className="text-sm" value={costo.monto || ''} onChange={e => updateConceptoCosto(costo.id, 'monto', Number(e.target.value))} />
+                <Select value={costo.moneda} onValueChange={valorSeleccionado => updateConceptoCosto(costo.id, 'moneda', valorSeleccionado)}>
                   <SelectTrigger className="text-sm"><SelectValue /></SelectTrigger>
                   <SelectContent><SelectItem value="MXN">MXN</SelectItem><SelectItem value="USD">USD</SelectItem><SelectItem value="EUR">EUR</SelectItem></SelectContent>
                 </Select>
-                <Input readOnly value={`$${cc.monto.toFixed(2)}`} className="text-sm bg-muted" />
-                <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => removeConceptoCosto(cc.id)} disabled={conceptosCosto.length <= 1}>
+                <Input readOnly value={`$${costo.monto.toFixed(2)}`} className="text-sm bg-muted" />
+                <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => removeConceptoCosto(costo.id)} disabled={conceptosCosto.length <= 1}>
                   <Trash2 className="h-4 w-4 text-destructive" />
                 </Button>
               </div>

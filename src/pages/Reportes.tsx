@@ -34,47 +34,46 @@ function useAllConceptos() {
 }
 
 export default function Reportes() {
-  const { data: embarques = [], isLoading: le } = useEmbarques();
+  const { data: embarques = [], isLoading: cargandoEmbarques } = useEmbarques();
   const { data: clientes = [] } = useClientes();
   const { data: facturas = [] } = useFacturas();
   const { data: gastosPendientes = [] } = useGastosPendientes();
-  const { data: conceptos, isLoading: lc } = useAllConceptos();
+  const { data: conceptos, isLoading: cargandoConceptos } = useAllConceptos();
 
-  const loading = le || lc;
+  const loading = cargandoEmbarques || cargandoConceptos;
 
   const porModo = useMemo(() => [
-    { name: 'Marítimo', value: embarques.filter(e => e.modo === 'Marítimo').length },
-    { name: 'Aéreo', value: embarques.filter(e => e.modo === 'Aéreo').length },
-    { name: 'Terrestre', value: embarques.filter(e => e.modo === 'Terrestre').length },
+    { name: 'Marítimo', value: embarques.filter(embarque => embarque.modo === 'Marítimo').length },
+    { name: 'Aéreo', value: embarques.filter(embarque => embarque.modo === 'Aéreo').length },
+    { name: 'Terrestre', value: embarques.filter(embarque => embarque.modo === 'Terrestre').length },
   ], [embarques]);
 
   const rentabilidadClientes = useMemo(() => {
     if (!conceptos) return [];
-    return clientes.map(c => {
-      const cEmbarques = embarques.filter(e => e.cliente_id === c.id);
-      const embIds = new Set(cEmbarques.map(e => e.id));
+    return clientes.map(cliente => {
+      const embarquesDelCliente = embarques.filter(embarque => embarque.cliente_id === cliente.id);
+      const idsEmbarquesCliente = new Set(embarquesDelCliente.map(embarque => embarque.id));
       let totalVenta = 0, totalCosto = 0;
-      // Map embarque id -> tipo cambio
-      const tcMap = new Map(cEmbarques.map(e => [e.id, { usd: e.tipo_cambio_usd, eur: e.tipo_cambio_eur }]));
-      conceptos.ventas.filter(v => embIds.has(v.embarque_id)).forEach(v => {
-        const tc = tcMap.get(v.embarque_id);
-        totalVenta += v.moneda === 'USD' ? v.total * (tc?.usd || 17.5) : v.moneda === 'EUR' ? v.total * (tc?.eur || 19) : v.total;
+      const tiposCambioEmbarques = new Map(embarquesDelCliente.map(embarque => [embarque.id, { usd: embarque.tipo_cambio_usd, eur: embarque.tipo_cambio_eur }]));
+      conceptos.ventas.filter(venta => idsEmbarquesCliente.has(venta.embarque_id)).forEach(venta => {
+        const tipoCambio = tiposCambioEmbarques.get(venta.embarque_id);
+        totalVenta += venta.moneda === 'USD' ? venta.total * (tipoCambio?.usd || 17.5) : venta.moneda === 'EUR' ? venta.total * (tipoCambio?.eur || 19) : venta.total;
       });
-      conceptos.costos.filter(g => embIds.has(g.embarque_id)).forEach(g => {
-        const tc = tcMap.get(g.embarque_id);
-        totalCosto += g.moneda === 'USD' ? g.monto * (tc?.usd || 17.5) : g.moneda === 'EUR' ? g.monto * (tc?.eur || 19) : g.monto;
+      conceptos.costos.filter(costo => idsEmbarquesCliente.has(costo.embarque_id)).forEach(costo => {
+        const tipoCambio = tiposCambioEmbarques.get(costo.embarque_id);
+        totalCosto += costo.moneda === 'USD' ? costo.monto * (tipoCambio?.usd || 17.5) : costo.moneda === 'EUR' ? costo.monto * (tipoCambio?.eur || 19) : costo.monto;
       });
-      return { nombre: c.nombre.split(' ').slice(0, 3).join(' '), embarques: cEmbarques.length, venta: totalVenta, costo: totalCosto, utilidad: totalVenta - totalCosto };
-    }).filter(c => c.embarques > 0).sort((a, b) => b.utilidad - a.utilidad);
+      return { nombre: cliente.nombre.split(' ').slice(0, 3).join(' '), embarques: embarquesDelCliente.length, venta: totalVenta, costo: totalCosto, utilidad: totalVenta - totalCosto };
+    }).filter(cliente => cliente.embarques > 0).sort((a, b) => b.utilidad - a.utilidad);
   }, [clientes, embarques, conceptos]);
 
   const totalPorCobrar = useMemo(() =>
-    facturas.filter(f => ['Emitida', 'Vencida'].includes(f.estado)).reduce((sum, f) => sum + f.total, 0),
+    facturas.filter(factura => ['Emitida', 'Vencida'].includes(factura.estado)).reduce((sum, factura) => sum + factura.total, 0),
     [facturas]
   );
 
   const totalPorPagar = useMemo(() =>
-    gastosPendientes.reduce((sum, g) => sum + g.monto, 0),
+    gastosPendientes.reduce((sum, gasto) => sum + gasto.monto, 0),
     [gastosPendientes]
   );
 
@@ -96,7 +95,7 @@ export default function Reportes() {
               <ResponsiveContainer width="100%" height={250}>
                 <PieChart>
                   <Pie data={porModo} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={90} label={({ name, value }) => `${name}: ${value}`}>
-                    {porModo.map((_, i) => <Cell key={i} fill={COLORS[i]} />)}
+                    {porModo.map((_, indice) => <Cell key={indice} fill={COLORS[indice]} />)}
                   </Pie>
                   <Tooltip />
                 </PieChart>
@@ -112,9 +111,9 @@ export default function Reportes() {
               <ResponsiveContainer width="100%" height={250}>
                 <BarChart data={rentabilidadClientes} layout="vertical">
                   <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis type="number" tickFormatter={(v) => `$${(v / 1000).toFixed(0)}k`} />
+                  <XAxis type="number" tickFormatter={(valor) => `$${(valor / 1000).toFixed(0)}k`} />
                   <YAxis type="category" dataKey="nombre" width={120} className="text-xs" />
-                  <Tooltip formatter={(v: number) => formatCurrency(v)} />
+                  <Tooltip formatter={(valor: number) => formatCurrency(valor)} />
                   <Bar dataKey="utilidad" fill="hsl(217, 91%, 60%)" radius={[0, 4, 4, 0]} />
                 </BarChart>
               </ResponsiveContainer>
@@ -128,7 +127,7 @@ export default function Reportes() {
         <CardHeader className="pb-2"><CardTitle className="text-sm">Top Clientes por Volumen e Ingresos</CardTitle></CardHeader>
         <CardContent className="p-0">
           {loading ? (
-            <div className="p-6 space-y-3">{Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-10 w-full" />)}</div>
+            <div className="p-6 space-y-3">{Array.from({ length: 4 }).map((_, indice) => <Skeleton key={indice} className="h-10 w-full" />)}</div>
           ) : (
             <Table>
               <TableHeader>
@@ -142,14 +141,14 @@ export default function Reportes() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {rentabilidadClientes.map((c, i) => (
-                  <TableRow key={i}>
-                    <TableCell className="font-medium">{c.nombre}</TableCell>
-                    <TableCell>{c.embarques}</TableCell>
-                    <TableCell>{formatCurrency(c.venta)}</TableCell>
-                    <TableCell>{formatCurrency(c.costo)}</TableCell>
-                    <TableCell className={c.utilidad >= 0 ? 'text-success font-medium' : 'text-destructive font-medium'}>{formatCurrency(c.utilidad)}</TableCell>
-                    <TableCell>{c.venta > 0 ? ((c.utilidad / c.venta) * 100).toFixed(1) : 0}%</TableCell>
+                {rentabilidadClientes.map((cliente, indice) => (
+                  <TableRow key={indice}>
+                    <TableCell className="font-medium">{cliente.nombre}</TableCell>
+                    <TableCell>{cliente.embarques}</TableCell>
+                    <TableCell>{formatCurrency(cliente.venta)}</TableCell>
+                    <TableCell>{formatCurrency(cliente.costo)}</TableCell>
+                    <TableCell className={cliente.utilidad >= 0 ? 'text-success font-medium' : 'text-destructive font-medium'}>{formatCurrency(cliente.utilidad)}</TableCell>
+                    <TableCell>{cliente.venta > 0 ? ((cliente.utilidad / cliente.venta) * 100).toFixed(1) : 0}%</TableCell>
                   </TableRow>
                 ))}
               </TableBody>

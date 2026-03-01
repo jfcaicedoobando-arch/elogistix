@@ -32,9 +32,9 @@ export default function Facturacion() {
   const { canEdit } = usePermissions();
 
   const filtered = useMemo(() => {
-    return facturas.filter(f => {
-      const matchSearch = !search || f.numero.toLowerCase().includes(search.toLowerCase()) || f.cliente_nombre.toLowerCase().includes(search.toLowerCase());
-      const matchEstado = filterEstado === "todos" || f.estado === filterEstado;
+    return facturas.filter(factura => {
+      const matchSearch = !search || factura.numero.toLowerCase().includes(search.toLowerCase()) || factura.cliente_nombre.toLowerCase().includes(search.toLowerCase());
+      const matchEstado = filterEstado === "todos" || factura.estado === filterEstado;
       return matchSearch && matchEstado;
     });
   }, [search, filterEstado, facturas]);
@@ -67,7 +67,7 @@ export default function Facturacion() {
                 <SelectTrigger className="w-[160px]"><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="todos">Todos</SelectItem>
-                  {ESTADOS_FACTURA.map(e => <SelectItem key={e} value={e}>{e}</SelectItem>)}
+                  {ESTADOS_FACTURA.map(estadoFactura => <SelectItem key={estadoFactura} value={estadoFactura}>{estadoFactura}</SelectItem>)}
                 </SelectContent>
               </Select>
             </CardContent>
@@ -76,7 +76,7 @@ export default function Facturacion() {
           <Card>
             <CardContent className="p-0">
               {loadingFacturas ? (
-                <div className="p-6 space-y-3">{Array.from({ length: 5 }).map((_, i) => <Skeleton key={i} className="h-10 w-full" />)}</div>
+                <div className="p-6 space-y-3">{Array.from({ length: 5 }).map((_, indice) => <Skeleton key={indice} className="h-10 w-full" />)}</div>
               ) : (
                 <Table>
                   <TableHeader>
@@ -94,16 +94,16 @@ export default function Facturacion() {
                   <TableBody>
                     {filtered.length === 0 ? (
                       <TableRow><TableCell colSpan={8} className="text-center py-8 text-muted-foreground">No se encontraron facturas</TableCell></TableRow>
-                    ) : filtered.map(f => (
-                      <TableRow key={f.id}>
-                        <TableCell className="font-medium">{f.numero}</TableCell>
-                        <TableCell>{f.expediente}</TableCell>
-                        <TableCell className="max-w-[180px] truncate">{f.cliente_nombre}</TableCell>
-                        <TableCell className="font-medium">{formatCurrency(f.total, f.moneda)}</TableCell>
-                        <TableCell>{f.moneda}</TableCell>
-                        <TableCell className="text-xs">{formatDate(f.fecha_emision)}</TableCell>
-                        <TableCell className="text-xs">{formatDate(f.fecha_vencimiento)}</TableCell>
-                        <TableCell><Badge className={getEstadoColor(f.estado)}>{f.estado}</Badge></TableCell>
+                    ) : filtered.map(factura => (
+                      <TableRow key={factura.id}>
+                        <TableCell className="font-medium">{factura.numero}</TableCell>
+                        <TableCell>{factura.expediente}</TableCell>
+                        <TableCell className="max-w-[180px] truncate">{factura.cliente_nombre}</TableCell>
+                        <TableCell className="font-medium">{formatCurrency(factura.total, factura.moneda)}</TableCell>
+                        <TableCell>{factura.moneda}</TableCell>
+                        <TableCell className="text-xs">{formatDate(factura.fecha_emision)}</TableCell>
+                        <TableCell className="text-xs">{formatDate(factura.fecha_vencimiento)}</TableCell>
+                        <TableCell><Badge className={getEstadoColor(factura.estado)}>{factura.estado}</Badge></TableCell>
                       </TableRow>
                     ))}
                   </TableBody>
@@ -117,7 +117,7 @@ export default function Facturacion() {
           <Card>
             <CardContent className="p-0">
               {loadingGastos ? (
-                <div className="p-6 space-y-3">{Array.from({ length: 5 }).map((_, i) => <Skeleton key={i} className="h-10 w-full" />)}</div>
+                <div className="p-6 space-y-3">{Array.from({ length: 5 }).map((_, indice) => <Skeleton key={indice} className="h-10 w-full" />)}</div>
               ) : (
                 <Table>
                   <TableHeader>
@@ -135,14 +135,14 @@ export default function Facturacion() {
                   <TableBody>
                     {gastosPendientes.length === 0 ? (
                       <TableRow><TableCell colSpan={8} className="text-center py-8 text-muted-foreground">No hay gastos pendientes</TableCell></TableRow>
-                    ) : gastosPendientes.map((g) => (
-                      <TableRow key={g.id}>
-                        <TableCell>{g.proveedor_nombre}</TableCell>
-                        <TableCell className="font-medium">{(g.embarques as any)?.expediente || '-'}</TableCell>
-                        <TableCell>{g.concepto}</TableCell>
-                        <TableCell className="font-medium">{formatCurrency(g.monto, g.moneda)}</TableCell>
-                        <TableCell>{g.moneda}</TableCell>
-                        <TableCell className="text-xs">{g.fecha_vencimiento ? formatDate(g.fecha_vencimiento) : '-'}</TableCell>
+                    ) : gastosPendientes.map((gasto) => (
+                      <TableRow key={gasto.id}>
+                        <TableCell>{gasto.proveedor_nombre}</TableCell>
+                        <TableCell className="font-medium">{(gasto.embarques as any)?.expediente || '-'}</TableCell>
+                        <TableCell>{gasto.concepto}</TableCell>
+                        <TableCell className="font-medium">{formatCurrency(gasto.monto, gasto.moneda)}</TableCell>
+                        <TableCell>{gasto.moneda}</TableCell>
+                        <TableCell className="text-xs">{gasto.fecha_vencimiento ? formatDate(gasto.fecha_vencimiento) : '-'}</TableCell>
                         <TableCell><Badge className={getEstadoColor('Pendiente')}>Pendiente</Badge></TableCell>
                         <TableCell>
                           {canEdit && (
@@ -150,7 +150,7 @@ export default function Facturacion() {
                               variant="outline"
                               size="sm"
                               disabled={marcarPagado.isPending}
-                              onClick={() => handleMarcarPagado(g.id)}
+                              onClick={() => handleMarcarPagado(gasto.id)}
                             >
                               Marcar Pagado
                             </Button>
