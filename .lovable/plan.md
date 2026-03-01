@@ -1,121 +1,180 @@
 
 
-## Plan: Refactorización — Limpieza, deduplicación y modularización
+## Plan: Renombrar variables y funciones para mayor claridad — v3.2.0
 
-### 1. Funciones duplicadas a consolidar
-
-Se encontraron **3 funciones helper duplicadas** definidas localmente en múltiples archivos, cuando ya existen versiones centralizadas en `src/lib/helpers.ts`:
-
-| Función | Definida en `helpers.ts` | Duplicada en |
-|---|---|---|
-| `getModoIcon()` | Si | `Embarques.tsx` (L24-32), `EmbarqueDetalle.tsx` (L28-35) |
-| `getEstadoColor()` | Si | `Embarques.tsx` (L34-44), `EmbarqueDetalle.tsx` (L37-49) |
-| `formatDate()` | Si | `Embarques.tsx` (L46-49), `EmbarqueDetalle.tsx` (L51-54), `Usuarios.tsx` (L89-92) |
-
-**Accion:** Eliminar las definiciones locales y usar `import { formatDate, getEstadoColor, getModoIcon } from "@/lib/helpers"`.
+He analizado todo el código de la aplicación. A continuación detallo los renombramientos organizados por archivo. El criterio es: **toda variable de 1-2 letras o abreviatura ambigua se reemplaza por un nombre descriptivo que se entienda sin contexto**.
 
 ---
 
-### 2. Hook duplicado: `useContactosCliente`
+### 1. `src/lib/helpers.ts`
+- `[y, m, d]` → `[anio, mes, dia]`
 
-Definido en **dos** archivos:
-- `src/hooks/useClientes.ts` (L38-49) — versión original
-- `src/hooks/useEmbarques.ts` (L214-227) — copia exacta
+### 2. `src/hooks/useClientes.ts`
+- `qc` (×4 hooks) → `queryClient`
+- `_d` en callbacks onSuccess → `_resultado`
 
-**Accion:** Eliminar la copia en `useEmbarques.ts`. Actualizar `NuevoEmbarque.tsx` para importar desde `useClientes.ts`.
+### 3. `src/hooks/useEmbarques.ts`
+- `emb` → `embarqueCreado` (L129)
+- `embError` → `errorCrearEmbarque`
+- `r` en `.then(r => r)` y `for (const r of results)` → `respuesta`
+- `cv` → `conceptoVenta` (L142)
+- `cc` → `conceptoCosto` (L149)
+- `d` → `documento` (L156)
+
+### 4. `src/hooks/useFacturas.ts`
+No requiere cambios — los nombres ya son descriptivos.
+
+### 5. `src/pages/Dashboard.tsx`
+- `le` → `cargandoEmbarques` (L37 alias de isLoading)
+- `lc` → se elimina, ya no se usa (conceptos se cargan en Reportes)
+- En `stats` memo: `e.estado` ok, pero `e` en `.filter(e =>` → `embarque`
+- `diff` → `diasParaLlegada`
+- `d` → `fechaMes` (L47)
+- `y, m` → `anio, mes`
+- `inMonth` → `embarquesDelMes`
+- `e` en recientes map → `embarque`
+- `f` en facturas filter → `factura`
+- `g` en gastos → mantener (solo `.length`)
+
+### 6. `src/pages/Embarques.tsx`
+- `e` en filter/map → `embarque`
+- `m` en MODOS map → `modoTransporte`
+- `c` en clientes map → `cliente`
+- `p` en setPage → `paginaActual`
+- `v` en onValueChange → `valorSeleccionado`
+
+### 7. `src/pages/EmbarqueDetalle.tsx`
+- `tcUSD` → `tipoCambioUSD`
+- `tcEUR` → `tipoCambioEUR`
+- `c` en reduce (conceptosVenta) → `concepto`
+- `t` → `totalConcepto`
+- `m` → `montoConcepto`
+- `docArchivo` param → `rutaArchivo`
+
+### 8. `src/pages/Facturacion.tsx`
+- `f` en filter/map → `factura`
+- `g` en gastos map → `gasto`
+- `e` en ESTADOS_FACTURA map → `estadoFactura`
+
+### 9. `src/pages/Reportes.tsx`
+- `le` → `cargandoEmbarques`
+- `lc` → `cargandoConceptos`
+- `c` en clientes.map → `cliente`
+- `cEmbarques` → `embarquesDelCliente`
+- `embIds` → `idsEmbarquesCliente`
+- `tcMap` → `tiposCambioEmbarques`
+- `tc` → `tipoCambio`
+- `v` en ventas filter → `venta`
+- `g` en costos filter → `costo`
+- `f` en facturas filter → `factura`
+- `i` en render → `indice`
+
+### 10. `src/pages/NuevoEmbarque.tsx`
+- `cv` en interfaces/filtros → `conceptoVenta` / `venta`
+- `cc` → `conceptoCosto` / `costo`
+- `ct` en contactos.find → `contacto`
+- `c` en reduce → `concepto`
+- `n` en setNextId → `contadorActual`
+- `s` en setCurrentStep → `pasoActual`
+- `p` en proveedoresDb.find → `proveedor`
+- `rates` → `tiposDeCambio`
+
+### 11. `src/pages/Clientes.tsx`
+- `c` en filtered/map → `cliente`
+- `d` en documentos map → `documento`
+- `o` en Dialog onOpenChange → `abierto`
+
+### 12. `src/pages/ClienteDetalle.tsx`
+- `ct` (contacto) → `contacto`
+- `_d` → `_resultado`
+- `t` en TIPOS_CONTACTO map → `tipoContacto`
+- `e` en handleChange → mantener (event pattern estándar)
+- `v` en onValueChange → `valorSeleccionado`
+
+### 13. `src/pages/Proveedores.tsx`
+- `p` en map → `proveedor`
+- `t` en TABS map → `tabConfig`
+- `i` en skeleton → `indice`
+
+### 14. `src/pages/ProveedorDetalle.tsx`
+- `prov` → `proveedor`
+- `o` en operaciones map → `operacion`
+- `i` en key → `indice`
+
+### 15. `src/pages/Usuarios.tsx`
+- `u` en map → `usuario`
+- `r` en rolesData map → `rolUsuario`
+
+### 16. `src/components/GlobalSearch.tsx`
+- `q` → `terminoBusqueda` (param)
+- `o` en setOpen → `estaAbierto`
+- `e` en embarques map → `embarque`
+- `c` en clientes map → `cliente`
+- `p` en proveedores map → `proveedor`
+- `f` en facturas map → `factura`
+- `r` en grouped reduce → `resultado`
+
+### 17. `src/components/embarque/StepCostosPrecios.tsx`
+- `cv` → `venta`
+- `cc` → `costo`
+- `v` en onValueChange → `valorSeleccionado`
+- `c` en CONCEPTOS map → `conceptoMaritimo`
+- `p` en proveedoresDb map → `proveedor`
+
+### 18. `src/components/embarque/TabCostos.tsx`
+- `c` en map → `concepto`
+
+### 19. `src/components/embarque/TabNotas.tsx`
+- `n` en map → `nota`
+
+### 20. `src/components/embarque/TabFacturacion.tsx`
+- `f` en map → `factura`
+
+### 21. `src/components/NuevoProveedorDialog.tsx` / `EditarProveedorDialog.tsx`
+- `f` en setForm → `formularioActual`
+- `v` en onValueChange → `valorSeleccionado`
+- `t` en TIPOS map → `tipoProveedor`
+- `m` en MONEDAS map → `moneda`
+- `p` en PAISES map → `pais`
+
+### 22. `src/contexts/AuthContext.tsx`
+- `_event` → `_eventoAuth`
 
 ---
 
-### 3. Constantes duplicadas entre `NuevoProveedorDialog` y `EditarProveedorDialog`
-
-Las constantes `TIPOS`, `MONEDAS` y `PAISES` están definidas idénticamente en ambos archivos. La lógica de formulario (campos Origen, Tipo, País, RFC, etc.) es casi idéntica.
-
-**Accion:** Extraer las constantes compartidas a `src/data/proveedorConstants.ts`. Los formularios son similares pero suficientemente distintos (crear vs editar con 2 pasos vs 1) para mantenerlos separados por ahora.
-
----
-
-### 4. Componentes creados pero nunca usados
-
-- `src/components/TableSkeleton.tsx` — **0 importaciones** en todo el codebase
-- `src/components/ErrorState.tsx` — **0 importaciones** en todo el codebase
-
-**Accion:** Eliminar ambos archivos. Si se necesitan en el futuro se recrean.
-
----
-
-### 5. Variable no usada en `EmbarqueDetalle.tsx`
-
-- `fileInputRef` (L68) se declara como `useRef<HTMLInputElement>(null)` pero **nunca se usa** — el upload usa `document.createElement("input")` dinámicamente.
-
-**Accion:** Eliminar la declaración `const fileInputRef`.
-
----
-
-### 6. Archivo `NuevoEmbarque.tsx` demasiado largo (518 líneas)
-
-Este es el archivo más complejo del proyecto. Tiene ~30 estados individuales con `useState` y 4 steps en un solo componente.
-
-**Accion:** Dividir en sub-componentes:
-- `src/components/embarque/StepDatosGenerales.tsx` — Step 1 (formulario de datos generales)
-- `src/components/embarque/StepDatosRuta.tsx` — Step 2 (campos por modo de transporte)
-- `src/components/embarque/StepDocumentos.tsx` — Step 3 (lista de documentos)
-- `src/components/embarque/StepCostosPrecios.tsx` — Step 4 (conceptos de venta/costo)
-- `src/components/embarque/StepIndicator.tsx` — Indicador de pasos (reutilizable, también se usa en `EmbarqueDetalle`)
-
-El estado principal se mantiene en `NuevoEmbarque.tsx` y se pasa por props.
-
----
-
-### 7. `EmbarqueDetalle.tsx` largo (422 líneas)
-
-**Accion:** Extraer cada tab a su propio componente:
-- `src/components/embarque/TabResumen.tsx`
-- `src/components/embarque/TabDocumentos.tsx`
-- `src/components/embarque/TabCostos.tsx`
-- `src/components/embarque/TabFacturacion.tsx`
-- `src/components/embarque/TabNotas.tsx`
-
-El componente `Row` (L415-422) ya local se mueve dentro de `TabResumen`.
-
----
-
-### 8. Lista de documentos duplicada en `NuevoEmbarque.tsx`
-
-La lista de documentos por modo de transporte (L157-161 y L387-389) está definida **dos veces** en el mismo archivo.
-
-**Accion:** Extraer a una función `getDocsForMode(modo: string): string[]` en el módulo de constantes del embarque.
-
----
-
-### Resumen de cambios
+### Archivos a modificar (22 archivos)
 
 ```text
-ELIMINAR:
-  src/components/TableSkeleton.tsx
-  src/components/ErrorState.tsx
-
-CREAR:
-  src/data/proveedorConstants.ts
-  src/components/embarque/StepIndicator.tsx
-  src/components/embarque/StepDatosGenerales.tsx
-  src/components/embarque/StepDatosRuta.tsx
-  src/components/embarque/StepDocumentos.tsx
-  src/components/embarque/StepCostosPrecios.tsx
-  src/components/embarque/TabResumen.tsx
-  src/components/embarque/TabDocumentos.tsx
-  src/components/embarque/TabCostos.tsx
-  src/components/embarque/TabFacturacion.tsx
-  src/components/embarque/TabNotas.tsx
-
-MODIFICAR:
-  src/pages/Embarques.tsx          (eliminar helpers locales, importar de helpers.ts)
-  src/pages/EmbarqueDetalle.tsx    (eliminar helpers locales + fileInputRef, extraer tabs)
-  src/pages/Usuarios.tsx           (eliminar formatDate local, importar de helpers.ts)
-  src/pages/NuevoEmbarque.tsx      (extraer steps a sub-componentes)
-  src/hooks/useEmbarques.ts        (eliminar useContactosCliente duplicado)
-  src/pages/NuevoEmbarque.tsx      (importar useContactosCliente desde useClientes)
-  src/components/NuevoProveedorDialog.tsx  (importar constantes compartidas)
-  src/components/EditarProveedorDialog.tsx (importar constantes compartidas)
-  src/pages/Changelog.tsx          (nueva entrada v3.1.0)
+src/lib/helpers.ts
+src/hooks/useClientes.ts
+src/hooks/useEmbarques.ts
+src/pages/Dashboard.tsx
+src/pages/Embarques.tsx
+src/pages/EmbarqueDetalle.tsx
+src/pages/Facturacion.tsx
+src/pages/Reportes.tsx
+src/pages/NuevoEmbarque.tsx
+src/pages/Clientes.tsx
+src/pages/ClienteDetalle.tsx
+src/pages/Proveedores.tsx
+src/pages/ProveedorDetalle.tsx
+src/pages/Usuarios.tsx
+src/components/GlobalSearch.tsx
+src/components/embarque/StepCostosPrecios.tsx
+src/components/embarque/TabCostos.tsx
+src/components/embarque/TabNotas.tsx
+src/components/embarque/TabFacturacion.tsx
+src/components/NuevoProveedorDialog.tsx
+src/components/EditarProveedorDialog.tsx
+src/contexts/AuthContext.tsx
+src/pages/Changelog.tsx  (nueva entrada v3.2.0)
 ```
+
+### Criterios aplicados
+- Variables de iterador de 1 letra (`e`, `c`, `f`, `g`, `p`) → nombre completo de la entidad
+- Abreviaciones ambiguas (`prov`, `emb`, `tc`, `qc`, `le`, `lc`) → nombre completo
+- Destructuring críptico (`[y, m, d]`) → nombre legible
+- Callbacks `_d` → `_resultado`
+- Setters con `f =>` → `formularioActual =>`
+- Sin cambiar nombres que ya son claros (`search`, `page`, `toast`, `navigate`, etc.)
 
