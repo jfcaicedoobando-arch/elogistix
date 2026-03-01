@@ -1,5 +1,5 @@
 import { useParams, useNavigate } from "react-router-dom";
-import { ArrowLeft, Edit, RefreshCw, FileText, Printer } from "lucide-react";
+import { ArrowLeft, Edit, FileText, Printer } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -7,15 +7,66 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
-import { embarques, facturas, formatDate, formatCurrency, getEstadoColor, getModoIcon } from "@/data/mockData";
-import type { Embarque } from "@/data/types";
+import { Skeleton } from "@/components/ui/skeleton";
+import { formatCurrency } from "@/lib/formatters";
+import {
+  useEmbarque,
+  useEmbarqueConceptosVenta,
+  useEmbarqueConceptosCosto,
+  useEmbarqueDocumentos,
+  useEmbarqueNotas,
+  useEmbarqueFacturas,
+} from "@/hooks/useEmbarques";
 
 const estadoTimeline = ['Cotización', 'Confirmado', 'En Tránsito', 'Llegada', 'En Proceso', 'Cerrado'];
+
+const getModoIcon = (modo: string) => {
+  switch (modo) {
+    case 'Marítimo': return '🚢';
+    case 'Aéreo': return '✈️';
+    case 'Terrestre': return '🚛';
+    default: return '📦';
+  }
+};
+
+const getEstadoColor = (estado: string) => {
+  switch (estado) {
+    case 'Cotización': return 'bg-muted text-muted-foreground';
+    case 'Confirmado': return 'bg-info/20 text-info';
+    case 'En Tránsito': return 'bg-warning/20 text-warning';
+    case 'Llegada': return 'bg-success/20 text-success';
+    case 'En Proceso': return 'bg-accent/20 text-accent';
+    case 'Cerrado': return 'bg-muted text-muted-foreground';
+    case 'Pagado': return 'bg-success/20 text-success';
+    case 'Pendiente': return 'bg-warning/20 text-warning';
+    default: return '';
+  }
+};
+
+const formatDate = (dateStr: string | null) => {
+  if (!dateStr) return '-';
+  return new Date(dateStr).toLocaleDateString('es-MX', { day: '2-digit', month: 'short', year: 'numeric' });
+};
 
 export default function EmbarqueDetalle() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const embarque = embarques.find(e => e.id === id);
+  const { data: embarque, isLoading } = useEmbarque(id);
+  const { data: conceptosVenta = [] } = useEmbarqueConceptosVenta(id);
+  const { data: conceptosCosto = [] } = useEmbarqueConceptosCosto(id);
+  const { data: documentos = [] } = useEmbarqueDocumentos(id);
+  const { data: notas = [] } = useEmbarqueNotas(id);
+  const { data: facturas = [] } = useEmbarqueFacturas(id);
+
+  if (isLoading) {
+    return (
+      <div className="space-y-6">
+        <Skeleton className="h-10 w-64" />
+        <Skeleton className="h-20 w-full" />
+        <Skeleton className="h-64 w-full" />
+      </div>
+    );
+  }
 
   if (!embarque) {
     return (
@@ -26,20 +77,23 @@ export default function EmbarqueDetalle() {
     );
   }
 
-  const embarqueFacturas = facturas.filter(f => f.embarqueId === id);
-  const totalVenta = embarque.conceptosVenta.reduce((sum, c) => {
-    if (c.moneda === 'USD') return sum + c.total * embarque.tipoCambioUSD;
-    if (c.moneda === 'EUR') return sum + c.total * embarque.tipoCambioEUR;
-    return sum + c.total;
+  const tcUSD = Number(embarque.tipo_cambio_usd) || 1;
+  const tcEUR = Number(embarque.tipo_cambio_eur) || 1;
+
+  const totalVenta = conceptosVenta.reduce((sum, c) => {
+    const t = Number(c.total);
+    if (c.moneda === 'USD') return sum + t * tcUSD;
+    if (c.moneda === 'EUR') return sum + t * tcEUR;
+    return sum + t;
   }, 0);
-  const totalCosto = embarque.conceptosCosto.reduce((sum, c) => {
-    if (c.moneda === 'USD') return sum + c.monto * embarque.tipoCambioUSD;
-    if (c.moneda === 'EUR') return sum + c.monto * embarque.tipoCambioEUR;
-    return sum + c.monto;
+  const totalCosto = conceptosCosto.reduce((sum, c) => {
+    const m = Number(c.monto);
+    if (c.moneda === 'USD') return sum + m * tcUSD;
+    if (c.moneda === 'EUR') return sum + m * tcEUR;
+    return sum + m;
   }, 0);
   const utilidad = totalVenta - totalCosto;
   const margen = totalVenta > 0 ? (utilidad / totalVenta) * 100 : 0;
-
   const currentStepIndex = estadoTimeline.indexOf(embarque.estado);
 
   return (
@@ -54,7 +108,7 @@ export default function EmbarqueDetalle() {
             <Badge className={getEstadoColor(embarque.estado)}>{embarque.estado}</Badge>
             <span className="text-lg">{getModoIcon(embarque.modo)}</span>
           </div>
-          <p className="text-sm text-muted-foreground">{embarque.clienteNombre}</p>
+          <p className="text-sm text-muted-foreground">{embarque.cliente_nombre}</p>
         </div>
         <div className="flex gap-2">
           <Button variant="outline" size="sm"><Edit className="h-4 w-4 mr-1" /> Editar</Button>
@@ -71,9 +125,7 @@ export default function EmbarqueDetalle() {
           <TabsTrigger value="notas">Notas y Actividad</TabsTrigger>
         </TabsList>
 
-        {/* RESUMEN */}
         <TabsContent value="resumen" className="space-y-6">
-          {/* Timeline */}
           <Card>
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
@@ -82,12 +134,8 @@ export default function EmbarqueDetalle() {
                     <div className="flex flex-col items-center">
                       <div className={`h-8 w-8 rounded-full flex items-center justify-center text-xs font-bold ${
                         i <= currentStepIndex ? 'bg-accent text-accent-foreground' : 'bg-muted text-muted-foreground'
-                      }`}>
-                        {i + 1}
-                      </div>
-                      <span className={`text-[10px] mt-1 text-center ${i <= currentStepIndex ? 'text-foreground font-medium' : 'text-muted-foreground'}`}>
-                        {estado}
-                      </span>
+                      }`}>{i + 1}</div>
+                      <span className={`text-[10px] mt-1 text-center ${i <= currentStepIndex ? 'text-foreground font-medium' : 'text-muted-foreground'}`}>{estado}</span>
                     </div>
                     {i < estadoTimeline.length - 1 && (
                       <div className={`flex-1 h-0.5 mx-2 ${i < currentStepIndex ? 'bg-accent' : 'bg-border'}`} />
@@ -105,9 +153,9 @@ export default function EmbarqueDetalle() {
                 <Row label="Modo" value={`${getModoIcon(embarque.modo)} ${embarque.modo}`} />
                 <Row label="Tipo" value={embarque.tipo} />
                 <Row label="Incoterm" value={embarque.incoterm} />
-                <Row label="Mercancía" value={embarque.descripcionMercancia} />
-                <Row label="Peso" value={`${embarque.pesoKg.toLocaleString()} kg`} />
-                <Row label="Volumen" value={`${embarque.volumenM3} m³`} />
+                <Row label="Mercancía" value={embarque.descripcion_mercancia} />
+                <Row label="Peso" value={`${Number(embarque.peso_kg).toLocaleString()} kg`} />
+                <Row label="Volumen" value={`${embarque.volumen_m3} m³`} />
                 <Row label="Piezas" value={embarque.piezas.toString()} />
                 <Row label="Operador" value={embarque.operador} />
               </CardContent>
@@ -117,30 +165,30 @@ export default function EmbarqueDetalle() {
               <CardHeader className="pb-3"><CardTitle className="text-sm">Ruta y Transporte</CardTitle></CardHeader>
               <CardContent className="space-y-2 text-sm">
                 {embarque.modo === 'Marítimo' && (<>
-                  <Row label="Puerto Origen" value={embarque.puertoOrigen || '-'} />
-                  <Row label="Puerto Destino" value={embarque.puertoDestino || '-'} />
+                  <Row label="Puerto Origen" value={embarque.puerto_origen || '-'} />
+                  <Row label="Puerto Destino" value={embarque.puerto_destino || '-'} />
                   <Row label="Naviera" value={embarque.naviera || '-'} />
-                  <Row label="BL Master" value={embarque.blMaster || '-'} />
-                  <Row label="BL House" value={embarque.blHouse || '-'} />
-                  <Row label="Servicio" value={embarque.tipoServicio || '-'} />
-                  <Row label="Contenedor" value={`${embarque.contenedor || '-'} (${embarque.tipoContenedor || '-'})`} />
+                  <Row label="BL Master" value={embarque.bl_master || '-'} />
+                  <Row label="BL House" value={embarque.bl_house || '-'} />
+                  <Row label="Servicio" value={embarque.tipo_servicio || '-'} />
+                  <Row label="Contenedor" value={`${embarque.contenedor || '-'} (${embarque.tipo_contenedor || '-'})`} />
                 </>)}
                 {embarque.modo === 'Aéreo' && (<>
-                  <Row label="Aeropuerto Origen" value={embarque.aeropuertoOrigen || '-'} />
-                  <Row label="Aeropuerto Destino" value={embarque.aeropuertoDestino || '-'} />
+                  <Row label="Aeropuerto Origen" value={embarque.aeropuerto_origen || '-'} />
+                  <Row label="Aeropuerto Destino" value={embarque.aeropuerto_destino || '-'} />
                   <Row label="Aerolínea" value={embarque.aerolinea || '-'} />
                   <Row label="MAWB" value={embarque.mawb || '-'} />
                   <Row label="HAWB" value={embarque.hawb || '-'} />
                 </>)}
                 {embarque.modo === 'Terrestre' && (<>
-                  <Row label="Ciudad Origen" value={embarque.ciudadOrigen || '-'} />
-                  <Row label="Ciudad Destino" value={embarque.ciudadDestino || '-'} />
+                  <Row label="Ciudad Origen" value={embarque.ciudad_origen || '-'} />
+                  <Row label="Ciudad Destino" value={embarque.ciudad_destino || '-'} />
                   <Row label="Transportista" value={embarque.transportista || '-'} />
-                  <Row label="Carta Porte" value={embarque.cartaPorte || '-'} />
+                  <Row label="Carta Porte" value={embarque.carta_porte || '-'} />
                 </>)}
                 <Row label="ETD" value={formatDate(embarque.etd)} />
                 <Row label="ETA" value={formatDate(embarque.eta)} />
-                {embarque.fechaLlegadaReal && <Row label="Llegada Real" value={formatDate(embarque.fechaLlegadaReal)} />}
+                {embarque.fecha_llegada_real && <Row label="Llegada Real" value={formatDate(embarque.fecha_llegada_real)} />}
               </CardContent>
             </Card>
           </div>
@@ -157,7 +205,6 @@ export default function EmbarqueDetalle() {
           </div>
         </TabsContent>
 
-        {/* DOCUMENTOS */}
         <TabsContent value="documentos">
           <Card>
             <CardContent className="p-0">
@@ -171,7 +218,7 @@ export default function EmbarqueDetalle() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {embarque.documentos.map(doc => (
+                  {documentos.map(doc => (
                     <TableRow key={doc.id}>
                       <TableCell className="font-medium">{doc.nombre}</TableCell>
                       <TableCell>
@@ -188,13 +235,15 @@ export default function EmbarqueDetalle() {
                       </TableCell>
                     </TableRow>
                   ))}
+                  {documentos.length === 0 && (
+                    <TableRow><TableCell colSpan={4} className="text-center py-8 text-muted-foreground text-sm">Sin documentos registrados</TableCell></TableRow>
+                  )}
                 </TableBody>
               </Table>
             </CardContent>
           </Card>
         </TabsContent>
 
-        {/* COSTOS */}
         <TabsContent value="costos" className="space-y-6">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <Card><CardContent className="p-4"><p className="text-xs text-muted-foreground">Total Venta</p><p className="text-lg font-bold">{formatCurrency(totalVenta)}</p></CardContent></Card>
@@ -209,8 +258,8 @@ export default function EmbarqueDetalle() {
               <Table>
                 <TableHeader><TableRow><TableHead>Concepto</TableHead><TableHead>Cant.</TableHead><TableHead>P. Unitario</TableHead><TableHead>Moneda</TableHead><TableHead>Total</TableHead></TableRow></TableHeader>
                 <TableBody>
-                  {embarque.conceptosVenta.map(c => (
-                    <TableRow key={c.id}><TableCell>{c.descripcion}</TableCell><TableCell>{c.cantidad}</TableCell><TableCell>{formatCurrency(c.precioUnitario, c.moneda)}</TableCell><TableCell>{c.moneda}</TableCell><TableCell className="font-medium">{formatCurrency(c.total, c.moneda)}</TableCell></TableRow>
+                  {conceptosVenta.map(c => (
+                    <TableRow key={c.id}><TableCell>{c.descripcion}</TableCell><TableCell>{c.cantidad}</TableCell><TableCell>{formatCurrency(Number(c.precio_unitario), c.moneda)}</TableCell><TableCell>{c.moneda}</TableCell><TableCell className="font-medium">{formatCurrency(Number(c.total), c.moneda)}</TableCell></TableRow>
                   ))}
                 </TableBody>
               </Table>
@@ -223,9 +272,9 @@ export default function EmbarqueDetalle() {
               <Table>
                 <TableHeader><TableRow><TableHead>Proveedor</TableHead><TableHead>Concepto</TableHead><TableHead>Monto</TableHead><TableHead>Moneda</TableHead><TableHead>Liquidación</TableHead></TableRow></TableHeader>
                 <TableBody>
-                  {embarque.conceptosCosto.map(c => (
-                    <TableRow key={c.id}><TableCell>{c.proveedorNombre}</TableCell><TableCell>{c.concepto}</TableCell><TableCell className="font-medium">{formatCurrency(c.monto, c.moneda)}</TableCell><TableCell>{c.moneda}</TableCell>
-                      <TableCell><Badge className={getEstadoColor(c.estadoLiquidacion)}>{c.estadoLiquidacion}</Badge></TableCell>
+                  {conceptosCosto.map(c => (
+                    <TableRow key={c.id}><TableCell>{c.proveedor_nombre}</TableCell><TableCell>{c.concepto}</TableCell><TableCell className="font-medium">{formatCurrency(Number(c.monto), c.moneda)}</TableCell><TableCell>{c.moneda}</TableCell>
+                      <TableCell><Badge className={getEstadoColor(c.estado_liquidacion)}>{c.estado_liquidacion}</Badge></TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
@@ -234,7 +283,6 @@ export default function EmbarqueDetalle() {
           </Card>
         </TabsContent>
 
-        {/* FACTURACIÓN */}
         <TabsContent value="facturacion">
           <Card>
             <CardHeader className="pb-2 flex flex-row items-center justify-between">
@@ -242,12 +290,12 @@ export default function EmbarqueDetalle() {
               <Button size="sm"><FileText className="h-4 w-4 mr-1" /> Generar Factura</Button>
             </CardHeader>
             <CardContent className="p-0">
-              {embarqueFacturas.length > 0 ? (
+              {facturas.length > 0 ? (
                 <Table>
                   <TableHeader><TableRow><TableHead># Factura</TableHead><TableHead>Monto</TableHead><TableHead>Moneda</TableHead><TableHead>Fecha</TableHead><TableHead>Estado</TableHead></TableRow></TableHeader>
                   <TableBody>
-                    {embarqueFacturas.map(f => (
-                      <TableRow key={f.id}><TableCell className="font-medium">{f.numero}</TableCell><TableCell>{formatCurrency(f.total, f.moneda)}</TableCell><TableCell>{f.moneda}</TableCell><TableCell>{formatDate(f.fechaEmision)}</TableCell>
+                    {facturas.map(f => (
+                      <TableRow key={f.id}><TableCell className="font-medium">{f.numero}</TableCell><TableCell>{formatCurrency(Number(f.total), f.moneda)}</TableCell><TableCell>{f.moneda}</TableCell><TableCell>{formatDate(f.fecha_emision)}</TableCell>
                         <TableCell><Badge className={getEstadoColor(f.estado)}>{f.estado}</Badge></TableCell>
                       </TableRow>
                     ))}
@@ -260,14 +308,13 @@ export default function EmbarqueDetalle() {
           </Card>
         </TabsContent>
 
-        {/* NOTAS */}
         <TabsContent value="notas">
           <Card>
             <CardHeader className="pb-2"><CardTitle className="text-sm">Actividad y Notas</CardTitle></CardHeader>
             <CardContent>
-              {embarque.notas.length > 0 ? (
+              {notas.length > 0 ? (
                 <div className="space-y-4">
-                  {embarque.notas.map(n => (
+                  {notas.map(n => (
                     <div key={n.id} className="flex gap-3 text-sm">
                       <div className="flex flex-col items-center">
                         <div className={`h-2.5 w-2.5 rounded-full mt-1.5 ${
