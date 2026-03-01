@@ -129,7 +129,7 @@ export default function EmbarqueDetalle() {
           <p className="text-sm text-muted-foreground">{embarque.cliente_nombre}</p>
         </div>
         <div className="flex gap-2">
-          {canEdit && <Button variant="outline" size="sm"><Edit className="h-4 w-4 mr-1" /> Editar</Button>}
+          {canEdit && <Button variant="outline" size="sm" onClick={() => navigate(`/embarques/${id}/editar`)}><Edit className="h-4 w-4 mr-1" /> Editar</Button>}
           <Button variant="outline" size="sm"><Printer className="h-4 w-4 mr-1" /> Imprimir</Button>
         </div>
       </div>

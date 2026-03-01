@@ -180,6 +180,57 @@ export function useCreateEmbarque() {
   });
 }
 
+interface UpdateEmbarqueInput {
+  id: string;
+  embarque: Partial<TablesInsert<'embarques'>>;
+  conceptosVenta: Omit<TablesInsert<'conceptos_venta'>, 'embarque_id'>[];
+  conceptosCosto: Omit<TablesInsert<'conceptos_costo'>, 'embarque_id'>[];
+}
+
+export function useUpdateEmbarque() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, embarque, conceptosVenta, conceptosCosto }: UpdateEmbarqueInput) => {
+      const { data: embarqueActualizado, error: errorActualizar } = await supabase
+        .from('embarques')
+        .update(embarque)
+        .eq('id', id)
+        .select()
+        .single();
+      if (errorActualizar) throw errorActualizar;
+
+      // Sincronizar conceptos: delete + re-insert
+      const { error: errorBorrarVenta } = await supabase.from('conceptos_venta').delete().eq('embarque_id', id);
+      if (errorBorrarVenta) throw errorBorrarVenta;
+
+      const { error: errorBorrarCosto } = await supabase.from('conceptos_costo').delete().eq('embarque_id', id);
+      if (errorBorrarCosto) throw errorBorrarCosto;
+
+      if (conceptosVenta.length > 0) {
+        const { error } = await supabase.from('conceptos_venta').insert(
+          conceptosVenta.map(cv => ({ ...cv, embarque_id: id }))
+        );
+        if (error) throw error;
+      }
+
+      if (conceptosCosto.length > 0) {
+        const { error } = await supabase.from('conceptos_costo').insert(
+          conceptosCosto.map(cc => ({ ...cc, embarque_id: id }))
+        );
+        if (error) throw error;
+      }
+
+      return embarqueActualizado;
+    },
+    onSuccess: (embarqueActualizado) => {
+      queryClient.invalidateQueries({ queryKey: ['embarques'] });
+      queryClient.invalidateQueries({ queryKey: ['embarques', embarqueActualizado.id] });
+      queryClient.invalidateQueries({ queryKey: ['conceptos_venta', embarqueActualizado.id] });
+      queryClient.invalidateQueries({ queryKey: ['conceptos_costo', embarqueActualizado.id] });
+    },
+  });
+}
+
 export function useClientesForSelect() {
   return useQuery({
     queryKey: ['clientes', 'select'],
