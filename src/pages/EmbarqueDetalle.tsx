@@ -1,5 +1,5 @@
 import { useParams, useNavigate } from "react-router-dom";
-import { ArrowLeft, Edit, FileText, Printer } from "lucide-react";
+import { ArrowLeft, Edit, FileText, Printer, Upload, Download, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -9,6 +9,11 @@ import {
 } from "@/components/ui/table";
 import { Skeleton } from "@/components/ui/skeleton";
 import { formatCurrency } from "@/lib/formatters";
+import { usePermissions } from "@/hooks/usePermissions";
+import { uploadFile, getSignedUrl } from "@/lib/storage";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
+import { useRef, useState } from "react";
 import {
   useEmbarque,
   useEmbarqueConceptosVenta,
@@ -51,12 +56,46 @@ const formatDate = (dateStr: string | null) => {
 export default function EmbarqueDetalle() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { toast } = useToast();
+  const { canEdit } = usePermissions();
   const { data: embarque, isLoading } = useEmbarque(id);
   const { data: conceptosVenta = [] } = useEmbarqueConceptosVenta(id);
   const { data: conceptosCosto = [] } = useEmbarqueConceptosCosto(id);
-  const { data: documentos = [] } = useEmbarqueDocumentos(id);
+  const { data: documentos = [], refetch: refetchDocs } = useEmbarqueDocumentos(id);
   const { data: notas = [] } = useEmbarqueNotas(id);
   const { data: facturas = [] } = useEmbarqueFacturas(id);
+
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [uploadingDocId, setUploadingDocId] = useState<string | null>(null);
+  const [downloadingDocId, setDownloadingDocId] = useState<string | null>(null);
+
+  const handleUpload = async (docId: string, file: File) => {
+    if (!id) return;
+    setUploadingDocId(docId);
+    try {
+      const path = `embarques/${id}/${docId}/${file.name}`;
+      await uploadFile(path, file);
+      await supabase.from("documentos_embarque").update({ archivo: path, estado: "Recibido" as any }).eq("id", docId);
+      toast({ title: "Archivo subido correctamente" });
+      refetchDocs();
+    } catch (err: any) {
+      toast({ title: "Error al subir archivo", description: err.message, variant: "destructive" });
+    } finally {
+      setUploadingDocId(null);
+    }
+  };
+
+  const handleDownload = async (docArchivo: string, docId: string) => {
+    setDownloadingDocId(docId);
+    try {
+      const url = await getSignedUrl(docArchivo);
+      window.open(url, "_blank");
+    } catch (err: any) {
+      toast({ title: "Error al descargar", description: err.message, variant: "destructive" });
+    } finally {
+      setDownloadingDocId(null);
+    }
+  };
 
   if (isLoading) {
     return (
@@ -111,7 +150,7 @@ export default function EmbarqueDetalle() {
           <p className="text-sm text-muted-foreground">{embarque.cliente_nombre}</p>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" size="sm"><Edit className="h-4 w-4 mr-1" /> Editar</Button>
+          {canEdit && <Button variant="outline" size="sm"><Edit className="h-4 w-4 mr-1" /> Editar</Button>}
           <Button variant="outline" size="sm"><Printer className="h-4 w-4 mr-1" /> Imprimir</Button>
         </div>
       </div>
@@ -231,7 +270,40 @@ export default function EmbarqueDetalle() {
                       </TableCell>
                       <TableCell className="text-sm text-muted-foreground">{doc.notas || '-'}</TableCell>
                       <TableCell>
-                        <Button variant="outline" size="sm">Subir archivo</Button>
+                        <div className="flex gap-2">
+                          {canEdit && (
+                            <>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                disabled={uploadingDocId === doc.id}
+                                onClick={() => {
+                                  const input = document.createElement("input");
+                                  input.type = "file";
+                                  input.onchange = (e) => {
+                                    const file = (e.target as HTMLInputElement).files?.[0];
+                                    if (file) handleUpload(doc.id, file);
+                                  };
+                                  input.click();
+                                }}
+                              >
+                                {uploadingDocId === doc.id ? <Loader2 className="h-3.5 w-3.5 animate-spin mr-1" /> : <Upload className="h-3.5 w-3.5 mr-1" />}
+                                Subir
+                              </Button>
+                            </>
+                          )}
+                          {doc.archivo && (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              disabled={downloadingDocId === doc.id}
+                              onClick={() => handleDownload(doc.archivo!, doc.id)}
+                            >
+                              {downloadingDocId === doc.id ? <Loader2 className="h-3.5 w-3.5 animate-spin mr-1" /> : <Download className="h-3.5 w-3.5 mr-1" />}
+                              Descargar
+                            </Button>
+                          )}
+                        </div>
                       </TableCell>
                     </TableRow>
                   ))}
@@ -287,7 +359,7 @@ export default function EmbarqueDetalle() {
           <Card>
             <CardHeader className="pb-2 flex flex-row items-center justify-between">
               <CardTitle className="text-sm">Facturas del Embarque</CardTitle>
-              <Button size="sm"><FileText className="h-4 w-4 mr-1" /> Generar Factura</Button>
+              {canEdit && <Button size="sm"><FileText className="h-4 w-4 mr-1" /> Generar Factura</Button>}
             </CardHeader>
             <CardContent className="p-0">
               {facturas.length > 0 ? (

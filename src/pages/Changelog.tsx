@@ -13,6 +13,14 @@ interface ChangelogEntry {
 
 const changelog: ChangelogEntry[] = [
   {
+    version: "3.0.0",
+    date: "2026-03-01",
+    type: "major",
+    title: "Fases 3 y 4 — Permisos, búsqueda, storage, responsive y tipos de cambio",
+    description:
+      "Permisos por rol en toda la UI (viewers solo lectura). Emails reales en gestión de usuarios. Subida de documentos al storage con descarga. Búsqueda global (Ctrl+K) en embarques, clientes, proveedores y facturas. Componentes reutilizables TableSkeleton y ErrorState. Tipos de cambio dinámicos desde API externa. Versión actualizada a v3.0.0.",
+  },
+  {
     version: "2.0.0",
     date: "2026-03-01",
     type: "major",

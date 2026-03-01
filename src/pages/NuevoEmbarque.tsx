@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft, Check, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -19,6 +19,7 @@ import {
   useCreateEmbarque,
 } from "@/hooks/useEmbarques";
 import { useAuth } from "@/contexts/AuthContext";
+import { useExchangeRates } from "@/hooks/useExchangeRates";
 import type { ModoTransporte, TipoOperacion, Incoterm } from "@/data/types";
 
 const MODOS: ModoTransporte[] = ['Marítimo', 'Aéreo', 'Terrestre', 'Multimodal'];
@@ -38,6 +39,7 @@ export default function NuevoEmbarque() {
   const { data: clientes = [] } = useClientesForSelect();
   const { data: proveedoresDb = [] } = useProveedoresForSelect();
   const createEmbarque = useCreateEmbarque();
+  const { data: rates } = useExchangeRates();
 
   const [currentStep, setCurrentStep] = useState(1);
   const [modo, setModo] = useState<string>('');
@@ -73,6 +75,14 @@ export default function NuevoEmbarque() {
   const [eta, setEta] = useState('');
   const [tipoCambioUSD, setTipoCambioUSD] = useState('17.25');
   const [tipoCambioEUR, setTipoCambioEUR] = useState('18.50');
+
+  // Update exchange rates from API when available
+  useEffect(() => {
+    if (rates) {
+      setTipoCambioUSD(String(rates.usdMxn));
+      setTipoCambioEUR(String(rates.eurMxn));
+    }
+  }, [rates]);
 
   const { data: contactos = [] } = useContactosCliente(clienteId || undefined);
 
