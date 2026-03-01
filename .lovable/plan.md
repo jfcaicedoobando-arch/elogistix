@@ -1,110 +1,122 @@
 
 
-# Plan de Refactorización y Mejoras
+## Plan: Fases 3 y 4 completas
 
-## Problema principal: Toda la app usa datos mock en memoria
+### Fase 3.1 — Permisos por rol en la UI
 
-La aplicación tiene backend (Lovable Cloud) pero solo lo usa para autenticación y roles. Todos los módulos operativos (embarques, clientes, proveedores, facturas) leen de `src/data/mockData.ts` — un archivo estático. Los datos no persisten entre sesiones, no se comparten entre usuarios, y las acciones de crear/editar no guardan nada real.
+**Objetivo:** Ocultar botones de crear/editar/eliminar para usuarios `viewer`.
 
----
-
-## Fase 1: Migrar datos a base de datos (Impacto alto)
-
-Crear tablas en la base de datos para las entidades core y migrar cada módulo de mock data a queries reales.
-
-### 1.1 Crear tablas: `clientes`, `proveedores`, `embarques`, `facturas`
-- Migración SQL con todas las tablas basadas en los tipos de `src/data/types.ts`
-- Tablas relacionales: `contactos_cliente`, `conceptos_venta`, `conceptos_costo`, `documentos_embarque`, `notas_embarque`
-- RLS policies por rol: admins y operadores CRUD, viewers solo lectura
-
-### 1.2 Migrar módulo de Clientes
-- Reemplazar imports de `mockData` por queries con `@tanstack/react-query`
-- CRUD real: crear, editar, eliminar clientes y contactos
-- Formulario de Nuevo Cliente guarda en DB
-
-### 1.3 Migrar módulo de Proveedores
-- Eliminar `useProveedores.ts` (store en memoria) y reemplazar con queries a DB
-- CRUD real con react-query mutations
-
-### 1.4 Migrar módulo de Embarques
-- Listado, detalle, y creación (NuevoEmbarque) conectados a DB
-- Subentidades (conceptos venta/costo, documentos, notas) en tablas separadas
-
-### 1.5 Migrar módulo de Facturación
-- Facturas y liquidación de gastos desde DB
-- Acciones reales: marcar pagado, cambiar estado de factura
-
-### 1.6 Dashboard y Reportes dinámicos
-- KPIs calculados desde queries reales en vez de constantes hardcoded
-- Gráficas alimentadas por datos reales
+**Cambios:**
+1. Crear hook `src/hooks/usePermissions.ts` que exponga `canEdit` (true si rol es `admin` u `operador`) basándose en `useAuth().role`
+2. Aplicar `canEdit` para ocultar/deshabilitar condicionalmente:
+   - `Clientes.tsx`: botón "Nuevo Cliente"
+   - `Proveedores.tsx`: botón "Nuevo Proveedor"
+   - `Embarques.tsx`: botón "Nuevo Embarque"
+   - `Facturacion.tsx`: botón "Marcar Pagado"
+   - `EmbarqueDetalle.tsx`: botones "Editar", "Subir archivo", "Generar Factura"
+   - `ClienteDetalle.tsx` / `ProveedorDetalle.tsx`: botones de editar
+   - `Usuarios.tsx` ya está protegida por ruta admin
 
 ---
 
-## Fase 2: Refactorización de código (Impacto medio)
+### Fase 3.2 — Emails de usuarios en tabla de gestión
 
-### 2.1 Extraer componentes reutilizables
-- `DataTable` genérico con búsqueda, filtros y paginación (se repite en Embarques, Clientes, Proveedores, Facturación)
-- `DetailRow` / `InfoCard` para las vistas de detalle
-- `StepWizard` genérico (se repite en NuevoEmbarque y NuevoCliente)
-- `StatusBadge` que encapsule `getEstadoColor` + Badge
+**Objetivo:** Mostrar el email real del usuario en la tabla de Usuarios en lugar del UUID.
 
-### 2.2 Centralizar hooks de datos
-- Un hook por entidad (`useEmbarques`, `useClientes`, `useProveedores`, `useFacturas`) usando react-query
-- Separar lógica de negocio (cálculos de utilidad, margen, tipo de cambio) en funciones utilitarias
-
-### 2.3 NuevoEmbarque.tsx — archivo demasiado grande (~400 líneas)
-- Extraer cada step del wizard a su propio componente
-- Mover el estado del formulario a un custom hook o react-hook-form + zod
-
-### 2.4 Eliminar archivos obsoletos
-- `src/data/mockData.ts` (después de migrar a DB)
-- `src/pages/Index.tsx` (no se usa, Dashboard es la raíz)
+**Cambios:**
+1. Crear Edge Function `supabase/functions/list-users/index.ts` que use `adminClient.auth.admin.listUsers()` y devuelva `[{ id, email, created_at }]`, protegida con verificación de rol admin
+2. Actualizar `supabase/config.toml` con `[functions.list-users]` y `verify_jwt = false`
+3. Modificar `Usuarios.tsx` para invocar `list-users` y cruzar los emails con `user_roles`, mostrando email + fecha de creación
 
 ---
 
-## Fase 3: Mejoras funcionales (Impacto medio-alto)
+### Fase 3.3 — Subida real de documentos (Storage)
 
-### 3.1 Permisos por rol en la UI
-- Viewers: ocultar botones de crear/editar/eliminar
-- Operadores: acceso completo excepto gestión de usuarios
-- Usar el `role` del AuthContext para condicionar acciones
+**Objetivo:** Los botones "Subir archivo" y "Adjuntar" suben archivos reales al storage.
 
-### 3.2 Mostrar email de usuarios en la tabla de Gestión
-- La tabla actual muestra UUID porque no puede acceder a `auth.users`
-- Crear una edge function `list-users` que use el service role key para obtener emails
-
-### 3.3 Subida real de documentos
-- Usar Storage de Lovable Cloud para archivos (BL, facturas, certificados)
-- Los botones "Subir archivo" actualmente no hacen nada
-
-### 3.4 Búsqueda global
-- Agregar un buscador en el header que busque en embarques, clientes y proveedores simultáneamente
+**Cambios:**
+1. Migración SQL: crear bucket `documentos` (público: false) con políticas RLS para admin/operador (upload, select, delete) y viewer (select)
+2. Modificar `EmbarqueDetalle.tsx` tab Documentos: el botón "Subir archivo" sube al bucket `documentos/{embarque_id}/{doc_id}/{filename}`, actualiza columna `archivo` en `documentos_embarque`, y muestra link de descarga
+3. Modificar `Clientes.tsx` paso 2: los archivos adjuntados se suben al bucket `documentos/clientes/{cliente_id}/{nombre_doc}` al momento de crear el cliente
+4. Crear helper `src/lib/storage.ts` con funciones `uploadFile()` y `getFileUrl()`
 
 ---
 
-## Fase 4: Mejoras técnicas (Impacto bajo-medio)
+### Fase 3.4 — Búsqueda global
 
-### 4.1 Manejo de errores y estados de carga
-- Agregar skeletons/loading states en todas las páginas
-- Manejo de errores con boundaries o toasts consistentes
+**Objetivo:** Barra de búsqueda en el sidebar/header que busque en embarques, clientes, proveedores y facturas.
 
-### 4.2 Responsive
-- Revisar tablas en mobile — actualmente no tienen scroll horizontal
-- Sidebar en mobile ya funciona con el SidebarProvider, pero las tablas se rompen
-
-### 4.3 Tipos de cambio dinámicos
-- Los tipos de cambio USD/EUR están hardcoded por embarque
-- Considerar integración con API de tipo de cambio del Banxico o entrada manual global
+**Cambios:**
+1. Crear componente `src/components/GlobalSearch.tsx` usando `CommandDialog` (cmdk ya instalado) con atajos de teclado (Ctrl+K)
+2. Al escribir, busca en paralelo en las 4 tablas (ilike en nombre/expediente/numero/rfc) con límite de 5 por tipo
+3. Al seleccionar resultado, navega a la ruta correspondiente
+4. Integrar en `Layout.tsx` o `AppSidebar.tsx`
 
 ---
 
-## Orden de ejecución recomendado
+### Fase 4.1 — Loading states y manejo de errores
 
-1. **Fase 1.1** — Crear esquema de base de datos (fundamento para todo lo demás)
-2. **Fase 1.2-1.5** — Migrar módulos uno por uno
-3. **Fase 2.3** — Refactorizar NuevoEmbarque (el archivo más complejo)
-4. **Fase 3.1** — Permisos por rol
-5. **Fase 3.2** — Emails en tabla de usuarios
-6. **Fase 2.1** — Componentes reutilizables
-7. **Resto** — Según prioridad del negocio
+**Objetivo:** Skeletons consistentes y estados de error amigables.
+
+**Cambios:**
+1. Crear componente `src/components/TableSkeleton.tsx` reutilizable (recibe columnas y filas)
+2. Crear componente `src/components/ErrorState.tsx` con mensaje y botón de reintentar
+3. Aplicar en todas las páginas que usan `isLoading` e `isError` de React Query: Dashboard, Embarques, Facturación, Clientes, Proveedores, Reportes
+
+---
+
+### Fase 4.2 — Responsive (tablas en mobile)
+
+**Objetivo:** Tablas legibles en pantallas pequeñas.
+
+**Cambios:**
+1. En mobile, las tablas de listado (Embarques, Clientes, Proveedores, Facturas) se renderizan como tarjetas apiladas en lugar de tabla usando `useIsMobile()`
+2. Crear componente `src/components/ResponsiveTable.tsx` que alterne entre vista tabla y vista cards
+3. Aplicar en las 4 páginas de listado principales
+
+---
+
+### Fase 4.3 — Tipos de cambio dinámicos
+
+**Objetivo:** Obtener tipo de cambio USD/MXN y EUR/MXN actualizado.
+
+**Cambios:**
+1. Crear Edge Function `supabase/functions/exchange-rates/index.ts` que consulte una API gratuita (frankfurter.app) y devuelva tasas USD→MXN y EUR→MXN
+2. Configurar `[functions.exchange-rates]` en config.toml
+3. Crear hook `src/hooks/useExchangeRates.ts` que invoque la función y cachee por 1 hora
+4. Usar las tasas como valores default en `NuevoEmbarque.tsx` (paso 4: tipos de cambio)
+
+---
+
+### Changelog
+
+Actualizar `src/pages/Changelog.tsx` con versión **v3.0.0** consolidando todas las mejoras de Fase 3 y 4.
+
+Actualizar versión en `AppSidebar.tsx` footer de `v1.4.0` a `v3.0.0`.
+
+---
+
+### Resumen de archivos a crear/modificar
+
+**Nuevos:**
+- `src/hooks/usePermissions.ts`
+- `supabase/functions/list-users/index.ts`
+- `src/lib/storage.ts`
+- `src/components/GlobalSearch.tsx`
+- `src/components/TableSkeleton.tsx`
+- `src/components/ErrorState.tsx`
+- `src/components/ResponsiveTable.tsx`
+- `supabase/functions/exchange-rates/index.ts`
+- `src/hooks/useExchangeRates.ts`
+
+**Modificados:**
+- `supabase/config.toml` (2 funciones nuevas)
+- `Clientes.tsx`, `Proveedores.tsx`, `Embarques.tsx`, `Facturacion.tsx`, `EmbarqueDetalle.tsx`, `ClienteDetalle.tsx`, `ProveedorDetalle.tsx` (permisos + responsive + error states)
+- `Usuarios.tsx` (emails reales)
+- `NuevoEmbarque.tsx` (tipos de cambio dinámicos)
+- `Layout.tsx` o `AppSidebar.tsx` (búsqueda global)
+- `Changelog.tsx`, `AppSidebar.tsx` (versión)
+
+**Migración SQL:**
+- Crear bucket `documentos` con políticas RLS
 
