@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/table";
 import { useProveedor, useProveedores } from "@/hooks/useProveedores";
 import { formatCurrency } from "@/lib/formatters";
-import { getEstadoColor } from "@/data/mockData";
+import { getEstadoColor } from "@/lib/helpers";
 import EditarProveedorDialog from "@/components/EditarProveedorDialog";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -100,14 +100,14 @@ export default function ProveedorDetalle() {
             <p><span className="text-muted-foreground">Contacto:</span> {prov.contacto}</p>
             <p><span className="text-muted-foreground">Email:</span> {prov.email}</p>
             <p><span className="text-muted-foreground">Teléfono:</span> {prov.telefono}</p>
-            <p><span className="text-muted-foreground">Moneda preferida:</span> {prov.monedaPreferida}</p>
+            <p><span className="text-muted-foreground">Moneda preferida:</span> {prov.moneda_preferida}</p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="pb-2"><CardTitle className="text-sm">Total Facturado</CardTitle></CardHeader>
           <CardContent>
-            <p className="text-2xl font-bold">{formatCurrency(totalFacturado, prov.monedaPreferida)}</p>
+            <p className="text-2xl font-bold">{formatCurrency(totalFacturado, prov.moneda_preferida)}</p>
             <p className="text-xs text-muted-foreground">{operaciones.length} operaciones</p>
           </CardContent>
         </Card>
@@ -116,13 +116,13 @@ export default function ProveedorDetalle() {
           <Card>
             <CardHeader className="pb-2"><CardTitle className="text-sm text-green-600">Pagado</CardTitle></CardHeader>
             <CardContent>
-              <p className="text-lg font-bold">{formatCurrency(totalPagado, prov.monedaPreferida)}</p>
+              <p className="text-lg font-bold">{formatCurrency(totalPagado, prov.moneda_preferida)}</p>
             </CardContent>
           </Card>
           <Card>
             <CardHeader className="pb-2"><CardTitle className="text-sm text-orange-600">Pendiente</CardTitle></CardHeader>
             <CardContent>
-              <p className="text-lg font-bold">{formatCurrency(totalPendiente, prov.monedaPreferida)}</p>
+              <p className="text-lg font-bold">{formatCurrency(totalPendiente, prov.moneda_preferida)}</p>
             </CardContent>
           </Card>
         </div>

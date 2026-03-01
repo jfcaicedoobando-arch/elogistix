@@ -11,27 +11,38 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { facturas, embarques, formatDate, formatCurrency, getEstadoColor } from "@/data/mockData";
-import type { EstadoFactura } from "@/data/types";
+import { Skeleton } from "@/components/ui/skeleton";
+import { useFacturas, useGastosPendientes, useMarcarCostoPagado } from "@/hooks/useFacturas";
+import { formatCurrency } from "@/lib/formatters";
+import { formatDate, getEstadoColor } from "@/lib/helpers";
+import { toast } from "sonner";
+import type { Database } from "@/integrations/supabase/types";
 
+type EstadoFactura = Database["public"]["Enums"]["estado_factura"];
 const ESTADOS_FACTURA: EstadoFactura[] = ['Borrador', 'Emitida', 'Pagada', 'Vencida', 'Cancelada'];
 
 export default function Facturacion() {
   const [search, setSearch] = useState("");
   const [filterEstado, setFilterEstado] = useState<string>("todos");
 
+  const { data: facturas = [], isLoading: loadingFacturas } = useFacturas();
+  const { data: gastosPendientes = [], isLoading: loadingGastos } = useGastosPendientes();
+  const marcarPagado = useMarcarCostoPagado();
+
   const filtered = useMemo(() => {
     return facturas.filter(f => {
-      const matchSearch = !search || f.numero.toLowerCase().includes(search.toLowerCase()) || f.clienteNombre.toLowerCase().includes(search.toLowerCase());
+      const matchSearch = !search || f.numero.toLowerCase().includes(search.toLowerCase()) || f.cliente_nombre.toLowerCase().includes(search.toLowerCase());
       const matchEstado = filterEstado === "todos" || f.estado === filterEstado;
       return matchSearch && matchEstado;
     });
-  }, [search, filterEstado]);
+  }, [search, filterEstado, facturas]);
 
-  // Gastos pendientes
-  const gastosPendientes = embarques.flatMap(e =>
-    e.conceptosCosto.filter(c => c.estadoLiquidacion === 'Pendiente').map(c => ({ ...c, expediente: e.expediente, embarqueId: e.id }))
-  );
+  const handleMarcarPagado = (id: string) => {
+    marcarPagado.mutate({ id }, {
+      onSuccess: () => toast.success("Gasto marcado como pagado"),
+      onError: () => toast.error("Error al marcar como pagado"),
+    });
+  };
 
   return (
     <div className="space-y-6">
@@ -62,34 +73,40 @@ export default function Facturacion() {
 
           <Card>
             <CardContent className="p-0">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead># Factura</TableHead>
-                    <TableHead>Expediente</TableHead>
-                    <TableHead>Cliente</TableHead>
-                    <TableHead>Monto</TableHead>
-                    <TableHead>Moneda</TableHead>
-                    <TableHead>Emisión</TableHead>
-                    <TableHead>Vencimiento</TableHead>
-                    <TableHead>Estado</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filtered.map(f => (
-                    <TableRow key={f.id}>
-                      <TableCell className="font-medium">{f.numero}</TableCell>
-                      <TableCell>{f.expediente}</TableCell>
-                      <TableCell className="max-w-[180px] truncate">{f.clienteNombre}</TableCell>
-                      <TableCell className="font-medium">{formatCurrency(f.total, f.moneda)}</TableCell>
-                      <TableCell>{f.moneda}</TableCell>
-                      <TableCell className="text-xs">{formatDate(f.fechaEmision)}</TableCell>
-                      <TableCell className="text-xs">{formatDate(f.fechaVencimiento)}</TableCell>
-                      <TableCell><Badge className={getEstadoColor(f.estado)}>{f.estado}</Badge></TableCell>
+              {loadingFacturas ? (
+                <div className="p-6 space-y-3">{Array.from({ length: 5 }).map((_, i) => <Skeleton key={i} className="h-10 w-full" />)}</div>
+              ) : (
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead># Factura</TableHead>
+                      <TableHead>Expediente</TableHead>
+                      <TableHead>Cliente</TableHead>
+                      <TableHead>Monto</TableHead>
+                      <TableHead>Moneda</TableHead>
+                      <TableHead>Emisión</TableHead>
+                      <TableHead>Vencimiento</TableHead>
+                      <TableHead>Estado</TableHead>
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+                  </TableHeader>
+                  <TableBody>
+                    {filtered.length === 0 ? (
+                      <TableRow><TableCell colSpan={8} className="text-center py-8 text-muted-foreground">No se encontraron facturas</TableCell></TableRow>
+                    ) : filtered.map(f => (
+                      <TableRow key={f.id}>
+                        <TableCell className="font-medium">{f.numero}</TableCell>
+                        <TableCell>{f.expediente}</TableCell>
+                        <TableCell className="max-w-[180px] truncate">{f.cliente_nombre}</TableCell>
+                        <TableCell className="font-medium">{formatCurrency(f.total, f.moneda)}</TableCell>
+                        <TableCell>{f.moneda}</TableCell>
+                        <TableCell className="text-xs">{formatDate(f.fecha_emision)}</TableCell>
+                        <TableCell className="text-xs">{formatDate(f.fecha_vencimiento)}</TableCell>
+                        <TableCell><Badge className={getEstadoColor(f.estado)}>{f.estado}</Badge></TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
@@ -97,34 +114,49 @@ export default function Facturacion() {
         <TabsContent value="liquidacion">
           <Card>
             <CardContent className="p-0">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Proveedor</TableHead>
-                    <TableHead>Expediente</TableHead>
-                    <TableHead>Concepto</TableHead>
-                    <TableHead>Monto</TableHead>
-                    <TableHead>Moneda</TableHead>
-                    <TableHead>Vencimiento</TableHead>
-                    <TableHead>Estado</TableHead>
-                    <TableHead>Acciones</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {gastosPendientes.map((g, i) => (
-                    <TableRow key={i}>
-                      <TableCell>{g.proveedorNombre}</TableCell>
-                      <TableCell className="font-medium">{g.expediente}</TableCell>
-                      <TableCell>{g.concepto}</TableCell>
-                      <TableCell className="font-medium">{formatCurrency(g.monto, g.moneda)}</TableCell>
-                      <TableCell>{g.moneda}</TableCell>
-                      <TableCell className="text-xs">{g.fechaVencimiento ? formatDate(g.fechaVencimiento) : '-'}</TableCell>
-                      <TableCell><Badge className={getEstadoColor('Pendiente')}>Pendiente</Badge></TableCell>
-                      <TableCell><Button variant="outline" size="sm">Marcar Pagado</Button></TableCell>
+              {loadingGastos ? (
+                <div className="p-6 space-y-3">{Array.from({ length: 5 }).map((_, i) => <Skeleton key={i} className="h-10 w-full" />)}</div>
+              ) : (
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Proveedor</TableHead>
+                      <TableHead>Expediente</TableHead>
+                      <TableHead>Concepto</TableHead>
+                      <TableHead>Monto</TableHead>
+                      <TableHead>Moneda</TableHead>
+                      <TableHead>Vencimiento</TableHead>
+                      <TableHead>Estado</TableHead>
+                      <TableHead>Acciones</TableHead>
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+                  </TableHeader>
+                  <TableBody>
+                    {gastosPendientes.length === 0 ? (
+                      <TableRow><TableCell colSpan={8} className="text-center py-8 text-muted-foreground">No hay gastos pendientes</TableCell></TableRow>
+                    ) : gastosPendientes.map((g) => (
+                      <TableRow key={g.id}>
+                        <TableCell>{g.proveedor_nombre}</TableCell>
+                        <TableCell className="font-medium">{(g.embarques as any)?.expediente || '-'}</TableCell>
+                        <TableCell>{g.concepto}</TableCell>
+                        <TableCell className="font-medium">{formatCurrency(g.monto, g.moneda)}</TableCell>
+                        <TableCell>{g.moneda}</TableCell>
+                        <TableCell className="text-xs">{g.fecha_vencimiento ? formatDate(g.fecha_vencimiento) : '-'}</TableCell>
+                        <TableCell><Badge className={getEstadoColor('Pendiente')}>Pendiente</Badge></TableCell>
+                        <TableCell>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            disabled={marcarPagado.isPending}
+                            onClick={() => handleMarcarPagado(g.id)}
+                          >
+                            Marcar Pagado
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              )}
             </CardContent>
           </Card>
         </TabsContent>

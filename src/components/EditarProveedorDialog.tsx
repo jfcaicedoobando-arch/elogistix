@@ -4,7 +4,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import type { Proveedor, TipoProveedor, Moneda } from "@/data/types";
+import type { TipoProveedor, Moneda } from "@/data/types";
+import type { Tables, TablesUpdate } from "@/integrations/supabase/types";
+
+type Proveedor = Tables<'proveedores'>;
 
 const TIPOS: TipoProveedor[] = ['Naviera', 'Aerolínea', 'Transportista', 'Agente Aduanal', 'Agente de Carga', 'Aseguradora', 'Custodia', 'Almacenes', 'Acondicionamiento de Carga', 'Materiales Peligrosos'];
 const MONEDAS: Moneda[] = ['MXN', 'USD', 'EUR'];
@@ -19,7 +22,7 @@ interface Props {
   proveedor: Proveedor;
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onSave: (id: string, data: Partial<Proveedor>) => void;
+  onSave: (id: string, data: TablesUpdate<"proveedores">) => void;
 }
 
 export default function EditarProveedorDialog({ proveedor, open, onOpenChange, onSave }: Props) {
@@ -30,8 +33,7 @@ export default function EditarProveedorDialog({ proveedor, open, onOpenChange, o
   }, [open, proveedor]);
 
   const isAgenteCarga = form.tipo === 'Agente de Carga';
-  const isMexico = form.pais === 'México';
-  const rfcLabel = form.origenProveedor === 'Extranjero' ? 'Tax ID' : 'RFC';
+  const rfcLabel = form.origen_proveedor === 'Extranjero' ? 'Tax ID' : 'RFC';
 
   const handleSave = () => {
     onSave(proveedor.id, form);
@@ -55,7 +57,7 @@ export default function EditarProveedorDialog({ proveedor, open, onOpenChange, o
         <div className="space-y-4">
           <div className="space-y-2">
             <Label>Origen</Label>
-            <Select value={form.origenProveedor || ''} onValueChange={v => setForm(f => ({ ...f, origenProveedor: v as 'Nacional' | 'Extranjero' }))}>
+            <Select value={form.origen_proveedor || ''} onValueChange={v => setForm(f => ({ ...f, origen_proveedor: v as 'Nacional' | 'Extranjero' }))}>
               <SelectTrigger><SelectValue placeholder="Selecciona origen" /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="Nacional">Nacional</SelectItem>
@@ -95,7 +97,7 @@ export default function EditarProveedorDialog({ proveedor, open, onOpenChange, o
               <Input
                 value={form.rfc}
                 onChange={e => setForm(f => ({ ...f, rfc: e.target.value }))}
-                placeholder={form.origenProveedor === 'Extranjero' ? 'Ingresa el Tax ID' : 'Ingresa el RFC'}
+                placeholder={form.origen_proveedor === 'Extranjero' ? 'Ingresa el Tax ID' : 'Ingresa el RFC'}
               />
             </div>
           )}
@@ -114,7 +116,7 @@ export default function EditarProveedorDialog({ proveedor, open, onOpenChange, o
           </div>
           <div className="space-y-2">
             <Label>Moneda Preferida</Label>
-            <Select value={form.monedaPreferida} onValueChange={v => setForm(f => ({ ...f, monedaPreferida: v as Moneda }))}>
+            <Select value={form.moneda_preferida} onValueChange={v => setForm(f => ({ ...f, moneda_preferida: v as Moneda }))}>
               <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>
                 {MONEDAS.map(m => <SelectItem key={m} value={m}>{m}</SelectItem>)}

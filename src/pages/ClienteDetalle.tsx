@@ -75,10 +75,10 @@ export default function ClienteDetalle() {
     if (!form.nombre.trim()) return;
     try {
       if (editingId) {
-        await updateContacto.mutateAsync({ id: editingId, clienteId: cliente.id, ...form });
+        await updateContacto.mutateAsync({ id: editingId, cliente_id: cliente.id, ...form });
         toast({ title: "Contacto actualizado" });
       } else {
-        await createContacto.mutateAsync({ clienteId: cliente.id, ...form });
+        await createContacto.mutateAsync({ cliente_id: cliente.id, ...form });
         toast({ title: "Contacto creado" });
       }
       setDialogOpen(false);
@@ -91,7 +91,7 @@ export default function ClienteDetalle() {
 
   const handleDelete = async (ctId: string) => {
     try {
-      await deleteContacto.mutateAsync({ id: ctId, clienteId: cliente.id });
+      await deleteContacto.mutateAsync({ id: ctId, cliente_id: cliente.id });
       toast({ title: "Contacto eliminado" });
     } catch (error: any) {
       toast({ title: "Error", description: error.message, variant: "destructive" });

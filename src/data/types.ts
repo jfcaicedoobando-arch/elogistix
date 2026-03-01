@@ -1,168 +1,28 @@
-export type ModoTransporte = 'Marítimo' | 'Aéreo' | 'Terrestre' | 'Multimodal';
-export type TipoOperacion = 'Importación' | 'Exportación' | 'Nacional';
-export type EstadoEmbarque = 'Cotización' | 'Confirmado' | 'En Tránsito' | 'Llegada' | 'En Proceso' | 'Cerrado';
-export type EstadoDocumento = 'Pendiente' | 'Recibido' | 'Validado';
-export type EstadoFactura = 'Borrador' | 'Emitida' | 'Pagada' | 'Vencida' | 'Cancelada';
-export type EstadoLiquidacion = 'Pendiente' | 'Pagado';
-export type Moneda = 'MXN' | 'USD' | 'EUR';
-export type TipoProveedor = 'Naviera' | 'Aerolínea' | 'Transportista' | 'Agente Aduanal' | 'Agente de Carga' | 'Aseguradora' | 'Custodia' | 'Almacenes' | 'Acondicionamiento de Carga' | 'Materiales Peligrosos';
+// Re-export types from Supabase generated types for convenience
+import type { Database } from '@/integrations/supabase/types';
+
+// Enum types
+export type ModoTransporte = Database['public']['Enums']['modo_transporte'];
+export type TipoOperacion = Database['public']['Enums']['tipo_operacion'];
+export type EstadoEmbarque = Database['public']['Enums']['estado_embarque'];
+export type EstadoDocumento = Database['public']['Enums']['estado_documento'];
+export type EstadoFactura = Database['public']['Enums']['estado_factura'];
+export type EstadoLiquidacion = Database['public']['Enums']['estado_liquidacion'];
+export type Moneda = Database['public']['Enums']['moneda'];
+export type TipoProveedor = Database['public']['Enums']['tipo_proveedor'];
+export type TipoServicioMaritimo = Database['public']['Enums']['tipo_servicio_maritimo'];
+export type Incoterm = Database['public']['Enums']['incoterm'];
+export type TipoContacto = Database['public']['Enums']['tipo_contacto'];
 export type TipoContenedor = string;
-export type TipoServicioMaritimo = 'FCL' | 'LCL';
-export type Incoterm = 'EXW' | 'FOB' | 'CIF' | 'DAP' | 'DDP' | 'FCA' | 'CFR' | 'CPT' | 'CIP' | 'DAT';
 
-export type TipoContacto = 'Proveedor' | 'Exportador' | 'Importador';
+// Row types (for components that still reference the old interfaces)
+export type Cliente = Database['public']['Tables']['clientes']['Row'];
+export type Proveedor = Database['public']['Tables']['proveedores']['Row'];
+export type ContactoCliente = Database['public']['Tables']['contactos_cliente']['Row'];
 
-export interface ContactoCliente {
-  id: string;
-  clienteId: string;
-  nombre: string;
-  rfc: string;
-  tipo: TipoContacto;
-  pais: string;
-  ciudad: string;
-  direccion: string;
-  contacto: string;
-  email: string;
-  telefono: string;
-}
-
-export interface Cliente {
-  id: string;
-  nombre: string;
-  rfc: string;
-  direccion: string;
-  ciudad: string;
-  estado: string;
-  cp: string;
-  contacto: string;
-  email: string;
-  telefono: string;
-  contactos?: ContactoCliente[];
-}
-
+// Legacy interface kept for NuevoProveedorDialog document step
 export interface DocumentoProveedor {
   nombre: string;
   archivo?: string;
   adjuntado: boolean;
-}
-
-export interface Proveedor {
-  id: string;
-  nombre: string;
-  tipo: TipoProveedor;
-  pais?: string;
-  rfc: string;
-  contacto: string;
-  email: string;
-  telefono: string;
-  monedaPreferida: Moneda;
-  origenProveedor?: 'Nacional' | 'Extranjero';
-}
-
-export interface DocumentoEmbarque {
-  id: string;
-  nombre: string;
-  estado: EstadoDocumento;
-  archivo?: string;
-  notas?: string;
-}
-
-export interface ConceptoVenta {
-  id: string;
-  descripcion: string;
-  cantidad: number;
-  precioUnitario: number;
-  moneda: Moneda;
-  total: number;
-}
-
-export interface ConceptoCosto {
-  id: string;
-  proveedorId: string;
-  proveedorNombre: string;
-  concepto: string;
-  monto: number;
-  moneda: Moneda;
-  estadoLiquidacion: EstadoLiquidacion;
-  fechaPago?: string;
-  referenciaPago?: string;
-  fechaVencimiento?: string;
-}
-
-export interface NotaActividad {
-  id: string;
-  fecha: string;
-  usuario: string;
-  tipo: 'nota' | 'cambio_estado' | 'documento' | 'factura' | 'sistema';
-  contenido: string;
-}
-
-export interface Embarque {
-  id: string;
-  expediente: string;
-  clienteId: string;
-  clienteNombre: string;
-  modo: ModoTransporte;
-  tipo: TipoOperacion;
-  shipper: string;
-  consignatario: string;
-  descripcionMercancia: string;
-  pesoKg: number;
-  volumenM3: number;
-  piezas: number;
-  incoterm: Incoterm;
-  estado: EstadoEmbarque;
-  operador: string;
-  // Ruta marítima
-  puertoOrigen?: string;
-  puertoDestino?: string;
-  naviera?: string;
-  blMaster?: string;
-  blHouse?: string;
-  tipoServicio?: TipoServicioMaritimo;
-  contenedor?: string;
-  tipoContenedor?: TipoContenedor;
-  // Ruta aérea
-  aeropuertoOrigen?: string;
-  aeropuertoDestino?: string;
-  aerolinea?: string;
-  mawb?: string;
-  hawb?: string;
-  // Ruta terrestre
-  ciudadOrigen?: string;
-  ciudadDestino?: string;
-  transportista?: string;
-  cartaPorte?: string;
-  // Fechas
-  etd: string;
-  eta: string;
-  fechaLlegadaReal?: string;
-  fechaCreacion: string;
-  // Financiero
-  conceptosVenta: ConceptoVenta[];
-  conceptosCosto: ConceptoCosto[];
-  documentos: DocumentoEmbarque[];
-  notas: NotaActividad[];
-  tipoCambioUSD: number;
-  tipoCambioEUR: number;
-}
-
-export interface Factura {
-  id: string;
-  numero: string;
-  embarqueId: string;
-  expediente: string;
-  clienteId: string;
-  clienteNombre: string;
-  conceptos: ConceptoVenta[];
-  subtotal: number;
-  iva: number;
-  total: number;
-  moneda: Moneda;
-  tipoCambio: number;
-  fechaEmision: string;
-  fechaVencimiento: string;
-  estado: EstadoFactura;
-  referenciaBL?: string;
-  notas?: string;
 }

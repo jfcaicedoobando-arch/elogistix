@@ -52,7 +52,7 @@ function ProveedorTable({ tipo, search, onSelect, proveedores, isLoading }: { ti
                 <TableCell className="font-medium">{p.nombre}</TableCell>
                 <TableCell className="text-xs font-mono">{p.rfc}</TableCell>
                 <TableCell className="text-xs">{p.contacto}</TableCell>
-                <TableCell className="text-xs">{p.monedaPreferida}</TableCell>
+                <TableCell className="text-xs">{p.moneda_preferida}</TableCell>
               </TableRow>
             )) : (
               <TableRow>
