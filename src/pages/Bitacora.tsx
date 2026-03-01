@@ -9,7 +9,7 @@ import { useBitacora } from "@/hooks/useBitacora";
 import { usePermissions } from "@/hooks/usePermissions";
 
 const MODULOS = [
-  { valor: "", etiqueta: "Todos los módulos" },
+  { valor: "todos", etiqueta: "Todos los módulos" },
   { valor: "embarques", etiqueta: "Embarques" },
   { valor: "clientes", etiqueta: "Clientes" },
   { valor: "proveedores", etiqueta: "Proveedores" },
@@ -22,11 +22,11 @@ const LIMITE_POR_PAGINA = 30;
 
 export default function Bitacora() {
   const { isAdmin } = usePermissions();
-  const [moduloFiltro, setModuloFiltro] = useState("");
+  const [moduloFiltro, setModuloFiltro] = useState("todos");
   const [pagina, setPagina] = useState(0);
 
   const { data, isLoading } = useBitacora({
-    modulo: moduloFiltro || undefined,
+    modulo: moduloFiltro === "todos" ? undefined : moduloFiltro,
     limite: LIMITE_POR_PAGINA,
     pagina,
   });
