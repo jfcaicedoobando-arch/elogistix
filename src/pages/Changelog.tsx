@@ -13,6 +13,14 @@ interface ChangelogEntry {
 
 const changelog: ChangelogEntry[] = [
   {
+    version: "1.7.0",
+    date: "2026-03-01",
+    type: "minor",
+    title: "Módulo de Embarques conectado a base de datos",
+    description:
+      "El listado, detalle y creación de embarques ahora persisten en la base de datos real. Se incluyen subentidades (conceptos de venta/costo, documentos, notas) y se eliminó la dependencia de mockData para embarques.",
+  },
+  {
     version: "1.6.0",
     date: "2026-02-28",
     type: "minor",

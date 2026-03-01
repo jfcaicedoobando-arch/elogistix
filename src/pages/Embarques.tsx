@@ -1,6 +1,6 @@
 import { useState, useMemo } from "react";
-import { Plus, Search, Filter } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Plus, Search } from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -10,16 +10,47 @@ import {
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
-import { embarques, clientes, formatDate, getEstadoColor, getModoIcon } from "@/data/mockData";
+import { Skeleton } from "@/components/ui/skeleton";
 import { useNavigate } from "react-router-dom";
+import { useEmbarques, useClientesForSelect } from "@/hooks/useEmbarques";
+import { formatCurrency } from "@/lib/formatters";
 import type { ModoTransporte, EstadoEmbarque } from "@/data/types";
 
 const ESTADOS: EstadoEmbarque[] = ['Cotización', 'Confirmado', 'En Tránsito', 'Llegada', 'En Proceso', 'Cerrado'];
 const MODOS: ModoTransporte[] = ['Marítimo', 'Aéreo', 'Terrestre', 'Multimodal'];
 const PAGE_SIZE = 10;
 
+const getModoIcon = (modo: string) => {
+  switch (modo) {
+    case 'Marítimo': return '🚢';
+    case 'Aéreo': return '✈️';
+    case 'Terrestre': return '🚛';
+    case 'Multimodal': return '📦';
+    default: return '📦';
+  }
+};
+
+const getEstadoColor = (estado: string) => {
+  switch (estado) {
+    case 'Cotización': return 'bg-muted text-muted-foreground';
+    case 'Confirmado': return 'bg-info/20 text-info';
+    case 'En Tránsito': return 'bg-warning/20 text-warning';
+    case 'Llegada': return 'bg-success/20 text-success';
+    case 'En Proceso': return 'bg-accent/20 text-accent';
+    case 'Cerrado': return 'bg-muted text-muted-foreground';
+    default: return '';
+  }
+};
+
+const formatDate = (dateStr: string | null) => {
+  if (!dateStr) return '-';
+  return new Date(dateStr).toLocaleDateString('es-MX', { day: '2-digit', month: 'short', year: 'numeric' });
+};
+
 export default function Embarques() {
   const navigate = useNavigate();
+  const { data: embarques = [], isLoading } = useEmbarques();
+  const { data: clientes = [] } = useClientesForSelect();
   const [search, setSearch] = useState("");
   const [filterModo, setFilterModo] = useState<string>("todos");
   const [filterEstado, setFilterEstado] = useState<string>("todos");
@@ -29,17 +60,27 @@ export default function Embarques() {
   const filtered = useMemo(() => {
     return embarques.filter((e) => {
       const matchSearch = !search || e.expediente.toLowerCase().includes(search.toLowerCase()) ||
-        e.clienteNombre.toLowerCase().includes(search.toLowerCase()) ||
-        e.descripcionMercancia.toLowerCase().includes(search.toLowerCase());
+        e.cliente_nombre.toLowerCase().includes(search.toLowerCase()) ||
+        e.descripcion_mercancia.toLowerCase().includes(search.toLowerCase());
       const matchModo = filterModo === "todos" || e.modo === filterModo;
       const matchEstado = filterEstado === "todos" || e.estado === filterEstado;
-      const matchCliente = filterCliente === "todos" || e.clienteId === filterCliente;
+      const matchCliente = filterCliente === "todos" || e.cliente_id === filterCliente;
       return matchSearch && matchModo && matchEstado && matchCliente;
     });
-  }, [search, filterModo, filterEstado, filterCliente]);
+  }, [embarques, search, filterModo, filterEstado, filterCliente]);
 
   const paginated = filtered.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
   const totalPages = Math.ceil(filtered.length / PAGE_SIZE);
+
+  if (isLoading) {
+    return (
+      <div className="space-y-6">
+        <Skeleton className="h-8 w-48" />
+        <Skeleton className="h-16 w-full" />
+        <Skeleton className="h-64 w-full" />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -53,7 +94,6 @@ export default function Embarques() {
         </Button>
       </div>
 
-      {/* Filters */}
       <Card>
         <CardContent className="p-4">
           <div className="flex flex-wrap gap-3">
@@ -91,7 +131,6 @@ export default function Embarques() {
         </CardContent>
       </Card>
 
-      {/* Table */}
       <Card>
         <CardContent className="p-0">
           <Table>
@@ -110,13 +149,19 @@ export default function Embarques() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {paginated.map((e) => {
-                const origen = (e.puertoOrigen || e.aeropuertoOrigen || e.ciudadOrigen || '-').split(',')[0];
-                const destino = (e.puertoDestino || e.aeropuertoDestino || e.ciudadDestino || '-').split(',')[0];
+              {paginated.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={10} className="text-center py-8 text-muted-foreground">
+                    No se encontraron embarques
+                  </TableCell>
+                </TableRow>
+              ) : paginated.map((e) => {
+                const origen = (e.puerto_origen || e.aeropuerto_origen || e.ciudad_origen || '-').split(',')[0];
+                const destino = (e.puerto_destino || e.aeropuerto_destino || e.ciudad_destino || '-').split(',')[0];
                 return (
                   <TableRow key={e.id} className="cursor-pointer" onClick={() => navigate(`/embarques/${e.id}`)}>
                     <TableCell className="font-medium">{e.expediente}</TableCell>
-                    <TableCell className="max-w-[180px] truncate">{e.clienteNombre}</TableCell>
+                    <TableCell className="max-w-[180px] truncate">{e.cliente_nombre}</TableCell>
                     <TableCell>
                       <span className="flex items-center gap-1">
                         {getModoIcon(e.modo)} <span className="text-xs">{e.modo}</span>
@@ -124,7 +169,7 @@ export default function Embarques() {
                     </TableCell>
                     <TableCell className="text-xs">{origen}</TableCell>
                     <TableCell className="text-xs">{destino}</TableCell>
-                    <TableCell className="text-xs">{e.tipoContenedor || '-'}</TableCell>
+                    <TableCell className="text-xs">{e.tipo_contenedor || '-'}</TableCell>
                     <TableCell className="text-xs">{formatDate(e.etd)}</TableCell>
                     <TableCell className="text-xs">{formatDate(e.eta)}</TableCell>
                     <TableCell>

@@ -8,12 +8,18 @@ import { Label } from "@/components/ui/label";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
-import { clientes, proveedores } from "@/data/mockData";
-import type { ModoTransporte, TipoOperacion, Incoterm } from "@/data/types";
 import { containerTypes } from "@/data/containerTypes";
 import { toast } from "@/hooks/use-toast";
 import PortSelect from "@/components/PortSelect";
 import ShippingLineSelect from "@/components/ShippingLineSelect";
+import {
+  useClientesForSelect,
+  useProveedoresForSelect,
+  useContactosCliente,
+  useCreateEmbarque,
+} from "@/hooks/useEmbarques";
+import { useAuth } from "@/contexts/AuthContext";
+import type { ModoTransporte, TipoOperacion, Incoterm } from "@/data/types";
 
 const MODOS: ModoTransporte[] = ['Marítimo', 'Aéreo', 'Terrestre', 'Multimodal'];
 const TIPOS: TipoOperacion[] = ['Importación', 'Exportación', 'Nacional'];
@@ -28,6 +34,11 @@ const steps = [
 
 export default function NuevoEmbarque() {
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const { data: clientes = [] } = useClientesForSelect();
+  const { data: proveedoresDb = [] } = useProveedoresForSelect();
+  const createEmbarque = useCreateEmbarque();
+
   const [currentStep, setCurrentStep] = useState(1);
   const [modo, setModo] = useState<string>('');
   const [tipo, setTipo] = useState<string>('');
@@ -47,10 +58,24 @@ export default function NuevoEmbarque() {
   const [tipoServicio, setTipoServicio] = useState('');
   const [contenedor, setContenedor] = useState('');
   const [tipoContenedor, setTipoContenedor] = useState('');
+  const [blMaster, setBlMaster] = useState('');
+  const [blHouse, setBlHouse] = useState('');
+  const [aeropuertoOrigen, setAeropuertoOrigen] = useState('');
+  const [aeropuertoDestino, setAeropuertoDestino] = useState('');
+  const [aerolinea, setAerolinea] = useState('');
+  const [mawb, setMawb] = useState('');
+  const [hawb, setHawb] = useState('');
+  const [ciudadOrigen, setCiudadOrigen] = useState('');
+  const [ciudadDestino, setCiudadDestino] = useState('');
+  const [transportista, setTransportista] = useState('');
+  const [cartaPorte, setCartaPorte] = useState('');
   const [etd, setEtd] = useState('');
   const [eta, setEta] = useState('');
+  const [tipoCambioUSD, setTipoCambioUSD] = useState('17.25');
+  const [tipoCambioEUR, setTipoCambioEUR] = useState('18.50');
 
-  // Conceptos de venta y costo
+  const { data: contactos = [] } = useContactosCliente(clienteId || undefined);
+
   interface ConceptoVentaRow { id: number; concepto: string; cantidad: number; precioUnitario: number; moneda: string; }
   interface ConceptoCostoRow { id: number; proveedorId: string; concepto: string; monto: number; moneda: string; }
   const [conceptosVenta, setConceptosVenta] = useState<ConceptoVentaRow[]>([
@@ -71,9 +96,7 @@ export default function NuevoEmbarque() {
     setConceptosVenta(prev => [...prev, { id: nextVentaId, concepto: '', cantidad: 1, precioUnitario: 0, moneda: 'MXN' }]);
     setNextVentaId(n => n + 1);
   };
-  const removeConceptoVenta = (id: number) => {
-    setConceptosVenta(prev => prev.filter(c => c.id !== id));
-  };
+  const removeConceptoVenta = (id: number) => setConceptosVenta(prev => prev.filter(c => c.id !== id));
   const updateConceptoCosto = (id: number, field: keyof ConceptoCostoRow, value: string | number) => {
     setConceptosCosto(prev => prev.map(c => c.id === id ? { ...c, [field]: value } : c));
   };
@@ -81,17 +104,24 @@ export default function NuevoEmbarque() {
     setConceptosCosto(prev => [...prev, { id: nextCostoId, proveedorId: '', concepto: '', monto: 0, moneda: 'MXN' }]);
     setNextCostoId(n => n + 1);
   };
-  const removeConceptoCosto = (id: number) => {
-    setConceptosCosto(prev => prev.filter(c => c.id !== id));
-  };
+  const removeConceptoCosto = (id: number) => setConceptosCosto(prev => prev.filter(c => c.id !== id));
 
   const subtotalVenta = conceptosVenta.reduce((acc, c) => acc + (c.cantidad * c.precioUnitario), 0);
-
   const totalCosto = conceptosCosto.reduce((acc, c) => acc + c.monto, 0);
   const utilidadEstimada = subtotalVenta - totalCosto;
 
   const selectedCliente = clientes.find(c => c.id === clienteId);
-  const contactos = selectedCliente?.contactos || [];
+
+  const resolveShipper = () => {
+    if (shipper === '__otro__') return shipperManual.trim();
+    const ct = contactos.find(c => c.id === shipper);
+    return ct ? `${ct.nombre} — ${ct.tipo} (${ct.pais})` : shipper;
+  };
+  const resolveConsignatario = () => {
+    if (consignatario === '__otro__') return consignatarioManual.trim();
+    const ct = contactos.find(c => c.id === consignatario);
+    return ct ? `${ct.nombre} — ${ct.tipo} (${ct.pais})` : consignatario;
+  };
 
   const isStep1Valid = () => {
     const shipperVal = shipper === '__otro__' ? shipperManual.trim() : shipper;
@@ -106,9 +136,84 @@ export default function NuevoEmbarque() {
     return etd && eta;
   };
 
-  const handleFinish = () => {
-    toast({ title: "Embarque creado", description: "El nuevo embarque se ha registrado correctamente." });
-    navigate("/embarques");
+  const generateExpediente = () => {
+    const year = new Date().getFullYear();
+    const rand = String(Math.floor(Math.random() * 9999)).padStart(4, '0');
+    return `EXP-${year}-${rand}`;
+  };
+
+  const handleFinish = async () => {
+    const expediente = generateExpediente();
+    const docsForMode = modo === 'Marítimo' || !modo
+      ? ['Bill of Lading (BL Master)', 'Bill of Lading (BL House)', 'Packing List', 'Factura Comercial', 'Certificado de Origen', 'Ficha Técnica', 'Otros']
+      : modo === 'Aéreo'
+        ? ['Air Waybill (AWB)', 'Packing List', 'Factura Comercial']
+        : ['Carta Porte', 'Factura', 'Lista de Empaque'];
+
+    try {
+      await createEmbarque.mutateAsync({
+        embarque: {
+          expediente,
+          cliente_id: clienteId,
+          cliente_nombre: selectedCliente?.nombre || '',
+          modo: modo as any,
+          tipo: tipo as any,
+          shipper: resolveShipper(),
+          consignatario: resolveConsignatario(),
+          incoterm: incoterm as any,
+          descripcion_mercancia: descripcionMercancia,
+          peso_kg: Number(pesoKg),
+          volumen_m3: Number(volumenM3),
+          piezas: Number(piezas),
+          puerto_origen: puertoOrigen || null,
+          puerto_destino: puertoDestino || null,
+          naviera: naviera || null,
+          bl_master: blMaster || null,
+          bl_house: blHouse || null,
+          tipo_servicio: (tipoServicio as any) || null,
+          contenedor: contenedor || null,
+          tipo_contenedor: tipoContenedor || null,
+          aeropuerto_origen: aeropuertoOrigen || null,
+          aeropuerto_destino: aeropuertoDestino || null,
+          aerolinea: aerolinea || null,
+          mawb: mawb || null,
+          hawb: hawb || null,
+          ciudad_origen: ciudadOrigen || null,
+          ciudad_destino: ciudadDestino || null,
+          transportista: transportista || null,
+          carta_porte: cartaPorte || null,
+          etd: etd || null,
+          eta: eta || null,
+          tipo_cambio_usd: Number(tipoCambioUSD),
+          tipo_cambio_eur: Number(tipoCambioEUR),
+          operador: user?.email || '',
+        },
+        conceptosVenta: conceptosVenta
+          .filter(cv => cv.concepto)
+          .map(cv => ({
+            descripcion: cv.concepto,
+            cantidad: cv.cantidad,
+            precio_unitario: cv.precioUnitario,
+            moneda: cv.moneda as any,
+            total: cv.cantidad * cv.precioUnitario,
+          })),
+        conceptosCosto: conceptosCosto
+          .filter(cc => cc.concepto)
+          .map(cc => ({
+            proveedor_id: cc.proveedorId || null,
+            proveedor_nombre: proveedoresDb.find(p => p.id === cc.proveedorId)?.nombre || '',
+            concepto: cc.concepto,
+            monto: cc.monto,
+            moneda: cc.moneda as any,
+          })),
+        documentos: docsForMode.map(d => ({ nombre: d })),
+      });
+
+      toast({ title: "Embarque creado", description: `Expediente ${expediente} registrado correctamente.` });
+      navigate("/embarques");
+    } catch (err: any) {
+      toast({ title: "Error al crear embarque", description: err.message, variant: "destructive" });
+    }
   };
 
   return (
@@ -227,8 +332,8 @@ export default function NuevoEmbarque() {
                 <div className="space-y-2"><Label>Puerto Origen *</Label><PortSelect value={puertoOrigen} onValueChange={setPuertoOrigen} placeholder="Seleccionar puerto origen" /></div>
                 <div className="space-y-2"><Label>Puerto Destino *</Label><PortSelect value={puertoDestino} onValueChange={setPuertoDestino} placeholder="Seleccionar puerto destino" /></div>
                 <div className="space-y-2"><Label>Naviera *</Label><ShippingLineSelect value={naviera} onValueChange={setNaviera} /></div>
-                <div className="space-y-2"><Label># BL Master</Label><Input placeholder="Número de BL" /></div>
-                <div className="space-y-2"><Label># BL House</Label><Input /></div>
+                <div className="space-y-2"><Label># BL Master</Label><Input placeholder="Número de BL" value={blMaster} onChange={e => setBlMaster(e.target.value)} /></div>
+                <div className="space-y-2"><Label># BL House</Label><Input value={blHouse} onChange={e => setBlHouse(e.target.value)} /></div>
                 <div className="space-y-2">
                   <Label>Tipo de Servicio *</Label>
                   <Select value={tipoServicio} onValueChange={setTipoServicio}><SelectTrigger><SelectValue placeholder="FCL / LCL" /></SelectTrigger>
@@ -244,17 +349,17 @@ export default function NuevoEmbarque() {
                 </div>
               </>)}
               {modo === 'Aéreo' && (<>
-                <div className="space-y-2"><Label>Aeropuerto Origen</Label><Input placeholder="Ej: Incheon (ICN)" /></div>
-                <div className="space-y-2"><Label>Aeropuerto Destino</Label><Input placeholder="Ej: AICM (MEX)" /></div>
-                <div className="space-y-2"><Label>Aerolínea</Label><Input /></div>
-                <div className="space-y-2"><Label># MAWB</Label><Input /></div>
-                <div className="space-y-2"><Label># HAWB</Label><Input /></div>
+                <div className="space-y-2"><Label>Aeropuerto Origen</Label><Input placeholder="Ej: Incheon (ICN)" value={aeropuertoOrigen} onChange={e => setAeropuertoOrigen(e.target.value)} /></div>
+                <div className="space-y-2"><Label>Aeropuerto Destino</Label><Input placeholder="Ej: AICM (MEX)" value={aeropuertoDestino} onChange={e => setAeropuertoDestino(e.target.value)} /></div>
+                <div className="space-y-2"><Label>Aerolínea</Label><Input value={aerolinea} onChange={e => setAerolinea(e.target.value)} /></div>
+                <div className="space-y-2"><Label># MAWB</Label><Input value={mawb} onChange={e => setMawb(e.target.value)} /></div>
+                <div className="space-y-2"><Label># HAWB</Label><Input value={hawb} onChange={e => setHawb(e.target.value)} /></div>
               </>)}
               {modo === 'Terrestre' && (<>
-                <div className="space-y-2"><Label>Ciudad Origen</Label><Input placeholder="Ej: Houston, TX" /></div>
-                <div className="space-y-2"><Label>Ciudad Destino</Label><Input placeholder="Ej: León, Guanajuato" /></div>
-                <div className="space-y-2"><Label>Transportista</Label><Input /></div>
-                <div className="space-y-2"><Label># Carta Porte</Label><Input /></div>
+                <div className="space-y-2"><Label>Ciudad Origen</Label><Input placeholder="Ej: Houston, TX" value={ciudadOrigen} onChange={e => setCiudadOrigen(e.target.value)} /></div>
+                <div className="space-y-2"><Label>Ciudad Destino</Label><Input placeholder="Ej: León, Guanajuato" value={ciudadDestino} onChange={e => setCiudadDestino(e.target.value)} /></div>
+                <div className="space-y-2"><Label>Transportista</Label><Input value={transportista} onChange={e => setTransportista(e.target.value)} /></div>
+                <div className="space-y-2"><Label># Carta Porte</Label><Input value={cartaPorte} onChange={e => setCartaPorte(e.target.value)} /></div>
               </>)}
               <div className="space-y-2"><Label>ETD (Fecha Salida) *</Label><Input type="date" value={etd} onChange={e => setEtd(e.target.value)} /></div>
               <div className="space-y-2"><Label>ETA (Fecha Llegada Estimada) *</Label><Input type="date" value={eta} onChange={e => setEta(e.target.value)} /></div>
@@ -322,7 +427,6 @@ export default function NuevoEmbarque() {
                   </div>
                 ))}
                 <Button variant="outline" size="sm" onClick={addConceptoVenta}>+ Agregar concepto</Button>
-                {/* Subtotal */}
                 <div className="border-t pt-3 mt-3 text-sm text-right">
                   <div className="flex justify-end gap-4"><span className="font-semibold">Subtotal (Sin IVA):</span><span className="font-bold w-28 text-right">${subtotalVenta.toFixed(2)}</span></div>
                 </div>
@@ -340,7 +444,7 @@ export default function NuevoEmbarque() {
                   <div key={cc.id} className="grid grid-cols-[1fr_1fr_100px_90px_100px_40px] gap-2 items-center">
                     <Select value={cc.proveedorId} onValueChange={v => updateConceptoCosto(cc.id, 'proveedorId', v)}>
                       <SelectTrigger className="text-sm"><SelectValue placeholder="Proveedor" /></SelectTrigger>
-                      <SelectContent>{proveedores.map(p => <SelectItem key={p.id} value={p.id}>{p.nombre.split(' ').slice(0, 2).join(' ')}</SelectItem>)}</SelectContent>
+                      <SelectContent>{proveedoresDb.map(p => <SelectItem key={p.id} value={p.id}>{p.nombre.split(' ').slice(0, 2).join(' ')}</SelectItem>)}</SelectContent>
                     </Select>
                     {modo === 'Marítimo' ? (
                       <Select value={cc.concepto} onValueChange={v => updateConceptoCosto(cc.id, 'concepto', v)}>
@@ -368,8 +472,8 @@ export default function NuevoEmbarque() {
           <Card>
             <CardContent className="p-4">
               <div className="grid grid-cols-3 gap-4 text-center">
-                <div><p className="text-xs text-muted-foreground">Tipo de Cambio USD</p><Input type="number" defaultValue="17.25" className="text-center mt-1" /></div>
-                <div><p className="text-xs text-muted-foreground">Tipo de Cambio EUR</p><Input type="number" defaultValue="18.50" className="text-center mt-1" /></div>
+                <div><p className="text-xs text-muted-foreground">Tipo de Cambio USD</p><Input type="number" value={tipoCambioUSD} onChange={e => setTipoCambioUSD(e.target.value)} className="text-center mt-1" /></div>
+                <div><p className="text-xs text-muted-foreground">Tipo de Cambio EUR</p><Input type="number" value={tipoCambioEUR} onChange={e => setTipoCambioEUR(e.target.value)} className="text-center mt-1" /></div>
                 <div><p className="text-xs text-muted-foreground">Utilidad Estimada</p><p className={`text-xl font-bold mt-2 ${utilidadEstimada >= 0 ? 'text-success' : 'text-destructive'}`}>${utilidadEstimada.toFixed(2)}</p></div>
               </div>
             </CardContent>
@@ -382,8 +486,8 @@ export default function NuevoEmbarque() {
         <Button variant="outline" onClick={() => currentStep > 1 ? setCurrentStep(s => s - 1) : navigate("/embarques")}>
           {currentStep === 1 ? 'Cancelar' : 'Anterior'}
         </Button>
-        <Button 
-          disabled={(currentStep === 1 && !isStep1Valid()) || (currentStep === 2 && !isStep2Valid())}
+        <Button
+          disabled={(currentStep === 1 && !isStep1Valid()) || (currentStep === 2 && !isStep2Valid()) || createEmbarque.isPending}
           onClick={() => {
             if (currentStep === 1 && !isStep1Valid()) {
               toast({ title: "Campos incompletos", description: "Completa todos los campos obligatorios (*) antes de continuar.", variant: "destructive" });
@@ -396,7 +500,7 @@ export default function NuevoEmbarque() {
             currentStep < 4 ? setCurrentStep(s => s + 1) : handleFinish();
           }}
         >
-          {currentStep === 4 ? 'Crear Embarque' : 'Siguiente'}
+          {createEmbarque.isPending ? 'Guardando...' : currentStep === 4 ? 'Crear Embarque' : 'Siguiente'}
         </Button>
       </div>
     </div>
