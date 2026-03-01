@@ -119,7 +119,7 @@ export function AppSidebar() {
         </Button>
         {!collapsed && (
           <div className="text-xs text-sidebar-foreground/50">
-            v1.4.0 · Operaciones MX
+            v3.0.0 · Operaciones MX
           </div>
         )}
       </SidebarFooter>

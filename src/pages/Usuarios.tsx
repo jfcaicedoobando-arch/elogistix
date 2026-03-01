@@ -31,23 +31,37 @@ export default function Usuarios() {
 
   const fetchUsers = async () => {
     setLoading(true);
-    const { data, error } = await supabase
+
+    // Fetch roles
+    const { data: rolesData, error: rolesError } = await supabase
       .from("user_roles")
-      .select("user_id, role, id")
+      .select("user_id, role")
       .order("user_id");
 
-    if (error) {
-      toast({ title: "Error", description: error.message, variant: "destructive" });
+    if (rolesError) {
+      toast({ title: "Error", description: rolesError.message, variant: "destructive" });
       setLoading(false);
       return;
     }
 
-    // We can't query auth.users directly, so we show user_id and role
-    const rows: UserRow[] = (data ?? []).map((r: any) => ({
+    // Fetch emails from edge function
+    let emailMap: Record<string, { email: string; created_at: string }> = {};
+    try {
+      const { data: usersData, error: fnError } = await supabase.functions.invoke("list-users");
+      if (!fnError && Array.isArray(usersData)) {
+        usersData.forEach((u: any) => {
+          emailMap[u.id] = { email: u.email, created_at: u.created_at };
+        });
+      }
+    } catch {
+      // If edge function fails, we'll show user_id instead
+    }
+
+    const rows: UserRow[] = (rolesData ?? []).map((r: any) => ({
       user_id: r.user_id,
-      email: r.user_id, // Will be replaced if we can get email
+      email: emailMap[r.user_id]?.email || r.user_id,
       role: r.role as AppRole,
-      created_at: "",
+      created_at: emailMap[r.user_id]?.created_at || "",
     }));
 
     setUsers(rows);
@@ -70,6 +84,11 @@ export default function Usuarios() {
       toast({ title: "Rol actualizado" });
       fetchUsers();
     }
+  };
+
+  const formatDate = (dateStr: string) => {
+    if (!dateStr) return "-";
+    return new Date(dateStr).toLocaleDateString("es-MX", { day: "2-digit", month: "short", year: "numeric" });
   };
 
   return (
@@ -99,7 +118,8 @@ export default function Usuarios() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Usuario (ID)</TableHead>
+                <TableHead>Email</TableHead>
+                <TableHead>Fecha de registro</TableHead>
                 <TableHead>Rol actual</TableHead>
                 <TableHead>Cambiar rol</TableHead>
               </TableRow>
@@ -107,7 +127,8 @@ export default function Usuarios() {
             <TableBody>
               {users.map((u) => (
                 <TableRow key={u.user_id}>
-                  <TableCell className="font-mono text-xs">{u.user_id}</TableCell>
+                  <TableCell className="font-medium">{u.email}</TableCell>
+                  <TableCell className="text-xs text-muted-foreground">{formatDate(u.created_at)}</TableCell>
                   <TableCell>
                     <Badge className={roleBadge[u.role]}>{u.role}</Badge>
                   </TableCell>
@@ -130,7 +151,7 @@ export default function Usuarios() {
               ))}
               {users.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={3} className="text-center text-muted-foreground py-8">
+                  <TableCell colSpan={4} className="text-center text-muted-foreground py-8">
                     No hay usuarios registrados.
                   </TableCell>
                 </TableRow>

@@ -13,6 +13,7 @@ import { formatCurrency } from "@/lib/formatters";
 import { getEstadoColor } from "@/lib/helpers";
 import EditarProveedorDialog from "@/components/EditarProveedorDialog";
 import { toast } from "sonner";
+import { usePermissions } from "@/hooks/usePermissions";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
 
@@ -22,6 +23,7 @@ export default function ProveedorDetalle() {
   const { data: prov, isLoading } = useProveedor(id);
   const { updateProveedor } = useProveedores();
   const [editOpen, setEditOpen] = useState(false);
+  const { canEdit } = usePermissions();
 
   // Fetch operaciones (conceptos_costo) for this provider with embarque info
   const { data: operaciones = [] } = useQuery({
@@ -87,9 +89,11 @@ export default function ProveedorDetalle() {
             <Badge variant="secondary">{prov.tipo}</Badge>
           </div>
         </div>
-        <Button variant="outline" onClick={() => setEditOpen(true)}>
-          <Pencil className="mr-2 h-4 w-4" /> Editar
-        </Button>
+        {canEdit && (
+          <Button variant="outline" onClick={() => setEditOpen(true)}>
+            <Pencil className="mr-2 h-4 w-4" /> Editar
+          </Button>
+        )}
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">

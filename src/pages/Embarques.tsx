@@ -14,6 +14,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useNavigate } from "react-router-dom";
 import { useEmbarques, useClientesForSelect } from "@/hooks/useEmbarques";
 import { formatCurrency } from "@/lib/formatters";
+import { usePermissions } from "@/hooks/usePermissions";
 import type { ModoTransporte, EstadoEmbarque } from "@/data/types";
 
 const ESTADOS: EstadoEmbarque[] = ['Cotización', 'Confirmado', 'En Tránsito', 'Llegada', 'En Proceso', 'Cerrado'];
@@ -56,6 +57,7 @@ export default function Embarques() {
   const [filterEstado, setFilterEstado] = useState<string>("todos");
   const [filterCliente, setFilterCliente] = useState<string>("todos");
   const [page, setPage] = useState(0);
+  const { canEdit } = usePermissions();
 
   const filtered = useMemo(() => {
     return embarques.filter((e) => {
@@ -89,9 +91,11 @@ export default function Embarques() {
           <h1 className="text-2xl font-bold">Embarques</h1>
           <p className="text-sm text-muted-foreground">{filtered.length} embarques encontrados</p>
         </div>
-        <Button onClick={() => navigate("/embarques/nuevo")}>
-          <Plus className="h-4 w-4 mr-2" /> Nuevo Embarque
-        </Button>
+        {canEdit && (
+          <Button onClick={() => navigate("/embarques/nuevo")}>
+            <Plus className="h-4 w-4 mr-2" /> Nuevo Embarque
+          </Button>
+        )}
       </div>
 
       <Card>

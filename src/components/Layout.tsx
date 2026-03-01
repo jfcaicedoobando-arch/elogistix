@@ -1,6 +1,7 @@
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
 import { Outlet } from "react-router-dom";
+import { GlobalSearch } from "@/components/GlobalSearch";
 
 export function Layout() {
   return (
@@ -13,6 +14,9 @@ export function Layout() {
             <h1 className="text-sm font-medium text-muted-foreground">
               Plataforma de Operaciones
             </h1>
+            <div className="ml-auto">
+              <GlobalSearch />
+            </div>
           </header>
           <main className="flex-1 overflow-auto p-6">
             <Outlet />

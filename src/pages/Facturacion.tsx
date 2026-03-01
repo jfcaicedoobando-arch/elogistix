@@ -16,6 +16,7 @@ import { useFacturas, useGastosPendientes, useMarcarCostoPagado } from "@/hooks/
 import { formatCurrency } from "@/lib/formatters";
 import { formatDate, getEstadoColor } from "@/lib/helpers";
 import { toast } from "sonner";
+import { usePermissions } from "@/hooks/usePermissions";
 import type { Database } from "@/integrations/supabase/types";
 
 type EstadoFactura = Database["public"]["Enums"]["estado_factura"];
@@ -28,6 +29,7 @@ export default function Facturacion() {
   const { data: facturas = [], isLoading: loadingFacturas } = useFacturas();
   const { data: gastosPendientes = [], isLoading: loadingGastos } = useGastosPendientes();
   const marcarPagado = useMarcarCostoPagado();
+  const { canEdit } = usePermissions();
 
   const filtered = useMemo(() => {
     return facturas.filter(f => {
@@ -143,14 +145,16 @@ export default function Facturacion() {
                         <TableCell className="text-xs">{g.fecha_vencimiento ? formatDate(g.fecha_vencimiento) : '-'}</TableCell>
                         <TableCell><Badge className={getEstadoColor('Pendiente')}>Pendiente</Badge></TableCell>
                         <TableCell>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            disabled={marcarPagado.isPending}
-                            onClick={() => handleMarcarPagado(g.id)}
-                          >
-                            Marcar Pagado
-                          </Button>
+                          {canEdit && (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              disabled={marcarPagado.isPending}
+                              onClick={() => handleMarcarPagado(g.id)}
+                            >
+                              Marcar Pagado
+                            </Button>
+                          )}
                         </TableCell>
                       </TableRow>
                     ))}

@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/table";
 import { useClientes, useCreateCliente } from "@/hooks/useClientes";
 import { useToast } from "@/hooks/use-toast";
+import { usePermissions } from "@/hooks/usePermissions";
 
 const emptyCliente = {
   nombre: "", rfc: "", direccion: "", ciudad: "", estado: "", cp: "", contacto: "", email: "", telefono: "",
@@ -35,6 +36,7 @@ export default function Clientes() {
   const { toast } = useToast();
   const { data: clientesList = [], isLoading } = useClientes();
   const createCliente = useCreateCliente();
+  const { canEdit } = usePermissions();
 
   const [search, setSearch] = useState("");
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -89,7 +91,7 @@ export default function Clientes() {
           <Users className="h-6 w-6 text-accent" />
           <h1 className="text-2xl font-bold">Clientes</h1>
         </div>
-        <Button onClick={() => setDialogOpen(true)}><Plus className="h-4 w-4 mr-1" />Nuevo Cliente</Button>
+        {canEdit && <Button onClick={() => setDialogOpen(true)}><Plus className="h-4 w-4 mr-1" />Nuevo Cliente</Button>}
       </div>
 
       <Card>

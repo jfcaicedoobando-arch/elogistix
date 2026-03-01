@@ -12,6 +12,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useProveedores } from "@/hooks/useProveedores";
 import NuevoProveedorDialog from "@/components/NuevoProveedorDialog";
 import { toast } from "sonner";
+import { usePermissions } from "@/hooks/usePermissions";
 import type { TipoProveedor, Proveedor } from "@/data/types";
 
 const TABS: { label: string; tipo: TipoProveedor }[] = [
@@ -71,6 +72,7 @@ export default function Proveedores() {
   const [nuevoOpen, setNuevoOpen] = useState(false);
   const navigate = useNavigate();
   const { proveedores, addProveedor, isLoading } = useProveedores();
+  const { canEdit } = usePermissions();
 
   const handleAdd = async (data: Omit<Proveedor, 'id'>) => {
     try {
@@ -88,9 +90,11 @@ export default function Proveedores() {
           <Truck className="h-6 w-6 text-accent" />
           <h1 className="text-2xl font-bold">Proveedores</h1>
         </div>
-        <Button onClick={() => setNuevoOpen(true)}>
-          <Plus className="mr-2 h-4 w-4" /> Nuevo Proveedor
-        </Button>
+        {canEdit && (
+          <Button onClick={() => setNuevoOpen(true)}>
+            <Plus className="mr-2 h-4 w-4" /> Nuevo Proveedor
+          </Button>
+        )}
       </div>
 
       <Card>

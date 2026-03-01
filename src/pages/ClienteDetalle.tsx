@@ -17,6 +17,7 @@ import {
 } from "@/components/ui/table";
 import { useCliente, useContactosCliente, useCreateContacto, useUpdateContacto, useDeleteContacto } from "@/hooks/useClientes";
 import { useToast } from "@/hooks/use-toast";
+import { usePermissions } from "@/hooks/usePermissions";
 import type { ContactoCliente, TipoContacto } from "@/data/types";
 
 const TIPOS_CONTACTO: TipoContacto[] = ['Proveedor', 'Exportador', 'Importador'];
@@ -35,6 +36,7 @@ export default function ClienteDetalle() {
   const createContacto = useCreateContacto();
   const updateContacto = useUpdateContacto();
   const deleteContacto = useDeleteContacto();
+  const { canEdit } = usePermissions();
 
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -146,7 +148,7 @@ export default function ClienteDetalle() {
       <Card>
         <CardHeader className="flex flex-row items-center justify-between pb-3">
           <CardTitle className="text-base flex items-center gap-2"><Users className="h-4 w-4" />Proveedores / Exportadores</CardTitle>
-          <Button size="sm" onClick={openNew}><Plus className="h-4 w-4 mr-1" />Agregar Contacto</Button>
+          {canEdit && <Button size="sm" onClick={openNew}><Plus className="h-4 w-4 mr-1" />Agregar Contacto</Button>}
         </CardHeader>
         <CardContent className="p-0">
           {loadingContactos ? (
@@ -178,14 +180,16 @@ export default function ClienteDetalle() {
                     <TableCell className="text-xs">{ct.contacto}</TableCell>
                     <TableCell className="text-xs">{ct.email}</TableCell>
                     <TableCell>
-                      <div className="flex gap-1">
-                        <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => openEdit(ct)}>
-                          <Pencil className="h-3.5 w-3.5" />
-                        </Button>
-                        <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={() => handleDelete(ct.id)}>
-                          <Trash2 className="h-3.5 w-3.5" />
-                        </Button>
-                      </div>
+                      {canEdit && (
+                        <div className="flex gap-1">
+                          <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => openEdit(ct)}>
+                            <Pencil className="h-3.5 w-3.5" />
+                          </Button>
+                          <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={() => handleDelete(ct.id)}>
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </Button>
+                        </div>
+                      )}
                     </TableCell>
                   </TableRow>
                 ))}
