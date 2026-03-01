@@ -14,6 +14,7 @@ import {
 import { useClientes, useCreateCliente } from "@/hooks/useClientes";
 import { useToast } from "@/hooks/use-toast";
 import { usePermissions } from "@/hooks/usePermissions";
+import { useRegistrarActividad } from "@/hooks/useBitacora";
 
 const emptyCliente = {
   nombre: "", rfc: "", direccion: "", ciudad: "", estado: "", cp: "", contacto: "", email: "", telefono: "",
@@ -37,6 +38,7 @@ export default function Clientes() {
   const { data: clientesList = [], isLoading } = useClientes();
   const createCliente = useCreateCliente();
   const { canEdit } = usePermissions();
+  const registrarActividad = useRegistrarActividad();
 
   const [search, setSearch] = useState("");
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -69,7 +71,13 @@ export default function Clientes() {
   const handleSave = async () => {
     if (!allDocsAdjuntados) return;
     try {
-      await createCliente.mutateAsync(form);
+      const clienteCreado = await createCliente.mutateAsync(form);
+      registrarActividad.mutate({
+        accion: 'crear',
+        modulo: 'clientes',
+        entidad_id: clienteCreado.id,
+        entidad_nombre: clienteCreado.nombre,
+      });
       toast({ title: "Cliente creado exitosamente" });
       resetAndClose();
     } catch (error: any) {

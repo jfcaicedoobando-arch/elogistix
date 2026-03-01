@@ -11,6 +11,7 @@ import {
 import { useContactosCliente } from "@/hooks/useClientes";
 import { useAuth } from "@/contexts/AuthContext";
 import { useExchangeRates } from "@/hooks/useExchangeRates";
+import { useRegistrarActividad } from "@/hooks/useBitacora";
 import { getDocsForMode } from "@/data/embarqueConstants";
 import { StepIndicator } from "@/components/embarque/StepIndicator";
 import { StepDatosGenerales } from "@/components/embarque/StepDatosGenerales";
@@ -31,6 +32,7 @@ export default function NuevoEmbarque() {
   const { data: clientes = [] } = useClientesForSelect();
   const { data: proveedoresDb = [] } = useProveedoresForSelect();
   const createEmbarque = useCreateEmbarque();
+  const registrarActividad = useRegistrarActividad();
   const { data: tiposDeCambio } = useExchangeRates();
 
   const [currentStep, setCurrentStep] = useState(1);
@@ -202,6 +204,13 @@ export default function NuevoEmbarque() {
             moneda: costo.moneda as any,
           })),
         documentos: docsForMode.map(documento => ({ nombre: documento })),
+      });
+
+      registrarActividad.mutate({
+        accion: 'crear',
+        modulo: 'embarques',
+        entidad_nombre: expediente,
+        detalles: { modo, tipo, cliente: selectedCliente?.nombre ?? '' },
       });
 
       toast({ title: "Embarque creado", description: `Expediente ${expediente} registrado correctamente.` });

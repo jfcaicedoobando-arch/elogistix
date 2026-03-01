@@ -16,6 +16,7 @@ import Proveedores from "./pages/Proveedores";
 import ProveedorDetalle from "./pages/ProveedorDetalle";
 import Reportes from "./pages/Reportes";
 import Changelog from "./pages/Changelog";
+import Bitacora from "./pages/Bitacora";
 import Usuarios from "./pages/Usuarios";
 import Login from "./pages/Login";
 import NotFound from "./pages/NotFound";
@@ -48,6 +49,7 @@ const App = () => (
             <Route path="/proveedores/:id" element={<ProveedorDetalle />} />
             <Route path="/reportes" element={<Reportes />} />
             <Route path="/changelog" element={<Changelog />} />
+            <Route path="/bitacora" element={<Bitacora />} />
             <Route
               path="/usuarios"
               element={

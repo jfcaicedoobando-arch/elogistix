@@ -173,8 +173,9 @@ export function useCreateEmbarque() {
 
       return embarqueCreado;
     },
-    onSuccess: () => {
+    onSuccess: (embarqueCreado) => {
       queryClient.invalidateQueries({ queryKey: ['embarques'] });
+      return embarqueCreado;
     },
   });
 }

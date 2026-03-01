@@ -9,6 +9,7 @@ import {
   ScrollText,
   ShieldCheck,
   LogOut,
+  History,
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
@@ -35,6 +36,7 @@ const menuItems = [
   { title: "Proveedores", url: "/proveedores", icon: Truck },
   { title: "Reportes", url: "/reportes", icon: BarChart3 },
   { title: "Changelog", url: "/changelog", icon: ScrollText },
+  { title: "Bitácora", url: "/bitacora", icon: History },
 ];
 
 const adminItems = [
@@ -119,7 +121,7 @@ export function AppSidebar() {
         </Button>
         {!collapsed && (
           <div className="text-xs text-sidebar-foreground/50">
-            v3.0.0 · Operaciones MX
+            v3.3.0 · Operaciones MX
           </div>
         )}
       </SidebarFooter>
