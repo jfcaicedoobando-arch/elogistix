@@ -13,6 +13,14 @@ interface ChangelogEntry {
 
 const changelog: ChangelogEntry[] = [
   {
+    version: "3.3.1",
+    date: "2026-03-01",
+    type: "patch",
+    title: "Suite de tests unitarios y de integración",
+    description:
+      "44 tests en 11 archivos cubriendo helpers (formatDate, getEstadoColor, getModoIcon), formatters (formatCurrency), utils (cn), constantes de embarque/proveedor/contenedores/puertos/navieras, componente BitacoraActividad y hook usePermissions.",
+  },
+  {
     version: "3.3.0",
     date: "2026-03-01",
     type: "minor",

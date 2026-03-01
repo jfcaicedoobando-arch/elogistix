@@ -1,0 +1,39 @@
+import { describe, it, expect } from "vitest";
+import { formatDate, getEstadoColor, getModoIcon } from "@/lib/helpers";
+
+describe("formatDate", () => {
+  it("devuelve '-' para cadena vacía", () => {
+    expect(formatDate("")).toBe("-");
+  });
+  it("formatea fecha ISO correctamente", () => {
+    expect(formatDate("2026-03-01")).toBe("01/03/2026");
+  });
+  it("devuelve tal cual si no tiene 3 partes", () => {
+    expect(formatDate("2026-03")).toBe("2026-03");
+  });
+});
+
+describe("getEstadoColor", () => {
+  it("retorna clase correcta para cada estado conocido", () => {
+    expect(getEstadoColor("Cotización")).toContain("bg-muted");
+    expect(getEstadoColor("En Tránsito")).toContain("text-warning");
+    expect(getEstadoColor("Cerrado")).toContain("text-success");
+    expect(getEstadoColor("Pagada")).toContain("text-success");
+    expect(getEstadoColor("Vencida")).toContain("text-destructive");
+  });
+  it("retorna default para estado desconocido", () => {
+    expect(getEstadoColor("Inventado")).toBe("bg-muted text-muted-foreground");
+  });
+});
+
+describe("getModoIcon", () => {
+  it("retorna emoji correcto por modo", () => {
+    expect(getModoIcon("Marítimo")).toBe("🚢");
+    expect(getModoIcon("Aéreo")).toBe("✈️");
+    expect(getModoIcon("Terrestre")).toBe("🚛");
+    expect(getModoIcon("Multimodal")).toBe("🔄");
+  });
+  it("retorna 📦 para modo desconocido", () => {
+    expect(getModoIcon("Otro")).toBe("📦");
+  });
+});
