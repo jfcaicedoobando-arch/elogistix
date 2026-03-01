@@ -1,180 +1,103 @@
 
 
-## Plan: Renombrar variables y funciones para mayor claridad — v3.2.0
+## Plan: Sistema de Bitacora y Actividad — v3.3.0
 
-He analizado todo el código de la aplicación. A continuación detallo los renombramientos organizados por archivo. El criterio es: **toda variable de 1-2 letras o abreviatura ambigua se reemplaza por un nombre descriptivo que se entienda sin contexto**.
+### Contexto actual
 
----
-
-### 1. `src/lib/helpers.ts`
-- `[y, m, d]` → `[anio, mes, dia]`
-
-### 2. `src/hooks/useClientes.ts`
-- `qc` (×4 hooks) → `queryClient`
-- `_d` en callbacks onSuccess → `_resultado`
-
-### 3. `src/hooks/useEmbarques.ts`
-- `emb` → `embarqueCreado` (L129)
-- `embError` → `errorCrearEmbarque`
-- `r` en `.then(r => r)` y `for (const r of results)` → `respuesta`
-- `cv` → `conceptoVenta` (L142)
-- `cc` → `conceptoCosto` (L149)
-- `d` → `documento` (L156)
-
-### 4. `src/hooks/useFacturas.ts`
-No requiere cambios — los nombres ya son descriptivos.
-
-### 5. `src/pages/Dashboard.tsx`
-- `le` → `cargandoEmbarques` (L37 alias de isLoading)
-- `lc` → se elimina, ya no se usa (conceptos se cargan en Reportes)
-- En `stats` memo: `e.estado` ok, pero `e` en `.filter(e =>` → `embarque`
-- `diff` → `diasParaLlegada`
-- `d` → `fechaMes` (L47)
-- `y, m` → `anio, mes`
-- `inMonth` → `embarquesDelMes`
-- `e` en recientes map → `embarque`
-- `f` en facturas filter → `factura`
-- `g` en gastos → mantener (solo `.length`)
-
-### 6. `src/pages/Embarques.tsx`
-- `e` en filter/map → `embarque`
-- `m` en MODOS map → `modoTransporte`
-- `c` en clientes map → `cliente`
-- `p` en setPage → `paginaActual`
-- `v` en onValueChange → `valorSeleccionado`
-
-### 7. `src/pages/EmbarqueDetalle.tsx`
-- `tcUSD` → `tipoCambioUSD`
-- `tcEUR` → `tipoCambioEUR`
-- `c` en reduce (conceptosVenta) → `concepto`
-- `t` → `totalConcepto`
-- `m` → `montoConcepto`
-- `docArchivo` param → `rutaArchivo`
-
-### 8. `src/pages/Facturacion.tsx`
-- `f` en filter/map → `factura`
-- `g` en gastos map → `gasto`
-- `e` en ESTADOS_FACTURA map → `estadoFactura`
-
-### 9. `src/pages/Reportes.tsx`
-- `le` → `cargandoEmbarques`
-- `lc` → `cargandoConceptos`
-- `c` en clientes.map → `cliente`
-- `cEmbarques` → `embarquesDelCliente`
-- `embIds` → `idsEmbarquesCliente`
-- `tcMap` → `tiposCambioEmbarques`
-- `tc` → `tipoCambio`
-- `v` en ventas filter → `venta`
-- `g` en costos filter → `costo`
-- `f` en facturas filter → `factura`
-- `i` en render → `indice`
-
-### 10. `src/pages/NuevoEmbarque.tsx`
-- `cv` en interfaces/filtros → `conceptoVenta` / `venta`
-- `cc` → `conceptoCosto` / `costo`
-- `ct` en contactos.find → `contacto`
-- `c` en reduce → `concepto`
-- `n` en setNextId → `contadorActual`
-- `s` en setCurrentStep → `pasoActual`
-- `p` en proveedoresDb.find → `proveedor`
-- `rates` → `tiposDeCambio`
-
-### 11. `src/pages/Clientes.tsx`
-- `c` en filtered/map → `cliente`
-- `d` en documentos map → `documento`
-- `o` en Dialog onOpenChange → `abierto`
-
-### 12. `src/pages/ClienteDetalle.tsx`
-- `ct` (contacto) → `contacto`
-- `_d` → `_resultado`
-- `t` en TIPOS_CONTACTO map → `tipoContacto`
-- `e` en handleChange → mantener (event pattern estándar)
-- `v` en onValueChange → `valorSeleccionado`
-
-### 13. `src/pages/Proveedores.tsx`
-- `p` en map → `proveedor`
-- `t` en TABS map → `tabConfig`
-- `i` en skeleton → `indice`
-
-### 14. `src/pages/ProveedorDetalle.tsx`
-- `prov` → `proveedor`
-- `o` en operaciones map → `operacion`
-- `i` en key → `indice`
-
-### 15. `src/pages/Usuarios.tsx`
-- `u` en map → `usuario`
-- `r` en rolesData map → `rolUsuario`
-
-### 16. `src/components/GlobalSearch.tsx`
-- `q` → `terminoBusqueda` (param)
-- `o` en setOpen → `estaAbierto`
-- `e` en embarques map → `embarque`
-- `c` en clientes map → `cliente`
-- `p` en proveedores map → `proveedor`
-- `f` en facturas map → `factura`
-- `r` en grouped reduce → `resultado`
-
-### 17. `src/components/embarque/StepCostosPrecios.tsx`
-- `cv` → `venta`
-- `cc` → `costo`
-- `v` en onValueChange → `valorSeleccionado`
-- `c` en CONCEPTOS map → `conceptoMaritimo`
-- `p` en proveedoresDb map → `proveedor`
-
-### 18. `src/components/embarque/TabCostos.tsx`
-- `c` en map → `concepto`
-
-### 19. `src/components/embarque/TabNotas.tsx`
-- `n` en map → `nota`
-
-### 20. `src/components/embarque/TabFacturacion.tsx`
-- `f` en map → `factura`
-
-### 21. `src/components/NuevoProveedorDialog.tsx` / `EditarProveedorDialog.tsx`
-- `f` en setForm → `formularioActual`
-- `v` en onValueChange → `valorSeleccionado`
-- `t` en TIPOS map → `tipoProveedor`
-- `m` en MONEDAS map → `moneda`
-- `p` en PAISES map → `pais`
-
-### 22. `src/contexts/AuthContext.tsx`
-- `_event` → `_eventoAuth`
+Ya existe una tabla `notas_embarque` con tipos (`nota`, `cambio_estado`, `documento`, `factura`, `sistema`) pero solo registra actividad a nivel de embarque individual. No hay un registro centralizado de acciones de usuario a nivel de toda la aplicación.
 
 ---
 
-### Archivos a modificar (22 archivos)
+### 1. Nueva tabla `bitacora_actividad`
 
-```text
-src/lib/helpers.ts
-src/hooks/useClientes.ts
-src/hooks/useEmbarques.ts
-src/pages/Dashboard.tsx
-src/pages/Embarques.tsx
-src/pages/EmbarqueDetalle.tsx
-src/pages/Facturacion.tsx
-src/pages/Reportes.tsx
-src/pages/NuevoEmbarque.tsx
-src/pages/Clientes.tsx
-src/pages/ClienteDetalle.tsx
-src/pages/Proveedores.tsx
-src/pages/ProveedorDetalle.tsx
-src/pages/Usuarios.tsx
-src/components/GlobalSearch.tsx
-src/components/embarque/StepCostosPrecios.tsx
-src/components/embarque/TabCostos.tsx
-src/components/embarque/TabNotas.tsx
-src/components/embarque/TabFacturacion.tsx
-src/components/NuevoProveedorDialog.tsx
-src/components/EditarProveedorDialog.tsx
-src/contexts/AuthContext.tsx
-src/pages/Changelog.tsx  (nueva entrada v3.2.0)
+Tabla centralizada que registra toda accion relevante de cualquier usuario en cualquier modulo.
+
+```sql
+CREATE TABLE public.bitacora_actividad (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  usuario_id uuid NOT NULL,
+  usuario_email text NOT NULL DEFAULT '',
+  accion text NOT NULL,           -- 'crear', 'editar', 'eliminar', 'cambio_estado', 'subir_documento', 'login'
+  modulo text NOT NULL,           -- 'embarques', 'clientes', 'proveedores', 'facturas', 'usuarios'
+  entidad_id uuid,                -- ID del registro afectado
+  entidad_nombre text DEFAULT '', -- Nombre/expediente para mostrar sin JOIN
+  detalles jsonb DEFAULT '{}',    -- Metadata adicional (campo cambiado, valor anterior, valor nuevo)
+  created_at timestamptz NOT NULL DEFAULT now()
+);
 ```
 
-### Criterios aplicados
-- Variables de iterador de 1 letra (`e`, `c`, `f`, `g`, `p`) → nombre completo de la entidad
-- Abreviaciones ambiguas (`prov`, `emb`, `tc`, `qc`, `le`, `lc`) → nombre completo
-- Destructuring críptico (`[y, m, d]`) → nombre legible
-- Callbacks `_d` → `_resultado`
-- Setters con `f =>` → `formularioActual =>`
-- Sin cambiar nombres que ya son claros (`search`, `page`, `toast`, `navigate`, etc.)
+Politicas RLS: admin ve todo, operador y viewer ven solo sus propias acciones. Insercion permitida a todos los autenticados.
+
+---
+
+### 2. Hook `src/hooks/useBitacora.ts`
+
+- `useBitacora(filtros?)` — consulta con filtros opcionales por modulo, usuario, rango de fechas
+- `useRegistrarActividad()` — mutation para insertar entrada en bitacora
+- `useActividadReciente(limite?)` — ultimas N acciones globales para el Dashboard
+
+---
+
+### 3. Componente `src/components/BitacoraActividad.tsx`
+
+Timeline visual reutilizable que muestra las acciones con:
+- Icono por tipo de accion (crear, editar, eliminar, etc.)
+- Nombre del usuario y email
+- Modulo y entidad afectada (con link navegable)
+- Timestamp relativo ("hace 5 min", "hace 2 horas")
+- Filtros por modulo y rango de fechas
+
+---
+
+### 4. Nueva pagina `src/pages/Bitacora.tsx`
+
+Pagina completa `/bitacora` accesible desde el sidebar que muestra:
+- La bitacora global con paginacion
+- Filtros por modulo, usuario y fecha
+- Solo admin ve todas las acciones; operador/viewer ven solo las propias
+
+---
+
+### 5. Widget de actividad reciente en Dashboard
+
+Reemplazar o complementar la seccion de "Alertas del Dia" con un componente de actividad reciente que muestre las ultimas 10 acciones de todos los usuarios (visible solo para admin) o las propias.
+
+---
+
+### 6. Registrar acciones automaticamente
+
+Integrar `useRegistrarActividad()` en los hooks existentes:
+- `useCreateEmbarque` — registrar "crear embarque"
+- `useCreateCliente` / `useUpdateCliente` — registrar crear/editar cliente
+- `useCreateProveedor` / `useUpdateProveedor` — registrar crear/editar proveedor
+- `useCreateFactura` / `useUpdateFacturaEstado` — registrar crear/cambiar estado factura
+- Upload de documentos en `EmbarqueDetalle` — registrar subida
+- Login en `AuthContext` — registrar inicio de sesion
+
+---
+
+### 7. Sidebar y rutas
+
+- Agregar "Bitacora" al menu del sidebar con icono `History`
+- Agregar ruta `/bitacora` en `App.tsx`
+
+---
+
+### Archivos
+
+**Nuevos:**
+- Migracion SQL (tabla + RLS)
+- `src/hooks/useBitacora.ts`
+- `src/components/BitacoraActividad.tsx`
+- `src/pages/Bitacora.tsx`
+
+**Modificados:**
+- `src/hooks/useEmbarques.ts` (registrar actividad al crear)
+- `src/hooks/useClientes.ts` (registrar actividad al crear/editar)
+- `src/hooks/useFacturas.ts` (registrar actividad)
+- `src/pages/EmbarqueDetalle.tsx` (registrar subida de docs)
+- `src/pages/Dashboard.tsx` (widget actividad reciente)
+- `src/components/AppSidebar.tsx` (nueva entrada menu)
+- `src/App.tsx` (nueva ruta)
+- `src/pages/Changelog.tsx` (v3.3.0)
 
