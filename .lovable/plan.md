@@ -1,73 +1,51 @@
 
 
-## Plan: Suite de tests para validar la funcionalidad de la aplicación — v3.3.1
+## Plan: Editar embarques existentes — v3.4.0
 
-Crearé tests unitarios y de integración ligera para cubrir las capas más importantes: funciones utilitarias, datos/constantes, y componentes clave. Los hooks que dependen de la base de datos se testearán con mocks de Supabase.
+### Enfoque
 
----
+Crear una nueva pagina `EditarEmbarque` que reutilice los mismos componentes del wizard (`StepDatosGenerales`, `StepDatosRuta`, `StepCostosPrecios`) pero pre-cargados con los datos existentes del embarque. El boton "Editar" en `EmbarqueDetalle` navegara a `/embarques/:id/editar`.
 
-### Tests a crear
+### Cambios
 
-| Archivo de test | Qué valida |
-|---|---|
-| `src/lib/__tests__/helpers.test.ts` | `formatDate`, `getEstadoColor`, `getModoIcon` — todos los casos y edge cases |
-| `src/lib/__tests__/formatters.test.ts` | `formatCurrency` — MXN, USD, EUR, decimales |
-| `src/lib/__tests__/utils.test.ts` | `cn()` — merge de clases Tailwind |
-| `src/data/__tests__/embarqueConstants.test.ts` | `getDocsForMode` — documentos por modo, `ESTADO_TIMELINE`, `CONCEPTOS_MARITIMOS` |
-| `src/data/__tests__/proveedorConstants.test.ts` | Arrays no vacíos, tipos correctos |
-| `src/data/__tests__/containerTypes.test.ts` | Códigos únicos, estructura válida |
-| `src/data/__tests__/ports.test.ts` | Códigos únicos, puertos mexicanos presentes |
-| `src/data/__tests__/shippingLines.test.ts` | Códigos únicos, estructura válida |
-| `src/components/__tests__/BitacoraActividad.test.tsx` | Renderiza actividades, muestra estado vacío, links correctos, `tiempoRelativo` |
-| `src/hooks/__tests__/usePermissions.test.tsx` | Retorna `canEdit`/`isAdmin` según rol |
+**1. Hook `useEmbarques.ts` — agregar mutacion `useUpdateEmbarque`**
+- Recibe el id del embarque y los campos a actualizar
+- Actualiza la tabla `embarques` con `.update()`
+- Tambien sincroniza `conceptos_venta` y `conceptos_costo`: elimina los existentes y re-inserta los nuevos (estrategia replace)
+- Invalida queries al completar
 
-### Qué se valida en cada test
+**2. Nueva pagina `src/pages/EditarEmbarque.tsx`**
+- Carga el embarque existente con `useEmbarque(id)`, conceptos venta/costo con los hooks existentes
+- Pre-llena todo el state local con los valores del embarque (mismo patron que `NuevoEmbarque` pero con `useEffect` para inicializar)
+- Reutiliza `StepDatosGenerales`, `StepDatosRuta`, `StepCostosPrecios` tal cual
+- Wizard de 3 pasos (sin Documentos, ya que esos se gestionan en el detalle)
+- Boton final dice "Guardar Cambios"
+- Registra actividad en bitacora con accion `editar` y detalles de campos modificados
 
-**helpers.ts:**
-- `formatDate('')` → `'-'`, fecha normal → `dd/mm/aaaa`, formato incompleto → devuelve tal cual
-- `getEstadoColor` → cada estado retorna clase CSS correcta, estado desconocido → default
-- `getModoIcon` → cada modo retorna emoji correcto, modo desconocido → 📦
+**3. Ruta en `App.tsx`**
+- Agregar `<Route path="/embarques/:id/editar" element={<EditarEmbarque />} />`
 
-**formatters.ts:**
-- MXN formatea con `$`, USD con `US$`, EUR con `€`
-- Negativos, cero, decimales
+**4. Boton Editar en `EmbarqueDetalle.tsx`**
+- Conectar el boton existente para navegar a `/embarques/${id}/editar`
 
-**embarqueConstants.ts:**
-- `getDocsForMode('Marítimo')` incluye BL Master
-- `getDocsForMode('Aéreo')` incluye AWB
-- `getDocsForMode('Terrestre')` incluye Carta Porte
-- `getDocsForMode('')` → marítimo por default
+**5. Changelog**
+- Nueva entrada v3.4.0
 
-**BitacoraActividad.tsx:**
-- Sin actividades → muestra "Sin actividad registrada"
-- Con actividades → renderiza cada entrada con acción y módulo
-- Con `mostrarUsuario=false` → no muestra email
-- Link a entidad cuando hay `entidad_id` y módulo con ruta
+### Detalle tecnico de la sincronizacion de conceptos
 
-**usePermissions:**
-- admin → `canEdit: true, isAdmin: true`
-- operador → `canEdit: true, isAdmin: false`
-- viewer → `canEdit: false, isAdmin: false`
+En lugar de hacer diff fila por fila, la mutacion:
+1. Hace `DELETE FROM conceptos_venta WHERE embarque_id = X`
+2. Hace `DELETE FROM conceptos_costo WHERE embarque_id = X`
+3. Re-inserta los conceptos actuales
 
----
+Esto simplifica la logica y evita bugs de sincronizacion, ya que los conceptos no tienen relaciones secundarias.
 
-### Archivos nuevos (10)
+### Archivos nuevos
+- `src/pages/EditarEmbarque.tsx`
 
-```text
-src/lib/__tests__/helpers.test.ts
-src/lib/__tests__/formatters.test.ts
-src/lib/__tests__/utils.test.ts
-src/data/__tests__/embarqueConstants.test.ts
-src/data/__tests__/proveedorConstants.test.ts
-src/data/__tests__/containerTypes.test.ts
-src/data/__tests__/ports.test.ts
-src/data/__tests__/shippingLines.test.ts
-src/components/__tests__/BitacoraActividad.test.tsx
-src/hooks/__tests__/usePermissions.test.tsx
-```
-
-### Modificados
-- `src/pages/Changelog.tsx` — nueva entrada v3.3.1
-
-Después de crear los tests, los ejecutaré automáticamente para verificar que todos pasen.
+### Archivos modificados
+- `src/hooks/useEmbarques.ts` — nueva mutacion `useUpdateEmbarque`
+- `src/App.tsx` — nueva ruta
+- `src/pages/EmbarqueDetalle.tsx` — conectar boton Editar
+- `src/pages/Changelog.tsx` — entrada v3.4.0
 
