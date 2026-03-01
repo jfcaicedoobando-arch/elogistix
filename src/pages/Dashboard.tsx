@@ -17,20 +17,20 @@ import { useMemo } from "react";
 
 export default function Dashboard() {
   const navigate = useNavigate();
-  const { data: embarques = [], isLoading: loadingEmbarques } = useEmbarques();
-  const { data: facturas = [], isLoading: loadingFacturas } = useFacturas();
+  const { data: embarques = [], isLoading: cargandoEmbarques } = useEmbarques();
+  const { data: facturas = [], isLoading: cargandoFacturas } = useFacturas();
   const { data: gastosPendientes = [] } = useGastosPendientes();
 
   const stats = useMemo(() => {
-    const embarquesActivos = embarques.filter(e => !['Cerrado', 'Cotización'].includes(e.estado)).length;
-    const embarquesPorCerrar = embarques.filter(e => {
-      if (e.estado === 'Cerrado' || !e.eta) return false;
-      const eta = new Date(e.eta);
+    const embarquesActivos = embarques.filter(embarque => !['Cerrado', 'Cotización'].includes(embarque.estado)).length;
+    const embarquesPorCerrar = embarques.filter(embarque => {
+      if (embarque.estado === 'Cerrado' || !embarque.eta) return false;
+      const eta = new Date(embarque.eta);
       const now = new Date();
-      const diff = (eta.getTime() - now.getTime()) / (1000 * 60 * 60 * 24);
-      return diff <= 7 && diff >= -3;
+      const diasParaLlegada = (eta.getTime() - now.getTime()) / (1000 * 60 * 60 * 24);
+      return diasParaLlegada <= 7 && diasParaLlegada >= -3;
     }).length;
-    const facturasPendientes = facturas.filter(f => ['Emitida', 'Borrador'].includes(f.estado)).length;
+    const facturasPendientes = facturas.filter(factura => ['Emitida', 'Borrador'].includes(factura.estado)).length;
     return { embarquesActivos, embarquesPorCerrar, facturasPendientes, gastosPendientes: gastosPendientes.length };
   }, [embarques, facturas, gastosPendientes]);
 
@@ -44,18 +44,18 @@ export default function Dashboard() {
     const now = new Date();
     const months: { mes: string; Marítimo: number; Aéreo: number; Terrestre: number }[] = [];
     for (let i = 5; i >= 0; i--) {
-      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
-      const label = d.toLocaleDateString('es-MX', { month: 'short' });
-      const y = d.getFullYear(), m = d.getMonth();
-      const inMonth = embarques.filter(e => {
-        const c = new Date(e.created_at);
-        return c.getFullYear() === y && c.getMonth() === m;
+      const fechaMes = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      const label = fechaMes.toLocaleDateString('es-MX', { month: 'short' });
+      const anio = fechaMes.getFullYear(), mes = fechaMes.getMonth();
+      const embarquesDelMes = embarques.filter(embarque => {
+        const fechaCreacion = new Date(embarque.created_at);
+        return fechaCreacion.getFullYear() === anio && fechaCreacion.getMonth() === mes;
       });
       months.push({
         mes: label.charAt(0).toUpperCase() + label.slice(1),
-        Marítimo: inMonth.filter(e => e.modo === 'Marítimo').length,
-        Aéreo: inMonth.filter(e => e.modo === 'Aéreo').length,
-        Terrestre: inMonth.filter(e => e.modo === 'Terrestre').length,
+        Marítimo: embarquesDelMes.filter(embarque => embarque.modo === 'Marítimo').length,
+        Aéreo: embarquesDelMes.filter(embarque => embarque.modo === 'Aéreo').length,
+        Terrestre: embarquesDelMes.filter(embarque => embarque.modo === 'Terrestre').length,
       });
     }
     return months;
@@ -68,7 +68,7 @@ export default function Dashboard() {
     { title: 'Gastos por Liquidar', value: stats.gastosPendientes, icon: DollarSign, color: 'text-destructive' },
   ];
 
-  const loading = loadingEmbarques || loadingFacturas;
+  const loading = cargandoEmbarques || cargandoFacturas;
 
   return (
     <div className="space-y-6">
@@ -118,7 +118,7 @@ export default function Dashboard() {
           </CardContent>
         </Card>
 
-        {/* Alertas - now dynamic */}
+        {/* Alertas */}
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-base flex items-center gap-2">
@@ -134,19 +134,19 @@ export default function Dashboard() {
                   <span className="text-muted-foreground">{gastosPendientes.length} gastos por liquidar</span>
                 </div>
               )}
-              {embarques.filter(e => e.eta && !['Cerrado'].includes(e.estado)).filter(e => {
-                const diff = (new Date(e.eta!).getTime() - Date.now()) / 864e5;
-                return diff <= 3 && diff >= -1;
-              }).slice(0, 4).map(e => (
-                <div key={e.id} className="flex items-start gap-3 rounded-lg border p-3 text-sm cursor-pointer hover:bg-muted/50 transition-colors" onClick={() => navigate(`/embarques/${e.id}`)}>
+              {embarques.filter(embarque => embarque.eta && !['Cerrado'].includes(embarque.estado)).filter(embarque => {
+                const diasParaLlegada = (new Date(embarque.eta!).getTime() - Date.now()) / 864e5;
+                return diasParaLlegada <= 3 && diasParaLlegada >= -1;
+              }).slice(0, 4).map(embarque => (
+                <div key={embarque.id} className="flex items-start gap-3 rounded-lg border p-3 text-sm cursor-pointer hover:bg-muted/50 transition-colors" onClick={() => navigate(`/embarques/${embarque.id}`)}>
                   <div className="mt-0.5 h-2 w-2 rounded-full shrink-0 bg-destructive" />
-                  <span className="text-muted-foreground">ETA próxima - {e.expediente} ({e.modo})</span>
+                  <span className="text-muted-foreground">ETA próxima - {embarque.expediente} ({embarque.modo})</span>
                 </div>
               ))}
-              {facturas.filter(f => f.estado === 'Vencida').slice(0, 3).map(f => (
-                <div key={f.id} className="flex items-start gap-3 rounded-lg border p-3 text-sm cursor-pointer hover:bg-muted/50 transition-colors" onClick={() => navigate('/facturacion')}>
+              {facturas.filter(factura => factura.estado === 'Vencida').slice(0, 3).map(factura => (
+                <div key={factura.id} className="flex items-start gap-3 rounded-lg border p-3 text-sm cursor-pointer hover:bg-muted/50 transition-colors" onClick={() => navigate('/facturacion')}>
                   <div className="mt-0.5 h-2 w-2 rounded-full shrink-0 bg-warning" />
-                  <span className="text-muted-foreground">Factura vencida - {f.numero}</span>
+                  <span className="text-muted-foreground">Factura vencida - {factura.numero}</span>
                 </div>
               ))}
               {embarques.length === 0 && !loading && (
@@ -164,7 +164,7 @@ export default function Dashboard() {
         </CardHeader>
         <CardContent>
           {loading ? (
-            <div className="space-y-3">{Array.from({ length: 5 }).map((_, i) => <Skeleton key={i} className="h-10 w-full" />)}</div>
+            <div className="space-y-3">{Array.from({ length: 5 }).map((_, indice) => <Skeleton key={indice} className="h-10 w-full" />)}</div>
           ) : (
             <Table>
               <TableHeader>
@@ -180,30 +180,30 @@ export default function Dashboard() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {recientes.map((e) => {
-                  const origen = e.puerto_origen || e.aeropuerto_origen || e.ciudad_origen || '-';
-                  const destino = e.puerto_destino || e.aeropuerto_destino || e.ciudad_destino || '-';
+                {recientes.map((embarque) => {
+                  const origen = embarque.puerto_origen || embarque.aeropuerto_origen || embarque.ciudad_origen || '-';
+                  const destino = embarque.puerto_destino || embarque.aeropuerto_destino || embarque.ciudad_destino || '-';
                   return (
-                    <TableRow key={e.id} className="cursor-pointer" onClick={() => navigate(`/embarques/${e.id}`)}>
-                      <TableCell className="font-medium">{e.expediente}</TableCell>
-                      <TableCell className="max-w-[200px] truncate">{e.cliente_nombre}</TableCell>
+                    <TableRow key={embarque.id} className="cursor-pointer" onClick={() => navigate(`/embarques/${embarque.id}`)}>
+                      <TableCell className="font-medium">{embarque.expediente}</TableCell>
+                      <TableCell className="max-w-[200px] truncate">{embarque.cliente_nombre}</TableCell>
                       <TableCell>
                         <span className="flex items-center gap-1.5">
-                          <span>{getModoIcon(e.modo)}</span>
-                          <span className="text-xs">{e.modo}</span>
+                          <span>{getModoIcon(embarque.modo)}</span>
+                          <span className="text-xs">{embarque.modo}</span>
                         </span>
                       </TableCell>
                       <TableCell className="text-xs max-w-[200px] truncate">
                         {origen.split(',')[0]} → {destino.split(',')[0]}
                       </TableCell>
-                      <TableCell className="text-xs">{e.etd ? formatDate(e.etd) : '-'}</TableCell>
-                      <TableCell className="text-xs">{e.eta ? formatDate(e.eta) : '-'}</TableCell>
+                      <TableCell className="text-xs">{embarque.etd ? formatDate(embarque.etd) : '-'}</TableCell>
+                      <TableCell className="text-xs">{embarque.eta ? formatDate(embarque.eta) : '-'}</TableCell>
                       <TableCell>
-                        <Badge variant="secondary" className={`text-xs ${getEstadoColor(e.estado)}`}>
-                          {e.estado}
+                        <Badge variant="secondary" className={`text-xs ${getEstadoColor(embarque.estado)}`}>
+                          {embarque.estado}
                         </Badge>
                       </TableCell>
-                      <TableCell className="text-xs">{e.operador}</TableCell>
+                      <TableCell className="text-xs">{embarque.operador}</TableCell>
                     </TableRow>
                   );
                 })}

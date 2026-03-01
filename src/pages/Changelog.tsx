@@ -13,6 +13,14 @@ interface ChangelogEntry {
 
 const changelog: ChangelogEntry[] = [
   {
+    version: "3.2.0",
+    date: "2026-03-01",
+    type: "minor",
+    title: "Renombramiento de variables para mayor claridad",
+    description:
+      "Todas las variables de 1-2 letras y abreviaciones ambiguas fueron reemplazadas por nombres descriptivos en 22 archivos. Ejemplos: e→embarque, f→factura, qc→queryClient, tc→tipoCambio, le→cargandoEmbarques, cv→venta, cc→costo, prov→proveedor, [y,m,d]→[anio,mes,dia]. El código ahora es legible sin necesidad de contexto adicional.",
+  },
+  {
     version: "3.1.0",
     date: "2026-03-01",
     type: "minor",

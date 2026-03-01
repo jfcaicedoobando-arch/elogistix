@@ -33,13 +33,13 @@ export default function Embarques() {
   const { canEdit } = usePermissions();
 
   const filtered = useMemo(() => {
-    return embarques.filter((e) => {
-      const matchSearch = !search || e.expediente.toLowerCase().includes(search.toLowerCase()) ||
-        e.cliente_nombre.toLowerCase().includes(search.toLowerCase()) ||
-        e.descripcion_mercancia.toLowerCase().includes(search.toLowerCase());
-      const matchModo = filterModo === "todos" || e.modo === filterModo;
-      const matchEstado = filterEstado === "todos" || e.estado === filterEstado;
-      const matchCliente = filterCliente === "todos" || e.cliente_id === filterCliente;
+    return embarques.filter((embarque) => {
+      const matchSearch = !search || embarque.expediente.toLowerCase().includes(search.toLowerCase()) ||
+        embarque.cliente_nombre.toLowerCase().includes(search.toLowerCase()) ||
+        embarque.descripcion_mercancia.toLowerCase().includes(search.toLowerCase());
+      const matchModo = filterModo === "todos" || embarque.modo === filterModo;
+      const matchEstado = filterEstado === "todos" || embarque.estado === filterEstado;
+      const matchCliente = filterCliente === "todos" || embarque.cliente_id === filterCliente;
       return matchSearch && matchModo && matchEstado && matchCliente;
     });
   }, [embarques, search, filterModo, filterEstado, filterCliente]);
@@ -83,25 +83,25 @@ export default function Embarques() {
                 className="pl-9"
               />
             </div>
-            <Select value={filterModo} onValueChange={(v) => { setFilterModo(v); setPage(0); }}>
+            <Select value={filterModo} onValueChange={(valorSeleccionado) => { setFilterModo(valorSeleccionado); setPage(0); }}>
               <SelectTrigger className="w-[150px]"><SelectValue placeholder="Modo" /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="todos">Todos los modos</SelectItem>
-                {MODOS.map(m => <SelectItem key={m} value={m}>{getModoIcon(m)} {m}</SelectItem>)}
+                {MODOS.map(modoTransporte => <SelectItem key={modoTransporte} value={modoTransporte}>{getModoIcon(modoTransporte)} {modoTransporte}</SelectItem>)}
               </SelectContent>
             </Select>
-            <Select value={filterEstado} onValueChange={(v) => { setFilterEstado(v); setPage(0); }}>
+            <Select value={filterEstado} onValueChange={(valorSeleccionado) => { setFilterEstado(valorSeleccionado); setPage(0); }}>
               <SelectTrigger className="w-[160px]"><SelectValue placeholder="Estado" /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="todos">Todos los estados</SelectItem>
-                {ESTADOS.map(e => <SelectItem key={e} value={e}>{e}</SelectItem>)}
+                {ESTADOS.map(estadoEmbarque => <SelectItem key={estadoEmbarque} value={estadoEmbarque}>{estadoEmbarque}</SelectItem>)}
               </SelectContent>
             </Select>
-            <Select value={filterCliente} onValueChange={(v) => { setFilterCliente(v); setPage(0); }}>
+            <Select value={filterCliente} onValueChange={(valorSeleccionado) => { setFilterCliente(valorSeleccionado); setPage(0); }}>
               <SelectTrigger className="w-[200px]"><SelectValue placeholder="Cliente" /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="todos">Todos los clientes</SelectItem>
-                {clientes.map(c => <SelectItem key={c.id} value={c.id}>{c.nombre.split(' ').slice(0, 3).join(' ')}</SelectItem>)}
+                {clientes.map(cliente => <SelectItem key={cliente.id} value={cliente.id}>{cliente.nombre.split(' ').slice(0, 3).join(' ')}</SelectItem>)}
               </SelectContent>
             </Select>
           </div>
@@ -132,27 +132,27 @@ export default function Embarques() {
                     No se encontraron embarques
                   </TableCell>
                 </TableRow>
-              ) : paginated.map((e) => {
-                const origen = (e.puerto_origen || e.aeropuerto_origen || e.ciudad_origen || '-').split(',')[0];
-                const destino = (e.puerto_destino || e.aeropuerto_destino || e.ciudad_destino || '-').split(',')[0];
+              ) : paginated.map((embarque) => {
+                const origen = (embarque.puerto_origen || embarque.aeropuerto_origen || embarque.ciudad_origen || '-').split(',')[0];
+                const destino = (embarque.puerto_destino || embarque.aeropuerto_destino || embarque.ciudad_destino || '-').split(',')[0];
                 return (
-                  <TableRow key={e.id} className="cursor-pointer" onClick={() => navigate(`/embarques/${e.id}`)}>
-                    <TableCell className="font-medium">{e.expediente}</TableCell>
-                    <TableCell className="max-w-[180px] truncate">{e.cliente_nombre}</TableCell>
+                  <TableRow key={embarque.id} className="cursor-pointer" onClick={() => navigate(`/embarques/${embarque.id}`)}>
+                    <TableCell className="font-medium">{embarque.expediente}</TableCell>
+                    <TableCell className="max-w-[180px] truncate">{embarque.cliente_nombre}</TableCell>
                     <TableCell>
                       <span className="flex items-center gap-1">
-                        {getModoIcon(e.modo)} <span className="text-xs">{e.modo}</span>
+                        {getModoIcon(embarque.modo)} <span className="text-xs">{embarque.modo}</span>
                       </span>
                     </TableCell>
                     <TableCell className="text-xs">{origen}</TableCell>
                     <TableCell className="text-xs">{destino}</TableCell>
-                    <TableCell className="text-xs">{e.tipo_contenedor || '-'}</TableCell>
-                    <TableCell className="text-xs">{formatDate(e.etd || '')}</TableCell>
-                    <TableCell className="text-xs">{formatDate(e.eta || '')}</TableCell>
+                    <TableCell className="text-xs">{embarque.tipo_contenedor || '-'}</TableCell>
+                    <TableCell className="text-xs">{formatDate(embarque.etd || '')}</TableCell>
+                    <TableCell className="text-xs">{formatDate(embarque.eta || '')}</TableCell>
                     <TableCell>
-                      <Badge variant="secondary" className={`text-xs ${getEstadoColor(e.estado)}`}>{e.estado}</Badge>
+                      <Badge variant="secondary" className={`text-xs ${getEstadoColor(embarque.estado)}`}>{embarque.estado}</Badge>
                     </TableCell>
-                    <TableCell className="text-xs">{e.operador}</TableCell>
+                    <TableCell className="text-xs">{embarque.operador}</TableCell>
                   </TableRow>
                 );
               })}
@@ -164,8 +164,8 @@ export default function Embarques() {
                 Página {page + 1} de {totalPages}
               </span>
               <div className="flex gap-2">
-                <Button variant="outline" size="sm" disabled={page === 0} onClick={() => setPage(p => p - 1)}>Anterior</Button>
-                <Button variant="outline" size="sm" disabled={page >= totalPages - 1} onClick={() => setPage(p => p + 1)}>Siguiente</Button>
+                <Button variant="outline" size="sm" disabled={page === 0} onClick={() => setPage(paginaActual => paginaActual - 1)}>Anterior</Button>
+                <Button variant="outline" size="sm" disabled={page >= totalPages - 1} onClick={() => setPage(paginaActual => paginaActual + 1)}>Siguiente</Button>
               </div>
             </div>
           )}

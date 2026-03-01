@@ -13,17 +13,17 @@ export function TabNotas({ notas }: Props) {
       <CardContent>
         {notas.length > 0 ? (
           <div className="space-y-4">
-            {notas.map(n => (
-              <div key={n.id} className="flex gap-3 text-sm">
+            {notas.map(nota => (
+              <div key={nota.id} className="flex gap-3 text-sm">
                 <div className="flex flex-col items-center">
                   <div className={`h-2.5 w-2.5 rounded-full mt-1.5 ${
-                    n.tipo === 'cambio_estado' ? 'bg-accent' : n.tipo === 'nota' ? 'bg-warning' : 'bg-muted-foreground'
+                    nota.tipo === 'cambio_estado' ? 'bg-accent' : nota.tipo === 'nota' ? 'bg-warning' : 'bg-muted-foreground'
                   }`} />
                   <div className="flex-1 w-px bg-border mt-1" />
                 </div>
                 <div className="pb-4">
-                  <p className="font-medium">{n.contenido}</p>
-                  <p className="text-xs text-muted-foreground">{n.usuario} · {formatDate(n.fecha)}</p>
+                  <p className="font-medium">{nota.contenido}</p>
+                  <p className="text-xs text-muted-foreground">{nota.usuario} · {formatDate(nota.fecha)}</p>
                 </div>
               </div>
             ))}

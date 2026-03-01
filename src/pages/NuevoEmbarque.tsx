@@ -31,7 +31,7 @@ export default function NuevoEmbarque() {
   const { data: clientes = [] } = useClientesForSelect();
   const { data: proveedoresDb = [] } = useProveedoresForSelect();
   const createEmbarque = useCreateEmbarque();
-  const { data: rates } = useExchangeRates();
+  const { data: tiposDeCambio } = useExchangeRates();
 
   const [currentStep, setCurrentStep] = useState(1);
   const [modo, setModo] = useState<string>('');
@@ -69,57 +69,57 @@ export default function NuevoEmbarque() {
   const [tipoCambioEUR, setTipoCambioEUR] = useState('18.50');
 
   useEffect(() => {
-    if (rates) {
-      setTipoCambioUSD(String(rates.usdMxn));
-      setTipoCambioEUR(String(rates.eurMxn));
+    if (tiposDeCambio) {
+      setTipoCambioUSD(String(tiposDeCambio.usdMxn));
+      setTipoCambioEUR(String(tiposDeCambio.eurMxn));
     }
-  }, [rates]);
+  }, [tiposDeCambio]);
 
   const { data: contactos = [] } = useContactosCliente(clienteId || undefined);
 
-  interface ConceptoVentaRow { id: number; concepto: string; cantidad: number; precioUnitario: number; moneda: string; }
-  interface ConceptoCostoRow { id: number; proveedorId: string; concepto: string; monto: number; moneda: string; }
-  const [conceptosVenta, setConceptosVenta] = useState<ConceptoVentaRow[]>([
+  interface ConceptoVentaLocal { id: number; concepto: string; cantidad: number; precioUnitario: number; moneda: string; }
+  interface ConceptoCostoLocal { id: number; proveedorId: string; concepto: string; monto: number; moneda: string; }
+  const [conceptosVenta, setConceptosVenta] = useState<ConceptoVentaLocal[]>([
     { id: 1, concepto: '', cantidad: 1, precioUnitario: 0, moneda: 'MXN' },
   ]);
-  const [conceptosCosto, setConceptosCosto] = useState<ConceptoCostoRow[]>([
+  const [conceptosCosto, setConceptosCosto] = useState<ConceptoCostoLocal[]>([
     { id: 1, proveedorId: '', concepto: '', monto: 0, moneda: 'MXN' },
   ]);
   const [nextVentaId, setNextVentaId] = useState(2);
   const [nextCostoId, setNextCostoId] = useState(2);
 
-  const updateConceptoVenta = (id: number, field: keyof ConceptoVentaRow, value: string | number) => {
-    setConceptosVenta(prev => prev.map(c => c.id === id ? { ...c, [field]: value } : c));
+  const updateConceptoVenta = (id: number, field: keyof ConceptoVentaLocal, value: string | number) => {
+    setConceptosVenta(prev => prev.map(concepto => concepto.id === id ? { ...concepto, [field]: value } : concepto));
   };
   const addConceptoVenta = () => {
     setConceptosVenta(prev => [...prev, { id: nextVentaId, concepto: '', cantidad: 1, precioUnitario: 0, moneda: 'MXN' }]);
-    setNextVentaId(n => n + 1);
+    setNextVentaId(contadorActual => contadorActual + 1);
   };
-  const removeConceptoVenta = (id: number) => setConceptosVenta(prev => prev.filter(c => c.id !== id));
-  const updateConceptoCosto = (id: number, field: keyof ConceptoCostoRow, value: string | number) => {
-    setConceptosCosto(prev => prev.map(c => c.id === id ? { ...c, [field]: value } : c));
+  const removeConceptoVenta = (id: number) => setConceptosVenta(prev => prev.filter(concepto => concepto.id !== id));
+  const updateConceptoCosto = (id: number, field: keyof ConceptoCostoLocal, value: string | number) => {
+    setConceptosCosto(prev => prev.map(concepto => concepto.id === id ? { ...concepto, [field]: value } : concepto));
   };
   const addConceptoCosto = () => {
     setConceptosCosto(prev => [...prev, { id: nextCostoId, proveedorId: '', concepto: '', monto: 0, moneda: 'MXN' }]);
-    setNextCostoId(n => n + 1);
+    setNextCostoId(contadorActual => contadorActual + 1);
   };
-  const removeConceptoCosto = (id: number) => setConceptosCosto(prev => prev.filter(c => c.id !== id));
+  const removeConceptoCosto = (id: number) => setConceptosCosto(prev => prev.filter(concepto => concepto.id !== id));
 
-  const subtotalVenta = conceptosVenta.reduce((acc, c) => acc + (c.cantidad * c.precioUnitario), 0);
-  const totalCosto = conceptosCosto.reduce((acc, c) => acc + c.monto, 0);
+  const subtotalVenta = conceptosVenta.reduce((acc, concepto) => acc + (concepto.cantidad * concepto.precioUnitario), 0);
+  const totalCosto = conceptosCosto.reduce((acc, concepto) => acc + concepto.monto, 0);
   const utilidadEstimada = subtotalVenta - totalCosto;
 
-  const selectedCliente = clientes.find(c => c.id === clienteId);
+  const selectedCliente = clientes.find(cliente => cliente.id === clienteId);
 
   const resolveShipper = () => {
     if (shipper === '__otro__') return shipperManual.trim();
-    const ct = contactos.find(c => c.id === shipper);
-    return ct ? `${ct.nombre} — ${ct.tipo} (${ct.pais})` : shipper;
+    const contacto = contactos.find(contactoItem => contactoItem.id === shipper);
+    return contacto ? `${contacto.nombre} — ${contacto.tipo} (${contacto.pais})` : shipper;
   };
   const resolveConsignatario = () => {
     if (consignatario === '__otro__') return consignatarioManual.trim();
-    const ct = contactos.find(c => c.id === consignatario);
-    return ct ? `${ct.nombre} — ${ct.tipo} (${ct.pais})` : consignatario;
+    const contacto = contactos.find(contactoItem => contactoItem.id === consignatario);
+    return contacto ? `${contacto.nombre} — ${contacto.tipo} (${contacto.pais})` : consignatario;
   };
 
   const isStep1Valid = () => {
@@ -184,24 +184,24 @@ export default function NuevoEmbarque() {
           operador: user?.email || '',
         },
         conceptosVenta: conceptosVenta
-          .filter(cv => cv.concepto)
-          .map(cv => ({
-            descripcion: cv.concepto,
-            cantidad: cv.cantidad,
-            precio_unitario: cv.precioUnitario,
-            moneda: cv.moneda as any,
-            total: cv.cantidad * cv.precioUnitario,
+          .filter(venta => venta.concepto)
+          .map(venta => ({
+            descripcion: venta.concepto,
+            cantidad: venta.cantidad,
+            precio_unitario: venta.precioUnitario,
+            moneda: venta.moneda as any,
+            total: venta.cantidad * venta.precioUnitario,
           })),
         conceptosCosto: conceptosCosto
-          .filter(cc => cc.concepto)
-          .map(cc => ({
-            proveedor_id: cc.proveedorId || null,
-            proveedor_nombre: proveedoresDb.find(p => p.id === cc.proveedorId)?.nombre || '',
-            concepto: cc.concepto,
-            monto: cc.monto,
-            moneda: cc.moneda as any,
+          .filter(costo => costo.concepto)
+          .map(costo => ({
+            proveedor_id: costo.proveedorId || null,
+            proveedor_nombre: proveedoresDb.find(proveedor => proveedor.id === costo.proveedorId)?.nombre || '',
+            concepto: costo.concepto,
+            monto: costo.monto,
+            moneda: costo.moneda as any,
           })),
-        documentos: docsForMode.map(d => ({ nombre: d })),
+        documentos: docsForMode.map(documento => ({ nombre: documento })),
       });
 
       toast({ title: "Embarque creado", description: `Expediente ${expediente} registrado correctamente.` });
@@ -289,7 +289,7 @@ export default function NuevoEmbarque() {
       )}
 
       <div className="flex justify-between">
-        <Button variant="outline" onClick={() => currentStep > 1 ? setCurrentStep(s => s - 1) : navigate("/embarques")}>
+        <Button variant="outline" onClick={() => currentStep > 1 ? setCurrentStep(pasoActual => pasoActual - 1) : navigate("/embarques")}>
           {currentStep === 1 ? 'Cancelar' : 'Anterior'}
         </Button>
         <Button
@@ -303,7 +303,7 @@ export default function NuevoEmbarque() {
               toast({ title: "Campos incompletos", description: "Completa todos los campos obligatorios (*) de la ruta antes de continuar.", variant: "destructive" });
               return;
             }
-            currentStep < 4 ? setCurrentStep(s => s + 1) : handleFinish();
+            currentStep < 4 ? setCurrentStep(pasoActual => pasoActual + 1) : handleFinish();
           }}
         >
           {createEmbarque.isPending ? 'Guardando...' : currentStep === 4 ? 'Crear Embarque' : 'Siguiente'}

@@ -4,8 +4,8 @@ export const formatDate = (dateStr: string): string => {
   if (!dateStr) return '-';
   const parts = dateStr.split('-');
   if (parts.length < 3) return dateStr;
-  const [y, m, d] = parts;
-  return `${d}/${m}/${y}`;
+  const [anio, mes, dia] = parts;
+  return `${dia}/${mes}/${anio}`;
 };
 
 export const getEstadoColor = (estado: string): string => {

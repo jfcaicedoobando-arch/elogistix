@@ -126,35 +126,35 @@ export function useCreateEmbarque() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async ({ embarque, conceptosVenta, conceptosCosto, documentos }: CreateEmbarqueInput) => {
-      const { data: emb, error: embError } = await supabase
+      const { data: embarqueCreado, error: errorCrearEmbarque } = await supabase
         .from('embarques')
         .insert(embarque)
         .select()
         .single();
-      if (embError) throw embError;
+      if (errorCrearEmbarque) throw errorCrearEmbarque;
 
-      const embarqueId = emb.id;
+      const embarqueId = embarqueCreado.id;
       const promises: PromiseLike<any>[] = [];
 
       if (conceptosVenta.length > 0) {
         promises.push(
           supabase.from('conceptos_venta').insert(
-            conceptosVenta.map(cv => ({ ...cv, embarque_id: embarqueId }))
-          ).select().then(r => r)
+            conceptosVenta.map(conceptoVenta => ({ ...conceptoVenta, embarque_id: embarqueId }))
+          ).select().then(respuesta => respuesta)
         );
       }
       if (conceptosCosto.length > 0) {
         promises.push(
           supabase.from('conceptos_costo').insert(
-            conceptosCosto.map(cc => ({ ...cc, embarque_id: embarqueId }))
-          ).select().then(r => r)
+            conceptosCosto.map(conceptoCosto => ({ ...conceptoCosto, embarque_id: embarqueId }))
+          ).select().then(respuesta => respuesta)
         );
       }
       if (documentos.length > 0) {
         promises.push(
           supabase.from('documentos_embarque').insert(
-            documentos.map(d => ({ ...d, embarque_id: embarqueId }))
-          ).select().then(r => r)
+            documentos.map(documento => ({ ...documento, embarque_id: embarqueId }))
+          ).select().then(respuesta => respuesta)
         );
       }
 
@@ -163,15 +163,15 @@ export function useCreateEmbarque() {
           embarque_id: embarqueId,
           contenido: 'Embarque creado',
           tipo: 'sistema' as const,
-        }).select().then(r => r)
+        }).select().then(respuesta => respuesta)
       );
 
       const results = await Promise.all(promises);
-      for (const r of results) {
-        if (r.error) throw r.error;
+      for (const respuesta of results) {
+        if (respuesta.error) throw respuesta.error;
       }
 
-      return emb;
+      return embarqueCreado;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['embarques'] });

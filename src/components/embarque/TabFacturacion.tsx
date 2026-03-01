@@ -32,9 +32,9 @@ export function TabFacturacion({ facturas, canEdit }: Props) {
           <Table>
             <TableHeader><TableRow><TableHead># Factura</TableHead><TableHead>Monto</TableHead><TableHead>Moneda</TableHead><TableHead>Fecha</TableHead><TableHead>Estado</TableHead></TableRow></TableHeader>
             <TableBody>
-              {facturas.map(f => (
-                <TableRow key={f.id}><TableCell className="font-medium">{f.numero}</TableCell><TableCell>{formatCurrency(Number(f.total), f.moneda)}</TableCell><TableCell>{f.moneda}</TableCell><TableCell>{formatDate(f.fecha_emision)}</TableCell>
-                  <TableCell><Badge className={getEstadoColor(f.estado)}>{f.estado}</Badge></TableCell>
+              {facturas.map(factura => (
+                <TableRow key={factura.id}><TableCell className="font-medium">{factura.numero}</TableCell><TableCell>{formatCurrency(Number(factura.total), factura.moneda)}</TableCell><TableCell>{factura.moneda}</TableCell><TableCell>{formatDate(factura.fecha_emision)}</TableCell>
+                  <TableCell><Badge className={getEstadoColor(factura.estado)}>{factura.estado}</Badge></TableCell>
                 </TableRow>
               ))}
             </TableBody>

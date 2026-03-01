@@ -43,19 +43,19 @@ export function GlobalSearch() {
     const down = (e: KeyboardEvent) => {
       if (e.key === "k" && (e.metaKey || e.ctrlKey)) {
         e.preventDefault();
-        setOpen((o) => !o);
+        setOpen((estaAbierto) => !estaAbierto);
       }
     };
     document.addEventListener("keydown", down);
     return () => document.removeEventListener("keydown", down);
   }, []);
 
-  const search = useCallback(async (q: string) => {
-    if (!q.trim()) {
+  const buscar = useCallback(async (terminoBusqueda: string) => {
+    if (!terminoBusqueda.trim()) {
       setResults([]);
       return;
     }
-    const pattern = `%${q}%`;
+    const pattern = `%${terminoBusqueda}%`;
     const [embarques, clientes, proveedores, facturas] = await Promise.all([
       supabase.from("embarques").select("id, expediente, cliente_nombre").ilike("expediente", pattern).limit(5),
       supabase.from("clientes").select("id, nombre, rfc").or(`nombre.ilike.${pattern},rfc.ilike.${pattern}`).limit(5),
@@ -64,18 +64,18 @@ export function GlobalSearch() {
     ]);
 
     const items: SearchResult[] = [
-      ...(embarques.data ?? []).map((e) => ({ id: e.id, label: e.expediente, sublabel: e.cliente_nombre, type: "embarque" as const, url: `/embarques/${e.id}` })),
-      ...(clientes.data ?? []).map((c) => ({ id: c.id, label: c.nombre, sublabel: c.rfc, type: "cliente" as const, url: `/clientes/${c.id}` })),
-      ...(proveedores.data ?? []).map((p) => ({ id: p.id, label: p.nombre, sublabel: p.rfc, type: "proveedor" as const, url: `/proveedores/${p.id}` })),
-      ...(facturas.data ?? []).map((f) => ({ id: f.id, label: f.numero, sublabel: f.cliente_nombre, type: "factura" as const, url: `/facturacion` })),
+      ...(embarques.data ?? []).map((embarque) => ({ id: embarque.id, label: embarque.expediente, sublabel: embarque.cliente_nombre, type: "embarque" as const, url: `/embarques/${embarque.id}` })),
+      ...(clientes.data ?? []).map((cliente) => ({ id: cliente.id, label: cliente.nombre, sublabel: cliente.rfc, type: "cliente" as const, url: `/clientes/${cliente.id}` })),
+      ...(proveedores.data ?? []).map((proveedor) => ({ id: proveedor.id, label: proveedor.nombre, sublabel: proveedor.rfc, type: "proveedor" as const, url: `/proveedores/${proveedor.id}` })),
+      ...(facturas.data ?? []).map((factura) => ({ id: factura.id, label: factura.numero, sublabel: factura.cliente_nombre, type: "factura" as const, url: `/facturacion` })),
     ];
     setResults(items);
   }, []);
 
   useEffect(() => {
-    const timer = setTimeout(() => search(query), 300);
+    const timer = setTimeout(() => buscar(query), 300);
     return () => clearTimeout(timer);
-  }, [query, search]);
+  }, [query, buscar]);
 
   const handleSelect = (url: string) => {
     setOpen(false);
@@ -83,8 +83,8 @@ export function GlobalSearch() {
     navigate(url);
   };
 
-  const grouped = results.reduce<Record<string, SearchResult[]>>((acc, r) => {
-    (acc[r.type] = acc[r.type] || []).push(r);
+  const grouped = results.reduce<Record<string, SearchResult[]>>((acc, resultado) => {
+    (acc[resultado.type] = acc[resultado.type] || []).push(resultado);
     return acc;
   }, {});
 

@@ -45,8 +45,8 @@ export default function Clientes() {
   const [documentos, setDocumentos] = useState<DocCliente[]>([]);
   const fileInputRefs = useRef<Record<string, HTMLInputElement | null>>({});
 
-  const filtered = clientesList.filter(c =>
-    !search || c.nombre.toLowerCase().includes(search.toLowerCase()) || c.rfc.toLowerCase().includes(search.toLowerCase())
+  const filtered = clientesList.filter(cliente =>
+    !search || cliente.nombre.toLowerCase().includes(search.toLowerCase()) || cliente.rfc.toLowerCase().includes(search.toLowerCase())
   );
 
   const handleChange = (field: string, value: string) => setForm(prev => ({ ...prev, [field]: value }));
@@ -60,11 +60,11 @@ export default function Clientes() {
 
   const handleFileChange = (docNombre: string, file: File | undefined) => {
     setDocumentos(prev =>
-      prev.map(d => d.nombre === docNombre ? { ...d, archivo: file?.name, adjuntado: !!file } : d)
+      prev.map(documento => documento.nombre === docNombre ? { ...documento, archivo: file?.name, adjuntado: !!file } : documento)
     );
   };
 
-  const allDocsAdjuntados = documentos.length > 0 && documentos.every(d => d.adjuntado);
+  const allDocsAdjuntados = documentos.length > 0 && documentos.every(documento => documento.adjuntado);
 
   const handleSave = async () => {
     if (!allDocsAdjuntados) return;
@@ -125,13 +125,13 @@ export default function Clientes() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filtered.map(c => (
-                  <TableRow key={c.id} className="cursor-pointer" onClick={() => navigate(`/clientes/${c.id}`)}>
-                    <TableCell className="font-medium max-w-[200px] truncate">{c.nombre}</TableCell>
-                    <TableCell className="text-xs font-mono">{c.rfc}</TableCell>
-                    <TableCell className="text-xs">{c.ciudad}, {c.estado}</TableCell>
-                    <TableCell className="text-xs">{c.contacto}</TableCell>
-                    <TableCell className="text-xs">{c.telefono}</TableCell>
+                {filtered.map(cliente => (
+                  <TableRow key={cliente.id} className="cursor-pointer" onClick={() => navigate(`/clientes/${cliente.id}`)}>
+                    <TableCell className="font-medium max-w-[200px] truncate">{cliente.nombre}</TableCell>
+                    <TableCell className="text-xs font-mono">{cliente.rfc}</TableCell>
+                    <TableCell className="text-xs">{cliente.ciudad}, {cliente.estado}</TableCell>
+                    <TableCell className="text-xs">{cliente.contacto}</TableCell>
+                    <TableCell className="text-xs">{cliente.telefono}</TableCell>
                   </TableRow>
                 ))}
               </TableBody>
@@ -140,7 +140,7 @@ export default function Clientes() {
         </CardContent>
       </Card>
 
-      <Dialog open={dialogOpen} onOpenChange={(o) => { if (!o) resetAndClose(); else setDialogOpen(o); }}>
+      <Dialog open={dialogOpen} onOpenChange={(abierto) => { if (!abierto) resetAndClose(); else setDialogOpen(abierto); }}>
         <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Nuevo Cliente — Paso {step} de 2</DialogTitle>
