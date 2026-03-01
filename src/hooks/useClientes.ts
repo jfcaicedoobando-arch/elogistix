@@ -63,7 +63,10 @@ export function useCreateCliente() {
       if (error) throw error;
       return data;
     },
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["clientes"] }),
+    onSuccess: (clienteCreado) => {
+      queryClient.invalidateQueries({ queryKey: ["clientes"] });
+      return clienteCreado;
+    },
   });
 }
 

@@ -10,6 +10,7 @@ import { usePermissions } from "@/hooks/usePermissions";
 import { uploadFile, getSignedUrl } from "@/lib/storage";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { useRegistrarActividad } from "@/hooks/useBitacora";
 import { useState } from "react";
 import {
   useEmbarque,
@@ -30,6 +31,7 @@ export default function EmbarqueDetalle() {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { canEdit } = usePermissions();
+  const registrarActividad = useRegistrarActividad();
   const { data: embarque, isLoading } = useEmbarque(id);
   const { data: conceptosVenta = [] } = useEmbarqueConceptosVenta(id);
   const { data: conceptosCosto = [] } = useEmbarqueConceptosCosto(id);
@@ -47,6 +49,13 @@ export default function EmbarqueDetalle() {
       const path = `embarques/${id}/${docId}/${file.name}`;
       await uploadFile(path, file);
       await supabase.from("documentos_embarque").update({ archivo: path, estado: "Recibido" as any }).eq("id", docId);
+      registrarActividad.mutate({
+        accion: 'subir_documento',
+        modulo: 'embarques',
+        entidad_id: id,
+        entidad_nombre: embarque?.expediente ?? '',
+        detalles: { documento: file.name },
+      });
       toast({ title: "Archivo subido correctamente" });
       refetchDocs();
     } catch (err: any) {

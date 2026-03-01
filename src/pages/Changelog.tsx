@@ -13,6 +13,14 @@ interface ChangelogEntry {
 
 const changelog: ChangelogEntry[] = [
   {
+    version: "3.3.0",
+    date: "2026-03-01",
+    type: "minor",
+    title: "Sistema de Bitácora y Actividad",
+    description:
+      "Nueva tabla centralizada bitacora_actividad para registrar todas las acciones de usuarios. Hook useBitacora con consultas filtradas y registro automático. Componente BitacoraActividad como timeline visual. Página dedicada /bitacora con paginación y filtros por módulo. Widget de actividad reciente en Dashboard. Registro automático al crear embarques, clientes, proveedores, subir documentos e iniciar sesión.",
+  },
+  {
     version: "3.2.0",
     date: "2026-03-01",
     type: "minor",

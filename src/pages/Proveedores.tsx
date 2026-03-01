@@ -13,6 +13,7 @@ import { useProveedores } from "@/hooks/useProveedores";
 import NuevoProveedorDialog from "@/components/NuevoProveedorDialog";
 import { toast } from "sonner";
 import { usePermissions } from "@/hooks/usePermissions";
+import { useRegistrarActividad } from "@/hooks/useBitacora";
 import type { TipoProveedor, Proveedor } from "@/data/types";
 
 const TABS: { label: string; tipo: TipoProveedor }[] = [
@@ -73,10 +74,17 @@ export default function Proveedores() {
   const navigate = useNavigate();
   const { proveedores, addProveedor, isLoading } = useProveedores();
   const { canEdit } = usePermissions();
+  const registrarActividad = useRegistrarActividad();
 
   const handleAdd = async (data: Omit<Proveedor, 'id'>) => {
     try {
-      await addProveedor(data);
+      const proveedorCreado = await addProveedor(data);
+      registrarActividad.mutate({
+        accion: 'crear',
+        modulo: 'proveedores',
+        entidad_id: (proveedorCreado as any)?.id,
+        entidad_nombre: data.nombre,
+      });
       toast.success("Proveedor creado correctamente");
     } catch {
       toast.error("Error al crear proveedor");

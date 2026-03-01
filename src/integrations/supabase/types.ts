@@ -14,6 +14,42 @@ export type Database = {
   }
   public: {
     Tables: {
+      bitacora_actividad: {
+        Row: {
+          accion: string
+          created_at: string
+          detalles: Json | null
+          entidad_id: string | null
+          entidad_nombre: string | null
+          id: string
+          modulo: string
+          usuario_email: string
+          usuario_id: string
+        }
+        Insert: {
+          accion: string
+          created_at?: string
+          detalles?: Json | null
+          entidad_id?: string | null
+          entidad_nombre?: string | null
+          id?: string
+          modulo: string
+          usuario_email?: string
+          usuario_id: string
+        }
+        Update: {
+          accion?: string
+          created_at?: string
+          detalles?: Json | null
+          entidad_id?: string | null
+          entidad_nombre?: string | null
+          id?: string
+          modulo?: string
+          usuario_email?: string
+          usuario_id?: string
+        }
+        Relationships: []
+      }
       clientes: {
         Row: {
           ciudad: string

@@ -1,4 +1,4 @@
-import { Ship, Clock, FileText, DollarSign, AlertTriangle } from "lucide-react";
+import { Ship, Clock, FileText, DollarSign, AlertTriangle, Activity } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -10,6 +10,9 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { useEmbarques } from "@/hooks/useEmbarques";
 import { useFacturas, useGastosPendientes } from "@/hooks/useFacturas";
+import { useActividadReciente } from "@/hooks/useBitacora";
+import { BitacoraActividad } from "@/components/BitacoraActividad";
+import { usePermissions } from "@/hooks/usePermissions";
 import { formatCurrency } from "@/lib/formatters";
 import { formatDate, getEstadoColor, getModoIcon } from "@/lib/helpers";
 import { useNavigate } from "react-router-dom";
@@ -17,9 +20,11 @@ import { useMemo } from "react";
 
 export default function Dashboard() {
   const navigate = useNavigate();
+  const { isAdmin } = usePermissions();
   const { data: embarques = [], isLoading: cargandoEmbarques } = useEmbarques();
   const { data: facturas = [], isLoading: cargandoFacturas } = useFacturas();
   const { data: gastosPendientes = [] } = useGastosPendientes();
+  const { data: actividadReciente = [], isLoading: cargandoActividad } = useActividadReciente(10);
 
   const stats = useMemo(() => {
     const embarquesActivos = embarques.filter(embarque => !['Cerrado', 'Cotización'].includes(embarque.estado)).length;
@@ -156,6 +161,27 @@ export default function Dashboard() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Actividad Reciente */}
+      <Card>
+        <CardHeader className="pb-2">
+          <CardTitle className="text-base flex items-center gap-2">
+            <Activity className="h-4 w-4 text-accent" />
+            Actividad Reciente
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {cargandoActividad ? (
+            <div className="space-y-3">
+              {Array.from({ length: 5 }).map((_, indice) => (
+                <Skeleton key={indice} className="h-6 w-full" />
+              ))}
+            </div>
+          ) : (
+            <BitacoraActividad actividades={actividadReciente} mostrarUsuario={isAdmin} />
+          )}
+        </CardContent>
+      </Card>
 
       {/* Embarques recientes */}
       <Card>

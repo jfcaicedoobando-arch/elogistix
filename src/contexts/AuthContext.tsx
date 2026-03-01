@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState, ReactNode } from "react";
+import { createContext, useContext, useEffect, useState, ReactNode, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import type { User, Session } from "@supabase/supabase-js";
 
@@ -38,6 +38,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setRole((data?.role as AppRole) ?? null);
   };
 
+  const registrarLogin = useCallback(async (userId: string, email: string) => {
+    try {
+      await supabase.from('bitacora_actividad').insert([{
+        usuario_id: userId,
+        usuario_email: email,
+        accion: 'login',
+        modulo: 'auth',
+        entidad_nombre: email,
+      }]);
+    } catch {
+      // No bloquear login si falla el registro
+    }
+  }, []);
+
   useEffect(() => {
     // Set up auth state listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
@@ -47,6 +61,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (session?.user) {
           // Use setTimeout to avoid potential deadlock with Supabase client
           setTimeout(() => fetchRole(session.user.id), 0);
+          if (_eventoAuth === 'SIGNED_IN') {
+            setTimeout(() => registrarLogin(session.user.id, session.user.email ?? ''), 0);
+          }
         } else {
           setRole(null);
         }
