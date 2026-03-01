@@ -126,7 +126,6 @@ export function useCreateEmbarque() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async ({ embarque, conceptosVenta, conceptosCosto, documentos }: CreateEmbarqueInput) => {
-      // Insert embarque
       const { data: emb, error: embError } = await supabase
         .from('embarques')
         .insert(embarque)
@@ -135,8 +134,6 @@ export function useCreateEmbarque() {
       if (embError) throw embError;
 
       const embarqueId = emb.id;
-
-      // Insert subentities in parallel
       const promises: PromiseLike<any>[] = [];
 
       if (conceptosVenta.length > 0) {
@@ -161,7 +158,6 @@ export function useCreateEmbarque() {
         );
       }
 
-      // Add creation note
       promises.push(
         supabase.from('notas_embarque').insert({
           embarque_id: embarqueId,
@@ -208,20 +204,5 @@ export function useProveedoresForSelect() {
       if (error) throw error;
       return data;
     },
-  });
-}
-
-export function useContactosCliente(clienteId: string | undefined) {
-  return useQuery({
-    queryKey: ['contactos_cliente', clienteId],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('contactos_cliente')
-        .select('*')
-        .eq('cliente_id', clienteId!);
-      if (error) throw error;
-      return data;
-    },
-    enabled: !!clienteId,
   });
 }

@@ -6,16 +6,8 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Check, Upload, ArrowLeft, ArrowRight } from "lucide-react";
 import type { TipoProveedor, Moneda, DocumentoProveedor } from "@/data/types";
+import { TIPOS_PROVEEDOR as TIPOS, MONEDAS_PROVEEDOR as MONEDAS, PAISES_PROVEEDOR as PAISES } from "@/data/proveedorConstants";
 import type { TablesInsert } from "@/integrations/supabase/types";
-
-const TIPOS: TipoProveedor[] = ['Naviera', 'Aerolínea', 'Transportista', 'Agente Aduanal', 'Agente de Carga', 'Aseguradora', 'Custodia', 'Almacenes', 'Acondicionamiento de Carga', 'Materiales Peligrosos'];
-const MONEDAS: Moneda[] = ['MXN', 'USD', 'EUR'];
-
-const PAISES = [
-  'México', 'Estados Unidos', 'Canadá', 'China', 'Alemania', 'España',
-  'Francia', 'Italia', 'Japón', 'Corea del Sur', 'Brasil', 'Colombia',
-  'Chile', 'Argentina', 'Perú', 'Reino Unido', 'India', 'Otro',
-];
 
 const DOCS_NACIONAL = [
   'CIF', 'Opinión fiscal', 'Acta constitutiva', 'INE RL',
