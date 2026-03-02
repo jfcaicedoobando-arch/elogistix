@@ -13,14 +13,6 @@ interface ChangelogEntry {
 
 const changelog: ChangelogEntry[] = [
   {
-    version: "3.12.3",
-    date: "2026-03-02",
-    type: "patch",
-    title: "Campo 'Días de almacenaje' para Marítimo LCL",
-    description:
-      "Nuevo campo numérico obligatorio 'Días de almacenaje' en la sección de Ruta del formulario de cotizaciones, visible únicamente cuando el modo es Marítimo y el tipo de embarque es LCL. Solo acepta enteros positivos. Persistido en la base de datos y mostrado en el detalle de la cotización.",
-  },
-  {
     version: "3.12.2",
     date: "2026-03-02",
     type: "patch",

@@ -89,7 +89,6 @@ export default function NuevaCotizacion() {
   const [seguro, setSeguro] = useState(false);
   const [valorSeguroUsd, setValorSeguroUsd] = useState(0);
   const [diasLibresDestino, setDiasLibresDestino] = useState(0);
-  const [diasAlmacenaje, setDiasAlmacenaje] = useState(0);
 
   // Conceptos
   const [notas, setNotas] = useState("");
@@ -109,7 +108,6 @@ export default function NuevaCotizacion() {
     setDimensionesLCL([{ piezas: 0, alto_cm: 0, largo_cm: 0, ancho_cm: 0, volumen_m3: 0 }]);
     setTipoCarga("Carga General");
     setMsdsFile(null);
-    setDiasAlmacenaje(0);
   };
 
   const actualizarConcepto = (index: number, campo: string, valor: any) => {
@@ -156,10 +154,6 @@ export default function NuevaCotizacion() {
     }
     if (conceptos.some(c => !c.descripcion.trim())) {
       toast({ title: "Completa todos los conceptos de venta", variant: "destructive" });
-      return;
-    }
-    if (esMaritimo && tipoEmbarque === 'LCL' && diasAlmacenaje <= 0) {
-      toast({ title: "Ingresa los días de almacenaje (debe ser mayor a 0)", variant: "destructive" });
       return;
     }
 
@@ -219,7 +213,6 @@ export default function NuevaCotizacion() {
         dimensiones_lcl: esMaritimo && tipoEmbarque === 'LCL' ? dimensionesLCL : [],
         dimensiones_aereas: esAereo ? dimensionesAereas : [],
         dias_libres_destino: esMaritimo && tipoEmbarque === 'FCL' ? diasLibresDestino : 0,
-        dias_almacenaje: esMaritimo && tipoEmbarque === 'LCL' ? diasAlmacenaje : 0,
         tiempo_transito_dias: tiempoTransitoDias ?? null,
         frecuencia,
         ruta_texto: rutaTexto,
@@ -409,22 +402,6 @@ export default function NuevaCotizacion() {
               <div>
                 <Label>Días libres en destino</Label>
                 <Input type="number" min={0} value={diasLibresDestino} onChange={e => setDiasLibresDestino(Number(e.target.value))} placeholder="Ej. 7" />
-              </div>
-            )}
-            {esMaritimo && tipoEmbarque === 'LCL' && (
-              <div>
-                <Label>Días de almacenaje *</Label>
-                <Input
-                  type="number"
-                  min={1}
-                  step={1}
-                  value={diasAlmacenaje || ''}
-                  onChange={e => {
-                    const val = parseInt(e.target.value, 10);
-                    setDiasAlmacenaje(isNaN(val) || val < 0 ? 0 : val);
-                  }}
-                  placeholder="Ej. 5"
-                />
               </div>
             )}
             <div>
