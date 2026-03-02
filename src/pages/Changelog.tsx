@@ -13,6 +13,14 @@ interface ChangelogEntry {
 
 const changelog: ChangelogEntry[] = [
   {
+    version: "3.13.1",
+    date: "2026-03-02",
+    type: "patch",
+    title: "Tipo de carga y MSDS en Datos Generales de embarques",
+    description:
+      "Nuevo dropdown 'Tipo de carga' (Carga General / Mercancía Peligrosa) en la sección de Datos Generales del wizard de creación y edición de embarques. Si se selecciona 'Mercancía Peligrosa', se muestra un campo para adjuntar la hoja de seguridad (MSDS) al storage. Columnas tipo_carga y msds_archivo agregadas a la tabla embarques.",
+  },
+  {
     version: "3.13.0",
     date: "2026-03-02",
     type: "minor",

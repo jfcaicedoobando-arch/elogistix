@@ -508,6 +508,7 @@ export type Database = {
           incoterm: Database["public"]["Enums"]["incoterm"]
           mawb: string | null
           modo: Database["public"]["Enums"]["modo_transporte"]
+          msds_archivo: string | null
           naviera: string | null
           operador: string
           peso_kg: number
@@ -518,6 +519,7 @@ export type Database = {
           tipo: Database["public"]["Enums"]["tipo_operacion"]
           tipo_cambio_eur: number
           tipo_cambio_usd: number
+          tipo_carga: string
           tipo_contenedor: string | null
           tipo_servicio:
             | Database["public"]["Enums"]["tipo_servicio_maritimo"]
@@ -552,6 +554,7 @@ export type Database = {
           incoterm?: Database["public"]["Enums"]["incoterm"]
           mawb?: string | null
           modo: Database["public"]["Enums"]["modo_transporte"]
+          msds_archivo?: string | null
           naviera?: string | null
           operador?: string
           peso_kg?: number
@@ -562,6 +565,7 @@ export type Database = {
           tipo: Database["public"]["Enums"]["tipo_operacion"]
           tipo_cambio_eur?: number
           tipo_cambio_usd?: number
+          tipo_carga?: string
           tipo_contenedor?: string | null
           tipo_servicio?:
             | Database["public"]["Enums"]["tipo_servicio_maritimo"]
@@ -596,6 +600,7 @@ export type Database = {
           incoterm?: Database["public"]["Enums"]["incoterm"]
           mawb?: string | null
           modo?: Database["public"]["Enums"]["modo_transporte"]
+          msds_archivo?: string | null
           naviera?: string | null
           operador?: string
           peso_kg?: number
@@ -606,6 +611,7 @@ export type Database = {
           tipo?: Database["public"]["Enums"]["tipo_operacion"]
           tipo_cambio_eur?: number
           tipo_cambio_usd?: number
+          tipo_carga?: string
           tipo_contenedor?: string | null
           tipo_servicio?:
             | Database["public"]["Enums"]["tipo_servicio_maritimo"]
