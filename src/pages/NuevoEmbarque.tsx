@@ -87,7 +87,9 @@ export default function NuevoEmbarque() {
     conceptosVenta, conceptosCosto,
     updateConceptoVenta, addConceptoVenta, removeConceptoVenta,
     updateConceptoCosto, addConceptoCosto, removeConceptoCosto,
-    subtotalVenta, totalCosto, utilidadEstimada,
+    subtotalVenta, ivaVenta, totalVentaConIva,
+    totalCosto, ivaCosto, totalCostoConIva,
+    utilidadEstimada,
   } = useConceptosForm();
 
   const selectedCliente = clientes.find(cliente => cliente.id === clienteId);
@@ -258,7 +260,11 @@ export default function NuevoEmbarque() {
           conceptosVenta={conceptosVenta}
           conceptosCosto={conceptosCosto}
           subtotalVenta={subtotalVenta}
+          ivaVenta={ivaVenta}
+          totalVentaConIva={totalVentaConIva}
           totalCosto={totalCosto}
+          ivaCosto={ivaCosto}
+          totalCostoConIva={totalCostoConIva}
           utilidadEstimada={utilidadEstimada}
           tipoCambioUSD={tipoCambioUSD} setTipoCambioUSD={setTipoCambioUSD}
           tipoCambioEUR={tipoCambioEUR} setTipoCambioEUR={setTipoCambioEUR}

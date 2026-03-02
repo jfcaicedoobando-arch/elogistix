@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
 import { CONCEPTOS_EMBARQUE } from "@/data/embarqueConstants";
 
 import type { ConceptoVentaLocal as ConceptoVentaRow, ConceptoCostoLocal as ConceptoCostoRow } from "@/data/conceptoTypes";
@@ -11,16 +12,20 @@ interface Props {
   conceptosVenta: ConceptoVentaRow[];
   conceptosCosto: ConceptoCostoRow[];
   subtotalVenta: number;
+  ivaVenta: number;
+  totalVentaConIva: number;
   totalCosto: number;
+  ivaCosto: number;
+  totalCostoConIva: number;
   utilidadEstimada: number;
   tipoCambioUSD: string;
   setTipoCambioUSD: (v: string) => void;
   tipoCambioEUR: string;
   setTipoCambioEUR: (v: string) => void;
-  updateConceptoVenta: (id: number, field: keyof ConceptoVentaRow, value: string | number) => void;
+  updateConceptoVenta: (id: number, field: keyof ConceptoVentaRow, value: string | number | boolean) => void;
   addConceptoVenta: () => void;
   removeConceptoVenta: (id: number) => void;
-  updateConceptoCosto: (id: number, field: keyof ConceptoCostoRow, value: string | number) => void;
+  updateConceptoCosto: (id: number, field: keyof ConceptoCostoRow, value: string | number | boolean) => void;
   addConceptoCosto: () => void;
   removeConceptoCosto: (id: number) => void;
 }
@@ -28,7 +33,9 @@ interface Props {
 export function StepCostosPrecios(props: Props) {
   const {
     conceptosVenta, conceptosCosto,
-    subtotalVenta, totalCosto, utilidadEstimada,
+    subtotalVenta, ivaVenta, totalVentaConIva,
+    totalCosto, ivaCosto, totalCostoConIva,
+    utilidadEstimada,
     tipoCambioUSD, setTipoCambioUSD, tipoCambioEUR, setTipoCambioEUR,
     updateConceptoVenta, addConceptoVenta, removeConceptoVenta,
     updateConceptoCosto, addConceptoCosto, removeConceptoCosto,
@@ -36,16 +43,16 @@ export function StepCostosPrecios(props: Props) {
 
   return (
     <div className="space-y-6">
-      {/* Conceptos de Costo (primero) */}
+      {/* Conceptos de Costo */}
       <Card>
         <CardHeader><CardTitle className="text-sm">Conceptos de Costo</CardTitle></CardHeader>
         <CardContent>
           <div className="space-y-3">
-            <div className="grid grid-cols-[1fr_1fr_100px_90px_100px_40px] gap-2 text-xs font-medium text-muted-foreground">
-              <span>Concepto</span><span>Proveedor</span><span>Monto</span><span>Moneda</span><span>Total</span><span></span>
+            <div className="grid grid-cols-[1fr_1fr_100px_90px_50px_100px_40px] gap-2 text-xs font-medium text-muted-foreground">
+              <span>Concepto</span><span>Proveedor</span><span>Monto</span><span>Moneda</span><span>IVA</span><span>Total</span><span></span>
             </div>
             {conceptosCosto.map(costo => (
-              <div key={costo.id} className="grid grid-cols-[1fr_1fr_100px_90px_100px_40px] gap-2 items-center">
+              <div key={costo.id} className="grid grid-cols-[1fr_1fr_100px_90px_50px_100px_40px] gap-2 items-center">
                 <Select value={costo.concepto} onValueChange={valor => updateConceptoCosto(costo.id, 'concepto', valor)}>
                   <SelectTrigger className="text-sm"><SelectValue placeholder="Seleccionar" /></SelectTrigger>
                   <SelectContent>{CONCEPTOS_EMBARQUE.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}</SelectContent>
@@ -56,27 +63,35 @@ export function StepCostosPrecios(props: Props) {
                   <SelectTrigger className="text-sm"><SelectValue /></SelectTrigger>
                   <SelectContent><SelectItem value="MXN">MXN</SelectItem><SelectItem value="USD">USD</SelectItem></SelectContent>
                 </Select>
-                <Input readOnly value={`$${costo.monto.toFixed(2)}`} className="text-sm bg-muted" />
+                <div className="flex justify-center">
+                  <Checkbox checked={costo.aplicaIva} onCheckedChange={checked => updateConceptoCosto(costo.id, 'aplicaIva', !!checked)} />
+                </div>
+                <Input readOnly value={`$${(costo.monto + (costo.aplicaIva ? costo.monto * 0.16 : 0)).toFixed(2)}`} className="text-sm bg-muted" />
                 <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => removeConceptoCosto(costo.id)} disabled={conceptosCosto.length <= 1}>
                   <Trash2 className="h-4 w-4 text-destructive" />
                 </Button>
               </div>
             ))}
             <Button variant="outline" size="sm" onClick={addConceptoCosto}>+ Agregar costo</Button>
+            <div className="border-t pt-3 mt-3 text-sm space-y-1">
+              <div className="flex justify-end gap-4"><span className="text-muted-foreground">Subtotal:</span><span className="w-28 text-right">${totalCosto.toFixed(2)}</span></div>
+              <div className="flex justify-end gap-4"><span className="text-muted-foreground">IVA (16%):</span><span className="w-28 text-right">${ivaCosto.toFixed(2)}</span></div>
+              <div className="flex justify-end gap-4"><span className="font-semibold">Total:</span><span className="font-bold w-28 text-right">${totalCostoConIva.toFixed(2)}</span></div>
+            </div>
           </div>
         </CardContent>
       </Card>
 
-      {/* Conceptos de Venta (segundo) */}
+      {/* Conceptos de Venta */}
       <Card>
         <CardHeader><CardTitle className="text-sm">Conceptos de Venta</CardTitle></CardHeader>
         <CardContent>
           <div className="space-y-3">
-            <div className="grid grid-cols-[1fr_80px_100px_90px_100px_40px] gap-2 text-xs font-medium text-muted-foreground">
-              <span>Concepto</span><span>Cantidad</span><span>P. Unitario</span><span>Moneda</span><span>Total</span><span></span>
+            <div className="grid grid-cols-[1fr_80px_100px_90px_50px_100px_40px] gap-2 text-xs font-medium text-muted-foreground">
+              <span>Concepto</span><span>Cantidad</span><span>P. Unitario</span><span>Moneda</span><span>IVA</span><span>Total</span><span></span>
             </div>
             {conceptosVenta.map(venta => (
-              <div key={venta.id} className="grid grid-cols-[1fr_80px_100px_90px_100px_40px] gap-2 items-center">
+              <div key={venta.id} className="grid grid-cols-[1fr_80px_100px_90px_50px_100px_40px] gap-2 items-center">
                 <Select value={venta.concepto} onValueChange={valor => updateConceptoVenta(venta.id, 'concepto', valor)}>
                   <SelectTrigger className="text-sm"><SelectValue placeholder="Seleccionar" /></SelectTrigger>
                   <SelectContent>{CONCEPTOS_EMBARQUE.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}</SelectContent>
@@ -87,15 +102,20 @@ export function StepCostosPrecios(props: Props) {
                   <SelectTrigger className="text-sm"><SelectValue /></SelectTrigger>
                   <SelectContent><SelectItem value="MXN">MXN</SelectItem><SelectItem value="USD">USD</SelectItem><SelectItem value="EUR">EUR</SelectItem></SelectContent>
                 </Select>
-                <Input readOnly value={`$${(venta.cantidad * venta.precioUnitario).toFixed(2)}`} className="text-sm bg-muted" />
+                <div className="flex justify-center">
+                  <Checkbox checked={venta.aplicaIva} onCheckedChange={checked => updateConceptoVenta(venta.id, 'aplicaIva', !!checked)} />
+                </div>
+                <Input readOnly value={`$${((venta.cantidad * venta.precioUnitario) + (venta.aplicaIva ? venta.cantidad * venta.precioUnitario * 0.16 : 0)).toFixed(2)}`} className="text-sm bg-muted" />
                 <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => removeConceptoVenta(venta.id)} disabled={conceptosVenta.length <= 1}>
                   <Trash2 className="h-4 w-4 text-destructive" />
                 </Button>
               </div>
             ))}
             <Button variant="outline" size="sm" onClick={addConceptoVenta}>+ Agregar concepto</Button>
-            <div className="border-t pt-3 mt-3 text-sm text-right">
-              <div className="flex justify-end gap-4"><span className="font-semibold">Subtotal (Sin IVA):</span><span className="font-bold w-28 text-right">${subtotalVenta.toFixed(2)}</span></div>
+            <div className="border-t pt-3 mt-3 text-sm space-y-1">
+              <div className="flex justify-end gap-4"><span className="text-muted-foreground">Subtotal:</span><span className="w-28 text-right">${subtotalVenta.toFixed(2)}</span></div>
+              <div className="flex justify-end gap-4"><span className="text-muted-foreground">IVA (16%):</span><span className="w-28 text-right">${ivaVenta.toFixed(2)}</span></div>
+              <div className="flex justify-end gap-4"><span className="font-semibold">Total:</span><span className="font-bold w-28 text-right">${totalVentaConIva.toFixed(2)}</span></div>
             </div>
           </div>
         </CardContent>

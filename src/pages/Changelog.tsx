@@ -13,6 +13,14 @@ interface ChangelogEntry {
 
 const changelog: ChangelogEntry[] = [
   {
+    version: "3.13.3",
+    date: "2026-03-02",
+    type: "minor",
+    title: "Toggle 'Aplica IVA' y totales por sección en Costos y Pricing",
+    description:
+      "Cada fila de conceptos de costo y venta ahora incluye un checkbox 'Aplica IVA'. Al final de cada sección se muestran Subtotal, IVA (16% solo de filas marcadas) y Total. La utilidad estimada se calcula con los totales incluyendo IVA.",
+  },
+  {
     version: "3.13.2",
     date: "2026-03-02",
     type: "minor",

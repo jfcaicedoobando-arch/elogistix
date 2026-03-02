@@ -84,7 +84,9 @@ export default function EditarEmbarque() {
     conceptosVenta, conceptosCosto,
     updateConceptoVenta, addConceptoVenta, removeConceptoVenta,
     updateConceptoCosto, addConceptoCosto, removeConceptoCosto,
-    subtotalVenta, totalCosto, utilidadEstimada,
+    subtotalVenta, ivaVenta, totalVentaConIva,
+    totalCosto, ivaCosto, totalCostoConIva,
+    utilidadEstimada,
     inicializarVenta, inicializarCosto,
   } = useConceptosForm();
 
@@ -136,6 +138,7 @@ export default function EditarEmbarque() {
       cantidad: conceptoVenta.cantidad,
       precioUnitario: Number(conceptoVenta.precio_unitario),
       moneda: conceptoVenta.moneda,
+      aplicaIva: false,
     })));
   }, [conceptosVentaDb, initialized]);
 
@@ -148,6 +151,7 @@ export default function EditarEmbarque() {
       concepto: conceptoCosto.concepto,
       monto: Number(conceptoCosto.monto),
       moneda: conceptoCosto.moneda,
+      aplicaIva: false,
     })));
   }, [conceptosCostoDb, initialized]);
 
@@ -328,7 +332,11 @@ export default function EditarEmbarque() {
           conceptosVenta={conceptosVenta}
           conceptosCosto={conceptosCosto}
           subtotalVenta={subtotalVenta}
+          ivaVenta={ivaVenta}
+          totalVentaConIva={totalVentaConIva}
           totalCosto={totalCosto}
+          ivaCosto={ivaCosto}
+          totalCostoConIva={totalCostoConIva}
           utilidadEstimada={utilidadEstimada}
           tipoCambioUSD={tipoCambioUSD} setTipoCambioUSD={setTipoCambioUSD}
           tipoCambioEUR={tipoCambioEUR} setTipoCambioEUR={setTipoCambioEUR}

@@ -4,6 +4,7 @@ export interface ConceptoVentaLocal {
   cantidad: number;
   precioUnitario: number;
   moneda: string;
+  aplicaIva: boolean;
 }
 
 export interface ConceptoCostoLocal {
@@ -12,4 +13,5 @@ export interface ConceptoCostoLocal {
   concepto: string;
   monto: number;
   moneda: string;
+  aplicaIva: boolean;
 }
