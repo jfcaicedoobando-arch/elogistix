@@ -13,6 +13,14 @@ interface ChangelogEntry {
 
 const changelog: ChangelogEntry[] = [
   {
+    version: "3.13.7",
+    date: "2026-03-02",
+    type: "patch",
+    title: "Eliminación de checkbox IVA en Costos y Venta",
+    description:
+      "Se removió la columna IVA (checkbox) de las tablas de Conceptos de Costo y Conceptos de Venta para simplificar el formulario.",
+  },
+  {
     version: "3.13.6",
     date: "2026-03-02",
     type: "patch",
