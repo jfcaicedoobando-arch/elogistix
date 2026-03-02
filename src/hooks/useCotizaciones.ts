@@ -65,6 +65,7 @@ export interface CotizacionRow {
   dimensiones_lcl: DimensionLCL[];
   dimensiones_aereas: DimensionAerea[];
   dias_libres_destino: number;
+  dias_almacenaje: number;
   tiempo_transito_dias: number | null;
   frecuencia: string;
   ruta_texto: string;
@@ -158,6 +159,7 @@ export interface CreateCotizacionInput {
   dimensiones_lcl?: DimensionLCL[];
   dimensiones_aereas?: DimensionAerea[];
   dias_libres_destino?: number;
+  dias_almacenaje?: number;
   tiempo_transito_dias?: number | null;
   frecuencia?: string;
   ruta_texto?: string;
@@ -212,6 +214,7 @@ export function useCreateCotizacion() {
           dimensiones_lcl: (input.dimensiones_lcl || []) as unknown as Json,
           dimensiones_aereas: (input.dimensiones_aereas || []) as unknown as Json,
           dias_libres_destino: input.dias_libres_destino ?? 0,
+          dias_almacenaje: input.dias_almacenaje ?? 0,
           tiempo_transito_dias: input.tiempo_transito_dias ?? null,
           frecuencia: input.frecuencia || '',
           ruta_texto: input.ruta_texto || '',
