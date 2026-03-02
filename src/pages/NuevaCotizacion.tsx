@@ -89,6 +89,7 @@ export default function NuevaCotizacion() {
   const [seguro, setSeguro] = useState(false);
   const [valorSeguroUsd, setValorSeguroUsd] = useState(0);
   const [diasLibresDestino, setDiasLibresDestino] = useState(0);
+  const [diasAlmacenaje, setDiasAlmacenaje] = useState(0);
 
   // Conceptos
   const [notas, setNotas] = useState("");
@@ -213,6 +214,7 @@ export default function NuevaCotizacion() {
         dimensiones_lcl: esMaritimo && tipoEmbarque === 'LCL' ? dimensionesLCL : [],
         dimensiones_aereas: esAereo ? dimensionesAereas : [],
         dias_libres_destino: esMaritimo && tipoEmbarque === 'FCL' ? diasLibresDestino : 0,
+        dias_almacenaje: esMaritimo && tipoEmbarque === 'LCL' ? diasAlmacenaje : 0,
         tiempo_transito_dias: tiempoTransitoDias ?? null,
         frecuencia,
         ruta_texto: rutaTexto,
@@ -402,6 +404,12 @@ export default function NuevaCotizacion() {
               <div>
                 <Label>Días libres en destino</Label>
                 <Input type="number" min={0} value={diasLibresDestino} onChange={e => setDiasLibresDestino(Number(e.target.value))} placeholder="Ej. 7" />
+              </div>
+            )}
+            {esMaritimo && tipoEmbarque === 'LCL' && (
+              <div>
+                <Label>Días libres de almacenaje</Label>
+                <Input type="number" min={0} value={diasAlmacenaje} onChange={e => setDiasAlmacenaje(Number(e.target.value))} placeholder="Ej. 5" />
               </div>
             )}
             <div>
