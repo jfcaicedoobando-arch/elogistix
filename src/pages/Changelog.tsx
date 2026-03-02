@@ -13,22 +13,6 @@ interface ChangelogEntry {
 
 const changelog: ChangelogEntry[] = [
   {
-    version: "3.13.3",
-    date: "2026-03-02",
-    type: "patch",
-    title: "Subtotal editable en Conceptos de Venta y columnas en Costos",
-    description:
-      "El campo Subtotal en Conceptos de Venta ahora es editable manualmente (se autocalcula al cambiar cantidad o precio unitario, pero permite ajustes). Columnas Subtotal y Total agregadas en Conceptos de Costo.",
-  },
-  {
-    version: "3.13.2",
-    date: "2026-03-02",
-    type: "minor",
-    title: "Reestructuración de Costos y Pricing en embarques",
-    description:
-      "Sección de costos reordenada: Conceptos de Costo aparece antes de Conceptos de Venta. Dropdown de concepto unificado con 6 opciones fijas (Flete Marítimo, Embalaje, Coordinación de Recolección, Seguro de Carga, Manejo, Demoras) reemplaza texto libre y opciones marítimas anteriores. Proveedor en costos cambiado a texto libre. Moneda de costos limitada a MXN/USD.",
-  },
-  {
     version: "3.13.1",
     date: "2026-03-02",
     type: "patch",

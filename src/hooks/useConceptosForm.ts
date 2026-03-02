@@ -8,10 +8,10 @@ interface UseConceptosFormOptions {
 
 export function useConceptosForm(opciones: UseConceptosFormOptions = {}) {
   const [conceptosVenta, setConceptosVenta] = useState<ConceptoVentaLocal[]>(
-    opciones.ventaInicial ?? [{ id: 1, concepto: '', cantidad: 1, precioUnitario: 0, moneda: 'MXN', total: 0 }]
+    opciones.ventaInicial ?? [{ id: 1, concepto: '', cantidad: 1, precioUnitario: 0, moneda: 'MXN' }]
   );
   const [conceptosCosto, setConceptosCosto] = useState<ConceptoCostoLocal[]>(
-    opciones.costoInicial ?? [{ id: 1, proveedor: '', concepto: '', monto: 0, moneda: 'MXN' }]
+    opciones.costoInicial ?? [{ id: 1, proveedorId: '', concepto: '', monto: 0, moneda: 'MXN' }]
   );
   const [nextVentaId, setNextVentaId] = useState(
     (opciones.ventaInicial?.length ?? 1) + 1
@@ -21,18 +21,11 @@ export function useConceptosForm(opciones: UseConceptosFormOptions = {}) {
   );
 
   const updateConceptoVenta = (id: number, field: keyof ConceptoVentaLocal, value: string | number) => {
-    setConceptosVenta(prev => prev.map(c => {
-      if (c.id !== id) return c;
-      const updated = { ...c, [field]: value };
-      if (field === 'cantidad' || field === 'precioUnitario') {
-        updated.total = updated.cantidad * updated.precioUnitario;
-      }
-      return updated;
-    }));
+    setConceptosVenta(prev => prev.map(c => c.id === id ? { ...c, [field]: value } : c));
   };
 
   const addConceptoVenta = () => {
-    setConceptosVenta(prev => [...prev, { id: nextVentaId, concepto: '', cantidad: 1, precioUnitario: 0, moneda: 'MXN', total: 0 }]);
+    setConceptosVenta(prev => [...prev, { id: nextVentaId, concepto: '', cantidad: 1, precioUnitario: 0, moneda: 'MXN' }]);
     setNextVentaId(n => n + 1);
   };
 
@@ -45,7 +38,7 @@ export function useConceptosForm(opciones: UseConceptosFormOptions = {}) {
   };
 
   const addConceptoCosto = () => {
-    setConceptosCosto(prev => [...prev, { id: nextCostoId, proveedor: '', concepto: '', monto: 0, moneda: 'MXN' }]);
+    setConceptosCosto(prev => [...prev, { id: nextCostoId, proveedorId: '', concepto: '', monto: 0, moneda: 'MXN' }]);
     setNextCostoId(n => n + 1);
   };
 
@@ -53,7 +46,7 @@ export function useConceptosForm(opciones: UseConceptosFormOptions = {}) {
     setConceptosCosto(prev => prev.filter(c => c.id !== id));
   };
 
-  const subtotalVenta = conceptosVenta.reduce((acc, c) => acc + c.total, 0);
+  const subtotalVenta = conceptosVenta.reduce((acc, c) => acc + (c.cantidad * c.precioUnitario), 0);
   const totalCosto = conceptosCosto.reduce((acc, c) => acc + c.monto, 0);
   const utilidadEstimada = subtotalVenta - totalCosto;
 
