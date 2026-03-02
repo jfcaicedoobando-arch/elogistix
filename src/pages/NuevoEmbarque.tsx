@@ -165,7 +165,7 @@ export default function NuevoEmbarque() {
             cantidad: venta.cantidad,
             precio_unitario: venta.precioUnitario,
             moneda: venta.moneda as any,
-            total: venta.cantidad * venta.precioUnitario,
+            total: venta.total,
           })),
         conceptosCosto: conceptosCosto
           .filter(costo => costo.concepto)
