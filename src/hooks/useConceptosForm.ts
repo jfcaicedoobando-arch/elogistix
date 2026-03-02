@@ -7,8 +7,7 @@ interface UseConceptosFormOptions {
 }
 
 function calcTotalVenta(c: ConceptoVentaLocal): number {
-  const base = c.cantidad * c.precioUnitario;
-  return base + (c.aplicaIva ? base * 0.16 : 0);
+  return c.monto * 1.16;
 }
 
 function calcTotalCosto(c: ConceptoCostoLocal): number {
@@ -17,7 +16,7 @@ function calcTotalCosto(c: ConceptoCostoLocal): number {
 
 export function useConceptosForm(opciones: UseConceptosFormOptions = {}) {
   const [conceptosVenta, setConceptosVenta] = useState<ConceptoVentaLocal[]>(
-    opciones.ventaInicial ?? [{ id: 1, concepto: '', cantidad: 1, precioUnitario: 0, moneda: 'MXN', aplicaIva: false, total: 0 }]
+    opciones.ventaInicial ?? [{ id: 1, concepto: '', proveedor: '', monto: 0, moneda: 'MXN', total: 0 }]
   );
   const [conceptosCosto, setConceptosCosto] = useState<ConceptoCostoLocal[]>(
     opciones.costoInicial ?? [{ id: 1, proveedor: '', concepto: '', monto: 0, moneda: 'MXN', aplicaIva: false, total: 0 }]
@@ -42,7 +41,7 @@ export function useConceptosForm(opciones: UseConceptosFormOptions = {}) {
   };
 
   const addConceptoVenta = () => {
-    setConceptosVenta(prev => [...prev, { id: nextVentaId, concepto: '', cantidad: 1, precioUnitario: 0, moneda: 'MXN', aplicaIva: false, total: 0 }]);
+    setConceptosVenta(prev => [...prev, { id: nextVentaId, concepto: '', proveedor: '', monto: 0, moneda: 'MXN', total: 0 }]);
     setNextVentaId(n => n + 1);
   };
 
@@ -70,9 +69,9 @@ export function useConceptosForm(opciones: UseConceptosFormOptions = {}) {
     setConceptosCosto(prev => prev.filter(c => c.id !== id));
   };
 
-  const subtotalVenta = conceptosVenta.reduce((acc, c) => acc + c.total, 0);
-  const ivaVenta = conceptosVenta.reduce((acc, c) => c.aplicaIva ? acc + (c.cantidad * c.precioUnitario * 0.16) : acc, 0);
-  const totalVentaConIva = subtotalVenta;
+  const subtotalVenta = conceptosVenta.reduce((acc, c) => acc + c.monto, 0);
+  const ivaVenta = subtotalVenta * 0.16;
+  const totalVentaConIva = subtotalVenta + ivaVenta;
 
   const totalCosto = conceptosCosto.reduce((acc, c) => acc + c.total, 0);
   const ivaCosto = conceptosCosto.reduce((acc, c) => c.aplicaIva ? acc + (c.monto * 0.16) : acc, 0);

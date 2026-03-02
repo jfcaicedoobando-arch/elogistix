@@ -164,10 +164,10 @@ export default function NuevoEmbarque() {
           .filter(venta => venta.concepto)
           .map(venta => ({
             descripcion: venta.concepto,
-            cantidad: venta.cantidad,
-            precio_unitario: venta.precioUnitario,
+            cantidad: 1,
+            precio_unitario: venta.monto,
             moneda: venta.moneda as any,
-            total: venta.cantidad * venta.precioUnitario,
+            total: venta.monto,
           })),
         conceptosCosto: conceptosCosto
           .filter(costo => costo.concepto)
