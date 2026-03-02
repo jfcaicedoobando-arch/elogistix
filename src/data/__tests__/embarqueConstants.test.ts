@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { getDocsForMode, ESTADO_TIMELINE, CONCEPTOS_MARITIMOS } from "@/data/embarqueConstants";
+import { getDocsForMode, ESTADO_TIMELINE, CATALOGO_CONCEPTOS } from "@/data/embarqueConstants";
 
 describe("getDocsForMode", () => {
   it("Marítimo incluye BL Master", () => {
@@ -26,8 +26,12 @@ describe("ESTADO_TIMELINE", () => {
   });
 });
 
-describe("CONCEPTOS_MARITIMOS", () => {
-  it("no está vacío", () => {
-    expect(CONCEPTOS_MARITIMOS.length).toBeGreaterThan(0);
+describe("CATALOGO_CONCEPTOS", () => {
+  it("tiene 7 opciones", () => {
+    expect(CATALOGO_CONCEPTOS).toHaveLength(7);
+  });
+  it("incluye Flete Marítimo y Cargos en Destino", () => {
+    expect(CATALOGO_CONCEPTOS).toContain("Flete Marítimo");
+    expect(CATALOGO_CONCEPTOS).toContain("Cargos en Destino");
   });
 });

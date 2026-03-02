@@ -13,6 +13,14 @@ interface ChangelogEntry {
 
 const changelog: ChangelogEntry[] = [
   {
+    version: "3.13.3",
+    date: "2026-03-02",
+    type: "patch",
+    title: "Catálogo estandarizado de conceptos en Costos y Pricing",
+    description:
+      "Se reemplazó el campo de texto libre de concepto en ambas tablas (Costos y Venta) por un dropdown con 7 opciones fijas: Flete Marítimo, Embalaje, Coordinación de Recolección, Seguro de Carga, Manejo, Demoras y Cargos en Destino. Aplica para todos los modos de transporte.",
+  },
+  {
     version: "3.13.2",
     date: "2026-03-02",
     type: "patch",
