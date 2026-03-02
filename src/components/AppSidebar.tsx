@@ -6,6 +6,7 @@ import {
   Truck,
   BarChart3,
   Anchor,
+  ClipboardList,
   ScrollText,
   ShieldCheck,
   LogOut,
@@ -30,6 +31,7 @@ import { Button } from "@/components/ui/button";
 
 const menuItems = [
   { title: "Dashboard", url: "/", icon: LayoutDashboard },
+  { title: "Cotizaciones", url: "/cotizaciones", icon: ClipboardList },
   { title: "Embarques", url: "/embarques", icon: Ship },
   { title: "Facturación", url: "/facturacion", icon: FileText },
   { title: "Clientes", url: "/clientes", icon: UserCheck },
@@ -121,7 +123,7 @@ export function AppSidebar() {
         </Button>
         {!collapsed && (
           <div className="text-xs text-sidebar-foreground/50">
-            v3.3.0 · Operaciones MX
+            v3.6.0 · Operaciones MX
           </div>
         )}
       </SidebarFooter>

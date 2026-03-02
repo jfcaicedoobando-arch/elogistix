@@ -13,6 +13,14 @@ interface ChangelogEntry {
 
 const changelog: ChangelogEntry[] = [
   {
+    version: "3.6.0",
+    date: "2026-03-02",
+    type: "minor",
+    title: "Módulo de Cotizaciones",
+    description:
+      "Nuevo módulo completo de cotizaciones con tabla independiente. Incluye listado con filtros y paginación, formulario simplificado para crear cotizaciones, detalle con conceptos de venta, y conversión automática a embarque al confirmar. Estados: Borrador, Enviada, Confirmada, Rechazada, Vencida. Registro en bitácora y folio auto-generado (COT-YYYY-NNNN).",
+  },
+  {
     version: "3.5.0",
     date: "2026-03-02",
     type: "minor",
