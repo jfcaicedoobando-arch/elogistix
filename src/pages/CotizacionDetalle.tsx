@@ -223,6 +223,22 @@ export default function CotizacionDetalle() {
             <div><span className="text-muted-foreground">Destino</span><p className="font-medium">{cotizacion.destino || '-'}</p></div>
             <div><span className="text-muted-foreground">Vigencia</span><p className="font-medium">{cotizacion.vigencia_dias} días ({cotizacion.fecha_vigencia ? formatDate(cotizacion.fecha_vigencia) : '-'})</p></div>
             <div><span className="text-muted-foreground">Operador</span><p className="font-medium">{cotizacion.operador || '-'}</p></div>
+            {(cotizacion as any).tiempo_transito_dias != null && (
+              <div><span className="text-muted-foreground">Tiempo de tránsito</span><p className="font-medium">{(cotizacion as any).tiempo_transito_dias} días</p></div>
+            )}
+            {(cotizacion as any).frecuencia && (
+              <div><span className="text-muted-foreground">Frecuencia</span><p className="font-medium">{(cotizacion as any).frecuencia}</p></div>
+            )}
+            {(cotizacion as any).ruta_texto && (
+              <div className="col-span-2"><span className="text-muted-foreground">Ruta</span><p className="font-medium">{(cotizacion as any).ruta_texto}</p></div>
+            )}
+            {(cotizacion as any).validez_propuesta && (
+              <div><span className="text-muted-foreground">Validez propuesta</span><p className="font-medium">{formatDate((cotizacion as any).validez_propuesta)}</p></div>
+            )}
+            {(cotizacion as any).tipo_movimiento && (
+              <div><span className="text-muted-foreground">Tipo de movimiento</span><p className="font-medium">{(cotizacion as any).tipo_movimiento}</p></div>
+            )}
+            <div><span className="text-muted-foreground">Seguro</span><p className="font-medium">{(cotizacion as any).seguro ? `Sí — $${Number((cotizacion as any).valor_seguro_usd || 0).toLocaleString('es-MX', { minimumFractionDigits: 2 })} USD` : 'No'}</p></div>
           </div>
         </CardContent>
       </Card>

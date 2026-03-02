@@ -306,6 +306,7 @@ export type Database = {
           estado: Database["public"]["Enums"]["estado_cotizacion"]
           fecha_vigencia: string | null
           folio: string
+          frecuencia: string
           id: string
           incoterm: Database["public"]["Enums"]["incoterm"]
           modo: Database["public"]["Enums"]["modo_transporte"]
@@ -320,14 +321,20 @@ export type Database = {
           prospecto_email: string
           prospecto_empresa: string
           prospecto_telefono: string
+          ruta_texto: string
           sector_economico: string
+          seguro: boolean
           subtotal: number
+          tiempo_transito_dias: number | null
           tipo: Database["public"]["Enums"]["tipo_operacion"]
           tipo_carga: string
           tipo_contenedor: string | null
           tipo_embarque: string
+          tipo_movimiento: string
           tipo_peso: string
           updated_at: string
+          validez_propuesta: string | null
+          valor_seguro_usd: number
           vigencia_dias: number
           volumen_m3: number
         }
@@ -346,6 +353,7 @@ export type Database = {
           estado?: Database["public"]["Enums"]["estado_cotizacion"]
           fecha_vigencia?: string | null
           folio: string
+          frecuencia?: string
           id?: string
           incoterm?: Database["public"]["Enums"]["incoterm"]
           modo: Database["public"]["Enums"]["modo_transporte"]
@@ -360,14 +368,20 @@ export type Database = {
           prospecto_email?: string
           prospecto_empresa?: string
           prospecto_telefono?: string
+          ruta_texto?: string
           sector_economico?: string
+          seguro?: boolean
           subtotal?: number
+          tiempo_transito_dias?: number | null
           tipo: Database["public"]["Enums"]["tipo_operacion"]
           tipo_carga?: string
           tipo_contenedor?: string | null
           tipo_embarque?: string
+          tipo_movimiento?: string
           tipo_peso?: string
           updated_at?: string
+          validez_propuesta?: string | null
+          valor_seguro_usd?: number
           vigencia_dias?: number
           volumen_m3?: number
         }
@@ -386,6 +400,7 @@ export type Database = {
           estado?: Database["public"]["Enums"]["estado_cotizacion"]
           fecha_vigencia?: string | null
           folio?: string
+          frecuencia?: string
           id?: string
           incoterm?: Database["public"]["Enums"]["incoterm"]
           modo?: Database["public"]["Enums"]["modo_transporte"]
@@ -400,14 +415,20 @@ export type Database = {
           prospecto_email?: string
           prospecto_empresa?: string
           prospecto_telefono?: string
+          ruta_texto?: string
           sector_economico?: string
+          seguro?: boolean
           subtotal?: number
+          tiempo_transito_dias?: number | null
           tipo?: Database["public"]["Enums"]["tipo_operacion"]
           tipo_carga?: string
           tipo_contenedor?: string | null
           tipo_embarque?: string
+          tipo_movimiento?: string
           tipo_peso?: string
           updated_at?: string
+          validez_propuesta?: string | null
+          valor_seguro_usd?: number
           vigencia_dias?: number
           volumen_m3?: number
         }
