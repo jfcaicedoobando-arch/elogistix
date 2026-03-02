@@ -13,6 +13,14 @@ interface ChangelogEntry {
 
 const changelog: ChangelogEntry[] = [
   {
+    version: "3.15.0",
+    date: "2026-03-02",
+    type: "minor",
+    title: "Unificación de Monto y Subtotal en Costos y Venta",
+    description:
+      "Se unificaron las columnas Monto y Subtotal en un solo campo editable 'Subtotal (sin IVA)' en ambas tablas. El Total USD se calcula directamente desde este valor.",
+  },
+  {
     version: "3.14.0",
     date: "2026-03-02",
     type: "minor",
