@@ -28,7 +28,14 @@ export default function NuevaCotizacion() {
   const crearCotizacion = useCreateCotizacion();
   const registrarActividad = useRegistrarActividad();
 
+  // Tipo de destinatario
+  const [esProspecto, setEsProspecto] = useState(false);
   const [clienteId, setClienteId] = useState("");
+  const [prospectoEmpresa, setProspectoEmpresa] = useState("");
+  const [prospectoContacto, setProspectoContacto] = useState("");
+  const [prospectoEmail, setProspectoEmail] = useState("");
+  const [prospectoTelefono, setProspectoTelefono] = useState("");
+
   const [modo, setModo] = useState("Marítimo");
   const [tipo, setTipo] = useState("Importación");
   const [incoterm, setIncoterm] = useState("FOB");
@@ -68,14 +75,36 @@ export default function NuevaCotizacion() {
   const subtotal = conceptos.reduce((sum, c) => sum + c.total, 0);
 
   const handleGuardar = async () => {
-    if (!clienteId) { toast({ title: "Selecciona un cliente", variant: "destructive" }); return; }
-    if (!mercancia.trim()) { toast({ title: "Ingresa la descripción de mercancía", variant: "destructive" }); return; }
-    if (conceptos.some(c => !c.descripcion.trim())) { toast({ title: "Completa todos los conceptos de venta", variant: "destructive" }); return; }
+    if (!esProspecto && !clienteId) {
+      toast({ title: "Selecciona un cliente", variant: "destructive" });
+      return;
+    }
+    if (esProspecto && !prospectoEmpresa.trim()) {
+      toast({ title: "Ingresa el nombre de la empresa del prospecto", variant: "destructive" });
+      return;
+    }
+    if (esProspecto && !prospectoContacto.trim()) {
+      toast({ title: "Ingresa el nombre del contacto del prospecto", variant: "destructive" });
+      return;
+    }
+    if (!mercancia.trim()) {
+      toast({ title: "Ingresa la descripción de mercancía", variant: "destructive" });
+      return;
+    }
+    if (conceptos.some(c => !c.descripcion.trim())) {
+      toast({ title: "Completa todos los conceptos de venta", variant: "destructive" });
+      return;
+    }
 
     try {
       const cotizacion = await crearCotizacion.mutateAsync({
-        cliente_id: clienteId,
-        cliente_nombre: clienteSeleccionado?.nombre ?? '',
+        es_prospecto: esProspecto,
+        cliente_id: esProspecto ? null : clienteId,
+        cliente_nombre: esProspecto ? prospectoEmpresa : (clienteSeleccionado?.nombre ?? ''),
+        prospecto_empresa: esProspecto ? prospectoEmpresa : '',
+        prospecto_contacto: esProspecto ? prospectoContacto : '',
+        prospecto_email: esProspecto ? prospectoEmail : '',
+        prospecto_telefono: esProspecto ? prospectoTelefono : '',
         modo,
         tipo,
         incoterm,
@@ -117,19 +146,70 @@ export default function NuevaCotizacion() {
         </div>
       </div>
 
+      {/* Destinatario */}
+      <Card>
+        <CardHeader><CardTitle className="text-lg">Destinatario</CardTitle></CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex gap-4">
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input
+                type="radio"
+                name="tipo-destinatario"
+                checked={!esProspecto}
+                onChange={() => setEsProspecto(false)}
+                className="accent-primary"
+              />
+              <span className="text-sm font-medium">Cliente existente</span>
+            </label>
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input
+                type="radio"
+                name="tipo-destinatario"
+                checked={esProspecto}
+                onChange={() => setEsProspecto(true)}
+                className="accent-primary"
+              />
+              <span className="text-sm font-medium">Prospecto</span>
+            </label>
+          </div>
+
+          {!esProspecto ? (
+            <div>
+              <Label>Cliente *</Label>
+              <Select value={clienteId} onValueChange={setClienteId}>
+                <SelectTrigger><SelectValue placeholder="Seleccionar cliente" /></SelectTrigger>
+                <SelectContent>
+                  {clientes.map(c => <SelectItem key={c.id} value={c.id}>{c.nombre}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <Label>Nombre de Empresa *</Label>
+                <Input value={prospectoEmpresa} onChange={e => setProspectoEmpresa(e.target.value)} placeholder="Ej. Importaciones ABC" />
+              </div>
+              <div>
+                <Label>Nombre de Contacto *</Label>
+                <Input value={prospectoContacto} onChange={e => setProspectoContacto(e.target.value)} placeholder="Ej. Juan Pérez" />
+              </div>
+              <div>
+                <Label>Email</Label>
+                <Input type="email" value={prospectoEmail} onChange={e => setProspectoEmail(e.target.value)} placeholder="contacto@empresa.com" />
+              </div>
+              <div>
+                <Label>Teléfono</Label>
+                <Input value={prospectoTelefono} onChange={e => setProspectoTelefono(e.target.value)} placeholder="+52 55 1234 5678" />
+              </div>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
       {/* Datos generales */}
       <Card>
         <CardHeader><CardTitle className="text-lg">Datos Generales</CardTitle></CardHeader>
         <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="md:col-span-2">
-            <Label>Cliente *</Label>
-            <Select value={clienteId} onValueChange={setClienteId}>
-              <SelectTrigger><SelectValue placeholder="Seleccionar cliente" /></SelectTrigger>
-              <SelectContent>
-                {clientes.map(c => <SelectItem key={c.id} value={c.id}>{c.nombre}</SelectItem>)}
-              </SelectContent>
-            </Select>
-          </div>
           <div>
             <Label>Modo de Transporte</Label>
             <Select value={modo} onValueChange={setModo}>

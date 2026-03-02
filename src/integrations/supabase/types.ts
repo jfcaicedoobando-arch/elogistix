@@ -292,13 +292,14 @@ export type Database = {
       }
       cotizaciones: {
         Row: {
-          cliente_id: string
+          cliente_id: string | null
           cliente_nombre: string
           conceptos_venta: Json
           created_at: string
           descripcion_mercancia: string
           destino: string
           embarque_id: string | null
+          es_prospecto: boolean
           estado: Database["public"]["Enums"]["estado_cotizacion"]
           fecha_vigencia: string | null
           folio: string
@@ -311,6 +312,10 @@ export type Database = {
           origen: string
           peso_kg: number
           piezas: number
+          prospecto_contacto: string
+          prospecto_email: string
+          prospecto_empresa: string
+          prospecto_telefono: string
           subtotal: number
           tipo: Database["public"]["Enums"]["tipo_operacion"]
           updated_at: string
@@ -318,13 +323,14 @@ export type Database = {
           volumen_m3: number
         }
         Insert: {
-          cliente_id: string
+          cliente_id?: string | null
           cliente_nombre?: string
           conceptos_venta?: Json
           created_at?: string
           descripcion_mercancia?: string
           destino?: string
           embarque_id?: string | null
+          es_prospecto?: boolean
           estado?: Database["public"]["Enums"]["estado_cotizacion"]
           fecha_vigencia?: string | null
           folio: string
@@ -337,6 +343,10 @@ export type Database = {
           origen?: string
           peso_kg?: number
           piezas?: number
+          prospecto_contacto?: string
+          prospecto_email?: string
+          prospecto_empresa?: string
+          prospecto_telefono?: string
           subtotal?: number
           tipo: Database["public"]["Enums"]["tipo_operacion"]
           updated_at?: string
@@ -344,13 +354,14 @@ export type Database = {
           volumen_m3?: number
         }
         Update: {
-          cliente_id?: string
+          cliente_id?: string | null
           cliente_nombre?: string
           conceptos_venta?: Json
           created_at?: string
           descripcion_mercancia?: string
           destino?: string
           embarque_id?: string | null
+          es_prospecto?: boolean
           estado?: Database["public"]["Enums"]["estado_cotizacion"]
           fecha_vigencia?: string | null
           folio?: string
@@ -363,6 +374,10 @@ export type Database = {
           origen?: string
           peso_kg?: number
           piezas?: number
+          prospecto_contacto?: string
+          prospecto_email?: string
+          prospecto_empresa?: string
+          prospecto_telefono?: string
           subtotal?: number
           tipo?: Database["public"]["Enums"]["tipo_operacion"]
           updated_at?: string
@@ -758,6 +773,7 @@ export type Database = {
         | "Confirmada"
         | "Rechazada"
         | "Vencida"
+        | "Aceptada"
       estado_documento: "Pendiente" | "Recibido" | "Validado"
       estado_embarque:
         | "Cotización"
@@ -936,6 +952,7 @@ export const Constants = {
         "Confirmada",
         "Rechazada",
         "Vencida",
+        "Aceptada",
       ],
       estado_documento: ["Pendiente", "Recibido", "Validado"],
       estado_embarque: [
