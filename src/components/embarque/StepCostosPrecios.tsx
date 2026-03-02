@@ -5,8 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { CONCEPTOS_MARITIMOS } from "@/data/embarqueConstants";
 
-interface ConceptoVentaRow { id: number; concepto: string; cantidad: number; precioUnitario: number; moneda: string; }
-interface ConceptoCostoRow { id: number; proveedorId: string; concepto: string; monto: number; moneda: string; }
+import type { ConceptoVentaLocal as ConceptoVentaRow, ConceptoCostoLocal as ConceptoCostoRow } from "@/data/conceptoTypes";
 
 interface Proveedor {
   id: string;

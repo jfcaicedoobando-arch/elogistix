@@ -23,19 +23,10 @@ import {
 } from "@/hooks/useCotizaciones";
 import { usePermissions } from "@/hooks/usePermissions";
 import { useToast } from "@/hooks/use-toast";
-import { formatDate } from "@/lib/helpers";
+import { formatDate, getEstadoColor } from "@/lib/helpers";
 import { formatCurrency } from "@/lib/formatters";
 import { getSignedUrl } from "@/lib/storage";
 import { ArrowLeft, CheckCircle, Send, XCircle, Ship, UserPlus, Anchor, FileDown, AlertTriangle } from "lucide-react";
-
-const estadoColor: Record<string, string> = {
-  Borrador: 'bg-muted text-muted-foreground',
-  Enviada: 'bg-blue-100 text-blue-800',
-  Aceptada: 'bg-amber-100 text-amber-800',
-  Confirmada: 'bg-green-100 text-green-800',
-  Rechazada: 'bg-red-100 text-red-800',
-  Vencida: 'bg-orange-100 text-orange-800',
-};
 
 export default function CotizacionDetalle() {
   const { id } = useParams<{ id: string }>();
@@ -119,7 +110,7 @@ export default function CotizacionDetalle() {
     : cotizacion.cliente_nombre;
 
   const dimensiones: DimensionLCL[] = Array.isArray(cotizacion.dimensiones_lcl) ? cotizacion.dimensiones_lcl : [];
-  const dimensionesAereas: DimensionAerea[] = Array.isArray((cotizacion as any).dimensiones_aereas) ? (cotizacion as any).dimensiones_aereas : [];
+  const dimensionesAereas: DimensionAerea[] = Array.isArray(cotizacion.dimensiones_aereas) ? cotizacion.dimensiones_aereas : [];
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
@@ -132,7 +123,7 @@ export default function CotizacionDetalle() {
           <h1 className="text-2xl font-bold">{cotizacion.folio}</h1>
           <p className="text-sm text-muted-foreground">{nombreDestinatario}</p>
         </div>
-        <Badge className={estadoColor[cotizacion.estado] || ''}>{cotizacion.estado}</Badge>
+        <Badge className={getEstadoColor(cotizacion.estado)}>{cotizacion.estado}</Badge>
       </div>
 
       {/* Acciones según estado */}
@@ -223,31 +214,31 @@ export default function CotizacionDetalle() {
             <div><span className="text-muted-foreground">Destino</span><p className="font-medium">{cotizacion.destino || '-'}</p></div>
             <div><span className="text-muted-foreground">Vigencia</span><p className="font-medium">{cotizacion.vigencia_dias} días ({cotizacion.fecha_vigencia ? formatDate(cotizacion.fecha_vigencia) : '-'})</p></div>
             <div><span className="text-muted-foreground">Operador</span><p className="font-medium">{cotizacion.operador || '-'}</p></div>
-            {(cotizacion as any).tiempo_transito_dias != null && (
-              <div><span className="text-muted-foreground">Tiempo de tránsito</span><p className="font-medium">{(cotizacion as any).tiempo_transito_dias} días</p></div>
+            {cotizacion.tiempo_transito_dias != null && (
+              <div><span className="text-muted-foreground">Tiempo de tránsito</span><p className="font-medium">{cotizacion.tiempo_transito_dias} días</p></div>
             )}
-            {esMaritimo && cotizacion.tipo_embarque === 'FCL' && (cotizacion as any).dias_libres_destino > 0 && (
-              <div><span className="text-muted-foreground">Días libres en destino</span><p className="font-medium">{(cotizacion as any).dias_libres_destino} días</p></div>
+            {esMaritimo && cotizacion.tipo_embarque === 'FCL' && cotizacion.dias_libres_destino > 0 && (
+              <div><span className="text-muted-foreground">Días libres en destino</span><p className="font-medium">{cotizacion.dias_libres_destino} días</p></div>
             )}
             {esMaritimo && cotizacion.tipo_embarque === 'FCL' && (
-              <div><span className="text-muted-foreground">Carta garantía</span><p className="font-medium">{(cotizacion as any).carta_garantia ? 'Sí' : 'No'}</p></div>
+              <div><span className="text-muted-foreground">Carta garantía</span><p className="font-medium">{cotizacion.carta_garantia ? 'Sí' : 'No'}</p></div>
             )}
-            {esMaritimo && cotizacion.tipo_embarque === 'LCL' && (cotizacion as any).dias_almacenaje > 0 && (
-              <div><span className="text-muted-foreground">Días libres de almacenaje</span><p className="font-medium">{(cotizacion as any).dias_almacenaje} días</p></div>
+            {esMaritimo && cotizacion.tipo_embarque === 'LCL' && cotizacion.dias_almacenaje > 0 && (
+              <div><span className="text-muted-foreground">Días libres de almacenaje</span><p className="font-medium">{cotizacion.dias_almacenaje} días</p></div>
             )}
-            {(cotizacion as any).frecuencia && (
-              <div><span className="text-muted-foreground">Frecuencia</span><p className="font-medium">{(cotizacion as any).frecuencia}</p></div>
+            {cotizacion.frecuencia && (
+              <div><span className="text-muted-foreground">Frecuencia</span><p className="font-medium">{cotizacion.frecuencia}</p></div>
             )}
-            {(cotizacion as any).ruta_texto && (
-              <div className="col-span-2"><span className="text-muted-foreground">Ruta</span><p className="font-medium">{(cotizacion as any).ruta_texto}</p></div>
+            {cotizacion.ruta_texto && (
+              <div className="col-span-2"><span className="text-muted-foreground">Ruta</span><p className="font-medium">{cotizacion.ruta_texto}</p></div>
             )}
-            {(cotizacion as any).validez_propuesta && (
-              <div><span className="text-muted-foreground">Validez propuesta</span><p className="font-medium">{formatDate((cotizacion as any).validez_propuesta)}</p></div>
+            {cotizacion.validez_propuesta && (
+              <div><span className="text-muted-foreground">Validez propuesta</span><p className="font-medium">{formatDate(cotizacion.validez_propuesta)}</p></div>
             )}
-            {(cotizacion as any).tipo_movimiento && (
-              <div><span className="text-muted-foreground">Tipo de movimiento</span><p className="font-medium">{(cotizacion as any).tipo_movimiento}</p></div>
+            {cotizacion.tipo_movimiento && (
+              <div><span className="text-muted-foreground">Tipo de movimiento</span><p className="font-medium">{cotizacion.tipo_movimiento}</p></div>
             )}
-            <div><span className="text-muted-foreground">Seguro</span><p className="font-medium">{(cotizacion as any).seguro ? `Sí — $${Number((cotizacion as any).valor_seguro_usd || 0).toLocaleString('es-MX', { minimumFractionDigits: 2 })} USD` : 'No'}</p></div>
+            <div><span className="text-muted-foreground">Seguro</span><p className="font-medium">{cotizacion.seguro ? `Sí — $${Number(cotizacion.valor_seguro_usd || 0).toLocaleString('es-MX', { minimumFractionDigits: 2 })} USD` : 'No'}</p></div>
           </div>
         </CardContent>
       </Card>
@@ -332,13 +323,13 @@ export default function CotizacionDetalle() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {dimensiones.map((d, i) => (
-                      <TableRow key={i}>
-                        <TableCell>{d.piezas}</TableCell>
-                        <TableCell>{d.alto_cm}</TableCell>
-                        <TableCell>{d.largo_cm}</TableCell>
-                        <TableCell>{d.ancho_cm}</TableCell>
-                        <TableCell>{d.volumen_m3.toFixed(4)}</TableCell>
+                    {dimensiones.map((dimension, indice) => (
+                      <TableRow key={indice}>
+                        <TableCell>{dimension.piezas}</TableCell>
+                        <TableCell>{dimension.alto_cm}</TableCell>
+                        <TableCell>{dimension.largo_cm}</TableCell>
+                        <TableCell>{dimension.ancho_cm}</TableCell>
+                        <TableCell>{dimension.volumen_m3.toFixed(4)}</TableCell>
                       </TableRow>
                     ))}
                   </TableBody>
@@ -367,13 +358,13 @@ export default function CotizacionDetalle() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {dimensionesAereas.map((d, i) => (
-                      <TableRow key={i}>
-                        <TableCell>{d.piezas}</TableCell>
-                        <TableCell>{d.alto_cm}</TableCell>
-                        <TableCell>{d.largo_cm}</TableCell>
-                        <TableCell>{d.ancho_cm}</TableCell>
-                        <TableCell>{d.peso_volumetrico_kg.toFixed(2)}</TableCell>
+                    {dimensionesAereas.map((dimension, indice) => (
+                      <TableRow key={indice}>
+                        <TableCell>{dimension.piezas}</TableCell>
+                        <TableCell>{dimension.alto_cm}</TableCell>
+                        <TableCell>{dimension.largo_cm}</TableCell>
+                        <TableCell>{dimension.ancho_cm}</TableCell>
+                        <TableCell>{dimension.peso_volumetrico_kg.toFixed(2)}</TableCell>
                       </TableRow>
                     ))}
                   </TableBody>
@@ -402,12 +393,12 @@ export default function CotizacionDetalle() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {cotizacion.conceptos_venta.map((c, i) => (
-                <TableRow key={i}>
-                  <TableCell>{c.descripcion}</TableCell>
-                  <TableCell className="text-right">{c.cantidad}</TableCell>
-                  <TableCell className="text-right">{formatCurrency(c.precio_unitario, c.moneda || cotizacion.moneda)}</TableCell>
-                  <TableCell className="text-right">{formatCurrency(c.total, c.moneda || cotizacion.moneda)}</TableCell>
+              {cotizacion.conceptos_venta.map((concepto, indice) => (
+                <TableRow key={indice}>
+                  <TableCell>{concepto.descripcion}</TableCell>
+                  <TableCell className="text-right">{concepto.cantidad}</TableCell>
+                  <TableCell className="text-right">{formatCurrency(concepto.precio_unitario, concepto.moneda || cotizacion.moneda)}</TableCell>
+                  <TableCell className="text-right">{formatCurrency(concepto.total, concepto.moneda || cotizacion.moneda)}</TableCell>
                 </TableRow>
               ))}
               <TableRow className="font-semibold">

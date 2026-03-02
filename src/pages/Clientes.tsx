@@ -1,9 +1,10 @@
 import { useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { Search, Users, Plus, Check, Upload, ArrowLeft, ArrowRight, Loader2 } from "lucide-react";
+import { Users, Plus, Check, Upload, ArrowLeft, ArrowRight, Loader2 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import SearchInput from "@/components/SearchInput";
 import { Label } from "@/components/ui/label";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription,
@@ -104,10 +105,7 @@ export default function Clientes() {
 
       <Card>
         <CardContent className="p-4">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input placeholder="Buscar por nombre o RFC..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9" />
-          </div>
+          <SearchInput value={search} onChange={setSearch} placeholder="Buscar por nombre o RFC..." />
         </CardContent>
       </Card>
 

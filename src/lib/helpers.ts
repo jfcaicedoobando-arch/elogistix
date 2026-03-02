@@ -25,8 +25,23 @@ export const getEstadoColor = (estado: string): string => {
     'Recibido': 'bg-info/15 text-info',
     'Validado': 'bg-success/15 text-success',
     'Pagado': 'bg-success/15 text-success',
+    // Estados de cotización
+    'Enviada': 'bg-info/15 text-info',
+    'Aceptada': 'bg-warning/15 text-warning',
+    'Confirmada': 'bg-success/15 text-success',
+    'Rechazada': 'bg-destructive/15 text-destructive',
   };
   return colors[estado] || 'bg-muted text-muted-foreground';
+};
+
+export const resolverContacto = (
+  contactos: Array<{ id: string; nombre: string; tipo: string; pais: string }>,
+  valor: string,
+  valorManual: string
+): string => {
+  if (valor === '__otro__') return valorManual.trim();
+  const contacto = contactos.find(c => c.id === valor);
+  return contacto ? `${contacto.nombre} — ${contacto.tipo} (${contacto.pais})` : valor;
 };
 
 export const getModoIcon = (modo: string): string => {
