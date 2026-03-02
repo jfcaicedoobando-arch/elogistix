@@ -8,7 +8,7 @@ export interface ConceptoVentaLocal {
 
 export interface ConceptoCostoLocal {
   id: number;
-  proveedorId: string;
+  proveedor: string;
   concepto: string;
   monto: number;
   moneda: string;

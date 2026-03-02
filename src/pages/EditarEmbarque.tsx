@@ -9,7 +9,6 @@ import {
   useEmbarqueConceptosVenta,
   useEmbarqueConceptosCosto,
   useClientesForSelect,
-  useProveedoresForSelect,
   useUpdateEmbarque,
 } from "@/hooks/useEmbarques";
 import { useContactosCliente } from "@/hooks/useClientes";
@@ -37,7 +36,6 @@ export default function EditarEmbarque() {
   const { data: conceptosVentaDb = [], isLoading: cargandoVenta } = useEmbarqueConceptosVenta(id);
   const { data: conceptosCostoDb = [], isLoading: cargandoCosto } = useEmbarqueConceptosCosto(id);
   const { data: clientes = [] } = useClientesForSelect();
-  const { data: proveedoresDb = [] } = useProveedoresForSelect();
   const updateEmbarque = useUpdateEmbarque();
   const registrarActividad = useRegistrarActividad();
 
@@ -146,7 +144,7 @@ export default function EditarEmbarque() {
     if (!initialized || conceptosCostoDb.length === 0) return;
     inicializarCosto(conceptosCostoDb.map((conceptoCosto, indice) => ({
       id: indice + 1,
-      proveedorId: conceptoCosto.proveedor_id ?? '',
+      proveedor: conceptoCosto.proveedor_nombre ?? '',
       concepto: conceptoCosto.concepto,
       monto: Number(conceptoCosto.monto),
       moneda: conceptoCosto.moneda,
@@ -222,8 +220,8 @@ export default function EditarEmbarque() {
         conceptosCosto: conceptosCosto
           .filter(costo => costo.concepto)
           .map(costo => ({
-            proveedor_id: costo.proveedorId || null,
-            proveedor_nombre: proveedoresDb.find(proveedor => proveedor.id === costo.proveedorId)?.nombre || '',
+            proveedor_id: null,
+            proveedor_nombre: costo.proveedor,
             concepto: costo.concepto,
             monto: costo.monto,
             moneda: costo.moneda as any,
@@ -327,10 +325,8 @@ export default function EditarEmbarque() {
 
       {currentStep === 3 && (
         <StepCostosPrecios
-          modo={modo}
           conceptosVenta={conceptosVenta}
           conceptosCosto={conceptosCosto}
-          proveedoresDb={proveedoresDb}
           subtotalVenta={subtotalVenta}
           totalCosto={totalCosto}
           utilidadEstimada={utilidadEstimada}

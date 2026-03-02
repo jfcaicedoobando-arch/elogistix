@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { getDocsForMode, ESTADO_TIMELINE, CONCEPTOS_MARITIMOS } from "@/data/embarqueConstants";
+import { getDocsForMode, ESTADO_TIMELINE, CONCEPTOS_EMBARQUE } from "@/data/embarqueConstants";
 
 describe("getDocsForMode", () => {
   it("Marítimo incluye BL Master", () => {
@@ -26,8 +26,8 @@ describe("ESTADO_TIMELINE", () => {
   });
 });
 
-describe("CONCEPTOS_MARITIMOS", () => {
-  it("no está vacío", () => {
-    expect(CONCEPTOS_MARITIMOS.length).toBeGreaterThan(0);
+describe("CONCEPTOS_EMBARQUE", () => {
+  it("tiene 6 conceptos", () => {
+    expect(CONCEPTOS_EMBARQUE).toHaveLength(6);
   });
 });
