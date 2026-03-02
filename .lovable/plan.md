@@ -1,36 +1,33 @@
 
 
-## Diagnóstico: Campo "Total" no permite ingresar números
+## Plan: Hacer el campo Total editable — v3.13.5
 
-### Causa identificada
+### Problema
+El campo "Total" en cada fila de costos y venta es un `<span>` calculado automáticamente. El usuario necesita poder escribir el monto total directamente.
 
-El campo "Total" en ambas secciones (costos y venta) tiene el atributo `readOnly`, lo que impide la escritura. Esto es **intencional** porque el Total se calcula automáticamente:
+### Solución
+Reemplazar el `<span>` calculado por un `<Input type="number">` editable. Agregar un campo `total` a los tipos de datos. El total se auto-calcula cuando el usuario cambia Monto/Cantidad/PrecioUnitario/IVA, pero también se puede editar manualmente.
 
-- **Costos**: `monto + (aplicaIva ? monto * 0.16 : 0)`
-- **Venta**: `(cantidad * precioUnitario) + (aplicaIva ? cantidad * precioUnitario * 0.16 : 0)`
+### Cambios
 
-Línea 69:
-```tsx
-<Input readOnly value={`$${(costo.monto + (costo.aplicaIva ? costo.monto * 0.16 : 0)).toFixed(2)}`} className="text-sm bg-muted" />
-```
+#### 1. `src/data/conceptoTypes.ts`
+- Agregar `total: number` a `ConceptoVentaLocal` y `ConceptoCostoLocal`
 
-Línea 108:
-```tsx
-<Input readOnly value={`$${((venta.cantidad * venta.precioUnitario) + ...}).toFixed(2)}`} className="text-sm bg-muted" />
-```
+#### 2. `src/hooks/useConceptosForm.ts`
+- Inicializar `total: 0` en ambos tipos
+- En las funciones `updateConceptoVenta` y `updateConceptoCosto`: cuando cambian `monto`, `cantidad`, `precioUnitario` o `aplicaIva`, auto-recalcular `total`. Cuando cambia `total` directamente, usar el valor ingresado
+- Los sumarios de sección (subtotal, IVA, totalConIva) se calculan a partir de los `total` almacenados por fila
 
-### Corrección propuesta
+#### 3. `src/components/embarque/StepCostosPrecios.tsx`
+- Línea 69: reemplazar `<span>` por `<Input type="number">` vinculado al campo `total` de cada fila
+- Línea 108: mismo cambio para venta
 
-Reemplazar los `<Input readOnly>` por un `<span>` con estilo similar, para que visualmente sea claro que es un valor calculado y no un campo editable. Esto elimina la confusión de ver un input que no responde.
-
-#### Archivo: `src/components/embarque/StepCostosPrecios.tsx`
-- Línea 69: cambiar `<Input readOnly ...>` por `<span className="text-sm bg-muted rounded-md border px-3 py-2 flex items-center">$...</span>`
-- Línea 108: mismo cambio para la sección de venta
-
-#### Archivo: `src/pages/Changelog.tsx`
-- Entrada v3.13.4
+#### 4. `src/pages/Changelog.tsx`
+- Entrada v3.13.5
 
 ### Archivos a modificar
+- `src/data/conceptoTypes.ts`
+- `src/hooks/useConceptosForm.ts`
 - `src/components/embarque/StepCostosPrecios.tsx`
 - `src/pages/Changelog.tsx`
 
