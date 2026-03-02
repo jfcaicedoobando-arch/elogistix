@@ -39,6 +39,8 @@ export interface CotizacionRow {
   estado: string;
   embarque_id: string | null;
   operador: string;
+  tipo_carga: string;
+  msds_archivo: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -115,6 +117,8 @@ interface CreateCotizacionInput {
   vigencia_dias: number;
   notas: string;
   operador: string;
+  tipo_carga?: string;
+  msds_archivo?: string | null;
 }
 
 export function useCreateCotizacion() {
@@ -152,6 +156,8 @@ export function useCreateCotizacion() {
           fecha_vigencia: fechaVigencia.toISOString().split('T')[0],
           notas: input.notas || null,
           operador: input.operador,
+          tipo_carga: input.tipo_carga || 'Carga General',
+          msds_archivo: input.msds_archivo || null,
         } as any)
         .select()
         .single();
