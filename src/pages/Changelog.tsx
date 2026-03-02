@@ -13,6 +13,14 @@ interface ChangelogEntry {
 
 const changelog: ChangelogEntry[] = [
   {
+    version: "3.13.2",
+    date: "2026-03-02",
+    type: "patch",
+    title: "Reorden de secciones en Costos y Pricing",
+    description:
+      "Se reorganizó el paso 4 del wizard de embarques para mostrar primero 'Conceptos de Costo' y después 'Conceptos de Venta'. Sin cambios en campos, columnas ni lógica.",
+  },
+  {
     version: "3.13.1",
     date: "2026-03-02",
     type: "patch",
