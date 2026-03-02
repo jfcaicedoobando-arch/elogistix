@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react";
-import { Search } from "lucide-react";
+import SearchInput from "@/components/SearchInput";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -59,10 +59,7 @@ export default function Facturacion() {
         <TabsContent value="facturas" className="space-y-4">
           <Card>
             <CardContent className="p-4 flex flex-wrap gap-3">
-              <div className="relative flex-1 min-w-[200px]">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input placeholder="Buscar factura o cliente..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9" />
-              </div>
+              <SearchInput value={search} onChange={setSearch} placeholder="Buscar factura o cliente..." className="flex-1 min-w-[200px]" />
               <Select value={filterEstado} onValueChange={setFilterEstado}>
                 <SelectTrigger className="w-[160px]"><SelectValue /></SelectTrigger>
                 <SelectContent>

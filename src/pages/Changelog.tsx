@@ -13,6 +13,14 @@ interface ChangelogEntry {
 
 const changelog: ChangelogEntry[] = [
   {
+    version: "3.13.0",
+    date: "2026-03-02",
+    type: "minor",
+    title: "Refactorización integral del código",
+    description:
+      "Consolidación de utilidades duplicadas: getEstadoColor unificado para todos los estados (embarque, cotización, factura), resolverContacto centralizado, interfaces ConceptoVentaLocal/ConceptoCostoLocal extraídas a conceptoTypes.ts, hook useConceptosForm reutilizable. Componentes SearchInput y PaginationControls extraídos y usados en 5+ páginas. Eliminación de ~20 casts 'as any' en CotizacionDetalle, código muerto de validaciones y variables abreviadas renombradas.",
+  },
+  {
     version: "3.12.5",
     date: "2026-03-02",
     type: "patch",

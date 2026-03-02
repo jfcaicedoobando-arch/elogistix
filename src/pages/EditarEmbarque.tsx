@@ -15,19 +15,18 @@ import {
 import { useContactosCliente } from "@/hooks/useClientes";
 import { useAuth } from "@/contexts/AuthContext";
 import { useRegistrarActividad } from "@/hooks/useBitacora";
+import { useConceptosForm } from "@/hooks/useConceptosForm";
 import { StepIndicator } from "@/components/embarque/StepIndicator";
 import { StepDatosGenerales } from "@/components/embarque/StepDatosGenerales";
 import { StepDatosRuta } from "@/components/embarque/StepDatosRuta";
 import { StepCostosPrecios } from "@/components/embarque/StepCostosPrecios";
 
+const TOTAL_STEPS = 3;
 const steps = [
   { title: 'Datos Generales', num: 1 },
   { title: 'Datos de Ruta', num: 2 },
   { title: 'Costos y Pricing', num: 3 },
 ];
-
-interface ConceptoVentaLocal { id: number; concepto: string; cantidad: number; precioUnitario: number; moneda: string; }
-interface ConceptoCostoLocal { id: number; proveedorId: string; concepto: string; monto: number; moneda: string; }
 
 export default function EditarEmbarque() {
   const { id } = useParams();
@@ -77,12 +76,15 @@ export default function EditarEmbarque() {
   const [tipoCambioUSD, setTipoCambioUSD] = useState('17.25');
   const [tipoCambioEUR, setTipoCambioEUR] = useState('18.50');
 
-  const [conceptosVenta, setConceptosVenta] = useState<ConceptoVentaLocal[]>([]);
-  const [conceptosCosto, setConceptosCosto] = useState<ConceptoCostoLocal[]>([]);
-  const [nextVentaId, setNextVentaId] = useState(1);
-  const [nextCostoId, setNextCostoId] = useState(1);
-
   const { data: contactos = [] } = useContactosCliente(clienteId || undefined);
+
+  const {
+    conceptosVenta, conceptosCosto,
+    updateConceptoVenta, addConceptoVenta, removeConceptoVenta,
+    updateConceptoCosto, addConceptoCosto, removeConceptoCosto,
+    subtotalVenta, totalCosto, utilidadEstimada,
+    inicializarVenta, inicializarCosto,
+  } = useConceptosForm();
 
   // Pre-llenar con datos existentes
   useEffect(() => {
@@ -124,59 +126,28 @@ export default function EditarEmbarque() {
   // Pre-llenar conceptos de venta
   useEffect(() => {
     if (!initialized || conceptosVentaDb.length === 0) return;
-    const mapped = conceptosVentaDb.map((cv, i) => ({
-      id: i + 1,
-      concepto: cv.descripcion,
-      cantidad: cv.cantidad,
-      precioUnitario: Number(cv.precio_unitario),
-      moneda: cv.moneda,
-    }));
-    setConceptosVenta(mapped);
-    setNextVentaId(mapped.length + 1);
+    inicializarVenta(conceptosVentaDb.map((conceptoVenta, indice) => ({
+      id: indice + 1,
+      concepto: conceptoVenta.descripcion,
+      cantidad: conceptoVenta.cantidad,
+      precioUnitario: Number(conceptoVenta.precio_unitario),
+      moneda: conceptoVenta.moneda,
+    })));
   }, [conceptosVentaDb, initialized]);
 
   // Pre-llenar conceptos de costo
   useEffect(() => {
     if (!initialized || conceptosCostoDb.length === 0) return;
-    const mapped = conceptosCostoDb.map((cc, i) => ({
-      id: i + 1,
-      proveedorId: cc.proveedor_id ?? '',
-      concepto: cc.concepto,
-      monto: Number(cc.monto),
-      moneda: cc.moneda,
-    }));
-    setConceptosCosto(mapped);
-    setNextCostoId(mapped.length + 1);
+    inicializarCosto(conceptosCostoDb.map((conceptoCosto, indice) => ({
+      id: indice + 1,
+      proveedorId: conceptoCosto.proveedor_id ?? '',
+      concepto: conceptoCosto.concepto,
+      monto: Number(conceptoCosto.monto),
+      moneda: conceptoCosto.moneda,
+    })));
   }, [conceptosCostoDb, initialized]);
 
-  const updateConceptoVenta = (id: number, field: keyof ConceptoVentaLocal, value: string | number) => {
-    setConceptosVenta(prev => prev.map(c => c.id === id ? { ...c, [field]: value } : c));
-  };
-  const addConceptoVenta = () => {
-    setConceptosVenta(prev => [...prev, { id: nextVentaId, concepto: '', cantidad: 1, precioUnitario: 0, moneda: 'MXN' }]);
-    setNextVentaId(n => n + 1);
-  };
-  const removeConceptoVenta = (id: number) => setConceptosVenta(prev => prev.filter(c => c.id !== id));
-  const updateConceptoCosto = (id: number, field: keyof ConceptoCostoLocal, value: string | number) => {
-    setConceptosCosto(prev => prev.map(c => c.id === id ? { ...c, [field]: value } : c));
-  };
-  const addConceptoCosto = () => {
-    setConceptosCosto(prev => [...prev, { id: nextCostoId, proveedorId: '', concepto: '', monto: 0, moneda: 'MXN' }]);
-    setNextCostoId(n => n + 1);
-  };
-  const removeConceptoCosto = (id: number) => setConceptosCosto(prev => prev.filter(c => c.id !== id));
-
-  const subtotalVenta = conceptosVenta.reduce((acc, c) => acc + (c.cantidad * c.precioUnitario), 0);
-  const totalCosto = conceptosCosto.reduce((acc, c) => acc + c.monto, 0);
-  const utilidadEstimada = subtotalVenta - totalCosto;
-
-  const selectedCliente = clientes.find(c => c.id === clienteId);
-
-  const isStep1Valid = () => modo && tipo && clienteId && incoterm && shipper && consignatario && descripcionMercancia.trim() && pesoKg && volumenM3 && piezas;
-  const isStep2Valid = () => {
-    if (modo === 'Marítimo') return puertoOrigen && puertoDestino && naviera && tipoServicio && contenedor && tipoContenedor && etd && eta;
-    return etd && eta;
-  };
+  const selectedCliente = clientes.find(cliente => cliente.id === clienteId);
 
   const handleSave = async () => {
     if (!id || !embarque) return;
@@ -219,22 +190,22 @@ export default function EditarEmbarque() {
           operador: user?.email || '',
         },
         conceptosVenta: conceptosVenta
-          .filter(v => v.concepto)
-          .map(v => ({
-            descripcion: v.concepto,
-            cantidad: v.cantidad,
-            precio_unitario: v.precioUnitario,
-            moneda: v.moneda as any,
-            total: v.cantidad * v.precioUnitario,
+          .filter(venta => venta.concepto)
+          .map(venta => ({
+            descripcion: venta.concepto,
+            cantidad: venta.cantidad,
+            precio_unitario: venta.precioUnitario,
+            moneda: venta.moneda as any,
+            total: venta.cantidad * venta.precioUnitario,
           })),
         conceptosCosto: conceptosCosto
-          .filter(c => c.concepto)
-          .map(c => ({
-            proveedor_id: c.proveedorId || null,
-            proveedor_nombre: proveedoresDb.find(p => p.id === c.proveedorId)?.nombre || '',
-            concepto: c.concepto,
-            monto: c.monto,
-            moneda: c.moneda as any,
+          .filter(costo => costo.concepto)
+          .map(costo => ({
+            proveedor_id: costo.proveedorId || null,
+            proveedor_nombre: proveedoresDb.find(proveedor => proveedor.id === costo.proveedorId)?.nombre || '',
+            concepto: costo.concepto,
+            monto: costo.monto,
+            moneda: costo.moneda as any,
           })),
       });
 
@@ -271,8 +242,6 @@ export default function EditarEmbarque() {
       </div>
     );
   }
-
-  const totalSteps = 3;
 
   return (
     <div className="space-y-6 max-w-4xl mx-auto">
@@ -353,20 +322,20 @@ export default function EditarEmbarque() {
       )}
 
       <div className="flex justify-between">
-        <Button variant="outline" onClick={() => currentStep > 1 ? setCurrentStep(p => p - 1) : navigate(`/embarques/${id}`)}>
+        <Button variant="outline" onClick={() => currentStep > 1 ? setCurrentStep(paso => paso - 1) : navigate(`/embarques/${id}`)}>
           {currentStep === 1 ? 'Cancelar' : 'Anterior'}
         </Button>
         <Button
-          disabled={(currentStep === 1 && !isStep1Valid()) || (currentStep === 2 && !isStep2Valid()) || updateEmbarque.isPending}
+          disabled={updateEmbarque.isPending}
           onClick={() => {
-            if (currentStep < totalSteps) {
-              setCurrentStep(p => p + 1);
+            if (currentStep < TOTAL_STEPS) {
+              setCurrentStep(paso => paso + 1);
             } else {
               handleSave();
             }
           }}
         >
-          {updateEmbarque.isPending ? 'Guardando...' : currentStep === totalSteps ? 'Guardar Cambios' : 'Siguiente'}
+          {updateEmbarque.isPending ? 'Guardando...' : currentStep === TOTAL_STEPS ? 'Guardar Cambios' : 'Siguiente'}
         </Button>
       </div>
     </div>

@@ -13,6 +13,8 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useExchangeRates } from "@/hooks/useExchangeRates";
 import { useRegistrarActividad } from "@/hooks/useBitacora";
 import { getDocsForMode } from "@/data/embarqueConstants";
+import { resolverContacto } from "@/lib/helpers";
+import { useConceptosForm } from "@/hooks/useConceptosForm";
 import { StepIndicator } from "@/components/embarque/StepIndicator";
 import { StepDatosGenerales } from "@/components/embarque/StepDatosGenerales";
 import { StepDatosRuta } from "@/components/embarque/StepDatosRuta";
@@ -79,53 +81,16 @@ export default function NuevoEmbarque() {
 
   const { data: contactos = [] } = useContactosCliente(clienteId || undefined);
 
-  interface ConceptoVentaLocal { id: number; concepto: string; cantidad: number; precioUnitario: number; moneda: string; }
-  interface ConceptoCostoLocal { id: number; proveedorId: string; concepto: string; monto: number; moneda: string; }
-  const [conceptosVenta, setConceptosVenta] = useState<ConceptoVentaLocal[]>([
-    { id: 1, concepto: '', cantidad: 1, precioUnitario: 0, moneda: 'MXN' },
-  ]);
-  const [conceptosCosto, setConceptosCosto] = useState<ConceptoCostoLocal[]>([
-    { id: 1, proveedorId: '', concepto: '', monto: 0, moneda: 'MXN' },
-  ]);
-  const [nextVentaId, setNextVentaId] = useState(2);
-  const [nextCostoId, setNextCostoId] = useState(2);
-
-  const updateConceptoVenta = (id: number, field: keyof ConceptoVentaLocal, value: string | number) => {
-    setConceptosVenta(prev => prev.map(concepto => concepto.id === id ? { ...concepto, [field]: value } : concepto));
-  };
-  const addConceptoVenta = () => {
-    setConceptosVenta(prev => [...prev, { id: nextVentaId, concepto: '', cantidad: 1, precioUnitario: 0, moneda: 'MXN' }]);
-    setNextVentaId(contadorActual => contadorActual + 1);
-  };
-  const removeConceptoVenta = (id: number) => setConceptosVenta(prev => prev.filter(concepto => concepto.id !== id));
-  const updateConceptoCosto = (id: number, field: keyof ConceptoCostoLocal, value: string | number) => {
-    setConceptosCosto(prev => prev.map(concepto => concepto.id === id ? { ...concepto, [field]: value } : concepto));
-  };
-  const addConceptoCosto = () => {
-    setConceptosCosto(prev => [...prev, { id: nextCostoId, proveedorId: '', concepto: '', monto: 0, moneda: 'MXN' }]);
-    setNextCostoId(contadorActual => contadorActual + 1);
-  };
-  const removeConceptoCosto = (id: number) => setConceptosCosto(prev => prev.filter(concepto => concepto.id !== id));
-
-  const subtotalVenta = conceptosVenta.reduce((acc, concepto) => acc + (concepto.cantidad * concepto.precioUnitario), 0);
-  const totalCosto = conceptosCosto.reduce((acc, concepto) => acc + concepto.monto, 0);
-  const utilidadEstimada = subtotalVenta - totalCosto;
+  const {
+    conceptosVenta, conceptosCosto,
+    updateConceptoVenta, addConceptoVenta, removeConceptoVenta,
+    updateConceptoCosto, addConceptoCosto, removeConceptoCosto,
+    subtotalVenta, totalCosto, utilidadEstimada,
+  } = useConceptosForm();
 
   const selectedCliente = clientes.find(cliente => cliente.id === clienteId);
 
-  const resolveShipper = () => {
-    if (shipper === '__otro__') return shipperManual.trim();
-    const contacto = contactos.find(contactoItem => contactoItem.id === shipper);
-    return contacto ? `${contacto.nombre} — ${contacto.tipo} (${contacto.pais})` : shipper;
-  };
-  const resolveConsignatario = () => {
-    if (consignatario === '__otro__') return consignatarioManual.trim();
-    const contacto = contactos.find(contactoItem => contactoItem.id === consignatario);
-    return contacto ? `${contacto.nombre} — ${contacto.tipo} (${contacto.pais})` : consignatario;
-  };
-
   const isStep1Valid = () => true;
-
   const isStep2Valid = () => true;
 
   const generateExpediente = () => {
@@ -146,8 +111,8 @@ export default function NuevoEmbarque() {
           cliente_nombre: selectedCliente?.nombre || '',
           modo: modo as any,
           tipo: tipo as any,
-          shipper: resolveShipper(),
-          consignatario: resolveConsignatario(),
+          shipper: resolverContacto(contactos, shipper, shipperManual),
+          consignatario: resolverContacto(contactos, consignatario, consignatarioManual),
           incoterm: incoterm as any,
           descripcion_mercancia: descripcionMercancia,
           peso_kg: Number(pesoKg),
@@ -295,14 +260,6 @@ export default function NuevoEmbarque() {
         <Button
           disabled={createEmbarque.isPending}
           onClick={() => {
-            if (currentStep === 1 && !isStep1Valid()) {
-              toast({ title: "Campos incompletos", description: "Completa todos los campos obligatorios (*) antes de continuar.", variant: "destructive" });
-              return;
-            }
-            if (currentStep === 2 && !isStep2Valid()) {
-              toast({ title: "Campos incompletos", description: "Completa todos los campos obligatorios (*) de la ruta antes de continuar.", variant: "destructive" });
-              return;
-            }
             currentStep < 4 ? setCurrentStep(pasoActual => pasoActual + 1) : handleFinish();
           }}
         >

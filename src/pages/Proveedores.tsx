@@ -1,9 +1,10 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Search, Truck, Plus } from "lucide-react";
+import { Truck, Plus } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import SearchInput from "@/components/SearchInput";
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
@@ -107,10 +108,7 @@ export default function Proveedores() {
 
       <Card>
         <CardContent className="p-4">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input placeholder="Buscar proveedor..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9" />
-          </div>
+          <SearchInput value={search} onChange={setSearch} placeholder="Buscar proveedor..." />
         </CardContent>
       </Card>
 
