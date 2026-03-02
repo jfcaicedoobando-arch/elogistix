@@ -1,51 +1,48 @@
 
 
-## Plan: Editar embarques existentes — v3.4.0
+## Plan: 4 mejoras operativas — v3.5.0
 
-### Enfoque
+### 1. Cambio de estado del embarque desde EmbarqueDetalle
 
-Crear una nueva pagina `EditarEmbarque` que reutilice los mismos componentes del wizard (`StepDatosGenerales`, `StepDatosRuta`, `StepCostosPrecios`) pero pre-cargados con los datos existentes del embarque. El boton "Editar" en `EmbarqueDetalle` navegara a `/embarques/:id/editar`.
+El flujo de estados en la base de datos es: **Cotización → Confirmado → En Tránsito → Llegada → En Proceso → Cerrado** (6 estados ya definidos en el enum `estado_embarque`). Se usará este flujo existente en lugar de los 5 estados mencionados, ya que cambiar el enum requeriría migración y rompería datos existentes.
 
-### Cambios
+**Cambios:**
+- `src/hooks/useEmbarques.ts` — nueva mutación `useAvanzarEstadoEmbarque` que hace `.update({ estado })` en la tabla `embarques` e inserta una nota tipo `cambio_estado` en `notas_embarque`
+- `src/pages/EmbarqueDetalle.tsx` — agregar botón "Avanzar a [siguiente estado]" visible solo si `canEdit` y el estado no es "Cerrado". Al hacer clic, muestra `AlertDialog` de confirmación. Al confirmar, ejecuta la mutación y registra en bitácora
+- `src/data/embarqueConstants.ts` — ya tiene `ESTADO_TIMELINE`, se reutiliza directamente
 
-**1. Hook `useEmbarques.ts` — agregar mutacion `useUpdateEmbarque`**
-- Recibe el id del embarque y los campos a actualizar
-- Actualiza la tabla `embarques` con `.update()`
-- Tambien sincroniza `conceptos_venta` y `conceptos_costo`: elimina los existentes y re-inserta los nuevos (estrategia replace)
-- Invalida queries al completar
+### 2. Editar datos del cliente desde ClienteDetalle
 
-**2. Nueva pagina `src/pages/EditarEmbarque.tsx`**
-- Carga el embarque existente con `useEmbarque(id)`, conceptos venta/costo con los hooks existentes
-- Pre-llena todo el state local con los valores del embarque (mismo patron que `NuevoEmbarque` pero con `useEffect` para inicializar)
-- Reutiliza `StepDatosGenerales`, `StepDatosRuta`, `StepCostosPrecios` tal cual
-- Wizard de 3 pasos (sin Documentos, ya que esos se gestionan en el detalle)
-- Boton final dice "Guardar Cambios"
-- Registra actividad en bitacora con accion `editar` y detalles de campos modificados
+**Cambios:**
+- `src/hooks/useClientes.ts` — nueva mutación `useUpdateCliente` con `.update()` sobre tabla `clientes`
+- `src/pages/ClienteDetalle.tsx` — agregar botón "Editar" al lado del nombre del cliente (visible si `canEdit`). Abre un `Dialog` con formulario pre-llenado con todos los campos (nombre, RFC, dirección, ciudad, estado, CP, contacto, email, teléfono). Al guardar, ejecuta mutación y registra en bitácora
 
-**3. Ruta en `App.tsx`**
-- Agregar `<Route path="/embarques/:id/editar" element={<EditarEmbarque />} />`
+### 3. Confirmación doble antes de eliminar contactos
 
-**4. Boton Editar en `EmbarqueDetalle.tsx`**
-- Conectar el boton existente para navegar a `/embarques/${id}/editar`
+**Cambios:**
+- `src/pages/ClienteDetalle.tsx` — reemplazar el `handleDelete` directo por un flujo de dos pasos:
+  1. Primer `AlertDialog`: "¿Estás seguro de eliminar este contacto?"
+  2. Segundo `AlertDialog`: "Esta acción no se puede deshacer. ¿Confirmas la eliminación?"
+  Solo si confirma ambos se ejecuta `deleteContacto.mutateAsync`
 
-**5. Changelog**
-- Nueva entrada v3.4.0
+### 4. Agregar notas desde el detalle del embarque
 
-### Detalle tecnico de la sincronizacion de conceptos
+**Cambios:**
+- `src/hooks/useEmbarques.ts` — nueva mutación `useCreateNotaEmbarque` que inserta en `notas_embarque` con tipo `nota`, usuario del contexto auth y timestamp
+- `src/components/embarque/TabNotas.tsx` — agregar un formulario con `Textarea` + botón "Agregar Nota" arriba de la lista de notas. Al enviar, ejecuta la mutación y registra en bitácora
 
-En lugar de hacer diff fila por fila, la mutacion:
-1. Hace `DELETE FROM conceptos_venta WHERE embarque_id = X`
-2. Hace `DELETE FROM conceptos_costo WHERE embarque_id = X`
-3. Re-inserta los conceptos actuales
+### 5. Changelog
 
-Esto simplifica la logica y evita bugs de sincronizacion, ya que los conceptos no tienen relaciones secundarias.
-
-### Archivos nuevos
-- `src/pages/EditarEmbarque.tsx`
+- Nueva entrada v3.5.0 en `src/pages/Changelog.tsx`
 
 ### Archivos modificados
-- `src/hooks/useEmbarques.ts` — nueva mutacion `useUpdateEmbarque`
-- `src/App.tsx` — nueva ruta
-- `src/pages/EmbarqueDetalle.tsx` — conectar boton Editar
-- `src/pages/Changelog.tsx` — entrada v3.4.0
+- `src/hooks/useEmbarques.ts` — 2 mutaciones nuevas
+- `src/hooks/useClientes.ts` — 1 mutación nueva
+- `src/pages/EmbarqueDetalle.tsx` — botón avanzar estado con AlertDialog
+- `src/pages/ClienteDetalle.tsx` — botón editar cliente + confirmación doble eliminar contacto
+- `src/components/embarque/TabNotas.tsx` — formulario crear notas
+- `src/pages/Changelog.tsx` — entrada v3.5.0
+
+### Nota sobre estados
+El usuario pidió "En Destino" y "Entregado" pero la base de datos tiene "Llegada", "En Proceso" y "Cerrado". Se usarán los estados existentes para no requerir migración de esquema ni romper datos. Si se desea cambiar los nombres, se haría en una migración separada.
 
