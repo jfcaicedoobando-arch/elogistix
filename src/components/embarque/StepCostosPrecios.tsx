@@ -48,7 +48,7 @@ export function StepCostosPrecios(props: Props) {
         <CardContent>
           <div className="space-y-3">
             <div className="grid grid-cols-[1fr_1fr_100px_90px_100px_40px] gap-2 text-xs font-medium text-muted-foreground">
-              <span>Proveedor</span><span>Concepto</span><span>Monto</span><span>Moneda</span><span>Total</span><span></span>
+              <span>Proveedor</span><span>Concepto</span><span>Monto</span><span>Moneda</span><span>Subtotal (Sin IVA)</span><span></span>
             </div>
             {conceptosCosto.map(costo => {
               const totalFila = costo.iva ? costo.monto * 1.16 : costo.monto;
@@ -86,7 +86,7 @@ export function StepCostosPrecios(props: Props) {
         <CardContent>
           <div className="space-y-3">
             <div className="grid grid-cols-[1fr_80px_100px_90px_100px_40px] gap-2 text-xs font-medium text-muted-foreground">
-              <span>Concepto</span><span>Cantidad</span><span>P. Unitario</span><span>Moneda</span><span>Total</span><span></span>
+              <span>Concepto</span><span>Cantidad</span><span>P. Unitario</span><span>Moneda</span><span>Subtotal (Sin IVA)</span><span></span>
             </div>
             {conceptosVenta.map(venta => {
               const base = venta.cantidad * venta.precioUnitario;
