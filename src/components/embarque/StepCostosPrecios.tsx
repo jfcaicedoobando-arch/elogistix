@@ -1,6 +1,7 @@
 import { Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { CATALOGO_CONCEPTOS } from "@/data/embarqueConstants";
@@ -27,7 +28,7 @@ interface Props {
   updateConceptoVenta: (id: number, field: keyof ConceptoVentaRow, value: string | number) => void;
   addConceptoVenta: () => void;
   removeConceptoVenta: (id: number) => void;
-  updateConceptoCosto: (id: number, field: keyof ConceptoCostoRow, value: string | number) => void;
+  updateConceptoCosto: (id: number, field: keyof ConceptoCostoRow, value: string | number | boolean) => void;
   addConceptoCosto: () => void;
   removeConceptoCosto: (id: number) => void;
 }
@@ -47,30 +48,36 @@ export function StepCostosPrecios(props: Props) {
         <CardHeader><CardTitle className="text-sm">Conceptos de Costo</CardTitle></CardHeader>
         <CardContent>
           <div className="space-y-3">
-            <div className="grid grid-cols-[1fr_1fr_100px_90px_100px_40px] gap-2 text-xs font-medium text-muted-foreground">
-              <span>Proveedor</span><span>Concepto</span><span>Monto</span><span>Moneda</span><span>Total</span><span></span>
+            <div className="grid grid-cols-[1fr_1fr_100px_90px_50px_100px_40px] gap-2 text-xs font-medium text-muted-foreground">
+              <span>Proveedor</span><span>Concepto</span><span>Monto</span><span>Moneda</span><span>IVA</span><span>Total</span><span></span>
             </div>
-            {conceptosCosto.map(costo => (
-              <div key={costo.id} className="grid grid-cols-[1fr_1fr_100px_90px_100px_40px] gap-2 items-center">
-                <Select value={costo.proveedorId} onValueChange={valorSeleccionado => updateConceptoCosto(costo.id, 'proveedorId', valorSeleccionado)}>
-                  <SelectTrigger className="text-sm"><SelectValue placeholder="Proveedor" /></SelectTrigger>
-                  <SelectContent>{proveedoresDb.map(proveedor => <SelectItem key={proveedor.id} value={proveedor.id}>{proveedor.nombre.split(' ').slice(0, 2).join(' ')}</SelectItem>)}</SelectContent>
-                </Select>
-                <Select value={costo.concepto} onValueChange={valorSeleccionado => updateConceptoCosto(costo.id, 'concepto', valorSeleccionado)}>
-                  <SelectTrigger className="text-sm"><SelectValue placeholder="Seleccionar" /></SelectTrigger>
-                  <SelectContent>{CATALOGO_CONCEPTOS.map(concepto => <SelectItem key={concepto} value={concepto}>{concepto}</SelectItem>)}</SelectContent>
-                </Select>
-                <Input type="number" min={0} step="0.01" className="text-sm" value={costo.monto || ''} onChange={e => updateConceptoCosto(costo.id, 'monto', Number(e.target.value))} />
-                <Select value={costo.moneda} onValueChange={valorSeleccionado => updateConceptoCosto(costo.id, 'moneda', valorSeleccionado)}>
-                  <SelectTrigger className="text-sm"><SelectValue /></SelectTrigger>
-                  <SelectContent><SelectItem value="MXN">MXN</SelectItem><SelectItem value="USD">USD</SelectItem><SelectItem value="EUR">EUR</SelectItem></SelectContent>
-                </Select>
-                <Input readOnly value={`$${costo.monto.toFixed(2)}`} className="text-sm bg-muted" />
-                <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => removeConceptoCosto(costo.id)} disabled={conceptosCosto.length <= 1}>
-                  <Trash2 className="h-4 w-4 text-destructive" />
-                </Button>
-              </div>
-            ))}
+            {conceptosCosto.map(costo => {
+              const totalFila = costo.iva ? costo.monto * 1.16 : costo.monto;
+              return (
+                <div key={costo.id} className="grid grid-cols-[1fr_1fr_100px_90px_50px_100px_40px] gap-2 items-center">
+                  <Select value={costo.proveedorId} onValueChange={v => updateConceptoCosto(costo.id, 'proveedorId', v)}>
+                    <SelectTrigger className="text-sm"><SelectValue placeholder="Proveedor" /></SelectTrigger>
+                    <SelectContent>{proveedoresDb.map(p => <SelectItem key={p.id} value={p.id}>{p.nombre.split(' ').slice(0, 2).join(' ')}</SelectItem>)}</SelectContent>
+                  </Select>
+                  <Select value={costo.concepto} onValueChange={v => updateConceptoCosto(costo.id, 'concepto', v)}>
+                    <SelectTrigger className="text-sm"><SelectValue placeholder="Seleccionar" /></SelectTrigger>
+                    <SelectContent>{CATALOGO_CONCEPTOS.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}</SelectContent>
+                  </Select>
+                  <Input type="number" min={0} step="0.01" className="text-sm" value={costo.monto || ''} onChange={e => updateConceptoCosto(costo.id, 'monto', Number(e.target.value))} />
+                  <Select value={costo.moneda} onValueChange={v => updateConceptoCosto(costo.id, 'moneda', v)}>
+                    <SelectTrigger className="text-sm"><SelectValue /></SelectTrigger>
+                    <SelectContent><SelectItem value="MXN">MXN</SelectItem><SelectItem value="USD">USD</SelectItem><SelectItem value="EUR">EUR</SelectItem></SelectContent>
+                  </Select>
+                  <div className="flex justify-center">
+                    <Checkbox checked={costo.iva} onCheckedChange={checked => updateConceptoCosto(costo.id, 'iva', !!checked)} />
+                  </div>
+                  <Input readOnly value={`$${totalFila.toFixed(2)}`} className="text-sm bg-muted" />
+                  <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => removeConceptoCosto(costo.id)} disabled={conceptosCosto.length <= 1}>
+                    <Trash2 className="h-4 w-4 text-destructive" />
+                  </Button>
+                </div>
+              );
+            })}
             <Button variant="outline" size="sm" onClick={addConceptoCosto}>+ Agregar costo</Button>
           </div>
         </CardContent>

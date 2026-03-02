@@ -11,7 +11,7 @@ export function useConceptosForm(opciones: UseConceptosFormOptions = {}) {
     opciones.ventaInicial ?? [{ id: 1, concepto: '', cantidad: 1, precioUnitario: 0, moneda: 'MXN' }]
   );
   const [conceptosCosto, setConceptosCosto] = useState<ConceptoCostoLocal[]>(
-    opciones.costoInicial ?? [{ id: 1, proveedorId: '', concepto: '', monto: 0, moneda: 'MXN' }]
+    opciones.costoInicial ?? [{ id: 1, proveedorId: '', concepto: '', monto: 0, moneda: 'MXN', iva: false }]
   );
   const [nextVentaId, setNextVentaId] = useState(
     (opciones.ventaInicial?.length ?? 1) + 1
@@ -33,12 +33,12 @@ export function useConceptosForm(opciones: UseConceptosFormOptions = {}) {
     setConceptosVenta(prev => prev.filter(c => c.id !== id));
   };
 
-  const updateConceptoCosto = (id: number, field: keyof ConceptoCostoLocal, value: string | number) => {
-    setConceptosCosto(prev => prev.map(c => c.id === id ? { ...c, [field]: value } : c));
+  const updateConceptoCosto = (id: number, field: keyof ConceptoCostoLocal, value: string | number | boolean) => {
+    setConceptosCosto(prev => prev.map(c => c.id === id ? { ...c, [field]: field === 'iva' ? Boolean(value) : value } : c));
   };
 
   const addConceptoCosto = () => {
-    setConceptosCosto(prev => [...prev, { id: nextCostoId, proveedorId: '', concepto: '', monto: 0, moneda: 'MXN' }]);
+    setConceptosCosto(prev => [...prev, { id: nextCostoId, proveedorId: '', concepto: '', monto: 0, moneda: 'MXN', iva: false }]);
     setNextCostoId(n => n + 1);
   };
 
@@ -47,7 +47,7 @@ export function useConceptosForm(opciones: UseConceptosFormOptions = {}) {
   };
 
   const subtotalVenta = conceptosVenta.reduce((acc, c) => acc + (c.cantidad * c.precioUnitario), 0);
-  const totalCosto = conceptosCosto.reduce((acc, c) => acc + c.monto, 0);
+  const totalCosto = conceptosCosto.reduce((acc, c) => acc + (c.iva ? c.monto * 1.16 : c.monto), 0);
   const utilidadEstimada = subtotalVenta - totalCosto;
 
   /** Reemplaza los conceptos de venta (útil para pre-llenado en edición) */
