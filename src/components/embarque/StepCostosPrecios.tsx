@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { CONCEPTOS_MARITIMOS } from "@/data/embarqueConstants";
+import { CATALOGO_CONCEPTOS } from "@/data/embarqueConstants";
 
 import type { ConceptoVentaLocal as ConceptoVentaRow, ConceptoCostoLocal as ConceptoCostoRow } from "@/data/conceptoTypes";
 
@@ -56,14 +56,10 @@ export function StepCostosPrecios(props: Props) {
                   <SelectTrigger className="text-sm"><SelectValue placeholder="Proveedor" /></SelectTrigger>
                   <SelectContent>{proveedoresDb.map(proveedor => <SelectItem key={proveedor.id} value={proveedor.id}>{proveedor.nombre.split(' ').slice(0, 2).join(' ')}</SelectItem>)}</SelectContent>
                 </Select>
-                {modo === 'Marítimo' ? (
-                  <Select value={costo.concepto} onValueChange={valorSeleccionado => updateConceptoCosto(costo.id, 'concepto', valorSeleccionado)}>
-                    <SelectTrigger className="text-sm"><SelectValue placeholder="Seleccionar" /></SelectTrigger>
-                    <SelectContent>{CONCEPTOS_MARITIMOS.map(conceptoMaritimo => <SelectItem key={conceptoMaritimo} value={conceptoMaritimo}>{conceptoMaritimo}</SelectItem>)}</SelectContent>
-                  </Select>
-                ) : (
-                  <Input placeholder="Concepto" className="text-sm" value={costo.concepto} onChange={e => updateConceptoCosto(costo.id, 'concepto', e.target.value)} />
-                )}
+                <Select value={costo.concepto} onValueChange={valorSeleccionado => updateConceptoCosto(costo.id, 'concepto', valorSeleccionado)}>
+                  <SelectTrigger className="text-sm"><SelectValue placeholder="Seleccionar" /></SelectTrigger>
+                  <SelectContent>{CATALOGO_CONCEPTOS.map(concepto => <SelectItem key={concepto} value={concepto}>{concepto}</SelectItem>)}</SelectContent>
+                </Select>
                 <Input type="number" min={0} step="0.01" className="text-sm" value={costo.monto || ''} onChange={e => updateConceptoCosto(costo.id, 'monto', Number(e.target.value))} />
                 <Select value={costo.moneda} onValueChange={valorSeleccionado => updateConceptoCosto(costo.id, 'moneda', valorSeleccionado)}>
                   <SelectTrigger className="text-sm"><SelectValue /></SelectTrigger>
@@ -88,14 +84,10 @@ export function StepCostosPrecios(props: Props) {
             </div>
             {conceptosVenta.map(venta => (
               <div key={venta.id} className="grid grid-cols-[1fr_80px_100px_90px_100px_40px] gap-2 items-center">
-                {modo === 'Marítimo' ? (
-                  <Select value={venta.concepto} onValueChange={valorSeleccionado => updateConceptoVenta(venta.id, 'concepto', valorSeleccionado)}>
-                    <SelectTrigger className="text-sm"><SelectValue placeholder="Seleccionar" /></SelectTrigger>
-                    <SelectContent>{CONCEPTOS_MARITIMOS.map(conceptoMaritimo => <SelectItem key={conceptoMaritimo} value={conceptoMaritimo}>{conceptoMaritimo}</SelectItem>)}</SelectContent>
-                  </Select>
-                ) : (
-                  <Input placeholder="Concepto" className="text-sm" value={venta.concepto} onChange={e => updateConceptoVenta(venta.id, 'concepto', e.target.value)} />
-                )}
+                <Select value={venta.concepto} onValueChange={valorSeleccionado => updateConceptoVenta(venta.id, 'concepto', valorSeleccionado)}>
+                  <SelectTrigger className="text-sm"><SelectValue placeholder="Seleccionar" /></SelectTrigger>
+                  <SelectContent>{CATALOGO_CONCEPTOS.map(concepto => <SelectItem key={concepto} value={concepto}>{concepto}</SelectItem>)}</SelectContent>
+                </Select>
                 <Input type="number" min={1} className="text-sm" value={venta.cantidad} onChange={e => updateConceptoVenta(venta.id, 'cantidad', Number(e.target.value))} />
                 <Input type="number" min={0} step="0.01" className="text-sm" value={venta.precioUnitario || ''} onChange={e => updateConceptoVenta(venta.id, 'precioUnitario', Number(e.target.value))} />
                 <Select value={venta.moneda} onValueChange={valorSeleccionado => updateConceptoVenta(venta.id, 'moneda', valorSeleccionado)}>
