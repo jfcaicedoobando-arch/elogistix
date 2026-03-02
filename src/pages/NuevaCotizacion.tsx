@@ -90,6 +90,7 @@ export default function NuevaCotizacion() {
   const [valorSeguroUsd, setValorSeguroUsd] = useState(0);
   const [diasLibresDestino, setDiasLibresDestino] = useState(0);
   const [diasAlmacenaje, setDiasAlmacenaje] = useState(0);
+  const [cartaGarantia, setCartaGarantia] = useState(false);
 
   // Conceptos
   const [notas, setNotas] = useState("");
@@ -215,6 +216,7 @@ export default function NuevaCotizacion() {
         dimensiones_aereas: esAereo ? dimensionesAereas : [],
         dias_libres_destino: esMaritimo && tipoEmbarque === 'FCL' ? diasLibresDestino : 0,
         dias_almacenaje: esMaritimo && tipoEmbarque === 'LCL' ? diasAlmacenaje : 0,
+        carta_garantia: esMaritimo && tipoEmbarque === 'FCL' ? cartaGarantia : false,
         tiempo_transito_dias: tiempoTransitoDias ?? null,
         frecuencia,
         ruta_texto: rutaTexto,
@@ -401,10 +403,22 @@ export default function NuevaCotizacion() {
               <Input type="number" min={0} value={tiempoTransitoDias ?? ''} onChange={e => setTiempoTransitoDias(e.target.value ? Number(e.target.value) : undefined)} placeholder="Ej. 25" />
             </div>
             {esMaritimo && tipoEmbarque === 'FCL' && (
-              <div>
-                <Label>Días libres en destino</Label>
-                <Input type="number" min={0} value={diasLibresDestino} onChange={e => setDiasLibresDestino(Number(e.target.value))} placeholder="Ej. 7" />
-              </div>
+              <>
+                <div>
+                  <Label>Días libres en destino</Label>
+                  <Input type="number" min={0} value={diasLibresDestino} onChange={e => setDiasLibresDestino(Number(e.target.value))} placeholder="Ej. 7" />
+                </div>
+                <div>
+                  <Label>Carta garantía</Label>
+                  <Select value={cartaGarantia ? 'si' : 'no'} onValueChange={(val) => setCartaGarantia(val === 'si')}>
+                    <SelectTrigger><SelectValue placeholder="Seleccione..." /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="si">Sí</SelectItem>
+                      <SelectItem value="no">No</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </>
             )}
             {esMaritimo && tipoEmbarque === 'LCL' && (
               <div>
