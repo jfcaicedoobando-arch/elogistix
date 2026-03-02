@@ -41,11 +41,14 @@ export function StepCostosPrecios(props: Props) {
         <CardHeader><CardTitle className="text-sm">Conceptos de Costo</CardTitle></CardHeader>
         <CardContent>
           <div className="space-y-3">
-            <div className="grid grid-cols-[1fr_1fr_100px_90px_100px_40px] gap-2 text-xs font-medium text-muted-foreground">
-              <span>Concepto</span><span>Proveedor</span><span>Monto</span><span>Moneda</span><span>Total</span><span></span>
+            <div className="grid grid-cols-[1fr_1fr_100px_90px_100px_100px_40px] gap-2 text-xs font-medium text-muted-foreground">
+              <span>Concepto</span><span>Proveedor</span><span>Monto</span><span>Moneda</span><span>Subtotal</span><span>Total</span><span></span>
             </div>
-            {conceptosCosto.map(costo => (
-              <div key={costo.id} className="grid grid-cols-[1fr_1fr_100px_90px_100px_40px] gap-2 items-center">
+            {conceptosCosto.map(costo => {
+              const subtotalCosto = costo.monto;
+              const totalCosto = costo.monto;
+              return (
+              <div key={costo.id} className="grid grid-cols-[1fr_1fr_100px_90px_100px_100px_40px] gap-2 items-center">
                 <Select value={costo.concepto} onValueChange={valor => updateConceptoCosto(costo.id, 'concepto', valor)}>
                   <SelectTrigger className="text-sm"><SelectValue placeholder="Seleccionar" /></SelectTrigger>
                   <SelectContent>{CONCEPTOS_EMBARQUE.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}</SelectContent>
@@ -56,12 +59,14 @@ export function StepCostosPrecios(props: Props) {
                   <SelectTrigger className="text-sm"><SelectValue /></SelectTrigger>
                   <SelectContent><SelectItem value="MXN">MXN</SelectItem><SelectItem value="USD">USD</SelectItem></SelectContent>
                 </Select>
-                <Input readOnly value={`$${costo.monto.toFixed(2)}`} className="text-sm bg-muted" />
+                <Input readOnly value={`$${subtotalCosto.toFixed(2)}`} className="text-sm bg-muted" />
+                <Input readOnly value={`$${totalCosto.toFixed(2)}`} className="text-sm bg-muted" />
                 <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => removeConceptoCosto(costo.id)} disabled={conceptosCosto.length <= 1}>
                   <Trash2 className="h-4 w-4 text-destructive" />
                 </Button>
               </div>
-            ))}
+              );
+            })}
             <Button variant="outline" size="sm" onClick={addConceptoCosto}>+ Agregar costo</Button>
           </div>
         </CardContent>
