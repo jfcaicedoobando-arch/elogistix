@@ -1,0 +1,1 @@
+ALTER TABLE public.cotizaciones ADD COLUMN dimensiones_aereas jsonb NOT NULL DEFAULT '[]';

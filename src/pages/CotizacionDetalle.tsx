@@ -19,7 +19,7 @@ import {
 import {
   useCotizacion, useUpdateEstadoCotizacion,
   useCrearEmbarqueDesdeCotizacion, useConvertirProspectoACliente,
-  DimensionLCL,
+  DimensionLCL, DimensionAerea,
 } from "@/hooks/useCotizaciones";
 import { usePermissions } from "@/hooks/usePermissions";
 import { useToast } from "@/hooks/use-toast";
@@ -65,6 +65,7 @@ export default function CotizacionDetalle() {
   const esAceptada = cotizacion.estado === 'Aceptada';
   const esConfirmada = cotizacion.estado === 'Confirmada';
   const esMaritimo = cotizacion.modo === 'Marítimo';
+  const esAereo = cotizacion.modo === 'Aéreo';
 
   const handleCambiarEstado = async (estado: string) => {
     try {
@@ -118,6 +119,7 @@ export default function CotizacionDetalle() {
     : cotizacion.cliente_nombre;
 
   const dimensiones: DimensionLCL[] = Array.isArray(cotizacion.dimensiones_lcl) ? cotizacion.dimensiones_lcl : [];
+  const dimensionesAereas: DimensionAerea[] = Array.isArray((cotizacion as any).dimensiones_aereas) ? (cotizacion as any).dimensiones_aereas : [];
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
@@ -259,7 +261,7 @@ export default function CotizacionDetalle() {
               <span className="text-muted-foreground">Sector Económico</span>
               <p className="font-medium">{cotizacion.sector_economico || cotizacion.descripcion_mercancia || '-'}</p>
             </div>
-            {!esMaritimo && (
+            {!esMaritimo && !esAereo && (
               <>
                 <div><span className="text-muted-foreground">Peso</span><p className="font-medium">{cotizacion.peso_kg} kg</p></div>
                 <div><span className="text-muted-foreground">Volumen</span><p className="font-medium">{cotizacion.volumen_m3} m³</p></div>
@@ -320,6 +322,41 @@ export default function CotizacionDetalle() {
               <div className="flex justify-end gap-6 mt-2 text-sm font-semibold">
                 <span>Total piezas: {cotizacion.piezas}</span>
                 <span>Volumen total: {cotizacion.volumen_m3} m³</span>
+              </div>
+            </div>
+          )}
+
+          {/* Tabla dimensiones Aéreas */}
+          {esAereo && dimensionesAereas.length > 0 && (
+            <div>
+              <span className="text-sm text-muted-foreground font-semibold">Dimensiones</span>
+              <div className="border rounded-md overflow-auto mt-1">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Piezas</TableHead>
+                      <TableHead>Alto (cm)</TableHead>
+                      <TableHead>Largo (cm)</TableHead>
+                      <TableHead>Ancho (cm)</TableHead>
+                      <TableHead>Peso vol. (kg)</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {dimensionesAereas.map((d, i) => (
+                      <TableRow key={i}>
+                        <TableCell>{d.piezas}</TableCell>
+                        <TableCell>{d.alto_cm}</TableCell>
+                        <TableCell>{d.largo_cm}</TableCell>
+                        <TableCell>{d.ancho_cm}</TableCell>
+                        <TableCell>{d.peso_volumetrico_kg.toFixed(2)}</TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+              <div className="flex justify-end gap-6 mt-2 text-sm font-semibold">
+                <span>Total piezas: {cotizacion.piezas}</span>
+                <span>Peso volumétrico total: {cotizacion.peso_kg} kg</span>
               </div>
             </div>
           )}

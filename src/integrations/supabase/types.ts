@@ -299,6 +299,7 @@ export type Database = {
           descripcion_adicional: string
           descripcion_mercancia: string
           destino: string
+          dimensiones_aereas: Json
           dimensiones_lcl: Json
           embarque_id: string | null
           es_prospecto: boolean
@@ -338,6 +339,7 @@ export type Database = {
           descripcion_adicional?: string
           descripcion_mercancia?: string
           destino?: string
+          dimensiones_aereas?: Json
           dimensiones_lcl?: Json
           embarque_id?: string | null
           es_prospecto?: boolean
@@ -377,6 +379,7 @@ export type Database = {
           descripcion_adicional?: string
           descripcion_mercancia?: string
           destino?: string
+          dimensiones_aereas?: Json
           dimensiones_lcl?: Json
           embarque_id?: string | null
           es_prospecto?: boolean
