@@ -51,15 +51,8 @@ export function StepCostosPrecios(props: Props) {
     return monto;
   };
 
-  const totalCostoUSD = conceptosCosto.reduce((acc, c) => {
-    const base = c.iva ? c.monto * 1.16 : c.monto;
-    return acc + toUSD(base, c.moneda);
-  }, 0);
-
-  const totalVentaUSD = conceptosVenta.reduce((acc, v) => {
-    const base = v.iva ? (v.cantidad * v.precioUnitario) * 1.16 : v.cantidad * v.precioUnitario;
-    return acc + toUSD(base, v.moneda);
-  }, 0);
+  const totalCostoUSD = conceptosCosto.reduce((acc, c) => acc + toUSD(c.monto, c.moneda), 0);
+  const totalVentaUSD = conceptosVenta.reduce((acc, v) => acc + toUSD(v.precioUnitario, v.moneda), 0);
 
   return (
     <div className="space-y-6">
@@ -67,14 +60,13 @@ export function StepCostosPrecios(props: Props) {
         <CardHeader><CardTitle className="text-sm">Conceptos de Costo</CardTitle></CardHeader>
         <CardContent>
           <div className="space-y-3">
-            <div className="grid grid-cols-[1fr_1fr_100px_90px_100px_100px_40px] gap-2 text-xs font-medium text-muted-foreground">
-              <span>Proveedor</span><span>Concepto</span><span>Monto</span><span>Moneda</span><span>Subtotal (Sin IVA)</span><span>Total USD</span><span></span>
+            <div className="grid grid-cols-[1fr_1fr_120px_90px_110px_40px] gap-2 text-xs font-medium text-muted-foreground">
+              <span>Proveedor</span><span>Concepto</span><span>Subtotal (sin IVA)</span><span>Moneda</span><span>Total USD</span><span></span>
             </div>
             {conceptosCosto.map(costo => {
-              const totalFila = costo.iva ? costo.monto * 1.16 : costo.monto;
-              const totalUSD = toUSD(totalFila, costo.moneda);
+              const totalUSD = toUSD(costo.monto, costo.moneda);
               return (
-                <div key={costo.id} className="grid grid-cols-[1fr_1fr_100px_90px_100px_100px_40px] gap-2 items-center">
+                <div key={costo.id} className="grid grid-cols-[1fr_1fr_120px_90px_110px_40px] gap-2 items-center">
                   <Select value={costo.proveedorId} onValueChange={v => updateConceptoCosto(costo.id, 'proveedorId', v)}>
                     <SelectTrigger className="text-sm"><SelectValue placeholder="Proveedor" /></SelectTrigger>
                     <SelectContent>{proveedoresDb.map(p => <SelectItem key={p.id} value={p.id}>{p.nombre.split(' ').slice(0, 2).join(' ')}</SelectItem>)}</SelectContent>
@@ -88,7 +80,6 @@ export function StepCostosPrecios(props: Props) {
                     <SelectTrigger className="text-sm"><SelectValue /></SelectTrigger>
                     <SelectContent><SelectItem value="MXN">MXN</SelectItem><SelectItem value="USD">USD</SelectItem><SelectItem value="EUR">EUR</SelectItem></SelectContent>
                   </Select>
-                  <Input readOnly value={`$${totalFila.toFixed(2)}`} className="text-sm bg-muted" />
                   <Input readOnly value={`$${totalUSD.toFixed(2)}`} className="text-sm bg-muted font-semibold" />
                   <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => removeConceptoCosto(costo.id)} disabled={conceptosCosto.length <= 1}>
                     <Trash2 className="h-4 w-4 text-destructive" />
@@ -107,15 +98,13 @@ export function StepCostosPrecios(props: Props) {
         <CardHeader><CardTitle className="text-sm">Conceptos de Venta</CardTitle></CardHeader>
         <CardContent>
           <div className="space-y-3">
-            <div className="grid grid-cols-[1fr_80px_100px_90px_100px_100px_40px] gap-2 text-xs font-medium text-muted-foreground">
-              <span>Concepto</span><span>Cantidad</span><span>Monto</span><span>Moneda</span><span>Subtotal (Sin IVA)</span><span>Total USD</span><span></span>
+            <div className="grid grid-cols-[1fr_80px_120px_90px_110px_40px] gap-2 text-xs font-medium text-muted-foreground">
+              <span>Concepto</span><span>Cantidad</span><span>Subtotal (sin IVA)</span><span>Moneda</span><span>Total USD</span><span></span>
             </div>
             {conceptosVenta.map(venta => {
-              const base = venta.cantidad * venta.precioUnitario;
-              const totalFila = venta.iva ? base * 1.16 : base;
-              const totalUSD = toUSD(totalFila, venta.moneda);
+              const totalUSD = toUSD(venta.precioUnitario, venta.moneda);
               return (
-                <div key={venta.id} className="grid grid-cols-[1fr_80px_100px_90px_100px_100px_40px] gap-2 items-center">
+                <div key={venta.id} className="grid grid-cols-[1fr_80px_120px_90px_110px_40px] gap-2 items-center">
                   <Select value={venta.concepto} onValueChange={v => updateConceptoVenta(venta.id, 'concepto', v)}>
                     <SelectTrigger className="text-sm"><SelectValue placeholder="Seleccionar" /></SelectTrigger>
                     <SelectContent>{CATALOGO_CONCEPTOS.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}</SelectContent>
@@ -126,7 +115,6 @@ export function StepCostosPrecios(props: Props) {
                     <SelectTrigger className="text-sm"><SelectValue /></SelectTrigger>
                     <SelectContent><SelectItem value="MXN">MXN</SelectItem><SelectItem value="USD">USD</SelectItem><SelectItem value="EUR">EUR</SelectItem></SelectContent>
                   </Select>
-                  <Input readOnly value={`$${totalFila.toFixed(2)}`} className="text-sm bg-muted" />
                   <Input readOnly value={`$${totalUSD.toFixed(2)}`} className="text-sm bg-muted font-semibold" />
                   <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => removeConceptoVenta(venta.id)} disabled={conceptosVenta.length <= 1}>
                     <Trash2 className="h-4 w-4 text-destructive" />
