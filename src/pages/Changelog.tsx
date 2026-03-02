@@ -13,6 +13,14 @@ interface ChangelogEntry {
 
 const changelog: ChangelogEntry[] = [
   {
+    version: "3.13.6",
+    date: "2026-03-02",
+    type: "patch",
+    title: "Total general en Conceptos de Costo",
+    description:
+      "Se agregó el total general al final de la tabla de Conceptos de Costo, mostrando la suma de todos los totales por fila.",
+  },
+  {
     version: "3.13.5",
     date: "2026-03-02",
     type: "patch",

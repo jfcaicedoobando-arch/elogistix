@@ -79,6 +79,9 @@ export function StepCostosPrecios(props: Props) {
               );
             })}
             <Button variant="outline" size="sm" onClick={addConceptoCosto}>+ Agregar costo</Button>
+            <div className="border-t pt-3 mt-3 text-sm text-right">
+              <div className="flex justify-end gap-4"><span className="font-semibold">Total:</span><span className="font-bold w-28 text-right">${totalCosto.toFixed(2)}</span></div>
+            </div>
           </div>
         </CardContent>
       </Card>
