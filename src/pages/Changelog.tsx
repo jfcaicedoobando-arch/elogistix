@@ -13,6 +13,14 @@ interface ChangelogEntry {
 
 const changelog: ChangelogEntry[] = [
   {
+    version: "3.13.5",
+    date: "2026-03-02",
+    type: "patch",
+    title: "Campo Total editable en conceptos de costo y venta",
+    description:
+      "El campo 'Total' en cada fila de costos y venta ahora es editable. Se auto-calcula al modificar monto/cantidad/precio/IVA, pero también permite ingresar un valor manualmente.",
+  },
+  {
     version: "3.13.4",
     date: "2026-03-02",
     type: "patch",
