@@ -1,0 +1,1 @@
+ALTER TABLE public.cotizaciones ADD COLUMN dias_libres_destino integer NOT NULL DEFAULT 0;
