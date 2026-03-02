@@ -6,12 +6,21 @@ interface UseConceptosFormOptions {
   costoInicial?: ConceptoCostoLocal[];
 }
 
+function calcTotalVenta(c: ConceptoVentaLocal): number {
+  const base = c.cantidad * c.precioUnitario;
+  return base + (c.aplicaIva ? base * 0.16 : 0);
+}
+
+function calcTotalCosto(c: ConceptoCostoLocal): number {
+  return c.monto + (c.aplicaIva ? c.monto * 0.16 : 0);
+}
+
 export function useConceptosForm(opciones: UseConceptosFormOptions = {}) {
   const [conceptosVenta, setConceptosVenta] = useState<ConceptoVentaLocal[]>(
-    opciones.ventaInicial ?? [{ id: 1, concepto: '', cantidad: 1, precioUnitario: 0, moneda: 'MXN', aplicaIva: false }]
+    opciones.ventaInicial ?? [{ id: 1, concepto: '', cantidad: 1, precioUnitario: 0, moneda: 'MXN', aplicaIva: false, total: 0 }]
   );
   const [conceptosCosto, setConceptosCosto] = useState<ConceptoCostoLocal[]>(
-    opciones.costoInicial ?? [{ id: 1, proveedor: '', concepto: '', monto: 0, moneda: 'MXN', aplicaIva: false }]
+    opciones.costoInicial ?? [{ id: 1, proveedor: '', concepto: '', monto: 0, moneda: 'MXN', aplicaIva: false, total: 0 }]
   );
   const [nextVentaId, setNextVentaId] = useState(
     (opciones.ventaInicial?.length ?? 1) + 1
@@ -21,11 +30,19 @@ export function useConceptosForm(opciones: UseConceptosFormOptions = {}) {
   );
 
   const updateConceptoVenta = (id: number, field: keyof ConceptoVentaLocal, value: string | number | boolean) => {
-    setConceptosVenta(prev => prev.map(c => c.id === id ? { ...c, [field]: value } : c));
+    setConceptosVenta(prev => prev.map(c => {
+      if (c.id !== id) return c;
+      const updated = { ...c, [field]: value };
+      // Auto-recalcular total excepto cuando se edita total directamente
+      if (field !== 'total') {
+        updated.total = calcTotalVenta(updated);
+      }
+      return updated;
+    }));
   };
 
   const addConceptoVenta = () => {
-    setConceptosVenta(prev => [...prev, { id: nextVentaId, concepto: '', cantidad: 1, precioUnitario: 0, moneda: 'MXN', aplicaIva: false }]);
+    setConceptosVenta(prev => [...prev, { id: nextVentaId, concepto: '', cantidad: 1, precioUnitario: 0, moneda: 'MXN', aplicaIva: false, total: 0 }]);
     setNextVentaId(n => n + 1);
   };
 
@@ -34,11 +51,18 @@ export function useConceptosForm(opciones: UseConceptosFormOptions = {}) {
   };
 
   const updateConceptoCosto = (id: number, field: keyof ConceptoCostoLocal, value: string | number | boolean) => {
-    setConceptosCosto(prev => prev.map(c => c.id === id ? { ...c, [field]: value } : c));
+    setConceptosCosto(prev => prev.map(c => {
+      if (c.id !== id) return c;
+      const updated = { ...c, [field]: value };
+      if (field !== 'total') {
+        updated.total = calcTotalCosto(updated);
+      }
+      return updated;
+    }));
   };
 
   const addConceptoCosto = () => {
-    setConceptosCosto(prev => [...prev, { id: nextCostoId, proveedor: '', concepto: '', monto: 0, moneda: 'MXN', aplicaIva: false }]);
+    setConceptosCosto(prev => [...prev, { id: nextCostoId, proveedor: '', concepto: '', monto: 0, moneda: 'MXN', aplicaIva: false, total: 0 }]);
     setNextCostoId(n => n + 1);
   };
 
@@ -46,13 +70,13 @@ export function useConceptosForm(opciones: UseConceptosFormOptions = {}) {
     setConceptosCosto(prev => prev.filter(c => c.id !== id));
   };
 
-  const subtotalVenta = conceptosVenta.reduce((acc, c) => acc + (c.cantidad * c.precioUnitario), 0);
+  const subtotalVenta = conceptosVenta.reduce((acc, c) => acc + c.total, 0);
   const ivaVenta = conceptosVenta.reduce((acc, c) => c.aplicaIva ? acc + (c.cantidad * c.precioUnitario * 0.16) : acc, 0);
-  const totalVentaConIva = subtotalVenta + ivaVenta;
+  const totalVentaConIva = subtotalVenta;
 
-  const totalCosto = conceptosCosto.reduce((acc, c) => acc + c.monto, 0);
+  const totalCosto = conceptosCosto.reduce((acc, c) => acc + c.total, 0);
   const ivaCosto = conceptosCosto.reduce((acc, c) => c.aplicaIva ? acc + (c.monto * 0.16) : acc, 0);
-  const totalCostoConIva = totalCosto + ivaCosto;
+  const totalCostoConIva = totalCosto;
 
   const utilidadEstimada = totalVentaConIva - totalCostoConIva;
 

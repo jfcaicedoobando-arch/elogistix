@@ -132,14 +132,18 @@ export default function EditarEmbarque() {
   // Pre-llenar conceptos de venta
   useEffect(() => {
     if (!initialized || conceptosVentaDb.length === 0) return;
-    inicializarVenta(conceptosVentaDb.map((conceptoVenta, indice) => ({
-      id: indice + 1,
-      concepto: conceptoVenta.descripcion,
-      cantidad: conceptoVenta.cantidad,
-      precioUnitario: Number(conceptoVenta.precio_unitario),
-      moneda: conceptoVenta.moneda,
-      aplicaIva: false,
-    })));
+    inicializarVenta(conceptosVentaDb.map((conceptoVenta, indice) => {
+      const base = conceptoVenta.cantidad * Number(conceptoVenta.precio_unitario);
+      return {
+        id: indice + 1,
+        concepto: conceptoVenta.descripcion,
+        cantidad: conceptoVenta.cantidad,
+        precioUnitario: Number(conceptoVenta.precio_unitario),
+        moneda: conceptoVenta.moneda,
+        aplicaIva: false,
+        total: base,
+      };
+    }));
   }, [conceptosVentaDb, initialized]);
 
   // Pre-llenar conceptos de costo
@@ -152,6 +156,7 @@ export default function EditarEmbarque() {
       monto: Number(conceptoCosto.monto),
       moneda: conceptoCosto.moneda,
       aplicaIva: false,
+      total: Number(conceptoCosto.monto),
     })));
   }, [conceptosCostoDb, initialized]);
 
