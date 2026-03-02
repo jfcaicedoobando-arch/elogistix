@@ -66,7 +66,7 @@ export function StepCostosPrecios(props: Props) {
                 <div className="flex justify-center">
                   <Checkbox checked={costo.aplicaIva} onCheckedChange={checked => updateConceptoCosto(costo.id, 'aplicaIva', !!checked)} />
                 </div>
-                <Input readOnly value={`$${(costo.monto + (costo.aplicaIva ? costo.monto * 0.16 : 0)).toFixed(2)}`} className="text-sm bg-muted" />
+                <span className="text-sm bg-muted rounded-md border border-input px-3 py-2 flex items-center h-10">${(costo.monto + (costo.aplicaIva ? costo.monto * 0.16 : 0)).toFixed(2)}</span>
                 <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => removeConceptoCosto(costo.id)} disabled={conceptosCosto.length <= 1}>
                   <Trash2 className="h-4 w-4 text-destructive" />
                 </Button>
@@ -105,7 +105,7 @@ export function StepCostosPrecios(props: Props) {
                 <div className="flex justify-center">
                   <Checkbox checked={venta.aplicaIva} onCheckedChange={checked => updateConceptoVenta(venta.id, 'aplicaIva', !!checked)} />
                 </div>
-                <Input readOnly value={`$${((venta.cantidad * venta.precioUnitario) + (venta.aplicaIva ? venta.cantidad * venta.precioUnitario * 0.16 : 0)).toFixed(2)}`} className="text-sm bg-muted" />
+                <span className="text-sm bg-muted rounded-md border border-input px-3 py-2 flex items-center h-10">${((venta.cantidad * venta.precioUnitario) + (venta.aplicaIva ? venta.cantidad * venta.precioUnitario * 0.16 : 0)).toFixed(2)}</span>
                 <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => removeConceptoVenta(venta.id)} disabled={conceptosVenta.length <= 1}>
                   <Trash2 className="h-4 w-4 text-destructive" />
                 </Button>
