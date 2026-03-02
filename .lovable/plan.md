@@ -1,35 +1,49 @@
 
 
-## Plan: Autocompletado de puertos para carga marítima y multimodal — v3.11.0
+## Plan: Campos adicionales de ruta y seguro — v3.12.0
 
-### Alcance
+### Migración de base de datos
 
-Reemplazar los campos de texto libre de Origen y Destino en la sección Ruta por un componente con autocompletado basado en el catálogo de ~150 puertos, pero solo cuando el modo es Marítimo (FCL/LCL) o Multimodal. Los flujos Aéreo y Terrestre conservan sus campos actuales sin cambios.
+```sql
+ALTER TABLE public.cotizaciones ADD COLUMN tiempo_transito_dias integer;
+ALTER TABLE public.cotizaciones ADD COLUMN frecuencia text NOT NULL DEFAULT '';
+ALTER TABLE public.cotizaciones ADD COLUMN ruta_texto text NOT NULL DEFAULT '';
+ALTER TABLE public.cotizaciones ADD COLUMN validez_propuesta date;
+ALTER TABLE public.cotizaciones ADD COLUMN tipo_movimiento text NOT NULL DEFAULT '';
+ALTER TABLE public.cotizaciones ADD COLUMN seguro boolean NOT NULL DEFAULT false;
+ALTER TABLE public.cotizaciones ADD COLUMN valor_seguro_usd numeric NOT NULL DEFAULT 0;
+```
 
-### Cambios
+### `src/hooks/useCotizaciones.ts`
 
-#### 1. `src/components/PortSelect.tsx` — Permitir texto libre
+- Agregar 7 campos nuevos a `CotizacionRow` y `CreateCotizacionInput`
+- Incluirlos en el insert de `useCreateCotizacion`
 
-Actualmente el componente solo permite seleccionar un puerto del catálogo (guarda el código UN/LOCODE). Se necesita que también permita escribir manualmente si el puerto no está en la lista:
+### `src/pages/NuevaCotizacion.tsx`
 
-- Cambiar el `value` para guardar el texto completo (ej. "Manzanillo — Manzanillo, México") en vez del código
-- Agregar un mensaje en `CommandEmpty` que permita usar el texto escrito tal cual
-- Cuando el usuario selecciona un puerto de la lista, se escribe "NombrePuerto — Ciudad, País"
-- Cuando escribe texto libre y confirma, se usa ese texto directamente
+Agregar estados para los 7 campos nuevos. En la sección **Ruta** (Card existente), agregar debajo de Origen/Destino:
 
-#### 2. `src/pages/NuevaCotizacion.tsx` — Sección Ruta
+- Tiempo de tránsito (Input numérico, días)
+- Frecuencia (Select: Diaria / Semanal / Quincenal)
+- Ruta (Input texto, placeholder: "Manzanillo → Los Angeles → Nueva York")
+- Validez de la propuesta (DatePicker con Calendar/Popover)
+- Tipo de movimiento (Select: CY-CY / CY-DR / DR-DR / DR-CY)
+- Seguro (Switch Sí/No)
+- Si Sí → Valor del seguro en USD (Input numérico)
 
-Renderizado condicional en la sección Ruta:
+El valor del seguro se suma al subtotal de conceptos para el total final. Al pasar `subtotal` al hook, sumar `valor_seguro_usd` si `seguro === true`.
 
-- Si `modo` es `Marítimo` o `Multimodal`: usar `PortSelect` para Origen y Destino
-- Si `modo` es `Aéreo` o `Terrestre`: mantener los `Input` actuales
+Pasar todos los campos nuevos a `crearCotizacion.mutateAsync()`.
 
-Los estados `origen` y `destino` siguen siendo strings, sin cambios en la base de datos.
+### `src/pages/CotizacionDetalle.tsx`
 
-#### 3. `src/pages/Changelog.tsx` — Entrada v3.11.0
+En la sección "Datos Generales", agregar la visualización de los 7 campos nuevos (tiempo de tránsito, frecuencia, ruta, validez, tipo de movimiento, seguro con valor).
+
+### `src/pages/Changelog.tsx` — Entrada v3.12.0
 
 ### Archivos modificados
-- `src/components/PortSelect.tsx` — soporte texto libre
-- `src/pages/NuevaCotizacion.tsx` — renderizado condicional en Ruta
+- `src/hooks/useCotizaciones.ts`
+- `src/pages/NuevaCotizacion.tsx`
+- `src/pages/CotizacionDetalle.tsx`
 - `src/pages/Changelog.tsx`
 
