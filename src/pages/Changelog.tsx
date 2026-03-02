@@ -13,6 +13,14 @@ interface ChangelogEntry {
 
 const changelog: ChangelogEntry[] = [
   {
+    version: "3.13.5",
+    date: "2026-03-02",
+    type: "patch",
+    title: "Columna IVA en Conceptos de Venta",
+    description:
+      "Se agregó columna IVA con checkbox en la tabla de Conceptos de Venta. Total por fila incluye 16% si está marcado. El total general muestra la suma de todos los totales.",
+  },
+  {
     version: "3.13.4",
     date: "2026-03-02",
     type: "patch",
