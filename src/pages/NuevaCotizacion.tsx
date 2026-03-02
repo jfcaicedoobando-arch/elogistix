@@ -14,7 +14,12 @@ import { useCreateCotizacion, ConceptoVentaCotizacion, DimensionLCL, DimensionAe
 import { useRegistrarActividad } from "@/hooks/useBitacora";
 import { useAuth } from "@/contexts/AuthContext";
 import { uploadFile } from "@/lib/storage";
-import { Plus, Trash2, ArrowLeft, Save } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
+import { cn } from "@/lib/utils";
+import { format } from "date-fns";
+import { Plus, Trash2, ArrowLeft, Save, CalendarIcon } from "lucide-react";
 import PortSelect from "@/components/PortSelect";
 
 import SeccionMercanciaMaritimaFCL from "@/components/cotizacion/SeccionMercanciaMaritimaFCL";
@@ -76,6 +81,13 @@ export default function NuevaCotizacion() {
   // Ruta
   const [origen, setOrigen] = useState("");
   const [destino, setDestino] = useState("");
+  const [tiempoTransitoDias, setTiempoTransitoDias] = useState<number | undefined>();
+  const [frecuencia, setFrecuencia] = useState("");
+  const [rutaTexto, setRutaTexto] = useState("");
+  const [validezPropuesta, setValidezPropuesta] = useState<Date | undefined>();
+  const [tipoMovimiento, setTipoMovimiento] = useState("");
+  const [seguro, setSeguro] = useState(false);
+  const [valorSeguroUsd, setValorSeguroUsd] = useState(0);
 
   // Conceptos
   const [vigenciaDias, setVigenciaDias] = useState(15);
@@ -116,7 +128,8 @@ export default function NuevaCotizacion() {
     setConceptos(prev => prev.filter((_, i) => i !== index));
   };
 
-  const subtotal = conceptos.reduce((sum, c) => sum + c.total, 0);
+  const subtotalConceptos = conceptos.reduce((sum, c) => sum + c.total, 0);
+  const subtotal = subtotalConceptos + (seguro ? Number(valorSeguroUsd) || 0 : 0);
 
   // Calcular piezas y volumen totales para LCL
   const totalPiezasLCL = dimensionesLCL.reduce((sum, d) => sum + d.piezas, 0);
@@ -199,6 +212,13 @@ export default function NuevaCotizacion() {
         sector_economico: sectorEconomico,
         dimensiones_lcl: esMaritimo && tipoEmbarque === 'LCL' ? dimensionesLCL : [],
         dimensiones_aereas: esAereo ? dimensionesAereas : [],
+        tiempo_transito_dias: tiempoTransitoDias ?? null,
+        frecuencia,
+        ruta_texto: rutaTexto,
+        validez_propuesta: validezPropuesta ? validezPropuesta.toISOString().split('T')[0] : null,
+        tipo_movimiento: tipoMovimiento,
+        seguro,
+        valor_seguro_usd: seguro ? Number(valorSeguroUsd) || 0 : 0,
       });
 
       registrarActividad.mutate({
@@ -371,7 +391,65 @@ export default function NuevaCotizacion() {
               <div><Label>Origen</Label><Input value={origen} onChange={e => setOrigen(e.target.value)} placeholder="Ej. Shanghai, China" /></div>
               <div><Label>Destino</Label><Input value={destino} onChange={e => setDestino(e.target.value)} placeholder="Ej. Manzanillo, México" /></div>
             </>
-          )}
+           )}
+          <div className="md:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-4 pt-4 border-t">
+            <div>
+              <Label>Tiempo de tránsito (días)</Label>
+              <Input type="number" min={0} value={tiempoTransitoDias ?? ''} onChange={e => setTiempoTransitoDias(e.target.value ? Number(e.target.value) : undefined)} placeholder="Ej. 25" />
+            </div>
+            <div>
+              <Label>Frecuencia</Label>
+              <Select value={frecuencia} onValueChange={setFrecuencia}>
+                <SelectTrigger><SelectValue placeholder="Seleccionar frecuencia" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Diaria">Diaria</SelectItem>
+                  <SelectItem value="Semanal">Semanal</SelectItem>
+                  <SelectItem value="Quincenal">Quincenal</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="md:col-span-2">
+              <Label>Ruta</Label>
+              <Input value={rutaTexto} onChange={e => setRutaTexto(e.target.value)} placeholder="Ej. Manzanillo → Los Angeles → Nueva York" />
+            </div>
+            <div>
+              <Label>Validez de la propuesta</Label>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button variant="outline" className={cn("w-full justify-start text-left font-normal", !validezPropuesta && "text-muted-foreground")}>
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {validezPropuesta ? format(validezPropuesta, "dd/MM/yyyy") : "Seleccionar fecha"}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar mode="single" selected={validezPropuesta} onSelect={setValidezPropuesta} initialFocus className={cn("p-3 pointer-events-auto")} />
+                </PopoverContent>
+              </Popover>
+            </div>
+            <div>
+              <Label>Tipo de movimiento</Label>
+              <Select value={tipoMovimiento} onValueChange={setTipoMovimiento}>
+                <SelectTrigger><SelectValue placeholder="Seleccionar tipo" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="CY-CY">CY-CY</SelectItem>
+                  <SelectItem value="CY-DR">CY-DR</SelectItem>
+                  <SelectItem value="DR-DR">DR-DR</SelectItem>
+                  <SelectItem value="DR-CY">DR-CY</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="flex items-center gap-3">
+              <Label>Seguro</Label>
+              <Switch checked={seguro} onCheckedChange={setSeguro} />
+              <span className="text-sm text-muted-foreground">{seguro ? 'Sí' : 'No'}</span>
+            </div>
+            {seguro && (
+              <div>
+                <Label>Valor del seguro (USD)</Label>
+                <Input type="number" min={0} step={0.01} value={valorSeguroUsd} onChange={e => setValorSeguroUsd(Number(e.target.value))} placeholder="0.00" />
+              </div>
+            )}
+          </div>
         </CardContent>
       </Card>
 
@@ -411,8 +489,10 @@ export default function NuevaCotizacion() {
               </div>
             </div>
           ))}
-          <div className="flex justify-end pt-2 border-t">
-            <span className="text-sm font-semibold">Subtotal: {new Intl.NumberFormat('es-MX', { style: 'currency', currency: moneda }).format(subtotal)}</span>
+          <div className="flex flex-col items-end gap-1 pt-2 border-t">
+            <span className="text-sm">Conceptos: {new Intl.NumberFormat('es-MX', { style: 'currency', currency: moneda }).format(subtotalConceptos)}</span>
+            {seguro && <span className="text-sm">Seguro: {new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'USD' }).format(Number(valorSeguroUsd) || 0)}</span>}
+            <span className="text-sm font-semibold">Total: {new Intl.NumberFormat('es-MX', { style: 'currency', currency: moneda }).format(subtotal)}</span>
           </div>
         </CardContent>
       </Card>

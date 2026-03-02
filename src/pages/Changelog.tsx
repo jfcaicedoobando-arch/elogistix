@@ -13,6 +13,14 @@ interface ChangelogEntry {
 
 const changelog: ChangelogEntry[] = [
   {
+    version: "3.12.0",
+    date: "2026-03-02",
+    type: "minor",
+    title: "Campos adicionales de ruta y seguro en cotizaciones",
+    description:
+      "Se agregaron 7 campos nuevos a la sección Ruta de cotizaciones: tiempo de tránsito (días), frecuencia (Diaria/Semanal/Quincenal), ruta de texto libre, validez de la propuesta (fecha), tipo de movimiento (CY-CY/CY-DR/DR-DR/DR-CY), seguro (toggle Sí/No) con valor en USD. El valor del seguro se suma automáticamente al total de la cotización. Campos visibles en detalle de cotización.",
+  },
+  {
     version: "3.11.0",
     date: "2026-03-02",
     type: "minor",
