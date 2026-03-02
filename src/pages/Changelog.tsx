@@ -13,6 +13,14 @@ interface ChangelogEntry {
 
 const changelog: ChangelogEntry[] = [
   {
+    version: "3.5.0",
+    date: "2026-03-02",
+    type: "minor",
+    title: "Mejoras operativas: estado de embarques, edición de clientes, notas y confirmación de eliminación",
+    description:
+      "Nuevo botón 'Avanzar estado' en el detalle del embarque con confirmación y registro en bitácora. Edición de datos del cliente desde su página de detalle. Doble confirmación antes de eliminar contactos. Formulario para agregar notas libres en la pestaña de Notas del embarque con registro automático en bitácora.",
+  },
+  {
     version: "3.4.0",
     date: "2026-03-01",
     type: "minor",

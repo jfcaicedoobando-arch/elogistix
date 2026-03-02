@@ -1,16 +1,68 @@
+import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
+import { Loader2, Send } from "lucide-react";
 import { formatDate } from "@/lib/helpers";
+import { useAuth } from "@/contexts/AuthContext";
+import { usePermissions } from "@/hooks/usePermissions";
+import { useCreateNotaEmbarque } from "@/hooks/useEmbarques";
+import { useRegistrarActividad } from "@/hooks/useBitacora";
+import { useToast } from "@/hooks/use-toast";
 import type { NotaEmbarqueRow } from "@/hooks/useEmbarques";
 
 interface Props {
   notas: NotaEmbarqueRow[];
+  embarqueId?: string;
 }
 
-export function TabNotas({ notas }: Props) {
+export function TabNotas({ notas, embarqueId }: Props) {
+  const [texto, setTexto] = useState("");
+  const { user } = useAuth();
+  const { canEdit } = usePermissions();
+  const crearNota = useCreateNotaEmbarque();
+  const registrarActividad = useRegistrarActividad();
+  const { toast } = useToast();
+
+  const handleSubmit = async () => {
+    if (!texto.trim() || !embarqueId) return;
+    try {
+      await crearNota.mutateAsync({
+        embarqueId,
+        contenido: texto.trim(),
+        usuario: user?.email ?? '',
+      });
+      registrarActividad.mutate({
+        accion: 'agregar_nota',
+        modulo: 'embarques',
+        entidad_id: embarqueId,
+        detalles: { nota: texto.trim() },
+      });
+      setTexto("");
+      toast({ title: "Nota agregada" });
+    } catch (err: any) {
+      toast({ title: "Error al agregar nota", description: err.message, variant: "destructive" });
+    }
+  };
+
   return (
     <Card>
       <CardHeader className="pb-2"><CardTitle className="text-sm">Actividad y Notas</CardTitle></CardHeader>
-      <CardContent>
+      <CardContent className="space-y-4">
+        {canEdit && embarqueId && (
+          <div className="flex gap-2">
+            <Textarea
+              placeholder="Escribe una nota..."
+              value={texto}
+              onChange={e => setTexto(e.target.value)}
+              className="min-h-[60px]"
+            />
+            <Button size="icon" className="shrink-0 self-end" onClick={handleSubmit} disabled={!texto.trim() || crearNota.isPending}>
+              {crearNota.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+            </Button>
+          </div>
+        )}
+
         {notas.length > 0 ? (
           <div className="space-y-4">
             {notas.map(nota => (
