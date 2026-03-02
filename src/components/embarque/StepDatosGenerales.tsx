@@ -1,6 +1,9 @@
+import { useState } from "react";
+import { Upload, FileText } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import type { ModoTransporte, TipoOperacion, Incoterm } from "@/data/types";
 
@@ -47,6 +50,11 @@ interface Props {
   setVolumenM3: (v: string) => void;
   piezas: string;
   setPiezas: (v: string) => void;
+  tipoCarga: string;
+  setTipoCarga: (v: string) => void;
+  msdsArchivo: string | null;
+  subiendoMsds: boolean;
+  onMsdsUpload: (file: File) => void;
 }
 
 export function StepDatosGenerales(props: Props) {
@@ -56,7 +64,10 @@ export function StepDatosGenerales(props: Props) {
     consignatario, setConsignatario, consignatarioManual, setConsignatarioManual,
     contactos, descripcionMercancia, setDescripcionMercancia,
     pesoKg, setPesoKg, volumenM3, setVolumenM3, piezas, setPiezas,
+    tipoCarga, setTipoCarga, msdsArchivo, subiendoMsds, onMsdsUpload,
   } = props;
+
+  const msdsNombreArchivo = msdsArchivo ? msdsArchivo.split('/').pop() : null;
 
   return (
     <Card>
@@ -117,6 +128,57 @@ export function StepDatosGenerales(props: Props) {
             <Label>Descripción de la Mercancía *</Label>
             <Input placeholder="Descripción detallada" value={descripcionMercancia} onChange={e => setDescripcionMercancia(e.target.value)} />
           </div>
+          <div className="space-y-2">
+            <Label>Tipo de Carga *</Label>
+            <Select value={tipoCarga} onValueChange={(valor) => { setTipoCarga(valor); }}>
+              <SelectTrigger><SelectValue placeholder="Seleccionar tipo de carga" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="Carga General">Carga General</SelectItem>
+                <SelectItem value="Mercancía Peligrosa">Mercancía Peligrosa</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          {tipoCarga === 'Mercancía Peligrosa' && (
+            <div className="space-y-2">
+              <Label>Hoja de Seguridad (MSDS)</Label>
+              {msdsNombreArchivo ? (
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <FileText className="h-4 w-4" />
+                  <span className="truncate">{msdsNombreArchivo}</span>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => document.getElementById('msds-file-input')?.click()}
+                  >
+                    Cambiar
+                  </Button>
+                </div>
+              ) : (
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="w-full"
+                  disabled={subiendoMsds}
+                  onClick={() => document.getElementById('msds-file-input')?.click()}
+                >
+                  <Upload className="h-4 w-4 mr-2" />
+                  {subiendoMsds ? 'Subiendo...' : 'Adjuntar MSDS'}
+                </Button>
+              )}
+              <input
+                id="msds-file-input"
+                type="file"
+                accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
+                className="hidden"
+                onChange={(e) => {
+                  const archivo = e.target.files?.[0];
+                  if (archivo) onMsdsUpload(archivo);
+                  e.target.value = '';
+                }}
+              />
+            </div>
+          )}
           <div className="space-y-2">
             <Label>Peso (kg) *</Label>
             <Input type="number" placeholder="0" value={pesoKg} onChange={e => setPesoKg(e.target.value)} />

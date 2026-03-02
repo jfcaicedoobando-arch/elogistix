@@ -14,6 +14,7 @@ import { useExchangeRates } from "@/hooks/useExchangeRates";
 import { useRegistrarActividad } from "@/hooks/useBitacora";
 import { getDocsForMode } from "@/data/embarqueConstants";
 import { resolverContacto } from "@/lib/helpers";
+import { uploadFile } from "@/lib/storage";
 import { useConceptosForm } from "@/hooks/useConceptosForm";
 import { StepIndicator } from "@/components/embarque/StepIndicator";
 import { StepDatosGenerales } from "@/components/embarque/StepDatosGenerales";
@@ -50,6 +51,9 @@ export default function NuevoEmbarque() {
   const [pesoKg, setPesoKg] = useState('');
   const [volumenM3, setVolumenM3] = useState('');
   const [piezas, setPiezas] = useState('');
+  const [tipoCarga, setTipoCarga] = useState('Carga General');
+  const [msdsArchivo, setMsdsArchivo] = useState<string | null>(null);
+  const [subiendoMsds, setSubiendoMsds] = useState(false);
   const [puertoOrigen, setPuertoOrigen] = useState('');
   const [puertoDestino, setPuertoDestino] = useState('');
   const [naviera, setNaviera] = useState('');
@@ -92,6 +96,19 @@ export default function NuevoEmbarque() {
 
   const isStep1Valid = () => true;
   const isStep2Valid = () => true;
+
+  const handleMsdsUpload = async (archivo: File) => {
+    setSubiendoMsds(true);
+    try {
+      const ruta = `embarques/msds/${Date.now()}_${archivo.name}`;
+      await uploadFile(ruta, archivo);
+      setMsdsArchivo(ruta);
+    } catch {
+      toast({ title: "Error al subir MSDS", variant: "destructive" });
+    } finally {
+      setSubiendoMsds(false);
+    }
+  };
 
   const generateExpediente = () => {
     const year = new Date().getFullYear();
@@ -139,6 +156,8 @@ export default function NuevoEmbarque() {
           eta: eta || null,
           tipo_cambio_usd: Number(tipoCambioUSD),
           tipo_cambio_eur: Number(tipoCambioEUR),
+          tipo_carga: tipoCarga,
+          msds_archivo: msdsArchivo,
           operador: user?.email || '',
         },
         conceptosVenta: conceptosVenta
@@ -203,6 +222,9 @@ export default function NuevoEmbarque() {
           pesoKg={pesoKg} setPesoKg={setPesoKg}
           volumenM3={volumenM3} setVolumenM3={setVolumenM3}
           piezas={piezas} setPiezas={setPiezas}
+          tipoCarga={tipoCarga} setTipoCarga={setTipoCarga}
+          msdsArchivo={msdsArchivo} subiendoMsds={subiendoMsds}
+          onMsdsUpload={handleMsdsUpload}
         />
       )}
 

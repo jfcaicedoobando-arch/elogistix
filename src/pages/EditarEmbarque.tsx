@@ -16,6 +16,7 @@ import { useContactosCliente } from "@/hooks/useClientes";
 import { useAuth } from "@/contexts/AuthContext";
 import { useRegistrarActividad } from "@/hooks/useBitacora";
 import { useConceptosForm } from "@/hooks/useConceptosForm";
+import { uploadFile } from "@/lib/storage";
 import { StepIndicator } from "@/components/embarque/StepIndicator";
 import { StepDatosGenerales } from "@/components/embarque/StepDatosGenerales";
 import { StepDatosRuta } from "@/components/embarque/StepDatosRuta";
@@ -54,6 +55,9 @@ export default function EditarEmbarque() {
   const [pesoKg, setPesoKg] = useState('');
   const [volumenM3, setVolumenM3] = useState('');
   const [piezas, setPiezas] = useState('');
+  const [tipoCarga, setTipoCarga] = useState('Carga General');
+  const [msdsArchivo, setMsdsArchivo] = useState<string | null>(null);
+  const [subiendoMsds, setSubiendoMsds] = useState(false);
   const [puertoOrigen, setPuertoOrigen] = useState('');
   const [puertoDestino, setPuertoDestino] = useState('');
   const [naviera, setNaviera] = useState('');
@@ -99,6 +103,8 @@ export default function EditarEmbarque() {
     setPesoKg(String(embarque.peso_kg));
     setVolumenM3(String(embarque.volumen_m3));
     setPiezas(String(embarque.piezas));
+    setTipoCarga((embarque as any).tipo_carga ?? 'Carga General');
+    setMsdsArchivo((embarque as any).msds_archivo ?? null);
     setPuertoOrigen(embarque.puerto_origen ?? '');
     setPuertoDestino(embarque.puerto_destino ?? '');
     setNaviera(embarque.naviera ?? '');
@@ -149,6 +155,19 @@ export default function EditarEmbarque() {
 
   const selectedCliente = clientes.find(cliente => cliente.id === clienteId);
 
+  const handleMsdsUpload = async (archivo: File) => {
+    setSubiendoMsds(true);
+    try {
+      const ruta = `embarques/msds/${Date.now()}_${archivo.name}`;
+      await uploadFile(ruta, archivo);
+      setMsdsArchivo(ruta);
+    } catch {
+      toast({ title: "Error al subir MSDS", variant: "destructive" });
+    } finally {
+      setSubiendoMsds(false);
+    }
+  };
+
   const handleSave = async () => {
     if (!id || !embarque) return;
     try {
@@ -187,6 +206,8 @@ export default function EditarEmbarque() {
           eta: eta || null,
           tipo_cambio_usd: Number(tipoCambioUSD),
           tipo_cambio_eur: Number(tipoCambioEUR),
+          tipo_carga: tipoCarga,
+          msds_archivo: msdsArchivo,
           operador: user?.email || '',
         },
         conceptosVenta: conceptosVenta
@@ -273,6 +294,9 @@ export default function EditarEmbarque() {
           pesoKg={pesoKg} setPesoKg={setPesoKg}
           volumenM3={volumenM3} setVolumenM3={setVolumenM3}
           piezas={piezas} setPiezas={setPiezas}
+          tipoCarga={tipoCarga} setTipoCarga={setTipoCarga}
+          msdsArchivo={msdsArchivo} subiendoMsds={subiendoMsds}
+          onMsdsUpload={handleMsdsUpload}
         />
       )}
 
