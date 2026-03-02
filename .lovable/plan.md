@@ -1,51 +1,35 @@
 
 
-## Plan: Sección de Mercancía Aérea — v3.10.0
+## Plan: Autocompletado de puertos para carga marítima y multimodal — v3.11.0
+
+### Alcance
+
+Reemplazar los campos de texto libre de Origen y Destino en la sección Ruta por un componente con autocompletado basado en el catálogo de ~150 puertos, pero solo cuando el modo es Marítimo (FCL/LCL) o Multimodal. Los flujos Aéreo y Terrestre conservan sus campos actuales sin cambios.
 
 ### Cambios
 
-#### 1. Migración de base de datos
+#### 1. `src/components/PortSelect.tsx` — Permitir texto libre
 
-```sql
-ALTER TABLE public.cotizaciones ADD COLUMN dimensiones_aereas jsonb NOT NULL DEFAULT '[]';
-```
+Actualmente el componente solo permite seleccionar un puerto del catálogo (guarda el código UN/LOCODE). Se necesita que también permita escribir manualmente si el puerto no está en la lista:
 
-Almacena array de `{piezas, alto_cm, largo_cm, ancho_cm, peso_volumetrico_kg}`.
+- Cambiar el `value` para guardar el texto completo (ej. "Manzanillo — Manzanillo, México") en vez del código
+- Agregar un mensaje en `CommandEmpty` que permita usar el texto escrito tal cual
+- Cuando el usuario selecciona un puerto de la lista, se escribe "NombrePuerto — Ciudad, País"
+- Cuando escribe texto libre y confirma, se usa ese texto directamente
 
-#### 2. `src/hooks/useCotizaciones.ts`
+#### 2. `src/pages/NuevaCotizacion.tsx` — Sección Ruta
 
-- Nueva interfaz `DimensionAerea` con campo `peso_volumetrico_kg` (fórmula: H×L×W×Pcs / 6000)
-- Agregar `dimensiones_aereas` a `CotizacionRow` y `CreateCotizacionInput`
-- Incluir en el insert de `useCreateCotizacion`
+Renderizado condicional en la sección Ruta:
 
-#### 3. Nuevo componente `src/components/cotizacion/SeccionMercanciaAerea.tsx`
+- Si `modo` es `Marítimo` o `Multimodal`: usar `PortSelect` para Origen y Destino
+- Si `modo` es `Aéreo` o `Terrestre`: mantener los `Input` actuales
 
-Misma estructura visual que `SeccionMercanciaMaritimeLCL` pero con peso volumétrico en lugar de volumen:
-- Tipo de carga (dropdown)
-- Sector económico (dropdown 9 opciones)
-- Descripción adicional (Textarea)
-- MSDS condicional
-- Tabla dinámica: Piezas, Alto, Largo, Ancho, **Peso volumétrico kg** (auto: H×L×W×Pcs/6000), eliminar
-- Totales: Total piezas + Peso volumétrico total kg
+Los estados `origen` y `destino` siguen siendo strings, sin cambios en la base de datos.
 
-#### 4. `src/pages/NuevaCotizacion.tsx`
+#### 3. `src/pages/Changelog.tsx` — Entrada v3.11.0
 
-- Nuevo estado `dimensionesAereas`
-- Cuando `modo === 'Aéreo'`, renderizar `SeccionMercanciaAerea` en lugar de `SeccionMercanciaGeneral`
-- Calcular totales aéreos para `peso_kg` y `piezas`
-- Pasar `dimensiones_aereas` al hook de crear
-
-#### 5. `src/pages/CotizacionDetalle.tsx`
-
-- Cuando modo es Aéreo y tiene dimensiones aéreas, mostrar tabla con peso volumétrico
-- Mostrar totales: Total piezas + Peso volumétrico total
-
-#### 6. `src/pages/Changelog.tsx` — Entrada v3.10.0
-
-### Archivos
-- `src/hooks/useCotizaciones.ts` — nueva interfaz y campos
-- `src/components/cotizacion/SeccionMercanciaAerea.tsx` — nuevo
-- `src/pages/NuevaCotizacion.tsx` — renderizar componente aéreo
-- `src/pages/CotizacionDetalle.tsx` — visualizar dimensiones aéreas
+### Archivos modificados
+- `src/components/PortSelect.tsx` — soporte texto libre
+- `src/pages/NuevaCotizacion.tsx` — renderizado condicional en Ruta
 - `src/pages/Changelog.tsx`
 
