@@ -88,6 +88,7 @@ export default function NuevaCotizacion() {
   const [tipoMovimiento, setTipoMovimiento] = useState("");
   const [seguro, setSeguro] = useState(false);
   const [valorSeguroUsd, setValorSeguroUsd] = useState(0);
+  const [diasLibresDestino, setDiasLibresDestino] = useState(0);
 
   // Conceptos
   const [notas, setNotas] = useState("");
@@ -211,6 +212,7 @@ export default function NuevaCotizacion() {
         sector_economico: sectorEconomico,
         dimensiones_lcl: esMaritimo && tipoEmbarque === 'LCL' ? dimensionesLCL : [],
         dimensiones_aereas: esAereo ? dimensionesAereas : [],
+        dias_libres_destino: esMaritimo && tipoEmbarque === 'FCL' ? diasLibresDestino : 0,
         tiempo_transito_dias: tiempoTransitoDias ?? null,
         frecuencia,
         ruta_texto: rutaTexto,
@@ -396,6 +398,12 @@ export default function NuevaCotizacion() {
               <Label>Tiempo de tránsito (días)</Label>
               <Input type="number" min={0} value={tiempoTransitoDias ?? ''} onChange={e => setTiempoTransitoDias(e.target.value ? Number(e.target.value) : undefined)} placeholder="Ej. 25" />
             </div>
+            {esMaritimo && tipoEmbarque === 'FCL' && (
+              <div>
+                <Label>Días libres en destino</Label>
+                <Input type="number" min={0} value={diasLibresDestino} onChange={e => setDiasLibresDestino(Number(e.target.value))} placeholder="Ej. 7" />
+              </div>
+            )}
             <div>
               <Label>Frecuencia</Label>
               <Select value={frecuencia} onValueChange={setFrecuencia}>

@@ -13,6 +13,14 @@ interface ChangelogEntry {
 
 const changelog: ChangelogEntry[] = [
   {
+    version: "3.12.2",
+    date: "2026-03-02",
+    type: "patch",
+    title: "Campo 'Días libres en destino' para Marítimo FCL",
+    description:
+      "Nuevo campo numérico 'Días libres en destino' en la sección de Ruta del formulario de cotizaciones, visible únicamente cuando el modo es Marítimo y el tipo de embarque es FCL. Persistido en la base de datos y mostrado en el detalle de la cotización cuando el valor es mayor a 0.",
+  },
+  {
     version: "3.12.1",
     date: "2026-03-02",
     type: "patch",

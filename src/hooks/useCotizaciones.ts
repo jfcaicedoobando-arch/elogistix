@@ -64,6 +64,7 @@ export interface CotizacionRow {
   sector_economico: string;
   dimensiones_lcl: DimensionLCL[];
   dimensiones_aereas: DimensionAerea[];
+  dias_libres_destino: number;
   tiempo_transito_dias: number | null;
   frecuencia: string;
   ruta_texto: string;
@@ -156,6 +157,7 @@ export interface CreateCotizacionInput {
   sector_economico?: string;
   dimensiones_lcl?: DimensionLCL[];
   dimensiones_aereas?: DimensionAerea[];
+  dias_libres_destino?: number;
   tiempo_transito_dias?: number | null;
   frecuencia?: string;
   ruta_texto?: string;
@@ -209,6 +211,7 @@ export function useCreateCotizacion() {
           sector_economico: input.sector_economico || '',
           dimensiones_lcl: (input.dimensiones_lcl || []) as unknown as Json,
           dimensiones_aereas: (input.dimensiones_aereas || []) as unknown as Json,
+          dias_libres_destino: input.dias_libres_destino ?? 0,
           tiempo_transito_dias: input.tiempo_transito_dias ?? null,
           frecuencia: input.frecuencia || '',
           ruta_texto: input.ruta_texto || '',
