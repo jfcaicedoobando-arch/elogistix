@@ -14,8 +14,13 @@ export interface ConceptoVentaCotizacion {
 export interface CotizacionRow {
   id: string;
   folio: string;
-  cliente_id: string;
+  cliente_id: string | null;
   cliente_nombre: string;
+  es_prospecto: boolean;
+  prospecto_empresa: string;
+  prospecto_contacto: string;
+  prospecto_email: string;
+  prospecto_telefono: string;
   modo: string;
   tipo: string;
   incoterm: string;
@@ -47,7 +52,7 @@ export function useCotizaciones() {
         .select('*')
         .order('created_at', { ascending: false });
       if (error) throw error;
-      return (data as unknown as CotizacionRow[]);
+      return data as unknown as CotizacionRow[];
     },
   });
 }
@@ -81,16 +86,20 @@ async function generarFolio(): Promise<string> {
   if (error) throw error;
   let siguiente = 1;
   if (data && data.length > 0) {
-    const ultimo = data[0].folio;
-    const numero = parseInt(ultimo.replace(prefijo, ''), 10);
+    const numero = parseInt(data[0].folio.replace(prefijo, ''), 10);
     if (!isNaN(numero)) siguiente = numero + 1;
   }
   return `${prefijo}${String(siguiente).padStart(4, '0')}`;
 }
 
 interface CreateCotizacionInput {
-  cliente_id: string;
+  cliente_id?: string | null;
   cliente_nombre: string;
+  es_prospecto: boolean;
+  prospecto_empresa?: string;
+  prospecto_contacto?: string;
+  prospecto_email?: string;
+  prospecto_telefono?: string;
   modo: string;
   tipo: string;
   incoterm: string;
@@ -120,8 +129,13 @@ export function useCreateCotizacion() {
         .from('cotizaciones')
         .insert({
           folio,
-          cliente_id: input.cliente_id,
+          cliente_id: input.es_prospecto ? null : input.cliente_id,
           cliente_nombre: input.cliente_nombre,
+          es_prospecto: input.es_prospecto,
+          prospecto_empresa: input.prospecto_empresa || '',
+          prospecto_contacto: input.prospecto_contacto || '',
+          prospecto_email: input.prospecto_email || '',
+          prospecto_telefono: input.prospecto_telefono || '',
           modo: input.modo as any,
           tipo: input.tipo as any,
           incoterm: input.incoterm as any,
@@ -167,12 +181,91 @@ export function useUpdateEstadoCotizacion() {
   });
 }
 
-export function useConfirmarCotizacion() {
+/** Convierte un prospecto en cliente y actualiza la cotización */
+export function useConvertirProspectoACliente() {
+  const queryClient = useQueryClient();
+  const { user } = useAuth();
+
+  return useMutation({
+    mutationFn: async ({
+      cotizacionId,
+      clienteData,
+    }: {
+      cotizacionId: string;
+      clienteData: {
+        nombre: string;
+        contacto: string;
+        email: string;
+        telefono: string;
+        rfc?: string;
+        direccion?: string;
+        ciudad?: string;
+        estado?: string;
+        cp?: string;
+      };
+    }) => {
+      // 1. Crear cliente
+      const { data: clienteCreado, error: errorCliente } = await supabase
+        .from('clientes')
+        .insert({
+          nombre: clienteData.nombre,
+          contacto: clienteData.contacto,
+          email: clienteData.email,
+          telefono: clienteData.telefono,
+          rfc: clienteData.rfc || '',
+          direccion: clienteData.direccion || '',
+          ciudad: clienteData.ciudad || '',
+          estado: clienteData.estado || '',
+          cp: clienteData.cp || '',
+        })
+        .select()
+        .single();
+      if (errorCliente) throw errorCliente;
+
+      // 2. Actualizar cotización
+      const { error: errorUpdate } = await supabase
+        .from('cotizaciones')
+        .update({
+          cliente_id: clienteCreado.id,
+          cliente_nombre: clienteCreado.nombre,
+          es_prospecto: false,
+        } as any)
+        .eq('id', cotizacionId);
+      if (errorUpdate) throw errorUpdate;
+
+      // 3. Bitácora
+      if (user) {
+        await supabase.from('bitacora_actividad').insert({
+          usuario_id: user.id,
+          usuario_email: user.email ?? '',
+          accion: 'Convertir prospecto a cliente',
+          modulo: 'Cotizaciones',
+          entidad_id: cotizacionId,
+          entidad_nombre: clienteCreado.nombre,
+          detalles: { cliente_id: clienteCreado.id } as unknown as Json,
+        });
+      }
+
+      return clienteCreado;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['cotizaciones'] });
+      queryClient.invalidateQueries({ queryKey: ['clientes'] });
+    },
+  });
+}
+
+/** Crea un embarque desde una cotización aceptada */
+export function useCrearEmbarqueDesdeCotizacion() {
   const queryClient = useQueryClient();
   const { user } = useAuth();
 
   return useMutation({
     mutationFn: async (cotizacion: CotizacionRow) => {
+      if (!cotizacion.cliente_id) {
+        throw new Error('La cotización debe tener un cliente asignado antes de crear el embarque.');
+      }
+
       // 1. Generar expediente
       const anio = new Date().getFullYear();
       const prefijoExp = `EXP-${anio}-`;
@@ -211,10 +304,9 @@ export function useConfirmarCotizacion() {
       if (errorEmbarque) throw errorEmbarque;
 
       // 3. Insertar conceptos de venta
-      const conceptos = cotizacion.conceptos_venta;
-      if (conceptos.length > 0) {
+      if (cotizacion.conceptos_venta.length > 0) {
         const { error: errorConceptos } = await supabase.from('conceptos_venta').insert(
-          conceptos.map(c => ({
+          cotizacion.conceptos_venta.map(c => ({
             embarque_id: embarqueCreado.id,
             descripcion: c.descripcion,
             cantidad: c.cantidad,
@@ -226,14 +318,14 @@ export function useConfirmarCotizacion() {
         if (errorConceptos) throw errorConceptos;
       }
 
-      // 4. Actualizar cotización
+      // 4. Actualizar cotización a Confirmada
       const { error: errorActualizar } = await supabase
         .from('cotizaciones')
         .update({ estado: 'Confirmada' as any, embarque_id: embarqueCreado.id } as any)
         .eq('id', cotizacion.id);
       if (errorActualizar) throw errorActualizar;
 
-      // 5. Nota de sistema en embarque
+      // 5. Nota de sistema
       await supabase.from('notas_embarque').insert({
         embarque_id: embarqueCreado.id,
         contenido: `Embarque creado desde cotización ${cotizacion.folio}`,
@@ -245,7 +337,7 @@ export function useConfirmarCotizacion() {
         await supabase.from('bitacora_actividad').insert({
           usuario_id: user.id,
           usuario_email: user.email ?? '',
-          accion: 'Confirmar cotización',
+          accion: 'Crear embarque desde cotización',
           modulo: 'Cotizaciones',
           entidad_id: cotizacion.id,
           entidad_nombre: cotizacion.folio,
@@ -261,3 +353,6 @@ export function useConfirmarCotizacion() {
     },
   });
 }
+
+/** @deprecated Usa useCrearEmbarqueDesdeCotizacion en su lugar */
+export const useConfirmarCotizacion = useCrearEmbarqueDesdeCotizacion;

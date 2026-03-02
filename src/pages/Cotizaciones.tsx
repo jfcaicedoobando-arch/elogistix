@@ -18,13 +18,14 @@ import { usePermissions } from "@/hooks/usePermissions";
 import { formatDate } from "@/lib/helpers";
 import { formatCurrency } from "@/lib/formatters";
 
-const ESTADOS = ['Borrador', 'Enviada', 'Confirmada', 'Rechazada', 'Vencida'];
+const ESTADOS = ['Borrador', 'Enviada', 'Aceptada', 'Confirmada', 'Rechazada', 'Vencida'];
 const PAGE_SIZE = 10;
 
 function getEstadoCotizacionColor(estado: string) {
   switch (estado) {
     case 'Borrador': return 'bg-muted text-muted-foreground';
     case 'Enviada': return 'bg-blue-100 text-blue-800';
+    case 'Aceptada': return 'bg-amber-100 text-amber-800';
     case 'Confirmada': return 'bg-green-100 text-green-800';
     case 'Rechazada': return 'bg-red-100 text-red-800';
     case 'Vencida': return 'bg-orange-100 text-orange-800';

@@ -13,6 +13,14 @@ interface ChangelogEntry {
 
 const changelog: ChangelogEntry[] = [
   {
+    version: "3.7.0",
+    date: "2026-03-02",
+    type: "minor",
+    title: "Flujo Prospecto/Cliente en Cotizaciones",
+    description:
+      "Nuevo flujo de destinatario al crear cotizaciones: cliente existente o prospecto (empresa, contacto, email, teléfono). Nuevo estado 'Aceptada' intermedio. Al aceptar, si es prospecto se puede convertir a cliente con formulario pre-llenado; luego se habilita 'Crear Embarque'. Registro completo en bitácora.",
+  },
+  {
     version: "3.6.0",
     date: "2026-03-02",
     type: "minor",
