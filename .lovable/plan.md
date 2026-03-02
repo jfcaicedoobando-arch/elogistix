@@ -1,33 +1,17 @@
 
 
-## Plan: Campo "Carta garantía" (Sí/No) para Marítimo FCL — v3.12.4
+## Plan: Quitar validaciones obligatorias temporalmente — v3.12.5
 
-### Migración de base de datos
+### Cambios en `src/pages/NuevoEmbarque.tsx`
 
-```sql
-ALTER TABLE public.cotizaciones ADD COLUMN carta_garantia boolean NOT NULL DEFAULT false;
-```
+1. **`isStep1Valid()`** (línea 127-131): Cambiar para que siempre retorne `true`
+2. **`isStep2Valid()`** (línea 133-138): Cambiar para que siempre retorne `true`
+3. **Botón "Siguiente"** (línea 305): Quitar la condición `disabled` que depende de las validaciones
 
-### Cambios en código
-
-#### `src/pages/NuevaCotizacion.tsx`
-- Agregar estado `cartaGarantia` (boolean, default false)
-- Después del bloque de "Días libres en destino" (línea 408), dentro de la misma condición `esMaritimo && tipoEmbarque === 'FCL'`, agregar un `Select` dropdown con opciones "Sí" / "No"
-- Pasar `carta_garantia` al objeto de `crearCotizacion.mutateAsync()`
-
-#### `src/hooks/useCotizaciones.ts`
-- Agregar `carta_garantia: boolean` a `CotizacionRow`
-- Agregar `carta_garantia?: boolean` a `CreateCotizacionInput`
-- Incluir en el insert con valor por defecto `false`
-
-#### `src/pages/CotizacionDetalle.tsx`
-- Mostrar "Carta garantía: Sí/No" en Datos Generales cuando modo sea Marítimo y tipo_embarque sea FCL
-
-#### `src/pages/Changelog.tsx` — Entrada v3.12.4
+### Cambios en `src/pages/Changelog.tsx`
+- Agregar entrada v3.12.5: "Validaciones obligatorias deshabilitadas temporalmente para pruebas"
 
 ### Archivos modificados
-- `src/hooks/useCotizaciones.ts`
-- `src/pages/NuevaCotizacion.tsx`
-- `src/pages/CotizacionDetalle.tsx`
+- `src/pages/NuevoEmbarque.tsx`
 - `src/pages/Changelog.tsx`
 
