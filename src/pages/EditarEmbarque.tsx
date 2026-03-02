@@ -150,6 +150,7 @@ export default function EditarEmbarque() {
       concepto: conceptoCosto.concepto,
       monto: Number(conceptoCosto.monto),
       moneda: conceptoCosto.moneda,
+      iva: false,
     })));
   }, [conceptosCostoDb, initialized]);
 

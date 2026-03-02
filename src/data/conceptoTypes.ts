@@ -12,4 +12,5 @@ export interface ConceptoCostoLocal {
   concepto: string;
   monto: number;
   moneda: string;
+  iva: boolean;
 }
