@@ -1,34 +1,37 @@
 
 
-## Plan: Campos "Tipo de carga" y "MSDS" en Datos Generales — v3.13.1
+## Plan: Reestructurar sección Costos y Pricing — v3.13.2
 
-### Migración de base de datos
+### Cambios
 
-```sql
-ALTER TABLE public.embarques
-  ADD COLUMN tipo_carga text NOT NULL DEFAULT 'Carga General',
-  ADD COLUMN msds_archivo text DEFAULT NULL;
-```
+#### 1. `src/data/embarqueConstants.ts`
+- Reemplazar `CONCEPTOS_MARITIMOS` por `CONCEPTOS_EMBARQUE` con las 6 opciones: Flete Marítimo, Embalaje, Coordinación de Recolección, Seguro de Carga, Manejo, Demoras
 
-### Cambios en código
+#### 2. `src/components/embarque/StepCostosPrecios.tsx`
+- **Reordenar secciones**: Costos primero, Venta después
+- **Conceptos de Costos** — columnas en orden: Concepto (dropdown), Proveedor (texto libre en lugar de dropdown de proveedores), Monto, Moneda (solo MXN/USD), Total, Eliminar
+- **Conceptos de Venta** — solo reemplazar el campo de concepto (texto libre o `CONCEPTOS_MARITIMOS`) por el dropdown con las 6 opciones fijas. Mantener columnas actuales
+- Eliminar la condición `modo === 'Marítimo'` ya que el dropdown ahora aplica siempre
+- Eliminar prop `proveedoresDb` (ya no se usa dropdown de proveedores en costos)
 
-#### `src/components/embarque/StepDatosGenerales.tsx`
-- Agregar props: `tipoCarga`, `setTipoCarga`, `msdsArchivo`, `onMsdsUpload`
-- Después de "Descripción de la Mercancía" y antes de "Peso (kg)", agregar:
-  - Dropdown "Tipo de carga" con opciones: "Carga General" / "Mercancía Peligrosa"
-  - Si `tipoCarga === 'Mercancía Peligrosa'`: mostrar input type="file" para adjuntar MSDS con botón de carga y nombre del archivo si ya existe
+#### 3. `src/data/conceptoTypes.ts`
+- Cambiar `proveedorId` a `proveedor` (string, texto libre) en `ConceptoCostoLocal`
 
-#### `src/pages/NuevoEmbarque.tsx`
-- Agregar estados: `tipoCarga` (default `'Carga General'`), `msdsArchivo` (default `null`)
-- Función `handleMsdsUpload(file)`: sube a Storage en ruta `embarques/msds/{timestamp}_{nombre}` y guarda la ruta en `msdsArchivo`
-- Pasar nuevos props a `StepDatosGenerales`
-- En `handleFinish`: incluir `tipo_carga` y `msds_archivo` en el objeto `embarque`
+#### 4. `src/hooks/useConceptosForm.ts`
+- Actualizar valor inicial de costo para usar `proveedor: ''` en lugar de `proveedorId: ''`
 
-#### `src/pages/Changelog.tsx`
-- Entrada v3.13.1
+#### 5. Archivos que pasan `proveedoresDb` a StepCostosPrecios
+- `NuevoEmbarque.tsx` y `EditarEmbarque.tsx`: dejar de pasar `proveedoresDb`; actualizar referencias de `proveedorId` a `proveedor`
+
+#### 6. `src/pages/Changelog.tsx`
+- Entrada v3.13.2
 
 ### Archivos a modificar
-- `src/components/embarque/StepDatosGenerales.tsx`
+- `src/data/embarqueConstants.ts`
+- `src/data/conceptoTypes.ts`
+- `src/hooks/useConceptosForm.ts`
+- `src/components/embarque/StepCostosPrecios.tsx`
 - `src/pages/NuevoEmbarque.tsx`
+- `src/pages/EditarEmbarque.tsx`
 - `src/pages/Changelog.tsx`
 
