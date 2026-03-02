@@ -15,6 +15,7 @@ import { useRegistrarActividad } from "@/hooks/useBitacora";
 import { useAuth } from "@/contexts/AuthContext";
 import { uploadFile } from "@/lib/storage";
 import { Plus, Trash2, ArrowLeft, Save } from "lucide-react";
+import PortSelect from "@/components/PortSelect";
 
 import SeccionMercanciaMaritimaFCL from "@/components/cotizacion/SeccionMercanciaMaritimaFCL";
 import SeccionMercanciaMaritimeLCL from "@/components/cotizacion/SeccionMercanciaMaritimeLCL";
@@ -360,8 +361,17 @@ export default function NuevaCotizacion() {
       <Card>
         <CardHeader><CardTitle className="text-lg">Ruta</CardTitle></CardHeader>
         <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div><Label>Origen</Label><Input value={origen} onChange={e => setOrigen(e.target.value)} placeholder="Ej. Shanghai, China" /></div>
-          <div><Label>Destino</Label><Input value={destino} onChange={e => setDestino(e.target.value)} placeholder="Ej. Manzanillo, México" /></div>
+          {esMaritimo || modo === 'Multimodal' ? (
+            <>
+              <div><Label>Origen</Label><PortSelect value={origen} onValueChange={setOrigen} placeholder="Buscar puerto de origen..." /></div>
+              <div><Label>Destino</Label><PortSelect value={destino} onValueChange={setDestino} placeholder="Buscar puerto de destino..." /></div>
+            </>
+          ) : (
+            <>
+              <div><Label>Origen</Label><Input value={origen} onChange={e => setOrigen(e.target.value)} placeholder="Ej. Shanghai, China" /></div>
+              <div><Label>Destino</Label><Input value={destino} onChange={e => setDestino(e.target.value)} placeholder="Ej. Manzanillo, México" /></div>
+            </>
+          )}
         </CardContent>
       </Card>
 

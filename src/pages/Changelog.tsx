@@ -13,6 +13,14 @@ interface ChangelogEntry {
 
 const changelog: ChangelogEntry[] = [
   {
+    version: "3.11.0",
+    date: "2026-03-02",
+    type: "minor",
+    title: "Autocompletado de puertos para carga marítima y multimodal",
+    description:
+      "Los campos de Origen y Destino en la sección Ruta ahora usan un buscador con autocompletado basado en un catálogo de ~150 puertos cuando el modo es Marítimo o Multimodal. Cada sugerencia muestra nombre del puerto, ciudad y país. Si el puerto no está en la lista, se permite escribirlo manualmente. Los flujos Aéreo y Terrestre conservan sus campos actuales sin cambios.",
+  },
+  {
     version: "3.10.0",
     date: "2026-03-02",
     type: "minor",
