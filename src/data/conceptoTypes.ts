@@ -1,10 +1,9 @@
 export interface ConceptoVentaLocal {
   id: number;
   concepto: string;
-  proveedor: string;
-  monto: number;
+  cantidad: number;
+  precioUnitario: number;
   moneda: string;
-  total: number;
 }
 
 export interface ConceptoCostoLocal {
@@ -13,6 +12,4 @@ export interface ConceptoCostoLocal {
   concepto: string;
   monto: number;
   moneda: string;
-  aplicaIva: boolean;
-  total: number;
 }

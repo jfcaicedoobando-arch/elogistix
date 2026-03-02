@@ -13,38 +13,6 @@ interface ChangelogEntry {
 
 const changelog: ChangelogEntry[] = [
   {
-    version: "3.13.6",
-    date: "2026-03-02",
-    type: "patch",
-    title: "Reestructurar columnas de Conceptos de Venta",
-    description:
-      "La tabla de Conceptos de Venta ahora muestra: Concepto, Proveedor, Monto, Moneda, Subtotal (auto) y Total (auto). Se eliminó el toggle de IVA y los campos de cantidad/precio unitario.",
-  },
-  {
-    version: "3.13.5",
-    date: "2026-03-02",
-    type: "patch",
-    title: "Campo Total editable en conceptos de costo y venta",
-    description:
-      "El campo 'Total' en cada fila de costos y venta ahora es editable. Se auto-calcula al modificar monto/cantidad/precio/IVA, pero también permite ingresar un valor manualmente.",
-  },
-  {
-    version: "3.13.4",
-    date: "2026-03-02",
-    type: "patch",
-    title: "Campo Total calculado cambiado a etiqueta visual",
-    description:
-      "Los campos 'Total' en conceptos de costo y venta ahora se muestran como etiquetas en lugar de inputs readOnly, eliminando la confusión de un campo que parece editable pero no lo es.",
-  },
-  {
-    version: "3.13.3",
-    date: "2026-03-02",
-    type: "minor",
-    title: "Toggle 'Aplica IVA' y totales por sección en Costos y Pricing",
-    description:
-      "Cada fila de conceptos de costo y venta ahora incluye un checkbox 'Aplica IVA'. Al final de cada sección se muestran Subtotal, IVA (16% solo de filas marcadas) y Total. La utilidad estimada se calcula con los totales incluyendo IVA.",
-  },
-  {
     version: "3.13.2",
     date: "2026-03-02",
     type: "minor",

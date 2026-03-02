@@ -84,9 +84,7 @@ export default function EditarEmbarque() {
     conceptosVenta, conceptosCosto,
     updateConceptoVenta, addConceptoVenta, removeConceptoVenta,
     updateConceptoCosto, addConceptoCosto, removeConceptoCosto,
-    subtotalVenta, ivaVenta, totalVentaConIva,
-    totalCosto, ivaCosto, totalCostoConIva,
-    utilidadEstimada,
+    subtotalVenta, totalCosto, utilidadEstimada,
     inicializarVenta, inicializarCosto,
   } = useConceptosForm();
 
@@ -135,10 +133,9 @@ export default function EditarEmbarque() {
     inicializarVenta(conceptosVentaDb.map((conceptoVenta, indice) => ({
       id: indice + 1,
       concepto: conceptoVenta.descripcion,
-      proveedor: '',
-      monto: Number(conceptoVenta.precio_unitario) * conceptoVenta.cantidad,
+      cantidad: conceptoVenta.cantidad,
+      precioUnitario: Number(conceptoVenta.precio_unitario),
       moneda: conceptoVenta.moneda,
-      total: Number(conceptoVenta.precio_unitario) * conceptoVenta.cantidad * 1.16,
     })));
   }, [conceptosVentaDb, initialized]);
 
@@ -151,8 +148,6 @@ export default function EditarEmbarque() {
       concepto: conceptoCosto.concepto,
       monto: Number(conceptoCosto.monto),
       moneda: conceptoCosto.moneda,
-      aplicaIva: false,
-      total: Number(conceptoCosto.monto),
     })));
   }, [conceptosCostoDb, initialized]);
 
@@ -217,10 +212,10 @@ export default function EditarEmbarque() {
           .filter(venta => venta.concepto)
           .map(venta => ({
             descripcion: venta.concepto,
-            cantidad: 1,
-            precio_unitario: venta.monto,
+            cantidad: venta.cantidad,
+            precio_unitario: venta.precioUnitario,
             moneda: venta.moneda as any,
-            total: venta.monto,
+            total: venta.cantidad * venta.precioUnitario,
           })),
         conceptosCosto: conceptosCosto
           .filter(costo => costo.concepto)
@@ -333,11 +328,7 @@ export default function EditarEmbarque() {
           conceptosVenta={conceptosVenta}
           conceptosCosto={conceptosCosto}
           subtotalVenta={subtotalVenta}
-          ivaVenta={ivaVenta}
-          totalVentaConIva={totalVentaConIva}
           totalCosto={totalCosto}
-          ivaCosto={ivaCosto}
-          totalCostoConIva={totalCostoConIva}
           utilidadEstimada={utilidadEstimada}
           tipoCambioUSD={tipoCambioUSD} setTipoCambioUSD={setTipoCambioUSD}
           tipoCambioEUR={tipoCambioEUR} setTipoCambioEUR={setTipoCambioEUR}
