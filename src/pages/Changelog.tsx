@@ -13,6 +13,14 @@ interface ChangelogEntry {
 
 const changelog: ChangelogEntry[] = [
   {
+    version: "3.13.6",
+    date: "2026-03-02",
+    type: "patch",
+    title: "Reestructurar columnas de Conceptos de Venta",
+    description:
+      "La tabla de Conceptos de Venta ahora muestra: Concepto, Proveedor, Monto, Moneda, Subtotal (auto) y Total (auto). Se eliminó el toggle de IVA y los campos de cantidad/precio unitario.",
+  },
+  {
     version: "3.13.5",
     date: "2026-03-02",
     type: "patch",

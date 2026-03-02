@@ -132,18 +132,14 @@ export default function EditarEmbarque() {
   // Pre-llenar conceptos de venta
   useEffect(() => {
     if (!initialized || conceptosVentaDb.length === 0) return;
-    inicializarVenta(conceptosVentaDb.map((conceptoVenta, indice) => {
-      const base = conceptoVenta.cantidad * Number(conceptoVenta.precio_unitario);
-      return {
-        id: indice + 1,
-        concepto: conceptoVenta.descripcion,
-        cantidad: conceptoVenta.cantidad,
-        precioUnitario: Number(conceptoVenta.precio_unitario),
-        moneda: conceptoVenta.moneda,
-        aplicaIva: false,
-        total: base,
-      };
-    }));
+    inicializarVenta(conceptosVentaDb.map((conceptoVenta, indice) => ({
+      id: indice + 1,
+      concepto: conceptoVenta.descripcion,
+      proveedor: '',
+      monto: Number(conceptoVenta.precio_unitario) * conceptoVenta.cantidad,
+      moneda: conceptoVenta.moneda,
+      total: Number(conceptoVenta.precio_unitario) * conceptoVenta.cantidad * 1.16,
+    })));
   }, [conceptosVentaDb, initialized]);
 
   // Pre-llenar conceptos de costo
@@ -221,10 +217,10 @@ export default function EditarEmbarque() {
           .filter(venta => venta.concepto)
           .map(venta => ({
             descripcion: venta.concepto,
-            cantidad: venta.cantidad,
-            precio_unitario: venta.precioUnitario,
+            cantidad: 1,
+            precio_unitario: venta.monto,
             moneda: venta.moneda as any,
-            total: venta.cantidad * venta.precioUnitario,
+            total: venta.monto,
           })),
         conceptosCosto: conceptosCosto
           .filter(costo => costo.concepto)

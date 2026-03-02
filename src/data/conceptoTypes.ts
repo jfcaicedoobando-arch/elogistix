@@ -1,10 +1,9 @@
 export interface ConceptoVentaLocal {
   id: number;
   concepto: string;
-  cantidad: number;
-  precioUnitario: number;
+  proveedor: string;
+  monto: number;
   moneda: string;
-  aplicaIva: boolean;
   total: number;
 }
 
