@@ -13,6 +13,14 @@ interface ChangelogEntry {
 
 const changelog: ChangelogEntry[] = [
   {
+    version: "3.8.0",
+    date: "2026-03-02",
+    type: "minor",
+    title: "Tipo de Carga y Descripción de Mercancía en Cotizaciones",
+    description:
+      "Nuevo dropdown de Tipo de Carga (Carga General / Mercancía Peligrosa) con campo condicional para subir hoja de seguridad MSDS. Descripción de mercancía reemplazada por dropdown con 9 categorías fijas: Automotriz, Médica, Alimentos, Carga Proyecto, Construcción, Industrial, General, Tecnología, Arte y Moda.",
+  },
+  {
     version: "3.7.0",
     date: "2026-03-02",
     type: "minor",

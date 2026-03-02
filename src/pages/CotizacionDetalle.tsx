@@ -24,7 +24,8 @@ import { usePermissions } from "@/hooks/usePermissions";
 import { useToast } from "@/hooks/use-toast";
 import { formatDate } from "@/lib/helpers";
 import { formatCurrency } from "@/lib/formatters";
-import { ArrowLeft, CheckCircle, Send, XCircle, Ship, UserPlus, Anchor } from "lucide-react";
+import { getSignedUrl } from "@/lib/storage";
+import { ArrowLeft, CheckCircle, Send, XCircle, Ship, UserPlus, Anchor, FileDown, AlertTriangle } from "lucide-react";
 
 const estadoColor: Record<string, string> = {
   Borrador: 'bg-muted text-muted-foreground',
@@ -233,10 +234,33 @@ export default function CotizacionDetalle() {
         <CardHeader><CardTitle className="text-lg">Mercancía</CardTitle></CardHeader>
         <CardContent>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-            <div className="col-span-2"><span className="text-muted-foreground">Descripción</span><p className="font-medium">{cotizacion.descripcion_mercancia}</p></div>
+            <div>
+              <span className="text-muted-foreground">Tipo de Carga</span>
+              <p className="font-medium flex items-center gap-1">
+                {(cotizacion as any).tipo_carga === 'Mercancía Peligrosa' && <AlertTriangle className="h-4 w-4 text-destructive" />}
+                {(cotizacion as any).tipo_carga || 'Carga General'}
+              </p>
+            </div>
+            <div><span className="text-muted-foreground">Descripción</span><p className="font-medium">{cotizacion.descripcion_mercancia}</p></div>
             <div><span className="text-muted-foreground">Peso</span><p className="font-medium">{cotizacion.peso_kg} kg</p></div>
             <div><span className="text-muted-foreground">Volumen</span><p className="font-medium">{cotizacion.volumen_m3} m³</p></div>
             <div><span className="text-muted-foreground">Piezas</span><p className="font-medium">{cotizacion.piezas}</p></div>
+            {(cotizacion as any).msds_archivo && (
+              <div>
+                <span className="text-muted-foreground">MSDS</span>
+                <Button
+                  variant="link"
+                  size="sm"
+                  className="p-0 h-auto text-sm"
+                  onClick={async () => {
+                    const url = await getSignedUrl((cotizacion as any).msds_archivo);
+                    window.open(url, '_blank');
+                  }}
+                >
+                  <FileDown className="h-3 w-3 mr-1" /> Descargar
+                </Button>
+              </div>
+            )}
           </div>
         </CardContent>
       </Card>

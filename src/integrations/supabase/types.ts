@@ -307,6 +307,7 @@ export type Database = {
           incoterm: Database["public"]["Enums"]["incoterm"]
           modo: Database["public"]["Enums"]["modo_transporte"]
           moneda: Database["public"]["Enums"]["moneda"]
+          msds_archivo: string | null
           notas: string | null
           operador: string
           origen: string
@@ -318,6 +319,7 @@ export type Database = {
           prospecto_telefono: string
           subtotal: number
           tipo: Database["public"]["Enums"]["tipo_operacion"]
+          tipo_carga: string
           updated_at: string
           vigencia_dias: number
           volumen_m3: number
@@ -338,6 +340,7 @@ export type Database = {
           incoterm?: Database["public"]["Enums"]["incoterm"]
           modo: Database["public"]["Enums"]["modo_transporte"]
           moneda?: Database["public"]["Enums"]["moneda"]
+          msds_archivo?: string | null
           notas?: string | null
           operador?: string
           origen?: string
@@ -349,6 +352,7 @@ export type Database = {
           prospecto_telefono?: string
           subtotal?: number
           tipo: Database["public"]["Enums"]["tipo_operacion"]
+          tipo_carga?: string
           updated_at?: string
           vigencia_dias?: number
           volumen_m3?: number
@@ -369,6 +373,7 @@ export type Database = {
           incoterm?: Database["public"]["Enums"]["incoterm"]
           modo?: Database["public"]["Enums"]["modo_transporte"]
           moneda?: Database["public"]["Enums"]["moneda"]
+          msds_archivo?: string | null
           notas?: string | null
           operador?: string
           origen?: string
@@ -380,6 +385,7 @@ export type Database = {
           prospecto_telefono?: string
           subtotal?: number
           tipo?: Database["public"]["Enums"]["tipo_operacion"]
+          tipo_carga?: string
           updated_at?: string
           vigencia_dias?: number
           volumen_m3?: number

@@ -13,12 +13,18 @@ import { useClientesForSelect } from "@/hooks/useEmbarques";
 import { useCreateCotizacion, ConceptoVentaCotizacion } from "@/hooks/useCotizaciones";
 import { useRegistrarActividad } from "@/hooks/useBitacora";
 import { useAuth } from "@/contexts/AuthContext";
-import { Plus, Trash2, ArrowLeft, Save } from "lucide-react";
+import { uploadFile } from "@/lib/storage";
+import { Plus, Trash2, ArrowLeft, Save, Upload } from "lucide-react";
 
 const MODOS = ['Marítimo', 'Aéreo', 'Terrestre', 'Multimodal'];
 const TIPOS = ['Importación', 'Exportación', 'Nacional'];
 const INCOTERMS = ['EXW', 'FOB', 'CIF', 'DAP', 'DDP', 'FCA', 'CFR', 'CPT', 'CIP', 'DAT'];
 const MONEDAS = ['MXN', 'USD', 'EUR'];
+const TIPOS_CARGA = ['Carga General', 'Mercancía Peligrosa'];
+const DESCRIPCIONES_MERCANCIA = [
+  'Automotriz', 'Médica', 'Alimentos', 'Carga Proyecto',
+  'Construcción', 'Industrial', 'General', 'Tecnología', 'Arte y Moda',
+];
 
 export default function NuevaCotizacion() {
   const navigate = useNavigate();
@@ -40,6 +46,8 @@ export default function NuevaCotizacion() {
   const [tipo, setTipo] = useState("Importación");
   const [incoterm, setIncoterm] = useState("FOB");
   const [mercancia, setMercancia] = useState("");
+  const [tipoCarga, setTipoCarga] = useState("Carga General");
+  const [msdsFile, setMsdsFile] = useState<File | null>(null);
   const [pesoKg, setPesoKg] = useState(0);
   const [volumenM3, setVolumenM3] = useState(0);
   const [piezas, setPiezas] = useState(0);
@@ -97,6 +105,15 @@ export default function NuevaCotizacion() {
     }
 
     try {
+      // Subir MSDS si aplica
+      let msdsArchivo: string | null = null;
+      if (tipoCarga === 'Mercancía Peligrosa' && msdsFile) {
+        const ext = msdsFile.name.split('.').pop() || 'pdf';
+        const path = `cotizaciones/msds-${Date.now()}.${ext}`;
+        await uploadFile(path, msdsFile);
+        msdsArchivo = path;
+      }
+
       const cotizacion = await crearCotizacion.mutateAsync({
         es_prospecto: esProspecto,
         cliente_id: esProspecto ? null : clienteId,
@@ -120,6 +137,8 @@ export default function NuevaCotizacion() {
         vigencia_dias: vigenciaDias,
         notas,
         operador: user?.email ?? '',
+        tipo_carga: tipoCarga,
+        msds_archivo: msdsArchivo,
       });
       registrarActividad.mutate({
         accion: 'Crear cotización',
@@ -245,10 +264,37 @@ export default function NuevaCotizacion() {
       <Card>
         <CardHeader><CardTitle className="text-lg">Mercancía</CardTitle></CardHeader>
         <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="md:col-span-2">
-            <Label>Descripción de Mercancía *</Label>
-            <Input value={mercancia} onChange={e => setMercancia(e.target.value)} placeholder="Ej. Textiles, maquinaria industrial..." />
+          <div>
+            <Label>Tipo de Carga</Label>
+            <Select value={tipoCarga} onValueChange={setTipoCarga}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>{TIPOS_CARGA.map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}</SelectContent>
+            </Select>
           </div>
+          <div>
+            <Label>Descripción de Mercancía *</Label>
+            <Select value={mercancia} onValueChange={setMercancia}>
+              <SelectTrigger><SelectValue placeholder="Seleccionar tipo" /></SelectTrigger>
+              <SelectContent>{DESCRIPCIONES_MERCANCIA.map(d => <SelectItem key={d} value={d}>{d}</SelectItem>)}</SelectContent>
+            </Select>
+          </div>
+          {tipoCarga === 'Mercancía Peligrosa' && (
+            <div className="md:col-span-2">
+              <Label>Hoja de Seguridad (MSDS)</Label>
+              <div className="flex items-center gap-2 mt-1">
+                <Input
+                  type="file"
+                  accept=".pdf,.doc,.docx,.jpg,.png"
+                  onChange={e => setMsdsFile(e.target.files?.[0] || null)}
+                />
+                {msdsFile && (
+                  <span className="text-xs text-muted-foreground flex items-center gap-1">
+                    <Upload className="h-3 w-3" /> {msdsFile.name}
+                  </span>
+                )}
+              </div>
+            </div>
+          )}
           <div>
             <Label>Peso (kg)</Label>
             <Input type="number" min={0} value={pesoKg} onChange={e => setPesoKg(Number(e.target.value))} />
