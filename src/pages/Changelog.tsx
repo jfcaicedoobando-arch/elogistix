@@ -13,6 +13,14 @@ interface ChangelogEntry {
 
 const changelog: ChangelogEntry[] = [
   {
+    version: "3.13.4",
+    date: "2026-03-02",
+    type: "patch",
+    title: "Campo Total calculado cambiado a etiqueta visual",
+    description:
+      "Los campos 'Total' en conceptos de costo y venta ahora se muestran como etiquetas en lugar de inputs readOnly, eliminando la confusión de un campo que parece editable pero no lo es.",
+  },
+  {
     version: "3.13.3",
     date: "2026-03-02",
     type: "minor",
