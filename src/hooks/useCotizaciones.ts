@@ -73,6 +73,7 @@ export interface CotizacionRow {
   tipo_movimiento: string;
   seguro: boolean;
   valor_seguro_usd: number;
+  carta_garantia: boolean;
   created_at: string;
   updated_at: string;
 }
@@ -167,6 +168,7 @@ export interface CreateCotizacionInput {
   tipo_movimiento?: string;
   seguro?: boolean;
   valor_seguro_usd?: number;
+  carta_garantia?: boolean;
 }
 
 export function useCreateCotizacion() {
@@ -222,6 +224,7 @@ export function useCreateCotizacion() {
           tipo_movimiento: input.tipo_movimiento || '',
           seguro: input.seguro ?? false,
           valor_seguro_usd: input.valor_seguro_usd ?? 0,
+          carta_garantia: input.carta_garantia ?? false,
         } as any)
         .select()
         .single();

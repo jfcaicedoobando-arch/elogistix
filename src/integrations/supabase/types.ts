@@ -292,6 +292,7 @@ export type Database = {
       }
       cotizaciones: {
         Row: {
+          carta_garantia: boolean
           cliente_id: string | null
           cliente_nombre: string
           conceptos_venta: Json
@@ -341,6 +342,7 @@ export type Database = {
           volumen_m3: number
         }
         Insert: {
+          carta_garantia?: boolean
           cliente_id?: string | null
           cliente_nombre?: string
           conceptos_venta?: Json
@@ -390,6 +392,7 @@ export type Database = {
           volumen_m3?: number
         }
         Update: {
+          carta_garantia?: boolean
           cliente_id?: string | null
           cliente_nombre?: string
           conceptos_venta?: Json

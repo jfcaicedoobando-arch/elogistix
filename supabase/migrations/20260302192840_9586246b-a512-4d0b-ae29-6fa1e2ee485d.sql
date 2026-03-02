@@ -1,0 +1,1 @@
+ALTER TABLE public.cotizaciones ADD COLUMN carta_garantia boolean NOT NULL DEFAULT false;

@@ -13,6 +13,14 @@ interface ChangelogEntry {
 
 const changelog: ChangelogEntry[] = [
   {
+    version: "3.12.4",
+    date: "2026-03-02",
+    type: "patch",
+    title: "Campo 'Carta garantía' para Marítimo FCL",
+    description:
+      "Nuevo campo dropdown 'Carta garantía' (Sí/No) en la sección de Ruta del formulario de cotizaciones, visible únicamente cuando el modo es Marítimo y el tipo de embarque es FCL. Persistido en la base de datos y mostrado en el detalle de la cotización.",
+  },
+  {
     version: "3.12.3",
     date: "2026-03-02",
     type: "patch",
