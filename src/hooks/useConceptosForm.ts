@@ -8,7 +8,7 @@ interface UseConceptosFormOptions {
 
 export function useConceptosForm(opciones: UseConceptosFormOptions = {}) {
   const [conceptosVenta, setConceptosVenta] = useState<ConceptoVentaLocal[]>(
-    opciones.ventaInicial ?? [{ id: 1, concepto: '', cantidad: 1, precioUnitario: 0, moneda: 'MXN' }]
+    opciones.ventaInicial ?? [{ id: 1, concepto: '', cantidad: 1, precioUnitario: 0, moneda: 'MXN', iva: false }]
   );
   const [conceptosCosto, setConceptosCosto] = useState<ConceptoCostoLocal[]>(
     opciones.costoInicial ?? [{ id: 1, proveedorId: '', concepto: '', monto: 0, moneda: 'MXN', iva: false }]
@@ -20,12 +20,12 @@ export function useConceptosForm(opciones: UseConceptosFormOptions = {}) {
     (opciones.costoInicial?.length ?? 1) + 1
   );
 
-  const updateConceptoVenta = (id: number, field: keyof ConceptoVentaLocal, value: string | number) => {
-    setConceptosVenta(prev => prev.map(c => c.id === id ? { ...c, [field]: value } : c));
+  const updateConceptoVenta = (id: number, field: keyof ConceptoVentaLocal, value: string | number | boolean) => {
+    setConceptosVenta(prev => prev.map(c => c.id === id ? { ...c, [field]: field === 'iva' ? Boolean(value) : value } : c));
   };
 
   const addConceptoVenta = () => {
-    setConceptosVenta(prev => [...prev, { id: nextVentaId, concepto: '', cantidad: 1, precioUnitario: 0, moneda: 'MXN' }]);
+    setConceptosVenta(prev => [...prev, { id: nextVentaId, concepto: '', cantidad: 1, precioUnitario: 0, moneda: 'MXN', iva: false }]);
     setNextVentaId(n => n + 1);
   };
 
@@ -46,7 +46,10 @@ export function useConceptosForm(opciones: UseConceptosFormOptions = {}) {
     setConceptosCosto(prev => prev.filter(c => c.id !== id));
   };
 
-  const subtotalVenta = conceptosVenta.reduce((acc, c) => acc + (c.cantidad * c.precioUnitario), 0);
+  const subtotalVenta = conceptosVenta.reduce((acc, c) => {
+    const base = c.cantidad * c.precioUnitario;
+    return acc + (c.iva ? base * 1.16 : base);
+  }, 0);
   const totalCosto = conceptosCosto.reduce((acc, c) => acc + (c.iva ? c.monto * 1.16 : c.monto), 0);
   const utilidadEstimada = subtotalVenta - totalCosto;
 

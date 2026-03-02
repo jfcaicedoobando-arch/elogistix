@@ -138,6 +138,7 @@ export default function EditarEmbarque() {
       cantidad: conceptoVenta.cantidad,
       precioUnitario: Number(conceptoVenta.precio_unitario),
       moneda: conceptoVenta.moneda,
+      iva: false,
     })));
   }, [conceptosVentaDb, initialized]);
 

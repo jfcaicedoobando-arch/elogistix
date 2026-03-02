@@ -25,7 +25,7 @@ interface Props {
   setTipoCambioUSD: (v: string) => void;
   tipoCambioEUR: string;
   setTipoCambioEUR: (v: string) => void;
-  updateConceptoVenta: (id: number, field: keyof ConceptoVentaRow, value: string | number) => void;
+  updateConceptoVenta: (id: number, field: keyof ConceptoVentaRow, value: string | number | boolean) => void;
   addConceptoVenta: () => void;
   removeConceptoVenta: (id: number) => void;
   updateConceptoCosto: (id: number, field: keyof ConceptoCostoRow, value: string | number | boolean) => void;
@@ -86,30 +86,37 @@ export function StepCostosPrecios(props: Props) {
         <CardHeader><CardTitle className="text-sm">Conceptos de Venta</CardTitle></CardHeader>
         <CardContent>
           <div className="space-y-3">
-            <div className="grid grid-cols-[1fr_80px_100px_90px_100px_40px] gap-2 text-xs font-medium text-muted-foreground">
-              <span>Concepto</span><span>Cantidad</span><span>P. Unitario</span><span>Moneda</span><span>Total</span><span></span>
+            <div className="grid grid-cols-[1fr_80px_100px_90px_50px_100px_40px] gap-2 text-xs font-medium text-muted-foreground">
+              <span>Concepto</span><span>Cantidad</span><span>P. Unitario</span><span>Moneda</span><span>IVA</span><span>Total</span><span></span>
             </div>
-            {conceptosVenta.map(venta => (
-              <div key={venta.id} className="grid grid-cols-[1fr_80px_100px_90px_100px_40px] gap-2 items-center">
-                <Select value={venta.concepto} onValueChange={valorSeleccionado => updateConceptoVenta(venta.id, 'concepto', valorSeleccionado)}>
-                  <SelectTrigger className="text-sm"><SelectValue placeholder="Seleccionar" /></SelectTrigger>
-                  <SelectContent>{CATALOGO_CONCEPTOS.map(concepto => <SelectItem key={concepto} value={concepto}>{concepto}</SelectItem>)}</SelectContent>
-                </Select>
-                <Input type="number" min={1} className="text-sm" value={venta.cantidad} onChange={e => updateConceptoVenta(venta.id, 'cantidad', Number(e.target.value))} />
-                <Input type="number" min={0} step="0.01" className="text-sm" value={venta.precioUnitario || ''} onChange={e => updateConceptoVenta(venta.id, 'precioUnitario', Number(e.target.value))} />
-                <Select value={venta.moneda} onValueChange={valorSeleccionado => updateConceptoVenta(venta.id, 'moneda', valorSeleccionado)}>
-                  <SelectTrigger className="text-sm"><SelectValue /></SelectTrigger>
-                  <SelectContent><SelectItem value="MXN">MXN</SelectItem><SelectItem value="USD">USD</SelectItem><SelectItem value="EUR">EUR</SelectItem></SelectContent>
-                </Select>
-                <Input readOnly value={`$${(venta.cantidad * venta.precioUnitario).toFixed(2)}`} className="text-sm bg-muted" />
-                <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => removeConceptoVenta(venta.id)} disabled={conceptosVenta.length <= 1}>
-                  <Trash2 className="h-4 w-4 text-destructive" />
-                </Button>
-              </div>
-            ))}
+            {conceptosVenta.map(venta => {
+              const base = venta.cantidad * venta.precioUnitario;
+              const totalFila = venta.iva ? base * 1.16 : base;
+              return (
+                <div key={venta.id} className="grid grid-cols-[1fr_80px_100px_90px_50px_100px_40px] gap-2 items-center">
+                  <Select value={venta.concepto} onValueChange={v => updateConceptoVenta(venta.id, 'concepto', v)}>
+                    <SelectTrigger className="text-sm"><SelectValue placeholder="Seleccionar" /></SelectTrigger>
+                    <SelectContent>{CATALOGO_CONCEPTOS.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}</SelectContent>
+                  </Select>
+                  <Input type="number" min={1} className="text-sm" value={venta.cantidad} onChange={e => updateConceptoVenta(venta.id, 'cantidad', Number(e.target.value))} />
+                  <Input type="number" min={0} step="0.01" className="text-sm" value={venta.precioUnitario || ''} onChange={e => updateConceptoVenta(venta.id, 'precioUnitario', Number(e.target.value))} />
+                  <Select value={venta.moneda} onValueChange={v => updateConceptoVenta(venta.id, 'moneda', v)}>
+                    <SelectTrigger className="text-sm"><SelectValue /></SelectTrigger>
+                    <SelectContent><SelectItem value="MXN">MXN</SelectItem><SelectItem value="USD">USD</SelectItem><SelectItem value="EUR">EUR</SelectItem></SelectContent>
+                  </Select>
+                  <div className="flex justify-center">
+                    <Checkbox checked={venta.iva} onCheckedChange={checked => updateConceptoVenta(venta.id, 'iva', !!checked)} />
+                  </div>
+                  <Input readOnly value={`$${totalFila.toFixed(2)}`} className="text-sm bg-muted" />
+                  <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => removeConceptoVenta(venta.id)} disabled={conceptosVenta.length <= 1}>
+                    <Trash2 className="h-4 w-4 text-destructive" />
+                  </Button>
+                </div>
+              );
+            })}
             <Button variant="outline" size="sm" onClick={addConceptoVenta}>+ Agregar concepto</Button>
             <div className="border-t pt-3 mt-3 text-sm text-right">
-              <div className="flex justify-end gap-4"><span className="font-semibold">Subtotal (Sin IVA):</span><span className="font-bold w-28 text-right">${subtotalVenta.toFixed(2)}</span></div>
+              <div className="flex justify-end gap-4"><span className="font-semibold">Total:</span><span className="font-bold w-28 text-right">${subtotalVenta.toFixed(2)}</span></div>
             </div>
           </div>
         </CardContent>
