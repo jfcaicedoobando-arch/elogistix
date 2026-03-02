@@ -13,6 +13,14 @@ interface ChangelogEntry {
 
 const changelog: ChangelogEntry[] = [
   {
+    version: "3.13.3",
+    date: "2026-03-02",
+    type: "patch",
+    title: "Columnas Subtotal y Total en Conceptos de Costo",
+    description:
+      "Reordenamiento de columnas en la tabla de Conceptos de Costo: Concepto, Proveedor, Monto, Moneda, Subtotal (calculado), Total (calculado) y botón eliminar.",
+  },
+  {
     version: "3.13.2",
     date: "2026-03-02",
     type: "minor",
