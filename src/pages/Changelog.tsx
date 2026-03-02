@@ -13,6 +13,14 @@ interface ChangelogEntry {
 
 const changelog: ChangelogEntry[] = [
   {
+    version: "3.12.1",
+    date: "2026-03-02",
+    type: "patch",
+    title: "Vigencia reemplazada por Validez de la Propuesta",
+    description:
+      "Se eliminó el campo manual 'Vigencia (días)' de la sección inferior del formulario de cotizaciones. La vigencia ahora se calcula automáticamente a partir de la fecha de 'Validez de la propuesta' seleccionada en la sección de Ruta. La Card se renombró a 'Notas Adicionales' y solo muestra el campo de notas.",
+  },
+  {
     version: "3.12.0",
     date: "2026-03-02",
     type: "minor",

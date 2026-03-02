@@ -90,7 +90,6 @@ export default function NuevaCotizacion() {
   const [valorSeguroUsd, setValorSeguroUsd] = useState(0);
 
   // Conceptos
-  const [vigenciaDias, setVigenciaDias] = useState(15);
   const [notas, setNotas] = useState("");
   const [conceptos, setConceptos] = useState<ConceptoVentaCotizacion[]>([
     { descripcion: '', cantidad: 1, precio_unitario: 0, moneda: 'MXN', total: 0 },
@@ -200,7 +199,7 @@ export default function NuevaCotizacion() {
         conceptos_venta: conceptos,
         subtotal,
         moneda,
-        vigencia_dias: vigenciaDias,
+        vigencia_dias: validezPropuesta ? Math.max(1, Math.ceil((validezPropuesta.getTime() - Date.now()) / (1000 * 60 * 60 * 24))) : 15,
         notas,
         operador: user?.email ?? '',
         tipo_carga: tipoCarga,
@@ -497,18 +496,12 @@ export default function NuevaCotizacion() {
         </CardContent>
       </Card>
 
-      {/* Vigencia y Notas */}
+      {/* Notas Adicionales */}
       <Card>
-        <CardHeader><CardTitle className="text-lg">Vigencia y Notas</CardTitle></CardHeader>
-        <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <Label>Vigencia (días)</Label>
-            <Input type="number" min={1} value={vigenciaDias} onChange={e => setVigenciaDias(Number(e.target.value))} />
-          </div>
-          <div className="md:col-span-2">
-            <Label>Notas</Label>
-            <Textarea value={notas} onChange={e => setNotas(e.target.value)} placeholder="Observaciones o condiciones..." rows={3} />
-          </div>
+        <CardHeader><CardTitle className="text-lg">Notas Adicionales</CardTitle></CardHeader>
+        <CardContent>
+          <Label>Notas</Label>
+          <Textarea value={notas} onChange={e => setNotas(e.target.value)} placeholder="Observaciones o condiciones..." rows={3} />
         </CardContent>
       </Card>
 
