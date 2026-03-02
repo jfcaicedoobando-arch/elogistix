@@ -229,6 +229,9 @@ export default function CotizacionDetalle() {
             {esMaritimo && cotizacion.tipo_embarque === 'FCL' && (cotizacion as any).dias_libres_destino > 0 && (
               <div><span className="text-muted-foreground">Días libres en destino</span><p className="font-medium">{(cotizacion as any).dias_libres_destino} días</p></div>
             )}
+            {esMaritimo && cotizacion.tipo_embarque === 'LCL' && (cotizacion as any).dias_almacenaje > 0 && (
+              <div><span className="text-muted-foreground">Días de almacenaje</span><p className="font-medium">{(cotizacion as any).dias_almacenaje} días</p></div>
+            )}
             {(cotizacion as any).frecuencia && (
               <div><span className="text-muted-foreground">Frecuencia</span><p className="font-medium">{(cotizacion as any).frecuencia}</p></div>
             )}
