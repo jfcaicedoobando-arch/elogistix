@@ -19,6 +19,14 @@ export interface DimensionLCL {
   volumen_m3: number;
 }
 
+export interface DimensionAerea {
+  piezas: number;
+  alto_cm: number;
+  largo_cm: number;
+  ancho_cm: number;
+  peso_volumetrico_kg: number;
+}
+
 export interface CotizacionRow {
   id: string;
   folio: string;
@@ -55,6 +63,7 @@ export interface CotizacionRow {
   descripcion_adicional: string;
   sector_economico: string;
   dimensiones_lcl: DimensionLCL[];
+  dimensiones_aereas: DimensionAerea[];
   created_at: string;
   updated_at: string;
 }
@@ -139,6 +148,7 @@ export interface CreateCotizacionInput {
   descripcion_adicional?: string;
   sector_economico?: string;
   dimensiones_lcl?: DimensionLCL[];
+  dimensiones_aereas?: DimensionAerea[];
 }
 
 export function useCreateCotizacion() {
@@ -184,6 +194,7 @@ export function useCreateCotizacion() {
           descripcion_adicional: input.descripcion_adicional || '',
           sector_economico: input.sector_economico || '',
           dimensiones_lcl: (input.dimensiones_lcl || []) as unknown as Json,
+          dimensiones_aereas: (input.dimensiones_aereas || []) as unknown as Json,
         } as any)
         .select()
         .single();

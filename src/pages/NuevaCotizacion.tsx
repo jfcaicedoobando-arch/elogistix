@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { useClientesForSelect } from "@/hooks/useEmbarques";
-import { useCreateCotizacion, ConceptoVentaCotizacion, DimensionLCL } from "@/hooks/useCotizaciones";
+import { useCreateCotizacion, ConceptoVentaCotizacion, DimensionLCL, DimensionAerea } from "@/hooks/useCotizaciones";
 import { useRegistrarActividad } from "@/hooks/useBitacora";
 import { useAuth } from "@/contexts/AuthContext";
 import { uploadFile } from "@/lib/storage";
@@ -19,6 +19,7 @@ import { Plus, Trash2, ArrowLeft, Save } from "lucide-react";
 import SeccionMercanciaMaritimaFCL from "@/components/cotizacion/SeccionMercanciaMaritimaFCL";
 import SeccionMercanciaMaritimeLCL from "@/components/cotizacion/SeccionMercanciaMaritimeLCL";
 import SeccionMercanciaGeneral from "@/components/cotizacion/SeccionMercanciaGeneral";
+import SeccionMercanciaAerea from "@/components/cotizacion/SeccionMercanciaAerea";
 
 const MODOS = ['Marítimo', 'Aéreo', 'Terrestre', 'Multimodal'];
 const TIPOS = ['Importación', 'Exportación', 'Nacional'];
@@ -61,7 +62,12 @@ export default function NuevaCotizacion() {
     { piezas: 0, alto_cm: 0, largo_cm: 0, ancho_cm: 0, volumen_m3: 0 },
   ]);
 
-  // Mercancía — no marítimo
+  // Mercancía — aéreo
+  const [dimensionesAereas, setDimensionesAereas] = useState<DimensionAerea[]>([
+    { piezas: 0, alto_cm: 0, largo_cm: 0, ancho_cm: 0, peso_volumetrico_kg: 0 },
+  ]);
+
+  // Mercancía — no marítimo/aéreo
   const [pesoKg, setPesoKg] = useState(0);
   const [volumenM3, setVolumenM3] = useState(0);
   const [piezas, setPiezas] = useState(0);
@@ -79,6 +85,7 @@ export default function NuevaCotizacion() {
 
   const clienteSeleccionado = clientes.find(c => c.id === clienteId);
   const esMaritimo = modo === 'Marítimo';
+  const esAereo = modo === 'Aéreo';
 
   const handleCambiarTipoEmbarque = (nuevoTipo: "FCL" | "LCL") => {
     setTipoEmbarque(nuevoTipo);
@@ -114,6 +121,10 @@ export default function NuevaCotizacion() {
   const totalPiezasLCL = dimensionesLCL.reduce((sum, d) => sum + d.piezas, 0);
   const totalVolumenLCL = dimensionesLCL.reduce((sum, d) => sum + d.volumen_m3, 0);
 
+  // Calcular totales aéreos
+  const totalPiezasAereas = dimensionesAereas.reduce((sum, d) => sum + d.piezas, 0);
+  const totalPesoVolAereo = dimensionesAereas.reduce((sum, d) => sum + d.peso_volumetrico_kg, 0);
+
   const handleGuardar = async () => {
     if (!esProspecto && !clienteId) {
       toast({ title: "Selecciona un cliente", variant: "destructive" });
@@ -142,9 +153,18 @@ export default function NuevaCotizacion() {
       }
 
       // Determinar peso/volumen/piezas finales
-      const pesoFinal = esMaritimo ? 0 : pesoKg;
-      const volumenFinal = esMaritimo && tipoEmbarque === 'LCL' ? totalVolumenLCL : (esMaritimo ? 0 : volumenM3);
-      const piezasFinal = esMaritimo && tipoEmbarque === 'LCL' ? totalPiezasLCL : (esMaritimo ? 0 : piezas);
+      let pesoFinal = pesoKg;
+      let volumenFinal = volumenM3;
+      let piezasFinal = piezas;
+      if (esMaritimo) {
+        pesoFinal = 0;
+        volumenFinal = tipoEmbarque === 'LCL' ? totalVolumenLCL : 0;
+        piezasFinal = tipoEmbarque === 'LCL' ? totalPiezasLCL : 0;
+      } else if (esAereo) {
+        pesoFinal = totalPesoVolAereo;
+        volumenFinal = 0;
+        piezasFinal = totalPiezasAereas;
+      }
 
       const cotizacion = await crearCotizacion.mutateAsync({
         es_prospecto: esProspecto,
@@ -177,6 +197,7 @@ export default function NuevaCotizacion() {
         descripcion_adicional: descripcionAdicional,
         sector_economico: sectorEconomico,
         dimensiones_lcl: esMaritimo && tipoEmbarque === 'LCL' ? dimensionesLCL : [],
+        dimensiones_aereas: esAereo ? dimensionesAereas : [],
       });
 
       registrarActividad.mutate({
@@ -313,6 +334,14 @@ export default function NuevaCotizacion() {
                 />
               )}
             </div>
+          ) : esAereo ? (
+            <SeccionMercanciaAerea
+              tipoCarga={tipoCarga} setTipoCarga={setTipoCarga}
+              sectorEconomico={sectorEconomico} setSectorEconomico={setSectorEconomico}
+              descripcionAdicional={descripcionAdicional} setDescripcionAdicional={setDescripcionAdicional}
+              msdsFile={msdsFile} setMsdsFile={setMsdsFile}
+              dimensiones={dimensionesAereas} setDimensiones={setDimensionesAereas}
+            />
           ) : (
             <SeccionMercanciaGeneral
               tipoCarga={tipoCarga} setTipoCarga={setTipoCarga}

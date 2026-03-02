@@ -13,6 +13,14 @@ interface ChangelogEntry {
 
 const changelog: ChangelogEntry[] = [
   {
+    version: "3.10.0",
+    date: "2026-03-02",
+    type: "minor",
+    title: "Sección de Mercancía Aérea con peso volumétrico",
+    description:
+      "Nueva sección de mercancía específica para carga aérea. Incluye tipo de carga, sector económico, descripción adicional, MSDS condicional y tabla dinámica de dimensiones con cálculo automático de peso volumétrico por fila (H×L×W×Pcs / 6000). Totales de piezas y peso volumétrico en kg. Datos persistidos en columna JSONB dimensiones_aereas.",
+  },
+  {
     version: "3.9.0",
     date: "2026-03-02",
     type: "minor",
