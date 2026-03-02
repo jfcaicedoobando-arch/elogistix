@@ -13,6 +13,14 @@ interface ChangelogEntry {
 
 const changelog: ChangelogEntry[] = [
   {
+    version: "3.14.0",
+    date: "2026-03-02",
+    type: "minor",
+    title: "Conversión automática a USD en Costos y Venta",
+    description:
+      "Se agregó columna 'Total USD' en cada fila de Conceptos de Costo y Venta con conversión automática usando los tipos de cambio configurados. Los totales generales y la utilidad estimada ahora se calculan en USD.",
+  },
+  {
     version: "3.13.7",
     date: "2026-03-02",
     type: "patch",
