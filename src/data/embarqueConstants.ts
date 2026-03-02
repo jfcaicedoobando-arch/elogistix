@@ -10,4 +10,7 @@ export function getDocsForMode(modo: string): string[] {
 
 export const ESTADO_TIMELINE = ['Cotización', 'Confirmado', 'En Tránsito', 'Llegada', 'En Proceso', 'Cerrado'] as const;
 
-export const CONCEPTOS_MARITIMOS = ['Flete marítimo', 'Revalidación'];
+export const CONCEPTOS_EMBARQUE = ['Flete Marítimo', 'Embalaje', 'Coordinación de Recolección', 'Seguro de Carga', 'Manejo', 'Demoras'];
+
+/** @deprecated Usar CONCEPTOS_EMBARQUE */
+export const CONCEPTOS_MARITIMOS = CONCEPTOS_EMBARQUE;

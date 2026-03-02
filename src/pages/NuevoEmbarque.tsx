@@ -5,7 +5,6 @@ import { Button } from "@/components/ui/button";
 import { toast } from "@/hooks/use-toast";
 import {
   useClientesForSelect,
-  useProveedoresForSelect,
   useCreateEmbarque,
 } from "@/hooks/useEmbarques";
 import { useContactosCliente } from "@/hooks/useClientes";
@@ -33,7 +32,6 @@ export default function NuevoEmbarque() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { data: clientes = [] } = useClientesForSelect();
-  const { data: proveedoresDb = [] } = useProveedoresForSelect();
   const createEmbarque = useCreateEmbarque();
   const registrarActividad = useRegistrarActividad();
   const { data: tiposDeCambio } = useExchangeRates();
@@ -172,8 +170,8 @@ export default function NuevoEmbarque() {
         conceptosCosto: conceptosCosto
           .filter(costo => costo.concepto)
           .map(costo => ({
-            proveedor_id: costo.proveedorId || null,
-            proveedor_nombre: proveedoresDb.find(proveedor => proveedor.id === costo.proveedorId)?.nombre || '',
+            proveedor_id: null,
+            proveedor_nombre: costo.proveedor,
             concepto: costo.concepto,
             monto: costo.monto,
             moneda: costo.moneda as any,
@@ -257,10 +255,8 @@ export default function NuevoEmbarque() {
 
       {currentStep === 4 && (
         <StepCostosPrecios
-          modo={modo}
           conceptosVenta={conceptosVenta}
           conceptosCosto={conceptosCosto}
-          proveedoresDb={proveedoresDb}
           subtotalVenta={subtotalVenta}
           totalCosto={totalCosto}
           utilidadEstimada={utilidadEstimada}
