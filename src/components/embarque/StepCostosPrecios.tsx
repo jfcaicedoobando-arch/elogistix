@@ -78,7 +78,7 @@ export function StepCostosPrecios(props: Props) {
         <CardContent>
           <div className="space-y-3">
             <div className="grid grid-cols-[1fr_80px_100px_90px_100px_40px] gap-2 text-xs font-medium text-muted-foreground">
-              <span>Concepto</span><span>Cantidad</span><span>P. Unitario</span><span>Moneda</span><span>Total</span><span></span>
+              <span>Concepto</span><span>Cantidad</span><span>P. Unitario</span><span>Moneda</span><span>Subtotal</span><span></span>
             </div>
             {conceptosVenta.map(venta => (
               <div key={venta.id} className="grid grid-cols-[1fr_80px_100px_90px_100px_40px] gap-2 items-center">
@@ -92,7 +92,7 @@ export function StepCostosPrecios(props: Props) {
                   <SelectTrigger className="text-sm"><SelectValue /></SelectTrigger>
                   <SelectContent><SelectItem value="MXN">MXN</SelectItem><SelectItem value="USD">USD</SelectItem><SelectItem value="EUR">EUR</SelectItem></SelectContent>
                 </Select>
-                <Input readOnly value={`$${(venta.cantidad * venta.precioUnitario).toFixed(2)}`} className="text-sm bg-muted" />
+                <Input type="number" min={0} step="0.01" className="text-sm" value={venta.total || ''} onChange={e => updateConceptoVenta(venta.id, 'total', Number(e.target.value))} />
                 <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => removeConceptoVenta(venta.id)} disabled={conceptosVenta.length <= 1}>
                   <Trash2 className="h-4 w-4 text-destructive" />
                 </Button>

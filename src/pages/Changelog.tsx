@@ -16,9 +16,9 @@ const changelog: ChangelogEntry[] = [
     version: "3.13.3",
     date: "2026-03-02",
     type: "patch",
-    title: "Columnas Subtotal y Total en Conceptos de Costo",
+    title: "Subtotal editable en Conceptos de Venta y columnas en Costos",
     description:
-      "Reordenamiento de columnas en la tabla de Conceptos de Costo: Concepto, Proveedor, Monto, Moneda, Subtotal (calculado), Total (calculado) y botón eliminar.",
+      "El campo Subtotal en Conceptos de Venta ahora es editable manualmente (se autocalcula al cambiar cantidad o precio unitario, pero permite ajustes). Columnas Subtotal y Total agregadas en Conceptos de Costo.",
   },
   {
     version: "3.13.2",

@@ -136,6 +136,7 @@ export default function EditarEmbarque() {
       cantidad: conceptoVenta.cantidad,
       precioUnitario: Number(conceptoVenta.precio_unitario),
       moneda: conceptoVenta.moneda,
+      total: Number(conceptoVenta.total),
     })));
   }, [conceptosVentaDb, initialized]);
 
@@ -215,7 +216,7 @@ export default function EditarEmbarque() {
             cantidad: venta.cantidad,
             precio_unitario: venta.precioUnitario,
             moneda: venta.moneda as any,
-            total: venta.cantidad * venta.precioUnitario,
+            total: venta.total,
           })),
         conceptosCosto: conceptosCosto
           .filter(costo => costo.concepto)

@@ -4,6 +4,7 @@ export interface ConceptoVentaLocal {
   cantidad: number;
   precioUnitario: number;
   moneda: string;
+  total: number;
 }
 
 export interface ConceptoCostoLocal {
