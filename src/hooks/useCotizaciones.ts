@@ -11,6 +11,14 @@ export interface ConceptoVentaCotizacion {
   total: number;
 }
 
+export interface DimensionLCL {
+  piezas: number;
+  alto_cm: number;
+  largo_cm: number;
+  ancho_cm: number;
+  volumen_m3: number;
+}
+
 export interface CotizacionRow {
   id: string;
   folio: string;
@@ -41,6 +49,12 @@ export interface CotizacionRow {
   operador: string;
   tipo_carga: string;
   msds_archivo: string | null;
+  tipo_embarque: string;
+  tipo_contenedor: string | null;
+  tipo_peso: string;
+  descripcion_adicional: string;
+  sector_economico: string;
+  dimensiones_lcl: DimensionLCL[];
   created_at: string;
   updated_at: string;
 }
@@ -94,7 +108,7 @@ async function generarFolio(): Promise<string> {
   return `${prefijo}${String(siguiente).padStart(4, '0')}`;
 }
 
-interface CreateCotizacionInput {
+export interface CreateCotizacionInput {
   cliente_id?: string | null;
   cliente_nombre: string;
   es_prospecto: boolean;
@@ -119,6 +133,12 @@ interface CreateCotizacionInput {
   operador: string;
   tipo_carga?: string;
   msds_archivo?: string | null;
+  tipo_embarque?: string;
+  tipo_contenedor?: string | null;
+  tipo_peso?: string;
+  descripcion_adicional?: string;
+  sector_economico?: string;
+  dimensiones_lcl?: DimensionLCL[];
 }
 
 export function useCreateCotizacion() {
@@ -158,6 +178,12 @@ export function useCreateCotizacion() {
           operador: input.operador,
           tipo_carga: input.tipo_carga || 'Carga General',
           msds_archivo: input.msds_archivo || null,
+          tipo_embarque: input.tipo_embarque || 'FCL',
+          tipo_contenedor: input.tipo_contenedor || null,
+          tipo_peso: input.tipo_peso || 'Peso Normal',
+          descripcion_adicional: input.descripcion_adicional || '',
+          sector_economico: input.sector_economico || '',
+          dimensiones_lcl: (input.dimensiones_lcl || []) as unknown as Json,
         } as any)
         .select()
         .single();
@@ -210,7 +236,6 @@ export function useConvertirProspectoACliente() {
         cp?: string;
       };
     }) => {
-      // 1. Crear cliente
       const { data: clienteCreado, error: errorCliente } = await supabase
         .from('clientes')
         .insert({
@@ -228,7 +253,6 @@ export function useConvertirProspectoACliente() {
         .single();
       if (errorCliente) throw errorCliente;
 
-      // 2. Actualizar cotización
       const { error: errorUpdate } = await supabase
         .from('cotizaciones')
         .update({
@@ -239,7 +263,6 @@ export function useConvertirProspectoACliente() {
         .eq('id', cotizacionId);
       if (errorUpdate) throw errorUpdate;
 
-      // 3. Bitácora
       if (user) {
         await supabase.from('bitacora_actividad').insert({
           usuario_id: user.id,
@@ -272,7 +295,6 @@ export function useCrearEmbarqueDesdeCotizacion() {
         throw new Error('La cotización debe tener un cliente asignado antes de crear el embarque.');
       }
 
-      // 1. Generar expediente
       const anio = new Date().getFullYear();
       const prefijoExp = `EXP-${anio}-`;
       const { data: ultimoEmbarque } = await supabase
@@ -288,7 +310,6 @@ export function useCrearEmbarqueDesdeCotizacion() {
       }
       const expediente = `${prefijoExp}${String(sigExp).padStart(4, '0')}`;
 
-      // 2. Crear embarque
       const { data: embarqueCreado, error: errorEmbarque } = await supabase
         .from('embarques')
         .insert({
@@ -304,12 +325,13 @@ export function useCrearEmbarqueDesdeCotizacion() {
           piezas: cotizacion.piezas,
           estado: 'Cotización' as any,
           operador: cotizacion.operador,
+          tipo_contenedor: cotizacion.tipo_contenedor || null,
+          tipo_servicio: cotizacion.modo === 'Marítimo' ? (cotizacion.tipo_embarque as any) : null,
         })
         .select()
         .single();
       if (errorEmbarque) throw errorEmbarque;
 
-      // 3. Insertar conceptos de venta
       if (cotizacion.conceptos_venta.length > 0) {
         const { error: errorConceptos } = await supabase.from('conceptos_venta').insert(
           cotizacion.conceptos_venta.map(c => ({
@@ -324,21 +346,18 @@ export function useCrearEmbarqueDesdeCotizacion() {
         if (errorConceptos) throw errorConceptos;
       }
 
-      // 4. Actualizar cotización a Confirmada
       const { error: errorActualizar } = await supabase
         .from('cotizaciones')
         .update({ estado: 'Confirmada' as any, embarque_id: embarqueCreado.id } as any)
         .eq('id', cotizacion.id);
       if (errorActualizar) throw errorActualizar;
 
-      // 5. Nota de sistema
       await supabase.from('notas_embarque').insert({
         embarque_id: embarqueCreado.id,
         contenido: `Embarque creado desde cotización ${cotizacion.folio}`,
         tipo: 'sistema' as const,
       });
 
-      // 6. Bitácora
       if (user) {
         await supabase.from('bitacora_actividad').insert({
           usuario_id: user.id,

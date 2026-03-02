@@ -296,8 +296,10 @@ export type Database = {
           cliente_nombre: string
           conceptos_venta: Json
           created_at: string
+          descripcion_adicional: string
           descripcion_mercancia: string
           destino: string
+          dimensiones_lcl: Json
           embarque_id: string | null
           es_prospecto: boolean
           estado: Database["public"]["Enums"]["estado_cotizacion"]
@@ -317,9 +319,13 @@ export type Database = {
           prospecto_email: string
           prospecto_empresa: string
           prospecto_telefono: string
+          sector_economico: string
           subtotal: number
           tipo: Database["public"]["Enums"]["tipo_operacion"]
           tipo_carga: string
+          tipo_contenedor: string | null
+          tipo_embarque: string
+          tipo_peso: string
           updated_at: string
           vigencia_dias: number
           volumen_m3: number
@@ -329,8 +335,10 @@ export type Database = {
           cliente_nombre?: string
           conceptos_venta?: Json
           created_at?: string
+          descripcion_adicional?: string
           descripcion_mercancia?: string
           destino?: string
+          dimensiones_lcl?: Json
           embarque_id?: string | null
           es_prospecto?: boolean
           estado?: Database["public"]["Enums"]["estado_cotizacion"]
@@ -350,9 +358,13 @@ export type Database = {
           prospecto_email?: string
           prospecto_empresa?: string
           prospecto_telefono?: string
+          sector_economico?: string
           subtotal?: number
           tipo: Database["public"]["Enums"]["tipo_operacion"]
           tipo_carga?: string
+          tipo_contenedor?: string | null
+          tipo_embarque?: string
+          tipo_peso?: string
           updated_at?: string
           vigencia_dias?: number
           volumen_m3?: number
@@ -362,8 +374,10 @@ export type Database = {
           cliente_nombre?: string
           conceptos_venta?: Json
           created_at?: string
+          descripcion_adicional?: string
           descripcion_mercancia?: string
           destino?: string
+          dimensiones_lcl?: Json
           embarque_id?: string | null
           es_prospecto?: boolean
           estado?: Database["public"]["Enums"]["estado_cotizacion"]
@@ -383,9 +397,13 @@ export type Database = {
           prospecto_email?: string
           prospecto_empresa?: string
           prospecto_telefono?: string
+          sector_economico?: string
           subtotal?: number
           tipo?: Database["public"]["Enums"]["tipo_operacion"]
           tipo_carga?: string
+          tipo_contenedor?: string | null
+          tipo_embarque?: string
+          tipo_peso?: string
           updated_at?: string
           vigencia_dias?: number
           volumen_m3?: number

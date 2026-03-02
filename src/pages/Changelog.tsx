@@ -13,6 +13,14 @@ interface ChangelogEntry {
 
 const changelog: ChangelogEntry[] = [
   {
+    version: "3.9.0",
+    date: "2026-03-02",
+    type: "minor",
+    title: "Mercancía dinámica FCL/LCL para carga marítima",
+    description:
+      "Sección de mercancía en cotizaciones ahora se adapta dinámicamente al tipo de embarque marítimo. FCL muestra selector de contenedor (10 tipos), tipo de peso (Normal/Sobrepeso) y campos compartidos. LCL muestra tabla dinámica de dimensiones con cálculo automático de volumen m³ y totales. Para modos no marítimos se mantienen los campos estándar. Los datos se persisten en 6 nuevas columnas de la tabla cotizaciones.",
+  },
+  {
     version: "3.8.0",
     date: "2026-03-02",
     type: "minor",
