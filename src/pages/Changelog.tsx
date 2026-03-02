@@ -13,6 +13,14 @@ interface ChangelogEntry {
 
 const changelog: ChangelogEntry[] = [
   {
+    version: "3.12.5",
+    date: "2026-03-02",
+    type: "patch",
+    title: "Validaciones obligatorias deshabilitadas temporalmente",
+    description:
+      "Se deshabilitaron temporalmente todas las validaciones de campos obligatorios en el wizard de creación de embarques (Paso 1 y Paso 2) para facilitar las pruebas durante el desarrollo.",
+  },
+  {
     version: "3.12.4",
     date: "2026-03-02",
     type: "patch",

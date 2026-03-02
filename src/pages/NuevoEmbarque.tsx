@@ -124,18 +124,9 @@ export default function NuevoEmbarque() {
     return contacto ? `${contacto.nombre} — ${contacto.tipo} (${contacto.pais})` : consignatario;
   };
 
-  const isStep1Valid = () => {
-    const shipperVal = shipper === '__otro__' ? shipperManual.trim() : shipper;
-    const consigVal = consignatario === '__otro__' ? consignatarioManual.trim() : consignatario;
-    return modo && tipo && clienteId && incoterm && shipperVal && consigVal && descripcionMercancia.trim() && pesoKg && volumenM3 && piezas;
-  };
+  const isStep1Valid = () => true;
 
-  const isStep2Valid = () => {
-    if (modo === 'Marítimo' || !modo) {
-      return puertoOrigen && puertoDestino && naviera && tipoServicio && contenedor && tipoContenedor && etd && eta;
-    }
-    return etd && eta;
-  };
+  const isStep2Valid = () => true;
 
   const generateExpediente = () => {
     const year = new Date().getFullYear();
@@ -302,7 +293,7 @@ export default function NuevoEmbarque() {
           {currentStep === 1 ? 'Cancelar' : 'Anterior'}
         </Button>
         <Button
-          disabled={(currentStep === 1 && !isStep1Valid()) || (currentStep === 2 && !isStep2Valid()) || createEmbarque.isPending}
+          disabled={createEmbarque.isPending}
           onClick={() => {
             if (currentStep === 1 && !isStep1Valid()) {
               toast({ title: "Campos incompletos", description: "Completa todos los campos obligatorios (*) antes de continuar.", variant: "destructive" });
