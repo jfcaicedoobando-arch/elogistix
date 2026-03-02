@@ -16,6 +16,9 @@ import ClienteDetalle from "./pages/ClienteDetalle";
 import Proveedores from "./pages/Proveedores";
 import ProveedorDetalle from "./pages/ProveedorDetalle";
 import Reportes from "./pages/Reportes";
+import Cotizaciones from "./pages/Cotizaciones";
+import NuevaCotizacion from "./pages/NuevaCotizacion";
+import CotizacionDetalle from "./pages/CotizacionDetalle";
 import Changelog from "./pages/Changelog";
 import Bitacora from "./pages/Bitacora";
 import Usuarios from "./pages/Usuarios";
@@ -49,6 +52,9 @@ const App = () => (
             <Route path="/clientes/:id" element={<ClienteDetalle />} />
             <Route path="/proveedores" element={<Proveedores />} />
             <Route path="/proveedores/:id" element={<ProveedorDetalle />} />
+            <Route path="/cotizaciones" element={<Cotizaciones />} />
+            <Route path="/cotizaciones/nueva" element={<NuevaCotizacion />} />
+            <Route path="/cotizaciones/:id" element={<CotizacionDetalle />} />
             <Route path="/reportes" element={<Reportes />} />
             <Route path="/changelog" element={<Changelog />} />
             <Route path="/bitacora" element={<Bitacora />} />

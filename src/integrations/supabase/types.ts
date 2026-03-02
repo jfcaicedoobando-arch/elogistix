@@ -290,6 +290,87 @@ export type Database = {
           },
         ]
       }
+      cotizaciones: {
+        Row: {
+          cliente_id: string
+          cliente_nombre: string
+          conceptos_venta: Json
+          created_at: string
+          descripcion_mercancia: string
+          destino: string
+          embarque_id: string | null
+          estado: Database["public"]["Enums"]["estado_cotizacion"]
+          fecha_vigencia: string | null
+          folio: string
+          id: string
+          incoterm: Database["public"]["Enums"]["incoterm"]
+          modo: Database["public"]["Enums"]["modo_transporte"]
+          moneda: Database["public"]["Enums"]["moneda"]
+          notas: string | null
+          operador: string
+          origen: string
+          peso_kg: number
+          piezas: number
+          subtotal: number
+          tipo: Database["public"]["Enums"]["tipo_operacion"]
+          updated_at: string
+          vigencia_dias: number
+          volumen_m3: number
+        }
+        Insert: {
+          cliente_id: string
+          cliente_nombre?: string
+          conceptos_venta?: Json
+          created_at?: string
+          descripcion_mercancia?: string
+          destino?: string
+          embarque_id?: string | null
+          estado?: Database["public"]["Enums"]["estado_cotizacion"]
+          fecha_vigencia?: string | null
+          folio: string
+          id?: string
+          incoterm?: Database["public"]["Enums"]["incoterm"]
+          modo: Database["public"]["Enums"]["modo_transporte"]
+          moneda?: Database["public"]["Enums"]["moneda"]
+          notas?: string | null
+          operador?: string
+          origen?: string
+          peso_kg?: number
+          piezas?: number
+          subtotal?: number
+          tipo: Database["public"]["Enums"]["tipo_operacion"]
+          updated_at?: string
+          vigencia_dias?: number
+          volumen_m3?: number
+        }
+        Update: {
+          cliente_id?: string
+          cliente_nombre?: string
+          conceptos_venta?: Json
+          created_at?: string
+          descripcion_mercancia?: string
+          destino?: string
+          embarque_id?: string | null
+          estado?: Database["public"]["Enums"]["estado_cotizacion"]
+          fecha_vigencia?: string | null
+          folio?: string
+          id?: string
+          incoterm?: Database["public"]["Enums"]["incoterm"]
+          modo?: Database["public"]["Enums"]["modo_transporte"]
+          moneda?: Database["public"]["Enums"]["moneda"]
+          notas?: string | null
+          operador?: string
+          origen?: string
+          peso_kg?: number
+          piezas?: number
+          subtotal?: number
+          tipo?: Database["public"]["Enums"]["tipo_operacion"]
+          updated_at?: string
+          vigencia_dias?: number
+          volumen_m3?: number
+        }
+        Relationships: []
+      }
       documentos_embarque: {
         Row: {
           archivo: string | null
@@ -671,6 +752,12 @@ export type Database = {
     }
     Enums: {
       app_role: "admin" | "operador" | "viewer"
+      estado_cotizacion:
+        | "Borrador"
+        | "Enviada"
+        | "Confirmada"
+        | "Rechazada"
+        | "Vencida"
       estado_documento: "Pendiente" | "Recibido" | "Validado"
       estado_embarque:
         | "Cotización"
@@ -843,6 +930,13 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["admin", "operador", "viewer"],
+      estado_cotizacion: [
+        "Borrador",
+        "Enviada",
+        "Confirmada",
+        "Rechazada",
+        "Vencida",
+      ],
       estado_documento: ["Pendiente", "Recibido", "Validado"],
       estado_embarque: [
         "Cotización",
