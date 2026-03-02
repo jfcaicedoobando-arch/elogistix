@@ -12,35 +12,49 @@ interface PortSelectProps {
   placeholder?: string;
 }
 
+function formatPort(port: { name: string; country: string }) {
+  return `${port.name} — ${port.name}, ${port.country}`;
+}
+
 export default function PortSelect({ value, onValueChange, placeholder = "Seleccionar puerto" }: PortSelectProps) {
   const [open, setOpen] = useState(false);
-
-  const selected = ports.find(p => p.code === value);
-  const label = selected ? `${selected.name}, ${selected.country} (${selected.code})` : "";
+  const [search, setSearch] = useState("");
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
         <Button variant="outline" role="combobox" aria-expanded={open} className="w-full justify-between font-normal">
-          {label || <span className="text-muted-foreground">{placeholder}</span>}
+          {value ? <span className="truncate">{value}</span> : <span className="text-muted-foreground">{placeholder}</span>}
           <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-[350px] p-0" align="start">
         <Command>
-          <CommandInput placeholder="Buscar puerto, país o código..." />
+          <CommandInput placeholder="Buscar puerto, país o ciudad..." value={search} onValueChange={setSearch} />
           <CommandList>
-            <CommandEmpty>No se encontró el puerto.</CommandEmpty>
+            <CommandEmpty>
+              {search.trim() ? (
+                <button
+                  type="button"
+                  className="w-full px-2 py-1.5 text-sm text-left hover:bg-accent rounded cursor-pointer"
+                  onClick={() => { onValueChange(search.trim()); setSearch(""); setOpen(false); }}
+                >
+                  Usar "<span className="font-medium">{search.trim()}</span>"
+                </button>
+              ) : (
+                "No se encontró el puerto."
+              )}
+            </CommandEmpty>
             <CommandGroup>
               {ports.map(port => {
-                const display = `${port.name}, ${port.country} (${port.code})`;
+                const display = formatPort(port);
                 return (
                   <CommandItem
                     key={port.code}
                     value={`${port.name} ${port.country} ${port.code}`}
-                    onSelect={() => { onValueChange(port.code); setOpen(false); }}
+                    onSelect={() => { onValueChange(display); setSearch(""); setOpen(false); }}
                   >
-                    <Check className={cn("mr-2 h-4 w-4", value === port.code ? "opacity-100" : "opacity-0")} />
+                    <Check className={cn("mr-2 h-4 w-4", value === display ? "opacity-100" : "opacity-0")} />
                     {display}
                   </CommandItem>
                 );
