@@ -113,3 +113,23 @@ export function useDeleteContacto() {
     onSuccess: (_resultado, vars) => queryClient.invalidateQueries({ queryKey: ["contactos_cliente", vars.cliente_id] }),
   });
 }
+
+export function useUpdateCliente() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, ...updates }: Partial<Cliente> & { id: string }) => {
+      const { data, error } = await supabase
+        .from("clientes")
+        .update(updates)
+        .eq("id", id)
+        .select()
+        .single();
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: (clienteActualizado) => {
+      queryClient.invalidateQueries({ queryKey: ["clientes"] });
+      queryClient.invalidateQueries({ queryKey: ["clientes", clienteActualizado.id] });
+    },
+  });
+}

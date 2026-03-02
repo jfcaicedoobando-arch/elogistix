@@ -1,9 +1,12 @@
 import { useParams, useNavigate } from "react-router-dom";
-import { ArrowLeft, Edit, Printer } from "lucide-react";
+import { ArrowLeft, Edit, Printer, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { formatCurrency } from "@/lib/formatters";
 import { getEstadoColor, getModoIcon } from "@/lib/helpers";
 import { usePermissions } from "@/hooks/usePermissions";
@@ -11,7 +14,9 @@ import { uploadFile, getSignedUrl } from "@/lib/storage";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useRegistrarActividad } from "@/hooks/useBitacora";
+import { useAuth } from "@/contexts/AuthContext";
 import { useState } from "react";
+import { ESTADO_TIMELINE } from "@/data/embarqueConstants";
 import {
   useEmbarque,
   useEmbarqueConceptosVenta,
@@ -19,6 +24,7 @@ import {
   useEmbarqueDocumentos,
   useEmbarqueNotas,
   useEmbarqueFacturas,
+  useAvanzarEstadoEmbarque,
 } from "@/hooks/useEmbarques";
 import { TabResumen } from "@/components/embarque/TabResumen";
 import { TabDocumentos } from "@/components/embarque/TabDocumentos";
@@ -30,6 +36,7 @@ export default function EmbarqueDetalle() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { user } = useAuth();
   const { canEdit } = usePermissions();
   const registrarActividad = useRegistrarActividad();
   const { data: embarque, isLoading } = useEmbarque(id);
@@ -38,6 +45,7 @@ export default function EmbarqueDetalle() {
   const { data: documentos = [], refetch: refetchDocs } = useEmbarqueDocumentos(id);
   const { data: notas = [] } = useEmbarqueNotas(id);
   const { data: facturas = [] } = useEmbarqueFacturas(id);
+  const avanzarEstado = useAvanzarEstadoEmbarque();
 
   const [uploadingDocId, setUploadingDocId] = useState<string | null>(null);
   const [downloadingDocId, setDownloadingDocId] = useState<string | null>(null);
@@ -74,6 +82,35 @@ export default function EmbarqueDetalle() {
       toast({ title: "Error al descargar", description: err.message, variant: "destructive" });
     } finally {
       setDownloadingDocId(null);
+    }
+  };
+
+  const getSiguienteEstado = (estadoActual: string) => {
+    const idx = ESTADO_TIMELINE.indexOf(estadoActual as any);
+    if (idx < 0 || idx >= ESTADO_TIMELINE.length - 1) return null;
+    return ESTADO_TIMELINE[idx + 1];
+  };
+
+  const handleAvanzarEstado = async () => {
+    if (!embarque || !id) return;
+    const siguiente = getSiguienteEstado(embarque.estado);
+    if (!siguiente) return;
+    try {
+      await avanzarEstado.mutateAsync({
+        embarqueId: id,
+        nuevoEstado: siguiente,
+        usuarioEmail: user?.email ?? '',
+      });
+      registrarActividad.mutate({
+        accion: 'cambiar_estado',
+        modulo: 'embarques',
+        entidad_id: id,
+        entidad_nombre: embarque.expediente,
+        detalles: { estado_anterior: embarque.estado, estado_nuevo: siguiente },
+      });
+      toast({ title: `Estado actualizado a "${siguiente}"` });
+    } catch (err: any) {
+      toast({ title: "Error al cambiar estado", description: err.message, variant: "destructive" });
     }
   };
 
@@ -114,6 +151,8 @@ export default function EmbarqueDetalle() {
   const utilidad = totalVenta - totalCosto;
   const margen = totalVenta > 0 ? (utilidad / totalVenta) * 100 : 0;
 
+  const siguienteEstado = getSiguienteEstado(embarque.estado);
+
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-4">
@@ -129,6 +168,28 @@ export default function EmbarqueDetalle() {
           <p className="text-sm text-muted-foreground">{embarque.cliente_nombre}</p>
         </div>
         <div className="flex gap-2">
+          {canEdit && siguienteEstado && (
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button size="sm" disabled={avanzarEstado.isPending}>
+                  <ChevronRight className="h-4 w-4 mr-1" />
+                  Avanzar a {siguienteEstado}
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Confirmar cambio de estado</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    ¿Estás seguro de cambiar el estado de <strong>{embarque.estado}</strong> a <strong>{siguienteEstado}</strong>? Esta acción quedará registrada en la bitácora.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                  <AlertDialogAction onClick={handleAvanzarEstado}>Confirmar</AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          )}
           {canEdit && <Button variant="outline" size="sm" onClick={() => navigate(`/embarques/${id}/editar`)}><Edit className="h-4 w-4 mr-1" /> Editar</Button>}
           <Button variant="outline" size="sm"><Printer className="h-4 w-4 mr-1" /> Imprimir</Button>
         </div>
@@ -174,7 +235,7 @@ export default function EmbarqueDetalle() {
         </TabsContent>
 
         <TabsContent value="notas">
-          <TabNotas notas={notas} />
+          <TabNotas notas={notas} embarqueId={id} />
         </TabsContent>
       </Tabs>
     </div>

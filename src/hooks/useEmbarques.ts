@@ -258,3 +258,51 @@ export function useProveedoresForSelect() {
     },
   });
 }
+
+export function useAvanzarEstadoEmbarque() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ embarqueId, nuevoEstado, usuarioEmail }: { embarqueId: string; nuevoEstado: string; usuarioEmail: string }) => {
+      const { error: errorEstado } = await supabase
+        .from('embarques')
+        .update({ estado: nuevoEstado as any })
+        .eq('id', embarqueId);
+      if (errorEstado) throw errorEstado;
+
+      const { error: errorNota } = await supabase
+        .from('notas_embarque')
+        .insert({
+          embarque_id: embarqueId,
+          contenido: `Estado cambiado a "${nuevoEstado}"`,
+          tipo: 'cambio_estado' as const,
+          usuario: usuarioEmail,
+        });
+      if (errorNota) throw errorNota;
+    },
+    onSuccess: (_resultado, vars) => {
+      queryClient.invalidateQueries({ queryKey: ['embarques'] });
+      queryClient.invalidateQueries({ queryKey: ['embarques', vars.embarqueId] });
+      queryClient.invalidateQueries({ queryKey: ['notas_embarque', vars.embarqueId] });
+    },
+  });
+}
+
+export function useCreateNotaEmbarque() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ embarqueId, contenido, usuario }: { embarqueId: string; contenido: string; usuario: string }) => {
+      const { error } = await supabase
+        .from('notas_embarque')
+        .insert({
+          embarque_id: embarqueId,
+          contenido,
+          tipo: 'nota' as const,
+          usuario,
+        });
+      if (error) throw error;
+    },
+    onSuccess: (_resultado, vars) => {
+      queryClient.invalidateQueries({ queryKey: ['notas_embarque', vars.embarqueId] });
+    },
+  });
+}
