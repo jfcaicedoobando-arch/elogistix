@@ -13,6 +13,14 @@ interface ChangelogEntry {
 
 const changelog: ChangelogEntry[] = [
   {
+    version: "4.2.2",
+    date: "2026-03-03",
+    type: "patch",
+    title: "Auto-mapeo de conceptos de costo al crear embarque desde cotización",
+    description:
+      "Al confirmar una cotización y crear el embarque, ahora se generan automáticamente las filas de conceptos de costo espejo con los mismos nombres de concepto y moneda heredada, con monto en $0. El operador solo necesita asignar proveedor y capturar el monto.",
+  },
+  {
     version: "4.2.1",
     date: "2026-03-03",
     type: "patch",

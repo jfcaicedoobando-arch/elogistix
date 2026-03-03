@@ -374,17 +374,28 @@ export function useCrearEmbarqueDesdeCotizacion() {
       if (errorEmbarque) throw errorEmbarque;
 
       if (cotizacion.conceptos_venta.length > 0) {
-        const { error: errorConceptos } = await supabase.from('conceptos_venta').insert(
-          cotizacion.conceptos_venta.map(c => ({
-            embarque_id: embarqueCreado.id,
-            descripcion: c.descripcion,
-            cantidad: c.cantidad,
-            precio_unitario: c.precio_unitario,
-            moneda: c.moneda as any,
-            total: c.total,
-          }))
-        );
+        const conceptosVentaRows = cotizacion.conceptos_venta.map(c => ({
+          embarque_id: embarqueCreado.id,
+          descripcion: c.descripcion,
+          cantidad: c.cantidad,
+          precio_unitario: c.precio_unitario,
+          moneda: c.moneda as any,
+          total: c.total,
+        }));
+        const { error: errorConceptos } = await supabase.from('conceptos_venta').insert(conceptosVentaRows);
         if (errorConceptos) throw errorConceptos;
+
+        // Auto-crear conceptos de costo espejo con monto en 0
+        const conceptosCostoRows = cotizacion.conceptos_venta.map(c => ({
+          embarque_id: embarqueCreado.id,
+          concepto: c.descripcion,
+          moneda: c.moneda as any,
+          monto: 0,
+          proveedor_id: null,
+          proveedor_nombre: '',
+        }));
+        const { error: errorCostos } = await supabase.from('conceptos_costo').insert(conceptosCostoRows);
+        if (errorCostos) throw errorCostos;
       }
 
       const { error: errorActualizar } = await supabase
