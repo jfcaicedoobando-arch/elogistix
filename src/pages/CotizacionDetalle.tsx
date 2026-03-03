@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useParams, useNavigate, Link } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -10,15 +10,11 @@ import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
 import {
-  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription,
-  AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
-import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
 } from "@/components/ui/dialog";
 import {
   useCotizacion, useUpdateEstadoCotizacion,
-  useCrearEmbarqueDesdeCotizacion, useConvertirProspectoACliente,
+  useConvertirProspectoACliente,
   DimensionLCL, DimensionAerea,
 } from "@/hooks/useCotizaciones";
 import { usePermissions } from "@/hooks/usePermissions";
@@ -26,7 +22,7 @@ import { useToast } from "@/hooks/use-toast";
 import { formatDate, getEstadoColor } from "@/lib/helpers";
 import { formatCurrency } from "@/lib/formatters";
 import { getSignedUrl } from "@/lib/storage";
-import { ArrowLeft, CheckCircle, Send, XCircle, Ship, UserPlus, Anchor, FileDown, AlertTriangle } from "lucide-react";
+import { ArrowLeft, CheckCircle, Send, XCircle, UserPlus, FileDown, AlertTriangle } from "lucide-react";
 
 export default function CotizacionDetalle() {
   const { id } = useParams<{ id: string }>();
@@ -34,7 +30,6 @@ export default function CotizacionDetalle() {
   const { toast } = useToast();
   const { data: cotizacion, isLoading } = useCotizacion(id);
   const actualizarEstado = useUpdateEstadoCotizacion();
-  const crearEmbarque = useCrearEmbarqueDesdeCotizacion();
   const convertirProspecto = useConvertirProspectoACliente();
   const { canEdit } = usePermissions();
 
@@ -54,7 +49,6 @@ export default function CotizacionDetalle() {
 
   const esBorradorOEnviada = cotizacion.estado === 'Borrador' || cotizacion.estado === 'Enviada';
   const esAceptada = cotizacion.estado === 'Aceptada';
-  const esConfirmada = cotizacion.estado === 'Confirmada';
   const esMaritimo = cotizacion.modo === 'Marítimo';
   const esAereo = cotizacion.modo === 'Aéreo';
 
@@ -64,16 +58,6 @@ export default function CotizacionDetalle() {
       toast({ title: `Estado actualizado a "${estado}"` });
     } catch (err: any) {
       toast({ title: "Error", description: err.message, variant: "destructive" });
-    }
-  };
-
-  const handleCrearEmbarque = async () => {
-    try {
-      const embarque = await crearEmbarque.mutateAsync(cotizacion);
-      toast({ title: `Embarque ${embarque.expediente} creado desde cotización.` });
-      navigate(`/embarques/${embarque.id}`);
-    } catch (err: any) {
-      toast({ title: "Error al crear embarque", description: err.message, variant: "destructive" });
     }
   };
 
@@ -149,41 +133,7 @@ export default function CotizacionDetalle() {
               <UserPlus className="h-4 w-4 mr-1" /> Convertir a Cliente
             </Button>
           )}
-          {esAceptada && !cotizacion.es_prospecto && (
-            <AlertDialog>
-              <AlertDialogTrigger asChild>
-                <Button size="sm"><Anchor className="h-4 w-4 mr-1" /> Crear Embarque</Button>
-              </AlertDialogTrigger>
-              <AlertDialogContent>
-                <AlertDialogHeader>
-                  <AlertDialogTitle>¿Crear embarque desde esta cotización?</AlertDialogTitle>
-                  <AlertDialogDescription>
-                    Se creará un embarque nuevo con los datos de esta cotización y pasará a estado "Confirmada".
-                  </AlertDialogDescription>
-                </AlertDialogHeader>
-                <AlertDialogFooter>
-                  <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                  <AlertDialogAction onClick={handleCrearEmbarque} disabled={crearEmbarque.isPending}>
-                    {crearEmbarque.isPending ? 'Creando...' : 'Crear Embarque'}
-                  </AlertDialogAction>
-                </AlertDialogFooter>
-              </AlertDialogContent>
-            </AlertDialog>
-          )}
         </div>
-      )}
-
-      {/* Link a embarque si confirmada */}
-      {esConfirmada && cotizacion.embarque_id && (
-        <Card className="border-green-200 bg-green-50">
-          <CardContent className="p-4 flex items-center gap-3">
-            <Ship className="h-5 w-5 text-green-700" />
-            <span className="text-sm text-green-800">
-              Embarque creado:{' '}
-              <Link to={`/embarques/${cotizacion.embarque_id}`} className="font-medium underline">Ver embarque</Link>
-            </span>
-          </CardContent>
-        </Card>
       )}
 
       {/* Info de prospecto */}
@@ -382,31 +332,32 @@ export default function CotizacionDetalle() {
       {/* Conceptos de venta */}
       <Card>
         <CardHeader><CardTitle className="text-lg">Conceptos de Venta</CardTitle></CardHeader>
-        <CardContent className="p-0">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Descripción</TableHead>
-                <TableHead className="text-right">Cantidad</TableHead>
-                <TableHead className="text-right">P. Unitario</TableHead>
-                <TableHead className="text-right">Total</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {cotizacion.conceptos_venta.map((concepto, indice) => (
-                <TableRow key={indice}>
-                  <TableCell>{concepto.descripcion}</TableCell>
-                  <TableCell className="text-right">{concepto.cantidad}</TableCell>
-                  <TableCell className="text-right">{formatCurrency(concepto.precio_unitario, concepto.moneda || cotizacion.moneda)}</TableCell>
-                  <TableCell className="text-right">{formatCurrency(concepto.total, concepto.moneda || cotizacion.moneda)}</TableCell>
+        <CardContent>
+          <div className="border rounded-md overflow-auto">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Descripción</TableHead>
+                  <TableHead className="text-right">Cantidad</TableHead>
+                  <TableHead className="text-right">Precio Unitario</TableHead>
+                  <TableHead className="text-right">Total</TableHead>
                 </TableRow>
-              ))}
-              <TableRow className="font-semibold">
-                <TableCell colSpan={3} className="text-right">Subtotal</TableCell>
-                <TableCell className="text-right">{formatCurrency(cotizacion.subtotal, cotizacion.moneda)}</TableCell>
-              </TableRow>
-            </TableBody>
-          </Table>
+              </TableHeader>
+              <TableBody>
+                {cotizacion.conceptos_venta.map((concepto, indice) => (
+                  <TableRow key={indice}>
+                    <TableCell>{concepto.descripcion}</TableCell>
+                    <TableCell className="text-right">{concepto.cantidad}</TableCell>
+                    <TableCell className="text-right">{formatCurrency(concepto.precio_unitario, concepto.moneda)}</TableCell>
+                    <TableCell className="text-right font-medium">{formatCurrency(concepto.total, concepto.moneda)}</TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+          <div className="flex justify-end mt-3">
+            <p className="text-lg font-bold">Subtotal: {formatCurrency(cotizacion.subtotal, cotizacion.moneda)}</p>
+          </div>
         </CardContent>
       </Card>
 
@@ -414,33 +365,33 @@ export default function CotizacionDetalle() {
       {cotizacion.notas && (
         <Card>
           <CardHeader><CardTitle className="text-lg">Notas</CardTitle></CardHeader>
-          <CardContent><p className="text-sm whitespace-pre-wrap">{cotizacion.notas}</p></CardContent>
+          <CardContent>
+            <p className="text-sm whitespace-pre-wrap">{cotizacion.notas}</p>
+          </CardContent>
         </Card>
       )}
 
-      <div className="text-xs text-muted-foreground">
-        Creada: {formatDate(cotizacion.created_at)} · Actualizada: {formatDate(cotizacion.updated_at)}
-      </div>
-
-      {/* Dialog: Convertir Prospecto a Cliente */}
+      {/* Dialog Convertir Prospecto */}
       <Dialog open={showConvertir} onOpenChange={setShowConvertir}>
         <DialogContent className="max-w-lg">
-          <DialogHeader><DialogTitle>Convertir Prospecto a Cliente</DialogTitle></DialogHeader>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="md:col-span-2"><Label>Nombre de Empresa *</Label><Input value={clienteForm.nombre} onChange={e => setClienteForm(f => ({ ...f, nombre: e.target.value }))} /></div>
-            <div><Label>Contacto</Label><Input value={clienteForm.contacto} onChange={e => setClienteForm(f => ({ ...f, contacto: e.target.value }))} /></div>
-            <div><Label>Email</Label><Input type="email" value={clienteForm.email} onChange={e => setClienteForm(f => ({ ...f, email: e.target.value }))} /></div>
-            <div><Label>Teléfono</Label><Input value={clienteForm.telefono} onChange={e => setClienteForm(f => ({ ...f, telefono: e.target.value }))} /></div>
-            <div><Label>RFC</Label><Input value={clienteForm.rfc} onChange={e => setClienteForm(f => ({ ...f, rfc: e.target.value }))} /></div>
-            <div><Label>Dirección</Label><Input value={clienteForm.direccion} onChange={e => setClienteForm(f => ({ ...f, direccion: e.target.value }))} /></div>
-            <div><Label>Ciudad</Label><Input value={clienteForm.ciudad} onChange={e => setClienteForm(f => ({ ...f, ciudad: e.target.value }))} /></div>
-            <div><Label>Estado</Label><Input value={clienteForm.estado} onChange={e => setClienteForm(f => ({ ...f, estado: e.target.value }))} /></div>
-            <div><Label>C.P.</Label><Input value={clienteForm.cp} onChange={e => setClienteForm(f => ({ ...f, cp: e.target.value }))} /></div>
+          <DialogHeader>
+            <DialogTitle>Convertir Prospecto a Cliente</DialogTitle>
+          </DialogHeader>
+          <div className="grid grid-cols-2 gap-3">
+            <div className="col-span-2"><Label>Nombre / Empresa *</Label><Input value={clienteForm.nombre} onChange={e => setClienteForm(p => ({ ...p, nombre: e.target.value }))} /></div>
+            <div><Label>Contacto *</Label><Input value={clienteForm.contacto} onChange={e => setClienteForm(p => ({ ...p, contacto: e.target.value }))} /></div>
+            <div><Label>Email</Label><Input value={clienteForm.email} onChange={e => setClienteForm(p => ({ ...p, email: e.target.value }))} /></div>
+            <div><Label>Teléfono</Label><Input value={clienteForm.telefono} onChange={e => setClienteForm(p => ({ ...p, telefono: e.target.value }))} /></div>
+            <div><Label>RFC</Label><Input value={clienteForm.rfc} onChange={e => setClienteForm(p => ({ ...p, rfc: e.target.value }))} /></div>
+            <div className="col-span-2"><Label>Dirección</Label><Input value={clienteForm.direccion} onChange={e => setClienteForm(p => ({ ...p, direccion: e.target.value }))} /></div>
+            <div><Label>Ciudad</Label><Input value={clienteForm.ciudad} onChange={e => setClienteForm(p => ({ ...p, ciudad: e.target.value }))} /></div>
+            <div><Label>Estado</Label><Input value={clienteForm.estado} onChange={e => setClienteForm(p => ({ ...p, estado: e.target.value }))} /></div>
+            <div><Label>C.P.</Label><Input value={clienteForm.cp} onChange={e => setClienteForm(p => ({ ...p, cp: e.target.value }))} /></div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setShowConvertir(false)}>Cancelar</Button>
             <Button onClick={handleConvertir} disabled={convertirProspecto.isPending}>
-              {convertirProspecto.isPending ? 'Guardando...' : 'Crear Cliente'}
+              {convertirProspecto.isPending ? 'Creando...' : 'Crear Cliente'}
             </Button>
           </DialogFooter>
         </DialogContent>
