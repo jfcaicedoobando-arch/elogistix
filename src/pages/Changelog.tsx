@@ -13,6 +13,14 @@ interface ChangelogEntry {
 
 const changelog: ChangelogEntry[] = [
   {
+    version: "4.2.5",
+    date: "2026-03-03",
+    type: "patch",
+    title: "Etiqueta 'Tax ID' en contactos de cliente",
+    description:
+      "Se cambió la etiqueta 'RFC' por 'Tax ID' en el formulario de contactos (Proveedor/Exportador/Importador) dentro de un cliente, ya que estos pueden ser de otros países.",
+  },
+  {
     version: "4.2.4",
     date: "2026-03-03",
     type: "patch",
