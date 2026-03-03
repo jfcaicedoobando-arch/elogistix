@@ -13,6 +13,14 @@ interface ChangelogEntry {
 
 const changelog: ChangelogEntry[] = [
   {
+    version: "4.2.4",
+    date: "2026-03-03",
+    type: "patch",
+    title: "Campo Valor de mercancía sin flechas de incremento",
+    description:
+      "El campo 'Valor de mercancía (USD)' ahora es un input de texto con validación numérica decimal, sin las flechas de incremento/decremento del navegador.",
+  },
+  {
     version: "4.2.3",
     date: "2026-03-03",
     type: "patch",
