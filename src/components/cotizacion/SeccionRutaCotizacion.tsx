@@ -150,7 +150,7 @@ export default function SeccionRutaCotizacion({
           {seguro && (
             <div>
               <Label>Valor de mercancía (USD)</Label>
-              <Input type="number" min={0} step={0.01} value={valorSeguroUsd} onChange={e => setValorSeguroUsd(Number(e.target.value))} placeholder="0.00" />
+              <Input type="text" inputMode="decimal" pattern="[0-9]*\.?[0-9]*" value={valorSeguroUsd || ''} onChange={e => { const v = e.target.value; if (/^\d*\.?\d*$/.test(v)) setValorSeguroUsd(Number(v) || 0); }} placeholder="0.00" />
             </div>
           )}
         </div>
