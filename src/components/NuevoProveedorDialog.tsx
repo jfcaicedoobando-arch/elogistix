@@ -1,13 +1,14 @@
-import { useState, useRef } from "react";
+import { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Check, Upload, ArrowLeft, ArrowRight } from "lucide-react";
-import type { TipoProveedor, Moneda, DocumentoProveedor } from "@/data/types";
+import { ArrowLeft, ArrowRight } from "lucide-react";
+import type { TipoProveedor, Moneda } from "@/data/types";
 import { TIPOS_PROVEEDOR as TIPOS, MONEDAS_PROVEEDOR as MONEDAS, PAISES_PROVEEDOR as PAISES } from "@/data/proveedorConstants";
 import type { TablesInsert } from "@/integrations/supabase/types";
+import DocumentChecklist, { type DocumentoChecklist } from "@/components/DocumentChecklist";
 
 const DOCS_NACIONAL = [
   'CIF', 'Opinión fiscal', 'Acta constitutiva', 'INE RL',
@@ -41,8 +42,7 @@ const emptyForm = {
 export default function NuevoProveedorDialog({ open, onOpenChange, onSave }: Props) {
   const [form, setForm] = useState({ ...emptyForm });
   const [step, setStep] = useState<1 | 2>(1);
-  const [documentos, setDocumentos] = useState<DocumentoProveedor[]>([]);
-  const fileInputRefs = useRef<Record<string, HTMLInputElement | null>>({});
+  const [documentos, setDocumentos] = useState<DocumentoChecklist[]>([]);
 
   const isAgenteCarga = form.tipo === 'Agente de Carga';
   const rfcLabel = form.origen_proveedor === 'Extranjero' ? 'Tax ID' : 'RFC';
@@ -68,11 +68,7 @@ export default function NuevoProveedorDialog({ open, onOpenChange, onSave }: Pro
 
   const handleFileChange = (docNombre: string, file: File | undefined) => {
     setDocumentos(prev =>
-      prev.map(documento =>
-        documento.nombre === docNombre
-          ? { ...documento, archivo: file?.name, adjuntado: !!file }
-          : documento
-      )
+      prev.map(d => d.nombre === docNombre ? { ...d, archivo: file?.name, adjuntado: !!file } : d)
     );
   };
 
@@ -89,10 +85,10 @@ export default function NuevoProveedorDialog({ open, onOpenChange, onSave }: Pro
   };
 
   const handleTipoChange = (valorSeleccionado: string) => {
-    setForm(formularioActual => ({
-      ...formularioActual,
+    setForm(prev => ({
+      ...prev,
       tipo: valorSeleccionado as TipoProveedor,
-      pais: valorSeleccionado === 'Agente de Carga' ? formularioActual.pais : '',
+      pais: valorSeleccionado === 'Agente de Carga' ? prev.pais : '',
     }));
   };
 
@@ -100,16 +96,14 @@ export default function NuevoProveedorDialog({ open, onOpenChange, onSave }: Pro
     <Dialog open={open} onOpenChange={(abierto) => { if (!abierto) resetAndClose(); else onOpenChange(abierto); }}>
       <DialogContent className="sm:max-w-md max-h-[85vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>
-            Nuevo Proveedor — Paso {step} de 2
-          </DialogTitle>
+          <DialogTitle>Nuevo Proveedor — Paso {step} de 2</DialogTitle>
         </DialogHeader>
 
         {step === 1 && (
           <div className="space-y-4">
             <div className="space-y-2">
               <Label>Origen *</Label>
-              <Select value={form.origen_proveedor || ''} onValueChange={valorSeleccionado => setForm(formularioActual => ({ ...formularioActual, origen_proveedor: valorSeleccionado as 'Nacional' | 'Extranjero' }))}>
+              <Select value={form.origen_proveedor || ''} onValueChange={v => setForm(prev => ({ ...prev, origen_proveedor: v as 'Nacional' | 'Extranjero' }))}>
                 <SelectTrigger><SelectValue placeholder="Selecciona origen" /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="Nacional">Nacional</SelectItem>
@@ -119,59 +113,56 @@ export default function NuevoProveedorDialog({ open, onOpenChange, onSave }: Pro
             </div>
             <div className="space-y-2">
               <Label>Nombre *</Label>
-              <Input value={form.nombre} onChange={e => setForm(formularioActual => ({ ...formularioActual, nombre: e.target.value }))} />
+              <Input value={form.nombre} onChange={e => setForm(prev => ({ ...prev, nombre: e.target.value }))} />
             </div>
             <div className="space-y-2">
               <Label>Tipo</Label>
               <Select value={form.tipo} onValueChange={handleTipoChange}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  {TIPOS.map(tipoProveedor => <SelectItem key={tipoProveedor} value={tipoProveedor}>{tipoProveedor}</SelectItem>)}
+                  {TIPOS.map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}
                 </SelectContent>
               </Select>
             </div>
-
             {isAgenteCarga && (
               <div className="space-y-2">
                 <Label>País *</Label>
-                <Select value={form.pais || ''} onValueChange={valorSeleccionado => setForm(formularioActual => ({ ...formularioActual, pais: valorSeleccionado, rfc: '' }))}>
+                <Select value={form.pais || ''} onValueChange={v => setForm(prev => ({ ...prev, pais: v, rfc: '' }))}>
                   <SelectTrigger><SelectValue placeholder="Selecciona un país" /></SelectTrigger>
                   <SelectContent>
-                    {PAISES.map(pais => <SelectItem key={pais} value={pais}>{pais}</SelectItem>)}
+                    {PAISES.map(p => <SelectItem key={p} value={p}>{p}</SelectItem>)}
                   </SelectContent>
                 </Select>
               </div>
             )}
-
             {(!isAgenteCarga || form.pais) && (
               <div className="space-y-2">
                 <Label>{rfcLabel} *</Label>
                 <Input
                   value={form.rfc}
-                  onChange={e => setForm(formularioActual => ({ ...formularioActual, rfc: e.target.value }))}
+                  onChange={e => setForm(prev => ({ ...prev, rfc: e.target.value }))}
                   placeholder={form.origen_proveedor === 'Extranjero' ? 'Ingresa el Tax ID' : 'Ingresa el RFC'}
                 />
               </div>
             )}
-
             <div className="space-y-2">
               <Label>Contacto</Label>
-              <Input value={form.contacto} onChange={e => setForm(formularioActual => ({ ...formularioActual, contacto: e.target.value }))} />
+              <Input value={form.contacto} onChange={e => setForm(prev => ({ ...prev, contacto: e.target.value }))} />
             </div>
             <div className="space-y-2">
               <Label>Email</Label>
-              <Input type="email" value={form.email} onChange={e => setForm(formularioActual => ({ ...formularioActual, email: e.target.value }))} />
+              <Input type="email" value={form.email} onChange={e => setForm(prev => ({ ...prev, email: e.target.value }))} />
             </div>
             <div className="space-y-2">
               <Label>Teléfono</Label>
-              <Input value={form.telefono} onChange={e => setForm(formularioActual => ({ ...formularioActual, telefono: e.target.value }))} />
+              <Input value={form.telefono} onChange={e => setForm(prev => ({ ...prev, telefono: e.target.value }))} />
             </div>
             <div className="space-y-2">
               <Label>Moneda Preferida</Label>
-              <Select value={form.moneda_preferida} onValueChange={valorSeleccionado => setForm(formularioActual => ({ ...formularioActual, moneda_preferida: valorSeleccionado as Moneda }))}>
+              <Select value={form.moneda_preferida} onValueChange={v => setForm(prev => ({ ...prev, moneda_preferida: v as Moneda }))}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  {MONEDAS.map(moneda => <SelectItem key={moneda} value={moneda}>{moneda}</SelectItem>)}
+                  {MONEDAS.map(m => <SelectItem key={m} value={m}>{m}</SelectItem>)}
                 </SelectContent>
               </Select>
             </div>
@@ -179,43 +170,11 @@ export default function NuevoProveedorDialog({ open, onOpenChange, onSave }: Pro
         )}
 
         {step === 2 && (
-          <div className="space-y-3">
-            <p className="text-sm text-muted-foreground">
-              Documentos requeridos para proveedor <strong>{form.origen_proveedor}</strong>. Puedes adjuntarlos ahora o después.
-            </p>
-            {documentos.map((doc) => (
-              <div key={doc.nombre} className="flex items-center justify-between gap-2 rounded-md border p-3">
-                <div className="flex items-center gap-2 min-w-0">
-                  {doc.adjuntado ? (
-                    <Check className="h-4 w-4 shrink-0 text-primary" />
-                  ) : (
-                    <div className="h-4 w-4 shrink-0 rounded-full border-2 border-muted-foreground/40" />
-                  )}
-                  <div className="min-w-0">
-                    <span className="text-sm font-medium">{doc.nombre}</span>
-                    {doc.archivo && (
-                      <p className="text-xs text-muted-foreground truncate">{doc.archivo}</p>
-                    )}
-                  </div>
-                </div>
-                <Button
-                  type="button"
-                  variant={doc.adjuntado ? "secondary" : "outline"}
-                  size="sm"
-                  onClick={() => fileInputRefs.current[doc.nombre]?.click()}
-                >
-                  <Upload className="h-3.5 w-3.5 mr-1" />
-                  {doc.adjuntado ? 'Cambiar' : 'Adjuntar'}
-                </Button>
-                <input
-                  ref={el => { fileInputRefs.current[doc.nombre] = el; }}
-                  type="file"
-                  className="hidden"
-                  onChange={e => handleFileChange(doc.nombre, e.target.files?.[0])}
-                />
-              </div>
-            ))}
-          </div>
+          <DocumentChecklist
+            documentos={documentos}
+            onFileChange={handleFileChange}
+            descripcion={`Documentos requeridos para proveedor ${form.origen_proveedor}. Puedes adjuntarlos ahora o después.`}
+          />
         )}
 
         <DialogFooter>

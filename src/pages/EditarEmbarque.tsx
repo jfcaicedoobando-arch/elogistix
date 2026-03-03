@@ -16,7 +16,7 @@ import { useContactosCliente } from "@/hooks/useClientes";
 import { useAuth } from "@/contexts/AuthContext";
 import { useRegistrarActividad } from "@/hooks/useBitacora";
 import { useConceptosForm } from "@/hooks/useConceptosForm";
-import { uploadFile } from "@/lib/storage";
+import { useEmbarqueForm } from "@/hooks/useEmbarqueForm";
 import { StepIndicator } from "@/components/embarque/StepIndicator";
 import { StepDatosGenerales } from "@/components/embarque/StepDatosGenerales";
 import { StepDatosRuta } from "@/components/embarque/StepDatosRuta";
@@ -43,44 +43,9 @@ export default function EditarEmbarque() {
 
   const [initialized, setInitialized] = useState(false);
   const [currentStep, setCurrentStep] = useState(1);
-  const [modo, setModo] = useState('');
-  const [tipo, setTipo] = useState('');
-  const [clienteId, setClienteId] = useState('');
-  const [shipper, setShipper] = useState('');
-  const [shipperManual, setShipperManual] = useState('');
-  const [consignatario, setConsignatario] = useState('');
-  const [consignatarioManual, setConsignatarioManual] = useState('');
-  const [incoterm, setIncoterm] = useState('');
-  const [descripcionMercancia, setDescripcionMercancia] = useState('');
-  const [pesoKg, setPesoKg] = useState('');
-  const [volumenM3, setVolumenM3] = useState('');
-  const [piezas, setPiezas] = useState('');
-  const [tipoCarga, setTipoCarga] = useState('Carga General');
-  const [msdsArchivo, setMsdsArchivo] = useState<string | null>(null);
-  const [subiendoMsds, setSubiendoMsds] = useState(false);
-  const [puertoOrigen, setPuertoOrigen] = useState('');
-  const [puertoDestino, setPuertoDestino] = useState('');
-  const [naviera, setNaviera] = useState('');
-  const [tipoServicio, setTipoServicio] = useState('');
-  const [contenedor, setContenedor] = useState('');
-  const [tipoContenedor, setTipoContenedor] = useState('');
-  const [blMaster, setBlMaster] = useState('');
-  const [blHouse, setBlHouse] = useState('');
-  const [aeropuertoOrigen, setAeropuertoOrigen] = useState('');
-  const [aeropuertoDestino, setAeropuertoDestino] = useState('');
-  const [aerolinea, setAerolinea] = useState('');
-  const [mawb, setMawb] = useState('');
-  const [hawb, setHawb] = useState('');
-  const [ciudadOrigen, setCiudadOrigen] = useState('');
-  const [ciudadDestino, setCiudadDestino] = useState('');
-  const [transportista, setTransportista] = useState('');
-  const [cartaPorte, setCartaPorte] = useState('');
-  const [etd, setEtd] = useState('');
-  const [eta, setEta] = useState('');
-  const [tipoCambioUSD, setTipoCambioUSD] = useState('17.25');
-  const [tipoCambioEUR, setTipoCambioEUR] = useState('18.50');
 
-  const { data: contactos = [] } = useContactosCliente(clienteId || undefined);
+  const { form, setField, handleMsdsUpload, inicializarDesdeEmbarque, buildEmbarquePayload, buildConceptosVentaPayload, buildConceptosCostoPayload } = useEmbarqueForm();
+  const { data: contactos = [] } = useContactosCliente(form.clienteId || undefined);
 
   const {
     conceptosVenta, conceptosCosto,
@@ -90,146 +55,44 @@ export default function EditarEmbarque() {
     inicializarVenta, inicializarCosto,
   } = useConceptosForm();
 
-  // Pre-llenar con datos existentes
   useEffect(() => {
     if (!embarque || initialized) return;
-    setModo(embarque.modo);
-    setTipo(embarque.tipo);
-    setClienteId(embarque.cliente_id);
-    setShipper(embarque.shipper);
-    setConsignatario(embarque.consignatario);
-    setIncoterm(embarque.incoterm);
-    setDescripcionMercancia(embarque.descripcion_mercancia);
-    setPesoKg(String(embarque.peso_kg));
-    setVolumenM3(String(embarque.volumen_m3));
-    setPiezas(String(embarque.piezas));
-    setTipoCarga((embarque as any).tipo_carga ?? 'Carga General');
-    setMsdsArchivo((embarque as any).msds_archivo ?? null);
-    setPuertoOrigen(embarque.puerto_origen ?? '');
-    setPuertoDestino(embarque.puerto_destino ?? '');
-    setNaviera(embarque.naviera ?? '');
-    setTipoServicio(embarque.tipo_servicio ?? '');
-    setContenedor(embarque.contenedor ?? '');
-    setTipoContenedor(embarque.tipo_contenedor ?? '');
-    setBlMaster(embarque.bl_master ?? '');
-    setBlHouse(embarque.bl_house ?? '');
-    setAeropuertoOrigen(embarque.aeropuerto_origen ?? '');
-    setAeropuertoDestino(embarque.aeropuerto_destino ?? '');
-    setAerolinea(embarque.aerolinea ?? '');
-    setMawb(embarque.mawb ?? '');
-    setHawb(embarque.hawb ?? '');
-    setCiudadOrigen(embarque.ciudad_origen ?? '');
-    setCiudadDestino(embarque.ciudad_destino ?? '');
-    setTransportista(embarque.transportista ?? '');
-    setCartaPorte(embarque.carta_porte ?? '');
-    setEtd(embarque.etd ?? '');
-    setEta(embarque.eta ?? '');
-    setTipoCambioUSD(String(embarque.tipo_cambio_usd));
-    setTipoCambioEUR(String(embarque.tipo_cambio_eur));
+    inicializarDesdeEmbarque(embarque);
     setInitialized(true);
   }, [embarque, initialized]);
 
-  // Pre-llenar conceptos de venta
   useEffect(() => {
     if (!initialized || conceptosVentaDb.length === 0) return;
-    inicializarVenta(conceptosVentaDb.map((conceptoVenta, indice) => ({
-      id: indice + 1,
-      concepto: conceptoVenta.descripcion,
-      cantidad: conceptoVenta.cantidad,
-      precioUnitario: Number(conceptoVenta.precio_unitario),
-      moneda: conceptoVenta.moneda,
-      iva: false,
+    inicializarVenta(conceptosVentaDb.map((v, i) => ({
+      id: i + 1,
+      concepto: v.descripcion,
+      cantidad: v.cantidad,
+      precioUnitario: Number(v.precio_unitario),
+      moneda: v.moneda,
     })));
   }, [conceptosVentaDb, initialized]);
 
-  // Pre-llenar conceptos de costo
   useEffect(() => {
     if (!initialized || conceptosCostoDb.length === 0) return;
-    inicializarCosto(conceptosCostoDb.map((conceptoCosto, indice) => ({
-      id: indice + 1,
-      proveedorId: conceptoCosto.proveedor_id ?? '',
-      concepto: conceptoCosto.concepto,
-      monto: Number(conceptoCosto.monto),
-      moneda: conceptoCosto.moneda,
-      iva: false,
+    inicializarCosto(conceptosCostoDb.map((c, i) => ({
+      id: i + 1,
+      proveedorId: c.proveedor_id ?? '',
+      concepto: c.concepto,
+      monto: Number(c.monto),
+      moneda: c.moneda,
     })));
   }, [conceptosCostoDb, initialized]);
 
-  const selectedCliente = clientes.find(cliente => cliente.id === clienteId);
-
-  const handleMsdsUpload = async (archivo: File) => {
-    setSubiendoMsds(true);
-    try {
-      const ruta = `embarques/msds/${Date.now()}_${archivo.name}`;
-      await uploadFile(ruta, archivo);
-      setMsdsArchivo(ruta);
-    } catch {
-      toast({ title: "Error al subir MSDS", variant: "destructive" });
-    } finally {
-      setSubiendoMsds(false);
-    }
-  };
+  const selectedCliente = clientes.find(c => c.id === form.clienteId);
 
   const handleSave = async () => {
     if (!id || !embarque) return;
     try {
       await updateEmbarque.mutateAsync({
         id,
-        embarque: {
-          cliente_id: clienteId,
-          cliente_nombre: selectedCliente?.nombre || '',
-          modo: modo as any,
-          tipo: tipo as any,
-          shipper,
-          consignatario,
-          incoterm: incoterm as any,
-          descripcion_mercancia: descripcionMercancia,
-          peso_kg: Number(pesoKg),
-          volumen_m3: Number(volumenM3),
-          piezas: Number(piezas),
-          puerto_origen: puertoOrigen || null,
-          puerto_destino: puertoDestino || null,
-          naviera: naviera || null,
-          bl_master: blMaster || null,
-          bl_house: blHouse || null,
-          tipo_servicio: (tipoServicio as any) || null,
-          contenedor: contenedor || null,
-          tipo_contenedor: tipoContenedor || null,
-          aeropuerto_origen: aeropuertoOrigen || null,
-          aeropuerto_destino: aeropuertoDestino || null,
-          aerolinea: aerolinea || null,
-          mawb: mawb || null,
-          hawb: hawb || null,
-          ciudad_origen: ciudadOrigen || null,
-          ciudad_destino: ciudadDestino || null,
-          transportista: transportista || null,
-          carta_porte: cartaPorte || null,
-          etd: etd || null,
-          eta: eta || null,
-          tipo_cambio_usd: Number(tipoCambioUSD),
-          tipo_cambio_eur: Number(tipoCambioEUR),
-          tipo_carga: tipoCarga,
-          msds_archivo: msdsArchivo,
-          operador: user?.email || '',
-        },
-        conceptosVenta: conceptosVenta
-          .filter(venta => venta.concepto)
-          .map(venta => ({
-            descripcion: venta.concepto,
-            cantidad: venta.cantidad,
-            precio_unitario: venta.precioUnitario,
-            moneda: venta.moneda as any,
-            total: venta.cantidad * venta.precioUnitario,
-          })),
-        conceptosCosto: conceptosCosto
-          .filter(costo => costo.concepto)
-          .map(costo => ({
-            proveedor_id: costo.proveedorId || null,
-            proveedor_nombre: proveedoresDb.find(proveedor => proveedor.id === costo.proveedorId)?.nombre || '',
-            concepto: costo.concepto,
-            monto: costo.monto,
-            moneda: costo.moneda as any,
-          })),
+        embarque: buildEmbarquePayload(contactos, selectedCliente?.nombre || '', user?.email || ''),
+        conceptosVenta: buildConceptosVentaPayload(conceptosVenta),
+        conceptosCosto: buildConceptosCostoPayload(conceptosCosto, proveedoresDb),
       });
 
       registrarActividad.mutate({
@@ -237,7 +100,7 @@ export default function EditarEmbarque() {
         modulo: 'embarques',
         entidad_id: id,
         entidad_nombre: embarque.expediente,
-        detalles: { cliente: selectedCliente?.nombre ?? '', modo, tipo },
+        detalles: { cliente: selectedCliente?.nombre ?? '', modo: form.modo, tipo: form.tipo },
       });
 
       toast({ title: "Embarque actualizado", description: `${embarque.expediente} guardado correctamente.` });
@@ -282,62 +145,62 @@ export default function EditarEmbarque() {
 
       {currentStep === 1 && (
         <StepDatosGenerales
-          modo={modo} setModo={setModo}
-          tipo={tipo} setTipo={setTipo}
-          clienteId={clienteId} setClienteId={setClienteId}
+          modo={form.modo} setModo={setField('modo')}
+          tipo={form.tipo} setTipo={setField('tipo')}
+          clienteId={form.clienteId} setClienteId={setField('clienteId')}
           clientes={clientes}
-          incoterm={incoterm} setIncoterm={setIncoterm}
-          shipper={shipper} setShipper={setShipper}
-          shipperManual={shipperManual} setShipperManual={setShipperManual}
-          consignatario={consignatario} setConsignatario={setConsignatario}
-          consignatarioManual={consignatarioManual} setConsignatarioManual={setConsignatarioManual}
+          incoterm={form.incoterm} setIncoterm={setField('incoterm')}
+          shipper={form.shipper} setShipper={setField('shipper')}
+          shipperManual={form.shipperManual} setShipperManual={setField('shipperManual')}
+          consignatario={form.consignatario} setConsignatario={setField('consignatario')}
+          consignatarioManual={form.consignatarioManual} setConsignatarioManual={setField('consignatarioManual')}
           contactos={contactos}
-          descripcionMercancia={descripcionMercancia} setDescripcionMercancia={setDescripcionMercancia}
-          pesoKg={pesoKg} setPesoKg={setPesoKg}
-          volumenM3={volumenM3} setVolumenM3={setVolumenM3}
-          piezas={piezas} setPiezas={setPiezas}
-          tipoCarga={tipoCarga} setTipoCarga={setTipoCarga}
-          msdsArchivo={msdsArchivo} subiendoMsds={subiendoMsds}
+          descripcionMercancia={form.descripcionMercancia} setDescripcionMercancia={setField('descripcionMercancia')}
+          pesoKg={form.pesoKg} setPesoKg={setField('pesoKg')}
+          volumenM3={form.volumenM3} setVolumenM3={setField('volumenM3')}
+          piezas={form.piezas} setPiezas={setField('piezas')}
+          tipoCarga={form.tipoCarga} setTipoCarga={setField('tipoCarga')}
+          msdsArchivo={form.msdsArchivo} subiendoMsds={form.subiendoMsds}
           onMsdsUpload={handleMsdsUpload}
         />
       )}
 
       {currentStep === 2 && (
         <StepDatosRuta
-          modo={modo}
-          puertoOrigen={puertoOrigen} setPuertoOrigen={setPuertoOrigen}
-          puertoDestino={puertoDestino} setPuertoDestino={setPuertoDestino}
-          naviera={naviera} setNaviera={setNaviera}
-          blMaster={blMaster} setBlMaster={setBlMaster}
-          blHouse={blHouse} setBlHouse={setBlHouse}
-          tipoServicio={tipoServicio} setTipoServicio={setTipoServicio}
-          contenedor={contenedor} setContenedor={setContenedor}
-          tipoContenedor={tipoContenedor} setTipoContenedor={setTipoContenedor}
-          aeropuertoOrigen={aeropuertoOrigen} setAeropuertoOrigen={setAeropuertoOrigen}
-          aeropuertoDestino={aeropuertoDestino} setAeropuertoDestino={setAeropuertoDestino}
-          aerolinea={aerolinea} setAerolinea={setAerolinea}
-          mawb={mawb} setMawb={setMawb}
-          hawb={hawb} setHawb={setHawb}
-          ciudadOrigen={ciudadOrigen} setCiudadOrigen={setCiudadOrigen}
-          ciudadDestino={ciudadDestino} setCiudadDestino={setCiudadDestino}
-          transportista={transportista} setTransportista={setTransportista}
-          cartaPorte={cartaPorte} setCartaPorte={setCartaPorte}
-          etd={etd} setEtd={setEtd}
-          eta={eta} setEta={setEta}
+          modo={form.modo}
+          puertoOrigen={form.puertoOrigen} setPuertoOrigen={setField('puertoOrigen')}
+          puertoDestino={form.puertoDestino} setPuertoDestino={setField('puertoDestino')}
+          naviera={form.naviera} setNaviera={setField('naviera')}
+          blMaster={form.blMaster} setBlMaster={setField('blMaster')}
+          blHouse={form.blHouse} setBlHouse={setField('blHouse')}
+          tipoServicio={form.tipoServicio} setTipoServicio={setField('tipoServicio')}
+          contenedor={form.contenedor} setContenedor={setField('contenedor')}
+          tipoContenedor={form.tipoContenedor} setTipoContenedor={setField('tipoContenedor')}
+          aeropuertoOrigen={form.aeropuertoOrigen} setAeropuertoOrigen={setField('aeropuertoOrigen')}
+          aeropuertoDestino={form.aeropuertoDestino} setAeropuertoDestino={setField('aeropuertoDestino')}
+          aerolinea={form.aerolinea} setAerolinea={setField('aerolinea')}
+          mawb={form.mawb} setMawb={setField('mawb')}
+          hawb={form.hawb} setHawb={setField('hawb')}
+          ciudadOrigen={form.ciudadOrigen} setCiudadOrigen={setField('ciudadOrigen')}
+          ciudadDestino={form.ciudadDestino} setCiudadDestino={setField('ciudadDestino')}
+          transportista={form.transportista} setTransportista={setField('transportista')}
+          cartaPorte={form.cartaPorte} setCartaPorte={setField('cartaPorte')}
+          etd={form.etd} setEtd={setField('etd')}
+          eta={form.eta} setEta={setField('eta')}
         />
       )}
 
       {currentStep === 3 && (
         <StepCostosPrecios
-          modo={modo}
+          modo={form.modo}
           conceptosVenta={conceptosVenta}
           conceptosCosto={conceptosCosto}
           proveedoresDb={proveedoresDb}
           subtotalVenta={subtotalVenta}
           totalCosto={totalCosto}
           utilidadEstimada={utilidadEstimada}
-          tipoCambioUSD={tipoCambioUSD} setTipoCambioUSD={setTipoCambioUSD}
-          tipoCambioEUR={tipoCambioEUR} setTipoCambioEUR={setTipoCambioEUR}
+          tipoCambioUSD={form.tipoCambioUSD} setTipoCambioUSD={setField('tipoCambioUSD')}
+          tipoCambioEUR={form.tipoCambioEUR} setTipoCambioEUR={setField('tipoCambioEUR')}
           updateConceptoVenta={updateConceptoVenta}
           addConceptoVenta={addConceptoVenta}
           removeConceptoVenta={removeConceptoVenta}
@@ -348,18 +211,12 @@ export default function EditarEmbarque() {
       )}
 
       <div className="flex justify-between">
-        <Button variant="outline" onClick={() => currentStep > 1 ? setCurrentStep(paso => paso - 1) : navigate(`/embarques/${id}`)}>
+        <Button variant="outline" onClick={() => currentStep > 1 ? setCurrentStep(p => p - 1) : navigate(`/embarques/${id}`)}>
           {currentStep === 1 ? 'Cancelar' : 'Anterior'}
         </Button>
         <Button
           disabled={updateEmbarque.isPending}
-          onClick={() => {
-            if (currentStep < TOTAL_STEPS) {
-              setCurrentStep(paso => paso + 1);
-            } else {
-              handleSave();
-            }
-          }}
+          onClick={() => currentStep < TOTAL_STEPS ? setCurrentStep(p => p + 1) : handleSave()}
         >
           {updateEmbarque.isPending ? 'Guardando...' : currentStep === TOTAL_STEPS ? 'Guardar Cambios' : 'Siguiente'}
         </Button>

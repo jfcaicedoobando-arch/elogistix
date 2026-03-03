@@ -13,6 +13,14 @@ interface ChangelogEntry {
 
 const changelog: ChangelogEntry[] = [
   {
+    version: "4.0.0",
+    date: "2026-03-02",
+    type: "major",
+    title: "Refactorización integral — Fases 1-4",
+    description:
+      "Fase 1: Eliminación de propiedad muerta 'iva' en tipos e inicializaciones, y funciones vacías isStep1Valid/isStep2Valid. Fase 2: Hook centralizado useEmbarqueForm con ~35 estados, handleMsdsUpload y builders de payload, eliminando ~200 líneas duplicadas entre NuevoEmbarque y EditarEmbarque. Fase 3: Componente DocumentChecklist reutilizable, usado en Clientes y NuevoProveedorDialog. Fase 4: NuevaCotizacion descompuesta en SeccionDestinatario, SeccionDatosGeneralesCotizacion, SeccionRutaCotizacion y SeccionConceptosVentaCotizacion.",
+  },
+  {
     version: "3.15.0",
     date: "2026-03-02",
     type: "minor",

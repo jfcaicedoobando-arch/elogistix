@@ -8,10 +8,10 @@ interface UseConceptosFormOptions {
 
 export function useConceptosForm(opciones: UseConceptosFormOptions = {}) {
   const [conceptosVenta, setConceptosVenta] = useState<ConceptoVentaLocal[]>(
-    opciones.ventaInicial ?? [{ id: 1, concepto: '', cantidad: 1, precioUnitario: 0, moneda: 'MXN', iva: false }]
+    opciones.ventaInicial ?? [{ id: 1, concepto: '', cantidad: 1, precioUnitario: 0, moneda: 'MXN' }]
   );
   const [conceptosCosto, setConceptosCosto] = useState<ConceptoCostoLocal[]>(
-    opciones.costoInicial ?? [{ id: 1, proveedorId: '', concepto: '', monto: 0, moneda: 'MXN', iva: false }]
+    opciones.costoInicial ?? [{ id: 1, proveedorId: '', concepto: '', monto: 0, moneda: 'MXN' }]
   );
   const [nextVentaId, setNextVentaId] = useState(
     (opciones.ventaInicial?.length ?? 1) + 1
@@ -21,11 +21,11 @@ export function useConceptosForm(opciones: UseConceptosFormOptions = {}) {
   );
 
   const updateConceptoVenta = (id: number, field: keyof ConceptoVentaLocal, value: string | number | boolean) => {
-    setConceptosVenta(prev => prev.map(c => c.id === id ? { ...c, [field]: field === 'iva' ? Boolean(value) : value } : c));
+    setConceptosVenta(prev => prev.map(c => c.id === id ? { ...c, [field]: value } : c));
   };
 
   const addConceptoVenta = () => {
-    setConceptosVenta(prev => [...prev, { id: nextVentaId, concepto: '', cantidad: 1, precioUnitario: 0, moneda: 'MXN', iva: false }]);
+    setConceptosVenta(prev => [...prev, { id: nextVentaId, concepto: '', cantidad: 1, precioUnitario: 0, moneda: 'MXN' }]);
     setNextVentaId(n => n + 1);
   };
 
@@ -34,11 +34,11 @@ export function useConceptosForm(opciones: UseConceptosFormOptions = {}) {
   };
 
   const updateConceptoCosto = (id: number, field: keyof ConceptoCostoLocal, value: string | number | boolean) => {
-    setConceptosCosto(prev => prev.map(c => c.id === id ? { ...c, [field]: field === 'iva' ? Boolean(value) : value } : c));
+    setConceptosCosto(prev => prev.map(c => c.id === id ? { ...c, [field]: value } : c));
   };
 
   const addConceptoCosto = () => {
-    setConceptosCosto(prev => [...prev, { id: nextCostoId, proveedorId: '', concepto: '', monto: 0, moneda: 'MXN', iva: false }]);
+    setConceptosCosto(prev => [...prev, { id: nextCostoId, proveedorId: '', concepto: '', monto: 0, moneda: 'MXN' }]);
     setNextCostoId(n => n + 1);
   };
 
@@ -46,20 +46,15 @@ export function useConceptosForm(opciones: UseConceptosFormOptions = {}) {
     setConceptosCosto(prev => prev.filter(c => c.id !== id));
   };
 
-  const subtotalVenta = conceptosVenta.reduce((acc, c) => {
-    const base = c.cantidad * c.precioUnitario;
-    return acc + (c.iva ? base * 1.16 : base);
-  }, 0);
-  const totalCosto = conceptosCosto.reduce((acc, c) => acc + (c.iva ? c.monto * 1.16 : c.monto), 0);
+  const subtotalVenta = conceptosVenta.reduce((acc, c) => acc + c.cantidad * c.precioUnitario, 0);
+  const totalCosto = conceptosCosto.reduce((acc, c) => acc + c.monto, 0);
   const utilidadEstimada = subtotalVenta - totalCosto;
 
-  /** Reemplaza los conceptos de venta (útil para pre-llenado en edición) */
   const inicializarVenta = (items: ConceptoVentaLocal[]) => {
     setConceptosVenta(items);
     setNextVentaId(items.length + 1);
   };
 
-  /** Reemplaza los conceptos de costo (útil para pre-llenado en edición) */
   const inicializarCosto = (items: ConceptoCostoLocal[]) => {
     setConceptosCosto(items);
     setNextCostoId(items.length + 1);
