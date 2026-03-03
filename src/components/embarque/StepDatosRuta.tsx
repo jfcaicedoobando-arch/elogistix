@@ -45,16 +45,20 @@ export function StepDatosRuta(props: Props) {
             <div className="space-y-2"><Label># BL House</Label><Input value={props.blHouse} onChange={e => props.setBlHouse(e.target.value)} /></div>
             <div className="space-y-2">
               <Label>Tipo de Servicio *</Label>
-              <Select value={props.tipoServicio} onValueChange={props.setTipoServicio}><SelectTrigger><SelectValue placeholder="FCL / LCL" /></SelectTrigger>
+              <Select value={props.tipoServicio} onValueChange={(v) => { props.setTipoServicio(v); if (v === 'LCL') props.setTipoContenedor('LCL'); }}><SelectTrigger><SelectValue placeholder="FCL / LCL" /></SelectTrigger>
                 <SelectContent><SelectItem value="FCL">FCL</SelectItem><SelectItem value="LCL">LCL</SelectItem></SelectContent>
               </Select>
             </div>
             <div className="space-y-2"><Label># Contenedor *</Label><Input value={props.contenedor} onChange={e => props.setContenedor(e.target.value)} /></div>
             <div className="space-y-2">
               <Label>Tipo Contenedor *</Label>
-              <Select value={props.tipoContenedor} onValueChange={props.setTipoContenedor}><SelectTrigger><SelectValue placeholder="Seleccionar tipo" /></SelectTrigger>
-                <SelectContent>{containerTypes.map(ct => <SelectItem key={ct.code} value={ct.code}>{ct.name}</SelectItem>)}</SelectContent>
-              </Select>
+              {props.tipoServicio === 'LCL' ? (
+                <Input value="LCL (Carga Consolidada)" disabled />
+              ) : (
+                <Select value={props.tipoContenedor} onValueChange={props.setTipoContenedor}><SelectTrigger><SelectValue placeholder="Seleccionar tipo" /></SelectTrigger>
+                  <SelectContent>{containerTypes.filter(ct => ct.code !== 'LCL').map(ct => <SelectItem key={ct.code} value={ct.code}>{ct.name}</SelectItem>)}</SelectContent>
+                </Select>
+              )}
             </div>
           </>)}
           {modo === 'Aéreo' && (<>

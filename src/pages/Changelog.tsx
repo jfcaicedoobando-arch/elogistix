@@ -13,6 +13,14 @@ interface ChangelogEntry {
 
 const changelog: ChangelogEntry[] = [
   {
+    version: "4.3.2",
+    date: "2026-03-03",
+    type: "patch",
+    title: "Auto-asignación de tipo contenedor LCL",
+    description:
+      "Cuando el tipo de servicio es LCL, el campo 'Tipo Contenedor' se fija automáticamente a 'LCL (Carga Consolidada)' y se deshabilita. Al cambiar a FCL se reactiva el dropdown normal.",
+  },
+  {
     version: "4.3.1",
     date: "2026-03-03",
     type: "patch",

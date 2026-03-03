@@ -32,4 +32,5 @@ export const containerTypes: ContainerType[] = [
   { code: "40GOH", name: "40' Garmentero (GOH)" },
   { code: "20INS", name: "20' Insulado" },
   { code: "40INS", name: "40' Insulado" },
+  { code: "LCL", name: "LCL (Carga Consolidada)" },
 ];
