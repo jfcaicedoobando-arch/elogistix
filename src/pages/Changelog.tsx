@@ -13,6 +13,14 @@ interface ChangelogEntry {
 
 const changelog: ChangelogEntry[] = [
   {
+    version: "4.3.1",
+    date: "2026-03-03",
+    type: "patch",
+    title: "Consolidadoras agregadas al catálogo de navieras",
+    description:
+      "Se agregaron 7 consolidadoras al dropdown de navieras: Charter Link, Ecu Line, Interteam, IFS, Vanguard, Fast Forward y Neutral.",
+  },
+  {
     version: "4.3.0",
     date: "2026-03-03",
     type: "minor",
