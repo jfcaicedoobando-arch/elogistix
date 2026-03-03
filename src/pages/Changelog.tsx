@@ -13,6 +13,14 @@ interface ChangelogEntry {
 
 const changelog: ChangelogEntry[] = [
   {
+    version: "4.2.3",
+    date: "2026-03-03",
+    type: "patch",
+    title: "Campo de seguro renombrado a Valor de mercancía (informativo)",
+    description:
+      "El campo 'Valor del seguro (USD)' se renombró a 'Valor de mercancía (USD)' y ahora es únicamente informativo: no se suma al total de la cotización. Se eliminó la línea de seguro del resumen de totales.",
+  },
+  {
     version: "4.2.2",
     date: "2026-03-03",
     type: "patch",

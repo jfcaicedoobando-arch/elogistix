@@ -10,18 +10,14 @@ import type { ConceptoVentaCotizacion } from "@/hooks/useCotizaciones";
 interface Props {
   conceptos: ConceptoVentaCotizacion[];
   moneda: string;
-  seguro: boolean;
-  valorSeguroUsd: number;
   subtotalConceptos: number;
-  subtotal: number;
   actualizarConcepto: (index: number, campo: string, valor: any) => void;
   agregarConcepto: () => void;
   eliminarConcepto: (index: number) => void;
 }
 
 export default function SeccionConceptosVentaCotizacion({
-  conceptos, moneda, seguro, valorSeguroUsd,
-  subtotalConceptos, subtotal,
+  conceptos, moneda, subtotalConceptos,
   actualizarConcepto, agregarConcepto, eliminarConcepto,
 }: Props) {
   const formatCurrency = (value: number, currency: string) =>
@@ -76,9 +72,7 @@ export default function SeccionConceptosVentaCotizacion({
           </div>
         ))}
         <div className="flex flex-col items-end gap-1 pt-2 border-t">
-          <span className="text-sm">Conceptos: {formatCurrency(subtotalConceptos, moneda)}</span>
-          {seguro && <span className="text-sm">Seguro: {formatCurrency(Number(valorSeguroUsd) || 0, 'USD')}</span>}
-          <span className="text-sm font-semibold">Total: {formatCurrency(subtotal, moneda)}</span>
+          <span className="text-sm font-semibold">Total: {formatCurrency(subtotalConceptos, moneda)}</span>
         </div>
       </CardContent>
     </Card>

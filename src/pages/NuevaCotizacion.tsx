@@ -113,7 +113,7 @@ export default function NuevaCotizacion() {
   };
 
   const subtotalConceptos = conceptos.reduce((sum, c) => sum + c.total, 0);
-  const subtotal = subtotalConceptos + (seguro ? Number(valorSeguroUsd) || 0 : 0);
+  const subtotal = subtotalConceptos;
   const totalPiezasLCL = dimensionesLCL.reduce((sum, d) => sum + d.piezas, 0);
   const totalVolumenLCL = dimensionesLCL.reduce((sum, d) => sum + d.volumen_m3, 0);
   const totalPiezasAereas = dimensionesAereas.reduce((sum, d) => sum + d.piezas, 0);
@@ -310,8 +310,7 @@ export default function NuevaCotizacion() {
 
       <SeccionConceptosVentaCotizacion
         conceptos={conceptos} moneda={moneda}
-        seguro={seguro} valorSeguroUsd={valorSeguroUsd}
-        subtotalConceptos={subtotalConceptos} subtotal={subtotal}
+        subtotalConceptos={subtotalConceptos}
         actualizarConcepto={actualizarConcepto}
         agregarConcepto={agregarConcepto}
         eliminarConcepto={eliminarConcepto}
