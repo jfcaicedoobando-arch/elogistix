@@ -22,6 +22,23 @@ export function useEmbarques() {
   });
 }
 
+export function useEmbarquesHermanos(referenciaOperacion: string | null | undefined, currentId: string | undefined) {
+  return useQuery({
+    queryKey: ['embarques', 'hermanos', referenciaOperacion],
+    queryFn: async () => {
+      if (!referenciaOperacion) return [];
+      const { data, error } = await supabase
+        .from('embarques')
+        .select('id, expediente, cliente_nombre, bl_house, estado, tipo_contenedor')
+        .eq('referencia_operacion', referenciaOperacion as any)
+        .order('created_at', { ascending: true });
+      if (error) throw error;
+      return (data ?? []).filter((e: any) => e.id !== currentId);
+    },
+    enabled: !!referenciaOperacion,
+  });
+}
+
 export function useEmbarque(id: string | undefined) {
   return useQuery({
     queryKey: ['embarques', id],

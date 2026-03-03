@@ -162,6 +162,7 @@ export default function EditarEmbarque() {
           tipoCarga={form.tipoCarga} setTipoCarga={setField('tipoCarga')}
           msdsArchivo={form.msdsArchivo} subiendoMsds={form.subiendoMsds}
           onMsdsUpload={handleMsdsUpload}
+          referenciaOperacion={form.referenciaOperacion} setReferenciaOperacion={setField('referenciaOperacion')}
         />
       )}
 
