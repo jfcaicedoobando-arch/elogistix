@@ -13,6 +13,14 @@ interface ChangelogEntry {
 
 const changelog: ChangelogEntry[] = [
   {
+    version: "4.1.0",
+    date: "2026-03-03",
+    type: "minor",
+    title: "Módulo de Configuración centralizado",
+    description:
+      "Nueva página /configuracion accesible solo para admins con 6 secciones: Datos de la Empresa, Tipos de Cambio por Defecto, Cotizaciones, Facturación, Embarques y Alertas del Dashboard. Tabla configuracion en BD con pares clave-valor por categoría, hook useConfiguracion con cache de 5 min, y useConfigValue para consumir valores individuales desde cualquier componente.",
+  },
+  {
     version: "4.0.0",
     date: "2026-03-02",
     type: "major",

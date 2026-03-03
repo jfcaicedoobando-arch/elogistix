@@ -237,6 +237,36 @@ export type Database = {
           },
         ]
       }
+      configuracion: {
+        Row: {
+          categoria: string
+          clave: string
+          created_at: string
+          descripcion: string
+          id: string
+          updated_at: string
+          valor: Json
+        }
+        Insert: {
+          categoria: string
+          clave: string
+          created_at?: string
+          descripcion?: string
+          id?: string
+          updated_at?: string
+          valor?: Json
+        }
+        Update: {
+          categoria?: string
+          clave?: string
+          created_at?: string
+          descripcion?: string
+          id?: string
+          updated_at?: string
+          valor?: Json
+        }
+        Relationships: []
+      }
       contactos_cliente: {
         Row: {
           ciudad: string

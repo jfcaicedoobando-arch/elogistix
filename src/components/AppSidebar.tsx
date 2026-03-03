@@ -11,6 +11,7 @@ import {
   ShieldCheck,
   LogOut,
   History,
+  Settings,
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
@@ -43,6 +44,7 @@ const menuItems = [
 
 const adminItems = [
   { title: "Usuarios", url: "/usuarios", icon: ShieldCheck },
+  { title: "Configuración", url: "/configuracion", icon: Settings },
 ];
 
 export function AppSidebar() {
@@ -123,7 +125,7 @@ export function AppSidebar() {
         </Button>
         {!collapsed && (
           <div className="text-xs text-sidebar-foreground/50">
-            v3.6.0 · Operaciones MX
+            v4.1.0 · Operaciones MX
           </div>
         )}
       </SidebarFooter>
