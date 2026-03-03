@@ -13,6 +13,14 @@ interface ChangelogEntry {
 
 const changelog: ChangelogEntry[] = [
   {
+    version: "4.3.0",
+    date: "2026-03-03",
+    type: "minor",
+    title: "Plantilla CSV y Carga Masiva de Embarques",
+    description:
+      "Nuevo botón 'Plantilla CSV' que descarga un archivo CSV con todos los campos del formulario de embarques (obligatorios marcados con *), fila de ejemplo y codificación UTF-8 con BOM para Excel. Botón 'Carga Masiva' que permite subir el CSV, validar cada fila contra catálogos y clientes existentes, mostrar errores detallados por fila, y crear los embarques válidos. Peso, Volumen y Piezas son opcionales.",
+  },
+  {
     version: "4.2.0",
     date: "2026-03-03",
     type: "minor",
