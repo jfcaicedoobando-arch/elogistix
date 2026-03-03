@@ -44,4 +44,12 @@ export const shippingLines: ShippingLine[] = [
   { code: "TRANSAMERICA", name: "Trans America Shipping" },
   { code: "X-PRESS", name: "X-Press Feeders" },
   { code: "UNIFEEDER", name: "Unifeeder" },
+  // Consolidadoras
+  { code: "CHARTERLINK", name: "Charter Link" },
+  { code: "ECULINE", name: "Ecu Line" },
+  { code: "INTERTEAM", name: "Interteam" },
+  { code: "IFS", name: "IFS" },
+  { code: "VANGUARD", name: "Vanguard" },
+  { code: "FASTFORWARD", name: "Fast Forward" },
+  { code: "NEUTRAL", name: "Neutral" },
 ];
