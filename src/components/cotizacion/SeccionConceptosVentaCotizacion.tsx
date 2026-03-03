@@ -2,7 +2,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Plus, Trash2 } from "lucide-react";
+import { CATALOGO_CONCEPTOS } from "@/data/embarqueConstants";
 import type { ConceptoVentaCotizacion } from "@/hooks/useCotizaciones";
 
 interface Props {
@@ -22,6 +24,9 @@ export default function SeccionConceptosVentaCotizacion({
   subtotalConceptos, subtotal,
   actualizarConcepto, agregarConcepto, eliminarConcepto,
 }: Props) {
+  const formatCurrency = (value: number, currency: string) =>
+    new Intl.NumberFormat('es-MX', { style: 'currency', currency }).format(value);
+
   return (
     <Card>
       <CardHeader>
@@ -36,8 +41,20 @@ export default function SeccionConceptosVentaCotizacion({
         {conceptos.map((concepto, index) => (
           <div key={index} className="grid grid-cols-12 gap-2 items-end">
             <div className="col-span-5">
-              {index === 0 && <Label className="text-xs">Descripción</Label>}
-              <Input value={concepto.descripcion} onChange={e => actualizarConcepto(index, 'descripcion', e.target.value)} placeholder="Concepto" />
+              {index === 0 && <Label className="text-xs">Concepto</Label>}
+              <Select
+                value={concepto.descripcion}
+                onValueChange={(val) => actualizarConcepto(index, 'descripcion', val)}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecciona concepto" />
+                </SelectTrigger>
+                <SelectContent>
+                  {CATALOGO_CONCEPTOS.map((opt) => (
+                    <SelectItem key={opt} value={opt}>{opt}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
             <div className="col-span-2">
               {index === 0 && <Label className="text-xs">Cantidad</Label>}
@@ -59,9 +76,9 @@ export default function SeccionConceptosVentaCotizacion({
           </div>
         ))}
         <div className="flex flex-col items-end gap-1 pt-2 border-t">
-          <span className="text-sm">Conceptos: {new Intl.NumberFormat('es-MX', { style: 'currency', currency: moneda }).format(subtotalConceptos)}</span>
-          {seguro && <span className="text-sm">Seguro: {new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'USD' }).format(Number(valorSeguroUsd) || 0)}</span>}
-          <span className="text-sm font-semibold">Total: {new Intl.NumberFormat('es-MX', { style: 'currency', currency: moneda }).format(subtotal)}</span>
+          <span className="text-sm">Conceptos: {formatCurrency(subtotalConceptos, moneda)}</span>
+          {seguro && <span className="text-sm">Seguro: {formatCurrency(Number(valorSeguroUsd) || 0, 'USD')}</span>}
+          <span className="text-sm font-semibold">Total: {formatCurrency(subtotal, moneda)}</span>
         </div>
       </CardContent>
     </Card>
