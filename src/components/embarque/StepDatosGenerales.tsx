@@ -31,6 +31,7 @@ interface Props {
   clienteId: string;
   setClienteId: (v: string) => void;
   clientes: Cliente[];
+  clienteNombre: string;
   incoterm: string;
   setIncoterm: (v: string) => void;
   shipper: string;
@@ -59,7 +60,7 @@ interface Props {
 
 export function StepDatosGenerales(props: Props) {
   const {
-    modo, setModo, tipo, setTipo, clienteId, setClienteId, clientes,
+    modo, setModo, tipo, setTipo, clienteId, setClienteId, clientes, clienteNombre,
     incoterm, setIncoterm, shipper, setShipper, shipperManual, setShipperManual,
     consignatario, setConsignatario, consignatarioManual, setConsignatarioManual,
     contactos, descripcionMercancia, setDescripcionMercancia,
@@ -118,6 +119,7 @@ export function StepDatosGenerales(props: Props) {
             <Select value={consignatario} onValueChange={(v) => { setConsignatario(v); if (v !== '__otro__') setConsignatarioManual(''); }}>
               <SelectTrigger><SelectValue placeholder="Seleccionar consignatario" /></SelectTrigger>
               <SelectContent>
+                {clienteNombre && <SelectItem value="__cliente__">Mismo cliente ({clienteNombre})</SelectItem>}
                 {contactos.map(ct => <SelectItem key={ct.id} value={ct.id}>{ct.nombre} — {ct.tipo} ({ct.pais})</SelectItem>)}
                 <SelectItem value="__otro__">Otro (escribir manualmente)</SelectItem>
               </SelectContent>

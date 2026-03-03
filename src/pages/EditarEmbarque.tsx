@@ -148,7 +148,7 @@ export default function EditarEmbarque() {
           modo={form.modo} setModo={setField('modo')}
           tipo={form.tipo} setTipo={setField('tipo')}
           clienteId={form.clienteId} setClienteId={setField('clienteId')}
-          clientes={clientes}
+          clientes={clientes} clienteNombre={selectedCliente?.nombre || ''}
           incoterm={form.incoterm} setIncoterm={setField('incoterm')}
           shipper={form.shipper} setShipper={setField('shipper')}
           shipperManual={form.shipperManual} setShipperManual={setField('shipperManual')}
