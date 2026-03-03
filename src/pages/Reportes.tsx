@@ -79,12 +79,15 @@ export default function Reportes() {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-bold">Reportes</h1>
+      <div>
+        <h1 className="text-2xl font-bold">Reportes</h1>
+        <p className="text-sm text-muted-foreground">Análisis de rendimiento y rentabilidad</p>
+      </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Card><CardContent className="p-4"><p className="text-xs text-muted-foreground">Total Embarques</p>{loading ? <Skeleton className="h-8 w-16" /> : <p className="text-2xl font-bold">{embarques.length}</p>}</CardContent></Card>
-        <Card><CardContent className="p-4"><p className="text-xs text-muted-foreground">Cuentas por Cobrar</p>{loading ? <Skeleton className="h-8 w-24" /> : <p className="text-2xl font-bold text-warning">{formatCurrency(totalPorCobrar)}</p>}</CardContent></Card>
-        <Card><CardContent className="p-4"><p className="text-xs text-muted-foreground">Cuentas por Pagar</p>{loading ? <Skeleton className="h-8 w-24" /> : <p className="text-2xl font-bold text-destructive">{formatCurrency(totalPorPagar)}</p>}</CardContent></Card>
+        <Card className="border-l-4 border-l-accent"><CardContent className="p-4"><p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Total Embarques</p>{loading ? <Skeleton className="h-8 w-16" /> : <p className="text-2xl font-bold mt-1">{embarques.length}</p>}</CardContent></Card>
+        <Card className="border-l-4 border-l-warning"><CardContent className="p-4"><p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Cuentas por Cobrar</p>{loading ? <Skeleton className="h-8 w-24" /> : <p className="text-2xl font-bold text-warning mt-1">{formatCurrency(totalPorCobrar)}</p>}</CardContent></Card>
+        <Card className="border-l-4 border-l-destructive"><CardContent className="p-4"><p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Cuentas por Pagar</p>{loading ? <Skeleton className="h-8 w-24" /> : <p className="text-2xl font-bold text-destructive mt-1">{formatCurrency(totalPorPagar)}</p>}</CardContent></Card>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

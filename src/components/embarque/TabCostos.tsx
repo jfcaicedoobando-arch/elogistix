@@ -14,14 +14,32 @@ interface Props {
   margen: number;
 }
 
+const kpiColors = [
+  'border-l-4 border-l-accent',
+  'border-l-4 border-l-warning',
+  'border-l-4 border-l-success',
+  'border-l-4 border-l-info',
+];
+
 export function TabCostos({ conceptosVenta, conceptosCosto, totalVenta, totalCosto, utilidad, margen }: Props) {
+  const kpis = [
+    { label: 'Total Venta', value: formatCurrency(totalVenta), color: '' },
+    { label: 'Total Costo', value: formatCurrency(totalCosto), color: '' },
+    { label: 'Utilidad', value: formatCurrency(utilidad), color: utilidad >= 0 ? 'text-success' : 'text-destructive' },
+    { label: 'Margen', value: `${margen.toFixed(1)}%`, color: margen >= 0 ? 'text-success' : 'text-destructive' },
+  ];
+
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <Card><CardContent className="p-4"><p className="text-xs text-muted-foreground">Total Venta</p><p className="text-lg font-bold">{formatCurrency(totalVenta)}</p></CardContent></Card>
-        <Card><CardContent className="p-4"><p className="text-xs text-muted-foreground">Total Costo</p><p className="text-lg font-bold">{formatCurrency(totalCosto)}</p></CardContent></Card>
-        <Card><CardContent className="p-4"><p className="text-xs text-muted-foreground">Utilidad</p><p className={`text-lg font-bold ${utilidad >= 0 ? 'text-success' : 'text-destructive'}`}>{formatCurrency(utilidad)}</p></CardContent></Card>
-        <Card><CardContent className="p-4"><p className="text-xs text-muted-foreground">Margen</p><p className={`text-lg font-bold ${margen >= 0 ? 'text-success' : 'text-destructive'}`}>{margen.toFixed(1)}%</p></CardContent></Card>
+        {kpis.map((kpi, i) => (
+          <Card key={kpi.label} className={kpiColors[i]}>
+            <CardContent className="p-4">
+              <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">{kpi.label}</p>
+              <p className={`text-lg font-bold mt-1 ${kpi.color}`}>{kpi.value}</p>
+            </CardContent>
+          </Card>
+        ))}
       </div>
 
       <Card>

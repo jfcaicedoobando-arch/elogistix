@@ -65,7 +65,7 @@ export function AppSidebar() {
     <Sidebar collapsible="icon">
       <SidebarHeader className="border-b border-sidebar-border p-4">
         <div className="flex items-center gap-3">
-          <img src={elogistixLogo} alt="eLogistix Logo" className="h-9 w-9 rounded-lg object-contain" />
+          <img src={elogistixLogo} alt="eLogistix Logo" className="h-9 w-9 rounded-lg object-contain bg-white p-0.5" />
           {!collapsed && (
             <div className="flex flex-col">
               <span className="text-sm font-bold text-sidebar-foreground">
@@ -124,7 +124,7 @@ export function AppSidebar() {
         </Button>
         {!collapsed && (
           <div className="text-xs text-sidebar-foreground/50">
-            v4.1.0 · Operaciones MX
+            v4.2.0 · Operaciones MX
           </div>
         )}
       </SidebarFooter>

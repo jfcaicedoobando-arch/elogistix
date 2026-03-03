@@ -95,9 +95,12 @@ export default function Proveedores() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <Truck className="h-6 w-6 text-accent" />
-          <h1 className="text-2xl font-bold">Proveedores</h1>
+        <div>
+          <div className="flex items-center gap-3">
+            <Truck className="h-6 w-6 text-accent" />
+            <h1 className="text-2xl font-bold">Proveedores</h1>
+          </div>
+          <p className="text-sm text-muted-foreground mt-1">Gestión de proveedores por categoría</p>
         </div>
         {canEdit && (
           <Button onClick={() => setNuevoOpen(true)}>
@@ -113,7 +116,7 @@ export default function Proveedores() {
       </Card>
 
       <Tabs defaultValue="Naviera">
-        <TabsList className="w-full flex flex-wrap h-auto gap-1">
+        <TabsList className="w-full grid grid-cols-5 lg:grid-cols-10 h-auto gap-1">
           {TABS.map(tabConfig => (
             <TabsTrigger key={tabConfig.tipo} value={tabConfig.tipo} className="text-xs">{tabConfig.label}</TabsTrigger>
           ))}

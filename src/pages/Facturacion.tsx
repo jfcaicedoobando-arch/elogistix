@@ -48,7 +48,10 @@ export default function Facturacion() {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-bold">Facturación y Liquidación</h1>
+      <div>
+        <h1 className="text-2xl font-bold">Facturación y Liquidación</h1>
+        <p className="text-sm text-muted-foreground">Control de facturas emitidas y gastos por liquidar</p>
+      </div>
 
       <Tabs defaultValue="facturas">
         <TabsList>

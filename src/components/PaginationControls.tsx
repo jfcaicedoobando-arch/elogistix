@@ -10,7 +10,7 @@ export default function PaginationControls({ page, totalPages, onPageChange }: P
   if (totalPages <= 1) return null;
 
   return (
-    <div className="flex items-center justify-between p-4 border-t">
+    <div className="flex items-center justify-between p-4 border-t bg-muted/30">
       <span className="text-sm text-muted-foreground">
         Página {page + 1} de {totalPages}
       </span>

@@ -9,9 +9,9 @@ export function Layout() {
       <div className="min-h-screen flex w-full">
         <AppSidebar />
         <div className="flex-1 flex flex-col min-w-0">
-          <header className="h-14 flex items-center border-b bg-card px-4 shrink-0">
+          <header className="h-16 flex items-center border-b bg-card px-4 shrink-0 shadow-sm">
             <SidebarTrigger className="mr-4" />
-            <h1 className="text-sm font-medium text-muted-foreground">
+            <h1 className="text-sm font-semibold tracking-wide text-muted-foreground uppercase">
               Plataforma de Operaciones
             </h1>
             <div className="ml-auto">

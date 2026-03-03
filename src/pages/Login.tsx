@@ -5,8 +5,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { Anchor, Loader2 } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import elogistixLogo from "@/assets/elogistix-logo.jpg";
 
 export default function Login() {
   const [email, setEmail] = useState("");
@@ -44,18 +45,18 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background px-4">
-      <Card className="w-full max-w-sm">
-        <CardHeader className="text-center space-y-2 pb-2">
-          <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-xl bg-primary">
-            <Anchor className="h-6 w-6 text-primary-foreground" />
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-background to-muted px-4">
+      <Card className="w-full max-w-sm shadow-lg">
+        <CardHeader className="text-center space-y-3 pb-2">
+          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-xl bg-white shadow-sm border">
+            <img src={elogistixLogo} alt="eLogistix Logo" className="h-12 w-12 rounded-lg object-contain" />
           </div>
           <h1 className="text-xl font-bold">Elogistix Shipping</h1>
           <p className="text-sm text-muted-foreground">
             {isSignUp ? "Crear cuenta nueva" : "Inicia sesión para continuar"}
           </p>
         </CardHeader>
-        <CardContent>
+        <CardContent className="pt-2">
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
