@@ -13,6 +13,14 @@ interface ChangelogEntry {
 
 const changelog: ChangelogEntry[] = [
   {
+    version: "4.2.6",
+    date: "2026-03-03",
+    type: "patch",
+    title: "Opción 'Mismo cliente' en Consignatario",
+    description:
+      "Se agregó la opción 'Mismo cliente' al dropdown de Consignatario en el formulario de embarques (nuevo y edición). Al seleccionarla, se usa automáticamente el nombre del cliente como consignatario.",
+  },
+  {
     version: "4.2.5",
     date: "2026-03-03",
     type: "patch",

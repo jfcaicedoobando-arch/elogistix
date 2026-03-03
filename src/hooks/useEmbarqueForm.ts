@@ -138,7 +138,7 @@ export function useEmbarqueForm() {
     modo: form.modo as any,
     tipo: form.tipo as any,
     shipper: resolverContacto(contactos, form.shipper, form.shipperManual),
-    consignatario: resolverContacto(contactos, form.consignatario, form.consignatarioManual),
+    consignatario: form.consignatario === '__cliente__' ? clienteNombre : resolverContacto(contactos, form.consignatario, form.consignatarioManual),
     incoterm: form.incoterm as any,
     descripcion_mercancia: form.descripcionMercancia,
     peso_kg: Number(form.pesoKg),
