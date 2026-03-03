@@ -1,8 +1,10 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { toast } from '@/hooks/use-toast';
 import { uploadFile } from '@/lib/storage';
 import { useExchangeRates } from '@/hooks/useExchangeRates';
 import { resolverContacto } from '@/lib/helpers';
+import { getDocsForMode } from '@/data/embarqueConstants';
+import type { DocumentoChecklist } from '@/components/DocumentChecklist';
 import type { ConceptoVentaLocal, ConceptoCostoLocal } from '@/data/conceptoTypes';
 
 export interface EmbarqueFormState {
@@ -60,6 +62,7 @@ type Setter<K extends keyof EmbarqueFormState> = (value: EmbarqueFormState[K]) =
 
 export function useEmbarqueForm() {
   const [form, setForm] = useState<EmbarqueFormState>({ ...INITIAL_STATE });
+  const [documentosArchivos, setDocumentosArchivos] = useState<Record<string, File>>({});
   const { data: tiposDeCambio } = useExchangeRates();
 
   useEffect(() => {
@@ -195,6 +198,26 @@ export function useEmbarqueForm() {
         moneda: c.moneda as any,
       }));
 
+  const setDocumentoArchivo = useCallback((nombre: string, file: File | undefined) => {
+    setDocumentosArchivos(prev => {
+      if (!file) {
+        const next = { ...prev };
+        delete next[nombre];
+        return next;
+      }
+      return { ...prev, [nombre]: file };
+    });
+  }, []);
+
+  const getDocumentosChecklist = useCallback((modo: string): DocumentoChecklist[] => {
+    const docs = getDocsForMode(modo);
+    return docs.map(nombre => ({
+      nombre,
+      adjuntado: !!documentosArchivos[nombre],
+      archivo: documentosArchivos[nombre]?.name,
+    }));
+  }, [documentosArchivos]);
+
   return {
     form,
     setField,
@@ -203,5 +226,8 @@ export function useEmbarqueForm() {
     buildEmbarquePayload,
     buildConceptosVentaPayload,
     buildConceptosCostoPayload,
+    documentosArchivos,
+    setDocumentoArchivo,
+    getDocumentosChecklist,
   };
 }
