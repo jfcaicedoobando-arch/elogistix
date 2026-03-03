@@ -13,6 +13,14 @@ interface ChangelogEntry {
 
 const changelog: ChangelogEntry[] = [
   {
+    version: "4.2.0",
+    date: "2026-03-03",
+    type: "minor",
+    title: "Mejora visual UI/UX integral",
+    description:
+      "Rediseño visual en 17 archivos sin cambios funcionales. Tablas con header uppercase tracking-wide y fondo sutil. KPI cards con borde izquierdo por categoría. Badges más compactos. Header global con shadow-sm y tipografía mejorada. Login con logo eLogistix y fondo gradiente. Filtros con gap-4 consistente. SearchInput con fondo sutil. Scrollbar personalizado. Tipografía con antialiased y font-feature-settings. Subtítulos descriptivos en todas las páginas.",
+  },
+  {
     version: "4.1.0",
     date: "2026-03-03",
     type: "minor",

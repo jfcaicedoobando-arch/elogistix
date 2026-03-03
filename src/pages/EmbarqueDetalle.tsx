@@ -196,7 +196,7 @@ export default function EmbarqueDetalle() {
       </div>
 
       <Tabs defaultValue="resumen">
-        <TabsList>
+        <TabsList className="gap-1">
           <TabsTrigger value="resumen">Resumen</TabsTrigger>
           <TabsTrigger value="documentos">Documentos</TabsTrigger>
           <TabsTrigger value="costos">Costos</TabsTrigger>

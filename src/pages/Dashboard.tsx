@@ -85,7 +85,11 @@ export default function Dashboard() {
       {/* KPIs */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {kpis.map((kpi) => (
-          <Card key={kpi.title}>
+          <Card key={kpi.title} className={`border-l-4 ${
+            kpi.title === 'Embarques Activos' ? 'border-l-accent' :
+            kpi.title === 'Por Cerrar esta Semana' ? 'border-l-warning' :
+            kpi.title === 'Facturas Pendientes' ? 'border-l-info' : 'border-l-destructive'
+          }`}>
             <CardContent className="p-5">
               <div className="flex items-center justify-between">
                 <div>

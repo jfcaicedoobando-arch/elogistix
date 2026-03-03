@@ -88,9 +88,12 @@ export default function Clientes() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <Users className="h-6 w-6 text-accent" />
-          <h1 className="text-2xl font-bold">Clientes</h1>
+        <div>
+          <div className="flex items-center gap-3">
+            <Users className="h-6 w-6 text-accent" />
+            <h1 className="text-2xl font-bold">Clientes</h1>
+          </div>
+          <p className="text-sm text-muted-foreground mt-1">{filtered.length} clientes registrados</p>
         </div>
         {canEdit && <Button onClick={() => setDialogOpen(true)}><Plus className="h-4 w-4 mr-1" />Nuevo Cliente</Button>}
       </div>

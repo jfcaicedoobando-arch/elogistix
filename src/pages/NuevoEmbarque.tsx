@@ -86,7 +86,10 @@ export default function NuevoEmbarque() {
         <Button variant="ghost" size="icon" onClick={() => navigate("/embarques")}>
           <ArrowLeft className="h-5 w-5" />
         </Button>
-        <h1 className="text-2xl font-bold">Nuevo Embarque</h1>
+        <div>
+          <h1 className="text-2xl font-bold">Nuevo Embarque</h1>
+          <p className="text-sm text-muted-foreground">Completa los datos para registrar un embarque</p>
+        </div>
       </div>
 
       <StepIndicator steps={steps} currentStep={currentStep} />
@@ -160,7 +163,7 @@ export default function NuevoEmbarque() {
         />
       )}
 
-      <div className="flex justify-between">
+      <div className="flex justify-between pt-2">
         <Button variant="outline" onClick={() => currentStep > 1 ? setCurrentStep(p => p - 1) : navigate("/embarques")}>
           {currentStep === 1 ? 'Cancelar' : 'Anterior'}
         </Button>

@@ -73,7 +73,7 @@ export default function Cotizaciones() {
 
       <Card>
         <CardContent className="p-4">
-          <div className="flex flex-wrap gap-3">
+          <div className="flex flex-wrap gap-4">
             <SearchInput
               value={search}
               onChange={(valor) => { setSearch(valor); setPage(0); }}
