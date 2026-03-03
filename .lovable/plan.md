@@ -1,47 +1,58 @@
 
 
-## Consignatario: Mismo cliente o tercero
+## Plan: Desacoplar cotizaciones de embarques
 
-### Situación actual
-El dropdown de Consignatario muestra solo los **contactos del cliente** + opción "Otro (escribir manualmente)". No hay forma directa de indicar que el consignatario es el mismo cliente seleccionado.
+### Resumen
+Eliminar toda lógica que vincule cotizaciones con embarques: funciones de conversión, botones de "Crear Embarque", links a embarques, y el estado "Confirmada". Las cotizaciones tendrán un flujo de estados independiente: Borrador → Enviada → Aceptada/Rechazada/Vencida.
 
-### Propuesta de UX
+### Cambios
 
-Agregar una opción fija al inicio del dropdown: **"Mismo cliente"**, que al seleccionarse tome automáticamente el nombre del cliente seleccionado. El dropdown quedaría así:
+**1. `src/hooks/useCotizaciones.ts`**
+- Eliminar `useCrearEmbarqueDesdeCotizacion` completa (~100 líneas)
+- Eliminar `useConfirmarCotizacion` (alias deprecated)
+- Eliminar `embarque_id` de `CotizacionRow`
+- Limpiar imports no usados (`useAuth`, queries de embarques)
 
-```text
-┌─────────────────────────────────────────┐
-│  Mismo cliente (Empresa ABC S.A.)       │  ← nuevo
-│─────────────────────────────────────────│
-│  Juan Pérez — Importador (México)       │  ← contactos existentes
-│  Li Wei — Exportador (China)            │
-│─────────────────────────────────────────│
-│  Otro (escribir manualmente)            │  ← ya existe
-└─────────────────────────────────────────┘
-```
+**2. `src/pages/CotizacionDetalle.tsx`**
+- Eliminar import y uso de `useCrearEmbarqueDesdeCotizacion`
+- Eliminar `handleCrearEmbarque` y el `AlertDialog` de "Crear Embarque" (líneas 152-172)
+- Eliminar el card verde de "Embarque creado" con link (líneas 177-187)
+- Eliminar variables `esConfirmada`,
 
-### Archivos a modificar
+<lov-plan>
 
-**`src/components/embarque/StepDatosGenerales.tsx`** (líneas 116-126)
-- Agregar `<SelectItem value="__cliente__">Mismo cliente ({selectedClienteName})</SelectItem>` como primera opción
-- Pasar el nombre del cliente seleccionado como prop (ya disponible desde `NuevoEmbarque.tsx`)
-- Al seleccionar `__cliente__`, limpiar `consignatarioManual`
+## Plan: Desacoplar cotizaciones de embarques
 
-**`src/components/embarque/StepDatosGenerales.tsx`** (Props interface)
-- Agregar prop `clienteNombre: string`
+### Resumen
+Eliminar toda lógica que vincule cotizaciones con embarques: funciones de conversión, botones de "Crear Embarque", links a embarques, y el estado "Confirmada". Las cotizaciones tendrán un flujo de estados independiente: Borrador → Enviada → Aceptada/Rechazada/Vencida.
 
-**`src/hooks/useEmbarqueForm.ts`** (función `buildEmbarquePayload`)
-- Manejar el caso `__cliente__`: cuando `consignatario === '__cliente__'`, usar el nombre del cliente como valor del campo consignatario en el payload
+### Cambios
 
-**`src/pages/NuevoEmbarque.tsx`**
-- Pasar `clienteNombre={selectedCliente?.nombre || ''}` al componente `StepDatosGenerales`
+**1. `src/hooks/useCotizaciones.ts`**
+- Eliminar `useCrearEmbarqueDesdeCotizacion` completa (~100 líneas)
+- Eliminar `useConfirmarCotizacion` (alias deprecated)
+- Eliminar `embarque_id` de `CotizacionRow`
+- Limpiar imports no usados (queries de embarques)
 
-**`src/pages/EditarEmbarque.tsx`**
-- Mismo cambio: pasar `clienteNombre` al componente
+**2. `src/pages/CotizacionDetalle.tsx`**
+- Eliminar import y uso de `useCrearEmbarqueDesdeCotizacion`
+- Eliminar `handleCrearEmbarque` y el `AlertDialog` de "Crear Embarque" (líneas 152-172)
+- Eliminar el card verde de "Embarque creado" con link a embarque (líneas 177-187)
+- Eliminar variables `esConfirmada`, imports de `Ship`, `Anchor`, `Link`
 
-**`src/pages/Changelog.tsx`**
-- Nueva entrada v4.2.6
+**3. `src/pages/Cotizaciones.tsx`**
+- Eliminar "Confirmada" del array `ESTADOS`
+- El import de `useClientesForSelect` viene de `useEmbarques` — moverlo a un import propio desde `useClientes` (o dejarlo si `useClientes` ya lo expone)
+
+**4. `src/pages/NuevaCotizacion.tsx`**
+- Verificar que no hay referencias a embarques (revisado: no hay, solo usa `useClientesForSelect` de embarques — mismo caso que punto 3)
+
+**5. `src/pages/Changelog.tsx`**
+- Nueva entrada v4.3.0 (minor: cambio funcional significativo) documentando la desconexión
 
 ### Sin cambios en BD
-No se requiere migración. El campo `consignatario` en la tabla `embarques` ya es `text` y almacenará el nombre resuelto.
+No se elimina la columna `embarque_id` de la tabla `cotizaciones` para evitar romper datos existentes. Solo se deja de usar en el código.
+
+### Flujo de estados resultante
+Borrador → Enviada → Aceptada / Rechazada / Vencida (sin "Confirmada")
 
