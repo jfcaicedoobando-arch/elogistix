@@ -1,58 +1,19 @@
 
 
-## Plan: Desacoplar cotizaciones de embarques
+## Plan: Auto-asignar tipo contenedor "LCL" cuando servicio es LCL
 
-### Resumen
-Eliminar toda lógica que vincule cotizaciones con embarques: funciones de conversión, botones de "Crear Embarque", links a embarques, y el estado "Confirmada". Las cotizaciones tendrán un flujo de estados independiente: Borrador → Enviada → Aceptada/Rechazada/Vencida.
-
-### Cambios
-
-**1. `src/hooks/useCotizaciones.ts`**
-- Eliminar `useCrearEmbarqueDesdeCotizacion` completa (~100 líneas)
-- Eliminar `useConfirmarCotizacion` (alias deprecated)
-- Eliminar `embarque_id` de `CotizacionRow`
-- Limpiar imports no usados (`useAuth`, queries de embarques)
-
-**2. `src/pages/CotizacionDetalle.tsx`**
-- Eliminar import y uso de `useCrearEmbarqueDesdeCotizacion`
-- Eliminar `handleCrearEmbarque` y el `AlertDialog` de "Crear Embarque" (líneas 152-172)
-- Eliminar el card verde de "Embarque creado" con link (líneas 177-187)
-- Eliminar variables `esConfirmada`,
-
-<lov-plan>
-
-## Plan: Desacoplar cotizaciones de embarques
-
-### Resumen
-Eliminar toda lógica que vincule cotizaciones con embarques: funciones de conversión, botones de "Crear Embarque", links a embarques, y el estado "Confirmada". Las cotizaciones tendrán un flujo de estados independiente: Borrador → Enviada → Aceptada/Rechazada/Vencida.
+### Lógica
+Cuando el usuario selecciona **LCL** en "Tipo de Servicio", el campo "Tipo Contenedor" se fija automáticamente a "LCL" y se deshabilita (no tiene sentido elegir un contenedor específico en carga consolidada). Al volver a **FCL**, se reactiva el dropdown normal.
 
 ### Cambios
 
-**1. `src/hooks/useCotizaciones.ts`**
-- Eliminar `useCrearEmbarqueDesdeCotizacion` completa (~100 líneas)
-- Eliminar `useConfirmarCotizacion` (alias deprecated)
-- Eliminar `embarque_id` de `CotizacionRow`
-- Limpiar imports no usados (queries de embarques)
+**1. `src/data/containerTypes.ts`**
+- Agregar `{ code: "LCL", name: "LCL (Carga Consolidada)" }` al final del array
 
-**2. `src/pages/CotizacionDetalle.tsx`**
-- Eliminar import y uso de `useCrearEmbarqueDesdeCotizacion`
-- Eliminar `handleCrearEmbarque` y el `AlertDialog` de "Crear Embarque" (líneas 152-172)
-- Eliminar el card verde de "Embarque creado" con link a embarque (líneas 177-187)
-- Eliminar variables `esConfirmada`, imports de `Ship`, `Anchor`, `Link`
+**2. `src/components/embarque/StepDatosRuta.tsx`**
+- Interceptar el `onValueChange` del Select de Tipo de Servicio: cuando el valor sea `"LCL"`, llamar `setTipoContenedor("LCL")` automáticamente
+- Cuando `tipoServicio === "LCL"`, mostrar el campo Tipo Contenedor como un Input deshabilitado con valor "LCL (Carga Consolidada)" en lugar del dropdown
 
-**3. `src/pages/Cotizaciones.tsx`**
-- Eliminar "Confirmada" del array `ESTADOS`
-- El import de `useClientesForSelect` viene de `useEmbarques` — moverlo a un import propio desde `useClientes` (o dejarlo si `useClientes` ya lo expone)
-
-**4. `src/pages/NuevaCotizacion.tsx`**
-- Verificar que no hay referencias a embarques (revisado: no hay, solo usa `useClientesForSelect` de embarques — mismo caso que punto 3)
-
-**5. `src/pages/Changelog.tsx`**
-- Nueva entrada v4.3.0 (minor: cambio funcional significativo) documentando la desconexión
-
-### Sin cambios en BD
-No se elimina la columna `embarque_id` de la tabla `cotizaciones` para evitar romper datos existentes. Solo se deja de usar en el código.
-
-### Flujo de estados resultante
-Borrador → Enviada → Aceptada / Rechazada / Vencida (sin "Confirmada")
+**3. `src/pages/Changelog.tsx`**
+- Nueva entrada v4.3.2
 
