@@ -13,6 +13,14 @@ interface ChangelogEntry {
 
 const changelog: ChangelogEntry[] = [
   {
+    version: "4.3.0",
+    date: "2026-03-03",
+    type: "minor",
+    title: "Desacoplamiento de cotizaciones y embarques",
+    description:
+      "Las cotizaciones ahora funcionan como un módulo completamente independiente. Se eliminó la lógica de conversión a embarque, el botón 'Crear Embarque' y el estado 'Confirmada'. Flujo de estados: Borrador → Enviada → Aceptada / Rechazada / Vencida.",
+  },
+  {
     version: "4.2.6",
     date: "2026-03-03",
     type: "patch",

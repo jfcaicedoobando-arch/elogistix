@@ -12,14 +12,14 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { useNavigate } from "react-router-dom";
 import { useCotizaciones } from "@/hooks/useCotizaciones";
-import { useClientesForSelect } from "@/hooks/useEmbarques";
+import { useClientesForSelect } from "@/hooks/useClientes";
 import { usePermissions } from "@/hooks/usePermissions";
 import { formatDate, getEstadoColor } from "@/lib/helpers";
 import { formatCurrency } from "@/lib/formatters";
 import SearchInput from "@/components/SearchInput";
 import PaginationControls from "@/components/PaginationControls";
 
-const ESTADOS = ['Borrador', 'Enviada', 'Aceptada', 'Confirmada', 'Rechazada', 'Vencida'];
+const ESTADOS = ['Borrador', 'Enviada', 'Aceptada', 'Rechazada', 'Vencida'];
 const PAGE_SIZE = 10;
 
 export default function Cotizaciones() {
