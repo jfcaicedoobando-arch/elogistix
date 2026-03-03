@@ -13,6 +13,14 @@ interface ChangelogEntry {
 
 const changelog: ChangelogEntry[] = [
   {
+    version: "4.3.3",
+    date: "2026-03-03",
+    type: "patch",
+    title: "Carga funcional de documentos en Nuevo Embarque",
+    description:
+      "Los botones de 'Subir' en el paso 3 del wizard de creación de embarques ahora permiten seleccionar archivos reales. Los archivos se suben a Supabase Storage al crear el embarque y la ruta se guarda en la tabla documentos_embarque.",
+  },
+  {
     version: "4.3.2",
     date: "2026-03-03",
     type: "patch",

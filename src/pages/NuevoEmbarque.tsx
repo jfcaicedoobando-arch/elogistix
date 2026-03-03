@@ -11,7 +11,7 @@ import {
 import { useContactosCliente } from "@/hooks/useClientes";
 import { useAuth } from "@/contexts/AuthContext";
 import { useRegistrarActividad } from "@/hooks/useBitacora";
-import { getDocsForMode } from "@/data/embarqueConstants";
+import { uploadFile } from '@/lib/storage';
 import { useConceptosForm } from "@/hooks/useConceptosForm";
 import { useEmbarqueForm } from "@/hooks/useEmbarqueForm";
 import { StepIndicator } from "@/components/embarque/StepIndicator";
@@ -36,7 +36,7 @@ export default function NuevoEmbarque() {
   const registrarActividad = useRegistrarActividad();
 
   const [currentStep, setCurrentStep] = useState(1);
-  const { form, setField, handleMsdsUpload, buildEmbarquePayload, buildConceptosVentaPayload, buildConceptosCostoPayload } = useEmbarqueForm();
+  const { form, setField, handleMsdsUpload, buildEmbarquePayload, buildConceptosVentaPayload, buildConceptosCostoPayload, documentosArchivos, setDocumentoArchivo, getDocumentosChecklist } = useEmbarqueForm();
   const { data: contactos = [] } = useContactosCliente(form.clienteId || undefined);
 
   const {
@@ -56,14 +56,27 @@ export default function NuevoEmbarque() {
 
   const handleFinish = async () => {
     const expediente = generateExpediente();
-    const docsForMode = getDocsForMode(form.modo);
 
     try {
+      // Subir archivos seleccionados a Storage
+      const docPayload: { nombre: string; archivo?: string }[] = [];
+      const docsChecklist = getDocumentosChecklist(form.modo);
+      for (const doc of docsChecklist) {
+        const file = documentosArchivos[doc.nombre];
+        if (file) {
+          const ruta = `embarques/${expediente}/${doc.nombre}/${Date.now()}_${file.name}`;
+          await uploadFile(ruta, file);
+          docPayload.push({ nombre: doc.nombre, archivo: ruta });
+        } else {
+          docPayload.push({ nombre: doc.nombre });
+        }
+      }
+
       await createEmbarque.mutateAsync({
         embarque: { expediente, ...buildEmbarquePayload(contactos, selectedCliente?.nombre || '', user?.email || '') },
         conceptosVenta: buildConceptosVentaPayload(conceptosVenta),
         conceptosCosto: buildConceptosCostoPayload(conceptosCosto, proveedoresDb),
-        documentos: docsForMode.map(d => ({ nombre: d })),
+        documentos: docPayload,
       });
 
       registrarActividad.mutate({
@@ -141,7 +154,12 @@ export default function NuevoEmbarque() {
         />
       )}
 
-      {currentStep === 3 && <StepDocumentos modo={form.modo} />}
+      {currentStep === 3 && (
+        <StepDocumentos
+          documentos={getDocumentosChecklist(form.modo)}
+          onFileChange={setDocumentoArchivo}
+        />
+      )}
 
       {currentStep === 4 && (
         <StepCostosPrecios
