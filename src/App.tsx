@@ -22,6 +22,7 @@ import CotizacionDetalle from "./pages/CotizacionDetalle";
 import Changelog from "./pages/Changelog";
 import Bitacora from "./pages/Bitacora";
 import Usuarios from "./pages/Usuarios";
+import Configuracion from "./pages/Configuracion";
 import Login from "./pages/Login";
 import NotFound from "./pages/NotFound";
 
@@ -63,6 +64,14 @@ const App = () => (
               element={
                 <ProtectedRoute allowedRoles={["admin"]}>
                   <Usuarios />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/configuracion"
+              element={
+                <ProtectedRoute allowedRoles={["admin"]}>
+                  <Configuracion />
                 </ProtectedRoute>
               }
             />
