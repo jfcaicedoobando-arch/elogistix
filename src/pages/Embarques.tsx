@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react";
-import { Plus, Download, Upload } from "lucide-react";
+import { Plus } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -16,8 +16,6 @@ import { usePermissions } from "@/hooks/usePermissions";
 import { formatDate, getEstadoColor, getModoIcon } from "@/lib/helpers";
 import SearchInput from "@/components/SearchInput";
 import PaginationControls from "@/components/PaginationControls";
-import CargaMasivaDialog from "@/components/embarque/CargaMasivaDialog";
-import { descargarPlantillaCSV } from "@/lib/embarqueCsvTemplate";
 import type { ModoTransporte, EstadoEmbarque } from "@/data/types";
 
 const ESTADOS: EstadoEmbarque[] = ['Cotización', 'Confirmado', 'En Tránsito', 'Llegada', 'En Proceso', 'Cerrado'];
@@ -33,7 +31,6 @@ export default function Embarques() {
   const [filterEstado, setFilterEstado] = useState<string>("todos");
   const [filterCliente, setFilterCliente] = useState<string>("todos");
   const [page, setPage] = useState(0);
-  const [dialogoMasivo, setDialogoMasivo] = useState(false);
   const { canEdit } = usePermissions();
 
   const filtered = useMemo(() => {
@@ -69,17 +66,9 @@ export default function Embarques() {
           <p className="text-sm text-muted-foreground">{filtered.length} embarques encontrados</p>
         </div>
         {canEdit && (
-          <div className="flex items-center gap-2">
-            <Button variant="outline" onClick={descargarPlantillaCSV}>
-              <Download className="h-4 w-4 mr-2" /> Plantilla CSV
-            </Button>
-            <Button variant="outline" onClick={() => setDialogoMasivo(true)}>
-              <Upload className="h-4 w-4 mr-2" /> Carga Masiva
-            </Button>
-            <Button onClick={() => navigate("/embarques/nuevo")}>
-              <Plus className="h-4 w-4 mr-2" /> Nuevo Embarque
-            </Button>
-          </div>
+          <Button onClick={() => navigate("/embarques/nuevo")}>
+            <Plus className="h-4 w-4 mr-2" /> Nuevo Embarque
+          </Button>
         )}
       </div>
 
@@ -170,12 +159,6 @@ export default function Embarques() {
           <PaginationControls page={page} totalPages={totalPages} onPageChange={setPage} />
         </CardContent>
       </Card>
-
-      <CargaMasivaDialog
-        open={dialogoMasivo}
-        onOpenChange={setDialogoMasivo}
-        clientes={clientes}
-      />
     </div>
   );
 }
