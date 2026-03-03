@@ -18,4 +18,5 @@ export const CATALOGO_CONCEPTOS = [
   'Manejo',
   'Demoras',
   'Cargos en Destino',
+  'Cargos en Origen',
 ] as const;

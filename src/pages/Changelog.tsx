@@ -13,6 +13,14 @@ interface ChangelogEntry {
 
 const changelog: ChangelogEntry[] = [
   {
+    version: "4.2.1",
+    date: "2026-03-03",
+    type: "patch",
+    title: "Dropdown de conceptos en cotizaciones",
+    description:
+      "Se reemplazó el campo de texto libre 'Descripción' por un dropdown 'Concepto' con 8 opciones estandarizadas del catálogo (Flete Marítimo, Embalaje, Coordinación de Recolección, Seguro de Carga, Manejo, Demoras, Cargos en Destino, Cargos en Origen) en la sección de conceptos de venta de cotizaciones.",
+  },
+  {
     version: "4.2.0",
     date: "2026-03-03",
     type: "minor",

@@ -27,11 +27,12 @@ describe("ESTADO_TIMELINE", () => {
 });
 
 describe("CATALOGO_CONCEPTOS", () => {
-  it("tiene 7 opciones", () => {
-    expect(CATALOGO_CONCEPTOS).toHaveLength(7);
+  it("tiene 8 opciones", () => {
+    expect(CATALOGO_CONCEPTOS).toHaveLength(8);
   });
-  it("incluye Flete Marítimo y Cargos en Destino", () => {
+  it("incluye Flete Marítimo, Cargos en Destino y Cargos en Origen", () => {
     expect(CATALOGO_CONCEPTOS).toContain("Flete Marítimo");
     expect(CATALOGO_CONCEPTOS).toContain("Cargos en Destino");
+    expect(CATALOGO_CONCEPTOS).toContain("Cargos en Origen");
   });
 });
