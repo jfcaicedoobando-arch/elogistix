@@ -136,7 +136,7 @@ export function useEmbarqueForm() {
     clienteNombre: string,
     operador: string,
   ) => ({
-    cliente_id: form.clienteId,
+    cliente_id: form.clienteId || null,
     cliente_nombre: clienteNombre,
     modo: form.modo as any,
     tipo: form.tipo as any,
