@@ -13,6 +13,14 @@ interface ChangelogEntry {
 
 const changelog: ChangelogEntry[] = [
   {
+    version: "4.3.4",
+    date: "2026-03-03",
+    type: "patch",
+    title: "Corrección de error UUID vacío al crear embarque",
+    description:
+      "Se agregó validación de campos requeridos (cliente, modo, tipo) antes de crear un embarque. Los campos UUID opcionales ahora envían null en lugar de cadena vacía, evitando el error de Postgres.",
+  },
+  {
     version: "4.3.3",
     date: "2026-03-03",
     type: "patch",

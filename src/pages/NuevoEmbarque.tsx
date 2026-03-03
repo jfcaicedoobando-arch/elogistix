@@ -55,6 +55,15 @@ export default function NuevoEmbarque() {
   };
 
   const handleFinish = async () => {
+    if (!form.clienteId || !form.modo || !form.tipo) {
+      toast({
+        title: "Campos requeridos",
+        description: "Selecciona un cliente, modo de transporte y tipo de operación antes de continuar.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     const expediente = generateExpediente();
 
     try {
