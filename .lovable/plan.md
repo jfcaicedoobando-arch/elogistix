@@ -1,24 +1,31 @@
 
 
-## Plan: Corregir error UUID vacío al crear embarque
+## Recomendación de estructura
 
-### Problema
-El error `"invalid input syntax for type uuid: \"\""` ocurre porque `cliente_id` se envía como cadena vacía cuando el usuario no selecciona un cliente. Postgres rechaza `""` para columnas de tipo UUID.
+La buena noticia es que **la base de datos ya tiene todo implementado**:
 
-### Cambios
+- Función `generar_expediente(tipo_op text)` que produce exactamente el formato `EL[TIPO][CONSECUTIVO]`
+- Secuencia `embarque_consecutivo_seq` que garantiza consecutivos únicos y globales
+- Soporta: Importación→IMP, Exportación→EXP, Nacional→NAC
 
-**1. `src/pages/NuevoEmbarque.tsx`**
-- Agregar validación en `handleFinish`: si `form.clienteId` está vacío, mostrar toast de error y no continuar
-- Validar también campos mínimos requeridos: `modo`, `tipo`
+**El problema actual**: `NuevoEmbarque.tsx` **no usa** esa función. En su lugar genera un código aleatorio del lado del cliente (`EXP-2026-XXXX`), que no es secuencial ni sigue el formato requerido.
 
-**2. `src/hooks/useEmbarqueForm.ts`**
-- En `buildEmbarquePayload` línea 139: cambiar `cliente_id: form.clienteId` a `cliente_id: form.clienteId || null` para evitar enviar cadena vacía
-- En `buildConceptosCostoPayload`: asegurar que `proveedor_id` vacío se convierta a `null`
+### Solución: un solo cambio en un solo archivo
 
-**3. `src/pages/Changelog.tsx`**
-- Nueva entrada v4.3.4 documentando la corrección
+**`src/pages/NuevoEmbarque.tsx`**
+- Eliminar la función local `generateExpediente()`
+- Reemplazar por una llamada RPC a la función de base de datos:
+  ```ts
+  const { data: expediente } = await supabase.rpc('generar_expediente', { tipo_op: form.tipo });
+  ```
+- Importar `supabase` desde `@/integrations/supabase/client`
 
-### Resultado
-- El usuario ve un mensaje claro si intenta crear un embarque sin seleccionar cliente
-- Los campos UUID opcionales envían `null` en lugar de `""`, evitando el error de Postgres
+**`src/pages/Changelog.tsx`**
+- Nueva entrada v4.3.5
+
+### Lo que NO se toca
+- Ningún campo del formulario
+- Ningún otro módulo
+- La lista y detalle de embarques ya muestran el campo `expediente` tal cual viene de la BD, así que mostrarán el nuevo formato automáticamente
+- No se necesitan cambios en la base de datos
 
