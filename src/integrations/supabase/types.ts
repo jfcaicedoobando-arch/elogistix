@@ -322,49 +322,40 @@ export type Database = {
       }
       cotizacion_costos: {
         Row: {
+          cantidad: number
           concepto: string
-          costo: number
+          costo_total: number | null
+          costo_unitario: number
           cotizacion_id: string
           created_at: string | null
           id: string
           moneda: string
-          porcentaje_profit: number | null
-          profit: number | null
-          proveedor: string | null
-          seccion: string | null
-          unidad_medida: string | null
+          proveedor: string
           updated_at: string | null
-          venta: number
         }
         Insert: {
+          cantidad?: number
           concepto: string
-          costo?: number
+          costo_total?: number | null
+          costo_unitario?: number
           cotizacion_id: string
           created_at?: string | null
           id?: string
-          moneda?: string
-          porcentaje_profit?: number | null
-          profit?: number | null
-          proveedor?: string | null
-          seccion?: string | null
-          unidad_medida?: string | null
+          moneda: string
+          proveedor?: string
           updated_at?: string | null
-          venta?: number
         }
         Update: {
+          cantidad?: number
           concepto?: string
-          costo?: number
+          costo_total?: number | null
+          costo_unitario?: number
           cotizacion_id?: string
           created_at?: string | null
           id?: string
           moneda?: string
-          porcentaje_profit?: number | null
-          profit?: number | null
-          proveedor?: string | null
-          seccion?: string | null
-          unidad_medida?: string | null
+          proveedor?: string
           updated_at?: string | null
-          venta?: number
         }
         Relationships: [
           {

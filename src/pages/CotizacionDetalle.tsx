@@ -431,7 +431,6 @@ export default function CotizacionDetalle() {
       {/* Costos Internos P&L */}
       <SeccionCostosInternosCotizacion
         cotizacionId={cotizacion.id}
-        conceptosVenta={cotizacion.conceptos_venta}
       />
 
       {/* Notas */}
