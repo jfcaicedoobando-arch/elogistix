@@ -1,5 +1,6 @@
-import { useState } from "react";
-import SeccionCostosInternosCotizacion from "@/components/cotizacion/SeccionCostosInternosCotizacion";
+import { useState, useMemo } from "react";
+import SeccionCostosInternosPL from "@/components/cotizacion/SeccionCostosInternosPL";
+import type { ConceptoVentaCotizacion } from "@/hooks/useCotizaciones";
 import { useParams, useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -40,6 +41,11 @@ export default function CotizacionDetalle() {
     nombre: '', contacto: '', email: '', telefono: '',
     rfc: '', direccion: '', ciudad: '', estado: '', cp: '',
   });
+
+  const conceptosVentaUSD = useMemo(() =>
+    cotizacion ? (cotizacion.conceptos_venta as unknown as ConceptoVentaCotizacion[]).filter(c => c.moneda === 'USD') : [], [cotizacion]);
+  const conceptosVentaMXN = useMemo(() =>
+    cotizacion ? (cotizacion.conceptos_venta as unknown as ConceptoVentaCotizacion[]).filter(c => c.moneda === 'MXN') : [], [cotizacion]);
 
   if (isLoading) {
     return <div className="space-y-4"><Skeleton className="h-8 w-64" /><Skeleton className="h-64 w-full" /></div>;
@@ -97,6 +103,7 @@ export default function CotizacionDetalle() {
 
   const dimensiones: DimensionLCL[] = Array.isArray(cotizacion.dimensiones_lcl) ? cotizacion.dimensiones_lcl : [];
   const dimensionesAereas: DimensionAerea[] = Array.isArray(cotizacion.dimensiones_aereas) ? cotizacion.dimensiones_aereas : [];
+
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
@@ -429,9 +436,13 @@ export default function CotizacionDetalle() {
       })()}
 
       {/* Costos Internos P&L */}
-      <SeccionCostosInternosCotizacion
-        cotizacionId={cotizacion.id}
-      />
+      {canEdit && (
+        <SeccionCostosInternosPL
+          cotizacionId={cotizacion.id}
+          conceptosUSD={conceptosVentaUSD}
+          conceptosMXN={conceptosVentaMXN}
+        />
+      )}
 
       {/* Notas */}
       {cotizacion.notas && (
