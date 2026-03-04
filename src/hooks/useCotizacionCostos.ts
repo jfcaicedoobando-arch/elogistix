@@ -1,18 +1,19 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import type { ConceptoVentaCotizacion } from '@/hooks/useCotizaciones';
 
 export interface CostoCotizacion {
   id: string;
   cotizacion_id: string;
   concepto: string;
-  moneda: string;
+  moneda: 'USD' | 'MXN';
   proveedor: string;
   cantidad: number;
   costo_unitario: number;
   costo_total: number;
+  created_at: string;
+  updated_at: string;
 }
-
-type CostoUpsert = Omit<CostoCotizacion, 'costo_total'>;
 
 export function useCotizacionCostos(cotizacionId: string | undefined) {
   return useQuery({
@@ -29,50 +30,75 @@ export function useCotizacionCostos(cotizacionId: string | undefined) {
   });
 }
 
-export function useUpsertCostos() {
+export function useUpsertCotizacionCostos() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async (costos: CostoUpsert[]) => {
-      const { data, error } = await supabase
-        .from('cotizacion_costos')
-        .upsert(costos as any)
-        .select();
-      if (error) throw error;
-      return data;
-    },
-    onSuccess: (_data, variables) => {
-      const cotizacionId = variables[0]?.cotizacion_id;
-      if (cotizacionId) {
-        qc.invalidateQueries({ queryKey: ['cotizacion_costos', cotizacionId] });
-      }
-    },
-  });
-}
-
-export function useDeleteCosto() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: async ({ id, cotizacionId }: { id: string; cotizacionId: string }) => {
-      const { error } = await supabase
+    mutationFn: async ({ cotizacionId, costos }: { cotizacionId: string; costos: CostoCotizacion[] }) => {
+      // DELETE all existing
+      const { error: delError } = await supabase
         .from('cotizacion_costos')
         .delete()
-        .eq('id', id);
+        .eq('cotizacion_id', cotizacionId);
+      if (delError) throw delError;
+
+      if (costos.length === 0) return [];
+
+      // INSERT new (omit costo_total — it's a generated column)
+      const rows = costos.map((c) => ({
+        cotizacion_id: cotizacionId,
+        concepto: c.concepto,
+        moneda: c.moneda,
+        proveedor: c.proveedor,
+        cantidad: c.cantidad,
+        costo_unitario: c.costo_unitario,
+      }));
+
+      const { data, error } = await supabase
+        .from('cotizacion_costos')
+        .insert(rows as any)
+        .select();
       if (error) throw error;
-      return { id, cotizacionId };
+      return (data ?? []) as unknown as CostoCotizacion[];
     },
-    onSuccess: (result) => {
-      qc.invalidateQueries({ queryKey: ['cotizacion_costos', result.cotizacionId] });
+    onSuccess: (_data, variables) => {
+      qc.invalidateQueries({ queryKey: ['cotizacion_costos', variables.cotizacionId] });
     },
   });
 }
 
-export function calcularTotalCostos(costos: CostoCotizacion[]): { totalUSD: number; totalMXN: number } {
-  let totalUSD = 0;
-  let totalMXN = 0;
-  for (const c of costos) {
-    const total = c.cantidad * c.costo_unitario;
-    if (c.moneda === 'USD') totalUSD += total;
-    else totalMXN += total;
-  }
-  return { totalUSD, totalMXN };
+export function calcularPL(
+  conceptosVenta: ConceptoVentaCotizacion[],
+  costos: CostoCotizacion[],
+) {
+  // --- USD ---
+  const ventasUSD = conceptosVenta.filter((c) => c.moneda === 'USD');
+  const costosUSD = costos.filter((c) => c.moneda === 'USD');
+  const totalVentaUSD = ventasUSD.reduce((s, c) => s + c.total, 0);
+  const totalCostoUSD = costosUSD.reduce((s, c) => s + c.costo_total, 0);
+  const profitUSD = totalVentaUSD - totalCostoUSD;
+
+  // --- MXN ---
+  const ventasMXN = conceptosVenta.filter((c) => c.moneda === 'MXN');
+  const costosMXN = costos.filter((c) => c.moneda === 'MXN');
+  const subtotalVentaMXN = ventasMXN.reduce((s, c) => s + c.cantidad * c.precio_unitario, 0);
+  const totalCostoMXN = costosMXN.reduce((s, c) => s + c.costo_total, 0);
+  const profitMXN = subtotalVentaMXN - totalCostoMXN;
+  const ivaMXN = subtotalVentaMXN * 0.16;
+
+  return {
+    usd: {
+      totalVenta: totalVentaUSD,
+      totalCosto: totalCostoUSD,
+      profit: profitUSD,
+      porcentajeProfit: totalVentaUSD !== 0 ? (profitUSD / totalVentaUSD) * 100 : 0,
+    },
+    mxn: {
+      subtotalVenta: subtotalVentaMXN,
+      totalCosto: totalCostoMXN,
+      profit: profitMXN,
+      porcentajeProfit: subtotalVentaMXN !== 0 ? (profitMXN / subtotalVentaMXN) * 100 : 0,
+      iva: ivaMXN,
+      totalConIva: subtotalVentaMXN + ivaMXN,
+    },
+  };
 }
