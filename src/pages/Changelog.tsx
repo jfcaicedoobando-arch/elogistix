@@ -13,6 +13,14 @@ interface ChangelogEntry {
 
 const changelog: ChangelogEntry[] = [
   {
+    version: "4.8.0",
+    date: "2026-03-04",
+    type: "minor",
+    title: "Unidad de Medida en conceptos de venta",
+    description:
+      "Nuevo campo dropdown 'Unidad de Medida' en ambas tablas de conceptos (USD y MXN) con opciones: BL, W/M, Documento, Contenedor, Kilo, Embarque. Visible también en el detalle de cotización.",
+  },
+  {
     version: "4.7.0",
     date: "2026-03-04",
     type: "minor",

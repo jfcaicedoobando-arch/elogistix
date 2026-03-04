@@ -22,10 +22,10 @@ import SeccionMercanciaGeneral from "@/components/cotizacion/SeccionMercanciaGen
 import SeccionMercanciaAerea from "@/components/cotizacion/SeccionMercanciaAerea";
 
 const emptyUSD = (): ConceptoVentaCotizacion => ({
-  descripcion: '', cantidad: 1, precio_unitario: 0, moneda: 'USD', total: 0, aplica_iva: false,
+  descripcion: '', unidad_medida: '', cantidad: 1, precio_unitario: 0, moneda: 'USD', total: 0, aplica_iva: false,
 });
 const emptyMXN = (): ConceptoVentaCotizacion => ({
-  descripcion: '', cantidad: 1, precio_unitario: 0, moneda: 'MXN', total: 0, aplica_iva: true,
+  descripcion: '', unidad_medida: '', cantidad: 1, precio_unitario: 0, moneda: 'MXN', total: 0, aplica_iva: true,
 });
 
 export default function NuevaCotizacion() {

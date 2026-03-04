@@ -17,6 +17,8 @@ const CATALOGO_MXN = [
   'Almacenaje', 'Entrega', 'Otro',
 ];
 
+const UNIDADES_MEDIDA = ['BL', 'W/M', 'Documento', 'Contenedor', 'Kilo', 'Embarque'];
+
 interface Props {
   conceptosUSD: ConceptoVentaCotizacion[];
   conceptosMXN: ConceptoVentaCotizacion[];
@@ -34,6 +36,20 @@ interface Props {
 
 const fmt = (value: number, currency: string) =>
   new Intl.NumberFormat('es-MX', { style: 'currency', currency }).format(value);
+
+function UnidadMedidaSelect({ value, onChange }: { value: string; onChange: (v: string) => void }) {
+  return (
+    <Select value={value || 'sin_unidad'} onValueChange={v => onChange(v === 'sin_unidad' ? '' : v)}>
+      <SelectTrigger><SelectValue placeholder="Unidad" /></SelectTrigger>
+      <SelectContent>
+        <SelectItem value="sin_unidad">—</SelectItem>
+        {UNIDADES_MEDIDA.map(u => (
+          <SelectItem key={u} value={u}>{u}</SelectItem>
+        ))}
+      </SelectContent>
+    </Select>
+  );
+}
 
 export default function SeccionConceptosVentaCotizacion({
   conceptosUSD, conceptosMXN,
@@ -57,10 +73,9 @@ export default function SeccionConceptosVentaCotizacion({
         <CardContent className="space-y-3">
           {conceptosUSD.map((c, i) => (
             <div key={i} className="grid grid-cols-12 gap-2 items-end">
-              <div className="col-span-5">
+              <div className="col-span-3">
                 {i === 0 && <Label className="text-xs">Concepto</Label>}
                 {c.descripcion !== '' && !CATALOGO_USD.includes(c.descripcion) && c.descripcion !== 'Otro' ? (
-                  // "Otro" with custom text
                   <Input
                     value={c.descripcion}
                     onChange={e => actualizarConceptoUSD(i, 'descripcion', e.target.value)}
@@ -72,7 +87,6 @@ export default function SeccionConceptosVentaCotizacion({
                     onValueChange={val => {
                       if (val === 'Otro') {
                         actualizarConceptoUSD(i, 'descripcion', '');
-                        // Force re-render as custom input
                         setTimeout(() => actualizarConceptoUSD(i, '_esOtro', true), 0);
                       } else {
                         actualizarConceptoUSD(i, 'descripcion', val);
@@ -87,6 +101,10 @@ export default function SeccionConceptosVentaCotizacion({
                     </SelectContent>
                   </Select>
                 )}
+              </div>
+              <div className="col-span-2">
+                {i === 0 && <Label className="text-xs">Unidad de Medida</Label>}
+                <UnidadMedidaSelect value={c.unidad_medida} onChange={v => actualizarConceptoUSD(i, 'unidad_medida', v)} />
               </div>
               <div className="col-span-2">
                 {i === 0 && <Label className="text-xs">Cantidad</Label>}
@@ -129,7 +147,7 @@ export default function SeccionConceptosVentaCotizacion({
             const iva = subtotal * 0.16;
             return (
               <div key={i} className="grid grid-cols-12 gap-2 items-end">
-                <div className="col-span-3">
+                <div className="col-span-2">
                   {i === 0 && <Label className="text-xs">Concepto</Label>}
                   {c.descripcion !== '' && !CATALOGO_MXN.includes(c.descripcion) && c.descripcion !== 'Otro' ? (
                     <Input
@@ -157,6 +175,10 @@ export default function SeccionConceptosVentaCotizacion({
                       </SelectContent>
                     </Select>
                   )}
+                </div>
+                <div className="col-span-1">
+                  {i === 0 && <Label className="text-xs">Unidad</Label>}
+                  <UnidadMedidaSelect value={c.unidad_medida} onChange={v => actualizarConceptoMXN(i, 'unidad_medida', v)} />
                 </div>
                 <div className="col-span-1">
                   {i === 0 && <Label className="text-xs">Cant.</Label>}
