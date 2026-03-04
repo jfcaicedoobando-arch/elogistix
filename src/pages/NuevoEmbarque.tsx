@@ -12,7 +12,6 @@ import { useContactosCliente } from "@/hooks/useClientes";
 import { useAuth } from "@/contexts/AuthContext";
 import { useRegistrarActividad } from "@/hooks/useBitacora";
 import { uploadFile } from '@/lib/storage';
-import { supabase } from '@/integrations/supabase/client';
 import { useConceptosForm } from "@/hooks/useConceptosForm";
 import { useEmbarqueForm } from "@/hooks/useEmbarqueForm";
 import { StepIndicator } from "@/components/embarque/StepIndicator";
@@ -49,6 +48,12 @@ export default function NuevoEmbarque() {
 
   const selectedCliente = clientes.find(c => c.id === form.clienteId);
 
+  const generateExpediente = () => {
+    const year = new Date().getFullYear();
+    const rand = String(Math.floor(Math.random() * 9999)).padStart(4, '0');
+    return `EXP-${year}-${rand}`;
+  };
+
   const handleFinish = async () => {
     if (!form.clienteId || !form.modo || !form.tipo) {
       toast({
@@ -59,10 +64,9 @@ export default function NuevoEmbarque() {
       return;
     }
 
-    try {
-      const { data: expediente, error: expError } = await supabase.rpc('generar_expediente', { tipo_op: form.tipo });
-      if (expError || !expediente) throw expError || new Error('No se pudo generar expediente');
+    const expediente = generateExpediente();
 
+    try {
       // Subir archivos seleccionados a Storage
       const docPayload: { nombre: string; archivo?: string }[] = [];
       const docsChecklist = getDocumentosChecklist(form.modo);
@@ -131,6 +135,7 @@ export default function NuevoEmbarque() {
           tipoCarga={form.tipoCarga} setTipoCarga={setField('tipoCarga')}
           msdsArchivo={form.msdsArchivo} subiendoMsds={form.subiendoMsds}
           onMsdsUpload={handleMsdsUpload}
+          referenciaOperacion={form.referenciaOperacion} setReferenciaOperacion={setField('referenciaOperacion')}
         />
       )}
 

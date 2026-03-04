@@ -25,6 +25,7 @@ import {
   useEmbarqueNotas,
   useEmbarqueFacturas,
   useAvanzarEstadoEmbarque,
+  useEmbarquesHermanos,
 } from "@/hooks/useEmbarques";
 import { TabResumen } from "@/components/embarque/TabResumen";
 import { TabDocumentos } from "@/components/embarque/TabDocumentos";
@@ -46,6 +47,10 @@ export default function EmbarqueDetalle() {
   const { data: notas = [] } = useEmbarqueNotas(id);
   const { data: facturas = [] } = useEmbarqueFacturas(id);
   const avanzarEstado = useAvanzarEstadoEmbarque();
+  const { data: embarquesHermanos = [] } = useEmbarquesHermanos(
+    (embarque as any)?.referencia_operacion,
+    id
+  );
 
   const [uploadingDocId, setUploadingDocId] = useState<string | null>(null);
   const [downloadingDocId, setDownloadingDocId] = useState<string | null>(null);
@@ -205,7 +210,7 @@ export default function EmbarqueDetalle() {
         </TabsList>
 
         <TabsContent value="resumen" className="space-y-6">
-          <TabResumen embarque={embarque} />
+          <TabResumen embarque={embarque} embarquesHermanos={embarquesHermanos} />
         </TabsContent>
 
         <TabsContent value="documentos">

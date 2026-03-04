@@ -13,14 +13,6 @@ interface ChangelogEntry {
 
 const changelog: ChangelogEntry[] = [
   {
-    version: "4.5.0",
-    date: "2026-03-04",
-    type: "minor",
-    title: "Expediente automático con formato Elogistix",
-    description:
-      "El expediente ahora se genera automáticamente con formato EL + prefijo de operación + consecutivo global (ej: ELIMP00001, ELEXP00002, ELNAC00003). Secuencia atómica en base de datos garantiza unicidad. Se eliminaron los campos redundantes 'Referencia de Operación' y 'Embarque Padre' de la tabla, formularios y UI.",
-  },
-  {
     version: "4.4.0",
     date: "2026-03-03",
     type: "minor",

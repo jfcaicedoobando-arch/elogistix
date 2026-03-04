@@ -56,6 +56,8 @@ interface Props {
   msdsArchivo: string | null;
   subiendoMsds: boolean;
   onMsdsUpload: (file: File) => void;
+  referenciaOperacion?: string;
+  setReferenciaOperacion?: (v: string) => void;
 }
 
 export function StepDatosGenerales(props: Props) {
@@ -66,6 +68,7 @@ export function StepDatosGenerales(props: Props) {
     contactos, descripcionMercancia, setDescripcionMercancia,
     pesoKg, setPesoKg, volumenM3, setVolumenM3, piezas, setPiezas,
     tipoCarga, setTipoCarga, msdsArchivo, subiendoMsds, onMsdsUpload,
+    referenciaOperacion, setReferenciaOperacion,
   } = props;
 
   const msdsNombreArchivo = msdsArchivo ? msdsArchivo.split('/').pop() : null;
@@ -103,6 +106,17 @@ export function StepDatosGenerales(props: Props) {
               <SelectContent>{INCOTERMS.map(i => <SelectItem key={i} value={i}>{i}</SelectItem>)}</SelectContent>
             </Select>
           </div>
+          {setReferenciaOperacion && (
+            <div className="space-y-2">
+              <Label>Referencia de Operación</Label>
+              <Input
+                placeholder="Ej: OP-2026-001 (opcional)"
+                value={referenciaOperacion || ''}
+                onChange={e => setReferenciaOperacion(e.target.value)}
+              />
+              <p className="text-xs text-muted-foreground">Vincula varios BL House bajo una misma operación</p>
+            </div>
+          )}
           <div className="space-y-2 md:col-span-2">
             <Select value={shipper} onValueChange={(v) => { setShipper(v); if (v !== '__otro__') setShipperManual(''); }}>
               <SelectTrigger><SelectValue placeholder="Seleccionar shipper" /></SelectTrigger>
