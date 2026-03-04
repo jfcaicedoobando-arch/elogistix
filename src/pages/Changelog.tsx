@@ -13,6 +13,14 @@ interface ChangelogEntry {
 
 const changelog: ChangelogEntry[] = [
   {
+    version: "4.8.2",
+    date: "2026-03-04",
+    type: "minor",
+    title: "IVA condicional en conceptos USD",
+    description:
+      "Toggle switch de IVA 16% para conceptos Handling, Desconsolidación y Revalidación en la tabla USD de cotizaciones. Footer dinámico con desglose de subtotal, IVA y total cuando aplica.",
+  },
+  {
     version: "4.8.1",
     date: "2026-03-04",
     type: "patch",
