@@ -18,7 +18,7 @@ const changelog: ChangelogEntry[] = [
     type: "patch",
     title: "Formato de moneda mexicana en todos los campos de dinero",
     description:
-      "Reemplazados todos los .toFixed(2) manuales con formatCurrency() usando Intl.NumberFormat('es-MX') en StepCostosPrecios, SeccionConceptosVentaCotizacion y CotizacionDetalle. Separadores de miles y decimales ahora consistentes en toda la app.",
+      "Reemplazados todos los formatos manuales de dinero con formatCurrency() usando Intl.NumberFormat('es-MX') en StepCostosPrecios, SeccionConceptosVentaCotizacion, CotizacionDetalle y cotizacionPdf. Separadores de miles y decimales consistentes en toda la app.",
   },
   {
     version: "4.8.4",
