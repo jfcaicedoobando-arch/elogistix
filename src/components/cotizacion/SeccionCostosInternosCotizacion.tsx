@@ -2,12 +2,11 @@ import { useState, useEffect, useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Badge } from "@/components/ui/badge";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
-import {
-  Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
-} from "@/components/ui/table";
 import { usePermissions } from "@/hooks/usePermissions";
 import {
   useCotizacionCostos, useUpsertCostos, useDeleteCosto, calcularPL,
@@ -15,7 +14,7 @@ import {
 } from "@/hooks/useCotizacionCostos";
 import type { ConceptoVentaCotizacion } from "@/hooks/useCotizaciones";
 import { useToast } from "@/hooks/use-toast";
-import { Plus, Trash2, Save } from "lucide-react";
+import { Plus, Trash2, Save, DollarSign, TrendingUp, TrendingDown, Package } from "lucide-react";
 import { formatCurrency } from "@/lib/formatters";
 
 interface FilaCosto {
@@ -31,6 +30,13 @@ interface FilaCosto {
 }
 
 const SECCIONES = ["Origen", "Flete Internacional", "Destino", "Otro"];
+
+const SECCION_COLORS: Record<string, string> = {
+  "Origen": "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300",
+  "Flete Internacional": "bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300",
+  "Destino": "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300",
+  "Otro": "bg-muted text-muted-foreground",
+};
 
 function crearFilaVacia(): FilaCosto {
   return {
@@ -60,7 +66,6 @@ export default function SeccionCostosInternosCotizacion({ cotizacionId, concepto
   const [filas, setFilas] = useState<FilaCosto[]>([]);
   const [inicializado, setInicializado] = useState(false);
 
-  // Inicializar filas: desde BD o pre-poblar desde conceptosVenta
   useEffect(() => {
     if (isLoading || inicializado) return;
     if (costosGuardados && costosGuardados.length > 0) {
@@ -128,7 +133,6 @@ export default function SeccionCostosInternosCotizacion({ cotizacionId, concepto
     }));
     try {
       const result = await upsert.mutateAsync(costos as any);
-      // Sync ids back
       if (result) {
         setFilas((prev) =>
           prev.map((f, i) => ({ ...f, id: (result[i] as any)?.id ?? f.id }))
@@ -140,7 +144,6 @@ export default function SeccionCostosInternosCotizacion({ cotizacionId, concepto
     }
   };
 
-  // Calcular P&L desde filas locales
   const pl = useMemo(() => {
     const asCostos: CostoCotizacion[] = filas.map((f) => ({
       id: f.id ?? f._key,
@@ -163,8 +166,16 @@ export default function SeccionCostosInternosCotizacion({ cotizacionId, concepto
 
   return (
     <Card>
-      <CardHeader className="flex flex-row items-center justify-between">
-        <CardTitle className="text-lg">Costos Internos (P&L)</CardTitle>
+      <CardHeader className="flex flex-row items-center justify-between pb-4">
+        <div>
+          <CardTitle className="text-lg flex items-center gap-2">
+            <DollarSign className="h-5 w-5 text-primary" />
+            Costos Internos (P&L)
+          </CardTitle>
+          <p className="text-sm text-muted-foreground mt-1">
+            Gestiona costos y analiza la rentabilidad de esta cotización
+          </p>
+        </div>
         <div className="flex gap-2">
           <Button variant="outline" size="sm" onClick={agregarFila}>
             <Plus className="h-4 w-4 mr-1" /> Agregar
@@ -174,151 +185,232 @@ export default function SeccionCostosInternosCotizacion({ cotizacionId, concepto
           </Button>
         </div>
       </CardHeader>
-      <CardContent>
-        <div className="border rounded-md overflow-auto">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead className="min-w-[160px]">Concepto</TableHead>
-                <TableHead className="min-w-[120px]">Proveedor</TableHead>
-                <TableHead className="w-[90px]">Moneda</TableHead>
-                <TableHead className="w-[90px]">Unidad</TableHead>
-                <TableHead className="w-[100px] text-right">Costo</TableHead>
-                <TableHead className="w-[100px] text-right">Venta</TableHead>
-                <TableHead className="w-[100px] text-right">Profit</TableHead>
-                <TableHead className="w-[80px] text-right">%</TableHead>
-                <TableHead className="w-[140px]">Sección</TableHead>
-                <TableHead className="w-[40px]" />
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filas.map((fila) => {
-                const profit = fila.venta - fila.costo;
-                const pctProfit = fila.venta === 0 ? 0 : Math.round((profit / fila.venta) * 10000) / 100;
-                return (
-                  <TableRow key={fila._key}>
-                    <TableCell>
-                      <Input
-                        value={fila.concepto}
-                        onChange={(e) => actualizarFila(fila._key, "concepto", e.target.value)}
-                        className="h-8 text-sm"
-                      />
-                    </TableCell>
-                    <TableCell>
-                      <Input
-                        value={fila.proveedor}
-                        onChange={(e) => actualizarFila(fila._key, "proveedor", e.target.value)}
-                        className="h-8 text-sm"
-                      />
-                    </TableCell>
-                    <TableCell>
-                      <Select value={fila.moneda} onValueChange={(v) => actualizarFila(fila._key, "moneda", v)}>
-                        <SelectTrigger className="h-8 text-sm"><SelectValue /></SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="USD">USD</SelectItem>
-                          <SelectItem value="MXN">MXN</SelectItem>
-                          <SelectItem value="EUR">EUR</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </TableCell>
-                    <TableCell>
-                      <Input
-                        value={fila.unidad_medida}
-                        onChange={(e) => actualizarFila(fila._key, "unidad_medida", e.target.value)}
-                        className="h-8 text-sm"
-                      />
-                    </TableCell>
-                    <TableCell>
-                      <Input
-                        type="number"
-                        value={fila.costo}
-                        onChange={(e) => actualizarFila(fila._key, "costo", Number(e.target.value))}
-                        className="h-8 text-sm text-right"
-                      />
-                    </TableCell>
-                    <TableCell>
-                      <Input
-                        type="number"
-                        value={fila.venta}
-                        onChange={(e) => actualizarFila(fila._key, "venta", Number(e.target.value))}
-                        className="h-8 text-sm text-right"
-                      />
-                    </TableCell>
-                    <TableCell className={`text-right text-sm font-medium ${profit < 0 ? "text-destructive" : "text-emerald-600"}`}>
-                      {formatCurrency(profit, fila.moneda)}
-                    </TableCell>
-                    <TableCell className={`text-right text-sm ${pctProfit < 0 ? "text-destructive" : ""}`}>
-                      {pctProfit.toFixed(1)}%
-                    </TableCell>
-                    <TableCell>
-                      <Select value={fila.seccion} onValueChange={(v) => actualizarFila(fila._key, "seccion", v)}>
-                        <SelectTrigger className="h-8 text-sm"><SelectValue /></SelectTrigger>
-                        <SelectContent>
-                          {SECCIONES.map((s) => (
-                            <SelectItem key={s} value={s}>{s}</SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </TableCell>
-                    <TableCell>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-7 w-7"
-                        onClick={() => eliminarFila(fila)}
-                        disabled={eliminar.isPending}
-                      >
-                        <Trash2 className="h-4 w-4 text-destructive" />
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                );
-              })}
-              {filas.length === 0 && (
-                <TableRow>
-                  <TableCell colSpan={10} className="text-center text-muted-foreground py-6">
-                    Sin costos. Presiona "Agregar" para crear una fila.
-                  </TableCell>
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
+      <CardContent className="space-y-6">
+        {/* Resumen KPI */}
+        {filas.length > 0 && (
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            <KPICard label="Total Costo" value={formatCurrency(pl.totalCosto, "USD")} icon={<Package className="h-4 w-4" />} />
+            <KPICard label="Total Venta" value={formatCurrency(pl.totalVenta, "USD")} icon={<DollarSign className="h-4 w-4" />} />
+            <KPICard
+              label="Utilidad"
+              value={formatCurrency(pl.totalProfit, "USD")}
+              icon={pl.totalProfit >= 0 ? <TrendingUp className="h-4 w-4" /> : <TrendingDown className="h-4 w-4" />}
+              variant={pl.totalProfit >= 0 ? "positive" : "negative"}
+            />
+            <KPICard
+              label="Margen"
+              value={`${pl.porcentajeProfit.toFixed(1)}%`}
+              icon={pl.porcentajeProfit >= 0 ? <TrendingUp className="h-4 w-4" /> : <TrendingDown className="h-4 w-4" />}
+              variant={pl.porcentajeProfit >= 0 ? "positive" : "negative"}
+            />
+          </div>
+        )}
+
+        {/* Filas de costos como cards individuales */}
+        <div className="space-y-3">
+          {filas.map((fila, idx) => {
+            const profit = fila.venta - fila.costo;
+            const pctProfit = fila.venta === 0 ? 0 : Math.round((profit / fila.venta) * 10000) / 100;
+            return (
+              <CostoRow
+                key={fila._key}
+                fila={fila}
+                index={idx}
+                profit={profit}
+                pctProfit={pctProfit}
+                onUpdate={actualizarFila}
+                onDelete={() => eliminarFila(fila)}
+                isDeleting={eliminar.isPending}
+              />
+            );
+          })}
+          {filas.length === 0 && (
+            <div className="text-center text-muted-foreground py-10 border border-dashed rounded-lg">
+              <Package className="h-8 w-8 mx-auto mb-2 opacity-50" />
+              <p>Sin costos registrados</p>
+              <p className="text-xs mt-1">Presiona "Agregar" para crear una fila</p>
+            </div>
+          )}
         </div>
 
-        {/* Resumen P&L */}
+        {/* Desglose por sección */}
         {filas.length > 0 && (
-          <div className="mt-4 border rounded-md p-4 bg-muted/30 space-y-2 text-sm">
-            <div className="grid grid-cols-4 gap-4 font-semibold border-b pb-2">
-              <span>Sección</span>
-              <span className="text-right">Costo</span>
-              <span className="text-right">Venta</span>
-              <span className="text-right">Profit (%)</span>
+          <div className="border rounded-lg overflow-hidden">
+            <div className="bg-muted/50 px-4 py-2.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              Desglose por Sección
             </div>
-            {SECCIONES.map((sec) => {
-              const s = pl.porSeccion[sec];
-              if (!s || (s.totalCosto === 0 && s.totalVenta === 0)) return null;
-              return (
-                <div key={sec} className="grid grid-cols-4 gap-4">
-                  <span>{sec}</span>
-                  <span className="text-right">{formatCurrency(s.totalCosto, "USD")}</span>
-                  <span className="text-right">{formatCurrency(s.totalVenta, "USD")}</span>
-                  <span className={`text-right font-medium ${s.totalProfit < 0 ? "text-destructive" : "text-emerald-600"}`}>
-                    {formatCurrency(s.totalProfit, "USD")} ({s.porcentajeProfit.toFixed(1)}%)
-                  </span>
-                </div>
-              );
-            })}
-            <div className="grid grid-cols-4 gap-4 font-bold border-t pt-2">
-              <span>Total</span>
-              <span className="text-right">{formatCurrency(pl.totalCosto, "USD")}</span>
-              <span className="text-right">{formatCurrency(pl.totalVenta, "USD")}</span>
-              <span className={`text-right ${pl.totalProfit < 0 ? "text-destructive" : "text-emerald-600"}`}>
-                {formatCurrency(pl.totalProfit, "USD")} ({pl.porcentajeProfit.toFixed(1)}%)
-              </span>
+            <div className="divide-y">
+              {SECCIONES.map((sec) => {
+                const s = pl.porSeccion[sec];
+                if (!s || (s.totalCosto === 0 && s.totalVenta === 0)) return null;
+                return (
+                  <div key={sec} className="grid grid-cols-4 gap-4 px-4 py-3 text-sm items-center">
+                    <Badge variant="outline" className={`${SECCION_COLORS[sec]} w-fit text-xs`}>{sec}</Badge>
+                    <span className="text-right tabular-nums">{formatCurrency(s.totalCosto, "USD")}</span>
+                    <span className="text-right tabular-nums">{formatCurrency(s.totalVenta, "USD")}</span>
+                    <span className={`text-right font-semibold tabular-nums ${s.totalProfit < 0 ? "text-destructive" : "text-emerald-600 dark:text-emerald-400"}`}>
+                      {formatCurrency(s.totalProfit, "USD")} ({s.porcentajeProfit.toFixed(1)}%)
+                    </span>
+                  </div>
+                );
+              })}
+              <div className="grid grid-cols-4 gap-4 px-4 py-3 text-sm items-center font-bold bg-muted/30">
+                <span>Total</span>
+                <span className="text-right tabular-nums">{formatCurrency(pl.totalCosto, "USD")}</span>
+                <span className="text-right tabular-nums">{formatCurrency(pl.totalVenta, "USD")}</span>
+                <span className={`text-right tabular-nums ${pl.totalProfit < 0 ? "text-destructive" : "text-emerald-600 dark:text-emerald-400"}`}>
+                  {formatCurrency(pl.totalProfit, "USD")} ({pl.porcentajeProfit.toFixed(1)}%)
+                </span>
+              </div>
             </div>
           </div>
         )}
       </CardContent>
     </Card>
+  );
+}
+
+/* ── Sub-componentes ── */
+
+function KPICard({ label, value, icon, variant }: {
+  label: string;
+  value: string;
+  icon: React.ReactNode;
+  variant?: "positive" | "negative";
+}) {
+  const colorClass = variant === "positive"
+    ? "border-l-emerald-500 text-emerald-600 dark:text-emerald-400"
+    : variant === "negative"
+      ? "border-l-destructive text-destructive"
+      : "border-l-primary text-foreground";
+
+  return (
+    <div className={`border rounded-lg border-l-4 p-3 ${colorClass}`}>
+      <div className="flex items-center gap-1.5 text-xs text-muted-foreground mb-1">
+        {icon}
+        {label}
+      </div>
+      <div className="text-lg font-bold tabular-nums">{value}</div>
+    </div>
+  );
+}
+
+function CostoRow({ fila, index, profit, pctProfit, onUpdate, onDelete, isDeleting }: {
+  fila: FilaCosto;
+  index: number;
+  profit: number;
+  pctProfit: number;
+  onUpdate: (key: string, campo: keyof FilaCosto, valor: string | number) => void;
+  onDelete: () => void;
+  isDeleting: boolean;
+}) {
+  return (
+    <div className="border rounded-lg p-4 space-y-3 bg-card hover:shadow-sm transition-shadow">
+      {/* Row header */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <span className="text-xs font-medium text-muted-foreground w-6 h-6 rounded-full bg-muted flex items-center justify-center">
+            {index + 1}
+          </span>
+          <Badge variant="outline" className={`${SECCION_COLORS[fila.seccion] || SECCION_COLORS["Otro"]} text-xs`}>
+            {fila.seccion}
+          </Badge>
+          {profit !== 0 && (
+            <span className={`text-xs font-semibold ${profit < 0 ? "text-destructive" : "text-emerald-600 dark:text-emerald-400"}`}>
+              {profit > 0 ? "+" : ""}{formatCurrency(profit, fila.moneda)} ({pctProfit.toFixed(1)}%)
+            </span>
+          )}
+        </div>
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-7 w-7 text-muted-foreground hover:text-destructive"
+          onClick={onDelete}
+          disabled={isDeleting}
+        >
+          <Trash2 className="h-4 w-4" />
+        </Button>
+      </div>
+
+      {/* Fields grid */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        <div className="col-span-2 md:col-span-1">
+          <Label className="text-xs text-muted-foreground">Concepto</Label>
+          <Input
+            value={fila.concepto}
+            onChange={(e) => onUpdate(fila._key, "concepto", e.target.value)}
+            placeholder="Ej: Flete marítimo"
+            className="h-9 mt-1"
+          />
+        </div>
+        <div>
+          <Label className="text-xs text-muted-foreground">Proveedor</Label>
+          <Input
+            value={fila.proveedor}
+            onChange={(e) => onUpdate(fila._key, "proveedor", e.target.value)}
+            placeholder="Nombre"
+            className="h-9 mt-1"
+          />
+        </div>
+        <div>
+          <Label className="text-xs text-muted-foreground">Sección</Label>
+          <Select value={fila.seccion} onValueChange={(v) => onUpdate(fila._key, "seccion", v)}>
+            <SelectTrigger className="h-9 mt-1"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              {SECCIONES.map((s) => (
+                <SelectItem key={s} value={s}>{s}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+        <div>
+          <Label className="text-xs text-muted-foreground">Moneda</Label>
+          <Select value={fila.moneda} onValueChange={(v) => onUpdate(fila._key, "moneda", v)}>
+            <SelectTrigger className="h-9 mt-1"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="USD">USD</SelectItem>
+              <SelectItem value="MXN">MXN</SelectItem>
+              <SelectItem value="EUR">EUR</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+        <div>
+          <Label className="text-xs text-muted-foreground">Unidad</Label>
+          <Input
+            value={fila.unidad_medida}
+            onChange={(e) => onUpdate(fila._key, "unidad_medida", e.target.value)}
+            placeholder="Ej: CBM"
+            className="h-9 mt-1"
+          />
+        </div>
+        <div>
+          <Label className="text-xs text-muted-foreground">Costo</Label>
+          <Input
+            type="number"
+            value={fila.costo}
+            onChange={(e) => onUpdate(fila._key, "costo", Number(e.target.value))}
+            className="h-9 mt-1 text-right tabular-nums"
+          />
+        </div>
+        <div>
+          <Label className="text-xs text-muted-foreground">Venta</Label>
+          <Input
+            type="number"
+            value={fila.venta}
+            onChange={(e) => onUpdate(fila._key, "venta", Number(e.target.value))}
+            className="h-9 mt-1 text-right tabular-nums"
+          />
+        </div>
+        <div>
+          <Label className="text-xs text-muted-foreground">Utilidad</Label>
+          <div className={`h-9 mt-1 flex items-center justify-end px-3 rounded-md bg-muted/50 text-sm font-semibold tabular-nums ${profit < 0 ? "text-destructive" : "text-emerald-600 dark:text-emerald-400"}`}>
+            {formatCurrency(profit, fila.moneda)}
+          </div>
+        </div>
+      </div>
+    </div>
   );
 }

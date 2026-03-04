@@ -13,6 +13,14 @@ interface ChangelogEntry {
 
 const changelog: ChangelogEntry[] = [
   {
+    version: "4.5.3",
+    date: "2026-03-04",
+    type: "patch",
+    title: "Rediseño de Costos Internos P&L",
+    description:
+      "Reestructuración visual de la sección de costos internos: cards individuales por concepto con labels, KPIs de resumen, badges por sección y desglose con mejor legibilidad.",
+  },
+  {
     version: "4.5.2",
     date: "2026-03-04",
     type: "patch",
