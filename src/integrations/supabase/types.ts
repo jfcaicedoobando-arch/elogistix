@@ -527,7 +527,6 @@ export type Database = {
           contenedor: string | null
           created_at: string
           descripcion_mercancia: string
-          embarque_padre_id: string | null
           estado: Database["public"]["Enums"]["estado_embarque"]
           eta: string | null
           etd: string | null
@@ -546,7 +545,6 @@ export type Database = {
           piezas: number
           puerto_destino: string | null
           puerto_origen: string | null
-          referencia_operacion: string | null
           shipper: string
           tipo: Database["public"]["Enums"]["tipo_operacion"]
           tipo_cambio_eur: number
@@ -575,7 +573,6 @@ export type Database = {
           contenedor?: string | null
           created_at?: string
           descripcion_mercancia?: string
-          embarque_padre_id?: string | null
           estado?: Database["public"]["Enums"]["estado_embarque"]
           eta?: string | null
           etd?: string | null
@@ -594,7 +591,6 @@ export type Database = {
           piezas?: number
           puerto_destino?: string | null
           puerto_origen?: string | null
-          referencia_operacion?: string | null
           shipper?: string
           tipo: Database["public"]["Enums"]["tipo_operacion"]
           tipo_cambio_eur?: number
@@ -623,7 +619,6 @@ export type Database = {
           contenedor?: string | null
           created_at?: string
           descripcion_mercancia?: string
-          embarque_padre_id?: string | null
           estado?: Database["public"]["Enums"]["estado_embarque"]
           eta?: string | null
           etd?: string | null
@@ -642,7 +637,6 @@ export type Database = {
           piezas?: number
           puerto_destino?: string | null
           puerto_origen?: string | null
-          referencia_operacion?: string | null
           shipper?: string
           tipo?: Database["public"]["Enums"]["tipo_operacion"]
           tipo_cambio_eur?: number
@@ -662,13 +656,6 @@ export type Database = {
             columns: ["cliente_id"]
             isOneToOne: false
             referencedRelation: "clientes"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "embarques_embarque_padre_id_fkey"
-            columns: ["embarque_padre_id"]
-            isOneToOne: false
-            referencedRelation: "embarques"
             referencedColumns: ["id"]
           },
         ]

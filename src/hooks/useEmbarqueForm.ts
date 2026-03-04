@@ -44,8 +44,6 @@ export interface EmbarqueFormState {
   eta: string;
   tipoCambioUSD: string;
   tipoCambioEUR: string;
-  referenciaOperacion: string;
-  embarquePadreId: string;
 }
 
 const INITIAL_STATE: EmbarqueFormState = {
@@ -58,7 +56,6 @@ const INITIAL_STATE: EmbarqueFormState = {
   aeropuertoOrigen: '', aeropuertoDestino: '', aerolinea: '', mawb: '', hawb: '',
   ciudadOrigen: '', ciudadDestino: '', transportista: '', cartaPorte: '',
   etd: '', eta: '', tipoCambioUSD: '17.25', tipoCambioEUR: '18.50',
-  referenciaOperacion: '', embarquePadreId: '',
 };
 
 type Setter<K extends keyof EmbarqueFormState> = (value: EmbarqueFormState[K]) => void;
@@ -131,8 +128,6 @@ export function useEmbarqueForm() {
       eta: embarque.eta ?? '',
       tipoCambioUSD: String(embarque.tipo_cambio_usd),
       tipoCambioEUR: String(embarque.tipo_cambio_eur),
-      referenciaOperacion: embarque.referencia_operacion ?? '',
-      embarquePadreId: embarque.embarque_padre_id ?? '',
     });
   };
 
@@ -176,9 +171,7 @@ export function useEmbarqueForm() {
     tipo_carga: form.tipoCarga,
     msds_archivo: form.msdsArchivo,
     operador,
-    referencia_operacion: form.referenciaOperacion || null,
-    embarque_padre_id: form.embarquePadreId || null,
-  } as any);
+  });
 
   const buildConceptosVentaPayload = (conceptosVenta: ConceptoVentaLocal[]) =>
     conceptosVenta

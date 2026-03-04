@@ -1,20 +1,15 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { formatDate, getModoIcon, getEstadoColor } from "@/lib/helpers";
+import { formatDate, getModoIcon } from "@/lib/helpers";
 import { ESTADO_TIMELINE } from "@/data/embarqueConstants";
 import { DetailRow } from "./DetailRow";
-import { useNavigate } from "react-router-dom";
 import type { EmbarqueRow } from "@/hooks/useEmbarques";
 
 interface Props {
   embarque: EmbarqueRow;
-  embarquesHermanos?: { id: string; expediente: string; cliente_nombre: string; bl_house: string | null; estado: string; tipo_contenedor: string | null }[];
 }
 
-export function TabResumen({ embarque, embarquesHermanos = [] }: Props) {
-  const navigate = useNavigate();
+export function TabResumen({ embarque }: Props) {
   const currentStepIndex = ESTADO_TIMELINE.indexOf(embarque.estado as any);
-  const refOp = (embarque as any).referencia_operacion;
 
   return (
     <div className="space-y-6">
@@ -95,37 +90,6 @@ export function TabResumen({ embarque, embarquesHermanos = [] }: Props) {
           <CardContent className="text-sm text-muted-foreground">{embarque.consignatario}</CardContent>
         </Card>
       </div>
-
-      {refOp && (
-        <Card>
-          <CardHeader className="pb-3"><CardTitle className="text-sm">Operación: {refOp}</CardTitle></CardHeader>
-          <CardContent>
-            {embarquesHermanos.length === 0 ? (
-              <p className="text-sm text-muted-foreground">No hay otros embarques vinculados a esta operación.</p>
-            ) : (
-              <div className="space-y-2">
-                {embarquesHermanos.map(h => (
-                  <div
-                    key={h.id}
-                    className="flex items-center justify-between p-2 rounded-md border cursor-pointer hover:bg-muted/50 transition-colors"
-                    onClick={() => navigate(`/embarques/${h.id}`)}
-                  >
-                    <div className="flex items-center gap-3">
-                      <span className="font-medium text-sm">{h.expediente}</span>
-                      <span className="text-xs text-muted-foreground">{h.bl_house || '-'}</span>
-                      <span className="text-xs text-muted-foreground">{h.tipo_contenedor || ''}</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs text-muted-foreground">{h.cliente_nombre}</span>
-                      <Badge variant="secondary" className={`text-xs ${getEstadoColor(h.estado)}`}>{h.estado}</Badge>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      )}
     </div>
   );
 }

@@ -135,7 +135,6 @@ export default function NuevoEmbarque() {
           tipoCarga={form.tipoCarga} setTipoCarga={setField('tipoCarga')}
           msdsArchivo={form.msdsArchivo} subiendoMsds={form.subiendoMsds}
           onMsdsUpload={handleMsdsUpload}
-          referenciaOperacion={form.referenciaOperacion} setReferenciaOperacion={setField('referenciaOperacion')}
         />
       )}
 

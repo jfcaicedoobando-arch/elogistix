@@ -13,14 +13,6 @@ interface ChangelogEntry {
 
 const changelog: ChangelogEntry[] = [
   {
-    version: "4.4.0",
-    date: "2026-03-03",
-    type: "minor",
-    title: "Referencia de operación para vincular embarques",
-    description:
-      "Nuevos campos 'Referencia de Operación' y 'Embarque Padre' en la tabla de embarques. Permite vincular varios BL House bajo un mismo BL Master compartiendo una referencia común (ej: OP-2026-001). La lista de embarques muestra la columna de referencia. El detalle del embarque muestra los embarques hermanos vinculados con navegación directa.",
-  },
-  {
     version: "4.3.4",
     date: "2026-03-03",
     type: "patch",
