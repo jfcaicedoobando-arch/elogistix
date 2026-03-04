@@ -1,22 +1,31 @@
 
 
-## Plan: Crear `src/hooks/useCotizacionCostos.ts`
+## Plan: Crear `SeccionCostosInternosCotizacion.tsx`
 
-### Archivo nuevo
+### Componente nuevo: `src/components/cotizacion/SeccionCostosInternosCotizacion.tsx`
 
-Crear el hook siguiendo el patrón existente de `useCotizaciones.ts` (react-query + supabase client):
+**Props**: `cotizacionId: string`, `conceptosVenta: ConceptoVentaCotizacion[]`
 
-1. **Interface `CostoCotizacion`** — mapea los campos de la tabla `cotizacion_costos` (id, cotizacion_id, concepto, proveedor, moneda, unidad_medida, costo, venta, profit, porcentaje_profit, seccion)
+**Comportamiento**:
 
-2. **`useCotizacionCostos(cotizacionId)`** — `useQuery` con `.select('*').eq('cotizacion_id', cotizacionId)`, habilitado solo cuando `cotizacionId` existe
+1. **Visibilidad**: Usa `usePermissions()` — si `!canEdit`, retorna `null`
+2. **Pre-poblado**: Al montar, si no hay costos guardados en BD (`useCotizacionCostos` retorna vacío), genera filas iniciales desde `conceptosVenta` mapeando `descripcion → concepto` y `precio_unitario * cantidad → venta`
+3. **Estado local**: Array de filas editables con campos: concepto, proveedor, moneda (default `USD`), unidad_medida, costo, venta, seccion
+4. **Columnas calculadas en UI**: `profit = venta - costo`, `% profit = ((venta - costo) / venta) * 100`
+5. **Selector de sección**: Select con opciones `Origen`, `Flete Internacional`, `Destino`, `Otro`
+6. **Botón Agregar**: Añade fila vacía al array local
+7. **Botón Eliminar**: Por fila, llama `useDeleteCosto` si tiene id, o elimina del array local
+8. **Botón Guardar**: Llama `useUpsertCostos()` con todo el array, asignando `cotizacion_id`
+9. **Resumen P&L**: Usa `calcularPL()` para mostrar totales al pie de la tabla
 
-3. **`useUpsertCostos()`** — `useMutation` que recibe un array de costos parciales (sin profit/porcentaje_profit que son columnas generadas), hace `supabase.from('cotizacion_costos').upsert(costos)` e invalida la query
+### UI
 
-4. **`useDeleteCosto()`** — `useMutation` que elimina por id e invalida la query
-
-5. **`calcularPL(costos)`** — función pura que retorna totales globales y agrupados por sección (`Origen`, `Flete Internacional`, `Destino`, `Otro`)
+- Card con título "Costos Internos (P&L)"
+- Tabla con Table/TableRow/TableCell existentes
+- Inputs inline para edición
+- Footer con totales de costo, venta, profit y % profit
 
 ### Changelog
 
-Registrar como versión **4.5.1** en `src/pages/Changelog.tsx`.
+Registrar como versión **4.5.2**.
 
