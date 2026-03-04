@@ -1,7 +1,13 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { formatDate, getModoIcon } from "@/lib/helpers";
+import { Badge } from "@/components/ui/badge";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { formatDate, getModoIcon, getEstadoColor } from "@/lib/helpers";
 import { ESTADO_TIMELINE } from "@/data/embarqueConstants";
 import { DetailRow } from "./DetailRow";
+import { supabase } from "@/integrations/supabase/client";
+import { useQuery } from "@tanstack/react-query";
+import { useNavigate } from "react-router-dom";
+import { Link } from "lucide-react";
 import type { EmbarqueRow } from "@/hooks/useEmbarques";
 
 interface Props {
@@ -9,7 +15,23 @@ interface Props {
 }
 
 export function TabResumen({ embarque }: Props) {
+  const navigate = useNavigate();
   const currentStepIndex = ESTADO_TIMELINE.indexOf(embarque.estado as any);
+
+  const { data: relacionados = [] } = useQuery({
+    queryKey: ['embarques-relacionados', embarque.bl_master, embarque.id],
+    queryFn: async () => {
+      if (!embarque.bl_master) return [];
+      const { data, error } = await supabase
+        .from('embarques')
+        .select('id, expediente, bl_house, cliente_nombre, shipper, estado')
+        .eq('bl_master', embarque.bl_master)
+        .neq('id', embarque.id);
+      if (error) throw error;
+      return data || [];
+    },
+    enabled: !!embarque.bl_master,
+  });
 
   return (
     <div className="space-y-6">
@@ -90,6 +112,43 @@ export function TabResumen({ embarque }: Props) {
           <CardContent className="text-sm text-muted-foreground">{embarque.consignatario}</CardContent>
         </Card>
       </div>
+
+      {relacionados.length > 0 && (
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-sm flex items-center gap-2">
+              <Link className="h-4 w-4" />
+              Embarques Relacionados (BL Master: {embarque.bl_master})
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="p-0">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Expediente</TableHead>
+                  <TableHead>BL House</TableHead>
+                  <TableHead>Cliente</TableHead>
+                  <TableHead>Shipper</TableHead>
+                  <TableHead>Estado</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {relacionados.map((rel) => (
+                  <TableRow key={rel.id} className="cursor-pointer" onClick={() => navigate(`/embarques/${rel.id}`)}>
+                    <TableCell className="font-medium">{rel.expediente}</TableCell>
+                    <TableCell className="text-xs">{rel.bl_house || '-'}</TableCell>
+                    <TableCell className="text-xs">{rel.cliente_nombre}</TableCell>
+                    <TableCell className="text-xs">{rel.shipper}</TableCell>
+                    <TableCell>
+                      <Badge variant="secondary" className={`text-xs ${getEstadoColor(rel.estado)}`}>{rel.estado}</Badge>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 }

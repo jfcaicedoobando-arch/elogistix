@@ -59,10 +59,21 @@ export default function NuevoEmbarque() {
       return;
     }
 
-    const { data: expediente, error: expError } = await supabase.rpc('generar_expediente', { tipo_op: form.tipo });
-    if (expError || !expediente) {
-      toast({ title: "Error al generar expediente", description: expError?.message || "No se pudo generar el número de referencia.", variant: "destructive" });
-      return;
+    let expediente: string;
+    if (form.blMaster && form.blMaster.trim()) {
+      const { data, error } = await supabase.rpc('resolver_expediente_por_bl', { _bl_master: form.blMaster.trim(), _tipo_op: form.tipo });
+      if (error || !data) {
+        toast({ title: "Error al resolver expediente", description: error?.message || "No se pudo resolver el número de referencia.", variant: "destructive" });
+        return;
+      }
+      expediente = data;
+    } else {
+      const { data, error } = await supabase.rpc('generar_expediente', { tipo_op: form.tipo });
+      if (error || !data) {
+        toast({ title: "Error al generar expediente", description: error?.message || "No se pudo generar el número de referencia.", variant: "destructive" });
+        return;
+      }
+      expediente = data;
     }
 
     try {

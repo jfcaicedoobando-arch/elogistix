@@ -37,7 +37,8 @@ export default function Embarques() {
     return embarques.filter((embarque) => {
       const matchSearch = !search || embarque.expediente.toLowerCase().includes(search.toLowerCase()) ||
         embarque.cliente_nombre.toLowerCase().includes(search.toLowerCase()) ||
-        embarque.descripcion_mercancia.toLowerCase().includes(search.toLowerCase());
+        embarque.descripcion_mercancia.toLowerCase().includes(search.toLowerCase()) ||
+        (embarque.bl_master || '').toLowerCase().includes(search.toLowerCase());
       const matchModo = filterModo === "todos" || embarque.modo === filterModo;
       const matchEstado = filterEstado === "todos" || embarque.estado === filterEstado;
       const matchCliente = filterCliente === "todos" || embarque.cliente_id === filterCliente;
@@ -112,6 +113,7 @@ export default function Embarques() {
             <TableHeader>
               <TableRow>
                 <TableHead>Expediente</TableHead>
+                <TableHead>BL Master</TableHead>
                 <TableHead>Cliente</TableHead>
                 <TableHead>Modo</TableHead>
                 <TableHead>Origen</TableHead>
@@ -126,7 +128,7 @@ export default function Embarques() {
             <TableBody>
               {paginated.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={10} className="text-center py-8 text-muted-foreground">
+                  <TableCell colSpan={11} className="text-center py-8 text-muted-foreground">
                     No se encontraron embarques
                   </TableCell>
                 </TableRow>
@@ -136,6 +138,7 @@ export default function Embarques() {
                 return (
                   <TableRow key={embarque.id} className="cursor-pointer" onClick={() => navigate(`/embarques/${embarque.id}`)}>
                     <TableCell className="font-medium">{embarque.expediente}</TableCell>
+                    <TableCell className="text-xs">{embarque.bl_master || '-'}</TableCell>
                     <TableCell className="max-w-[180px] truncate">{embarque.cliente_nombre}</TableCell>
                     <TableCell>
                       <span className="flex items-center gap-1">

@@ -13,6 +13,14 @@ interface ChangelogEntry {
 
 const changelog: ChangelogEntry[] = [
   {
+    version: "4.4.0",
+    date: "2026-03-04",
+    type: "minor",
+    title: "Agrupación de embarques por BL Master",
+    description:
+      "Cuando se crea un embarque con un BL Master existente, se asigna automáticamente la misma referencia Elogistix. Nueva columna BL Master en la lista de embarques con búsqueda incluida. Sección 'Embarques relacionados' en el detalle muestra todos los BL House bajo el mismo BL Master con navegación directa.",
+  },
+  {
     version: "4.3.5",
     date: "2026-03-04",
     type: "minor",

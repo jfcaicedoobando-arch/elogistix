@@ -858,6 +858,10 @@ export type Database = {
         }
         Returns: boolean
       }
+      resolver_expediente_por_bl: {
+        Args: { _bl_master: string; _tipo_op: string }
+        Returns: string
+      }
     }
     Enums: {
       app_role: "admin" | "operador" | "viewer"
