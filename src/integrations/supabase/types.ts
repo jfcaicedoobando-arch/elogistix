@@ -320,6 +320,62 @@ export type Database = {
           },
         ]
       }
+      cotizacion_costos: {
+        Row: {
+          concepto: string
+          costo: number
+          cotizacion_id: string
+          created_at: string | null
+          id: string
+          moneda: string
+          porcentaje_profit: number | null
+          profit: number | null
+          proveedor: string | null
+          seccion: string | null
+          unidad_medida: string | null
+          updated_at: string | null
+          venta: number
+        }
+        Insert: {
+          concepto: string
+          costo?: number
+          cotizacion_id: string
+          created_at?: string | null
+          id?: string
+          moneda?: string
+          porcentaje_profit?: number | null
+          profit?: number | null
+          proveedor?: string | null
+          seccion?: string | null
+          unidad_medida?: string | null
+          updated_at?: string | null
+          venta?: number
+        }
+        Update: {
+          concepto?: string
+          costo?: number
+          cotizacion_id?: string
+          created_at?: string | null
+          id?: string
+          moneda?: string
+          porcentaje_profit?: number | null
+          profit?: number | null
+          proveedor?: string | null
+          seccion?: string | null
+          unidad_medida?: string | null
+          updated_at?: string | null
+          venta?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cotizacion_costos_cotizacion_id_fkey"
+            columns: ["cotizacion_id"]
+            isOneToOne: false
+            referencedRelation: "cotizaciones"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       cotizaciones: {
         Row: {
           carta_garantia: boolean
