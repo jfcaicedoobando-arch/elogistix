@@ -8,11 +8,10 @@ import {
   useEmbarque,
   useEmbarqueConceptosVenta,
   useEmbarqueConceptosCosto,
-  useClientesForSelect,
   useProveedoresForSelect,
   useUpdateEmbarque,
 } from "@/hooks/useEmbarques";
-import { useContactosCliente } from "@/hooks/useClientes";
+import { useClientesForSelect, useContactosCliente } from "@/hooks/useClientes";
 import { useAuth } from "@/contexts/AuthContext";
 import { useRegistrarActividad } from "@/hooks/useBitacora";
 import { useConceptosForm } from "@/hooks/useConceptosForm";

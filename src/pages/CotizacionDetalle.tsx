@@ -1,19 +1,19 @@
 import { useState, useMemo } from "react";
 import SeccionCostosInternosPL from "@/components/cotizacion/SeccionCostosInternosPL";
+import TablaConceptosUSD from "@/components/cotizacion/TablaConceptosUSD";
+import TablaConceptosMXN from "@/components/cotizacion/TablaConceptosMXN";
+import ResumenTotalesCotizacion from "@/components/cotizacion/ResumenTotalesCotizacion";
+import DialogConvertirProspecto from "@/components/cotizacion/DialogConvertirProspecto";
+import type { ClienteFormData } from "@/components/cotizacion/DialogConvertirProspecto";
 import type { ConceptoVentaCotizacion } from "@/hooks/useCotizaciones";
 import { useParams, useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
-import {
-  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
-} from "@/components/ui/dialog";
 import {
   useCotizacion, useUpdateEstadoCotizacion,
   useConvertirProspectoACliente,
@@ -37,7 +37,7 @@ export default function CotizacionDetalle() {
   const { canEdit } = usePermissions();
 
   const [showConvertir, setShowConvertir] = useState(false);
-  const [clienteForm, setClienteForm] = useState({
+  const [clienteForm, setClienteForm] = useState<ClienteFormData>({
     nombre: '', contacto: '', email: '', telefono: '',
     rfc: '', direccion: '', ciudad: '', estado: '', cp: '',
   });
@@ -46,6 +46,12 @@ export default function CotizacionDetalle() {
     cotizacion ? (cotizacion.conceptos_venta as unknown as ConceptoVentaCotizacion[]).filter(c => c.moneda === 'USD') : [], [cotizacion]);
   const conceptosVentaMXN = useMemo(() =>
     cotizacion ? (cotizacion.conceptos_venta as unknown as ConceptoVentaCotizacion[]).filter(c => c.moneda === 'MXN') : [], [cotizacion]);
+
+  // Totales calculados
+  const totalUSD = useMemo(() => conceptosVentaUSD.reduce((s, c) => s + c.total, 0), [conceptosVentaUSD]);
+  const subtotalMXN = useMemo(() => conceptosVentaMXN.reduce((s, c) => s + c.cantidad * c.precio_unitario, 0), [conceptosVentaMXN]);
+  const ivaMXN = subtotalMXN * 0.16;
+  const totalMXN = subtotalMXN + ivaMXN;
 
   if (isLoading) {
     return <div className="space-y-4"><Skeleton className="h-8 w-64" /><Skeleton className="h-64 w-full" /></div>;
@@ -103,7 +109,6 @@ export default function CotizacionDetalle() {
 
   const dimensiones: DimensionLCL[] = Array.isArray(cotizacion.dimensiones_lcl) ? cotizacion.dimensiones_lcl : [];
   const dimensionesAereas: DimensionAerea[] = Array.isArray(cotizacion.dimensiones_aereas) ? cotizacion.dimensiones_aereas : [];
-
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
@@ -340,104 +345,10 @@ export default function CotizacionDetalle() {
         </CardContent>
       </Card>
 
-      {/* Conceptos de venta — USD */}
-      {(() => {
-        const cUSD = cotizacion.conceptos_venta.filter(c => c.moneda === 'USD');
-        const cMXN = cotizacion.conceptos_venta.filter(c => c.moneda === 'MXN');
-        const tUSD = cUSD.reduce((s, c) => s + c.total, 0);
-        const sMXN = cMXN.reduce((s, c) => s + c.cantidad * c.precio_unitario, 0);
-        const iMXN = sMXN * 0.16;
-        const tMXN = sMXN + iMXN;
-        return (
-          <>
-            {cUSD.length > 0 && (
-              <Card>
-                <CardHeader><CardTitle className="text-lg">Conceptos en USD</CardTitle></CardHeader>
-                <CardContent>
-                  <div className="border rounded-md overflow-auto">
-                    <Table>
-                      <TableHeader>
-                      <TableRow>
-                          <TableHead>Descripción</TableHead>
-                          <TableHead>Unidad</TableHead>
-                          <TableHead className="text-right">Cantidad</TableHead>
-                          <TableHead className="text-right">Precio Unitario</TableHead>
-                          <TableHead className="text-right">Total</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {cUSD.map((concepto, indice) => (
-                          <TableRow key={indice}>
-                            <TableCell>{concepto.descripcion}</TableCell>
-                            <TableCell>{concepto.unidad_medida || '—'}</TableCell>
-                            <TableCell className="text-right">{concepto.cantidad}</TableCell>
-                            <TableCell className="text-right">{formatCurrency(concepto.precio_unitario, 'USD')}</TableCell>
-                            <TableCell className="text-right font-medium">{formatCurrency(concepto.total, 'USD')}</TableCell>
-                          </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
-                  </div>
-                  <div className="flex justify-end mt-3">
-                    <p className="text-lg font-bold">Total USD: {formatCurrency(tUSD, 'USD')}</p>
-                  </div>
-                </CardContent>
-              </Card>
-            )}
-
-            {cMXN.length > 0 && (
-              <Card>
-                <CardHeader><CardTitle className="text-lg">Conceptos en MXN + IVA</CardTitle></CardHeader>
-                <CardContent>
-                  <div className="border rounded-md overflow-auto">
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead>Descripción</TableHead>
-                          <TableHead>Unidad</TableHead>
-                          <TableHead className="text-right">Cantidad</TableHead>
-                          <TableHead className="text-right">P. Unitario</TableHead>
-                          <TableHead className="text-right">Subtotal</TableHead>
-                          <TableHead className="text-right">IVA (16%)</TableHead>
-                          <TableHead className="text-right">Total</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {cMXN.map((concepto, indice) => {
-                          const sub = concepto.cantidad * concepto.precio_unitario;
-                          const iva = sub * 0.16;
-                          return (
-                            <TableRow key={indice}>
-                              <TableCell>{concepto.descripcion}</TableCell>
-                              <TableCell>{concepto.unidad_medida || '—'}</TableCell>
-                              <TableCell className="text-right">{concepto.cantidad}</TableCell>
-                              <TableCell className="text-right">{formatCurrency(concepto.precio_unitario, 'MXN')}</TableCell>
-                              <TableCell className="text-right">{formatCurrency(sub, 'MXN')}</TableCell>
-                              <TableCell className="text-right">{formatCurrency(iva, 'MXN')}</TableCell>
-                              <TableCell className="text-right font-medium">{formatCurrency(sub + iva, 'MXN')}</TableCell>
-                            </TableRow>
-                          );
-                        })}
-                      </TableBody>
-                    </Table>
-                  </div>
-                  <div className="flex flex-col items-end mt-3 gap-1">
-                    <span className="text-sm">Subtotal MXN: {formatCurrency(sMXN, 'MXN')}</span>
-                    <span className="text-sm">IVA (16%): {formatCurrency(iMXN, 'MXN')}</span>
-                    <p className="text-lg font-bold">Total MXN: {formatCurrency(tMXN, 'MXN')}</p>
-                  </div>
-                </CardContent>
-              </Card>
-            )}
-
-            <div className="flex flex-col items-end gap-1 p-4 border rounded-md bg-muted/30">
-              <span className="text-base font-bold">Total USD: {formatCurrency(tUSD, 'USD')}</span>
-              <span className="text-base font-bold">Total MXN (c/IVA): {formatCurrency(tMXN, 'MXN')}</span>
-              <span className="text-xs text-muted-foreground">* Los conceptos en MXN incluyen IVA 16%</span>
-            </div>
-          </>
-        );
-      })()}
+      {/* Conceptos de venta */}
+      <TablaConceptosUSD conceptos={conceptosVentaUSD} totalUSD={totalUSD} />
+      <TablaConceptosMXN conceptos={conceptosVentaMXN} subtotalMXN={subtotalMXN} ivaMXN={ivaMXN} totalMXN={totalMXN} />
+      <ResumenTotalesCotizacion totalUSD={totalUSD} totalMXN={totalMXN} />
 
       {/* Costos Internos P&L */}
       {canEdit && (
@@ -459,30 +370,14 @@ export default function CotizacionDetalle() {
       )}
 
       {/* Dialog Convertir Prospecto */}
-      <Dialog open={showConvertir} onOpenChange={setShowConvertir}>
-        <DialogContent className="max-w-lg">
-          <DialogHeader>
-            <DialogTitle>Convertir Prospecto a Cliente</DialogTitle>
-          </DialogHeader>
-          <div className="grid grid-cols-2 gap-3">
-            <div className="col-span-2"><Label>Nombre / Empresa *</Label><Input value={clienteForm.nombre} onChange={e => setClienteForm(p => ({ ...p, nombre: e.target.value }))} /></div>
-            <div><Label>Contacto *</Label><Input value={clienteForm.contacto} onChange={e => setClienteForm(p => ({ ...p, contacto: e.target.value }))} /></div>
-            <div><Label>Email</Label><Input value={clienteForm.email} onChange={e => setClienteForm(p => ({ ...p, email: e.target.value }))} /></div>
-            <div><Label>Teléfono</Label><Input value={clienteForm.telefono} onChange={e => setClienteForm(p => ({ ...p, telefono: e.target.value }))} /></div>
-            <div><Label>RFC</Label><Input value={clienteForm.rfc} onChange={e => setClienteForm(p => ({ ...p, rfc: e.target.value }))} /></div>
-            <div className="col-span-2"><Label>Dirección</Label><Input value={clienteForm.direccion} onChange={e => setClienteForm(p => ({ ...p, direccion: e.target.value }))} /></div>
-            <div><Label>Ciudad</Label><Input value={clienteForm.ciudad} onChange={e => setClienteForm(p => ({ ...p, ciudad: e.target.value }))} /></div>
-            <div><Label>Estado</Label><Input value={clienteForm.estado} onChange={e => setClienteForm(p => ({ ...p, estado: e.target.value }))} /></div>
-            <div><Label>C.P.</Label><Input value={clienteForm.cp} onChange={e => setClienteForm(p => ({ ...p, cp: e.target.value }))} /></div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setShowConvertir(false)}>Cancelar</Button>
-            <Button onClick={handleConvertir} disabled={convertirProspecto.isPending}>
-              {convertirProspecto.isPending ? 'Creando...' : 'Crear Cliente'}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <DialogConvertirProspecto
+        open={showConvertir}
+        onOpenChange={setShowConvertir}
+        clienteForm={clienteForm}
+        setClienteForm={setClienteForm}
+        onConvertir={handleConvertir}
+        isPending={convertirProspecto.isPending}
+      />
     </div>
   );
 }

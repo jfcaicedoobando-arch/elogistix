@@ -231,20 +231,6 @@ export function useUpdateEmbarque() {
   });
 }
 
-export function useClientesForSelect() {
-  return useQuery({
-    queryKey: ['clientes', 'select'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('clientes')
-        .select('id, nombre')
-        .order('nombre');
-      if (error) throw error;
-      return data;
-    },
-  });
-}
-
 export function useProveedoresForSelect() {
   return useQuery({
     queryKey: ['proveedores', 'select'],
