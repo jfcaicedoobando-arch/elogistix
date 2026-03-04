@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -17,6 +17,7 @@ import { useEmbarqueForm } from "@/hooks/useEmbarqueForm";
 import { supabase } from "@/integrations/supabase/client";
 import { StepIndicator } from "@/components/embarque/StepIndicator";
 import { StepDatosGenerales } from "@/components/embarque/StepDatosGenerales";
+import type { EmbarqueValidationErrors } from "@/components/embarque/StepDatosGenerales";
 import { StepDatosRuta } from "@/components/embarque/StepDatosRuta";
 import { StepDocumentos } from "@/components/embarque/StepDocumentos";
 import { StepCostosPrecios } from "@/components/embarque/StepCostosPrecios";
@@ -37,6 +38,7 @@ export default function NuevoEmbarque() {
   const registrarActividad = useRegistrarActividad();
 
   const [currentStep, setCurrentStep] = useState(1);
+  const [validationErrors, setValidationErrors] = useState<EmbarqueValidationErrors>({});
   const { form, setField, handleMsdsUpload, buildEmbarquePayload, buildConceptosVentaPayload, buildConceptosCostoPayload, documentosArchivos, setDocumentoArchivo, getDocumentosChecklist } = useEmbarqueForm();
   const { data: contactos = [] } = useContactosCliente(form.clienteId || undefined);
 
@@ -49,11 +51,22 @@ export default function NuevoEmbarque() {
 
   const selectedCliente = clientes.find(c => c.id === form.clienteId);
 
+  const validateStep1 = useCallback((): boolean => {
+    const errors: EmbarqueValidationErrors = {};
+    if (!form.modo) errors.modo = 'Selecciona un modo de transporte';
+    if (!form.tipo) errors.tipo = 'Selecciona un tipo de operación';
+    if (!form.clienteId) errors.clienteId = 'Selecciona un cliente';
+    if (!form.descripcionMercancia.trim()) errors.descripcionMercancia = 'Ingresa la descripción de la mercancía';
+    setValidationErrors(errors);
+    return Object.keys(errors).length === 0;
+  }, [form.modo, form.tipo, form.clienteId, form.descripcionMercancia]);
+
   const handleFinish = async () => {
-    if (!form.clienteId || !form.modo || !form.tipo) {
+    if (!validateStep1()) {
+      setCurrentStep(1);
       toast({
         title: "Campos requeridos",
-        description: "Selecciona un cliente, modo de transporte y tipo de operación antes de continuar.",
+        description: "Completa todos los campos obligatorios marcados con * en Datos Generales.",
         variant: "destructive",
       });
       return;
@@ -144,8 +157,9 @@ export default function NuevoEmbarque() {
           piezas={form.piezas} setPiezas={setField('piezas')}
           tipoCarga={form.tipoCarga} setTipoCarga={setField('tipoCarga')}
           msdsArchivo={form.msdsArchivo} subiendoMsds={form.subiendoMsds}
-          onMsdsUpload={handleMsdsUpload}
-        />
+           onMsdsUpload={handleMsdsUpload}
+           errors={validationErrors}
+         />
       )}
 
       {currentStep === 2 && (
@@ -206,7 +220,11 @@ export default function NuevoEmbarque() {
         </Button>
         <Button
           disabled={createEmbarque.isPending}
-          onClick={() => currentStep < 4 ? setCurrentStep(p => p + 1) : handleFinish()}
+          onClick={() => {
+            if (currentStep === 1 && !validateStep1()) return;
+            if (currentStep < 4) setCurrentStep(p => p + 1);
+            else handleFinish();
+          }}
         >
           {createEmbarque.isPending ? 'Guardando...' : currentStep === 4 ? 'Crear Embarque' : 'Siguiente'}
         </Button>

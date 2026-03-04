@@ -13,6 +13,14 @@ interface ChangelogEntry {
 
 const changelog: ChangelogEntry[] = [
   {
+    version: "4.4.2",
+    date: "2026-03-04",
+    type: "patch",
+    title: "Validación inline en formulario de Nuevo Embarque",
+    description:
+      "Los campos obligatorios (modo, tipo, cliente, descripción de mercancía) ahora muestran mensajes de error en rojo cuando están vacíos. No se permite avanzar al paso 2 ni crear el embarque sin completarlos.",
+  },
+  {
     version: "4.4.1",
     date: "2026-03-04",
     type: "patch",
