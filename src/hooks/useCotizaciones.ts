@@ -5,6 +5,7 @@ import type { Json } from '@/integrations/supabase/types';
 
 export interface ConceptoVentaCotizacion {
   descripcion: string;
+  unidad_medida: string;
   cantidad: number;
   precio_unitario: number;
   moneda: string;
