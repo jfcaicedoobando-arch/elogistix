@@ -13,6 +13,14 @@ interface ChangelogEntry {
 
 const changelog: ChangelogEntry[] = [
   {
+    version: "4.5.5",
+    date: "2026-03-04",
+    type: "minor",
+    title: "Conceptos de venta separados por moneda (USD/MXN)",
+    description:
+      "Rediseño de conceptos de venta en cotizaciones con dos secciones fijas: USD (sin IVA) y MXN (con IVA 16% automático). Catálogos independientes por moneda, opción 'Otro' con texto libre, y resumen final con totales independientes. Se eliminó el campo Moneda global de datos generales.",
+  },
+  {
     version: "4.5.4",
     date: "2026-03-04",
     type: "patch",

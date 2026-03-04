@@ -1,4 +1,4 @@
-import type { CotizacionRow, DimensionLCL, DimensionAerea } from '@/hooks/useCotizaciones';
+import type { CotizacionRow, DimensionLCL, DimensionAerea, ConceptoVentaCotizacion } from '@/hooks/useCotizaciones';
 
 const formatCurrencyPdf = (amount: number, currency: string = 'MXN'): string => {
   return new Intl.NumberFormat('es-MX', { style: 'currency', currency, minimumFractionDigits: 2 }).format(amount);
@@ -19,12 +19,19 @@ export function generarPdfCotizacion(cotizacion: CotizacionRow) {
   const dimensiones: DimensionLCL[] = Array.isArray(cotizacion.dimensiones_lcl) ? cotizacion.dimensiones_lcl : [];
   const dimensionesAereas: DimensionAerea[] = Array.isArray(cotizacion.dimensiones_aereas) ? cotizacion.dimensiones_aereas : [];
 
-  // Build general data rows
+  // Split conceptos by currency
+  const conceptosUSD = cotizacion.conceptos_venta.filter(c => c.moneda === 'USD');
+  const conceptosMXN = cotizacion.conceptos_venta.filter(c => c.moneda === 'MXN');
+  const totalUSD = conceptosUSD.reduce((s, c) => s + c.total, 0);
+  const subtotalMXN = conceptosMXN.reduce((s, c) => s + c.cantidad * c.precio_unitario, 0);
+  const ivaMXN = subtotalMXN * 0.16;
+  const totalMXN = subtotalMXN + ivaMXN;
+
+  // Build general data rows (no Moneda)
   const datosGenerales: [string, string][] = [
     ['Modo', cotizacion.modo],
     ['Tipo', cotizacion.tipo],
     ['Incoterm', cotizacion.incoterm],
-    ['Moneda', cotizacion.moneda],
     ['Origen', cotizacion.origen || '-'],
     ['Destino', cotizacion.destino || '-'],
     ['Vigencia', `${cotizacion.vigencia_dias} días${cotizacion.fecha_vigencia ? ` (${formatDatePdf(cotizacion.fecha_vigencia)})` : ''}`],
@@ -43,22 +50,14 @@ export function generarPdfCotizacion(cotizacion: CotizacionRow) {
   if (esMaritimo && cotizacion.tipo_embarque === 'LCL' && cotizacion.dias_almacenaje > 0) {
     datosGenerales.push(['Días libres de almacenaje', `${cotizacion.dias_almacenaje} días`]);
   }
-  if (cotizacion.frecuencia) {
-    datosGenerales.push(['Frecuencia', cotizacion.frecuencia]);
-  }
-  if (cotizacion.ruta_texto) {
-    datosGenerales.push(['Ruta', cotizacion.ruta_texto]);
-  }
-  if (cotizacion.tipo_movimiento) {
-    datosGenerales.push(['Tipo de movimiento', cotizacion.tipo_movimiento]);
-  }
+  if (cotizacion.frecuencia) datosGenerales.push(['Frecuencia', cotizacion.frecuencia]);
+  if (cotizacion.ruta_texto) datosGenerales.push(['Ruta', cotizacion.ruta_texto]);
+  if (cotizacion.tipo_movimiento) datosGenerales.push(['Tipo de movimiento', cotizacion.tipo_movimiento]);
   datosGenerales.push(['Seguro', cotizacion.seguro ? `Sí — $${Number(cotizacion.valor_seguro_usd || 0).toLocaleString('es-MX', { minimumFractionDigits: 2 })} USD` : 'No']);
 
   // Build mercancia rows
   const mercancia: [string, string][] = [];
-  if (esMaritimo) {
-    mercancia.push(['Tipo de Embarque', cotizacion.tipo_embarque]);
-  }
+  if (esMaritimo) mercancia.push(['Tipo de Embarque', cotizacion.tipo_embarque]);
   if (esMaritimo && cotizacion.tipo_embarque === 'FCL') {
     mercancia.push(['Tipo de Contenedor', cotizacion.tipo_contenedor || '-']);
     mercancia.push(['Peso', cotizacion.tipo_peso]);
@@ -92,10 +91,37 @@ export function generarPdfCotizacion(cotizacion: CotizacionRow) {
       <p class="totals">Total piezas: ${cotizacion.piezas} &nbsp;|&nbsp; Peso volumétrico total: ${cotizacion.peso_kg} kg</p>`;
   }
 
-  // Conceptos de venta
-  const conceptosRows = cotizacion.conceptos_venta.map(c =>
-    `<tr><td>${c.descripcion}</td><td class="right">${c.cantidad}</td><td class="right">${formatCurrencyPdf(c.precio_unitario, c.moneda)}</td><td class="right">${formatCurrencyPdf(c.total, c.moneda)}</td></tr>`
-  ).join('');
+  // Build concept tables
+  const buildUsdTable = () => {
+    if (conceptosUSD.length === 0) return '';
+    const rows = conceptosUSD.map(c =>
+      `<tr><td>${c.descripcion}</td><td class="right">${c.cantidad}</td><td class="right">${formatCurrencyPdf(c.precio_unitario, 'USD')}</td><td class="right">${formatCurrencyPdf(c.total, 'USD')}</td></tr>`
+    ).join('');
+    return `
+      <h4>Conceptos en USD</h4>
+      <table>
+        <thead><tr><th>Descripción</th><th class="right">Cantidad</th><th class="right">Precio Unitario</th><th class="right">Total</th></tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+      <p class="subtotal">Total USD: ${formatCurrencyPdf(totalUSD, 'USD')}</p>`;
+  };
+
+  const buildMxnTable = () => {
+    if (conceptosMXN.length === 0) return '';
+    const rows = conceptosMXN.map(c => {
+      const sub = c.cantidad * c.precio_unitario;
+      const iva = sub * 0.16;
+      return `<tr><td>${c.descripcion}</td><td class="right">${c.cantidad}</td><td class="right">${formatCurrencyPdf(c.precio_unitario, 'MXN')}</td><td class="right">${formatCurrencyPdf(sub, 'MXN')}</td><td class="right">${formatCurrencyPdf(iva, 'MXN')}</td><td class="right">${formatCurrencyPdf(sub + iva, 'MXN')}</td></tr>`;
+    }).join('');
+    return `
+      <h4>Conceptos en MXN + IVA</h4>
+      <table>
+        <thead><tr><th>Descripción</th><th class="right">Cantidad</th><th class="right">P. Unitario</th><th class="right">Subtotal</th><th class="right">IVA (16%)</th><th class="right">Total</th></tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+      <p class="totals">Subtotal MXN: ${formatCurrencyPdf(subtotalMXN, 'MXN')} &nbsp;|&nbsp; IVA: ${formatCurrencyPdf(ivaMXN, 'MXN')}</p>
+      <p class="subtotal">Total MXN: ${formatCurrencyPdf(totalMXN, 'MXN')}</p>`;
+  };
 
   const html = `<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><title>${cotizacion.folio} - Cotización</title>
 <style>
@@ -118,6 +144,9 @@ export function generarPdfCotizacion(cotizacion: CotizacionRow) {
   .right { text-align: right; }
   .totals { text-align: right; margin-top: 6px; font-weight: 600; font-size: 12px; }
   .subtotal { text-align: right; margin-top: 10px; font-size: 15px; font-weight: 700; color: #0f4c81; }
+  .resumen { margin-top: 20px; padding: 12px; border: 2px solid #0f4c81; border-radius: 8px; text-align: right; }
+  .resumen p { font-size: 14px; font-weight: 700; color: #0f4c81; margin: 4px 0; }
+  .resumen .nota { font-size: 11px; color: #777; font-weight: 400; }
   .footer { margin-top: 32px; border-top: 1px solid #ddd; padding-top: 10px; font-size: 11px; color: #999; text-align: center; }
   @media print { body { padding: 16px; } }
 </style></head><body>
@@ -156,11 +185,13 @@ export function generarPdfCotizacion(cotizacion: CotizacionRow) {
 
   <section>
     <h3>Conceptos de Venta</h3>
-    <table>
-      <thead><tr><th>Descripción</th><th class="right">Cantidad</th><th class="right">Precio Unitario</th><th class="right">Total</th></tr></thead>
-      <tbody>${conceptosRows}</tbody>
-    </table>
-    <p class="subtotal">Subtotal: ${formatCurrencyPdf(cotizacion.subtotal, cotizacion.moneda)}</p>
+    ${buildUsdTable()}
+    ${buildMxnTable()}
+    <div class="resumen">
+      <p>Total USD: ${formatCurrencyPdf(totalUSD, 'USD')}</p>
+      <p>Total MXN (c/IVA): ${formatCurrencyPdf(totalMXN, 'MXN')}</p>
+      <p class="nota">* Los conceptos en MXN incluyen IVA 16%</p>
+    </div>
   </section>
 
   ${cotizacion.notas ? `<section><h3>Notas</h3><p>${cotizacion.notas}</p></section>` : ''}

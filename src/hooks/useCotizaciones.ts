@@ -9,6 +9,7 @@ export interface ConceptoVentaCotizacion {
   precio_unitario: number;
   moneda: string;
   total: number;
+  aplica_iva: boolean;
 }
 
 export interface DimensionLCL {

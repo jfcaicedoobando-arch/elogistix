@@ -21,6 +21,13 @@ import SeccionMercanciaMaritimeLCL from "@/components/cotizacion/SeccionMercanci
 import SeccionMercanciaGeneral from "@/components/cotizacion/SeccionMercanciaGeneral";
 import SeccionMercanciaAerea from "@/components/cotizacion/SeccionMercanciaAerea";
 
+const emptyUSD = (): ConceptoVentaCotizacion => ({
+  descripcion: '', cantidad: 1, precio_unitario: 0, moneda: 'USD', total: 0, aplica_iva: false,
+});
+const emptyMXN = (): ConceptoVentaCotizacion => ({
+  descripcion: '', cantidad: 1, precio_unitario: 0, moneda: 'MXN', total: 0, aplica_iva: true,
+});
+
 export default function NuevaCotizacion() {
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -41,7 +48,6 @@ export default function NuevaCotizacion() {
   const [modo, setModo] = useState("Marítimo");
   const [tipo, setTipo] = useState("Importación");
   const [incoterm, setIncoterm] = useState("FOB");
-  const [moneda, setMoneda] = useState("MXN");
 
   // Mercancía
   const [tipoCarga, setTipoCarga] = useState("Carga General");
@@ -75,11 +81,10 @@ export default function NuevaCotizacion() {
   const [diasAlmacenaje, setDiasAlmacenaje] = useState(0);
   const [cartaGarantia, setCartaGarantia] = useState(false);
 
-  // Conceptos
+  // Conceptos separados por moneda
   const [notas, setNotas] = useState("");
-  const [conceptos, setConceptos] = useState<ConceptoVentaCotizacion[]>([
-    { descripcion: '', cantidad: 1, precio_unitario: 0, moneda: 'MXN', total: 0 },
-  ]);
+  const [conceptosUSD, setConceptosUSD] = useState<ConceptoVentaCotizacion[]>([emptyUSD()]);
+  const [conceptosMXN, setConceptosMXN] = useState<ConceptoVentaCotizacion[]>([emptyMXN()]);
 
   const clienteSeleccionado = clientes.find(c => c.id === clienteId);
   const esMaritimo = modo === 'Marítimo';
@@ -94,26 +99,45 @@ export default function NuevaCotizacion() {
     setMsdsFile(null);
   };
 
-  const actualizarConcepto = (index: number, campo: string, valor: any) => {
-    setConceptos(prev => {
+  // USD helpers
+  const actualizarConceptoUSD = (index: number, campo: string, valor: any) => {
+    if (campo === '_esOtro') return; // flag internal
+    setConceptosUSD(prev => {
       const copia = [...prev];
       (copia[index] as any)[campo] = valor;
       copia[index].total = copia[index].cantidad * copia[index].precio_unitario;
       return copia;
     });
   };
-
-  const agregarConcepto = () => {
-    setConceptos(prev => [...prev, { descripcion: '', cantidad: 1, precio_unitario: 0, moneda, total: 0 }]);
+  const agregarConceptoUSD = () => setConceptosUSD(prev => [...prev, emptyUSD()]);
+  const eliminarConceptoUSD = (index: number) => {
+    if (conceptosUSD.length <= 1) return;
+    setConceptosUSD(prev => prev.filter((_, i) => i !== index));
   };
 
-  const eliminarConcepto = (index: number) => {
-    if (conceptos.length <= 1) return;
-    setConceptos(prev => prev.filter((_, i) => i !== index));
+  // MXN helpers (total includes IVA)
+  const actualizarConceptoMXN = (index: number, campo: string, valor: any) => {
+    if (campo === '_esOtro') return;
+    setConceptosMXN(prev => {
+      const copia = [...prev];
+      (copia[index] as any)[campo] = valor;
+      const sub = copia[index].cantidad * copia[index].precio_unitario;
+      copia[index].total = sub * 1.16;
+      return copia;
+    });
+  };
+  const agregarConceptoMXN = () => setConceptosMXN(prev => [...prev, emptyMXN()]);
+  const eliminarConceptoMXN = (index: number) => {
+    if (conceptosMXN.length <= 1) return;
+    setConceptosMXN(prev => prev.filter((_, i) => i !== index));
   };
 
-  const subtotalConceptos = conceptos.reduce((sum, c) => sum + c.total, 0);
-  const subtotal = subtotalConceptos;
+  // Totals
+  const totalUSD = conceptosUSD.reduce((s, c) => s + c.total, 0);
+  const subtotalMXN = conceptosMXN.reduce((s, c) => s + c.cantidad * c.precio_unitario, 0);
+  const ivaMXN = subtotalMXN * 0.16;
+  const totalMXN = subtotalMXN + ivaMXN;
+
   const totalPiezasLCL = dimensionesLCL.reduce((sum, d) => sum + d.piezas, 0);
   const totalVolumenLCL = dimensionesLCL.reduce((sum, d) => sum + d.volumen_m3, 0);
   const totalPiezasAereas = dimensionesAereas.reduce((sum, d) => sum + d.piezas, 0);
@@ -132,7 +156,8 @@ export default function NuevaCotizacion() {
       toast({ title: "Ingresa el nombre del contacto del prospecto", variant: "destructive" });
       return;
     }
-    if (conceptos.some(c => !c.descripcion.trim())) {
+    const allConceptos = [...conceptosUSD, ...conceptosMXN];
+    if (allConceptos.some(c => !c.descripcion.trim())) {
       toast({ title: "Completa todos los conceptos de venta", variant: "destructive" });
       return;
     }
@@ -169,8 +194,9 @@ export default function NuevaCotizacion() {
         descripcion_mercancia: sectorEconomico,
         peso_kg: pesoFinal, volumen_m3: volumenFinal, piezas: piezasFinal,
         origen, destino,
-        conceptos_venta: conceptos,
-        subtotal, moneda,
+        conceptos_venta: allConceptos,
+        subtotal: totalUSD,
+        moneda: 'USD',
         vigencia_dias: validezPropuesta ? Math.max(1, Math.ceil((validezPropuesta.getTime() - Date.now()) / (1000 * 60 * 60 * 24))) : 15,
         notas,
         operador: user?.email ?? '',
@@ -232,7 +258,6 @@ export default function NuevaCotizacion() {
         modo={modo} setModo={setModo}
         tipo={tipo} setTipo={setTipo}
         incoterm={incoterm} setIncoterm={setIncoterm}
-        moneda={moneda} setMoneda={setMoneda}
       />
 
       {/* Mercancía */}
@@ -309,11 +334,18 @@ export default function NuevaCotizacion() {
       />
 
       <SeccionConceptosVentaCotizacion
-        conceptos={conceptos} moneda={moneda}
-        subtotalConceptos={subtotalConceptos}
-        actualizarConcepto={actualizarConcepto}
-        agregarConcepto={agregarConcepto}
-        eliminarConcepto={eliminarConcepto}
+        conceptosUSD={conceptosUSD}
+        conceptosMXN={conceptosMXN}
+        actualizarConceptoUSD={actualizarConceptoUSD}
+        actualizarConceptoMXN={actualizarConceptoMXN}
+        agregarConceptoUSD={agregarConceptoUSD}
+        agregarConceptoMXN={agregarConceptoMXN}
+        eliminarConceptoUSD={eliminarConceptoUSD}
+        eliminarConceptoMXN={eliminarConceptoMXN}
+        totalUSD={totalUSD}
+        subtotalMXN={subtotalMXN}
+        ivaMXN={ivaMXN}
+        totalMXN={totalMXN}
       />
 
       <Card>

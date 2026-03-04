@@ -164,7 +164,6 @@ export default function CotizacionDetalle() {
             <div><span className="text-muted-foreground">Modo</span><p className="font-medium">{cotizacion.modo}</p></div>
             <div><span className="text-muted-foreground">Tipo</span><p className="font-medium">{cotizacion.tipo}</p></div>
             <div><span className="text-muted-foreground">Incoterm</span><p className="font-medium">{cotizacion.incoterm}</p></div>
-            <div><span className="text-muted-foreground">Moneda</span><p className="font-medium">{cotizacion.moneda}</p></div>
             <div><span className="text-muted-foreground">Origen</span><p className="font-medium">{cotizacion.origen || '-'}</p></div>
             <div><span className="text-muted-foreground">Destino</span><p className="font-medium">{cotizacion.destino || '-'}</p></div>
             <div><span className="text-muted-foreground">Vigencia</span><p className="font-medium">{cotizacion.vigencia_dias} días ({cotizacion.fecha_vigencia ? formatDate(cotizacion.fecha_vigencia) : '-'})</p></div>
@@ -334,37 +333,100 @@ export default function CotizacionDetalle() {
         </CardContent>
       </Card>
 
-      {/* Conceptos de venta */}
-      <Card>
-        <CardHeader><CardTitle className="text-lg">Conceptos de Venta</CardTitle></CardHeader>
-        <CardContent>
-          <div className="border rounded-md overflow-auto">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Descripción</TableHead>
-                  <TableHead className="text-right">Cantidad</TableHead>
-                  <TableHead className="text-right">Precio Unitario</TableHead>
-                  <TableHead className="text-right">Total</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {cotizacion.conceptos_venta.map((concepto, indice) => (
-                  <TableRow key={indice}>
-                    <TableCell>{concepto.descripcion}</TableCell>
-                    <TableCell className="text-right">{concepto.cantidad}</TableCell>
-                    <TableCell className="text-right">{formatCurrency(concepto.precio_unitario, concepto.moneda)}</TableCell>
-                    <TableCell className="text-right font-medium">{formatCurrency(concepto.total, concepto.moneda)}</TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
-          <div className="flex justify-end mt-3">
-            <p className="text-lg font-bold">Subtotal: {formatCurrency(cotizacion.subtotal, cotizacion.moneda)}</p>
-          </div>
-        </CardContent>
-      </Card>
+      {/* Conceptos de venta — USD */}
+      {(() => {
+        const cUSD = cotizacion.conceptos_venta.filter(c => c.moneda === 'USD');
+        const cMXN = cotizacion.conceptos_venta.filter(c => c.moneda === 'MXN');
+        const tUSD = cUSD.reduce((s, c) => s + c.total, 0);
+        const sMXN = cMXN.reduce((s, c) => s + c.cantidad * c.precio_unitario, 0);
+        const iMXN = sMXN * 0.16;
+        const tMXN = sMXN + iMXN;
+        return (
+          <>
+            {cUSD.length > 0 && (
+              <Card>
+                <CardHeader><CardTitle className="text-lg">Conceptos en USD</CardTitle></CardHeader>
+                <CardContent>
+                  <div className="border rounded-md overflow-auto">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Descripción</TableHead>
+                          <TableHead className="text-right">Cantidad</TableHead>
+                          <TableHead className="text-right">Precio Unitario</TableHead>
+                          <TableHead className="text-right">Total</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {cUSD.map((concepto, indice) => (
+                          <TableRow key={indice}>
+                            <TableCell>{concepto.descripcion}</TableCell>
+                            <TableCell className="text-right">{concepto.cantidad}</TableCell>
+                            <TableCell className="text-right">{formatCurrency(concepto.precio_unitario, 'USD')}</TableCell>
+                            <TableCell className="text-right font-medium">{formatCurrency(concepto.total, 'USD')}</TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+                  <div className="flex justify-end mt-3">
+                    <p className="text-lg font-bold">Total USD: {formatCurrency(tUSD, 'USD')}</p>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
+            {cMXN.length > 0 && (
+              <Card>
+                <CardHeader><CardTitle className="text-lg">Conceptos en MXN + IVA</CardTitle></CardHeader>
+                <CardContent>
+                  <div className="border rounded-md overflow-auto">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Descripción</TableHead>
+                          <TableHead className="text-right">Cantidad</TableHead>
+                          <TableHead className="text-right">P. Unitario</TableHead>
+                          <TableHead className="text-right">Subtotal</TableHead>
+                          <TableHead className="text-right">IVA (16%)</TableHead>
+                          <TableHead className="text-right">Total</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {cMXN.map((concepto, indice) => {
+                          const sub = concepto.cantidad * concepto.precio_unitario;
+                          const iva = sub * 0.16;
+                          return (
+                            <TableRow key={indice}>
+                              <TableCell>{concepto.descripcion}</TableCell>
+                              <TableCell className="text-right">{concepto.cantidad}</TableCell>
+                              <TableCell className="text-right">{formatCurrency(concepto.precio_unitario, 'MXN')}</TableCell>
+                              <TableCell className="text-right">{formatCurrency(sub, 'MXN')}</TableCell>
+                              <TableCell className="text-right">{formatCurrency(iva, 'MXN')}</TableCell>
+                              <TableCell className="text-right font-medium">{formatCurrency(sub + iva, 'MXN')}</TableCell>
+                            </TableRow>
+                          );
+                        })}
+                      </TableBody>
+                    </Table>
+                  </div>
+                  <div className="flex flex-col items-end mt-3 gap-1">
+                    <span className="text-sm">Subtotal MXN: {formatCurrency(sMXN, 'MXN')}</span>
+                    <span className="text-sm">IVA (16%): {formatCurrency(iMXN, 'MXN')}</span>
+                    <p className="text-lg font-bold">Total MXN: {formatCurrency(tMXN, 'MXN')}</p>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
+            <div className="flex flex-col items-end gap-1 p-4 border rounded-md bg-muted/30">
+              <span className="text-base font-bold">Total USD: {formatCurrency(tUSD, 'USD')}</span>
+              <span className="text-base font-bold">Total MXN (c/IVA): {formatCurrency(tMXN, 'MXN')}</span>
+              <span className="text-xs text-muted-foreground">* Los conceptos en MXN incluyen IVA 16%</span>
+            </div>
+          </>
+        );
+      })()}
 
       {/* Costos Internos P&L */}
       <SeccionCostosInternosCotizacion

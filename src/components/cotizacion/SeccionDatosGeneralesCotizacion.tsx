@@ -5,7 +5,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 const MODOS = ['Marítimo', 'Aéreo', 'Terrestre', 'Multimodal'];
 const TIPOS = ['Importación', 'Exportación', 'Nacional'];
 const INCOTERMS = ['EXW', 'FOB', 'CIF', 'DAP', 'DDP', 'FCA', 'CFR', 'CPT', 'CIP', 'DAT'];
-const MONEDAS = ['MXN', 'USD', 'EUR'];
 
 interface Props {
   modo: string;
@@ -14,15 +13,13 @@ interface Props {
   setTipo: (v: string) => void;
   incoterm: string;
   setIncoterm: (v: string) => void;
-  moneda: string;
-  setMoneda: (v: string) => void;
 }
 
-export default function SeccionDatosGeneralesCotizacion({ modo, setModo, tipo, setTipo, incoterm, setIncoterm, moneda, setMoneda }: Props) {
+export default function SeccionDatosGeneralesCotizacion({ modo, setModo, tipo, setTipo, incoterm, setIncoterm }: Props) {
   return (
     <Card>
       <CardHeader><CardTitle className="text-lg">Datos Generales</CardTitle></CardHeader>
-      <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div>
           <Label>Modo de Transporte</Label>
           <Select value={modo} onValueChange={setModo}>
@@ -42,13 +39,6 @@ export default function SeccionDatosGeneralesCotizacion({ modo, setModo, tipo, s
           <Select value={incoterm} onValueChange={setIncoterm}>
             <SelectTrigger><SelectValue /></SelectTrigger>
             <SelectContent>{INCOTERMS.map(i => <SelectItem key={i} value={i}>{i}</SelectItem>)}</SelectContent>
-          </Select>
-        </div>
-        <div>
-          <Label>Moneda</Label>
-          <Select value={moneda} onValueChange={setMoneda}>
-            <SelectTrigger><SelectValue /></SelectTrigger>
-            <SelectContent>{MONEDAS.map(m => <SelectItem key={m} value={m}>{m}</SelectItem>)}</SelectContent>
           </Select>
         </div>
       </CardContent>
