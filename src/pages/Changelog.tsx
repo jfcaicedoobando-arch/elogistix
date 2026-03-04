@@ -13,6 +13,14 @@ interface ChangelogEntry {
 
 const changelog: ChangelogEntry[] = [
   {
+    version: "4.4.1",
+    date: "2026-03-04",
+    type: "patch",
+    title: "Valor por defecto FOB en campo Incoterm",
+    description:
+      "El campo Incoterm en el formulario de Nuevo Embarque ahora tiene 'FOB' como valor por defecto, evitando errores de validación cuando no se selecciona manualmente.",
+  },
+  {
     version: "4.4.0",
     date: "2026-03-04",
     type: "minor",

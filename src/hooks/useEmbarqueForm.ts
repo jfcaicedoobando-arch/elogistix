@@ -48,7 +48,7 @@ export interface EmbarqueFormState {
 
 const INITIAL_STATE: EmbarqueFormState = {
   modo: '', tipo: '', clienteId: '', shipper: '', shipperManual: '',
-  consignatario: '', consignatarioManual: '', incoterm: '', descripcionMercancia: '',
+  consignatario: '', consignatarioManual: '', incoterm: 'FOB', descripcionMercancia: '',
   pesoKg: '', volumenM3: '', piezas: '', tipoCarga: 'Carga General',
   msdsArchivo: null, subiendoMsds: false,
   puertoOrigen: '', puertoDestino: '', naviera: '', tipoServicio: '',
