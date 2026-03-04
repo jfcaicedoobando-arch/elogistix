@@ -5,28 +5,14 @@ export interface CostoCotizacion {
   id: string;
   cotizacion_id: string;
   concepto: string;
-  proveedor: string | null;
   moneda: string;
-  unidad_medida: string | null;
-  costo: number;
-  venta: number;
-  profit: number | null;
-  porcentaje_profit: number | null;
-  seccion: string | null;
+  proveedor: string;
+  cantidad: number;
+  costo_unitario: number;
+  costo_total: number;
 }
 
-type CostoUpsert = Omit<CostoCotizacion, 'profit' | 'porcentaje_profit'>;
-
-interface SeccionPL {
-  totalCosto: number;
-  totalVenta: number;
-  totalProfit: number;
-  porcentajeProfit: number;
-}
-
-interface ResultadoPL extends SeccionPL {
-  porSeccion: Record<string, SeccionPL>;
-}
+type CostoUpsert = Omit<CostoCotizacion, 'costo_total'>;
 
 export function useCotizacionCostos(cotizacionId: string | undefined) {
   return useQuery({
@@ -37,7 +23,7 @@ export function useCotizacionCostos(cotizacionId: string | undefined) {
         .select('*')
         .eq('cotizacion_id', cotizacionId!);
       if (error) throw error;
-      return data as CostoCotizacion[];
+      return (data ?? []) as unknown as CostoCotizacion[];
     },
     enabled: !!cotizacionId,
   });
@@ -80,33 +66,13 @@ export function useDeleteCosto() {
   });
 }
 
-function crearSeccionVacia(): SeccionPL {
-  return { totalCosto: 0, totalVenta: 0, totalProfit: 0, porcentajeProfit: 0 };
-}
-
-export function calcularPL(costos: CostoCotizacion[]): ResultadoPL {
-  const secciones = ['Origen', 'Flete Internacional', 'Destino', 'Otro'];
-  const porSeccion: Record<string, SeccionPL> = {};
-  secciones.forEach(s => { porSeccion[s] = crearSeccionVacia(); });
-
-  let totalCosto = 0, totalVenta = 0;
-
+export function calcularTotalCostos(costos: CostoCotizacion[]): { totalUSD: number; totalMXN: number } {
+  let totalUSD = 0;
+  let totalMXN = 0;
   for (const c of costos) {
-    totalCosto += c.costo;
-    totalVenta += c.venta;
-    const sec = c.seccion ?? 'Otro';
-    const grupo = porSeccion[sec] ?? (porSeccion[sec] = crearSeccionVacia());
-    grupo.totalCosto += c.costo;
-    grupo.totalVenta += c.venta;
+    const total = c.cantidad * c.costo_unitario;
+    if (c.moneda === 'USD') totalUSD += total;
+    else totalMXN += total;
   }
-
-  const totalProfit = totalVenta - totalCosto;
-  const porcentajeProfit = totalVenta === 0 ? 0 : Math.round(((totalVenta - totalCosto) / totalVenta) * 10000) / 100;
-
-  for (const s of Object.values(porSeccion)) {
-    s.totalProfit = s.totalVenta - s.totalCosto;
-    s.porcentajeProfit = s.totalVenta === 0 ? 0 : Math.round(((s.totalVenta - s.totalCosto) / s.totalVenta) * 10000) / 100;
-  }
-
-  return { totalCosto, totalVenta, totalProfit, porcentajeProfit, porSeccion };
+  return { totalUSD, totalMXN };
 }

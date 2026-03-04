@@ -13,6 +13,14 @@ interface ChangelogEntry {
 
 const changelog: ChangelogEntry[] = [
   {
+    version: "4.6.0",
+    date: "2026-03-04",
+    type: "minor",
+    title: "Reestructuración de costos internos de cotización",
+    description:
+      "Se recreó la tabla cotizacion_costos con nueva estructura: cantidad, costo unitario y costo total calculado automáticamente. Se eliminaron campos obsoletos (venta, profit, sección, unidad de medida). El formulario ahora muestra totales separados por moneda (USD/MXN).",
+  },
+  {
     version: "4.5.5",
     date: "2026-03-04",
     type: "minor",
