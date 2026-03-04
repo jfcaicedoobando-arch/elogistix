@@ -13,6 +13,14 @@ interface ChangelogEntry {
 
 const changelog: ChangelogEntry[] = [
   {
+    version: "4.5.0",
+    date: "2026-03-04",
+    type: "minor",
+    title: "Tabla cotizacion_costos en base de datos",
+    description:
+      "Nueva tabla cotizacion_costos con campos de concepto, proveedor, moneda, costo, venta y columnas calculadas de profit y porcentaje. Incluye secciones (Origen, Flete Internacional, Destino, Otro), políticas RLS por rol y trigger de updated_at.",
+  },
+  {
     version: "4.4.2",
     date: "2026-03-04",
     type: "patch",
