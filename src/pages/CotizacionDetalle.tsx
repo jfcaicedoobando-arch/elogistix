@@ -24,6 +24,7 @@ import { formatDate, getEstadoColor } from "@/lib/helpers";
 import { formatCurrency } from "@/lib/formatters";
 import { getSignedUrl } from "@/lib/storage";
 import { ArrowLeft, CheckCircle, Send, XCircle, UserPlus, FileDown, AlertTriangle } from "lucide-react";
+import { generarPdfCotizacion } from "@/lib/cotizacionPdf";
 
 export default function CotizacionDetalle() {
   const { id } = useParams<{ id: string }>();
@@ -109,6 +110,9 @@ export default function CotizacionDetalle() {
           <p className="text-sm text-muted-foreground">{nombreDestinatario}</p>
         </div>
         <Badge className={getEstadoColor(cotizacion.estado)}>{cotizacion.estado}</Badge>
+        <Button variant="outline" size="sm" onClick={() => generarPdfCotizacion(cotizacion)}>
+          <FileDown className="h-4 w-4 mr-1" /> Exportar PDF
+        </Button>
       </div>
 
       {/* Acciones según estado */}

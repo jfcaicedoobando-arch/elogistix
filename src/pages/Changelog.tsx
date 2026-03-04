@@ -13,6 +13,14 @@ interface ChangelogEntry {
 
 const changelog: ChangelogEntry[] = [
   {
+    version: "4.5.4",
+    date: "2026-03-04",
+    type: "patch",
+    title: "Exportar cotización a PDF",
+    description:
+      "Botón para exportar cotizaciones a PDF con datos generales, mercancía y conceptos de venta. No incluye costos internos (P&L).",
+  },
+  {
     version: "4.5.3",
     date: "2026-03-04",
     type: "patch",
