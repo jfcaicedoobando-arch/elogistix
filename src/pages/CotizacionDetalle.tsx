@@ -1,4 +1,5 @@
 import { useState } from "react";
+import SeccionCostosInternosCotizacion from "@/components/cotizacion/SeccionCostosInternosCotizacion";
 import { useParams, useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -360,6 +361,12 @@ export default function CotizacionDetalle() {
           </div>
         </CardContent>
       </Card>
+
+      {/* Costos Internos P&L */}
+      <SeccionCostosInternosCotizacion
+        cotizacionId={cotizacion.id}
+        conceptosVenta={cotizacion.conceptos_venta}
+      />
 
       {/* Notas */}
       {cotizacion.notas && (
