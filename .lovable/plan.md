@@ -1,27 +1,56 @@
 
 
-## Plan: Botón Exportar PDF en CotizacionDetalle
+## Plan: Rediseñar Conceptos de Venta con dos secciones por moneda
 
-### Enfoque
+### Cambio 1 — `src/hooks/useCotizaciones.ts`
+- Agregar `aplica_iva: boolean` a `ConceptoVentaCotizacion`
+- Mantener compatibilidad: al leer datos existentes sin `aplica_iva`, inferir `false`
 
-Usar la API nativa del navegador `window.print()` con una vista de impresión dedicada, sin dependencias externas. Se crea una función que genera un HTML con los datos de la cotización (Datos Generales, Mercancía, Conceptos de Venta) y lo abre en una ventana nueva para imprimir/guardar como PDF.
+### Cambio 2 — `src/components/cotizacion/SeccionConceptosVentaCotizacion.tsx`
+Reescribir completamente con nueva interfaz de Props que reciba:
+- `conceptosUSD`, `conceptosMXN` (arrays separados)
+- Funciones: `actualizarConceptoUSD/MXN`, `agregarConceptoUSD/MXN`, `eliminarConceptoUSD/MXN`
+- `totalUSD`, `totalMXN`, `subtotalMXN`, `ivaMXN`
 
-### Cambios
+Renderiza DOS Cards:
 
-**1. Crear `src/lib/cotizacionPdf.ts`**
-- Función `generarPdfCotizacion(cotizacion: CotizacionRow)` que:
-  - Construye un documento HTML con estilos inline para impresión
-  - Encabezado: folio, cliente/prospecto, estado, fecha
-  - Sección Datos Generales: modo, tipo, incoterm, moneda, origen, destino, vigencia, operador, y campos condicionales (tránsito, seguro, etc.)
-  - Sección Mercancía: tipo embarque, contenedor, carga, sector, dimensiones LCL/aéreas si aplica
-  - Sección Conceptos de Venta: tabla con descripción, cantidad, precio unitario, total + subtotal
-  - **NO incluye** Costos Internos (P&L)
-  - Abre `window.open()` con el HTML y ejecuta `window.print()`
+**Card 1 — "Conceptos en USD"**
+- Catálogo: `['Flete Marítimo', 'Flete Aéreo', 'Embalaje', 'Coordinación de Recolección', 'Seguro de Carga', 'Cargos en Origen', 'Otro']`
+- Columnas: Concepto | Cantidad | P. Unitario (USD) | Total (USD)
+- Opción "Otro" muestra Input texto libre
+- Footer: Total USD
 
-**2. Modificar `src/pages/CotizacionDetalle.tsx`**
-- Importar `generarPdfCotizacion`
-- Agregar botón "Exportar PDF" con icono `FileDown` en la barra de acciones (junto al badge de estado)
+**Card 2 — "Conceptos en MXN + IVA"**
+- Catálogo: `['Manejo', 'Demoras', 'Cargos en Destino', 'Almacenaje', 'Entrega', 'Otro']`
+- Columnas: Concepto | Cantidad | P. Unitario (MXN) | Subtotal | IVA (16%) | Total (MXN)
+- IVA calculado automáticamente, campos readonly
+- Footer: Subtotal MXN, IVA 16%, Total MXN
 
-**3. Actualizar `src/pages/Changelog.tsx`**
-- Versión 4.5.4: Botón de exportación a PDF en cotizaciones
+**Resumen final** al pie: Total USD + Total MXN con nota "* Los conceptos en MXN incluyen IVA 16%"
+
+### Cambio 3 — `src/pages/NuevaCotizacion.tsx`
+- Reemplazar `conceptos` con `conceptosUSD` y `conceptosMXN` (arrays separados)
+- Valores iniciales con una fila vacía cada uno
+- Eliminar estado `moneda`/`setMoneda`
+- `actualizarConcepto` / `agregarConcepto` / `eliminarConcepto` duplicados por moneda
+- Al guardar: `conceptos_venta = [...conceptosUSD, ...conceptosMXN]`, `subtotal` = suma USD, `moneda` = `'USD'` (default BD)
+- Pasar nuevas props a `SeccionConceptosVentaCotizacion`
+- Quitar `moneda`/`setMoneda` de `SeccionDatosGeneralesCotizacion`
+
+### Cambio 4 — `src/components/cotizacion/SeccionDatosGeneralesCotizacion.tsx`
+- Eliminar props `moneda` y `setMoneda`
+- Eliminar el Select de Moneda del grid (queda con 3 campos: Modo, Tipo, Incoterm)
+
+### Cambio 5 — `src/lib/cotizacionPdf.ts`
+- Adaptar la sección de conceptos de venta para separar USD y MXN en dos tablas
+- Mostrar IVA en conceptos MXN
+- Quitar fila "Moneda" de datos generales
+- Resumen: Total USD + Total MXN (sin combinar)
+
+### Cambio 6 — `src/pages/CotizacionDetalle.tsx`
+- Adaptar la tabla de conceptos de venta para mostrar dos tablas separadas por moneda
+- Mostrar columna IVA para conceptos MXN
+
+### Cambio 7 — `src/pages/Changelog.tsx`
+- Versión 4.5.5: Rediseño conceptos de venta con dos secciones por moneda (USD/MXN) e IVA automático en MXN
 
