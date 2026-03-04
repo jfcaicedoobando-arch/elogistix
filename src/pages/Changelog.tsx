@@ -13,6 +13,14 @@ interface ChangelogEntry {
 
 const changelog: ChangelogEntry[] = [
   {
+    version: "4.8.5",
+    date: "2026-03-04",
+    type: "patch",
+    title: "Formato de moneda mexicana en todos los campos de dinero",
+    description:
+      "Reemplazados todos los .toFixed(2) manuales con formatCurrency() usando Intl.NumberFormat('es-MX') en StepCostosPrecios, SeccionConceptosVentaCotizacion y CotizacionDetalle. Separadores de miles y decimales ahora consistentes en toda la app.",
+  },
+  {
     version: "4.8.4",
     date: "2026-03-04",
     type: "patch",

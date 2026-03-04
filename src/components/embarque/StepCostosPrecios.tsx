@@ -1,4 +1,5 @@
 import { Trash2 } from "lucide-react";
+import { formatCurrency } from "@/lib/formatters";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -80,7 +81,7 @@ export function StepCostosPrecios(props: Props) {
                     <SelectTrigger className="text-sm"><SelectValue /></SelectTrigger>
                     <SelectContent><SelectItem value="MXN">MXN</SelectItem><SelectItem value="USD">USD</SelectItem><SelectItem value="EUR">EUR</SelectItem></SelectContent>
                   </Select>
-                  <Input readOnly value={`$${totalUSD.toFixed(2)}`} className="text-sm bg-muted font-semibold" />
+                  <Input readOnly value={formatCurrency(totalUSD, 'USD')} className="text-sm bg-muted font-semibold" />
                   <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => removeConceptoCosto(costo.id)} disabled={conceptosCosto.length <= 1}>
                     <Trash2 className="h-4 w-4 text-destructive" />
                   </Button>
@@ -89,7 +90,7 @@ export function StepCostosPrecios(props: Props) {
             })}
             <Button variant="outline" size="sm" onClick={addConceptoCosto}>+ Agregar costo</Button>
             <div className="border-t pt-3 mt-3 text-sm text-right">
-              <div className="flex justify-end gap-4"><span className="font-semibold">Total USD:</span><span className="font-bold w-28 text-right">${totalCostoUSD.toFixed(2)}</span></div>
+              <div className="flex justify-end gap-4"><span className="font-semibold">Total USD:</span><span className="font-bold w-28 text-right">{formatCurrency(totalCostoUSD, 'USD')}</span></div>
             </div>
           </div>
         </CardContent>
@@ -115,7 +116,7 @@ export function StepCostosPrecios(props: Props) {
                     <SelectTrigger className="text-sm"><SelectValue /></SelectTrigger>
                     <SelectContent><SelectItem value="MXN">MXN</SelectItem><SelectItem value="USD">USD</SelectItem><SelectItem value="EUR">EUR</SelectItem></SelectContent>
                   </Select>
-                  <Input readOnly value={`$${totalUSD.toFixed(2)}`} className="text-sm bg-muted font-semibold" />
+                  <Input readOnly value={formatCurrency(totalUSD, 'USD')} className="text-sm bg-muted font-semibold" />
                   <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => removeConceptoVenta(venta.id)} disabled={conceptosVenta.length <= 1}>
                     <Trash2 className="h-4 w-4 text-destructive" />
                   </Button>
@@ -124,7 +125,7 @@ export function StepCostosPrecios(props: Props) {
             })}
             <Button variant="outline" size="sm" onClick={addConceptoVenta}>+ Agregar concepto</Button>
             <div className="border-t pt-3 mt-3 text-sm text-right">
-              <div className="flex justify-end gap-4"><span className="font-semibold">Total USD:</span><span className="font-bold w-28 text-right">${totalVentaUSD.toFixed(2)}</span></div>
+              <div className="flex justify-end gap-4"><span className="font-semibold">Total USD:</span><span className="font-bold w-28 text-right">{formatCurrency(totalVentaUSD, 'USD')}</span></div>
             </div>
           </div>
         </CardContent>
@@ -134,7 +135,7 @@ export function StepCostosPrecios(props: Props) {
           <div className="grid grid-cols-3 gap-4 text-center">
             <div><p className="text-xs text-muted-foreground">Tipo de Cambio USD</p><Input type="number" value={tipoCambioUSD} onChange={e => setTipoCambioUSD(e.target.value)} className="text-center mt-1" /></div>
             <div><p className="text-xs text-muted-foreground">Tipo de Cambio EUR</p><Input type="number" value={tipoCambioEUR} onChange={e => setTipoCambioEUR(e.target.value)} className="text-center mt-1" /></div>
-            <div><p className="text-xs text-muted-foreground">Utilidad Estimada (USD)</p><p className={`text-xl font-bold mt-2 ${utilidadEstimada >= 0 ? 'text-success' : 'text-destructive'}`}>${(totalVentaUSD - totalCostoUSD).toFixed(2)}</p></div>
+            <div><p className="text-xs text-muted-foreground">Utilidad Estimada (USD)</p><p className={`text-xl font-bold mt-2 ${utilidadEstimada >= 0 ? 'text-success' : 'text-destructive'}`}>{formatCurrency(totalVentaUSD - totalCostoUSD, 'USD')}</p></div>
           </div>
         </CardContent>
       </Card>
