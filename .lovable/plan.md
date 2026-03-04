@@ -1,44 +1,25 @@
 
 
-## Plan: Crear SeccionCostosInternosPL y actualizar CotizacionDetalle
+## Plan: Agregar campo "Unidad de Medida" a conceptos de venta
 
-### Archivo 1: `src/components/cotizacion/SeccionCostosInternosPL.tsx` (nuevo)
+### Cambios necesarios
 
-Componente completo de P&L con las siguientes secciones:
+**1. `src/hooks/useCotizaciones.ts`** — Agregar `unidad_medida: string` a la interface `ConceptoVentaCotizacion`
 
-**Estado local**: Array de filas de costo inicializado desde `useCotizacionCostos(cotizacionId)`. Si no hay costos guardados, se pre-pobla una fila por cada concepto en `conceptosUSD` (moneda='USD') y cada concepto en `conceptosMXN` (moneda='MXN'), con `costo_unitario=0`, `proveedor=''`, `concepto` y `moneda` tomados del concepto de venta.
+**2. `src/pages/NuevaCotizacion.tsx`** — Agregar `unidad_medida: ''` a las funciones `emptyUSD()` y `emptyMXN()`
 
-**Tabla USD** — Card con título "Costos en USD", ícono `DollarSign` violeta:
-- Columnas: Concepto (readonly) | Proveedor (Input editable) | Costo Unit. (Input editable) | Venta (readonly, del concepto de venta `.total`) | Profit (venta - costo) | % Profit (Badge verde/rojo/gris)
-- Fila de totales al pie
+**3. `src/components/cotizacion/SeccionConceptosVentaCotizacion.tsx`** — En ambas tablas (USD y MXN), agregar una columna "Unidad de Medida" justo después de "Concepto" con un dropdown Select con las opciones: BL, W/M, Documento, Contenedor, Kilo, Embarque. Ajustar las proporciones del grid para acomodar la nueva columna.
 
-**Tabla MXN** — Card con título "Costos en MXN", ícono `Banknote` violeta:
-- Mismas columnas, Venta muestra subtotal sin IVA (`precio_unitario * cantidad`)
-- Nota al pie: "* P&L calculado sobre subtotales sin IVA"
-- Pie adicional: Subtotal s/IVA | IVA 16% | Total c/IVA
+**4. `src/pages/CotizacionDetalle.tsx`** — Mostrar la unidad de medida en la vista de detalle si se muestra la tabla de conceptos
 
-**Resumen P&L** — Card colapsable (`Collapsible`) con ícono `TrendingUp`:
-- Dos cards lado a lado (USD y MXN) mostrando Total Costo, Total Venta, Profit, % Profit en badge grande
-- Nota: "* El IVA no forma parte del profit"
+**5. `src/pages/Changelog.tsx`** — Nueva entrada
 
-**Botón Guardar**: Llama `useUpsertCotizacionCostos()`, visible solo si `canEdit`, toast de éxito.
+### Catálogo de unidades
+```
+const UNIDADES_MEDIDA = ['BL', 'W/M', 'Documento', 'Contenedor', 'Kilo', 'Embarque'];
+```
 
-### Archivo 2: `src/pages/CotizacionDetalle.tsx` (modificar)
-
-- Importar `SeccionCostosInternosPL` (reemplaza `SeccionCostosInternosCotizacion`)
-- Eliminar import de `SeccionCostosInternosCotizacion`
-- Separar `conceptos_venta` en `conceptosUSD` y `conceptosMXN` (ya están calculados en la IIFE de línea 337-339, se extraen a variables del componente)
-- Reemplazar líneas 431-434 con:
-  ```
-  {canEdit && (
-    <SeccionCostosInternosPL
-      cotizacionId={cotizacion.id}
-      conceptosUSD={cUSD}
-      conceptosMXN={cMXN}
-    />
-  )}
-  ```
-  Nota: los arrays `cUSD`/`cMXN` se calculan dentro de la IIFE. Se moverán a `useMemo` a nivel componente para poder pasarlos como props.
-
-### Archivo 3: `src/pages/Changelog.tsx` — nueva entrada v4.7.0
+### Layout del grid (ajustado)
+- **USD**: Concepto (col-span-3) | Unidad (col-span-2) | Cantidad (col-span-1) | P. Unitario (col-span-2) | Total (col-span-2) | Eliminar (col-span-1) → no cambia el total de 12 pero se reduce concepto de 5→3 y se agrega unidad col-span-2
+- **MXN**: Concepto (col-span-2) | Unidad (col-span-1) | Cant. (col-span-1) | P. Unit. (col-span-2) | Subtotal (col-span-2) | IVA (col-span-2) | Total (col-span-1) | Eliminar (col-span-1)
 
