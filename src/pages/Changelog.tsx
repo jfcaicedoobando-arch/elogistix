@@ -13,6 +13,14 @@ interface ChangelogEntry {
 
 const changelog: ChangelogEntry[] = [
   {
+    version: "4.7.0",
+    date: "2026-03-04",
+    type: "minor",
+    title: "Sección de Costos Internos P&L por moneda",
+    description:
+      "Nuevo componente SeccionCostosInternosPL con tablas separadas USD y MXN, pre-poblado automático desde conceptos de venta, cálculo de profit y % por fila, resumen colapsable con totales por moneda. Visible solo para admin y operador.",
+  },
+  {
     version: "4.6.0",
     date: "2026-03-04",
     type: "minor",
