@@ -13,6 +13,14 @@ interface ChangelogEntry {
 
 const changelog: ChangelogEntry[] = [
   {
+    version: "4.8.3",
+    date: "2026-03-04",
+    type: "patch",
+    title: "P&L siempre calcula profit sin IVA",
+    description:
+      "Corregido el módulo de Costos Internos P&L para que todos los cálculos de profit usen subtotales sin IVA. La columna Venta muestra el valor neto con etiqueta visual '+ IVA' como referencia.",
+  },
+  {
     version: "4.8.2",
     date: "2026-03-04",
     type: "minor",

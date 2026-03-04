@@ -30,6 +30,7 @@ interface FilaCosto {
   costo_unitario: number;
   // readonly from concepto de venta
   venta: number;
+  aplica_iva?: boolean;
 }
 
 function profitBadge(profit: number) {
@@ -55,9 +56,11 @@ export default function SeccionCostosInternosPL({ cotizacionId, conceptosUSD, co
       // Map saved costs back, matching venta from conceptos
       const mapped: FilaCosto[] = costosGuardados.map((c) => {
         let venta = 0;
+        let aplica_iva = false;
         if (c.moneda === "USD") {
           const cv = conceptosUSD.find((v) => v.descripcion === c.concepto);
-          venta = cv ? cv.total : 0;
+          venta = cv ? cv.cantidad * cv.precio_unitario : 0;
+          aplica_iva = cv?.aplica_iva ?? false;
         } else {
           const cv = conceptosMXN.find((v) => v.descripcion === c.concepto);
           venta = cv ? cv.cantidad * cv.precio_unitario : 0;
@@ -69,6 +72,7 @@ export default function SeccionCostosInternosPL({ cotizacionId, conceptosUSD, co
           cantidad: c.cantidad,
           costo_unitario: c.costo_unitario,
           venta,
+          aplica_iva,
         };
       });
       setFilas(mapped);
@@ -80,7 +84,8 @@ export default function SeccionCostosInternosPL({ cotizacionId, conceptosUSD, co
         proveedor: "",
         cantidad: c.cantidad,
         costo_unitario: 0,
-        venta: c.total,
+        venta: c.cantidad * c.precio_unitario,
+        aplica_iva: c.aplica_iva ?? false,
       }));
       const fromMXN: FilaCosto[] = conceptosMXN.map((c) => ({
         concepto: c.descripcion,
@@ -233,7 +238,10 @@ export default function SeccionCostosInternosPL({ cotizacionId, conceptosUSD, co
                           <span className="text-sm">{formatCurrency(fila.costo_unitario, moneda)}</span>
                         )}
                       </TableCell>
-                      <TableCell className="text-right text-sm">{formatCurrency(fila.venta, moneda)}</TableCell>
+                      <TableCell className="text-right text-sm">
+                        {formatCurrency(fila.venta, moneda)}
+                        {fila.aplica_iva && <span className="text-xs text-muted-foreground ml-1">+ IVA</span>}
+                      </TableCell>
                       <TableCell className={`text-right text-sm font-medium ${profit >= 0 ? "text-emerald-600" : "text-red-600"}`}>
                         {formatCurrency(profit, moneda)}
                       </TableCell>
