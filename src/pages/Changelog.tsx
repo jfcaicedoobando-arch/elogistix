@@ -13,6 +13,14 @@ interface ChangelogEntry {
 
 const changelog: ChangelogEntry[] = [
   {
+    version: "4.5.1",
+    date: "2026-03-04",
+    type: "patch",
+    title: "Hook useCotizacionCostos",
+    description:
+      "Nuevo hook con useCotizacionCostos (query), useUpsertCostos (upsert en lote), useDeleteCosto y función calcularPL para totales globales y por sección.",
+  },
+  {
     version: "4.5.0",
     date: "2026-03-04",
     type: "minor",
