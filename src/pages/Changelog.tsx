@@ -13,6 +13,14 @@ interface ChangelogEntry {
 
 const changelog: ChangelogEntry[] = [
   {
+    version: "4.5.2",
+    date: "2026-03-04",
+    type: "patch",
+    title: "Componente SeccionCostosInternosCotizacion",
+    description:
+      "Tabla editable de costos internos (P&L) por cotización con pre-poblado desde conceptos de venta, cálculo de profit en tiempo real, secciones y guardado en lote.",
+  },
+  {
     version: "4.5.1",
     date: "2026-03-04",
     type: "patch",
