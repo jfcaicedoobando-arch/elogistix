@@ -13,6 +13,14 @@ interface ChangelogEntry {
 
 const changelog: ChangelogEntry[] = [
   {
+    version: "4.3.5",
+    date: "2026-03-04",
+    type: "minor",
+    title: "Generación automática de expediente EL[TIPO][CONSECUTIVO]",
+    description:
+      "El número de referencia del embarque ahora se genera automáticamente desde la base de datos con formato secuencial (ej: ELIMP00001, ELEXP00002). Es único, irrepetible y no editable por el operador.",
+  },
+  {
     version: "4.3.4",
     date: "2026-03-03",
     type: "patch",
