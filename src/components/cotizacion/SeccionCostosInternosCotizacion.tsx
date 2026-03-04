@@ -8,7 +8,7 @@ import {
 } from "@/components/ui/select";
 import { usePermissions } from "@/hooks/usePermissions";
 import {
-  useCotizacionCostos, useUpsertCostos, useDeleteCosto, calcularTotalCostos,
+  useCotizacionCostos, useUpsertCotizacionCostos,
   type CostoCotizacion,
 } from "@/hooks/useCotizacionCostos";
 import { useToast } from "@/hooks/use-toast";
@@ -44,8 +44,7 @@ export default function SeccionCostosInternosCotizacion({ cotizacionId }: Props)
   const { canEdit } = usePermissions();
   const { toast } = useToast();
   const { data: costosGuardados, isLoading } = useCotizacionCostos(cotizacionId);
-  const upsert = useUpsertCostos();
-  const eliminar = useDeleteCosto();
+  const upsert = useUpsertCotizacionCostos();
 
   const [filas, setFilas] = useState<FilaCosto[]>([]);
   const [inicializado, setInicializado] = useState(false);
@@ -76,34 +75,35 @@ export default function SeccionCostosInternosCotizacion({ cotizacionId }: Props)
 
   const agregarFila = () => setFilas((prev) => [...prev, crearFilaVacia()]);
 
-  const eliminarFila = async (fila: FilaCosto) => {
-    if (fila.id) {
-      try {
-        await eliminar.mutateAsync({ id: fila.id, cotizacionId });
-      } catch (err: any) {
-        toast({ title: "Error al eliminar", description: err.message, variant: "destructive" });
-        return;
-      }
-    }
+  const eliminarFila = (fila: FilaCosto) => {
     setFilas((prev) => prev.filter((f) => f._key !== fila._key));
   };
 
   const guardar = async () => {
-    const costos = filas.map((f) => ({
-      ...(f.id ? { id: f.id } : {}),
+    const costosToSave: CostoCotizacion[] = filas.map((f) => ({
+      id: f.id ?? f._key,
       cotizacion_id: cotizacionId,
       concepto: f.concepto,
       proveedor: f.proveedor || '',
-      moneda: f.moneda,
+      moneda: f.moneda as 'USD' | 'MXN',
       cantidad: f.cantidad,
       costo_unitario: f.costo_unitario,
+      costo_total: f.cantidad * f.costo_unitario,
+      created_at: '',
+      updated_at: '',
     }));
     try {
-      const result = await upsert.mutateAsync(costos as any);
-      if (result) {
-        setFilas((prev) =>
-          prev.map((f, i) => ({ ...f, id: (result[i] as any)?.id ?? f.id }))
-        );
+      const result = await upsert.mutateAsync({ cotizacionId, costos: costosToSave });
+      if (result && result.length > 0) {
+        setFilas(result.map((r) => ({
+          _key: r.id,
+          id: r.id,
+          concepto: r.concepto,
+          proveedor: r.proveedor,
+          moneda: r.moneda,
+          cantidad: r.cantidad,
+          costo_unitario: r.costo_unitario,
+        })));
       }
       toast({ title: "Costos guardados correctamente" });
     } catch (err: any) {
@@ -112,18 +112,15 @@ export default function SeccionCostosInternosCotizacion({ cotizacionId }: Props)
   };
 
   const totales = useMemo(() => {
-    const asCostos: CostoCotizacion[] = filas.map((f) => ({
-      id: f.id ?? f._key,
-      cotizacion_id: cotizacionId,
-      concepto: f.concepto,
-      proveedor: f.proveedor,
-      moneda: f.moneda,
-      cantidad: f.cantidad,
-      costo_unitario: f.costo_unitario,
-      costo_total: f.cantidad * f.costo_unitario,
-    }));
-    return calcularTotalCostos(asCostos);
-  }, [filas, cotizacionId]);
+    let totalUSD = 0;
+    let totalMXN = 0;
+    for (const f of filas) {
+      const t = f.cantidad * f.costo_unitario;
+      if (f.moneda === 'USD') totalUSD += t;
+      else totalMXN += t;
+    }
+    return { totalUSD, totalMXN };
+  }, [filas]);
 
   if (!canEdit) return null;
   if (isLoading) return null;
@@ -167,7 +164,7 @@ export default function SeccionCostosInternosCotizacion({ cotizacionId }: Props)
               index={idx}
               onUpdate={actualizarFila}
               onDelete={() => eliminarFila(fila)}
-              isDeleting={eliminar.isPending}
+              isDeleting={false}
             />
           ))}
           {filas.length === 0 && (
