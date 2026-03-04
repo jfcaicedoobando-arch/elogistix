@@ -23,6 +23,13 @@ interface Cliente {
   nombre: string;
 }
 
+export interface EmbarqueValidationErrors {
+  modo?: string;
+  tipo?: string;
+  clienteId?: string;
+  descripcionMercancia?: string;
+}
+
 interface Props {
   modo: string;
   setModo: (v: string) => void;
@@ -56,6 +63,7 @@ interface Props {
   msdsArchivo: string | null;
   subiendoMsds: boolean;
   onMsdsUpload: (file: File) => void;
+  errors?: EmbarqueValidationErrors;
 }
 
 export function StepDatosGenerales(props: Props) {
@@ -66,6 +74,7 @@ export function StepDatosGenerales(props: Props) {
     contactos, descripcionMercancia, setDescripcionMercancia,
     pesoKg, setPesoKg, volumenM3, setVolumenM3, piezas, setPiezas,
     tipoCarga, setTipoCarga, msdsArchivo, subiendoMsds, onMsdsUpload,
+    errors = {},
   } = props;
 
   const msdsNombreArchivo = msdsArchivo ? msdsArchivo.split('/').pop() : null;
@@ -78,23 +87,26 @@ export function StepDatosGenerales(props: Props) {
           <div className="space-y-2">
             <Label>Modo de Transporte *</Label>
             <Select value={modo} onValueChange={setModo}>
-              <SelectTrigger><SelectValue placeholder="Seleccionar modo" /></SelectTrigger>
+              <SelectTrigger className={errors.modo ? 'border-destructive' : ''}><SelectValue placeholder="Seleccionar modo" /></SelectTrigger>
               <SelectContent>{MODOS.map(m => <SelectItem key={m} value={m}>{m}</SelectItem>)}</SelectContent>
             </Select>
+            {errors.modo && <p className="text-xs text-destructive">{errors.modo}</p>}
           </div>
           <div className="space-y-2">
             <Label>Tipo de Operación *</Label>
             <Select value={tipo} onValueChange={setTipo}>
-              <SelectTrigger><SelectValue placeholder="Seleccionar tipo" /></SelectTrigger>
+              <SelectTrigger className={errors.tipo ? 'border-destructive' : ''}><SelectValue placeholder="Seleccionar tipo" /></SelectTrigger>
               <SelectContent>{TIPOS.map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}</SelectContent>
             </Select>
+            {errors.tipo && <p className="text-xs text-destructive">{errors.tipo}</p>}
           </div>
           <div className="space-y-2">
             <Label>Cliente *</Label>
             <Select value={clienteId} onValueChange={setClienteId}>
-              <SelectTrigger><SelectValue placeholder="Seleccionar cliente" /></SelectTrigger>
+              <SelectTrigger className={errors.clienteId ? 'border-destructive' : ''}><SelectValue placeholder="Seleccionar cliente" /></SelectTrigger>
               <SelectContent>{clientes.map(c => <SelectItem key={c.id} value={c.id}>{c.nombre}</SelectItem>)}</SelectContent>
             </Select>
+            {errors.clienteId && <p className="text-xs text-destructive">{errors.clienteId}</p>}
           </div>
           <div className="space-y-2">
             <Label>Incoterm *</Label>
@@ -128,7 +140,8 @@ export function StepDatosGenerales(props: Props) {
           </div>
           <div className="space-y-2 md:col-span-2">
             <Label>Descripción de la Mercancía *</Label>
-            <Input placeholder="Descripción detallada" value={descripcionMercancia} onChange={e => setDescripcionMercancia(e.target.value)} />
+            <Input className={errors.descripcionMercancia ? 'border-destructive' : ''} placeholder="Descripción detallada" value={descripcionMercancia} onChange={e => setDescripcionMercancia(e.target.value)} />
+            {errors.descripcionMercancia && <p className="text-xs text-destructive">{errors.descripcionMercancia}</p>}
           </div>
           <div className="space-y-2">
             <Label>Tipo de Carga *</Label>
