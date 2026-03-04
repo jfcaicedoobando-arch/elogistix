@@ -146,7 +146,7 @@ export default function SeccionConceptosVentaCotizacion({
                 </div>
                 <div className="col-span-2">
                   {i === 0 && <Label className="text-xs">Total (USD)</Label>}
-                  <Input value={c.total.toFixed(2)} readOnly className="bg-muted" />
+                  <Input value={formatCurrency(c.total, 'USD')} readOnly className="bg-muted" />
                 </div>
                 <div className="col-span-1">
                   {i === 0 && <Label className="text-xs">&nbsp;</Label>}
@@ -230,15 +230,15 @@ export default function SeccionConceptosVentaCotizacion({
                 </div>
                 <div className="col-span-2">
                   {i === 0 && <Label className="text-xs">Subtotal</Label>}
-                  <Input value={subtotal.toFixed(2)} readOnly className="bg-muted" />
+                  <Input value={formatCurrency(subtotal, 'MXN')} readOnly className="bg-muted" />
                 </div>
                 <div className="col-span-2">
                   {i === 0 && <Label className="text-xs">IVA (16%)</Label>}
-                  <Input value={iva.toFixed(2)} readOnly className="bg-muted" />
+                  <Input value={formatCurrency(iva, 'MXN')} readOnly className="bg-muted" />
                 </div>
                 <div className="col-span-1">
                   {i === 0 && <Label className="text-xs">Total</Label>}
-                  <Input value={c.total.toFixed(2)} readOnly className="bg-muted" />
+                  <Input value={formatCurrency(c.total, 'MXN')} readOnly className="bg-muted" />
                 </div>
                 <div className="col-span-1">
                   <Button variant="ghost" size="icon" onClick={() => eliminarConceptoMXN(i)} disabled={conceptosMXN.length <= 1}>

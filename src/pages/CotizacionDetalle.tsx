@@ -204,7 +204,7 @@ export default function CotizacionDetalle() {
             {cotizacion.tipo_movimiento && (
               <div><span className="text-muted-foreground">Tipo de movimiento</span><p className="font-medium">{cotizacion.tipo_movimiento}</p></div>
             )}
-            <div><span className="text-muted-foreground">Seguro</span><p className="font-medium">{cotizacion.seguro ? `Sí — $${Number(cotizacion.valor_seguro_usd || 0).toLocaleString('es-MX', { minimumFractionDigits: 2 })} USD` : 'No'}</p></div>
+            <div><span className="text-muted-foreground">Seguro</span><p className="font-medium">{cotizacion.seguro ? `Sí — ${formatCurrency(Number(cotizacion.valor_seguro_usd || 0), 'USD')}` : 'No'}</p></div>
           </div>
         </CardContent>
       </Card>
