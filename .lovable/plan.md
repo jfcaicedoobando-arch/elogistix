@@ -1,44 +1,33 @@
 
 
-## Plan: IVA condicional en conceptos USD con toggle switch
+## Plan: Corregir P&L para usar siempre subtotales sin IVA
 
-### Archivo 1: `src/hooks/useCotizaciones.ts`
-- Agregar `aplica_iva: boolean` a la interface `ConceptoVentaCotizacion` (ya existe en el código actual, verificar que esté presente)
+### Problema
+En `SeccionCostosInternosPL.tsx`, la columna "Venta" para conceptos USD usa `cv.total` que puede incluir IVA (×1.16) si `aplica_iva=true`. Esto contamina los cálculos de profit.
 
-### Archivo 2: `src/components/cotizacion/SeccionConceptosVentaCotizacion.tsx`
+En `calcularPL`, el campo USD también usa `c.total` que puede incluir IVA.
 
-**Catálogos**: Verificar que `Handling`, `Desconsolidación`, `Revalidación` estén en `CATALOGO_USD` (ya están del cambio anterior).
+### Archivo 1: `src/hooks/useCotizacionCostos.ts`
 
-**Nueva constante**:
+En `calcularPL`, línea 76: cambiar de `c.total` a `c.cantidad * c.precio_unitario` para USD, asegurando que nunca se use el total con IVA:
+
 ```typescript
-const CONCEPTOS_CON_IVA = ['Handling', 'Desconsolidación', 'Revalidación'];
+const totalVentaUSD = ventasUSD.reduce((s, c) => s + c.cantidad * c.precio_unitario, 0);
 ```
 
-**Select USD**: Los conceptos en `CONCEPTOS_CON_IVA` muestran asterisco: `"Handling *"`
+MXN ya usa `c.cantidad * c.precio_unitario` (línea 83), está correcto.
 
-**Nueva columna IVA** entre P. Unitario y Total USD:
-- Si concepto está en `CONCEPTOS_CON_IVA` → Switch toggle controlando `aplica_iva`. OFF = "No" gris, ON = "16%" amber
-- Si no está → "—" gris
-- Filas con `aplica_iva=true` llevan fondo `bg-amber-50/30`
+### Archivo 2: `src/components/cotizacion/SeccionCostosInternosPL.tsx`
 
-**Total USD recalculado**: `total = cantidad * precio_unitario * (aplica_iva ? 1.16 : 1)`
+**Inicialización (líneas 59, 77)**: Para conceptos USD, cambiar `venta: cv.total` → `venta: cv.cantidad * cv.precio_unitario`. Agregar campo `aplica_iva` a `FilaCosto` para referencia visual.
 
-**Lógica de cambio de descripción**: Si nuevo concepto no está en `CONCEPTOS_CON_IVA`, auto-setear `aplica_iva = false`
+**Interface `FilaCosto`**: Agregar `aplica_iva?: boolean`.
 
-**Footer USD dinámico**:
-- Si algún concepto tiene `aplica_iva=true`: mostrar Subtotal s/IVA | IVA 16% | Total USD
-- Si ninguno: solo Total USD
+**Mapeo de datos**: Al inicializar filas USD, leer `aplica_iva` del concepto de venta original.
 
-**Grid ajustado USD**: Concepto(3) | Unidad(1) | Cantidad(1) | P.Unit(2) | IVA(1) | Total(2) | Delete(1) → sigue siendo col-span-12 reduciendo Unidad de 2→1 y agregando IVA col-span-1
+**Columna Venta**: Si `aplica_iva=true`, mostrar junto al monto una etiqueta `<span className="text-xs text-muted-foreground ml-1">+ IVA</span>`.
 
-### Archivo 3: `src/pages/NuevaCotizacion.tsx`
+**Cálculos de profit**: Ya usan `fila.venta` que ahora será siempre `cantidad * precio_unitario` (sin IVA). No requieren cambio adicional.
 
-**`actualizarConceptoUSD`**: Recalcular total considerando `aplica_iva`:
-```typescript
-copia[index].total = copia[index].cantidad * copia[index].precio_unitario * (copia[index].aplica_iva ? 1.16 : 1);
-```
-
-Cuando se cambia `descripcion` a un concepto que no está en `CONCEPTOS_CON_IVA`, setear `aplica_iva = false` y recalcular.
-
-### Archivo 4: `src/pages/Changelog.tsx` — entrada v4.8.2
+### Archivo 3: `src/pages/Changelog.tsx` — entrada v4.8.3
 
