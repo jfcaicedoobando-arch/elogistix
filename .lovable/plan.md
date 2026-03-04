@@ -1,31 +1,27 @@
 
 
-## Plan: Crear `SeccionCostosInternosCotizacion.tsx`
+## Plan: Botón Exportar PDF en CotizacionDetalle
 
-### Componente nuevo: `src/components/cotizacion/SeccionCostosInternosCotizacion.tsx`
+### Enfoque
 
-**Props**: `cotizacionId: string`, `conceptosVenta: ConceptoVentaCotizacion[]`
+Usar la API nativa del navegador `window.print()` con una vista de impresión dedicada, sin dependencias externas. Se crea una función que genera un HTML con los datos de la cotización (Datos Generales, Mercancía, Conceptos de Venta) y lo abre en una ventana nueva para imprimir/guardar como PDF.
 
-**Comportamiento**:
+### Cambios
 
-1. **Visibilidad**: Usa `usePermissions()` — si `!canEdit`, retorna `null`
-2. **Pre-poblado**: Al montar, si no hay costos guardados en BD (`useCotizacionCostos` retorna vacío), genera filas iniciales desde `conceptosVenta` mapeando `descripcion → concepto` y `precio_unitario * cantidad → venta`
-3. **Estado local**: Array de filas editables con campos: concepto, proveedor, moneda (default `USD`), unidad_medida, costo, venta, seccion
-4. **Columnas calculadas en UI**: `profit = venta - costo`, `% profit = ((venta - costo) / venta) * 100`
-5. **Selector de sección**: Select con opciones `Origen`, `Flete Internacional`, `Destino`, `Otro`
-6. **Botón Agregar**: Añade fila vacía al array local
-7. **Botón Eliminar**: Por fila, llama `useDeleteCosto` si tiene id, o elimina del array local
-8. **Botón Guardar**: Llama `useUpsertCostos()` con todo el array, asignando `cotizacion_id`
-9. **Resumen P&L**: Usa `calcularPL()` para mostrar totales al pie de la tabla
+**1. Crear `src/lib/cotizacionPdf.ts`**
+- Función `generarPdfCotizacion(cotizacion: CotizacionRow)` que:
+  - Construye un documento HTML con estilos inline para impresión
+  - Encabezado: folio, cliente/prospecto, estado, fecha
+  - Sección Datos Generales: modo, tipo, incoterm, moneda, origen, destino, vigencia, operador, y campos condicionales (tránsito, seguro, etc.)
+  - Sección Mercancía: tipo embarque, contenedor, carga, sector, dimensiones LCL/aéreas si aplica
+  - Sección Conceptos de Venta: tabla con descripción, cantidad, precio unitario, total + subtotal
+  - **NO incluye** Costos Internos (P&L)
+  - Abre `window.open()` con el HTML y ejecuta `window.print()`
 
-### UI
+**2. Modificar `src/pages/CotizacionDetalle.tsx`**
+- Importar `generarPdfCotizacion`
+- Agregar botón "Exportar PDF" con icono `FileDown` en la barra de acciones (junto al badge de estado)
 
-- Card con título "Costos Internos (P&L)"
-- Tabla con Table/TableRow/TableCell existentes
-- Inputs inline para edición
-- Footer con totales de costo, venta, profit y % profit
-
-### Changelog
-
-Registrar como versión **4.5.2**.
+**3. Actualizar `src/pages/Changelog.tsx`**
+- Versión 4.5.4: Botón de exportación a PDF en cotizaciones
 
