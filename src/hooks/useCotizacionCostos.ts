@@ -73,7 +73,7 @@ export function calcularPL(
   // --- USD ---
   const ventasUSD = conceptosVenta.filter((c) => c.moneda === 'USD');
   const costosUSD = costos.filter((c) => c.moneda === 'USD');
-  const totalVentaUSD = ventasUSD.reduce((s, c) => s + c.total, 0);
+  const totalVentaUSD = ventasUSD.reduce((s, c) => s + c.cantidad * c.precio_unitario, 0);
   const totalCostoUSD = costosUSD.reduce((s, c) => s + c.costo_total, 0);
   const profitUSD = totalVentaUSD - totalCostoUSD;
 
