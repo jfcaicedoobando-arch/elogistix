@@ -13,6 +13,14 @@ interface ChangelogEntry {
 
 const changelog: ChangelogEntry[] = [
   {
+    version: "4.8.1",
+    date: "2026-03-04",
+    type: "patch",
+    title: "Nuevos conceptos en catálogos de venta",
+    description:
+      "Se agregan Revalidación, Handling, Desconsolidación y Entrega Nacional a los dropdowns de conceptos USD y MXN en cotizaciones.",
+  },
+  {
     version: "4.8.0",
     date: "2026-03-04",
     type: "minor",

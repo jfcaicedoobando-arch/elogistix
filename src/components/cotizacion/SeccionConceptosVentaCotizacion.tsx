@@ -9,12 +9,14 @@ import type { ConceptoVentaCotizacion } from "@/hooks/useCotizaciones";
 const CATALOGO_USD = [
   'Flete Marítimo', 'Flete Aéreo', 'Embalaje',
   'Coordinación de Recolección', 'Seguro de Carga',
-  'Cargos en Origen', 'Otro',
+  'Cargos en Origen', 'Revalidación', 'Handling',
+  'Desconsolidación', 'Entrega Nacional', 'Otro',
 ];
 
 const CATALOGO_MXN = [
   'Manejo', 'Demoras', 'Cargos en Destino',
-  'Almacenaje', 'Entrega', 'Otro',
+  'Almacenaje', 'Entrega', 'Revalidación', 'Handling',
+  'Desconsolidación', 'Entrega Nacional', 'Otro',
 ];
 
 const UNIDADES_MEDIDA = ['BL', 'W/M', 'Documento', 'Contenedor', 'Kilo', 'Embarque'];
