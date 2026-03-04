@@ -1,37 +1,41 @@
 
 
-## Plan: Aplicar formato de moneda mexicana a todos los campos de dinero
+## Plan: Convertir catálogo de puertos en opción configurable
 
 ### Problema
-Varios campos monetarios usan `.toFixed(2)` con prefijo `$` manual en lugar de `formatCurrency()`, que ya usa `Intl.NumberFormat('es-MX')` con separadores de miles y decimales correctos.
+Los puertos están hardcodeados en `src/data/ports.ts` (~150 registros). El usuario quiere poder agregar y quitar puertos desde el módulo de Configuración.
 
-### Archivos a modificar
+### Enfoque
+Crear una tabla `puertos` en la base de datos, migrar los puertos existentes como seed, y agregar una pestaña "Puertos" en Configuración con CRUD inline.
 
-**1. `src/components/embarque/StepCostosPrecios.tsx`** (5 cambios)
-- Línea 83: `$${totalUSD.toFixed(2)}` → `formatCurrency(totalUSD, 'USD')`
-- Línea 92: `$${totalCostoUSD.toFixed(2)}` → `formatCurrency(totalCostoUSD, 'USD')`
-- Línea 118: `$${totalUSD.toFixed(2)}` → `formatCurrency(totalUSD, 'USD')`
-- Línea 127: `$${totalVentaUSD.toFixed(2)}` → `formatCurrency(totalVentaUSD, 'USD')`
-- Línea 137: `$${(totalVentaUSD - totalCostoUSD).toFixed(2)}` → `formatCurrency(totalVentaUSD - totalCostoUSD, 'USD')`
-- Agregar import de `formatCurrency`
+### Cambios
 
-**2. `src/components/cotizacion/SeccionConceptosVentaCotizacion.tsx`** (4 cambios)
-- Línea 149: `c.total.toFixed(2)` → `formatCurrency(c.total, 'USD')`
-- Línea 233: `subtotal.toFixed(2)` → `formatCurrency(subtotal, 'MXN')`
-- Línea 237: `iva.toFixed(2)` → `formatCurrency(iva, 'MXN')`
-- Línea 241: `c.total.toFixed(2)` → `formatCurrency(c.total, 'MXN')`
-- Agregar import de `formatCurrency`
+**1. Migración SQL** — Crear tabla `puertos`
+- Columnas: `id uuid PK`, `code text UNIQUE`, `name text`, `country text`, `activo boolean DEFAULT true`, `created_at timestamptz`
+- RLS: lectura para autenticados, CRUD para admins
+- INSERT de los ~150 puertos existentes de `ports.ts` como datos iniciales
 
-**3. `src/pages/CotizacionDetalle.tsx`** (1 cambio)
-- Línea 207: `$${Number(...).toLocaleString('es-MX', ...)} USD` → `formatCurrency(Number(cotizacion.valor_seguro_usd || 0), 'USD')`
+**2. `src/hooks/usePuertos.ts`** (nuevo)
+- Hook `usePuertos()` que hace SELECT de puertos activos ordenados por país, nombre
+- Hook `useAdminPuertos()` con mutations para agregar, eliminar y toggle activo
 
-**4. `src/pages/Reportes.tsx`** (1 cambio)
-- Línea 117: chart XAxis tickFormatter — mantener formato abreviado `$12k` pero usar `formatCurrency` para el tooltip (ya está correcto el tooltip)
+**3. `src/components/PortSelect.tsx`** (modificar)
+- Reemplazar import de `ports` hardcodeado por `usePuertos()`
+- Misma interfaz visual, solo cambia la fuente de datos
 
-**5. `src/pages/Changelog.tsx`** — entrada v4.8.5
+**4. `src/pages/Configuracion.tsx`** (modificar)
+- Agregar pestaña "Puertos" con icono `Anchor`
+- Tabla con columnas: Código, Nombre, País, Activo (switch)
+- Buscador para filtrar la lista
+- Formulario inline para agregar nuevo puerto (code, name, country)
+- Botón para eliminar puertos
 
-### No se modifican (no son dinero)
-- `peso_volumetrico_kg.toFixed(2)` — peso, no dinero
-- `volumen_m3.toFixed(4)` — volumen, no dinero
-- `margen.toFixed(1)%` — porcentaje, no dinero
+**5. `src/data/ports.ts`** — Se mantiene solo como referencia para el seed SQL, ya no se importa en componentes
+
+**6. `src/pages/Changelog.tsx`** — Entrada v4.9.0 (minor: nueva funcionalidad)
+
+### Notas técnicas
+- La tabla usa `activo boolean` en lugar de borrado físico, para no perder historial en cotizaciones que ya referencian un puerto
+- El PortSelect solo muestra puertos con `activo = true`
+- El seed SQL se genera a partir del array existente en `ports.ts`
 
