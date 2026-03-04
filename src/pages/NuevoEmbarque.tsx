@@ -4,11 +4,10 @@ import { ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "@/hooks/use-toast";
 import {
-  useClientesForSelect,
   useProveedoresForSelect,
   useCreateEmbarque,
 } from "@/hooks/useEmbarques";
-import { useContactosCliente } from "@/hooks/useClientes";
+import { useClientesForSelect, useContactosCliente } from "@/hooks/useClientes";
 import { useAuth } from "@/contexts/AuthContext";
 import { useRegistrarActividad } from "@/hooks/useBitacora";
 import { uploadFile } from '@/lib/storage';

@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import type { ConceptoVentaCotizacion } from '@/hooks/useCotizaciones';
+
 
 export interface CostoCotizacion {
   id: string;
@@ -31,7 +31,7 @@ export function useCotizacionCostos(cotizacionId: string | undefined) {
 }
 
 export function useUpsertCotizacionCostos() {
-  const qc = useQueryClient();
+  const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async ({ cotizacionId, costos }: { cotizacionId: string; costos: CostoCotizacion[] }) => {
       // DELETE all existing
@@ -61,44 +61,7 @@ export function useUpsertCotizacionCostos() {
       return (data ?? []) as unknown as CostoCotizacion[];
     },
     onSuccess: (_data, variables) => {
-      qc.invalidateQueries({ queryKey: ['cotizacion_costos', variables.cotizacionId] });
+      queryClient.invalidateQueries({ queryKey: ['cotizacion_costos', variables.cotizacionId] });
     },
   });
-}
-
-export function calcularPL(
-  conceptosVenta: ConceptoVentaCotizacion[],
-  costos: CostoCotizacion[],
-) {
-  // --- USD ---
-  const ventasUSD = conceptosVenta.filter((c) => c.moneda === 'USD');
-  const costosUSD = costos.filter((c) => c.moneda === 'USD');
-  const totalVentaUSD = ventasUSD.reduce((s, c) => s + c.cantidad * c.precio_unitario, 0);
-  const totalCostoUSD = costosUSD.reduce((s, c) => s + c.costo_total, 0);
-  const profitUSD = totalVentaUSD - totalCostoUSD;
-
-  // --- MXN ---
-  const ventasMXN = conceptosVenta.filter((c) => c.moneda === 'MXN');
-  const costosMXN = costos.filter((c) => c.moneda === 'MXN');
-  const subtotalVentaMXN = ventasMXN.reduce((s, c) => s + c.cantidad * c.precio_unitario, 0);
-  const totalCostoMXN = costosMXN.reduce((s, c) => s + c.costo_total, 0);
-  const profitMXN = subtotalVentaMXN - totalCostoMXN;
-  const ivaMXN = subtotalVentaMXN * 0.16;
-
-  return {
-    usd: {
-      totalVenta: totalVentaUSD,
-      totalCosto: totalCostoUSD,
-      profit: profitUSD,
-      porcentajeProfit: totalVentaUSD !== 0 ? (profitUSD / totalVentaUSD) * 100 : 0,
-    },
-    mxn: {
-      subtotalVenta: subtotalVentaMXN,
-      totalCosto: totalCostoMXN,
-      profit: profitMXN,
-      porcentajeProfit: subtotalVentaMXN !== 0 ? (profitMXN / subtotalVentaMXN) * 100 : 0,
-      iva: ivaMXN,
-      totalConIva: subtotalVentaMXN + ivaMXN,
-    },
-  };
 }

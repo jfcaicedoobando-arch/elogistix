@@ -15,7 +15,7 @@ import { ArrowLeft, Save } from "lucide-react";
 import SeccionDestinatario from "@/components/cotizacion/SeccionDestinatario";
 import SeccionDatosGeneralesCotizacion from "@/components/cotizacion/SeccionDatosGeneralesCotizacion";
 import SeccionRutaCotizacion from "@/components/cotizacion/SeccionRutaCotizacion";
-import SeccionConceptosVentaCotizacion from "@/components/cotizacion/SeccionConceptosVentaCotizacion";
+import SeccionConceptosVentaCotizacion, { CONCEPTOS_CON_IVA } from "@/components/cotizacion/SeccionConceptosVentaCotizacion";
 import SeccionMercanciaMaritimaFCL from "@/components/cotizacion/SeccionMercanciaMaritimaFCL";
 import SeccionMercanciaMaritimeLCL from "@/components/cotizacion/SeccionMercanciaMaritimeLCL";
 import SeccionMercanciaGeneral from "@/components/cotizacion/SeccionMercanciaGeneral";
@@ -107,7 +107,6 @@ export default function NuevaCotizacion() {
       (copia[index] as any)[campo] = valor;
       // Auto-reset aplica_iva when changing to a non-IVA concept
       if (campo === 'descripcion') {
-        const CONCEPTOS_CON_IVA = ['Handling', 'Desconsolidación', 'Revalidación'];
         if (!CONCEPTOS_CON_IVA.includes(valor)) {
           copia[index].aplica_iva = false;
         }

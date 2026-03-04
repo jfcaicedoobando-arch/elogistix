@@ -13,6 +13,14 @@ interface ChangelogEntry {
 
 const changelog: ChangelogEntry[] = [
   {
+    version: "4.8.4",
+    date: "2026-03-04",
+    type: "patch",
+    title: "Refactorización: duplicados, sub-componentes y nombres",
+    description:
+      "Fase 1: Eliminado useClientesForSelect duplicado de useEmbarques, fmt local reemplazado por formatCurrency, CONCEPTOS_CON_IVA consolidado, calcularPL muerta eliminada, import Input no usado removido. Fase 2: Extraídos TablaConceptosUSD, TablaConceptosMXN, ResumenTotalesCotizacion y DialogConvertirProspecto de CotizacionDetalle (~488→~300 líneas). Fase 3: Variables crípticas renombradas (qc→queryClient, totUSD→totalesUSD, totMXN→totalesMXN).",
+  },
+  {
     version: "4.8.3",
     date: "2026-03-04",
     type: "patch",

@@ -11,7 +11,8 @@ import {
 } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useNavigate } from "react-router-dom";
-import { useEmbarques, useClientesForSelect } from "@/hooks/useEmbarques";
+import { useEmbarques } from "@/hooks/useEmbarques";
+import { useClientesForSelect } from "@/hooks/useClientes";
 import { usePermissions } from "@/hooks/usePermissions";
 import { formatDate, getEstadoColor, getModoIcon } from "@/lib/helpers";
 import SearchInput from "@/components/SearchInput";

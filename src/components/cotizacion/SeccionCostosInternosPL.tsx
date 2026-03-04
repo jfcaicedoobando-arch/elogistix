@@ -127,7 +127,7 @@ export default function SeccionCostosInternosPL({ cotizacionId, conceptosUSD, co
   };
 
   // Totals
-  const totUSD = useMemo(() => {
+  const totalesUSD = useMemo(() => {
     const totalCosto = filasUSD.reduce((s, f) => s + f.cantidad * f.costo_unitario, 0);
     const totalVenta = filasUSD.reduce((s, f) => s + f.venta, 0);
     const profit = totalVenta - totalCosto;
@@ -135,7 +135,7 @@ export default function SeccionCostosInternosPL({ cotizacionId, conceptosUSD, co
     return { totalCosto, totalVenta, profit, pct };
   }, [filasUSD]);
 
-  const totMXN = useMemo(() => {
+  const totalesMXN = useMemo(() => {
     const totalCosto = filasMXN.reduce((s, f) => s + f.cantidad * f.costo_unitario, 0);
     const subtotalVenta = filasMXN.reduce((s, f) => s + f.venta, 0);
     const profit = subtotalVenta - totalCosto;
@@ -268,9 +268,9 @@ export default function SeccionCostosInternosPL({ cotizacionId, conceptosUSD, co
             <div className="mt-3 space-y-1">
               <p className="text-xs text-muted-foreground">* P&L calculado sobre subtotales sin IVA</p>
               <div className="flex flex-col items-end gap-0.5 text-sm">
-                <span>Subtotal s/IVA: {formatCurrency(totMXN.subtotalVenta, "MXN")}</span>
-                <span>IVA 16%: {formatCurrency(totMXN.iva, "MXN")}</span>
-                <span className="font-bold">Total c/IVA: {formatCurrency(totMXN.totalConIva, "MXN")}</span>
+                <span>Subtotal s/IVA: {formatCurrency(totalesMXN.subtotalVenta, "MXN")}</span>
+                <span>IVA 16%: {formatCurrency(totalesMXN.iva, "MXN")}</span>
+                <span className="font-bold">Total c/IVA: {formatCurrency(totalesMXN.totalConIva, "MXN")}</span>
               </div>
             </div>
           )}
@@ -306,20 +306,20 @@ export default function SeccionCostosInternosPL({ cotizacionId, conceptosUSD, co
                         <p className="text-sm font-semibold text-violet-600">USD</p>
                         <div className="flex justify-between text-sm">
                           <span className="text-muted-foreground">Total Costo</span>
-                          <span>{formatCurrency(totUSD.totalCosto, "USD")}</span>
+                          <span>{formatCurrency(totalesUSD.totalCosto, "USD")}</span>
                         </div>
                         <div className="flex justify-between text-sm">
                           <span className="text-muted-foreground">Total Venta</span>
-                          <span>{formatCurrency(totUSD.totalVenta, "USD")}</span>
+                          <span>{formatCurrency(totalesUSD.totalVenta, "USD")}</span>
                         </div>
                         <div className="flex justify-between text-sm font-semibold">
                           <span>Profit</span>
-                          <span className={totUSD.profit >= 0 ? "text-emerald-600" : "text-red-600"}>
-                            {formatCurrency(totUSD.profit, "USD")}
+                          <span className={totalesUSD.profit >= 0 ? "text-emerald-600" : "text-red-600"}>
+                            {formatCurrency(totalesUSD.profit, "USD")}
                           </span>
                         </div>
                         <div className="flex justify-center pt-1">
-                          {profitBadge(totUSD.pct)}
+                          {profitBadge(totalesUSD.pct)}
                         </div>
                       </CardContent>
                     </Card>
@@ -331,20 +331,20 @@ export default function SeccionCostosInternosPL({ cotizacionId, conceptosUSD, co
                         <p className="text-sm font-semibold text-violet-600">MXN</p>
                         <div className="flex justify-between text-sm">
                           <span className="text-muted-foreground">Total Costo</span>
-                          <span>{formatCurrency(totMXN.totalCosto, "MXN")}</span>
+                          <span>{formatCurrency(totalesMXN.totalCosto, "MXN")}</span>
                         </div>
                         <div className="flex justify-between text-sm">
                           <span className="text-muted-foreground">Total Venta</span>
-                          <span>{formatCurrency(totMXN.subtotalVenta, "MXN")}</span>
+                          <span>{formatCurrency(totalesMXN.subtotalVenta, "MXN")}</span>
                         </div>
                         <div className="flex justify-between text-sm font-semibold">
                           <span>Profit</span>
-                          <span className={totMXN.profit >= 0 ? "text-emerald-600" : "text-red-600"}>
-                            {formatCurrency(totMXN.profit, "MXN")}
+                          <span className={totalesMXN.profit >= 0 ? "text-emerald-600" : "text-red-600"}>
+                            {formatCurrency(totalesMXN.profit, "MXN")}
                           </span>
                         </div>
                         <div className="flex justify-center pt-1">
-                          {profitBadge(totMXN.pct)}
+                          {profitBadge(totalesMXN.pct)}
                         </div>
                       </CardContent>
                     </Card>

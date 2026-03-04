@@ -6,6 +6,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Switch } from "@/components/ui/switch";
 import { Plus, Trash2 } from "lucide-react";
 import type { ConceptoVentaCotizacion } from "@/hooks/useCotizaciones";
+import { formatCurrency } from "@/lib/formatters";
 
 const CATALOGO_USD = [
   'Flete Marítimo', 'Flete Aéreo', 'Embalaje',
@@ -39,8 +40,6 @@ interface Props {
   totalMXN: number;
 }
 
-const fmt = (value: number, currency: string) =>
-  new Intl.NumberFormat('es-MX', { style: 'currency', currency }).format(value);
 
 function UnidadMedidaSelect({ value, onChange }: { value: string; onChange: (v: string) => void }) {
   return (
@@ -161,12 +160,12 @@ export default function SeccionConceptosVentaCotizacion({
           <div className="flex flex-col items-end gap-1 pt-2 border-t">
             {hayIvaUSD ? (
               <>
-                <span className="text-sm">Subtotal s/IVA: {fmt(subtotalSinIvaUSD, 'USD')}</span>
-                <span className="text-sm text-amber-600">IVA 16%: {fmt(ivaUSD, 'USD')}</span>
-                <span className="text-sm font-semibold">Total USD: {fmt(totalUSD, 'USD')}</span>
+                <span className="text-sm">Subtotal s/IVA: {formatCurrency(subtotalSinIvaUSD, 'USD')}</span>
+                <span className="text-sm text-amber-600">IVA 16%: {formatCurrency(ivaUSD, 'USD')}</span>
+                <span className="text-sm font-semibold">Total USD: {formatCurrency(totalUSD, 'USD')}</span>
               </>
             ) : (
-              <span className="text-sm font-semibold">Total USD: {fmt(totalUSD, 'USD')}</span>
+              <span className="text-sm font-semibold">Total USD: {formatCurrency(totalUSD, 'USD')}</span>
             )}
           </div>
         </CardContent>
@@ -250,17 +249,17 @@ export default function SeccionConceptosVentaCotizacion({
             );
           })}
           <div className="flex flex-col items-end gap-1 pt-2 border-t">
-            <span className="text-sm">Subtotal MXN: {fmt(subtotalMXN, 'MXN')}</span>
-            <span className="text-sm">IVA (16%): {fmt(ivaMXN, 'MXN')}</span>
-            <span className="text-sm font-semibold">Total MXN: {fmt(totalMXN, 'MXN')}</span>
+            <span className="text-sm">Subtotal MXN: {formatCurrency(subtotalMXN, 'MXN')}</span>
+            <span className="text-sm">IVA (16%): {formatCurrency(ivaMXN, 'MXN')}</span>
+            <span className="text-sm font-semibold">Total MXN: {formatCurrency(totalMXN, 'MXN')}</span>
           </div>
         </CardContent>
       </Card>
 
       {/* === RESUMEN === */}
       <div className="flex flex-col items-end gap-1 p-4 border rounded-md bg-muted/30">
-        <span className="text-base font-bold">Total USD: {fmt(totalUSD, 'USD')}</span>
-        <span className="text-base font-bold">Total MXN (c/IVA): {fmt(totalMXN, 'MXN')}</span>
+        <span className="text-base font-bold">Total USD: {formatCurrency(totalUSD, 'USD')}</span>
+        <span className="text-base font-bold">Total MXN (c/IVA): {formatCurrency(totalMXN, 'MXN')}</span>
         <span className="text-xs text-muted-foreground">* Los conceptos en MXN incluyen IVA 16%</span>
         {hayIvaUSD && <span className="text-xs text-amber-600">* Algunos conceptos USD incluyen IVA 16%</span>}
       </div>
