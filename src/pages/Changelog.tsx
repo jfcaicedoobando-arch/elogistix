@@ -13,6 +13,14 @@ interface ChangelogEntry {
 
 const changelog: ChangelogEntry[] = [
   {
+    version: "4.9.0",
+    date: "2026-03-04",
+    type: "minor",
+    title: "Catálogo de puertos configurable",
+    description:
+      "Los puertos de origen/destino en cotizaciones y embarques ahora se administran desde Configuración → Puertos. Se pueden agregar, desactivar y eliminar puertos. La tabla 'puertos' en la base de datos reemplaza el catálogo estático anterior.",
+  },
+  {
     version: "4.8.5",
     date: "2026-03-04",
     type: "patch",

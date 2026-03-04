@@ -4,7 +4,7 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
-import { ports } from "@/data/ports";
+import { usePuertos } from "@/hooks/usePuertos";
 
 interface PortSelectProps {
   value: string;
@@ -19,6 +19,7 @@ function formatPort(port: { name: string; country: string }) {
 export default function PortSelect({ value, onValueChange, placeholder = "Seleccionar puerto" }: PortSelectProps) {
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState("");
+  const { data: ports = [] } = usePuertos();
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -50,7 +51,7 @@ export default function PortSelect({ value, onValueChange, placeholder = "Selecc
                 const display = formatPort(port);
                 return (
                   <CommandItem
-                    key={port.code}
+                    key={port.id}
                     value={`${port.name} ${port.country} ${port.code}`}
                     onSelect={() => { onValueChange(display); setSearch(""); setOpen(false); }}
                   >

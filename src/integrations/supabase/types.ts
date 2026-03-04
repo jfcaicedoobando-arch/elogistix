@@ -874,6 +874,33 @@ export type Database = {
         }
         Relationships: []
       }
+      puertos: {
+        Row: {
+          activo: boolean
+          code: string
+          country: string
+          created_at: string
+          id: string
+          name: string
+        }
+        Insert: {
+          activo?: boolean
+          code: string
+          country: string
+          created_at?: string
+          id?: string
+          name: string
+        }
+        Update: {
+          activo?: boolean
+          code?: string
+          country?: string
+          created_at?: string
+          id?: string
+          name?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           id: string
