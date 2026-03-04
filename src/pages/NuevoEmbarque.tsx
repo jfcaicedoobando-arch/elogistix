@@ -14,6 +14,7 @@ import { useRegistrarActividad } from "@/hooks/useBitacora";
 import { uploadFile } from '@/lib/storage';
 import { useConceptosForm } from "@/hooks/useConceptosForm";
 import { useEmbarqueForm } from "@/hooks/useEmbarqueForm";
+import { supabase } from "@/integrations/supabase/client";
 import { StepIndicator } from "@/components/embarque/StepIndicator";
 import { StepDatosGenerales } from "@/components/embarque/StepDatosGenerales";
 import { StepDatosRuta } from "@/components/embarque/StepDatosRuta";
@@ -48,12 +49,6 @@ export default function NuevoEmbarque() {
 
   const selectedCliente = clientes.find(c => c.id === form.clienteId);
 
-  const generateExpediente = () => {
-    const year = new Date().getFullYear();
-    const rand = String(Math.floor(Math.random() * 9999)).padStart(4, '0');
-    return `EXP-${year}-${rand}`;
-  };
-
   const handleFinish = async () => {
     if (!form.clienteId || !form.modo || !form.tipo) {
       toast({
@@ -64,7 +59,11 @@ export default function NuevoEmbarque() {
       return;
     }
 
-    const expediente = generateExpediente();
+    const { data: expediente, error: expError } = await supabase.rpc('generar_expediente', { tipo_op: form.tipo });
+    if (expError || !expediente) {
+      toast({ title: "Error al generar expediente", description: expError?.message || "No se pudo generar el número de referencia.", variant: "destructive" });
+      return;
+    }
 
     try {
       // Subir archivos seleccionados a Storage
