@@ -3,6 +3,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
 import { Plus, Trash2 } from "lucide-react";
 import type { ConceptoVentaCotizacion } from "@/hooks/useCotizaciones";
 
@@ -18,6 +19,8 @@ const CATALOGO_MXN = [
   'Almacenaje', 'Entrega', 'Revalidación', 'Handling',
   'Desconsolidación', 'Entrega Nacional', 'Otro',
 ];
+
+const CONCEPTOS_CON_IVA = ['Handling', 'Desconsolidación', 'Revalidación'];
 
 const UNIDADES_MEDIDA = ['BL', 'W/M', 'Documento', 'Contenedor', 'Kilo', 'Embarque'];
 
@@ -53,6 +56,8 @@ function UnidadMedidaSelect({ value, onChange }: { value: string; onChange: (v: 
   );
 }
 
+export { CONCEPTOS_CON_IVA };
+
 export default function SeccionConceptosVentaCotizacion({
   conceptosUSD, conceptosMXN,
   actualizarConceptoUSD, actualizarConceptoMXN,
@@ -60,6 +65,10 @@ export default function SeccionConceptosVentaCotizacion({
   eliminarConceptoUSD, eliminarConceptoMXN,
   totalUSD, subtotalMXN, ivaMXN, totalMXN,
 }: Props) {
+  const hayIvaUSD = conceptosUSD.some(c => c.aplica_iva);
+  const subtotalSinIvaUSD = conceptosUSD.reduce((s, c) => s + c.cantidad * c.precio_unitario, 0);
+  const ivaUSD = totalUSD - subtotalSinIvaUSD;
+
   return (
     <div className="space-y-6">
       {/* === TABLA USD === */}
@@ -73,62 +82,92 @@ export default function SeccionConceptosVentaCotizacion({
           </div>
         </CardHeader>
         <CardContent className="space-y-3">
-          {conceptosUSD.map((c, i) => (
-            <div key={i} className="grid grid-cols-12 gap-2 items-end">
-              <div className="col-span-3">
-                {i === 0 && <Label className="text-xs">Concepto</Label>}
-                {c.descripcion !== '' && !CATALOGO_USD.includes(c.descripcion) && c.descripcion !== 'Otro' ? (
-                  <Input
-                    value={c.descripcion}
-                    onChange={e => actualizarConceptoUSD(i, 'descripcion', e.target.value)}
-                    placeholder="Descripción libre"
-                  />
-                ) : (
-                  <Select
-                    value={CATALOGO_USD.includes(c.descripcion) ? c.descripcion : c.descripcion === '' ? '' : 'Otro'}
-                    onValueChange={val => {
-                      if (val === 'Otro') {
-                        actualizarConceptoUSD(i, 'descripcion', '');
-                        setTimeout(() => actualizarConceptoUSD(i, '_esOtro', true), 0);
-                      } else {
-                        actualizarConceptoUSD(i, 'descripcion', val);
-                      }
-                    }}
-                  >
-                    <SelectTrigger><SelectValue placeholder="Selecciona concepto" /></SelectTrigger>
-                    <SelectContent>
-                      {CATALOGO_USD.map(opt => (
-                        <SelectItem key={opt} value={opt}>{opt}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                )}
+          {conceptosUSD.map((c, i) => {
+            const puedeIva = CONCEPTOS_CON_IVA.includes(c.descripcion);
+            return (
+              <div key={i} className={`grid grid-cols-12 gap-2 items-end rounded-md px-1 py-1 ${c.aplica_iva ? 'bg-amber-50/30' : ''}`}>
+                <div className="col-span-3">
+                  {i === 0 && <Label className="text-xs">Concepto</Label>}
+                  {c.descripcion !== '' && !CATALOGO_USD.includes(c.descripcion) && c.descripcion !== 'Otro' ? (
+                    <Input
+                      value={c.descripcion}
+                      onChange={e => actualizarConceptoUSD(i, 'descripcion', e.target.value)}
+                      placeholder="Descripción libre"
+                    />
+                  ) : (
+                    <Select
+                      value={CATALOGO_USD.includes(c.descripcion) ? c.descripcion : c.descripcion === '' ? '' : 'Otro'}
+                      onValueChange={val => {
+                        if (val === 'Otro') {
+                          actualizarConceptoUSD(i, 'descripcion', '');
+                          setTimeout(() => actualizarConceptoUSD(i, '_esOtro', true), 0);
+                        } else {
+                          actualizarConceptoUSD(i, 'descripcion', val);
+                        }
+                      }}
+                    >
+                      <SelectTrigger><SelectValue placeholder="Selecciona concepto" /></SelectTrigger>
+                      <SelectContent>
+                        {CATALOGO_USD.map(opt => (
+                          <SelectItem key={opt} value={opt}>
+                            {CONCEPTOS_CON_IVA.includes(opt) ? `${opt} *` : opt}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  )}
+                </div>
+                <div className="col-span-1">
+                  {i === 0 && <Label className="text-xs">Unidad</Label>}
+                  <UnidadMedidaSelect value={c.unidad_medida} onChange={v => actualizarConceptoUSD(i, 'unidad_medida', v)} />
+                </div>
+                <div className="col-span-1">
+                  {i === 0 && <Label className="text-xs">Cant.</Label>}
+                  <Input type="number" min={1} value={c.cantidad} onChange={e => actualizarConceptoUSD(i, 'cantidad', Number(e.target.value))} />
+                </div>
+                <div className="col-span-2">
+                  {i === 0 && <Label className="text-xs">P. Unitario (USD)</Label>}
+                  <Input type="number" min={0} step={0.01} value={c.precio_unitario} onChange={e => actualizarConceptoUSD(i, 'precio_unitario', Number(e.target.value))} />
+                </div>
+                <div className="col-span-1">
+                  {i === 0 && <Label className="text-xs">IVA</Label>}
+                  {puedeIva ? (
+                    <div className="flex items-center gap-1">
+                      <Switch
+                        checked={c.aplica_iva}
+                        onCheckedChange={checked => actualizarConceptoUSD(i, 'aplica_iva', checked)}
+                      />
+                      <span className={`text-xs font-medium ${c.aplica_iva ? 'text-amber-600' : 'text-muted-foreground'}`}>
+                        {c.aplica_iva ? '16%' : 'No'}
+                      </span>
+                    </div>
+                  ) : (
+                    <span className="text-xs text-muted-foreground flex items-center h-10">—</span>
+                  )}
+                </div>
+                <div className="col-span-2">
+                  {i === 0 && <Label className="text-xs">Total (USD)</Label>}
+                  <Input value={c.total.toFixed(2)} readOnly className="bg-muted" />
+                </div>
+                <div className="col-span-1">
+                  {i === 0 && <Label className="text-xs">&nbsp;</Label>}
+                  <Button variant="ghost" size="icon" onClick={() => eliminarConceptoUSD(i)} disabled={conceptosUSD.length <= 1}>
+                    <Trash2 className="h-4 w-4 text-destructive" />
+                  </Button>
+                </div>
               </div>
-              <div className="col-span-2">
-                {i === 0 && <Label className="text-xs">Unidad de Medida</Label>}
-                <UnidadMedidaSelect value={c.unidad_medida} onChange={v => actualizarConceptoUSD(i, 'unidad_medida', v)} />
-              </div>
-              <div className="col-span-2">
-                {i === 0 && <Label className="text-xs">Cantidad</Label>}
-                <Input type="number" min={1} value={c.cantidad} onChange={e => actualizarConceptoUSD(i, 'cantidad', Number(e.target.value))} />
-              </div>
-              <div className="col-span-2">
-                {i === 0 && <Label className="text-xs">P. Unitario (USD)</Label>}
-                <Input type="number" min={0} step={0.01} value={c.precio_unitario} onChange={e => actualizarConceptoUSD(i, 'precio_unitario', Number(e.target.value))} />
-              </div>
-              <div className="col-span-2">
-                {i === 0 && <Label className="text-xs">Total (USD)</Label>}
-                <Input value={c.total.toFixed(2)} readOnly className="bg-muted" />
-              </div>
-              <div className="col-span-1">
-                <Button variant="ghost" size="icon" onClick={() => eliminarConceptoUSD(i)} disabled={conceptosUSD.length <= 1}>
-                  <Trash2 className="h-4 w-4 text-destructive" />
-                </Button>
-              </div>
-            </div>
-          ))}
+            );
+          })}
           <div className="flex flex-col items-end gap-1 pt-2 border-t">
-            <span className="text-sm font-semibold">Total USD: {fmt(totalUSD, 'USD')}</span>
+            {hayIvaUSD ? (
+              <>
+                <span className="text-sm">Subtotal s/IVA: {fmt(subtotalSinIvaUSD, 'USD')}</span>
+                <span className="text-sm text-amber-600">IVA 16%: {fmt(ivaUSD, 'USD')}</span>
+                <span className="text-sm font-semibold">Total USD: {fmt(totalUSD, 'USD')}</span>
+              </>
+            ) : (
+              <span className="text-sm font-semibold">Total USD: {fmt(totalUSD, 'USD')}</span>
+            )}
           </div>
         </CardContent>
       </Card>
@@ -223,6 +262,7 @@ export default function SeccionConceptosVentaCotizacion({
         <span className="text-base font-bold">Total USD: {fmt(totalUSD, 'USD')}</span>
         <span className="text-base font-bold">Total MXN (c/IVA): {fmt(totalMXN, 'MXN')}</span>
         <span className="text-xs text-muted-foreground">* Los conceptos en MXN incluyen IVA 16%</span>
+        {hayIvaUSD && <span className="text-xs text-amber-600">* Algunos conceptos USD incluyen IVA 16%</span>}
       </div>
     </div>
   );

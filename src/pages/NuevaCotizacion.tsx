@@ -105,7 +105,14 @@ export default function NuevaCotizacion() {
     setConceptosUSD(prev => {
       const copia = [...prev];
       (copia[index] as any)[campo] = valor;
-      copia[index].total = copia[index].cantidad * copia[index].precio_unitario;
+      // Auto-reset aplica_iva when changing to a non-IVA concept
+      if (campo === 'descripcion') {
+        const CONCEPTOS_CON_IVA = ['Handling', 'Desconsolidación', 'Revalidación'];
+        if (!CONCEPTOS_CON_IVA.includes(valor)) {
+          copia[index].aplica_iva = false;
+        }
+      }
+      copia[index].total = copia[index].cantidad * copia[index].precio_unitario * (copia[index].aplica_iva ? 1.16 : 1);
       return copia;
     });
   };
