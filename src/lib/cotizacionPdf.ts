@@ -53,7 +53,7 @@ export function generarPdfCotizacion(cotizacion: CotizacionRow) {
   if (cotizacion.frecuencia) datosGenerales.push(['Frecuencia', cotizacion.frecuencia]);
   if (cotizacion.ruta_texto) datosGenerales.push(['Ruta', cotizacion.ruta_texto]);
   if (cotizacion.tipo_movimiento) datosGenerales.push(['Tipo de movimiento', cotizacion.tipo_movimiento]);
-  datosGenerales.push(['Seguro', cotizacion.seguro ? `Sí — $${Number(cotizacion.valor_seguro_usd || 0).toLocaleString('es-MX', { minimumFractionDigits: 2 })} USD` : 'No']);
+  datosGenerales.push(['Seguro', cotizacion.seguro ? `Sí — ${formatCurrencyPdf(Number(cotizacion.valor_seguro_usd || 0), 'USD')}` : 'No']);
 
   // Build mercancia rows
   const mercancia: [string, string][] = [];
