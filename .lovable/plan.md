@@ -1,56 +1,19 @@
 
 
-## Plan: Rediseñar Conceptos de Venta con dos secciones por moneda
+## Plan: DROP y recrear tabla `cotizacion_costos`
 
-### Cambio 1 — `src/hooks/useCotizaciones.ts`
-- Agregar `aplica_iva: boolean` a `ConceptoVentaCotizacion`
-- Mantener compatibilidad: al leer datos existentes sin `aplica_iva`, inferir `false`
+### Migración SQL
+1. `DROP TABLE public.cotizacion_costos;` — elimina la tabla actual y todos sus datos
+2. `CREATE TABLE public.cotizacion_costos` con la nueva estructura:
+   - `id`, `cotizacion_id` (FK → cotizaciones), `concepto`, `moneda` (CHECK USD/MXN), `proveedor`, `cantidad`, `costo_unitario`, `costo_total` (GENERATED ALWAYS AS cantidad * costo_unitario STORED)
+   - `created_at`, `updated_at`
+3. Habilitar RLS + mismas 2 políticas (admin/operador CRUD, viewer SELECT)
+4. Índice en `cotizacion_id`
 
-### Cambio 2 — `src/components/cotizacion/SeccionConceptosVentaCotizacion.tsx`
-Reescribir completamente con nueva interfaz de Props que reciba:
-- `conceptosUSD`, `conceptosMXN` (arrays separados)
-- Funciones: `actualizarConceptoUSD/MXN`, `agregarConceptoUSD/MXN`, `eliminarConceptoUSD/MXN`
-- `totalUSD`, `totalMXN`, `subtotalMXN`, `ivaMXN`
+### Código a actualizar después de la migración
+- **`src/hooks/useCotizacionCostos.ts`** — actualizar interfaces y queries para usar las nuevas columnas (`cantidad`, `costo_unitario`, `costo_total`) y eliminar las obsoletas (`venta`, `profit`, `porcentaje_profit`, `seccion`, `unidad_medida`)
+- **`src/components/cotizacion/SeccionCostosInternosCotizacion.tsx`** — adaptar el formulario a la nueva estructura (quitar campos venta/sección, agregar cantidad/costo unitario, mostrar costo total calculado)
+- **`src/pages/Changelog.tsx`** — nueva entrada
 
-Renderiza DOS Cards:
-
-**Card 1 — "Conceptos en USD"**
-- Catálogo: `['Flete Marítimo', 'Flete Aéreo', 'Embalaje', 'Coordinación de Recolección', 'Seguro de Carga', 'Cargos en Origen', 'Otro']`
-- Columnas: Concepto | Cantidad | P. Unitario (USD) | Total (USD)
-- Opción "Otro" muestra Input texto libre
-- Footer: Total USD
-
-**Card 2 — "Conceptos en MXN + IVA"**
-- Catálogo: `['Manejo', 'Demoras', 'Cargos en Destino', 'Almacenaje', 'Entrega', 'Otro']`
-- Columnas: Concepto | Cantidad | P. Unitario (MXN) | Subtotal | IVA (16%) | Total (MXN)
-- IVA calculado automáticamente, campos readonly
-- Footer: Subtotal MXN, IVA 16%, Total MXN
-
-**Resumen final** al pie: Total USD + Total MXN con nota "* Los conceptos en MXN incluyen IVA 16%"
-
-### Cambio 3 — `src/pages/NuevaCotizacion.tsx`
-- Reemplazar `conceptos` con `conceptosUSD` y `conceptosMXN` (arrays separados)
-- Valores iniciales con una fila vacía cada uno
-- Eliminar estado `moneda`/`setMoneda`
-- `actualizarConcepto` / `agregarConcepto` / `eliminarConcepto` duplicados por moneda
-- Al guardar: `conceptos_venta = [...conceptosUSD, ...conceptosMXN]`, `subtotal` = suma USD, `moneda` = `'USD'` (default BD)
-- Pasar nuevas props a `SeccionConceptosVentaCotizacion`
-- Quitar `moneda`/`setMoneda` de `SeccionDatosGeneralesCotizacion`
-
-### Cambio 4 — `src/components/cotizacion/SeccionDatosGeneralesCotizacion.tsx`
-- Eliminar props `moneda` y `setMoneda`
-- Eliminar el Select de Moneda del grid (queda con 3 campos: Modo, Tipo, Incoterm)
-
-### Cambio 5 — `src/lib/cotizacionPdf.ts`
-- Adaptar la sección de conceptos de venta para separar USD y MXN en dos tablas
-- Mostrar IVA en conceptos MXN
-- Quitar fila "Moneda" de datos generales
-- Resumen: Total USD + Total MXN (sin combinar)
-
-### Cambio 6 — `src/pages/CotizacionDetalle.tsx`
-- Adaptar la tabla de conceptos de venta para mostrar dos tablas separadas por moneda
-- Mostrar columna IVA para conceptos MXN
-
-### Cambio 7 — `src/pages/Changelog.tsx`
-- Versión 4.5.5: Rediseño conceptos de venta con dos secciones por moneda (USD/MXN) e IVA automático en MXN
+**Nota:** Esta migración eliminará todos los datos existentes en `cotizacion_costos`. Los datos no son recuperables.
 
