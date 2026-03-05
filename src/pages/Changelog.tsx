@@ -13,6 +13,14 @@ interface ChangelogEntry {
 
 const changelog: ChangelogEntry[] = [
   {
+    version: "4.10.4",
+    date: "2026-03-05",
+    type: "patch",
+    title: "Actualizar catálogos de conceptos USD y MXN en Costos & P&L",
+    description:
+      "Se reemplazaron los catálogos de conceptos USD (16 opciones) y MXN (3 opciones) en el componente de Costos & P&L del wizard de cotización.",
+  },
+  {
     version: "4.10.3",
     date: "2026-03-05",
     type: "patch",
