@@ -75,6 +75,7 @@ export interface CotizacionRow {
   seguro: boolean;
   valor_seguro_usd: number;
   carta_garantia: boolean;
+  num_contenedores: number;
   created_at: string;
   updated_at: string;
 }
