@@ -1,34 +1,70 @@
 
 
-## Plan: Agregar botón "Generar Embarques" y card de embarques vinculados en CotizacionDetalle
+## Plan: Rediseñar NuevaCotizacion.tsx como wizard de 4 pasos
 
-### Archivo único: `src/pages/CotizacionDetalle.tsx`
+### Problema clave
+`SeccionCostosInternosPL` requiere un `cotizacionId` para funcionar (consulta la BD). En una cotización nueva no existe ID aún. Se necesita crear un componente nuevo de costos que trabaje con estado local.
 
-**1. Imports adicionales (líneas 1-28)**
-- `useConvertirCotizacionAEmbarques` desde `@/hooks/useCotizaciones`
-- `useQuery` desde `@tanstack/react-query`
-- `supabase` desde `@/integrations/supabase/client`
-- `ArrowRight` desde `lucide-react`
-- `AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle` desde `@/components/ui/alert-dialog`
+### Archivos a crear/modificar
 
-**2. Hooks y estado (después de línea 37)**
-- `useQuery` para cargar `embarquesVinculados` filtrando por `cotizacion_id`
-- Estado `showConfirmarConvertir`
-- Hook `convertirAEmbarques = useConvertirCotizacionAEmbarques()`
+**1. Nuevo: `src/components/cotizacion/SeccionCostosInternosPLLocal.tsx`**
+- Versión local de SeccionCostosInternosPL que NO requiere cotizacionId
+- Props: `filas`, `setFilas`, `conceptosUSD`, `conceptosMXN` (estado local del wizard)
+- Misma UI (tablas USD/MXN, resumen P&L, badges de profit)
+- Agrega columnas Unidad de Medida y Precio Venta editables
+- Badge de rentabilidad: Verde (USD>15% Y MXN>10%), Amarillo (0-15%), Rojo (negativo)
+- No tiene botón "Guardar" propio (se guarda al final del wizard)
 
-**3. Botón en sección de acciones (línea ~152)**
-- Cuando `esAceptada`, agregar botón "Generar Embarques" con badge de `num_contenedores`
-- onClick abre el AlertDialog de confirmación
+**2. Modificar: `src/pages/NuevaCotizacion.tsx`**
+- Reorganizar como wizard siguiendo patrón de NuevoEmbarque.tsx
 
-**4. AlertDialog de confirmación (antes del cierre del div principal)**
-- Título: "¿Generar embarques?"
-- Descripción con número de contenedores y reglas de copia
-- Botón confirmar ejecuta `convertirAEmbarques.mutateAsync(cotizacion)`, muestra toast y cierra
+**Estado nuevo:**
+```
+currentStep, numContenedores, costosInternos (filas locales), costosPreLlenados
+```
 
-**5. Card "Embarques Generados" (al final, antes del cierre)**
-- Visible cuando `estado === 'Convertida'` o `embarquesVinculados.length > 0`
-- Lista cada embarque con expediente clickeable, badge de estado y fecha
-- Skeleton si no hay datos aún
+**Layout:**
+- Header fijo: título + StepIndicator (4 pasos)
+- Centro scrolleable max-w-4xl
+- Footer: Anterior/Siguiente/Guardar
 
-**6. Changelog**: Entrada v4.9.5
+**Paso 1 — Datos Generales:**
+- SeccionDestinatario, SeccionDatosGeneralesCotizacion, Mercancía (FCL/LCL/Aéreo), SeccionRutaCotizacion
+- Card nuevo "Número de Embarques" (input numContenedores, min=1)
+- Card "Notas Adicionales"
+
+**Paso 2 — Costos & P&L:**
+- SeccionCostosInternosPLLocal con estado local
+- Pre-pobla filas desde catálogo vacío (concepto vacío, costo=0, precio_venta=0)
+- Badge de rentabilidad global
+
+**Paso 3 — Cotización Cliente:**
+- SeccionConceptosVentaCotizacion existente
+- Al entrar por primera vez: pre-llena conceptosUSD/MXN desde costosInternos (concepto→descripcion, precio_venta→precio_unitario, etc.)
+- Nota informativa "Pre-llenado desde Costos & P&L"
+
+**Paso 4 — Resumen:**
+- Card P&L USD y MXN con totales
+- Card datos operación (cliente, ruta, num contenedores, modo, incoterm)
+- Nota "La cotización se guardará en estado Borrador"
+
+**Navegación:**
+- Anterior (disabled en paso 1) / Siguiente (pasos 1-3)
+- "Guardar Cotización" en paso 4: ejecuta handleGuardar existente + upsertCotizacionCostos + incluye num_contenedores
+
+**3. Modificar: `src/pages/Changelog.tsx`** — entrada v4.10.0
+
+### Interfaz de filas locales para costos
+```ts
+interface FilaCostoLocal {
+  concepto: string;
+  moneda: "USD" | "MXN";
+  proveedor: string;
+  cantidad: number;
+  costo_unitario: number;
+  precio_venta: number;
+  unidad_medida: string;
+  aplica_iva?: boolean;
+}
+```
 
