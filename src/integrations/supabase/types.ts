@@ -330,7 +330,12 @@ export type Database = {
           created_at: string | null
           id: string
           moneda: string
+          porcentaje_profit: number | null
+          precio_total: number | null
+          precio_venta: number
+          profit: number | null
           proveedor: string
+          unidad_medida: string
           updated_at: string | null
         }
         Insert: {
@@ -342,7 +347,12 @@ export type Database = {
           created_at?: string | null
           id?: string
           moneda: string
+          porcentaje_profit?: number | null
+          precio_total?: number | null
+          precio_venta?: number
+          profit?: number | null
           proveedor?: string
+          unidad_medida?: string
           updated_at?: string | null
         }
         Update: {
@@ -354,7 +364,12 @@ export type Database = {
           created_at?: string | null
           id?: string
           moneda?: string
+          porcentaje_profit?: number | null
+          precio_total?: number | null
+          precio_venta?: number
+          profit?: number | null
           proveedor?: string
+          unidad_medida?: string
           updated_at?: string | null
         }
         Relationships: [
@@ -393,6 +408,7 @@ export type Database = {
           moneda: Database["public"]["Enums"]["moneda"]
           msds_archivo: string | null
           notas: string | null
+          num_contenedores: number
           operador: string
           origen: string
           peso_kg: number
@@ -443,6 +459,7 @@ export type Database = {
           moneda?: Database["public"]["Enums"]["moneda"]
           msds_archivo?: string | null
           notas?: string | null
+          num_contenedores?: number
           operador?: string
           origen?: string
           peso_kg?: number
@@ -493,6 +510,7 @@ export type Database = {
           moneda?: Database["public"]["Enums"]["moneda"]
           msds_archivo?: string | null
           notas?: string | null
+          num_contenedores?: number
           operador?: string
           origen?: string
           peso_kg?: number
@@ -573,6 +591,7 @@ export type Database = {
           cliente_nombre: string
           consignatario: string
           contenedor: string | null
+          cotizacion_id: string | null
           created_at: string
           descripcion_mercancia: string
           estado: Database["public"]["Enums"]["estado_embarque"]
@@ -620,6 +639,7 @@ export type Database = {
           cliente_nombre?: string
           consignatario?: string
           contenedor?: string | null
+          cotizacion_id?: string | null
           created_at?: string
           descripcion_mercancia?: string
           estado?: Database["public"]["Enums"]["estado_embarque"]
@@ -667,6 +687,7 @@ export type Database = {
           cliente_nombre?: string
           consignatario?: string
           contenedor?: string | null
+          cotizacion_id?: string | null
           created_at?: string
           descripcion_mercancia?: string
           estado?: Database["public"]["Enums"]["estado_embarque"]
@@ -706,6 +727,13 @@ export type Database = {
             columns: ["cliente_id"]
             isOneToOne: false
             referencedRelation: "clientes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "embarques_cotizacion_id_fkey"
+            columns: ["cotizacion_id"]
+            isOneToOne: false
+            referencedRelation: "cotizaciones"
             referencedColumns: ["id"]
           },
         ]

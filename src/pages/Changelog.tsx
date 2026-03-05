@@ -13,6 +13,14 @@ interface ChangelogEntry {
 
 const changelog: ChangelogEntry[] = [
   {
+    version: "4.9.3",
+    date: "2026-03-05",
+    type: "patch",
+    title: "Migración de esquema: contenedores, cotización-embarque y P&L en costos",
+    description:
+      "Se agregó num_contenedores a cotizaciones, cotizacion_id a embarques, y columnas de precio_venta, precio_total, profit, porcentaje_profit y unidad_medida a cotizacion_costos (con columnas generadas).",
+  },
+  {
     version: "4.9.2",
     date: "2026-03-05",
     type: "patch",
