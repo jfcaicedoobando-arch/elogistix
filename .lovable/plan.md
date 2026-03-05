@@ -1,42 +1,42 @@
 
 
-## Plan: Actualizar catálogos y lógica de IVA en Cotización Cliente
+## Plan: Corregir pre-llenado Paso 3 desde Paso 2
 
-### Archivo: `src/components/cotizacion/SeccionConceptosVentaCotizacion.tsx`
+### Análisis
 
-**1. Reemplazar catálogos (líneas 11-24):**
+Revisé el código. `SeccionCostosInternosPLLocal` ya recibe `filas={costosInternos}` y `setFilas={setCostosInternos}` directamente — el estado ya está sincronizado vía props. Sin embargo, seguiré las instrucciones del usuario y agregaré el callback `onCostosChange` como capa adicional de seguridad.
 
-```ts
-const CATALOGO_USD = [
-  'Cargos en Origen', 'Costos Portuarios', 'Consolidación', 'Seguro',
-  'Recolección', 'Modificación de BL', 'Flete Marítimo', 'Flete Aéreo',
-  'Flete Terrestre', 'Handling', 'Desconsolidación', 'Revalidación',
-  'Demoras', 'Cargos en Destino', 'Release', 'Otro'
-];
+### Cambios
 
-const CATALOGO_MXN = ['Entrega Nacional', 'Honorarios de Despacho Aduanal', 'Otro'];
+**1. `src/components/cotizacion/SeccionCostosInternosPLLocal.tsx`**
 
-const CONCEPTOS_CON_IVA = ['Handling', 'Desconsolidación', 'Revalidación', 'Demoras', 'Cargos en Destino', 'Release'];
-```
+- Agregar `useEffect` import (ya tiene `useMemo`, agregar `useEffect`)
+- Agregar prop opcional `onCostosChange?: (costos: FilaCostoLocal[]) => void` a la interfaz `Props`
+- Desestructurar la nueva prop en el componente
+- Agregar `useEffect` que llame `onCostosChange?.(filas)` cuando cambien las filas
 
-**2. Auto-activar IVA al seleccionar concepto USD (línea ~99-105):**
+**2. `src/pages/NuevaCotizacion.tsx`**
 
-En el `onValueChange` del Select USD, después de setear `descripcion`, también setear `aplica_iva` según si el concepto está en `CONCEPTOS_CON_IVA`:
+- Pasar `onCostosChange` al componente:
+  ```tsx
+  <SeccionCostosInternosPLLocal
+    filas={costosInternos}
+    setFilas={setCostosInternos}
+    onCostosChange={(costos) => setCostosInternos(costos)}
+  />
+  ```
 
-```ts
-onValueChange={val => {
-  if (val === 'Otro') {
-    actualizarConceptoUSD(i, 'descripcion', '');
-    actualizarConceptoUSD(i, 'aplica_iva', false);
-    setTimeout(() => actualizarConceptoUSD(i, '_esOtro', true), 0);
-  } else {
-    actualizarConceptoUSD(i, 'descripcion', val);
-    actualizarConceptoUSD(i, 'aplica_iva', CONCEPTOS_CON_IVA.includes(val));
-  }
-}}
-```
+- Definir constante `CONCEPTOS_CON_IVA_USD` (línea ~30):
+  ```ts
+  const CONCEPTOS_CON_IVA_USD = [
+    'Handling', 'Desconsolidación', 'Revalidación',
+    'Demoras', 'Cargos en Destino', 'Release'
+  ];
+  ```
 
-**3. MXN sin cambios de lógica** — ya aplica IVA 16% obligatorio a todos.
+- Reemplazar el `useEffect` de pre-llenado (líneas 172-201) con la lógica que usa `CONCEPTOS_CON_IVA_USD`:
+  - USD: `aplica_iva = CONCEPTOS_CON_IVA_USD.includes(c.concepto)`, total con multiplicador condicional
+  - MXN: `aplica_iva = true` siempre, total con `* 1.16`
 
-### Archivo: `src/pages/Changelog.tsx` — entrada v4.10.5
+**3. `src/pages/Changelog.tsx`** — entrada v4.10.6
 
