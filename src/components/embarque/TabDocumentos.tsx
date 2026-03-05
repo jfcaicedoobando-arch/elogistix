@@ -1,4 +1,4 @@
-import { Upload, Download, Loader2 } from "lucide-react";
+import { Upload, Download, Loader2, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -9,11 +9,13 @@ interface Props {
   canEdit: boolean;
   uploadingDocId: string | null;
   downloadingDocId: string | null;
+  deletingDocId?: string | null;
   onUpload: (docId: string, file: File) => void;
   onDownload: (archivo: string, docId: string) => void;
+  onDelete?: (doc: DocumentoEmbarqueRow) => void;
 }
 
-export function TabDocumentos({ documentos, canEdit, uploadingDocId, downloadingDocId, onUpload, onDownload }: Props) {
+export function TabDocumentos({ documentos, canEdit, uploadingDocId, downloadingDocId, deletingDocId, onUpload, onDownload, onDelete }: Props) {
   return (
     <Card>
       <CardContent className="p-0">
@@ -61,15 +63,29 @@ export function TabDocumentos({ documentos, canEdit, uploadingDocId, downloading
                       </Button>
                     )}
                     {doc.archivo && (
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        disabled={downloadingDocId === doc.id}
-                        onClick={() => onDownload(doc.archivo!, doc.id)}
-                      >
-                        {downloadingDocId === doc.id ? <Loader2 className="h-3.5 w-3.5 animate-spin mr-1" /> : <Download className="h-3.5 w-3.5 mr-1" />}
-                        Descargar
-                      </Button>
+                      <>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          disabled={downloadingDocId === doc.id}
+                          onClick={() => onDownload(doc.archivo!, doc.id)}
+                        >
+                          {downloadingDocId === doc.id ? <Loader2 className="h-3.5 w-3.5 animate-spin mr-1" /> : <Download className="h-3.5 w-3.5 mr-1" />}
+                          Descargar
+                        </Button>
+                        {canEdit && onDelete && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                            disabled={deletingDocId === doc.id}
+                            onClick={() => onDelete(doc)}
+                          >
+                            {deletingDocId === doc.id ? <Loader2 className="h-3.5 w-3.5 animate-spin mr-1" /> : <Trash2 className="h-3.5 w-3.5 mr-1" />}
+                            Eliminar
+                          </Button>
+                        )}
+                      </>
                     )}
                   </div>
                 </TableCell>
