@@ -13,6 +13,14 @@ interface ChangelogEntry {
 
 const changelog: ChangelogEntry[] = [
   {
+    version: "4.10.6",
+    date: "2026-03-05",
+    type: "patch",
+    title: "Corregir pre-llenado IVA del Paso 3 desde Paso 2",
+    description:
+      "Se agregó callback onCostosChange en SeccionCostosInternosPLLocal para sincronizar estado con el wizard. El pre-llenado del Paso 3 ahora aplica IVA automático solo a conceptos USD específicos (Handling, Desconsolidación, Revalidación, Demoras, Cargos en Destino, Release) y siempre IVA para MXN.",
+  },
+  {
     version: "4.10.5",
     date: "2026-03-05",
     type: "patch",
