@@ -13,6 +13,14 @@ interface ChangelogEntry {
 
 const changelog: ChangelogEntry[] = [
   {
+    version: "4.10.5",
+    date: "2026-03-05",
+    type: "patch",
+    title: "Actualizar catálogos y lógica de IVA en Cotización Cliente",
+    description:
+      "Se actualizaron los catálogos de conceptos USD (16 opciones) y MXN (3 opciones) en la sección Cotización Cliente. Se amplió CONCEPTOS_CON_IVA para incluir Demoras, Cargos en Destino y Release. Al seleccionar un concepto con IVA, aplica_iva se activa automáticamente.",
+  },
+  {
     version: "4.10.4",
     date: "2026-03-05",
     type: "patch",

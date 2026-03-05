@@ -9,19 +9,15 @@ import type { ConceptoVentaCotizacion } from "@/hooks/useCotizaciones";
 import { formatCurrency } from "@/lib/formatters";
 
 const CATALOGO_USD = [
-  'Flete Marítimo', 'Flete Aéreo', 'Embalaje',
-  'Coordinación de Recolección', 'Seguro de Carga',
-  'Cargos en Origen', 'Revalidación', 'Handling',
-  'Desconsolidación', 'Entrega Nacional', 'Otro',
+  'Cargos en Origen', 'Costos Portuarios', 'Consolidación', 'Seguro',
+  'Recolección', 'Modificación de BL', 'Flete Marítimo', 'Flete Aéreo',
+  'Flete Terrestre', 'Handling', 'Desconsolidación', 'Revalidación',
+  'Demoras', 'Cargos en Destino', 'Release', 'Otro'
 ];
 
-const CATALOGO_MXN = [
-  'Manejo', 'Demoras', 'Cargos en Destino',
-  'Almacenaje', 'Entrega', 'Revalidación', 'Handling',
-  'Desconsolidación', 'Entrega Nacional', 'Otro',
-];
+const CATALOGO_MXN = ['Entrega Nacional', 'Honorarios de Despacho Aduanal', 'Otro'];
 
-const CONCEPTOS_CON_IVA = ['Handling', 'Desconsolidación', 'Revalidación'];
+const CONCEPTOS_CON_IVA = ['Handling', 'Desconsolidación', 'Revalidación', 'Demoras', 'Cargos en Destino', 'Release'];
 
 const UNIDADES_MEDIDA = ['BL', 'W/M', 'Documento', 'Contenedor', 'Kilo', 'Embarque'];
 
@@ -96,12 +92,14 @@ export default function SeccionConceptosVentaCotizacion({
                   ) : (
                     <Select
                       value={CATALOGO_USD.includes(c.descripcion) ? c.descripcion : c.descripcion === '' ? '' : 'Otro'}
-                      onValueChange={val => {
+                    onValueChange={val => {
                         if (val === 'Otro') {
                           actualizarConceptoUSD(i, 'descripcion', '');
+                          actualizarConceptoUSD(i, 'aplica_iva', false);
                           setTimeout(() => actualizarConceptoUSD(i, '_esOtro', true), 0);
                         } else {
                           actualizarConceptoUSD(i, 'descripcion', val);
+                          actualizarConceptoUSD(i, 'aplica_iva', CONCEPTOS_CON_IVA.includes(val));
                         }
                       }}
                     >
