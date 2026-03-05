@@ -563,6 +563,7 @@ export type Database = {
           aerolinea: string | null
           aeropuerto_destino: string | null
           aeropuerto_origen: string | null
+          agente: string | null
           bl_house: string | null
           bl_master: string | null
           carta_porte: string | null
@@ -609,6 +610,7 @@ export type Database = {
           aerolinea?: string | null
           aeropuerto_destino?: string | null
           aeropuerto_origen?: string | null
+          agente?: string | null
           bl_house?: string | null
           bl_master?: string | null
           carta_porte?: string | null
@@ -655,6 +657,7 @@ export type Database = {
           aerolinea?: string | null
           aeropuerto_destino?: string | null
           aeropuerto_origen?: string | null
+          agente?: string | null
           bl_house?: string | null
           bl_master?: string | null
           carta_porte?: string | null

@@ -167,6 +167,7 @@ export default function NuevoEmbarque() {
           puertoOrigen={form.puertoOrigen} setPuertoOrigen={setField('puertoOrigen')}
           puertoDestino={form.puertoDestino} setPuertoDestino={setField('puertoDestino')}
           naviera={form.naviera} setNaviera={setField('naviera')}
+          agente={form.agente} setAgente={setField('agente')}
           blMaster={form.blMaster} setBlMaster={setField('blMaster')}
           blHouse={form.blHouse} setBlHouse={setField('blHouse')}
           tipoServicio={form.tipoServicio} setTipoServicio={setField('tipoServicio')}

@@ -13,6 +13,14 @@ interface ChangelogEntry {
 
 const changelog: ChangelogEntry[] = [
   {
+    version: "4.9.1",
+    date: "2026-03-05",
+    type: "patch",
+    title: "Campo Agente en Datos de Ruta marítimo",
+    description:
+      "Nuevo campo de texto libre 'Agente' en la sección marítima de Datos de Ruta, junto al campo Naviera. Disponible en creación y edición de embarques.",
+  },
+  {
     version: "4.9.0",
     date: "2026-03-04",
     type: "minor",
