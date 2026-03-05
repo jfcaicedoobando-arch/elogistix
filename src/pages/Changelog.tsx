@@ -13,6 +13,14 @@ interface ChangelogEntry {
 
 const changelog: ChangelogEntry[] = [
   {
+    version: "4.10.4",
+    date: "2026-03-05",
+    type: "patch",
+    title: "Actualizar catálogos de conceptos en Costos & P&L",
+    description:
+      "Se reemplazaron los catálogos de conceptos USD y MXN en el wizard de cotización. USD ahora incluye 16 opciones (Cargos en Origen, Costos Portuarios, Consolidación, Seguro, Recolección, Modificación de BL, Flete Marítimo/Aéreo/Terrestre, Handling, Desconsolidación, Revalidación, Demoras, Cargos en Destino, Release, Otro). MXN se simplificó a 3 opciones (Entrega Nacional, Honorarios de Despacho Aduanal, Otro).",
+  },
+  {
     version: "4.10.3",
     date: "2026-03-05",
     type: "patch",
