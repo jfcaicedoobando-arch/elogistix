@@ -29,6 +29,7 @@ export interface EmbarqueFormState {
   tipoServicio: string;
   contenedor: string;
   tipoContenedor: string;
+  agente: string;
   blMaster: string;
   blHouse: string;
   aeropuertoOrigen: string;
@@ -51,7 +52,7 @@ const INITIAL_STATE: EmbarqueFormState = {
   consignatario: '', consignatarioManual: '', incoterm: 'FOB', descripcionMercancia: '',
   pesoKg: '', volumenM3: '', piezas: '', tipoCarga: 'Carga General',
   msdsArchivo: null, subiendoMsds: false,
-  puertoOrigen: '', puertoDestino: '', naviera: '', tipoServicio: '',
+  puertoOrigen: '', puertoDestino: '', naviera: '', agente: '', tipoServicio: '',
   contenedor: '', tipoContenedor: '', blMaster: '', blHouse: '',
   aeropuertoOrigen: '', aeropuertoDestino: '', aerolinea: '', mawb: '', hawb: '',
   ciudadOrigen: '', ciudadDestino: '', transportista: '', cartaPorte: '',
@@ -110,6 +111,7 @@ export function useEmbarqueForm() {
       puertoOrigen: embarque.puerto_origen ?? '',
       puertoDestino: embarque.puerto_destino ?? '',
       naviera: embarque.naviera ?? '',
+      agente: embarque.agente ?? '',
       tipoServicio: embarque.tipo_servicio ?? '',
       contenedor: embarque.contenedor ?? '',
       tipoContenedor: embarque.tipo_contenedor ?? '',
@@ -150,6 +152,7 @@ export function useEmbarqueForm() {
     puerto_origen: form.puertoOrigen || null,
     puerto_destino: form.puertoDestino || null,
     naviera: form.naviera || null,
+    agente: form.agente || null,
     bl_master: form.blMaster || null,
     bl_house: form.blHouse || null,
     tipo_servicio: (form.tipoServicio as any) || null,

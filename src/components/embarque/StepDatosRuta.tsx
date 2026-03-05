@@ -11,6 +11,7 @@ interface Props {
   puertoOrigen: string; setPuertoOrigen: (v: string) => void;
   puertoDestino: string; setPuertoDestino: (v: string) => void;
   naviera: string; setNaviera: (v: string) => void;
+  agente: string; setAgente: (v: string) => void;
   blMaster: string; setBlMaster: (v: string) => void;
   blHouse: string; setBlHouse: (v: string) => void;
   tipoServicio: string; setTipoServicio: (v: string) => void;
@@ -41,6 +42,7 @@ export function StepDatosRuta(props: Props) {
             <div className="space-y-2"><Label>Puerto Origen *</Label><PortSelect value={props.puertoOrigen} onValueChange={props.setPuertoOrigen} placeholder="Seleccionar puerto origen" /></div>
             <div className="space-y-2"><Label>Puerto Destino *</Label><PortSelect value={props.puertoDestino} onValueChange={props.setPuertoDestino} placeholder="Seleccionar puerto destino" /></div>
             <div className="space-y-2"><Label>Naviera *</Label><ShippingLineSelect value={props.naviera} onValueChange={props.setNaviera} /></div>
+            <div className="space-y-2"><Label>Agente</Label><Input placeholder="Nombre del agente" value={props.agente} onChange={e => props.setAgente(e.target.value)} /></div>
             <div className="space-y-2"><Label># BL Master</Label><Input placeholder="Número de BL" value={props.blMaster} onChange={e => props.setBlMaster(e.target.value)} /></div>
             <div className="space-y-2"><Label># BL House</Label><Input value={props.blHouse} onChange={e => props.setBlHouse(e.target.value)} /></div>
             <div className="space-y-2">

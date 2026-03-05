@@ -1,0 +1,1 @@
+ALTER TABLE public.embarques ADD COLUMN agente text;
