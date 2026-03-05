@@ -13,6 +13,14 @@ interface ChangelogEntry {
 
 const changelog: ChangelogEntry[] = [
   {
+    version: "4.10.2",
+    date: "2026-03-05",
+    type: "patch",
+    title: "Botón eliminar documentos en embarque",
+    description:
+      "Se agregó un botón 'Eliminar' en la pestaña de documentos del detalle de embarque. Permite borrar el archivo adjunto de Storage y regresar el estado del documento a 'Pendiente' para subir uno nuevo. La acción queda registrada en la bitácora.",
+  },
+  {
     version: "4.10.1",
     date: "2026-03-05",
     type: "patch",

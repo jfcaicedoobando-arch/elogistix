@@ -10,7 +10,7 @@ import {
 import { formatCurrency } from "@/lib/formatters";
 import { getEstadoColor, getModoIcon } from "@/lib/helpers";
 import { usePermissions } from "@/hooks/usePermissions";
-import { uploadFile, getSignedUrl } from "@/lib/storage";
+import { uploadFile, getSignedUrl, deleteFile } from "@/lib/storage";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useRegistrarActividad } from "@/hooks/useBitacora";
@@ -49,6 +49,7 @@ export default function EmbarqueDetalle() {
 
   const [uploadingDocId, setUploadingDocId] = useState<string | null>(null);
   const [downloadingDocId, setDownloadingDocId] = useState<string | null>(null);
+  const [deletingDocId, setDeletingDocId] = useState<string | null>(null);
 
   const handleUpload = async (docId: string, file: File) => {
     if (!id) return;
@@ -70,6 +71,28 @@ export default function EmbarqueDetalle() {
       toast({ title: "Error al subir archivo", description: err.message, variant: "destructive" });
     } finally {
       setUploadingDocId(null);
+    }
+  };
+
+  const handleDeleteDoc = async (doc: typeof documentos[number]) => {
+    if (!id || !doc.archivo) return;
+    setDeletingDocId(doc.id);
+    try {
+      await deleteFile(doc.archivo);
+      await supabase.from("documentos_embarque").update({ archivo: null, estado: "Pendiente" as any }).eq("id", doc.id);
+      registrarActividad.mutate({
+        accion: 'eliminar_documento',
+        modulo: 'embarques',
+        entidad_id: id,
+        entidad_nombre: embarque?.expediente ?? '',
+        detalles: { documento: doc.nombre },
+      });
+      toast({ title: "Documento eliminado correctamente" });
+      refetchDocs();
+    } catch (err: any) {
+      toast({ title: "Error al eliminar documento", description: err.message, variant: "destructive" });
+    } finally {
+      setDeletingDocId(null);
     }
   };
 
@@ -214,8 +237,10 @@ export default function EmbarqueDetalle() {
             canEdit={canEdit}
             uploadingDocId={uploadingDocId}
             downloadingDocId={downloadingDocId}
+            deletingDocId={deletingDocId}
             onUpload={handleUpload}
             onDownload={handleDownload}
+            onDelete={handleDeleteDoc}
           />
         </TabsContent>
 
