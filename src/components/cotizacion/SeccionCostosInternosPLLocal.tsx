@@ -8,7 +8,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { DollarSign, Banknote, TrendingUp, ChevronDown, Plus, Trash2 } from "lucide-react";
 import { formatCurrency } from "@/lib/formatters";
 
-const CONCEPTOS_USD = ['Flete Marítimo', 'Flete Aéreo', 'Embalaje', 'Coordinación de Recolección', 'Seguro de Carga', 'Cargos en Origen', 'Handling', 'Desconsolidación', 'Revalidación', 'Otro'];
+const CONCEPTOS_USD = ['Flete Marítimo', 'Flete Aéreo', 'Embalaje', 'Coordinación de Recolección', 'Seguro de Carga', 'Cargos en Origen', 'Cargos en Destino', 'Handling', 'Desconsolidación', 'Revalidación', 'Otro'];
 const CONCEPTOS_MXN = ['Manejo', 'Demoras', 'Cargos en Destino', 'Almacenaje', 'Entrega Nacional', 'Otro'];
 const UNIDADES_MEDIDA = ['BL', 'W/M', 'Documento', 'Contenedor', 'Kilo', 'Embarque'];
 
