@@ -13,6 +13,14 @@ interface ChangelogEntry {
 
 const changelog: ChangelogEntry[] = [
   {
+    version: "4.10.1",
+    date: "2026-03-05",
+    type: "patch",
+    title: "Layout de dos líneas y catálogo de conceptos en Costos P&L",
+    description:
+      "Rediseño del componente SeccionCostosInternosPLLocal: cada fila se muestra en dos líneas (concepto/proveedor/unidad + cantidad/costo/venta/profit). El campo Concepto ahora es un Select con catálogo predefinido por moneda (USD/MXN). Se eliminó la tabla apretada en favor de un layout espacioso sin scroll horizontal.",
+  },
+  {
     version: "4.10.0",
     date: "2026-03-05",
     type: "minor",
