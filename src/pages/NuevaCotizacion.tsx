@@ -27,6 +27,11 @@ import SeccionMercanciaGeneral from "@/components/cotizacion/SeccionMercanciaGen
 import SeccionMercanciaAerea from "@/components/cotizacion/SeccionMercanciaAerea";
 import SeccionCostosInternosPLLocal, { type FilaCostoLocal } from "@/components/cotizacion/SeccionCostosInternosPLLocal";
 
+const CONCEPTOS_CON_IVA_USD = [
+  'Handling', 'Desconsolidación', 'Revalidación',
+  'Demoras', 'Cargos en Destino', 'Release',
+];
+
 const WIZARD_STEPS = [
   { num: 1, title: 'Datos Generales' },
   { num: 2, title: 'Costos & P&L' },
@@ -173,15 +178,18 @@ export default function NuevaCotizacion() {
     if (currentStep === 3 && !costosPreLlenados && costosInternos.length > 0) {
       const usdFromCostos = costosInternos
         .filter(c => c.moneda === "USD" && c.concepto.trim())
-        .map(c => ({
-          descripcion: c.concepto,
-          unidad_medida: c.unidad_medida,
-          cantidad: c.cantidad,
-          precio_unitario: c.precio_venta,
-          moneda: 'USD' as const,
-          total: c.cantidad * c.precio_venta * (c.aplica_iva ? 1.16 : 1),
-          aplica_iva: c.aplica_iva ?? false,
-        }));
+        .map(c => {
+          const tieneIva = CONCEPTOS_CON_IVA_USD.includes(c.concepto);
+          return {
+            descripcion: c.concepto,
+            unidad_medida: c.unidad_medida,
+            cantidad: c.cantidad,
+            precio_unitario: c.precio_venta,
+            moneda: 'USD' as const,
+            total: c.cantidad * c.precio_venta * (tieneIva ? 1.16 : 1),
+            aplica_iva: tieneIva,
+          };
+        });
       const mxnFromCostos = costosInternos
         .filter(c => c.moneda === "MXN" && c.concepto.trim())
         .map(c => ({
@@ -191,7 +199,7 @@ export default function NuevaCotizacion() {
           precio_unitario: c.precio_venta,
           moneda: 'MXN' as const,
           total: c.cantidad * c.precio_venta * 1.16,
-          aplica_iva: c.aplica_iva ?? true,
+          aplica_iva: true,
         }));
 
       if (usdFromCostos.length > 0) setConceptosUSD(usdFromCostos);
@@ -477,7 +485,7 @@ export default function NuevaCotizacion() {
 
           {/* PASO 2 — Costos & P&L */}
           {currentStep === 2 && (
-            <SeccionCostosInternosPLLocal filas={costosInternos} setFilas={setCostosInternos} />
+            <SeccionCostosInternosPLLocal filas={costosInternos} setFilas={setCostosInternos} onCostosChange={(costos) => setCostosInternos(costos)} />
           )}
 
           {/* PASO 3 — Cotización Cliente */}
