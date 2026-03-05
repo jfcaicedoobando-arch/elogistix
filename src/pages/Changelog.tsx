@@ -13,6 +13,14 @@ interface ChangelogEntry {
 
 const changelog: ChangelogEntry[] = [
   {
+    version: "4.10.3",
+    date: "2026-03-05",
+    type: "patch",
+    title: "Agregar 'Cargos en Destino' al catálogo USD",
+    description:
+      "Se añadió la opción 'Cargos en Destino' al dropdown de conceptos en USD dentro del wizard de nueva cotización (SeccionCostosInternosPLLocal).",
+  },
+  {
     version: "4.10.2",
     date: "2026-03-05",
     type: "patch",
