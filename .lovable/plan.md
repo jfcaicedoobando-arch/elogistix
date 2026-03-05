@@ -1,37 +1,22 @@
 
 
-## Plan: Rediseñar layout de filas en SeccionCostosInternosPLLocal
+## Plan: Agregar botón "Eliminar" en documentos de embarque
 
-### Archivo único: `src/components/cotizacion/SeccionCostosInternosPLLocal.tsx`
+### Cambios en 3 archivos
 
-**1. Catálogos de conceptos por moneda**
-```ts
-const CONCEPTOS_USD = ['Flete Marítimo', 'Flete Aéreo', 'Embalaje', 'Coordinación de Recolección', 'Seguro de Carga', 'Cargos en Origen', 'Handling', 'Desconsolidación', 'Revalidación', 'Otro'];
-const CONCEPTOS_MXN = ['Manejo', 'Demoras', 'Cargos en Destino', 'Almacenaje', 'Entrega Nacional', 'Otro'];
-```
+**1. `src/components/embarque/TabDocumentos.tsx`**
+- Agregar prop `onDelete` y `deletingDocId` a la interfaz
+- Importar `Trash2` de lucide-react
+- Cuando `doc.archivo` existe y `canEdit`, mostrar botón rojo "Eliminar" junto a Descargar
+- Spinner mientras se elimina
 
-**2. Reemplazar la Table con layout de filas en dos líneas**
+**2. `src/pages/EmbarqueDetalle.tsx`**
+- Agregar estado `deletingDocId`
+- Crear `handleDeleteDoc`: elimina archivo de Storage con `deleteFile(doc.archivo)`, luego actualiza el registro en `documentos_embarque` poniendo `archivo = null, estado = 'Pendiente'`, registra en bitácora, refetch docs
+- Pasar `onDelete` y `deletingDocId` a `TabDocumentos`
 
-Eliminar el `<Table>` completo. Reemplazar con un div de filas donde cada fila usa `border-b border-slate-100 py-3 space-y-1`:
+**3. `src/pages/Changelog.tsx`** — entrada v4.10.2
 
-- **Línea 1** (`flex items-center gap-2`):
-  - Concepto: `Select` con catálogo por moneda, `min-w-[180px] flex-1`. Si el valor actual no está en el catálogo, agregarlo como opción (para datos existentes).
-  - Proveedor: `Input` `w-[120px]`
-  - Unidad: `Select` `w-[110px]`
-
-- **Línea 2** (`flex items-center gap-2`):
-  - Cantidad: `Input` `w-[80px]`
-  - Costo Unit.: `Input` `w-[110px]`
-  - P. Venta: `Input` `w-[110px]`
-  - Profit: `span` readonly `w-[100px]`
-  - %: badge `w-[70px]`
-  - Eliminar: botón `w-8`
-
-**3. Totales**
-
-Reemplazar el `TableFooter` con un div resumen al final con los mismos totales en `flex justify-between`.
-
-**4. Mantener sin cambios**: Resumen P&L collapsible, lógica de cálculo, funciones helper.
-
-**5. Changelog**: Entrada v4.10.1
+### Lógica de eliminación
+No se borra el registro de `documentos_embarque`, solo se limpia el campo `archivo` y se regresa el estado a "Pendiente", permitiendo subir otro archivo.
 
