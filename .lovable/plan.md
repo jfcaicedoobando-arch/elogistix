@@ -1,70 +1,37 @@
 
 
-## Plan: Rediseñar NuevaCotizacion.tsx como wizard de 4 pasos
+## Plan: Rediseñar layout de filas en SeccionCostosInternosPLLocal
 
-### Problema clave
-`SeccionCostosInternosPL` requiere un `cotizacionId` para funcionar (consulta la BD). En una cotización nueva no existe ID aún. Se necesita crear un componente nuevo de costos que trabaje con estado local.
+### Archivo único: `src/components/cotizacion/SeccionCostosInternosPLLocal.tsx`
 
-### Archivos a crear/modificar
-
-**1. Nuevo: `src/components/cotizacion/SeccionCostosInternosPLLocal.tsx`**
-- Versión local de SeccionCostosInternosPL que NO requiere cotizacionId
-- Props: `filas`, `setFilas`, `conceptosUSD`, `conceptosMXN` (estado local del wizard)
-- Misma UI (tablas USD/MXN, resumen P&L, badges de profit)
-- Agrega columnas Unidad de Medida y Precio Venta editables
-- Badge de rentabilidad: Verde (USD>15% Y MXN>10%), Amarillo (0-15%), Rojo (negativo)
-- No tiene botón "Guardar" propio (se guarda al final del wizard)
-
-**2. Modificar: `src/pages/NuevaCotizacion.tsx`**
-- Reorganizar como wizard siguiendo patrón de NuevoEmbarque.tsx
-
-**Estado nuevo:**
-```
-currentStep, numContenedores, costosInternos (filas locales), costosPreLlenados
-```
-
-**Layout:**
-- Header fijo: título + StepIndicator (4 pasos)
-- Centro scrolleable max-w-4xl
-- Footer: Anterior/Siguiente/Guardar
-
-**Paso 1 — Datos Generales:**
-- SeccionDestinatario, SeccionDatosGeneralesCotizacion, Mercancía (FCL/LCL/Aéreo), SeccionRutaCotizacion
-- Card nuevo "Número de Embarques" (input numContenedores, min=1)
-- Card "Notas Adicionales"
-
-**Paso 2 — Costos & P&L:**
-- SeccionCostosInternosPLLocal con estado local
-- Pre-pobla filas desde catálogo vacío (concepto vacío, costo=0, precio_venta=0)
-- Badge de rentabilidad global
-
-**Paso 3 — Cotización Cliente:**
-- SeccionConceptosVentaCotizacion existente
-- Al entrar por primera vez: pre-llena conceptosUSD/MXN desde costosInternos (concepto→descripcion, precio_venta→precio_unitario, etc.)
-- Nota informativa "Pre-llenado desde Costos & P&L"
-
-**Paso 4 — Resumen:**
-- Card P&L USD y MXN con totales
-- Card datos operación (cliente, ruta, num contenedores, modo, incoterm)
-- Nota "La cotización se guardará en estado Borrador"
-
-**Navegación:**
-- Anterior (disabled en paso 1) / Siguiente (pasos 1-3)
-- "Guardar Cotización" en paso 4: ejecuta handleGuardar existente + upsertCotizacionCostos + incluye num_contenedores
-
-**3. Modificar: `src/pages/Changelog.tsx`** — entrada v4.10.0
-
-### Interfaz de filas locales para costos
+**1. Catálogos de conceptos por moneda**
 ```ts
-interface FilaCostoLocal {
-  concepto: string;
-  moneda: "USD" | "MXN";
-  proveedor: string;
-  cantidad: number;
-  costo_unitario: number;
-  precio_venta: number;
-  unidad_medida: string;
-  aplica_iva?: boolean;
-}
+const CONCEPTOS_USD = ['Flete Marítimo', 'Flete Aéreo', 'Embalaje', 'Coordinación de Recolección', 'Seguro de Carga', 'Cargos en Origen', 'Handling', 'Desconsolidación', 'Revalidación', 'Otro'];
+const CONCEPTOS_MXN = ['Manejo', 'Demoras', 'Cargos en Destino', 'Almacenaje', 'Entrega Nacional', 'Otro'];
 ```
+
+**2. Reemplazar la Table con layout de filas en dos líneas**
+
+Eliminar el `<Table>` completo. Reemplazar con un div de filas donde cada fila usa `border-b border-slate-100 py-3 space-y-1`:
+
+- **Línea 1** (`flex items-center gap-2`):
+  - Concepto: `Select` con catálogo por moneda, `min-w-[180px] flex-1`. Si el valor actual no está en el catálogo, agregarlo como opción (para datos existentes).
+  - Proveedor: `Input` `w-[120px]`
+  - Unidad: `Select` `w-[110px]`
+
+- **Línea 2** (`flex items-center gap-2`):
+  - Cantidad: `Input` `w-[80px]`
+  - Costo Unit.: `Input` `w-[110px]`
+  - P. Venta: `Input` `w-[110px]`
+  - Profit: `span` readonly `w-[100px]`
+  - %: badge `w-[70px]`
+  - Eliminar: botón `w-8`
+
+**3. Totales**
+
+Reemplazar el `TableFooter` con un div resumen al final con los mismos totales en `flex justify-between`.
+
+**4. Mantener sin cambios**: Resumen P&L collapsible, lógica de cálculo, funciones helper.
+
+**5. Changelog**: Entrada v4.10.1
 
