@@ -15,16 +15,23 @@ import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
 import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import {
   useCotizacion, useUpdateEstadoCotizacion,
   useConvertirProspectoACliente,
+  useConvertirCotizacionAEmbarques,
   DimensionLCL, DimensionAerea,
 } from "@/hooks/useCotizaciones";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 import { usePermissions } from "@/hooks/usePermissions";
 import { useToast } from "@/hooks/use-toast";
 import { formatDate, getEstadoColor } from "@/lib/helpers";
 import { formatCurrency } from "@/lib/formatters";
 import { getSignedUrl } from "@/lib/storage";
-import { ArrowLeft, CheckCircle, Send, XCircle, UserPlus, FileDown, AlertTriangle } from "lucide-react";
+import { ArrowLeft, ArrowRight, CheckCircle, Send, XCircle, UserPlus, FileDown, AlertTriangle } from "lucide-react";
 import { generarPdfCotizacion } from "@/lib/cotizacionPdf";
 
 export default function CotizacionDetalle() {
@@ -35,8 +42,24 @@ export default function CotizacionDetalle() {
   const actualizarEstado = useUpdateEstadoCotizacion();
   const convertirProspecto = useConvertirProspectoACliente();
   const { canEdit } = usePermissions();
+  const convertirAEmbarques = useConvertirCotizacionAEmbarques();
+
+  const { data: embarquesVinculados = [] } = useQuery({
+    queryKey: ['embarques', 'cotizacion', cotizacion?.id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('embarques')
+        .select('id, expediente, estado, created_at')
+        .eq('cotizacion_id', cotizacion!.id)
+        .order('created_at', { ascending: true });
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!cotizacion?.id,
+  });
 
   const [showConvertir, setShowConvertir] = useState(false);
+  const [showConfirmarConvertir, setShowConfirmarConvertir] = useState(false);
   const [clienteForm, setClienteForm] = useState<ClienteFormData>({
     nombre: '', contacto: '', email: '', telefono: '',
     rfc: '', direccion: '', ciudad: '', estado: '', cp: '',
@@ -148,6 +171,13 @@ export default function CotizacionDetalle() {
           {esAceptada && cotizacion.es_prospecto && (
             <Button size="sm" variant="secondary" onClick={abrirDialogConvertir}>
               <UserPlus className="h-4 w-4 mr-1" /> Convertir a Cliente
+            </Button>
+          )}
+          {esAceptada && (
+            <Button size="sm" onClick={() => setShowConfirmarConvertir(true)}>
+              <ArrowRight className="h-4 w-4 mr-1" />
+              Generar Embarques
+              <Badge className="ml-2">{cotizacion.num_contenedores}</Badge>
             </Button>
           )}
         </div>
@@ -369,6 +399,37 @@ export default function CotizacionDetalle() {
         </Card>
       )}
 
+      {/* Embarques Generados */}
+      {(cotizacion.estado === 'Convertida' || embarquesVinculados.length > 0) && (
+        <Card>
+          <CardHeader><CardTitle className="text-lg">Embarques Generados</CardTitle></CardHeader>
+          <CardContent>
+            {embarquesVinculados.length === 0 ? (
+              <div className="space-y-2">
+                <Skeleton className="h-8 w-full" />
+                <Skeleton className="h-8 w-full" />
+              </div>
+            ) : (
+              <div className="space-y-2">
+                {embarquesVinculados.map((emb) => (
+                  <div
+                    key={emb.id}
+                    className="flex items-center justify-between p-3 border rounded-md hover:bg-muted/50 cursor-pointer"
+                    onClick={() => navigate(`/embarques/${emb.id}`)}
+                  >
+                    <span className="font-medium text-primary">{emb.expediente}</span>
+                    <div className="flex items-center gap-3">
+                      <Badge className={getEstadoColor(emb.estado)}>{emb.estado}</Badge>
+                      <span className="text-sm text-muted-foreground">{formatDate(emb.created_at)}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
+
       {/* Dialog Convertir Prospecto */}
       <DialogConvertirProspecto
         open={showConvertir}
@@ -378,6 +439,37 @@ export default function CotizacionDetalle() {
         onConvertir={handleConvertir}
         isPending={convertirProspecto.isPending}
       />
+
+      {/* AlertDialog Confirmar Conversión a Embarques */}
+      <AlertDialog open={showConfirmarConvertir} onOpenChange={setShowConfirmarConvertir}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>¿Generar embarques?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Se crearán {cotizacion.num_contenedores} embarque{cotizacion.num_contenedores > 1 ? 's' : ''} desde esta cotización.
+              Los conceptos por Contenedor se copiarán a cada embarque.
+              Los conceptos por BL solo al primer embarque.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              disabled={convertirAEmbarques.isPending}
+              onClick={async () => {
+                try {
+                  await convertirAEmbarques.mutateAsync(cotizacion);
+                  toast({ title: `Se generaron ${cotizacion.num_contenedores} embarques exitosamente` });
+                  setShowConfirmarConvertir(false);
+                } catch (err: any) {
+                  toast({ title: "Error al generar embarques", description: err.message, variant: "destructive" });
+                }
+              }}
+            >
+              {convertirAEmbarques.isPending ? 'Generando…' : 'Confirmar'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

@@ -13,6 +13,14 @@ interface ChangelogEntry {
 
 const changelog: ChangelogEntry[] = [
   {
+    version: "4.9.5",
+    date: "2026-03-05",
+    type: "minor",
+    title: "Botón Generar Embarques y card de embarques vinculados",
+    description:
+      "En CotizacionDetalle se agrega botón para convertir cotización aceptada en embarques con diálogo de confirmación, y una card que lista los embarques generados con links navegables.",
+  },
+  {
     version: "4.9.4",
     date: "2026-03-05",
     type: "minor",
