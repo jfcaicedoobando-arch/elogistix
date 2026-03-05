@@ -1,24 +1,34 @@
 
 
-## Plan: Agregar `useConvertirCotizacionAEmbarques()` al final de `useCotizaciones.ts`
+## Plan: Agregar botón "Generar Embarques" y card de embarques vinculados en CotizacionDetalle
 
-### Cambio único
+### Archivo único: `src/pages/CotizacionDetalle.tsx`
 
-**`src/hooks/useCotizaciones.ts`** — Agregar después de la línea 327 el nuevo hook `useConvertirCotizacionAEmbarques()`:
+**1. Imports adicionales (líneas 1-28)**
+- `useConvertirCotizacionAEmbarques` desde `@/hooks/useCotizaciones`
+- `useQuery` desde `@tanstack/react-query`
+- `supabase` desde `@/integrations/supabase/client`
+- `ArrowRight` desde `lucide-react`
+- `AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle` desde `@/components/ui/alert-dialog`
 
-- `useMutation` que recibe `cotizacion: CotizacionRow`
-- Paso 1: Fetch `cotizacion_costos` filtrado por `cotizacion_id`
-- Paso 2: Loop `0..num_contenedores-1`, por cada iteración:
-  - RPC `generar_expediente` → expediente
-  - Insert en `embarques` con los campos mapeados de la cotización
-  - Insert en `conceptos_costo` según `unidad_medida`:
-    - `'Contenedor'` / `'Embarque'` / `'W/M'` → todos los embarques
-    - `'BL'` → solo cuando `i === 0`
-- Paso 3: Update cotización estado → `'Convertida'`
-- Paso 4: Retorna array de embarques creados
-- `onSuccess`: invalida queries `embarques`, `cotizaciones`, `cotizaciones/{id}`
+**2. Hooks y estado (después de línea 37)**
+- `useQuery` para cargar `embarquesVinculados` filtrando por `cotizacion_id`
+- Estado `showConfirmarConvertir`
+- Hook `convertirAEmbarques = useConvertirCotizacionAEmbarques()`
 
-**`src/pages/Changelog.tsx`** — Entrada v4.9.4
+**3. Botón en sección de acciones (línea ~152)**
+- Cuando `esAceptada`, agregar botón "Generar Embarques" con badge de `num_contenedores`
+- onClick abre el AlertDialog de confirmación
 
-No se modifica ningún código existente del archivo.
+**4. AlertDialog de confirmación (antes del cierre del div principal)**
+- Título: "¿Generar embarques?"
+- Descripción con número de contenedores y reglas de copia
+- Botón confirmar ejecuta `convertirAEmbarques.mutateAsync(cotizacion)`, muestra toast y cierra
+
+**5. Card "Embarques Generados" (al final, antes del cierre)**
+- Visible cuando `estado === 'Convertida'` o `embarquesVinculados.length > 0`
+- Lista cada embarque con expediente clickeable, badge de estado y fecha
+- Skeleton si no hay datos aún
+
+**6. Changelog**: Entrada v4.9.5
 
