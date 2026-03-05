@@ -1,17 +1,16 @@
 
 
-## Plan: Actualizar catálogos de conceptos USD y MXN
+## Plan: Agregar "Cargos en Destino" al catálogo USD
 
-### Archivo: `src/components/cotizacion/SeccionCostosInternosPLLocal.tsx`
+### Cambio único
 
-Reemplazar líneas 11-12 con los nuevos catálogos:
+**`src/components/cotizacion/SeccionCostosInternosPLLocal.tsx` (línea 11)**
+
+Agregar `'Cargos en Destino'` al array `CONCEPTOS_USD`, quedando:
 
 ```ts
-const CONCEPTOS_USD = ['Cargos en Origen', 'Costos Portuarios', 'Consolidación', 'Seguro', 'Recolección', 'Modificación de BL', 'Flete Marítimo', 'Flete Aéreo', 'Flete Terrestre', 'Handling', 'Desconsolidación', 'Revalidación', 'Demoras', 'Cargos en Destino', 'Release', 'Otro'];
-const CONCEPTOS_MXN = ['Entrega Nacional', 'Honorarios de Despacho Aduanal', 'Otro'];
+const CONCEPTOS_USD = ['Flete Marítimo', 'Flete Aéreo', 'Embalaje', 'Coordinación de Recolección', 'Seguro de Carga', 'Cargos en Origen', 'Cargos en Destino', 'Handling', 'Desconsolidación', 'Revalidación', 'Otro'];
 ```
 
-### Archivo: `src/pages/Changelog.tsx`
-
-Entrada v4.10.4 — "Actualizar catálogos de conceptos USD y MXN en Costos & P&L".
+**`src/pages/Changelog.tsx`** — entrada v4.10.3
 
