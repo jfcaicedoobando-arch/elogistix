@@ -1,22 +1,47 @@
 
 
-## Plan: Agregar campo "Agente" en Datos de Ruta marítimo
+## Plan: Corregir input de precio unitario USD en conceptos de cotización
 
-### Cambios
+### Problema
+El campo "P. Unitario (USD)" en la sección de conceptos de venta:
+1. No borra el `0` inicial al hacer clic — el usuario escribe "1500" y queda "01500"
+2. El valor se parsea incorrectamente por el prefijo "0"
 
-**1. Migración SQL** — Agregar columna `agente text` a la tabla `embarques`
+### Solución
+Cambiar los inputs numéricos de `precio_unitario` (y `cantidad`) en `SeccionConceptosVentaCotizacion.tsx` para que:
+- Usen `type="text"` con `inputMode="decimal"` en lugar de `type="number"`
+- Al recibir foco (`onFocus`), si el valor es `0`, limpiar el campo
+- Al perder foco (`onBlur`), si el campo está vacío, restaurar a `0`
+- Parsear correctamente el valor ingresado eliminando caracteres no numéricos
 
-**2. `src/hooks/useEmbarqueForm.ts`**
-- Agregar `agente: string` al interface `EmbarqueFormState` y al `INITIAL_STATE`
-- Agregar `agente` al `inicializarDesdeEmbarque`
-- Agregar `agente: form.agente || null` al `buildEmbarquePayload`
+### Archivos a modificar
 
-**3. `src/components/embarque/StepDatosRuta.tsx`**
-- Agregar props `agente` y `setAgente` al interface
-- Agregar campo Input "Agente" justo después del campo "Naviera" en la sección marítima
+**1. `src/components/cotizacion/SeccionConceptosVentaCotizacion.tsx`**
+- Reemplazar los `<Input type="number">` de `precio_unitario` en ambas tablas (USD y MXN) por inputs de texto con manejo de foco
+- Aplicar la misma lógica a los campos de `cantidad`
 
-**4. `src/pages/NuevoEmbarque.tsx`** y `src/pages/EditarEmbarque.tsx`**
-- Pasar props `agente` y `setAgente` al componente `StepDatosRuta`
+**2. `src/pages/Changelog.tsx`**
+- Entrada v4.9.2
 
-**5. `src/pages/Changelog.tsx`** — Entrada v4.9.1
+### Detalle técnico
+```tsx
+// Antes:
+<Input type="number" min={0} step={0.01} value={c.precio_unitario} 
+  onChange={e => actualizarConceptoUSD(i, 'precio_unitario', Number(e.target.value))} />
+
+// Después:
+<Input 
+  type="text" inputMode="decimal"
+  value={c.precio_unitario === 0 ? '' : c.precio_unitario}
+  onFocus={e => { if (e.target.value === '0') e.target.value = ''; }}
+  onChange={e => {
+    const raw = e.target.value.replace(/[^0-9.]/g, '');
+    actualizarConceptoUSD(i, 'precio_unitario', raw === '' ? 0 : parseFloat(raw));
+  }}
+  onBlur={e => { if (e.target.value === '') actualizarConceptoUSD(i, 'precio_unitario', 0); }}
+  placeholder="0.00"
+/>
+```
+
+Se aplicará el mismo patrón a todos los campos numéricos editables de ambas tablas (USD y MXN).
 
