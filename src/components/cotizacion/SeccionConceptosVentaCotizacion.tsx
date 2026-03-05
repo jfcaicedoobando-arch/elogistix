@@ -122,11 +122,31 @@ export default function SeccionConceptosVentaCotizacion({
                 </div>
                 <div className="col-span-1">
                   {i === 0 && <Label className="text-xs">Cant.</Label>}
-                  <Input type="number" min={1} value={c.cantidad} onChange={e => actualizarConceptoUSD(i, 'cantidad', Number(e.target.value))} />
+                  <Input
+                    type="text" inputMode="numeric"
+                    value={c.cantidad === 0 ? '' : c.cantidad}
+                    onFocus={e => { if (e.target.value === '0') e.target.value = ''; }}
+                    onChange={e => {
+                      const raw = e.target.value.replace(/[^0-9]/g, '');
+                      actualizarConceptoUSD(i, 'cantidad', raw === '' ? 0 : parseInt(raw, 10));
+                    }}
+                    onBlur={e => { if (e.target.value === '') actualizarConceptoUSD(i, 'cantidad', 1); }}
+                    placeholder="1"
+                  />
                 </div>
                 <div className="col-span-2">
                   {i === 0 && <Label className="text-xs">P. Unitario (USD)</Label>}
-                  <Input type="number" min={0} step={0.01} value={c.precio_unitario} onChange={e => actualizarConceptoUSD(i, 'precio_unitario', Number(e.target.value))} />
+                  <Input
+                    type="text" inputMode="decimal"
+                    value={c.precio_unitario === 0 ? '' : c.precio_unitario}
+                    onFocus={e => { if (e.target.value === '0') e.target.value = ''; }}
+                    onChange={e => {
+                      const raw = e.target.value.replace(/[^0-9.]/g, '');
+                      actualizarConceptoUSD(i, 'precio_unitario', raw === '' ? 0 : parseFloat(raw));
+                    }}
+                    onBlur={e => { if (e.target.value === '') actualizarConceptoUSD(i, 'precio_unitario', 0); }}
+                    placeholder="0.00"
+                  />
                 </div>
                 <div className="col-span-1">
                   {i === 0 && <Label className="text-xs">IVA</Label>}
@@ -222,11 +242,31 @@ export default function SeccionConceptosVentaCotizacion({
                 </div>
                 <div className="col-span-1">
                   {i === 0 && <Label className="text-xs">Cant.</Label>}
-                  <Input type="number" min={1} value={c.cantidad} onChange={e => actualizarConceptoMXN(i, 'cantidad', Number(e.target.value))} />
+                  <Input
+                    type="text" inputMode="numeric"
+                    value={c.cantidad === 0 ? '' : c.cantidad}
+                    onFocus={e => { if (e.target.value === '0') e.target.value = ''; }}
+                    onChange={e => {
+                      const raw = e.target.value.replace(/[^0-9]/g, '');
+                      actualizarConceptoMXN(i, 'cantidad', raw === '' ? 0 : parseInt(raw, 10));
+                    }}
+                    onBlur={e => { if (e.target.value === '') actualizarConceptoMXN(i, 'cantidad', 1); }}
+                    placeholder="1"
+                  />
                 </div>
                 <div className="col-span-2">
                   {i === 0 && <Label className="text-xs">P. Unitario</Label>}
-                  <Input type="number" min={0} step={0.01} value={c.precio_unitario} onChange={e => actualizarConceptoMXN(i, 'precio_unitario', Number(e.target.value))} />
+                  <Input
+                    type="text" inputMode="decimal"
+                    value={c.precio_unitario === 0 ? '' : c.precio_unitario}
+                    onFocus={e => { if (e.target.value === '0') e.target.value = ''; }}
+                    onChange={e => {
+                      const raw = e.target.value.replace(/[^0-9.]/g, '');
+                      actualizarConceptoMXN(i, 'precio_unitario', raw === '' ? 0 : parseFloat(raw));
+                    }}
+                    onBlur={e => { if (e.target.value === '') actualizarConceptoMXN(i, 'precio_unitario', 0); }}
+                    placeholder="0.00"
+                  />
                 </div>
                 <div className="col-span-2">
                   {i === 0 && <Label className="text-xs">Subtotal</Label>}

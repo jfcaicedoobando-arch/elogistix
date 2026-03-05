@@ -13,6 +13,14 @@ interface ChangelogEntry {
 
 const changelog: ChangelogEntry[] = [
   {
+    version: "4.9.2",
+    date: "2026-03-05",
+    type: "patch",
+    title: "Corrección de inputs numéricos en conceptos de cotización",
+    description:
+      "Los campos de cantidad y precio unitario en conceptos USD y MXN ahora limpian el 0 inicial al hacer clic y validan correctamente el formato numérico/decimal.",
+  },
+  {
     version: "4.9.1",
     date: "2026-03-05",
     type: "patch",
