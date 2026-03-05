@@ -241,6 +241,28 @@ export function useCreateCotizacion() {
   });
 }
 
+export function useUpdateCotizacion() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, data }: { id: string; data: Partial<CreateCotizacionInput> }) => {
+      const updatePayload: any = { ...data };
+      if (data.conceptos_venta) updatePayload.conceptos_venta = data.conceptos_venta as unknown as Json;
+      if (data.dimensiones_lcl) updatePayload.dimensiones_lcl = data.dimensiones_lcl as unknown as Json;
+      if (data.dimensiones_aereas) updatePayload.dimensiones_aereas = data.dimensiones_aereas as unknown as Json;
+      if (data.modo) updatePayload.modo = data.modo as any;
+      if (data.tipo) updatePayload.tipo = data.tipo as any;
+      if (data.incoterm) updatePayload.incoterm = data.incoterm as any;
+      if (data.moneda) updatePayload.moneda = data.moneda as any;
+      const { error } = await supabase.from('cotizaciones').update(updatePayload).eq('id', id);
+      if (error) throw error;
+    },
+    onSuccess: (_r, vars) => {
+      queryClient.invalidateQueries({ queryKey: ['cotizaciones'] });
+      queryClient.invalidateQueries({ queryKey: ['cotizaciones', vars.id] });
+    },
+  });
+}
+
 export function useUpdateEstadoCotizacion() {
   const queryClient = useQueryClient();
   return useMutation({
