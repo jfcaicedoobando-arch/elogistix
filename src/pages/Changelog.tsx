@@ -13,6 +13,14 @@ interface ChangelogEntry {
 
 const changelog: ChangelogEntry[] = [
   {
+    version: "4.9.4",
+    date: "2026-03-05",
+    type: "minor",
+    title: "Hook para convertir cotización en embarques",
+    description:
+      "Nuevo hook useConvertirCotizacionAEmbarques que crea automáticamente embarques a partir de una cotización según num_contenedores, mapeando costos por unidad_medida (Contenedor, BL, W/M) y actualizando el estado a Convertida.",
+  },
+  {
     version: "4.9.3",
     date: "2026-03-05",
     type: "patch",
