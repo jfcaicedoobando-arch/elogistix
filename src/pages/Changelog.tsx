@@ -13,6 +13,14 @@ interface ChangelogEntry {
 
 const changelog: ChangelogEntry[] = [
   {
+    version: "4.10.0",
+    date: "2026-03-05",
+    type: "minor",
+    title: "Wizard de 4 pasos en Nueva Cotización",
+    description:
+      "Rediseño de NuevaCotizacion como wizard con 4 pasos: Datos Generales, Costos & P&L (con SeccionCostosInternosPLLocal), Cotización Cliente (pre-llenado automático desde costos) y Resumen con P&L y datos de operación. Incluye campo Número de Embarques y navegación con StepIndicator.",
+  },
+  {
     version: "4.9.5",
     date: "2026-03-05",
     type: "minor",

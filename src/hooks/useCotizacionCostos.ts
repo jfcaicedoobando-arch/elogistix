@@ -11,6 +11,8 @@ export interface CostoCotizacion {
   cantidad: number;
   costo_unitario: number;
   costo_total: number;
+  precio_venta?: number;
+  unidad_medida?: string;
   created_at: string;
   updated_at: string;
 }
@@ -51,6 +53,8 @@ export function useUpsertCotizacionCostos() {
         proveedor: c.proveedor,
         cantidad: c.cantidad,
         costo_unitario: c.costo_unitario,
+        precio_venta: c.precio_venta ?? 0,
+        unidad_medida: c.unidad_medida ?? '',
       }));
 
       const { data, error } = await supabase

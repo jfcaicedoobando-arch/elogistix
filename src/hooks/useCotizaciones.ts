@@ -171,6 +171,7 @@ export interface CreateCotizacionInput {
   seguro?: boolean;
   valor_seguro_usd?: number;
   carta_garantia?: boolean;
+  num_contenedores?: number;
 }
 
 export function useCreateCotizacion() {
@@ -227,6 +228,7 @@ export function useCreateCotizacion() {
           seguro: input.seguro ?? false,
           valor_seguro_usd: input.valor_seguro_usd ?? 0,
           carta_garantia: input.carta_garantia ?? false,
+          num_contenedores: input.num_contenedores ?? 1,
         } as any)
         .select()
         .single();
