@@ -1,16 +1,24 @@
 
 
-## Plan: Migración SQL con 3 cambios de esquema
+## Plan: Agregar `useConvertirCotizacionAEmbarques()` al final de `useCotizaciones.ts`
 
-Crear una única migración que ejecute:
+### Cambio único
 
-1. `cotizaciones` — agregar `num_contenedores integer NOT NULL DEFAULT 1`
-2. `embarques` — agregar `cotizacion_id uuid REFERENCES cotizaciones(id) ON DELETE SET NULL`
-3. `cotizacion_costos` — agregar `precio_venta`, `precio_total` (generated), `profit` (generated), `porcentaje_profit` (generated), `unidad_medida`
+**`src/hooks/useCotizaciones.ts`** — Agregar después de la línea 327 el nuevo hook `useConvertirCotizacionAEmbarques()`:
 
-### Archivos a modificar
-- Nueva migración SQL (único archivo)
-- `src/pages/Changelog.tsx` — entrada v4.9.3
+- `useMutation` que recibe `cotizacion: CotizacionRow`
+- Paso 1: Fetch `cotizacion_costos` filtrado por `cotizacion_id`
+- Paso 2: Loop `0..num_contenedores-1`, por cada iteración:
+  - RPC `generar_expediente` → expediente
+  - Insert en `embarques` con los campos mapeados de la cotización
+  - Insert en `conceptos_costo` según `unidad_medida`:
+    - `'Contenedor'` / `'Embarque'` / `'W/M'` → todos los embarques
+    - `'BL'` → solo cuando `i === 0`
+- Paso 3: Update cotización estado → `'Convertida'`
+- Paso 4: Retorna array de embarques creados
+- `onSuccess`: invalida queries `embarques`, `cotizaciones`, `cotizaciones/{id}`
 
-No se toca ningún otro archivo ni tabla existente.
+**`src/pages/Changelog.tsx`** — Entrada v4.9.4
+
+No se modifica ningún código existente del archivo.
 
