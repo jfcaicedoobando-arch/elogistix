@@ -325,3 +325,94 @@ export function useConvertirProspectoACliente() {
     },
   });
 }
+
+/** Convierte una cotización en uno o más embarques según num_contenedores */
+export function useConvertirCotizacionAEmbarques() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (cotizacion: CotizacionRow) => {
+      // 1. Leer costos de la cotización
+      const { data: costos, error: errorCostos } = await supabase
+        .from('cotizacion_costos')
+        .select('*')
+        .eq('cotizacion_id', cotizacion.id);
+      if (errorCostos) throw errorCostos;
+
+      const numContenedores = (cotizacion as any).num_contenedores ?? 1;
+      const embarquesCreados: any[] = [];
+
+      // 2. Loop por cada contenedor
+      for (let i = 0; i < numContenedores; i++) {
+        // a. Generar expediente único
+        const { data: expediente, error: errorExp } = await supabase
+          .rpc('generar_expediente', { tipo_op: cotizacion.tipo });
+        if (errorExp) throw errorExp;
+
+        // b. Insertar embarque
+        const { data: embarque, error: errorEmb } = await supabase
+          .from('embarques')
+          .insert({
+            cotizacion_id: cotizacion.id,
+            expediente: expediente as string,
+            cliente_id: cotizacion.cliente_id!,
+            cliente_nombre: cotizacion.cliente_nombre,
+            modo: cotizacion.modo as any,
+            tipo: cotizacion.tipo as any,
+            incoterm: cotizacion.incoterm as any,
+            descripcion_mercancia: cotizacion.descripcion_mercancia,
+            peso_kg: cotizacion.peso_kg,
+            volumen_m3: cotizacion.volumen_m3,
+            piezas: cotizacion.piezas,
+            operador: cotizacion.operador,
+            tipo_carga: cotizacion.tipo_carga,
+            tipo_contenedor: cotizacion.tipo_contenedor,
+          } as any)
+          .select()
+          .single();
+        if (errorEmb) throw errorEmb;
+
+        // c. Insertar conceptos de costo según unidad_medida
+        if (costos && costos.length > 0) {
+          const conceptosParaInsertar = costos.filter((c: any) => {
+            const um = c.unidad_medida ?? 'Contenedor';
+            if (um === 'BL') return i === 0;
+            return true; // Contenedor, Embarque, W/M → todos
+          });
+
+          if (conceptosParaInsertar.length > 0) {
+            const rows = conceptosParaInsertar.map((c: any) => ({
+              embarque_id: embarque.id,
+              concepto: c.concepto,
+              monto: c.costo_unitario,
+              moneda: c.moneda as any,
+              proveedor_nombre: c.proveedor,
+            }));
+
+            const { error: errorConceptos } = await supabase
+              .from('conceptos_costo')
+              .insert(rows as any);
+            if (errorConceptos) throw errorConceptos;
+          }
+        }
+
+        embarquesCreados.push(embarque);
+      }
+
+      // 3. Actualizar estado de la cotización
+      const { error: errorUpdate } = await supabase
+        .from('cotizaciones')
+        .update({ estado: 'Convertida' as any })
+        .eq('id', cotizacion.id);
+      if (errorUpdate) throw errorUpdate;
+
+      // 4. Retornar embarques creados
+      return embarquesCreados;
+    },
+    onSuccess: (_data, cotizacion) => {
+      queryClient.invalidateQueries({ queryKey: ['embarques'] });
+      queryClient.invalidateQueries({ queryKey: ['cotizaciones'] });
+      queryClient.invalidateQueries({ queryKey: ['cotizaciones', cotizacion.id] });
+    },
+  });
+}
