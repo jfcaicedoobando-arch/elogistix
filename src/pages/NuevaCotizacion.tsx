@@ -8,7 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { useClientesForSelect } from "@/hooks/useClientes";
-import { useCreateCotizacion, ConceptoVentaCotizacion, DimensionLCL, DimensionAerea } from "@/hooks/useCotizaciones";
+import { useCreateCotizacion, useUpdateCotizacion, ConceptoVentaCotizacion, DimensionLCL, DimensionAerea } from "@/hooks/useCotizaciones";
 import { useUpsertCotizacionCostos, CostoCotizacion } from "@/hooks/useCotizacionCostos";
 import { useRegistrarActividad } from "@/hooks/useBitacora";
 import { useAuth } from "@/contexts/AuthContext";
@@ -52,8 +52,12 @@ export default function NuevaCotizacion() {
   const { user } = useAuth();
   const { data: clientes = [] } = useClientesForSelect();
   const crearCotizacion = useCreateCotizacion();
+  const updateCotizacion = useUpdateCotizacion();
   const upsertCostos = useUpsertCotizacionCostos();
   const registrarActividad = useRegistrarActividad();
+
+  // Wizard state
+  const [cotizacionId, setCotizacionId] = useState<string | null>(null);
 
   // Wizard state
   const [currentStep, setCurrentStep] = useState(1);
@@ -221,116 +225,159 @@ export default function NuevaCotizacion() {
   const plUSD = calcPL(costosUSD);
   const plMXN = calcPL(costosMXN);
 
+  const buildPaso1Data = () => {
+    let msdsArchivo: string | null = null;
+    let pesoFinal = pesoKg, volumenFinal = volumenM3, piezasFinal = piezas;
+    if (esMaritimo) {
+      pesoFinal = 0;
+      volumenFinal = tipoEmbarque === 'LCL' ? totalVolumenLCL : 0;
+      piezasFinal = tipoEmbarque === 'LCL' ? totalPiezasLCL : 0;
+    } else if (esAereo) {
+      pesoFinal = totalPesoVolAereo;
+      volumenFinal = 0;
+      piezasFinal = totalPiezasAereas;
+    }
+    return {
+      es_prospecto: esProspecto,
+      cliente_id: esProspecto ? null : clienteId,
+      cliente_nombre: esProspecto ? prospectoEmpresa : (clienteSeleccionado?.nombre ?? ''),
+      prospecto_empresa: esProspecto ? prospectoEmpresa : '',
+      prospecto_contacto: esProspecto ? prospectoContacto : '',
+      prospecto_email: esProspecto ? prospectoEmail : '',
+      prospecto_telefono: esProspecto ? prospectoTelefono : '',
+      modo, tipo, incoterm,
+      descripcion_mercancia: sectorEconomico,
+      peso_kg: pesoFinal, volumen_m3: volumenFinal, piezas: piezasFinal,
+      origen, destino,
+      conceptos_venta: [] as ConceptoVentaCotizacion[],
+      subtotal: 0,
+      moneda: 'USD',
+      vigencia_dias: validezPropuesta ? Math.max(1, Math.ceil((validezPropuesta.getTime() - Date.now()) / (1000 * 60 * 60 * 24))) : 15,
+      notas,
+      operador: user?.email ?? '',
+      tipo_carga: tipoCarga,
+      msds_archivo: msdsArchivo,
+      tipo_embarque: esMaritimo ? tipoEmbarque : 'FCL',
+      tipo_contenedor: esMaritimo && tipoEmbarque === 'FCL' ? tipoContenedor : null,
+      tipo_peso: esMaritimo && tipoEmbarque === 'FCL' ? tipoPeso : 'Peso Normal',
+      descripcion_adicional: descripcionAdicional,
+      sector_economico: sectorEconomico,
+      dimensiones_lcl: esMaritimo && tipoEmbarque === 'LCL' ? dimensionesLCL : [],
+      dimensiones_aereas: esAereo ? dimensionesAereas : [],
+      dias_libres_destino: esMaritimo && tipoEmbarque === 'FCL' ? diasLibresDestino : 0,
+      dias_almacenaje: esMaritimo && tipoEmbarque === 'LCL' ? diasAlmacenaje : 0,
+      carta_garantia: esMaritimo && tipoEmbarque === 'FCL' ? cartaGarantia : false,
+      tiempo_transito_dias: tiempoTransitoDias ?? null,
+      frecuencia,
+      ruta_texto: rutaTexto,
+      validez_propuesta: validezPropuesta ? validezPropuesta.toISOString().split('T')[0] : null,
+      tipo_movimiento: tipoMovimiento,
+      seguro,
+      valor_seguro_usd: seguro ? Number(valorSeguroUsd) || 0 : 0,
+      num_contenedores: numContenedores,
+    };
+  };
+
+  const handleSiguiente = async () => {
+    if (currentStep === 1) {
+      // Validaciones
+      if (!esProspecto && !clienteId) {
+        toast({ title: "Selecciona un cliente", variant: "destructive" });
+        return;
+      }
+      if (esProspecto && !prospectoEmpresa.trim()) {
+        toast({ title: "Ingresa el nombre de la empresa del prospecto", variant: "destructive" });
+        return;
+      }
+      if (esProspecto && !prospectoContacto.trim()) {
+        toast({ title: "Ingresa el nombre del contacto del prospecto", variant: "destructive" });
+        return;
+      }
+
+      try {
+        // Upload MSDS if needed
+        let msdsArchivo: string | null = null;
+        if (tipoCarga === 'Mercancía Peligrosa' && msdsFile) {
+          const ext = msdsFile.name.split('.').pop() || 'pdf';
+          const path = `cotizaciones/msds-${Date.now()}.${ext}`;
+          await uploadFile(path, msdsFile);
+          msdsArchivo = path;
+        }
+
+        const data = buildPaso1Data();
+        data.msds_archivo = msdsArchivo;
+
+        if (cotizacionId) {
+          await updateCotizacion.mutateAsync({ id: cotizacionId, data });
+        } else {
+          const cotizacion = await crearCotizacion.mutateAsync(data);
+          setCotizacionId(cotizacion.id);
+        }
+        setCurrentStep(2);
+      } catch (err: any) {
+        toast({ title: "Error al guardar datos generales", description: err.message, variant: "destructive" });
+      }
+    } else if (currentStep === 2) {
+      try {
+        if (costosInternos.length > 0 && cotizacionId) {
+          const costos: CostoCotizacion[] = costosInternos.map(f => ({
+            id: "",
+            cotizacion_id: cotizacionId,
+            concepto: f.concepto,
+            moneda: f.moneda,
+            proveedor: f.proveedor,
+            cantidad: f.cantidad,
+            costo_unitario: f.costo_unitario,
+            costo_total: f.cantidad * f.costo_unitario,
+            precio_venta: f.precio_venta,
+            unidad_medida: f.unidad_medida,
+            created_at: "",
+            updated_at: "",
+          }));
+          await upsertCostos.mutateAsync({ cotizacionId, costos });
+        }
+        setCurrentStep(3);
+      } catch (err: any) {
+        toast({ title: "Error al guardar costos", description: err.message, variant: "destructive" });
+      }
+    } else if (currentStep === 3) {
+      const allConceptos = [...conceptosUSD, ...conceptosMXN];
+      if (allConceptos.some(c => !c.descripcion.trim())) {
+        toast({ title: "Completa todos los conceptos de venta", variant: "destructive" });
+        return;
+      }
+      try {
+        if (cotizacionId) {
+          await updateCotizacion.mutateAsync({
+            id: cotizacionId,
+            data: {
+              conceptos_venta: allConceptos,
+              subtotal: totalUSD,
+            },
+          });
+        }
+        setCurrentStep(4);
+      } catch (err: any) {
+        toast({ title: "Error al guardar conceptos de venta", description: err.message, variant: "destructive" });
+      }
+    }
+  };
+
   const handleGuardar = async () => {
-    if (!esProspecto && !clienteId) {
-      toast({ title: "Selecciona un cliente", variant: "destructive" });
-      setCurrentStep(1);
-      return;
-    }
-    if (esProspecto && !prospectoEmpresa.trim()) {
-      toast({ title: "Ingresa el nombre de la empresa del prospecto", variant: "destructive" });
-      setCurrentStep(1);
-      return;
-    }
-    if (esProspecto && !prospectoContacto.trim()) {
-      toast({ title: "Ingresa el nombre del contacto del prospecto", variant: "destructive" });
-      setCurrentStep(1);
-      return;
-    }
-    const allConceptos = [...conceptosUSD, ...conceptosMXN];
-    if (allConceptos.some(c => !c.descripcion.trim())) {
-      toast({ title: "Completa todos los conceptos de venta", variant: "destructive" });
-      setCurrentStep(3);
-      return;
-    }
-
+    if (!cotizacionId) return;
     try {
-      let msdsArchivo: string | null = null;
-      if (tipoCarga === 'Mercancía Peligrosa' && msdsFile) {
-        const ext = msdsFile.name.split('.').pop() || 'pdf';
-        const path = `cotizaciones/msds-${Date.now()}.${ext}`;
-        await uploadFile(path, msdsFile);
-        msdsArchivo = path;
-      }
-
-      let pesoFinal = pesoKg, volumenFinal = volumenM3, piezasFinal = piezas;
-      if (esMaritimo) {
-        pesoFinal = 0;
-        volumenFinal = tipoEmbarque === 'LCL' ? totalVolumenLCL : 0;
-        piezasFinal = tipoEmbarque === 'LCL' ? totalPiezasLCL : 0;
-      } else if (esAereo) {
-        pesoFinal = totalPesoVolAereo;
-        volumenFinal = 0;
-        piezasFinal = totalPiezasAereas;
-      }
-
-      const cotizacion = await crearCotizacion.mutateAsync({
-        es_prospecto: esProspecto,
-        cliente_id: esProspecto ? null : clienteId,
-        cliente_nombre: esProspecto ? prospectoEmpresa : (clienteSeleccionado?.nombre ?? ''),
-        prospecto_empresa: esProspecto ? prospectoEmpresa : '',
-        prospecto_contacto: esProspecto ? prospectoContacto : '',
-        prospecto_email: esProspecto ? prospectoEmail : '',
-        prospecto_telefono: esProspecto ? prospectoTelefono : '',
-        modo, tipo, incoterm,
-        descripcion_mercancia: sectorEconomico,
-        peso_kg: pesoFinal, volumen_m3: volumenFinal, piezas: piezasFinal,
-        origen, destino,
-        conceptos_venta: allConceptos,
-        subtotal: totalUSD,
-        moneda: 'USD',
-        vigencia_dias: validezPropuesta ? Math.max(1, Math.ceil((validezPropuesta.getTime() - Date.now()) / (1000 * 60 * 60 * 24))) : 15,
-        notas,
-        operador: user?.email ?? '',
-        tipo_carga: tipoCarga,
-        msds_archivo: msdsArchivo,
-        tipo_embarque: esMaritimo ? tipoEmbarque : 'FCL',
-        tipo_contenedor: esMaritimo && tipoEmbarque === 'FCL' ? tipoContenedor : null,
-        tipo_peso: esMaritimo && tipoEmbarque === 'FCL' ? tipoPeso : 'Peso Normal',
-        descripcion_adicional: descripcionAdicional,
-        sector_economico: sectorEconomico,
-        dimensiones_lcl: esMaritimo && tipoEmbarque === 'LCL' ? dimensionesLCL : [],
-        dimensiones_aereas: esAereo ? dimensionesAereas : [],
-        dias_libres_destino: esMaritimo && tipoEmbarque === 'FCL' ? diasLibresDestino : 0,
-        dias_almacenaje: esMaritimo && tipoEmbarque === 'LCL' ? diasAlmacenaje : 0,
-        carta_garantia: esMaritimo && tipoEmbarque === 'FCL' ? cartaGarantia : false,
-        tiempo_transito_dias: tiempoTransitoDias ?? null,
-        frecuencia,
-        ruta_texto: rutaTexto,
-        validez_propuesta: validezPropuesta ? validezPropuesta.toISOString().split('T')[0] : null,
-        tipo_movimiento: tipoMovimiento,
-        seguro,
-        valor_seguro_usd: seguro ? Number(valorSeguroUsd) || 0 : 0,
-        num_contenedores: numContenedores,
+      await updateCotizacion.mutateAsync({
+        id: cotizacionId,
+        data: { estado: 'Borrador' } as any,
       });
-
-      // Save internal costs
-      if (costosInternos.length > 0) {
-        const costos: CostoCotizacion[] = costosInternos.map(f => ({
-          id: "",
-          cotizacion_id: cotizacion.id,
-          concepto: f.concepto,
-          moneda: f.moneda,
-          proveedor: f.proveedor,
-          cantidad: f.cantidad,
-          costo_unitario: f.costo_unitario,
-          costo_total: f.cantidad * f.costo_unitario,
-          precio_venta: f.precio_venta,
-          unidad_medida: f.unidad_medida,
-          created_at: "",
-          updated_at: "",
-        }));
-        await upsertCostos.mutateAsync({ cotizacionId: cotizacion.id, costos });
-      }
-
       registrarActividad.mutate({
         accion: 'Crear cotización', modulo: 'Cotizaciones',
-        entidad_id: cotizacion.id, entidad_nombre: cotizacion.folio,
+        entidad_id: cotizacionId, entidad_nombre: '',
       });
-      toast({ title: `Cotización ${cotizacion.folio} creada` });
-      navigate(`/cotizaciones/${cotizacion.id}`);
+      toast({ title: "Cotización creada exitosamente" });
+      navigate(`/cotizaciones/${cotizacionId}`);
     } catch (err: any) {
-      toast({ title: "Error al crear cotización", description: err.message, variant: "destructive" });
+      toast({ title: "Error al finalizar cotización", description: err.message, variant: "destructive" });
     }
   };
 
@@ -633,18 +680,20 @@ export default function NuevaCotizacion() {
             )}
           </Button>
           <Button
-            disabled={crearCotizacion.isPending || upsertCostos.isPending}
+            disabled={crearCotizacion.isPending || updateCotizacion.isPending || upsertCostos.isPending}
             onClick={() => {
-              if (currentStep < 4) setCurrentStep(p => p + 1);
+              if (currentStep < 4) handleSiguiente();
               else handleGuardar();
             }}
           >
             {currentStep === 4 ? (
-              crearCotizacion.isPending || upsertCostos.isPending ? 'Guardando...' : (
+              updateCotizacion.isPending ? 'Guardando...' : (
                 <><Save className="h-4 w-4 mr-1" /> Guardar Cotización</>
               )
             ) : (
-              <>Siguiente <ChevronRight className="h-4 w-4 ml-1" /></>
+              crearCotizacion.isPending || updateCotizacion.isPending || upsertCostos.isPending ? 'Guardando...' : (
+                <>Siguiente <ChevronRight className="h-4 w-4 ml-1" /></>
+              )
             )}
           </Button>
         </div>

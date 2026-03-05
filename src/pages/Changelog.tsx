@@ -13,6 +13,14 @@ interface ChangelogEntry {
 
 const changelog: ChangelogEntry[] = [
   {
+    version: "4.11.0",
+    date: "2026-03-05",
+    type: "minor",
+    title: "Guardado progresivo por paso en wizard de cotización",
+    description:
+      "El wizard de nueva cotización ahora guarda en la base de datos en cada paso: Paso 1 crea/actualiza la cotización, Paso 2 guarda costos internos, Paso 3 actualiza conceptos de venta y Paso 4 finaliza como Borrador. Si ocurre un error en cualquier paso, no avanza al siguiente.",
+  },
+  {
     version: "4.10.6",
     date: "2026-03-05",
     type: "patch",
