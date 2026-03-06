@@ -3,7 +3,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 const MODOS = ['Marítimo', 'Aéreo', 'Terrestre', 'Multimodal'];
-const TIPOS = ['Importación', 'Exportación', 'Nacional'];
+const TIPOS = ['Importación', 'Exportación', 'Nacional', 'Cross Trade'];
 const INCOTERMS = ['EXW', 'FOB', 'CIF', 'DAP', 'DDP', 'FCA', 'CFR', 'CPT', 'CIP', 'DAT'];
 
 interface Props {
