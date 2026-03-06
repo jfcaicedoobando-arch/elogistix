@@ -1,16 +1,32 @@
 
 
-## Plan: Usar expediente del origen al duplicar
+## Plan: Permitir decimales en el campo Cantidad del P&L
 
-### Cambio único en `src/hooks/useEmbarques.ts`
+### Problema
+El campo "Cant." en `SeccionCostosInternosPLLocal.tsx` (línea 149) usa `replace(/[^0-9]/g, '')` que elimina puntos y comas, impidiendo ingresar cantidades decimales como `1.5`.
 
-En el loop de `useDuplicarEmbarque` (líneas 257-262), reemplazar la llamada a `supabase.rpc('generar_expediente')` por usar directamente `embarqueOrigen.expediente`:
+### Solución
+En `src/components/cotizacion/SeccionCostosInternosPLLocal.tsx`:
 
-- **Eliminar** líneas 258-262 (la llamada RPC y el manejo de error)
-- **Cambiar** línea 268 `expediente: expediente as string` → `expediente: embarqueOrigen.expediente`
-- En el push final al array `creados`, usar `embarqueOrigen.expediente` en lugar de `expediente as string`
+1. **Línea 145**: Cambiar `inputMode="numeric"` → `inputMode="decimal"` para mostrar teclado con punto decimal en móvil.
+2. **Línea 149**: Cambiar el regex de `[^0-9]` a `[^0-9.]` para permitir punto decimal, y usar `parseFloat` en lugar de `parseInt`.
+3. **Línea 152 (onBlur)**: Cambiar default de `1` a `1` pero mantener consistencia con parseFloat.
 
-### Cambio en `src/pages/Changelog.tsx`
+Cambio concreto en el bloque de cantidad (~líneas 144-154):
+```tsx
+<Input
+  type="text" inputMode="decimal"
+  value={fila.cantidad === 0 ? '' : fila.cantidad}
+  onFocus={e => { if (e.target.value === '0') e.target.value = ''; }}
+  onChange={e => {
+    const raw = e.target.value.replace(/[^0-9.]/g, '');
+    updateFila(gi, "cantidad", raw === '' ? 0 : parseFloat(raw));
+  }}
+  onBlur={e => { if (e.target.value === '') updateFila(gi, "cantidad", 1); }}
+  className="h-8 text-sm text-right w-[80px]"
+/>
+```
 
-Entrada v4.15.1 — "Duplicar embarque ahora conserva el mismo expediente del origen"
+### `src/pages/Changelog.tsx`
+Entrada v4.15.6: "Campo de cantidad en P&L ahora acepta valores decimales."
 
