@@ -206,7 +206,7 @@ export function generarPdfCotizacion(cotizacion: CotizacionRow) {
     <div class="resumen">
       <p>Total USD: ${formatCurrencyPdf(totalUSD, 'USD')}</p>
       <p>Total MXN (c/IVA): ${formatCurrencyPdf(totalMXN, 'MXN')}</p>
-      <p class="nota">* Los conceptos en MXN incluyen IVA 16%</p>
+      <p class="nota">* Los cargos en destino incluyen IVA</p>
     </div>
   </section>
 
