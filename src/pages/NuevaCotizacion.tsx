@@ -341,17 +341,20 @@ export default function NuevaCotizacion() {
         toast({ title: "Error al guardar costos", description: err.message, variant: "destructive" });
       }
     } else if (currentStep === 3) {
-      const allConceptos = [...conceptosUSD, ...conceptosMXN];
-      if (allConceptos.some(c => !c.descripcion.trim())) {
-        toast({ title: "Completa todos los conceptos de venta", variant: "destructive" });
+      const conceptosUSDValidos = conceptosUSD.filter(c => c.descripcion && c.descripcion.trim() !== '');
+      const conceptosMXNValidos = conceptosMXN.filter(c => c.descripcion && c.descripcion.trim() !== '');
+
+      if (conceptosUSDValidos.length === 0 && conceptosMXNValidos.length === 0) {
+        toast({ title: "Agrega al menos un concepto de venta", variant: "destructive" });
         return;
       }
+
       try {
         if (cotizacionId) {
           await updateCotizacion.mutateAsync({
             id: cotizacionId,
             data: {
-              conceptos_venta: allConceptos,
+              conceptos_venta: [...conceptosUSDValidos, ...conceptosMXNValidos],
               subtotal: totalUSD,
             },
           });
