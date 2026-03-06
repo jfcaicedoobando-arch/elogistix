@@ -95,9 +95,9 @@ export default function SeccionConceptosVentaCotizacion({
                     >
                       <SelectTrigger><SelectValue placeholder="Selecciona concepto" /></SelectTrigger>
                       <SelectContent>
-                        {CATALOGO_USD.map(opt => (
+                        {[...CONCEPTOS_COSTO_USD].map(opt => (
                           <SelectItem key={opt} value={opt}>
-                            {CONCEPTOS_CON_IVA.includes(opt) ? `${opt} *` : opt}
+                            {(CONCEPTOS_CON_IVA_USD as readonly string[]).includes(opt) ? `${opt} *` : opt}
                           </SelectItem>
                         ))}
                       </SelectContent>
