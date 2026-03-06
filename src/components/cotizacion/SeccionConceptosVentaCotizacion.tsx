@@ -89,7 +89,7 @@ export default function SeccionConceptosVentaCotizacion({
                           setTimeout(() => actualizarConceptoUSD(i, '_esOtro', true), 0);
                         } else {
                           actualizarConceptoUSD(i, 'descripcion', val);
-                          actualizarConceptoUSD(i, 'aplica_iva', CONCEPTOS_CON_IVA.includes(val));
+                          actualizarConceptoUSD(i, 'aplica_iva', (CONCEPTOS_CON_IVA_USD as readonly string[]).includes(val));
                         }
                       }}
                     >
