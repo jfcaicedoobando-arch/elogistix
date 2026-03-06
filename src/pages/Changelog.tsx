@@ -13,6 +13,14 @@ interface ChangelogEntry {
 
 const changelog: ChangelogEntry[] = [
   {
+    version: "4.15.1",
+    date: "2026-03-06",
+    type: "patch",
+    title: "Duplicar embarque conserva expediente del origen",
+    description:
+      "Al duplicar un embarque, las copias ahora conservan el mismo número de expediente del embarque origen en lugar de generar uno nuevo.",
+  },
+  {
     version: "4.15.0",
     date: "2026-03-06",
     type: "minor",

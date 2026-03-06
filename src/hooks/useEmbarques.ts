@@ -255,17 +255,11 @@ export function useDuplicarEmbarque() {
       const creados: { id: string; expediente: string }[] = [];
 
       for (const copia of copias) {
-        // 1. Generar expediente
-        const { data: expediente, error: errExp } = await supabase.rpc('generar_expediente', {
-          tipo_op: embarqueOrigen.tipo,
-        });
-        if (errExp) throw errExp;
-
-        // 2. Insertar embarque
+        // Insertar embarque con el mismo expediente del origen
         const { data: nuevoEmbarque, error: errIns } = await supabase
           .from('embarques')
           .insert({
-            expediente: expediente as string,
+            expediente: embarqueOrigen.expediente,
             estado: 'Cotización' as any,
             cliente_id: embarqueOrigen.cliente_id,
             cliente_nombre: embarqueOrigen.cliente_nombre,
@@ -353,7 +347,7 @@ export function useDuplicarEmbarque() {
           if (r.error) throw r.error;
         }
 
-        creados.push({ id: nuevoId, expediente: expediente as string });
+        creados.push({ id: nuevoId, expediente: embarqueOrigen.expediente });
       }
 
       return creados;
