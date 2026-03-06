@@ -231,6 +231,139 @@ export function useUpdateEmbarque() {
   });
 }
 
+interface DuplicarEmbarqueInput {
+  embarqueOrigen: EmbarqueRow;
+  copias: Array<{
+    num_contenedor: string;
+    tipo_contenedor: string;
+    peso_kg: number;
+    volumen_m3: number;
+    piezas: number;
+  }>;
+}
+
+export function useDuplicarEmbarque() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ embarqueOrigen, copias }: DuplicarEmbarqueInput) => {
+      // Fetch conceptos del origen
+      const [{ data: ventaOrigen }, { data: costoOrigen }] = await Promise.all([
+        supabase.from('conceptos_venta').select('*').eq('embarque_id', embarqueOrigen.id),
+        supabase.from('conceptos_costo').select('*').eq('embarque_id', embarqueOrigen.id),
+      ]);
+
+      const creados: { id: string; expediente: string }[] = [];
+
+      for (const copia of copias) {
+        // 1. Generar expediente
+        const { data: expediente, error: errExp } = await supabase.rpc('generar_expediente', {
+          tipo_op: embarqueOrigen.tipo,
+        });
+        if (errExp) throw errExp;
+
+        // 2. Insertar embarque
+        const { data: nuevoEmbarque, error: errIns } = await supabase
+          .from('embarques')
+          .insert({
+            expediente: expediente as string,
+            estado: 'Cotización' as any,
+            cliente_id: embarqueOrigen.cliente_id,
+            cliente_nombre: embarqueOrigen.cliente_nombre,
+            modo: embarqueOrigen.modo,
+            tipo: embarqueOrigen.tipo,
+            incoterm: embarqueOrigen.incoterm,
+            bl_master: embarqueOrigen.bl_master,
+            bl_house: embarqueOrigen.bl_house,
+            naviera: embarqueOrigen.naviera,
+            puerto_origen: embarqueOrigen.puerto_origen,
+            puerto_destino: embarqueOrigen.puerto_destino,
+            aeropuerto_origen: embarqueOrigen.aeropuerto_origen,
+            aeropuerto_destino: embarqueOrigen.aeropuerto_destino,
+            ciudad_origen: embarqueOrigen.ciudad_origen,
+            ciudad_destino: embarqueOrigen.ciudad_destino,
+            aerolinea: embarqueOrigen.aerolinea,
+            transportista: embarqueOrigen.transportista,
+            agente: embarqueOrigen.agente,
+            shipper: embarqueOrigen.shipper,
+            consignatario: embarqueOrigen.consignatario,
+            descripcion_mercancia: embarqueOrigen.descripcion_mercancia,
+            tipo_carga: embarqueOrigen.tipo_carga,
+            tipo_servicio: embarqueOrigen.tipo_servicio,
+            operador: embarqueOrigen.operador,
+            mawb: embarqueOrigen.mawb,
+            hawb: embarqueOrigen.hawb,
+            carta_porte: embarqueOrigen.carta_porte,
+            etd: embarqueOrigen.etd,
+            eta: embarqueOrigen.eta,
+            tipo_cambio_usd: embarqueOrigen.tipo_cambio_usd,
+            tipo_cambio_eur: embarqueOrigen.tipo_cambio_eur,
+            contenedor: copia.num_contenedor || null,
+            tipo_contenedor: copia.tipo_contenedor || null,
+            peso_kg: copia.peso_kg,
+            volumen_m3: copia.volumen_m3,
+            piezas: copia.piezas,
+          })
+          .select()
+          .single();
+        if (errIns) throw errIns;
+
+        const nuevoId = nuevoEmbarque.id;
+
+        // 3. Copiar conceptos
+        const promesas: PromiseLike<any>[] = [];
+        if (ventaOrigen && ventaOrigen.length > 0) {
+          promesas.push(
+            supabase.from('conceptos_venta').insert(
+              ventaOrigen.map(cv => ({
+                embarque_id: nuevoId,
+                descripcion: cv.descripcion,
+                cantidad: cv.cantidad,
+                precio_unitario: cv.precio_unitario,
+                moneda: cv.moneda,
+                total: cv.total,
+              }))
+            )
+          );
+        }
+        if (costoOrigen && costoOrigen.length > 0) {
+          promesas.push(
+            supabase.from('conceptos_costo').insert(
+              costoOrigen.map(cc => ({
+                embarque_id: nuevoId,
+                concepto: cc.concepto,
+                proveedor_nombre: cc.proveedor_nombre,
+                proveedor_id: cc.proveedor_id,
+                moneda: cc.moneda,
+                monto: cc.monto,
+              }))
+            )
+          );
+        }
+        // Nota de sistema
+        promesas.push(
+          supabase.from('notas_embarque').insert({
+            embarque_id: nuevoId,
+            contenido: `Embarque duplicado desde ${embarqueOrigen.expediente}`,
+            tipo: 'sistema' as const,
+          })
+        );
+
+        const results = await Promise.all(promesas);
+        for (const r of results) {
+          if (r.error) throw r.error;
+        }
+
+        creados.push({ id: nuevoId, expediente: expediente as string });
+      }
+
+      return creados;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['embarques'] });
+    },
+  });
+}
+
 export function useProveedoresForSelect() {
   return useQuery({
     queryKey: ['proveedores', 'select'],
