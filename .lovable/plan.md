@@ -1,86 +1,34 @@
 
 
-## Plan de Refactorización por Fases
+## Plan: Duplicar Embarque
 
-### Hallazgos
+### Cambios
 
-**1. Código duplicado — `profitBadge`**
-La función `profitBadge` está definida 3 veces con lógica casi idéntica:
-- `SeccionCostosInternosPLLocal.tsx` (línea 37)
-- `SeccionCostosInternosPL.tsx` (línea 36)
-- `NuevaCotizacion.tsx` como `profitBadgeLocal` (línea 368)
+**1. `src/hooks/useEmbarques.ts`** — Agregar `useDuplicarEmbarque`
 
-**2. Código duplicado — lógica de P&L (calcPL)**
-El cálculo de totales de costo/venta/profit/porcentaje se repite en `NuevaCotizacion.tsx` (línea 184) y de forma equivalente dentro de los dos componentes `SeccionCostosInternos*`.
+Hook `useMutation` que recibe `{ embarqueOrigen: EmbarqueRow, copias: Array<{ num_contenedor, tipo_contenedor, peso_kg, volumen_m3, piezas }> }`.
 
-**3. Archivo excesivamente largo — `NuevaCotizacion.tsx` (687 líneas)**
-Concentra demasiada lógica: 30+ variables de estado, funciones de validación por paso, construcción de payload, helpers de conceptos USD/MXN, y JSX del Paso 4 (resumen) directamente en el componente.
+Para cada copia:
+1. `supabase.rpc('generar_expediente', { tipo_op: embarqueOrigen.tipo })` → obtiene expediente
+2. Inserta embarque nuevo copiando campos del origen (cliente_id, cliente_nombre, modo, tipo, incoterm, bl_master, bl_house, naviera, puerto_origen, puerto_destino, etc.) pero con expediente generado, contenedor/peso/volumen/piezas de la copia, estado `'Cotización'`
+3. Copia `conceptos_venta` y `conceptos_costo` del origen al nuevo embarque_id
+4. Retorna array de `{ id, expediente }` creados
 
-**4. Archivo largo — `CotizacionDetalle.tsx` (475 líneas)**
-La sección de "Mercancía" (líneas 242-376) con tablas de dimensiones LCL y Aéreas podría extraerse a un componente dedicado.
+`onSuccess`: `invalidateQueries(['embarques'])`
 
-**5. Duplicación helpers USD/MXN en `NuevaCotizacion.tsx`**
-`actualizarConceptoUSD` y `actualizarConceptoMXN` (líneas 132-167) son casi idénticos. Solo difiere el manejo de IVA. Podrían ser una sola función parametrizada.
+**2. `src/pages/EmbarqueDetalle.tsx`** — Botón + Dialog de duplicación
 
-**6. Código potencialmente no utilizado**
-- `SeccionCostosInternosPLLocal.tsx` tiene una línea vacía donde estaba `onCostosChange` (línea 34) — limpieza pendiente de la interfaz `Props`.
+- Importar `Copy` de lucide, `Dialog` components, `useDuplicarEmbarque`
+- Estado: `dialogDuplicarAbierto`, `cantidadCopias` (1-10), `filaCopias` (array editable)
+- Botón "Duplicar" con ícono Copy junto a Editar/Imprimir, visible solo si `canEdit`
+- Dialog con:
+  - Header: "Duplicar Embarque" + subtítulo con expediente y BL
+  - Control +/− para cantidad (1-10), sincroniza array de filas
+  - Tabla editable: # | Contenedor | Tipo Contenedor | Peso | Volumen | Piezas
+  - Valores iniciales copiados del embarque origen (contenedor vacío)
+  - Nota informativa azul con campos que se copian automáticamente
+  - Footer: Cancelar + "Crear N Embarques"
+- `onSuccess`: toast con expedientes creados, cerrar dialog
 
----
-
-### Fase 1 — Extraer utilidades compartidas de P&L
-
-**Archivo nuevo: `src/lib/profitUtils.tsx`**
-- Mover `profitBadge(pct: number)` como componente/función exportada
-- Mover `calcularTotalesPL(filas)` como función utilitaria exportada
-- Mover `rentabilidadGlobal(...)` como componente exportado
-
-**Archivos a actualizar:**
-- `SeccionCostosInternosPLLocal.tsx` — importar en vez de definir localmente
-- `SeccionCostosInternosPL.tsx` — importar en vez de definir localmente
-- `NuevaCotizacion.tsx` — eliminar `profitBadgeLocal` y `calcPL`, importar los compartidos
-
----
-
-### Fase 2 — Extraer Paso 4 (Resumen) de NuevaCotizacion
-
-**Archivo nuevo: `src/components/cotizacion/PasoResumenCotizacion.tsx`**
-- Extraer todo el JSX del Paso 4 (líneas 549-648) a un componente independiente
-- Props: datos de operación, totales P&L, totales de venta
-
-Esto reduce `NuevaCotizacion.tsx` en ~100 líneas.
-
----
-
-### Fase 3 — Consolidar helpers de conceptos USD/MXN
-
-**En `NuevaCotizacion.tsx`:**
-- Reemplazar `actualizarConceptoUSD` y `actualizarConceptoMXN` por una sola función genérica `actualizarConcepto(moneda, index, campo, valor)` que encapsula la lógica de IVA según la moneda.
-- Igualmente consolidar `agregarConcepto` y `eliminarConcepto` en versiones parametrizadas.
-
----
-
-### Fase 4 — Extraer sección Mercancía de CotizacionDetalle
-
-**Archivo nuevo: `src/components/cotizacion/SeccionMercanciaCotizacionDetalle.tsx`**
-- Mover la Card de "Mercancía" (líneas 242-376 de `CotizacionDetalle.tsx`) incluyendo las tablas de dimensiones LCL y Aéreas.
-- Props: cotización completa (solo lectura)
-
----
-
-### Fase 5 — Limpieza menor
-
-- Eliminar línea vacía residual en la interfaz `Props` de `SeccionCostosInternosPLLocal.tsx` (línea 34)
-- Actualizar `Changelog.tsx` con entrada v4.13.0
-
----
-
-### Resumen de impacto
-
-| Fase | Líneas eliminadas (aprox.) | Archivos nuevos | Archivos modificados |
-|------|---------------------------|-----------------|---------------------|
-| 1    | ~30 duplicadas            | 1               | 3                   |
-| 2    | ~100 de NuevaCotizacion   | 1               | 1                   |
-| 3    | ~20 de NuevaCotizacion    | 0               | 1                   |
-| 4    | ~130 de CotizacionDetalle | 1               | 1                   |
-| 5    | ~2                        | 0               | 2                   |
+**3. `src/pages/Changelog.tsx`** — entrada v4.14.0
 
