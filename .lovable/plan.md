@@ -1,24 +1,16 @@
 
 
-## Plan: Botón Eliminar Embarque (solo Admin)
+## Plan: Usar expediente del origen al duplicar
 
-### Cambios
+### Cambio único en `src/hooks/useEmbarques.ts`
 
-**1. `src/hooks/useEmbarques.ts`** — Agregar `useEliminarEmbarque`
+En el loop de `useDuplicarEmbarque` (líneas 257-262), reemplazar la llamada a `supabase.rpc('generar_expediente')` por usar directamente `embarqueOrigen.expediente`:
 
-Hook `useMutation` que:
-1. Elimina registros relacionados en orden: `conceptos_venta`, `conceptos_costo`, `documentos_embarque`, `notas_embarque`, `facturas` (por `embarque_id`)
-2. Elimina el embarque de la tabla `embarques`
-3. `onSuccess`: `invalidateQueries(['embarques'])`
+- **Eliminar** líneas 258-262 (la llamada RPC y el manejo de error)
+- **Cambiar** línea 268 `expediente: expediente as string` → `expediente: embarqueOrigen.expediente`
+- En el push final al array `creados`, usar `embarqueOrigen.expediente` en lugar de `expediente as string`
 
-**2. `src/pages/EmbarqueDetalle.tsx`** — Botón + AlertDialog de eliminación
+### Cambio en `src/pages/Changelog.tsx`
 
-- Importar `Trash2` de lucide y `useEliminarEmbarque`
-- Agregar botón rojo "Eliminar" visible solo si `isAdmin` (no `canEdit`, solo admin)
-- AlertDialog con doble confirmación (siguiendo el patrón existente de seguridad del proyecto):
-  - Primera alerta: "¿Estás seguro de eliminar este embarque?"
-  - Segunda alerta: "Esta acción es irreversible. Se eliminarán todos los documentos, costos, conceptos de venta y notas asociados."
-- `onSuccess`: registrar en bitácora, toast de confirmación, navegar a `/embarques`
-
-**3. `src/pages/Changelog.tsx`** — Entrada v4.15.0
+Entrada v4.15.1 — "Duplicar embarque ahora conserva el mismo expediente del origen"
 
