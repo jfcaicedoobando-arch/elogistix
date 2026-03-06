@@ -20,7 +20,8 @@ import { StepIndicator } from "@/components/embarque/StepIndicator";
 import SeccionDestinatario from "@/components/cotizacion/SeccionDestinatario";
 import SeccionDatosGeneralesCotizacion from "@/components/cotizacion/SeccionDatosGeneralesCotizacion";
 import SeccionRutaCotizacion from "@/components/cotizacion/SeccionRutaCotizacion";
-import SeccionConceptosVentaCotizacion, { CONCEPTOS_CON_IVA } from "@/components/cotizacion/SeccionConceptosVentaCotizacion";
+import SeccionConceptosVentaCotizacion from "@/components/cotizacion/SeccionConceptosVentaCotizacion";
+import { CONCEPTOS_CON_IVA_USD } from "@/data/cotizacionConstants";
 import SeccionMercanciaMaritimaFCL from "@/components/cotizacion/SeccionMercanciaMaritimaFCL";
 import SeccionMercanciaMaritimeLCL from "@/components/cotizacion/SeccionMercanciaMaritimeLCL";
 import SeccionMercanciaGeneral from "@/components/cotizacion/SeccionMercanciaGeneral";
@@ -28,10 +29,6 @@ import SeccionMercanciaAerea from "@/components/cotizacion/SeccionMercanciaAerea
 import SeccionCostosInternosPLLocal, { type FilaCostoLocal } from "@/components/cotizacion/SeccionCostosInternosPLLocal";
 import PasoResumenCotizacion from "@/components/cotizacion/PasoResumenCotizacion";
 
-const CONCEPTOS_CON_IVA_USD = [
-  'Handling', 'Desconsolidación', 'Revalidación',
-  'Demoras', 'Cargos en Destino', 'Release',
-];
 
 const WIZARD_STEPS = [
   { num: 1, title: 'Datos Generales' },
@@ -136,7 +133,7 @@ export default function NuevaCotizacion() {
     setter(prev => {
       const copia = [...prev];
       (copia[index] as any)[campo] = valor;
-      if (moneda === "USD" && campo === 'descripcion' && !CONCEPTOS_CON_IVA.includes(valor)) {
+      if (moneda === "USD" && campo === 'descripcion' && !(CONCEPTOS_CON_IVA_USD as readonly string[]).includes(valor)) {
         copia[index].aplica_iva = false;
       }
       const sub = copia[index].cantidad * copia[index].precio_unitario;
@@ -290,7 +287,7 @@ export default function NuevaCotizacion() {
           const usdFromCostos = costosInternos
             .filter(c => c.moneda === 'USD' && c.concepto.trim())
             .map(c => {
-              const tieneIva = CONCEPTOS_CON_IVA_USD.includes(c.concepto);
+              const tieneIva = (CONCEPTOS_CON_IVA_USD as readonly string[]).includes(c.concepto);
               return { descripcion: c.concepto, unidad_medida: c.unidad_medida, cantidad: c.cantidad, precio_unitario: c.precio_venta, moneda: 'USD' as const, aplica_iva: tieneIva, total: c.cantidad * c.precio_venta * (tieneIva ? 1.16 : 1) };
             });
           const mxnFromCostos = costosInternos

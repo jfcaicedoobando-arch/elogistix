@@ -7,17 +7,7 @@ import { Switch } from "@/components/ui/switch";
 import { Plus, Trash2 } from "lucide-react";
 import type { ConceptoVentaCotizacion } from "@/hooks/useCotizaciones";
 import { formatCurrency } from "@/lib/formatters";
-
-const CATALOGO_USD = [
-  'Cargos en Origen', 'Costos Portuarios', 'Consolidación', 'Seguro',
-  'Recolección', 'Modificación de BL', 'Flete Marítimo', 'Flete Aéreo',
-  'Flete Terrestre', 'Handling', 'Desconsolidación', 'Revalidación',
-  'Demoras', 'Cargos en Destino', 'Release', 'Otro'
-];
-
-const CATALOGO_MXN = ['Entrega Nacional', 'Honorarios de Despacho Aduanal', 'Otro'];
-
-const CONCEPTOS_CON_IVA = ['Handling', 'Desconsolidación', 'Revalidación', 'Demoras', 'Cargos en Destino', 'Release'];
+import { CONCEPTOS_COSTO_USD, CONCEPTOS_COSTO_MXN, CONCEPTOS_CON_IVA_USD } from "@/data/cotizacionConstants";
 
 const UNIDADES_MEDIDA = ['BL', 'W/M', 'Documento', 'Contenedor', 'Kilo', 'Embarque'];
 
@@ -51,7 +41,7 @@ function UnidadMedidaSelect({ value, onChange }: { value: string; onChange: (v: 
   );
 }
 
-export { CONCEPTOS_CON_IVA };
+
 
 export default function SeccionConceptosVentaCotizacion({
   conceptosUSD, conceptosMXN,
@@ -78,12 +68,12 @@ export default function SeccionConceptosVentaCotizacion({
         </CardHeader>
         <CardContent className="space-y-3">
           {conceptosUSD.map((c, i) => {
-            const puedeIva = CONCEPTOS_CON_IVA.includes(c.descripcion);
+            const puedeIva = (CONCEPTOS_CON_IVA_USD as readonly string[]).includes(c.descripcion);
             return (
               <div key={i} className={`grid grid-cols-12 gap-2 items-end rounded-md px-1 py-1 ${c.aplica_iva ? 'bg-amber-50/30' : ''}`}>
                 <div className="col-span-3">
                   {i === 0 && <Label className="text-xs">Concepto</Label>}
-                  {c.descripcion !== '' && !CATALOGO_USD.includes(c.descripcion) && c.descripcion !== 'Otro' ? (
+                  {c.descripcion !== '' && !(CONCEPTOS_COSTO_USD as readonly string[]).includes(c.descripcion) && c.descripcion !== 'Otro' ? (
                     <Input
                       value={c.descripcion}
                       onChange={e => actualizarConceptoUSD(i, 'descripcion', e.target.value)}
@@ -91,7 +81,7 @@ export default function SeccionConceptosVentaCotizacion({
                     />
                   ) : (
                     <Select
-                      value={CATALOGO_USD.includes(c.descripcion) ? c.descripcion : c.descripcion === '' ? '' : 'Otro'}
+                      value={(CONCEPTOS_COSTO_USD as readonly string[]).includes(c.descripcion) ? c.descripcion : c.descripcion === '' ? '' : 'Otro'}
                     onValueChange={val => {
                         if (val === 'Otro') {
                           actualizarConceptoUSD(i, 'descripcion', '');
@@ -99,15 +89,15 @@ export default function SeccionConceptosVentaCotizacion({
                           setTimeout(() => actualizarConceptoUSD(i, '_esOtro', true), 0);
                         } else {
                           actualizarConceptoUSD(i, 'descripcion', val);
-                          actualizarConceptoUSD(i, 'aplica_iva', CONCEPTOS_CON_IVA.includes(val));
+                          actualizarConceptoUSD(i, 'aplica_iva', (CONCEPTOS_CON_IVA_USD as readonly string[]).includes(val));
                         }
                       }}
                     >
                       <SelectTrigger><SelectValue placeholder="Selecciona concepto" /></SelectTrigger>
                       <SelectContent>
-                        {CATALOGO_USD.map(opt => (
+                        {[...CONCEPTOS_COSTO_USD].map(opt => (
                           <SelectItem key={opt} value={opt}>
-                            {CONCEPTOS_CON_IVA.includes(opt) ? `${opt} *` : opt}
+                            {(CONCEPTOS_CON_IVA_USD as readonly string[]).includes(opt) ? `${opt} *` : opt}
                           </SelectItem>
                         ))}
                       </SelectContent>
@@ -207,7 +197,7 @@ export default function SeccionConceptosVentaCotizacion({
               <div key={i} className="grid grid-cols-12 gap-2 items-end">
                 <div className="col-span-2">
                   {i === 0 && <Label className="text-xs">Concepto</Label>}
-                  {c.descripcion !== '' && !CATALOGO_MXN.includes(c.descripcion) && c.descripcion !== 'Otro' ? (
+                  {c.descripcion !== '' && !(CONCEPTOS_COSTO_MXN as readonly string[]).includes(c.descripcion) && c.descripcion !== 'Otro' ? (
                     <Input
                       value={c.descripcion}
                       onChange={e => actualizarConceptoMXN(i, 'descripcion', e.target.value)}
@@ -215,7 +205,7 @@ export default function SeccionConceptosVentaCotizacion({
                     />
                   ) : (
                     <Select
-                      value={CATALOGO_MXN.includes(c.descripcion) ? c.descripcion : c.descripcion === '' ? '' : 'Otro'}
+                      value={(CONCEPTOS_COSTO_MXN as readonly string[]).includes(c.descripcion) ? c.descripcion : c.descripcion === '' ? '' : 'Otro'}
                       onValueChange={val => {
                         if (val === 'Otro') {
                           actualizarConceptoMXN(i, 'descripcion', '');
@@ -227,7 +217,7 @@ export default function SeccionConceptosVentaCotizacion({
                     >
                       <SelectTrigger><SelectValue placeholder="Selecciona concepto" /></SelectTrigger>
                       <SelectContent>
-                        {CATALOGO_MXN.map(opt => (
+                        {[...CONCEPTOS_COSTO_MXN].map(opt => (
                           <SelectItem key={opt} value={opt}>{opt}</SelectItem>
                         ))}
                       </SelectContent>
