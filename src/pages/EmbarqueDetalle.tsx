@@ -1,5 +1,5 @@
 import { useParams, useNavigate } from "react-router-dom";
-import { ArrowLeft, Edit, Printer, ChevronRight, Copy, Plus, Minus, Info } from "lucide-react";
+import { ArrowLeft, Edit, Printer, ChevronRight, Copy, Plus, Minus, Info, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -33,6 +33,7 @@ import {
   useEmbarqueFacturas,
   useAvanzarEstadoEmbarque,
   useDuplicarEmbarque,
+  useEliminarEmbarque,
 } from "@/hooks/useEmbarques";
 import { TabResumen } from "@/components/embarque/TabResumen";
 import { TabDocumentos } from "@/components/embarque/TabDocumentos";
@@ -45,7 +46,7 @@ export default function EmbarqueDetalle() {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { user } = useAuth();
-  const { canEdit } = usePermissions();
+  const { canEdit, isAdmin } = usePermissions();
   const registrarActividad = useRegistrarActividad();
   const { data: embarque, isLoading } = useEmbarque(id);
   const { data: conceptosVenta = [] } = useEmbarqueConceptosVenta(id);
@@ -56,11 +57,14 @@ export default function EmbarqueDetalle() {
   const avanzarEstado = useAvanzarEstadoEmbarque();
 
   const duplicarEmbarque = useDuplicarEmbarque();
+  const eliminarEmbarque = useEliminarEmbarque();
 
   const [uploadingDocId, setUploadingDocId] = useState<string | null>(null);
   const [downloadingDocId, setDownloadingDocId] = useState<string | null>(null);
   const [deletingDocId, setDeletingDocId] = useState<string | null>(null);
   const [dialogDuplicarAbierto, setDialogDuplicarAbierto] = useState(false);
+  const [confirmarEliminar1, setConfirmarEliminar1] = useState(false);
+  const [confirmarEliminar2, setConfirmarEliminar2] = useState(false);
 
   interface FilaCopia {
     num_contenedor: string;
@@ -124,6 +128,27 @@ export default function EmbarqueDetalle() {
       setDialogDuplicarAbierto(false);
     } catch (err: any) {
       toast({ title: "Error al duplicar", description: err.message, variant: "destructive" });
+    }
+  };
+
+  const handleEliminarEmbarque = async () => {
+    if (!embarque || !id) return;
+    try {
+      await eliminarEmbarque.mutateAsync(id);
+      registrarActividad.mutate({
+        accion: 'eliminar',
+        modulo: 'embarques',
+        entidad_id: id,
+        entidad_nombre: embarque.expediente,
+        detalles: { cliente: embarque.cliente_nombre, modo: embarque.modo, tipo: embarque.tipo },
+      });
+      toast({ title: "Embarque eliminado", description: `${embarque.expediente} fue eliminado permanentemente.` });
+      navigate("/embarques");
+    } catch (err: any) {
+      toast({ title: "Error al eliminar", description: err.message, variant: "destructive" });
+    } finally {
+      setConfirmarEliminar1(false);
+      setConfirmarEliminar2(false);
     }
   };
 
@@ -291,6 +316,11 @@ export default function EmbarqueDetalle() {
           )}
           {canEdit && <Button variant="outline" size="sm" onClick={() => navigate(`/embarques/${id}/editar`)}><Edit className="h-4 w-4 mr-1" /> Editar</Button>}
           {canEdit && <Button variant="outline" size="sm" onClick={abrirDialogDuplicar}><Copy className="h-4 w-4 mr-1" /> Duplicar</Button>}
+          {isAdmin && (
+            <Button variant="destructive" size="sm" onClick={() => setConfirmarEliminar1(true)} disabled={eliminarEmbarque.isPending}>
+              <Trash2 className="h-4 w-4 mr-1" /> Eliminar
+            </Button>
+          )}
           <Button variant="outline" size="sm"><Printer className="h-4 w-4 mr-1" /> Imprimir</Button>
         </div>
       </div>
@@ -397,6 +427,53 @@ export default function EmbarqueDetalle() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+
+      {/* AlertDialog 1: Primera confirmación de eliminación */}
+      <AlertDialog open={confirmarEliminar1} onOpenChange={setConfirmarEliminar1}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>¿Eliminar embarque {embarque.expediente}?</AlertDialogTitle>
+            <AlertDialogDescription>
+              ¿Estás seguro de que deseas eliminar este embarque? Esta acción no se puede deshacer.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={() => {
+                setConfirmarEliminar1(false);
+                setConfirmarEliminar2(true);
+              }}
+            >
+              Sí, eliminar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* AlertDialog 2: Segunda confirmación (irreversible) */}
+      <AlertDialog open={confirmarEliminar2} onOpenChange={setConfirmarEliminar2}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>⚠️ Confirmación final</AlertDialogTitle>
+            <AlertDialogDescription>
+              Esta acción es <strong>irreversible</strong>. Se eliminarán permanentemente todos los documentos, costos, conceptos de venta, notas y facturas asociados al embarque <strong>{embarque.expediente}</strong>.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={handleEliminarEmbarque}
+              disabled={eliminarEmbarque.isPending}
+            >
+              {eliminarEmbarque.isPending ? 'Eliminando...' : 'Eliminar permanentemente'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
 
       <Tabs defaultValue="resumen">

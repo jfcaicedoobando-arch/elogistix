@@ -425,3 +425,30 @@ export function useCreateNotaEmbarque() {
     },
   });
 }
+
+export function useEliminarEmbarque() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (embarqueId: string) => {
+      // Eliminar registros relacionados en orden para respetar FK
+      const tablas = [
+        'conceptos_venta',
+        'conceptos_costo',
+        'documentos_embarque',
+        'notas_embarque',
+        'facturas',
+      ] as const;
+
+      for (const tabla of tablas) {
+        const { error } = await supabase.from(tabla).delete().eq('embarque_id', embarqueId);
+        if (error) throw error;
+      }
+
+      const { error } = await supabase.from('embarques').delete().eq('id', embarqueId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['embarques'] });
+    },
+  });
+}

@@ -13,6 +13,14 @@ interface ChangelogEntry {
 
 const changelog: ChangelogEntry[] = [
   {
+    version: "4.15.0",
+    date: "2026-03-06",
+    type: "minor",
+    title: "Eliminar Embarque (solo Admin)",
+    description:
+      "Nuevo botón para eliminar embarques de forma permanente, disponible exclusivamente para administradores. Incluye doble confirmación de seguridad y eliminación en cascada de todos los registros relacionados (documentos, costos, conceptos de venta, notas y facturas). La acción queda registrada en la bitácora.",
+  },
+  {
     version: "4.14.0",
     date: "2026-03-06",
     type: "minor",
