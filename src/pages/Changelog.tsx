@@ -13,6 +13,14 @@ interface ChangelogEntry {
 
 const changelog: ChangelogEntry[] = [
   {
+    version: "4.15.6",
+    date: "2026-03-06",
+    type: "patch",
+    title: "Cantidad decimal en P&L",
+    description:
+      "El campo de cantidad en la sección de costos P&L ahora acepta valores decimales con punto.",
+  },
+  {
     version: "4.15.5",
     date: "2026-03-06",
     type: "patch",
