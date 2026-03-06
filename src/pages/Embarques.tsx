@@ -15,6 +15,7 @@ import { useEmbarques } from "@/hooks/useEmbarques";
 import { useClientesForSelect } from "@/hooks/useClientes";
 import { usePermissions } from "@/hooks/usePermissions";
 import { formatDate, getEstadoColor, getModoIcon } from "@/lib/helpers";
+import { calcularEstadoEmbarque } from "@/hooks/useEmbarques";
 import SearchInput from "@/components/SearchInput";
 import PaginationControls from "@/components/PaginationControls";
 import type { ModoTransporte, EstadoEmbarque } from "@/data/types";
