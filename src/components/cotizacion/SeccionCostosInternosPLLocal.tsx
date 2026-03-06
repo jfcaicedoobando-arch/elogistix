@@ -7,6 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { DollarSign, Banknote, TrendingUp, ChevronDown, Plus, Trash2 } from "lucide-react";
 import { formatCurrency } from "@/lib/formatters";
+import { ProfitBadge, RentabilidadGlobalBadge } from "@/lib/profitUtils";
 
 const CONCEPTOS_USD = [
   'Cargos en Origen', 'Costos Portuarios', 'Consolidación', 'Seguro',
@@ -31,24 +32,6 @@ export interface FilaCostoLocal {
 interface Props {
   filas: FilaCostoLocal[];
   setFilas: React.Dispatch<React.SetStateAction<FilaCostoLocal[]>>;
-  
-}
-
-function profitBadge(profit: number) {
-  if (profit > 15) return <Badge className="bg-emerald-100 text-emerald-700 border-emerald-200">{profit.toFixed(1)}%</Badge>;
-  if (profit > 0) return <Badge className="bg-amber-100 text-amber-700 border-amber-200">{profit.toFixed(1)}%</Badge>;
-  if (profit < 0) return <Badge className="bg-red-100 text-red-700 border-red-200">{profit.toFixed(1)}%</Badge>;
-  return <Badge variant="secondary">0%</Badge>;
-}
-
-function rentabilidadGlobal(pctUSD: number, pctMXN: number, hasUSD: boolean, hasMXN: boolean) {
-  const usdOk = !hasUSD || pctUSD > 15;
-  const mxnOk = !hasMXN || pctMXN > 10;
-  if (usdOk && mxnOk && (hasUSD || hasMXN)) return <Badge className="bg-emerald-100 text-emerald-700 border-emerald-200 text-sm">Rentabilidad Saludable</Badge>;
-  const usdNeg = hasUSD && pctUSD < 0;
-  const mxnNeg = hasMXN && pctMXN < 0;
-  if (usdNeg || mxnNeg) return <Badge className="bg-red-100 text-red-700 border-red-200 text-sm">Rentabilidad Negativa</Badge>;
-  return <Badge className="bg-amber-100 text-amber-700 border-amber-200 text-sm">Rentabilidad Baja</Badge>;
 }
 
 export default function SeccionCostosInternosPLLocal({ filas, setFilas }: Props) {
@@ -90,8 +73,8 @@ export default function SeccionCostosInternosPLLocal({ filas, setFilas }: Props)
     const totalCosto = rows.reduce((s, f) => s + f.cantidad * f.costo_unitario, 0);
     const totalVenta = rows.reduce((s, f) => s + f.cantidad * f.precio_venta, 0);
     const profit = totalVenta - totalCosto;
-    const pct = totalVenta !== 0 ? (profit / totalVenta) * 100 : 0;
-    return { totalCosto, totalVenta, profit, pct };
+    const porcentaje = totalVenta !== 0 ? (profit / totalVenta) * 100 : 0;
+    return { totalCosto, totalVenta, profit, porcentaje };
   };
 
   const totalesUSD = useMemo(() => calcTotals(filasUSD), [filasUSD]);
@@ -208,7 +191,7 @@ export default function SeccionCostosInternosPLLocal({ filas, setFilas }: Props)
                     <span className={`text-sm font-medium w-[100px] text-right ${profit >= 0 ? "text-emerald-600" : "text-red-600"}`}>
                       {formatCurrency(profit, moneda)}
                     </span>
-                    <div className="w-[70px] flex justify-center">{profitBadge(pct)}</div>
+                    <div className="w-[70px] flex justify-center"><ProfitBadge porcentaje={pct} /></div>
                     <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => removeFila(gi)}>
                       <Trash2 className="h-4 w-4 text-destructive" />
                     </Button>
@@ -226,7 +209,7 @@ export default function SeccionCostosInternosPLLocal({ filas, setFilas }: Props)
                   <span className={`w-[100px] text-right ${tots.profit >= 0 ? "text-emerald-600" : "text-red-600"}`}>
                     {formatCurrency(tots.profit, moneda)}
                   </span>
-                  <div className="w-[70px] flex justify-center">{profitBadge(tots.pct)}</div>
+                  <div className="w-[70px] flex justify-center"><ProfitBadge porcentaje={tots.porcentaje} /></div>
                   <div className="w-8" />
                 </div>
               </div>
@@ -251,7 +234,7 @@ export default function SeccionCostosInternosPLLocal({ filas, setFilas }: Props)
                   <TrendingUp className="h-4 w-4 text-violet-500" />
                   Resumen P&L
                   <div className="ml-auto flex items-center gap-2">
-                    {rentabilidadGlobal(totalesUSD.pct, totalesMXN.pct, filasUSD.length > 0, filasMXN.length > 0)}
+                    <RentabilidadGlobalBadge porcentajeUSD={totalesUSD.porcentaje} porcentajeMXN={totalesMXN.porcentaje} tieneUSD={filasUSD.length > 0} tieneMXN={filasMXN.length > 0} />
                     <ChevronDown className="h-4 w-4 text-muted-foreground" />
                   </div>
                 </CardTitle>
@@ -278,7 +261,7 @@ export default function SeccionCostosInternosPLLocal({ filas, setFilas }: Props)
                             {formatCurrency(totalesUSD.profit, "USD")}
                           </span>
                         </div>
-                        <div className="flex justify-center pt-1">{profitBadge(totalesUSD.pct)}</div>
+                        <div className="flex justify-center pt-1"><ProfitBadge porcentaje={totalesUSD.porcentaje} /></div>
                       </CardContent>
                     </Card>
                   )}
@@ -300,7 +283,7 @@ export default function SeccionCostosInternosPLLocal({ filas, setFilas }: Props)
                             {formatCurrency(totalesMXN.profit, "MXN")}
                           </span>
                         </div>
-                        <div className="flex justify-center pt-1">{profitBadge(totalesMXN.pct)}</div>
+                        <div className="flex justify-center pt-1"><ProfitBadge porcentaje={totalesMXN.porcentaje} /></div>
                       </CardContent>
                     </Card>
                   )}

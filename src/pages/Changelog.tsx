@@ -13,6 +13,14 @@ interface ChangelogEntry {
 
 const changelog: ChangelogEntry[] = [
   {
+    version: "4.13.0",
+    date: "2026-03-06",
+    type: "minor",
+    title: "Refactorización: utilidades P&L, componentes extraídos y helpers consolidados",
+    description:
+      "Se extrajo profitBadge, calcularTotalesPL y rentabilidadGlobal a src/lib/profitUtils.tsx eliminando duplicación en 3 archivos. Se creó PasoResumenCotizacion.tsx y SeccionMercanciaCotizacionDetalle.tsx como componentes independientes. Se consolidaron helpers USD/MXN en funciones parametrizadas. NuevaCotizacion.tsx se redujo ~120 líneas y CotizacionDetalle.tsx ~130 líneas.",
+  },
+  {
     version: "4.12.0",
     date: "2026-03-06",
     type: "minor",
