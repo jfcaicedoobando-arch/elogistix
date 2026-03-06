@@ -13,6 +13,14 @@ interface ChangelogEntry {
 
 const changelog: ChangelogEntry[] = [
   {
+    version: "4.15.2",
+    date: "2026-03-06",
+    type: "patch",
+    title: "Columna Unidad y IVA condicional en PDF de cotización",
+    description:
+      "Se agrega la columna 'Unidad' en las tablas de conceptos USD y MXN del PDF. Los conceptos USD con IVA ahora muestran columnas de Subtotal e IVA condicionalmente. Se actualiza el texto del pie a 'Los cargos en destino incluyen IVA'.",
+  },
+  {
     version: "4.15.1",
     date: "2026-03-06",
     type: "patch",

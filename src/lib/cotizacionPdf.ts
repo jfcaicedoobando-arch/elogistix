@@ -22,7 +22,10 @@ export function generarPdfCotizacion(cotizacion: CotizacionRow) {
   // Split conceptos by currency
   const conceptosUSD = cotizacion.conceptos_venta.filter(c => c.moneda === 'USD');
   const conceptosMXN = cotizacion.conceptos_venta.filter(c => c.moneda === 'MXN');
-  const totalUSD = conceptosUSD.reduce((s, c) => s + c.total, 0);
+  const totalUSD = conceptosUSD.reduce((s, c) => {
+    const sub = c.cantidad * c.precio_unitario;
+    return s + (c.aplica_iva ? sub * 1.16 : sub);
+  }, 0);
   const subtotalMXN = conceptosMXN.reduce((s, c) => s + c.cantidad * c.precio_unitario, 0);
   const ivaMXN = subtotalMXN * 0.16;
   const totalMXN = subtotalMXN + ivaMXN;
@@ -94,13 +97,25 @@ export function generarPdfCotizacion(cotizacion: CotizacionRow) {
   // Build concept tables
   const buildUsdTable = () => {
     if (conceptosUSD.length === 0) return '';
-    const rows = conceptosUSD.map(c =>
-      `<tr><td>${c.descripcion}</td><td class="right">${c.cantidad}</td><td class="right">${formatCurrencyPdf(c.precio_unitario, 'USD')}</td><td class="right">${formatCurrencyPdf(c.total, 'USD')}</td></tr>`
-    ).join('');
+    const hayIvaUSD = conceptosUSD.some(c => c.aplica_iva);
+    const headerCols = hayIvaUSD
+      ? '<th>Descripción</th><th>Unidad</th><th class="right">Cantidad</th><th class="right">Precio Unitario</th><th class="right">Subtotal</th><th class="right">IVA (16%)</th><th class="right">Total</th>'
+      : '<th>Descripción</th><th>Unidad</th><th class="right">Cantidad</th><th class="right">Precio Unitario</th><th class="right">Total</th>';
+    const rows = conceptosUSD.map(c => {
+      const unidad = c.unidad_medida || '—';
+      const sub = c.cantidad * c.precio_unitario;
+      if (hayIvaUSD) {
+        const iva = c.aplica_iva ? sub * 0.16 : 0;
+        const total = sub + iva;
+        const desc = c.aplica_iva ? `${c.descripcion} <span style='color:#999;font-size:11px'>(+IVA 16%)</span>` : c.descripcion;
+        return `<tr><td>${desc}</td><td>${unidad}</td><td class="right">${c.cantidad}</td><td class="right">${formatCurrencyPdf(c.precio_unitario, 'USD')}</td><td class="right">${formatCurrencyPdf(sub, 'USD')}</td><td class="right">${c.aplica_iva ? formatCurrencyPdf(iva, 'USD') : '—'}</td><td class="right">${formatCurrencyPdf(total, 'USD')}</td></tr>`;
+      }
+      return `<tr><td>${c.descripcion}</td><td>${unidad}</td><td class="right">${c.cantidad}</td><td class="right">${formatCurrencyPdf(c.precio_unitario, 'USD')}</td><td class="right">${formatCurrencyPdf(sub, 'USD')}</td></tr>`;
+    }).join('');
     return `
       <h4>Conceptos en USD</h4>
       <table>
-        <thead><tr><th>Descripción</th><th class="right">Cantidad</th><th class="right">Precio Unitario</th><th class="right">Total</th></tr></thead>
+        <thead><tr>${headerCols}</tr></thead>
         <tbody>${rows}</tbody>
       </table>
       <p class="subtotal">Total USD: ${formatCurrencyPdf(totalUSD, 'USD')}</p>`;
@@ -111,12 +126,13 @@ export function generarPdfCotizacion(cotizacion: CotizacionRow) {
     const rows = conceptosMXN.map(c => {
       const sub = c.cantidad * c.precio_unitario;
       const iva = sub * 0.16;
-      return `<tr><td>${c.descripcion}</td><td class="right">${c.cantidad}</td><td class="right">${formatCurrencyPdf(c.precio_unitario, 'MXN')}</td><td class="right">${formatCurrencyPdf(sub, 'MXN')}</td><td class="right">${formatCurrencyPdf(iva, 'MXN')}</td><td class="right">${formatCurrencyPdf(sub + iva, 'MXN')}</td></tr>`;
+      const unidad = c.unidad_medida || '—';
+      return `<tr><td>${c.descripcion}</td><td>${unidad}</td><td class="right">${c.cantidad}</td><td class="right">${formatCurrencyPdf(c.precio_unitario, 'MXN')}</td><td class="right">${formatCurrencyPdf(sub, 'MXN')}</td><td class="right">${formatCurrencyPdf(iva, 'MXN')}</td><td class="right">${formatCurrencyPdf(sub + iva, 'MXN')}</td></tr>`;
     }).join('');
     return `
       <h4>Conceptos en MXN + IVA</h4>
       <table>
-        <thead><tr><th>Descripción</th><th class="right">Cantidad</th><th class="right">P. Unitario</th><th class="right">Subtotal</th><th class="right">IVA (16%)</th><th class="right">Total</th></tr></thead>
+        <thead><tr><th>Descripción</th><th>Unidad</th><th class="right">Cantidad</th><th class="right">P. Unitario</th><th class="right">Subtotal</th><th class="right">IVA (16%)</th><th class="right">Total</th></tr></thead>
         <tbody>${rows}</tbody>
       </table>
       <p class="totals">Subtotal MXN: ${formatCurrencyPdf(subtotalMXN, 'MXN')} &nbsp;|&nbsp; IVA: ${formatCurrencyPdf(ivaMXN, 'MXN')}</p>
@@ -190,7 +206,7 @@ export function generarPdfCotizacion(cotizacion: CotizacionRow) {
     <div class="resumen">
       <p>Total USD: ${formatCurrencyPdf(totalUSD, 'USD')}</p>
       <p>Total MXN (c/IVA): ${formatCurrencyPdf(totalMXN, 'MXN')}</p>
-      <p class="nota">* Los conceptos en MXN incluyen IVA 16%</p>
+      <p class="nota">* Los cargos en destino incluyen IVA</p>
     </div>
   </section>
 
