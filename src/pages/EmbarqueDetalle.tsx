@@ -21,7 +21,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useRegistrarActividad } from "@/hooks/useBitacora";
 import { useAuth } from "@/contexts/AuthContext";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { ESTADO_TIMELINE } from "@/data/embarqueConstants";
 import { containerTypes } from "@/data/containerTypes";
 import {
@@ -34,6 +35,7 @@ import {
   useAvanzarEstadoEmbarque,
   useDuplicarEmbarque,
   useEliminarEmbarque,
+  calcularEstadoEmbarque,
 } from "@/hooks/useEmbarques";
 import { TabResumen } from "@/components/embarque/TabResumen";
 import { TabDocumentos } from "@/components/embarque/TabDocumentos";
