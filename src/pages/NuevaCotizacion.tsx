@@ -177,40 +177,6 @@ export default function NuevaCotizacion() {
   const totalPiezasAereas = dimensionesAereas.reduce((sum, d) => sum + d.piezas, 0);
   const totalPesoVolAereo = dimensionesAereas.reduce((sum, d) => sum + d.peso_volumetrico_kg, 0);
 
-  // Pre-fill step 3 from step 2 costs
-  useEffect(() => {
-    if (currentStep === 3 && !costosPreLlenados && costosInternos.length > 0) {
-      const usdFromCostos = costosInternos
-        .filter(c => c.moneda === "USD" && c.concepto.trim())
-        .map(c => {
-          const tieneIva = CONCEPTOS_CON_IVA_USD.includes(c.concepto);
-          return {
-            descripcion: c.concepto,
-            unidad_medida: c.unidad_medida,
-            cantidad: c.cantidad,
-            precio_unitario: c.precio_venta,
-            moneda: 'USD' as const,
-            total: c.cantidad * c.precio_venta * (tieneIva ? 1.16 : 1),
-            aplica_iva: tieneIva,
-          };
-        });
-      const mxnFromCostos = costosInternos
-        .filter(c => c.moneda === "MXN" && c.concepto.trim())
-        .map(c => ({
-          descripcion: c.concepto,
-          unidad_medida: c.unidad_medida,
-          cantidad: c.cantidad,
-          precio_unitario: c.precio_venta,
-          moneda: 'MXN' as const,
-          total: c.cantidad * c.precio_venta * 1.16,
-          aplica_iva: true,
-        }));
-
-      if (usdFromCostos.length > 0) setConceptosUSD(usdFromCostos);
-      if (mxnFromCostos.length > 0) setConceptosMXN(mxnFromCostos);
-      setCostosPreLlenados(true);
-    }
-  }, [currentStep, costosPreLlenados, costosInternos]);
 
   // P&L calculations for summary
   const costosUSD = costosInternos.filter(c => c.moneda === "USD");
@@ -335,6 +301,21 @@ export default function NuevaCotizacion() {
             updated_at: "",
           }));
           await upsertCostos.mutateAsync({ cotizacionId, costos });
+        }
+        // Pre-llenar Paso 3 directamente
+        if (!costosPreLlenados && costosInternos.length > 0) {
+          const usdFromCostos = costosInternos
+            .filter(c => c.moneda === 'USD' && c.concepto.trim())
+            .map(c => {
+              const tieneIva = CONCEPTOS_CON_IVA_USD.includes(c.concepto);
+              return { descripcion: c.concepto, unidad_medida: c.unidad_medida, cantidad: c.cantidad, precio_unitario: c.precio_venta, moneda: 'USD' as const, aplica_iva: tieneIva, total: c.cantidad * c.precio_venta * (tieneIva ? 1.16 : 1) };
+            });
+          const mxnFromCostos = costosInternos
+            .filter(c => c.moneda === 'MXN' && c.concepto.trim())
+            .map(c => ({ descripcion: c.concepto, unidad_medida: c.unidad_medida, cantidad: c.cantidad, precio_unitario: c.precio_venta, moneda: 'MXN' as const, aplica_iva: true, total: c.cantidad * c.precio_venta * 1.16 }));
+          if (usdFromCostos.length > 0) setConceptosUSD(usdFromCostos);
+          if (mxnFromCostos.length > 0) setConceptosMXN(mxnFromCostos);
+          setCostosPreLlenados(true);
         }
         setCurrentStep(3);
       } catch (err: any) {
@@ -535,7 +516,7 @@ export default function NuevaCotizacion() {
 
           {/* PASO 2 — Costos & P&L */}
           {currentStep === 2 && (
-            <SeccionCostosInternosPLLocal filas={costosInternos} setFilas={setCostosInternos} onCostosChange={(costos) => setCostosInternos(costos)} />
+            <SeccionCostosInternosPLLocal filas={costosInternos} setFilas={setCostosInternos} />
           )}
 
           {/* PASO 3 — Cotización Cliente */}
