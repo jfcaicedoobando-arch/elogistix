@@ -31,6 +31,9 @@ export default function SeccionCostosInternosPLLocal({ filas, setFilas }: Props)
   const filasUSD = useMemo(() => filas.filter(f => f.moneda === "USD"), [filas]);
   const filasMXN = useMemo(() => filas.filter(f => f.moneda === "MXN"), [filas]);
 
+  // Track which field is being edited and its raw text
+  const [editingQty, setEditingQty] = useState<{ idx: number; raw: string } | null>(null);
+
   const updateFila = (globalIdx: number, field: keyof FilaCostoLocal, value: any) => {
     setFilas(prev => {
       const copy = [...prev];
