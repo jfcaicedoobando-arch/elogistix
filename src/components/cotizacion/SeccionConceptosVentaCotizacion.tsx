@@ -73,7 +73,7 @@ export default function SeccionConceptosVentaCotizacion({
               <div key={i} className={`grid grid-cols-12 gap-2 items-end rounded-md px-1 py-1 ${c.aplica_iva ? 'bg-amber-50/30' : ''}`}>
                 <div className="col-span-3">
                   {i === 0 && <Label className="text-xs">Concepto</Label>}
-                  {c.descripcion !== '' && !CATALOGO_USD.includes(c.descripcion) && c.descripcion !== 'Otro' ? (
+                  {c.descripcion !== '' && !(CONCEPTOS_COSTO_USD as readonly string[]).includes(c.descripcion) && c.descripcion !== 'Otro' ? (
                     <Input
                       value={c.descripcion}
                       onChange={e => actualizarConceptoUSD(i, 'descripcion', e.target.value)}
