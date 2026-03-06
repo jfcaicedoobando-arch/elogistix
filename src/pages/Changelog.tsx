@@ -13,6 +13,14 @@ interface ChangelogEntry {
 
 const changelog: ChangelogEntry[] = [
   {
+    version: "4.14.0",
+    date: "2026-03-06",
+    type: "minor",
+    title: "Duplicar Embarque",
+    description:
+      "Nueva funcionalidad para duplicar un embarque existente creando 1 a 10 copias con contenedores independientes. Copia automáticamente cliente, BL, naviera, ruta, fechas, conceptos de venta y costos internos. Accesible desde el detalle del embarque para admin y operador.",
+  },
+  {
     version: "4.13.0",
     date: "2026-03-06",
     type: "minor",
