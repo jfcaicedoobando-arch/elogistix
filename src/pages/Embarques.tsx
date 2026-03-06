@@ -20,7 +20,7 @@ import SearchInput from "@/components/SearchInput";
 import PaginationControls from "@/components/PaginationControls";
 import type { ModoTransporte, EstadoEmbarque } from "@/data/types";
 
-const ESTADOS: EstadoEmbarque[] = ['Cotización', 'Confirmado', 'En Tránsito', 'Llegada', 'En Proceso', 'Cerrado'];
+const ESTADOS: string[] = ['Confirmado', 'En Tránsito', 'En Aduana', 'Llegada', 'En Proceso', 'Entregado', 'Cerrado', 'Cancelado'];
 const MODOS: ModoTransporte[] = ['Marítimo', 'Aéreo', 'Terrestre', 'Multimodal'];
 const PAGE_SIZE = 10;
 
