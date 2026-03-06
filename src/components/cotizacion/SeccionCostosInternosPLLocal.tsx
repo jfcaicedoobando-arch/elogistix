@@ -8,14 +8,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { DollarSign, Banknote, TrendingUp, ChevronDown, Plus, Trash2 } from "lucide-react";
 import { formatCurrency } from "@/lib/formatters";
 import { ProfitBadge, RentabilidadGlobalBadge } from "@/lib/profitUtils";
-
-const CONCEPTOS_USD = [
-  'Cargos en Origen', 'Costos Portuarios', 'Consolidación', 'Seguro',
-  'Recolección', 'Modificación de BL', 'Flete Marítimo', 'Flete Aéreo',
-  'Flete Terrestre', 'Handling', 'Desconsolidación', 'Revalidación',
-  'Demoras', 'Cargos en Destino', 'Release', 'Otro'
-];
-const CONCEPTOS_MXN = ['Entrega Nacional', 'Honorarios de Despacho Aduanal', 'Otro'];
+import { CONCEPTOS_COSTO_USD, CONCEPTOS_COSTO_MXN } from "@/data/cotizacionConstants";
 const UNIDADES_MEDIDA = ['BL', 'W/M', 'Documento', 'Contenedor', 'Kilo', 'Embarque'];
 
 export interface FilaCostoLocal {
