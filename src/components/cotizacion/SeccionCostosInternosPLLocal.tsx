@@ -75,7 +75,7 @@ export default function SeccionCostosInternosPLLocal({ filas, setFilas }: Props)
 
   const renderRows = (rows: FilaCostoLocal[], moneda: "USD" | "MXN", title: string, icon: React.ReactNode) => {
     const tots = moneda === "USD" ? totalesUSD : totalesMXN;
-    const catalogo = moneda === "USD" ? CONCEPTOS_USD : CONCEPTOS_MXN;
+    const catalogo: readonly string[] = moneda === "USD" ? CONCEPTOS_COSTO_USD : CONCEPTOS_COSTO_MXN;
 
     return (
       <Card>

@@ -41,7 +41,7 @@ function UnidadMedidaSelect({ value, onChange }: { value: string; onChange: (v: 
   );
 }
 
-export { CONCEPTOS_CON_IVA };
+
 
 export default function SeccionConceptosVentaCotizacion({
   conceptosUSD, conceptosMXN,

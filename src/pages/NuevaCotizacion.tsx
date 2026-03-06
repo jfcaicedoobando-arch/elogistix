@@ -29,10 +29,6 @@ import SeccionMercanciaAerea from "@/components/cotizacion/SeccionMercanciaAerea
 import SeccionCostosInternosPLLocal, { type FilaCostoLocal } from "@/components/cotizacion/SeccionCostosInternosPLLocal";
 import PasoResumenCotizacion from "@/components/cotizacion/PasoResumenCotizacion";
 
-const CONCEPTOS_CON_IVA_USD = [
-  'Handling', 'Desconsolidación', 'Revalidación',
-  'Demoras', 'Cargos en Destino', 'Release',
-];
 
 const WIZARD_STEPS = [
   { num: 1, title: 'Datos Generales' },

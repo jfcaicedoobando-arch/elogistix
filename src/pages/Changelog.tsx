@@ -13,6 +13,14 @@ interface ChangelogEntry {
 
 const changelog: ChangelogEntry[] = [
   {
+    version: "4.15.3",
+    date: "2026-03-06",
+    type: "patch",
+    title: "Centralizar constantes de cotización",
+    description:
+      "Se crea src/data/cotizacionConstants.ts con CONCEPTOS_COSTO_USD, CONCEPTOS_COSTO_MXN y CONCEPTOS_CON_IVA_USD. Los componentes SeccionCostosInternosPLLocal, SeccionConceptosVentaCotizacion y NuevaCotizacion ahora importan desde este archivo centralizado.",
+  },
+  {
     version: "4.15.2",
     date: "2026-03-06",
     type: "patch",
