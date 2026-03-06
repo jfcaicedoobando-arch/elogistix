@@ -1,200 +1,366 @@
-import { Ship, Clock, FileText, DollarSign, AlertTriangle, Activity } from "lucide-react";
+import { useState, useMemo } from "react";
+import { useNavigate } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
+import {
+  Anchor, Plane, Warehouse, PackageCheck, AlertTriangle,
+  CalendarClock, TrendingUp, Ship, ArrowRight, Clock,
+} from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Progress } from "@/components/ui/progress";
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
-import {
-  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend,
-} from "recharts";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useEmbarques } from "@/hooks/useEmbarques";
-import { useFacturas, useGastosPendientes } from "@/hooks/useFacturas";
-import { useActividadReciente } from "@/hooks/useBitacora";
-import { BitacoraActividad } from "@/components/BitacoraActividad";
-import { usePermissions } from "@/hooks/usePermissions";
+import { useEmbarques, calcularEstadoEmbarque } from "@/hooks/useEmbarques";
+import { supabase } from "@/integrations/supabase/client";
 import { formatCurrency } from "@/lib/formatters";
-import { formatDate, getEstadoColor, getModoIcon } from "@/lib/helpers";
-import { useNavigate } from "react-router-dom";
-import { useMemo } from "react";
+import { formatDate, getModoIcon } from "@/lib/helpers";
 
+// ─── Types ───────────────────────────────────────────────
+interface EmbarqueConEstado {
+  id: string;
+  expediente: string;
+  cliente_nombre: string;
+  modo: string;
+  tipo: string;
+  estado: string;
+  estadoReal: string;
+  etd: string | null;
+  eta: string | null;
+  operador: string;
+  puerto_origen?: string | null;
+  puerto_destino?: string | null;
+  aeropuerto_origen?: string | null;
+  aeropuerto_destino?: string | null;
+  ciudad_origen?: string | null;
+  ciudad_destino?: string | null;
+  created_at: string;
+}
+
+const ESTADOS_FILTRO = ["Confirmado", "En Tránsito", "En Aduana", "Entregado"] as const;
+type EstadoFiltro = (typeof ESTADOS_FILTRO)[number];
+
+const ESTADO_CONFIG: Record<EstadoFiltro, { icon: typeof Ship; gradient: string; border: string; text: string; glow: string }> = {
+  Confirmado:   { icon: Anchor,       gradient: "from-[hsl(217,91%,60%)] to-[hsl(217,91%,45%)]", border: "border-info",   text: "text-info",   glow: "shadow-[0_0_20px_hsl(217,91%,60%,0.25)]" },
+  "En Tránsito": { icon: Ship,        gradient: "from-[hsl(38,92%,50%)] to-[hsl(38,92%,38%)]",   border: "border-warning", text: "text-warning", glow: "shadow-[0_0_20px_hsl(38,92%,50%,0.25)]" },
+  "En Aduana":   { icon: Warehouse,    gradient: "from-[hsl(15,80%,55%)] to-[hsl(0,84%,50%)]",    border: "border-destructive", text: "text-destructive", glow: "shadow-[0_0_20px_hsl(0,84%,60%,0.25)]" },
+  Entregado:    { icon: PackageCheck,  gradient: "from-[hsl(142,71%,45%)] to-[hsl(142,71%,35%)]", border: "border-success", text: "text-success", glow: "shadow-[0_0_20px_hsl(142,71%,45%,0.25)]" },
+};
+
+// ─── Greeting ────────────────────────────────────────────
+function getSaludo() {
+  const h = new Date().getHours();
+  if (h < 12) return "Buenos días";
+  if (h < 19) return "Buenas tardes";
+  return "Buenas noches";
+}
+
+// ─── Component ───────────────────────────────────────────
 export default function Dashboard() {
   const navigate = useNavigate();
-  const { isAdmin } = usePermissions();
-  const { data: embarques = [], isLoading: cargandoEmbarques } = useEmbarques();
-  const { data: facturas = [], isLoading: cargandoFacturas } = useFacturas();
-  const { data: gastosPendientes = [] } = useGastosPendientes();
-  const { data: actividadReciente = [], isLoading: cargandoActividad } = useActividadReciente(10);
+  const { data: embarques = [], isLoading } = useEmbarques();
+  const [filtroEstado, setFiltroEstado] = useState<EstadoFiltro | null>(null);
 
-  const stats = useMemo(() => {
-    const embarquesActivos = embarques.filter(embarque => !['Cerrado', 'Cotización'].includes(embarque.estado)).length;
-    const embarquesPorCerrar = embarques.filter(embarque => {
-      if (embarque.estado === 'Cerrado' || !embarque.eta) return false;
-      const eta = new Date(embarque.eta);
-      const now = new Date();
-      const diasParaLlegada = (eta.getTime() - now.getTime()) / (1000 * 60 * 60 * 24);
-      return diasParaLlegada <= 7 && diasParaLlegada >= -3;
-    }).length;
-    const facturasPendientes = facturas.filter(factura => ['Emitida', 'Borrador'].includes(factura.estado)).length;
-    return { embarquesActivos, embarquesPorCerrar, facturasPendientes, gastosPendientes: gastosPendientes.length };
-  }, [embarques, facturas, gastosPendientes]);
+  // Batch queries for profit
+  const { data: ventasUSD = [] } = useQuery({
+    queryKey: ["dashboard-ventas-usd"],
+    queryFn: async () => {
+      const { data } = await supabase.from("conceptos_venta").select("embarque_id, total").eq("moneda", "USD");
+      return data ?? [];
+    },
+  });
+  const { data: costosUSD = [] } = useQuery({
+    queryKey: ["dashboard-costos-usd"],
+    queryFn: async () => {
+      const { data } = await supabase.from("conceptos_costo").select("embarque_id, monto").eq("moneda", "USD");
+      return data ?? [];
+    },
+  });
 
-  const recientes = useMemo(() =>
-    [...embarques].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()).slice(0, 8),
+  // ─── Derived data ──────────────────────────────────────
+  const embarquesConEstado = useMemo<EmbarqueConEstado[]>(() =>
+    embarques.map(e => ({
+      ...e,
+      estadoReal: calcularEstadoEmbarque(e.modo, e.etd, e.eta, e.estado),
+    })),
     [embarques]
   );
 
-  // Chart from real data: count by mode per month (last 6 months)
-  const chartData = useMemo(() => {
-    const now = new Date();
-    const months: { mes: string; Marítimo: number; Aéreo: number; Terrestre: number }[] = [];
-    for (let i = 5; i >= 0; i--) {
-      const fechaMes = new Date(now.getFullYear(), now.getMonth() - i, 1);
-      const label = fechaMes.toLocaleDateString('es-MX', { month: 'short' });
-      const anio = fechaMes.getFullYear(), mes = fechaMes.getMonth();
-      const embarquesDelMes = embarques.filter(embarque => {
-        const fechaCreacion = new Date(embarque.created_at);
-        return fechaCreacion.getFullYear() === anio && fechaCreacion.getMonth() === mes;
-      });
-      months.push({
-        mes: label.charAt(0).toUpperCase() + label.slice(1),
-        Marítimo: embarquesDelMes.filter(embarque => embarque.modo === 'Marítimo').length,
-        Aéreo: embarquesDelMes.filter(embarque => embarque.modo === 'Aéreo').length,
-        Terrestre: embarquesDelMes.filter(embarque => embarque.modo === 'Terrestre').length,
-      });
-    }
-    return months;
-  }, [embarques]);
+  const activos = useMemo(() =>
+    embarquesConEstado.filter(e => !["Cerrado", "Cotización", "Cancelado"].includes(e.estadoReal)),
+    [embarquesConEstado]
+  );
 
-  const kpis = [
-    { title: 'Embarques Activos', value: stats.embarquesActivos, icon: Ship, color: 'text-accent' },
-    { title: 'Por Cerrar esta Semana', value: stats.embarquesPorCerrar, icon: Clock, color: 'text-warning' },
-    { title: 'Facturas Pendientes', value: stats.facturasPendientes, icon: FileText, color: 'text-info' },
-    { title: 'Gastos por Liquidar', value: stats.gastosPendientes, icon: DollarSign, color: 'text-destructive' },
-  ];
+  const conteoPorEstado = useMemo(() => {
+    const m: Record<EstadoFiltro, number> = { Confirmado: 0, "En Tránsito": 0, "En Aduana": 0, Entregado: 0 };
+    activos.forEach(e => { if (e.estadoReal in m) m[e.estadoReal as EstadoFiltro]++; });
+    return m;
+  }, [activos]);
 
-  const loading = cargandoEmbarques || cargandoFacturas;
+  const totalActivos = useMemo(() => Object.values(conteoPorEstado).reduce((s, v) => s + v, 0), [conteoPorEstado]);
 
+  // Alertas demora
+  const alertasDemora = useMemo(() => {
+    const hoy = new Date(); hoy.setHours(0, 0, 0, 0);
+    return activos
+      .filter(e => e.estadoReal === "En Aduana" && e.eta)
+      .map(e => {
+        const eta = new Date(e.eta! + "T00:00:00");
+        const diasLibres = 7; // default
+        const diasDesdeEta = Math.floor((hoy.getTime() - eta.getTime()) / 864e5);
+        const diasDemora = diasDesdeEta - diasLibres;
+        return { ...e, diasDemora, diasDesdeEta };
+      })
+      .filter(e => e.diasDemora >= 0)
+      .sort((a, b) => b.diasDemora - a.diasDemora);
+  }, [activos]);
+
+  // Próximos arribos
+  const proximosArribos = useMemo(() => {
+    const hoy = new Date(); hoy.setHours(0, 0, 0, 0);
+    const en7 = new Date(hoy); en7.setDate(en7.getDate() + 7);
+    return activos
+      .filter(e => e.estadoReal === "En Tránsito" && e.eta)
+      .map(e => {
+        const eta = new Date(e.eta! + "T00:00:00");
+        const diasRestantes = Math.ceil((eta.getTime() - hoy.getTime()) / 864e5);
+        return { ...e, diasRestantes };
+      })
+      .filter(e => e.diasRestantes >= 0 && e.diasRestantes <= 7)
+      .sort((a, b) => a.diasRestantes - b.diasRestantes);
+  }, [activos]);
+
+  // Profit USD
+  const profitPorEmbarque = useMemo(() => {
+    const ventaMap: Record<string, number> = {};
+    const costoMap: Record<string, number> = {};
+    ventasUSD.forEach(v => { ventaMap[v.embarque_id] = (ventaMap[v.embarque_id] || 0) + Number(v.total); });
+    costosUSD.forEach(c => { costoMap[c.embarque_id] = (costoMap[c.embarque_id] || 0) + Number(c.monto); });
+
+    return activos
+      .map(e => {
+        const venta = ventaMap[e.id] || 0;
+        const costo = costoMap[e.id] || 0;
+        const profit = venta - costo;
+        const margen = venta !== 0 ? (profit / venta) * 100 : 0;
+        return { ...e, ventaUSD: venta, costoUSD: costo, profit, margen };
+      })
+      .filter(e => e.ventaUSD > 0 || e.costoUSD > 0)
+      .sort((a, b) => b.profit - a.profit);
+  }, [activos, ventasUSD, costosUSD]);
+
+  // Filtered list
+  const embarquesFiltrados = useMemo(() =>
+    filtroEstado ? activos.filter(e => e.estadoReal === filtroEstado) : activos,
+    [activos, filtroEstado]
+  );
+
+  const hoyStr = new Date().toLocaleDateString("es-MX", { weekday: "long", day: "numeric", month: "long", year: "numeric" });
+
+  // ─── Render ────────────────────────────────────────────
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-foreground">Dashboard</h1>
-        <p className="text-sm text-muted-foreground">Resumen operativo del día</p>
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-1">
+        <div>
+          <h1 className="text-2xl font-bold text-foreground">{getSaludo()} 👋</h1>
+          <p className="text-sm text-muted-foreground capitalize">{hoyStr}</p>
+        </div>
+        <Badge variant="secondary" className="text-xs w-fit">{activos.length} embarques activos</Badge>
       </div>
 
-      {/* KPIs */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        {kpis.map((kpi) => (
-          <Card key={kpi.title} className={`border-l-4 ${
-            kpi.title === 'Embarques Activos' ? 'border-l-accent' :
-            kpi.title === 'Por Cerrar esta Semana' ? 'border-l-warning' :
-            kpi.title === 'Facturas Pendientes' ? 'border-l-info' : 'border-l-destructive'
-          }`}>
-            <CardContent className="p-5">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">{kpi.title}</p>
-                  {loading ? <Skeleton className="h-9 w-16 mt-1" /> : <p className="text-3xl font-bold mt-1">{kpi.value}</p>}
+      {/* ── 1. Status cards ── */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        {ESTADOS_FILTRO.map(estado => {
+          const cfg = ESTADO_CONFIG[estado];
+          const Icon = cfg.icon;
+          const count = conteoPorEstado[estado];
+          const pct = totalActivos ? (count / totalActivos) * 100 : 0;
+          const selected = filtroEstado === estado;
+
+          return (
+            <Card
+              key={estado}
+              onClick={() => setFiltroEstado(selected ? null : estado)}
+              className={`cursor-pointer transition-all duration-200 hover:scale-[1.02] border-2 ${
+                selected ? `${cfg.border} ${cfg.glow}` : "border-transparent"
+              }`}
+            >
+              <CardContent className="p-4 space-y-3">
+                <div className="flex items-center justify-between">
+                  <div className={`p-2 rounded-lg bg-gradient-to-br ${cfg.gradient}`}>
+                    <Icon className="h-4 w-4 text-white" />
+                  </div>
+                  {isLoading ? <Skeleton className="h-8 w-10" /> : (
+                    <span className="text-3xl font-extrabold tracking-tight">{count}</span>
+                  )}
                 </div>
-                <kpi.icon className={`h-8 w-8 ${kpi.color} opacity-80`} />
-              </div>
-            </CardContent>
-          </Card>
-        ))}
+                <p className="text-xs font-medium text-muted-foreground">{estado}</p>
+                <Progress value={pct} className="h-1.5" />
+              </CardContent>
+            </Card>
+          );
+        })}
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Chart */}
-        <Card className="lg:col-span-2">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-base">Embarques por Modo — Últimos 6 Meses</CardTitle>
+      {/* ── 2. Alertas + Próximos Arribos ── */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Alertas demora */}
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base flex items-center gap-2">
+              <AlertTriangle className="h-4 w-4 text-destructive" />
+              Alertas de Demora
+              {alertasDemora.length > 0 && (
+                <Badge variant="destructive" className="ml-auto text-[10px]">{alertasDemora.length}</Badge>
+              )}
+            </CardTitle>
           </CardHeader>
-          <CardContent>
-            {loading ? <Skeleton className="h-[280px] w-full" /> : (
-              <ResponsiveContainer width="100%" height={280}>
-                <BarChart data={chartData}>
-                  <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
-                  <XAxis dataKey="mes" className="text-xs" />
-                  <YAxis className="text-xs" />
-                  <Tooltip />
-                  <Legend />
-                  <Bar dataKey="Marítimo" fill="hsl(217, 91%, 60%)" radius={[4, 4, 0, 0]} />
-                  <Bar dataKey="Aéreo" fill="hsl(38, 92%, 50%)" radius={[4, 4, 0, 0]} />
-                  <Bar dataKey="Terrestre" fill="hsl(142, 71%, 45%)" radius={[4, 4, 0, 0]} />
-                </BarChart>
-              </ResponsiveContainer>
+          <CardContent className="space-y-2 max-h-[280px] overflow-y-auto">
+            {isLoading ? (
+              Array.from({ length: 3 }).map((_, i) => <Skeleton key={i} className="h-14 w-full" />)
+            ) : alertasDemora.length === 0 ? (
+              <p className="text-sm text-muted-foreground text-center py-6">Sin alertas de demora</p>
+            ) : (
+              alertasDemora.map(e => (
+                <div
+                  key={e.id}
+                  onClick={() => navigate(`/embarques/${e.id}`)}
+                  className="flex items-center gap-3 rounded-lg border p-3 cursor-pointer hover:bg-muted/50 transition-colors"
+                >
+                  <div className={`shrink-0 h-9 w-9 rounded-full flex items-center justify-center text-xs font-bold text-white ${
+                    e.diasDemora >= 5 ? "bg-destructive" : "bg-warning"
+                  }`}>
+                    {e.diasDemora}d
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-medium truncate">{e.expediente}</p>
+                    <p className="text-xs text-muted-foreground truncate">{e.cliente_nombre}</p>
+                  </div>
+                  <ArrowRight className="h-4 w-4 text-muted-foreground shrink-0" />
+                </div>
+              ))
             )}
           </CardContent>
         </Card>
 
-        {/* Alertas */}
+        {/* Próximos arribos */}
         <Card>
-          <CardHeader className="pb-2">
+          <CardHeader className="pb-3">
             <CardTitle className="text-base flex items-center gap-2">
-              <AlertTriangle className="h-4 w-4 text-warning" />
-              Alertas del Día
+              <CalendarClock className="h-4 w-4 text-warning" />
+              Próximos Arribos (7 días)
+              {proximosArribos.length > 0 && (
+                <Badge className="ml-auto text-[10px] bg-warning/15 text-warning border-warning/30">{proximosArribos.length}</Badge>
+              )}
             </CardTitle>
           </CardHeader>
-          <CardContent>
-            <div className="space-y-3">
-              {gastosPendientes.length > 0 && (
-                <div className="flex items-start gap-3 rounded-lg border p-3 text-sm cursor-pointer hover:bg-muted/50 transition-colors" onClick={() => navigate('/facturacion')}>
-                  <div className="mt-0.5 h-2 w-2 rounded-full shrink-0 bg-info" />
-                  <span className="text-muted-foreground">{gastosPendientes.length} gastos por liquidar</span>
+          <CardContent className="space-y-2 max-h-[280px] overflow-y-auto">
+            {isLoading ? (
+              Array.from({ length: 3 }).map((_, i) => <Skeleton key={i} className="h-14 w-full" />)
+            ) : proximosArribos.length === 0 ? (
+              <p className="text-sm text-muted-foreground text-center py-6">Sin arribos próximos</p>
+            ) : (
+              proximosArribos.map(e => (
+                <div
+                  key={e.id}
+                  onClick={() => navigate(`/embarques/${e.id}`)}
+                  className="flex items-center gap-3 rounded-lg border p-3 cursor-pointer hover:bg-muted/50 transition-colors"
+                >
+                  <div className="shrink-0 h-9 w-9 rounded-full bg-warning/15 flex items-center justify-center">
+                    <Clock className="h-4 w-4 text-warning" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-medium truncate">{e.expediente} — {e.cliente_nombre}</p>
+                    <p className="text-xs text-muted-foreground">
+                      ETA: {formatDate(e.eta!)} · {e.diasRestantes === 0 ? "Hoy" : `${e.diasRestantes} día${e.diasRestantes > 1 ? "s" : ""}`}
+                    </p>
+                  </div>
+                  <span className="text-lg">{getModoIcon(e.modo)}</span>
                 </div>
-              )}
-              {embarques.filter(embarque => embarque.eta && !['Cerrado'].includes(embarque.estado)).filter(embarque => {
-                const diasParaLlegada = (new Date(embarque.eta!).getTime() - Date.now()) / 864e5;
-                return diasParaLlegada <= 3 && diasParaLlegada >= -1;
-              }).slice(0, 4).map(embarque => (
-                <div key={embarque.id} className="flex items-start gap-3 rounded-lg border p-3 text-sm cursor-pointer hover:bg-muted/50 transition-colors" onClick={() => navigate(`/embarques/${embarque.id}`)}>
-                  <div className="mt-0.5 h-2 w-2 rounded-full shrink-0 bg-destructive" />
-                  <span className="text-muted-foreground">ETA próxima - {embarque.expediente} ({embarque.modo})</span>
-                </div>
-              ))}
-              {facturas.filter(factura => factura.estado === 'Vencida').slice(0, 3).map(factura => (
-                <div key={factura.id} className="flex items-start gap-3 rounded-lg border p-3 text-sm cursor-pointer hover:bg-muted/50 transition-colors" onClick={() => navigate('/facturacion')}>
-                  <div className="mt-0.5 h-2 w-2 rounded-full shrink-0 bg-warning" />
-                  <span className="text-muted-foreground">Factura vencida - {factura.numero}</span>
-                </div>
-              ))}
-              {embarques.length === 0 && !loading && (
-                <p className="text-sm text-muted-foreground text-center py-4">Sin alertas</p>
-              )}
-            </div>
+              ))
+            )}
           </CardContent>
         </Card>
       </div>
 
-      {/* Actividad Reciente */}
+      {/* ── 3. Profit USD ── */}
       <Card>
-        <CardHeader className="pb-2">
+        <CardHeader className="pb-3">
           <CardTitle className="text-base flex items-center gap-2">
-            <Activity className="h-4 w-4 text-accent" />
-            Actividad Reciente
+            <TrendingUp className="h-4 w-4 text-success" />
+            Profit USD por Embarque
           </CardTitle>
         </CardHeader>
         <CardContent>
-          {cargandoActividad ? (
-            <div className="space-y-3">
-              {Array.from({ length: 5 }).map((_, indice) => (
-                <Skeleton key={indice} className="h-6 w-full" />
-              ))}
-            </div>
+          {isLoading ? (
+            <div className="space-y-2">{Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-10 w-full" />)}</div>
+          ) : profitPorEmbarque.length === 0 ? (
+            <p className="text-sm text-muted-foreground text-center py-6">Sin datos de conceptos USD</p>
           ) : (
-            <BitacoraActividad actividades={actividadReciente} mostrarUsuario={isAdmin} />
+            <div className="overflow-auto max-h-[320px]">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Expediente</TableHead>
+                    <TableHead>Cliente</TableHead>
+                    <TableHead className="text-right">Venta USD</TableHead>
+                    <TableHead className="text-right">Costo USD</TableHead>
+                    <TableHead className="text-right">Profit</TableHead>
+                    <TableHead className="text-right">Margen</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {profitPorEmbarque.map(e => (
+                    <TableRow key={e.id} className="cursor-pointer" onClick={() => navigate(`/embarques/${e.id}`)}>
+                      <TableCell className="font-medium">{e.expediente}</TableCell>
+                      <TableCell className="max-w-[180px] truncate">{e.cliente_nombre}</TableCell>
+                      <TableCell className="text-right tabular-nums">{formatCurrency(e.ventaUSD, "USD")}</TableCell>
+                      <TableCell className="text-right tabular-nums">{formatCurrency(e.costoUSD, "USD")}</TableCell>
+                      <TableCell className={`text-right font-semibold tabular-nums ${e.profit >= 0 ? "text-success" : "text-destructive"}`}>
+                        {formatCurrency(e.profit, "USD")}
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <Badge className={`text-[10px] ${
+                          e.margen > 15 ? "bg-success/15 text-success border-success/30" :
+                          e.margen > 0 ? "bg-warning/15 text-warning border-warning/30" :
+                          "bg-destructive/15 text-destructive border-destructive/30"
+                        }`}>
+                          {e.margen.toFixed(1)}%
+                        </Badge>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
           )}
         </CardContent>
       </Card>
 
-      {/* Embarques recientes */}
+      {/* ── 4. Lista filtrable ── */}
       <Card>
-        <CardHeader className="pb-2">
-          <CardTitle className="text-base">Embarques Recientes</CardTitle>
+        <CardHeader className="pb-3">
+          <div className="flex items-center justify-between">
+            <CardTitle className="text-base">
+              Embarques Activos
+              {filtroEstado && (
+                <Badge className={`ml-2 text-[10px] ${ESTADO_CONFIG[filtroEstado].text}`}>{filtroEstado}</Badge>
+              )}
+            </CardTitle>
+            {filtroEstado && (
+              <button onClick={() => setFiltroEstado(null)} className="text-xs text-muted-foreground hover:text-foreground transition-colors">
+                Limpiar filtro
+              </button>
+            )}
+          </div>
         </CardHeader>
         <CardContent>
-          {loading ? (
-            <div className="space-y-3">{Array.from({ length: 5 }).map((_, indice) => <Skeleton key={indice} className="h-10 w-full" />)}</div>
+          {isLoading ? (
+            <div className="space-y-2">{Array.from({ length: 5 }).map((_, i) => <Skeleton key={i} className="h-10 w-full" />)}</div>
+          ) : embarquesFiltrados.length === 0 ? (
+            <p className="text-sm text-muted-foreground text-center py-6">No hay embarques{filtroEstado ? ` en estado "${filtroEstado}"` : ""}</p>
           ) : (
             <Table>
               <TableHeader>
@@ -210,30 +376,29 @@ export default function Dashboard() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {recientes.map((embarque) => {
-                  const origen = embarque.puerto_origen || embarque.aeropuerto_origen || embarque.ciudad_origen || '-';
-                  const destino = embarque.puerto_destino || embarque.aeropuerto_destino || embarque.ciudad_destino || '-';
+                {embarquesFiltrados.map(e => {
+                  const origen = (e.puerto_origen || e.aeropuerto_origen || e.ciudad_origen || "-").split(",")[0];
+                  const destino = (e.puerto_destino || e.aeropuerto_destino || e.ciudad_destino || "-").split(",")[0];
+                  const cfg = ESTADO_CONFIG[e.estadoReal as EstadoFiltro];
                   return (
-                    <TableRow key={embarque.id} className="cursor-pointer" onClick={() => navigate(`/embarques/${embarque.id}`)}>
-                      <TableCell className="font-medium">{embarque.expediente}</TableCell>
-                      <TableCell className="max-w-[200px] truncate">{embarque.cliente_nombre}</TableCell>
+                    <TableRow key={e.id} className="cursor-pointer" onClick={() => navigate(`/embarques/${e.id}`)}>
+                      <TableCell className="font-medium">{e.expediente}</TableCell>
+                      <TableCell className="max-w-[180px] truncate">{e.cliente_nombre}</TableCell>
                       <TableCell>
                         <span className="flex items-center gap-1.5">
-                          <span>{getModoIcon(embarque.modo)}</span>
-                          <span className="text-xs">{embarque.modo}</span>
+                          <span>{getModoIcon(e.modo)}</span>
+                          <span className="text-xs">{e.modo}</span>
                         </span>
                       </TableCell>
-                      <TableCell className="text-xs max-w-[200px] truncate">
-                        {origen.split(',')[0]} → {destino.split(',')[0]}
-                      </TableCell>
-                      <TableCell className="text-xs">{embarque.etd ? formatDate(embarque.etd) : '-'}</TableCell>
-                      <TableCell className="text-xs">{embarque.eta ? formatDate(embarque.eta) : '-'}</TableCell>
+                      <TableCell className="text-xs max-w-[180px] truncate">{origen} → {destino}</TableCell>
+                      <TableCell className="text-xs">{e.etd ? formatDate(e.etd) : "-"}</TableCell>
+                      <TableCell className="text-xs">{e.eta ? formatDate(e.eta) : "-"}</TableCell>
                       <TableCell>
-                        <Badge variant="secondary" className={`text-xs ${getEstadoColor(embarque.estado)}`}>
-                          {embarque.estado}
+                        <Badge variant="secondary" className={`text-xs ${cfg ? `${cfg.text} bg-transparent border ${cfg.border}/30` : ""}`}>
+                          {e.estadoReal}
                         </Badge>
                       </TableCell>
-                      <TableCell className="text-xs">{embarque.operador}</TableCell>
+                      <TableCell className="text-xs">{e.operador}</TableCell>
                     </TableRow>
                   );
                 })}
