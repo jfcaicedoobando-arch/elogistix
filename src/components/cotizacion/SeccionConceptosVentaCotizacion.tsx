@@ -68,7 +68,7 @@ export default function SeccionConceptosVentaCotizacion({
         </CardHeader>
         <CardContent className="space-y-3">
           {conceptosUSD.map((c, i) => {
-            const puedeIva = CONCEPTOS_CON_IVA.includes(c.descripcion);
+            const puedeIva = (CONCEPTOS_CON_IVA_USD as readonly string[]).includes(c.descripcion);
             return (
               <div key={i} className={`grid grid-cols-12 gap-2 items-end rounded-md px-1 py-1 ${c.aplica_iva ? 'bg-amber-50/30' : ''}`}>
                 <div className="col-span-3">
