@@ -1,47 +1,36 @@
 
 
-## Plan: Corregir pre-llenado Paso 2 → Paso 3
+## Plan: Botón eliminar cotización (solo admin)
 
 ### Cambios
 
-**1. `src/components/cotizacion/SeccionCostosInternosPLLocal.tsx`**
-- Quitar `onCostosChange` de la interfaz `Props` (línea 34)
-- Quitar el `useEffect` que llama `onCostosChange` (líneas 58-60)
-- Cambiar import de `useMemo, useEffect` a solo `useMemo` (línea 1)
+**1. `src/hooks/useCotizaciones.ts`** — Agregar `useDeleteCotizacion`
 
-**2. `src/pages/NuevaCotizacion.tsx`**
-- Línea 538: quitar `onCostosChange={(costos) => setCostosInternos(costos)}` del componente
-- Eliminar el `useEffect` de pre-llenado (líneas 180-213) — ya no se necesita
-- En `handleSiguiente` cuando `currentStep === 2` (líneas 320-342): después del `await upsertCostos`, ejecutar el pre-llenado directamente antes de `setCurrentStep(3)`:
-
-```tsx
-} else if (currentStep === 2) {
-  try {
-    if (costosInternos.length > 0 && cotizacionId) {
-      // ... upsert costos (sin cambio)
-      await upsertCostos.mutateAsync({ cotizacionId, costos });
-    }
-    // Pre-llenar Paso 3 directamente
-    if (!costosPreLlenados && costosInternos.length > 0) {
-      const usdFromCostos = costosInternos
-        .filter(c => c.moneda === 'USD' && c.concepto.trim())
-        .map(c => {
-          const tieneIva = CONCEPTOS_CON_IVA_USD.includes(c.concepto);
-          return { descripcion: c.concepto, unidad_medida: c.unidad_medida, cantidad: c.cantidad, precio_unitario: c.precio_venta, moneda: 'USD' as const, aplica_iva: tieneIva, total: c.cantidad * c.precio_venta * (tieneIva ? 1.16 : 1) };
-        });
-      const mxnFromCostos = costosInternos
-        .filter(c => c.moneda === 'MXN' && c.concepto.trim())
-        .map(c => ({ descripcion: c.concepto, unidad_medida: c.unidad_medida, cantidad: c.cantidad, precio_unitario: c.precio_venta, moneda: 'MXN' as const, aplica_iva: true, total: c.cantidad * c.precio_venta * 1.16 }));
-      if (usdFromCostos.length > 0) setConceptosUSD(usdFromCostos);
-      if (mxnFromCostos.length > 0) setConceptosMXN(mxnFromCostos);
-      setCostosPreLlenados(true);
-    }
-    setCurrentStep(3);
-  } catch (err: any) {
-    toast({ title: "Error al guardar costos", description: err.message, variant: "destructive" });
-  }
+```ts
+export function useDeleteCotizacion() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from('cotizaciones').delete().eq('id', id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['cotizaciones'] });
+    },
+  });
 }
 ```
 
-**3. `src/pages/Changelog.tsx`** — entrada v4.11.2
+**2. `src/pages/Cotizaciones.tsx`** — Columna de acciones con botón eliminar
+
+- Importar `Trash2`, `AlertDialog` components, `useDeleteCotizacion`, `useToast`
+- Agregar estado `cotizacionAEliminar` para controlar el dialog
+- Extraer `isAdmin` de `usePermissions()`
+- Agregar columna "Acciones" al header (solo si `isAdmin`)
+- En cada fila, agregar celda con botón `Trash2` que abre `AlertDialog` (con `e.stopPropagation()` para no navegar)
+- AlertDialog con doble confirmación (protocolo de seguridad existente): título "¿Eliminar cotización?", descripción "Esta acción no se puede deshacer."
+- Al confirmar: `deleteCotizacion.mutateAsync(id)` → toast éxito
+- Actualizar `colSpan` del mensaje vacío de 8 a 9 cuando es admin
+
+**3. `src/pages/Changelog.tsx`** — entrada v4.12.0
 
