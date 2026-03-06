@@ -13,6 +13,14 @@ interface ChangelogEntry {
 
 const changelog: ChangelogEntry[] = [
   {
+    version: "4.16.0",
+    date: "2026-03-06",
+    type: "minor",
+    title: "Rediseño completo del Dashboard",
+    description:
+      "Nuevo dashboard estilo command center con resumen por estado (Confirmado, En Tránsito, En Aduana, Entregado) con filtrado interactivo, alertas de demora en aduana, próximos arribos en 7 días, tabla de profit USD por embarque con margen, y lista de embarques activos filtrable. Se eliminaron secciones de facturas, gastos, gráfica Recharts y bitácora.",
+  },
+  {
     version: "4.15.7",
     date: "2026-03-06",
     type: "minor",
