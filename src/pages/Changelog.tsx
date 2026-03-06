@@ -13,6 +13,14 @@ interface ChangelogEntry {
 
 const changelog: ChangelogEntry[] = [
   {
+    version: "4.11.1",
+    date: "2026-03-06",
+    type: "patch",
+    title: "Corregir validación Paso 3 → Paso 4 en wizard de cotización",
+    description:
+      "La validación del Paso 3 ahora filtra conceptos con descripción vacía en lugar de rechazarlos. Solo se guardan en la base de datos los conceptos válidos. Se requiere al menos un concepto con descripción para avanzar.",
+  },
+  {
     version: "4.11.0",
     date: "2026-03-05",
     type: "minor",
