@@ -337,7 +337,7 @@ export default function EmbarqueDetalle() {
           )}
           {canEdit && <Button variant="outline" size="sm" onClick={() => navigate(`/embarques/${id}/editar`)}><Edit className="h-4 w-4 mr-1" /> Editar</Button>}
           {canEdit && <Button variant="outline" size="sm" onClick={abrirDialogDuplicar}><Copy className="h-4 w-4 mr-1" /> Duplicar</Button>}
-          {isAdmin && (
+          {canEdit && (
             <Button variant="destructive" size="sm" onClick={() => setConfirmarEliminar1(true)} disabled={eliminarEmbarque.isPending}>
               <Trash2 className="h-4 w-4 mr-1" /> Eliminar
             </Button>

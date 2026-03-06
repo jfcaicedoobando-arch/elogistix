@@ -1,21 +1,16 @@
 
 
-## Plan: Permitir eliminación de embarques para operadores
+## Plan: Usar expediente del origen al duplicar
 
-### Cambio único en `src/pages/EmbarqueDetalle.tsx`
+### Cambio único en `src/hooks/useEmbarques.ts`
 
-Línea 340: cambiar `isAdmin` por `canEdit` en la condición que muestra el botón "Eliminar".
+En el loop de `useDuplicarEmbarque` (líneas 257-262), reemplazar la llamada a `supabase.rpc('generar_expediente')` por usar directamente `embarqueOrigen.expediente`:
 
-```tsx
-// Antes
-{isAdmin && (
-// Después
-{canEdit && (
-```
+- **Eliminar** líneas 258-262 (la llamada RPC y el manejo de error)
+- **Cambiar** línea 268 `expediente: expediente as string` → `expediente: embarqueOrigen.expediente`
+- En el push final al array `creados`, usar `embarqueOrigen.expediente` en lugar de `expediente as string`
 
-La doble confirmación ya está implementada (dos AlertDialogs consecutivos). Solo se necesita cambiar la condición de visibilidad del botón.
+### Cambio en `src/pages/Changelog.tsx`
 
-### `src/pages/Changelog.tsx`
-
-Agregar entrada v4.15.5: "Permiso de eliminación de embarques ampliado al equipo operativo con doble confirmación de seguridad."
+Entrada v4.15.1 — "Duplicar embarque ahora conserva el mismo expediente del origen"
 
