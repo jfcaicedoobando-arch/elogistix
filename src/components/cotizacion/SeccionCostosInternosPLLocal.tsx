@@ -142,12 +142,12 @@ export default function SeccionCostosInternosPLLocal({ filas, setFilas }: Props)
                     <div className="flex items-center gap-1">
                       <span className="text-xs text-muted-foreground">Cant.</span>
                       <Input
-                        type="text" inputMode="numeric"
+                        type="text" inputMode="decimal"
                         value={fila.cantidad === 0 ? '' : fila.cantidad}
                         onFocus={e => { if (e.target.value === '0') e.target.value = ''; }}
                         onChange={e => {
-                          const raw = e.target.value.replace(/[^0-9]/g, '');
-                          updateFila(gi, "cantidad", raw === '' ? 0 : parseInt(raw, 10));
+                          const raw = e.target.value.replace(/[^0-9.]/g, '');
+                          updateFila(gi, "cantidad", raw === '' ? 0 : parseFloat(raw));
                         }}
                         onBlur={e => { if (e.target.value === '') updateFila(gi, "cantidad", 1); }}
                         className="h-8 text-sm text-right w-[80px]"
