@@ -13,6 +13,14 @@ interface ChangelogEntry {
 
 const changelog: ChangelogEntry[] = [
   {
+    version: "4.15.7",
+    date: "2026-03-06",
+    type: "minor",
+    title: "Tipo de operación Cross Trade en cotizaciones",
+    description:
+      "Se agrega la opción 'Cross Trade' al dropdown de tipo de operación en datos generales de cotización.",
+  },
+  {
     version: "4.15.6",
     date: "2026-03-06",
     type: "patch",
