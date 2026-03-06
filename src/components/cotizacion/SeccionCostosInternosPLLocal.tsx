@@ -1,4 +1,4 @@
-import { useMemo, useEffect } from "react";
+import { useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -31,7 +31,7 @@ export interface FilaCostoLocal {
 interface Props {
   filas: FilaCostoLocal[];
   setFilas: React.Dispatch<React.SetStateAction<FilaCostoLocal[]>>;
-  onCostosChange?: (costos: FilaCostoLocal[]) => void;
+  
 }
 
 function profitBadge(profit: number) {
@@ -51,13 +51,9 @@ function rentabilidadGlobal(pctUSD: number, pctMXN: number, hasUSD: boolean, has
   return <Badge className="bg-amber-100 text-amber-700 border-amber-200 text-sm">Rentabilidad Baja</Badge>;
 }
 
-export default function SeccionCostosInternosPLLocal({ filas, setFilas, onCostosChange }: Props) {
+export default function SeccionCostosInternosPLLocal({ filas, setFilas }: Props) {
   const filasUSD = useMemo(() => filas.filter(f => f.moneda === "USD"), [filas]);
   const filasMXN = useMemo(() => filas.filter(f => f.moneda === "MXN"), [filas]);
-
-  useEffect(() => {
-    onCostosChange?.(filas);
-  }, [filas]);
 
   const updateFila = (globalIdx: number, field: keyof FilaCostoLocal, value: any) => {
     setFilas(prev => {

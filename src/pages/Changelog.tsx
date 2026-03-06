@@ -13,6 +13,14 @@ interface ChangelogEntry {
 
 const changelog: ChangelogEntry[] = [
   {
+    version: "4.11.2",
+    date: "2026-03-06",
+    type: "patch",
+    title: "Corregir pre-llenado Paso 2 → Paso 3 en wizard de cotización",
+    description:
+      "El pre-llenado del Paso 3 ahora se ejecuta directamente al avanzar desde el Paso 2, eliminando la dependencia del useEffect que causaba problemas de sincronización. Se removió la prop redundante onCostosChange.",
+  },
+  {
     version: "4.11.1",
     date: "2026-03-06",
     type: "patch",
