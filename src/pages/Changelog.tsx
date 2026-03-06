@@ -13,6 +13,14 @@ interface ChangelogEntry {
 
 const changelog: ChangelogEntry[] = [
   {
+    version: "4.15.5",
+    date: "2026-03-06",
+    type: "patch",
+    title: "Permiso de eliminación de embarques para operadores",
+    description:
+      "El equipo operativo (rol operador) ahora puede eliminar embarques con la misma doble confirmación de seguridad que los administradores.",
+  },
+  {
     version: "4.15.4",
     date: "2026-03-06",
     type: "minor",
