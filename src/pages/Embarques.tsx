@@ -15,11 +15,12 @@ import { useEmbarques } from "@/hooks/useEmbarques";
 import { useClientesForSelect } from "@/hooks/useClientes";
 import { usePermissions } from "@/hooks/usePermissions";
 import { formatDate, getEstadoColor, getModoIcon } from "@/lib/helpers";
+import { calcularEstadoEmbarque } from "@/hooks/useEmbarques";
 import SearchInput from "@/components/SearchInput";
 import PaginationControls from "@/components/PaginationControls";
 import type { ModoTransporte, EstadoEmbarque } from "@/data/types";
 
-const ESTADOS: EstadoEmbarque[] = ['Cotización', 'Confirmado', 'En Tránsito', 'Llegada', 'En Proceso', 'Cerrado'];
+const ESTADOS: string[] = ['Confirmado', 'En Tránsito', 'En Aduana', 'Llegada', 'En Proceso', 'Entregado', 'Cerrado', 'Cancelado'];
 const MODOS: ModoTransporte[] = ['Marítimo', 'Aéreo', 'Terrestre', 'Multimodal'];
 const PAGE_SIZE = 10;
 
@@ -41,7 +42,8 @@ export default function Embarques() {
         embarque.descripcion_mercancia.toLowerCase().includes(search.toLowerCase()) ||
         (embarque.bl_master || '').toLowerCase().includes(search.toLowerCase());
       const matchModo = filterModo === "todos" || embarque.modo === filterModo;
-      const matchEstado = filterEstado === "todos" || embarque.estado === filterEstado;
+      const estadoCalculado = calcularEstadoEmbarque(embarque.modo, embarque.etd, embarque.eta, embarque.estado);
+      const matchEstado = filterEstado === "todos" || estadoCalculado === filterEstado;
       const matchCliente = filterCliente === "todos" || embarque.cliente_id === filterCliente;
       return matchSearch && matchModo && matchEstado && matchCliente;
     });
@@ -152,7 +154,10 @@ export default function Embarques() {
                     <TableCell className="text-xs">{formatDate(embarque.etd || '')}</TableCell>
                     <TableCell className="text-xs">{formatDate(embarque.eta || '')}</TableCell>
                     <TableCell>
-                      <Badge variant="secondary" className={`text-xs ${getEstadoColor(embarque.estado)}`}>{embarque.estado}</Badge>
+                      {(() => {
+                        const estadoMostrado = calcularEstadoEmbarque(embarque.modo, embarque.etd, embarque.eta, embarque.estado);
+                        return <Badge variant="secondary" className={`text-xs ${getEstadoColor(estadoMostrado)}`}>{estadoMostrado}</Badge>;
+                      })()}
                     </TableCell>
                     <TableCell className="text-xs">{embarque.operador}</TableCell>
                   </TableRow>

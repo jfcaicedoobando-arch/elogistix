@@ -8,7 +8,7 @@ export function getDocsForMode(modo: string): string[] {
   return ['Carta Porte', 'Factura', 'Lista de Empaque'];
 }
 
-export const ESTADO_TIMELINE = ['Cotización', 'Confirmado', 'En Tránsito', 'Llegada', 'En Proceso', 'Cerrado'] as const;
+export const ESTADO_TIMELINE = ['Confirmado', 'En Tránsito', 'En Aduana', 'Llegada', 'En Proceso', 'Entregado', 'Cerrado'] as const;
 
 export const CATALOGO_CONCEPTOS = [
   'Flete Marítimo',

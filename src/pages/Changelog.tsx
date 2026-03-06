@@ -13,6 +13,14 @@ interface ChangelogEntry {
 
 const changelog: ChangelogEntry[] = [
   {
+    version: "4.15.4",
+    date: "2026-03-06",
+    type: "minor",
+    title: "Estado automático para embarques marítimos",
+    description:
+      "Los embarques marítimos ahora calculan su estado automáticamente según ETD/ETA: Confirmado (antes de ETD), En Tránsito (entre ETD y ETA), En Aduana (después de ETA). Se agregan los estados En Aduana, Entregado y Cancelado al enum. Estado inicial cambiado de Cotización a Confirmado.",
+  },
+  {
     version: "4.15.3",
     date: "2026-03-06",
     type: "patch",

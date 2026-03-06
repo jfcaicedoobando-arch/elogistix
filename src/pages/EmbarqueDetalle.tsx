@@ -21,7 +21,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useRegistrarActividad } from "@/hooks/useBitacora";
 import { useAuth } from "@/contexts/AuthContext";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { ESTADO_TIMELINE } from "@/data/embarqueConstants";
 import { containerTypes } from "@/data/containerTypes";
 import {
@@ -34,6 +35,7 @@ import {
   useAvanzarEstadoEmbarque,
   useDuplicarEmbarque,
   useEliminarEmbarque,
+  calcularEstadoEmbarque,
 } from "@/hooks/useEmbarques";
 import { TabResumen } from "@/components/embarque/TabResumen";
 import { TabDocumentos } from "@/components/embarque/TabDocumentos";
@@ -58,6 +60,25 @@ export default function EmbarqueDetalle() {
 
   const duplicarEmbarque = useDuplicarEmbarque();
   const eliminarEmbarque = useEliminarEmbarque();
+  const queryClient = useQueryClient();
+
+  // Auto-actualizar estado para embarques marítimos
+  useEffect(() => {
+    if (!embarque) return;
+    const estadoCalculado = calcularEstadoEmbarque(
+      embarque.modo,
+      embarque.etd,
+      embarque.eta,
+      embarque.estado
+    );
+    if (estadoCalculado !== embarque.estado) {
+      supabase
+        .from('embarques')
+        .update({ estado: estadoCalculado as any })
+        .eq('id', embarque.id)
+        .then(() => queryClient.invalidateQueries({ queryKey: ['embarques', embarque.id] }));
+    }
+  }, [embarque?.id, embarque?.etd, embarque?.eta]);
 
   const [uploadingDocId, setUploadingDocId] = useState<string | null>(null);
   const [downloadingDocId, setDownloadingDocId] = useState<string | null>(null);
