@@ -5,7 +5,6 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { useClientesForSelect } from "@/hooks/useClientes";
 import { useCreateCotizacion, useUpdateCotizacion, ConceptoVentaCotizacion, DimensionLCL, DimensionAerea } from "@/hooks/useCotizaciones";
@@ -14,6 +13,7 @@ import { useRegistrarActividad } from "@/hooks/useBitacora";
 import { useAuth } from "@/contexts/AuthContext";
 import { uploadFile } from "@/lib/storage";
 import { formatCurrency } from "@/lib/formatters";
+import { calcularTotalesPL } from "@/lib/profitUtils";
 import { ArrowLeft, Save, ChevronRight, ChevronLeft, Info, Package } from "lucide-react";
 
 import { StepIndicator } from "@/components/embarque/StepIndicator";
@@ -26,6 +26,7 @@ import SeccionMercanciaMaritimeLCL from "@/components/cotizacion/SeccionMercanci
 import SeccionMercanciaGeneral from "@/components/cotizacion/SeccionMercanciaGeneral";
 import SeccionMercanciaAerea from "@/components/cotizacion/SeccionMercanciaAerea";
 import SeccionCostosInternosPLLocal, { type FilaCostoLocal } from "@/components/cotizacion/SeccionCostosInternosPLLocal";
+import PasoResumenCotizacion from "@/components/cotizacion/PasoResumenCotizacion";
 
 const CONCEPTOS_CON_IVA_USD = [
   'Handling', 'Desconsolidación', 'Revalidación',
@@ -128,42 +129,31 @@ export default function NuevaCotizacion() {
     setMsdsFile(null);
   };
 
-  // USD helpers
-  const actualizarConceptoUSD = (index: number, campo: string, valor: any) => {
+  // Helpers consolidados de conceptos
+  const actualizarConcepto = (moneda: "USD" | "MXN", index: number, campo: string, valor: any) => {
     if (campo === '_esOtro') return;
-    setConceptosUSD(prev => {
+    const setter = moneda === "USD" ? setConceptosUSD : setConceptosMXN;
+    setter(prev => {
       const copia = [...prev];
       (copia[index] as any)[campo] = valor;
-      if (campo === 'descripcion') {
-        if (!CONCEPTOS_CON_IVA.includes(valor)) {
-          copia[index].aplica_iva = false;
-        }
+      if (moneda === "USD" && campo === 'descripcion' && !CONCEPTOS_CON_IVA.includes(valor)) {
+        copia[index].aplica_iva = false;
       }
-      copia[index].total = copia[index].cantidad * copia[index].precio_unitario * (copia[index].aplica_iva ? 1.16 : 1);
-      return copia;
-    });
-  };
-  const agregarConceptoUSD = () => setConceptosUSD(prev => [...prev, emptyUSD()]);
-  const eliminarConceptoUSD = (index: number) => {
-    if (conceptosUSD.length <= 1) return;
-    setConceptosUSD(prev => prev.filter((_, i) => i !== index));
-  };
-
-  // MXN helpers
-  const actualizarConceptoMXN = (index: number, campo: string, valor: any) => {
-    if (campo === '_esOtro') return;
-    setConceptosMXN(prev => {
-      const copia = [...prev];
-      (copia[index] as any)[campo] = valor;
       const sub = copia[index].cantidad * copia[index].precio_unitario;
-      copia[index].total = sub * 1.16;
+      copia[index].total = moneda === "MXN" ? sub * 1.16 : sub * (copia[index].aplica_iva ? 1.16 : 1);
       return copia;
     });
   };
-  const agregarConceptoMXN = () => setConceptosMXN(prev => [...prev, emptyMXN()]);
-  const eliminarConceptoMXN = (index: number) => {
-    if (conceptosMXN.length <= 1) return;
-    setConceptosMXN(prev => prev.filter((_, i) => i !== index));
+  const agregarConcepto = (moneda: "USD" | "MXN") => {
+    const setter = moneda === "USD" ? setConceptosUSD : setConceptosMXN;
+    const factory = moneda === "USD" ? emptyUSD : emptyMXN;
+    setter(prev => [...prev, factory()]);
+  };
+  const eliminarConcepto = (moneda: "USD" | "MXN", index: number) => {
+    const setter = moneda === "USD" ? setConceptosUSD : setConceptosMXN;
+    const lista = moneda === "USD" ? conceptosUSD : conceptosMXN;
+    if (lista.length <= 1) return;
+    setter(prev => prev.filter((_, i) => i !== index));
   };
 
   // Totals
@@ -181,15 +171,8 @@ export default function NuevaCotizacion() {
   // P&L calculations for summary
   const costosUSD = costosInternos.filter(c => c.moneda === "USD");
   const costosMXN = costosInternos.filter(c => c.moneda === "MXN");
-  const calcPL = (rows: FilaCostoLocal[]) => {
-    const totalCosto = rows.reduce((s, f) => s + f.cantidad * f.costo_unitario, 0);
-    const totalVenta = rows.reduce((s, f) => s + f.cantidad * f.precio_venta, 0);
-    const profit = totalVenta - totalCosto;
-    const pct = totalVenta !== 0 ? (profit / totalVenta) * 100 : 0;
-    return { totalCosto, totalVenta, profit, pct };
-  };
-  const plUSD = calcPL(costosUSD);
-  const plMXN = calcPL(costosMXN);
+  const plUSD = calcularTotalesPL(costosUSD);
+  const plMXN = calcularTotalesPL(costosMXN);
 
   const buildPaso1Data = () => {
     let msdsArchivo: string | null = null;
@@ -365,12 +348,6 @@ export default function NuevaCotizacion() {
     }
   };
 
-  const profitBadgeLocal = (pct: number) => {
-    if (pct > 15) return <Badge className="bg-emerald-100 text-emerald-700 border-emerald-200">{pct.toFixed(1)}%</Badge>;
-    if (pct > 0) return <Badge className="bg-amber-100 text-amber-700 border-amber-200">{pct.toFixed(1)}%</Badge>;
-    if (pct < 0) return <Badge className="bg-red-100 text-red-700 border-red-200">{pct.toFixed(1)}%</Badge>;
-    return <Badge variant="secondary">0%</Badge>;
-  };
 
   return (
     <div className="flex flex-col h-[calc(100vh-4rem)]">
@@ -531,12 +508,12 @@ export default function NuevaCotizacion() {
               <SeccionConceptosVentaCotizacion
                 conceptosUSD={conceptosUSD}
                 conceptosMXN={conceptosMXN}
-                actualizarConceptoUSD={actualizarConceptoUSD}
-                actualizarConceptoMXN={actualizarConceptoMXN}
-                agregarConceptoUSD={agregarConceptoUSD}
-                agregarConceptoMXN={agregarConceptoMXN}
-                eliminarConceptoUSD={eliminarConceptoUSD}
-                eliminarConceptoMXN={eliminarConceptoMXN}
+                actualizarConceptoUSD={(i, c, v) => actualizarConcepto("USD", i, c, v)}
+                actualizarConceptoMXN={(i, c, v) => actualizarConcepto("MXN", i, c, v)}
+                agregarConceptoUSD={() => agregarConcepto("USD")}
+                agregarConceptoMXN={() => agregarConcepto("MXN")}
+                eliminarConceptoUSD={(i) => eliminarConcepto("USD", i)}
+                eliminarConceptoMXN={(i) => eliminarConcepto("MXN", i)}
                 totalUSD={totalUSD}
                 subtotalMXN={subtotalMXN}
                 ivaMXN={ivaMXN}
@@ -547,105 +524,21 @@ export default function NuevaCotizacion() {
 
           {/* PASO 4 — Resumen */}
           {currentStep === 4 && (
-            <div className="space-y-4">
-              {/* P&L Cards */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {costosUSD.length > 0 && (
-                  <Card>
-                    <CardHeader className="pb-2">
-                      <CardTitle className="text-base">P&L USD</CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-2">
-                      <div className="flex justify-between text-sm">
-                        <span className="text-muted-foreground">Total Costo</span>
-                        <span>{formatCurrency(plUSD.totalCosto, "USD")}</span>
-                      </div>
-                      <div className="flex justify-between text-sm">
-                        <span className="text-muted-foreground">Total Venta</span>
-                        <span>{formatCurrency(plUSD.totalVenta, "USD")}</span>
-                      </div>
-                      <div className="flex justify-between text-sm font-semibold">
-                        <span>Profit</span>
-                        <span className={plUSD.profit >= 0 ? "text-emerald-600" : "text-red-600"}>
-                          {formatCurrency(plUSD.profit, "USD")}
-                        </span>
-                      </div>
-                      <div className="flex justify-center pt-1">{profitBadgeLocal(plUSD.pct)}</div>
-                    </CardContent>
-                  </Card>
-                )}
-                {costosMXN.length > 0 && (
-                  <Card>
-                    <CardHeader className="pb-2">
-                      <CardTitle className="text-base">P&L MXN</CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-2">
-                      <div className="flex justify-between text-sm">
-                        <span className="text-muted-foreground">Total Costo</span>
-                        <span>{formatCurrency(plMXN.totalCosto, "MXN")}</span>
-                      </div>
-                      <div className="flex justify-between text-sm">
-                        <span className="text-muted-foreground">Total Venta</span>
-                        <span>{formatCurrency(plMXN.totalVenta, "MXN")}</span>
-                      </div>
-                      <div className="flex justify-between text-sm font-semibold">
-                        <span>Profit</span>
-                        <span className={plMXN.profit >= 0 ? "text-emerald-600" : "text-red-600"}>
-                          {formatCurrency(plMXN.profit, "MXN")}
-                        </span>
-                      </div>
-                      <div className="flex justify-center pt-1">{profitBadgeLocal(plMXN.pct)}</div>
-                    </CardContent>
-                  </Card>
-                )}
-              </div>
-
-              {/* Datos de operación */}
-              <Card>
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-base">Datos de la Operación</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="grid grid-cols-2 md:grid-cols-3 gap-4 text-sm">
-                    <div>
-                      <span className="text-muted-foreground">Cliente</span>
-                      <p className="font-medium">{esProspecto ? prospectoEmpresa : (clienteSeleccionado?.nombre || '—')}</p>
-                    </div>
-                    <div>
-                      <span className="text-muted-foreground">Ruta</span>
-                      <p className="font-medium">{origen || '—'} → {destino || '—'}</p>
-                    </div>
-                    <div>
-                      <span className="text-muted-foreground">Contenedores/BLs</span>
-                      <p className="font-medium">{numContenedores}</p>
-                    </div>
-                    <div>
-                      <span className="text-muted-foreground">Modo</span>
-                      <p className="font-medium">{modo}</p>
-                    </div>
-                    <div>
-                      <span className="text-muted-foreground">Incoterm</span>
-                      <p className="font-medium">{incoterm}</p>
-                    </div>
-                    <div>
-                      <span className="text-muted-foreground">Tipo</span>
-                      <p className="font-medium">{tipo}</p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* Totales de venta */}
-              <div className="flex flex-col items-end gap-1 p-4 border rounded-md bg-muted/30">
-                <span className="text-base font-bold">Total USD: {formatCurrency(totalUSD, 'USD')}</span>
-                <span className="text-base font-bold">Total MXN (c/IVA): {formatCurrency(totalMXN, 'MXN')}</span>
-              </div>
-
-              <div className="flex items-center gap-2 p-3 rounded-md bg-amber-50 border border-amber-200 text-amber-700 text-sm">
-                <Info className="h-4 w-4 flex-shrink-0" />
-                La cotización se guardará en estado Borrador.
-              </div>
-            </div>
+            <PasoResumenCotizacion
+              plUSD={plUSD}
+              plMXN={plMXN}
+              tieneCostosUSD={costosUSD.length > 0}
+              tieneCostosMXN={costosMXN.length > 0}
+              nombreCliente={esProspecto ? prospectoEmpresa : (clienteSeleccionado?.nombre || '—')}
+              origen={origen}
+              destino={destino}
+              numContenedores={numContenedores}
+              modo={modo}
+              incoterm={incoterm}
+              tipo={tipo}
+              totalUSD={totalUSD}
+              totalMXN={totalMXN}
+            />
           )}
         </div>
       </div>

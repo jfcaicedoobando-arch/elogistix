@@ -33,11 +33,7 @@ interface FilaCosto {
   aplica_iva?: boolean;
 }
 
-function profitBadge(profit: number) {
-  if (profit > 0) return <Badge className="bg-emerald-100 text-emerald-700 border-emerald-200">{profit.toFixed(1)}%</Badge>;
-  if (profit < 0) return <Badge className="bg-red-100 text-red-700 border-red-200">{profit.toFixed(1)}%</Badge>;
-  return <Badge variant="secondary">0%</Badge>;
-}
+import { ProfitBadge } from "@/lib/profitUtils";
 
 export default function SeccionCostosInternosPL({ cotizacionId, conceptosUSD, conceptosMXN }: Props) {
   const { canEdit } = usePermissions();
@@ -245,7 +241,7 @@ export default function SeccionCostosInternosPL({ cotizacionId, conceptosUSD, co
                       <TableCell className={`text-right text-sm font-medium ${profit >= 0 ? "text-emerald-600" : "text-red-600"}`}>
                         {formatCurrency(profit, moneda)}
                       </TableCell>
-                      <TableCell className="text-right">{profitBadge(pct)}</TableCell>
+                      <TableCell className="text-right"><ProfitBadge porcentaje={pct} /></TableCell>
                     </TableRow>
                   );
                 })}
@@ -258,7 +254,7 @@ export default function SeccionCostosInternosPL({ cotizacionId, conceptosUSD, co
                   <TableCell className={`text-right ${totProfit >= 0 ? "text-emerald-600" : "text-red-600"}`}>
                     {formatCurrency(totProfit, moneda)}
                   </TableCell>
-                  <TableCell className="text-right">{profitBadge(totPct)}</TableCell>
+                  <TableCell className="text-right"><ProfitBadge porcentaje={totPct} /></TableCell>
                 </TableRow>
               </TableFooter>
             </Table>
@@ -319,7 +315,7 @@ export default function SeccionCostosInternosPL({ cotizacionId, conceptosUSD, co
                           </span>
                         </div>
                         <div className="flex justify-center pt-1">
-                          {profitBadge(totalesUSD.pct)}
+                          <ProfitBadge porcentaje={totalesUSD.pct} />
                         </div>
                       </CardContent>
                     </Card>
@@ -344,7 +340,7 @@ export default function SeccionCostosInternosPL({ cotizacionId, conceptosUSD, co
                           </span>
                         </div>
                         <div className="flex justify-center pt-1">
-                          {profitBadge(totalesMXN.pct)}
+                          <ProfitBadge porcentaje={totalesMXN.pct} />
                         </div>
                       </CardContent>
                     </Card>

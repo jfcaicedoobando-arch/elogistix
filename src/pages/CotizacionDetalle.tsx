@@ -4,6 +4,7 @@ import TablaConceptosUSD from "@/components/cotizacion/TablaConceptosUSD";
 import TablaConceptosMXN from "@/components/cotizacion/TablaConceptosMXN";
 import ResumenTotalesCotizacion from "@/components/cotizacion/ResumenTotalesCotizacion";
 import DialogConvertirProspecto from "@/components/cotizacion/DialogConvertirProspecto";
+import SeccionMercanciaCotizacionDetalle from "@/components/cotizacion/SeccionMercanciaCotizacionDetalle";
 import type { ClienteFormData } from "@/components/cotizacion/DialogConvertirProspecto";
 import type { ConceptoVentaCotizacion } from "@/hooks/useCotizaciones";
 import { useParams, useNavigate } from "react-router-dom";
@@ -12,9 +13,6 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
-  Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
-} from "@/components/ui/table";
-import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
@@ -22,7 +20,6 @@ import {
   useCotizacion, useUpdateEstadoCotizacion,
   useConvertirProspectoACliente,
   useConvertirCotizacionAEmbarques,
-  DimensionLCL, DimensionAerea,
 } from "@/hooks/useCotizaciones";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -30,8 +27,7 @@ import { usePermissions } from "@/hooks/usePermissions";
 import { useToast } from "@/hooks/use-toast";
 import { formatDate, getEstadoColor } from "@/lib/helpers";
 import { formatCurrency } from "@/lib/formatters";
-import { getSignedUrl } from "@/lib/storage";
-import { ArrowLeft, ArrowRight, CheckCircle, Send, XCircle, UserPlus, FileDown, AlertTriangle } from "lucide-react";
+import { ArrowLeft, ArrowRight, CheckCircle, Send, XCircle, UserPlus, FileDown } from "lucide-react";
 import { generarPdfCotizacion } from "@/lib/cotizacionPdf";
 
 export default function CotizacionDetalle() {
@@ -130,8 +126,6 @@ export default function CotizacionDetalle() {
     ? `${cotizacion.prospecto_empresa} (Prospecto)`
     : cotizacion.cliente_nombre;
 
-  const dimensiones: DimensionLCL[] = Array.isArray(cotizacion.dimensiones_lcl) ? cotizacion.dimensiones_lcl : [];
-  const dimensionesAereas: DimensionAerea[] = Array.isArray(cotizacion.dimensiones_aereas) ? cotizacion.dimensiones_aereas : [];
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
@@ -240,140 +234,7 @@ export default function CotizacionDetalle() {
       </Card>
 
       {/* Mercancía */}
-      <Card>
-        <CardHeader><CardTitle className="text-lg">Mercancía</CardTitle></CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-            {esMaritimo && (
-              <div>
-                <span className="text-muted-foreground">Tipo de Embarque</span>
-                <p className="font-medium">{cotizacion.tipo_embarque}</p>
-              </div>
-            )}
-            {esMaritimo && cotizacion.tipo_embarque === 'FCL' && (
-              <>
-                <div>
-                  <span className="text-muted-foreground">Tipo de Contenedor</span>
-                  <p className="font-medium">{cotizacion.tipo_contenedor || '-'}</p>
-                </div>
-                <div>
-                  <span className="text-muted-foreground">Peso</span>
-                  <p className="font-medium">{cotizacion.tipo_peso}</p>
-                </div>
-              </>
-            )}
-            <div>
-              <span className="text-muted-foreground">Tipo de Carga</span>
-              <p className="font-medium flex items-center gap-1">
-                {cotizacion.tipo_carga === 'Mercancía Peligrosa' && <AlertTriangle className="h-4 w-4 text-destructive" />}
-                {cotizacion.tipo_carga || 'Carga General'}
-              </p>
-            </div>
-            <div>
-              <span className="text-muted-foreground">Sector Económico</span>
-              <p className="font-medium">{cotizacion.sector_economico || cotizacion.descripcion_mercancia || '-'}</p>
-            </div>
-            {!esMaritimo && !esAereo && (
-              <>
-                <div><span className="text-muted-foreground">Peso</span><p className="font-medium">{cotizacion.peso_kg} kg</p></div>
-                <div><span className="text-muted-foreground">Volumen</span><p className="font-medium">{cotizacion.volumen_m3} m³</p></div>
-                <div><span className="text-muted-foreground">Piezas</span><p className="font-medium">{cotizacion.piezas}</p></div>
-              </>
-            )}
-            {cotizacion.msds_archivo && (
-              <div>
-                <span className="text-muted-foreground">MSDS</span>
-                <Button
-                  variant="link" size="sm" className="p-0 h-auto text-sm"
-                  onClick={async () => {
-                    const url = await getSignedUrl(cotizacion.msds_archivo!);
-                    window.open(url, '_blank');
-                  }}
-                >
-                  <FileDown className="h-3 w-3 mr-1" /> Descargar
-                </Button>
-              </div>
-            )}
-          </div>
-
-          {cotizacion.descripcion_adicional && (
-            <div className="text-sm">
-              <span className="text-muted-foreground">Descripción Adicional</span>
-              <p className="font-medium whitespace-pre-wrap">{cotizacion.descripcion_adicional}</p>
-            </div>
-          )}
-
-          {/* Tabla dimensiones LCL */}
-          {esMaritimo && cotizacion.tipo_embarque === 'LCL' && dimensiones.length > 0 && (
-            <div>
-              <span className="text-sm text-muted-foreground font-semibold">Dimensiones</span>
-              <div className="border rounded-md overflow-auto mt-1">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Piezas</TableHead>
-                      <TableHead>Alto (cm)</TableHead>
-                      <TableHead>Largo (cm)</TableHead>
-                      <TableHead>Ancho (cm)</TableHead>
-                      <TableHead>Volumen m³</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {dimensiones.map((dimension, indice) => (
-                      <TableRow key={indice}>
-                        <TableCell>{dimension.piezas}</TableCell>
-                        <TableCell>{dimension.alto_cm}</TableCell>
-                        <TableCell>{dimension.largo_cm}</TableCell>
-                        <TableCell>{dimension.ancho_cm}</TableCell>
-                        <TableCell>{dimension.volumen_m3.toFixed(4)}</TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </div>
-              <div className="flex justify-end gap-6 mt-2 text-sm font-semibold">
-                <span>Total piezas: {cotizacion.piezas}</span>
-                <span>Volumen total: {cotizacion.volumen_m3} m³</span>
-              </div>
-            </div>
-          )}
-
-          {/* Tabla dimensiones Aéreas */}
-          {esAereo && dimensionesAereas.length > 0 && (
-            <div>
-              <span className="text-sm text-muted-foreground font-semibold">Dimensiones</span>
-              <div className="border rounded-md overflow-auto mt-1">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Piezas</TableHead>
-                      <TableHead>Alto (cm)</TableHead>
-                      <TableHead>Largo (cm)</TableHead>
-                      <TableHead>Ancho (cm)</TableHead>
-                      <TableHead>Peso vol. (kg)</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {dimensionesAereas.map((dimension, indice) => (
-                      <TableRow key={indice}>
-                        <TableCell>{dimension.piezas}</TableCell>
-                        <TableCell>{dimension.alto_cm}</TableCell>
-                        <TableCell>{dimension.largo_cm}</TableCell>
-                        <TableCell>{dimension.ancho_cm}</TableCell>
-                        <TableCell>{dimension.peso_volumetrico_kg.toFixed(2)}</TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </div>
-              <div className="flex justify-end gap-6 mt-2 text-sm font-semibold">
-                <span>Total piezas: {cotizacion.piezas}</span>
-                <span>Peso volumétrico total: {cotizacion.peso_kg} kg</span>
-              </div>
-            </div>
-          )}
-        </CardContent>
-      </Card>
+      <SeccionMercanciaCotizacionDetalle cotizacion={cotizacion} />
 
       {/* Conceptos de venta */}
       <TablaConceptosUSD conceptos={conceptosVentaUSD} totalUSD={totalUSD} />
