@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -30,6 +30,9 @@ interface Props {
 export default function SeccionCostosInternosPLLocal({ filas, setFilas }: Props) {
   const filasUSD = useMemo(() => filas.filter(f => f.moneda === "USD"), [filas]);
   const filasMXN = useMemo(() => filas.filter(f => f.moneda === "MXN"), [filas]);
+
+  // Track which field is being edited and its raw text
+  const [editingQty, setEditingQty] = useState<{ idx: number; raw: string } | null>(null);
 
   const updateFila = (globalIdx: number, field: keyof FilaCostoLocal, value: any) => {
     setFilas(prev => {
@@ -141,15 +144,25 @@ export default function SeccionCostosInternosPLLocal({ filas, setFilas }: Props)
                   <div className="flex items-center gap-2">
                     <div className="flex items-center gap-1">
                       <span className="text-xs text-muted-foreground">Cant.</span>
-                      <Input
+                       <Input
                         type="text" inputMode="decimal"
-                        value={fila.cantidad === 0 ? '' : fila.cantidad}
-                        onFocus={e => { if (e.target.value === '0') e.target.value = ''; }}
-                        onChange={e => {
-                          const raw = e.target.value.replace(/[^0-9.]/g, '');
-                          updateFila(gi, "cantidad", raw === '' ? 0 : parseFloat(raw));
+                        value={editingQty?.idx === gi ? editingQty.raw : (fila.cantidad === 0 ? '' : String(fila.cantidad))}
+                        onFocus={e => {
+                          const val = fila.cantidad === 0 ? '' : String(fila.cantidad);
+                          setEditingQty({ idx: gi, raw: val });
+                          if (e.target.value === '0') e.target.value = '';
                         }}
-                        onBlur={e => { if (e.target.value === '') updateFila(gi, "cantidad", 1); }}
+                        onChange={e => {
+                          const raw = e.target.value.replace(/[^0-9.,]/g, '').replace(',', '.');
+                          setEditingQty({ idx: gi, raw });
+                          const num = parseFloat(raw);
+                          if (!isNaN(num)) updateFila(gi, "cantidad", num);
+                          else if (raw === '') updateFila(gi, "cantidad", 0);
+                        }}
+                        onBlur={() => {
+                          setEditingQty(null);
+                          if (fila.cantidad === 0 || isNaN(fila.cantidad)) updateFila(gi, "cantidad", 1);
+                        }}
                         className="h-8 text-sm text-right w-[80px]"
                       />
                     </div>
