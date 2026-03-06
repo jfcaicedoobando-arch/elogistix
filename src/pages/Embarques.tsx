@@ -153,7 +153,10 @@ export default function Embarques() {
                     <TableCell className="text-xs">{formatDate(embarque.etd || '')}</TableCell>
                     <TableCell className="text-xs">{formatDate(embarque.eta || '')}</TableCell>
                     <TableCell>
-                      <Badge variant="secondary" className={`text-xs ${getEstadoColor(embarque.estado)}`}>{embarque.estado}</Badge>
+                      {(() => {
+                        const estadoMostrado = calcularEstadoEmbarque(embarque.modo, embarque.etd, embarque.eta, embarque.estado);
+                        return <Badge variant="secondary" className={`text-xs ${getEstadoColor(estadoMostrado)}`}>{estadoMostrado}</Badge>;
+                      })()}
                     </TableCell>
                     <TableCell className="text-xs">{embarque.operador}</TableCell>
                   </TableRow>

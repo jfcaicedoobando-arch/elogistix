@@ -282,7 +282,7 @@ export function useDuplicarEmbarque() {
           .from('embarques')
           .insert({
             expediente: embarqueOrigen.expediente,
-            estado: 'Cotización' as any,
+            estado: 'Confirmado' as any,
             cliente_id: embarqueOrigen.cliente_id,
             cliente_nombre: embarqueOrigen.cliente_nombre,
             modo: embarqueOrigen.modo,

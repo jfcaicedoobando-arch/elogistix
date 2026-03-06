@@ -25,6 +25,8 @@ export const getEstadoColor = (estado: string): string => {
     'Recibido': 'bg-info/15 text-info',
     'Validado': 'bg-success/15 text-success',
     'Pagado': 'bg-success/15 text-success',
+    'En Aduana': 'bg-warning/15 text-warning',
+    'Entregado': 'bg-success/15 text-success',
     // Estados de cotización
     'Enviada': 'bg-info/15 text-info',
     'Aceptada': 'bg-warning/15 text-warning',

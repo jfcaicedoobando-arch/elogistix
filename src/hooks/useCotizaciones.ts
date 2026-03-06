@@ -395,6 +395,7 @@ export function useConvertirCotizacionAEmbarques() {
             expediente: expediente as string,
             cliente_id: cotizacion.cliente_id!,
             cliente_nombre: cotizacion.cliente_nombre,
+            estado: 'Confirmado' as any,
             modo: cotizacion.modo as any,
             tipo: cotizacion.tipo as any,
             incoterm: cotizacion.incoterm as any,
