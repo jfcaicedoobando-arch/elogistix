@@ -81,7 +81,7 @@ export default function SeccionConceptosVentaCotizacion({
                     />
                   ) : (
                     <Select
-                      value={CATALOGO_USD.includes(c.descripcion) ? c.descripcion : c.descripcion === '' ? '' : 'Otro'}
+                      value={(CONCEPTOS_COSTO_USD as readonly string[]).includes(c.descripcion) ? c.descripcion : c.descripcion === '' ? '' : 'Otro'}
                     onValueChange={val => {
                         if (val === 'Otro') {
                           actualizarConceptoUSD(i, 'descripcion', '');
