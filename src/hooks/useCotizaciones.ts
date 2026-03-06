@@ -263,6 +263,19 @@ export function useUpdateCotizacion() {
   });
 }
 
+export function useDeleteCotizacion() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from('cotizaciones').delete().eq('id', id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['cotizaciones'] });
+    },
+  });
+}
+
 export function useUpdateEstadoCotizacion() {
   const queryClient = useQueryClient();
   return useMutation({

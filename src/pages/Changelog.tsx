@@ -13,6 +13,14 @@ interface ChangelogEntry {
 
 const changelog: ChangelogEntry[] = [
   {
+    version: "4.12.0",
+    date: "2026-03-06",
+    type: "minor",
+    title: "Botón eliminar cotización (solo admin)",
+    description:
+      "Se agregó una columna de acciones en la tabla de cotizaciones con botón de eliminar visible únicamente para administradores. Incluye confirmación con AlertDialog antes de proceder.",
+  },
+  {
     version: "4.11.2",
     date: "2026-03-06",
     type: "patch",
