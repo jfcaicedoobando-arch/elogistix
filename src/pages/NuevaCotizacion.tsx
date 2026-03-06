@@ -287,7 +287,7 @@ export default function NuevaCotizacion() {
           const usdFromCostos = costosInternos
             .filter(c => c.moneda === 'USD' && c.concepto.trim())
             .map(c => {
-              const tieneIva = CONCEPTOS_CON_IVA_USD.includes(c.concepto);
+              const tieneIva = (CONCEPTOS_CON_IVA_USD as readonly string[]).includes(c.concepto);
               return { descripcion: c.concepto, unidad_medida: c.unidad_medida, cantidad: c.cantidad, precio_unitario: c.precio_venta, moneda: 'USD' as const, aplica_iva: tieneIva, total: c.cantidad * c.precio_venta * (tieneIva ? 1.16 : 1) };
             });
           const mxnFromCostos = costosInternos

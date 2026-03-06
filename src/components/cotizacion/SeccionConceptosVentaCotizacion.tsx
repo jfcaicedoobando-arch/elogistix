@@ -217,7 +217,7 @@ export default function SeccionConceptosVentaCotizacion({
                     >
                       <SelectTrigger><SelectValue placeholder="Selecciona concepto" /></SelectTrigger>
                       <SelectContent>
-                        {CATALOGO_MXN.map(opt => (
+                        {[...CONCEPTOS_COSTO_MXN].map(opt => (
                           <SelectItem key={opt} value={opt}>{opt}</SelectItem>
                         ))}
                       </SelectContent>
