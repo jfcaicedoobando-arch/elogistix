@@ -205,7 +205,7 @@ export default function SeccionConceptosVentaCotizacion({
                     />
                   ) : (
                     <Select
-                      value={CATALOGO_MXN.includes(c.descripcion) ? c.descripcion : c.descripcion === '' ? '' : 'Otro'}
+                      value={(CONCEPTOS_COSTO_MXN as readonly string[]).includes(c.descripcion) ? c.descripcion : c.descripcion === '' ? '' : 'Otro'}
                       onValueChange={val => {
                         if (val === 'Otro') {
                           actualizarConceptoMXN(i, 'descripcion', '');
