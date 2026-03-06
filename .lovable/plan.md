@@ -1,34 +1,24 @@
 
 
-## Plan: Duplicar Embarque
+## Plan: Botón Eliminar Embarque (solo Admin)
 
 ### Cambios
 
-**1. `src/hooks/useEmbarques.ts`** — Agregar `useDuplicarEmbarque`
+**1. `src/hooks/useEmbarques.ts`** — Agregar `useEliminarEmbarque`
 
-Hook `useMutation` que recibe `{ embarqueOrigen: EmbarqueRow, copias: Array<{ num_contenedor, tipo_contenedor, peso_kg, volumen_m3, piezas }> }`.
+Hook `useMutation` que:
+1. Elimina registros relacionados en orden: `conceptos_venta`, `conceptos_costo`, `documentos_embarque`, `notas_embarque`, `facturas` (por `embarque_id`)
+2. Elimina el embarque de la tabla `embarques`
+3. `onSuccess`: `invalidateQueries(['embarques'])`
 
-Para cada copia:
-1. `supabase.rpc('generar_expediente', { tipo_op: embarqueOrigen.tipo })` → obtiene expediente
-2. Inserta embarque nuevo copiando campos del origen (cliente_id, cliente_nombre, modo, tipo, incoterm, bl_master, bl_house, naviera, puerto_origen, puerto_destino, etc.) pero con expediente generado, contenedor/peso/volumen/piezas de la copia, estado `'Cotización'`
-3. Copia `conceptos_venta` y `conceptos_costo` del origen al nuevo embarque_id
-4. Retorna array de `{ id, expediente }` creados
+**2. `src/pages/EmbarqueDetalle.tsx`** — Botón + AlertDialog de eliminación
 
-`onSuccess`: `invalidateQueries(['embarques'])`
+- Importar `Trash2` de lucide y `useEliminarEmbarque`
+- Agregar botón rojo "Eliminar" visible solo si `isAdmin` (no `canEdit`, solo admin)
+- AlertDialog con doble confirmación (siguiendo el patrón existente de seguridad del proyecto):
+  - Primera alerta: "¿Estás seguro de eliminar este embarque?"
+  - Segunda alerta: "Esta acción es irreversible. Se eliminarán todos los documentos, costos, conceptos de venta y notas asociados."
+- `onSuccess`: registrar en bitácora, toast de confirmación, navegar a `/embarques`
 
-**2. `src/pages/EmbarqueDetalle.tsx`** — Botón + Dialog de duplicación
-
-- Importar `Copy` de lucide, `Dialog` components, `useDuplicarEmbarque`
-- Estado: `dialogDuplicarAbierto`, `cantidadCopias` (1-10), `filaCopias` (array editable)
-- Botón "Duplicar" con ícono Copy junto a Editar/Imprimir, visible solo si `canEdit`
-- Dialog con:
-  - Header: "Duplicar Embarque" + subtítulo con expediente y BL
-  - Control +/− para cantidad (1-10), sincroniza array de filas
-  - Tabla editable: # | Contenedor | Tipo Contenedor | Peso | Volumen | Piezas
-  - Valores iniciales copiados del embarque origen (contenedor vacío)
-  - Nota informativa azul con campos que se copian automáticamente
-  - Footer: Cancelar + "Crear N Embarques"
-- `onSuccess`: toast con expedientes creados, cerrar dialog
-
-**3. `src/pages/Changelog.tsx`** — entrada v4.14.0
+**3. `src/pages/Changelog.tsx`** — Entrada v4.15.0
 
