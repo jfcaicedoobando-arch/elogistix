@@ -7,17 +7,7 @@ import { Switch } from "@/components/ui/switch";
 import { Plus, Trash2 } from "lucide-react";
 import type { ConceptoVentaCotizacion } from "@/hooks/useCotizaciones";
 import { formatCurrency } from "@/lib/formatters";
-
-const CATALOGO_USD = [
-  'Cargos en Origen', 'Costos Portuarios', 'Consolidación', 'Seguro',
-  'Recolección', 'Modificación de BL', 'Flete Marítimo', 'Flete Aéreo',
-  'Flete Terrestre', 'Handling', 'Desconsolidación', 'Revalidación',
-  'Demoras', 'Cargos en Destino', 'Release', 'Otro'
-];
-
-const CATALOGO_MXN = ['Entrega Nacional', 'Honorarios de Despacho Aduanal', 'Otro'];
-
-const CONCEPTOS_CON_IVA = ['Handling', 'Desconsolidación', 'Revalidación', 'Demoras', 'Cargos en Destino', 'Release'];
+import { CONCEPTOS_COSTO_USD, CONCEPTOS_COSTO_MXN, CONCEPTOS_CON_IVA_USD } from "@/data/cotizacionConstants";
 
 const UNIDADES_MEDIDA = ['BL', 'W/M', 'Documento', 'Contenedor', 'Kilo', 'Embarque'];
 
