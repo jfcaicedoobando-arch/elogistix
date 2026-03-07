@@ -19,6 +19,7 @@ export const queryKeys = {
   },
   clientes: {
     all: ['clientes'] as const,
+    list: (filters: Record<string, unknown>) => ['clientes', 'list', filters] as const,
     detail: (id: string) => ['clientes', id] as const,
     select: ['clientes', 'select'] as const,
     contactos: (id: string) => ['contactos_cliente', id] as const,
