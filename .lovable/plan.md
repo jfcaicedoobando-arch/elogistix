@@ -1,16 +1,54 @@
 
 
-## Plan: Usar expediente del origen al duplicar
+## Plan: Extraer SeccionMercanciaWrapper
 
-### Cambio único en `src/hooks/useEmbarques.ts`
+### Análisis de duplicación
 
-En el loop de `useDuplicarEmbarque` (líneas 257-262), reemplazar la llamada a `supabase.rpc('generar_expediente')` por usar directamente `embarqueOrigen.expediente`:
+Los 3 componentes (FCL, LCL, Aérea) y también `SeccionMercanciaGeneral` comparten exactamente este bloque UI:
 
-- **Eliminar** líneas 258-262 (la llamada RPC y el manejo de error)
-- **Cambiar** línea 268 `expediente: expediente as string` → `expediente: embarqueOrigen.expediente`
-- En el push final al array `creados`, usar `embarqueOrigen.expediente` en lugar de `expediente as string`
+1. **Tipo de Carga** — Select con las mismas opciones
+2. **Sector Económico** — Select con las mismas opciones
+3. **Descripción Adicional** — Textarea
+4. **MSDS condicional** — Input file cuando `tipoCarga === 'Mercancía Peligrosa'`
 
-### Cambio en `src/pages/Changelog.tsx`
+Las constantes `TIPOS_CARGA` y `SECTORES` están duplicadas en los 4 archivos.
 
-Entrada v4.15.1 — "Duplicar embarque ahora conserva el mismo expediente del origen"
+### Cambios
+
+**1. Crear `src/components/cotizacion/SeccionMercanciaWrapper.tsx`**
+
+Componente wrapper que renderiza los campos compartidos + un slot `children` para contenido específico:
+
+```text
+┌─────────────────────────────────┐
+│ [Tipo de Carga]  [Sector Econ.] │  ← wrapper
+│ [children específicos]           │  ← slot (contenedor FCL, dimensiones, peso/vol, etc.)
+│ [Descripción Adicional]          │  ← wrapper
+│ [MSDS si peligrosa]              │  ← wrapper
+└─────────────────────────────────┘
+```
+
+Props del wrapper: `tipoCarga`, `setTipoCarga`, `sectorEconomico`, `setSectorEconomico`, `descripcionAdicional`, `setDescripcionAdicional`, `msdsFile`, `setMsdsFile`, `children`.
+
+Las constantes `TIPOS_CARGA` y `SECTORES` se definen solo aquí.
+
+**2. Refactorizar `SeccionMercanciaMaritimaFCL.tsx`**
+
+Queda solo con: Tipo de Contenedor, Peso (select). Envuelto en `<SeccionMercanciaWrapper>`.
+
+**3. Refactorizar `SeccionMercanciaMaritimeLCL.tsx`**
+
+Queda solo con: Tabla de dimensiones. Envuelto en `<SeccionMercanciaWrapper>`.
+
+**4. Refactorizar `SeccionMercanciaAerea.tsx`**
+
+Queda solo con: Tabla de dimensiones (peso volumétrico). Envuelto en `<SeccionMercanciaWrapper>`.
+
+**5. Refactorizar `SeccionMercanciaGeneral.tsx`**
+
+Queda solo con: Peso, Volumen, Piezas. Envuelto en `<SeccionMercanciaWrapper>`.
+
+**6. Changelog** — Entrada v4.26.0.
+
+No se requieren cambios en `NuevaCotizacion.tsx` ya que las props externas no cambian.
 
