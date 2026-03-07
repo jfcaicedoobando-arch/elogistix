@@ -13,6 +13,14 @@ interface ChangelogEntry {
 
 const changelog: ChangelogEntry[] = [
   {
+    version: "4.30.1",
+    date: "2026-03-07",
+    type: "patch",
+    title: "Corrección de nombre duplicado en selector de puertos",
+    description:
+      "Se corrigió un bug en PortSelect donde el nombre del puerto se mostraba dos veces (ej. 'Manzanillo — Manzanillo, México'). Ahora muestra formato 'Nombre, País (Código)' (ej. 'Manzanillo, México (MXZLO)').",
+  },
+  {
     version: "4.30.0",
     date: "2026-03-07",
     type: "minor",
