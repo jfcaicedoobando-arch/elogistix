@@ -13,6 +13,14 @@ interface ChangelogEntry {
 
 const changelog: ChangelogEntry[] = [
   {
+    version: "4.27.0",
+    date: "2026-03-07",
+    type: "minor",
+    title: "Tabla de Embarques — más registros y selector de página",
+    description:
+      "Page size por defecto aumentado a 20. Nuevo selector de registros por página (10/20/50) en PaginationControls para aprovechar mejor monitores grandes.",
+  },
+  {
     version: "4.26.0",
     date: "2026-03-07",
     type: "minor",
