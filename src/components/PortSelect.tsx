@@ -12,8 +12,8 @@ interface PortSelectProps {
   placeholder?: string;
 }
 
-function formatPort(port: { name: string; country: string }) {
-  return `${port.name} — ${port.name}, ${port.country}`;
+function formatPort(port: { code: string; name: string; country: string }) {
+  return `${port.name}, ${port.country} (${port.code})`;
 }
 
 export default function PortSelect({ value, onValueChange, placeholder = "Seleccionar puerto" }: PortSelectProps) {
