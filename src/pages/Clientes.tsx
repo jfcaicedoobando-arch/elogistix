@@ -9,9 +9,6 @@ import { Label } from "@/components/ui/label";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription,
 } from "@/components/ui/dialog";
-import {
-  Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
-} from "@/components/ui/table";
 import { useClientesPaginados, useCreateCliente } from "@/hooks/useClientes";
 import { useToast } from "@/hooks/use-toast";
 import { usePermissions } from "@/hooks/usePermissions";
@@ -19,6 +16,7 @@ import { useRegistrarActividad } from "@/hooks/useBitacora";
 import DocumentChecklist, { type DocumentoChecklist } from "@/components/DocumentChecklist";
 import PaginationControls from "@/components/PaginationControls";
 import { useDebounce } from "@/hooks/useDebounce";
+import { DataTable, type DataTableColumn } from "@/components/DataTable";
 
 const DEFAULT_PAGE_SIZE = 20;
 
@@ -30,6 +28,16 @@ const DOCS_OBLIGATORIOS = [
   'CIF', 'Opinión fiscal', 'Acta constitutiva', 'INE RL', 'Poder notarial',
   'Comprobante de domicilio', 'Datos bancarios', 'Opinión de cumplimiento IMSS/Infonavit',
   'Contrato de servicios con Elogistix', 'Estados financieros último corte',
+];
+
+type ClienteRow = { id: string; nombre: string; rfc: string; ciudad: string; estado: string; contacto: string; telefono: string };
+
+const columns: DataTableColumn<ClienteRow>[] = [
+  { key: "nombre", header: "Nombre", className: "font-medium max-w-[200px] truncate", render: (c) => c.nombre },
+  { key: "rfc", header: "RFC", className: "text-xs font-mono", render: (c) => c.rfc },
+  { key: "ciudad", header: "Ciudad", className: "text-xs", render: (c) => `${c.ciudad}, ${c.estado}` },
+  { key: "contacto", header: "Contacto", className: "text-xs", render: (c) => c.contacto },
+  { key: "telefono", header: "Teléfono", className: "text-xs", render: (c) => c.telefono },
 ];
 
 export default function Clientes() {
@@ -119,38 +127,14 @@ export default function Clientes() {
 
       <Card>
         <CardContent className="p-0">
-          {isLoading ? (
-            <div className="flex items-center justify-center py-12">
-              <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-            </div>
-          ) : clientes.length === 0 ? (
-            <div className="py-12 text-center text-sm text-muted-foreground">
-              {search ? "No se encontraron clientes" : "No hay clientes registrados"}
-            </div>
-          ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Nombre</TableHead>
-                  <TableHead>RFC</TableHead>
-                  <TableHead>Ciudad</TableHead>
-                  <TableHead>Contacto</TableHead>
-                  <TableHead>Teléfono</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {clientes.map(cliente => (
-                  <TableRow key={cliente.id} className="cursor-pointer" onClick={() => navigate(`/clientes/${cliente.id}`)}>
-                    <TableCell className="font-medium max-w-[200px] truncate">{cliente.nombre}</TableCell>
-                    <TableCell className="text-xs font-mono">{cliente.rfc}</TableCell>
-                    <TableCell className="text-xs">{cliente.ciudad}, {cliente.estado}</TableCell>
-                    <TableCell className="text-xs">{cliente.contacto}</TableCell>
-                    <TableCell className="text-xs">{cliente.telefono}</TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          )}
+          <DataTable
+            columns={columns}
+            data={clientes as ClienteRow[]}
+            isLoading={isLoading}
+            emptyMessage={search ? "No se encontraron clientes" : "No hay clientes registrados"}
+            onRowClick={(c) => navigate(`/clientes/${c.id}`)}
+            rowKey={(c) => c.id}
+          />
           <PaginationControls
             page={page}
             totalPages={totalPages}

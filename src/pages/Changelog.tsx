@@ -13,6 +13,14 @@ interface ChangelogEntry {
 
 const changelog: ChangelogEntry[] = [
   {
+    version: "4.30.0",
+    date: "2026-03-07",
+    type: "minor",
+    title: "Estandarización de tablas con componente DataTable",
+    description:
+      "Nuevo componente DataTable reutilizable con loading (skeletons), empty state con icono, zebra-striping, hover con tinte primary, sticky headers y filas compactas. 9 tablas migradas (Embarques, Cotizaciones, Clientes, Facturación, Proveedores, Usuarios, Dashboard Activos, Profit, Puertos). Todas las tablas de la app se benefician de las mejoras CSS en los primitivos base.",
+  },
+  {
     version: "4.29.3",
     date: "2026-03-07",
     type: "patch",

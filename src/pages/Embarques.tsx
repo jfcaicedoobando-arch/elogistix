@@ -4,12 +4,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
-  Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
-} from "@/components/ui/table";
-import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
-import { Skeleton } from "@/components/ui/skeleton";
 import { useNavigate } from "react-router-dom";
 import { useEmbarques, calcularEstadoEmbarque } from "@/hooks/useEmbarques";
 import { useClientesForSelect } from "@/hooks/useClientes";
@@ -18,8 +14,36 @@ import { formatDate, getEstadoColor, getModoIcon } from "@/lib/helpers";
 import { ESTADOS_EMBARQUE, MODOS_TRANSPORTE } from "@/data/embarqueConstants";
 import SearchInput from "@/components/SearchInput";
 import PaginationControls from "@/components/PaginationControls";
+import { DataTable, type DataTableColumn } from "@/components/DataTable";
 
 const DEFAULT_PAGE_SIZE = 20;
+
+type Embarque = ReturnType<typeof useEmbarques>["data"] extends (infer U)[] | undefined ? U : never;
+
+const columns: DataTableColumn<Embarque>[] = [
+  { key: "expediente", header: "Expediente", className: "font-medium", render: (e) => e.expediente },
+  { key: "bl", header: "BL Master", className: "text-xs", render: (e) => e.bl_master || "-" },
+  { key: "cliente", header: "Cliente", className: "max-w-[180px] truncate", render: (e) => e.cliente_nombre },
+  {
+    key: "modo", header: "Modo", render: (e) => (
+      <span className="flex items-center gap-1">
+        {getModoIcon(e.modo)} <span className="text-xs">{e.modo}</span>
+      </span>
+    ),
+  },
+  { key: "origen", header: "Origen", className: "text-xs", render: (e) => (e.puerto_origen || e.aeropuerto_origen || e.ciudad_origen || "-").split(",")[0] },
+  { key: "destino", header: "Destino", className: "text-xs", render: (e) => (e.puerto_destino || e.aeropuerto_destino || e.ciudad_destino || "-").split(",")[0] },
+  { key: "contenedor", header: "Contenedor", className: "text-xs", render: (e) => e.tipo_contenedor || "-" },
+  { key: "etd", header: "ETD", className: "text-xs", render: (e) => formatDate(e.etd || "") },
+  { key: "eta", header: "ETA", className: "text-xs", render: (e) => formatDate(e.eta || "") },
+  {
+    key: "estado", header: "Estado", render: (e) => {
+      const estado = calcularEstadoEmbarque(e.modo, e.etd, e.eta, e.estado);
+      return <Badge variant="secondary" className={`text-xs ${getEstadoColor(estado)}`}>{estado}</Badge>;
+    },
+  },
+  { key: "operador", header: "Operador", className: "text-xs", render: (e) => e.operador },
+];
 
 export default function Embarques() {
   const navigate = useNavigate();
@@ -49,16 +73,6 @@ export default function Embarques() {
 
   const paginated = filtered.slice(page * pageSize, (page + 1) * pageSize);
   const totalPages = Math.ceil(filtered.length / pageSize);
-
-  if (isLoading) {
-    return (
-      <div className="space-y-6">
-        <Skeleton className="h-8 w-48" />
-        <Skeleton className="h-16 w-full" />
-        <Skeleton className="h-64 w-full" />
-      </div>
-    );
-  }
 
   return (
     <div className="space-y-6">
@@ -110,59 +124,14 @@ export default function Embarques() {
 
       <Card>
         <CardContent className="p-0">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Expediente</TableHead>
-                <TableHead>BL Master</TableHead>
-                <TableHead>Cliente</TableHead>
-                <TableHead>Modo</TableHead>
-                <TableHead>Origen</TableHead>
-                <TableHead>Destino</TableHead>
-                <TableHead>Contenedor</TableHead>
-                <TableHead>ETD</TableHead>
-                <TableHead>ETA</TableHead>
-                <TableHead>Estado</TableHead>
-                <TableHead>Operador</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {paginated.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={11} className="text-center py-8 text-muted-foreground">
-                    No se encontraron embarques
-                  </TableCell>
-                </TableRow>
-              ) : paginated.map((embarque) => {
-                const origen = (embarque.puerto_origen || embarque.aeropuerto_origen || embarque.ciudad_origen || '-').split(',')[0];
-                const destino = (embarque.puerto_destino || embarque.aeropuerto_destino || embarque.ciudad_destino || '-').split(',')[0];
-                return (
-                  <TableRow key={embarque.id} className="cursor-pointer" onClick={() => navigate(`/embarques/${embarque.id}`)}>
-                    <TableCell className="font-medium">{embarque.expediente}</TableCell>
-                    <TableCell className="text-xs">{embarque.bl_master || '-'}</TableCell>
-                    <TableCell className="max-w-[180px] truncate">{embarque.cliente_nombre}</TableCell>
-                    <TableCell>
-                      <span className="flex items-center gap-1">
-                        {getModoIcon(embarque.modo)} <span className="text-xs">{embarque.modo}</span>
-                      </span>
-                    </TableCell>
-                    <TableCell className="text-xs">{origen}</TableCell>
-                    <TableCell className="text-xs">{destino}</TableCell>
-                    <TableCell className="text-xs">{embarque.tipo_contenedor || '-'}</TableCell>
-                    <TableCell className="text-xs">{formatDate(embarque.etd || '')}</TableCell>
-                    <TableCell className="text-xs">{formatDate(embarque.eta || '')}</TableCell>
-                    <TableCell>
-                      {(() => {
-                        const estadoMostrado = calcularEstadoEmbarque(embarque.modo, embarque.etd, embarque.eta, embarque.estado);
-                        return <Badge variant="secondary" className={`text-xs ${getEstadoColor(estadoMostrado)}`}>{estadoMostrado}</Badge>;
-                      })()}
-                    </TableCell>
-                    <TableCell className="text-xs">{embarque.operador}</TableCell>
-                  </TableRow>
-                );
-              })}
-            </TableBody>
-          </Table>
+          <DataTable
+            columns={columns}
+            data={paginated}
+            isLoading={isLoading}
+            emptyMessage="No se encontraron embarques"
+            onRowClick={(e) => navigate(`/embarques/${e.id}`)}
+            rowKey={(e) => e.id}
+          />
           <PaginationControls
             page={page}
             totalPages={totalPages}

@@ -4,16 +4,12 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
-  Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
-} from "@/components/ui/table";
-import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Skeleton } from "@/components/ui/skeleton";
 import { useNavigate } from "react-router-dom";
 import { useCotizaciones, useDeleteCotizacion } from "@/hooks/useCotizaciones";
 import { useClientesForSelect } from "@/hooks/useClientes";
@@ -23,9 +19,12 @@ import { formatDate, getEstadoColor } from "@/lib/helpers";
 import { formatCurrency } from "@/lib/formatters";
 import SearchInput from "@/components/SearchInput";
 import PaginationControls from "@/components/PaginationControls";
+import { DataTable, type DataTableColumn } from "@/components/DataTable";
 
 const ESTADOS = ['Borrador', 'Enviada', 'Aceptada', 'Rechazada', 'Vencida'];
 const DEFAULT_PAGE_SIZE = 20;
+
+type Cotizacion = ReturnType<typeof useCotizaciones>["data"] extends (infer U)[] | undefined ? U : never;
 
 export default function Cotizaciones() {
   const navigate = useNavigate();
@@ -56,15 +55,36 @@ export default function Cotizaciones() {
   const paginated = filtered.slice(page * pageSize, (page + 1) * pageSize);
   const totalPages = Math.ceil(filtered.length / pageSize);
 
-  if (isLoading) {
-    return (
-      <div className="space-y-6">
-        <Skeleton className="h-8 w-48" />
-        <Skeleton className="h-16 w-full" />
-        <Skeleton className="h-64 w-full" />
-      </div>
-    );
-  }
+  const columns: DataTableColumn<Cotizacion>[] = useMemo(() => {
+    const cols: DataTableColumn<Cotizacion>[] = [
+      { key: "folio", header: "Folio", className: "font-medium", render: (c) => c.folio },
+      { key: "cliente", header: "Cliente", className: "max-w-[180px] truncate", render: (c) => c.cliente_nombre },
+      { key: "modo", header: "Modo", className: "text-xs", render: (c) => c.modo },
+      { key: "ruta", header: "Origen → Destino", className: "text-xs", render: (c) => `${c.origen || "-"} → ${c.destino || "-"}` },
+      { key: "subtotal", header: "Subtotal", className: "text-right text-xs", headerClassName: "text-right", render: (c) => formatCurrency(c.subtotal, c.moneda) },
+      { key: "estado", header: "Estado", render: (c) => <Badge variant="secondary" className={`text-xs ${getEstadoColor(c.estado)}`}>{c.estado}</Badge> },
+      { key: "vigencia", header: "Vigencia", className: "text-xs", render: (c) => c.fecha_vigencia ? formatDate(c.fecha_vigencia) : "-" },
+      { key: "fecha", header: "Fecha", className: "text-xs", render: (c) => formatDate(c.created_at) },
+    ];
+    if (isAdmin) {
+      cols.push({
+        key: "acciones",
+        header: "Acciones",
+        headerClassName: "w-[60px]",
+        render: (c) => (
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8 text-destructive hover:text-destructive"
+            onClick={(e) => { e.stopPropagation(); setCotizacionAEliminar(c.id); }}
+          >
+            <Trash2 className="h-4 w-4" />
+          </Button>
+        ),
+      });
+    }
+    return cols;
+  }, [isAdmin]);
 
   return (
     <div className="space-y-6">
@@ -109,55 +129,14 @@ export default function Cotizaciones() {
 
       <Card>
         <CardContent className="p-0">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Folio</TableHead>
-                <TableHead>Cliente</TableHead>
-                <TableHead>Modo</TableHead>
-                <TableHead>Origen → Destino</TableHead>
-                <TableHead className="text-right">Subtotal</TableHead>
-                <TableHead>Estado</TableHead>
-                <TableHead>Vigencia</TableHead>
-                <TableHead>Fecha</TableHead>
-                {isAdmin && <TableHead className="w-[60px]">Acciones</TableHead>}
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {paginated.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={isAdmin ? 9 : 8} className="text-center py-8 text-muted-foreground">
-                    No se encontraron cotizaciones
-                  </TableCell>
-                </TableRow>
-              ) : paginated.map((cotizacion) => (
-                <TableRow key={cotizacion.id} className="cursor-pointer" onClick={() => navigate(`/cotizaciones/${cotizacion.id}`)}>
-                  <TableCell className="font-medium">{cotizacion.folio}</TableCell>
-                  <TableCell className="max-w-[180px] truncate">{cotizacion.cliente_nombre}</TableCell>
-                  <TableCell className="text-xs">{cotizacion.modo}</TableCell>
-                  <TableCell className="text-xs">{cotizacion.origen || '-'} → {cotizacion.destino || '-'}</TableCell>
-                  <TableCell className="text-right text-xs">{formatCurrency(cotizacion.subtotal, cotizacion.moneda)}</TableCell>
-                  <TableCell>
-                    <Badge variant="secondary" className={`text-xs ${getEstadoColor(cotizacion.estado)}`}>{cotizacion.estado}</Badge>
-                  </TableCell>
-                  <TableCell className="text-xs">{cotizacion.fecha_vigencia ? formatDate(cotizacion.fecha_vigencia) : '-'}</TableCell>
-                  <TableCell className="text-xs">{formatDate(cotizacion.created_at)}</TableCell>
-                  {isAdmin && (
-                    <TableCell>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-8 w-8 text-destructive hover:text-destructive"
-                        onClick={(e) => { e.stopPropagation(); setCotizacionAEliminar(cotizacion.id); }}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </TableCell>
-                  )}
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+          <DataTable
+            columns={columns}
+            data={paginated}
+            isLoading={isLoading}
+            emptyMessage="No se encontraron cotizaciones"
+            onRowClick={(c) => navigate(`/cotizaciones/${c.id}`)}
+            rowKey={(c) => c.id}
+          />
           <PaginationControls
             page={page}
             totalPages={totalPages}
