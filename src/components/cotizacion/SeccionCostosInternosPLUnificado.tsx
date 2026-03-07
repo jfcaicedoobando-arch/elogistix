@@ -60,12 +60,11 @@ type Props = PropsLocal | PropsDetalle;
 const UNIDADES_MEDIDA = ['BL', 'W/M', 'Documento', 'Contenedor', 'Kilo', 'Embarque'];
 
 // ─── Shared utilities ────────────────────────────────────────
+/** Adapta filas con shape {cantidad, costo, venta} al formato de calcularTotalesPL */
 function calcTotals(rows: { cantidad: number; costo: number; venta: number }[]) {
-  const totalCosto = rows.reduce((s, r) => s + r.cantidad * r.costo, 0);
-  const totalVenta = rows.reduce((s, r) => s + r.venta, 0);
-  const profit = totalVenta - totalCosto;
-  const porcentaje = totalVenta !== 0 ? (profit / totalVenta) * 100 : 0;
-  return { totalCosto, totalVenta, profit, porcentaje };
+  return calcularTotalesPL(
+    rows.map(r => ({ cantidad: r.cantidad, costo_unitario: r.costo, precio_venta: r.venta / (r.cantidad || 1) }))
+  );
 }
 
 function getGlobalIndex(filas: { moneda: string }[], moneda: string, localIdx: number) {
