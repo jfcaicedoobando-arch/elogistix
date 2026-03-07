@@ -1,16 +1,26 @@
 
 
-## Plan: Usar expediente del origen al duplicar
+## Page break en PDF de cotización (v4.30.5)
 
-### Cambio único en `src/hooks/useEmbarques.ts`
+### Cambios en `src/lib/cotizacionPdf.ts`
 
-En el loop de `useDuplicarEmbarque` (líneas 257-262), reemplazar la llamada a `supabase.rpc('generar_expediente')` por usar directamente `embarqueOrigen.expediente`:
+**1. Agregar clase CSS** (línea 166, antes de `@media print`):
+```css
+.page-break { page-break-before: always; }
+```
 
-- **Eliminar** líneas 258-262 (la llamada RPC y el manejo de error)
-- **Cambiar** línea 268 `expediente: expediente as string` → `expediente: embarqueOrigen.expediente`
-- En el push final al array `creados`, usar `embarqueOrigen.expediente` en lugar de `expediente as string`
+**2. Agregar `<div class="page-break"></div>`** entre la sección Mercancía (línea 199) y la sección Conceptos de Venta (línea 201).
 
-### Cambio en `src/pages/Changelog.tsx`
+Orden final del HTML:
+1. Header
+2. Datos del Prospecto (condicional)
+3. Datos Generales
+4. Mercancía
+5. **`<div class="page-break"></div>`** ← corte de página
+6. Conceptos de Venta
+7. Resumen
+8. Notas
+9. Footer
 
-Entrada v4.15.1 — "Duplicar embarque ahora conserva el mismo expediente del origen"
+**3. `src/pages/Changelog.tsx`** — Entrada v4.30.5.
 
