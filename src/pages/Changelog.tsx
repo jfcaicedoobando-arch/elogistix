@@ -13,6 +13,14 @@ interface ChangelogEntry {
 
 const changelog: ChangelogEntry[] = [
   {
+    version: "4.21.0",
+    date: "2026-03-07",
+    type: "minor",
+    title: "Refactorización de formularios de embarque con React Hook Form",
+    description:
+      "Migrado useEmbarqueForm a react-hook-form (useForm/FormProvider). StepDatosGenerales, StepDatosRuta y StepCostosPrecios ahora usan useFormContext eliminando ~40 props de prop drilling. Inputs de texto usan register() (no controlados) para evitar re-renders innecesarios. NuevoEmbarque y EditarEmbarque simplificados como orquestadores de UI.",
+  },
+  {
     version: "4.20.0",
     date: "2026-03-07",
     type: "minor",
