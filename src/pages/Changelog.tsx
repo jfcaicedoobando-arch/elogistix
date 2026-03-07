@@ -13,6 +13,14 @@ interface ChangelogEntry {
 
 const changelog: ChangelogEntry[] = [
   {
+    version: "4.28.0",
+    date: "2026-03-07",
+    type: "minor",
+    title: "Wizard de cotización migrado a FormProvider/useFormContext",
+    description:
+      "Eliminado prop drilling en el wizard de cotizaciones. ~30 useState reemplazados por useForm con CotizacionFormValues tipado. 8 componentes Seccion*.tsx migrados a useFormContext. NuevaCotizacion envuelto en FormProvider.",
+  },
+  {
     version: "4.27.3",
     date: "2026-03-07",
     type: "patch",
