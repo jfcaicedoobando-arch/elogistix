@@ -1,4 +1,5 @@
 import { useState, useMemo, useCallback } from "react";
+import { useForm } from "react-hook-form";
 import type { NavigateFunction } from "react-router-dom";
 import type { ConceptoVentaCotizacion, DimensionLCL, DimensionAerea } from "@/hooks/useCotizaciones";
 import type { CostoCotizacion } from "@/hooks/useCotizacionCostos";
@@ -7,6 +8,86 @@ import { CONCEPTOS_CON_IVA_USD } from "@/data/cotizacionConstants";
 import { calcularTotalesPL, type TotalesPL } from "@/lib/profitUtils";
 import { calcularIVA, calcularTotalConIVA } from "@/lib/financialUtils";
 import { uploadFile } from "@/lib/storage";
+
+// ────────── Form values type ──────────
+export interface CotizacionFormValues {
+  // Destinatario
+  esProspecto: boolean;
+  clienteId: string;
+  prospectoEmpresa: string;
+  prospectoContacto: string;
+  prospectoEmail: string;
+  prospectoTelefono: string;
+  // Datos generales
+  modo: string;
+  tipo: string;
+  incoterm: string;
+  // Mercancía
+  tipoCarga: string;
+  sectorEconomico: string;
+  descripcionAdicional: string;
+  tipoEmbarque: "FCL" | "LCL";
+  tipoContenedor: string;
+  tipoPeso: string;
+  dimensionesLCL: DimensionLCL[];
+  dimensionesAereas: DimensionAerea[];
+  pesoKg: number;
+  volumenM3: number;
+  piezas: number;
+  // Ruta
+  origen: string;
+  destino: string;
+  tiempoTransitoDias: number | undefined;
+  frecuencia: string;
+  rutaTexto: string;
+  validezPropuesta: Date | undefined;
+  tipoMovimiento: string;
+  seguro: boolean;
+  valorSeguroUsd: number;
+  diasLibresDestino: number;
+  diasAlmacenaje: number;
+  cartaGarantia: boolean;
+  // Otros
+  notas: string;
+  numContenedores: number;
+}
+
+export const COTIZACION_FORM_DEFAULTS: CotizacionFormValues = {
+  esProspecto: false,
+  clienteId: "",
+  prospectoEmpresa: "",
+  prospectoContacto: "",
+  prospectoEmail: "",
+  prospectoTelefono: "",
+  modo: "Marítimo",
+  tipo: "Importación",
+  incoterm: "FOB",
+  tipoCarga: "Carga General",
+  sectorEconomico: "",
+  descripcionAdicional: "",
+  tipoEmbarque: "FCL",
+  tipoContenedor: "",
+  tipoPeso: "Peso Normal",
+  dimensionesLCL: [{ piezas: 0, alto_cm: 0, largo_cm: 0, ancho_cm: 0, volumen_m3: 0 }],
+  dimensionesAereas: [{ piezas: 0, alto_cm: 0, largo_cm: 0, ancho_cm: 0, peso_volumetrico_kg: 0 }],
+  pesoKg: 0,
+  volumenM3: 0,
+  piezas: 0,
+  origen: "",
+  destino: "",
+  tiempoTransitoDias: undefined,
+  frecuencia: "",
+  rutaTexto: "",
+  validezPropuesta: undefined,
+  tipoMovimiento: "",
+  seguro: false,
+  valorSeguroUsd: 0,
+  diasLibresDestino: 0,
+  diasAlmacenaje: 0,
+  cartaGarantia: false,
+  notas: "",
+  numContenedores: 1,
+};
 
 // ────────── Factories ──────────
 const emptyUSD = (): ConceptoVentaCotizacion => ({
@@ -39,77 +120,38 @@ interface HookDeps {
 export function useCotizacionWizardForm({ navigate, toast, userEmail, clientes, mutations }: HookDeps) {
   const { crearCotizacion, updateCotizacion, upsertCostos, registrarActividad } = mutations;
 
-  // ── Wizard ──
+  // ── React Hook Form ──
+  const form = useForm<CotizacionFormValues>({
+    defaultValues: COTIZACION_FORM_DEFAULTS,
+  });
+
+  // ── Non-serializable / external state ──
   const [cotizacionId, setCotizacionId] = useState<string | null>(null);
   const [currentStep, setCurrentStep] = useState(1);
-  const [numContenedores, setNumContenedores] = useState(1);
+  const [msdsFile, setMsdsFile] = useState<File | null>(null);
   const [costosInternos, setCostosInternos] = useState<FilaCostoLocal[]>([]);
   const [costosPreLlenados, setCostosPreLlenados] = useState(false);
-
-  // ── Destinatario ──
-  const [esProspecto, setEsProspecto] = useState(false);
-  const [clienteId, setClienteId] = useState("");
-  const [prospectoEmpresa, setProspectoEmpresa] = useState("");
-  const [prospectoContacto, setProspectoContacto] = useState("");
-  const [prospectoEmail, setProspectoEmail] = useState("");
-  const [prospectoTelefono, setProspectoTelefono] = useState("");
-
-  // ── Datos generales ──
-  const [modo, setModo] = useState("Marítimo");
-  const [tipo, setTipo] = useState("Importación");
-  const [incoterm, setIncoterm] = useState("FOB");
-
-  // ── Mercancía ──
-  const [tipoCarga, setTipoCarga] = useState("Carga General");
-  const [sectorEconomico, setSectorEconomico] = useState("");
-  const [descripcionAdicional, setDescripcionAdicional] = useState("");
-  const [msdsFile, setMsdsFile] = useState<File | null>(null);
-  const [tipoEmbarque, setTipoEmbarque] = useState<"FCL" | "LCL">("FCL");
-  const [tipoContenedor, setTipoContenedor] = useState("");
-  const [tipoPeso, setTipoPeso] = useState("Peso Normal");
-  const [dimensionesLCL, setDimensionesLCL] = useState<DimensionLCL[]>([
-    { piezas: 0, alto_cm: 0, largo_cm: 0, ancho_cm: 0, volumen_m3: 0 },
-  ]);
-  const [dimensionesAereas, setDimensionesAereas] = useState<DimensionAerea[]>([
-    { piezas: 0, alto_cm: 0, largo_cm: 0, ancho_cm: 0, peso_volumetrico_kg: 0 },
-  ]);
-  const [pesoKg, setPesoKg] = useState(0);
-  const [volumenM3, setVolumenM3] = useState(0);
-  const [piezas, setPiezas] = useState(0);
-
-  // ── Ruta ──
-  const [origen, setOrigen] = useState("");
-  const [destino, setDestino] = useState("");
-  const [tiempoTransitoDias, setTiempoTransitoDias] = useState<number | undefined>();
-  const [frecuencia, setFrecuencia] = useState("");
-  const [rutaTexto, setRutaTexto] = useState("");
-  const [validezPropuesta, setValidezPropuesta] = useState<Date | undefined>();
-  const [tipoMovimiento, setTipoMovimiento] = useState("");
-  const [seguro, setSeguro] = useState(false);
-  const [valorSeguroUsd, setValorSeguroUsd] = useState(0);
-  const [diasLibresDestino, setDiasLibresDestino] = useState(0);
-  const [diasAlmacenaje, setDiasAlmacenaje] = useState(0);
-  const [cartaGarantia, setCartaGarantia] = useState(false);
-
-  // ── Conceptos de venta ──
-  const [notas, setNotas] = useState("");
   const [conceptosUSD, setConceptosUSD] = useState<ConceptoVentaCotizacion[]>([emptyUSD()]);
   const [conceptosMXN, setConceptosMXN] = useState<ConceptoVentaCotizacion[]>([emptyMXN()]);
 
-  // ── Derivados ──
-  const clienteSeleccionado = clientes.find(c => c.id === clienteId);
+  // ── Watched derived values ──
+  const modo = form.watch("modo");
+  const tipoEmbarque = form.watch("tipoEmbarque");
+  const esProspecto = form.watch("esProspecto");
+  const clienteId = form.watch("clienteId");
   const esMaritimo = modo === "Marítimo";
   const esAereo = modo === "Aéreo";
+  const clienteSeleccionado = clientes.find(c => c.id === clienteId);
 
   // ── Helpers mercancía ──
   const handleCambiarTipoEmbarque = useCallback((nuevoTipo: "FCL" | "LCL") => {
-    setTipoEmbarque(nuevoTipo);
-    setTipoContenedor("");
-    setTipoPeso("Peso Normal");
-    setDimensionesLCL([{ piezas: 0, alto_cm: 0, largo_cm: 0, ancho_cm: 0, volumen_m3: 0 }]);
-    setTipoCarga("Carga General");
+    form.setValue("tipoEmbarque", nuevoTipo);
+    form.setValue("tipoContenedor", "");
+    form.setValue("tipoPeso", "Peso Normal");
+    form.setValue("dimensionesLCL", [{ piezas: 0, alto_cm: 0, largo_cm: 0, ancho_cm: 0, volumen_m3: 0 }]);
+    form.setValue("tipoCarga", "Carga General");
     setMsdsFile(null);
-  }, []);
+  }, [form]);
 
   // ── Helpers conceptos ──
   const actualizarConcepto = useCallback((moneda: "USD" | "MXN", index: number, campo: string, valor: any) => {
@@ -147,94 +189,96 @@ export function useCotizacionWizardForm({ navigate, toast, userEmail, clientes, 
   const ivaMXN = useMemo(() => calcularIVA(subtotalMXN), [subtotalMXN]);
   const totalMXN = useMemo(() => calcularTotalConIVA(subtotalMXN), [subtotalMXN]);
 
+  // ── Dimension totals (watched) ──
+  const dimensionesLCL = form.watch("dimensionesLCL");
+  const dimensionesAereas = form.watch("dimensionesAereas");
   const totalPiezasLCL = useMemo(() => dimensionesLCL.reduce((s, d) => s + d.piezas, 0), [dimensionesLCL]);
   const totalVolumenLCL = useMemo(() => dimensionesLCL.reduce((s, d) => s + d.volumen_m3, 0), [dimensionesLCL]);
   const totalPiezasAereas = useMemo(() => dimensionesAereas.reduce((s, d) => s + d.piezas, 0), [dimensionesAereas]);
   const totalPesoVolAereo = useMemo(() => dimensionesAereas.reduce((s, d) => s + d.peso_volumetrico_kg, 0), [dimensionesAereas]);
 
   // ── P&L ──
-  const costosUSD = useMemo(() => costosInternos.filter(c => c.moneda === "USD"), [costosInternos]);
-  const costosMXN = useMemo(() => costosInternos.filter(c => c.moneda === "MXN"), [costosInternos]);
-  const plUSD: TotalesPL = useMemo(() => calcularTotalesPL(costosUSD), [costosUSD]);
-  const plMXN: TotalesPL = useMemo(() => calcularTotalesPL(costosMXN), [costosMXN]);
+  const costosUSDFiltered = useMemo(() => costosInternos.filter(c => c.moneda === "USD"), [costosInternos]);
+  const costosMXNFiltered = useMemo(() => costosInternos.filter(c => c.moneda === "MXN"), [costosInternos]);
+  const plUSD: TotalesPL = useMemo(() => calcularTotalesPL(costosUSDFiltered), [costosUSDFiltered]);
+  const plMXN: TotalesPL = useMemo(() => calcularTotalesPL(costosMXNFiltered), [costosMXNFiltered]);
 
   // ── Build payload Paso 1 ──
   const buildPaso1Data = useCallback(() => {
-    let pesoFinal = pesoKg, volumenFinal = volumenM3, piezasFinal = piezas;
-    if (esMaritimo) {
+    const v = form.getValues();
+    const cliente = clientes.find(c => c.id === v.clienteId);
+    let pesoFinal = v.pesoKg, volumenFinal = v.volumenM3, piezasFinal = v.piezas;
+    const _esMaritimo = v.modo === "Marítimo";
+    const _esAereo = v.modo === "Aéreo";
+    if (_esMaritimo) {
       pesoFinal = 0;
-      volumenFinal = tipoEmbarque === "LCL" ? totalVolumenLCL : 0;
-      piezasFinal = tipoEmbarque === "LCL" ? totalPiezasLCL : 0;
-    } else if (esAereo) {
-      pesoFinal = totalPesoVolAereo;
+      volumenFinal = v.tipoEmbarque === "LCL" ? v.dimensionesLCL.reduce((s, d) => s + d.volumen_m3, 0) : 0;
+      piezasFinal = v.tipoEmbarque === "LCL" ? v.dimensionesLCL.reduce((s, d) => s + d.piezas, 0) : 0;
+    } else if (_esAereo) {
+      pesoFinal = v.dimensionesAereas.reduce((s, d) => s + d.peso_volumetrico_kg, 0);
       volumenFinal = 0;
-      piezasFinal = totalPiezasAereas;
+      piezasFinal = v.dimensionesAereas.reduce((s, d) => s + d.piezas, 0);
     }
     return {
-      es_prospecto: esProspecto,
-      cliente_id: esProspecto ? null : clienteId,
-      cliente_nombre: esProspecto ? prospectoEmpresa : (clienteSeleccionado?.nombre ?? ""),
-      prospecto_empresa: esProspecto ? prospectoEmpresa : "",
-      prospecto_contacto: esProspecto ? prospectoContacto : "",
-      prospecto_email: esProspecto ? prospectoEmail : "",
-      prospecto_telefono: esProspecto ? prospectoTelefono : "",
-      modo, tipo, incoterm,
-      descripcion_mercancia: sectorEconomico,
+      es_prospecto: v.esProspecto,
+      cliente_id: v.esProspecto ? null : v.clienteId,
+      cliente_nombre: v.esProspecto ? v.prospectoEmpresa : (cliente?.nombre ?? ""),
+      prospecto_empresa: v.esProspecto ? v.prospectoEmpresa : "",
+      prospecto_contacto: v.esProspecto ? v.prospectoContacto : "",
+      prospecto_email: v.esProspecto ? v.prospectoEmail : "",
+      prospecto_telefono: v.esProspecto ? v.prospectoTelefono : "",
+      modo: v.modo, tipo: v.tipo, incoterm: v.incoterm,
+      descripcion_mercancia: v.sectorEconomico,
       peso_kg: pesoFinal, volumen_m3: volumenFinal, piezas: piezasFinal,
-      origen, destino,
+      origen: v.origen, destino: v.destino,
       conceptos_venta: [] as ConceptoVentaCotizacion[],
       subtotal: 0,
       moneda: "USD",
-      vigencia_dias: validezPropuesta ? Math.max(1, Math.ceil((validezPropuesta.getTime() - Date.now()) / (1000 * 60 * 60 * 24))) : 15,
-      notas,
+      vigencia_dias: v.validezPropuesta ? Math.max(1, Math.ceil((v.validezPropuesta.getTime() - Date.now()) / (1000 * 60 * 60 * 24))) : 15,
+      notas: v.notas,
       operador: userEmail,
-      tipo_carga: tipoCarga,
+      tipo_carga: v.tipoCarga,
       msds_archivo: null as string | null,
-      tipo_embarque: esMaritimo ? tipoEmbarque : "FCL",
-      tipo_contenedor: esMaritimo && tipoEmbarque === "FCL" ? tipoContenedor : null,
-      tipo_peso: esMaritimo && tipoEmbarque === "FCL" ? tipoPeso : "Peso Normal",
-      descripcion_adicional: descripcionAdicional,
-      sector_economico: sectorEconomico,
-      dimensiones_lcl: esMaritimo && tipoEmbarque === "LCL" ? dimensionesLCL : [],
-      dimensiones_aereas: esAereo ? dimensionesAereas : [],
-      dias_libres_destino: esMaritimo && tipoEmbarque === "FCL" ? diasLibresDestino : 0,
-      dias_almacenaje: esMaritimo && tipoEmbarque === "LCL" ? diasAlmacenaje : 0,
-      carta_garantia: esMaritimo && tipoEmbarque === "FCL" ? cartaGarantia : false,
-      tiempo_transito_dias: tiempoTransitoDias ?? null,
-      frecuencia,
-      ruta_texto: rutaTexto,
-      validez_propuesta: validezPropuesta ? validezPropuesta.toISOString().split("T")[0] : null,
-      tipo_movimiento: tipoMovimiento,
-      seguro,
-      valor_seguro_usd: seguro ? Number(valorSeguroUsd) || 0 : 0,
-      num_contenedores: numContenedores,
+      tipo_embarque: _esMaritimo ? v.tipoEmbarque : "FCL",
+      tipo_contenedor: _esMaritimo && v.tipoEmbarque === "FCL" ? v.tipoContenedor : null,
+      tipo_peso: _esMaritimo && v.tipoEmbarque === "FCL" ? v.tipoPeso : "Peso Normal",
+      descripcion_adicional: v.descripcionAdicional,
+      sector_economico: v.sectorEconomico,
+      dimensiones_lcl: _esMaritimo && v.tipoEmbarque === "LCL" ? v.dimensionesLCL : [],
+      dimensiones_aereas: _esAereo ? v.dimensionesAereas : [],
+      dias_libres_destino: _esMaritimo && v.tipoEmbarque === "FCL" ? v.diasLibresDestino : 0,
+      dias_almacenaje: _esMaritimo && v.tipoEmbarque === "LCL" ? v.diasAlmacenaje : 0,
+      carta_garantia: _esMaritimo && v.tipoEmbarque === "FCL" ? v.cartaGarantia : false,
+      tiempo_transito_dias: v.tiempoTransitoDias ?? null,
+      frecuencia: v.frecuencia,
+      ruta_texto: v.rutaTexto,
+      validez_propuesta: v.validezPropuesta ? v.validezPropuesta.toISOString().split("T")[0] : null,
+      tipo_movimiento: v.tipoMovimiento,
+      seguro: v.seguro,
+      valor_seguro_usd: v.seguro ? Number(v.valorSeguroUsd) || 0 : 0,
+      num_contenedores: v.numContenedores,
     };
-  }, [
-    esProspecto, clienteId, clienteSeleccionado, prospectoEmpresa, prospectoContacto, prospectoEmail, prospectoTelefono,
-    modo, tipo, incoterm, sectorEconomico, pesoKg, volumenM3, piezas, origen, destino, validezPropuesta, notas, userEmail,
-    tipoCarga, tipoEmbarque, tipoContenedor, tipoPeso, descripcionAdicional, dimensionesLCL, dimensionesAereas,
-    diasLibresDestino, diasAlmacenaje, cartaGarantia, tiempoTransitoDias, frecuencia, rutaTexto, tipoMovimiento,
-    seguro, valorSeguroUsd, numContenedores, esMaritimo, esAereo, totalVolumenLCL, totalPiezasLCL, totalPesoVolAereo, totalPiezasAereas,
-  ]);
+  }, [form, clientes, userEmail]);
 
   // ── Navegación del wizard ──
   const handleSiguiente = useCallback(async () => {
+    const v = form.getValues();
     if (currentStep === 1) {
-      if (!esProspecto && !clienteId) {
+      if (!v.esProspecto && !v.clienteId) {
         toast({ title: "Selecciona un cliente", variant: "destructive" });
         return;
       }
-      if (esProspecto && !prospectoEmpresa.trim()) {
+      if (v.esProspecto && !v.prospectoEmpresa.trim()) {
         toast({ title: "Ingresa el nombre de la empresa del prospecto", variant: "destructive" });
         return;
       }
-      if (esProspecto && !prospectoContacto.trim()) {
+      if (v.esProspecto && !v.prospectoContacto.trim()) {
         toast({ title: "Ingresa el nombre del contacto del prospecto", variant: "destructive" });
         return;
       }
       try {
         let msdsArchivo: string | null = null;
-        if (tipoCarga === "Mercancía Peligrosa" && msdsFile) {
+        if (v.tipoCarga === "Mercancía Peligrosa" && msdsFile) {
           const ext = msdsFile.name.split(".").pop() || "pdf";
           const path = `cotizaciones/msds-${Date.now()}.${ext}`;
           await uploadFile(path, msdsFile);
@@ -309,7 +353,7 @@ export function useCotizacionWizardForm({ navigate, toast, userEmail, clientes, 
       }
     }
   }, [
-    currentStep, esProspecto, clienteId, prospectoEmpresa, prospectoContacto, tipoCarga, msdsFile,
+    currentStep, form, msdsFile,
     buildPaso1Data, cotizacionId, updateCotizacion, crearCotizacion, costosInternos, upsertCostos,
     costosPreLlenados, conceptosUSD, conceptosMXN, totalUSD, toast,
   ]);
@@ -337,42 +381,27 @@ export function useCotizacionWizardForm({ navigate, toast, userEmail, clientes, 
   const isPending = crearCotizacion.isPending || updateCotizacion.isPending || upsertCostos.isPending;
 
   return {
+    // React Hook Form
+    form,
+
     // Wizard
-    currentStep, cotizacionId, numContenedores, setNumContenedores,
+    currentStep, cotizacionId,
     costosInternos, setCostosInternos, costosPreLlenados, isPending,
+    msdsFile, setMsdsFile,
 
-    // Destinatario
-    esProspecto, setEsProspecto, clienteId, setClienteId,
-    prospectoEmpresa, setProspectoEmpresa, prospectoContacto, setProspectoContacto,
-    prospectoEmail, setProspectoEmail, prospectoTelefono, setProspectoTelefono,
-
-    // Datos generales
-    modo, setModo, tipo, setTipo, incoterm, setIncoterm,
-
-    // Mercancía
-    tipoCarga, setTipoCarga, sectorEconomico, setSectorEconomico,
-    descripcionAdicional, setDescripcionAdicional, msdsFile, setMsdsFile,
-    tipoEmbarque, tipoContenedor, setTipoContenedor, tipoPeso, setTipoPeso,
-    dimensionesLCL, setDimensionesLCL, dimensionesAereas, setDimensionesAereas,
-    pesoKg, setPesoKg, volumenM3, setVolumenM3, piezas, setPiezas,
+    // Derived (watched)
+    esMaritimo, esAereo, clienteSeleccionado,
     handleCambiarTipoEmbarque,
 
-    // Ruta
-    origen, setOrigen, destino, setDestino,
-    tiempoTransitoDias, setTiempoTransitoDias, frecuencia, setFrecuencia,
-    rutaTexto, setRutaTexto, validezPropuesta, setValidezPropuesta,
-    tipoMovimiento, setTipoMovimiento, seguro, setSeguro,
-    valorSeguroUsd, setValorSeguroUsd, diasLibresDestino, setDiasLibresDestino,
-    diasAlmacenaje, setDiasAlmacenaje, cartaGarantia, setCartaGarantia,
-
-    // Conceptos de venta
-    notas, setNotas, conceptosUSD, conceptosMXN,
+    // Conceptos de venta (external state)
+    conceptosUSD, conceptosMXN,
     actualizarConcepto, agregarConcepto, eliminarConcepto,
     totalUSD, subtotalMXN, ivaMXN, totalMXN,
 
-    // Derivados
-    clienteSeleccionado, esMaritimo, esAereo,
-    plUSD, plMXN, costosUSD, costosMXN,
+    // P&L
+    plUSD, plMXN,
+    costosUSD: costosUSDFiltered,
+    costosMXN: costosMXNFiltered,
 
     // Acciones
     handleSiguiente, handleGuardar, handleBack,
