@@ -47,8 +47,8 @@ export default function Embarques() {
     });
   }, [embarques, search, filterModo, filterEstado, filterCliente]);
 
-  const paginated = filtered.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
-  const totalPages = Math.ceil(filtered.length / PAGE_SIZE);
+  const paginated = filtered.slice(page * pageSize, (page + 1) * pageSize);
+  const totalPages = Math.ceil(filtered.length / pageSize);
 
   if (isLoading) {
     return (
