@@ -57,13 +57,13 @@ export default function Reportes() {
       const tiposCambioEmbarques = new Map(embarquesDelCliente.map(embarque => [embarque.id, { usd: embarque.tipo_cambio_usd, eur: embarque.tipo_cambio_eur }]));
       conceptos.ventas.filter(venta => idsEmbarquesCliente.has(venta.embarque_id)).forEach(venta => {
         const tipoCambio = tiposCambioEmbarques.get(venta.embarque_id);
-        totalVenta += venta.moneda === 'USD' ? venta.total * (tipoCambio?.usd || 17.5) : venta.moneda === 'EUR' ? venta.total * (tipoCambio?.eur || 19) : venta.total;
+        totalVenta += convertirAMXN(venta.total, venta.moneda, tipoCambio?.usd || 17.5, tipoCambio?.eur || 19);
       });
       conceptos.costos.filter(costo => idsEmbarquesCliente.has(costo.embarque_id)).forEach(costo => {
         const tipoCambio = tiposCambioEmbarques.get(costo.embarque_id);
-        totalCosto += costo.moneda === 'USD' ? costo.monto * (tipoCambio?.usd || 17.5) : costo.moneda === 'EUR' ? costo.monto * (tipoCambio?.eur || 19) : costo.monto;
+        totalCosto += convertirAMXN(costo.monto, costo.moneda, tipoCambio?.usd || 17.5, tipoCambio?.eur || 19);
       });
-      return { nombre: cliente.nombre.split(' ').slice(0, 3).join(' '), embarques: embarquesDelCliente.length, venta: totalVenta, costo: totalCosto, utilidad: totalVenta - totalCosto };
+      return { nombre: cliente.nombre.split(' ').slice(0, 3).join(' '), embarques: embarquesDelCliente.length, venta: totalVenta, costo: totalCosto, utilidad: calcularUtilidad(totalVenta, totalCosto) };
     }).filter(cliente => cliente.embarques > 0).sort((a, b) => b.utilidad - a.utilidad);
   }, [clientes, embarques, conceptos]);
 
