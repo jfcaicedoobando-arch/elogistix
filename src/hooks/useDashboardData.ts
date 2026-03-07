@@ -1,6 +1,7 @@
 import { useState, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useEmbarques, calcularEstadoEmbarque } from "@/hooks/useEmbarques";
+import { ESTADOS_ACTIVOS } from "@/data/embarqueConstants";
 import { supabase } from "@/integrations/supabase/client";
 
 // ─── Types ───────────────────────────────────────────────
@@ -40,7 +41,7 @@ export interface EmbarqueConProfit extends EmbarqueConEstado {
   margen: number;
 }
 
-export const ESTADOS_FILTRO = ["Confirmado", "En Tránsito", "En Aduana", "Entregado"] as const;
+export const ESTADOS_FILTRO = ESTADOS_ACTIVOS;
 export type EstadoFiltro = (typeof ESTADOS_FILTRO)[number];
 
 const DIAS_LIBRES_DEFAULT = 7;

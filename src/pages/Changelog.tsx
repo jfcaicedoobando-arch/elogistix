@@ -13,6 +13,14 @@ interface ChangelogEntry {
 
 const changelog: ChangelogEntry[] = [
   {
+    version: "4.17.0",
+    date: "2026-03-07",
+    type: "minor",
+    title: "Refactorización masiva del proyecto",
+    description:
+      "useEmbarques.ts separado en useEmbarqueQueries, useEmbarqueMutations y useEmbarqueUtils con barrel re-export. EmbarqueDetalle.tsx refactorizado extrayendo DialogDuplicarEmbarque y DialogEliminarEmbarque. Configuracion.tsx modularizado en 7 tabs independientes (TabEmpresa, TabTiposCambio, TabCotizaciones, TabFacturacion, TabEmbarques, TabAlertas, TabPuertos). Creado financialUtils.ts con funciones centralizadas de IVA, subtotales, márgenes y conversión de moneda. Constantes ESTADOS_EMBARQUE, MODOS_TRANSPORTE y ESTADOS_ACTIVOS unificadas en embarqueConstants.ts.",
+  },
+  {
     version: "4.16.1",
     date: "2026-03-07",
     type: "patch",

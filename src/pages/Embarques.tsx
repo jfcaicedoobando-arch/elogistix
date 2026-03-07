@@ -11,17 +11,14 @@ import {
 } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useNavigate } from "react-router-dom";
-import { useEmbarques } from "@/hooks/useEmbarques";
+import { useEmbarques, calcularEstadoEmbarque } from "@/hooks/useEmbarques";
 import { useClientesForSelect } from "@/hooks/useClientes";
 import { usePermissions } from "@/hooks/usePermissions";
 import { formatDate, getEstadoColor, getModoIcon } from "@/lib/helpers";
-import { calcularEstadoEmbarque } from "@/hooks/useEmbarques";
+import { ESTADOS_EMBARQUE, MODOS_TRANSPORTE } from "@/data/embarqueConstants";
 import SearchInput from "@/components/SearchInput";
 import PaginationControls from "@/components/PaginationControls";
-import type { ModoTransporte, EstadoEmbarque } from "@/data/types";
 
-const ESTADOS: string[] = ['Confirmado', 'En Tránsito', 'En Aduana', 'Llegada', 'En Proceso', 'Entregado', 'Cerrado', 'Cancelado'];
-const MODOS: ModoTransporte[] = ['Marítimo', 'Aéreo', 'Terrestre', 'Multimodal'];
 const PAGE_SIZE = 10;
 
 export default function Embarques() {
@@ -85,25 +82,25 @@ export default function Embarques() {
               placeholder="Buscar por expediente, cliente o mercancía..."
               className="flex-1 min-w-[200px]"
             />
-            <Select value={filterModo} onValueChange={(valorSeleccionado) => { setFilterModo(valorSeleccionado); setPage(0); }}>
+            <Select value={filterModo} onValueChange={(v) => { setFilterModo(v); setPage(0); }}>
               <SelectTrigger className="w-[150px]"><SelectValue placeholder="Modo" /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="todos">Todos los modos</SelectItem>
-                {MODOS.map(modoTransporte => <SelectItem key={modoTransporte} value={modoTransporte}>{getModoIcon(modoTransporte)} {modoTransporte}</SelectItem>)}
+                {MODOS_TRANSPORTE.map(m => <SelectItem key={m} value={m}>{getModoIcon(m)} {m}</SelectItem>)}
               </SelectContent>
             </Select>
-            <Select value={filterEstado} onValueChange={(valorSeleccionado) => { setFilterEstado(valorSeleccionado); setPage(0); }}>
+            <Select value={filterEstado} onValueChange={(v) => { setFilterEstado(v); setPage(0); }}>
               <SelectTrigger className="w-[160px]"><SelectValue placeholder="Estado" /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="todos">Todos los estados</SelectItem>
-                {ESTADOS.map(estadoEmbarque => <SelectItem key={estadoEmbarque} value={estadoEmbarque}>{estadoEmbarque}</SelectItem>)}
+                {ESTADOS_EMBARQUE.map(e => <SelectItem key={e} value={e}>{e}</SelectItem>)}
               </SelectContent>
             </Select>
-            <Select value={filterCliente} onValueChange={(valorSeleccionado) => { setFilterCliente(valorSeleccionado); setPage(0); }}>
+            <Select value={filterCliente} onValueChange={(v) => { setFilterCliente(v); setPage(0); }}>
               <SelectTrigger className="w-[200px]"><SelectValue placeholder="Cliente" /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="todos">Todos los clientes</SelectItem>
-                {clientes.map(cliente => <SelectItem key={cliente.id} value={cliente.id}>{cliente.nombre.split(' ').slice(0, 3).join(' ')}</SelectItem>)}
+                {clientes.map(c => <SelectItem key={c.id} value={c.id}>{c.nombre.split(' ').slice(0, 3).join(' ')}</SelectItem>)}
               </SelectContent>
             </Select>
           </div>
