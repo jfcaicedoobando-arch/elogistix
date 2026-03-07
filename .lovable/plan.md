@@ -1,24 +1,16 @@
 
 
-## Plan: Optimizar tabla de Embarques para aprovechar mejor la pantalla
+## Plan: Usar expediente del origen al duplicar
 
-### Problema
-- `PAGE_SIZE` está hardcodeado a 10, desperdiciando espacio en monitores grandes.
-- 11 columnas fijas sin adaptación responsive.
+### Cambio único en `src/hooks/useEmbarques.ts`
 
-### Cambios propuestos
+En el loop de `useDuplicarEmbarque` (líneas 257-262), reemplazar la llamada a `supabase.rpc('generar_expediente')` por usar directamente `embarqueOrigen.expediente`:
 
-**1. `src/pages/Embarques.tsx`**
-- Aumentar `PAGE_SIZE` de 10 a 20 para mostrar más registros por defecto.
-- Agregar opción de seleccionar registros por página (10 / 20 / 50) junto al control de paginación.
+- **Eliminar** líneas 258-262 (la llamada RPC y el manejo de error)
+- **Cambiar** línea 268 `expediente: expediente as string` → `expediente: embarqueOrigen.expediente`
+- En el push final al array `creados`, usar `embarqueOrigen.expediente` en lugar de `expediente as string`
 
-**2. `src/components/PaginationControls.tsx`**
-- Agregar prop opcional `pageSize` + `onPageSizeChange` para renderizar un selector de "registros por página".
+### Cambio en `src/pages/Changelog.tsx`
 
-**3. `src/pages/Changelog.tsx`**
-- Entrada v4.27.0.
-
-### Sin cambios en
-- La estructura de columnas se mantiene (son operativamente necesarias).
-- El componente `Table` base no cambia.
+Entrada v4.15.1 — "Duplicar embarque ahora conserva el mismo expediente del origen"
 

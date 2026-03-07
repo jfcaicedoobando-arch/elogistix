@@ -19,7 +19,7 @@ import { ESTADOS_EMBARQUE, MODOS_TRANSPORTE } from "@/data/embarqueConstants";
 import SearchInput from "@/components/SearchInput";
 import PaginationControls from "@/components/PaginationControls";
 
-const PAGE_SIZE = 10;
+const DEFAULT_PAGE_SIZE = 20;
 
 export default function Embarques() {
   const navigate = useNavigate();
@@ -30,6 +30,7 @@ export default function Embarques() {
   const [filterEstado, setFilterEstado] = useState<string>("todos");
   const [filterCliente, setFilterCliente] = useState<string>("todos");
   const [page, setPage] = useState(0);
+  const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
   const { canEdit } = usePermissions();
 
   const filtered = useMemo(() => {
@@ -46,8 +47,8 @@ export default function Embarques() {
     });
   }, [embarques, search, filterModo, filterEstado, filterCliente]);
 
-  const paginated = filtered.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
-  const totalPages = Math.ceil(filtered.length / PAGE_SIZE);
+  const paginated = filtered.slice(page * pageSize, (page + 1) * pageSize);
+  const totalPages = Math.ceil(filtered.length / pageSize);
 
   if (isLoading) {
     return (
@@ -162,7 +163,13 @@ export default function Embarques() {
               })}
             </TableBody>
           </Table>
-          <PaginationControls page={page} totalPages={totalPages} onPageChange={setPage} />
+          <PaginationControls
+            page={page}
+            totalPages={totalPages}
+            onPageChange={setPage}
+            pageSize={pageSize}
+            onPageSizeChange={(s) => { setPageSize(s); setPage(0); }}
+          />
         </CardContent>
       </Card>
     </div>
