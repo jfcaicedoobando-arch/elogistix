@@ -14,7 +14,7 @@ import NuevoProveedorDialog from "@/components/NuevoProveedorDialog";
 import { toast } from "sonner";
 import { usePermissions } from "@/hooks/usePermissions";
 import { useRegistrarActividad } from "@/hooks/useBitacora";
-import type { TipoProveedor } from "@/data/types";
+import type { TipoProveedor, Proveedor } from "@/data/types";
 import type { ProveedorListItem } from "@/hooks/useProveedores";
 
 const TABS: { label: string; tipo: TipoProveedor }[] = [
