@@ -1,16 +1,15 @@
 
 
-## Plan: Usar expediente del origen al duplicar
+## Plan: Migrar ProveedorDetalle a useProveedorMutations (v4.29.1)
 
-### Cambio único en `src/hooks/useEmbarques.ts`
+### Cambio
+Reemplazar `useProveedores()` (deprecated, carga todos los registros) por `useProveedorMutations()` (solo mutaciones, sin query innecesaria).
 
-En el loop de `useDuplicarEmbarque` (líneas 257-262), reemplazar la llamada a `supabase.rpc('generar_expediente')` por usar directamente `embarqueOrigen.expediente`:
+### Archivo: `src/pages/ProveedorDetalle.tsx`
+- Línea 11: cambiar import de `useProveedores` a `useProveedorMutations`
+- Línea 24: cambiar `const { updateProveedor } = useProveedores()` por `const { updateProveedor } = useProveedorMutations()`
+- Sin otros cambios — la API de `updateProveedor` es idéntica en ambos hooks
 
-- **Eliminar** líneas 258-262 (la llamada RPC y el manejo de error)
-- **Cambiar** línea 268 `expediente: expediente as string` → `expediente: embarqueOrigen.expediente`
-- En el push final al array `creados`, usar `embarqueOrigen.expediente` en lugar de `expediente as string`
-
-### Cambio en `src/pages/Changelog.tsx`
-
-Entrada v4.15.1 — "Duplicar embarque ahora conserva el mismo expediente del origen"
+### Archivo: `src/pages/Changelog.tsx`
+- Nueva entrada v4.29.1
 
