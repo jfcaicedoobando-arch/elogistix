@@ -30,6 +30,7 @@ export const queryKeys = {
   },
   proveedores: {
     all: ['proveedores'] as const,
+    list: (filters: Record<string, unknown>) => ['proveedores', 'list', filters] as const,
     detail: (id: string) => ['proveedores', id] as const,
     select: ['proveedores', 'select'] as const,
   },
