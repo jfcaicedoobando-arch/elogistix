@@ -2,6 +2,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import type { TablesInsert } from '@/integrations/supabase/types';
 import type { EmbarqueRow } from './useEmbarqueUtils';
+import { queryKeys } from '@/lib/queryKeys';
 
 // ─── Create ──────────────────────────────────────────────
 interface CreateEmbarqueInput {
@@ -63,7 +64,7 @@ export function useCreateEmbarque() {
       return embarqueCreado;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['embarques'] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.embarques.all });
     },
   });
 }
@@ -111,10 +112,10 @@ export function useUpdateEmbarque() {
       return embarqueActualizado;
     },
     onSuccess: (embarqueActualizado) => {
-      queryClient.invalidateQueries({ queryKey: ['embarques'] });
-      queryClient.invalidateQueries({ queryKey: ['embarques', embarqueActualizado.id] });
-      queryClient.invalidateQueries({ queryKey: ['conceptos_venta', embarqueActualizado.id] });
-      queryClient.invalidateQueries({ queryKey: ['conceptos_costo', embarqueActualizado.id] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.embarques.all });
+      queryClient.invalidateQueries({ queryKey: queryKeys.embarques.detail(embarqueActualizado.id) });
+      queryClient.invalidateQueries({ queryKey: queryKeys.embarques.conceptosVenta(embarqueActualizado.id) });
+      queryClient.invalidateQueries({ queryKey: queryKeys.embarques.conceptosCosto(embarqueActualizado.id) });
     },
   });
 }
@@ -238,7 +239,7 @@ export function useDuplicarEmbarque() {
       return creados;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['embarques'] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.embarques.all });
     },
   });
 }
@@ -265,9 +266,9 @@ export function useAvanzarEstadoEmbarque() {
       if (errorNota) throw errorNota;
     },
     onSuccess: (_resultado, vars) => {
-      queryClient.invalidateQueries({ queryKey: ['embarques'] });
-      queryClient.invalidateQueries({ queryKey: ['embarques', vars.embarqueId] });
-      queryClient.invalidateQueries({ queryKey: ['notas_embarque', vars.embarqueId] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.embarques.all });
+      queryClient.invalidateQueries({ queryKey: queryKeys.embarques.detail(vars.embarqueId) });
+      queryClient.invalidateQueries({ queryKey: queryKeys.embarques.notas(vars.embarqueId) });
     },
   });
 }
@@ -288,7 +289,7 @@ export function useCreateNotaEmbarque() {
       if (error) throw error;
     },
     onSuccess: (_resultado, vars) => {
-      queryClient.invalidateQueries({ queryKey: ['notas_embarque', vars.embarqueId] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.embarques.notas(vars.embarqueId) });
     },
   });
 }
@@ -315,7 +316,7 @@ export function useEliminarEmbarque() {
       if (error) throw error;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['embarques'] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.embarques.all });
     },
   });
 }

@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import type { Json } from '@/integrations/supabase/types';
+import { queryKeys } from '@/lib/queryKeys';
 
 export interface ConceptoVentaCotizacion {
   descripcion: string;
@@ -85,7 +86,7 @@ const COTIZACION_LIST_COLUMNS = 'id, folio, cliente_id, cliente_nombre, modo, or
 
 export function useCotizaciones() {
   return useQuery({
-    queryKey: ['cotizaciones'],
+    queryKey: queryKeys.cotizaciones.all,
     queryFn: async () => {
       const { data, error } = await supabase
         .from('cotizaciones')
@@ -99,7 +100,7 @@ export function useCotizaciones() {
 
 export function useCotizacion(id: string | undefined) {
   return useQuery({
-    queryKey: ['cotizaciones', id],
+    queryKey: queryKeys.cotizaciones.detail(id!),
     queryFn: async () => {
       if (!id) throw new Error('No id');
       const { data, error } = await supabase
@@ -239,7 +240,7 @@ export function useCreateCotizacion() {
       return data as unknown as CotizacionRow;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['cotizaciones'] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.cotizaciones.all });
     },
   });
 }
@@ -260,8 +261,8 @@ export function useUpdateCotizacion() {
       if (error) throw error;
     },
     onSuccess: (_r, vars) => {
-      queryClient.invalidateQueries({ queryKey: ['cotizaciones'] });
-      queryClient.invalidateQueries({ queryKey: ['cotizaciones', vars.id] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.cotizaciones.all });
+      queryClient.invalidateQueries({ queryKey: queryKeys.cotizaciones.detail(vars.id) });
     },
   });
 }
@@ -274,7 +275,7 @@ export function useDeleteCotizacion() {
       if (error) throw error;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['cotizaciones'] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.cotizaciones.all });
     },
   });
 }
@@ -290,8 +291,8 @@ export function useUpdateEstadoCotizacion() {
       if (error) throw error;
     },
     onSuccess: (_r, vars) => {
-      queryClient.invalidateQueries({ queryKey: ['cotizaciones'] });
-      queryClient.invalidateQueries({ queryKey: ['cotizaciones', vars.id] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.cotizaciones.all });
+      queryClient.invalidateQueries({ queryKey: queryKeys.cotizaciones.detail(vars.id) });
     },
   });
 }
@@ -361,8 +362,8 @@ export function useConvertirProspectoACliente() {
       return clienteCreado;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['cotizaciones'] });
-      queryClient.invalidateQueries({ queryKey: ['clientes'] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.cotizaciones.all });
+      queryClient.invalidateQueries({ queryKey: queryKeys.clientes.all });
     },
   });
 }
@@ -452,9 +453,9 @@ export function useConvertirCotizacionAEmbarques() {
       return embarquesCreados;
     },
     onSuccess: (_data, cotizacion) => {
-      queryClient.invalidateQueries({ queryKey: ['embarques'] });
-      queryClient.invalidateQueries({ queryKey: ['cotizaciones'] });
-      queryClient.invalidateQueries({ queryKey: ['cotizaciones', cotizacion.id] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.embarques.all });
+      queryClient.invalidateQueries({ queryKey: queryKeys.cotizaciones.all });
+      queryClient.invalidateQueries({ queryKey: queryKeys.cotizaciones.detail(cotizacion.id) });
     },
   });
 }

@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { queryKeys } from '@/lib/queryKeys';
 import type {
   EmbarqueRow,
   ConceptoVentaRow,
@@ -13,7 +14,7 @@ const EMBARQUE_LIST_COLUMNS = 'id, expediente, bl_master, cliente_id, cliente_no
 
 export function useEmbarques() {
   return useQuery({
-    queryKey: ['embarques'],
+    queryKey: queryKeys.embarques.all,
     queryFn: async () => {
       const { data, error } = await supabase
         .from('embarques')
@@ -27,7 +28,7 @@ export function useEmbarques() {
 
 export function useEmbarque(id: string | undefined) {
   return useQuery({
-    queryKey: ['embarques', id],
+    queryKey: queryKeys.embarques.detail(id!),
     queryFn: async () => {
       if (!id) throw new Error('No id');
       const { data, error } = await supabase
@@ -44,7 +45,7 @@ export function useEmbarque(id: string | undefined) {
 
 export function useEmbarqueConceptosVenta(embarqueId: string | undefined) {
   return useQuery({
-    queryKey: ['conceptos_venta', embarqueId],
+    queryKey: queryKeys.embarques.conceptosVenta(embarqueId!),
     queryFn: async () => {
       const { data, error } = await supabase
         .from('conceptos_venta')
@@ -59,7 +60,7 @@ export function useEmbarqueConceptosVenta(embarqueId: string | undefined) {
 
 export function useEmbarqueConceptosCosto(embarqueId: string | undefined) {
   return useQuery({
-    queryKey: ['conceptos_costo', embarqueId],
+    queryKey: queryKeys.embarques.conceptosCosto(embarqueId!),
     queryFn: async () => {
       const { data, error } = await supabase
         .from('conceptos_costo')
@@ -74,7 +75,7 @@ export function useEmbarqueConceptosCosto(embarqueId: string | undefined) {
 
 export function useEmbarqueDocumentos(embarqueId: string | undefined) {
   return useQuery({
-    queryKey: ['documentos_embarque', embarqueId],
+    queryKey: queryKeys.embarques.documentos(embarqueId!),
     queryFn: async () => {
       const { data, error } = await supabase
         .from('documentos_embarque')
@@ -89,7 +90,7 @@ export function useEmbarqueDocumentos(embarqueId: string | undefined) {
 
 export function useEmbarqueNotas(embarqueId: string | undefined) {
   return useQuery({
-    queryKey: ['notas_embarque', embarqueId],
+    queryKey: queryKeys.embarques.notas(embarqueId!),
     queryFn: async () => {
       const { data, error } = await supabase
         .from('notas_embarque')
@@ -105,7 +106,7 @@ export function useEmbarqueNotas(embarqueId: string | undefined) {
 
 export function useEmbarqueFacturas(embarqueId: string | undefined) {
   return useQuery({
-    queryKey: ['facturas', 'embarque', embarqueId],
+    queryKey: queryKeys.embarques.facturas(embarqueId!),
     queryFn: async () => {
       const { data, error } = await supabase
         .from('facturas')
@@ -120,7 +121,7 @@ export function useEmbarqueFacturas(embarqueId: string | undefined) {
 
 export function useProveedoresForSelect() {
   return useQuery({
-    queryKey: ['proveedores', 'select'],
+    queryKey: queryKeys.proveedores.select,
     queryFn: async () => {
       const { data, error } = await supabase
         .from('proveedores')

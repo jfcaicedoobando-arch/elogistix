@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import type { Json } from '@/integrations/supabase/types';
+import { queryKeys } from '@/lib/queryKeys';
 
 export interface EntradaBitacora {
   id: string;
@@ -28,7 +29,7 @@ export function useBitacora(filtros: FiltrosBitacora = {}) {
   const { limite = 50, pagina = 0, modulo, usuarioId, fechaDesde, fechaHasta } = filtros;
 
   return useQuery({
-    queryKey: ['bitacora', filtros],
+    queryKey: queryKeys.bitacora.list(filtros as Record<string, unknown>),
     queryFn: async () => {
       let query = supabase
         .from('bitacora_actividad')
@@ -50,7 +51,7 @@ export function useBitacora(filtros: FiltrosBitacora = {}) {
 
 export function useActividadReciente(limite = 10) {
   return useQuery({
-    queryKey: ['bitacora', 'reciente', limite],
+    queryKey: queryKeys.bitacora.reciente(limite),
     queryFn: async () => {
       const { data, error } = await supabase
         .from('bitacora_actividad')
@@ -88,7 +89,7 @@ export function useRegistrarActividad() {
       if (error) throw error;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['bitacora'] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.bitacora.all });
     },
   });
 }

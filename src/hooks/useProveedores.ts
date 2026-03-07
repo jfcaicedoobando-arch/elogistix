@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import type { Tables, TablesInsert, TablesUpdate } from "@/integrations/supabase/types";
+import { queryKeys } from "@/lib/queryKeys";
 
 export type Proveedor = Tables<'proveedores'>;
 
@@ -8,7 +9,7 @@ export function useProveedores() {
   const queryClient = useQueryClient();
 
   const { data: proveedores = [], isLoading } = useQuery({
-    queryKey: ["proveedores"],
+    queryKey: queryKeys.proveedores.all,
     queryFn: async () => {
       const { data, error } = await supabase
         .from("proveedores")
@@ -25,7 +26,7 @@ export function useProveedores() {
       if (error) throw error;
       return data;
     },
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["proveedores"] }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.proveedores.all }),
   });
 
   const updateProveedorMutation = useMutation({
@@ -33,7 +34,7 @@ export function useProveedores() {
       const { error } = await supabase.from("proveedores").update(data).eq("id", id);
       if (error) throw error;
     },
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["proveedores"] }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.proveedores.all }),
   });
 
   return {
@@ -49,7 +50,7 @@ export function useProveedores() {
 
 export function useProveedor(id: string | undefined) {
   return useQuery({
-    queryKey: ["proveedores", id],
+    queryKey: queryKeys.proveedores.detail(id!),
     enabled: !!id,
     queryFn: async () => {
       const { data, error } = await supabase

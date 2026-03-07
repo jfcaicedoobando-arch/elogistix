@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { queryKeys } from "@/lib/queryKeys";
 
 export interface ConfigItem {
   id: string;
@@ -12,7 +13,7 @@ export interface ConfigItem {
 
 export function useConfiguracion() {
   return useQuery<ConfigItem[]>({
-    queryKey: ["configuracion"],
+    queryKey: queryKeys.configuracion.all,
     queryFn: async () => {
       const { data, error } = await supabase
         .from("configuracion")
@@ -62,7 +63,7 @@ export function useUpdateConfiguracion() {
       }
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["configuracion"] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.configuracion.all });
       toast({ title: "Configuración guardada" });
     },
     onError: (error: Error) => {

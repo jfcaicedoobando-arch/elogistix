@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { queryKeys } from "@/lib/queryKeys";
 
 interface ExchangeRates {
   usdMxn: number;
@@ -8,7 +9,7 @@ interface ExchangeRates {
 
 export function useExchangeRates() {
   return useQuery<ExchangeRates>({
-    queryKey: ["exchange-rates"],
+    queryKey: queryKeys.exchangeRates.all,
     queryFn: async () => {
       const { data, error } = await supabase.functions.invoke("exchange-rates");
       if (error) throw error;
