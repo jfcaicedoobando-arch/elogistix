@@ -4,6 +4,7 @@ import { useEmbarques, calcularEstadoEmbarque } from "@/hooks/useEmbarques";
 import { ESTADOS_ACTIVOS } from "@/data/embarqueConstants";
 import { calcularUtilidad, calcularMargen } from "@/lib/financialUtils";
 import { supabase } from "@/integrations/supabase/client";
+import { queryKeys } from "@/lib/queryKeys";
 
 // ─── Types ───────────────────────────────────────────────
 export interface EmbarqueConEstado {
@@ -53,7 +54,7 @@ export function useDashboardData() {
 
   // Batch queries for profit
   const { data: ventasUSD = [] } = useQuery({
-    queryKey: ["dashboard-ventas-usd"],
+    queryKey: queryKeys.dashboard.ventasUSD,
     queryFn: async () => {
       const { data } = await supabase
         .from("conceptos_venta")
@@ -64,7 +65,7 @@ export function useDashboardData() {
   });
 
   const { data: costosUSD = [] } = useQuery({
-    queryKey: ["dashboard-costos-usd"],
+    queryKey: queryKeys.dashboard.costosUSD,
     queryFn: async () => {
       const { data } = await supabase
         .from("conceptos_costo")

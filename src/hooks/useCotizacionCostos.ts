@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { queryKeys } from '@/lib/queryKeys';
 
 
 export interface CostoCotizacion {
@@ -19,7 +20,7 @@ export interface CostoCotizacion {
 
 export function useCotizacionCostos(cotizacionId: string | undefined) {
   return useQuery({
-    queryKey: ['cotizacion_costos', cotizacionId],
+    queryKey: queryKeys.cotizaciones.costos(cotizacionId!),
     queryFn: async () => {
       const { data, error } = await supabase
         .from('cotizacion_costos')
@@ -65,7 +66,7 @@ export function useUpsertCotizacionCostos() {
       return (data ?? []) as unknown as CostoCotizacion[];
     },
     onSuccess: (_data, variables) => {
-      queryClient.invalidateQueries({ queryKey: ['cotizacion_costos', variables.cotizacionId] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.cotizaciones.costos(variables.cotizacionId) });
     },
   });
 }

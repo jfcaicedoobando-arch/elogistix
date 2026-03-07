@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import type { Tables } from '@/integrations/supabase/types';
+import { queryKeys } from '@/lib/queryKeys';
 
 export type FacturaRow = Tables<'facturas'>;
 
@@ -9,7 +10,7 @@ const FACTURA_LIST_COLUMNS = 'id, numero, cliente_id, cliente_nombre, embarque_i
 
 export function useFacturas() {
   return useQuery({
-    queryKey: ['facturas'],
+    queryKey: queryKeys.facturas.all,
     queryFn: async () => {
       const { data, error } = await supabase
         .from('facturas')
@@ -36,15 +37,14 @@ export function useMarcarCostoPagado() {
       if (error) throw error;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['conceptos_costo'] });
-      queryClient.invalidateQueries({ queryKey: ['gastos_pendientes'] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.facturas.gastosPendientes });
     },
   });
 }
 
 export function useGastosPendientes() {
   return useQuery({
-    queryKey: ['gastos_pendientes'],
+    queryKey: queryKeys.facturas.gastosPendientes,
     queryFn: async () => {
       const { data, error } = await supabase
         .from('conceptos_costo')

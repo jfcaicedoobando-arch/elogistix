@@ -15,13 +15,14 @@ import { formatCurrency } from "@/lib/formatters";
 import { convertirAMXN, calcularUtilidad, calcularMargen } from "@/lib/financialUtils";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
+import { queryKeys } from "@/lib/queryKeys";
 
 const COLORS = ['hsl(217, 91%, 60%)', 'hsl(38, 92%, 50%)', 'hsl(142, 71%, 45%)', 'hsl(0, 84%, 60%)'];
 
 // Hook to get all conceptos_venta and conceptos_costo for reporting
 function useAllConceptos() {
   return useQuery({
-    queryKey: ['reportes', 'conceptos'],
+    queryKey: queryKeys.reportes.conceptos,
     queryFn: async () => {
       const [ventaRes, costoRes] = await Promise.all([
         supabase.from('conceptos_venta').select('embarque_id, total, moneda'),

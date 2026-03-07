@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { queryKeys } from "@/lib/queryKeys";
 
 export interface Puerto {
   id: string;
@@ -14,7 +15,7 @@ export interface Puerto {
 /** Puertos activos ordenados por país → nombre */
 export function usePuertos() {
   return useQuery<Puerto[]>({
-    queryKey: ["puertos", "activos"],
+    queryKey: queryKeys.puertos.activos,
     queryFn: async () => {
       const { data, error } = await supabase
         .from("puertos")
@@ -32,7 +33,7 @@ export function usePuertos() {
 /** Todos los puertos (incluye inactivos) para admin */
 export function useAllPuertos() {
   return useQuery<Puerto[]>({
-    queryKey: ["puertos", "todos"],
+    queryKey: queryKeys.puertos.todos,
     queryFn: async () => {
       const { data, error } = await supabase
         .from("puertos")
@@ -51,7 +52,7 @@ export function useAdminPuertos() {
   const { toast } = useToast();
 
   const invalidate = () => {
-    queryClient.invalidateQueries({ queryKey: ["puertos"] });
+    queryClient.invalidateQueries({ queryKey: queryKeys.puertos.all });
   };
 
   const agregarPuerto = useMutation({

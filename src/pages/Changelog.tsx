@@ -13,6 +13,14 @@ interface ChangelogEntry {
 
 const changelog: ChangelogEntry[] = [
   {
+    version: "4.25.0",
+    date: "2026-03-07",
+    type: "minor",
+    title: "Query Key Factory centralizado",
+    description:
+      "Nuevo archivo src/lib/queryKeys.ts con factory tipado para todos los dominios. Todos los hooks refactorizados para usar keys centralizadas en lugar de strings hardcodeados, mejorando la mantenibilidad y evitando errores de invalidación.",
+  },
+  {
     version: "4.24.0",
     date: "2026-03-07",
     type: "minor",

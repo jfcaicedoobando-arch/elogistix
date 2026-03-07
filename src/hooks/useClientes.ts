@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import type { Tables, TablesInsert } from "@/integrations/supabase/types";
+import { queryKeys } from "@/lib/queryKeys";
 
 export type Cliente = Tables<'clientes'>;
 export type ContactoCliente = Tables<'contactos_cliente'>;
@@ -10,7 +11,7 @@ const CLIENTE_LIST_COLUMNS = 'id, nombre, rfc, ciudad, estado, contacto, telefon
 
 export function useClientes() {
   return useQuery({
-    queryKey: ["clientes"],
+    queryKey: queryKeys.clientes.all,
     queryFn: async () => {
       const { data, error } = await supabase
         .from("clientes")
@@ -24,7 +25,7 @@ export function useClientes() {
 
 export function useCliente(id: string | undefined) {
   return useQuery({
-    queryKey: ["clientes", id],
+    queryKey: queryKeys.clientes.detail(id!),
     enabled: !!id,
     queryFn: async () => {
       const { data, error } = await supabase
@@ -40,7 +41,7 @@ export function useCliente(id: string | undefined) {
 
 export function useContactosCliente(clienteId: string | undefined) {
   return useQuery({
-    queryKey: ["contactos_cliente", clienteId],
+    queryKey: queryKeys.clientes.contactos(clienteId!),
     enabled: !!clienteId,
     queryFn: async () => {
       const { data, error } = await supabase
@@ -66,9 +67,8 @@ export function useCreateCliente() {
       if (error) throw error;
       return data;
     },
-    onSuccess: (clienteCreado) => {
-      queryClient.invalidateQueries({ queryKey: ["clientes"] });
-      return clienteCreado;
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.clientes.all });
     },
   });
 }
@@ -85,7 +85,7 @@ export function useCreateContacto() {
       if (error) throw error;
       return data;
     },
-    onSuccess: (_resultado, vars) => queryClient.invalidateQueries({ queryKey: ["contactos_cliente", vars.cliente_id] }),
+    onSuccess: (_resultado, vars) => queryClient.invalidateQueries({ queryKey: queryKeys.clientes.contactos(vars.cliente_id) }),
   });
 }
 
@@ -99,7 +99,7 @@ export function useUpdateContacto() {
         .eq("id", id);
       if (error) throw error;
     },
-    onSuccess: (_resultado, vars) => queryClient.invalidateQueries({ queryKey: ["contactos_cliente", vars.cliente_id] }),
+    onSuccess: (_resultado, vars) => queryClient.invalidateQueries({ queryKey: queryKeys.clientes.contactos(vars.cliente_id) }),
   });
 }
 
@@ -113,13 +113,13 @@ export function useDeleteContacto() {
         .eq("id", id);
       if (error) throw error;
     },
-    onSuccess: (_resultado, vars) => queryClient.invalidateQueries({ queryKey: ["contactos_cliente", vars.cliente_id] }),
+    onSuccess: (_resultado, vars) => queryClient.invalidateQueries({ queryKey: queryKeys.clientes.contactos(vars.cliente_id) }),
   });
 }
 
 export function useClientesForSelect() {
   return useQuery({
-    queryKey: ['clientes', 'select'],
+    queryKey: queryKeys.clientes.select,
     queryFn: async () => {
       const { data, error } = await supabase
         .from('clientes')
@@ -145,8 +145,8 @@ export function useUpdateCliente() {
       return data;
     },
     onSuccess: (clienteActualizado) => {
-      queryClient.invalidateQueries({ queryKey: ["clientes"] });
-      queryClient.invalidateQueries({ queryKey: ["clientes", clienteActualizado.id] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.clientes.all });
+      queryClient.invalidateQueries({ queryKey: queryKeys.clientes.detail(clienteActualizado.id) });
     },
   });
 }
