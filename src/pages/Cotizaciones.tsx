@@ -158,7 +158,13 @@ export default function Cotizaciones() {
               ))}
             </TableBody>
           </Table>
-          <PaginationControls page={page} totalPages={totalPages} onPageChange={setPage} />
+          <PaginationControls
+            page={page}
+            totalPages={totalPages}
+            onPageChange={setPage}
+            pageSize={pageSize}
+            onPageSizeChange={(s) => { setPageSize(s); setPage(0); }}
+          />
         </CardContent>
       </Card>
       <AlertDialog open={!!cotizacionAEliminar} onOpenChange={(open) => { if (!open) setCotizacionAEliminar(null); }}>

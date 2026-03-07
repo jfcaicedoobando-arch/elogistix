@@ -134,7 +134,7 @@ export default function Clientes() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filtered.map(cliente => (
+                {paginated.map(cliente => (
                   <TableRow key={cliente.id} className="cursor-pointer" onClick={() => navigate(`/clientes/${cliente.id}`)}>
                     <TableCell className="font-medium max-w-[200px] truncate">{cliente.nombre}</TableCell>
                     <TableCell className="text-xs font-mono">{cliente.rfc}</TableCell>
@@ -146,6 +146,13 @@ export default function Clientes() {
               </TableBody>
             </Table>
           )}
+          <PaginationControls
+            page={page}
+            totalPages={totalPages}
+            onPageChange={setPage}
+            pageSize={pageSize}
+            onPageSizeChange={(s) => { setPageSize(s); setPage(0); }}
+          />
         </CardContent>
       </Card>
 

@@ -94,30 +94,11 @@ export default function Bitacora() {
         </CardContent>
       </Card>
 
-      {/* Paginación */}
-      {totalPaginas > 1 && (
-        <div className="flex items-center justify-center gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            disabled={pagina === 0}
-            onClick={() => setPagina(pagina - 1)}
-          >
-            Anterior
-          </Button>
-          <span className="text-sm text-muted-foreground">
-            Página {pagina + 1} de {totalPaginas}
-          </span>
-          <Button
-            variant="outline"
-            size="sm"
-            disabled={pagina >= totalPaginas - 1}
-            onClick={() => setPagina(pagina + 1)}
-          >
-            Siguiente
-          </Button>
-        </div>
-      )}
+      <PaginationControls
+        page={pagina}
+        totalPages={totalPaginas}
+        onPageChange={setPagina}
+      />
     </div>
   );
 }

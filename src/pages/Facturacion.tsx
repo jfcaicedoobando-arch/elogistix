@@ -101,7 +101,7 @@ export default function Facturacion() {
                   <TableBody>
                     {filtered.length === 0 ? (
                       <TableRow><TableCell colSpan={8} className="text-center py-8 text-muted-foreground">No se encontraron facturas</TableCell></TableRow>
-                    ) : filtered.map(factura => (
+                    ) : paginatedFacturas.map(factura => (
                       <TableRow key={factura.id}>
                         <TableCell className="font-medium">{factura.numero}</TableCell>
                         <TableCell>{factura.expediente}</TableCell>
@@ -116,6 +116,13 @@ export default function Facturacion() {
                   </TableBody>
                 </Table>
               )}
+              <PaginationControls
+                page={page}
+                totalPages={totalPages}
+                onPageChange={setPage}
+                pageSize={pageSize}
+                onPageSizeChange={(s) => { setPageSize(s); setPage(0); }}
+              />
             </CardContent>
           </Card>
         </TabsContent>
