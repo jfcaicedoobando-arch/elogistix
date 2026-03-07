@@ -7,6 +7,7 @@ import { queryKeys } from "@/lib/queryKeys";
 const PROVEEDOR_LIST_COLUMNS = 'id, nombre, tipo, rfc, contacto, moneda_preferida' as const;
 
 export type Proveedor = Tables<'proveedores'>;
+export type ProveedorListItem = Pick<Proveedor, 'id' | 'nombre' | 'tipo' | 'rfc' | 'contacto' | 'moneda_preferida'>;
 
 export function useProveedores() {
   const queryClient = useQueryClient();
