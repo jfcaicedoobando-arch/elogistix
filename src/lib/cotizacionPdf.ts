@@ -199,6 +199,8 @@ export function generarPdfCotizacion(cotizacion: CotizacionRow) {
     ${dimensionesHtml}
   </section>
 
+  <div class="page-break"></div>
+
   <section>
     <h3>Conceptos de Venta</h3>
     ${buildUsdTable()}
