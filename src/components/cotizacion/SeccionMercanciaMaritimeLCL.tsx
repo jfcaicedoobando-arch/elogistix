@@ -1,3 +1,4 @@
+import { useFormContext } from "react-hook-form";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -7,57 +8,42 @@ import {
 import { Plus, Trash2 } from "lucide-react";
 import type { DimensionLCL } from "@/hooks/useCotizaciones";
 import SeccionMercanciaWrapper from "./SeccionMercanciaWrapper";
+import type { CotizacionFormValues } from "@/hooks/useCotizacionWizardForm";
 
 interface Props {
-  tipoCarga: string;
-  setTipoCarga: (v: string) => void;
-  sectorEconomico: string;
-  setSectorEconomico: (v: string) => void;
-  descripcionAdicional: string;
-  setDescripcionAdicional: (v: string) => void;
   msdsFile: File | null;
   setMsdsFile: (f: File | null) => void;
-  dimensiones: DimensionLCL[];
-  setDimensiones: (d: DimensionLCL[]) => void;
 }
 
 function calcularVolumen(d: DimensionLCL): number {
   return (d.alto_cm * d.largo_cm * d.ancho_cm * d.piezas) / 1_000_000;
 }
 
-export default function SeccionMercanciaMaritimeLCL({
-  tipoCarga, setTipoCarga,
-  sectorEconomico, setSectorEconomico,
-  descripcionAdicional, setDescripcionAdicional,
-  msdsFile, setMsdsFile,
-  dimensiones, setDimensiones,
-}: Props) {
+export default function SeccionMercanciaMaritimeLCL({ msdsFile, setMsdsFile }: Props) {
+  const { watch, setValue } = useFormContext<CotizacionFormValues>();
+  const dimensiones = watch("dimensionesLCL");
+
   const actualizarDimension = (index: number, campo: keyof DimensionLCL, valor: number) => {
     const copia = [...dimensiones];
     copia[index] = { ...copia[index], [campo]: valor };
     copia[index].volumen_m3 = calcularVolumen(copia[index]);
-    setDimensiones(copia);
+    setValue("dimensionesLCL", copia);
   };
 
   const agregarFila = () => {
-    setDimensiones([...dimensiones, { piezas: 0, alto_cm: 0, largo_cm: 0, ancho_cm: 0, volumen_m3: 0 }]);
+    setValue("dimensionesLCL", [...dimensiones, { piezas: 0, alto_cm: 0, largo_cm: 0, ancho_cm: 0, volumen_m3: 0 }]);
   };
 
   const eliminarFila = (index: number) => {
     if (dimensiones.length <= 1) return;
-    setDimensiones(dimensiones.filter((_, i) => i !== index));
+    setValue("dimensionesLCL", dimensiones.filter((_, i) => i !== index));
   };
 
   const totalPiezas = dimensiones.reduce((sum, d) => sum + d.piezas, 0);
   const totalVolumen = dimensiones.reduce((sum, d) => sum + d.volumen_m3, 0);
 
   return (
-    <SeccionMercanciaWrapper
-      tipoCarga={tipoCarga} setTipoCarga={setTipoCarga}
-      sectorEconomico={sectorEconomico} setSectorEconomico={setSectorEconomico}
-      descripcionAdicional={descripcionAdicional} setDescripcionAdicional={setDescripcionAdicional}
-      msdsFile={msdsFile} setMsdsFile={setMsdsFile}
-    >
+    <SeccionMercanciaWrapper msdsFile={msdsFile} setMsdsFile={setMsdsFile}>
       <div>
         <div className="flex items-center justify-between mb-2">
           <Label className="text-sm font-semibold">Dimensiones</Label>
