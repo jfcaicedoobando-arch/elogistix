@@ -35,6 +35,7 @@ export default function Cotizaciones() {
   const [filterEstado, setFilterEstado] = useState<string>("todos");
   const [filterCliente, setFilterCliente] = useState<string>("todos");
   const [page, setPage] = useState(0);
+  const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
   const { canEdit, isAdmin } = usePermissions();
   const deleteCotizacion = useDeleteCotizacion();
   const { toast } = useToast();
