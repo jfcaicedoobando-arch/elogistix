@@ -13,6 +13,14 @@ interface ChangelogEntry {
 
 const changelog: ChangelogEntry[] = [
   {
+    version: "4.29.1",
+    date: "2026-03-07",
+    type: "patch",
+    title: "Migración de ProveedorDetalle a useProveedorMutations",
+    description:
+      "ProveedorDetalle.tsx ahora usa useProveedorMutations en lugar del hook deprecated useProveedores, evitando una query innecesaria que descargaba todos los proveedores.",
+  },
+  {
     version: "4.29.0",
     date: "2026-03-07",
     type: "minor",
