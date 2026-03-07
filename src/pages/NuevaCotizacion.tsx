@@ -26,7 +26,7 @@ import SeccionMercanciaMaritimaFCL from "@/components/cotizacion/SeccionMercanci
 import SeccionMercanciaMaritimeLCL from "@/components/cotizacion/SeccionMercanciaMaritimeLCL";
 import SeccionMercanciaGeneral from "@/components/cotizacion/SeccionMercanciaGeneral";
 import SeccionMercanciaAerea from "@/components/cotizacion/SeccionMercanciaAerea";
-import SeccionCostosInternosPLLocal, { type FilaCostoLocal } from "@/components/cotizacion/SeccionCostosInternosPLLocal";
+import SeccionCostosInternosPLUnificado, { type FilaCostoLocal } from "@/components/cotizacion/SeccionCostosInternosPLUnificado";
 import PasoResumenCotizacion from "@/components/cotizacion/PasoResumenCotizacion";
 
 
