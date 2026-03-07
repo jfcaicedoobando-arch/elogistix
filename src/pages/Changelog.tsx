@@ -13,6 +13,14 @@ interface ChangelogEntry {
 
 const changelog: ChangelogEntry[] = [
   {
+    version: "4.29.3",
+    date: "2026-03-07",
+    type: "patch",
+    title: "Validación de campos requeridos en Editar Proveedor",
+    description:
+      "El diálogo de Editar Proveedor ahora valida campos requeridos (Origen, Nombre, RFC/Tax ID, País para Agentes de Carga) y formato de email, mostrando errores inline y deshabilitando el botón Guardar hasta que el formulario sea válido.",
+  },
+  {
     version: "4.29.2",
     date: "2026-03-07",
     type: "patch",
