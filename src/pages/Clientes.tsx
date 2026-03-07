@@ -108,7 +108,7 @@ export default function Clientes() {
 
       <Card>
         <CardContent className="p-4">
-          <SearchInput value={search} onChange={setSearch} placeholder="Buscar por nombre o RFC..." />
+          <SearchInput value={search} onChange={(v) => { setSearch(v); setPage(0); }} placeholder="Buscar por nombre o RFC..." />
         </CardContent>
       </Card>
 
