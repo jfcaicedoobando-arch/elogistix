@@ -13,6 +13,14 @@ interface ChangelogEntry {
 
 const changelog: ChangelogEntry[] = [
   {
+    version: "4.29.2",
+    date: "2026-03-07",
+    type: "patch",
+    title: "Eliminación del hook deprecated useProveedores",
+    description:
+      "Se eliminó el hook useProveedores (deprecated) del archivo useProveedores.ts al confirmar que no tiene consumidores restantes.",
+  },
+  {
     version: "4.29.1",
     date: "2026-03-07",
     type: "patch",
