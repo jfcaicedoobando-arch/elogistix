@@ -13,6 +13,14 @@ interface ChangelogEntry {
 
 const changelog: ChangelogEntry[] = [
   {
+    version: "4.23.0",
+    date: "2026-03-07",
+    type: "minor",
+    title: "Optimización de queries: selección explícita de columnas",
+    description:
+      "Eliminado select('*') en queries de listas de embarques, cotizaciones, clientes, facturas y reportes. Cada query ahora solicita solo las columnas necesarias para la UI, reduciendo el payload de red significativamente.",
+  },
+  {
     version: "4.22.1",
     date: "2026-03-07",
     type: "patch",

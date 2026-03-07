@@ -8,13 +8,16 @@ import type {
   NotaEmbarqueRow,
 } from './useEmbarqueUtils';
 
+/** Columnas necesarias para listas y dashboard (evita select('*')) */
+const EMBARQUE_LIST_COLUMNS = 'id, expediente, bl_master, cliente_id, cliente_nombre, modo, estado, etd, eta, operador, puerto_origen, puerto_destino, aeropuerto_origen, aeropuerto_destino, ciudad_origen, ciudad_destino, tipo_contenedor, descripcion_mercancia, tipo, created_at, tipo_cambio_usd, tipo_cambio_eur' as const;
+
 export function useEmbarques() {
   return useQuery({
     queryKey: ['embarques'],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('embarques')
-        .select('*')
+        .select(EMBARQUE_LIST_COLUMNS)
         .order('created_at', { ascending: false });
       if (error) throw error;
       return data as EmbarqueRow[];
