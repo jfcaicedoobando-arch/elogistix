@@ -69,7 +69,7 @@ export default function Facturacion() {
         <TabsContent value="facturas" className="space-y-4">
           <Card>
             <CardContent className="p-4 flex flex-wrap gap-3">
-              <SearchInput value={search} onChange={setSearch} placeholder="Buscar factura o cliente..." className="flex-1 min-w-[200px]" />
+              <SearchInput value={search} onChange={(v) => { setSearch(v); setPage(0); }} placeholder="Buscar factura o cliente..." className="flex-1 min-w-[200px]" />
               <Select value={filterEstado} onValueChange={setFilterEstado}>
                 <SelectTrigger className="w-[160px]"><SelectValue /></SelectTrigger>
                 <SelectContent>
