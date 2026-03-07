@@ -13,6 +13,14 @@ interface ChangelogEntry {
 
 const changelog: ChangelogEntry[] = [
   {
+    version: "4.28.2",
+    date: "2026-03-07",
+    type: "patch",
+    title: "Extracción de servicios y uploads paralelos en NuevoEmbarque",
+    description:
+      "Llamadas supabase.rpc extraídas a src/lib/embarqueServices.ts (resolverExpediente, subirDocumentosEmbarque). La subida de documentos ahora usa Promise.all en lugar de un bucle secuencial.",
+  },
+  {
     version: "4.28.1",
     date: "2026-03-07",
     type: "patch",
