@@ -12,6 +12,7 @@ import { useEmbarques } from "@/hooks/useEmbarques";
 import { useFacturas, useGastosPendientes } from "@/hooks/useFacturas";
 import { useClientes } from "@/hooks/useClientes";
 import { formatCurrency } from "@/lib/formatters";
+import { convertirAMXN, calcularUtilidad, calcularMargen } from "@/lib/financialUtils";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
 

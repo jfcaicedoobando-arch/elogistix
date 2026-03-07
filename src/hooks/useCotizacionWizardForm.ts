@@ -5,6 +5,7 @@ import type { CostoCotizacion } from "@/hooks/useCotizacionCostos";
 import type { FilaCostoLocal } from "@/components/cotizacion/SeccionCostosInternosPLUnificado";
 import { CONCEPTOS_CON_IVA_USD } from "@/data/cotizacionConstants";
 import { calcularTotalesPL, type TotalesPL } from "@/lib/profitUtils";
+import { calcularIVA, calcularTotalConIVA } from "@/lib/financialUtils";
 import { uploadFile } from "@/lib/storage";
 
 // ────────── Factories ──────────
