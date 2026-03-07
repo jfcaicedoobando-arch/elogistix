@@ -151,7 +151,7 @@ export default function Reportes() {
                     <TableCell>{formatCurrency(cliente.venta)}</TableCell>
                     <TableCell>{formatCurrency(cliente.costo)}</TableCell>
                     <TableCell className={cliente.utilidad >= 0 ? 'text-success font-medium' : 'text-destructive font-medium'}>{formatCurrency(cliente.utilidad)}</TableCell>
-                    <TableCell>{cliente.venta > 0 ? ((cliente.utilidad / cliente.venta) * 100).toFixed(1) : 0}%</TableCell>
+                    <TableCell>{calcularMargen(cliente.venta, cliente.venta - cliente.utilidad).toFixed(1)}%</TableCell>
                   </TableRow>
                 ))}
               </TableBody>
