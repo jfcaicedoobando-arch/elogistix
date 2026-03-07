@@ -1,16 +1,36 @@
 
 
-## Plan: Usar expediente del origen al duplicar
+## Plan: Refactorizar NuevaCotizacion.tsx — Extraer `useCotizacionWizardForm`
 
-### Cambio único en `src/hooks/useEmbarques.ts`
+### Problema
+`NuevaCotizacion.tsx` tiene 577 líneas con ~30 `useState`, lógica de navegación, validación, persistencia y cálculos mezclados. Difícil de mantener.
 
-En el loop de `useDuplicarEmbarque` (líneas 257-262), reemplazar la llamada a `supabase.rpc('generar_expediente')` por usar directamente `embarqueOrigen.expediente`:
+### Solución
+Extraer un hook `useCotizacionWizardForm` que encapsule todo el estado y la lógica, dejando `NuevaCotizacion.tsx` como orquestador puro de UI.
 
-- **Eliminar** líneas 258-262 (la llamada RPC y el manejo de error)
-- **Cambiar** línea 268 `expediente: expediente as string` → `expediente: embarqueOrigen.expediente`
-- En el push final al array `creados`, usar `embarqueOrigen.expediente` en lugar de `expediente as string`
+### Cambios
 
-### Cambio en `src/pages/Changelog.tsx`
+#### 1. Crear `src/hooks/useCotizacionWizardForm.ts` (~250 líneas)
+Mover al hook:
+- Los ~30 `useState` (destinatario, datos generales, mercancía, ruta, conceptos, wizard)
+- Helpers: `handleCambiarTipoEmbarque`, `actualizarConcepto`, `agregarConcepto`, `eliminarConcepto`
+- Cálculos: `totalUSD`, `subtotalMXN`, `ivaMXN`, `totalMXN`, totales LCL/aéreos, P&L
+- Derivados: `esMaritimo`, `esAereo`, `clienteSeleccionado`
+- `buildPaso1Data`, `handleSiguiente`, `handleGuardar`
+- Factories `emptyUSD`, `emptyMXN`
 
-Entrada v4.15.1 — "Duplicar embarque ahora conserva el mismo expediente del origen"
+El hook recibe las dependencias (navigate, toast, user, clientes, mutations) y retorna un objeto tipado con todo el estado y las acciones.
+
+#### 2. Simplificar `src/pages/NuevaCotizacion.tsx` (~200 líneas)
+- Importar `useCotizacionWizardForm`
+- Desestructurar estado y acciones del hook
+- Mantener solo el JSX (header, steps, footer)
+- Sin lógica de negocio en el componente
+
+#### 3. Actualizar `src/pages/Changelog.tsx`
+Entrada v4.20.0 documentando la refactorización.
+
+### Archivos
+- **Crear**: `src/hooks/useCotizacionWizardForm.ts`
+- **Modificar**: `src/pages/NuevaCotizacion.tsx`, `src/pages/Changelog.tsx`
 
