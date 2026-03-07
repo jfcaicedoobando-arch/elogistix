@@ -5,8 +5,8 @@ import { queryKeys } from '@/lib/queryKeys';
 
 export type FacturaRow = Tables<'facturas'>;
 
-/** Columnas para lista de facturas y reportes */
-const FACTURA_LIST_COLUMNS = 'id, numero, cliente_id, cliente_nombre, embarque_id, expediente, estado, moneda, subtotal, iva, total, tipo_cambio, fecha_emision, fecha_vencimiento, referencia_bl, notas, created_at, updated_at' as const;
+/** Columnas para lista de facturas (UI tabla + reportes) */
+const FACTURA_LIST_COLUMNS = 'id, numero, cliente_nombre, expediente, total, moneda, fecha_emision, fecha_vencimiento, estado' as const;
 
 export function useFacturas() {
   return useQuery({
