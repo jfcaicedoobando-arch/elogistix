@@ -11,10 +11,9 @@ import {
 import { useClientesForSelect, useContactosCliente } from "@/hooks/useClientes";
 import { useAuth } from "@/contexts/AuthContext";
 import { useRegistrarActividad } from "@/hooks/useBitacora";
-import { uploadFile } from '@/lib/storage';
 import { useConceptosForm } from "@/hooks/useConceptosForm";
 import { useEmbarqueForm } from "@/hooks/useEmbarqueForm";
-import { supabase } from "@/integrations/supabase/client";
+import { resolverExpediente, subirDocumentosEmbarque } from "@/lib/embarqueServices";
 import { StepIndicator } from "@/components/embarque/StepIndicator";
 import { StepDatosGenerales } from "@/components/embarque/StepDatosGenerales";
 import type { EmbarqueValidationErrors } from "@/components/embarque/StepDatosGenerales";
@@ -73,36 +72,14 @@ export default function NuevoEmbarque() {
 
     const v = methods.getValues();
 
-    let expediente: string;
-    if (v.blMaster && v.blMaster.trim()) {
-      const { data, error } = await supabase.rpc('resolver_expediente_por_bl', { _bl_master: v.blMaster.trim(), _tipo_op: v.tipo });
-      if (error || !data) {
-        toast({ title: "Error al resolver expediente", description: error?.message || "No se pudo resolver el número de referencia.", variant: "destructive" });
-        return;
-      }
-      expediente = data;
-    } else {
-      const { data, error } = await supabase.rpc('generar_expediente', { tipo_op: v.tipo });
-      if (error || !data) {
-        toast({ title: "Error al generar expediente", description: error?.message || "No se pudo generar el número de referencia.", variant: "destructive" });
-        return;
-      }
-      expediente = data;
-    }
-
     try {
-      const docPayload: { nombre: string; archivo?: string }[] = [];
-      const docsChecklist = getDocumentosChecklist(v.modo);
-      for (const doc of docsChecklist) {
-        const file = documentosArchivos[doc.nombre];
-        if (file) {
-          const ruta = `embarques/${expediente}/${doc.nombre}/${Date.now()}_${file.name}`;
-          await uploadFile(ruta, file);
-          docPayload.push({ nombre: doc.nombre, archivo: ruta });
-        } else {
-          docPayload.push({ nombre: doc.nombre });
-        }
-      }
+      const expediente = await resolverExpediente(v.blMaster, v.tipo);
+
+      const docPayload = await subirDocumentosEmbarque(
+        expediente,
+        getDocumentosChecklist(v.modo),
+        documentosArchivos,
+      );
 
       await createEmbarque.mutateAsync({
         embarque: { expediente, ...buildEmbarquePayload(contactos, selectedCliente?.nombre || '', user?.email || '') },
