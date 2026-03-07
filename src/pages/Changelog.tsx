@@ -13,6 +13,14 @@ interface ChangelogEntry {
 
 const changelog: ChangelogEntry[] = [
   {
+    version: "4.22.1",
+    date: "2026-03-07",
+    type: "patch",
+    title: "Tests unitarios para funciones financieras y de rentabilidad",
+    description:
+      "Agregados 27 tests cubriendo calcularIVA, calcularTotalConIVA, convertirAMXN, convertirAUSD, calcularSubtotal, calcularMargen, calcularUtilidad, calcularTotalesPL, ProfitBadge y RentabilidadGlobalBadge.",
+  },
+  {
     version: "4.22.0",
     date: "2026-03-07",
     type: "minor",
