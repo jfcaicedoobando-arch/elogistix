@@ -13,6 +13,14 @@ interface ChangelogEntry {
 
 const changelog: ChangelogEntry[] = [
   {
+    version: "4.16.1",
+    date: "2026-03-07",
+    type: "patch",
+    title: "Refactorización completa del Dashboard",
+    description:
+      "Se extrajo la lógica de datos a useDashboardData hook y se crearon 5 sub-componentes (DashboardStatusCards, AlertasDemoraCard, ProximosArribosCard, ProfitTable, EmbarquesActivosTable). Se reemplazaron colores HSL hardcodeados por tokens semánticos del design system.",
+  },
+  {
     version: "4.16.0",
     date: "2026-03-06",
     type: "minor",
