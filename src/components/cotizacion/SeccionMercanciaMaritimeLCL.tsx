@@ -1,21 +1,12 @@
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import {
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
-} from "@/components/ui/select";
-import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
-import { Plus, Trash2, Upload } from "lucide-react";
+import { Plus, Trash2 } from "lucide-react";
 import type { DimensionLCL } from "@/hooks/useCotizaciones";
-
-const TIPOS_CARGA = ['Carga General', 'Mercancía Peligrosa'];
-const SECTORES = [
-  'Automotriz', 'Médica', 'Alimentos', 'Carga Proyecto',
-  'Construcción', 'Industrial', 'General', 'Tecnología', 'Arte y Moda',
-];
+import SeccionMercanciaWrapper from "./SeccionMercanciaWrapper";
 
 interface Props {
   tipoCarga: string;
@@ -61,51 +52,12 @@ export default function SeccionMercanciaMaritimeLCL({
   const totalVolumen = dimensiones.reduce((sum, d) => sum + d.volumen_m3, 0);
 
   return (
-    <div className="space-y-4">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div>
-          <Label>Tipo de Carga</Label>
-          <Select value={tipoCarga} onValueChange={setTipoCarga}>
-            <SelectTrigger><SelectValue /></SelectTrigger>
-            <SelectContent>{TIPOS_CARGA.map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}</SelectContent>
-          </Select>
-        </div>
-        <div>
-          <Label>Sector Económico</Label>
-          <Select value={sectorEconomico} onValueChange={setSectorEconomico}>
-            <SelectTrigger><SelectValue placeholder="Seleccionar sector" /></SelectTrigger>
-            <SelectContent>{SECTORES.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
-          </Select>
-        </div>
-        <div className="md:col-span-2">
-          <Label>Descripción Adicional</Label>
-          <Textarea
-            value={descripcionAdicional}
-            onChange={e => setDescripcionAdicional(e.target.value)}
-            placeholder="Describe aquí más detalles de la mercancía..."
-            rows={3}
-          />
-        </div>
-        {tipoCarga === 'Mercancía Peligrosa' && (
-          <div className="md:col-span-2">
-            <Label>Hoja de Seguridad (MSDS)</Label>
-            <div className="flex items-center gap-2 mt-1">
-              <Input
-                type="file"
-                accept=".pdf,.doc,.docx,.jpg,.png"
-                onChange={e => setMsdsFile(e.target.files?.[0] || null)}
-              />
-              {msdsFile && (
-                <span className="text-xs text-muted-foreground flex items-center gap-1">
-                  <Upload className="h-3 w-3" /> {msdsFile.name}
-                </span>
-              )}
-            </div>
-          </div>
-        )}
-      </div>
-
-      {/* Tabla de dimensiones */}
+    <SeccionMercanciaWrapper
+      tipoCarga={tipoCarga} setTipoCarga={setTipoCarga}
+      sectorEconomico={sectorEconomico} setSectorEconomico={setSectorEconomico}
+      descripcionAdicional={descripcionAdicional} setDescripcionAdicional={setDescripcionAdicional}
+      msdsFile={msdsFile} setMsdsFile={setMsdsFile}
+    >
       <div>
         <div className="flex items-center justify-between mb-2">
           <Label className="text-sm font-semibold">Dimensiones</Label>
@@ -158,6 +110,6 @@ export default function SeccionMercanciaMaritimeLCL({
           <span>Volumen total: {totalVolumen.toFixed(4)} m³</span>
         </div>
       </div>
-    </div>
+    </SeccionMercanciaWrapper>
   );
 }
