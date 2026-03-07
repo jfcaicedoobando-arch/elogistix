@@ -44,10 +44,15 @@ export default function Clientes() {
   const [form, setForm] = useState(emptyCliente);
   const [step, setStep] = useState<1 | 2>(1);
   const [documentos, setDocumentos] = useState<DocumentoChecklist[]>([]);
+  const [page, setPage] = useState(0);
+  const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
 
-  const filtered = clientesList.filter(cliente =>
+  const filtered = useMemo(() => clientesList.filter(cliente =>
     !search || cliente.nombre.toLowerCase().includes(search.toLowerCase()) || cliente.rfc.toLowerCase().includes(search.toLowerCase())
-  );
+  ), [clientesList, search]);
+
+  const paginated = filtered.slice(page * pageSize, (page + 1) * pageSize);
+  const totalPages = Math.ceil(filtered.length / pageSize);
 
   const handleChange = (field: string, value: string) => setForm(prev => ({ ...prev, [field]: value }));
   const isStep1Valid = () => form.nombre.trim() && form.rfc.trim() && form.cp.trim();
