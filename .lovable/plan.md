@@ -1,29 +1,16 @@
 
 
-## Fix: Puerto duplicado en PortSelect (v4.30.1)
+## Plan: Usar expediente del origen al duplicar
 
-### Causa raíz
+### Cambio único en `src/hooks/useEmbarques.ts`
 
-En `src/components/PortSelect.tsx`, línea 16, la función `formatPort` repite `port.name` dos veces:
+En el loop de `useDuplicarEmbarque` (líneas 257-262), reemplazar la llamada a `supabase.rpc('generar_expediente')` por usar directamente `embarqueOrigen.expediente`:
 
-```typescript
-// BUG actual:
-return `${port.name} — ${port.name}, ${port.country}`;
-// Resultado: "Manzanillo — Manzanillo, México"
-```
+- **Eliminar** líneas 258-262 (la llamada RPC y el manejo de error)
+- **Cambiar** línea 268 `expediente: expediente as string` → `expediente: embarqueOrigen.expediente`
+- En el push final al array `creados`, usar `embarqueOrigen.expediente` en lugar de `expediente as string`
 
-### Corrección
+### Cambio en `src/pages/Changelog.tsx`
 
-Cambiar el formato a `Nombre, País (Código)`:
-
-```typescript
-function formatPort(port: { code: string; name: string; country: string }) {
-  return `${port.name}, ${port.country} (${port.code})`;
-}
-// Resultado: "Manzanillo, México (MXZLO)"
-```
-
-### Archivos a modificar
-1. **`src/components/PortSelect.tsx`** — Corregir `formatPort` (línea 16)
-2. **`src/pages/Changelog.tsx`** — Entrada v4.30.1
+Entrada v4.15.1 — "Duplicar embarque ahora conserva el mismo expediente del origen"
 
