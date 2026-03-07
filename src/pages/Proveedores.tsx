@@ -4,11 +4,8 @@ import { Truck, Plus } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import SearchInput from "@/components/SearchInput";
-import {
-  Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
-} from "@/components/ui/table";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useProveedoresPaginados, useProveedorMutations } from "@/hooks/useProveedores";
 import type { ProveedorListItem } from "@/hooks/useProveedores";
 import NuevoProveedorDialog from "@/components/NuevoProveedorDialog";
@@ -17,6 +14,7 @@ import { toast } from "sonner";
 import { usePermissions } from "@/hooks/usePermissions";
 import { useRegistrarActividad } from "@/hooks/useBitacora";
 import { useDebounce } from "@/hooks/useDebounce";
+import { DataTable, type DataTableColumn } from "@/components/DataTable";
 import type { TipoProveedor, Proveedor } from "@/data/types";
 
 const DEFAULT_PAGE_SIZE = 20;
@@ -32,6 +30,13 @@ const TABS: { label: string; tipo: TipoProveedor }[] = [
   { label: 'Almacenes', tipo: 'Almacenes' },
   { label: 'Acondicionamiento', tipo: 'Acondicionamiento de Carga' },
   { label: 'Mat. Peligrosos', tipo: 'Materiales Peligrosos' },
+];
+
+const proveedorColumns: DataTableColumn<ProveedorListItem>[] = [
+  { key: "nombre", header: "Nombre", className: "font-medium", render: (p) => p.nombre },
+  { key: "rfc", header: "RFC", className: "text-xs font-mono", render: (p) => p.rfc },
+  { key: "contacto", header: "Contacto", className: "text-xs", render: (p) => p.contacto },
+  { key: "moneda", header: "Moneda", className: "text-xs", render: (p) => p.moneda_preferida },
 ];
 
 function ProveedorTable({ tipo, search, onSelect }: { tipo: TipoProveedor; search: string; onSelect: (id: string) => void }) {
@@ -57,37 +62,17 @@ function ProveedorTable({ tipo, search, onSelect }: { tipo: TipoProveedor; searc
     if (page !== 0) setPage(0);
   }
 
-  if (isLoading && proveedores.length === 0) {
-    return <Card><CardContent className="p-6 space-y-3">{[1,2,3].map(indice => <Skeleton key={indice} className="h-10 w-full" />)}</CardContent></Card>;
-  }
-
   return (
     <Card>
       <CardContent className="p-0">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Nombre</TableHead>
-              <TableHead>RFC</TableHead>
-              <TableHead>Contacto</TableHead>
-              <TableHead>Moneda</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {proveedores.length > 0 ? proveedores.map(proveedor => (
-              <TableRow key={proveedor.id} className="cursor-pointer" onClick={() => onSelect(proveedor.id)}>
-                <TableCell className="font-medium">{proveedor.nombre}</TableCell>
-                <TableCell className="text-xs font-mono">{proveedor.rfc}</TableCell>
-                <TableCell className="text-xs">{proveedor.contacto}</TableCell>
-                <TableCell className="text-xs">{proveedor.moneda_preferida}</TableCell>
-              </TableRow>
-            )) : (
-              <TableRow>
-                <TableCell colSpan={4} className="text-center text-muted-foreground py-8">Sin proveedores registrados</TableCell>
-              </TableRow>
-            )}
-          </TableBody>
-        </Table>
+        <DataTable
+          columns={proveedorColumns}
+          data={proveedores}
+          isLoading={isLoading && proveedores.length === 0}
+          emptyMessage="Sin proveedores registrados"
+          onRowClick={(p) => onSelect(p.id)}
+          rowKey={(p) => p.id}
+        />
         <PaginationControls
           page={page}
           totalPages={totalPages}

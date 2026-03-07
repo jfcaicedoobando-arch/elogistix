@@ -1,7 +1,6 @@
 import { useState, useMemo } from "react";
 import SearchInput from "@/components/SearchInput";
 import { Card, CardContent } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -11,18 +10,31 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Skeleton } from "@/components/ui/skeleton";
 import { useFacturas, useGastosPendientes, useMarcarCostoPagado } from "@/hooks/useFacturas";
 import { formatCurrency } from "@/lib/formatters";
 import { formatDate, getEstadoColor } from "@/lib/helpers";
 import { toast } from "sonner";
 import { usePermissions } from "@/hooks/usePermissions";
 import PaginationControls from "@/components/PaginationControls";
+import { DataTable, type DataTableColumn } from "@/components/DataTable";
 import type { Database } from "@/integrations/supabase/types";
 
 type EstadoFactura = Database["public"]["Enums"]["estado_factura"];
 const ESTADOS_FACTURA: EstadoFactura[] = ['Borrador', 'Emitida', 'Pagada', 'Vencida', 'Cancelada'];
 const DEFAULT_PAGE_SIZE = 20;
+
+type Factura = ReturnType<typeof useFacturas>["data"] extends (infer U)[] | undefined ? U : never;
+
+const facturaColumns: DataTableColumn<Factura>[] = [
+  { key: "numero", header: "# Factura", className: "font-medium", render: (f) => f.numero },
+  { key: "expediente", header: "Expediente", render: (f) => f.expediente },
+  { key: "cliente", header: "Cliente", className: "max-w-[180px] truncate", render: (f) => f.cliente_nombre },
+  { key: "monto", header: "Monto", className: "font-medium", render: (f) => formatCurrency(f.total, f.moneda) },
+  { key: "moneda", header: "Moneda", render: (f) => f.moneda },
+  { key: "emision", header: "Emisión", className: "text-xs", render: (f) => formatDate(f.fecha_emision) },
+  { key: "vencimiento", header: "Vencimiento", className: "text-xs", render: (f) => formatDate(f.fecha_vencimiento) },
+  { key: "estado", header: "Estado", render: (f) => <Badge className={getEstadoColor(f.estado)}>{f.estado}</Badge> },
+];
 
 export default function Facturacion() {
   const [search, setSearch] = useState("");
@@ -53,6 +65,25 @@ export default function Facturacion() {
     });
   };
 
+  type GastoPendiente = (typeof gastosPendientes)[number];
+
+  const gastoColumns: DataTableColumn<GastoPendiente>[] = [
+    { key: "proveedor", header: "Proveedor", render: (g) => g.proveedor_nombre },
+    { key: "expediente", header: "Expediente", className: "font-medium", render: (g) => (g.embarques as any)?.expediente || "-" },
+    { key: "concepto", header: "Concepto", render: (g) => g.concepto },
+    { key: "monto", header: "Monto", className: "font-medium", render: (g) => formatCurrency(g.monto, g.moneda) },
+    { key: "moneda", header: "Moneda", render: (g) => g.moneda },
+    { key: "vencimiento", header: "Vencimiento", className: "text-xs", render: (g) => g.fecha_vencimiento ? formatDate(g.fecha_vencimiento) : "-" },
+    { key: "estado", header: "Estado", render: () => <Badge className={getEstadoColor("Pendiente")}>Pendiente</Badge> },
+    {
+      key: "acciones", header: "Acciones", render: (g) => canEdit ? (
+        <Button variant="outline" size="sm" disabled={marcarPagado.isPending} onClick={() => handleMarcarPagado(g.id)}>
+          Marcar Pagado
+        </Button>
+      ) : null,
+    },
+  ];
+
   return (
     <div className="space-y-6">
       <div>
@@ -82,40 +113,13 @@ export default function Facturacion() {
 
           <Card>
             <CardContent className="p-0">
-              {loadingFacturas ? (
-                <div className="p-6 space-y-3">{Array.from({ length: 5 }).map((_, indice) => <Skeleton key={indice} className="h-10 w-full" />)}</div>
-              ) : (
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead># Factura</TableHead>
-                      <TableHead>Expediente</TableHead>
-                      <TableHead>Cliente</TableHead>
-                      <TableHead>Monto</TableHead>
-                      <TableHead>Moneda</TableHead>
-                      <TableHead>Emisión</TableHead>
-                      <TableHead>Vencimiento</TableHead>
-                      <TableHead>Estado</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {filtered.length === 0 ? (
-                      <TableRow><TableCell colSpan={8} className="text-center py-8 text-muted-foreground">No se encontraron facturas</TableCell></TableRow>
-                    ) : paginatedFacturas.map(factura => (
-                      <TableRow key={factura.id}>
-                        <TableCell className="font-medium">{factura.numero}</TableCell>
-                        <TableCell>{factura.expediente}</TableCell>
-                        <TableCell className="max-w-[180px] truncate">{factura.cliente_nombre}</TableCell>
-                        <TableCell className="font-medium">{formatCurrency(factura.total, factura.moneda)}</TableCell>
-                        <TableCell>{factura.moneda}</TableCell>
-                        <TableCell className="text-xs">{formatDate(factura.fecha_emision)}</TableCell>
-                        <TableCell className="text-xs">{formatDate(factura.fecha_vencimiento)}</TableCell>
-                        <TableCell><Badge className={getEstadoColor(factura.estado)}>{factura.estado}</Badge></TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              )}
+              <DataTable
+                columns={facturaColumns}
+                data={paginatedFacturas}
+                isLoading={loadingFacturas}
+                emptyMessage="No se encontraron facturas"
+                rowKey={(f) => f.id}
+              />
               <PaginationControls
                 page={page}
                 totalPages={totalPages}
@@ -130,51 +134,13 @@ export default function Facturacion() {
         <TabsContent value="liquidacion">
           <Card>
             <CardContent className="p-0">
-              {loadingGastos ? (
-                <div className="p-6 space-y-3">{Array.from({ length: 5 }).map((_, indice) => <Skeleton key={indice} className="h-10 w-full" />)}</div>
-              ) : (
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Proveedor</TableHead>
-                      <TableHead>Expediente</TableHead>
-                      <TableHead>Concepto</TableHead>
-                      <TableHead>Monto</TableHead>
-                      <TableHead>Moneda</TableHead>
-                      <TableHead>Vencimiento</TableHead>
-                      <TableHead>Estado</TableHead>
-                      <TableHead>Acciones</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {gastosPendientes.length === 0 ? (
-                      <TableRow><TableCell colSpan={8} className="text-center py-8 text-muted-foreground">No hay gastos pendientes</TableCell></TableRow>
-                    ) : gastosPendientes.map((gasto) => (
-                      <TableRow key={gasto.id}>
-                        <TableCell>{gasto.proveedor_nombre}</TableCell>
-                        <TableCell className="font-medium">{(gasto.embarques as any)?.expediente || '-'}</TableCell>
-                        <TableCell>{gasto.concepto}</TableCell>
-                        <TableCell className="font-medium">{formatCurrency(gasto.monto, gasto.moneda)}</TableCell>
-                        <TableCell>{gasto.moneda}</TableCell>
-                        <TableCell className="text-xs">{gasto.fecha_vencimiento ? formatDate(gasto.fecha_vencimiento) : '-'}</TableCell>
-                        <TableCell><Badge className={getEstadoColor('Pendiente')}>Pendiente</Badge></TableCell>
-                        <TableCell>
-                          {canEdit && (
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              disabled={marcarPagado.isPending}
-                              onClick={() => handleMarcarPagado(gasto.id)}
-                            >
-                              Marcar Pagado
-                            </Button>
-                          )}
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              )}
+              <DataTable
+                columns={gastoColumns}
+                data={gastosPendientes}
+                isLoading={loadingGastos}
+                emptyMessage="No hay gastos pendientes"
+                rowKey={(g) => g.id}
+              />
             </CardContent>
           </Card>
         </TabsContent>

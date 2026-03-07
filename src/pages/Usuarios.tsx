@@ -2,11 +2,11 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, ShieldCheck, UserPlus } from "lucide-react";
+import { ShieldCheck, UserPlus } from "lucide-react";
 import NuevoUsuarioDialog from "@/components/NuevoUsuarioDialog";
+import { DataTable, type DataTableColumn } from "@/components/DataTable";
 
 type AppRole = "admin" | "operador" | "viewer";
 
@@ -23,6 +23,11 @@ const roleBadge: Record<AppRole, string> = {
   viewer: "bg-muted text-muted-foreground",
 };
 
+const formatDateLocal = (dateStr: string) => {
+  if (!dateStr) return "-";
+  return new Date(dateStr).toLocaleDateString("es-MX", { day: "2-digit", month: "short", year: "numeric" });
+};
+
 export default function Usuarios() {
   const [users, setUsers] = useState<UserRow[]>([]);
   const [loading, setLoading] = useState(true);
@@ -32,7 +37,6 @@ export default function Usuarios() {
   const fetchUsers = async () => {
     setLoading(true);
 
-    // Fetch roles
     const { data: rolesData, error: rolesError } = await supabase
       .from("user_roles")
       .select("user_id, role")
@@ -44,7 +48,6 @@ export default function Usuarios() {
       return;
     }
 
-    // Fetch emails from edge function
     let emailMap: Record<string, { email: string; created_at: string }> = {};
     try {
       const { data: usersData, error: fnError } = await supabase.functions.invoke("list-users");
@@ -86,10 +89,23 @@ export default function Usuarios() {
     }
   };
 
-  const formatDateLocal = (dateStr: string) => {
-    if (!dateStr) return "-";
-    return new Date(dateStr).toLocaleDateString("es-MX", { day: "2-digit", month: "short", year: "numeric" });
-  };
+  const columns: DataTableColumn<UserRow>[] = [
+    { key: "email", header: "Email", className: "font-medium", render: (u) => u.email },
+    { key: "created_at", header: "Fecha de registro", className: "text-xs text-muted-foreground", render: (u) => formatDateLocal(u.created_at) },
+    { key: "role", header: "Rol actual", render: (u) => <Badge className={roleBadge[u.role]}>{u.role}</Badge> },
+    {
+      key: "change_role", header: "Cambiar rol", render: (u) => (
+        <Select value={u.role} onValueChange={(val) => handleRoleChange(u.user_id, val as AppRole)}>
+          <SelectTrigger className="w-[140px]"><SelectValue /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="admin">Admin</SelectItem>
+            <SelectItem value="operador">Operador</SelectItem>
+            <SelectItem value="viewer">Viewer</SelectItem>
+          </SelectContent>
+        </Select>
+      ),
+    },
+  ];
 
   return (
     <div className="space-y-6">
@@ -109,57 +125,15 @@ export default function Usuarios() {
 
       <NuevoUsuarioDialog open={dialogOpen} onOpenChange={setDialogOpen} onCreated={fetchUsers} />
 
-      {loading ? (
-        <div className="flex justify-center py-12">
-          <Loader2 className="h-8 w-8 animate-spin text-primary" />
-        </div>
-      ) : (
-        <div className="rounded-md border">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Email</TableHead>
-                <TableHead>Fecha de registro</TableHead>
-                <TableHead>Rol actual</TableHead>
-                <TableHead>Cambiar rol</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {users.map((usuario) => (
-                <TableRow key={usuario.user_id}>
-                  <TableCell className="font-medium">{usuario.email}</TableCell>
-                  <TableCell className="text-xs text-muted-foreground">{formatDateLocal(usuario.created_at)}</TableCell>
-                  <TableCell>
-                    <Badge className={roleBadge[usuario.role]}>{usuario.role}</Badge>
-                  </TableCell>
-                  <TableCell>
-                    <Select
-                      value={usuario.role}
-                      onValueChange={(val) => handleRoleChange(usuario.user_id, val as AppRole)}
-                    >
-                      <SelectTrigger className="w-[140px]">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="admin">Admin</SelectItem>
-                        <SelectItem value="operador">Operador</SelectItem>
-                        <SelectItem value="viewer">Viewer</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </TableCell>
-                </TableRow>
-              ))}
-              {users.length === 0 && (
-                <TableRow>
-                  <TableCell colSpan={4} className="text-center text-muted-foreground py-8">
-                    No hay usuarios registrados.
-                  </TableCell>
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
-        </div>
-      )}
+      <div className="rounded-md border">
+        <DataTable
+          columns={columns}
+          data={users}
+          isLoading={loading}
+          emptyMessage="No hay usuarios registrados."
+          rowKey={(u) => u.user_id}
+        />
+      </div>
     </div>
   );
 }
