@@ -30,6 +30,7 @@ export default function Embarques() {
   const [filterEstado, setFilterEstado] = useState<string>("todos");
   const [filterCliente, setFilterCliente] = useState<string>("todos");
   const [page, setPage] = useState(0);
+  const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
   const { canEdit } = usePermissions();
 
   const filtered = useMemo(() => {
