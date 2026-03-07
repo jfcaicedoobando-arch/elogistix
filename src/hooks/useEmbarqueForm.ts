@@ -1,4 +1,5 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useEffect, useCallback } from 'react';
+import { useForm, type UseFormReturn } from 'react-hook-form';
 import { toast } from '@/hooks/use-toast';
 import { uploadFile } from '@/lib/storage';
 import { useExchangeRates } from '@/hooks/useExchangeRates';
@@ -6,8 +7,9 @@ import { resolverContacto } from '@/lib/helpers';
 import { getDocsForMode } from '@/data/embarqueConstants';
 import type { DocumentoChecklist } from '@/components/DocumentChecklist';
 import type { ConceptoVentaLocal, ConceptoCostoLocal } from '@/data/conceptoTypes';
+import { useState } from 'react';
 
-export interface EmbarqueFormState {
+export interface EmbarqueFormValues {
   modo: string;
   tipo: string;
   clienteId: string;
@@ -47,7 +49,10 @@ export interface EmbarqueFormState {
   tipoCambioEUR: string;
 }
 
-const INITIAL_STATE: EmbarqueFormState = {
+/** Keep backward compat alias */
+export type EmbarqueFormState = EmbarqueFormValues;
+
+const DEFAULT_VALUES: EmbarqueFormValues = {
   modo: '', tipo: '', clienteId: '', shipper: '', shipperManual: '',
   consignatario: '', consignatarioManual: '', incoterm: 'FOB', descripcionMercancia: '',
   pesoKg: '', volumenM3: '', piezas: '', tipoCarga: 'Carga General',
@@ -59,40 +64,39 @@ const INITIAL_STATE: EmbarqueFormState = {
   etd: '', eta: '', tipoCambioUSD: '17.25', tipoCambioEUR: '18.50',
 };
 
-type Setter<K extends keyof EmbarqueFormState> = (value: EmbarqueFormState[K]) => void;
+export type EmbarqueFormMethods = UseFormReturn<EmbarqueFormValues>;
 
 export function useEmbarqueForm() {
-  const [form, setForm] = useState<EmbarqueFormState>({ ...INITIAL_STATE });
+  const methods = useForm<EmbarqueFormValues>({
+    defaultValues: DEFAULT_VALUES,
+    mode: 'onBlur',
+  });
+
   const [documentosArchivos, setDocumentosArchivos] = useState<Record<string, File>>({});
   const { data: tiposDeCambio } = useExchangeRates();
 
   useEffect(() => {
     if (tiposDeCambio) {
-      setForm(prev => ({
-        ...prev,
-        tipoCambioUSD: String(tiposDeCambio.usdMxn),
-        tipoCambioEUR: String(tiposDeCambio.eurMxn),
-      }));
+      methods.setValue('tipoCambioUSD', String(tiposDeCambio.usdMxn));
+      methods.setValue('tipoCambioEUR', String(tiposDeCambio.eurMxn));
     }
-  }, [tiposDeCambio]);
-
-  const setField = <K extends keyof EmbarqueFormState>(key: K): Setter<K> =>
-    (value) => setForm(prev => ({ ...prev, [key]: value }));
+  }, [tiposDeCambio, methods]);
 
   const handleMsdsUpload = async (archivo: File) => {
-    setForm(prev => ({ ...prev, subiendoMsds: true }));
+    methods.setValue('subiendoMsds', true);
     try {
       const ruta = `embarques/msds/${Date.now()}_${archivo.name}`;
       await uploadFile(ruta, archivo);
-      setForm(prev => ({ ...prev, msdsArchivo: ruta, subiendoMsds: false }));
+      methods.setValue('msdsArchivo', ruta);
+      methods.setValue('subiendoMsds', false);
     } catch {
       toast({ title: "Error al subir MSDS", variant: "destructive" });
-      setForm(prev => ({ ...prev, subiendoMsds: false }));
+      methods.setValue('subiendoMsds', false);
     }
   };
 
   const inicializarDesdeEmbarque = (embarque: any) => {
-    setForm({
+    methods.reset({
       modo: embarque.modo,
       tipo: embarque.tipo,
       clienteId: embarque.cliente_id,
@@ -137,44 +141,47 @@ export function useEmbarqueForm() {
     contactos: any[],
     clienteNombre: string,
     operador: string,
-  ) => ({
-    cliente_id: form.clienteId || null,
-    cliente_nombre: clienteNombre,
-    modo: form.modo as any,
-    tipo: form.tipo as any,
-    shipper: resolverContacto(contactos, form.shipper, form.shipperManual),
-    consignatario: form.consignatario === '__cliente__' ? clienteNombre : resolverContacto(contactos, form.consignatario, form.consignatarioManual),
-    incoterm: form.incoterm as any,
-    descripcion_mercancia: form.descripcionMercancia,
-    peso_kg: Number(form.pesoKg),
-    volumen_m3: Number(form.volumenM3),
-    piezas: Number(form.piezas),
-    puerto_origen: form.puertoOrigen || null,
-    puerto_destino: form.puertoDestino || null,
-    naviera: form.naviera || null,
-    agente: form.agente || null,
-    bl_master: form.blMaster || null,
-    bl_house: form.blHouse || null,
-    tipo_servicio: (form.tipoServicio as any) || null,
-    contenedor: form.contenedor || null,
-    tipo_contenedor: form.tipoContenedor || null,
-    aeropuerto_origen: form.aeropuertoOrigen || null,
-    aeropuerto_destino: form.aeropuertoDestino || null,
-    aerolinea: form.aerolinea || null,
-    mawb: form.mawb || null,
-    hawb: form.hawb || null,
-    ciudad_origen: form.ciudadOrigen || null,
-    ciudad_destino: form.ciudadDestino || null,
-    transportista: form.transportista || null,
-    carta_porte: form.cartaPorte || null,
-    etd: form.etd || null,
-    eta: form.eta || null,
-    tipo_cambio_usd: Number(form.tipoCambioUSD),
-    tipo_cambio_eur: Number(form.tipoCambioEUR),
-    tipo_carga: form.tipoCarga,
-    msds_archivo: form.msdsArchivo,
-    operador,
-  });
+  ) => {
+    const v = methods.getValues();
+    return {
+      cliente_id: v.clienteId || null,
+      cliente_nombre: clienteNombre,
+      modo: v.modo as any,
+      tipo: v.tipo as any,
+      shipper: resolverContacto(contactos, v.shipper, v.shipperManual),
+      consignatario: v.consignatario === '__cliente__' ? clienteNombre : resolverContacto(contactos, v.consignatario, v.consignatarioManual),
+      incoterm: v.incoterm as any,
+      descripcion_mercancia: v.descripcionMercancia,
+      peso_kg: Number(v.pesoKg),
+      volumen_m3: Number(v.volumenM3),
+      piezas: Number(v.piezas),
+      puerto_origen: v.puertoOrigen || null,
+      puerto_destino: v.puertoDestino || null,
+      naviera: v.naviera || null,
+      agente: v.agente || null,
+      bl_master: v.blMaster || null,
+      bl_house: v.blHouse || null,
+      tipo_servicio: (v.tipoServicio as any) || null,
+      contenedor: v.contenedor || null,
+      tipo_contenedor: v.tipoContenedor || null,
+      aeropuerto_origen: v.aeropuertoOrigen || null,
+      aeropuerto_destino: v.aeropuertoDestino || null,
+      aerolinea: v.aerolinea || null,
+      mawb: v.mawb || null,
+      hawb: v.hawb || null,
+      ciudad_origen: v.ciudadOrigen || null,
+      ciudad_destino: v.ciudadDestino || null,
+      transportista: v.transportista || null,
+      carta_porte: v.cartaPorte || null,
+      etd: v.etd || null,
+      eta: v.eta || null,
+      tipo_cambio_usd: Number(v.tipoCambioUSD),
+      tipo_cambio_eur: Number(v.tipoCambioEUR),
+      tipo_carga: v.tipoCarga,
+      msds_archivo: v.msdsArchivo,
+      operador,
+    };
+  };
 
   const buildConceptosVentaPayload = (conceptosVenta: ConceptoVentaLocal[]) =>
     conceptosVenta
@@ -222,8 +229,7 @@ export function useEmbarqueForm() {
   }, [documentosArchivos]);
 
   return {
-    form,
-    setField,
+    methods,
     handleMsdsUpload,
     inicializarDesdeEmbarque,
     buildEmbarquePayload,
