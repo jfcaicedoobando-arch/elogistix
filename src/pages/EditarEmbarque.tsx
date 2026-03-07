@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, ChevronLeft, ChevronRight, Save } from "lucide-react";
 import { FormProvider } from "react-hook-form";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -114,10 +114,17 @@ export default function EditarEmbarque() {
 
   if (isLoading || cargandoVenta || cargandoCosto) {
     return (
-      <div className="space-y-6 max-w-4xl mx-auto">
-        <Skeleton className="h-10 w-64" />
-        <Skeleton className="h-20 w-full" />
-        <Skeleton className="h-64 w-full" />
+      <div className="flex flex-col h-[calc(100vh-4rem)] -m-6">
+        <div className="flex-none border-b bg-background p-4 space-y-3">
+          <Skeleton className="h-8 w-64" />
+          <Skeleton className="h-8 w-full" />
+        </div>
+        <div className="flex-1 overflow-y-auto p-4">
+          <div className="max-w-4xl mx-auto space-y-4">
+            <Skeleton className="h-20 w-full" />
+            <Skeleton className="h-64 w-full" />
+          </div>
+        </div>
       </div>
     );
   }
@@ -133,57 +140,67 @@ export default function EditarEmbarque() {
 
   return (
     <FormProvider {...methods}>
-      <div className="space-y-6 max-w-4xl mx-auto">
-        <div className="flex items-center gap-4">
-          <Button variant="ghost" size="icon" onClick={() => navigate(`/embarques/${id}`)}>
-            <ArrowLeft className="h-5 w-5" />
-          </Button>
-          <div>
-            <h1 className="text-2xl font-bold">Editar Embarque</h1>
-            <p className="text-sm text-muted-foreground">{embarque.expediente}</p>
+      <div className="flex flex-col h-[calc(100vh-4rem)] -m-6">
+        {/* Header fijo */}
+        <div className="flex-none border-b bg-background p-4 space-y-3">
+          <div className="flex items-center gap-3">
+            <Button variant="ghost" size="icon" onClick={() => navigate(`/embarques/${id}`)}>
+              <ArrowLeft className="h-4 w-4" />
+            </Button>
+            <div>
+              <h1 className="text-2xl font-bold">Editar Embarque</h1>
+              <p className="text-sm text-muted-foreground">{embarque.expediente}</p>
+            </div>
+          </div>
+          <StepIndicator steps={steps} currentStep={currentStep} />
+        </div>
+
+        {/* Contenido scrolleable */}
+        <div className="flex-1 overflow-y-auto p-4">
+          <div className="max-w-4xl mx-auto space-y-6">
+            {currentStep === 1 && (
+              <StepDatosGenerales
+                clientes={clientes}
+                clienteNombre={selectedCliente?.nombre || ''}
+                contactos={contactos}
+                onMsdsUpload={handleMsdsUpload}
+              />
+            )}
+
+            {currentStep === 2 && <StepDatosRuta />}
+
+            {currentStep === 3 && (
+              <StepCostosPrecios
+                conceptosVenta={conceptosVenta}
+                conceptosCosto={conceptosCosto}
+                proveedoresDb={proveedoresDb}
+                subtotalVenta={subtotalVenta}
+                totalCosto={totalCosto}
+                utilidadEstimada={utilidadEstimada}
+                updateConceptoVenta={updateConceptoVenta}
+                addConceptoVenta={addConceptoVenta}
+                removeConceptoVenta={removeConceptoVenta}
+                updateConceptoCosto={updateConceptoCosto}
+                addConceptoCosto={addConceptoCosto}
+                removeConceptoCosto={removeConceptoCosto}
+              />
+            )}
           </div>
         </div>
 
-        <StepIndicator steps={steps} currentStep={currentStep} />
-
-        {currentStep === 1 && (
-          <StepDatosGenerales
-            clientes={clientes}
-            clienteNombre={selectedCliente?.nombre || ''}
-            contactos={contactos}
-            onMsdsUpload={handleMsdsUpload}
-          />
-        )}
-
-        {currentStep === 2 && <StepDatosRuta />}
-
-        {currentStep === 3 && (
-          <StepCostosPrecios
-            conceptosVenta={conceptosVenta}
-            conceptosCosto={conceptosCosto}
-            proveedoresDb={proveedoresDb}
-            subtotalVenta={subtotalVenta}
-            totalCosto={totalCosto}
-            utilidadEstimada={utilidadEstimada}
-            updateConceptoVenta={updateConceptoVenta}
-            addConceptoVenta={addConceptoVenta}
-            removeConceptoVenta={removeConceptoVenta}
-            updateConceptoCosto={updateConceptoCosto}
-            addConceptoCosto={addConceptoCosto}
-            removeConceptoCosto={removeConceptoCosto}
-          />
-        )}
-
-        <div className="flex justify-between">
-          <Button variant="outline" onClick={() => currentStep > 1 ? setCurrentStep(p => p - 1) : navigate(`/embarques/${id}`)}>
-            {currentStep === 1 ? 'Cancelar' : 'Anterior'}
-          </Button>
-          <Button
-            disabled={updateEmbarque.isPending}
-            onClick={() => currentStep < TOTAL_STEPS ? setCurrentStep(p => p + 1) : handleSave()}
-          >
-            {updateEmbarque.isPending ? 'Guardando...' : currentStep === TOTAL_STEPS ? 'Guardar Cambios' : 'Siguiente'}
-          </Button>
+        {/* Footer fijo */}
+        <div className="flex-none border-t bg-background p-4">
+          <div className="max-w-4xl mx-auto flex justify-between">
+            <Button variant="outline" onClick={() => currentStep > 1 ? setCurrentStep(p => p - 1) : navigate(`/embarques/${id}`)}>
+              {currentStep === 1 ? 'Cancelar' : <><ChevronLeft className="h-4 w-4 mr-1" /> Anterior</>}
+            </Button>
+            <Button
+              disabled={updateEmbarque.isPending}
+              onClick={() => currentStep < TOTAL_STEPS ? setCurrentStep(p => p + 1) : handleSave()}
+            >
+              {updateEmbarque.isPending ? 'Guardando...' : currentStep === TOTAL_STEPS ? <><Save className="h-4 w-4 mr-1" /> Guardar Cambios</> : <>Siguiente <ChevronRight className="h-4 w-4 ml-1" /></>}
+            </Button>
+          </div>
         </div>
       </div>
     </FormProvider>
