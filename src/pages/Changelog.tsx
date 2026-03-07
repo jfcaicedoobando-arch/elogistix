@@ -13,6 +13,14 @@ interface ChangelogEntry {
 
 const changelog: ChangelogEntry[] = [
   {
+    version: "4.30.5",
+    date: "2026-03-07",
+    type: "patch",
+    title: "Page break en PDF de cotización",
+    description:
+      "Se agregó un salto de página en el PDF generado de cotización para separar los datos generales y mercancía (página 1) de los conceptos de venta, resumen y notas (página 2).",
+  },
+  {
     version: "4.30.4",
     date: "2026-03-07",
     type: "patch",

@@ -163,6 +163,7 @@ export function generarPdfCotizacion(cotizacion: CotizacionRow) {
   .resumen p { font-size: 14px; font-weight: 700; color: #0f4c81; margin: 4px 0; }
   .resumen .nota { font-size: 11px; color: #777; font-weight: 400; }
   .footer { margin-top: 32px; border-top: 1px solid #ddd; padding-top: 10px; font-size: 11px; color: #999; text-align: center; }
+  .page-break { page-break-before: always; }
   @media print { body { padding: 16px; } }
 </style></head><body>
   <div class="header">
@@ -197,6 +198,8 @@ export function generarPdfCotizacion(cotizacion: CotizacionRow) {
     ${cotizacion.descripcion_adicional ? `<p style="margin-top:8px"><span class="label">Descripción Adicional:</span> ${cotizacion.descripcion_adicional}</p>` : ''}
     ${dimensionesHtml}
   </section>
+
+  <div class="page-break"></div>
 
   <section>
     <h3>Conceptos de Venta</h3>
