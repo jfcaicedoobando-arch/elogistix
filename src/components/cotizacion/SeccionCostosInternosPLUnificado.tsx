@@ -147,8 +147,8 @@ function ModoLocal({ filas, setFilas }: PropsLocal) {
             {rows.map((fila, idx) => {
               const costoTotal = fila.cantidad * fila.costo_unitario;
               const ventaTotal = fila.cantidad * fila.precio_venta;
-              const profit = ventaTotal - costoTotal;
-              const pct = ventaTotal !== 0 ? (profit / ventaTotal) * 100 : 0;
+              const profit = calcularUtilidad(ventaTotal, costoTotal);
+              const pct = calcularMargen(ventaTotal, costoTotal);
               const gi = getGlobalIndex(filas, moneda, idx);
               const conceptOptions = [...catalogo];
               if (fila.concepto && !conceptOptions.includes(fila.concepto)) {
