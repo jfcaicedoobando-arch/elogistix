@@ -13,6 +13,14 @@ interface ChangelogEntry {
 
 const changelog: ChangelogEntry[] = [
   {
+    version: "4.18.0",
+    date: "2026-03-07",
+    type: "minor",
+    title: "Unificación de TablaConceptos y SeccionCostosInternosPL",
+    description:
+      "TablaConceptosUSD y TablaConceptosMXN consolidados en TablaConceptosGenerico con prop moneda. SeccionCostosInternosPL y SeccionCostosInternosPLLocal unificados en SeccionCostosInternosPLUnificado con prop tipo ('detalle'|'local'). Extraído ResumenPL como componente compartido. Eliminados 4 archivos redundantes.",
+  },
+  {
     version: "4.17.0",
     date: "2026-03-07",
     type: "minor",
