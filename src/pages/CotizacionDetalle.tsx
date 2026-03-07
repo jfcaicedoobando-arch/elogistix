@@ -1,7 +1,6 @@
 import { useState, useMemo } from "react";
-import SeccionCostosInternosPL from "@/components/cotizacion/SeccionCostosInternosPL";
-import TablaConceptosUSD from "@/components/cotizacion/TablaConceptosUSD";
-import TablaConceptosMXN from "@/components/cotizacion/TablaConceptosMXN";
+import SeccionCostosInternosPLUnificado from "@/components/cotizacion/SeccionCostosInternosPLUnificado";
+import TablaConceptosGenerico from "@/components/cotizacion/TablaConceptosGenerico";
 import ResumenTotalesCotizacion from "@/components/cotizacion/ResumenTotalesCotizacion";
 import DialogConvertirProspecto from "@/components/cotizacion/DialogConvertirProspecto";
 import SeccionMercanciaCotizacionDetalle from "@/components/cotizacion/SeccionMercanciaCotizacionDetalle";
