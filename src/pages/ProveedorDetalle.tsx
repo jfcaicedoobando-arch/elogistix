@@ -21,7 +21,7 @@ export default function ProveedorDetalle() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { data: proveedor, isLoading } = useProveedor(id);
-  const { updateProveedor } = useProveedores();
+  const { updateProveedor } = useProveedorMutations();
   const [editOpen, setEditOpen] = useState(false);
   const { canEdit } = usePermissions();
 
