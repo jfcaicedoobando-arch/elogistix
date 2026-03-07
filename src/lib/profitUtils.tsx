@@ -1,4 +1,5 @@
 import { Badge } from "@/components/ui/badge";
+import { calcularUtilidad, calcularMargen } from "@/lib/financialUtils";
 
 /** Muestra un badge de porcentaje de profit coloreado según el nivel */
 export function ProfitBadge({ porcentaje }: { porcentaje: number }) {
@@ -8,12 +9,20 @@ export function ProfitBadge({ porcentaje }: { porcentaje: number }) {
   return <Badge variant="secondary">0%</Badge>;
 }
 
+/** Resultado de cálculo de totales P&L */
+export interface TotalesPL {
+  totalCosto: number;
+  totalVenta: number;
+  profit: number;
+  porcentaje: number;
+}
+
 /** Calcula totales de P&L para un conjunto de filas con cantidad, costo_unitario y precio_venta */
-export function calcularTotalesPL(filas: { cantidad: number; costo_unitario: number; precio_venta: number }[]) {
+export function calcularTotalesPL(filas: { cantidad: number; costo_unitario: number; precio_venta: number }[]): TotalesPL {
   const totalCosto = filas.reduce((s, f) => s + f.cantidad * f.costo_unitario, 0);
   const totalVenta = filas.reduce((s, f) => s + f.cantidad * f.precio_venta, 0);
-  const profit = totalVenta - totalCosto;
-  const porcentaje = totalVenta !== 0 ? (profit / totalVenta) * 100 : 0;
+  const profit = calcularUtilidad(totalVenta, totalCosto);
+  const porcentaje = calcularMargen(totalVenta, totalCosto);
   return { totalCosto, totalVenta, profit, porcentaje };
 }
 

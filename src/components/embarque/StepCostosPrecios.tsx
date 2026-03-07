@@ -45,15 +45,17 @@ export function StepCostosPrecios(props: Props) {
   const tcUSD = parseFloat(tipoCambioUSD) || 1;
   const tcEUR = parseFloat(tipoCambioEUR) || 1;
 
-  const toUSD = (monto: number, moneda: string) => {
-    if (moneda === 'USD') return monto;
-    if (moneda === 'MXN') return monto / tcUSD;
-    if (moneda === 'EUR') return (monto * tcEUR) / tcUSD;
-    return monto;
-  };
+  const toUSD = (monto: number, moneda: string) =>
+    convertirAUSD(monto, moneda as Moneda, tcUSD, tcEUR);
 
-  const totalCostoUSD = conceptosCosto.reduce((acc, c) => acc + toUSD(c.monto, c.moneda), 0);
-  const totalVentaUSD = conceptosVenta.reduce((acc, v) => acc + toUSD(v.precioUnitario, v.moneda), 0);
+  const totalCostoUSD = useMemo(
+    () => conceptosCosto.reduce((acc, c) => acc + toUSD(c.monto, c.moneda), 0),
+    [conceptosCosto, tcUSD, tcEUR]
+  );
+  const totalVentaUSD = useMemo(
+    () => conceptosVenta.reduce((acc, v) => acc + toUSD(v.precioUnitario, v.moneda), 0),
+    [conceptosVenta, tcUSD, tcEUR]
+  );
 
   return (
     <div className="space-y-6">

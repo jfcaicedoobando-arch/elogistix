@@ -13,6 +13,14 @@ interface ChangelogEntry {
 
 const changelog: ChangelogEntry[] = [
   {
+    version: "4.19.0",
+    date: "2026-03-07",
+    type: "minor",
+    title: "Centralización de cálculos financieros",
+    description:
+      "Tipo estricto Moneda y función convertirAUSD agregados a financialUtils.ts. Interface TotalesPL y return type explícito en profitUtils.tsx. Inline math de márgenes y utilidad reemplazado en useDashboardData, StepCostosPrecios y SeccionCostosInternosPLUnificado con funciones centralizadas. Totales en StepCostosPrecios envueltos en useMemo.",
+  },
+  {
     version: "4.18.0",
     date: "2026-03-07",
     type: "minor",

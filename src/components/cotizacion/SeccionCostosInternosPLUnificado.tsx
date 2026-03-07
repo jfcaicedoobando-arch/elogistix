@@ -363,8 +363,8 @@ function ModoDetalle({ cotizacionId, conceptosUSD, conceptosMXN }: PropsDetalle)
               <TableBody>
                 {rows.map((fila, idx) => {
                   const costo = fila.cantidad * fila.costo_unitario;
-                  const profit = fila.venta - costo;
-                  const pct = fila.venta !== 0 ? (profit / fila.venta) * 100 : 0;
+                  const profit = calcularUtilidad(fila.venta, costo);
+                  const pct = calcularMargen(fila.venta, costo);
                   const globalIdx = getGlobalIndex(filas, moneda, idx);
 
                   return (
