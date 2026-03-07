@@ -9,13 +9,17 @@ import {
 } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useProveedores } from "@/hooks/useProveedores";
+import { useProveedoresPaginados, useProveedorMutations } from "@/hooks/useProveedores";
+import type { ProveedorListItem } from "@/hooks/useProveedores";
 import NuevoProveedorDialog from "@/components/NuevoProveedorDialog";
+import PaginationControls from "@/components/PaginationControls";
 import { toast } from "sonner";
 import { usePermissions } from "@/hooks/usePermissions";
 import { useRegistrarActividad } from "@/hooks/useBitacora";
+import { useDebounce } from "@/hooks/useDebounce";
 import type { TipoProveedor, Proveedor } from "@/data/types";
-import type { ProveedorListItem } from "@/hooks/useProveedores";
+
+const DEFAULT_PAGE_SIZE = 20;
 
 const TABS: { label: string; tipo: TipoProveedor }[] = [
   { label: 'Navieras', tipo: 'Naviera' },
@@ -30,10 +34,30 @@ const TABS: { label: string; tipo: TipoProveedor }[] = [
   { label: 'Mat. Peligrosos', tipo: 'Materiales Peligrosos' },
 ];
 
-function ProveedorTable({ tipo, search, onSelect, proveedores, isLoading }: { tipo: TipoProveedor; search: string; onSelect: (id: string) => void; proveedores: ProveedorListItem[]; isLoading: boolean }) {
-  const filtered = proveedores.filter(proveedor => proveedor.tipo === tipo && (!search || proveedor.nombre.toLowerCase().includes(search.toLowerCase())));
+function ProveedorTable({ tipo, search, onSelect }: { tipo: TipoProveedor; search: string; onSelect: (id: string) => void }) {
+  const [page, setPage] = useState(0);
+  const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
+  const debouncedSearch = useDebounce(search, 300);
 
-  if (isLoading) {
+  const { data: resultado, isLoading } = useProveedoresPaginados({
+    tipo,
+    search: debouncedSearch,
+    page,
+    pageSize,
+  });
+
+  const proveedores = resultado?.data ?? [];
+  const totalCount = resultado?.count ?? 0;
+  const totalPages = Math.ceil(totalCount / pageSize);
+
+  // Reset page when search changes
+  const prevSearchRef = useState(debouncedSearch);
+  if (prevSearchRef[0] !== debouncedSearch) {
+    prevSearchRef[1](debouncedSearch);
+    if (page !== 0) setPage(0);
+  }
+
+  if (isLoading && proveedores.length === 0) {
     return <Card><CardContent className="p-6 space-y-3">{[1,2,3].map(indice => <Skeleton key={indice} className="h-10 w-full" />)}</CardContent></Card>;
   }
 
@@ -50,7 +74,7 @@ function ProveedorTable({ tipo, search, onSelect, proveedores, isLoading }: { ti
             </TableRow>
           </TableHeader>
           <TableBody>
-            {filtered.length > 0 ? filtered.map(proveedor => (
+            {proveedores.length > 0 ? proveedores.map(proveedor => (
               <TableRow key={proveedor.id} className="cursor-pointer" onClick={() => onSelect(proveedor.id)}>
                 <TableCell className="font-medium">{proveedor.nombre}</TableCell>
                 <TableCell className="text-xs font-mono">{proveedor.rfc}</TableCell>
@@ -64,6 +88,13 @@ function ProveedorTable({ tipo, search, onSelect, proveedores, isLoading }: { ti
             )}
           </TableBody>
         </Table>
+        <PaginationControls
+          page={page}
+          totalPages={totalPages}
+          onPageChange={setPage}
+          pageSize={pageSize}
+          onPageSizeChange={(s) => { setPageSize(s); setPage(0); }}
+        />
       </CardContent>
     </Card>
   );
@@ -73,7 +104,7 @@ export default function Proveedores() {
   const [search, setSearch] = useState("");
   const [nuevoOpen, setNuevoOpen] = useState(false);
   const navigate = useNavigate();
-  const { proveedores, addProveedor, isLoading } = useProveedores();
+  const { addProveedor } = useProveedorMutations();
   const { canEdit } = usePermissions();
   const registrarActividad = useRegistrarActividad();
 
@@ -123,7 +154,7 @@ export default function Proveedores() {
         </TabsList>
         {TABS.map(tabConfig => (
           <TabsContent key={tabConfig.tipo} value={tabConfig.tipo}>
-            <ProveedorTable tipo={tabConfig.tipo} search={search} onSelect={(id) => navigate(`/proveedores/${id}`)} proveedores={proveedores} isLoading={isLoading} />
+            <ProveedorTable tipo={tabConfig.tipo} search={search} onSelect={(id) => navigate(`/proveedores/${id}`)} />
           </TabsContent>
         ))}
       </Tabs>

@@ -13,6 +13,14 @@ interface ChangelogEntry {
 
 const changelog: ChangelogEntry[] = [
   {
+    version: "4.29.0",
+    date: "2026-03-07",
+    type: "minor",
+    title: "Paginación server-side para Clientes y Proveedores",
+    description:
+      "Clientes y Proveedores ahora usan paginación real desde el servidor con .range() y count exact, búsqueda server-side con debounce de 300ms, y filtro por tipo de proveedor en servidor.",
+  },
+  {
     version: "4.28.2",
     date: "2026-03-07",
     type: "patch",

@@ -9,6 +9,43 @@ export type ContactoCliente = Tables<'contactos_cliente'>;
 /** Columnas necesarias para la tabla de clientes y reportes */
 const CLIENTE_LIST_COLUMNS = 'id, nombre, rfc, ciudad, estado, contacto, telefono' as const;
 
+// --- Hook paginado server-side para la vista de lista ---
+
+interface UseClientesPaginadosParams {
+  search: string;
+  page: number;
+  pageSize: number;
+}
+
+export function useClientesPaginados({ search, page, pageSize }: UseClientesPaginadosParams) {
+  const filters = { search, page, pageSize };
+
+  return useQuery({
+    queryKey: queryKeys.clientes.list(filters),
+    queryFn: async () => {
+      let query = supabase
+        .from('clientes')
+        .select(CLIENTE_LIST_COLUMNS, { count: 'exact' })
+        .order('nombre');
+
+      if (search) {
+        query = query.or(`nombre.ilike.%${search}%,rfc.ilike.%${search}%`);
+      }
+
+      const from = page * pageSize;
+      const to = from + pageSize - 1;
+      query = query.range(from, to);
+
+      const { data, error, count } = await query;
+      if (error) throw error;
+      return { data: data ?? [], count: count ?? 0 };
+    },
+    placeholderData: (prev) => prev,
+  });
+}
+
+// --- Hook original (todos los registros) para Reportes ---
+
 export function useClientes() {
   return useQuery({
     queryKey: queryKeys.clientes.all,
@@ -22,6 +59,8 @@ export function useClientes() {
     },
   });
 }
+
+// --- Hooks de detalle, contactos, CRUD (sin cambios) ---
 
 export function useCliente(id: string | undefined) {
   return useQuery({

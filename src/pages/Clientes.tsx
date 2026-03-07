@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Users, Plus, ArrowLeft, ArrowRight, Loader2 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
@@ -12,12 +12,13 @@ import {
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
-import { useClientes, useCreateCliente } from "@/hooks/useClientes";
+import { useClientesPaginados, useCreateCliente } from "@/hooks/useClientes";
 import { useToast } from "@/hooks/use-toast";
 import { usePermissions } from "@/hooks/usePermissions";
 import { useRegistrarActividad } from "@/hooks/useBitacora";
 import DocumentChecklist, { type DocumentoChecklist } from "@/components/DocumentChecklist";
 import PaginationControls from "@/components/PaginationControls";
+import { useDebounce } from "@/hooks/useDebounce";
 
 const DEFAULT_PAGE_SIZE = 20;
 
@@ -34,7 +35,6 @@ const DOCS_OBLIGATORIOS = [
 export default function Clientes() {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { data: clientesList = [], isLoading } = useClientes();
   const createCliente = useCreateCliente();
   const { canEdit } = usePermissions();
   const registrarActividad = useRegistrarActividad();
@@ -47,12 +47,17 @@ export default function Clientes() {
   const [page, setPage] = useState(0);
   const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
 
-  const filtered = useMemo(() => clientesList.filter(cliente =>
-    !search || cliente.nombre.toLowerCase().includes(search.toLowerCase()) || cliente.rfc.toLowerCase().includes(search.toLowerCase())
-  ), [clientesList, search]);
+  const debouncedSearch = useDebounce(search, 300);
 
-  const paginated = filtered.slice(page * pageSize, (page + 1) * pageSize);
-  const totalPages = Math.ceil(filtered.length / pageSize);
+  const { data: resultado, isLoading } = useClientesPaginados({
+    search: debouncedSearch,
+    page,
+    pageSize,
+  });
+
+  const clientes = resultado?.data ?? [];
+  const totalCount = resultado?.count ?? 0;
+  const totalPages = Math.ceil(totalCount / pageSize);
 
   const handleChange = (field: string, value: string) => setForm(prev => ({ ...prev, [field]: value }));
   const isStep1Valid = () => form.nombre.trim() && form.rfc.trim() && form.cp.trim();
@@ -101,7 +106,7 @@ export default function Clientes() {
             <Users className="h-6 w-6 text-accent" />
             <h1 className="text-2xl font-bold">Clientes</h1>
           </div>
-          <p className="text-sm text-muted-foreground mt-1">{filtered.length} clientes registrados</p>
+          <p className="text-sm text-muted-foreground mt-1">{totalCount} clientes registrados</p>
         </div>
         {canEdit && <Button onClick={() => setDialogOpen(true)}><Plus className="h-4 w-4 mr-1" />Nuevo Cliente</Button>}
       </div>
@@ -118,7 +123,7 @@ export default function Clientes() {
             <div className="flex items-center justify-center py-12">
               <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
             </div>
-          ) : filtered.length === 0 ? (
+          ) : clientes.length === 0 ? (
             <div className="py-12 text-center text-sm text-muted-foreground">
               {search ? "No se encontraron clientes" : "No hay clientes registrados"}
             </div>
@@ -134,7 +139,7 @@ export default function Clientes() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {paginated.map(cliente => (
+                {clientes.map(cliente => (
                   <TableRow key={cliente.id} className="cursor-pointer" onClick={() => navigate(`/clientes/${cliente.id}`)}>
                     <TableCell className="font-medium max-w-[200px] truncate">{cliente.nombre}</TableCell>
                     <TableCell className="text-xs font-mono">{cliente.rfc}</TableCell>
