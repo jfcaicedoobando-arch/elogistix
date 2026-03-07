@@ -25,7 +25,7 @@ import SearchInput from "@/components/SearchInput";
 import PaginationControls from "@/components/PaginationControls";
 
 const ESTADOS = ['Borrador', 'Enviada', 'Aceptada', 'Rechazada', 'Vencida'];
-const PAGE_SIZE = 10;
+const DEFAULT_PAGE_SIZE = 20;
 
 export default function Cotizaciones() {
   const navigate = useNavigate();
@@ -35,6 +35,7 @@ export default function Cotizaciones() {
   const [filterEstado, setFilterEstado] = useState<string>("todos");
   const [filterCliente, setFilterCliente] = useState<string>("todos");
   const [page, setPage] = useState(0);
+  const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
   const { canEdit, isAdmin } = usePermissions();
   const deleteCotizacion = useDeleteCotizacion();
   const { toast } = useToast();
@@ -52,8 +53,8 @@ export default function Cotizaciones() {
     });
   }, [cotizaciones, search, filterEstado, filterCliente]);
 
-  const paginated = filtered.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
-  const totalPages = Math.ceil(filtered.length / PAGE_SIZE);
+  const paginated = filtered.slice(page * pageSize, (page + 1) * pageSize);
+  const totalPages = Math.ceil(filtered.length / pageSize);
 
   if (isLoading) {
     return (
@@ -157,7 +158,13 @@ export default function Cotizaciones() {
               ))}
             </TableBody>
           </Table>
-          <PaginationControls page={page} totalPages={totalPages} onPageChange={setPage} />
+          <PaginationControls
+            page={page}
+            totalPages={totalPages}
+            onPageChange={setPage}
+            pageSize={pageSize}
+            onPageSizeChange={(s) => { setPageSize(s); setPage(0); }}
+          />
         </CardContent>
       </Card>
       <AlertDialog open={!!cotizacionAEliminar} onOpenChange={(open) => { if (!open) setCotizacionAEliminar(null); }}>

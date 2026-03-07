@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { Users, Plus, ArrowLeft, ArrowRight, Loader2 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
@@ -17,6 +17,9 @@ import { useToast } from "@/hooks/use-toast";
 import { usePermissions } from "@/hooks/usePermissions";
 import { useRegistrarActividad } from "@/hooks/useBitacora";
 import DocumentChecklist, { type DocumentoChecklist } from "@/components/DocumentChecklist";
+import PaginationControls from "@/components/PaginationControls";
+
+const DEFAULT_PAGE_SIZE = 20;
 
 const emptyCliente = {
   nombre: "", rfc: "", direccion: "", ciudad: "", estado: "", cp: "", contacto: "", email: "", telefono: "",
@@ -41,10 +44,15 @@ export default function Clientes() {
   const [form, setForm] = useState(emptyCliente);
   const [step, setStep] = useState<1 | 2>(1);
   const [documentos, setDocumentos] = useState<DocumentoChecklist[]>([]);
+  const [page, setPage] = useState(0);
+  const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
 
-  const filtered = clientesList.filter(cliente =>
+  const filtered = useMemo(() => clientesList.filter(cliente =>
     !search || cliente.nombre.toLowerCase().includes(search.toLowerCase()) || cliente.rfc.toLowerCase().includes(search.toLowerCase())
-  );
+  ), [clientesList, search]);
+
+  const paginated = filtered.slice(page * pageSize, (page + 1) * pageSize);
+  const totalPages = Math.ceil(filtered.length / pageSize);
 
   const handleChange = (field: string, value: string) => setForm(prev => ({ ...prev, [field]: value }));
   const isStep1Valid = () => form.nombre.trim() && form.rfc.trim() && form.cp.trim();
@@ -100,7 +108,7 @@ export default function Clientes() {
 
       <Card>
         <CardContent className="p-4">
-          <SearchInput value={search} onChange={setSearch} placeholder="Buscar por nombre o RFC..." />
+          <SearchInput value={search} onChange={(v) => { setSearch(v); setPage(0); }} placeholder="Buscar por nombre o RFC..." />
         </CardContent>
       </Card>
 
@@ -126,7 +134,7 @@ export default function Clientes() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filtered.map(cliente => (
+                {paginated.map(cliente => (
                   <TableRow key={cliente.id} className="cursor-pointer" onClick={() => navigate(`/clientes/${cliente.id}`)}>
                     <TableCell className="font-medium max-w-[200px] truncate">{cliente.nombre}</TableCell>
                     <TableCell className="text-xs font-mono">{cliente.rfc}</TableCell>
@@ -138,6 +146,13 @@ export default function Clientes() {
               </TableBody>
             </Table>
           )}
+          <PaginationControls
+            page={page}
+            totalPages={totalPages}
+            onPageChange={setPage}
+            pageSize={pageSize}
+            onPageSizeChange={(s) => { setPageSize(s); setPage(0); }}
+          />
         </CardContent>
       </Card>
 

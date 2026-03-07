@@ -17,14 +17,18 @@ import { formatCurrency } from "@/lib/formatters";
 import { formatDate, getEstadoColor } from "@/lib/helpers";
 import { toast } from "sonner";
 import { usePermissions } from "@/hooks/usePermissions";
+import PaginationControls from "@/components/PaginationControls";
 import type { Database } from "@/integrations/supabase/types";
 
 type EstadoFactura = Database["public"]["Enums"]["estado_factura"];
 const ESTADOS_FACTURA: EstadoFactura[] = ['Borrador', 'Emitida', 'Pagada', 'Vencida', 'Cancelada'];
+const DEFAULT_PAGE_SIZE = 20;
 
 export default function Facturacion() {
   const [search, setSearch] = useState("");
   const [filterEstado, setFilterEstado] = useState<string>("todos");
+  const [page, setPage] = useState(0);
+  const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
 
   const { data: facturas = [], isLoading: loadingFacturas } = useFacturas();
   const { data: gastosPendientes = [], isLoading: loadingGastos } = useGastosPendientes();
@@ -38,6 +42,9 @@ export default function Facturacion() {
       return matchSearch && matchEstado;
     });
   }, [search, filterEstado, facturas]);
+
+  const paginatedFacturas = filtered.slice(page * pageSize, (page + 1) * pageSize);
+  const totalPages = Math.ceil(filtered.length / pageSize);
 
   const handleMarcarPagado = (id: string) => {
     marcarPagado.mutate({ id }, {
@@ -62,7 +69,7 @@ export default function Facturacion() {
         <TabsContent value="facturas" className="space-y-4">
           <Card>
             <CardContent className="p-4 flex flex-wrap gap-3">
-              <SearchInput value={search} onChange={setSearch} placeholder="Buscar factura o cliente..." className="flex-1 min-w-[200px]" />
+              <SearchInput value={search} onChange={(v) => { setSearch(v); setPage(0); }} placeholder="Buscar factura o cliente..." className="flex-1 min-w-[200px]" />
               <Select value={filterEstado} onValueChange={setFilterEstado}>
                 <SelectTrigger className="w-[160px]"><SelectValue /></SelectTrigger>
                 <SelectContent>
@@ -94,7 +101,7 @@ export default function Facturacion() {
                   <TableBody>
                     {filtered.length === 0 ? (
                       <TableRow><TableCell colSpan={8} className="text-center py-8 text-muted-foreground">No se encontraron facturas</TableCell></TableRow>
-                    ) : filtered.map(factura => (
+                    ) : paginatedFacturas.map(factura => (
                       <TableRow key={factura.id}>
                         <TableCell className="font-medium">{factura.numero}</TableCell>
                         <TableCell>{factura.expediente}</TableCell>
@@ -109,6 +116,13 @@ export default function Facturacion() {
                   </TableBody>
                 </Table>
               )}
+              <PaginationControls
+                page={page}
+                totalPages={totalPages}
+                onPageChange={setPage}
+                pageSize={pageSize}
+                onPageSizeChange={(s) => { setPageSize(s); setPage(0); }}
+              />
             </CardContent>
           </Card>
         </TabsContent>

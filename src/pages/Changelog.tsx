@@ -13,6 +13,14 @@ interface ChangelogEntry {
 
 const changelog: ChangelogEntry[] = [
   {
+    version: "4.27.1",
+    date: "2026-03-07",
+    type: "patch",
+    title: "Paginación con selector de registros en todas las tablas",
+    description:
+      "Selector de registros por página (10/20/50) replicado en Cotizaciones, Clientes, Facturación y Bitácora. Default 20 registros. Clientes y Facturación ahora incluyen paginación que antes no tenían.",
+  },
+  {
     version: "4.27.0",
     date: "2026-03-07",
     type: "minor",
