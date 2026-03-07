@@ -35,8 +35,8 @@ const columns: DataTableColumn<Embarque>[] = [
       </span>
     ),
   },
-  { key: "origen", header: "Origen", className: "text-xs", render: (e) => (e.puerto_origen || e.aeropuerto_origen || e.ciudad_origen || "-").split(",")[0] },
-  { key: "destino", header: "Destino", className: "text-xs", render: (e) => (e.puerto_destino || e.aeropuerto_destino || e.ciudad_destino || "-").split(",")[0] },
+  { key: "origen", header: "Origen", className: "text-xs", render: (e) => shortName(e.puerto_origen || e.aeropuerto_origen || e.ciudad_origen || "-") },
+  { key: "destino", header: "Destino", className: "text-xs", render: (e) => shortName(e.puerto_destino || e.aeropuerto_destino || e.ciudad_destino || "-") },
   { key: "contenedor", header: "Contenedor", className: "text-xs", render: (e) => e.tipo_contenedor || "-" },
   { key: "etd", header: "ETD", className: "text-xs", render: (e) => formatDate(e.etd || "") },
   { key: "eta", header: "ETA", className: "text-xs", render: (e) => formatDate(e.eta || "") },

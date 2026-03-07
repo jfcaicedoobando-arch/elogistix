@@ -13,6 +13,14 @@ interface ChangelogEntry {
 
 const changelog: ChangelogEntry[] = [
   {
+    version: "4.30.2",
+    date: "2026-03-07",
+    type: "patch",
+    title: "Corrección de nombres de puerto duplicados en tablas de embarques",
+    description:
+      "Se mejoró la lógica de extracción del nombre corto de puertos en la tabla de Embarques Activos del Dashboard y en el listado principal de Embarques para manejar correctamente datos guardados con el formato anterior.",
+  },
+  {
     version: "4.30.1",
     date: "2026-03-07",
     type: "patch",
