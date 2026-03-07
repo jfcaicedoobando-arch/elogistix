@@ -13,6 +13,14 @@ interface ChangelogEntry {
 
 const changelog: ChangelogEntry[] = [
   {
+    version: "4.24.0",
+    date: "2026-03-07",
+    type: "minor",
+    title: "Code splitting con React.lazy en rutas",
+    description:
+      "Todas las páginas ahora se cargan bajo demanda con React.lazy() y Suspense, reduciendo el bundle inicial y mejorando el tiempo de carga.",
+  },
+  {
     version: "4.23.1",
     date: "2026-03-07",
     type: "patch",
