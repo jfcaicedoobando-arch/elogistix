@@ -20,7 +20,7 @@ export function useProveedores() {
         .select(PROVEEDOR_LIST_COLUMNS)
         .order("nombre");
       if (error) throw error;
-      return data;
+      return data as ProveedorListItem[];
     },
   });
 
