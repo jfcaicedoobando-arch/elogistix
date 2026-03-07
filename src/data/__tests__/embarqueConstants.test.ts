@@ -17,12 +17,12 @@ describe("getDocsForMode", () => {
 });
 
 describe("ESTADO_TIMELINE", () => {
-  it("tiene 6 estados", () => {
-    expect(ESTADO_TIMELINE).toHaveLength(6);
+  it("tiene 7 estados", () => {
+    expect(ESTADO_TIMELINE).toHaveLength(7);
   });
-  it("empieza con Cotización y termina con Cerrado", () => {
-    expect(ESTADO_TIMELINE[0]).toBe("Cotización");
-    expect(ESTADO_TIMELINE[5]).toBe("Cerrado");
+  it("empieza con Confirmado y termina con Cerrado", () => {
+    expect(ESTADO_TIMELINE[0]).toBe("Confirmado");
+    expect(ESTADO_TIMELINE[ESTADO_TIMELINE.length - 1]).toBe("Cerrado");
   });
 });
 
