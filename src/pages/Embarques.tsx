@@ -20,6 +20,10 @@ const DEFAULT_PAGE_SIZE = 20;
 
 type Embarque = ReturnType<typeof useEmbarques>["data"] extends (infer U)[] | undefined ? U : never;
 
+function shortName(raw: string) {
+  return raw.split(/[,—]/)[0].trim();
+}
+
 const columns: DataTableColumn<Embarque>[] = [
   { key: "expediente", header: "Expediente", className: "font-medium", render: (e) => e.expediente },
   { key: "bl", header: "BL Master", className: "text-xs", render: (e) => e.bl_master || "-" },
