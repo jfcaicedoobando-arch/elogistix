@@ -236,8 +236,8 @@ export default function CotizacionDetalle() {
       <SeccionMercanciaCotizacionDetalle cotizacion={cotizacion} />
 
       {/* Conceptos de venta */}
-      <TablaConceptosUSD conceptos={conceptosVentaUSD} totalUSD={totalUSD} />
-      <TablaConceptosMXN conceptos={conceptosVentaMXN} subtotalMXN={subtotalMXN} ivaMXN={ivaMXN} totalMXN={totalMXN} />
+      <TablaConceptosGenerico moneda="USD" conceptos={conceptosVentaUSD} total={totalUSD} />
+      <TablaConceptosGenerico moneda="MXN" conceptos={conceptosVentaMXN} subtotal={subtotalMXN} iva={ivaMXN} total={totalMXN} />
       <ResumenTotalesCotizacion totalUSD={totalUSD} totalMXN={totalMXN} />
 
       {/* Costos Internos P&L */}
