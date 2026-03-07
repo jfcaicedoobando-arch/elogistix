@@ -43,6 +43,9 @@ export default function Facturacion() {
     });
   }, [search, filterEstado, facturas]);
 
+  const paginatedFacturas = filtered.slice(page * pageSize, (page + 1) * pageSize);
+  const totalPages = Math.ceil(filtered.length / pageSize);
+
   const handleMarcarPagado = (id: string) => {
     marcarPagado.mutate({ id }, {
       onSuccess: () => toast.success("Gasto marcado como pagado"),
