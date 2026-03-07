@@ -2,13 +2,83 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import type { Tables, TablesInsert, TablesUpdate } from "@/integrations/supabase/types";
 import { queryKeys } from "@/lib/queryKeys";
+import type { TipoProveedor } from "@/data/types";
 
-/** Columnas necesarias para la tabla de proveedores (evita select('*')) */
+/** Columnas necesarias para la tabla de proveedores */
 const PROVEEDOR_LIST_COLUMNS = 'id, nombre, tipo, rfc, contacto, moneda_preferida' as const;
 
 export type Proveedor = Tables<'proveedores'>;
 export type ProveedorListItem = Pick<Proveedor, 'id' | 'nombre' | 'tipo' | 'rfc' | 'contacto' | 'moneda_preferida'>;
 
+// --- Hook paginado server-side para la vista de lista ---
+
+interface UseProveedoresPaginadosParams {
+  tipo: TipoProveedor;
+  search: string;
+  page: number;
+  pageSize: number;
+}
+
+export function useProveedoresPaginados({ tipo, search, page, pageSize }: UseProveedoresPaginadosParams) {
+  const filters = { tipo, search, page, pageSize };
+
+  return useQuery({
+    queryKey: queryKeys.proveedores.list(filters),
+    queryFn: async () => {
+      let query = supabase
+        .from('proveedores')
+        .select(PROVEEDOR_LIST_COLUMNS, { count: 'exact' })
+        .eq('tipo', tipo)
+        .order('nombre');
+
+      if (search) {
+        query = query.ilike('nombre', `%${search}%`);
+      }
+
+      const from = page * pageSize;
+      const to = from + pageSize - 1;
+      query = query.range(from, to);
+
+      const { data, error, count } = await query;
+      if (error) throw error;
+      return { data: (data ?? []) as ProveedorListItem[], count: count ?? 0 };
+    },
+    placeholderData: (prev) => prev,
+  });
+}
+
+// --- Hook de mutaciones para Proveedores (sin query de lista) ---
+
+export function useProveedorMutations() {
+  const queryClient = useQueryClient();
+
+  const addProveedorMutation = useMutation({
+    mutationFn: async (prov: TablesInsert<"proveedores">) => {
+      const { data, error } = await supabase.from("proveedores").insert(prov).select().single();
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.proveedores.all }),
+  });
+
+  const updateProveedorMutation = useMutation({
+    mutationFn: async ({ id, data }: { id: string; data: TablesUpdate<"proveedores"> }) => {
+      const { error } = await supabase.from("proveedores").update(data).eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.proveedores.all }),
+  });
+
+  return {
+    addProveedor: addProveedorMutation.mutateAsync,
+    updateProveedor: (id: string, data: TablesUpdate<"proveedores">) =>
+      updateProveedorMutation.mutateAsync({ id, data }),
+    isAdding: addProveedorMutation.isPending,
+    isUpdating: updateProveedorMutation.isPending,
+  };
+}
+
+/** @deprecated Usa useProveedorMutations + useProveedoresPaginados en su lugar */
 export function useProveedores() {
   const queryClient = useQueryClient();
 
