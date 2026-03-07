@@ -15,7 +15,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useRegistrarActividad } from "@/hooks/useBitacora";
 import { useAuth } from "@/contexts/AuthContext";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { ESTADO_TIMELINE } from "@/data/embarqueConstants";
 import {
@@ -148,6 +148,20 @@ export default function EmbarqueDetalle() {
     }
   };
 
+  const tipoCambioUSD = embarque ? (Number(embarque.tipo_cambio_usd) || 1) : 1;
+  const tipoCambioEUR = embarque ? (Number(embarque.tipo_cambio_eur) || 1) : 1;
+
+  const totalVenta = useMemo(
+    () => conceptosVenta.reduce((sum, c) => sum + convertirAMXN(Number(c.total), c.moneda, tipoCambioUSD, tipoCambioEUR), 0),
+    [conceptosVenta, tipoCambioUSD, tipoCambioEUR]
+  );
+  const totalCosto = useMemo(
+    () => conceptosCosto.reduce((sum, c) => sum + convertirAMXN(Number(c.monto), c.moneda, tipoCambioUSD, tipoCambioEUR), 0),
+    [conceptosCosto, tipoCambioUSD, tipoCambioEUR]
+  );
+  const utilidad = useMemo(() => calcularUtilidad(totalVenta, totalCosto), [totalVenta, totalCosto]);
+  const margen = useMemo(() => calcularMargen(totalVenta, totalCosto), [totalVenta, totalCosto]);
+
   if (isLoading) {
     return (
       <div className="space-y-6">
@@ -166,14 +180,6 @@ export default function EmbarqueDetalle() {
       </div>
     );
   }
-
-  const tipoCambioUSD = Number(embarque.tipo_cambio_usd) || 1;
-  const tipoCambioEUR = Number(embarque.tipo_cambio_eur) || 1;
-
-  const totalVenta = conceptosVenta.reduce((sum, c) => sum + convertirAMXN(Number(c.total), c.moneda, tipoCambioUSD, tipoCambioEUR), 0);
-  const totalCosto = conceptosCosto.reduce((sum, c) => sum + convertirAMXN(Number(c.monto), c.moneda, tipoCambioUSD, tipoCambioEUR), 0);
-  const utilidad = calcularUtilidad(totalVenta, totalCosto);
-  const margen = calcularMargen(totalVenta, totalCosto);
 
   const siguienteEstado = getSiguienteEstado(embarque.estado);
 

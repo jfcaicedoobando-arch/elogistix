@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
+import { calcularUtilidad } from '@/lib/financialUtils';
 import type { ConceptoVentaLocal, ConceptoCostoLocal } from '@/data/conceptoTypes';
 
 interface UseConceptosFormOptions {
@@ -46,9 +47,18 @@ export function useConceptosForm(opciones: UseConceptosFormOptions = {}) {
     setConceptosCosto(prev => prev.filter(c => c.id !== id));
   };
 
-  const subtotalVenta = conceptosVenta.reduce((acc, c) => acc + c.cantidad * c.precioUnitario, 0);
-  const totalCosto = conceptosCosto.reduce((acc, c) => acc + c.monto, 0);
-  const utilidadEstimada = subtotalVenta - totalCosto;
+  const subtotalVenta = useMemo(
+    () => conceptosVenta.reduce((acc, c) => acc + c.cantidad * c.precioUnitario, 0),
+    [conceptosVenta]
+  );
+  const totalCosto = useMemo(
+    () => conceptosCosto.reduce((acc, c) => acc + c.monto, 0),
+    [conceptosCosto]
+  );
+  const utilidadEstimada = useMemo(
+    () => calcularUtilidad(subtotalVenta, totalCosto),
+    [subtotalVenta, totalCosto]
+  );
 
   const inicializarVenta = (items: ConceptoVentaLocal[]) => {
     setConceptosVenta(items);

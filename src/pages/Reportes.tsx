@@ -12,6 +12,7 @@ import { useEmbarques } from "@/hooks/useEmbarques";
 import { useFacturas, useGastosPendientes } from "@/hooks/useFacturas";
 import { useClientes } from "@/hooks/useClientes";
 import { formatCurrency } from "@/lib/formatters";
+import { convertirAMXN, calcularUtilidad, calcularMargen } from "@/lib/financialUtils";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
 
@@ -57,13 +58,13 @@ export default function Reportes() {
       const tiposCambioEmbarques = new Map(embarquesDelCliente.map(embarque => [embarque.id, { usd: embarque.tipo_cambio_usd, eur: embarque.tipo_cambio_eur }]));
       conceptos.ventas.filter(venta => idsEmbarquesCliente.has(venta.embarque_id)).forEach(venta => {
         const tipoCambio = tiposCambioEmbarques.get(venta.embarque_id);
-        totalVenta += venta.moneda === 'USD' ? venta.total * (tipoCambio?.usd || 17.5) : venta.moneda === 'EUR' ? venta.total * (tipoCambio?.eur || 19) : venta.total;
+        totalVenta += convertirAMXN(venta.total, venta.moneda, tipoCambio?.usd || 17.5, tipoCambio?.eur || 19);
       });
       conceptos.costos.filter(costo => idsEmbarquesCliente.has(costo.embarque_id)).forEach(costo => {
         const tipoCambio = tiposCambioEmbarques.get(costo.embarque_id);
-        totalCosto += costo.moneda === 'USD' ? costo.monto * (tipoCambio?.usd || 17.5) : costo.moneda === 'EUR' ? costo.monto * (tipoCambio?.eur || 19) : costo.monto;
+        totalCosto += convertirAMXN(costo.monto, costo.moneda, tipoCambio?.usd || 17.5, tipoCambio?.eur || 19);
       });
-      return { nombre: cliente.nombre.split(' ').slice(0, 3).join(' '), embarques: embarquesDelCliente.length, venta: totalVenta, costo: totalCosto, utilidad: totalVenta - totalCosto };
+      return { nombre: cliente.nombre.split(' ').slice(0, 3).join(' '), embarques: embarquesDelCliente.length, venta: totalVenta, costo: totalCosto, utilidad: calcularUtilidad(totalVenta, totalCosto) };
     }).filter(cliente => cliente.embarques > 0).sort((a, b) => b.utilidad - a.utilidad);
   }, [clientes, embarques, conceptos]);
 
@@ -151,7 +152,7 @@ export default function Reportes() {
                     <TableCell>{formatCurrency(cliente.venta)}</TableCell>
                     <TableCell>{formatCurrency(cliente.costo)}</TableCell>
                     <TableCell className={cliente.utilidad >= 0 ? 'text-success font-medium' : 'text-destructive font-medium'}>{formatCurrency(cliente.utilidad)}</TableCell>
-                    <TableCell>{cliente.venta > 0 ? ((cliente.utilidad / cliente.venta) * 100).toFixed(1) : 0}%</TableCell>
+                    <TableCell>{calcularMargen(cliente.venta, cliente.venta - cliente.utilidad).toFixed(1)}%</TableCell>
                   </TableRow>
                 ))}
               </TableBody>

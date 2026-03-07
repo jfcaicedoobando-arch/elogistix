@@ -5,6 +5,7 @@ import type { CostoCotizacion } from "@/hooks/useCotizacionCostos";
 import type { FilaCostoLocal } from "@/components/cotizacion/SeccionCostosInternosPLUnificado";
 import { CONCEPTOS_CON_IVA_USD } from "@/data/cotizacionConstants";
 import { calcularTotalesPL, type TotalesPL } from "@/lib/profitUtils";
+import { calcularIVA, calcularTotalConIVA } from "@/lib/financialUtils";
 import { uploadFile } from "@/lib/storage";
 
 // ────────── Factories ──────────
@@ -143,8 +144,8 @@ export function useCotizacionWizardForm({ navigate, toast, userEmail, clientes, 
   // ── Totales ──
   const totalUSD = useMemo(() => conceptosUSD.reduce((s, c) => s + c.total, 0), [conceptosUSD]);
   const subtotalMXN = useMemo(() => conceptosMXN.reduce((s, c) => s + c.cantidad * c.precio_unitario, 0), [conceptosMXN]);
-  const ivaMXN = subtotalMXN * 0.16;
-  const totalMXN = subtotalMXN + ivaMXN;
+  const ivaMXN = useMemo(() => calcularIVA(subtotalMXN), [subtotalMXN]);
+  const totalMXN = useMemo(() => calcularTotalConIVA(subtotalMXN), [subtotalMXN]);
 
   const totalPiezasLCL = useMemo(() => dimensionesLCL.reduce((s, d) => s + d.piezas, 0), [dimensionesLCL]);
   const totalVolumenLCL = useMemo(() => dimensionesLCL.reduce((s, d) => s + d.volumen_m3, 0), [dimensionesLCL]);
