@@ -2,6 +2,7 @@ import { useState, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useEmbarques, calcularEstadoEmbarque } from "@/hooks/useEmbarques";
 import { ESTADOS_ACTIVOS } from "@/data/embarqueConstants";
+import { calcularUtilidad, calcularMargen } from "@/lib/financialUtils";
 import { supabase } from "@/integrations/supabase/client";
 
 // ─── Types ───────────────────────────────────────────────
