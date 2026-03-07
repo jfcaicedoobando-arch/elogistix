@@ -3,6 +3,9 @@ import { supabase } from "@/integrations/supabase/client";
 import type { Tables, TablesInsert, TablesUpdate } from "@/integrations/supabase/types";
 import { queryKeys } from "@/lib/queryKeys";
 
+/** Columnas necesarias para la tabla de proveedores (evita select('*')) */
+const PROVEEDOR_LIST_COLUMNS = 'id, nombre, tipo, rfc, contacto, moneda_preferida' as const;
+
 export type Proveedor = Tables<'proveedores'>;
 
 export function useProveedores() {
