@@ -13,6 +13,14 @@ interface ChangelogEntry {
 
 const changelog: ChangelogEntry[] = [
   {
+    version: "4.23.1",
+    date: "2026-03-07",
+    type: "patch",
+    title: "Correcciones en TablaConceptosGenerico",
+    description:
+      "IVA dinámico usando TASA_IVA en lugar de texto hardcodeado, key estable por descripción en lugar de índice, respeto a aplica_iva por concepto, y cálculos centralizados con calcularSubtotal/calcularIVA de financialUtils.",
+  },
+  {
     version: "4.23.0",
     date: "2026-03-07",
     type: "minor",

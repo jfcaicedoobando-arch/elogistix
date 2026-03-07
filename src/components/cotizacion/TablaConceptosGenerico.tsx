@@ -1,7 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { formatCurrency } from "@/lib/formatters";
-import { TASA_IVA } from "@/lib/financialUtils";
+import { TASA_IVA, calcularSubtotal, calcularIVA } from "@/lib/financialUtils";
 import type { ConceptoVentaCotizacion } from "@/hooks/useCotizaciones";
 
 interface Props {
@@ -12,6 +12,8 @@ interface Props {
   iva?: number;
   total: number;
 }
+
+const ivaLabel = `IVA (${TASA_IVA * 100}%)`;
 
 export default function TablaConceptosGenerico({ moneda, conceptos, subtotal, iva, total }: Props) {
   if (conceptos.length === 0) return null;
@@ -35,17 +37,18 @@ export default function TablaConceptosGenerico({ moneda, conceptos, subtotal, iv
                 <TableHead className="text-right">Cantidad</TableHead>
                 <TableHead className="text-right">{esMXN ? "P. Unitario" : "Precio Unitario"}</TableHead>
                 {esMXN && <TableHead className="text-right">Subtotal</TableHead>}
-                {esMXN && <TableHead className="text-right">IVA (16%)</TableHead>}
+                {esMXN && <TableHead className="text-right">{ivaLabel}</TableHead>}
                 <TableHead className="text-right">Total</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {conceptos.map((concepto, indice) => {
-                const lineSubtotal = concepto.cantidad * concepto.precio_unitario;
-                const lineIva = esMXN ? lineSubtotal * TASA_IVA : 0;
+                const lineSubtotal = calcularSubtotal(concepto.cantidad, concepto.precio_unitario);
+                const aplicaIva = esMXN || !!(concepto as any).aplica_iva;
+                const lineIva = aplicaIva ? calcularIVA(lineSubtotal) : 0;
 
                 return (
-                  <TableRow key={indice}>
+                  <TableRow key={concepto.descripcion ?? indice}>
                     <TableCell>{concepto.descripcion}</TableCell>
                     <TableCell>{concepto.unidad_medida || '—'}</TableCell>
                     <TableCell className="text-right">{concepto.cantidad}</TableCell>
@@ -67,7 +70,7 @@ export default function TablaConceptosGenerico({ moneda, conceptos, subtotal, iv
             <span className="text-sm">Subtotal MXN: {formatCurrency(subtotal, "MXN")}</span>
           )}
           {esMXN && iva !== undefined && (
-            <span className="text-sm">IVA (16%): {formatCurrency(iva, "MXN")}</span>
+            <span className="text-sm">{ivaLabel}: {formatCurrency(iva, "MXN")}</span>
           )}
           <p className="text-lg font-bold">Total {moneda}: {formatCurrency(total, moneda)}</p>
         </div>
