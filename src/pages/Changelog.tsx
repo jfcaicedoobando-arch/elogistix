@@ -13,6 +13,14 @@ interface ChangelogEntry {
 
 const changelog: ChangelogEntry[] = [
   {
+    version: "4.30.3",
+    date: "2026-03-07",
+    type: "patch",
+    title: "Desglose correcto de totales en PDF de cotización",
+    description:
+      "Se corrigió el bloque de resumen del PDF para mostrar subtotal, IVA y total por separado en USD y MXN, con visualización condicional según los conceptos existentes.",
+  },
+  {
     version: "4.30.2",
     date: "2026-03-07",
     type: "patch",

@@ -203,8 +203,13 @@ export function generarPdfCotizacion(cotizacion: CotizacionRow) {
     ${buildUsdTable()}
     ${buildMxnTable()}
     <div class="resumen">
-      <p>Total USD: ${formatCurrencyPdf(totalUSD, 'USD')}</p>
-      <p>Total MXN (c/IVA): ${formatCurrencyPdf(totalMXN, 'MXN')}</p>
+      <p>Subtotal USD: ${formatCurrencyPdf(subtotalUSD, 'USD')}</p>
+      ${ivaUSD > 0 ? `<p>IVA (16%): ${formatCurrencyPdf(ivaUSD, 'USD')}</p>` : ''}
+      <p><strong>Total USD: ${formatCurrencyPdf(totalUSD, 'USD')}</strong></p>
+      ${conceptosMXN.length > 0 ? `
+      <p style="margin-top:8px">Subtotal MXN: ${formatCurrencyPdf(subtotalMXN, 'MXN')}</p>
+      <p>IVA (16%): ${formatCurrencyPdf(ivaMXN, 'MXN')}</p>
+      <p><strong>Total MXN: ${formatCurrencyPdf(totalMXN, 'MXN')}</strong></p>` : ''}
       <p class="nota">* Los cargos en destino incluyen IVA</p>
     </div>
   </section>
