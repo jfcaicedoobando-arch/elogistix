@@ -14,7 +14,8 @@ import {
 } from "@/hooks/useCotizacionCostos";
 import type { ConceptoVentaCotizacion } from "@/hooks/useCotizaciones";
 import { formatCurrency } from "@/lib/formatters";
-import { ProfitBadge } from "@/lib/profitUtils";
+import { calcularUtilidad, calcularMargen } from "@/lib/financialUtils";
+import { ProfitBadge, calcularTotalesPL } from "@/lib/profitUtils";
 import { CONCEPTOS_COSTO_USD, CONCEPTOS_COSTO_MXN } from "@/data/cotizacionConstants";
 import ResumenPL from "./ResumenPL";
 
@@ -59,12 +60,11 @@ type Props = PropsLocal | PropsDetalle;
 const UNIDADES_MEDIDA = ['BL', 'W/M', 'Documento', 'Contenedor', 'Kilo', 'Embarque'];
 
 // ─── Shared utilities ────────────────────────────────────────
+/** Adapta filas con shape {cantidad, costo, venta} al formato de calcularTotalesPL */
 function calcTotals(rows: { cantidad: number; costo: number; venta: number }[]) {
-  const totalCosto = rows.reduce((s, r) => s + r.cantidad * r.costo, 0);
-  const totalVenta = rows.reduce((s, r) => s + r.venta, 0);
-  const profit = totalVenta - totalCosto;
-  const porcentaje = totalVenta !== 0 ? (profit / totalVenta) * 100 : 0;
-  return { totalCosto, totalVenta, profit, porcentaje };
+  return calcularTotalesPL(
+    rows.map(r => ({ cantidad: r.cantidad, costo_unitario: r.costo, precio_venta: r.venta / (r.cantidad || 1) }))
+  );
 }
 
 function getGlobalIndex(filas: { moneda: string }[], moneda: string, localIdx: number) {
@@ -147,8 +147,8 @@ function ModoLocal({ filas, setFilas }: PropsLocal) {
             {rows.map((fila, idx) => {
               const costoTotal = fila.cantidad * fila.costo_unitario;
               const ventaTotal = fila.cantidad * fila.precio_venta;
-              const profit = ventaTotal - costoTotal;
-              const pct = ventaTotal !== 0 ? (profit / ventaTotal) * 100 : 0;
+              const profit = calcularUtilidad(ventaTotal, costoTotal);
+              const pct = calcularMargen(ventaTotal, costoTotal);
               const gi = getGlobalIndex(filas, moneda, idx);
               const conceptOptions = [...catalogo];
               if (fila.concepto && !conceptOptions.includes(fila.concepto)) {
@@ -363,8 +363,8 @@ function ModoDetalle({ cotizacionId, conceptosUSD, conceptosMXN }: PropsDetalle)
               <TableBody>
                 {rows.map((fila, idx) => {
                   const costo = fila.cantidad * fila.costo_unitario;
-                  const profit = fila.venta - costo;
-                  const pct = fila.venta !== 0 ? (profit / fila.venta) * 100 : 0;
+                  const profit = calcularUtilidad(fila.venta, costo);
+                  const pct = calcularMargen(fila.venta, costo);
                   const globalIdx = getGlobalIndex(filas, moneda, idx);
 
                   return (

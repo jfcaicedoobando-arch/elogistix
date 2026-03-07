@@ -1,3 +1,6 @@
+/** Tipo estricto de moneda soportada */
+export type Moneda = 'USD' | 'MXN' | 'EUR';
+
 /** Tasa de IVA estándar en México */
 export const TASA_IVA = 0.16;
 
@@ -30,11 +33,23 @@ export function calcularUtilidad(venta: number, costo: number): number {
 /** Convierte un monto a MXN según su moneda */
 export function convertirAMXN(
   monto: number,
-  moneda: string,
+  moneda: Moneda,
   tipoCambioUSD: number = 1,
   tipoCambioEUR: number = 1
 ): number {
   if (moneda === 'USD') return monto * tipoCambioUSD;
   if (moneda === 'EUR') return monto * tipoCambioEUR;
+  return monto;
+}
+
+/** Convierte un monto a USD según su moneda */
+export function convertirAUSD(
+  monto: number,
+  moneda: Moneda,
+  tipoCambioUSD: number,
+  tipoCambioEUR: number
+): number {
+  if (moneda === 'MXN') return monto / tipoCambioUSD;
+  if (moneda === 'EUR') return (monto * tipoCambioEUR) / tipoCambioUSD;
   return monto;
 }

@@ -2,6 +2,7 @@ import { useState, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useEmbarques, calcularEstadoEmbarque } from "@/hooks/useEmbarques";
 import { ESTADOS_ACTIVOS } from "@/data/embarqueConstants";
+import { calcularUtilidad, calcularMargen } from "@/lib/financialUtils";
 import { supabase } from "@/integrations/supabase/client";
 
 // ─── Types ───────────────────────────────────────────────
@@ -161,8 +162,8 @@ export function useDashboardData() {
       .map((e) => {
         const venta = ventaMap[e.id] || 0;
         const costo = costoMap[e.id] || 0;
-        const profit = venta - costo;
-        const margen = venta !== 0 ? (profit / venta) * 100 : 0;
+        const profit = calcularUtilidad(venta, costo);
+        const margen = calcularMargen(venta, costo);
         return { ...e, ventaUSD: venta, costoUSD: costo, profit, margen };
       })
       .filter((e) => e.ventaUSD > 0 || e.costoUSD > 0)
