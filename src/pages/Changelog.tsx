@@ -13,6 +13,14 @@ interface ChangelogEntry {
 
 const changelog: ChangelogEntry[] = [
   {
+    version: "4.22.0",
+    date: "2026-03-07",
+    type: "minor",
+    title: "Centralización de cálculos financieros inline",
+    description:
+      "Auditoría completa de math inline: useConceptosForm ahora envuelve subtotalVenta/totalCosto/utilidadEstimada en useMemo con calcularUtilidad. useCotizacionWizardForm usa calcularIVA/calcularTotalConIVA. EmbarqueDetalle envuelve reduces en useMemo antes de early returns. Reportes usa convertirAMXN y calcularMargen centralizados. profitUtils migrado a tokens semánticos (success/warning/destructive). Todas las funciones de financialUtils y profitUtils con return types estrictos.",
+  },
+  {
     version: "4.21.0",
     date: "2026-03-07",
     type: "minor",
