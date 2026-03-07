@@ -80,13 +80,16 @@ export interface CotizacionRow {
   updated_at: string;
 }
 
+/** Columnas necesarias para la tabla de cotizaciones (evita select('*')) */
+const COTIZACION_LIST_COLUMNS = 'id, folio, cliente_id, cliente_nombre, modo, origen, destino, subtotal, moneda, estado, fecha_vigencia, created_at, descripcion_mercancia' as const;
+
 export function useCotizaciones() {
   return useQuery({
     queryKey: ['cotizaciones'],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('cotizaciones')
-        .select('*')
+        .select(COTIZACION_LIST_COLUMNS)
         .order('created_at', { ascending: false });
       if (error) throw error;
       return data as unknown as CotizacionRow[];

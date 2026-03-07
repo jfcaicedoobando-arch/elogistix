@@ -24,8 +24,8 @@ function useAllConceptos() {
     queryKey: ['reportes', 'conceptos'],
     queryFn: async () => {
       const [ventaRes, costoRes] = await Promise.all([
-        supabase.from('conceptos_venta').select('*'),
-        supabase.from('conceptos_costo').select('*'),
+        supabase.from('conceptos_venta').select('embarque_id, total, moneda'),
+        supabase.from('conceptos_costo').select('embarque_id, monto, moneda'),
       ]);
       if (ventaRes.error) throw ventaRes.error;
       if (costoRes.error) throw costoRes.error;

@@ -5,13 +5,16 @@ import type { Tables, TablesInsert } from "@/integrations/supabase/types";
 export type Cliente = Tables<'clientes'>;
 export type ContactoCliente = Tables<'contactos_cliente'>;
 
+/** Columnas necesarias para la tabla de clientes y reportes */
+const CLIENTE_LIST_COLUMNS = 'id, nombre, rfc, ciudad, estado, contacto, telefono' as const;
+
 export function useClientes() {
   return useQuery({
     queryKey: ["clientes"],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("clientes")
-        .select("*")
+        .select(CLIENTE_LIST_COLUMNS)
         .order("nombre");
       if (error) throw error;
       return data;
