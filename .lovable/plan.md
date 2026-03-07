@@ -1,25 +1,16 @@
 
 
-## Fix: Resumen PDF con desglose correcto (v4.30.3)
+## Plan: Usar expediente del origen al duplicar
 
-### Cambios en `src/lib/cotizacionPdf.ts`
+### Cambio único en `src/hooks/useEmbarques.ts`
 
-**1. Corregir cálculos (líneas 25-31)** — Separar subtotalUSD e ivaUSD:
-```typescript
-const subtotalUSD = conceptosUSD.reduce((s, c) => s + c.cantidad * c.precio_unitario, 0);
-const ivaUSD = conceptosUSD.reduce((s, c) => c.aplica_iva ? s + c.cantidad * c.precio_unitario * 0.16 : s, 0);
-const totalUSD = subtotalUSD + ivaUSD;
-const subtotalMXN = conceptosMXN.reduce((s, c) => s + c.cantidad * c.precio_unitario, 0);
-const ivaMXN = subtotalMXN * 0.16;
-const totalMXN = subtotalMXN + ivaMXN;
-```
+En el loop de `useDuplicarEmbarque` (líneas 257-262), reemplazar la llamada a `supabase.rpc('generar_expediente')` por usar directamente `embarqueOrigen.expediente`:
 
-**2. Reemplazar bloque `div.resumen`** en el HTML (~línea 185) con desglose condicional:
-- Subtotal USD / IVA USD (si > 0) / Total USD
-- Subtotal MXN / IVA MXN / Total MXN (solo si hay conceptos MXN)
-- Nota al pie
+- **Eliminar** líneas 258-262 (la llamada RPC y el manejo de error)
+- **Cambiar** línea 268 `expediente: expediente as string` → `expediente: embarqueOrigen.expediente`
+- En el push final al array `creados`, usar `embarqueOrigen.expediente` en lugar de `expediente as string`
 
-**3. Actualizar `src/pages/Changelog.tsx`** — Entrada v4.30.3.
+### Cambio en `src/pages/Changelog.tsx`
 
-### Sin cambios en tablas de conceptos ni en ningún otro archivo.
+Entrada v4.15.1 — "Duplicar embarque ahora conserva el mismo expediente del origen"
 

@@ -22,10 +22,9 @@ export function generarPdfCotizacion(cotizacion: CotizacionRow) {
   // Split conceptos by currency
   const conceptosUSD = cotizacion.conceptos_venta.filter(c => c.moneda === 'USD');
   const conceptosMXN = cotizacion.conceptos_venta.filter(c => c.moneda === 'MXN');
-  const totalUSD = conceptosUSD.reduce((s, c) => {
-    const sub = c.cantidad * c.precio_unitario;
-    return s + (c.aplica_iva ? sub * 1.16 : sub);
-  }, 0);
+  const subtotalUSD = conceptosUSD.reduce((s, c) => s + c.cantidad * c.precio_unitario, 0);
+  const ivaUSD = conceptosUSD.reduce((s, c) => c.aplica_iva ? s + c.cantidad * c.precio_unitario * 0.16 : s, 0);
+  const totalUSD = subtotalUSD + ivaUSD;
   const subtotalMXN = conceptosMXN.reduce((s, c) => s + c.cantidad * c.precio_unitario, 0);
   const ivaMXN = subtotalMXN * 0.16;
   const totalMXN = subtotalMXN + ivaMXN;
@@ -204,8 +203,13 @@ export function generarPdfCotizacion(cotizacion: CotizacionRow) {
     ${buildUsdTable()}
     ${buildMxnTable()}
     <div class="resumen">
-      <p>Total USD: ${formatCurrencyPdf(totalUSD, 'USD')}</p>
-      <p>Total MXN (c/IVA): ${formatCurrencyPdf(totalMXN, 'MXN')}</p>
+      <p>Subtotal USD: ${formatCurrencyPdf(subtotalUSD, 'USD')}</p>
+      ${ivaUSD > 0 ? `<p>IVA (16%): ${formatCurrencyPdf(ivaUSD, 'USD')}</p>` : ''}
+      <p><strong>Total USD: ${formatCurrencyPdf(totalUSD, 'USD')}</strong></p>
+      ${conceptosMXN.length > 0 ? `
+      <p style="margin-top:8px">Subtotal MXN: ${formatCurrencyPdf(subtotalMXN, 'MXN')}</p>
+      <p>IVA (16%): ${formatCurrencyPdf(ivaMXN, 'MXN')}</p>
+      <p><strong>Total MXN: ${formatCurrencyPdf(totalMXN, 'MXN')}</strong></p>` : ''}
       <p class="nota">* Los cargos en destino incluyen IVA</p>
     </div>
   </section>
