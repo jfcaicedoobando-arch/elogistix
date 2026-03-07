@@ -17,10 +17,12 @@ import { formatCurrency } from "@/lib/formatters";
 import { formatDate, getEstadoColor } from "@/lib/helpers";
 import { toast } from "sonner";
 import { usePermissions } from "@/hooks/usePermissions";
+import PaginationControls from "@/components/PaginationControls";
 import type { Database } from "@/integrations/supabase/types";
 
 type EstadoFactura = Database["public"]["Enums"]["estado_factura"];
 const ESTADOS_FACTURA: EstadoFactura[] = ['Borrador', 'Emitida', 'Pagada', 'Vencida', 'Cancelada'];
+const DEFAULT_PAGE_SIZE = 20;
 
 export default function Facturacion() {
   const [search, setSearch] = useState("");
