@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
+import { FormProvider } from "react-hook-form";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "@/hooks/use-toast";
@@ -43,8 +44,9 @@ export default function EditarEmbarque() {
   const [initialized, setInitialized] = useState(false);
   const [currentStep, setCurrentStep] = useState(1);
 
-  const { form, setField, handleMsdsUpload, inicializarDesdeEmbarque, buildEmbarquePayload, buildConceptosVentaPayload, buildConceptosCostoPayload } = useEmbarqueForm();
-  const { data: contactos = [] } = useContactosCliente(form.clienteId || undefined);
+  const { methods, handleMsdsUpload, inicializarDesdeEmbarque, buildEmbarquePayload, buildConceptosVentaPayload, buildConceptosCostoPayload } = useEmbarqueForm();
+  const clienteId = methods.watch('clienteId');
+  const { data: contactos = [] } = useContactosCliente(clienteId || undefined);
 
   const {
     conceptosVenta, conceptosCosto,
@@ -82,7 +84,7 @@ export default function EditarEmbarque() {
     })));
   }, [conceptosCostoDb, initialized]);
 
-  const selectedCliente = clientes.find(c => c.id === form.clienteId);
+  const selectedCliente = clientes.find(c => c.id === clienteId);
 
   const handleSave = async () => {
     if (!id || !embarque) return;
@@ -94,12 +96,13 @@ export default function EditarEmbarque() {
         conceptosCosto: buildConceptosCostoPayload(conceptosCosto, proveedoresDb),
       });
 
+      const v = methods.getValues();
       registrarActividad.mutate({
         accion: 'editar',
         modulo: 'embarques',
         entidad_id: id,
         entidad_nombre: embarque.expediente,
-        detalles: { cliente: selectedCliente?.nombre ?? '', modo: form.modo, tipo: form.tipo },
+        detalles: { cliente: selectedCliente?.nombre ?? '', modo: v.modo, tipo: v.tipo },
       });
 
       toast({ title: "Embarque actualizado", description: `${embarque.expediente} guardado correctamente.` });
@@ -129,98 +132,60 @@ export default function EditarEmbarque() {
   }
 
   return (
-    <div className="space-y-6 max-w-4xl mx-auto">
-      <div className="flex items-center gap-4">
-        <Button variant="ghost" size="icon" onClick={() => navigate(`/embarques/${id}`)}>
-          <ArrowLeft className="h-5 w-5" />
-        </Button>
-        <div>
-          <h1 className="text-2xl font-bold">Editar Embarque</h1>
-          <p className="text-sm text-muted-foreground">{embarque.expediente}</p>
+    <FormProvider {...methods}>
+      <div className="space-y-6 max-w-4xl mx-auto">
+        <div className="flex items-center gap-4">
+          <Button variant="ghost" size="icon" onClick={() => navigate(`/embarques/${id}`)}>
+            <ArrowLeft className="h-5 w-5" />
+          </Button>
+          <div>
+            <h1 className="text-2xl font-bold">Editar Embarque</h1>
+            <p className="text-sm text-muted-foreground">{embarque.expediente}</p>
+          </div>
+        </div>
+
+        <StepIndicator steps={steps} currentStep={currentStep} />
+
+        {currentStep === 1 && (
+          <StepDatosGenerales
+            clientes={clientes}
+            clienteNombre={selectedCliente?.nombre || ''}
+            contactos={contactos}
+            onMsdsUpload={handleMsdsUpload}
+          />
+        )}
+
+        {currentStep === 2 && <StepDatosRuta />}
+
+        {currentStep === 3 && (
+          <StepCostosPrecios
+            conceptosVenta={conceptosVenta}
+            conceptosCosto={conceptosCosto}
+            proveedoresDb={proveedoresDb}
+            subtotalVenta={subtotalVenta}
+            totalCosto={totalCosto}
+            utilidadEstimada={utilidadEstimada}
+            updateConceptoVenta={updateConceptoVenta}
+            addConceptoVenta={addConceptoVenta}
+            removeConceptoVenta={removeConceptoVenta}
+            updateConceptoCosto={updateConceptoCosto}
+            addConceptoCosto={addConceptoCosto}
+            removeConceptoCosto={removeConceptoCosto}
+          />
+        )}
+
+        <div className="flex justify-between">
+          <Button variant="outline" onClick={() => currentStep > 1 ? setCurrentStep(p => p - 1) : navigate(`/embarques/${id}`)}>
+            {currentStep === 1 ? 'Cancelar' : 'Anterior'}
+          </Button>
+          <Button
+            disabled={updateEmbarque.isPending}
+            onClick={() => currentStep < TOTAL_STEPS ? setCurrentStep(p => p + 1) : handleSave()}
+          >
+            {updateEmbarque.isPending ? 'Guardando...' : currentStep === TOTAL_STEPS ? 'Guardar Cambios' : 'Siguiente'}
+          </Button>
         </div>
       </div>
-
-      <StepIndicator steps={steps} currentStep={currentStep} />
-
-      {currentStep === 1 && (
-        <StepDatosGenerales
-          modo={form.modo} setModo={setField('modo')}
-          tipo={form.tipo} setTipo={setField('tipo')}
-          clienteId={form.clienteId} setClienteId={setField('clienteId')}
-          clientes={clientes} clienteNombre={selectedCliente?.nombre || ''}
-          incoterm={form.incoterm} setIncoterm={setField('incoterm')}
-          shipper={form.shipper} setShipper={setField('shipper')}
-          shipperManual={form.shipperManual} setShipperManual={setField('shipperManual')}
-          consignatario={form.consignatario} setConsignatario={setField('consignatario')}
-          consignatarioManual={form.consignatarioManual} setConsignatarioManual={setField('consignatarioManual')}
-          contactos={contactos}
-          descripcionMercancia={form.descripcionMercancia} setDescripcionMercancia={setField('descripcionMercancia')}
-          pesoKg={form.pesoKg} setPesoKg={setField('pesoKg')}
-          volumenM3={form.volumenM3} setVolumenM3={setField('volumenM3')}
-          piezas={form.piezas} setPiezas={setField('piezas')}
-          tipoCarga={form.tipoCarga} setTipoCarga={setField('tipoCarga')}
-          msdsArchivo={form.msdsArchivo} subiendoMsds={form.subiendoMsds}
-          onMsdsUpload={handleMsdsUpload}
-        />
-      )}
-
-      {currentStep === 2 && (
-        <StepDatosRuta
-          modo={form.modo}
-          puertoOrigen={form.puertoOrigen} setPuertoOrigen={setField('puertoOrigen')}
-          puertoDestino={form.puertoDestino} setPuertoDestino={setField('puertoDestino')}
-          naviera={form.naviera} setNaviera={setField('naviera')}
-          agente={form.agente} setAgente={setField('agente')}
-          blMaster={form.blMaster} setBlMaster={setField('blMaster')}
-          blHouse={form.blHouse} setBlHouse={setField('blHouse')}
-          tipoServicio={form.tipoServicio} setTipoServicio={setField('tipoServicio')}
-          contenedor={form.contenedor} setContenedor={setField('contenedor')}
-          tipoContenedor={form.tipoContenedor} setTipoContenedor={setField('tipoContenedor')}
-          aeropuertoOrigen={form.aeropuertoOrigen} setAeropuertoOrigen={setField('aeropuertoOrigen')}
-          aeropuertoDestino={form.aeropuertoDestino} setAeropuertoDestino={setField('aeropuertoDestino')}
-          aerolinea={form.aerolinea} setAerolinea={setField('aerolinea')}
-          mawb={form.mawb} setMawb={setField('mawb')}
-          hawb={form.hawb} setHawb={setField('hawb')}
-          ciudadOrigen={form.ciudadOrigen} setCiudadOrigen={setField('ciudadOrigen')}
-          ciudadDestino={form.ciudadDestino} setCiudadDestino={setField('ciudadDestino')}
-          transportista={form.transportista} setTransportista={setField('transportista')}
-          cartaPorte={form.cartaPorte} setCartaPorte={setField('cartaPorte')}
-          etd={form.etd} setEtd={setField('etd')}
-          eta={form.eta} setEta={setField('eta')}
-        />
-      )}
-
-      {currentStep === 3 && (
-        <StepCostosPrecios
-          modo={form.modo}
-          conceptosVenta={conceptosVenta}
-          conceptosCosto={conceptosCosto}
-          proveedoresDb={proveedoresDb}
-          subtotalVenta={subtotalVenta}
-          totalCosto={totalCosto}
-          utilidadEstimada={utilidadEstimada}
-          tipoCambioUSD={form.tipoCambioUSD} setTipoCambioUSD={setField('tipoCambioUSD')}
-          tipoCambioEUR={form.tipoCambioEUR} setTipoCambioEUR={setField('tipoCambioEUR')}
-          updateConceptoVenta={updateConceptoVenta}
-          addConceptoVenta={addConceptoVenta}
-          removeConceptoVenta={removeConceptoVenta}
-          updateConceptoCosto={updateConceptoCosto}
-          addConceptoCosto={addConceptoCosto}
-          removeConceptoCosto={removeConceptoCosto}
-        />
-      )}
-
-      <div className="flex justify-between">
-        <Button variant="outline" onClick={() => currentStep > 1 ? setCurrentStep(p => p - 1) : navigate(`/embarques/${id}`)}>
-          {currentStep === 1 ? 'Cancelar' : 'Anterior'}
-        </Button>
-        <Button
-          disabled={updateEmbarque.isPending}
-          onClick={() => currentStep < TOTAL_STEPS ? setCurrentStep(p => p + 1) : handleSave()}
-        >
-          {updateEmbarque.isPending ? 'Guardando...' : currentStep === TOTAL_STEPS ? 'Guardar Cambios' : 'Siguiente'}
-        </Button>
-      </div>
-    </div>
+    </FormProvider>
   );
 }

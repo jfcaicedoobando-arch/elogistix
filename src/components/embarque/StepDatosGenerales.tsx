@@ -1,10 +1,11 @@
-import { useState } from "react";
 import { Upload, FileText } from "lucide-react";
+import { useFormContext, Controller } from "react-hook-form";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import type { EmbarqueFormValues } from "@/hooks/useEmbarqueForm";
 import type { ModoTransporte, TipoOperacion, Incoterm } from "@/data/types";
 
 const MODOS: ModoTransporte[] = ['Marítimo', 'Aéreo', 'Terrestre', 'Multimodal'];
@@ -31,51 +32,22 @@ export interface EmbarqueValidationErrors {
 }
 
 interface Props {
-  modo: string;
-  setModo: (v: string) => void;
-  tipo: string;
-  setTipo: (v: string) => void;
-  clienteId: string;
-  setClienteId: (v: string) => void;
   clientes: Cliente[];
   clienteNombre: string;
-  incoterm: string;
-  setIncoterm: (v: string) => void;
-  shipper: string;
-  setShipper: (v: string) => void;
-  shipperManual: string;
-  setShipperManual: (v: string) => void;
-  consignatario: string;
-  setConsignatario: (v: string) => void;
-  consignatarioManual: string;
-  setConsignatarioManual: (v: string) => void;
   contactos: Contacto[];
-  descripcionMercancia: string;
-  setDescripcionMercancia: (v: string) => void;
-  pesoKg: string;
-  setPesoKg: (v: string) => void;
-  volumenM3: string;
-  setVolumenM3: (v: string) => void;
-  piezas: string;
-  setPiezas: (v: string) => void;
-  tipoCarga: string;
-  setTipoCarga: (v: string) => void;
-  msdsArchivo: string | null;
-  subiendoMsds: boolean;
   onMsdsUpload: (file: File) => void;
   errors?: EmbarqueValidationErrors;
 }
 
-export function StepDatosGenerales(props: Props) {
-  const {
-    modo, setModo, tipo, setTipo, clienteId, setClienteId, clientes, clienteNombre,
-    incoterm, setIncoterm, shipper, setShipper, shipperManual, setShipperManual,
-    consignatario, setConsignatario, consignatarioManual, setConsignatarioManual,
-    contactos, descripcionMercancia, setDescripcionMercancia,
-    pesoKg, setPesoKg, volumenM3, setVolumenM3, piezas, setPiezas,
-    tipoCarga, setTipoCarga, msdsArchivo, subiendoMsds, onMsdsUpload,
-    errors = {},
-  } = props;
+export function StepDatosGenerales({ clientes, clienteNombre, contactos, onMsdsUpload, errors = {} }: Props) {
+  const { register, watch, setValue } = useFormContext<EmbarqueFormValues>();
+
+  const modo = watch('modo');
+  const shipper = watch('shipper');
+  const consignatario = watch('consignatario');
+  const tipoCarga = watch('tipoCarga');
+  const msdsArchivo = watch('msdsArchivo');
+  const subiendoMsds = watch('subiendoMsds');
 
   const msdsNombreArchivo = msdsArchivo ? msdsArchivo.split('/').pop() : null;
 
@@ -86,72 +58,86 @@ export function StepDatosGenerales(props: Props) {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="space-y-2">
             <Label>Modo de Transporte *</Label>
-            <Select value={modo} onValueChange={setModo}>
-              <SelectTrigger className={errors.modo ? 'border-destructive' : ''}><SelectValue placeholder="Seleccionar modo" /></SelectTrigger>
-              <SelectContent>{MODOS.map(m => <SelectItem key={m} value={m}>{m}</SelectItem>)}</SelectContent>
-            </Select>
+            <Controller name="modo" render={({ field }) => (
+              <Select value={field.value} onValueChange={field.onChange}>
+                <SelectTrigger className={errors.modo ? 'border-destructive' : ''}><SelectValue placeholder="Seleccionar modo" /></SelectTrigger>
+                <SelectContent>{MODOS.map(m => <SelectItem key={m} value={m}>{m}</SelectItem>)}</SelectContent>
+              </Select>
+            )} />
             {errors.modo && <p className="text-xs text-destructive">{errors.modo}</p>}
           </div>
           <div className="space-y-2">
             <Label>Tipo de Operación *</Label>
-            <Select value={tipo} onValueChange={setTipo}>
-              <SelectTrigger className={errors.tipo ? 'border-destructive' : ''}><SelectValue placeholder="Seleccionar tipo" /></SelectTrigger>
-              <SelectContent>{TIPOS.map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}</SelectContent>
-            </Select>
+            <Controller name="tipo" render={({ field }) => (
+              <Select value={field.value} onValueChange={field.onChange}>
+                <SelectTrigger className={errors.tipo ? 'border-destructive' : ''}><SelectValue placeholder="Seleccionar tipo" /></SelectTrigger>
+                <SelectContent>{TIPOS.map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}</SelectContent>
+              </Select>
+            )} />
             {errors.tipo && <p className="text-xs text-destructive">{errors.tipo}</p>}
           </div>
           <div className="space-y-2">
             <Label>Cliente *</Label>
-            <Select value={clienteId} onValueChange={setClienteId}>
-              <SelectTrigger className={errors.clienteId ? 'border-destructive' : ''}><SelectValue placeholder="Seleccionar cliente" /></SelectTrigger>
-              <SelectContent>{clientes.map(c => <SelectItem key={c.id} value={c.id}>{c.nombre}</SelectItem>)}</SelectContent>
-            </Select>
+            <Controller name="clienteId" render={({ field }) => (
+              <Select value={field.value} onValueChange={field.onChange}>
+                <SelectTrigger className={errors.clienteId ? 'border-destructive' : ''}><SelectValue placeholder="Seleccionar cliente" /></SelectTrigger>
+                <SelectContent>{clientes.map(c => <SelectItem key={c.id} value={c.id}>{c.nombre}</SelectItem>)}</SelectContent>
+              </Select>
+            )} />
             {errors.clienteId && <p className="text-xs text-destructive">{errors.clienteId}</p>}
           </div>
           <div className="space-y-2">
             <Label>Incoterm *</Label>
-            <Select value={incoterm} onValueChange={setIncoterm}>
-              <SelectTrigger><SelectValue placeholder="Seleccionar" /></SelectTrigger>
-              <SelectContent>{INCOTERMS.map(i => <SelectItem key={i} value={i}>{i}</SelectItem>)}</SelectContent>
-            </Select>
+            <Controller name="incoterm" render={({ field }) => (
+              <Select value={field.value} onValueChange={field.onChange}>
+                <SelectTrigger><SelectValue placeholder="Seleccionar" /></SelectTrigger>
+                <SelectContent>{INCOTERMS.map(i => <SelectItem key={i} value={i}>{i}</SelectItem>)}</SelectContent>
+              </Select>
+            )} />
           </div>
           <div className="space-y-2 md:col-span-2">
             <Label>Shipper (Exportador) *</Label>
-            <Select value={shipper} onValueChange={(v) => { setShipper(v); if (v !== '__otro__') setShipperManual(''); }}>
-              <SelectTrigger><SelectValue placeholder="Seleccionar shipper" /></SelectTrigger>
-              <SelectContent>
-                {contactos.map(ct => <SelectItem key={ct.id} value={ct.id}>{ct.nombre} — {ct.tipo} ({ct.pais})</SelectItem>)}
-                <SelectItem value="__otro__">Otro (escribir manualmente)</SelectItem>
-              </SelectContent>
-            </Select>
-            {shipper === '__otro__' && <Input placeholder="Nombre del exportador" value={shipperManual} onChange={e => setShipperManual(e.target.value)} className="mt-2" />}
+            <Controller name="shipper" render={({ field }) => (
+              <Select value={field.value} onValueChange={(v) => { field.onChange(v); if (v !== '__otro__') setValue('shipperManual', ''); }}>
+                <SelectTrigger><SelectValue placeholder="Seleccionar shipper" /></SelectTrigger>
+                <SelectContent>
+                  {contactos.map(ct => <SelectItem key={ct.id} value={ct.id}>{ct.nombre} — {ct.tipo} ({ct.pais})</SelectItem>)}
+                  <SelectItem value="__otro__">Otro (escribir manualmente)</SelectItem>
+                </SelectContent>
+              </Select>
+            )} />
+            {shipper === '__otro__' && <Input placeholder="Nombre del exportador" {...register('shipperManual')} className="mt-2" />}
           </div>
           <div className="space-y-2 md:col-span-2">
             <Label>Consignatario *</Label>
-            <Select value={consignatario} onValueChange={(v) => { setConsignatario(v); if (v !== '__otro__') setConsignatarioManual(''); }}>
-              <SelectTrigger><SelectValue placeholder="Seleccionar consignatario" /></SelectTrigger>
-              <SelectContent>
-                {clienteNombre && <SelectItem value="__cliente__">Mismo cliente ({clienteNombre})</SelectItem>}
-                {contactos.map(ct => <SelectItem key={ct.id} value={ct.id}>{ct.nombre} — {ct.tipo} ({ct.pais})</SelectItem>)}
-                <SelectItem value="__otro__">Otro (escribir manualmente)</SelectItem>
-              </SelectContent>
-            </Select>
-            {consignatario === '__otro__' && <Input placeholder="Nombre del consignatario" value={consignatarioManual} onChange={e => setConsignatarioManual(e.target.value)} className="mt-2" />}
+            <Controller name="consignatario" render={({ field }) => (
+              <Select value={field.value} onValueChange={(v) => { field.onChange(v); if (v !== '__otro__') setValue('consignatarioManual', ''); }}>
+                <SelectTrigger><SelectValue placeholder="Seleccionar consignatario" /></SelectTrigger>
+                <SelectContent>
+                  {clienteNombre && <SelectItem value="__cliente__">Mismo cliente ({clienteNombre})</SelectItem>}
+                  {contactos.map(ct => <SelectItem key={ct.id} value={ct.id}>{ct.nombre} — {ct.tipo} ({ct.pais})</SelectItem>)}
+                  <SelectItem value="__otro__">Otro (escribir manualmente)</SelectItem>
+                </SelectContent>
+              </Select>
+            )} />
+            {consignatario === '__otro__' && <Input placeholder="Nombre del consignatario" {...register('consignatarioManual')} className="mt-2" />}
           </div>
           <div className="space-y-2 md:col-span-2">
             <Label>Descripción de la Mercancía *</Label>
-            <Input className={errors.descripcionMercancia ? 'border-destructive' : ''} placeholder="Descripción detallada" value={descripcionMercancia} onChange={e => setDescripcionMercancia(e.target.value)} />
+            <Input className={errors.descripcionMercancia ? 'border-destructive' : ''} placeholder="Descripción detallada" {...register('descripcionMercancia')} />
             {errors.descripcionMercancia && <p className="text-xs text-destructive">{errors.descripcionMercancia}</p>}
           </div>
           <div className="space-y-2">
             <Label>Tipo de Carga *</Label>
-            <Select value={tipoCarga} onValueChange={(valor) => { setTipoCarga(valor); }}>
-              <SelectTrigger><SelectValue placeholder="Seleccionar tipo de carga" /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="Carga General">Carga General</SelectItem>
-                <SelectItem value="Mercancía Peligrosa">Mercancía Peligrosa</SelectItem>
-              </SelectContent>
-            </Select>
+            <Controller name="tipoCarga" render={({ field }) => (
+              <Select value={field.value} onValueChange={field.onChange}>
+                <SelectTrigger><SelectValue placeholder="Seleccionar tipo de carga" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Carga General">Carga General</SelectItem>
+                  <SelectItem value="Mercancía Peligrosa">Mercancía Peligrosa</SelectItem>
+                </SelectContent>
+              </Select>
+            )} />
           </div>
           {tipoCarga === 'Mercancía Peligrosa' && (
             <div className="space-y-2">
@@ -160,51 +146,29 @@ export function StepDatosGenerales(props: Props) {
                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
                   <FileText className="h-4 w-4" />
                   <span className="truncate">{msdsNombreArchivo}</span>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={() => document.getElementById('msds-file-input')?.click()}
-                  >
-                    Cambiar
-                  </Button>
+                  <Button type="button" variant="outline" size="sm" onClick={() => document.getElementById('msds-file-input')?.click()}>Cambiar</Button>
                 </div>
               ) : (
-                <Button
-                  type="button"
-                  variant="outline"
-                  className="w-full"
-                  disabled={subiendoMsds}
-                  onClick={() => document.getElementById('msds-file-input')?.click()}
-                >
+                <Button type="button" variant="outline" className="w-full" disabled={subiendoMsds} onClick={() => document.getElementById('msds-file-input')?.click()}>
                   <Upload className="h-4 w-4 mr-2" />
                   {subiendoMsds ? 'Subiendo...' : 'Adjuntar MSDS'}
                 </Button>
               )}
-              <input
-                id="msds-file-input"
-                type="file"
-                accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
-                className="hidden"
-                onChange={(e) => {
-                  const archivo = e.target.files?.[0];
-                  if (archivo) onMsdsUpload(archivo);
-                  e.target.value = '';
-                }}
-              />
+              <input id="msds-file-input" type="file" accept=".pdf,.doc,.docx,.jpg,.jpeg,.png" className="hidden"
+                onChange={(e) => { const archivo = e.target.files?.[0]; if (archivo) onMsdsUpload(archivo); e.target.value = ''; }} />
             </div>
           )}
           <div className="space-y-2">
             <Label>Peso (kg) *</Label>
-            <Input type="number" placeholder="0" value={pesoKg} onChange={e => setPesoKg(e.target.value)} />
+            <Input type="number" placeholder="0" {...register('pesoKg')} />
           </div>
           <div className="space-y-2">
             <Label>Volumen (m³) *</Label>
-            <Input type="number" placeholder="0" value={volumenM3} onChange={e => setVolumenM3(e.target.value)} />
+            <Input type="number" placeholder="0" {...register('volumenM3')} />
           </div>
           <div className="space-y-2">
             <Label>Piezas *</Label>
-            <Input type="number" placeholder="0" value={piezas} onChange={e => setPiezas(e.target.value)} />
+            <Input type="number" placeholder="0" {...register('piezas')} />
           </div>
         </div>
       </CardContent>

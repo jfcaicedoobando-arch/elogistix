@@ -1,4 +1,5 @@
 import { useMemo } from "react";
+import { useFormContext } from "react-hook-form";
 import { Trash2 } from "lucide-react";
 import { formatCurrency } from "@/lib/formatters";
 import { convertirAUSD, type Moneda } from "@/lib/financialUtils";
@@ -7,7 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { CATALOGO_CONCEPTOS } from "@/data/embarqueConstants";
-
+import type { EmbarqueFormValues } from "@/hooks/useEmbarqueForm";
 import type { ConceptoVentaLocal as ConceptoVentaRow, ConceptoCostoLocal as ConceptoCostoRow } from "@/data/conceptoTypes";
 
 interface Proveedor {
@@ -16,17 +17,12 @@ interface Proveedor {
 }
 
 interface Props {
-  modo: string;
   conceptosVenta: ConceptoVentaRow[];
   conceptosCosto: ConceptoCostoRow[];
   proveedoresDb: Proveedor[];
   subtotalVenta: number;
   totalCosto: number;
   utilidadEstimada: number;
-  tipoCambioUSD: string;
-  setTipoCambioUSD: (v: string) => void;
-  tipoCambioEUR: string;
-  setTipoCambioEUR: (v: string) => void;
   updateConceptoVenta: (id: number, field: keyof ConceptoVentaRow, value: string | number | boolean) => void;
   addConceptoVenta: () => void;
   removeConceptoVenta: (id: number) => void;
@@ -37,12 +33,15 @@ interface Props {
 
 export function StepCostosPrecios(props: Props) {
   const {
-    modo, conceptosVenta, conceptosCosto, proveedoresDb,
+    conceptosVenta, conceptosCosto, proveedoresDb,
     subtotalVenta, totalCosto, utilidadEstimada,
-    tipoCambioUSD, setTipoCambioUSD, tipoCambioEUR, setTipoCambioEUR,
     updateConceptoVenta, addConceptoVenta, removeConceptoVenta,
     updateConceptoCosto, addConceptoCosto, removeConceptoCosto,
   } = props;
+
+  const { watch, register, setValue } = useFormContext<EmbarqueFormValues>();
+  const tipoCambioUSD = watch('tipoCambioUSD');
+  const tipoCambioEUR = watch('tipoCambioEUR');
 
   const tcUSD = parseFloat(tipoCambioUSD) || 1;
   const tcEUR = parseFloat(tipoCambioEUR) || 1;
@@ -137,8 +136,8 @@ export function StepCostosPrecios(props: Props) {
       <Card>
         <CardContent className="p-4">
           <div className="grid grid-cols-3 gap-4 text-center">
-            <div><p className="text-xs text-muted-foreground">Tipo de Cambio USD</p><Input type="number" value={tipoCambioUSD} onChange={e => setTipoCambioUSD(e.target.value)} className="text-center mt-1" /></div>
-            <div><p className="text-xs text-muted-foreground">Tipo de Cambio EUR</p><Input type="number" value={tipoCambioEUR} onChange={e => setTipoCambioEUR(e.target.value)} className="text-center mt-1" /></div>
+            <div><p className="text-xs text-muted-foreground">Tipo de Cambio USD</p><Input type="number" {...register('tipoCambioUSD')} className="text-center mt-1" /></div>
+            <div><p className="text-xs text-muted-foreground">Tipo de Cambio EUR</p><Input type="number" {...register('tipoCambioEUR')} className="text-center mt-1" /></div>
             <div><p className="text-xs text-muted-foreground">Utilidad Estimada (USD)</p><p className={`text-xl font-bold mt-2 ${utilidadEstimada >= 0 ? 'text-success' : 'text-destructive'}`}>{formatCurrency(totalVentaUSD - totalCostoUSD, 'USD')}</p></div>
           </div>
         </CardContent>
