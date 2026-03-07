@@ -1,7 +1,6 @@
 import { useState, useMemo } from "react";
-import SeccionCostosInternosPL from "@/components/cotizacion/SeccionCostosInternosPL";
-import TablaConceptosUSD from "@/components/cotizacion/TablaConceptosUSD";
-import TablaConceptosMXN from "@/components/cotizacion/TablaConceptosMXN";
+import SeccionCostosInternosPLUnificado from "@/components/cotizacion/SeccionCostosInternosPLUnificado";
+import TablaConceptosGenerico from "@/components/cotizacion/TablaConceptosGenerico";
 import ResumenTotalesCotizacion from "@/components/cotizacion/ResumenTotalesCotizacion";
 import DialogConvertirProspecto from "@/components/cotizacion/DialogConvertirProspecto";
 import SeccionMercanciaCotizacionDetalle from "@/components/cotizacion/SeccionMercanciaCotizacionDetalle";
@@ -237,13 +236,14 @@ export default function CotizacionDetalle() {
       <SeccionMercanciaCotizacionDetalle cotizacion={cotizacion} />
 
       {/* Conceptos de venta */}
-      <TablaConceptosUSD conceptos={conceptosVentaUSD} totalUSD={totalUSD} />
-      <TablaConceptosMXN conceptos={conceptosVentaMXN} subtotalMXN={subtotalMXN} ivaMXN={ivaMXN} totalMXN={totalMXN} />
+      <TablaConceptosGenerico moneda="USD" conceptos={conceptosVentaUSD} total={totalUSD} />
+      <TablaConceptosGenerico moneda="MXN" conceptos={conceptosVentaMXN} subtotal={subtotalMXN} iva={ivaMXN} total={totalMXN} />
       <ResumenTotalesCotizacion totalUSD={totalUSD} totalMXN={totalMXN} />
 
       {/* Costos Internos P&L */}
       {canEdit && (
-        <SeccionCostosInternosPL
+        <SeccionCostosInternosPLUnificado
+          tipo="detalle"
           cotizacionId={cotizacion.id}
           conceptosUSD={conceptosVentaUSD}
           conceptosMXN={conceptosVentaMXN}
