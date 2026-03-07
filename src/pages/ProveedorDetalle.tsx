@@ -8,7 +8,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
-import { useProveedor, useProveedores } from "@/hooks/useProveedores";
+import { useProveedor, useProveedorMutations } from "@/hooks/useProveedores";
 import { formatCurrency } from "@/lib/formatters";
 import { getEstadoColor } from "@/lib/helpers";
 import EditarProveedorDialog from "@/components/EditarProveedorDialog";
@@ -21,7 +21,7 @@ export default function ProveedorDetalle() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { data: proveedor, isLoading } = useProveedor(id);
-  const { updateProveedor } = useProveedores();
+  const { updateProveedor } = useProveedorMutations();
   const [editOpen, setEditOpen] = useState(false);
   const { canEdit } = usePermissions();
 
