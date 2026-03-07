@@ -490,7 +490,7 @@ export default function NuevaCotizacion() {
 
           {/* PASO 2 — Costos & P&L */}
           {currentStep === 2 && (
-            <SeccionCostosInternosPLLocal filas={costosInternos} setFilas={setCostosInternos} />
+            <SeccionCostosInternosPLUnificado tipo="local" filas={costosInternos} setFilas={setCostosInternos} />
           )}
 
           {/* PASO 3 — Cotización Cliente */}
