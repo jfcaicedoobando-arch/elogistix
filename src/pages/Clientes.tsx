@@ -17,6 +17,9 @@ import { useToast } from "@/hooks/use-toast";
 import { usePermissions } from "@/hooks/usePermissions";
 import { useRegistrarActividad } from "@/hooks/useBitacora";
 import DocumentChecklist, { type DocumentoChecklist } from "@/components/DocumentChecklist";
+import PaginationControls from "@/components/PaginationControls";
+
+const DEFAULT_PAGE_SIZE = 20;
 
 const emptyCliente = {
   nombre: "", rfc: "", direccion: "", ciudad: "", estado: "", cp: "", contacto: "", email: "", telefono: "",
