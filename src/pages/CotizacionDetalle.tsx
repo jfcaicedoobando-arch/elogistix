@@ -242,7 +242,8 @@ export default function CotizacionDetalle() {
 
       {/* Costos Internos P&L */}
       {canEdit && (
-        <SeccionCostosInternosPL
+        <SeccionCostosInternosPLUnificado
+          tipo="detalle"
           cotizacionId={cotizacion.id}
           conceptosUSD={conceptosVentaUSD}
           conceptosMXN={conceptosVentaMXN}
