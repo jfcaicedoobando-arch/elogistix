@@ -1,3 +1,4 @@
+import { useFormContext } from "react-hook-form";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -10,50 +11,16 @@ import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { CalendarIcon } from "lucide-react";
 import PortSelect from "@/components/PortSelect";
+import type { CotizacionFormValues } from "@/hooks/useCotizacionWizardForm";
 
-interface Props {
-  modo: string;
-  tipoEmbarque: string;
-  origen: string;
-  setOrigen: (v: string) => void;
-  destino: string;
-  setDestino: (v: string) => void;
-  tiempoTransitoDias: number | undefined;
-  setTiempoTransitoDias: (v: number | undefined) => void;
-  diasLibresDestino: number;
-  setDiasLibresDestino: (v: number) => void;
-  diasAlmacenaje: number;
-  setDiasAlmacenaje: (v: number) => void;
-  cartaGarantia: boolean;
-  setCartaGarantia: (v: boolean) => void;
-  frecuencia: string;
-  setFrecuencia: (v: string) => void;
-  rutaTexto: string;
-  setRutaTexto: (v: string) => void;
-  validezPropuesta: Date | undefined;
-  setValidezPropuesta: (v: Date | undefined) => void;
-  tipoMovimiento: string;
-  setTipoMovimiento: (v: string) => void;
-  seguro: boolean;
-  setSeguro: (v: boolean) => void;
-  valorSeguroUsd: number;
-  setValorSeguroUsd: (v: number) => void;
-}
+export default function SeccionRutaCotizacion() {
+  const { watch, setValue } = useFormContext<CotizacionFormValues>();
 
-export default function SeccionRutaCotizacion({
-  modo, tipoEmbarque,
-  origen, setOrigen, destino, setDestino,
-  tiempoTransitoDias, setTiempoTransitoDias,
-  diasLibresDestino, setDiasLibresDestino,
-  diasAlmacenaje, setDiasAlmacenaje,
-  cartaGarantia, setCartaGarantia,
-  frecuencia, setFrecuencia,
-  rutaTexto, setRutaTexto,
-  validezPropuesta, setValidezPropuesta,
-  tipoMovimiento, setTipoMovimiento,
-  seguro, setSeguro,
-  valorSeguroUsd, setValorSeguroUsd,
-}: Props) {
+  const modo = watch("modo");
+  const tipoEmbarque = watch("tipoEmbarque");
+  const seguro = watch("seguro");
+  const validezPropuesta = watch("validezPropuesta");
+
   const esMaritimo = modo === 'Marítimo';
   const usarPortSelect = esMaritimo || modo === 'Multimodal';
 
@@ -63,29 +30,29 @@ export default function SeccionRutaCotizacion({
       <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {usarPortSelect ? (
           <>
-            <div><Label>Origen</Label><PortSelect value={origen} onValueChange={setOrigen} placeholder="Buscar puerto de origen..." /></div>
-            <div><Label>Destino</Label><PortSelect value={destino} onValueChange={setDestino} placeholder="Buscar puerto de destino..." /></div>
+            <div><Label>Origen</Label><PortSelect value={watch("origen")} onValueChange={v => setValue("origen", v)} placeholder="Buscar puerto de origen..." /></div>
+            <div><Label>Destino</Label><PortSelect value={watch("destino")} onValueChange={v => setValue("destino", v)} placeholder="Buscar puerto de destino..." /></div>
           </>
         ) : (
           <>
-            <div><Label>Origen</Label><Input value={origen} onChange={e => setOrigen(e.target.value)} placeholder="Ej. Shanghai, China" /></div>
-            <div><Label>Destino</Label><Input value={destino} onChange={e => setDestino(e.target.value)} placeholder="Ej. Manzanillo, México" /></div>
+            <div><Label>Origen</Label><Input value={watch("origen")} onChange={e => setValue("origen", e.target.value)} placeholder="Ej. Shanghai, China" /></div>
+            <div><Label>Destino</Label><Input value={watch("destino")} onChange={e => setValue("destino", e.target.value)} placeholder="Ej. Manzanillo, México" /></div>
           </>
         )}
         <div className="md:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-4 pt-4 border-t">
           <div>
             <Label>Tiempo de tránsito (días)</Label>
-            <Input type="number" min={0} value={tiempoTransitoDias ?? ''} onChange={e => setTiempoTransitoDias(e.target.value ? Number(e.target.value) : undefined)} placeholder="Ej. 25" />
+            <Input type="number" min={0} value={watch("tiempoTransitoDias") ?? ''} onChange={e => setValue("tiempoTransitoDias", e.target.value ? Number(e.target.value) : undefined)} placeholder="Ej. 25" />
           </div>
           {esMaritimo && tipoEmbarque === 'FCL' && (
             <>
               <div>
                 <Label>Días libres en destino</Label>
-                <Input type="number" min={0} value={diasLibresDestino} onChange={e => setDiasLibresDestino(Number(e.target.value))} placeholder="Ej. 7" />
+                <Input type="number" min={0} value={watch("diasLibresDestino")} onChange={e => setValue("diasLibresDestino", Number(e.target.value))} placeholder="Ej. 7" />
               </div>
               <div>
                 <Label>Carta garantía</Label>
-                <Select value={cartaGarantia ? 'si' : 'no'} onValueChange={v => setCartaGarantia(v === 'si')}>
+                <Select value={watch("cartaGarantia") ? 'si' : 'no'} onValueChange={v => setValue("cartaGarantia", v === 'si')}>
                   <SelectTrigger><SelectValue placeholder="Seleccione..." /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="si">Sí</SelectItem>
@@ -98,12 +65,12 @@ export default function SeccionRutaCotizacion({
           {esMaritimo && tipoEmbarque === 'LCL' && (
             <div>
               <Label>Días libres de almacenaje</Label>
-              <Input type="number" min={0} value={diasAlmacenaje} onChange={e => setDiasAlmacenaje(Number(e.target.value))} placeholder="Ej. 5" />
+              <Input type="number" min={0} value={watch("diasAlmacenaje")} onChange={e => setValue("diasAlmacenaje", Number(e.target.value))} placeholder="Ej. 5" />
             </div>
           )}
           <div>
             <Label>Frecuencia</Label>
-            <Select value={frecuencia} onValueChange={setFrecuencia}>
+            <Select value={watch("frecuencia")} onValueChange={v => setValue("frecuencia", v)}>
               <SelectTrigger><SelectValue placeholder="Seleccionar frecuencia" /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="Diaria">Diaria</SelectItem>
@@ -114,7 +81,7 @@ export default function SeccionRutaCotizacion({
           </div>
           <div className="md:col-span-2">
             <Label>Ruta</Label>
-            <Input value={rutaTexto} onChange={e => setRutaTexto(e.target.value)} placeholder="Ej. Manzanillo → Los Angeles → Nueva York" />
+            <Input value={watch("rutaTexto")} onChange={e => setValue("rutaTexto", e.target.value)} placeholder="Ej. Manzanillo → Los Angeles → Nueva York" />
           </div>
           <div>
             <Label>Validez de la propuesta</Label>
@@ -126,13 +93,13 @@ export default function SeccionRutaCotizacion({
                 </Button>
               </PopoverTrigger>
               <PopoverContent className="w-auto p-0" align="start">
-                <Calendar mode="single" selected={validezPropuesta} onSelect={setValidezPropuesta} initialFocus className={cn("p-3 pointer-events-auto")} />
+                <Calendar mode="single" selected={validezPropuesta} onSelect={d => setValue("validezPropuesta", d)} initialFocus className={cn("p-3 pointer-events-auto")} />
               </PopoverContent>
             </Popover>
           </div>
           <div>
             <Label>Tipo de movimiento</Label>
-            <Select value={tipoMovimiento} onValueChange={setTipoMovimiento}>
+            <Select value={watch("tipoMovimiento")} onValueChange={v => setValue("tipoMovimiento", v)}>
               <SelectTrigger><SelectValue placeholder="Seleccionar tipo" /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="CY-CY">CY-CY</SelectItem>
@@ -144,13 +111,13 @@ export default function SeccionRutaCotizacion({
           </div>
           <div className="flex items-center gap-3">
             <Label>Seguro</Label>
-            <Switch checked={seguro} onCheckedChange={setSeguro} />
+            <Switch checked={seguro} onCheckedChange={v => setValue("seguro", v)} />
             <span className="text-sm text-muted-foreground">{seguro ? 'Sí' : 'No'}</span>
           </div>
           {seguro && (
             <div>
               <Label>Valor de mercancía (USD)</Label>
-              <Input type="text" inputMode="decimal" pattern="[0-9]*\.?[0-9]*" value={valorSeguroUsd || ''} onChange={e => { const v = e.target.value; if (/^\d*\.?\d*$/.test(v)) setValorSeguroUsd(Number(v) || 0); }} placeholder="0.00" />
+              <Input type="text" inputMode="decimal" pattern="[0-9]*\.?[0-9]*" value={watch("valorSeguroUsd") || ''} onChange={e => { const v = e.target.value; if (/^\d*\.?\d*$/.test(v)) setValue("valorSeguroUsd", Number(v) || 0); }} placeholder="0.00" />
             </div>
           )}
         </div>

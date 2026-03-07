@@ -1,3 +1,4 @@
+import { useFormContext } from "react-hook-form";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -7,57 +8,42 @@ import {
 import { Plus, Trash2 } from "lucide-react";
 import type { DimensionAerea } from "@/hooks/useCotizaciones";
 import SeccionMercanciaWrapper from "./SeccionMercanciaWrapper";
+import type { CotizacionFormValues } from "@/hooks/useCotizacionWizardForm";
 
 interface Props {
-  tipoCarga: string;
-  setTipoCarga: (v: string) => void;
-  sectorEconomico: string;
-  setSectorEconomico: (v: string) => void;
-  descripcionAdicional: string;
-  setDescripcionAdicional: (v: string) => void;
   msdsFile: File | null;
   setMsdsFile: (f: File | null) => void;
-  dimensiones: DimensionAerea[];
-  setDimensiones: (d: DimensionAerea[]) => void;
 }
 
 function calcularPesoVolumetrico(d: DimensionAerea): number {
   return (d.alto_cm * d.largo_cm * d.ancho_cm * d.piezas) / 6000;
 }
 
-export default function SeccionMercanciaAerea({
-  tipoCarga, setTipoCarga,
-  sectorEconomico, setSectorEconomico,
-  descripcionAdicional, setDescripcionAdicional,
-  msdsFile, setMsdsFile,
-  dimensiones, setDimensiones,
-}: Props) {
+export default function SeccionMercanciaAerea({ msdsFile, setMsdsFile }: Props) {
+  const { watch, setValue } = useFormContext<CotizacionFormValues>();
+  const dimensiones = watch("dimensionesAereas");
+
   const actualizarDimension = (index: number, campo: keyof DimensionAerea, valor: number) => {
     const copia = [...dimensiones];
     copia[index] = { ...copia[index], [campo]: valor };
     copia[index].peso_volumetrico_kg = calcularPesoVolumetrico(copia[index]);
-    setDimensiones(copia);
+    setValue("dimensionesAereas", copia);
   };
 
   const agregarFila = () => {
-    setDimensiones([...dimensiones, { piezas: 0, alto_cm: 0, largo_cm: 0, ancho_cm: 0, peso_volumetrico_kg: 0 }]);
+    setValue("dimensionesAereas", [...dimensiones, { piezas: 0, alto_cm: 0, largo_cm: 0, ancho_cm: 0, peso_volumetrico_kg: 0 }]);
   };
 
   const eliminarFila = (index: number) => {
     if (dimensiones.length <= 1) return;
-    setDimensiones(dimensiones.filter((_, i) => i !== index));
+    setValue("dimensionesAereas", dimensiones.filter((_, i) => i !== index));
   };
 
   const totalPiezas = dimensiones.reduce((sum, d) => sum + d.piezas, 0);
   const totalPesoVolumetrico = dimensiones.reduce((sum, d) => sum + d.peso_volumetrico_kg, 0);
 
   return (
-    <SeccionMercanciaWrapper
-      tipoCarga={tipoCarga} setTipoCarga={setTipoCarga}
-      sectorEconomico={sectorEconomico} setSectorEconomico={setSectorEconomico}
-      descripcionAdicional={descripcionAdicional} setDescripcionAdicional={setDescripcionAdicional}
-      msdsFile={msdsFile} setMsdsFile={setMsdsFile}
-    >
+    <SeccionMercanciaWrapper msdsFile={msdsFile} setMsdsFile={setMsdsFile}>
       <div>
         <div className="flex items-center justify-between mb-2">
           <Label className="text-sm font-semibold">Dimensiones</Label>

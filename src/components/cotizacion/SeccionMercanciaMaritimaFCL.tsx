@@ -1,8 +1,10 @@
+import { useFormContext } from "react-hook-form";
 import { Label } from "@/components/ui/label";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import SeccionMercanciaWrapper from "./SeccionMercanciaWrapper";
+import type { CotizacionFormValues } from "@/hooks/useCotizacionWizardForm";
 
 const CONTENEDORES_FCL = [
   "20' Dry", "40' Dry", "40' High Cube", "45' High Cube",
@@ -13,39 +15,19 @@ const CONTENEDORES_FCL = [
 const TIPOS_PESO = ['Peso Normal', 'Sobrepeso'];
 
 interface Props {
-  tipoContenedor: string;
-  setTipoContenedor: (v: string) => void;
-  tipoCarga: string;
-  setTipoCarga: (v: string) => void;
-  sectorEconomico: string;
-  setSectorEconomico: (v: string) => void;
-  descripcionAdicional: string;
-  setDescripcionAdicional: (v: string) => void;
-  tipoPeso: string;
-  setTipoPeso: (v: string) => void;
   msdsFile: File | null;
   setMsdsFile: (f: File | null) => void;
 }
 
-export default function SeccionMercanciaMaritimaFCL({
-  tipoContenedor, setTipoContenedor,
-  tipoCarga, setTipoCarga,
-  sectorEconomico, setSectorEconomico,
-  descripcionAdicional, setDescripcionAdicional,
-  tipoPeso, setTipoPeso,
-  msdsFile, setMsdsFile,
-}: Props) {
+export default function SeccionMercanciaMaritimaFCL({ msdsFile, setMsdsFile }: Props) {
+  const { watch, setValue } = useFormContext<CotizacionFormValues>();
+
   return (
-    <SeccionMercanciaWrapper
-      tipoCarga={tipoCarga} setTipoCarga={setTipoCarga}
-      sectorEconomico={sectorEconomico} setSectorEconomico={setSectorEconomico}
-      descripcionAdicional={descripcionAdicional} setDescripcionAdicional={setDescripcionAdicional}
-      msdsFile={msdsFile} setMsdsFile={setMsdsFile}
-    >
+    <SeccionMercanciaWrapper msdsFile={msdsFile} setMsdsFile={setMsdsFile}>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
           <Label>Tipo de Contenedor</Label>
-          <Select value={tipoContenedor} onValueChange={setTipoContenedor}>
+          <Select value={watch("tipoContenedor")} onValueChange={v => setValue("tipoContenedor", v)}>
             <SelectTrigger><SelectValue placeholder="Seleccionar contenedor" /></SelectTrigger>
             <SelectContent>
               {CONTENEDORES_FCL.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
@@ -54,7 +36,7 @@ export default function SeccionMercanciaMaritimaFCL({
         </div>
         <div>
           <Label>Peso</Label>
-          <Select value={tipoPeso} onValueChange={setTipoPeso}>
+          <Select value={watch("tipoPeso")} onValueChange={v => setValue("tipoPeso", v)}>
             <SelectTrigger><SelectValue /></SelectTrigger>
             <SelectContent>{TIPOS_PESO.map(p => <SelectItem key={p} value={p}>{p}</SelectItem>)}</SelectContent>
           </Select>

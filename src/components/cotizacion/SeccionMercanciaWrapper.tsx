@@ -1,4 +1,5 @@
 import { ReactNode } from "react";
+import { useFormContext } from "react-hook-form";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
@@ -6,6 +7,7 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { Upload } from "lucide-react";
+import type { CotizacionFormValues } from "@/hooks/useCotizacionWizardForm";
 
 export const TIPOS_CARGA = ['Carga General', 'Mercancía Peligrosa'];
 export const SECTORES = [
@@ -14,37 +16,31 @@ export const SECTORES = [
 ];
 
 interface Props {
-  tipoCarga: string;
-  setTipoCarga: (v: string) => void;
-  sectorEconomico: string;
-  setSectorEconomico: (v: string) => void;
-  descripcionAdicional: string;
-  setDescripcionAdicional: (v: string) => void;
   msdsFile: File | null;
   setMsdsFile: (f: File | null) => void;
   children?: ReactNode;
 }
 
 export default function SeccionMercanciaWrapper({
-  tipoCarga, setTipoCarga,
-  sectorEconomico, setSectorEconomico,
-  descripcionAdicional, setDescripcionAdicional,
   msdsFile, setMsdsFile,
   children,
 }: Props) {
+  const { watch, setValue } = useFormContext<CotizacionFormValues>();
+  const tipoCarga = watch("tipoCarga");
+
   return (
     <div className="space-y-4">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
           <Label>Tipo de Carga</Label>
-          <Select value={tipoCarga} onValueChange={setTipoCarga}>
+          <Select value={tipoCarga} onValueChange={v => setValue("tipoCarga", v)}>
             <SelectTrigger><SelectValue /></SelectTrigger>
             <SelectContent>{TIPOS_CARGA.map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}</SelectContent>
           </Select>
         </div>
         <div>
           <Label>Sector Económico</Label>
-          <Select value={sectorEconomico} onValueChange={setSectorEconomico}>
+          <Select value={watch("sectorEconomico")} onValueChange={v => setValue("sectorEconomico", v)}>
             <SelectTrigger><SelectValue placeholder="Seleccionar sector" /></SelectTrigger>
             <SelectContent>{SECTORES.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
           </Select>
@@ -56,8 +52,8 @@ export default function SeccionMercanciaWrapper({
       <div>
         <Label>Descripción Adicional</Label>
         <Textarea
-          value={descripcionAdicional}
-          onChange={e => setDescripcionAdicional(e.target.value)}
+          value={watch("descripcionAdicional")}
+          onChange={e => setValue("descripcionAdicional", e.target.value)}
           placeholder="Describe aquí más detalles de la mercancía..."
           rows={3}
         />
