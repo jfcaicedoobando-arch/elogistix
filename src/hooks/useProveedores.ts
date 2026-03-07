@@ -16,7 +16,7 @@ export function useProveedores() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("proveedores")
-        .select("*")
+        .select(PROVEEDOR_LIST_COLUMNS)
         .order("nombre");
       if (error) throw error;
       return data;
