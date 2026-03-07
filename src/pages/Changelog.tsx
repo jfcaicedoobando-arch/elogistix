@@ -13,6 +13,14 @@ interface ChangelogEntry {
 
 const changelog: ChangelogEntry[] = [
   {
+    version: "4.20.0",
+    date: "2026-03-07",
+    type: "minor",
+    title: "Refactorización de NuevaCotizacion — hook useCotizacionWizardForm",
+    description:
+      "Extraído todo el estado (~30 useState), lógica de navegación, validación, persistencia y cálculos del wizard de cotizaciones al hook useCotizacionWizardForm. NuevaCotizacion.tsx reducido de 577 a ~220 líneas como orquestador puro de UI. Cálculos envueltos en useMemo y acciones en useCallback.",
+  },
+  {
     version: "4.19.0",
     date: "2026-03-07",
     type: "minor",
