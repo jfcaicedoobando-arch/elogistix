@@ -13,6 +13,14 @@ interface ChangelogEntry {
 
 const changelog: ChangelogEntry[] = [
   {
+    version: "4.30.4",
+    date: "2026-03-07",
+    type: "patch",
+    title: "Formato de fecha legible en tabla de Cotizaciones",
+    description:
+      "La columna Fecha ahora muestra día/mes/año y hora en formato es-MX (ej. 05/03/2026, 14:35) en lugar del timestamp crudo.",
+  },
+  {
     version: "4.30.3",
     date: "2026-03-07",
     type: "patch",

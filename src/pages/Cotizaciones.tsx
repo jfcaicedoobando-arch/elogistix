@@ -64,7 +64,7 @@ export default function Cotizaciones() {
       { key: "subtotal", header: "Subtotal", className: "text-right text-xs", headerClassName: "text-right", render: (c) => formatCurrency(c.subtotal, c.moneda) },
       { key: "estado", header: "Estado", render: (c) => <Badge variant="secondary" className={`text-xs ${getEstadoColor(c.estado)}`}>{c.estado}</Badge> },
       { key: "vigencia", header: "Vigencia", className: "text-xs", render: (c) => c.fecha_vigencia ? formatDate(c.fecha_vigencia) : "-" },
-      { key: "fecha", header: "Fecha", className: "text-xs", render: (c) => formatDate(c.created_at) },
+      { key: "fecha", header: "Fecha", className: "text-xs", render: (c) => new Date(c.created_at).toLocaleString('es-MX', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }) },
     ];
     if (isAdmin) {
       cols.push({

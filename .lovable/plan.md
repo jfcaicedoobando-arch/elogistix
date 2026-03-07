@@ -1,26 +1,16 @@
 
 
-## Formato de fecha con hora en Cotizaciones (v4.30.4)
+## Plan: Usar expediente del origen al duplicar
 
-### Cambio único en `src/pages/Cotizaciones.tsx`
+### Cambio único en `src/hooks/useEmbarques.ts`
 
-Reemplazar `formatDate(c.created_at)` en la columna "Fecha" por:
+En el loop de `useDuplicarEmbarque` (líneas 257-262), reemplazar la llamada a `supabase.rpc('generar_expediente')` por usar directamente `embarqueOrigen.expediente`:
 
-```typescript
-new Date(c.created_at).toLocaleString('es-MX', {
-  day: '2-digit',
-  month: '2-digit',
-  year: 'numeric',
-  hour: '2-digit',
-  minute: '2-digit'
-})
-```
+- **Eliminar** líneas 258-262 (la llamada RPC y el manejo de error)
+- **Cambiar** línea 268 `expediente: expediente as string` → `expediente: embarqueOrigen.expediente`
+- En el push final al array `creados`, usar `embarqueOrigen.expediente` en lugar de `expediente as string`
 
-Resultado: `05/03/2026, 14:35`
+### Cambio en `src/pages/Changelog.tsx`
 
-Se elimina la dependencia de `formatDate` de helpers (si no se usa en otro import del archivo).
-
-### Archivos
-1. **`src/pages/Cotizaciones.tsx`** — Columna "Fecha" (~línea 68)
-2. **`src/pages/Changelog.tsx`** — Entrada v4.30.4
+Entrada v4.15.1 — "Duplicar embarque ahora conserva el mismo expediente del origen"
 
