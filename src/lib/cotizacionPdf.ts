@@ -22,10 +22,9 @@ export function generarPdfCotizacion(cotizacion: CotizacionRow) {
   // Split conceptos by currency
   const conceptosUSD = cotizacion.conceptos_venta.filter(c => c.moneda === 'USD');
   const conceptosMXN = cotizacion.conceptos_venta.filter(c => c.moneda === 'MXN');
-  const totalUSD = conceptosUSD.reduce((s, c) => {
-    const sub = c.cantidad * c.precio_unitario;
-    return s + (c.aplica_iva ? sub * 1.16 : sub);
-  }, 0);
+  const subtotalUSD = conceptosUSD.reduce((s, c) => s + c.cantidad * c.precio_unitario, 0);
+  const ivaUSD = conceptosUSD.reduce((s, c) => c.aplica_iva ? s + c.cantidad * c.precio_unitario * 0.16 : s, 0);
+  const totalUSD = subtotalUSD + ivaUSD;
   const subtotalMXN = conceptosMXN.reduce((s, c) => s + c.cantidad * c.precio_unitario, 0);
   const ivaMXN = subtotalMXN * 0.16;
   const totalMXN = subtotalMXN + ivaMXN;
