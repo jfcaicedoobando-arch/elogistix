@@ -13,6 +13,14 @@ interface ChangelogEntry {
 
 const changelog: ChangelogEntry[] = [
   {
+    version: "4.26.0",
+    date: "2026-03-07",
+    type: "minor",
+    title: "SeccionMercanciaWrapper — eliminación de duplicación",
+    description:
+      "Campos compartidos (Tipo de Carga, Sector Económico, Descripción Adicional, MSDS) extraídos a un wrapper reutilizable. Los 4 componentes de mercancía (FCL, LCL, Aérea, General) refactorizados para usar el wrapper, eliminando ~120 líneas duplicadas.",
+  },
+  {
     version: "4.25.0",
     date: "2026-03-07",
     type: "minor",
