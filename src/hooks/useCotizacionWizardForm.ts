@@ -23,7 +23,7 @@ interface ToastFn {
 interface Mutations {
   crearCotizacion: { mutateAsync: (d: any) => Promise<any>; isPending: boolean };
   updateCotizacion: { mutateAsync: (d: any) => Promise<void>; isPending: boolean };
-  upsertCostos: { mutateAsync: (d: any) => Promise<void>; isPending: boolean };
+  upsertCostos: { mutateAsync: (d: any) => Promise<any>; isPending: boolean };
   registrarActividad: { mutate: (d: any) => void };
 }
 
