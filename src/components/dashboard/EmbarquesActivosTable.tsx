@@ -13,6 +13,10 @@ interface Props {
   isLoading: boolean;
 }
 
+function shortName(raw: string) {
+  return raw.split(/[,—]/)[0].trim();
+}
+
 const columns: DataTableColumn<EmbarqueConEstado>[] = [
   { key: "expediente", header: "Expediente", className: "font-medium", render: (e) => e.expediente },
   { key: "cliente", header: "Cliente", className: "max-w-[180px] truncate", render: (e) => e.cliente_nombre },
