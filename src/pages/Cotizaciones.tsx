@@ -25,7 +25,7 @@ import SearchInput from "@/components/SearchInput";
 import PaginationControls from "@/components/PaginationControls";
 
 const ESTADOS = ['Borrador', 'Enviada', 'Aceptada', 'Rechazada', 'Vencida'];
-const PAGE_SIZE = 10;
+const DEFAULT_PAGE_SIZE = 20;
 
 export default function Cotizaciones() {
   const navigate = useNavigate();
