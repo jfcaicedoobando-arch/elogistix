@@ -1,6 +1,6 @@
 import { useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, ChevronLeft, ChevronRight, Save } from "lucide-react";
 import { FormProvider } from "react-hook-form";
 import { Button } from "@/components/ui/button";
 import { toast } from "@/hooks/use-toast";
@@ -127,69 +127,79 @@ export default function NuevoEmbarque() {
 
   return (
     <FormProvider {...methods}>
-      <div className="space-y-6 max-w-4xl mx-auto">
-        <div className="flex items-center gap-4">
-          <Button variant="ghost" size="icon" onClick={() => navigate("/embarques")}>
-            <ArrowLeft className="h-5 w-5" />
-          </Button>
-          <div>
-            <h1 className="text-2xl font-bold">Nuevo Embarque</h1>
-            <p className="text-sm text-muted-foreground">Completa los datos para registrar un embarque</p>
+      <div className="flex flex-col h-[calc(100vh-4rem)] -m-6">
+        {/* Header fijo */}
+        <div className="flex-none border-b bg-background p-4 space-y-3">
+          <div className="flex items-center gap-3">
+            <Button variant="ghost" size="icon" onClick={() => navigate("/embarques")}>
+              <ArrowLeft className="h-4 w-4" />
+            </Button>
+            <div>
+              <h1 className="text-2xl font-bold">Nuevo Embarque</h1>
+              <p className="text-sm text-muted-foreground">Completa los datos para registrar un embarque</p>
+            </div>
+          </div>
+          <StepIndicator steps={steps} currentStep={currentStep} />
+        </div>
+
+        {/* Contenido scrolleable */}
+        <div className="flex-1 overflow-y-auto p-4">
+          <div className="max-w-4xl mx-auto space-y-6">
+            {currentStep === 1 && (
+              <StepDatosGenerales
+                clientes={clientes}
+                clienteNombre={selectedCliente?.nombre || ''}
+                contactos={contactos}
+                onMsdsUpload={handleMsdsUpload}
+                errors={validationErrors}
+              />
+            )}
+
+            {currentStep === 2 && <StepDatosRuta />}
+
+            {currentStep === 3 && (
+              <StepDocumentos
+                documentos={getDocumentosChecklist(modo)}
+                onFileChange={setDocumentoArchivo}
+              />
+            )}
+
+            {currentStep === 4 && (
+              <StepCostosPrecios
+                conceptosVenta={conceptosVenta}
+                conceptosCosto={conceptosCosto}
+                proveedoresDb={proveedoresDb}
+                subtotalVenta={subtotalVenta}
+                totalCosto={totalCosto}
+                utilidadEstimada={utilidadEstimada}
+                updateConceptoVenta={updateConceptoVenta}
+                addConceptoVenta={addConceptoVenta}
+                removeConceptoVenta={removeConceptoVenta}
+                updateConceptoCosto={updateConceptoCosto}
+                addConceptoCosto={addConceptoCosto}
+                removeConceptoCosto={removeConceptoCosto}
+              />
+            )}
           </div>
         </div>
 
-        <StepIndicator steps={steps} currentStep={currentStep} />
-
-        {currentStep === 1 && (
-          <StepDatosGenerales
-            clientes={clientes}
-            clienteNombre={selectedCliente?.nombre || ''}
-            contactos={contactos}
-            onMsdsUpload={handleMsdsUpload}
-            errors={validationErrors}
-          />
-        )}
-
-        {currentStep === 2 && <StepDatosRuta />}
-
-        {currentStep === 3 && (
-          <StepDocumentos
-            documentos={getDocumentosChecklist(modo)}
-            onFileChange={setDocumentoArchivo}
-          />
-        )}
-
-        {currentStep === 4 && (
-          <StepCostosPrecios
-            conceptosVenta={conceptosVenta}
-            conceptosCosto={conceptosCosto}
-            proveedoresDb={proveedoresDb}
-            subtotalVenta={subtotalVenta}
-            totalCosto={totalCosto}
-            utilidadEstimada={utilidadEstimada}
-            updateConceptoVenta={updateConceptoVenta}
-            addConceptoVenta={addConceptoVenta}
-            removeConceptoVenta={removeConceptoVenta}
-            updateConceptoCosto={updateConceptoCosto}
-            addConceptoCosto={addConceptoCosto}
-            removeConceptoCosto={removeConceptoCosto}
-          />
-        )}
-
-        <div className="flex justify-between pt-2">
-          <Button variant="outline" onClick={() => currentStep > 1 ? setCurrentStep(p => p - 1) : navigate("/embarques")}>
-            {currentStep === 1 ? 'Cancelar' : 'Anterior'}
-          </Button>
-          <Button
-            disabled={createEmbarque.isPending}
-            onClick={() => {
-              if (currentStep === 1 && !validateStep1()) return;
-              if (currentStep < 4) setCurrentStep(p => p + 1);
-              else handleFinish();
-            }}
-          >
-            {createEmbarque.isPending ? 'Guardando...' : currentStep === 4 ? 'Crear Embarque' : 'Siguiente'}
-          </Button>
+        {/* Footer fijo */}
+        <div className="flex-none border-t bg-background p-4">
+          <div className="max-w-4xl mx-auto flex justify-between">
+            <Button variant="outline" onClick={() => currentStep > 1 ? setCurrentStep(p => p - 1) : navigate("/embarques")}>
+              {currentStep === 1 ? 'Cancelar' : <><ChevronLeft className="h-4 w-4 mr-1" /> Anterior</>}
+            </Button>
+            <Button
+              disabled={createEmbarque.isPending}
+              onClick={() => {
+                if (currentStep === 1 && !validateStep1()) return;
+                if (currentStep < 4) setCurrentStep(p => p + 1);
+                else handleFinish();
+              }}
+            >
+              {createEmbarque.isPending ? 'Guardando...' : currentStep === 4 ? <><Save className="h-4 w-4 mr-1" /> Crear Embarque</> : <>Siguiente <ChevronRight className="h-4 w-4 ml-1" /></>}
+            </Button>
+          </div>
         </div>
       </div>
     </FormProvider>

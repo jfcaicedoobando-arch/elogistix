@@ -13,6 +13,14 @@ interface ChangelogEntry {
 
 const changelog: ChangelogEntry[] = [
   {
+    version: "4.28.1",
+    date: "2026-03-07",
+    type: "patch",
+    title: "Layout fijo header/footer en wizards de embarque",
+    description:
+      "NuevoEmbarque y EditarEmbarque refactorizados con header fijo, contenido scrolleable y footer fijo con botones de navegación, igualando el patrón de NuevaCotizacion.",
+  },
+  {
     version: "4.28.0",
     date: "2026-03-07",
     type: "minor",
