@@ -15,6 +15,7 @@ import { toast } from "sonner";
 import { usePermissions } from "@/hooks/usePermissions";
 import { useRegistrarActividad } from "@/hooks/useBitacora";
 import type { TipoProveedor, Proveedor } from "@/data/types";
+import type { ProveedorListItem } from "@/hooks/useProveedores";
 
 const TABS: { label: string; tipo: TipoProveedor }[] = [
   { label: 'Navieras', tipo: 'Naviera' },
@@ -29,7 +30,7 @@ const TABS: { label: string; tipo: TipoProveedor }[] = [
   { label: 'Mat. Peligrosos', tipo: 'Materiales Peligrosos' },
 ];
 
-function ProveedorTable({ tipo, search, onSelect, proveedores, isLoading }: { tipo: TipoProveedor; search: string; onSelect: (id: string) => void; proveedores: Proveedor[]; isLoading: boolean }) {
+function ProveedorTable({ tipo, search, onSelect, proveedores, isLoading }: { tipo: TipoProveedor; search: string; onSelect: (id: string) => void; proveedores: ProveedorListItem[]; isLoading: boolean }) {
   const filtered = proveedores.filter(proveedor => proveedor.tipo === tipo && (!search || proveedor.nombre.toLowerCase().includes(search.toLowerCase())));
 
   if (isLoading) {

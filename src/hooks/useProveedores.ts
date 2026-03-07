@@ -3,7 +3,11 @@ import { supabase } from "@/integrations/supabase/client";
 import type { Tables, TablesInsert, TablesUpdate } from "@/integrations/supabase/types";
 import { queryKeys } from "@/lib/queryKeys";
 
+/** Columnas necesarias para la tabla de proveedores (evita select('*')) */
+const PROVEEDOR_LIST_COLUMNS = 'id, nombre, tipo, rfc, contacto, moneda_preferida' as const;
+
 export type Proveedor = Tables<'proveedores'>;
+export type ProveedorListItem = Pick<Proveedor, 'id' | 'nombre' | 'tipo' | 'rfc' | 'contacto' | 'moneda_preferida'>;
 
 export function useProveedores() {
   const queryClient = useQueryClient();
@@ -13,10 +17,10 @@ export function useProveedores() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("proveedores")
-        .select("*")
+        .select(PROVEEDOR_LIST_COLUMNS)
         .order("nombre");
       if (error) throw error;
-      return data;
+      return data as ProveedorListItem[];
     },
   });
 

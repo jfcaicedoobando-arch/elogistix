@@ -13,6 +13,14 @@ interface ChangelogEntry {
 
 const changelog: ChangelogEntry[] = [
   {
+    version: "4.27.2",
+    date: "2026-03-07",
+    type: "patch",
+    title: "Optimización select() en consulta de proveedores",
+    description:
+      "La consulta de lista de proveedores ahora selecciona solo las 6 columnas necesarias (id, nombre, tipo, rfc, contacto, moneda_preferida) en lugar de select('*'). Nuevo tipo ProveedorListItem para tipado preciso.",
+  },
+  {
     version: "4.27.1",
     date: "2026-03-07",
     type: "patch",
