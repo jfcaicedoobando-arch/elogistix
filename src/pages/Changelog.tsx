@@ -13,6 +13,14 @@ interface ChangelogEntry {
 
 const changelog: ChangelogEntry[] = [
   {
+    version: "4.27.3",
+    date: "2026-03-07",
+    type: "patch",
+    title: "Optimización select() en consulta de facturas",
+    description:
+      "FACTURA_LIST_COLUMNS reducido de 18 a 9 columnas, trayendo solo los campos usados en la tabla de Facturación y Reportes. useClientes ya estaba optimizado previamente.",
+  },
+  {
     version: "4.27.2",
     date: "2026-03-07",
     type: "patch",
