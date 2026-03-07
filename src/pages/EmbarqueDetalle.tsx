@@ -148,6 +148,20 @@ export default function EmbarqueDetalle() {
     }
   };
 
+  const tipoCambioUSD = embarque ? (Number(embarque.tipo_cambio_usd) || 1) : 1;
+  const tipoCambioEUR = embarque ? (Number(embarque.tipo_cambio_eur) || 1) : 1;
+
+  const totalVenta = useMemo(
+    () => conceptosVenta.reduce((sum, c) => sum + convertirAMXN(Number(c.total), c.moneda, tipoCambioUSD, tipoCambioEUR), 0),
+    [conceptosVenta, tipoCambioUSD, tipoCambioEUR]
+  );
+  const totalCosto = useMemo(
+    () => conceptosCosto.reduce((sum, c) => sum + convertirAMXN(Number(c.monto), c.moneda, tipoCambioUSD, tipoCambioEUR), 0),
+    [conceptosCosto, tipoCambioUSD, tipoCambioEUR]
+  );
+  const utilidad = useMemo(() => calcularUtilidad(totalVenta, totalCosto), [totalVenta, totalCosto]);
+  const margen = useMemo(() => calcularMargen(totalVenta, totalCosto), [totalVenta, totalCosto]);
+
   if (isLoading) {
     return (
       <div className="space-y-6">
@@ -166,20 +180,6 @@ export default function EmbarqueDetalle() {
       </div>
     );
   }
-
-  const tipoCambioUSD = Number(embarque.tipo_cambio_usd) || 1;
-  const tipoCambioEUR = Number(embarque.tipo_cambio_eur) || 1;
-
-  const totalVenta = useMemo(
-    () => conceptosVenta.reduce((sum, c) => sum + convertirAMXN(Number(c.total), c.moneda, tipoCambioUSD, tipoCambioEUR), 0),
-    [conceptosVenta, tipoCambioUSD, tipoCambioEUR]
-  );
-  const totalCosto = useMemo(
-    () => conceptosCosto.reduce((sum, c) => sum + convertirAMXN(Number(c.monto), c.moneda, tipoCambioUSD, tipoCambioEUR), 0),
-    [conceptosCosto, tipoCambioUSD, tipoCambioEUR]
-  );
-  const utilidad = useMemo(() => calcularUtilidad(totalVenta, totalCosto), [totalVenta, totalCosto]);
-  const margen = useMemo(() => calcularMargen(totalVenta, totalCosto), [totalVenta, totalCosto]);
 
   const siguienteEstado = getSiguienteEstado(embarque.estado);
 
