@@ -13,6 +13,10 @@ interface Props {
   isLoading: boolean;
 }
 
+function shortName(raw: string) {
+  return raw.split(/[,—]/)[0].trim();
+}
+
 const columns: DataTableColumn<EmbarqueConEstado>[] = [
   { key: "expediente", header: "Expediente", className: "font-medium", render: (e) => e.expediente },
   { key: "cliente", header: "Cliente", className: "max-w-[180px] truncate", render: (e) => e.cliente_nombre },
@@ -26,8 +30,8 @@ const columns: DataTableColumn<EmbarqueConEstado>[] = [
   },
   {
     key: "ruta", header: "Origen → Destino", className: "text-xs max-w-[180px] truncate", render: (e) => {
-      const origen = (e.puerto_origen || e.aeropuerto_origen || e.ciudad_origen || "-").split(",")[0];
-      const destino = (e.puerto_destino || e.aeropuerto_destino || e.ciudad_destino || "-").split(",")[0];
+      const origen = shortName(e.puerto_origen || e.aeropuerto_origen || e.ciudad_origen || "-");
+      const destino = shortName(e.puerto_destino || e.aeropuerto_destino || e.ciudad_destino || "-");
       return `${origen} → ${destino}`;
     },
   },

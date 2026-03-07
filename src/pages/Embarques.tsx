@@ -20,6 +20,10 @@ const DEFAULT_PAGE_SIZE = 20;
 
 type Embarque = ReturnType<typeof useEmbarques>["data"] extends (infer U)[] | undefined ? U : never;
 
+function shortName(raw: string) {
+  return raw.split(/[,—]/)[0].trim();
+}
+
 const columns: DataTableColumn<Embarque>[] = [
   { key: "expediente", header: "Expediente", className: "font-medium", render: (e) => e.expediente },
   { key: "bl", header: "BL Master", className: "text-xs", render: (e) => e.bl_master || "-" },
@@ -31,8 +35,8 @@ const columns: DataTableColumn<Embarque>[] = [
       </span>
     ),
   },
-  { key: "origen", header: "Origen", className: "text-xs", render: (e) => (e.puerto_origen || e.aeropuerto_origen || e.ciudad_origen || "-").split(",")[0] },
-  { key: "destino", header: "Destino", className: "text-xs", render: (e) => (e.puerto_destino || e.aeropuerto_destino || e.ciudad_destino || "-").split(",")[0] },
+  { key: "origen", header: "Origen", className: "text-xs", render: (e) => shortName(e.puerto_origen || e.aeropuerto_origen || e.ciudad_origen || "-") },
+  { key: "destino", header: "Destino", className: "text-xs", render: (e) => shortName(e.puerto_destino || e.aeropuerto_destino || e.ciudad_destino || "-") },
   { key: "contenedor", header: "Contenedor", className: "text-xs", render: (e) => e.tipo_contenedor || "-" },
   { key: "etd", header: "ETD", className: "text-xs", render: (e) => formatDate(e.etd || "") },
   { key: "eta", header: "ETA", className: "text-xs", render: (e) => formatDate(e.eta || "") },
