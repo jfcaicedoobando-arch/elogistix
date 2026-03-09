@@ -47,6 +47,7 @@ export interface EmbarqueConProfit extends EmbarqueConEstado {
 export const ESTADOS_FILTRO = ESTADOS_ACTIVOS;
 export type EstadoFiltro = (typeof ESTADOS_FILTRO)[number];
 
+
 const DIAS_LIBRES_DEFAULT = 7;
 
 export function useDashboardData() {
