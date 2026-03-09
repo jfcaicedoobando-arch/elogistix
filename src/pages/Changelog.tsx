@@ -13,6 +13,13 @@ interface ChangelogEntry {
 
 const changelog: ChangelogEntry[] = [
   {
+    version: "4.32.1",
+    date: "2026-03-09",
+    type: "patch",
+    title: "Eliminar archivos adjuntos con doble confirmación",
+    description: "Los operadores pueden eliminar archivos adjuntos en el paso de Documentos Requeridos al crear un embarque. Incluye doble confirmación para evitar borrados accidentales.",
+  },
+  {
     version: "4.32.0",
     date: "2026-03-09",
     type: "minor",
