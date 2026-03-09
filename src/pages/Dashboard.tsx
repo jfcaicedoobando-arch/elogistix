@@ -25,6 +25,7 @@ export default function Dashboard() {
     proximosArribos,
     profitPorEmbarque,
     embarquesFiltrados,
+    arribosEsteMes,
   } = useDashboardData();
 
   const hoyStr = new Date().toLocaleDateString("es-MX", {
