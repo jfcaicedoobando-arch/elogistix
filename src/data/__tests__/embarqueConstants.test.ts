@@ -24,6 +24,10 @@ describe("ESTADO_TIMELINE", () => {
     expect(ESTADO_TIMELINE[0]).toBe("Confirmado");
     expect(ESTADO_TIMELINE[ESTADO_TIMELINE.length - 1]).toBe("Cerrado");
   });
+  it("incluye Arribo y EIR", () => {
+    expect(ESTADO_TIMELINE).toContain("Arribo");
+    expect(ESTADO_TIMELINE).toContain("EIR");
+  });
 });
 
 describe("CATALOGO_CONCEPTOS", () => {

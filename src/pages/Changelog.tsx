@@ -13,6 +13,13 @@ interface ChangelogEntry {
 
 const changelog: ChangelogEntry[] = [
   {
+    version: "4.32.0",
+    date: "2026-03-09",
+    type: "minor",
+    title: "Nuevo sistema de estados de embarques",
+    description: "7 estados en orden: Confirmado → En Tránsito → Arribo → En Aduana → Entregado → EIR → Cerrado. Cálculo automático solo para importaciones marítimas. Arribo reemplaza la detección automática post-ETA. Nuevos colores semánticos por estado.",
+  },
+  {
     version: "4.31.0",
     date: "2026-03-09",
     type: "minor",
