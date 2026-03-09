@@ -1,7 +1,12 @@
+import { useState } from "react";
 import { Upload, Download, Loader2, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import type { DocumentoEmbarqueRow } from "@/hooks/useEmbarques";
 
 interface Props {
@@ -16,7 +21,10 @@ interface Props {
 }
 
 export function TabDocumentos({ documentos, canEdit, uploadingDocId, downloadingDocId, deletingDocId, onUpload, onDownload, onDelete }: Props) {
+  const [docToDelete, setDocToDelete] = useState<DocumentoEmbarqueRow | null>(null);
+
   return (
+    <>
     <Card>
       <CardContent className="p-0">
         <Table>
@@ -79,7 +87,7 @@ export function TabDocumentos({ documentos, canEdit, uploadingDocId, downloading
                             size="sm"
                             className="text-destructive hover:text-destructive hover:bg-destructive/10"
                             disabled={deletingDocId === doc.id}
-                            onClick={() => onDelete(doc)}
+                            onClick={() => setDocToDelete(doc)}
                           >
                             {deletingDocId === doc.id ? <Loader2 className="h-3.5 w-3.5 animate-spin mr-1" /> : <Trash2 className="h-3.5 w-3.5 mr-1" />}
                             Eliminar
@@ -98,5 +106,29 @@ export function TabDocumentos({ documentos, canEdit, uploadingDocId, downloading
         </Table>
       </CardContent>
     </Card>
+
+    <AlertDialog open={!!docToDelete} onOpenChange={(open) => { if (!open) setDocToDelete(null); }}>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>¿Eliminar documento?</AlertDialogTitle>
+          <AlertDialogDescription>
+            El archivo <strong>{docToDelete?.nombre}</strong> será eliminado permanentemente. Esta acción no se puede deshacer.
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel>Cancelar</AlertDialogCancel>
+          <AlertDialogAction
+            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            onClick={() => {
+              if (docToDelete && onDelete) onDelete(docToDelete);
+              setDocToDelete(null);
+            }}
+          >
+            Eliminar
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+    </>
   );
 }
