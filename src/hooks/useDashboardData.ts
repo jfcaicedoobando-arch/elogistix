@@ -27,6 +27,7 @@ export interface EmbarqueConEstado {
   created_at: string;
 }
 
+
 export interface AlertaDemora extends EmbarqueConEstado {
   diasDemora: number;
   diasDesdeEta: number;
