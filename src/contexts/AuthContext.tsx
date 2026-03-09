@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState, ReactNode, useCallback } from "react";
+import { createContext, useContext, useEffect, useState, useRef, ReactNode, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import type { User, Session } from "@supabase/supabase-js";
 
@@ -27,6 +27,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [role, setRole] = useState<AppRole | null>(null);
   const [loading, setLoading] = useState(true);
+  const hasLoggedLogin = useRef(false);
 
   const fetchRole = async (userId: string) => {
     const { data } = await supabase
@@ -61,7 +62,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (session?.user) {
           // Use setTimeout to avoid potential deadlock with Supabase client
           setTimeout(() => fetchRole(session.user.id), 0);
-          if (_eventoAuth === 'SIGNED_IN') {
+          if (_eventoAuth === 'SIGNED_IN' && !hasLoggedLogin.current) {
+            hasLoggedLogin.current = true;
             setTimeout(() => registrarLogin(session.user.id, session.user.email ?? ''), 0);
           }
         } else {
@@ -85,6 +87,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const signOut = async () => {
+    hasLoggedLogin.current = false;
     await supabase.auth.signOut();
     setUser(null);
     setSession(null);
