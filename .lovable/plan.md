@@ -1,16 +1,44 @@
 
 
-## Plan: Usar expediente del origen al duplicar
+## Línea de tiempo visual + Indicador de arribos del mes
 
-### Cambio único en `src/hooks/useEmbarques.ts`
+### Archivos a modificar (3)
 
-En el loop de `useDuplicarEmbarque` (líneas 257-262), reemplazar la llamada a `supabase.rpc('generar_expediente')` por usar directamente `embarqueOrigen.expediente`:
+**1. `src/hooks/useDashboardData.ts`**
+- Cambiar `arribosEsteMes` de `number` a un objeto con `{ total, yaLlegaron, enCamino }` usando la lógica proporcionada por el usuario
+- Filtrar `embarquesConEstado` por ETA dentro del mes, luego subdividir por `estadoReal`
 
-- **Eliminar** líneas 258-262 (la llamada RPC y el manejo de error)
-- **Cambiar** línea 268 `expediente: expediente as string` → `expediente: embarqueOrigen.expediente`
-- En el push final al array `creados`, usar `embarqueOrigen.expediente` en lugar de `expediente as string`
+**2. `src/components/dashboard/DashboardStatusCards.tsx`** — Reescribir completamente
+- **CAMBIO 1 — Línea de tiempo horizontal:**
+  - Reemplazar la grid de cards por una línea de tiempo dentro de un solo `Card`
+  - 5 nodos conectados por líneas horizontales: Confirmado → En Tránsito → Arribo → En Aduana → Entregado
+  - Cada nodo: ícono circular con gradiente de color (de `estadoConfig`), conteo grande debajo, label del estado
+  - Líneas conectoras entre nodos con color degradado
+  - Click en cada nodo filtra la tabla (toggle on/off como antes)
+  - Nodo seleccionado: ring/glow + scale-up; hover: scale sutil
+  - Responsive: en móvil los nodos se apilan o se hacen scroll horizontal
 
-### Cambio en `src/pages/Changelog.tsx`
+- **CAMBIO 2 — Indicador de arribos del mes:**
+  - Debajo de la línea de tiempo, un `Card` compacto con:
+    - Ícono `CalendarDays` + título "Arribos este mes"
+    - 3 métricas en fila: Total | Ya llegaron | En camino
+    - Barra de progreso mostrando `yaLlegaron / total`
 
-Entrada v4.15.1 — "Duplicar embarque ahora conserva el mismo expediente del origen"
+**3. `src/pages/Dashboard.tsx`**
+- Extraer los nuevos campos del hook (`arribosEsteMes` ahora es objeto)
+- Pasar los datos actualizados a `DashboardStatusCards`
+
+### Diseño visual (línea de tiempo)
+
+```text
+┌──────────────────────────────────────────────────────────────────┐
+│  ●────────●────────●────────●────────●                          │
+│  Confirmado  En Tránsito  Arribo  En Aduana  Entregado          │
+│     3           5          2        1           4               │
+└──────────────────────────────────────────────────────────────────┘
+┌──────────────────────────────────────────────────────────────────┐
+│  📅 Arribos este mes: 8    Ya llegaron: 5    En camino: 3       │
+│  ████████████████░░░░░░░░░  63%                                 │
+└──────────────────────────────────────────────────────────────────┘
+```
 
