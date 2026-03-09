@@ -82,7 +82,7 @@ export function useDashboardData() {
     () =>
       embarques.map((e) => ({
         ...e,
-        estadoReal: calcularEstadoEmbarque(e.modo, e.etd, e.eta, e.estado),
+        estadoReal: calcularEstadoEmbarque(e.modo, e.tipo, e.etd, e.eta, e.estado),
       })),
     [embarques]
   );
