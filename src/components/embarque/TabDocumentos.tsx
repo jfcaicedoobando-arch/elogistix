@@ -87,7 +87,7 @@ export function TabDocumentos({ documentos, canEdit, uploadingDocId, downloading
                             size="sm"
                             className="text-destructive hover:text-destructive hover:bg-destructive/10"
                             disabled={deletingDocId === doc.id}
-                            onClick={() => onDelete(doc)}
+                            onClick={() => setDocToDelete(doc)}
                           >
                             {deletingDocId === doc.id ? <Loader2 className="h-3.5 w-3.5 animate-spin mr-1" /> : <Trash2 className="h-3.5 w-3.5 mr-1" />}
                             Eliminar
