@@ -1,16 +1,23 @@
 
 
-## Plan: Usar expediente del origen al duplicar
+## Agregar botón eliminar archivo con doble confirmación en DocumentChecklist (v4.32.1)
 
-### Cambio único en `src/hooks/useEmbarques.ts`
+### Cambio
 
-En el loop de `useDuplicarEmbarque` (líneas 257-262), reemplazar la llamada a `supabase.rpc('generar_expediente')` por usar directamente `embarqueOrigen.expediente`:
+Cuando un documento tiene archivo adjuntado (`doc.adjuntado === true`), mostrar un botón de eliminar (ícono Trash2) junto al botón "Cambiar". Al hacer clic:
 
-- **Eliminar** líneas 258-262 (la llamada RPC y el manejo de error)
-- **Cambiar** línea 268 `expediente: expediente as string` → `expediente: embarqueOrigen.expediente`
-- En el push final al array `creados`, usar `embarqueOrigen.expediente` en lugar de `expediente as string`
+1. **Primer diálogo**: "¿Deseas eliminar el archivo {nombre}?"  → Cancelar / Continuar
+2. **Segundo diálogo**: "Esta acción no se puede deshacer. ¿Confirmar eliminación?" → Cancelar / Eliminar
 
-### Cambio en `src/pages/Changelog.tsx`
+Si confirma ambos, llamar `onFileChange(docNombre, undefined)` para limpiar el archivo del estado local.
 
-Entrada v4.15.1 — "Duplicar embarque ahora conserva el mismo expediente del origen"
+### Archivos a modificar (2)
+
+1. **`src/components/DocumentChecklist.tsx`**
+   - Agregar estado local para manejar los dos pasos del diálogo (`pendingDelete`, `confirmStep`)
+   - Importar `AlertDialog` de radix
+   - Agregar botón `Trash2` (variant destructive/ghost) visible solo cuando `doc.adjuntado`
+   - Dos AlertDialogs encadenados: primer confirm abre el segundo, segundo ejecuta `onFileChange(nombre, undefined)`
+
+2. **`src/pages/Changelog.tsx`** — entrada v4.32.1
 
