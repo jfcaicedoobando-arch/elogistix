@@ -1,16 +1,31 @@
 
 
-## Plan: Usar expediente del origen al duplicar
+## Fix: Registrar solo logins reales en la bitácora (v4.33.1)
 
-### Cambio único en `src/hooks/useEmbarques.ts`
+### Causa raíz
 
-En el loop de `useDuplicarEmbarque` (líneas 257-262), reemplazar la llamada a `supabase.rpc('generar_expediente')` por usar directamente `embarqueOrigen.expediente`:
+`onAuthStateChange` con evento `SIGNED_IN` se dispara en token refresh y page load, no solo en login real. Esto genera ~2,000 registros falsos de login.
 
-- **Eliminar** líneas 258-262 (la llamada RPC y el manejo de error)
-- **Cambiar** línea 268 `expediente: expediente as string` → `expediente: embarqueOrigen.expediente`
-- En el push final al array `creados`, usar `embarqueOrigen.expediente` en lugar de `expediente as string`
+### Solución
 
-### Cambio en `src/pages/Changelog.tsx`
+En `AuthContext.tsx`, usar un `useRef` para trackear si el login ya fue registrado en esta sesión. Solo registrar cuando:
+1. El evento es `SIGNED_IN`
+2. No se ha registrado previamente en esta sesión del componente
+3. Resetear el ref en `signOut`
 
-Entrada v4.15.1 — "Duplicar embarque ahora conserva el mismo expediente del origen"
+Esto evita duplicados por token refresh y page reload.
+
+### Archivos a modificar (2)
+
+1. **`src/contexts/AuthContext.tsx`**
+   - Agregar `const hasLoggedLogin = useRef(false)`
+   - En el handler de `SIGNED_IN`, verificar `!hasLoggedLogin.current` antes de registrar
+   - Setear `hasLoggedLogin.current = true` después de registrar
+   - En `signOut`, resetear `hasLoggedLogin.current = false`
+
+2. **`src/pages/Changelog.tsx`** — entrada v4.33.1
+
+### Limpieza de datos existentes (opcional)
+
+Se puede ejecutar un query para limpiar los logins duplicados, conservando solo el primero de cada sesión por usuario por día. Esto se puede coordinar después si lo deseas.
 
