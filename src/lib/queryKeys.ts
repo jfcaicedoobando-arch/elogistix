@@ -56,5 +56,6 @@ export const queryKeys = {
   },
   reportes: {
     conceptos: ['reportes', 'conceptos'] as const,
+    cotizaciones: ['reportes', 'cotizaciones'] as const,
   },
 } as const;
