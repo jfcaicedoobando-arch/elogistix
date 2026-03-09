@@ -988,6 +988,8 @@ export type Database = {
         | "En Aduana"
         | "Entregado"
         | "Cancelado"
+        | "Arribo"
+        | "EIR"
       estado_factura:
         | "Borrador"
         | "Emitida"
@@ -1171,6 +1173,8 @@ export const Constants = {
         "En Aduana",
         "Entregado",
         "Cancelado",
+        "Arribo",
+        "EIR",
       ],
       estado_factura: ["Borrador", "Emitida", "Pagada", "Vencida", "Cancelada"],
       estado_liquidacion: ["Pendiente", "Pagado"],
