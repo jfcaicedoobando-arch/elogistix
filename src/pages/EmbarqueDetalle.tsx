@@ -58,7 +58,7 @@ export default function EmbarqueDetalle() {
   // Auto-actualizar estado para embarques marítimos
   useEffect(() => {
     if (!embarque) return;
-    const estadoCalculado = calcularEstadoEmbarque(embarque.modo, embarque.etd, embarque.eta, embarque.estado);
+    const estadoCalculado = calcularEstadoEmbarque(embarque.modo, embarque.tipo, embarque.etd, embarque.eta, embarque.estado);
     if (estadoCalculado !== embarque.estado) {
       supabase
         .from('embarques')

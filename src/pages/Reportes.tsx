@@ -126,7 +126,7 @@ export default function Reportes() {
   const embarquesDemorados = useMemo(() => {
     return embarques
       .filter(embarque => 
-        embarque.estado === 'En Aduana' && 
+        embarque.estado === 'Arribo' && 
         embarque.eta && 
         differenceInDays(hoy, new Date(embarque.eta)) > 7
       )

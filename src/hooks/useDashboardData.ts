@@ -119,7 +119,7 @@ export function useDashboardData() {
     const hoy = new Date();
     hoy.setHours(0, 0, 0, 0);
     return activos
-      .filter((e) => e.estadoReal === "En Aduana" && e.eta)
+      .filter((e) => e.estadoReal === "Arribo" && e.eta)
       .map((e) => {
         const eta = new Date(e.eta! + "T00:00:00");
         const diasDesdeEta = Math.floor(
