@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useFacturas, useGastosPendientes, useMarcarCostoPagado } from "@/hooks/useFacturas";
+import { useRegistrarActividad } from "@/hooks/useBitacora";
 import { formatCurrency } from "@/lib/formatters";
 import { formatDate, getEstadoColor } from "@/lib/helpers";
 import { toast } from "sonner";
