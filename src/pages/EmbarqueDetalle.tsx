@@ -98,7 +98,7 @@ export default function EmbarqueDetalle() {
     setDeletingDocId(doc.id);
     try {
       await deleteFile(doc.archivo);
-      await supabase.from("documentos_embarque").update({ archivo: null, estado: "Pendiente" as any }).eq("id", doc.id);
+      await supabase.from("documentos_embarque").delete().eq("id", doc.id);
       registrarActividad.mutate({
         accion: 'eliminar_documento', modulo: 'embarques',
         entidad_id: id, entidad_nombre: embarque?.expediente ?? '',

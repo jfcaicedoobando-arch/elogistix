@@ -13,6 +13,13 @@ interface ChangelogEntry {
 
 const changelog: ChangelogEntry[] = [
   {
+    version: "4.32.2",
+    date: "2026-03-09",
+    type: "patch",
+    title: "Corregir eliminación de documentos en embarques",
+    description: "El botón Eliminar en el detalle del embarque ahora muestra un diálogo de confirmación antes de proceder. La función de eliminación ahora borra el registro completo de la base de datos y el archivo de Storage, en lugar de solo limpiar el campo.",
+  },
+  {
     version: "4.32.1",
     date: "2026-03-09",
     type: "patch",
