@@ -1,7 +1,12 @@
+import { useState } from "react";
 import { Upload, Download, Loader2, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import type { DocumentoEmbarqueRow } from "@/hooks/useEmbarques";
 
 interface Props {
@@ -16,7 +21,10 @@ interface Props {
 }
 
 export function TabDocumentos({ documentos, canEdit, uploadingDocId, downloadingDocId, deletingDocId, onUpload, onDownload, onDelete }: Props) {
+  const [docToDelete, setDocToDelete] = useState<DocumentoEmbarqueRow | null>(null);
+
   return (
+    <>
     <Card>
       <CardContent className="p-0">
         <Table>
