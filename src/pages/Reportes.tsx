@@ -84,7 +84,7 @@ export default function Reportes() {
 
   // KPI Calculations
   const embarquesActivos = useMemo(() =>
-    embarquesFiltrados.filter(embarque => !['Entregado', 'Cerrado', 'Cancelado'].includes(embarque.estado)).length,
+    embarquesFiltrados.filter(embarque => !['EIR', 'Cerrado', 'Cancelado'].includes(embarque.estado)).length,
     [embarquesFiltrados]
   );
 
