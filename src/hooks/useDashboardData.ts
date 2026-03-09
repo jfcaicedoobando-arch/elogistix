@@ -183,6 +183,18 @@ export function useDashboardData() {
     [activos, filtroEstado]
   );
 
+  // Arribos este mes
+  const arribosEsteMes = useMemo(() => {
+    const hoy = new Date();
+    const inicioMes = new Date(hoy.getFullYear(), hoy.getMonth(), 1);
+    const finMes = new Date(hoy.getFullYear(), hoy.getMonth() + 1, 0);
+    return embarquesConEstado.filter((e) => {
+      if (!e.eta) return false;
+      const eta = new Date(e.eta + "T00:00:00");
+      return eta >= inicioMes && eta <= finMes;
+    }).length;
+  }, [embarquesConEstado]);
+
   return {
     isLoading,
     filtroEstado,
@@ -194,5 +206,6 @@ export function useDashboardData() {
     proximosArribos,
     profitPorEmbarque,
     embarquesFiltrados,
+    arribosEsteMes,
   };
 }

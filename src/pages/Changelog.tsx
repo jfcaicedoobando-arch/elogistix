@@ -13,6 +13,13 @@ interface ChangelogEntry {
 
 const changelog: ChangelogEntry[] = [
   {
+    version: "4.34.0",
+    date: "2026-03-09",
+    type: "minor",
+    title: "Tarjeta 'Arribos este mes' en Dashboard",
+    description: "Se agregó una tarjeta informativa al final de la fila de estados del Dashboard que muestra el conteo de embarques con ETA dentro del mes en curso. Estilo consistente con las tarjetas existentes, barra cyan decorativa.",
+  },
+  {
     version: "4.33.1",
     date: "2026-03-09",
     type: "patch",
