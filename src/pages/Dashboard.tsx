@@ -56,6 +56,7 @@ export default function Dashboard() {
         filtroEstado={filtroEstado}
         onFiltroChange={setFiltroEstado}
         isLoading={isLoading}
+        arribosEsteMes={arribosEsteMes}
       />
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

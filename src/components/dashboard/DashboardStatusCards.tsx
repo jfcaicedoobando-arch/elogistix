@@ -3,6 +3,7 @@ import { Progress } from "@/components/ui/progress";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ESTADOS_FILTRO, type EstadoFiltro } from "@/hooks/useDashboardData";
 import { ESTADO_CONFIG } from "./estadoConfig";
+import { CalendarDays } from "lucide-react";
 
 interface Props {
   conteoPorEstado: Record<EstadoFiltro, number>;
@@ -10,6 +11,7 @@ interface Props {
   filtroEstado: EstadoFiltro | null;
   onFiltroChange: (estado: EstadoFiltro | null) => void;
   isLoading: boolean;
+  arribosEsteMes: number;
 }
 
 export function DashboardStatusCards({
@@ -18,9 +20,10 @@ export function DashboardStatusCards({
   filtroEstado,
   onFiltroChange,
   isLoading,
+  arribosEsteMes,
 }: Props) {
   return (
-    <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+    <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
       {ESTADOS_FILTRO.map((estado) => {
         const cfg = ESTADO_CONFIG[estado];
         const Icon = cfg.icon;
@@ -59,6 +62,28 @@ export function DashboardStatusCards({
           </Card>
         );
       })}
+
+      {/* Tarjeta informativa: Arribos este mes */}
+      <Card className="border-2 border-transparent">
+        <CardContent className="p-4 space-y-3">
+          <div className="flex items-center justify-between">
+            <div className="p-2 rounded-lg bg-gradient-to-br from-cyan-500 to-cyan-600">
+              <CalendarDays className="h-4 w-4 text-white" />
+            </div>
+            {isLoading ? (
+              <Skeleton className="h-8 w-10" />
+            ) : (
+              <span className="text-3xl font-extrabold tracking-tight">
+                {arribosEsteMes}
+              </span>
+            )}
+          </div>
+          <p className="text-xs font-medium text-muted-foreground">
+            Arribos este mes
+          </p>
+          <Progress value={100} className="h-1.5 [&>div]:bg-cyan-500" />
+        </CardContent>
+      </Card>
     </div>
   );
 }
