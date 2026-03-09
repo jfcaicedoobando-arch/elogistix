@@ -42,7 +42,7 @@ const columns: DataTableColumn<Embarque>[] = [
   { key: "eta", header: "ETA", className: "text-xs", render: (e) => formatDate(e.eta || "") },
   {
     key: "estado", header: "Estado", render: (e) => {
-      const estado = calcularEstadoEmbarque(e.modo, e.etd, e.eta, e.estado);
+      const estado = calcularEstadoEmbarque(e.modo, e.tipo, e.etd, e.eta, e.estado);
       return <Badge variant="secondary" className={`text-xs ${getEstadoColor(estado)}`}>{estado}</Badge>;
     },
   },
