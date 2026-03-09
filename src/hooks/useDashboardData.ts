@@ -90,7 +90,7 @@ export function useDashboardData() {
   const activos = useMemo(
     () =>
       embarquesConEstado.filter(
-        (e) => !["Cerrado", "Cotización", "Cancelado"].includes(e.estadoReal)
+        (e) => !["EIR", "Cerrado", "Cancelado"].includes(e.estadoReal)
       ),
     [embarquesConEstado]
   );
