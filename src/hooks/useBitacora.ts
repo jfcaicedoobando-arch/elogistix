@@ -23,6 +23,7 @@ interface FiltrosBitacora {
   fechaHasta?: string;
   limite?: number;
   pagina?: number;
+  excluirLogin?: boolean;
 }
 
 export function useBitacora(filtros: FiltrosBitacora = {}) {
