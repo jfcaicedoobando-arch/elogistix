@@ -99,6 +99,7 @@ export function useDashboardData() {
     const m: Record<EstadoFiltro, number> = {
       Confirmado: 0,
       "En Tránsito": 0,
+      Arribo: 0,
       "En Aduana": 0,
       Entregado: 0,
     };
