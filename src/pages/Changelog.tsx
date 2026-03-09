@@ -13,6 +13,13 @@ interface ChangelogEntry {
 
 const changelog: ChangelogEntry[] = [
   {
+    version: "4.31.0",
+    date: "2026-03-09",
+    type: "minor",
+    title: "Dashboard completo de Reportes",
+    description: "Expansión mayor con filtro de período, 4 nuevas secciones (Panorama General, Operaciones, Ventas, Rentabilidad) y métricas avanzadas.",
+  },
+  {
     version: "4.30.5",
     date: "2026-03-07",
     type: "patch",
