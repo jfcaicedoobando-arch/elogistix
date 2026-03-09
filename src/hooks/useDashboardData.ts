@@ -27,6 +27,7 @@ export interface EmbarqueConEstado {
   created_at: string;
 }
 
+
 export interface AlertaDemora extends EmbarqueConEstado {
   diasDemora: number;
   diasDesdeEta: number;
@@ -45,6 +46,7 @@ export interface EmbarqueConProfit extends EmbarqueConEstado {
 
 export const ESTADOS_FILTRO = ESTADOS_ACTIVOS;
 export type EstadoFiltro = (typeof ESTADOS_FILTRO)[number];
+
 
 const DIAS_LIBRES_DEFAULT = 7;
 
@@ -80,7 +82,7 @@ export function useDashboardData() {
     () =>
       embarques.map((e) => ({
         ...e,
-        estadoReal: calcularEstadoEmbarque(e.modo, e.etd, e.eta, e.estado),
+        estadoReal: calcularEstadoEmbarque(e.modo, e.tipo, e.etd, e.eta, e.estado),
       })),
     [embarques]
   );
@@ -88,7 +90,7 @@ export function useDashboardData() {
   const activos = useMemo(
     () =>
       embarquesConEstado.filter(
-        (e) => !["Cerrado", "Cotización", "Cancelado"].includes(e.estadoReal)
+        (e) => !["EIR", "Cerrado", "Cancelado"].includes(e.estadoReal)
       ),
     [embarquesConEstado]
   );
@@ -97,6 +99,7 @@ export function useDashboardData() {
     const m: Record<EstadoFiltro, number> = {
       Confirmado: 0,
       "En Tránsito": 0,
+      Arribo: 0,
       "En Aduana": 0,
       Entregado: 0,
     };
@@ -116,7 +119,7 @@ export function useDashboardData() {
     const hoy = new Date();
     hoy.setHours(0, 0, 0, 0);
     return activos
-      .filter((e) => e.estadoReal === "En Aduana" && e.eta)
+      .filter((e) => e.estadoReal === "Arribo" && e.eta)
       .map((e) => {
         const eta = new Date(e.eta! + "T00:00:00");
         const diasDesdeEta = Math.floor(

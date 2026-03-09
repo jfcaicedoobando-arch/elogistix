@@ -42,7 +42,7 @@ const columns: DataTableColumn<Embarque>[] = [
   { key: "eta", header: "ETA", className: "text-xs", render: (e) => formatDate(e.eta || "") },
   {
     key: "estado", header: "Estado", render: (e) => {
-      const estado = calcularEstadoEmbarque(e.modo, e.etd, e.eta, e.estado);
+      const estado = calcularEstadoEmbarque(e.modo, e.tipo, e.etd, e.eta, e.estado);
       return <Badge variant="secondary" className={`text-xs ${getEstadoColor(estado)}`}>{estado}</Badge>;
     },
   },
@@ -68,7 +68,7 @@ export default function Embarques() {
         embarque.descripcion_mercancia.toLowerCase().includes(search.toLowerCase()) ||
         (embarque.bl_master || '').toLowerCase().includes(search.toLowerCase());
       const matchModo = filterModo === "todos" || embarque.modo === filterModo;
-      const estadoCalculado = calcularEstadoEmbarque(embarque.modo, embarque.etd, embarque.eta, embarque.estado);
+      const estadoCalculado = calcularEstadoEmbarque(embarque.modo, embarque.tipo, embarque.etd, embarque.eta, embarque.estado);
       const matchEstado = filterEstado === "todos" || estadoCalculado === filterEstado;
       const matchCliente = filterCliente === "todos" || embarque.cliente_id === filterCliente;
       return matchSearch && matchModo && matchEstado && matchCliente;

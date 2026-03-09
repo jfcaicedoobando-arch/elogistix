@@ -84,7 +84,7 @@ export default function Reportes() {
 
   // KPI Calculations
   const embarquesActivos = useMemo(() =>
-    embarquesFiltrados.filter(embarque => !['Entregado', 'Cerrado', 'Cancelado'].includes(embarque.estado)).length,
+    embarquesFiltrados.filter(embarque => !['EIR', 'Cerrado', 'Cancelado'].includes(embarque.estado)).length,
     [embarquesFiltrados]
   );
 
@@ -126,7 +126,7 @@ export default function Reportes() {
   const embarquesDemorados = useMemo(() => {
     return embarques
       .filter(embarque => 
-        embarque.estado === 'En Aduana' && 
+        embarque.estado === 'Arribo' && 
         embarque.eta && 
         differenceInDays(hoy, new Date(embarque.eta)) > 7
       )

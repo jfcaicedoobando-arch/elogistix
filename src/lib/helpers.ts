@@ -10,12 +10,15 @@ export const formatDate = (dateStr: string): string => {
 
 export const getEstadoColor = (estado: string): string => {
   const colors: Record<string, string> = {
-    'Cotización': 'bg-muted text-muted-foreground',
     'Confirmado': 'bg-info/15 text-info',
     'En Tránsito': 'bg-warning/15 text-warning',
-    'Llegada': 'bg-accent/15 text-accent',
-    'En Proceso': 'bg-info/15 text-info',
-    'Cerrado': 'bg-success/15 text-success',
+    'Arribo': 'bg-cyan-500/15 text-cyan-600',
+    'En Aduana': 'bg-violet-500/15 text-violet-600',
+    'Entregado': 'bg-emerald-500/15 text-emerald-600',
+    'EIR': 'bg-orange-500/15 text-orange-600',
+    'Cerrado': 'bg-muted text-muted-foreground',
+    'Cancelado': 'bg-destructive/15 text-destructive',
+    // Estados de facturación
     'Borrador': 'bg-muted text-muted-foreground',
     'Emitida': 'bg-info/15 text-info',
     'Pagada': 'bg-success/15 text-success',
@@ -25,8 +28,6 @@ export const getEstadoColor = (estado: string): string => {
     'Recibido': 'bg-info/15 text-info',
     'Validado': 'bg-success/15 text-success',
     'Pagado': 'bg-success/15 text-success',
-    'En Aduana': 'bg-warning/15 text-warning',
-    'Entregado': 'bg-success/15 text-success',
     // Estados de cotización
     'Enviada': 'bg-info/15 text-info',
     'Aceptada': 'bg-warning/15 text-warning',

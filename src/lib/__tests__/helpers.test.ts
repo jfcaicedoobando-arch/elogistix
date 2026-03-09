@@ -15,9 +15,13 @@ describe("formatDate", () => {
 
 describe("getEstadoColor", () => {
   it("retorna clase correcta para cada estado conocido", () => {
-    expect(getEstadoColor("Cotización")).toContain("bg-muted");
+    expect(getEstadoColor("Confirmado")).toContain("text-info");
     expect(getEstadoColor("En Tránsito")).toContain("text-warning");
-    expect(getEstadoColor("Cerrado")).toContain("text-success");
+    expect(getEstadoColor("Arribo")).toContain("text-cyan-600");
+    expect(getEstadoColor("En Aduana")).toContain("text-violet-600");
+    expect(getEstadoColor("Entregado")).toContain("text-emerald-600");
+    expect(getEstadoColor("EIR")).toContain("text-orange-600");
+    expect(getEstadoColor("Cerrado")).toContain("text-muted-foreground");
     expect(getEstadoColor("Pagada")).toContain("text-success");
     expect(getEstadoColor("Vencida")).toContain("text-destructive");
   });

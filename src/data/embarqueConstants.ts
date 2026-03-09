@@ -8,13 +8,13 @@ export function getDocsForMode(modo: string): string[] {
   return ['Carta Porte', 'Factura', 'Lista de Empaque'];
 }
 
-export const ESTADO_TIMELINE = ['Confirmado', 'En Tránsito', 'En Aduana', 'Llegada', 'En Proceso', 'Entregado', 'Cerrado'] as const;
+export const ESTADO_TIMELINE = ['Confirmado', 'En Tránsito', 'Arribo', 'En Aduana', 'Entregado', 'EIR', 'Cerrado'] as const;
 
-export const ESTADOS_EMBARQUE = ['Confirmado', 'En Tránsito', 'En Aduana', 'Llegada', 'En Proceso', 'Entregado', 'Cerrado', 'Cancelado'] as const;
+export const ESTADOS_EMBARQUE = ['Confirmado', 'En Tránsito', 'Arribo', 'En Aduana', 'Entregado', 'EIR', 'Cerrado'] as const;
 
-export const ESTADOS_ACTIVOS = ['Confirmado', 'En Tránsito', 'En Aduana', 'Entregado'] as const;
+export const ESTADOS_ACTIVOS = ['Confirmado', 'En Tránsito', 'Arribo', 'En Aduana', 'Entregado'] as const;
 
-export const ESTADOS_INACTIVOS = ['Cerrado', 'Cotización', 'Cancelado'] as const;
+export const ESTADOS_INACTIVOS = ['EIR', 'Cerrado'] as const;
 
 export const MODOS_TRANSPORTE = ['Marítimo', 'Aéreo', 'Terrestre', 'Multimodal'] as const;
 
