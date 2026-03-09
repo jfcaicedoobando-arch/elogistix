@@ -13,6 +13,13 @@ interface ChangelogEntry {
 
 const changelog: ChangelogEntry[] = [
   {
+    version: "4.33.1",
+    date: "2026-03-09",
+    type: "patch",
+    title: "Corregir registro duplicado de logins en bitácora",
+    description: "El evento SIGNED_IN de autenticación se disparaba en cada refresh de token y recarga de página, generando miles de registros falsos de login. Ahora se usa un ref para registrar solo el primer login real por sesión del componente.",
+  },
+  {
     version: "4.33.0",
     date: "2026-03-09",
     type: "minor",
