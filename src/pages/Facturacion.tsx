@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useFacturas, useGastosPendientes, useMarcarCostoPagado } from "@/hooks/useFacturas";
+import { useRegistrarActividad } from "@/hooks/useBitacora";
 import { formatCurrency } from "@/lib/formatters";
 import { formatDate, getEstadoColor } from "@/lib/helpers";
 import { toast } from "sonner";
@@ -58,9 +59,19 @@ export default function Facturacion() {
   const paginatedFacturas = filtered.slice(page * pageSize, (page + 1) * pageSize);
   const totalPages = Math.ceil(filtered.length / pageSize);
 
+  const registrarActividad = useRegistrarActividad();
+
   const handleMarcarPagado = (id: string) => {
     marcarPagado.mutate({ id }, {
-      onSuccess: () => toast.success("Gasto marcado como pagado"),
+      onSuccess: () => {
+        registrarActividad.mutate({
+          accion: 'editar',
+          modulo: 'facturas',
+          entidad_id: id,
+          entidad_nombre: 'Gasto marcado como pagado',
+        });
+        toast.success("Gasto marcado como pagado");
+      },
       onError: () => toast.error("Error al marcar como pagado"),
     });
   };

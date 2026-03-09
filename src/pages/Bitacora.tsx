@@ -2,8 +2,9 @@ import { useState } from "react";
 import { History } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 import PaginationControls from "@/components/PaginationControls";
 import { BitacoraActividad } from "@/components/BitacoraActividad";
 import { useBitacora } from "@/hooks/useBitacora";
@@ -14,6 +15,7 @@ const MODULOS = [
   { valor: "embarques", etiqueta: "Embarques" },
   { valor: "clientes", etiqueta: "Clientes" },
   { valor: "proveedores", etiqueta: "Proveedores" },
+  { valor: "cotizaciones", etiqueta: "Cotizaciones" },
   { valor: "facturas", etiqueta: "Facturas" },
   { valor: "usuarios", etiqueta: "Usuarios" },
   { valor: "auth", etiqueta: "Autenticación" },
@@ -25,11 +27,15 @@ export default function Bitacora() {
   const { isAdmin } = usePermissions();
   const [moduloFiltro, setModuloFiltro] = useState("todos");
   const [pagina, setPagina] = useState(0);
+  const [mostrarLogins, setMostrarLogins] = useState(false);
+
+  const esAuth = moduloFiltro === "auth";
 
   const { data, isLoading } = useBitacora({
     modulo: moduloFiltro === "todos" ? undefined : moduloFiltro,
     limite: LIMITE_POR_PAGINA,
     pagina,
+    excluirLogin: esAuth ? false : !mostrarLogins,
   });
 
   const actividades = data?.datos ?? [];
@@ -70,6 +76,19 @@ export default function Bitacora() {
             ))}
           </SelectContent>
         </Select>
+
+        {!esAuth && (
+          <div className="flex items-center gap-2">
+            <Switch
+              id="mostrar-logins"
+              checked={mostrarLogins}
+              onCheckedChange={(v) => { setMostrarLogins(v); setPagina(0); }}
+            />
+            <Label htmlFor="mostrar-logins" className="text-xs text-muted-foreground cursor-pointer">
+              Incluir logins
+            </Label>
+          </div>
+        )}
 
         <span className="text-xs text-muted-foreground ml-auto">
           {total} {total === 1 ? "registro" : "registros"}

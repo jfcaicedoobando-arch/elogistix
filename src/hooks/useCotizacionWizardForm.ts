@@ -363,7 +363,7 @@ export function useCotizacionWizardForm({ navigate, toast, userEmail, clientes, 
     try {
       await updateCotizacion.mutateAsync({ id: cotizacionId, data: { estado: "Borrador" } as any });
       registrarActividad.mutate({
-        accion: "Crear cotización", modulo: "Cotizaciones",
+        accion: "crear", modulo: "cotizaciones",
         entidad_id: cotizacionId, entidad_nombre: "",
       });
       toast({ title: "Cotización creada exitosamente" });

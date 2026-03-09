@@ -146,7 +146,7 @@ export default function ClienteDetalle() {
     try {
       await updateCliente.mutateAsync({ id: cliente.id, ...clienteForm });
       registrarActividad.mutate({
-        accion: 'editar_cliente',
+        accion: 'editar',
         modulo: 'clientes',
         entidad_id: cliente.id,
         entidad_nombre: clienteForm.nombre,

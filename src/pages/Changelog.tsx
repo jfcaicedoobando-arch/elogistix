@@ -13,6 +13,13 @@ interface ChangelogEntry {
 
 const changelog: ChangelogEntry[] = [
   {
+    version: "4.33.0",
+    date: "2026-03-09",
+    type: "minor",
+    title: "Mejoras completas en la Bitácora de Actividad",
+    description: "Se filtran logins por defecto con toggle para incluirlos. Se corrigieron nombres de acciones inconsistentes (crear cotización, editar_cliente, cambiar_estado). Se agregó tracking para facturas. Se añadió módulo Cotizaciones a filtros y rutas de navegación. Nuevos íconos para agregar_nota y eliminar_documento.",
+  },
+  {
     version: "4.32.2",
     date: "2026-03-09",
     type: "patch",

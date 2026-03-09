@@ -23,10 +23,11 @@ interface FiltrosBitacora {
   fechaHasta?: string;
   limite?: number;
   pagina?: number;
+  excluirLogin?: boolean;
 }
 
 export function useBitacora(filtros: FiltrosBitacora = {}) {
-  const { limite = 50, pagina = 0, modulo, usuarioId, fechaDesde, fechaHasta } = filtros;
+  const { limite = 50, pagina = 0, modulo, usuarioId, fechaDesde, fechaHasta, excluirLogin = true } = filtros;
 
   return useQuery({
     queryKey: queryKeys.bitacora.list(filtros as Record<string, unknown>),
@@ -37,6 +38,7 @@ export function useBitacora(filtros: FiltrosBitacora = {}) {
         .order('created_at', { ascending: false })
         .range(pagina * limite, (pagina + 1) * limite - 1);
 
+      if (excluirLogin) query = query.neq('accion', 'login');
       if (modulo) query = query.eq('modulo', modulo);
       if (usuarioId) query = query.eq('usuario_id', usuarioId);
       if (fechaDesde) query = query.gte('created_at', fechaDesde);
