@@ -188,12 +188,38 @@ export function useDashboardData() {
     const hoy = new Date();
     const inicioMes = new Date(hoy.getFullYear(), hoy.getMonth(), 1);
     const finMes = new Date(hoy.getFullYear(), hoy.getMonth() + 1, 0);
-    return embarquesConEstado.filter((e) => {
+
+    const ventaMap: Record<string, number> = {};
+    const costoMap: Record<string, number> = {};
+    ventasUSD.forEach((v) => {
+      ventaMap[v.embarque_id] = (ventaMap[v.embarque_id] || 0) + Number(v.total);
+    });
+    costosUSD.forEach((c) => {
+      costoMap[c.embarque_id] = (costoMap[c.embarque_id] || 0) + Number(c.monto);
+    });
+
+    const filtered = embarquesConEstado.filter((e) => {
       if (!e.eta) return false;
       const eta = new Date(e.eta + "T00:00:00");
       return eta >= inicioMes && eta <= finMes;
-    }).length;
-  }, [embarquesConEstado]);
+    });
+
+    const yaLlegaron = filtered.filter((e) =>
+      ["Arribo", "En Aduana", "Entregado", "EIR", "Cerrado"].includes(e.estadoReal)
+    ).length;
+
+    const enCamino = filtered.filter((e) =>
+      ["Confirmado", "En Tránsito"].includes(e.estadoReal)
+    ).length;
+
+    const profitUSD = filtered.reduce((acc, e) => {
+      const v = ventaMap[e.id] || 0;
+      const c = costoMap[e.id] || 0;
+      return acc + (v - c);
+    }, 0);
+
+    return { total: filtered.length, yaLlegaron, enCamino, profitUSD };
+  }, [embarquesConEstado, ventasUSD, costosUSD]);
 
   return {
     isLoading,
