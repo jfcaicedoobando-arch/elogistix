@@ -13,6 +13,13 @@ interface ChangelogEntry {
 
 const changelog: ChangelogEntry[] = [
   {
+    version: "4.35.0",
+    date: "2026-03-09",
+    type: "minor",
+    title: "Línea de tiempo visual + Indicador de arribos y profit",
+    description: "Se reemplazaron las tarjetas de estado del Dashboard por una línea de tiempo horizontal interactiva con 5 nodos (Confirmado → En Tránsito → Arribo → En Aduana → Entregado). Se agregó indicador compacto de arribos del mes con métricas de ya llegaron, en camino y profit USD proyectado.",
+  },
+  {
     version: "4.34.0",
     date: "2026-03-09",
     type: "minor",
