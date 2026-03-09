@@ -1,16 +1,32 @@
 
 
-## Plan: Usar expediente del origen al duplicar
+## Corregir eliminación de documentos en embarques (v4.32.2)
 
-### Cambio único en `src/hooks/useEmbarques.ts`
+### Problema 1 — TabDocumentos sin confirmación
 
-En el loop de `useDuplicarEmbarque` (líneas 257-262), reemplazar la llamada a `supabase.rpc('generar_expediente')` por usar directamente `embarqueOrigen.expediente`:
+En `src/components/embarque/TabDocumentos.tsx`, el botón Eliminar llama `onDelete(doc)` directamente. Se agregará un `AlertDialog` con estado local para controlar qué documento se va a eliminar.
 
-- **Eliminar** líneas 258-262 (la llamada RPC y el manejo de error)
-- **Cambiar** línea 268 `expediente: expediente as string` → `expediente: embarqueOrigen.expediente`
-- En el push final al array `creados`, usar `embarqueOrigen.expediente` en lugar de `expediente as string`
+- Agregar estado `docToDelete` para trackear el documento seleccionado
+- El botón Eliminar abre el diálogo seteando `docToDelete`
+- Al confirmar, llama `onDelete(docToDelete)` y cierra
+- Título: "¿Eliminar documento?"
+- Descripción: "El archivo {nombre} será eliminado permanentemente. Esta acción no se puede deshacer."
 
-### Cambio en `src/pages/Changelog.tsx`
+### Problema 2 — handleDeleteDoc hace UPDATE en vez de DELETE
 
-Entrada v4.15.1 — "Duplicar embarque ahora conserva el mismo expediente del origen"
+En `src/pages/EmbarqueDetalle.tsx` línea 101, cambia el `update` por `delete`:
+
+```typescript
+// Antes:
+await supabase.from("documentos_embarque").update({ archivo: null, estado: "Pendiente" as any }).eq("id", doc.id);
+
+// Después:
+await supabase.from("documentos_embarque").delete().eq("id", doc.id);
+```
+
+### Archivos a modificar (3)
+
+1. `src/components/embarque/TabDocumentos.tsx` — AlertDialog de confirmación
+2. `src/pages/EmbarqueDetalle.tsx` — DELETE en vez de UPDATE
+3. `src/pages/Changelog.tsx` — entrada v4.32.2
 
