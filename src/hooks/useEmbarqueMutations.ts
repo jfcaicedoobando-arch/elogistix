@@ -65,6 +65,7 @@ export function useCreateEmbarque() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.embarques.all });
+      queryClient.invalidateQueries({ queryKey: queryKeys.cotizaciones.all });
     },
   });
 }

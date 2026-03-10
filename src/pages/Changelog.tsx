@@ -13,6 +13,13 @@ interface ChangelogEntry {
 
 const changelog: ChangelogEntry[] = [
   {
+    version: "4.37.0",
+    date: "2026-03-10",
+    type: "minor",
+    title: "Vincular cotización existente al crear embarque",
+    description: "Al crear un nuevo embarque se puede vincular opcionalmente una cotización con estado 'Aceptada'. Se pre-llenan los campos del formulario y al guardar la cotización cambia a 'Embarcada'.",
+  },
+  {
     version: "4.36.7",
     date: "2026-03-10",
     type: "patch",
