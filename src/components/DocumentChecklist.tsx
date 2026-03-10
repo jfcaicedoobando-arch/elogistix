@@ -27,28 +27,20 @@ interface Props {
 export default function DocumentChecklist({ documentos, onFileChange, descripcion }: Props) {
   const fileInputRefs = useRef<Record<string, HTMLInputElement | null>>({});
   const [pendingDelete, setPendingDelete] = useState<string | null>(null);
-  const [confirmStep, setConfirmStep] = useState<1 | 2>(1);
 
   const handleDeleteClick = (docNombre: string) => {
     setPendingDelete(docNombre);
-    setConfirmStep(1);
   };
 
-  const handleFirstConfirm = () => {
-    setConfirmStep(2);
-  };
-
-  const handleSecondConfirm = () => {
+  const handleConfirmDelete = () => {
     if (pendingDelete) {
       onFileChange(pendingDelete, undefined);
     }
     setPendingDelete(null);
-    setConfirmStep(1);
   };
 
   const handleCancel = () => {
     setPendingDelete(null);
-    setConfirmStep(1);
   };
 
   return (
