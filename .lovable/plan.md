@@ -1,21 +1,16 @@
 
 
-## Fix: Revert COT-2026-0007 to 'Aceptada'
+## Plan: Usar expediente del origen al duplicar
 
-### Verified State
-- **Folio**: COT-2026-0007 (id: `9ea07dbb-...`)
-- **Current estado**: `Embarcada`
-- **Linked embarques**: 0 (confirmed — the embarque was already deleted)
+### Cambio único en `src/hooks/useEmbarques.ts`
 
-### Action
-Execute a data UPDATE (not a migration) to set the estado back to `'Aceptada'`:
+En el loop de `useDuplicarEmbarque` (líneas 257-262), reemplazar la llamada a `supabase.rpc('generar_expediente')` por usar directamente `embarqueOrigen.expediente`:
 
-```sql
-UPDATE public.cotizaciones
-SET estado = 'Aceptada'
-WHERE folio = 'COT-2026-0007'
-  AND estado = 'Embarcada';
-```
+- **Eliminar** líneas 258-262 (la llamada RPC y el manejo de error)
+- **Cambiar** línea 268 `expediente: expediente as string` → `expediente: embarqueOrigen.expediente`
+- En el push final al array `creados`, usar `embarqueOrigen.expediente` en lugar de `expediente as string`
 
-Single statement, no code changes needed.
+### Cambio en `src/pages/Changelog.tsx`
+
+Entrada v4.15.1 — "Duplicar embarque ahora conserva el mismo expediente del origen"
 
