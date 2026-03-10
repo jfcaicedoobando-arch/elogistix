@@ -1,16 +1,17 @@
 
 
-## Plan: Usar expediente del origen al duplicar
+## Fix: Revert cotización status when deleting linked embarque
 
-### Cambio único en `src/hooks/useEmbarques.ts`
+### Change: `src/hooks/useEmbarqueMutations.ts` — `useEliminarEmbarque`
 
-En el loop de `useDuplicarEmbarque` (líneas 257-262), reemplazar la llamada a `supabase.rpc('generar_expediente')` por usar directamente `embarqueOrigen.expediente`:
+Before the cascade deletion, add a query to read the embarque's `cotizacion_id`. After all deletions complete, check if other embarques remain linked to that cotización. If none remain, update the cotización status back to `'Aceptada'`.
 
-- **Eliminar** líneas 258-262 (la llamada RPC y el manejo de error)
-- **Cambiar** línea 268 `expediente: expediente as string` → `expediente: embarqueOrigen.expediente`
-- En el push final al array `creados`, usar `embarqueOrigen.expediente` en lugar de `expediente as string`
+Order of operations in `mutationFn`:
+1. **Read** `cotizacion_id` from the embarque (before any deletes)
+2. **Delete** related records (conceptos_venta, conceptos_costo, documentos, notas, facturas) — existing code
+3. **Delete** the embarque — existing code
+4. **Check** if `cotizacion_id` exists, count remaining embarques linked to it
+5. **Update** cotización to `'Aceptada'` if count is 0
 
-### Cambio en `src/pages/Changelog.tsx`
-
-Entrada v4.15.1 — "Duplicar embarque ahora conserva el mismo expediente del origen"
+No other files need changes.
 
