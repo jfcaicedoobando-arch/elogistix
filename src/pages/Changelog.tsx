@@ -13,6 +13,13 @@ interface ChangelogEntry {
 
 const changelog: ChangelogEntry[] = [
   {
+    version: "4.36.4",
+    date: "2026-03-10",
+    type: "minor",
+    title: "Eliminar embarques desde la lista",
+    description: "Se agregó botón de eliminar por fila en la lista de embarques, visible en hover para roles admin y operador, con flujo de doble confirmación y registro en bitácora.",
+  },
+  {
     version: "4.36.3",
     date: "2026-03-10",
     type: "patch",
