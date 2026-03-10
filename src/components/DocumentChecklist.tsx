@@ -94,35 +94,18 @@ export default function DocumentChecklist({ documentos, onFileChange, descripcio
         </div>
       ))}
 
-      {/* Primer diálogo */}
-      <AlertDialog open={!!pendingDelete && confirmStep === 1} onOpenChange={(open) => { if (!open) handleCancel(); }}>
+      <AlertDialog open={!!pendingDelete} onOpenChange={(open) => { if (!open) handleCancel(); }}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>¿Deseas eliminar el archivo?</AlertDialogTitle>
+            <AlertDialogTitle>¿Eliminar archivo?</AlertDialogTitle>
             <AlertDialogDescription>
-              Se eliminará el archivo adjunto de <strong>{pendingDelete}</strong>.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel onClick={handleCancel}>Cancelar</AlertDialogCancel>
-            <AlertDialogAction onClick={handleFirstConfirm}>Continuar</AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-
-      {/* Segundo diálogo */}
-      <AlertDialog open={!!pendingDelete && confirmStep === 2} onOpenChange={(open) => { if (!open) handleCancel(); }}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Confirmar eliminación</AlertDialogTitle>
-            <AlertDialogDescription>
-              Esta acción no se puede deshacer. ¿Confirmar eliminación del archivo de <strong>{pendingDelete}</strong>?
+              Se eliminará el archivo adjunto de <strong>{pendingDelete}</strong>. Esta acción no se puede deshacer.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel onClick={handleCancel}>Cancelar</AlertDialogCancel>
             <AlertDialogAction
-              onClick={handleSecondConfirm}
+              onClick={handleConfirmDelete}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
               Eliminar
