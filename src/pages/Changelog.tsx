@@ -13,6 +13,13 @@ interface ChangelogEntry {
 
 const changelog: ChangelogEntry[] = [
   {
+    version: "4.37.3",
+    date: "2026-03-10",
+    type: "patch",
+    title: "Unificar catálogo de conceptos embarques ↔ cotizaciones",
+    description: "CATALOGO_CONCEPTOS en embarqueConstants.ts ahora contiene los mismos 18 conceptos usados en cotizaciones, eliminando discrepancias entre módulos.",
+  },
+  {
     version: "4.37.2",
     date: "2026-03-10",
     type: "patch",
