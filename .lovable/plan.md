@@ -1,16 +1,13 @@
 
 
-## Plan: Usar expediente del origen al duplicar
+## Simplificar eliminación en DocumentChecklist
 
-### Cambio único en `src/hooks/useEmbarques.ts`
+### Cambio único en `src/components/DocumentChecklist.tsx`
 
-En el loop de `useDuplicarEmbarque` (líneas 257-262), reemplazar la llamada a `supabase.rpc('generar_expediente')` por usar directamente `embarqueOrigen.expediente`:
+- Eliminar `confirmStep` state y `handleFirstConfirm`
+- Eliminar el segundo `AlertDialog`
+- El único `AlertDialog` restante ejecuta directamente `onFileChange(pendingDelete, undefined)` al confirmar
+- Botón "Eliminar" con clase destructive
 
-- **Eliminar** líneas 258-262 (la llamada RPC y el manejo de error)
-- **Cambiar** línea 268 `expediente: expediente as string` → `expediente: embarqueOrigen.expediente`
-- En el push final al array `creados`, usar `embarqueOrigen.expediente` en lugar de `expediente as string`
-
-### Cambio en `src/pages/Changelog.tsx`
-
-Entrada v4.15.1 — "Duplicar embarque ahora conserva el mismo expediente del origen"
+Flujo resultante: Click Trash → Dialog → Eliminar → `onFileChange` → cierra.
 
