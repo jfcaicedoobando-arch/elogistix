@@ -8,6 +8,7 @@ import type { EmbarqueMesSiguiente, ResumenFacturacion } from "@/hooks/useDashbo
 import { ESTADO_CONFIG } from "./estadoConfig";
 import type { EstadoFiltro } from "@/hooks/useDashboardData";
 import { CalendarDays, DollarSign, TrendingUp, FileCheck, Package } from "lucide-react";
+import { Progress } from "@/components/ui/progress";
 
 interface Props {
   embarques: EmbarqueMesSiguiente[];
@@ -114,14 +115,30 @@ export function EmbarquesActivosTable({ embarques, resumen, isLoading }: Props) 
               <p className="text-[10px] text-muted-foreground">Profit</p>
             </div>
           </div>
-          <div className="flex items-center gap-2 rounded-lg border bg-muted/30 p-3">
-            <FileCheck className="h-4 w-4 text-primary shrink-0" />
-            <div>
-              <p className="text-sm font-bold text-foreground">
-                {resumen.facturados}/{resumen.totalEmbarques}
-              </p>
-              <p className="text-[10px] text-muted-foreground">Facturados</p>
+          <div className="flex flex-col gap-1.5 rounded-lg border bg-muted/30 p-3">
+            <div className="flex items-center gap-2">
+              <FileCheck className="h-4 w-4 text-primary shrink-0" />
+              <div className="flex-1">
+                <div className="flex items-baseline justify-between">
+                  <p className="text-sm font-bold text-foreground">
+                    {resumen.facturados}/{resumen.totalEmbarques}
+                  </p>
+                  <span className="text-[10px] text-muted-foreground">
+                    {resumen.totalEmbarques > 0
+                      ? Math.round((resumen.facturados / resumen.totalEmbarques) * 100)
+                      : 0}%
+                  </span>
+                </div>
+                <p className="text-[10px] text-muted-foreground">Facturados</p>
+              </div>
             </div>
+            {(() => {
+              const pct = resumen.totalEmbarques > 0
+                ? Math.round((resumen.facturados / resumen.totalEmbarques) * 100)
+                : 0;
+              const colorClass = pct >= 75 ? "[&>div]:bg-success" : pct >= 25 ? "[&>div]:bg-warning" : "[&>div]:bg-destructive";
+              return <Progress value={pct} className={`h-1.5 ${colorClass}`} />;
+            })()}
           </div>
         </div>
 

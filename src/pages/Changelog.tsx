@@ -13,6 +13,13 @@ interface ChangelogEntry {
 
 const changelog: ChangelogEntry[] = [
   {
+    version: "4.36.2",
+    date: "2026-03-10",
+    type: "patch",
+    title: "Barra de progreso de facturación en resumen del mes siguiente",
+    description: "Se agregó una barra de progreso visual con porcentaje en la tarjeta de Facturados del resumen del mes siguiente. La barra cambia de color según el avance: verde (≥75%), amarillo (25-74%) y rojo (<25%).",
+  },
+  {
     version: "4.36.1",
     date: "2026-03-10",
     type: "patch",
