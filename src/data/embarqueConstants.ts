@@ -19,12 +19,22 @@ export const ESTADOS_INACTIVOS = ['EIR', 'Cerrado'] as const;
 export const MODOS_TRANSPORTE = ['Marítimo', 'Aéreo', 'Terrestre', 'Multimodal'] as const;
 
 export const CATALOGO_CONCEPTOS = [
+  'Cargos en Origen',
+  'Costos Portuarios',
+  'Consolidación',
+  'Seguro',
+  'Recolección',
+  'Modificación de BL',
   'Flete Marítimo',
-  'Embalaje',
-  'Coordinación de Recolección',
-  'Seguro de Carga',
-  'Manejo',
+  'Flete Aéreo',
+  'Flete Terrestre',
+  'Handling',
+  'Desconsolidación',
+  'Revalidación',
   'Demoras',
   'Cargos en Destino',
-  'Cargos en Origen',
+  'Release',
+  'Honorarios de Despacho Aduanal',
+  'Entrega Nacional',
+  'Otro'
 ] as const;

@@ -31,12 +31,17 @@ describe("ESTADO_TIMELINE", () => {
 });
 
 describe("CATALOGO_CONCEPTOS", () => {
-  it("tiene 8 opciones", () => {
-    expect(CATALOGO_CONCEPTOS).toHaveLength(8);
+  it("tiene 18 opciones", () => {
+    expect(CATALOGO_CONCEPTOS).toHaveLength(18);
   });
   it("incluye Flete Marítimo, Cargos en Destino y Cargos en Origen", () => {
     expect(CATALOGO_CONCEPTOS).toContain("Flete Marítimo");
     expect(CATALOGO_CONCEPTOS).toContain("Cargos en Destino");
     expect(CATALOGO_CONCEPTOS).toContain("Cargos en Origen");
+  });
+  it("incluye conceptos unificados de cotizaciones", () => {
+    expect(CATALOGO_CONCEPTOS).toContain("Handling");
+    expect(CATALOGO_CONCEPTOS).toContain("Honorarios de Despacho Aduanal");
+    expect(CATALOGO_CONCEPTOS).toContain("Otro");
   });
 });
