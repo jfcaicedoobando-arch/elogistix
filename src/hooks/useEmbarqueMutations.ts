@@ -299,6 +299,16 @@ export function useEliminarEmbarque() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (embarqueId: string) => {
+      // 1. Leer cotizacion_id ANTES de eliminar
+      const { data: embarqueData } = await supabase
+        .from('embarques')
+        .select('cotizacion_id')
+        .eq('id', embarqueId)
+        .single();
+
+      const cotizacionId = embarqueData?.cotizacion_id;
+
+      // 2. Eliminar registros relacionados
       const tablas = [
         'conceptos_venta',
         'conceptos_costo',
@@ -312,8 +322,24 @@ export function useEliminarEmbarque() {
         if (error) throw error;
       }
 
+      // 3. Eliminar el embarque
       const { error } = await supabase.from('embarques').delete().eq('id', embarqueId);
       if (error) throw error;
+
+      // 4. Revertir cotización a 'Aceptada' si no quedan más embarques vinculados
+      if (cotizacionId) {
+        const { count } = await supabase
+          .from('embarques')
+          .select('id', { count: 'exact', head: true })
+          .eq('cotizacion_id', cotizacionId);
+
+        if (count === 0) {
+          await supabase
+            .from('cotizaciones')
+            .update({ estado: 'Aceptada' as any })
+            .eq('id', cotizacionId);
+        }
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.embarques.all });
