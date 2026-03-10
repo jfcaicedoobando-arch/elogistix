@@ -1,8 +1,16 @@
 
 
-## Fix: Add cotizaciones cache invalidation to useEliminarEmbarque
+## Plan: Usar expediente del origen al duplicar
 
-### Change: `src/hooks/useEmbarqueMutations.ts`
+### Cambio único en `src/hooks/useEmbarques.ts`
 
-In the `onSuccess` callback of `useEliminarEmbarque`, add `queryClient.invalidateQueries({ queryKey: queryKeys.cotizaciones.all })` after the existing embarques invalidation. This ensures the cotizaciones list reflects the updated estado when a linked embarque is deleted.
+En el loop de `useDuplicarEmbarque` (líneas 257-262), reemplazar la llamada a `supabase.rpc('generar_expediente')` por usar directamente `embarqueOrigen.expediente`:
+
+- **Eliminar** líneas 258-262 (la llamada RPC y el manejo de error)
+- **Cambiar** línea 268 `expediente: expediente as string` → `expediente: embarqueOrigen.expediente`
+- En el push final al array `creados`, usar `embarqueOrigen.expediente` en lugar de `expediente as string`
+
+### Cambio en `src/pages/Changelog.tsx`
+
+Entrada v4.15.1 — "Duplicar embarque ahora conserva el mismo expediente del origen"
 
