@@ -56,36 +56,40 @@ export default function NuevoEmbarque() {
 
   const selectedCliente = clientes.find(c => c.id === clienteId);
 
+  const opts = { shouldValidate: true, shouldDirty: true } as const;
+
   const handleVincularCotizacion = useCallback((cot: CotizacionRow) => {
     setCotizacionVinculada(cot);
-    methods.setValue('clienteId', cot.cliente_id || '');
-    methods.setValue('modo', cot.modo);
-    methods.setValue('tipo', cot.tipo);
-    methods.setValue('incoterm', cot.incoterm);
-    methods.setValue('descripcionMercancia', cot.descripcion_mercancia);
-    methods.setValue('tipoCarga', cot.tipo_carga || 'Carga General');
-    methods.setValue('tipoContenedor', cot.tipo_contenedor || '');
-    methods.setValue('pesoKg', String(cot.peso_kg || ''));
-    methods.setValue('volumenM3', String(cot.volumen_m3 || ''));
-    methods.setValue('piezas', String(cot.piezas || ''));
-    methods.setValue('puertoOrigen', cot.origen || '');
-    methods.setValue('puertoDestino', cot.destino || '');
+    methods.setValue('clienteId', cot.cliente_id || '', opts);
+    methods.setValue('modo', cot.modo, opts);
+    methods.setValue('tipo', cot.tipo, opts);
+    methods.setValue('incoterm', cot.incoterm, opts);
+    methods.setValue('descripcionMercancia', cot.descripcion_mercancia, opts);
+    methods.setValue('tipoCarga', cot.tipo_carga || 'Carga General', opts);
+    methods.setValue('tipoContenedor', cot.tipo_contenedor || '', opts);
+    methods.setValue('pesoKg', String(cot.peso_kg || ''), opts);
+    methods.setValue('volumenM3', String(cot.volumen_m3 || ''), opts);
+    methods.setValue('piezas', String(cot.piezas || ''), opts);
+    methods.setValue('puertoOrigen', cot.origen || '', opts);
+    methods.setValue('puertoDestino', cot.destino || '', opts);
+    methods.trigger();
   }, [methods]);
 
   const handleDesvincularCotizacion = useCallback(() => {
     setCotizacionVinculada(null);
-    methods.setValue('clienteId', '');
-    methods.setValue('modo', '');
-    methods.setValue('tipo', '');
-    methods.setValue('incoterm', 'FOB');
-    methods.setValue('descripcionMercancia', '');
-    methods.setValue('tipoCarga', 'Carga General');
-    methods.setValue('tipoContenedor', '');
-    methods.setValue('pesoKg', '');
-    methods.setValue('volumenM3', '');
-    methods.setValue('piezas', '');
-    methods.setValue('puertoOrigen', '');
-    methods.setValue('puertoDestino', '');
+    methods.setValue('clienteId', '', opts);
+    methods.setValue('modo', '', opts);
+    methods.setValue('tipo', '', opts);
+    methods.setValue('incoterm', 'FOB', opts);
+    methods.setValue('descripcionMercancia', '', opts);
+    methods.setValue('tipoCarga', 'Carga General', opts);
+    methods.setValue('tipoContenedor', '', opts);
+    methods.setValue('pesoKg', '', opts);
+    methods.setValue('volumenM3', '', opts);
+    methods.setValue('piezas', '', opts);
+    methods.setValue('puertoOrigen', '', opts);
+    methods.setValue('puertoDestino', '', opts);
+    methods.trigger();
   }, [methods]);
 
   const validateStep1 = useCallback((): boolean => {
