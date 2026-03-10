@@ -33,6 +33,7 @@ export const getEstadoColor = (estado: string): string => {
     'Aceptada': 'bg-warning/15 text-warning',
     'Confirmada': 'bg-success/15 text-success',
     'Rechazada': 'bg-destructive/15 text-destructive',
+    'Embarcada': 'bg-indigo-500/15 text-indigo-600',
   };
   return colors[estado] || 'bg-muted text-muted-foreground';
 };

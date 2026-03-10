@@ -445,7 +445,7 @@ export function useConvertirCotizacionAEmbarques() {
       // 3. Actualizar estado de la cotización
       const { error: errorUpdate } = await supabase
         .from('cotizaciones')
-        .update({ estado: 'Convertida' as any })
+        .update({ estado: 'Embarcada' as any })
         .eq('id', cotizacion.id);
       if (errorUpdate) throw errorUpdate;
 

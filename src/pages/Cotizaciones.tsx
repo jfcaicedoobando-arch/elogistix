@@ -21,7 +21,7 @@ import SearchInput from "@/components/SearchInput";
 import PaginationControls from "@/components/PaginationControls";
 import { DataTable, type DataTableColumn } from "@/components/DataTable";
 
-const ESTADOS = ['Borrador', 'Enviada', 'Aceptada', 'Rechazada', 'Vencida'];
+const ESTADOS = ['Borrador', 'Enviada', 'Aceptada', 'Rechazada', 'Vencida', 'Embarcada'];
 const DEFAULT_PAGE_SIZE = 20;
 
 type Cotizacion = ReturnType<typeof useCotizaciones>["data"] extends (infer U)[] | undefined ? U : never;
