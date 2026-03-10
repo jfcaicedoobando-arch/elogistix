@@ -50,19 +50,25 @@ export default function Embarques() {
 
   const handleEliminar = async () => {
     if (!embarqueAEliminar) return;
+    const id = embarqueAEliminar.id;
+    const expediente = embarqueAEliminar.expediente;
+    const cliente = embarqueAEliminar.cliente_nombre;
+    const modo = embarqueAEliminar.modo;
+
     try {
-      await eliminarEmbarque.mutateAsync(embarqueAEliminar.id);
+      await eliminarEmbarque.mutateAsync(id);
       registrarActividad.mutate({
         accion: 'eliminar',
         modulo: 'embarques',
-        entidad_id: embarqueAEliminar.id,
-        entidad_nombre: embarqueAEliminar.expediente,
-        detalles: { cliente: embarqueAEliminar.cliente_nombre, modo: embarqueAEliminar.modo },
+        entidad_id: id,
+        entidad_nombre: expediente,
+        detalles: { cliente, modo },
       });
-      toast({ title: "Embarque eliminado", description: `${embarqueAEliminar.expediente} fue eliminado permanentemente.` });
+      toast({ title: "Embarque eliminado", description: `${expediente} fue eliminado permanentemente.` });
+      setEmbarqueAEliminar(null);
+      setPaso2(false);
     } catch (err: any) {
       toast({ title: "Error al eliminar", description: err.message, variant: "destructive" });
-    } finally {
       setEmbarqueAEliminar(null);
       setPaso2(false);
     }
