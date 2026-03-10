@@ -1,16 +1,15 @@
 
 
-## Plan: Usar expediente del origen al duplicar
+## Fix: Add `shouldValidate` / `shouldDirty` to `setValue` calls in `handleVincularCotizacion` and `handleDesvincularCotizacion`
 
-### Cambio único en `src/hooks/useEmbarques.ts`
+### Problem
+`setValue` without options doesn't trigger re-renders on controlled components (Select, Combobox), so fields appear empty after linking a cotización.
 
-En el loop de `useDuplicarEmbarque` (líneas 257-262), reemplazar la llamada a `supabase.rpc('generar_expediente')` por usar directamente `embarqueOrigen.expediente`:
+### Changes — `src/pages/NuevoEmbarque.tsx`
 
-- **Eliminar** líneas 258-262 (la llamada RPC y el manejo de error)
-- **Cambiar** línea 268 `expediente: expediente as string` → `expediente: embarqueOrigen.expediente`
-- En el push final al array `creados`, usar `embarqueOrigen.expediente` en lugar de `expediente as string`
+**`handleVincularCotizacion` (lines 59-73)**: Add `{ shouldValidate: true, shouldDirty: true }` to every `setValue` call. Add `methods.trigger()` at the end before closing the callback.
 
-### Cambio en `src/pages/Changelog.tsx`
+**`handleDesvincularCotizacion` (lines 75-89)**: Same — add `{ shouldValidate: true, shouldDirty: true }` to every `setValue` call, and `methods.trigger()` at the end.
 
-Entrada v4.15.1 — "Duplicar embarque ahora conserva el mismo expediente del origen"
+No other files affected.
 
