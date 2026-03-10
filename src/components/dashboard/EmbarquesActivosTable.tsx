@@ -8,6 +8,7 @@ import type { EmbarqueMesSiguiente, ResumenFacturacion } from "@/hooks/useDashbo
 import { ESTADO_CONFIG } from "./estadoConfig";
 import type { EstadoFiltro } from "@/hooks/useDashboardData";
 import { CalendarDays, DollarSign, TrendingUp, FileCheck, Package } from "lucide-react";
+import { Progress } from "@/components/ui/progress";
 
 interface Props {
   embarques: EmbarqueMesSiguiente[];
