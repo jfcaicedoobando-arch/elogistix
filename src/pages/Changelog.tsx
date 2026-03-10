@@ -13,6 +13,13 @@ interface ChangelogEntry {
 
 const changelog: ChangelogEntry[] = [
   {
+    version: "4.36.0",
+    date: "2026-03-10",
+    type: "minor",
+    title: "Profit filtrado por mes + Tabla de embarques mes siguiente con facturación",
+    description: "La tabla de Profit USD ahora muestra solo embarques con arribo este mes. Se reemplazó la tabla de embarques activos por una vista del mes siguiente con resumen de facturación (venta, costo, profit, facturados vs pendientes) y columna de estado de facturación.",
+  },
+  {
     version: "4.35.0",
     date: "2026-03-09",
     type: "minor",

@@ -23,8 +23,9 @@ export default function Dashboard() {
     totalActivos,
     alertasDemora,
     proximosArribos,
-    profitPorEmbarque,
-    embarquesFiltrados,
+    profitArribosEsteMes,
+    embarquesMesSiguiente,
+    resumenMesSiguiente,
     arribosEsteMes,
   } = useDashboardData();
 
@@ -64,12 +65,11 @@ export default function Dashboard() {
         <ProximosArribosCard arribos={proximosArribos} isLoading={isLoading} />
       </div>
 
-      <ProfitTable embarques={profitPorEmbarque} isLoading={isLoading} />
+      <ProfitTable embarques={profitArribosEsteMes} isLoading={isLoading} />
 
       <EmbarquesActivosTable
-        embarques={embarquesFiltrados}
-        filtroEstado={filtroEstado}
-        onLimpiarFiltro={() => setFiltroEstado(null)}
+        embarques={embarquesMesSiguiente}
+        resumen={resumenMesSiguiente}
         isLoading={isLoading}
       />
     </div>
