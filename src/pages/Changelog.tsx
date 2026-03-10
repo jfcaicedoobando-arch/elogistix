@@ -13,6 +13,13 @@ interface ChangelogEntry {
 
 const changelog: ChangelogEntry[] = [
   {
+    version: "4.36.7",
+    date: "2026-03-10",
+    type: "patch",
+    title: "Corrección de datos: COT-2026-0007 a Aceptada",
+    description: "Se corrigió el estado de la cotización COT-2026-0007 que quedó como 'Embarcada' sin embarques activos, revirtiéndola a 'Aceptada'.",
+  },
+  {
     version: "4.36.6",
     date: "2026-03-10",
     type: "patch",
