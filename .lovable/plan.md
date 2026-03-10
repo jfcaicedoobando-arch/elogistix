@@ -1,16 +1,16 @@
 
 
-## Plan: Usar expediente del origen al duplicar
+## Fase 1: Eliminar SeccionCostosInternosCotizacion
 
-### Cambio único en `src/hooks/useEmbarques.ts`
+### Hallazgos
+- `SeccionCostosInternosCotizacion.tsx` no se importa en ningún otro componente/página — solo existe el archivo y una referencia en Changelog.
+- Changelog entry en líneas 693-700 (v4.5.2) referencia el componente.
 
-En el loop de `useDuplicarEmbarque` (líneas 257-262), reemplazar la llamada a `supabase.rpc('generar_expediente')` por usar directamente `embarqueOrigen.expediente`:
+### Cambios
 
-- **Eliminar** líneas 258-262 (la llamada RPC y el manejo de error)
-- **Cambiar** línea 268 `expediente: expediente as string` → `expediente: embarqueOrigen.expediente`
-- En el push final al array `creados`, usar `embarqueOrigen.expediente` en lugar de `expediente as string`
+1. **Eliminar** `src/components/cotizacion/SeccionCostosInternosCotizacion.tsx`
 
-### Cambio en `src/pages/Changelog.tsx`
+2. **Changelog.tsx** (líneas 693-700): Actualizar el título y descripción de la entrada v4.5.2 para que no mencione el componente eliminado. Cambiar a algo como "Costos internos por cotización" con descripción genérica sobre la funcionalidad de P&L.
 
-Entrada v4.15.1 — "Duplicar embarque ahora conserva el mismo expediente del origen"
+3. **Changelog.tsx**: Agregar entrada v4.37.2 al inicio del array con título "Limpieza: eliminar componente legacy de costos internos" indicando que se removió el componente no utilizado `SeccionCostosInternosCotizacion` reemplazado por `SeccionCostosInternosPLUnificado`.
 
