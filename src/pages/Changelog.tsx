@@ -13,6 +13,13 @@ interface ChangelogEntry {
 
 const changelog: ChangelogEntry[] = [
   {
+    version: "4.37.2",
+    date: "2026-03-10",
+    type: "patch",
+    title: "Limpieza: eliminar componente legacy de costos internos",
+    description: "Se removió SeccionCostosInternosCotizacion (no utilizado) reemplazado por SeccionCostosInternosPLUnificado.",
+  },
+  {
     version: "4.37.1",
     date: "2026-03-10",
     type: "patch",
