@@ -1,15 +1,21 @@
 import { useState, useMemo } from "react";
-import { Plus } from "lucide-react";
+import { Plus, Trash2 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { useNavigate } from "react-router-dom";
-import { useEmbarques, calcularEstadoEmbarque } from "@/hooks/useEmbarques";
+import { useEmbarques, calcularEstadoEmbarque, useEliminarEmbarque } from "@/hooks/useEmbarques";
 import { useClientesForSelect } from "@/hooks/useClientes";
 import { usePermissions } from "@/hooks/usePermissions";
+import { useRegistrarActividad } from "@/hooks/useBitacora";
+import { useToast } from "@/hooks/use-toast";
 import { formatDate, getEstadoColor, getModoIcon } from "@/lib/helpers";
 import { ESTADOS_EMBARQUE, MODOS_TRANSPORTE } from "@/data/embarqueConstants";
 import SearchInput from "@/components/SearchInput";
@@ -24,31 +30,6 @@ function shortName(raw: string) {
   return raw.split(/[,—]/)[0].trim();
 }
 
-const columns: DataTableColumn<Embarque>[] = [
-  { key: "expediente", header: "Expediente", className: "font-medium", render: (e) => e.expediente },
-  { key: "bl", header: "BL Master", className: "text-xs", render: (e) => e.bl_master || "-" },
-  { key: "cliente", header: "Cliente", className: "max-w-[180px] truncate", render: (e) => e.cliente_nombre },
-  {
-    key: "modo", header: "Modo", render: (e) => (
-      <span className="flex items-center gap-1">
-        {getModoIcon(e.modo)} <span className="text-xs">{e.modo}</span>
-      </span>
-    ),
-  },
-  { key: "origen", header: "Origen", className: "text-xs", render: (e) => shortName(e.puerto_origen || e.aeropuerto_origen || e.ciudad_origen || "-") },
-  { key: "destino", header: "Destino", className: "text-xs", render: (e) => shortName(e.puerto_destino || e.aeropuerto_destino || e.ciudad_destino || "-") },
-  { key: "contenedor", header: "Contenedor", className: "text-xs", render: (e) => e.tipo_contenedor || "-" },
-  { key: "etd", header: "ETD", className: "text-xs", render: (e) => formatDate(e.etd || "") },
-  { key: "eta", header: "ETA", className: "text-xs", render: (e) => formatDate(e.eta || "") },
-  {
-    key: "estado", header: "Estado", render: (e) => {
-      const estado = calcularEstadoEmbarque(e.modo, e.tipo, e.etd, e.eta, e.estado);
-      return <Badge variant="secondary" className={`text-xs ${getEstadoColor(estado)}`}>{estado}</Badge>;
-    },
-  },
-  { key: "operador", header: "Operador", className: "text-xs", render: (e) => e.operador },
-];
-
 export default function Embarques() {
   const navigate = useNavigate();
   const { data: embarques = [], isLoading } = useEmbarques();
@@ -60,6 +41,78 @@ export default function Embarques() {
   const [page, setPage] = useState(0);
   const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
   const { canEdit } = usePermissions();
+  const { toast } = useToast();
+  const eliminarEmbarque = useEliminarEmbarque();
+  const registrarActividad = useRegistrarActividad();
+
+  const [embarqueAEliminar, setEmbarqueAEliminar] = useState<Embarque | null>(null);
+  const [paso2, setPaso2] = useState(false);
+
+  const handleEliminar = async () => {
+    if (!embarqueAEliminar) return;
+    try {
+      await eliminarEmbarque.mutateAsync(embarqueAEliminar.id);
+      registrarActividad.mutate({
+        accion: 'eliminar',
+        modulo: 'embarques',
+        entidad_id: embarqueAEliminar.id,
+        entidad_nombre: embarqueAEliminar.expediente,
+        detalles: { cliente: embarqueAEliminar.cliente_nombre, modo: embarqueAEliminar.modo },
+      });
+      toast({ title: "Embarque eliminado", description: `${embarqueAEliminar.expediente} fue eliminado permanentemente.` });
+    } catch (err: any) {
+      toast({ title: "Error al eliminar", description: err.message, variant: "destructive" });
+    } finally {
+      setEmbarqueAEliminar(null);
+      setPaso2(false);
+    }
+  };
+
+  const columns: DataTableColumn<Embarque>[] = useMemo(() => {
+    const base: DataTableColumn<Embarque>[] = [
+      { key: "expediente", header: "Expediente", className: "font-medium", render: (e) => e.expediente },
+      { key: "bl", header: "BL Master", className: "text-xs", render: (e) => e.bl_master || "-" },
+      { key: "cliente", header: "Cliente", className: "max-w-[180px] truncate", render: (e) => e.cliente_nombre },
+      {
+        key: "modo", header: "Modo", render: (e) => (
+          <span className="flex items-center gap-1">
+            {getModoIcon(e.modo)} <span className="text-xs">{e.modo}</span>
+          </span>
+        ),
+      },
+      { key: "origen", header: "Origen", className: "text-xs", render: (e) => shortName(e.puerto_origen || e.aeropuerto_origen || e.ciudad_origen || "-") },
+      { key: "destino", header: "Destino", className: "text-xs", render: (e) => shortName(e.puerto_destino || e.aeropuerto_destino || e.ciudad_destino || "-") },
+      { key: "contenedor", header: "Contenedor", className: "text-xs", render: (e) => e.tipo_contenedor || "-" },
+      { key: "etd", header: "ETD", className: "text-xs", render: (e) => formatDate(e.etd || "") },
+      { key: "eta", header: "ETA", className: "text-xs", render: (e) => formatDate(e.eta || "") },
+      {
+        key: "estado", header: "Estado", render: (e) => {
+          const estado = calcularEstadoEmbarque(e.modo, e.tipo, e.etd, e.eta, e.estado);
+          return <Badge variant="secondary" className={`text-xs ${getEstadoColor(estado)}`}>{estado}</Badge>;
+        },
+      },
+      { key: "operador", header: "Operador", className: "text-xs", render: (e) => e.operador },
+    ];
+
+    if (canEdit) {
+      base.push({
+        key: "acciones",
+        header: "",
+        className: "w-10",
+        render: (e) => (
+          <button
+            className="opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded hover:bg-destructive/10 text-muted-foreground hover:text-destructive"
+            onClick={(ev) => { ev.stopPropagation(); setEmbarqueAEliminar(e); }}
+            title="Eliminar embarque"
+          >
+            <Trash2 className="h-4 w-4" />
+          </button>
+        ),
+      });
+    }
+
+    return base;
+  }, [canEdit]);
 
   const filtered = useMemo(() => {
     return embarques.filter((embarque) => {
@@ -135,6 +188,7 @@ export default function Embarques() {
             emptyMessage="No se encontraron embarques"
             onRowClick={(e) => navigate(`/embarques/${e.id}`)}
             rowKey={(e) => e.id}
+            rowClassName={() => "group"}
           />
           <PaginationControls
             page={page}
@@ -145,6 +199,44 @@ export default function Embarques() {
           />
         </CardContent>
       </Card>
+
+      {/* Paso 1 */}
+      <AlertDialog open={!!embarqueAEliminar && !paso2} onOpenChange={(v) => { if (!v) setEmbarqueAEliminar(null); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>¿Eliminar embarque?</AlertDialogTitle>
+            <AlertDialogDescription>
+              El embarque <strong>{embarqueAEliminar?.expediente}</strong> será eliminado permanentemente.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={() => setPaso2(true)}>Continuar</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Paso 2 */}
+      <AlertDialog open={paso2} onOpenChange={(v) => { if (!v) { setPaso2(false); setEmbarqueAEliminar(null); } }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>¿Estás seguro?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Esta acción no se puede deshacer. Se eliminarán todos los datos, documentos y costos asociados al embarque <strong>{embarqueAEliminar?.expediente}</strong>.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={handleEliminar}
+              disabled={eliminarEmbarque.isPending}
+            >
+              {eliminarEmbarque.isPending ? 'Eliminando...' : 'Eliminar definitivamente'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
