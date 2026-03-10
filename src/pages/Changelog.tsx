@@ -13,6 +13,13 @@ interface ChangelogEntry {
 
 const changelog: ChangelogEntry[] = [
   {
+    version: "4.36.5",
+    date: "2026-03-10",
+    type: "patch",
+    title: "Políticas RLS permisivas para eliminar embarques",
+    description: "Se agregaron políticas DELETE permisivas en 6 tablas (embarques, conceptos_venta, conceptos_costo, documentos_embarque, notas_embarque, facturas) para que la eliminación en cascada funcione correctamente para roles admin y operador.",
+  },
+  {
     version: "4.36.4",
     date: "2026-03-10",
     type: "minor",
