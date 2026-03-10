@@ -13,6 +13,13 @@ interface ChangelogEntry {
 
 const changelog: ChangelogEntry[] = [
   {
+    version: "4.37.2",
+    date: "2026-03-10",
+    type: "patch",
+    title: "Limpieza: eliminar componente legacy de costos internos",
+    description: "Se removió SeccionCostosInternosCotizacion (no utilizado) reemplazado por SeccionCostosInternosPLUnificado.",
+  },
+  {
     version: "4.37.1",
     date: "2026-03-10",
     type: "patch",
@@ -694,9 +701,9 @@ const changelog: ChangelogEntry[] = [
     version: "4.5.2",
     date: "2026-03-04",
     type: "patch",
-    title: "Componente SeccionCostosInternosCotizacion",
+    title: "Costos internos por cotización",
     description:
-      "Tabla editable de costos internos (P&L) por cotización con pre-poblado desde conceptos de venta, cálculo de profit en tiempo real, secciones y guardado en lote.",
+      "Funcionalidad de P&L por cotización con pre-poblado desde conceptos de venta, cálculo de profit en tiempo real, secciones y guardado en lote.",
   },
   {
     version: "4.5.1",
