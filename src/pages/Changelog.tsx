@@ -13,6 +13,13 @@ interface ChangelogEntry {
 
 const changelog: ChangelogEntry[] = [
   {
+    version: "4.37.1",
+    date: "2026-03-10",
+    type: "patch",
+    title: "Fix setValue en vinculación de cotización y soporte Cross Trade",
+    description: "Corregido el problema donde los campos controlados (Select, Combobox) no se actualizaban al vincular/desvincular una cotización. Se agregó 'Cross Trade' al listado de tipos de operación en embarques.",
+  },
+  {
     version: "4.37.0",
     date: "2026-03-10",
     type: "minor",
