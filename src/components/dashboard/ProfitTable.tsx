@@ -46,7 +46,7 @@ export function ProfitTable({ embarques, isLoading }: Props) {
       <CardHeader className="pb-3">
         <CardTitle className="text-base flex items-center gap-2">
           <TrendingUp className="h-4 w-4 text-success" />
-          Profit USD por Embarque
+          Profit USD — Arribos este mes
         </CardTitle>
       </CardHeader>
       <CardContent>
@@ -55,7 +55,7 @@ export function ProfitTable({ embarques, isLoading }: Props) {
             columns={columns}
             data={embarques}
             isLoading={isLoading}
-            emptyMessage="Sin datos de conceptos USD"
+            emptyMessage="Sin embarques con arribo este mes"
             onRowClick={(e) => navigate(`/embarques/${e.id}`)}
             rowKey={(e) => e.id}
             skeletonRows={4}

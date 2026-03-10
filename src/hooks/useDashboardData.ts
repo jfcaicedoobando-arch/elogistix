@@ -27,7 +27,6 @@ export interface EmbarqueConEstado {
   created_at: string;
 }
 
-
 export interface AlertaDemora extends EmbarqueConEstado {
   diasDemora: number;
   diasDesdeEta: number;
@@ -44,9 +43,21 @@ export interface EmbarqueConProfit extends EmbarqueConEstado {
   margen: number;
 }
 
+export interface EmbarqueMesSiguiente extends EmbarqueConProfit {
+  facturado: boolean;
+}
+
+export interface ResumenFacturacion {
+  totalEmbarques: number;
+  ventaUSD: number;
+  costoUSD: number;
+  profitUSD: number;
+  facturados: number;
+  nombreMes: string;
+}
+
 export const ESTADOS_FILTRO = ESTADOS_ACTIVOS;
 export type EstadoFiltro = (typeof ESTADOS_FILTRO)[number];
-
 
 const DIAS_LIBRES_DEFAULT = 7;
 
@@ -73,6 +84,17 @@ export function useDashboardData() {
         .from("conceptos_costo")
         .select("embarque_id, monto")
         .eq("moneda", "USD");
+      return data ?? [];
+    },
+  });
+
+  // Query facturas para saber qué embarques ya tienen factura
+  const { data: facturasRaw = [] } = useQuery({
+    queryKey: queryKeys.dashboard.facturas,
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("facturas")
+        .select("embarque_id, estado, total, moneda");
       return data ?? [];
     },
   });
@@ -114,6 +136,26 @@ export function useDashboardData() {
     [conteoPorEstado]
   );
 
+  // Maps de venta/costo para reutilizar
+  const { ventaMap, costoMap } = useMemo(() => {
+    const vm: Record<string, number> = {};
+    const cm: Record<string, number> = {};
+    ventasUSD.forEach((v) => {
+      vm[v.embarque_id] = (vm[v.embarque_id] || 0) + Number(v.total);
+    });
+    costosUSD.forEach((c) => {
+      cm[c.embarque_id] = (cm[c.embarque_id] || 0) + Number(c.monto);
+    });
+    return { ventaMap: vm, costoMap: cm };
+  }, [ventasUSD, costosUSD]);
+
+  // Set de embarques que ya tienen factura
+  const embarquesFacturados = useMemo(() => {
+    const set = new Set<string>();
+    facturasRaw.forEach((f) => set.add(f.embarque_id));
+    return set;
+  }, [facturasRaw]);
+
   // Alertas demora
   const alertasDemora = useMemo<AlertaDemora[]>(() => {
     const hoy = new Date();
@@ -149,19 +191,8 @@ export function useDashboardData() {
       .sort((a, b) => a.diasRestantes - b.diasRestantes);
   }, [activos]);
 
-  // Profit USD
+  // Profit USD (todos los activos con conceptos)
   const profitPorEmbarque = useMemo<EmbarqueConProfit[]>(() => {
-    const ventaMap: Record<string, number> = {};
-    const costoMap: Record<string, number> = {};
-    ventasUSD.forEach((v) => {
-      ventaMap[v.embarque_id] =
-        (ventaMap[v.embarque_id] || 0) + Number(v.total);
-    });
-    costosUSD.forEach((c) => {
-      costoMap[c.embarque_id] =
-        (costoMap[c.embarque_id] || 0) + Number(c.monto);
-    });
-
     return activos
       .map((e) => {
         const venta = ventaMap[e.id] || 0;
@@ -172,7 +203,62 @@ export function useDashboardData() {
       })
       .filter((e) => e.ventaUSD > 0 || e.costoUSD > 0)
       .sort((a, b) => b.profit - a.profit);
-  }, [activos, ventasUSD, costosUSD]);
+  }, [activos, ventaMap, costoMap]);
+
+  // Profit filtrado: solo embarques con ETA en el mes actual
+  const profitArribosEsteMes = useMemo<EmbarqueConProfit[]>(() => {
+    const hoy = new Date();
+    const inicioMes = new Date(hoy.getFullYear(), hoy.getMonth(), 1);
+    const finMes = new Date(hoy.getFullYear(), hoy.getMonth() + 1, 0);
+
+    return profitPorEmbarque.filter((e) => {
+      if (!e.eta) return false;
+      const eta = new Date(e.eta + "T00:00:00");
+      return eta >= inicioMes && eta <= finMes;
+    });
+  }, [profitPorEmbarque]);
+
+  // Embarques del mes siguiente con profit y estado de facturación
+  const embarquesMesSiguiente = useMemo<EmbarqueMesSiguiente[]>(() => {
+    const hoy = new Date();
+    const inicioSig = new Date(hoy.getFullYear(), hoy.getMonth() + 1, 1);
+    const finSig = new Date(hoy.getFullYear(), hoy.getMonth() + 2, 0);
+
+    return embarquesConEstado
+      .filter((e) => {
+        if (!e.eta) return false;
+        const eta = new Date(e.eta + "T00:00:00");
+        return eta >= inicioSig && eta <= finSig;
+      })
+      .map((e) => {
+        const venta = ventaMap[e.id] || 0;
+        const costo = costoMap[e.id] || 0;
+        const profit = calcularUtilidad(venta, costo);
+        const margen = calcularMargen(venta, costo);
+        const facturado = embarquesFacturados.has(e.id);
+        return { ...e, ventaUSD: venta, costoUSD: costo, profit, margen, facturado };
+      })
+      .sort((a, b) => {
+        const etaA = a.eta ? new Date(a.eta).getTime() : 0;
+        const etaB = b.eta ? new Date(b.eta).getTime() : 0;
+        return etaA - etaB;
+      });
+  }, [embarquesConEstado, ventaMap, costoMap, embarquesFacturados]);
+
+  // Resumen de facturación del mes siguiente
+  const resumenMesSiguiente = useMemo<ResumenFacturacion>(() => {
+    const hoy = new Date();
+    const mesSig = new Date(hoy.getFullYear(), hoy.getMonth() + 1, 1);
+    const nombreMes = mesSig.toLocaleDateString("es-MX", { month: "long", year: "numeric" });
+
+    const totalEmbarques = embarquesMesSiguiente.length;
+    const ventaUSD = embarquesMesSiguiente.reduce((s, e) => s + e.ventaUSD, 0);
+    const costoUSD = embarquesMesSiguiente.reduce((s, e) => s + e.costoUSD, 0);
+    const profitUSD = embarquesMesSiguiente.reduce((s, e) => s + e.profit, 0);
+    const facturados = embarquesMesSiguiente.filter((e) => e.facturado).length;
+
+    return { totalEmbarques, ventaUSD, costoUSD, profitUSD, facturados, nombreMes };
+  }, [embarquesMesSiguiente]);
 
   // Filtered list
   const embarquesFiltrados = useMemo(
@@ -188,15 +274,6 @@ export function useDashboardData() {
     const hoy = new Date();
     const inicioMes = new Date(hoy.getFullYear(), hoy.getMonth(), 1);
     const finMes = new Date(hoy.getFullYear(), hoy.getMonth() + 1, 0);
-
-    const ventaMap: Record<string, number> = {};
-    const costoMap: Record<string, number> = {};
-    ventasUSD.forEach((v) => {
-      ventaMap[v.embarque_id] = (ventaMap[v.embarque_id] || 0) + Number(v.total);
-    });
-    costosUSD.forEach((c) => {
-      costoMap[c.embarque_id] = (costoMap[c.embarque_id] || 0) + Number(c.monto);
-    });
 
     const filtered = embarquesConEstado.filter((e) => {
       if (!e.eta) return false;
@@ -219,7 +296,7 @@ export function useDashboardData() {
     }, 0);
 
     return { total: filtered.length, yaLlegaron, enCamino, profitUSD };
-  }, [embarquesConEstado, ventasUSD, costosUSD]);
+  }, [embarquesConEstado, ventaMap, costoMap]);
 
   return {
     isLoading,
@@ -231,7 +308,10 @@ export function useDashboardData() {
     alertasDemora,
     proximosArribos,
     profitPorEmbarque,
+    profitArribosEsteMes,
     embarquesFiltrados,
     arribosEsteMes,
+    embarquesMesSiguiente,
+    resumenMesSiguiente,
   };
 }

@@ -3,13 +3,15 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { DataTable, type DataTableColumn } from "@/components/DataTable";
 import { formatDate, getModoIcon } from "@/lib/helpers";
-import type { EmbarqueConEstado, EstadoFiltro } from "@/hooks/useDashboardData";
+import { formatCurrency } from "@/lib/formatters";
+import type { EmbarqueMesSiguiente, ResumenFacturacion } from "@/hooks/useDashboardData";
 import { ESTADO_CONFIG } from "./estadoConfig";
+import type { EstadoFiltro } from "@/hooks/useDashboardData";
+import { CalendarDays, DollarSign, TrendingUp, FileCheck, Package } from "lucide-react";
 
 interface Props {
-  embarques: EmbarqueConEstado[];
-  filtroEstado: EstadoFiltro | null;
-  onLimpiarFiltro: () => void;
+  embarques: EmbarqueMesSiguiente[];
+  resumen: ResumenFacturacion;
   isLoading: boolean;
 }
 
@@ -17,7 +19,7 @@ function shortName(raw: string) {
   return raw.split(/[,—]/)[0].trim();
 }
 
-const columns: DataTableColumn<EmbarqueConEstado>[] = [
+const columns: DataTableColumn<EmbarqueMesSiguiente>[] = [
   { key: "expediente", header: "Expediente", className: "font-medium", render: (e) => e.expediente },
   { key: "cliente", header: "Cliente", className: "max-w-[180px] truncate", render: (e) => e.cliente_nombre },
   {
@@ -35,7 +37,6 @@ const columns: DataTableColumn<EmbarqueConEstado>[] = [
       return `${origen} → ${destino}`;
     },
   },
-  { key: "etd", header: "ETD", className: "text-xs", render: (e) => e.etd ? formatDate(e.etd) : "-" },
   { key: "eta", header: "ETA", className: "text-xs", render: (e) => e.eta ? formatDate(e.eta) : "-" },
   {
     key: "estado", header: "Estado", render: (e) => {
@@ -47,37 +48,88 @@ const columns: DataTableColumn<EmbarqueConEstado>[] = [
       );
     },
   },
-  { key: "operador", header: "Operador", className: "text-xs", render: (e) => e.operador },
+  {
+    key: "profit", header: "Profit", className: "text-right tabular-nums", headerClassName: "text-right",
+    render: (e) => (
+      <span className={`text-xs font-medium ${e.profit >= 0 ? "text-success" : "text-destructive"}`}>
+        {formatCurrency(e.profit, "USD")}
+      </span>
+    ),
+  },
+  {
+    key: "facturado", header: "Facturado", className: "text-center", headerClassName: "text-center",
+    render: (e) => (
+      <Badge variant="secondary" className={`text-[10px] ${
+        e.facturado
+          ? "bg-success/15 text-success border-success/30"
+          : "bg-muted text-muted-foreground"
+      }`}>
+        {e.facturado ? "Sí" : "No"}
+      </Badge>
+    ),
+  },
 ];
 
-export function EmbarquesActivosTable({ embarques, filtroEstado, onLimpiarFiltro, isLoading }: Props) {
+export function EmbarquesActivosTable({ embarques, resumen, isLoading }: Props) {
   const navigate = useNavigate();
 
   return (
     <Card>
       <CardHeader className="pb-3">
-        <div className="flex items-center justify-between">
-          <CardTitle className="text-base">
-            Embarques Activos
-            {filtroEstado && (
-              <Badge className={`ml-2 text-[10px] ${ESTADO_CONFIG[filtroEstado].text}`}>
-                {filtroEstado}
-              </Badge>
-            )}
-          </CardTitle>
-          {filtroEstado && (
-            <button onClick={onLimpiarFiltro} className="text-xs text-muted-foreground hover:text-foreground transition-colors">
-              Limpiar filtro
-            </button>
-          )}
-        </div>
+        <CardTitle className="text-base flex items-center gap-2">
+          <CalendarDays className="h-4 w-4 text-primary" />
+          Embarques — {resumen.nombreMes.charAt(0).toUpperCase() + resumen.nombreMes.slice(1)}
+        </CardTitle>
       </CardHeader>
-      <CardContent>
+      <CardContent className="space-y-4">
+        {/* Resumen de facturación */}
+        <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
+          <div className="flex items-center gap-2 rounded-lg border bg-muted/30 p-3">
+            <Package className="h-4 w-4 text-muted-foreground shrink-0" />
+            <div>
+              <p className="text-lg font-bold text-foreground">{resumen.totalEmbarques}</p>
+              <p className="text-[10px] text-muted-foreground">Embarques</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2 rounded-lg border bg-muted/30 p-3">
+            <DollarSign className="h-4 w-4 text-info shrink-0" />
+            <div>
+              <p className="text-sm font-bold text-foreground">{formatCurrency(resumen.ventaUSD, "USD")}</p>
+              <p className="text-[10px] text-muted-foreground">Venta USD</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2 rounded-lg border bg-muted/30 p-3">
+            <DollarSign className="h-4 w-4 text-warning shrink-0" />
+            <div>
+              <p className="text-sm font-bold text-foreground">{formatCurrency(resumen.costoUSD, "USD")}</p>
+              <p className="text-[10px] text-muted-foreground">Costo USD</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2 rounded-lg border bg-muted/30 p-3">
+            <TrendingUp className={`h-4 w-4 shrink-0 ${resumen.profitUSD >= 0 ? "text-success" : "text-destructive"}`} />
+            <div>
+              <p className={`text-sm font-bold ${resumen.profitUSD >= 0 ? "text-success" : "text-destructive"}`}>
+                {formatCurrency(resumen.profitUSD, "USD")}
+              </p>
+              <p className="text-[10px] text-muted-foreground">Profit</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2 rounded-lg border bg-muted/30 p-3">
+            <FileCheck className="h-4 w-4 text-primary shrink-0" />
+            <div>
+              <p className="text-sm font-bold text-foreground">
+                {resumen.facturados}/{resumen.totalEmbarques}
+              </p>
+              <p className="text-[10px] text-muted-foreground">Facturados</p>
+            </div>
+          </div>
+        </div>
+
         <DataTable
           columns={columns}
           data={embarques}
           isLoading={isLoading}
-          emptyMessage={`No hay embarques${filtroEstado ? ` en estado "${filtroEstado}"` : ""}`}
+          emptyMessage="Sin embarques programados para el próximo mes"
           onRowClick={(e) => navigate(`/embarques/${e.id}`)}
           rowKey={(e) => e.id}
         />
