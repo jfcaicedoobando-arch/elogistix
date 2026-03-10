@@ -13,6 +13,13 @@ interface ChangelogEntry {
 
 const changelog: ChangelogEntry[] = [
   {
+    version: "4.36.1",
+    date: "2026-03-10",
+    type: "patch",
+    title: "Simplificar confirmación de eliminación en DocumentChecklist",
+    description: "Se reemplazó el flujo de doble confirmación por un solo diálogo directo al eliminar archivos adjuntos, corrigiendo el bug donde la segunda confirmación no ejecutaba la eliminación.",
+  },
+  {
     version: "4.36.0",
     date: "2026-03-10",
     type: "minor",
