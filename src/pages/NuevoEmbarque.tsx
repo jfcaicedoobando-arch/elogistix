@@ -13,6 +13,8 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useRegistrarActividad } from "@/hooks/useBitacora";
 import { useConceptosForm } from "@/hooks/useConceptosForm";
 import { useEmbarqueForm } from "@/hooks/useEmbarqueForm";
+import { useCotizacionesAceptadas, type CotizacionRow } from "@/hooks/useCotizaciones";
+import { supabase } from "@/integrations/supabase/client";
 import { resolverExpediente, subirDocumentosEmbarque } from "@/lib/embarqueServices";
 import { StepIndicator } from "@/components/embarque/StepIndicator";
 import { StepDatosGenerales } from "@/components/embarque/StepDatosGenerales";
@@ -33,11 +35,13 @@ export default function NuevoEmbarque() {
   const { user } = useAuth();
   const { data: clientes = [] } = useClientesForSelect();
   const { data: proveedoresDb = [] } = useProveedoresForSelect();
+  const { data: cotizacionesAceptadas = [] } = useCotizacionesAceptadas();
   const createEmbarque = useCreateEmbarque();
   const registrarActividad = useRegistrarActividad();
 
   const [currentStep, setCurrentStep] = useState(1);
   const [validationErrors, setValidationErrors] = useState<EmbarqueValidationErrors>({});
+  const [cotizacionVinculada, setCotizacionVinculada] = useState<CotizacionRow | null>(null);
   const { methods, handleMsdsUpload, buildEmbarquePayload, buildConceptosVentaPayload, buildConceptosCostoPayload, documentosArchivos, setDocumentoArchivo, getDocumentosChecklist } = useEmbarqueForm();
   const clienteId = methods.watch('clienteId');
   const modo = methods.watch('modo');
@@ -51,6 +55,38 @@ export default function NuevoEmbarque() {
   } = useConceptosForm();
 
   const selectedCliente = clientes.find(c => c.id === clienteId);
+
+  const handleVincularCotizacion = useCallback((cot: CotizacionRow) => {
+    setCotizacionVinculada(cot);
+    methods.setValue('clienteId', cot.cliente_id || '');
+    methods.setValue('modo', cot.modo);
+    methods.setValue('tipo', cot.tipo);
+    methods.setValue('incoterm', cot.incoterm);
+    methods.setValue('descripcionMercancia', cot.descripcion_mercancia);
+    methods.setValue('tipoCarga', cot.tipo_carga || 'Carga General');
+    methods.setValue('tipoContenedor', cot.tipo_contenedor || '');
+    methods.setValue('pesoKg', String(cot.peso_kg || ''));
+    methods.setValue('volumenM3', String(cot.volumen_m3 || ''));
+    methods.setValue('piezas', String(cot.piezas || ''));
+    methods.setValue('puertoOrigen', cot.origen || '');
+    methods.setValue('puertoDestino', cot.destino || '');
+  }, [methods]);
+
+  const handleDesvincularCotizacion = useCallback(() => {
+    setCotizacionVinculada(null);
+    methods.setValue('clienteId', '');
+    methods.setValue('modo', '');
+    methods.setValue('tipo', '');
+    methods.setValue('incoterm', 'FOB');
+    methods.setValue('descripcionMercancia', '');
+    methods.setValue('tipoCarga', 'Carga General');
+    methods.setValue('tipoContenedor', '');
+    methods.setValue('pesoKg', '');
+    methods.setValue('volumenM3', '');
+    methods.setValue('piezas', '');
+    methods.setValue('puertoOrigen', '');
+    methods.setValue('puertoDestino', '');
+  }, [methods]);
 
   const validateStep1 = useCallback((): boolean => {
     const v = methods.getValues();
@@ -81,18 +117,32 @@ export default function NuevoEmbarque() {
         documentosArchivos,
       );
 
+      const embarquePayload = {
+        expediente,
+        ...buildEmbarquePayload(contactos, selectedCliente?.nombre || '', user?.email || ''),
+        ...(cotizacionVinculada ? { cotizacion_id: cotizacionVinculada.id } : {}),
+      };
+
       await createEmbarque.mutateAsync({
-        embarque: { expediente, ...buildEmbarquePayload(contactos, selectedCliente?.nombre || '', user?.email || '') },
+        embarque: embarquePayload,
         conceptosVenta: buildConceptosVentaPayload(conceptosVenta),
         conceptosCosto: buildConceptosCostoPayload(conceptosCosto, proveedoresDb),
         documentos: docPayload,
       });
 
+      // Si hay cotización vinculada, cambiar su estado a 'Embarcada'
+      if (cotizacionVinculada) {
+        await supabase
+          .from('cotizaciones')
+          .update({ estado: 'Embarcada' as any })
+          .eq('id', cotizacionVinculada.id);
+      }
+
       registrarActividad.mutate({
         accion: 'crear',
         modulo: 'embarques',
         entidad_nombre: expediente,
-        detalles: { modo: v.modo, tipo: v.tipo, cliente: selectedCliente?.nombre ?? '' },
+        detalles: { modo: v.modo, tipo: v.tipo, cliente: selectedCliente?.nombre ?? '', cotizacion_folio: cotizacionVinculada?.folio ?? null },
       });
 
       toast({ title: "Embarque creado", description: `Expediente ${expediente} registrado correctamente.` });
@@ -129,6 +179,10 @@ export default function NuevoEmbarque() {
                 contactos={contactos}
                 onMsdsUpload={handleMsdsUpload}
                 errors={validationErrors}
+                cotizacionesAceptadas={cotizacionesAceptadas}
+                cotizacionVinculada={cotizacionVinculada}
+                onVincularCotizacion={handleVincularCotizacion}
+                onDesvincularCotizacion={handleDesvincularCotizacion}
               />
             )}
 

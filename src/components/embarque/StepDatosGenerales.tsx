@@ -1,11 +1,17 @@
-import { Upload, FileText } from "lucide-react";
+import { useState } from "react";
+import { Upload, FileText, Check, ChevronsUpDown, X } from "lucide-react";
 import { useFormContext, Controller } from "react-hook-form";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
+import { cn } from "@/lib/utils";
 import type { EmbarqueFormValues } from "@/hooks/useEmbarqueForm";
+import type { CotizacionRow } from "@/hooks/useCotizaciones";
 import type { ModoTransporte, TipoOperacion, Incoterm } from "@/data/types";
 
 const MODOS: ModoTransporte[] = ['Marítimo', 'Aéreo', 'Terrestre', 'Multimodal'];
@@ -37,10 +43,15 @@ interface Props {
   contactos: Contacto[];
   onMsdsUpload: (file: File) => void;
   errors?: EmbarqueValidationErrors;
+  cotizacionesAceptadas?: CotizacionRow[];
+  cotizacionVinculada?: CotizacionRow | null;
+  onVincularCotizacion?: (cot: CotizacionRow) => void;
+  onDesvincularCotizacion?: () => void;
 }
 
-export function StepDatosGenerales({ clientes, clienteNombre, contactos, onMsdsUpload, errors = {} }: Props) {
+export function StepDatosGenerales({ clientes, clienteNombre, contactos, onMsdsUpload, errors = {}, cotizacionesAceptadas = [], cotizacionVinculada, onVincularCotizacion, onDesvincularCotizacion }: Props) {
   const { register, watch, setValue } = useFormContext<EmbarqueFormValues>();
+  const [comboboxOpen, setComboboxOpen] = useState(false);
 
   const modo = watch('modo');
   const shipper = watch('shipper');
@@ -55,6 +66,55 @@ export function StepDatosGenerales({ clientes, clienteNombre, contactos, onMsdsU
     <Card>
       <CardHeader><CardTitle>Datos Generales</CardTitle></CardHeader>
       <CardContent className="space-y-4">
+        {/* Combobox vincular cotización */}
+        <div className="space-y-2">
+          <Label>¿Vincular a cotización existente? (opcional)</Label>
+          {cotizacionVinculada ? (
+            <div className="flex items-center gap-2">
+              <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200 dark:bg-green-950 dark:text-green-300 dark:border-green-800 px-3 py-1.5 text-sm">
+                ✓ Vinculada a {cotizacionVinculada.folio} — {cotizacionVinculada.cliente_nombre}
+              </Badge>
+              <Button type="button" variant="ghost" size="icon" className="h-7 w-7" onClick={onDesvincularCotizacion}>
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+          ) : (
+            <Popover open={comboboxOpen} onOpenChange={setComboboxOpen}>
+              <PopoverTrigger asChild>
+                <Button variant="outline" role="combobox" aria-expanded={comboboxOpen} className="w-full justify-between font-normal text-muted-foreground">
+                  Buscar cotización aceptada...
+                  <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
+                <Command>
+                  <CommandInput placeholder="Buscar por folio o cliente..." />
+                  <CommandList>
+                    <CommandEmpty>Sin cotizaciones aceptadas</CommandEmpty>
+                    <CommandGroup>
+                      {cotizacionesAceptadas.map(cot => (
+                        <CommandItem
+                          key={cot.id}
+                          value={`${cot.folio} ${cot.cliente_nombre}`}
+                          onSelect={() => {
+                            onVincularCotizacion?.(cot);
+                            setComboboxOpen(false);
+                          }}
+                        >
+                          <Check className={cn("mr-2 h-4 w-4", cotizacionVinculada?.id === cot.id ? "opacity-100" : "opacity-0")} />
+                          <span className="truncate">
+                            {cot.folio} — {cot.cliente_nombre} ({cot.origen} → {cot.destino})
+                          </span>
+                        </CommandItem>
+                      ))}
+                    </CommandGroup>
+                  </CommandList>
+                </Command>
+              </PopoverContent>
+            </Popover>
+          )}
+        </div>
+
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="space-y-2">
             <Label>Modo de Transporte *</Label>
