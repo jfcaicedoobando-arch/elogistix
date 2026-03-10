@@ -1,12 +1,16 @@
 
 
-## Fix `handleEliminar` in Embarques.tsx
+## Plan: Usar expediente del origen al duplicar
 
-Replace the current `handleEliminar` function (lines ~46-62) to capture values before the async call and move state reset from `finally` into both `try` and `catch` blocks.
+### Cambio único en `src/hooks/useEmbarques.ts`
 
-### Change: `src/pages/Embarques.tsx`
+En el loop de `useDuplicarEmbarque` (líneas 257-262), reemplazar la llamada a `supabase.rpc('generar_expediente')` por usar directamente `embarqueOrigen.expediente`:
 
-Replace the existing `handleEliminar` with the user's provided version that:
-1. Captures `id`, `expediente`, `cliente`, `modo` before the async operation
-2. Moves `setEmbarqueAEliminar(null)` and `setPaso2(false)` into the `try`/`catch` blocks instead of `finally`
+- **Eliminar** líneas 258-262 (la llamada RPC y el manejo de error)
+- **Cambiar** línea 268 `expediente: expediente as string` → `expediente: embarqueOrigen.expediente`
+- En el push final al array `creados`, usar `embarqueOrigen.expediente` en lugar de `expediente as string`
+
+### Cambio en `src/pages/Changelog.tsx`
+
+Entrada v4.15.1 — "Duplicar embarque ahora conserva el mismo expediente del origen"
 
