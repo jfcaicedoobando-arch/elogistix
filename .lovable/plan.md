@@ -1,16 +1,28 @@
 
 
-## Plan: Usar expediente del origen al duplicar
+## Corregir estado de cotización al generar embarques
 
-### Cambio único en `src/hooks/useEmbarques.ts`
+### Paso 1 — Migración SQL
+Agregar valor `'Embarcada'` al enum `estado_cotizacion`:
+```sql
+ALTER TYPE estado_cotizacion ADD VALUE IF NOT EXISTS 'Embarcada';
+```
 
-En el loop de `useDuplicarEmbarque` (líneas 257-262), reemplazar la llamada a `supabase.rpc('generar_expediente')` por usar directamente `embarqueOrigen.expediente`:
+### Paso 2 — `src/hooks/useCotizaciones.ts`
+En `useConvertirCotizacionAEmbarques`, línea ~261, cambiar `'Convertida'` por `'Embarcada'`.
 
-- **Eliminar** líneas 258-262 (la llamada RPC y el manejo de error)
-- **Cambiar** línea 268 `expediente: expediente as string` → `expediente: embarqueOrigen.expediente`
-- En el push final al array `creados`, usar `embarqueOrigen.expediente` en lugar de `expediente as string`
+### Paso 3 — `src/pages/Cotizaciones.tsx`
+Línea 24: agregar `'Embarcada'` al array `ESTADOS`.
 
-### Cambio en `src/pages/Changelog.tsx`
+### Paso 4 — `src/lib/helpers.ts`
+Agregar color para `'Embarcada'` en `getEstadoColor`: `'bg-indigo-500/15 text-indigo-600'`.
 
-Entrada v4.15.1 — "Duplicar embarque ahora conserva el mismo expediente del origen"
+### Paso 5 — `src/pages/CotizacionDetalle.tsx`
+- El badge ya usa `getEstadoColor`, así que mostrará el color indigo automáticamente.
+- Línea 169: cambiar condición del botón "Generar Embarques" de `esAceptada` a `esAceptada && cotizacion.estado !== 'Embarcada'` (o simplemente mantener `esAceptada` ya que `esAceptada` es `estado === 'Aceptada'`, que ya excluye `'Embarcada'`). No se necesita cambio adicional porque `esAceptada` ya filtra correctamente.
+
+### Paso 6 — Changelog
+Agregar entrada v4.36.3 describiendo el cambio.
+
+4 archivos editados, 1 migración SQL.
 
