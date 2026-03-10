@@ -13,6 +13,13 @@ interface ChangelogEntry {
 
 const changelog: ChangelogEntry[] = [
   {
+    version: "4.36.3",
+    date: "2026-03-10",
+    type: "patch",
+    title: "Estado 'Embarcada' en cotizaciones al generar embarques",
+    description: "Al convertir una cotización en embarques, el estado ahora cambia a 'Embarcada' en lugar de 'Convertida'. Se agregó el filtro y badge con color índigo para el nuevo estado.",
+  },
+  {
     version: "4.36.2",
     date: "2026-03-10",
     type: "patch",
