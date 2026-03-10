@@ -13,6 +13,13 @@ interface ChangelogEntry {
 
 const changelog: ChangelogEntry[] = [
   {
+    version: "4.36.6",
+    date: "2026-03-10",
+    type: "patch",
+    title: "Revertir cotización al eliminar embarque vinculado",
+    description: "Al eliminar un embarque que tiene cotización vinculada, si no quedan más embarques asociados a esa cotización, el estado se revierte automáticamente a 'Aceptada'.",
+  },
+  {
     version: "4.36.5",
     date: "2026-03-10",
     type: "patch",
