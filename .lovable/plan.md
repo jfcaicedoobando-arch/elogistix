@@ -1,16 +1,20 @@
 
 
-## Plan: Usar expediente del origen al duplicar
+## Plan: Campo "Tipo de Unidad" condicional para modo Terrestre
 
-### Cambio único en `src/hooks/useEmbarques.ts`
+### Cambios
 
-En el loop de `useDuplicarEmbarque` (líneas 257-262), reemplazar la llamada a `supabase.rpc('generar_expediente')` por usar directamente `embarqueOrigen.expediente`:
+**1. `src/hooks/useCotizacionWizardForm.ts`**
+- Agregar `tipoUnidad: string` a `CotizacionFormValues` (default `""`)
+- En `buildPaso1Data`, incluir `tipo_unidad: v.modo === 'Terrestre' ? v.tipoUnidad : null`
 
-- **Eliminar** líneas 258-262 (la llamada RPC y el manejo de error)
-- **Cambiar** línea 268 `expediente: expediente as string` → `expediente: embarqueOrigen.expediente`
-- En el push final al array `creados`, usar `embarqueOrigen.expediente` en lugar de `expediente as string`
+**2. `src/components/cotizacion/SeccionMercanciaGeneral.tsx`**
+- Leer `modo` del form context
+- Si `modo === 'Terrestre'`: mostrar solo un campo "Tipo de Unidad" (input texto, placeholder "Ej. Trailer, Caja seca, Plataforma, Rabón...")
+- Si no: mostrar Peso, Volumen, Piezas como hoy
 
-### Cambio en `src/pages/Changelog.tsx`
+**3. Migración de BD**
+- Agregar columna `tipo_unidad TEXT` (nullable) a la tabla `cotizaciones`
 
-Entrada v4.15.1 — "Duplicar embarque ahora conserva el mismo expediente del origen"
+**4. `src/pages/Changelog.tsx`** — Registrar v4.42.0
 
