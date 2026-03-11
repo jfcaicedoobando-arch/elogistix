@@ -1,12 +1,16 @@
 
 
-## Cambio de texto en NuevaCotizacion.tsx
+## Plan: Usar expediente del origen al duplicar
 
-**Archivo**: `src/pages/NuevaCotizacion.tsx`, línea 117
+### Cambio único en `src/hooks/useEmbarques.ts`
 
-**Cambio**: Reemplazar el texto del `<Label>`:
-- **Antes**: `¿Cuántos contenedores o BLs tiene esta operación?`
-- **Después**: `Número de contenedores/Embarques`
+En el loop de `useDuplicarEmbarque` (líneas 257-262), reemplazar la llamada a `supabase.rpc('generar_expediente')` por usar directamente `embarqueOrigen.expediente`:
 
-Un solo cambio de texto, sin impacto funcional.
+- **Eliminar** líneas 258-262 (la llamada RPC y el manejo de error)
+- **Cambiar** línea 268 `expediente: expediente as string` → `expediente: embarqueOrigen.expediente`
+- En el push final al array `creados`, usar `embarqueOrigen.expediente` en lugar de `expediente as string`
+
+### Cambio en `src/pages/Changelog.tsx`
+
+Entrada v4.15.1 — "Duplicar embarque ahora conserva el mismo expediente del origen"
 
