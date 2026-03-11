@@ -478,17 +478,19 @@ export function useCotizacionWizardForm({ navigate, toast, userEmail, clientes, 
   const handleGuardar = useCallback(async () => {
     if (!cotizacionId) return;
     try {
-      await updateCotizacion.mutateAsync({ id: cotizacionId, data: { estado: "Borrador" } as any });
+      if (!isEditMode) {
+        await updateCotizacion.mutateAsync({ id: cotizacionId, data: { estado: "Borrador" } as any });
+      }
       registrarActividad.mutate({
-        accion: "crear", modulo: "cotizaciones",
+        accion: isEditMode ? "editar" : "crear", modulo: "cotizaciones",
         entidad_id: cotizacionId, entidad_nombre: "",
       });
-      toast({ title: "Cotización creada exitosamente" });
+      toast({ title: isEditMode ? "Cotización actualizada exitosamente" : "Cotización creada exitosamente" });
       navigate(`/cotizaciones/${cotizacionId}`);
     } catch (err: any) {
       toast({ title: "Error al finalizar cotización", description: err.message, variant: "destructive" });
     }
-  }, [cotizacionId, updateCotizacion, registrarActividad, toast, navigate]);
+  }, [cotizacionId, updateCotizacion, registrarActividad, toast, navigate, isEditMode]);
 
   const handleBack = useCallback(() => {
     if (currentStep > 1) setCurrentStep(p => p - 1);
