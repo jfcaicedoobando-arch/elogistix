@@ -13,6 +13,13 @@ interface ChangelogEntry {
 
 const changelog: ChangelogEntry[] = [
   {
+    version: "4.39.0",
+    date: "2026-03-11",
+    type: "minor",
+    title: "Agregar tipo de operación 'Intra USA'",
+    description: "Se añadió la opción 'Intra USA' al dropdown de tipo de operación en cotizaciones y embarques.",
+  },
+  {
     version: "4.38.1",
     date: "2026-03-11",
     type: "patch",
