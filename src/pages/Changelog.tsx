@@ -13,6 +13,13 @@ interface ChangelogEntry {
 
 const changelog: ChangelogEntry[] = [
   {
+    version: "4.38.0",
+    date: "2026-03-11",
+    type: "minor",
+    title: "Filtro por operador en tablero de embarques",
+    description: "Se agregó un dropdown para filtrar embarques por operador asignado en la vista principal.",
+  },
+  {
     version: "4.37.5",
     date: "2026-03-11",
     type: "patch",

@@ -38,6 +38,7 @@ export default function Embarques() {
   const [filterModo, setFilterModo] = useState<string>("todos");
   const [filterEstado, setFilterEstado] = useState<string>("todos");
   const [filterCliente, setFilterCliente] = useState<string>("todos");
+  const [filterOperador, setFilterOperador] = useState<string>("todos");
   const [page, setPage] = useState(0);
   const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
   const { canEdit } = usePermissions();
@@ -120,6 +121,11 @@ export default function Embarques() {
     return base;
   }, [canEdit]);
 
+  const operadoresUnicos = useMemo(() => {
+    const set = new Set(embarques.map(e => e.operador).filter(Boolean));
+    return Array.from(set).sort();
+  }, [embarques]);
+
   const filtered = useMemo(() => {
     return embarques.filter((embarque) => {
       const matchSearch = !search || embarque.expediente.toLowerCase().includes(search.toLowerCase()) ||
@@ -130,9 +136,10 @@ export default function Embarques() {
       const estadoCalculado = calcularEstadoEmbarque(embarque.modo, embarque.tipo, embarque.etd, embarque.eta, embarque.estado);
       const matchEstado = filterEstado === "todos" || estadoCalculado === filterEstado;
       const matchCliente = filterCliente === "todos" || embarque.cliente_id === filterCliente;
-      return matchSearch && matchModo && matchEstado && matchCliente;
+      const matchOperador = filterOperador === "todos" || embarque.operador === filterOperador;
+      return matchSearch && matchModo && matchEstado && matchCliente && matchOperador;
     });
-  }, [embarques, search, filterModo, filterEstado, filterCliente]);
+  }, [embarques, search, filterModo, filterEstado, filterCliente, filterOperador]);
 
   const paginated = filtered.slice(page * pageSize, (page + 1) * pageSize);
   const totalPages = Math.ceil(filtered.length / pageSize);
@@ -179,6 +186,13 @@ export default function Embarques() {
               <SelectContent>
                 <SelectItem value="todos">Todos los clientes</SelectItem>
                 {clientes.map(c => <SelectItem key={c.id} value={c.id}>{c.nombre.split(' ').slice(0, 3).join(' ')}</SelectItem>)}
+              </SelectContent>
+            </Select>
+            <Select value={filterOperador} onValueChange={(v) => { setFilterOperador(v); setPage(0); }}>
+              <SelectTrigger className="w-[180px]"><SelectValue placeholder="Operador" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="todos">Todos los operadores</SelectItem>
+                {operadoresUnicos.map(op => <SelectItem key={op} value={op}>{op}</SelectItem>)}
               </SelectContent>
             </Select>
           </div>
