@@ -16,7 +16,7 @@ import type { ModoTransporte, TipoOperacion, Incoterm } from "@/data/types";
 
 const MODOS: ModoTransporte[] = ['Marítimo', 'Aéreo', 'Terrestre', 'Multimodal'];
 const TIPOS: TipoOperacion[] = ['Importación', 'Exportación', 'Nacional', 'Cross Trade', 'Intra USA'];
-const INCOTERMS: Incoterm[] = ['EXW', 'FOB', 'CIF', 'DAP', 'DDP', 'FCA', 'CFR', 'CPT', 'CIP', 'DAT'];
+const INCOTERMS: Incoterm[] = ['EXW', 'FOB', 'CIF', 'DAP', 'DDP', 'FCA', 'CFR', 'CPT', 'CIP', 'DAT', 'N/A'];
 
 interface Contacto {
   id: string;

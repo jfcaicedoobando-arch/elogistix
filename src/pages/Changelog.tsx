@@ -13,6 +13,13 @@ interface ChangelogEntry {
 
 const changelog: ChangelogEntry[] = [
   {
+    version: "4.40.0",
+    date: "2026-03-11",
+    type: "minor",
+    title: "Agregar incoterm 'N/A'",
+    description: "Se añadió la opción 'N/A' al dropdown de incoterm en cotizaciones y embarques.",
+  },
+  {
     version: "4.39.0",
     date: "2026-03-11",
     type: "minor",

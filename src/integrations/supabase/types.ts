@@ -1009,6 +1009,7 @@ export type Database = {
         | "CPT"
         | "CIP"
         | "DAT"
+        | "N/A"
       modo_transporte: "Marítimo" | "Aéreo" | "Terrestre" | "Multimodal"
       moneda: "MXN" | "USD" | "EUR"
       origen_proveedor: "Nacional" | "Extranjero"
@@ -1196,6 +1197,7 @@ export const Constants = {
         "CPT",
         "CIP",
         "DAT",
+        "N/A",
       ],
       modo_transporte: ["Marítimo", "Aéreo", "Terrestre", "Multimodal"],
       moneda: ["MXN", "USD", "EUR"],

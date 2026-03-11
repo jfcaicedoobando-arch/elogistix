@@ -1,0 +1,1 @@
+ALTER TYPE public.incoterm ADD VALUE IF NOT EXISTS 'N/A';
