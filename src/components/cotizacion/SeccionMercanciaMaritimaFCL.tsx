@@ -7,7 +7,7 @@ import SeccionMercanciaWrapper from "./SeccionMercanciaWrapper";
 import type { CotizacionFormValues } from "@/hooks/useCotizacionWizardForm";
 
 const CONTENEDORES_FCL = [
-  "20' Dry", "40' Dry", "40' High Cube", "45' High Cube",
+  "20' GP", "20' Dry", "40' Dry", "40' High Cube", "45' High Cube",
   "20' Reefer", "40' Reefer", "20' Open Top", "40' Open Top",
   "20' Flat Rack", "40' Flat Rack",
 ];

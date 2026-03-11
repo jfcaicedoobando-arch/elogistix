@@ -4,6 +4,7 @@ export interface ContainerType {
 }
 
 export const containerTypes: ContainerType[] = [
+  { code: "20GP", name: "20' GP" },
   { code: "20DRY", name: "20' Dry (Standard)" },
   { code: "40DRY", name: "40' Dry (Standard)" },
   { code: "40HC", name: "40' High Cube" },
