@@ -13,6 +13,13 @@ interface ChangelogEntry {
 
 const changelog: ChangelogEntry[] = [
   {
+    version: "4.38.1",
+    date: "2026-03-11",
+    type: "patch",
+    title: "Simplificar etiqueta de contenedores en cotización",
+    description: "Se cambió el texto 'Número de contenedores/Embarques' a 'Número de contenedores' en el formulario de nueva cotización.",
+  },
+  {
     version: "4.38.0",
     date: "2026-03-11",
     type: "minor",
