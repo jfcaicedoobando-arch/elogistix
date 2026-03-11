@@ -195,6 +195,7 @@ export default function Embarques() {
                 {operadoresUnicos.map(op => <SelectItem key={op} value={op}>{op}</SelectItem>)}
               </SelectContent>
             </Select>
+          </div>
         </CardContent>
       </Card>
 
