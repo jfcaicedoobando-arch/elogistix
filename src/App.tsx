@@ -25,6 +25,7 @@ const Reportes = lazy(() => import("./pages/Reportes"));
 const Cotizaciones = lazy(() => import("./pages/Cotizaciones"));
 const NuevaCotizacion = lazy(() => import("./pages/NuevaCotizacion"));
 const CotizacionDetalle = lazy(() => import("./pages/CotizacionDetalle"));
+const EditarCotizacion = lazy(() => import("./pages/EditarCotizacion"));
 const Changelog = lazy(() => import("./pages/Changelog"));
 const Bitacora = lazy(() => import("./pages/Bitacora"));
 const Usuarios = lazy(() => import("./pages/Usuarios"));
