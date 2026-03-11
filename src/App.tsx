@@ -25,6 +25,7 @@ const Reportes = lazy(() => import("./pages/Reportes"));
 const Cotizaciones = lazy(() => import("./pages/Cotizaciones"));
 const NuevaCotizacion = lazy(() => import("./pages/NuevaCotizacion"));
 const CotizacionDetalle = lazy(() => import("./pages/CotizacionDetalle"));
+const EditarCotizacion = lazy(() => import("./pages/EditarCotizacion"));
 const Changelog = lazy(() => import("./pages/Changelog"));
 const Bitacora = lazy(() => import("./pages/Bitacora"));
 const Usuarios = lazy(() => import("./pages/Usuarios"));
@@ -61,6 +62,7 @@ const App = () => (
               <Route path="/cotizaciones" element={<Cotizaciones />} />
               <Route path="/cotizaciones/nueva" element={<NuevaCotizacion />} />
               <Route path="/cotizaciones/:id" element={<CotizacionDetalle />} />
+              <Route path="/cotizaciones/:id/editar" element={<EditarCotizacion />} />
               <Route path="/reportes" element={<Reportes />} />
               <Route path="/changelog" element={<Changelog />} />
               <Route path="/bitacora" element={<Bitacora />} />

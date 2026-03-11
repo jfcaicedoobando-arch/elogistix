@@ -111,30 +111,144 @@ interface Mutations {
   registrarActividad: { mutate: (d: any) => void };
 }
 
+interface InitialData {
+  id: string;
+  estado: string;
+  folio: string;
+  es_prospecto: boolean;
+  cliente_id: string | null;
+  prospecto_empresa: string;
+  prospecto_contacto: string;
+  prospecto_email: string;
+  prospecto_telefono: string;
+  modo: string;
+  tipo: string;
+  incoterm: string;
+  tipo_carga: string;
+  sector_economico: string;
+  descripcion_adicional: string;
+  tipo_embarque: string;
+  tipo_contenedor: string | null;
+  tipo_peso: string;
+  dimensiones_lcl: DimensionLCL[];
+  dimensiones_aereas: DimensionAerea[];
+  peso_kg: number;
+  volumen_m3: number;
+  piezas: number;
+  tipo_unidad: string | null;
+  origen: string;
+  destino: string;
+  tiempo_transito_dias: number | null;
+  frecuencia: string;
+  ruta_texto: string;
+  validez_propuesta: string | null;
+  tipo_movimiento: string;
+  seguro: boolean;
+  valor_seguro_usd: number;
+  dias_libres_destino: number;
+  dias_almacenaje: number;
+  carta_garantia: boolean;
+  notas: string | null;
+  num_contenedores: number;
+  conceptos_venta: any;
+  msds_archivo: string | null;
+}
+
+interface InitialCosto {
+  concepto: string;
+  moneda: string;
+  proveedor: string;
+  cantidad: number;
+  costo_unitario: number;
+  precio_venta?: number;
+  unidad_medida?: string;
+}
+
 interface HookDeps {
   navigate: NavigateFunction;
   toast: ToastFn;
   userEmail: string;
   clientes: { id: string; nombre: string }[];
   mutations: Mutations;
+  initialData?: InitialData;
+  initialCostos?: InitialCosto[];
 }
 
-export function useCotizacionWizardForm({ navigate, toast, userEmail, clientes, mutations }: HookDeps) {
+function buildDefaultValues(d?: InitialData): CotizacionFormValues {
+  if (!d) return COTIZACION_FORM_DEFAULTS;
+  return {
+    esProspecto: d.es_prospecto,
+    clienteId: d.cliente_id ?? "",
+    prospectoEmpresa: d.prospecto_empresa ?? "",
+    prospectoContacto: d.prospecto_contacto ?? "",
+    prospectoEmail: d.prospecto_email ?? "",
+    prospectoTelefono: d.prospecto_telefono ?? "",
+    modo: d.modo,
+    tipo: d.tipo,
+    incoterm: d.incoterm,
+    tipoCarga: d.tipo_carga ?? "Carga General",
+    sectorEconomico: d.sector_economico ?? "",
+    descripcionAdicional: d.descripcion_adicional ?? "",
+    tipoEmbarque: (d.tipo_embarque as "FCL" | "LCL") ?? "FCL",
+    tipoContenedor: d.tipo_contenedor ?? "",
+    tipoPeso: d.tipo_peso ?? "Peso Normal",
+    dimensionesLCL: (d.dimensiones_lcl as DimensionLCL[])?.length ? d.dimensiones_lcl as DimensionLCL[] : [{ piezas: 0, alto_cm: 0, largo_cm: 0, ancho_cm: 0, volumen_m3: 0 }],
+    dimensionesAereas: (d.dimensiones_aereas as DimensionAerea[])?.length ? d.dimensiones_aereas as DimensionAerea[] : [{ piezas: 0, alto_cm: 0, largo_cm: 0, ancho_cm: 0, peso_volumetrico_kg: 0 }],
+    pesoKg: d.peso_kg ?? 0,
+    volumenM3: d.volumen_m3 ?? 0,
+    piezas: d.piezas ?? 0,
+    tipoUnidad: d.tipo_unidad ?? "",
+    origen: d.origen ?? "",
+    destino: d.destino ?? "",
+    tiempoTransitoDias: d.tiempo_transito_dias ?? undefined,
+    frecuencia: d.frecuencia ?? "",
+    rutaTexto: d.ruta_texto ?? "",
+    validezPropuesta: d.validez_propuesta ? new Date(d.validez_propuesta) : undefined,
+    tipoMovimiento: d.tipo_movimiento ?? "",
+    seguro: d.seguro ?? false,
+    valorSeguroUsd: d.valor_seguro_usd ?? 0,
+    diasLibresDestino: d.dias_libres_destino ?? 0,
+    diasAlmacenaje: d.dias_almacenaje ?? 0,
+    cartaGarantia: d.carta_garantia ?? false,
+    notas: d.notas ?? "",
+    numContenedores: d.num_contenedores ?? 1,
+  };
+}
+
+export function useCotizacionWizardForm({ navigate, toast, userEmail, clientes, mutations, initialData, initialCostos }: HookDeps) {
   const { crearCotizacion, updateCotizacion, upsertCostos, registrarActividad } = mutations;
+  const isEditMode = !!initialData;
 
   // ── React Hook Form ──
   const form = useForm<CotizacionFormValues>({
-    defaultValues: COTIZACION_FORM_DEFAULTS,
+    defaultValues: buildDefaultValues(initialData),
   });
 
+  // ── Pre-fill conceptos from initialData ──
+  const initialConceptosVenta = initialData?.conceptos_venta as ConceptoVentaCotizacion[] | undefined;
+  const initialUSD = initialConceptosVenta?.filter(c => c.moneda === "USD") ?? [];
+  const initialMXN = initialConceptosVenta?.filter(c => c.moneda === "MXN") ?? [];
+
+  // ── Pre-fill costos from initialCostos ──
+  const initialCostosLocales: FilaCostoLocal[] = (initialCostos ?? []).map((c, i) => ({
+    _key: `init-${i}`,
+    concepto: c.concepto,
+    moneda: c.moneda as "USD" | "MXN",
+    proveedor: c.proveedor,
+    cantidad: c.cantidad,
+    costo_unitario: c.costo_unitario,
+    precio_venta: c.precio_venta ?? 0,
+    unidad_medida: c.unidad_medida ?? "Contenedor",
+  }));
+
   // ── Non-serializable / external state ──
-  const [cotizacionId, setCotizacionId] = useState<string | null>(null);
+  const [cotizacionId, setCotizacionId] = useState<string | null>(initialData?.id ?? null);
   const [currentStep, setCurrentStep] = useState(1);
   const [msdsFile, setMsdsFile] = useState<File | null>(null);
-  const [costosInternos, setCostosInternos] = useState<FilaCostoLocal[]>([]);
-  const [costosPreLlenados, setCostosPreLlenados] = useState(false);
-  const [conceptosUSD, setConceptosUSD] = useState<ConceptoVentaCotizacion[]>([emptyUSD()]);
-  const [conceptosMXN, setConceptosMXN] = useState<ConceptoVentaCotizacion[]>([emptyMXN()]);
+  const [costosInternos, setCostosInternos] = useState<FilaCostoLocal[]>(initialCostosLocales);
+  const [costosPreLlenados, setCostosPreLlenados] = useState(isEditMode);
+  const [conceptosUSD, setConceptosUSD] = useState<ConceptoVentaCotizacion[]>(initialUSD.length > 0 ? initialUSD : [emptyUSD()]);
+  const [conceptosMXN, setConceptosMXN] = useState<ConceptoVentaCotizacion[]>(initialMXN.length > 0 ? initialMXN : [emptyMXN()]);
 
   // ── Watched derived values ──
   const modo = form.watch("modo");
@@ -364,17 +478,19 @@ export function useCotizacionWizardForm({ navigate, toast, userEmail, clientes, 
   const handleGuardar = useCallback(async () => {
     if (!cotizacionId) return;
     try {
-      await updateCotizacion.mutateAsync({ id: cotizacionId, data: { estado: "Borrador" } as any });
+      if (!isEditMode) {
+        await updateCotizacion.mutateAsync({ id: cotizacionId, data: { estado: "Borrador" } as any });
+      }
       registrarActividad.mutate({
-        accion: "crear", modulo: "cotizaciones",
+        accion: isEditMode ? "editar" : "crear", modulo: "cotizaciones",
         entidad_id: cotizacionId, entidad_nombre: "",
       });
-      toast({ title: "Cotización creada exitosamente" });
+      toast({ title: isEditMode ? "Cotización actualizada exitosamente" : "Cotización creada exitosamente" });
       navigate(`/cotizaciones/${cotizacionId}`);
     } catch (err: any) {
       toast({ title: "Error al finalizar cotización", description: err.message, variant: "destructive" });
     }
-  }, [cotizacionId, updateCotizacion, registrarActividad, toast, navigate]);
+  }, [cotizacionId, updateCotizacion, registrarActividad, toast, navigate, isEditMode]);
 
   const handleBack = useCallback(() => {
     if (currentStep > 1) setCurrentStep(p => p - 1);

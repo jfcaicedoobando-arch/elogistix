@@ -13,6 +13,13 @@ interface ChangelogEntry {
 
 const changelog: ChangelogEntry[] = [
   {
+    version: "4.43.0",
+    date: "2026-03-11",
+    type: "minor",
+    title: "Editar cotizaciones en estado Borrador",
+    description: "Los operadores y administradores pueden editar cotizaciones cuando están en estado Borrador. Se reutiliza el wizard de 4 pasos con los datos pre-llenados desde la cotización guardada.",
+  },
+  {
     version: "4.42.0",
     date: "2026-03-11",
     type: "minor",
