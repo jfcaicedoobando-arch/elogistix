@@ -121,6 +121,11 @@ export default function Embarques() {
     return base;
   }, [canEdit]);
 
+  const operadoresUnicos = useMemo(() => {
+    const set = new Set(embarques.map(e => e.operador).filter(Boolean));
+    return Array.from(set).sort();
+  }, [embarques]);
+
   const filtered = useMemo(() => {
     return embarques.filter((embarque) => {
       const matchSearch = !search || embarque.expediente.toLowerCase().includes(search.toLowerCase()) ||
@@ -131,9 +136,10 @@ export default function Embarques() {
       const estadoCalculado = calcularEstadoEmbarque(embarque.modo, embarque.tipo, embarque.etd, embarque.eta, embarque.estado);
       const matchEstado = filterEstado === "todos" || estadoCalculado === filterEstado;
       const matchCliente = filterCliente === "todos" || embarque.cliente_id === filterCliente;
-      return matchSearch && matchModo && matchEstado && matchCliente;
+      const matchOperador = filterOperador === "todos" || embarque.operador === filterOperador;
+      return matchSearch && matchModo && matchEstado && matchCliente && matchOperador;
     });
-  }, [embarques, search, filterModo, filterEstado, filterCliente]);
+  }, [embarques, search, filterModo, filterEstado, filterCliente, filterOperador]);
 
   const paginated = filtered.slice(page * pageSize, (page + 1) * pageSize);
   const totalPages = Math.ceil(filtered.length / pageSize);
