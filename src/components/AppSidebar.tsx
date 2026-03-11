@@ -4,14 +4,14 @@ import {
   FileText,
   UserCheck,
   Truck,
-  BarChart3,
-  
+  Activity,
   ClipboardList,
   ScrollText,
   ShieldCheck,
   LogOut,
   History,
   Settings,
+  ChevronDown,
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import elogistixLogo from "@/assets/elogistix-logo.jpg";
@@ -30,15 +30,20 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
+import { Collapsible, CollapsibleTrigger, CollapsibleContent } from "@/components/ui/collapsible";
+import { Separator } from "@/components/ui/separator";
+
+const dashboardItems = [
+  { title: "Principal", url: "/", icon: LayoutDashboard },
+  { title: "Operaciones", url: "/operaciones", icon: Activity },
+];
 
 const menuItems = [
-  { title: "Dashboard", url: "/", icon: LayoutDashboard },
   { title: "Cotizaciones", url: "/cotizaciones", icon: ClipboardList },
   { title: "Embarques", url: "/embarques", icon: Ship },
   { title: "Facturación", url: "/facturacion", icon: FileText },
   { title: "Clientes", url: "/clientes", icon: UserCheck },
   { title: "Proveedores", url: "/proveedores", icon: Truck },
-  { title: "Reportes", url: "/reportes", icon: BarChart3 },
   { title: "Changelog", url: "/changelog", icon: ScrollText },
   { title: "Bitácora", url: "/bitacora", icon: History },
 ];
@@ -80,6 +85,69 @@ export function AppSidebar() {
       </SidebarHeader>
 
       <SidebarContent className="px-2 py-4">
+        {/* Dashboards section */}
+        {collapsed ? (
+          <SidebarGroup>
+            <SidebarGroupContent>
+              <SidebarMenu>
+                {dashboardItems.map((item) => (
+                  <SidebarMenuItem key={item.title}>
+                    <SidebarMenuButton
+                      asChild
+                      isActive={isActive(item.url)}
+                      tooltip={item.title}
+                    >
+                      <NavLink
+                        to={item.url}
+                        end={item.url === "/"}
+                        className="hover:bg-sidebar-accent/50"
+                        activeClassName="bg-sidebar-accent text-sidebar-accent-foreground font-medium"
+                      >
+                        <item.icon className="h-4 w-4" />
+                      </NavLink>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                ))}
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        ) : (
+          <Collapsible defaultOpen className="group/collapsible">
+            <CollapsibleTrigger className="flex w-full items-center justify-between px-3 py-2 text-xs font-semibold uppercase tracking-wider text-sidebar-foreground/60 hover:text-sidebar-foreground transition-colors">
+              <div className="flex items-center gap-2">
+                <LayoutDashboard className="h-3.5 w-3.5" />
+                <span>Dashboards</span>
+              </div>
+              <ChevronDown className="h-3.5 w-3.5 transition-transform duration-200 group-data-[state=closed]/collapsible:rotate-[-90deg]" />
+            </CollapsibleTrigger>
+            <CollapsibleContent>
+              <SidebarMenu className="ml-4 border-l-2 border-sidebar-border pl-2">
+                {dashboardItems.map((item) => (
+                  <SidebarMenuItem key={item.title}>
+                    <SidebarMenuButton
+                      asChild
+                      isActive={isActive(item.url)}
+                    >
+                      <NavLink
+                        to={item.url}
+                        end={item.url === "/"}
+                        className="hover:bg-sidebar-accent/50"
+                        activeClassName="bg-sidebar-accent text-sidebar-accent-foreground font-medium"
+                      >
+                        <item.icon className="h-4 w-4" />
+                        <span>{item.title}</span>
+                      </NavLink>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                ))}
+              </SidebarMenu>
+            </CollapsibleContent>
+          </Collapsible>
+        )}
+
+        <Separator className="my-2 mx-1" />
+
+        {/* Main menu */}
         <SidebarGroup>
           <SidebarGroupContent>
             <SidebarMenu>
