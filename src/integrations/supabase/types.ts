@@ -1014,7 +1014,12 @@ export type Database = {
       origen_proveedor: "Nacional" | "Extranjero"
       tipo_contacto: "Proveedor" | "Exportador" | "Importador"
       tipo_nota: "nota" | "cambio_estado" | "documento" | "factura" | "sistema"
-      tipo_operacion: "Importación" | "Exportación" | "Nacional" | "Cross Trade"
+      tipo_operacion:
+        | "Importación"
+        | "Exportación"
+        | "Nacional"
+        | "Cross Trade"
+        | "Intra USA"
       tipo_proveedor:
         | "Naviera"
         | "Aerolínea"
@@ -1197,7 +1202,13 @@ export const Constants = {
       origen_proveedor: ["Nacional", "Extranjero"],
       tipo_contacto: ["Proveedor", "Exportador", "Importador"],
       tipo_nota: ["nota", "cambio_estado", "documento", "factura", "sistema"],
-      tipo_operacion: ["Importación", "Exportación", "Nacional", "Cross Trade"],
+      tipo_operacion: [
+        "Importación",
+        "Exportación",
+        "Nacional",
+        "Cross Trade",
+        "Intra USA",
+      ],
       tipo_proveedor: [
         "Naviera",
         "Aerolínea",
