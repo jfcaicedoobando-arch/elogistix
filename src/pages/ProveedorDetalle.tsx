@@ -113,9 +113,16 @@ export default function ProveedorDetalle() {
           </div>
         </div>
         {canEdit && (
-          <Button variant="outline" onClick={() => setEditOpen(true)}>
-            <Pencil className="mr-2 h-4 w-4" /> Editar
-          </Button>
+          <div className="flex gap-2">
+            {isAdmin && (
+              <Button variant="destructive" onClick={() => setDeleteStep(1)} disabled={isDeleting}>
+                <Trash2 className="mr-2 h-4 w-4" /> Eliminar
+              </Button>
+            )}
+            <Button variant="outline" onClick={() => setEditOpen(true)}>
+              <Pencil className="mr-2 h-4 w-4" /> Editar
+            </Button>
+          </div>
         )}
       </div>
 
