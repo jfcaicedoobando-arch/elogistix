@@ -1,18 +1,26 @@
 
 
-## Plan: Eliminar proveedor JIANGSU SOHO RUNLONG INNOVATION
+## Plan: Sección colapsable "Dashboards" + quitar Reportes + página Operaciones
 
-### Diagnóstico
-- Hay exactamente 1 registro con nombre que contiene "JIANGSU SOHO RUNLONG" y tipo "Agente de Carga" (ID: `c45f3e51-c38d-4faa-a5b5-a5b43398e8b7`).
-- No tiene registros en `conceptos_costo`, por lo que no hay bloqueo por FK.
+### Archivos a modificar
 
-### Acción
-Ejecutar DELETE directo en la base de datos usando la herramienta de inserción/datos:
+**1. `src/components/AppSidebar.tsx`**
+- Importar `Activity`, `ChevronDown` de lucide-react; quitar `BarChart3`
+- Importar `Collapsible`, `CollapsibleTrigger`, `CollapsibleContent` de `@/components/ui/collapsible`
+- Importar `Separator` de `@/components/ui/separator`
+- Crear array `dashboardItems` con Principal (`/`, LayoutDashboard) y Operaciones (`/operaciones`, Activity)
+- Quitar "Dashboard" y "Reportes" del array `menuItems`
+- En el render, antes del SidebarGroup principal:
+  - Si collapsed: renderizar los dashboardItems como items normales (solo íconos)
+  - Si expandido: renderizar un `Collapsible` con `defaultOpen={true}`, trigger "Dashboards" con chevron rotable, y contenido con sub-items indentados con borde izquierdo (`border-l-2 ml-4 pl-2`)
+- Agregar `<Separator />` entre la sección Dashboards y el menú principal
 
-```sql
-DELETE FROM proveedores 
-WHERE id = 'c45f3e51-c38d-4faa-a5b5-a5b43398e8b7';
-```
+**2. `src/App.tsx`**
+- Agregar lazy import: `const Operaciones = lazy(() => import("./pages/Operaciones"))`
+- Agregar ruta: `<Route path="/operaciones" element={<Operaciones />} />` junto a la ruta `/`
+- Mantener ruta `/reportes` (el archivo no se elimina)
 
-No se requieren cambios en código frontend.
+**3. `src/pages/Operaciones.tsx`** (crear)
+- Página placeholder con título "Dashboard de Operaciones", subtítulo "Rendimiento del equipo operativo", y card con texto "Próximamente"
+- Seguir el mismo patrón de layout que las otras páginas (div con padding, heading, etc.)
 
