@@ -67,7 +67,7 @@ export default function Cotizaciones() {
       { key: "vigencia", header: "Vigencia", className: "text-xs", render: (c) => c.fecha_vigencia ? formatDate(c.fecha_vigencia) : "-" },
       { key: "fecha", header: "Fecha", className: "text-xs", render: (c) => new Date(c.created_at).toLocaleString('es-MX', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }) },
     ];
-    if (isAdmin) {
+    if (canEdit) {
       cols.push({
         key: "acciones",
         header: "Acciones",
@@ -85,7 +85,7 @@ export default function Cotizaciones() {
       });
     }
     return cols;
-  }, [isAdmin]);
+  }, [canEdit]);
 
   return (
     <div className="space-y-6">
