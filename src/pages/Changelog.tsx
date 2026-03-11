@@ -13,6 +13,13 @@ interface ChangelogEntry {
 
 const changelog: ChangelogEntry[] = [
   {
+    version: "4.37.4",
+    date: "2026-03-11",
+    type: "patch",
+    title: "Formato legible de timestamp en Notas y Actividad",
+    description: "Las fechas en la pestaña Notas y Actividad del embarque ahora muestran formato DD/MM/YYYY, HH:mm localizado (es-MX) en lugar del formato ISO crudo.",
+  },
+  {
     version: "4.37.3",
     date: "2026-03-10",
     type: "patch",
