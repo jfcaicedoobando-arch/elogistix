@@ -34,6 +34,7 @@ export interface CotizacionFormValues {
   pesoKg: number;
   volumenM3: number;
   piezas: number;
+  tipoUnidad: string;
   // Ruta
   origen: string;
   destino: string;
@@ -73,6 +74,7 @@ export const COTIZACION_FORM_DEFAULTS: CotizacionFormValues = {
   pesoKg: 0,
   volumenM3: 0,
   piezas: 0,
+  tipoUnidad: "",
   origen: "",
   destino: "",
   tiempoTransitoDias: undefined,
@@ -257,6 +259,7 @@ export function useCotizacionWizardForm({ navigate, toast, userEmail, clientes, 
       seguro: v.seguro,
       valor_seguro_usd: v.seguro ? Number(v.valorSeguroUsd) || 0 : 0,
       num_contenedores: v.numContenedores,
+      tipo_unidad: v.modo === 'Terrestre' ? v.tipoUnidad : null,
     };
   }, [form, clientes, userEmail]);
 
