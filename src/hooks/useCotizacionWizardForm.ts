@@ -74,6 +74,7 @@ export const COTIZACION_FORM_DEFAULTS: CotizacionFormValues = {
   pesoKg: 0,
   volumenM3: 0,
   piezas: 0,
+  tipoUnidad: "",
   origen: "",
   destino: "",
   tiempoTransitoDias: undefined,
