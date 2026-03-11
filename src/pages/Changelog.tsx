@@ -13,6 +13,13 @@ interface ChangelogEntry {
 
 const changelog: ChangelogEntry[] = [
   {
+    version: "4.41.0",
+    date: "2026-03-11",
+    type: "minor",
+    title: "Operadores pueden eliminar cotizaciones",
+    description: "Los usuarios con rol operador ahora pueden eliminar cotizaciones. Se implementó doble confirmación para mayor seguridad.",
+  },
+  {
     version: "4.40.0",
     date: "2026-03-11",
     type: "minor",
