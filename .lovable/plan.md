@@ -1,16 +1,16 @@
 
 
-## Plan: Usar expediente del origen al duplicar
+## Fix: Formato de timestamp en Notas y Actividad
 
-### Cambio único en `src/hooks/useEmbarques.ts`
+**Problema**: `TabNotas` usa `formatDate()` que solo maneja fechas `YYYY-MM-DD` y no muestra hora. Los timestamps de notas son ISO completos (ej: `2026-03-10T14:30:00Z`).
 
-En el loop de `useDuplicarEmbarque` (líneas 257-262), reemplazar la llamada a `supabase.rpc('generar_expediente')` por usar directamente `embarqueOrigen.expediente`:
+**Solución**: Reemplazar `formatDate(nota.fecha)` con una función de formato local que muestre fecha y hora legible según el estándar del proyecto (`DD/MM/YYYY, HH:mm`).
 
-- **Eliminar** líneas 258-262 (la llamada RPC y el manejo de error)
-- **Cambiar** línea 268 `expediente: expediente as string` → `expediente: embarqueOrigen.expediente`
-- En el push final al array `creados`, usar `embarqueOrigen.expediente` en lugar de `expediente as string`
+### Cambios
 
-### Cambio en `src/pages/Changelog.tsx`
+1. **`src/components/embarque/TabNotas.tsx`** (línea ~76):
+   - Reemplazar `formatDate(nota.fecha)` por un formato usando `new Date(nota.fecha).toLocaleString('es-MX', { day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit' })` o bien usar `format` de `date-fns` con locale es-MX.
+   - Remover import de `formatDate` si ya no se usa.
 
-Entrada v4.15.1 — "Duplicar embarque ahora conserva el mismo expediente del origen"
+Solo se toca este archivo.
 
