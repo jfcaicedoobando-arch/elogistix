@@ -147,11 +147,31 @@ export default function Cotizaciones() {
           />
         </CardContent>
       </Card>
-      <AlertDialog open={!!cotizacionAEliminar} onOpenChange={(open) => { if (!open) setCotizacionAEliminar(null); }}>
+      {/* Primera confirmación */}
+      <AlertDialog open={!!cotizacionAEliminar && !showSegundaConfirmacion} onOpenChange={(open) => { if (!open) setCotizacionAEliminar(null); }}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>¿Eliminar cotización?</AlertDialogTitle>
-            <AlertDialogDescription>Esta acción no se puede deshacer.</AlertDialogDescription>
+            <AlertDialogDescription>Esta acción eliminará la cotización de forma permanente.</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={() => setShowSegundaConfirmacion(true)}
+            >
+              Continuar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Segunda confirmación */}
+      <AlertDialog open={showSegundaConfirmacion} onOpenChange={(open) => { if (!open) { setShowSegundaConfirmacion(false); setCotizacionAEliminar(null); } }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>⚠️ Confirmar eliminación</AlertDialogTitle>
+            <AlertDialogDescription>¿Estás completamente seguro? Esta acción no se puede deshacer.</AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancelar</AlertDialogCancel>
@@ -165,10 +185,11 @@ export default function Cotizaciones() {
                 } catch (err: any) {
                   toast({ title: "Error al eliminar", description: err.message, variant: "destructive" });
                 }
+                setShowSegundaConfirmacion(false);
                 setCotizacionAEliminar(null);
               }}
             >
-              Eliminar
+              Eliminar definitivamente
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
