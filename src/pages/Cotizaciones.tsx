@@ -39,6 +39,7 @@ export default function Cotizaciones() {
   const deleteCotizacion = useDeleteCotizacion();
   const { toast } = useToast();
   const [cotizacionAEliminar, setCotizacionAEliminar] = useState<string | null>(null);
+  const [showSegundaConfirmacion, setShowSegundaConfirmacion] = useState(false);
 
   const filtered = useMemo(() => {
     return cotizaciones.filter((cotizacion) => {
