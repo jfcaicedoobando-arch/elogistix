@@ -26,9 +26,11 @@ export default function ProveedorDetalle() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { data: proveedor, isLoading } = useProveedor(id);
-  const { updateProveedor } = useProveedorMutations();
+  const { updateProveedor, deleteProveedor, isDeleting } = useProveedorMutations();
   const [editOpen, setEditOpen] = useState(false);
-  const { canEdit } = usePermissions();
+  const [deleteStep, setDeleteStep] = useState<0 | 1 | 2>(0);
+  const { canEdit, isAdmin } = usePermissions();
+  const registrarActividad = useRegistrarActividad();
 
   // Fetch operaciones (conceptos_costo) for this provider with embarque info
   const { data: operaciones = [] } = useQuery({
