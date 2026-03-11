@@ -26,7 +26,7 @@ import { usePermissions } from "@/hooks/usePermissions";
 import { useToast } from "@/hooks/use-toast";
 import { formatDate, getEstadoColor } from "@/lib/helpers";
 import { formatCurrency } from "@/lib/formatters";
-import { ArrowLeft, ArrowRight, CheckCircle, Send, XCircle, UserPlus, FileDown } from "lucide-react";
+import { ArrowLeft, ArrowRight, CheckCircle, Send, XCircle, UserPlus, FileDown, Pencil } from "lucide-react";
 import { generarPdfCotizacion } from "@/lib/cotizacionPdf";
 
 export default function CotizacionDetalle() {
