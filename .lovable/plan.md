@@ -1,12 +1,16 @@
 
 
-## Agregar "20' GP" a todos los dropdowns de tipo de contenedor
+## Plan: Usar expediente del origen al duplicar
 
-### Archivos a modificar
+### Cambio único en `src/hooks/useEmbarques.ts`
 
-1. **`src/data/containerTypes.ts`** — Agregar `{ code: "20GP", name: "20' GP" }` al inicio del array (o después del 20' Dry, por orden lógico).
+En el loop de `useDuplicarEmbarque` (líneas 257-262), reemplazar la llamada a `supabase.rpc('generar_expediente')` por usar directamente `embarqueOrigen.expediente`:
 
-2. **`src/components/cotizacion/SeccionMercanciaMaritimaFCL.tsx`** — Agregar `"20' GP"` al array local `CONTENEDORES_FCL`.
+- **Eliminar** líneas 258-262 (la llamada RPC y el manejo de error)
+- **Cambiar** línea 268 `expediente: expediente as string` → `expediente: embarqueOrigen.expediente`
+- En el push final al array `creados`, usar `embarqueOrigen.expediente` en lugar de `expediente as string`
 
-Estos son los dos únicos catálogos que alimentan los dropdowns de tipo de contenedor en toda la app (embarques y cotizaciones).
+### Cambio en `src/pages/Changelog.tsx`
+
+Entrada v4.15.1 — "Duplicar embarque ahora conserva el mismo expediente del origen"
 

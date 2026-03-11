@@ -13,6 +13,13 @@ interface ChangelogEntry {
 
 const changelog: ChangelogEntry[] = [
   {
+    version: "4.37.5",
+    date: "2026-03-11",
+    type: "patch",
+    title: "Agregar tipo de contenedor 20' GP",
+    description: "Se añadió la opción 20' GP a todos los dropdowns de tipo de contenedor en embarques y cotizaciones.",
+  },
+  {
     version: "4.37.4",
     date: "2026-03-11",
     type: "patch",
