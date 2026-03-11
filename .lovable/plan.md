@@ -1,16 +1,18 @@
 
 
-## Plan: Usar expediente del origen al duplicar
+## Plan: Eliminar proveedor JIANGSU SOHO RUNLONG INNOVATION
 
-### Cambio único en `src/hooks/useEmbarques.ts`
+### Diagnóstico
+- Hay exactamente 1 registro con nombre que contiene "JIANGSU SOHO RUNLONG" y tipo "Agente de Carga" (ID: `c45f3e51-c38d-4faa-a5b5-a5b43398e8b7`).
+- No tiene registros en `conceptos_costo`, por lo que no hay bloqueo por FK.
 
-En el loop de `useDuplicarEmbarque` (líneas 257-262), reemplazar la llamada a `supabase.rpc('generar_expediente')` por usar directamente `embarqueOrigen.expediente`:
+### Acción
+Ejecutar DELETE directo en la base de datos usando la herramienta de inserción/datos:
 
-- **Eliminar** líneas 258-262 (la llamada RPC y el manejo de error)
-- **Cambiar** línea 268 `expediente: expediente as string` → `expediente: embarqueOrigen.expediente`
-- En el push final al array `creados`, usar `embarqueOrigen.expediente` en lugar de `expediente as string`
+```sql
+DELETE FROM proveedores 
+WHERE id = 'c45f3e51-c38d-4faa-a5b5-a5b43398e8b7';
+```
 
-### Cambio en `src/pages/Changelog.tsx`
-
-Entrada v4.15.1 — "Duplicar embarque ahora conserva el mismo expediente del origen"
+No se requieren cambios en código frontend.
 
