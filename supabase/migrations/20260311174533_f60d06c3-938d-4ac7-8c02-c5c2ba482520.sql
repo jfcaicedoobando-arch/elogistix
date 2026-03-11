@@ -1,0 +1,1 @@
+ALTER TABLE public.cotizaciones ADD COLUMN tipo_unidad text;

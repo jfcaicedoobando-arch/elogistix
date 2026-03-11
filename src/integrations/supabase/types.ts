@@ -428,6 +428,7 @@ export type Database = {
           tipo_embarque: string
           tipo_movimiento: string
           tipo_peso: string
+          tipo_unidad: string | null
           updated_at: string
           validez_propuesta: string | null
           valor_seguro_usd: number
@@ -479,6 +480,7 @@ export type Database = {
           tipo_embarque?: string
           tipo_movimiento?: string
           tipo_peso?: string
+          tipo_unidad?: string | null
           updated_at?: string
           validez_propuesta?: string | null
           valor_seguro_usd?: number
@@ -530,6 +532,7 @@ export type Database = {
           tipo_embarque?: string
           tipo_movimiento?: string
           tipo_peso?: string
+          tipo_unidad?: string | null
           updated_at?: string
           validez_propuesta?: string | null
           valor_seguro_usd?: number

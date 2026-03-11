@@ -13,6 +13,13 @@ interface ChangelogEntry {
 
 const changelog: ChangelogEntry[] = [
   {
+    version: "4.42.0",
+    date: "2026-03-11",
+    type: "minor",
+    title: "Campo 'Tipo de Unidad' para modo Terrestre en cotizaciones",
+    description: "Al seleccionar modo Terrestre, se ocultan Peso, Volumen y Piezas y se muestra un campo de texto libre 'Tipo de Unidad' (Ej. Trailer, Caja seca, Plataforma, Rabón).",
+  },
+  {
     version: "4.41.0",
     date: "2026-03-11",
     type: "minor",

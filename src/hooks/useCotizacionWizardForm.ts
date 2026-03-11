@@ -259,6 +259,7 @@ export function useCotizacionWizardForm({ navigate, toast, userEmail, clientes, 
       seguro: v.seguro,
       valor_seguro_usd: v.seguro ? Number(v.valorSeguroUsd) || 0 : 0,
       num_contenedores: v.numContenedores,
+      tipo_unidad: v.modo === 'Terrestre' ? v.tipoUnidad : null,
     };
   }, [form, clientes, userEmail]);
 
