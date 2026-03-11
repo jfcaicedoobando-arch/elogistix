@@ -122,7 +122,7 @@ export default function NuevaCotizacion() {
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <Label>Número de contenedores/Embarques</Label>
+                    <Label>Número de contenedores</Label>
                     <Input
                       type="number" min={1}
                       value={form.watch("numContenedores")}
