@@ -34,6 +34,7 @@ export interface CotizacionFormValues {
   pesoKg: number;
   volumenM3: number;
   piezas: number;
+  tipoUnidad: string;
   // Ruta
   origen: string;
   destino: string;
