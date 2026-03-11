@@ -13,6 +13,13 @@ interface ChangelogEntry {
 
 const changelog: ChangelogEntry[] = [
   {
+    version: "4.45.0",
+    date: "2026-03-11",
+    type: "minor",
+    title: "Sección colapsable Dashboards y página Operaciones",
+    description: "El menú lateral ahora agrupa Dashboard Principal y el nuevo Dashboard de Operaciones en una sección colapsable 'Dashboards'. Se eliminó Reportes del menú y se agregó un separador visual.",
+  },
+  {
     version: "4.44.0",
     date: "2026-03-11",
     type: "minor",

@@ -12,6 +12,7 @@ import RouteLoadingFallback from "./components/RouteLoadingFallback";
 const Login = lazy(() => import("./pages/Login"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 const Dashboard = lazy(() => import("./pages/Dashboard"));
+const Operaciones = lazy(() => import("./pages/Operaciones"));
 const Embarques = lazy(() => import("./pages/Embarques"));
 const EmbarqueDetalle = lazy(() => import("./pages/EmbarqueDetalle"));
 const NuevoEmbarque = lazy(() => import("./pages/NuevoEmbarque"));
@@ -50,6 +51,7 @@ const App = () => (
               }
             >
               <Route path="/" element={<Dashboard />} />
+              <Route path="/operaciones" element={<Operaciones />} />
               <Route path="/embarques" element={<Embarques />} />
               <Route path="/embarques/nuevo" element={<NuevoEmbarque />} />
               <Route path="/embarques/:id" element={<EmbarqueDetalle />} />
