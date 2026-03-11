@@ -233,7 +233,7 @@ export function useCotizacionWizardForm({ navigate, toast, userEmail, clientes, 
   const initialCostosLocales: FilaCostoLocal[] = (initialCostos ?? []).map((c, i) => ({
     _key: `init-${i}`,
     concepto: c.concepto,
-    moneda: c.moneda,
+    moneda: c.moneda as "USD" | "MXN",
     proveedor: c.proveedor,
     cantidad: c.cantidad,
     costo_unitario: c.costo_unitario,
