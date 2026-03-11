@@ -13,6 +13,13 @@ interface ChangelogEntry {
 
 const changelog: ChangelogEntry[] = [
   {
+    version: "4.43.1",
+    date: "2026-03-11",
+    type: "patch",
+    title: "Mercancía general muestra todos los campos sin condición de modo",
+    description: "Tipo de Unidad, Peso, Volumen y Piezas se muestran siempre en la sección de mercancía general, independientemente del modo de transporte.",
+  },
+  {
     version: "4.43.0",
     date: "2026-03-11",
     type: "minor",
