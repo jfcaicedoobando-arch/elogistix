@@ -69,12 +69,22 @@ export function useProveedorMutations() {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.proveedores.all }),
   });
 
+  const deleteProveedorMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from("proveedores").delete().eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.proveedores.all }),
+  });
+
   return {
     addProveedor: addProveedorMutation.mutateAsync,
     updateProveedor: (id: string, data: TablesUpdate<"proveedores">) =>
       updateProveedorMutation.mutateAsync({ id, data }),
+    deleteProveedor: deleteProveedorMutation.mutateAsync,
     isAdding: addProveedorMutation.isPending,
     isUpdating: updateProveedorMutation.isPending,
+    isDeleting: deleteProveedorMutation.isPending,
   };
 }
 
