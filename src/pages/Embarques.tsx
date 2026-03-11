@@ -188,7 +188,13 @@ export default function Embarques() {
                 {clientes.map(c => <SelectItem key={c.id} value={c.id}>{c.nombre.split(' ').slice(0, 3).join(' ')}</SelectItem>)}
               </SelectContent>
             </Select>
-          </div>
+            <Select value={filterOperador} onValueChange={(v) => { setFilterOperador(v); setPage(0); }}>
+              <SelectTrigger className="w-[180px]"><SelectValue placeholder="Operador" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="todos">Todos los operadores</SelectItem>
+                {operadoresUnicos.map(op => <SelectItem key={op} value={op}>{op}</SelectItem>)}
+              </SelectContent>
+            </Select>
         </CardContent>
       </Card>
 
