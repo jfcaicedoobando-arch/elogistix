@@ -13,6 +13,13 @@ interface ChangelogEntry {
 
 const changelog: ChangelogEntry[] = [
   {
+    version: "4.46.0",
+    date: "2026-03-11",
+    type: "minor",
+    title: "Dashboard de Operaciones completo",
+    description: "Nuevo dashboard con KPIs globales, ranking de operadores por profit, tabla expandible con clientes y mini gráficas, tendencia de cargas creadas vs llegadas con filtro por operador, y barra de balance.",
+  },
+  {
     version: "4.45.0",
     date: "2026-03-11",
     type: "minor",
