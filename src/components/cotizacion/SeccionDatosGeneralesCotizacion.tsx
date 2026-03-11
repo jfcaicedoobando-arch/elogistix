@@ -6,7 +6,7 @@ import type { CotizacionFormValues } from "@/hooks/useCotizacionWizardForm";
 
 const MODOS = ['Marítimo', 'Aéreo', 'Terrestre', 'Multimodal'];
 const TIPOS = ['Importación', 'Exportación', 'Nacional', 'Cross Trade', 'Intra USA'];
-const INCOTERMS = ['EXW', 'FOB', 'CIF', 'DAP', 'DDP', 'FCA', 'CFR', 'CPT', 'CIP', 'DAT'];
+const INCOTERMS = ['EXW', 'FOB', 'CIF', 'DAP', 'DDP', 'FCA', 'CFR', 'CPT', 'CIP', 'DAT', 'N/A'];
 
 export default function SeccionDatosGeneralesCotizacion() {
   const { watch, setValue } = useFormContext<CotizacionFormValues>();
