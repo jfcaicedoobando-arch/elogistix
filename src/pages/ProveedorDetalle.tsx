@@ -83,6 +83,22 @@ export default function ProveedorDetalle() {
     }
   };
 
+  const handleDelete = async () => {
+    try {
+      await deleteProveedor(proveedor.id);
+      registrarActividad.mutate({
+        accion: 'eliminar',
+        modulo: 'proveedores',
+        entidad_id: proveedor.id,
+        entidad_nombre: proveedor.nombre,
+      });
+      toast.success("Proveedor eliminado");
+      navigate("/proveedores");
+    } catch {
+      toast.error("Error al eliminar proveedor");
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
