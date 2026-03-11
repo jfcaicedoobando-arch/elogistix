@@ -5,7 +5,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import type { CotizacionFormValues } from "@/hooks/useCotizacionWizardForm";
 
 const MODOS = ['Marítimo', 'Aéreo', 'Terrestre', 'Multimodal'];
-const TIPOS = ['Importación', 'Exportación', 'Nacional', 'Cross Trade'];
+const TIPOS = ['Importación', 'Exportación', 'Nacional', 'Cross Trade', 'Intra USA'];
 const INCOTERMS = ['EXW', 'FOB', 'CIF', 'DAP', 'DDP', 'FCA', 'CFR', 'CPT', 'CIP', 'DAT'];
 
 export default function SeccionDatosGeneralesCotizacion() {
