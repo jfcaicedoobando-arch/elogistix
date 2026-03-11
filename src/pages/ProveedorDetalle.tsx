@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
-import { ArrowLeft, Truck, Pencil } from "lucide-react";
+import { ArrowLeft, Truck, Pencil, Trash2 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -8,12 +8,17 @@ import { Skeleton } from "@/components/ui/skeleton";
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { useProveedor, useProveedorMutations } from "@/hooks/useProveedores";
 import { formatCurrency } from "@/lib/formatters";
 import { getEstadoColor } from "@/lib/helpers";
 import EditarProveedorDialog from "@/components/EditarProveedorDialog";
 import { toast } from "sonner";
 import { usePermissions } from "@/hooks/usePermissions";
+import { useRegistrarActividad } from "@/hooks/useBitacora";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
 
@@ -21,9 +26,11 @@ export default function ProveedorDetalle() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { data: proveedor, isLoading } = useProveedor(id);
-  const { updateProveedor } = useProveedorMutations();
+  const { updateProveedor, deleteProveedor, isDeleting } = useProveedorMutations();
   const [editOpen, setEditOpen] = useState(false);
-  const { canEdit } = usePermissions();
+  const [deleteStep, setDeleteStep] = useState<0 | 1 | 2>(0);
+  const { canEdit, isAdmin } = usePermissions();
+  const registrarActividad = useRegistrarActividad();
 
   // Fetch operaciones (conceptos_costo) for this provider with embarque info
   const { data: operaciones = [] } = useQuery({
@@ -76,6 +83,22 @@ export default function ProveedorDetalle() {
     }
   };
 
+  const handleDelete = async () => {
+    try {
+      await deleteProveedor(proveedor.id);
+      registrarActividad.mutate({
+        accion: 'eliminar',
+        modulo: 'proveedores',
+        entidad_id: proveedor.id,
+        entidad_nombre: proveedor.nombre,
+      });
+      toast.success("Proveedor eliminado");
+      navigate("/proveedores");
+    } catch {
+      toast.error("Error al eliminar proveedor");
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -90,9 +113,16 @@ export default function ProveedorDetalle() {
           </div>
         </div>
         {canEdit && (
-          <Button variant="outline" onClick={() => setEditOpen(true)}>
-            <Pencil className="mr-2 h-4 w-4" /> Editar
-          </Button>
+          <div className="flex gap-2">
+            {isAdmin && (
+              <Button variant="destructive" onClick={() => setDeleteStep(1)} disabled={isDeleting}>
+                <Trash2 className="mr-2 h-4 w-4" /> Eliminar
+              </Button>
+            )}
+            <Button variant="outline" onClick={() => setEditOpen(true)}>
+              <Pencil className="mr-2 h-4 w-4" /> Editar
+            </Button>
+          </div>
         )}
       </div>
 
@@ -176,6 +206,41 @@ export default function ProveedorDetalle() {
         onOpenChange={setEditOpen}
         onSave={handleUpdate}
       />
+
+      {/* Doble confirmación de eliminación */}
+      <AlertDialog open={deleteStep === 1} onOpenChange={(open) => !open && setDeleteStep(0)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>¿Eliminar proveedor?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Estás a punto de eliminar a <strong>{proveedor.nombre}</strong>. Esta acción no se puede deshacer.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={() => setDeleteStep(2)} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              Continuar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog open={deleteStep === 2} onOpenChange={(open) => !open && setDeleteStep(0)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirmación final</AlertDialogTitle>
+            <AlertDialogDescription>
+              ¿Realmente deseas eliminar permanentemente a <strong>{proveedor.nombre}</strong>?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              Eliminar definitivamente
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

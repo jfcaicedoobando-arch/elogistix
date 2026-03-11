@@ -13,6 +13,13 @@ interface ChangelogEntry {
 
 const changelog: ChangelogEntry[] = [
   {
+    version: "4.44.0",
+    date: "2026-03-11",
+    type: "minor",
+    title: "Eliminar proveedores (solo administradores)",
+    description: "Los administradores pueden eliminar proveedores desde su detalle, con doble confirmación de seguridad y registro en bitácora.",
+  },
+  {
     version: "4.43.1",
     date: "2026-03-11",
     type: "patch",
