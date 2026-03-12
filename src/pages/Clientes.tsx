@@ -26,9 +26,10 @@ const emptyCliente = {
 };
 
 const DOCS_OBLIGATORIOS = [
-  'CIF', 'Opinión fiscal', 'Acta constitutiva', 'INE RL', 'Poder notarial',
-  'Comprobante de domicilio', 'Datos bancarios', 'Opinión de cumplimiento IMSS/Infonavit',
-  'Contrato de servicios con Elogistix', 'Estados financieros último corte',
+  'Constancia de Situación Fiscal (CSF)', 'CIF', 'Opinión fiscal', 'Acta constitutiva',
+  'INE RL', 'Poder notarial', 'Comprobante de domicilio', 'Datos bancarios',
+  'Opinión de cumplimiento IMSS/Infonavit', 'Contrato de servicios con Elogistix',
+  'Estados financieros último corte',
 ];
 
 type ClienteRow = { id: string; nombre: string; rfc: string; ciudad: string; estado: string; contacto: string; telefono: string };
