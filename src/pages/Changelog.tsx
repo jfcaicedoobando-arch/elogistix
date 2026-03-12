@@ -13,6 +13,13 @@ interface ChangelogEntry {
 
 const changelog: ChangelogEntry[] = [
   {
+    version: "5.1.0",
+    date: "2026-03-12",
+    type: "minor",
+    title: "Tasa de IVA configurable desde base de datos",
+    description: "TASA_IVA ahora se lee desde la tabla de configuración (facturacion.tasa_iva) mediante el hook useTasaIVA. Todos los componentes, hooks y el generador de PDF usan la tasa configurable en lugar del valor hardcodeado 0.16.",
+  },
+  {
     version: "5.0.5",
     date: "2026-03-12",
     type: "patch",
