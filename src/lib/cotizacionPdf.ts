@@ -99,7 +99,7 @@ export function generarPdfCotizacion(cotizacion: CotizacionRow, tasaIva: number 
     if (conceptosUSD.length === 0) return '';
     const hayIvaUSD = conceptosUSD.some(c => c.aplica_iva);
     const headerCols = hayIvaUSD
-      ? '<th>Descripción</th><th>Unidad</th><th class="right">Cantidad</th><th class="right">Precio Unitario</th><th class="right">Subtotal</th><th class="right">IVA (16%)</th><th class="right">Total</th>'
+      ? `<th>Descripción</th><th>Unidad</th><th class="right">Cantidad</th><th class="right">Precio Unitario</th><th class="right">Subtotal</th><th class="right">IVA (${tasaIva * 100}%)</th><th class="right">Total</th>`
       : '<th>Descripción</th><th>Unidad</th><th class="right">Cantidad</th><th class="right">Precio Unitario</th><th class="right">Total</th>';
     const rows = conceptosUSD.map(c => {
       const unidad = c.unidad_medida || '—';
