@@ -1,1 +1,4 @@
 project_id = "eorqadkulqtneqjbsblk"
+
+[functions.parse-csf]
+verify_jwt = false
