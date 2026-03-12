@@ -29,7 +29,6 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
-import { Collapsible, CollapsibleTrigger, CollapsibleContent } from "@/components/ui/collapsible";
 import { Separator } from "@/components/ui/separator";
 
 const dashboardItems = [
