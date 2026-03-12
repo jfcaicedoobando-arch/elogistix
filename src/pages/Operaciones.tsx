@@ -317,7 +317,7 @@ export default function Operaciones() {
                 <Line
                   type="monotone"
                   dataKey="creadas"
-                  name="Creadas"
+                  name="Por ETD"
                   stroke="#3b82f6"
                   strokeWidth={2}
                   dot={{ r: 4, fill: "#3b82f6" }}
