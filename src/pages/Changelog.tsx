@@ -13,6 +13,13 @@ interface ChangelogEntry {
 
 const changelog: ChangelogEntry[] = [
   {
+    version: "5.0.3",
+    date: "2026-03-12",
+    type: "minor",
+    title: "Sidebar reorganizado en secciones lógicas",
+    description: "El menú lateral ahora agrupa los items en 5 secciones con labels y separadores: Dashboards, Gestión, Directorio, Sistema y Administración. Mejora la navegabilidad y organización visual.",
+  },
+  {
     version: "5.0.2",
     date: "2026-03-12",
     type: "minor",
