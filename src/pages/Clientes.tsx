@@ -116,6 +116,7 @@ export default function Clientes() {
     setStep(1);
     setDocumentos([]);
     setModoAlta("manual");
+    setCsfFile(null);
     setDialogOpen(false);
   };
 
