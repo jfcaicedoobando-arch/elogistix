@@ -72,36 +72,38 @@ function KpiCard({
   );
 }
 
-// ─── Semáforo dots ───────────────────────────────────────
-function SemaforoDots({ criticos, enPuerto, porArribar }: { criticos: number; enPuerto: number; porArribar: number }) {
-  const items = [
-    { count: criticos, ...RIESGO_CONFIG.critico },
-    { count: enPuerto, ...RIESGO_CONFIG.en_puerto },
-    { count: porArribar, ...RIESGO_CONFIG.por_arribar },
-  ];
+// ─── Risk indicator chips ────────────────────────────────
+function RiesgoIndicador({ criticos, enPuerto, porArribar }: { criticos: number; enPuerto: number; porArribar: number }) {
   const total = criticos + enPuerto + porArribar;
-  if (total === 0) return <span className="text-xs text-emerald-500 font-medium">✓</span>;
+  if (total === 0) {
+    return (
+      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium bg-emerald-100 text-emerald-700">
+        ✓ Sin riesgo
+      </span>
+    );
+  }
 
   return (
-    <TooltipProvider>
-      <div className="flex items-center gap-1.5">
-        {items.map((item) =>
-          item.count > 0 ? (
-            <Tooltip key={item.label}>
-              <TooltipTrigger asChild>
-                <div className="flex items-center gap-0.5">
-                  <div className={`w-2.5 h-2.5 rounded-full ${item.dot}`} />
-                  <span className={`text-[11px] font-semibold ${item.color}`}>{item.count}</span>
-                </div>
-              </TooltipTrigger>
-              <TooltipContent side="top" className="text-xs">
-                {item.count} {item.label.toLowerCase()}
-              </TooltipContent>
-            </Tooltip>
-          ) : null
-        )}
-      </div>
-    </TooltipProvider>
+    <div className="flex flex-wrap items-center gap-1">
+      {criticos > 0 && (
+        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold bg-red-600 text-white">
+          <AlertTriangle className="h-3 w-3" />
+          {criticos} crítica{criticos > 1 ? "s" : ""}
+        </span>
+      )}
+      {enPuerto > 0 && (
+        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold border border-amber-400 bg-amber-50 text-amber-700">
+          <Anchor className="h-3 w-3" />
+          {enPuerto} en puerto
+        </span>
+      )}
+      {porArribar > 0 && (
+        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold border border-sky-300 bg-sky-50 text-sky-700">
+          <Ship className="h-3 w-3" />
+          {porArribar} por arribar
+        </span>
+      )}
+    </div>
   );
 }
 
