@@ -125,14 +125,14 @@ export function generarPdfCotizacion(cotizacion: CotizacionRow, tasaIva: number 
     if (conceptosMXN.length === 0) return '';
     const rows = conceptosMXN.map(c => {
       const sub = c.cantidad * c.precio_unitario;
-      const iva = calcularIVA(sub);
+      const iva = calcularIVA(sub, tasaIva);
       const unidad = c.unidad_medida || '—';
       return `<tr><td>${c.descripcion}</td><td>${unidad}</td><td class="right">${c.cantidad}</td><td class="right">${formatCurrencyPdf(c.precio_unitario, 'MXN')}</td><td class="right">${formatCurrencyPdf(sub, 'MXN')}</td><td class="right">${formatCurrencyPdf(iva, 'MXN')}</td><td class="right">${formatCurrencyPdf(sub + iva, 'MXN')}</td></tr>`;
     }).join('');
     return `
       <h4>Conceptos en MXN + IVA</h4>
       <table>
-        <thead><tr><th>Descripción</th><th>Unidad</th><th class="right">Cantidad</th><th class="right">P. Unitario</th><th class="right">Subtotal</th><th class="right">IVA (16%)</th><th class="right">Total</th></tr></thead>
+        <thead><tr><th>Descripción</th><th>Unidad</th><th class="right">Cantidad</th><th class="right">P. Unitario</th><th class="right">Subtotal</th><th class="right">IVA (${tasaIva * 100}%)</th><th class="right">Total</th></tr></thead>
         <tbody>${rows}</tbody>
       </table>
       <p class="totals">Subtotal MXN: ${formatCurrencyPdf(subtotalMXN, 'MXN')} &nbsp;|&nbsp; IVA: ${formatCurrencyPdf(ivaMXN, 'MXN')}</p>
