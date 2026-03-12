@@ -1,5 +1,6 @@
 import { useState, useMemo } from "react";
-import { calcularIVA, TASA_IVA } from "@/lib/financialUtils";
+import { calcularIVA } from "@/lib/financialUtils";
+import { useTasaIVA } from "@/hooks/useTasaIVA";
 import SeccionCostosInternosPLUnificado from "@/components/cotizacion/SeccionCostosInternosPLUnificado";
 import TablaConceptosGenerico from "@/components/cotizacion/TablaConceptosGenerico";
 import ResumenTotalesCotizacion from "@/components/cotizacion/ResumenTotalesCotizacion";
@@ -69,7 +70,8 @@ export default function CotizacionDetalle() {
   // Totales calculados
   const totalUSD = useMemo(() => conceptosVentaUSD.reduce((s, c) => s + c.total, 0), [conceptosVentaUSD]);
   const subtotalMXN = useMemo(() => conceptosVentaMXN.reduce((s, c) => s + c.cantidad * c.precio_unitario, 0), [conceptosVentaMXN]);
-  const ivaMXN = calcularIVA(subtotalMXN);
+  const tasaIva = useTasaIVA();
+  const ivaMXN = calcularIVA(subtotalMXN, tasaIva);
   const totalMXN = subtotalMXN + ivaMXN;
 
   if (isLoading) {
@@ -139,7 +141,7 @@ export default function CotizacionDetalle() {
           <p className="text-sm text-muted-foreground">{nombreDestinatario}</p>
         </div>
         <Badge className={getEstadoColor(cotizacion.estado)}>{cotizacion.estado}</Badge>
-        <Button variant="outline" size="sm" onClick={() => generarPdfCotizacion(cotizacion)}>
+        <Button variant="outline" size="sm" onClick={() => generarPdfCotizacion(cotizacion, tasaIva)}>
           <FileDown className="h-4 w-4 mr-1" /> Exportar PDF
         </Button>
       </div>

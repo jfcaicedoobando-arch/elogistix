@@ -8,6 +8,7 @@ import { Plus, Trash2 } from "lucide-react";
 import type { ConceptoVentaCotizacion } from "@/hooks/useCotizaciones";
 import { formatCurrency } from "@/lib/formatters";
 import { calcularIVA } from "@/lib/financialUtils";
+import { useTasaIVA } from "@/hooks/useTasaIVA";
 import { CONCEPTOS_COSTO_USD, CONCEPTOS_COSTO_MXN, CONCEPTOS_CON_IVA_USD } from "@/data/cotizacionConstants";
 
 const UNIDADES_MEDIDA = ['BL', 'W/M', 'Documento', 'Contenedor', 'Kilo', 'Embarque'];
@@ -51,6 +52,7 @@ export default function SeccionConceptosVentaCotizacion({
   eliminarConceptoUSD, eliminarConceptoMXN,
   totalUSD, subtotalMXN, ivaMXN, totalMXN,
 }: Props) {
+  const tasaIva = useTasaIVA();
   const hayIvaUSD = conceptosUSD.some(c => c.aplica_iva);
   const subtotalSinIvaUSD = conceptosUSD.reduce((s, c) => s + c.cantidad * c.precio_unitario, 0);
   const ivaUSD = totalUSD - subtotalSinIvaUSD;
@@ -193,7 +195,7 @@ export default function SeccionConceptosVentaCotizacion({
         <CardContent className="space-y-3">
           {conceptosMXN.map((c, i) => {
             const subtotal = c.cantidad * c.precio_unitario;
-            const iva = calcularIVA(subtotal);
+            const iva = calcularIVA(subtotal, tasaIva);
             return (
               <div key={i} className="grid grid-cols-12 gap-2 items-end">
                 <div className="col-span-2">

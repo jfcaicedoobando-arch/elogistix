@@ -7,6 +7,7 @@ import type { FilaCostoLocal } from "@/components/cotizacion/SeccionCostosIntern
 import { CONCEPTOS_CON_IVA_USD } from "@/data/cotizacionConstants";
 import { calcularTotalesPL, type TotalesPL } from "@/lib/profitUtils";
 import { calcularIVA, calcularTotalConIVA } from "@/lib/financialUtils";
+import { useTasaIVA } from "@/hooks/useTasaIVA";
 import { uploadFile } from "@/lib/storage";
 
 // ────────── Form values type ──────────
@@ -216,6 +217,7 @@ function buildDefaultValues(d?: InitialData): CotizacionFormValues {
 }
 
 export function useCotizacionWizardForm({ navigate, toast, userEmail, clientes, mutations, initialData, initialCostos }: HookDeps) {
+  const tasaIva = useTasaIVA();
   const { crearCotizacion, updateCotizacion, upsertCostos, registrarActividad } = mutations;
   const isEditMode = !!initialData;
 
@@ -280,10 +282,10 @@ export function useCotizacionWizardForm({ navigate, toast, userEmail, clientes, 
         copia[index].aplica_iva = false;
       }
       const sub = copia[index].cantidad * copia[index].precio_unitario;
-      copia[index].total = moneda === "MXN" ? calcularTotalConIVA(sub) : (copia[index].aplica_iva ? calcularTotalConIVA(sub) : sub);
+      copia[index].total = moneda === "MXN" ? calcularTotalConIVA(sub, tasaIva) : (copia[index].aplica_iva ? calcularTotalConIVA(sub, tasaIva) : sub);
       return copia;
     });
-  }, []);
+  }, [tasaIva]);
 
   const agregarConcepto = useCallback((moneda: "USD" | "MXN") => {
     const setter = moneda === "USD" ? setConceptosUSD : setConceptosMXN;
@@ -432,7 +434,7 @@ export function useCotizacionWizardForm({ navigate, toast, userEmail, clientes, 
               return {
                 descripcion: c.concepto, unidad_medida: c.unidad_medida, cantidad: c.cantidad,
                 precio_unitario: c.precio_venta, moneda: "USD" as const, aplica_iva: tieneIva,
-                total: tieneIva ? calcularTotalConIVA(c.cantidad * c.precio_venta) : c.cantidad * c.precio_venta,
+                total: tieneIva ? calcularTotalConIVA(c.cantidad * c.precio_venta, tasaIva) : c.cantidad * c.precio_venta,
               };
             });
           const mxnFromCostos = costosInternos
@@ -440,7 +442,7 @@ export function useCotizacionWizardForm({ navigate, toast, userEmail, clientes, 
             .map(c => ({
               descripcion: c.concepto, unidad_medida: c.unidad_medida, cantidad: c.cantidad,
               precio_unitario: c.precio_venta, moneda: "MXN" as const, aplica_iva: true,
-              total: calcularTotalConIVA(c.cantidad * c.precio_venta),
+              total: calcularTotalConIVA(c.cantidad * c.precio_venta, tasaIva),
             }));
           if (usdFromCostos.length > 0) setConceptosUSD(usdFromCostos);
           if (mxnFromCostos.length > 0) setConceptosMXN(mxnFromCostos);
