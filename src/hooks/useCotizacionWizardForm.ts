@@ -282,7 +282,7 @@ export function useCotizacionWizardForm({ navigate, toast, userEmail, clientes, 
         copia[index].aplica_iva = false;
       }
       const sub = copia[index].cantidad * copia[index].precio_unitario;
-      copia[index].total = moneda === "MXN" ? calcularTotalConIVA(sub) : (copia[index].aplica_iva ? calcularTotalConIVA(sub) : sub);
+      copia[index].total = moneda === "MXN" ? calcularTotalConIVA(sub, tasaIva) : (copia[index].aplica_iva ? calcularTotalConIVA(sub, tasaIva) : sub);
       return copia;
     });
   }, []);
