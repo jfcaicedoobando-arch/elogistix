@@ -8,6 +8,7 @@ import { Plus, Trash2 } from "lucide-react";
 import type { ConceptoVentaCotizacion } from "@/hooks/useCotizaciones";
 import { formatCurrency } from "@/lib/formatters";
 import { calcularIVA } from "@/lib/financialUtils";
+import { useTasaIVA } from "@/hooks/useTasaIVA";
 import { CONCEPTOS_COSTO_USD, CONCEPTOS_COSTO_MXN, CONCEPTOS_CON_IVA_USD } from "@/data/cotizacionConstants";
 
 const UNIDADES_MEDIDA = ['BL', 'W/M', 'Documento', 'Contenedor', 'Kilo', 'Embarque'];
