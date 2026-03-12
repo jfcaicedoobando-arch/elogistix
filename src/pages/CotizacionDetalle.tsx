@@ -1,4 +1,5 @@
 import { useState, useMemo } from "react";
+import { calcularIVA, TASA_IVA } from "@/lib/financialUtils";
 import SeccionCostosInternosPLUnificado from "@/components/cotizacion/SeccionCostosInternosPLUnificado";
 import TablaConceptosGenerico from "@/components/cotizacion/TablaConceptosGenerico";
 import ResumenTotalesCotizacion from "@/components/cotizacion/ResumenTotalesCotizacion";
@@ -68,7 +69,7 @@ export default function CotizacionDetalle() {
   // Totales calculados
   const totalUSD = useMemo(() => conceptosVentaUSD.reduce((s, c) => s + c.total, 0), [conceptosVentaUSD]);
   const subtotalMXN = useMemo(() => conceptosVentaMXN.reduce((s, c) => s + c.cantidad * c.precio_unitario, 0), [conceptosVentaMXN]);
-  const ivaMXN = subtotalMXN * 0.16;
+  const ivaMXN = calcularIVA(subtotalMXN);
   const totalMXN = subtotalMXN + ivaMXN;
 
   if (isLoading) {

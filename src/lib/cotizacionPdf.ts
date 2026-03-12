@@ -1,4 +1,5 @@
 import type { CotizacionRow, DimensionLCL, DimensionAerea, ConceptoVentaCotizacion } from '@/hooks/useCotizaciones';
+import { calcularIVA } from '@/lib/financialUtils';
 
 const formatCurrencyPdf = (amount: number, currency: string = 'MXN'): string => {
   return new Intl.NumberFormat('es-MX', { style: 'currency', currency, minimumFractionDigits: 2 }).format(amount);
@@ -23,10 +24,10 @@ export function generarPdfCotizacion(cotizacion: CotizacionRow) {
   const conceptosUSD = cotizacion.conceptos_venta.filter(c => c.moneda === 'USD');
   const conceptosMXN = cotizacion.conceptos_venta.filter(c => c.moneda === 'MXN');
   const subtotalUSD = conceptosUSD.reduce((s, c) => s + c.cantidad * c.precio_unitario, 0);
-  const ivaUSD = conceptosUSD.reduce((s, c) => c.aplica_iva ? s + c.cantidad * c.precio_unitario * 0.16 : s, 0);
+  const ivaUSD = conceptosUSD.reduce((s, c) => c.aplica_iva ? s + calcularIVA(c.cantidad * c.precio_unitario) : s, 0);
   const totalUSD = subtotalUSD + ivaUSD;
   const subtotalMXN = conceptosMXN.reduce((s, c) => s + c.cantidad * c.precio_unitario, 0);
-  const ivaMXN = subtotalMXN * 0.16;
+  const ivaMXN = calcularIVA(subtotalMXN);
   const totalMXN = subtotalMXN + ivaMXN;
 
   // Build general data rows (no Moneda)
@@ -104,7 +105,7 @@ export function generarPdfCotizacion(cotizacion: CotizacionRow) {
       const unidad = c.unidad_medida || '—';
       const sub = c.cantidad * c.precio_unitario;
       if (hayIvaUSD) {
-        const iva = c.aplica_iva ? sub * 0.16 : 0;
+        const iva = c.aplica_iva ? calcularIVA(sub) : 0;
         const total = sub + iva;
         const desc = c.aplica_iva ? `${c.descripcion} <span style='color:#999;font-size:11px'>(+IVA 16%)</span>` : c.descripcion;
         return `<tr><td>${desc}</td><td>${unidad}</td><td class="right">${c.cantidad}</td><td class="right">${formatCurrencyPdf(c.precio_unitario, 'USD')}</td><td class="right">${formatCurrencyPdf(sub, 'USD')}</td><td class="right">${c.aplica_iva ? formatCurrencyPdf(iva, 'USD') : '—'}</td><td class="right">${formatCurrencyPdf(total, 'USD')}</td></tr>`;
@@ -124,7 +125,7 @@ export function generarPdfCotizacion(cotizacion: CotizacionRow) {
     if (conceptosMXN.length === 0) return '';
     const rows = conceptosMXN.map(c => {
       const sub = c.cantidad * c.precio_unitario;
-      const iva = sub * 0.16;
+      const iva = calcularIVA(sub);
       const unidad = c.unidad_medida || '—';
       return `<tr><td>${c.descripcion}</td><td>${unidad}</td><td class="right">${c.cantidad}</td><td class="right">${formatCurrencyPdf(c.precio_unitario, 'MXN')}</td><td class="right">${formatCurrencyPdf(sub, 'MXN')}</td><td class="right">${formatCurrencyPdf(iva, 'MXN')}</td><td class="right">${formatCurrencyPdf(sub + iva, 'MXN')}</td></tr>`;
     }).join('');

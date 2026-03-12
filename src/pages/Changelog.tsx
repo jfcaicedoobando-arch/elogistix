@@ -13,6 +13,13 @@ interface ChangelogEntry {
 
 const changelog: ChangelogEntry[] = [
   {
+    version: "5.0.5",
+    date: "2026-03-12",
+    type: "patch",
+    title: "Centralización completa de cálculos IVA con financialUtils",
+    description: "Se reemplazaron las 6 instancias restantes de * 0.16 hardcodeado en CotizacionDetalle, SeccionConceptosVentaCotizacion y cotizacionPdf por calcularIVA() de financialUtils.ts.",
+  },
+  {
     version: "5.0.4",
     date: "2026-03-12",
     type: "patch",
