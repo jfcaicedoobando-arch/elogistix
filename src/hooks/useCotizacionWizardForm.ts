@@ -285,7 +285,7 @@ export function useCotizacionWizardForm({ navigate, toast, userEmail, clientes, 
       copia[index].total = moneda === "MXN" ? calcularTotalConIVA(sub, tasaIva) : (copia[index].aplica_iva ? calcularTotalConIVA(sub, tasaIva) : sub);
       return copia;
     });
-  }, []);
+  }, [tasaIva]);
 
   const agregarConcepto = useCallback((moneda: "USD" | "MXN") => {
     const setter = moneda === "USD" ? setConceptosUSD : setConceptosMXN;
