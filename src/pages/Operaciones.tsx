@@ -341,7 +341,7 @@ export default function Operaciones() {
           {/* Barra de balance */}
           <Separator className="my-4" />
           <div className="flex items-center gap-3">
-            <span className="text-xs text-muted-foreground whitespace-nowrap">Balance creadas/llegadas</span>
+            <span className="text-xs text-muted-foreground whitespace-nowrap">Balance ETD/llegadas</span>
             <Progress
               value={Math.min(balancePct, 100)}
               className={`h-2 flex-1 ${balancePct >= 100 ? "[&>div]:bg-emerald-500" : "[&>div]:bg-amber-500"}`}

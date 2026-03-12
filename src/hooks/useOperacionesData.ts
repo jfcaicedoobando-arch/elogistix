@@ -187,9 +187,9 @@ export function useOperacionesData(periodo: PeriodoFiltro = "mes") {
         if (dias > DIAS_LIBRES_DEFAULT) d.demoras++;
       }
 
-      // Histórico creados
+      // Histórico por ETD
       meses6.forEach((m) => {
-        if (isWithinInterval(createdAt, { start: m.inicio, end: m.fin })) {
+        if (isWithinInterval(fechaOperacion, { start: m.inicio, end: m.fin })) {
           d.creadosPorMes[m.label]++;
         }
       });
