@@ -52,6 +52,7 @@ export default function SeccionConceptosVentaCotizacion({
   eliminarConceptoUSD, eliminarConceptoMXN,
   totalUSD, subtotalMXN, ivaMXN, totalMXN,
 }: Props) {
+  const tasaIva = useTasaIVA();
   const hayIvaUSD = conceptosUSD.some(c => c.aplica_iva);
   const subtotalSinIvaUSD = conceptosUSD.reduce((s, c) => s + c.cantidad * c.precio_unitario, 0);
   const ivaUSD = totalUSD - subtotalSinIvaUSD;
