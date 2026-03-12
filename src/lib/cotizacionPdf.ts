@@ -1,5 +1,5 @@
 import type { CotizacionRow, DimensionLCL, DimensionAerea, ConceptoVentaCotizacion } from '@/hooks/useCotizaciones';
-import { calcularIVA } from '@/lib/financialUtils';
+import { calcularIVA, TASA_IVA } from '@/lib/financialUtils';
 
 const formatCurrencyPdf = (amount: number, currency: string = 'MXN'): string => {
   return new Intl.NumberFormat('es-MX', { style: 'currency', currency, minimumFractionDigits: 2 }).format(amount);
