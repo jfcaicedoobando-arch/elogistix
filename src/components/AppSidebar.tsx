@@ -11,7 +11,6 @@ import {
   LogOut,
   History,
   Settings,
-  ChevronDown,
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import elogistixLogo from "@/assets/elogistix-logo.jpg";
