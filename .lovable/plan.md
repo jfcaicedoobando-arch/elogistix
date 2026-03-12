@@ -1,16 +1,35 @@
 
 
-## Plan: Usar expediente del origen al duplicar
+## Plan: Cambiar "Creadas" a ETD en la gráfica de tendencia
 
-### Cambio único en `src/hooks/useEmbarques.ts`
+### Cambios en `src/hooks/useOperacionesData.ts`
 
-En el loop de `useDuplicarEmbarque` (líneas 257-262), reemplazar la llamada a `supabase.rpc('generar_expediente')` por usar directamente `embarqueOrigen.expediente`:
+**Líneas 170-174** — Cambiar la fecha usada para "esteMes" de `created_at` a `etd ?? created_at`:
+```typescript
+const fechaOperacion = e.etd ? new Date(e.etd + "T00:00:00") : new Date(e.created_at);
+if (isWithinInterval(fechaOperacion, { start: inicioMes, end: finMes })) {
+  d.esteMes++;
+}
+```
 
-- **Eliminar** líneas 258-262 (la llamada RPC y el manejo de error)
-- **Cambiar** línea 268 `expediente: expediente as string` → `expediente: embarqueOrigen.expediente`
-- En el push final al array `creados`, usar `embarqueOrigen.expediente` en lugar de `expediente as string`
+**Líneas 190-195** — Cambiar histórico de creados para usar ETD como fecha:
+```typescript
+// Histórico por ETD
+meses6.forEach((m) => {
+  if (isWithinInterval(fechaOperacion, { start: m.inicio, end: m.fin })) {
+    d.creadosPorMes[m.label]++;
+  }
+});
+```
 
-### Cambio en `src/pages/Changelog.tsx`
+Nota: la variable `fechaOperacion` se calcula una sola vez arriba y se reutiliza en ambos bloques.
 
-Entrada v4.15.1 — "Duplicar embarque ahora conserva el mismo expediente del origen"
+### Cambios en `src/pages/Operaciones.tsx`
+
+Renombrar etiquetas en 3 lugares:
+1. **Línea 143**: KPI card `"Creadas este mes"` → `"ETD este mes"`
+2. **Línea 295**: Mini KPI en tendencia `"Creadas este mes"` → `"ETD este mes"`
+3. **Línea 320**: `name="Creadas"` → `name="Por ETD"` en el Line del chart
+4. **Línea 229**: `"Cargas creadas (6 meses)"` → `"Cargas por ETD (6 meses)"`
+5. **Línea 344**: `"Balance creadas/llegadas"` → `"Balance ETD/llegadas"`
 
