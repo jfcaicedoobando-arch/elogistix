@@ -1,16 +1,13 @@
 
 
-## Plan: Usar expediente del origen al duplicar
+## Plan: Quitar el cuadro "Top del mes"
 
-### Cambio único en `src/hooks/useEmbarques.ts`
+Eliminar la card oscura "Top del mes" (líneas 384-409) y hacer que la tabla de operadores ocupe todo el ancho.
 
-En el loop de `useDuplicarEmbarque` (líneas 257-262), reemplazar la llamada a `supabase.rpc('generar_expediente')` por usar directamente `embarqueOrigen.expediente`:
+### Cambios en `src/pages/Operaciones.tsx`
 
-- **Eliminar** líneas 258-262 (la llamada RPC y el manejo de error)
-- **Cambiar** línea 268 `expediente: expediente as string` → `expediente: embarqueOrigen.expediente`
-- En el push final al array `creados`, usar `embarqueOrigen.expediente` en lugar de `expediente as string`
-
-### Cambio en `src/pages/Changelog.tsx`
-
-Entrada v4.15.1 — "Duplicar embarque ahora conserva el mismo expediente del origen"
+1. **Línea 281**: Cambiar el grid de `xl:grid-cols-4` a solo un contenedor sin grid (ya no hay sidebar).
+2. **Línea 282**: Quitar `xl:col-span-3` de la card de ranking.
+3. **Líneas 384-409**: Eliminar completamente la card "Top del mes".
+4. Eliminar la variable `topOperador` si ya no se usa en ningún otro lugar.
 
