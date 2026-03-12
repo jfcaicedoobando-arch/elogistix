@@ -13,6 +13,13 @@ interface ChangelogEntry {
 
 const changelog: ChangelogEntry[] = [
   {
+    version: "5.2.0",
+    date: "2026-03-12",
+    type: "minor",
+    title: "Alta de clientes vía CSF (Constancia de Situación Fiscal)",
+    description: "Al crear un nuevo cliente ahora se puede elegir entre llenar los datos manualmente o subir un PDF de CSF del SAT. El sistema extrae automáticamente Razón Social, RFC, CP, dirección, ciudad y estado mediante AI, pre-llenando el formulario para revisión.",
+  },
+  {
     version: "5.1.0",
     date: "2026-03-12",
     type: "minor",
