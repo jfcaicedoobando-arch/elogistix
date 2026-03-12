@@ -280,7 +280,7 @@ export function useCotizacionWizardForm({ navigate, toast, userEmail, clientes, 
         copia[index].aplica_iva = false;
       }
       const sub = copia[index].cantidad * copia[index].precio_unitario;
-      copia[index].total = moneda === "MXN" ? sub * 1.16 : sub * (copia[index].aplica_iva ? 1.16 : 1);
+      copia[index].total = moneda === "MXN" ? calcularTotalConIVA(sub) : (copia[index].aplica_iva ? calcularTotalConIVA(sub) : sub);
       return copia;
     });
   }, []);
