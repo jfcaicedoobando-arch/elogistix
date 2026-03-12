@@ -1,16 +1,41 @@
 
 
-## Plan: Usar expediente del origen al duplicar
+## Plan: Refactoring — IVA hardcodeado, formatDate con date-fns, y asset duplicado
 
-### Cambio único en `src/hooks/useEmbarques.ts`
+### 1. Reemplazar `* 1.16` por funciones de `financialUtils.ts` en `useCotizacionWizardForm.ts`
 
-En el loop de `useDuplicarEmbarque` (líneas 257-262), reemplazar la llamada a `supabase.rpc('generar_expediente')` por usar directamente `embarqueOrigen.expediente`:
+Hay 3 líneas con `* 1.16` hardcodeado que deben usar `calcularTotalConIVA`:
 
-- **Eliminar** líneas 258-262 (la llamada RPC y el manejo de error)
-- **Cambiar** línea 268 `expediente: expediente as string` → `expediente: embarqueOrigen.expediente`
-- En el push final al array `creados`, usar `embarqueOrigen.expediente` en lugar de `expediente as string`
+- **Línea 283**: `sub * 1.16` → `calcularTotalConIVA(sub)` y `sub * (aplica_iva ? 1.16 : 1)` → `aplica_iva ? calcularTotalConIVA(sub) : sub`
+- **Línea 435**: `c.cantidad * c.precio_venta * (tieneIva ? 1.16 : 1)` → `tieneIva ? calcularTotalConIVA(c.cantidad * c.precio_venta) : c.cantidad * c.precio_venta`
+- **Línea 443**: `c.cantidad * c.precio_venta * 1.16` → `calcularTotalConIVA(c.cantidad * c.precio_venta)`
 
-### Cambio en `src/pages/Changelog.tsx`
+`calcularTotalConIVA` ya está importado en línea 9.
 
-Entrada v4.15.1 — "Duplicar embarque ahora conserva el mismo expediente del origen"
+### 2. Reemplazar `formatDate` manual por `date-fns` en `src/lib/helpers.ts`
+
+Cambiar la implementación de string-splitting por:
+```typescript
+import { format, parseISO } from "date-fns";
+
+export const formatDate = (dateStr: string): string => {
+  if (!dateStr) return '-';
+  try {
+    return format(parseISO(dateStr), 'dd/MM/yyyy');
+  } catch {
+    return dateStr;
+  }
+};
+```
+
+Misma firma, misma salida `dd/MM/yyyy`, pero robusto ante formatos edge-case. `date-fns` ya es dependencia del proyecto. Los 13 archivos consumidores no requieren cambios.
+
+### 3. Eliminar asset duplicado `public/elogistix-logo.jpg`
+
+Solo se usa `src/assets/elogistix-logo.jpg` (en `AppSidebar.tsx` y `Login.tsx`). El archivo en `public/` no se referencia en ningún componente.
+
+### Archivos modificados
+- `src/hooks/useCotizacionWizardForm.ts` — 3 líneas
+- `src/lib/helpers.ts` — reescribir `formatDate`
+- Eliminar `public/elogistix-logo.jpg`
 
