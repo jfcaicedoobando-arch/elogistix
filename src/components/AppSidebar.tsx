@@ -36,14 +36,20 @@ const dashboardItems = [
   { title: "Operaciones", url: "/operaciones", icon: Activity },
 ];
 
-const menuItems = [
+const gestionItems = [
   { title: "Cotizaciones", url: "/cotizaciones", icon: ClipboardList },
   { title: "Embarques", url: "/embarques", icon: Ship },
   { title: "Facturación", url: "/facturacion", icon: FileText },
+];
+
+const directorioItems = [
   { title: "Clientes", url: "/clientes", icon: UserCheck },
   { title: "Proveedores", url: "/proveedores", icon: Truck },
-  { title: "Changelog", url: "/changelog", icon: ScrollText },
+];
+
+const sistemaItems = [
   { title: "Bitácora", url: "/bitacora", icon: History },
+  { title: "Changelog", url: "/changelog", icon: ScrollText },
 ];
 
 const adminItems = [
