@@ -9,8 +9,8 @@ describe("formatDate", () => {
   it("formatea fecha ISO correctamente", () => {
     expect(formatDate("2026-03-01")).toBe("01/03/2026");
   });
-  it("devuelve tal cual si no tiene 3 partes", () => {
-    expect(formatDate("2026-03")).toBe("2026-03");
+  it("parsea cadena parcial (YYYY-MM) como primer día del mes", () => {
+    expect(formatDate("2026-03")).toBe("01/03/2026");
   });
 });
 
