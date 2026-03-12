@@ -217,6 +217,7 @@ function buildDefaultValues(d?: InitialData): CotizacionFormValues {
 }
 
 export function useCotizacionWizardForm({ navigate, toast, userEmail, clientes, mutations, initialData, initialCostos }: HookDeps) {
+  const tasaIva = useTasaIVA();
   const { crearCotizacion, updateCotizacion, upsertCostos, registrarActividad } = mutations;
   const isEditMode = !!initialData;
 
