@@ -79,7 +79,12 @@ export default function Clientes() {
 
   const handleNext = () => {
     if (!isStep1Valid()) return;
-    setDocumentos(DOCS_OBLIGATORIOS.map(nombre => ({ nombre, adjuntado: false })));
+    setDocumentos(DOCS_OBLIGATORIOS.map(nombre => {
+      if (nombre === 'Constancia de Situación Fiscal (CSF)' && csfFile) {
+        return { nombre, adjuntado: true, archivo: csfFile.name };
+      }
+      return { nombre, adjuntado: false };
+    }));
     setStep(2);
   };
 
