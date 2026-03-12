@@ -222,7 +222,7 @@ export default function Operaciones() {
         return last?.valor || 0;
       })();
 
-  const topOperador = operadores.length > 0 ? operadores[0] : null;
+  
 
   const balancePct = creadasEsteMes > 0
     ? Math.round((llegadasEsteMes / creadasEsteMes) * 100)
