@@ -167,9 +167,9 @@ export function useOperacionesData(periodo: PeriodoFiltro = "mes") {
         d.clientes.add(e.cliente_nombre);
       }
 
-      // Creadas este mes
-      const createdAt = new Date(e.created_at);
-      if (isWithinInterval(createdAt, { start: inicioMes, end: finMes })) {
+      // ETD este mes (usa etd como fecha principal, fallback a created_at)
+      const fechaOperacion = e.etd ? new Date(e.etd + "T00:00:00") : new Date(e.created_at);
+      if (isWithinInterval(fechaOperacion, { start: inicioMes, end: finMes })) {
         d.esteMes++;
       }
 
