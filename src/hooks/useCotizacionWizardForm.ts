@@ -434,7 +434,7 @@ export function useCotizacionWizardForm({ navigate, toast, userEmail, clientes, 
               return {
                 descripcion: c.concepto, unidad_medida: c.unidad_medida, cantidad: c.cantidad,
                 precio_unitario: c.precio_venta, moneda: "USD" as const, aplica_iva: tieneIva,
-                total: tieneIva ? calcularTotalConIVA(c.cantidad * c.precio_venta) : c.cantidad * c.precio_venta,
+                total: tieneIva ? calcularTotalConIVA(c.cantidad * c.precio_venta, tasaIva) : c.cantidad * c.precio_venta,
               };
             });
           const mxnFromCostos = costosInternos
