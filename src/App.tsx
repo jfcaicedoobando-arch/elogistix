@@ -22,7 +22,7 @@ const Clientes = lazy(() => import("./pages/Clientes"));
 const ClienteDetalle = lazy(() => import("./pages/ClienteDetalle"));
 const Proveedores = lazy(() => import("./pages/Proveedores"));
 const ProveedorDetalle = lazy(() => import("./pages/ProveedorDetalle"));
-const Reportes = lazy(() => import("./pages/Reportes"));
+
 const Cotizaciones = lazy(() => import("./pages/Cotizaciones"));
 const NuevaCotizacion = lazy(() => import("./pages/NuevaCotizacion"));
 const CotizacionDetalle = lazy(() => import("./pages/CotizacionDetalle"));
@@ -65,7 +65,7 @@ const App = () => (
               <Route path="/cotizaciones/nueva" element={<NuevaCotizacion />} />
               <Route path="/cotizaciones/:id" element={<CotizacionDetalle />} />
               <Route path="/cotizaciones/:id/editar" element={<EditarCotizacion />} />
-              <Route path="/reportes" element={<Reportes />} />
+              
               <Route path="/changelog" element={<Changelog />} />
               <Route path="/bitacora" element={<Bitacora />} />
               <Route
