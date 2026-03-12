@@ -309,7 +309,7 @@ export default function Operaciones() {
                   <TableRow>
                     <TableHead className="w-10">#</TableHead>
                     <TableHead>Operador</TableHead>
-                    <TableHead className="text-center">Riesgo</TableHead>
+                    <TableHead className="text-center">Estado de cargas</TableHead>
                     <TableHead className="text-center">Contenedores</TableHead>
                     <TableHead className="text-center">Activas</TableHead>
                     <TableHead className="text-center">Demoras</TableHead>
