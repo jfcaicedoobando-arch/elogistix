@@ -1,16 +1,33 @@
 
 
-## Plan: Usar expediente del origen al duplicar
+## Plan: Cambiar sección Dashboards a estática
 
-### Cambio único en `src/hooks/useEmbarques.ts`
+La sección "Dashboards" actualmente usa un `Collapsible` con chevron, a diferencia del resto de secciones que son estáticas. El cambio es simple: reemplazar el `Collapsible` por un `SidebarGroup` con label estático, igual que la sección principal.
 
-En el loop de `useDuplicarEmbarque` (líneas 257-262), reemplazar la llamada a `supabase.rpc('generar_expediente')` por usar directamente `embarqueOrigen.expediente`:
+### Cambios en `src/components/AppSidebar.tsx`
 
-- **Eliminar** líneas 258-262 (la llamada RPC y el manejo de error)
-- **Cambiar** línea 268 `expediente: expediente as string` → `expediente: embarqueOrigen.expediente`
-- En el push final al array `creados`, usar `embarqueOrigen.expediente` en lugar de `expediente as string`
+**1. Eliminar el Collapsible y la bifurcación collapsed/expanded (líneas 88-146)**
 
-### Cambio en `src/pages/Changelog.tsx`
+Reemplazar todo ese bloque por un `SidebarGroup` simple que renderice los `dashboardItems` de la misma forma que el menú principal (líneas 150-175). El label "Dashboards" se mantiene como `text-xs uppercase` pero sin chevron ni toggle.
 
-Entrada v4.15.1 — "Duplicar embarque ahora conserva el mismo expediente del origen"
+**2. Limpiar imports no usados**
+
+Eliminar `Collapsible`, `CollapsibleTrigger`, `CollapsibleContent` y `ChevronDown` ya que no se usan en ningún otro lugar del componente.
+
+### Resultado
+
+```text
+┌─────────────────────┐
+│   DASHBOARDS         │  ← label estático, sin chevron
+│   Principal          │
+│   Operaciones        │
+├─────────────────────┤
+│   Cotizaciones       │
+│   Embarques          │
+│   ...                │
+└─────────────────────┘
+```
+
+### Archivo modificado
+- `src/components/AppSidebar.tsx`
 
