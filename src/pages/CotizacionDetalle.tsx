@@ -141,7 +141,7 @@ export default function CotizacionDetalle() {
           <p className="text-sm text-muted-foreground">{nombreDestinatario}</p>
         </div>
         <Badge className={getEstadoColor(cotizacion.estado)}>{cotizacion.estado}</Badge>
-        <Button variant="outline" size="sm" onClick={() => generarPdfCotizacion(cotizacion)}>
+        <Button variant="outline" size="sm" onClick={() => generarPdfCotizacion(cotizacion, tasaIva)}>
           <FileDown className="h-4 w-4 mr-1" /> Exportar PDF
         </Button>
       </div>
