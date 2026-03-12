@@ -280,7 +280,7 @@ export function useCotizacionWizardForm({ navigate, toast, userEmail, clientes, 
         copia[index].aplica_iva = false;
       }
       const sub = copia[index].cantidad * copia[index].precio_unitario;
-      copia[index].total = moneda === "MXN" ? sub * 1.16 : sub * (copia[index].aplica_iva ? 1.16 : 1);
+      copia[index].total = moneda === "MXN" ? calcularTotalConIVA(sub) : (copia[index].aplica_iva ? calcularTotalConIVA(sub) : sub);
       return copia;
     });
   }, []);
@@ -432,7 +432,7 @@ export function useCotizacionWizardForm({ navigate, toast, userEmail, clientes, 
               return {
                 descripcion: c.concepto, unidad_medida: c.unidad_medida, cantidad: c.cantidad,
                 precio_unitario: c.precio_venta, moneda: "USD" as const, aplica_iva: tieneIva,
-                total: c.cantidad * c.precio_venta * (tieneIva ? 1.16 : 1),
+                total: tieneIva ? calcularTotalConIVA(c.cantidad * c.precio_venta) : c.cantidad * c.precio_venta,
               };
             });
           const mxnFromCostos = costosInternos
@@ -440,7 +440,7 @@ export function useCotizacionWizardForm({ navigate, toast, userEmail, clientes, 
             .map(c => ({
               descripcion: c.concepto, unidad_medida: c.unidad_medida, cantidad: c.cantidad,
               precio_unitario: c.precio_venta, moneda: "MXN" as const, aplica_iva: true,
-              total: c.cantidad * c.precio_venta * 1.16,
+              total: calcularTotalConIVA(c.cantidad * c.precio_venta),
             }));
           if (usdFromCostos.length > 0) setConceptosUSD(usdFromCostos);
           if (mxnFromCostos.length > 0) setConceptosMXN(mxnFromCostos);

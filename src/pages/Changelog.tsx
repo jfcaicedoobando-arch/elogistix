@@ -13,6 +13,13 @@ interface ChangelogEntry {
 
 const changelog: ChangelogEntry[] = [
   {
+    version: "5.0.4",
+    date: "2026-03-12",
+    type: "patch",
+    title: "Refactoring: IVA centralizado, formatDate robusto, asset duplicado eliminado",
+    description: "Se reemplazaron los multiplicadores hardcodeados * 1.16 por calcularTotalConIVA de financialUtils. formatDate ahora usa date-fns para mayor robustez. Se eliminó el logo duplicado en public/.",
+  },
+  {
     version: "5.0.3",
     date: "2026-03-12",
     type: "minor",
