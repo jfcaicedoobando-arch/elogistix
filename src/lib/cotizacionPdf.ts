@@ -105,9 +105,9 @@ export function generarPdfCotizacion(cotizacion: CotizacionRow, tasaIva: number 
       const unidad = c.unidad_medida || '—';
       const sub = c.cantidad * c.precio_unitario;
       if (hayIvaUSD) {
-        const iva = c.aplica_iva ? calcularIVA(sub) : 0;
+        const iva = c.aplica_iva ? calcularIVA(sub, tasaIva) : 0;
         const total = sub + iva;
-        const desc = c.aplica_iva ? `${c.descripcion} <span style='color:#999;font-size:11px'>(+IVA 16%)</span>` : c.descripcion;
+        const desc = c.aplica_iva ? `${c.descripcion} <span style='color:#999;font-size:11px'>(+IVA ${tasaIva * 100}%)</span>` : c.descripcion;
         return `<tr><td>${desc}</td><td>${unidad}</td><td class="right">${c.cantidad}</td><td class="right">${formatCurrencyPdf(c.precio_unitario, 'USD')}</td><td class="right">${formatCurrencyPdf(sub, 'USD')}</td><td class="right">${c.aplica_iva ? formatCurrencyPdf(iva, 'USD') : '—'}</td><td class="right">${formatCurrencyPdf(total, 'USD')}</td></tr>`;
       }
       return `<tr><td>${c.descripcion}</td><td>${unidad}</td><td class="right">${c.cantidad}</td><td class="right">${formatCurrencyPdf(c.precio_unitario, 'USD')}</td><td class="right">${formatCurrencyPdf(sub, 'USD')}</td></tr>`;
