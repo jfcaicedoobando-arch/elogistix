@@ -84,64 +84,36 @@ export function AppSidebar() {
 
       <SidebarContent className="px-2 py-4">
         {/* Dashboards section */}
-        {collapsed ? (
-          <SidebarGroup>
-            <SidebarGroupContent>
-              <SidebarMenu>
-                {dashboardItems.map((item) => (
-                  <SidebarMenuItem key={item.title}>
-                    <SidebarMenuButton
-                      asChild
-                      isActive={isActive(item.url)}
-                      tooltip={item.title}
+        <SidebarGroup>
+          {!collapsed && (
+            <span className="px-3 py-2 text-xs font-semibold uppercase tracking-wider text-sidebar-foreground/60">
+              Dashboards
+            </span>
+          )}
+          <SidebarGroupContent>
+            <SidebarMenu>
+              {dashboardItems.map((item) => (
+                <SidebarMenuItem key={item.title}>
+                  <SidebarMenuButton
+                    asChild
+                    isActive={isActive(item.url)}
+                    tooltip={item.title}
+                  >
+                    <NavLink
+                      to={item.url}
+                      end={item.url === "/"}
+                      className="hover:bg-sidebar-accent/50"
+                      activeClassName="bg-sidebar-accent text-sidebar-accent-foreground font-medium"
                     >
-                      <NavLink
-                        to={item.url}
-                        end={item.url === "/"}
-                        className="hover:bg-sidebar-accent/50"
-                        activeClassName="bg-sidebar-accent text-sidebar-accent-foreground font-medium"
-                      >
-                        <item.icon className="h-4 w-4" />
-                      </NavLink>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                ))}
-              </SidebarMenu>
-            </SidebarGroupContent>
-          </SidebarGroup>
-        ) : (
-          <Collapsible defaultOpen className="group/collapsible">
-            <CollapsibleTrigger className="flex w-full items-center justify-between px-3 py-2 text-xs font-semibold uppercase tracking-wider text-sidebar-foreground/60 hover:text-sidebar-foreground transition-colors">
-              <div className="flex items-center gap-2">
-                <LayoutDashboard className="h-3.5 w-3.5" />
-                <span>Dashboards</span>
-              </div>
-              <ChevronDown className="h-3.5 w-3.5 transition-transform duration-200 group-data-[state=closed]/collapsible:rotate-[-90deg]" />
-            </CollapsibleTrigger>
-            <CollapsibleContent>
-              <SidebarMenu className="ml-4 border-l-2 border-sidebar-border pl-2">
-                {dashboardItems.map((item) => (
-                  <SidebarMenuItem key={item.title}>
-                    <SidebarMenuButton
-                      asChild
-                      isActive={isActive(item.url)}
-                    >
-                      <NavLink
-                        to={item.url}
-                        end={item.url === "/"}
-                        className="hover:bg-sidebar-accent/50"
-                        activeClassName="bg-sidebar-accent text-sidebar-accent-foreground font-medium"
-                      >
-                        <item.icon className="h-4 w-4" />
-                        <span>{item.title}</span>
-                      </NavLink>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                ))}
-              </SidebarMenu>
-            </CollapsibleContent>
-          </Collapsible>
-        )}
+                      <item.icon className="h-4 w-4" />
+                      {!collapsed && <span>{item.title}</span>}
+                    </NavLink>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              ))}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
 
         <Separator className="my-2 mx-1" />
 
