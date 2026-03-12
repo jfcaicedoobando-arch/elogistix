@@ -140,7 +140,7 @@ export default function Operaciones() {
       {/* BLOQUE 2 — KPIs globales */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <KpiCard titulo="Cargas activas" valor={global.totalActivas} icono={Package} color="blue" loading={isLoading} />
-        <KpiCard titulo="Creadas este mes" valor={global.totalEsteMes} icono={Activity} color="violet" loading={isLoading} />
+        <KpiCard titulo="ETD este mes" valor={global.totalEsteMes} icono={Activity} color="violet" loading={isLoading} />
         <KpiCard titulo="Profit total USD" valor={formatCurrency(global.totalProfit, "USD")} icono={TrendingUp} color="emerald" loading={isLoading} />
         <KpiCard titulo="Demoras activas" valor={global.totalDemoras} icono={AlertTriangle} color="red" loading={isLoading} />
       </div>
