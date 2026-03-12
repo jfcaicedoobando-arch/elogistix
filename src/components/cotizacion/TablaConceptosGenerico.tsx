@@ -47,7 +47,7 @@ export default function TablaConceptosGenerico({ moneda, conceptos, subtotal, iv
               {conceptos.map((concepto, indice) => {
                 const lineSubtotal = calcularSubtotal(concepto.cantidad, concepto.precio_unitario);
                 const aplicaIva = esMXN || !!(concepto as any).aplica_iva;
-                const lineIva = aplicaIva ? calcularIVA(lineSubtotal) : 0;
+                const lineIva = aplicaIva ? calcularIVA(lineSubtotal, tasaIva) : 0;
 
                 return (
                   <TableRow key={concepto.descripcion ?? indice}>

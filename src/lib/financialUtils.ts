@@ -1,7 +1,7 @@
 /** Tipo estricto de moneda soportada */
 export type Moneda = 'USD' | 'MXN' | 'EUR';
 
-/** Tasa de IVA estándar en México */
+/** Tasa de IVA estándar en México (fallback cuando no hay configuración) */
 export const TASA_IVA = 0.16;
 
 /** Calcula el subtotal (cantidad × precio unitario) */
