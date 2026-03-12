@@ -195,7 +195,7 @@ export default function SeccionConceptosVentaCotizacion({
         <CardContent className="space-y-3">
           {conceptosMXN.map((c, i) => {
             const subtotal = c.cantidad * c.precio_unitario;
-            const iva = calcularIVA(subtotal);
+            const iva = calcularIVA(subtotal, tasaIva);
             return (
               <div key={i} className="grid grid-cols-12 gap-2 items-end">
                 <div className="col-span-2">

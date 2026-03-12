@@ -10,7 +10,7 @@ const formatDatePdf = (dateStr: string): string => {
   return d.toLocaleDateString('es-MX', { day: '2-digit', month: 'short', year: 'numeric' });
 };
 
-export function generarPdfCotizacion(cotizacion: CotizacionRow) {
+export function generarPdfCotizacion(cotizacion: CotizacionRow, tasaIva: number = TASA_IVA) {
   const nombreDestinatario = cotizacion.es_prospecto
     ? `${cotizacion.prospecto_empresa} (Prospecto)`
     : cotizacion.cliente_nombre;
