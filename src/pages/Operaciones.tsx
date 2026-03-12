@@ -7,7 +7,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+
 import {
   Activity, TrendingUp, AlertTriangle, Package, ChevronDown, Star, Users,
   Container, Shield, Anchor, Ship,
@@ -72,36 +72,38 @@ function KpiCard({
   );
 }
 
-// ─── Semáforo dots ───────────────────────────────────────
-function SemaforoDots({ criticos, enPuerto, porArribar }: { criticos: number; enPuerto: number; porArribar: number }) {
-  const items = [
-    { count: criticos, ...RIESGO_CONFIG.critico },
-    { count: enPuerto, ...RIESGO_CONFIG.en_puerto },
-    { count: porArribar, ...RIESGO_CONFIG.por_arribar },
-  ];
+// ─── Risk indicator chips ────────────────────────────────
+function RiesgoIndicador({ criticos, enPuerto, porArribar }: { criticos: number; enPuerto: number; porArribar: number }) {
   const total = criticos + enPuerto + porArribar;
-  if (total === 0) return <span className="text-xs text-emerald-500 font-medium">✓</span>;
+  if (total === 0) {
+    return (
+      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium bg-emerald-100 text-emerald-700">
+        ✓ Sin riesgo
+      </span>
+    );
+  }
 
   return (
-    <TooltipProvider>
-      <div className="flex items-center gap-1.5">
-        {items.map((item) =>
-          item.count > 0 ? (
-            <Tooltip key={item.label}>
-              <TooltipTrigger asChild>
-                <div className="flex items-center gap-0.5">
-                  <div className={`w-2.5 h-2.5 rounded-full ${item.dot}`} />
-                  <span className={`text-[11px] font-semibold ${item.color}`}>{item.count}</span>
-                </div>
-              </TooltipTrigger>
-              <TooltipContent side="top" className="text-xs">
-                {item.count} {item.label.toLowerCase()}
-              </TooltipContent>
-            </Tooltip>
-          ) : null
-        )}
-      </div>
-    </TooltipProvider>
+    <div className="flex flex-wrap items-center gap-1">
+      {criticos > 0 && (
+        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold bg-red-600 text-white">
+          <AlertTriangle className="h-3 w-3" />
+          {criticos} crítica{criticos > 1 ? "s" : ""}
+        </span>
+      )}
+      {enPuerto > 0 && (
+        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold border border-amber-400 bg-amber-50 text-amber-700">
+          <Anchor className="h-3 w-3" />
+          {enPuerto} en puerto
+        </span>
+      )}
+      {porArribar > 0 && (
+        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold border border-sky-300 bg-sky-50 text-sky-700">
+          <Ship className="h-3 w-3" />
+          {porArribar} por arribar
+        </span>
+      )}
+    </div>
   );
 }
 
@@ -118,11 +120,19 @@ function CapacityBar({ count, max }: { count: number; max: number }) {
 }
 
 // ─── Risk badge ──────────────────────────────────────────
+const RISK_BADGE_CONFIG: Record<NivelRiesgo, { icon: React.ElementType; className: string; label: string }> = {
+  critico:     { icon: AlertTriangle, className: "bg-red-600 text-white", label: "Crítico" },
+  en_puerto:   { icon: Anchor, className: "border border-amber-400 bg-amber-50 text-amber-700", label: "En Puerto" },
+  por_arribar: { icon: Ship, className: "border border-sky-300 bg-sky-50 text-sky-700", label: "Por Arribar" },
+  ok:          { icon: Ship, className: "bg-emerald-100 text-emerald-700", label: "OK" },
+};
+
 function RiskBadge({ nivel }: { nivel: NivelRiesgo }) {
-  const cfg = RIESGO_CONFIG[nivel];
+  const cfg = RISK_BADGE_CONFIG[nivel];
+  const Icono = cfg.icon;
   return (
-    <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium border ${cfg.badge}`}>
-      <span className={`w-1.5 h-1.5 rounded-full ${cfg.dot}`} />
+    <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold ${cfg.className}`}>
+      <Icono className="h-3 w-3" />
       {cfg.label}
     </span>
   );
@@ -299,7 +309,7 @@ export default function Operaciones() {
                   <TableRow>
                     <TableHead className="w-10">#</TableHead>
                     <TableHead>Operador</TableHead>
-                    <TableHead className="text-center">Riesgo</TableHead>
+                    <TableHead className="text-center">Estado de cargas</TableHead>
                     <TableHead className="text-center">Contenedores</TableHead>
                     <TableHead className="text-center">Activas</TableHead>
                     <TableHead className="text-center">Demoras</TableHead>
@@ -321,7 +331,7 @@ export default function Operaciones() {
                             </TableCell>
                             <TableCell className="font-medium">{op.nombre}</TableCell>
                             <TableCell className="text-center">
-                              <SemaforoDots criticos={op.criticos} enPuerto={op.enPuerto} porArribar={op.porArribar} />
+                              <RiesgoIndicador criticos={op.criticos} enPuerto={op.enPuerto} porArribar={op.porArribar} />
                             </TableCell>
                             <TableCell className="text-center">
                               <CapacityBar count={op.contenedores} max={MAX_CONTENEDORES} />
