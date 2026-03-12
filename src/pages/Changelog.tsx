@@ -13,6 +13,13 @@ interface ChangelogEntry {
 
 const changelog: ChangelogEntry[] = [
   {
+    version: "5.0.1",
+    date: "2026-03-12",
+    type: "patch",
+    title: "Eliminado cuadro Top del mes en Operaciones",
+    description: "Se removió la card 'Top del mes' del Dashboard de Operaciones para simplificar la vista. La tabla de operadores ahora ocupa el ancho completo.",
+  },
+  {
     version: "5.0.0",
     date: "2026-03-12",
     type: "major",

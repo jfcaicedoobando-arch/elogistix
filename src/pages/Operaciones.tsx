@@ -381,32 +381,6 @@ export default function Operaciones() {
           </CardContent>
         </Card>
 
-        {/* Top del mes */}
-        <Card className="rounded-2xl shadow-sm border-0 bg-slate-900 text-white">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-slate-400">Top del mes</CardTitle>
-          </CardHeader>
-          <CardContent className="flex flex-col items-center justify-center py-6 gap-3">
-            {isLoading ? (
-              <Skeleton className="h-20 w-20 rounded-full bg-slate-700" />
-            ) : topOperador ? (
-              <>
-                <div className="rounded-full bg-amber-500/20 p-4">
-                  <Star className="h-8 w-8 text-amber-400 fill-amber-400" />
-                </div>
-                <p className="text-lg font-bold">{topOperador.nombre}</p>
-                <p className="text-2xl font-bold text-emerald-400">
-                  {formatCurrency(topOperador.profit, "USD")}
-                </p>
-                <p className="text-xs text-slate-400">
-                  {topOperador.cargasActivas} activas · {topOperador.clientes.length} clientes
-                </p>
-              </>
-            ) : (
-              <p className="text-sm text-slate-400">Sin datos</p>
-            )}
-          </CardContent>
-        </Card>
       </div>
 
       {/* ── BLOQUE 3 — Cargas en riesgo ──────────────── */}
