@@ -1,7 +1,8 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { formatCurrency } from "@/lib/formatters";
-import { TASA_IVA, calcularSubtotal, calcularIVA } from "@/lib/financialUtils";
+import { calcularSubtotal, calcularIVA } from "@/lib/financialUtils";
+import { useTasaIVA } from "@/hooks/useTasaIVA";
 import type { ConceptoVentaCotizacion } from "@/hooks/useCotizaciones";
 
 interface Props {
@@ -12,8 +13,6 @@ interface Props {
   iva?: number;
   total: number;
 }
-
-const ivaLabel = `IVA (${TASA_IVA * 100}%)`;
 
 export default function TablaConceptosGenerico({ moneda, conceptos, subtotal, iva, total }: Props) {
   if (conceptos.length === 0) return null;
