@@ -278,8 +278,8 @@ export default function Operaciones() {
       </div>
 
       {/* ── BLOQUE 2 — Tabla operadores + Top ──────── */}
-      <div className="grid grid-cols-1 xl:grid-cols-4 gap-4">
-        <Card className="xl:col-span-3 rounded-2xl shadow-sm border-0 bg-card">
+      <div>
+        <Card className="rounded-2xl shadow-sm border-0 bg-card">
           <CardHeader className="pb-2">
             <CardTitle className="text-base font-semibold flex items-center gap-2">
               <Users className="h-4 w-4 text-muted-foreground" />
