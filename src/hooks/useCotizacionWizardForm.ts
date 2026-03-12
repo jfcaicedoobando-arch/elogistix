@@ -440,7 +440,7 @@ export function useCotizacionWizardForm({ navigate, toast, userEmail, clientes, 
             .map(c => ({
               descripcion: c.concepto, unidad_medida: c.unidad_medida, cantidad: c.cantidad,
               precio_unitario: c.precio_venta, moneda: "MXN" as const, aplica_iva: true,
-              total: c.cantidad * c.precio_venta * 1.16,
+              total: calcularTotalConIVA(c.cantidad * c.precio_venta),
             }));
           if (usdFromCostos.length > 0) setConceptosUSD(usdFromCostos);
           if (mxnFromCostos.length > 0) setConceptosMXN(mxnFromCostos);

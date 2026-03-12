@@ -1,11 +1,14 @@
 // Shared helper functions extracted from mockData.ts
 
+import { format, parseISO } from "date-fns";
+
 export const formatDate = (dateStr: string): string => {
   if (!dateStr) return '-';
-  const parts = dateStr.split('-');
-  if (parts.length < 3) return dateStr;
-  const [anio, mes, dia] = parts;
-  return `${dia}/${mes}/${anio}`;
+  try {
+    return format(parseISO(dateStr), 'dd/MM/yyyy');
+  } catch {
+    return dateStr;
+  }
 };
 
 export const getEstadoColor = (estado: string): string => {
