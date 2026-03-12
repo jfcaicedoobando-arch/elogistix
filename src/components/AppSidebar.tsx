@@ -68,7 +68,41 @@ export function AppSidebar() {
     return location.pathname.startsWith(path);
   };
 
-  const allItems = role === "admin" ? [...menuItems, ...adminItems] : menuItems;
+  const renderGroup = (label: string, items: typeof dashboardItems) => (
+    <>
+      <SidebarGroup>
+        {!collapsed && (
+          <span className="px-3 py-2 text-xs font-semibold uppercase tracking-wider text-sidebar-foreground/60">
+            {label}
+          </span>
+        )}
+        <SidebarGroupContent>
+          <SidebarMenu>
+            {items.map((item) => (
+              <SidebarMenuItem key={item.title}>
+                <SidebarMenuButton
+                  asChild
+                  isActive={isActive(item.url)}
+                  tooltip={item.title}
+                >
+                  <NavLink
+                    to={item.url}
+                    end={item.url === "/"}
+                    className="hover:bg-sidebar-accent/50"
+                    activeClassName="bg-sidebar-accent text-sidebar-accent-foreground font-medium"
+                  >
+                    <item.icon className="h-4 w-4" />
+                    {!collapsed && <span>{item.title}</span>}
+                  </NavLink>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            ))}
+          </SidebarMenu>
+        </SidebarGroupContent>
+      </SidebarGroup>
+      <Separator className="my-2 mx-1" />
+    </>
+  );
 
   return (
     <Sidebar collapsible="icon">
@@ -89,66 +123,11 @@ export function AppSidebar() {
       </SidebarHeader>
 
       <SidebarContent className="px-2 py-4">
-        {/* Dashboards section */}
-        <SidebarGroup>
-          {!collapsed && (
-            <span className="px-3 py-2 text-xs font-semibold uppercase tracking-wider text-sidebar-foreground/60">
-              Dashboards
-            </span>
-          )}
-          <SidebarGroupContent>
-            <SidebarMenu>
-              {dashboardItems.map((item) => (
-                <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton
-                    asChild
-                    isActive={isActive(item.url)}
-                    tooltip={item.title}
-                  >
-                    <NavLink
-                      to={item.url}
-                      end={item.url === "/"}
-                      className="hover:bg-sidebar-accent/50"
-                      activeClassName="bg-sidebar-accent text-sidebar-accent-foreground font-medium"
-                    >
-                      <item.icon className="h-4 w-4" />
-                      {!collapsed && <span>{item.title}</span>}
-                    </NavLink>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
-
-        <Separator className="my-2 mx-1" />
-
-        {/* Main menu */}
-        <SidebarGroup>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              {allItems.map((item) => (
-                <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton
-                    asChild
-                    isActive={isActive(item.url)}
-                    tooltip={item.title}
-                  >
-                    <NavLink
-                      to={item.url}
-                      end={item.url === "/"}
-                      className="hover:bg-sidebar-accent/50"
-                      activeClassName="bg-sidebar-accent text-sidebar-accent-foreground font-medium"
-                    >
-                      <item.icon className="h-4 w-4" />
-                      {!collapsed && <span>{item.title}</span>}
-                    </NavLink>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
+        {renderGroup("Dashboards", dashboardItems)}
+        {renderGroup("Gestión", gestionItems)}
+        {renderGroup("Directorio", directorioItems)}
+        {renderGroup("Sistema", sistemaItems)}
+        {role === "admin" && renderGroup("Administración", adminItems)}
       </SidebarContent>
 
       <SidebarFooter className="border-t border-sidebar-border p-4 space-y-2">
