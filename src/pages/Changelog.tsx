@@ -13,6 +13,13 @@ interface ChangelogEntry {
 
 const changelog: ChangelogEntry[] = [
   {
+    version: "5.0.2",
+    date: "2026-03-12",
+    type: "minor",
+    title: "Rediseño de indicadores de riesgo en Operaciones",
+    description: "Se reemplazaron los dots de colores por chips descriptivos con ícono y texto (ej. '3 críticas', '2 en puerto'). Badges de riesgo ahora incluyen íconos contextuales. Columna renombrada a 'Estado de cargas'.",
+  },
+  {
     version: "5.0.1",
     date: "2026-03-12",
     type: "patch",
