@@ -226,7 +226,7 @@ export default function Operaciones() {
                                   </div>
                                 </div>
                                 <div>
-                                  <p className="text-xs font-semibold text-muted-foreground mb-2">Cargas creadas (6 meses)</p>
+                                  <p className="text-xs font-semibold text-muted-foreground mb-2">Cargas por ETD (6 meses)</p>
                                   <MiniBarChart data={op.historicoCreadosPorMes} />
                                 </div>
                               </div>
