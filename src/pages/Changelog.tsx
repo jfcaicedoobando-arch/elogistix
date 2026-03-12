@@ -13,6 +13,13 @@ interface ChangelogEntry {
 
 const changelog: ChangelogEntry[] = [
   {
+    version: "5.0.0",
+    date: "2026-03-12",
+    type: "major",
+    title: "Rediseño completo del Dashboard de Operaciones",
+    description: "Nuevo dashboard con niveles de riesgo por carga (Crítico/En Puerto/Por Arribar), semáforo visual por operador, barra de capacidad de contenedores, tabla global de cargas en riesgo ordenada por criticidad, y detalle expandible con cargas en riesgo y mini gráfica por operador.",
+  },
+  {
     version: "4.46.1",
     date: "2026-03-12",
     type: "patch",
