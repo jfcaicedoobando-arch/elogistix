@@ -292,7 +292,7 @@ export default function Operaciones() {
           {/* KPIs arriba de gráfica */}
           <div className="grid grid-cols-3 gap-3 mb-4">
             <div className="rounded-xl bg-blue-50 p-3 text-center">
-              <p className="text-xs text-blue-600 font-medium">Creadas este mes</p>
+              <p className="text-xs text-blue-600 font-medium">ETD este mes</p>
               <p className="text-xl font-bold text-blue-700">{creadasEsteMes}</p>
             </div>
             <div className="rounded-xl bg-emerald-50 p-3 text-center">
