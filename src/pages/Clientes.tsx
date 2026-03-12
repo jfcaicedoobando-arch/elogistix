@@ -163,6 +163,7 @@ export default function Clientes() {
         estado: datos.estado || prev.estado,
       }));
 
+      setCsfFile(file);
       toast({ title: "Datos extraídos", description: "Revisa la información antes de continuar." });
     } catch (error: any) {
       toast({ title: "Error al leer CSF", description: error.message, variant: "destructive" });
