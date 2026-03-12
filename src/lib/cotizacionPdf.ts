@@ -125,7 +125,7 @@ export function generarPdfCotizacion(cotizacion: CotizacionRow) {
     if (conceptosMXN.length === 0) return '';
     const rows = conceptosMXN.map(c => {
       const sub = c.cantidad * c.precio_unitario;
-      const iva = sub * 0.16;
+      const iva = calcularIVA(sub);
       const unidad = c.unidad_medida || '—';
       return `<tr><td>${c.descripcion}</td><td>${unidad}</td><td class="right">${c.cantidad}</td><td class="right">${formatCurrencyPdf(c.precio_unitario, 'MXN')}</td><td class="right">${formatCurrencyPdf(sub, 'MXN')}</td><td class="right">${formatCurrencyPdf(iva, 'MXN')}</td><td class="right">${formatCurrencyPdf(sub + iva, 'MXN')}</td></tr>`;
     }).join('');
