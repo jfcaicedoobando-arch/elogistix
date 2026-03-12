@@ -1,4 +1,5 @@
 import { describe, it, expect } from "vitest";
+// @ts-ignore - suppress date-fns ESM resolution warnings in test
 import { formatDate, getEstadoColor, getModoIcon } from "@/lib/helpers";
 
 describe("formatDate", () => {
