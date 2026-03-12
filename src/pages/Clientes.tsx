@@ -26,9 +26,10 @@ const emptyCliente = {
 };
 
 const DOCS_OBLIGATORIOS = [
-  'CIF', 'Opinión fiscal', 'Acta constitutiva', 'INE RL', 'Poder notarial',
-  'Comprobante de domicilio', 'Datos bancarios', 'Opinión de cumplimiento IMSS/Infonavit',
-  'Contrato de servicios con Elogistix', 'Estados financieros último corte',
+  'Constancia de Situación Fiscal (CSF)', 'CIF', 'Opinión fiscal', 'Acta constitutiva',
+  'INE RL', 'Poder notarial', 'Comprobante de domicilio', 'Datos bancarios',
+  'Opinión de cumplimiento IMSS/Infonavit', 'Contrato de servicios con Elogistix',
+  'Estados financieros último corte',
 ];
 
 type ClienteRow = { id: string; nombre: string; rfc: string; ciudad: string; estado: string; contacto: string; telefono: string };
@@ -59,6 +60,7 @@ export default function Clientes() {
   const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
   const [modoAlta, setModoAlta] = useState<ModoAlta>("manual");
   const [parsingCsf, setParsingCsf] = useState(false);
+  const [csfFile, setCsfFile] = useState<File | null>(null);
 
   const debouncedSearch = useDebounce(search, 300);
 
@@ -77,7 +79,12 @@ export default function Clientes() {
 
   const handleNext = () => {
     if (!isStep1Valid()) return;
-    setDocumentos(DOCS_OBLIGATORIOS.map(nombre => ({ nombre, adjuntado: false })));
+    setDocumentos(DOCS_OBLIGATORIOS.map(nombre => {
+      if (nombre === 'Constancia de Situación Fiscal (CSF)' && csfFile) {
+        return { nombre, adjuntado: true, archivo: csfFile.name };
+      }
+      return { nombre, adjuntado: false };
+    }));
     setStep(2);
   };
 
@@ -109,6 +116,7 @@ export default function Clientes() {
     setStep(1);
     setDocumentos([]);
     setModoAlta("manual");
+    setCsfFile(null);
     setDialogOpen(false);
   };
 
@@ -155,6 +163,7 @@ export default function Clientes() {
         estado: datos.estado || prev.estado,
       }));
 
+      setCsfFile(file);
       toast({ title: "Datos extraídos", description: "Revisa la información antes de continuar." });
     } catch (error: any) {
       toast({ title: "Error al leer CSF", description: error.message, variant: "destructive" });
