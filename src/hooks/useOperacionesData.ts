@@ -167,9 +167,9 @@ export function useOperacionesData(periodo: PeriodoFiltro = "mes") {
         d.clientes.add(e.cliente_nombre);
       }
 
-      // Creadas este mes
-      const createdAt = new Date(e.created_at);
-      if (isWithinInterval(createdAt, { start: inicioMes, end: finMes })) {
+      // ETD este mes (usa etd como fecha principal, fallback a created_at)
+      const fechaOperacion = e.etd ? new Date(e.etd + "T00:00:00") : new Date(e.created_at);
+      if (isWithinInterval(fechaOperacion, { start: inicioMes, end: finMes })) {
         d.esteMes++;
       }
 
@@ -187,9 +187,9 @@ export function useOperacionesData(periodo: PeriodoFiltro = "mes") {
         if (dias > DIAS_LIBRES_DEFAULT) d.demoras++;
       }
 
-      // Histórico creados
+      // Histórico por ETD
       meses6.forEach((m) => {
-        if (isWithinInterval(createdAt, { start: m.inicio, end: m.fin })) {
+        if (isWithinInterval(fechaOperacion, { start: m.inicio, end: m.fin })) {
           d.creadosPorMes[m.label]++;
         }
       });

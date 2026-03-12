@@ -140,7 +140,7 @@ export default function Operaciones() {
       {/* BLOQUE 2 — KPIs globales */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <KpiCard titulo="Cargas activas" valor={global.totalActivas} icono={Package} color="blue" loading={isLoading} />
-        <KpiCard titulo="Creadas este mes" valor={global.totalEsteMes} icono={Activity} color="violet" loading={isLoading} />
+        <KpiCard titulo="ETD este mes" valor={global.totalEsteMes} icono={Activity} color="violet" loading={isLoading} />
         <KpiCard titulo="Profit total USD" valor={formatCurrency(global.totalProfit, "USD")} icono={TrendingUp} color="emerald" loading={isLoading} />
         <KpiCard titulo="Demoras activas" valor={global.totalDemoras} icono={AlertTriangle} color="red" loading={isLoading} />
       </div>
@@ -226,7 +226,7 @@ export default function Operaciones() {
                                   </div>
                                 </div>
                                 <div>
-                                  <p className="text-xs font-semibold text-muted-foreground mb-2">Cargas creadas (6 meses)</p>
+                                  <p className="text-xs font-semibold text-muted-foreground mb-2">Cargas por ETD (6 meses)</p>
                                   <MiniBarChart data={op.historicoCreadosPorMes} />
                                 </div>
                               </div>
@@ -292,7 +292,7 @@ export default function Operaciones() {
           {/* KPIs arriba de gráfica */}
           <div className="grid grid-cols-3 gap-3 mb-4">
             <div className="rounded-xl bg-blue-50 p-3 text-center">
-              <p className="text-xs text-blue-600 font-medium">Creadas este mes</p>
+              <p className="text-xs text-blue-600 font-medium">ETD este mes</p>
               <p className="text-xl font-bold text-blue-700">{creadasEsteMes}</p>
             </div>
             <div className="rounded-xl bg-emerald-50 p-3 text-center">
@@ -317,7 +317,7 @@ export default function Operaciones() {
                 <Line
                   type="monotone"
                   dataKey="creadas"
-                  name="Creadas"
+                  name="Por ETD"
                   stroke="#3b82f6"
                   strokeWidth={2}
                   dot={{ r: 4, fill: "#3b82f6" }}
@@ -341,7 +341,7 @@ export default function Operaciones() {
           {/* Barra de balance */}
           <Separator className="my-4" />
           <div className="flex items-center gap-3">
-            <span className="text-xs text-muted-foreground whitespace-nowrap">Balance creadas/llegadas</span>
+            <span className="text-xs text-muted-foreground whitespace-nowrap">Balance ETD/llegadas</span>
             <Progress
               value={Math.min(balancePct, 100)}
               className={`h-2 flex-1 ${balancePct >= 100 ? "[&>div]:bg-emerald-500" : "[&>div]:bg-amber-500"}`}

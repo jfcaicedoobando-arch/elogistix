@@ -13,6 +13,13 @@ interface ChangelogEntry {
 
 const changelog: ChangelogEntry[] = [
   {
+    version: "4.46.1",
+    date: "2026-03-12",
+    type: "patch",
+    title: "Tendencia de cargas usa ETD en vez de fecha de creación",
+    description: "La gráfica de tendencia y KPIs del Dashboard de Operaciones ahora agrupan las cargas por fecha de zarpe (ETD) en lugar de fecha de captura en el sistema. Etiquetas actualizadas a 'Por ETD'.",
+  },
+  {
     version: "4.46.0",
     date: "2026-03-11",
     type: "minor",
