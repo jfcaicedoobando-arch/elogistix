@@ -120,11 +120,19 @@ function CapacityBar({ count, max }: { count: number; max: number }) {
 }
 
 // ─── Risk badge ──────────────────────────────────────────
+const RISK_BADGE_CONFIG: Record<NivelRiesgo, { icon: React.ElementType; className: string; label: string }> = {
+  critico:     { icon: AlertTriangle, className: "bg-red-600 text-white", label: "Crítico" },
+  en_puerto:   { icon: Anchor, className: "border border-amber-400 bg-amber-50 text-amber-700", label: "En Puerto" },
+  por_arribar: { icon: Ship, className: "border border-sky-300 bg-sky-50 text-sky-700", label: "Por Arribar" },
+  ok:          { icon: Ship, className: "bg-emerald-100 text-emerald-700", label: "OK" },
+};
+
 function RiskBadge({ nivel }: { nivel: NivelRiesgo }) {
-  const cfg = RIESGO_CONFIG[nivel];
+  const cfg = RISK_BADGE_CONFIG[nivel];
+  const Icono = cfg.icon;
   return (
-    <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium border ${cfg.badge}`}>
-      <span className={`w-1.5 h-1.5 rounded-full ${cfg.dot}`} />
+    <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold ${cfg.className}`}>
+      <Icono className="h-3 w-3" />
       {cfg.label}
     </span>
   );
