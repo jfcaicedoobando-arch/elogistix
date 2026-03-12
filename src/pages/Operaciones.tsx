@@ -331,7 +331,7 @@ export default function Operaciones() {
                             </TableCell>
                             <TableCell className="font-medium">{op.nombre}</TableCell>
                             <TableCell className="text-center">
-                              <SemaforoDots criticos={op.criticos} enPuerto={op.enPuerto} porArribar={op.porArribar} />
+                              <RiesgoIndicador criticos={op.criticos} enPuerto={op.enPuerto} porArribar={op.porArribar} />
                             </TableCell>
                             <TableCell className="text-center">
                               <CapacityBar count={op.contenedores} max={MAX_CONTENEDORES} />
