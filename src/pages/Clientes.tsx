@@ -60,6 +60,7 @@ export default function Clientes() {
   const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
   const [modoAlta, setModoAlta] = useState<ModoAlta>("manual");
   const [parsingCsf, setParsingCsf] = useState(false);
+  const [csfFile, setCsfFile] = useState<File | null>(null);
 
   const debouncedSearch = useDebounce(search, 300);
 
