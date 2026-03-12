@@ -15,6 +15,9 @@ interface Props {
 }
 
 export default function TablaConceptosGenerico({ moneda, conceptos, subtotal, iva, total }: Props) {
+  const tasaIva = useTasaIVA();
+  const ivaLabel = `IVA (${tasaIva * 100}%)`;
+
   if (conceptos.length === 0) return null;
 
   const esMXN = moneda === "MXN";
