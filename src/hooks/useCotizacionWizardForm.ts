@@ -272,12 +272,12 @@ export function useCotizacionWizardForm({ navigate, toast, userEmail, clientes, 
   }, [form]);
 
   // ── Helpers conceptos ──
-  const actualizarConcepto = useCallback((moneda: "USD" | "MXN", index: number, campo: string, valor: any) => {
-    if (campo === "_esOtro") return;
+  const actualizarConcepto = useCallback((moneda: "USD" | "MXN", index: number, campo: keyof ConceptoVentaCotizacion, valor: string | number | boolean) => {
+    if (campo === "_esOtro" as string) return;
     const setter = moneda === "USD" ? setConceptosUSD : setConceptosMXN;
     setter(prev => {
       const copia = [...prev];
-      (copia[index] as any)[campo] = valor;
+      copia[index] = { ...copia[index], [campo]: valor };
       if (moneda === "USD" && campo === "descripcion" && !(CONCEPTOS_CON_IVA_USD as readonly string[]).includes(valor)) {
         copia[index].aplica_iva = false;
       }
