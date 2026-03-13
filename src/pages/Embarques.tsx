@@ -74,6 +74,7 @@ export default function Embarques() {
   const totalPages = filterEstado !== "todos" ? 1 : Math.ceil(totalCount / pageSize);
 
   const [embarqueAEliminar, setEmbarqueAEliminar] = useState<EmbarqueRow | null>(null);
+  const [embarqueADuplicar, setEmbarqueADuplicar] = useState<EmbarqueRow | null>(null);
 
   const operadoresUnicos = useMemo(() => {
     const set = new Set(embarques.map(e => e.operador).filter(Boolean));
