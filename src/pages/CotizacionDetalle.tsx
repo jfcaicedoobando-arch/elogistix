@@ -21,9 +21,8 @@ import {
   useCotizacion, useUpdateEstadoCotizacion,
   useConvertirProspectoACliente,
   useConvertirCotizacionAEmbarques,
+  useEmbarquesVinculados,
 } from "@/hooks/useCotizaciones";
-import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
 import { usePermissions } from "@/hooks/usePermissions";
 import { useToast } from "@/hooks/use-toast";
 import { formatDate, getEstadoColor } from "@/lib/helpers";
@@ -41,19 +40,7 @@ export default function CotizacionDetalle() {
   const { canEdit } = usePermissions();
   const convertirAEmbarques = useConvertirCotizacionAEmbarques();
 
-  const { data: embarquesVinculados = [] } = useQuery({
-    queryKey: ['embarques', 'cotizacion', cotizacion?.id],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('embarques')
-        .select('id, expediente, estado, created_at')
-        .eq('cotizacion_id', cotizacion!.id)
-        .order('created_at', { ascending: true });
-      if (error) throw error;
-      return data;
-    },
-    enabled: !!cotizacion?.id,
-  });
+  const { data: embarquesVinculados = [] } = useEmbarquesVinculados(cotizacion?.id);
 
   const [showConvertir, setShowConvertir] = useState(false);
   const [showConfirmarConvertir, setShowConfirmarConvertir] = useState(false);
@@ -85,14 +72,14 @@ export default function CotizacionDetalle() {
   const esBorradorOEnviada = cotizacion.estado === 'Borrador' || cotizacion.estado === 'Enviada';
   const esAceptada = cotizacion.estado === 'Aceptada';
   const esMaritimo = cotizacion.modo === 'Marítimo';
-  const esAereo = cotizacion.modo === 'Aéreo';
 
   const handleCambiarEstado = async (estado: string) => {
     try {
       await actualizarEstado.mutateAsync({ id: cotizacion.id, estado });
       toast({ title: `Estado actualizado a "${estado}"` });
-    } catch (err: any) {
-      toast({ title: "Error", description: err.message, variant: "destructive" });
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Error desconocido";
+      toast({ title: "Error", description: msg, variant: "destructive" });
     }
   };
 
@@ -119,8 +106,9 @@ export default function CotizacionDetalle() {
       });
       toast({ title: `Cliente "${cliente.nombre}" creado exitosamente` });
       setShowConvertir(false);
-    } catch (err: any) {
-      toast({ title: "Error al convertir prospecto", description: err.message, variant: "destructive" });
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Error desconocido";
+      toast({ title: "Error al convertir prospecto", description: msg, variant: "destructive" });
     }
   };
 
@@ -329,8 +317,9 @@ export default function CotizacionDetalle() {
                   await convertirAEmbarques.mutateAsync(cotizacion);
                   toast({ title: `Se generaron ${cotizacion.num_contenedores} embarques exitosamente` });
                   setShowConfirmarConvertir(false);
-                } catch (err: any) {
-                  toast({ title: "Error al generar embarques", description: err.message, variant: "destructive" });
+                } catch (err: unknown) {
+                  const msg = err instanceof Error ? err.message : "Error desconocido";
+                  toast({ title: "Error al generar embarques", description: msg, variant: "destructive" });
                 }
               }}
             >

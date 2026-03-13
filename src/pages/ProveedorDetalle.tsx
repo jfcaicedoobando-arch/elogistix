@@ -12,15 +12,13 @@ import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { useProveedor, useProveedorMutations } from "@/hooks/useProveedores";
+import { useProveedor, useProveedorMutations, useProveedorOperaciones } from "@/hooks/useProveedores";
 import { formatCurrency } from "@/lib/formatters";
 import { getEstadoColor } from "@/lib/helpers";
 import EditarProveedorDialog from "@/components/EditarProveedorDialog";
 import { toast } from "sonner";
 import { usePermissions } from "@/hooks/usePermissions";
 import { useRegistrarActividad } from "@/hooks/useBitacora";
-import { supabase } from "@/integrations/supabase/client";
-import { useQuery } from "@tanstack/react-query";
 
 export default function ProveedorDetalle() {
   const { id } = useParams<{ id: string }>();
@@ -32,28 +30,7 @@ export default function ProveedorDetalle() {
   const { canEdit, isAdmin } = usePermissions();
   const registrarActividad = useRegistrarActividad();
 
-  // Fetch operaciones (conceptos_costo) for this provider with embarque info
-  const { data: operaciones = [] } = useQuery({
-    queryKey: ["proveedor-operaciones", id],
-    enabled: !!id,
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("conceptos_costo")
-        .select("*, embarques!conceptos_costo_embarque_id_fkey(expediente, id, cliente_nombre)")
-        .eq("proveedor_id", id!);
-      if (error) throw error;
-      return (data ?? []).map((row: any) => ({
-        concepto: row.concepto,
-        monto: Number(row.monto),
-        moneda: row.moneda,
-        estadoLiquidacion: row.estado_liquidacion,
-        fechaVencimiento: row.fecha_vencimiento,
-        expediente: row.embarques?.expediente ?? '',
-        embarqueId: row.embarques?.id ?? '',
-        clienteNombre: row.embarques?.cliente_nombre ?? '',
-      }));
-    },
-  });
+  const { data: operaciones = [] } = useProveedorOperaciones(id);
 
   if (isLoading) {
     return <div className="space-y-4 p-8">{[1,2,3].map(indice => <Skeleton key={indice} className="h-24 w-full" />)}</div>;
@@ -74,7 +51,7 @@ export default function ProveedorDetalle() {
   const totalPagado = operaciones.filter(operacion => operacion.estadoLiquidacion === 'Pagado').reduce((sum, operacion) => sum + operacion.monto, 0);
   const totalPendiente = totalFacturado - totalPagado;
 
-  const handleUpdate = async (id: string, data: any) => {
+  const handleUpdate = async (id: string, data: Record<string, unknown>) => {
     try {
       await updateProveedor(id, data);
       toast.success("Proveedor actualizado");
