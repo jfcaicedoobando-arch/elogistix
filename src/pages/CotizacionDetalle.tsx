@@ -106,8 +106,7 @@ export default function CotizacionDetalle() {
       toast({ title: `Cliente "${cliente.nombre}" creado exitosamente` });
       setShowConvertir(false);
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : "Error desconocido";
-      toast({ title: "Error al convertir prospecto", description: msg, variant: "destructive" });
+      toast({ title: "Error al convertir prospecto", description: getErrorMessage(err), variant: "destructive" });
     }
   };
 
