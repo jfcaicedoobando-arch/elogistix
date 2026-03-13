@@ -8,6 +8,10 @@ import { getDocsForMode } from '@/data/embarqueConstants';
 import type { DocumentoChecklist } from '@/components/DocumentChecklist';
 import type { ConceptoVentaLocal, ConceptoCostoLocal } from '@/data/conceptoTypes';
 import { useState } from 'react';
+import type { Tables, TablesInsert } from '@/integrations/supabase/types';
+
+type EmbarqueRow = Tables<'embarques'>;
+type ContactoRow = Pick<Tables<'contactos_cliente'>, 'id' | 'nombre' | 'tipo' | 'pais'>;
 
 export interface EmbarqueFormValues {
   modo: string;
