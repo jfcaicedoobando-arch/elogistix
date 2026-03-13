@@ -399,8 +399,8 @@ export function useCotizacionWizardForm({ navigate, toast, userEmail, clientes, 
           setCostosPreLlenados(true);
         }
         setCurrentStep(3);
-      } catch (err: any) {
-        toast({ title: "Error al guardar costos", description: err.message, variant: "destructive" });
+      } catch (err: unknown) {
+        toast({ title: "Error al guardar costos", description: getErrorMessage(err), variant: "destructive" });
       }
     } else if (currentStep === 3) {
       const conceptosUSDValidos = conceptosUSD.filter(c => c.descripcion?.trim());
