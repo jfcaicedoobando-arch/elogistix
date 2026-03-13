@@ -158,7 +158,7 @@ export function DataTable<T>({
                 onClick={onRowClick ? () => onRowClick(item) : undefined}
               >
                 {columns.map((col) => (
-                  <TableCell key={col.key} className={cn(col.width, col.className)}>
+                  <TableCell key={col.key} className={cn(col.width, col.className, col.sticky && "sticky left-0 z-[5] bg-background")}>
                     {col.render(item)}
                   </TableCell>
                 ))}
