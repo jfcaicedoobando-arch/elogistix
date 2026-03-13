@@ -397,7 +397,7 @@ export function useEliminarEmbarque() {
         if (count === 0) {
           await supabase
             .from('cotizaciones')
-            .update({ estado: 'Aceptada' as any })
+            .update({ estado: 'Aceptada' as CotizacionEstado })
             .eq('id', cotizacionId);
         }
       }
