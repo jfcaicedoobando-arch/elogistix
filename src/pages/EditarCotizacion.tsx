@@ -51,7 +51,7 @@ function EditarCotizacionForm({
   toast,
   userEmail,
 }: {
-  cotizacion: Tables<'cotizaciones'>;
+  cotizacion: CotizacionRow;
   costos: CostoCotizacion[];
   clientes: { id: string; nombre: string }[];
   navigate: NavigateFunction;

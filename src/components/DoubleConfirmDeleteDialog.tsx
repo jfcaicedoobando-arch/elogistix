@@ -24,8 +24,6 @@ export default function DoubleConfirmDeleteDialog({
   onConfirm,
   isPending = false,
 }: DoubleConfirmDeleteDialogProps) {
-  const [step, setStep] = [open ? 1 : 0, () => {}] as const;
-  // Use internal state for 2-step flow
   return <DoubleConfirmInner
     open={open}
     onOpenChange={onOpenChange}
