@@ -362,8 +362,8 @@ export function useCotizacionWizardForm({ navigate, toast, userEmail, clientes, 
           setCotizacionId(cotizacion.id);
         }
         setCurrentStep(2);
-      } catch (err: any) {
-        toast({ title: "Error al guardar datos generales", description: err.message, variant: "destructive" });
+      } catch (err: unknown) {
+        toast({ title: "Error al guardar datos generales", description: getErrorMessage(err), variant: "destructive" });
       }
     } else if (currentStep === 2) {
       try {
