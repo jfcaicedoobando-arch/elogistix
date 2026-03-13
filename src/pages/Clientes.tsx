@@ -16,11 +16,11 @@ const DEFAULT_PAGE_SIZE = 20;
 type ClienteRow = { id: string; nombre: string; rfc: string; ciudad: string; estado: string; contacto: string; telefono: string };
 
 const columns: DataTableColumn<ClienteRow>[] = [
-  { key: "nombre", header: "Nombre", className: "font-medium max-w-[200px] truncate", render: (c) => c.nombre },
-  { key: "rfc", header: "RFC", className: "text-xs font-mono", render: (c) => c.rfc },
-  { key: "ciudad", header: "Ciudad", className: "text-xs", render: (c) => `${c.ciudad}, ${c.estado}` },
-  { key: "contacto", header: "Contacto", className: "text-xs", render: (c) => c.contacto },
-  { key: "telefono", header: "Teléfono", className: "text-xs", render: (c) => c.telefono },
+  { key: "nombre", header: "Nombre", width: "min-w-[180px]", className: "font-medium max-w-[200px] truncate", sortable: true, sortValue: (c) => c.nombre, render: (c) => c.nombre },
+  { key: "rfc", header: "RFC", width: "w-[130px]", className: "text-xs font-mono", sortable: true, sortValue: (c) => c.rfc, render: (c) => c.rfc },
+  { key: "ciudad", header: "Ciudad", width: "w-[150px]", className: "text-xs", sortable: true, sortValue: (c) => c.ciudad, render: (c) => `${c.ciudad}, ${c.estado}` },
+  { key: "contacto", header: "Contacto", width: "w-[140px]", className: "text-xs", render: (c) => c.contacto },
+  { key: "telefono", header: "Teléfono", width: "w-[120px]", className: "text-xs", render: (c) => c.telefono },
 ];
 
 export default function Clientes() {

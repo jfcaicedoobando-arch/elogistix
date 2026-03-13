@@ -18,6 +18,7 @@ const columns: DataTableColumn<EmbarqueConProfit>[] = [
   { key: "costo", header: "Costo USD", className: "text-right tabular-nums", headerClassName: "text-right", render: (e) => formatCurrency(e.costoUSD, "USD") },
   {
     key: "profit", header: "Profit", className: "text-right font-semibold tabular-nums", headerClassName: "text-right",
+    sortable: true, sortValue: (e) => e.profit,
     render: (e) => (
       <span className={e.profit >= 0 ? "text-success" : "text-destructive"}>
         {formatCurrency(e.profit, "USD")}
@@ -26,6 +27,7 @@ const columns: DataTableColumn<EmbarqueConProfit>[] = [
   },
   {
     key: "margen", header: "Margen", className: "text-right", headerClassName: "text-right",
+    sortable: true, sortValue: (e) => e.margen,
     render: (e) => (
       <Badge className={`text-[10px] ${
         e.margen > 15 ? "bg-success/15 text-success border-success/30"

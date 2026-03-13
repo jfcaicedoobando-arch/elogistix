@@ -13,6 +13,13 @@ interface ChangelogEntry {
 
 const changelog: ChangelogEntry[] = [
   {
+    version: "5.18.0",
+    date: "2026-03-13",
+    type: "minor",
+    title: "Tablas con ordenamiento por columna y anchos explícitos",
+    description: "El componente DataTable ahora soporta click-to-sort (asc → desc → none) con indicadores visuales ArrowUp/ArrowDown/ArrowUpDown. Se configuraron anchos explícitos (width) en todas las columnas de Embarques, Cotizaciones, Clientes, Proveedores, Facturación, Usuarios y Dashboard para alineación consistente. Columnas clave marcadas como sortable con extractores de valor tipados.",
+  },
+  {
     version: "5.17.0",
     date: "2026-03-13",
     type: "minor",

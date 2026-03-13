@@ -24,14 +24,14 @@ const DEFAULT_PAGE_SIZE = 20;
 type Factura = ReturnType<typeof useFacturas>["data"] extends (infer U)[] | undefined ? U : never;
 
 const facturaColumns: DataTableColumn<Factura>[] = [
-  { key: "numero", header: "# Factura", className: "font-medium", render: (f) => f.numero },
-  { key: "expediente", header: "Expediente", render: (f) => f.expediente },
-  { key: "cliente", header: "Cliente", className: "max-w-[180px] truncate", render: (f) => f.cliente_nombre },
-  { key: "monto", header: "Monto", className: "font-medium", render: (f) => formatCurrency(f.total, f.moneda) },
-  { key: "moneda", header: "Moneda", render: (f) => f.moneda },
-  { key: "emision", header: "Emisión", className: "text-xs", render: (f) => formatDate(f.fecha_emision) },
-  { key: "vencimiento", header: "Vencimiento", className: "text-xs", render: (f) => formatDate(f.fecha_vencimiento) },
-  { key: "estado", header: "Estado", render: (f) => <Badge className={getEstadoColor(f.estado)}>{f.estado}</Badge> },
+  { key: "numero", header: "# Factura", width: "w-[110px]", className: "font-medium", sortable: true, sortValue: (f) => f.numero, render: (f) => f.numero },
+  { key: "expediente", header: "Expediente", width: "w-[110px]", render: (f) => f.expediente },
+  { key: "cliente", header: "Cliente", width: "min-w-[160px]", className: "max-w-[180px] truncate", render: (f) => f.cliente_nombre },
+  { key: "monto", header: "Monto", width: "w-[110px]", className: "font-medium", sortable: true, sortValue: (f) => f.total, render: (f) => formatCurrency(f.total, f.moneda) },
+  { key: "moneda", header: "Moneda", width: "w-[70px]", render: (f) => f.moneda },
+  { key: "emision", header: "Emisión", width: "w-[100px]", className: "text-xs", sortable: true, sortValue: (f) => f.fecha_emision, render: (f) => formatDate(f.fecha_emision) },
+  { key: "vencimiento", header: "Vencimiento", width: "w-[100px]", className: "text-xs", sortable: true, sortValue: (f) => f.fecha_vencimiento, render: (f) => formatDate(f.fecha_vencimiento) },
+  { key: "estado", header: "Estado", width: "w-[100px]", sortable: true, sortValue: (f) => f.estado, render: (f) => <Badge className={getEstadoColor(f.estado)}>{f.estado}</Badge> },
 ];
 
 export default function Facturacion() {
@@ -77,13 +77,13 @@ export default function Facturacion() {
   type GastoPendiente = (typeof gastosPendientes)[number];
 
   const gastoColumns: DataTableColumn<GastoPendiente>[] = [
-    { key: "proveedor", header: "Proveedor", render: (g) => g.proveedor_nombre },
-    { key: "expediente", header: "Expediente", className: "font-medium", render: (g) => (g.embarques as { expediente: string } | null)?.expediente || "-" },
-    { key: "concepto", header: "Concepto", render: (g) => g.concepto },
-    { key: "monto", header: "Monto", className: "font-medium", render: (g) => formatCurrency(g.monto, g.moneda) },
-    { key: "moneda", header: "Moneda", render: (g) => g.moneda },
-    { key: "vencimiento", header: "Vencimiento", className: "text-xs", render: (g) => g.fecha_vencimiento ? formatDate(g.fecha_vencimiento) : "-" },
-    { key: "estado", header: "Estado", render: () => <Badge className={getEstadoColor("Pendiente")}>Pendiente</Badge> },
+    { key: "proveedor", header: "Proveedor", width: "min-w-[160px]", sortable: true, sortValue: (g) => g.proveedor_nombre, render: (g) => g.proveedor_nombre },
+    { key: "expediente", header: "Expediente", width: "w-[110px]", className: "font-medium", render: (g) => (g.embarques as { expediente: string } | null)?.expediente || "-" },
+    { key: "concepto", header: "Concepto", width: "min-w-[140px]", render: (g) => g.concepto },
+    { key: "monto", header: "Monto", width: "w-[110px]", className: "font-medium", sortable: true, sortValue: (g) => g.monto, render: (g) => formatCurrency(g.monto, g.moneda) },
+    { key: "moneda", header: "Moneda", width: "w-[70px]", render: (g) => g.moneda },
+    { key: "vencimiento", header: "Vencimiento", width: "w-[100px]", className: "text-xs", sortable: true, sortValue: (g) => g.fecha_vencimiento || "", render: (g) => g.fecha_vencimiento ? formatDate(g.fecha_vencimiento) : "-" },
+    { key: "estado", header: "Estado", width: "w-[100px]", render: () => <Badge className={getEstadoColor("Pendiente")}>Pendiente</Badge> },
     {
       key: "acciones", header: "Acciones", render: (g) => canEdit ? (
         <Button variant="outline" size="sm" disabled={marcarPagado.isPending} onClick={() => handleMarcarPagado(g.id)}>

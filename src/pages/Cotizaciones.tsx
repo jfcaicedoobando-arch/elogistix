@@ -55,14 +55,14 @@ export default function Cotizaciones() {
 
   const columns: DataTableColumn<Cotizacion>[] = useMemo(() => {
     const cols: DataTableColumn<Cotizacion>[] = [
-      { key: "folio", header: "Folio", className: "font-medium", render: (c) => c.folio },
-      { key: "cliente", header: "Cliente", className: "max-w-[180px] truncate", render: (c) => c.cliente_nombre },
-      { key: "modo", header: "Modo", className: "text-xs", render: (c) => c.modo },
-      { key: "ruta", header: "Origen → Destino", className: "text-xs", render: (c) => `${c.origen || "-"} → ${c.destino || "-"}` },
-      { key: "subtotal", header: "Subtotal", className: "text-right text-xs", headerClassName: "text-right", render: (c) => formatCurrency(c.subtotal, c.moneda) },
-      { key: "estado", header: "Estado", render: (c) => <Badge variant="secondary" className={`text-xs ${getEstadoColor(c.estado)}`}>{c.estado}</Badge> },
-      { key: "vigencia", header: "Vigencia", className: "text-xs", render: (c) => c.fecha_vigencia ? formatDate(c.fecha_vigencia) : "-" },
-      { key: "fecha", header: "Fecha", className: "text-xs", render: (c) => new Date(c.created_at).toLocaleString('es-MX', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }) },
+      { key: "folio", header: "Folio", width: "w-[100px]", className: "font-medium", sortable: true, sortValue: (c) => c.folio, render: (c) => c.folio },
+      { key: "cliente", header: "Cliente", width: "min-w-[160px]", className: "max-w-[180px] truncate", sortable: true, sortValue: (c) => c.cliente_nombre, render: (c) => c.cliente_nombre },
+      { key: "modo", header: "Modo", width: "w-[80px]", className: "text-xs", render: (c) => c.modo },
+      { key: "ruta", header: "Origen → Destino", width: "min-w-[160px]", className: "text-xs", render: (c) => `${c.origen || "-"} → ${c.destino || "-"}` },
+      { key: "subtotal", header: "Subtotal", width: "w-[110px]", className: "text-right text-xs", headerClassName: "text-right", sortable: true, sortValue: (c) => c.subtotal, render: (c) => formatCurrency(c.subtotal, c.moneda) },
+      { key: "estado", header: "Estado", width: "w-[100px]", sortable: true, sortValue: (c) => c.estado, render: (c) => <Badge variant="secondary" className={`text-xs ${getEstadoColor(c.estado)}`}>{c.estado}</Badge> },
+      { key: "vigencia", header: "Vigencia", width: "w-[100px]", className: "text-xs", render: (c) => c.fecha_vigencia ? formatDate(c.fecha_vigencia) : "-" },
+      { key: "fecha", header: "Fecha", width: "w-[130px]", className: "text-xs", sortable: true, sortValue: (c) => c.created_at, render: (c) => new Date(c.created_at).toLocaleString('es-MX', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }) },
     ];
     if (canEdit) {
       cols.push({
