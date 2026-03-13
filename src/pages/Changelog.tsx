@@ -13,6 +13,13 @@ interface ChangelogEntry {
 
 const changelog: ChangelogEntry[] = [
   {
+    version: "5.4.0",
+    date: "2026-03-13",
+    type: "minor",
+    title: "Refactor: mutaciones de documentos y estado extraídas a hooks dedicados",
+    description: "Las operaciones directas de Supabase en EmbarqueDetalle (subir/eliminar documentos, sincronizar estado calculado) fueron extraídas a hooks reutilizables en useEmbarqueMutations.ts (useSyncEstadoEmbarque, useUploadDocumentoEmbarque, useDeleteDocumentoEmbarque), mejorando la separación de responsabilidades y eliminando estados locales redundantes.",
+  },
+  {
     version: "5.3.0",
     date: "2026-03-13",
     type: "minor",
