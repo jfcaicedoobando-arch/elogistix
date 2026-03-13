@@ -4,6 +4,10 @@ import type { TablesInsert } from '@/integrations/supabase/types';
 import type { EmbarqueRow } from './useEmbarqueUtils';
 import { queryKeys } from '@/lib/queryKeys';
 
+type EmbarqueInsert = TablesInsert<'embarques'>;
+type CotizacionEstado = TablesInsert<'cotizaciones'>['estado'];
+type DocumentoEstado = TablesInsert<'documentos_embarque'>['estado'];
+
 // ─── Create ──────────────────────────────────────────────
 interface CreateEmbarqueInput {
   embarque: TablesInsert<'embarques'>;
