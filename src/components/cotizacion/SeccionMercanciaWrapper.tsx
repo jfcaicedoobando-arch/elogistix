@@ -6,6 +6,9 @@ import { Input } from "@/components/ui/input";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
+import {
+  Accordion, AccordionContent, AccordionItem, AccordionTrigger,
+} from "@/components/ui/accordion";
 import { Upload } from "lucide-react";
 import type { CotizacionFormValues } from "@/hooks/useCotizacionWizardForm";
 
@@ -49,15 +52,21 @@ export default function SeccionMercanciaWrapper({
 
       {children}
 
-      <div>
-        <Label>Descripción Adicional</Label>
-        <Textarea
-          value={watch("descripcionAdicional")}
-          onChange={e => setValue("descripcionAdicional", e.target.value)}
-          placeholder="Describe aquí más detalles de la mercancía..."
-          rows={3}
-        />
-      </div>
+      <Accordion type="multiple" className="w-full">
+        <AccordionItem value="descripcion-adicional" className="border-b-0">
+          <AccordionTrigger className="text-sm font-medium py-2 hover:no-underline">
+            Descripción Adicional
+          </AccordionTrigger>
+          <AccordionContent>
+            <Textarea
+              value={watch("descripcionAdicional")}
+              onChange={e => setValue("descripcionAdicional", e.target.value)}
+              placeholder="Describe aquí más detalles de la mercancía..."
+              rows={3}
+            />
+          </AccordionContent>
+        </AccordionItem>
+      </Accordion>
 
       {tipoCarga === 'Mercancía Peligrosa' && (
         <div>

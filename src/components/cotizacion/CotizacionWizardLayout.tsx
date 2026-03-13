@@ -1,10 +1,14 @@
+import { useEffect, useRef } from "react";
 import { FormProvider } from "react-hook-form";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { ArrowLeft, Save, ChevronRight, ChevronLeft, Info, Package } from "lucide-react";
+import {
+  Accordion, AccordionContent, AccordionItem, AccordionTrigger,
+} from "@/components/ui/accordion";
+import { ArrowLeft, Save, ChevronRight, ChevronLeft, Info, Package, StickyNote } from "lucide-react";
 
 import { StepIndicator } from "@/components/embarque/StepIndicator";
 import SeccionDestinatario from "@/components/cotizacion/SeccionDestinatario";
@@ -26,7 +30,6 @@ const WIZARD_STEPS = [
 ];
 
 interface CotizacionWizardLayoutProps {
-  /** The wizard hook instance returned by useCotizacionWizardForm */
   w: ReturnType<typeof import("@/hooks/useCotizacionWizardForm").useCotizacionWizardForm>;
   clientes: { id: string; nombre: string }[];
   title: string;
@@ -45,6 +48,18 @@ export default function CotizacionWizardLayout({
 }: CotizacionWizardLayoutProps) {
   const { form } = w;
   const tipoEmbarque = form.watch("tipoEmbarque");
+  const contentRef = useRef<HTMLDivElement>(null);
+
+  // Auto-focus first input on step change
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      const el = contentRef.current?.querySelector<HTMLElement>(
+        'input:not([type="hidden"]):not([readonly]), select, textarea, [role="combobox"]'
+      );
+      el?.focus();
+    }, 100);
+    return () => clearTimeout(timer);
+  }, [w.currentStep]);
 
   return (
     <FormProvider {...form}>
@@ -64,7 +79,7 @@ export default function CotizacionWizardLayout({
         </div>
 
         {/* Contenido scrolleable */}
-        <div className="flex-1 overflow-y-auto p-4">
+        <div className="flex-1 overflow-y-auto p-4" ref={contentRef}>
           <div className="max-w-4xl mx-auto space-y-6">
             {/* PASO 1 — Datos Generales */}
             {w.currentStep === 1 && (
@@ -100,30 +115,39 @@ export default function CotizacionWizardLayout({
                   </CardContent>
                 </Card>
                 <SeccionRutaCotizacion />
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="text-lg flex items-center gap-2">
-                      <Package className="h-5 w-5 text-primary" />
-                      Número de Embarques
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <Label>Número de contenedores</Label>
-                    <Input
-                      type="number" min={1}
-                      value={form.watch("numContenedores")}
-                      onChange={e => form.setValue("numContenedores", Math.max(1, parseInt(e.target.value) || 1))}
-                      className="w-32 mt-1"
-                    />
-                  </CardContent>
-                </Card>
-                <Card>
-                  <CardHeader><CardTitle className="text-lg">Notas Adicionales</CardTitle></CardHeader>
-                  <CardContent>
-                    <Label>Notas</Label>
-                    <Textarea value={form.watch("notas")} onChange={e => form.setValue("notas", e.target.value)} placeholder="Observaciones o condiciones..." rows={3} />
-                  </CardContent>
-                </Card>
+
+                {/* Campos opcionales colapsados */}
+                <Accordion type="multiple" className="w-full">
+                  <AccordionItem value="num-embarques">
+                    <AccordionTrigger className="text-base font-semibold hover:no-underline">
+                      <span className="flex items-center gap-2">
+                        <Package className="h-5 w-5 text-primary" />
+                        Número de Embarques
+                      </span>
+                    </AccordionTrigger>
+                    <AccordionContent className="pt-2">
+                      <Label>Número de contenedores</Label>
+                      <Input
+                        type="number" min={1}
+                        value={form.watch("numContenedores")}
+                        onChange={e => form.setValue("numContenedores", Math.max(1, parseInt(e.target.value) || 1))}
+                        className="w-32 mt-1"
+                      />
+                    </AccordionContent>
+                  </AccordionItem>
+                  <AccordionItem value="notas">
+                    <AccordionTrigger className="text-base font-semibold hover:no-underline">
+                      <span className="flex items-center gap-2">
+                        <StickyNote className="h-5 w-5 text-primary" />
+                        Notas Adicionales
+                      </span>
+                    </AccordionTrigger>
+                    <AccordionContent className="pt-2">
+                      <Label>Notas</Label>
+                      <Textarea value={form.watch("notas")} onChange={e => form.setValue("notas", e.target.value)} placeholder="Observaciones o condiciones..." rows={3} />
+                    </AccordionContent>
+                  </AccordionItem>
+                </Accordion>
               </>
             )}
 
