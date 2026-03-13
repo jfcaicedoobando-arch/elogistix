@@ -80,11 +80,11 @@ export default function Cotizaciones() {
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={() => navigate(`/cotizaciones/${c.id}/editar`)}>
+              <DropdownMenuItem onClick={(e) => { e.stopPropagation(); navigate(`/cotizaciones/${c.id}/editar`); }}>
                 <Pencil className="mr-2 h-4 w-4" /> Editar
               </DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem className="text-destructive focus:text-destructive" onClick={() => setCotizacionAEliminar(c.id)}>
+              <DropdownMenuItem className="text-destructive focus:text-destructive" onClick={(e) => { e.stopPropagation(); setCotizacionAEliminar(c.id); }}>
                 <Trash2 className="mr-2 h-4 w-4" /> Eliminar
               </DropdownMenuItem>
             </DropdownMenuContent>

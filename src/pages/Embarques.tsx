@@ -133,14 +133,14 @@ export default function Embarques() {
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={() => navigate(`/embarques/${e.id}/editar`)}>
+              <DropdownMenuItem onClick={(ev) => { ev.stopPropagation(); navigate(`/embarques/${e.id}/editar`); }}>
                 <Pencil className="mr-2 h-4 w-4" /> Editar
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setEmbarqueADuplicar(e)}>
+              <DropdownMenuItem onClick={(ev) => { ev.stopPropagation(); setEmbarqueADuplicar(e); }}>
                 <Copy className="mr-2 h-4 w-4" /> Duplicar
               </DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem className="text-destructive focus:text-destructive" onClick={() => setEmbarqueAEliminar(e)}>
+              <DropdownMenuItem className="text-destructive focus:text-destructive" onClick={(ev) => { ev.stopPropagation(); setEmbarqueAEliminar(e); }}>
                 <Trash2 className="mr-2 h-4 w-4" /> Eliminar
               </DropdownMenuItem>
             </DropdownMenuContent>
