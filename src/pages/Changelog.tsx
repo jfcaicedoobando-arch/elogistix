@@ -13,6 +13,13 @@ interface ChangelogEntry {
 
 const changelog: ChangelogEntry[] = [
   {
+    version: "5.8.0",
+    date: "2026-03-13",
+    type: "minor",
+    title: "Refactor: useCotizaciones fragmentado en módulos especializados",
+    description: "El hook monolítico useCotizaciones.ts (443 líneas) fue dividido en 4 módulos: useCotizacionTypes.ts (tipos e interfaces), useCotizacionQueries.ts (queries), useCotizacionMutations.ts (CRUD + estado), useCotizacionConversions.ts (prospecto→cliente, cotización→embarques). useCotizaciones.ts ahora es un barrel re-export. Todos los imports existentes siguen funcionando sin cambios.",
+  },
+  {
     version: "5.7.0",
     date: "2026-03-13",
     type: "minor",
