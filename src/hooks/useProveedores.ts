@@ -104,3 +104,42 @@ export function useProveedor(id: string | undefined) {
     },
   });
 }
+
+/** Operaciones (conceptos de costo) vinculadas a un proveedor */
+export interface ProveedorOperacion {
+  concepto: string;
+  monto: number;
+  moneda: string;
+  estadoLiquidacion: string;
+  fechaVencimiento: string | null;
+  expediente: string;
+  embarqueId: string;
+  clienteNombre: string;
+}
+
+export function useProveedorOperaciones(proveedorId: string | undefined) {
+  return useQuery({
+    queryKey: queryKeys.proveedores.operaciones(proveedorId!),
+    enabled: !!proveedorId,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("conceptos_costo")
+        .select("*, embarques!conceptos_costo_embarque_id_fkey(expediente, id, cliente_nombre)")
+        .eq("proveedor_id", proveedorId!);
+      if (error) throw error;
+      return (data ?? []).map((row) => {
+        const embarque = row.embarques as unknown as { expediente: string; id: string; cliente_nombre: string } | null;
+        return {
+          concepto: row.concepto,
+          monto: Number(row.monto),
+          moneda: row.moneda,
+          estadoLiquidacion: row.estado_liquidacion,
+          fechaVencimiento: row.fecha_vencimiento,
+          expediente: embarque?.expediente ?? '',
+          embarqueId: embarque?.id ?? '',
+          clienteNombre: embarque?.cliente_nombre ?? '',
+        } satisfies ProveedorOperacion;
+      });
+    },
+  });
+}

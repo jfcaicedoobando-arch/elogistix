@@ -35,6 +35,7 @@ export const queryKeys = {
     list: (filters: Record<string, unknown>) => ['proveedores', 'list', filters] as const,
     detail: (id: string) => ['proveedores', id] as const,
     select: ['proveedores', 'select'] as const,
+    operaciones: (id: string) => ['proveedores', 'operaciones', id] as const,
   },
   configuracion: {
     all: ['configuracion'] as const,

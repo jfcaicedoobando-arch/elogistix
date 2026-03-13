@@ -54,3 +54,20 @@ export function useCotizacion(id: string | undefined) {
     enabled: !!id,
   });
 }
+
+/** Embarques vinculados a una cotización */
+export function useEmbarquesVinculados(cotizacionId: string | undefined) {
+  return useQuery({
+    queryKey: queryKeys.cotizaciones.embarquesVinculados(cotizacionId!),
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('embarques')
+        .select('id, expediente, estado, created_at')
+        .eq('cotizacion_id', cotizacionId!)
+        .order('created_at', { ascending: true });
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!cotizacionId,
+  });
+}
