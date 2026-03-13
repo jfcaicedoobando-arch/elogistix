@@ -194,7 +194,7 @@ export function useEmbarqueForm() {
         descripcion: v.concepto,
         cantidad: v.cantidad,
         precio_unitario: v.precioUnitario,
-        moneda: v.moneda as any,
+        moneda: v.moneda as TablesInsert<'conceptos_venta'>['moneda'],
         total: v.cantidad * v.precioUnitario,
       }));
 
