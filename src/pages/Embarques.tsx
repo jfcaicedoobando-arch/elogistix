@@ -100,7 +100,7 @@ export default function Embarques() {
 
   const columns: DataTableColumn<EmbarqueRow>[] = useMemo(() => {
     const base: DataTableColumn<EmbarqueRow>[] = [
-      { key: "expediente", header: "Expediente", width: "w-[110px]", className: "font-medium", sortable: true, sortValue: (e) => e.expediente, render: (e) => e.expediente },
+      { key: "expediente", header: "Expediente", width: "w-[110px]", className: "font-medium", sticky: true, sortable: true, sortValue: (e) => e.expediente, render: (e) => e.expediente },
       { key: "bl", header: "BL Master", width: "w-[120px]", className: "text-xs", render: (e) => e.bl_master || "-" },
       { key: "cliente", header: "Cliente", width: "min-w-[160px]", className: "max-w-[180px] truncate", sortable: true, sortValue: (e) => e.cliente_nombre, render: (e) => e.cliente_nombre },
       {
