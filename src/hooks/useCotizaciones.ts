@@ -34,56 +34,12 @@ export interface DimensionAerea {
   peso_volumetrico_kg: number;
 }
 
-export interface CotizacionRow {
-  id: string;
-  folio: string;
-  cliente_id: string | null;
-  cliente_nombre: string;
-  es_prospecto: boolean;
-  prospecto_empresa: string;
-  prospecto_contacto: string;
-  prospecto_email: string;
-  prospecto_telefono: string;
-  modo: string;
-  tipo: string;
-  incoterm: string;
-  descripcion_mercancia: string;
-  peso_kg: number;
-  volumen_m3: number;
-  piezas: number;
-  origen: string;
-  destino: string;
+/** CotizacionRow extiende la tabla generada, sobreescribiendo los campos JSON */
+export type CotizacionRow = Omit<Tables<'cotizaciones'>, 'conceptos_venta' | 'dimensiones_lcl' | 'dimensiones_aereas'> & {
   conceptos_venta: ConceptoVentaCotizacion[];
-  subtotal: number;
-  moneda: string;
-  vigencia_dias: number;
-  fecha_vigencia: string | null;
-  notas: string | null;
-  estado: string;
-  operador: string;
-  tipo_carga: string;
-  msds_archivo: string | null;
-  tipo_embarque: string;
-  tipo_contenedor: string | null;
-  tipo_peso: string;
-  descripcion_adicional: string;
-  sector_economico: string;
   dimensiones_lcl: DimensionLCL[];
   dimensiones_aereas: DimensionAerea[];
-  dias_libres_destino: number;
-  dias_almacenaje: number;
-  tiempo_transito_dias: number | null;
-  frecuencia: string;
-  ruta_texto: string;
-  validez_propuesta: string | null;
-  tipo_movimiento: string;
-  seguro: boolean;
-  valor_seguro_usd: number;
-  carta_garantia: boolean;
-  num_contenedores: number;
-  created_at: string;
-  updated_at: string;
-}
+};
 
 /** Columnas necesarias para la tabla de cotizaciones (evita select('*')) */
 const COTIZACION_LIST_COLUMNS = 'id, folio, cliente_id, cliente_nombre, modo, origen, destino, subtotal, moneda, estado, fecha_vigencia, created_at, descripcion_mercancia' as const;
