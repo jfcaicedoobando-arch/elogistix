@@ -44,6 +44,7 @@ export default function Facturacion() {
   const { data: gastosPendientes = [], isLoading: loadingGastos } = useGastosPendientes();
   const marcarPagado = useMarcarCostoPagado();
   const { canEdit } = usePermissions();
+  const { toast } = useToast();
 
   const filtered = useMemo(() => {
     return facturas.filter(factura => {
@@ -67,9 +68,9 @@ export default function Facturacion() {
           entidad_id: id,
           entidad_nombre: 'Gasto marcado como pagado',
         });
-        toast.success("Gasto marcado como pagado");
+        toast({ title: "Gasto marcado como pagado" });
       },
-      onError: () => toast.error("Error al marcar como pagado"),
+      onError: () => toast({ title: "Error al marcar como pagado", variant: "destructive" }),
     });
   };
 
