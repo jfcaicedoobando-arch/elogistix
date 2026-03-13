@@ -11,7 +11,7 @@ import {
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { useNavigate } from "react-router-dom";
-import { useEmbarques, calcularEstadoEmbarque, useEliminarEmbarque } from "@/hooks/useEmbarques";
+import { useEmbarquesPaginados, calcularEstadoEmbarque, useEliminarEmbarque } from "@/hooks/useEmbarques";
 import { useClientesForSelect } from "@/hooks/useClientes";
 import { usePermissions } from "@/hooks/usePermissions";
 import { useRegistrarActividad } from "@/hooks/useBitacora";
@@ -21,10 +21,10 @@ import { ESTADOS_EMBARQUE, MODOS_TRANSPORTE } from "@/data/embarqueConstants";
 import SearchInput from "@/components/SearchInput";
 import PaginationControls from "@/components/PaginationControls";
 import { DataTable, type DataTableColumn } from "@/components/DataTable";
+import { useDebounce } from "@/hooks/useDebounce";
+import type { EmbarqueRow } from "@/hooks/useEmbarqueUtils";
 
 const DEFAULT_PAGE_SIZE = 20;
-
-type Embarque = ReturnType<typeof useEmbarques>["data"] extends (infer U)[] | undefined ? U : never;
 
 function shortName(raw: string) {
   return raw.split(/[,—]/)[0].trim();
@@ -32,7 +32,6 @@ function shortName(raw: string) {
 
 export default function Embarques() {
   const navigate = useNavigate();
-  const { data: embarques = [], isLoading } = useEmbarques();
   const { data: clientes = [] } = useClientesForSelect();
   const [search, setSearch] = useState("");
   const [filterModo, setFilterModo] = useState<string>("todos");
@@ -46,8 +45,44 @@ export default function Embarques() {
   const eliminarEmbarque = useEliminarEmbarque();
   const registrarActividad = useRegistrarActividad();
 
-  const [embarqueAEliminar, setEmbarqueAEliminar] = useState<Embarque | null>(null);
+  const debouncedSearch = useDebounce(search, 300);
+
+  const { data: resultado, isLoading } = useEmbarquesPaginados({
+    search: debouncedSearch,
+    filterModo,
+    filterEstado,
+    filterCliente,
+    filterOperador,
+    page,
+    pageSize,
+  });
+
+  const embarques = resultado?.data ?? [];
+  const totalCount = resultado?.count ?? 0;
+
+  // Estado filtering is done client-side because calcularEstadoEmbarque derives from ETD/ETA
+  const filtered = useMemo(() => {
+    if (filterEstado === "todos") return embarques;
+    return embarques.filter((e) => {
+      const estadoCalculado = calcularEstadoEmbarque(e.modo, e.tipo, e.etd, e.eta, e.estado);
+      return estadoCalculado === filterEstado;
+    });
+  }, [embarques, filterEstado]);
+
+  // For estado filter we use filtered count when filtering estado client-side
+  const displayCount = filterEstado !== "todos" ? filtered.length : totalCount;
+  const totalPages = filterEstado !== "todos"
+    ? 1 // When filtering estado client-side, all results are in the current page
+    : Math.ceil(totalCount / pageSize);
+
+  const [embarqueAEliminar, setEmbarqueAEliminar] = useState<EmbarqueRow | null>(null);
   const [paso2, setPaso2] = useState(false);
+
+  // Collect unique operators from current page for the filter dropdown
+  const operadoresUnicos = useMemo(() => {
+    const set = new Set(embarques.map(e => e.operador).filter(Boolean));
+    return Array.from(set).sort();
+  }, [embarques]);
 
   const handleEliminar = async () => {
     if (!embarqueAEliminar) return;
@@ -75,8 +110,8 @@ export default function Embarques() {
     }
   };
 
-  const columns: DataTableColumn<Embarque>[] = useMemo(() => {
-    const base: DataTableColumn<Embarque>[] = [
+  const columns: DataTableColumn<EmbarqueRow>[] = useMemo(() => {
+    const base: DataTableColumn<EmbarqueRow>[] = [
       { key: "expediente", header: "Expediente", className: "font-medium", render: (e) => e.expediente },
       { key: "bl", header: "BL Master", className: "text-xs", render: (e) => e.bl_master || "-" },
       { key: "cliente", header: "Cliente", className: "max-w-[180px] truncate", render: (e) => e.cliente_nombre },
@@ -121,35 +156,16 @@ export default function Embarques() {
     return base;
   }, [canEdit]);
 
-  const operadoresUnicos = useMemo(() => {
-    const set = new Set(embarques.map(e => e.operador).filter(Boolean));
-    return Array.from(set).sort();
-  }, [embarques]);
-
-  const filtered = useMemo(() => {
-    return embarques.filter((embarque) => {
-      const matchSearch = !search || embarque.expediente.toLowerCase().includes(search.toLowerCase()) ||
-        embarque.cliente_nombre.toLowerCase().includes(search.toLowerCase()) ||
-        embarque.descripcion_mercancia.toLowerCase().includes(search.toLowerCase()) ||
-        (embarque.bl_master || '').toLowerCase().includes(search.toLowerCase());
-      const matchModo = filterModo === "todos" || embarque.modo === filterModo;
-      const estadoCalculado = calcularEstadoEmbarque(embarque.modo, embarque.tipo, embarque.etd, embarque.eta, embarque.estado);
-      const matchEstado = filterEstado === "todos" || estadoCalculado === filterEstado;
-      const matchCliente = filterCliente === "todos" || embarque.cliente_id === filterCliente;
-      const matchOperador = filterOperador === "todos" || embarque.operador === filterOperador;
-      return matchSearch && matchModo && matchEstado && matchCliente && matchOperador;
-    });
-  }, [embarques, search, filterModo, filterEstado, filterCliente, filterOperador]);
-
-  const paginated = filtered.slice(page * pageSize, (page + 1) * pageSize);
-  const totalPages = Math.ceil(filtered.length / pageSize);
+  const resetFilters = () => {
+    setPage(0);
+  };
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold">Embarques</h1>
-          <p className="text-sm text-muted-foreground">{filtered.length} embarques encontrados</p>
+          <p className="text-sm text-muted-foreground">{displayCount} embarques encontrados</p>
         </div>
         {canEdit && (
           <Button onClick={() => navigate("/embarques/nuevo")}>
@@ -203,7 +219,7 @@ export default function Embarques() {
         <CardContent className="p-0">
           <DataTable
             columns={columns}
-            data={paginated}
+            data={filtered}
             isLoading={isLoading}
             emptyMessage="No se encontraron embarques"
             onRowClick={(e) => navigate(`/embarques/${e.id}`)}
