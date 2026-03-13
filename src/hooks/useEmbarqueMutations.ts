@@ -49,9 +49,9 @@ export function useUpdateEmbarque() {
     mutationFn: async ({ id, embarque, conceptosVenta, conceptosCosto }: UpdateEmbarqueInput) => {
       const { error } = await supabase.rpc('actualizar_embarque_completo', {
         p_embarque_id: id,
-        p_embarque: embarque as unknown as Record<string, unknown>,
-        p_conceptos_venta: conceptosVenta as unknown as Record<string, unknown>[],
-        p_conceptos_costo: conceptosCosto as unknown as Record<string, unknown>[],
+        p_embarque: embarque as unknown as Json,
+        p_conceptos_venta: conceptosVenta as unknown as Json,
+        p_conceptos_costo: conceptosCosto as unknown as Json,
       });
       if (error) throw error;
       return { id } as EmbarqueRow;
