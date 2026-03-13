@@ -323,7 +323,7 @@ export function useConvertirProspectoACliente() {
           cliente_id: clienteCreado.id,
           cliente_nombre: clienteCreado.nombre,
           es_prospecto: false,
-        } as any)
+        })
         .eq('id', cotizacionId);
       if (errorUpdate) throw errorUpdate;
 
