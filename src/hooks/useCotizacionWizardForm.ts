@@ -211,7 +211,6 @@ function buildDefaultValues(d?: InitialData): CotizacionFormValues {
 }
 
 export function useCotizacionWizardForm({ navigate, toast, userEmail, clientes, mutations, initialData, initialCostos }: HookDeps) {
-  const tasaIva = useTasaIVA();
   const { crearCotizacion, updateCotizacion, upsertCostos, registrarActividad } = mutations;
   const isEditMode = !!initialData;
 
@@ -243,13 +242,20 @@ export function useCotizacionWizardForm({ navigate, toast, userEmail, clientes, 
   const [msdsFile, setMsdsFile] = useState<File | null>(null);
   const [costosInternos, setCostosInternos] = useState<FilaCostoLocal[]>(initialCostosLocales);
   const [costosPreLlenados, setCostosPreLlenados] = useState(isEditMode);
-  const [conceptosUSD, setConceptosUSD] = useState<ConceptoVentaCotizacion[]>(initialUSD.length > 0 ? initialUSD : [emptyUSD()]);
-  const [conceptosMXN, setConceptosMXN] = useState<ConceptoVentaCotizacion[]>(initialMXN.length > 0 ? initialMXN : [emptyMXN()]);
+
+  // ── Conceptos de venta (hook extraído) ──
+  const conceptos = useConceptosVentaCotizacion({ initialUSD, initialMXN });
+  const {
+    conceptosUSD, conceptosMXN, setConceptosUSD, setConceptosMXN,
+    actualizarConcepto, agregarConcepto, eliminarConcepto,
+    totalUSD, subtotalMXN, ivaMXN, totalMXN, tasaIva,
+  } = conceptos;
+
+  // ── P&L (hook extraído) ──
+  const { costosUSD: costosUSDFiltered, costosMXN: costosMXNFiltered, plUSD, plMXN } = useCotizacionPL(costosInternos);
 
   // ── Watched derived values ──
   const modo = form.watch("modo");
-  const tipoEmbarque = form.watch("tipoEmbarque");
-  const esProspecto = form.watch("esProspecto");
   const clienteId = form.watch("clienteId");
   const esMaritimo = modo === "Marítimo";
   const esAereo = modo === "Aéreo";
@@ -264,56 +270,6 @@ export function useCotizacionWizardForm({ navigate, toast, userEmail, clientes, 
     form.setValue("tipoCarga", "Carga General");
     setMsdsFile(null);
   }, [form]);
-
-  // ── Helpers conceptos ──
-  const actualizarConcepto = useCallback((moneda: "USD" | "MXN", index: number, campo: string, valor: string | number | boolean) => {
-    if (campo === "_esOtro") return;
-    const setter = moneda === "USD" ? setConceptosUSD : setConceptosMXN;
-    setter(prev => {
-      const copia = [...prev];
-      copia[index] = { ...copia[index], [campo]: valor };
-      if (moneda === "USD" && campo === "descripcion" && typeof valor === "string" && !(CONCEPTOS_CON_IVA_USD as readonly string[]).includes(valor)) {
-        copia[index].aplica_iva = false;
-      }
-      const sub = copia[index].cantidad * copia[index].precio_unitario;
-      copia[index].total = moneda === "MXN" ? calcularTotalConIVA(sub, tasaIva) : (copia[index].aplica_iva ? calcularTotalConIVA(sub, tasaIva) : sub);
-      return copia;
-    });
-  }, [tasaIva]);
-
-  const agregarConcepto = useCallback((moneda: "USD" | "MXN") => {
-    const setter = moneda === "USD" ? setConceptosUSD : setConceptosMXN;
-    const factory = moneda === "USD" ? emptyUSD : emptyMXN;
-    setter(prev => [...prev, factory()]);
-  }, []);
-
-  const eliminarConcepto = useCallback((moneda: "USD" | "MXN", index: number) => {
-    const setter = moneda === "USD" ? setConceptosUSD : setConceptosMXN;
-    setter(prev => {
-      if (prev.length <= 1) return prev;
-      return prev.filter((_, i) => i !== index);
-    });
-  }, []);
-
-  // ── Totales ──
-  const totalUSD = useMemo(() => conceptosUSD.reduce((s, c) => s + c.total, 0), [conceptosUSD]);
-  const subtotalMXN = useMemo(() => conceptosMXN.reduce((s, c) => s + c.cantidad * c.precio_unitario, 0), [conceptosMXN]);
-  const ivaMXN = useMemo(() => calcularIVA(subtotalMXN), [subtotalMXN]);
-  const totalMXN = useMemo(() => calcularTotalConIVA(subtotalMXN), [subtotalMXN]);
-
-  // ── Dimension totals (watched) ──
-  const dimensionesLCL = form.watch("dimensionesLCL");
-  const dimensionesAereas = form.watch("dimensionesAereas");
-  const totalPiezasLCL = useMemo(() => dimensionesLCL.reduce((s, d) => s + d.piezas, 0), [dimensionesLCL]);
-  const totalVolumenLCL = useMemo(() => dimensionesLCL.reduce((s, d) => s + d.volumen_m3, 0), [dimensionesLCL]);
-  const totalPiezasAereas = useMemo(() => dimensionesAereas.reduce((s, d) => s + d.piezas, 0), [dimensionesAereas]);
-  const totalPesoVolAereo = useMemo(() => dimensionesAereas.reduce((s, d) => s + d.peso_volumetrico_kg, 0), [dimensionesAereas]);
-
-  // ── P&L ──
-  const costosUSDFiltered = useMemo(() => costosInternos.filter(c => c.moneda === "USD"), [costosInternos]);
-  const costosMXNFiltered = useMemo(() => costosInternos.filter(c => c.moneda === "MXN"), [costosInternos]);
-  const plUSD: TotalesPL = useMemo(() => calcularTotalesPL(costosUSDFiltered), [costosUSDFiltered]);
-  const plMXN: TotalesPL = useMemo(() => calcularTotalesPL(costosMXNFiltered), [costosMXNFiltered]);
 
   // ── Build payload Paso 1 ──
   const buildPaso1Data = useCallback(() => {
