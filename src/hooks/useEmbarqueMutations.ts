@@ -83,7 +83,7 @@ export function useDuplicarEmbarque() {
     mutationFn: async ({ embarqueOrigen, copias }: DuplicarEmbarqueInput) => {
       const { data, error } = await supabase.rpc('duplicar_embarque_completo', {
         p_embarque_origen_id: embarqueOrigen.id,
-        p_copias: copias as unknown as Record<string, unknown>[],
+        p_copias: copias as unknown as Json,
       });
       if (error) throw error;
       return data as unknown as { id: string; expediente: string }[];
