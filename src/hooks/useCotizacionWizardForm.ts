@@ -6,6 +6,7 @@ import type { CostoCotizacion } from "@/hooks/useCotizacionCostos";
 import type { FilaCostoLocal } from "@/components/cotizacion/SeccionCostosInternosPLUnificado";
 import { CONCEPTOS_CON_IVA_USD } from "@/data/cotizacionConstants";
 import { calcularTotalConIVA } from "@/lib/financialUtils";
+import { buildPaso1Data as buildPaso1Mapper } from "@/lib/mappers/cotizacionMappers";
 import { useConceptosVentaCotizacion } from "@/hooks/useConceptosVentaCotizacion";
 import { useCotizacionPL } from "@/hooks/useCotizacionPL";
 import { uploadFile } from "@/lib/storage";
