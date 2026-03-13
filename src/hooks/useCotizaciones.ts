@@ -361,8 +361,8 @@ export function useConvertirCotizacionAEmbarques() {
         .eq('cotizacion_id', cotizacion.id);
       if (errorCostos) throw errorCostos;
 
-      const numContenedores = (cotizacion as any).num_contenedores ?? 1;
-      const embarquesCreados: any[] = [];
+      const numContenedores = cotizacion.num_contenedores ?? 1;
+      const embarquesCreados: Tables<'embarques'>[] = [];
 
       // 2. Loop por cada contenedor
       for (let i = 0; i < numContenedores; i++) {
