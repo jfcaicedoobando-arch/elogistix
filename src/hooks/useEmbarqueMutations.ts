@@ -19,10 +19,10 @@ export function useCreateEmbarque() {
   return useMutation({
     mutationFn: async ({ embarque, conceptosVenta, conceptosCosto, documentos }: CreateEmbarqueInput) => {
       const { data, error } = await supabase.rpc('crear_embarque_completo', {
-        p_embarque: embarque as unknown as Record<string, unknown>,
-        p_conceptos_venta: conceptosVenta as unknown as Record<string, unknown>[],
-        p_conceptos_costo: conceptosCosto as unknown as Record<string, unknown>[],
-        p_documentos: documentos as unknown as Record<string, unknown>[],
+        p_embarque: embarque as unknown as Json,
+        p_conceptos_venta: conceptosVenta as unknown as Json,
+        p_conceptos_costo: conceptosCosto as unknown as Json,
+        p_documentos: documentos as unknown as Json,
       });
       if (error) throw error;
       const result = data as unknown as { id: string };
