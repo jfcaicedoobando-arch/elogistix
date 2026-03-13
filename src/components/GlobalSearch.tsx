@@ -55,20 +55,25 @@ export function GlobalSearch() {
       setResults([]);
       return;
     }
-    const pattern = `%${terminoBusqueda}%`;
-    const [embarques, clientes, proveedores, facturas] = await Promise.all([
-      supabase.from("embarques").select("id, expediente, cliente_nombre").ilike("expediente", pattern).limit(5),
-      supabase.from("clientes").select("id, nombre, rfc").or(`nombre.ilike.${pattern},rfc.ilike.${pattern}`).limit(5),
-      supabase.from("proveedores").select("id, nombre, rfc").or(`nombre.ilike.${pattern},rfc.ilike.${pattern}`).limit(5),
-      supabase.from("facturas").select("id, numero, cliente_nombre").or(`numero.ilike.${pattern},cliente_nombre.ilike.${pattern}`).limit(5),
-    ]);
 
-    const items: SearchResult[] = [
-      ...(embarques.data ?? []).map((embarque) => ({ id: embarque.id, label: embarque.expediente, sublabel: embarque.cliente_nombre, type: "embarque" as const, url: `/embarques/${embarque.id}` })),
-      ...(clientes.data ?? []).map((cliente) => ({ id: cliente.id, label: cliente.nombre, sublabel: cliente.rfc, type: "cliente" as const, url: `/clientes/${cliente.id}` })),
-      ...(proveedores.data ?? []).map((proveedor) => ({ id: proveedor.id, label: proveedor.nombre, sublabel: proveedor.rfc, type: "proveedor" as const, url: `/proveedores/${proveedor.id}` })),
-      ...(facturas.data ?? []).map((factura) => ({ id: factura.id, label: factura.numero, sublabel: factura.cliente_nombre, type: "factura" as const, url: `/facturacion` })),
-    ];
+    const { data, error } = await supabase.rpc("busqueda_global", {
+      termino: terminoBusqueda,
+      limite: 5,
+    });
+
+    if (error) {
+      console.error("Error en búsqueda global:", error);
+      setResults([]);
+      return;
+    }
+
+    const items: SearchResult[] = (data ?? []).map((r: { id: string; label: string; sublabel: string; tipo: string; url: string }) => ({
+      id: r.id,
+      label: r.label,
+      sublabel: r.sublabel,
+      type: r.tipo as SearchResult["type"],
+      url: r.url,
+    }));
     setResults(items);
   }, []);
 

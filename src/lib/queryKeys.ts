@@ -56,7 +56,11 @@ export const queryKeys = {
   dashboard: {
     ventasUSD: ['dashboard-ventas-usd'] as const,
     costosUSD: ['dashboard-costos-usd'] as const,
+    profitAggregated: ['dashboard-profit-aggregated'] as const,
     facturas: ['dashboard-facturas'] as const,
+  },
+  operadores: {
+    distintos: ['operadores-distintos'] as const,
   },
   reportes: {
     conceptos: ['reportes', 'conceptos'] as const,

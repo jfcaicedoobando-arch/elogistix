@@ -76,10 +76,7 @@ export default function Embarques() {
   const [embarqueAEliminar, setEmbarqueAEliminar] = useState<EmbarqueRow | null>(null);
   const [embarqueADuplicar, setEmbarqueADuplicar] = useState<EmbarqueRow | null>(null);
 
-  const operadoresUnicos = useMemo(() => {
-    const set = new Set(embarques.map(e => e.operador).filter(Boolean));
-    return Array.from(set).sort();
-  }, [embarques]);
+  const { data: operadoresUnicos = [] } = useOperadoresDistintos();
 
   const handleEliminar = async () => {
     if (!embarqueAEliminar) return;

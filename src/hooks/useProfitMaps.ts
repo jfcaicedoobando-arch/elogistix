@@ -4,30 +4,15 @@ import { supabase } from "@/integrations/supabase/client";
 import { queryKeys } from "@/lib/queryKeys";
 
 /**
- * Hook compartido que consulta conceptos de venta y costo en USD
- * y construye mapas embarque_id → total acumulado.
- *
- * Usado por useDashboardData y useOperacionesData.
+ * Hook compartido que consulta profit agregado por embarque desde una RPC server-side.
+ * Reemplaza las dos queries separadas a conceptos_venta y conceptos_costo.
  */
 export function useProfitMaps() {
-  const { data: ventasUSD = [] } = useQuery({
-    queryKey: queryKeys.dashboard.ventasUSD,
+  const { data: profitRows = [] } = useQuery({
+    queryKey: queryKeys.dashboard.profitAggregated,
     queryFn: async () => {
-      const { data } = await supabase
-        .from("conceptos_venta")
-        .select("embarque_id, total")
-        .eq("moneda", "USD");
-      return data ?? [];
-    },
-  });
-
-  const { data: costosUSD = [] } = useQuery({
-    queryKey: queryKeys.dashboard.costosUSD,
-    queryFn: async () => {
-      const { data } = await supabase
-        .from("conceptos_costo")
-        .select("embarque_id, monto")
-        .eq("moneda", "USD");
+      const { data, error } = await supabase.rpc("profit_por_embarque");
+      if (error) throw error;
       return data ?? [];
     },
   });
@@ -35,14 +20,12 @@ export function useProfitMaps() {
   const { ventaMap, costoMap } = useMemo(() => {
     const vm: Record<string, number> = {};
     const cm: Record<string, number> = {};
-    ventasUSD.forEach((v) => {
-      vm[v.embarque_id] = (vm[v.embarque_id] || 0) + Number(v.total);
-    });
-    costosUSD.forEach((c) => {
-      cm[c.embarque_id] = (cm[c.embarque_id] || 0) + Number(c.monto);
+    profitRows.forEach((r: { embarque_id: string; venta_usd: number; costo_usd: number }) => {
+      vm[r.embarque_id] = Number(r.venta_usd);
+      cm[r.embarque_id] = Number(r.costo_usd);
     });
     return { ventaMap: vm, costoMap: cm };
-  }, [ventasUSD, costosUSD]);
+  }, [profitRows]);
 
   return { ventaMap, costoMap };
 }
