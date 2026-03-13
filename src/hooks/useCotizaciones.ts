@@ -372,17 +372,15 @@ export function useConvertirCotizacionAEmbarques() {
         if (errorExp) throw errorExp;
 
         // b. Insertar embarque
-        const { data: embarque, error: errorEmb } = await supabase
-          .from('embarques')
-          .insert({
+        const embarqueInsert: EmbarqueInsert = {
             cotizacion_id: cotizacion.id,
             expediente: expediente as string,
             cliente_id: cotizacion.cliente_id!,
             cliente_nombre: cotizacion.cliente_nombre,
-            estado: 'Confirmado' as any,
-            modo: cotizacion.modo as any,
-            tipo: cotizacion.tipo as any,
-            incoterm: cotizacion.incoterm as any,
+            estado: 'Confirmado',
+            modo: cotizacion.modo,
+            tipo: cotizacion.tipo,
+            incoterm: cotizacion.incoterm,
             descripcion_mercancia: cotizacion.descripcion_mercancia,
             peso_kg: cotizacion.peso_kg,
             volumen_m3: cotizacion.volumen_m3,
@@ -390,7 +388,11 @@ export function useConvertirCotizacionAEmbarques() {
             operador: cotizacion.operador,
             tipo_carga: cotizacion.tipo_carga,
             tipo_contenedor: cotizacion.tipo_contenedor,
-          } as any)
+        };
+
+        const { data: embarque, error: errorEmb } = await supabase
+          .from('embarques')
+          .insert(embarqueInsert)
           .select()
           .single();
         if (errorEmb) throw errorEmb;
