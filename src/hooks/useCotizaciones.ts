@@ -229,14 +229,14 @@ export function useUpdateCotizacion() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async ({ id, data }: { id: string; data: Partial<CreateCotizacionInput> }) => {
-      const updatePayload: any = { ...data };
+      const updatePayload: CotizacionUpdate = { ...data } as CotizacionUpdate;
       if (data.conceptos_venta) updatePayload.conceptos_venta = data.conceptos_venta as unknown as Json;
       if (data.dimensiones_lcl) updatePayload.dimensiones_lcl = data.dimensiones_lcl as unknown as Json;
       if (data.dimensiones_aereas) updatePayload.dimensiones_aereas = data.dimensiones_aereas as unknown as Json;
-      if (data.modo) updatePayload.modo = data.modo as any;
-      if (data.tipo) updatePayload.tipo = data.tipo as any;
-      if (data.incoterm) updatePayload.incoterm = data.incoterm as any;
-      if (data.moneda) updatePayload.moneda = data.moneda as any;
+      if (data.modo) updatePayload.modo = data.modo as CotizacionInsert['modo'];
+      if (data.tipo) updatePayload.tipo = data.tipo as CotizacionInsert['tipo'];
+      if (data.incoterm) updatePayload.incoterm = data.incoterm as CotizacionInsert['incoterm'];
+      if (data.moneda) updatePayload.moneda = data.moneda as CotizacionInsert['moneda'];
       const { error } = await supabase.from('cotizaciones').update(updatePayload).eq('id', id);
       if (error) throw error;
     },
