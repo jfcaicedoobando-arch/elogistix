@@ -5,6 +5,7 @@ import { ESTADOS_ACTIVOS } from "@/data/embarqueConstants";
 import { calcularUtilidad, calcularMargen } from "@/lib/financialUtils";
 import { supabase } from "@/integrations/supabase/client";
 import { queryKeys } from "@/lib/queryKeys";
+import { useProfitMaps } from "@/hooks/useProfitMaps";
 
 // ─── Types ───────────────────────────────────────────────
 export interface EmbarqueConEstado {
@@ -64,29 +65,7 @@ const DIAS_LIBRES_DEFAULT = 7;
 export function useDashboardData() {
   const { data: embarques = [], isLoading } = useEmbarques();
   const [filtroEstado, setFiltroEstado] = useState<EstadoFiltro | null>(null);
-
-  // Batch queries for profit
-  const { data: ventasUSD = [] } = useQuery({
-    queryKey: queryKeys.dashboard.ventasUSD,
-    queryFn: async () => {
-      const { data } = await supabase
-        .from("conceptos_venta")
-        .select("embarque_id, total")
-        .eq("moneda", "USD");
-      return data ?? [];
-    },
-  });
-
-  const { data: costosUSD = [] } = useQuery({
-    queryKey: queryKeys.dashboard.costosUSD,
-    queryFn: async () => {
-      const { data } = await supabase
-        .from("conceptos_costo")
-        .select("embarque_id, monto")
-        .eq("moneda", "USD");
-      return data ?? [];
-    },
-  });
+  const { ventaMap, costoMap } = useProfitMaps();
 
   // Query facturas para saber qué embarques ya tienen factura
   const { data: facturasRaw = [] } = useQuery({
@@ -135,19 +114,6 @@ export function useDashboardData() {
     () => Object.values(conteoPorEstado).reduce((s, v) => s + v, 0),
     [conteoPorEstado]
   );
-
-  // Maps de venta/costo para reutilizar
-  const { ventaMap, costoMap } = useMemo(() => {
-    const vm: Record<string, number> = {};
-    const cm: Record<string, number> = {};
-    ventasUSD.forEach((v) => {
-      vm[v.embarque_id] = (vm[v.embarque_id] || 0) + Number(v.total);
-    });
-    costosUSD.forEach((c) => {
-      cm[c.embarque_id] = (cm[c.embarque_id] || 0) + Number(c.monto);
-    });
-    return { ventaMap: vm, costoMap: cm };
-  }, [ventasUSD, costosUSD]);
 
   // Set de embarques que ya tienen factura
   const embarquesFacturados = useMemo(() => {
