@@ -13,6 +13,12 @@ interface ChangelogEntry {
 
 const changelog: ChangelogEntry[] = [
   {
+    version: "5.17.0",
+    date: "2026-03-13",
+    type: "minor",
+    title: "RPCs atómicas para embarques + extracción de mapper cotización + consolidación estado Configuración",
+    description: "Creadas 4 funciones RPC (crear_embarque_completo, actualizar_embarque_completo, duplicar_embarque_completo, eliminar_embarque_completo) que ejecutan operaciones multi-tabla en transacciones atómicas, eliminando riesgo de registros huérfanos. Extraído buildPaso1Data a src/lib/mappers/cotizacionMappers.ts como función pura testeable. Consolidados 20+ useState individuales en Configuracion.tsx a un único objeto de estado. Eliminados PromiseLike<any> restantes.",
+  },
     version: "5.16.1",
     date: "2026-03-13",
     type: "patch",
