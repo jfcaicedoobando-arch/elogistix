@@ -13,6 +13,13 @@ interface ChangelogEntry {
 
 const changelog: ChangelogEntry[] = [
   {
+    version: "5.22.1",
+    date: "2026-03-13",
+    type: "patch",
+    title: "Fix: diálogo de eliminación no avanzaba al paso 2",
+    description: "Corregido bug donde AlertDialogAction de Radix cerraba automáticamente el diálogo antes de mostrar la confirmación final. Se añadió e.preventDefault() en ambos pasos del DoubleConfirmDeleteDialog para evitar el cierre prematuro.",
+  },
+  {
     version: "5.22.0",
     date: "2026-03-13",
     type: "minor",
