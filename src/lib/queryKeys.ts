@@ -5,6 +5,7 @@
 export const queryKeys = {
   embarques: {
     all: ['embarques'] as const,
+    list: (filters: Record<string, unknown>) => ['embarques', 'list', filters] as const,
     detail: (id: string) => ['embarques', id] as const,
     conceptosVenta: (id: string) => ['conceptos_venta', id] as const,
     conceptosCosto: (id: string) => ['conceptos_costo', id] as const,

@@ -10,6 +10,7 @@ export {
 
 export {
   useEmbarques,
+  useEmbarquesPaginados,
   useEmbarque,
   useEmbarqueConceptosVenta,
   useEmbarqueConceptosCosto,
