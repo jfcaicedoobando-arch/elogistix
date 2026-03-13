@@ -58,9 +58,9 @@ function ProveedorTable({ tipo, search, onSelect }: { tipo: TipoProveedor; searc
   const totalPages = Math.ceil(totalCount / pageSize);
 
   // Reset page when search changes
-  const prevSearchRef = useState(debouncedSearch);
-  if (prevSearchRef[0] !== debouncedSearch) {
-    prevSearchRef[1](debouncedSearch);
+  const prevSearchRef = useRef(debouncedSearch);
+  if (prevSearchRef.current !== debouncedSearch) {
+    prevSearchRef.current = debouncedSearch;
     if (page !== 0) setPage(0);
   }
 
