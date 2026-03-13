@@ -316,8 +316,7 @@ export default function CotizacionDetalle() {
                   toast({ title: `Se generaron ${cotizacion.num_contenedores} embarques exitosamente` });
                   setShowConfirmarConvertir(false);
                 } catch (err: unknown) {
-                  const msg = err instanceof Error ? err.message : "Error desconocido";
-                  toast({ title: "Error al generar embarques", description: msg, variant: "destructive" });
+                  toast({ title: "Error al generar embarques", description: getErrorMessage(err), variant: "destructive" });
                 }
               }}
             >
