@@ -7,6 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Loader2 } from "lucide-react";
+import { getErrorMessage } from "@/lib/errorUtils";
 
 interface Props {
   open: boolean;
@@ -54,8 +55,8 @@ export default function NuevoUsuarioDialog({ open, onOpenChange, onCreated }: Pr
       setRole("viewer");
       onOpenChange(false);
       onCreated();
-    } catch (err: any) {
-      toast({ title: "Error", description: err.message, variant: "destructive" });
+    } catch (err: unknown) {
+      toast({ title: "Error", description: getErrorMessage(err), variant: "destructive" });
     } finally {
       setLoading(false);
     }

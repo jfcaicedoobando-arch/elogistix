@@ -1,9 +1,8 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { ArrowLeft, ChevronLeft, ChevronRight, Save } from "lucide-react";
 import { FormProvider } from "react-hook-form";
-import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import {
   useEmbarque,
@@ -17,12 +16,12 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useRegistrarActividad } from "@/hooks/useBitacora";
 import { useConceptosForm } from "@/hooks/useConceptosForm";
 import { useEmbarqueForm } from "@/hooks/useEmbarqueForm";
-import { StepIndicator } from "@/components/embarque/StepIndicator";
+import { getErrorMessage } from "@/lib/errorUtils";
+import { EmbarqueWizardLayout } from "@/components/embarque/EmbarqueWizardLayout";
 import { StepDatosGenerales } from "@/components/embarque/StepDatosGenerales";
 import { StepDatosRuta } from "@/components/embarque/StepDatosRuta";
 import { StepCostosPrecios } from "@/components/embarque/StepCostosPrecios";
 
-const TOTAL_STEPS = 3;
 const steps = [
   { title: 'Datos Generales', num: 1 },
   { title: 'Datos de Ruta', num: 2 },
@@ -108,8 +107,8 @@ export default function EditarEmbarque() {
 
       toast({ title: "Embarque actualizado", description: `${embarque.expediente} guardado correctamente.` });
       navigate(`/embarques/${id}`);
-    } catch (err: any) {
-      toast({ title: "Error al actualizar", description: err.message, variant: "destructive" });
+    } catch (err: unknown) {
+      toast({ title: "Error al actualizar", description: getErrorMessage(err), variant: "destructive" });
     }
   };
 
@@ -141,69 +140,44 @@ export default function EditarEmbarque() {
 
   return (
     <FormProvider {...methods}>
-      <div className="flex flex-col h-[calc(100vh-4rem)] -m-6">
-        {/* Header fijo */}
-        <div className="flex-none border-b bg-background p-4 space-y-3">
-          <div className="flex items-center gap-3">
-            <Button variant="ghost" size="icon" onClick={() => navigate(`/embarques/${id}`)}>
-              <ArrowLeft className="h-4 w-4" />
-            </Button>
-            <div>
-              <h1 className="text-2xl font-bold">Editar Embarque</h1>
-              <p className="text-sm text-muted-foreground">{embarque.expediente}</p>
-            </div>
-          </div>
-          <StepIndicator steps={steps} currentStep={currentStep} />
-        </div>
-
-        {/* Contenido scrolleable */}
-        <div className="flex-1 overflow-y-auto p-4">
-          <div className="max-w-4xl mx-auto space-y-6">
-            {currentStep === 1 && (
-              <StepDatosGenerales
-                clientes={clientes}
-                clienteNombre={selectedCliente?.nombre || ''}
-                contactos={contactos}
-                onMsdsUpload={handleMsdsUpload}
-              />
-            )}
-
-            {currentStep === 2 && <StepDatosRuta />}
-
-            {currentStep === 3 && (
-              <StepCostosPrecios
-                conceptosVenta={conceptosVenta}
-                conceptosCosto={conceptosCosto}
-                proveedoresDb={proveedoresDb}
-                subtotalVenta={subtotalVenta}
-                totalCosto={totalCosto}
-                utilidadEstimada={utilidadEstimada}
-                updateConceptoVenta={updateConceptoVenta}
-                addConceptoVenta={addConceptoVenta}
-                removeConceptoVenta={removeConceptoVenta}
-                updateConceptoCosto={updateConceptoCosto}
-                addConceptoCosto={addConceptoCosto}
-                removeConceptoCosto={removeConceptoCosto}
-              />
-            )}
-          </div>
-        </div>
-
-        {/* Footer fijo */}
-        <div className="flex-none border-t bg-background p-4">
-          <div className="max-w-4xl mx-auto flex justify-between">
-            <Button variant="outline" onClick={() => currentStep > 1 ? setCurrentStep(p => p - 1) : navigate(`/embarques/${id}`)}>
-              {currentStep === 1 ? 'Cancelar' : <><ChevronLeft className="h-4 w-4 mr-1" /> Anterior</>}
-            </Button>
-            <Button
-              disabled={updateEmbarque.isPending}
-              onClick={() => currentStep < TOTAL_STEPS ? setCurrentStep(p => p + 1) : handleSave()}
-            >
-              {updateEmbarque.isPending ? 'Guardando...' : currentStep === TOTAL_STEPS ? <><Save className="h-4 w-4 mr-1" /> Guardar Cambios</> : <>Siguiente <ChevronRight className="h-4 w-4 ml-1" /></>}
-            </Button>
-          </div>
-        </div>
-      </div>
+      <EmbarqueWizardLayout
+        title="Editar Embarque"
+        subtitle={embarque.expediente}
+        steps={steps}
+        currentStep={currentStep}
+        setCurrentStep={setCurrentStep}
+        totalSteps={3}
+        isPending={updateEmbarque.isPending}
+        saveLabel="Guardar Cambios"
+        onBack={() => navigate(`/embarques/${id}`)}
+        onFinish={handleSave}
+      >
+        {currentStep === 1 && (
+          <StepDatosGenerales
+            clientes={clientes}
+            clienteNombre={selectedCliente?.nombre || ''}
+            contactos={contactos}
+            onMsdsUpload={handleMsdsUpload}
+          />
+        )}
+        {currentStep === 2 && <StepDatosRuta />}
+        {currentStep === 3 && (
+          <StepCostosPrecios
+            conceptosVenta={conceptosVenta}
+            conceptosCosto={conceptosCosto}
+            proveedoresDb={proveedoresDb}
+            subtotalVenta={subtotalVenta}
+            totalCosto={totalCosto}
+            utilidadEstimada={utilidadEstimada}
+            updateConceptoVenta={updateConceptoVenta}
+            addConceptoVenta={addConceptoVenta}
+            removeConceptoVenta={removeConceptoVenta}
+            updateConceptoCosto={updateConceptoCosto}
+            addConceptoCosto={addConceptoCosto}
+            removeConceptoCosto={removeConceptoCosto}
+          />
+        )}
+      </EmbarqueWizardLayout>
     </FormProvider>
   );
 }

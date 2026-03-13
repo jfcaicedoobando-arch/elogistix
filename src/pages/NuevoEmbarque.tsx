@@ -1,8 +1,6 @@
 import { useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, ChevronLeft, ChevronRight, Save } from "lucide-react";
 import { FormProvider } from "react-hook-form";
-import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import {
   useProveedoresForSelect,
@@ -16,7 +14,8 @@ import { useEmbarqueForm } from "@/hooks/useEmbarqueForm";
 import { useCotizacionesAceptadas, type CotizacionRow } from "@/hooks/useCotizaciones";
 import { useUpdateEstadoCotizacion } from "@/hooks/useCotizacionMutations";
 import { resolverExpediente, subirDocumentosEmbarque } from "@/lib/embarqueServices";
-import { StepIndicator } from "@/components/embarque/StepIndicator";
+import { getErrorMessage } from "@/lib/errorUtils";
+import { EmbarqueWizardLayout } from "@/components/embarque/EmbarqueWizardLayout";
 import { StepDatosGenerales } from "@/components/embarque/StepDatosGenerales";
 import type { EmbarqueValidationErrors } from "@/components/embarque/StepDatosGenerales";
 import { StepDatosRuta } from "@/components/embarque/StepDatosRuta";
@@ -136,7 +135,6 @@ export default function NuevoEmbarque() {
         documentos: docPayload,
       });
 
-      // Si hay cotización vinculada, cambiar su estado a 'Embarcada'
       if (cotizacionVinculada) {
         await updateEstadoCotizacion.mutateAsync({
           id: cotizacionVinculada.id,
@@ -153,92 +151,63 @@ export default function NuevoEmbarque() {
 
       toast({ title: "Embarque creado", description: `Expediente ${expediente} registrado correctamente.` });
       navigate("/embarques");
-    } catch (err: any) {
-      toast({ title: "Error al crear embarque", description: err.message, variant: "destructive" });
+    } catch (err: unknown) {
+      toast({ title: "Error al crear embarque", description: getErrorMessage(err), variant: "destructive" });
     }
   };
 
   return (
     <FormProvider {...methods}>
-      <div className="flex flex-col h-[calc(100vh-4rem)] -m-6">
-        {/* Header fijo */}
-        <div className="flex-none border-b bg-background p-4 space-y-3">
-          <div className="flex items-center gap-3">
-            <Button variant="ghost" size="icon" onClick={() => navigate("/embarques")}>
-              <ArrowLeft className="h-4 w-4" />
-            </Button>
-            <div>
-              <h1 className="text-2xl font-bold">Nuevo Embarque</h1>
-              <p className="text-sm text-muted-foreground">Completa los datos para registrar un embarque</p>
-            </div>
-          </div>
-          <StepIndicator steps={steps} currentStep={currentStep} />
-        </div>
-
-        {/* Contenido scrolleable */}
-        <div className="flex-1 overflow-y-auto p-4">
-          <div className="max-w-4xl mx-auto space-y-6">
-            {currentStep === 1 && (
-              <StepDatosGenerales
-                clientes={clientes}
-                clienteNombre={selectedCliente?.nombre || ''}
-                contactos={contactos}
-                onMsdsUpload={handleMsdsUpload}
-                errors={validationErrors}
-                cotizacionesAceptadas={cotizacionesAceptadas}
-                cotizacionVinculada={cotizacionVinculada}
-                onVincularCotizacion={handleVincularCotizacion}
-                onDesvincularCotizacion={handleDesvincularCotizacion}
-              />
-            )}
-
-            {currentStep === 2 && <StepDatosRuta />}
-
-            {currentStep === 3 && (
-              <StepDocumentos
-                documentos={getDocumentosChecklist(modo)}
-                onFileChange={setDocumentoArchivo}
-              />
-            )}
-
-            {currentStep === 4 && (
-              <StepCostosPrecios
-                conceptosVenta={conceptosVenta}
-                conceptosCosto={conceptosCosto}
-                proveedoresDb={proveedoresDb}
-                subtotalVenta={subtotalVenta}
-                totalCosto={totalCosto}
-                utilidadEstimada={utilidadEstimada}
-                updateConceptoVenta={updateConceptoVenta}
-                addConceptoVenta={addConceptoVenta}
-                removeConceptoVenta={removeConceptoVenta}
-                updateConceptoCosto={updateConceptoCosto}
-                addConceptoCosto={addConceptoCosto}
-                removeConceptoCosto={removeConceptoCosto}
-              />
-            )}
-          </div>
-        </div>
-
-        {/* Footer fijo */}
-        <div className="flex-none border-t bg-background p-4">
-          <div className="max-w-4xl mx-auto flex justify-between">
-            <Button variant="outline" onClick={() => currentStep > 1 ? setCurrentStep(p => p - 1) : navigate("/embarques")}>
-              {currentStep === 1 ? 'Cancelar' : <><ChevronLeft className="h-4 w-4 mr-1" /> Anterior</>}
-            </Button>
-            <Button
-              disabled={createEmbarque.isPending}
-              onClick={() => {
-                if (currentStep === 1 && !validateStep1()) return;
-                if (currentStep < 4) setCurrentStep(p => p + 1);
-                else handleFinish();
-              }}
-            >
-              {createEmbarque.isPending ? 'Guardando...' : currentStep === 4 ? <><Save className="h-4 w-4 mr-1" /> Crear Embarque</> : <>Siguiente <ChevronRight className="h-4 w-4 ml-1" /></>}
-            </Button>
-          </div>
-        </div>
-      </div>
+      <EmbarqueWizardLayout
+        title="Nuevo Embarque"
+        subtitle="Completa los datos para registrar un embarque"
+        steps={steps}
+        currentStep={currentStep}
+        setCurrentStep={setCurrentStep}
+        totalSteps={4}
+        isPending={createEmbarque.isPending}
+        saveLabel="Crear Embarque"
+        onBack={() => navigate("/embarques")}
+        onFinish={handleFinish}
+        validateStep={(step) => step === 1 ? validateStep1() : true}
+      >
+        {currentStep === 1 && (
+          <StepDatosGenerales
+            clientes={clientes}
+            clienteNombre={selectedCliente?.nombre || ''}
+            contactos={contactos}
+            onMsdsUpload={handleMsdsUpload}
+            errors={validationErrors}
+            cotizacionesAceptadas={cotizacionesAceptadas}
+            cotizacionVinculada={cotizacionVinculada}
+            onVincularCotizacion={handleVincularCotizacion}
+            onDesvincularCotizacion={handleDesvincularCotizacion}
+          />
+        )}
+        {currentStep === 2 && <StepDatosRuta />}
+        {currentStep === 3 && (
+          <StepDocumentos
+            documentos={getDocumentosChecklist(modo)}
+            onFileChange={setDocumentoArchivo}
+          />
+        )}
+        {currentStep === 4 && (
+          <StepCostosPrecios
+            conceptosVenta={conceptosVenta}
+            conceptosCosto={conceptosCosto}
+            proveedoresDb={proveedoresDb}
+            subtotalVenta={subtotalVenta}
+            totalCosto={totalCosto}
+            utilidadEstimada={utilidadEstimada}
+            updateConceptoVenta={updateConceptoVenta}
+            addConceptoVenta={addConceptoVenta}
+            removeConceptoVenta={removeConceptoVenta}
+            updateConceptoCosto={updateConceptoCosto}
+            addConceptoCosto={addConceptoCosto}
+            removeConceptoCosto={removeConceptoCosto}
+          />
+        )}
+      </EmbarqueWizardLayout>
     </FormProvider>
   );
 }

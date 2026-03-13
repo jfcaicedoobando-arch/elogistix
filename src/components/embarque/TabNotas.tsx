@@ -8,6 +8,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { usePermissions } from "@/hooks/usePermissions";
 import { useCreateNotaEmbarque } from "@/hooks/useEmbarques";
 import { useRegistrarActividad } from "@/hooks/useBitacora";
+import { getErrorMessage } from "@/lib/errorUtils";
 import { useToast } from "@/hooks/use-toast";
 import type { NotaEmbarqueRow } from "@/hooks/useEmbarques";
 
@@ -40,8 +41,8 @@ export function TabNotas({ notas, embarqueId }: Props) {
       });
       setTexto("");
       toast({ title: "Nota agregada" });
-    } catch (err: any) {
-      toast({ title: "Error al agregar nota", description: err.message, variant: "destructive" });
+    } catch (err: unknown) {
+      toast({ title: "Error al agregar nota", description: getErrorMessage(err), variant: "destructive" });
     }
   };
 

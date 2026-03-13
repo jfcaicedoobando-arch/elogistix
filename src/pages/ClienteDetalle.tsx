@@ -7,12 +7,13 @@ import { useCliente, useContactosCliente, useCreateContacto, useUpdateContacto, 
 import { useToast } from "@/hooks/use-toast";
 import { usePermissions } from "@/hooks/usePermissions";
 import { useRegistrarActividad } from "@/hooks/useBitacora";
+import { getErrorMessage } from "@/lib/errorUtils";
 import type { Tables } from "@/integrations/supabase/types";
 type ContactoCliente = Tables<'contactos_cliente'>;
 import DialogContacto from "@/components/cliente/DialogContacto";
 import DialogEditarCliente from "@/components/cliente/DialogEditarCliente";
 import TablaContactos from "@/components/cliente/TablaContactos";
-import DeleteContactoDialogs from "@/components/cliente/DeleteContactoDialogs";
+import DoubleConfirmDeleteDialog from "@/components/DoubleConfirmDeleteDialog";
 
 export default function ClienteDetalle() {
   const { id } = useParams<{ id: string }>();
@@ -36,7 +37,7 @@ export default function ClienteDetalle() {
   const [editClienteOpen, setEditClienteOpen] = useState(false);
 
   // Delete contact
-  const [deleteStep, setDeleteStep] = useState<0 | 1 | 2>(0);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [deletingContactoId, setDeletingContactoId] = useState<string | null>(null);
 
   if (loadingCliente) {
@@ -67,8 +68,8 @@ export default function ClienteDetalle() {
       }
       setContactDialogOpen(false);
       setEditingContacto(null);
-    } catch (error: any) {
-      toast({ title: "Error", description: error.message, variant: "destructive" });
+    } catch (err: unknown) {
+      toast({ title: "Error", description: getErrorMessage(err), variant: "destructive" });
     }
   };
 
@@ -81,22 +82,19 @@ export default function ClienteDetalle() {
       });
       toast({ title: "Cliente actualizado" });
       setEditClienteOpen(false);
-    } catch (error: any) {
-      toast({ title: "Error", description: error.message, variant: "destructive" });
+    } catch (err: unknown) {
+      toast({ title: "Error", description: getErrorMessage(err), variant: "destructive" });
     }
   };
 
-  const startDelete = (contactoId: string) => { setDeletingContactoId(contactoId); setDeleteStep(1); };
-  const cancelDelete = () => { setDeleteStep(0); setDeletingContactoId(null); };
-  const confirmFinalDelete = async () => {
+  const startDelete = (contactoId: string) => { setDeletingContactoId(contactoId); setDeleteDialogOpen(true); };
+  const confirmDelete = async () => {
     if (!deletingContactoId) return;
     try {
       await deleteContacto.mutateAsync({ id: deletingContactoId, cliente_id: cliente.id });
       toast({ title: "Contacto eliminado" });
-    } catch (error: any) {
-      toast({ title: "Error", description: error.message, variant: "destructive" });
-    } finally {
-      cancelDelete();
+    } catch (err: unknown) {
+      toast({ title: "Error", description: getErrorMessage(err), variant: "destructive" });
     }
   };
 
@@ -163,11 +161,14 @@ export default function ClienteDetalle() {
         isSaving={updateCliente.isPending}
       />
 
-      <DeleteContactoDialogs
-        step={deleteStep}
-        onConfirmFirst={() => setDeleteStep(2)}
-        onConfirmFinal={confirmFinalDelete}
-        onCancel={cancelDelete}
+      <DoubleConfirmDeleteDialog
+        open={deleteDialogOpen}
+        onOpenChange={(open) => { setDeleteDialogOpen(open); if (!open) setDeletingContactoId(null); }}
+        entityName="este contacto"
+        description="Estás a punto de eliminar este contacto del cliente. ¿Deseas continuar?"
+        finalDescription="Esta acción no se puede deshacer. El contacto será eliminado permanentemente. ¿Confirmas la eliminación?"
+        onConfirm={confirmDelete}
+        isPending={deleteContacto.isPending}
       />
     </div>
   );

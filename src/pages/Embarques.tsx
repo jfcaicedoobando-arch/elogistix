@@ -8,6 +8,7 @@ import {
 } from "@/components/ui/select";
 import { useNavigate } from "react-router-dom";
 import { useEmbarquesPaginados, calcularEstadoEmbarque, useEliminarEmbarque } from "@/hooks/useEmbarques";
+import { getErrorMessage } from "@/lib/errorUtils";
 import { useClientesForSelect } from "@/hooks/useClientes";
 import { usePermissions } from "@/hooks/usePermissions";
 import { useRegistrarActividad } from "@/hooks/useBitacora";
@@ -86,8 +87,8 @@ export default function Embarques() {
         detalles: { cliente: cliente_nombre, modo },
       });
       toast({ title: "Embarque eliminado", description: `${expediente} fue eliminado permanentemente.` });
-    } catch (err: any) {
-      toast({ title: "Error al eliminar", description: err.message, variant: "destructive" });
+    } catch (err: unknown) {
+      toast({ title: "Error al eliminar", description: getErrorMessage(err), variant: "destructive" });
     }
     setEmbarqueAEliminar(null);
   };

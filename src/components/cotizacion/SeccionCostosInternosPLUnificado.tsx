@@ -8,6 +8,7 @@ import {
 } from "@/components/ui/table";
 import { DollarSign, Banknote, Save, Plus, Trash2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { getErrorMessage } from "@/lib/errorUtils";
 import { usePermissions } from "@/hooks/usePermissions";
 import {
   useCotizacionCostos, useUpsertCotizacionCostos, CostoCotizacion,
@@ -331,8 +332,8 @@ function ModoDetalle({ cotizacionId, conceptosUSD, conceptosMXN }: PropsDetalle)
     try {
       await upsert.mutateAsync({ cotizacionId, costos });
       toast({ title: "Costos guardados correctamente" });
-    } catch (err: any) {
-      toast({ title: "Error al guardar", description: err.message, variant: "destructive" });
+    } catch (err: unknown) {
+      toast({ title: "Error al guardar", description: getErrorMessage(err), variant: "destructive" });
     }
   };
 

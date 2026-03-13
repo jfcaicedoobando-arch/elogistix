@@ -8,6 +8,7 @@ import {
 } from "@/components/ui/select";
 import { useNavigate } from "react-router-dom";
 import { useCotizaciones, useDeleteCotizacion } from "@/hooks/useCotizaciones";
+import { getErrorMessage } from "@/lib/errorUtils";
 import { useClientesForSelect } from "@/hooks/useClientes";
 import { usePermissions } from "@/hooks/usePermissions";
 import { useToast } from "@/hooks/use-toast";
@@ -88,8 +89,8 @@ export default function Cotizaciones() {
     try {
       await deleteCotizacion.mutateAsync(cotizacionAEliminar);
       toast({ title: "Cotización eliminada correctamente" });
-    } catch (err: any) {
-      toast({ title: "Error al eliminar", description: err.message, variant: "destructive" });
+    } catch (err: unknown) {
+      toast({ title: "Error al eliminar", description: getErrorMessage(err), variant: "destructive" });
     }
     setCotizacionAEliminar(null);
   };

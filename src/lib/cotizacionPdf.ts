@@ -1,14 +1,10 @@
-import type { CotizacionRow, DimensionLCL, DimensionAerea, ConceptoVentaCotizacion } from '@/hooks/useCotizaciones';
+import type { CotizacionRow, DimensionLCL, DimensionAerea } from '@/hooks/useCotizaciones';
 import { calcularIVA, TASA_IVA } from '@/lib/financialUtils';
+import { formatCurrency } from '@/lib/formatters';
+import { formatDate } from '@/lib/helpers';
 
-const formatCurrencyPdf = (amount: number, currency: string = 'MXN'): string => {
-  return new Intl.NumberFormat('es-MX', { style: 'currency', currency, minimumFractionDigits: 2 }).format(amount);
-};
-
-const formatDatePdf = (dateStr: string): string => {
-  const d = new Date(dateStr + 'T00:00:00');
-  return d.toLocaleDateString('es-MX', { day: '2-digit', month: 'short', year: 'numeric' });
-};
+const formatCurrencyPdf = formatCurrency;
+const formatDatePdf = formatDate;
 
 export function generarPdfCotizacion(cotizacion: CotizacionRow, tasaIva: number = TASA_IVA) {
   const nombreDestinatario = cotizacion.es_prospecto

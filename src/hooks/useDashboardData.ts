@@ -1,3 +1,9 @@
+/**
+ * NOTA DE ESCALABILIDAD: Este hook obtiene todos los embarques del lado del cliente.
+ * Supabase tiene un límite por defecto de 1000 filas por query. Cuando el dataset
+ * supere ~1000 embarques, las estadísticas del dashboard serán incompletas.
+ * Plan: migrar a una vista o función RPC con agregación del lado del servidor.
+ */
 import { useState, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useEmbarques, calcularEstadoEmbarque } from "@/hooks/useEmbarques";

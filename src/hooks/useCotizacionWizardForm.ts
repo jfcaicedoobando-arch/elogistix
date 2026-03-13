@@ -1,7 +1,7 @@
 import { useState, useCallback } from "react";
 import { useForm } from "react-hook-form";
 import type { NavigateFunction } from "react-router-dom";
-import type { ConceptoVentaCotizacion, DimensionLCL, DimensionAerea } from "@/hooks/useCotizaciones";
+import type { ConceptoVentaCotizacion, DimensionLCL, DimensionAerea, CotizacionRow, CreateCotizacionInput } from "@/hooks/useCotizaciones";
 import type { CostoCotizacion } from "@/hooks/useCotizacionCostos";
 import type { FilaCostoLocal } from "@/components/cotizacion/SeccionCostosInternosPLUnificado";
 import { CONCEPTOS_CON_IVA_USD } from "@/data/cotizacionConstants";
@@ -9,6 +9,7 @@ import { calcularTotalConIVA } from "@/lib/financialUtils";
 import { useConceptosVentaCotizacion } from "@/hooks/useConceptosVentaCotizacion";
 import { useCotizacionPL } from "@/hooks/useCotizacionPL";
 import { uploadFile } from "@/lib/storage";
+import { getErrorMessage } from "@/lib/errorUtils";
 
 // ────────── Form values type ──────────
 export interface CotizacionFormValues {
@@ -100,10 +101,10 @@ interface ToastFn {
 }
 
 interface Mutations {
-  crearCotizacion: { mutateAsync: (d: any) => Promise<any>; isPending: boolean };
-  updateCotizacion: { mutateAsync: (d: any) => Promise<void>; isPending: boolean };
-  upsertCostos: { mutateAsync: (d: any) => Promise<any>; isPending: boolean };
-  registrarActividad: { mutate: (d: any) => void };
+  crearCotizacion: { mutateAsync: (d: CreateCotizacionInput) => Promise<CotizacionRow>; isPending: boolean };
+  updateCotizacion: { mutateAsync: (d: { id: string; data: Partial<CreateCotizacionInput> & Record<string, unknown> }) => Promise<void>; isPending: boolean };
+  upsertCostos: { mutateAsync: (d: { cotizacionId: string; costos: CostoCotizacion[] }) => Promise<CostoCotizacion[]>; isPending: boolean };
+  registrarActividad: { mutate: (d: { accion: string; modulo: string; entidad_id?: string | null; entidad_nombre?: string; detalles?: Record<string, unknown> }) => void };
 }
 
 interface InitialData {
@@ -362,8 +363,8 @@ export function useCotizacionWizardForm({ navigate, toast, userEmail, clientes, 
           setCotizacionId(cotizacion.id);
         }
         setCurrentStep(2);
-      } catch (err: any) {
-        toast({ title: "Error al guardar datos generales", description: err.message, variant: "destructive" });
+      } catch (err: unknown) {
+        toast({ title: "Error al guardar datos generales", description: getErrorMessage(err), variant: "destructive" });
       }
     } else if (currentStep === 2) {
       try {
@@ -399,8 +400,8 @@ export function useCotizacionWizardForm({ navigate, toast, userEmail, clientes, 
           setCostosPreLlenados(true);
         }
         setCurrentStep(3);
-      } catch (err: any) {
-        toast({ title: "Error al guardar costos", description: err.message, variant: "destructive" });
+      } catch (err: unknown) {
+        toast({ title: "Error al guardar costos", description: getErrorMessage(err), variant: "destructive" });
       }
     } else if (currentStep === 3) {
       const conceptosUSDValidos = conceptosUSD.filter(c => c.descripcion?.trim());
@@ -417,8 +418,8 @@ export function useCotizacionWizardForm({ navigate, toast, userEmail, clientes, 
           });
         }
         setCurrentStep(4);
-      } catch (err: any) {
-        toast({ title: "Error al guardar conceptos de venta", description: err.message, variant: "destructive" });
+      } catch (err: unknown) {
+        toast({ title: "Error al guardar conceptos de venta", description: getErrorMessage(err), variant: "destructive" });
       }
     }
   }, [
@@ -439,8 +440,8 @@ export function useCotizacionWizardForm({ navigate, toast, userEmail, clientes, 
       });
       toast({ title: isEditMode ? "Cotización actualizada exitosamente" : "Cotización creada exitosamente" });
       navigate(`/cotizaciones/${cotizacionId}`);
-    } catch (err: any) {
-      toast({ title: "Error al finalizar cotización", description: err.message, variant: "destructive" });
+    } catch (err: unknown) {
+      toast({ title: "Error al finalizar cotización", description: getErrorMessage(err), variant: "destructive" });
     }
   }, [cotizacionId, updateCotizacion, registrarActividad, toast, navigate, isEditMode]);
 
