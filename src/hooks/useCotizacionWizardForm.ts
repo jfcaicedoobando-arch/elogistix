@@ -272,8 +272,8 @@ export function useCotizacionWizardForm({ navigate, toast, userEmail, clientes, 
   }, [form]);
 
   // ── Helpers conceptos ──
-  const actualizarConcepto = useCallback((moneda: "USD" | "MXN", index: number, campo: keyof ConceptoVentaCotizacion, valor: string | number | boolean) => {
-    if (campo === "_esOtro" as string) return;
+  const actualizarConcepto = useCallback((moneda: "USD" | "MXN", index: number, campo: string, valor: string | number | boolean) => {
+    if (campo === "_esOtro") return;
     const setter = moneda === "USD" ? setConceptosUSD : setConceptosMXN;
     setter(prev => {
       const copia = [...prev];
