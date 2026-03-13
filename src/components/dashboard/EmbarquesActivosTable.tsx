@@ -5,7 +5,7 @@ import { DataTable, type DataTableColumn } from "@/components/DataTable";
 import { formatDate, getModoIcon, getEstadoColor } from "@/lib/helpers";
 import { formatCurrency } from "@/lib/formatters";
 import type { EmbarqueMesSiguiente, ResumenFacturacion } from "@/hooks/useDashboardData";
-import type { EstadoFiltro } from "@/hooks/useDashboardData";
+
 import { CalendarDays, DollarSign, TrendingUp, FileCheck, Package } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 
