@@ -17,6 +17,7 @@ export const queryKeys = {
     all: ['cotizaciones'] as const,
     detail: (id: string) => ['cotizaciones', id] as const,
     costos: (id: string) => ['cotizacion_costos', id] as const,
+    embarquesVinculados: (id: string) => ['embarques', 'cotizacion', id] as const,
   },
   clientes: {
     all: ['clientes'] as const,
