@@ -25,6 +25,9 @@ export {
   useUpdateEmbarque,
   useDuplicarEmbarque,
   useAvanzarEstadoEmbarque,
+  useSyncEstadoEmbarque,
+  useUploadDocumentoEmbarque,
+  useDeleteDocumentoEmbarque,
   useCreateNotaEmbarque,
   useEliminarEmbarque,
 } from './useEmbarqueMutations';
