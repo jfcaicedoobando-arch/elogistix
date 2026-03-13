@@ -229,7 +229,7 @@ export function useUpdateCotizacion() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async ({ id, data }: { id: string; data: Partial<CreateCotizacionInput> }) => {
-      const updatePayload: CotizacionUpdate = { ...data } as CotizacionUpdate;
+      const updatePayload = { ...data } as unknown as CotizacionUpdate;
       if (data.conceptos_venta) updatePayload.conceptos_venta = data.conceptos_venta as unknown as Json;
       if (data.dimensiones_lcl) updatePayload.dimensiones_lcl = data.dimensiones_lcl as unknown as Json;
       if (data.dimensiones_aereas) updatePayload.dimensiones_aereas = data.dimensiones_aereas as unknown as Json;
