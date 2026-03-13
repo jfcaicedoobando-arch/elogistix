@@ -13,6 +13,12 @@ interface ChangelogEntry {
 
 const changelog: ChangelogEntry[] = [
   {
+    version: "5.13.0",
+    date: "2026-03-13",
+    type: "minor",
+    title: "Refactor: descomposición de useCotizacionWizardForm",
+    description: "Extraídos dos hooks independientes del wizard de cotizaciones: useConceptosVentaCotizacion (gestión de conceptos USD/MXN, CRUD y totales) y useCotizacionPL (filtrado por moneda y cálculo de totales P&L). El hook principal ahora delega estas responsabilidades, reduciendo ~60 líneas y mejorando la cohesión y testabilidad.",
+  },
     version: "5.12.0",
     date: "2026-03-13",
     type: "minor",
