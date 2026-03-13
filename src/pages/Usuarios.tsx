@@ -17,10 +17,7 @@ const roleBadge: Record<AppRole, string> = {
   viewer: "bg-muted text-muted-foreground",
 };
 
-const formatDateLocal = (dateStr: string) => {
-  if (!dateStr) return "-";
-  return new Date(dateStr).toLocaleDateString("es-MX", { day: "2-digit", month: "short", year: "numeric" });
-};
+import { formatDate } from "@/lib/helpers";
 
 export default function Usuarios() {
   const [dialogOpen, setDialogOpen] = useState(false);
