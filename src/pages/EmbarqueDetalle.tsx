@@ -10,13 +10,11 @@ import {
 import { getEstadoColor, getModoIcon } from "@/lib/helpers";
 import { convertirAMXN, calcularMargen, calcularUtilidad } from "@/lib/financialUtils";
 import { usePermissions } from "@/hooks/usePermissions";
-import { uploadFile, getSignedUrl, deleteFile } from "@/lib/storage";
-import { supabase } from "@/integrations/supabase/client";
+import { getSignedUrl } from "@/lib/storage";
 import { useToast } from "@/hooks/use-toast";
 import { useRegistrarActividad } from "@/hooks/useBitacora";
 import { useAuth } from "@/contexts/AuthContext";
 import { useState, useEffect, useMemo } from "react";
-import { useQueryClient } from "@tanstack/react-query";
 import { ESTADO_TIMELINE } from "@/data/embarqueConstants";
 import {
   useEmbarque,
@@ -26,6 +24,9 @@ import {
   useEmbarqueNotas,
   useEmbarqueFacturas,
   useAvanzarEstadoEmbarque,
+  useSyncEstadoEmbarque,
+  useUploadDocumentoEmbarque,
+  useDeleteDocumentoEmbarque,
   calcularEstadoEmbarque,
 } from "@/hooks/useEmbarques";
 import { TabResumen } from "@/components/embarque/TabResumen";
@@ -46,70 +47,54 @@ export default function EmbarqueDetalle() {
   const { data: embarque, isLoading } = useEmbarque(id);
   const { data: conceptosVenta = [] } = useEmbarqueConceptosVenta(id);
   const { data: conceptosCosto = [] } = useEmbarqueConceptosCosto(id);
-  const { data: documentos = [], refetch: refetchDocs } = useEmbarqueDocumentos(id);
+  const { data: documentos = [] } = useEmbarqueDocumentos(id);
   const { data: notas = [] } = useEmbarqueNotas(id);
   const { data: facturas = [] } = useEmbarqueFacturas(id);
   const avanzarEstado = useAvanzarEstadoEmbarque();
-  const queryClient = useQueryClient();
+  const syncEstado = useSyncEstadoEmbarque();
+  const uploadDoc = useUploadDocumentoEmbarque();
+  const deleteDoc = useDeleteDocumentoEmbarque();
 
   const [dialogDuplicarAbierto, setDialogDuplicarAbierto] = useState(false);
   const [dialogEliminarAbierto, setDialogEliminarAbierto] = useState(false);
+  const [downloadingDocId, setDownloadingDocId] = useState<string | null>(null);
 
   // Auto-actualizar estado para embarques marítimos
   useEffect(() => {
     if (!embarque) return;
     const estadoCalculado = calcularEstadoEmbarque(embarque.modo, embarque.tipo, embarque.etd, embarque.eta, embarque.estado);
     if (estadoCalculado !== embarque.estado) {
-      supabase
-        .from('embarques')
-        .update({ estado: estadoCalculado as any })
-        .eq('id', embarque.id)
-        .then(() => queryClient.invalidateQueries({ queryKey: ['embarques', embarque.id] }));
+      syncEstado.mutate({ embarqueId: embarque.id, nuevoEstado: estadoCalculado });
     }
   }, [embarque?.id, embarque?.etd, embarque?.eta]);
 
-  const [uploadingDocId, setUploadingDocId] = useState<string | null>(null);
-  const [downloadingDocId, setDownloadingDocId] = useState<string | null>(null);
-  const [deletingDocId, setDeletingDocId] = useState<string | null>(null);
-
   const handleUpload = async (docId: string, file: File) => {
     if (!id) return;
-    setUploadingDocId(docId);
     try {
-      const path = `embarques/${id}/${docId}/${file.name}`;
-      await uploadFile(path, file);
-      await supabase.from("documentos_embarque").update({ archivo: path, estado: "Recibido" as any }).eq("id", docId);
+      await uploadDoc.mutateAsync({ embarqueId: id, docId, file });
       registrarActividad.mutate({
         accion: 'subir_documento', modulo: 'embarques',
         entidad_id: id, entidad_nombre: embarque?.expediente ?? '',
         detalles: { documento: file.name },
       });
       toast({ title: "Archivo subido correctamente" });
-      refetchDocs();
     } catch (err: any) {
       toast({ title: "Error al subir archivo", description: err.message, variant: "destructive" });
-    } finally {
-      setUploadingDocId(null);
     }
   };
 
   const handleDeleteDoc = async (doc: typeof documentos[number]) => {
     if (!id || !doc.archivo) return;
-    setDeletingDocId(doc.id);
     try {
-      await deleteFile(doc.archivo);
-      await supabase.from("documentos_embarque").delete().eq("id", doc.id);
+      await deleteDoc.mutateAsync({ embarqueId: id, docId: doc.id, archivoPath: doc.archivo });
       registrarActividad.mutate({
         accion: 'eliminar_documento', modulo: 'embarques',
         entidad_id: id, entidad_nombre: embarque?.expediente ?? '',
         detalles: { documento: doc.nombre },
       });
       toast({ title: "Documento eliminado correctamente" });
-      refetchDocs();
     } catch (err: any) {
       toast({ title: "Error al eliminar documento", description: err.message, variant: "destructive" });
-    } finally {
-      setDeletingDocId(null);
     }
   };
 
@@ -251,9 +236,9 @@ export default function EmbarqueDetalle() {
           <TabDocumentos
             documentos={documentos}
             canEdit={canEdit}
-            uploadingDocId={uploadingDocId}
+            uploadingDocId={uploadDoc.isPending ? (uploadDoc.variables?.docId ?? null) : null}
             downloadingDocId={downloadingDocId}
-            deletingDocId={deletingDocId}
+            deletingDocId={deleteDoc.isPending ? (deleteDoc.variables?.docId ?? null) : null}
             onUpload={handleUpload}
             onDownload={handleDownload}
             onDelete={handleDeleteDoc}
