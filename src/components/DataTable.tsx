@@ -108,6 +108,7 @@ export function DataTable<T>({
                 col.width,
                 col.headerClassName,
                 col.sortable && "cursor-pointer select-none hover:text-foreground transition-colors",
+                col.sticky && "sticky left-0 z-20 bg-background",
               )}
               onClick={col.sortable ? () => handleSort(col.key) : undefined}
             >
