@@ -65,7 +65,7 @@ function DoubleConfirmInner({
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancelar</AlertDialogCancel>
-            <AlertDialogAction onClick={() => setPaso2(true)}>Continuar</AlertDialogAction>
+            <AlertDialogAction onClick={(e) => { e.preventDefault(); setPaso2(true); }}>Continuar</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
