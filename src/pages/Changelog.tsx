@@ -13,6 +13,13 @@ interface ChangelogEntry {
 
 const changelog: ChangelogEntry[] = [
   {
+    version: "5.11.0",
+    date: "2026-03-13",
+    type: "minor",
+    title: "Refactor: hook compartido useProfitMaps()",
+    description: "Extraída la lógica duplicada de consulta de conceptos_venta/conceptos_costo USD y construcción de ventaMap/costoMap a un hook compartido useProfitMaps.ts. Eliminadas ~40 líneas duplicadas entre useDashboardData y useOperacionesData. Ambos hooks ahora consumen el mismo hook, compartiendo caché de React Query.",
+  },
+  {
     version: "5.10.0",
     date: "2026-03-13",
     type: "minor",

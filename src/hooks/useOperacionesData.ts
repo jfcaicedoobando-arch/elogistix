@@ -1,11 +1,9 @@
 import { useMemo } from "react";
-import { useQuery } from "@tanstack/react-query";
 import { useEmbarques, calcularEstadoEmbarque } from "@/hooks/useEmbarques";
 import { calcularUtilidad } from "@/lib/financialUtils";
-import { supabase } from "@/integrations/supabase/client";
-import { queryKeys } from "@/lib/queryKeys";
 import { subMonths, startOfMonth, endOfMonth, format, isWithinInterval, differenceInCalendarDays } from "date-fns";
 import { es } from "date-fns/locale";
+import { useProfitMaps } from "@/hooks/useProfitMaps";
 
 const ESTADOS_TERMINALES = ["EIR", "Cerrado", "Cancelado"];
 const DIAS_LIBRES_DEFAULT = 7;
@@ -110,42 +108,9 @@ const RIESGO_ORDER: Record<NivelRiesgo, number> = {
 
 export function useOperacionesData(periodo: PeriodoFiltro = "mes") {
   const { data: embarques = [], isLoading } = useEmbarques();
-
-  const { data: ventasUSD = [] } = useQuery({
-    queryKey: queryKeys.dashboard.ventasUSD,
-    queryFn: async () => {
-      const { data } = await supabase
-        .from("conceptos_venta")
-        .select("embarque_id, total")
-        .eq("moneda", "USD");
-      return data ?? [];
-    },
-  });
-
-  const { data: costosUSD = [] } = useQuery({
-    queryKey: queryKeys.dashboard.costosUSD,
-    queryFn: async () => {
-      const { data } = await supabase
-        .from("conceptos_costo")
-        .select("embarque_id, monto")
-        .eq("moneda", "USD");
-      return data ?? [];
-    },
-  });
+  const { ventaMap, costoMap } = useProfitMaps();
 
   const meses6 = useMemo(() => generarUltimos6Meses(), []);
-
-  const { ventaMap, costoMap } = useMemo(() => {
-    const vm: Record<string, number> = {};
-    const cm: Record<string, number> = {};
-    ventasUSD.forEach((v) => {
-      vm[v.embarque_id] = (vm[v.embarque_id] || 0) + Number(v.total);
-    });
-    costosUSD.forEach((c) => {
-      cm[c.embarque_id] = (cm[c.embarque_id] || 0) + Number(c.monto);
-    });
-    return { ventaMap: vm, costoMap: cm };
-  }, [ventasUSD, costosUSD]);
 
   const embarquesConEstado = useMemo(
     () =>
@@ -329,7 +294,6 @@ export function useOperacionesData(periodo: PeriodoFiltro = "mes") {
 
     const ultimoMes = historico[historico.length - 1];
 
-    // All risk cargos globally sorted
     const cargasEnRiesgo = operadores
       .flatMap((o) => o.cargasEnRiesgo)
       .sort((a, b) => RIESGO_ORDER[a.nivelRiesgo] - RIESGO_ORDER[b.nivelRiesgo]);
