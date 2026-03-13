@@ -266,7 +266,7 @@ export function useUpdateEstadoCotizacion() {
     mutationFn: async ({ id, estado }: { id: string; estado: string }) => {
       const { error } = await supabase
         .from('cotizaciones')
-        .update({ estado: estado as any })
+        .update({ estado: estado as CotizacionInsert['estado'] })
         .eq('id', id);
       if (error) throw error;
     },
