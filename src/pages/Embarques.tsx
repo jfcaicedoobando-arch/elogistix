@@ -112,7 +112,6 @@ export default function Embarques() {
       },
       { key: "origen", header: "Origen", width: "w-[120px]", className: "text-xs", render: (e) => shortName(e.puerto_origen || e.aeropuerto_origen || e.ciudad_origen || "-") },
       { key: "destino", header: "Destino", width: "w-[120px]", className: "text-xs", render: (e) => shortName(e.puerto_destino || e.aeropuerto_destino || e.ciudad_destino || "-") },
-      { key: "contenedor", header: "Contenedor", width: "w-[100px]", className: "text-xs", render: (e) => e.tipo_contenedor || "-" },
       { key: "etd", header: "ETD", width: "w-[90px]", className: "text-xs", sortable: true, sortValue: (e) => e.etd || "", render: (e) => formatDate(e.etd || "") },
       { key: "eta", header: "ETA", width: "w-[90px]", className: "text-xs", sortable: true, sortValue: (e) => e.eta || "", render: (e) => formatDate(e.eta || "") },
       {
@@ -121,7 +120,6 @@ export default function Embarques() {
           return <Badge variant="secondary" className={`text-xs ${getEstadoColor(estado)}`}>{estado}</Badge>;
         },
       },
-      { key: "operador", header: "Operador", width: "w-[100px]", className: "text-xs", sortable: true, sortValue: (e) => e.operador, render: (e) => e.operador },
     ];
 
     if (canEdit) {
