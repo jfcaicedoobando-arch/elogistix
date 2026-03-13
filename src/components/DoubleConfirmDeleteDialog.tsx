@@ -2,6 +2,9 @@ import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Loader2 } from "lucide-react";
 
 interface DoubleConfirmDeleteDialogProps {
   open: boolean;
@@ -15,24 +18,8 @@ interface DoubleConfirmDeleteDialogProps {
   isPending?: boolean;
 }
 
-export default function DoubleConfirmDeleteDialog({
-  open,
-  onOpenChange,
-  entityName,
-  description,
-  finalDescription,
-  onConfirm,
-  isPending = false,
-}: DoubleConfirmDeleteDialogProps) {
-  return <DoubleConfirmInner
-    open={open}
-    onOpenChange={onOpenChange}
-    entityName={entityName}
-    description={description}
-    finalDescription={finalDescription}
-    onConfirm={onConfirm}
-    isPending={isPending}
-  />;
+export default function DoubleConfirmDeleteDialog(props: DoubleConfirmDeleteDialogProps) {
+  return <DoubleConfirmInner {...props} />;
 }
 
 import { useState, useEffect } from "react";
@@ -44,19 +31,26 @@ function DoubleConfirmInner({
   description,
   finalDescription,
   onConfirm,
-  isPending,
+  isPending = false,
 }: DoubleConfirmDeleteDialogProps) {
   const [paso2, setPaso2] = useState(false);
+  const [confirmText, setConfirmText] = useState("");
 
-  // Reset step when dialog closes
+  // Reset step and text when dialog closes
   useEffect(() => {
-    if (!open) setPaso2(false);
+    if (!open) {
+      setPaso2(false);
+      setConfirmText("");
+    }
   }, [open]);
 
   const close = () => {
     setPaso2(false);
+    setConfirmText("");
     onOpenChange(false);
   };
+
+  const canDelete = confirmText.trim().toUpperCase() === "ELIMINAR";
 
   return (
     <>
@@ -85,6 +79,19 @@ function DoubleConfirmInner({
               {finalDescription || "¿Estás completamente seguro? Esta acción no se puede deshacer."}
             </AlertDialogDescription>
           </AlertDialogHeader>
+          <div className="space-y-2 py-2">
+            <Label htmlFor="confirm-delete" className="text-sm text-muted-foreground">
+              Escribe <span className="font-bold text-destructive">ELIMINAR</span> para confirmar:
+            </Label>
+            <Input
+              id="confirm-delete"
+              value={confirmText}
+              onChange={(e) => setConfirmText(e.target.value)}
+              placeholder="ELIMINAR"
+              autoComplete="off"
+              className="font-mono"
+            />
+          </div>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancelar</AlertDialogCancel>
             <AlertDialogAction
@@ -93,9 +100,13 @@ function DoubleConfirmInner({
                 await onConfirm();
                 close();
               }}
-              disabled={isPending}
+              disabled={isPending || !canDelete}
             >
-              {isPending ? "Eliminando..." : "Eliminar definitivamente"}
+              {isPending ? (
+                <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Eliminando...</>
+              ) : (
+                "Eliminar definitivamente"
+              )}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

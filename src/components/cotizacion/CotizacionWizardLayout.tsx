@@ -208,9 +208,11 @@ export default function CotizacionWizardLayout({
               disabled={w.isPending}
               onClick={() => { if (w.currentStep < 4) w.handleSiguiente(); else w.handleGuardar(); }}
             >
-              {w.currentStep === 4
-                ? (w.isPending ? "Guardando..." : <><Save className="h-4 w-4 mr-1" /> {saveLabel}</>)
-                : (w.isPending ? "Guardando..." : <>Siguiente <ChevronRight className="h-4 w-4 ml-1" /></>)
+              {w.isPending
+                ? <><Loader2 className="h-4 w-4 mr-1 animate-spin" /> Guardando...</>
+                : w.currentStep === 4
+                  ? <><Save className="h-4 w-4 mr-1" /> {saveLabel}</>
+                  : <>Siguiente <ChevronRight className="h-4 w-4 ml-1" /></>
               }
             </Button>
           </div>
