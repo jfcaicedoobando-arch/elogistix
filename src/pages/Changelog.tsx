@@ -13,6 +13,13 @@ interface ChangelogEntry {
 
 const changelog: ChangelogEntry[] = [
   {
+    version: "5.16.0",
+    date: "2026-03-13",
+    type: "minor",
+    title: "Auditoría arquitectónica fase 2: 8 mejoras implementadas",
+    description: "EmbarqueWizardLayout compartido elimina duplicación entre NuevoEmbarque y EditarEmbarque. Mutations tipadas correctamente en useCotizacionWizardForm (eliminando 'any'). getErrorMessage centralizado reemplaza catch(err: any) en 13 archivos. Formatters de fecha/moneda consolidados desde helpers/formatters. ClienteDetalle migrado a DoubleConfirmDeleteDialog. useEmbarqueFinancials extrae cálculos financieros de EmbarqueDetalle. Documentación de límite de escalabilidad en useDashboardData.",
+  },
+  {
     version: "5.15.0",
     date: "2026-03-13",
     type: "minor",
