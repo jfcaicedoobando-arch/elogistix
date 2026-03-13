@@ -36,7 +36,7 @@ export default function Usuarios() {
 
   const columns: DataTableColumn<UserRow>[] = [
     { key: "email", header: "Email", className: "font-medium", render: (u) => u.email },
-    { key: "created_at", header: "Fecha de registro", className: "text-xs text-muted-foreground", render: (u) => formatDateLocal(u.created_at) },
+    { key: "created_at", header: "Fecha de registro", className: "text-xs text-muted-foreground", render: (u) => formatDate(u.created_at) },
     { key: "role", header: "Rol actual", render: (u) => <Badge className={roleBadge[u.role]}>{u.role}</Badge> },
     {
       key: "change_role", header: "Cambiar rol", render: (u) => (
