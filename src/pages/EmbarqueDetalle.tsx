@@ -8,13 +8,13 @@ import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { getEstadoColor, getModoIcon } from "@/lib/helpers";
-import { convertirAMXN, calcularMargen, calcularUtilidad } from "@/lib/financialUtils";
+import { getErrorMessage } from "@/lib/errorUtils";
 import { usePermissions } from "@/hooks/usePermissions";
 import { getSignedUrl } from "@/lib/storage";
 import { useToast } from "@/hooks/use-toast";
 import { useRegistrarActividad } from "@/hooks/useBitacora";
 import { useAuth } from "@/contexts/AuthContext";
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect } from "react";
 import { ESTADO_TIMELINE } from "@/data/embarqueConstants";
 import {
   useEmbarque,
@@ -29,6 +29,7 @@ import {
   useDeleteDocumentoEmbarque,
   calcularEstadoEmbarque,
 } from "@/hooks/useEmbarques";
+import { useEmbarqueFinancials } from "@/hooks/useEmbarqueFinancials";
 import { TabResumen } from "@/components/embarque/TabResumen";
 import { TabDocumentos } from "@/components/embarque/TabDocumentos";
 import { TabCostos } from "@/components/embarque/TabCostos";
@@ -68,6 +69,16 @@ export default function EmbarqueDetalle() {
     }
   }, [embarque?.id, embarque?.etd, embarque?.eta]);
 
+  const tipoCambioUSD = embarque ? (Number(embarque.tipo_cambio_usd) || 1) : 1;
+  const tipoCambioEUR = embarque ? (Number(embarque.tipo_cambio_eur) || 1) : 1;
+
+  const { totalVenta, totalCosto, utilidad, margen } = useEmbarqueFinancials({
+    conceptosVenta,
+    conceptosCosto,
+    tipoCambioUSD,
+    tipoCambioEUR,
+  });
+
   const handleUpload = async (docId: string, file: File) => {
     if (!id) return;
     try {
@@ -78,8 +89,8 @@ export default function EmbarqueDetalle() {
         detalles: { documento: file.name },
       });
       toast({ title: "Archivo subido correctamente" });
-    } catch (err: any) {
-      toast({ title: "Error al subir archivo", description: err.message, variant: "destructive" });
+    } catch (err: unknown) {
+      toast({ title: "Error al subir archivo", description: getErrorMessage(err), variant: "destructive" });
     }
   };
 
@@ -93,8 +104,8 @@ export default function EmbarqueDetalle() {
         detalles: { documento: doc.nombre },
       });
       toast({ title: "Documento eliminado correctamente" });
-    } catch (err: any) {
-      toast({ title: "Error al eliminar documento", description: err.message, variant: "destructive" });
+    } catch (err: unknown) {
+      toast({ title: "Error al eliminar documento", description: getErrorMessage(err), variant: "destructive" });
     }
   };
 
@@ -103,8 +114,8 @@ export default function EmbarqueDetalle() {
     try {
       const url = await getSignedUrl(rutaArchivo);
       window.open(url, "_blank");
-    } catch (err: any) {
-      toast({ title: "Error al descargar", description: err.message, variant: "destructive" });
+    } catch (err: unknown) {
+      toast({ title: "Error al descargar", description: getErrorMessage(err), variant: "destructive" });
     } finally {
       setDownloadingDocId(null);
     }
@@ -128,24 +139,10 @@ export default function EmbarqueDetalle() {
         detalles: { estado_anterior: embarque.estado, estado_nuevo: siguiente },
       });
       toast({ title: `Estado actualizado a "${siguiente}"` });
-    } catch (err: any) {
-      toast({ title: "Error al cambiar estado", description: err.message, variant: "destructive" });
+    } catch (err: unknown) {
+      toast({ title: "Error al cambiar estado", description: getErrorMessage(err), variant: "destructive" });
     }
   };
-
-  const tipoCambioUSD = embarque ? (Number(embarque.tipo_cambio_usd) || 1) : 1;
-  const tipoCambioEUR = embarque ? (Number(embarque.tipo_cambio_eur) || 1) : 1;
-
-  const totalVenta = useMemo(
-    () => conceptosVenta.reduce((sum, c) => sum + convertirAMXN(Number(c.total), c.moneda, tipoCambioUSD, tipoCambioEUR), 0),
-    [conceptosVenta, tipoCambioUSD, tipoCambioEUR]
-  );
-  const totalCosto = useMemo(
-    () => conceptosCosto.reduce((sum, c) => sum + convertirAMXN(Number(c.monto), c.moneda, tipoCambioUSD, tipoCambioEUR), 0),
-    [conceptosCosto, tipoCambioUSD, tipoCambioEUR]
-  );
-  const utilidad = useMemo(() => calcularUtilidad(totalVenta, totalCosto), [totalVenta, totalCosto]);
-  const margen = useMemo(() => calcularMargen(totalVenta, totalCosto), [totalVenta, totalCosto]);
 
   if (isLoading) {
     return (
