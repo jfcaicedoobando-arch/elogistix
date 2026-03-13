@@ -86,8 +86,8 @@ export default function Embarques() {
         detalles: { cliente: cliente_nombre, modo },
       });
       toast({ title: "Embarque eliminado", description: `${expediente} fue eliminado permanentemente.` });
-    } catch (err: any) {
-      toast({ title: "Error al eliminar", description: err.message, variant: "destructive" });
+    } catch (err: unknown) {
+      toast({ title: "Error al eliminar", description: getErrorMessage(err), variant: "destructive" });
     }
     setEmbarqueAEliminar(null);
   };

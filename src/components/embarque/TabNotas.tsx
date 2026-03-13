@@ -40,8 +40,8 @@ export function TabNotas({ notas, embarqueId }: Props) {
       });
       setTexto("");
       toast({ title: "Nota agregada" });
-    } catch (err: any) {
-      toast({ title: "Error al agregar nota", description: err.message, variant: "destructive" });
+    } catch (err: unknown) {
+      toast({ title: "Error al agregar nota", description: getErrorMessage(err), variant: "destructive" });
     }
   };
 

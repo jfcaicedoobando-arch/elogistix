@@ -60,8 +60,8 @@ export default function DialogDuplicarEmbarque({ embarque, open, onOpenChange }:
       const creados = await duplicarEmbarque.mutateAsync({ embarqueOrigen: embarque, copias: filaCopias });
       toast({ title: `Se crearon ${creados.length} embarque(s)`, description: creados.map(c => c.expediente).join(', ') });
       onOpenChange(false);
-    } catch (err: any) {
-      toast({ title: "Error al duplicar", description: err.message, variant: "destructive" });
+    } catch (err: unknown) {
+      toast({ title: "Error al duplicar", description: getErrorMessage(err), variant: "destructive" });
     }
   };
 

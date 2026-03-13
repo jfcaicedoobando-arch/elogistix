@@ -54,8 +54,8 @@ export default function NuevoUsuarioDialog({ open, onOpenChange, onCreated }: Pr
       setRole("viewer");
       onOpenChange(false);
       onCreated();
-    } catch (err: any) {
-      toast({ title: "Error", description: err.message, variant: "destructive" });
+    } catch (err: unknown) {
+      toast({ title: "Error", description: getErrorMessage(err), variant: "destructive" });
     } finally {
       setLoading(false);
     }

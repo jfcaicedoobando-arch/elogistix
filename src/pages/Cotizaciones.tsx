@@ -88,8 +88,8 @@ export default function Cotizaciones() {
     try {
       await deleteCotizacion.mutateAsync(cotizacionAEliminar);
       toast({ title: "Cotización eliminada correctamente" });
-    } catch (err: any) {
-      toast({ title: "Error al eliminar", description: err.message, variant: "destructive" });
+    } catch (err: unknown) {
+      toast({ title: "Error al eliminar", description: getErrorMessage(err), variant: "destructive" });
     }
     setCotizacionAEliminar(null);
   };
