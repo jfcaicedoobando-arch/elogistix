@@ -1,7 +1,7 @@
 import { useState, useCallback } from "react";
 import { useForm } from "react-hook-form";
 import type { NavigateFunction } from "react-router-dom";
-import type { ConceptoVentaCotizacion, DimensionLCL, DimensionAerea } from "@/hooks/useCotizaciones";
+import type { ConceptoVentaCotizacion, DimensionLCL, DimensionAerea, CotizacionRow, CreateCotizacionInput } from "@/hooks/useCotizaciones";
 import type { CostoCotizacion } from "@/hooks/useCotizacionCostos";
 import type { FilaCostoLocal } from "@/components/cotizacion/SeccionCostosInternosPLUnificado";
 import { CONCEPTOS_CON_IVA_USD } from "@/data/cotizacionConstants";

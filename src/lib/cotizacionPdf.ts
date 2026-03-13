@@ -1,4 +1,4 @@
-import type { CotizacionRow, DimensionLCL, DimensionAerea, ConceptoVentaCotizacion } from '@/hooks/useCotizaciones';
+import type { CotizacionRow, DimensionLCL, DimensionAerea } from '@/hooks/useCotizaciones';
 import { calcularIVA, TASA_IVA } from '@/lib/financialUtils';
 import { formatCurrency } from '@/lib/formatters';
 import { formatDate } from '@/lib/helpers';

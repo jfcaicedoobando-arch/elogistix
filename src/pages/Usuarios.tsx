@@ -4,6 +4,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { ShieldCheck, UserPlus } from "lucide-react";
+import { getErrorMessage } from "@/lib/errorUtils";
 import NuevoUsuarioDialog from "@/components/NuevoUsuarioDialog";
 import { DataTable, type DataTableColumn } from "@/components/DataTable";
 import { useUsuarios, useUpdateUserRole, type UserRow } from "@/hooks/useUsuarios";
