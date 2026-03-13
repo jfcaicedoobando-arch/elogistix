@@ -958,6 +958,32 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      actualizar_embarque_completo: {
+        Args: {
+          p_conceptos_costo?: Json
+          p_conceptos_venta?: Json
+          p_embarque: Json
+          p_embarque_id: string
+        }
+        Returns: undefined
+      }
+      crear_embarque_completo: {
+        Args: {
+          p_conceptos_costo?: Json
+          p_conceptos_venta?: Json
+          p_documentos?: Json
+          p_embarque: Json
+        }
+        Returns: Json
+      }
+      duplicar_embarque_completo: {
+        Args: { p_copias: Json; p_embarque_origen_id: string }
+        Returns: Json
+      }
+      eliminar_embarque_completo: {
+        Args: { p_embarque_id: string }
+        Returns: undefined
+      }
       generar_expediente: { Args: { tipo_op: string }; Returns: string }
       has_role: {
         Args: {
