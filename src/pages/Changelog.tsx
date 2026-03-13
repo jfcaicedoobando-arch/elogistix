@@ -13,6 +13,13 @@ interface ChangelogEntry {
 
 const changelog: ChangelogEntry[] = [
   {
+    version: "5.12.0",
+    date: "2026-03-13",
+    type: "minor",
+    title: "Estandarización de toast + Error Boundaries",
+    description: "Todos los imports de 'sonner' (toast.success/toast.error) en Proveedores, ProveedorDetalle y Facturación reemplazados por useToast de shadcn. Creado componente ErrorBoundary con UI de error amigable y botón de reintentar. Layout envuelve <Outlet /> con ErrorBoundary para capturar crashes a nivel de ruta. Eliminados imports no utilizados de Table en Facturación.",
+  },
+  {
     version: "5.11.0",
     date: "2026-03-13",
     type: "minor",
