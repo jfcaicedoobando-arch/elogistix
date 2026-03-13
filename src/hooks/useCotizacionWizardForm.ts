@@ -439,8 +439,8 @@ export function useCotizacionWizardForm({ navigate, toast, userEmail, clientes, 
       });
       toast({ title: isEditMode ? "Cotización actualizada exitosamente" : "Cotización creada exitosamente" });
       navigate(`/cotizaciones/${cotizacionId}`);
-    } catch (err: any) {
-      toast({ title: "Error al finalizar cotización", description: err.message, variant: "destructive" });
+    } catch (err: unknown) {
+      toast({ title: "Error al finalizar cotización", description: getErrorMessage(err), variant: "destructive" });
     }
   }, [cotizacionId, updateCotizacion, registrarActividad, toast, navigate, isEditMode]);
 
