@@ -209,7 +209,7 @@ export function useEmbarqueForm() {
         proveedor_nombre: proveedoresDb.find(p => p.id === c.proveedorId)?.nombre || '',
         concepto: c.concepto,
         monto: c.monto,
-        moneda: c.moneda as any,
+        moneda: c.moneda as TablesInsert<'conceptos_costo'>['moneda'],
       }));
 
   const setDocumentoArchivo = useCallback((nombre: string, file: File | undefined) => {
