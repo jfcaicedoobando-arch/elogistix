@@ -278,7 +278,7 @@ export function useCotizacionWizardForm({ navigate, toast, userEmail, clientes, 
     setter(prev => {
       const copia = [...prev];
       copia[index] = { ...copia[index], [campo]: valor };
-      if (moneda === "USD" && campo === "descripcion" && !(CONCEPTOS_CON_IVA_USD as readonly string[]).includes(valor)) {
+      if (moneda === "USD" && campo === "descripcion" && typeof valor === "string" && !(CONCEPTOS_CON_IVA_USD as readonly string[]).includes(valor)) {
         copia[index].aplica_iva = false;
       }
       const sub = copia[index].cantidad * copia[index].precio_unitario;
