@@ -96,7 +96,8 @@ function DoubleConfirmInner({
             <AlertDialogCancel>Cancelar</AlertDialogCancel>
             <AlertDialogAction
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-              onClick={async () => {
+              onClick={async (e) => {
+                e.preventDefault();
                 await onConfirm();
                 close();
               }}
