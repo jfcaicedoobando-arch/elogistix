@@ -256,7 +256,7 @@ export function useAvanzarEstadoEmbarque() {
     mutationFn: async ({ embarqueId, nuevoEstado, usuarioEmail }: { embarqueId: string; nuevoEstado: string; usuarioEmail: string }) => {
       const { error: errorEstado } = await supabase
         .from('embarques')
-        .update({ estado: nuevoEstado as any })
+        .update({ estado: nuevoEstado as EmbarqueInsert['estado'] })
         .eq('id', embarqueId);
       if (errorEstado) throw errorEstado;
 
