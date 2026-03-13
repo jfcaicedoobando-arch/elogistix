@@ -8,6 +8,7 @@ import {
 } from "@/components/ui/select";
 import { useNavigate } from "react-router-dom";
 import { useEmbarquesPaginados, calcularEstadoEmbarque, useEliminarEmbarque } from "@/hooks/useEmbarques";
+import { useOperadoresDistintos } from "@/hooks/useOperadoresDistintos";
 import { getErrorMessage } from "@/lib/errorUtils";
 import { useClientesForSelect } from "@/hooks/useClientes";
 import { usePermissions } from "@/hooks/usePermissions";
@@ -76,10 +77,7 @@ export default function Embarques() {
   const [embarqueAEliminar, setEmbarqueAEliminar] = useState<EmbarqueRow | null>(null);
   const [embarqueADuplicar, setEmbarqueADuplicar] = useState<EmbarqueRow | null>(null);
 
-  const operadoresUnicos = useMemo(() => {
-    const set = new Set(embarques.map(e => e.operador).filter(Boolean));
-    return Array.from(set).sort();
-  }, [embarques]);
+  const { data: operadoresUnicos = [] } = useOperadoresDistintos();
 
   const handleEliminar = async () => {
     if (!embarqueAEliminar) return;
