@@ -60,7 +60,7 @@ export function useEmbarquesPaginados({
       }
 
       if (filterModo !== 'todos') {
-        query = query.eq('modo', filterModo);
+        query = query.eq('modo', filterModo as any);
       }
       // Estado filtering is done client-side because calcularEstadoEmbarque derives estado from ETD/ETA
       if (filterCliente !== 'todos') {
