@@ -95,28 +95,28 @@ export default function Embarques() {
 
   const columns: DataTableColumn<EmbarqueRow>[] = useMemo(() => {
     const base: DataTableColumn<EmbarqueRow>[] = [
-      { key: "expediente", header: "Expediente", className: "font-medium", render: (e) => e.expediente },
-      { key: "bl", header: "BL Master", className: "text-xs", render: (e) => e.bl_master || "-" },
-      { key: "cliente", header: "Cliente", className: "max-w-[180px] truncate", render: (e) => e.cliente_nombre },
+      { key: "expediente", header: "Expediente", width: "w-[110px]", className: "font-medium", sortable: true, sortValue: (e) => e.expediente, render: (e) => e.expediente },
+      { key: "bl", header: "BL Master", width: "w-[120px]", className: "text-xs", render: (e) => e.bl_master || "-" },
+      { key: "cliente", header: "Cliente", width: "min-w-[160px]", className: "max-w-[180px] truncate", sortable: true, sortValue: (e) => e.cliente_nombre, render: (e) => e.cliente_nombre },
       {
-        key: "modo", header: "Modo", render: (e) => (
+        key: "modo", header: "Modo", width: "w-[90px]", render: (e) => (
           <span className="flex items-center gap-1">
             {getModoIcon(e.modo)} <span className="text-xs">{e.modo}</span>
           </span>
         ),
       },
-      { key: "origen", header: "Origen", className: "text-xs", render: (e) => shortName(e.puerto_origen || e.aeropuerto_origen || e.ciudad_origen || "-") },
-      { key: "destino", header: "Destino", className: "text-xs", render: (e) => shortName(e.puerto_destino || e.aeropuerto_destino || e.ciudad_destino || "-") },
-      { key: "contenedor", header: "Contenedor", className: "text-xs", render: (e) => e.tipo_contenedor || "-" },
-      { key: "etd", header: "ETD", className: "text-xs", render: (e) => formatDate(e.etd || "") },
-      { key: "eta", header: "ETA", className: "text-xs", render: (e) => formatDate(e.eta || "") },
+      { key: "origen", header: "Origen", width: "w-[120px]", className: "text-xs", render: (e) => shortName(e.puerto_origen || e.aeropuerto_origen || e.ciudad_origen || "-") },
+      { key: "destino", header: "Destino", width: "w-[120px]", className: "text-xs", render: (e) => shortName(e.puerto_destino || e.aeropuerto_destino || e.ciudad_destino || "-") },
+      { key: "contenedor", header: "Contenedor", width: "w-[100px]", className: "text-xs", render: (e) => e.tipo_contenedor || "-" },
+      { key: "etd", header: "ETD", width: "w-[90px]", className: "text-xs", sortable: true, sortValue: (e) => e.etd || "", render: (e) => formatDate(e.etd || "") },
+      { key: "eta", header: "ETA", width: "w-[90px]", className: "text-xs", sortable: true, sortValue: (e) => e.eta || "", render: (e) => formatDate(e.eta || "") },
       {
-        key: "estado", header: "Estado", render: (e) => {
+        key: "estado", header: "Estado", width: "w-[110px]", sortable: true, sortValue: (e) => calcularEstadoEmbarque(e.modo, e.tipo, e.etd, e.eta, e.estado), render: (e) => {
           const estado = calcularEstadoEmbarque(e.modo, e.tipo, e.etd, e.eta, e.estado);
           return <Badge variant="secondary" className={`text-xs ${getEstadoColor(estado)}`}>{estado}</Badge>;
         },
       },
-      { key: "operador", header: "Operador", className: "text-xs", render: (e) => e.operador },
+      { key: "operador", header: "Operador", width: "w-[100px]", className: "text-xs", sortable: true, sortValue: (e) => e.operador, render: (e) => e.operador },
     ];
 
     if (canEdit) {

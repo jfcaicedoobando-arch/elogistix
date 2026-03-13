@@ -35,10 +35,10 @@ const TABS: { label: string; tipo: TipoProveedor }[] = [
 ];
 
 const proveedorColumns: DataTableColumn<ProveedorListItem>[] = [
-  { key: "nombre", header: "Nombre", className: "font-medium", render: (p) => p.nombre },
-  { key: "rfc", header: "RFC", className: "text-xs font-mono", render: (p) => p.rfc },
-  { key: "contacto", header: "Contacto", className: "text-xs", render: (p) => p.contacto },
-  { key: "moneda", header: "Moneda", className: "text-xs", render: (p) => p.moneda_preferida },
+  { key: "nombre", header: "Nombre", width: "min-w-[180px]", className: "font-medium", sortable: true, sortValue: (p) => p.nombre, render: (p) => p.nombre },
+  { key: "rfc", header: "RFC", width: "w-[130px]", className: "text-xs font-mono", sortable: true, sortValue: (p) => p.rfc, render: (p) => p.rfc },
+  { key: "contacto", header: "Contacto", width: "w-[140px]", className: "text-xs", render: (p) => p.contacto },
+  { key: "moneda", header: "Moneda", width: "w-[80px]", className: "text-xs", render: (p) => p.moneda_preferida },
 ];
 
 function ProveedorTable({ tipo, search, onSelect }: { tipo: TipoProveedor; search: string; onSelect: (id: string) => void }) {

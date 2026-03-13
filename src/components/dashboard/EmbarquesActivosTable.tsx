@@ -21,8 +21,8 @@ function shortName(raw: string) {
 }
 
 const columns: DataTableColumn<EmbarqueMesSiguiente>[] = [
-  { key: "expediente", header: "Expediente", className: "font-medium", render: (e) => e.expediente },
-  { key: "cliente", header: "Cliente", className: "max-w-[180px] truncate", render: (e) => e.cliente_nombre },
+  { key: "expediente", header: "Expediente", className: "font-medium", sortable: true, sortValue: (e) => e.expediente, render: (e) => e.expediente },
+  { key: "cliente", header: "Cliente", className: "max-w-[180px] truncate", sortable: true, sortValue: (e) => e.cliente_nombre, render: (e) => e.cliente_nombre },
   {
     key: "modo", header: "Modo", render: (e) => (
       <span className="flex items-center gap-1.5">
@@ -38,9 +38,9 @@ const columns: DataTableColumn<EmbarqueMesSiguiente>[] = [
       return `${origen} → ${destino}`;
     },
   },
-  { key: "eta", header: "ETA", className: "text-xs", render: (e) => e.eta ? formatDate(e.eta) : "-" },
+  { key: "eta", header: "ETA", className: "text-xs", sortable: true, sortValue: (e) => e.eta || "", render: (e) => e.eta ? formatDate(e.eta) : "-" },
   {
-    key: "estado", header: "Estado", render: (e) => {
+    key: "estado", header: "Estado", sortable: true, sortValue: (e) => e.estadoReal, render: (e) => {
       const cfg = ESTADO_CONFIG[e.estadoReal as EstadoFiltro];
       return (
         <Badge variant="secondary" className={`text-xs ${cfg ? `${cfg.text} bg-transparent border ${cfg.border}/30` : ""}`}>
@@ -51,6 +51,7 @@ const columns: DataTableColumn<EmbarqueMesSiguiente>[] = [
   },
   {
     key: "profit", header: "Profit", className: "text-right tabular-nums", headerClassName: "text-right",
+    sortable: true, sortValue: (e) => e.profit,
     render: (e) => (
       <span className={`text-xs font-medium ${e.profit >= 0 ? "text-success" : "text-destructive"}`}>
         {formatCurrency(e.profit, "USD")}

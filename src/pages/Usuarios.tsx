@@ -36,11 +36,11 @@ export default function Usuarios() {
   };
 
   const columns: DataTableColumn<UserRow>[] = [
-    { key: "email", header: "Email", className: "font-medium", render: (u) => u.email },
-    { key: "created_at", header: "Fecha de registro", className: "text-xs text-muted-foreground", render: (u) => formatDate(u.created_at) },
-    { key: "role", header: "Rol actual", render: (u) => <Badge className={roleBadge[u.role]}>{u.role}</Badge> },
+    { key: "email", header: "Email", width: "min-w-[200px]", className: "font-medium", sortable: true, sortValue: (u) => u.email, render: (u) => u.email },
+    { key: "created_at", header: "Fecha de registro", width: "w-[140px]", className: "text-xs text-muted-foreground", sortable: true, sortValue: (u) => u.created_at, render: (u) => formatDate(u.created_at) },
+    { key: "role", header: "Rol actual", width: "w-[100px]", sortable: true, sortValue: (u) => u.role, render: (u) => <Badge className={roleBadge[u.role]}>{u.role}</Badge> },
     {
-      key: "change_role", header: "Cambiar rol", render: (u) => (
+      key: "change_role", header: "Cambiar rol", width: "w-[160px]", render: (u) => (
         <Select value={u.role} onValueChange={(val) => handleRoleChange(u.user_id, val as AppRole)}>
           <SelectTrigger className="w-[140px]"><SelectValue /></SelectTrigger>
           <SelectContent>
