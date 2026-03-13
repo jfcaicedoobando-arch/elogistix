@@ -17,6 +17,7 @@ export {
   useCotizaciones,
   useCotizacion,
   useCotizacionesAceptadas,
+  useEmbarquesVinculados,
 } from './useCotizacionQueries';
 
 // Mutations

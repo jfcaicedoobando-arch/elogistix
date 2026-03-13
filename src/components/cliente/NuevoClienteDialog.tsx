@@ -10,7 +10,7 @@ import { useCreateCliente } from "@/hooks/useClientes";
 import { useToast } from "@/hooks/use-toast";
 import { useRegistrarActividad } from "@/hooks/useBitacora";
 import DocumentChecklist, { type DocumentoChecklist } from "@/components/DocumentChecklist";
-import { supabase } from "@/integrations/supabase/client";
+import { parseCsf } from "@/lib/csfService";
 
 const emptyCliente = {
   nombre: "", rfc: "", direccion: "", ciudad: "", estado: "", cp: "", contacto: "", email: "", telefono: "",
@@ -116,28 +116,7 @@ export default function NuevoClienteDialog({ open, onOpenChange }: Props) {
 
     setParsingCsf(true);
     try {
-      const formData = new FormData();
-      formData.append("file", file);
-
-      const { data: { session } } = await supabase.auth.getSession();
-
-      const res = await fetch(
-        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/parse-csf`,
-        {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${session?.access_token ?? import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
-          },
-          body: formData,
-        }
-      );
-
-      if (!res.ok) {
-        const err = await res.json().catch(() => ({ error: "Error al procesar el documento" }));
-        throw new Error(err.error || "Error al procesar el documento");
-      }
-
-      const datos = await res.json();
+      const datos = await parseCsf(file);
       setForm(prev => ({
         ...prev,
         nombre: datos.nombre || prev.nombre,
@@ -172,20 +151,10 @@ export default function NuevoClienteDialog({ open, onOpenChange }: Props) {
         {step === 1 && (
           <div className="space-y-4">
             <div className="flex gap-2">
-              <Button
-                type="button"
-                variant={modoAlta === "manual" ? "default" : "outline"}
-                size="sm"
-                onClick={() => setModoAlta("manual")}
-              >
+              <Button type="button" variant={modoAlta === "manual" ? "default" : "outline"} size="sm" onClick={() => setModoAlta("manual")}>
                 <FileText className="h-4 w-4 mr-1" /> Manual
               </Button>
-              <Button
-                type="button"
-                variant={modoAlta === "csf" ? "default" : "outline"}
-                size="sm"
-                onClick={() => setModoAlta("csf")}
-              >
+              <Button type="button" variant={modoAlta === "csf" ? "default" : "outline"} size="sm" onClick={() => setModoAlta("csf")}>
                 <Upload className="h-4 w-4 mr-1" /> Subir CSF
               </Button>
             </div>
@@ -205,12 +174,7 @@ export default function NuevoClienteDialog({ open, onOpenChange }: Props) {
                       <Button type="button" variant="outline" size="sm" asChild>
                         <span>Seleccionar PDF</span>
                       </Button>
-                      <input
-                        type="file"
-                        accept="application/pdf"
-                        className="hidden"
-                        onChange={handleCsfUpload}
-                      />
+                      <input type="file" accept="application/pdf" className="hidden" onChange={handleCsfUpload} />
                     </label>
                   </>
                 )}
@@ -221,11 +185,7 @@ export default function NuevoClienteDialog({ open, onOpenChange }: Props) {
               {FORM_FIELDS.map(({ label, field, full, required }) => (
                 <div key={field} className={full ? "col-span-2" : ""}>
                   <Label className="text-xs">{label}{required && <span className="text-destructive ml-0.5">*</span>}</Label>
-                  <Input
-                    value={form[field]}
-                    onChange={(e) => handleChange(field, e.target.value)}
-                    className="mt-1"
-                  />
+                  <Input value={form[field]} onChange={(e) => handleChange(field, e.target.value)} className="mt-1" />
                 </div>
               ))}
             </div>

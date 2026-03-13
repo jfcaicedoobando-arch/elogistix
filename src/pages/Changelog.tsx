@@ -13,6 +13,13 @@ interface ChangelogEntry {
 
 const changelog: ChangelogEntry[] = [
   {
+    version: "5.10.0",
+    date: "2026-03-13",
+    type: "minor",
+    title: "Refactor: queries inline movidas a hooks dedicados",
+    description: "Eliminados imports directos de supabase en CotizacionDetalle (useEmbarquesVinculados), ProveedorDetalle (useProveedorOperaciones) y NuevoClienteDialog (parseCsf service). Nuevas query keys centralizadas: cotizaciones.embarquesVinculados y proveedores.operaciones. Tipado estricto en joins de proveedor operaciones. Eliminados 'as any' residuales en catch blocks.",
+  },
+  {
     version: "5.9.0",
     date: "2026-03-13",
     type: "minor",
