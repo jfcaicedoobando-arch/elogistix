@@ -142,19 +142,19 @@ export function useEmbarqueForm() {
   };
 
   const buildEmbarquePayload = (
-    contactos: any[],
+    contactos: ContactoRow[],
     clienteNombre: string,
     operador: string,
-  ) => {
+  ): Omit<TablesInsert<'embarques'>, 'expediente'> => {
     const v = methods.getValues();
     return {
-      cliente_id: v.clienteId || null,
+      cliente_id: v.clienteId || null!,
       cliente_nombre: clienteNombre,
-      modo: v.modo as any,
-      tipo: v.tipo as any,
+      modo: v.modo as TablesInsert<'embarques'>['modo'],
+      tipo: v.tipo as TablesInsert<'embarques'>['tipo'],
       shipper: resolverContacto(contactos, v.shipper, v.shipperManual),
       consignatario: v.consignatario === '__cliente__' ? clienteNombre : resolverContacto(contactos, v.consignatario, v.consignatarioManual),
-      incoterm: v.incoterm as any,
+      incoterm: v.incoterm as TablesInsert<'embarques'>['incoterm'],
       descripcion_mercancia: v.descripcionMercancia,
       peso_kg: Number(v.pesoKg),
       volumen_m3: Number(v.volumenM3),
@@ -165,7 +165,7 @@ export function useEmbarqueForm() {
       agente: v.agente || null,
       bl_master: v.blMaster || null,
       bl_house: v.blHouse || null,
-      tipo_servicio: (v.tipoServicio as any) || null,
+      tipo_servicio: (v.tipoServicio as TablesInsert<'embarques'>['tipo_servicio']) || null,
       contenedor: v.contenedor || null,
       tipo_contenedor: v.tipoContenedor || null,
       aeropuerto_origen: v.aeropuertoOrigen || null,
