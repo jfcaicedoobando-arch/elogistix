@@ -138,7 +138,7 @@ export default function NuevoEmbarque() {
       if (cotizacionVinculada) {
         await supabase
           .from('cotizaciones')
-          .update({ estado: 'Embarcada' as any })
+          .update({ estado: 'Embarcada' as TablesInsert<'cotizaciones'>['estado'] })
           .eq('id', cotizacionVinculada.id);
       }
 

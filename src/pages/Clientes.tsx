@@ -288,7 +288,7 @@ export default function Clientes() {
                   <div key={field} className={full ? "col-span-2" : ""}>
                     <Label className="text-xs">{label}{required && <span className="text-destructive ml-0.5">*</span>}</Label>
                     <Input
-                      value={(form as any)[field]}
+                      value={(form as Record<string, string>)[field]}
                       onChange={(e) => handleChange(field, e.target.value)}
                       className="mt-1"
                     />

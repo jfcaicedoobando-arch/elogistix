@@ -80,7 +80,7 @@ export default function Facturacion() {
 
   const gastoColumns: DataTableColumn<GastoPendiente>[] = [
     { key: "proveedor", header: "Proveedor", render: (g) => g.proveedor_nombre },
-    { key: "expediente", header: "Expediente", className: "font-medium", render: (g) => (g.embarques as any)?.expediente || "-" },
+    { key: "expediente", header: "Expediente", className: "font-medium", render: (g) => (g.embarques as { expediente: string } | null)?.expediente || "-" },
     { key: "concepto", header: "Concepto", render: (g) => g.concepto },
     { key: "monto", header: "Monto", className: "font-medium", render: (g) => formatCurrency(g.monto, g.moneda) },
     { key: "moneda", header: "Moneda", render: (g) => g.moneda },

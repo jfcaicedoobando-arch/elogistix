@@ -71,7 +71,7 @@ export function useAdminPuertos() {
 
   const toggleActivo = useMutation({
     mutationFn: async ({ id, activo }: { id: string; activo: boolean }) => {
-      const { error } = await supabase.from("puertos").update({ activo } as any).eq("id", id);
+      const { error } = await supabase.from("puertos").update({ activo }).eq("id", id);
       if (error) throw error;
     },
     onSuccess: () => invalidate(),

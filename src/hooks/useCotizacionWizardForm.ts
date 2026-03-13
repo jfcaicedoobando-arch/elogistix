@@ -481,7 +481,7 @@ export function useCotizacionWizardForm({ navigate, toast, userEmail, clientes, 
     if (!cotizacionId) return;
     try {
       if (!isEditMode) {
-        await updateCotizacion.mutateAsync({ id: cotizacionId, data: { estado: "Borrador" } as any });
+        await updateCotizacion.mutateAsync({ id: cotizacionId, data: { estado: "Borrador" } });
       }
       registrarActividad.mutate({
         accion: isEditMode ? "editar" : "crear", modulo: "cotizaciones",
