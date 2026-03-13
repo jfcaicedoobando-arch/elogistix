@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react";
-import { Plus, Trash2, MoreHorizontal, Pencil, Copy } from "lucide-react";
+import { Plus, Trash2, MoreHorizontal, Pencil, Copy, Ship } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
