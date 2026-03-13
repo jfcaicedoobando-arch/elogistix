@@ -8,6 +8,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { usePermissions } from "@/hooks/usePermissions";
 import { useCreateNotaEmbarque } from "@/hooks/useEmbarques";
 import { useRegistrarActividad } from "@/hooks/useBitacora";
+import { getErrorMessage } from "@/lib/errorUtils";
 import { useToast } from "@/hooks/use-toast";
 import type { NotaEmbarqueRow } from "@/hooks/useEmbarques";
 

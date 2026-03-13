@@ -7,6 +7,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
 import { useEliminarEmbarque, type EmbarqueRow } from "@/hooks/useEmbarques";
 import { useRegistrarActividad } from "@/hooks/useBitacora";
+import { getErrorMessage } from "@/lib/errorUtils";
 
 interface Props {
   embarque: EmbarqueRow;

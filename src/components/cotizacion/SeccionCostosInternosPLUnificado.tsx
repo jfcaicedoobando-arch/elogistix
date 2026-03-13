@@ -8,6 +8,7 @@ import {
 } from "@/components/ui/table";
 import { DollarSign, Banknote, Save, Plus, Trash2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { getErrorMessage } from "@/lib/errorUtils";
 import { usePermissions } from "@/hooks/usePermissions";
 import {
   useCotizacionCostos, useUpsertCotizacionCostos, CostoCotizacion,
