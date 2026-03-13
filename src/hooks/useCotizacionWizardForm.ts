@@ -417,8 +417,8 @@ export function useCotizacionWizardForm({ navigate, toast, userEmail, clientes, 
           });
         }
         setCurrentStep(4);
-      } catch (err: any) {
-        toast({ title: "Error al guardar conceptos de venta", description: err.message, variant: "destructive" });
+      } catch (err: unknown) {
+        toast({ title: "Error al guardar conceptos de venta", description: getErrorMessage(err), variant: "destructive" });
       }
     }
   }, [
