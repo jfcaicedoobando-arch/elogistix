@@ -14,7 +14,7 @@ import { useFacturas, useGastosPendientes, useMarcarCostoPagado } from "@/hooks/
 import { useRegistrarActividad } from "@/hooks/useBitacora";
 import { formatCurrency } from "@/lib/formatters";
 import { formatDate, getEstadoColor } from "@/lib/helpers";
-import { toast } from "sonner";
+import { useToast } from "@/hooks/use-toast";
 import { usePermissions } from "@/hooks/usePermissions";
 import PaginationControls from "@/components/PaginationControls";
 import { DataTable, type DataTableColumn } from "@/components/DataTable";

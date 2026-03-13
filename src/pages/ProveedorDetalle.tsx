@@ -16,7 +16,7 @@ import { useProveedor, useProveedorMutations, useProveedorOperaciones } from "@/
 import { formatCurrency } from "@/lib/formatters";
 import { getEstadoColor } from "@/lib/helpers";
 import EditarProveedorDialog from "@/components/EditarProveedorDialog";
-import { toast } from "sonner";
+import { useToast } from "@/hooks/use-toast";
 import { usePermissions } from "@/hooks/usePermissions";
 import { useRegistrarActividad } from "@/hooks/useBitacora";
 

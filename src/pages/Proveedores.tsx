@@ -10,7 +10,7 @@ import { useProveedoresPaginados, useProveedorMutations } from "@/hooks/useProve
 import type { ProveedorListItem } from "@/hooks/useProveedores";
 import NuevoProveedorDialog from "@/components/NuevoProveedorDialog";
 import PaginationControls from "@/components/PaginationControls";
-import { toast } from "sonner";
+import { useToast } from "@/hooks/use-toast";
 import { usePermissions } from "@/hooks/usePermissions";
 import { useRegistrarActividad } from "@/hooks/useBitacora";
 import { useDebounce } from "@/hooks/useDebounce";
