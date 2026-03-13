@@ -4,7 +4,7 @@ import { ArrowLeft, ChevronLeft, ChevronRight, Save } from "lucide-react";
 import { FormProvider } from "react-hook-form";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { toast } from "@/hooks/use-toast";
+import { useToast } from "@/hooks/use-toast";
 import {
   useEmbarque,
   useEmbarqueConceptosVenta,
@@ -33,6 +33,7 @@ export default function EditarEmbarque() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { toast } = useToast();
   const { data: embarque, isLoading } = useEmbarque(id);
   const { data: conceptosVentaDb = [], isLoading: cargandoVenta } = useEmbarqueConceptosVenta(id);
   const { data: conceptosCostoDb = [], isLoading: cargandoCosto } = useEmbarqueConceptosCosto(id);

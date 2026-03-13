@@ -6,10 +6,6 @@ import { Badge } from "@/components/ui/badge";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
-import {
-  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
-  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
 import { useNavigate } from "react-router-dom";
 import { useEmbarquesPaginados, calcularEstadoEmbarque, useEliminarEmbarque } from "@/hooks/useEmbarques";
 import { useClientesForSelect } from "@/hooks/useClientes";
@@ -23,6 +19,7 @@ import PaginationControls from "@/components/PaginationControls";
 import { DataTable, type DataTableColumn } from "@/components/DataTable";
 import { useDebounce } from "@/hooks/useDebounce";
 import type { EmbarqueRow } from "@/hooks/useEmbarqueUtils";
+import DoubleConfirmDeleteDialog from "@/components/DoubleConfirmDeleteDialog";
 
 const DEFAULT_PAGE_SIZE = 20;
 
@@ -60,7 +57,6 @@ export default function Embarques() {
   const embarques = resultado?.data ?? [];
   const totalCount = resultado?.count ?? 0;
 
-  // Estado filtering is done client-side because calcularEstadoEmbarque derives from ETD/ETA
   const filtered = useMemo(() => {
     if (filterEstado === "todos") return embarques;
     return embarques.filter((e) => {
@@ -69,16 +65,11 @@ export default function Embarques() {
     });
   }, [embarques, filterEstado]);
 
-  // For estado filter we use filtered count when filtering estado client-side
   const displayCount = filterEstado !== "todos" ? filtered.length : totalCount;
-  const totalPages = filterEstado !== "todos"
-    ? 1 // When filtering estado client-side, all results are in the current page
-    : Math.ceil(totalCount / pageSize);
+  const totalPages = filterEstado !== "todos" ? 1 : Math.ceil(totalCount / pageSize);
 
   const [embarqueAEliminar, setEmbarqueAEliminar] = useState<EmbarqueRow | null>(null);
-  const [paso2, setPaso2] = useState(false);
 
-  // Collect unique operators from current page for the filter dropdown
   const operadoresUnicos = useMemo(() => {
     const set = new Set(embarques.map(e => e.operador).filter(Boolean));
     return Array.from(set).sort();
@@ -86,28 +77,19 @@ export default function Embarques() {
 
   const handleEliminar = async () => {
     if (!embarqueAEliminar) return;
-    const id = embarqueAEliminar.id;
-    const expediente = embarqueAEliminar.expediente;
-    const cliente = embarqueAEliminar.cliente_nombre;
-    const modo = embarqueAEliminar.modo;
-
+    const { id, expediente, cliente_nombre, modo } = embarqueAEliminar;
     try {
       await eliminarEmbarque.mutateAsync(id);
       registrarActividad.mutate({
-        accion: 'eliminar',
-        modulo: 'embarques',
-        entidad_id: id,
-        entidad_nombre: expediente,
-        detalles: { cliente, modo },
+        accion: 'eliminar', modulo: 'embarques',
+        entidad_id: id, entidad_nombre: expediente,
+        detalles: { cliente: cliente_nombre, modo },
       });
       toast({ title: "Embarque eliminado", description: `${expediente} fue eliminado permanentemente.` });
-      setEmbarqueAEliminar(null);
-      setPaso2(false);
     } catch (err: any) {
       toast({ title: "Error al eliminar", description: err.message, variant: "destructive" });
-      setEmbarqueAEliminar(null);
-      setPaso2(false);
     }
+    setEmbarqueAEliminar(null);
   };
 
   const columns: DataTableColumn<EmbarqueRow>[] = useMemo(() => {
@@ -155,10 +137,6 @@ export default function Embarques() {
 
     return base;
   }, [canEdit]);
-
-  const resetFilters = () => {
-    setPage(0);
-  };
 
   return (
     <div className="space-y-6">
@@ -236,43 +214,15 @@ export default function Embarques() {
         </CardContent>
       </Card>
 
-      {/* Paso 1 */}
-      <AlertDialog open={!!embarqueAEliminar && !paso2} onOpenChange={(v) => { if (!v) setEmbarqueAEliminar(null); }}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>¿Eliminar embarque?</AlertDialogTitle>
-            <AlertDialogDescription>
-              El embarque <strong>{embarqueAEliminar?.expediente}</strong> será eliminado permanentemente.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancelar</AlertDialogCancel>
-            <AlertDialogAction onClick={() => setPaso2(true)}>Continuar</AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-
-      {/* Paso 2 */}
-      <AlertDialog open={paso2} onOpenChange={(v) => { if (!v) { setPaso2(false); setEmbarqueAEliminar(null); } }}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>¿Estás seguro?</AlertDialogTitle>
-            <AlertDialogDescription>
-              Esta acción no se puede deshacer. Se eliminarán todos los datos, documentos y costos asociados al embarque <strong>{embarqueAEliminar?.expediente}</strong>.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancelar</AlertDialogCancel>
-            <AlertDialogAction
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-              onClick={handleEliminar}
-              disabled={eliminarEmbarque.isPending}
-            >
-              {eliminarEmbarque.isPending ? 'Eliminando...' : 'Eliminar definitivamente'}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <DoubleConfirmDeleteDialog
+        open={!!embarqueAEliminar}
+        onOpenChange={(open) => { if (!open) setEmbarqueAEliminar(null); }}
+        entityName="embarque"
+        description={`El embarque ${embarqueAEliminar?.expediente} será eliminado permanentemente.`}
+        finalDescription={`Esta acción no se puede deshacer. Se eliminarán todos los datos, documentos y costos asociados al embarque ${embarqueAEliminar?.expediente}.`}
+        onConfirm={handleEliminar}
+        isPending={eliminarEmbarque.isPending}
+      />
     </div>
   );
 }
