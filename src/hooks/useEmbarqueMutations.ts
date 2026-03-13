@@ -274,6 +274,62 @@ export function useAvanzarEstadoEmbarque() {
   });
 }
 
+// ─── Sincronizar Estado Calculado ─────────────────────────
+/** Actualiza el estado en BD si el estado calculado difiere del almacenado */
+export function useSyncEstadoEmbarque() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ embarqueId, nuevoEstado }: { embarqueId: string; nuevoEstado: string }) => {
+      const { error } = await supabase
+        .from('embarques')
+        .update({ estado: nuevoEstado as any })
+        .eq('id', embarqueId);
+      if (error) throw error;
+    },
+    onSuccess: (_r, vars) => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.embarques.detail(vars.embarqueId) });
+      queryClient.invalidateQueries({ queryKey: queryKeys.embarques.all });
+    },
+  });
+}
+
+// ─── Upload Documento ────────────────────────────────────
+export function useUploadDocumentoEmbarque() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ embarqueId, docId, file }: { embarqueId: string; docId: string; file: File }) => {
+      const { uploadFile } = await import('@/lib/storage');
+      const path = `embarques/${embarqueId}/${docId}/${file.name}`;
+      await uploadFile(path, file);
+      const { error } = await supabase
+        .from('documentos_embarque')
+        .update({ archivo: path, estado: 'Recibido' as any })
+        .eq('id', docId);
+      if (error) throw error;
+      return { path, fileName: file.name };
+    },
+    onSuccess: (_r, vars) => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.embarques.documentos(vars.embarqueId) });
+    },
+  });
+}
+
+// ─── Delete Documento ────────────────────────────────────
+export function useDeleteDocumentoEmbarque() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ embarqueId, docId, archivoPath }: { embarqueId: string; docId: string; archivoPath: string }) => {
+      const { deleteFile } = await import('@/lib/storage');
+      await deleteFile(archivoPath);
+      const { error } = await supabase.from('documentos_embarque').delete().eq('id', docId);
+      if (error) throw error;
+    },
+    onSuccess: (_r, vars) => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.embarques.documentos(vars.embarqueId) });
+    },
+  });
+}
+
 // ─── Crear Nota ──────────────────────────────────────────
 export function useCreateNotaEmbarque() {
   const queryClient = useQueryClient();
