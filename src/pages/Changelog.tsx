@@ -13,6 +13,13 @@ interface ChangelogEntry {
 
 const changelog: ChangelogEntry[] = [
   {
+    version: "5.9.0",
+    date: "2026-03-13",
+    type: "minor",
+    title: "Refactor: NuevoClienteDialog extraído de Clientes.tsx",
+    description: "El diálogo de alta de clientes (wizard 2 pasos, CSF upload, document checklist) fue extraído a src/components/cliente/NuevoClienteDialog.tsx con estado independiente. Clientes.tsx reducido de 334 a 90 líneas. Eliminados casts 'as any' residuales en el formulario usando keyof tipado.",
+  },
+  {
     version: "5.8.0",
     date: "2026-03-13",
     type: "minor",
