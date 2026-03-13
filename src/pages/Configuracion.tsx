@@ -18,100 +18,102 @@ function getVal<T>(data: ConfigItem[] | undefined, categoria: string, clave: str
   return item ? (item.valor as T) : fallback;
 }
 
+interface ConfigState {
+  nombre: string;
+  subtitulo: string;
+  rfc: string;
+  direccion: string;
+  email: string;
+  telefono: string;
+  usdMxn: string;
+  eurMxn: string;
+  fuente: string;
+  vigenciaDias: string;
+  diasLibres: string;
+  monedaCot: string;
+  terminos: string;
+  tasaIva: string;
+  diasVenc: string;
+  serieFact: string;
+  folioInicial: string;
+  monedaFact: string;
+  prefijo: string;
+  tipoCargaDefault: string;
+  monedaEmb: string;
+  diasEta: string;
+  diasEtaCritica: string;
+  diasFactVencer: string;
+}
+
+function buildStateFromConfig(config: ConfigItem[] | undefined): ConfigState {
+  return {
+    nombre: getVal(config, "empresa", "nombre", ""),
+    subtitulo: getVal(config, "empresa", "subtitulo", ""),
+    rfc: getVal(config, "empresa", "rfc", ""),
+    direccion: getVal(config, "empresa", "direccion_fiscal", ""),
+    email: getVal(config, "empresa", "email", ""),
+    telefono: getVal(config, "empresa", "telefono", ""),
+    usdMxn: String(getVal(config, "tipos_cambio", "usd_mxn_default", 17.25)),
+    eurMxn: String(getVal(config, "tipos_cambio", "eur_mxn_default", 18.5)),
+    fuente: getVal(config, "tipos_cambio", "fuente", "api"),
+    vigenciaDias: String(getVal(config, "cotizaciones", "vigencia_dias", 15)),
+    diasLibres: String(getVal(config, "cotizaciones", "dias_libres_destino", 0)),
+    monedaCot: getVal(config, "cotizaciones", "moneda_default", "USD"),
+    terminos: getVal(config, "cotizaciones", "terminos_condiciones", ""),
+    tasaIva: String(getVal(config, "facturacion", "tasa_iva", 16)),
+    diasVenc: String(getVal(config, "facturacion", "dias_vencimiento", 30)),
+    serieFact: getVal(config, "facturacion", "serie_factura", "A"),
+    folioInicial: String(getVal(config, "facturacion", "folio_inicial", 1)),
+    monedaFact: getVal(config, "facturacion", "moneda_default", "MXN"),
+    prefijo: getVal(config, "embarques", "prefijo_expediente", "EXP"),
+    tipoCargaDefault: getVal(config, "embarques", "tipo_carga_default", "Carga General"),
+    monedaEmb: getVal(config, "embarques", "moneda_default", "USD"),
+    diasEta: String(getVal(config, "alertas", "dias_eta_alerta", 7)),
+    diasEtaCritica: String(getVal(config, "alertas", "dias_eta_critica", 3)),
+    diasFactVencer: String(getVal(config, "alertas", "dias_factura_vencer", 7)),
+  };
+}
+
+const INITIAL_STATE: ConfigState = buildStateFromConfig(undefined);
+
 export default function Configuracion() {
   const { data: config, isLoading } = useConfiguracion();
   const updateConfig = useUpdateConfiguracion();
-
-  // Empresa
-  const [nombre, setNombre] = useState("");
-  const [subtitulo, setSubtitulo] = useState("");
-  const [rfc, setRfc] = useState("");
-  const [direccion, setDireccion] = useState("");
-  const [email, setEmail] = useState("");
-  const [telefono, setTelefono] = useState("");
-
-  // Tipos de cambio
-  const [usdMxn, setUsdMxn] = useState("17.25");
-  const [eurMxn, setEurMxn] = useState("18.50");
-  const [fuente, setFuente] = useState("api");
-
-  // Cotizaciones
-  const [vigenciaDias, setVigenciaDias] = useState("15");
-  const [diasLibres, setDiasLibres] = useState("0");
-  const [monedaCot, setMonedaCot] = useState("USD");
-  const [terminos, setTerminos] = useState("");
-
-  // Facturación
-  const [tasaIva, setTasaIva] = useState("16");
-  const [diasVenc, setDiasVenc] = useState("30");
-  const [serieFact, setSerieFact] = useState("A");
-  const [folioInicial, setFolioInicial] = useState("1");
-  const [monedaFact, setMonedaFact] = useState("MXN");
-
-  // Embarques
-  const [prefijo, setPrefijo] = useState("EXP");
-  const [tipoCargaDefault, setTipoCargaDefault] = useState("Carga General");
-  const [monedaEmb, setMonedaEmb] = useState("USD");
-
-  // Alertas
-  const [diasEta, setDiasEta] = useState("7");
-  const [diasEtaCritica, setDiasEtaCritica] = useState("3");
-  const [diasFactVencer, setDiasFactVencer] = useState("7");
+  const [s, setS] = useState<ConfigState>(INITIAL_STATE);
 
   useEffect(() => {
-    if (!config) return;
-    setNombre(getVal(config, "empresa", "nombre", ""));
-    setSubtitulo(getVal(config, "empresa", "subtitulo", ""));
-    setRfc(getVal(config, "empresa", "rfc", ""));
-    setDireccion(getVal(config, "empresa", "direccion_fiscal", ""));
-    setEmail(getVal(config, "empresa", "email", ""));
-    setTelefono(getVal(config, "empresa", "telefono", ""));
-    setUsdMxn(String(getVal(config, "tipos_cambio", "usd_mxn_default", 17.25)));
-    setEurMxn(String(getVal(config, "tipos_cambio", "eur_mxn_default", 18.5)));
-    setFuente(getVal(config, "tipos_cambio", "fuente", "api"));
-    setVigenciaDias(String(getVal(config, "cotizaciones", "vigencia_dias", 15)));
-    setDiasLibres(String(getVal(config, "cotizaciones", "dias_libres_destino", 0)));
-    setMonedaCot(getVal(config, "cotizaciones", "moneda_default", "USD"));
-    setTerminos(getVal(config, "cotizaciones", "terminos_condiciones", ""));
-    setTasaIva(String(getVal(config, "facturacion", "tasa_iva", 16)));
-    setDiasVenc(String(getVal(config, "facturacion", "dias_vencimiento", 30)));
-    setSerieFact(getVal(config, "facturacion", "serie_factura", "A"));
-    setFolioInicial(String(getVal(config, "facturacion", "folio_inicial", 1)));
-    setMonedaFact(getVal(config, "facturacion", "moneda_default", "MXN"));
-    setPrefijo(getVal(config, "embarques", "prefijo_expediente", "EXP"));
-    setTipoCargaDefault(getVal(config, "embarques", "tipo_carga_default", "Carga General"));
-    setMonedaEmb(getVal(config, "embarques", "moneda_default", "USD"));
-    setDiasEta(String(getVal(config, "alertas", "dias_eta_alerta", 7)));
-    setDiasEtaCritica(String(getVal(config, "alertas", "dias_eta_critica", 3)));
-    setDiasFactVencer(String(getVal(config, "alertas", "dias_factura_vencer", 7)));
+    if (config) setS(buildStateFromConfig(config));
   }, [config]);
+
+  const set = <K extends keyof ConfigState>(key: K) => (value: ConfigState[K]) =>
+    setS(prev => ({ ...prev, [key]: value }));
 
   const handleSave = () => {
     updateConfig.mutate([
-      { categoria: "empresa", clave: "nombre", valor: nombre },
-      { categoria: "empresa", clave: "subtitulo", valor: subtitulo },
-      { categoria: "empresa", clave: "rfc", valor: rfc },
-      { categoria: "empresa", clave: "direccion_fiscal", valor: direccion },
-      { categoria: "empresa", clave: "email", valor: email },
-      { categoria: "empresa", clave: "telefono", valor: telefono },
-      { categoria: "tipos_cambio", clave: "usd_mxn_default", valor: parseFloat(usdMxn) || 17.25 },
-      { categoria: "tipos_cambio", clave: "eur_mxn_default", valor: parseFloat(eurMxn) || 18.5 },
-      { categoria: "tipos_cambio", clave: "fuente", valor: fuente },
-      { categoria: "cotizaciones", clave: "vigencia_dias", valor: parseInt(vigenciaDias) || 15 },
-      { categoria: "cotizaciones", clave: "dias_libres_destino", valor: parseInt(diasLibres) || 0 },
-      { categoria: "cotizaciones", clave: "moneda_default", valor: monedaCot },
-      { categoria: "cotizaciones", clave: "terminos_condiciones", valor: terminos },
-      { categoria: "facturacion", clave: "tasa_iva", valor: parseInt(tasaIva) || 16 },
-      { categoria: "facturacion", clave: "dias_vencimiento", valor: parseInt(diasVenc) || 30 },
-      { categoria: "facturacion", clave: "serie_factura", valor: serieFact },
-      { categoria: "facturacion", clave: "folio_inicial", valor: parseInt(folioInicial) || 1 },
-      { categoria: "facturacion", clave: "moneda_default", valor: monedaFact },
-      { categoria: "embarques", clave: "prefijo_expediente", valor: prefijo },
-      { categoria: "embarques", clave: "tipo_carga_default", valor: tipoCargaDefault },
-      { categoria: "embarques", clave: "moneda_default", valor: monedaEmb },
-      { categoria: "alertas", clave: "dias_eta_alerta", valor: parseInt(diasEta) || 7 },
-      { categoria: "alertas", clave: "dias_eta_critica", valor: parseInt(diasEtaCritica) || 3 },
-      { categoria: "alertas", clave: "dias_factura_vencer", valor: parseInt(diasFactVencer) || 7 },
+      { categoria: "empresa", clave: "nombre", valor: s.nombre },
+      { categoria: "empresa", clave: "subtitulo", valor: s.subtitulo },
+      { categoria: "empresa", clave: "rfc", valor: s.rfc },
+      { categoria: "empresa", clave: "direccion_fiscal", valor: s.direccion },
+      { categoria: "empresa", clave: "email", valor: s.email },
+      { categoria: "empresa", clave: "telefono", valor: s.telefono },
+      { categoria: "tipos_cambio", clave: "usd_mxn_default", valor: parseFloat(s.usdMxn) || 17.25 },
+      { categoria: "tipos_cambio", clave: "eur_mxn_default", valor: parseFloat(s.eurMxn) || 18.5 },
+      { categoria: "tipos_cambio", clave: "fuente", valor: s.fuente },
+      { categoria: "cotizaciones", clave: "vigencia_dias", valor: parseInt(s.vigenciaDias) || 15 },
+      { categoria: "cotizaciones", clave: "dias_libres_destino", valor: parseInt(s.diasLibres) || 0 },
+      { categoria: "cotizaciones", clave: "moneda_default", valor: s.monedaCot },
+      { categoria: "cotizaciones", clave: "terminos_condiciones", valor: s.terminos },
+      { categoria: "facturacion", clave: "tasa_iva", valor: parseInt(s.tasaIva) || 16 },
+      { categoria: "facturacion", clave: "dias_vencimiento", valor: parseInt(s.diasVenc) || 30 },
+      { categoria: "facturacion", clave: "serie_factura", valor: s.serieFact },
+      { categoria: "facturacion", clave: "folio_inicial", valor: parseInt(s.folioInicial) || 1 },
+      { categoria: "facturacion", clave: "moneda_default", valor: s.monedaFact },
+      { categoria: "embarques", clave: "prefijo_expediente", valor: s.prefijo },
+      { categoria: "embarques", clave: "tipo_carga_default", valor: s.tipoCargaDefault },
+      { categoria: "embarques", clave: "moneda_default", valor: s.monedaEmb },
+      { categoria: "alertas", clave: "dias_eta_alerta", valor: parseInt(s.diasEta) || 7 },
+      { categoria: "alertas", clave: "dias_eta_critica", valor: parseInt(s.diasEtaCritica) || 3 },
+      { categoria: "alertas", clave: "dias_factura_vencer", valor: parseInt(s.diasFactVencer) || 7 },
     ]);
   };
 
@@ -154,22 +156,22 @@ export default function Configuracion() {
         </TabsList>
 
         <TabsContent value="empresa">
-          <TabEmpresa nombre={nombre} setNombre={setNombre} subtitulo={subtitulo} setSubtitulo={setSubtitulo} rfc={rfc} setRfc={setRfc} direccion={direccion} setDireccion={setDireccion} email={email} setEmail={setEmail} telefono={telefono} setTelefono={setTelefono} />
+          <TabEmpresa nombre={s.nombre} setNombre={set("nombre")} subtitulo={s.subtitulo} setSubtitulo={set("subtitulo")} rfc={s.rfc} setRfc={set("rfc")} direccion={s.direccion} setDireccion={set("direccion")} email={s.email} setEmail={set("email")} telefono={s.telefono} setTelefono={set("telefono")} />
         </TabsContent>
         <TabsContent value="tipos_cambio">
-          <TabTiposCambio usdMxn={usdMxn} setUsdMxn={setUsdMxn} eurMxn={eurMxn} setEurMxn={setEurMxn} fuente={fuente} setFuente={setFuente} />
+          <TabTiposCambio usdMxn={s.usdMxn} setUsdMxn={set("usdMxn")} eurMxn={s.eurMxn} setEurMxn={set("eurMxn")} fuente={s.fuente} setFuente={set("fuente")} />
         </TabsContent>
         <TabsContent value="cotizaciones">
-          <TabCotizaciones vigenciaDias={vigenciaDias} setVigenciaDias={setVigenciaDias} diasLibres={diasLibres} setDiasLibres={setDiasLibres} monedaCot={monedaCot} setMonedaCot={setMonedaCot} terminos={terminos} setTerminos={setTerminos} />
+          <TabCotizaciones vigenciaDias={s.vigenciaDias} setVigenciaDias={set("vigenciaDias")} diasLibres={s.diasLibres} setDiasLibres={set("diasLibres")} monedaCot={s.monedaCot} setMonedaCot={set("monedaCot")} terminos={s.terminos} setTerminos={set("terminos")} />
         </TabsContent>
         <TabsContent value="facturacion">
-          <TabFacturacion tasaIva={tasaIva} setTasaIva={setTasaIva} diasVenc={diasVenc} setDiasVenc={setDiasVenc} serieFact={serieFact} setSerieFact={setSerieFact} folioInicial={folioInicial} setFolioInicial={setFolioInicial} monedaFact={monedaFact} setMonedaFact={setMonedaFact} />
+          <TabFacturacion tasaIva={s.tasaIva} setTasaIva={set("tasaIva")} diasVenc={s.diasVenc} setDiasVenc={set("diasVenc")} serieFact={s.serieFact} setSerieFact={set("serieFact")} folioInicial={s.folioInicial} setFolioInicial={set("folioInicial")} monedaFact={s.monedaFact} setMonedaFact={set("monedaFact")} />
         </TabsContent>
         <TabsContent value="embarques">
-          <TabEmbarques prefijo={prefijo} setPrefijo={setPrefijo} tipoCargaDefault={tipoCargaDefault} setTipoCargaDefault={setTipoCargaDefault} monedaEmb={monedaEmb} setMonedaEmb={setMonedaEmb} />
+          <TabEmbarques prefijo={s.prefijo} setPrefijo={set("prefijo")} tipoCargaDefault={s.tipoCargaDefault} setTipoCargaDefault={set("tipoCargaDefault")} monedaEmb={s.monedaEmb} setMonedaEmb={set("monedaEmb")} />
         </TabsContent>
         <TabsContent value="alertas">
-          <TabAlertas diasEta={diasEta} setDiasEta={setDiasEta} diasEtaCritica={diasEtaCritica} setDiasEtaCritica={setDiasEtaCritica} diasFactVencer={diasFactVencer} setDiasFactVencer={setDiasFactVencer} />
+          <TabAlertas diasEta={s.diasEta} setDiasEta={set("diasEta")} diasEtaCritica={s.diasEtaCritica} setDiasEtaCritica={set("diasEtaCritica")} diasFactVencer={s.diasFactVencer} setDiasFactVencer={set("diasFactVencer")} />
         </TabsContent>
         <TabsContent value="puertos">
           <TabPuertos />
