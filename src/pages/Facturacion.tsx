@@ -24,7 +24,7 @@ const DEFAULT_PAGE_SIZE = 20;
 type Factura = ReturnType<typeof useFacturas>["data"] extends (infer U)[] | undefined ? U : never;
 
 const facturaColumns: DataTableColumn<Factura>[] = [
-  { key: "numero", header: "# Factura", width: "w-[110px]", className: "font-medium", sortable: true, sortValue: (f) => f.numero, render: (f) => f.numero },
+  { key: "numero", header: "# Factura", width: "w-[110px]", className: "font-medium", sticky: true, sortable: true, sortValue: (f) => f.numero, render: (f) => f.numero },
   { key: "expediente", header: "Expediente", width: "w-[110px]", render: (f) => f.expediente },
   { key: "cliente", header: "Cliente", width: "min-w-[160px]", className: "max-w-[180px] truncate", render: (f) => f.cliente_nombre },
   { key: "monto", header: "Monto", width: "w-[110px]", className: "font-medium", sortable: true, sortValue: (f) => f.total, render: (f) => formatCurrency(f.total, f.moneda) },

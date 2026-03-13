@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react";
-import { Plus, Trash2 } from "lucide-react";
+import { Plus, Trash2, MoreHorizontal, Pencil, Copy } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -21,6 +21,10 @@ import { DataTable, type DataTableColumn } from "@/components/DataTable";
 import { useDebounce } from "@/hooks/useDebounce";
 import type { EmbarqueRow } from "@/hooks/useEmbarqueUtils";
 import DoubleConfirmDeleteDialog from "@/components/DoubleConfirmDeleteDialog";
+import DialogDuplicarEmbarque from "@/components/embarque/DialogDuplicarEmbarque";
+import {
+  DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 const DEFAULT_PAGE_SIZE = 20;
 
@@ -70,6 +74,7 @@ export default function Embarques() {
   const totalPages = filterEstado !== "todos" ? 1 : Math.ceil(totalCount / pageSize);
 
   const [embarqueAEliminar, setEmbarqueAEliminar] = useState<EmbarqueRow | null>(null);
+  const [embarqueADuplicar, setEmbarqueADuplicar] = useState<EmbarqueRow | null>(null);
 
   const operadoresUnicos = useMemo(() => {
     const set = new Set(embarques.map(e => e.operador).filter(Boolean));
@@ -95,7 +100,7 @@ export default function Embarques() {
 
   const columns: DataTableColumn<EmbarqueRow>[] = useMemo(() => {
     const base: DataTableColumn<EmbarqueRow>[] = [
-      { key: "expediente", header: "Expediente", width: "w-[110px]", className: "font-medium", sortable: true, sortValue: (e) => e.expediente, render: (e) => e.expediente },
+      { key: "expediente", header: "Expediente", width: "w-[110px]", className: "font-medium", sticky: true, sortable: true, sortValue: (e) => e.expediente, render: (e) => e.expediente },
       { key: "bl", header: "BL Master", width: "w-[120px]", className: "text-xs", render: (e) => e.bl_master || "-" },
       { key: "cliente", header: "Cliente", width: "min-w-[160px]", className: "max-w-[180px] truncate", sortable: true, sortValue: (e) => e.cliente_nombre, render: (e) => e.cliente_nombre },
       {
@@ -125,13 +130,25 @@ export default function Embarques() {
         header: "",
         className: "w-10",
         render: (e) => (
-          <button
-            className="opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded hover:bg-destructive/10 text-muted-foreground hover:text-destructive"
-            onClick={(ev) => { ev.stopPropagation(); setEmbarqueAEliminar(e); }}
-            title="Eliminar embarque"
-          >
-            <Trash2 className="h-4 w-4" />
-          </button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild onClick={(ev) => ev.stopPropagation()}>
+              <Button variant="ghost" size="icon" className="h-8 w-8">
+                <MoreHorizontal className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={() => navigate(`/embarques/${e.id}/editar`)}>
+                <Pencil className="mr-2 h-4 w-4" /> Editar
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setEmbarqueADuplicar(e)}>
+                <Copy className="mr-2 h-4 w-4" /> Duplicar
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem className="text-destructive focus:text-destructive" onClick={() => setEmbarqueAEliminar(e)}>
+                <Trash2 className="mr-2 h-4 w-4" /> Eliminar
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         ),
       });
     }
@@ -224,6 +241,13 @@ export default function Embarques() {
         onConfirm={handleEliminar}
         isPending={eliminarEmbarque.isPending}
       />
+      {embarqueADuplicar && (
+        <DialogDuplicarEmbarque
+          embarque={embarqueADuplicar}
+          open
+          onOpenChange={(open) => { if (!open) setEmbarqueADuplicar(null); }}
+        />
+      )}
     </div>
   );
 }

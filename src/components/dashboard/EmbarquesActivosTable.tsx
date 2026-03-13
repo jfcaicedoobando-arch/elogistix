@@ -2,11 +2,10 @@ import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { DataTable, type DataTableColumn } from "@/components/DataTable";
-import { formatDate, getModoIcon } from "@/lib/helpers";
+import { formatDate, getModoIcon, getEstadoColor } from "@/lib/helpers";
 import { formatCurrency } from "@/lib/formatters";
 import type { EmbarqueMesSiguiente, ResumenFacturacion } from "@/hooks/useDashboardData";
-import { ESTADO_CONFIG } from "./estadoConfig";
-import type { EstadoFiltro } from "@/hooks/useDashboardData";
+
 import { CalendarDays, DollarSign, TrendingUp, FileCheck, Package } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 
@@ -21,7 +20,7 @@ function shortName(raw: string) {
 }
 
 const columns: DataTableColumn<EmbarqueMesSiguiente>[] = [
-  { key: "expediente", header: "Expediente", className: "font-medium", sortable: true, sortValue: (e) => e.expediente, render: (e) => e.expediente },
+  { key: "expediente", header: "Expediente", className: "font-medium", sticky: true, sortable: true, sortValue: (e) => e.expediente, render: (e) => e.expediente },
   { key: "cliente", header: "Cliente", className: "max-w-[180px] truncate", sortable: true, sortValue: (e) => e.cliente_nombre, render: (e) => e.cliente_nombre },
   {
     key: "modo", header: "Modo", render: (e) => (
@@ -40,14 +39,11 @@ const columns: DataTableColumn<EmbarqueMesSiguiente>[] = [
   },
   { key: "eta", header: "ETA", className: "text-xs", sortable: true, sortValue: (e) => e.eta || "", render: (e) => e.eta ? formatDate(e.eta) : "-" },
   {
-    key: "estado", header: "Estado", sortable: true, sortValue: (e) => e.estadoReal, render: (e) => {
-      const cfg = ESTADO_CONFIG[e.estadoReal as EstadoFiltro];
-      return (
-        <Badge variant="secondary" className={`text-xs ${cfg ? `${cfg.text} bg-transparent border ${cfg.border}/30` : ""}`}>
-          {e.estadoReal}
-        </Badge>
-      );
-    },
+    key: "estado", header: "Estado", sortable: true, sortValue: (e) => e.estadoReal, render: (e) => (
+      <Badge variant="secondary" className={`text-xs ${getEstadoColor(e.estadoReal)}`}>
+        {e.estadoReal}
+      </Badge>
+    ),
   },
   {
     key: "profit", header: "Profit", className: "text-right tabular-nums", headerClassName: "text-right",

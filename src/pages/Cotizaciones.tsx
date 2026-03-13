@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react";
-import { Plus, Trash2 } from "lucide-react";
+import { Plus, Trash2, MoreHorizontal, Pencil } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -18,6 +18,9 @@ import SearchInput from "@/components/SearchInput";
 import PaginationControls from "@/components/PaginationControls";
 import { DataTable, type DataTableColumn } from "@/components/DataTable";
 import DoubleConfirmDeleteDialog from "@/components/DoubleConfirmDeleteDialog";
+import {
+  DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 const ESTADOS = ['Borrador', 'Enviada', 'Aceptada', 'Rechazada', 'Vencida', 'Embarcada'];
 const DEFAULT_PAGE_SIZE = 20;
@@ -55,7 +58,7 @@ export default function Cotizaciones() {
 
   const columns: DataTableColumn<Cotizacion>[] = useMemo(() => {
     const cols: DataTableColumn<Cotizacion>[] = [
-      { key: "folio", header: "Folio", width: "w-[100px]", className: "font-medium", sortable: true, sortValue: (c) => c.folio, render: (c) => c.folio },
+      { key: "folio", header: "Folio", width: "w-[100px]", className: "font-medium", sticky: true, sortable: true, sortValue: (c) => c.folio, render: (c) => c.folio },
       { key: "cliente", header: "Cliente", width: "min-w-[160px]", className: "max-w-[180px] truncate", sortable: true, sortValue: (c) => c.cliente_nombre, render: (c) => c.cliente_nombre },
       { key: "modo", header: "Modo", width: "w-[80px]", className: "text-xs", render: (c) => c.modo },
       { key: "ruta", header: "Origen → Destino", width: "min-w-[160px]", className: "text-xs", render: (c) => `${c.origen || "-"} → ${c.destino || "-"}` },
@@ -67,17 +70,25 @@ export default function Cotizaciones() {
     if (canEdit) {
       cols.push({
         key: "acciones",
-        header: "Acciones",
+        header: "",
         headerClassName: "w-[60px]",
         render: (c) => (
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-8 w-8 text-destructive hover:text-destructive"
-            onClick={(e) => { e.stopPropagation(); setCotizacionAEliminar(c.id); }}
-          >
-            <Trash2 className="h-4 w-4" />
-          </Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
+              <Button variant="ghost" size="icon" className="h-8 w-8">
+                <MoreHorizontal className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={() => navigate(`/cotizaciones/${c.id}/editar`)}>
+                <Pencil className="mr-2 h-4 w-4" /> Editar
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem className="text-destructive focus:text-destructive" onClick={() => setCotizacionAEliminar(c.id)}>
+                <Trash2 className="mr-2 h-4 w-4" /> Eliminar
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         ),
       });
     }
