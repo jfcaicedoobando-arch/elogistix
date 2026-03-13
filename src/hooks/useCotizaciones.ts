@@ -164,9 +164,7 @@ export function useCreateCotizacion() {
       const fechaVigencia = new Date();
       fechaVigencia.setDate(fechaVigencia.getDate() + input.vigencia_dias);
 
-      const { data, error } = await supabase
-        .from('cotizaciones')
-        .insert({
+      const insertPayload: CotizacionInsert = {
           folio,
           cliente_id: input.es_prospecto ? null : input.cliente_id,
           cliente_nombre: input.cliente_nombre,
@@ -175,9 +173,9 @@ export function useCreateCotizacion() {
           prospecto_contacto: input.prospecto_contacto || '',
           prospecto_email: input.prospecto_email || '',
           prospecto_telefono: input.prospecto_telefono || '',
-          modo: input.modo as any,
-          tipo: input.tipo as any,
-          incoterm: input.incoterm as any,
+          modo: input.modo as CotizacionInsert['modo'],
+          tipo: input.tipo as CotizacionInsert['tipo'],
+          incoterm: input.incoterm as CotizacionInsert['incoterm'],
           descripcion_mercancia: input.descripcion_mercancia,
           peso_kg: input.peso_kg,
           volumen_m3: input.volumen_m3,
@@ -186,7 +184,7 @@ export function useCreateCotizacion() {
           destino: input.destino,
           conceptos_venta: input.conceptos_venta as unknown as Json,
           subtotal: input.subtotal,
-          moneda: input.moneda as any,
+          moneda: input.moneda as CotizacionInsert['moneda'],
           vigencia_dias: input.vigencia_dias,
           fecha_vigencia: fechaVigencia.toISOString().split('T')[0],
           notas: input.notas || null,
@@ -211,7 +209,11 @@ export function useCreateCotizacion() {
           valor_seguro_usd: input.valor_seguro_usd ?? 0,
           carta_garantia: input.carta_garantia ?? false,
           num_contenedores: input.num_contenedores ?? 1,
-        } as any)
+      };
+
+      const { data, error } = await supabase
+        .from('cotizaciones')
+        .insert(insertPayload)
         .select()
         .single();
       if (error) throw error;
