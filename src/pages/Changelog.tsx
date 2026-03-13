@@ -13,6 +13,13 @@ interface ChangelogEntry {
 
 const changelog: ChangelogEntry[] = [
   {
+    version: "5.6.0",
+    date: "2026-03-13",
+    type: "minor",
+    title: "Refactor: Operaciones descompuesto en sub-componentes",
+    description: "La página de Operaciones fue dividida extrayendo KpiCard y widgets de riesgo (RiesgoIndicador, CapacityBar, RiskBadge, MiniBarChart, RiskDetailTable) a componentes reutilizables en src/components/operaciones/.",
+  },
+  {
     version: "5.5.0",
     date: "2026-03-13",
     type: "minor",
