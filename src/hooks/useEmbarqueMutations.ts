@@ -307,7 +307,7 @@ export function useUploadDocumentoEmbarque() {
       await uploadFile(path, file);
       const { error } = await supabase
         .from('documentos_embarque')
-        .update({ archivo: path, estado: 'Recibido' as any })
+        .update({ archivo: path, estado: 'Recibido' as DocumentoEstado })
         .eq('id', docId);
       if (error) throw error;
       return { path, fileName: file.name };
