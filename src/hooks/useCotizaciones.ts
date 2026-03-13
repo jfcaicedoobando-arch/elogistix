@@ -399,24 +399,24 @@ export function useConvertirCotizacionAEmbarques() {
 
         // c. Insertar conceptos de costo según unidad_medida
         if (costos && costos.length > 0) {
-          const conceptosParaInsertar = costos.filter((c: any) => {
+          const conceptosParaInsertar = costos.filter((c) => {
             const um = c.unidad_medida ?? 'Contenedor';
             if (um === 'BL') return i === 0;
-            return true; // Contenedor, Embarque, W/M → todos
+            return true;
           });
 
           if (conceptosParaInsertar.length > 0) {
-            const rows = conceptosParaInsertar.map((c: any) => ({
+            const rows: TablesInsert<'conceptos_costo'>[] = conceptosParaInsertar.map((c) => ({
               embarque_id: embarque.id,
               concepto: c.concepto,
               monto: c.costo_unitario,
-              moneda: c.moneda as any,
+              moneda: c.moneda as TablesInsert<'conceptos_costo'>['moneda'],
               proveedor_nombre: c.proveedor,
             }));
 
             const { error: errorConceptos } = await supabase
               .from('conceptos_costo')
-              .insert(rows as any);
+              .insert(rows);
             if (errorConceptos) throw errorConceptos;
           }
         }
