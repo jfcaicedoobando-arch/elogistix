@@ -1,14 +1,14 @@
 import { useMemo } from 'react';
-import { convertirAMXN, calcularUtilidad, calcularMargen } from '@/lib/financialUtils';
+import { convertirAMXN, calcularUtilidad, calcularMargen, type Moneda } from '@/lib/financialUtils';
 
 interface ConceptoVenta {
   total: number;
-  moneda: string;
+  moneda: Moneda;
 }
 
 interface ConceptoCosto {
   monto: number;
-  moneda: string;
+  moneda: Moneda;
 }
 
 interface UseEmbarqueFinancialsParams {
