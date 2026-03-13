@@ -1,5 +1,5 @@
 import { ReactNode } from "react";
-import { ArrowLeft, ChevronLeft, ChevronRight, Save } from "lucide-react";
+import { ArrowLeft, ChevronLeft, ChevronRight, Save, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { StepIndicator } from "@/components/embarque/StepIndicator";
 
