@@ -20,7 +20,7 @@ function shortName(raw: string) {
 }
 
 const columns: DataTableColumn<EmbarqueMesSiguiente>[] = [
-  { key: "expediente", header: "Expediente", className: "font-medium", sortable: true, sortValue: (e) => e.expediente, render: (e) => e.expediente },
+  { key: "expediente", header: "Expediente", className: "font-medium", sticky: true, sortable: true, sortValue: (e) => e.expediente, render: (e) => e.expediente },
   { key: "cliente", header: "Cliente", className: "max-w-[180px] truncate", sortable: true, sortValue: (e) => e.cliente_nombre, render: (e) => e.cliente_nombre },
   {
     key: "modo", header: "Modo", render: (e) => (
