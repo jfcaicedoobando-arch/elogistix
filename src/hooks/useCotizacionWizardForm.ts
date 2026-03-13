@@ -6,6 +6,7 @@ import type { CostoCotizacion } from "@/hooks/useCotizacionCostos";
 import type { FilaCostoLocal } from "@/components/cotizacion/SeccionCostosInternosPLUnificado";
 import { CONCEPTOS_CON_IVA_USD } from "@/data/cotizacionConstants";
 import { calcularTotalConIVA } from "@/lib/financialUtils";
+import { buildPaso1Data as buildPaso1Mapper } from "@/lib/mappers/cotizacionMappers";
 import { useConceptosVentaCotizacion } from "@/hooks/useConceptosVentaCotizacion";
 import { useCotizacionPL } from "@/hooks/useCotizacionPL";
 import { uploadFile } from "@/lib/storage";
@@ -274,60 +275,7 @@ export function useCotizacionWizardForm({ navigate, toast, userEmail, clientes, 
 
   // ── Build payload Paso 1 ──
   const buildPaso1Data = useCallback(() => {
-    const v = form.getValues();
-    const cliente = clientes.find(c => c.id === v.clienteId);
-    let pesoFinal = v.pesoKg, volumenFinal = v.volumenM3, piezasFinal = v.piezas;
-    const _esMaritimo = v.modo === "Marítimo";
-    const _esAereo = v.modo === "Aéreo";
-    if (_esMaritimo) {
-      pesoFinal = 0;
-      volumenFinal = v.tipoEmbarque === "LCL" ? v.dimensionesLCL.reduce((s, d) => s + d.volumen_m3, 0) : 0;
-      piezasFinal = v.tipoEmbarque === "LCL" ? v.dimensionesLCL.reduce((s, d) => s + d.piezas, 0) : 0;
-    } else if (_esAereo) {
-      pesoFinal = v.dimensionesAereas.reduce((s, d) => s + d.peso_volumetrico_kg, 0);
-      volumenFinal = 0;
-      piezasFinal = v.dimensionesAereas.reduce((s, d) => s + d.piezas, 0);
-    }
-    return {
-      es_prospecto: v.esProspecto,
-      cliente_id: v.esProspecto ? null : v.clienteId,
-      cliente_nombre: v.esProspecto ? v.prospectoEmpresa : (cliente?.nombre ?? ""),
-      prospecto_empresa: v.esProspecto ? v.prospectoEmpresa : "",
-      prospecto_contacto: v.esProspecto ? v.prospectoContacto : "",
-      prospecto_email: v.esProspecto ? v.prospectoEmail : "",
-      prospecto_telefono: v.esProspecto ? v.prospectoTelefono : "",
-      modo: v.modo, tipo: v.tipo, incoterm: v.incoterm,
-      descripcion_mercancia: v.sectorEconomico,
-      peso_kg: pesoFinal, volumen_m3: volumenFinal, piezas: piezasFinal,
-      origen: v.origen, destino: v.destino,
-      conceptos_venta: [] as ConceptoVentaCotizacion[],
-      subtotal: 0,
-      moneda: "USD",
-      vigencia_dias: v.validezPropuesta ? Math.max(1, Math.ceil((v.validezPropuesta.getTime() - Date.now()) / (1000 * 60 * 60 * 24))) : 15,
-      notas: v.notas,
-      operador: userEmail,
-      tipo_carga: v.tipoCarga,
-      msds_archivo: null as string | null,
-      tipo_embarque: _esMaritimo ? v.tipoEmbarque : "FCL",
-      tipo_contenedor: _esMaritimo && v.tipoEmbarque === "FCL" ? v.tipoContenedor : null,
-      tipo_peso: _esMaritimo && v.tipoEmbarque === "FCL" ? v.tipoPeso : "Peso Normal",
-      descripcion_adicional: v.descripcionAdicional,
-      sector_economico: v.sectorEconomico,
-      dimensiones_lcl: _esMaritimo && v.tipoEmbarque === "LCL" ? v.dimensionesLCL : [],
-      dimensiones_aereas: _esAereo ? v.dimensionesAereas : [],
-      dias_libres_destino: _esMaritimo && v.tipoEmbarque === "FCL" ? v.diasLibresDestino : 0,
-      dias_almacenaje: _esMaritimo && v.tipoEmbarque === "LCL" ? v.diasAlmacenaje : 0,
-      carta_garantia: _esMaritimo && v.tipoEmbarque === "FCL" ? v.cartaGarantia : false,
-      tiempo_transito_dias: v.tiempoTransitoDias ?? null,
-      frecuencia: v.frecuencia,
-      ruta_texto: v.rutaTexto,
-      validez_propuesta: v.validezPropuesta ? v.validezPropuesta.toISOString().split("T")[0] : null,
-      tipo_movimiento: v.tipoMovimiento,
-      seguro: v.seguro,
-      valor_seguro_usd: v.seguro ? Number(v.valorSeguroUsd) || 0 : 0,
-      num_contenedores: v.numContenedores,
-      tipo_unidad: v.modo === 'Terrestre' ? v.tipoUnidad : null,
-    };
+    return buildPaso1Mapper(form.getValues(), clientes, userEmail);
   }, [form, clientes, userEmail]);
 
   // ── Navegación del wizard ──
@@ -354,12 +302,12 @@ export function useCotizacionWizardForm({ navigate, toast, userEmail, clientes, 
           await uploadFile(path, msdsFile);
           msdsArchivo = path;
         }
-        const data = buildPaso1Data();
+        const data = buildPaso1Data() as Record<string, unknown>;
         data.msds_archivo = msdsArchivo;
         if (cotizacionId) {
           await updateCotizacion.mutateAsync({ id: cotizacionId, data });
         } else {
-          const cotizacion = await crearCotizacion.mutateAsync(data);
+          const cotizacion = await crearCotizacion.mutateAsync(data as unknown as CreateCotizacionInput);
           setCotizacionId(cotizacion.id);
         }
         setCurrentStep(2);
