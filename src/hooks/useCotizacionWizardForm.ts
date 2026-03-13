@@ -92,13 +92,7 @@ export const COTIZACION_FORM_DEFAULTS: CotizacionFormValues = {
   numContenedores: 1,
 };
 
-// ────────── Factories ──────────
-const emptyUSD = (): ConceptoVentaCotizacion => ({
-  descripcion: "", unidad_medida: "", cantidad: 1, precio_unitario: 0, moneda: "USD", total: 0, aplica_iva: false,
-});
-const emptyMXN = (): ConceptoVentaCotizacion => ({
-  descripcion: "", unidad_medida: "", cantidad: 1, precio_unitario: 0, moneda: "MXN", total: 0, aplica_iva: true,
-});
+// Factories moved to useConceptosVentaCotizacion
 
 // ────────── Types ──────────
 interface ToastFn {
