@@ -58,7 +58,7 @@ export default function Cotizaciones() {
 
   const columns: DataTableColumn<Cotizacion>[] = useMemo(() => {
     const cols: DataTableColumn<Cotizacion>[] = [
-      { key: "folio", header: "Folio", width: "w-[100px]", className: "font-medium", sortable: true, sortValue: (c) => c.folio, render: (c) => c.folio },
+      { key: "folio", header: "Folio", width: "w-[100px]", className: "font-medium", sticky: true, sortable: true, sortValue: (c) => c.folio, render: (c) => c.folio },
       { key: "cliente", header: "Cliente", width: "min-w-[160px]", className: "max-w-[180px] truncate", sortable: true, sortValue: (c) => c.cliente_nombre, render: (c) => c.cliente_nombre },
       { key: "modo", header: "Modo", width: "w-[80px]", className: "text-xs", render: (c) => c.modo },
       { key: "ruta", header: "Origen → Destino", width: "min-w-[160px]", className: "text-xs", render: (c) => `${c.origen || "-"} → ${c.destino || "-"}` },
