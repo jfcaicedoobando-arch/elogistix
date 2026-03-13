@@ -56,7 +56,7 @@ export function useUpdateConfiguracion() {
       for (const item of items) {
         const { error } = await supabase
           .from("configuracion")
-          .update({ valor: item.valor as any })
+          .update({ valor: item.valor as Json })
           .eq("categoria", item.categoria)
           .eq("clave", item.clave);
         if (error) throw error;

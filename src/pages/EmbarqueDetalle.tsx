@@ -111,7 +111,7 @@ export default function EmbarqueDetalle() {
   };
 
   const getSiguienteEstado = (estadoActual: string) => {
-    const idx = ESTADO_TIMELINE.indexOf(estadoActual as any);
+    const idx = ESTADO_TIMELINE.indexOf(estadoActual as typeof ESTADO_TIMELINE[number]);
     if (idx < 0 || idx >= ESTADO_TIMELINE.length - 1) return null;
     return ESTADO_TIMELINE[idx + 1];
   };
