@@ -8,10 +8,6 @@ import { Skeleton } from "@/components/ui/skeleton";
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
-import {
-  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
-  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
 import { useProveedor, useProveedorMutations, useProveedorOperaciones } from "@/hooks/useProveedores";
 import { formatCurrency } from "@/lib/formatters";
 import { getEstadoColor } from "@/lib/helpers";
@@ -19,6 +15,7 @@ import EditarProveedorDialog from "@/components/EditarProveedorDialog";
 import { useToast } from "@/hooks/use-toast";
 import { usePermissions } from "@/hooks/usePermissions";
 import { useRegistrarActividad } from "@/hooks/useBitacora";
+import DoubleConfirmDeleteDialog from "@/components/DoubleConfirmDeleteDialog";
 
 export default function ProveedorDetalle() {
   const { id } = useParams<{ id: string }>();
@@ -26,7 +23,7 @@ export default function ProveedorDetalle() {
   const { data: proveedor, isLoading } = useProveedor(id);
   const { updateProveedor, deleteProveedor, isDeleting } = useProveedorMutations();
   const [editOpen, setEditOpen] = useState(false);
-  const [deleteStep, setDeleteStep] = useState<0 | 1 | 2>(0);
+  const [deleteOpen, setDeleteOpen] = useState(false);
   const { canEdit, isAdmin } = usePermissions();
   const registrarActividad = useRegistrarActividad();
   const { toast } = useToast();
@@ -93,7 +90,7 @@ export default function ProveedorDetalle() {
         {canEdit && (
           <div className="flex gap-2">
             {isAdmin && (
-              <Button variant="destructive" onClick={() => setDeleteStep(1)} disabled={isDeleting}>
+              <Button variant="destructive" onClick={() => setDeleteOpen(true)} disabled={isDeleting}>
                 <Trash2 className="mr-2 h-4 w-4" /> Eliminar
               </Button>
             )}
@@ -185,40 +182,15 @@ export default function ProveedorDetalle() {
         onSave={handleUpdate}
       />
 
-      {/* Doble confirmación de eliminación */}
-      <AlertDialog open={deleteStep === 1} onOpenChange={(open) => !open && setDeleteStep(0)}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>¿Eliminar proveedor?</AlertDialogTitle>
-            <AlertDialogDescription>
-              Estás a punto de eliminar a <strong>{proveedor.nombre}</strong>. Esta acción no se puede deshacer.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancelar</AlertDialogCancel>
-            <AlertDialogAction onClick={() => setDeleteStep(2)} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
-              Continuar
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-
-      <AlertDialog open={deleteStep === 2} onOpenChange={(open) => !open && setDeleteStep(0)}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Confirmación final</AlertDialogTitle>
-            <AlertDialogDescription>
-              ¿Realmente deseas eliminar permanentemente a <strong>{proveedor.nombre}</strong>?
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancelar</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
-              Eliminar definitivamente
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <DoubleConfirmDeleteDialog
+        open={deleteOpen}
+        onOpenChange={setDeleteOpen}
+        entityName="proveedor"
+        description={`Estás a punto de eliminar a ${proveedor.nombre}. Esta acción no se puede deshacer.`}
+        finalDescription={`¿Realmente deseas eliminar permanentemente a ${proveedor.nombre}?`}
+        onConfirm={handleDelete}
+        isPending={isDeleting}
+      />
     </div>
   );
 }

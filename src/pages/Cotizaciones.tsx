@@ -6,10 +6,6 @@ import { Badge } from "@/components/ui/badge";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
-import {
-  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
-  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
 import { useNavigate } from "react-router-dom";
 import { useCotizaciones, useDeleteCotizacion } from "@/hooks/useCotizaciones";
 import { useClientesForSelect } from "@/hooks/useClientes";
@@ -20,6 +16,7 @@ import { formatCurrency } from "@/lib/formatters";
 import SearchInput from "@/components/SearchInput";
 import PaginationControls from "@/components/PaginationControls";
 import { DataTable, type DataTableColumn } from "@/components/DataTable";
+import DoubleConfirmDeleteDialog from "@/components/DoubleConfirmDeleteDialog";
 
 const ESTADOS = ['Borrador', 'Enviada', 'Aceptada', 'Rechazada', 'Vencida', 'Embarcada'];
 const DEFAULT_PAGE_SIZE = 20;
@@ -35,11 +32,10 @@ export default function Cotizaciones() {
   const [filterCliente, setFilterCliente] = useState<string>("todos");
   const [page, setPage] = useState(0);
   const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
-  const { canEdit, isAdmin } = usePermissions();
+  const { canEdit } = usePermissions();
   const deleteCotizacion = useDeleteCotizacion();
   const { toast } = useToast();
   const [cotizacionAEliminar, setCotizacionAEliminar] = useState<string | null>(null);
-  const [showSegundaConfirmacion, setShowSegundaConfirmacion] = useState(false);
 
   const filtered = useMemo(() => {
     return cotizaciones.filter((cotizacion) => {
@@ -86,6 +82,17 @@ export default function Cotizaciones() {
     }
     return cols;
   }, [canEdit]);
+
+  const handleDeleteCotizacion = async () => {
+    if (!cotizacionAEliminar) return;
+    try {
+      await deleteCotizacion.mutateAsync(cotizacionAEliminar);
+      toast({ title: "Cotización eliminada correctamente" });
+    } catch (err: any) {
+      toast({ title: "Error al eliminar", description: err.message, variant: "destructive" });
+    }
+    setCotizacionAEliminar(null);
+  };
 
   return (
     <div className="space-y-6">
@@ -147,53 +154,15 @@ export default function Cotizaciones() {
           />
         </CardContent>
       </Card>
-      {/* Primera confirmación */}
-      <AlertDialog open={!!cotizacionAEliminar && !showSegundaConfirmacion} onOpenChange={(open) => { if (!open) setCotizacionAEliminar(null); }}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>¿Eliminar cotización?</AlertDialogTitle>
-            <AlertDialogDescription>Esta acción eliminará la cotización de forma permanente.</AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancelar</AlertDialogCancel>
-            <AlertDialogAction
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-              onClick={() => setShowSegundaConfirmacion(true)}
-            >
-              Continuar
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
 
-      {/* Segunda confirmación */}
-      <AlertDialog open={showSegundaConfirmacion} onOpenChange={(open) => { if (!open) { setShowSegundaConfirmacion(false); setCotizacionAEliminar(null); } }}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>⚠️ Confirmar eliminación</AlertDialogTitle>
-            <AlertDialogDescription>¿Estás completamente seguro? Esta acción no se puede deshacer.</AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancelar</AlertDialogCancel>
-            <AlertDialogAction
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-              onClick={async () => {
-                if (!cotizacionAEliminar) return;
-                try {
-                  await deleteCotizacion.mutateAsync(cotizacionAEliminar);
-                  toast({ title: "Cotización eliminada correctamente" });
-                } catch (err: any) {
-                  toast({ title: "Error al eliminar", description: err.message, variant: "destructive" });
-                }
-                setShowSegundaConfirmacion(false);
-                setCotizacionAEliminar(null);
-              }}
-            >
-              Eliminar definitivamente
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <DoubleConfirmDeleteDialog
+        open={!!cotizacionAEliminar}
+        onOpenChange={(open) => { if (!open) setCotizacionAEliminar(null); }}
+        entityName="cotización"
+        description="Esta acción eliminará la cotización de forma permanente."
+        onConfirm={handleDeleteCotizacion}
+        isPending={deleteCotizacion.isPending}
+      />
     </div>
   );
 }
