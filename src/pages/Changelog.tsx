@@ -13,6 +13,13 @@ interface ChangelogEntry {
 
 const changelog: ChangelogEntry[] = [
   {
+    version: "5.19.0",
+    date: "2026-03-13",
+    type: "minor",
+    title: "Wizard de cotización: reducción de clutter visual",
+    description: "Dimensiones LCL y Aéreas envueltas en Cards con fondo sutil (bg-muted/40). Campos opcionales (Notas, Número de Embarques, Descripción Adicional) colapsados en Accordions. Auto-focus en el primer input al cambiar de paso del wizard.",
+  },
+  {
     version: "5.18.0",
     date: "2026-03-13",
     type: "minor",
