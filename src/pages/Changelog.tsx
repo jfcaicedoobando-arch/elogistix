@@ -13,6 +13,13 @@ interface ChangelogEntry {
 
 const changelog: ChangelogEntry[] = [
   {
+    version: "5.20.0",
+    date: "2026-03-13",
+    type: "minor",
+    title: "DataTable: columnas sticky, dropdown de acciones y badges con borde",
+    description: "Primera columna (Expediente/Folio/# Factura) fija al hacer scroll horizontal. Botones de acción (Editar, Duplicar, Eliminar) consolidados en un DropdownMenu con icono ⋮. Todos los badges de estado ahora incluyen un borde sutil del mismo color para mayor legibilidad. EmbarquesActivosTable unificado con getEstadoColor.",
+  },
+  {
     version: "5.19.0",
     date: "2026-03-13",
     type: "minor",

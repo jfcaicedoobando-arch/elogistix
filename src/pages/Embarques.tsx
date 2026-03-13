@@ -241,6 +241,11 @@ export default function Embarques() {
         onConfirm={handleEliminar}
         isPending={eliminarEmbarque.isPending}
       />
+      <DialogDuplicarEmbarque
+        embarque={embarqueADuplicar}
+        open={!!embarqueADuplicar}
+        onOpenChange={(open) => { if (!open) setEmbarqueADuplicar(null); }}
+      />
     </div>
   );
 }
