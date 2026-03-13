@@ -120,7 +120,6 @@ export default function Embarques() {
           return <Badge variant="secondary" className={`text-xs ${getEstadoColor(estado)}`}>{estado}</Badge>;
         },
       },
-      { key: "operador", header: "Operador", width: "w-[100px]", className: "text-xs", sortable: true, sortValue: (e) => e.operador, render: (e) => e.operador },
     ];
 
     if (canEdit) {
