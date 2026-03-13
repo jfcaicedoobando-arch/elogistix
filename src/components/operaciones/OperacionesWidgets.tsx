@@ -1,5 +1,4 @@
 import { AlertTriangle, Anchor, Ship } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { ResponsiveContainer, BarChart, Bar, XAxis, LabelList } from "recharts";

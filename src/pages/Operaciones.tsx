@@ -8,7 +8,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
-  Activity, TrendingUp, AlertTriangle, Package, ChevronDown, Star, Users,
+  TrendingUp, AlertTriangle, Package, ChevronDown, Star, Users,
   Container, Shield, Anchor, Ship,
 } from "lucide-react";
 import {
