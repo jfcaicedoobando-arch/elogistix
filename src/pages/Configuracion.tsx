@@ -12,9 +12,9 @@ import TabEmbarques from "@/components/configuracion/TabEmbarques";
 import TabAlertas from "@/components/configuracion/TabAlertas";
 import TabPuertos from "@/components/configuracion/TabPuertos";
 
-function getVal<T>(data: any[] | undefined, categoria: string, clave: string, fallback: T): T {
+function getVal<T>(data: ConfigItem[] | undefined, categoria: string, clave: string, fallback: T): T {
   if (!data) return fallback;
-  const item = data.find((c: any) => c.categoria === categoria && c.clave === clave);
+  const item = data.find((c) => c.categoria === categoria && c.clave === clave);
   return item ? (item.valor as T) : fallback;
 }
 
