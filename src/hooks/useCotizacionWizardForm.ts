@@ -272,13 +272,13 @@ export function useCotizacionWizardForm({ navigate, toast, userEmail, clientes, 
   }, [form]);
 
   // ── Helpers conceptos ──
-  const actualizarConcepto = useCallback((moneda: "USD" | "MXN", index: number, campo: string, valor: any) => {
+  const actualizarConcepto = useCallback((moneda: "USD" | "MXN", index: number, campo: string, valor: string | number | boolean) => {
     if (campo === "_esOtro") return;
     const setter = moneda === "USD" ? setConceptosUSD : setConceptosMXN;
     setter(prev => {
       const copia = [...prev];
-      (copia[index] as any)[campo] = valor;
-      if (moneda === "USD" && campo === "descripcion" && !(CONCEPTOS_CON_IVA_USD as readonly string[]).includes(valor)) {
+      copia[index] = { ...copia[index], [campo]: valor };
+      if (moneda === "USD" && campo === "descripcion" && typeof valor === "string" && !(CONCEPTOS_CON_IVA_USD as readonly string[]).includes(valor)) {
         copia[index].aplica_iva = false;
       }
       const sub = copia[index].cantidad * copia[index].precio_unitario;
@@ -481,7 +481,7 @@ export function useCotizacionWizardForm({ navigate, toast, userEmail, clientes, 
     if (!cotizacionId) return;
     try {
       if (!isEditMode) {
-        await updateCotizacion.mutateAsync({ id: cotizacionId, data: { estado: "Borrador" } as any });
+        await updateCotizacion.mutateAsync({ id: cotizacionId, data: { estado: "Borrador" } });
       }
       registrarActividad.mutate({
         accion: isEditMode ? "editar" : "crear", modulo: "cotizaciones",

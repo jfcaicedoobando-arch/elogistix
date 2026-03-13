@@ -16,7 +16,7 @@ interface Props {
 
 export function TabResumen({ embarque }: Props) {
   const navigate = useNavigate();
-  const currentStepIndex = ESTADO_TIMELINE.indexOf(embarque.estado as any);
+  const currentStepIndex = ESTADO_TIMELINE.indexOf(embarque.estado as typeof ESTADO_TIMELINE[number]);
 
   const { data: relacionados = [] } = useQuery({
     queryKey: ['embarques-relacionados', embarque.bl_master, embarque.id],

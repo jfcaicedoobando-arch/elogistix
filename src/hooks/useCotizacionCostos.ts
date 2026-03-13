@@ -60,7 +60,7 @@ export function useUpsertCotizacionCostos() {
 
       const { data, error } = await supabase
         .from('cotizacion_costos')
-        .insert(rows as any)
+        .insert(rows)
         .select();
       if (error) throw error;
       return (data ?? []) as unknown as CostoCotizacion[];

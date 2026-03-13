@@ -4,6 +4,10 @@ import type { TablesInsert } from '@/integrations/supabase/types';
 import type { EmbarqueRow } from './useEmbarqueUtils';
 import { queryKeys } from '@/lib/queryKeys';
 
+type EmbarqueInsert = TablesInsert<'embarques'>;
+type CotizacionEstado = TablesInsert<'cotizaciones'>['estado'];
+type DocumentoEstado = TablesInsert<'documentos_embarque'>['estado'];
+
 // ─── Create ──────────────────────────────────────────────
 interface CreateEmbarqueInput {
   embarque: TablesInsert<'embarques'>;
@@ -149,7 +153,7 @@ export function useDuplicarEmbarque() {
           .from('embarques')
           .insert({
             expediente: embarqueOrigen.expediente,
-            estado: 'Confirmado' as any,
+            estado: 'Confirmado' as EmbarqueInsert['estado'],
             cliente_id: embarqueOrigen.cliente_id,
             cliente_nombre: embarqueOrigen.cliente_nombre,
             modo: embarqueOrigen.modo,
@@ -252,7 +256,7 @@ export function useAvanzarEstadoEmbarque() {
     mutationFn: async ({ embarqueId, nuevoEstado, usuarioEmail }: { embarqueId: string; nuevoEstado: string; usuarioEmail: string }) => {
       const { error: errorEstado } = await supabase
         .from('embarques')
-        .update({ estado: nuevoEstado as any })
+        .update({ estado: nuevoEstado as EmbarqueInsert['estado'] })
         .eq('id', embarqueId);
       if (errorEstado) throw errorEstado;
 
@@ -282,7 +286,7 @@ export function useSyncEstadoEmbarque() {
     mutationFn: async ({ embarqueId, nuevoEstado }: { embarqueId: string; nuevoEstado: string }) => {
       const { error } = await supabase
         .from('embarques')
-        .update({ estado: nuevoEstado as any })
+        .update({ estado: nuevoEstado as EmbarqueInsert['estado'] })
         .eq('id', embarqueId);
       if (error) throw error;
     },
@@ -303,7 +307,7 @@ export function useUploadDocumentoEmbarque() {
       await uploadFile(path, file);
       const { error } = await supabase
         .from('documentos_embarque')
-        .update({ archivo: path, estado: 'Recibido' as any })
+        .update({ archivo: path, estado: 'Recibido' as DocumentoEstado })
         .eq('id', docId);
       if (error) throw error;
       return { path, fileName: file.name };
@@ -393,7 +397,7 @@ export function useEliminarEmbarque() {
         if (count === 0) {
           await supabase
             .from('cotizaciones')
-            .update({ estado: 'Aceptada' as any })
+            .update({ estado: 'Aceptada' as CotizacionEstado })
             .eq('id', cotizacionId);
         }
       }

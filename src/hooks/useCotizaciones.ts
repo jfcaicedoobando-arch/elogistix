@@ -1,7 +1,11 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
-import type { Json } from '@/integrations/supabase/types';
+import type { Json, Tables, TablesInsert } from '@/integrations/supabase/types';
+
+type CotizacionInsert = TablesInsert<'cotizaciones'>;
+type EmbarqueInsert = TablesInsert<'embarques'>;
+type CotizacionUpdate = Partial<CotizacionInsert>;
 import { queryKeys } from '@/lib/queryKeys';
 
 export interface ConceptoVentaCotizacion {
@@ -30,56 +34,12 @@ export interface DimensionAerea {
   peso_volumetrico_kg: number;
 }
 
-export interface CotizacionRow {
-  id: string;
-  folio: string;
-  cliente_id: string | null;
-  cliente_nombre: string;
-  es_prospecto: boolean;
-  prospecto_empresa: string;
-  prospecto_contacto: string;
-  prospecto_email: string;
-  prospecto_telefono: string;
-  modo: string;
-  tipo: string;
-  incoterm: string;
-  descripcion_mercancia: string;
-  peso_kg: number;
-  volumen_m3: number;
-  piezas: number;
-  origen: string;
-  destino: string;
+/** CotizacionRow extiende la tabla generada, sobreescribiendo los campos JSON */
+export type CotizacionRow = Omit<Tables<'cotizaciones'>, 'conceptos_venta' | 'dimensiones_lcl' | 'dimensiones_aereas'> & {
   conceptos_venta: ConceptoVentaCotizacion[];
-  subtotal: number;
-  moneda: string;
-  vigencia_dias: number;
-  fecha_vigencia: string | null;
-  notas: string | null;
-  estado: string;
-  operador: string;
-  tipo_carga: string;
-  msds_archivo: string | null;
-  tipo_embarque: string;
-  tipo_contenedor: string | null;
-  tipo_peso: string;
-  descripcion_adicional: string;
-  sector_economico: string;
   dimensiones_lcl: DimensionLCL[];
   dimensiones_aereas: DimensionAerea[];
-  dias_libres_destino: number;
-  dias_almacenaje: number;
-  tiempo_transito_dias: number | null;
-  frecuencia: string;
-  ruta_texto: string;
-  validez_propuesta: string | null;
-  tipo_movimiento: string;
-  seguro: boolean;
-  valor_seguro_usd: number;
-  carta_garantia: boolean;
-  num_contenedores: number;
-  created_at: string;
-  updated_at: string;
-}
+};
 
 /** Columnas necesarias para la tabla de cotizaciones (evita select('*')) */
 const COTIZACION_LIST_COLUMNS = 'id, folio, cliente_id, cliente_nombre, modo, origen, destino, subtotal, moneda, estado, fecha_vigencia, created_at, descripcion_mercancia' as const;
@@ -204,9 +164,7 @@ export function useCreateCotizacion() {
       const fechaVigencia = new Date();
       fechaVigencia.setDate(fechaVigencia.getDate() + input.vigencia_dias);
 
-      const { data, error } = await supabase
-        .from('cotizaciones')
-        .insert({
+      const insertPayload: CotizacionInsert = {
           folio,
           cliente_id: input.es_prospecto ? null : input.cliente_id,
           cliente_nombre: input.cliente_nombre,
@@ -215,9 +173,9 @@ export function useCreateCotizacion() {
           prospecto_contacto: input.prospecto_contacto || '',
           prospecto_email: input.prospecto_email || '',
           prospecto_telefono: input.prospecto_telefono || '',
-          modo: input.modo as any,
-          tipo: input.tipo as any,
-          incoterm: input.incoterm as any,
+          modo: input.modo as CotizacionInsert['modo'],
+          tipo: input.tipo as CotizacionInsert['tipo'],
+          incoterm: input.incoterm as CotizacionInsert['incoterm'],
           descripcion_mercancia: input.descripcion_mercancia,
           peso_kg: input.peso_kg,
           volumen_m3: input.volumen_m3,
@@ -226,7 +184,7 @@ export function useCreateCotizacion() {
           destino: input.destino,
           conceptos_venta: input.conceptos_venta as unknown as Json,
           subtotal: input.subtotal,
-          moneda: input.moneda as any,
+          moneda: input.moneda as CotizacionInsert['moneda'],
           vigencia_dias: input.vigencia_dias,
           fecha_vigencia: fechaVigencia.toISOString().split('T')[0],
           notas: input.notas || null,
@@ -251,7 +209,11 @@ export function useCreateCotizacion() {
           valor_seguro_usd: input.valor_seguro_usd ?? 0,
           carta_garantia: input.carta_garantia ?? false,
           num_contenedores: input.num_contenedores ?? 1,
-        } as any)
+      };
+
+      const { data, error } = await supabase
+        .from('cotizaciones')
+        .insert(insertPayload)
         .select()
         .single();
       if (error) throw error;
@@ -267,14 +229,14 @@ export function useUpdateCotizacion() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async ({ id, data }: { id: string; data: Partial<CreateCotizacionInput> }) => {
-      const updatePayload: any = { ...data };
+      const updatePayload = { ...data } as unknown as CotizacionUpdate;
       if (data.conceptos_venta) updatePayload.conceptos_venta = data.conceptos_venta as unknown as Json;
       if (data.dimensiones_lcl) updatePayload.dimensiones_lcl = data.dimensiones_lcl as unknown as Json;
       if (data.dimensiones_aereas) updatePayload.dimensiones_aereas = data.dimensiones_aereas as unknown as Json;
-      if (data.modo) updatePayload.modo = data.modo as any;
-      if (data.tipo) updatePayload.tipo = data.tipo as any;
-      if (data.incoterm) updatePayload.incoterm = data.incoterm as any;
-      if (data.moneda) updatePayload.moneda = data.moneda as any;
+      if (data.modo) updatePayload.modo = data.modo as CotizacionInsert['modo'];
+      if (data.tipo) updatePayload.tipo = data.tipo as CotizacionInsert['tipo'];
+      if (data.incoterm) updatePayload.incoterm = data.incoterm as CotizacionInsert['incoterm'];
+      if (data.moneda) updatePayload.moneda = data.moneda as CotizacionInsert['moneda'];
       const { error } = await supabase.from('cotizaciones').update(updatePayload).eq('id', id);
       if (error) throw error;
     },
@@ -304,7 +266,7 @@ export function useUpdateEstadoCotizacion() {
     mutationFn: async ({ id, estado }: { id: string; estado: string }) => {
       const { error } = await supabase
         .from('cotizaciones')
-        .update({ estado: estado as any })
+        .update({ estado: estado as CotizacionInsert['estado'] })
         .eq('id', id);
       if (error) throw error;
     },
@@ -361,7 +323,7 @@ export function useConvertirProspectoACliente() {
           cliente_id: clienteCreado.id,
           cliente_nombre: clienteCreado.nombre,
           es_prospecto: false,
-        } as any)
+        })
         .eq('id', cotizacionId);
       if (errorUpdate) throw errorUpdate;
 
@@ -399,8 +361,8 @@ export function useConvertirCotizacionAEmbarques() {
         .eq('cotizacion_id', cotizacion.id);
       if (errorCostos) throw errorCostos;
 
-      const numContenedores = (cotizacion as any).num_contenedores ?? 1;
-      const embarquesCreados: any[] = [];
+      const numContenedores = cotizacion.num_contenedores ?? 1;
+      const embarquesCreados: Tables<'embarques'>[] = [];
 
       // 2. Loop por cada contenedor
       for (let i = 0; i < numContenedores; i++) {
@@ -410,17 +372,15 @@ export function useConvertirCotizacionAEmbarques() {
         if (errorExp) throw errorExp;
 
         // b. Insertar embarque
-        const { data: embarque, error: errorEmb } = await supabase
-          .from('embarques')
-          .insert({
+        const embarqueInsert: EmbarqueInsert = {
             cotizacion_id: cotizacion.id,
             expediente: expediente as string,
             cliente_id: cotizacion.cliente_id!,
             cliente_nombre: cotizacion.cliente_nombre,
-            estado: 'Confirmado' as any,
-            modo: cotizacion.modo as any,
-            tipo: cotizacion.tipo as any,
-            incoterm: cotizacion.incoterm as any,
+            estado: 'Confirmado',
+            modo: cotizacion.modo,
+            tipo: cotizacion.tipo,
+            incoterm: cotizacion.incoterm,
             descripcion_mercancia: cotizacion.descripcion_mercancia,
             peso_kg: cotizacion.peso_kg,
             volumen_m3: cotizacion.volumen_m3,
@@ -428,31 +388,35 @@ export function useConvertirCotizacionAEmbarques() {
             operador: cotizacion.operador,
             tipo_carga: cotizacion.tipo_carga,
             tipo_contenedor: cotizacion.tipo_contenedor,
-          } as any)
+        };
+
+        const { data: embarque, error: errorEmb } = await supabase
+          .from('embarques')
+          .insert(embarqueInsert)
           .select()
           .single();
         if (errorEmb) throw errorEmb;
 
         // c. Insertar conceptos de costo según unidad_medida
         if (costos && costos.length > 0) {
-          const conceptosParaInsertar = costos.filter((c: any) => {
+          const conceptosParaInsertar = costos.filter((c) => {
             const um = c.unidad_medida ?? 'Contenedor';
             if (um === 'BL') return i === 0;
-            return true; // Contenedor, Embarque, W/M → todos
+            return true;
           });
 
           if (conceptosParaInsertar.length > 0) {
-            const rows = conceptosParaInsertar.map((c: any) => ({
+            const rows: TablesInsert<'conceptos_costo'>[] = conceptosParaInsertar.map((c) => ({
               embarque_id: embarque.id,
               concepto: c.concepto,
               monto: c.costo_unitario,
-              moneda: c.moneda as any,
+              moneda: c.moneda as TablesInsert<'conceptos_costo'>['moneda'],
               proveedor_nombre: c.proveedor,
             }));
 
             const { error: errorConceptos } = await supabase
               .from('conceptos_costo')
-              .insert(rows as any);
+              .insert(rows);
             if (errorConceptos) throw errorConceptos;
           }
         }
@@ -463,7 +427,7 @@ export function useConvertirCotizacionAEmbarques() {
       // 3. Actualizar estado de la cotización
       const { error: errorUpdate } = await supabase
         .from('cotizaciones')
-        .update({ estado: 'Embarcada' as any })
+        .update({ estado: 'Embarcada' as CotizacionInsert['estado'] })
         .eq('id', cotizacion.id);
       if (errorUpdate) throw errorUpdate;
 

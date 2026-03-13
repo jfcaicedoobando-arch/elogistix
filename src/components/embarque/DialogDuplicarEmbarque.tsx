@@ -47,10 +47,10 @@ export default function DialogDuplicarEmbarque({ embarque, open, onOpenChange }:
     });
   };
 
-  const actualizarFila = (index: number, campo: keyof FilaCopia, valor: any) => {
+  const actualizarFila = (index: number, campo: keyof FilaCopia, valor: string | number) => {
     setFilaCopias(prev => {
       const copia = [...prev];
-      (copia[index] as any)[campo] = valor;
+      copia[index] = { ...copia[index], [campo]: valor };
       return copia;
     });
   };

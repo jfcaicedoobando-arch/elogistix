@@ -15,6 +15,7 @@ import { useConceptosForm } from "@/hooks/useConceptosForm";
 import { useEmbarqueForm } from "@/hooks/useEmbarqueForm";
 import { useCotizacionesAceptadas, type CotizacionRow } from "@/hooks/useCotizaciones";
 import { supabase } from "@/integrations/supabase/client";
+import type { TablesInsert } from "@/integrations/supabase/types";
 import { resolverExpediente, subirDocumentosEmbarque } from "@/lib/embarqueServices";
 import { StepIndicator } from "@/components/embarque/StepIndicator";
 import { StepDatosGenerales } from "@/components/embarque/StepDatosGenerales";
@@ -138,7 +139,7 @@ export default function NuevoEmbarque() {
       if (cotizacionVinculada) {
         await supabase
           .from('cotizaciones')
-          .update({ estado: 'Embarcada' as any })
+          .update({ estado: 'Embarcada' as TablesInsert<'cotizaciones'>['estado'] })
           .eq('id', cotizacionVinculada.id);
       }
 

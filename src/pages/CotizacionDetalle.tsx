@@ -269,7 +269,7 @@ export default function CotizacionDetalle() {
       )}
 
       {/* Embarques Generados */}
-      {(cotizacion.estado === 'Convertida' || embarquesVinculados.length > 0) && (
+      {(cotizacion.estado === 'Embarcada' || embarquesVinculados.length > 0) && (
         <Card>
           <CardHeader><CardTitle className="text-lg">Embarques Generados</CardTitle></CardHeader>
           <CardContent>

@@ -99,7 +99,7 @@ export default function Proveedores() {
       registrarActividad.mutate({
         accion: 'crear',
         modulo: 'proveedores',
-        entidad_id: (proveedorCreado as any)?.id,
+        entidad_id: (proveedorCreado as { id?: string })?.id,
         entidad_nombre: data.nombre,
       });
       toast.success("Proveedor creado correctamente");

@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import type { TablesInsert } from '@/integrations/supabase/types';
 import { queryKeys } from '@/lib/queryKeys';
 import type {
   EmbarqueRow,
@@ -60,7 +61,7 @@ export function useEmbarquesPaginados({
       }
 
       if (filterModo !== 'todos') {
-        query = query.eq('modo', filterModo as any);
+        query = query.eq('modo', filterModo as TablesInsert<'embarques'>['modo']);
       }
       // Estado filtering is done client-side because calcularEstadoEmbarque derives estado from ETD/ETA
       if (filterCliente !== 'todos') {
