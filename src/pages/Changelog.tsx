@@ -13,6 +13,13 @@ interface ChangelogEntry {
 
 const changelog: ChangelogEntry[] = [
   {
+    version: "5.3.0",
+    date: "2026-03-13",
+    type: "minor",
+    title: "Paginación server-side para embarques",
+    description: "El listado de embarques ahora utiliza paginación desde el servidor con búsqueda debounced y filtros (modo, cliente, operador) delegados a la base de datos. Mejora significativa de rendimiento al evitar descargar todos los registros al cliente.",
+  },
+  {
     version: "5.2.0",
     date: "2026-03-12",
     type: "minor",

@@ -12,6 +12,7 @@ import type {
 /** Columnas necesarias para listas y dashboard (evita select('*')) */
 const EMBARQUE_LIST_COLUMNS = 'id, expediente, bl_master, cliente_id, cliente_nombre, modo, estado, etd, eta, operador, puerto_origen, puerto_destino, aeropuerto_origen, aeropuerto_destino, ciudad_origen, ciudad_destino, tipo_contenedor, descripcion_mercancia, tipo, created_at, tipo_cambio_usd, tipo_cambio_eur' as const;
 
+/** Hook original: descarga TODOS los embarques. Usar solo para Dashboard/Operaciones que necesitan el dataset completo. */
 export function useEmbarques() {
   return useQuery({
     queryKey: queryKeys.embarques.all,
@@ -23,6 +24,61 @@ export function useEmbarques() {
       if (error) throw error;
       return data as EmbarqueRow[];
     },
+  });
+}
+
+// --- Hook paginado server-side para la vista de lista ---
+
+interface UseEmbarquesPaginadosParams {
+  search: string;
+  filterModo: string;
+  filterEstado: string;
+  filterCliente: string;
+  filterOperador: string;
+  page: number;
+  pageSize: number;
+}
+
+export function useEmbarquesPaginados({
+  search, filterModo, filterEstado, filterCliente, filterOperador, page, pageSize,
+}: UseEmbarquesPaginadosParams) {
+  const filters = { search, filterModo, filterEstado, filterCliente, filterOperador, page, pageSize };
+
+  return useQuery({
+    queryKey: queryKeys.embarques.list(filters),
+    queryFn: async () => {
+      let query = supabase
+        .from('embarques')
+        .select(EMBARQUE_LIST_COLUMNS, { count: 'exact' })
+        .order('created_at', { ascending: false });
+
+      // Text search across multiple columns
+      if (search) {
+        query = query.or(
+          `expediente.ilike.%${search}%,cliente_nombre.ilike.%${search}%,descripcion_mercancia.ilike.%${search}%,bl_master.ilike.%${search}%`
+        );
+      }
+
+      if (filterModo !== 'todos') {
+        query = query.eq('modo', filterModo as any);
+      }
+      // Estado filtering is done client-side because calcularEstadoEmbarque derives estado from ETD/ETA
+      if (filterCliente !== 'todos') {
+        query = query.eq('cliente_id', filterCliente);
+      }
+      if (filterOperador !== 'todos') {
+        query = query.eq('operador', filterOperador);
+      }
+
+      const from = page * pageSize;
+      const to = from + pageSize - 1;
+      query = query.range(from, to);
+
+      const { data, error, count } = await query;
+      if (error) throw error;
+      return { data: (data ?? []) as EmbarqueRow[], count: count ?? 0 };
+    },
+    placeholderData: (prev) => prev,
   });
 }
 
