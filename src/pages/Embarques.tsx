@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react";
-import { Plus, Trash2, MoreHorizontal, Pencil, Copy } from "lucide-react";
+import { Plus, Trash2, MoreHorizontal, Pencil, Copy, Ship } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -154,6 +154,8 @@ export default function Embarques() {
     return base;
   }, [canEdit]);
 
+  const isEmptyState = !isLoading && totalCount === 0 && !debouncedSearch && filterModo === "todos" && filterEstado === "todos" && filterCliente === "todos" && filterOperador === "todos";
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -161,74 +163,100 @@ export default function Embarques() {
           <h1 className="text-2xl font-bold">Embarques</h1>
           <p className="text-sm text-muted-foreground">{displayCount} embarques encontrados</p>
         </div>
-        {canEdit && (
+        {canEdit && !isEmptyState && (
           <Button onClick={() => navigate("/embarques/nuevo")}>
             <Plus className="h-4 w-4 mr-2" /> Nuevo Embarque
           </Button>
         )}
       </div>
 
-      <Card>
-        <CardContent className="p-4">
-          <div className="flex flex-wrap gap-4">
-            <SearchInput
-              value={search}
-              onChange={(valor) => { setSearch(valor); setPage(0); }}
-              placeholder="Buscar por expediente, cliente o mercancía..."
-              className="flex-1 min-w-[200px]"
+      {isEmptyState ? (
+        <Card className="shadow-md">
+          <CardContent className="flex flex-col items-center justify-center py-16 px-6 text-center">
+            <img
+              src="/placeholder.svg"
+              alt="Sin embarques"
+              className="h-40 w-40 opacity-80 mb-6"
             />
-            <Select value={filterModo} onValueChange={(v) => { setFilterModo(v); setPage(0); }}>
-              <SelectTrigger className="w-[150px]"><SelectValue placeholder="Modo" /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="todos">Todos los modos</SelectItem>
-                {MODOS_TRANSPORTE.map(m => <SelectItem key={m} value={m}>{getModoIcon(m)} {m}</SelectItem>)}
-              </SelectContent>
-            </Select>
-            <Select value={filterEstado} onValueChange={(v) => { setFilterEstado(v); setPage(0); }}>
-              <SelectTrigger className="w-[160px]"><SelectValue placeholder="Estado" /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="todos">Todos los estados</SelectItem>
-                {ESTADOS_EMBARQUE.map(e => <SelectItem key={e} value={e}>{e}</SelectItem>)}
-              </SelectContent>
-            </Select>
-            <Select value={filterCliente} onValueChange={(v) => { setFilterCliente(v); setPage(0); }}>
-              <SelectTrigger className="w-[200px]"><SelectValue placeholder="Cliente" /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="todos">Todos los clientes</SelectItem>
-                {clientes.map(c => <SelectItem key={c.id} value={c.id}>{c.nombre.split(' ').slice(0, 3).join(' ')}</SelectItem>)}
-              </SelectContent>
-            </Select>
-            <Select value={filterOperador} onValueChange={(v) => { setFilterOperador(v); setPage(0); }}>
-              <SelectTrigger className="w-[180px]"><SelectValue placeholder="Operador" /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="todos">Todos los operadores</SelectItem>
-                {operadoresUnicos.map(op => <SelectItem key={op} value={op}>{op}</SelectItem>)}
-              </SelectContent>
-            </Select>
-          </div>
-        </CardContent>
-      </Card>
+            <div className="flex items-center gap-2 mb-2">
+              <Ship className="h-5 w-5 text-primary" />
+              <h2 className="text-xl font-semibold text-foreground">Aún no tienes embarques</h2>
+            </div>
+            <p className="text-sm text-muted-foreground max-w-md mb-6">
+              Comienza registrando tu primer embarque para dar seguimiento a tus operaciones de importación, exportación y más.
+            </p>
+            {canEdit && (
+              <Button size="lg" onClick={() => navigate("/embarques/nuevo")}>
+                <Plus className="h-5 w-5 mr-2" /> Crear mi primer embarque
+              </Button>
+            )}
+          </CardContent>
+        </Card>
+      ) : (
+        <>
+          <Card>
+            <CardContent className="p-4">
+              <div className="flex flex-wrap gap-4">
+                <SearchInput
+                  value={search}
+                  onChange={(valor) => { setSearch(valor); setPage(0); }}
+                  placeholder="Buscar por expediente, cliente o mercancía..."
+                  className="flex-1 min-w-[200px]"
+                />
+                <Select value={filterModo} onValueChange={(v) => { setFilterModo(v); setPage(0); }}>
+                  <SelectTrigger className="w-[150px]"><SelectValue placeholder="Modo" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="todos">Todos los modos</SelectItem>
+                    {MODOS_TRANSPORTE.map(m => <SelectItem key={m} value={m}>{getModoIcon(m)} {m}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+                <Select value={filterEstado} onValueChange={(v) => { setFilterEstado(v); setPage(0); }}>
+                  <SelectTrigger className="w-[160px]"><SelectValue placeholder="Estado" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="todos">Todos los estados</SelectItem>
+                    {ESTADOS_EMBARQUE.map(e => <SelectItem key={e} value={e}>{e}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+                <Select value={filterCliente} onValueChange={(v) => { setFilterCliente(v); setPage(0); }}>
+                  <SelectTrigger className="w-[200px]"><SelectValue placeholder="Cliente" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="todos">Todos los clientes</SelectItem>
+                    {clientes.map(c => <SelectItem key={c.id} value={c.id}>{c.nombre.split(' ').slice(0, 3).join(' ')}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+                <Select value={filterOperador} onValueChange={(v) => { setFilterOperador(v); setPage(0); }}>
+                  <SelectTrigger className="w-[180px]"><SelectValue placeholder="Operador" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="todos">Todos los operadores</SelectItem>
+                    {operadoresUnicos.map(op => <SelectItem key={op} value={op}>{op}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+            </CardContent>
+          </Card>
 
-      <Card>
-        <CardContent className="p-0">
-          <DataTable
-            columns={columns}
-            data={filtered}
-            isLoading={isLoading}
-            emptyMessage="No se encontraron embarques"
-            onRowClick={(e) => navigate(`/embarques/${e.id}`)}
-            rowKey={(e) => e.id}
-            rowClassName={() => "group"}
-          />
-          <PaginationControls
-            page={page}
-            totalPages={totalPages}
-            onPageChange={setPage}
-            pageSize={pageSize}
-            onPageSizeChange={(s) => { setPageSize(s); setPage(0); }}
-          />
-        </CardContent>
-      </Card>
+          <Card>
+            <CardContent className="p-0">
+              <DataTable
+                columns={columns}
+                data={filtered}
+                isLoading={isLoading}
+                emptyMessage="No se encontraron embarques"
+                onRowClick={(e) => navigate(`/embarques/${e.id}`)}
+                rowKey={(e) => e.id}
+                rowClassName={() => "group"}
+              />
+              <PaginationControls
+                page={page}
+                totalPages={totalPages}
+                onPageChange={setPage}
+                pageSize={pageSize}
+                onPageSizeChange={(s) => { setPageSize(s); setPage(0); }}
+              />
+            </CardContent>
+          </Card>
+        </>
+      )}
 
       <DoubleConfirmDeleteDialog
         open={!!embarqueAEliminar}
