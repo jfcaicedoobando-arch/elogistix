@@ -13,6 +13,13 @@ interface ChangelogEntry {
 
 const changelog: ChangelogEntry[] = [
   {
+    version: "5.15.0",
+    date: "2026-03-13",
+    type: "minor",
+    title: "Auditoría arquitectónica: 10 pasos de limpieza implementados",
+    description: "Hook useUsuarios con React Query (reemplaza queries inline en Usuarios.tsx). Eliminado sistema dual de toasters (Sonner removido). Toast estandarizado al patrón useToast() en todos los archivos. CotizacionWizardLayout compartido elimina ~200 líneas duplicadas entre NuevaCotizacion y EditarCotizacion. DoubleConfirmDeleteDialog reutilizable reemplaza 4 instancias duplicadas. Tipos 'any' corregidos en EditarCotizacionForm. NuevoEmbarque usa useUpdateEstadoCotizacion en lugar de supabase directo. Eliminado re-export duplicado de use-toast. Dead code limpiado.",
+  },
+  {
     version: "5.14.0",
     date: "2026-03-13",
     type: "minor",
