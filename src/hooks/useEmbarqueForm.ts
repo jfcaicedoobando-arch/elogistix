@@ -1,6 +1,6 @@
 import { useEffect, useCallback } from 'react';
 import { useForm, type UseFormReturn } from 'react-hook-form';
-import { toast } from '@/hooks/use-toast';
+import { useToast } from '@/hooks/use-toast';
 import { uploadFile } from '@/lib/storage';
 import { useExchangeRates } from '@/hooks/useExchangeRates';
 import { resolverContacto } from '@/lib/helpers';
@@ -76,6 +76,7 @@ export function useEmbarqueForm() {
     mode: 'onBlur',
   });
 
+  const { toast } = useToast();
   const [documentosArchivos, setDocumentosArchivos] = useState<Record<string, File>>({});
   const { data: tiposDeCambio } = useExchangeRates();
 

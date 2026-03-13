@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { ArrowLeft, ChevronLeft, ChevronRight, Save } from "lucide-react";
 import { FormProvider } from "react-hook-form";
 import { Button } from "@/components/ui/button";
-import { toast } from "@/hooks/use-toast";
+import { useToast } from "@/hooks/use-toast";
 import {
   useProveedoresForSelect,
   useCreateEmbarque,
@@ -14,7 +14,7 @@ import { useRegistrarActividad } from "@/hooks/useBitacora";
 import { useConceptosForm } from "@/hooks/useConceptosForm";
 import { useEmbarqueForm } from "@/hooks/useEmbarqueForm";
 import { useCotizacionesAceptadas, type CotizacionRow } from "@/hooks/useCotizaciones";
-import { supabase } from "@/integrations/supabase/client";
+import { useUpdateEstadoCotizacion } from "@/hooks/useCotizacionMutations";
 import type { TablesInsert } from "@/integrations/supabase/types";
 import { resolverExpediente, subirDocumentosEmbarque } from "@/lib/embarqueServices";
 import { StepIndicator } from "@/components/embarque/StepIndicator";
@@ -34,11 +34,13 @@ const steps = [
 export default function NuevoEmbarque() {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { toast } = useToast();
   const { data: clientes = [] } = useClientesForSelect();
   const { data: proveedoresDb = [] } = useProveedoresForSelect();
   const { data: cotizacionesAceptadas = [] } = useCotizacionesAceptadas();
   const createEmbarque = useCreateEmbarque();
   const registrarActividad = useRegistrarActividad();
+  const updateEstadoCotizacion = useUpdateEstadoCotizacion();
 
   const [currentStep, setCurrentStep] = useState(1);
   const [validationErrors, setValidationErrors] = useState<EmbarqueValidationErrors>({});
@@ -137,10 +139,10 @@ export default function NuevoEmbarque() {
 
       // Si hay cotización vinculada, cambiar su estado a 'Embarcada'
       if (cotizacionVinculada) {
-        await supabase
-          .from('cotizaciones')
-          .update({ estado: 'Embarcada' as TablesInsert<'cotizaciones'>['estado'] })
-          .eq('id', cotizacionVinculada.id);
+        await updateEstadoCotizacion.mutateAsync({
+          id: cotizacionVinculada.id,
+          estado: 'Embarcada',
+        });
       }
 
       registrarActividad.mutate({

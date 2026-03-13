@@ -1,5 +1,4 @@
-import { useEffect, useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
@@ -7,15 +6,10 @@ import { useToast } from "@/hooks/use-toast";
 import { ShieldCheck, UserPlus } from "lucide-react";
 import NuevoUsuarioDialog from "@/components/NuevoUsuarioDialog";
 import { DataTable, type DataTableColumn } from "@/components/DataTable";
+import { useUsuarios, useUpdateUserRole, type UserRow } from "@/hooks/useUsuarios";
+import type { Enums } from "@/integrations/supabase/types";
 
-type AppRole = "admin" | "operador" | "viewer";
-
-interface UserRow {
-  user_id: string;
-  email: string;
-  role: AppRole;
-  created_at: string;
-}
+type AppRole = Enums<'app_role'>;
 
 const roleBadge: Record<AppRole, string> = {
   admin: "bg-destructive text-destructive-foreground",
@@ -29,63 +23,17 @@ const formatDateLocal = (dateStr: string) => {
 };
 
 export default function Usuarios() {
-  const [users, setUsers] = useState<UserRow[]>([]);
-  const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
   const { toast } = useToast();
-
-  const fetchUsers = async () => {
-    setLoading(true);
-
-    const { data: rolesData, error: rolesError } = await supabase
-      .from("user_roles")
-      .select("user_id, role")
-      .order("user_id");
-
-    if (rolesError) {
-      toast({ title: "Error", description: rolesError.message, variant: "destructive" });
-      setLoading(false);
-      return;
-    }
-
-    let emailMap: Record<string, { email: string; created_at: string }> = {};
-    try {
-      const { data: usersData, error: fnError } = await supabase.functions.invoke("list-users");
-      if (!fnError && Array.isArray(usersData)) {
-        usersData.forEach((usuario: any) => {
-          emailMap[usuario.id] = { email: usuario.email, created_at: usuario.created_at };
-        });
-      }
-    } catch {
-      // If edge function fails, we'll show user_id instead
-    }
-
-    const rows: UserRow[] = (rolesData ?? []).map((rolUsuario: any) => ({
-      user_id: rolUsuario.user_id,
-      email: emailMap[rolUsuario.user_id]?.email || rolUsuario.user_id,
-      role: rolUsuario.role as AppRole,
-      created_at: emailMap[rolUsuario.user_id]?.created_at || "",
-    }));
-
-    setUsers(rows);
-    setLoading(false);
-  };
-
-  useEffect(() => {
-    fetchUsers();
-  }, []);
+  const { data: users = [], isLoading, refetch } = useUsuarios();
+  const updateRole = useUpdateUserRole();
 
   const handleRoleChange = async (userId: string, newRole: AppRole) => {
-    const { error } = await supabase
-      .from("user_roles")
-      .update({ role: newRole })
-      .eq("user_id", userId);
-
-    if (error) {
-      toast({ title: "Error al cambiar rol", description: error.message, variant: "destructive" });
-    } else {
+    try {
+      await updateRole.mutateAsync({ userId, newRole });
       toast({ title: "Rol actualizado" });
-      fetchUsers();
+    } catch (error: any) {
+      toast({ title: "Error al cambiar rol", description: error.message, variant: "destructive" });
     }
   };
 
@@ -123,13 +71,13 @@ export default function Usuarios() {
         </Button>
       </div>
 
-      <NuevoUsuarioDialog open={dialogOpen} onOpenChange={setDialogOpen} onCreated={fetchUsers} />
+      <NuevoUsuarioDialog open={dialogOpen} onOpenChange={setDialogOpen} onCreated={() => refetch()} />
 
       <div className="rounded-md border">
         <DataTable
           columns={columns}
           data={users}
-          isLoading={loading}
+          isLoading={isLoading}
           emptyMessage="No hay usuarios registrados."
           rowKey={(u) => u.user_id}
         />
