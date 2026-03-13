@@ -29,8 +29,8 @@ export default function Usuarios() {
     try {
       await updateRole.mutateAsync({ userId, newRole });
       toast({ title: "Rol actualizado" });
-    } catch (error: any) {
-      toast({ title: "Error al cambiar rol", description: error.message, variant: "destructive" });
+    } catch (err: unknown) {
+      toast({ title: "Error al cambiar rol", description: getErrorMessage(err), variant: "destructive" });
     }
   };
 
