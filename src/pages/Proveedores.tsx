@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { Truck, Plus } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
