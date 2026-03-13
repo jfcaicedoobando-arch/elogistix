@@ -29,6 +29,7 @@ import { formatDate, getEstadoColor } from "@/lib/helpers";
 import { formatCurrency } from "@/lib/formatters";
 import { ArrowLeft, ArrowRight, CheckCircle, Send, XCircle, UserPlus, FileDown, Pencil } from "lucide-react";
 import { generarPdfCotizacion } from "@/lib/cotizacionPdf";
+import { getErrorMessage } from "@/lib/errorUtils";
 
 export default function CotizacionDetalle() {
   const { id } = useParams<{ id: string }>();

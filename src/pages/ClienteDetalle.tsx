@@ -57,7 +57,7 @@ export default function ClienteDetalle() {
     );
   }
 
-  const handleSaveContacto = async (data: any, editingId: string | null) => {
+  const handleSaveContacto = async (data: { nombre: string; rfc: string; tipo: string; pais: string; ciudad: string; direccion: string; contacto: string; email: string; telefono: string }, editingId: string | null) => {
     try {
       if (editingId) {
         await updateContacto.mutateAsync({ id: editingId, cliente_id: cliente.id, ...data });

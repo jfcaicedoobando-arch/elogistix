@@ -146,7 +146,7 @@ interface InitialData {
   carta_garantia: boolean;
   notas: string | null;
   num_contenedores: number;
-  conceptos_venta: any;
+  conceptos_venta: ConceptoVentaCotizacion[];
   msds_archivo: string | null;
 }
 

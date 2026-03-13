@@ -96,7 +96,7 @@ function ModoLocal({ filas, setFilas }: PropsLocal) {
 
   const [editingQty, setEditingQty] = useState<{ idx: number; raw: string } | null>(null);
 
-  const updateFila = (globalIdx: number, field: keyof FilaCostoLocal, value: any) => {
+  const updateFila = (globalIdx: number, field: keyof FilaCostoLocal, value: string | number | boolean) => {
     setFilas(prev => {
       const copy = [...prev];
       copy[globalIdx] = { ...copy[globalIdx], [field]: value };
