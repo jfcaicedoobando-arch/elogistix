@@ -15,7 +15,9 @@ import { usePermissions } from "@/hooks/usePermissions";
 import { useRegistrarActividad } from "@/hooks/useBitacora";
 import { useDebounce } from "@/hooks/useDebounce";
 import { DataTable, type DataTableColumn } from "@/components/DataTable";
-import type { TipoProveedor, Proveedor } from "@/data/types";
+import type { Tables, Enums } from "@/integrations/supabase/types";
+type TipoProveedor = Enums<'tipo_proveedor'>;
+type Proveedor = Tables<'proveedores'>;
 
 const DEFAULT_PAGE_SIZE = 20;
 

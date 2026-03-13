@@ -4,9 +4,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import type { TipoProveedor, Moneda } from "@/data/types";
+import type { Enums, Tables, TablesUpdate } from "@/integrations/supabase/types";
+type TipoProveedor = Enums<'tipo_proveedor'>;
+type Moneda = Enums<'moneda'>;
 import { TIPOS_PROVEEDOR as TIPOS, MONEDAS_PROVEEDOR as MONEDAS, PAISES_PROVEEDOR as PAISES } from "@/data/proveedorConstants";
-import type { Tables, TablesUpdate } from "@/integrations/supabase/types";
 
 type Proveedor = Tables<'proveedores'>;
 

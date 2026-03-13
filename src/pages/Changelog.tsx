@@ -13,6 +13,13 @@ interface ChangelogEntry {
 
 const changelog: ChangelogEntry[] = [
   {
+    version: "5.14.0",
+    date: "2026-03-13",
+    type: "minor",
+    title: "Limpieza de tipos redundantes en data/types.ts",
+    description: "Eliminados todos los alias de tipos re-exportados (ModoTransporte, TipoOperacion, EstadoEmbarque, Moneda, Cliente, Proveedor, ContactoCliente, etc.) de data/types.ts. Los 9 archivos consumidores ahora importan directamente Enums<> y Tables<> desde los tipos generados de Supabase, eliminando la capa de indirección innecesaria. Solo se conserva DocumentoProveedor como tipo propio del dominio.",
+  },
+  {
     version: "5.13.0",
     date: "2026-03-13",
     type: "minor",

@@ -2,7 +2,8 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import type { Tables, TablesInsert, TablesUpdate } from "@/integrations/supabase/types";
 import { queryKeys } from "@/lib/queryKeys";
-import type { TipoProveedor } from "@/data/types";
+import type { Enums } from "@/integrations/supabase/types";
+type TipoProveedor = Enums<'tipo_proveedor'>;
 
 /** Columnas necesarias para la tabla de proveedores */
 const PROVEEDOR_LIST_COLUMNS = 'id, nombre, tipo, rfc, contacto, moneda_preferida' as const;

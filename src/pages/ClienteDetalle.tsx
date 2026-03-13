@@ -7,7 +7,8 @@ import { useCliente, useContactosCliente, useCreateContacto, useUpdateContacto, 
 import { useToast } from "@/hooks/use-toast";
 import { usePermissions } from "@/hooks/usePermissions";
 import { useRegistrarActividad } from "@/hooks/useBitacora";
-import type { ContactoCliente } from "@/data/types";
+import type { Tables } from "@/integrations/supabase/types";
+type ContactoCliente = Tables<'contactos_cliente'>;
 import DialogContacto from "@/components/cliente/DialogContacto";
 import DialogEditarCliente from "@/components/cliente/DialogEditarCliente";
 import TablaContactos from "@/components/cliente/TablaContactos";
