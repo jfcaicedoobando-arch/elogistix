@@ -13,6 +13,13 @@ interface ChangelogEntry {
 
 const changelog: ChangelogEntry[] = [
   {
+    version: "5.7.0",
+    date: "2026-03-13",
+    type: "minor",
+    title: "Eliminación masiva de casts 'as any' — tipado estricto con Supabase",
+    description: "Reducción de ~188 a ~6 ocurrencias de 'as any' en 17 archivos. Reemplazados casts de enums por TablesInsert<T>['campo'], CotizacionRow ahora extiende Tables<'cotizaciones'> (eliminando 80 líneas de interfaz manual), accesos dinámicos tipados con keyof/Record, joins tipados en Facturación. Archivos afectados: useCotizaciones, useEmbarqueMutations, useEmbarqueQueries, useCotizacionWizardForm, usePuertos, useConfiguracion, useCotizacionCostos, DialogDuplicarEmbarque, TabResumen, EmbarqueDetalle, NuevoEmbarque, Clientes, Facturacion, Proveedores, TablaConceptosGenerico.",
+  },
+  {
     version: "5.6.1",
     date: "2026-03-13",
     type: "patch",
