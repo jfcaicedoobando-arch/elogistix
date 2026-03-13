@@ -21,6 +21,10 @@ import { DataTable, type DataTableColumn } from "@/components/DataTable";
 import { useDebounce } from "@/hooks/useDebounce";
 import type { EmbarqueRow } from "@/hooks/useEmbarqueUtils";
 import DoubleConfirmDeleteDialog from "@/components/DoubleConfirmDeleteDialog";
+import { DialogDuplicarEmbarque } from "@/components/embarque/DialogDuplicarEmbarque";
+import {
+  DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 const DEFAULT_PAGE_SIZE = 20;
 
