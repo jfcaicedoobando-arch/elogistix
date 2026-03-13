@@ -13,6 +13,13 @@ interface ChangelogEntry {
 
 const changelog: ChangelogEntry[] = [
   {
+    version: "5.22.0",
+    date: "2026-03-13",
+    type: "minor",
+    title: "Optimización de rendimiento: caché, RPCs y reducción de queries",
+    description: "QueryClient configurado con staleTime de 30s y gcTime de 5min para eliminar refetches duplicados. Creada RPC profit_por_embarque que agrega ventas/costos en servidor (reemplaza 2 queries sin límite). RPC operadores_distintos corrige bug donde el filtro de operador solo mostraba datos de la página actual. RPC busqueda_global consolida 4 queries paralelas del buscador en una sola con UNION ALL.",
+  },
+  {
     version: "5.21.0",
     date: "2026-03-13",
     type: "minor",
