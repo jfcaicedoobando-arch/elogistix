@@ -8,7 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import {
   Accordion, AccordionContent, AccordionItem, AccordionTrigger,
 } from "@/components/ui/accordion";
-import { ArrowLeft, Save, ChevronRight, ChevronLeft, Info, Package, StickyNote } from "lucide-react";
+import { ArrowLeft, Save, ChevronRight, ChevronLeft, Info, Package, StickyNote, Loader2 } from "lucide-react";
 
 import { StepIndicator } from "@/components/embarque/StepIndicator";
 import SeccionDestinatario from "@/components/cotizacion/SeccionDestinatario";
