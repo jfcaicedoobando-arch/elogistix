@@ -29,6 +29,7 @@ export default function ProveedorDetalle() {
   const [deleteStep, setDeleteStep] = useState<0 | 1 | 2>(0);
   const { canEdit, isAdmin } = usePermissions();
   const registrarActividad = useRegistrarActividad();
+  const { toast } = useToast();
 
   const { data: operaciones = [] } = useProveedorOperaciones(id);
 
@@ -54,9 +55,9 @@ export default function ProveedorDetalle() {
   const handleUpdate = async (id: string, data: Record<string, unknown>) => {
     try {
       await updateProveedor(id, data);
-      toast.success("Proveedor actualizado");
+      toast({ title: "Proveedor actualizado" });
     } catch {
-      toast.error("Error al actualizar");
+      toast({ title: "Error al actualizar", variant: "destructive" });
     }
   };
 
@@ -69,10 +70,10 @@ export default function ProveedorDetalle() {
         entidad_id: proveedor.id,
         entidad_nombre: proveedor.nombre,
       });
-      toast.success("Proveedor eliminado");
+      toast({ title: "Proveedor eliminado" });
       navigate("/proveedores");
     } catch {
-      toast.error("Error al eliminar proveedor");
+      toast({ title: "Error al eliminar proveedor", variant: "destructive" });
     }
   };
 

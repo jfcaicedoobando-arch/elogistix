@@ -92,6 +92,7 @@ export default function Proveedores() {
   const { addProveedor } = useProveedorMutations();
   const { canEdit } = usePermissions();
   const registrarActividad = useRegistrarActividad();
+  const { toast } = useToast();
 
   const handleAdd = async (data: Omit<Proveedor, 'id'>) => {
     try {
@@ -102,9 +103,9 @@ export default function Proveedores() {
         entidad_id: (proveedorCreado as { id?: string })?.id,
         entidad_nombre: data.nombre,
       });
-      toast.success("Proveedor creado correctamente");
+      toast({ title: "Proveedor creado correctamente" });
     } catch {
-      toast.error("Error al crear proveedor");
+      toast({ title: "Error al crear proveedor", variant: "destructive" });
     }
   };
 
