@@ -31,7 +31,14 @@ const Bitacora = lazy(() => import("./pages/Bitacora"));
 const Usuarios = lazy(() => import("./pages/Usuarios"));
 const Configuracion = lazy(() => import("./pages/Configuracion"));
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 30_000,   // 30 seconds — prevents duplicate refetches on navigation
+      gcTime: 5 * 60_000,  // 5 minutes — keeps unused data in cache longer
+    },
+  },
+});
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
