@@ -286,7 +286,7 @@ export function useSyncEstadoEmbarque() {
     mutationFn: async ({ embarqueId, nuevoEstado }: { embarqueId: string; nuevoEstado: string }) => {
       const { error } = await supabase
         .from('embarques')
-        .update({ estado: nuevoEstado as any })
+        .update({ estado: nuevoEstado as EmbarqueInsert['estado'] })
         .eq('id', embarqueId);
       if (error) throw error;
     },
