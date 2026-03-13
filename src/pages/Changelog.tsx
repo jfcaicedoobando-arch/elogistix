@@ -13,6 +13,13 @@ interface ChangelogEntry {
 
 const changelog: ChangelogEntry[] = [
   {
+    version: "5.5.0",
+    date: "2026-03-13",
+    type: "minor",
+    title: "Refactor: ClienteDetalle descompuesto en sub-componentes",
+    description: "La página de detalle de cliente fue dividida en 4 componentes independientes: DialogContacto, DialogEditarCliente, TablaContactos y DeleteContactoDialogs. Reduce la complejidad de 368 a ~160 líneas en la página principal.",
+  },
+  {
     version: "5.4.0",
     date: "2026-03-13",
     type: "minor",
