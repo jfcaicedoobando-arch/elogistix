@@ -57,7 +57,7 @@ export function useAdminPuertos() {
 
   const agregarPuerto = useMutation({
     mutationFn: async (puerto: { code: string; name: string; country: string }) => {
-      const { error } = await supabase.from("puertos").insert(puerto as any);
+      const { error } = await supabase.from("puertos").insert(puerto);
       if (error) throw error;
     },
     onSuccess: () => {
