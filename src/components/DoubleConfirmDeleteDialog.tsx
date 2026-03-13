@@ -65,7 +65,7 @@ function DoubleConfirmInner({
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancelar</AlertDialogCancel>
-            <AlertDialogAction onClick={() => setPaso2(true)}>Continuar</AlertDialogAction>
+            <AlertDialogAction onClick={(e) => { e.preventDefault(); setPaso2(true); }}>Continuar</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
@@ -96,7 +96,8 @@ function DoubleConfirmInner({
             <AlertDialogCancel>Cancelar</AlertDialogCancel>
             <AlertDialogAction
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-              onClick={async () => {
+              onClick={async (e) => {
+                e.preventDefault();
                 await onConfirm();
                 close();
               }}
