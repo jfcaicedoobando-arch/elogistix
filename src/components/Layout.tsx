@@ -2,6 +2,7 @@ import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
 import { Outlet } from "react-router-dom";
 import { GlobalSearch } from "@/components/GlobalSearch";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 
 export function Layout() {
   return (
@@ -19,7 +20,9 @@ export function Layout() {
             </div>
           </header>
           <main className="flex-1 overflow-auto p-6">
-            <Outlet />
+            <ErrorBoundary>
+              <Outlet />
+            </ErrorBoundary>
           </main>
         </div>
       </div>

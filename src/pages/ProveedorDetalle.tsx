@@ -16,7 +16,7 @@ import { useProveedor, useProveedorMutations, useProveedorOperaciones } from "@/
 import { formatCurrency } from "@/lib/formatters";
 import { getEstadoColor } from "@/lib/helpers";
 import EditarProveedorDialog from "@/components/EditarProveedorDialog";
-import { toast } from "sonner";
+import { useToast } from "@/hooks/use-toast";
 import { usePermissions } from "@/hooks/usePermissions";
 import { useRegistrarActividad } from "@/hooks/useBitacora";
 
@@ -29,6 +29,7 @@ export default function ProveedorDetalle() {
   const [deleteStep, setDeleteStep] = useState<0 | 1 | 2>(0);
   const { canEdit, isAdmin } = usePermissions();
   const registrarActividad = useRegistrarActividad();
+  const { toast } = useToast();
 
   const { data: operaciones = [] } = useProveedorOperaciones(id);
 
@@ -54,9 +55,9 @@ export default function ProveedorDetalle() {
   const handleUpdate = async (id: string, data: Record<string, unknown>) => {
     try {
       await updateProveedor(id, data);
-      toast.success("Proveedor actualizado");
+      toast({ title: "Proveedor actualizado" });
     } catch {
-      toast.error("Error al actualizar");
+      toast({ title: "Error al actualizar", variant: "destructive" });
     }
   };
 
@@ -69,10 +70,10 @@ export default function ProveedorDetalle() {
         entidad_id: proveedor.id,
         entidad_nombre: proveedor.nombre,
       });
-      toast.success("Proveedor eliminado");
+      toast({ title: "Proveedor eliminado" });
       navigate("/proveedores");
     } catch {
-      toast.error("Error al eliminar proveedor");
+      toast({ title: "Error al eliminar proveedor", variant: "destructive" });
     }
   };
 

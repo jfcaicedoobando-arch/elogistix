@@ -4,9 +4,6 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
-  Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
-} from "@/components/ui/table";
-import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -14,7 +11,7 @@ import { useFacturas, useGastosPendientes, useMarcarCostoPagado } from "@/hooks/
 import { useRegistrarActividad } from "@/hooks/useBitacora";
 import { formatCurrency } from "@/lib/formatters";
 import { formatDate, getEstadoColor } from "@/lib/helpers";
-import { toast } from "sonner";
+import { useToast } from "@/hooks/use-toast";
 import { usePermissions } from "@/hooks/usePermissions";
 import PaginationControls from "@/components/PaginationControls";
 import { DataTable, type DataTableColumn } from "@/components/DataTable";
@@ -47,6 +44,7 @@ export default function Facturacion() {
   const { data: gastosPendientes = [], isLoading: loadingGastos } = useGastosPendientes();
   const marcarPagado = useMarcarCostoPagado();
   const { canEdit } = usePermissions();
+  const { toast } = useToast();
 
   const filtered = useMemo(() => {
     return facturas.filter(factura => {
@@ -70,9 +68,9 @@ export default function Facturacion() {
           entidad_id: id,
           entidad_nombre: 'Gasto marcado como pagado',
         });
-        toast.success("Gasto marcado como pagado");
+        toast({ title: "Gasto marcado como pagado" });
       },
-      onError: () => toast.error("Error al marcar como pagado"),
+      onError: () => toast({ title: "Error al marcar como pagado", variant: "destructive" }),
     });
   };
 
