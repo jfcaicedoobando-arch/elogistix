@@ -24,14 +24,14 @@ const DEFAULT_PAGE_SIZE = 20;
 type Factura = ReturnType<typeof useFacturas>["data"] extends (infer U)[] | undefined ? U : never;
 
 const facturaColumns: DataTableColumn<Factura>[] = [
-  { key: "numero", header: "# Factura", className: "font-medium", render: (f) => f.numero },
-  { key: "expediente", header: "Expediente", render: (f) => f.expediente },
-  { key: "cliente", header: "Cliente", className: "max-w-[180px] truncate", render: (f) => f.cliente_nombre },
-  { key: "monto", header: "Monto", className: "font-medium", render: (f) => formatCurrency(f.total, f.moneda) },
-  { key: "moneda", header: "Moneda", render: (f) => f.moneda },
-  { key: "emision", header: "Emisión", className: "text-xs", render: (f) => formatDate(f.fecha_emision) },
-  { key: "vencimiento", header: "Vencimiento", className: "text-xs", render: (f) => formatDate(f.fecha_vencimiento) },
-  { key: "estado", header: "Estado", render: (f) => <Badge className={getEstadoColor(f.estado)}>{f.estado}</Badge> },
+  { key: "numero", header: "# Factura", width: "w-[110px]", className: "font-medium", sortable: true, sortValue: (f) => f.numero, render: (f) => f.numero },
+  { key: "expediente", header: "Expediente", width: "w-[110px]", render: (f) => f.expediente },
+  { key: "cliente", header: "Cliente", width: "min-w-[160px]", className: "max-w-[180px] truncate", render: (f) => f.cliente_nombre },
+  { key: "monto", header: "Monto", width: "w-[110px]", className: "font-medium", sortable: true, sortValue: (f) => f.total, render: (f) => formatCurrency(f.total, f.moneda) },
+  { key: "moneda", header: "Moneda", width: "w-[70px]", render: (f) => f.moneda },
+  { key: "emision", header: "Emisión", width: "w-[100px]", className: "text-xs", sortable: true, sortValue: (f) => f.fecha_emision, render: (f) => formatDate(f.fecha_emision) },
+  { key: "vencimiento", header: "Vencimiento", width: "w-[100px]", className: "text-xs", sortable: true, sortValue: (f) => f.fecha_vencimiento, render: (f) => formatDate(f.fecha_vencimiento) },
+  { key: "estado", header: "Estado", width: "w-[100px]", sortable: true, sortValue: (f) => f.estado, render: (f) => <Badge className={getEstadoColor(f.estado)}>{f.estado}</Badge> },
 ];
 
 export default function Facturacion() {
