@@ -967,6 +967,16 @@ export type Database = {
         }
         Returns: undefined
       }
+      busqueda_global: {
+        Args: { limite?: number; termino: string }
+        Returns: {
+          id: string
+          label: string
+          sublabel: string
+          tipo: string
+          url: string
+        }[]
+      }
       crear_embarque_completo: {
         Args: {
           p_conceptos_costo?: Json
@@ -991,6 +1001,20 @@ export type Database = {
           _user_id: string
         }
         Returns: boolean
+      }
+      operadores_distintos: {
+        Args: never
+        Returns: {
+          operador: string
+        }[]
+      }
+      profit_por_embarque: {
+        Args: never
+        Returns: {
+          costo_usd: number
+          embarque_id: string
+          venta_usd: number
+        }[]
       }
       resolver_expediente_por_bl: {
         Args: { _bl_master: string; _tipo_op: string }
