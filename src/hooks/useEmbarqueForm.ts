@@ -99,7 +99,7 @@ export function useEmbarqueForm() {
     }
   };
 
-  const inicializarDesdeEmbarque = (embarque: any) => {
+  const inicializarDesdeEmbarque = (embarque: EmbarqueRow) => {
     methods.reset({
       modo: embarque.modo,
       tipo: embarque.tipo,
