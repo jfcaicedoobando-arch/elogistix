@@ -5,9 +5,10 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ArrowLeft, ArrowRight } from "lucide-react";
-import type { TipoProveedor, Moneda } from "@/data/types";
+import type { Enums, TablesInsert } from "@/integrations/supabase/types";
+type TipoProveedor = Enums<'tipo_proveedor'>;
+type Moneda = Enums<'moneda'>;
 import { TIPOS_PROVEEDOR as TIPOS, MONEDAS_PROVEEDOR as MONEDAS, PAISES_PROVEEDOR as PAISES } from "@/data/proveedorConstants";
-import type { TablesInsert } from "@/integrations/supabase/types";
 import DocumentChecklist, { type DocumentoChecklist } from "@/components/DocumentChecklist";
 
 const DOCS_NACIONAL = [

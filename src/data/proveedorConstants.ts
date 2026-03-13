@@ -1,4 +1,6 @@
-import type { TipoProveedor, Moneda } from "@/data/types";
+import type { Enums } from "@/integrations/supabase/types";
+type TipoProveedor = Enums<'tipo_proveedor'>;
+type Moneda = Enums<'moneda'>;
 
 export const TIPOS_PROVEEDOR: TipoProveedor[] = [
   'Naviera', 'Aerolínea', 'Transportista', 'Agente Aduanal', 'Agente de Carga',

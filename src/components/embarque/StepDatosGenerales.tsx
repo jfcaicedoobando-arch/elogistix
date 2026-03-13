@@ -12,7 +12,10 @@ import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, Command
 import { cn } from "@/lib/utils";
 import type { EmbarqueFormValues } from "@/hooks/useEmbarqueForm";
 import type { CotizacionRow } from "@/hooks/useCotizaciones";
-import type { ModoTransporte, TipoOperacion, Incoterm } from "@/data/types";
+import type { Enums } from "@/integrations/supabase/types";
+type ModoTransporte = Enums<'modo_transporte'>;
+type TipoOperacion = Enums<'tipo_operacion'>;
+type Incoterm = Enums<'incoterm'>;
 
 const MODOS: ModoTransporte[] = ['Marítimo', 'Aéreo', 'Terrestre', 'Multimodal'];
 const TIPOS: TipoOperacion[] = ['Importación', 'Exportación', 'Nacional', 'Cross Trade', 'Intra USA'];

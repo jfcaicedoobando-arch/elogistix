@@ -5,7 +5,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
-import type { ContactoCliente, TipoContacto } from "@/data/types";
+import type { Tables, Enums } from "@/integrations/supabase/types";
+type ContactoCliente = Tables<'contactos_cliente'>;
+type TipoContacto = Enums<'tipo_contacto'>;
 
 const tipoBadgeVariant = (tipo: TipoContacto) => {
   switch (tipo) {

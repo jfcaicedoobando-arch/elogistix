@@ -9,7 +9,9 @@ import {
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription,
 } from "@/components/ui/dialog";
-import type { ContactoCliente, TipoContacto } from "@/data/types";
+import type { Tables, Enums } from "@/integrations/supabase/types";
+type ContactoCliente = Tables<'contactos_cliente'>;
+type TipoContacto = Enums<'tipo_contacto'>;
 
 const TIPOS_CONTACTO: TipoContacto[] = ['Proveedor', 'Exportador', 'Importador'];
 
