@@ -13,6 +13,13 @@ interface ChangelogEntry {
 
 const changelog: ChangelogEntry[] = [
   {
+    version: "5.16.1",
+    date: "2026-03-13",
+    type: "patch",
+    title: "Limpieza final de tipos 'any' y patrones no estándar",
+    description: "Eliminados los últimos ~12 'any' en Configuracion, ClienteDetalle, useCotizacionWizardForm, useUsuarios, SeccionConceptosVenta y SeccionCostosInternos. getErrorMessage centralizado en CotizacionDetalle (3 ocurrencias). useState-as-ref corregido a useRef en Proveedores. Tipo de retorno de addProveedor corregido (elimina cast unsafe). Edge function list-users usa catch(err: unknown).",
+  },
+  {
     version: "5.16.0",
     date: "2026-03-13",
     type: "minor",

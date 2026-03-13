@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Save, Building2, DollarSign, FileText, Ship, ClipboardList, Bell, Anchor } from "lucide-react";
-import { useConfiguracion, useUpdateConfiguracion } from "@/hooks/useConfiguracion";
+import { useConfiguracion, useUpdateConfiguracion, type ConfigItem } from "@/hooks/useConfiguracion";
 import TabEmpresa from "@/components/configuracion/TabEmpresa";
 import TabTiposCambio from "@/components/configuracion/TabTiposCambio";
 import TabCotizaciones from "@/components/configuracion/TabCotizaciones";
@@ -12,9 +12,9 @@ import TabEmbarques from "@/components/configuracion/TabEmbarques";
 import TabAlertas from "@/components/configuracion/TabAlertas";
 import TabPuertos from "@/components/configuracion/TabPuertos";
 
-function getVal<T>(data: any[] | undefined, categoria: string, clave: string, fallback: T): T {
+function getVal<T>(data: ConfigItem[] | undefined, categoria: string, clave: string, fallback: T): T {
   if (!data) return fallback;
-  const item = data.find((c: any) => c.categoria === categoria && c.clave === clave);
+  const item = data.find((c) => c.categoria === categoria && c.clave === clave);
   return item ? (item.valor as T) : fallback;
 }
 

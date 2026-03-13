@@ -29,6 +29,7 @@ import { formatDate, getEstadoColor } from "@/lib/helpers";
 import { formatCurrency } from "@/lib/formatters";
 import { ArrowLeft, ArrowRight, CheckCircle, Send, XCircle, UserPlus, FileDown, Pencil } from "lucide-react";
 import { generarPdfCotizacion } from "@/lib/cotizacionPdf";
+import { getErrorMessage } from "@/lib/errorUtils";
 
 export default function CotizacionDetalle() {
   const { id } = useParams<{ id: string }>();
@@ -78,8 +79,7 @@ export default function CotizacionDetalle() {
       await actualizarEstado.mutateAsync({ id: cotizacion.id, estado });
       toast({ title: `Estado actualizado a "${estado}"` });
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : "Error desconocido";
-      toast({ title: "Error", description: msg, variant: "destructive" });
+      toast({ title: "Error", description: getErrorMessage(err), variant: "destructive" });
     }
   };
 
@@ -107,8 +107,7 @@ export default function CotizacionDetalle() {
       toast({ title: `Cliente "${cliente.nombre}" creado exitosamente` });
       setShowConvertir(false);
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : "Error desconocido";
-      toast({ title: "Error al convertir prospecto", description: msg, variant: "destructive" });
+      toast({ title: "Error al convertir prospecto", description: getErrorMessage(err), variant: "destructive" });
     }
   };
 
@@ -318,8 +317,7 @@ export default function CotizacionDetalle() {
                   toast({ title: `Se generaron ${cotizacion.num_contenedores} embarques exitosamente` });
                   setShowConfirmarConvertir(false);
                 } catch (err: unknown) {
-                  const msg = err instanceof Error ? err.message : "Error desconocido";
-                  toast({ title: "Error al generar embarques", description: msg, variant: "destructive" });
+                  toast({ title: "Error al generar embarques", description: getErrorMessage(err), variant: "destructive" });
                 }
               }}
             >

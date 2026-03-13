@@ -28,7 +28,7 @@ export function useUsuarios() {
       try {
         const { data: usersData, error: fnError } = await supabase.functions.invoke('list-users');
         if (!fnError && Array.isArray(usersData)) {
-          usersData.forEach((usuario: any) => {
+          (usersData as { id: string; email: string; created_at: string }[]).forEach((usuario) => {
             emailMap[usuario.id] = { email: usuario.email, created_at: usuario.created_at };
           });
         }
@@ -36,7 +36,7 @@ export function useUsuarios() {
         // If edge function fails, we'll show user_id instead
       }
 
-      return (rolesData ?? []).map((rolUsuario: any) => ({
+      return (rolesData ?? []).map((rolUsuario) => ({
         user_id: rolUsuario.user_id,
         email: emailMap[rolUsuario.user_id]?.email || rolUsuario.user_id,
         role: rolUsuario.role as AppRole,

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { Truck, Plus } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
@@ -58,9 +58,9 @@ function ProveedorTable({ tipo, search, onSelect }: { tipo: TipoProveedor; searc
   const totalPages = Math.ceil(totalCount / pageSize);
 
   // Reset page when search changes
-  const prevSearchRef = useState(debouncedSearch);
-  if (prevSearchRef[0] !== debouncedSearch) {
-    prevSearchRef[1](debouncedSearch);
+  const prevSearchRef = useRef(debouncedSearch);
+  if (prevSearchRef.current !== debouncedSearch) {
+    prevSearchRef.current = debouncedSearch;
     if (page !== 0) setPage(0);
   }
 
@@ -102,7 +102,7 @@ export default function Proveedores() {
       registrarActividad.mutate({
         accion: 'crear',
         modulo: 'proveedores',
-        entidad_id: (proveedorCreado as { id?: string })?.id,
+        entidad_id: proveedorCreado.id,
         entidad_nombre: data.nombre,
       });
       toast({ title: "Proveedor creado correctamente" });

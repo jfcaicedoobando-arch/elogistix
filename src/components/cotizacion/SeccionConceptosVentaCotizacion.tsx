@@ -16,8 +16,8 @@ const UNIDADES_MEDIDA = ['BL', 'W/M', 'Documento', 'Contenedor', 'Kilo', 'Embarq
 interface Props {
   conceptosUSD: ConceptoVentaCotizacion[];
   conceptosMXN: ConceptoVentaCotizacion[];
-  actualizarConceptoUSD: (index: number, campo: string, valor: any) => void;
-  actualizarConceptoMXN: (index: number, campo: string, valor: any) => void;
+  actualizarConceptoUSD: (index: number, campo: string, valor: string | number | boolean) => void;
+  actualizarConceptoMXN: (index: number, campo: string, valor: string | number | boolean) => void;
   agregarConceptoUSD: () => void;
   agregarConceptoMXN: () => void;
   eliminarConceptoUSD: (index: number) => void;

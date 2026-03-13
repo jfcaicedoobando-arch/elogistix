@@ -8,8 +8,9 @@ import { useToast } from "@/hooks/use-toast";
 import { usePermissions } from "@/hooks/usePermissions";
 import { useRegistrarActividad } from "@/hooks/useBitacora";
 import { getErrorMessage } from "@/lib/errorUtils";
-import type { Tables } from "@/integrations/supabase/types";
+import type { Tables, Enums } from "@/integrations/supabase/types";
 type ContactoCliente = Tables<'contactos_cliente'>;
+type TipoContacto = Enums<'tipo_contacto'>;
 import DialogContacto from "@/components/cliente/DialogContacto";
 import DialogEditarCliente from "@/components/cliente/DialogEditarCliente";
 import TablaContactos from "@/components/cliente/TablaContactos";
@@ -57,7 +58,7 @@ export default function ClienteDetalle() {
     );
   }
 
-  const handleSaveContacto = async (data: any, editingId: string | null) => {
+  const handleSaveContacto = async (data: { nombre: string; rfc: string; tipo: TipoContacto; pais: string; ciudad: string; direccion: string; contacto: string; email: string; telefono: string }, editingId: string | null) => {
     try {
       if (editingId) {
         await updateContacto.mutateAsync({ id: editingId, cliente_id: cliente.id, ...data });
