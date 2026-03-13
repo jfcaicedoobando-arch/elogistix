@@ -302,12 +302,12 @@ export function useCotizacionWizardForm({ navigate, toast, userEmail, clientes, 
           await uploadFile(path, msdsFile);
           msdsArchivo = path;
         }
-        const data = buildPaso1Data();
+        const data = buildPaso1Data() as Record<string, unknown>;
         data.msds_archivo = msdsArchivo;
         if (cotizacionId) {
           await updateCotizacion.mutateAsync({ id: cotizacionId, data });
         } else {
-          const cotizacion = await crearCotizacion.mutateAsync(data);
+          const cotizacion = await crearCotizacion.mutateAsync(data as unknown as CreateCotizacionInput);
           setCotizacionId(cotizacion.id);
         }
         setCurrentStep(2);
