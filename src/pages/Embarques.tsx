@@ -130,13 +130,25 @@ export default function Embarques() {
         header: "",
         className: "w-10",
         render: (e) => (
-          <button
-            className="opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded hover:bg-destructive/10 text-muted-foreground hover:text-destructive"
-            onClick={(ev) => { ev.stopPropagation(); setEmbarqueAEliminar(e); }}
-            title="Eliminar embarque"
-          >
-            <Trash2 className="h-4 w-4" />
-          </button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild onClick={(ev) => ev.stopPropagation()}>
+              <Button variant="ghost" size="icon" className="h-8 w-8">
+                <MoreHorizontal className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={() => navigate(`/embarques/${e.id}/editar`)}>
+                <Pencil className="mr-2 h-4 w-4" /> Editar
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setEmbarqueADuplicar(e)}>
+                <Copy className="mr-2 h-4 w-4" /> Duplicar
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem className="text-destructive focus:text-destructive" onClick={() => setEmbarqueAEliminar(e)}>
+                <Trash2 className="mr-2 h-4 w-4" /> Eliminar
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         ),
       });
     }
