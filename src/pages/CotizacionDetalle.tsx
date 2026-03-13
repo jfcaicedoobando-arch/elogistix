@@ -78,8 +78,7 @@ export default function CotizacionDetalle() {
       await actualizarEstado.mutateAsync({ id: cotizacion.id, estado });
       toast({ title: `Estado actualizado a "${estado}"` });
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : "Error desconocido";
-      toast({ title: "Error", description: msg, variant: "destructive" });
+      toast({ title: "Error", description: getErrorMessage(err), variant: "destructive" });
     }
   };
 
