@@ -13,6 +13,13 @@ interface ChangelogEntry {
 
 const changelog: ChangelogEntry[] = [
   {
+    version: "5.6.1",
+    date: "2026-03-13",
+    type: "patch",
+    title: "Tipado estricto en useEmbarqueForm",
+    description: "Eliminados todos los `any` de useEmbarqueForm.ts. inicializarDesdeEmbarque ahora recibe EmbarqueRow, buildEmbarquePayload recibe ContactoRow[] y retorna TablesInsert<'embarques'>. Casts de moneda/modo/tipo usan tipos de Supabase.",
+  },
+  {
     version: "5.6.0",
     date: "2026-03-13",
     type: "minor",
