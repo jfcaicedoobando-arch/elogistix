@@ -9,8 +9,8 @@ import { useAuth } from "@/contexts/AuthContext";
 import { usePermissions } from "@/hooks/usePermissions";
 import { useCotizacionWizardForm } from "@/hooks/useCotizacionWizardForm";
 import CotizacionWizardLayout from "@/components/cotizacion/CotizacionWizardLayout";
-import type { Tables } from "@/integrations/supabase/types";
 import type { NavigateFunction } from "react-router-dom";
+import type { CotizacionRow } from "@/hooks/useCotizaciones";
 import type { CostoCotizacion } from "@/hooks/useCotizacionCostos";
 
 export default function EditarCotizacion() {
