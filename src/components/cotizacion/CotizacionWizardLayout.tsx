@@ -8,7 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import {
   Accordion, AccordionContent, AccordionItem, AccordionTrigger,
 } from "@/components/ui/accordion";
-import { ArrowLeft, Save, ChevronRight, ChevronLeft, Info, Package, StickyNote } from "lucide-react";
+import { ArrowLeft, Save, ChevronRight, ChevronLeft, Info, Package, StickyNote, Loader2 } from "lucide-react";
 
 import { StepIndicator } from "@/components/embarque/StepIndicator";
 import SeccionDestinatario from "@/components/cotizacion/SeccionDestinatario";
@@ -208,9 +208,11 @@ export default function CotizacionWizardLayout({
               disabled={w.isPending}
               onClick={() => { if (w.currentStep < 4) w.handleSiguiente(); else w.handleGuardar(); }}
             >
-              {w.currentStep === 4
-                ? (w.isPending ? "Guardando..." : <><Save className="h-4 w-4 mr-1" /> {saveLabel}</>)
-                : (w.isPending ? "Guardando..." : <>Siguiente <ChevronRight className="h-4 w-4 ml-1" /></>)
+              {w.isPending
+                ? <><Loader2 className="h-4 w-4 mr-1 animate-spin" /> Guardando...</>
+                : w.currentStep === 4
+                  ? <><Save className="h-4 w-4 mr-1" /> {saveLabel}</>
+                  : <>Siguiente <ChevronRight className="h-4 w-4 ml-1" /></>
               }
             </Button>
           </div>

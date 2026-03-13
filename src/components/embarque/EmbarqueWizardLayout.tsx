@@ -1,5 +1,5 @@
 import { ReactNode } from "react";
-import { ArrowLeft, ChevronLeft, ChevronRight, Save } from "lucide-react";
+import { ArrowLeft, ChevronLeft, ChevronRight, Save, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { StepIndicator } from "@/components/embarque/StepIndicator";
 
@@ -74,7 +74,12 @@ export function EmbarqueWizardLayout({
             {currentStep === 1 ? 'Cancelar' : <><ChevronLeft className="h-4 w-4 mr-1" /> Anterior</>}
           </Button>
           <Button disabled={isPending} onClick={handleNext}>
-            {isPending ? 'Guardando...' : currentStep === totalSteps ? <><Save className="h-4 w-4 mr-1" /> {saveLabel}</> : <>Siguiente <ChevronRight className="h-4 w-4 ml-1" /></>}
+            {isPending
+              ? <><Loader2 className="h-4 w-4 mr-1 animate-spin" /> Guardando...</>
+              : currentStep === totalSteps
+                ? <><Save className="h-4 w-4 mr-1" /> {saveLabel}</>
+                : <>Siguiente <ChevronRight className="h-4 w-4 ml-1" /></>
+            }
           </Button>
         </div>
       </div>

@@ -13,6 +13,13 @@ interface ChangelogEntry {
 
 const changelog: ChangelogEntry[] = [
   {
+    version: "5.21.0",
+    date: "2026-03-13",
+    type: "minor",
+    title: "Confirmación de eliminación con texto + spinners en botones de guardado",
+    description: "El diálogo de doble confirmación ahora requiere escribir 'ELIMINAR' antes de habilitar el botón rojo. Botones de guardado en wizards de embarque y cotización muestran spinner animado (Loader2) cuando isPending es true. Los widgets del dashboard ya usaban Skeleton — verificado sin cambios.",
+  },
+  {
     version: "5.20.0",
     date: "2026-03-13",
     type: "minor",
