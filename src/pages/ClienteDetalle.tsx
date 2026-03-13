@@ -1,34 +1,17 @@
 import { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { ArrowLeft, Plus, Pencil, Trash2, Users, Building2, Loader2 } from "lucide-react";
+import { ArrowLeft, Pencil, Building2, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import {
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
-} from "@/components/ui/select";
-import {
-  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription,
-} from "@/components/ui/dialog";
-import {
-  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
-import {
-  Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
-} from "@/components/ui/table";
 import { useCliente, useContactosCliente, useCreateContacto, useUpdateContacto, useDeleteContacto, useUpdateCliente } from "@/hooks/useClientes";
 import { useToast } from "@/hooks/use-toast";
 import { usePermissions } from "@/hooks/usePermissions";
 import { useRegistrarActividad } from "@/hooks/useBitacora";
-import type { ContactoCliente, TipoContacto } from "@/data/types";
-
-const TIPOS_CONTACTO: TipoContacto[] = ['Proveedor', 'Exportador', 'Importador'];
-
-const emptyContacto = {
-  nombre: '', rfc: '', tipo: 'Proveedor' as TipoContacto, pais: '', ciudad: '', direccion: '', contacto: '', email: '', telefono: '',
-};
+import type { ContactoCliente } from "@/data/types";
+import DialogContacto from "@/components/cliente/DialogContacto";
+import DialogEditarCliente from "@/components/cliente/DialogEditarCliente";
+import TablaContactos from "@/components/cliente/TablaContactos";
+import DeleteContactoDialogs from "@/components/cliente/DeleteContactoDialogs";
 
 export default function ClienteDetalle() {
   const { id } = useParams<{ id: string }>();
@@ -44,15 +27,14 @@ export default function ClienteDetalle() {
   const { canEdit } = usePermissions();
   const registrarActividad = useRegistrarActividad();
 
-  const [dialogOpen, setDialogOpen] = useState(false);
-  const [editingId, setEditingId] = useState<string | null>(null);
-  const [form, setForm] = useState(emptyContacto);
+  // Contact dialog
+  const [contactDialogOpen, setContactDialogOpen] = useState(false);
+  const [editingContacto, setEditingContacto] = useState<ContactoCliente | null>(null);
 
-  // Edit client state
+  // Edit client dialog
   const [editClienteOpen, setEditClienteOpen] = useState(false);
-  const [clienteForm, setClienteForm] = useState({ nombre: '', rfc: '', direccion: '', ciudad: '', estado: '', cp: '', contacto: '', email: '', telefono: '' });
 
-  // Double-confirm delete state
+  // Delete contact
   const [deleteStep, setDeleteStep] = useState<0 | 1 | 2>(0);
   const [deletingContactoId, setDeletingContactoId] = useState<string | null>(null);
 
@@ -73,83 +55,28 @@ export default function ClienteDetalle() {
     );
   }
 
-  const handleChange = (field: string, value: string) => setForm(prev => ({ ...prev, [field]: value }));
-
-  const openNew = () => {
-    setEditingId(null);
-    setForm(emptyContacto);
-    setDialogOpen(true);
-  };
-
-  const openEdit = (contacto: ContactoCliente) => {
-    setEditingId(contacto.id);
-    setForm({ nombre: contacto.nombre, rfc: contacto.rfc, tipo: contacto.tipo, pais: contacto.pais, ciudad: contacto.ciudad, direccion: contacto.direccion, contacto: contacto.contacto, email: contacto.email, telefono: contacto.telefono });
-    setDialogOpen(true);
-  };
-
-  const handleSave = async () => {
-    if (!form.nombre.trim()) return;
+  const handleSaveContacto = async (data: any, editingId: string | null) => {
     try {
       if (editingId) {
-        await updateContacto.mutateAsync({ id: editingId, cliente_id: cliente.id, ...form });
+        await updateContacto.mutateAsync({ id: editingId, cliente_id: cliente.id, ...data });
         toast({ title: "Contacto actualizado" });
       } else {
-        await createContacto.mutateAsync({ cliente_id: cliente.id, ...form });
+        await createContacto.mutateAsync({ cliente_id: cliente.id, ...data });
         toast({ title: "Contacto creado" });
       }
-      setDialogOpen(false);
-      setForm(emptyContacto);
-      setEditingId(null);
+      setContactDialogOpen(false);
+      setEditingContacto(null);
     } catch (error: any) {
       toast({ title: "Error", description: error.message, variant: "destructive" });
     }
   };
 
-  // Double-confirm delete
-  const startDelete = (contactoId: string) => {
-    setDeletingContactoId(contactoId);
-    setDeleteStep(1);
-  };
-
-  const confirmFirstDelete = () => setDeleteStep(2);
-
-  const confirmFinalDelete = async () => {
-    if (!deletingContactoId) return;
+  const handleSaveCliente = async (data: { nombre: string; rfc: string; direccion: string; ciudad: string; estado: string; cp: string; contacto: string; email: string; telefono: string }) => {
     try {
-      await deleteContacto.mutateAsync({ id: deletingContactoId, cliente_id: cliente.id });
-      toast({ title: "Contacto eliminado" });
-    } catch (error: any) {
-      toast({ title: "Error", description: error.message, variant: "destructive" });
-    } finally {
-      setDeleteStep(0);
-      setDeletingContactoId(null);
-    }
-  };
-
-  const cancelDelete = () => {
-    setDeleteStep(0);
-    setDeletingContactoId(null);
-  };
-
-  // Edit client
-  const openEditCliente = () => {
-    setClienteForm({
-      nombre: cliente.nombre, rfc: cliente.rfc, direccion: cliente.direccion,
-      ciudad: cliente.ciudad, estado: cliente.estado, cp: cliente.cp,
-      contacto: cliente.contacto, email: cliente.email, telefono: cliente.telefono,
-    });
-    setEditClienteOpen(true);
-  };
-
-  const handleSaveCliente = async () => {
-    if (!clienteForm.nombre.trim()) return;
-    try {
-      await updateCliente.mutateAsync({ id: cliente.id, ...clienteForm });
+      await updateCliente.mutateAsync({ id: cliente.id, ...data });
       registrarActividad.mutate({
-        accion: 'editar',
-        modulo: 'clientes',
-        entidad_id: cliente.id,
-        entidad_nombre: clienteForm.nombre,
+        accion: 'editar', modulo: 'clientes',
+        entidad_id: cliente.id, entidad_nombre: data.nombre,
       });
       toast({ title: "Cliente actualizado" });
       setEditClienteOpen(false);
@@ -158,15 +85,19 @@ export default function ClienteDetalle() {
     }
   };
 
-  const tipoBadgeVariant = (tipo: TipoContacto) => {
-    switch (tipo) {
-      case 'Proveedor': return 'default';
-      case 'Exportador': return 'secondary';
-      case 'Importador': return 'outline';
+  const startDelete = (contactoId: string) => { setDeletingContactoId(contactoId); setDeleteStep(1); };
+  const cancelDelete = () => { setDeleteStep(0); setDeletingContactoId(null); };
+  const confirmFinalDelete = async () => {
+    if (!deletingContactoId) return;
+    try {
+      await deleteContacto.mutateAsync({ id: deletingContactoId, cliente_id: cliente.id });
+      toast({ title: "Contacto eliminado" });
+    } catch (error: any) {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+    } finally {
+      cancelDelete();
     }
   };
-
-  const isSaving = createContacto.isPending || updateContacto.isPending;
 
   return (
     <div className="space-y-6">
@@ -179,13 +110,12 @@ export default function ClienteDetalle() {
           <p className="text-sm text-muted-foreground">{cliente.rfc}</p>
         </div>
         {canEdit && (
-          <Button variant="outline" size="sm" onClick={openEditCliente}>
+          <Button variant="outline" size="sm" onClick={() => setEditClienteOpen(true)}>
             <Pencil className="h-4 w-4 mr-1" /> Editar
           </Button>
         )}
       </div>
 
-      {/* Info cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <Card>
           <CardHeader className="pb-2"><CardTitle className="text-sm flex items-center gap-2"><Building2 className="h-4 w-4" />Información General</CardTitle></CardHeader>
@@ -207,162 +137,37 @@ export default function ClienteDetalle() {
         </Card>
       </div>
 
-      {/* Contacts table */}
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between pb-3">
-          <CardTitle className="text-base flex items-center gap-2"><Users className="h-4 w-4" />Proveedores / Exportadores</CardTitle>
-          {canEdit && <Button size="sm" onClick={openNew}><Plus className="h-4 w-4 mr-1" />Agregar Contacto</Button>}
-        </CardHeader>
-        <CardContent className="p-0">
-          {loadingContactos ? (
-            <div className="flex items-center justify-center py-8">
-              <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
-            </div>
-          ) : contactos.length === 0 ? (
-            <div className="p-8 text-center text-muted-foreground text-sm">
-              No hay contactos registrados. Agrega proveedores o exportadores para usarlos en embarques.
-            </div>
-          ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Nombre</TableHead>
-                  <TableHead>Tipo</TableHead>
-                  <TableHead>País / Ciudad</TableHead>
-                  <TableHead>Contacto</TableHead>
-                  <TableHead>Email</TableHead>
-                  <TableHead className="w-[80px]">Acciones</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {contactos.map(contacto => (
-                  <TableRow key={contacto.id}>
-                    <TableCell className="font-medium">{contacto.nombre}</TableCell>
-                    <TableCell><Badge variant={tipoBadgeVariant(contacto.tipo)}>{contacto.tipo}</Badge></TableCell>
-                    <TableCell className="text-xs">{contacto.pais}, {contacto.ciudad}</TableCell>
-                    <TableCell className="text-xs">{contacto.contacto}</TableCell>
-                    <TableCell className="text-xs">{contacto.email}</TableCell>
-                    <TableCell>
-                      {canEdit && (
-                        <div className="flex gap-1">
-                          <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => openEdit(contacto)}>
-                            <Pencil className="h-3.5 w-3.5" />
-                          </Button>
-                          <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={() => startDelete(contacto.id)}>
-                            <Trash2 className="h-3.5 w-3.5" />
-                          </Button>
-                        </div>
-                      )}
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          )}
-        </CardContent>
-      </Card>
+      <TablaContactos
+        contactos={contactos}
+        isLoading={loadingContactos}
+        canEdit={canEdit}
+        onAdd={() => { setEditingContacto(null); setContactDialogOpen(true); }}
+        onEdit={(c) => { setEditingContacto(c); setContactDialogOpen(true); }}
+        onDelete={startDelete}
+      />
 
-      {/* Contact Dialog */}
-      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="max-w-lg">
-          <DialogHeader>
-            <DialogTitle>{editingId ? 'Editar Contacto' : 'Nuevo Contacto'}</DialogTitle>
-            <DialogDescription>Proveedor, exportador o importador asociado a este cliente.</DialogDescription>
-          </DialogHeader>
-          <div className="grid grid-cols-2 gap-4">
-            <div className="col-span-2">
-              <Label className="text-xs">Nombre<span className="text-destructive ml-0.5">*</span></Label>
-              <Input value={form.nombre} onChange={e => handleChange('nombre', e.target.value)} className="mt-1" />
-            </div>
-            <div>
-              <Label className="text-xs">Tipo</Label>
-              <Select value={form.tipo} onValueChange={v => handleChange('tipo', v)}>
-                <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
-                <SelectContent>{TIPOS_CONTACTO.map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}</SelectContent>
-              </Select>
-            </div>
-            <div><Label className="text-xs">Tax ID</Label><Input value={form.rfc} onChange={e => handleChange('rfc', e.target.value)} className="mt-1" /></div>
-            <div><Label className="text-xs">País</Label><Input value={form.pais} onChange={e => handleChange('pais', e.target.value)} className="mt-1" /></div>
-            <div><Label className="text-xs">Ciudad</Label><Input value={form.ciudad} onChange={e => handleChange('ciudad', e.target.value)} className="mt-1" /></div>
-            <div className="col-span-2"><Label className="text-xs">Dirección</Label><Input value={form.direccion} onChange={e => handleChange('direccion', e.target.value)} className="mt-1" /></div>
-            <div><Label className="text-xs">Contacto</Label><Input value={form.contacto} onChange={e => handleChange('contacto', e.target.value)} className="mt-1" /></div>
-            <div><Label className="text-xs">Email</Label><Input value={form.email} onChange={e => handleChange('email', e.target.value)} className="mt-1" /></div>
-            <div><Label className="text-xs">Teléfono</Label><Input value={form.telefono} onChange={e => handleChange('telefono', e.target.value)} className="mt-1" /></div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setDialogOpen(false)}>Cancelar</Button>
-            <Button onClick={handleSave} disabled={!form.nombre.trim() || isSaving}>
-              {isSaving ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : null}
-              {editingId ? 'Guardar Cambios' : 'Agregar'}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <DialogContacto
+        open={contactDialogOpen}
+        onOpenChange={setContactDialogOpen}
+        contacto={editingContacto}
+        onSave={handleSaveContacto}
+        isSaving={createContacto.isPending || updateContacto.isPending}
+      />
 
-      {/* Edit Client Dialog */}
-      <Dialog open={editClienteOpen} onOpenChange={setEditClienteOpen}>
-        <DialogContent className="max-w-lg">
-          <DialogHeader>
-            <DialogTitle>Editar Cliente</DialogTitle>
-            <DialogDescription>Modifica los datos generales del cliente.</DialogDescription>
-          </DialogHeader>
-          <div className="grid grid-cols-2 gap-4">
-            <div className="col-span-2">
-              <Label className="text-xs">Nombre / Razón Social<span className="text-destructive ml-0.5">*</span></Label>
-              <Input value={clienteForm.nombre} onChange={e => setClienteForm(p => ({ ...p, nombre: e.target.value }))} className="mt-1" />
-            </div>
-            <div><Label className="text-xs">RFC</Label><Input value={clienteForm.rfc} onChange={e => setClienteForm(p => ({ ...p, rfc: e.target.value }))} className="mt-1" /></div>
-            <div><Label className="text-xs">Código Postal</Label><Input value={clienteForm.cp} onChange={e => setClienteForm(p => ({ ...p, cp: e.target.value }))} className="mt-1" /></div>
-            <div className="col-span-2"><Label className="text-xs">Dirección</Label><Input value={clienteForm.direccion} onChange={e => setClienteForm(p => ({ ...p, direccion: e.target.value }))} className="mt-1" /></div>
-            <div><Label className="text-xs">Ciudad</Label><Input value={clienteForm.ciudad} onChange={e => setClienteForm(p => ({ ...p, ciudad: e.target.value }))} className="mt-1" /></div>
-            <div><Label className="text-xs">Estado</Label><Input value={clienteForm.estado} onChange={e => setClienteForm(p => ({ ...p, estado: e.target.value }))} className="mt-1" /></div>
-            <div><Label className="text-xs">Contacto</Label><Input value={clienteForm.contacto} onChange={e => setClienteForm(p => ({ ...p, contacto: e.target.value }))} className="mt-1" /></div>
-            <div><Label className="text-xs">Email</Label><Input value={clienteForm.email} onChange={e => setClienteForm(p => ({ ...p, email: e.target.value }))} className="mt-1" /></div>
-            <div><Label className="text-xs">Teléfono</Label><Input value={clienteForm.telefono} onChange={e => setClienteForm(p => ({ ...p, telefono: e.target.value }))} className="mt-1" /></div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setEditClienteOpen(false)}>Cancelar</Button>
-            <Button onClick={handleSaveCliente} disabled={!clienteForm.nombre.trim() || updateCliente.isPending}>
-              {updateCliente.isPending ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : null}
-              Guardar Cambios
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <DialogEditarCliente
+        open={editClienteOpen}
+        onOpenChange={setEditClienteOpen}
+        cliente={{ nombre: cliente.nombre, rfc: cliente.rfc, direccion: cliente.direccion, ciudad: cliente.ciudad, estado: cliente.estado, cp: cliente.cp, contacto: cliente.contacto, email: cliente.email, telefono: cliente.telefono }}
+        onSave={handleSaveCliente}
+        isSaving={updateCliente.isPending}
+      />
 
-      {/* Double-confirm delete: Step 1 */}
-      <AlertDialog open={deleteStep === 1} onOpenChange={open => !open && cancelDelete()}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>¿Eliminar este contacto?</AlertDialogTitle>
-            <AlertDialogDescription>
-              Estás a punto de eliminar este contacto del cliente. ¿Deseas continuar?
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel onClick={cancelDelete}>Cancelar</AlertDialogCancel>
-            <AlertDialogAction onClick={confirmFirstDelete}>Sí, continuar</AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-
-      {/* Double-confirm delete: Step 2 */}
-      <AlertDialog open={deleteStep === 2} onOpenChange={open => !open && cancelDelete()}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Confirmación final</AlertDialogTitle>
-            <AlertDialogDescription>
-              Esta acción <strong>no se puede deshacer</strong>. El contacto será eliminado permanentemente. ¿Confirmas la eliminación?
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel onClick={cancelDelete}>Cancelar</AlertDialogCancel>
-            <AlertDialogAction onClick={confirmFinalDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
-              Eliminar definitivamente
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <DeleteContactoDialogs
+        step={deleteStep}
+        onConfirmFirst={() => setDeleteStep(2)}
+        onConfirmFinal={confirmFinalDelete}
+        onCancel={cancelDelete}
+      />
     </div>
   );
 }
