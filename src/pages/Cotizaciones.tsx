@@ -1,5 +1,7 @@
 import { useState, useMemo } from "react";
-import { Plus, Trash2, MoreHorizontal, Pencil } from "lucide-react";
+import { Plus, Trash2, MoreHorizontal, Pencil, Download, TrendingUp, CheckCircle, XCircle, BarChart3 } from "lucide-react";
+import { exportToCsv } from "@/lib/exportCsv";
+import { KpiCard } from "@/components/operaciones/KpiCard";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -55,6 +57,15 @@ export default function Cotizaciones() {
 
   const paginated = filtered.slice(page * pageSize, (page + 1) * pageSize);
   const totalPages = Math.ceil(filtered.length / pageSize);
+
+  // KPI de conversión
+  const kpis = useMemo(() => {
+    const total = filtered.length;
+    const aceptadas = filtered.filter(c => c.estado === "Aceptada" || c.estado === "Embarcada").length;
+    const rechazadas = filtered.filter(c => c.estado === "Rechazada").length;
+    const tasa = total > 0 ? ((aceptadas / total) * 100).toFixed(1) : "0.0";
+    return { total, aceptadas, rechazadas, tasa };
+  }, [filtered]);
 
   const columns: DataTableColumn<Cotizacion>[] = useMemo(() => {
     const cols: DataTableColumn<Cotizacion>[] = [
@@ -113,11 +124,46 @@ export default function Cotizaciones() {
           <h1 className="text-2xl font-bold">Cotizaciones</h1>
           <p className="text-sm text-muted-foreground">{filtered.length} cotizaciones encontradas</p>
         </div>
-        {canEdit && (
-          <Button onClick={() => navigate("/cotizaciones/nueva")}>
-            <Plus className="h-4 w-4 mr-2" /> Nueva Cotización
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={() => exportToCsv(
+            `cotizaciones_${new Date().toISOString().slice(0, 10)}.csv`,
+            [
+              { key: "folio", label: "Folio" },
+              { key: "cliente", label: "Cliente" },
+              { key: "modo", label: "Modo" },
+              { key: "ruta", label: "Ruta" },
+              { key: "subtotal", label: "Subtotal" },
+              { key: "moneda", label: "Moneda" },
+              { key: "estado", label: "Estado" },
+              { key: "vigencia", label: "Vigencia" },
+            ],
+            filtered.map(c => ({
+              folio: c.folio,
+              cliente: c.cliente_nombre,
+              modo: c.modo,
+              ruta: `${c.origen || ""} → ${c.destino || ""}`,
+              subtotal: c.subtotal,
+              moneda: c.moneda,
+              estado: c.estado,
+              vigencia: c.fecha_vigencia || "",
+            })),
+          )}>
+            <Download className="h-4 w-4 mr-2" /> Exportar CSV
           </Button>
-        )}
+          {canEdit && (
+            <Button onClick={() => navigate("/cotizaciones/nueva")}>
+              <Plus className="h-4 w-4 mr-2" /> Nueva Cotización
+            </Button>
+          )}
+        </div>
+      </div>
+
+      {/* KPI Cards */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <KpiCard titulo="Total cotizaciones" valor={kpis.total} icono={BarChart3} color="blue" />
+        <KpiCard titulo="Aceptadas" valor={kpis.aceptadas} icono={CheckCircle} color="emerald" />
+        <KpiCard titulo="Rechazadas" valor={kpis.rechazadas} icono={XCircle} color="red" />
+        <KpiCard titulo="Tasa de conversión" valor={`${kpis.tasa}%`} icono={TrendingUp} color="violet" />
       </div>
 
       <Card>

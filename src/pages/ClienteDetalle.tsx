@@ -1,13 +1,18 @@
 import { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { ArrowLeft, Pencil, Building2, Loader2 } from "lucide-react";
+import { ArrowLeft, Pencil, Building2, Loader2, Ship, FileText, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { useCliente, useContactosCliente, useCreateContacto, useUpdateContacto, useDeleteContacto, useUpdateCliente } from "@/hooks/useClientes";
+import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useCliente, useContactosCliente, useCreateContacto, useUpdateContacto, useDeleteContacto, useUpdateCliente, useEmbarquesCliente, useCotizacionesCliente } from "@/hooks/useClientes";
 import { useToast } from "@/hooks/use-toast";
 import { usePermissions } from "@/hooks/usePermissions";
 import { useRegistrarActividad } from "@/hooks/useBitacora";
 import { getErrorMessage } from "@/lib/errorUtils";
+import { formatDate, getEstadoColor } from "@/lib/helpers";
+import { formatCurrency } from "@/lib/formatters";
+import { DataTable, type DataTableColumn } from "@/components/DataTable";
 import type { Tables, Enums } from "@/integrations/supabase/types";
 type ContactoCliente = Tables<'contactos_cliente'>;
 type TipoContacto = Enums<'tipo_contacto'>;
@@ -23,6 +28,8 @@ export default function ClienteDetalle() {
 
   const { data: cliente, isLoading: loadingCliente } = useCliente(id);
   const { data: contactos = [], isLoading: loadingContactos } = useContactosCliente(id);
+  const { data: embarquesCliente = [], isLoading: loadingEmbarques } = useEmbarquesCliente(id);
+  const { data: cotizacionesCliente = [], isLoading: loadingCotizaciones } = useCotizacionesCliente(id);
   const createContacto = useCreateContacto();
   const updateContacto = useUpdateContacto();
   const deleteContacto = useDeleteContacto();
@@ -30,14 +37,9 @@ export default function ClienteDetalle() {
   const { canEdit } = usePermissions();
   const registrarActividad = useRegistrarActividad();
 
-  // Contact dialog
   const [contactDialogOpen, setContactDialogOpen] = useState(false);
   const [editingContacto, setEditingContacto] = useState<ContactoCliente | null>(null);
-
-  // Edit client dialog
   const [editClienteOpen, setEditClienteOpen] = useState(false);
-
-  // Delete contact
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [deletingContactoId, setDeletingContactoId] = useState<string | null>(null);
 
@@ -99,6 +101,28 @@ export default function ClienteDetalle() {
     }
   };
 
+  const shortName = (raw: string | null) => raw?.split(/[,—]/)[0].trim() || "-";
+
+  type EmbarqueCliente = (typeof embarquesCliente)[number];
+  const embarqueColumns: DataTableColumn<EmbarqueCliente>[] = [
+    { key: "expediente", header: "Expediente", width: "w-[110px]", className: "font-medium", render: (e) => e.expediente },
+    { key: "modo", header: "Modo", width: "w-[90px]", className: "text-xs", render: (e) => e.modo },
+    { key: "ruta", header: "Origen → Destino", width: "min-w-[160px]", className: "text-xs", render: (e) => `${shortName(e.puerto_origen || e.aeropuerto_origen || e.ciudad_origen)} → ${shortName(e.puerto_destino || e.aeropuerto_destino || e.ciudad_destino)}` },
+    { key: "estado", header: "Estado", width: "w-[100px]", render: (e) => <Badge variant="secondary" className={`text-xs ${getEstadoColor(e.estado)}`}>{e.estado}</Badge> },
+    { key: "etd", header: "ETD", width: "w-[90px]", className: "text-xs", render: (e) => formatDate(e.etd || "") },
+    { key: "eta", header: "ETA", width: "w-[90px]", className: "text-xs", render: (e) => formatDate(e.eta || "") },
+  ];
+
+  type CotizacionCliente = (typeof cotizacionesCliente)[number];
+  const cotizacionColumns: DataTableColumn<CotizacionCliente>[] = [
+    { key: "folio", header: "Folio", width: "w-[100px]", className: "font-medium", render: (c) => c.folio },
+    { key: "modo", header: "Modo", width: "w-[80px]", className: "text-xs", render: (c) => c.modo },
+    { key: "ruta", header: "Origen → Destino", width: "min-w-[160px]", className: "text-xs", render: (c) => `${c.origen || "-"} → ${c.destino || "-"}` },
+    { key: "subtotal", header: "Subtotal", width: "w-[110px]", className: "text-right text-xs", headerClassName: "text-right", render: (c) => formatCurrency(c.subtotal, c.moneda) },
+    { key: "estado", header: "Estado", width: "w-[100px]", render: (c) => <Badge variant="secondary" className={`text-xs ${getEstadoColor(c.estado)}`}>{c.estado}</Badge> },
+    { key: "fecha", header: "Fecha", width: "w-[100px]", className: "text-xs", render: (c) => formatDate(c.created_at) },
+  ];
+
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-4">
@@ -116,35 +140,104 @@ export default function ClienteDetalle() {
         )}
       </div>
 
+      {/* Summary cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <Card>
-          <CardHeader className="pb-2"><CardTitle className="text-sm flex items-center gap-2"><Building2 className="h-4 w-4" />Información General</CardTitle></CardHeader>
-          <CardContent className="text-sm space-y-1">
-            <p>{cliente.direccion}</p>
-            <p>{cliente.ciudad}, {cliente.estado} {cliente.cp}</p>
-            <div className="pt-2 border-t mt-2 space-y-1">
-              <p><span className="text-muted-foreground">Contacto:</span> {cliente.contacto}</p>
-              <p><span className="text-muted-foreground">Email:</span> {cliente.email}</p>
-              <p><span className="text-muted-foreground">Tel:</span> {cliente.telefono}</p>
+          <CardContent className="p-4 flex items-center gap-3">
+            <div className="rounded-xl p-3 bg-blue-50 text-blue-600">
+              <Ship className="h-5 w-5" />
+            </div>
+            <div>
+              <p className="text-xs text-muted-foreground">Embarques</p>
+              <p className="text-xl font-bold">{embarquesCliente.length}</p>
             </div>
           </CardContent>
         </Card>
         <Card>
-          <CardContent className="p-4">
-            <p className="text-xs text-muted-foreground">Contactos Registrados</p>
-            <p className="text-xl font-bold">{contactos.length}</p>
+          <CardContent className="p-4 flex items-center gap-3">
+            <div className="rounded-xl p-3 bg-violet-50 text-violet-600">
+              <FileText className="h-5 w-5" />
+            </div>
+            <div>
+              <p className="text-xs text-muted-foreground">Cotizaciones</p>
+              <p className="text-xl font-bold">{cotizacionesCliente.length}</p>
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-4 flex items-center gap-3">
+            <div className="rounded-xl p-3 bg-emerald-50 text-emerald-600">
+              <Users className="h-5 w-5" />
+            </div>
+            <div>
+              <p className="text-xs text-muted-foreground">Contactos</p>
+              <p className="text-xl font-bold">{contactos.length}</p>
+            </div>
           </CardContent>
         </Card>
       </div>
 
-      <TablaContactos
-        contactos={contactos}
-        isLoading={loadingContactos}
-        canEdit={canEdit}
-        onAdd={() => { setEditingContacto(null); setContactDialogOpen(true); }}
-        onEdit={(c) => { setEditingContacto(c); setContactDialogOpen(true); }}
-        onDelete={startDelete}
-      />
+      <Tabs defaultValue="informacion">
+        <TabsList>
+          <TabsTrigger value="informacion">Información</TabsTrigger>
+          <TabsTrigger value="embarques">Embarques ({embarquesCliente.length})</TabsTrigger>
+          <TabsTrigger value="cotizaciones">Cotizaciones ({cotizacionesCliente.length})</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="informacion" className="space-y-6">
+          <Card>
+            <CardHeader className="pb-2"><CardTitle className="text-sm flex items-center gap-2"><Building2 className="h-4 w-4" />Información General</CardTitle></CardHeader>
+            <CardContent className="text-sm space-y-1">
+              <p>{cliente.direccion}</p>
+              <p>{cliente.ciudad}, {cliente.estado} {cliente.cp}</p>
+              <div className="pt-2 border-t mt-2 space-y-1">
+                <p><span className="text-muted-foreground">Contacto:</span> {cliente.contacto}</p>
+                <p><span className="text-muted-foreground">Email:</span> {cliente.email}</p>
+                <p><span className="text-muted-foreground">Tel:</span> {cliente.telefono}</p>
+              </div>
+            </CardContent>
+          </Card>
+
+          <TablaContactos
+            contactos={contactos}
+            isLoading={loadingContactos}
+            canEdit={canEdit}
+            onAdd={() => { setEditingContacto(null); setContactDialogOpen(true); }}
+            onEdit={(c) => { setEditingContacto(c); setContactDialogOpen(true); }}
+            onDelete={startDelete}
+          />
+        </TabsContent>
+
+        <TabsContent value="embarques">
+          <Card>
+            <CardContent className="p-0">
+              <DataTable
+                columns={embarqueColumns}
+                data={embarquesCliente}
+                isLoading={loadingEmbarques}
+                emptyMessage="Sin embarques registrados"
+                onRowClick={(e) => navigate(`/embarques/${e.id}`)}
+                rowKey={(e) => e.id}
+              />
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="cotizaciones">
+          <Card>
+            <CardContent className="p-0">
+              <DataTable
+                columns={cotizacionColumns}
+                data={cotizacionesCliente}
+                isLoading={loadingCotizaciones}
+                emptyMessage="Sin cotizaciones registradas"
+                onRowClick={(c) => navigate(`/cotizaciones/${c.id}`)}
+                rowKey={(c) => c.id}
+              />
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
 
       <DialogContacto
         open={contactDialogOpen}

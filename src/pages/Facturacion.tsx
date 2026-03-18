@@ -1,4 +1,6 @@
 import { useState, useMemo } from "react";
+import { Download } from "lucide-react";
+import { exportToCsv } from "@/lib/exportCsv";
 import SearchInput from "@/components/SearchInput";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -110,6 +112,31 @@ export default function Facturacion() {
           <Card>
             <CardContent className="p-4 flex flex-wrap gap-3">
               <SearchInput value={search} onChange={(v) => { setSearch(v); setPage(0); }} placeholder="Buscar factura o cliente..." className="flex-1 min-w-[200px]" />
+              <Button variant="outline" onClick={() => exportToCsv(
+                `facturas_${new Date().toISOString().slice(0, 10)}.csv`,
+                [
+                  { key: "numero", label: "# Factura" },
+                  { key: "expediente", label: "Expediente" },
+                  { key: "cliente", label: "Cliente" },
+                  { key: "total", label: "Monto" },
+                  { key: "moneda", label: "Moneda" },
+                  { key: "emision", label: "Emisión" },
+                  { key: "vencimiento", label: "Vencimiento" },
+                  { key: "estado", label: "Estado" },
+                ],
+                filtered.map(f => ({
+                  numero: f.numero,
+                  expediente: f.expediente,
+                  cliente: f.cliente_nombre,
+                  total: f.total,
+                  moneda: f.moneda,
+                  emision: f.fecha_emision,
+                  vencimiento: f.fecha_vencimiento,
+                  estado: f.estado,
+                })),
+              )}>
+                <Download className="h-4 w-4 mr-2" /> Exportar CSV
+              </Button>
               <Select value={filterEstado} onValueChange={setFilterEstado}>
                 <SelectTrigger className="w-[160px]"><SelectValue /></SelectTrigger>
                 <SelectContent>

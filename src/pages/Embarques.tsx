@@ -1,5 +1,6 @@
 import { useState, useMemo } from "react";
-import { Plus, Trash2, MoreHorizontal, Pencil, Copy, Ship } from "lucide-react";
+import { Plus, Trash2, MoreHorizontal, Pencil, Copy, Ship, Download } from "lucide-react";
+import { exportToCsv } from "@/lib/exportCsv";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -161,11 +162,40 @@ export default function Embarques() {
           <h1 className="text-2xl font-bold">Embarques</h1>
           <p className="text-sm text-muted-foreground">{displayCount} embarques encontrados</p>
         </div>
-        {canEdit && !isEmptyState && (
-          <Button onClick={() => navigate("/embarques/nuevo")}>
-            <Plus className="h-4 w-4 mr-2" /> Nuevo Embarque
-          </Button>
-        )}
+        <div className="flex gap-2">
+          {!isEmptyState && (
+            <Button variant="outline" onClick={() => exportToCsv(
+              `embarques_${new Date().toISOString().slice(0, 10)}.csv`,
+              [
+                { key: "expediente", label: "Expediente" },
+                { key: "cliente_nombre", label: "Cliente" },
+                { key: "modo", label: "Modo" },
+                { key: "origen", label: "Origen" },
+                { key: "destino", label: "Destino" },
+                { key: "estado", label: "Estado" },
+                { key: "etd", label: "ETD" },
+                { key: "eta", label: "ETA" },
+              ],
+              filtered.map(e => ({
+                expediente: e.expediente,
+                cliente_nombre: e.cliente_nombre,
+                modo: e.modo,
+                origen: e.puerto_origen || e.aeropuerto_origen || e.ciudad_origen || "",
+                destino: e.puerto_destino || e.aeropuerto_destino || e.ciudad_destino || "",
+                estado: calcularEstadoEmbarque(e.modo, e.tipo, e.etd, e.eta, e.estado),
+                etd: e.etd || "",
+                eta: e.eta || "",
+              })),
+            )}>
+              <Download className="h-4 w-4 mr-2" /> Exportar CSV
+            </Button>
+          )}
+          {canEdit && !isEmptyState && (
+            <Button onClick={() => navigate("/embarques/nuevo")}>
+              <Plus className="h-4 w-4 mr-2" /> Nuevo Embarque
+            </Button>
+          )}
+        </div>
       </div>
 
       {isEmptyState ? (
