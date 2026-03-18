@@ -90,6 +90,49 @@ export default function Embarques() {
 
   const { data: operadoresUnicos = [] } = useOperadoresDistintos();
 
+  // Liquidation status per embarque
+  const embarqueIds = useMemo(() => embarques.map(e => e.id), [embarques]);
+  const { data: liquidacionMap = {} } = useQuery({
+    queryKey: ['embarques-liquidacion', embarqueIds],
+    queryFn: async () => {
+      if (embarqueIds.length === 0) return {};
+      const { data, error } = await supabase
+        .from('conceptos_costo')
+        .select('embarque_id, estado_liquidacion')
+        .in('embarque_id', embarqueIds);
+      if (error) throw error;
+      const map: Record<string, { total: number; pagados: number }> = {};
+      (data ?? []).forEach((c) => {
+        if (!map[c.embarque_id]) map[c.embarque_id] = { total: 0, pagados: 0 };
+        map[c.embarque_id].total++;
+        if (c.estado_liquidacion === 'Pagado') map[c.embarque_id].pagados++;
+      });
+      return map;
+    },
+    enabled: embarqueIds.length > 0,
+  });
+
+  // Documentos incompletos per embarque
+  const { data: docsMap = {} } = useQuery({
+    queryKey: ['embarques-docs-status', embarqueIds],
+    queryFn: async () => {
+      if (embarqueIds.length === 0) return {};
+      const { data, error } = await supabase
+        .from('documentos_embarque')
+        .select('embarque_id, estado')
+        .in('embarque_id', embarqueIds);
+      if (error) throw error;
+      const map: Record<string, { total: number; pendientes: number }> = {};
+      (data ?? []).forEach((d) => {
+        if (!map[d.embarque_id]) map[d.embarque_id] = { total: 0, pendientes: 0 };
+        map[d.embarque_id].total++;
+        if (d.estado !== 'Recibido' && d.estado !== 'Validado') map[d.embarque_id].pendientes++;
+      });
+      return map;
+    },
+    enabled: embarqueIds.length > 0,
+  });
+
   const handleEliminar = async () => {
     if (!embarqueAEliminar) return;
     const { id, expediente, cliente_nombre, modo } = embarqueAEliminar;
@@ -107,9 +150,40 @@ export default function Embarques() {
     setEmbarqueAEliminar(null);
   };
 
+  const getLiquidacionBadge = (embarqueId: string) => {
+    const info = liquidacionMap[embarqueId];
+    if (!info || info.total === 0) return <span className="text-xs text-muted-foreground">—</span>;
+    if (info.pagados === info.total) return <Badge variant="secondary" className="text-xs bg-emerald-100 text-emerald-700 border-emerald-300">Pagado</Badge>;
+    if (info.pagados > 0) return <Badge variant="secondary" className="text-xs bg-amber-100 text-amber-700 border-amber-300">Parcial</Badge>;
+    return <Badge variant="secondary" className="text-xs bg-red-100 text-red-700 border-red-300">Pendiente</Badge>;
+  };
+
   const columns: DataTableColumn<EmbarqueRow>[] = useMemo(() => {
     const base: DataTableColumn<EmbarqueRow>[] = [
-      { key: "expediente", header: "Expediente", width: "w-[110px]", className: "font-medium", sticky: true, sortable: true, sortValue: (e) => e.expediente, render: (e) => e.expediente },
+      {
+        key: "expediente", header: "Expediente", width: "w-[130px]", className: "font-medium", sticky: true, sortable: true, sortValue: (e) => e.expediente,
+        render: (e) => {
+          const docInfo = docsMap[e.id];
+          const hayPendientes = docInfo && docInfo.pendientes > 0;
+          return (
+            <span className="flex items-center gap-1">
+              {e.expediente}
+              {hayPendientes && (
+                <TooltipProvider delayDuration={200}>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <AlertTriangle className="h-3.5 w-3.5 text-amber-500 flex-shrink-0" />
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p className="text-xs">{docInfo.pendientes} doc(s) pendientes</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              )}
+            </span>
+          );
+        },
+      },
       { key: "bl", header: "BL Master", width: "w-[120px]", className: "text-xs", render: (e) => e.bl_master || "-" },
       { key: "cliente", header: "Cliente", width: "min-w-[160px]", className: "max-w-[180px] truncate", sortable: true, sortValue: (e) => e.cliente_nombre, render: (e) => e.cliente_nombre },
       {
@@ -128,6 +202,9 @@ export default function Embarques() {
           const estado = calcularEstadoEmbarque(e.modo, e.tipo, e.etd, e.eta, e.estado);
           return <Badge variant="secondary" className={`text-xs ${getEstadoColor(estado)}`}>{estado}</Badge>;
         },
+      },
+      {
+        key: "liquidacion", header: "Costos", width: "w-[90px]", render: (e) => getLiquidacionBadge(e.id),
       },
     ];
 
@@ -161,7 +238,7 @@ export default function Embarques() {
     }
 
     return base;
-  }, [canEdit]);
+  }, [canEdit, liquidacionMap, docsMap]);
 
   const isEmptyState = !isLoading && totalCount === 0 && !debouncedSearch && filterModo === "todos" && filterEstado === "todos" && filterCliente === "todos" && filterOperador === "todos";
 
