@@ -71,6 +71,7 @@ const App = () => (
               <Route path="/cotizaciones/nueva" element={<NuevaCotizacion />} />
               <Route path="/cotizaciones/:id" element={<CotizacionDetalle />} />
               <Route path="/cotizaciones/:id/editar" element={<EditarCotizacion />} />
+              <Route path="/reportes/rentabilidad" element={<Reportes />} />
               
               <Route path="/changelog" element={<Changelog />} />
               <Route path="/bitacora" element={<Bitacora />} />

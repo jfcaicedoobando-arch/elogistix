@@ -130,6 +130,7 @@ export function AppSidebar() {
       <SidebarContent className="px-2 py-4">
         {renderGroup("Dashboards", dashboardItems)}
         {renderGroup("Gestión", gestionItems)}
+        {renderGroup("Reportes", reportesItems)}
         {renderGroup("Directorio", directorioItems)}
         {renderGroup("Sistema", sistemaItems)}
         {role === "admin" && renderGroup("Administración", adminItems)}
