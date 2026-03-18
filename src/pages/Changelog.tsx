@@ -13,6 +13,13 @@ interface ChangelogEntry {
 
 const changelog: ChangelogEntry[] = [
   {
+    version: "5.26.0",
+    date: "2026-03-18",
+    type: "minor",
+    title: "6 mejoras operativas de esfuerzo bajo",
+    description: "1) Badge de alertas en sidebar (embarques en demora + facturas vencidas). 2) Filtro de rango de fechas ETD/ETA en Embarques. 3) Indicador de estado de liquidación de costos (Pagado/Parcial/Pendiente) en tabla de Embarques. 4) Cards de resumen financiero (Facturado, Pendiente, Profit) en detalle del cliente. 5) Botón Duplicar cotización. 6) Indicador de documentos incompletos en la tabla de Embarques.",
+  },
+  {
     version: "5.25.1",
     date: "2026-03-18",
     type: "patch",
