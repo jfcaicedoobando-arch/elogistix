@@ -223,6 +223,7 @@ export default function EmbarqueDetalle() {
           <TabsTrigger value="documentos">Documentos</TabsTrigger>
           <TabsTrigger value="costos">Costos</TabsTrigger>
           <TabsTrigger value="facturacion">Facturación</TabsTrigger>
+          <TabsTrigger value="tracking">Tracking</TabsTrigger>
           <TabsTrigger value="notas">Notas y Actividad</TabsTrigger>
         </TabsList>
 
