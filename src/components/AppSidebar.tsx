@@ -69,6 +69,7 @@ export function AppSidebar() {
   const collapsed = state === "collapsed";
   const location = useLocation();
   const { user, role, signOut } = useAuth();
+  const { totalAlertas } = useSidebarAlerts();
 
   const isActive = (path: string) => {
     if (path === "/") return location.pathname === "/";
