@@ -158,6 +158,14 @@ export default function Cotizaciones() {
         </div>
       </div>
 
+      {/* KPI Cards */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <KpiCard titulo="Total cotizaciones" valor={kpis.total} icono={BarChart3} color="blue" />
+        <KpiCard titulo="Aceptadas" valor={kpis.aceptadas} icono={CheckCircle} color="emerald" />
+        <KpiCard titulo="Rechazadas" valor={kpis.rechazadas} icono={XCircle} color="red" />
+        <KpiCard titulo="Tasa de conversión" valor={`${kpis.tasa}%`} icono={TrendingUp} color="violet" />
+      </div>
+
       <Card>
         <CardContent className="p-4">
           <div className="flex flex-wrap gap-4">

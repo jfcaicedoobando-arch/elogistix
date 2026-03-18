@@ -170,6 +170,38 @@ export function useClientesForSelect() {
   });
 }
 
+export function useEmbarquesCliente(clienteId: string | undefined) {
+  return useQuery({
+    queryKey: queryKeys.clientes.embarques(clienteId!),
+    enabled: !!clienteId,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("embarques")
+        .select("id, expediente, modo, tipo, estado, etd, eta, puerto_origen, puerto_destino, aeropuerto_origen, aeropuerto_destino, ciudad_origen, ciudad_destino, cliente_nombre")
+        .eq("cliente_id", clienteId!)
+        .order("created_at", { ascending: false });
+      if (error) throw error;
+      return data ?? [];
+    },
+  });
+}
+
+export function useCotizacionesCliente(clienteId: string | undefined) {
+  return useQuery({
+    queryKey: queryKeys.clientes.cotizaciones(clienteId!),
+    enabled: !!clienteId,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("cotizaciones")
+        .select("id, folio, modo, tipo, origen, destino, estado, subtotal, moneda, created_at")
+        .eq("cliente_id", clienteId!)
+        .order("created_at", { ascending: false });
+      if (error) throw error;
+      return data ?? [];
+    },
+  });
+}
+
 export function useUpdateCliente() {
   const queryClient = useQueryClient();
   return useMutation({

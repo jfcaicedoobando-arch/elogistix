@@ -25,6 +25,8 @@ export const queryKeys = {
     detail: (id: string) => ['clientes', id] as const,
     select: ['clientes', 'select'] as const,
     contactos: (id: string) => ['contactos_cliente', id] as const,
+    embarques: (id: string) => ['clientes', 'embarques', id] as const,
+    cotizaciones: (id: string) => ['clientes', 'cotizaciones', id] as const,
   },
   facturas: {
     all: ['facturas'] as const,
