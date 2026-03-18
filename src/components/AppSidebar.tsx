@@ -43,6 +43,10 @@ const gestionItems = [
   { title: "Facturación", url: "/facturacion", icon: FileText },
 ];
 
+const reportesItems = [
+  { title: "Rentabilidad", url: "/reportes/rentabilidad", icon: BarChart3 },
+];
+
 const directorioItems = [
   { title: "Clientes", url: "/clientes", icon: UserCheck },
   { title: "Proveedores", url: "/proveedores", icon: Truck },
