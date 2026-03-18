@@ -48,6 +48,8 @@ export default function Embarques() {
   const [filterEstado, setFilterEstado] = useState<string>("todos");
   const [filterCliente, setFilterCliente] = useState<string>("todos");
   const [filterOperador, setFilterOperador] = useState<string>("todos");
+  const [fechaDesde, setFechaDesde] = useState("");
+  const [fechaHasta, setFechaHasta] = useState("");
   const [page, setPage] = useState(0);
   const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
   const { canEdit } = usePermissions();
@@ -65,6 +67,8 @@ export default function Embarques() {
     filterOperador,
     page,
     pageSize,
+    fechaDesde,
+    fechaHasta,
   });
 
   const embarques = resultado?.data ?? [];
