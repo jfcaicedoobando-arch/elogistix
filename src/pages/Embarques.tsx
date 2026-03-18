@@ -1,12 +1,16 @@
 import { useState, useMemo } from "react";
-import { Plus, Trash2, MoreHorizontal, Pencil, Copy, Ship, Download } from "lucide-react";
+import { Plus, Trash2, MoreHorizontal, Pencil, Copy, Ship, Download, AlertTriangle } from "lucide-react";
 import { exportToCsv } from "@/lib/exportCsv";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
+import {
+  Tooltip, TooltipContent, TooltipTrigger, TooltipProvider,
+} from "@/components/ui/tooltip";
 import { useNavigate } from "react-router-dom";
 import { useEmbarquesPaginados, calcularEstadoEmbarque, useEliminarEmbarque } from "@/hooks/useEmbarques";
 import { useOperadoresDistintos } from "@/hooks/useOperadoresDistintos";
@@ -24,6 +28,8 @@ import { useDebounce } from "@/hooks/useDebounce";
 import type { EmbarqueRow } from "@/hooks/useEmbarqueUtils";
 import DoubleConfirmDeleteDialog from "@/components/DoubleConfirmDeleteDialog";
 import DialogDuplicarEmbarque from "@/components/embarque/DialogDuplicarEmbarque";
+import { supabase } from "@/integrations/supabase/client";
+import { useQuery } from "@tanstack/react-query";
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
