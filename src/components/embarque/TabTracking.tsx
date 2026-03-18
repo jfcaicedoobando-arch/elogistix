@@ -1,0 +1,187 @@
+import { useState } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Badge } from '@/components/ui/badge';
+import { Plus, MapPin, Clock, User } from 'lucide-react';
+import { useEventosEmbarque, useCreateEventoEmbarque, TIPOS_EVENTO_TRACKING } from '@/hooks/useEventosEmbarque';
+import { useAuth } from '@/contexts/AuthContext';
+import { usePermissions } from '@/hooks/usePermissions';
+import { useToast } from '@/hooks/use-toast';
+import { getErrorMessage } from '@/lib/errorUtils';
+import { format } from 'date-fns';
+import { es } from 'date-fns/locale';
+
+interface Props {
+  embarqueId: string;
+}
+
+const ICONO_EVENTO: Record<string, string> = {
+  Zarpe: '🚢',
+  Transbordo: '🔄',
+  'Arribo a Puerto': '⚓',
+  Descarga: '📦',
+  'Despacho Aduanal': '🛃',
+  Liberación: '✅',
+  'En Ruta Terrestre': '🚛',
+  Entrega: '🏁',
+  Demora: '⚠️',
+  Inspección: '🔍',
+  Otro: '📝',
+};
+
+export function TabTracking({ embarqueId }: Props) {
+  const { data: eventos = [], isLoading } = useEventosEmbarque(embarqueId);
+  const crearEvento = useCreateEventoEmbarque();
+  const { user } = useAuth();
+  const { canEdit } = usePermissions();
+  const { toast } = useToast();
+
+  const [formAbierto, setFormAbierto] = useState(false);
+  const [tipo, setTipo] = useState<string>('');
+  const [descripcion, setDescripcion] = useState('');
+  const [ubicacion, setUbicacion] = useState('');
+  const [fecha, setFecha] = useState(() => new Date().toISOString().slice(0, 16));
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!tipo) return;
+    try {
+      await crearEvento.mutateAsync({
+        embarqueId,
+        tipo,
+        descripcion,
+        ubicacion,
+        fecha: new Date(fecha).toISOString(),
+        usuario: user?.email ?? '',
+      });
+      toast({ title: 'Evento registrado' });
+      setFormAbierto(false);
+      setTipo('');
+      setDescripcion('');
+      setUbicacion('');
+      setFecha(new Date().toISOString().slice(0, 16));
+    } catch (err: unknown) {
+      toast({ title: 'Error al registrar evento', description: getErrorMessage(err), variant: 'destructive' });
+    }
+  };
+
+  return (
+    <div className="space-y-6">
+      {canEdit && (
+        <div className="flex justify-end">
+          <Button size="sm" onClick={() => setFormAbierto(!formAbierto)}>
+            <Plus className="h-4 w-4 mr-1" /> Registrar Evento
+          </Button>
+        </div>
+      )}
+
+      {formAbierto && (
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-sm">Nuevo Evento de Tracking</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Tipo de evento *</label>
+                <Select value={tipo} onValueChange={setTipo}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Seleccionar tipo..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {TIPOS_EVENTO_TRACKING.map((t) => (
+                      <SelectItem key={t} value={t}>
+                        {ICONO_EVENTO[t]} {t}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Fecha y hora *</label>
+                <Input type="datetime-local" value={fecha} onChange={(e) => setFecha(e.target.value)} required />
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Ubicación</label>
+                <Input value={ubicacion} onChange={(e) => setUbicacion(e.target.value)} placeholder="Puerto, ciudad, terminal..." />
+              </div>
+              <div className="space-y-2 md:col-span-2">
+                <label className="text-sm font-medium">Descripción</label>
+                <Textarea value={descripcion} onChange={(e) => setDescripcion(e.target.value)} placeholder="Detalles del evento..." rows={2} />
+              </div>
+              <div className="md:col-span-2 flex gap-2 justify-end">
+                <Button type="button" variant="outline" size="sm" onClick={() => setFormAbierto(false)}>Cancelar</Button>
+                <Button type="submit" size="sm" disabled={!tipo || crearEvento.isPending}>
+                  {crearEvento.isPending ? 'Guardando...' : 'Guardar Evento'}
+                </Button>
+              </div>
+            </form>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Timeline */}
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle className="text-sm">Línea de Tiempo</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {isLoading ? (
+            <p className="text-sm text-muted-foreground">Cargando eventos...</p>
+          ) : eventos.length === 0 ? (
+            <p className="text-sm text-muted-foreground text-center py-8">
+              No hay eventos de tracking registrados.
+            </p>
+          ) : (
+            <div className="relative">
+              {/* Línea vertical */}
+              <div className="absolute left-4 top-0 bottom-0 w-0.5 bg-border" />
+
+              <div className="space-y-6">
+                {eventos.map((ev, i) => (
+                  <div key={ev.id} className="relative pl-10">
+                    {/* Punto en la línea */}
+                    <div className={`absolute left-2.5 top-1 h-3.5 w-3.5 rounded-full border-2 border-background ${
+                      i === 0 ? 'bg-accent' : 'bg-muted-foreground/40'
+                    }`} />
+
+                    <div className="space-y-1">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="text-base">{ICONO_EVENTO[ev.tipo] ?? '📝'}</span>
+                        <Badge variant="secondary" className="text-xs">{ev.tipo}</Badge>
+                        <span className="text-xs text-muted-foreground flex items-center gap-1">
+                          <Clock className="h-3 w-3" />
+                          {format(new Date(ev.fecha), "dd MMM yyyy, HH:mm", { locale: es })}
+                        </span>
+                      </div>
+
+                      {ev.descripcion && (
+                        <p className="text-sm text-foreground">{ev.descripcion}</p>
+                      )}
+
+                      <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                        {ev.ubicacion && (
+                          <span className="flex items-center gap-1">
+                            <MapPin className="h-3 w-3" /> {ev.ubicacion}
+                          </span>
+                        )}
+                        {ev.usuario && (
+                          <span className="flex items-center gap-1">
+                            <User className="h-3 w-3" /> {ev.usuario}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    </div>
+  );
+}

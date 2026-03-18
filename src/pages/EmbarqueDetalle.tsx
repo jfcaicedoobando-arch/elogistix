@@ -35,6 +35,7 @@ import { TabDocumentos } from "@/components/embarque/TabDocumentos";
 import { TabCostos } from "@/components/embarque/TabCostos";
 import { TabFacturacion } from "@/components/embarque/TabFacturacion";
 import { TabNotas } from "@/components/embarque/TabNotas";
+import { TabTracking } from "@/components/embarque/TabTracking";
 import DialogDuplicarEmbarque from "@/components/embarque/DialogDuplicarEmbarque";
 import DialogEliminarEmbarque from "@/components/embarque/DialogEliminarEmbarque";
 
@@ -222,6 +223,7 @@ export default function EmbarqueDetalle() {
           <TabsTrigger value="documentos">Documentos</TabsTrigger>
           <TabsTrigger value="costos">Costos</TabsTrigger>
           <TabsTrigger value="facturacion">Facturación</TabsTrigger>
+          <TabsTrigger value="tracking">Tracking</TabsTrigger>
           <TabsTrigger value="notas">Notas y Actividad</TabsTrigger>
         </TabsList>
 
@@ -255,6 +257,10 @@ export default function EmbarqueDetalle() {
 
         <TabsContent value="facturacion">
           <TabFacturacion facturas={facturas} canEdit={canEdit} />
+        </TabsContent>
+
+        <TabsContent value="tracking">
+          <TabTracking embarqueId={id!} />
         </TabsContent>
 
         <TabsContent value="notas">

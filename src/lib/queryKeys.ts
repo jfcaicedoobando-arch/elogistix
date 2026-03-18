@@ -12,6 +12,7 @@ export const queryKeys = {
     documentos: (id: string) => ['documentos_embarque', id] as const,
     notas: (id: string) => ['notas_embarque', id] as const,
     facturas: (id: string) => ['facturas', 'embarque', id] as const,
+    eventos: (id: string) => ['eventos_embarque', id] as const,
   },
   cotizaciones: {
     all: ['cotizaciones'] as const,

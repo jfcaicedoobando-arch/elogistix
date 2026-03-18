@@ -741,6 +741,47 @@ export type Database = {
           },
         ]
       }
+      eventos_embarque: {
+        Row: {
+          created_at: string
+          descripcion: string
+          embarque_id: string
+          fecha: string
+          id: string
+          tipo: Database["public"]["Enums"]["tipo_evento_tracking"]
+          ubicacion: string
+          usuario: string
+        }
+        Insert: {
+          created_at?: string
+          descripcion?: string
+          embarque_id: string
+          fecha?: string
+          id?: string
+          tipo: Database["public"]["Enums"]["tipo_evento_tracking"]
+          ubicacion?: string
+          usuario?: string
+        }
+        Update: {
+          created_at?: string
+          descripcion?: string
+          embarque_id?: string
+          fecha?: string
+          id?: string
+          tipo?: Database["public"]["Enums"]["tipo_evento_tracking"]
+          ubicacion?: string
+          usuario?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "eventos_embarque_embarque_id_fkey"
+            columns: ["embarque_id"]
+            isOneToOne: false
+            referencedRelation: "embarques"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       facturas: {
         Row: {
           cliente_id: string
@@ -1077,6 +1118,18 @@ export type Database = {
       moneda: "MXN" | "USD" | "EUR"
       origen_proveedor: "Nacional" | "Extranjero"
       tipo_contacto: "Proveedor" | "Exportador" | "Importador"
+      tipo_evento_tracking:
+        | "Zarpe"
+        | "Transbordo"
+        | "Arribo a Puerto"
+        | "Descarga"
+        | "Despacho Aduanal"
+        | "Liberación"
+        | "En Ruta Terrestre"
+        | "Entrega"
+        | "Demora"
+        | "Inspección"
+        | "Otro"
       tipo_nota: "nota" | "cambio_estado" | "documento" | "factura" | "sistema"
       tipo_operacion:
         | "Importación"
@@ -1266,6 +1319,19 @@ export const Constants = {
       moneda: ["MXN", "USD", "EUR"],
       origen_proveedor: ["Nacional", "Extranjero"],
       tipo_contacto: ["Proveedor", "Exportador", "Importador"],
+      tipo_evento_tracking: [
+        "Zarpe",
+        "Transbordo",
+        "Arribo a Puerto",
+        "Descarga",
+        "Despacho Aduanal",
+        "Liberación",
+        "En Ruta Terrestre",
+        "Entrega",
+        "Demora",
+        "Inspección",
+        "Otro",
+      ],
       tipo_nota: ["nota", "cambio_estado", "documento", "factura", "sistema"],
       tipo_operacion: [
         "Importación",
