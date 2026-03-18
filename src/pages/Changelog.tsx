@@ -13,6 +13,13 @@ interface ChangelogEntry {
 
 const changelog: ChangelogEntry[] = [
   {
+    version: "5.25.0",
+    date: "2026-03-18",
+    type: "minor",
+    title: "Módulo de Tracking Events por Embarque",
+    description: "Nueva pestaña 'Tracking' en el detalle de cada embarque con línea de tiempo vertical de eventos tipificados (Zarpe, Transbordo, Arribo, Despacho Aduanal, Entrega, etc.). Permite registrar eventos con fecha, ubicación y descripción para auditar tiempos reales de tránsito.",
+  },
+  {
     version: "5.24.0",
     date: "2026-03-18",
     type: "minor",
