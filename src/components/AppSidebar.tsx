@@ -101,6 +101,15 @@ export function AppSidebar() {
                   >
                     <item.icon className="h-4 w-4" />
                     {!collapsed && <span>{item.title}</span>}
+                    {/* Badge de alertas en Principal */}
+                    {item.url === "/" && totalAlertas > 0 && (
+                      <Badge
+                        variant="destructive"
+                        className="ml-auto h-5 min-w-5 px-1 text-[10px] font-bold rounded-full"
+                      >
+                        {totalAlertas}
+                      </Badge>
+                    )}
                   </NavLink>
                 </SidebarMenuButton>
               </SidebarMenuItem>
