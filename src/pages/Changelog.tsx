@@ -13,6 +13,13 @@ interface ChangelogEntry {
 
 const changelog: ChangelogEntry[] = [
   {
+    version: "5.25.1",
+    date: "2026-03-18",
+    type: "patch",
+    title: "Tracking automático por cambio de estado",
+    description: "Al avanzar el estado de un embarque (manual o auto-calculado por ETD/ETA), se inserta automáticamente un evento en la línea de tiempo de Tracking con el tipo correspondiente (Zarpe, Arribo a Puerto, Despacho Aduanal, Entrega, etc.).",
+  },
+  {
     version: "5.25.0",
     date: "2026-03-18",
     type: "minor",

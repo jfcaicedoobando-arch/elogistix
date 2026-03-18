@@ -94,6 +94,29 @@ export function useDuplicarEmbarque() {
   });
 }
 
+// ─── Mapeo estado → tipo evento tracking ─────────────────
+const ESTADO_A_EVENTO: Record<string, string> = {
+  'Confirmado': 'Otro',
+  'En Tránsito': 'Zarpe',
+  'Arribo': 'Arribo a Puerto',
+  'En Aduana': 'Despacho Aduanal',
+  'Entregado': 'Entrega',
+  'EIR': 'Liberación',
+  'Cerrado': 'Otro',
+};
+
+async function insertarEventoTracking(embarqueId: string, nuevoEstado: string, usuario: string) {
+  const tipoEvento = ESTADO_A_EVENTO[nuevoEstado] ?? 'Otro';
+  await supabase.from('eventos_embarque').insert({
+    embarque_id: embarqueId,
+    tipo: tipoEvento as any,
+    descripcion: `Estado cambiado a "${nuevoEstado}"`,
+    ubicacion: '',
+    fecha: new Date().toISOString(),
+    usuario,
+  });
+}
+
 // ─── Avanzar Estado ──────────────────────────────────────
 export function useAvanzarEstadoEmbarque() {
   const queryClient = useQueryClient();
@@ -114,11 +137,15 @@ export function useAvanzarEstadoEmbarque() {
           usuario: usuarioEmail,
         });
       if (errorNota) throw errorNota;
+
+      // Evento de tracking automático
+      await insertarEventoTracking(embarqueId, nuevoEstado, usuarioEmail);
     },
     onSuccess: (_resultado, vars) => {
       queryClient.invalidateQueries({ queryKey: queryKeys.embarques.all });
       queryClient.invalidateQueries({ queryKey: queryKeys.embarques.detail(vars.embarqueId) });
       queryClient.invalidateQueries({ queryKey: queryKeys.embarques.notas(vars.embarqueId) });
+      queryClient.invalidateQueries({ queryKey: queryKeys.embarques.eventos(vars.embarqueId) });
     },
   });
 }
@@ -134,10 +161,14 @@ export function useSyncEstadoEmbarque() {
         .update({ estado: nuevoEstado as EmbarqueInsert['estado'] })
         .eq('id', embarqueId);
       if (error) throw error;
+
+      // Evento de tracking automático (sync automático por ETD/ETA)
+      await insertarEventoTracking(embarqueId, nuevoEstado, 'sistema');
     },
     onSuccess: (_r, vars) => {
       queryClient.invalidateQueries({ queryKey: queryKeys.embarques.detail(vars.embarqueId) });
       queryClient.invalidateQueries({ queryKey: queryKeys.embarques.all });
+      queryClient.invalidateQueries({ queryKey: queryKeys.embarques.eventos(vars.embarqueId) });
     },
   });
 }
