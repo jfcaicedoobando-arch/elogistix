@@ -161,10 +161,14 @@ export function useSyncEstadoEmbarque() {
         .update({ estado: nuevoEstado as EmbarqueInsert['estado'] })
         .eq('id', embarqueId);
       if (error) throw error;
+
+      // Evento de tracking automático (sync automático por ETD/ETA)
+      await insertarEventoTracking(embarqueId, nuevoEstado, 'sistema');
     },
     onSuccess: (_r, vars) => {
       queryClient.invalidateQueries({ queryKey: queryKeys.embarques.detail(vars.embarqueId) });
       queryClient.invalidateQueries({ queryKey: queryKeys.embarques.all });
+      queryClient.invalidateQueries({ queryKey: queryKeys.embarques.eventos(vars.embarqueId) });
     },
   });
 }
