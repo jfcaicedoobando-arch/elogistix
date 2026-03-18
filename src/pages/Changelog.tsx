@@ -13,6 +13,13 @@ interface ChangelogEntry {
 
 const changelog: ChangelogEntry[] = [
   {
+    version: "5.23.0",
+    date: "2026-03-18",
+    type: "minor",
+    title: "Mejoras estratégicas: historial por cliente, exportar CSV, KPIs de conversión",
+    description: "Detalle del cliente ahora incluye tabs con historial de embarques y cotizaciones vinculados, cards de resumen. Botón 'Exportar CSV' en Embarques, Cotizaciones y Facturas para descargar datos filtrados. Widget de 4 KPIs de tasa de conversión en la página de Cotizaciones (total, aceptadas, rechazadas, % conversión). Los tipos de cambio ya se pre-llenan automáticamente desde la API al crear embarques.",
+  },
+  {
     version: "5.22.1",
     date: "2026-03-13",
     type: "patch",
