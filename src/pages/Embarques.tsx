@@ -240,7 +240,7 @@ export default function Embarques() {
     return base;
   }, [canEdit, liquidacionMap, docsMap]);
 
-  const isEmptyState = !isLoading && totalCount === 0 && !debouncedSearch && filterModo === "todos" && filterEstado === "todos" && filterCliente === "todos" && filterOperador === "todos";
+  const isEmptyState = !isLoading && totalCount === 0 && !debouncedSearch && filterModo === "todos" && filterEstado === "todos" && filterCliente === "todos" && filterOperador === "todos" && !fechaDesde && !fechaHasta;
 
   return (
     <div className="space-y-6">
