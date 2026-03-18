@@ -96,6 +96,19 @@ export default function Cotizaciones() {
               <DropdownMenuItem onClick={(e) => { e.stopPropagation(); navigate(`/cotizaciones/${c.id}/editar`); }}>
                 <Pencil className="mr-2 h-4 w-4" /> Editar
               </DropdownMenuItem>
+              <DropdownMenuItem onClick={(e) => {
+                e.stopPropagation();
+                duplicarCotizacion.mutate(c.id, {
+                  onSuccess: (data) => {
+                    toast({ title: "Cotización duplicada", description: `Se creó ${data.folio} como Borrador.` });
+                  },
+                  onError: (err) => {
+                    toast({ title: "Error al duplicar", description: getErrorMessage(err), variant: "destructive" });
+                  },
+                });
+              }}>
+                <Copy className="mr-2 h-4 w-4" /> Duplicar
+              </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem className="text-destructive focus:text-destructive" onClick={(e) => { e.stopPropagation(); setCotizacionAEliminar(c.id); }}>
                 <Trash2 className="mr-2 h-4 w-4" /> Eliminar
