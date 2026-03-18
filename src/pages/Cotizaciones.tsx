@@ -58,6 +58,15 @@ export default function Cotizaciones() {
   const paginated = filtered.slice(page * pageSize, (page + 1) * pageSize);
   const totalPages = Math.ceil(filtered.length / pageSize);
 
+  // KPI de conversión
+  const kpis = useMemo(() => {
+    const total = filtered.length;
+    const aceptadas = filtered.filter(c => c.estado === "Aceptada" || c.estado === "Embarcada").length;
+    const rechazadas = filtered.filter(c => c.estado === "Rechazada").length;
+    const tasa = total > 0 ? ((aceptadas / total) * 100).toFixed(1) : "0.0";
+    return { total, aceptadas, rechazadas, tasa };
+  }, [filtered]);
+
   const columns: DataTableColumn<Cotizacion>[] = useMemo(() => {
     const cols: DataTableColumn<Cotizacion>[] = [
       { key: "folio", header: "Folio", width: "w-[100px]", className: "font-medium", sticky: true, sortable: true, sortValue: (c) => c.folio, render: (c) => c.folio },
