@@ -346,6 +346,8 @@ export default function Embarques() {
                     {operadoresUnicos.map(op => <SelectItem key={op} value={op}>{op}</SelectItem>)}
                   </SelectContent>
                 </Select>
+                <Input type="date" value={fechaDesde} onChange={(e) => { setFechaDesde(e.target.value); setPage(0); }} className="w-[150px]" placeholder="Desde (ETD)" title="ETD desde" />
+                <Input type="date" value={fechaHasta} onChange={(e) => { setFechaHasta(e.target.value); setPage(0); }} className="w-[150px]" placeholder="Hasta (ETA)" title="ETA hasta" />
               </div>
             </CardContent>
           </Card>
