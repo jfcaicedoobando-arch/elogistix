@@ -38,12 +38,14 @@ interface UseEmbarquesPaginadosParams {
   filterOperador: string;
   page: number;
   pageSize: number;
+  fechaDesde?: string;
+  fechaHasta?: string;
 }
 
 export function useEmbarquesPaginados({
-  search, filterModo, filterEstado, filterCliente, filterOperador, page, pageSize,
+  search, filterModo, filterEstado, filterCliente, filterOperador, page, pageSize, fechaDesde, fechaHasta,
 }: UseEmbarquesPaginadosParams) {
-  const filters = { search, filterModo, filterEstado, filterCliente, filterOperador, page, pageSize };
+  const filters = { search, filterModo, filterEstado, filterCliente, filterOperador, page, pageSize, fechaDesde, fechaHasta };
 
   return useQuery({
     queryKey: queryKeys.embarques.list(filters),
@@ -69,6 +71,12 @@ export function useEmbarquesPaginados({
       }
       if (filterOperador !== 'todos') {
         query = query.eq('operador', filterOperador);
+      }
+      if (fechaDesde) {
+        query = query.gte('etd', fechaDesde);
+      }
+      if (fechaHasta) {
+        query = query.lte('eta', fechaHasta);
       }
 
       const from = page * pageSize;
