@@ -35,6 +35,7 @@ import { TabDocumentos } from "@/components/embarque/TabDocumentos";
 import { TabCostos } from "@/components/embarque/TabCostos";
 import { TabFacturacion } from "@/components/embarque/TabFacturacion";
 import { TabNotas } from "@/components/embarque/TabNotas";
+import { TabTracking } from "@/components/embarque/TabTracking";
 import DialogDuplicarEmbarque from "@/components/embarque/DialogDuplicarEmbarque";
 import DialogEliminarEmbarque from "@/components/embarque/DialogEliminarEmbarque";
 
