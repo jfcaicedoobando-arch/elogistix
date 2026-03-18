@@ -11,6 +11,7 @@ import {
   LogOut,
   History,
   Settings,
+  BarChart3,
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import elogistixLogo from "@/assets/elogistix-logo.jpg";
