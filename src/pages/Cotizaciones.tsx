@@ -124,11 +124,38 @@ export default function Cotizaciones() {
           <h1 className="text-2xl font-bold">Cotizaciones</h1>
           <p className="text-sm text-muted-foreground">{filtered.length} cotizaciones encontradas</p>
         </div>
-        {canEdit && (
-          <Button onClick={() => navigate("/cotizaciones/nueva")}>
-            <Plus className="h-4 w-4 mr-2" /> Nueva Cotización
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={() => exportToCsv(
+            `cotizaciones_${new Date().toISOString().slice(0, 10)}.csv`,
+            [
+              { key: "folio", label: "Folio" },
+              { key: "cliente", label: "Cliente" },
+              { key: "modo", label: "Modo" },
+              { key: "ruta", label: "Ruta" },
+              { key: "subtotal", label: "Subtotal" },
+              { key: "moneda", label: "Moneda" },
+              { key: "estado", label: "Estado" },
+              { key: "vigencia", label: "Vigencia" },
+            ],
+            filtered.map(c => ({
+              folio: c.folio,
+              cliente: c.cliente_nombre,
+              modo: c.modo,
+              ruta: `${c.origen || ""} → ${c.destino || ""}`,
+              subtotal: c.subtotal,
+              moneda: c.moneda,
+              estado: c.estado,
+              vigencia: c.fecha_vigencia || "",
+            })),
+          )}>
+            <Download className="h-4 w-4 mr-2" /> Exportar CSV
           </Button>
-        )}
+          {canEdit && (
+            <Button onClick={() => navigate("/cotizaciones/nueva")}>
+              <Plus className="h-4 w-4 mr-2" /> Nueva Cotización
+            </Button>
+          )}
+        </div>
       </div>
 
       <Card>
