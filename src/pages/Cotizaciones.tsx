@@ -41,6 +41,7 @@ export default function Cotizaciones() {
   const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
   const { canEdit } = usePermissions();
   const deleteCotizacion = useDeleteCotizacion();
+  const duplicarCotizacion = useDuplicarCotizacion();
   const { toast } = useToast();
   const [cotizacionAEliminar, setCotizacionAEliminar] = useState<string | null>(null);
 
