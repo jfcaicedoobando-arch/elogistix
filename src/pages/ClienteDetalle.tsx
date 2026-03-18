@@ -1,11 +1,12 @@
 import { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { ArrowLeft, Pencil, Building2, Loader2, Ship, FileText, Users } from "lucide-react";
+import { ArrowLeft, Pencil, Building2, Loader2, Ship, FileText, Users, DollarSign, TrendingUp, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useCliente, useContactosCliente, useCreateContacto, useUpdateContacto, useDeleteContacto, useUpdateCliente, useEmbarquesCliente, useCotizacionesCliente } from "@/hooks/useClientes";
+import { useClienteFinancials } from "@/hooks/useClienteFinancials";
 import { useToast } from "@/hooks/use-toast";
 import { usePermissions } from "@/hooks/usePermissions";
 import { useRegistrarActividad } from "@/hooks/useBitacora";
@@ -30,6 +31,7 @@ export default function ClienteDetalle() {
   const { data: contactos = [], isLoading: loadingContactos } = useContactosCliente(id);
   const { data: embarquesCliente = [], isLoading: loadingEmbarques } = useEmbarquesCliente(id);
   const { data: cotizacionesCliente = [], isLoading: loadingCotizaciones } = useCotizacionesCliente(id);
+  const { data: financials } = useClienteFinancials(id);
   const createContacto = useCreateContacto();
   const updateContacto = useUpdateContacto();
   const deleteContacto = useDeleteContacto();
@@ -141,7 +143,7 @@ export default function ClienteDetalle() {
       </div>
 
       {/* Summary cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
         <Card>
           <CardContent className="p-4 flex items-center gap-3">
             <div className="rounded-xl p-3 bg-blue-50 text-blue-600">
@@ -172,6 +174,39 @@ export default function ClienteDetalle() {
             <div>
               <p className="text-xs text-muted-foreground">Contactos</p>
               <p className="text-xl font-bold">{contactos.length}</p>
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-4 flex items-center gap-3">
+            <div className="rounded-xl p-3 bg-cyan-50 text-cyan-600">
+              <DollarSign className="h-5 w-5" />
+            </div>
+            <div>
+              <p className="text-xs text-muted-foreground">Facturado</p>
+              <p className="text-lg font-bold">{formatCurrency(financials?.facturadoUSD ?? 0, 'USD')}</p>
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-4 flex items-center gap-3">
+            <div className="rounded-xl p-3 bg-amber-50 text-amber-600">
+              <AlertCircle className="h-5 w-5" />
+            </div>
+            <div>
+              <p className="text-xs text-muted-foreground">Pendiente</p>
+              <p className="text-lg font-bold">{formatCurrency(financials?.pendienteUSD ?? 0, 'USD')}</p>
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-4 flex items-center gap-3">
+            <div className="rounded-xl p-3 bg-green-50 text-green-600">
+              <TrendingUp className="h-5 w-5" />
+            </div>
+            <div>
+              <p className="text-xs text-muted-foreground">Profit</p>
+              <p className="text-lg font-bold">{formatCurrency(financials?.profitUSD ?? 0, 'USD')}</p>
             </div>
           </CardContent>
         </Card>

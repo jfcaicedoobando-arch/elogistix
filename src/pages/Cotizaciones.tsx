@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react";
-import { Plus, Trash2, MoreHorizontal, Pencil, Download, TrendingUp, CheckCircle, XCircle, BarChart3 } from "lucide-react";
+import { Plus, Trash2, MoreHorizontal, Pencil, Download, TrendingUp, CheckCircle, XCircle, BarChart3, Copy } from "lucide-react";
 import { exportToCsv } from "@/lib/exportCsv";
 import { KpiCard } from "@/components/operaciones/KpiCard";
 import { Card, CardContent } from "@/components/ui/card";
@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/select";
 import { useNavigate } from "react-router-dom";
 import { useCotizaciones, useDeleteCotizacion } from "@/hooks/useCotizaciones";
+import { useDuplicarCotizacion } from "@/hooks/useDuplicarCotizacion";
 import { getErrorMessage } from "@/lib/errorUtils";
 import { useClientesForSelect } from "@/hooks/useClientes";
 import { usePermissions } from "@/hooks/usePermissions";
@@ -40,6 +41,7 @@ export default function Cotizaciones() {
   const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
   const { canEdit } = usePermissions();
   const deleteCotizacion = useDeleteCotizacion();
+  const duplicarCotizacion = useDuplicarCotizacion();
   const { toast } = useToast();
   const [cotizacionAEliminar, setCotizacionAEliminar] = useState<string | null>(null);
 
@@ -93,6 +95,19 @@ export default function Cotizaciones() {
             <DropdownMenuContent align="end">
               <DropdownMenuItem onClick={(e) => { e.stopPropagation(); navigate(`/cotizaciones/${c.id}/editar`); }}>
                 <Pencil className="mr-2 h-4 w-4" /> Editar
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={(e) => {
+                e.stopPropagation();
+                duplicarCotizacion.mutate(c.id, {
+                  onSuccess: (data) => {
+                    toast({ title: "Cotización duplicada", description: `Se creó ${data.folio} como Borrador.` });
+                  },
+                  onError: (err) => {
+                    toast({ title: "Error al duplicar", description: getErrorMessage(err), variant: "destructive" });
+                  },
+                });
+              }}>
+                <Copy className="mr-2 h-4 w-4" /> Duplicar
               </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem className="text-destructive focus:text-destructive" onClick={(e) => { e.stopPropagation(); setCotizacionAEliminar(c.id); }}>

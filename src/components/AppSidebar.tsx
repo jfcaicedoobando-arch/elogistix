@@ -17,6 +17,7 @@ import { NavLink } from "@/components/NavLink";
 import elogistixLogo from "@/assets/elogistix-logo.jpg";
 import { useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
+import { useSidebarAlerts } from "@/hooks/useSidebarAlerts";
 import {
   Sidebar,
   SidebarContent,
@@ -31,6 +32,7 @@ import {
 } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
+import { Badge } from "@/components/ui/badge";
 
 const dashboardItems = [
   { title: "Principal", url: "/", icon: LayoutDashboard },
@@ -67,6 +69,7 @@ export function AppSidebar() {
   const collapsed = state === "collapsed";
   const location = useLocation();
   const { user, role, signOut } = useAuth();
+  const { totalAlertas } = useSidebarAlerts();
 
   const isActive = (path: string) => {
     if (path === "/") return location.pathname === "/";
@@ -98,6 +101,15 @@ export function AppSidebar() {
                   >
                     <item.icon className="h-4 w-4" />
                     {!collapsed && <span>{item.title}</span>}
+                    {/* Badge de alertas en Principal */}
+                    {item.url === "/" && totalAlertas > 0 && (
+                      <Badge
+                        variant="destructive"
+                        className="ml-auto h-5 min-w-5 px-1 text-[10px] font-bold rounded-full"
+                      >
+                        {totalAlertas}
+                      </Badge>
+                    )}
                   </NavLink>
                 </SidebarMenuButton>
               </SidebarMenuItem>
