@@ -31,6 +31,7 @@ export default function ClienteDetalle() {
   const { data: contactos = [], isLoading: loadingContactos } = useContactosCliente(id);
   const { data: embarquesCliente = [], isLoading: loadingEmbarques } = useEmbarquesCliente(id);
   const { data: cotizacionesCliente = [], isLoading: loadingCotizaciones } = useCotizacionesCliente(id);
+  const { data: financials } = useClienteFinancials(id);
   const createContacto = useCreateContacto();
   const updateContacto = useUpdateContacto();
   const deleteContacto = useDeleteContacto();
