@@ -1,58 +1,16 @@
 
 
-## Plan: Reporte de Rentabilidad por Cliente (P&L)
+## Plan: Usar expediente del origen al duplicar
 
-### Resumen
+### Cambio único en `src/hooks/useEmbarques.ts`
 
-Nueva pagina `/reportes/rentabilidad` con tabla agrupada por cliente mostrando venta, costo, profit y margen acumulados de sus embarques, filtrable por rango de fechas y modo de transporte. Incluye grafica de barras Top 10 clientes por profit.
+En el loop de `useDuplicarEmbarque` (líneas 257-262), reemplazar la llamada a `supabase.rpc('generar_expediente')` por usar directamente `embarqueOrigen.expediente`:
 
----
+- **Eliminar** líneas 258-262 (la llamada RPC y el manejo de error)
+- **Cambiar** línea 268 `expediente: expediente as string` → `expediente: embarqueOrigen.expediente`
+- En el push final al array `creados`, usar `embarqueOrigen.expediente` en lugar de `expediente as string`
 
-### 1. RPC server-side para agregacion
+### Cambio en `src/pages/Changelog.tsx`
 
-Crear una funcion RPC `profit_por_cliente` que agrupe `conceptos_venta` y `conceptos_costo` (en USD) por `cliente_id`/`cliente_nombre`, con filtros opcionales de rango de fechas (basado en `embarques.eta`) y modo de transporte. Retorna: `cliente_id`, `cliente_nombre`, `total_embarques`, `venta_usd`, `costo_usd`.
-
-Esto evita traer todos los registros al cliente y resuelve el limite de 1000 filas.
-
-**Migracion SQL necesaria.**
-
-### 2. Hook `useRentabilidadClientes`
-
-Nuevo archivo `src/hooks/useRentabilidadClientes.ts`:
-- Acepta parametros: `fechaDesde`, `fechaHasta`, `modo` (opcional)
-- Llama a la RPC `profit_por_cliente` con esos filtros
-- Calcula `profit` y `margen` en el cliente con `calcularUtilidad` / `calcularMargen` de `financialUtils`
-- Agrega query key en `queryKeys.ts` bajo `reportes.rentabilidadClientes`
-
-### 3. Pagina `src/pages/Reportes.tsx`
-
-Nueva pagina con:
-- **Filtros**: Date range picker (fecha desde / hasta, default: mes actual), select de modo de transporte (Todos / Maritimo / Aereo / Terrestre)
-- **4 KPI cards** arriba: Total Clientes con operaciones, Revenue total USD, Profit total USD, Margen promedio %
-- **Tabla** con columnas: Cliente, Embarques, Venta USD, Costo USD, Profit USD, Margen % (con badge coloreado). Ordenable por profit. Click en fila navega a `/clientes/:id`
-- **Grafica Top 10**: `BarChart` de Recharts (ya instalado) mostrando los 10 clientes con mayor profit. Usa `ChartContainer` existente
-- Boton "Exportar CSV" reutilizando `exportToCsv`
-
-### 4. Ruta y navegacion
-
-- `App.tsx`: agregar ruta `/reportes/rentabilidad` con lazy load
-- `AppSidebar.tsx`: agregar grupo "Reportes" entre Gestion y Directorio con entrada "Rentabilidad" (icono `BarChart3`)
-
-### 5. Changelog
-
-Entrada v5.24.0 — "Nuevo reporte de Rentabilidad por Cliente con P&L agrupado, filtros de fecha/modo, grafica Top 10 y exportacion CSV"
-
----
-
-### Archivos
-
-| Accion | Archivo |
-|--------|---------|
-| Migracion | Nueva RPC `profit_por_cliente` |
-| Nuevo | `src/hooks/useRentabilidadClientes.ts` |
-| Nuevo | `src/pages/Reportes.tsx` |
-| Editar | `src/App.tsx` (ruta) |
-| Editar | `src/components/AppSidebar.tsx` (nav) |
-| Editar | `src/lib/queryKeys.ts` (key) |
-| Editar | `src/pages/Changelog.tsx` |
+Entrada v4.15.1 — "Duplicar embarque ahora conserva el mismo expediente del origen"
 

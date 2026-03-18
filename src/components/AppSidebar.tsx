@@ -11,6 +11,7 @@ import {
   LogOut,
   History,
   Settings,
+  BarChart3,
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import elogistixLogo from "@/assets/elogistix-logo.jpg";
@@ -40,6 +41,10 @@ const gestionItems = [
   { title: "Cotizaciones", url: "/cotizaciones", icon: ClipboardList },
   { title: "Embarques", url: "/embarques", icon: Ship },
   { title: "Facturación", url: "/facturacion", icon: FileText },
+];
+
+const reportesItems = [
+  { title: "Rentabilidad", url: "/reportes/rentabilidad", icon: BarChart3 },
 ];
 
 const directorioItems = [
@@ -125,6 +130,7 @@ export function AppSidebar() {
       <SidebarContent className="px-2 py-4">
         {renderGroup("Dashboards", dashboardItems)}
         {renderGroup("Gestión", gestionItems)}
+        {renderGroup("Reportes", reportesItems)}
         {renderGroup("Directorio", directorioItems)}
         {renderGroup("Sistema", sistemaItems)}
         {role === "admin" && renderGroup("Administración", adminItems)}

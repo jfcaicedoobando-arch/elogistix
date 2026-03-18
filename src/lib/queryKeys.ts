@@ -67,5 +67,6 @@ export const queryKeys = {
   reportes: {
     conceptos: ['reportes', 'conceptos'] as const,
     cotizaciones: ['reportes', 'cotizaciones'] as const,
+    rentabilidadClientes: (filtros: { fechaDesde?: string; fechaHasta?: string; modo?: string }) => ['reportes', 'rentabilidad', filtros] as const,
   },
 } as const;

@@ -1008,6 +1008,16 @@ export type Database = {
           operador: string
         }[]
       }
+      profit_por_cliente: {
+        Args: { _fecha_desde?: string; _fecha_hasta?: string; _modo?: string }
+        Returns: {
+          cliente_id: string
+          cliente_nombre: string
+          costo_usd: number
+          total_embarques: number
+          venta_usd: number
+        }[]
+      }
       profit_por_embarque: {
         Args: never
         Returns: {

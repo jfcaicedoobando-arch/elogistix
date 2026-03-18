@@ -13,6 +13,13 @@ interface ChangelogEntry {
 
 const changelog: ChangelogEntry[] = [
   {
+    version: "5.24.0",
+    date: "2026-03-18",
+    type: "minor",
+    title: "Reporte de Rentabilidad por Cliente (P&L)",
+    description: "Nueva página de Reportes con P&L agrupado por cliente. Incluye filtros de rango de fechas y modo de transporte, 4 KPIs ejecutivos (clientes, revenue, profit, margen), gráfica Top 10 clientes por profit, tabla ordenable con navegación al detalle del cliente, y exportación CSV.",
+  },
+  {
     version: "5.23.0",
     date: "2026-03-18",
     type: "minor",
