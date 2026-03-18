@@ -17,6 +17,7 @@ import { NavLink } from "@/components/NavLink";
 import elogistixLogo from "@/assets/elogistix-logo.jpg";
 import { useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
+import { useSidebarAlerts } from "@/hooks/useSidebarAlerts";
 import {
   Sidebar,
   SidebarContent,
@@ -31,6 +32,7 @@ import {
 } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
+import { Badge } from "@/components/ui/badge";
 
 const dashboardItems = [
   { title: "Principal", url: "/", icon: LayoutDashboard },
