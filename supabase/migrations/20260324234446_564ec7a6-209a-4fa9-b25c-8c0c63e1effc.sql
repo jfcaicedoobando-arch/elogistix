@@ -1,0 +1,1 @@
+UPDATE public.cotizaciones SET estado = 'Aceptada' WHERE folio = 'COT-2026-0007' AND estado = 'Embarcada';
