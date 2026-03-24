@@ -1,16 +1,20 @@
 
 
-## Plan: Usar expediente del origen al duplicar
+## Correccion: Cotizacion COT-2026-0007
 
-### Cambio único en `src/hooks/useEmbarques.ts`
+### Problema
+La cotizacion COT-2026-0007 quedo en estado "Embarcada" pero no tiene embarques activos asociados, lo que la deja en un estado inconsistente.
 
-En el loop de `useDuplicarEmbarque` (líneas 257-262), reemplazar la llamada a `supabase.rpc('generar_expediente')` por usar directamente `embarqueOrigen.expediente`:
+### Solucion
+Ejecutar un UPDATE directo (no migracion de schema) para revertir el estado a "Aceptada":
 
-- **Eliminar** líneas 258-262 (la llamada RPC y el manejo de error)
-- **Cambiar** línea 268 `expediente: expediente as string` → `expediente: embarqueOrigen.expediente`
-- En el push final al array `creados`, usar `embarqueOrigen.expediente` en lugar de `expediente as string`
+```sql
+UPDATE public.cotizaciones 
+SET estado = 'Aceptada' 
+WHERE folio = 'COT-2026-0007' 
+  AND estado = 'Embarcada';
+```
 
-### Cambio en `src/pages/Changelog.tsx`
-
-Entrada v4.15.1 — "Duplicar embarque ahora conserva el mismo expediente del origen"
+### Ejecucion
+Dado que es una operacion de datos (no de schema), se usara la herramienta de datos para ejecutar el UPDATE directamente en la base de datos. No se requieren cambios en codigo ni migraciones.
 
