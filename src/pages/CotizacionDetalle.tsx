@@ -50,10 +50,14 @@ export default function CotizacionDetalle() {
     rfc: '', direccion: '', ciudad: '', estado: '', cp: '',
   });
 
-  const conceptosVentaUSD = useMemo(() =>
-    cotizacion ? (cotizacion.conceptos_venta as unknown as ConceptoVentaCotizacion[]).filter(c => c.moneda === 'USD') : [], [cotizacion]);
-  const conceptosVentaMXN = useMemo(() =>
-    cotizacion ? (cotizacion.conceptos_venta as unknown as ConceptoVentaCotizacion[]).filter(c => c.moneda === 'MXN') : [], [cotizacion]);
+  const conceptosParsed = useMemo(() => {
+    if (!cotizacion) return [];
+    const raw = cotizacion.conceptos_venta;
+    const arr = typeof raw === 'string' ? JSON.parse(raw) : raw;
+    return Array.isArray(arr) ? arr as ConceptoVentaCotizacion[] : [];
+  }, [cotizacion]);
+  const conceptosVentaUSD = useMemo(() => conceptosParsed.filter(c => c.moneda === 'USD'), [conceptosParsed]);
+  const conceptosVentaMXN = useMemo(() => conceptosParsed.filter(c => c.moneda === 'MXN'), [conceptosParsed]);
 
   // Totales calculados
   const totalUSD = useMemo(() => conceptosVentaUSD.reduce((s, c) => s + c.total, 0), [conceptosVentaUSD]);

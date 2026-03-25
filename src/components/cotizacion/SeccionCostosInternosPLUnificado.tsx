@@ -275,15 +275,20 @@ function ModoDetalle({ cotizacionId, conceptosUSD, conceptosMXN }: PropsDetalle)
     if (isLoading || initialized) return;
 
     if (costosGuardados && costosGuardados.length > 0) {
+      const normalize = (s: string) => (s ?? '').trim().toLowerCase();
+      let idxUSD = 0;
+      let idxMXN = 0;
       const mapped: FilaCostoDetalle[] = costosGuardados.map((c) => {
         let venta = 0;
         let aplica_iva = false;
         if (c.moneda === "USD") {
-          const cv = conceptosUSD.find((v) => v.descripcion === c.concepto);
+          const cv = conceptosUSD.find(v => normalize(v.descripcion) === normalize(c.concepto))
+            || conceptosUSD[idxUSD++];
           venta = cv ? cv.cantidad * cv.precio_unitario : 0;
           aplica_iva = cv?.aplica_iva ?? false;
         } else {
-          const cv = conceptosMXN.find((v) => v.descripcion === c.concepto);
+          const cv = conceptosMXN.find(v => normalize(v.descripcion) === normalize(c.concepto))
+            || conceptosMXN[idxMXN++];
           venta = cv ? cv.cantidad * cv.precio_unitario : 0;
         }
         return { concepto: c.concepto, moneda: c.moneda as "USD" | "MXN", proveedor: c.proveedor, cantidad: c.cantidad, costo_unitario: c.costo_unitario, venta, aplica_iva };
