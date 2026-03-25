@@ -14,6 +14,7 @@ export const CONCEPTOS_COSTO_USD = [
   'Demoras',
   'Cargos en Destino',
   'Release',
+  'Tarifa no estibable',
   'Otro'
 ] as const;
 
