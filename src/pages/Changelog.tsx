@@ -13,6 +13,13 @@ interface ChangelogEntry {
 
 const changelog: ChangelogEntry[] = [
   {
+    version: "5.26.1",
+    date: "2026-03-25",
+    type: "patch",
+    title: "Nuevo concepto de costo USD: Tarifa no estibable",
+    description: "Se agregó 'Tarifa no estibable' al catálogo de conceptos de costo en USD, disponible en el dropdown de costos de cotizaciones.",
+  },
+  {
     version: "5.26.0",
     date: "2026-03-18",
     type: "minor",
