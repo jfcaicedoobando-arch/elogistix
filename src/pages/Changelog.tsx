@@ -13,6 +13,13 @@ interface ChangelogEntry {
 
 const changelog: ChangelogEntry[] = [
   {
+    version: "5.26.2",
+    date: "2026-03-25",
+    type: "patch",
+    title: "Bug fix: Columna Venta en costos P&L al recargar cotización",
+    description: "Se corrigió un error donde la columna 'Venta' en la sección de Costos Internos P&L mostraba $0.00 al recargar la vista de detalle de cotización. Se mejoró el parseo de conceptos de venta y el match entre costos y conceptos usando normalización case-insensitive con fallback por índice.",
+  },
+  {
     version: "5.26.1",
     date: "2026-03-25",
     type: "patch",
