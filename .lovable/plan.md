@@ -1,20 +1,12 @@
 
 
-## Correccion: Cotizacion COT-2026-0007
+## Plan: Agregar "Tarifa no estibable" al catálogo de conceptos de costo USD
 
-### Problema
-La cotizacion COT-2026-0007 quedo en estado "Embarcada" pero no tiene embarques activos asociados, lo que la deja en un estado inconsistente.
+### Cambio
 
-### Solucion
-Ejecutar un UPDATE directo (no migracion de schema) para revertir el estado a "Aceptada":
+Agregar `'Tarifa no estibable'` al array `CONCEPTOS_COSTO_USD` en `src/data/cotizacionConstants.ts`, antes de `'Otro'` (que siempre debe ser el último).
 
-```sql
-UPDATE public.cotizaciones 
-SET estado = 'Aceptada' 
-WHERE folio = 'COT-2026-0007' 
-  AND estado = 'Embarcada';
-```
+### Archivo a modificar
 
-### Ejecucion
-Dado que es una operacion de datos (no de schema), se usara la herramienta de datos para ejecutar el UPDATE directamente en la base de datos. No se requieren cambios en codigo ni migraciones.
+- `src/data/cotizacionConstants.ts` — insertar `'Tarifa no estibable'` como penúltimo elemento del array `CONCEPTOS_COSTO_USD`
 
