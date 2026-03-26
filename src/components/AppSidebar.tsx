@@ -149,6 +149,9 @@ export function AppSidebar() {
         {renderGroup("Directorio", directorioItems)}
         {renderGroup("Sistema", sistemaItems)}
         {(role === "admin" || (role as string) === "super_admin") && renderGroup("Administración", adminItems)}
+        {(role as string) === "super_admin" && renderGroup("Super Admin", [
+          { title: "Panel Admin", url: "/admin", icon: Building2 },
+        ])}
       </SidebarContent>
 
       <SidebarFooter className="border-t border-sidebar-border p-4 space-y-2">
