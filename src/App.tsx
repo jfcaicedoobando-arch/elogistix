@@ -32,11 +32,20 @@ const Bitacora = lazy(() => import("./pages/Bitacora"));
 const Usuarios = lazy(() => import("./pages/Usuarios"));
 const Configuracion = lazy(() => import("./pages/Configuracion"));
 
+// Admin pages
+const AdminDashboard = lazy(() => import("./pages/admin/AdminDashboard"));
+const AdminOrganizaciones = lazy(() => import("./pages/admin/AdminOrganizaciones"));
+const AdminOrgDetalle = lazy(() => import("./pages/admin/AdminOrgDetalle"));
+const AdminUsuarios = lazy(() => import("./pages/admin/AdminUsuarios"));
+
+// Admin layout
+import { AdminLayout } from "./components/admin/AdminLayout";
+
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      staleTime: 30_000,   // 30 seconds — prevents duplicate refetches on navigation
-      gcTime: 5 * 60_000,  // 5 minutes — keeps unused data in cache longer
+      staleTime: 30_000,
+      gcTime: 5 * 60_000,
     },
   },
 });
@@ -49,6 +58,22 @@ const App = () => (
         <Suspense fallback={<RouteLoadingFallback />}>
           <Routes>
             <Route path="/login" element={<Login />} />
+
+            {/* Admin routes — super_admin only */}
+            <Route
+              element={
+                <ProtectedRoute allowedRoles={["super_admin" as "admin"]}>
+                  <AdminLayout />
+                </ProtectedRoute>
+              }
+            >
+              <Route path="/admin" element={<AdminDashboard />} />
+              <Route path="/admin/organizaciones" element={<AdminOrganizaciones />} />
+              <Route path="/admin/organizaciones/:id" element={<AdminOrgDetalle />} />
+              <Route path="/admin/usuarios" element={<AdminUsuarios />} />
+            </Route>
+
+            {/* Regular app routes */}
             <Route
               element={
                 <ProtectedRoute>

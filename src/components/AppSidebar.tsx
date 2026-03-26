@@ -64,6 +64,9 @@ const adminItems = [
   { title: "Configuración", url: "/configuracion", icon: Settings },
 ];
 
+// Import Building2 for admin link
+import { Building2 } from "lucide-react";
+
 export function AppSidebar() {
   const { state } = useSidebar();
   const collapsed = state === "collapsed";
@@ -145,7 +148,10 @@ export function AppSidebar() {
         {renderGroup("Reportes", reportesItems)}
         {renderGroup("Directorio", directorioItems)}
         {renderGroup("Sistema", sistemaItems)}
-        {role === "admin" && renderGroup("Administración", adminItems)}
+        {(role === "admin" || (role as string) === "super_admin") && renderGroup("Administración", adminItems)}
+        {(role as string) === "super_admin" && renderGroup("Super Admin", [
+          { title: "Panel Admin", url: "/admin", icon: Building2 },
+        ])}
       </SidebarContent>
 
       <SidebarFooter className="border-t border-sidebar-border p-4 space-y-2">
@@ -165,7 +171,7 @@ export function AppSidebar() {
         </Button>
         {!collapsed && (
           <div className="text-xs text-sidebar-foreground/50">
-            v4.2.0 · Operaciones MX
+            v6.0.0 · Multi-Tenant
           </div>
         )}
       </SidebarFooter>

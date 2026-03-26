@@ -13,6 +13,7 @@ import type { Enums } from "@/integrations/supabase/types";
 type AppRole = Enums<'app_role'>;
 
 const roleBadge: Record<AppRole, string> = {
+  super_admin: "bg-primary text-primary-foreground",
   admin: "bg-destructive text-destructive-foreground",
   operador: "bg-info text-info-foreground",
   viewer: "bg-muted text-muted-foreground",

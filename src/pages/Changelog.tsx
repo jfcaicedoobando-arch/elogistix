@@ -13,6 +13,13 @@ interface ChangelogEntry {
 
 const changelog: ChangelogEntry[] = [
   {
+    version: "6.0.0",
+    date: "2026-03-26",
+    type: "major",
+    title: "Arquitectura Multi-Tenant con Super Admin",
+    description: "Migración completa a arquitectura multi-tenant. Nuevas tablas organizations y organization_members. Nuevo rol super_admin con dashboard dedicado para administrar organizaciones, usuarios y métricas globales. Todas las tablas de datos ahora incluyen organization_id con aislamiento por RLS. Funciones RPC actualizadas para filtrar por organización del usuario autenticado.",
+  },
+  {
     version: "5.26.2",
     date: "2026-03-25",
     type: "patch",
