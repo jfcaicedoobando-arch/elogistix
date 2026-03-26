@@ -64,6 +64,9 @@ const adminItems = [
   { title: "Configuración", url: "/configuracion", icon: Settings },
 ];
 
+// Import Building2 for admin link
+import { Building2 } from "lucide-react";
+
 export function AppSidebar() {
   const { state } = useSidebar();
   const collapsed = state === "collapsed";
