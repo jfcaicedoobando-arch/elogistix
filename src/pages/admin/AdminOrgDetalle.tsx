@@ -22,9 +22,6 @@ export default function AdminOrgDetalle() {
   const { id } = useParams<{ id: string }>();
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const [addDialogOpen, setAddDialogOpen] = useState(false);
-  const [newEmail, setNewEmail] = useState("");
-  const [newRole, setNewRole] = useState<AppRole>("viewer");
 
   const { data: org } = useQuery({
     queryKey: ["admin-org", id],

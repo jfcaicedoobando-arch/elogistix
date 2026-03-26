@@ -7,7 +7,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 
 export function AdminLayout() {
   const { organizations, organizationId, setActiveOrganization, isSuperAdmin } = useOrganization();
-  const navigate = useNavigate();
 
   return (
     <SidebarProvider>
