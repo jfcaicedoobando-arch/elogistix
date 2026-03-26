@@ -898,6 +898,71 @@ export type Database = {
           },
         ]
       }
+      organization_members: {
+        Row: {
+          created_at: string | null
+          id: string
+          organization_id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          organization_id: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          organization_id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "organization_members_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      organizations: {
+        Row: {
+          activo: boolean | null
+          created_at: string | null
+          id: string
+          logo_url: string | null
+          nombre: string
+          plan: string | null
+          rfc: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          activo?: boolean | null
+          created_at?: string | null
+          id?: string
+          logo_url?: string | null
+          nombre: string
+          plan?: string | null
+          rfc?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          activo?: boolean | null
+          created_at?: string | null
+          id?: string
+          logo_url?: string | null
+          nombre?: string
+          plan?: string | null
+          rfc?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       proveedores: {
         Row: {
           contacto: string
@@ -1027,6 +1092,7 @@ export type Database = {
         }
         Returns: Json
       }
+      current_user_org_id: { Args: never; Returns: string }
       duplicar_embarque_completo: {
         Args: { p_copias: Json; p_embarque_origen_id: string }
         Returns: Json
