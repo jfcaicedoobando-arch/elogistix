@@ -145,7 +145,7 @@ export function AppSidebar() {
         {renderGroup("Reportes", reportesItems)}
         {renderGroup("Directorio", directorioItems)}
         {renderGroup("Sistema", sistemaItems)}
-        {role === "admin" && renderGroup("Administración", adminItems)}
+        {(role === "admin" || (role as string) === "super_admin") && renderGroup("Administración", adminItems)}
       </SidebarContent>
 
       <SidebarFooter className="border-t border-sidebar-border p-4 space-y-2">
