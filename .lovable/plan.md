@@ -1,159 +1,72 @@
 
 
-## Plan: Migración a Arquitectura Multi-Tenant con Super Admin
+## Plan: Panel Exclusivo para Super Admin (sin membresía a organizaciones)
 
-### Resumen
+### Concepto
 
-Transformar la app single-tenant en una plataforma multi-tenant usando `organization_id` en todas las tablas de datos, con un nuevo rol `super_admin` que tiene su propio dashboard para administrar organizaciones y sus usuarios.
-
----
-
-### Fase 1 — Modelo de Datos (Migraciones SQL)
-
-**1.1 Tabla `organizations`**
-```sql
-CREATE TABLE public.organizations (
-  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  nombre text NOT NULL,
-  rfc text DEFAULT '',
-  logo_url text,
-  plan text DEFAULT 'basic',
-  activo boolean DEFAULT true,
-  created_at timestamptz DEFAULT now(),
-  updated_at timestamptz DEFAULT now()
-);
-```
-
-**1.2 Tabla `organization_members`** (vincula usuarios a organizaciones)
-```sql
-CREATE TABLE public.organization_members (
-  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  organization_id uuid NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
-  user_id uuid NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
-  role app_role NOT NULL DEFAULT 'viewer',
-  created_at timestamptz DEFAULT now(),
-  UNIQUE(organization_id, user_id)
-);
-```
-
-**1.3 Nuevo rol `super_admin`**
-```sql
-ALTER TYPE public.app_role ADD VALUE 'super_admin';
-```
-
-**1.4 Agregar `organization_id` a todas las tablas de datos**
-
-Tablas afectadas (13 tablas):
-- `embarques`, `clientes`, `proveedores`, `cotizaciones`, `facturas`
-- `conceptos_venta`, `conceptos_costo`, `conceptos_factura`
-- `contactos_cliente`, `cotizacion_costos`, `documentos_embarque`
-- `notas_embarque`, `eventos_embarque`
-
-Para cada tabla:
-```sql
-ALTER TABLE public.<tabla> ADD COLUMN organization_id uuid REFERENCES organizations(id);
--- Después de migrar datos existentes:
-ALTER TABLE public.<tabla> ALTER COLUMN organization_id SET NOT NULL;
-```
-
-**1.5 Función helper para obtener org del usuario actual**
-```sql
-CREATE FUNCTION public.current_user_org_id()
-RETURNS uuid LANGUAGE sql STABLE SECURITY DEFINER SET search_path = public AS $$
-  SELECT organization_id FROM organization_members 
-  WHERE user_id = auth.uid() LIMIT 1;
-$$;
-```
-
-**1.6 Actualizar RLS en todas las tablas**
-
-Reemplazar las políticas actuales por políticas con filtro `organization_id`:
-```sql
--- Ejemplo para embarques:
-CREATE POLICY "Tenant isolation" ON embarques
-  USING (
-    organization_id = current_user_org_id()
-    OR has_role(auth.uid(), 'super_admin')
-  );
-```
-
-**1.7 Actualizar funciones RPC existentes**
-
-Las funciones `crear_embarque_completo`, `actualizar_embarque_completo`, `duplicar_embarque_completo`, `eliminar_embarque_completo`, `profit_por_cliente`, `profit_por_embarque`, `busqueda_global` deben recibir o inferir `organization_id`.
+El Super Admin es el administrador global de la plataforma. No pertenece a ninguna organización — administra todas. Al iniciar sesión, se le redirige directamente a `/admin` en lugar de `/` (dashboard de org). El enlace "Ir a la app" se elimina ya que no tiene contexto de organización.
 
 ---
 
-### Fase 2 — Migración de Datos Existentes
+### Cambios
 
-1. Crear una organización "Elogistix" por defecto
-2. Asignar todos los registros existentes a esa organización
-3. Migrar `user_roles` existentes a `organization_members`
-4. Asignar un usuario como `super_admin`
+#### 1. Redirección post-login según rol
 
----
+**Login.tsx**: Después de un login exitoso, verificar si el usuario es `super_admin`. Si lo es, redirigir a `/admin` en vez de `/`.
 
-### Fase 3 — Contexto de Organización (Frontend)
+**ProtectedRoute.tsx**: En las rutas regulares (Layout), si el usuario es `super_admin` y no tiene membresía a ninguna org, redirigir a `/admin`.
 
-**3.1 `OrganizationContext`** — nuevo contexto React
-- Almacena la organización activa del usuario
-- Para super_admin: permite cambiar entre organizaciones
-- Expone `organizationId` que todos los hooks usan
+#### 2. OrganizationContext — Super Admin sin org propia
 
-**3.2 Actualizar `AuthContext`**
-- Agregar detección de `super_admin`
-- Cargar membresía de organización tras login
+Actualmente el super_admin carga todas las orgs y selecciona una. Mantener este comportamiento para "impersonar" orgs cuando navega dentro del panel admin (ver datos de una org específica), pero **no forzar** que tenga membresía.
 
-**3.3 Actualizar todos los hooks de datos**
-- Cada query/mutation debe incluir `organization_id` del contexto
-- Hooks afectados: `useEmbarques`, `useClientes`, `useProveedores`, `useCotizaciones`, `useFacturas`, `useDashboardData`, `useOperacionesData`, `useBitacora`, etc.
+Ajustar `current_user_org_id()` o las queries del panel admin para que funcionen sin membresía.
 
----
+#### 3. Panel Admin mejorado
 
-### Fase 4 — Dashboard Super Admin
+**AdminSidebar.tsx**:
+- Eliminar "Ir a la app" (el super_admin vive en `/admin`)
+- Agregar sección "Configuración Global" con opciones como: Configuración de la plataforma, Planes/Billing (placeholder)
 
-**4.1 Nuevas páginas**
+**AdminLayout.tsx**:
+- Mantener el selector de organización en el header para "impersonar" y ver datos de orgs específicas
+- Agregar indicador visual de qué org se está viendo
 
-| Ruta | Página | Función |
-|------|--------|---------|
-| `/admin` | AdminDashboard | Resumen de todas las organizaciones |
-| `/admin/organizaciones` | AdminOrganizaciones | CRUD de organizaciones |
-| `/admin/organizaciones/:id` | AdminOrgDetalle | Detalle, usuarios, configuración de una org |
-| `/admin/usuarios` | AdminUsuarios | Gestión global de usuarios |
+**Nuevas páginas admin**:
+- `/admin/configuracion` — Configuración global de la plataforma (parámetros que aplican a todas las orgs)
 
-**4.2 Layout separado para Super Admin**
-- Sidebar diferente con navegación de administración
-- Selector de organización para "impersonar" y ver la app como esa org
-- Acceso a métricas globales (total embarques, cotizaciones, usuarios por org)
+#### 4. Eliminar membresía del super_admin
 
-**4.3 `ProtectedRoute` actualizado**
-- Soportar `allowedRoles: ['super_admin']`
-- Redirigir super_admin a `/admin` tras login (no al dashboard operativo)
+**Migración SQL**: Eliminar al usuario super_admin de `organization_members` para que no pertenezca a ninguna org.
+
+Ajustar `current_user_org_id()` para que no falle si el super_admin no tiene membresía — ya los RLS policies tienen `OR has_role(auth.uid(), 'super_admin')`.
+
+#### 5. Auth y routing
+
+- Login: detectar rol post-login y redirigir apropiadamente
+- Si un super_admin intenta acceder a `/`, redirigir a `/admin`
+- Las rutas `/admin/*` solo accesibles para `super_admin`
 
 ---
 
-### Fase 5 — Configuración por Organización
+### Archivos a modificar/crear
 
-- Mover tabla `configuracion` a ser per-org (agregar `organization_id`)
-- Cada empresa puede tener su propia tasa IVA, vigencia de cotizaciones, logo, etc.
-- Super admin puede configurar valores por defecto globales
+| Archivo | Cambio |
+|---------|--------|
+| `src/pages/Login.tsx` | Redirigir a `/admin` si es super_admin |
+| `src/components/ProtectedRoute.tsx` | Redirigir super_admin sin org a `/admin` |
+| `src/contexts/OrganizationContext.tsx` | Manejar super_admin sin membresía |
+| `src/components/admin/AdminSidebar.tsx` | Quitar "Ir a la app", agregar config global |
+| `src/pages/admin/AdminConfiguracion.tsx` | **Nuevo** — Config global de plataforma |
+| `src/App.tsx` | Agregar ruta `/admin/configuracion` |
+| `src/pages/Changelog.tsx` | Entrada v6.2.0 |
+| **Migración SQL** | Eliminar super_admin de `organization_members` |
 
 ---
 
-### Orden de Implementación Recomendado
+### Detalles técnicos
 
-Dado el tamaño del cambio, se recomienda dividirlo en sprints:
-
-1. **Sprint 1**: Tablas `organizations` + `organization_members`, nuevo rol, migración de datos existentes
-2. **Sprint 2**: Agregar `organization_id` a las 3 tablas principales (embarques, clientes, proveedores) + actualizar RLS + hooks
-3. **Sprint 3**: Agregar `organization_id` al resto de tablas + actualizar funciones RPC
-4. **Sprint 4**: OrganizationContext + actualizar todos los hooks para filtrar por org
-5. **Sprint 5**: Dashboard Super Admin (páginas, layout, CRUD orgs)
-6. **Sprint 6**: Configuración per-org + testing E2E
-
-### Riesgos y Consideraciones
-
-- **Cambio masivo**: ~13 tablas, ~10+ hooks, ~7 funciones RPC, todas las políticas RLS
-- **Datos existentes**: Requiere migración cuidadosa para no perder datos
-- **Edge functions**: `create-user` y `list-users` necesitan adaptarse al contexto multi-tenant
-- **Billing/Planes**: Si se quiere cobrar por organización, se necesita integración con Stripe (futuro)
+- El super_admin ya tiene acceso a todos los datos via RLS (`has_role(auth.uid(), 'super_admin')`), por lo que eliminar su membresía no rompe el acceso a datos.
+- La función `current_user_org_id()` retornará NULL para el super_admin, pero eso está cubierto por la cláusula OR en las políticas RLS.
+- Para el panel admin, el selector de org en el header permite al super_admin "impersonar" una org para ver sus datos (funcionalidad existente).
 
