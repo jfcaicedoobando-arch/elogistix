@@ -13,6 +13,13 @@ interface ChangelogEntry {
 
 const changelog: ChangelogEntry[] = [
   {
+    version: "6.5.2",
+    date: "2026-03-27",
+    type: "patch",
+    title: "Toggle activar/desactivar organización",
+    description: "Se agregó un switch en el header del detalle de organización para activar o desactivar la organización con feedback inmediato.",
+  },
+  {
     version: "6.5.1",
     date: "2026-03-27",
     type: "patch",
