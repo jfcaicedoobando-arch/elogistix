@@ -66,6 +66,7 @@ const adminItems = [
 
 // Import Building2 for admin link
 import { Building2 } from "lucide-react";
+import { OrgSwitcher } from "@/components/OrgSwitcher";
 
 export function AppSidebar() {
   const { state } = useSidebar();
