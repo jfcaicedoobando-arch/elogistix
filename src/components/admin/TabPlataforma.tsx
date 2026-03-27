@@ -70,7 +70,7 @@ export default function TabPlataforma() {
           </div>
           <div className="space-y-2">
             <Label>Email de soporte</Label>
-            <Input value={emailSoporte} onChange={(e) => setEmailSoporte(e.target.value)} placeholder="soporte@elogistix.com" type="email" />
+            <Input value={emailSoporte} onChange={(e) => setEmailSoporte(e.target.value)} placeholder="soporte@librecarga.com" type="email" />
           </div>
         </div>
         <div className="flex justify-end pt-2">

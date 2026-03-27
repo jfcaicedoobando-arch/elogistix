@@ -49,10 +49,10 @@ export function AdminSidebar() {
           {!collapsed && (
             <div className="flex flex-col">
               <span className="text-sm font-bold text-sidebar-foreground">
-                Super Admin
+                Libre Carga
               </span>
               <span className="text-xs text-sidebar-foreground/60">
-                Gestión Multi-Tenant
+                Super Admin
               </span>
             </div>
           )}
