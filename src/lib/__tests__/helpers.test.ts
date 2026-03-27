@@ -27,7 +27,7 @@ describe("getEstadoColor", () => {
     expect(getEstadoColor("Vencida")).toContain("text-destructive");
   });
   it("retorna default para estado desconocido", () => {
-    expect(getEstadoColor("Inventado")).toBe("bg-muted text-muted-foreground");
+    expect(getEstadoColor("Inventado")).toBe("bg-muted text-muted-foreground border border-border");
   });
 });
 
