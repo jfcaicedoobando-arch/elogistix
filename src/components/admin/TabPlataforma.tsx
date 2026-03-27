@@ -18,7 +18,7 @@ export default function TabPlataforma() {
   const [initialized, setInitialized] = useState(false);
 
   if (Object.keys(config).length > 0 && !initialized) {
-    setNombreApp((config.nombre_app as string) || "Elogistix");
+    setNombreApp((config.nombre_app as string) || "Libre Carga");
     setTagline((config.tagline as string) || "");
     setLogoUrl((config.logo_url as string) || "");
     setColorPrimario((config.color_primario as string) || "#1e40af");
