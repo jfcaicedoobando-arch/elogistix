@@ -90,4 +90,14 @@ export const queryKeys = {
     activos: ['tipos_contenedor', 'activos'] as const,
     todos: ['tipos_contenedor', 'todos'] as const,
   },
+  admin: {
+    organizations: ['admin-organizations'] as const,
+    allUsers: ['admin-all-users'] as const,
+    org: (id: string) => ['admin-org', id] as const,
+    orgMembers: (id: string) => ['admin-org-members', id] as const,
+    orgCountMembers: (id: string) => ['admin-org-count-members', id] as const,
+    orgCountEmbarques: (id: string) => ['admin-org-count-embarques', id] as const,
+    orgCountClientes: (id: string) => ['admin-org-count-clientes', id] as const,
+    orgCountCotizaciones: (id: string) => ['admin-org-count-cotizaciones', id] as const,
+  },
 } as const;
