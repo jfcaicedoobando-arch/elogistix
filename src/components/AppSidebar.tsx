@@ -175,7 +175,7 @@ export function AppSidebar() {
         </Button>
         {!collapsed && (
           <div className="text-xs text-sidebar-foreground/50">
-            v6.0.0 · Multi-Tenant
+            v6.1.0 · Multi-Tenant
           </div>
         )}
       </SidebarFooter>
