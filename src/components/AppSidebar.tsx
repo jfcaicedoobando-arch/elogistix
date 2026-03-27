@@ -14,7 +14,7 @@ import {
   BarChart3,
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
-import librecargaLogo from "@/assets/librecarga-logo.svg";
+import librecargaLogo from "@/assets/librecarga-logo.png";
 import { useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSidebarAlerts } from "@/hooks/useSidebarAlerts";
