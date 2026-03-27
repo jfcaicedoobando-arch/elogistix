@@ -13,6 +13,13 @@ interface ChangelogEntry {
 
 const changelog: ChangelogEntry[] = [
   {
+    version: "6.5.3",
+    date: "2026-03-27",
+    type: "patch",
+    title: "Eliminar tab Plataforma redundante",
+    description: "Se removió el tab 'Plataforma' de la configuración global por ser redundante. El campo de email de soporte se movió al tab de Seguridad.",
+  },
+  {
     version: "6.5.2",
     date: "2026-03-27",
     type: "patch",

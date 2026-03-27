@@ -1,7 +1,6 @@
-import { Settings, Globe, CreditCard, Shield, BookOpen } from "lucide-react";
+import { Settings, CreditCard, Shield, BookOpen } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
-import TabPlataforma from "@/components/admin/TabPlataforma";
 import TabPlanes from "@/components/admin/TabPlanes";
 import TabSeguridadGlobal from "@/components/admin/TabSeguridadGlobal";
 import TabCatalogosGlobales from "@/components/admin/TabCatalogosGlobales";
@@ -20,32 +19,25 @@ export default function AdminConfiguracion() {
         </p>
       </div>
 
-      <Tabs defaultValue="plataforma">
+      <Tabs defaultValue="seguridad">
         <TabsList>
-          <TabsTrigger value="plataforma" className="gap-1.5">
-            <Globe className="h-3.5 w-3.5" /> Plataforma
+          <TabsTrigger value="seguridad" className="gap-1.5">
+            <Shield className="h-3.5 w-3.5" /> Seguridad
           </TabsTrigger>
           <TabsTrigger value="planes" className="gap-1.5">
             <CreditCard className="h-3.5 w-3.5" /> Planes
-          </TabsTrigger>
-          <TabsTrigger value="seguridad" className="gap-1.5">
-            <Shield className="h-3.5 w-3.5" /> Seguridad
           </TabsTrigger>
           <TabsTrigger value="catalogos" className="gap-1.5">
             <BookOpen className="h-3.5 w-3.5" /> Catálogos
           </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="plataforma">
-          <TabPlataforma />
+        <TabsContent value="seguridad">
+          <TabSeguridadGlobal />
         </TabsContent>
 
         <TabsContent value="planes">
           <TabPlanes />
-        </TabsContent>
-
-        <TabsContent value="seguridad">
-          <TabSeguridadGlobal />
         </TabsContent>
 
         <TabsContent value="catalogos">

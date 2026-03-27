@@ -4,6 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
+import { Separator } from "@/components/ui/separator";
 import { Save } from "lucide-react";
 import { useConfigGlobalCategoria, useUpdateConfiguracionGlobal } from "@/hooks/useConfiguracionGlobal";
 
@@ -12,11 +13,14 @@ export default function TabSeguridadGlobal() {
   const updateConfig = useUpdateConfiguracionGlobal();
   const [initialized, setInitialized] = useState(false);
 
+  const configPlataforma = useConfigGlobalCategoria("plataforma");
+
   const [autoConfirmar, setAutoConfirmar] = useState(false);
   const [longitudPassword, setLongitudPassword] = useState(8);
   const [expiracionSesion, setExpiracionSesion] = useState(24);
   const [maxIntentos, setMaxIntentos] = useState(5);
   const [registroPublico, setRegistroPublico] = useState(false);
+  const [emailSoporte, setEmailSoporte] = useState("");
 
   if (Object.keys(config).length > 0 && !initialized) {
     setAutoConfirmar(config.auto_confirmar_email as boolean ?? false);
@@ -24,6 +28,7 @@ export default function TabSeguridadGlobal() {
     setExpiracionSesion(config.expiracion_sesion_horas as number ?? 24);
     setMaxIntentos(config.max_intentos_login as number ?? 5);
     setRegistroPublico(config.permitir_registro_publico as boolean ?? false);
+    setEmailSoporte((configPlataforma.email_soporte as string) || "");
     setInitialized(true);
   }
 
@@ -34,6 +39,7 @@ export default function TabSeguridadGlobal() {
       { categoria: "seguridad", clave: "expiracion_sesion_horas", valor: expiracionSesion },
       { categoria: "seguridad", clave: "max_intentos_login", valor: maxIntentos },
       { categoria: "seguridad", clave: "permitir_registro_publico", valor: registroPublico },
+      { categoria: "plataforma", clave: "email_soporte", valor: emailSoporte },
     ]);
   };
 
@@ -96,6 +102,17 @@ export default function TabSeguridadGlobal() {
               onChange={(e) => setMaxIntentos(Number(e.target.value))}
               className="w-24"
             />
+          </div>
+        </div>
+
+        <Separator />
+
+        <div>
+          <h3 className="text-sm font-medium mb-2">Contacto de soporte</h3>
+          <div className="space-y-2 p-3 rounded-lg border max-w-md">
+            <Label className="text-sm font-medium">Email de soporte</Label>
+            <p className="text-xs text-muted-foreground">Dirección de contacto para soporte técnico de la plataforma</p>
+            <Input value={emailSoporte} onChange={(e) => setEmailSoporte(e.target.value)} placeholder="soporte@librecarga.com" type="email" />
           </div>
         </div>
 
