@@ -144,6 +144,9 @@ export function AppSidebar() {
       </SidebarHeader>
 
       <SidebarContent className="px-2 py-4">
+        <div className="px-2 mb-2">
+          <OrgSwitcher collapsed={collapsed} />
+        </div>
         {renderGroup("Dashboards", dashboardItems)}
         {renderGroup("Gestión", gestionItems)}
         {renderGroup("Reportes", reportesItems)}
