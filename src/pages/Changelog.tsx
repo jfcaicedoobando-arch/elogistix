@@ -13,6 +13,13 @@ interface ChangelogEntry {
 
 const changelog: ChangelogEntry[] = [
   {
+    version: "6.6.0",
+    date: "2026-03-27",
+    type: "minor",
+    title: "Agregar miembros a organización",
+    description: "Se puede agregar usuarios existentes como miembros de una organización desde la página de detalle, seleccionando el usuario y asignándole un rol.",
+  },
+  {
     version: "6.5.3",
     date: "2026-03-27",
     type: "patch",
