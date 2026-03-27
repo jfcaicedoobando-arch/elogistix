@@ -49,7 +49,8 @@ interface UseEmbarquesPaginadosParams {
 export function useEmbarquesPaginados({
   search, filterModo, filterEstado, filterCliente, filterOperador, page, pageSize, fechaDesde, fechaHasta,
 }: UseEmbarquesPaginadosParams) {
-  const filters = { search, filterModo, filterEstado, filterCliente, filterOperador, page, pageSize, fechaDesde, fechaHasta };
+  const { organizationId } = useOrgFilter();
+  const filters = { search, filterModo, filterEstado, filterCliente, filterOperador, page, pageSize, fechaDesde, fechaHasta, organizationId };
 
   return useQuery({
     queryKey: queryKeys.embarques.list(filters),
@@ -58,6 +59,8 @@ export function useEmbarquesPaginados({
         .from('embarques')
         .select(EMBARQUE_LIST_COLUMNS, { count: 'exact' })
         .order('created_at', { ascending: false });
+
+      if (organizationId) query = query.eq('organization_id', organizationId);
 
       // Text search across multiple columns
       if (search) {
