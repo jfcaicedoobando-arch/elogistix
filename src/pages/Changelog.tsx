@@ -13,6 +13,13 @@ interface ChangelogEntry {
 
 const changelog: ChangelogEntry[] = [
   {
+    version: "6.7.0",
+    date: "2026-03-27",
+    type: "minor",
+    title: "Catálogos de navieras y tipos de contenedor",
+    description: "Se crearon catálogos dinámicos para navieras y tipos de contenedor, migrando los datos estáticos a la base de datos con gestión completa (agregar, activar/desactivar, eliminar) desde Catálogos Globales.",
+  },
+  {
     version: "6.6.0",
     date: "2026-03-27",
     type: "minor",

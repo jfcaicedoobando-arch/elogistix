@@ -29,6 +29,7 @@ interface Props {
 export default function DialogDuplicarEmbarque({ embarque, open, onOpenChange }: Props) {
   const { toast } = useToast();
   const duplicarEmbarque = useDuplicarEmbarque();
+  const { data: containerTypes = [] } = useTiposContenedor();
 
   const crearFilaInicial = (): FilaCopia => ({
     num_contenedor: '',
