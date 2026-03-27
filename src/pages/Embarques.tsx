@@ -29,7 +29,7 @@ import type { EmbarqueRow } from "@/hooks/useEmbarqueUtils";
 import DoubleConfirmDeleteDialog from "@/components/DoubleConfirmDeleteDialog";
 import DialogDuplicarEmbarque from "@/components/embarque/DialogDuplicarEmbarque";
 import { supabase } from "@/integrations/supabase/client";
-import { useQuery } from "@tanstack/react-query";
+import { useEmbarquesLiquidacion, useEmbarquesDocsStatus } from "@/hooks/useEmbarquesListData";
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
