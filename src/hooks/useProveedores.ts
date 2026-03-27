@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import type { Tables, TablesInsert, TablesUpdate } from "@/integrations/supabase/types";
 import { queryKeys } from "@/lib/queryKeys";
 import type { Enums } from "@/integrations/supabase/types";
+import { useOrgFilter } from "@/hooks/useOrgFilter";
 type TipoProveedor = Enums<'tipo_proveedor'>;
 
 /** Columnas necesarias para la tabla de proveedores */
