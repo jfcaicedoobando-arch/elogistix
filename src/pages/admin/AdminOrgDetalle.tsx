@@ -13,7 +13,7 @@ import { useConfiguracionByOrg } from "@/hooks/useConfiguracionOrg";
 import { usePlanes } from "@/hooks/usePlanes";
 import { useToast } from "@/hooks/use-toast";
 import { Switch } from "@/components/ui/switch";
-import { ArrowLeft, Building2, Users, Ship, UserCheck, FileText, Calendar, CheckCircle2, XCircle, Settings, Pencil, Save, X, UserPlus } from "lucide-react";
+import { ArrowLeft, Building2, Users, Ship, UserCheck, FileText, Calendar, CheckCircle2, XCircle, Settings, Pencil, Save, X, UserPlus, Trash2 } from "lucide-react";
 import AgregarMiembroOrgDialog from "@/components/admin/AgregarMiembroOrgDialog";
 import type { Enums } from "@/integrations/supabase/types";
 import { format } from "date-fns";
