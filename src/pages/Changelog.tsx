@@ -13,6 +13,13 @@ interface ChangelogEntry {
 
 const changelog: ChangelogEntry[] = [
   {
+    version: "6.5.1",
+    date: "2026-03-27",
+    type: "patch",
+    title: "Edición inline de organización",
+    description: "El detalle de organización ahora permite editar nombre, RFC y plan directamente con un botón de editar/guardar. El selector de plan muestra los planes activos desde la base de datos.",
+  },
+  {
     version: "6.5.0",
     date: "2026-03-27",
     type: "minor",
