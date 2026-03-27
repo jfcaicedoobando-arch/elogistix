@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import type { Tables, TablesInsert, TablesUpdate } from "@/integrations/supabase/types";
 import { queryKeys } from "@/lib/queryKeys";
 import type { Enums } from "@/integrations/supabase/types";
+import { useOrgFilter } from "@/hooks/useOrgFilter";
 type TipoProveedor = Enums<'tipo_proveedor'>;
 
 /** Columnas necesarias para la tabla de proveedores */
@@ -21,7 +22,8 @@ interface UseProveedoresPaginadosParams {
 }
 
 export function useProveedoresPaginados({ tipo, search, page, pageSize }: UseProveedoresPaginadosParams) {
-  const filters = { tipo, search, page, pageSize };
+  const { organizationId } = useOrgFilter();
+  const filters = { tipo, search, page, pageSize, organizationId };
 
   return useQuery({
     queryKey: queryKeys.proveedores.list(filters),
@@ -31,6 +33,8 @@ export function useProveedoresPaginados({ tipo, search, page, pageSize }: UsePro
         .select(PROVEEDOR_LIST_COLUMNS, { count: 'exact' })
         .eq('tipo', tipo)
         .order('nombre');
+
+      if (organizationId) query = query.eq('organization_id', organizationId);
 
       if (search) {
         query = query.ilike('nombre', `%${search}%`);

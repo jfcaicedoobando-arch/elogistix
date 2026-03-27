@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import type { Tables, TablesInsert } from "@/integrations/supabase/types";
 import { queryKeys } from "@/lib/queryKeys";
+import { useOrgFilter } from "@/hooks/useOrgFilter";
 
 export type Cliente = Tables<'clientes'>;
 export type ContactoCliente = Tables<'contactos_cliente'>;
@@ -18,7 +19,8 @@ interface UseClientesPaginadosParams {
 }
 
 export function useClientesPaginados({ search, page, pageSize }: UseClientesPaginadosParams) {
-  const filters = { search, page, pageSize };
+  const { organizationId } = useOrgFilter();
+  const filters = { search, page, pageSize, organizationId };
 
   return useQuery({
     queryKey: queryKeys.clientes.list(filters),
@@ -28,6 +30,7 @@ export function useClientesPaginados({ search, page, pageSize }: UseClientesPagi
         .select(CLIENTE_LIST_COLUMNS, { count: 'exact' })
         .order('nombre');
 
+      if (organizationId) query = query.eq('organization_id', organizationId);
       if (search) {
         query = query.or(`nombre.ilike.%${search}%,rfc.ilike.%${search}%`);
       }
@@ -47,13 +50,16 @@ export function useClientesPaginados({ search, page, pageSize }: UseClientesPagi
 // --- Hook original (todos los registros) para Reportes ---
 
 export function useClientes() {
+  const { organizationId } = useOrgFilter();
   return useQuery({
-    queryKey: queryKeys.clientes.all,
+    queryKey: [...queryKeys.clientes.all, organizationId],
     queryFn: async () => {
-      const { data, error } = await supabase
+      let query = supabase
         .from("clientes")
         .select(CLIENTE_LIST_COLUMNS)
         .order("nombre");
+      if (organizationId) query = query.eq('organization_id', organizationId);
+      const { data, error } = await query;
       if (error) throw error;
       return data;
     },
@@ -157,13 +163,16 @@ export function useDeleteContacto() {
 }
 
 export function useClientesForSelect() {
+  const { organizationId } = useOrgFilter();
   return useQuery({
-    queryKey: queryKeys.clientes.select,
+    queryKey: [...queryKeys.clientes.select, organizationId],
     queryFn: async () => {
-      const { data, error } = await supabase
+      let query = supabase
         .from('clientes')
         .select('id, nombre')
         .order('nombre');
+      if (organizationId) query = query.eq('organization_id', organizationId);
+      const { data, error } = await query;
       if (error) throw error;
       return data;
     },

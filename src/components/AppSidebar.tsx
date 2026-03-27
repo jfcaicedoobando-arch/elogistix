@@ -66,6 +66,7 @@ const adminItems = [
 
 // Import Building2 for admin link
 import { Building2 } from "lucide-react";
+import { OrgSwitcher } from "@/components/OrgSwitcher";
 
 export function AppSidebar() {
   const { state } = useSidebar();
@@ -143,6 +144,9 @@ export function AppSidebar() {
       </SidebarHeader>
 
       <SidebarContent className="px-2 py-4">
+        <div className="px-2 mb-2">
+          <OrgSwitcher collapsed={collapsed} />
+        </div>
         {renderGroup("Dashboards", dashboardItems)}
         {renderGroup("Gestión", gestionItems)}
         {renderGroup("Reportes", reportesItems)}
@@ -171,7 +175,7 @@ export function AppSidebar() {
         </Button>
         {!collapsed && (
           <div className="text-xs text-sidebar-foreground/50">
-            v6.0.0 · Multi-Tenant
+            v6.1.0 · Multi-Tenant
           </div>
         )}
       </SidebarFooter>

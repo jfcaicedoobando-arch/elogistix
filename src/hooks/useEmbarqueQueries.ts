@@ -2,6 +2,7 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import type { TablesInsert } from '@/integrations/supabase/types';
 import { queryKeys } from '@/lib/queryKeys';
+import { useOrgFilter } from '@/hooks/useOrgFilter';
 import type {
   EmbarqueRow,
   ConceptoVentaRow,
@@ -15,13 +16,16 @@ const EMBARQUE_LIST_COLUMNS = 'id, expediente, bl_master, cliente_id, cliente_no
 
 /** Hook original: descarga TODOS los embarques. Usar solo para Dashboard/Operaciones que necesitan el dataset completo. */
 export function useEmbarques() {
+  const { organizationId } = useOrgFilter();
   return useQuery({
-    queryKey: queryKeys.embarques.all,
+    queryKey: [...queryKeys.embarques.all, organizationId],
     queryFn: async () => {
-      const { data, error } = await supabase
+      let query = supabase
         .from('embarques')
         .select(EMBARQUE_LIST_COLUMNS)
         .order('created_at', { ascending: false });
+      if (organizationId) query = query.eq('organization_id', organizationId);
+      const { data, error } = await query;
       if (error) throw error;
       return data as EmbarqueRow[];
     },
@@ -45,7 +49,8 @@ interface UseEmbarquesPaginadosParams {
 export function useEmbarquesPaginados({
   search, filterModo, filterEstado, filterCliente, filterOperador, page, pageSize, fechaDesde, fechaHasta,
 }: UseEmbarquesPaginadosParams) {
-  const filters = { search, filterModo, filterEstado, filterCliente, filterOperador, page, pageSize, fechaDesde, fechaHasta };
+  const { organizationId } = useOrgFilter();
+  const filters = { search, filterModo, filterEstado, filterCliente, filterOperador, page, pageSize, fechaDesde, fechaHasta, organizationId };
 
   return useQuery({
     queryKey: queryKeys.embarques.list(filters),
@@ -54,6 +59,8 @@ export function useEmbarquesPaginados({
         .from('embarques')
         .select(EMBARQUE_LIST_COLUMNS, { count: 'exact' })
         .order('created_at', { ascending: false });
+
+      if (organizationId) query = query.eq('organization_id', organizationId);
 
       // Text search across multiple columns
       if (search) {
@@ -185,13 +192,16 @@ export function useEmbarqueFacturas(embarqueId: string | undefined) {
 }
 
 export function useProveedoresForSelect() {
+  const { organizationId } = useOrgFilter();
   return useQuery({
-    queryKey: queryKeys.proveedores.select,
+    queryKey: [...queryKeys.proveedores.select, organizationId],
     queryFn: async () => {
-      const { data, error } = await supabase
+      let query = supabase
         .from('proveedores')
         .select('id, nombre')
         .order('nombre');
+      if (organizationId) query = query.eq('organization_id', organizationId);
+      const { data, error } = await query;
       if (error) throw error;
       return data;
     },
