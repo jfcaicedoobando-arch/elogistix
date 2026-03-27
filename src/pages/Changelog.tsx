@@ -13,6 +13,13 @@ interface ChangelogEntry {
 
 const changelog: ChangelogEntry[] = [
   {
+    version: "7.2.0",
+    date: "2026-03-27",
+    type: "minor",
+    title: "Dashboard server-side: RPC dashboard_stats reemplaza 3 queries pesadas",
+    description: "Nueva función RPC dashboard_stats() que calcula en el servidor todos los datos del Dashboard en una sola llamada: conteos por estado, alertas de demora, próximos arribos, profit del mes, embarques del mes siguiente y resumen de facturación. Elimina la descarga de TODOS los embarques + profit + facturas del lado del cliente. Incluye réplica de la lógica calcularEstadoEmbarque en SQL para consistencia.",
+  },
+  {
     version: "7.1.0",
     date: "2026-03-27",
     type: "minor",
