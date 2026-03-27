@@ -60,6 +60,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setSession(session);
         setUser(session?.user ?? null);
         if (session?.user) {
+          hasFetchedRole.current = true;
           // Use setTimeout to avoid potential deadlock with Supabase client
           setTimeout(() => fetchRole(session.user.id), 0);
           if (_eventoAuth === 'SIGNED_IN' && !hasLoggedLogin.current) {
