@@ -3,10 +3,10 @@ import {
   Building2,
   Users,
   LogOut,
-  ArrowLeft,
+  Settings,
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import {
   Sidebar,
@@ -21,19 +21,19 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
-import { Separator } from "@/components/ui/separator";
+
 
 const adminItems = [
   { title: "Dashboard", url: "/admin", icon: LayoutDashboard },
   { title: "Organizaciones", url: "/admin/organizaciones", icon: Building2 },
   { title: "Usuarios", url: "/admin/usuarios", icon: Users },
+  { title: "Configuración Global", url: "/admin/configuracion", icon: Settings },
 ];
 
 export function AdminSidebar() {
   const { state } = useSidebar();
   const collapsed = state === "collapsed";
   const location = useLocation();
-  const navigate = useNavigate();
   const { user, signOut } = useAuth();
 
   const isActive = (path: string) => {
@@ -91,23 +91,6 @@ export function AdminSidebar() {
           </SidebarGroupContent>
         </SidebarGroup>
 
-        <Separator className="my-2 mx-1" />
-
-        <SidebarGroup>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              <SidebarMenuItem>
-                <SidebarMenuButton
-                  tooltip="Ir a la app"
-                  onClick={() => navigate("/")}
-                >
-                  <ArrowLeft className="h-4 w-4" />
-                  {!collapsed && <span>Ir a la app</span>}
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
       </SidebarContent>
 
       <SidebarFooter className="border-t border-sidebar-border p-4 space-y-2">

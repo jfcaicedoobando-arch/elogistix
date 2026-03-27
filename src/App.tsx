@@ -37,6 +37,7 @@ const AdminDashboard = lazy(() => import("./pages/admin/AdminDashboard"));
 const AdminOrganizaciones = lazy(() => import("./pages/admin/AdminOrganizaciones"));
 const AdminOrgDetalle = lazy(() => import("./pages/admin/AdminOrgDetalle"));
 const AdminUsuarios = lazy(() => import("./pages/admin/AdminUsuarios"));
+const AdminConfiguracion = lazy(() => import("./pages/admin/AdminConfiguracion"));
 
 // Admin layout
 import { AdminLayout } from "./components/admin/AdminLayout";
@@ -71,6 +72,7 @@ const App = () => (
               <Route path="/admin/organizaciones" element={<AdminOrganizaciones />} />
               <Route path="/admin/organizaciones/:id" element={<AdminOrgDetalle />} />
               <Route path="/admin/usuarios" element={<AdminUsuarios />} />
+              <Route path="/admin/configuracion" element={<AdminConfiguracion />} />
             </Route>
 
             {/* Regular app routes */}
