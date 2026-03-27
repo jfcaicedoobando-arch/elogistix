@@ -18,7 +18,6 @@ export default function Dashboard() {
     isLoading,
     filtroEstado,
     setFiltroEstado,
-    activos,
     conteoPorEstado,
     totalActivos,
     alertasDemora,
@@ -47,7 +46,7 @@ export default function Dashboard() {
           <p className="text-sm text-muted-foreground capitalize">{hoyStr}</p>
         </div>
         <Badge variant="secondary" className="text-xs w-fit">
-          {activos.length} embarques activos
+          {totalActivos} embarques activos
         </Badge>
       </div>
 

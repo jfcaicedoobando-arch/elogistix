@@ -1,17 +1,8 @@
-/**
- * NOTA DE ESCALABILIDAD: Este hook obtiene todos los embarques del lado del cliente.
- * Supabase tiene un límite por defecto de 1000 filas por query. Cuando el dataset
- * supere ~1000 embarques, las estadísticas del dashboard serán incompletas.
- * Plan: migrar a una vista o función RPC con agregación del lado del servidor.
- */
 import { useState, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { useEmbarques, calcularEstadoEmbarque } from "@/hooks/useEmbarques";
-import { ESTADOS_ACTIVOS } from "@/data/embarqueConstants";
-import { calcularUtilidad, calcularMargen } from "@/lib/financialUtils";
 import { supabase } from "@/integrations/supabase/client";
 import { queryKeys } from "@/lib/queryKeys";
-import { useProfitMaps } from "@/hooks/useProfitMaps";
+import { ESTADOS_ACTIVOS } from "@/data/embarqueConstants";
 
 // ─── Types ───────────────────────────────────────────────
 export interface EmbarqueConEstado {
@@ -66,209 +57,119 @@ export interface ResumenFacturacion {
 export const ESTADOS_FILTRO = ESTADOS_ACTIVOS;
 export type EstadoFiltro = (typeof ESTADOS_FILTRO)[number];
 
-const DIAS_LIBRES_DEFAULT = 7;
+const EMPTY_CONTEO: Record<EstadoFiltro, number> = {
+  Confirmado: 0,
+  "En Tránsito": 0,
+  Arribo: 0,
+  "En Aduana": 0,
+  Entregado: 0,
+};
 
+const EMPTY_ARRIBOS = { total: 0, yaLlegaron: 0, enCamino: 0, profitUSD: 0 };
+
+const EMPTY_RESUMEN: ResumenFacturacion = {
+  totalEmbarques: 0,
+  ventaUSD: 0,
+  costoUSD: 0,
+  profitUSD: 0,
+  facturados: 0,
+  nombreMes: "",
+};
+
+/**
+ * Dashboard data powered by a single server-side RPC `dashboard_stats()`.
+ * Replaces the previous approach of downloading ALL embarques + profit + facturas client-side.
+ */
 export function useDashboardData() {
-  const { data: embarques = [], isLoading } = useEmbarques();
-  const [filtroEstado, setFiltroEstado] = useState<EstadoFiltro | null>(null);
-  const { ventaMap, costoMap } = useProfitMaps();
-
-  // Query facturas para saber qué embarques ya tienen factura
-  const { data: facturasRaw = [] } = useQuery({
-    queryKey: queryKeys.dashboard.facturas,
+  const { data: stats, isLoading } = useQuery({
+    queryKey: queryKeys.dashboard.stats,
     queryFn: async () => {
-      const { data } = await supabase
-        .from("facturas")
-        .select("embarque_id, estado, total, moneda");
-      return data ?? [];
+      const { data, error } = await supabase.rpc("dashboard_stats");
+      if (error) throw error;
+      return data as Record<string, unknown>;
     },
   });
 
-  // ─── Derived data ──────────────────────────────────────
-  const embarquesConEstado = useMemo<EmbarqueConEstado[]>(
-    () =>
-      embarques.map((e) => ({
-        ...e,
-        estadoReal: calcularEstadoEmbarque(e.modo, e.tipo, e.etd, e.eta, e.estado),
-      })),
-    [embarques]
-  );
+  const [filtroEstado, setFiltroEstado] = useState<EstadoFiltro | null>(null);
 
-  const activos = useMemo(
-    () =>
-      embarquesConEstado.filter(
-        (e) => !["EIR", "Cerrado", "Cancelado"].includes(e.estadoReal)
-      ),
-    [embarquesConEstado]
-  );
-
-  const conteoPorEstado = useMemo(() => {
-    const m: Record<EstadoFiltro, number> = {
-      Confirmado: 0,
-      "En Tránsito": 0,
-      Arribo: 0,
-      "En Aduana": 0,
-      Entregado: 0,
+  // Parse the JSONB response into typed objects
+  const conteoPorEstado = useMemo<Record<EstadoFiltro, number>>(() => {
+    if (!stats?.conteoPorEstado) return EMPTY_CONTEO;
+    const raw = stats.conteoPorEstado as Record<string, number>;
+    return {
+      Confirmado: Number(raw["Confirmado"] ?? 0),
+      "En Tránsito": Number(raw["En Tránsito"] ?? 0),
+      Arribo: Number(raw["Arribo"] ?? 0),
+      "En Aduana": Number(raw["En Aduana"] ?? 0),
+      Entregado: Number(raw["Entregado"] ?? 0),
     };
-    activos.forEach((e) => {
-      if (e.estadoReal in m) m[e.estadoReal as EstadoFiltro]++;
-    });
-    return m;
-  }, [activos]);
+  }, [stats]);
 
-  const totalActivos = useMemo(
-    () => Object.values(conteoPorEstado).reduce((s, v) => s + v, 0),
-    [conteoPorEstado]
+  const totalActivos = Number(stats?.totalActivos ?? 0);
+
+  const alertasDemora = useMemo<AlertaDemora[]>(
+    () => (stats?.alertasDemora as AlertaDemora[]) ?? [],
+    [stats]
   );
 
-  // Set de embarques que ya tienen factura
-  const embarquesFacturados = useMemo(() => {
-    const set = new Set<string>();
-    facturasRaw.forEach((f) => set.add(f.embarque_id));
-    return set;
-  }, [facturasRaw]);
-
-  // Alertas demora
-  const alertasDemora = useMemo<AlertaDemora[]>(() => {
-    const hoy = new Date();
-    hoy.setHours(0, 0, 0, 0);
-    return activos
-      .filter((e) => e.estadoReal === "Arribo" && e.eta)
-      .map((e) => {
-        const eta = new Date(e.eta! + "T00:00:00");
-        const diasDesdeEta = Math.floor(
-          (hoy.getTime() - eta.getTime()) / 864e5
-        );
-        const diasDemora = diasDesdeEta - DIAS_LIBRES_DEFAULT;
-        return { ...e, diasDemora, diasDesdeEta };
-      })
-      .filter((e) => e.diasDemora >= 0)
-      .sort((a, b) => b.diasDemora - a.diasDemora);
-  }, [activos]);
-
-  // Próximos arribos
-  const proximosArribos = useMemo<ProximoArribo[]>(() => {
-    const hoy = new Date();
-    hoy.setHours(0, 0, 0, 0);
-    return activos
-      .filter((e) => e.estadoReal === "En Tránsito" && e.eta)
-      .map((e) => {
-        const eta = new Date(e.eta! + "T00:00:00");
-        const diasRestantes = Math.ceil(
-          (eta.getTime() - hoy.getTime()) / 864e5
-        );
-        return { ...e, diasRestantes };
-      })
-      .filter((e) => e.diasRestantes >= 0 && e.diasRestantes <= 7)
-      .sort((a, b) => a.diasRestantes - b.diasRestantes);
-  }, [activos]);
-
-  // Profit USD (todos los activos con conceptos)
-  const profitPorEmbarque = useMemo<EmbarqueConProfit[]>(() => {
-    return activos
-      .map((e) => {
-        const venta = ventaMap[e.id] || 0;
-        const costo = costoMap[e.id] || 0;
-        const profit = calcularUtilidad(venta, costo);
-        const margen = calcularMargen(venta, costo);
-        return { ...e, ventaUSD: venta, costoUSD: costo, profit, margen };
-      })
-      .filter((e) => e.ventaUSD > 0 || e.costoUSD > 0)
-      .sort((a, b) => b.profit - a.profit);
-  }, [activos, ventaMap, costoMap]);
-
-  // Profit filtrado: solo embarques con ETA en el mes actual
-  const profitArribosEsteMes = useMemo<EmbarqueConProfit[]>(() => {
-    const hoy = new Date();
-    const inicioMes = new Date(hoy.getFullYear(), hoy.getMonth(), 1);
-    const finMes = new Date(hoy.getFullYear(), hoy.getMonth() + 1, 0);
-
-    return profitPorEmbarque.filter((e) => {
-      if (!e.eta) return false;
-      const eta = new Date(e.eta + "T00:00:00");
-      return eta >= inicioMes && eta <= finMes;
-    });
-  }, [profitPorEmbarque]);
-
-  // Embarques del mes siguiente con profit y estado de facturación
-  const embarquesMesSiguiente = useMemo<EmbarqueMesSiguiente[]>(() => {
-    const hoy = new Date();
-    const inicioSig = new Date(hoy.getFullYear(), hoy.getMonth() + 1, 1);
-    const finSig = new Date(hoy.getFullYear(), hoy.getMonth() + 2, 0);
-
-    return embarquesConEstado
-      .filter((e) => {
-        if (!e.eta) return false;
-        const eta = new Date(e.eta + "T00:00:00");
-        return eta >= inicioSig && eta <= finSig;
-      })
-      .map((e) => {
-        const venta = ventaMap[e.id] || 0;
-        const costo = costoMap[e.id] || 0;
-        const profit = calcularUtilidad(venta, costo);
-        const margen = calcularMargen(venta, costo);
-        const facturado = embarquesFacturados.has(e.id);
-        return { ...e, ventaUSD: venta, costoUSD: costo, profit, margen, facturado };
-      })
-      .sort((a, b) => {
-        const etaA = a.eta ? new Date(a.eta).getTime() : 0;
-        const etaB = b.eta ? new Date(b.eta).getTime() : 0;
-        return etaA - etaB;
-      });
-  }, [embarquesConEstado, ventaMap, costoMap, embarquesFacturados]);
-
-  // Resumen de facturación del mes siguiente
-  const resumenMesSiguiente = useMemo<ResumenFacturacion>(() => {
-    const hoy = new Date();
-    const mesSig = new Date(hoy.getFullYear(), hoy.getMonth() + 1, 1);
-    const nombreMes = mesSig.toLocaleDateString("es-MX", { month: "long", year: "numeric" });
-
-    const totalEmbarques = embarquesMesSiguiente.length;
-    const ventaUSD = embarquesMesSiguiente.reduce((s, e) => s + e.ventaUSD, 0);
-    const costoUSD = embarquesMesSiguiente.reduce((s, e) => s + e.costoUSD, 0);
-    const profitUSD = embarquesMesSiguiente.reduce((s, e) => s + e.profit, 0);
-    const facturados = embarquesMesSiguiente.filter((e) => e.facturado).length;
-
-    return { totalEmbarques, ventaUSD, costoUSD, profitUSD, facturados, nombreMes };
-  }, [embarquesMesSiguiente]);
-
-  // Filtered list
-  const embarquesFiltrados = useMemo(
-    () =>
-      filtroEstado
-        ? activos.filter((e) => e.estadoReal === filtroEstado)
-        : activos,
-    [activos, filtroEstado]
+  const proximosArribos = useMemo<ProximoArribo[]>(
+    () => (stats?.proximosArribos as ProximoArribo[]) ?? [],
+    [stats]
   );
 
-  // Arribos este mes
+  const profitArribosEsteMes = useMemo<EmbarqueConProfit[]>(
+    () => (stats?.profitArribosEsteMes as EmbarqueConProfit[]) ?? [],
+    [stats]
+  );
+
   const arribosEsteMes = useMemo(() => {
-    const hoy = new Date();
-    const inicioMes = new Date(hoy.getFullYear(), hoy.getMonth(), 1);
-    const finMes = new Date(hoy.getFullYear(), hoy.getMonth() + 1, 0);
+    if (!stats?.arribosEsteMes) return EMPTY_ARRIBOS;
+    const raw = stats.arribosEsteMes as Record<string, number>;
+    return {
+      total: Number(raw.total ?? 0),
+      yaLlegaron: Number(raw.yaLlegaron ?? 0),
+      enCamino: Number(raw.enCamino ?? 0),
+      profitUSD: Number(raw.profitUSD ?? 0),
+    };
+  }, [stats]);
 
-    const filtered = embarquesConEstado.filter((e) => {
-      if (!e.eta) return false;
-      const eta = new Date(e.eta + "T00:00:00");
-      return eta >= inicioMes && eta <= finMes;
+  const embarquesMesSiguiente = useMemo<EmbarqueMesSiguiente[]>(
+    () => (stats?.embarquesMesSiguiente as EmbarqueMesSiguiente[]) ?? [],
+    [stats]
+  );
+
+  const resumenMesSiguiente = useMemo<ResumenFacturacion>(() => {
+    if (!stats?.resumenMesSiguiente) return EMPTY_RESUMEN;
+    const raw = stats.resumenMesSiguiente as Record<string, unknown>;
+    return {
+      totalEmbarques: Number(raw.totalEmbarques ?? 0),
+      ventaUSD: Number(raw.ventaUSD ?? 0),
+      costoUSD: Number(raw.costoUSD ?? 0),
+      profitUSD: Number(raw.profitUSD ?? 0),
+      facturados: Number(raw.facturados ?? 0),
+      nombreMes: String(raw.nombreMes ?? ""),
+    };
+  }, [stats]);
+
+  // Client-side filtering for the status card click interaction
+  const activos = useMemo<EmbarqueConEstado[]>(() => {
+    // We don't have the full activos list from the RPC (only filtered subsets).
+    // For the status card filter, we combine available lists.
+    // This is lightweight since each list is already small.
+    const all = [
+      ...alertasDemora,
+      ...proximosArribos,
+      ...profitArribosEsteMes,
+      ...embarquesMesSiguiente,
+    ];
+    // Deduplicate by id
+    const seen = new Set<string>();
+    return all.filter((e) => {
+      if (seen.has(e.id)) return false;
+      seen.add(e.id);
+      return true;
     });
-
-    const yaLlegaron = filtered.filter((e) =>
-      ["Arribo", "En Aduana", "Entregado", "EIR", "Cerrado"].includes(e.estadoReal)
-    ).length;
-
-    const enCamino = filtered.filter((e) =>
-      ["Confirmado", "En Tránsito"].includes(e.estadoReal)
-    ).length;
-
-    const profitUSD = filtered.reduce((acc, e) => {
-      const v = ventaMap[e.id] || 0;
-      const c = costoMap[e.id] || 0;
-      return acc + (v - c);
-    }, 0);
-
-    return { total: filtered.length, yaLlegaron, enCamino, profitUSD };
-  }, [embarquesConEstado, ventaMap, costoMap]);
+  }, [alertasDemora, proximosArribos, profitArribosEsteMes, embarquesMesSiguiente]);
 
   return {
     isLoading,
@@ -279,11 +180,9 @@ export function useDashboardData() {
     totalActivos,
     alertasDemora,
     proximosArribos,
-    profitPorEmbarque,
     profitArribosEsteMes,
-    embarquesFiltrados,
-    arribosEsteMes,
     embarquesMesSiguiente,
     resumenMesSiguiente,
+    arribosEsteMes,
   };
 }
