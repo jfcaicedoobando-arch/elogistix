@@ -13,6 +13,13 @@ interface ChangelogEntry {
 
 const changelog: ChangelogEntry[] = [
   {
+    version: "6.1.0",
+    date: "2026-03-27",
+    type: "minor",
+    title: "Selector de organización para Super Admin",
+    description: "Nuevo componente OrgSwitcher en el sidebar que permite a usuarios super_admin cambiar entre organizaciones. Todos los hooks de consulta principales (embarques, clientes, cotizaciones, proveedores, facturas) ahora filtran datos por la organización activa seleccionada, garantizando el aislamiento visual de datos en la interfaz.",
+  },
+  {
     version: "6.0.0",
     date: "2026-03-26",
     type: "major",
