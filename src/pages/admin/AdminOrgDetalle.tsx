@@ -3,6 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -13,7 +14,7 @@ import { useConfiguracionByOrg } from "@/hooks/useConfiguracionOrg";
 import { usePlanes } from "@/hooks/usePlanes";
 import { useToast } from "@/hooks/use-toast";
 import { Switch } from "@/components/ui/switch";
-import { ArrowLeft, Building2, Users, Ship, UserCheck, FileText, Calendar, CheckCircle2, XCircle, Settings, Pencil, Save, X, UserPlus } from "lucide-react";
+import { ArrowLeft, Building2, Users, Ship, UserCheck, FileText, Calendar, CheckCircle2, XCircle, Settings, Pencil, Save, X, UserPlus, Trash2 } from "lucide-react";
 import AgregarMiembroOrgDialog from "@/components/admin/AgregarMiembroOrgDialog";
 import type { Enums } from "@/integrations/supabase/types";
 import { format } from "date-fns";
@@ -209,6 +210,24 @@ export default function AdminOrgDetalle() {
     },
   });
 
+  const removeMember = useMutation({
+    mutationFn: async (memberId: string) => {
+      const { error } = await supabase
+        .from("organization_members")
+        .delete()
+        .eq("id", memberId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin-org-members", id] });
+      queryClient.invalidateQueries({ queryKey: ["admin-org-count-members", id] });
+      toast({ title: "Miembro eliminado de la organización" });
+    },
+    onError: (error: Error) => {
+      toast({ title: "Error al eliminar miembro", description: error.message, variant: "destructive" });
+    },
+  });
+
   const roleBadge: Record<string, string> = {
     super_admin: "bg-primary text-primary-foreground",
     admin: "bg-destructive text-destructive-foreground",
@@ -232,6 +251,37 @@ export default function AdminOrgDetalle() {
             <SelectItem value="viewer">Viewer</SelectItem>
           </SelectContent>
         </Select>
+      ),
+    },
+    {
+      key: "eliminar",
+      header: "",
+      headerClassName: "w-12",
+      render: (m) => (
+        <AlertDialog>
+          <AlertDialogTrigger asChild>
+            <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:text-destructive">
+              <Trash2 className="h-4 w-4" />
+            </Button>
+          </AlertDialogTrigger>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>¿Eliminar miembro?</AlertDialogTitle>
+              <AlertDialogDescription>
+                Se eliminará a <strong>{m.email}</strong> de esta organización. El usuario seguirá existiendo en el sistema.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancelar</AlertDialogCancel>
+              <AlertDialogAction
+                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                onClick={(e) => { e.preventDefault(); removeMember.mutate(m.id); }}
+              >
+                Eliminar
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       ),
     },
   ];
