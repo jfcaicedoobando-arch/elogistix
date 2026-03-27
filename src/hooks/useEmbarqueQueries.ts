@@ -16,13 +16,16 @@ const EMBARQUE_LIST_COLUMNS = 'id, expediente, bl_master, cliente_id, cliente_no
 
 /** Hook original: descarga TODOS los embarques. Usar solo para Dashboard/Operaciones que necesitan el dataset completo. */
 export function useEmbarques() {
+  const { organizationId } = useOrgFilter();
   return useQuery({
-    queryKey: queryKeys.embarques.all,
+    queryKey: [...queryKeys.embarques.all, organizationId],
     queryFn: async () => {
-      const { data, error } = await supabase
+      let query = supabase
         .from('embarques')
         .select(EMBARQUE_LIST_COLUMNS)
         .order('created_at', { ascending: false });
+      if (organizationId) query = query.eq('organization_id', organizationId);
+      const { data, error } = await query;
       if (error) throw error;
       return data as EmbarqueRow[];
     },
