@@ -34,7 +34,7 @@ Deno.serve(async (req) => {
 
     // Check admin role
     const { data: roleData } = await supabaseUser.from("user_roles").select("role").eq("user_id", userId).single();
-    if (roleData?.role !== "admin") {
+    if (roleData?.role !== "admin" && roleData?.role !== "super_admin") {
       return new Response(JSON.stringify({ error: "Solo administradores" }), { status: 403, headers: corsHeaders });
     }
 
