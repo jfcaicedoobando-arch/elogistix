@@ -36,7 +36,7 @@ export default function AdminOrganizaciones() {
   const navigate = useNavigate();
 
   const { data: orgs = [], isLoading } = useQuery({
-    queryKey: ["admin-organizations"],
+    queryKey: queryKeys.admin.organizations,
     queryFn: async () => {
       const { data, error } = await supabase
         .from("organizations")
