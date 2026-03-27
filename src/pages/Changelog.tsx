@@ -13,6 +13,13 @@ interface ChangelogEntry {
 
 const changelog: ChangelogEntry[] = [
   {
+    version: "6.5.0",
+    date: "2026-03-27",
+    type: "minor",
+    title: "Detalle enriquecido de organización",
+    description: "La página de detalle de una organización en el panel de administración ahora muestra KPIs (miembros, embarques, clientes, cotizaciones), información general (nombre, RFC, plan, fecha de creación, estado), tabla de miembros con cambio de rol y sección de configuración personalizada. Incluye botón de regreso a la lista.",
+  },
+  {
     version: "6.4.0",
     date: "2026-03-27",
     type: "minor",
