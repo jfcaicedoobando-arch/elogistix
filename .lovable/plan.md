@@ -1,99 +1,95 @@
 
 
-## Plan: Catálogos de Navieras y Tipos de Contenedor
+# Auditoría de Arquitectura del Codebase
 
-Crear dos tablas en la base de datos (`navieras` y `tipos_contenedor`) siguiendo el mismo patrón que `puertos`, con hooks CRUD, componentes de administración en el tab de Catálogos Globales, y migración de los selects existentes para leer de la BD en lugar de archivos estáticos.
+## Resumen General
 
----
-
-### 1. Migración SQL — Crear tablas `navieras` y `tipos_contenedor`
-
-```sql
-CREATE TABLE public.navieras (
-  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  code text NOT NULL UNIQUE,
-  name text NOT NULL,
-  activo boolean NOT NULL DEFAULT true,
-  created_at timestamptz NOT NULL DEFAULT now()
-);
-
-ALTER TABLE public.navieras ENABLE ROW LEVEL SECURITY;
-
-CREATE POLICY "Autenticados pueden leer navieras" ON public.navieras FOR SELECT TO authenticated USING (true);
-CREATE POLICY "Super admin CRUD navieras" ON public.navieras FOR ALL TO authenticated
-  USING (has_role(auth.uid(), 'super_admin')) WITH CHECK (has_role(auth.uid(), 'super_admin'));
-CREATE POLICY "Admins CRUD navieras" ON public.navieras FOR ALL TO authenticated
-  USING (has_role(auth.uid(), 'admin')) WITH CHECK (has_role(auth.uid(), 'admin'));
-
-CREATE TABLE public.tipos_contenedor (
-  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  code text NOT NULL UNIQUE,
-  name text NOT NULL,
-  activo boolean NOT NULL DEFAULT true,
-  created_at timestamptz NOT NULL DEFAULT now()
-);
-
-ALTER TABLE public.tipos_contenedor ENABLE ROW LEVEL SECURITY;
-
-CREATE POLICY "Autenticados pueden leer tipos_contenedor" ON public.tipos_contenedor FOR SELECT TO authenticated USING (true);
-CREATE POLICY "Super admin CRUD tipos_contenedor" ON public.tipos_contenedor FOR ALL TO authenticated
-  USING (has_role(auth.uid(), 'super_admin')) WITH CHECK (has_role(auth.uid(), 'super_admin'));
-CREATE POLICY "Admins CRUD tipos_contenedor" ON public.tipos_contenedor FOR ALL TO authenticated
-  USING (has_role(auth.uid(), 'admin')) WITH CHECK (has_role(auth.uid(), 'admin'));
-```
-
-Seed con datos de `shippingLines.ts` y `containerTypes.ts`.
-
-### 2. Hooks — `useNavieras.ts` y `useTiposContenedor.ts`
-
-Seguir el patrón exacto de `usePuertos.ts`:
-- `useNavieras()` — activas, para selects
-- `useAllNavieras()` — todas, para admin
-- `useAdminNavieras()` — mutations: agregar, toggleActivo, eliminar
-- Mismo patrón para `useTiposContenedor`
-
-### 3. Query keys
-
-Agregar a `queryKeys.ts`:
-```ts
-navieras: { all, activas, todas },
-tiposContenedor: { all, activos, todos },
-```
-
-### 4. Componentes de catálogo admin
-
-- `TabNavieras.tsx` — Mismo layout que `TabPuertos` (formulario de agregar, búsqueda, DataTable con toggle activo y eliminar). Campos: código, nombre.
-- `TabTiposContenedor.tsx` — Igual. Campos: código, nombre.
-
-### 5. Integrar en `TabCatalogosGlobales.tsx`
-
-Reemplazar los placeholders "Próximamente" con los nuevos componentes `TabNavieras` y `TabTiposContenedor`.
-
-### 6. Migrar selects existentes a leer de BD
-
-- **`ShippingLineSelect.tsx`** — Cambiar de `import { shippingLines }` estático a `useNavieras()` hook.
-- **`StepDatosRuta.tsx`** — Cambiar de `containerTypes` estático a `useTiposContenedor()` hook.
-- **`DialogDuplicarEmbarque.tsx`** — Mismo cambio para tipos de contenedor.
-
-### 7. Changelog
-
-Agregar entrada v6.7.0 — "Catálogos de navieras y tipos de contenedor".
+La arquitectura es sólida y bien modularizada para un proyecto de este tamaño. Los patrones de hooks, barrel exports, query key factory y separación de concerns están bien establecidos. Los problemas encontrados son incrementales, no sistémicos.
 
 ---
 
-### Archivos afectados
+## Hallazgos Ordenados por Criticidad
 
-| Archivo | Acción |
-|---|---|
-| Migración SQL | Crear tablas + seed + RLS |
-| `src/lib/queryKeys.ts` | Agregar keys |
-| `src/hooks/useNavieras.ts` | Crear |
-| `src/hooks/useTiposContenedor.ts` | Crear |
-| `src/components/configuracion/TabNavieras.tsx` | Crear |
-| `src/components/configuracion/TabTiposContenedor.tsx` | Crear |
-| `src/components/admin/TabCatalogosGlobales.tsx` | Integrar nuevos tabs |
-| `src/components/ShippingLineSelect.tsx` | Migrar a hook |
-| `src/components/embarque/StepDatosRuta.tsx` | Migrar a hook |
-| `src/components/embarque/DialogDuplicarEmbarque.tsx` | Migrar a hook |
-| `src/pages/Changelog.tsx` | Agregar v6.7.0 |
+### 1. CRÍTICO — `AdminOrgDetalle.tsx` es un monolito con lógica inline (477 líneas)
+
+Este archivo concentra 7 queries, 3 mutations, lógica de edición, columnas de tabla y todo el JSX en un solo componente de página. Viola el patrón establecido en el resto del proyecto (hooks extraídos, sub-componentes atómicos).
+
+**Recomendación**: Extraer un `useAdminOrgDetalle(id)` hook con todas las queries/mutations, y separar las secciones de UI (KPIs, Info general, Miembros, Configuración) en sub-componentes.
+
+### 2. CRÍTICO — Query keys hardcodeados en admin pages
+
+`AdminOrgDetalle.tsx`, `AdminOrganizaciones.tsx` y `AdminUsuarios.tsx` usan strings inline (`"admin-org"`, `"admin-org-members"`, `"admin-organizations"`, `"admin-all-users"`) en lugar del `queryKeys` factory centralizado. Esto rompe la convención del proyecto y hace frágil la invalidación de caché.
+
+**Recomendación**: Agregar sección `admin` al `queryKeys.ts` factory y migrar todos los admin pages.
+
+### 3. MODERADO — Queries inline en `Embarques.tsx` (liquidación + docs)
+
+Las queries de `embarques-liquidacion` y `embarques-docs-status` (líneas 95-134) están definidas inline en la página en lugar de extraerse a hooks. También usan query keys hardcodeados.
+
+**Recomendación**: Mover a `useEmbarqueQueries.ts` o crear un `useEmbarquesListSupplementary(ids)` hook.
+
+### 4. MODERADO — Archivos estáticos obsoletos sin consumidores
+
+`src/data/shippingLines.ts` y `src/data/containerTypes.ts` ya no se importan en ningún componente de producción (solo en tests). Fueron reemplazados por los hooks `useNavieras` y `useTiposContenedor` que leen de la BD.
+
+**Recomendación**: Eliminar ambos archivos y sus tests (`shippingLines.test.ts`, `containerTypes.test.ts`).
+
+### 5. MODERADO — `Configuracion.tsx` mezcla lógica de estado con UI
+
+La página define `getVal()`, `buildStateFromConfig()`, y `ConfigState` inline. Este patrón no sigue la convención de hooks extraídos usada en el resto del proyecto.
+
+**Recomendación**: Mover la lógica de estado a un `useConfiguracionState()` hook.
+
+### 6. MENOR — Tipo `AppRole` definido en múltiples lugares
+
+`AppRole` se define localmente en `AuthContext.tsx`, `AdminOrgDetalle.tsx`, y `usePermissions.ts` como strings manuales. Debería derivarse del enum de la BD (`Enums<"app_role">`).
+
+**Recomendación**: Crear un solo `export type AppRole = Enums<"app_role">` en `src/data/types.ts` y reutilizar.
+
+### 7. MENOR — Cast inseguro `"super_admin" as "admin"` en `App.tsx`
+
+Línea 67: `allowedRoles={["super_admin" as "admin"]}` es un hack de tipado. Indica que `ProtectedRoute` no soporta `super_admin` como rol válido en su tipado.
+
+**Recomendación**: Corregir el tipo de `allowedRoles` en `ProtectedRoute` para aceptar todos los roles válidos incluyendo `super_admin`.
+
+### 8. MENOR — `NuevoEmbarque.tsx` tiene lógica de vinculación de cotización inline
+
+Los callbacks `handleVincularCotizacion` y `handleDesvincularCotizacion` con sus 12+ `setValue` cada uno podrían vivir dentro de `useEmbarqueForm` como métodos del hook.
+
+**Recomendación**: Mover al hook `useEmbarqueForm` para reducir la complejidad de la página.
+
+### 9. OPCIONAL — Tests de datos estáticos obsoletos
+
+`src/data/__tests__/containerTypes.test.ts` y `shippingLines.test.ts` validan archivos que ya no se usan en producción.
+
+**Recomendación**: Eliminar junto con los archivos estáticos (punto 4).
+
+### 10. OPCIONAL — Falta barrel export para hooks de admin
+
+Los hooks `usePlanes`, `useConfiguracionGlobal`, `useConfiguracionOrg` no tienen un barrel como los de embarques/cotizaciones. No es urgente dado que el módulo admin es más pequeño.
+
+---
+
+## Resumen de Acciones Propuestas (en orden)
+
+| # | Prioridad | Acción | Archivos |
+|---|-----------|--------|----------|
+| 1 | Crítica | Extraer hook + sub-componentes de AdminOrgDetalle | AdminOrgDetalle.tsx → hook + 3-4 componentes |
+| 2 | Crítica | Centralizar query keys de admin en queryKeys.ts | queryKeys.ts, 3 admin pages |
+| 3 | Moderada | Extraer queries inline de Embarques.tsx a hooks | Embarques.tsx, useEmbarqueQueries.ts |
+| 4 | Moderada | Eliminar archivos estáticos obsoletos | shippingLines.ts, containerTypes.ts + tests |
+| 5 | Moderada | Extraer lógica de estado de Configuracion.tsx | Configuracion.tsx → hook |
+| 6 | Menor | Unificar tipo AppRole desde la BD | types.ts, AuthContext, usePermissions, AdminOrgDetalle |
+| 7 | Menor | Corregir cast inseguro en App.tsx | App.tsx, ProtectedRoute.tsx |
+| 8 | Menor | Mover lógica de vinculación cotización al hook | NuevoEmbarque.tsx, useEmbarqueForm.ts |
+
+## Lo que está bien hecho
+
+- Query key factory centralizado (para módulos principales)
+- Barrel exports consistentes (useEmbarques, useCotizaciones)
+- Hooks modulares (queries/mutations/utils separados)
+- Componentes reutilizables (DataTable, SearchInput, PaginationControls)
+- Separación clara entre data layer, hooks y UI en módulos core
+- Lazy loading por ruta
+- Error handling estandarizado con `getErrorMessage`
 
