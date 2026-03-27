@@ -23,7 +23,7 @@ export type Database = {
           entidad_nombre: string | null
           id: string
           modulo: string
-          organization_id: string
+          organization_id: string | null
           usuario_email: string
           usuario_id: string
         }
@@ -35,7 +35,7 @@ export type Database = {
           entidad_nombre?: string | null
           id?: string
           modulo: string
-          organization_id?: string
+          organization_id?: string | null
           usuario_email?: string
           usuario_id: string
         }
@@ -47,7 +47,7 @@ export type Database = {
           entidad_nombre?: string | null
           id?: string
           modulo?: string
-          organization_id?: string
+          organization_id?: string | null
           usuario_email?: string
           usuario_id?: string
         }
@@ -1257,11 +1257,16 @@ export type Database = {
         Returns: undefined
       }
       generar_expediente: { Args: { tipo_op: string }; Returns: string }
+      get_user_org_ids: { Args: { _user_id: string }; Returns: string[] }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
           _user_id: string
         }
+        Returns: boolean
+      }
+      is_org_admin: {
+        Args: { _org_id: string; _user_id: string }
         Returns: boolean
       }
       operadores_distintos: {
