@@ -250,10 +250,17 @@ export default function AdminOrgDetalle() {
           <h1 className="text-2xl font-bold tracking-tight">{org.nombre}</h1>
           <p className="text-sm text-muted-foreground">RFC: {org.rfc || "—"} · Plan: {org.plan}</p>
         </div>
-        <Badge variant={isActive ? "default" : "secondary"} className="gap-1">
-          {isActive ? <CheckCircle2 className="h-3 w-3" /> : <XCircle className="h-3 w-3" />}
-          {isActive ? "Activo" : "Inactivo"}
-        </Badge>
+        <div className="flex items-center gap-2">
+          <Switch
+            checked={isActive}
+            onCheckedChange={(checked) => toggleActivo.mutate(checked)}
+            disabled={toggleActivo.isPending}
+          />
+          <Badge variant={isActive ? "default" : "secondary"} className="gap-1">
+            {isActive ? <CheckCircle2 className="h-3 w-3" /> : <XCircle className="h-3 w-3" />}
+            {isActive ? "Activo" : "Inactivo"}
+          </Badge>
+        </div>
       </div>
 
       {/* KPIs */}
