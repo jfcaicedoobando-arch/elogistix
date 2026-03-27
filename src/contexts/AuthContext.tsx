@@ -27,6 +27,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [role, setRole] = useState<AppRole | null>(null);
   const [loading, setLoading] = useState(true);
   const hasLoggedLogin = useRef(false);
+  const hasFetchedRole = useRef(false);
 
   const fetchRole = async (userId: string) => {
     const { data } = await supabase
