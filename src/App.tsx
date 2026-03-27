@@ -72,6 +72,7 @@ const App = () => (
               <Route path="/admin/organizaciones" element={<AdminOrganizaciones />} />
               <Route path="/admin/organizaciones/:id" element={<AdminOrgDetalle />} />
               <Route path="/admin/usuarios" element={<AdminUsuarios />} />
+              <Route path="/admin/configuracion" element={<AdminConfiguracion />} />
             </Route>
 
             {/* Regular app routes */}

@@ -34,11 +34,25 @@ export default function Login() {
         toast({ title: "Registro exitoso", description: "Revisa tu correo para confirmar tu cuenta." });
       }
     } else {
-      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      const { data: signInData, error } = await supabase.auth.signInWithPassword({ email, password });
       setLoading(false);
       if (error) {
         toast({ title: "Error al iniciar sesión", description: error.message, variant: "destructive" });
       } else {
+        // Check if user is super_admin to redirect to /admin
+        const userId = signInData.user?.id;
+        if (userId) {
+          const { data: roleData } = await supabase
+            .from("user_roles")
+            .select("role")
+            .eq("user_id", userId)
+            .limit(1)
+            .single();
+          if (roleData?.role === "super_admin") {
+            navigate("/admin", { replace: true });
+            return;
+          }
+        }
         navigate("/", { replace: true });
       }
     }
