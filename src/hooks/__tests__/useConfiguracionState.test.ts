@@ -2,11 +2,15 @@ import { describe, it, expect } from "vitest";
 import { getVal, buildStateFromConfig } from "@/hooks/useConfiguracionState";
 import type { ConfigItem } from "@/hooks/useConfiguracion";
 
+const item = (id: string, categoria: string, clave: string, valor: unknown): ConfigItem => ({
+  id, categoria, clave, valor, descripcion: "",
+});
+
 describe("useConfiguracionState helpers", () => {
   describe("getVal", () => {
     const items: ConfigItem[] = [
-      { id: "1", categoria: "empresa", clave: "nombre", valor: "Elogistix", descripcion: "", organization_id: "", created_at: "", updated_at: "" },
-      { id: "2", categoria: "tipos_cambio", clave: "usd_mxn_default", valor: 20.5, descripcion: "", organization_id: "", created_at: "", updated_at: "" },
+      item("1", "empresa", "nombre", "Elogistix"),
+      item("2", "tipos_cambio", "usd_mxn_default", 20.5),
     ];
 
     it("returns matching value", () => {
@@ -41,11 +45,11 @@ describe("useConfiguracionState helpers", () => {
 
     it("builds state from config items", () => {
       const config: ConfigItem[] = [
-        { id: "1", categoria: "empresa", clave: "nombre", valor: "TestCo", descripcion: "", organization_id: "", created_at: "", updated_at: "" },
-        { id: "2", categoria: "empresa", clave: "rfc", valor: "RFC123", descripcion: "", organization_id: "", created_at: "", updated_at: "" },
-        { id: "3", categoria: "tipos_cambio", clave: "usd_mxn_default", valor: 19.0, descripcion: "", organization_id: "", created_at: "", updated_at: "" },
-        { id: "4", categoria: "facturacion", clave: "tasa_iva", valor: 8, descripcion: "", organization_id: "", created_at: "", updated_at: "" },
-        { id: "5", categoria: "embarques", clave: "prefijo_expediente", valor: "SHP", descripcion: "", organization_id: "", created_at: "", updated_at: "" },
+        item("1", "empresa", "nombre", "TestCo"),
+        item("2", "empresa", "rfc", "RFC123"),
+        item("3", "tipos_cambio", "usd_mxn_default", 19.0),
+        item("4", "facturacion", "tasa_iva", 8),
+        item("5", "embarques", "prefijo_expediente", "SHP"),
       ];
       const state = buildStateFromConfig(config);
       expect(state.nombre).toBe("TestCo");
@@ -53,7 +57,6 @@ describe("useConfiguracionState helpers", () => {
       expect(state.usdMxn).toBe("19");
       expect(state.tasaIva).toBe("8");
       expect(state.prefijo).toBe("SHP");
-      // Defaults for missing keys
       expect(state.eurMxn).toBe("18.5");
       expect(state.monedaCot).toBe("USD");
     });
