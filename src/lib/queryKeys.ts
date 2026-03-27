@@ -80,4 +80,14 @@ export const queryKeys = {
   configuracionOrg: {
     byOrg: (orgId: string) => ['configuracion', 'org', orgId] as const,
   },
+  navieras: {
+    all: ['navieras'] as const,
+    activas: ['navieras', 'activas'] as const,
+    todas: ['navieras', 'todas'] as const,
+  },
+  tiposContenedor: {
+    all: ['tipos_contenedor'] as const,
+    activos: ['tipos_contenedor', 'activos'] as const,
+    todos: ['tipos_contenedor', 'todos'] as const,
+  },
 } as const;

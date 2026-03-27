@@ -4,7 +4,7 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
-import { shippingLines } from "@/data/shippingLines";
+import { useNavieras } from "@/hooks/useNavieras";
 
 interface ShippingLineSelectProps {
   value: string;
@@ -14,8 +14,9 @@ interface ShippingLineSelectProps {
 
 export default function ShippingLineSelect({ value, onValueChange, placeholder = "Seleccionar naviera" }: ShippingLineSelectProps) {
   const [open, setOpen] = useState(false);
+  const { data: navieras = [] } = useNavieras();
 
-  const selected = shippingLines.find(s => s.code === value);
+  const selected = navieras.find(s => s.code === value);
   const label = selected ? `${selected.name} (${selected.code})` : "";
 
   return (
@@ -32,7 +33,7 @@ export default function ShippingLineSelect({ value, onValueChange, placeholder =
           <CommandList>
             <CommandEmpty>No se encontró la naviera.</CommandEmpty>
             <CommandGroup>
-              {shippingLines.map(line => (
+              {navieras.map(line => (
                 <CommandItem
                   key={line.code}
                   value={`${line.name} ${line.code}`}

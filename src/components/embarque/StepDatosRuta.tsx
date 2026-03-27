@@ -11,6 +11,7 @@ import type { EmbarqueFormValues } from "@/hooks/useEmbarqueForm";
 export function StepDatosRuta() {
   const { register, watch, setValue } = useFormContext<EmbarqueFormValues>();
   const modo = watch('modo');
+  const { data: containerTypes = [] } = useTiposContenedor();
 
   return (
     <Card>
