@@ -330,6 +330,36 @@ export type Database = {
           },
         ]
       }
+      configuracion_global: {
+        Row: {
+          categoria: string
+          clave: string
+          created_at: string | null
+          descripcion: string
+          id: string
+          updated_at: string | null
+          valor: Json
+        }
+        Insert: {
+          categoria: string
+          clave: string
+          created_at?: string | null
+          descripcion?: string
+          id?: string
+          updated_at?: string | null
+          valor?: Json
+        }
+        Update: {
+          categoria?: string
+          clave?: string
+          created_at?: string | null
+          descripcion?: string
+          id?: string
+          updated_at?: string | null
+          valor?: Json
+        }
+        Relationships: []
+      }
       contactos_cliente: {
         Row: {
           ciudad: string
@@ -1104,6 +1134,39 @@ export type Database = {
           plan?: string | null
           rfc?: string | null
           updated_at?: string | null
+        }
+        Relationships: []
+      }
+      planes: {
+        Row: {
+          activo: boolean
+          almacenamiento_mb: number
+          created_at: string | null
+          id: string
+          max_embarques_mes: number
+          max_usuarios: number
+          nombre: string
+          precio_mensual: number
+        }
+        Insert: {
+          activo?: boolean
+          almacenamiento_mb?: number
+          created_at?: string | null
+          id?: string
+          max_embarques_mes?: number
+          max_usuarios?: number
+          nombre: string
+          precio_mensual?: number
+        }
+        Update: {
+          activo?: boolean
+          almacenamiento_mb?: number
+          created_at?: string | null
+          id?: string
+          max_embarques_mes?: number
+          max_usuarios?: number
+          nombre?: string
+          precio_mensual?: number
         }
         Relationships: []
       }

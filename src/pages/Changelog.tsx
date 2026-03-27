@@ -13,6 +13,13 @@ interface ChangelogEntry {
 
 const changelog: ChangelogEntry[] = [
   {
+    version: "6.3.0",
+    date: "2026-03-27",
+    type: "minor",
+    title: "Configuración Global del Super Admin",
+    description: "Nueva página de Configuración Global con 4 secciones: Plataforma (identidad de marca), Planes y Límites (gestión de planes para organizaciones), Seguridad Global (políticas de contraseña, sesión y registro) y Catálogos Globales (puertos, navieras, contenedores). Incluye sección de impersonación para ver/editar la configuración de cada organización. Nuevas tablas configuracion_global y planes.",
+  },
+  {
     version: "6.2.0",
     date: "2026-03-27",
     type: "minor",
