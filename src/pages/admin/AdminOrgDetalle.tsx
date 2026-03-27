@@ -39,6 +39,7 @@ export default function AdminOrgDetalle() {
   const [editNombre, setEditNombre] = useState("");
   const [editRfc, setEditRfc] = useState("");
   const [editPlan, setEditPlan] = useState("");
+  const [addMemberOpen, setAddMemberOpen] = useState(false);
 
   // Planes
   const { data: planes = [] } = usePlanes();
