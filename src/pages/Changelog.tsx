@@ -13,6 +13,13 @@ interface ChangelogEntry {
 
 const changelog: ChangelogEntry[] = [
   {
+    version: "6.2.0",
+    date: "2026-03-27",
+    type: "minor",
+    title: "Panel exclusivo para Super Admin",
+    description: "El Super Admin ya no pertenece a ninguna organización y opera exclusivamente desde /admin. Al iniciar sesión se redirige automáticamente al panel de administración. Se agregó página de Configuración Global y se eliminó el enlace 'Ir a la app' del sidebar admin.",
+  },
+  {
     version: "6.1.0",
     date: "2026-03-27",
     type: "minor",

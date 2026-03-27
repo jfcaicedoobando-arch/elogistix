@@ -34,7 +34,6 @@ export function AdminSidebar() {
   const { state } = useSidebar();
   const collapsed = state === "collapsed";
   const location = useLocation();
-  const navigate = useNavigate();
   const { user, signOut } = useAuth();
 
   const isActive = (path: string) => {
