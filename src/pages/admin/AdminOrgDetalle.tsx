@@ -12,6 +12,7 @@ import { KpiCard } from "@/components/operaciones/KpiCard";
 import { useConfiguracionByOrg } from "@/hooks/useConfiguracionOrg";
 import { usePlanes } from "@/hooks/usePlanes";
 import { useToast } from "@/hooks/use-toast";
+import { Switch } from "@/components/ui/switch";
 import { ArrowLeft, Building2, Users, Ship, UserCheck, FileText, Calendar, CheckCircle2, XCircle, Settings, Pencil, Save, X } from "lucide-react";
 import type { Enums } from "@/integrations/supabase/types";
 import { format } from "date-fns";
@@ -80,6 +81,23 @@ export default function AdminOrgDetalle() {
     },
     onError: (error: Error) => {
       toast({ title: "Error al actualizar", description: error.message, variant: "destructive" });
+    },
+  });
+
+  const toggleActivo = useMutation({
+    mutationFn: async (activo: boolean) => {
+      const { error } = await supabase
+        .from("organizations")
+        .update({ activo })
+        .eq("id", id!);
+      if (error) throw error;
+    },
+    onSuccess: (_, activo) => {
+      queryClient.invalidateQueries({ queryKey: ["admin-org", id] });
+      toast({ title: activo ? "Organización activada" : "Organización desactivada" });
+    },
+    onError: (error: Error) => {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
     },
   });
 
@@ -232,10 +250,17 @@ export default function AdminOrgDetalle() {
           <h1 className="text-2xl font-bold tracking-tight">{org.nombre}</h1>
           <p className="text-sm text-muted-foreground">RFC: {org.rfc || "—"} · Plan: {org.plan}</p>
         </div>
-        <Badge variant={isActive ? "default" : "secondary"} className="gap-1">
-          {isActive ? <CheckCircle2 className="h-3 w-3" /> : <XCircle className="h-3 w-3" />}
-          {isActive ? "Activo" : "Inactivo"}
-        </Badge>
+        <div className="flex items-center gap-2">
+          <Switch
+            checked={isActive}
+            onCheckedChange={(checked) => toggleActivo.mutate(checked)}
+            disabled={toggleActivo.isPending}
+          />
+          <Badge variant={isActive ? "default" : "secondary"} className="gap-1">
+            {isActive ? <CheckCircle2 className="h-3 w-3" /> : <XCircle className="h-3 w-3" />}
+            {isActive ? "Activo" : "Inactivo"}
+          </Badge>
+        </div>
       </div>
 
       {/* KPIs */}
