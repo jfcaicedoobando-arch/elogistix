@@ -1,53 +1,48 @@
-
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { queryKeys } from "@/lib/queryKeys";
 
 /**
- * Supplementary data for the Embarques list view:
- * liquidation status and document status per embarque.
+ * Single RPC call to fetch liquidation + document counts for a page of embarques.
+ * Replaces the previous two separate hooks (useEmbarquesLiquidacion + useEmbarquesDocsStatus).
  */
-
-export function useEmbarquesLiquidacion(embarqueIds: string[]) {
+export function useEmbarquesListExtras(embarqueIds: string[]) {
   return useQuery({
-    queryKey: [...queryKeys.embarques.all, 'liquidacion', embarqueIds],
+    queryKey: [...queryKeys.embarques.all, 'list-extras', embarqueIds],
     queryFn: async () => {
-      if (embarqueIds.length === 0) return {};
-      const { data, error } = await supabase
-        .from('conceptos_costo')
-        .select('embarque_id, estado_liquidacion')
-        .in('embarque_id', embarqueIds);
-      if (error) throw error;
-      const map: Record<string, { total: number; pagados: number }> = {};
-      (data ?? []).forEach((c) => {
-        if (!map[c.embarque_id]) map[c.embarque_id] = { total: 0, pagados: 0 };
-        map[c.embarque_id].total++;
-        if (c.estado_liquidacion === 'Pagado') map[c.embarque_id].pagados++;
+      if (embarqueIds.length === 0) return { liquidacion: {}, docs: {} };
+      const { data, error } = await supabase.rpc('embarques_list_extras', {
+        p_ids: embarqueIds,
       });
-      return map;
+      if (error) throw error;
+
+      const liquidacion: Record<string, { total: number; pagados: number }> = {};
+      const docs: Record<string, { total: number; pendientes: number }> = {};
+
+      (data ?? []).forEach((row: { embarque_id: string; costos_total: number; costos_pagados: number; docs_total: number; docs_pendientes: number }) => {
+        liquidacion[row.embarque_id] = {
+          total: Number(row.costos_total),
+          pagados: Number(row.costos_pagados),
+        };
+        docs[row.embarque_id] = {
+          total: Number(row.docs_total),
+          pendientes: Number(row.docs_pendientes),
+        };
+      });
+
+      return { liquidacion, docs };
     },
     enabled: embarqueIds.length > 0,
   });
 }
 
+// Keep old exports as aliases for backward compatibility during migration
+export function useEmbarquesLiquidacion(embarqueIds: string[]) {
+  const { data, ...rest } = useEmbarquesListExtras(embarqueIds);
+  return { data: data?.liquidacion ?? {}, ...rest };
+}
+
 export function useEmbarquesDocsStatus(embarqueIds: string[]) {
-  return useQuery({
-    queryKey: [...queryKeys.embarques.all, 'docs-status', embarqueIds],
-    queryFn: async () => {
-      if (embarqueIds.length === 0) return {};
-      const { data, error } = await supabase
-        .from('documentos_embarque')
-        .select('embarque_id, estado')
-        .in('embarque_id', embarqueIds);
-      if (error) throw error;
-      const map: Record<string, { total: number; pendientes: number }> = {};
-      (data ?? []).forEach((d) => {
-        if (!map[d.embarque_id]) map[d.embarque_id] = { total: 0, pendientes: 0 };
-        map[d.embarque_id].total++;
-        if (d.estado !== 'Recibido' && d.estado !== 'Validado') map[d.embarque_id].pendientes++;
-      });
-      return map;
-    },
-    enabled: embarqueIds.length > 0,
-  });
+  const { data, ...rest } = useEmbarquesListExtras(embarqueIds);
+  return { data: data?.docs ?? {}, ...rest };
 }
