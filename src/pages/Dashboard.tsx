@@ -18,7 +18,6 @@ export default function Dashboard() {
     isLoading,
     filtroEstado,
     setFiltroEstado,
-    activos,
     conteoPorEstado,
     totalActivos,
     alertasDemora,
