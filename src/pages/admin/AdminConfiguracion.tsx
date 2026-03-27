@@ -1,5 +1,11 @@
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Settings, Globe, CreditCard, Shield } from "lucide-react";
+import { Settings, Globe, CreditCard, Shield, BookOpen } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Separator } from "@/components/ui/separator";
+import TabPlataforma from "@/components/admin/TabPlataforma";
+import TabPlanes from "@/components/admin/TabPlanes";
+import TabSeguridadGlobal from "@/components/admin/TabSeguridadGlobal";
+import TabCatalogosGlobales from "@/components/admin/TabCatalogosGlobales";
+import ConfigOrganizacion from "@/components/admin/ConfigOrganizacion";
 
 export default function AdminConfiguracion() {
   return (
@@ -14,46 +20,42 @@ export default function AdminConfiguracion() {
         </p>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-base">
-              <Globe className="h-4 w-4" />
-              Plataforma
-            </CardTitle>
-            <CardDescription>Nombre, logo y configuración general</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <p className="text-sm text-muted-foreground">Próximamente</p>
-          </CardContent>
-        </Card>
+      <Tabs defaultValue="plataforma">
+        <TabsList>
+          <TabsTrigger value="plataforma" className="gap-1.5">
+            <Globe className="h-3.5 w-3.5" /> Plataforma
+          </TabsTrigger>
+          <TabsTrigger value="planes" className="gap-1.5">
+            <CreditCard className="h-3.5 w-3.5" /> Planes
+          </TabsTrigger>
+          <TabsTrigger value="seguridad" className="gap-1.5">
+            <Shield className="h-3.5 w-3.5" /> Seguridad
+          </TabsTrigger>
+          <TabsTrigger value="catalogos" className="gap-1.5">
+            <BookOpen className="h-3.5 w-3.5" /> Catálogos
+          </TabsTrigger>
+        </TabsList>
 
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-base">
-              <CreditCard className="h-4 w-4" />
-              Planes y Facturación
-            </CardTitle>
-            <CardDescription>Gestión de planes y suscripciones</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <p className="text-sm text-muted-foreground">Próximamente</p>
-          </CardContent>
-        </Card>
+        <TabsContent value="plataforma">
+          <TabPlataforma />
+        </TabsContent>
 
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-base">
-              <Shield className="h-4 w-4" />
-              Seguridad
-            </CardTitle>
-            <CardDescription>Políticas de seguridad globales</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <p className="text-sm text-muted-foreground">Próximamente</p>
-          </CardContent>
-        </Card>
-      </div>
+        <TabsContent value="planes">
+          <TabPlanes />
+        </TabsContent>
+
+        <TabsContent value="seguridad">
+          <TabSeguridadGlobal />
+        </TabsContent>
+
+        <TabsContent value="catalogos">
+          <TabCatalogosGlobales />
+        </TabsContent>
+      </Tabs>
+
+      <Separator />
+
+      <ConfigOrganizacion />
     </div>
   );
 }
