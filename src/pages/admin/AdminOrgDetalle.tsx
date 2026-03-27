@@ -13,7 +13,8 @@ import { useConfiguracionByOrg } from "@/hooks/useConfiguracionOrg";
 import { usePlanes } from "@/hooks/usePlanes";
 import { useToast } from "@/hooks/use-toast";
 import { Switch } from "@/components/ui/switch";
-import { ArrowLeft, Building2, Users, Ship, UserCheck, FileText, Calendar, CheckCircle2, XCircle, Settings, Pencil, Save, X } from "lucide-react";
+import { ArrowLeft, Building2, Users, Ship, UserCheck, FileText, Calendar, CheckCircle2, XCircle, Settings, Pencil, Save, X, UserPlus } from "lucide-react";
+import AgregarMiembroOrgDialog from "@/components/admin/AgregarMiembroOrgDialog";
 import type { Enums } from "@/integrations/supabase/types";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
@@ -38,6 +39,7 @@ export default function AdminOrgDetalle() {
   const [editNombre, setEditNombre] = useState("");
   const [editRfc, setEditRfc] = useState("");
   const [editPlan, setEditPlan] = useState("");
+  const [addMemberOpen, setAddMemberOpen] = useState(false);
 
   // Planes
   const { data: planes = [] } = usePlanes();
@@ -356,6 +358,9 @@ export default function AdminOrgDetalle() {
             <Users className="h-5 w-5" />
             Miembros ({members.length})
           </CardTitle>
+          <Button size="sm" className="gap-1" onClick={() => setAddMemberOpen(true)}>
+            <UserPlus className="h-4 w-4" /> Agregar miembro
+          </Button>
         </CardHeader>
         <CardContent>
           <DataTable
@@ -404,6 +409,19 @@ export default function AdminOrgDetalle() {
           ))}
         </CardContent>
       </Card>
+
+      {id && (
+        <AgregarMiembroOrgDialog
+          open={addMemberOpen}
+          onOpenChange={setAddMemberOpen}
+          organizationId={id}
+          existingUserIds={members.map((m) => m.user_id)}
+          onAdded={() => {
+            queryClient.invalidateQueries({ queryKey: ["admin-org-members", id] });
+            queryClient.invalidateQueries({ queryKey: ["admin-org-count-members", id] });
+          }}
+        />
+      )}
     </div>
   );
 }
