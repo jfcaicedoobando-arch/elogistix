@@ -50,13 +50,16 @@ export function useClientesPaginados({ search, page, pageSize }: UseClientesPagi
 // --- Hook original (todos los registros) para Reportes ---
 
 export function useClientes() {
+  const { organizationId } = useOrgFilter();
   return useQuery({
-    queryKey: queryKeys.clientes.all,
+    queryKey: [...queryKeys.clientes.all, organizationId],
     queryFn: async () => {
-      const { data, error } = await supabase
+      let query = supabase
         .from("clientes")
         .select(CLIENTE_LIST_COLUMNS)
         .order("nombre");
+      if (organizationId) query = query.eq('organization_id', organizationId);
+      const { data, error } = await query;
       if (error) throw error;
       return data;
     },

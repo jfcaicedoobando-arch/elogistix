@@ -2,6 +2,7 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { queryKeys } from '@/lib/queryKeys';
 import type { CotizacionRow } from './useCotizacionTypes';
+import { useOrgFilter } from '@/hooks/useOrgFilter';
 
 /** Columnas necesarias para la tabla de cotizaciones (evita select('*')) */
 const COTIZACION_LIST_COLUMNS = 'id, folio, cliente_id, cliente_nombre, modo, origen, destino, subtotal, moneda, estado, fecha_vigencia, created_at, descripcion_mercancia' as const;
@@ -10,14 +11,17 @@ const COTIZACION_LIST_COLUMNS = 'id, folio, cliente_id, cliente_nombre, modo, or
 const COTIZACION_ACEPTADA_COLUMNS = 'id, folio, cliente_id, cliente_nombre, modo, tipo, incoterm, descripcion_mercancia, tipo_carga, tipo_contenedor, peso_kg, volumen_m3, piezas, operador, origen, destino, notas' as const;
 
 export function useCotizacionesAceptadas() {
+  const { organizationId } = useOrgFilter();
   return useQuery({
-    queryKey: [...queryKeys.cotizaciones.all, 'aceptadas'] as const,
+    queryKey: [...queryKeys.cotizaciones.all, 'aceptadas', organizationId] as const,
     queryFn: async () => {
-      const { data, error } = await supabase
+      let query = supabase
         .from('cotizaciones')
         .select(COTIZACION_ACEPTADA_COLUMNS)
         .eq('estado', 'Aceptada')
         .order('created_at', { ascending: false });
+      if (organizationId) query = query.eq('organization_id', organizationId);
+      const { data, error } = await query;
       if (error) throw error;
       return data as unknown as CotizacionRow[];
     },
@@ -25,13 +29,16 @@ export function useCotizacionesAceptadas() {
 }
 
 export function useCotizaciones() {
+  const { organizationId } = useOrgFilter();
   return useQuery({
-    queryKey: queryKeys.cotizaciones.all,
+    queryKey: [...queryKeys.cotizaciones.all, organizationId],
     queryFn: async () => {
-      const { data, error } = await supabase
+      let query = supabase
         .from('cotizaciones')
         .select(COTIZACION_LIST_COLUMNS)
         .order('created_at', { ascending: false });
+      if (organizationId) query = query.eq('organization_id', organizationId);
+      const { data, error } = await query;
       if (error) throw error;
       return data as unknown as CotizacionRow[];
     },
