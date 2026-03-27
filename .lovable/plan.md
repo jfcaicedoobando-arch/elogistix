@@ -1,95 +1,74 @@
 
 
-# Auditoría de Arquitectura del Codebase
+# Auditoría de Arquitectura — Post-Refactoring v7.0.0
 
-## Resumen General
+## Estado actual
 
-La arquitectura es sólida y bien modularizada para un proyecto de este tamaño. Los patrones de hooks, barrel exports, query key factory y separación de concerns están bien establecidos. Los problemas encontrados son incrementales, no sistémicos.
-
----
-
-## Hallazgos Ordenados por Criticidad
-
-### 1. CRÍTICO — `AdminOrgDetalle.tsx` es un monolito con lógica inline (477 líneas)
-
-Este archivo concentra 7 queries, 3 mutations, lógica de edición, columnas de tabla y todo el JSX en un solo componente de página. Viola el patrón establecido en el resto del proyecto (hooks extraídos, sub-componentes atómicos).
-
-**Recomendación**: Extraer un `useAdminOrgDetalle(id)` hook con todas las queries/mutations, y separar las secciones de UI (KPIs, Info general, Miembros, Configuración) en sub-componentes.
-
-### 2. CRÍTICO — Query keys hardcodeados en admin pages
-
-`AdminOrgDetalle.tsx`, `AdminOrganizaciones.tsx` y `AdminUsuarios.tsx` usan strings inline (`"admin-org"`, `"admin-org-members"`, `"admin-organizations"`, `"admin-all-users"`) en lugar del `queryKeys` factory centralizado. Esto rompe la convención del proyecto y hace frágil la invalidación de caché.
-
-**Recomendación**: Agregar sección `admin` al `queryKeys.ts` factory y migrar todos los admin pages.
-
-### 3. MODERADO — Queries inline en `Embarques.tsx` (liquidación + docs)
-
-Las queries de `embarques-liquidacion` y `embarques-docs-status` (líneas 95-134) están definidas inline en la página en lugar de extraerse a hooks. También usan query keys hardcodeados.
-
-**Recomendación**: Mover a `useEmbarqueQueries.ts` o crear un `useEmbarquesListSupplementary(ids)` hook.
-
-### 4. MODERADO — Archivos estáticos obsoletos sin consumidores
-
-`src/data/shippingLines.ts` y `src/data/containerTypes.ts` ya no se importan en ningún componente de producción (solo en tests). Fueron reemplazados por los hooks `useNavieras` y `useTiposContenedor` que leen de la BD.
-
-**Recomendación**: Eliminar ambos archivos y sus tests (`shippingLines.test.ts`, `containerTypes.test.ts`).
-
-### 5. MODERADO — `Configuracion.tsx` mezcla lógica de estado con UI
-
-La página define `getVal()`, `buildStateFromConfig()`, y `ConfigState` inline. Este patrón no sigue la convención de hooks extraídos usada en el resto del proyecto.
-
-**Recomendación**: Mover la lógica de estado a un `useConfiguracionState()` hook.
-
-### 6. MENOR — Tipo `AppRole` definido en múltiples lugares
-
-`AppRole` se define localmente en `AuthContext.tsx`, `AdminOrgDetalle.tsx`, y `usePermissions.ts` como strings manuales. Debería derivarse del enum de la BD (`Enums<"app_role">`).
-
-**Recomendación**: Crear un solo `export type AppRole = Enums<"app_role">` en `src/data/types.ts` y reutilizar.
-
-### 7. MENOR — Cast inseguro `"super_admin" as "admin"` en `App.tsx`
-
-Línea 67: `allowedRoles={["super_admin" as "admin"]}` es un hack de tipado. Indica que `ProtectedRoute` no soporta `super_admin` como rol válido en su tipado.
-
-**Recomendación**: Corregir el tipo de `allowedRoles` en `ProtectedRoute` para aceptar todos los roles válidos incluyendo `super_admin`.
-
-### 8. MENOR — `NuevoEmbarque.tsx` tiene lógica de vinculación de cotización inline
-
-Los callbacks `handleVincularCotizacion` y `handleDesvincularCotizacion` con sus 12+ `setValue` cada uno podrían vivir dentro de `useEmbarqueForm` como métodos del hook.
-
-**Recomendación**: Mover al hook `useEmbarqueForm` para reducir la complejidad de la página.
-
-### 9. OPCIONAL — Tests de datos estáticos obsoletos
-
-`src/data/__tests__/containerTypes.test.ts` y `shippingLines.test.ts` validan archivos que ya no se usan en producción.
-
-**Recomendación**: Eliminar junto con los archivos estáticos (punto 4).
-
-### 10. OPCIONAL — Falta barrel export para hooks de admin
-
-Los hooks `usePlanes`, `useConfiguracionGlobal`, `useConfiguracionOrg` no tienen un barrel como los de embarques/cotizaciones. No es urgente dado que el módulo admin es más pequeño.
+El refactoring v7.0.0 resolvió los problemas más críticos del audit anterior (AdminOrgDetalle monolítico, query keys hardcodeados, queries inline en Embarques, archivos estáticos obsoletos, ConfiguracionState, vinculación cotización en hook). La arquitectura está significativamente más limpia. Los hallazgos restantes son de criticidad menor a moderada.
 
 ---
 
-## Resumen de Acciones Propuestas (en orden)
+## Hallazgos Pendientes
 
-| # | Prioridad | Acción | Archivos |
-|---|-----------|--------|----------|
-| 1 | Crítica | Extraer hook + sub-componentes de AdminOrgDetalle | AdminOrgDetalle.tsx → hook + 3-4 componentes |
-| 2 | Crítica | Centralizar query keys de admin en queryKeys.ts | queryKeys.ts, 3 admin pages |
-| 3 | Moderada | Extraer queries inline de Embarques.tsx a hooks | Embarques.tsx, useEmbarqueQueries.ts |
-| 4 | Moderada | Eliminar archivos estáticos obsoletos | shippingLines.ts, containerTypes.ts + tests |
-| 5 | Moderada | Extraer lógica de estado de Configuracion.tsx | Configuracion.tsx → hook |
-| 6 | Menor | Unificar tipo AppRole desde la BD | types.ts, AuthContext, usePermissions, AdminOrgDetalle |
-| 7 | Menor | Corregir cast inseguro en App.tsx | App.tsx, ProtectedRoute.tsx |
-| 8 | Menor | Mover lógica de vinculación cotización al hook | NuevoEmbarque.tsx, useEmbarqueForm.ts |
+### 1. MODERADO — `AppRole` sigue definido localmente en 3 archivos
 
-## Lo que está bien hecho
+A pesar de crear `AppRole` centralizado en `src/data/types.ts`, tres archivos aún definen su propia versión local:
 
-- Query key factory centralizado (para módulos principales)
+- `src/components/admin/AgregarMiembroOrgDialog.tsx` → `type AppRole = Enums<"app_role">`
+- `src/pages/Usuarios.tsx` → `type AppRole = Enums<'app_role'>`
+- `src/hooks/useUsuarios.ts` → `type AppRole = Enums<'app_role'>`
+
+**Acción**: Reemplazar las 3 definiciones locales por `import type { AppRole } from "@/data/types"`.
+
+### 2. MODERADO — Casts inseguros `(role as string) === "super_admin"` en 3 archivos
+
+El tipo `AppRole` del `AuthContext` ya debería incluir `super_admin`, pero se siguen usando casts a `string` para comparar:
+
+- `src/contexts/OrganizationContext.tsx` línea 41
+- `src/components/ProtectedRoute.tsx` línea 28
+- `src/components/AppSidebar.tsx` líneas 155-156
+
+**Acción**: Dado que `AuthContext.role` ya es `AppRole | null` (que incluye `super_admin`), eliminar los casts `as string` y comparar directamente.
+
+### 3. MENOR — Variable `containerTypes` mantiene nombre en inglés
+
+En `StepDatosRuta.tsx` y `DialogDuplicarEmbarque.tsx`, la variable de hook se asigna como `containerTypes` (en inglés), rompiendo la convención de español del proyecto.
+
+**Acción**: Renombrar a `tiposContenedor` para consistencia.
+
+### 4. MENOR — `ShippingLineSelect` mantiene nombre en inglés
+
+El componente `src/components/ShippingLineSelect.tsx` y sus props usan nombres en inglés, mientras el resto del proyecto usa español.
+
+**Acción**: Renombrar a `NavieraSelect` (archivo y componente).
+
+### 5. OPCIONAL — Helpers del test `useConfiguracionState.test.ts` duplican lógica del hook
+
+Los tests de `useConfiguracionState` recrean `getVal` y `buildStateFromConfig` en lugar de importarlos. Si se exportaran como funciones puras del hook, los tests serían más fieles al código real.
+
+**Acción**: Exportar `getVal` y `buildStateFromConfig` desde `useConfiguracionState.ts` y usarlos en el test.
+
+---
+
+## Resumen de Acciones (en orden)
+
+| # | Prioridad | Acción | Archivos afectados |
+|---|-----------|--------|--------------------|
+| 1 | Moderada | Unificar AppRole desde `data/types.ts` | AgregarMiembroOrgDialog, Usuarios, useUsuarios |
+| 2 | Moderada | Eliminar casts `as string` para super_admin | OrganizationContext, ProtectedRoute, AppSidebar |
+| 3 | Menor | Renombrar `containerTypes` → `tiposContenedor` | StepDatosRuta, DialogDuplicarEmbarque |
+| 4 | Menor | Renombrar `ShippingLineSelect` → `NavieraSelect` | ShippingLineSelect.tsx, StepDatosRuta.tsx |
+| 5 | Opcional | Exportar helpers puros de useConfiguracionState | useConfiguracionState.ts, test |
+
+## Lo que ya está bien
+
+- AdminOrgDetalle correctamente descompuesto (280 líneas, hook separado)
+- Query keys 100% centralizados en `queryKeys.ts`
+- Queries de Embarques extraídas a `useEmbarquesListData`
+- Archivos estáticos obsoletos eliminados
+- ConfiguracionState extraído a hook
+- Vinculación de cotización dentro del hook `useEmbarqueForm`
+- ProtectedRoute acepta `AppRole[]` con tipado correcto
 - Barrel exports consistentes (useEmbarques, useCotizaciones)
-- Hooks modulares (queries/mutations/utils separados)
-- Componentes reutilizables (DataTable, SearchInput, PaginationControls)
-- Separación clara entre data layer, hooks y UI en módulos core
-- Lazy loading por ruta
-- Error handling estandarizado con `getErrorMessage`
+- Lazy loading, error handling, DataTable estandarizado
 
