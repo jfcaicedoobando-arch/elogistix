@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useConfiguracion, useUpdateConfiguracion, type ConfigItem } from "@/hooks/useConfiguracion";
 
-function getVal<T>(data: ConfigItem[] | undefined, categoria: string, clave: string, fallback: T): T {
+export function getVal<T>(data: ConfigItem[] | undefined, categoria: string, clave: string, fallback: T): T {
   if (!data) return fallback;
   const item = data.find((c) => c.categoria === categoria && c.clave === clave);
   return item ? (item.valor as T) : fallback;
