@@ -19,7 +19,8 @@ interface UseClientesPaginadosParams {
 }
 
 export function useClientesPaginados({ search, page, pageSize }: UseClientesPaginadosParams) {
-  const filters = { search, page, pageSize };
+  const { organizationId } = useOrgFilter();
+  const filters = { search, page, pageSize, organizationId };
 
   return useQuery({
     queryKey: queryKeys.clientes.list(filters),
@@ -29,6 +30,7 @@ export function useClientesPaginados({ search, page, pageSize }: UseClientesPagi
         .select(CLIENTE_LIST_COLUMNS, { count: 'exact' })
         .order('nombre');
 
+      if (organizationId) query = query.eq('organization_id', organizationId);
       if (search) {
         query = query.or(`nombre.ilike.%${search}%,rfc.ilike.%${search}%`);
       }
