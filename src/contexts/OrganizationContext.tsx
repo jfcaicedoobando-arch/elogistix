@@ -38,7 +38,7 @@ export function OrganizationProvider({ children }: { children: ReactNode }) {
   const [organizations, setOrganizations] = useState<Organization[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const isSuperAdmin = (role as string) === "super_admin";
+  const isSuperAdmin = role === "super_admin";
 
   const fetchMembership = useCallback(async () => {
     if (!user) {

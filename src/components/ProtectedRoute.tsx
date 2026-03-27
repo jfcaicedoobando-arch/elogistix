@@ -25,7 +25,7 @@ export function ProtectedRoute({ children, allowedRoles }: ProtectedRouteProps) 
   }
 
   // Super admin accessing regular app routes → redirect to /admin
-  const isSuperAdmin = (role as string) === "super_admin";
+  const isSuperAdmin = role === "super_admin";
   if (isSuperAdmin && !location.pathname.startsWith("/admin")) {
     return <Navigate to="/admin" replace />;
   }

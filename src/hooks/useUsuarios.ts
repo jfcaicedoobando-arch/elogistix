@@ -1,8 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import type { Enums } from '@/integrations/supabase/types';
-
-type AppRole = Enums<'app_role'>;
+import type { AppRole } from '@/data/types';
 
 export interface UserRow {
   user_id: string;

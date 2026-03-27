@@ -5,7 +5,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useTiposContenedor } from "@/hooks/useTiposContenedor";
 import PortSelect from "@/components/PortSelect";
-import ShippingLineSelect from "@/components/ShippingLineSelect";
+import NavieraSelect from "@/components/NavieraSelect";
 import type { EmbarqueFormValues } from "@/hooks/useEmbarqueForm";
 
 export function StepDatosRuta() {

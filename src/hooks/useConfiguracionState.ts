@@ -34,7 +34,7 @@ export interface ConfigState {
   diasFactVencer: string;
 }
 
-function buildStateFromConfig(config: ConfigItem[] | undefined): ConfigState {
+export function buildStateFromConfig(config: ConfigItem[] | undefined): ConfigState {
   return {
     nombre: getVal(config, "empresa", "nombre", ""),
     subtitulo: getVal(config, "empresa", "subtitulo", ""),
