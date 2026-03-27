@@ -21,7 +21,7 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
-import { Separator } from "@/components/ui/separator";
+
 
 const adminItems = [
   { title: "Dashboard", url: "/admin", icon: LayoutDashboard },
