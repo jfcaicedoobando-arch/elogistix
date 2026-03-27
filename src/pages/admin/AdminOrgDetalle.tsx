@@ -210,6 +210,24 @@ export default function AdminOrgDetalle() {
     },
   });
 
+  const removeMember = useMutation({
+    mutationFn: async (memberId: string) => {
+      const { error } = await supabase
+        .from("organization_members")
+        .delete()
+        .eq("id", memberId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin-org-members", id] });
+      queryClient.invalidateQueries({ queryKey: ["admin-org-count-members", id] });
+      toast({ title: "Miembro eliminado de la organización" });
+    },
+    onError: (error: Error) => {
+      toast({ title: "Error al eliminar miembro", description: error.message, variant: "destructive" });
+    },
+  });
+
   const roleBadge: Record<string, string> = {
     super_admin: "bg-primary text-primary-foreground",
     admin: "bg-destructive text-destructive-foreground",
