@@ -1,15 +1,18 @@
+import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { DataTable, type DataTableColumn } from "@/components/DataTable";
 import { KpiCard } from "@/components/operaciones/KpiCard";
 import { useConfiguracionByOrg } from "@/hooks/useConfiguracionOrg";
+import { usePlanes } from "@/hooks/usePlanes";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, Building2, Users, Ship, UserCheck, FileText, Calendar, CheckCircle2, XCircle, Settings } from "lucide-react";
+import { ArrowLeft, Building2, Users, Ship, UserCheck, FileText, Calendar, CheckCircle2, XCircle, Settings, Pencil, Save, X } from "lucide-react";
 import type { Enums } from "@/integrations/supabase/types";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
@@ -29,6 +32,15 @@ export default function AdminOrgDetalle() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
+  // Edit state
+  const [editing, setEditing] = useState(false);
+  const [editNombre, setEditNombre] = useState("");
+  const [editRfc, setEditRfc] = useState("");
+  const [editPlan, setEditPlan] = useState("");
+
+  // Planes
+  const { data: planes = [] } = usePlanes();
+
   // Org data
   const { data: org } = useQuery({
     queryKey: ["admin-org", id],
@@ -42,6 +54,33 @@ export default function AdminOrgDetalle() {
       return data;
     },
     enabled: !!id,
+  });
+
+  useEffect(() => {
+    if (org) {
+      setEditNombre(org.nombre);
+      setEditRfc(org.rfc ?? "");
+      setEditPlan(org.plan ?? "basic");
+    }
+  }, [org]);
+
+  // Update org mutation
+  const updateOrg = useMutation({
+    mutationFn: async (payload: { nombre: string; rfc: string; plan: string }) => {
+      const { error } = await supabase
+        .from("organizations")
+        .update({ nombre: payload.nombre, rfc: payload.rfc, plan: payload.plan })
+        .eq("id", id!);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin-org", id] });
+      toast({ title: "Organización actualizada" });
+      setEditing(false);
+    },
+    onError: (error: Error) => {
+      toast({ title: "Error al actualizar", description: error.message, variant: "destructive" });
+    },
   });
 
   // KPI counts
@@ -209,28 +248,74 @@ export default function AdminOrgDetalle() {
 
       {/* Info general */}
       <Card>
-        <CardHeader>
+        <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle className="text-lg flex items-center gap-2">
             <Calendar className="h-4 w-4" />
             Información general
           </CardTitle>
+          {!editing ? (
+            <Button variant="outline" size="sm" onClick={() => setEditing(true)} className="gap-1">
+              <Pencil className="h-3.5 w-3.5" /> Editar
+            </Button>
+          ) : (
+            <div className="flex gap-2">
+              <Button
+                variant="default"
+                size="sm"
+                className="gap-1"
+                disabled={updateOrg.isPending || !editNombre.trim()}
+                onClick={() => updateOrg.mutate({ nombre: editNombre.trim(), rfc: editRfc.trim(), plan: editPlan })}
+              >
+                <Save className="h-3.5 w-3.5" /> Guardar
+              </Button>
+              <Button variant="ghost" size="sm" onClick={() => { setEditing(false); if (org) { setEditNombre(org.nombre); setEditRfc(org.rfc ?? ""); setEditPlan(org.plan ?? "basic"); } }}>
+                <X className="h-3.5 w-3.5" />
+              </Button>
+            </div>
+          )}
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
             <div>
-              <p className="text-muted-foreground">Nombre</p>
-              <p className="font-medium">{org.nombre}</p>
+              <p className="text-muted-foreground mb-1">Nombre</p>
+              {editing ? (
+                <Input value={editNombre} onChange={(e) => setEditNombre(e.target.value)} maxLength={100} />
+              ) : (
+                <p className="font-medium">{org.nombre}</p>
+              )}
             </div>
             <div>
-              <p className="text-muted-foreground">RFC</p>
-              <p className="font-medium">{org.rfc || "—"}</p>
+              <p className="text-muted-foreground mb-1">RFC</p>
+              {editing ? (
+                <Input value={editRfc} onChange={(e) => setEditRfc(e.target.value.toUpperCase())} maxLength={13} />
+              ) : (
+                <p className="font-medium">{org.rfc || "—"}</p>
+              )}
             </div>
             <div>
-              <p className="text-muted-foreground">Plan</p>
-              <Badge variant="outline">{org.plan ?? "basic"}</Badge>
+              <p className="text-muted-foreground mb-1">Plan</p>
+              {editing ? (
+                <Select value={editPlan} onValueChange={setEditPlan}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {planes.filter(p => p.activo).map((p) => (
+                      <SelectItem key={p.id} value={p.nombre}>{p.nombre}</SelectItem>
+                    ))}
+                    {planes.length === 0 && (
+                      <>
+                        <SelectItem value="basic">Basic</SelectItem>
+                        <SelectItem value="pro">Pro</SelectItem>
+                        <SelectItem value="enterprise">Enterprise</SelectItem>
+                      </>
+                    )}
+                  </SelectContent>
+                </Select>
+              ) : (
+                <Badge variant="outline">{org.plan ?? "basic"}</Badge>
+              )}
             </div>
             <div>
-              <p className="text-muted-foreground">Fecha de creación</p>
+              <p className="text-muted-foreground mb-1">Fecha de creación</p>
               <p className="font-medium">
                 {org.created_at ? format(new Date(org.created_at), "dd MMM yyyy", { locale: es }) : "—"}
               </p>
