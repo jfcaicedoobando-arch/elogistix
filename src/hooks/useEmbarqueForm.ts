@@ -233,6 +233,44 @@ export function useEmbarqueForm() {
     }));
   }, [documentosArchivos]);
 
+  const vincularCotizacion = useCallback((cot: {
+    cliente_id: string | null; modo: string; tipo: string; incoterm: string;
+    descripcion_mercancia: string; tipo_carga: string; tipo_contenedor: string | null;
+    peso_kg: number; volumen_m3: number; piezas: number; origen: string; destino: string;
+  }) => {
+    const opts = { shouldValidate: true, shouldDirty: true } as const;
+    methods.setValue('clienteId', cot.cliente_id || '', opts);
+    methods.setValue('modo', cot.modo, opts);
+    methods.setValue('tipo', cot.tipo, opts);
+    methods.setValue('incoterm', cot.incoterm, opts);
+    methods.setValue('descripcionMercancia', cot.descripcion_mercancia, opts);
+    methods.setValue('tipoCarga', cot.tipo_carga || 'Carga General', opts);
+    methods.setValue('tipoContenedor', cot.tipo_contenedor || '', opts);
+    methods.setValue('pesoKg', String(cot.peso_kg || ''), opts);
+    methods.setValue('volumenM3', String(cot.volumen_m3 || ''), opts);
+    methods.setValue('piezas', String(cot.piezas || ''), opts);
+    methods.setValue('puertoOrigen', cot.origen || '', opts);
+    methods.setValue('puertoDestino', cot.destino || '', opts);
+    methods.trigger();
+  }, [methods]);
+
+  const desvincularCotizacion = useCallback(() => {
+    const opts = { shouldValidate: true, shouldDirty: true } as const;
+    methods.setValue('clienteId', '', opts);
+    methods.setValue('modo', '', opts);
+    methods.setValue('tipo', '', opts);
+    methods.setValue('incoterm', 'FOB', opts);
+    methods.setValue('descripcionMercancia', '', opts);
+    methods.setValue('tipoCarga', 'Carga General', opts);
+    methods.setValue('tipoContenedor', '', opts);
+    methods.setValue('pesoKg', '', opts);
+    methods.setValue('volumenM3', '', opts);
+    methods.setValue('piezas', '', opts);
+    methods.setValue('puertoOrigen', '', opts);
+    methods.setValue('puertoDestino', '', opts);
+    methods.trigger();
+  }, [methods]);
+
   return {
     methods,
     handleMsdsUpload,
@@ -243,5 +281,7 @@ export function useEmbarqueForm() {
     documentosArchivos,
     setDocumentoArchivo,
     getDocumentosChecklist,
+    vincularCotizacion,
+    desvincularCotizacion,
   };
 }

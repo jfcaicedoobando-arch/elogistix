@@ -43,7 +43,11 @@ export default function NuevoEmbarque() {
   const [currentStep, setCurrentStep] = useState(1);
   const [validationErrors, setValidationErrors] = useState<EmbarqueValidationErrors>({});
   const [cotizacionVinculada, setCotizacionVinculada] = useState<CotizacionRow | null>(null);
-  const { methods, handleMsdsUpload, buildEmbarquePayload, buildConceptosVentaPayload, buildConceptosCostoPayload, documentosArchivos, setDocumentoArchivo, getDocumentosChecklist } = useEmbarqueForm();
+  const {
+    methods, handleMsdsUpload, buildEmbarquePayload, buildConceptosVentaPayload,
+    buildConceptosCostoPayload, documentosArchivos, setDocumentoArchivo, getDocumentosChecklist,
+    vincularCotizacion, desvincularCotizacion,
+  } = useEmbarqueForm();
   const clienteId = methods.watch('clienteId');
   const modo = methods.watch('modo');
   const { data: contactos = [] } = useContactosCliente(clienteId || undefined);
@@ -57,41 +61,15 @@ export default function NuevoEmbarque() {
 
   const selectedCliente = clientes.find(c => c.id === clienteId);
 
-  const opts = { shouldValidate: true, shouldDirty: true } as const;
-
   const handleVincularCotizacion = useCallback((cot: CotizacionRow) => {
     setCotizacionVinculada(cot);
-    methods.setValue('clienteId', cot.cliente_id || '', opts);
-    methods.setValue('modo', cot.modo, opts);
-    methods.setValue('tipo', cot.tipo, opts);
-    methods.setValue('incoterm', cot.incoterm, opts);
-    methods.setValue('descripcionMercancia', cot.descripcion_mercancia, opts);
-    methods.setValue('tipoCarga', cot.tipo_carga || 'Carga General', opts);
-    methods.setValue('tipoContenedor', cot.tipo_contenedor || '', opts);
-    methods.setValue('pesoKg', String(cot.peso_kg || ''), opts);
-    methods.setValue('volumenM3', String(cot.volumen_m3 || ''), opts);
-    methods.setValue('piezas', String(cot.piezas || ''), opts);
-    methods.setValue('puertoOrigen', cot.origen || '', opts);
-    methods.setValue('puertoDestino', cot.destino || '', opts);
-    methods.trigger();
-  }, [methods]);
+    vincularCotizacion(cot);
+  }, [vincularCotizacion]);
 
   const handleDesvincularCotizacion = useCallback(() => {
     setCotizacionVinculada(null);
-    methods.setValue('clienteId', '', opts);
-    methods.setValue('modo', '', opts);
-    methods.setValue('tipo', '', opts);
-    methods.setValue('incoterm', 'FOB', opts);
-    methods.setValue('descripcionMercancia', '', opts);
-    methods.setValue('tipoCarga', 'Carga General', opts);
-    methods.setValue('tipoContenedor', '', opts);
-    methods.setValue('pesoKg', '', opts);
-    methods.setValue('volumenM3', '', opts);
-    methods.setValue('piezas', '', opts);
-    methods.setValue('puertoOrigen', '', opts);
-    methods.setValue('puertoDestino', '', opts);
-    methods.trigger();
-  }, [methods]);
+    desvincularCotizacion();
+  }, [desvincularCotizacion]);
 
   const validateStep1 = useCallback((): boolean => {
     const v = methods.getValues();

@@ -13,6 +13,13 @@ interface ChangelogEntry {
 
 const changelog: ChangelogEntry[] = [
   {
+    version: "7.0.0",
+    date: "2026-03-27",
+    type: "major",
+    title: "Auditoría arquitectónica: refactoring integral del codebase",
+    description: "Refactoring completo en 8 pasos: 1) AdminOrgDetalle descompuesto en hook useAdminOrgDetalle + UI limpia (477→260 líneas). 2) Query keys de admin centralizados en queryKeys.ts. 3) Queries inline de Embarques.tsx extraídas a useEmbarquesListData. 4) Archivos estáticos obsoletos eliminados (shippingLines, containerTypes). 5) Lógica de Configuracion.tsx extraída a useConfiguracionState. 6) Tipo AppRole unificado desde el enum de la BD. 7) Cast inseguro 'super_admin as admin' corregido con tipado propio en ProtectedRoute. 8) Lógica de vinculación de cotización movida a useEmbarqueForm.",
+  },
+  {
     version: "6.7.1",
     date: "2026-03-27",
     type: "patch",

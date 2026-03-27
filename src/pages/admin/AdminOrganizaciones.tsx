@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { queryKeys } from "@/lib/queryKeys";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -35,7 +36,7 @@ export default function AdminOrganizaciones() {
   const navigate = useNavigate();
 
   const { data: orgs = [], isLoading } = useQuery({
-    queryKey: ["admin-organizations"],
+    queryKey: queryKeys.admin.organizations,
     queryFn: async () => {
       const { data, error } = await supabase
         .from("organizations")
@@ -52,7 +53,7 @@ export default function AdminOrganizaciones() {
       if (error) throw error;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["admin-organizations"] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.admin.organizations });
       toast({ title: "Organización creada" });
       setDialogOpen(false);
       setNombre("");

@@ -28,8 +28,7 @@ import { useDebounce } from "@/hooks/useDebounce";
 import type { EmbarqueRow } from "@/hooks/useEmbarqueUtils";
 import DoubleConfirmDeleteDialog from "@/components/DoubleConfirmDeleteDialog";
 import DialogDuplicarEmbarque from "@/components/embarque/DialogDuplicarEmbarque";
-import { supabase } from "@/integrations/supabase/client";
-import { useQuery } from "@tanstack/react-query";
+import { useEmbarquesLiquidacion, useEmbarquesDocsStatus } from "@/hooks/useEmbarquesListData";
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
@@ -90,48 +89,10 @@ export default function Embarques() {
 
   const { data: operadoresUnicos = [] } = useOperadoresDistintos();
 
-  // Liquidation status per embarque
+  // Supplementary data for the list
   const embarqueIds = useMemo(() => embarques.map(e => e.id), [embarques]);
-  const { data: liquidacionMap = {} } = useQuery({
-    queryKey: ['embarques-liquidacion', embarqueIds],
-    queryFn: async () => {
-      if (embarqueIds.length === 0) return {};
-      const { data, error } = await supabase
-        .from('conceptos_costo')
-        .select('embarque_id, estado_liquidacion')
-        .in('embarque_id', embarqueIds);
-      if (error) throw error;
-      const map: Record<string, { total: number; pagados: number }> = {};
-      (data ?? []).forEach((c) => {
-        if (!map[c.embarque_id]) map[c.embarque_id] = { total: 0, pagados: 0 };
-        map[c.embarque_id].total++;
-        if (c.estado_liquidacion === 'Pagado') map[c.embarque_id].pagados++;
-      });
-      return map;
-    },
-    enabled: embarqueIds.length > 0,
-  });
-
-  // Documentos incompletos per embarque
-  const { data: docsMap = {} } = useQuery({
-    queryKey: ['embarques-docs-status', embarqueIds],
-    queryFn: async () => {
-      if (embarqueIds.length === 0) return {};
-      const { data, error } = await supabase
-        .from('documentos_embarque')
-        .select('embarque_id, estado')
-        .in('embarque_id', embarqueIds);
-      if (error) throw error;
-      const map: Record<string, { total: number; pendientes: number }> = {};
-      (data ?? []).forEach((d) => {
-        if (!map[d.embarque_id]) map[d.embarque_id] = { total: 0, pendientes: 0 };
-        map[d.embarque_id].total++;
-        if (d.estado !== 'Recibido' && d.estado !== 'Validado') map[d.embarque_id].pendientes++;
-      });
-      return map;
-    },
-    enabled: embarqueIds.length > 0,
-  });
+  const { data: liquidacionMap = {} } = useEmbarquesLiquidacion(embarqueIds);
+  const { data: docsMap = {} } = useEmbarquesDocsStatus(embarqueIds);
 
   const handleEliminar = async () => {
     if (!embarqueAEliminar) return;
