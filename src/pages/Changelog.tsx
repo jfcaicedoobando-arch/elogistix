@@ -13,6 +13,13 @@ interface ChangelogEntry {
 
 const changelog: ChangelogEntry[] = [
   {
+    version: "7.1.0",
+    date: "2026-03-27",
+    type: "minor",
+    title: "Optimización de rendimiento: RPCs server-side y eliminación de descargas masivas",
+    description: "1) RPC sidebar_alert_counts reemplaza useEmbarques en el sidebar — elimina descarga masiva de todos los embarques en cada navegación. 2) RPC embarques_list_extras unifica conteos de liquidación y documentos en una sola llamada con GROUP BY server-side. 3) AuthContext deduplica fetchRole evitando doble fetch al inicio. 4) Configuración usa Promise.all en lugar de loop secuencial. 5) Query keys del sidebar centralizados en queryKeys.ts.",
+  },
+  {
     version: "7.0.1",
     date: "2026-03-27",
     type: "patch",
