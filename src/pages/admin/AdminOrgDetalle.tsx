@@ -32,6 +32,15 @@ export default function AdminOrgDetalle() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
+  // Edit state
+  const [editing, setEditing] = useState(false);
+  const [editNombre, setEditNombre] = useState("");
+  const [editRfc, setEditRfc] = useState("");
+  const [editPlan, setEditPlan] = useState("");
+
+  // Planes
+  const { data: planes = [] } = usePlanes();
+
   // Org data
   const { data: org } = useQuery({
     queryKey: ["admin-org", id],
@@ -45,6 +54,33 @@ export default function AdminOrgDetalle() {
       return data;
     },
     enabled: !!id,
+  });
+
+  useEffect(() => {
+    if (org) {
+      setEditNombre(org.nombre);
+      setEditRfc(org.rfc ?? "");
+      setEditPlan(org.plan ?? "basic");
+    }
+  }, [org]);
+
+  // Update org mutation
+  const updateOrg = useMutation({
+    mutationFn: async (payload: { nombre: string; rfc: string; plan: string }) => {
+      const { error } = await supabase
+        .from("organizations")
+        .update({ nombre: payload.nombre, rfc: payload.rfc, plan: payload.plan })
+        .eq("id", id!);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin-org", id] });
+      toast({ title: "Organización actualizada" });
+      setEditing(false);
+    },
+    onError: (error: Error) => {
+      toast({ title: "Error al actualizar", description: error.message, variant: "destructive" });
+    },
   });
 
   // KPI counts
