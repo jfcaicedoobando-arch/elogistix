@@ -54,7 +54,7 @@ export function useUpdateConfiguracionGlobal() {
       for (const item of items) {
         const { error } = await supabase
           .from("configuracion_global")
-          .update({ valor: item.valor as Record<string, unknown> })
+          .update({ valor: JSON.parse(JSON.stringify(item.valor)) })
           .eq("categoria", item.categoria)
           .eq("clave", item.clave);
         if (error) throw error;
