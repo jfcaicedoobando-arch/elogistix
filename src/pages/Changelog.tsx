@@ -13,6 +13,13 @@ interface ChangelogEntry {
 
 const changelog: ChangelogEntry[] = [
   {
+    version: "6.4.0",
+    date: "2026-03-27",
+    type: "minor",
+    title: "Rebranding completo: Libre Carga",
+    description: "Renombrada toda la plataforma de Elogistix a Libre Carga. Nuevo logo SVG, favicon actualizado, metadatos OG/Twitter actualizados, referencias en sidebar, login, PDFs de cotización y documentos de cliente. Nueva identidad visual con ícono de contenedor estilizado en azul marino y azul eléctrico.",
+  },
+  {
     version: "6.3.0",
     date: "2026-03-27",
     type: "minor",
