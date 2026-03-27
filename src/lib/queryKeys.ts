@@ -57,6 +57,7 @@ export const queryKeys = {
     reciente: (limite: number) => ['bitacora', 'reciente', limite] as const,
   },
   dashboard: {
+    stats: ['dashboard-stats'] as const,
     ventasUSD: ['dashboard-ventas-usd'] as const,
     costosUSD: ['dashboard-costos-usd'] as const,
     profitAggregated: ['dashboard-profit-aggregated'] as const,
