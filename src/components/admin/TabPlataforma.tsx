@@ -46,7 +46,7 @@ export default function TabPlataforma() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="space-y-2">
             <Label>Nombre de la plataforma</Label>
-            <Input value={nombreApp} onChange={(e) => setNombreApp(e.target.value)} placeholder="Elogistix" />
+            <Input value={nombreApp} onChange={(e) => setNombreApp(e.target.value)} placeholder="Libre Carga" />
           </div>
           <div className="space-y-2">
             <Label>Subtítulo / Tagline</Label>
