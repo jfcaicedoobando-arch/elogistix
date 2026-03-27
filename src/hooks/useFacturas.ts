@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import type { Tables } from '@/integrations/supabase/types';
 import { queryKeys } from '@/lib/queryKeys';
+import { useOrgFilter } from '@/hooks/useOrgFilter';
 
 export type FacturaRow = Tables<'facturas'>;
 
@@ -9,13 +10,16 @@ export type FacturaRow = Tables<'facturas'>;
 const FACTURA_LIST_COLUMNS = 'id, numero, cliente_nombre, expediente, total, moneda, fecha_emision, fecha_vencimiento, estado' as const;
 
 export function useFacturas() {
+  const { organizationId } = useOrgFilter();
   return useQuery({
-    queryKey: queryKeys.facturas.all,
+    queryKey: [...queryKeys.facturas.all, organizationId],
     queryFn: async () => {
-      const { data, error } = await supabase
+      let query = supabase
         .from('facturas')
         .select(FACTURA_LIST_COLUMNS)
         .order('created_at', { ascending: false });
+      if (organizationId) query = query.eq('organization_id', organizationId);
+      const { data, error } = await query;
       if (error) throw error;
       return data as FacturaRow[];
     },

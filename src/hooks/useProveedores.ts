@@ -22,7 +22,8 @@ interface UseProveedoresPaginadosParams {
 }
 
 export function useProveedoresPaginados({ tipo, search, page, pageSize }: UseProveedoresPaginadosParams) {
-  const filters = { tipo, search, page, pageSize };
+  const { organizationId } = useOrgFilter();
+  const filters = { tipo, search, page, pageSize, organizationId };
 
   return useQuery({
     queryKey: queryKeys.proveedores.list(filters),
@@ -32,6 +33,8 @@ export function useProveedoresPaginados({ tipo, search, page, pageSize }: UsePro
         .select(PROVEEDOR_LIST_COLUMNS, { count: 'exact' })
         .eq('tipo', tipo)
         .order('nombre');
+
+      if (organizationId) query = query.eq('organization_id', organizationId);
 
       if (search) {
         query = query.ilike('nombre', `%${search}%`);
