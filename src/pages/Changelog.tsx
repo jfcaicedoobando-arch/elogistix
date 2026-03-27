@@ -13,6 +13,13 @@ interface ChangelogEntry {
 
 const changelog: ChangelogEntry[] = [
   {
+    version: "6.7.1",
+    date: "2026-03-27",
+    type: "patch",
+    title: "Eliminar miembros de organización",
+    description: "Se puede eliminar miembros de una organización desde la página de detalle, con confirmación antes de proceder.",
+  },
+  {
     version: "6.7.0",
     date: "2026-03-27",
     type: "minor",
