@@ -84,6 +84,23 @@ export default function AdminOrgDetalle() {
     },
   });
 
+  const toggleActivo = useMutation({
+    mutationFn: async (activo: boolean) => {
+      const { error } = await supabase
+        .from("organizations")
+        .update({ activo })
+        .eq("id", id!);
+      if (error) throw error;
+    },
+    onSuccess: (_, activo) => {
+      queryClient.invalidateQueries({ queryKey: ["admin-org", id] });
+      toast({ title: activo ? "Organización activada" : "Organización desactivada" });
+    },
+    onError: (error: Error) => {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+    },
+  });
+
   // KPI counts
   const { data: memberCount = 0 } = useQuery({
     queryKey: ["admin-org-count-members", id],
