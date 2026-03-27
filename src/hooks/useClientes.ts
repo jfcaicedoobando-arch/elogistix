@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import type { Tables, TablesInsert } from "@/integrations/supabase/types";
 import { queryKeys } from "@/lib/queryKeys";
+import { useOrgFilter } from "@/hooks/useOrgFilter";
 
 export type Cliente = Tables<'clientes'>;
 export type ContactoCliente = Tables<'contactos_cliente'>;
