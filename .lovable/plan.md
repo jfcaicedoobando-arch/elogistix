@@ -1,40 +1,38 @@
 
 
-## Plan: Rebranding de Elogistix a Libre Carga
+## Plan: Enriquecer página de detalle de organización
 
-Renombrar toda la plataforma de "Elogistix" / "Elogistix Shipping" a **"Libre Carga"** en todos los archivos afectados, generar un nuevo logo SVG y actualizar favicon.
-
----
-
-### 1. Generar logo SVG nuevo
-
-Crear `src/assets/librecarga-logo.svg` — un logo limpio con un ícono de carga/logística estilizado y el texto "Libre Carga". Colores basados en la paleta actual (azul marino #1B2B4B, azul eléctrico #2563EB). También copiar al directorio `public/` para favicon.
-
-### 2. Actualizar referencias en archivos
-
-| Archivo | Cambio |
-|---------|--------|
-| `index.html` | Title, meta tags, OG tags, favicon → librecarga-logo.svg |
-| `src/components/AppSidebar.tsx` | Import del logo, texto "Libre Carga" |
-| `src/components/admin/AdminSidebar.tsx` | Texto "Libre Carga — Super Admin" |
-| `src/pages/Login.tsx` | Import del logo, texto "Libre Carga" |
-| `src/lib/cotizacionPdf.ts` | Footer "Libre Carga" |
-| `src/components/cliente/NuevoClienteDialog.tsx` | "Contrato de servicios con Libre Carga" |
-| `src/components/admin/TabPlataforma.tsx` | Placeholder y default "Libre Carga" |
-| `src/pages/Changelog.tsx` | Actualizar menciones históricas + nueva entrada v6.4.0 |
-
-### 3. Eliminar assets antiguos
-
-- Eliminar `src/assets/elogistix-logo.jpg`
-- Eliminar `public/elogistix-logo.jpg` (si existe, referenciado en index.html)
-
-### 4. Changelog
-
-Agregar entrada v6.4.0: "Rebranding completo de la plataforma a Libre Carga"
+La página `AdminOrgDetalle` ya existe y es navegable desde la lista de organizaciones, pero solo muestra los miembros. Se enriquecerá con información completa.
 
 ---
 
-### Detalles del logo SVG
+### Cambios en `src/pages/admin/AdminOrgDetalle.tsx`
 
-Logo minimalista: ícono de contenedor/carga estilizado + tipografía "Libre Carga" en Inter/sans-serif. Funciona en fondo oscuro (sidebar) y claro (login). Formato SVG para escalabilidad perfecta.
+Rediseñar la página para incluir:
+
+1. **Header con botón de regreso** — Botón "← Organizaciones" para volver a la lista.
+
+2. **Card de información general** — Nombre, RFC, plan (badge), estado (activo/inactivo), fecha de creación, logo_url si existe.
+
+3. **Estadísticas rápidas (KPIs)** — Contadores obtenidos con queries:
+   - Total de miembros (count de `organization_members`)
+   - Total de embarques (count de `embarques` filtrado por `organization_id`)
+   - Total de clientes (count de `clientes` filtrado por `organization_id`)
+   - Total de cotizaciones (count de `cotizaciones` filtrado por `organization_id`)
+
+4. **Tabla de miembros** — Ya existente, se mantiene con la funcionalidad de cambio de rol.
+
+5. **Card de configuración** — Mostrar items de `configuracion` filtrados por `organization_id` (reutilizando lógica de `useConfiguracionByOrg`).
+
+### Cambios en `src/pages/Changelog.tsx`
+
+Agregar entrada para esta mejora.
+
+---
+
+### Detalle técnico
+
+- Se agregan 4 queries con `supabase.from("tabla").select("id", { count: "exact", head: true }).eq("organization_id", id)` para obtener los conteos sin traer datos.
+- Se usa el hook `useConfiguracionByOrg` existente para la sección de configuración.
+- Layout: header → stats grid (4 columnas) → card info + miembros en stack vertical → config al final.
 
