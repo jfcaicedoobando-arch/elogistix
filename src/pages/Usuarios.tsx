@@ -8,9 +8,7 @@ import { getErrorMessage } from "@/lib/errorUtils";
 import NuevoUsuarioDialog from "@/components/NuevoUsuarioDialog";
 import { DataTable, type DataTableColumn } from "@/components/DataTable";
 import { useUsuarios, useUpdateUserRole, type UserRow } from "@/hooks/useUsuarios";
-import type { Enums } from "@/integrations/supabase/types";
-
-type AppRole = Enums<'app_role'>;
+import type { AppRole } from "@/data/types";
 
 const roleBadge: Record<AppRole, string> = {
   super_admin: "bg-primary text-primary-foreground",

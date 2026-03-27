@@ -13,6 +13,13 @@ interface ChangelogEntry {
 
 const changelog: ChangelogEntry[] = [
   {
+    version: "7.0.1",
+    date: "2026-03-27",
+    type: "patch",
+    title: "Limpieza post-auditoría: tipos unificados y nomenclatura consistente",
+    description: "1) AppRole centralizado desde data/types.ts en 3 archivos. 2) Casts inseguros 'as string' eliminados en ProtectedRoute, AppSidebar y OrganizationContext. 3) Variables containerTypes renombradas a tiposContenedor. 4) ShippingLineSelect renombrado a NavieraSelect. 5) Helpers getVal/buildStateFromConfig exportados y tests actualizados para importarlos directamente.",
+  },
+  {
     version: "7.0.0",
     date: "2026-03-27",
     type: "major",

@@ -7,9 +7,7 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Loader2 } from "lucide-react";
 import { getErrorMessage } from "@/lib/errorUtils";
-import type { Enums } from "@/integrations/supabase/types";
-
-type AppRole = Enums<"app_role">;
+import type { AppRole } from "@/data/types";
 
 interface Props {
   open: boolean;

@@ -5,13 +5,13 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useTiposContenedor } from "@/hooks/useTiposContenedor";
 import PortSelect from "@/components/PortSelect";
-import ShippingLineSelect from "@/components/ShippingLineSelect";
+import NavieraSelect from "@/components/NavieraSelect";
 import type { EmbarqueFormValues } from "@/hooks/useEmbarqueForm";
 
 export function StepDatosRuta() {
   const { register, watch, setValue } = useFormContext<EmbarqueFormValues>();
   const modo = watch('modo');
-  const { data: containerTypes = [] } = useTiposContenedor();
+  const { data: tiposContenedor = [] } = useTiposContenedor();
 
   return (
     <Card>
@@ -34,7 +34,7 @@ export function StepDatosRuta() {
             <div className="space-y-2">
               <Label>Naviera *</Label>
               <Controller name="naviera" render={({ field }) => (
-                <ShippingLineSelect value={field.value} onValueChange={field.onChange} />
+                <NavieraSelect value={field.value} onValueChange={field.onChange} />
               )} />
             </div>
             <div className="space-y-2"><Label>Agente</Label><Input placeholder="Nombre del agente" {...register('agente')} /></div>
@@ -59,7 +59,7 @@ export function StepDatosRuta() {
                 ) : (
                   <Select value={field.value} onValueChange={field.onChange}>
                     <SelectTrigger><SelectValue placeholder="Seleccionar tipo" /></SelectTrigger>
-                    <SelectContent>{containerTypes.filter(ct => ct.code !== 'LCL').map(ct => <SelectItem key={ct.code} value={ct.code}>{ct.name}</SelectItem>)}</SelectContent>
+                    <SelectContent>{tiposContenedor.filter(ct => ct.code !== 'LCL').map(ct => <SelectItem key={ct.code} value={ct.code}>{ct.name}</SelectItem>)}</SelectContent>
                   </Select>
                 );
               }} />

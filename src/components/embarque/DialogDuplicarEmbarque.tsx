@@ -29,7 +29,7 @@ interface Props {
 export default function DialogDuplicarEmbarque({ embarque, open, onOpenChange }: Props) {
   const { toast } = useToast();
   const duplicarEmbarque = useDuplicarEmbarque();
-  const { data: containerTypes = [] } = useTiposContenedor();
+  const { data: tiposContenedor = [] } = useTiposContenedor();
 
   const crearFilaInicial = (): FilaCopia => ({
     num_contenedor: '',
@@ -111,7 +111,7 @@ export default function DialogDuplicarEmbarque({ embarque, open, onOpenChange }:
                     <Select value={fila.tipo_contenedor} onValueChange={v => actualizarFila(i, 'tipo_contenedor', v)}>
                       <SelectTrigger className="h-8"><SelectValue placeholder="Seleccionar" /></SelectTrigger>
                       <SelectContent>
-                        {containerTypes.map(ct => <SelectItem key={ct.code} value={ct.name}>{ct.name}</SelectItem>)}
+                        {tiposContenedor.map(ct => <SelectItem key={ct.code} value={ct.name}>{ct.name}</SelectItem>)}
                       </SelectContent>
                     </Select>
                   </TableCell>
