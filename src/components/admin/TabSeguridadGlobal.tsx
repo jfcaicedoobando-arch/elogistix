@@ -105,6 +105,17 @@ export default function TabSeguridadGlobal() {
           </div>
         </div>
 
+        <Separator />
+
+        <div>
+          <h3 className="text-sm font-medium mb-2">Contacto de soporte</h3>
+          <div className="space-y-2 p-3 rounded-lg border max-w-md">
+            <Label className="text-sm font-medium">Email de soporte</Label>
+            <p className="text-xs text-muted-foreground">Dirección de contacto para soporte técnico de la plataforma</p>
+            <Input value={emailSoporte} onChange={(e) => setEmailSoporte(e.target.value)} placeholder="soporte@librecarga.com" type="email" />
+          </div>
+        </div>
+
         <div className="flex justify-end pt-2">
           <Button onClick={handleGuardar} disabled={updateConfig.isPending}>
             <Save className="h-4 w-4 mr-2" /> Guardar políticas
