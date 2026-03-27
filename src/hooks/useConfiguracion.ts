@@ -54,14 +54,18 @@ export function useUpdateConfiguracion() {
 
   return useMutation({
     mutationFn: async (items: { categoria: string; clave: string; valor: unknown }[]) => {
-      for (const item of items) {
-        const { error } = await supabase
-          .from("configuracion")
-          .update({ valor: item.valor as Json })
-          .eq("categoria", item.categoria)
-          .eq("clave", item.clave);
-        if (error) throw error;
-      }
+      // Batch all updates in parallel instead of sequential loop
+      const results = await Promise.all(
+        items.map((item) =>
+          supabase
+            .from("configuracion")
+            .update({ valor: item.valor as Json })
+            .eq("categoria", item.categoria)
+            .eq("clave", item.clave)
+        )
+      );
+      const firstError = results.find((r) => r.error);
+      if (firstError?.error) throw firstError.error;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.configuracion.all });

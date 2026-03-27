@@ -27,6 +27,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [role, setRole] = useState<AppRole | null>(null);
   const [loading, setLoading] = useState(true);
   const hasLoggedLogin = useRef(false);
+  const hasFetchedRole = useRef(false);
 
   const fetchRole = async (userId: string) => {
     const { data } = await supabase
@@ -59,6 +60,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setSession(session);
         setUser(session?.user ?? null);
         if (session?.user) {
+          hasFetchedRole.current = true;
           // Use setTimeout to avoid potential deadlock with Supabase client
           setTimeout(() => fetchRole(session.user.id), 0);
           if (_eventoAuth === 'SIGNED_IN' && !hasLoggedLogin.current) {
@@ -72,14 +74,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     );
 
-    // THEN check for existing session
+    // THEN check for existing session (only set loading=false if onAuthStateChange hasn't fired yet)
     supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      if (session?.user) {
-        fetchRole(session.user.id);
+      if (!hasFetchedRole.current) {
+        setSession(session);
+        setUser(session?.user ?? null);
+        if (session?.user) {
+          hasFetchedRole.current = true;
+          fetchRole(session.user.id);
+        }
+        setLoading(false);
       }
-      setLoading(false);
     });
 
     return () => subscription.unsubscribe();
@@ -87,6 +92,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signOut = async () => {
     hasLoggedLogin.current = false;
+    hasFetchedRole.current = false;
     await supabase.auth.signOut();
     setUser(null);
     setSession(null);

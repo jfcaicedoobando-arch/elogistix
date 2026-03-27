@@ -1367,6 +1367,16 @@ export type Database = {
         Args: { p_embarque_id: string }
         Returns: undefined
       }
+      embarques_list_extras: {
+        Args: { p_ids: string[] }
+        Returns: {
+          costos_pagados: number
+          costos_total: number
+          docs_pendientes: number
+          docs_total: number
+          embarque_id: string
+        }[]
+      }
       generar_expediente: { Args: { tipo_op: string }; Returns: string }
       get_user_org_ids: { Args: { _user_id: string }; Returns: string[] }
       has_role: {
@@ -1407,6 +1417,13 @@ export type Database = {
       resolver_expediente_por_bl: {
         Args: { _bl_master: string; _tipo_op: string }
         Returns: string
+      }
+      sidebar_alert_counts: {
+        Args: never
+        Returns: {
+          embarques_demora: number
+          facturas_vencidas: number
+        }[]
       }
     }
     Enums: {

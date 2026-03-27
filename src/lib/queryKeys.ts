@@ -90,6 +90,9 @@ export const queryKeys = {
     activos: ['tipos_contenedor', 'activos'] as const,
     todos: ['tipos_contenedor', 'todos'] as const,
   },
+  sidebar: {
+    alertCounts: ['sidebar-alert-counts'] as const,
+  },
   admin: {
     organizations: ['admin-organizations'] as const,
     allUsers: ['admin-all-users'] as const,
