@@ -1,74 +1,230 @@
 
 
-# Auditoría de Arquitectura — Post-Refactoring v7.0.0
+# Análisis de Rendimiento — Hallazgos y Recomendaciones
 
-## Estado actual
+## Resumen
 
-El refactoring v7.0.0 resolvió los problemas más críticos del audit anterior (AdminOrgDetalle monolítico, query keys hardcodeados, queries inline en Embarques, archivos estáticos obsoletos, ConfiguracionState, vinculación cotización en hook). La arquitectura está significativamente más limpia. Los hallazgos restantes son de criticidad menor a moderada.
-
----
-
-## Hallazgos Pendientes
-
-### 1. MODERADO — `AppRole` sigue definido localmente en 3 archivos
-
-A pesar de crear `AppRole` centralizado en `src/data/types.ts`, tres archivos aún definen su propia versión local:
-
-- `src/components/admin/AgregarMiembroOrgDialog.tsx` → `type AppRole = Enums<"app_role">`
-- `src/pages/Usuarios.tsx` → `type AppRole = Enums<'app_role'>`
-- `src/hooks/useUsuarios.ts` → `type AppRole = Enums<'app_role'>`
-
-**Acción**: Reemplazar las 3 definiciones locales por `import type { AppRole } from "@/data/types"`.
-
-### 2. MODERADO — Casts inseguros `(role as string) === "super_admin"` en 3 archivos
-
-El tipo `AppRole` del `AuthContext` ya debería incluir `super_admin`, pero se siguen usando casts a `string` para comparar:
-
-- `src/contexts/OrganizationContext.tsx` línea 41
-- `src/components/ProtectedRoute.tsx` línea 28
-- `src/components/AppSidebar.tsx` líneas 155-156
-
-**Acción**: Dado que `AuthContext.role` ya es `AppRole | null` (que incluye `super_admin`), eliminar los casts `as string` y comparar directamente.
-
-### 3. MENOR — Variable `containerTypes` mantiene nombre en inglés
-
-En `StepDatosRuta.tsx` y `DialogDuplicarEmbarque.tsx`, la variable de hook se asigna como `containerTypes` (en inglés), rompiendo la convención de español del proyecto.
-
-**Acción**: Renombrar a `tiposContenedor` para consistencia.
-
-### 4. MENOR — `ShippingLineSelect` mantiene nombre en inglés
-
-El componente `src/components/ShippingLineSelect.tsx` y sus props usan nombres en inglés, mientras el resto del proyecto usa español.
-
-**Acción**: Renombrar a `NavieraSelect` (archivo y componente).
-
-### 5. OPCIONAL — Helpers del test `useConfiguracionState.test.ts` duplican lógica del hook
-
-Los tests de `useConfiguracionState` recrean `getVal` y `buildStateFromConfig` en lugar de importarlos. Si se exportaran como funciones puras del hook, los tests serían más fieles al código real.
-
-**Acción**: Exportar `getVal` y `buildStateFromConfig` desde `useConfiguracionState.ts` y usarlos en el test.
+La app tiene buena base (lazy loading, query caching, column selection), pero hay un problema dominante que explica la lentitud percibida, más varios problemas secundarios.
 
 ---
 
-## Resumen de Acciones (en orden)
+## 1. CRÍTICO — `useEmbarques()` descarga TODOS los embarques en 3 páginas simultáneamente
 
-| # | Prioridad | Acción | Archivos afectados |
-|---|-----------|--------|--------------------|
-| 1 | Moderada | Unificar AppRole desde `data/types.ts` | AgregarMiembroOrgDialog, Usuarios, useUsuarios |
-| 2 | Moderada | Eliminar casts `as string` para super_admin | OrganizationContext, ProtectedRoute, AppSidebar |
-| 3 | Menor | Renombrar `containerTypes` → `tiposContenedor` | StepDatosRuta, DialogDuplicarEmbarque |
-| 4 | Menor | Renombrar `ShippingLineSelect` → `NavieraSelect` | ShippingLineSelect.tsx, StepDatosRuta.tsx |
-| 5 | Opcional | Exportar helpers puros de useConfiguracionState | useConfiguracionState.ts, test |
+El hook `useEmbarques()` (sin paginación) se invoca desde **3 consumidores independientes** cada vez que el usuario navega a cualquier ruta protegida:
 
-## Lo que ya está bien
+- **`useSidebarAlerts`** — se monta en `AppSidebar` → `Layout`, activo en TODA la app
+- **`useDashboardData`** — página Dashboard
+- **`useOperacionesData`** — página Operaciones
 
-- AdminOrgDetalle correctamente descompuesto (280 líneas, hook separado)
-- Query keys 100% centralizados en `queryKeys.ts`
-- Queries de Embarques extraídas a `useEmbarquesListData`
-- Archivos estáticos obsoletos eliminados
-- ConfiguracionState extraído a hook
-- Vinculación de cotización dentro del hook `useEmbarqueForm`
-- ProtectedRoute acepta `AppRole[]` con tipado correcto
-- Barrel exports consistentes (useEmbarques, useCotizaciones)
-- Lazy loading, error handling, DataTable estandarizado
+Gracias a React Query comparten la misma caché, pero el problema es que `useSidebarAlerts` fuerza la descarga de TODOS los embarques en **cada navegación**, incluso cuando el usuario va a Clientes, Proveedores o Configuración. Con el límite de 1000 filas de Supabase, esto ya es un techo.
+
+**Recomendación**: Reemplazar `useSidebarAlerts` con una query RPC ligera del tipo `SELECT count(*) FROM embarques WHERE estado = 'Arribo' AND eta < now() - interval '7 days'`. Esto elimina la descarga masiva del sidebar y la limita a Dashboard/Operaciones donde realmente se necesita.
+
+**Impacto estimado**: Reducción de ~60-80% del tráfico de red en navegación general.
+
+---
+
+## 2. ALTO — Dashboard y Operaciones ejecutan 3 queries pesadas en paralelo
+
+Al abrir Dashboard se disparan simultáneamente:
+- `useEmbarques()` → todos los embarques
+- `useProfitMaps()` → RPC `profit_por_embarque` (todos los embarques con conceptos)
+- `useQuery(facturas)` → todas las facturas
+
+Y en Operaciones los mismos 2 primeros. Todo este procesamiento (filtrado, agrupación, cálculo de profit) se hace client-side con `useMemo`.
+
+**Recomendación a corto plazo**: Ya existe la nota de escalabilidad en el código. Crear una RPC `dashboard_stats()` que devuelva los conteos, alertas y profit agregados desde el servidor en una sola llamada. Esto reemplazaría las 3 queries + toda la lógica de `useMemo`.
+
+**Recomendación a mediano plazo**: Crear `operaciones_stats()` RPC similar para la página Operaciones.
+
+---
+
+## 3. MODERADO — Queries N+1 en lista de Embarques
+
+La página Embarques ejecuta 3 queries por cada carga de página:
+1. `useEmbarquesPaginados` — los embarques paginados
+2. `useEmbarquesLiquidacion(embarqueIds)` — conceptos_costo de todos los IDs visibles
+3. `useEmbarquesDocsStatus(embarqueIds)` — documentos de todos los IDs visibles
+
+Queries 2 y 3 dependen del resultado de query 1 (patrón waterfall). Además, descargan todas las filas de `conceptos_costo` y `documentos_embarque` solo para contar totales.
+
+**Recomendación**: Crear una RPC `embarques_list_extras(p_ids uuid[])` que devuelva los conteos agregados en una sola llamada con `GROUP BY embarque_id`, eliminando el waterfall y reduciendo el payload.
+
+---
+
+## 4. MODERADO — `useEmbarquesLiquidacion` descarga filas completas para contar
+
+La query actual hace `select('embarque_id, estado_liquidacion')` y luego cuenta en JS. Con muchos conceptos por embarque (ej. 20 embarques × 15 conceptos = 300 filas), esto es ineficiente.
+
+**Recomendación**: Usar una query con `GROUP BY` del lado servidor:
+```sql
+SELECT embarque_id, count(*) as total, 
+  count(*) FILTER (WHERE estado_liquidacion = 'Pagado') as pagados
+FROM conceptos_costo WHERE embarque_id = ANY($1)
+GROUP BY embarque_id
+```
+
+---
+
+## 5. MENOR — `useUpdateConfiguracion` ejecuta updates secuenciales
+
+El mutation de configuración hace un `for` loop con `await` por cada item, generando N requests secuenciales al guardar.
+
+**Recomendación**: Agrupar en un solo `upsert` o crear una RPC que reciba el array completo.
+
+---
+
+## 6. MENOR — `AdminLayout` no usa lazy loading para su sidebar
+
+`AdminLayout` importa `AdminSidebar` de forma síncrona. Menor impacto dado que solo afecta a super_admin.
+
+**No requiere acción** por ahora.
+
+---
+
+## 7. MENOR — AuthContext hace doble fetch de sesión
+
+En `AuthContext`, tanto `onAuthStateChange` como `getSession()` se ejecutan al montar, lo que puede resultar en `fetchRole` llamado dos veces al inicio. El `setTimeout` evita deadlocks pero agrega latencia.
+
+**Recomendación**: Usar solo `onAuthStateChange` y eliminar el `getSession()` redundante, o guardar un flag para evitar el doble `fetchRole`.
+
+---
+
+## 8. COSMÉTICO — Hardcoded query key en `useSidebarAlerts`
+
+La query de facturas vencidas usa `['sidebar-facturas-vencidas']` en lugar del factory `queryKeys`. Esto puede causar que no se invalide correctamente cuando se actualiza una factura.
+
+**Recomendación**: Mover a `queryKeys.sidebar.facturasVencidas` o similar.
+
+---
+
+## Resumen Priorizado
+
+| # | Prioridad | Acción | Impacto |
+|---|-----------|--------|---------|
+| 1 | Crítica | RPC ligera para sidebar alerts (eliminar `useEmbarques` del sidebar) | Elimina descarga masiva en toda la app |
+| 2 | Alta | RPC `dashboard_stats` server-side | Reduce 3 queries + procesamiento client-side a 1 |
+| 3 | Moderada | RPC `embarques_list_extras` para liquidación + docs | Elimina waterfall y reduce payload |
+| 4 | Moderada | Agregar GROUP BY server-side para conteos | Reduce filas transferidas |
+| 5 | Menor | Batch upsert en configuración | Reduce N requests a 1 |
+| 6 | Menor | Deduplicar fetchRole en AuthContext | Elimina request redundante al inicio |
+| 7 | Menor | Migrar query key hardcoded del sidebar | Correctitud de cache invalidation |
+
+## Lo que ya está bien optimizado
+
+- Lazy loading por ruta con `React.lazy`
+- `staleTime: 30s` y `gcTime: 5<lov-plan>
+
+# Análisis de Rendimiento — Hallazgos y Recomendaciones
+
+## Resumen
+
+La app tiene buena base (lazy loading, query caching, column selection), pero hay un problema dominante que explica la lentitud percibida, más varios problemas secundarios.
+
+---
+
+## 1. CRÍTICO — `useEmbarques()` descarga TODOS los embarques en 3 páginas simultáneamente
+
+El hook `useEmbarques()` (sin paginación) se invoca desde **3 consumidores independientes** cada vez que el usuario navega a cualquier ruta protegida:
+
+- **`useSidebarAlerts`** — se monta en `AppSidebar` → `Layout`, activo en TODA la app
+- **`useDashboardData`** — página Dashboard
+- **`useOperacionesData`** — página Operaciones
+
+Gracias a React Query comparten la misma caché, pero el problema es que `useSidebarAlerts` fuerza la descarga de TODOS los embarques en **cada navegación**, incluso cuando el usuario va a Clientes, Proveedores o Configuración. Con el límite de 1000 filas de Supabase, esto ya es un techo.
+
+**Recomendación**: Reemplazar `useSidebarAlerts` con una query RPC ligera del tipo `SELECT count(*) FROM embarques WHERE estado = 'Arribo' AND eta < now() - interval '7 days'`. Esto elimina la descarga masiva del sidebar y la limita a Dashboard/Operaciones donde realmente se necesita.
+
+**Impacto estimado**: Reducción de ~60-80% del tráfico de red en navegación general.
+
+---
+
+## 2. ALTO — Dashboard y Operaciones ejecutan 3 queries pesadas en paralelo
+
+Al abrir Dashboard se disparan simultáneamente:
+- `useEmbarques()` → todos los embarques
+- `useProfitMaps()` → RPC `profit_por_embarque` (todos los embarques con conceptos)
+- `useQuery(facturas)` → todas las facturas
+
+Y en Operaciones los mismos 2 primeros. Todo este procesamiento (filtrado, agrupación, cálculo de profit) se hace client-side con `useMemo`.
+
+**Recomendación a corto plazo**: Ya existe la nota de escalabilidad en el código. Crear una RPC `dashboard_stats()` que devuelva los conteos, alertas y profit agregados desde el servidor en una sola llamada. Esto reemplazaría las 3 queries + toda la lógica de `useMemo`.
+
+**Recomendación a mediano plazo**: Crear `operaciones_stats()` RPC similar para la página Operaciones.
+
+---
+
+## 3. MODERADO — Queries N+1 en lista de Embarques
+
+La página Embarques ejecuta 3 queries por cada carga de página:
+1. `useEmbarquesPaginados` — los embarques paginados
+2. `useEmbarquesLiquidacion(embarqueIds)` — conceptos_costo de todos los IDs visibles
+3. `useEmbarquesDocsStatus(embarqueIds)` — documentos de todos los IDs visibles
+
+Queries 2 y 3 dependen del resultado de query 1 (patrón waterfall). Además, descargan todas las filas de `conceptos_costo` y `documentos_embarque` solo para contar totales.
+
+**Recomendación**: Crear una RPC `embarques_list_extras(p_ids uuid[])` que devuelva los conteos agregados en una sola llamada con `GROUP BY embarque_id`, eliminando el waterfall y reduciendo el payload.
+
+---
+
+## 4. MODERADO — `useEmbarquesLiquidacion` descarga filas completas para contar
+
+La query actual hace `select('embarque_id, estado_liquidacion')` y luego cuenta en JS. Con muchos conceptos por embarque (ej. 20 embarques × 15 conceptos = 300 filas), esto es ineficiente.
+
+**Recomendación**: Usar una query con `GROUP BY` del lado servidor:
+```sql
+SELECT embarque_id, count(*) as total, 
+  count(*) FILTER (WHERE estado_liquidacion = 'Pagado') as pagados
+FROM conceptos_costo WHERE embarque_id = ANY($1)
+GROUP BY embarque_id
+```
+
+---
+
+## 5. MENOR — `useUpdateConfiguracion` ejecuta updates secuenciales
+
+El mutation de configuración hace un `for` loop con `await` por cada item, generando N requests secuenciales al guardar.
+
+**Recomendación**: Agrupar en un solo `upsert` o crear una RPC que reciba el array completo.
+
+---
+
+## 6. MENOR — AuthContext hace doble fetch de sesión
+
+En `AuthContext`, tanto `onAuthStateChange` como `getSession()` se ejecutan al montar, lo que puede resultar en `fetchRole` llamado dos veces al inicio. El `setTimeout` evita deadlocks pero agrega latencia.
+
+**Recomendación**: Usar solo `onAuthStateChange` y eliminar el `getSession()` redundante, o guardar un flag para evitar el doble `fetchRole`.
+
+---
+
+## 7. COSMÉTICO — Hardcoded query key en `useSidebarAlerts`
+
+La query de facturas vencidas usa `['sidebar-facturas-vencidas']` en lugar del factory `queryKeys`. Esto puede causar que no se invalide correctamente cuando se actualiza una factura.
+
+**Recomendación**: Mover a `queryKeys.sidebar.facturasVencidas` o similar.
+
+---
+
+## Resumen Priorizado
+
+| # | Prioridad | Acción | Impacto |
+|---|-----------|--------|---------|
+| 1 | Crítica | RPC ligera para sidebar alerts (eliminar `useEmbarques` del sidebar) | Elimina descarga masiva en toda la app |
+| 2 | Alta | RPC `dashboard_stats` server-side | Reduce 3 queries + procesamiento client-side a 1 |
+| 3 | Moderada | RPC `embarques_list_extras` para liquidación + docs | Elimina waterfall y reduce payload |
+| 4 | Moderada | Agregar GROUP BY server-side para conteos | Reduce filas transferidas |
+| 5 | Menor | Batch upsert en configuración | Reduce N requests a 1 |
+| 6 | Menor | Deduplicar fetchRole en AuthContext | Elimina request redundante al inicio |
+| 7 | Menor | Migrar query key hardcoded del sidebar | Correctitud de cache invalidation |
+
+## Lo que ya está bien optimizado
+
+- Lazy loading por ruta con `React.lazy` y `Suspense`
+- `staleTime: 30s` y `gcTime: 5min` globales en React Query
+- Column selection explícita (`EMBARQUE_LIST_COLUMNS`, `CLIENTE_LIST_COLUMNS`, etc.)
+- Paginación server-side en Embarques, Clientes y Cotizaciones
+- `useProfitMaps` usa RPC `profit_por_embarque` (agregación server-side)
+- `placeholderData` para transiciones suaves entre páginas
+- `useDebounce` en búsquedas para evitar queries excesivas
+- Operaciones atómicas vía RPCs (`crear_embarque_completo`, `actualizar_embarque_completo`)
 
