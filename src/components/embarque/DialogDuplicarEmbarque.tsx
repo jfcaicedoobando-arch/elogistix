@@ -7,7 +7,7 @@ import {
 } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { containerTypes } from "@/data/containerTypes";
+import { useTiposContenedor } from "@/hooks/useTiposContenedor";
 import { getErrorMessage } from "@/lib/errorUtils";
 import { useToast } from "@/hooks/use-toast";
 import { useDuplicarEmbarque, type EmbarqueRow } from "@/hooks/useEmbarques";
@@ -29,6 +29,7 @@ interface Props {
 export default function DialogDuplicarEmbarque({ embarque, open, onOpenChange }: Props) {
   const { toast } = useToast();
   const duplicarEmbarque = useDuplicarEmbarque();
+  const { data: containerTypes = [] } = useTiposContenedor();
 
   const crearFilaInicial = (): FilaCopia => ({
     num_contenedor: '',

@@ -1024,6 +1024,30 @@ export type Database = {
           },
         ]
       }
+      navieras: {
+        Row: {
+          activo: boolean
+          code: string
+          created_at: string
+          id: string
+          name: string
+        }
+        Insert: {
+          activo?: boolean
+          code: string
+          created_at?: string
+          id?: string
+          name: string
+        }
+        Update: {
+          activo?: boolean
+          code?: string
+          created_at?: string
+          id?: string
+          name?: string
+        }
+        Relationships: []
+      }
       notas_embarque: {
         Row: {
           contenido: string
@@ -1253,6 +1277,30 @@ export type Database = {
           activo?: boolean
           code?: string
           country?: string
+          created_at?: string
+          id?: string
+          name?: string
+        }
+        Relationships: []
+      }
+      tipos_contenedor: {
+        Row: {
+          activo: boolean
+          code: string
+          created_at: string
+          id: string
+          name: string
+        }
+        Insert: {
+          activo?: boolean
+          code: string
+          created_at?: string
+          id?: string
+          name: string
+        }
+        Update: {
+          activo?: boolean
+          code?: string
           created_at?: string
           id?: string
           name?: string

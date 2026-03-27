@@ -1,7 +1,8 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Anchor, Ship, Package } from "lucide-react";
 import TabPuertos from "@/components/configuracion/TabPuertos";
+import TabNavieras from "@/components/configuracion/TabNavieras";
+import TabTiposContenedor from "@/components/configuracion/TabTiposContenedor";
 
 export default function TabCatalogosGlobales() {
   return (
@@ -24,27 +25,11 @@ export default function TabCatalogosGlobales() {
         </TabsContent>
 
         <TabsContent value="navieras">
-          <Card>
-            <CardHeader>
-              <CardTitle>Catálogo de Navieras</CardTitle>
-              <CardDescription>Gestión de líneas navieras disponibles en el sistema</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <p className="text-sm text-muted-foreground">Próximamente — actualmente definidas en código estático</p>
-            </CardContent>
-          </Card>
+          <TabNavieras />
         </TabsContent>
 
         <TabsContent value="contenedores">
-          <Card>
-            <CardHeader>
-              <CardTitle>Tipos de Contenedor</CardTitle>
-              <CardDescription>Gestión de tipos de contenedor disponibles</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <p className="text-sm text-muted-foreground">Próximamente — actualmente definidos en código estático</p>
-            </CardContent>
-          </Card>
+          <TabTiposContenedor />
         </TabsContent>
       </Tabs>
     </div>
