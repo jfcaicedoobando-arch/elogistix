@@ -6,13 +6,13 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { useNavieras } from "@/hooks/useNavieras";
 
-interface ShippingLineSelectProps {
+interface NavieraSelectProps {
   value: string;
   onValueChange: (value: string) => void;
   placeholder?: string;
 }
 
-export default function ShippingLineSelect({ value, onValueChange, placeholder = "Seleccionar naviera" }: ShippingLineSelectProps) {
+export default function NavieraSelect({ value, onValueChange, placeholder = "Seleccionar naviera" }: NavieraSelectProps) {
   const [open, setOpen] = useState(false);
   const { data: navieras = [] } = useNavieras();
 
