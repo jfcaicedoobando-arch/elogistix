@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Badge } from "@/components/ui/badge";
 import { Users } from "lucide-react";
 import { DataTable, type DataTableColumn } from "@/components/DataTable";
+import { queryKeys } from "@/lib/queryKeys";
 
 interface GlobalUserRow {
   user_id: string;
@@ -13,7 +14,7 @@ interface GlobalUserRow {
 
 export default function AdminUsuarios() {
   const { data: users = [], isLoading } = useQuery({
-    queryKey: ["admin-all-users"],
+    queryKey: queryKeys.admin.allUsers,
     queryFn: async () => {
       const { data: members, error } = await supabase
         .from("organization_members")
@@ -21,12 +22,10 @@ export default function AdminUsuarios() {
         .order("user_id");
       if (error) throw error;
 
-      // Get org names
       const { data: orgs } = await supabase.from("organizations").select("id, nombre");
       const orgMap: Record<string, string> = {};
       (orgs ?? []).forEach((o) => { orgMap[o.id] = o.nombre; });
 
-      // Get emails
       let emailMap: Record<string, string> = {};
       try {
         const { data: usersData } = await supabase.functions.invoke("list-users");

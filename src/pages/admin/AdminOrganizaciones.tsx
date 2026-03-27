@@ -53,7 +53,7 @@ export default function AdminOrganizaciones() {
       if (error) throw error;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["admin-organizations"] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.admin.organizations });
       toast({ title: "Organización creada" });
       setDialogOpen(false);
       setNombre("");

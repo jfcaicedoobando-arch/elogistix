@@ -1,7 +1,5 @@
-import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
+import { useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
@@ -10,230 +8,39 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { DataTable, type DataTableColumn } from "@/components/DataTable";
 import { KpiCard } from "@/components/operaciones/KpiCard";
-import { useConfiguracionByOrg } from "@/hooks/useConfiguracionOrg";
-import { usePlanes } from "@/hooks/usePlanes";
-import { useToast } from "@/hooks/use-toast";
 import { Switch } from "@/components/ui/switch";
 import { ArrowLeft, Building2, Users, Ship, UserCheck, FileText, Calendar, CheckCircle2, XCircle, Settings, Pencil, Save, X, UserPlus, Trash2 } from "lucide-react";
 import AgregarMiembroOrgDialog from "@/components/admin/AgregarMiembroOrgDialog";
-import type { Enums } from "@/integrations/supabase/types";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
+import { useAdminOrgDetalle, type MemberRow } from "@/hooks/useAdminOrgDetalle";
+import type { AppRole } from "@/data/types";
 
-type AppRole = Enums<"app_role">;
-
-interface MemberRow {
-  id: string;
-  user_id: string;
-  role: AppRole;
-  email?: string;
-}
+const roleBadge: Record<string, string> = {
+  super_admin: "bg-primary text-primary-foreground",
+  admin: "bg-destructive text-destructive-foreground",
+  operador: "bg-info text-info-foreground",
+  viewer: "bg-muted text-muted-foreground",
+};
 
 export default function AdminOrgDetalle() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { toast } = useToast();
-  const queryClient = useQueryClient();
 
-  // Edit state
-  const [editing, setEditing] = useState(false);
-  const [editNombre, setEditNombre] = useState("");
-  const [editRfc, setEditRfc] = useState("");
-  const [editPlan, setEditPlan] = useState("");
-  const [addMemberOpen, setAddMemberOpen] = useState(false);
-
-  // Planes
-  const { data: planes = [] } = usePlanes();
-
-  // Org data
-  const { data: org } = useQuery({
-    queryKey: ["admin-org", id],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("organizations")
-        .select("*")
-        .eq("id", id!)
-        .single();
-      if (error) throw error;
-      return data;
-    },
-    enabled: !!id,
-  });
-
-  useEffect(() => {
-    if (org) {
-      setEditNombre(org.nombre);
-      setEditRfc(org.rfc ?? "");
-      setEditPlan(org.plan ?? "basic");
-    }
-  }, [org]);
-
-  // Update org mutation
-  const updateOrg = useMutation({
-    mutationFn: async (payload: { nombre: string; rfc: string; plan: string }) => {
-      const { error } = await supabase
-        .from("organizations")
-        .update({ nombre: payload.nombre, rfc: payload.rfc, plan: payload.plan })
-        .eq("id", id!);
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["admin-org", id] });
-      toast({ title: "Organización actualizada" });
-      setEditing(false);
-    },
-    onError: (error: Error) => {
-      toast({ title: "Error al actualizar", description: error.message, variant: "destructive" });
-    },
-  });
-
-  const toggleActivo = useMutation({
-    mutationFn: async (activo: boolean) => {
-      const { error } = await supabase
-        .from("organizations")
-        .update({ activo })
-        .eq("id", id!);
-      if (error) throw error;
-    },
-    onSuccess: (_, activo) => {
-      queryClient.invalidateQueries({ queryKey: ["admin-org", id] });
-      toast({ title: activo ? "Organización activada" : "Organización desactivada" });
-    },
-    onError: (error: Error) => {
-      toast({ title: "Error", description: error.message, variant: "destructive" });
-    },
-  });
-
-  // KPI counts
-  const { data: memberCount = 0 } = useQuery({
-    queryKey: ["admin-org-count-members", id],
-    queryFn: async () => {
-      const { count, error } = await supabase
-        .from("organization_members")
-        .select("id", { count: "exact", head: true })
-        .eq("organization_id", id!);
-      if (error) throw error;
-      return count ?? 0;
-    },
-    enabled: !!id,
-  });
-
-  const { data: embarqueCount = 0 } = useQuery({
-    queryKey: ["admin-org-count-embarques", id],
-    queryFn: async () => {
-      const { count, error } = await supabase
-        .from("embarques")
-        .select("id", { count: "exact", head: true })
-        .eq("organization_id", id!);
-      if (error) throw error;
-      return count ?? 0;
-    },
-    enabled: !!id,
-  });
-
-  const { data: clienteCount = 0 } = useQuery({
-    queryKey: ["admin-org-count-clientes", id],
-    queryFn: async () => {
-      const { count, error } = await supabase
-        .from("clientes")
-        .select("id", { count: "exact", head: true })
-        .eq("organization_id", id!);
-      if (error) throw error;
-      return count ?? 0;
-    },
-    enabled: !!id,
-  });
-
-  const { data: cotizacionCount = 0 } = useQuery({
-    queryKey: ["admin-org-count-cotizaciones", id],
-    queryFn: async () => {
-      const { count, error } = await supabase
-        .from("cotizaciones")
-        .select("id", { count: "exact", head: true })
-        .eq("organization_id", id!);
-      if (error) throw error;
-      return count ?? 0;
-    },
-    enabled: !!id,
-  });
-
-  // Members
-  const { data: members = [], isLoading: loadingMembers } = useQuery({
-    queryKey: ["admin-org-members", id],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("organization_members")
-        .select("id, user_id, role")
-        .eq("organization_id", id!)
-        .order("created_at");
-      if (error) throw error;
-
-      let emailMap: Record<string, string> = {};
-      try {
-        const { data: usersData } = await supabase.functions.invoke("list-users");
-        if (Array.isArray(usersData)) {
-          usersData.forEach((u: { id: string; email: string }) => {
-            emailMap[u.id] = u.email;
-          });
-        }
-      } catch { /* */ }
-
-      return (data ?? []).map((m) => ({
-        ...m,
-        email: emailMap[m.user_id] || m.user_id,
-      })) as MemberRow[];
-    },
-    enabled: !!id,
-  });
-
-  // Config
-  const { data: configItems = [], isLoading: loadingConfig } = useConfiguracionByOrg(id ?? null);
-
-  const grouped = configItems.reduce<Record<string, typeof configItems>>((acc, item) => {
-    if (!acc[item.categoria]) acc[item.categoria] = [];
-    acc[item.categoria].push(item);
-    return acc;
-  }, {});
-
-  // Mutations
-  const updateRole = useMutation({
-    mutationFn: async ({ memberId, role }: { memberId: string; role: AppRole }) => {
-      const { error } = await supabase
-        .from("organization_members")
-        .update({ role })
-        .eq("id", memberId);
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["admin-org-members", id] });
-      toast({ title: "Rol actualizado" });
-    },
-  });
-
-  const removeMember = useMutation({
-    mutationFn: async (memberId: string) => {
-      const { error } = await supabase
-        .from("organization_members")
-        .delete()
-        .eq("id", memberId);
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["admin-org-members", id] });
-      queryClient.invalidateQueries({ queryKey: ["admin-org-count-members", id] });
-      toast({ title: "Miembro eliminado de la organización" });
-    },
-    onError: (error: Error) => {
-      toast({ title: "Error al eliminar miembro", description: error.message, variant: "destructive" });
-    },
-  });
-
-  const roleBadge: Record<string, string> = {
-    super_admin: "bg-primary text-primary-foreground",
-    admin: "bg-destructive text-destructive-foreground",
-    operador: "bg-info text-info-foreground",
-    viewer: "bg-muted text-muted-foreground",
-  };
+  const {
+    org, planes,
+    editing, setEditing,
+    editNombre, setEditNombre,
+    editRfc, setEditRfc,
+    editPlan, setEditPlan,
+    addMemberOpen, setAddMemberOpen,
+    updateOrg, toggleActivo,
+    memberCount, embarqueCount, clienteCount, cotizacionCount,
+    members, loadingMembers,
+    configItems, loadingConfig, grouped,
+    updateRole, removeMember,
+    cancelEditing, saveEditing, invalidateMembers,
+  } = useAdminOrgDetalle(id);
 
   const columns: DataTableColumn<MemberRow>[] = [
     { key: "email", header: "Usuario", width: "min-w-[200px]", className: "font-medium", render: (m) => m.email ?? m.user_id },
@@ -341,11 +148,11 @@ export default function AdminOrgDetalle() {
                 size="sm"
                 className="gap-1"
                 disabled={updateOrg.isPending || !editNombre.trim()}
-                onClick={() => updateOrg.mutate({ nombre: editNombre.trim(), rfc: editRfc.trim(), plan: editPlan })}
+                onClick={saveEditing}
               >
                 <Save className="h-3.5 w-3.5" /> Guardar
               </Button>
-              <Button variant="ghost" size="sm" onClick={() => { setEditing(false); if (org) { setEditNombre(org.nombre); setEditRfc(org.rfc ?? ""); setEditPlan(org.plan ?? "basic"); } }}>
+              <Button variant="ghost" size="sm" onClick={cancelEditing}>
                 <X className="h-3.5 w-3.5" />
               </Button>
             </div>
@@ -466,10 +273,7 @@ export default function AdminOrgDetalle() {
           onOpenChange={setAddMemberOpen}
           organizationId={id}
           existingUserIds={members.map((m) => m.user_id)}
-          onAdded={() => {
-            queryClient.invalidateQueries({ queryKey: ["admin-org-members", id] });
-            queryClient.invalidateQueries({ queryKey: ["admin-org-count-members", id] });
-          }}
+          onAdded={invalidateMembers}
         />
       )}
     </div>
