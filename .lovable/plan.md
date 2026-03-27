@@ -1,230 +1,71 @@
 
 
-# Análisis de Rendimiento — Hallazgos y Recomendaciones
-
-## Resumen
-
-La app tiene buena base (lazy loading, query caching, column selection), pero hay un problema dominante que explica la lentitud percibida, más varios problemas secundarios.
-
----
-
-## 1. CRÍTICO — `useEmbarques()` descarga TODOS los embarques en 3 páginas simultáneamente
-
-El hook `useEmbarques()` (sin paginación) se invoca desde **3 consumidores independientes** cada vez que el usuario navega a cualquier ruta protegida:
-
-- **`useSidebarAlerts`** — se monta en `AppSidebar` → `Layout`, activo en TODA la app
-- **`useDashboardData`** — página Dashboard
-- **`useOperacionesData`** — página Operaciones
-
-Gracias a React Query comparten la misma caché, pero el problema es que `useSidebarAlerts` fuerza la descarga de TODOS los embarques en **cada navegación**, incluso cuando el usuario va a Clientes, Proveedores o Configuración. Con el límite de 1000 filas de Supabase, esto ya es un techo.
-
-**Recomendación**: Reemplazar `useSidebarAlerts` con una query RPC ligera del tipo `SELECT count(*) FROM embarques WHERE estado = 'Arribo' AND eta < now() - interval '7 days'`. Esto elimina la descarga masiva del sidebar y la limita a Dashboard/Operaciones donde realmente se necesita.
-
-**Impacto estimado**: Reducción de ~60-80% del tráfico de red en navegación general.
-
----
-
-## 2. ALTO — Dashboard y Operaciones ejecutan 3 queries pesadas en paralelo
-
-Al abrir Dashboard se disparan simultáneamente:
-- `useEmbarques()` → todos los embarques
-- `useProfitMaps()` → RPC `profit_por_embarque` (todos los embarques con conceptos)
-- `useQuery(facturas)` → todas las facturas
-
-Y en Operaciones los mismos 2 primeros. Todo este procesamiento (filtrado, agrupación, cálculo de profit) se hace client-side con `useMemo`.
-
-**Recomendación a corto plazo**: Ya existe la nota de escalabilidad en el código. Crear una RPC `dashboard_stats()` que devuelva los conteos, alertas y profit agregados desde el servidor en una sola llamada. Esto reemplazaría las 3 queries + toda la lógica de `useMemo`.
-
-**Recomendación a mediano plazo**: Crear `operaciones_stats()` RPC similar para la página Operaciones.
-
----
-
-## 3. MODERADO — Queries N+1 en lista de Embarques
-
-La página Embarques ejecuta 3 queries por cada carga de página:
-1. `useEmbarquesPaginados` — los embarques paginados
-2. `useEmbarquesLiquidacion(embarqueIds)` — conceptos_costo de todos los IDs visibles
-3. `useEmbarquesDocsStatus(embarqueIds)` — documentos de todos los IDs visibles
-
-Queries 2 y 3 dependen del resultado de query 1 (patrón waterfall). Además, descargan todas las filas de `conceptos_costo` y `documentos_embarque` solo para contar totales.
-
-**Recomendación**: Crear una RPC `embarques_list_extras(p_ids uuid[])` que devuelva los conteos agregados en una sola llamada con `GROUP BY embarque_id`, eliminando el waterfall y reduciendo el payload.
-
----
-
-## 4. MODERADO — `useEmbarquesLiquidacion` descarga filas completas para contar
-
-La query actual hace `select('embarque_id, estado_liquidacion')` y luego cuenta en JS. Con muchos conceptos por embarque (ej. 20 embarques × 15 conceptos = 300 filas), esto es ineficiente.
-
-**Recomendación**: Usar una query con `GROUP BY` del lado servidor:
-```sql
-SELECT embarque_id, count(*) as total, 
-  count(*) FILTER (WHERE estado_liquidacion = 'Pagado') as pagados
-FROM conceptos_costo WHERE embarque_id = ANY($1)
-GROUP BY embarque_id
-```
-
----
-
-## 5. MENOR — `useUpdateConfiguracion` ejecuta updates secuenciales
-
-El mutation de configuración hace un `for` loop con `await` por cada item, generando N requests secuenciales al guardar.
-
-**Recomendación**: Agrupar en un solo `upsert` o crear una RPC que reciba el array completo.
-
----
-
-## 6. MENOR — `AdminLayout` no usa lazy loading para su sidebar
-
-`AdminLayout` importa `AdminSidebar` de forma síncrona. Menor impacto dado que solo afecta a super_admin.
-
-**No requiere acción** por ahora.
-
----
-
-## 7. MENOR — AuthContext hace doble fetch de sesión
-
-En `AuthContext`, tanto `onAuthStateChange` como `getSession()` se ejecutan al montar, lo que puede resultar en `fetchRole` llamado dos veces al inicio. El `setTimeout` evita deadlocks pero agrega latencia.
-
-**Recomendación**: Usar solo `onAuthStateChange` y eliminar el `getSession()` redundante, o guardar un flag para evitar el doble `fetchRole`.
-
----
-
-## 8. COSMÉTICO — Hardcoded query key en `useSidebarAlerts`
-
-La query de facturas vencidas usa `['sidebar-facturas-vencidas']` en lugar del factory `queryKeys`. Esto puede causar que no se invalide correctamente cuando se actualiza una factura.
-
-**Recomendación**: Mover a `queryKeys.sidebar.facturasVencidas` o similar.
-
----
-
-## Resumen Priorizado
-
-| # | Prioridad | Acción | Impacto |
-|---|-----------|--------|---------|
-| 1 | Crítica | RPC ligera para sidebar alerts (eliminar `useEmbarques` del sidebar) | Elimina descarga masiva en toda la app |
-| 2 | Alta | RPC `dashboard_stats` server-side | Reduce 3 queries + procesamiento client-side a 1 |
-| 3 | Moderada | RPC `embarques_list_extras` para liquidación + docs | Elimina waterfall y reduce payload |
-| 4 | Moderada | Agregar GROUP BY server-side para conteos | Reduce filas transferidas |
-| 5 | Menor | Batch upsert en configuración | Reduce N requests a 1 |
-| 6 | Menor | Deduplicar fetchRole en AuthContext | Elimina request redundante al inicio |
-| 7 | Menor | Migrar query key hardcoded del sidebar | Correctitud de cache invalidation |
-
-## Lo que ya está bien optimizado
-
-- Lazy loading por ruta con `React.lazy`
-- `staleTime: 30s` y `gcTime: 5<lov-plan>
-
-# Análisis de Rendimiento — Hallazgos y Recomendaciones
-
-## Resumen
-
-La app tiene buena base (lazy loading, query caching, column selection), pero hay un problema dominante que explica la lentitud percibida, más varios problemas secundarios.
-
----
-
-## 1. CRÍTICO — `useEmbarques()` descarga TODOS los embarques en 3 páginas simultáneamente
-
-El hook `useEmbarques()` (sin paginación) se invoca desde **3 consumidores independientes** cada vez que el usuario navega a cualquier ruta protegida:
-
-- **`useSidebarAlerts`** — se monta en `AppSidebar` → `Layout`, activo en TODA la app
-- **`useDashboardData`** — página Dashboard
-- **`useOperacionesData`** — página Operaciones
-
-Gracias a React Query comparten la misma caché, pero el problema es que `useSidebarAlerts` fuerza la descarga de TODOS los embarques en **cada navegación**, incluso cuando el usuario va a Clientes, Proveedores o Configuración. Con el límite de 1000 filas de Supabase, esto ya es un techo.
-
-**Recomendación**: Reemplazar `useSidebarAlerts` con una query RPC ligera del tipo `SELECT count(*) FROM embarques WHERE estado = 'Arribo' AND eta < now() - interval '7 days'`. Esto elimina la descarga masiva del sidebar y la limita a Dashboard/Operaciones donde realmente se necesita.
-
-**Impacto estimado**: Reducción de ~60-80% del tráfico de red en navegación general.
-
----
-
-## 2. ALTO — Dashboard y Operaciones ejecutan 3 queries pesadas en paralelo
-
-Al abrir Dashboard se disparan simultáneamente:
-- `useEmbarques()` → todos los embarques
-- `useProfitMaps()` → RPC `profit_por_embarque` (todos los embarques con conceptos)
-- `useQuery(facturas)` → todas las facturas
-
-Y en Operaciones los mismos 2 primeros. Todo este procesamiento (filtrado, agrupación, cálculo de profit) se hace client-side con `useMemo`.
-
-**Recomendación a corto plazo**: Ya existe la nota de escalabilidad en el código. Crear una RPC `dashboard_stats()` que devuelva los conteos, alertas y profit agregados desde el servidor en una sola llamada. Esto reemplazaría las 3 queries + toda la lógica de `useMemo`.
-
-**Recomendación a mediano plazo**: Crear `operaciones_stats()` RPC similar para la página Operaciones.
-
----
-
-## 3. MODERADO — Queries N+1 en lista de Embarques
-
-La página Embarques ejecuta 3 queries por cada carga de página:
-1. `useEmbarquesPaginados` — los embarques paginados
-2. `useEmbarquesLiquidacion(embarqueIds)` — conceptos_costo de todos los IDs visibles
-3. `useEmbarquesDocsStatus(embarqueIds)` — documentos de todos los IDs visibles
-
-Queries 2 y 3 dependen del resultado de query 1 (patrón waterfall). Además, descargan todas las filas de `conceptos_costo` y `documentos_embarque` solo para contar totales.
-
-**Recomendación**: Crear una RPC `embarques_list_extras(p_ids uuid[])` que devuelva los conteos agregados en una sola llamada con `GROUP BY embarque_id`, eliminando el waterfall y reduciendo el payload.
-
----
-
-## 4. MODERADO — `useEmbarquesLiquidacion` descarga filas completas para contar
-
-La query actual hace `select('embarque_id, estado_liquidacion')` y luego cuenta en JS. Con muchos conceptos por embarque (ej. 20 embarques × 15 conceptos = 300 filas), esto es ineficiente.
-
-**Recomendación**: Usar una query con `GROUP BY` del lado servidor:
-```sql
-SELECT embarque_id, count(*) as total, 
-  count(*) FILTER (WHERE estado_liquidacion = 'Pagado') as pagados
-FROM conceptos_costo WHERE embarque_id = ANY($1)
-GROUP BY embarque_id
-```
-
----
-
-## 5. MENOR — `useUpdateConfiguracion` ejecuta updates secuenciales
-
-El mutation de configuración hace un `for` loop con `await` por cada item, generando N requests secuenciales al guardar.
-
-**Recomendación**: Agrupar en un solo `upsert` o crear una RPC que reciba el array completo.
-
----
-
-## 6. MENOR — AuthContext hace doble fetch de sesión
-
-En `AuthContext`, tanto `onAuthStateChange` como `getSession()` se ejecutan al montar, lo que puede resultar en `fetchRole` llamado dos veces al inicio. El `setTimeout` evita deadlocks pero agrega latencia.
-
-**Recomendación**: Usar solo `onAuthStateChange` y eliminar el `getSession()` redundante, o guardar un flag para evitar el doble `fetchRole`.
-
----
-
-## 7. COSMÉTICO — Hardcoded query key en `useSidebarAlerts`
-
-La query de facturas vencidas usa `['sidebar-facturas-vencidas']` en lugar del factory `queryKeys`. Esto puede causar que no se invalide correctamente cuando se actualiza una factura.
-
-**Recomendación**: Mover a `queryKeys.sidebar.facturasVencidas` o similar.
-
----
-
-## Resumen Priorizado
-
-| # | Prioridad | Acción | Impacto |
-|---|-----------|--------|---------|
-| 1 | Crítica | RPC ligera para sidebar alerts (eliminar `useEmbarques` del sidebar) | Elimina descarga masiva en toda la app |
-| 2 | Alta | RPC `dashboard_stats` server-side | Reduce 3 queries + procesamiento client-side a 1 |
-| 3 | Moderada | RPC `embarques_list_extras` para liquidación + docs | Elimina waterfall y reduce payload |
-| 4 | Moderada | Agregar GROUP BY server-side para conteos | Reduce filas transferidas |
-| 5 | Menor | Batch upsert en configuración | Reduce N requests a 1 |
-| 6 | Menor | Deduplicar fetchRole en AuthContext | Elimina request redundante al inicio |
-| 7 | Menor | Migrar query key hardcoded del sidebar | Correctitud de cache invalidation |
-
-## Lo que ya está bien optimizado
-
-- Lazy loading por ruta con `React.lazy` y `Suspense`
-- `staleTime: 30s` y `gcTime: 5min` globales en React Query
-- Column selection explícita (`EMBARQUE_LIST_COLUMNS`, `CLIENTE_LIST_COLUMNS`, etc.)
-- Paginación server-side en Embarques, Clientes y Cotizaciones
-- `useProfitMaps` usa RPC `profit_por_embarque` (agregación server-side)
-- `placeholderData` para transiciones suaves entre páginas
-- `useDebounce` en búsquedas para evitar queries excesivas
-- Operaciones atómicas vía RPCs (`crear_embarque_completo`, `actualizar_embarque_completo`)
+# Plan: Generar Data Demo para Demo Logistics MX
+
+## Situación actual
+La organización "Demo Logistics MX" (ID: `05ac6723...`) tiene:
+- **2 clientes**, **4 proveedores**, **2 embarques**, **3 cotizaciones**, **2 facturas**
+- Usuario jorge.quintana@expertdata.io tiene rol global `viewer` pero rol org `admin`
+
+**Problema**: El rol global es `viewer`, lo que bloquea operaciones CRUD vía RLS. Necesita ser actualizado a `admin` o `operador` para poder insertar data.
+
+## Plan de ejecución
+
+### Paso 1 — Corregir rol global del usuario
+Actualizar `user_roles` de `viewer` a `admin` para jorge.quintana para que las políticas RLS permitan CRUD.
+
+### Paso 2 — Crear 6 clientes nuevos (8 total)
+Empresas mexicanas realistas con datos completos:
+
+| Cliente | RFC | Ciudad | Sector |
+|---------|-----|--------|--------|
+| Plásticos Industriales de Querétaro | PIQ250101 | Querétaro | Manufactura |
+| Textiles La Moderna | TLM250201 | Puebla | Textil |
+| Electrónica Avanzada del Norte | EAN250301 | Monterrey | Electrónica |
+| Agroexport del Bajío | AEB250401 | León | Agroindustria |
+| Químicos Especializados MX | QEM250501 | CDMX | Química |
+| AutoPartes Centrales | APC250601 | Aguascalientes | Automotriz |
+
+### Paso 3 — Crear 3 proveedores nuevos (7 total)
+| Proveedor | Tipo |
+|-----------|------|
+| Maersk Line México | Naviera |
+| DHL Global Forwarding | Agente |
+| Almacenadora del Puerto | Almacén |
+
+### Paso 4 — Crear ~25 embarques con workflow coherente
+Distribución por estado que refleje operación real:
+
+| Estado | Cantidad | Fechas ETD/ETA |
+|--------|----------|----------------|
+| Cerrado | 4 | Ene-Feb 2026 |
+| EIR | 2 | Feb 2026 |
+| Entregado | 3 | Feb-Mar 2026 |
+| En Aduana | 2 | Mar 2026 |
+| Arribo | 3 | Mar 2026 (algunos con demora >7 días) |
+| En Tránsito | 5 | Mar-Abr 2026 |
+| Confirmado | 6 | Abr-May 2026 |
+
+- Modos: ~15 Marítimo, ~5 Aéreo, ~3 Terrestre, ~2 Multimodal
+- Tipos: ~18 Importación, ~5 Exportación, ~2 Nacional
+- Cada uno con 2-4 conceptos de venta y 2-5 conceptos de costo (para generar profit)
+- Rutas realistas: Shanghai→Manzanillo, Shenzhen→CDMX, Houston→Monterrey, etc.
+
+### Paso 5 — Crear 5 cotizaciones adicionales (8 total)
+En distintos estados: 2 Borrador, 1 Enviada, 1 Aceptada, 1 Rechazada
+
+### Paso 6 — Crear 6 facturas adicionales (8 total)
+Vinculadas a embarques cerrados/entregados: 2 Pagada, 2 Emitida, 1 Vencida, 1 Borrador
+
+### Paso 7 — Registrar en bitácora
+Insertar entradas de actividad para las operaciones principales del usuario.
+
+### Paso 8 — Verificar vía browser
+Navegar Dashboard, Embarques, Clientes y Cotizaciones para confirmar que la data se muestra correctamente y que los KPIs tienen sentido.
+
+## Detalle técnico
+- Toda la data se inserta con `organization_id = '05ac6723-1b76-47ba-8f64-2f70a82e77a3'`
+- Los embarques se crean vía la RPC `crear_embarque_completo` para generar expedientes automáticos
+- Las facturas se insertan directamente con folios secuenciales `DLM-F003` a `DLM-F008`
+- Los conceptos de venta/costo usan monedas USD y MXN con tipos de cambio realistas (~17.2-17.8)
 
