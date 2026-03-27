@@ -192,13 +192,16 @@ export function useEmbarqueFacturas(embarqueId: string | undefined) {
 }
 
 export function useProveedoresForSelect() {
+  const { organizationId } = useOrgFilter();
   return useQuery({
-    queryKey: queryKeys.proveedores.select,
+    queryKey: [...queryKeys.proveedores.select, organizationId],
     queryFn: async () => {
-      const { data, error } = await supabase
+      let query = supabase
         .from('proveedores')
         .select('id, nombre')
         .order('nombre');
+      if (organizationId) query = query.eq('organization_id', organizationId);
+      const { data, error } = await query;
       if (error) throw error;
       return data;
     },

@@ -163,13 +163,16 @@ export function useDeleteContacto() {
 }
 
 export function useClientesForSelect() {
+  const { organizationId } = useOrgFilter();
   return useQuery({
-    queryKey: queryKeys.clientes.select,
+    queryKey: [...queryKeys.clientes.select, organizationId],
     queryFn: async () => {
-      const { data, error } = await supabase
+      let query = supabase
         .from('clientes')
         .select('id, nombre')
         .order('nombre');
+      if (organizationId) query = query.eq('organization_id', organizationId);
+      const { data, error } = await query;
       if (error) throw error;
       return data;
     },
