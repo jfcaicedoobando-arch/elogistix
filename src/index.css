@@ -32,18 +32,18 @@
 
     --border: 214 32% 91%;
     --input: 214 32% 91%;
-    --ring: 217 91% 60%;
+    --ring: 221 83% 53%;
 
     --radius: 0.5rem;
 
-    --sidebar-background: 220 47% 20%;
+    --sidebar-background: 216 47% 20%;
     --sidebar-foreground: 210 33% 95%;
-    --sidebar-primary: 217 91% 60%;
+    --sidebar-primary: 221 83% 53%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 220 40% 28%;
+    --sidebar-accent: 216 40% 28%;
     --sidebar-accent-foreground: 210 33% 95%;
-    --sidebar-border: 220 40% 28%;
-    --sidebar-ring: 217 91% 60%;
+    --sidebar-border: 216 40% 28%;
+    --sidebar-ring: 221 83% 53%;
 
     --success: 142 71% 45%;
     --success-foreground: 0 0% 100%;
