@@ -70,4 +70,14 @@ export const queryKeys = {
     cotizaciones: ['reportes', 'cotizaciones'] as const,
     rentabilidadClientes: (filtros: { fechaDesde?: string; fechaHasta?: string; modo?: string }) => ['reportes', 'rentabilidad', filtros] as const,
   },
+  configuracionGlobal: {
+    all: ['configuracion_global'] as const,
+    categoria: (cat: string) => ['configuracion_global', cat] as const,
+  },
+  planes: {
+    all: ['planes'] as const,
+  },
+  configuracionOrg: {
+    byOrg: (orgId: string) => ['configuracion', 'org', orgId] as const,
+  },
 } as const;
