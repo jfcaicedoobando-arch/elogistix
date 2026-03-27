@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import elogistixLogo from "@/assets/elogistix-logo.jpg";
+import librecargaLogo from "@/assets/librecarga-logo.svg";
 
 export default function Login() {
   const [email, setEmail] = useState("");
@@ -63,9 +63,9 @@ export default function Login() {
       <Card className="w-full max-w-sm shadow-lg">
         <CardHeader className="text-center space-y-3 pb-2">
           <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-xl bg-white shadow-sm border">
-            <img src={elogistixLogo} alt="eLogistix Logo" className="h-12 w-12 rounded-lg object-contain" />
+            <img src={librecargaLogo} alt="Libre Carga Logo" className="h-12 w-12 rounded-lg object-contain" />
           </div>
-          <h1 className="text-xl font-bold">Elogistix Shipping</h1>
+          <h1 className="text-xl font-bold">Libre Carga</h1>
           <p className="text-sm text-muted-foreground">
             {isSignUp ? "Crear cuenta nueva" : "Inicia sesión para continuar"}
           </p>

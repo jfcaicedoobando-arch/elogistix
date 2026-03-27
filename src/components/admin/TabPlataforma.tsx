@@ -18,7 +18,7 @@ export default function TabPlataforma() {
   const [initialized, setInitialized] = useState(false);
 
   if (Object.keys(config).length > 0 && !initialized) {
-    setNombreApp((config.nombre_app as string) || "Elogistix");
+    setNombreApp((config.nombre_app as string) || "Libre Carga");
     setTagline((config.tagline as string) || "");
     setLogoUrl((config.logo_url as string) || "");
     setColorPrimario((config.color_primario as string) || "#1e40af");
@@ -46,7 +46,7 @@ export default function TabPlataforma() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="space-y-2">
             <Label>Nombre de la plataforma</Label>
-            <Input value={nombreApp} onChange={(e) => setNombreApp(e.target.value)} placeholder="Elogistix" />
+            <Input value={nombreApp} onChange={(e) => setNombreApp(e.target.value)} placeholder="Libre Carga" />
           </div>
           <div className="space-y-2">
             <Label>Subtítulo / Tagline</Label>
@@ -70,7 +70,7 @@ export default function TabPlataforma() {
           </div>
           <div className="space-y-2">
             <Label>Email de soporte</Label>
-            <Input value={emailSoporte} onChange={(e) => setEmailSoporte(e.target.value)} placeholder="soporte@elogistix.com" type="email" />
+            <Input value={emailSoporte} onChange={(e) => setEmailSoporte(e.target.value)} placeholder="soporte@librecarga.com" type="email" />
           </div>
         </div>
         <div className="flex justify-end pt-2">

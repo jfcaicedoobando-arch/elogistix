@@ -14,7 +14,7 @@ import {
   BarChart3,
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
-import elogistixLogo from "@/assets/elogistix-logo.jpg";
+import librecargaLogo from "@/assets/librecarga-logo.svg";
 import { useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSidebarAlerts } from "@/hooks/useSidebarAlerts";
@@ -129,11 +129,11 @@ export function AppSidebar() {
     <Sidebar collapsible="icon">
       <SidebarHeader className="border-b border-sidebar-border p-4">
         <div className="flex items-center gap-3">
-          <img src={elogistixLogo} alt="eLogistix Logo" className="h-9 w-9 rounded-lg object-contain bg-white p-0.5" />
+          <img src={librecargaLogo} alt="Libre Carga Logo" className="h-9 w-9 rounded-lg object-contain bg-white p-0.5" />
           {!collapsed && (
             <div className="flex flex-col">
               <span className="text-sm font-bold text-sidebar-foreground">
-                Elogistix Shipping
+                Libre Carga
               </span>
               <span className="text-xs text-sidebar-foreground/60">
                 Agente de Carga
@@ -175,7 +175,7 @@ export function AppSidebar() {
         </Button>
         {!collapsed && (
           <div className="text-xs text-sidebar-foreground/50">
-            v6.1.0 · Multi-Tenant
+            v6.4.0 · Libre Carga
           </div>
         )}
       </SidebarFooter>

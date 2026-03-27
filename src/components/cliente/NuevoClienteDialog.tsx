@@ -19,7 +19,7 @@ const emptyCliente = {
 const DOCS_OBLIGATORIOS = [
   'Constancia de Situación Fiscal (CSF)', 'CIF', 'Opinión fiscal', 'Acta constitutiva',
   'INE RL', 'Poder notarial', 'Comprobante de domicilio', 'Datos bancarios',
-  'Opinión de cumplimiento IMSS/Infonavit', 'Contrato de servicios con Elogistix',
+  'Opinión de cumplimiento IMSS/Infonavit', 'Contrato de servicios con Libre Carga',
   'Estados financieros último corte',
 ];
 

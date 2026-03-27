@@ -216,7 +216,7 @@ export function generarPdfCotizacion(cotizacion: CotizacionRow, tasaIva: number 
 
   ${cotizacion.notas ? `<section><h3>Notas</h3><p>${cotizacion.notas}</p></section>` : ''}
 
-  <div class="footer">Documento generado el ${new Date().toLocaleDateString('es-MX', { day: '2-digit', month: 'long', year: 'numeric' })} — eLogistix</div>
+  <div class="footer">Documento generado el ${new Date().toLocaleDateString('es-MX', { day: '2-digit', month: 'long', year: 'numeric' })} — Libre Carga</div>
 </body></html>`;
 
   const win = window.open('', '_blank');
