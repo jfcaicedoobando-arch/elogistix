@@ -409,6 +409,19 @@ export default function AdminOrgDetalle() {
           ))}
         </CardContent>
       </Card>
+
+      {id && (
+        <AgregarMiembroOrgDialog
+          open={addMemberOpen}
+          onOpenChange={setAddMemberOpen}
+          organizationId={id}
+          existingUserIds={members.map((m) => m.user_id)}
+          onAdded={() => {
+            queryClient.invalidateQueries({ queryKey: ["admin-org-members", id] });
+            queryClient.invalidateQueries({ queryKey: ["admin-org-count-members", id] });
+          }}
+        />
+      )}
     </div>
   );
 }
