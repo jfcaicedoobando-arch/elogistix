@@ -34,7 +34,7 @@ export function StepDatosRuta() {
             <div className="space-y-2">
               <Label>Naviera *</Label>
               <Controller name="naviera" render={({ field }) => (
-                <ShippingLineSelect value={field.value} onValueChange={field.onChange} />
+                <NavieraSelect value={field.value} onValueChange={field.onChange} />
               )} />
             </div>
             <div className="space-y-2"><Label>Agente</Label><Input placeholder="Nombre del agente" {...register('agente')} /></div>
