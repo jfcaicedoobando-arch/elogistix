@@ -13,6 +13,13 @@ interface ChangelogEntry {
 
 const changelog: ChangelogEntry[] = [
   {
+    version: "7.4.3",
+    date: "2026-03-30",
+    type: "patch",
+    title: "Rol del usuario visible en el sidebar",
+    description: "Se muestra el rol del usuario (admin, operador, viewer, super admin) como badge junto a su email en el pie del sidebar.",
+  },
+  {
     version: "7.4.2",
     date: "2026-03-30",
     type: "patch",
