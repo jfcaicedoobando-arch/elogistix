@@ -1,9 +1,12 @@
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Badge } from "@/components/ui/badge";
-import { Users } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Users, UserPlus } from "lucide-react";
 import { DataTable, type DataTableColumn } from "@/components/DataTable";
 import { queryKeys } from "@/lib/queryKeys";
+import NuevoUsuarioAdminDialog from "@/components/admin/NuevoUsuarioAdminDialog";
 
 interface GlobalUserRow {
   user_id: string;
