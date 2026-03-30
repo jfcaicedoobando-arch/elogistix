@@ -1,3 +1,4 @@
+import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 import {
   LayoutDashboard,
   Ship,
@@ -167,9 +168,19 @@ export function AppSidebar() {
               {user.email}
             </div>
             {role && (
-              <Badge variant="outline" className="w-fit text-[10px] px-1.5 py-0 capitalize border-sidebar-border text-sidebar-foreground/50">
-                {role === "super_admin" ? "Super Admin" : role}
-              </Badge>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Badge variant="outline" className="w-fit text-[10px] px-1.5 py-0 capitalize border-sidebar-border text-sidebar-foreground/50 cursor-help">
+                    {role === "super_admin" ? "Super Admin" : role}
+                  </Badge>
+                </TooltipTrigger>
+                <TooltipContent side="top" className="max-w-[220px] text-xs">
+                  {role === "super_admin" && "Acceso total a todas las organizaciones y configuración global de la plataforma."}
+                  {role === "admin" && "Gestión completa de su organización: usuarios, configuración, embarques y facturación."}
+                  {role === "operador" && "Crear y editar embarques, cotizaciones y documentos operativos."}
+                  {role === "viewer" && "Solo lectura: puede consultar información pero no crear ni modificar registros."}
+                </TooltipContent>
+              </Tooltip>
             )}
           </div>
         )}
