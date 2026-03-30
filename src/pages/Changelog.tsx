@@ -13,6 +13,20 @@ interface ChangelogEntry {
 
 const changelog: ChangelogEntry[] = [
   {
+    version: "7.4.5",
+    date: "2026-03-30",
+    type: "patch",
+    title: "Rol organizacional en sidebar y permisos",
+    description: "El sidebar y el sistema de permisos ahora muestran y usan el rol del usuario dentro de su organización (organization_members) en lugar del rol global (user_roles). Esto corrige casos donde un admin de organización aparecía incorrectamente como viewer.",
+  },
+  {
+    version: "7.4.4",
+    date: "2026-03-30",
+    type: "patch",
+    title: "Tooltip de permisos en badge del rol",
+    description: "Se agregó un tooltip al badge del rol en el sidebar que explica los permisos de cada nivel (Super Admin, Admin, Operador, Viewer).",
+  },
+  {
     version: "7.4.3",
     date: "2026-03-30",
     type: "patch",

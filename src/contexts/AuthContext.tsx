@@ -112,10 +112,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(null);
     setSession(null);
     setRole(null);
+    setOrgRole(null);
   };
 
+  // effectiveRole: orgRole for regular users, global role for super_admin
+  const effectiveRole: AppRole | null = role === 'super_admin' ? role : (orgRole ?? role);
+
   return (
-    <AuthContext.Provider value={{ user, session, role, loading, signOut }}>
+    <AuthContext.Provider value={{ user, session, role, orgRole, effectiveRole, loading, signOut }}>
       {children}
     </AuthContext.Provider>
   );
