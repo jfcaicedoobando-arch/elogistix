@@ -1,9 +1,12 @@
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Badge } from "@/components/ui/badge";
-import { Users } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Users, UserPlus } from "lucide-react";
 import { DataTable, type DataTableColumn } from "@/components/DataTable";
 import { queryKeys } from "@/lib/queryKeys";
+import NuevoUsuarioAdminDialog from "@/components/admin/NuevoUsuarioAdminDialog";
 
 interface GlobalUserRow {
   user_id: string;
@@ -13,7 +16,8 @@ interface GlobalUserRow {
 }
 
 export default function AdminUsuarios() {
-  const { data: users = [], isLoading } = useQuery({
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const { data: users = [], isLoading, refetch } = useQuery({
     queryKey: queryKeys.admin.allUsers,
     queryFn: async () => {
       const { data: members, error } = await supabase
@@ -58,13 +62,21 @@ export default function AdminUsuarios() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center gap-3">
-        <Users className="h-6 w-6 text-primary" />
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight">Usuarios Globales</h1>
-          <p className="text-sm text-muted-foreground">Todos los usuarios de todas las organizaciones.</p>
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <Users className="h-6 w-6 text-primary" />
+          <div>
+            <h1 className="text-2xl font-bold tracking-tight">Usuarios Globales</h1>
+            <p className="text-sm text-muted-foreground">Todos los usuarios de todas las organizaciones.</p>
+          </div>
         </div>
+        <Button onClick={() => setDialogOpen(true)}>
+          <UserPlus className="h-4 w-4" />
+          Nuevo Usuario
+        </Button>
       </div>
+
+      <NuevoUsuarioAdminDialog open={dialogOpen} onOpenChange={setDialogOpen} onCreated={() => refetch()} />
 
       <div className="rounded-md border">
         <DataTable
