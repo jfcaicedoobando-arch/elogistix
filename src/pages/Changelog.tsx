@@ -13,6 +13,13 @@ interface ChangelogEntry {
 
 const changelog: ChangelogEntry[] = [
   {
+    version: "7.4.6",
+    date: "2026-03-30",
+    type: "patch",
+    title: "Corrección de visibilidad en búsqueda global",
+    description: "Se corrigió un problema donde la búsqueda global (⌘K) no mostraba resultados aunque el servidor los devolvía correctamente. El filtrado interno del componente ocultaba items por falta de valor explícito. También se mejoró la accesibilidad del diálogo de búsqueda.",
+  },
+  {
     version: "7.4.5",
     date: "2026-03-30",
     type: "patch",

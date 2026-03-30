@@ -119,7 +119,7 @@ export function GlobalSearch() {
             return (
               <CommandGroup key={type} heading={typeLabels[type as keyof typeof typeLabels]}>
                 {items.map((item) => (
-                  <CommandItem key={item.id} onSelect={() => handleSelect(item.url)}>
+                  <CommandItem key={item.id} value={`${item.label} ${item.sublabel ?? ""} ${type}`.toLowerCase()} onSelect={() => handleSelect(item.url)}>
                     <Icon className="mr-2 h-4 w-4 shrink-0 text-muted-foreground" />
                     <span className="font-medium">{item.label}</span>
                     {item.sublabel && (
