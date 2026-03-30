@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Users, UserPlus } from "lucide-react";
 import { DataTable, type DataTableColumn } from "@/components/DataTable";
 import { queryKeys } from "@/lib/queryKeys";
-import NuevoUsuarioAdminDialog from "@/components/admin/NuevoUsuarioAdminDialog";
+import NuevoUsuarioDialog from "@/components/NuevoUsuarioDialog";
 
 interface GlobalUserRow {
   user_id: string;

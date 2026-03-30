@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -13,18 +14,35 @@ interface Props {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onCreated: () => void;
+  /** When true, shows an organization selector (for admin/global context) */
+  showOrgSelector?: boolean;
 }
 
-export default function NuevoUsuarioDialog({ open, onOpenChange, onCreated }: Props) {
+export default function NuevoUsuarioDialog({ open, onOpenChange, onCreated, showOrgSelector = false }: Props) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [role, setRole] = useState("viewer");
+  const [orgId, setOrgId] = useState("");
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
+
+  const { data: orgs = [] } = useQuery({
+    queryKey: ["admin", "organizations-list"],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("organizations").select("id, nombre").order("nombre");
+      if (error) throw error;
+      return data ?? [];
+    },
+    enabled: open && showOrgSelector,
+  });
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email || !password) return;
+    if (showOrgSelector && !orgId) {
+      toast({ title: "Error", description: "Selecciona una organización", variant: "destructive" });
+      return;
+    }
     if (password.length < 6) {
       toast({ title: "Error", description: "La contraseña debe tener al menos 6 caracteres", variant: "destructive" });
       return;
@@ -40,19 +58,29 @@ export default function NuevoUsuarioDialog({ open, onOpenChange, onCreated }: Pr
         headers: token ? { Authorization: `Bearer ${token}` } : undefined,
       });
 
-      if (res.error) {
-        throw new Error(res.error.message || "Error al crear usuario");
-      }
-
+      if (res.error) throw new Error(res.error.message || "Error al crear usuario");
       const body = res.data;
-      if (body?.error) {
-        throw new Error(body.error);
+      if (body?.error) throw new Error(body.error);
+
+      // If admin context, also assign to selected organization
+      if (showOrgSelector && orgId && body?.user?.id) {
+        const { error: memberError } = await supabase.from("organization_members").insert({
+          organization_id: orgId,
+          user_id: body.user.id,
+          role: role as "admin" | "operador" | "viewer",
+        });
+        if (memberError) {
+          toast({ title: "Usuario creado", description: `Pero no se pudo asignar a la organización: ${memberError.message}`, variant: "destructive" });
+          setLoading(false);
+          return;
+        }
       }
 
       toast({ title: "Usuario creado", description: `Se registró ${email} como ${role}` });
       setEmail("");
       setPassword("");
       setRole("viewer");
+      setOrgId("");
       onOpenChange(false);
       onCreated();
     } catch (err: unknown) {
@@ -66,8 +94,12 @@ export default function NuevoUsuarioDialog({ open, onOpenChange, onCreated }: Pr
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Nuevo Usuario</DialogTitle>
-          <DialogDescription>Registra un nuevo usuario en el sistema.</DialogDescription>
+          <DialogTitle>{showOrgSelector ? "Nuevo Usuario Global" : "Nuevo Usuario"}</DialogTitle>
+          <DialogDescription>
+            {showOrgSelector
+              ? "Registra un nuevo usuario y asígnalo a una organización."
+              : "Registra un nuevo usuario en el sistema."}
+          </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
@@ -78,6 +110,21 @@ export default function NuevoUsuarioDialog({ open, onOpenChange, onCreated }: Pr
             <Label htmlFor="nu-password">Contraseña</Label>
             <Input id="nu-password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} required minLength={6} placeholder="Mínimo 6 caracteres" />
           </div>
+          {showOrgSelector && (
+            <div className="space-y-2">
+              <Label>Organización</Label>
+              <Select value={orgId} onValueChange={setOrgId}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecciona organización" />
+                </SelectTrigger>
+                <SelectContent>
+                  {orgs.map((o) => (
+                    <SelectItem key={o.id} value={o.id}>{o.nombre}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
           <div className="space-y-2">
             <Label>Rol</Label>
             <Select value={role} onValueChange={setRole}>
