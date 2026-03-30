@@ -76,7 +76,7 @@ export default function AdminUsuarios() {
         </Button>
       </div>
 
-      <NuevoUsuarioAdminDialog open={dialogOpen} onOpenChange={setDialogOpen} onCreated={() => refetch()} />
+      <NuevoUsuarioDialog open={dialogOpen} onOpenChange={setDialogOpen} onCreated={() => refetch()} showOrgSelector />
 
       <div className="rounded-md border">
         <DataTable
