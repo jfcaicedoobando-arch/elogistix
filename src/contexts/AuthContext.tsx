@@ -7,6 +7,8 @@ interface AuthContextType {
   user: User | null;
   session: Session | null;
   role: AppRole | null;
+  orgRole: AppRole | null;
+  effectiveRole: AppRole | null;
   loading: boolean;
   signOut: () => Promise<void>;
 }
@@ -15,6 +17,8 @@ const AuthContext = createContext<AuthContextType>({
   user: null,
   session: null,
   role: null,
+  orgRole: null,
+  effectiveRole: null,
   loading: true,
   signOut: async () => {},
 });
@@ -25,6 +29,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [role, setRole] = useState<AppRole | null>(null);
+  const [orgRole, setOrgRole] = useState<AppRole | null>(null);
   const [loading, setLoading] = useState(true);
   const hasLoggedLogin = useRef(false);
   const hasFetchedRole = useRef(false);
@@ -37,6 +42,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       .limit(1)
       .single();
     setRole((data?.role as AppRole) ?? null);
+
+    // Fetch organizational role
+    const { data: orgData } = await supabase
+      .from("organization_members")
+      .select("role")
+      .eq("user_id", userId)
+      .limit(1)
+      .single();
+    setOrgRole((orgData?.role as AppRole) ?? null);
   };
 
   const registrarLogin = useCallback(async (userId: string, email: string) => {
@@ -69,6 +83,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           }
         } else {
           setRole(null);
+          setOrgRole(null);
         }
         setLoading(false);
       }
@@ -97,10 +112,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(null);
     setSession(null);
     setRole(null);
+    setOrgRole(null);
   };
 
+  // effectiveRole: orgRole for regular users, global role for super_admin
+  const effectiveRole: AppRole | null = role === 'super_admin' ? role : (orgRole ?? role);
+
   return (
-    <AuthContext.Provider value={{ user, session, role, loading, signOut }}>
+    <AuthContext.Provider value={{ user, session, role, orgRole, effectiveRole, loading, signOut }}>
       {children}
     </AuthContext.Provider>
   );
