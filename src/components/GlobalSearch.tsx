@@ -24,6 +24,7 @@ const typeIcons = {
   cliente: Users,
   proveedor: Truck,
   factura: FileText,
+  cotizacion: ClipboardList,
 };
 
 const typeLabels = {
@@ -31,6 +32,7 @@ const typeLabels = {
   cliente: "Clientes",
   proveedor: "Proveedores",
   factura: "Facturas",
+  cotizacion: "Cotizaciones",
 };
 
 export function GlobalSearch() {
