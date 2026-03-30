@@ -15,7 +15,7 @@ interface SearchResult {
   id: string;
   label: string;
   sublabel?: string;
-  type: "embarque" | "cliente" | "proveedor" | "factura";
+  type: "embarque" | "cliente" | "proveedor" | "factura" | "cotizacion";
   url: string;
 }
 
