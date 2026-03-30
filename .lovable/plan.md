@@ -1,37 +1,43 @@
 
 
-# Plan: Crear usuario demo con rol Operador para Demo Logistics MX
+# Plan: Corregir visibilidad de la Bitácora de Actividad
 
-## Objetivo
-Crear una cuenta de usuario demo que se pueda compartir con clientes potenciales para que prueben la app con rol Operador (puede ver, crear y editar pero no acceder a configuración ni gestión de usuarios).
+## Problema identificado
 
-## Pasos
+Las políticas de seguridad (RLS) de la tabla `bitacora_actividad` tienen dos errores que bloquean la lectura:
 
-### 1. Crear el usuario vía Edge Function `create-user`
-- Email: `demo@demologistica.mx`
-- Contraseña: `Demo2026!`
-- Rol global: `operador`
+1. **Super Admin no puede ver nada**: La política "Tenant admin bitacora" requiere `has_role('admin')` al final, pero el super_admin tiene rol `super_admin`, no `admin`. Esto significa que el AND final siempre falla para super_admin.
 
-La Edge Function ya maneja: creación del usuario en auth, asignación de rol en `user_roles`, y confirmación automática del email.
+2. **Admins de organización con rol global `viewer` no ven nada**: La política usa `has_role()` que consulta la tabla `user_roles` (rol global), no el rol dentro de `organization_members`. Usuarios como hector@lopezbenavides.com que son admin a nivel org pero viewer a nivel global, quedan bloqueados.
 
-### 2. Agregar al usuario como miembro de "Demo Logistics MX"
-Insertar en `organization_members` con:
-- `user_id`: el ID retornado por la Edge Function
-- `organization_id`: `05ac6723-1b76-47ba-8f64-2f70a82e77a3`
-- `role`: `operador`
+3. **Super Admin sin membresía de org**: `current_user_org_id()` retorna NULL para super_admin porque no es miembro de ninguna organización, así que la política de "own bitacora" también falla.
 
-### 3. Verificar acceso
-Iniciar sesión con las credenciales demo en el preview para confirmar que:
-- Se puede acceder al Dashboard, Embarques, Clientes, Cotizaciones
-- Se pueden crear y editar registros
-- No se puede acceder a Configuración ni Usuarios (restringido para Operador)
+## Solución
 
-## Credenciales resultantes
-| Campo | Valor |
-|-------|-------|
-| URL | https://elogistix.lovable.app |
-| Email | demo@demologistica.mx |
-| Contraseña | Demo2026! |
-| Rol | Operador |
-| Organización | Demo Logistics MX |
+Actualizar las políticas RLS de `bitacora_actividad` para:
+
+### Política 1 — Admin de organización puede leer
+Permitir lectura si el usuario es admin **a nivel organización** (usando `is_org_admin`) o tiene rol global `admin`:
+```sql
+DROP POLICY "Tenant admin bitacora" ON bitacora_actividad;
+CREATE POLICY "Tenant admin bitacora" ON bitacora_actividad
+  FOR SELECT TO authenticated
+  USING (
+    (organization_id = current_user_org_id() AND is_org_admin(auth.uid(), organization_id))
+    OR has_role(auth.uid(), 'admin')
+    OR has_role(auth.uid(), 'super_admin')
+  );
+```
+
+### Política 2 — Usuarios ven su propia actividad (sin cambios estructurales, solo quitar restricción de org para super_admin)
+La política existente "Tenant user own bitacora" se mantiene porque funciona correctamente para usuarios normales.
+
+### Resultado esperado
+- Super admins ven toda la bitácora de cualquier organización
+- Admins de organización ven toda la bitácora de su organización
+- Usuarios normales siguen viendo solo su propia actividad
+
+## Archivos a modificar
+- **Migración SQL**: Reemplazar la política "Tenant admin bitacora"
+- **`src/pages/Changelog.tsx`**: Agregar entrada v7.4.1
 
