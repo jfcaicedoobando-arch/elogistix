@@ -83,6 +83,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           }
         } else {
           setRole(null);
+          setOrgRole(null);
         }
         setLoading(false);
       }
