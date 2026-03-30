@@ -42,6 +42,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       .limit(1)
       .single();
     setRole((data?.role as AppRole) ?? null);
+
+    // Fetch organizational role
+    const { data: orgData } = await supabase
+      .from("organization_members")
+      .select("role")
+      .eq("user_id", userId)
+      .limit(1)
+      .single();
+    setOrgRole((orgData?.role as AppRole) ?? null);
   };
 
   const registrarLogin = useCallback(async (userId: string, email: string) => {
