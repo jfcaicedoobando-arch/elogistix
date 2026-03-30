@@ -13,6 +13,13 @@ interface ChangelogEntry {
 
 const changelog: ChangelogEntry[] = [
   {
+    version: "7.4.7",
+    date: "2026-03-30",
+    type: "minor",
+    title: "Cotizaciones en búsqueda global",
+    description: "La búsqueda global (⌘K) ahora incluye cotizaciones. Se puede buscar por folio, nombre de cliente o empresa prospecto para encontrar cotizaciones directamente desde el buscador.",
+  },
+  {
     version: "7.4.6",
     date: "2026-03-30",
     type: "patch",

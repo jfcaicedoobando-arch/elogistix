@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { Search, Ship, Users, Truck, FileText } from "lucide-react";
+import { Search, Ship, Users, Truck, FileText, ClipboardList } from "lucide-react";
 import {
   CommandDialog,
   CommandEmpty,
@@ -15,7 +15,7 @@ interface SearchResult {
   id: string;
   label: string;
   sublabel?: string;
-  type: "embarque" | "cliente" | "proveedor" | "factura";
+  type: "embarque" | "cliente" | "proveedor" | "factura" | "cotizacion";
   url: string;
 }
 
@@ -24,6 +24,7 @@ const typeIcons = {
   cliente: Users,
   proveedor: Truck,
   factura: FileText,
+  cotizacion: ClipboardList,
 };
 
 const typeLabels = {
@@ -31,6 +32,7 @@ const typeLabels = {
   cliente: "Clientes",
   proveedor: "Proveedores",
   factura: "Facturas",
+  cotizacion: "Cotizaciones",
 };
 
 export function GlobalSearch() {
