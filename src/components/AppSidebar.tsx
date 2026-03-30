@@ -17,6 +17,7 @@ import { NavLink } from "@/components/NavLink";
 import librecargaLogo from "@/assets/librecarga-logo.png";
 import { useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
+import { useOrganization } from "@/contexts/OrganizationContext";
 import { useSidebarAlerts } from "@/hooks/useSidebarAlerts";
 import {
   Sidebar,
