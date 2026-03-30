@@ -1,41 +1,47 @@
 
+Objetivo: corregir la búsqueda global para que “indimex” sí aparezca en el diálogo de búsqueda (ya confirmé que el backend sí regresa el cliente).
 
-# Plan: Mostrar el rol organizacional en lugar del rol global en el sidebar
+1) Corregir el filtrado interno de `CommandItem` en `GlobalSearch`
+- Problema detectado: `cmdk` filtra por el `value` del item y hoy en `GlobalSearch` no se le pasa `value`, por eso puede ocultar resultados aunque la RPC devuelva datos.
+- Cambio propuesto en `src/components/GlobalSearch.tsx`:
+  - En cada `CommandItem`, agregar `value` concatenando campos buscables, por ejemplo:
+    - `item.label`
+    - `item.sublabel`
+    - tipo (`cliente`, `embarque`, etc.)
+  - Normalizar a minúsculas para consistencia.
+- Resultado esperado: si la RPC devuelve “INDIMEX TRADING”, el item ya no se filtra erróneamente y se mostrará.
 
-## Problema
-El sidebar muestra el rol de la tabla `user_roles` (rol global de plataforma), pero para usuarios regulares el rol relevante es el de `organization_members` (rol dentro de su organización). Por eso `hector@lopezbenavides.com` aparece como "viewer" aunque es admin de Elogistix.
+2) Endurecer la UX del buscador para evitar falsos “sin resultados”
+- Mantener el debounce actual.
+- Limpiar espacios del término antes de consultar (`trim` ya está, se conserva).
+- Validar que el estado `results` se alimente directo de la respuesta y que no haya filtrado adicional accidental.
 
-## Impacto actual
-- El badge del sidebar muestra un rol incorrecto para usuarios cuyo rol global difiere del organizacional
-- La lógica de permisos (`usePermissions`) también usa el rol global, lo que podría estar bloqueando funcionalidades que el usuario debería tener como admin de organización
+3) Corregir warning de accesibilidad del diálogo (ya visible en consola)
+- En `src/components/ui/command.tsx`, dentro de `CommandDialog`:
+  - Agregar `DialogTitle` (puede ir oculto visualmente con clase sr-only o VisuallyHidden).
+  - Agregar `DialogDescription` breve.
+- Esto elimina los warnings:
+  - “DialogContent requires a DialogTitle…”
+  - “Missing Description…”
 
-## Solución
+4) Actualizar changelog
+- En `src/pages/Changelog.tsx`, agregar al inicio una nueva entrada (v7.4.6, fecha actual) indicando:
+  - corrección de visibilidad de resultados en búsqueda global por ajuste de `CommandItem.value`
+  - mejora de accesibilidad del diálogo de búsqueda.
 
-### 1. Modificar `AuthContext.tsx` para obtener también el rol organizacional
-Agregar una consulta a `organization_members` para obtener el rol del usuario dentro de su organización. Exponer un campo `orgRole` en el contexto.
+5) Verificación funcional (manual)
+- Abrir Ctrl/Cmd+K y buscar:
+  - `indimex`
+  - `INDIMEX`
+  - fragmentos como `indi`, `itr180`
+- Confirmar:
+  - aparece resultado de cliente “INDIMEX TRADING”
+  - al seleccionar navega a `/clientes/{id}`
+  - no reaparecen warnings de DialogTitle/Description en consola.
 
-### 2. Modificar `AppSidebar.tsx`
-Mostrar el `orgRole` (rol organizacional) cuando esté disponible, cayendo al rol global como fallback. Para super_admin, seguir mostrando "Super Admin".
-
-### 3. Modificar `usePermissions.ts`
-Usar el rol organizacional como fuente primaria de permisos para usuarios regulares, manteniendo el rol global solo para super_admin.
-
-### 4. Actualizar `Changelog.tsx`
-Agregar entrada v7.4.5.
-
-## Detalle técnico
+Detalle técnico clave
 ```text
-Flujo actual:
-  AuthContext → user_roles.role → "viewer" → sidebar badge
-
-Flujo corregido:
-  AuthContext → organization_members.role → "admin" (para usuarios con membresía)
-             → user_roles.role (fallback para super_admin sin membresía)
+RPC busqueda_global: devuelve resultado correcto (verificado por request 200 con cliente INDIMEX).
+Falla real: filtrado client-side de cmdk al no definir `value` en CommandItem.
+Fix: setear `value` explícito en cada resultado para alinear filtro interno con los datos mostrados.
 ```
-
-## Archivos a modificar
-- `src/contexts/AuthContext.tsx` — agregar fetch de `organization_members.role`
-- `src/components/AppSidebar.tsx` — usar rol organizacional
-- `src/hooks/usePermissions.ts` — usar rol organizacional como fuente primaria
-- `src/pages/Changelog.tsx` — entrada v7.4.5
-
