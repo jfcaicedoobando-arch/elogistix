@@ -74,7 +74,7 @@ export function AppSidebar() {
   const { state } = useSidebar();
   const collapsed = state === "collapsed";
   const location = useLocation();
-  const { user, role, signOut } = useAuth();
+  const { user, role, effectiveRole, signOut } = useAuth();
   const { organization } = useOrganization();
   const { totalAlertas } = useSidebarAlerts();
 
