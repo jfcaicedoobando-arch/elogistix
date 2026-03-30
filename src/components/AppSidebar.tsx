@@ -155,7 +155,7 @@ export function AppSidebar() {
         {renderGroup("Reportes", reportesItems)}
         {renderGroup("Directorio", directorioItems)}
         {renderGroup("Sistema", sistemaItems)}
-        {(role === "admin" || role === "super_admin") && renderGroup("Administración", adminItems)}
+        {(effectiveRole === "admin" || role === "super_admin") && renderGroup("Administración", adminItems)}
         {role === "super_admin" && renderGroup("Super Admin", [
           { title: "Panel Admin", url: "/admin", icon: Building2 },
         ])}
