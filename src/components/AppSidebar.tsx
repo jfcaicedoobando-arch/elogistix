@@ -162,8 +162,15 @@ export function AppSidebar() {
 
       <SidebarFooter className="border-t border-sidebar-border p-4 space-y-2">
         {!collapsed && user && (
-          <div className="text-xs text-sidebar-foreground/70 truncate">
-            {user.email}
+          <div className="flex flex-col gap-0.5">
+            <div className="text-xs text-sidebar-foreground/70 truncate">
+              {user.email}
+            </div>
+            {role && (
+              <Badge variant="outline" className="w-fit text-[10px] px-1.5 py-0 capitalize border-sidebar-border text-sidebar-foreground/50">
+                {role === "super_admin" ? "Super Admin" : role}
+              </Badge>
+            )}
           </div>
         )}
         <Button
