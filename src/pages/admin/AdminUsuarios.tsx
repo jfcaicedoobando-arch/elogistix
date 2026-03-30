@@ -16,7 +16,8 @@ interface GlobalUserRow {
 }
 
 export default function AdminUsuarios() {
-  const { data: users = [], isLoading } = useQuery({
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const { data: users = [], isLoading, refetch } = useQuery({
     queryKey: queryKeys.admin.allUsers,
     queryFn: async () => {
       const { data: members, error } = await supabase
