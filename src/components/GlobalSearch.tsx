@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { Search, Ship, Users, Truck, FileText } from "lucide-react";
+import { Search, Ship, Users, Truck, FileText, ClipboardList } from "lucide-react";
 import {
   CommandDialog,
   CommandEmpty,
