@@ -168,7 +168,7 @@ export function AppSidebar() {
               {user.email}
             </div>
             {effectiveRole && (
-              <Tooltip>
+              <Tooltip delayDuration={200}>
                 <TooltipTrigger asChild>
                   <Badge variant="outline" className="w-fit text-[10px] px-1.5 py-0 capitalize border-sidebar-border text-sidebar-foreground/50 cursor-help">
                     {effectiveRole === "super_admin" ? "Super Admin" : effectiveRole}
