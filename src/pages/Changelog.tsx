@@ -13,11 +13,11 @@ interface ChangelogEntry {
 
 const changelog: ChangelogEntry[] = [
   {
-    version: "7.3.0",
+    version: "7.3.1",
     date: "2026-03-30",
-    type: "minor",
-    title: "Botón Nuevo Usuario en Admin Usuarios Globales",
-    description: "Se agregó un botón 'Nuevo Usuario' a la página de Usuarios Globales del panel de administración que permite crear usuarios y asignarlos directamente a una organización con el rol deseado.",
+    type: "patch",
+    title: "Unificación del diálogo de creación de usuarios",
+    description: "Se unificaron NuevoUsuarioDialog y NuevoUsuarioAdminDialog en un solo componente reutilizable con prop showOrgSelector. Admin Usuarios Globales y Gestión de Usuarios de organización ahora usan el mismo diálogo.",
   },
   {
     version: "7.2.0",
