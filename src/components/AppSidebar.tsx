@@ -17,6 +17,7 @@ import { NavLink } from "@/components/NavLink";
 import librecargaLogo from "@/assets/librecarga-logo.png";
 import { useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
+import { useOrganization } from "@/contexts/OrganizationContext";
 import { useSidebarAlerts } from "@/hooks/useSidebarAlerts";
 import {
   Sidebar,
@@ -73,6 +74,7 @@ export function AppSidebar() {
   const collapsed = state === "collapsed";
   const location = useLocation();
   const { user, role, signOut } = useAuth();
+  const { organization } = useOrganization();
   const { totalAlertas } = useSidebarAlerts();
 
   const isActive = (path: string) => {
@@ -135,8 +137,8 @@ export function AppSidebar() {
               <span className="text-sm font-bold text-sidebar-foreground">
                 Libre Carga
               </span>
-              <span className="text-xs text-sidebar-foreground/60">
-                Agente de Carga
+              <span className="text-xs text-sidebar-foreground/60 truncate">
+                {organization?.nombre ?? "Agente de Carga"}
               </span>
             </div>
           )}

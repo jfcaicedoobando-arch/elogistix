@@ -13,6 +13,13 @@ interface ChangelogEntry {
 
 const changelog: ChangelogEntry[] = [
   {
+    version: "7.4.2",
+    date: "2026-03-30",
+    type: "patch",
+    title: "Nombre de organización visible en el sidebar",
+    description: "Todos los usuarios ahora ven el nombre de su organización en el encabezado del sidebar, reemplazando el texto estático 'Agente de Carga'.",
+  },
+  {
     version: "7.4.1",
     date: "2026-03-30",
     type: "patch",
