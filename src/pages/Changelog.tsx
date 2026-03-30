@@ -13,6 +13,13 @@ interface ChangelogEntry {
 
 const changelog: ChangelogEntry[] = [
   {
+    version: "7.4.1",
+    date: "2026-03-30",
+    type: "patch",
+    title: "Corrección de visibilidad en Bitácora de Actividad",
+    description: "Se corrigió la política RLS de bitacora_actividad que impedía a Super Admins y admins de organización (con rol global viewer) ver los registros. Ahora usa is_org_admin() para validar admins a nivel organización y permite acceso completo a super_admin y admin global.",
+  },
+  {
     version: "7.4.0",
     date: "2026-03-30",
     type: "minor",
