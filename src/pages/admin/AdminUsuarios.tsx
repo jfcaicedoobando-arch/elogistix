@@ -62,13 +62,21 @@ export default function AdminUsuarios() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center gap-3">
-        <Users className="h-6 w-6 text-primary" />
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight">Usuarios Globales</h1>
-          <p className="text-sm text-muted-foreground">Todos los usuarios de todas las organizaciones.</p>
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <Users className="h-6 w-6 text-primary" />
+          <div>
+            <h1 className="text-2xl font-bold tracking-tight">Usuarios Globales</h1>
+            <p className="text-sm text-muted-foreground">Todos los usuarios de todas las organizaciones.</p>
+          </div>
         </div>
+        <Button onClick={() => setDialogOpen(true)}>
+          <UserPlus className="h-4 w-4" />
+          Nuevo Usuario
+        </Button>
       </div>
+
+      <NuevoUsuarioAdminDialog open={dialogOpen} onOpenChange={setDialogOpen} onCreated={() => refetch()} />
 
       <div className="rounded-md border">
         <DataTable
