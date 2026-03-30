@@ -13,11 +13,11 @@ interface ChangelogEntry {
 
 const changelog: ChangelogEntry[] = [
   {
-    version: "7.3.1",
+    version: "7.4.0",
     date: "2026-03-30",
-    type: "patch",
-    title: "Unificación del diálogo de creación de usuarios",
-    description: "Se unificaron NuevoUsuarioDialog y NuevoUsuarioAdminDialog en un solo componente reutilizable con prop showOrgSelector. Admin Usuarios Globales y Gestión de Usuarios de organización ahora usan el mismo diálogo.",
+    type: "minor",
+    title: "Eliminación de usuarios desde Admin Usuarios Globales",
+    description: "Nueva Edge Function delete-user (solo super_admin) que elimina la cuenta de autenticación, roles y membresías. Se agregó botón de eliminar con doble confirmación (escribir ELIMINAR) en la tabla de Usuarios Globales. Incluye protección contra auto-eliminación.",
   },
   {
     version: "7.2.0",
