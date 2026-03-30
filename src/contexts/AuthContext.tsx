@@ -7,6 +7,8 @@ interface AuthContextType {
   user: User | null;
   session: Session | null;
   role: AppRole | null;
+  orgRole: AppRole | null;
+  effectiveRole: AppRole | null;
   loading: boolean;
   signOut: () => Promise<void>;
 }
