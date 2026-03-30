@@ -136,8 +136,8 @@ export function AppSidebar() {
               <span className="text-sm font-bold text-sidebar-foreground">
                 Libre Carga
               </span>
-              <span className="text-xs text-sidebar-foreground/60">
-                Agente de Carga
+              <span className="text-xs text-sidebar-foreground/60 truncate">
+                {organization?.nombre ?? "Agente de Carga"}
               </span>
             </div>
           )}
