@@ -3,6 +3,30 @@ import { AlertTriangle, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 
+const CHUNK_ERROR_RELOAD_KEY = "chunk-error-auto-reload";
+
+const isDynamicImportError = (error: Error | null) => {
+  if (!error) return false;
+
+  const message = error.message.toLowerCase();
+  return (
+    message.includes("failed to fetch dynamically imported module") ||
+    message.includes("importing a module script failed") ||
+    message.includes("dynamically imported module") ||
+    message.includes("loading chunk") ||
+    message.includes("chunkloaderror")
+  );
+};
+
+const tryReloadForChunkError = () => {
+  if (typeof window === "undefined") return false;
+  if (window.sessionStorage.getItem(CHUNK_ERROR_RELOAD_KEY) === "1") return false;
+
+  window.sessionStorage.setItem(CHUNK_ERROR_RELOAD_KEY, "1");
+  window.location.reload();
+  return true;
+};
+
 interface Props {
   children: React.ReactNode;
 }
@@ -24,9 +48,17 @@ export class ErrorBoundary extends React.Component<Props, State> {
 
   componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
     console.error("[ErrorBoundary]", error, errorInfo);
+
+    if (isDynamicImportError(error)) {
+      tryReloadForChunkError();
+    }
   }
 
   handleReset = () => {
+    if (isDynamicImportError(this.state.error) && tryReloadForChunkError()) {
+      return;
+    }
+
     this.setState({ hasError: false, error: null });
   };
 

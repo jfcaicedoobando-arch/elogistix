@@ -13,6 +13,13 @@ interface ChangelogEntry {
 
 const changelog: ChangelogEntry[] = [
   {
+    version: "7.4.9",
+    date: "2026-04-01",
+    type: "patch",
+    title: "Recuperación automática ante chunks desactualizados",
+    description: "La app ahora detecta errores de importación dinámica después de un cambio de build y recarga automáticamente una vez para recuperar rutas lazy-load sin que el usuario tenga que refrescar manualmente.",
+  },
+  {
     version: "7.4.8",
     date: "2026-04-01",
     type: "patch",
