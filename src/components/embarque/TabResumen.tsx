@@ -9,6 +9,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import { Link } from "lucide-react";
 import type { EmbarqueRow } from "@/hooks/useEmbarques";
+import { calcularEstadoEmbarque } from "@/hooks/useEmbarqueUtils";
 
 interface Props {
   embarque: EmbarqueRow;
@@ -16,7 +17,8 @@ interface Props {
 
 export function TabResumen({ embarque }: Props) {
   const navigate = useNavigate();
-  const currentStepIndex = ESTADO_TIMELINE.indexOf(embarque.estado as typeof ESTADO_TIMELINE[number]);
+  const estadoVisual = calcularEstadoEmbarque(embarque.modo, embarque.tipo, embarque.etd, embarque.eta, embarque.estado);
+  const currentStepIndex = ESTADO_TIMELINE.indexOf(estadoVisual as typeof ESTADO_TIMELINE[number]);
 
   const { data: relacionados = [] } = useQuery({
     queryKey: ['embarques-relacionados', embarque.bl_master, embarque.id],
