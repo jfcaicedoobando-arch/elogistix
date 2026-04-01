@@ -13,6 +13,13 @@ interface ChangelogEntry {
 
 const changelog: ChangelogEntry[] = [
   {
+    version: "7.4.8",
+    date: "2026-04-01",
+    type: "patch",
+    title: "Estado visual consistente en detalle de embarques",
+    description: "El detalle y la línea de tiempo del embarque ahora usan el mismo estado calculado por fechas que el listado, evitando discrepancias como ver 'Confirmado' al abrir un embarque que ya está 'En Tránsito'.",
+  },
+  {
     version: "7.4.7",
     date: "2026-03-30",
     type: "minor",

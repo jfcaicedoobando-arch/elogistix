@@ -164,7 +164,8 @@ export default function EmbarqueDetalle() {
     );
   }
 
-  const siguienteEstado = getSiguienteEstado(embarque.estado);
+  const estadoVisual = calcularEstadoEmbarque(embarque.modo, embarque.tipo, embarque.etd, embarque.eta, embarque.estado);
+  const siguienteEstado = getSiguienteEstado(estadoVisual);
 
   return (
     <div className="space-y-6">
@@ -175,7 +176,7 @@ export default function EmbarqueDetalle() {
         <div className="flex-1">
           <div className="flex items-center gap-3">
             <h1 className="text-2xl font-bold">{embarque.expediente}</h1>
-            <Badge className={getEstadoColor(embarque.estado)}>{embarque.estado}</Badge>
+            <Badge className={getEstadoColor(estadoVisual)}>{estadoVisual}</Badge>
             <span className="text-lg">{getModoIcon(embarque.modo)}</span>
           </div>
           <p className="text-sm text-muted-foreground">{embarque.cliente_nombre}</p>
@@ -193,7 +194,7 @@ export default function EmbarqueDetalle() {
                 <AlertDialogHeader>
                   <AlertDialogTitle>Confirmar cambio de estado</AlertDialogTitle>
                   <AlertDialogDescription>
-                    ¿Estás seguro de cambiar el estado de <strong>{embarque.estado}</strong> a <strong>{siguienteEstado}</strong>? Esta acción quedará registrada en la bitácora.
+                    ¿Estás seguro de cambiar el estado de <strong>{estadoVisual}</strong> a <strong>{siguienteEstado}</strong>? Esta acción quedará registrada en la bitácora.
                   </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>
