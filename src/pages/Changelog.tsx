@@ -13,6 +13,13 @@ interface ChangelogEntry {
 
 const changelog: ChangelogEntry[] = [
   {
+    version: "7.5.0",
+    date: "2026-04-03",
+    type: "minor",
+    title: "Refactoring arquitectónico: separación de concerns y modularidad",
+    description: "1) shortName extraída a formatters.ts eliminando duplicación. 2) ProfitBadge y RentabilidadGlobalBadge movidos de lib/ a components/shared/. 3) getEstadoColor y getModoIcon separados en uiMappings.ts. 4) Handlers de EmbarqueDetalle extraídos a useEmbarqueDetalleActions. 5) useCotizacionDetalleState encapsula lógica del detalle de cotización. 6) Columnas de ClienteDetalle extraídas a clienteColumns.tsx. 7) Diálogos de proveedor/usuario movidos a carpetas de dominio. 8) Tipo legacy DocumentoProveedor eliminado.",
+  },
+  {
     version: "7.4.9",
     date: "2026-04-01",
     type: "patch",
