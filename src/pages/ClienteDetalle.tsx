@@ -12,7 +12,7 @@ import { usePermissions } from "@/hooks/usePermissions";
 import { useRegistrarActividad } from "@/hooks/useBitacora";
 import { getErrorMessage } from "@/lib/errorUtils";
 import { formatDate, getEstadoColor } from "@/lib/helpers";
-import { formatCurrency } from "@/lib/formatters";
+import { formatCurrency, shortName } from "@/lib/formatters";
 import { DataTable, type DataTableColumn } from "@/components/DataTable";
 import type { Tables, Enums } from "@/integrations/supabase/types";
 type ContactoCliente = Tables<'contactos_cliente'>;
