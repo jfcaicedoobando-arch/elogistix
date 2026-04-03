@@ -3,7 +3,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { ArrowLeft, Pencil, Building2, Loader2, Ship, FileText, Users, DollarSign, TrendingUp, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useCliente, useContactosCliente, useCreateContacto, useUpdateContacto, useDeleteContacto, useUpdateCliente, useEmbarquesCliente, useCotizacionesCliente } from "@/hooks/useClientes";
 import { useClienteFinancials } from "@/hooks/useClienteFinancials";
@@ -11,9 +11,10 @@ import { useToast } from "@/hooks/use-toast";
 import { usePermissions } from "@/hooks/usePermissions";
 import { useRegistrarActividad } from "@/hooks/useBitacora";
 import { getErrorMessage } from "@/lib/errorUtils";
-import { formatDate, getEstadoColor } from "@/lib/helpers";
+
 import { formatCurrency } from "@/lib/formatters";
-import { DataTable, type DataTableColumn } from "@/components/DataTable";
+import { DataTable } from "@/components/DataTable";
+import { embarqueColumns, cotizacionColumns } from "@/components/cliente/clienteColumns";
 import type { Tables, Enums } from "@/integrations/supabase/types";
 type ContactoCliente = Tables<'contactos_cliente'>;
 type TipoContacto = Enums<'tipo_contacto'>;
@@ -103,27 +104,7 @@ export default function ClienteDetalle() {
     }
   };
 
-  const shortName = (raw: string | null) => raw?.split(/[,—]/)[0].trim() || "-";
 
-  type EmbarqueCliente = (typeof embarquesCliente)[number];
-  const embarqueColumns: DataTableColumn<EmbarqueCliente>[] = [
-    { key: "expediente", header: "Expediente", width: "w-[110px]", className: "font-medium", render: (e) => e.expediente },
-    { key: "modo", header: "Modo", width: "w-[90px]", className: "text-xs", render: (e) => e.modo },
-    { key: "ruta", header: "Origen → Destino", width: "min-w-[160px]", className: "text-xs", render: (e) => `${shortName(e.puerto_origen || e.aeropuerto_origen || e.ciudad_origen)} → ${shortName(e.puerto_destino || e.aeropuerto_destino || e.ciudad_destino)}` },
-    { key: "estado", header: "Estado", width: "w-[100px]", render: (e) => <Badge variant="secondary" className={`text-xs ${getEstadoColor(e.estado)}`}>{e.estado}</Badge> },
-    { key: "etd", header: "ETD", width: "w-[90px]", className: "text-xs", render: (e) => formatDate(e.etd || "") },
-    { key: "eta", header: "ETA", width: "w-[90px]", className: "text-xs", render: (e) => formatDate(e.eta || "") },
-  ];
-
-  type CotizacionCliente = (typeof cotizacionesCliente)[number];
-  const cotizacionColumns: DataTableColumn<CotizacionCliente>[] = [
-    { key: "folio", header: "Folio", width: "w-[100px]", className: "font-medium", render: (c) => c.folio },
-    { key: "modo", header: "Modo", width: "w-[80px]", className: "text-xs", render: (c) => c.modo },
-    { key: "ruta", header: "Origen → Destino", width: "min-w-[160px]", className: "text-xs", render: (c) => `${c.origen || "-"} → ${c.destino || "-"}` },
-    { key: "subtotal", header: "Subtotal", width: "w-[110px]", className: "text-right text-xs", headerClassName: "text-right", render: (c) => formatCurrency(c.subtotal, c.moneda) },
-    { key: "estado", header: "Estado", width: "w-[100px]", render: (c) => <Badge variant="secondary" className={`text-xs ${getEstadoColor(c.estado)}`}>{c.estado}</Badge> },
-    { key: "fecha", header: "Fecha", width: "w-[100px]", className: "text-xs", render: (c) => formatDate(c.created_at) },
-  ];
 
   return (
     <div className="space-y-6">

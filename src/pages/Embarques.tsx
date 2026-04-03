@@ -1,6 +1,7 @@
 import { useState, useMemo } from "react";
 import { Plus, Trash2, MoreHorizontal, Pencil, Copy, Ship, Download, AlertTriangle } from "lucide-react";
 import { exportToCsv } from "@/lib/exportCsv";
+import { shortName } from "@/lib/formatters";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -35,9 +36,6 @@ import {
 
 const DEFAULT_PAGE_SIZE = 20;
 
-function shortName(raw: string) {
-  return raw.split(/[,—]/)[0].trim();
-}
 
 export default function Embarques() {
   const navigate = useNavigate();

@@ -8,14 +8,8 @@ import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { getEstadoColor, getModoIcon } from "@/lib/helpers";
-import { getErrorMessage } from "@/lib/errorUtils";
 import { usePermissions } from "@/hooks/usePermissions";
-import { getSignedUrl } from "@/lib/storage";
-import { useToast } from "@/hooks/use-toast";
-import { useRegistrarActividad } from "@/hooks/useBitacora";
-import { useAuth } from "@/contexts/AuthContext";
-import { useState, useEffect } from "react";
-import { ESTADO_TIMELINE } from "@/data/embarqueConstants";
+import { useState } from "react";
 import {
   useEmbarque,
   useEmbarqueConceptosVenta,
@@ -23,13 +17,10 @@ import {
   useEmbarqueDocumentos,
   useEmbarqueNotas,
   useEmbarqueFacturas,
-  useAvanzarEstadoEmbarque,
-  useSyncEstadoEmbarque,
-  useUploadDocumentoEmbarque,
-  useDeleteDocumentoEmbarque,
   calcularEstadoEmbarque,
 } from "@/hooks/useEmbarques";
 import { useEmbarqueFinancials } from "@/hooks/useEmbarqueFinancials";
+import { useEmbarqueDetalleActions, getSiguienteEstado } from "@/hooks/useEmbarqueDetalleActions";
 import { TabResumen } from "@/components/embarque/TabResumen";
 import { TabDocumentos } from "@/components/embarque/TabDocumentos";
 import { TabCostos } from "@/components/embarque/TabCostos";
@@ -42,108 +33,28 @@ import DialogEliminarEmbarque from "@/components/embarque/DialogEliminarEmbarque
 export default function EmbarqueDetalle() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { toast } = useToast();
-  const { user } = useAuth();
   const { canEdit } = usePermissions();
-  const registrarActividad = useRegistrarActividad();
   const { data: embarque, isLoading } = useEmbarque(id);
   const { data: conceptosVenta = [] } = useEmbarqueConceptosVenta(id);
   const { data: conceptosCosto = [] } = useEmbarqueConceptosCosto(id);
   const { data: documentos = [] } = useEmbarqueDocumentos(id);
   const { data: notas = [] } = useEmbarqueNotas(id);
   const { data: facturas = [] } = useEmbarqueFacturas(id);
-  const avanzarEstado = useAvanzarEstadoEmbarque();
-  const syncEstado = useSyncEstadoEmbarque();
-  const uploadDoc = useUploadDocumentoEmbarque();
-  const deleteDoc = useDeleteDocumentoEmbarque();
 
   const [dialogDuplicarAbierto, setDialogDuplicarAbierto] = useState(false);
   const [dialogEliminarAbierto, setDialogEliminarAbierto] = useState(false);
-  const [downloadingDocId, setDownloadingDocId] = useState<string | null>(null);
 
-  // Auto-actualizar estado para embarques marítimos
-  useEffect(() => {
-    if (!embarque) return;
-    const estadoCalculado = calcularEstadoEmbarque(embarque.modo, embarque.tipo, embarque.etd, embarque.eta, embarque.estado);
-    if (estadoCalculado !== embarque.estado) {
-      syncEstado.mutate({ embarqueId: embarque.id, nuevoEstado: estadoCalculado });
-    }
-  }, [embarque?.id, embarque?.etd, embarque?.eta]);
+  const {
+    handleUpload, handleDeleteDoc, handleDownload, handleAvanzarEstado,
+    downloadingDocId, avanzarEstado, uploadDoc, deleteDoc,
+  } = useEmbarqueDetalleActions(embarque, id);
 
   const tipoCambioUSD = embarque ? (Number(embarque.tipo_cambio_usd) || 1) : 1;
   const tipoCambioEUR = embarque ? (Number(embarque.tipo_cambio_eur) || 1) : 1;
 
   const { totalVenta, totalCosto, utilidad, margen } = useEmbarqueFinancials({
-    conceptosVenta,
-    conceptosCosto,
-    tipoCambioUSD,
-    tipoCambioEUR,
+    conceptosVenta, conceptosCosto, tipoCambioUSD, tipoCambioEUR,
   });
-
-  const handleUpload = async (docId: string, file: File) => {
-    if (!id) return;
-    try {
-      await uploadDoc.mutateAsync({ embarqueId: id, docId, file });
-      registrarActividad.mutate({
-        accion: 'subir_documento', modulo: 'embarques',
-        entidad_id: id, entidad_nombre: embarque?.expediente ?? '',
-        detalles: { documento: file.name },
-      });
-      toast({ title: "Archivo subido correctamente" });
-    } catch (err: unknown) {
-      toast({ title: "Error al subir archivo", description: getErrorMessage(err), variant: "destructive" });
-    }
-  };
-
-  const handleDeleteDoc = async (doc: typeof documentos[number]) => {
-    if (!id || !doc.archivo) return;
-    try {
-      await deleteDoc.mutateAsync({ embarqueId: id, docId: doc.id, archivoPath: doc.archivo });
-      registrarActividad.mutate({
-        accion: 'eliminar_documento', modulo: 'embarques',
-        entidad_id: id, entidad_nombre: embarque?.expediente ?? '',
-        detalles: { documento: doc.nombre },
-      });
-      toast({ title: "Documento eliminado correctamente" });
-    } catch (err: unknown) {
-      toast({ title: "Error al eliminar documento", description: getErrorMessage(err), variant: "destructive" });
-    }
-  };
-
-  const handleDownload = async (rutaArchivo: string, docId: string) => {
-    setDownloadingDocId(docId);
-    try {
-      const url = await getSignedUrl(rutaArchivo);
-      window.open(url, "_blank");
-    } catch (err: unknown) {
-      toast({ title: "Error al descargar", description: getErrorMessage(err), variant: "destructive" });
-    } finally {
-      setDownloadingDocId(null);
-    }
-  };
-
-  const getSiguienteEstado = (estadoActual: string) => {
-    const idx = ESTADO_TIMELINE.indexOf(estadoActual as typeof ESTADO_TIMELINE[number]);
-    if (idx < 0 || idx >= ESTADO_TIMELINE.length - 1) return null;
-    return ESTADO_TIMELINE[idx + 1];
-  };
-
-  const handleAvanzarEstado = async () => {
-    if (!embarque || !id) return;
-    const siguiente = getSiguienteEstado(embarque.estado);
-    if (!siguiente) return;
-    try {
-      await avanzarEstado.mutateAsync({ embarqueId: id, nuevoEstado: siguiente, usuarioEmail: user?.email ?? '' });
-      registrarActividad.mutate({
-        accion: 'cambiar_estado', modulo: 'embarques',
-        entidad_id: id, entidad_nombre: embarque.expediente,
-        detalles: { estado_anterior: embarque.estado, estado_nuevo: siguiente },
-      });
-      toast({ title: `Estado actualizado a "${siguiente}"` });
-    } catch (err: unknown) {
-      toast({ title: "Error al cambiar estado", description: getErrorMessage(err), variant: "destructive" });
-    }
-  };
 
   if (isLoading) {
     return (
