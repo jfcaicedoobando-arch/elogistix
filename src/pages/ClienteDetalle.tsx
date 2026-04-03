@@ -11,7 +11,7 @@ import { useToast } from "@/hooks/use-toast";
 import { usePermissions } from "@/hooks/usePermissions";
 import { useRegistrarActividad } from "@/hooks/useBitacora";
 import { getErrorMessage } from "@/lib/errorUtils";
-import { formatDate, getEstadoColor } from "@/lib/helpers";
+
 import { formatCurrency } from "@/lib/formatters";
 import { DataTable } from "@/components/DataTable";
 import { embarqueColumns, cotizacionColumns } from "@/components/cliente/clienteColumns";
