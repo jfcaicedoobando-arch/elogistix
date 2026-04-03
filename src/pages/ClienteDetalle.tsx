@@ -104,7 +104,6 @@ export default function ClienteDetalle() {
     }
   };
 
-  
 
   type EmbarqueCliente = (typeof embarquesCliente)[number];
   const embarqueColumns: DataTableColumn<EmbarqueCliente>[] = [
