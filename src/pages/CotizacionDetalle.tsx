@@ -1,14 +1,4 @@
-import { useState, useMemo } from "react";
-import { calcularIVA } from "@/lib/financialUtils";
-import { useTasaIVA } from "@/hooks/useTasaIVA";
-import SeccionCostosInternosPLUnificado from "@/components/cotizacion/SeccionCostosInternosPLUnificado";
-import TablaConceptosGenerico from "@/components/cotizacion/TablaConceptosGenerico";
-import ResumenTotalesCotizacion from "@/components/cotizacion/ResumenTotalesCotizacion";
-import DialogConvertirProspecto from "@/components/cotizacion/DialogConvertirProspecto";
-import SeccionMercanciaCotizacionDetalle from "@/components/cotizacion/SeccionMercanciaCotizacionDetalle";
-import type { ClienteFormData } from "@/components/cotizacion/DialogConvertirProspecto";
-import type { ConceptoVentaCotizacion } from "@/hooks/useCotizaciones";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -17,54 +7,32 @@ import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import {
-  useCotizacion, useUpdateEstadoCotizacion,
-  useConvertirProspectoACliente,
-  useConvertirCotizacionAEmbarques,
-  useEmbarquesVinculados,
-} from "@/hooks/useCotizaciones";
-import { usePermissions } from "@/hooks/usePermissions";
-import { useToast } from "@/hooks/use-toast";
-import { formatDate, getEstadoColor } from "@/lib/helpers";
+import SeccionCostosInternosPLUnificado from "@/components/cotizacion/SeccionCostosInternosPLUnificado";
+import TablaConceptosGenerico from "@/components/cotizacion/TablaConceptosGenerico";
+import ResumenTotalesCotizacion from "@/components/cotizacion/ResumenTotalesCotizacion";
+import DialogConvertirProspecto from "@/components/cotizacion/DialogConvertirProspecto";
+import SeccionMercanciaCotizacionDetalle from "@/components/cotizacion/SeccionMercanciaCotizacionDetalle";
+import { getEstadoColor } from "@/lib/helpers";
+import { formatDate } from "@/lib/helpers";
 import { formatCurrency } from "@/lib/formatters";
 import { ArrowLeft, ArrowRight, CheckCircle, Send, XCircle, UserPlus, FileDown, Pencil } from "lucide-react";
 import { generarPdfCotizacion } from "@/lib/cotizacionPdf";
-import { getErrorMessage } from "@/lib/errorUtils";
+import { useCotizacionDetalleState } from "@/hooks/useCotizacionDetalleState";
 
 export default function CotizacionDetalle() {
   const { id } = useParams<{ id: string }>();
-  const navigate = useNavigate();
-  const { toast } = useToast();
-  const { data: cotizacion, isLoading } = useCotizacion(id);
-  const actualizarEstado = useUpdateEstadoCotizacion();
-  const convertirProspecto = useConvertirProspectoACliente();
-  const { canEdit } = usePermissions();
-  const convertirAEmbarques = useConvertirCotizacionAEmbarques();
 
-  const { data: embarquesVinculados = [] } = useEmbarquesVinculados(cotizacion?.id);
-
-  const [showConvertir, setShowConvertir] = useState(false);
-  const [showConfirmarConvertir, setShowConfirmarConvertir] = useState(false);
-  const [clienteForm, setClienteForm] = useState<ClienteFormData>({
-    nombre: '', contacto: '', email: '', telefono: '',
-    rfc: '', direccion: '', ciudad: '', estado: '', cp: '',
-  });
-
-  const conceptosParsed = useMemo(() => {
-    if (!cotizacion) return [];
-    const raw = cotizacion.conceptos_venta;
-    const arr = typeof raw === 'string' ? JSON.parse(raw) : raw;
-    return Array.isArray(arr) ? arr as ConceptoVentaCotizacion[] : [];
-  }, [cotizacion]);
-  const conceptosVentaUSD = useMemo(() => conceptosParsed.filter(c => c.moneda === 'USD'), [conceptosParsed]);
-  const conceptosVentaMXN = useMemo(() => conceptosParsed.filter(c => c.moneda === 'MXN'), [conceptosParsed]);
-
-  // Totales calculados
-  const totalUSD = useMemo(() => conceptosVentaUSD.reduce((s, c) => s + c.total, 0), [conceptosVentaUSD]);
-  const subtotalMXN = useMemo(() => conceptosVentaMXN.reduce((s, c) => s + c.cantidad * c.precio_unitario, 0), [conceptosVentaMXN]);
-  const tasaIva = useTasaIVA();
-  const ivaMXN = calcularIVA(subtotalMXN, tasaIva);
-  const totalMXN = subtotalMXN + ivaMXN;
+  const {
+    cotizacion, isLoading, canEdit, tasaIva, embarquesVinculados,
+    conceptosVentaUSD, conceptosVentaMXN,
+    totalUSD, subtotalMXN, ivaMXN, totalMXN,
+    nombreDestinatario,
+    showConvertir, setShowConvertir,
+    showConfirmarConvertir, setShowConfirmarConvertir,
+    clienteForm, setClienteForm,
+    handleCambiarEstado, abrirDialogConvertir, handleConvertir, handleGenerarEmbarques,
+    convertirProspecto, convertirAEmbarques, navigate,
+  } = useCotizacionDetalleState(id);
 
   if (isLoading) {
     return <div className="space-y-4"><Skeleton className="h-8 w-64" /><Skeleton className="h-64 w-full" /></div>;
@@ -77,48 +45,6 @@ export default function CotizacionDetalle() {
   const esBorradorOEnviada = cotizacion.estado === 'Borrador' || cotizacion.estado === 'Enviada';
   const esAceptada = cotizacion.estado === 'Aceptada';
   const esMaritimo = cotizacion.modo === 'Marítimo';
-
-  const handleCambiarEstado = async (estado: string) => {
-    try {
-      await actualizarEstado.mutateAsync({ id: cotizacion.id, estado });
-      toast({ title: `Estado actualizado a "${estado}"` });
-    } catch (err: unknown) {
-      toast({ title: "Error", description: getErrorMessage(err), variant: "destructive" });
-    }
-  };
-
-  const abrirDialogConvertir = () => {
-    setClienteForm({
-      nombre: cotizacion.prospecto_empresa || '',
-      contacto: cotizacion.prospecto_contacto || '',
-      email: cotizacion.prospecto_email || '',
-      telefono: cotizacion.prospecto_telefono || '',
-      rfc: '', direccion: '', ciudad: '', estado: '', cp: '',
-    });
-    setShowConvertir(true);
-  };
-
-  const handleConvertir = async () => {
-    if (!clienteForm.nombre.trim()) {
-      toast({ title: "El nombre es obligatorio", variant: "destructive" });
-      return;
-    }
-    try {
-      const cliente = await convertirProspecto.mutateAsync({
-        cotizacionId: cotizacion.id,
-        clienteData: clienteForm,
-      });
-      toast({ title: `Cliente "${cliente.nombre}" creado exitosamente` });
-      setShowConvertir(false);
-    } catch (err: unknown) {
-      toast({ title: "Error al convertir prospecto", description: getErrorMessage(err), variant: "destructive" });
-    }
-  };
-
-  const nombreDestinatario = cotizacion.es_prospecto
-    ? `${cotizacion.prospecto_empresa} (Prospecto)`
-    : cotizacion.cliente_nombre;
-
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
@@ -315,15 +241,7 @@ export default function CotizacionDetalle() {
             <AlertDialogCancel>Cancelar</AlertDialogCancel>
             <AlertDialogAction
               disabled={convertirAEmbarques.isPending}
-              onClick={async () => {
-                try {
-                  await convertirAEmbarques.mutateAsync(cotizacion);
-                  toast({ title: `Se generaron ${cotizacion.num_contenedores} embarques exitosamente` });
-                  setShowConfirmarConvertir(false);
-                } catch (err: unknown) {
-                  toast({ title: "Error al generar embarques", description: getErrorMessage(err), variant: "destructive" });
-                }
-              }}
+              onClick={handleGenerarEmbarques}
             >
               {convertirAEmbarques.isPending ? 'Generando…' : 'Confirmar'}
             </AlertDialogAction>
