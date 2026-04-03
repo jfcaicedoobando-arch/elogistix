@@ -103,7 +103,7 @@ export default function ClienteDetalle() {
     }
   };
 
-  const shortName = (raw: string | null) => raw?.split(/[,—]/)[0].trim() || "-";
+  
 
   type EmbarqueCliente = (typeof embarquesCliente)[number];
   const embarqueColumns: DataTableColumn<EmbarqueCliente>[] = [

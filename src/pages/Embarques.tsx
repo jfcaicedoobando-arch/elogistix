@@ -36,9 +36,6 @@ import {
 
 const DEFAULT_PAGE_SIZE = 20;
 
-function shortName(raw: string) {
-  return raw.split(/[,—]/)[0].trim();
-}
 
 export default function Embarques() {
   const navigate = useNavigate();
