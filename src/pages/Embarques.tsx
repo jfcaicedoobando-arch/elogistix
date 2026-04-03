@@ -1,6 +1,7 @@
 import { useState, useMemo } from "react";
 import { Plus, Trash2, MoreHorizontal, Pencil, Copy, Ship, Download, AlertTriangle } from "lucide-react";
 import { exportToCsv } from "@/lib/exportCsv";
+import { shortName } from "@/lib/formatters";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
