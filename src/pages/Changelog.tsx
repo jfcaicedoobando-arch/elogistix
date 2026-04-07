@@ -13,6 +13,13 @@ interface ChangelogEntry {
 
 const changelog: ChangelogEntry[] = [
   {
+    version: "7.5.1",
+    date: "2026-04-07",
+    type: "patch",
+    title: "Exportación CSV de embarques con todos los campos operativos",
+    description: "El CSV ahora incluye BL Master, Tipo de Operación, Operador, Tipo de Contenedor, Descripción de Mercancía, Tipos de Cambio USD/EUR, Estado de Costos y Fecha de Creación además de los campos originales.",
+  },
+  {
     version: "7.5.0",
     date: "2026-04-03",
     type: "minor",
