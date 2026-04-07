@@ -214,24 +214,46 @@ export default function Embarques() {
               `embarques_${new Date().toISOString().slice(0, 10)}.csv`,
               [
                 { key: "expediente", label: "Expediente" },
+                { key: "bl_master", label: "BL Master" },
                 { key: "cliente_nombre", label: "Cliente" },
                 { key: "modo", label: "Modo" },
+                { key: "tipo", label: "Tipo Operación" },
                 { key: "origen", label: "Origen" },
                 { key: "destino", label: "Destino" },
                 { key: "estado", label: "Estado" },
                 { key: "etd", label: "ETD" },
                 { key: "eta", label: "ETA" },
+                { key: "operador", label: "Operador" },
+                { key: "tipo_contenedor", label: "Tipo Contenedor" },
+                { key: "descripcion_mercancia", label: "Descripción Mercancía" },
+                { key: "tipo_cambio_usd", label: "T/C USD" },
+                { key: "tipo_cambio_eur", label: "T/C EUR" },
+                { key: "liquidacion", label: "Estado Costos" },
+                { key: "created_at", label: "Fecha Creación" },
               ],
-              filtered.map(e => ({
-                expediente: e.expediente,
-                cliente_nombre: e.cliente_nombre,
-                modo: e.modo,
-                origen: e.puerto_origen || e.aeropuerto_origen || e.ciudad_origen || "",
-                destino: e.puerto_destino || e.aeropuerto_destino || e.ciudad_destino || "",
-                estado: calcularEstadoEmbarque(e.modo, e.tipo, e.etd, e.eta, e.estado),
-                etd: e.etd || "",
-                eta: e.eta || "",
-              })),
+              filtered.map(e => {
+                const liq = liquidacionMap[e.id];
+                const estadoLiq = !liq || liq.total === 0 ? "—" : liq.pagados === liq.total ? "Pagado" : liq.pagados > 0 ? "Parcial" : "Pendiente";
+                return {
+                  expediente: e.expediente,
+                  bl_master: e.bl_master || "",
+                  cliente_nombre: e.cliente_nombre,
+                  modo: e.modo,
+                  tipo: e.tipo,
+                  origen: e.puerto_origen || e.aeropuerto_origen || e.ciudad_origen || "",
+                  destino: e.puerto_destino || e.aeropuerto_destino || e.ciudad_destino || "",
+                  estado: calcularEstadoEmbarque(e.modo, e.tipo, e.etd, e.eta, e.estado),
+                  etd: e.etd || "",
+                  eta: e.eta || "",
+                  operador: e.operador || "",
+                  tipo_contenedor: e.tipo_contenedor || "",
+                  descripcion_mercancia: e.descripcion_mercancia || "",
+                  tipo_cambio_usd: e.tipo_cambio_usd ?? "",
+                  tipo_cambio_eur: e.tipo_cambio_eur ?? "",
+                  liquidacion: estadoLiq,
+                  created_at: e.created_at ? new Date(e.created_at).toLocaleDateString("es-MX") : "",
+                };
+              }),
             )}>
               <Download className="h-4 w-4 mr-2" /> Exportar CSV
             </Button>
