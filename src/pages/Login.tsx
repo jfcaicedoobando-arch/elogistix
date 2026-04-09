@@ -57,7 +57,7 @@ export default function Login() {
           </div>
           <h1 className="text-xl font-bold">Libre Carga</h1>
           <p className="text-sm text-muted-foreground">
-            {isSignUp ? "Crear cuenta nueva" : "Inicia sesión para continuar"}
+            Inicia sesión para continuar
           </p>
         </CardHeader>
         <CardContent className="pt-2">
