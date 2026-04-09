@@ -13,6 +13,13 @@ interface ChangelogEntry {
 
 const changelog: ChangelogEntry[] = [
   {
+    version: "7.10.4",
+    date: "2026-04-09",
+    type: "patch",
+    title: "Fix: Edge functions create-user y delete-user validan rol organizacional",
+    description: "Las funciones de crear y eliminar usuarios ahora aceptan administradores organizacionales. Al crear un usuario, se agrega automáticamente como miembro de la organización del creador. Al eliminar, los admins organizacionales solo pueden eliminar usuarios de su propia organización.",
+  },
+  {
     version: "7.10.3",
     date: "2026-04-09",
     type: "patch",

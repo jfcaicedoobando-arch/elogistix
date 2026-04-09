@@ -16,7 +16,7 @@ Deno.serve(async (req) => {
     const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const anonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
 
-    // Verify caller is admin
+    // Verify caller
     const authHeader = req.headers.get("Authorization");
     if (!authHeader?.startsWith("Bearer ")) {
       return new Response(JSON.stringify({ error: "No autorizado" }), {
@@ -39,9 +39,9 @@ Deno.serve(async (req) => {
     }
 
     const callerId = claimsData.claims.sub;
-
-    // Check admin role using service role client (bypasses RLS)
     const adminClient = createClient(supabaseUrl, serviceRoleKey);
+
+    // Check admin role: global OR organizational
     const { data: roleData } = await adminClient
       .from("user_roles")
       .select("role")
@@ -49,11 +49,33 @@ Deno.serve(async (req) => {
       .in("role", ["admin", "super_admin"])
       .maybeSingle();
 
+    let callerOrgId: string | null = null;
+
     if (!roleData) {
-      return new Response(JSON.stringify({ error: "Solo administradores pueden crear usuarios" }), {
-        status: 403,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      // Check organizational role
+      const { data: orgData } = await adminClient
+        .from("organization_members")
+        .select("role, organization_id")
+        .eq("user_id", callerId)
+        .eq("role", "admin")
+        .maybeSingle();
+
+      if (!orgData) {
+        return new Response(JSON.stringify({ error: "Solo administradores pueden crear usuarios" }), {
+          status: 403,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      callerOrgId = orgData.organization_id;
+    } else {
+      // Global admin — get their org
+      const { data: orgMember } = await adminClient
+        .from("organization_members")
+        .select("organization_id")
+        .eq("user_id", callerId)
+        .limit(1)
+        .maybeSingle();
+      callerOrgId = orgMember?.organization_id ?? null;
     }
 
     // Parse body
@@ -97,6 +119,17 @@ Deno.serve(async (req) => {
         .from("user_roles")
         .update({ role: selectedRole })
         .eq("user_id", newUser.user.id);
+    }
+
+    // Add to the caller's organization
+    if (callerOrgId) {
+      await adminClient
+        .from("organization_members")
+        .insert({
+          user_id: newUser.user.id,
+          organization_id: callerOrgId,
+          role: selectedRole,
+        });
     }
 
     return new Response(
