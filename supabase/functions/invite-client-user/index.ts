@@ -79,29 +79,23 @@ Deno.serve(async (req) => {
       userId = newUser.user.id;
     }
 
-    // Check if already has 'cliente' role
+    // Ensure user has 'cliente' role - replace any auto-assigned role
     const { data: existingRole } = await supabaseAdmin
       .from("user_roles")
-      .select("id")
+      .select("id, role")
       .eq("user_id", userId)
-      .eq("role", "cliente")
       .maybeSingle();
 
     if (!existingRole) {
-      // Remove any existing roles first (a client shouldn't have admin/operador roles)
-      // Only add if no existing role
-      const { data: anyRole } = await supabaseAdmin
+      await supabaseAdmin.from("user_roles").insert({
+        user_id: userId,
+        role: "cliente",
+      });
+    } else if (existingRole.role !== "cliente") {
+      await supabaseAdmin
         .from("user_roles")
-        .select("id")
-        .eq("user_id", userId)
-        .maybeSingle();
-
-      if (!anyRole) {
-        await supabaseAdmin.from("user_roles").insert({
-          user_id: userId,
-          role: "cliente",
-        });
-      }
+        .update({ role: "cliente" })
+        .eq("id", existingRole.id);
     }
 
     // Create client_users link (upsert to avoid duplicates)
