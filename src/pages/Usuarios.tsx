@@ -3,12 +3,14 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { ShieldCheck, UserPlus } from "lucide-react";
+import { ShieldCheck, UserPlus, Trash2 } from "lucide-react";
 import { getErrorMessage } from "@/lib/errorUtils";
 import NuevoUsuarioDialog from "@/components/NuevoUsuarioDialog";
 import { DataTable, type DataTableColumn } from "@/components/DataTable";
-import { useUsuarios, useUpdateUserRole, type UserRow } from "@/hooks/useUsuarios";
+import { useUsuarios, useUpdateUserRole, useDeleteUser, type UserRow } from "@/hooks/useUsuarios";
+import DoubleConfirmDeleteDialog from "@/components/DoubleConfirmDeleteDialog";
 import type { AppRole } from "@/data/types";
+import { useAuth } from "@/contexts/AuthContext";
 
 const roleBadge: Record<AppRole, string> = {
   super_admin: "bg-primary text-primary-foreground",
@@ -22,9 +24,12 @@ import { formatDate } from "@/lib/helpers";
 
 export default function Usuarios() {
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<UserRow | null>(null);
   const { toast } = useToast();
+  const { user } = useAuth();
   const { data: users = [], isLoading, refetch } = useUsuarios();
   const updateRole = useUpdateUserRole();
+  const deleteUser = useDeleteUser();
 
   const handleRoleChange = async (userId: string, newRole: AppRole) => {
     try {
@@ -32,6 +37,16 @@ export default function Usuarios() {
       toast({ title: "Rol actualizado" });
     } catch (err: unknown) {
       toast({ title: "Error al cambiar rol", description: getErrorMessage(err), variant: "destructive" });
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!deleteTarget) return;
+    try {
+      await deleteUser.mutateAsync(deleteTarget.user_id);
+      toast({ title: "Usuario eliminado", description: `${deleteTarget.email} fue eliminado del sistema.` });
+    } catch (err: unknown) {
+      toast({ title: "Error al eliminar usuario", description: getErrorMessage(err), variant: "destructive" });
     }
   };
 
@@ -50,6 +65,22 @@ export default function Usuarios() {
           </SelectContent>
         </Select>
       ),
+    },
+    {
+      key: "actions", header: "", width: "w-[50px]", render: (u) => {
+        const isSelf = u.user_id === user?.id;
+        if (isSelf) return null;
+        return (
+          <Button
+            variant="ghost"
+            size="icon"
+            className="text-muted-foreground hover:text-destructive"
+            onClick={(e) => { e.stopPropagation(); setDeleteTarget(u); }}
+          >
+            <Trash2 className="h-4 w-4" />
+          </Button>
+        );
+      },
     },
   ];
 
@@ -70,6 +101,16 @@ export default function Usuarios() {
       </div>
 
       <NuevoUsuarioDialog open={dialogOpen} onOpenChange={setDialogOpen} onCreated={() => refetch()} />
+
+      <DoubleConfirmDeleteDialog
+        open={!!deleteTarget}
+        onOpenChange={(open) => { if (!open) setDeleteTarget(null); }}
+        entityName={deleteTarget?.email ?? "usuario"}
+        description={`El usuario ${deleteTarget?.email} será eliminado permanentemente del sistema y de la organización.`}
+        finalDescription="Esta acción eliminará al usuario completamente. No se puede deshacer."
+        onConfirm={handleDelete}
+        isPending={deleteUser.isPending}
+      />
 
       <div className="rounded-md border">
         <DataTable

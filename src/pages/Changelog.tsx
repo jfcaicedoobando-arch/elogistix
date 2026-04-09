@@ -13,6 +13,13 @@ interface ChangelogEntry {
 
 const changelog: ChangelogEntry[] = [
   {
+    version: "7.11.0",
+    date: "2026-04-09",
+    type: "minor",
+    title: "Botón de eliminar usuario en tabla de Usuarios",
+    description: "Se agregó un botón de eliminar usuario con doble confirmación (escribir ELIMINAR) en la tabla de gestión de usuarios. No se puede eliminar la propia cuenta.",
+  },
+  {
     version: "7.10.4",
     date: "2026-04-09",
     type: "patch",
