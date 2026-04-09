@@ -1,0 +1,114 @@
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+
+export function usePortalEmbarques(clienteIds: string[]) {
+  return useQuery({
+    queryKey: ["portal", "embarques", clienteIds],
+    queryFn: async () => {
+      if (!clienteIds.length) return [];
+      const { data, error } = await supabase
+        .from("embarques")
+        .select("id, expediente, cliente_nombre, modo, tipo, estado, etd, eta, puerto_origen, puerto_destino, aeropuerto_origen, aeropuerto_destino, ciudad_origen, ciudad_destino, tipo_servicio, naviera, aerolinea, transportista, created_at")
+        .in("cliente_id", clienteIds)
+        .order("created_at", { ascending: false });
+      if (error) throw error;
+      return data ?? [];
+    },
+    enabled: clienteIds.length > 0,
+  });
+}
+
+export function usePortalEmbarque(id?: string) {
+  return useQuery({
+    queryKey: ["portal", "embarque", id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("embarques")
+        .select("*")
+        .eq("id", id!)
+        .single();
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!id,
+  });
+}
+
+export function usePortalEventos(embarqueId?: string) {
+  return useQuery({
+    queryKey: ["portal", "eventos", embarqueId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("eventos_embarque")
+        .select("*")
+        .eq("embarque_id", embarqueId!)
+        .order("fecha", { ascending: false });
+      if (error) throw error;
+      return data ?? [];
+    },
+    enabled: !!embarqueId,
+  });
+}
+
+export function usePortalDocumentos(embarqueId?: string) {
+  return useQuery({
+    queryKey: ["portal", "documentos", embarqueId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("documentos_embarque")
+        .select("*")
+        .eq("embarque_id", embarqueId!)
+        .order("created_at", { ascending: true });
+      if (error) throw error;
+      return data ?? [];
+    },
+    enabled: !!embarqueId,
+  });
+}
+
+export function usePortalCotizaciones(clienteIds: string[]) {
+  return useQuery({
+    queryKey: ["portal", "cotizaciones", clienteIds],
+    queryFn: async () => {
+      if (!clienteIds.length) return [];
+      const { data, error } = await supabase
+        .from("cotizaciones")
+        .select("id, folio, cliente_nombre, modo, tipo, estado, moneda, subtotal, origen, destino, created_at, fecha_vigencia")
+        .in("cliente_id", clienteIds)
+        .order("created_at", { ascending: false });
+      if (error) throw error;
+      return data ?? [];
+    },
+    enabled: clienteIds.length > 0,
+  });
+}
+
+export function usePortalFacturas(clienteIds: string[]) {
+  return useQuery({
+    queryKey: ["portal", "facturas", clienteIds],
+    queryFn: async () => {
+      if (!clienteIds.length) return [];
+      const { data, error } = await supabase
+        .from("facturas")
+        .select("id, numero, expediente, cliente_nombre, estado, moneda, subtotal, iva, total, fecha_emision, fecha_vencimiento")
+        .in("cliente_id", clienteIds)
+        .order("fecha_emision", { ascending: false });
+      if (error) throw error;
+      return data ?? [];
+    },
+    enabled: clienteIds.length > 0,
+  });
+}
+
+export function usePortalClientUsers() {
+  return useQuery({
+    queryKey: ["portal", "client_users"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("client_users")
+        .select("*");
+      if (error) throw error;
+      return data ?? [];
+    },
+  });
+}

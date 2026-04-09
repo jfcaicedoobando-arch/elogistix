@@ -15,6 +15,7 @@ const roleBadge: Record<AppRole, string> = {
   admin: "bg-destructive text-destructive-foreground",
   operador: "bg-info text-info-foreground",
   viewer: "bg-muted text-muted-foreground",
+  cliente: "bg-accent text-accent-foreground",
 };
 
 import { formatDate } from "@/lib/helpers";

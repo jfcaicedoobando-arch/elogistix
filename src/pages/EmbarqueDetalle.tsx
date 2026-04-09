@@ -1,5 +1,5 @@
 import { useParams, useNavigate } from "react-router-dom";
-import { ArrowLeft, Edit, Printer, ChevronRight, Copy, Trash2 } from "lucide-react";
+import { ArrowLeft, Edit, Printer, ChevronRight, Copy, Trash2, Share2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -29,6 +29,8 @@ import { TabNotas } from "@/components/embarque/TabNotas";
 import { TabTracking } from "@/components/embarque/TabTracking";
 import DialogDuplicarEmbarque from "@/components/embarque/DialogDuplicarEmbarque";
 import DialogEliminarEmbarque from "@/components/embarque/DialogEliminarEmbarque";
+import { useCreateTrackingLink } from "@/hooks/useTrackingLinks";
+import { useToast } from "@/hooks/use-toast";
 
 export default function EmbarqueDetalle() {
   const { id } = useParams();
@@ -43,6 +45,20 @@ export default function EmbarqueDetalle() {
 
   const [dialogDuplicarAbierto, setDialogDuplicarAbierto] = useState(false);
   const [dialogEliminarAbierto, setDialogEliminarAbierto] = useState(false);
+  const createTrackingLink = useCreateTrackingLink();
+  const { toast } = useToast();
+
+  const handleCompartirTracking = async () => {
+    if (!id) return;
+    try {
+      const link = await createTrackingLink.mutateAsync({ embarqueId: id });
+      const url = `${window.location.origin}/tracking/${link.token}`;
+      await navigator.clipboard.writeText(url);
+      toast({ title: "Enlace copiado", description: "El enlace de tracking fue copiado al portapapeles." });
+    } catch {
+      toast({ title: "Error al generar enlace", variant: "destructive" });
+    }
+  };
 
   const {
     handleUpload, handleDeleteDoc, handleDownload, handleAvanzarEstado,
@@ -122,6 +138,9 @@ export default function EmbarqueDetalle() {
               <Trash2 className="h-4 w-4 mr-1" /> Eliminar
             </Button>
           )}
+          <Button variant="outline" size="sm" onClick={handleCompartirTracking} disabled={createTrackingLink.isPending}>
+            <Share2 className="h-4 w-4 mr-1" /> Compartir Tracking
+          </Button>
           <Button variant="outline" size="sm"><Printer className="h-4 w-4 mr-1" /> Imprimir</Button>
         </div>
       </div>

@@ -9,11 +9,10 @@ import { Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import librecargaLogo from "@/assets/librecarga-logo.png";
 
-export default function Login() {
+export default function PortalLogin() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
-  const [isSignUp, setIsSignUp] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -21,45 +20,43 @@ export default function Login() {
     e.preventDefault();
     setLoading(true);
 
-    if (isSignUp) {
-      const { error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: { emailRedirectTo: window.location.origin },
+    const { data: signInData, error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
+    setLoading(false);
+
+    if (error) {
+      toast({
+        title: "Error al iniciar sesión",
+        description: error.message,
+        variant: "destructive",
       });
-      setLoading(false);
-      if (error) {
-        toast({ title: "Error al registrarse", description: error.message, variant: "destructive" });
-      } else {
-        toast({ title: "Registro exitoso", description: "Revisa tu correo para confirmar tu cuenta." });
-      }
-    } else {
-      const { data: signInData, error } = await supabase.auth.signInWithPassword({ email, password });
-      setLoading(false);
-      if (error) {
-        toast({ title: "Error al iniciar sesión", description: error.message, variant: "destructive" });
-      } else {
-        // Check if user is super_admin to redirect to /admin
-        const userId = signInData.user?.id;
-        if (userId) {
-          const { data: roleData } = await supabase
-            .from("user_roles")
-            .select("role")
-            .eq("user_id", userId)
-            .limit(1)
-            .single();
-          if (roleData?.role === "super_admin") {
-            navigate("/admin", { replace: true });
-            return;
-          }
-          if (roleData?.role === "cliente") {
-            navigate("/portal", { replace: true });
-            return;
-          }
-        }
-        navigate("/", { replace: true });
+      return;
+    }
+
+    // Verify user has 'cliente' role
+    const userId = signInData.user?.id;
+    if (userId) {
+      const { data: roleData } = await supabase
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", userId)
+        .limit(1)
+        .single();
+
+      if (roleData?.role !== "cliente") {
+        await supabase.auth.signOut();
+        toast({
+          title: "Acceso denegado",
+          description: "Este portal es exclusivo para clientes.",
+          variant: "destructive",
+        });
+        return;
       }
     }
+
+    navigate("/portal", { replace: true });
   };
 
   return (
@@ -67,11 +64,15 @@ export default function Login() {
       <Card className="w-full max-w-sm shadow-lg">
         <CardHeader className="text-center space-y-3 pb-2">
           <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-xl bg-white shadow-sm border">
-            <img src={librecargaLogo} alt="Libre Carga Logo" className="h-12 w-12 rounded-lg object-contain" />
+            <img
+              src={librecargaLogo}
+              alt="Libre Carga Logo"
+              className="h-12 w-12 rounded-lg object-contain"
+            />
           </div>
-          <h1 className="text-xl font-bold">Libre Carga</h1>
+          <h1 className="text-xl font-bold">Portal de Cliente</h1>
           <p className="text-sm text-muted-foreground">
-            {isSignUp ? "Crear cuenta nueva" : "Inicia sesión para continuar"}
+            Inicia sesión para ver tus embarques, cotizaciones y facturas
           </p>
         </CardHeader>
         <CardContent className="pt-2">
@@ -81,7 +82,7 @@ export default function Login() {
               <Input
                 id="email"
                 type="email"
-                placeholder="usuario@empresa.com"
+                placeholder="tu@empresa.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
@@ -101,18 +102,9 @@ export default function Login() {
             </div>
             <Button type="submit" className="w-full" disabled={loading}>
               {loading && <Loader2 className="h-4 w-4 animate-spin" />}
-              {isSignUp ? "Registrarse" : "Iniciar sesión"}
+              Iniciar sesión
             </Button>
           </form>
-          <div className="mt-4 text-center">
-            <button
-              type="button"
-              className="text-sm text-muted-foreground hover:text-foreground underline-offset-4 hover:underline"
-              onClick={() => setIsSignUp(!isSignUp)}
-            >
-              {isSignUp ? "¿Ya tienes cuenta? Inicia sesión" : "¿No tienes cuenta? Regístrate"}
-            </button>
-          </div>
         </CardContent>
       </Card>
     </div>

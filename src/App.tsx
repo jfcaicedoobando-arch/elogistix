@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { Layout } from "./components/Layout";
 import { ProtectedRoute } from "./components/ProtectedRoute";
+import { PortalProtectedRoute } from "./components/PortalProtectedRoute";
 import RouteLoadingFallback from "./components/RouteLoadingFallback";
 
 // Lazy-loaded pages
@@ -39,8 +40,18 @@ const AdminOrgDetalle = lazy(() => import("./pages/admin/AdminOrgDetalle"));
 const AdminUsuarios = lazy(() => import("./pages/admin/AdminUsuarios"));
 const AdminConfiguracion = lazy(() => import("./pages/admin/AdminConfiguracion"));
 
+// Portal pages
+const PortalLogin = lazy(() => import("./pages/portal/PortalLogin"));
+const PortalDashboard = lazy(() => import("./pages/portal/PortalDashboard"));
+const PortalEmbarques = lazy(() => import("./pages/portal/PortalEmbarques"));
+const PortalEmbarqueDetalle = lazy(() => import("./pages/portal/PortalEmbarqueDetalle"));
+const PortalCotizaciones = lazy(() => import("./pages/portal/PortalCotizaciones"));
+const PortalFacturas = lazy(() => import("./pages/portal/PortalFacturas"));
+const TrackingPublico = lazy(() => import("./pages/TrackingPublico"));
+
 // Admin layout
 import { AdminLayout } from "./components/admin/AdminLayout";
+import PortalLayout from "./components/portal/PortalLayout";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -59,6 +70,23 @@ const App = () => (
         <Suspense fallback={<RouteLoadingFallback />}>
           <Routes>
             <Route path="/login" element={<Login />} />
+            <Route path="/portal/login" element={<PortalLogin />} />
+            <Route path="/tracking/:token" element={<TrackingPublico />} />
+
+            {/* Portal routes — cliente only */}
+            <Route
+              element={
+                <PortalProtectedRoute>
+                  <PortalLayout />
+                </PortalProtectedRoute>
+              }
+            >
+              <Route path="/portal" element={<PortalDashboard />} />
+              <Route path="/portal/embarques" element={<PortalEmbarques />} />
+              <Route path="/portal/embarques/:id" element={<PortalEmbarqueDetalle />} />
+              <Route path="/portal/cotizaciones" element={<PortalCotizaciones />} />
+              <Route path="/portal/facturas" element={<PortalFacturas />} />
+            </Route>
 
             {/* Admin routes — super_admin only */}
             <Route

@@ -13,6 +13,7 @@ import { useRegistrarActividad } from "@/hooks/useBitacora";
 import { getErrorMessage } from "@/lib/errorUtils";
 
 import { formatCurrency } from "@/lib/formatters";
+import TabPortalCliente from "@/components/cliente/TabPortalCliente";
 import { DataTable } from "@/components/DataTable";
 import { embarqueColumns, cotizacionColumns } from "@/components/cliente/clienteColumns";
 import type { Tables, Enums } from "@/integrations/supabase/types";
@@ -198,6 +199,7 @@ export default function ClienteDetalle() {
           <TabsTrigger value="informacion">Información</TabsTrigger>
           <TabsTrigger value="embarques">Embarques ({embarquesCliente.length})</TabsTrigger>
           <TabsTrigger value="cotizaciones">Cotizaciones ({cotizacionesCliente.length})</TabsTrigger>
+          <TabsTrigger value="portal">Portal</TabsTrigger>
         </TabsList>
 
         <TabsContent value="informacion" className="space-y-6">
@@ -252,6 +254,10 @@ export default function ClienteDetalle() {
               />
             </CardContent>
           </Card>
+        </TabsContent>
+
+        <TabsContent value="portal">
+          <TabPortalCliente clienteId={cliente.id} organizationId={cliente.organization_id} canEdit={canEdit} />
         </TabsContent>
       </Tabs>
 
