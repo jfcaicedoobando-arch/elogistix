@@ -29,6 +29,8 @@ import { TabNotas } from "@/components/embarque/TabNotas";
 import { TabTracking } from "@/components/embarque/TabTracking";
 import DialogDuplicarEmbarque from "@/components/embarque/DialogDuplicarEmbarque";
 import DialogEliminarEmbarque from "@/components/embarque/DialogEliminarEmbarque";
+import { useCreateTrackingLink } from "@/hooks/useTrackingLinks";
+import { useToast } from "@/hooks/use-toast";
 
 export default function EmbarqueDetalle() {
   const { id } = useParams();
