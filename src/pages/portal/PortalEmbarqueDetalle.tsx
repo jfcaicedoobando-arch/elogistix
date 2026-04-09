@@ -38,7 +38,22 @@ export default function PortalEmbarqueDetalle() {
         .from("documentos")
         .createSignedUrl(archivo, 300);
       if (error) throw error;
-      window.open(data.signedUrl, "_blank");
+      const filename = archivo.split("/").pop() || "documento";
+      try {
+        const response = await fetch(data.signedUrl);
+        if (!response.ok) throw new Error("Download failed");
+        const blob = await response.blob();
+        const blobUrl = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = blobUrl;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(blobUrl);
+      } catch {
+        window.open(data.signedUrl, "_blank");
+      }
     } catch {
       toast({ title: "Error al descargar", variant: "destructive" });
     } finally {
