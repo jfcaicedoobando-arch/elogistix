@@ -37,11 +37,10 @@ export default function PortalLayout() {
             </div>
           </div>
           <div className="flex items-center gap-4">
-            <span className="text-sm text-muted-foreground hidden sm:block">
+            <div className="hidden sm:flex flex-col items-end text-sm leading-tight">
               {clienteName && <span className="font-medium text-foreground">{clienteName}</span>}
-              {clienteName && " · "}
-              {user?.email}
-            </span>
+              <span className="text-xs text-muted-foreground">{user?.email}</span>
+            </div>
             <Button variant="ghost" size="sm" onClick={handleSignOut}>
               <LogOut className="h-4 w-4 mr-1" /> Salir
             </Button>
