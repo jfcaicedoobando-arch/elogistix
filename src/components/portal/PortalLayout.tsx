@@ -30,7 +30,7 @@ export default function PortalLayout() {
       <header className="border-b bg-card sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between h-14">
           <div className="flex items-center gap-3">
-            <img src={librecargaLogo} alt="Logo" className="h-12 w-12 rounded object-contain" />
+            <img src={librecargaLogo} alt="Logo" className="h-16 w-16 rounded object-contain" />
             <div className="flex flex-col leading-tight">
               <span className="font-semibold text-foreground">{orgName || "Portal de Cliente"}</span>
               {orgName && <span className="text-[10px] text-muted-foreground">Portal de Cliente</span>}
