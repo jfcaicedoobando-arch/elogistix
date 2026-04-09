@@ -131,3 +131,19 @@ export function usePortalClienteName() {
     },
   });
 }
+
+export function usePortalCotizacion(id?: string) {
+  return useQuery({
+    queryKey: ["portal", "cotizacion", id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("cotizaciones")
+        .select("*")
+        .eq("id", id!)
+        .single();
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!id,
+  });
+}
