@@ -13,6 +13,13 @@ interface ChangelogEntry {
 
 const changelog: ChangelogEntry[] = [
   {
+    version: "7.10.2",
+    date: "2026-04-09",
+    type: "patch",
+    title: "Fix: Edge function list-users valida rol organizacional",
+    description: "La función de listar usuarios ahora acepta administradores organizacionales además de roles globales, permitiendo que admins de organización gestionen usuarios.",
+  },
+  {
     version: "7.10.1",
     date: "2026-04-09",
     type: "patch",
