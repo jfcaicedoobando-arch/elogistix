@@ -13,6 +13,13 @@ interface ChangelogEntry {
 
 const changelog: ChangelogEntry[] = [
   {
+    version: "7.10.0",
+    date: "2026-04-09",
+    type: "minor",
+    title: "Login Unificado",
+    description: "Se unificó el inicio de sesión en una sola página (/login). El sistema detecta automáticamente el rol del usuario y redirige a la sección correspondiente: portal de clientes, panel de administración o app principal. Se eliminó la página de login separada para clientes.",
+  },
+  {
     version: "7.9.0",
     date: "2026-04-09",
     type: "minor",
