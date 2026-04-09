@@ -31,7 +31,10 @@ export default function PortalLayout() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between h-14">
           <div className="flex items-center gap-3">
             <img src={librecargaLogo} alt="Logo" className="h-8 w-8 rounded object-contain" />
-            <span className="font-semibold text-foreground">Portal de Cliente</span>
+            <div className="flex flex-col leading-tight">
+              <span className="font-semibold text-foreground">{orgName || "Portal de Cliente"}</span>
+              {orgName && <span className="text-[10px] text-muted-foreground">Portal de Cliente</span>}
+            </div>
           </div>
           <div className="flex items-center gap-4">
             <span className="text-sm text-muted-foreground hidden sm:block">

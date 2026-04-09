@@ -53,6 +53,11 @@ export default function PortalDashboard() {
         <h1 className="text-2xl font-bold">
           {clienteName ? `Bienvenido, ${clienteName}` : "Bienvenido"}
         </h1>
+        {orgName && (
+          <p className="text-sm text-muted-foreground">
+            Portal de <span className="font-medium text-foreground">{orgName}</span>
+          </p>
+        )}
         <p className="text-sm text-muted-foreground mt-1">
           Aquí puedes consultar el estado de tus embarques, cotizaciones y facturas.
         </p>

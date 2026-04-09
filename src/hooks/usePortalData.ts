@@ -132,6 +132,25 @@ export function usePortalClienteName() {
   });
 }
 
+export function usePortalOrgName() {
+  return useQuery({
+    queryKey: ["portal", "org_name"],
+    queryFn: async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return null;
+      const { data, error } = await supabase
+        .from("client_users")
+        .select("organizations(nombre)")
+        .eq("user_id", user.id)
+        .limit(1)
+        .maybeSingle();
+      if (error) throw error;
+      const org = data?.organizations as unknown as { nombre: string } | null;
+      return org?.nombre ?? null;
+    },
+  });
+}
+
 export function usePortalCotizacion(id?: string) {
   return useQuery({
     queryKey: ["portal", "cotizacion", id],
