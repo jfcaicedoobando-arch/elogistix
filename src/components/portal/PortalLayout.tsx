@@ -17,6 +17,7 @@ export default function PortalLayout() {
   const location = useLocation();
   const navigate = useNavigate();
   const { data: clienteName } = usePortalClienteName();
+  const { data: orgName } = usePortalOrgName();
 
   const handleSignOut = async () => {
     await signOut();
