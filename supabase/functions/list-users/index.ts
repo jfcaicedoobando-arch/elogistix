@@ -32,9 +32,17 @@ Deno.serve(async (req) => {
 
     const userId = claims.claims.sub;
 
-    // Check admin role
+    // Check admin role: global role OR organizational role
     const { data: roleData } = await supabaseUser.from("user_roles").select("role").eq("user_id", userId).single();
-    if (roleData?.role !== "admin" && roleData?.role !== "super_admin") {
+    const isGlobalAdmin = roleData?.role === "admin" || roleData?.role === "super_admin";
+
+    let isOrgAdmin = false;
+    if (!isGlobalAdmin) {
+      const { data: orgData } = await supabaseUser.from("organization_members").select("role").eq("user_id", userId).limit(1).single();
+      isOrgAdmin = orgData?.role === "admin";
+    }
+
+    if (!isGlobalAdmin && !isOrgAdmin) {
       return new Response(JSON.stringify({ error: "Solo administradores" }), { status: 403, headers: corsHeaders });
     }
 
