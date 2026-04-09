@@ -45,6 +45,20 @@ export default function EmbarqueDetalle() {
 
   const [dialogDuplicarAbierto, setDialogDuplicarAbierto] = useState(false);
   const [dialogEliminarAbierto, setDialogEliminarAbierto] = useState(false);
+  const createTrackingLink = useCreateTrackingLink();
+  const { toast } = useToast();
+
+  const handleCompartirTracking = async () => {
+    if (!id) return;
+    try {
+      const link = await createTrackingLink.mutateAsync({ embarqueId: id });
+      const url = `${window.location.origin}/tracking/${link.token}`;
+      await navigator.clipboard.writeText(url);
+      toast({ title: "Enlace copiado", description: "El enlace de tracking fue copiado al portapapeles." });
+    } catch {
+      toast({ title: "Error al generar enlace", variant: "destructive" });
+    }
+  };
 
   const {
     handleUpload, handleDeleteDoc, handleDownload, handleAvanzarEstado,
