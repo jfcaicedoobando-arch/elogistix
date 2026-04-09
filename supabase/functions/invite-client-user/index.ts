@@ -12,25 +12,8 @@ Deno.serve(async (req) => {
   }
 
   try {
-    // Validate auth
     const authHeader = req.headers.get("Authorization");
     if (!authHeader?.startsWith("Bearer ")) {
-      return new Response(
-        JSON.stringify({ error: "No autorizado" }),
-        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
-
-    const supabaseAuth = createClient(
-      Deno.env.get("SUPABASE_URL")!,
-      Deno.env.get("SUPABASE_ANON_KEY")!,
-      { global: { headers: { Authorization: authHeader } } }
-    );
-
-    const { data: claimsData, error: claimsError } = await supabaseAuth.auth.getClaims(
-      authHeader.replace("Bearer ", "")
-    );
-    if (claimsError || !claimsData?.claims) {
       return new Response(
         JSON.stringify({ error: "No autorizado" }),
         { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -62,24 +45,38 @@ Deno.serve(async (req) => {
 
     if (existingUser) {
       userId = existingUser.id;
-    } else {
-      // Create new user with a random password (they'll reset it)
-      const tempPassword = crypto.randomUUID() + "Aa1!";
-      const { data: newUser, error: createError } = await supabaseAdmin.auth.admin.createUser({
+      // Send a password reset email so they can access the portal
+      const redirectTo = `${req.headers.get("origin") || "https://elogistix.lovable.app"}/portal/login`;
+      await supabaseAdmin.auth.admin.generateLink({
+        type: "magiclink",
         email,
-        password: tempPassword,
-        email_confirm: true,
+        options: { redirectTo },
       });
-      if (createError || !newUser.user) {
+      // Also trigger the actual email delivery via the non-admin API
+      const supabaseAnon = createClient(
+        Deno.env.get("SUPABASE_URL")!,
+        Deno.env.get("SUPABASE_ANON_KEY")!
+      );
+      await supabaseAnon.auth.resetPasswordForEmail(email, { redirectTo });
+    } else {
+      // Use inviteUserByEmail — this creates the user AND sends the invite email
+      const redirectTo = `${req.headers.get("origin") || "https://elogistix.lovable.app"}/portal/login`;
+      const { data: inviteData, error: inviteError } = await supabaseAdmin.auth.admin.inviteUserByEmail(email, {
+        redirectTo,
+        data: { role: "cliente" },
+      });
+
+      if (inviteError || !inviteData.user) {
+        console.error("Error inviting user:", inviteError);
         return new Response(
-          JSON.stringify({ error: `Error al crear usuario: ${createError?.message}` }),
+          JSON.stringify({ error: `Error al invitar usuario: ${inviteError?.message}` }),
           { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
       }
-      userId = newUser.user.id;
+      userId = inviteData.user.id;
     }
 
-    // Ensure user has 'cliente' role - replace any auto-assigned role
+    // Ensure user has 'cliente' role
     const { data: existingRole } = await supabaseAdmin
       .from("user_roles")
       .select("id, role")
@@ -98,28 +95,18 @@ Deno.serve(async (req) => {
         .eq("id", existingRole.id);
     }
 
-    // Create client_users link (upsert to avoid duplicates)
+    // Create client_users link
     const { error: linkError } = await supabaseAdmin.from("client_users").upsert(
       { user_id: userId, cliente_id, organization_id },
       { onConflict: "user_id,cliente_id" }
     );
 
     if (linkError) {
+      console.error("Error linking user:", linkError);
       return new Response(
         JSON.stringify({ error: `Error al vincular usuario: ${linkError.message}` }),
         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
-    }
-
-    // Send password reset email so user can set their password
-    if (!existingUser) {
-      await supabaseAdmin.auth.admin.generateLink({
-        type: "recovery",
-        email,
-        options: {
-          redirectTo: `${req.headers.get("origin") || Deno.env.get("SUPABASE_URL")}/portal/login`,
-        },
-      });
     }
 
     return new Response(
@@ -131,6 +118,7 @@ Deno.serve(async (req) => {
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (err) {
+    console.error("Internal error:", err);
     return new Response(
       JSON.stringify({ error: "Error interno del servidor" }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
