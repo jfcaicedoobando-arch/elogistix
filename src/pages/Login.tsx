@@ -21,45 +21,31 @@ export default function Login() {
     e.preventDefault();
     setLoading(true);
 
-    if (isSignUp) {
-      const { error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: { emailRedirectTo: window.location.origin },
-      });
-      setLoading(false);
-      if (error) {
-        toast({ title: "Error al registrarse", description: error.message, variant: "destructive" });
-      } else {
-        toast({ title: "Registro exitoso", description: "Revisa tu correo para confirmar tu cuenta." });
+    const { data: signInData, error } = await supabase.auth.signInWithPassword({ email, password });
+    setLoading(false);
+    if (error) {
+      toast({ title: "Error al iniciar sesión", description: error.message, variant: "destructive" });
+      return;
+    }
+
+    const userId = signInData.user?.id;
+    if (userId) {
+      const { data: roleData } = await supabase
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", userId)
+        .limit(1)
+        .single();
+      if (roleData?.role === "super_admin") {
+        navigate("/admin", { replace: true });
+        return;
       }
-    } else {
-      const { data: signInData, error } = await supabase.auth.signInWithPassword({ email, password });
-      setLoading(false);
-      if (error) {
-        toast({ title: "Error al iniciar sesión", description: error.message, variant: "destructive" });
-      } else {
-        // Check if user is super_admin to redirect to /admin
-        const userId = signInData.user?.id;
-        if (userId) {
-          const { data: roleData } = await supabase
-            .from("user_roles")
-            .select("role")
-            .eq("user_id", userId)
-            .limit(1)
-            .single();
-          if (roleData?.role === "super_admin") {
-            navigate("/admin", { replace: true });
-            return;
-          }
-          if (roleData?.role === "cliente") {
-            navigate("/portal", { replace: true });
-            return;
-          }
-        }
-        navigate("/", { replace: true });
+      if (roleData?.role === "cliente") {
+        navigate("/portal", { replace: true });
+        return;
       }
     }
+    navigate("/", { replace: true });
   };
 
   return (
