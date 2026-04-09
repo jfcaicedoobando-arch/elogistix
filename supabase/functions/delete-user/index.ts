@@ -16,7 +16,7 @@ Deno.serve(async (req) => {
     const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const anonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
 
-    // Verify caller is super_admin
+    // Verify caller
     const authHeader = req.headers.get("Authorization");
     if (!authHeader?.startsWith("Bearer ")) {
       return new Response(JSON.stringify({ error: "No autorizado" }), {
@@ -39,22 +39,34 @@ Deno.serve(async (req) => {
     }
 
     const callerId = claimsData.claims.sub;
-
     const adminClient = createClient(supabaseUrl, serviceRoleKey);
 
-    // Only super_admin can delete users
+    // Check admin role: global super_admin OR global admin OR org admin
     const { data: roleData } = await adminClient
       .from("user_roles")
       .select("role")
       .eq("user_id", callerId)
-      .eq("role", "super_admin")
+      .in("role", ["admin", "super_admin"])
       .maybeSingle();
 
-    if (!roleData) {
-      return new Response(JSON.stringify({ error: "Solo super administradores pueden eliminar usuarios" }), {
-        status: 403,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+    const isGlobalAdmin = !!roleData;
+
+    let callerOrgId: string | null = null;
+    if (!isGlobalAdmin) {
+      const { data: orgData } = await adminClient
+        .from("organization_members")
+        .select("role, organization_id")
+        .eq("user_id", callerId)
+        .eq("role", "admin")
+        .maybeSingle();
+
+      if (!orgData) {
+        return new Response(JSON.stringify({ error: "Solo administradores pueden eliminar usuarios" }), {
+          status: 403,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      callerOrgId = orgData.organization_id;
     }
 
     const { user_id } = await req.json();
@@ -74,7 +86,24 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Delete from organization_members and user_roles first (service role bypasses RLS)
+    // If org admin (not global), verify target user belongs to their org
+    if (!isGlobalAdmin && callerOrgId) {
+      const { data: targetMember } = await adminClient
+        .from("organization_members")
+        .select("id")
+        .eq("user_id", user_id)
+        .eq("organization_id", callerOrgId)
+        .maybeSingle();
+
+      if (!targetMember) {
+        return new Response(JSON.stringify({ error: "El usuario no pertenece a tu organización" }), {
+          status: 403,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+    }
+
+    // Delete from organization_members and user_roles first
     await adminClient.from("organization_members").delete().eq("user_id", user_id);
     await adminClient.from("user_roles").delete().eq("user_id", user_id);
 
