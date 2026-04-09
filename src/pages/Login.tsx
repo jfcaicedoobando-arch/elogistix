@@ -52,7 +52,7 @@ export default function Login() {
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-background to-muted px-4">
       <Card className="w-full max-w-sm shadow-lg">
         <CardHeader className="text-center space-y-3 pb-2">
-          <div className="mx-auto flex items-center justify-center rounded-xl bg-white shadow-sm border p-2">
+          <div className="mx-auto flex h-44 w-44 items-center justify-center rounded-xl bg-white shadow-sm border">
             <img src={librecargaLogo} alt="Libre Carga Logo" className="h-42 w-42 rounded-lg object-contain" />
           </div>
           <h1 className="text-xl font-bold">Libre Carga</h1>
