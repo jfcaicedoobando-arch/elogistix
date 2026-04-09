@@ -1,34 +1,40 @@
 
 
-# Mejora de Diseño del Portal de Clientes
+# Detalle de Cotización en Portal de Clientes
 
-## Cambios
+## Problema
+Las cards de cotizaciones en el portal no son clickeables porque no existe una página de detalle ni una ruta para `/portal/cotizaciones/:id`.
 
-### 1. Header con nombre del cliente (`PortalLayout.tsx`)
-- Consultar `client_users` con join a `clientes(nombre_comercial)` para obtener el nombre de la empresa del cliente logueado.
-- Mostrar el nombre comercial del cliente junto al email en el header (ej: "Indimex Trading · hector@indimextrading.com").
-- Si hay múltiples clientes asociados, mostrar el primero.
+## Plan
 
-### 2. Dashboard mejorado (`PortalDashboard.tsx`)
-- **Mensaje de bienvenida personalizado**: Reemplazar el genérico "Bienvenido" por "Bienvenido, [Nombre Comercial]" usando los datos de `client_users` + `clientes`.
-- Agregar subtítulo descriptivo: "Aquí puedes consultar el estado de tus embarques, cotizaciones y facturas."
-- **Cards KPI con iconos de color**:
-  - Embarques Activos: icono Ship en azul eléctrico (`text-blue-600 bg-blue-100`) dentro de un círculo decorativo.
-  - Cotizaciones: icono FileText en violeta (`text-violet-600 bg-violet-100`).
-  - Facturas Pendientes: icono Receipt en ámbar (`text-amber-600 bg-amber-100`).
-- Cada card tendrá el icono en un contenedor redondeado con fondo de color suave para darle vida visual.
+### 1. Crear página `PortalCotizacionDetalle.tsx`
+Vista de solo lectura adaptada del `CotizacionDetalle.tsx` interno, mostrando:
+- Encabezado: folio, estado (badge), nombre del cliente
+- Datos generales: modo, tipo, incoterm, origen, destino, vigencia, tiempo de tránsito
+- Mercancía (reutilizar `SeccionMercanciaCotizacionDetalle`)
+- Conceptos de venta USD y MXN (reutilizar `TablaConceptosGenerico`)
+- Resumen de totales (reutilizar `ResumenTotalesCotizacion`)
+- Notas (si existen)
+- **Sin** acciones de cambio de estado, edición, P&L interno ni generación de embarques
 
-### 3. Hook auxiliar
-- Agregar a `usePortalData.ts` un hook `usePortalClienteName` que haga `select("clientes(nombre_comercial)")` desde `client_users` y devuelva el nombre del primer cliente.
+### 2. Agregar hook `usePortalCotizacion` en `usePortalData.ts`
+Query individual: `select("*")` de `cotizaciones` filtrado por `id` y validando que el `cliente_id` pertenezca al usuario.
 
-### 4. Changelog
-- Nueva entrada en `Changelog.tsx`.
+### 3. Agregar ruta en `App.tsx`
+Nueva ruta `/portal/cotizaciones/:id` → `PortalCotizacionDetalle`.
 
-## Archivos a modificar
+### 4. Hacer clickeables las cards en `PortalCotizaciones.tsx`
+Agregar `onClick` + `useNavigate` para navegar a `/portal/cotizaciones/${c.id}`. Estilo cursor-pointer y hover.
+
+### 5. Changelog
+Nueva entrada v7.8.0.
+
+## Archivos
 | Archivo | Cambio |
 |---|---|
-| `src/hooks/usePortalData.ts` | Nuevo hook para nombre del cliente |
-| `src/components/portal/PortalLayout.tsx` | Mostrar nombre en header |
-| `src/pages/portal/PortalDashboard.tsx` | Bienvenida personalizada + cards con iconos de color |
+| `src/pages/portal/PortalCotizacionDetalle.tsx` | **Nuevo** — vista de detalle solo lectura |
+| `src/hooks/usePortalData.ts` | Nuevo hook `usePortalCotizacion` |
+| `src/App.tsx` | Ruta `/portal/cotizaciones/:id` |
+| `src/pages/portal/PortalCotizaciones.tsx` | Cards clickeables con navigate |
 | `src/pages/Changelog.tsx` | Nueva entrada |
 
