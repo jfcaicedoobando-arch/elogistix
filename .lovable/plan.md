@@ -1,39 +1,22 @@
 
 
-# Login Unificado
+# Fix: Sidebar "Usuarios" y "Configuración" no funcionan para admin de organización
 
-## Resumen
-Eliminar `/portal/login` y usar únicamente `/login`. Después de autenticar, el sistema detecta el rol y redirige automáticamente.
+## Problema identificado
 
-## Cambios
+El usuario `hector@lopezbenavides.com` tiene:
+- Rol global: **viewer**
+- Rol organizacional: **admin** (en Elogistix)
 
-### 1. Actualizar `/login` (Login.tsx)
-- Eliminar la opción de registro (signup) — los clientes se invitan, no se registran solos.
-- Después de `signInWithPassword`, consultar `user_roles` y redirigir:
-  - `super_admin` → `/admin`
-  - `cliente` → `/portal`
-  - Cualquier otro → `/`
-- **Ya hace esto parcialmente**, solo falta quitar el toggle de registro.
+El `effectiveRole` se calcula correctamente como `admin`, por lo que el sidebar muestra los enlaces de "Usuarios" y "Configuración". Sin embargo, al hacer clic, `ProtectedRoute` en línea 38 valida contra el **rol global** (`role` = `viewer`), no contra `effectiveRole`. Como `viewer` no está en `["admin"]`, redirige a `/`.
 
-### 2. Redirigir `/portal/login` → `/login`
-- En `App.tsx`, reemplazar la ruta `/portal/login` con un `<Navigate to="/login" replace />`.
-- Eliminar el archivo `src/pages/portal/PortalLogin.tsx`.
+## Solución
 
-### 3. Actualizar `PortalProtectedRoute`
-- Cambiar la redirección de usuarios no autenticados de `/portal/login` a `/login`.
+### 1. `src/components/ProtectedRoute.tsx`
+- Usar `effectiveRole` en lugar de `role` para la validación de `allowedRoles` (línea 38).
+- Cambiar `const { user, role, loading } = useAuth()` → `const { user, role, effectiveRole, loading } = useAuth()`.
+- Línea 38: `!allowedRoles.includes(role as AppRole)` → `!allowedRoles.includes(effectiveRole as AppRole)`.
 
-### 4. Actualizar `ProtectedRoute`
-- Verificar que redirige a `/login` (ya debería hacerlo).
-
-### 5. Changelog
-- Nueva entrada v7.10.0: "Login unificado".
-
-## Archivos
-| Archivo | Cambio |
-|---|---|
-| `src/pages/Login.tsx` | Quitar toggle de registro |
-| `src/App.tsx` | Redirigir `/portal/login` → `/login` |
-| `src/pages/portal/PortalLogin.tsx` | **Eliminar** |
-| `src/components/PortalProtectedRoute.tsx` | Redirigir a `/login` |
-| `src/pages/Changelog.tsx` | Nueva entrada |
+### 2. `src/pages/Changelog.tsx`
+- Nueva entrada v7.10.1: "Fix: permisos de rutas usan rol efectivo de organización".
 
