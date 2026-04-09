@@ -13,6 +13,13 @@ interface ChangelogEntry {
 
 const changelog: ChangelogEntry[] = [
   {
+    version: "7.10.3",
+    date: "2026-04-09",
+    type: "patch",
+    title: "Fix: Usuarios muestra miembros de la organización",
+    description: "La página de Usuarios ahora muestra solo los miembros de la organización actual en lugar de todos los usuarios globales. Los cambios de rol actualizan el rol organizacional.",
+  },
+  {
     version: "7.10.2",
     date: "2026-04-09",
     type: "patch",
