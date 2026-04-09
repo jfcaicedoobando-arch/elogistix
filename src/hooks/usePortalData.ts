@@ -112,3 +112,22 @@ export function usePortalClientUsers() {
     },
   });
 }
+
+export function usePortalClienteName() {
+  return useQuery({
+    queryKey: ["portal", "cliente_nombre"],
+    queryFn: async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return null;
+      const { data, error } = await supabase
+        .from("client_users")
+        .select("cliente_id, clientes(nombre)")
+        .eq("user_id", user.id)
+        .limit(1)
+        .maybeSingle();
+      if (error) throw error;
+      const clientes = data?.clientes as unknown as { nombre: string } | null;
+      return clientes?.nombre ?? null;
+    },
+  });
+}
