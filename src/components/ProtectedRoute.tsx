@@ -24,6 +24,11 @@ export function ProtectedRoute({ children, allowedRoles }: ProtectedRouteProps) 
     return <Navigate to="/login" replace />;
   }
 
+  // Cliente accessing regular app routes → redirect to /portal
+  if (role === "cliente" && !location.pathname.startsWith("/portal")) {
+    return <Navigate to="/portal" replace />;
+  }
+
   // Super admin accessing regular app routes → redirect to /admin
   const isSuperAdmin = role === "super_admin";
   if (isSuperAdmin && !location.pathname.startsWith("/admin")) {
