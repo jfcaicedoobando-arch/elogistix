@@ -61,6 +61,45 @@ export type Database = {
           },
         ]
       }
+      client_users: {
+        Row: {
+          cliente_id: string
+          created_at: string | null
+          id: string
+          organization_id: string
+          user_id: string
+        }
+        Insert: {
+          cliente_id: string
+          created_at?: string | null
+          id?: string
+          organization_id: string
+          user_id: string
+        }
+        Update: {
+          cliente_id?: string
+          created_at?: string | null
+          id?: string
+          organization_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "client_users_cliente_id_fkey"
+            columns: ["cliente_id"]
+            isOneToOne: false
+            referencedRelation: "clientes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "client_users_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       clientes: {
         Row: {
           ciudad: string
@@ -1307,6 +1346,44 @@ export type Database = {
         }
         Relationships: []
       }
+      tracking_links: {
+        Row: {
+          created_at: string | null
+          created_by: string
+          embarque_id: string
+          expires_at: string | null
+          id: string
+          organization_id: string
+          token: string
+        }
+        Insert: {
+          created_at?: string | null
+          created_by?: string
+          embarque_id: string
+          expires_at?: string | null
+          id?: string
+          organization_id?: string
+          token?: string
+        }
+        Update: {
+          created_at?: string | null
+          created_by?: string
+          embarque_id?: string
+          expires_at?: string | null
+          id?: string
+          organization_id?: string
+          token?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tracking_links_embarque_id_fkey"
+            columns: ["embarque_id"]
+            isOneToOne: false
+            referencedRelation: "embarques"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_roles: {
         Row: {
           id: string
@@ -1358,6 +1435,7 @@ export type Database = {
         }
         Returns: Json
       }
+      current_user_client_ids: { Args: never; Returns: string[] }
       current_user_org_id: { Args: never; Returns: string }
       dashboard_stats: { Args: never; Returns: Json }
       duplicar_embarque_completo: {
