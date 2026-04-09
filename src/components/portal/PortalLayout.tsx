@@ -16,6 +16,7 @@ export default function PortalLayout() {
   const { signOut, user } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
+  const { data: clienteName } = usePortalClienteName();
 
   const handleSignOut = async () => {
     await signOut();
