@@ -3,6 +3,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Ship, FileText, Receipt, LayoutDashboard, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import librecargaLogo from "@/assets/librecarga-logo.png";
+import { usePortalClienteName } from "@/hooks/usePortalData";
 
 const navItems = [
   { label: "Inicio", href: "/portal", icon: LayoutDashboard },
