@@ -1,0 +1,1 @@
+UPDATE public.user_roles SET role = 'cliente' WHERE user_id = '192ee8d8-d2c4-44d5-af42-1ae21d552116' AND role = 'viewer';
