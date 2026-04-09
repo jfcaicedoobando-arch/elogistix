@@ -13,6 +13,13 @@ interface ChangelogEntry {
 
 const changelog: ChangelogEntry[] = [
   {
+    version: "7.8.0",
+    date: "2026-04-09",
+    type: "minor",
+    title: "Detalle de cotización en Portal de Clientes",
+    description: "Las cotizaciones en el portal ahora son clickeables y muestran una vista de detalle con datos generales, mercancía, conceptos de venta, totales y notas en modo solo lectura.",
+  },
+  {
     version: "7.7.0",
     date: "2026-04-09",
     type: "minor",

@@ -1,3 +1,4 @@
+import { useNavigate } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -15,6 +16,7 @@ const estadoColor: Record<string, string> = {
 };
 
 export default function PortalCotizaciones() {
+  const navigate = useNavigate();
   const { data: clientUsers = [] } = usePortalClientUsers();
   const clienteIds = clientUsers.map((cu) => cu.cliente_id);
   const { data: cotizaciones = [], isLoading } = usePortalCotizaciones(clienteIds);
@@ -31,7 +33,11 @@ export default function PortalCotizaciones() {
       ) : (
         <div className="grid gap-3">
           {cotizaciones.map((c) => (
-            <Card key={c.id}>
+            <Card
+              key={c.id}
+              className="cursor-pointer transition-colors hover:bg-muted/50"
+              onClick={() => navigate(`/portal/cotizaciones/${c.id}`)}
+            >
               <CardContent className="flex items-center justify-between p-4">
                 <div>
                   <p className="font-medium">{c.folio}</p>

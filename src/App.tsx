@@ -46,6 +46,7 @@ const PortalDashboard = lazy(() => import("./pages/portal/PortalDashboard"));
 const PortalEmbarques = lazy(() => import("./pages/portal/PortalEmbarques"));
 const PortalEmbarqueDetalle = lazy(() => import("./pages/portal/PortalEmbarqueDetalle"));
 const PortalCotizaciones = lazy(() => import("./pages/portal/PortalCotizaciones"));
+const PortalCotizacionDetalle = lazy(() => import("./pages/portal/PortalCotizacionDetalle"));
 const PortalFacturas = lazy(() => import("./pages/portal/PortalFacturas"));
 const TrackingPublico = lazy(() => import("./pages/TrackingPublico"));
 
@@ -85,6 +86,7 @@ const App = () => (
               <Route path="/portal/embarques" element={<PortalEmbarques />} />
               <Route path="/portal/embarques/:id" element={<PortalEmbarqueDetalle />} />
               <Route path="/portal/cotizaciones" element={<PortalCotizaciones />} />
+              <Route path="/portal/cotizaciones/:id" element={<PortalCotizacionDetalle />} />
               <Route path="/portal/facturas" element={<PortalFacturas />} />
             </Route>
 
