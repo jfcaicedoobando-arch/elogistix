@@ -45,6 +45,19 @@ Deno.serve(async (req) => {
 
     if (existingUser) {
       userId = existingUser.id;
+      // Send a password reset email so they can access the portal
+      const redirectTo = `${req.headers.get("origin") || "https://elogistix.lovable.app"}/portal/login`;
+      await supabaseAdmin.auth.admin.generateLink({
+        type: "magiclink",
+        email,
+        options: { redirectTo },
+      });
+      // Also trigger the actual email delivery via the non-admin API
+      const supabaseAnon = createClient(
+        Deno.env.get("SUPABASE_URL")!,
+        Deno.env.get("SUPABASE_ANON_KEY")!
+      );
+      await supabaseAnon.auth.resetPasswordForEmail(email, { redirectTo });
     } else {
       // Use inviteUserByEmail — this creates the user AND sends the invite email
       const redirectTo = `${req.headers.get("origin") || "https://elogistix.lovable.app"}/portal/login`;
