@@ -260,6 +260,10 @@ export default function ClienteDetalle() {
             </CardContent>
           </Card>
         </TabsContent>
+
+        <TabsContent value="portal">
+          <TabPortalCliente clienteId={cliente.id} organizationId={cliente.organization_id} canEdit={canEdit} />
+        </TabsContent>
       </Tabs>
 
       <DialogContacto
