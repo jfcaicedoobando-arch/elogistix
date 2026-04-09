@@ -41,7 +41,7 @@ const AdminUsuarios = lazy(() => import("./pages/admin/AdminUsuarios"));
 const AdminConfiguracion = lazy(() => import("./pages/admin/AdminConfiguracion"));
 
 // Portal pages
-const PortalLogin = lazy(() => import("./pages/portal/PortalLogin"));
+
 const PortalDashboard = lazy(() => import("./pages/portal/PortalDashboard"));
 const PortalEmbarques = lazy(() => import("./pages/portal/PortalEmbarques"));
 const PortalEmbarqueDetalle = lazy(() => import("./pages/portal/PortalEmbarqueDetalle"));
