@@ -71,7 +71,7 @@ const App = () => (
         <Suspense fallback={<RouteLoadingFallback />}>
           <Routes>
             <Route path="/login" element={<Login />} />
-            <Route path="/portal/login" element={<PortalLogin />} />
+            <Route path="/portal/login" element={<Navigate to="/login" replace />} />
             <Route path="/tracking/:token" element={<TrackingPublico />} />
 
             {/* Portal routes — cliente only */}
