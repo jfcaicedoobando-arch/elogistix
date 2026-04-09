@@ -13,6 +13,13 @@ interface ChangelogEntry {
 
 const changelog: ChangelogEntry[] = [
   {
+    version: "7.10.1",
+    date: "2026-04-09",
+    type: "patch",
+    title: "Fix: Permisos de rutas usan rol efectivo de organización",
+    description: "Se corrigió un problema donde las rutas protegidas validaban el rol global en lugar del rol efectivo de la organización, impidiendo que usuarios con rol admin organizacional accedieran a secciones como Usuarios y Configuración.",
+  },
+  {
     version: "7.10.0",
     date: "2026-04-09",
     type: "minor",
