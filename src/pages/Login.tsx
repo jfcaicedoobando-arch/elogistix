@@ -13,7 +13,7 @@ export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
-  const [isSignUp, setIsSignUp] = useState(false);
+  
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -21,45 +21,31 @@ export default function Login() {
     e.preventDefault();
     setLoading(true);
 
-    if (isSignUp) {
-      const { error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: { emailRedirectTo: window.location.origin },
-      });
-      setLoading(false);
-      if (error) {
-        toast({ title: "Error al registrarse", description: error.message, variant: "destructive" });
-      } else {
-        toast({ title: "Registro exitoso", description: "Revisa tu correo para confirmar tu cuenta." });
+    const { data: signInData, error } = await supabase.auth.signInWithPassword({ email, password });
+    setLoading(false);
+    if (error) {
+      toast({ title: "Error al iniciar sesión", description: error.message, variant: "destructive" });
+      return;
+    }
+
+    const userId = signInData.user?.id;
+    if (userId) {
+      const { data: roleData } = await supabase
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", userId)
+        .limit(1)
+        .single();
+      if (roleData?.role === "super_admin") {
+        navigate("/admin", { replace: true });
+        return;
       }
-    } else {
-      const { data: signInData, error } = await supabase.auth.signInWithPassword({ email, password });
-      setLoading(false);
-      if (error) {
-        toast({ title: "Error al iniciar sesión", description: error.message, variant: "destructive" });
-      } else {
-        // Check if user is super_admin to redirect to /admin
-        const userId = signInData.user?.id;
-        if (userId) {
-          const { data: roleData } = await supabase
-            .from("user_roles")
-            .select("role")
-            .eq("user_id", userId)
-            .limit(1)
-            .single();
-          if (roleData?.role === "super_admin") {
-            navigate("/admin", { replace: true });
-            return;
-          }
-          if (roleData?.role === "cliente") {
-            navigate("/portal", { replace: true });
-            return;
-          }
-        }
-        navigate("/", { replace: true });
+      if (roleData?.role === "cliente") {
+        navigate("/portal", { replace: true });
+        return;
       }
     }
+    navigate("/", { replace: true });
   };
 
   return (
@@ -71,7 +57,7 @@ export default function Login() {
           </div>
           <h1 className="text-xl font-bold">Libre Carga</h1>
           <p className="text-sm text-muted-foreground">
-            {isSignUp ? "Crear cuenta nueva" : "Inicia sesión para continuar"}
+            Inicia sesión para continuar
           </p>
         </CardHeader>
         <CardContent className="pt-2">
@@ -101,18 +87,9 @@ export default function Login() {
             </div>
             <Button type="submit" className="w-full" disabled={loading}>
               {loading && <Loader2 className="h-4 w-4 animate-spin" />}
-              {isSignUp ? "Registrarse" : "Iniciar sesión"}
+              Iniciar sesión
             </Button>
           </form>
-          <div className="mt-4 text-center">
-            <button
-              type="button"
-              className="text-sm text-muted-foreground hover:text-foreground underline-offset-4 hover:underline"
-              onClick={() => setIsSignUp(!isSignUp)}
-            >
-              {isSignUp ? "¿Ya tienes cuenta? Inicia sesión" : "¿No tienes cuenta? Regístrate"}
-            </button>
-          </div>
         </CardContent>
       </Card>
     </div>

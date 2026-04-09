@@ -2,7 +2,7 @@ import { lazy, Suspense } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { Layout } from "./components/Layout";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 import { PortalProtectedRoute } from "./components/PortalProtectedRoute";
@@ -41,7 +41,7 @@ const AdminUsuarios = lazy(() => import("./pages/admin/AdminUsuarios"));
 const AdminConfiguracion = lazy(() => import("./pages/admin/AdminConfiguracion"));
 
 // Portal pages
-const PortalLogin = lazy(() => import("./pages/portal/PortalLogin"));
+
 const PortalDashboard = lazy(() => import("./pages/portal/PortalDashboard"));
 const PortalEmbarques = lazy(() => import("./pages/portal/PortalEmbarques"));
 const PortalEmbarqueDetalle = lazy(() => import("./pages/portal/PortalEmbarqueDetalle"));
@@ -71,7 +71,7 @@ const App = () => (
         <Suspense fallback={<RouteLoadingFallback />}>
           <Routes>
             <Route path="/login" element={<Login />} />
-            <Route path="/portal/login" element={<PortalLogin />} />
+            <Route path="/portal/login" element={<Navigate to="/login" replace />} />
             <Route path="/tracking/:token" element={<TrackingPublico />} />
 
             {/* Portal routes — cliente only */}
