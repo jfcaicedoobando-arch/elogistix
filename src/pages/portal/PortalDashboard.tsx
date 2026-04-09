@@ -16,6 +16,7 @@ const kpis = [
 export default function PortalDashboard() {
   const { data: clientUsers = [] } = usePortalClientUsers();
   const { data: clienteName } = usePortalClienteName();
+  const { data: orgName } = usePortalOrgName();
   const clienteIds = clientUsers.map((cu) => cu.cliente_id);
   const { data: embarques = [], isLoading: loadingEmb } = usePortalEmbarques(clienteIds);
   const { data: cotizaciones = [], isLoading: loadingCot } = usePortalCotizaciones(clienteIds);
