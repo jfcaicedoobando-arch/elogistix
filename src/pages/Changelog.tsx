@@ -13,6 +13,13 @@ interface ChangelogEntry {
 
 const changelog: ChangelogEntry[] = [
   {
+    version: "7.9.0",
+    date: "2026-04-09",
+    type: "minor",
+    title: "Nombre del Agente Forwarder en Portal de Clientes",
+    description: "El portal de clientes ahora muestra el nombre de la empresa forwarder (organización) en el header y en el mensaje de bienvenida del dashboard.",
+  },
+  {
     version: "7.8.0",
     date: "2026-04-09",
     type: "minor",

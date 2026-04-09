@@ -1,7 +1,7 @@
 import { Ship, FileText, Receipt, Clock } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { usePortalEmbarques, usePortalCotizaciones, usePortalFacturas, usePortalClientUsers, usePortalClienteName } from "@/hooks/usePortalData";
+import { usePortalEmbarques, usePortalCotizaciones, usePortalFacturas, usePortalClientUsers, usePortalClienteName, usePortalOrgName } from "@/hooks/usePortalData";
 import { getEstadoColor } from "@/lib/helpers";
 import { calcularEstadoEmbarque } from "@/hooks/useEmbarques";
 import { Link } from "react-router-dom";
@@ -16,6 +16,7 @@ const kpis = [
 export default function PortalDashboard() {
   const { data: clientUsers = [] } = usePortalClientUsers();
   const { data: clienteName } = usePortalClienteName();
+  const { data: orgName } = usePortalOrgName();
   const clienteIds = clientUsers.map((cu) => cu.cliente_id);
   const { data: embarques = [], isLoading: loadingEmb } = usePortalEmbarques(clienteIds);
   const { data: cotizaciones = [], isLoading: loadingCot } = usePortalCotizaciones(clienteIds);
@@ -52,6 +53,11 @@ export default function PortalDashboard() {
         <h1 className="text-2xl font-bold">
           {clienteName ? `Bienvenido, ${clienteName}` : "Bienvenido"}
         </h1>
+        {orgName && (
+          <p className="text-sm text-muted-foreground">
+            Portal de <span className="font-medium text-foreground">{orgName}</span>
+          </p>
+        )}
         <p className="text-sm text-muted-foreground mt-1">
           Aquí puedes consultar el estado de tus embarques, cotizaciones y facturas.
         </p>

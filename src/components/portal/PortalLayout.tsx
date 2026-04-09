@@ -3,7 +3,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Ship, FileText, Receipt, LayoutDashboard, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import librecargaLogo from "@/assets/librecarga-logo.png";
-import { usePortalClienteName } from "@/hooks/usePortalData";
+import { usePortalClienteName, usePortalOrgName } from "@/hooks/usePortalData";
 
 const navItems = [
   { label: "Inicio", href: "/portal", icon: LayoutDashboard },
@@ -17,6 +17,7 @@ export default function PortalLayout() {
   const location = useLocation();
   const navigate = useNavigate();
   const { data: clienteName } = usePortalClienteName();
+  const { data: orgName } = usePortalOrgName();
 
   const handleSignOut = async () => {
     await signOut();
@@ -30,7 +31,10 @@ export default function PortalLayout() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between h-14">
           <div className="flex items-center gap-3">
             <img src={librecargaLogo} alt="Logo" className="h-8 w-8 rounded object-contain" />
-            <span className="font-semibold text-foreground">Portal de Cliente</span>
+            <div className="flex flex-col leading-tight">
+              <span className="font-semibold text-foreground">{orgName || "Portal de Cliente"}</span>
+              {orgName && <span className="text-[10px] text-muted-foreground">Portal de Cliente</span>}
+            </div>
           </div>
           <div className="flex items-center gap-4">
             <span className="text-sm text-muted-foreground hidden sm:block">
