@@ -52,6 +52,10 @@ export default function Login() {
             navigate("/admin", { replace: true });
             return;
           }
+          if (roleData?.role === "cliente") {
+            navigate("/portal", { replace: true });
+            return;
+          }
         }
         navigate("/", { replace: true });
       }
