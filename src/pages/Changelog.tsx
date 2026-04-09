@@ -13,6 +13,13 @@ interface ChangelogEntry {
 
 const changelog: ChangelogEntry[] = [
   {
+    version: "7.7.0",
+    date: "2026-04-09",
+    type: "minor",
+    title: "Mejora visual del Portal de Clientes",
+    description: "Se agrega el nombre del cliente en el header, mensaje de bienvenida personalizado y cards KPI con iconos de color (azul, violeta, ámbar) para mejorar la experiencia visual del portal.",
+  },
+  {
     version: "7.6.0",
     date: "2026-04-09",
     type: "major",

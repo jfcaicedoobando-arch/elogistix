@@ -3,6 +3,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Ship, FileText, Receipt, LayoutDashboard, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import librecargaLogo from "@/assets/librecarga-logo.png";
+import { usePortalClienteName } from "@/hooks/usePortalData";
 
 const navItems = [
   { label: "Inicio", href: "/portal", icon: LayoutDashboard },
@@ -15,6 +16,7 @@ export default function PortalLayout() {
   const { signOut, user } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
+  const { data: clienteName } = usePortalClienteName();
 
   const handleSignOut = async () => {
     await signOut();
@@ -31,7 +33,11 @@ export default function PortalLayout() {
             <span className="font-semibold text-foreground">Portal de Cliente</span>
           </div>
           <div className="flex items-center gap-4">
-            <span className="text-sm text-muted-foreground hidden sm:block">{user?.email}</span>
+            <span className="text-sm text-muted-foreground hidden sm:block">
+              {clienteName && <span className="font-medium text-foreground">{clienteName}</span>}
+              {clienteName && " · "}
+              {user?.email}
+            </span>
             <Button variant="ghost" size="sm" onClick={handleSignOut}>
               <LogOut className="h-4 w-4 mr-1" /> Salir
             </Button>

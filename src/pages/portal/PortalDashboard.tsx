@@ -1,14 +1,21 @@
 import { Ship, FileText, Receipt, Clock } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { usePortalEmbarques, usePortalCotizaciones, usePortalFacturas, usePortalClientUsers } from "@/hooks/usePortalData";
+import { usePortalEmbarques, usePortalCotizaciones, usePortalFacturas, usePortalClientUsers, usePortalClienteName } from "@/hooks/usePortalData";
 import { getEstadoColor } from "@/lib/helpers";
 import { calcularEstadoEmbarque } from "@/hooks/useEmbarques";
 import { Link } from "react-router-dom";
 import { Skeleton } from "@/components/ui/skeleton";
 
+const kpis = [
+  { key: "embarques", label: "Embarques Activos", icon: Ship, iconBg: "bg-blue-100", iconColor: "text-blue-600" },
+  { key: "cotizaciones", label: "Cotizaciones", icon: FileText, iconBg: "bg-violet-100", iconColor: "text-violet-600" },
+  { key: "facturas", label: "Facturas Pendientes", icon: Receipt, iconBg: "bg-amber-100", iconColor: "text-amber-600" },
+] as const;
+
 export default function PortalDashboard() {
   const { data: clientUsers = [] } = usePortalClientUsers();
+  const { data: clienteName } = usePortalClienteName();
   const clienteIds = clientUsers.map((cu) => cu.cliente_id);
   const { data: embarques = [], isLoading: loadingEmb } = usePortalEmbarques(clienteIds);
   const { data: cotizaciones = [], isLoading: loadingCot } = usePortalCotizaciones(clienteIds);
@@ -21,6 +28,12 @@ export default function PortalDashboard() {
   const facturasPendientes = facturas.filter(
     (f) => f.estado === "Emitida" || f.estado === "Vencida"
   );
+
+  const kpiValues = {
+    embarques: embarquesActivos.length,
+    cotizaciones: cotizaciones.length,
+    facturas: facturasPendientes.length,
+  };
 
   if (loadingEmb || loadingCot || loadingFac) {
     return (
@@ -35,37 +48,30 @@ export default function PortalDashboard() {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-bold">Bienvenido</h1>
+      <div>
+        <h1 className="text-2xl font-bold">
+          {clienteName ? `Bienvenido, ${clienteName}` : "Bienvenido"}
+        </h1>
+        <p className="text-sm text-muted-foreground mt-1">
+          Aquí puedes consultar el estado de tus embarques, cotizaciones y facturas.
+        </p>
+      </div>
 
       {/* KPIs */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">Embarques Activos</CardTitle>
-            <Ship className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{embarquesActivos.length}</div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">Cotizaciones</CardTitle>
-            <FileText className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{cotizaciones.length}</div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">Facturas Pendientes</CardTitle>
-            <Receipt className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{facturasPendientes.length}</div>
-          </CardContent>
-        </Card>
+        {kpis.map((kpi) => (
+          <Card key={kpi.key}>
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
+              <CardTitle className="text-sm font-medium">{kpi.label}</CardTitle>
+              <div className={`rounded-full p-2 ${kpi.iconBg}`}>
+                <kpi.icon className={`h-4 w-4 ${kpi.iconColor}`} />
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{kpiValues[kpi.key]}</div>
+            </CardContent>
+          </Card>
+        ))}
       </div>
 
       {/* Recent embarques */}
