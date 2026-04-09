@@ -13,6 +13,13 @@ interface ChangelogEntry {
 
 const changelog: ChangelogEntry[] = [
   {
+    version: "7.6.0",
+    date: "2026-04-09",
+    type: "major",
+    title: "Portal de Clientes y Links de Tracking Públicos",
+    description: "Nuevo portal donde los clientes pueden iniciar sesión para ver el estado de sus embarques, tracking en tiempo real, documentos descargables, cotizaciones y facturas. Se incluye la generación de enlaces públicos de tracking por embarque que pueden compartirse por email sin necesidad de cuenta. Los administradores pueden invitar clientes al portal desde el detalle del cliente.",
+  },
+  {
     version: "7.5.1",
     date: "2026-04-07",
     type: "patch",
