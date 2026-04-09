@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { ArrowLeft, Pencil, Building2, Loader2, Ship, FileText, Users, DollarSign, TrendingUp, AlertCircle, UserPlus, Trash2, Globe } from "lucide-react";
+import { ArrowLeft, Pencil, Building2, Loader2, Ship, FileText, Users, DollarSign, TrendingUp, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
