@@ -204,6 +204,7 @@ export default function ClienteDetalle() {
           <TabsTrigger value="informacion">Información</TabsTrigger>
           <TabsTrigger value="embarques">Embarques ({embarquesCliente.length})</TabsTrigger>
           <TabsTrigger value="cotizaciones">Cotizaciones ({cotizacionesCliente.length})</TabsTrigger>
+          <TabsTrigger value="portal">Portal</TabsTrigger>
         </TabsList>
 
         <TabsContent value="informacion" className="space-y-6">
