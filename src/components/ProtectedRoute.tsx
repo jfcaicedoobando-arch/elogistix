@@ -35,7 +35,7 @@ export function ProtectedRoute({ children, allowedRoles }: ProtectedRouteProps) 
     return <Navigate to="/admin" replace />;
   }
 
-  if (allowedRoles && role && !allowedRoles.includes(role as AppRole)) {
+  if (allowedRoles && effectiveRole && !allowedRoles.includes(effectiveRole as AppRole)) {
     return <Navigate to="/" replace />;
   }
 
