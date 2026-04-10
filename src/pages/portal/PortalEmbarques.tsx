@@ -4,10 +4,11 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Collapsible, CollapsibleTrigger, CollapsibleContent } from "@/components/ui/collapsible";
 import { usePortalEmbarques, usePortalClientUsers } from "@/hooks/usePortalData";
 import { getEstadoColor, getModoIcon } from "@/lib/helpers";
 import { calcularEstadoEmbarque } from "@/hooks/useEmbarques";
-import { Search, Ship, Filter, Calendar, Package } from "lucide-react";
+import { Search, Ship, Filter, Calendar, Package, ChevronDown } from "lucide-react";
 import { useState, useMemo } from "react";
 import { format, parseISO } from "date-fns";
 
@@ -28,14 +29,14 @@ function EmbarqueCard({ e }: { e: any }) {
                 {e.puerto_destino || e.aeropuerto_destino || e.ciudad_destino || "—"}
               </p>
               <div className="flex items-center gap-3 mt-1 flex-wrap">
-                <span className="text-[10px] text-muted-foreground flex items-center gap-0.5">
+                <span className="text-xs text-muted-foreground flex items-center gap-0.5">
                   <Calendar className="h-3 w-3" />
                   ETD: {e.etd ? format(parseISO(e.etd), "dd/MM/yy") : "—"}
                 </span>
-                <span className="text-[10px] text-muted-foreground flex items-center gap-0.5">
+                <span className="text-xs text-muted-foreground flex items-center gap-0.5">
                   ETA: {e.eta ? format(parseISO(e.eta), "dd/MM/yy") : "—"}
                 </span>
-                <span className="text-[10px] text-muted-foreground">{e.tipo}</span>
+                <span className="text-xs text-muted-foreground">{e.tipo}</span>
               </div>
             </div>
           </div>
@@ -155,21 +156,45 @@ export default function PortalEmbarques() {
               const e = items[0];
               return <EmbarqueCard key={e.id} e={e} />;
             }
+            const statusCounts = items.reduce((acc, item) => {
+              const st = calcularEstadoEmbarque(item.modo, item.tipo, item.etd, item.eta, item.estado);
+              acc[st] = (acc[st] || 0) + 1;
+              return acc;
+            }, {} as Record<string, number>);
+            const firstItem = items[0];
+            const ruta = `${firstItem.puerto_origen || firstItem.aeropuerto_origen || firstItem.ciudad_origen || "—"} → ${firstItem.puerto_destino || firstItem.aeropuerto_destino || firstItem.ciudad_destino || "—"}`;
             return (
-              <Card key={expediente} className="border-dashed bg-muted/30">
-                <CardContent className="p-3 space-y-2">
-                  <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
-                    <Package className="h-4 w-4 text-muted-foreground" />
-                    <span>{expediente}</span>
-                    <span className="text-xs font-normal text-muted-foreground">· {items.length} contenedores</span>
-                  </div>
-                  <div className="grid gap-2">
-                    {items.map((e) => (
-                      <EmbarqueCard key={e.id} e={e} />
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
+              <Collapsible key={expediente} defaultOpen>
+                <Card className="border-dashed bg-muted/30 overflow-hidden">
+                  <CollapsibleTrigger className="w-full cursor-pointer group">
+                    <CardContent className="p-3 flex items-center justify-between">
+                      <div className="flex flex-col gap-0.5 text-left">
+                        <div className="flex items-center gap-2 text-sm font-bold text-foreground">
+                          <ChevronDown className="h-4 w-4 text-muted-foreground transition-transform duration-200 group-data-[state=closed]:-rotate-90" />
+                          <Package className="h-4 w-4 text-muted-foreground" />
+                          <span>{expediente}</span>
+                          <span className="text-xs font-normal text-muted-foreground">· {items.length} contenedores</span>
+                        </div>
+                        <p className="text-xs text-muted-foreground ml-10">{ruta}</p>
+                      </div>
+                      <div className="flex items-center gap-1.5 flex-shrink-0">
+                        {Object.entries(statusCounts).map(([estado, count]) => (
+                          <Badge key={estado} variant="outline" className={`${getEstadoColor(estado)} text-[10px] px-1.5 py-0`}>
+                            {count} {estado}
+                          </Badge>
+                        ))}
+                      </div>
+                    </CardContent>
+                  </CollapsibleTrigger>
+                  <CollapsibleContent>
+                    <div className="px-3 pb-3 grid gap-2">
+                      {items.map((e) => (
+                        <EmbarqueCard key={e.id} e={e} />
+                      ))}
+                    </div>
+                  </CollapsibleContent>
+                </Card>
+              </Collapsible>
             );
           })}
         </div>
