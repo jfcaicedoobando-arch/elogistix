@@ -13,6 +13,13 @@ interface ChangelogEntry {
 
 const changelog: ChangelogEntry[] = [
   {
+    version: "8.1.0",
+    date: "2026-04-10",
+    type: "minor",
+    title: "Unificación de alertas entre sidebar y dashboard",
+    description: "El badge rojo del sidebar ahora usa la misma lógica dinámica de estado (basada en fechas ETD/ETA) que el dashboard, asegurando que ambos muestren el mismo conteo de embarques con demora.",
+  },
+  {
     version: "8.0.9",
     date: "2026-04-10",
     type: "patch",
