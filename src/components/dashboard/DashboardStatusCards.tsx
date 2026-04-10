@@ -153,16 +153,10 @@ export function DashboardStatusCards({
               </div>
             </div>
 
-            {/* Barra de progreso */}
-            <div className="flex items-center gap-2 sm:w-40 shrink-0">
-              <Progress
-                value={arribosEsteMes.total > 0 ? (arribosEsteMes.yaLlegaron / arribosEsteMes.total) * 100 : 0}
-                className="h-2 flex-1 [&>div]:bg-cyan-500"
-              />
-              <span className="text-xs text-muted-foreground font-medium w-8 text-right">
-                {arribosEsteMes.total > 0
-                  ? Math.round((arribosEsteMes.yaLlegaron / arribosEsteMes.total) * 100)
-                  : 0}%
+            {/* Resumen textual */}
+            <div className="shrink-0">
+              <span className="text-xs text-muted-foreground font-medium">
+                {arribosEsteMes.yaLlegaron} / {arribosEsteMes.total} llegaron
               </span>
             </div>
           </div>

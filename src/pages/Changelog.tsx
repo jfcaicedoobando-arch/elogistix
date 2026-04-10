@@ -13,6 +13,13 @@ interface ChangelogEntry {
 
 const changelog: ChangelogEntry[] = [
   {
+    version: "8.0.6",
+    date: "2026-04-10",
+    type: "patch",
+    title: "Indicador textual en arribos del mes",
+    description: "Se reemplazó la barra de progreso confusa por un indicador de texto claro '12 / 68 llegaron' en la tarjeta de arribos del dashboard.",
+  },
+  {
     version: "8.0.5",
     date: "2026-04-10",
     type: "patch",
