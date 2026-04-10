@@ -1,22 +1,29 @@
 
 
-# Fix: Sidebar "Usuarios" y "Configuración" no funcionan para admin de organización
+## Fix: Ordenar estados de embarque en el dashboard del portal
 
-## Problema identificado
+**Problema**: La distribución de estados en el dashboard del portal ordena los estados por cantidad (mayor a menor), no por el orden lógico del ciclo de vida del embarque.
 
-El usuario `hector@lopezbenavides.com` tiene:
-- Rol global: **viewer**
-- Rol organizacional: **admin** (en Elogistix)
+**Solución**: Ordenar usando el array `ESTADOS_EMBARQUE` de `embarqueConstants.ts` que ya define el orden correcto: Confirmado → En Tránsito → Arribo → En Aduana → Entregado → EIR → Cerrado.
 
-El `effectiveRole` se calcula correctamente como `admin`, por lo que el sidebar muestra los enlaces de "Usuarios" y "Configuración". Sin embargo, al hacer clic, `ProtectedRoute` en línea 38 valida contra el **rol global** (`role` = `viewer`), no contra `effectiveRole`. Como `viewer` no está en `["admin"]`, redirige a `/`.
+### Cambio en `src/pages/portal/PortalDashboard.tsx`
 
-## Solución
+- Importar `ESTADOS_EMBARQUE` desde `@/data/embarqueConstants`
+- Cambiar el `.sort()` en `estadoDistribucion` (línea 68) para ordenar según el índice en `ESTADOS_EMBARQUE` en lugar de por conteo
 
-### 1. `src/components/ProtectedRoute.tsx`
-- Usar `effectiveRole` en lugar de `role` para la validación de `allowedRoles` (línea 38).
-- Cambiar `const { user, role, loading } = useAuth()` → `const { user, role, effectiveRole, loading } = useAuth()`.
-- Línea 38: `!allowedRoles.includes(role as AppRole)` → `!allowedRoles.includes(effectiveRole as AppRole)`.
+```ts
+// Antes
+return Object.entries(counts).sort((a, b) => b[1] - a[1]);
 
-### 2. `src/pages/Changelog.tsx`
-- Nueva entrada v7.10.1: "Fix: permisos de rutas usan rol efectivo de organización".
+// Después
+return Object.entries(counts).sort((a, b) => {
+  const idxA = ESTADOS_EMBARQUE.indexOf(a[0] as any);
+  const idxB = ESTADOS_EMBARQUE.indexOf(b[0] as any);
+  return (idxA === -1 ? 99 : idxA) - (idxB === -1 ? 99 : idxB);
+});
+```
+
+### Actualizar `src/pages/Changelog.tsx`
+
+- Agregar entrada con la corrección del orden de estados.
 
