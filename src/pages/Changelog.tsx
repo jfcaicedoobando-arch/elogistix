@@ -13,6 +13,13 @@ interface ChangelogEntry {
 
 const changelog: ChangelogEntry[] = [
   {
+    version: "8.0.3",
+    date: "2026-04-10",
+    type: "patch",
+    title: "Comentarios del cliente al aceptar o rechazar cotización",
+    description: "Los clientes pueden agregar un comentario opcional al aceptar o rechazar una cotización desde el portal. El comentario se muestra en los banners de estado del portal y en una sección dedicada en el detalle interno de la cotización.",
+  },
+  {
     version: "8.0.2",
     date: "2026-04-10",
     type: "minor",
