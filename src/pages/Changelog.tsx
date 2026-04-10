@@ -13,6 +13,13 @@ interface ChangelogEntry {
 
 const changelog: ChangelogEntry[] = [
   {
+    version: "8.0.9",
+    date: "2026-04-10",
+    type: "patch",
+    title: "Tarjetas de embarque enriquecidas en portal del cliente",
+    description: "Rediseño de EmbarqueCard con icono de modo con color semántico, metadatos enriquecidos (naviera, tipo de servicio), barra de progreso temporal ETD→ETA, y flecha de hover para indicar navegación.",
+  },
+  {
     version: "8.0.8",
     date: "2026-04-10",
     type: "patch",
