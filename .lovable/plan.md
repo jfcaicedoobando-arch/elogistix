@@ -1,23 +1,22 @@
 
 
-## Mostrar expediente y contenedor en la misma línea
+## Reemplazar barra de progreso por indicador textual claro
 
-**Problema**: El contenedor se muestra en texto muy pequeño (`text-[10px]`) separado del expediente, difícil de leer.
+**Problema**: La barra de progreso muestra "12 de 68" como una línea semi-llena con un porcentaje, lo cual no aporta valor al usuario — los números ya están visibles arriba.
 
-**Solución**: Combinar expediente y contenedor en el título principal de la tarjeta, formato `ELIMP00149 - WHSU6049365`, y eliminar el contenedor duplicado de la fila inferior.
+**Solución**: Eliminar la barra de progreso y reemplazarla con un texto compacto tipo fracción `12 / 68 llegaron` que es más legible y directo. Esto simplifica la UI sin perder información.
 
-### Cambios en `src/pages/portal/PortalEmbarques.tsx`
+### Cambios
 
-1. **Línea 119** — Cambiar el título de la tarjeta:
-   - De: `{e.expediente}`
-   - A: `{e.expediente}{e.contenedor ? ` - ${e.contenedor}` : ""}`
+**`src/pages/portal/PortalEmbarques.tsx`** — No aplica, el cambio es solo en dashboard.
 
-2. **Líneas 125-130** — Eliminar el bloque del contenedor separado (el `{e.contenedor && (...)}`)
+**`src/components/dashboard/DashboardStatusCards.tsx`**
+- Eliminar el bloque de `<Progress>` + porcentaje (líneas 156-167)
+- Reemplazarlo con un texto tipo: `12 / 68 completados` en `text-xs text-muted-foreground` alineado a la derecha, solo si resulta útil como resumen — o simplemente eliminarlo ya que la info de "Ya llegaron" y "Total" ya está visible en las métricas de arriba.
 
-### Cambio en `src/pages/Changelog.tsx`
-- Agregar entrada v8.0.5
+**`src/pages/Changelog.tsx`** — Entrada v8.0.6
 
 ### Archivos a modificar
-- `src/pages/portal/PortalEmbarques.tsx` (2 ediciones)
+- `src/components/dashboard/DashboardStatusCards.tsx` (eliminar barra de progreso)
 - `src/pages/Changelog.tsx`
 
