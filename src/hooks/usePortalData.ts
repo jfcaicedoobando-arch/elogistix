@@ -8,7 +8,7 @@ export function usePortalEmbarques(clienteIds: string[]) {
       if (!clienteIds.length) return [];
       const { data, error } = await supabase
         .from("embarques")
-        .select("id, expediente, cliente_nombre, modo, tipo, estado, etd, eta, puerto_origen, puerto_destino, aeropuerto_origen, aeropuerto_destino, ciudad_origen, ciudad_destino, tipo_servicio, naviera, aerolinea, transportista, contenedor, created_at")
+        .select("id, expediente, cliente_nombre, modo, tipo, estado, etd, eta, puerto_origen, puerto_destino, aeropuerto_origen, aeropuerto_destino, ciudad_origen, ciudad_destino, tipo_servicio, naviera, aerolinea, transportista, contenedor, tipo_contenedor, created_at")
         .in("cliente_id", clienteIds)
         .order("created_at", { ascending: false });
       if (error) throw error;
