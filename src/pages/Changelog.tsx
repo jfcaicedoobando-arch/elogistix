@@ -13,6 +13,13 @@ interface ChangelogEntry {
 
 const changelog: ChangelogEntry[] = [
   {
+    version: "8.0.1",
+    date: "2026-04-10",
+    type: "patch",
+    title: "Orden correcto de estados en el dashboard del portal",
+    description: "Los estados de embarque en la gráfica de distribución del dashboard del portal ahora se muestran en el orden lógico del ciclo de vida (Confirmado → En Tránsito → Arribo → En Aduana → Entregado → EIR → Cerrado) en lugar de ordenarse por cantidad.",
+  },
+  {
     version: "8.0.0",
     date: "2026-04-10",
     type: "major",
