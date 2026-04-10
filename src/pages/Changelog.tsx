@@ -13,6 +13,13 @@ interface ChangelogEntry {
 
 const changelog: ChangelogEntry[] = [
   {
+    version: "8.0.8",
+    date: "2026-04-10",
+    type: "patch",
+    title: "Grupos colapsables y mejoras UX en Mis Embarques",
+    description: "Los grupos de embarques por expediente en el portal del cliente ahora se pueden colapsar/expandir con animación suave. El encabezado muestra un resumen de estados y la ruta, mejorando la legibilidad de fechas ETD/ETA.",
+  },
+  {
     version: "8.0.7",
     date: "2026-04-10",
     type: "patch",
