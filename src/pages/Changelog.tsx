@@ -13,6 +13,13 @@ interface ChangelogEntry {
 
 const changelog: ChangelogEntry[] = [
   {
+    version: "8.0.0",
+    date: "2026-04-10",
+    type: "major",
+    title: "Rediseño completo del Portal de Clientes",
+    description: "Mejora integral de UX: nuevo layout con navegación integrada en header, menú móvil desplegable, breadcrumbs, avatar de usuario. Dashboard enriquecido con KPIs clickeables, gráfica de distribución por estado, próximos arribos y resumen de facturación pendiente. Listas de embarques, cotizaciones y facturas con búsqueda y filtros por estado/modo. Detalle de embarque con tracker visual de progreso, countdown de ETA, tarjetas rápidas de ruta e indicadores en pestañas.",
+  },
+  {
     version: "7.11.0",
     date: "2026-04-09",
     type: "minor",
