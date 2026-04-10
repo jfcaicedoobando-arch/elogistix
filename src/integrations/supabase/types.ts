@@ -1475,6 +1475,10 @@ export type Database = {
           operador: string
         }[]
       }
+      portal_responder_cotizacion: {
+        Args: { p_cotizacion_id: string; p_respuesta: string }
+        Returns: Json
+      }
       profit_por_cliente: {
         Args: { _fecha_desde?: string; _fecha_hasta?: string; _modo?: string }
         Returns: {
