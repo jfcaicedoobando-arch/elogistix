@@ -1,46 +1,40 @@
 
 
-## Agrupar embarques por expediente en el portal
+## Mini gráfico de tendencia de arribos por semana
 
-**Objetivo**: Cuando un expediente tiene múltiples contenedores, agruparlos visualmente bajo un encabezado común para que el cliente identifique fácilmente que pertenecen al mismo embarque.
+**Objetivo**: Agregar un pequeño gráfico de barras en la tarjeta de "Arribos este mes" que muestre el desglose semanal (Sem 1, Sem 2, Sem 3, Sem 4/5) de los arribos del mes.
 
 ### Diseño visual
 
 ```text
-┌─────────────────────────────────────────────┐
-│ 🚢 ELIMP00149  ·  3 contenedores           │
-│   Shanghai → Manzanillo  ·  Importación     │
-├─────────────────────────────────────────────┤
-│  ├─ WHSU6049365   ETD 10/03  ETA 15/04  🟢 │
-│  ├─ WHSU5494746   ETD 10/03  ETA 15/04  🟡 │
-│  └─ TCKU7283910   ETD 12/03  ETA 17/04  🟢 │
-└─────────────────────────────────────────────┘
-
-┌─────────────────────────────────────────────┐
-│ 🚢 ELIMP00150                               │
-│   Veracruz → Houston  ·  Exportación        │
-├─────────────────────────────────────────────┤
-│  └─ (sin contenedor)  ETD 05/04  ETA 12/04 🔵│
-└─────────────────────────────────────────────┘
+┌─ Arribos este mes ─────────────────────────────────────────────┐
+│ 🗓 Total: 28   ✓ Ya llegaron: 12   🚢 En camino: 16   │ $X   │
+│                                                                │
+│   S1    S2    S3    S4    S5   ← mini barras (80px alto)       │
+│   ██    ██                                                     │
+│   ██    ██    ██                                               │
+│   ██    ██    ██    ██    ██                                   │
+│   5     8     7     5     3                                    │
+└────────────────────────────────────────────────────────────────┘
 ```
 
-- Expedientes con un solo embarque se muestran como tarjeta simple (sin encabezado de grupo).
-- Expedientes con múltiples embarques se agrupan bajo un encabezado con el nombre del expediente, cantidad de contenedores, ruta y tipo.
-- Cada contenedor se muestra como una fila compacta dentro del grupo, enlazada a su detalle.
+### Cambios
 
-### Cambios técnicos
+**1. Migración SQL** — Agregar un CTE `arribos_semana` al RPC `dashboard_stats()` que calcule el conteo de embarques por semana del mes (basado en ETA), retornado como un array JSON:
+```json
+[{"semana": "S1", "count": 5}, {"semana": "S2", "count": 8}, ...]
+```
+Se agrupará por `EXTRACT(WEEK FROM eta) - EXTRACT(WEEK FROM v_inicio_mes) + 1` y se incluirá como `arribosPorSemana` en el resultado.
 
-**`src/pages/portal/PortalEmbarques.tsx`**
-1. Después de filtrar, agrupar los embarques por `expediente` usando un `Map<string, embarque[]>`.
-2. Si un grupo tiene 1 embarque → renderizar la tarjeta actual sin cambios.
-3. Si un grupo tiene 2+ embarques → renderizar una `Card` contenedora con:
-   - Encabezado: icono de modo + expediente + badge `N contenedores` + ruta + tipo.
-   - Lista interna: cada embarque como un `Link` con contenedor, ETD, ETA y badge de estado, separados por `border-t`.
-4. Actualizar el contador de resultados para reflejar grupos vs embarques individuales.
+**2. `src/hooks/useDashboardData.ts`** — Parsear el nuevo campo `arribosPorSemana` del RPC y exponerlo como `arribosPorSemana: {semana: string, count: number}[]`.
 
-**`src/pages/Changelog.tsx`** — Entrada v8.1.0 (minor, nueva funcionalidad visual).
+**3. `src/components/dashboard/DashboardStatusCards.tsx`** — Importar `MiniBarChart` de `OperacionesWidgets` (o usar Recharts directamente). Agregar el mini gráfico de barras debajo de las métricas actuales, o a la derecha en pantallas grandes, mostrando las barras semanales.
+
+**4. `src/pages/Changelog.tsx`** — Entrada v8.1.1.
 
 ### Archivos a modificar
-- `src/pages/portal/PortalEmbarques.tsx`
+- Nueva migración SQL (actualizar `dashboard_stats`)
+- `src/hooks/useDashboardData.ts`
+- `src/components/dashboard/DashboardStatusCards.tsx`
 - `src/pages/Changelog.tsx`
 
