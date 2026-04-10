@@ -8,90 +8,39 @@ import { Collapsible, CollapsibleTrigger, CollapsibleContent } from "@/component
 import { usePortalEmbarques, usePortalClientUsers } from "@/hooks/usePortalData";
 import { getEstadoColor, getModoIcon } from "@/lib/helpers";
 import { calcularEstadoEmbarque } from "@/hooks/useEmbarques";
-import { Progress } from "@/components/ui/progress";
-import { Search, Ship, Filter, Calendar, Package, ChevronDown, ArrowRight, Building2, Box } from "lucide-react";
+import { Search, Ship, Filter, Calendar, Package, ChevronDown } from "lucide-react";
 import { useState, useMemo } from "react";
 import { format, parseISO } from "date-fns";
 
-const modoColors: Record<string, string> = {
-  "Marítimo": "bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300",
-  "Aéreo": "bg-sky-100 text-sky-700 dark:bg-sky-900/40 dark:text-sky-300",
-  "Terrestre": "bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300",
-  "Multimodal": "bg-violet-100 text-violet-700 dark:bg-violet-900/40 dark:text-violet-300",
-};
-
-function calcProgress(etd?: string | null, eta?: string | null): number | null {
-  if (!etd || !eta) return null;
-  const start = parseISO(etd).getTime();
-  const end = parseISO(eta).getTime();
-  if (end <= start) return null;
-  const now = Date.now();
-  if (now <= start) return 0;
-  if (now >= end) return 100;
-  return Math.round(((now - start) / (end - start)) * 100);
-}
-
 function EmbarqueCard({ e }: { e: any }) {
   const estadoVisual = calcularEstadoEmbarque(e.modo, e.tipo, e.etd, e.eta, e.estado);
-  const progress = calcProgress(e.etd, e.eta);
-  const carrier = e.naviera || e.aerolinea || e.transportista;
-  const iconBg = modoColors[e.modo] || "bg-muted/60 text-muted-foreground";
-
   return (
     <Link to={`/portal/embarques/${e.id}`}>
       <Card className="hover:shadow-md transition-all hover:border-accent/30 group">
-        <CardContent className="p-4 space-y-2.5">
-          {/* Row 1: expediente + badge */}
-          <div className="flex items-start justify-between gap-2">
-            <div className="flex items-center gap-3 min-w-0">
-              <div className={`rounded-lg p-2 flex-shrink-0 ${iconBg}`}>
-                <span className="text-lg">{getModoIcon(e.modo)}</span>
-              </div>
-              <div className="min-w-0">
-                <p className="font-semibold text-sm">{e.expediente}{e.contenedor ? ` - ${e.contenedor}` : ""}</p>
-                <p className="text-sm text-muted-foreground truncate">
-                  {e.puerto_origen || e.aeropuerto_origen || e.ciudad_origen || "—"} →{" "}
-                  {e.puerto_destino || e.aeropuerto_destino || e.ciudad_destino || "—"}
-                </p>
-              </div>
+        <CardContent className="flex items-center justify-between p-4">
+          <div className="flex items-center gap-3 min-w-0">
+            <div className="rounded-lg bg-muted/60 p-2 flex-shrink-0">
+              <span className="text-lg">{getModoIcon(e.modo)}</span>
             </div>
-            <div className="flex items-center gap-1.5 flex-shrink-0">
-              <Badge className={`${getEstadoColor(estadoVisual)}`}>{estadoVisual}</Badge>
-              <ArrowRight className="h-4 w-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
+            <div className="min-w-0">
+              <p className="font-semibold text-sm">{e.expediente}{e.contenedor ? ` - ${e.contenedor}` : ""}</p>
+              <p className="text-xs text-muted-foreground truncate">
+                {e.puerto_origen || e.aeropuerto_origen || e.ciudad_origen || "—"} →{" "}
+                {e.puerto_destino || e.aeropuerto_destino || e.ciudad_destino || "—"}
+              </p>
+              <div className="flex items-center gap-3 mt-1 flex-wrap">
+                <span className="text-xs text-muted-foreground flex items-center gap-0.5">
+                  <Calendar className="h-3 w-3" />
+                  ETD: {e.etd ? format(parseISO(e.etd), "dd/MM/yy") : "—"}
+                </span>
+                <span className="text-xs text-muted-foreground flex items-center gap-0.5">
+                  ETA: {e.eta ? format(parseISO(e.eta), "dd/MM/yy") : "—"}
+                </span>
+                <span className="text-xs text-muted-foreground">{e.tipo}</span>
+              </div>
             </div>
           </div>
-
-          {/* Row 2: dates + metadata chips */}
-          <div className="flex items-center gap-3 flex-wrap pl-[52px]">
-            <span className="text-xs text-muted-foreground flex items-center gap-1">
-              <Calendar className="h-3 w-3" />
-              ETD: {e.etd ? format(parseISO(e.etd), "dd/MM/yy") : "—"}
-            </span>
-            <span className="text-xs text-muted-foreground flex items-center gap-1">
-              <Calendar className="h-3 w-3" />
-              ETA: {e.eta ? format(parseISO(e.eta), "dd/MM/yy") : "—"}
-            </span>
-            {carrier && (
-              <span className="text-xs text-muted-foreground flex items-center gap-1">
-                <Building2 className="h-3 w-3" />
-                {carrier}
-              </span>
-            )}
-            {e.tipo_servicio && (
-              <span className="text-xs text-muted-foreground flex items-center gap-1">
-                <Box className="h-3 w-3" />
-                {e.tipo_servicio}{e.tipo_contenedor ? ` ${e.tipo_contenedor}` : ""}
-              </span>
-            )}
-          </div>
-
-          {/* Row 3: progress bar */}
-          {progress !== null && (
-            <div className="pl-[52px] flex items-center gap-2">
-              <Progress value={progress} className="h-1.5 flex-1" />
-              <span className="text-[10px] text-muted-foreground font-medium w-8 text-right">{progress}%</span>
-            </div>
-          )}
+          <Badge className={`${getEstadoColor(estadoVisual)} flex-shrink-0 ml-2`}>{estadoVisual}</Badge>
         </CardContent>
       </Card>
     </Link>
