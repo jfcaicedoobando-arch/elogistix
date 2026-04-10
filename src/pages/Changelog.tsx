@@ -13,6 +13,13 @@ interface ChangelogEntry {
 
 const changelog: ChangelogEntry[] = [
   {
+    version: "8.1.1",
+    date: "2026-04-10",
+    type: "patch",
+    title: "Mini gráfico de tendencia semanal en arribos",
+    description: "Se agregó un gráfico de barras compacto en la tarjeta de 'Arribos este mes' que muestra el desglose de embarques por semana del mes (S1-S5).",
+  },
+  {
     version: "8.1.0",
     date: "2026-04-10",
     type: "minor",
