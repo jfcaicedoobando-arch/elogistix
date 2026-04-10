@@ -1,17 +1,31 @@
+import { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
+import { useQueryClient } from "@tanstack/react-query";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ArrowLeft } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { ArrowLeft, CheckCircle2, XCircle, Info } from "lucide-react";
 import { usePortalCotizacion } from "@/hooks/usePortalData";
-import { formatCurrency } from "@/lib/formatters";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 import SeccionMercanciaCotizacionDetalle from "@/components/cotizacion/SeccionMercanciaCotizacionDetalle";
 import TablaConceptosGenerico from "@/components/cotizacion/TablaConceptosGenerico";
 import ResumenTotalesCotizacion from "@/components/cotizacion/ResumenTotalesCotizacion";
 import type { ConceptoVentaCotizacion } from "@/hooks/useCotizacionTypes";
 import { calcularSubtotal, calcularIVA } from "@/lib/financialUtils";
 import { useTasaIVA } from "@/hooks/useTasaIVA";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 const estadoColor: Record<string, string> = {
   Borrador: "bg-muted text-muted-foreground",
@@ -28,6 +42,36 @@ export default function PortalCotizacionDetalle() {
   const navigate = useNavigate();
   const { data: cot, isLoading } = usePortalCotizacion(id);
   const tasaIva = useTasaIVA();
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+
+  const [confirmAction, setConfirmAction] = useState<"Aceptada" | "Rechazada" | null>(null);
+  const [submitting, setSubmitting] = useState(false);
+
+  const handleResponder = async () => {
+    if (!confirmAction || !id) return;
+    setSubmitting(true);
+    try {
+      const { error } = await supabase.rpc("portal_responder_cotizacion", {
+        p_cotizacion_id: id,
+        p_respuesta: confirmAction,
+      });
+      if (error) throw error;
+      toast({
+        title: confirmAction === "Aceptada"
+          ? "Cotización aceptada exitosamente"
+          : "Cotización rechazada",
+      });
+      queryClient.invalidateQueries({ queryKey: ["portal", "cotizacion", id] });
+      queryClient.invalidateQueries({ queryKey: ["portal", "cotizaciones"] });
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Error al responder";
+      toast({ title: "Error", description: message, variant: "destructive" });
+    } finally {
+      setSubmitting(false);
+      setConfirmAction(null);
+    }
+  };
 
   if (isLoading) {
     return (
@@ -83,7 +127,54 @@ export default function PortalCotizacionDetalle() {
           </div>
           <p className="text-sm text-muted-foreground">{cot.cliente_nombre}</p>
         </div>
+
+        {/* Botones de acción para estado Enviada */}
+        {cot.estado === "Enviada" && (
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              className="border-destructive text-destructive hover:bg-destructive/10"
+              onClick={() => setConfirmAction("Rechazada")}
+            >
+              <XCircle className="h-4 w-4 mr-2" />
+              Rechazar
+            </Button>
+            <Button
+              className="bg-success text-success-foreground hover:bg-success/90"
+              onClick={() => setConfirmAction("Aceptada")}
+            >
+              <CheckCircle2 className="h-4 w-4 mr-2" />
+              Aceptar Cotización
+            </Button>
+          </div>
+        )}
       </div>
+
+      {/* Banner informativo */}
+      {cot.estado === "Aceptada" && (
+        <Alert className="border-success/50 bg-success/10">
+          <CheckCircle2 className="h-4 w-4 text-success" />
+          <AlertDescription className="text-success">
+            Esta cotización fue aceptada. El equipo procederá con la operación.
+          </AlertDescription>
+        </Alert>
+      )}
+      {cot.estado === "Rechazada" && (
+        <Alert className="border-destructive/50 bg-destructive/10">
+          <XCircle className="h-4 w-4 text-destructive" />
+          <AlertDescription className="text-destructive">
+            Esta cotización fue rechazada.
+          </AlertDescription>
+        </Alert>
+      )}
+      {cot.estado === "Enviada" && (
+        <Alert className="border-info/50 bg-info/10">
+          <Info className="h-4 w-4 text-info" />
+          <AlertDescription className="text-info">
+            Esta cotización está pendiente de tu respuesta. Puedes aceptarla o rechazarla.
+          </AlertDescription>
+        </Alert>
+      )}
 
       {/* Datos generales */}
       <Card>
@@ -175,6 +266,32 @@ export default function PortalCotizacionDetalle() {
           </CardContent>
         </Card>
       )}
+
+      {/* Dialog de confirmación */}
+      <AlertDialog open={!!confirmAction} onOpenChange={() => setConfirmAction(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              {confirmAction === "Aceptada" ? "¿Aceptar esta cotización?" : "¿Rechazar esta cotización?"}
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              {confirmAction === "Aceptada"
+                ? "Al aceptar, el equipo de operaciones será notificado para proceder con el embarque. Esta acción no se puede deshacer."
+                : "Al rechazar, la cotización quedará cerrada. Si necesitas cambios, contacta al equipo de operaciones."}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={submitting}>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleResponder}
+              disabled={submitting}
+              className={confirmAction === "Rechazada" ? "bg-destructive text-destructive-foreground hover:bg-destructive/90" : ""}
+            >
+              {submitting ? "Procesando..." : confirmAction === "Aceptada" ? "Sí, aceptar" : "Sí, rechazar"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
