@@ -2,7 +2,7 @@ import { Ship, FileText, Receipt, Clock, TrendingUp, Calendar, ArrowRight, Packa
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Progress } from "@/components/ui/progress";
+
 import { usePortalEmbarques, usePortalCotizaciones, usePortalFacturas, usePortalClientUsers, usePortalClienteName, usePortalOrgName } from "@/hooks/usePortalData";
 import { getEstadoColor, getModoIcon } from "@/lib/helpers";
 import { calcularEstadoEmbarque } from "@/hooks/useEmbarques";
@@ -142,19 +142,40 @@ export default function PortalDashboard() {
             </CardHeader>
             <CardContent className="space-y-3">
               {estadoDistribucion.map(([estado, count]) => (
-                <div key={estado} className="space-y-1">
-                  <div className="flex items-center justify-between text-sm">
-                    <div className="flex items-center gap-2">
-                      <Badge className={`${getEstadoColor(estado)} text-xs`}>{estado}</Badge>
-                    </div>
-                    <span className="text-muted-foreground font-medium">{count}</span>
+                <div key={estado} className="flex items-center justify-between text-sm">
+                  <div className="flex items-center gap-2">
+                    <Badge className={`${getEstadoColor(estado)} text-xs`}>{estado}</Badge>
                   </div>
-                  <Progress
-                    value={(count / embarquesActivos.length) * 100}
-                    className="h-1.5"
-                  />
+                  <span className="text-muted-foreground font-medium">{count}</span>
                 </div>
               ))}
+              {/* Barra apilada de distribución */}
+              <div className="flex h-2.5 rounded-full overflow-hidden mt-2">
+                {estadoDistribucion.map(([estado, count]) => {
+                  const pct = (count / embarquesActivos.length) * 100;
+                  const barColors: Record<string, string> = {
+                    'Confirmado': 'bg-info',
+                    'En Tránsito': 'bg-warning',
+                    'Arribo': 'bg-cyan-500',
+                    'En Aduana': 'bg-violet-500',
+                    'Entregado': 'bg-emerald-500',
+                    'EIR': 'bg-orange-500',
+                    'Cerrado': 'bg-muted-foreground',
+                    'Cancelado': 'bg-destructive',
+                  };
+                  return (
+                    <div
+                      key={estado}
+                      className={`${barColors[estado] || 'bg-muted-foreground'} transition-all`}
+                      style={{ width: `${pct}%` }}
+                      title={`${estado}: ${count}`}
+                    />
+                  );
+                })}
+              </div>
+              <p className="text-xs text-muted-foreground text-center">
+                {embarquesActivos.length} embarque{embarquesActivos.length !== 1 ? "s" : ""} activo{embarquesActivos.length !== 1 ? "s" : ""}
+              </p>
             </CardContent>
           </Card>
         )}

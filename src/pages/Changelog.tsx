@@ -13,6 +13,13 @@ interface ChangelogEntry {
 
 const changelog: ChangelogEntry[] = [
   {
+    version: "8.0.6",
+    date: "2026-04-10",
+    type: "patch",
+    title: "Distribución visual de estados en portal",
+    description: "La carta 'Estado de Embarques' del portal de clientes ahora muestra una barra apilada de colores con la distribución de estados, reemplazando las barras de progreso individuales que eran confusas.",
+  },
+  {
     version: "8.0.5",
     date: "2026-04-10",
     type: "patch",
