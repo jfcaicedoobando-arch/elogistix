@@ -1,42 +1,59 @@
 
 
-## Mejorar diseño de tarjetas de embarque en el portal
+## Unificar el cálculo de alertas entre sidebar y dashboard
 
-### Cambios en `src/pages/portal/PortalEmbarques.tsx`
+### Problema
+El badge rojo del sidebar y la tarjeta "Alertas de Demora" del dashboard muestran números diferentes porque usan criterios distintos:
 
-Rediseñar `EmbarqueCard` para mostrar más información visual sin progress bar:
+- **Sidebar** (`sidebar_alert_counts`): Filtra por `estado = 'Arribo'` (valor crudo en la columna) + facturas vencidas
+- **Dashboard** (`dashboard_stats`): Calcula un `estado_real` dinámico basado en fechas (ETD/ETA), lo que atrapa más embarques que ya pasaron su ETA pero cuyo estado no fue actualizado manualmente
 
-```text
-┌──────────────────────────────────────────────────┐
-│  🚢  ELIMP00149 - WHSU6049365          🟢 En tránsito │
-│                                                        │
-│  📍 Shanghái → Manzanillo    FCL 40'                   │
-│  🚢 Hapag-Lloyd              Servicio: P2P             │
-│                                                        │
-│  📅 ETD: 15/03/26     📅 ETA: 12/04/26                │
-└──────────────────────────────────────────────────┘
+Además, el sidebar suma facturas vencidas al total, pero el dashboard no las muestra visualmente en ningún lado.
+
+### Solución
+
+1. **Actualizar `sidebar_alert_counts`** para usar la misma lógica de `estado_real` que el dashboard. Reemplazar `e.estado = 'Arribo'` por el CASE que calcula el estado dinámico basado en fechas, de modo que ambos conteos sean consistentes.
+
+2. **Mostrar facturas vencidas en el dashboard** (opcional pero recomendado): Dado que el sidebar las cuenta, agregar una indicación visual en el dashboard para que el desglose sea claro. Esto puede ser una segunda tarjeta o un segundo bloque dentro de AlertasDemoraCard.
+
+### Detalles técnicos
+
+**Migración SQL** — actualizar la función `sidebar_alert_counts`:
+```sql
+CREATE OR REPLACE FUNCTION public.sidebar_alert_counts()
+RETURNS TABLE(embarques_demora bigint, facturas_vencidas bigint)
+LANGUAGE sql STABLE SECURITY DEFINER SET search_path TO 'public'
+AS $$
+  SELECT
+    (SELECT count(*) FROM embarques e
+     WHERE e.eta IS NOT NULL
+       AND (current_date - e.eta) >= 7
+       AND CASE
+         WHEN e.estado IN ('Arribo','En Aduana','Entregado','EIR','Cerrado') THEN e.estado::text
+         WHEN e.modo = 'Marítimo' AND e.tipo = 'Importación'
+              AND e.etd IS NOT NULL AND e.eta IS NOT NULL THEN
+           CASE
+             WHEN current_date < e.etd THEN 'Confirmado'
+             WHEN current_date >= e.etd AND current_date < e.eta THEN 'En Tránsito'
+             WHEN current_date >= e.eta THEN 'Arribo'
+             ELSE e.estado::text
+           END
+         ELSE e.estado::text
+       END = 'Arribo'
+       AND (e.organization_id = current_user_org_id()
+            OR has_role(auth.uid(), 'super_admin'))
+    ) AS embarques_demora,
+    (SELECT count(*) FROM facturas f
+     WHERE f.estado = 'Vencida'
+       AND (f.organization_id = current_user_org_id()
+            OR has_role(auth.uid(), 'super_admin'))
+    ) AS facturas_vencidas;
+$$;
 ```
 
-Cambios específicos:
-
-1. **Layout de dos filas** en lugar de una sola línea compacta:
-   - Fila 1: Expediente + contenedor (bold) con badge de estado alineado a la derecha
-   - Fila 2: Ruta con icono `MapPin`, tipo (FCL/LCL/Aéreo) como badge outline
-   - Fila 3: Naviera/aerolínea/transportista con icono correspondiente + tipo de servicio si existe
-   - Fila 4: ETD y ETA con mejor espaciado e iconos `CalendarClock`
-
-2. **Incluir campos adicionales** ya disponibles en la query: `naviera`, `aerolinea`, `transportista`, `tipo_servicio`.
-
-3. **Mejoras visuales**:
-   - Icono de modo más grande en un círculo con color de fondo sutil según modo (azul marítimo, celeste aéreo, ámbar terrestre)
-   - Badge de estado más prominente con `variant="default"` y colores semánticos
-   - Borde izquierdo de color según estado (`border-l-4`) para identificación rápida
-   - Hover con sombra más marcada y ligero scale
-
-### Cambio en `src/pages/Changelog.tsx`
-- Entrada v8.0.9
+**`src/pages/Changelog.tsx`** — entrada v8.1.0
 
 ### Archivos a modificar
-- `src/pages/portal/PortalEmbarques.tsx` — rediseño de EmbarqueCard
+- Migración SQL (función `sidebar_alert_counts`)
 - `src/pages/Changelog.tsx`
 
