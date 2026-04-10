@@ -13,6 +13,13 @@ interface ChangelogEntry {
 
 const changelog: ChangelogEntry[] = [
   {
+    version: "8.0.9",
+    date: "2026-04-10",
+    type: "patch",
+    title: "Rediseño de tarjetas de embarque en portal del cliente",
+    description: "Tarjetas de embarque con más información visual: borde de color según estado, icono circular por modo de transporte, ruta con icono, naviera/aerolínea, tipo de servicio y fechas con mejor formato. Hover con sombra y escala sutil.",
+  },
+  {
     version: "8.0.8",
     date: "2026-04-10",
     type: "patch",
