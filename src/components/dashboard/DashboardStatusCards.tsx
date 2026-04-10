@@ -1,5 +1,5 @@
 import { Card, CardContent } from "@/components/ui/card";
-import { Progress } from "@/components/ui/progress";
+
 import { Skeleton } from "@/components/ui/skeleton";
 import { ESTADOS_FILTRO, type EstadoFiltro } from "@/hooks/useDashboardData";
 import { ESTADO_CONFIG } from "./estadoConfig";
