@@ -116,18 +116,12 @@ export default function PortalEmbarques() {
                         <span className="text-lg">{getModoIcon(e.modo)}</span>
                       </div>
                       <div className="min-w-0">
-                        <p className="font-semibold text-sm">{e.expediente}</p>
+                        <p className="font-semibold text-sm">{e.expediente}{e.contenedor ? ` - ${e.contenedor}` : ""}</p>
                         <p className="text-xs text-muted-foreground truncate">
                           {e.puerto_origen || e.aeropuerto_origen || e.ciudad_origen || "—"} →{" "}
                           {e.puerto_destino || e.aeropuerto_destino || e.ciudad_destino || "—"}
                         </p>
                         <div className="flex items-center gap-3 mt-1 flex-wrap">
-                          {e.contenedor && (
-                            <span className="text-[10px] text-muted-foreground flex items-center gap-0.5 font-medium">
-                              <Package className="h-3 w-3" />
-                              {e.contenedor}
-                            </span>
-                          )}
                           <span className="text-[10px] text-muted-foreground flex items-center gap-0.5">
                             <Calendar className="h-3 w-3" />
                             ETD: {e.etd ? format(parseISO(e.etd), "dd/MM/yy") : "—"}

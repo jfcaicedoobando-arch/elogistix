@@ -13,6 +13,13 @@ interface ChangelogEntry {
 
 const changelog: ChangelogEntry[] = [
   {
+    version: "8.0.5",
+    date: "2026-04-10",
+    type: "patch",
+    title: "Expediente y contenedor en una sola línea",
+    description: "El título de cada tarjeta de embarque en el portal ahora muestra el expediente y el contenedor juntos (ej. ELIMP00149 - WHSU6049365), facilitando la lectura.",
+  },
+  {
     version: "8.0.4",
     date: "2026-04-10",
     type: "patch",
