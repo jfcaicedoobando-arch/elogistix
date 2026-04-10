@@ -186,7 +186,7 @@ export default function PortalEmbarques() {
                       </div>
                     </CardContent>
                   </CollapsibleTrigger>
-                  <CollapsibleContent>
+                  <CollapsibleContent className="overflow-hidden data-[state=open]:animate-accordion-down data-[state=closed]:animate-accordion-up">
                     <div className="px-3 pb-3 grid gap-2">
                       {items.map((e) => (
                         <EmbarqueCard key={e.id} e={e} />
