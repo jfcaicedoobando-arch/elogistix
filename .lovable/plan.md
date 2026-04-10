@@ -1,39 +1,41 @@
 
 
-## Mejorar la carta "Estado de Embarques" en el portal
+## Agrupar embarques por expediente en el portal
 
-**Problema**: La barra de progreso (Progress) muestra proporciones como 12 de 68 que no comunican nada útil al cliente. No es un "progreso" — es una distribución.
+**Problema**: Cuando un cliente tiene múltiples contenedores bajo el mismo expediente, aparecen como tarjetas sueltas sin relación visual.
 
-**Solución**: Reemplazar las barras de progreso individuales por un diseño más claro:
+**Solución**: Agrupar los embarques filtrados por expediente. Si un expediente tiene 2+ embarques, se muestra dentro de una tarjeta contenedora con el nombre del expediente como encabezado y las tarjetas individuales (contenedores) anidadas. Los expedientes con un solo embarque se muestran como hasta ahora.
 
-### Cambio en `src/pages/portal/PortalDashboard.tsx` (líneas 143-157)
+### Resultado visual
 
-Reemplazar cada fila de estado con:
-- Badge de color con el nombre del estado (ya existe)
-- El conteo numérico en texto visible (ya existe)
-- **Eliminar el `<Progress>`** de cada fila
-- **Agregar una barra horizontal apilada** al final del bloque que muestre visualmente la proporción de todos los estados juntos (como un solo bar chart horizontal con segmentos de colores)
-- Debajo de la barra, mostrar el total: "68 embarques activos"
-
-Resultado visual:
 ```text
-┌─────────────────────────────────────┐
-│  Estado de Embarques                │
-│                                     │
-│  🟢 En tránsito          32        │
-│  🟡 Documentación        18        │
-│  🔵 Reservado            12        │
-│  🟠 Arribo                6        │
-│                                     │
-│  ████████████▓▓▓▓▓▓░░░░░▒▒▒        │
-│  68 embarques activos               │
-└─────────────────────────────────────┘
+┌─ ELIMP00149 · 3 contenedores ──────────────┐
+│  ┌─ ELIMP00149 - WHSU6049365 ────── 🟢 ─┐  │
+│  └───────────────────────────────────────┘  │
+│  ┌─ ELIMP00149 - WHSU5494746 ────── 🟡 ─┐  │
+│  └───────────────────────────────────────┘  │
+│  ┌─ ELIMP00149 - TCNU7281435 ────── 🟢 ─┐  │
+│  └───────────────────────────────────────┘  │
+└─────────────────────────────────────────────┘
+
+┌─ ELIMP00150 - MSKU1234567 ──────── 🔵 ─┐
+└─────────────────────────────────────────┘
 ```
 
+### Cambios en `src/pages/portal/PortalEmbarques.tsx`
+
+1. **Agrupar embarques filtrados por expediente** con un `useMemo` que crea un `Map<string, embarque[]>` ordenado por fecha del primer embarque del grupo.
+
+2. **Renderizar grupos**: Iterar sobre los grupos en lugar de la lista plana.
+   - Si el grupo tiene 1 embarque: renderizar la tarjeta individual como actualmente.
+   - Si tiene 2+: envolver en un `Card` con borde punteado y fondo `bg-muted/30`, encabezado con el expediente, icono de modo y conteo de contenedores. Las tarjetas internas se renderizan dentro.
+
+3. No se requieren cambios en hooks ni queries.
+
 ### Cambio en `src/pages/Changelog.tsx`
-- Entrada v8.0.6
+- Entrada v8.0.7
 
 ### Archivos a modificar
-- `src/pages/portal/PortalDashboard.tsx` — reemplazar Progress por barra apilada
-- `src/pages/Changelog.tsx` — nueva entrada
+- `src/pages/portal/PortalEmbarques.tsx` (agrupamiento + render)
+- `src/pages/Changelog.tsx`
 
