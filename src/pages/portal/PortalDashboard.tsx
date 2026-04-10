@@ -6,6 +6,7 @@ import { Progress } from "@/components/ui/progress";
 import { usePortalEmbarques, usePortalCotizaciones, usePortalFacturas, usePortalClientUsers, usePortalClienteName, usePortalOrgName } from "@/hooks/usePortalData";
 import { getEstadoColor, getModoIcon } from "@/lib/helpers";
 import { calcularEstadoEmbarque } from "@/hooks/useEmbarques";
+import { ESTADOS_EMBARQUE } from "@/data/embarqueConstants";
 import { formatCurrency } from "@/lib/formatters";
 import { Link } from "react-router-dom";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -65,7 +66,11 @@ export default function PortalDashboard() {
       const est = calcularEstadoEmbarque(e.modo, e.tipo, e.etd, e.eta, e.estado);
       counts[est] = (counts[est] || 0) + 1;
     });
-    return Object.entries(counts).sort((a, b) => b[1] - a[1]);
+    return Object.entries(counts).sort((a, b) => {
+      const idxA = ESTADOS_EMBARQUE.indexOf(a[0] as any);
+      const idxB = ESTADOS_EMBARQUE.indexOf(b[0] as any);
+      return (idxA === -1 ? 99 : idxA) - (idxB === -1 ? 99 : idxB);
+    });
   }, [embarquesActivos]);
 
   // Monto total facturas pendientes
