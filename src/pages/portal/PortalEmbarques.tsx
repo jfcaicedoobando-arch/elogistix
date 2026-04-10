@@ -11,6 +11,41 @@ import { Search, Ship, Filter, Calendar, Package } from "lucide-react";
 import { useState, useMemo } from "react";
 import { format, parseISO } from "date-fns";
 
+function EmbarqueCard({ e }: { e: any }) {
+  const estadoVisual = calcularEstadoEmbarque(e.modo, e.tipo, e.etd, e.eta, e.estado);
+  return (
+    <Link to={`/portal/embarques/${e.id}`}>
+      <Card className="hover:shadow-md transition-all hover:border-accent/30 group">
+        <CardContent className="flex items-center justify-between p-4">
+          <div className="flex items-center gap-3 min-w-0">
+            <div className="rounded-lg bg-muted/60 p-2 flex-shrink-0">
+              <span className="text-lg">{getModoIcon(e.modo)}</span>
+            </div>
+            <div className="min-w-0">
+              <p className="font-semibold text-sm">{e.expediente}{e.contenedor ? ` - ${e.contenedor}` : ""}</p>
+              <p className="text-xs text-muted-foreground truncate">
+                {e.puerto_origen || e.aeropuerto_origen || e.ciudad_origen || "—"} →{" "}
+                {e.puerto_destino || e.aeropuerto_destino || e.ciudad_destino || "—"}
+              </p>
+              <div className="flex items-center gap-3 mt-1 flex-wrap">
+                <span className="text-[10px] text-muted-foreground flex items-center gap-0.5">
+                  <Calendar className="h-3 w-3" />
+                  ETD: {e.etd ? format(parseISO(e.etd), "dd/MM/yy") : "—"}
+                </span>
+                <span className="text-[10px] text-muted-foreground flex items-center gap-0.5">
+                  ETA: {e.eta ? format(parseISO(e.eta), "dd/MM/yy") : "—"}
+                </span>
+                <span className="text-[10px] text-muted-foreground">{e.tipo}</span>
+              </div>
+            </div>
+          </div>
+          <Badge className={`${getEstadoColor(estadoVisual)} flex-shrink-0 ml-2`}>{estadoVisual}</Badge>
+        </CardContent>
+      </Card>
+    </Link>
+  );
+}
+
 
 export default function PortalEmbarques() {
   const { data: clientUsers = [] } = usePortalClientUsers();
