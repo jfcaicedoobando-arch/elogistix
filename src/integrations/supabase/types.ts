@@ -539,6 +539,7 @@ export type Database = {
           carta_garantia: boolean
           cliente_id: string | null
           cliente_nombre: string
+          comentario_cliente: string | null
           conceptos_venta: Json
           created_at: string
           descripcion_adicional: string
@@ -592,6 +593,7 @@ export type Database = {
           carta_garantia?: boolean
           cliente_id?: string | null
           cliente_nombre?: string
+          comentario_cliente?: string | null
           conceptos_venta?: Json
           created_at?: string
           descripcion_adicional?: string
@@ -645,6 +647,7 @@ export type Database = {
           carta_garantia?: boolean
           cliente_id?: string | null
           cliente_nombre?: string
+          comentario_cliente?: string | null
           conceptos_venta?: Json
           created_at?: string
           descripcion_adicional?: string
@@ -1475,10 +1478,19 @@ export type Database = {
           operador: string
         }[]
       }
-      portal_responder_cotizacion: {
-        Args: { p_cotizacion_id: string; p_respuesta: string }
-        Returns: Json
-      }
+      portal_responder_cotizacion:
+        | {
+            Args: { p_cotizacion_id: string; p_respuesta: string }
+            Returns: Json
+          }
+        | {
+            Args: {
+              p_comentario?: string
+              p_cotizacion_id: string
+              p_respuesta: string
+            }
+            Returns: Json
+          }
       profit_por_cliente: {
         Args: { _fecha_desde?: string; _fecha_hasta?: string; _modo?: string }
         Returns: {

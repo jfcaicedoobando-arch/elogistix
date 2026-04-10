@@ -175,6 +175,16 @@ export default function CotizacionDetalle() {
         />
       )}
 
+      {/* Comentario del cliente */}
+      {(cotizacion as any).comentario_cliente && (
+        <Card className="border-info/50">
+          <CardHeader><CardTitle className="text-lg">Comentario del Cliente</CardTitle></CardHeader>
+          <CardContent>
+            <p className="text-sm whitespace-pre-wrap italic">"{(cotizacion as any).comentario_cliente}"</p>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Notas */}
       {cotizacion.notas && (
         <Card>

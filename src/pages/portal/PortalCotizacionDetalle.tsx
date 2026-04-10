@@ -15,7 +15,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { ArrowLeft, CheckCircle2, XCircle, Info } from "lucide-react";
+import { ArrowLeft, CheckCircle2, XCircle, Info, MessageSquare } from "lucide-react";
 import { usePortalCotizacion } from "@/hooks/usePortalData";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -26,6 +26,7 @@ import type { ConceptoVentaCotizacion } from "@/hooks/useCotizacionTypes";
 import { calcularSubtotal, calcularIVA } from "@/lib/financialUtils";
 import { useTasaIVA } from "@/hooks/useTasaIVA";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Textarea } from "@/components/ui/textarea";
 
 const estadoColor: Record<string, string> = {
   Borrador: "bg-muted text-muted-foreground",
@@ -47,6 +48,7 @@ export default function PortalCotizacionDetalle() {
 
   const [confirmAction, setConfirmAction] = useState<"Aceptada" | "Rechazada" | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [comentario, setComentario] = useState("");
 
   const handleResponder = async () => {
     if (!confirmAction || !id) return;
@@ -55,6 +57,7 @@ export default function PortalCotizacionDetalle() {
       const { error } = await supabase.rpc("portal_responder_cotizacion", {
         p_cotizacion_id: id,
         p_respuesta: confirmAction,
+        p_comentario: comentario,
       });
       if (error) throw error;
       toast({
@@ -70,6 +73,7 @@ export default function PortalCotizacionDetalle() {
     } finally {
       setSubmitting(false);
       setConfirmAction(null);
+      setComentario("");
     }
   };
 
@@ -155,7 +159,13 @@ export default function PortalCotizacionDetalle() {
         <Alert className="border-success/50 bg-success/10">
           <CheckCircle2 className="h-4 w-4 text-success" />
           <AlertDescription className="text-success">
-            Esta cotización fue aceptada. El equipo procederá con la operación.
+            <p>Esta cotización fue aceptada. El equipo procederá con la operación.</p>
+            {(cot as any).comentario_cliente && (
+              <p className="mt-2 flex items-start gap-1.5">
+                <MessageSquare className="h-3.5 w-3.5 mt-0.5 shrink-0" />
+                <span className="italic">"{(cot as any).comentario_cliente}"</span>
+              </p>
+            )}
           </AlertDescription>
         </Alert>
       )}
@@ -163,7 +173,13 @@ export default function PortalCotizacionDetalle() {
         <Alert className="border-destructive/50 bg-destructive/10">
           <XCircle className="h-4 w-4 text-destructive" />
           <AlertDescription className="text-destructive">
-            Esta cotización fue rechazada.
+            <p>Esta cotización fue rechazada.</p>
+            {(cot as any).comentario_cliente && (
+              <p className="mt-2 flex items-start gap-1.5">
+                <MessageSquare className="h-3.5 w-3.5 mt-0.5 shrink-0" />
+                <span className="italic">"{(cot as any).comentario_cliente}"</span>
+              </p>
+            )}
           </AlertDescription>
         </Alert>
       )}
@@ -268,7 +284,7 @@ export default function PortalCotizacionDetalle() {
       )}
 
       {/* Dialog de confirmación */}
-      <AlertDialog open={!!confirmAction} onOpenChange={() => setConfirmAction(null)}>
+      <AlertDialog open={!!confirmAction} onOpenChange={(open) => { if (!open) { setConfirmAction(null); setComentario(""); } }}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>
@@ -280,6 +296,12 @@ export default function PortalCotizacionDetalle() {
                 : "Al rechazar, la cotización quedará cerrada. Si necesitas cambios, contacta al equipo de operaciones."}
             </AlertDialogDescription>
           </AlertDialogHeader>
+          <Textarea
+            placeholder={confirmAction === "Aceptada" ? "¿Algún comentario? (opcional)" : "¿Motivo del rechazo? (opcional)"}
+            value={comentario}
+            onChange={(e) => setComentario(e.target.value)}
+            className="min-h-[80px]"
+          />
           <AlertDialogFooter>
             <AlertDialogCancel disabled={submitting}>Cancelar</AlertDialogCancel>
             <AlertDialogAction
