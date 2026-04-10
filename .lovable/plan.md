@@ -1,28 +1,23 @@
 
 
-## Mostrar contenedor en la lista de embarques del portal
+## Mostrar expediente y contenedor en la misma línea
 
-**Problema**: Cuando un expediente tiene múltiples contenedores, las tarjetas se ven idénticas y el cliente no sabe diferenciarlas.
+**Problema**: El contenedor se muestra en texto muy pequeño (`text-[10px]`) separado del expediente, difícil de leer.
 
-**Solución**: Mostrar el número de contenedor en cada tarjeta de embarque del portal.
+**Solución**: Combinar expediente y contenedor en el título principal de la tarjeta, formato `ELIMP00149 - WHSU6049365`, y eliminar el contenedor duplicado de la fila inferior.
 
-### Cambio en `src/pages/portal/PortalEmbarques.tsx`
+### Cambios en `src/pages/portal/PortalEmbarques.tsx`
 
-1. **Agregar `contenedor` al query** en `usePortalEmbarques` (`src/hooks/usePortalData.ts`) — añadir el campo `contenedor` al `.select()`
+1. **Línea 119** — Cambiar el título de la tarjeta:
+   - De: `{e.expediente}`
+   - A: `{e.expediente}{e.contenedor ? ` - ${e.contenedor}` : ""}`
 
-2. **Mostrar el contenedor en la tarjeta** — debajo de la ruta (origen → destino), agregar una línea que muestre el número de contenedor cuando exista:
-   ```
-   📦 WHSU5494746
-   ```
-   Usar un icono `Package` de Lucide con el texto del contenedor en `text-[10px]`, junto a los campos ETD/ETA existentes.
-
-3. **Incluir contenedor en la búsqueda** — agregar `e.contenedor` al filtro de búsqueda para que el cliente pueda buscar por número de contenedor.
+2. **Líneas 125-130** — Eliminar el bloque del contenedor separado (el `{e.contenedor && (...)}`)
 
 ### Cambio en `src/pages/Changelog.tsx`
-- Agregar entrada v8.0.4 con la mejora.
+- Agregar entrada v8.0.5
 
 ### Archivos a modificar
-- `src/hooks/usePortalData.ts`: agregar `contenedor` al select de `usePortalEmbarques`
-- `src/pages/portal/PortalEmbarques.tsx`: mostrar contenedor en tarjeta + incluir en búsqueda
-- `src/pages/Changelog.tsx`: nueva entrada
+- `src/pages/portal/PortalEmbarques.tsx` (2 ediciones)
+- `src/pages/Changelog.tsx`
 
