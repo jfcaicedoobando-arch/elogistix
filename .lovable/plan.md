@@ -1,42 +1,42 @@
 
 
-## Colapsar/expandir grupos y mejoras UX en "Mis Embarques"
+## Mejorar diseño de tarjetas de embarque en el portal
 
 ### Cambios en `src/pages/portal/PortalEmbarques.tsx`
 
-1. **Importar** `Collapsible`, `CollapsibleTrigger`, `CollapsibleContent` de `@/components/ui/collapsible` y `ChevronDown` de lucide-react.
-
-2. **Grupos colapsables**: Envolver los grupos multi-contenedor con `<Collapsible defaultOpen>`. El encabezado del grupo se convierte en `CollapsibleTrigger` con un icono `ChevronDown` que rota 180° al abrir (`data-[state=open]:rotate-180`). Las tarjetas internas van dentro de `CollapsibleContent`.
-
-3. **Resumen en encabezado del grupo**: Junto al conteo de contenedores, mostrar un mini-resumen de estados del grupo (badges pequeños con conteo por estado) visible siempre, para que el usuario sepa qué hay dentro sin expandir.
-
-4. **Mejoras UX generales**:
-   - Tarjetas individuales: aumentar ligeramente el padding y hacer las fechas ETD/ETA de `text-[10px]` a `text-xs` para mejor legibilidad.
-   - En la tarjeta del grupo colapsado, mostrar la ruta del primer embarque como subtítulo para dar contexto.
-   - Hover en el trigger del grupo: `cursor-pointer` con transición suave.
-
-### Resultado visual
+Rediseñar `EmbarqueCard` para mostrar más información visual sin progress bar:
 
 ```text
-┌─ ▼ ELIMP00149 · 3 contenedores · 🟢2 🟡1 ─┐
-│  Shanghái → Manzanillo                       │
-│  ┌─ ELIMP00149 - WHSU6049365 ────── 🟢 ─┐   │
-│  └───────────────────────────────────────┘   │
-│  ┌─ ELIMP00149 - WHSU5494746 ────── 🟡 ─┐   │
-│  └───────────────────────────────────────┘   │
-│  ┌─ ELIMP00149 - TCNU7281435 ────── 🟢 ─┐   │
-│  └───────────────────────────────────────┘   │
-└──────────────────────────────────────────────┘
-
-┌─ ▶ ELIMP00148 · 2 contenedores · 🔵2 ──────┐
-│  Ningbo → Lázaro Cárdenas                    │
-└──────────────────────────────────────────────┘
+┌──────────────────────────────────────────────────┐
+│  🚢  ELIMP00149 - WHSU6049365          🟢 En tránsito │
+│                                                        │
+│  📍 Shanghái → Manzanillo    FCL 40'                   │
+│  🚢 Hapag-Lloyd              Servicio: P2P             │
+│                                                        │
+│  📅 ETD: 15/03/26     📅 ETA: 12/04/26                │
+└──────────────────────────────────────────────────┘
 ```
 
+Cambios específicos:
+
+1. **Layout de dos filas** en lugar de una sola línea compacta:
+   - Fila 1: Expediente + contenedor (bold) con badge de estado alineado a la derecha
+   - Fila 2: Ruta con icono `MapPin`, tipo (FCL/LCL/Aéreo) como badge outline
+   - Fila 3: Naviera/aerolínea/transportista con icono correspondiente + tipo de servicio si existe
+   - Fila 4: ETD y ETA con mejor espaciado e iconos `CalendarClock`
+
+2. **Incluir campos adicionales** ya disponibles en la query: `naviera`, `aerolinea`, `transportista`, `tipo_servicio`.
+
+3. **Mejoras visuales**:
+   - Icono de modo más grande en un círculo con color de fondo sutil según modo (azul marítimo, celeste aéreo, ámbar terrestre)
+   - Badge de estado más prominente con `variant="default"` y colores semánticos
+   - Borde izquierdo de color según estado (`border-l-4`) para identificación rápida
+   - Hover con sombra más marcada y ligero scale
+
 ### Cambio en `src/pages/Changelog.tsx`
-- Entrada v8.0.8
+- Entrada v8.0.9
 
 ### Archivos a modificar
-- `src/pages/portal/PortalEmbarques.tsx`
+- `src/pages/portal/PortalEmbarques.tsx` — rediseño de EmbarqueCard
 - `src/pages/Changelog.tsx`
 
