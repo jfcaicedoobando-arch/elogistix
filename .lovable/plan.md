@@ -1,38 +1,28 @@
 
 
-## Agregar comentarios del cliente al aceptar/rechazar cotización
+## Mostrar contenedor en la lista de embarques del portal
 
-### Resumen
-Permitir que el cliente escriba un comentario opcional al momento de aceptar o rechazar una cotización. El comentario se guarda en un nuevo campo `comentario_cliente` en la tabla `cotizaciones` y se muestra tanto en el portal como en el detalle interno.
+**Problema**: Cuando un expediente tiene múltiples contenedores, las tarjetas se ven idénticas y el cliente no sabe diferenciarlas.
 
-### Cambios
+**Solución**: Mostrar el número de contenedor en cada tarjeta de embarque del portal.
 
-**1. Migración SQL**
-- Agregar columna `comentario_cliente text` (nullable) a la tabla `cotizaciones`
-- Actualizar la función `portal_responder_cotizacion` para aceptar un tercer parámetro `p_comentario text DEFAULT ''` y guardar el valor en el nuevo campo
+### Cambio en `src/pages/portal/PortalEmbarques.tsx`
 
-**2. `src/pages/portal/PortalCotizacionDetalle.tsx`**
-- Agregar estado `comentario` con `useState("")`
-- Importar `Textarea` de `@/components/ui/textarea`
-- Agregar un campo `Textarea` dentro del `AlertDialog` debajo de la descripción, con placeholder contextual ("¿Algún comentario?" / "¿Motivo del rechazo?")
-- Pasar `p_comentario: comentario` en la llamada RPC
-- Limpiar el comentario al cerrar el dialog
-- Mostrar el `comentario_cliente` guardado en los banners de estado Aceptada/Rechazada si existe
+1. **Agregar `contenedor` al query** en `usePortalEmbarques` (`src/hooks/usePortalData.ts`) — añadir el campo `contenedor` al `.select()`
 
-**3. `src/pages/CotizacionDetalle.tsx`** (vista interna)
-- Mostrar el campo `comentario_cliente` si existe, en una sección visible para el equipo de operaciones
+2. **Mostrar el contenedor en la tarjeta** — debajo de la ruta (origen → destino), agregar una línea que muestre el número de contenedor cuando exista:
+   ```
+   📦 WHSU5494746
+   ```
+   Usar un icono `Package` de Lucide con el texto del contenedor en `text-[10px]`, junto a los campos ETD/ETA existentes.
 
-**4. `src/pages/Changelog.tsx`**
-- Agregar entrada v8.0.3
+3. **Incluir contenedor en la búsqueda** — agregar `e.contenedor` al filtro de búsqueda para que el cliente pueda buscar por número de contenedor.
 
-### Detalle técnico
+### Cambio en `src/pages/Changelog.tsx`
+- Agregar entrada v8.0.4 con la mejora.
 
-```sql
-ALTER TABLE cotizaciones ADD COLUMN comentario_cliente text;
-
-CREATE OR REPLACE FUNCTION public.portal_responder_cotizacion(
-  p_cotizacion_id uuid, p_respuesta text, p_comentario text DEFAULT ''
-) RETURNS jsonb ...
--- Agrega: SET comentario_cliente = NULLIF(trim(p_comentario), '')
-```
+### Archivos a modificar
+- `src/hooks/usePortalData.ts`: agregar `contenedor` al select de `usePortalEmbarques`
+- `src/pages/portal/PortalEmbarques.tsx`: mostrar contenedor en tarjeta + incluir en búsqueda
+- `src/pages/Changelog.tsx`: nueva entrada
 
