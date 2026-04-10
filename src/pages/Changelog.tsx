@@ -13,6 +13,13 @@ interface ChangelogEntry {
 
 const changelog: ChangelogEntry[] = [
   {
+    version: "8.0.4",
+    date: "2026-04-10",
+    type: "patch",
+    title: "Mostrar contenedor en tarjetas de embarque del portal",
+    description: "Las tarjetas de embarques en el portal de clientes ahora muestran el número de contenedor, permitiendo diferenciar fácilmente embarques con el mismo expediente. También se puede buscar por número de contenedor.",
+  },
+  {
     version: "8.0.3",
     date: "2026-04-10",
     type: "patch",
