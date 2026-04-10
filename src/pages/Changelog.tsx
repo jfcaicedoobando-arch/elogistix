@@ -13,6 +13,13 @@ interface ChangelogEntry {
 
 const changelog: ChangelogEntry[] = [
   {
+    version: "8.0.7",
+    date: "2026-04-10",
+    type: "patch",
+    title: "Agrupación visual de embarques por expediente en portal",
+    description: "Los embarques que comparten el mismo expediente ahora se muestran agrupados visualmente en una tarjeta contenedora con borde punteado, indicando el número de contenedores del grupo.",
+  },
+  {
     version: "8.0.6",
     date: "2026-04-10",
     type: "patch",

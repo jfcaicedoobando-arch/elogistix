@@ -11,6 +11,41 @@ import { Search, Ship, Filter, Calendar, Package } from "lucide-react";
 import { useState, useMemo } from "react";
 import { format, parseISO } from "date-fns";
 
+function EmbarqueCard({ e }: { e: any }) {
+  const estadoVisual = calcularEstadoEmbarque(e.modo, e.tipo, e.etd, e.eta, e.estado);
+  return (
+    <Link to={`/portal/embarques/${e.id}`}>
+      <Card className="hover:shadow-md transition-all hover:border-accent/30 group">
+        <CardContent className="flex items-center justify-between p-4">
+          <div className="flex items-center gap-3 min-w-0">
+            <div className="rounded-lg bg-muted/60 p-2 flex-shrink-0">
+              <span className="text-lg">{getModoIcon(e.modo)}</span>
+            </div>
+            <div className="min-w-0">
+              <p className="font-semibold text-sm">{e.expediente}{e.contenedor ? ` - ${e.contenedor}` : ""}</p>
+              <p className="text-xs text-muted-foreground truncate">
+                {e.puerto_origen || e.aeropuerto_origen || e.ciudad_origen || "—"} →{" "}
+                {e.puerto_destino || e.aeropuerto_destino || e.ciudad_destino || "—"}
+              </p>
+              <div className="flex items-center gap-3 mt-1 flex-wrap">
+                <span className="text-[10px] text-muted-foreground flex items-center gap-0.5">
+                  <Calendar className="h-3 w-3" />
+                  ETD: {e.etd ? format(parseISO(e.etd), "dd/MM/yy") : "—"}
+                </span>
+                <span className="text-[10px] text-muted-foreground flex items-center gap-0.5">
+                  ETA: {e.eta ? format(parseISO(e.eta), "dd/MM/yy") : "—"}
+                </span>
+                <span className="text-[10px] text-muted-foreground">{e.tipo}</span>
+              </div>
+            </div>
+          </div>
+          <Badge className={`${getEstadoColor(estadoVisual)} flex-shrink-0 ml-2`}>{estadoVisual}</Badge>
+        </CardContent>
+      </Card>
+    </Link>
+  );
+}
+
 
 export default function PortalEmbarques() {
   const { data: clientUsers = [] } = usePortalClientUsers();
@@ -53,6 +88,16 @@ export default function PortalEmbarques() {
     });
   }, [embarques, search, filtroEstado, filtroModo]);
 
+  // Group filtered embarques by expediente
+  const grouped = useMemo(() => {
+    const map = new Map<string, typeof filtered>();
+    filtered.forEach((e) => {
+      const key = e.expediente || "S/N";
+      if (!map.has(key)) map.set(key, []);
+      map.get(key)!.push(e);
+    });
+    return Array.from(map.entries());
+  }, [filtered]);
   if (isLoading) {
     return <div className="space-y-4"><Skeleton className="h-8 w-48" /><Skeleton className="h-12 w-full" /><Skeleton className="h-64 w-full" /></div>;
   }
@@ -105,38 +150,26 @@ export default function PortalEmbarques() {
         </div>
       ) : (
         <div className="grid gap-3">
-          {filtered.map((e) => {
-            const estadoVisual = calcularEstadoEmbarque(e.modo, e.tipo, e.etd, e.eta, e.estado);
+          {grouped.map(([expediente, items]) => {
+            if (items.length === 1) {
+              const e = items[0];
+              return <EmbarqueCard key={e.id} e={e} />;
+            }
             return (
-              <Link key={e.id} to={`/portal/embarques/${e.id}`}>
-                <Card className="hover:shadow-md transition-all hover:border-accent/30 group">
-                  <CardContent className="flex items-center justify-between p-4">
-                    <div className="flex items-center gap-3 min-w-0">
-                      <div className="rounded-lg bg-muted/60 p-2 flex-shrink-0">
-                        <span className="text-lg">{getModoIcon(e.modo)}</span>
-                      </div>
-                      <div className="min-w-0">
-                        <p className="font-semibold text-sm">{e.expediente}{e.contenedor ? ` - ${e.contenedor}` : ""}</p>
-                        <p className="text-xs text-muted-foreground truncate">
-                          {e.puerto_origen || e.aeropuerto_origen || e.ciudad_origen || "—"} →{" "}
-                          {e.puerto_destino || e.aeropuerto_destino || e.ciudad_destino || "—"}
-                        </p>
-                        <div className="flex items-center gap-3 mt-1 flex-wrap">
-                          <span className="text-[10px] text-muted-foreground flex items-center gap-0.5">
-                            <Calendar className="h-3 w-3" />
-                            ETD: {e.etd ? format(parseISO(e.etd), "dd/MM/yy") : "—"}
-                          </span>
-                          <span className="text-[10px] text-muted-foreground flex items-center gap-0.5">
-                            ETA: {e.eta ? format(parseISO(e.eta), "dd/MM/yy") : "—"}
-                          </span>
-                          <span className="text-[10px] text-muted-foreground">{e.tipo}</span>
-                        </div>
-                      </div>
-                    </div>
-                    <Badge className={`${getEstadoColor(estadoVisual)} flex-shrink-0 ml-2`}>{estadoVisual}</Badge>
-                  </CardContent>
-                </Card>
-              </Link>
+              <Card key={expediente} className="border-dashed bg-muted/30">
+                <CardContent className="p-3 space-y-2">
+                  <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
+                    <Package className="h-4 w-4 text-muted-foreground" />
+                    <span>{expediente}</span>
+                    <span className="text-xs font-normal text-muted-foreground">· {items.length} contenedores</span>
+                  </div>
+                  <div className="grid gap-2">
+                    {items.map((e) => (
+                      <EmbarqueCard key={e.id} e={e} />
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
             );
           })}
         </div>
