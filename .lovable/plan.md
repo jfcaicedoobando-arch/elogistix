@@ -1,37 +1,38 @@
 
 
-## Agregar Aceptar/Rechazar cotización desde el portal del cliente
+## Agregar comentarios del cliente al aceptar/rechazar cotización
 
-**Objetivo**: Permitir que el cliente acepte o rechace una cotización directamente desde el portal cuando está en estado "Enviada".
+### Resumen
+Permitir que el cliente escriba un comentario opcional al momento de aceptar o rechazar una cotización. El comentario se guarda en un nuevo campo `comentario_cliente` en la tabla `cotizaciones` y se muestra tanto en el portal como en el detalle interno.
 
-### Problema actual
-Los clientes solo tienen permiso de lectura (SELECT) en la tabla `cotizaciones`. No pueden actualizar el estado.
+### Cambios
 
-### Solución
+**1. Migración SQL**
+- Agregar columna `comentario_cliente text` (nullable) a la tabla `cotizaciones`
+- Actualizar la función `portal_responder_cotizacion` para aceptar un tercer parámetro `p_comentario text DEFAULT ''` y guardar el valor en el nuevo campo
 
-**1. Función de base de datos (SECURITY DEFINER)**
+**2. `src/pages/portal/PortalCotizacionDetalle.tsx`**
+- Agregar estado `comentario` con `useState("")`
+- Importar `Textarea` de `@/components/ui/textarea`
+- Agregar un campo `Textarea` dentro del `AlertDialog` debajo de la descripción, con placeholder contextual ("¿Algún comentario?" / "¿Motivo del rechazo?")
+- Pasar `p_comentario: comentario` en la llamada RPC
+- Limpiar el comentario al cerrar el dialog
+- Mostrar el `comentario_cliente` guardado en los banners de estado Aceptada/Rechazada si existe
 
-Crear una función `portal_responder_cotizacion(p_cotizacion_id uuid, p_respuesta text)` que:
-- Valide que el usuario autenticado es cliente y la cotización le pertenece (via `current_user_client_ids()`)
-- Valide que la cotización está en estado "Enviada"
-- Valide que `p_respuesta` sea "Aceptada" o "Rechazada"
-- Actualice el estado de la cotización
-- Retorne el registro actualizado
+**3. `src/pages/CotizacionDetalle.tsx`** (vista interna)
+- Mostrar el campo `comentario_cliente` si existe, en una sección visible para el equipo de operaciones
 
-Usar SECURITY DEFINER evita necesitar una política UPDATE para clientes, manteniendo la seguridad.
+**4. `src/pages/Changelog.tsx`**
+- Agregar entrada v8.0.3
 
-**2. Actualizar `PortalCotizacionDetalle.tsx`**
+### Detalle técnico
 
-- Agregar botones "Aceptar Cotización" y "Rechazar Cotización" visibles solo cuando `cot.estado === 'Enviada'`
-- Incluir un AlertDialog de confirmación antes de ejecutar la acción
-- Llamar a la función RPC `portal_responder_cotizacion` via `supabase.rpc()`
-- Mostrar toast de éxito/error y refrescar los datos
-- Mostrar un banner informativo cuando ya fue aceptada/rechazada
+```sql
+ALTER TABLE cotizaciones ADD COLUMN comentario_cliente text;
 
-**3. Actualizar Changelog** a v8.0.2
-
-### Archivos a modificar
-- **Migración SQL**: nueva función `portal_responder_cotizacion`
-- `src/pages/portal/PortalCotizacionDetalle.tsx`: botones + dialogs + mutación
-- `src/pages/Changelog.tsx`: nueva entrada
+CREATE OR REPLACE FUNCTION public.portal_responder_cotizacion(
+  p_cotizacion_id uuid, p_respuesta text, p_comentario text DEFAULT ''
+) RETURNS jsonb ...
+-- Agrega: SET comentario_cliente = NULLIF(trim(p_comentario), '')
+```
 
