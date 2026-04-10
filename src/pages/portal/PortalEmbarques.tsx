@@ -10,7 +10,7 @@ import { calcularEstadoEmbarque } from "@/hooks/useEmbarques";
 import { Search, Ship, Filter, Calendar } from "lucide-react";
 import { useState, useMemo } from "react";
 import { format, parseISO } from "date-fns";
-import { es } from "date-fns/locale";
+
 
 export default function PortalEmbarques() {
   const { data: clientUsers = [] } = usePortalClientUsers();

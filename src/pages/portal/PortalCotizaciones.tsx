@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { usePortalCotizaciones, usePortalClientUsers } from "@/hooks/usePortalData";
 import { formatCurrency } from "@/lib/formatters";
-import { Search, FileText, Filter, ArrowRight } from "lucide-react";
+import { Search, FileText, Filter } from "lucide-react";
 import { useState, useMemo } from "react";
 
 const estadoColor: Record<string, string> = {

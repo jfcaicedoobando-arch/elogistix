@@ -1,5 +1,5 @@
 import { useParams, useNavigate } from "react-router-dom";
-import { ArrowLeft, Download, Clock, MapPin, Ship, Plane, Truck, FileCheck, FileX, Loader2 } from "lucide-react";
+import { ArrowLeft, Download, Clock, MapPin, Ship, FileCheck, FileX, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";

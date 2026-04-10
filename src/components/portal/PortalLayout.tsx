@@ -1,6 +1,6 @@
 import { Outlet, Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
-import { Ship, FileText, Receipt, LayoutDashboard, LogOut, Menu, X, ChevronRight } from "lucide-react";
+import { Ship, FileText, Receipt, LayoutDashboard, LogOut, Menu, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
