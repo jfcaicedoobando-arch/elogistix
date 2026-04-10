@@ -66,6 +66,7 @@ const EMPTY_CONTEO: Record<EstadoFiltro, number> = {
 };
 
 const EMPTY_ARRIBOS = { total: 0, yaLlegaron: 0, enCamino: 0, profitUSD: 0 };
+const EMPTY_SEMANAS: { semana: string; count: number }[] = [];
 
 const EMPTY_RESUMEN: ResumenFacturacion = {
   totalEmbarques: 0,
