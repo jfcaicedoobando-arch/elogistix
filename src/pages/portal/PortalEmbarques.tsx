@@ -7,7 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { usePortalEmbarques, usePortalClientUsers } from "@/hooks/usePortalData";
 import { getEstadoColor, getModoIcon } from "@/lib/helpers";
 import { calcularEstadoEmbarque } from "@/hooks/useEmbarques";
-import { Search, Ship, Filter, Calendar } from "lucide-react";
+import { Search, Ship, Filter, Calendar, Package } from "lucide-react";
 import { useState, useMemo } from "react";
 import { format, parseISO } from "date-fns";
 
@@ -45,7 +45,8 @@ export default function PortalEmbarques() {
           e.expediente.toLowerCase().includes(q) ||
           e.cliente_nombre.toLowerCase().includes(q) ||
           ruta.includes(q) ||
-          estadoVisual.toLowerCase().includes(q)
+          estadoVisual.toLowerCase().includes(q) ||
+          (e.contenedor && e.contenedor.toLowerCase().includes(q))
         );
       }
       return true;
@@ -120,7 +121,13 @@ export default function PortalEmbarques() {
                           {e.puerto_origen || e.aeropuerto_origen || e.ciudad_origen || "—"} →{" "}
                           {e.puerto_destino || e.aeropuerto_destino || e.ciudad_destino || "—"}
                         </p>
-                        <div className="flex items-center gap-3 mt-1">
+                        <div className="flex items-center gap-3 mt-1 flex-wrap">
+                          {e.contenedor && (
+                            <span className="text-[10px] text-muted-foreground flex items-center gap-0.5 font-medium">
+                              <Package className="h-3 w-3" />
+                              {e.contenedor}
+                            </span>
+                          )}
                           <span className="text-[10px] text-muted-foreground flex items-center gap-0.5">
                             <Calendar className="h-3 w-3" />
                             ETD: {e.etd ? format(parseISO(e.etd), "dd/MM/yy") : "—"}
