@@ -1,42 +1,59 @@
 
 
-## Colapsar/expandir grupos y mejoras UX en "Mis Embarques"
+## Mejorar diseño de tarjetas de embarque en el portal
 
-### Cambios en `src/pages/portal/PortalEmbarques.tsx`
+### Problema
+Las tarjetas actuales son compactas y planas — muestran expediente, ruta, ETD/ETA, tipo y badge de estado en una sola línea horizontal. Falta información visual que el cliente valora (naviera/aerolínea, tipo de servicio, contenedor destacado) y la jerarquía visual es débil.
 
-1. **Importar** `Collapsible`, `CollapsibleTrigger`, `CollapsibleContent` de `@/components/ui/collapsible` y `ChevronDown` de lucide-react.
-
-2. **Grupos colapsables**: Envolver los grupos multi-contenedor con `<Collapsible defaultOpen>`. El encabezado del grupo se convierte en `CollapsibleTrigger` con un icono `ChevronDown` que rota 180° al abrir (`data-[state=open]:rotate-180`). Las tarjetas internas van dentro de `CollapsibleContent`.
-
-3. **Resumen en encabezado del grupo**: Junto al conteo de contenedores, mostrar un mini-resumen de estados del grupo (badges pequeños con conteo por estado) visible siempre, para que el usuario sepa qué hay dentro sin expandir.
-
-4. **Mejoras UX generales**:
-   - Tarjetas individuales: aumentar ligeramente el padding y hacer las fechas ETD/ETA de `text-[10px]` a `text-xs` para mejor legibilidad.
-   - En la tarjeta del grupo colapsado, mostrar la ruta del primer embarque como subtítulo para dar contexto.
-   - Hover en el trigger del grupo: `cursor-pointer` con transición suave.
-
-### Resultado visual
+### Solución
+Rediseñar `EmbarqueCard` con un layout más rico y estructurado:
 
 ```text
-┌─ ▼ ELIMP00149 · 3 contenedores · 🟢2 🟡1 ─┐
-│  Shanghái → Manzanillo                       │
-│  ┌─ ELIMP00149 - WHSU6049365 ────── 🟢 ─┐   │
-│  └───────────────────────────────────────┘   │
-│  ┌─ ELIMP00149 - WHSU5494746 ────── 🟡 ─┐   │
-│  └───────────────────────────────────────┘   │
-│  ┌─ ELIMP00149 - TCNU7281435 ────── 🟢 ─┐   │
-│  └───────────────────────────────────────┘   │
-└──────────────────────────────────────────────┘
-
-┌─ ▶ ELIMP00148 · 2 contenedores · 🔵2 ──────┐
-│  Ningbo → Lázaro Cárdenas                    │
-└──────────────────────────────────────────────┘
+┌──────────────────────────────────────────────────┐
+│  🚢  ELIMP00149 - WHSU6049365        🟢 En Tránsito │
+│      Shanghai → Manzanillo                           │
+│                                                      │
+│  📅 ETD: 15/03/26    📅 ETA: 02/04/26               │
+│  🏢 Hapag-Lloyd      📦 FCL 40'     🔧 P2P          │
+│  ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 65%                  │
+└──────────────────────────────────────────────────┘
 ```
 
-### Cambio en `src/pages/Changelog.tsx`
-- Entrada v8.0.8
+### Cambios concretos en `EmbarqueCard` (`PortalEmbarques.tsx`)
+
+1. **Layout de dos filas principales**: Fila superior con expediente/contenedor + badge de estado. Fila inferior con ruta en texto ligeramente más grande.
+
+2. **Fila de metadatos enriquecida**: Debajo de la ruta, mostrar hasta 3 chips/tags informativos:
+   - Naviera o aerolínea (`e.naviera` o `e.aerolinea` o `e.transportista`)
+   - Tipo (`e.tipo`, ej. "FCL 40'")
+   - Tipo de servicio (`e.tipo_servicio`, ej. "P2P") si existe
+
+3. **Barra de progreso temporal**: Una barra delgada que muestra el progreso estimado entre ETD y ETA basado en la fecha actual (sólo si ambas fechas existen). Esto le da al cliente una noción visual inmediata de "dónde va" su carga.
+
+4. **Icono de modo más prominente**: Usar un fondo con color semántico sutil según el modo (azul para marítimo, sky para aéreo, amber para terrestre) en lugar del gris neutro actual.
+
+5. **Hover mejorado**: Agregar una flecha `→` sutil que aparece al hacer hover para indicar que la tarjeta es clickeable.
+
+### Datos disponibles (ya en la query)
+Los campos `naviera`, `aerolinea`, `transportista`, `tipo_servicio`, `contenedor`, `tipo` ya se obtienen en `usePortalEmbarques` — no se requieren cambios en hooks.
+
+### Cálculo de progreso temporal
+```typescript
+const calcProgress = (etd: string, eta: string) => {
+  if (!etd || !eta) return null;
+  const start = parseISO(etd).getTime();
+  const end = parseISO(eta).getTime();
+  const now = Date.now();
+  if (now <= start) return 0;
+  if (now >= end) return 100;
+  return Math.round(((now - start) / (end - start)) * 100);
+};
+```
+
+### Changelog
+- Entrada v8.0.9 en `src/pages/Changelog.tsx`
 
 ### Archivos a modificar
-- `src/pages/portal/PortalEmbarques.tsx`
-- `src/pages/Changelog.tsx`
+- `src/pages/portal/PortalEmbarques.tsx` — rediseño de `EmbarqueCard`
+- `src/pages/Changelog.tsx` — nueva entrada
 
