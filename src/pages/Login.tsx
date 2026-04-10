@@ -55,7 +55,7 @@ export default function Login() {
           <div className="mx-auto flex h-44 w-44 items-center justify-center rounded-xl bg-white shadow-sm border">
             <img src={librecargaLogo} alt="Libre Carga Logo" className="h-42 w-42 rounded-lg object-contain" />
           </div>
-          <h1 className="text-xl font-bold">Libre Carga</h1>
+          
           <p className="text-sm text-muted-foreground">
             Inicia sesión para continuar
           </p>
