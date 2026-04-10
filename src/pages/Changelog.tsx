@@ -13,6 +13,13 @@ interface ChangelogEntry {
 
 const changelog: ChangelogEntry[] = [
   {
+    version: "8.0.2",
+    date: "2026-04-10",
+    type: "minor",
+    title: "Aceptar o rechazar cotizaciones desde el portal de clientes",
+    description: "Los clientes ahora pueden aceptar o rechazar cotizaciones en estado 'Enviada' directamente desde el detalle de cotización en su portal, con confirmación visual y banners informativos según el estado.",
+  },
+  {
     version: "8.0.1",
     date: "2026-04-10",
     type: "patch",
