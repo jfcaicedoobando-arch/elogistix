@@ -66,7 +66,6 @@ const EMPTY_CONTEO: Record<EstadoFiltro, number> = {
 };
 
 const EMPTY_ARRIBOS = { total: 0, yaLlegaron: 0, enCamino: 0, profitUSD: 0 };
-const EMPTY_SEMANAS: { semana: string; count: number }[] = [];
 
 const EMPTY_RESUMEN: ResumenFacturacion = {
   totalEmbarques: 0,
@@ -152,22 +151,18 @@ export function useDashboardData() {
     };
   }, [stats]);
 
-  const arribosPorSemana = useMemo<{ semana: string; count: number }[]>(() => {
-    if (!stats?.arribosPorSemana) return EMPTY_SEMANAS;
-    return (stats.arribosPorSemana as { semana: string; count: number }[]).map((s) => ({
-      semana: String(s.semana),
-      count: Number(s.count ?? 0),
-    }));
-  }, [stats]);
-
   // Client-side filtering for the status card click interaction
   const activos = useMemo<EmbarqueConEstado[]>(() => {
+    // We don't have the full activos list from the RPC (only filtered subsets).
+    // For the status card filter, we combine available lists.
+    // This is lightweight since each list is already small.
     const all = [
       ...alertasDemora,
       ...proximosArribos,
       ...profitArribosEsteMes,
       ...embarquesMesSiguiente,
     ];
+    // Deduplicate by id
     const seen = new Set<string>();
     return all.filter((e) => {
       if (seen.has(e.id)) return false;
@@ -189,6 +184,5 @@ export function useDashboardData() {
     embarquesMesSiguiente,
     resumenMesSiguiente,
     arribosEsteMes,
-    arribosPorSemana,
   };
 }

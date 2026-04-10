@@ -26,7 +26,6 @@ export default function Dashboard() {
     embarquesMesSiguiente,
     resumenMesSiguiente,
     arribosEsteMes,
-    arribosPorSemana,
   } = useDashboardData();
 
   const hoyStr = new Date().toLocaleDateString("es-MX", {
@@ -58,7 +57,6 @@ export default function Dashboard() {
         onFiltroChange={setFiltroEstado}
         isLoading={isLoading}
         arribosEsteMes={arribosEsteMes}
-        arribosPorSemana={arribosPorSemana}
       />
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

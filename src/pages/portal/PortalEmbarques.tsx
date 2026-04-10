@@ -53,29 +53,15 @@ export default function PortalEmbarques() {
     });
   }, [embarques, search, filtroEstado, filtroModo]);
 
-  // Group filtered embarques by expediente
-  const grouped = useMemo(() => {
-    const map = new Map<string, typeof filtered>();
-    filtered.forEach((e) => {
-      const key = e.expediente;
-      if (!map.has(key)) map.set(key, []);
-      map.get(key)!.push(e);
-    });
-    return Array.from(map.entries());
-  }, [filtered]);
-
   if (isLoading) {
     return <div className="space-y-4"><Skeleton className="h-8 w-48" /><Skeleton className="h-12 w-full" /><Skeleton className="h-64 w-full" /></div>;
   }
-
-  const getOrigen = (e: typeof filtered[0]) => e.puerto_origen || e.aeropuerto_origen || e.ciudad_origen || "—";
-  const getDestino = (e: typeof filtered[0]) => e.puerto_destino || e.aeropuerto_destino || e.ciudad_destino || "—";
 
   return (
     <div className="space-y-5">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold">Mis Embarques</h1>
-        <span className="text-sm text-muted-foreground">{filtered.length} embarques · {grouped.length} expedientes</span>
+        <span className="text-sm text-muted-foreground">{filtered.length} de {embarques.length}</span>
       </div>
 
       {/* Filters */}
@@ -119,81 +105,23 @@ export default function PortalEmbarques() {
         </div>
       ) : (
         <div className="grid gap-3">
-          {grouped.map(([expediente, items]) => {
-            if (items.length === 1) {
-              // Single embarque — render as simple card
-              const e = items[0];
-              const estadoVisual = calcularEstadoEmbarque(e.modo, e.tipo, e.etd, e.eta, e.estado);
-              return (
-                <Link key={e.id} to={`/portal/embarques/${e.id}`}>
-                  <Card className="hover:shadow-md transition-all hover:border-accent/30 group">
-                    <CardContent className="flex items-center justify-between p-4">
-                      <div className="flex items-center gap-3 min-w-0">
-                        <div className="rounded-lg bg-muted/60 p-2 flex-shrink-0">
-                          <span className="text-lg">{getModoIcon(e.modo)}</span>
-                        </div>
-                        <div className="min-w-0">
-                          <p className="font-semibold text-sm">{e.expediente}{e.contenedor ? ` - ${e.contenedor}` : ""}</p>
-                          <p className="text-xs text-muted-foreground truncate">
-                            {getOrigen(e)} → {getDestino(e)}
-                          </p>
-                          <div className="flex items-center gap-3 mt-1 flex-wrap">
-                            <span className="text-[10px] text-muted-foreground flex items-center gap-0.5">
-                              <Calendar className="h-3 w-3" />
-                              ETD: {e.etd ? format(parseISO(e.etd), "dd/MM/yy") : "—"}
-                            </span>
-                            <span className="text-[10px] text-muted-foreground flex items-center gap-0.5">
-                              ETA: {e.eta ? format(parseISO(e.eta), "dd/MM/yy") : "—"}
-                            </span>
-                            <span className="text-[10px] text-muted-foreground">{e.tipo}</span>
-                          </div>
-                        </div>
-                      </div>
-                      <Badge className={`${getEstadoColor(estadoVisual)} flex-shrink-0 ml-2`}>{estadoVisual}</Badge>
-                    </CardContent>
-                  </Card>
-                </Link>
-              );
-            }
-
-            // Multiple embarques — grouped card
-            const first = items[0];
+          {filtered.map((e) => {
+            const estadoVisual = calcularEstadoEmbarque(e.modo, e.tipo, e.etd, e.eta, e.estado);
             return (
-              <Card key={expediente} className="overflow-hidden">
-                {/* Group header */}
-                <div className="flex items-center justify-between gap-3 p-4 bg-muted/40">
-                  <div className="flex items-center gap-3 min-w-0">
-                    <div className="rounded-lg bg-muted p-2 flex-shrink-0">
-                      <span className="text-lg">{getModoIcon(first.modo)}</span>
-                    </div>
-                    <div className="min-w-0">
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <p className="font-semibold text-sm">{expediente}</p>
-                        <Badge variant="secondary" className="text-[10px] px-1.5 py-0">
-                          <Package className="h-3 w-3 mr-0.5" />
-                          {items.length} contenedores
-                        </Badge>
+              <Link key={e.id} to={`/portal/embarques/${e.id}`}>
+                <Card className="hover:shadow-md transition-all hover:border-accent/30 group">
+                  <CardContent className="flex items-center justify-between p-4">
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className="rounded-lg bg-muted/60 p-2 flex-shrink-0">
+                        <span className="text-lg">{getModoIcon(e.modo)}</span>
                       </div>
-                      <p className="text-xs text-muted-foreground truncate">
-                        {getOrigen(first)} → {getDestino(first)} · {first.tipo}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-                {/* Sub-rows */}
-                <div className="divide-y divide-border">
-                  {items.map((e) => {
-                    const estadoVisual = calcularEstadoEmbarque(e.modo, e.tipo, e.etd, e.eta, e.estado);
-                    return (
-                      <Link
-                        key={e.id}
-                        to={`/portal/embarques/${e.id}`}
-                        className="flex items-center justify-between px-4 py-2.5 hover:bg-muted/30 transition-colors"
-                      >
-                        <div className="flex items-center gap-4 min-w-0">
-                          <span className="text-sm font-medium truncate min-w-[120px]">
-                            {e.contenedor || "(sin contenedor)"}
-                          </span>
+                      <div className="min-w-0">
+                        <p className="font-semibold text-sm">{e.expediente}{e.contenedor ? ` - ${e.contenedor}` : ""}</p>
+                        <p className="text-xs text-muted-foreground truncate">
+                          {e.puerto_origen || e.aeropuerto_origen || e.ciudad_origen || "—"} →{" "}
+                          {e.puerto_destino || e.aeropuerto_destino || e.ciudad_destino || "—"}
+                        </p>
+                        <div className="flex items-center gap-3 mt-1 flex-wrap">
                           <span className="text-[10px] text-muted-foreground flex items-center gap-0.5">
                             <Calendar className="h-3 w-3" />
                             ETD: {e.etd ? format(parseISO(e.etd), "dd/MM/yy") : "—"}
@@ -201,13 +129,14 @@ export default function PortalEmbarques() {
                           <span className="text-[10px] text-muted-foreground flex items-center gap-0.5">
                             ETA: {e.eta ? format(parseISO(e.eta), "dd/MM/yy") : "—"}
                           </span>
+                          <span className="text-[10px] text-muted-foreground">{e.tipo}</span>
                         </div>
-                        <Badge className={`${getEstadoColor(estadoVisual)} flex-shrink-0 ml-2`}>{estadoVisual}</Badge>
-                      </Link>
-                    );
-                  })}
-                </div>
-              </Card>
+                      </div>
+                    </div>
+                    <Badge className={`${getEstadoColor(estadoVisual)} flex-shrink-0 ml-2`}>{estadoVisual}</Badge>
+                  </CardContent>
+                </Card>
+              </Link>
             );
           })}
         </div>

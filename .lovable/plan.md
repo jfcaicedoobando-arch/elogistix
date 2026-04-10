@@ -1,40 +1,23 @@
 
 
-## Mini gráfico de tendencia de arribos por semana
+## Mostrar expediente y contenedor en la misma línea
 
-**Objetivo**: Agregar un pequeño gráfico de barras en la tarjeta de "Arribos este mes" que muestre el desglose semanal (Sem 1, Sem 2, Sem 3, Sem 4/5) de los arribos del mes.
+**Problema**: El contenedor se muestra en texto muy pequeño (`text-[10px]`) separado del expediente, difícil de leer.
 
-### Diseño visual
+**Solución**: Combinar expediente y contenedor en el título principal de la tarjeta, formato `ELIMP00149 - WHSU6049365`, y eliminar el contenedor duplicado de la fila inferior.
 
-```text
-┌─ Arribos este mes ─────────────────────────────────────────────┐
-│ 🗓 Total: 28   ✓ Ya llegaron: 12   🚢 En camino: 16   │ $X   │
-│                                                                │
-│   S1    S2    S3    S4    S5   ← mini barras (80px alto)       │
-│   ██    ██                                                     │
-│   ██    ██    ██                                               │
-│   ██    ██    ██    ██    ██                                   │
-│   5     8     7     5     3                                    │
-└────────────────────────────────────────────────────────────────┘
-```
+### Cambios en `src/pages/portal/PortalEmbarques.tsx`
 
-### Cambios
+1. **Línea 119** — Cambiar el título de la tarjeta:
+   - De: `{e.expediente}`
+   - A: `{e.expediente}{e.contenedor ? ` - ${e.contenedor}` : ""}`
 
-**1. Migración SQL** — Agregar un CTE `arribos_semana` al RPC `dashboard_stats()` que calcule el conteo de embarques por semana del mes (basado en ETA), retornado como un array JSON:
-```json
-[{"semana": "S1", "count": 5}, {"semana": "S2", "count": 8}, ...]
-```
-Se agrupará por `EXTRACT(WEEK FROM eta) - EXTRACT(WEEK FROM v_inicio_mes) + 1` y se incluirá como `arribosPorSemana` en el resultado.
+2. **Líneas 125-130** — Eliminar el bloque del contenedor separado (el `{e.contenedor && (...)}`)
 
-**2. `src/hooks/useDashboardData.ts`** — Parsear el nuevo campo `arribosPorSemana` del RPC y exponerlo como `arribosPorSemana: {semana: string, count: number}[]`.
-
-**3. `src/components/dashboard/DashboardStatusCards.tsx`** — Importar `MiniBarChart` de `OperacionesWidgets` (o usar Recharts directamente). Agregar el mini gráfico de barras debajo de las métricas actuales, o a la derecha en pantallas grandes, mostrando las barras semanales.
-
-**4. `src/pages/Changelog.tsx`** — Entrada v8.1.1.
+### Cambio en `src/pages/Changelog.tsx`
+- Agregar entrada v8.0.5
 
 ### Archivos a modificar
-- Nueva migración SQL (actualizar `dashboard_stats`)
-- `src/hooks/useDashboardData.ts`
-- `src/components/dashboard/DashboardStatusCards.tsx`
+- `src/pages/portal/PortalEmbarques.tsx` (2 ediciones)
 - `src/pages/Changelog.tsx`
 

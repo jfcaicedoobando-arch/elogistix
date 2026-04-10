@@ -13,27 +13,6 @@ interface ChangelogEntry {
 
 const changelog: ChangelogEntry[] = [
   {
-    version: "8.1.1",
-    date: "2026-04-10",
-    type: "patch",
-    title: "Mini gráfico de tendencia semanal en arribos",
-    description: "Se agregó un gráfico de barras compacto en la tarjeta de 'Arribos este mes' que muestra el desglose de embarques por semana del mes (S1-S5).",
-  },
-  {
-    version: "8.1.0",
-    date: "2026-04-10",
-    type: "minor",
-    title: "Agrupación de embarques por expediente en portal",
-    description: "Los embarques del portal de clientes ahora se agrupan visualmente cuando comparten el mismo expediente, mostrando un encabezado común con la ruta y cantidad de contenedores.",
-  },
-  {
-    version: "8.0.6",
-    date: "2026-04-10",
-    type: "patch",
-    title: "Indicador textual en arribos del mes",
-    description: "Se reemplazó la barra de progreso confusa por un indicador de texto claro '12 / 68 llegaron' en la tarjeta de arribos del dashboard.",
-  },
-  {
     version: "8.0.5",
     date: "2026-04-10",
     type: "patch",
