@@ -1,29 +1,37 @@
 
 
-## Fix: Ordenar estados de embarque en el dashboard del portal
+## Agregar Aceptar/Rechazar cotización desde el portal del cliente
 
-**Problema**: La distribución de estados en el dashboard del portal ordena los estados por cantidad (mayor a menor), no por el orden lógico del ciclo de vida del embarque.
+**Objetivo**: Permitir que el cliente acepte o rechace una cotización directamente desde el portal cuando está en estado "Enviada".
 
-**Solución**: Ordenar usando el array `ESTADOS_EMBARQUE` de `embarqueConstants.ts` que ya define el orden correcto: Confirmado → En Tránsito → Arribo → En Aduana → Entregado → EIR → Cerrado.
+### Problema actual
+Los clientes solo tienen permiso de lectura (SELECT) en la tabla `cotizaciones`. No pueden actualizar el estado.
 
-### Cambio en `src/pages/portal/PortalDashboard.tsx`
+### Solución
 
-- Importar `ESTADOS_EMBARQUE` desde `@/data/embarqueConstants`
-- Cambiar el `.sort()` en `estadoDistribucion` (línea 68) para ordenar según el índice en `ESTADOS_EMBARQUE` en lugar de por conteo
+**1. Función de base de datos (SECURITY DEFINER)**
 
-```ts
-// Antes
-return Object.entries(counts).sort((a, b) => b[1] - a[1]);
+Crear una función `portal_responder_cotizacion(p_cotizacion_id uuid, p_respuesta text)` que:
+- Valide que el usuario autenticado es cliente y la cotización le pertenece (via `current_user_client_ids()`)
+- Valide que la cotización está en estado "Enviada"
+- Valide que `p_respuesta` sea "Aceptada" o "Rechazada"
+- Actualice el estado de la cotización
+- Retorne el registro actualizado
 
-// Después
-return Object.entries(counts).sort((a, b) => {
-  const idxA = ESTADOS_EMBARQUE.indexOf(a[0] as any);
-  const idxB = ESTADOS_EMBARQUE.indexOf(b[0] as any);
-  return (idxA === -1 ? 99 : idxA) - (idxB === -1 ? 99 : idxB);
-});
-```
+Usar SECURITY DEFINER evita necesitar una política UPDATE para clientes, manteniendo la seguridad.
 
-### Actualizar `src/pages/Changelog.tsx`
+**2. Actualizar `PortalCotizacionDetalle.tsx`**
 
-- Agregar entrada con la corrección del orden de estados.
+- Agregar botones "Aceptar Cotización" y "Rechazar Cotización" visibles solo cuando `cot.estado === 'Enviada'`
+- Incluir un AlertDialog de confirmación antes de ejecutar la acción
+- Llamar a la función RPC `portal_responder_cotizacion` via `supabase.rpc()`
+- Mostrar toast de éxito/error y refrescar los datos
+- Mostrar un banner informativo cuando ya fue aceptada/rechazada
+
+**3. Actualizar Changelog** a v8.0.2
+
+### Archivos a modificar
+- **Migración SQL**: nueva función `portal_responder_cotizacion`
+- `src/pages/portal/PortalCotizacionDetalle.tsx`: botones + dialogs + mutación
+- `src/pages/Changelog.tsx`: nueva entrada
 
