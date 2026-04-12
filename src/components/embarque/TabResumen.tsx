@@ -9,7 +9,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import { Link } from "lucide-react";
 import type { EmbarqueRow } from "@/hooks/useEmbarques";
-import { calcularEstadoEmbarque } from "@/hooks/useEmbarqueUtils";
+import { calcularEstadoEmbarque } from "@/lib/embarqueLogic";
 
 interface Props {
   embarque: EmbarqueRow;
@@ -18,7 +18,7 @@ interface Props {
 export function TabResumen({ embarque }: Props) {
   const navigate = useNavigate();
   const estadoVisual = calcularEstadoEmbarque(embarque.modo, embarque.tipo, embarque.etd, embarque.eta, embarque.estado);
-  const currentStepIndex = ESTADO_TIMELINE.indexOf(estadoVisual as typeof ESTADO_TIMELINE[number]);
+  const currentStepIndex = ESTADOS_EMBARQUE.indexOf(estadoVisual as typeof ESTADOS_EMBARQUE[number]);
 
   const { data: relacionados = [] } = useQuery({
     queryKey: ['embarques-relacionados', embarque.bl_master, embarque.id],
@@ -40,7 +40,7 @@ export function TabResumen({ embarque }: Props) {
       <Card>
         <CardContent className="p-6">
           <div className="flex items-center justify-between">
-            {ESTADO_TIMELINE.map((estado, i) => (
+            {ESTADOS_EMBARQUE.map((estado, i) => (
               <div key={estado} className="flex items-center flex-1">
                 <div className="flex flex-col items-center">
                   <div className={`h-8 w-8 rounded-full flex items-center justify-center text-xs font-bold ${
@@ -48,7 +48,7 @@ export function TabResumen({ embarque }: Props) {
                   }`}>{i + 1}</div>
                   <span className={`text-[10px] mt-1 text-center ${i <= currentStepIndex ? 'text-foreground font-medium' : 'text-muted-foreground'}`}>{estado}</span>
                 </div>
-                {i < ESTADO_TIMELINE.length - 1 && (
+                {i < ESTADOS_EMBARQUE.length - 1 && (
                   <div className={`flex-1 h-0.5 mx-2 ${i < currentStepIndex ? 'bg-accent' : 'bg-border'}`} />
                 )}
               </div>
