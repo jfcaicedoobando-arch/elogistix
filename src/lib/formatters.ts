@@ -1,5 +1,6 @@
 import { format, parseISO } from "date-fns";
 import { es } from "date-fns/locale";
+import type { Locale } from "date-fns";
 
 export const formatCurrency = (amount: number, currency: string = 'MXN'): string => {
   const formatter = new Intl.NumberFormat('es-MX', { style: 'currency', currency, minimumFractionDigits: 2 });
