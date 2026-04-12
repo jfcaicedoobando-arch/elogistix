@@ -25,7 +25,7 @@ describe("usePermissions", () => {
   });
 
   it("viewer → canEdit false, isAdmin false", () => {
-    mockUseAuth.mockReturnValue({ role: "viewer" } as any);
+    mockUseAuth.mockReturnValue({ role: "viewer", effectiveRole: "viewer" } as any);
     const { result } = renderHook(() => usePermissions());
     expect(result.current.canEdit).toBe(false);
     expect(result.current.isAdmin).toBe(false);
