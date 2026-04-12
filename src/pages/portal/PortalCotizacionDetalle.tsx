@@ -1,7 +1,5 @@
 import { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { useQueryClient } from "@tanstack/react-query";
-import { queryKeys } from "@/lib/queryKeys";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -18,8 +16,8 @@ import {
 } from "@/components/ui/alert-dialog";
 import { ArrowLeft, CheckCircle2, XCircle, Info, MessageSquare } from "lucide-react";
 import { usePortalCotizacion } from "@/hooks/usePortalData";
-import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { getErrorMessage } from "@/lib/errorUtils";
 import SeccionMercanciaCotizacionDetalle from "@/components/cotizacion/SeccionMercanciaCotizacionDetalle";
 import TablaConceptosGenerico from "@/components/cotizacion/TablaConceptosGenerico";
 import ResumenTotalesCotizacion from "@/components/cotizacion/ResumenTotalesCotizacion";
@@ -30,6 +28,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Textarea } from "@/components/ui/textarea";
 import { getEstadoColor } from "@/lib/uiMappings";
 import type { Tables } from "@/integrations/supabase/types";
+import { useResponderCotizacion } from "@/hooks/usePortalCotizacionMutations";
 
 export default function PortalCotizacionDetalle() {
   const { id } = useParams<{ id: string }>();
@@ -37,37 +36,32 @@ export default function PortalCotizacionDetalle() {
   const { data: cot, isLoading } = usePortalCotizacion(id);
   const tasaIva = useTasaIVA();
   const { toast } = useToast();
-  const queryClient = useQueryClient();
 
   const [confirmAction, setConfirmAction] = useState<"Aceptada" | "Rechazada" | null>(null);
-  const [submitting, setSubmitting] = useState(false);
   const [comentario, setComentario] = useState("");
+  const responderMutation = useResponderCotizacion(id ?? "");
 
   const handleResponder = async () => {
     if (!confirmAction || !id) return;
-    setSubmitting(true);
-    try {
-      const { error } = await supabase.rpc("portal_responder_cotizacion", {
-        p_cotizacion_id: id,
-        p_respuesta: confirmAction,
-        p_comentario: comentario,
-      });
-      if (error) throw error;
-      toast({
-        title: confirmAction === "Aceptada"
-          ? "Cotización aceptada exitosamente"
-          : "Cotización rechazada",
-      });
-      queryClient.invalidateQueries({ queryKey: queryKeys.portal.cotizacion(id) });
-      queryClient.invalidateQueries({ queryKey: queryKeys.portal.cotizaciones([]) });
-    } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : "Error al responder";
-      toast({ title: "Error", description: message, variant: "destructive" });
-    } finally {
-      setSubmitting(false);
-      setConfirmAction(null);
-      setComentario("");
-    }
+    responderMutation.mutate(
+      { respuesta: confirmAction, comentario },
+      {
+        onSuccess: () => {
+          toast({
+            title: confirmAction === "Aceptada"
+              ? "Cotización aceptada exitosamente"
+              : "Cotización rechazada",
+          });
+          setConfirmAction(null);
+          setComentario("");
+        },
+        onError: (err: unknown) => {
+          toast({ title: "Error", description: getErrorMessage(err), variant: "destructive" });
+          setConfirmAction(null);
+          setComentario("");
+        },
+      }
+    )
   };
 
   if (isLoading) {
@@ -296,13 +290,13 @@ export default function PortalCotizacionDetalle() {
             className="min-h-[80px]"
           />
           <AlertDialogFooter>
-            <AlertDialogCancel disabled={submitting}>Cancelar</AlertDialogCancel>
+            <AlertDialogCancel disabled={responderMutation.isPending}>Cancelar</AlertDialogCancel>
             <AlertDialogAction
               onClick={handleResponder}
-              disabled={submitting}
+              disabled={responderMutation.isPending}
               className={confirmAction === "Rechazada" ? "bg-destructive text-destructive-foreground hover:bg-destructive/90" : ""}
             >
-              {submitting ? "Procesando..." : confirmAction === "Aceptada" ? "Sí, aceptar" : "Sí, rechazar"}
+              {responderMutation.isPending ? "Procesando..." : confirmAction === "Aceptada" ? "Sí, aceptar" : "Sí, rechazar"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
