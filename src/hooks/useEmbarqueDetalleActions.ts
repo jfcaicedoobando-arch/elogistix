@@ -4,7 +4,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useRegistrarActividad } from "@/hooks/useBitacora";
 import { getSignedUrl } from "@/lib/storage";
 import { getErrorMessage } from "@/lib/errorUtils";
-import { ESTADO_TIMELINE } from "@/data/embarqueConstants";
+import { ESTADOS_EMBARQUE } from "@/data/embarqueConstants";
 import {
   useAvanzarEstadoEmbarque,
   useSyncEstadoEmbarque,
@@ -16,9 +16,9 @@ import {
 } from "@/hooks/useEmbarques";
 
 export function getSiguienteEstado(estadoActual: string) {
-  const idx = ESTADO_TIMELINE.indexOf(estadoActual as typeof ESTADO_TIMELINE[number]);
-  if (idx < 0 || idx >= ESTADO_TIMELINE.length - 1) return null;
-  return ESTADO_TIMELINE[idx + 1];
+  const idx = (ESTADOS_EMBARQUE as readonly string[]).indexOf(estadoActual);
+  if (idx < 0 || idx >= ESTADOS_EMBARQUE.length - 1) return null;
+  return ESTADOS_EMBARQUE[idx + 1];
 }
 
 export function useEmbarqueDetalleActions(embarque: EmbarqueRow | undefined, id: string | undefined) {

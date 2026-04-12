@@ -28,16 +28,8 @@ import { calcularSubtotal, calcularIVA } from "@/lib/financialUtils";
 import { useTasaIVA } from "@/hooks/useTasaIVA";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Textarea } from "@/components/ui/textarea";
-
-const estadoColor: Record<string, string> = {
-  Borrador: "bg-muted text-muted-foreground",
-  Enviada: "bg-info text-info-foreground",
-  Confirmada: "bg-success text-success-foreground",
-  Aceptada: "bg-success text-success-foreground",
-  Rechazada: "bg-destructive text-destructive-foreground",
-  Vencida: "bg-warning text-warning-foreground",
-  Embarcada: "bg-primary text-primary-foreground",
-};
+import { getEstadoColor } from "@/lib/uiMappings";
+import type { Tables } from "@/integrations/supabase/types";
 
 export default function PortalCotizacionDetalle() {
   const { id } = useParams<{ id: string }>();
@@ -126,7 +118,7 @@ export default function PortalCotizacionDetalle() {
         <div className="flex-1">
           <div className="flex items-center gap-3">
             <h1 className="text-2xl font-bold">{cot.folio}</h1>
-            <Badge className={estadoColor[cot.estado] ?? "bg-muted text-muted-foreground"}>
+            <Badge className={getEstadoColor(cot.estado)}>
               {cot.estado}
             </Badge>
           </div>
@@ -161,10 +153,10 @@ export default function PortalCotizacionDetalle() {
           <CheckCircle2 className="h-4 w-4 text-success" />
           <AlertDescription className="text-success">
             <p>Esta cotización fue aceptada. El equipo procederá con la operación.</p>
-            {(cot as any).comentario_cliente && (
+            {(cot as Tables<'cotizaciones'>).comentario_cliente && (
               <p className="mt-2 flex items-start gap-1.5">
                 <MessageSquare className="h-3.5 w-3.5 mt-0.5 shrink-0" />
-                <span className="italic">"{(cot as any).comentario_cliente}"</span>
+                <span className="italic">"{(cot as Tables<'cotizaciones'>).comentario_cliente}"</span>
               </p>
             )}
           </AlertDescription>
@@ -175,10 +167,10 @@ export default function PortalCotizacionDetalle() {
           <XCircle className="h-4 w-4 text-destructive" />
           <AlertDescription className="text-destructive">
             <p>Esta cotización fue rechazada.</p>
-            {(cot as any).comentario_cliente && (
+            {(cot as Tables<'cotizaciones'>).comentario_cliente && (
               <p className="mt-2 flex items-start gap-1.5">
                 <MessageSquare className="h-3.5 w-3.5 mt-0.5 shrink-0" />
-                <span className="italic">"{(cot as any).comentario_cliente}"</span>
+                <span className="italic">"{(cot as Tables<'cotizaciones'>).comentario_cliente}"</span>
               </p>
             )}
           </AlertDescription>

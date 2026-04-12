@@ -10,9 +10,6 @@ export function getDocsForMode(modo: string): string[] {
 
 export const ESTADOS_EMBARQUE = ['Confirmado', 'En Tránsito', 'Arribo', 'En Aduana', 'Entregado', 'EIR', 'Cerrado'] as const;
 
-/** @deprecated Usar ESTADOS_EMBARQUE en su lugar */
-export const ESTADO_TIMELINE = ESTADOS_EMBARQUE;
-
 export const ESTADOS_ACTIVOS = ['Confirmado', 'En Tránsito', 'Arribo', 'En Aduana', 'Entregado'] as const;
 
 export const ESTADOS_INACTIVOS = ['EIR', 'Cerrado'] as const;

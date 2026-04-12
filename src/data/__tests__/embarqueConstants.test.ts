@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { getDocsForMode, ESTADO_TIMELINE, CATALOGO_CONCEPTOS } from "@/data/embarqueConstants";
+import { getDocsForMode, ESTADOS_EMBARQUE, CATALOGO_CONCEPTOS } from "@/data/embarqueConstants";
 
 describe("getDocsForMode", () => {
   it("Marítimo incluye BL Master", () => {
@@ -16,17 +16,17 @@ describe("getDocsForMode", () => {
   });
 });
 
-describe("ESTADO_TIMELINE", () => {
+describe("ESTADOS_EMBARQUE", () => {
   it("tiene 7 estados", () => {
-    expect(ESTADO_TIMELINE).toHaveLength(7);
+    expect(ESTADOS_EMBARQUE).toHaveLength(7);
   });
   it("empieza con Confirmado y termina con Cerrado", () => {
-    expect(ESTADO_TIMELINE[0]).toBe("Confirmado");
-    expect(ESTADO_TIMELINE[ESTADO_TIMELINE.length - 1]).toBe("Cerrado");
+    expect(ESTADOS_EMBARQUE[0]).toBe("Confirmado");
+    expect(ESTADOS_EMBARQUE[ESTADOS_EMBARQUE.length - 1]).toBe("Cerrado");
   });
   it("incluye Arribo y EIR", () => {
-    expect(ESTADO_TIMELINE).toContain("Arribo");
-    expect(ESTADO_TIMELINE).toContain("EIR");
+    expect(ESTADOS_EMBARQUE).toContain("Arribo");
+    expect(ESTADOS_EMBARQUE).toContain("EIR");
   });
 });
 

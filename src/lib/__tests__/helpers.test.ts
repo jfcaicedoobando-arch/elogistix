@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
-// @ts-ignore - suppress date-fns ESM resolution warnings in test
-import { formatDate, getEstadoColor, getModoIcon } from "@/lib/helpers";
+import { formatDate } from "@/lib/formatters";
+import { getEstadoColor, getModoIcon } from "@/lib/uiMappings";
 
 describe("formatDate", () => {
   it("devuelve '-' para cadena vacía", () => {

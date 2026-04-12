@@ -1,9 +1,4 @@
-// Barrel mínimo para backward compatibility.
-// Las funciones canónicas están en formatters.ts y uiMappings.ts.
-
-export { formatDate } from "@/lib/formatters";
-export { getEstadoColor, getModoIcon } from "@/lib/uiMappings";
-
+/** Resuelve un contacto por su ID o devuelve el valor manual si es '__otro__'. */
 export const resolverContacto = (
   contactos: Array<{ id: string; nombre: string; tipo: string; pais: string }>,
   valor: string,

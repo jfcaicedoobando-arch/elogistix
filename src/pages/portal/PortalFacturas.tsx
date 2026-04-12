@@ -5,16 +5,9 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { usePortalFacturas, usePortalClientUsers } from "@/hooks/usePortalData";
 import { formatCurrency } from "@/lib/formatters";
+import { getEstadoColor } from "@/lib/uiMappings";
 import { Search, Receipt, Filter, AlertTriangle } from "lucide-react";
 import { useState, useMemo } from "react";
-
-const estadoColor: Record<string, string> = {
-  Borrador: "bg-muted text-muted-foreground",
-  Emitida: "bg-accent/10 text-accent border-accent/30",
-  Pagada: "bg-green-100 text-green-700 border-green-300",
-  Vencida: "bg-destructive/10 text-destructive border-destructive/30",
-  Cancelada: "bg-muted text-muted-foreground",
-};
 
 export default function PortalFacturas() {
   const { data: clientUsers = [] } = usePortalClientUsers();
@@ -99,7 +92,7 @@ export default function PortalFacturas() {
                   </p>
                 </div>
                 <div className="text-right space-y-1.5 flex-shrink-0 ml-3 flex flex-col items-end">
-                  <Badge className={`${estadoColor[f.estado] ?? "bg-muted text-muted-foreground"} text-xs border`}>
+                  <Badge className={`${getEstadoColor(f.estado)} text-xs`}>
                     {f.estado}
                   </Badge>
                   <p className="text-sm font-bold">{formatCurrency(f.total, f.moneda)}</p>

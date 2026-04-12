@@ -1,6 +1,7 @@
 import { Badge } from "@/components/ui/badge";
 import type { DataTableColumn } from "@/components/DataTable";
-import { formatDate, getEstadoColor } from "@/lib/helpers";
+import { formatDate } from "@/lib/formatters";
+import { getEstadoColor } from "@/lib/uiMappings";
 import { formatCurrency, shortName } from "@/lib/formatters";
 
 export type EmbarqueCliente = {

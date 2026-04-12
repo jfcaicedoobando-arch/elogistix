@@ -1,7 +1,7 @@
 import type { CotizacionRow, DimensionLCL, DimensionAerea } from '@/hooks/useCotizaciones';
 import { calcularIVA, TASA_IVA } from '@/lib/financialUtils';
 import { formatCurrency } from '@/lib/formatters';
-import { formatDate } from '@/lib/helpers';
+import { formatDate } from '@/lib/formatters';
 
 const formatCurrencyPdf = formatCurrency;
 const formatDatePdf = formatDate;

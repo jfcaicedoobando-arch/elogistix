@@ -2,7 +2,8 @@ import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { DataTable, type DataTableColumn } from "@/components/DataTable";
-import { formatDate, getModoIcon, getEstadoColor } from "@/lib/helpers";
+import { formatDate } from "@/lib/formatters";
+import { getModoIcon, getEstadoColor } from "@/lib/uiMappings";
 import { formatCurrency } from "@/lib/formatters";
 import type { EmbarqueMesSiguiente, ResumenFacturacion } from "@/hooks/useDashboardData";
 

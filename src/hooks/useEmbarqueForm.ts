@@ -3,7 +3,7 @@ import { useForm, type UseFormReturn } from 'react-hook-form';
 import { useToast } from '@/hooks/use-toast';
 import { uploadFile } from '@/lib/storage';
 import { useExchangeRates } from '@/hooks/useExchangeRates';
-import { resolverContacto } from '@/lib/helpers';
+import { resolverContacto } from '@/lib/contactoUtils';
 import { getDocsForMode } from '@/data/embarqueConstants';
 import type { DocumentoChecklist } from '@/components/DocumentChecklist';
 import type { ConceptoVentaLocal, ConceptoCostoLocal } from '@/data/conceptoTypes';

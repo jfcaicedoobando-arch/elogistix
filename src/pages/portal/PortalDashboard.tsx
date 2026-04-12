@@ -4,7 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 
 import { usePortalEmbarques, usePortalCotizaciones, usePortalFacturas, usePortalClientUsers, usePortalClienteName, usePortalOrgName } from "@/hooks/usePortalData";
-import { getEstadoColor, getModoIcon } from "@/lib/uiMappings";
+import { getEstadoColor, getModoIcon, getEstadoBarColor } from "@/lib/uiMappings";
 import { calcularEstadoEmbarque } from "@/lib/embarqueLogic";
 import { ESTADOS_EMBARQUE } from "@/data/embarqueConstants";
 import { formatCurrency } from "@/lib/formatters";
@@ -67,8 +67,8 @@ export default function PortalDashboard() {
       counts[est] = (counts[est] || 0) + 1;
     });
     return Object.entries(counts).sort((a, b) => {
-      const idxA = ESTADOS_EMBARQUE.indexOf(a[0] as any);
-      const idxB = ESTADOS_EMBARQUE.indexOf(b[0] as any);
+      const idxA = (ESTADOS_EMBARQUE as readonly string[]).indexOf(a[0]);
+      const idxB = (ESTADOS_EMBARQUE as readonly string[]).indexOf(b[0]);
       return (idxA === -1 ? 99 : idxA) - (idxB === -1 ? 99 : idxB);
     });
   }, [embarquesActivos]);
@@ -153,20 +153,10 @@ export default function PortalDashboard() {
               <div className="flex h-2.5 rounded-full overflow-hidden mt-2">
                 {estadoDistribucion.map(([estado, count]) => {
                   const pct = (count / embarquesActivos.length) * 100;
-                  const barColors: Record<string, string> = {
-                    'Confirmado': 'bg-info',
-                    'En Tránsito': 'bg-warning',
-                    'Arribo': 'bg-cyan-500',
-                    'En Aduana': 'bg-violet-500',
-                    'Entregado': 'bg-emerald-500',
-                    'EIR': 'bg-orange-500',
-                    'Cerrado': 'bg-muted-foreground',
-                    'Cancelado': 'bg-destructive',
-                  };
                   return (
                     <div
                       key={estado}
-                      className={`${barColors[estado] || 'bg-muted-foreground'} transition-all`}
+                      className={`${getEstadoBarColor(estado)} transition-all`}
                       style={{ width: `${pct}%` }}
                       title={`${estado}: ${count}`}
                     />

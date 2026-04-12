@@ -1,7 +1,8 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { formatDate, getModoIcon, getEstadoColor } from "@/lib/helpers";
+import { formatDate } from "@/lib/formatters";
+import { getModoIcon, getEstadoColor } from "@/lib/uiMappings";
 import { ESTADOS_EMBARQUE } from "@/data/embarqueConstants";
 import { DetailRow } from "./DetailRow";
 import { supabase } from "@/integrations/supabase/client";

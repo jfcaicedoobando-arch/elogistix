@@ -12,9 +12,8 @@ import TablaConceptosGenerico from "@/components/cotizacion/TablaConceptosGeneri
 import ResumenTotalesCotizacion from "@/components/cotizacion/ResumenTotalesCotizacion";
 import DialogConvertirProspecto from "@/components/cotizacion/DialogConvertirProspecto";
 import SeccionMercanciaCotizacionDetalle from "@/components/cotizacion/SeccionMercanciaCotizacionDetalle";
-import { getEstadoColor } from "@/lib/helpers";
-import { formatDate } from "@/lib/helpers";
-import { formatCurrency } from "@/lib/formatters";
+import { getEstadoColor } from "@/lib/uiMappings";
+import { formatDate, formatCurrency } from "@/lib/formatters";
 import { ArrowLeft, ArrowRight, CheckCircle, Send, XCircle, UserPlus, FileDown, Pencil } from "lucide-react";
 import { generarPdfCotizacion } from "@/lib/cotizacionPdf";
 import { useCotizacionDetalleState } from "@/hooks/useCotizacionDetalleState";

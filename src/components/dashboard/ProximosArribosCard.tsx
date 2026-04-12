@@ -3,7 +3,8 @@ import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { formatDate, getModoIcon } from "@/lib/helpers";
+import { formatDate } from "@/lib/formatters";
+import { getModoIcon } from "@/lib/uiMappings";
 import type { ProximoArribo } from "@/hooks/useDashboardData";
 
 interface Props {

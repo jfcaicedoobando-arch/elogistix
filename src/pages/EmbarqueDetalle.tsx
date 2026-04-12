@@ -7,7 +7,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { getEstadoColor, getModoIcon } from "@/lib/helpers";
+import { getEstadoColor, getModoIcon } from "@/lib/uiMappings";
 import { usePermissions } from "@/hooks/usePermissions";
 import { useState } from "react";
 import {
