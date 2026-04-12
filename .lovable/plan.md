@@ -1,57 +1,55 @@
 
 
-## Auditoría Arquitectónica v8.5.1 — Hallazgos Finos
+## Auditoría Final v8.6.0 — Oportunidades de Compactación
 
-La arquitectura está limpia a nivel macro. Los hallazgos restantes son de **consistencia menor** y **mantenibilidad preventiva**.
+El codebase está muy limpio. Los hallazgos son menores y orientados a **reducir volumen** más que a corregir problemas.
 
 ---
 
 ### Hallazgos
 
-#### 1. MEDIO — `NuevoClienteDialog.tsx` no usa `getErrorMessage` centralizado
+#### 1. ALTO — `Changelog.tsx` tiene 2,018 líneas (261 entradas)
 
-Este componente usa el patrón manual `error instanceof Error ? error.message : "Error desconocido"` en 2 catch blocks (líneas 94 y 133), en vez del utilitario centralizado `getErrorMessage(err)` que usan los demás 20+ componentes del proyecto.
+Es el archivo más grande del proyecto por mucho. Debería externalizarse a un archivo de datos JSON/TS y renderizarse con un componente ligero.
 
-**Archivos**: `src/components/cliente/NuevoClienteDialog.tsx`
-**Solución**: Reemplazar las 2 instancias por `getErrorMessage(err)`.
-
----
-
-#### 2. MEDIO — `as any` en tests de `usePermissions`
-
-`src/hooks/__tests__/usePermissions.test.tsx` tiene 3 casts `as any` en los mocks de `useAuth`. Se podría tipar el mock con `Partial<ReturnType<typeof useAuth>>` para eliminarlos.
-
-**Archivos**: `src/hooks/__tests__/usePermissions.test.tsx`
-**Solución**: Tipar el mock correctamente.
+**Solución**: Mover las entradas a `src/data/changelogData.ts` y dejar `Changelog.tsx` como un componente de ~50 líneas que importa y renderiza.
 
 ---
 
-#### 3. BAJO — `SeccionCostosInternosPLUnificado.tsx` es el componente más grande (444 líneas)
+#### 2. MEDIO — Supabase calls directos en 4 componentes
 
-Es el componente no-página más extenso. Combina tabla de costos, formulario de agregar fila, cálculos de P&L y resumen. Podría beneficiarse de extraer la tabla de costos a un sub-componente.
+Persisten llamadas directas a `supabase.from()` / `supabase.functions.invoke()` en componentes UI en vez de hooks:
 
-**Solución**: Opcional — extraer `TablaCostosInternos` como sub-componente.
+- **`NuevoUsuarioDialog.tsx`**: query a `organizations` + insert a `organization_members` + `create-user` invoke (3 llamadas)
+- **`TabPortalCliente.tsx`**: `invite-client-user` invoke + `delete` en `client_users` (2 llamadas)
+- **`AdminUsuarios.tsx`**: `delete-user` invoke (1 llamada)
+- **`PortalCotizacionDetalle.tsx`**: `portal_responder_cotizacion` RPC (1 llamada)
 
----
-
-#### 4. BAJO — `useCotizacionWizardForm.ts` es el hook más grande (429 líneas)
-
-Maneja la lógica de un wizard de 4 pasos. Es complejo por naturaleza, pero los pasos de guardado (`handleSavePaso1/2/3/4`) podrían extraerse a funciones en un archivo de servicios separado.
-
-**Solución**: Opcional — extraer funciones `savePasoN` a `lib/cotizacionServices.ts`.
+**Solución**: Extraer mutaciones a hooks dedicados (`useUsuarioMutations`, `useClientUsersMutations`, `usePortalCotizacionMutations`).
 
 ---
 
-### Plan de acción recomendado
+#### 3. BAJO — `Embarques.tsx` (379 líneas) combina filtros complejos + tabla
 
-| Paso | Descripción | Archivos | Esfuerzo |
-|------|------------|----------|----------|
-| 1 | Migrar catch blocks de `NuevoClienteDialog` a `getErrorMessage` | 1 archivo | Muy bajo |
-| 2 | Tipar mocks en test de `usePermissions` para eliminar `as any` | 1 archivo test | Muy bajo |
-| 3 | Extraer sub-componente de `SeccionCostosInternosPLUnificado` (opcional) | 1 → 2 archivos | Medio |
-| 4 | Extraer lógica de guardado del wizard de cotización (opcional) | 1 → 2 archivos | Medio |
+Es la página de listado más grande. Los filtros (modo, estado, operador, rango de fechas) podrían extraerse a un componente `EmbarquesFiltros`.
 
-### Resumen
+**Solución**: Extraer componente de filtros para reducir a ~200 líneas.
 
-Solo quedan **2 hallazgos accionables de esfuerzo mínimo** (pasos 1-2) y **2 opcionales** de descomposición preventiva para los archivos más grandes. El codebase está en estado de producción limpio.
+---
+
+#### 4. BAJO — `useOperacionesData.ts` (324 líneas) hace cálculos de date-fns inline
+
+Usa `format`, `subMonths`, `startOfMonth`, etc. directamente. Son cálculos legítimos de agregación pero podrían modularizarse.
+
+**Solución**: Opcional — solo si crece más.
+
+---
+
+### Plan de acción
+
+| Paso | Descripción | Impacto |
+|------|------------|---------|
+| 1 | Externalizar datos de Changelog a archivo `.ts` separado | -1,950 líneas en página |
+| 2 | Extraer mutaciones Supabase de 4 componentes a hooks | Separación de concerns |
+| 3 | Extraer filtros de `Embarques.tsx` a sub-componente | -150 líneas en página |
 
