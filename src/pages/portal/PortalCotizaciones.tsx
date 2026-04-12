@@ -6,18 +6,9 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { usePortalCotizaciones, usePortalClientUsers } from "@/hooks/usePortalData";
 import { formatCurrency } from "@/lib/formatters";
+import { getEstadoColor } from "@/lib/uiMappings";
 import { Search, FileText, Filter } from "lucide-react";
 import { useState, useMemo } from "react";
-
-const estadoColor: Record<string, string> = {
-  Borrador: "bg-muted text-muted-foreground",
-  Enviada: "bg-accent/10 text-accent border-accent/30",
-  Confirmada: "bg-green-100 text-green-700 border-green-300",
-  Aceptada: "bg-green-100 text-green-700 border-green-300",
-  Rechazada: "bg-destructive/10 text-destructive border-destructive/30",
-  Vencida: "bg-amber-100 text-amber-700 border-amber-300",
-  Embarcada: "bg-primary/10 text-primary border-primary/30",
-};
 
 export default function PortalCotizaciones() {
   const navigate = useNavigate();
@@ -105,7 +96,7 @@ export default function PortalCotizaciones() {
                   </p>
                 </div>
                 <div className="text-right space-y-1.5 flex-shrink-0 ml-3 flex flex-col items-end">
-                  <Badge className={`${estadoColor[c.estado] ?? "bg-muted text-muted-foreground"} text-xs border`}>
+                  <Badge className={`${getEstadoColor(c.estado)} text-xs`}>
                     {c.estado}
                   </Badge>
                   <p className="text-sm font-bold">{formatCurrency(c.subtotal, c.moneda)}</p>

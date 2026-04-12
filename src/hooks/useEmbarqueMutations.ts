@@ -1,6 +1,6 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import type { Json, TablesInsert } from '@/integrations/supabase/types';
+import type { Json, TablesInsert, Enums } from '@/integrations/supabase/types';
 import type { EmbarqueRow } from './useEmbarqueUtils';
 import { queryKeys } from '@/lib/queryKeys';
 
@@ -106,10 +106,10 @@ const ESTADO_A_EVENTO: Record<string, string> = {
 };
 
 async function insertarEventoTracking(embarqueId: string, nuevoEstado: string, usuario: string) {
-  const tipoEvento = ESTADO_A_EVENTO[nuevoEstado] ?? 'Otro';
+  const tipoEvento = (ESTADO_A_EVENTO[nuevoEstado] ?? 'Otro') as Enums<'tipo_evento_tracking'>;
   await supabase.from('eventos_embarque').insert({
     embarque_id: embarqueId,
-    tipo: tipoEvento as any,
+    tipo: tipoEvento,
     descripcion: `Estado cambiado a "${nuevoEstado}"`,
     ubicacion: '',
     fecha: new Date().toISOString(),

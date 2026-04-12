@@ -61,6 +61,21 @@ export const getEstadoBorderColor = (estado: string): string => {
   return map[estado] || "border-l-muted-foreground";
 };
 
+/** Color de fondo para barras apiladas por estado */
+export const getEstadoBarColor = (estado: string): string => {
+  const map: Record<string, string> = {
+    'Confirmado': 'bg-info',
+    'En Tránsito': 'bg-warning',
+    'Arribo': 'bg-cyan-500',
+    'En Aduana': 'bg-violet-500',
+    'Entregado': 'bg-emerald-500',
+    'EIR': 'bg-orange-500',
+    'Cerrado': 'bg-muted-foreground',
+    'Cancelado': 'bg-destructive',
+  };
+  return map[estado] || 'bg-muted-foreground';
+};
+
 /** Estilo de círculo por modo de transporte */
 export const getModoCircleStyle = (modo: string): string => {
   const map: Record<string, string> = {

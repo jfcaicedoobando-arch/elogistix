@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import type { Enums } from '@/integrations/supabase/types';
 import { queryKeys } from '@/lib/queryKeys';
 
 export interface EventoEmbarque {
@@ -58,7 +59,7 @@ export function useCreateEventoEmbarque() {
     mutationFn: async ({ embarqueId, tipo, descripcion, ubicacion, fecha, usuario }: CreateEventoInput) => {
       const { error } = await supabase.from('eventos_embarque').insert({
         embarque_id: embarqueId,
-        tipo: tipo as any,
+        tipo: tipo as Enums<'tipo_evento_tracking'>,
         descripcion,
         ubicacion,
         fecha,
