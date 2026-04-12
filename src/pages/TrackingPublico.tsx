@@ -4,15 +4,9 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { getEstadoColor, getModoIcon } from "@/lib/uiMappings";
+import { formatDate } from "@/lib/formatters";
+import { ICONO_EVENTO } from "@/data/embarqueConstants";
 import { Clock, MapPin, Ship, AlertTriangle } from "lucide-react";
-import { format } from "date-fns";
-import { es } from "date-fns/locale";
-
-const ICONO_EVENTO: Record<string, string> = {
-  Zarpe: "🚢", Transbordo: "🔄", "Arribo a Puerto": "⚓", Descarga: "📦",
-  "Despacho Aduanal": "🛃", Liberación: "✅", "En Ruta Terrestre": "🚛",
-  Entrega: "🏁", Demora: "⚠️", Inspección: "🔍", Otro: "📝",
-};
 
 interface TrackingData {
   embarque: {
@@ -149,7 +143,7 @@ export default function TrackingPublico() {
                           <Badge variant="secondary" className="text-xs">{ev.tipo}</Badge>
                           <span className="text-xs text-muted-foreground flex items-center gap-1">
                             <Clock className="h-3 w-3" />
-                            {format(new Date(ev.fecha), "dd MMM yyyy, HH:mm", { locale: es })}
+                            {formatDate(ev.fecha, "dd MMM yyyy, HH:mm")}
                           </span>
                         </div>
                         {ev.descripcion && <p className="text-sm text-foreground">{ev.descripcion}</p>}

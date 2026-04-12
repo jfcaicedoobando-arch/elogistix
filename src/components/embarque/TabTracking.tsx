@@ -17,19 +17,6 @@ interface Props {
   embarqueId: string;
 }
 
-const ICONO_EVENTO: Record<string, string> = {
-  Zarpe: '🚢',
-  Transbordo: '🔄',
-  'Arribo a Puerto': '⚓',
-  Descarga: '📦',
-  'Despacho Aduanal': '🛃',
-  Liberación: '✅',
-  'En Ruta Terrestre': '🚛',
-  Entrega: '🏁',
-  Demora: '⚠️',
-  Inspección: '🔍',
-  Otro: '📝',
-};
 
 export function TabTracking({ embarqueId }: Props) {
   const { data: eventos = [], isLoading } = useEventosEmbarque(embarqueId);

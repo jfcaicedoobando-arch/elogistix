@@ -11,8 +11,7 @@ import { KpiCard } from "@/components/operaciones/KpiCard";
 import { Switch } from "@/components/ui/switch";
 import { ArrowLeft, Building2, Users, Ship, UserCheck, FileText, Calendar, CheckCircle2, XCircle, Settings, Pencil, Save, X, UserPlus, Trash2 } from "lucide-react";
 import AgregarMiembroOrgDialog from "@/components/admin/AgregarMiembroOrgDialog";
-import { format } from "date-fns";
-import { es } from "date-fns/locale";
+import { formatDate } from "@/lib/formatters";
 import { useAdminOrgDetalle, type MemberRow } from "@/hooks/useAdminOrgDetalle";
 import type { AppRole } from "@/data/types";
 
@@ -201,7 +200,7 @@ export default function AdminOrgDetalle() {
             <div>
               <p className="text-muted-foreground mb-1">Fecha de creación</p>
               <p className="font-medium">
-                {org.created_at ? format(new Date(org.created_at), "dd MMM yyyy", { locale: es }) : "—"}
+                {org.created_at ? formatDate(org.created_at, "dd MMM yyyy") : "—"}
               </p>
             </div>
           </div>

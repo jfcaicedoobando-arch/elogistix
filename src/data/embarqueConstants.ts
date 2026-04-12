@@ -16,6 +16,12 @@ export const ESTADOS_INACTIVOS = ['EIR', 'Cerrado'] as const;
 
 export const MODOS_TRANSPORTE = ['Marítimo', 'Aéreo', 'Terrestre', 'Multimodal'] as const;
 
+export const ICONO_EVENTO: Record<string, string> = {
+  Zarpe: '🚢', Transbordo: '🔄', 'Arribo a Puerto': '⚓', Descarga: '📦',
+  'Despacho Aduanal': '🛃', Liberación: '✅', 'En Ruta Terrestre': '🚛',
+  Entrega: '🏁', Demora: '⚠️', Inspección: '🔍', Otro: '📝',
+};
+
 export const CATALOGO_CONCEPTOS = [
   'Cargos en Origen',
   'Costos Portuarios',
