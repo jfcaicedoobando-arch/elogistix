@@ -7,6 +7,7 @@ import { ESTADOS_EMBARQUE } from "@/data/embarqueConstants";
 import { DetailRow } from "./DetailRow";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
+import { queryKeys } from "@/lib/queryKeys";
 import { useNavigate } from "react-router-dom";
 import { Link } from "lucide-react";
 import type { EmbarqueRow } from "@/hooks/useEmbarques";
@@ -22,7 +23,7 @@ export function TabResumen({ embarque }: Props) {
   const currentStepIndex = ESTADOS_EMBARQUE.indexOf(estadoVisual as typeof ESTADOS_EMBARQUE[number]);
 
   const { data: relacionados = [] } = useQuery({
-    queryKey: ['embarques-relacionados', embarque.bl_master, embarque.id],
+    queryKey: queryKeys.embarques.relacionados(embarque.id, embarque.bl_master ?? ''),
     queryFn: async () => {
       if (!embarque.bl_master) return [];
       const { data, error } = await supabase

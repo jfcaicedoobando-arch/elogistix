@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useMemo } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -7,6 +7,8 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Loader2 } from "lucide-react";
 import { getErrorMessage } from "@/lib/errorUtils";
+import { useQuery } from "@tanstack/react-query";
+import { queryKeys } from "@/lib/queryKeys";
 import type { AppRole } from "@/data/types";
 
 interface Props {
@@ -23,28 +25,24 @@ interface UserOption {
 }
 
 export default function AgregarMiembroOrgDialog({ open, onOpenChange, organizationId, existingUserIds, onAdded }: Props) {
-  const [users, setUsers] = useState<UserOption[]>([]);
   const [selectedUserId, setSelectedUserId] = useState("");
   const [role, setRole] = useState<AppRole>("viewer");
   const [loading, setLoading] = useState(false);
-  const [loadingUsers, setLoadingUsers] = useState(false);
   const { toast } = useToast();
 
-  useEffect(() => {
-    if (!open) return;
-    setSelectedUserId("");
-    setRole("viewer");
-    setLoadingUsers(true);
+  const { data: allUsers = [], isLoading: loadingUsers } = useQuery({
+    queryKey: [...queryKeys.admin.allUsers, 'options'],
+    queryFn: async () => {
+      const { data } = await supabase.functions.invoke("list-users");
+      return Array.isArray(data) ? (data as UserOption[]) : [];
+    },
+    enabled: open,
+  });
 
-    supabase.functions.invoke("list-users").then(({ data }) => {
-      if (Array.isArray(data)) {
-        const available = (data as UserOption[]).filter(
-          (u) => !existingUserIds.includes(u.id)
-        );
-        setUsers(available);
-      }
-    }).finally(() => setLoadingUsers(false));
-  }, [open, existingUserIds]);
+  const users = useMemo(
+    () => allUsers.filter((u) => !existingUserIds.includes(u.id)),
+    [allUsers, existingUserIds],
+  );
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

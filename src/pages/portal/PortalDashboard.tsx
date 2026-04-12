@@ -7,11 +7,10 @@ import { usePortalEmbarques, usePortalCotizaciones, usePortalFacturas, usePortal
 import { getEstadoColor, getModoIcon, getEstadoBarColor } from "@/lib/uiMappings";
 import { calcularEstadoEmbarque } from "@/lib/embarqueLogic";
 import { ESTADOS_EMBARQUE } from "@/data/embarqueConstants";
-import { formatCurrency } from "@/lib/formatters";
+import { formatCurrency, formatDate } from "@/lib/formatters";
 import { Link } from "react-router-dom";
 import { Skeleton } from "@/components/ui/skeleton";
-import { format, parseISO, isAfter, addDays } from "date-fns";
-import { es } from "date-fns/locale";
+import { parseISO, isAfter, addDays } from "date-fns";
 import { useMemo } from "react";
 
 const kpis = [
@@ -210,7 +209,7 @@ export default function PortalDashboard() {
                     </div>
                     <div className="text-right flex-shrink-0 ml-2">
                       <p className="text-xs font-medium text-accent">
-                        {e.eta ? format(parseISO(e.eta), "dd MMM", { locale: es }) : "—"}
+                        {e.eta ? formatDate(e.eta, "dd MMM") : "—"}
                       </p>
                     </div>
                   </Link>
@@ -300,7 +299,7 @@ export default function PortalDashboard() {
                       <div className="flex items-center gap-2 flex-shrink-0 ml-2">
                         {e.eta && (
                           <span className="text-[10px] text-muted-foreground hidden sm:block">
-                            ETA {format(parseISO(e.eta), "dd/MM", { locale: es })}
+                            ETA {formatDate(e.eta, "dd/MM")}
                           </span>
                         )}
                         <Badge className={getEstadoColor(estadoVisual)}>{estadoVisual}</Badge>

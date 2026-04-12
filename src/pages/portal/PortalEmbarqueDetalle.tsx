@@ -1,31 +1,18 @@
 import { useParams, useNavigate } from "react-router-dom";
-import { ArrowLeft, Download, Clock, MapPin, Ship, FileCheck, FileX, Loader2 } from "lucide-react";
+import { ArrowLeft, Ship } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { usePortalEmbarque, usePortalEventos, usePortalDocumentos } from "@/hooks/usePortalData";
 import { getEstadoColor, getModoIcon } from "@/lib/uiMappings";
 import { calcularEstadoEmbarque } from "@/lib/embarqueLogic";
-import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/hooks/use-toast";
-import { format, parseISO, differenceInDays } from "date-fns";
-import { es } from "date-fns/locale";
-import { useState, useMemo } from "react";
-
-const ICONO_EVENTO: Record<string, string> = {
-  Zarpe: "🚢", Transbordo: "🔄", "Arribo a Puerto": "⚓", Descarga: "📦",
-  "Despacho Aduanal": "🛃", Liberación: "✅", "En Ruta Terrestre": "🚛",
-  Entrega: "🏁", Demora: "⚠️", Inspección: "🔍", Otro: "📝",
-};
-
-const DOC_ESTADO_ICON: Record<string, { icon: typeof FileCheck; color: string }> = {
-  Pendiente: { icon: FileX, color: "text-amber-500" },
-  Recibido: { icon: FileCheck, color: "text-accent" },
-  Validado: { icon: FileCheck, color: "text-green-600" },
-};
+import { formatDate } from "@/lib/formatters";
+import { parseISO, differenceInDays } from "date-fns";
+import { useMemo } from "react";
+import { PortalEmbarqueTimeline } from "@/components/portal/PortalEmbarqueTimeline";
+import { PortalEmbarqueDocumentos } from "@/components/portal/PortalEmbarqueDocumentos";
 
 // Progress steps for visual tracker
 const PROGRESS_STEPS = [
@@ -39,41 +26,9 @@ const PROGRESS_STEPS = [
 export default function PortalEmbarqueDetalle() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { toast } = useToast();
   const { data: embarque, isLoading } = usePortalEmbarque(id);
   const { data: eventos = [] } = usePortalEventos(id);
   const { data: documentos = [] } = usePortalDocumentos(id);
-  const [downloadingId, setDownloadingId] = useState<string | null>(null);
-
-  const handleDownload = async (archivo: string, docId: string) => {
-    setDownloadingId(docId);
-    try {
-      const { data, error } = await supabase.storage
-        .from("documentos")
-        .createSignedUrl(archivo, 300);
-      if (error) throw error;
-      const filename = archivo.split("/").pop() || "documento";
-      try {
-        const response = await fetch(data.signedUrl);
-        if (!response.ok) throw new Error("Download failed");
-        const blob = await response.blob();
-        const blobUrl = URL.createObjectURL(blob);
-        const a = document.createElement("a");
-        a.href = blobUrl;
-        a.download = filename;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(blobUrl);
-      } catch {
-        window.open(data.signedUrl, "_blank");
-      }
-    } catch {
-      toast({ title: "Error al descargar", variant: "destructive" });
-    } finally {
-      setDownloadingId(null);
-    }
-  };
 
   // Determine current step index for progress tracker
   const currentStepIndex = useMemo(() => {
@@ -133,7 +88,6 @@ export default function PortalEmbarqueDetalle() {
       <Card className="overflow-hidden">
         <CardContent className="p-4 sm:p-6">
           <div className="flex items-center justify-between relative">
-            {/* Background line */}
             <div className="absolute top-5 left-0 right-0 h-0.5 bg-border" />
             <div
               className="absolute top-5 left-0 h-0.5 bg-accent transition-all duration-500"
@@ -172,7 +126,7 @@ export default function PortalEmbarqueDetalle() {
               <p className="text-xs text-muted-foreground">
                 Llegada estimada en <span className="font-bold text-accent">{diasParaEta} día{diasParaEta !== 1 ? "s" : ""}</span>
                 {embarque.eta && (
-                  <span> ({format(parseISO(embarque.eta), "dd 'de' MMMM", { locale: es })})</span>
+                  <span> ({formatDate(embarque.eta, "dd 'de' MMMM")})</span>
                 )}
               </p>
             </div>
@@ -197,13 +151,13 @@ export default function PortalEmbarqueDetalle() {
         <Card>
           <CardContent className="p-3 text-center">
             <p className="text-[10px] text-muted-foreground font-medium">ETD</p>
-            <p className="text-xs font-semibold mt-0.5">{embarque.etd ? format(parseISO(embarque.etd), "dd/MM/yyyy") : "—"}</p>
+            <p className="text-xs font-semibold mt-0.5">{embarque.etd ? formatDate(embarque.etd) : "—"}</p>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="p-3 text-center">
             <p className="text-[10px] text-muted-foreground font-medium">ETA</p>
-            <p className="text-xs font-semibold mt-0.5">{embarque.eta ? format(parseISO(embarque.eta), "dd/MM/yyyy") : "—"}</p>
+            <p className="text-xs font-semibold mt-0.5">{embarque.eta ? formatDate(embarque.eta) : "—"}</p>
           </CardContent>
         </Card>
       </div>
@@ -285,106 +239,11 @@ export default function PortalEmbarqueDetalle() {
         </TabsContent>
 
         <TabsContent value="tracking">
-          <Card>
-            <CardHeader className="pb-3"><CardTitle className="text-sm">Línea de Tiempo</CardTitle></CardHeader>
-            <CardContent>
-              {eventos.length === 0 ? (
-                <div className="text-center py-12">
-                  <Clock className="h-8 w-8 mx-auto text-muted-foreground/30 mb-2" />
-                  <p className="text-sm text-muted-foreground">No hay eventos registrados aún.</p>
-                </div>
-              ) : (
-                <div className="relative">
-                  <div className="absolute left-4 top-0 bottom-0 w-0.5 bg-border" />
-                  <div className="space-y-6">
-                    {eventos.map((ev, i) => (
-                      <div key={ev.id} className="relative pl-10">
-                        <div className={`absolute left-2.5 top-1 h-3.5 w-3.5 rounded-full border-2 border-background transition-colors ${
-                          i === 0 ? "bg-accent ring-4 ring-accent/20" : "bg-muted-foreground/40"
-                        }`} />
-                        <div className="space-y-1">
-                          <div className="flex items-center gap-2 flex-wrap">
-                            <span className="text-base">{ICONO_EVENTO[ev.tipo] ?? "📝"}</span>
-                            <Badge variant="secondary" className="text-xs">{ev.tipo}</Badge>
-                            <span className="text-xs text-muted-foreground flex items-center gap-1">
-                              <Clock className="h-3 w-3" />
-                              {format(new Date(ev.fecha), "dd MMM yyyy, HH:mm", { locale: es })}
-                            </span>
-                          </div>
-                          {ev.descripcion && <p className="text-sm text-foreground">{ev.descripcion}</p>}
-                          {ev.ubicacion && (
-                            <span className="text-xs text-muted-foreground flex items-center gap-1">
-                              <MapPin className="h-3 w-3" /> {ev.ubicacion}
-                            </span>
-                          )}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </CardContent>
-          </Card>
+          <PortalEmbarqueTimeline eventos={eventos} />
         </TabsContent>
 
         <TabsContent value="documentos">
-          <Card>
-            <CardContent className="p-0">
-              {documentos.length === 0 ? (
-                <div className="text-center py-12">
-                  <FileCheck className="h-8 w-8 mx-auto text-muted-foreground/30 mb-2" />
-                  <p className="text-sm text-muted-foreground">No hay documentos disponibles.</p>
-                </div>
-              ) : (
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Documento</TableHead>
-                      <TableHead>Estado</TableHead>
-                      <TableHead className="w-24 text-right">Acción</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {documentos.map((doc) => {
-                      const docInfo = DOC_ESTADO_ICON[doc.estado] || DOC_ESTADO_ICON.Pendiente;
-                      const DocIcon = docInfo.icon;
-                      return (
-                        <TableRow key={doc.id}>
-                          <TableCell>
-                            <div className="flex items-center gap-2">
-                              <DocIcon className={`h-4 w-4 ${docInfo.color}`} />
-                              <span className="font-medium">{doc.nombre}</span>
-                            </div>
-                          </TableCell>
-                          <TableCell>
-                            <Badge variant="secondary" className="text-xs">{doc.estado}</Badge>
-                          </TableCell>
-                          <TableCell className="text-right">
-                            {doc.archivo ? (
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                disabled={downloadingId === doc.id}
-                                onClick={() => handleDownload(doc.archivo!, doc.id)}
-                              >
-                                {downloadingId === doc.id ? (
-                                  <Loader2 className="h-4 w-4 animate-spin" />
-                                ) : (
-                                  <Download className="h-4 w-4" />
-                                )}
-                              </Button>
-                            ) : (
-                              <span className="text-xs text-muted-foreground">—</span>
-                            )}
-                          </TableCell>
-                        </TableRow>
-                      );
-                    })}
-                  </TableBody>
-                </Table>
-              )}
-            </CardContent>
-          </Card>
+          <PortalEmbarqueDocumentos documentos={documentos} />
         </TabsContent>
       </Tabs>
     </div>

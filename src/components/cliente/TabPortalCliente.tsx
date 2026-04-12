@@ -11,8 +11,8 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { getErrorMessage } from "@/lib/errorUtils";
-import { format } from "date-fns";
-import { es } from "date-fns/locale";
+import { formatDate } from "@/lib/formatters";
+import { queryKeys } from "@/lib/queryKeys";
 
 interface Props {
   clienteId: string;
@@ -28,7 +28,7 @@ export default function TabPortalCliente({ clienteId, organizationId, canEdit }:
 
   // Fetch client_users for this cliente
   const { data: clientUsers = [], isLoading } = useQuery({
-    queryKey: ["client_users", clienteId],
+    queryKey: queryKeys.clientes.clientUsers(clienteId),
     queryFn: async () => {
       const { data, error } = await supabase
         .from("client_users")
@@ -54,7 +54,7 @@ export default function TabPortalCliente({ clienteId, organizationId, canEdit }:
           ? "Se creó la cuenta y se envió un correo para establecer contraseña."
           : "El usuario existente fue vinculado a este cliente.",
       });
-      qc.invalidateQueries({ queryKey: ["client_users", clienteId] });
+      qc.invalidateQueries({ queryKey: queryKeys.clientes.clientUsers(clienteId) });
       setInviteOpen(false);
       setInviteEmail("");
     },
@@ -70,7 +70,7 @@ export default function TabPortalCliente({ clienteId, organizationId, canEdit }:
     },
     onSuccess: () => {
       toast({ title: "Acceso revocado" });
-      qc.invalidateQueries({ queryKey: ["client_users", clienteId] });
+      qc.invalidateQueries({ queryKey: queryKeys.clientes.clientUsers(clienteId) });
     },
     onError: (err: unknown) => {
       toast({ title: "Error", description: getErrorMessage(err), variant: "destructive" });
@@ -111,7 +111,7 @@ export default function TabPortalCliente({ clienteId, organizationId, canEdit }:
                   <TableRow key={cu.id}>
                     <TableCell className="font-mono text-xs">{cu.user_id.slice(0, 8)}...</TableCell>
                     <TableCell className="text-sm">
-                      {cu.created_at ? format(new Date(cu.created_at), "dd MMM yyyy", { locale: es }) : "—"}
+                      {cu.created_at ? formatDate(cu.created_at, "dd MMM yyyy") : "—"}
                     </TableCell>
                     <TableCell>
                       {canEdit && (

@@ -9,6 +9,7 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Loader2 } from "lucide-react";
 import { getErrorMessage } from "@/lib/errorUtils";
+import { queryKeys } from "@/lib/queryKeys";
 
 interface Props {
   open: boolean;
@@ -27,7 +28,7 @@ export default function NuevoUsuarioDialog({ open, onOpenChange, onCreated, show
   const { toast } = useToast();
 
   const { data: orgs = [] } = useQuery({
-    queryKey: ["admin", "organizations-list"],
+    queryKey: queryKeys.admin.organizationsList,
     queryFn: async () => {
       const { data, error } = await supabase.from("organizations").select("id, nombre").order("nombre");
       if (error) throw error;
