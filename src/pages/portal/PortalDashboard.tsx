@@ -4,8 +4,8 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 
 import { usePortalEmbarques, usePortalCotizaciones, usePortalFacturas, usePortalClientUsers, usePortalClienteName, usePortalOrgName } from "@/hooks/usePortalData";
-import { getEstadoColor, getModoIcon } from "@/lib/helpers";
-import { calcularEstadoEmbarque } from "@/hooks/useEmbarques";
+import { getEstadoColor, getModoIcon } from "@/lib/uiMappings";
+import { calcularEstadoEmbarque } from "@/lib/embarqueLogic";
 import { ESTADOS_EMBARQUE } from "@/data/embarqueConstants";
 import { formatCurrency } from "@/lib/formatters";
 import { Link } from "react-router-dom";

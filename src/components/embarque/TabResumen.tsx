@@ -2,7 +2,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { formatDate, getModoIcon, getEstadoColor } from "@/lib/helpers";
-import { ESTADO_TIMELINE } from "@/data/embarqueConstants";
+import { ESTADOS_EMBARQUE } from "@/data/embarqueConstants";
 import { DetailRow } from "./DetailRow";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";

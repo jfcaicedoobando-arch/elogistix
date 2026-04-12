@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom";
+import { useState, useMemo } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -6,112 +6,10 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Collapsible, CollapsibleTrigger, CollapsibleContent } from "@/components/ui/collapsible";
 import { usePortalEmbarques, usePortalClientUsers } from "@/hooks/usePortalData";
-import { getEstadoColor, getModoIcon } from "@/lib/helpers";
-import { calcularEstadoEmbarque } from "@/hooks/useEmbarques";
-import { Search, Ship, Filter, Calendar, Package, ChevronDown, MapPin, Anchor, Plane, Truck, CalendarClock } from "lucide-react";
-import { useState, useMemo } from "react";
-import { format, parseISO } from "date-fns";
-
-const getEstadoBorderColor = (estado: string): string => {
-  const map: Record<string, string> = {
-    "Confirmado": "border-l-blue-500",
-    "En Tránsito": "border-l-amber-500",
-    "Arribo": "border-l-cyan-500",
-    "En Aduana": "border-l-violet-500",
-    "Entregado": "border-l-emerald-500",
-    "EIR": "border-l-orange-500",
-    "Cerrado": "border-l-muted-foreground",
-    "Cancelado": "border-l-destructive",
-  };
-  return map[estado] || "border-l-muted-foreground";
-};
-
-const getModoCircleStyle = (modo: string) => {
-  const map: Record<string, string> = {
-    "Marítimo": "bg-blue-100 text-blue-600 dark:bg-blue-900/40 dark:text-blue-400",
-    "Aéreo": "bg-sky-100 text-sky-600 dark:bg-sky-900/40 dark:text-sky-400",
-    "Terrestre": "bg-amber-100 text-amber-600 dark:bg-amber-900/40 dark:text-amber-400",
-    "Multimodal": "bg-purple-100 text-purple-600 dark:bg-purple-900/40 dark:text-purple-400",
-  };
-  return map[modo] || "bg-muted text-muted-foreground";
-};
-
-const getModoLucideIcon = (modo: string) => {
-  switch (modo) {
-    case "Marítimo": return <Anchor className="h-5 w-5" />;
-    case "Aéreo": return <Plane className="h-5 w-5" />;
-    case "Terrestre": return <Truck className="h-5 w-5" />;
-    default: return <Ship className="h-5 w-5" />;
-  }
-};
-
-function EmbarqueCard({ e }: { e: any }) {
-  const estadoVisual = calcularEstadoEmbarque(e.modo, e.tipo, e.etd, e.eta, e.estado);
-  const origen = e.puerto_origen || e.aeropuerto_origen || e.ciudad_origen || "—";
-  const destino = e.puerto_destino || e.aeropuerto_destino || e.ciudad_destino || "—";
-  const carrier = e.naviera || e.aerolinea || e.transportista;
-  const tipoLabel = e.tipo_servicio
-    ? `${e.tipo_servicio}${e.tipo_contenedor ? ` ${e.tipo_contenedor}` : ""}`
-    : e.modo === "Aéreo" ? "Aéreo" : e.tipo_carga || null;
-
-  return (
-    <Link to={`/portal/embarques/${e.id}`}>
-      <Card className={`border-l-4 ${getEstadoBorderColor(estadoVisual)} hover:shadow-lg hover:scale-[1.01] transition-all duration-200 group`}>
-        <CardContent className="p-4 space-y-2.5">
-          {/* Row 1: Expediente + Estado */}
-          <div className="flex items-center justify-between gap-2">
-            <div className="flex items-center gap-3 min-w-0">
-              <div className={`rounded-full p-2 flex-shrink-0 ${getModoCircleStyle(e.modo)}`}>
-                {getModoLucideIcon(e.modo)}
-              </div>
-              <p className="font-semibold text-sm truncate">
-                {e.expediente}{e.contenedor ? ` — ${e.contenedor}` : ""}
-              </p>
-            </div>
-            <Badge className={`${getEstadoColor(estadoVisual)} flex-shrink-0 text-xs px-2.5 py-0.5`}>
-              {estadoVisual}
-            </Badge>
-          </div>
-
-          {/* Row 2: Ruta + Tipo */}
-          <div className="flex items-center justify-between gap-2 pl-[52px]">
-            <span className="text-xs text-muted-foreground flex items-center gap-1 truncate">
-              <MapPin className="h-3 w-3 flex-shrink-0" />
-              {origen} → {destino}
-            </span>
-            {tipoLabel && (
-              <Badge variant="outline" className="text-[10px] px-1.5 py-0 flex-shrink-0 font-normal">
-                {tipoLabel}
-              </Badge>
-            )}
-          </div>
-
-          {/* Row 3: Carrier + Row 4: Dates */}
-          <div className="flex items-center justify-between gap-4 pl-[52px] flex-wrap">
-            <div className="flex items-center gap-4">
-              {carrier && (
-                <span className="text-xs text-muted-foreground flex items-center gap-1">
-                  {e.modo === "Marítimo" ? <Anchor className="h-3 w-3" /> : e.modo === "Aéreo" ? <Plane className="h-3 w-3" /> : <Truck className="h-3 w-3" />}
-                  {carrier}
-                </span>
-              )}
-            </div>
-            <div className="flex items-center gap-4">
-              <span className="text-xs text-muted-foreground flex items-center gap-1">
-                <CalendarClock className="h-3 w-3 flex-shrink-0" />
-                ETD: {e.etd ? format(parseISO(e.etd), "dd/MM/yy") : "—"}
-              </span>
-              <span className="text-xs text-muted-foreground flex items-center gap-1">
-                <CalendarClock className="h-3 w-3 flex-shrink-0" />
-                ETA: {e.eta ? format(parseISO(e.eta), "dd/MM/yy") : "—"}
-              </span>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-    </Link>
-  );
-}
+import { getEstadoColor } from "@/lib/uiMappings";
+import { calcularEstadoEmbarque } from "@/lib/embarqueLogic";
+import EmbarqueCard from "@/components/portal/EmbarqueCard";
+import { Search, Ship, Filter, Package, ChevronDown } from "lucide-react";
 
 export default function PortalEmbarques() {
   const { data: clientUsers = [] } = usePortalClientUsers();
@@ -164,6 +62,7 @@ export default function PortalEmbarques() {
     });
     return Array.from(map.entries());
   }, [filtered]);
+
   if (isLoading) {
     return <div className="space-y-4"><Skeleton className="h-8 w-48" /><Skeleton className="h-12 w-full" /><Skeleton className="h-64 w-full" /></div>;
   }
