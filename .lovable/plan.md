@@ -1,101 +1,90 @@
 
 
-## Auditoría arquitectónica del codebase — Reporte
+## Auditoría Arquitectónica — Reporte Post-Refactoring v8.2.0
+
+La auditoría anterior (v8.2.0) corrigió los problemas más críticos. Esta revisión identifica la deuda técnica restante y nuevas oportunidades de mejora.
+
+---
 
 ### Hallazgos ordenados por criticidad
 
----
+#### 1. ALTO — `estadoColor` duplicado 3 veces en el portal
 
-#### 1. CRÍTICO — `calcularEstadoEmbarque` vive en un hook pero es lógica pura
+`PortalCotizaciones.tsx`, `PortalCotizacionDetalle.tsx` y `PortalFacturas.tsx` cada uno define su propio mapa `estadoColor` inline con estilos **ligeramente distintos** entre sí y distintos de `getEstadoColor()` en `uiMappings.ts`. Esto genera inconsistencia visual entre las vistas del portal y el sistema principal, y cualquier cambio de colores requiere editar 4 archivos.
 
-`calcularEstadoEmbarque` en `src/hooks/useEmbarqueUtils.ts` es una función pura sin dependencias de React. Se importa en 6+ archivos (portal, dashboard, embarques). Debería estar en `src/lib/` (ej. `embarqueLogic.ts`), no en `hooks/`.
+**Recomendación**: Unificar. Usar `getEstadoColor()` de `uiMappings.ts` en las 3 páginas del portal, o agregar una variante allí si los estilos del portal son intencionalmente diferentes.
 
-**Impacto**: Viola separación de concerns. Un hook file no debe exportar lógica de dominio pura.
+#### 2. ALTO — `helpers.ts` sigue teniendo 17 consumidores
 
----
+Aunque `helpers.ts` fue reducido a un barrel mínimo, 17 archivos siguen importando desde él en vez de directamente desde `formatters.ts` y `uiMappings.ts`. El archivo intermedio agrega una capa de indirección innecesaria.
 
-#### 2. CRÍTICO — Mapeos visuales duplicados en `PortalEmbarques.tsx`
+**Recomendación**: Migrar los 17 consumidores para importar directamente desde `formatters.ts` (`formatDate`) y `uiMappings.ts` (`getEstadoColor`, `getModoIcon`). Después, eliminar `helpers.ts`.
 
-`getEstadoBorderColor`, `getModoCircleStyle` y `getModoLucideIcon` (~45 líneas) están definidos inline en el componente de página. Son mapeos UI reutilizables que pertenecen a `src/lib/uiMappings.ts`.
+#### 3. ALTO — `as any` residuales en código de producción (6 ocurrencias)
 
-**Impacto**: Si se crean más vistas de portal, se duplicarán. Rompe la convención establecida en el proyecto.
+- `PortalCotizacionDetalle.tsx`: 4× `(cot as any).comentario_cliente` — el campo existe en la BD pero no en el tipo `CotizacionRow`.
+- `PortalDashboard.tsx`: 2× `ESTADOS_EMBARQUE.indexOf(a[0] as any)` — cast innecesario.
+- `useEventosEmbarque.ts`: `tipo as any` — enum no tipado.
+- `useEmbarqueMutations.ts`: `tipoEvento as any` — mismo problema de enum.
 
----
+**Recomendación**: Agregar `comentario_cliente` a `CotizacionRow` (si existe en la BD). Para los `indexOf`, usar un type assertion más preciso. Para los enums de eventos, derivar el tipo del esquema.
 
-#### 3. ALTO — `helpers.ts` es un proxy innecesario
+#### 4. MEDIO — `format(parseISO(...))` inline en portal (7 llamadas)
 
-`helpers.ts` contiene solo `formatDate` + `resolverContacto` y re-exporta `getEstadoColor`/`getModoIcon` desde `uiMappings.ts`. 18 archivos importan desde `helpers.ts` en lugar de directamente desde `uiMappings.ts` y `formatters.ts`.
+`PortalDashboard.tsx` y `PortalEmbarqueDetalle.tsx` usan `format(parseISO(date), ...)` directamente en vez de `formatDate`. Algunos usan locale `es` con formatos especiales (`"dd MMM"`, `"dd 'de' MMMM"`).
 
-**Recomendación**: Mover `formatDate` a `formatters.ts`, `resolverContacto` a un lugar más específico (o dejarlo en helpers), y que los 18 consumidores importen directamente de `uiMappings` y `formatters`. Eliminar helpers.ts o dejarlo como barrel mínimo.
+**Recomendación**: Extender `formatDate` en `formatters.ts` para aceptar un parámetro `locale` opcional, y migrar las llamadas inline.
 
----
+#### 5. MEDIO — `barColors` en `PortalDashboard.tsx` duplica colores de estado
 
-#### 4. ALTO — Query keys del portal no usan la factoría centralizada
+Líneas 156-165 definen un mapa `barColors` con colores de barra por estado que son redundantes con `estadoConfig.ts` y `uiMappings.ts`.
 
-`usePortalData.ts` usa strings hardcodeados (`["portal", "embarques", ...]`) en lugar de `queryKeys`. Esto contradice la convención del proyecto y dificulta invalidaciones coordinadas.
+**Recomendación**: Agregar un mapa de colores de barra a `uiMappings.ts` o `estadoConfig.ts`.
 
-**Recomendación**: Agregar un bloque `portal` a `queryKeys.ts`.
+#### 6. MEDIO — `ESTADO_TIMELINE` sigue con consumidores activos
 
----
+Aunque fue marcado como `@deprecated`, `useEmbarqueDetalleActions.ts` y el test `embarqueConstants.test.ts` lo usan. La migración quedó incompleta.
 
-#### 5. ALTO — Tipo `any` en `EmbarqueCard`
+**Recomendación**: Reemplazar por `ESTADOS_EMBARQUE` en los 2 consumidores y eliminar el alias deprecated.
 
-`EmbarqueCard({ e }: { e: any })` en `PortalEmbarques.tsx`. Es el único uso de `any` en componentes (fuera de un cast en `useClienteFinancials`). Debería tiparse con el retorno de la query o un tipo derivado.
+#### 7. MEDIO — Admin pages hacen queries directas a Supabase
 
----
+`AdminDashboard.tsx`, `AdminUsuarios.tsx` y `AdminOrganizaciones.tsx` llaman `supabase.from(...)` directamente en la página en vez de usar hooks dedicados. Esto rompe la convención del resto de la app.
 
-#### 6. MEDIO — `ESTADO_TIMELINE` y `ESTADOS_EMBARQUE` son idénticos
+**Recomendación**: Extraer estas queries a `useAdminData.ts` o hooks similares, y registrar sus keys en `queryKeys.admin`.
 
-En `embarqueConstants.ts`, líneas 11-13: ambos arrays contienen exactamente los mismos 7 elementos. Uno debería eliminarse o derivarse del otro.
+#### 8. BAJO — Backward-compat wrappers en `useEmbarquesListData.ts`
 
----
+`useEmbarquesLiquidacion` y `useEmbarquesDocsStatus` son wrappers de backward-compat sobre `useEmbarquesListExtras`. Solo `Embarques.tsx` los usa.
 
-#### 7. MEDIO — `profitUtils.ts` re-exporta componentes React
+**Recomendación**: Migrar `Embarques.tsx` a usar `useEmbarquesListExtras` directamente y eliminar los wrappers.
 
-`src/lib/profitUtils.ts` hace `export { ProfitBadge, RentabilidadGlobalBadge } from "@/components/shared/ProfitBadge"`. Un archivo en `lib/` no debería re-exportar componentes React. Esto es un vestigio de backward compatibility que ya debería haberse limpiado.
+#### 9. BAJO — `useEmbarqueUtils.ts` es solo tipos + re-export
 
----
+El archivo solo define type aliases y re-exporta `calcularEstadoEmbarque`. Podría eliminarse moviendo los tipos a `useEmbarques.ts` o a un archivo `types/embarque.ts`.
 
-#### 8. MEDIO — `format(parseISO(...))` inline en el portal
+#### 10. BAJO — Test de `helpers.ts` prueba funciones que ya no son canónicas ahí
 
-En `PortalEmbarques.tsx`, `PortalEmbarqueDetalle.tsx` y `PortalDashboard.tsx` hay ~10 llamadas a `format(parseISO(date), "dd/MM/yy")` directas en vez de usar `formatDate` de helpers/formatters. Esto duplica la lógica de formateo y no maneja el caso de fecha nula de forma consistente.
-
----
-
-#### 9. MEDIO — Backward-compat re-export files en `components/`
-
-3 archivos raíz (`NuevoUsuarioDialog.tsx`, `NuevoProveedorDialog.tsx`, `EditarProveedorDialog.tsx`) solo re-exportan desde sus carpetas de dominio. Si ya no hay consumidores externos usando la ruta antigua, pueden eliminarse.
+`src/lib/__tests__/helpers.test.ts` testea `formatDate`, `getEstadoColor` y `getModoIcon` importándolos desde `helpers.ts`, pero las funciones canónicas están en `formatters.ts` y `uiMappings.ts`.
 
 ---
 
-#### 10. BAJO — `EmbarqueCard` es un componente significativo inline en una página
+### Plan de acción recomendado
 
-El componente `EmbarqueCard` (~70 líneas) está definido dentro de `PortalEmbarques.tsx`. Debería extraerse a `src/components/portal/EmbarqueCard.tsx` siguiendo la convención de descomposición modular del proyecto.
-
----
-
-#### 11. BAJO — Stale comment en `helpers.ts`
-
-Línea 1: `// Shared helper functions extracted from mockData.ts` — referencia a un archivo que ya no existe.
-
----
-
-### Plan de acción recomendado (en orden)
-
-| Paso | Archivos | Esfuerzo |
-|------|----------|----------|
-| 1. Mover `calcularEstadoEmbarque` a `src/lib/embarqueLogic.ts`, re-exportar desde barrel | `useEmbarqueUtils.ts`, `useEmbarques.ts`, nuevo `embarqueLogic.ts` | Bajo |
-| 2. Mover mapeos de portal (`getEstadoBorderColor`, `getModoCircleStyle`, `getModoLucideIcon`) a `uiMappings.ts` | `PortalEmbarques.tsx`, `uiMappings.ts` | Bajo |
-| 3. Agregar query keys de portal a `queryKeys.ts` y actualizar `usePortalData.ts` | 2 archivos | Bajo |
-| 4. Tipar `EmbarqueCard` prop eliminando `any` | `PortalEmbarques.tsx` | Bajo |
-| 5. Consolidar `formatDate` en `formatters.ts`, limpiar `helpers.ts` | `formatters.ts`, `helpers.ts`, 18 consumidores | Medio |
-| 6. Eliminar duplicado `ESTADO_TIMELINE` / `ESTADOS_EMBARQUE` | `embarqueConstants.ts`, consumidores | Bajo |
-| 7. Eliminar re-export de componentes desde `profitUtils.ts` | `profitUtils.ts`, consumidores de ProfitBadge | Bajo |
-| 8. Reemplazar `format(parseISO(...))` inline por `formatDate` en portal | 3 archivos portal | Bajo |
-| 9. Extraer `EmbarqueCard` a `src/components/portal/EmbarqueCard.tsx` | `PortalEmbarques.tsx`, nuevo archivo | Bajo |
-| 10. Verificar y eliminar backward-compat re-exports si no tienen consumidores | 3 archivos | Bajo |
+| Paso | Archivos afectados | Esfuerzo |
+|------|-------------------|----------|
+| 1. Eliminar `estadoColor` duplicados del portal, usar `getEstadoColor` | 3 archivos portal + `uiMappings.ts` | Bajo |
+| 2. Migrar 17 consumidores de `helpers.ts` → imports directos, eliminar `helpers.ts` | 17 archivos + `helpers.ts` + test | Medio |
+| 3. Eliminar `as any` residuales (agregar campo a tipo, tipar enums) | 4 archivos | Bajo |
+| 4. Extender `formatDate` con locale y migrar `format(parseISO(...))` inline | `formatters.ts` + 2 archivos portal | Bajo |
+| 5. Mover `barColors` a `uiMappings.ts` | `PortalDashboard.tsx` + `uiMappings.ts` | Bajo |
+| 6. Completar migración de `ESTADO_TIMELINE` → `ESTADOS_EMBARQUE` | 2 archivos + `embarqueConstants.ts` | Bajo |
+| 7. Extraer queries de admin a hooks dedicados | 3 archivos admin + nuevo hook | Medio |
+| 8. Eliminar wrappers backward-compat en `useEmbarquesListData.ts` | 2 archivos | Bajo |
+| 9. Consolidar `useEmbarqueUtils.ts` | 2 archivos | Bajo |
+| 10. Mover test de helpers al módulo correcto | 1 archivo test | Bajo |
 
 ### Resumen
 
-La arquitectura está en **buen estado general** — hay separación clara entre hooks, lib, components y pages, con barrels y una factoría de query keys bien establecida. Los problemas encontrados son principalmente **deuda técnica incremental**: mapeos duplicados, un par de violaciones de la convención de separación lib/hooks/components, y strings hardcodeados en el portal que no siguen el patrón del resto de la app. Ninguno es un blocker funcional, pero limpiarlos ahora previene que se multipliquen.
+La arquitectura mejoró significativamente con la auditoría anterior. Los problemas restantes son: **consistencia incompleta** (mapas de color duplicados, `helpers.ts` aún como intermediario, `ESTADO_TIMELINE` deprecated pero activo) y **deuda técnica menor** (6 `as any`, queries inline en admin, wrappers de backward-compat). Ninguno es un blocker, pero resolverlos completa la limpieza iniciada en v8.2.0.
 
