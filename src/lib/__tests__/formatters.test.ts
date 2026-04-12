@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { formatCurrency } from "@/lib/formatters";
+import { formatCurrency, formatDate } from "@/lib/formatters";
 
 describe("formatCurrency", () => {
   it("formatea MXN por defecto", () => {
@@ -20,5 +20,17 @@ describe("formatCurrency", () => {
   it("maneja negativos", () => {
     const result = formatCurrency(-100);
     expect(result).toContain("100.00");
+  });
+});
+
+describe("formatDate", () => {
+  it("devuelve '-' para cadena vacía", () => {
+    expect(formatDate("")).toBe("-");
+  });
+  it("formatea fecha ISO correctamente", () => {
+    expect(formatDate("2026-03-01")).toBe("01/03/2026");
+  });
+  it("parsea cadena parcial (YYYY-MM) como primer día del mes", () => {
+    expect(formatDate("2026-03")).toBe("01/03/2026");
   });
 });
