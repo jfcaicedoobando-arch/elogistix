@@ -27,10 +27,10 @@ import SearchInput from "@/components/SearchInput";
 import PaginationControls from "@/components/PaginationControls";
 import { DataTable, type DataTableColumn } from "@/components/DataTable";
 import { useDebounce } from "@/hooks/useDebounce";
-import type { EmbarqueRow } from "@/hooks/useEmbarqueUtils";
+import type { EmbarqueRow } from "@/hooks/useEmbarques";
 import DoubleConfirmDeleteDialog from "@/components/DoubleConfirmDeleteDialog";
 import DialogDuplicarEmbarque from "@/components/embarque/DialogDuplicarEmbarque";
-import { useEmbarquesLiquidacion, useEmbarquesDocsStatus } from "@/hooks/useEmbarquesListData";
+import { useEmbarquesListExtras } from "@/hooks/useEmbarquesListData";
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
