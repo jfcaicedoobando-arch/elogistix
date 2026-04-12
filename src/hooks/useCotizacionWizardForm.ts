@@ -4,28 +4,23 @@ import type { NavigateFunction } from "react-router-dom";
 import type { ConceptoVentaCotizacion, DimensionLCL, DimensionAerea, CotizacionRow, CreateCotizacionInput } from "@/hooks/useCotizaciones";
 import type { CostoCotizacion } from "@/hooks/useCotizacionCostos";
 import type { FilaCostoLocal } from "@/components/cotizacion/SeccionCostosInternosPLUnificado";
-import { CONCEPTOS_CON_IVA_USD } from "@/data/cotizacionConstants";
-import { calcularTotalConIVA } from "@/lib/financialUtils";
 import { buildPaso1Data as buildPaso1Mapper } from "@/lib/mappers/cotizacionMappers";
 import { useConceptosVentaCotizacion } from "@/hooks/useConceptosVentaCotizacion";
 import { useCotizacionPL } from "@/hooks/useCotizacionPL";
-import { uploadFile } from "@/lib/storage";
 import { getErrorMessage } from "@/lib/errorUtils";
+import { savePaso1, savePaso2, savePaso3, savePasoFinal, buildConceptosFromCostos } from "@/lib/cotizacionServices";
 
 // ────────── Form values type ──────────
 export interface CotizacionFormValues {
-  // Destinatario
   esProspecto: boolean;
   clienteId: string;
   prospectoEmpresa: string;
   prospectoContacto: string;
   prospectoEmail: string;
   prospectoTelefono: string;
-  // Datos generales
   modo: string;
   tipo: string;
   incoterm: string;
-  // Mercancía
   tipoCarga: string;
   sectorEconomico: string;
   descripcionAdicional: string;
@@ -38,7 +33,6 @@ export interface CotizacionFormValues {
   volumenM3: number;
   piezas: number;
   tipoUnidad: string;
-  // Ruta
   origen: string;
   destino: string;
   tiempoTransitoDias: number | undefined;
@@ -51,7 +45,6 @@ export interface CotizacionFormValues {
   diasLibresDestino: number;
   diasAlmacenaje: number;
   cartaGarantia: boolean;
-  // Otros
   notas: string;
   numContenedores: number;
 }
@@ -93,8 +86,6 @@ export const COTIZACION_FORM_DEFAULTS: CotizacionFormValues = {
   notas: "",
   numContenedores: 1,
 };
-
-// Factories moved to useConceptosVentaCotizacion
 
 // ────────── Types ──────────
 interface ToastFn {
@@ -216,17 +207,14 @@ export function useCotizacionWizardForm({ navigate, toast, userEmail, clientes, 
   const { crearCotizacion, updateCotizacion, upsertCostos, registrarActividad } = mutations;
   const isEditMode = !!initialData;
 
-  // ── React Hook Form ──
   const form = useForm<CotizacionFormValues>({
     defaultValues: buildDefaultValues(initialData),
   });
 
-  // ── Pre-fill conceptos from initialData ──
   const initialConceptosVenta = initialData?.conceptos_venta as ConceptoVentaCotizacion[] | undefined;
   const initialUSD = initialConceptosVenta?.filter(c => c.moneda === "USD") ?? [];
   const initialMXN = initialConceptosVenta?.filter(c => c.moneda === "MXN") ?? [];
 
-  // ── Pre-fill costos from initialCostos ──
   const initialCostosLocales: FilaCostoLocal[] = (initialCostos ?? []).map((c, i) => ({
     _key: `init-${i}`,
     concepto: c.concepto,
@@ -238,14 +226,12 @@ export function useCotizacionWizardForm({ navigate, toast, userEmail, clientes, 
     unidad_medida: c.unidad_medida ?? "Contenedor",
   }));
 
-  // ── Non-serializable / external state ──
   const [cotizacionId, setCotizacionId] = useState<string | null>(initialData?.id ?? null);
   const [currentStep, setCurrentStep] = useState(1);
   const [msdsFile, setMsdsFile] = useState<File | null>(null);
   const [costosInternos, setCostosInternos] = useState<FilaCostoLocal[]>(initialCostosLocales);
   const [costosPreLlenados, setCostosPreLlenados] = useState(isEditMode);
 
-  // ── Conceptos de venta (hook extraído) ──
   const conceptos = useConceptosVentaCotizacion({ initialUSD, initialMXN });
   const {
     conceptosUSD, conceptosMXN, setConceptosUSD, setConceptosMXN,
@@ -253,17 +239,14 @@ export function useCotizacionWizardForm({ navigate, toast, userEmail, clientes, 
     totalUSD, subtotalMXN, ivaMXN, totalMXN, tasaIva,
   } = conceptos;
 
-  // ── P&L (hook extraído) ──
   const { costosUSD: costosUSDFiltered, costosMXN: costosMXNFiltered, plUSD, plMXN } = useCotizacionPL(costosInternos);
 
-  // ── Watched derived values ──
   const modo = form.watch("modo");
   const clienteId = form.watch("clienteId");
   const esMaritimo = modo === "Marítimo";
   const esAereo = modo === "Aéreo";
   const clienteSeleccionado = clientes.find(c => c.id === clienteId);
 
-  // ── Helpers mercancía ──
   const handleCambiarTipoEmbarque = useCallback((nuevoTipo: "FCL" | "LCL") => {
     form.setValue("tipoEmbarque", nuevoTipo);
     form.setValue("tipoContenedor", "");
@@ -273,12 +256,11 @@ export function useCotizacionWizardForm({ navigate, toast, userEmail, clientes, 
     setMsdsFile(null);
   }, [form]);
 
-  // ── Build payload Paso 1 ──
   const buildPaso1Data = useCallback(() => {
     return buildPaso1Mapper(form.getValues(), clientes, userEmail);
   }, [form, clientes, userEmail]);
 
-  // ── Navegación del wizard ──
+  // ── Navegación del wizard (usa cotizacionServices) ──
   const handleSiguiente = useCallback(async () => {
     const v = form.getValues();
     if (currentStep === 1) {
@@ -295,21 +277,11 @@ export function useCotizacionWizardForm({ navigate, toast, userEmail, clientes, 
         return;
       }
       try {
-        let msdsArchivo: string | null = null;
-        if (v.tipoCarga === "Mercancía Peligrosa" && msdsFile) {
-          const ext = msdsFile.name.split(".").pop() || "pdf";
-          const path = `cotizaciones/msds-${Date.now()}.${ext}`;
-          await uploadFile(path, msdsFile);
-          msdsArchivo = path;
-        }
-        const data = buildPaso1Data() as Record<string, unknown>;
-        data.msds_archivo = msdsArchivo;
-        if (cotizacionId) {
-          await updateCotizacion.mutateAsync({ id: cotizacionId, data });
-        } else {
-          const cotizacion = await crearCotizacion.mutateAsync(data as unknown as CreateCotizacionInput);
-          setCotizacionId(cotizacion.id);
-        }
+        const id = await savePaso1({
+          form, msdsFile, cotizacionId, buildPaso1Data,
+          mutations: { crearCotizacion, updateCotizacion },
+        });
+        if (!cotizacionId) setCotizacionId(id);
         setCurrentStep(2);
       } catch (err: unknown) {
         toast({ title: "Error al guardar datos generales", description: getErrorMessage(err), variant: "destructive" });
@@ -317,34 +289,12 @@ export function useCotizacionWizardForm({ navigate, toast, userEmail, clientes, 
     } else if (currentStep === 2) {
       try {
         if (costosInternos.length > 0 && cotizacionId) {
-          const costos: CostoCotizacion[] = costosInternos.map(f => ({
-            id: "", cotizacion_id: cotizacionId, concepto: f.concepto, moneda: f.moneda,
-            proveedor: f.proveedor, cantidad: f.cantidad, costo_unitario: f.costo_unitario,
-            costo_total: f.cantidad * f.costo_unitario, precio_venta: f.precio_venta,
-            unidad_medida: f.unidad_medida, created_at: "", updated_at: "",
-          }));
-          await upsertCostos.mutateAsync({ cotizacionId, costos });
+          await savePaso2({ cotizacionId, costosInternos, mutations: { upsertCostos } });
         }
         if (!costosPreLlenados && costosInternos.length > 0) {
-          const usdFromCostos = costosInternos
-            .filter(c => c.moneda === "USD" && c.concepto.trim())
-            .map(c => {
-              const tieneIva = (CONCEPTOS_CON_IVA_USD as readonly string[]).includes(c.concepto);
-              return {
-                descripcion: c.concepto, unidad_medida: c.unidad_medida, cantidad: c.cantidad,
-                precio_unitario: c.precio_venta, moneda: "USD" as const, aplica_iva: tieneIva,
-                total: tieneIva ? calcularTotalConIVA(c.cantidad * c.precio_venta, tasaIva) : c.cantidad * c.precio_venta,
-              };
-            });
-          const mxnFromCostos = costosInternos
-            .filter(c => c.moneda === "MXN" && c.concepto.trim())
-            .map(c => ({
-              descripcion: c.concepto, unidad_medida: c.unidad_medida, cantidad: c.cantidad,
-              precio_unitario: c.precio_venta, moneda: "MXN" as const, aplica_iva: true,
-              total: calcularTotalConIVA(c.cantidad * c.precio_venta, tasaIva),
-            }));
-          if (usdFromCostos.length > 0) setConceptosUSD(usdFromCostos);
-          if (mxnFromCostos.length > 0) setConceptosMXN(mxnFromCostos);
+          const { usd, mxn } = buildConceptosFromCostos(costosInternos, tasaIva);
+          if (usd.length > 0) setConceptosUSD(usd);
+          if (mxn.length > 0) setConceptosMXN(mxn);
           setCostosPreLlenados(true);
         }
         setCurrentStep(3);
@@ -360,9 +310,11 @@ export function useCotizacionWizardForm({ navigate, toast, userEmail, clientes, 
       }
       try {
         if (cotizacionId) {
-          await updateCotizacion.mutateAsync({
-            id: cotizacionId,
-            data: { conceptos_venta: [...conceptosUSDValidos, ...conceptosMXNValidos], subtotal: totalUSD },
+          await savePaso3({
+            cotizacionId,
+            conceptosVenta: [...conceptosUSDValidos, ...conceptosMXNValidos] as unknown as Record<string, unknown>[],
+            totalUSD,
+            mutations: { updateCotizacion },
           });
         }
         setCurrentStep(4);
@@ -373,18 +325,17 @@ export function useCotizacionWizardForm({ navigate, toast, userEmail, clientes, 
   }, [
     currentStep, form, msdsFile,
     buildPaso1Data, cotizacionId, updateCotizacion, crearCotizacion, costosInternos, upsertCostos,
-    costosPreLlenados, conceptosUSD, conceptosMXN, totalUSD, toast,
+    costosPreLlenados, conceptosUSD, conceptosMXN, totalUSD, toast, tasaIva,
+    setConceptosUSD, setConceptosMXN,
   ]);
 
   const handleGuardar = useCallback(async () => {
     if (!cotizacionId) return;
     try {
-      if (!isEditMode) {
-        await updateCotizacion.mutateAsync({ id: cotizacionId, data: { estado: "Borrador" } });
-      }
-      registrarActividad.mutate({
-        accion: isEditMode ? "editar" : "crear", modulo: "cotizaciones",
-        entidad_id: cotizacionId, entidad_nombre: "",
+      await savePasoFinal({
+        cotizacionId, isEditMode,
+        mutations: { updateCotizacion },
+        registrarActividad: registrarActividad.mutate,
       });
       toast({ title: isEditMode ? "Cotización actualizada exitosamente" : "Cotización creada exitosamente" });
       navigate(`/cotizaciones/${cotizacionId}`);
@@ -401,29 +352,18 @@ export function useCotizacionWizardForm({ navigate, toast, userEmail, clientes, 
   const isPending = crearCotizacion.isPending || updateCotizacion.isPending || upsertCostos.isPending;
 
   return {
-    // React Hook Form
     form,
-
-    // Wizard
     currentStep, cotizacionId,
     costosInternos, setCostosInternos, costosPreLlenados, isPending,
     msdsFile, setMsdsFile,
-
-    // Derived (watched)
     esMaritimo, esAereo, clienteSeleccionado,
     handleCambiarTipoEmbarque,
-
-    // Conceptos de venta (external state)
     conceptosUSD, conceptosMXN,
     actualizarConcepto, agregarConcepto, eliminarConcepto,
     totalUSD, subtotalMXN, ivaMXN, totalMXN,
-
-    // P&L
     plUSD, plMXN,
     costosUSD: costosUSDFiltered,
     costosMXN: costosMXNFiltered,
-
-    // Acciones
     handleSiguiente, handleGuardar, handleBack,
   };
 }
