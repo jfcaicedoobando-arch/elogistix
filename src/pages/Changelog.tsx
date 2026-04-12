@@ -13,6 +13,13 @@ interface ChangelogEntry {
 
 const changelog: ChangelogEntry[] = [
   {
+    version: "8.5.2",
+    date: "2026-04-12",
+    type: "patch",
+    title: "Consistencia final: getErrorMessage y tipado de tests",
+    description: "1) NuevoClienteDialog migrado a getErrorMessage centralizado (2 catch blocks). 2) as any eliminado en usePermissions.test.tsx con tipado Partial<ReturnType>.",
+  },
+  {
     version: "8.5.1",
     date: "2026-04-12",
     type: "patch",
