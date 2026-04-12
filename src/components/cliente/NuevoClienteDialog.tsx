@@ -92,7 +92,7 @@ export default function NuevoClienteDialog({ open, onOpenChange }: Props) {
       toast({ title: "Cliente creado exitosamente" });
       resetAndClose();
     } catch (error: unknown) {
-      const msg = error instanceof Error ? error.message : "Error desconocido";
+      const msg = getErrorMessage(error);
       toast({ title: "Error al crear cliente", description: msg, variant: "destructive" });
     }
   };
@@ -131,7 +131,7 @@ export default function NuevoClienteDialog({ open, onOpenChange }: Props) {
       setCsfFile(file);
       toast({ title: "Datos extraídos", description: "Revisa la información antes de continuar." });
     } catch (error: unknown) {
-      const msg = error instanceof Error ? error.message : "Error desconocido";
+      const msg = getErrorMessage(error);
       toast({ title: "Error al leer CSF", description: msg, variant: "destructive" });
     } finally {
       setParsingCsf(false);
