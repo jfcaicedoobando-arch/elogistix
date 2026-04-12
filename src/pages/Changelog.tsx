@@ -13,6 +13,13 @@ interface ChangelogEntry {
 
 const changelog: ChangelogEntry[] = [
   {
+    version: "8.4.0",
+    date: "2026-04-12",
+    type: "minor",
+    title: "Limpieza arquitectónica final: hooks admin, consolidación y tests",
+    description: "1) Queries directas de Supabase en AdminDashboard, AdminUsuarios y AdminOrganizaciones extraídas a useAdminData.ts con hooks dedicados. 2) Wrappers backward-compat (useEmbarquesLiquidacion, useEmbarquesDocsStatus) eliminados; Embarques.tsx migrado a useEmbarquesListExtras. 3) useEmbarqueUtils.ts eliminado; tipos consolidados en useEmbarques.ts. 4) Test de helpers.test.ts dividido en formatters.test.ts y uiMappings.test.ts.",
+  },
+  {
     version: "8.3.0",
     date: "2026-04-12",
     type: "minor",
