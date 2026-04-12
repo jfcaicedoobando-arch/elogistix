@@ -65,8 +65,8 @@ export default function PortalCotizacionDetalle() {
           ? "Cotización aceptada exitosamente"
           : "Cotización rechazada",
       });
-      queryClient.invalidateQueries({ queryKey: ["portal", "cotizacion", id] });
-      queryClient.invalidateQueries({ queryKey: ["portal", "cotizaciones"] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.portal.cotizacion(id) });
+      queryClient.invalidateQueries({ queryKey: queryKeys.portal.cotizaciones([]) });
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : "Error al responder";
       toast({ title: "Error", description: message, variant: "destructive" });
