@@ -3,8 +3,8 @@
  * Separados de helpers.ts (utilidades puras de formateo).
  */
 
+import type { LucideIcon } from "lucide-react";
 import { Anchor, Plane, Truck, Ship } from "lucide-react";
-import type { ReactNode } from "react";
 
 export const getEstadoColor = (estado: string): string => {
   const colors: Record<string, string> = {
@@ -72,8 +72,8 @@ export const getModoCircleStyle = (modo: string): string => {
   return map[modo] || "bg-muted text-muted-foreground";
 };
 
-/** Icono Lucide por modo de transporte (devuelve ReactNode) */
-export const getModoLucideIcon = (modo: string): ReactNode => {
+/** Icono Lucide por modo de transporte (devuelve componente) */
+export const getModoLucideIcon = (modo: string): LucideIcon => {
   switch (modo) {
     case "Marítimo": return Anchor;
     case "Aéreo": return Plane;
