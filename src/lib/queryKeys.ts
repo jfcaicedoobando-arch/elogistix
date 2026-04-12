@@ -91,6 +91,18 @@ export const queryKeys = {
     activos: ['tipos_contenedor', 'activos'] as const,
     todos: ['tipos_contenedor', 'todos'] as const,
   },
+  portal: {
+    embarques: (clienteIds: string[]) => ['portal', 'embarques', clienteIds] as const,
+    embarque: (id: string) => ['portal', 'embarque', id] as const,
+    eventos: (id: string) => ['portal', 'eventos', id] as const,
+    documentos: (id: string) => ['portal', 'documentos', id] as const,
+    cotizaciones: (clienteIds: string[]) => ['portal', 'cotizaciones', clienteIds] as const,
+    cotizacion: (id: string) => ['portal', 'cotizacion', id] as const,
+    facturas: (clienteIds: string[]) => ['portal', 'facturas', clienteIds] as const,
+    clientUsers: ['portal', 'client_users'] as const,
+    clienteName: ['portal', 'cliente_nombre'] as const,
+    orgName: ['portal', 'org_name'] as const,
+  },
   sidebar: {
     alertCounts: ['sidebar-alert-counts'] as const,
   },
