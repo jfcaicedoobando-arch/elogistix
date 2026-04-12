@@ -2,13 +2,8 @@ import { Clock, MapPin } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { formatDate } from "@/lib/formatters";
+import { ICONO_EVENTO } from "@/data/embarqueConstants";
 import type { Tables } from "@/integrations/supabase/types";
-
-const ICONO_EVENTO: Record<string, string> = {
-  Zarpe: "🚢", Transbordo: "🔄", "Arribo a Puerto": "⚓", Descarga: "📦",
-  "Despacho Aduanal": "🛃", Liberación: "✅", "En Ruta Terrestre": "🚛",
-  Entrega: "🏁", Demora: "⚠️", Inspección: "🔍", Otro: "📝",
-};
 
 interface Props {
   eventos: Tables<"eventos_embarque">[];

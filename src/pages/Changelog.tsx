@@ -13,6 +13,13 @@ interface ChangelogEntry {
 
 const changelog: ChangelogEntry[] = [
   {
+    version: "8.5.1",
+    date: "2026-04-12",
+    type: "patch",
+    title: "Consolidación ICONO_EVENTO y formatDate residuales",
+    description: "1) ICONO_EVENTO extraído a embarqueConstants.ts e importado en TabTracking, PortalEmbarqueTimeline y TrackingPublico. 2) format(new Date(...)) inline migrado a formatDate en AdminOrgDetalle y TrackingPublico.",
+  },
+  {
     version: "8.5.0",
     date: "2026-04-12",
     type: "minor",
