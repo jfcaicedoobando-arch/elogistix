@@ -4,7 +4,6 @@ import { queryKeys } from "@/lib/queryKeys";
 
 /**
  * Single RPC call to fetch liquidation + document counts for a page of embarques.
- * Replaces the previous two separate hooks (useEmbarquesLiquidacion + useEmbarquesDocsStatus).
  */
 export function useEmbarquesListExtras(embarqueIds: string[]) {
   return useQuery({
@@ -34,15 +33,4 @@ export function useEmbarquesListExtras(embarqueIds: string[]) {
     },
     enabled: embarqueIds.length > 0,
   });
-}
-
-// Keep old exports as aliases for backward compatibility during migration
-export function useEmbarquesLiquidacion(embarqueIds: string[]) {
-  const { data, ...rest } = useEmbarquesListExtras(embarqueIds);
-  return { data: data?.liquidacion ?? {}, ...rest };
-}
-
-export function useEmbarquesDocsStatus(embarqueIds: string[]) {
-  const { data, ...rest } = useEmbarquesListExtras(embarqueIds);
-  return { data: data?.docs ?? {}, ...rest };
 }

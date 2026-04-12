@@ -1,49 +1,15 @@
-import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Building2, Users, Ship, FileText } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
-
-interface OrgStats {
-  totalOrgs: number;
-  totalUsers: number;
-  totalEmbarques: number;
-  totalCotizaciones: number;
-}
+import { useAdminDashboardStats } from "@/hooks/useAdminData";
 
 export default function AdminDashboard() {
-  const [stats, setStats] = useState<OrgStats>({
-    totalOrgs: 0,
-    totalUsers: 0,
-    totalEmbarques: 0,
-    totalCotizaciones: 0,
-  });
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    async function fetchStats() {
-      const [orgs, members, embarques, cotizaciones] = await Promise.all([
-        supabase.from("organizations").select("id", { count: "exact", head: true }),
-        supabase.from("organization_members").select("id", { count: "exact", head: true }),
-        supabase.from("embarques").select("id", { count: "exact", head: true }),
-        supabase.from("cotizaciones").select("id", { count: "exact", head: true }),
-      ]);
-
-      setStats({
-        totalOrgs: orgs.count ?? 0,
-        totalUsers: members.count ?? 0,
-        totalEmbarques: embarques.count ?? 0,
-        totalCotizaciones: cotizaciones.count ?? 0,
-      });
-      setLoading(false);
-    }
-    fetchStats();
-  }, []);
+  const { data: stats, isLoading } = useAdminDashboardStats();
 
   const cards = [
-    { title: "Organizaciones", value: stats.totalOrgs, icon: Building2, color: "text-primary" },
-    { title: "Usuarios", value: stats.totalUsers, icon: Users, color: "text-info" },
-    { title: "Embarques", value: stats.totalEmbarques, icon: Ship, color: "text-accent-foreground" },
-    { title: "Cotizaciones", value: stats.totalCotizaciones, icon: FileText, color: "text-muted-foreground" },
+    { title: "Organizaciones", value: stats?.totalOrgs ?? 0, icon: Building2, color: "text-primary" },
+    { title: "Usuarios", value: stats?.totalUsers ?? 0, icon: Users, color: "text-info" },
+    { title: "Embarques", value: stats?.totalEmbarques ?? 0, icon: Ship, color: "text-accent-foreground" },
+    { title: "Cotizaciones", value: stats?.totalCotizaciones ?? 0, icon: FileText, color: "text-muted-foreground" },
   ];
 
   return (
@@ -62,7 +28,7 @@ export default function AdminDashboard() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
-                {loading ? "..." : card.value}
+                {isLoading ? "..." : card.value}
               </div>
             </CardContent>
           </Card>

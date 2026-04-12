@@ -1,7 +1,4 @@
 import { useState } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { queryKeys } from "@/lib/queryKeys";
-import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -17,52 +14,32 @@ import {
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { useNavigate } from "react-router-dom";
-
-interface OrgRow {
-  id: string;
-  nombre: string;
-  rfc: string;
-  plan: string;
-  activo: boolean;
-  created_at: string;
-}
+import { useAdminOrganizations, useCreateOrganization, type OrgRow } from "@/hooks/useAdminData";
 
 export default function AdminOrganizaciones() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [nombre, setNombre] = useState("");
   const [rfc, setRfc] = useState("");
   const { toast } = useToast();
-  const queryClient = useQueryClient();
   const navigate = useNavigate();
 
-  const { data: orgs = [], isLoading } = useQuery({
-    queryKey: queryKeys.admin.organizations,
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("organizations")
-        .select("*")
-        .order("nombre");
-      if (error) throw error;
-      return data as unknown as OrgRow[];
-    },
-  });
+  const { data: orgs = [], isLoading } = useAdminOrganizations();
 
-  const createOrg = useMutation({
-    mutationFn: async () => {
-      const { error } = await supabase.from("organizations").insert({ nombre, rfc });
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.admin.organizations });
-      toast({ title: "Organización creada" });
-      setDialogOpen(false);
-      setNombre("");
-      setRfc("");
-    },
-    onError: (err: Error) => {
-      toast({ title: "Error", description: err.message, variant: "destructive" });
-    },
-  });
+  const createOrg = useCreateOrganization();
+
+  const handleCreate = () => {
+    createOrg.mutate({ nombre, rfc }, {
+      onSuccess: () => {
+        toast({ title: "Organización creada" });
+        setDialogOpen(false);
+        setNombre("");
+        setRfc("");
+      },
+      onError: (err: Error) => {
+        toast({ title: "Error", description: err.message, variant: "destructive" });
+      },
+    });
+  };
 
   const columns: DataTableColumn<OrgRow>[] = [
     {
@@ -138,7 +115,7 @@ export default function AdminOrganizaciones() {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setDialogOpen(false)}>Cancelar</Button>
-            <Button onClick={() => createOrg.mutate()} disabled={!nombre.trim() || createOrg.isPending}>
+            <Button onClick={handleCreate} disabled={!nombre.trim() || createOrg.isPending}>
               Crear
             </Button>
           </DialogFooter>

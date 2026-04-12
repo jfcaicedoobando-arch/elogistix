@@ -1,15 +1,14 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import type { TablesInsert } from '@/integrations/supabase/types';
+import type { Tables, TablesInsert } from '@/integrations/supabase/types';
 import { queryKeys } from '@/lib/queryKeys';
 import { useOrgFilter } from '@/hooks/useOrgFilter';
-import type {
-  EmbarqueRow,
-  ConceptoVentaRow,
-  ConceptoCostoRow,
-  DocumentoEmbarqueRow,
-  NotaEmbarqueRow,
-} from './useEmbarqueUtils';
+
+type EmbarqueRow = Tables<'embarques'>;
+type ConceptoVentaRow = Tables<'conceptos_venta'>;
+type ConceptoCostoRow = Tables<'conceptos_costo'>;
+type DocumentoEmbarqueRow = Tables<'documentos_embarque'>;
+type NotaEmbarqueRow = Tables<'notas_embarque'>;
 
 /** Columnas necesarias para listas y dashboard (evita select('*')) */
 const EMBARQUE_LIST_COLUMNS = 'id, expediente, bl_master, cliente_id, cliente_nombre, modo, estado, etd, eta, operador, puerto_origen, puerto_destino, aeropuerto_origen, aeropuerto_destino, ciudad_origen, ciudad_destino, tipo_contenedor, descripcion_mercancia, tipo, created_at, tipo_cambio_usd, tipo_cambio_eur' as const;

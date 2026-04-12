@@ -1,22 +1,14 @@
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Users, UserPlus, Trash2 } from "lucide-react";
 import { DataTable, type DataTableColumn } from "@/components/DataTable";
-import { queryKeys } from "@/lib/queryKeys";
 import { useToast } from "@/hooks/use-toast";
 import { getErrorMessage } from "@/lib/errorUtils";
 import NuevoUsuarioDialog from "@/components/usuario/NuevoUsuarioDialog";
 import DoubleConfirmDeleteDialog from "@/components/DoubleConfirmDeleteDialog";
-
-interface GlobalUserRow {
-  user_id: string;
-  email: string;
-  org_nombre: string;
-  role: string;
-}
+import { useAdminGlobalUsers, type GlobalUserRow } from "@/hooks/useAdminData";
 
 export default function AdminUsuarios() {
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -24,35 +16,7 @@ export default function AdminUsuarios() {
   const [deleting, setDeleting] = useState(false);
   const { toast } = useToast();
 
-  const { data: users = [], isLoading, refetch } = useQuery({
-    queryKey: queryKeys.admin.allUsers,
-    queryFn: async () => {
-      const { data: members, error } = await supabase
-        .from("organization_members")
-        .select("user_id, role, organization_id")
-        .order("user_id");
-      if (error) throw error;
-
-      const { data: orgs } = await supabase.from("organizations").select("id, nombre");
-      const orgMap: Record<string, string> = {};
-      (orgs ?? []).forEach((o) => { orgMap[o.id] = o.nombre; });
-
-      let emailMap: Record<string, string> = {};
-      try {
-        const { data: usersData } = await supabase.functions.invoke("list-users");
-        if (Array.isArray(usersData)) {
-          usersData.forEach((u: { id: string; email: string }) => { emailMap[u.id] = u.email; });
-        }
-      } catch { /* */ }
-
-      return (members ?? []).map((m) => ({
-        user_id: m.user_id,
-        email: emailMap[m.user_id] || m.user_id,
-        org_nombre: orgMap[m.organization_id] || m.organization_id,
-        role: m.role,
-      })) as GlobalUserRow[];
-    },
-  });
+  const { data: users = [], isLoading, refetch } = useAdminGlobalUsers();
 
   const handleDelete = async () => {
     if (!deleteTarget) return;
