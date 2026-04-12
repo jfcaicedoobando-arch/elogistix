@@ -4,7 +4,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { formatCurrency } from "@/lib/formatters";
-import { formatDate, getEstadoColor } from "@/lib/helpers";
+import { formatDate } from "@/lib/formatters";
+import { getEstadoColor } from "@/lib/uiMappings";
 
 interface Factura {
   id: string;

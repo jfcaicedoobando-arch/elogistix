@@ -20,7 +20,7 @@ const roleBadge: Record<AppRole, string> = {
   cliente: "bg-accent text-accent-foreground",
 };
 
-import { formatDate } from "@/lib/helpers";
+import { formatDate } from "@/lib/formatters";
 
 export default function Usuarios() {
   const [dialogOpen, setDialogOpen] = useState(false);
