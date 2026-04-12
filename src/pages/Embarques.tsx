@@ -90,8 +90,9 @@ export default function Embarques() {
 
   // Supplementary data for the list
   const embarqueIds = useMemo(() => embarques.map(e => e.id), [embarques]);
-  const { data: liquidacionMap = {} } = useEmbarquesLiquidacion(embarqueIds);
-  const { data: docsMap = {} } = useEmbarquesDocsStatus(embarqueIds);
+  const { data: extrasData } = useEmbarquesListExtras(embarqueIds);
+  const liquidacionMap = extrasData?.liquidacion ?? {};
+  const docsMap = extrasData?.docs ?? {};
 
   const handleEliminar = async () => {
     if (!embarqueAEliminar) return;
