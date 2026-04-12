@@ -1,17 +1,7 @@
-// Shared helper functions extracted from mockData.ts
+// Barrel mínimo para backward compatibility.
+// Las funciones canónicas están en formatters.ts y uiMappings.ts.
 
-import { format, parseISO } from "date-fns";
-
-export const formatDate = (dateStr: string): string => {
-  if (!dateStr) return '-';
-  try {
-    return format(parseISO(dateStr), 'dd/MM/yyyy');
-  } catch {
-    return dateStr;
-  }
-};
-
-// Re-export UI mappings for backward compatibility
+export { formatDate } from "@/lib/formatters";
 export { getEstadoColor, getModoIcon } from "@/lib/uiMappings";
 
 export const resolverContacto = (

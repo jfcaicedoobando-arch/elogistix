@@ -1,9 +1,10 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { queryKeys } from "@/lib/queryKeys";
 
 export function usePortalEmbarques(clienteIds: string[]) {
   return useQuery({
-    queryKey: ["portal", "embarques", clienteIds],
+    queryKey: queryKeys.portal.embarques(clienteIds),
     queryFn: async () => {
       if (!clienteIds.length) return [];
       const { data, error } = await supabase
@@ -20,7 +21,7 @@ export function usePortalEmbarques(clienteIds: string[]) {
 
 export function usePortalEmbarque(id?: string) {
   return useQuery({
-    queryKey: ["portal", "embarque", id],
+    queryKey: queryKeys.portal.embarque(id ?? ""),
     queryFn: async () => {
       const { data, error } = await supabase
         .from("embarques")
@@ -36,7 +37,7 @@ export function usePortalEmbarque(id?: string) {
 
 export function usePortalEventos(embarqueId?: string) {
   return useQuery({
-    queryKey: ["portal", "eventos", embarqueId],
+    queryKey: queryKeys.portal.eventos(embarqueId ?? ""),
     queryFn: async () => {
       const { data, error } = await supabase
         .from("eventos_embarque")
@@ -52,7 +53,7 @@ export function usePortalEventos(embarqueId?: string) {
 
 export function usePortalDocumentos(embarqueId?: string) {
   return useQuery({
-    queryKey: ["portal", "documentos", embarqueId],
+    queryKey: queryKeys.portal.documentos(embarqueId ?? ""),
     queryFn: async () => {
       const { data, error } = await supabase
         .from("documentos_embarque")
@@ -68,7 +69,7 @@ export function usePortalDocumentos(embarqueId?: string) {
 
 export function usePortalCotizaciones(clienteIds: string[]) {
   return useQuery({
-    queryKey: ["portal", "cotizaciones", clienteIds],
+    queryKey: queryKeys.portal.cotizaciones(clienteIds),
     queryFn: async () => {
       if (!clienteIds.length) return [];
       const { data, error } = await supabase
@@ -85,7 +86,7 @@ export function usePortalCotizaciones(clienteIds: string[]) {
 
 export function usePortalFacturas(clienteIds: string[]) {
   return useQuery({
-    queryKey: ["portal", "facturas", clienteIds],
+    queryKey: queryKeys.portal.facturas(clienteIds),
     queryFn: async () => {
       if (!clienteIds.length) return [];
       const { data, error } = await supabase
@@ -102,7 +103,7 @@ export function usePortalFacturas(clienteIds: string[]) {
 
 export function usePortalClientUsers() {
   return useQuery({
-    queryKey: ["portal", "client_users"],
+    queryKey: queryKeys.portal.clientUsers,
     queryFn: async () => {
       const { data, error } = await supabase
         .from("client_users")
@@ -115,7 +116,7 @@ export function usePortalClientUsers() {
 
 export function usePortalClienteName() {
   return useQuery({
-    queryKey: ["portal", "cliente_nombre"],
+    queryKey: queryKeys.portal.clienteName,
     queryFn: async () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return null;
@@ -134,7 +135,7 @@ export function usePortalClienteName() {
 
 export function usePortalOrgName() {
   return useQuery({
-    queryKey: ["portal", "org_name"],
+    queryKey: queryKeys.portal.orgName,
     queryFn: async () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return null;
@@ -153,7 +154,7 @@ export function usePortalOrgName() {
 
 export function usePortalCotizacion(id?: string) {
   return useQuery({
-    queryKey: ["portal", "cotizacion", id],
+    queryKey: queryKeys.portal.cotizacion(id ?? ""),
     queryFn: async () => {
       const { data, error } = await supabase
         .from("cotizaciones")

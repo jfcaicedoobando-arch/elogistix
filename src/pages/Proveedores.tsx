@@ -8,7 +8,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useProveedoresPaginados, useProveedorMutations } from "@/hooks/useProveedores";
 import type { ProveedorListItem } from "@/hooks/useProveedores";
-import NuevoProveedorDialog from "@/components/NuevoProveedorDialog";
+import NuevoProveedorDialog from "@/components/proveedor/NuevoProveedorDialog";
 import PaginationControls from "@/components/PaginationControls";
 import { useToast } from "@/hooks/use-toast";
 import { usePermissions } from "@/hooks/usePermissions";

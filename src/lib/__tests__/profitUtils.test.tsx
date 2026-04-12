@@ -1,6 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { render, screen } from "@testing-library/react";
-import { calcularTotalesPL, ProfitBadge, RentabilidadGlobalBadge } from "@/lib/profitUtils";
+import { calcularTotalesPL } from "@/lib/profitUtils";
+import { ProfitBadge, RentabilidadGlobalBadge } from "@/components/shared/ProfitBadge";
 
 describe("calcularTotalesPL", () => {
   it("calcula totales correctamente para múltiples filas", () => {

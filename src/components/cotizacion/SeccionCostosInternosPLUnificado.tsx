@@ -16,7 +16,8 @@ import {
 import type { ConceptoVentaCotizacion } from "@/hooks/useCotizaciones";
 import { formatCurrency } from "@/lib/formatters";
 import { calcularUtilidad, calcularMargen } from "@/lib/financialUtils";
-import { ProfitBadge, calcularTotalesPL } from "@/lib/profitUtils";
+import { ProfitBadge } from "@/components/shared/ProfitBadge";
+import { calcularTotalesPL } from "@/lib/profitUtils";
 import { CONCEPTOS_COSTO_USD, CONCEPTOS_COSTO_MXN } from "@/data/cotizacionConstants";
 import ResumenPL from "./ResumenPL";
 

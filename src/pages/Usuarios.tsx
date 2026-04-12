@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { ShieldCheck, UserPlus, Trash2 } from "lucide-react";
 import { getErrorMessage } from "@/lib/errorUtils";
-import NuevoUsuarioDialog from "@/components/NuevoUsuarioDialog";
+import NuevoUsuarioDialog from "@/components/usuario/NuevoUsuarioDialog";
 import { DataTable, type DataTableColumn } from "@/components/DataTable";
 import { useUsuarios, useUpdateUserRole, useDeleteUser, type UserRow } from "@/hooks/useUsuarios";
 import DoubleConfirmDeleteDialog from "@/components/DoubleConfirmDeleteDialog";

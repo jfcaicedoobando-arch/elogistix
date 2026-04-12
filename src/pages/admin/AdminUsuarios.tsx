@@ -8,7 +8,7 @@ import { DataTable, type DataTableColumn } from "@/components/DataTable";
 import { queryKeys } from "@/lib/queryKeys";
 import { useToast } from "@/hooks/use-toast";
 import { getErrorMessage } from "@/lib/errorUtils";
-import NuevoUsuarioDialog from "@/components/NuevoUsuarioDialog";
+import NuevoUsuarioDialog from "@/components/usuario/NuevoUsuarioDialog";
 import DoubleConfirmDeleteDialog from "@/components/DoubleConfirmDeleteDialog";
 
 interface GlobalUserRow {

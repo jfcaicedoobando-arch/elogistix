@@ -11,7 +11,7 @@ import {
 import { useProveedor, useProveedorMutations, useProveedorOperaciones } from "@/hooks/useProveedores";
 import { formatCurrency } from "@/lib/formatters";
 import { getEstadoColor } from "@/lib/helpers";
-import EditarProveedorDialog from "@/components/EditarProveedorDialog";
+import EditarProveedorDialog from "@/components/proveedor/EditarProveedorDialog";
 import { useToast } from "@/hooks/use-toast";
 import { usePermissions } from "@/hooks/usePermissions";
 import { useRegistrarActividad } from "@/hooks/useBitacora";

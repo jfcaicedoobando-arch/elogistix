@@ -1,8 +1,5 @@
 import { calcularUtilidad, calcularMargen } from "@/lib/financialUtils";
 
-// Re-export components for backward compatibility
-export { ProfitBadge, RentabilidadGlobalBadge } from "@/components/shared/ProfitBadge";
-
 /** Resultado de cálculo de totales P&L */
 export interface TotalesPL {
   totalCosto: number;

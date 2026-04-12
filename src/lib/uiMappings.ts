@@ -3,6 +3,9 @@
  * Separados de helpers.ts (utilidades puras de formateo).
  */
 
+import type { LucideIcon } from "lucide-react";
+import { Anchor, Plane, Truck, Ship } from "lucide-react";
+
 export const getEstadoColor = (estado: string): string => {
   const colors: Record<string, string> = {
     'Confirmado': 'bg-info/15 text-info border border-info/30',
@@ -41,4 +44,40 @@ export const getModoIcon = (modo: string): string => {
     'Multimodal': '🔄',
   };
   return icons[modo] || '📦';
+};
+
+/** Borde izquierdo de color por estado (para tarjetas de embarque) */
+export const getEstadoBorderColor = (estado: string): string => {
+  const map: Record<string, string> = {
+    "Confirmado": "border-l-blue-500",
+    "En Tránsito": "border-l-amber-500",
+    "Arribo": "border-l-cyan-500",
+    "En Aduana": "border-l-violet-500",
+    "Entregado": "border-l-emerald-500",
+    "EIR": "border-l-orange-500",
+    "Cerrado": "border-l-muted-foreground",
+    "Cancelado": "border-l-destructive",
+  };
+  return map[estado] || "border-l-muted-foreground";
+};
+
+/** Estilo de círculo por modo de transporte */
+export const getModoCircleStyle = (modo: string): string => {
+  const map: Record<string, string> = {
+    "Marítimo": "bg-blue-100 text-blue-600 dark:bg-blue-900/40 dark:text-blue-400",
+    "Aéreo": "bg-sky-100 text-sky-600 dark:bg-sky-900/40 dark:text-sky-400",
+    "Terrestre": "bg-amber-100 text-amber-600 dark:bg-amber-900/40 dark:text-amber-400",
+    "Multimodal": "bg-purple-100 text-purple-600 dark:bg-purple-900/40 dark:text-purple-400",
+  };
+  return map[modo] || "bg-muted text-muted-foreground";
+};
+
+/** Icono Lucide por modo de transporte (devuelve componente) */
+export const getModoLucideIcon = (modo: string): LucideIcon => {
+  switch (modo) {
+    case "Marítimo": return Anchor;
+    case "Aéreo": return Plane;
+    case "Terrestre": return Truck;
+    default: return Ship;
+  }
 };

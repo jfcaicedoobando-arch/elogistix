@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
+import { queryKeys } from "@/lib/queryKeys";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -65,8 +66,8 @@ export default function PortalCotizacionDetalle() {
           ? "Cotización aceptada exitosamente"
           : "Cotización rechazada",
       });
-      queryClient.invalidateQueries({ queryKey: ["portal", "cotizacion", id] });
-      queryClient.invalidateQueries({ queryKey: ["portal", "cotizaciones"] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.portal.cotizacion(id) });
+      queryClient.invalidateQueries({ queryKey: queryKeys.portal.cotizaciones([]) });
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : "Error al responder";
       toast({ title: "Error", description: message, variant: "destructive" });
