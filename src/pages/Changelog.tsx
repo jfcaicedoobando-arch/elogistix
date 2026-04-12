@@ -13,6 +13,13 @@ interface ChangelogEntry {
 
 const changelog: ChangelogEntry[] = [
   {
+    version: "8.2.0",
+    date: "2026-04-12",
+    type: "minor",
+    title: "Auditoría arquitectónica: refactoring de separación de concerns",
+    description: "1) calcularEstadoEmbarque movida de hooks/ a lib/embarqueLogic.ts (lógica pura). 2) Mapeos visuales del portal centralizados en uiMappings.ts. 3) Query keys del portal integradas en la factoría queryKeys.ts. 4) formatDate consolidada en formatters.ts. 5) ESTADO_TIMELINE derivado de ESTADOS_EMBARQUE. 6) ProfitBadge ya no se re-exporta desde lib/. 7) EmbarqueCard extraída a components/portal/. 8) Re-exports obsoletos eliminados. 9) Tipo any eliminado de EmbarqueCard.",
+  },
+  {
     version: "8.1.0",
     date: "2026-04-10",
     type: "minor",
