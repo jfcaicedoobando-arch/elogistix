@@ -11,21 +11,21 @@ const mockUseAuth = vi.mocked(useAuth);
 
 describe("usePermissions", () => {
   it("admin → canEdit true, isAdmin true", () => {
-    mockUseAuth.mockReturnValue({ role: "admin" } as any);
+    mockUseAuth.mockReturnValue({ role: "admin", effectiveRole: "admin" } as any);
     const { result } = renderHook(() => usePermissions());
     expect(result.current.canEdit).toBe(true);
     expect(result.current.isAdmin).toBe(true);
   });
 
   it("operador → canEdit true, isAdmin false", () => {
-    mockUseAuth.mockReturnValue({ role: "operador" } as any);
+    mockUseAuth.mockReturnValue({ role: "operador", effectiveRole: "operador" } as any);
     const { result } = renderHook(() => usePermissions());
     expect(result.current.canEdit).toBe(true);
     expect(result.current.isAdmin).toBe(false);
   });
 
   it("viewer → canEdit false, isAdmin false", () => {
-    mockUseAuth.mockReturnValue({ role: "viewer" } as any);
+    mockUseAuth.mockReturnValue({ role: "viewer", effectiveRole: "viewer" } as any);
     const { result } = renderHook(() => usePermissions());
     expect(result.current.canEdit).toBe(false);
     expect(result.current.isAdmin).toBe(false);
