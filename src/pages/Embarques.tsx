@@ -5,10 +5,6 @@ import { shortName } from "@/lib/formatters";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
-import {
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
-} from "@/components/ui/select";
 import {
   Tooltip, TooltipContent, TooltipTrigger, TooltipProvider,
 } from "@/components/ui/tooltip";
@@ -22,8 +18,6 @@ import { useRegistrarActividad } from "@/hooks/useBitacora";
 import { useToast } from "@/hooks/use-toast";
 import { formatDate } from "@/lib/formatters";
 import { getEstadoColor, getModoIcon } from "@/lib/uiMappings";
-import { ESTADOS_EMBARQUE, MODOS_TRANSPORTE } from "@/data/embarqueConstants";
-import SearchInput from "@/components/SearchInput";
 import PaginationControls from "@/components/PaginationControls";
 import { DataTable, type DataTableColumn } from "@/components/DataTable";
 import { useDebounce } from "@/hooks/useDebounce";
@@ -31,6 +25,7 @@ import type { EmbarqueRow } from "@/hooks/useEmbarques";
 import DoubleConfirmDeleteDialog from "@/components/DoubleConfirmDeleteDialog";
 import DialogDuplicarEmbarque from "@/components/embarque/DialogDuplicarEmbarque";
 import { useEmbarquesListExtras } from "@/hooks/useEmbarquesListData";
+import EmbarquesFiltros from "@/components/embarque/EmbarquesFiltros";
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
@@ -294,44 +289,24 @@ export default function Embarques() {
         <>
           <Card>
             <CardContent className="p-4">
-              <div className="flex flex-wrap gap-4">
-                <SearchInput
-                  value={search}
-                  onChange={(valor) => { setSearch(valor); setPage(0); }}
-                  placeholder="Buscar por expediente, cliente o mercancía..."
-                  className="flex-1 min-w-[200px]"
-                />
-                <Select value={filterModo} onValueChange={(v) => { setFilterModo(v); setPage(0); }}>
-                  <SelectTrigger className="w-[150px]"><SelectValue placeholder="Modo" /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="todos">Todos los modos</SelectItem>
-                    {MODOS_TRANSPORTE.map(m => <SelectItem key={m} value={m}>{getModoIcon(m)} {m}</SelectItem>)}
-                  </SelectContent>
-                </Select>
-                <Select value={filterEstado} onValueChange={(v) => { setFilterEstado(v); setPage(0); }}>
-                  <SelectTrigger className="w-[160px]"><SelectValue placeholder="Estado" /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="todos">Todos los estados</SelectItem>
-                    {ESTADOS_EMBARQUE.map(e => <SelectItem key={e} value={e}>{e}</SelectItem>)}
-                  </SelectContent>
-                </Select>
-                <Select value={filterCliente} onValueChange={(v) => { setFilterCliente(v); setPage(0); }}>
-                  <SelectTrigger className="w-[200px]"><SelectValue placeholder="Cliente" /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="todos">Todos los clientes</SelectItem>
-                    {clientes.map(c => <SelectItem key={c.id} value={c.id}>{c.nombre.split(' ').slice(0, 3).join(' ')}</SelectItem>)}
-                  </SelectContent>
-                </Select>
-                <Select value={filterOperador} onValueChange={(v) => { setFilterOperador(v); setPage(0); }}>
-                  <SelectTrigger className="w-[180px]"><SelectValue placeholder="Operador" /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="todos">Todos los operadores</SelectItem>
-                    {operadoresUnicos.map(op => <SelectItem key={op} value={op}>{op}</SelectItem>)}
-                  </SelectContent>
-                </Select>
-                <Input type="date" value={fechaDesde} onChange={(e) => { setFechaDesde(e.target.value); setPage(0); }} className="w-[150px]" placeholder="Desde (ETD)" title="ETD desde" />
-                <Input type="date" value={fechaHasta} onChange={(e) => { setFechaHasta(e.target.value); setPage(0); }} className="w-[150px]" placeholder="Hasta (ETA)" title="ETA hasta" />
-              </div>
+              <EmbarquesFiltros
+                search={search}
+                onSearchChange={(v) => { setSearch(v); setPage(0); }}
+                filterModo={filterModo}
+                onFilterModoChange={(v) => { setFilterModo(v); setPage(0); }}
+                filterEstado={filterEstado}
+                onFilterEstadoChange={(v) => { setFilterEstado(v); setPage(0); }}
+                filterCliente={filterCliente}
+                onFilterClienteChange={(v) => { setFilterCliente(v); setPage(0); }}
+                filterOperador={filterOperador}
+                onFilterOperadorChange={(v) => { setFilterOperador(v); setPage(0); }}
+                fechaDesde={fechaDesde}
+                onFechaDesdeChange={(v) => { setFechaDesde(v); setPage(0); }}
+                fechaHasta={fechaHasta}
+                onFechaHastaChange={(v) => { setFechaHasta(v); setPage(0); }}
+                clientes={clientes}
+                operadores={operadoresUnicos}
+              />
             </CardContent>
           </Card>
 
