@@ -13,6 +13,7 @@ export const queryKeys = {
     notas: (id: string) => ['notas_embarque', id] as const,
     facturas: (id: string) => ['facturas', 'embarque', id] as const,
     eventos: (id: string) => ['eventos_embarque', id] as const,
+    relacionados: (id: string, blMaster: string) => ['embarques', 'relacionados', id, blMaster] as const,
   },
   cotizaciones: {
     all: ['cotizaciones'] as const,
@@ -26,6 +27,7 @@ export const queryKeys = {
     detail: (id: string) => ['clientes', id] as const,
     select: ['clientes', 'select'] as const,
     contactos: (id: string) => ['contactos_cliente', id] as const,
+    clientUsers: (id: string) => ['client_users', id] as const,
     embarques: (id: string) => ['clientes', 'embarques', id] as const,
     cotizaciones: (id: string) => ['clientes', 'cotizaciones', id] as const,
   },
@@ -115,5 +117,6 @@ export const queryKeys = {
     orgCountEmbarques: (id: string) => ['admin-org-count-embarques', id] as const,
     orgCountClientes: (id: string) => ['admin-org-count-clientes', id] as const,
     orgCountCotizaciones: (id: string) => ['admin-org-count-cotizaciones', id] as const,
+    organizationsList: ['admin', 'organizations-list'] as const,
   },
 } as const;

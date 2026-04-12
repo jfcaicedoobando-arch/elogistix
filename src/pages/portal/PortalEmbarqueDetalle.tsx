@@ -11,7 +11,8 @@ import { getEstadoColor, getModoIcon } from "@/lib/uiMappings";
 import { calcularEstadoEmbarque } from "@/lib/embarqueLogic";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { format, parseISO, differenceInDays } from "date-fns";
+import { formatDate } from "@/lib/formatters";
+import { parseISO, differenceInDays } from "date-fns";
 import { es } from "date-fns/locale";
 import { useState, useMemo } from "react";
 
@@ -172,7 +173,7 @@ export default function PortalEmbarqueDetalle() {
               <p className="text-xs text-muted-foreground">
                 Llegada estimada en <span className="font-bold text-accent">{diasParaEta} día{diasParaEta !== 1 ? "s" : ""}</span>
                 {embarque.eta && (
-                  <span> ({format(parseISO(embarque.eta), "dd 'de' MMMM", { locale: es })})</span>
+                  <span> ({formatDate(embarque.eta, "dd 'de' MMMM")})</span>
                 )}
               </p>
             </div>
@@ -197,13 +198,13 @@ export default function PortalEmbarqueDetalle() {
         <Card>
           <CardContent className="p-3 text-center">
             <p className="text-[10px] text-muted-foreground font-medium">ETD</p>
-            <p className="text-xs font-semibold mt-0.5">{embarque.etd ? format(parseISO(embarque.etd), "dd/MM/yyyy") : "—"}</p>
+            <p className="text-xs font-semibold mt-0.5">{embarque.etd ? formatDate(embarque.etd) : "—"}</p>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="p-3 text-center">
             <p className="text-[10px] text-muted-foreground font-medium">ETA</p>
-            <p className="text-xs font-semibold mt-0.5">{embarque.eta ? format(parseISO(embarque.eta), "dd/MM/yyyy") : "—"}</p>
+            <p className="text-xs font-semibold mt-0.5">{embarque.eta ? formatDate(embarque.eta) : "—"}</p>
           </CardContent>
         </Card>
       </div>
@@ -308,7 +309,7 @@ export default function PortalEmbarqueDetalle() {
                             <Badge variant="secondary" className="text-xs">{ev.tipo}</Badge>
                             <span className="text-xs text-muted-foreground flex items-center gap-1">
                               <Clock className="h-3 w-3" />
-                              {format(new Date(ev.fecha), "dd MMM yyyy, HH:mm", { locale: es })}
+                              {formatDate(ev.fecha, "dd MMM yyyy, HH:mm")}
                             </span>
                           </div>
                           {ev.descripcion && <p className="text-sm text-foreground">{ev.descripcion}</p>}

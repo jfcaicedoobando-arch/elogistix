@@ -11,8 +11,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { usePermissions } from '@/hooks/usePermissions';
 import { useToast } from '@/hooks/use-toast';
 import { getErrorMessage } from '@/lib/errorUtils';
-import { format } from 'date-fns';
-import { es } from 'date-fns/locale';
+import { formatDate } from '@/lib/formatters';
 
 interface Props {
   embarqueId: string;
@@ -154,7 +153,7 @@ export function TabTracking({ embarqueId }: Props) {
                         <Badge variant="secondary" className="text-xs">{ev.tipo}</Badge>
                         <span className="text-xs text-muted-foreground flex items-center gap-1">
                           <Clock className="h-3 w-3" />
-                          {format(new Date(ev.fecha), "dd MMM yyyy, HH:mm", { locale: es })}
+                          {formatDate(ev.fecha, "dd MMM yyyy, HH:mm")}
                         </span>
                       </div>
 
