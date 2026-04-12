@@ -1,12 +1,13 @@
-// Barrel re-export — maintains backward compatibility for all existing imports
-export {
-  calcularEstadoEmbarque,
-  type EmbarqueRow,
-  type ConceptoVentaRow,
-  type ConceptoCostoRow,
-  type DocumentoEmbarqueRow,
-  type NotaEmbarqueRow,
-} from './useEmbarqueUtils';
+// Barrel re-export — single entry point for all embarque types, queries & mutations
+import type { Tables } from '@/integrations/supabase/types';
+
+export type EmbarqueRow = Tables<'embarques'>;
+export type ConceptoVentaRow = Tables<'conceptos_venta'>;
+export type ConceptoCostoRow = Tables<'conceptos_costo'>;
+export type DocumentoEmbarqueRow = Tables<'documentos_embarque'>;
+export type NotaEmbarqueRow = Tables<'notas_embarque'>;
+
+export { calcularEstadoEmbarque } from '@/lib/embarqueLogic';
 
 export {
   useEmbarques,

@@ -1,7 +1,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import type { Json, TablesInsert, Enums } from '@/integrations/supabase/types';
-import type { EmbarqueRow } from './useEmbarqueUtils';
+import type { Json, Tables, TablesInsert, Enums } from '@/integrations/supabase/types';
+type EmbarqueRow = Tables<'embarques'>;
 import { queryKeys } from '@/lib/queryKeys';
 
 type EmbarqueInsert = TablesInsert<'embarques'>;
