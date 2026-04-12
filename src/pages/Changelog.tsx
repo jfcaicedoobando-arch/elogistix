@@ -13,6 +13,13 @@ interface ChangelogEntry {
 
 const changelog: ChangelogEntry[] = [
   {
+    version: "8.5.0",
+    date: "2026-04-12",
+    type: "minor",
+    title: "Limpieza final: type safety, query keys y descomposición portal",
+    description: "1) as any eliminado en CotizacionDetalle (comentario_cliente tipado). 2) Query keys centralizados: client_users, organizations-list, embarques-relacionados registrados en queryKeys.ts. 3) format(parseISO) inline migrado a formatDate en 4 archivos (PortalDashboard, PortalEmbarqueDetalle, TabPortalCliente, TabTracking). 4) AgregarMiembroOrgDialog migrado de useEffect+setState a useQuery. 5) PortalEmbarqueDetalle descompuesto en PortalEmbarqueTimeline y PortalEmbarqueDocumentos.",
+  },
+  {
     version: "8.4.0",
     date: "2026-04-12",
     type: "minor",
