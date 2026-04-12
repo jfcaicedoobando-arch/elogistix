@@ -45,7 +45,7 @@ export default function EmbarqueCard({ e }: { e: EmbarqueCardData }) {
           <div className="flex items-center justify-between gap-2">
             <div className="flex items-center gap-3 min-w-0">
               <div className={`rounded-full p-2 flex-shrink-0 ${getModoCircleStyle(e.modo)}`}>
-                {getModoLucideIcon(e.modo)}
+                {(() => { const Icon = getModoLucideIcon(e.modo); return <Icon className="h-5 w-5" />; })()}
               </div>
               <p className="font-semibold text-sm truncate">
                 {e.expediente}{e.contenedor ? ` — ${e.contenedor}` : ""}
