@@ -10,12 +10,12 @@ import { supabase } from "@/integrations/supabase/client";
 import { Loader2 } from "lucide-react";
 import { getErrorMessage } from "@/lib/errorUtils";
 import { queryKeys } from "@/lib/queryKeys";
+import { useCreateUser } from "@/hooks/useUsuarioMutations";
 
 interface Props {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onCreated: () => void;
-  /** When true, shows an organization selector (for admin/global context) */
   showOrgSelector?: boolean;
 }
 
@@ -24,8 +24,8 @@ export default function NuevoUsuarioDialog({ open, onOpenChange, onCreated, show
   const [password, setPassword] = useState("");
   const [role, setRole] = useState("viewer");
   const [orgId, setOrgId] = useState("");
-  const [loading, setLoading] = useState(false);
   const { toast } = useToast();
+  const createUser = useCreateUser();
 
   const { data: orgs = [] } = useQuery({
     queryKey: queryKeys.admin.organizationsList,
@@ -49,46 +49,23 @@ export default function NuevoUsuarioDialog({ open, onOpenChange, onCreated, show
       return;
     }
 
-    setLoading(true);
-    try {
-      const { data: sessionData } = await supabase.auth.getSession();
-      const token = sessionData.session?.access_token;
-
-      const res = await supabase.functions.invoke("create-user", {
-        body: { email, password, role },
-        headers: token ? { Authorization: `Bearer ${token}` } : undefined,
-      });
-
-      if (res.error) throw new Error(res.error.message || "Error al crear usuario");
-      const body = res.data;
-      if (body?.error) throw new Error(body.error);
-
-      // If admin context, also assign to selected organization
-      if (showOrgSelector && orgId && body?.user?.id) {
-        const { error: memberError } = await supabase.from("organization_members").insert({
-          organization_id: orgId,
-          user_id: body.user.id,
-          role: role as "admin" | "operador" | "viewer",
-        });
-        if (memberError) {
-          toast({ title: "Usuario creado", description: `Pero no se pudo asignar a la organización: ${memberError.message}`, variant: "destructive" });
-          setLoading(false);
-          return;
-        }
+    createUser.mutate(
+      { email, password, role, orgId: showOrgSelector ? orgId : undefined },
+      {
+        onSuccess: () => {
+          toast({ title: "Usuario creado", description: `Se registró ${email} como ${role}` });
+          setEmail("");
+          setPassword("");
+          setRole("viewer");
+          setOrgId("");
+          onOpenChange(false);
+          onCreated();
+        },
+        onError: (err: unknown) => {
+          toast({ title: "Error", description: getErrorMessage(err), variant: "destructive" });
+        },
       }
-
-      toast({ title: "Usuario creado", description: `Se registró ${email} como ${role}` });
-      setEmail("");
-      setPassword("");
-      setRole("viewer");
-      setOrgId("");
-      onOpenChange(false);
-      onCreated();
-    } catch (err: unknown) {
-      toast({ title: "Error", description: getErrorMessage(err), variant: "destructive" });
-    } finally {
-      setLoading(false);
-    }
+    );
   };
 
   return (
@@ -140,9 +117,9 @@ export default function NuevoUsuarioDialog({ open, onOpenChange, onCreated, show
             </Select>
           </div>
           <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={loading}>Cancelar</Button>
-            <Button type="submit" disabled={loading}>
-              {loading && <Loader2 className="h-4 w-4 animate-spin" />}
+            <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={createUser.isPending}>Cancelar</Button>
+            <Button type="submit" disabled={createUser.isPending}>
+              {createUser.isPending && <Loader2 className="h-4 w-4 animate-spin" />}
               Crear usuario
             </Button>
           </DialogFooter>

@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Users, UserPlus, Trash2 } from "lucide-react";
@@ -9,39 +8,28 @@ import { getErrorMessage } from "@/lib/errorUtils";
 import NuevoUsuarioDialog from "@/components/usuario/NuevoUsuarioDialog";
 import DoubleConfirmDeleteDialog from "@/components/DoubleConfirmDeleteDialog";
 import { useAdminGlobalUsers, type GlobalUserRow } from "@/hooks/useAdminData";
+import { useDeleteUser } from "@/hooks/useUsuarioMutations";
 
 export default function AdminUsuarios() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<GlobalUserRow | null>(null);
-  const [deleting, setDeleting] = useState(false);
   const { toast } = useToast();
-
   const { data: users = [], isLoading, refetch } = useAdminGlobalUsers();
+  const deleteUser = useDeleteUser();
 
   const handleDelete = async () => {
     if (!deleteTarget) return;
-    setDeleting(true);
-    try {
-      const { data: sessionData } = await supabase.auth.getSession();
-      const token = sessionData.session?.access_token;
-
-      const res = await supabase.functions.invoke("delete-user", {
-        body: { user_id: deleteTarget.user_id },
-        headers: token ? { Authorization: `Bearer ${token}` } : undefined,
-      });
-
-      if (res.error) throw new Error(res.error.message || "Error al eliminar usuario");
-      const body = res.data;
-      if (body?.error) throw new Error(body.error);
-
-      toast({ title: "Usuario eliminado", description: `Se eliminó ${deleteTarget.email} del sistema.` });
-      refetch();
-    } catch (err: unknown) {
-      toast({ title: "Error", description: getErrorMessage(err), variant: "destructive" });
-    } finally {
-      setDeleting(false);
-      setDeleteTarget(null);
-    }
+    deleteUser.mutate(deleteTarget.user_id, {
+      onSuccess: () => {
+        toast({ title: "Usuario eliminado", description: `Se eliminó ${deleteTarget.email} del sistema.` });
+        refetch();
+        setDeleteTarget(null);
+      },
+      onError: (err: unknown) => {
+        toast({ title: "Error", description: getErrorMessage(err), variant: "destructive" });
+        setDeleteTarget(null);
+      },
+    });
   };
 
   const roleBadge: Record<string, string> = {
@@ -56,17 +44,9 @@ export default function AdminUsuarios() {
     { key: "org", header: "Organización", width: "w-[180px]", sortable: true, sortValue: (u) => u.org_nombre, render: (u) => u.org_nombre },
     { key: "role", header: "Rol", width: "w-[120px]", render: (u) => <Badge className={roleBadge[u.role] ?? ""}>{u.role}</Badge> },
     {
-      key: "actions",
-      header: "",
-      width: "w-[60px]",
+      key: "actions", header: "", width: "w-[60px]",
       render: (u) => (
-        <Button
-          variant="ghost"
-          size="icon"
-          className="text-muted-foreground hover:text-destructive"
-          onClick={() => setDeleteTarget(u)}
-          title="Eliminar usuario"
-        >
+        <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-destructive" onClick={() => setDeleteTarget(u)} title="Eliminar usuario">
           <Trash2 className="h-4 w-4" />
         </Button>
       ),
@@ -84,8 +64,7 @@ export default function AdminUsuarios() {
           </div>
         </div>
         <Button onClick={() => setDialogOpen(true)}>
-          <UserPlus className="h-4 w-4" />
-          Nuevo Usuario
+          <UserPlus className="h-4 w-4" /> Nuevo Usuario
         </Button>
       </div>
 
@@ -98,17 +77,11 @@ export default function AdminUsuarios() {
         description={`El usuario ${deleteTarget?.email} será eliminado permanentemente del sistema, incluyendo sus membresías y roles.`}
         finalDescription="Esta acción eliminará la cuenta de autenticación, roles y membresías de organización. No se puede deshacer."
         onConfirm={handleDelete}
-        isPending={deleting}
+        isPending={deleteUser.isPending}
       />
 
       <div className="rounded-md border">
-        <DataTable
-          columns={columns}
-          data={users}
-          isLoading={isLoading}
-          emptyMessage="No hay usuarios."
-          rowKey={(u) => u.user_id + u.org_nombre}
-        />
+        <DataTable columns={columns} data={users} isLoading={isLoading} emptyMessage="No hay usuarios." rowKey={(u) => u.user_id + u.org_nombre} />
       </div>
     </div>
   );
