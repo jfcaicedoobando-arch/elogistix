@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -9,7 +9,7 @@ import { calcularUtilidad, calcularMargen } from "@/lib/financialUtils";
 import { ProfitBadge } from "@/components/shared/ProfitBadge";
 import { CONCEPTOS_COSTO_USD, CONCEPTOS_COSTO_MXN } from "@/data/cotizacionConstants";
 import type { FilaCostoLocal } from "./SeccionCostosInternosPLUnificado";
-import type { PLTotals } from "@/lib/profitUtils";
+import type { TotalesPL } from "@/lib/profitUtils";
 
 const UNIDADES_MEDIDA = ['BL', 'W/M', 'Documento', 'Contenedor', 'Kilo', 'Embarque'];
 
@@ -30,7 +30,7 @@ interface Props {
   moneda: "USD" | "MXN";
   title: string;
   icon: React.ReactNode;
-  totales: PLTotals;
+  totales: TotalesPL;
   onUpdate: (globalIdx: number, field: keyof FilaCostoLocal, value: string | number | boolean) => void;
   onAdd: (moneda: "USD" | "MXN") => void;
   onRemove: (globalIdx: number) => void;

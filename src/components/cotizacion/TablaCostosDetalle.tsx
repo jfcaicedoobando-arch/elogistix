@@ -6,7 +6,7 @@ import {
 import { formatCurrency } from "@/lib/formatters";
 import { calcularUtilidad, calcularMargen } from "@/lib/financialUtils";
 import { ProfitBadge } from "@/components/shared/ProfitBadge";
-import type { PLTotals } from "@/lib/profitUtils";
+import type { TotalesPL } from "@/lib/profitUtils";
 
 interface FilaCostoDetalle {
   concepto: string;
@@ -35,7 +35,7 @@ interface Props {
   moneda: "USD" | "MXN";
   title: string;
   icon: React.ReactNode;
-  totales: PLTotals;
+  totales: TotalesPL;
   canEdit: boolean;
   onUpdate: (globalIdx: number, field: "proveedor" | "costo_unitario", value: string) => void;
 }
