@@ -11,7 +11,6 @@ import { formatCurrency, formatDate } from "@/lib/formatters";
 import { Link } from "react-router-dom";
 import { Skeleton } from "@/components/ui/skeleton";
 import { parseISO, isAfter, addDays } from "date-fns";
-import { es } from "date-fns/locale";
 import { useMemo } from "react";
 
 const kpis = [

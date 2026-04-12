@@ -13,7 +13,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { formatDate } from "@/lib/formatters";
 import { parseISO, differenceInDays } from "date-fns";
-import { es } from "date-fns/locale";
 import { useState, useMemo } from "react";
 
 const ICONO_EVENTO: Record<string, string> = {
