@@ -13,6 +13,13 @@ interface ChangelogEntry {
 
 const changelog: ChangelogEntry[] = [
   {
+    version: "8.3.0",
+    date: "2026-04-12",
+    type: "minor",
+    title: "Limpieza arquitectónica: eliminación de deuda técnica post-v8.2.0",
+    description: "1) Mapas estadoColor duplicados en 3 páginas del portal unificados con getEstadoColor de uiMappings.ts. 2) 17 consumidores migrados de helpers.ts a imports directos (formatters.ts/uiMappings.ts); helpers.ts eliminado. 3) 6 casts 'as any' eliminados: comentario_cliente tipado correctamente, enums de eventos derivados del esquema. 4) formatDate extendida con locale (es por defecto). 5) barColors inline en PortalDashboard movido a getEstadoBarColor en uiMappings.ts. 6) ESTADO_TIMELINE deprecated eliminado; consumidores migrados a ESTADOS_EMBARQUE. 7) resolverContacto extraída a lib/contactoUtils.ts.",
+  },
+  {
     version: "8.2.0",
     date: "2026-04-12",
     type: "minor",
