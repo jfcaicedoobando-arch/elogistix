@@ -1,90 +1,97 @@
 
 
-## Auditoría Arquitectónica — Reporte Post-Refactoring v8.2.0
+## Auditoría Arquitectónica v8.4.0 — Reporte Final
 
-La auditoría anterior (v8.2.0) corrigió los problemas más críticos. Esta revisión identifica la deuda técnica restante y nuevas oportunidades de mejora.
+El codebase ha mejorado enormemente tras los refactorings v8.2.0–v8.4.0. Los problemas restantes son menores pero vale la pena documentarlos para completar la limpieza.
 
 ---
 
 ### Hallazgos ordenados por criticidad
 
-#### 1. ALTO — `estadoColor` duplicado 3 veces en el portal
+#### 1. ALTO — `as any` residual en `CotizacionDetalle.tsx`
 
-`PortalCotizaciones.tsx`, `PortalCotizacionDetalle.tsx` y `PortalFacturas.tsx` cada uno define su propio mapa `estadoColor` inline con estilos **ligeramente distintos** entre sí y distintos de `getEstadoColor()` en `uiMappings.ts`. Esto genera inconsistencia visual entre las vistas del portal y el sistema principal, y cualquier cambio de colores requiere editar 4 archivos.
+Líneas 178 y 182 usan `(cotizacion as any).comentario_cliente`. Este campo se tipó correctamente en `PortalCotizacionDetalle.tsx` pero el fix no se propagó aquí.
 
-**Recomendación**: Unificar. Usar `getEstadoColor()` de `uiMappings.ts` en las 3 páginas del portal, o agregar una variante allí si los estilos del portal son intencionalmente diferentes.
+**Archivos**: `src/pages/CotizacionDetalle.tsx`
+**Solución**: Importar el tipo correcto (`Tables<'cotizaciones'>`) o acceder al campo tipado si ya existe en el esquema.
 
-#### 2. ALTO — `helpers.ts` sigue teniendo 17 consumidores
+---
 
-Aunque `helpers.ts` fue reducido a un barrel mínimo, 17 archivos siguen importando desde él en vez de directamente desde `formatters.ts` y `uiMappings.ts`. El archivo intermedio agrega una capa de indirección innecesaria.
+#### 2. ALTO — Queries inline con strings hardcodeados en 3 componentes
 
-**Recomendación**: Migrar los 17 consumidores para importar directamente desde `formatters.ts` (`formatDate`) y `uiMappings.ts` (`getEstadoColor`, `getModoIcon`). Después, eliminar `helpers.ts`.
+Tres componentes tienen queries Supabase directas con `queryKey` de strings sin usar `queryKeys`:
 
-#### 3. ALTO — `as any` residuales en código de producción (6 ocurrencias)
+- **`TabPortalCliente.tsx`**: query `["client_users", clienteId]` + mutaciones `delete` directas contra `client_users`
+- **`NuevoUsuarioDialog.tsx`**: query `["admin", "organizations-list"]` + insert directo a `organization_members`
+- **`TabResumen.tsx`**: query `['embarques-relacionados', ...]`
 
-- `PortalCotizacionDetalle.tsx`: 4× `(cot as any).comentario_cliente` — el campo existe en la BD pero no en el tipo `CotizacionRow`.
-- `PortalDashboard.tsx`: 2× `ESTADOS_EMBARQUE.indexOf(a[0] as any)` — cast innecesario.
-- `useEventosEmbarque.ts`: `tipo as any` — enum no tipado.
-- `useEmbarqueMutations.ts`: `tipoEvento as any` — mismo problema de enum.
+**Solución**: Extraer a hooks dedicados o agregar keys al factory `queryKeys.ts`. Registrar `clientUsers` en `queryKeys.portal` o `queryKeys.clientes`.
 
-**Recomendación**: Agregar `comentario_cliente` a `CotizacionRow` (si existe en la BD). Para los `indexOf`, usar un type assertion más preciso. Para los enums de eventos, derivar el tipo del esquema.
+---
 
-#### 4. MEDIO — `format(parseISO(...))` inline en portal (7 llamadas)
+#### 3. MEDIO — `format(parseISO(...))` inline en 3 archivos (7 llamadas)
 
-`PortalDashboard.tsx` y `PortalEmbarqueDetalle.tsx` usan `format(parseISO(date), ...)` directamente en vez de `formatDate`. Algunos usan locale `es` con formatos especiales (`"dd MMM"`, `"dd 'de' MMMM"`).
+Persisten llamadas directas a `format(parseISO(...))` en vez de usar el centralizado `formatDate`:
 
-**Recomendación**: Extender `formatDate` en `formatters.ts` para aceptar un parámetro `locale` opcional, y migrar las llamadas inline.
+- `PortalDashboard.tsx`: 2 llamadas con formatos `"dd MMM"` y `"dd/MM"`
+- `PortalEmbarqueDetalle.tsx`: 3 llamadas con formatos `"dd 'de' MMMM"` y `"dd/MM/yyyy"`
+- `TabPortalCliente.tsx`: 1 llamada con `format(new Date(...))` 
 
-#### 5. MEDIO — `barColors` en `PortalDashboard.tsx` duplica colores de estado
+`formatDate` ya acepta `locale` y `formatStr`, así que estas llamadas pueden migrarse directamente.
 
-Líneas 156-165 definen un mapa `barColors` con colores de barra por estado que son redundantes con `estadoConfig.ts` y `uiMappings.ts`.
+**Archivos**: 3 archivos portal
+**Solución**: Reemplazar por `formatDate(dateStr, "dd MMM")`.
 
-**Recomendación**: Agregar un mapa de colores de barra a `uiMappings.ts` o `estadoConfig.ts`.
+---
 
-#### 6. MEDIO — `ESTADO_TIMELINE` sigue con consumidores activos
+#### 4. MEDIO — `AgregarMiembroOrgDialog.tsx` usa `useEffect` + `setState` para fetching
 
-Aunque fue marcado como `@deprecated`, `useEmbarqueDetalleActions.ts` y el test `embarqueConstants.test.ts` lo usan. La migración quedó incompleta.
+Líneas 33-47 usan un patrón imperativo (`useEffect` → `supabase.functions.invoke` → `setState`) en vez del patrón declarativo del proyecto (React Query). Esto no maneja estados de error, no se beneficia del caché, y rompe la convención.
 
-**Recomendación**: Reemplazar por `ESTADOS_EMBARQUE` en los 2 consumidores y eliminar el alias deprecated.
+**Archivos**: `src/components/admin/AgregarMiembroOrgDialog.tsx`
+**Solución**: Migrar a `useQuery` con la key `queryKeys.admin.allUsers` (reutilizando `useAdminGlobalUsers` o un subset).
 
-#### 7. MEDIO — Admin pages hacen queries directas a Supabase
+---
 
-`AdminDashboard.tsx`, `AdminUsuarios.tsx` y `AdminOrganizaciones.tsx` llaman `supabase.from(...)` directamente en la página en vez de usar hooks dedicados. Esto rompe la convención del resto de la app.
+#### 5. MEDIO — `format` importado de `date-fns` en componentes que deberían usar `formatDate`
 
-**Recomendación**: Extraer estas queries a `useAdminData.ts` o hooks similares, y registrar sus keys en `queryKeys.admin`.
+`TabTracking.tsx` y `SeccionRutaCotizacion.tsx` importan `format` directamente de `date-fns`. El primero formatea fechas de eventos; el segundo formatea fechas para el calendario (caso especial legítimo para `<Calendar>`).
 
-#### 8. BAJO — Backward-compat wrappers en `useEmbarquesListData.ts`
+**Archivos**: `TabTracking.tsx` (migrable), `SeccionRutaCotizacion.tsx` (legítimo — formato de Calendar component)
+**Solución**: Migrar `TabTracking.tsx` a `formatDate`. Dejar `SeccionRutaCotizacion.tsx` como está.
 
-`useEmbarquesLiquidacion` y `useEmbarquesDocsStatus` son wrappers de backward-compat sobre `useEmbarquesListExtras`. Solo `Embarques.tsx` los usa.
+---
 
-**Recomendación**: Migrar `Embarques.tsx` a usar `useEmbarquesListExtras` directamente y eliminar los wrappers.
+#### 6. BAJO — `PortalEmbarqueDetalle.tsx` es el archivo más grande (392 líneas)
 
-#### 9. BAJO — `useEmbarqueUtils.ts` es solo tipos + re-export
+Combina resumen, timeline de eventos, documentos y detalles financieros en un solo componente. Podría descomponerse en sub-componentes.
 
-El archivo solo define type aliases y re-exporta `calcularEstadoEmbarque`. Podría eliminarse moviendo los tipos a `useEmbarques.ts` o a un archivo `types/embarque.ts`.
+**Solución**: Extraer secciones a componentes como `PortalEmbarqueTimeline`, `PortalEmbarqueDocumentos`. No es urgente dado que la complejidad es manejable.
 
-#### 10. BAJO — Test de `helpers.ts` prueba funciones que ya no son canónicas ahí
+---
 
-`src/lib/__tests__/helpers.test.ts` testea `formatDate`, `getEstadoColor` y `getModoIcon` importándolos desde `helpers.ts`, pero las funciones canónicas están en `formatters.ts` y `uiMappings.ts`.
+#### 7. BAJO — Query keys no registrados en el factory
+
+- `["client_users", clienteId]` en `TabPortalCliente`
+- `["admin", "organizations-list"]` en `NuevoUsuarioDialog`
+- `['embarques-relacionados', ...]` en `TabResumen`
+
+Estas deberían registrarse en `queryKeys.ts` para consistencia.
 
 ---
 
 ### Plan de acción recomendado
 
-| Paso | Archivos afectados | Esfuerzo |
-|------|-------------------|----------|
-| 1. Eliminar `estadoColor` duplicados del portal, usar `getEstadoColor` | 3 archivos portal + `uiMappings.ts` | Bajo |
-| 2. Migrar 17 consumidores de `helpers.ts` → imports directos, eliminar `helpers.ts` | 17 archivos + `helpers.ts` + test | Medio |
-| 3. Eliminar `as any` residuales (agregar campo a tipo, tipar enums) | 4 archivos | Bajo |
-| 4. Extender `formatDate` con locale y migrar `format(parseISO(...))` inline | `formatters.ts` + 2 archivos portal | Bajo |
-| 5. Mover `barColors` a `uiMappings.ts` | `PortalDashboard.tsx` + `uiMappings.ts` | Bajo |
-| 6. Completar migración de `ESTADO_TIMELINE` → `ESTADOS_EMBARQUE` | 2 archivos + `embarqueConstants.ts` | Bajo |
-| 7. Extraer queries de admin a hooks dedicados | 3 archivos admin + nuevo hook | Medio |
-| 8. Eliminar wrappers backward-compat en `useEmbarquesListData.ts` | 2 archivos | Bajo |
-| 9. Consolidar `useEmbarqueUtils.ts` | 2 archivos | Bajo |
-| 10. Mover test de helpers al módulo correcto | 1 archivo test | Bajo |
+| Paso | Descripción | Archivos | Esfuerzo |
+|------|------------|----------|----------|
+| 1 | Eliminar `as any` en `CotizacionDetalle.tsx` — tipar `comentario_cliente` | 1 archivo | Bajo |
+| 2 | Extraer queries de `TabPortalCliente` y `NuevoUsuarioDialog` a hooks, registrar keys | 3 archivos + `queryKeys.ts` | Medio |
+| 3 | Migrar `format(parseISO(...))` inline a `formatDate` en portal + `TabTracking` | 4 archivos | Bajo |
+| 4 | Refactorizar `AgregarMiembroOrgDialog` de `useEffect`+`setState` a `useQuery` | 1 archivo | Bajo |
+| 5 | Registrar query keys faltantes (`embarques-relacionados`, `client_users`) | `queryKeys.ts` + `TabResumen.tsx` | Bajo |
+| 6 | Descomponer `PortalEmbarqueDetalle.tsx` en sub-componentes (opcional) | 1 → 3 archivos | Medio |
 
 ### Resumen
 
-La arquitectura mejoró significativamente con la auditoría anterior. Los problemas restantes son: **consistencia incompleta** (mapas de color duplicados, `helpers.ts` aún como intermediario, `ESTADO_TIMELINE` deprecated pero activo) y **deuda técnica menor** (6 `as any`, queries inline en admin, wrappers de backward-compat). Ninguno es un blocker, pero resolverlos completa la limpieza iniciada en v8.2.0.
+La arquitectura está en **excelente estado**. Los hallazgos son deuda técnica menor: 1 cast `as any` residual, 3 componentes con queries no centralizadas, y algunas llamadas de formateo que no siguen la convención establecida. Un patrón imperativo de fetching (`useEffect`) sobrevive en un diálogo de admin. Nada es un blocker funcional — completar estos pasos cierra definitivamente el ciclo de limpieza iniciado en v8.2.0.
 
