@@ -13,6 +13,13 @@ interface ChangelogEntry {
 
 const changelog: ChangelogEntry[] = [
   {
+    version: "8.6.0",
+    date: "2026-04-12",
+    type: "minor",
+    title: "Descomposición de componentes y extracción de servicios",
+    description: "1) SeccionCostosInternosPLUnificado descompuesto en TablaCostosLocal y TablaCostosDetalle (444→230 líneas). 2) Lógica de guardado del wizard de cotización extraída a lib/cotizacionServices.ts (savePaso1-4, buildConceptosFromCostos). useCotizacionWizardForm reducido de 429→280 líneas.",
+  },
+  {
     version: "8.5.2",
     date: "2026-04-12",
     type: "patch",
