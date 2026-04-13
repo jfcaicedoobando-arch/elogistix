@@ -8,7 +8,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { usePortalEmbarque, usePortalEventos, usePortalDocumentos } from "@/hooks/usePortalData";
 import { getEstadoColor, getModoIcon } from "@/lib/uiMappings";
 import { calcularEstadoEmbarque } from "@/lib/embarqueLogic";
-import { formatDate } from "@/lib/formatters";
+import { formatDate, getOrigen, getDestino } from "@/lib/formatters";
 import { parseISO, differenceInDays } from "date-fns";
 import { useMemo } from "react";
 import { PortalEmbarqueTimeline } from "@/components/portal/PortalEmbarqueTimeline";

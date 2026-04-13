@@ -8,6 +8,7 @@ import { Collapsible, CollapsibleTrigger, CollapsibleContent } from "@/component
 import { usePortalEmbarques, usePortalClientUsers } from "@/hooks/usePortalData";
 import { getEstadoColor } from "@/lib/uiMappings";
 import { calcularEstadoEmbarque } from "@/lib/embarqueLogic";
+import { getOrigen, getDestino } from "@/lib/formatters";
 import EmbarqueCard from "@/components/portal/EmbarqueCard";
 import { Search, Ship, Filter, Package, ChevronDown } from "lucide-react";
 
