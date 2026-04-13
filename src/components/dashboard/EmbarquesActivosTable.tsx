@@ -2,9 +2,8 @@ import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { DataTable, type DataTableColumn } from "@/components/DataTable";
-import { formatDate } from "@/lib/formatters";
+import { formatDate, formatCurrency, getOrigen, getDestino } from "@/lib/formatters";
 import { getModoIcon, getEstadoColor } from "@/lib/uiMappings";
-import { formatCurrency } from "@/lib/formatters";
 import type { EmbarqueMesSiguiente, ResumenFacturacion } from "@/hooks/useDashboardData";
 
 import { CalendarDays, DollarSign, TrendingUp, FileCheck, Package } from "lucide-react";
@@ -14,10 +13,6 @@ interface Props {
   embarques: EmbarqueMesSiguiente[];
   resumen: ResumenFacturacion;
   isLoading: boolean;
-}
-
-function shortName(raw: string) {
-  return raw.split(/[,—]/)[0].trim();
 }
 
 const columns: DataTableColumn<EmbarqueMesSiguiente>[] = [
@@ -32,11 +27,7 @@ const columns: DataTableColumn<EmbarqueMesSiguiente>[] = [
     ),
   },
   {
-    key: "ruta", header: "Origen → Destino", className: "text-xs max-w-[180px] truncate", render: (e) => {
-      const origen = shortName(e.puerto_origen || e.aeropuerto_origen || e.ciudad_origen || "-");
-      const destino = shortName(e.puerto_destino || e.aeropuerto_destino || e.ciudad_destino || "-");
-      return `${origen} → ${destino}`;
-    },
+    key: "ruta", header: "Origen → Destino", className: "text-xs max-w-[180px] truncate", render: (e) => `${getOrigen(e)} → ${getDestino(e)}`,
   },
   { key: "eta", header: "ETA", className: "text-xs", sortable: true, sortValue: (e) => e.eta || "", render: (e) => e.eta ? formatDate(e.eta) : "-" },
   {

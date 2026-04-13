@@ -139,13 +139,13 @@ export default function PortalEmbarqueDetalle() {
         <Card>
           <CardContent className="p-3 text-center">
             <p className="text-[10px] text-muted-foreground font-medium">Origen</p>
-            <p className="text-xs font-semibold mt-0.5 truncate">{embarque.puerto_origen || embarque.aeropuerto_origen || embarque.ciudad_origen || "—"}</p>
+            <p className="text-xs font-semibold mt-0.5 truncate">{getOrigen(embarque)}</p>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="p-3 text-center">
             <p className="text-[10px] text-muted-foreground font-medium">Destino</p>
-            <p className="text-xs font-semibold mt-0.5 truncate">{embarque.puerto_destino || embarque.aeropuerto_destino || embarque.ciudad_destino || "—"}</p>
+            <p className="text-xs font-semibold mt-0.5 truncate">{getDestino(embarque)}</p>
           </CardContent>
         </Card>
         <Card>
@@ -186,9 +186,9 @@ export default function PortalEmbarqueDetalle() {
               <CardContent>
                 <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-2 text-sm">
                   <dt className="text-muted-foreground">Origen</dt>
-                  <dd className="font-medium">{embarque.puerto_origen || embarque.aeropuerto_origen || embarque.ciudad_origen || "—"}</dd>
+                  <dd className="font-medium">{getOrigen(embarque)}</dd>
                   <dt className="text-muted-foreground">Destino</dt>
-                  <dd className="font-medium">{embarque.puerto_destino || embarque.aeropuerto_destino || embarque.ciudad_destino || "—"}</dd>
+                  <dd className="font-medium">{getDestino(embarque)}</dd>
                   <dt className="text-muted-foreground">ETD</dt>
                   <dd className="font-medium">{embarque.etd || "—"}</dd>
                   <dt className="text-muted-foreground">ETA</dt>

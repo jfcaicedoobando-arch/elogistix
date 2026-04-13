@@ -7,7 +7,7 @@ import { usePortalEmbarques, usePortalCotizaciones, usePortalFacturas, usePortal
 import { getEstadoColor, getModoIcon, getEstadoBarColor } from "@/lib/uiMappings";
 import { calcularEstadoEmbarque } from "@/lib/embarqueLogic";
 import { ESTADOS_EMBARQUE } from "@/data/embarqueConstants";
-import { formatCurrency, formatDate } from "@/lib/formatters";
+import { formatCurrency, formatDate, getOrigen, getDestino } from "@/lib/formatters";
 import { Link } from "react-router-dom";
 import { Skeleton } from "@/components/ui/skeleton";
 import { parseISO, isAfter, addDays } from "date-fns";
@@ -290,8 +290,7 @@ export default function PortalDashboard() {
                           <p className="text-xs text-muted-foreground flex items-center gap-1">
                             <Clock className="h-3 w-3 flex-shrink-0" />
                             <span className="truncate">
-                              {e.puerto_origen || e.aeropuerto_origen || e.ciudad_origen || "—"} →{" "}
-                              {e.puerto_destino || e.aeropuerto_destino || e.ciudad_destino || "—"}
+                              {getOrigen(e)} → {getDestino(e)}
                             </span>
                           </p>
                         </div>

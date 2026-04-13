@@ -16,7 +16,7 @@ import { useClientesForSelect } from "@/hooks/useClientes";
 import { usePermissions } from "@/hooks/usePermissions";
 import { useRegistrarActividad } from "@/hooks/useBitacora";
 import { useToast } from "@/hooks/use-toast";
-import { formatDate } from "@/lib/formatters";
+import { formatDate, getOrigen, getDestino } from "@/lib/formatters";
 import { getEstadoColor, getModoIcon } from "@/lib/uiMappings";
 import PaginationControls from "@/components/PaginationControls";
 import { DataTable, type DataTableColumn } from "@/components/DataTable";
@@ -149,8 +149,8 @@ export default function Embarques() {
           </span>
         ),
       },
-      { key: "origen", header: "Origen", width: "w-[120px]", className: "text-xs", render: (e) => shortName(e.puerto_origen || e.aeropuerto_origen || e.ciudad_origen || "-") },
-      { key: "destino", header: "Destino", width: "w-[120px]", className: "text-xs", render: (e) => shortName(e.puerto_destino || e.aeropuerto_destino || e.ciudad_destino || "-") },
+      { key: "origen", header: "Origen", width: "w-[120px]", className: "text-xs", render: (e) => shortName(getOrigen(e)) },
+      { key: "destino", header: "Destino", width: "w-[120px]", className: "text-xs", render: (e) => shortName(getDestino(e)) },
       { key: "etd", header: "ETD", width: "w-[90px]", className: "text-xs", sortable: true, sortValue: (e) => e.etd || "", render: (e) => formatDate(e.etd || "") },
       { key: "eta", header: "ETA", width: "w-[90px]", className: "text-xs", sortable: true, sortValue: (e) => e.eta || "", render: (e) => formatDate(e.eta || "") },
       {
@@ -237,8 +237,8 @@ export default function Embarques() {
                   cliente_nombre: e.cliente_nombre,
                   modo: e.modo,
                   tipo: e.tipo,
-                  origen: e.puerto_origen || e.aeropuerto_origen || e.ciudad_origen || "",
-                  destino: e.puerto_destino || e.aeropuerto_destino || e.ciudad_destino || "",
+                  origen: getOrigen(e),
+                  destino: getDestino(e),
                   estado: calcularEstadoEmbarque(e.modo, e.tipo, e.etd, e.eta, e.estado),
                   etd: e.etd || "",
                   eta: e.eta || "",

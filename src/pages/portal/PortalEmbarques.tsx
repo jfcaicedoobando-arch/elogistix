@@ -126,7 +126,7 @@ export default function PortalEmbarques() {
               return acc;
             }, {} as Record<string, number>);
             const firstItem = items[0];
-            const ruta = `${firstItem.puerto_origen || firstItem.aeropuerto_origen || firstItem.ciudad_origen || "—"} → ${firstItem.puerto_destino || firstItem.aeropuerto_destino || firstItem.ciudad_destino || "—"}`;
+            const ruta = `${getOrigen(firstItem)} → ${getDestino(firstItem)}`;
             return (
               <Collapsible key={expediente} defaultOpen>
                 <Card className="border-dashed bg-muted/30 overflow-hidden">
