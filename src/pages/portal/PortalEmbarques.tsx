@@ -8,6 +8,7 @@ import { Collapsible, CollapsibleTrigger, CollapsibleContent } from "@/component
 import { usePortalEmbarques, usePortalClientUsers } from "@/hooks/usePortalData";
 import { getEstadoColor } from "@/lib/uiMappings";
 import { calcularEstadoEmbarque } from "@/lib/embarqueLogic";
+import { getOrigen, getDestino } from "@/lib/formatters";
 import EmbarqueCard from "@/components/portal/EmbarqueCard";
 import { Search, Ship, Filter, Package, ChevronDown } from "lucide-react";
 
@@ -126,7 +127,7 @@ export default function PortalEmbarques() {
               return acc;
             }, {} as Record<string, number>);
             const firstItem = items[0];
-            const ruta = `${firstItem.puerto_origen || firstItem.aeropuerto_origen || firstItem.ciudad_origen || "—"} → ${firstItem.puerto_destino || firstItem.aeropuerto_destino || firstItem.ciudad_destino || "—"}`;
+            const ruta = `${getOrigen(firstItem)} → ${getDestino(firstItem)}`;
             return (
               <Collapsible key={expediente} defaultOpen>
                 <Card className="border-dashed bg-muted/30 overflow-hidden">

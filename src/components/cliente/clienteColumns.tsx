@@ -1,8 +1,7 @@
 import { Badge } from "@/components/ui/badge";
 import type { DataTableColumn } from "@/components/DataTable";
-import { formatDate } from "@/lib/formatters";
+import { formatDate, formatCurrency, shortName, getOrigen, getDestino } from "@/lib/formatters";
 import { getEstadoColor } from "@/lib/uiMappings";
-import { formatCurrency, shortName } from "@/lib/formatters";
 
 export type EmbarqueCliente = {
   id: string;
@@ -34,7 +33,7 @@ export type CotizacionCliente = {
 export const embarqueColumns: DataTableColumn<EmbarqueCliente>[] = [
   { key: "expediente", header: "Expediente", width: "w-[110px]", className: "font-medium", render: (e) => e.expediente },
   { key: "modo", header: "Modo", width: "w-[90px]", className: "text-xs", render: (e) => e.modo },
-  { key: "ruta", header: "Origen → Destino", width: "min-w-[160px]", className: "text-xs", render: (e) => `${shortName(e.puerto_origen || e.aeropuerto_origen || e.ciudad_origen)} → ${shortName(e.puerto_destino || e.aeropuerto_destino || e.ciudad_destino)}` },
+  { key: "ruta", header: "Origen → Destino", width: "min-w-[160px]", className: "text-xs", render: (e) => `${shortName(getOrigen(e))} → ${shortName(getDestino(e))}` },
   { key: "estado", header: "Estado", width: "w-[100px]", render: (e) => <Badge variant="secondary" className={`text-xs ${getEstadoColor(e.estado)}`}>{e.estado}</Badge> },
   { key: "etd", header: "ETD", width: "w-[90px]", className: "text-xs", render: (e) => formatDate(e.etd || "") },
   { key: "eta", header: "ETA", width: "w-[90px]", className: "text-xs", render: (e) => formatDate(e.eta || "") },

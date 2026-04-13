@@ -4,7 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { getEstadoColor, getModoIcon } from "@/lib/uiMappings";
-import { formatDate } from "@/lib/formatters";
+import { formatDate, getOrigen, getDestino } from "@/lib/formatters";
 import { ICONO_EVENTO } from "@/data/embarqueConstants";
 import { Clock, MapPin, Ship, AlertTriangle } from "lucide-react";
 
@@ -78,8 +78,8 @@ export default function TrackingPublico() {
   }
 
   const { embarque: e, eventos, organizacion } = data;
-  const origen = e.puerto_origen || e.aeropuerto_origen || e.ciudad_origen || "—";
-  const destino = e.puerto_destino || e.aeropuerto_destino || e.ciudad_destino || "—";
+  const origen = getOrigen(e);
+  const destino = getDestino(e);
 
   return (
     <div className="min-h-screen bg-background">

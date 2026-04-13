@@ -3,7 +3,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { getEstadoColor, getEstadoBorderColor, getModoCircleStyle, getModoLucideIcon } from "@/lib/uiMappings";
 import { calcularEstadoEmbarque } from "@/lib/embarqueLogic";
-import { formatDate } from "@/lib/formatters";
+import { formatDate, getOrigen, getDestino } from "@/lib/formatters";
 import { MapPin, Anchor, Plane, Truck, CalendarClock } from "lucide-react";
 
 export interface EmbarqueCardData {
@@ -30,8 +30,8 @@ export interface EmbarqueCardData {
 
 export default function EmbarqueCard({ e }: { e: EmbarqueCardData }) {
   const estadoVisual = calcularEstadoEmbarque(e.modo, e.tipo, e.etd, e.eta, e.estado);
-  const origen = e.puerto_origen || e.aeropuerto_origen || e.ciudad_origen || "—";
-  const destino = e.puerto_destino || e.aeropuerto_destino || e.ciudad_destino || "—";
+  const origen = getOrigen(e);
+  const destino = getDestino(e);
   const carrier = e.naviera || e.aerolinea || e.transportista;
   const tipoLabel = e.tipo_servicio
     ? `${e.tipo_servicio}${e.tipo_contenedor ? ` ${e.tipo_contenedor}` : ""}`
