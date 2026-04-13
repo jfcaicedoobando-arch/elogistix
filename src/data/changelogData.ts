@@ -10,6 +10,13 @@ export interface ChangelogEntry {
 
 export const changelog: ChangelogEntry[] = [
   {
+    version: "8.8.0",
+    date: "2026-04-13",
+    type: "minor",
+    title: "Compactación: helpers getOrigen/getDestino centralizados",
+    description: "Creados helpers reutilizables getOrigen() y getDestino() en formatters.ts para resolver la ubicación de un embarque según modo de transporte. Eliminadas 14 ocurrencias duplicadas en 8 archivos.",
+  },
+  {
     version: "8.7.1",
     date: "2026-04-13",
     type: "patch",
