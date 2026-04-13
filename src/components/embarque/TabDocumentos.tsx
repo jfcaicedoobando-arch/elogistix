@@ -43,7 +43,7 @@ export function TabDocumentos({ documentos, canEdit, uploadingDocId, downloading
                 <TableCell>
                   <div className="flex items-center gap-2">
                     <div className={`h-3 w-3 rounded-full ${
-                      doc.estado === 'Validado' ? 'bg-success' : doc.estado === 'Recibido' ? 'bg-warning' : 'bg-destructive'
+                      doc.estado === 'Validado' ? 'bg-success' : doc.estado === 'Recibido' ? 'bg-success' : 'bg-destructive'
                     }`} />
                     <span className="text-sm">{doc.estado}</span>
                   </div>
