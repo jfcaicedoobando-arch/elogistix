@@ -75,7 +75,16 @@ export function useEmbarqueDetalleActions(embarque: EmbarqueRow | undefined, id:
     setDownloadingDocId(docId);
     try {
       const url = await getSignedUrl(rutaArchivo);
-      window.open(url, "_blank");
+      const a = document.createElement("a");
+      a.href = url;
+      a.target = "_blank";
+      a.rel = "noopener noreferrer";
+      // Extraer nombre del archivo de la ruta
+      const fileName = rutaArchivo.split("/").pop() ?? "documento";
+      a.download = fileName;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
     } catch (err: unknown) {
       toast({ title: "Error al descargar", description: getErrorMessage(err), variant: "destructive" });
     } finally {
