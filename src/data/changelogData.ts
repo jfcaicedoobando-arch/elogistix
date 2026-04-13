@@ -10,6 +10,13 @@ export interface ChangelogEntry {
 
 export const changelog: ChangelogEntry[] = [
   {
+    version: "8.7.1",
+    date: "2026-04-13",
+    type: "patch",
+    title: "Fix: estado de documentos al crear embarque",
+    description: "Corregido bug donde los documentos subidos durante la creación de un embarque quedaban en estado 'Pendiente' en vez de 'Recibido'. Se actualizó la función de creación y se corrigieron los registros existentes afectados.",
+  },
+  {
     version: "8.7.0",
     date: "2026-04-12",
     type: "minor",
