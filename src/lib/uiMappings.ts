@@ -23,7 +23,7 @@ export const getEstadoColor = (estado: string): string => {
     'Vencida': 'bg-destructive/15 text-destructive border border-destructive/30',
     'Cancelada': 'bg-destructive/15 text-destructive border border-destructive/30',
     'Pendiente': 'bg-warning/15 text-warning border border-warning/30',
-    'Recibido': 'bg-info/15 text-info border border-info/30',
+    'Recibido': 'bg-success/15 text-success border border-success/30',
     'Validado': 'bg-success/15 text-success border border-success/30',
     'Pagado': 'bg-success/15 text-success border border-success/30',
     // Estados de cotización
