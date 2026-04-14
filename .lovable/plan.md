@@ -1,45 +1,44 @@
 
 
-## Compactación v8.8.0 — Últimas oportunidades
+## Widget: Cargas Activas por Cliente — Dashboard Principal
 
-El codebase está en estado muy limpio. Solo quedan **micro-optimizaciones de consistencia** y una utilidad repetida en 7+ lugares.
+### Concepto
 
----
+Una **tabla ranked compacta** (no gráfico) que muestre los clientes ordenados por número de embarques activos, con números grandes y claros para tomar decisiones rápido. Cada fila incluye:
 
-### Hallazgos
+- Nombre del cliente
+- Número total de embarques activos (grande, bold)
+- Mini desglose por estado con chips de color (ej: 3 En Tránsito, 2 Arribo)
+- Barra de proporción inline sutil para contexto visual
+- Click en fila navega a `/clientes/{id}`
 
-#### 1. MEDIO — Patrón `origen/destino` duplicado en 7+ archivos (14 ocurrencias)
+### Ubicación
 
-La expresión `e.puerto_origen || e.aeropuerto_origen || e.ciudad_origen || "—"` se repite textualmente en 7 archivos. Debería ser una función utilitaria en `formatters.ts`.
+Se inserta en el Dashboard principal (`Dashboard.tsx`) entre las alertas/próximos arribos y la tabla de profit, dentro de una Card titulada **"Cargas activas por cliente"**.
 
-**Solución**: Crear `getOrigen(e)` y `getDestino(e)` en `src/lib/formatters.ts` y reemplazar todas las ocurrencias.
+### Datos
 
-**Archivos afectados**: `Embarques.tsx`, `PortalDashboard.tsx`, `EmbarquesActivosTable.tsx`, `EmbarqueCard.tsx`, `clienteColumns.tsx`, `TrackingPublico.tsx`
-
----
-
-#### 2. BAJO — `PortalDashboard.tsx` (317 líneas) tiene 4 secciones inline
-
-Las secciones de KPIs, estado de embarques, próximos arribos y facturación pendiente son auto-contenidas y podrían extraerse a sub-componentes para mejorar legibilidad.
-
-**Solución**: Opcional — solo extraer si crece más. Marcar como no-acción por ahora.
-
----
-
-#### 3. BAJO — `useOperacionesData.ts` (324 líneas) — sin cambio
-
-Ya se identificó en la auditoría anterior como opcional. Solo actuar si crece.
-
----
+Se agrega una nueva sección al RPC `dashboard_stats()` que agrupa embarques activos por `cliente_id` + `cliente_nombre`, contando por estado real. Esto evita queries adicionales del frontend.
 
 ### Plan de acción
 
-| Paso | Descripción | Impacto |
-|------|------------|---------|
-| 1 | Crear helpers `getOrigen`/`getDestino` en `formatters.ts` y reemplazar en 6 archivos | Elimina 14 líneas duplicadas, mejora mantenibilidad |
-| 2 | Actualizar `changelogData.ts` con entrada v8.8.0 | Documentación |
+| Paso | Descripción |
+|------|------------|
+| 1 | **Migración SQL**: Agregar sección `cargas_por_cliente` al RPC `dashboard_stats()` — agrupa activos por cliente con conteo por estado |
+| 2 | **Hook**: Parsear la nueva sección en `useDashboardData.ts` |
+| 3 | **Componente**: Crear `CargasActivasClienteCard.tsx` — tabla compacta con números prominentes, chips de estado y barras inline |
+| 4 | **Dashboard**: Insertar el componente en `Dashboard.tsx` |
+| 5 | **Changelog**: Entrada v8.9.0 |
 
-### Resumen
+### Diseño visual (mockup)
 
-Solo queda **1 acción concreta** de valor. El resto del codebase ya está en estado óptimo de producción. Después de este paso, no hay más oportunidades significativas de compactación sin reestructurar la arquitectura.
+```text
+┌─────────────────────────────────────────────────────┐
+│  📦 Cargas activas por cliente                      │
+├──────────────┬───────┬──────────────────────────────┤
+│ Cliente ABC  │  12   │ ██████████ 5 Tránsito 4 Arr. │
+│ Importadora  │   8   │ ██████░░░░ 3 Conf. 5 Aduana  │
+│ Comercial X  │   3   │ ██░░░░░░░░ 2 Tránsito 1 Arr. │
+└──────────────┴───────┴──────────────────────────────┘
+```
 
