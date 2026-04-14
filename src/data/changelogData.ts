@@ -10,6 +10,13 @@ export interface ChangelogEntry {
 
 export const changelog: ChangelogEntry[] = [
   {
+    version: "8.9.0",
+    date: "2026-04-14",
+    type: "minor",
+    title: "Widget: Cargas activas por cliente en Dashboard",
+    description: "Nuevo widget en el Dashboard principal que muestra una tabla ranked de clientes ordenados por número de embarques activos, con desglose por estado y navegación directa al detalle del cliente.",
+  },
+  {
     version: "8.8.0",
     date: "2026-04-13",
     type: "minor",

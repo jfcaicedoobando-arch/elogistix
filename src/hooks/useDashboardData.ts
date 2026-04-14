@@ -138,6 +138,16 @@ export function useDashboardData() {
     [stats]
   );
 
+  const cargasPorCliente = useMemo(() => {
+    if (!stats?.cargasPorCliente) return [];
+    return stats.cargasPorCliente as Array<{
+      clienteId: string;
+      clienteNombre: string;
+      total: number;
+      desglose: Record<EstadoFiltro, number>;
+    }>;
+  }, [stats]);
+
   const resumenMesSiguiente = useMemo<ResumenFacturacion>(() => {
     if (!stats?.resumenMesSiguiente) return EMPTY_RESUMEN;
     const raw = stats.resumenMesSiguiente as Record<string, unknown>;
@@ -184,5 +194,6 @@ export function useDashboardData() {
     embarquesMesSiguiente,
     resumenMesSiguiente,
     arribosEsteMes,
+    cargasPorCliente,
   };
 }
