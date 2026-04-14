@@ -5,6 +5,7 @@ import { AlertasDemoraCard } from "@/components/dashboard/AlertasDemoraCard";
 import { ProximosArribosCard } from "@/components/dashboard/ProximosArribosCard";
 import { ProfitTable } from "@/components/dashboard/ProfitTable";
 import { EmbarquesActivosTable } from "@/components/dashboard/EmbarquesActivosTable";
+import { CargasActivasClienteCard } from "@/components/dashboard/CargasActivasClienteCard";
 
 function getSaludo() {
   const h = new Date().getHours();
@@ -26,6 +27,7 @@ export default function Dashboard() {
     embarquesMesSiguiente,
     resumenMesSiguiente,
     arribosEsteMes,
+    cargasPorCliente,
   } = useDashboardData();
 
   const hoyStr = new Date().toLocaleDateString("es-MX", {
@@ -63,6 +65,8 @@ export default function Dashboard() {
         <AlertasDemoraCard alertas={alertasDemora} isLoading={isLoading} />
         <ProximosArribosCard arribos={proximosArribos} isLoading={isLoading} />
       </div>
+
+      <CargasActivasClienteCard data={cargasPorCliente} isLoading={isLoading} />
 
       <ProfitTable embarques={profitArribosEsteMes} isLoading={isLoading} />
 
