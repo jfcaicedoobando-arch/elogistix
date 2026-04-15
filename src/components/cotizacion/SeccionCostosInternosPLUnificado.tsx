@@ -34,6 +34,7 @@ interface FilaCostoDetalle {
   costo_unitario: number;
   venta: number;
   aplica_iva?: boolean;
+  notas?: string;
 }
 
 // ─── Discriminated union props ───────────────────────────────
@@ -155,7 +156,7 @@ function ModoDetalle({ cotizacionId, conceptosUSD, conceptosMXN }: PropsDetalle)
             || conceptosMXN[idxMXN++];
           venta = cv ? cv.cantidad * cv.precio_unitario : 0;
         }
-        return { concepto: c.concepto, moneda: c.moneda as "USD" | "MXN", proveedor: c.proveedor, cantidad: c.cantidad, costo_unitario: c.costo_unitario, venta, aplica_iva };
+        return { concepto: c.concepto, moneda: c.moneda as "USD" | "MXN", proveedor: c.proveedor, cantidad: c.cantidad, costo_unitario: c.costo_unitario, venta, aplica_iva, notas: (c as any).notas ?? "" };
       });
       setFilas(mapped);
     } else {
