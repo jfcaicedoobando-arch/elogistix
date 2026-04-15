@@ -6,10 +6,10 @@ import { useTasaIVA } from "@/hooks/useTasaIVA";
 
 // ── Factories ──
 const emptyUSD = (): ConceptoVentaCotizacion => ({
-  descripcion: "", unidad_medida: "", cantidad: 1, precio_unitario: 0, moneda: "USD", total: 0, aplica_iva: false,
+  descripcion: "", unidad_medida: "", cantidad: 1, precio_unitario: 0, moneda: "USD", total: 0, aplica_iva: false, notas: "",
 });
 const emptyMXN = (): ConceptoVentaCotizacion => ({
-  descripcion: "", unidad_medida: "", cantidad: 1, precio_unitario: 0, moneda: "MXN", total: 0, aplica_iva: true,
+  descripcion: "", unidad_medida: "", cantidad: 1, precio_unitario: 0, moneda: "MXN", total: 0, aplica_iva: true, notas: "",
 });
 
 interface Options {

@@ -10,6 +10,13 @@ export interface ChangelogEntry {
 
 export const changelog: ChangelogEntry[] = [
   {
+    version: "8.10.0",
+    date: "2026-04-15",
+    type: "minor",
+    title: "Notas por concepto de venta en cotizaciones",
+    description: "Cada concepto de venta (USD y MXN) ahora permite agregar notas opcionales que se muestran en la vista detalle y se incluyen en el PDF exportado para el cliente.",
+  },
+  {
     version: "8.9.0",
     date: "2026-04-14",
     type: "minor",
