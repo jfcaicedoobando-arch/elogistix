@@ -23,6 +23,7 @@ export interface FilaCostoLocal {
   precio_venta: number;
   unidad_medida: string;
   aplica_iva?: boolean;
+  notas?: string;
 }
 
 interface FilaCostoDetalle {
@@ -85,7 +86,7 @@ function ModoLocal({ filas, setFilas }: PropsLocal) {
     setFilas(prev => [...prev, {
       concepto: "", moneda, proveedor: "", cantidad: 1,
       costo_unitario: 0, precio_venta: 0, unidad_medida: "",
-      aplica_iva: moneda === "MXN",
+      aplica_iva: moneda === "MXN", notas: "",
     }]);
   };
 
