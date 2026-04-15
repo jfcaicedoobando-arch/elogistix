@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -135,6 +136,12 @@ export default function TablaCostosLocal({ filas, filasMoneda, moneda, title, ic
                     <Trash2 className="h-4 w-4 text-destructive" />
                   </Button>
                 </div>
+                <Textarea
+                  placeholder="Notas (opcional)"
+                  value={fila.notas || ""}
+                  onChange={e => onUpdate(gi, "notas", e.target.value)}
+                  className="mt-1 text-xs h-8 min-h-[32px] resize-none focus:min-h-[60px] transition-all"
+                />
               </div>
             );
           })}

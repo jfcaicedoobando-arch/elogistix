@@ -472,6 +472,7 @@ export type Database = {
           created_at: string | null
           id: string
           moneda: string
+          notas: string
           organization_id: string
           porcentaje_profit: number | null
           precio_total: number | null
@@ -490,6 +491,7 @@ export type Database = {
           created_at?: string | null
           id?: string
           moneda: string
+          notas?: string
           organization_id?: string
           porcentaje_profit?: number | null
           precio_total?: number | null
@@ -508,6 +510,7 @@ export type Database = {
           created_at?: string | null
           id?: string
           moneda?: string
+          notas?: string
           organization_id?: string
           porcentaje_profit?: number | null
           precio_total?: number | null

@@ -10,6 +10,13 @@ export interface ChangelogEntry {
 
 export const changelog: ChangelogEntry[] = [
   {
+    version: "8.11.0",
+    date: "2026-04-15",
+    type: "minor",
+    title: "Notas por concepto de costos P&L en cotizaciones",
+    description: "Cada concepto de costos internos (USD y MXN) ahora permite agregar notas opcionales que se persisten en la base de datos y se muestran en el wizard y vista detalle de la cotización.",
+  },
+  {
     version: "8.10.0",
     date: "2026-04-15",
     type: "minor",
