@@ -221,6 +221,7 @@ export default function Embarques() {
                 { key: "etd", label: "ETD" },
                 { key: "eta", label: "ETA" },
                 { key: "operador", label: "Operador" },
+                { key: "contenedor", label: "Contenedor" },
                 { key: "tipo_contenedor", label: "Tipo Contenedor" },
                 { key: "descripcion_mercancia", label: "Descripción Mercancía" },
                 { key: "tipo_cambio_usd", label: "T/C USD" },
