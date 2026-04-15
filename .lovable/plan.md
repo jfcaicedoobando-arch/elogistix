@@ -1,44 +1,33 @@
 
 
-## Widget: Cargas Activas por Cliente — Dashboard Principal
+## v8.10.0 — Notas por concepto de venta en cotizaciones
 
 ### Concepto
 
-Una **tabla ranked compacta** (no gráfico) que muestre los clientes ordenados por número de embarques activos, con números grandes y claros para tomar decisiones rápido. Cada fila incluye:
-
-- Nombre del cliente
-- Número total de embarques activos (grande, bold)
-- Mini desglose por estado con chips de color (ej: 3 En Tránsito, 2 Arribo)
-- Barra de proporción inline sutil para contexto visual
-- Click en fila navega a `/clientes/{id}`
-
-### Ubicación
-
-Se inserta en el Dashboard principal (`Dashboard.tsx`) entre las alertas/próximos arribos y la tabla de profit, dentro de una Card titulada **"Cargas activas por cliente"**.
-
-### Datos
-
-Se agrega una nueva sección al RPC `dashboard_stats()` que agrupa embarques activos por `cliente_id` + `cliente_nombre`, contando por estado real. Esto evita queries adicionales del frontend.
+Agregar un campo de texto "Notas" opcional en cada fila de concepto de venta (USD y MXN). Las notas se almacenan dentro del JSON `conceptos_venta` existente en la tabla `cotizaciones` — no requiere migración de base de datos. Las notas aparecerán debajo de cada concepto en el PDF exportado.
 
 ### Plan de acción
 
-| Paso | Descripción |
-|------|------------|
-| 1 | **Migración SQL**: Agregar sección `cargas_por_cliente` al RPC `dashboard_stats()` — agrupa activos por cliente con conteo por estado |
-| 2 | **Hook**: Parsear la nueva sección en `useDashboardData.ts` |
-| 3 | **Componente**: Crear `CargasActivasClienteCard.tsx` — tabla compacta con números prominentes, chips de estado y barras inline |
-| 4 | **Dashboard**: Insertar el componente en `Dashboard.tsx` |
-| 5 | **Changelog**: Entrada v8.9.0 |
+| Paso | Archivo | Cambio |
+|------|---------|--------|
+| 1 | `src/hooks/useCotizacionTypes.ts` | Agregar `notas?: string` a `ConceptoVentaCotizacion` |
+| 2 | `src/components/cotizacion/SeccionConceptosVentaCotizacion.tsx` | Agregar input de notas debajo de cada fila de concepto (USD y MXN) — un textarea compacto con placeholder "Notas (opcional)" |
+| 3 | `src/hooks/useConceptosVentaCotizacion.ts` | Incluir `notas: ""` en el template de concepto nuevo |
+| 4 | `src/components/cotizacion/TablaConceptosGenerico.tsx` | Mostrar notas (si existen) como texto gris debajo de la descripción en la vista detalle |
+| 5 | `src/lib/cotizacionPdf.ts` | Renderizar notas debajo de cada fila de concepto en el PDF (texto italic gris) |
+| 6 | `src/data/changelogData.ts` | Entrada v8.10.0 |
 
-### Diseño visual (mockup)
+### Diseño visual
 
+**En el wizard:** Debajo de cada fila de concepto, un textarea de 1 línea que se expande al hacer focus, con texto `text-xs text-muted-foreground`.
+
+**En el PDF:** Debajo de cada fila del concepto, una línea en itálica gris con la nota:
 ```text
-┌─────────────────────────────────────────────────────┐
-│  📦 Cargas activas por cliente                      │
-├──────────────┬───────┬──────────────────────────────┤
-│ Cliente ABC  │  12   │ ██████████ 5 Tránsito 4 Arr. │
-│ Importadora  │   8   │ ██████░░░░ 3 Conf. 5 Aduana  │
-│ Comercial X  │   3   │ ██░░░░░░░░ 2 Tránsito 1 Arr. │
-└──────────────┴───────┴──────────────────────────────┘
+| Flete Marítimo | BL | 1 | $1,200.00 | $1,200.00 |
+|   ↳ Incluye seguro básico                         |
 ```
+
+### Sin migración SQL
+
+El campo `notas` vive dentro del JSONB `conceptos_venta` que ya se almacena en la tabla `cotizaciones`. No se necesita alterar ninguna tabla.
 
