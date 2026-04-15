@@ -1,5 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow, TableFooter,
 } from "@/components/ui/table";
@@ -16,6 +17,7 @@ interface FilaCostoDetalle {
   costo_unitario: number;
   venta: number;
   aplica_iva?: boolean;
+  notas?: string;
 }
 
 function getGlobalIndex(filas: { moneda: string }[], moneda: string, localIdx: number) {
@@ -37,7 +39,7 @@ interface Props {
   icon: React.ReactNode;
   totales: TotalesPL;
   canEdit: boolean;
-  onUpdate: (globalIdx: number, field: "proveedor" | "costo_unitario", value: string) => void;
+  onUpdate: (globalIdx: number, field: "proveedor" | "costo_unitario" | "notas", value: string) => void;
 }
 
 export default function TablaCostosDetalle({ filas, filasMoneda, moneda, title, icon, totales, canEdit, onUpdate }: Props) {

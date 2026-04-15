@@ -176,7 +176,7 @@ function ModoDetalle({ cotizacionId, conceptosUSD, conceptosMXN }: PropsDetalle)
   const filasUSD = useMemo(() => filas.filter(f => f.moneda === "USD"), [filas]);
   const filasMXN = useMemo(() => filas.filter(f => f.moneda === "MXN"), [filas]);
 
-  const updateFila = (index: number, field: "proveedor" | "costo_unitario", value: string) => {
+  const updateFila = (index: number, field: "proveedor" | "costo_unitario" | "notas", value: string) => {
     setFilas(prev => {
       const copy = [...prev];
       if (field === "costo_unitario") copy[index] = { ...copy[index], costo_unitario: parseFloat(value) || 0 };
