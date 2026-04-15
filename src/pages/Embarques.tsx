@@ -244,6 +244,7 @@ export default function Embarques() {
                   etd: e.etd || "",
                   eta: e.eta || "",
                   operador: e.operador || "",
+                  contenedor: e.contenedor || "",
                   tipo_contenedor: e.tipo_contenedor || "",
                   descripcion_mercancia: e.descripcion_mercancia || "",
                   tipo_cambio_usd: e.tipo_cambio_usd ?? "",
