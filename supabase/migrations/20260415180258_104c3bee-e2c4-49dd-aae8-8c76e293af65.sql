@@ -1,0 +1,1 @@
+ALTER TABLE public.cotizacion_costos ADD COLUMN notas text NOT NULL DEFAULT '';
