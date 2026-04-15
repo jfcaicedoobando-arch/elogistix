@@ -2,6 +2,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Plus, Trash2 } from "lucide-react";
@@ -165,6 +166,15 @@ export default function SeccionConceptosVentaCotizacion({
                     <Trash2 className="h-4 w-4 text-destructive" />
                   </Button>
                 </div>
+                <div className="col-span-12 -mt-1 mb-1">
+                  <Textarea
+                    value={c.notas || ''}
+                    onChange={e => actualizarConceptoUSD(i, 'notas', e.target.value)}
+                    placeholder="Notas (opcional)"
+                    className="min-h-[32px] h-8 text-xs text-muted-foreground resize-none focus:h-16 transition-all"
+                    rows={1}
+                  />
+                </div>
               </div>
             );
           })}
@@ -275,6 +285,15 @@ export default function SeccionConceptosVentaCotizacion({
                   <Button variant="ghost" size="icon" onClick={() => eliminarConceptoMXN(i)} disabled={conceptosMXN.length <= 1}>
                     <Trash2 className="h-4 w-4 text-destructive" />
                   </Button>
+                </div>
+                <div className="col-span-12 -mt-1 mb-1">
+                  <Textarea
+                    value={c.notas || ''}
+                    onChange={e => actualizarConceptoMXN(i, 'notas', e.target.value)}
+                    placeholder="Notas (opcional)"
+                    className="min-h-[32px] h-8 text-xs text-muted-foreground resize-none focus:h-16 transition-all"
+                    rows={1}
+                  />
                 </div>
               </div>
             );

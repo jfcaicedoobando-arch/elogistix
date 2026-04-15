@@ -100,13 +100,14 @@ export function generarPdfCotizacion(cotizacion: CotizacionRow, tasaIva: number 
     const rows = conceptosUSD.map(c => {
       const unidad = c.unidad_medida || '—';
       const sub = c.cantidad * c.precio_unitario;
+      const notaHtml = c.notas ? `<tr><td colspan="${hayIvaUSD ? 7 : 5}" style="border-top:none;padding-top:0;font-size:11px;color:#888;font-style:italic">↳ ${c.notas}</td></tr>` : '';
       if (hayIvaUSD) {
         const iva = c.aplica_iva ? calcularIVA(sub, tasaIva) : 0;
         const total = sub + iva;
         const desc = c.aplica_iva ? `${c.descripcion} <span style='color:#999;font-size:11px'>(+IVA ${tasaIva * 100}%)</span>` : c.descripcion;
-        return `<tr><td>${desc}</td><td>${unidad}</td><td class="right">${c.cantidad}</td><td class="right">${formatCurrencyPdf(c.precio_unitario, 'USD')}</td><td class="right">${formatCurrencyPdf(sub, 'USD')}</td><td class="right">${c.aplica_iva ? formatCurrencyPdf(iva, 'USD') : '—'}</td><td class="right">${formatCurrencyPdf(total, 'USD')}</td></tr>`;
+        return `<tr><td>${desc}</td><td>${unidad}</td><td class="right">${c.cantidad}</td><td class="right">${formatCurrencyPdf(c.precio_unitario, 'USD')}</td><td class="right">${formatCurrencyPdf(sub, 'USD')}</td><td class="right">${c.aplica_iva ? formatCurrencyPdf(iva, 'USD') : '—'}</td><td class="right">${formatCurrencyPdf(total, 'USD')}</td></tr>${notaHtml}`;
       }
-      return `<tr><td>${c.descripcion}</td><td>${unidad}</td><td class="right">${c.cantidad}</td><td class="right">${formatCurrencyPdf(c.precio_unitario, 'USD')}</td><td class="right">${formatCurrencyPdf(sub, 'USD')}</td></tr>`;
+      return `<tr><td>${c.descripcion}</td><td>${unidad}</td><td class="right">${c.cantidad}</td><td class="right">${formatCurrencyPdf(c.precio_unitario, 'USD')}</td><td class="right">${formatCurrencyPdf(sub, 'USD')}</td></tr>${notaHtml}`;
     }).join('');
     return `
       <h4>Conceptos en USD</h4>
@@ -123,7 +124,8 @@ export function generarPdfCotizacion(cotizacion: CotizacionRow, tasaIva: number 
       const sub = c.cantidad * c.precio_unitario;
       const iva = calcularIVA(sub, tasaIva);
       const unidad = c.unidad_medida || '—';
-      return `<tr><td>${c.descripcion}</td><td>${unidad}</td><td class="right">${c.cantidad}</td><td class="right">${formatCurrencyPdf(c.precio_unitario, 'MXN')}</td><td class="right">${formatCurrencyPdf(sub, 'MXN')}</td><td class="right">${formatCurrencyPdf(iva, 'MXN')}</td><td class="right">${formatCurrencyPdf(sub + iva, 'MXN')}</td></tr>`;
+      const notaHtml = c.notas ? `<tr><td colspan="7" style="border-top:none;padding-top:0;font-size:11px;color:#888;font-style:italic">↳ ${c.notas}</td></tr>` : '';
+      return `<tr><td>${c.descripcion}</td><td>${unidad}</td><td class="right">${c.cantidad}</td><td class="right">${formatCurrencyPdf(c.precio_unitario, 'MXN')}</td><td class="right">${formatCurrencyPdf(sub, 'MXN')}</td><td class="right">${formatCurrencyPdf(iva, 'MXN')}</td><td class="right">${formatCurrencyPdf(sub + iva, 'MXN')}</td></tr>${notaHtml}`;
     }).join('');
     return `
       <h4>Conceptos en MXN + IVA</h4>
