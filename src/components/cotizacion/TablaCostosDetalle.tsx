@@ -92,6 +92,20 @@ export default function TablaCostosDetalle({ filas, filasMoneda, moneda, title, 
                     </TableCell>
                     <TableCell className="text-right"><ProfitBadge porcentaje={pct} /></TableCell>
                   </TableRow>
+                  <TableRow key={`${idx}-notas`}>
+                    <TableCell colSpan={6} className="pt-0 pb-2" style={{ borderTop: 'none' }}>
+                      {canEdit ? (
+                        <Textarea
+                          placeholder="Notas (opcional)"
+                          value={fila.notas || ""}
+                          onChange={e => onUpdate(globalIdx, "notas", e.target.value)}
+                          className="text-xs h-8 min-h-[32px] resize-none focus:min-h-[60px] transition-all"
+                        />
+                      ) : fila.notas ? (
+                        <span className="text-xs text-muted-foreground italic">↳ {fila.notas}</span>
+                      ) : null}
+                    </TableCell>
+                  </TableRow>
                 );
               })}
             </TableBody>
