@@ -61,7 +61,7 @@ export async function savePaso2(opts: {
     id: "", cotizacion_id: cotizacionId, concepto: f.concepto, moneda: f.moneda,
     proveedor: f.proveedor, cantidad: f.cantidad, costo_unitario: f.costo_unitario,
     costo_total: f.cantidad * f.costo_unitario, precio_venta: f.precio_venta,
-    unidad_medida: f.unidad_medida, created_at: "", updated_at: "",
+    unidad_medida: f.unidad_medida, notas: f.notas ?? "", created_at: "", updated_at: "",
   }));
   await mutations.upsertCostos.mutateAsync({ cotizacionId, costos });
 }
