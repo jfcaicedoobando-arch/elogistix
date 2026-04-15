@@ -162,11 +162,11 @@ function ModoDetalle({ cotizacionId, conceptosUSD, conceptosMXN }: PropsDetalle)
     } else {
       const fromUSD: FilaCostoDetalle[] = conceptosUSD.map((c) => ({
         concepto: c.descripcion, moneda: "USD" as const, proveedor: "", cantidad: c.cantidad, costo_unitario: 0,
-        venta: c.cantidad * c.precio_unitario, aplica_iva: c.aplica_iva ?? false,
+        venta: c.cantidad * c.precio_unitario, aplica_iva: c.aplica_iva ?? false, notas: "",
       }));
       const fromMXN: FilaCostoDetalle[] = conceptosMXN.map((c) => ({
         concepto: c.descripcion, moneda: "MXN" as const, proveedor: "", cantidad: c.cantidad, costo_unitario: 0,
-        venta: c.cantidad * c.precio_unitario,
+        venta: c.cantidad * c.precio_unitario, notas: "",
       }));
       setFilas([...fromUSD, ...fromMXN]);
     }
@@ -197,7 +197,7 @@ function ModoDetalle({ cotizacionId, conceptosUSD, conceptosMXN }: PropsDetalle)
     const costos: CostoCotizacion[] = filas.map((f) => ({
       id: "", cotizacion_id: cotizacionId, concepto: f.concepto, moneda: f.moneda,
       proveedor: f.proveedor, cantidad: f.cantidad, costo_unitario: f.costo_unitario,
-      costo_total: f.cantidad * f.costo_unitario, created_at: "", updated_at: "",
+      costo_total: f.cantidad * f.costo_unitario, notas: f.notas ?? "", created_at: "", updated_at: "",
     }));
     try {
       await upsert.mutateAsync({ cotizacionId, costos });
