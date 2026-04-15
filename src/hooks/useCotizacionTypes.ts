@@ -8,6 +8,7 @@ export interface ConceptoVentaCotizacion {
   moneda: string;
   total: number;
   aplica_iva: boolean;
+  notas?: string;
 }
 
 export interface DimensionLCL {
