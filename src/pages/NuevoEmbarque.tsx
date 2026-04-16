@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { FormProvider } from "react-hook-form";
 import { useToast } from "@/hooks/use-toast";
@@ -6,6 +6,7 @@ import {
   useProveedoresForSelect,
   useCreateEmbarque,
 } from "@/hooks/useEmbarques";
+import type { ExpedienteCliente } from "@/hooks/useEmbarques";
 import { useClientesForSelect, useContactosCliente } from "@/hooks/useClientes";
 import { useAuth } from "@/contexts/AuthContext";
 import { useRegistrarActividad } from "@/hooks/useBitacora";
@@ -43,6 +44,9 @@ export default function NuevoEmbarque() {
   const [currentStep, setCurrentStep] = useState(1);
   const [validationErrors, setValidationErrors] = useState<EmbarqueValidationErrors>({});
   const [cotizacionVinculada, setCotizacionVinculada] = useState<CotizacionRow | null>(null);
+  const [modoExpediente, setModoExpediente] = useState<'nuevo' | 'existente'>('nuevo');
+  const [expedienteSeleccionado, setExpedienteSeleccionado] = useState<ExpedienteCliente | null>(null);
+
   const {
     methods, handleMsdsUpload, buildEmbarquePayload, buildConceptosVentaPayload,
     buildConceptosCostoPayload, documentosArchivos, setDocumentoArchivo, getDocumentosChecklist,
@@ -69,7 +73,33 @@ export default function NuevoEmbarque() {
   const handleDesvincularCotizacion = useCallback(() => {
     setCotizacionVinculada(null);
     desvincularCotizacion();
+    // Reset expediente association too
+    setModoExpediente('nuevo');
+    setExpedienteSeleccionado(null);
   }, [desvincularCotizacion]);
+
+  // Reset expediente selection when client changes
+  const prevClienteRef = useRef(clienteId);
+  useEffect(() => {
+    if (clienteId !== prevClienteRef.current) {
+      prevClienteRef.current = clienteId;
+      setModoExpediente('nuevo');
+      setExpedienteSeleccionado(null);
+    }
+  }, [clienteId]);
+
+  const handleModoExpedienteChange = useCallback((modo: 'nuevo' | 'existente') => {
+    setModoExpediente(modo);
+    if (modo === 'nuevo') {
+      setExpedienteSeleccionado(null);
+      methods.setValue('blMaster', '');
+    }
+  }, [methods]);
+
+  const handleSeleccionarExpediente = useCallback((exp: ExpedienteCliente) => {
+    setExpedienteSeleccionado(exp);
+    methods.setValue('blMaster', exp.bl_master || '');
+  }, [methods]);
 
   const validateStep1 = useCallback((): boolean => {
     const v = methods.getValues();
@@ -92,7 +122,13 @@ export default function NuevoEmbarque() {
     const v = methods.getValues();
 
     try {
-      const expediente = await resolverExpediente(v.blMaster, v.tipo);
+      // Determine expediente: use existing one or generate new
+      let expediente: string;
+      if (modoExpediente === 'existente' && expedienteSeleccionado) {
+        expediente = expedienteSeleccionado.expediente;
+      } else {
+        expediente = await resolverExpediente(v.blMaster, v.tipo);
+      }
 
       const docPayload = await subirDocumentosEmbarque(
         expediente,
@@ -124,7 +160,7 @@ export default function NuevoEmbarque() {
         accion: 'crear',
         modulo: 'embarques',
         entidad_nombre: expediente,
-        detalles: { modo: v.modo, tipo: v.tipo, cliente: selectedCliente?.nombre ?? '', cotizacion_folio: cotizacionVinculada?.folio ?? null },
+        detalles: { modo: v.modo, tipo: v.tipo, cliente: selectedCliente?.nombre ?? '', cotizacion_folio: cotizacionVinculada?.folio ?? null, asociado_a_existente: modoExpediente === 'existente' },
       });
 
       toast({ title: "Embarque creado", description: `Expediente ${expediente} registrado correctamente.` });
@@ -160,6 +196,10 @@ export default function NuevoEmbarque() {
             cotizacionVinculada={cotizacionVinculada}
             onVincularCotizacion={handleVincularCotizacion}
             onDesvincularCotizacion={handleDesvincularCotizacion}
+            modoExpediente={modoExpediente}
+            onModoExpedienteChange={handleModoExpedienteChange}
+            expedienteSeleccionado={expedienteSeleccionado}
+            onSeleccionarExpediente={handleSeleccionarExpediente}
           />
         )}
         {currentStep === 2 && <StepDatosRuta />}

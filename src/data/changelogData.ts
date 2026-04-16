@@ -10,6 +10,13 @@ export interface ChangelogEntry {
 
 export const changelog: ChangelogEntry[] = [
   {
+    version: "8.12.0",
+    date: "2026-04-16",
+    type: "minor",
+    title: "Asociar embarques a expediente existente",
+    description: "Al crear un nuevo embarque, ahora es posible asociarlo a un expediente existente del mismo cliente. Esto permite que múltiples embarques (ej. contenedores 20' y 40') compartan el mismo número de expediente y BL.",
+  },
+  {
     version: "8.11.0",
     date: "2026-04-15",
     type: "minor",
