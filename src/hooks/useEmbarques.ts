@@ -19,7 +19,10 @@ export {
   useEmbarqueNotas,
   useEmbarqueFacturas,
   useProveedoresForSelect,
+  useExpedientesCliente,
 } from './useEmbarqueQueries';
+
+export type { ExpedienteCliente } from './useEmbarqueQueries';
 
 export {
   useCreateEmbarque,

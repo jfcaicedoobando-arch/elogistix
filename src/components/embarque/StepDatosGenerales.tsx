@@ -9,9 +9,11 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { cn } from "@/lib/utils";
 import type { EmbarqueFormValues } from "@/hooks/useEmbarqueForm";
 import type { CotizacionRow } from "@/hooks/useCotizaciones";
+import { useExpedientesCliente, type ExpedienteCliente } from "@/hooks/useEmbarques";
 import type { Enums } from "@/integrations/supabase/types";
 type ModoTransporte = Enums<'modo_transporte'>;
 type TipoOperacion = Enums<'tipo_operacion'>;
@@ -50,18 +52,27 @@ interface Props {
   cotizacionVinculada?: CotizacionRow | null;
   onVincularCotizacion?: (cot: CotizacionRow) => void;
   onDesvincularCotizacion?: () => void;
+  modoExpediente: 'nuevo' | 'existente';
+  onModoExpedienteChange: (modo: 'nuevo' | 'existente') => void;
+  expedienteSeleccionado: ExpedienteCliente | null;
+  onSeleccionarExpediente: (exp: ExpedienteCliente) => void;
 }
 
-export function StepDatosGenerales({ clientes, clienteNombre, contactos, onMsdsUpload, errors = {}, cotizacionesAceptadas = [], cotizacionVinculada, onVincularCotizacion, onDesvincularCotizacion }: Props) {
+export function StepDatosGenerales({ clientes, clienteNombre, contactos, onMsdsUpload, errors = {}, cotizacionesAceptadas = [], cotizacionVinculada, onVincularCotizacion, onDesvincularCotizacion, modoExpediente, onModoExpedienteChange, expedienteSeleccionado, onSeleccionarExpediente }: Props) {
   const { register, watch, setValue } = useFormContext<EmbarqueFormValues>();
   const [comboboxOpen, setComboboxOpen] = useState(false);
+  const [expedienteComboOpen, setExpedienteComboOpen] = useState(false);
 
   const modo = watch('modo');
+  const clienteId = watch('clienteId');
   const shipper = watch('shipper');
   const consignatario = watch('consignatario');
   const tipoCarga = watch('tipoCarga');
   const msdsArchivo = watch('msdsArchivo');
   const subiendoMsds = watch('subiendoMsds');
+
+  const { data: expedientesCliente = [] } = useExpedientesCliente(clienteId || undefined);
+  const tieneExpedientes = expedientesCliente.length > 0;
 
   const msdsNombreArchivo = msdsArchivo ? msdsArchivo.split('/').pop() : null;
 
@@ -158,6 +169,90 @@ export function StepDatosGenerales({ clientes, clienteNombre, contactos, onMsdsU
               </Select>
             )} />
           </div>
+        </div>
+
+        {/* Selector de expediente: nuevo o existente */}
+        {clienteId && tieneExpedientes && (
+          <div className="space-y-3 p-4 border rounded-lg bg-muted/30">
+            <Label className="text-sm font-medium">Expediente</Label>
+            <RadioGroup
+              value={modoExpediente}
+              onValueChange={(v) => onModoExpedienteChange(v as 'nuevo' | 'existente')}
+              className="flex gap-6"
+            >
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="nuevo" id="exp-nuevo" />
+                <Label htmlFor="exp-nuevo" className="font-normal cursor-pointer">Crear nuevo expediente</Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="existente" id="exp-existente" />
+                <Label htmlFor="exp-existente" className="font-normal cursor-pointer">Asociar a expediente existente</Label>
+              </div>
+            </RadioGroup>
+
+            {modoExpediente === 'existente' && (
+              <div className="space-y-2">
+                {expedienteSeleccionado ? (
+                  <div className="flex items-center gap-2">
+                    <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-950 dark:text-blue-300 dark:border-blue-800 px-3 py-1.5 text-sm">
+                      📦 {expedienteSeleccionado.expediente}
+                      {expedienteSeleccionado.bl_master && ` | BL: ${expedienteSeleccionado.bl_master}`}
+                      {` (${expedienteSeleccionado.total_embarques} embarque${expedienteSeleccionado.total_embarques > 1 ? 's' : ''})`}
+                    </Badge>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      className="h-7 w-7"
+                      onClick={() => onModoExpedienteChange('nuevo')}
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </div>
+                ) : (
+                  <Popover open={expedienteComboOpen} onOpenChange={setExpedienteComboOpen}>
+                    <PopoverTrigger asChild>
+                      <Button variant="outline" role="combobox" aria-expanded={expedienteComboOpen} className="w-full justify-between font-normal text-muted-foreground">
+                        Buscar expediente...
+                        <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
+                      <Command>
+                        <CommandInput placeholder="Buscar por expediente o BL..." />
+                        <CommandList>
+                          <CommandEmpty>Sin expedientes abiertos para este cliente</CommandEmpty>
+                          <CommandGroup>
+                            {expedientesCliente.map(exp => (
+                              <CommandItem
+                                key={exp.expediente}
+                                value={`${exp.expediente} ${exp.bl_master || ''}`}
+                                onSelect={() => {
+                                  onSeleccionarExpediente(exp);
+                                  setExpedienteComboOpen(false);
+                                }}
+                              >
+                                <span className="truncate">
+                                  {exp.expediente}
+                                  {exp.bl_master && ` | BL: ${exp.bl_master}`}
+                                  <span className="text-muted-foreground ml-1">
+                                    ({exp.total_embarques} emb.)
+                                  </span>
+                                </span>
+                              </CommandItem>
+                            ))}
+                          </CommandGroup>
+                        </CommandList>
+                      </Command>
+                    </PopoverContent>
+                  </Popover>
+                )}
+              </div>
+            )}
+          </div>
+        )}
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="space-y-2 md:col-span-2">
             <Label>Shipper (Exportador) *</Label>
             <Controller name="shipper" render={({ field }) => (
