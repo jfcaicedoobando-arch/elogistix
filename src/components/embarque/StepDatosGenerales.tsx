@@ -52,10 +52,10 @@ interface Props {
   cotizacionVinculada?: CotizacionRow | null;
   onVincularCotizacion?: (cot: CotizacionRow) => void;
   onDesvincularCotizacion?: () => void;
-  modoExpediente: 'nuevo' | 'existente';
-  onModoExpedienteChange: (modo: 'nuevo' | 'existente') => void;
-  expedienteSeleccionado: ExpedienteCliente | null;
-  onSeleccionarExpediente: (exp: ExpedienteCliente) => void;
+  modoExpediente?: 'nuevo' | 'existente';
+  onModoExpedienteChange?: (modo: 'nuevo' | 'existente') => void;
+  expedienteSeleccionado?: ExpedienteCliente | null;
+  onSeleccionarExpediente?: (exp: ExpedienteCliente) => void;
 }
 
 export function StepDatosGenerales({ clientes, clienteNombre, contactos, onMsdsUpload, errors = {}, cotizacionesAceptadas = [], cotizacionVinculada, onVincularCotizacion, onDesvincularCotizacion, modoExpediente, onModoExpedienteChange, expedienteSeleccionado, onSeleccionarExpediente }: Props) {
