@@ -79,11 +79,14 @@ export default function NuevoEmbarque() {
   }, [desvincularCotizacion]);
 
   // Reset expediente selection when client changes
-  const prevClienteId = useState(clienteId)[0];
-  if (clienteId !== prevClienteId) {
-    setModoExpediente('nuevo');
-    setExpedienteSeleccionado(null);
-  }
+  const prevClienteRef = useRef(clienteId);
+  useEffect(() => {
+    if (clienteId !== prevClienteRef.current) {
+      prevClienteRef.current = clienteId;
+      setModoExpediente('nuevo');
+      setExpedienteSeleccionado(null);
+    }
+  }, [clienteId]);
 
   const handleModoExpedienteChange = useCallback((modo: 'nuevo' | 'existente') => {
     setModoExpediente(modo);
