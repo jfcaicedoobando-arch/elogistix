@@ -22,6 +22,7 @@ export interface EmbarqueConEstado {
   aeropuerto_destino?: string | null;
   ciudad_origen?: string | null;
   ciudad_destino?: string | null;
+  contenedor?: string | null;
   created_at: string;
 }
 
