@@ -307,6 +307,10 @@ export function useOperacionesData(periodo: PeriodoFiltro = "mes") {
           enPuerto: d.enPuerto,
           porArribar: d.porArribar,
           clientes: Array.from(d.clientes),
+          clientesDesglose: Array.from(d.clientesCount.entries())
+            .map(([nombre, cantidad]) => ({ nombre, cantidad }))
+            .sort((a, b) => b.cantidad - a.cantidad),
+          desgloseEstados: d.desglose,
           cargasEnRiesgo: d.cargasEnRiesgo,
           historicoCreadosPorMes: meses6.map((m) => ({ mes: m.label, valor: d.creadosPorMes[m.label] })),
           historicoLlegadosPorMes: meses6.map((m) => ({ mes: m.label, valor: d.llegadosPorMes[m.label] })),
