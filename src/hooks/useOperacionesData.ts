@@ -159,6 +159,7 @@ export function useOperacionesData(periodo: PeriodoFiltro = "mes") {
       porArribar: number;
       clientes: Set<string>;
       clientesCount: Map<string, number>;
+      clientesEstados: Map<string, DesgloseEstados>;
       desglose: DesgloseEstados;
       cargasEnRiesgo: CargaRiesgo[];
       creadosPorMes: Record<string, number>;
