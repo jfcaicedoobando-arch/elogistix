@@ -10,6 +10,13 @@ export interface ChangelogEntry {
 
 export const changelog: ChangelogEntry[] = [
   {
+    version: "8.13.3",
+    date: "2026-04-17",
+    type: "patch",
+    title: "Columna Contenedor en tabla de embarques del dashboard",
+    description: "La tabla de embarques del próximo mes en el Dashboard principal ahora incluye la columna 'Contenedor' con el número de contenedor de cada embarque. La columna es ordenable y muestra '-' cuando no hay contenedor asignado.",
+  },
+  {
     version: "8.13.2",
     date: "2026-04-17",
     type: "patch",
