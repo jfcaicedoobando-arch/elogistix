@@ -211,6 +211,24 @@ export function useOperacionesData(periodo: PeriodoFiltro = "mes") {
         d.activas++;
         d.contenedores++;
         d.clientes.add(e.cliente_nombre);
+        d.clientesCount.set(e.cliente_nombre, (d.clientesCount.get(e.cliente_nombre) ?? 0) + 1);
+
+        // Desglose por estado (excluir Cotización y terminales)
+        switch (e.estadoReal) {
+          case "Confirmado":
+            d.desglose.Confirmado++;
+            break;
+          case "En Tránsito":
+            d.desglose["En Tránsito"]++;
+            break;
+          case "Arribo":
+            d.desglose.Llegada++;
+            break;
+          case "En Aduana":
+          case "Entregado":
+            d.desglose["En Proceso"]++;
+            break;
+        }
 
         // Risk level
         const { nivel, diasEnPuerto } = calcularNivelRiesgo(e.estadoReal, e.eta, hoy);
@@ -231,6 +249,9 @@ export function useOperacionesData(periodo: PeriodoFiltro = "mes") {
             profit: embarqueProfit,
           });
         }
+      } else if (["EIR", "Cerrado"].includes(e.estadoReal)) {
+        // Cerrados también se cuentan en el desglose (pero no en activas)
+        d.desglose.Cerrado++;
       }
 
       // ETD este mes
