@@ -24,6 +24,19 @@ export interface CargaRiesgo {
   profit: number;
 }
 
+export interface ClienteCarga {
+  nombre: string;
+  cantidad: number;
+}
+
+export interface DesgloseEstados {
+  Confirmado: number;
+  "En Tránsito": number;
+  Llegada: number;
+  "En Proceso": number;
+  Cerrado: number;
+}
+
 export interface OperadorData {
   nombre: string;
   cargasActivas: number;
@@ -35,6 +48,8 @@ export interface OperadorData {
   enPuerto: number;
   porArribar: number;
   clientes: string[];
+  clientesDesglose: ClienteCarga[];
+  desgloseEstados: DesgloseEstados;
   cargasEnRiesgo: CargaRiesgo[];
   historicoCreadosPorMes: { mes: string; valor: number }[];
   historicoLlegadosPorMes: { mes: string; valor: number }[];
