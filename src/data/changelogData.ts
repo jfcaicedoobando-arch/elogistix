@@ -10,6 +10,13 @@ export interface ChangelogEntry {
 
 export const changelog: ChangelogEntry[] = [
   {
+    version: "8.13.4",
+    date: "2026-04-17",
+    type: "patch",
+    title: "Columna Contenedor en lista de embarques",
+    description: "La tabla principal de la página Embarques ahora incluye la columna 'Contenedor' justo después de 'BL Master', mostrando el número de contenedor en formato monoespaciado. Si no hay contenedor asignado, se muestra '-'.",
+  },
+  {
     version: "8.13.3",
     date: "2026-04-17",
     type: "patch",
