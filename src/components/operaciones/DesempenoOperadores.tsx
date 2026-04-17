@@ -160,11 +160,17 @@ export function DesempenoOperadores({ operadores, isLoading }: Props) {
   );
 }
 
+const TOP_CLIENTES = 5;
+
 function OperadorCard({ operador }: { operador: OperadorData }) {
   const totalDesglose = useMemo(
     () => ESTADOS_KEYS.reduce((s, k) => s + operador.desgloseEstados[k], 0),
     [operador]
   );
+
+  // clientesDesglose ya viene ordenado por cantidad desc desde useOperacionesData
+  const clientesTop = operador.clientesDesglose.slice(0, TOP_CLIENTES);
+  const clientesRestantes = Math.max(operador.clientesDesglose.length - TOP_CLIENTES, 0);
 
   return (
     <div className="rounded-xl border bg-background p-4 space-y-3 hover:shadow-md transition-shadow">
