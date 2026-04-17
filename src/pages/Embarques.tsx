@@ -141,6 +141,7 @@ export default function Embarques() {
         },
       },
       { key: "bl", header: "BL Master", width: "w-[120px]", className: "text-xs", render: (e) => e.bl_master || "-" },
+      { key: "contenedor", header: "Contenedor", width: "w-[130px]", className: "text-xs font-mono", render: (e) => e.contenedor || <span className="text-muted-foreground">-</span> },
       { key: "cliente", header: "Cliente", width: "min-w-[160px]", className: "max-w-[180px] truncate", sortable: true, sortValue: (e) => e.cliente_nombre, render: (e) => e.cliente_nombre },
       {
         key: "modo", header: "Modo", width: "w-[90px]", render: (e) => (
