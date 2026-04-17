@@ -27,6 +27,7 @@ export interface CargaRiesgo {
 export interface ClienteCarga {
   nombre: string;
   cantidad: number;
+  desgloseEstados: DesgloseEstados;
 }
 
 export interface DesgloseEstados {
