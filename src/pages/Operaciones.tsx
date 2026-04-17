@@ -1,15 +1,11 @@
 import { useState, useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
-  TrendingUp, AlertTriangle, Package, ChevronDown, Star, Users,
-  Container, Shield, Anchor, Ship,
+  TrendingUp, AlertTriangle, Package, Container, Ship,
 } from "lucide-react";
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip,
@@ -20,27 +16,18 @@ import {
   type PeriodoFiltro,
 } from "@/hooks/useOperacionesData";
 import { formatCurrency } from "@/lib/formatters";
-import { useNavigate } from "react-router-dom";
 import { KpiCard } from "@/components/operaciones/KpiCard";
-import {
-  RiesgoIndicador, CapacityBar, RiskBadge, MiniBarChart, RiskDetailTable,
-} from "@/components/operaciones/OperacionesWidgets";
+import { DesempenoOperadores } from "@/components/operaciones/DesempenoOperadores";
 
 export default function Operaciones() {
   const [periodo, setPeriodo] = useState<PeriodoFiltro>("mes");
   const [operadorChart, setOperadorChart] = useState<string>("todos");
-  const [expandedRow, setExpandedRow] = useState<string | null>(null);
   const { isLoading, operadores, global } = useOperacionesData(periodo);
-  const navigate = useNavigate();
+
 
   const hoyStr = new Date().toLocaleDateString("es-MX", {
     weekday: "long", day: "numeric", month: "long", year: "numeric",
   });
-
-  const maxProfit = useMemo(
-    () => Math.max(...operadores.map((o) => Math.abs(o.profit)), 1),
-    [operadores]
-  );
 
   const chartData = useMemo(() => {
     if (operadorChart === "todos") return global.historicoCreadosPorMes;
@@ -104,155 +91,8 @@ export default function Operaciones() {
         <KpiCard titulo="Alertas de riesgo" valor={totalAlertas} subtitulo={totalAlertas > 0 ? `${global.totalCriticos} críticos · ${global.totalEnPuerto} en puerto` : "Sin alertas"} icono={AlertTriangle} color="red" loading={isLoading} />
       </div>
 
-      {/* ── Ranking de Operadores ─────────────────────── */}
-      <Card className="rounded-2xl shadow-sm border-0 bg-card">
-        <CardHeader className="pb-2">
-          <CardTitle className="text-base font-semibold flex items-center gap-2">
-            <Users className="h-4 w-4 text-muted-foreground" />
-            Ranking de Operadores
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="p-0">
-          {isLoading ? (
-            <div className="p-6 space-y-3">{[1, 2, 3].map((i) => <Skeleton key={i} className="h-10 w-full" />)}</div>
-          ) : operadores.length === 0 ? (
-            <p className="p-6 text-sm text-muted-foreground">Sin datos de operadores</p>
-          ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="w-10">#</TableHead>
-                  <TableHead>Operador</TableHead>
-                  <TableHead className="text-center">Estado de cargas</TableHead>
-                  <TableHead className="text-center">Contenedores</TableHead>
-                  <TableHead className="text-center">Activas</TableHead>
-                  <TableHead className="text-center">Demoras</TableHead>
-                  <TableHead className="text-right">Profit USD</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {operadores.map((op, idx) => (
-                  <Collapsible key={op.nombre} open={expandedRow === op.nombre} onOpenChange={(open) => setExpandedRow(open ? op.nombre : null)} asChild>
-                    <>
-                      <CollapsibleTrigger asChild>
-                        <TableRow className="cursor-pointer">
-                          <TableCell className="font-medium">
-                            {idx === 0 ? <Star className="h-4 w-4 text-amber-500 fill-amber-500" /> : idx + 1}
-                          </TableCell>
-                          <TableCell className="font-medium">{op.nombre}</TableCell>
-                          <TableCell className="text-center">
-                            <RiesgoIndicador criticos={op.criticos} enPuerto={op.enPuerto} porArribar={op.porArribar} />
-                          </TableCell>
-                          <TableCell className="text-center">
-                            <CapacityBar count={op.contenedores} max={MAX_CONTENEDORES} />
-                          </TableCell>
-                          <TableCell className="text-center">{op.cargasActivas}</TableCell>
-                          <TableCell className="text-center">
-                            <Badge variant={op.demoras > 0 ? "destructive" : "secondary"} className={op.demoras === 0 ? "bg-emerald-100 text-emerald-700 hover:bg-emerald-100" : ""}>
-                              {op.demoras}
-                            </Badge>
-                          </TableCell>
-                          <TableCell className="text-right">
-                            <div className="flex items-center justify-end gap-2">
-                              <span className="text-sm font-medium">{formatCurrency(op.profit, "USD")}</span>
-                              <div className="w-16 h-2 bg-muted rounded-full overflow-hidden">
-                                <div className="h-full bg-emerald-500 rounded-full" style={{ width: `${Math.max((op.profit / maxProfit) * 100, 0)}%` }} />
-                              </div>
-                              <ChevronDown className={`h-3 w-3 text-muted-foreground transition-transform ${expandedRow === op.nombre ? "rotate-180" : ""}`} />
-                            </div>
-                          </TableCell>
-                        </TableRow>
-                      </CollapsibleTrigger>
-                      <CollapsibleContent asChild>
-                        <tr>
-                          <td colSpan={7} className="p-4 bg-muted/30">
-                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                              <div>
-                                <p className="text-xs font-semibold text-muted-foreground mb-2">Clientes activos</p>
-                                <div className="flex flex-wrap gap-1">
-                                  {op.clientes.length > 0 ? op.clientes.map((c) => (
-                                    <Badge key={c} variant="outline" className="text-xs">{c}</Badge>
-                                  )) : <span className="text-xs text-muted-foreground">Sin clientes</span>}
-                                </div>
-                              </div>
-                              <div>
-                                <p className="text-xs font-semibold text-muted-foreground mb-2">Cargas en riesgo</p>
-                                <RiskDetailTable cargas={op.cargasEnRiesgo} />
-                              </div>
-                              <div>
-                                <p className="text-xs font-semibold text-muted-foreground mb-2">Cargas por ETD (6 meses)</p>
-                                <MiniBarChart data={op.historicoCreadosPorMes} />
-                              </div>
-                            </div>
-                          </td>
-                        </tr>
-                      </CollapsibleContent>
-                    </>
-                  </Collapsible>
-                ))}
-              </TableBody>
-            </Table>
-          )}
-        </CardContent>
-      </Card>
-
-      {/* ── Cargas en riesgo ──────────────────────────── */}
-      <Card className="rounded-2xl shadow-sm border-0 bg-card">
-        <CardHeader className="pb-2">
-          <CardTitle className="text-base font-semibold flex items-center gap-2">
-            <Shield className="h-4 w-4 text-red-500" />
-            Cargas en riesgo
-            {global.cargasEnRiesgo.length > 0 && (
-              <Badge variant="destructive" className="ml-1 text-[10px]">{global.cargasEnRiesgo.length}</Badge>
-            )}
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          {isLoading ? (
-            <Skeleton className="h-32 w-full" />
-          ) : global.cargasEnRiesgo.length === 0 ? (
-            <div className="flex flex-col items-center py-8 text-muted-foreground">
-              <Anchor className="h-8 w-8 mb-2 opacity-40" />
-              <p className="text-sm">Sin cargas en riesgo</p>
-            </div>
-          ) : (
-            <div className="rounded-lg border overflow-hidden">
-              <Table>
-                <TableHeader>
-                  <TableRow className="bg-muted/40">
-                    <TableHead>Expediente</TableHead>
-                    <TableHead>Cliente</TableHead>
-                    <TableHead>Operador</TableHead>
-                    <TableHead>Estado</TableHead>
-                    <TableHead>Nivel</TableHead>
-                    <TableHead className="text-center">Días</TableHead>
-                    <TableHead>ETA</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {global.cargasEnRiesgo.map((c) => (
-                    <TableRow key={c.id} className="cursor-pointer hover:bg-muted/30" onClick={() => navigate(`/embarques/${c.id}`)}>
-                      <TableCell className="font-mono text-xs font-medium">{c.expediente}</TableCell>
-                      <TableCell className="text-xs">{c.cliente_nombre}</TableCell>
-                      <TableCell className="text-xs">{c.operador}</TableCell>
-                      <TableCell className="text-xs">{c.estadoReal}</TableCell>
-                      <TableCell><RiskBadge nivel={c.nivelRiesgo} /></TableCell>
-                      <TableCell className="text-center text-xs font-bold">
-                        {c.nivelRiesgo === "critico" ? (
-                          <span className="text-red-600">{c.diasEnPuerto}d</span>
-                        ) : c.diasEnPuerto > 0 ? (
-                          <span className="text-amber-600">{c.diasEnPuerto}d</span>
-                        ) : "—"}
-                      </TableCell>
-                      <TableCell className="text-xs text-muted-foreground">{c.eta ?? "—"}</TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
-          )}
-        </CardContent>
-      </Card>
+      {/* ── Desempeño por Operador ───────────────────── */}
+      <DesempenoOperadores operadores={operadores} isLoading={isLoading} />
 
       {/* ── Tendencia de cargas ────────────────────────── */}
       <Card className="rounded-2xl shadow-sm border-0 bg-card">

@@ -24,6 +24,19 @@ export interface CargaRiesgo {
   profit: number;
 }
 
+export interface ClienteCarga {
+  nombre: string;
+  cantidad: number;
+}
+
+export interface DesgloseEstados {
+  Confirmado: number;
+  "En Tránsito": number;
+  Llegada: number;
+  "En Proceso": number;
+  Cerrado: number;
+}
+
 export interface OperadorData {
   nombre: string;
   cargasActivas: number;
@@ -35,6 +48,8 @@ export interface OperadorData {
   enPuerto: number;
   porArribar: number;
   clientes: string[];
+  clientesDesglose: ClienteCarga[];
+  desgloseEstados: DesgloseEstados;
   cargasEnRiesgo: CargaRiesgo[];
   historicoCreadosPorMes: { mes: string; valor: number }[];
   historicoLlegadosPorMes: { mes: string; valor: number }[];
@@ -142,6 +157,8 @@ export function useOperacionesData(periodo: PeriodoFiltro = "mes") {
       enPuerto: number;
       porArribar: number;
       clientes: Set<string>;
+      clientesCount: Map<string, number>;
+      desglose: DesgloseEstados;
       cargasEnRiesgo: CargaRiesgo[];
       creadosPorMes: Record<string, number>;
       llegadosPorMes: Record<string, number>;
@@ -165,6 +182,14 @@ export function useOperacionesData(periodo: PeriodoFiltro = "mes") {
           enPuerto: 0,
           porArribar: 0,
           clientes: new Set(),
+          clientesCount: new Map(),
+          desglose: {
+            Confirmado: 0,
+            "En Tránsito": 0,
+            Llegada: 0,
+            "En Proceso": 0,
+            Cerrado: 0,
+          },
           cargasEnRiesgo: [],
           creadosPorMes,
           llegadosPorMes,
@@ -186,6 +211,24 @@ export function useOperacionesData(periodo: PeriodoFiltro = "mes") {
         d.activas++;
         d.contenedores++;
         d.clientes.add(e.cliente_nombre);
+        d.clientesCount.set(e.cliente_nombre, (d.clientesCount.get(e.cliente_nombre) ?? 0) + 1);
+
+        // Desglose por estado (excluir Cotización y terminales)
+        switch (e.estadoReal) {
+          case "Confirmado":
+            d.desglose.Confirmado++;
+            break;
+          case "En Tránsito":
+            d.desglose["En Tránsito"]++;
+            break;
+          case "Arribo":
+            d.desglose.Llegada++;
+            break;
+          case "En Aduana":
+          case "Entregado":
+            d.desglose["En Proceso"]++;
+            break;
+        }
 
         // Risk level
         const { nivel, diasEnPuerto } = calcularNivelRiesgo(e.estadoReal, e.eta, hoy);
@@ -206,6 +249,9 @@ export function useOperacionesData(periodo: PeriodoFiltro = "mes") {
             profit: embarqueProfit,
           });
         }
+      } else if (["EIR", "Cerrado"].includes(e.estadoReal)) {
+        // Cerrados también se cuentan en el desglose (pero no en activas)
+        d.desglose.Cerrado++;
       }
 
       // ETD este mes
@@ -261,6 +307,10 @@ export function useOperacionesData(periodo: PeriodoFiltro = "mes") {
           enPuerto: d.enPuerto,
           porArribar: d.porArribar,
           clientes: Array.from(d.clientes),
+          clientesDesglose: Array.from(d.clientesCount.entries())
+            .map(([nombre, cantidad]) => ({ nombre, cantidad }))
+            .sort((a, b) => b.cantidad - a.cantidad),
+          desgloseEstados: d.desglose,
           cargasEnRiesgo: d.cargasEnRiesgo,
           historicoCreadosPorMes: meses6.map((m) => ({ mes: m.label, valor: d.creadosPorMes[m.label] })),
           historicoLlegadosPorMes: meses6.map((m) => ({ mes: m.label, valor: d.llegadosPorMes[m.label] })),

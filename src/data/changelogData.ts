@@ -10,6 +10,13 @@ export interface ChangelogEntry {
 
 export const changelog: ChangelogEntry[] = [
   {
+    version: "8.13.0",
+    date: "2026-04-17",
+    type: "minor",
+    title: "Dashboard de Operaciones: Desempeño por Operador",
+    description: "Se reemplazaron las secciones 'Ranking de operaciones' y 'Cargas en riesgo' por un nuevo reporte 'Desempeño por Operador' que muestra en tiempo real el estado de trabajo de cada persona: gráfico comparativo de barras apiladas por estado (Confirmado, En Tránsito, Llegada, En Proceso, Cerrado) y tarjetas individuales con desglose visual y lista de clientes con cantidad de embarques.",
+  },
+  {
     version: "8.12.0",
     date: "2026-04-16",
     type: "minor",
