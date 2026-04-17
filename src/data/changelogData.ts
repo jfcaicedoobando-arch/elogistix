@@ -10,6 +10,13 @@ export interface ChangelogEntry {
 
 export const changelog: ChangelogEntry[] = [
   {
+    version: "8.13.2",
+    date: "2026-04-17",
+    type: "patch",
+    title: "Clientes expandibles en tarjetas de Desempeño por Operador",
+    description: "Cada cliente listado dentro de la tarjeta de operador ahora es clickeable y se expande mostrando el desglose de embarques por estado (Confirmado, En Tránsito, Llegada, En Proceso, Cerrado) específico de ese cliente con ese operador. Incluye animación suave y flecha indicadora.",
+  },
+  {
     version: "8.13.1",
     date: "2026-04-17",
     type: "patch",

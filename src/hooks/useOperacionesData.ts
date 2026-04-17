@@ -27,6 +27,7 @@ export interface CargaRiesgo {
 export interface ClienteCarga {
   nombre: string;
   cantidad: number;
+  desgloseEstados: DesgloseEstados;
 }
 
 export interface DesgloseEstados {
@@ -158,6 +159,7 @@ export function useOperacionesData(periodo: PeriodoFiltro = "mes") {
       porArribar: number;
       clientes: Set<string>;
       clientesCount: Map<string, number>;
+      clientesEstados: Map<string, DesgloseEstados>;
       desglose: DesgloseEstados;
       cargasEnRiesgo: CargaRiesgo[];
       creadosPorMes: Record<string, number>;
@@ -183,6 +185,7 @@ export function useOperacionesData(periodo: PeriodoFiltro = "mes") {
           porArribar: 0,
           clientes: new Set(),
           clientesCount: new Map(),
+          clientesEstados: new Map(),
           desglose: {
             Confirmado: 0,
             "En Tránsito": 0,
@@ -206,12 +209,31 @@ export function useOperacionesData(periodo: PeriodoFiltro = "mes") {
       const costo = costoMap[e.id] || 0;
       const embarqueProfit = (venta > 0 || costo > 0) ? calcularUtilidad(venta, costo) : 0;
 
+      // Tracking por cliente: cuenta + desglose de estados (incluye terminales como Cerrado)
+      const trackInClient = !ESTADOS_TERMINALES.includes(e.estadoReal) || ["EIR", "Cerrado"].includes(e.estadoReal);
+      if (trackInClient) {
+        d.clientes.add(e.cliente_nombre);
+        d.clientesCount.set(e.cliente_nombre, (d.clientesCount.get(e.cliente_nombre) ?? 0) + 1);
+        let clienteDesglose = d.clientesEstados.get(e.cliente_nombre);
+        if (!clienteDesglose) {
+          clienteDesglose = { Confirmado: 0, "En Tránsito": 0, Llegada: 0, "En Proceso": 0, Cerrado: 0 };
+          d.clientesEstados.set(e.cliente_nombre, clienteDesglose);
+        }
+        switch (e.estadoReal) {
+          case "Confirmado": clienteDesglose.Confirmado++; break;
+          case "En Tránsito": clienteDesglose["En Tránsito"]++; break;
+          case "Arribo": clienteDesglose.Llegada++; break;
+          case "En Aduana":
+          case "Entregado": clienteDesglose["En Proceso"]++; break;
+          case "EIR":
+          case "Cerrado": clienteDesglose.Cerrado++; break;
+        }
+      }
+
       // Activas
       if (!ESTADOS_TERMINALES.includes(e.estadoReal)) {
         d.activas++;
         d.contenedores++;
-        d.clientes.add(e.cliente_nombre);
-        d.clientesCount.set(e.cliente_nombre, (d.clientesCount.get(e.cliente_nombre) ?? 0) + 1);
 
         // Desglose por estado (excluir Cotización y terminales)
         switch (e.estadoReal) {
@@ -308,7 +330,13 @@ export function useOperacionesData(periodo: PeriodoFiltro = "mes") {
           porArribar: d.porArribar,
           clientes: Array.from(d.clientes),
           clientesDesglose: Array.from(d.clientesCount.entries())
-            .map(([nombre, cantidad]) => ({ nombre, cantidad }))
+            .map(([nombre, cantidad]) => ({
+              nombre,
+              cantidad,
+              desgloseEstados: d.clientesEstados.get(nombre) ?? {
+                Confirmado: 0, "En Tránsito": 0, Llegada: 0, "En Proceso": 0, Cerrado: 0,
+              },
+            }))
             .sort((a, b) => b.cantidad - a.cantidad),
           desgloseEstados: d.desglose,
           cargasEnRiesgo: d.cargasEnRiesgo,
