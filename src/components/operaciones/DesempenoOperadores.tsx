@@ -229,25 +229,32 @@ function OperadorCard({ operador }: { operador: OperadorData }) {
         {operador.clientesDesglose.length === 0 ? (
           <p className="text-[11px] text-muted-foreground italic">Sin clientes activos</p>
         ) : (
-          <ul className="space-y-1 max-h-32 overflow-y-auto">
-            {operador.clientesDesglose.map((c) => (
-              <li
-                key={c.nombre}
-                className="flex items-center justify-between text-[11px] gap-2"
-              >
-                <span className="flex items-center gap-1 min-w-0 text-foreground">
-                  <ChevronRight className="h-3 w-3 text-muted-foreground shrink-0" />
-                  <span className="truncate">{c.nombre}</span>
-                </span>
-                <Badge
-                  variant="secondary"
-                  className="text-[10px] h-4 px-1.5 shrink-0 tabular-nums"
+          <>
+            <ul className="space-y-1 max-h-32 overflow-y-auto">
+              {clientesTop.map((c) => (
+                <li
+                  key={c.nombre}
+                  className="flex items-center justify-between text-[11px] gap-2"
                 >
-                  {c.cantidad}
-                </Badge>
-              </li>
-            ))}
-          </ul>
+                  <span className="flex items-center gap-1 min-w-0 text-foreground">
+                    <ChevronRight className="h-3 w-3 text-muted-foreground shrink-0" />
+                    <span className="truncate">{c.nombre}</span>
+                  </span>
+                  <Badge
+                    variant="secondary"
+                    className="text-[10px] h-4 px-1.5 shrink-0 tabular-nums"
+                  >
+                    {c.cantidad}
+                  </Badge>
+                </li>
+              ))}
+            </ul>
+            {clientesRestantes > 0 && (
+              <p className="text-[10px] text-muted-foreground mt-1.5 pl-4">
+                +{clientesRestantes} {clientesRestantes === 1 ? "cliente más" : "clientes más"}
+              </p>
+            )}
+          </>
         )}
       </div>
     </div>
