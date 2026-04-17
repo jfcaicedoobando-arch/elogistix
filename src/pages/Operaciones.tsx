@@ -1,15 +1,11 @@
 import { useState, useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
-  TrendingUp, AlertTriangle, Package, ChevronDown, Star, Users,
-  Container, Shield, Anchor, Ship,
+  TrendingUp, AlertTriangle, Package, Container, Ship,
 } from "lucide-react";
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip,
@@ -20,18 +16,14 @@ import {
   type PeriodoFiltro,
 } from "@/hooks/useOperacionesData";
 import { formatCurrency } from "@/lib/formatters";
-import { useNavigate } from "react-router-dom";
 import { KpiCard } from "@/components/operaciones/KpiCard";
-import {
-  RiesgoIndicador, CapacityBar, RiskBadge, MiniBarChart, RiskDetailTable,
-} from "@/components/operaciones/OperacionesWidgets";
+import { DesempenoOperadores } from "@/components/operaciones/DesempenoOperadores";
 
 export default function Operaciones() {
   const [periodo, setPeriodo] = useState<PeriodoFiltro>("mes");
   const [operadorChart, setOperadorChart] = useState<string>("todos");
-  const [expandedRow, setExpandedRow] = useState<string | null>(null);
   const { isLoading, operadores, global } = useOperacionesData(periodo);
-  const navigate = useNavigate();
+
 
   const hoyStr = new Date().toLocaleDateString("es-MX", {
     weekday: "long", day: "numeric", month: "long", year: "numeric",
