@@ -185,6 +185,7 @@ export function useOperacionesData(periodo: PeriodoFiltro = "mes") {
           porArribar: 0,
           clientes: new Set(),
           clientesCount: new Map(),
+          clientesEstados: new Map(),
           desglose: {
             Confirmado: 0,
             "En Tránsito": 0,
