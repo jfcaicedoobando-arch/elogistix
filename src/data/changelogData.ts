@@ -10,6 +10,13 @@ export interface ChangelogEntry {
 
 export const changelog: ChangelogEntry[] = [
   {
+    version: "8.13.1",
+    date: "2026-04-17",
+    type: "patch",
+    title: "Top 5 clientes en tarjetas de Desempeño por Operador",
+    description: "Las tarjetas de operador ahora muestran únicamente los 5 clientes con mayor cantidad de embarques, ordenados de mayor a menor. Si el operador maneja más de 5 clientes, se indica la cantidad restante con un texto '+X clientes más'.",
+  },
+  {
     version: "8.13.0",
     date: "2026-04-17",
     type: "minor",
