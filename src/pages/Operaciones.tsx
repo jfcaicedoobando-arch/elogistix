@@ -29,11 +29,6 @@ export default function Operaciones() {
     weekday: "long", day: "numeric", month: "long", year: "numeric",
   });
 
-  const maxProfit = useMemo(
-    () => Math.max(...operadores.map((o) => Math.abs(o.profit)), 1),
-    [operadores]
-  );
-
   const chartData = useMemo(() => {
     if (operadorChart === "todos") return global.historicoCreadosPorMes;
     const op = operadores.find((o) => o.nombre === operadorChart);
