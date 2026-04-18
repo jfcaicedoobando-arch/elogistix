@@ -57,7 +57,6 @@ export function StepDatosGenerales({ clientes, clienteNombre, contactos, onMsdsU
   const [comboboxOpen, setComboboxOpen] = useState(false);
   const [expedienteComboOpen, setExpedienteComboOpen] = useState(false);
 
-  const modo = watch('modo');
   const clienteId = watch('clienteId');
   const shipper = watch('shipper');
   const consignatario = watch('consignatario');
