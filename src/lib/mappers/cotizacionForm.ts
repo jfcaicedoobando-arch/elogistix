@@ -1,0 +1,5 @@
+/**
+ * Mappers puros entre el formulario de cotización (RHF) y la BD.
+ * Ubicación canónica desde Fase 8.
+ */
+export * from "../cotizacionFormMappers";

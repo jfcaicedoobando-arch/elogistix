@@ -21,9 +21,7 @@ import { getErrorMessage } from "@/lib/errorUtils";
 import SeccionMercanciaCotizacionDetalle from "@/components/cotizacion/SeccionMercanciaCotizacionDetalle";
 import TablaConceptosGenerico from "@/components/cotizacion/TablaConceptosGenerico";
 import ResumenTotalesCotizacion from "@/components/cotizacion/ResumenTotalesCotizacion";
-import type { ConceptoVentaCotizacion } from "@/hooks/useCotizacionTypes";
-import { calcularSubtotal, calcularIVA } from "@/lib/financialUtils";
-import { useTasaIVA } from "@/hooks/useTasaIVA";
+import { usePortalCotizacionDetalle } from "@/hooks/usePortalCotizacionDetalle";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Textarea } from "@/components/ui/textarea";
 import { getEstadoColor } from "@/lib/uiMappings";
@@ -34,7 +32,7 @@ export default function PortalCotizacionDetalle() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { data: cot, isLoading } = usePortalCotizacion(id);
-  const tasaIva = useTasaIVA();
+  const totales = usePortalCotizacionDetalle(cot);
   const { toast } = useToast();
 
   const [confirmAction, setConfirmAction] = useState<"Aceptada" | "Rechazada" | null>(null);
@@ -84,23 +82,7 @@ export default function PortalCotizacionDetalle() {
     );
   }
 
-  const conceptos: ConceptoVentaCotizacion[] = Array.isArray(cot.conceptos_venta)
-    ? (cot.conceptos_venta as unknown as ConceptoVentaCotizacion[])
-    : [];
-
-  const conceptosUSD = conceptos.filter((c) => c.moneda === "USD");
-  const conceptosMXN = conceptos.filter((c) => c.moneda === "MXN");
-
-  const totalUSD = conceptosUSD.reduce((s, c) => s + (c.total || 0), 0);
-  const subtotalMXN = conceptosMXN.reduce(
-    (s, c) => s + calcularSubtotal(c.cantidad, c.precio_unitario),
-    0
-  );
-  const ivaMXN = conceptosMXN.reduce(
-    (s, c) => s + calcularIVA(calcularSubtotal(c.cantidad, c.precio_unitario), tasaIva),
-    0
-  );
-  const totalMXN = subtotalMXN + ivaMXN;
+  const { conceptosUSD, conceptosMXN, totalUSD, subtotalMXN, ivaMXN, totalMXN } = totales;
 
   return (
     <div className="space-y-6">
