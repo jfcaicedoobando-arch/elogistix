@@ -10,6 +10,13 @@ export interface ChangelogEntry {
 
 export const changelog: ChangelogEntry[] = [
   {
+    version: "8.21.0",
+    date: "2026-04-18",
+    type: "patch",
+    title: "Guardarraíles ESLint contra deriva arquitectónica",
+    description: "Añadidas reglas ESLint para prevenir regresión a archivos sobredimensionados: max-lines (300 LOC), max-lines-per-function (150), complexity (15), max-depth (4), max-params (5). Exenciones aplicadas a primitivos shadcn (src/components/ui/**), tipos generados de Supabase, catálogos de datos (changelogData, ports) y archivos de tests. Las reglas emiten warnings (no bloquean build) para permitir refactor incremental cuando aparezcan violaciones futuras.",
+  },
+  {
     version: "8.20.0",
     date: "2026-04-18",
     type: "minor",
