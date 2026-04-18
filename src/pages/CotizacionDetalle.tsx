@@ -12,9 +12,10 @@ import TablaConceptosGenerico from "@/components/cotizacion/TablaConceptosGeneri
 import ResumenTotalesCotizacion from "@/components/cotizacion/ResumenTotalesCotizacion";
 import DialogConvertirProspecto from "@/components/cotizacion/DialogConvertirProspecto";
 import SeccionMercanciaCotizacionDetalle from "@/components/cotizacion/SeccionMercanciaCotizacionDetalle";
+import { CotizacionDetalleEmbarques, CotizacionDetalleAcciones } from "@/components/cotizacion/CotizacionDetalleSecciones";
 import { getEstadoColor } from "@/lib/uiMappings";
 import { formatDate, formatCurrency } from "@/lib/formatters";
-import { ArrowLeft, ArrowRight, CheckCircle, Send, XCircle, UserPlus, FileDown, Pencil } from "lucide-react";
+import { ArrowLeft, FileDown } from "lucide-react";
 import { useCotizacionDetalleState } from "@/hooks/useCotizacionDetalleState";
 
 // Lazy-loaded PDF generator (jsPDF + autotable are heavy; only load on demand)
@@ -46,8 +47,6 @@ export default function CotizacionDetalle() {
     return <div className="text-center py-12 text-muted-foreground">Cotización no encontrada</div>;
   }
 
-  const esBorradorOEnviada = cotizacion.estado === 'Borrador' || cotizacion.estado === 'Enviada';
-  const esAceptada = cotizacion.estado === 'Aceptada';
   const esMaritimo = cotizacion.modo === 'Marítimo';
 
   return (
@@ -69,40 +68,15 @@ export default function CotizacionDetalle() {
 
       {/* Acciones según estado */}
       {canEdit && (
-        <div className="flex flex-wrap gap-2">
-          {cotizacion.estado === 'Borrador' && (
-            <>
-              <Button variant="outline" size="sm" onClick={() => navigate(`/cotizaciones/${id}/editar`)}>
-                <Pencil className="h-4 w-4 mr-1" /> Editar
-              </Button>
-              <Button variant="outline" size="sm" onClick={() => handleCambiarEstado('Enviada')}>
-                <Send className="h-4 w-4 mr-1" /> Marcar como Enviada
-              </Button>
-            </>
-          )}
-          {esBorradorOEnviada && (
-            <>
-              <Button variant="outline" size="sm" onClick={() => handleCambiarEstado('Rechazada')}>
-                <XCircle className="h-4 w-4 mr-1" /> Rechazar
-              </Button>
-              <Button size="sm" onClick={() => handleCambiarEstado('Aceptada')}>
-                <CheckCircle className="h-4 w-4 mr-1" /> Aceptar
-              </Button>
-            </>
-          )}
-          {esAceptada && cotizacion.es_prospecto && (
-            <Button size="sm" variant="secondary" onClick={abrirDialogConvertir}>
-              <UserPlus className="h-4 w-4 mr-1" /> Convertir a Cliente
-            </Button>
-          )}
-          {esAceptada && (
-            <Button size="sm" onClick={() => setShowConfirmarConvertir(true)}>
-              <ArrowRight className="h-4 w-4 mr-1" />
-              Generar Embarques
-              <Badge className="ml-2">{cotizacion.num_contenedores}</Badge>
-            </Button>
-          )}
-        </div>
+        <CotizacionDetalleAcciones
+          estado={cotizacion.estado}
+          esProspecto={cotizacion.es_prospecto}
+          numContenedores={cotizacion.num_contenedores}
+          cotizacionId={id!}
+          onCambiarEstado={handleCambiarEstado}
+          onAbrirConvertir={abrirDialogConvertir}
+          onAbrirGenerarEmbarques={() => setShowConfirmarConvertir(true)}
+        />
       )}
 
       {/* Info de prospecto */}
@@ -200,35 +174,10 @@ export default function CotizacionDetalle() {
       )}
 
       {/* Embarques Generados */}
-      {(cotizacion.estado === 'Embarcada' || embarquesVinculados.length > 0) && (
-        <Card>
-          <CardHeader><CardTitle className="text-lg">Embarques Generados</CardTitle></CardHeader>
-          <CardContent>
-            {embarquesVinculados.length === 0 ? (
-              <div className="space-y-2">
-                <Skeleton className="h-8 w-full" />
-                <Skeleton className="h-8 w-full" />
-              </div>
-            ) : (
-              <div className="space-y-2">
-                {embarquesVinculados.map((emb) => (
-                  <div
-                    key={emb.id}
-                    className="flex items-center justify-between p-3 border rounded-md hover:bg-muted/50 cursor-pointer"
-                    onClick={() => navigate(`/embarques/${emb.id}`)}
-                  >
-                    <span className="font-medium text-primary">{emb.expediente}</span>
-                    <div className="flex items-center gap-3">
-                      <Badge className={getEstadoColor(emb.estado)}>{emb.estado}</Badge>
-                      <span className="text-sm text-muted-foreground">{formatDate(emb.created_at)}</span>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      )}
+      <CotizacionDetalleEmbarques
+        embarques={embarquesVinculados}
+        cotizacionEstado={cotizacion.estado}
+      />
 
       {/* Dialog Convertir Prospecto */}
       <DialogConvertirProspecto
