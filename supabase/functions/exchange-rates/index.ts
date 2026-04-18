@@ -1,12 +1,9 @@
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-};
+import { handlePreflight } from "../_shared/cors.ts";
+import { jsonResponse, errorResponse } from "../_shared/response.ts";
 
 Deno.serve(async (req) => {
-  if (req.method === "OPTIONS") {
-    return new Response(null, { headers: corsHeaders });
-  }
+  const preflight = handlePreflight(req);
+  if (preflight) return preflight;
 
   try {
     const res = await fetch("https://api.frankfurter.app/latest?from=MXN&to=USD,EUR");
@@ -16,12 +13,8 @@ Deno.serve(async (req) => {
     const usdMxn = data.rates?.USD ? +(1 / data.rates.USD).toFixed(4) : 17.25;
     const eurMxn = data.rates?.EUR ? +(1 / data.rates.EUR).toFixed(4) : 18.50;
 
-    return new Response(JSON.stringify({ usdMxn, eurMxn }), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
+    return jsonResponse({ usdMxn, eurMxn });
   } catch {
-    return new Response(JSON.stringify({ usdMxn: 17.25, eurMxn: 18.50 }), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
+    return jsonResponse({ usdMxn: 17.25, eurMxn: 18.50 });
   }
 });
