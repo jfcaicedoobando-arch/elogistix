@@ -41,6 +41,8 @@ export function useDashboardData() {
       if (error) throw error;
       return data as Record<string, unknown>;
     },
+    staleTime: 5 * 60_000, // 5 min — el dashboard no necesita refetch agresivo
+    gcTime: 10 * 60_000,
   });
 
   const [filtroEstado, setFiltroEstado] = useState<EstadoFiltro | null>(null);

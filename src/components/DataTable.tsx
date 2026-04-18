@@ -1,4 +1,4 @@
-import React, { useState, useMemo, memo } from "react";
+import React, { useState, useMemo } from "react";
 import { Inbox, ArrowUp, ArrowDown, ArrowUpDown } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
@@ -170,7 +170,12 @@ function DataTableInner<T>({
 }
 
 /**
- * Memoized DataTable — evita re-renders cuando props (columns, data, etc.)
- * se mantienen referencialmente iguales entre renders del padre.
+ * DataTable — componente genérico de tabla.
+ *
+ * Nota: previamente envolvíamos esto con `memo()`, pero al ser un componente
+ * genérico React emitía el warning "Function components cannot be given refs"
+ * cuando algún hijo (ej. Badge con Slot) recibía un ref desde una row con
+ * onClick. Eso rompía la memoización silenciosamente. La memoización efectiva
+ * se logra ahora memoizando `columns` y `data` en los padres (useMemo).
  */
-export const DataTable = memo(DataTableInner) as typeof DataTableInner;
+export const DataTable = DataTableInner;

@@ -109,18 +109,33 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   useEffect(() => {
-    // Set up auth state listener FIRST
+    // Set up auth state listener FIRST.
+    // IMPORTANT: ignoramos TOKEN_REFRESHED e INITIAL_SESSION para evitar
+    // re-renders y refetches en cascada cada ~60s cuando Supabase rota el token.
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (_eventoAuth, newSession) => {
+      (eventoAuth, newSession) => {
+        if (eventoAuth === 'TOKEN_REFRESHED' || eventoAuth === 'INITIAL_SESSION') {
+          // Solo actualizamos la session silenciosamente si cambió la referencia,
+          // sin tocar user ni disparar fetchs. Esto evita invalidar React Query.
+          setSession((prev) => (prev?.access_token === newSession?.access_token ? prev : newSession));
+          return;
+        }
+
         setSession(newSession);
         setUser(newSession?.user ?? null);
         if (newSession?.user) {
           // Defer to avoid potential deadlock with Supabase client
           setTimeout(() => fetchUserContext(newSession.user.id), 0);
-          if (_eventoAuth === 'SIGNED_IN' && !hasLoggedLogin.current) {
-            hasLoggedLogin.current = true;
-            // Fire-and-forget — don't block UI
-            setTimeout(() => registrarLogin(newSession.user.id, newSession.user.email ?? ''), 100);
+          if (eventoAuth === 'SIGNED_IN' && !hasLoggedLogin.current) {
+            // Guard adicional por sessionStorage para no re-loguear en refresh de pestaña
+            const loginKey = `lc:login-logged:${newSession.user.id}`;
+            if (typeof sessionStorage !== 'undefined' && sessionStorage.getItem(loginKey)) {
+              hasLoggedLogin.current = true;
+            } else {
+              hasLoggedLogin.current = true;
+              try { sessionStorage?.setItem(loginKey, '1'); } catch { /* noop */ }
+              setTimeout(() => registrarLogin(newSession.user.id, newSession.user.email ?? ''), 100);
+            }
           }
         } else {
           setCtx({ role: null, orgRole: null, organizationId: null, organization: null });
@@ -148,6 +163,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     hasLoggedLogin.current = false;
     lastFetchedFor.current = null;
     lastFetchedAt.current = 0;
+    try {
+      if (typeof sessionStorage !== 'undefined' && user?.id) {
+        sessionStorage.removeItem(`lc:login-logged:${user.id}`);
+      }
+    } catch { /* noop */ }
     await supabase.auth.signOut();
     setUser(null);
     setSession(null);
