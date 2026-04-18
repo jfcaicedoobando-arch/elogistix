@@ -68,6 +68,9 @@ export function useClientes() {
 
 // --- Hooks de detalle, contactos, CRUD (sin cambios) ---
 
+const CLIENTE_DETAIL_COLUMNS = 'id, nombre, rfc, direccion, ciudad, estado, cp, contacto, telefono, email, organization_id, created_at, updated_at' as const;
+const CONTACTO_COLUMNS = 'id, cliente_id, tipo, nombre, contacto, rfc, telefono, email, direccion, ciudad, pais, organization_id, created_at' as const;
+
 export function useCliente(id: string | undefined) {
   return useQuery({
     queryKey: queryKeys.clientes.detail(id!),
@@ -75,7 +78,7 @@ export function useCliente(id: string | undefined) {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("clientes")
-        .select("*")
+        .select(CLIENTE_DETAIL_COLUMNS)
         .eq("id", id!)
         .single();
       if (error) throw error;
@@ -91,7 +94,7 @@ export function useContactosCliente(clienteId: string | undefined) {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("contactos_cliente")
-        .select("*")
+        .select(CONTACTO_COLUMNS)
         .eq("cliente_id", clienteId!)
         .order("nombre");
       if (error) throw error;
