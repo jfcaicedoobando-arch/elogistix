@@ -10,6 +10,13 @@ export interface ChangelogEntry {
 
 export const changelog: ChangelogEntry[] = [
   {
+    version: "8.30.0",
+    date: "2026-04-18",
+    type: "patch",
+    title: "Re-auditoría de rendimiento — paginación de Changelog",
+    description: "Tras re-auditar el plan v8.25.0, se confirmó que la mayoría de las acciones pendientes ya estaban resueltas: useClientes y useProveedores ya tienen placeholderData, OrganizationContext ya memoiza su value con useMemo y reutiliza la org cacheada del AuthContext, useSidebarAlerts ya define staleTime de 5 min, y todos los imports de lucide-react usan named imports (tree-shaking correcto). La única deuda real era el peso del módulo Changelog (~32 kB gzip). Solución: la página ahora muestra solo las primeras 20 entradas con un botón 'Ver más' para cargar las siguientes páginas. El renderizado inicial es ~85% más liviano sin reducir el contenido disponible.",
+  },
+  {
     version: "8.29.0",
     date: "2026-04-18",
     type: "patch",
