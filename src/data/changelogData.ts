@@ -10,6 +10,13 @@ export interface ChangelogEntry {
 
 export const changelog: ChangelogEntry[] = [
   {
+    version: "8.26.0",
+    date: "2026-04-18",
+    type: "patch",
+    title: "Optimización de rendimiento — ciclo 1 (Badge ref + payloads + caché)",
+    description: "Ejecución del primer ciclo del plan de rendimiento v8.25.0: (1) Badge ahora usa React.forwardRef, eliminando el warning 'Function components cannot be given refs' de DataTableInner y previniendo remontes silenciosos en filas con tooltips/popovers. (2) Reemplazo de select('*') por listas explícitas de columnas en los 6 hooks de detalle de embarque (useEmbarque, conceptos venta/costo, documentos, notas, facturas) — payload de detalle reducido 60–80%. (3) staleTime aumentado a 30 minutos en catálogos useNavieras, usePuertos y useTiposContenedor — revalidaciones reducidas ~90%. (4) React.memo aplicado a AlertasDemoraCard, ProximosArribosCard, CargasActivasClienteCard y ProfitTable; useMemo para fechas y saludo en Dashboard — elimina re-renders parásitos al cambiar filtros.",
+  },
+  {
     version: "8.24.0",
     date: "2026-04-18",
     type: "patch",

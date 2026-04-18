@@ -1,3 +1,4 @@
+import { memo } from "react";
 import { TrendingUp } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -40,7 +41,7 @@ const columns: DataTableColumn<EmbarqueConProfit>[] = [
   },
 ];
 
-export function ProfitTable({ embarques, isLoading }: Props) {
+export const ProfitTable = memo(function ProfitTable({ embarques, isLoading }: Props) {
   const navigate = useNavigate();
 
   return (
@@ -66,4 +67,4 @@ export function ProfitTable({ embarques, isLoading }: Props) {
       </CardContent>
     </Card>
   );
-}
+});

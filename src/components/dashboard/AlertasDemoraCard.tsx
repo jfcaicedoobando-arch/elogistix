@@ -1,3 +1,4 @@
+import { memo } from "react";
 import { AlertTriangle, ArrowRight } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -10,7 +11,7 @@ interface Props {
   isLoading: boolean;
 }
 
-export function AlertasDemoraCard({ alertas, isLoading }: Props) {
+export const AlertasDemoraCard = memo(function AlertasDemoraCard({ alertas, isLoading }: Props) {
   const navigate = useNavigate();
 
   return (
@@ -62,4 +63,4 @@ export function AlertasDemoraCard({ alertas, isLoading }: Props) {
       </CardContent>
     </Card>
   );
-}
+});
