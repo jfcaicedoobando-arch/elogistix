@@ -10,6 +10,13 @@ export interface ChangelogEntry {
 
 export const changelog: ChangelogEntry[] = [
   {
+    version: "8.29.0",
+    date: "2026-04-18",
+    type: "patch",
+    title: "Optimización de rendimiento — ciclo 4 (auditoría de bundle)",
+    description: "Cierre del plan de rendimiento v8.25.0: se incorpora rollup-plugin-visualizer (activable con ANALYZE=true npx vite build) para auditar el tamaño real de los chunks. Auditoría confirmó que (a) los chunks vendor (react, query, radix, charts) están correctamente aislados, (b) las páginas operativas pesan <30 kB gzip, y (c) charts-vendor (97 kB gzip) solo se carga al visitar Dashboard/Reportes/Operaciones gracias al lazy-loading. Única deuda detectada: Changelog.js (32 kB gzip) por su contenido estático extenso, pero ya es lazy-loaded y no afecta el TTI de pantallas operativas. Plan de rendimiento completado: 10/10 acciones ejecutadas.",
+  },
+  {
     version: "8.28.0",
     date: "2026-04-18",
     type: "patch",
