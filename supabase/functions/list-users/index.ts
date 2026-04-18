@@ -1,56 +1,17 @@
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-};
+import { handlePreflight } from "../_shared/cors.ts";
+import { jsonResponse, errorResponse } from "../_shared/response.ts";
+import { authenticate, checkAdminAccess } from "../_shared/auth.ts";
 
 Deno.serve(async (req) => {
-  if (req.method === "OPTIONS") {
-    return new Response(null, { headers: corsHeaders });
-  }
+  const preflight = handlePreflight(req);
+  if (preflight) return preflight;
 
   try {
-    const authHeader = req.headers.get("Authorization");
-    if (!authHeader?.startsWith("Bearer ")) {
-      return new Response(JSON.stringify({ error: "No autorizado" }), { status: 401, headers: corsHeaders });
+    const { userId, adminClient } = await authenticate(req);
+    const { isGlobalAdmin, orgId } = await checkAdminAccess(adminClient, userId);
+    if (!isGlobalAdmin && !orgId) {
+      return errorResponse("Solo administradores", 403);
     }
-
-    // Verify calling user is admin
-    const supabaseUser = createClient(
-      Deno.env.get("SUPABASE_URL")!,
-      Deno.env.get("SUPABASE_ANON_KEY")!,
-      { global: { headers: { Authorization: authHeader } } }
-    );
-
-    const { data: claims, error: claimsError } = await supabaseUser.auth.getClaims(
-      authHeader.replace("Bearer ", "")
-    );
-    if (claimsError || !claims?.claims?.sub) {
-      return new Response(JSON.stringify({ error: "Token inválido" }), { status: 401, headers: corsHeaders });
-    }
-
-    const userId = claims.claims.sub;
-
-    // Check admin role: global role OR organizational role
-    const { data: roleData } = await supabaseUser.from("user_roles").select("role").eq("user_id", userId).single();
-    const isGlobalAdmin = roleData?.role === "admin" || roleData?.role === "super_admin";
-
-    let isOrgAdmin = false;
-    if (!isGlobalAdmin) {
-      const { data: orgData } = await supabaseUser.from("organization_members").select("role").eq("user_id", userId).limit(1).single();
-      isOrgAdmin = orgData?.role === "admin";
-    }
-
-    if (!isGlobalAdmin && !isOrgAdmin) {
-      return new Response(JSON.stringify({ error: "Solo administradores" }), { status: 403, headers: corsHeaders });
-    }
-
-    // Use service role to list all users
-    const adminClient = createClient(
-      Deno.env.get("SUPABASE_URL")!,
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
-    );
 
     const { data: { users }, error } = await adminClient.auth.admin.listUsers();
     if (error) throw error;
@@ -61,14 +22,11 @@ Deno.serve(async (req) => {
       created_at: u.created_at,
     }));
 
-    return new Response(JSON.stringify(result), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
-  } catch (err: unknown) {
-    const message = err instanceof Error ? err.message : "Error desconocido";
-    return new Response(JSON.stringify({ error: message }), {
-      status: 500,
-      headers: corsHeaders,
-    });
+    return jsonResponse(result);
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : "Error desconocido";
+    const [code, ...rest] = msg.split(":");
+    const status = /^\d+$/.test(code) ? parseInt(code) : 500;
+    return errorResponse(rest.join(":") || msg, status);
   }
 });

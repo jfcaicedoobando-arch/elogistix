@@ -10,6 +10,13 @@ export interface ChangelogEntry {
 
 export const changelog: ChangelogEntry[] = [
   {
+    version: "8.18.0",
+    date: "2026-04-18",
+    type: "minor",
+    title: "Refactor arquitectónico Fase 6: reorganización de carpetas y utilidades compartidas para edge functions",
+    description: "Sexta iteración del refactor arquitectónico. (1) Reorganización de carpetas: src/lib/ ahora contiene exclusivamente utilidades puras (formatters, financialUtils, dashboardParsers, etc.); los módulos con efectos secundarios sobre la base de datos o el almacenamiento se movieron a src/services/ (storage, csfService, embarqueServices, cotizacionServices) y los generadores de documentos a src/generators/ (cotizacionPdf, exportCsv). Esta separación clarifica la testabilidad y la dirección de las dependencias. (2) Edge functions: se creó supabase/functions/_shared/ con utilidades reutilizables para CORS (cors.ts), respuestas JSON estandarizadas (response.ts) y autenticación con verificación de rol admin (auth.ts). Las funciones create-user, list-users y delete-user fueron refactorizadas para consumir estas utilidades, eliminando ~120 líneas de código duplicado y unificando el manejo de errores. Cero cambios visuales ni de comportamiento; toda la API pública se preserva.",
+  },
+  {
     version: "8.17.0",
     date: "2026-04-18",
     type: "minor",

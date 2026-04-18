@@ -11,7 +11,7 @@ import { useCreateCliente } from "@/hooks/useClientes";
 import { useToast } from "@/hooks/use-toast";
 import { useRegistrarActividad } from "@/hooks/useBitacora";
 import DocumentChecklist, { type DocumentoChecklist } from "@/components/DocumentChecklist";
-import { parseCsf } from "@/lib/csfService";
+import { parseCsf } from "@/services/csfService";
 
 const emptyCliente = {
   nombre: "", rfc: "", direccion: "", ciudad: "", estado: "", cp: "", contacto: "", email: "", telefono: "",

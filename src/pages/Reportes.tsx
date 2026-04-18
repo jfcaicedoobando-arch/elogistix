@@ -15,7 +15,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 import { formatCurrency } from "@/lib/formatters";
-import { exportToCsv } from "@/lib/exportCsv";
+import { exportToCsv } from "@/generators/exportCsv";
 import { useRentabilidadClientes } from "@/hooks/useRentabilidadClientes";
 
 const MODOS = [

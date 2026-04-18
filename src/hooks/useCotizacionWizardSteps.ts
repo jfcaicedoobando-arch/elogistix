@@ -5,7 +5,7 @@ import type { CostoCotizacion } from "@/hooks/useCotizacionCostos";
 import type { CreateCotizacionInput, CotizacionRow, ConceptoVentaCotizacion } from "@/hooks/useCotizaciones";
 import type { FilaCostoLocal } from "@/components/cotizacion/SeccionCostosInternosPLUnificado";
 import type { CotizacionFormValues } from "@/lib/cotizacionFormMappers";
-import { savePaso1, savePaso2, savePaso3, savePasoFinal, buildConceptosFromCostos } from "@/lib/cotizacionServices";
+import { savePaso1, savePaso2, savePaso3, savePasoFinal, buildConceptosFromCostos } from "@/services/cotizacionServices";
 import { getErrorMessage } from "@/lib/errorUtils";
 
 interface ToastFn {

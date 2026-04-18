@@ -1,6 +1,6 @@
 import { useState, useMemo } from "react";
 import { Download } from "lucide-react";
-import { exportToCsv } from "@/lib/exportCsv";
+import { exportToCsv } from "@/generators/exportCsv";
 import SearchInput from "@/components/SearchInput";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
