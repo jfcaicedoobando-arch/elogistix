@@ -10,6 +10,13 @@ export interface ChangelogEntry {
 
 export const changelog: ChangelogEntry[] = [
   {
+    version: "8.31.0",
+    date: "2026-04-18",
+    type: "patch",
+    title: "Cierre del plan — AuthContext memoizado y preload idle de rutas",
+    description: "Últimas dos acciones del plan: (1) AuthContext ahora memoiza su value con useMemo, evitando re-renders en cascada de todos los consumidores cada vez que el provider se vuelve a renderizar. (2) Tras el login se programa un import() en idle (requestIdleCallback con fallback setTimeout) de las páginas Embarques, Cotizaciones y Dashboard, dejando sus chunks en caché del navegador. La primera navegación a esas pantallas resulta prácticamente instantánea (sin esperar el round-trip de descarga del chunk). Plan de rendimiento v8.25.0 cerrado al 100%.",
+  },
+  {
     version: "8.30.0",
     date: "2026-04-18",
     type: "patch",
