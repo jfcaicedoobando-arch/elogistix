@@ -10,6 +10,13 @@ export interface ChangelogEntry {
 
 export const changelog: ChangelogEntry[] = [
   {
+    version: "8.15.2",
+    date: "2026-04-18",
+    type: "patch",
+    title: "Refactor arquitectónico Fase 1.3: descomposición de componentes y hooks",
+    description: "Tercera iteración del refactor arquitectónico. Se extrajeron de useCotizacionWizardForm.ts los tipos del formulario (CotizacionFormValues), los valores por defecto (COTIZACION_FORM_DEFAULTS) y la función pura buildCotizacionDefaultValues a un nuevo archivo src/lib/cotizacionFormMappers.ts; el hook se redujo de 369 a ~210 líneas y ahora se concentra en orquestar el wizard. Se creó el hook useEmbarqueDetalleTracking que encapsula la creación y copiado del enlace público de tracking, eliminando dependencias directas de useToast y useCreateTrackingLink desde la página EmbarqueDetalle. Cero cambios visuales ni de comportamiento; la API pública (re-exports) se preserva.",
+  },
+  {
     version: "8.15.1",
     date: "2026-04-18",
     type: "patch",
