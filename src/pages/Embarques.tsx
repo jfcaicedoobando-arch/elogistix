@@ -1,89 +1,49 @@
 import { useState, useMemo } from "react";
-import { Plus, Trash2, MoreHorizontal, Pencil, Copy, Ship, Download, AlertTriangle } from "lucide-react";
+import { Plus, Ship, Download } from "lucide-react";
 import { exportToCsv } from "@/generators/exportCsv";
-import { shortName } from "@/lib/formatters";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import {
-  Tooltip, TooltipContent, TooltipTrigger, TooltipProvider,
-} from "@/components/ui/tooltip";
 import { useNavigate } from "react-router-dom";
-import { useEmbarquesPaginados, calcularEstadoEmbarque, useEliminarEmbarque } from "@/hooks/useEmbarques";
+import { useEliminarEmbarque, calcularEstadoEmbarque } from "@/hooks/useEmbarques";
 import { useOperadoresDistintos } from "@/hooks/useOperadoresDistintos";
 import { getErrorMessage } from "@/lib/errorUtils";
 import { useClientesForSelect } from "@/hooks/useClientes";
 import { usePermissions } from "@/hooks/usePermissions";
 import { useRegistrarActividad } from "@/hooks/useBitacora";
 import { useToast } from "@/hooks/use-toast";
-import { formatDate, getOrigen, getDestino } from "@/lib/formatters";
-import { getEstadoColor, getModoIcon } from "@/lib/uiMappings";
+import { getOrigen, getDestino } from "@/lib/formatters";
 import PaginationControls from "@/components/PaginationControls";
-import { DataTable, type DataTableColumn } from "@/components/DataTable";
-import { useDebounce } from "@/hooks/useDebounce";
+import { DataTable } from "@/components/DataTable";
 import type { EmbarqueRow } from "@/hooks/useEmbarques";
 import DoubleConfirmDeleteDialog from "@/components/DoubleConfirmDeleteDialog";
 import DialogDuplicarEmbarque from "@/components/embarque/DialogDuplicarEmbarque";
 import { useEmbarquesListExtras } from "@/hooks/useEmbarquesListData";
 import EmbarquesFiltros from "@/components/embarque/EmbarquesFiltros";
-import {
-  DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-
-const DEFAULT_PAGE_SIZE = 20;
-
+import { useEmbarquesPageState } from "@/hooks/useEmbarquesPageState";
+import { buildEmbarqueColumns } from "@/components/embarque/embarqueColumns";
 
 export default function Embarques() {
   const navigate = useNavigate();
   const { data: clientes = [] } = useClientesForSelect();
-  const [search, setSearch] = useState("");
-  const [filterModo, setFilterModo] = useState<string>("todos");
-  const [filterEstado, setFilterEstado] = useState<string>("todos");
-  const [filterCliente, setFilterCliente] = useState<string>("todos");
-  const [filterOperador, setFilterOperador] = useState<string>("todos");
-  const [fechaDesde, setFechaDesde] = useState("");
-  const [fechaHasta, setFechaHasta] = useState("");
-  const [page, setPage] = useState(0);
-  const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
   const { canEdit } = usePermissions();
   const { toast } = useToast();
   const eliminarEmbarque = useEliminarEmbarque();
   const registrarActividad = useRegistrarActividad();
 
-  const debouncedSearch = useDebounce(search, 300);
-
-  const { data: resultado, isLoading } = useEmbarquesPaginados({
-    search: debouncedSearch,
-    filterModo,
-    filterEstado,
-    filterCliente,
-    filterOperador,
-    page,
-    pageSize,
-    fechaDesde,
-    fechaHasta,
-  });
-
-  const embarques = resultado?.data ?? [];
-  const totalCount = resultado?.count ?? 0;
-
-  const filtered = useMemo(() => {
-    if (filterEstado === "todos") return embarques;
-    return embarques.filter((e) => {
-      const estadoCalculado = calcularEstadoEmbarque(e.modo, e.tipo, e.etd, e.eta, e.estado);
-      return estadoCalculado === filterEstado;
-    });
-  }, [embarques, filterEstado]);
-
-  const displayCount = filterEstado !== "todos" ? filtered.length : totalCount;
-  const totalPages = filterEstado !== "todos" ? 1 : Math.ceil(totalCount / pageSize);
+  const state = useEmbarquesPageState();
+  const {
+    search, filterModo, filterEstado, filterCliente, filterOperador,
+    fechaDesde, fechaHasta, page, pageSize,
+    setSearch, setFilterModo, setFilterEstado, setFilterCliente, setFilterOperador,
+    setFechaDesde, setFechaHasta, setPage, setPageSize,
+    embarques, filtered, displayCount, totalPages, isLoading, isEmptyState,
+  } = state;
 
   const [embarqueAEliminar, setEmbarqueAEliminar] = useState<EmbarqueRow | null>(null);
   const [embarqueADuplicar, setEmbarqueADuplicar] = useState<EmbarqueRow | null>(null);
 
   const { data: operadoresUnicos = [] } = useOperadoresDistintos();
 
-  // Supplementary data for the list
   const embarqueIds = useMemo(() => embarques.map(e => e.id), [embarques]);
   const { data: extrasData } = useEmbarquesListExtras(embarqueIds);
   const liquidacionMap = extrasData?.liquidacion ?? {};
@@ -106,98 +66,17 @@ export default function Embarques() {
     setEmbarqueAEliminar(null);
   };
 
-  const getLiquidacionBadge = (embarqueId: string) => {
-    const info = liquidacionMap[embarqueId];
-    if (!info || info.total === 0) return <span className="text-xs text-muted-foreground">—</span>;
-    if (info.pagados === info.total) return <Badge variant="secondary" className="text-xs bg-emerald-100 text-emerald-700 border-emerald-300">Pagado</Badge>;
-    if (info.pagados > 0) return <Badge variant="secondary" className="text-xs bg-amber-100 text-amber-700 border-amber-300">Parcial</Badge>;
-    return <Badge variant="secondary" className="text-xs bg-red-100 text-red-700 border-red-300">Pendiente</Badge>;
-  };
-
-  const columns: DataTableColumn<EmbarqueRow>[] = useMemo(() => {
-    const base: DataTableColumn<EmbarqueRow>[] = [
-      {
-        key: "expediente", header: "Expediente", width: "w-[130px]", className: "font-medium", sticky: true, sortable: true, sortValue: (e) => e.expediente,
-        render: (e) => {
-          const docInfo = docsMap[e.id];
-          const hayPendientes = docInfo && docInfo.pendientes > 0;
-          return (
-            <span className="flex items-center gap-1">
-              {e.expediente}
-              {hayPendientes && (
-                <TooltipProvider delayDuration={200}>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <AlertTriangle className="h-3.5 w-3.5 text-amber-500 flex-shrink-0" />
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      <p className="text-xs">{docInfo.pendientes} doc(s) pendientes</p>
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-              )}
-            </span>
-          );
-        },
-      },
-      { key: "bl", header: "BL Master", width: "w-[120px]", className: "text-xs", render: (e) => e.bl_master || "-" },
-      { key: "contenedor", header: "Contenedor", width: "w-[130px]", className: "text-xs font-mono", render: (e) => e.contenedor || <span className="text-muted-foreground">-</span> },
-      { key: "cliente", header: "Cliente", width: "min-w-[160px]", className: "max-w-[180px] truncate", sortable: true, sortValue: (e) => e.cliente_nombre, render: (e) => e.cliente_nombre },
-      {
-        key: "modo", header: "Modo", width: "w-[90px]", render: (e) => (
-          <span className="flex items-center gap-1">
-            {getModoIcon(e.modo)} <span className="text-xs">{e.modo}</span>
-          </span>
-        ),
-      },
-      { key: "origen", header: "Origen", width: "w-[120px]", className: "text-xs", render: (e) => shortName(getOrigen(e)) },
-      { key: "destino", header: "Destino", width: "w-[120px]", className: "text-xs", render: (e) => shortName(getDestino(e)) },
-      { key: "etd", header: "ETD", width: "w-[90px]", className: "text-xs", sortable: true, sortValue: (e) => e.etd || "", render: (e) => formatDate(e.etd || "") },
-      { key: "eta", header: "ETA", width: "w-[90px]", className: "text-xs", sortable: true, sortValue: (e) => e.eta || "", render: (e) => formatDate(e.eta || "") },
-      {
-        key: "estado", header: "Estado", width: "w-[110px]", sortable: true, sortValue: (e) => calcularEstadoEmbarque(e.modo, e.tipo, e.etd, e.eta, e.estado), render: (e) => {
-          const estado = calcularEstadoEmbarque(e.modo, e.tipo, e.etd, e.eta, e.estado);
-          return <Badge variant="secondary" className={`text-xs ${getEstadoColor(estado)}`}>{estado}</Badge>;
-        },
-      },
-      {
-        key: "liquidacion", header: "Costos", width: "w-[90px]", render: (e) => getLiquidacionBadge(e.id),
-      },
-    ];
-
-    if (canEdit) {
-      base.push({
-        key: "acciones",
-        header: "",
-        className: "w-10",
-        render: (e) => (
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild onClick={(ev) => ev.stopPropagation()}>
-              <Button variant="ghost" size="icon" className="h-8 w-8">
-                <MoreHorizontal className="h-4 w-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={(ev) => { ev.stopPropagation(); navigate(`/embarques/${e.id}/editar`); }}>
-                <Pencil className="mr-2 h-4 w-4" /> Editar
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={(ev) => { ev.stopPropagation(); setEmbarqueADuplicar(e); }}>
-                <Copy className="mr-2 h-4 w-4" /> Duplicar
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem className="text-destructive focus:text-destructive" onClick={(ev) => { ev.stopPropagation(); setEmbarqueAEliminar(e); }}>
-                <Trash2 className="mr-2 h-4 w-4" /> Eliminar
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        ),
-      });
-    }
-
-    return base;
-  }, [canEdit, liquidacionMap, docsMap]);
-
-  const isEmptyState = !isLoading && totalCount === 0 && !debouncedSearch && filterModo === "todos" && filterEstado === "todos" && filterCliente === "todos" && filterOperador === "todos" && !fechaDesde && !fechaHasta;
+  const columns = useMemo(
+    () => buildEmbarqueColumns({
+      canEdit,
+      docsMap,
+      liquidacionMap,
+      onEditar: (e) => navigate(`/embarques/${e.id}/editar`),
+      onDuplicar: setEmbarqueADuplicar,
+      onEliminar: setEmbarqueAEliminar,
+    }),
+    [canEdit, liquidacionMap, docsMap, navigate],
+  );
 
   return (
     <div className="space-y-6">
@@ -294,19 +173,19 @@ export default function Embarques() {
             <CardContent className="p-4">
               <EmbarquesFiltros
                 search={search}
-                onSearchChange={(v) => { setSearch(v); setPage(0); }}
+                onSearchChange={setSearch}
                 filterModo={filterModo}
-                onFilterModoChange={(v) => { setFilterModo(v); setPage(0); }}
+                onFilterModoChange={setFilterModo}
                 filterEstado={filterEstado}
-                onFilterEstadoChange={(v) => { setFilterEstado(v); setPage(0); }}
+                onFilterEstadoChange={setFilterEstado}
                 filterCliente={filterCliente}
-                onFilterClienteChange={(v) => { setFilterCliente(v); setPage(0); }}
+                onFilterClienteChange={setFilterCliente}
                 filterOperador={filterOperador}
-                onFilterOperadorChange={(v) => { setFilterOperador(v); setPage(0); }}
+                onFilterOperadorChange={setFilterOperador}
                 fechaDesde={fechaDesde}
-                onFechaDesdeChange={(v) => { setFechaDesde(v); setPage(0); }}
+                onFechaDesdeChange={setFechaDesde}
                 fechaHasta={fechaHasta}
-                onFechaHastaChange={(v) => { setFechaHasta(v); setPage(0); }}
+                onFechaHastaChange={setFechaHasta}
                 clientes={clientes}
                 operadores={operadoresUnicos}
               />
@@ -329,7 +208,7 @@ export default function Embarques() {
                 totalPages={totalPages}
                 onPageChange={setPage}
                 pageSize={pageSize}
-                onPageSizeChange={(s) => { setPageSize(s); setPage(0); }}
+                onPageSizeChange={setPageSize}
               />
             </CardContent>
           </Card>
@@ -352,6 +231,7 @@ export default function Embarques() {
           onOpenChange={(open) => { if (!open) setEmbarqueADuplicar(null); }}
         />
       )}
+
     </div>
   );
 }

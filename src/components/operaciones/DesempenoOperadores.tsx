@@ -15,22 +15,15 @@ import {
   Legend,
 } from "recharts";
 import type { OperadorData, DesgloseEstados } from "@/hooks/useOperacionesData";
-
-const ESTADOS_KEYS: (keyof DesgloseEstados)[] = [
-  "Confirmado",
-  "En Tránsito",
-  "Llegada",
-  "En Proceso",
-  "Cerrado",
-];
+import { useDesempenoChartData, ESTADOS_KEYS } from "@/hooks/useDesempenoChartData";
 
 // Tokens semánticos: usamos colores del design system mediante variables CSS
 const ESTADO_COLOR: Record<keyof DesgloseEstados, string> = {
   Confirmado: "hsl(var(--info))",
   "En Tránsito": "hsl(var(--warning))",
-  Llegada: "hsl(199 89% 48%)",       // cyan
-  "En Proceso": "hsl(262 83% 58%)",   // violet
-  Cerrado: "hsl(160 84% 39%)",        // emerald
+  Llegada: "hsl(var(--state-llegada))",
+  "En Proceso": "hsl(var(--state-en-proceso))",
+  Cerrado: "hsl(var(--state-cerrado))",
 };
 
 const ESTADO_ICON: Record<keyof DesgloseEstados, typeof Anchor> = {
@@ -47,18 +40,8 @@ interface Props {
 }
 
 export function DesempenoOperadores({ operadores, isLoading }: Props) {
-  const chartData = useMemo(
-    () =>
-      operadores.map((op) => ({
-        nombre: op.nombre,
-        Confirmado: op.desgloseEstados.Confirmado,
-        "En Tránsito": op.desgloseEstados["En Tránsito"],
-        Llegada: op.desgloseEstados.Llegada,
-        "En Proceso": op.desgloseEstados["En Proceso"],
-        Cerrado: op.desgloseEstados.Cerrado,
-      })),
-    [operadores]
-  );
+  const chartData = useDesempenoChartData(operadores);
+
 
   if (isLoading) {
     return (

@@ -14,14 +14,8 @@ import { cn } from "@/lib/utils";
 import type { EmbarqueFormValues } from "@/hooks/useEmbarqueForm";
 import type { CotizacionRow } from "@/hooks/useCotizaciones";
 import { useExpedientesCliente, type ExpedienteCliente } from "@/hooks/useEmbarques";
-import type { Enums } from "@/integrations/supabase/types";
-type ModoTransporte = Enums<'modo_transporte'>;
-type TipoOperacion = Enums<'tipo_operacion'>;
-type Incoterm = Enums<'incoterm'>;
+import { MODOS, TIPOS, INCOTERMS } from "@/data/wizardConstants";
 
-const MODOS: ModoTransporte[] = ['Marítimo', 'Aéreo', 'Terrestre', 'Multimodal'];
-const TIPOS: TipoOperacion[] = ['Importación', 'Exportación', 'Nacional', 'Cross Trade', 'Intra USA'];
-const INCOTERMS: Incoterm[] = ['EXW', 'FOB', 'CIF', 'DAP', 'DDP', 'FCA', 'CFR', 'CPT', 'CIP', 'DAT', 'N/A'];
 
 interface Contacto {
   id: string;
@@ -63,7 +57,6 @@ export function StepDatosGenerales({ clientes, clienteNombre, contactos, onMsdsU
   const [comboboxOpen, setComboboxOpen] = useState(false);
   const [expedienteComboOpen, setExpedienteComboOpen] = useState(false);
 
-  const modo = watch('modo');
   const clienteId = watch('clienteId');
   const shipper = watch('shipper');
   const consignatario = watch('consignatario');

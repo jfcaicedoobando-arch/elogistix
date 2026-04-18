@@ -51,6 +51,11 @@
     --warning-foreground: 0 0% 100%;
     --info: 221 83% 53%;
     --info-foreground: 0 0% 100%;
+
+    /* Tokens semánticos para estados de embarque (Llegada, En Proceso, Cerrado) */
+    --state-llegada: 199 89% 48%;
+    --state-en-proceso: 262 83% 58%;
+    --state-cerrado: 160 84% 39%;
   }
 
   .dark {
@@ -87,6 +92,11 @@
     --warning-foreground: 0 0% 100%;
     --info: 217 91% 60%;
     --info-foreground: 0 0% 100%;
+
+    /* Tokens semánticos para estados (variantes oscuras) */
+    --state-llegada: 199 89% 55%;
+    --state-en-proceso: 262 83% 65%;
+    --state-cerrado: 160 84% 45%;
   }
 }
 
