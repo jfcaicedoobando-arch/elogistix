@@ -10,6 +10,13 @@ export interface ChangelogEntry {
 
 export const changelog: ChangelogEntry[] = [
   {
+    version: "8.17.0",
+    date: "2026-04-18",
+    type: "minor",
+    title: "Refactor arquitectónico Fase 5: aislamiento de backend, descomposición de páginas y división del wizard",
+    description: "Quinta iteración del refactor arquitectónico. (1) Aislamiento de backend: GlobalSearch, TabResumen del embarque, PortalEmbarqueDocumentos, NuevoUsuarioDialog y AgregarMiembroOrgDialog ya no acceden directamente al cliente de base de datos; ahora consumen hooks dedicados (useGlobalSearch, useEmbarquesRelacionados, usePortalDocumentDownload, useOrganizationsList, useAvailableUsers, useAddOrgMember). (2) Descomposición de páginas: EmbarqueDetalle delega su encabezado al nuevo EmbarqueDetalleHeader; CotizacionDetalle delega sus acciones por estado y la sección de embarques generados a CotizacionDetalleSecciones. (3) Wizard de cotización: la navegación entre pasos se extrajo a useCotizacionWizardSteps, dejando a useCotizacionWizardForm como orquestador puro de estado y cálculos. Cero cambios visuales ni de comportamiento; toda la API pública se preserva.",
+  },
+  {
     version: "8.16.0",
     date: "2026-04-18",
     type: "minor",
