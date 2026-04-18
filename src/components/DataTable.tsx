@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, memo } from "react";
 import { Inbox, ArrowUp, ArrowDown, ArrowUpDown } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
@@ -37,7 +37,7 @@ interface DataTableProps<T> {
 
 type SortDir = "asc" | "desc";
 
-export function DataTable<T>({
+function DataTableInner<T>({
   columns,
   data,
   isLoading = false,
@@ -168,3 +168,9 @@ export function DataTable<T>({
     </Table>
   );
 }
+
+/**
+ * Memoized DataTable — evita re-renders cuando props (columns, data, etc.)
+ * se mantienen referencialmente iguales entre renders del padre.
+ */
+export const DataTable = memo(DataTableInner) as typeof DataTableInner;

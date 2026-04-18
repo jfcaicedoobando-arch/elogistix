@@ -10,6 +10,13 @@ export interface ChangelogEntry {
 
 export const changelog: ChangelogEntry[] = [
   {
+    version: "8.14.2",
+    date: "2026-04-18",
+    type: "patch",
+    title: "Optimizaciones de rendimiento (Fase 3)",
+    description: "Se aplicó memoización (React.memo) al componente genérico DataTable y a las tarjetas de embarque del portal del cliente. Esto evita que las tablas y listas se vuelvan a renderizar cuando cambia un estado externo no relacionado (por ejemplo, al expandir un panel, abrir un menú o cambiar el foco). En vistas con muchas filas el desplazamiento y las interacciones se sienten más fluidas.",
+  },
+  {
     version: "8.14.1",
     date: "2026-04-18",
     type: "minor",
