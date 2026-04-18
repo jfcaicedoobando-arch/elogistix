@@ -10,6 +10,13 @@ export interface ChangelogEntry {
 
 export const changelog: ChangelogEntry[] = [
   {
+    version: "8.16.0",
+    date: "2026-04-18",
+    type: "minor",
+    title: "Refactor arquitectónico Fase 4: separación de responsabilidades",
+    description: "Cuarta iteración del refactor arquitectónico que limpia la deuda técnica restante del audit original. (1) Acceso a backend: TabPortalCliente ya no usa el cliente de base de datos directamente; ahora consume el nuevo hook useClientUsers, lo que centraliza la invalidación de caché. (2) Componentes: SeccionCostosInternosPLUnificado se dividió en tres archivos especializados (Local para el wizard, Detalle para la persistencia desde BD y un dispatcher delgado), manteniendo intacta la API pública. (3) Hooks god-object: useDashboardData delega el parsing del JSONB a un módulo puro y testeable (lib/dashboardParsers.ts); useCotizacionDetalleState se separa en helpers puros (cotizacionDetalleHelpers.ts) + hook de handlers (useCotizacionDetalleHandlers); useEmbarqueDetalleActions se reorganiza como orquestador de dos hooks focalizados (useEmbarqueEstadoActions y useEmbarqueDocumentosActions). Cero cambios visuales ni de comportamiento.",
+  },
+  {
     version: "8.15.2",
     date: "2026-04-18",
     type: "patch",

@@ -6,13 +6,14 @@ import { Label } from "@/components/ui/label";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { UserPlus, Trash2, Globe, Loader2 } from "lucide-react";
-import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { getErrorMessage } from "@/lib/errorUtils";
 import { formatDate } from "@/lib/formatters";
-import { queryKeys } from "@/lib/queryKeys";
-import { useInviteClientUser, useRevokeClientUser } from "@/hooks/useClientUsersMutations";
+import {
+  useClientUsers,
+  useInviteClientUser,
+  useRevokeClientUser,
+} from "@/hooks/useClientUsersMutations";
 
 interface Props {
   clienteId: string;
@@ -25,14 +26,7 @@ export default function TabPortalCliente({ clienteId, organizationId, canEdit }:
   const [inviteOpen, setInviteOpen] = useState(false);
   const [inviteEmail, setInviteEmail] = useState("");
 
-  const { data: clientUsers = [], isLoading } = useQuery({
-    queryKey: queryKeys.clientes.clientUsers(clienteId),
-    queryFn: async () => {
-      const { data, error } = await supabase.from("client_users").select("*").eq("cliente_id", clienteId);
-      if (error) throw error;
-      return data ?? [];
-    },
-  });
+  const { data: clientUsers = [], isLoading } = useClientUsers(clienteId);
 
   const inviteMutation = useInviteClientUser(clienteId);
   const revokeMutation = useRevokeClientUser(clienteId);
