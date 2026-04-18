@@ -66,7 +66,7 @@ export function CargasActivasClienteCard({ data, isLoading }: Props) {
                 </p>
                 <div className="flex flex-wrap gap-1">
                   {ESTADOS_ORDEN.map((est) => {
-                    const count = c.desglose[est];
+                    const count = c.desglose?.[est];
                     if (!count) return null;
                     return (
                       <Badge
