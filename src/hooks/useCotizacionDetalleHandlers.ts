@@ -5,7 +5,7 @@ import {
   useUpdateEstadoCotizacion,
   useConvertirProspectoACliente,
   useConvertirCotizacionAEmbarques,
-  type Cotizacion,
+  type CotizacionRow,
 } from "@/hooks/useCotizaciones";
 import type { ClienteFormData } from "@/components/cotizacion/DialogConvertirProspecto";
 
@@ -13,7 +13,7 @@ import type { ClienteFormData } from "@/components/cotizacion/DialogConvertirPro
  * Hook focalizado en las acciones (mutations + handlers + diálogos) del detalle de cotización.
  * Separado del state de queries/totales para favorecer la testabilidad.
  */
-export function useCotizacionDetalleHandlers(cotizacion: Cotizacion | undefined) {
+export function useCotizacionDetalleHandlers(cotizacion: CotizacionRow | undefined) {
   const { toast } = useToast();
   const actualizarEstado = useUpdateEstadoCotizacion();
   const convertirProspecto = useConvertirProspectoACliente();
