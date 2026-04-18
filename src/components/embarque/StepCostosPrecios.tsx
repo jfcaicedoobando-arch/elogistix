@@ -2,7 +2,7 @@ import { useMemo } from "react";
 import { useFormContext } from "react-hook-form";
 import { Trash2 } from "lucide-react";
 import { formatCurrency } from "@/lib/formatters";
-import { convertirAUSD, type Moneda } from "@/lib/financialUtils";
+import { aUSD, sumarEnUSD } from "@/lib/costosUSD";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -46,15 +46,14 @@ export function StepCostosPrecios(props: Props) {
   const tcUSD = parseFloat(tipoCambioUSD) || 1;
   const tcEUR = parseFloat(tipoCambioEUR) || 1;
 
-  const toUSD = (monto: number, moneda: string) =>
-    convertirAUSD(monto, moneda as Moneda, tcUSD, tcEUR);
+  const toUSD = (monto: number, moneda: string) => aUSD(monto, moneda, tcUSD, tcEUR);
 
   const totalCostoUSD = useMemo(
-    () => conceptosCosto.reduce((acc, c) => acc + toUSD(c.monto, c.moneda), 0),
+    () => sumarEnUSD(conceptosCosto.map(c => ({ monto: c.monto, moneda: c.moneda })), tcUSD, tcEUR),
     [conceptosCosto, tcUSD, tcEUR]
   );
   const totalVentaUSD = useMemo(
-    () => conceptosVenta.reduce((acc, v) => acc + toUSD(v.precioUnitario, v.moneda), 0),
+    () => sumarEnUSD(conceptosVenta.map(v => ({ monto: v.precioUnitario, moneda: v.moneda })), tcUSD, tcEUR),
     [conceptosVenta, tcUSD, tcEUR]
   );
 
