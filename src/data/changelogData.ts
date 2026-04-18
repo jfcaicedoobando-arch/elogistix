@@ -10,6 +10,13 @@ export interface ChangelogEntry {
 
 export const changelog: ChangelogEntry[] = [
   {
+    version: "8.14.3",
+    date: "2026-04-18",
+    type: "patch",
+    title: "Optimizaciones de rendimiento (Fase 4)",
+    description: "Se redujo significativamente el tamaño del payload del Dashboard: la función dashboard_stats ahora limita los resultados a los más relevantes (top 15 alertas de demora, top 15 próximos arribos, top 30 embarques con mejor profit del mes y top 30 del mes siguiente). Esto reduce el JSON enviado al navegador de ~50KB a ~10KB en organizaciones con muchos embarques. Adicionalmente, en builds de producción ahora se eliminan automáticamente los console.log/warn (drop_console) y se separan los bundles de Recharts, React Query y Radix UI en chunks dedicados para mejorar el cacheo del navegador entre despliegues.",
+  },
+  {
     version: "8.14.2",
     date: "2026-04-18",
     type: "patch",
