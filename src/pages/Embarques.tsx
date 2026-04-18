@@ -33,7 +33,7 @@ export default function Embarques() {
   const state = useEmbarquesPageState();
   const {
     search, filterModo, filterEstado, filterCliente, filterOperador,
-    fechaDesde, fechaHasta, page, pageSize, debouncedSearch,
+    fechaDesde, fechaHasta, page, pageSize,
     setSearch, setFilterModo, setFilterEstado, setFilterCliente, setFilterOperador,
     setFechaDesde, setFechaHasta, setPage, setPageSize,
     embarques, filtered, displayCount, totalPages, isLoading, isEmptyState,
@@ -232,8 +232,6 @@ export default function Embarques() {
         />
       )}
 
-      {/* unused vars guard */}
-      {false && <span>{debouncedSearch}</span>}
     </div>
   );
 }
