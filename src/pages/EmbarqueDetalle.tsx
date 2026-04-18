@@ -124,7 +124,7 @@ export default function EmbarqueDetalle() {
               <Trash2 className="h-4 w-4 mr-1" /> Eliminar
             </Button>
           )}
-          <Button variant="outline" size="sm" onClick={handleCompartirTracking} disabled={createTrackingLink.isPending}>
+          <Button variant="outline" size="sm" onClick={handleCompartirTracking} disabled={trackingPending}>
             <Share2 className="h-4 w-4 mr-1" /> Compartir Tracking
           </Button>
           <Button variant="outline" size="sm"><Printer className="h-4 w-4 mr-1" /> Imprimir</Button>
