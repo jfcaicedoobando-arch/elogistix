@@ -36,8 +36,20 @@ type Cotizacion = ReturnType<typeof useCotizaciones>["data"] extends (infer U)[]
 
 export default function Cotizaciones() {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const { data: cotizaciones = [], isLoading } = useCotizaciones();
   const { data: clientes = [] } = useClientesForSelect();
+  const prefetchCotizacion = useCallback((id: string) => {
+    queryClient.prefetchQuery({
+      queryKey: queryKeys.cotizaciones.detail(id),
+      queryFn: async () => {
+        const { data, error } = await supabase.from('cotizaciones').select('*').eq('id', id).single();
+        if (error) throw error;
+        return data;
+      },
+      staleTime: 30_000,
+    });
+  }, [queryClient]);
   const [search, setSearch] = useState("");
   const [filterEstado, setFilterEstado] = useState<string>("todos");
   const [filterCliente, setFilterCliente] = useState<string>("todos");
