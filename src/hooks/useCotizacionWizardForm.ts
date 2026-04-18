@@ -4,21 +4,21 @@ import type { NavigateFunction } from "react-router-dom";
 import type { ConceptoVentaCotizacion, CotizacionRow, CreateCotizacionInput } from "@/hooks/useCotizaciones";
 import type { CostoCotizacion } from "@/hooks/useCotizacionCostos";
 import type { FilaCostoLocal } from "@/components/cotizacion/SeccionCostosInternosPLUnificado";
-import { buildPaso1Data as buildPaso1Mapper } from "@/lib/mappers/cotizacionMappers";
+import { buildPaso1Data as buildPaso1Mapper } from "@/lib/mappers/cotizacion";
 import {
   buildCotizacionDefaultValues,
   buildCotizacionInitialCostos,
   type CotizacionFormValues,
   type CotizacionInitialData,
   type CotizacionInitialCosto,
-} from "@/lib/cotizacionFormMappers";
+} from "@/lib/mappers/cotizacionForm";
 import { useConceptosVentaCotizacion } from "@/hooks/useConceptosVentaCotizacion";
 import { useCotizacionPL } from "@/hooks/useCotizacionPL";
 import { useCotizacionWizardSteps } from "@/hooks/useCotizacionWizardSteps";
 
 // Re-exports para preservar la API pública existente
-export { COTIZACION_FORM_DEFAULTS } from "@/lib/cotizacionFormMappers";
-export type { CotizacionFormValues } from "@/lib/cotizacionFormMappers";
+export { COTIZACION_FORM_DEFAULTS } from "@/lib/mappers/cotizacionForm";
+export type { CotizacionFormValues } from "@/lib/mappers/cotizacionForm";
 
 // ────────── Types ──────────
 interface ToastFn {

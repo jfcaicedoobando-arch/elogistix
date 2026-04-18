@@ -15,12 +15,12 @@ import {
   buildDesvincularCotizacionUpdates,
   type EmbarqueFormValues,
   type CotizacionParaVincular,
-} from "@/lib/embarqueMappers";
+} from "@/lib/mappers/embarque";
 import type { Tables } from "@/integrations/supabase/types";
 import type { ConceptoVentaLocal, ConceptoCostoLocal } from "@/data/conceptoTypes";
 
 // Re-exports para compatibilidad con consumidores existentes
-export type { EmbarqueFormValues } from "@/lib/embarqueMappers";
+export type { EmbarqueFormValues } from "@/lib/mappers/embarque";
 export type EmbarqueFormState = EmbarqueFormValues;
 export type EmbarqueFormMethods = UseFormReturn<EmbarqueFormValues>;
 

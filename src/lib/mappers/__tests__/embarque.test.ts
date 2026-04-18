@@ -8,7 +8,7 @@ import {
   DEFAULT_EMBARQUE_VALUES,
   type EmbarqueFormValues,
   type CotizacionParaVincular,
-} from "@/lib/embarqueMappers";
+} from "@/lib/mappers/embarque";
 
 const baseValues = (over: Partial<EmbarqueFormValues> = {}): EmbarqueFormValues => ({
   ...DEFAULT_EMBARQUE_VALUES,

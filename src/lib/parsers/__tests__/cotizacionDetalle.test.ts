@@ -3,7 +3,7 @@ import {
   parseConceptos,
   calcularTotalesConceptos,
   getNombreDestinatario,
-} from "@/lib/cotizacionDetalleHelpers";
+} from "@/lib/parsers/cotizacionDetalle";
 import type { ConceptoVentaCotizacion } from "@/hooks/useCotizaciones";
 
 const concepto = (over: Partial<ConceptoVentaCotizacion>): ConceptoVentaCotizacion => ({

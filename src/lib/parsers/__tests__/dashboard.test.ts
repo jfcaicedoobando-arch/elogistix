@@ -9,7 +9,7 @@ import {
   EMPTY_ARRIBOS,
   EMPTY_RESUMEN,
   type EmbarqueConEstado,
-} from "@/lib/dashboardParsers";
+} from "@/lib/parsers/dashboard";
 
 const baseEmb = (id: string): EmbarqueConEstado => ({
   id,

@@ -7,7 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Collapsible, CollapsibleTrigger, CollapsibleContent } from "@/components/ui/collapsible";
 import { usePortalEmbarques, usePortalClientUsers } from "@/hooks/usePortalData";
 import { getEstadoColor } from "@/lib/uiMappings";
-import { calcularEstadoEmbarque } from "@/lib/embarqueLogic";
+import { calcularEstadoEmbarque } from "@/lib/domain/embarque";
 import { getOrigen, getDestino } from "@/lib/formatters";
 import EmbarqueCard from "@/components/portal/EmbarqueCard";
 import { Search, Ship, Filter, Package, ChevronDown } from "lucide-react";
