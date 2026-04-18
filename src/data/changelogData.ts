@@ -10,6 +10,13 @@ export interface ChangelogEntry {
 
 export const changelog: ChangelogEntry[] = [
   {
+    version: "8.18.1",
+    date: "2026-04-18",
+    type: "patch",
+    title: "Cobertura de tests: módulos puros extraídos en Fase 4-6",
+    description: "Se agregaron 41 tests unitarios nuevos para los módulos puros extraídos durante el refactor arquitectónico: dashboardParsers (13 tests cubriendo parseConteoPorEstado, parseArribosEsteMes, parseResumenMesSiguiente, parseCargasPorCliente y combinarActivos), cotizacionDetalleHelpers (12 tests cubriendo parseConceptos, calcularTotalesConceptos y getNombreDestinatario) y embarqueMappers (16 tests cubriendo buildEmbarquePayload, buildConceptosVentaPayload/CostoPayload y los helpers de vinculación/desvinculación con cotizaciones). Total de la suite: pasa de ~50 a ~91 tests, sin cambios funcionales.",
+  },
+  {
     version: "8.18.0",
     date: "2026-04-18",
     type: "minor",
