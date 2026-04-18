@@ -5,10 +5,16 @@ import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { getEstadoColor } from "@/lib/uiMappings";
 import { formatDate } from "@/lib/formatters";
-import type { EmbarqueRow } from "@/hooks/useEmbarques";
+
+interface EmbarqueVinculado {
+  id: string;
+  expediente: string;
+  estado: string;
+  created_at: string;
+}
 
 interface Props {
-  embarques: EmbarqueRow[];
+  embarques: EmbarqueVinculado[];
   cotizacionEstado: string;
 }
 
