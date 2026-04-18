@@ -304,4 +304,4 @@ const ClienteExpandible = memo(function ClienteExpandible({ cliente }: { cliente
       </Collapsible>
     </li>
   );
-}
+});
