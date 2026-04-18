@@ -1463,6 +1463,7 @@ export type Database = {
         }[]
       }
       generar_expediente: { Args: { tipo_op: string }; Returns: string }
+      get_user_context: { Args: never; Returns: Json }
       get_user_org_ids: { Args: { _user_id: string }; Returns: string[] }
       has_role: {
         Args: {
@@ -1516,6 +1517,8 @@ export type Database = {
         Args: { _bl_master: string; _tipo_op: string }
         Returns: string
       }
+      show_limit: { Args: never; Returns: number }
+      show_trgm: { Args: { "": string }; Returns: string[] }
       sidebar_alert_counts: {
         Args: never
         Returns: {

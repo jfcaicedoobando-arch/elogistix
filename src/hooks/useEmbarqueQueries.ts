@@ -28,6 +28,7 @@ export function useEmbarques() {
       if (error) throw error;
       return data as EmbarqueRow[];
     },
+    staleTime: 60_000,
   });
 }
 
@@ -111,6 +112,7 @@ export function useEmbarque(id: string | undefined) {
       return data as EmbarqueRow;
     },
     enabled: !!id,
+    staleTime: 30_000,
   });
 }
 
@@ -126,6 +128,7 @@ export function useEmbarqueConceptosVenta(embarqueId: string | undefined) {
       return data as ConceptoVentaRow[];
     },
     enabled: !!embarqueId,
+    staleTime: 30_000,
   });
 }
 
@@ -141,6 +144,7 @@ export function useEmbarqueConceptosCosto(embarqueId: string | undefined) {
       return data as ConceptoCostoRow[];
     },
     enabled: !!embarqueId,
+    staleTime: 30_000,
   });
 }
 
@@ -156,6 +160,7 @@ export function useEmbarqueDocumentos(embarqueId: string | undefined) {
       return data as DocumentoEmbarqueRow[];
     },
     enabled: !!embarqueId,
+    staleTime: 30_000,
   });
 }
 
@@ -172,6 +177,7 @@ export function useEmbarqueNotas(embarqueId: string | undefined) {
       return data as NotaEmbarqueRow[];
     },
     enabled: !!embarqueId,
+    staleTime: 30_000,
   });
 }
 
@@ -187,6 +193,7 @@ export function useEmbarqueFacturas(embarqueId: string | undefined) {
       return data;
     },
     enabled: !!embarqueId,
+    staleTime: 30_000,
   });
 }
 
@@ -201,6 +208,7 @@ export function useExpedientesCliente(clienteId: string | undefined) {
   const { organizationId } = useOrgFilter();
   return useQuery({
     queryKey: [...queryKeys.embarques.all, 'expedientes-cliente', clienteId, organizationId],
+    staleTime: 60_000,
     queryFn: async () => {
       if (!clienteId) return [];
       const { data, error } = await supabase
@@ -245,5 +253,6 @@ export function useProveedoresForSelect() {
       if (error) throw error;
       return data;
     },
+    staleTime: 5 * 60_000,
   });
 }

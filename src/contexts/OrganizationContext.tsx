@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState, ReactNode, useCallback } from "react";
+import { createContext, useContext, useEffect, useState, ReactNode, useCallback, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 
@@ -32,88 +32,77 @@ const OrganizationContext = createContext<OrganizationContextType>({
 export const useOrganization = () => useContext(OrganizationContext);
 
 export function OrganizationProvider({ children }: { children: ReactNode }) {
-  const { user, role } = useAuth();
-  const [organizationId, setOrganizationId] = useState<string | null>(null);
-  const [organization, setOrganization] = useState<Organization | null>(null);
-  const [organizations, setOrganizations] = useState<Organization[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { user, role, organizationId: cachedOrgId, organization: cachedOrg, loading: authLoading } = useAuth();
+  const [superAdminOrgs, setSuperAdminOrgs] = useState<Organization[]>([]);
+  const [superAdminActiveId, setSuperAdminActiveId] = useState<string | null>(null);
+  const [loadingSA, setLoadingSA] = useState(false);
 
   const isSuperAdmin = role === "super_admin";
 
-  const fetchMembership = useCallback(async () => {
-    if (!user) {
-      setOrganizationId(null);
-      setOrganization(null);
-      setOrganizations([]);
-      setLoading(false);
-      return;
-    }
-
-    try {
-      if (isSuperAdmin) {
-        // Super admin can see all organizations
-        const { data: orgs } = await supabase
-          .from("organizations")
-          .select("*")
-          .eq("activo", true)
-          .order("nombre");
-        
-        const orgList = (orgs ?? []) as unknown as Organization[];
-        setOrganizations(orgList);
-        
-        // Default to first org or stored preference
-        const stored = localStorage.getItem("sa_active_org");
-        const activeId = stored && orgList.find(o => o.id === stored)
-          ? stored
-          : orgList[0]?.id ?? null;
-        
-        setOrganizationId(activeId);
-        setOrganization(orgList.find(o => o.id === activeId) ?? null);
-      } else {
-        // Regular user — get their org membership
-        const { data: membership } = await supabase
-          .from("organization_members")
-          .select("organization_id")
-          .eq("user_id", user.id)
-          .limit(1)
-          .single();
-
-        if (membership) {
-          const { data: org } = await supabase
-            .from("organizations")
-            .select("*")
-            .eq("id", membership.organization_id)
-            .single();
-          
-          const orgData = org as unknown as Organization | null;
-          setOrganizationId(membership.organization_id);
-          setOrganization(orgData);
-          setOrganizations(orgData ? [orgData] : []);
-        }
-      }
-    } catch {
-      // Silent fail
-    } finally {
-      setLoading(false);
-    }
+  // Super-admin needs the full org list — only fetched when applicable
+  useEffect(() => {
+    if (!user || !isSuperAdmin) return;
+    let cancelled = false;
+    setLoadingSA(true);
+    (async () => {
+      const { data: orgs } = await supabase
+        .from("organizations")
+        .select("*")
+        .eq("activo", true)
+        .order("nombre");
+      if (cancelled) return;
+      const orgList = (orgs ?? []) as unknown as Organization[];
+      setSuperAdminOrgs(orgList);
+      const stored = localStorage.getItem("sa_active_org");
+      const activeId = stored && orgList.find(o => o.id === stored)
+        ? stored
+        : orgList[0]?.id ?? null;
+      setSuperAdminActiveId(activeId);
+      setLoadingSA(false);
+    })();
+    return () => { cancelled = true; };
   }, [user, isSuperAdmin]);
 
-  useEffect(() => {
-    fetchMembership();
-  }, [fetchMembership]);
-
   const setActiveOrganization = useCallback((id: string) => {
-    setOrganizationId(id);
-    setOrganization(organizations.find(o => o.id === id) ?? null);
     if (isSuperAdmin) {
+      setSuperAdminActiveId(id);
       localStorage.setItem("sa_active_org", id);
     }
-  }, [organizations, isSuperAdmin]);
+  }, [isSuperAdmin]);
+
+  const value = useMemo<OrganizationContextType>(() => {
+    if (isSuperAdmin) {
+      const active = superAdminOrgs.find(o => o.id === superAdminActiveId) ?? null;
+      return {
+        organizationId: superAdminActiveId,
+        organization: active,
+        organizations: superAdminOrgs,
+        setActiveOrganization,
+        isSuperAdmin: true,
+        loading: authLoading || loadingSA,
+      };
+    }
+    // Regular user — reuse cached organization from AuthContext (no extra round-trips)
+    const orgFromCache: Organization | null = cachedOrg ? {
+      id: cachedOrg.id,
+      nombre: cachedOrg.nombre,
+      rfc: cachedOrg.rfc ?? "",
+      logo_url: cachedOrg.logo_url,
+      plan: cachedOrg.plan ?? "basic",
+      activo: cachedOrg.activo ?? true,
+    } : null;
+    return {
+      organizationId: cachedOrgId,
+      organization: orgFromCache,
+      organizations: orgFromCache ? [orgFromCache] : [],
+      setActiveOrganization,
+      isSuperAdmin: false,
+      loading: authLoading,
+    };
+  }, [isSuperAdmin, superAdminOrgs, superAdminActiveId, cachedOrgId, cachedOrg, authLoading, loadingSA, setActiveOrganization]);
 
   return (
-    <OrganizationContext.Provider
-      value={{ organizationId, organization, organizations, setActiveOrganization, isSuperAdmin, loading }}
-    >
+    <OrganizationContext.Provider value={value}>
       {children}
     </OrganizationContext.Provider>
   );
