@@ -14,8 +14,7 @@ import {
 } from "@/lib/cotizacionFormMappers";
 import { useConceptosVentaCotizacion } from "@/hooks/useConceptosVentaCotizacion";
 import { useCotizacionPL } from "@/hooks/useCotizacionPL";
-import { getErrorMessage } from "@/lib/errorUtils";
-import { savePaso1, savePaso2, savePaso3, savePasoFinal, buildConceptosFromCostos } from "@/lib/cotizacionServices";
+import { useCotizacionWizardSteps } from "@/hooks/useCotizacionWizardSteps";
 
 // Re-exports para preservar la API pública existente
 export { COTIZACION_FORM_DEFAULTS } from "@/lib/cotizacionFormMappers";
@@ -43,8 +42,12 @@ interface HookDeps {
   initialCostos?: CotizacionInitialCosto[];
 }
 
+/**
+ * Orquestador del wizard de cotización.
+ * Combina form-state + cálculos + handlers de pasos (delegados a useCotizacionWizardSteps).
+ */
 export function useCotizacionWizardForm({ navigate, toast, userEmail, clientes, mutations, initialData, initialCostos }: HookDeps) {
-  const { crearCotizacion, updateCotizacion, upsertCostos, registrarActividad } = mutations;
+  const { crearCotizacion, updateCotizacion, upsertCostos } = mutations;
   const isEditMode = !!initialData;
 
   const form = useForm<CotizacionFormValues>({
@@ -91,94 +94,16 @@ export function useCotizacionWizardForm({ navigate, toast, userEmail, clientes, 
     return buildPaso1Mapper(form.getValues(), clientes, userEmail);
   }, [form, clientes, userEmail]);
 
-  // ── Navegación del wizard (usa cotizacionServices) ──
-  const handleSiguiente = useCallback(async () => {
-    const v = form.getValues();
-    if (currentStep === 1) {
-      if (!v.esProspecto && !v.clienteId) {
-        toast({ title: "Selecciona un cliente", variant: "destructive" });
-        return;
-      }
-      if (v.esProspecto && !v.prospectoEmpresa.trim()) {
-        toast({ title: "Ingresa el nombre de la empresa del prospecto", variant: "destructive" });
-        return;
-      }
-      if (v.esProspecto && !v.prospectoContacto.trim()) {
-        toast({ title: "Ingresa el nombre del contacto del prospecto", variant: "destructive" });
-        return;
-      }
-      try {
-        const id = await savePaso1({
-          form, msdsFile, cotizacionId, buildPaso1Data,
-          mutations: { crearCotizacion, updateCotizacion },
-        });
-        if (!cotizacionId) setCotizacionId(id);
-        setCurrentStep(2);
-      } catch (err: unknown) {
-        toast({ title: "Error al guardar datos generales", description: getErrorMessage(err), variant: "destructive" });
-      }
-    } else if (currentStep === 2) {
-      try {
-        if (costosInternos.length > 0 && cotizacionId) {
-          await savePaso2({ cotizacionId, costosInternos, mutations: { upsertCostos } });
-        }
-        if (!costosPreLlenados && costosInternos.length > 0) {
-          const { usd, mxn } = buildConceptosFromCostos(costosInternos, tasaIva);
-          if (usd.length > 0) setConceptosUSD(usd);
-          if (mxn.length > 0) setConceptosMXN(mxn);
-          setCostosPreLlenados(true);
-        }
-        setCurrentStep(3);
-      } catch (err: unknown) {
-        toast({ title: "Error al guardar costos", description: getErrorMessage(err), variant: "destructive" });
-      }
-    } else if (currentStep === 3) {
-      const conceptosUSDValidos = conceptosUSD.filter(c => c.descripcion?.trim());
-      const conceptosMXNValidos = conceptosMXN.filter(c => c.descripcion?.trim());
-      if (conceptosUSDValidos.length === 0 && conceptosMXNValidos.length === 0) {
-        toast({ title: "Agrega al menos un concepto de venta", variant: "destructive" });
-        return;
-      }
-      try {
-        if (cotizacionId) {
-          await savePaso3({
-            cotizacionId,
-            conceptosVenta: [...conceptosUSDValidos, ...conceptosMXNValidos] as unknown as Record<string, unknown>[],
-            totalUSD,
-            mutations: { updateCotizacion },
-          });
-        }
-        setCurrentStep(4);
-      } catch (err: unknown) {
-        toast({ title: "Error al guardar conceptos de venta", description: getErrorMessage(err), variant: "destructive" });
-      }
-    }
-  }, [
-    currentStep, form, msdsFile,
-    buildPaso1Data, cotizacionId, updateCotizacion, crearCotizacion, costosInternos, upsertCostos,
-    costosPreLlenados, conceptosUSD, conceptosMXN, totalUSD, toast, tasaIva,
-    setConceptosUSD, setConceptosMXN,
-  ]);
-
-  const handleGuardar = useCallback(async () => {
-    if (!cotizacionId) return;
-    try {
-      await savePasoFinal({
-        cotizacionId, isEditMode,
-        mutations: { updateCotizacion },
-        registrarActividad: registrarActividad.mutate,
-      });
-      toast({ title: isEditMode ? "Cotización actualizada exitosamente" : "Cotización creada exitosamente" });
-      navigate(`/cotizaciones/${cotizacionId}`);
-    } catch (err: unknown) {
-      toast({ title: "Error al finalizar cotización", description: getErrorMessage(err), variant: "destructive" });
-    }
-  }, [cotizacionId, updateCotizacion, registrarActividad, toast, navigate, isEditMode]);
-
-  const handleBack = useCallback(() => {
-    if (currentStep > 1) setCurrentStep(p => p - 1);
-    else navigate("/cotizaciones");
-  }, [currentStep, navigate]);
+  // ── Handlers de navegación del wizard (hook dedicado) ──
+  const { handleSiguiente, handleGuardar, handleBack } = useCotizacionWizardSteps({
+    form, toast, navigate, isEditMode,
+    cotizacionId, setCotizacionId,
+    currentStep, setCurrentStep,
+    msdsFile, costosInternos, costosPreLlenados, setCostosPreLlenados,
+    conceptosUSD, conceptosMXN, setConceptosUSD, setConceptosMXN,
+    totalUSD, tasaIva, buildPaso1Data,
+    mutations,
+  });
 
   const isPending = crearCotizacion.isPending || updateCotizacion.isPending || upsertCostos.isPending;
 
