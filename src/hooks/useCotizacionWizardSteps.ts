@@ -38,7 +38,7 @@ interface Deps {
   setConceptosMXN: (c: ConceptoVentaCotizacion[]) => void;
   totalUSD: number;
   tasaIva: number;
-  buildPaso1Data: () => CreateCotizacionInput;
+  buildPaso1Data: () => Record<string, unknown>;
   mutations: StepMutations;
 }
 
