@@ -14,7 +14,8 @@ export function useSidebarAlerts() {
         facturasVencidas: Number(row.facturas_vencidas),
       };
     },
-    staleTime: 60_000, // 1 min — no need to refresh alerts aggressively
+    staleTime: 5 * 60_000, // 5 min — alertas no requieren refresco frecuente
+    gcTime: 10 * 60_000,
   });
 
   const embarquesDemora = data?.embarquesDemora ?? 0;

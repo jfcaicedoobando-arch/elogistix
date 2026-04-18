@@ -10,6 +10,13 @@ export interface ChangelogEntry {
 
 export const changelog: ChangelogEntry[] = [
   {
+    version: "8.23.0",
+    date: "2026-04-18",
+    type: "patch",
+    title: "Optimización de rendimiento — eliminación del ciclo de refetch de 60s",
+    description: "Tres mejoras críticas de rendimiento detectadas en auditoría: (1) AuthContext ahora ignora eventos TOKEN_REFRESHED e INITIAL_SESSION (Supabase rota el token cada ~60s); estos eventos ya no disparan setUser/fetchUserContext, eliminando la cadena de refetches dashboard_stats + sidebar_alert_counts + bitacora insert que se observaba cada minuto. Guard adicional por sessionStorage evita registrar bitácora de login duplicada en refresh de pestaña. (2) DataTable ya no se envuelve con memo() — al ser un componente genérico provocaba el warning 'Function components cannot be given refs' cuando un hijo (Badge con Slot) recibía un ref desde una row con onClick, rompiendo la memoización silenciosamente. La memoización efectiva ahora se logra memoizando columns/data en los padres. (3) staleTime aumentado a 5 min para dashboard.stats y sidebar.alertCounts (antes 30s default y 1 min respectivamente); refetches en background drásticamente reducidos.",
+  },
+  {
     version: "8.22.0",
     date: "2026-04-18",
     type: "minor",
