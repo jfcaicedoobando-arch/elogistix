@@ -180,7 +180,7 @@ export function useUploadDocumentoEmbarque() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async ({ embarqueId, docId, file }: { embarqueId: string; docId: string; file: File }) => {
-      const { uploadFile } = await import('@/lib/storage');
+      const { uploadFile } = await import('@/services/storage');
       const path = `embarques/${embarqueId}/${docId}/${file.name}`;
       await uploadFile(path, file);
       const { error } = await supabase
@@ -201,7 +201,7 @@ export function useDeleteDocumentoEmbarque() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async ({ embarqueId, docId, archivoPath }: { embarqueId: string; docId: string; archivoPath: string }) => {
-      const { deleteFile } = await import('@/lib/storage');
+      const { deleteFile } = await import('@/services/storage');
       await deleteFile(archivoPath);
       const { error } = await supabase.from('documentos_embarque').delete().eq('id', docId);
       if (error) throw error;

@@ -14,7 +14,7 @@ import { useConceptosForm } from "@/hooks/useConceptosForm";
 import { useEmbarqueForm } from "@/hooks/useEmbarqueForm";
 import { useCotizacionesAceptadas, type CotizacionRow } from "@/hooks/useCotizaciones";
 import { useUpdateEstadoCotizacion } from "@/hooks/useCotizacionMutations";
-import { resolverExpediente, subirDocumentosEmbarque } from "@/lib/embarqueServices";
+import { resolverExpediente, subirDocumentosEmbarque } from "@/services/embarqueServices";
 import { getErrorMessage } from "@/lib/errorUtils";
 import { EmbarqueWizardLayout } from "@/components/embarque/EmbarqueWizardLayout";
 import { StepDatosGenerales } from "@/components/embarque/StepDatosGenerales";

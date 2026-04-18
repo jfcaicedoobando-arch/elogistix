@@ -1,5 +1,5 @@
 import { supabase } from '@/integrations/supabase/client';
-import { uploadFile } from '@/lib/storage';
+import { uploadFile } from '@/services/storage';
 
 /**
  * Resuelve o genera un número de expediente para un nuevo embarque.

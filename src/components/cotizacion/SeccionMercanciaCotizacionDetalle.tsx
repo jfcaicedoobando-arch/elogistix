@@ -5,7 +5,7 @@ import {
 } from "@/components/ui/table";
 import { AlertTriangle, FileDown } from "lucide-react";
 import { formatCurrency } from "@/lib/formatters";
-import { getSignedUrl } from "@/lib/storage";
+import { getSignedUrl } from "@/services/storage";
 import type { DimensionLCL, DimensionAerea } from "@/hooks/useCotizaciones";
 
 interface Props {

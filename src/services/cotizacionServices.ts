@@ -8,7 +8,7 @@ import type { CostoCotizacion } from "@/hooks/useCotizacionCostos";
 import type { FilaCostoLocal } from "@/components/cotizacion/SeccionCostosInternosPLUnificado";
 import { CONCEPTOS_CON_IVA_USD } from "@/data/cotizacionConstants";
 import { calcularTotalConIVA } from "@/lib/financialUtils";
-import { uploadFile } from "@/lib/storage";
+import { uploadFile } from "@/services/storage";
 
 // ── Types ──
 interface Mutations {
