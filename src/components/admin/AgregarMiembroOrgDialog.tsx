@@ -4,11 +4,9 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/integrations/supabase/client";
 import { Loader2 } from "lucide-react";
 import { getErrorMessage } from "@/lib/errorUtils";
-import { useQuery } from "@tanstack/react-query";
-import { queryKeys } from "@/lib/queryKeys";
+import { useAvailableUsers, useAddOrgMember } from "@/hooks/useOrgMembersMutations";
 import type { AppRole } from "@/data/types";
 
 interface Props {
@@ -19,25 +17,14 @@ interface Props {
   onAdded: () => void;
 }
 
-interface UserOption {
-  id: string;
-  email: string;
-}
-
 export default function AgregarMiembroOrgDialog({ open, onOpenChange, organizationId, existingUserIds, onAdded }: Props) {
   const [selectedUserId, setSelectedUserId] = useState("");
   const [role, setRole] = useState<AppRole>("viewer");
-  const [loading, setLoading] = useState(false);
   const { toast } = useToast();
 
-  const { data: allUsers = [], isLoading: loadingUsers } = useQuery({
-    queryKey: [...queryKeys.admin.allUsers, 'options'],
-    queryFn: async () => {
-      const { data } = await supabase.functions.invoke("list-users");
-      return Array.isArray(data) ? (data as UserOption[]) : [];
-    },
-    enabled: open,
-  });
+  const { data: allUsers = [], isLoading: loadingUsers } = useAvailableUsers(open);
+  const addMember = useAddOrgMember();
+  const loading = addMember.isPending;
 
   const users = useMemo(
     () => allUsers.filter((u) => !existingUserIds.includes(u.id)),
@@ -47,23 +34,14 @@ export default function AgregarMiembroOrgDialog({ open, onOpenChange, organizati
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedUserId) return;
-
-    setLoading(true);
     try {
-      const { error } = await supabase
-        .from("organization_members")
-        .insert({ organization_id: organizationId, user_id: selectedUserId, role });
-
-      if (error) throw error;
-
+      await addMember.mutateAsync({ organizationId, userId: selectedUserId, role });
       const user = users.find((u) => u.id === selectedUserId);
       toast({ title: "Miembro agregado", description: `${user?.email ?? "Usuario"} agregado como ${role}` });
       onOpenChange(false);
       onAdded();
     } catch (err: unknown) {
       toast({ title: "Error", description: getErrorMessage(err), variant: "destructive" });
-    } finally {
-      setLoading(false);
     }
   };
 

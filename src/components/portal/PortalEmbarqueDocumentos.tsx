@@ -1,11 +1,9 @@
-import { useState } from "react";
 import { Download, FileCheck, FileX, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/hooks/use-toast";
+import { usePortalDocumentDownload } from "@/hooks/usePortalDocumentDownload";
 import type { Tables } from "@/integrations/supabase/types";
 
 const DOC_ESTADO_ICON: Record<string, { icon: typeof FileCheck; color: string }> = {
@@ -19,38 +17,7 @@ interface Props {
 }
 
 export function PortalEmbarqueDocumentos({ documentos }: Props) {
-  const { toast } = useToast();
-  const [downloadingId, setDownloadingId] = useState<string | null>(null);
-
-  const handleDownload = async (archivo: string, docId: string) => {
-    setDownloadingId(docId);
-    try {
-      const { data, error } = await supabase.storage
-        .from("documentos")
-        .createSignedUrl(archivo, 300);
-      if (error) throw error;
-      const filename = archivo.split("/").pop() || "documento";
-      try {
-        const response = await fetch(data.signedUrl);
-        if (!response.ok) throw new Error("Download failed");
-        const blob = await response.blob();
-        const blobUrl = URL.createObjectURL(blob);
-        const a = document.createElement("a");
-        a.href = blobUrl;
-        a.download = filename;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(blobUrl);
-      } catch {
-        window.open(data.signedUrl, "_blank");
-      }
-    } catch {
-      toast({ title: "Error al descargar", variant: "destructive" });
-    } finally {
-      setDownloadingId(null);
-    }
-  };
+  const { downloadingId, handleDownload } = usePortalDocumentDownload();
 
   return (
     <Card>

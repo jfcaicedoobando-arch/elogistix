@@ -5,13 +5,11 @@ import { formatDate } from "@/lib/formatters";
 import { getModoIcon, getEstadoColor } from "@/lib/uiMappings";
 import { ESTADOS_EMBARQUE } from "@/data/embarqueConstants";
 import { DetailRow } from "./DetailRow";
-import { supabase } from "@/integrations/supabase/client";
-import { useQuery } from "@tanstack/react-query";
-import { queryKeys } from "@/lib/queryKeys";
 import { useNavigate } from "react-router-dom";
 import { Link } from "lucide-react";
 import type { EmbarqueRow } from "@/hooks/useEmbarques";
 import { calcularEstadoEmbarque } from "@/lib/embarqueLogic";
+import { useEmbarquesRelacionados } from "@/hooks/useEmbarquesRelacionados";
 
 interface Props {
   embarque: EmbarqueRow;
@@ -22,20 +20,7 @@ export function TabResumen({ embarque }: Props) {
   const estadoVisual = calcularEstadoEmbarque(embarque.modo, embarque.tipo, embarque.etd, embarque.eta, embarque.estado);
   const currentStepIndex = ESTADOS_EMBARQUE.indexOf(estadoVisual as typeof ESTADOS_EMBARQUE[number]);
 
-  const { data: relacionados = [] } = useQuery({
-    queryKey: queryKeys.embarques.relacionados(embarque.id, embarque.bl_master ?? ''),
-    queryFn: async () => {
-      if (!embarque.bl_master) return [];
-      const { data, error } = await supabase
-        .from('embarques')
-        .select('id, expediente, bl_house, cliente_nombre, shipper, estado')
-        .eq('bl_master', embarque.bl_master)
-        .neq('id', embarque.id);
-      if (error) throw error;
-      return data || [];
-    },
-    enabled: !!embarque.bl_master,
-  });
+  const { data: relacionados = [] } = useEmbarquesRelacionados(embarque.id, embarque.bl_master);
 
   return (
     <div className="space-y-6">

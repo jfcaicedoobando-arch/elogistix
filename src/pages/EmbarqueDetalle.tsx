@@ -1,13 +1,7 @@
 import { useParams, useNavigate } from "react-router-dom";
-import { ArrowLeft, Edit, Printer, ChevronRight, Copy, Trash2, Share2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
-import {
-  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
-import { getEstadoColor, getModoIcon } from "@/lib/uiMappings";
 import { usePermissions } from "@/hooks/usePermissions";
 import { useState } from "react";
 import {
@@ -30,6 +24,7 @@ import { TabTracking } from "@/components/embarque/TabTracking";
 import DialogDuplicarEmbarque from "@/components/embarque/DialogDuplicarEmbarque";
 import DialogEliminarEmbarque from "@/components/embarque/DialogEliminarEmbarque";
 import { useEmbarqueDetalleTracking } from "@/hooks/useEmbarqueDetalleTracking";
+import { EmbarqueDetalleHeader } from "@/components/embarque/EmbarqueDetalleHeader";
 
 export default function EmbarqueDetalle() {
   const { id } = useParams();
@@ -82,54 +77,19 @@ export default function EmbarqueDetalle() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center gap-4">
-        <Button variant="ghost" size="icon" onClick={() => navigate("/embarques")}>
-          <ArrowLeft className="h-5 w-5" />
-        </Button>
-        <div className="flex-1">
-          <div className="flex items-center gap-3">
-            <h1 className="text-2xl font-bold">{embarque.expediente}</h1>
-            <Badge className={getEstadoColor(estadoVisual)}>{estadoVisual}</Badge>
-            <span className="text-lg">{getModoIcon(embarque.modo)}</span>
-          </div>
-          <p className="text-sm text-muted-foreground">{embarque.cliente_nombre}</p>
-        </div>
-        <div className="flex gap-2">
-          {canEdit && siguienteEstado && (
-            <AlertDialog>
-              <AlertDialogTrigger asChild>
-                <Button size="sm" disabled={avanzarEstado.isPending}>
-                  <ChevronRight className="h-4 w-4 mr-1" />
-                  Avanzar a {siguienteEstado}
-                </Button>
-              </AlertDialogTrigger>
-              <AlertDialogContent>
-                <AlertDialogHeader>
-                  <AlertDialogTitle>Confirmar cambio de estado</AlertDialogTitle>
-                  <AlertDialogDescription>
-                    ¿Estás seguro de cambiar el estado de <strong>{estadoVisual}</strong> a <strong>{siguienteEstado}</strong>? Esta acción quedará registrada en la bitácora.
-                  </AlertDialogDescription>
-                </AlertDialogHeader>
-                <AlertDialogFooter>
-                  <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                  <AlertDialogAction onClick={handleAvanzarEstado}>Confirmar</AlertDialogAction>
-                </AlertDialogFooter>
-              </AlertDialogContent>
-            </AlertDialog>
-          )}
-          {canEdit && <Button variant="outline" size="sm" onClick={() => navigate(`/embarques/${id}/editar`)}><Edit className="h-4 w-4 mr-1" /> Editar</Button>}
-          {canEdit && <Button variant="outline" size="sm" onClick={() => setDialogDuplicarAbierto(true)}><Copy className="h-4 w-4 mr-1" /> Duplicar</Button>}
-          {canEdit && (
-            <Button variant="destructive" size="sm" onClick={() => setDialogEliminarAbierto(true)}>
-              <Trash2 className="h-4 w-4 mr-1" /> Eliminar
-            </Button>
-          )}
-          <Button variant="outline" size="sm" onClick={handleCompartirTracking} disabled={trackingPending}>
-            <Share2 className="h-4 w-4 mr-1" /> Compartir Tracking
-          </Button>
-          <Button variant="outline" size="sm"><Printer className="h-4 w-4 mr-1" /> Imprimir</Button>
-        </div>
-      </div>
+      <EmbarqueDetalleHeader
+        embarque={embarque}
+        estadoVisual={estadoVisual}
+        siguienteEstado={siguienteEstado}
+        canEdit={canEdit}
+        avanzandoEstado={avanzarEstado.isPending}
+        trackingPending={trackingPending}
+        embarqueId={id!}
+        onAvanzarEstado={handleAvanzarEstado}
+        onCompartirTracking={handleCompartirTracking}
+        onAbrirDuplicar={() => setDialogDuplicarAbierto(true)}
+        onAbrirEliminar={() => setDialogEliminarAbierto(true)}
+      />
 
       <DialogDuplicarEmbarque embarque={embarque} open={dialogDuplicarAbierto} onOpenChange={setDialogDuplicarAbierto} />
       <DialogEliminarEmbarque embarque={embarque} open={dialogEliminarAbierto} onOpenChange={setDialogEliminarAbierto} />

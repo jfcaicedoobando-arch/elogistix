@@ -1,16 +1,14 @@
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/integrations/supabase/client";
 import { Loader2 } from "lucide-react";
 import { getErrorMessage } from "@/lib/errorUtils";
-import { queryKeys } from "@/lib/queryKeys";
 import { useCreateUser } from "@/hooks/useUsuarioMutations";
+import { useOrganizationsList } from "@/hooks/useOrganizationsList";
 
 interface Props {
   open: boolean;
@@ -27,15 +25,7 @@ export default function NuevoUsuarioDialog({ open, onOpenChange, onCreated, show
   const { toast } = useToast();
   const createUser = useCreateUser();
 
-  const { data: orgs = [] } = useQuery({
-    queryKey: queryKeys.admin.organizationsList,
-    queryFn: async () => {
-      const { data, error } = await supabase.from("organizations").select("id, nombre").order("nombre");
-      if (error) throw error;
-      return data ?? [];
-    },
-    enabled: open && showOrgSelector,
-  });
+  const { data: orgs = [] } = useOrganizationsList(open && showOrgSelector);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
