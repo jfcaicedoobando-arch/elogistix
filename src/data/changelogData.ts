@@ -10,6 +10,13 @@ export interface ChangelogEntry {
 
 export const changelog: ChangelogEntry[] = [
   {
+    version: "8.15.0",
+    date: "2026-04-18",
+    type: "minor",
+    title: "Refactor arquitectónico Fase 1.1: mappings de estado unificados",
+    description: "Se consolidaron los mapeos visuales de estado (color de badge, borde izquierdo, barra apilada, icono, gradiente y glow) en una única fuente de verdad: src/lib/estadoConfig.ts. Antes existían tres funciones independientes en uiMappings.ts (getEstadoColor, getEstadoBorderColor, getEstadoBarColor) y un ESTADO_CONFIG separado en components/dashboard/. Ahora todos los consumidores leen del mismo objeto, eliminando duplicación y facilitando agregar nuevos estados. Las funciones existentes se mantienen como wrappers ligeros para preservar la API pública (cero cambios visuales). Archivo components/dashboard/estadoConfig.ts eliminado.",
+  },
+  {
     version: "8.14.3",
     date: "2026-04-18",
     type: "patch",

@@ -1,40 +1,24 @@
 /**
- * Mapeos de UI: colores de estado e iconos de modo de transporte.
- * Separados de helpers.ts (utilidades puras de formateo).
+ * Mapeos de UI: helpers de estado e iconos de modo de transporte.
+ *
+ * Los mapeos de estado están centralizados en `estadoConfig.ts` (fuente única de verdad).
+ * Este archivo expone wrappers ligeros para mantener la API pública estable.
  */
 
 import type { LucideIcon } from "lucide-react";
 import { Anchor, Plane, Truck, Ship } from "lucide-react";
+import { getEstadoVisual } from "./estadoConfig";
 
-export const getEstadoColor = (estado: string): string => {
-  const colors: Record<string, string> = {
-    'Confirmado': 'bg-info/15 text-info border border-info/30',
-    'En Tránsito': 'bg-warning/15 text-warning border border-warning/30',
-    'Arribo': 'bg-cyan-500/15 text-cyan-600 border border-cyan-500/30',
-    'En Aduana': 'bg-violet-500/15 text-violet-600 border border-violet-500/30',
-    'Entregado': 'bg-emerald-500/15 text-emerald-600 border border-emerald-500/30',
-    'EIR': 'bg-orange-500/15 text-orange-600 border border-orange-500/30',
-    'Cerrado': 'bg-muted text-muted-foreground border border-border',
-    'Cancelado': 'bg-destructive/15 text-destructive border border-destructive/30',
-    // Estados de facturación
-    'Borrador': 'bg-muted text-muted-foreground border border-border',
-    'Emitida': 'bg-info/15 text-info border border-info/30',
-    'Pagada': 'bg-success/15 text-success border border-success/30',
-    'Vencida': 'bg-destructive/15 text-destructive border border-destructive/30',
-    'Cancelada': 'bg-destructive/15 text-destructive border border-destructive/30',
-    'Pendiente': 'bg-warning/15 text-warning border border-warning/30',
-    'Recibido': 'bg-success/15 text-success border border-success/30',
-    'Validado': 'bg-success/15 text-success border border-success/30',
-    'Pagado': 'bg-success/15 text-success border border-success/30',
-    // Estados de cotización
-    'Enviada': 'bg-info/15 text-info border border-info/30',
-    'Aceptada': 'bg-warning/15 text-warning border border-warning/30',
-    'Confirmada': 'bg-success/15 text-success border border-success/30',
-    'Rechazada': 'bg-destructive/15 text-destructive border border-destructive/30',
-    'Embarcada': 'bg-indigo-500/15 text-indigo-600 border border-indigo-500/30',
-  };
-  return colors[estado] || 'bg-muted text-muted-foreground border border-border';
-};
+export const getEstadoColor = (estado: string): string =>
+  getEstadoVisual(estado).badge;
+
+/** Borde izquierdo de color por estado (para tarjetas de embarque) */
+export const getEstadoBorderColor = (estado: string): string =>
+  getEstadoVisual(estado).borderLeft;
+
+/** Color de fondo para barras apiladas por estado */
+export const getEstadoBarColor = (estado: string): string =>
+  getEstadoVisual(estado).bar;
 
 export const getModoIcon = (modo: string): string => {
   const icons: Record<string, string> = {
@@ -44,36 +28,6 @@ export const getModoIcon = (modo: string): string => {
     'Multimodal': '🔄',
   };
   return icons[modo] || '📦';
-};
-
-/** Borde izquierdo de color por estado (para tarjetas de embarque) */
-export const getEstadoBorderColor = (estado: string): string => {
-  const map: Record<string, string> = {
-    "Confirmado": "border-l-blue-500",
-    "En Tránsito": "border-l-amber-500",
-    "Arribo": "border-l-cyan-500",
-    "En Aduana": "border-l-violet-500",
-    "Entregado": "border-l-emerald-500",
-    "EIR": "border-l-orange-500",
-    "Cerrado": "border-l-muted-foreground",
-    "Cancelado": "border-l-destructive",
-  };
-  return map[estado] || "border-l-muted-foreground";
-};
-
-/** Color de fondo para barras apiladas por estado */
-export const getEstadoBarColor = (estado: string): string => {
-  const map: Record<string, string> = {
-    'Confirmado': 'bg-info',
-    'En Tránsito': 'bg-warning',
-    'Arribo': 'bg-cyan-500',
-    'En Aduana': 'bg-violet-500',
-    'Entregado': 'bg-emerald-500',
-    'EIR': 'bg-orange-500',
-    'Cerrado': 'bg-muted-foreground',
-    'Cancelado': 'bg-destructive',
-  };
-  return map[estado] || 'bg-muted-foreground';
 };
 
 /** Estilo de círculo por modo de transporte */
