@@ -177,18 +177,35 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // effectiveRole: orgRole for regular users, global role for super_admin
   const effectiveRole: AppRole | null = ctx.role === 'super_admin' ? ctx.role : (ctx.orgRole ?? ctx.role);
 
+  // Preload de rutas frecuentes en idle tras login — mejora TTI percibido al navegar
+  useEffect(() => {
+    if (!user || loading) return;
+    const idle = (cb: () => void) => {
+      const w = window as unknown as { requestIdleCallback?: (cb: () => void) => number };
+      if (typeof w.requestIdleCallback === "function") w.requestIdleCallback(cb);
+      else setTimeout(cb, 1500);
+    };
+    idle(() => {
+      void import("@/pages/Embarques");
+      void import("@/pages/Cotizaciones");
+      void import("@/pages/Dashboard");
+    });
+  }, [user, loading]);
+
+  const value = useMemo<AuthContextType>(() => ({
+    user,
+    session,
+    role: ctx.role,
+    orgRole: ctx.orgRole,
+    effectiveRole,
+    organizationId: ctx.organizationId,
+    organization: ctx.organization,
+    loading,
+    signOut,
+  }), [user, session, ctx, effectiveRole, loading]);
+
   return (
-    <AuthContext.Provider value={{
-      user,
-      session,
-      role: ctx.role,
-      orgRole: ctx.orgRole,
-      effectiveRole,
-      organizationId: ctx.organizationId,
-      organization: ctx.organization,
-      loading,
-      signOut,
-    }}>
+    <AuthContext.Provider value={value}>
       {children}
     </AuthContext.Provider>
   );
