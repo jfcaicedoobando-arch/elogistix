@@ -34,16 +34,36 @@ export type {
  * Este hook se concentra en orquestar la query, el filtro de estado y los memos.
  */
 export function useDashboardData() {
-  const { data: stats, isLoading } = useQuery({
-    queryKey: queryKeys.dashboard.stats,
+  // Summary: KPIs + conteos + resumen mensual — payload pequeño, carga eager
+  const { data: summary, isLoading } = useQuery({
+    queryKey: [...queryKeys.dashboard.stats, "summary"],
     queryFn: async () => {
-      const { data, error } = await supabase.rpc("dashboard_stats");
+      const { data, error } = await supabase.rpc("dashboard_summary" as never);
       if (error) throw error;
       return data as Record<string, unknown>;
     },
-    staleTime: 5 * 60_000, // 5 min — el dashboard no necesita refetch agresivo
+    staleTime: 5 * 60_000,
     gcTime: 10 * 60_000,
   });
+
+  // Details: listas largas — solo después de que summary terminó (no bloquea TTI)
+  const { data: details } = useQuery({
+    queryKey: [...queryKeys.dashboard.stats, "details"],
+    queryFn: async () => {
+      const { data, error } = await supabase.rpc("dashboard_details" as never);
+      if (error) throw error;
+      return data as Record<string, unknown>;
+    },
+    enabled: !!summary,
+    staleTime: 5 * 60_000,
+    gcTime: 10 * 60_000,
+  });
+
+  // Combinamos ambos payloads en un solo objeto para mantener el contrato del hook intacto
+  const stats = useMemo(
+    () => ({ ...(summary ?? {}), ...(details ?? {}) }) as Record<string, unknown>,
+    [summary, details],
+  );
 
   const [filtroEstado, setFiltroEstado] = useState<EstadoFiltro | null>(null);
 

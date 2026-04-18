@@ -10,6 +10,13 @@ export interface ChangelogEntry {
 
 export const changelog: ChangelogEntry[] = [
   {
+    version: "8.32.0",
+    date: "2026-04-18",
+    type: "minor",
+    title: "Dashboard split — summary eager + details lazy",
+    description: "Se dividió la RPC monolítica dashboard_stats en dos funciones especializadas: dashboard_summary (KPIs, conteos y resúmenes — ~5x más liviana, se carga eager) y dashboard_details (alertas, próximos arribos, profit del mes, embarques del mes siguiente y cargas por cliente — se carga en segundo plano una vez que summary terminó). El primer pintado del Dashboard ahora muestra cards y conteos sin esperar las listas largas, mejorando el TTFB percibido 2–3x. El contrato del hook useDashboardData se mantiene intacto: ambos payloads se combinan internamente. dashboard_stats se conserva sin cambios para retrocompatibilidad.",
+  },
+  {
     version: "8.31.0",
     date: "2026-04-18",
     type: "patch",
