@@ -1476,6 +1476,7 @@ export type Database = {
         Args: { _org_id: string; _user_id: string }
         Returns: boolean
       }
+      operaciones_stats: { Args: never; Returns: Json }
       operadores_distintos: {
         Args: never
         Returns: {

@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { memo, useMemo, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -163,7 +163,7 @@ export function DesempenoOperadores({ operadores, isLoading }: Props) {
 
 const TOP_CLIENTES = 5;
 
-function OperadorCard({ operador }: { operador: OperadorData }) {
+const OperadorCard = memo(function OperadorCard({ operador }: { operador: OperadorData }) {
   const totalDesglose = useMemo(
     () => ESTADOS_KEYS.reduce((s, k) => s + operador.desgloseEstados[k], 0),
     [operador]
@@ -246,9 +246,9 @@ function OperadorCard({ operador }: { operador: OperadorData }) {
       </div>
     </div>
   );
-}
+});
 
-function ClienteExpandible({ cliente }: { cliente: OperadorData["clientesDesglose"][number] }) {
+const ClienteExpandible = memo(function ClienteExpandible({ cliente }: { cliente: OperadorData["clientesDesglose"][number] }) {
   const [open, setOpen] = useState(false);
   const estadosConValor = ESTADOS_KEYS.filter((e) => cliente.desgloseEstados[e] > 0);
 
@@ -304,4 +304,4 @@ function ClienteExpandible({ cliente }: { cliente: OperadorData["clientesDesglos
       </Collapsible>
     </li>
   );
-}
+});

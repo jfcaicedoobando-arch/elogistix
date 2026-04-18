@@ -10,6 +10,13 @@ export interface ChangelogEntry {
 
 export const changelog: ChangelogEntry[] = [
   {
+    version: "8.14.1",
+    date: "2026-04-18",
+    type: "minor",
+    title: "Optimizaciones de rendimiento (Fase 2)",
+    description: "Se optimizó significativamente el Dashboard de Operaciones: (1) todos los cálculos por operador (KPIs, desglose por estado, clientes, cargas en riesgo e histórico de 6 meses) ahora se ejecutan en una sola consulta al servidor mediante la nueva función operaciones_stats(), eliminando la descarga completa de embarques al navegador; (2) se memoizaron las tarjetas de operador y los clientes expandibles con React.memo para evitar re-renders innecesarios al expandir/contraer filas; (3) el resultado se cachea por 60 segundos. En proyectos con cientos de embarques esto reduce el tiempo de carga de Operaciones de varios segundos a milisegundos.",
+  },
+  {
     version: "8.14.0",
     date: "2026-04-18",
     type: "minor",
