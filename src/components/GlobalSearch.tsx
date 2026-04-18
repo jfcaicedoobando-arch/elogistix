@@ -9,15 +9,9 @@ import {
   CommandItem,
   CommandList,
 } from "@/components/ui/command";
-import { supabase } from "@/integrations/supabase/client";
+import { useGlobalSearch, type GlobalSearchResult } from "@/hooks/useGlobalSearch";
 
-interface SearchResult {
-  id: string;
-  label: string;
-  sublabel?: string;
-  type: "embarque" | "cliente" | "proveedor" | "factura" | "cotizacion";
-  url: string;
-}
+type SearchResult = GlobalSearchResult;
 
 const typeIcons = {
   embarque: Ship,
@@ -40,6 +34,7 @@ export function GlobalSearch() {
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<SearchResult[]>([]);
   const navigate = useNavigate();
+  const search = useGlobalSearch();
 
   useEffect(() => {
     const down = (e: KeyboardEvent) => {
@@ -53,31 +48,9 @@ export function GlobalSearch() {
   }, []);
 
   const buscar = useCallback(async (terminoBusqueda: string) => {
-    if (!terminoBusqueda.trim()) {
-      setResults([]);
-      return;
-    }
-
-    const { data, error } = await supabase.rpc("busqueda_global", {
-      termino: terminoBusqueda,
-      limite: 5,
-    });
-
-    if (error) {
-      console.error("Error en búsqueda global:", error);
-      setResults([]);
-      return;
-    }
-
-    const items: SearchResult[] = (data ?? []).map((r: { id: string; label: string; sublabel: string; tipo: string; url: string }) => ({
-      id: r.id,
-      label: r.label,
-      sublabel: r.sublabel,
-      type: r.tipo as SearchResult["type"],
-      url: r.url,
-    }));
+    const items = await search(terminoBusqueda, 5);
     setResults(items);
-  }, []);
+  }, [search]);
 
   useEffect(() => {
     const timer = setTimeout(() => buscar(query), 300);
