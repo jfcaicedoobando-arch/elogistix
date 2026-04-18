@@ -15,8 +15,13 @@ import SeccionMercanciaCotizacionDetalle from "@/components/cotizacion/SeccionMe
 import { getEstadoColor } from "@/lib/uiMappings";
 import { formatDate, formatCurrency } from "@/lib/formatters";
 import { ArrowLeft, ArrowRight, CheckCircle, Send, XCircle, UserPlus, FileDown, Pencil } from "lucide-react";
-import { generarPdfCotizacion } from "@/lib/cotizacionPdf";
 import { useCotizacionDetalleState } from "@/hooks/useCotizacionDetalleState";
+
+// Lazy-loaded PDF generator (jsPDF + autotable are heavy; only load on demand)
+const handleExportarPdf = async (cotizacion: Parameters<typeof import("@/lib/cotizacionPdf").generarPdfCotizacion>[0], tasaIva: number) => {
+  const { generarPdfCotizacion } = await import("@/lib/cotizacionPdf");
+  generarPdfCotizacion(cotizacion, tasaIva);
+};
 
 export default function CotizacionDetalle() {
   const { id } = useParams<{ id: string }>();
@@ -57,7 +62,7 @@ export default function CotizacionDetalle() {
           <p className="text-sm text-muted-foreground">{nombreDestinatario}</p>
         </div>
         <Badge className={getEstadoColor(cotizacion.estado)}>{cotizacion.estado}</Badge>
-        <Button variant="outline" size="sm" onClick={() => generarPdfCotizacion(cotizacion, tasaIva)}>
+        <Button variant="outline" size="sm" onClick={() => handleExportarPdf(cotizacion, tasaIva)}>
           <FileDown className="h-4 w-4 mr-1" /> Exportar PDF
         </Button>
       </div>

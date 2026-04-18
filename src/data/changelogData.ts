@@ -10,6 +10,13 @@ export interface ChangelogEntry {
 
 export const changelog: ChangelogEntry[] = [
   {
+    version: "8.14.0",
+    date: "2026-04-18",
+    type: "minor",
+    title: "Optimizaciones de rendimiento (Fase 1)",
+    description: "Se redujo significativamente el tiempo de carga inicial y la latencia en navegación: (1) las consultas de rol, organización y membresía se consolidaron en una sola llamada al servidor (antes eran 6); (2) se agregaron índices de búsqueda por similitud (pg_trgm) e índices auxiliares en embarques, clientes, proveedores, cotizaciones y facturas para acelerar la búsqueda global y los filtros; (3) la generación de PDF de cotizaciones ahora se carga bajo demanda, reduciendo el tamaño del paquete inicial; (4) se desactivó el refetch automático al cambiar de pestaña y se agregó caché de 30s-5min en consultas de detalle y catálogos; (5) la bitácora de login ahora se registra de manera diferida sin bloquear el render.",
+  },
+  {
     version: "8.13.4",
     date: "2026-04-17",
     type: "patch",
