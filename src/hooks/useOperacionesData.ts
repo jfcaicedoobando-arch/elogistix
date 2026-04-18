@@ -1,12 +1,8 @@
 import { useMemo } from "react";
-import { useEmbarques, calcularEstadoEmbarque } from "@/hooks/useEmbarques";
-import { calcularUtilidad } from "@/lib/financialUtils";
-import { subMonths, startOfMonth, endOfMonth, format, isWithinInterval, differenceInCalendarDays } from "date-fns";
-import { es } from "date-fns/locale";
-import { useProfitMaps } from "@/hooks/useProfitMaps";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { queryKeys } from "@/lib/queryKeys";
 
-const ESTADOS_TERMINALES = ["EIR", "Cerrado", "Cancelado"];
-const DIAS_LIBRES_DEFAULT = 7;
 export const MAX_CONTENEDORES = 150;
 
 export type PeriodoFiltro = "mes" | "3meses" | "anio";
@@ -78,325 +74,108 @@ export interface OperacionesGlobal {
   cargasEnRiesgo: CargaRiesgo[];
 }
 
-function generarUltimos6Meses(): { inicio: Date; fin: Date; label: string }[] {
-  const hoy = new Date();
-  const meses: { inicio: Date; fin: Date; label: string }[] = [];
-  for (let i = 5; i >= 0; i--) {
-    const d = subMonths(hoy, i);
-    meses.push({
-      inicio: startOfMonth(d),
-      fin: endOfMonth(d),
-      label: format(d, "MMM", { locale: es }),
-    });
-  }
-  return meses;
-}
-
-function calcularNivelRiesgo(
-  estadoReal: string,
-  eta: string | null,
-  hoy: Date
-): { nivel: NivelRiesgo; diasEnPuerto: number } {
-  if (["Arribo", "En Aduana"].includes(estadoReal) && eta) {
-    const fechaEta = new Date(eta + "T00:00:00");
-    const dias = differenceInCalendarDays(hoy, fechaEta);
-    if (dias > DIAS_LIBRES_DEFAULT) {
-      return { nivel: "critico", diasEnPuerto: dias };
-    }
-    return { nivel: "en_puerto", diasEnPuerto: Math.max(dias, 0) };
-  }
-  if (estadoReal === "En Tránsito" && eta) {
-    const fechaEta = new Date(eta + "T00:00:00");
-    const diasParaLlegar = differenceInCalendarDays(fechaEta, hoy);
-    if (diasParaLlegar <= 7 && diasParaLlegar >= 0) {
-      return { nivel: "por_arribar", diasEnPuerto: 0 };
-    }
-  }
-  return { nivel: "ok", diasEnPuerto: 0 };
-}
-
-const RIESGO_ORDER: Record<NivelRiesgo, number> = {
-  critico: 0,
-  en_puerto: 1,
-  por_arribar: 2,
-  ok: 3,
+const EMPTY_DESGLOSE: DesgloseEstados = {
+  Confirmado: 0, "En Tránsito": 0, Llegada: 0, "En Proceso": 0, Cerrado: 0,
 };
 
-export function useOperacionesData(periodo: PeriodoFiltro = "mes") {
-  const { data: embarques = [], isLoading } = useEmbarques();
-  const { ventaMap, costoMap } = useProfitMaps();
+const EMPTY_GLOBAL: OperacionesGlobal = {
+  totalActivas: 0, totalContenedores: 0, totalEsteMes: 0, totalProfit: 0,
+  totalDemoras: 0, totalCriticos: 0, totalEnPuerto: 0, totalPorArribar: 0,
+  activasHoy: 0, historicoCreadosPorMes: [], llegadasEsteMes: 0, creadasEsteMes: 0,
+  cargasEnRiesgo: [],
+};
 
-  const meses6 = useMemo(() => generarUltimos6Meses(), []);
+interface ServerOperador {
+  nombre: string;
+  cargasActivas: number;
+  contenedores: number;
+  cargasEsteMes: number;
+  profit: number;
+  demoras: number;
+  criticos: number;
+  enPuerto: number;
+  porArribar: number;
+  desgloseEstados: DesgloseEstados;
+  clientesDesglose: ClienteCarga[];
+  cargasEnRiesgo: CargaRiesgo[];
+  historico: { mes: string; creados: number; llegados: number }[];
+}
 
-  const embarquesConEstado = useMemo(
-    () =>
-      embarques.map((e) => ({
-        ...e,
-        estadoReal: calcularEstadoEmbarque(e.modo, e.tipo, e.etd, e.eta, e.estado),
-      })),
-    [embarques]
-  );
+interface ServerStats {
+  operadores: ServerOperador[];
+  global: {
+    totalActivas: number; totalContenedores: number; totalEsteMes: number;
+    totalProfit: number; totalDemoras: number; totalCriticos: number;
+    totalEnPuerto: number; totalPorArribar: number; activasHoy: number;
+    maxContenedores: number;
+  };
+  historicoGlobal: { mes: string; creadas: number; llegadas: number }[];
+  mesesLabels: string[];
+}
 
-  const activos = useMemo(
-    () => embarquesConEstado.filter((e) => !ESTADOS_TERMINALES.includes(e.estadoReal)),
-    [embarquesConEstado]
-  );
+/**
+ * Operaciones data — powered by server-side RPC `operaciones_stats()`.
+ * Replaces previous approach of downloading ALL embarques and aggregating client-side.
+ */
+export function useOperacionesData(_periodo: PeriodoFiltro = "mes") {
+  const { data: stats, isLoading } = useQuery({
+    queryKey: queryKeys.operaciones?.stats ?? ['operaciones', 'stats'],
+    queryFn: async () => {
+      const { data, error } = await supabase.rpc("operaciones_stats");
+      if (error) throw error;
+      return data as unknown as ServerStats;
+    },
+    staleTime: 60_000,
+  });
 
-  // Per-operator data
   const operadores = useMemo<OperadorData[]>(() => {
-    const hoy = new Date();
-    hoy.setHours(0, 0, 0, 0);
-    const inicioMes = startOfMonth(hoy);
-    const finMes = endOfMonth(hoy);
-    const map = new Map<string, {
-      activas: number;
-      contenedores: number;
-      esteMes: number;
-      profit: number;
-      demoras: number;
-      criticos: number;
-      enPuerto: number;
-      porArribar: number;
-      clientes: Set<string>;
-      clientesCount: Map<string, number>;
-      clientesEstados: Map<string, DesgloseEstados>;
-      desglose: DesgloseEstados;
-      cargasEnRiesgo: CargaRiesgo[];
-      creadosPorMes: Record<string, number>;
-      llegadosPorMes: Record<string, number>;
-    }>();
+    if (!stats?.operadores) return [];
+    return stats.operadores.map((op) => ({
+      nombre: op.nombre,
+      cargasActivas: Number(op.cargasActivas ?? 0),
+      contenedores: Number(op.contenedores ?? 0),
+      cargasEsteMes: Number(op.cargasEsteMes ?? 0),
+      profit: Number(op.profit ?? 0),
+      demoras: Number(op.demoras ?? 0),
+      criticos: Number(op.criticos ?? 0),
+      enPuerto: Number(op.enPuerto ?? 0),
+      porArribar: Number(op.porArribar ?? 0),
+      clientes: (op.clientesDesglose ?? []).map((c) => c.nombre),
+      clientesDesglose: op.clientesDesglose ?? [],
+      desgloseEstados: { ...EMPTY_DESGLOSE, ...(op.desgloseEstados ?? {}) },
+      cargasEnRiesgo: op.cargasEnRiesgo ?? [],
+      historicoCreadosPorMes: (op.historico ?? []).map((h) => ({ mes: h.mes, valor: h.creados })),
+      historicoLlegadosPorMes: (op.historico ?? []).map((h) => ({ mes: h.mes, valor: h.llegados })),
+    }));
+  }, [stats]);
 
-    const getOrCreate = (op: string) => {
-      if (!map.has(op)) {
-        const creadosPorMes: Record<string, number> = {};
-        const llegadosPorMes: Record<string, number> = {};
-        meses6.forEach((m) => {
-          creadosPorMes[m.label] = 0;
-          llegadosPorMes[m.label] = 0;
-        });
-        map.set(op, {
-          activas: 0,
-          contenedores: 0,
-          esteMes: 0,
-          profit: 0,
-          demoras: 0,
-          criticos: 0,
-          enPuerto: 0,
-          porArribar: 0,
-          clientes: new Set(),
-          clientesCount: new Map(),
-          clientesEstados: new Map(),
-          desglose: {
-            Confirmado: 0,
-            "En Tránsito": 0,
-            Llegada: 0,
-            "En Proceso": 0,
-            Cerrado: 0,
-          },
-          cargasEnRiesgo: [],
-          creadosPorMes,
-          llegadosPorMes,
-        });
-      }
-      return map.get(op)!;
-    };
-
-    embarquesConEstado.forEach((e) => {
-      const op = e.operador || "Sin Asignar";
-      const d = getOrCreate(op);
-
-      const venta = ventaMap[e.id] || 0;
-      const costo = costoMap[e.id] || 0;
-      const embarqueProfit = (venta > 0 || costo > 0) ? calcularUtilidad(venta, costo) : 0;
-
-      // Tracking por cliente: cuenta + desglose de estados (incluye terminales como Cerrado)
-      const trackInClient = !ESTADOS_TERMINALES.includes(e.estadoReal) || ["EIR", "Cerrado"].includes(e.estadoReal);
-      if (trackInClient) {
-        d.clientes.add(e.cliente_nombre);
-        d.clientesCount.set(e.cliente_nombre, (d.clientesCount.get(e.cliente_nombre) ?? 0) + 1);
-        let clienteDesglose = d.clientesEstados.get(e.cliente_nombre);
-        if (!clienteDesglose) {
-          clienteDesglose = { Confirmado: 0, "En Tránsito": 0, Llegada: 0, "En Proceso": 0, Cerrado: 0 };
-          d.clientesEstados.set(e.cliente_nombre, clienteDesglose);
-        }
-        switch (e.estadoReal) {
-          case "Confirmado": clienteDesglose.Confirmado++; break;
-          case "En Tránsito": clienteDesglose["En Tránsito"]++; break;
-          case "Arribo": clienteDesglose.Llegada++; break;
-          case "En Aduana":
-          case "Entregado": clienteDesglose["En Proceso"]++; break;
-          case "EIR":
-          case "Cerrado": clienteDesglose.Cerrado++; break;
-        }
-      }
-
-      // Activas
-      if (!ESTADOS_TERMINALES.includes(e.estadoReal)) {
-        d.activas++;
-        d.contenedores++;
-
-        // Desglose por estado (excluir Cotización y terminales)
-        switch (e.estadoReal) {
-          case "Confirmado":
-            d.desglose.Confirmado++;
-            break;
-          case "En Tránsito":
-            d.desglose["En Tránsito"]++;
-            break;
-          case "Arribo":
-            d.desglose.Llegada++;
-            break;
-          case "En Aduana":
-          case "Entregado":
-            d.desglose["En Proceso"]++;
-            break;
-        }
-
-        // Risk level
-        const { nivel, diasEnPuerto } = calcularNivelRiesgo(e.estadoReal, e.eta, hoy);
-        if (nivel === "critico") d.criticos++;
-        if (nivel === "en_puerto") d.enPuerto++;
-        if (nivel === "por_arribar") d.porArribar++;
-
-        if (nivel !== "ok") {
-          d.cargasEnRiesgo.push({
-            id: e.id,
-            expediente: e.expediente,
-            cliente_nombre: e.cliente_nombre,
-            operador: op,
-            estadoReal: e.estadoReal,
-            nivelRiesgo: nivel,
-            eta: e.eta,
-            diasEnPuerto,
-            profit: embarqueProfit,
-          });
-        }
-      } else if (["EIR", "Cerrado"].includes(e.estadoReal)) {
-        // Cerrados también se cuentan en el desglose (pero no en activas)
-        d.desglose.Cerrado++;
-      }
-
-      // ETD este mes
-      const fechaOperacion = e.etd ? new Date(e.etd + "T00:00:00") : new Date(e.created_at);
-      if (isWithinInterval(fechaOperacion, { start: inicioMes, end: finMes })) {
-        d.esteMes++;
-      }
-
-      // Profit
-      d.profit += embarqueProfit;
-
-      // Demoras
-      if (e.estadoReal === "Arribo" && e.eta) {
-        const eta = new Date(e.eta + "T00:00:00");
-        const dias = Math.floor((hoy.getTime() - eta.getTime()) / 864e5);
-        if (dias > DIAS_LIBRES_DEFAULT) d.demoras++;
-      }
-
-      // Histórico por ETD
-      meses6.forEach((m) => {
-        if (isWithinInterval(fechaOperacion, { start: m.inicio, end: m.fin })) {
-          d.creadosPorMes[m.label]++;
-        }
-      });
-
-      // Histórico llegados
-      const fechaLlegada = e.fecha_llegada_real
-        ? new Date(e.fecha_llegada_real + "T00:00:00")
-        : ["Entregado", "EIR", "Cerrado"].includes(e.estadoReal) && e.eta
-          ? new Date(e.eta + "T00:00:00")
-          : null;
-
-      if (fechaLlegada) {
-        meses6.forEach((m) => {
-          if (isWithinInterval(fechaLlegada, { start: m.inicio, end: m.fin })) {
-            d.llegadosPorMes[m.label]++;
-          }
-        });
-      }
-    });
-
-    return Array.from(map.entries())
-      .map(([nombre, d]) => {
-        d.cargasEnRiesgo.sort((a, b) => RIESGO_ORDER[a.nivelRiesgo] - RIESGO_ORDER[b.nivelRiesgo]);
-        return {
-          nombre,
-          cargasActivas: d.activas,
-          contenedores: d.contenedores,
-          cargasEsteMes: d.esteMes,
-          profit: d.profit,
-          demoras: d.demoras,
-          criticos: d.criticos,
-          enPuerto: d.enPuerto,
-          porArribar: d.porArribar,
-          clientes: Array.from(d.clientes),
-          clientesDesglose: Array.from(d.clientesCount.entries())
-            .map(([nombre, cantidad]) => ({
-              nombre,
-              cantidad,
-              desgloseEstados: d.clientesEstados.get(nombre) ?? {
-                Confirmado: 0, "En Tránsito": 0, Llegada: 0, "En Proceso": 0, Cerrado: 0,
-              },
-            }))
-            .sort((a, b) => b.cantidad - a.cantidad),
-          desgloseEstados: d.desglose,
-          cargasEnRiesgo: d.cargasEnRiesgo,
-          historicoCreadosPorMes: meses6.map((m) => ({ mes: m.label, valor: d.creadosPorMes[m.label] })),
-          historicoLlegadosPorMes: meses6.map((m) => ({ mes: m.label, valor: d.llegadosPorMes[m.label] })),
-        };
-      })
-      .sort((a, b) => b.profit - a.profit);
-  }, [embarquesConEstado, ventaMap, costoMap, meses6]);
-
-  // Global
   const global = useMemo<OperacionesGlobal>(() => {
-    const totalActivas = operadores.reduce((s, o) => s + o.cargasActivas, 0);
-    const totalContenedores = operadores.reduce((s, o) => s + o.contenedores, 0);
-    const totalEsteMes = operadores.reduce((s, o) => s + o.cargasEsteMes, 0);
-    const totalProfit = operadores.reduce((s, o) => s + o.profit, 0);
-    const totalDemoras = operadores.reduce((s, o) => s + o.demoras, 0);
-    const totalCriticos = operadores.reduce((s, o) => s + o.criticos, 0);
-    const totalEnPuerto = operadores.reduce((s, o) => s + o.enPuerto, 0);
-    const totalPorArribar = operadores.reduce((s, o) => s + o.porArribar, 0);
-
-    const historico: HistoricoMes[] = meses6.map((m) => {
-      const creadas = operadores.reduce(
-        (s, o) => s + (o.historicoCreadosPorMes.find((h) => h.mes === m.label)?.valor || 0),
-        0
-      );
-      const llegadas = operadores.reduce(
-        (s, o) => s + (o.historicoLlegadosPorMes.find((h) => h.mes === m.label)?.valor || 0),
-        0
-      );
-      return { mes: m.label, creadas, llegadas };
-    });
-
-    const ultimoMes = historico[historico.length - 1];
-
-    const cargasEnRiesgo = operadores
-      .flatMap((o) => o.cargasEnRiesgo)
-      .sort((a, b) => RIESGO_ORDER[a.nivelRiesgo] - RIESGO_ORDER[b.nivelRiesgo]);
-
+    if (!stats?.global) return EMPTY_GLOBAL;
+    const g = stats.global;
+    const historicoGlobal = stats.historicoGlobal ?? [];
+    const ultimo = historicoGlobal[historicoGlobal.length - 1];
+    const cargasEnRiesgo = operadores.flatMap((o) => o.cargasEnRiesgo);
     return {
-      totalActivas,
-      totalContenedores,
-      totalEsteMes,
-      totalProfit,
-      totalDemoras,
-      totalCriticos,
-      totalEnPuerto,
-      totalPorArribar,
-      activasHoy: activos.length,
-      historicoCreadosPorMes: historico,
-      creadasEsteMes: ultimoMes?.creadas || 0,
-      llegadasEsteMes: ultimoMes?.llegadas || 0,
+      totalActivas: Number(g.totalActivas ?? 0),
+      totalContenedores: Number(g.totalContenedores ?? 0),
+      totalEsteMes: Number(g.totalEsteMes ?? 0),
+      totalProfit: Number(g.totalProfit ?? 0),
+      totalDemoras: Number(g.totalDemoras ?? 0),
+      totalCriticos: Number(g.totalCriticos ?? 0),
+      totalEnPuerto: Number(g.totalEnPuerto ?? 0),
+      totalPorArribar: Number(g.totalPorArribar ?? 0),
+      activasHoy: Number(g.activasHoy ?? 0),
+      historicoCreadosPorMes: historicoGlobal,
+      creadasEsteMes: ultimo?.creadas ?? 0,
+      llegadasEsteMes: ultimo?.llegadas ?? 0,
       cargasEnRiesgo,
     };
-  }, [operadores, activos, meses6]);
+  }, [stats, operadores]);
 
   return {
     isLoading,
     operadores,
     global,
-    meses6Labels: meses6.map((m) => m.label),
+    meses6Labels: stats?.mesesLabels ?? [],
   };
 }
