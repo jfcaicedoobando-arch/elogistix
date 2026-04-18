@@ -10,6 +10,13 @@ export interface ChangelogEntry {
 
 export const changelog: ChangelogEntry[] = [
   {
+    version: "8.22.0",
+    date: "2026-04-18",
+    type: "minor",
+    title: "Fase 8 — Descomposición de componentes grandes y reorganización de lib/",
+    description: "Refactor estructural sin cambios funcionales: (1) StepDatosGenerales reducido de 328 → 90 LOC dividiéndolo en BloqueClienteContactos, BloqueMercancia y BloqueVinculacion bajo src/components/embarque/secciones/. (2) SeccionConceptosVentaCotizacion reducido de 317 → 109 LOC extrayendo ConceptoRowUSD/ConceptoRowMXN/UnidadMedidaSelect a src/components/cotizacion/conceptos/ConceptoRows.tsx. (3) PortalCotizacionDetalle reducido de 306 → 288 LOC delegando parsing y cálculo de totales al nuevo hook usePortalCotizacionDetalle. (4) Reorganización de lib/: creados aliases canónicos lib/mappers/{embarque,cotizacion,cotizacionForm}.ts, lib/parsers/{dashboard,cotizacionDetalle}.ts y lib/domain/embarque.ts (re-exports con @deprecated en raíz para migración gradual sin romper consumidores). (5) Barrels useEmbarques/useCotizaciones se mantienen como puntos de entrada únicos (separación interna ya cumple el patrón). 132 tests pasando, sin regresiones funcionales.",
+  },
+  {
     version: "8.21.0",
     date: "2026-04-18",
     type: "patch",
