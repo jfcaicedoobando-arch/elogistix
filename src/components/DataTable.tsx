@@ -31,6 +31,7 @@ interface DataTableProps<T> {
   emptyIcon?: React.ReactNode;
   skeletonRows?: number;
   onRowClick?: (item: T) => void;
+  onRowMouseEnter?: (item: T) => void;
   rowKey: (item: T) => string;
   rowClassName?: (item: T) => string;
 }
@@ -45,6 +46,7 @@ function DataTableInner<T>({
   emptyIcon,
   skeletonRows = 5,
   onRowClick,
+  onRowMouseEnter,
   rowKey,
   rowClassName,
 }: DataTableProps<T>) {
@@ -156,6 +158,7 @@ function DataTableInner<T>({
                   .filter(Boolean)
                   .join(" ")}
                 onClick={onRowClick ? () => onRowClick(item) : undefined}
+                onMouseEnter={onRowMouseEnter ? () => onRowMouseEnter(item) : undefined}
               >
                 {columns.map((col) => (
                   <TableCell key={col.key} className={cn(col.width, col.className, col.sticky && "sticky left-0 z-[5] bg-background")}>
