@@ -1516,6 +1516,8 @@ export type Database = {
         Args: { _bl_master: string; _tipo_op: string }
         Returns: string
       }
+      show_limit: { Args: never; Returns: number }
+      show_trgm: { Args: { "": string }; Returns: string[] }
       sidebar_alert_counts: {
         Args: never
         Returns: {
