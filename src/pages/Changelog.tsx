@@ -1,4 +1,6 @@
+import { useState, useMemo } from "react";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { changelog, type ChangeType } from "@/data/changelogData";
 
@@ -8,7 +10,17 @@ const typeConfig: Record<ChangeType, { label: string; className: string }> = {
   patch: { label: "Patch", className: "bg-muted text-muted-foreground" },
 };
 
+const PAGE_SIZE = 20;
+
 export default function Changelog() {
+  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
+
+  const visibleEntries = useMemo(
+    () => changelog.slice(0, visibleCount),
+    [visibleCount],
+  );
+  const hasMore = visibleCount < changelog.length;
+
   return (
     <div className="max-w-3xl mx-auto space-y-6">
       <div>
@@ -19,7 +31,7 @@ export default function Changelog() {
       </div>
 
       <div className="relative border-l-2 border-border ml-4 space-y-6 pl-8">
-        {changelog.map((entry) => {
+        {visibleEntries.map((entry) => {
           const config = typeConfig[entry.type];
           return (
             <div key={entry.version} className="relative">
@@ -39,6 +51,17 @@ export default function Changelog() {
           );
         })}
       </div>
+
+      {hasMore && (
+        <div className="flex justify-center pt-2">
+          <Button
+            variant="outline"
+            onClick={() => setVisibleCount((c) => c + PAGE_SIZE)}
+          >
+            Ver más ({changelog.length - visibleCount} restantes)
+          </Button>
+        </div>
+      )}
     </div>
   );
 }
