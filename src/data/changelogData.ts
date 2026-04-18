@@ -10,6 +10,13 @@ export interface ChangelogEntry {
 
 export const changelog: ChangelogEntry[] = [
   {
+    version: "8.24.0",
+    date: "2026-04-18",
+    type: "patch",
+    title: "Cierre de Fase 8 — eliminación de archivos legacy en lib/",
+    description: "Migración completa de los 19 imports restantes que aún apuntaban a las ubicaciones legacy (lib/embarqueMappers, lib/cotizacionFormMappers, lib/dashboardParsers, lib/cotizacionDetalleHelpers, lib/embarqueLogic, lib/mappers/cotizacionMappers) a sus aliases canónicos en lib/mappers/, lib/parsers/ y lib/domain/. Los archivos legacy (que solo re-exportaban) fueron eliminados y el contenido real ahora vive en su ubicación final. Los tests unitarios se reubicaron bajo lib/{mappers,parsers}/__tests__/. Cero cambios funcionales; 132 tests pasando.",
+  },
+  {
     version: "8.23.0",
     date: "2026-04-18",
     type: "patch",
