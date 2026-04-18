@@ -1443,7 +1443,9 @@ export type Database = {
       }
       current_user_client_ids: { Args: never; Returns: string[] }
       current_user_org_id: { Args: never; Returns: string }
+      dashboard_details: { Args: never; Returns: Json }
       dashboard_stats: { Args: never; Returns: Json }
+      dashboard_summary: { Args: never; Returns: Json }
       duplicar_embarque_completo: {
         Args: { p_copias: Json; p_embarque_origen_id: string }
         Returns: Json
