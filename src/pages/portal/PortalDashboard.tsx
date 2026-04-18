@@ -6,17 +6,15 @@ import { Button } from "@/components/ui/button";
 import { usePortalEmbarques, usePortalCotizaciones, usePortalFacturas, usePortalClientUsers, usePortalClienteName, usePortalOrgName } from "@/hooks/usePortalData";
 import { getEstadoColor, getModoIcon, getEstadoBarColor } from "@/lib/uiMappings";
 import { calcularEstadoEmbarque } from "@/lib/embarqueLogic";
-import { ESTADOS_EMBARQUE } from "@/data/embarqueConstants";
 import { formatCurrency, formatDate, getOrigen, getDestino } from "@/lib/formatters";
 import { Link } from "react-router-dom";
 import { Skeleton } from "@/components/ui/skeleton";
-import { parseISO, isAfter, addDays } from "date-fns";
-import { useMemo } from "react";
+import { usePortalDashboardKpis } from "@/hooks/usePortalDashboardKpis";
 
 const kpis = [
   { key: "embarques" as const, label: "Embarques Activos", icon: Ship, href: "/portal/embarques", color: "text-accent", bg: "bg-accent/10" },
-  { key: "cotizaciones" as const, label: "Cotizaciones", icon: FileText, href: "/portal/cotizaciones", color: "text-violet-600", bg: "bg-violet-100" },
-  { key: "facturas" as const, label: "Facturas Pendientes", icon: Receipt, href: "/portal/facturas", color: "text-amber-600", bg: "bg-amber-100" },
+  { key: "cotizaciones" as const, label: "Cotizaciones", icon: FileText, href: "/portal/cotizaciones", color: "text-[hsl(var(--state-en-proceso))]", bg: "bg-[hsl(var(--state-en-proceso)/0.1)]" },
+  { key: "facturas" as const, label: "Facturas Pendientes", icon: Receipt, href: "/portal/facturas", color: "text-[hsl(var(--warning))]", bg: "bg-[hsl(var(--warning)/0.1)]" },
 ];
 
 export default function PortalDashboard() {
@@ -28,54 +26,20 @@ export default function PortalDashboard() {
   const { data: cotizaciones = [], isLoading: loadingCot } = usePortalCotizaciones(clienteIds);
   const { data: facturas = [], isLoading: loadingFac } = usePortalFacturas(clienteIds);
 
-  const embarquesActivos = embarques.filter(
-    (e) => !["Cerrado", "Cancelado", "EIR"].includes(e.estado)
-  );
-
-  const facturasPendientes = facturas.filter(
-    (f) => f.estado === "Emitida" || f.estado === "Vencida"
-  );
+  const {
+    embarquesActivos,
+    facturasPendientes,
+    proximosArribos,
+    estadoDistribucion,
+    montoFacturasPendientes,
+    facturasVencidas,
+  } = usePortalDashboardKpis(embarques, facturas);
 
   const kpiValues = {
     embarques: embarquesActivos.length,
     cotizaciones: cotizaciones.length,
     facturas: facturasPendientes.length,
   };
-
-  // Próximos arribos (embarques con ETA en próximos 14 días)
-  const proximosArribos = useMemo(() => {
-    const hoy = new Date();
-    const en14Dias = addDays(hoy, 14);
-    return embarquesActivos
-      .filter((e) => {
-        if (!e.eta) return false;
-        try {
-          const etaDate = parseISO(e.eta);
-          return isAfter(etaDate, hoy) && !isAfter(etaDate, en14Dias);
-        } catch { return false; }
-      })
-      .sort((a, b) => (a.eta! > b.eta! ? 1 : -1))
-      .slice(0, 5);
-  }, [embarquesActivos]);
-
-  // Distribución por estado
-  const estadoDistribucion = useMemo(() => {
-    const counts: Record<string, number> = {};
-    embarquesActivos.forEach((e) => {
-      const est = calcularEstadoEmbarque(e.modo, e.tipo, e.etd, e.eta, e.estado);
-      counts[est] = (counts[est] || 0) + 1;
-    });
-    return Object.entries(counts).sort((a, b) => {
-      const idxA = (ESTADOS_EMBARQUE as readonly string[]).indexOf(a[0]);
-      const idxB = (ESTADOS_EMBARQUE as readonly string[]).indexOf(b[0]);
-      return (idxA === -1 ? 99 : idxA) - (idxB === -1 ? 99 : idxB);
-    });
-  }, [embarquesActivos]);
-
-  // Monto total facturas pendientes
-  const montoFacturasPendientes = useMemo(() => {
-    return facturasPendientes.reduce((sum, f) => sum + f.total, 0);
-  }, [facturasPendientes]);
 
   if (loadingEmb || loadingCot || loadingFac) {
     return (
