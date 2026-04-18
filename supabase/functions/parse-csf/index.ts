@@ -1,15 +1,10 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
-};
+import { handlePreflight } from "../_shared/cors.ts";
+import { jsonResponse, errorResponse } from "../_shared/response.ts";
 
 serve(async (req) => {
-  if (req.method === "OPTIONS") {
-    return new Response(null, { headers: corsHeaders });
-  }
+  const preflight = handlePreflight(req);
+  if (preflight) return preflight;
 
   try {
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
@@ -17,14 +12,8 @@ serve(async (req) => {
 
     const formData = await req.formData();
     const file = formData.get("file") as File | null;
-    if (!file) {
-      return new Response(JSON.stringify({ error: "No se envió archivo PDF" }), {
-        status: 400,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
+    if (!file) return errorResponse("No se envió archivo PDF", 400);
 
-    // Read PDF as base64 for the AI model
     const arrayBuffer = await file.arrayBuffer();
     const base64 = btoa(String.fromCharCode(...new Uint8Array(arrayBuffer)));
 
@@ -53,89 +42,53 @@ Si no encuentras un campo, devuelve cadena vacía. No inventes datos.`;
           {
             role: "user",
             content: [
-              {
-                type: "file",
-                file: {
-                  filename: file.name,
-                  file_data: `data:application/pdf;base64,${base64}`,
-                },
-              },
-              {
-                type: "text",
-                text: "Extrae los datos fiscales de esta Constancia de Situación Fiscal.",
-              },
+              { type: "file", file: { filename: file.name, file_data: `data:application/pdf;base64,${base64}` } },
+              { type: "text", text: "Extrae los datos fiscales de esta Constancia de Situación Fiscal." },
             ],
           },
         ],
-        tools: [
-          {
-            type: "function",
-            function: {
-              name: "extraer_datos_csf",
-              description: "Retorna los datos fiscales extraídos de la CSF",
-              parameters: {
-                type: "object",
-                properties: {
-                  nombre: { type: "string", description: "Denominación o Razón Social" },
-                  rfc: { type: "string", description: "RFC del contribuyente" },
-                  cp: { type: "string", description: "Código Postal" },
-                  direccion: { type: "string", description: "Dirección completa" },
-                  ciudad: { type: "string", description: "Municipio o Demarcación" },
-                  estado: { type: "string", description: "Entidad Federativa" },
-                },
-                required: ["nombre", "rfc", "cp", "direccion", "ciudad", "estado"],
-                additionalProperties: false,
+        tools: [{
+          type: "function",
+          function: {
+            name: "extraer_datos_csf",
+            description: "Retorna los datos fiscales extraídos de la CSF",
+            parameters: {
+              type: "object",
+              properties: {
+                nombre: { type: "string", description: "Denominación o Razón Social" },
+                rfc: { type: "string", description: "RFC del contribuyente" },
+                cp: { type: "string", description: "Código Postal" },
+                direccion: { type: "string", description: "Dirección completa" },
+                ciudad: { type: "string", description: "Municipio o Demarcación" },
+                estado: { type: "string", description: "Entidad Federativa" },
               },
+              required: ["nombre", "rfc", "cp", "direccion", "ciudad", "estado"],
+              additionalProperties: false,
             },
           },
-        ],
+        }],
         tool_choice: { type: "function", function: { name: "extraer_datos_csf" } },
       }),
     });
 
     if (!response.ok) {
-      if (response.status === 429) {
-        return new Response(JSON.stringify({ error: "Límite de solicitudes excedido, intenta en unos momentos." }), {
-          status: 429,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      }
-      if (response.status === 402) {
-        return new Response(JSON.stringify({ error: "Créditos insuficientes para procesamiento AI." }), {
-          status: 402,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      }
+      if (response.status === 429) return errorResponse("Límite de solicitudes excedido, intenta en unos momentos.", 429);
+      if (response.status === 402) return errorResponse("Créditos insuficientes para procesamiento AI.", 402);
       const errorText = await response.text();
       console.error("AI gateway error:", response.status, errorText);
-      return new Response(JSON.stringify({ error: "Error al procesar el documento" }), {
-        status: 500,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      return errorResponse("Error al procesar el documento", 500);
     }
 
     const aiResult = await response.json();
     const toolCall = aiResult.choices?.[0]?.message?.tool_calls?.[0];
-
     if (!toolCall?.function?.arguments) {
-      return new Response(JSON.stringify({ error: "No se pudieron extraer los datos del documento" }), {
-        status: 422,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      return errorResponse("No se pudieron extraer los datos del documento", 422);
     }
 
-    const datos = JSON.parse(toolCall.function.arguments);
-
-    return new Response(JSON.stringify(datos), {
-      status: 200,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
+    return jsonResponse(JSON.parse(toolCall.function.arguments));
   } catch (error) {
     console.error("parse-csf error:", error);
     const message = error instanceof Error ? error.message : "Error desconocido";
-    return new Response(JSON.stringify({ error: message }), {
-      status: 500,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
+    return errorResponse(message, 500);
   }
 });
