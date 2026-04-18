@@ -10,6 +10,13 @@ export interface ChangelogEntry {
 
 export const changelog: ChangelogEntry[] = [
   {
+    version: "8.25.0",
+    date: "2026-04-18",
+    type: "patch",
+    title: "Cobertura de tests para lógica de embarques y wizard de cotización",
+    description: "Se agregaron 34 tests unitarios nuevos cubriendo módulos críticos previamente sin cobertura: (1) calcularEstadoEmbarque (lib/domain/embarque) — 6 tests para estados manuales, ramas no-marítimas, ETD/ETA faltantes y los tres rangos temporales con vi.useFakeTimers. (2) useCotizacionWizardSteps — 11 tests cubriendo validaciones de paso 1, avance con guardado de cotizacionId, manejo de errores, validación de conceptos en paso 3, handleBack y handleGuardar. (3) useEmbarqueEstadoActions + getSiguienteEstado — 9 tests cubriendo la secuencia de estados, auto-sync condicional y las tres ramas de handleAvanzarEstado. (4) useEmbarqueDocumentosActions — 8 tests cubriendo upload/delete con bitácora, guards, errores y handleDownload con stub de URL.createObjectURL/fetch. Total suite: 132 → 166 tests.",
+  },
+  {
     version: "8.24.0",
     date: "2026-04-18",
     type: "patch",
