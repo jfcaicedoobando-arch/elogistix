@@ -1,3 +1,4 @@
+import { memo } from "react";
 import { Link } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
@@ -28,7 +29,7 @@ export interface EmbarqueCardData {
   tipo_servicio: string | null;
 }
 
-export default function EmbarqueCard({ e }: { e: EmbarqueCardData }) {
+function EmbarqueCardInner({ e }: { e: EmbarqueCardData }) {
   const estadoVisual = calcularEstadoEmbarque(e.modo, e.tipo, e.etd, e.eta, e.estado);
   const origen = getOrigen(e);
   const destino = getDestino(e);
@@ -95,3 +96,6 @@ export default function EmbarqueCard({ e }: { e: EmbarqueCardData }) {
     </Link>
   );
 }
+
+const EmbarqueCard = memo(EmbarqueCardInner);
+export default EmbarqueCard;
