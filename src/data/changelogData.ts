@@ -10,6 +10,13 @@ export interface ChangelogEntry {
 
 export const changelog: ChangelogEntry[] = [
   {
+    version: "8.15.1",
+    date: "2026-04-18",
+    type: "patch",
+    title: "Refactor arquitectónico Fase 1.2: separación de mappers y helpers de moneda",
+    description: "Se extrajo la lógica pura de mapeo entre el formulario de embarque y la BD a src/lib/embarqueMappers.ts (DEFAULT_EMBARQUE_VALUES, mapEmbarqueRowToFormValues, buildEmbarquePayload, buildConceptosVentaPayload, buildConceptosCostoPayload y los updates de vincular/desvincular cotización). El hook useEmbarqueForm se redujo de 287 a ~135 líneas, ahora solo orquesta RHF + side-effects. Adicionalmente se creó src/lib/costosUSD.ts con helpers sumarEnUSD/aUSD para totalizar listas de conceptos por moneda; StepCostosPrecios.tsx ahora consume estos helpers en lugar de duplicar la conversión inline. Cero cambios visuales ni de comportamiento.",
+  },
+  {
     version: "8.15.0",
     date: "2026-04-18",
     type: "minor",
