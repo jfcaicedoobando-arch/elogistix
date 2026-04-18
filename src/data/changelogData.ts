@@ -10,6 +10,13 @@ export interface ChangelogEntry {
 
 export const changelog: ChangelogEntry[] = [
   {
+    version: "8.28.0",
+    date: "2026-04-18",
+    type: "patch",
+    title: "Optimización de rendimiento — ciclo 3 (prefetch en hover)",
+    description: "Tercer ciclo del plan de rendimiento: (1) DataTable expone una nueva prop opcional onRowMouseEnter para ejecutar acciones al pasar el cursor sobre una fila. (2) Las páginas Embarques y Cotizaciones ahora prefetchean el detalle (queryClient.prefetchQuery con staleTime 30s) cuando el usuario apunta una fila — la navegación al detalle resulta prácticamente instantánea (cache caliente). Cero cambios funcionales ni en RLS.",
+  },
+  {
     version: "8.27.0",
     date: "2026-04-18",
     type: "patch",

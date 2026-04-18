@@ -1,5 +1,8 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useCallback } from "react";
 import { Plus, Trash2, MoreHorizontal, Pencil, Download, TrendingUp, CheckCircle, XCircle, BarChart3, Copy } from "lucide-react";
+import { useQueryClient } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { queryKeys } from "@/lib/queryKeys";
 import { exportToCsv } from "@/generators/exportCsv";
 import { KpiCard } from "@/components/operaciones/KpiCard";
 import { Card, CardContent } from "@/components/ui/card";
@@ -33,8 +36,20 @@ type Cotizacion = ReturnType<typeof useCotizaciones>["data"] extends (infer U)[]
 
 export default function Cotizaciones() {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const { data: cotizaciones = [], isLoading } = useCotizaciones();
   const { data: clientes = [] } = useClientesForSelect();
+  const prefetchCotizacion = useCallback((id: string) => {
+    queryClient.prefetchQuery({
+      queryKey: queryKeys.cotizaciones.detail(id),
+      queryFn: async () => {
+        const { data, error } = await supabase.from('cotizaciones').select('*').eq('id', id).single();
+        if (error) throw error;
+        return data;
+      },
+      staleTime: 30_000,
+    });
+  }, [queryClient]);
   const [search, setSearch] = useState("");
   const [filterEstado, setFilterEstado] = useState<string>("todos");
   const [filterCliente, setFilterCliente] = useState<string>("todos");
@@ -217,6 +232,7 @@ export default function Cotizaciones() {
             isLoading={isLoading}
             emptyMessage="No se encontraron cotizaciones"
             onRowClick={(c) => navigate(`/cotizaciones/${c.id}`)}
+            onRowMouseEnter={(c) => prefetchCotizacion(c.id)}
             rowKey={(c) => c.id}
           />
           <PaginationControls
