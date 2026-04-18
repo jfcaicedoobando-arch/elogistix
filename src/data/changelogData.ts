@@ -10,6 +10,13 @@ export interface ChangelogEntry {
 
 export const changelog: ChangelogEntry[] = [
   {
+    version: "8.19.0",
+    date: "2026-04-18",
+    type: "minor",
+    title: "Cierre del refactor arquitectónico (Fases 4-6) — auditoría final",
+    description: "Auditoría final post-refactor. Verificación exhaustiva del ranking de deuda técnica del audit original: (1) Páginas de detalle reducidas — EmbarqueDetalle (149 líneas) y CotizacionDetalle (216 líneas) ya delegan estado a hooks dedicados (useEmbarqueDetalleActions, useCotizacionDetalleState) y UI a componentes hijos. (2) FormProvider implementado en ambos wizards (CotizacionWizardLayout y NuevoEmbarque/EditarEmbarque), eliminando prop-drilling en las secciones. (3) useCotizacionWizardForm delega navegación a useCotizacionWizardSteps. (4) DialogConvertirProspecto y OrgSwitcher confirmados como componentes presentacionales puros sin acceso directo a Supabase. (5) Edge functions consolidadas con shared utils. (6) lib/services/generators reorganizados. Suite de tests: 132 tests pasando en 17 archivos. Cero cambios funcionales en esta versión — únicamente verificación y documentación del estado final.",
+  },
+  {
     version: "8.18.1",
     date: "2026-04-18",
     type: "patch",
