@@ -7,7 +7,7 @@ import {
   parseConceptos,
   calcularTotalesConceptos,
   getNombreDestinatario,
-} from "@/lib/cotizacionDetalleHelpers";
+} from "@/lib/parsers/cotizacionDetalle";
 import { useCotizacionDetalleHandlers } from "@/hooks/useCotizacionDetalleHandlers";
 
 /**

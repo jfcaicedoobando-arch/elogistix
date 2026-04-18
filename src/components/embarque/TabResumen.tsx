@@ -8,7 +8,7 @@ import { DetailRow } from "./DetailRow";
 import { useNavigate } from "react-router-dom";
 import { Link } from "lucide-react";
 import type { EmbarqueRow } from "@/hooks/useEmbarques";
-import { calcularEstadoEmbarque } from "@/lib/embarqueLogic";
+import { calcularEstadoEmbarque } from "@/lib/domain/embarque";
 import { useEmbarquesRelacionados } from "@/hooks/useEmbarquesRelacionados";
 
 interface Props {

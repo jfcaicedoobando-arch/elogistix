@@ -4,7 +4,7 @@ import type { NavigateFunction } from "react-router-dom";
 import type { CostoCotizacion } from "@/hooks/useCotizacionCostos";
 import type { CreateCotizacionInput, CotizacionRow, ConceptoVentaCotizacion } from "@/hooks/useCotizaciones";
 import type { FilaCostoLocal } from "@/components/cotizacion/SeccionCostosInternosPLUnificado";
-import type { CotizacionFormValues } from "@/lib/cotizacionFormMappers";
+import type { CotizacionFormValues } from "@/lib/mappers/cotizacionForm";
 import { savePaso1, savePaso2, savePaso3, savePasoFinal, buildConceptosFromCostos } from "@/services/cotizacionServices";
 import { getErrorMessage } from "@/lib/errorUtils";
 

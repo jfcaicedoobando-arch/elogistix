@@ -14,7 +14,7 @@ import {
   type ProximoArribo,
   type EmbarqueConProfit,
   type EmbarqueMesSiguiente,
-} from "@/lib/dashboardParsers";
+} from "@/lib/parsers/dashboard";
 
 // Re-exports para preservar la API pública de este hook
 export { ESTADOS_FILTRO };
@@ -26,7 +26,7 @@ export type {
   EmbarqueConProfit,
   EmbarqueMesSiguiente,
   ResumenFacturacion,
-} from "@/lib/dashboardParsers";
+} from "@/lib/parsers/dashboard";
 
 /**
  * Dashboard data powered by a single server-side RPC `dashboard_stats()`.

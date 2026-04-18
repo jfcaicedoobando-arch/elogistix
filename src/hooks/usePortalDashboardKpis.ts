@@ -4,7 +4,7 @@
  */
 import { useMemo } from "react";
 import { parseISO, isAfter, addDays } from "date-fns";
-import { calcularEstadoEmbarque } from "@/lib/embarqueLogic";
+import { calcularEstadoEmbarque } from "@/lib/domain/embarque";
 import { ESTADOS_EMBARQUE } from "@/data/embarqueConstants";
 
 interface EmbarqueLike {

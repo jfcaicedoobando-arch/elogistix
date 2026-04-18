@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 
 import { usePortalEmbarques, usePortalCotizaciones, usePortalFacturas, usePortalClientUsers, usePortalClienteName, usePortalOrgName } from "@/hooks/usePortalData";
 import { getEstadoColor, getModoIcon, getEstadoBarColor } from "@/lib/uiMappings";
-import { calcularEstadoEmbarque } from "@/lib/embarqueLogic";
+import { calcularEstadoEmbarque } from "@/lib/domain/embarque";
 import { formatCurrency, formatDate, getOrigen, getDestino } from "@/lib/formatters";
 import { Link } from "react-router-dom";
 import { Skeleton } from "@/components/ui/skeleton";

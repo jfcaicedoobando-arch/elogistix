@@ -7,7 +7,7 @@ export type ConceptoCostoRow = Tables<'conceptos_costo'>;
 export type DocumentoEmbarqueRow = Tables<'documentos_embarque'>;
 export type NotaEmbarqueRow = Tables<'notas_embarque'>;
 
-export { calcularEstadoEmbarque } from '@/lib/embarqueLogic';
+export { calcularEstadoEmbarque } from '@/lib/domain/embarque';
 
 export {
   useEmbarques,
