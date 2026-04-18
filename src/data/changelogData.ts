@@ -10,6 +10,13 @@ export interface ChangelogEntry {
 
 export const changelog: ChangelogEntry[] = [
   {
+    version: "8.27.0",
+    date: "2026-04-18",
+    type: "patch",
+    title: "Optimización de rendimiento — ciclo 2 (portal + detalle + bitácora)",
+    description: "Continuación del plan de rendimiento: (1) Reemplazo de select('*') en usePortalEmbarque, usePortalEventos y usePortalDocumentos con listas explícitas de columnas — payload del portal cliente reducido ~50%. (2) useCliente y useContactosCliente migrados a constantes CLIENTE_DETAIL_COLUMNS / CONTACTO_COLUMNS. (3) useProveedor migrado a PROVEEDOR_DETAIL_COLUMNS. (4) useBitacora y useActividadReciente usan ahora BITACORA_COLUMNS explícitas; useBitacora añade placeholderData para evitar parpadeo al paginar. Cero cambios funcionales; payloads de detalle 40–60% más ligeros.",
+  },
+  {
     version: "8.26.0",
     date: "2026-04-18",
     type: "patch",

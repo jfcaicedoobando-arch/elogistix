@@ -19,13 +19,17 @@ export function usePortalEmbarques(clienteIds: string[]) {
   });
 }
 
+const PORTAL_EMBARQUE_DETAIL_COLUMNS = 'id, expediente, bl_master, bl_house, mawb, hawb, cliente_id, cliente_nombre, consignatario, shipper, modo, tipo, estado, etd, eta, fecha_creacion, fecha_llegada_real, naviera, aerolinea, transportista, contenedor, tipo_contenedor, tipo_servicio, tipo_carga, descripcion_mercancia, peso_kg, volumen_m3, piezas, incoterm, puerto_origen, puerto_destino, aeropuerto_origen, aeropuerto_destino, ciudad_origen, ciudad_destino, organization_id, created_at, updated_at' as const;
+const PORTAL_EVENTO_COLUMNS = 'id, embarque_id, tipo, descripcion, ubicacion, fecha, usuario, organization_id, created_at' as const;
+const PORTAL_DOCUMENTO_COLUMNS = 'id, embarque_id, nombre, archivo, estado, notas, organization_id, created_at' as const;
+
 export function usePortalEmbarque(id?: string) {
   return useQuery({
     queryKey: queryKeys.portal.embarque(id ?? ""),
     queryFn: async () => {
       const { data, error } = await supabase
         .from("embarques")
-        .select("*")
+        .select(PORTAL_EMBARQUE_DETAIL_COLUMNS)
         .eq("id", id!)
         .single();
       if (error) throw error;
@@ -41,7 +45,7 @@ export function usePortalEventos(embarqueId?: string) {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("eventos_embarque")
-        .select("*")
+        .select(PORTAL_EVENTO_COLUMNS)
         .eq("embarque_id", embarqueId!)
         .order("fecha", { ascending: false });
       if (error) throw error;
@@ -57,7 +61,7 @@ export function usePortalDocumentos(embarqueId?: string) {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("documentos_embarque")
-        .select("*")
+        .select(PORTAL_DOCUMENTO_COLUMNS)
         .eq("embarque_id", embarqueId!)
         .order("created_at", { ascending: true });
       if (error) throw error;

@@ -94,6 +94,8 @@ export function useProveedorMutations() {
 }
 
 
+const PROVEEDOR_DETAIL_COLUMNS = 'id, nombre, tipo, rfc, contacto, telefono, email, moneda_preferida, origen_proveedor, pais, organization_id, created_at, updated_at' as const;
+
 export function useProveedor(id: string | undefined) {
   return useQuery({
     queryKey: queryKeys.proveedores.detail(id!),
@@ -101,7 +103,7 @@ export function useProveedor(id: string | undefined) {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("proveedores")
-        .select("*")
+        .select(PROVEEDOR_DETAIL_COLUMNS)
         .eq("id", id!)
         .maybeSingle();
       if (error) throw error;

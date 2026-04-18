@@ -26,6 +26,8 @@ interface FiltrosBitacora {
   excluirLogin?: boolean;
 }
 
+const BITACORA_COLUMNS = 'id, usuario_id, usuario_email, accion, modulo, entidad_id, entidad_nombre, detalles, created_at' as const;
+
 export function useBitacora(filtros: FiltrosBitacora = {}) {
   const { limite = 50, pagina = 0, modulo, usuarioId, fechaDesde, fechaHasta, excluirLogin = true } = filtros;
 
@@ -34,7 +36,7 @@ export function useBitacora(filtros: FiltrosBitacora = {}) {
     queryFn: async () => {
       let query = supabase
         .from('bitacora_actividad')
-        .select('*', { count: 'exact' })
+        .select(BITACORA_COLUMNS, { count: 'exact' })
         .order('created_at', { ascending: false })
         .range(pagina * limite, (pagina + 1) * limite - 1);
 
@@ -48,6 +50,7 @@ export function useBitacora(filtros: FiltrosBitacora = {}) {
       if (error) throw error;
       return { datos: data as EntradaBitacora[], total: count ?? 0 };
     },
+    placeholderData: (prev) => prev,
   });
 }
 
@@ -57,7 +60,7 @@ export function useActividadReciente(limite = 10) {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('bitacora_actividad')
-        .select('*')
+        .select(BITACORA_COLUMNS)
         .order('created_at', { ascending: false })
         .limit(limite);
       if (error) throw error;
