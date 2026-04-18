@@ -5,17 +5,19 @@ const toast = vi.fn();
 const registrarActividadMutate = vi.fn();
 const uploadMutateAsync = vi.fn();
 const deleteMutateAsync = vi.fn();
-const getSignedUrlMock = vi.fn();
 
 vi.mock("@/hooks/use-toast", () => ({ useToast: () => ({ toast }) }));
 vi.mock("@/hooks/useBitacora", () => ({
   useRegistrarActividad: () => ({ mutate: registrarActividadMutate }),
 }));
-vi.mock("@/services/storage", () => ({ getSignedUrl: getSignedUrlMock }));
+vi.mock("@/services/storage", () => ({ getSignedUrl: vi.fn() }));
 vi.mock("@/hooks/useEmbarques", () => ({
   useUploadDocumentoEmbarque: () => ({ mutateAsync: uploadMutateAsync }),
   useDeleteDocumentoEmbarque: () => ({ mutateAsync: deleteMutateAsync }),
 }));
+
+import { getSignedUrl } from "@/services/storage";
+const getSignedUrlMock = vi.mocked(getSignedUrl);
 
 import { useEmbarqueDocumentosActions } from "@/hooks/useEmbarqueDocumentosActions";
 
