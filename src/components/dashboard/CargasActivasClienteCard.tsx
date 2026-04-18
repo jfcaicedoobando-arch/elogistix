@@ -1,3 +1,4 @@
+import { memo } from "react";
 import { useNavigate } from "react-router-dom";
 import { Package } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -26,7 +27,7 @@ const ESTADOS_ORDEN: EstadoFiltro[] = [
   "Entregado",
 ];
 
-export function CargasActivasClienteCard({ data, isLoading }: Props) {
+export const CargasActivasClienteCard = memo(function CargasActivasClienteCard({ data, isLoading }: Props) {
   const navigate = useNavigate();
   const maxTotal = data.length > 0 ? data[0].total : 1;
 
@@ -94,4 +95,4 @@ export function CargasActivasClienteCard({ data, isLoading }: Props) {
       </CardContent>
     </Card>
   );
-}
+});

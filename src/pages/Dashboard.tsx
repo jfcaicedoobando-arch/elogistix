@@ -1,3 +1,4 @@
+import { useMemo } from "react";
 import { Badge } from "@/components/ui/badge";
 import { useDashboardData } from "@/hooks/useDashboardData";
 import { DashboardStatusCards } from "@/components/dashboard/DashboardStatusCards";
@@ -30,12 +31,15 @@ export default function Dashboard() {
     cargasPorCliente,
   } = useDashboardData();
 
-  const hoyStr = new Date().toLocaleDateString("es-MX", {
-    weekday: "long",
-    day: "numeric",
-    month: "long",
-    year: "numeric",
-  });
+  const { saludo, hoyStr } = useMemo(() => ({
+    saludo: getSaludo(),
+    hoyStr: new Date().toLocaleDateString("es-MX", {
+      weekday: "long",
+      day: "numeric",
+      month: "long",
+      year: "numeric",
+    }),
+  }), []);
 
   return (
     <div className="space-y-6">
@@ -43,7 +47,7 @@ export default function Dashboard() {
       <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-1">
         <div>
           <h1 className="text-2xl font-bold text-foreground">
-            {getSaludo()} 👋
+            {saludo} 👋
           </h1>
           <p className="text-sm text-muted-foreground capitalize">{hoyStr}</p>
         </div>

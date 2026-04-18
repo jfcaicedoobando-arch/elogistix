@@ -24,7 +24,7 @@ export function useNavieras() {
       if (error) throw error;
       return (data ?? []) as unknown as Naviera[];
     },
-    staleTime: 5 * 60 * 1000,
+    staleTime: 30 * 60 * 1000,
   });
 }
 

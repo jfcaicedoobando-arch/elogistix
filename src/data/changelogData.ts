@@ -10,11 +10,11 @@ export interface ChangelogEntry {
 
 export const changelog: ChangelogEntry[] = [
   {
-    version: "8.25.0",
+    version: "8.26.0",
     date: "2026-04-18",
     type: "patch",
-    title: "Cobertura de tests para lógica de embarques y wizard de cotización",
-    description: "Se agregaron 34 tests unitarios nuevos cubriendo módulos críticos previamente sin cobertura: (1) calcularEstadoEmbarque (lib/domain/embarque) — 6 tests para estados manuales, ramas no-marítimas, ETD/ETA faltantes y los tres rangos temporales con vi.useFakeTimers. (2) useCotizacionWizardSteps — 11 tests cubriendo validaciones de paso 1, avance con guardado de cotizacionId, manejo de errores, validación de conceptos en paso 3, handleBack y handleGuardar. (3) useEmbarqueEstadoActions + getSiguienteEstado — 9 tests cubriendo la secuencia de estados, auto-sync condicional y las tres ramas de handleAvanzarEstado. (4) useEmbarqueDocumentosActions — 8 tests cubriendo upload/delete con bitácora, guards, errores y handleDownload con stub de URL.createObjectURL/fetch. Total suite: 132 → 166 tests.",
+    title: "Optimización de rendimiento — ciclo 1 (Badge ref + payloads + caché)",
+    description: "Ejecución del primer ciclo del plan de rendimiento v8.25.0: (1) Badge ahora usa React.forwardRef, eliminando el warning 'Function components cannot be given refs' de DataTableInner y previniendo remontes silenciosos en filas con tooltips/popovers. (2) Reemplazo de select('*') por listas explícitas de columnas en los 6 hooks de detalle de embarque (useEmbarque, conceptos venta/costo, documentos, notas, facturas) — payload de detalle reducido 60–80%. (3) staleTime aumentado a 30 minutos en catálogos useNavieras, usePuertos y useTiposContenedor — revalidaciones reducidas ~90%. (4) React.memo aplicado a AlertasDemoraCard, ProximosArribosCard, CargasActivasClienteCard y ProfitTable; useMemo para fechas y saludo en Dashboard — elimina re-renders parásitos al cambiar filtros.",
   },
   {
     version: "8.24.0",

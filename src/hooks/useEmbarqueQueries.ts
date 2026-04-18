@@ -98,6 +98,9 @@ export function useEmbarquesPaginados({
   });
 }
 
+/** Columnas completas para vista detalle (todas excepto las que nunca se leen aquí) */
+const EMBARQUE_DETAIL_COLUMNS = 'id, expediente, bl_master, bl_house, mawb, hawb, carta_porte, cliente_id, cliente_nombre, consignatario, shipper, modo, tipo, estado, etd, eta, fecha_creacion, fecha_llegada_real, operador, agente, naviera, aerolinea, transportista, contenedor, tipo_contenedor, tipo_servicio, tipo_carga, descripcion_mercancia, peso_kg, volumen_m3, piezas, incoterm, puerto_origen, puerto_destino, aeropuerto_origen, aeropuerto_destino, ciudad_origen, ciudad_destino, msds_archivo, organization_id, cotizacion_id, tipo_cambio_usd, tipo_cambio_eur, created_at, updated_at' as const;
+
 export function useEmbarque(id: string | undefined) {
   return useQuery({
     queryKey: queryKeys.embarques.detail(id!),
@@ -105,7 +108,7 @@ export function useEmbarque(id: string | undefined) {
       if (!id) throw new Error('No id');
       const { data, error } = await supabase
         .from('embarques')
-        .select('*')
+        .select(EMBARQUE_DETAIL_COLUMNS)
         .eq('id', id)
         .single();
       if (error) throw error;
@@ -122,7 +125,7 @@ export function useEmbarqueConceptosVenta(embarqueId: string | undefined) {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('conceptos_venta')
-        .select('*')
+        .select('id, embarque_id, descripcion, cantidad, precio_unitario, total, moneda, organization_id, created_at')
         .eq('embarque_id', embarqueId!);
       if (error) throw error;
       return data as ConceptoVentaRow[];
@@ -138,7 +141,7 @@ export function useEmbarqueConceptosCosto(embarqueId: string | undefined) {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('conceptos_costo')
-        .select('*')
+        .select('id, embarque_id, concepto, monto, moneda, proveedor_id, proveedor_nombre, estado_liquidacion, fecha_pago, fecha_vencimiento, referencia_pago, organization_id, created_at')
         .eq('embarque_id', embarqueId!);
       if (error) throw error;
       return data as ConceptoCostoRow[];
@@ -154,7 +157,7 @@ export function useEmbarqueDocumentos(embarqueId: string | undefined) {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('documentos_embarque')
-        .select('*')
+        .select('id, embarque_id, nombre, archivo, estado, notas, organization_id, created_at')
         .eq('embarque_id', embarqueId!);
       if (error) throw error;
       return data as DocumentoEmbarqueRow[];
@@ -170,7 +173,7 @@ export function useEmbarqueNotas(embarqueId: string | undefined) {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('notas_embarque')
-        .select('*')
+        .select('id, embarque_id, contenido, tipo, fecha, usuario, organization_id, created_at')
         .eq('embarque_id', embarqueId!)
         .order('fecha', { ascending: false });
       if (error) throw error;
@@ -187,7 +190,7 @@ export function useEmbarqueFacturas(embarqueId: string | undefined) {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('facturas')
-        .select('*')
+        .select('id, numero, embarque_id, expediente, cliente_id, cliente_nombre, estado, moneda, subtotal, iva, total, tipo_cambio, fecha_emision, fecha_vencimiento, referencia_bl, notas, organization_id, created_at, updated_at')
         .eq('embarque_id', embarqueId!);
       if (error) throw error;
       return data;

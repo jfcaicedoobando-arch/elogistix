@@ -1,3 +1,4 @@
+import { memo } from "react";
 import { CalendarClock, Clock } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -12,7 +13,7 @@ interface Props {
   isLoading: boolean;
 }
 
-export function ProximosArribosCard({ arribos, isLoading }: Props) {
+export const ProximosArribosCard = memo(function ProximosArribosCard({ arribos, isLoading }: Props) {
   const navigate = useNavigate();
 
   return (
@@ -65,4 +66,4 @@ export function ProximosArribosCard({ arribos, isLoading }: Props) {
       </CardContent>
     </Card>
   );
-}
+});
