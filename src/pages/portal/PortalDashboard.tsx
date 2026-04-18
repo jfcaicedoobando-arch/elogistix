@@ -201,9 +201,9 @@ export default function PortalDashboard() {
                 {facturasPendientes.length} factura{facturasPendientes.length !== 1 ? "s" : ""} por pagar
               </p>
               <div className="mt-4 space-y-2">
-                {facturasPendientes.filter((f) => f.estado === "Vencida").length > 0 && (
+                {facturasVencidas > 0 && (
                   <div className="flex items-center gap-2 text-xs p-2 rounded bg-destructive/10 text-destructive">
-                    <span className="font-medium">⚠️ {facturasPendientes.filter((f) => f.estado === "Vencida").length} vencida(s)</span>
+                    <span className="font-medium">⚠️ {facturasVencidas} vencida(s)</span>
                   </div>
                 )}
               </div>
