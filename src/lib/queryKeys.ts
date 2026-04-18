@@ -68,6 +68,9 @@ export const queryKeys = {
   operadores: {
     distintos: ['operadores-distintos'] as const,
   },
+  operaciones: {
+    stats: ['operaciones-stats'] as const,
+  },
   reportes: {
     conceptos: ['reportes', 'conceptos'] as const,
     cotizaciones: ['reportes', 'cotizaciones'] as const,

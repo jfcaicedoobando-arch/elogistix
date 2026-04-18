@@ -119,7 +119,7 @@ interface ServerStats {
  */
 export function useOperacionesData(_periodo: PeriodoFiltro = "mes") {
   const { data: stats, isLoading } = useQuery({
-    queryKey: queryKeys.operaciones?.stats ?? ['operaciones', 'stats'],
+    queryKey: queryKeys.operaciones.stats,
     queryFn: async () => {
       const { data, error } = await supabase.rpc("operaciones_stats");
       if (error) throw error;
@@ -142,7 +142,7 @@ export function useOperacionesData(_periodo: PeriodoFiltro = "mes") {
       porArribar: Number(op.porArribar ?? 0),
       clientes: (op.clientesDesglose ?? []).map((c) => c.nombre),
       clientesDesglose: op.clientesDesglose ?? [],
-      desgloseEstados: { ...EMPTY_DESGLOSE, ...(op.desgloseEstados ?? {}) },
+      desgloseEstados: { ...EMPTY_DESGLOSE, ...op.desgloseEstados },
       cargasEnRiesgo: op.cargasEnRiesgo ?? [],
       historicoCreadosPorMes: (op.historico ?? []).map((h) => ({ mes: h.mes, valor: h.creados })),
       historicoLlegadosPorMes: (op.historico ?? []).map((h) => ({ mes: h.mes, valor: h.llegados })),
