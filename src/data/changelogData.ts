@@ -10,6 +10,13 @@ export interface ChangelogEntry {
 
 export const changelog: ChangelogEntry[] = [
   {
+    version: "8.20.0",
+    date: "2026-04-18",
+    type: "minor",
+    title: "Fase 7 — Pulido arquitectónico: extracción de hooks y tokens semánticos",
+    description: "Refactor de organización (cero cambios funcionales): (1) Embarques.tsx reducido de 357 a ~225 líneas extrayendo useEmbarquesPageState (filtros+paginación+debounce), buildEmbarqueColumns (definición de columnas DataTable) y EmbarqueRowActions (dropdown editar/duplicar/eliminar). (2) DesempenoOperadores y PortalDashboard delegan cómputo a hooks especializados (useDesempenoChartData, usePortalDashboardKpis). (3) Tipos del formulario de cotización movidos a capa neutra src/data/cotizacionFormTypes.ts (rompe inversión de dependencia lib→components). (4) Constantes MODOS/TIPOS/INCOTERMS/UNIDADES_MEDIDA centralizadas en src/data/wizardConstants.ts. (5) Tokens semánticos --state-llegada, --state-en-proceso, --state-cerrado añadidos en index.css con variantes light/dark; DesempenoOperadores y PortalDashboard migrados a tokens (eliminadas paletas violet/amber crudas).",
+  },
+  {
     version: "8.19.0",
     date: "2026-04-18",
     type: "minor",
