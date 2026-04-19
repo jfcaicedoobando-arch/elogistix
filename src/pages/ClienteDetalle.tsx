@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { ArrowLeft, Pencil, Building2, Loader2, Ship, FileText, Users, DollarSign, TrendingUp, AlertCircle } from "lucide-react";
+import { ArrowLeft, Pencil, Building2, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
@@ -12,7 +12,6 @@ import { usePermissions } from "@/hooks/usePermissions";
 import { useRegistrarActividad } from "@/hooks/useBitacora";
 import { getErrorMessage } from "@/lib/errorUtils";
 
-import { formatCurrency } from "@/lib/formatters";
 import TabPortalCliente from "@/components/cliente/TabPortalCliente";
 import { DataTable } from "@/components/DataTable";
 import { embarqueColumns, cotizacionColumns } from "@/components/cliente/clienteColumns";
@@ -23,6 +22,7 @@ import DialogContacto from "@/components/cliente/DialogContacto";
 import DialogEditarCliente from "@/components/cliente/DialogEditarCliente";
 import TablaContactos from "@/components/cliente/TablaContactos";
 import DoubleConfirmDeleteDialog from "@/components/DoubleConfirmDeleteDialog";
+import ClienteSummaryCards from "@/components/cliente/ClienteSummaryCards";
 
 export default function ClienteDetalle() {
   const { id } = useParams<{ id: string }>();
