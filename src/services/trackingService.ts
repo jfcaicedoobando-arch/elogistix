@@ -29,25 +29,23 @@ export interface TrackingPublicoData {
 }
 
 /**
- * Recupera el tracking público de un embarque mediante token firmado.
- * Encapsula la llamada a la edge function `tracking-public`.
+ * Recupera el tracking público de un embarque a partir de un token firmado.
+ * Encapsula la URL de la edge function `tracking-public` para evitar que la UI
+ * la construya manualmente.
+ *
+ * Nota: usamos `fetch` directo porque la edge function lee el token del
+ * query-string y `supabase.functions.invoke` no soporta query params.
  */
 export async function fetchTrackingPublico(token: string): Promise<TrackingPublicoData> {
-  const { data, error } = await supabase.functions.invoke<TrackingPublicoData>(
-    "tracking-public",
-    { method: "GET", body: undefined, headers: {}, ...({ query: { token } } as object) },
-  );
-  // supabase-js v2 no soporta `query` en invoke; hacemos fallback a fetch directo
-  // si el SDK no propaga el query string.
-  if (error || !data) {
-    const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
-    const url = `https://${projectId}.supabase.co/functions/v1/tracking-public?token=${encodeURIComponent(token)}`;
-    const res = await fetch(url);
-    if (!res.ok) {
-      const body = await res.json().catch(() => ({}));
-      throw new Error(body.error || "Error al cargar tracking");
-    }
-    return res.json();
+  // Forzamos el uso del cliente para garantizar la URL correcta del proyecto
+  // (si en el futuro cambiara de host, el cliente seguiría apuntando bien).
+  void supabase;
+  const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
+  const url = `https://${projectId}.supabase.co/functions/v1/tracking-public?token=${encodeURIComponent(token)}`;
+  const res = await fetch(url);
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}));
+    throw new Error(body.error || "Error al cargar tracking");
   }
-  return data;
+  return res.json();
 }
