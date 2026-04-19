@@ -33,6 +33,7 @@ const steps = [
 
 export default function NuevoEmbarque() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { user } = useAuth();
   const { toast } = useToast();
   const { data: clientes = [] } = useClientesForSelect();
@@ -41,6 +42,10 @@ export default function NuevoEmbarque() {
   const createEmbarque = useCreateEmbarque();
   const registrarActividad = useRegistrarActividad();
   const updateEstadoCotizacion = useUpdateEstadoCotizacion();
+
+  // Pre-vinculación desde detalle de cotización (location.state.cotizacionPrevinculadaId)
+  const cotizacionPrevinculadaId = (location.state as { cotizacionPrevinculadaId?: string } | null)?.cotizacionPrevinculadaId;
+  const { data: cotizacionPrevinculada } = useCotizacion(cotizacionPrevinculadaId);
 
   const [currentStep, setCurrentStep] = useState(1);
   const [validationErrors, setValidationErrors] = useState<EmbarqueValidationErrors>({});
@@ -62,14 +67,47 @@ export default function NuevoEmbarque() {
     updateConceptoVenta, addConceptoVenta, removeConceptoVenta,
     updateConceptoCosto, addConceptoCosto, removeConceptoCosto,
     subtotalVenta, totalCosto, utilidadEstimada,
+    setConceptosVenta, setConceptosCosto,
   } = useConceptosForm();
 
   const selectedCliente = clientes.find(c => c.id === clienteId);
 
+  const hidratarConceptosDesdeCotizacion = useCallback(async (cot: CotizacionRow) => {
+    // 1. Conceptos de venta desde el JSONB de la cotización
+    const ventas = parseConceptos(cot.conceptos_venta);
+    if (ventas.length > 0) {
+      setConceptosVenta(ventas.map((v, idx) => ({
+        id: idx + 1,
+        concepto: v.descripcion ?? '',
+        cantidad: Number(v.cantidad) || 1,
+        precioUnitario: Number(v.precio_unitario) || 0,
+        moneda: v.moneda || 'MXN',
+      })));
+    }
+    // 2. Conceptos de costo desde la tabla cotizacion_costos
+    const { data: costos } = await supabase
+      .from('cotizacion_costos')
+      .select('concepto, costo_unitario, moneda, proveedor')
+      .eq('cotizacion_id', cot.id);
+    if (costos && costos.length > 0) {
+      setConceptosCosto(costos.map((c, idx) => {
+        const provMatch = proveedoresDb.find(p => p.nombre === c.proveedor);
+        return {
+          id: idx + 1,
+          proveedorId: provMatch?.id ?? '',
+          concepto: c.concepto,
+          monto: Number(c.costo_unitario) || 0,
+          moneda: c.moneda || 'MXN',
+        };
+      }));
+    }
+  }, [setConceptosVenta, setConceptosCosto, proveedoresDb]);
+
   const handleVincularCotizacion = useCallback((cot: CotizacionRow) => {
     setCotizacionVinculada(cot);
     vincularCotizacion(cot);
-  }, [vincularCotizacion]);
+    void hidratarConceptosDesdeCotizacion(cot);
+  }, [vincularCotizacion, hidratarConceptosDesdeCotizacion]);
 
   const handleDesvincularCotizacion = useCallback(() => {
     setCotizacionVinculada(null);
@@ -78,6 +116,21 @@ export default function NuevoEmbarque() {
     setModoExpediente('nuevo');
     setExpedienteSeleccionado(null);
   }, [desvincularCotizacion]);
+
+  // Auto-pre-vinculación si viene de CotizacionDetalle
+  const yaPrevinculadoRef = useRef(false);
+  useEffect(() => {
+    if (yaPrevinculadoRef.current) return;
+    if (!cotizacionPrevinculada) return;
+    yaPrevinculadoRef.current = true;
+    handleVincularCotizacion(cotizacionPrevinculada);
+    toast({
+      title: 'Datos pre-rellenados',
+      description: `Cotización ${cotizacionPrevinculada.folio} vinculada automáticamente.`,
+    });
+    // Limpiar location.state para evitar re-aplicación en refresh
+    window.history.replaceState({}, '');
+  }, [cotizacionPrevinculada, handleVincularCotizacion, toast]);
 
   // Reset expediente selection when client changes
   const prevClienteRef = useRef(clienteId);
