@@ -94,10 +94,19 @@ export function CotizacionDetalleAcciones({
         <Button size="sm" variant="secondary" onClick={onAbrirConvertir}>Convertir a Cliente</Button>
       )}
       {esAceptada && (
-        <Button size="sm" onClick={onAbrirGenerarEmbarques}>
-          Generar Embarques
-          <Badge className="ml-2">{numContenedores}</Badge>
-        </Button>
+        <>
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => navigate("/embarques/nuevo", { state: { cotizacionPrevinculadaId: cotizacionId } })}
+          >
+            Crear Embarque
+          </Button>
+          <Button size="sm" onClick={onAbrirGenerarEmbarques}>
+            Generar Embarques
+            <Badge className="ml-2">{numContenedores}</Badge>
+          </Button>
+        </>
       )}
     </div>
   );
