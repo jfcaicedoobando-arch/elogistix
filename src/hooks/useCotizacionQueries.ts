@@ -1,4 +1,4 @@
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { queryKeys } from '@/lib/queryKeys';
 import type { CotizacionRow } from './useCotizacionTypes';
@@ -60,6 +60,26 @@ export function useCotizacion(id: string | undefined) {
     },
     enabled: !!id,
   });
+}
+
+/** Hook para prefetch en hover (lista → detalle) */
+export function usePrefetchCotizacion() {
+  const queryClient = useQueryClient();
+  return (id: string) => {
+    queryClient.prefetchQuery({
+      queryKey: queryKeys.cotizaciones.detail(id),
+      queryFn: async () => {
+        const { data, error } = await supabase
+          .from('cotizaciones')
+          .select('*')
+          .eq('id', id)
+          .single();
+        if (error) throw error;
+        return data as unknown as CotizacionRow;
+      },
+      staleTime: 30_000,
+    });
+  };
 }
 
 /** Embarques vinculados a una cotización */

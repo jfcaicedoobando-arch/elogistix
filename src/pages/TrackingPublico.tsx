@@ -7,45 +7,14 @@ import { getEstadoColor, getModoIcon } from "@/lib/uiMappings";
 import { formatDate, getOrigen, getDestino } from "@/lib/formatters";
 import { ICONO_EVENTO } from "@/data/embarqueConstants";
 import { Clock, MapPin, Ship, AlertTriangle } from "lucide-react";
-
-interface TrackingData {
-  embarque: {
-    expediente: string;
-    cliente_nombre: string;
-    modo: string;
-    tipo: string;
-    estado: string;
-    etd: string | null;
-    eta: string | null;
-    puerto_origen: string | null;
-    puerto_destino: string | null;
-    aeropuerto_origen: string | null;
-    aeropuerto_destino: string | null;
-    ciudad_origen: string | null;
-    ciudad_destino: string | null;
-    naviera: string | null;
-    aerolinea: string | null;
-    transportista: string | null;
-  };
-  eventos: { tipo: string; descripcion: string; ubicacion: string; fecha: string }[];
-  organizacion: { nombre: string; logo_url: string | null } | null;
-}
+import { fetchTrackingPublico, type TrackingPublicoData } from "@/services/trackingService";
 
 export default function TrackingPublico() {
   const { token } = useParams<{ token: string }>();
 
-  const { data, isLoading, error } = useQuery<TrackingData>({
+  const { data, isLoading, error } = useQuery<TrackingPublicoData>({
     queryKey: ["tracking-public", token],
-    queryFn: async () => {
-      const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
-      const url = `https://${projectId}.supabase.co/functions/v1/tracking-public?token=${token}`;
-      const res = await fetch(url);
-      if (!res.ok) {
-        const body = await res.json().catch(() => ({}));
-        throw new Error(body.error || "Error al cargar tracking");
-      }
-      return res.json();
-    },
+    queryFn: () => fetchTrackingPublico(token!),
     enabled: !!token,
     retry: false,
   });
