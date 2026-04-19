@@ -9,8 +9,7 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { useNavigate } from "react-router-dom";
-import { useCotizaciones, useDeleteCotizacion } from "@/hooks/useCotizaciones";
-import { usePrefetchCotizacion } from "@/hooks/useCotizacionQueries";
+import { useCotizaciones, useDeleteCotizacion, usePrefetchCotizacion } from "@/hooks/useCotizaciones";
 import { useDuplicarCotizacion } from "@/hooks/useDuplicarCotizacion";
 import { getErrorMessage } from "@/lib/errorUtils";
 import { useClientesForSelect } from "@/hooks/useClientes";
