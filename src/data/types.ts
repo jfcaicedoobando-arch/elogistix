@@ -1,4 +1,2 @@
-import type { Enums } from "@/integrations/supabase/types";
-
-/** Centralized role type derived from the database enum */
-export type AppRole = Enums<"app_role">;
+/** @deprecated Mover imports a `@/types/types`. Se mantiene como re-export por compatibilidad. */
+export * from "@/types/types";
