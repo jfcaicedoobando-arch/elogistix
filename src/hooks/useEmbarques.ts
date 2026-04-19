@@ -21,9 +21,9 @@ export {
   useEmbarqueFacturas,
   useProveedoresForSelect,
   useExpedientesCliente,
-} from './useEmbarqueQueries';
+} from './embarque/useEmbarqueQueries';
 
-export type { ExpedienteCliente } from './useEmbarqueQueries';
+export type { ExpedienteCliente } from './embarque/useEmbarqueQueries';
 
 export {
   useCreateEmbarque,
@@ -35,4 +35,4 @@ export {
   useDeleteDocumentoEmbarque,
   useCreateNotaEmbarque,
   useEliminarEmbarque,
-} from './useEmbarqueMutations';
+} from './embarque/useEmbarqueMutations';
