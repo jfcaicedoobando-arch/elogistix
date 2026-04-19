@@ -2,7 +2,7 @@
  * Pure parsers for the `dashboard_stats()` JSONB RPC payload.
  * Extracted from useDashboardData to keep the hook focused on query+state.
  */
-import { ESTADOS_ACTIVOS } from "@/data/embarqueConstants";
+import { ESTADOS_ACTIVOS } from "@/constants/embarqueConstants";
 
 export interface EmbarqueConEstado {
   id: string;

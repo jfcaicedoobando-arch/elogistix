@@ -11,11 +11,18 @@ export interface ChangelogEntry {
 /** Entradas recientes (v8.x). Las anteriores se cargan dinámicamente. */
 export const recentChangelog: ChangelogEntry[] = [
   {
+    version: "8.36.0",
+    date: "2026-04-19",
+    type: "patch",
+    title: "Cierre auditoría — eliminación de re-exports @deprecated en src/data/",
+    description: "Tramo final de la auditoría de arquitectura: (1) Migrados los 32 archivos consumidores de @/data/{types,conceptoTypes,cotizacionFormTypes,*Constants} a sus nuevas ubicaciones canónicas en @/types/* y @/constants/*. (2) Eliminados los 7 archivos puente marcados @deprecated en src/data/. (3) Movidos los tests de constantes a src/constants/__tests__/. (4) ARCHITECTURE.md actualizado con sección de deuda técnica aceptada (hooks Detalle fragmentados a propósito). 139 tests verdes. src/data/ queda solo con datasets puros (changelog, ports).",
+  },
+  {
     version: "8.35.0",
     date: "2026-04-19",
     type: "patch",
     title: "Cierre auditoría — barrels completos e imports unificados",
-    description: "Tercer y último tramo de la auditoría: (1) Los barrels useEmbarques.ts y useCotizaciones.ts ahora exportan también usePrefetchEmbarque y usePrefetchCotizacion, completando la API pública. (2) Las páginas Embarques.tsx, Cotizaciones.tsx y NuevoEmbarque.tsx fusionan sus imports en una sola línea desde el barrel, eliminando la mezcla barrel + módulo interno. (3) Auditoría confirma que los hooks restantes con imports internos (useEmbarqueForm, useCotizacionWizardForm, useCotizacionDetalleHandlers) son detalles especializados que no pertenecen al barrel público — el orquestador useEmbarqueDetalleActions ya cumple su rol. Plan de remediación de arquitectura cerrado.",
+    description: "Tercer tramo de la auditoría: (1) Los barrels useEmbarques.ts y useCotizaciones.ts ahora exportan también usePrefetchEmbarque y usePrefetchCotizacion, completando la API pública. (2) Las páginas Embarques.tsx, Cotizaciones.tsx y NuevoEmbarque.tsx fusionan sus imports en una sola línea desde el barrel, eliminando la mezcla barrel + módulo interno. (3) Auditoría confirma que los hooks restantes con imports internos (useEmbarqueForm, useCotizacionWizardForm, useCotizacionDetalleHandlers) son detalles especializados que no pertenecen al barrel público — el orquestador useEmbarqueDetalleActions ya cumple su rol.",
   },
   {
     version: "8.34.0",

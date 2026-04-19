@@ -8,8 +8,8 @@ import { Trash2 } from "lucide-react";
 import type { ConceptoVentaCotizacion } from "@/hooks/useCotizaciones";
 import { formatCurrency } from "@/lib/formatters";
 import { calcularIVA } from "@/lib/financialUtils";
-import { CONCEPTOS_COSTO_USD, CONCEPTOS_COSTO_MXN, CONCEPTOS_CON_IVA_USD } from "@/data/cotizacionConstants";
-import { UNIDADES_MEDIDA } from "@/data/wizardConstants";
+import { CONCEPTOS_COSTO_USD, CONCEPTOS_COSTO_MXN, CONCEPTOS_CON_IVA_USD } from "@/constants/cotizacionConstants";
+import { UNIDADES_MEDIDA } from "@/constants/wizardConstants";
 
 export function UnidadMedidaSelect({ value, onChange }: { value: string; onChange: (v: string) => void }) {
   return (

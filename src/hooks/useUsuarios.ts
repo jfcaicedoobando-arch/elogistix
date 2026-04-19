@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import type { AppRole } from '@/data/types';
+import type { AppRole } from "@/types/types";
 
 export interface UserRow {
   user_id: string;

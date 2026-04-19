@@ -3,7 +3,7 @@ import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { formatDate } from "@/lib/formatters";
 import { getModoIcon, getEstadoColor } from "@/lib/uiMappings";
-import { ESTADOS_EMBARQUE } from "@/data/embarqueConstants";
+import { ESTADOS_EMBARQUE } from "@/constants/embarqueConstants";
 import { DetailRow } from "./DetailRow";
 import { useNavigate } from "react-router-dom";
 import { Link } from "lucide-react";

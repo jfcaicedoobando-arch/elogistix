@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { TIPOS_PROVEEDOR, MONEDAS_PROVEEDOR, PAISES_PROVEEDOR } from "@/data/proveedorConstants";
+import { TIPOS_PROVEEDOR, MONEDAS_PROVEEDOR, PAISES_PROVEEDOR } from "@/constants/proveedorConstants";
 
 describe("proveedorConstants", () => {
   it("TIPOS_PROVEEDOR no está vacío", () => {

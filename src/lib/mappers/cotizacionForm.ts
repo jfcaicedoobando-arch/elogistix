@@ -9,7 +9,7 @@ import {
   type CotizacionInitialData,
   type CotizacionInitialCosto,
   COTIZACION_FORM_DEFAULTS,
-} from "@/data/cotizacionFormTypes";
+} from "@/types/cotizacionFormTypes";
 
 // Re-exports para preservar la API pública usada por consumidores existentes.
 export type { CotizacionFormValues, CotizacionInitialData, CotizacionInitialCosto };

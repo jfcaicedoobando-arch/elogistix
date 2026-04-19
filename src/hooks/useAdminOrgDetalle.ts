@@ -5,7 +5,7 @@ import { useToast } from "@/hooks/use-toast";
 import { usePlanes } from "@/hooks/usePlanes";
 import { useConfiguracionByOrg } from "@/hooks/useConfiguracionOrg";
 import { queryKeys } from "@/lib/queryKeys";
-import type { AppRole } from "@/data/types";
+import type { AppRole } from "@/types/types";
 
 export interface MemberRow {
   id: string;

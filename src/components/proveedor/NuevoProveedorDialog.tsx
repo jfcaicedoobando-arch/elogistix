@@ -8,7 +8,7 @@ import { ArrowLeft, ArrowRight } from "lucide-react";
 import type { Enums, TablesInsert } from "@/integrations/supabase/types";
 type TipoProveedor = Enums<'tipo_proveedor'>;
 type Moneda = Enums<'moneda'>;
-import { TIPOS_PROVEEDOR as TIPOS, MONEDAS_PROVEEDOR as MONEDAS, PAISES_PROVEEDOR as PAISES } from "@/data/proveedorConstants";
+import { TIPOS_PROVEEDOR as TIPOS, MONEDAS_PROVEEDOR as MONEDAS, PAISES_PROVEEDOR as PAISES } from "@/constants/proveedorConstants";
 import DocumentChecklist, { type DocumentoChecklist } from "@/components/DocumentChecklist";
 
 const DOCS_NACIONAL = [
