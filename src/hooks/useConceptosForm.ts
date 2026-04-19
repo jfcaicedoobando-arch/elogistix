@@ -84,5 +84,8 @@ export function useConceptosForm(opciones: UseConceptosFormOptions = {}) {
     utilidadEstimada,
     inicializarVenta,
     inicializarCosto,
+    // Aliases para hidratación desde fuentes externas (ej. cotización vinculada)
+    setConceptosVenta: inicializarVenta,
+    setConceptosCosto: inicializarCosto,
   };
 }
