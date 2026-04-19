@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect, useRef } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { FormProvider } from "react-hook-form";
 import { useToast } from "@/hooks/use-toast";
 import {
@@ -12,8 +12,10 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useRegistrarActividad } from "@/hooks/useBitacora";
 import { useConceptosForm } from "@/hooks/useConceptosForm";
 import { useEmbarqueForm } from "@/hooks/embarque/useEmbarqueForm";
-import { useCotizacionesAceptadas, useUpdateEstadoCotizacion, type CotizacionRow } from "@/hooks/useCotizaciones";
+import { useCotizacionesAceptadas, useUpdateEstadoCotizacion, useCotizacion, type CotizacionRow } from "@/hooks/useCotizaciones";
 import { resolverExpediente, subirDocumentosEmbarque } from "@/services/embarqueServices";
+import { supabase } from "@/integrations/supabase/client";
+import { parseConceptos } from "@/lib/parsers/cotizacionDetalle";
 import { getErrorMessage } from "@/lib/errorUtils";
 import { EmbarqueWizardLayout } from "@/components/embarque/EmbarqueWizardLayout";
 import { StepDatosGenerales } from "@/components/embarque/StepDatosGenerales";
