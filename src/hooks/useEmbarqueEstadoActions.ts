@@ -2,7 +2,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import { useRegistrarActividad } from "@/hooks/useBitacora";
 import { getErrorMessage } from "@/lib/errorUtils";
-import { ESTADOS_EMBARQUE } from "@/data/embarqueConstants";
+import { ESTADOS_EMBARQUE } from "@/constants/embarqueConstants";
 import {
   useAvanzarEstadoEmbarque,
   useSyncEstadoEmbarque,

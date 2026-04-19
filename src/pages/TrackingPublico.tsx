@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { getEstadoColor, getModoIcon } from "@/lib/uiMappings";
 import { formatDate, getOrigen, getDestino } from "@/lib/formatters";
-import { ICONO_EVENTO } from "@/data/embarqueConstants";
+import { ICONO_EVENTO } from "@/constants/embarqueConstants";
 import { Clock, MapPin, Ship, AlertTriangle } from "lucide-react";
 import { fetchTrackingPublico, type TrackingPublicoData } from "@/services/trackingService";
 

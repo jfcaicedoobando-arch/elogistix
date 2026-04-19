@@ -1,5 +1,5 @@
 import { useAuth } from "@/contexts/AuthContext";
-import type { AppRole } from "@/data/types";
+import type { AppRole } from "@/types/types";
 
 export function usePermissions() {
   const { role, effectiveRole } = useAuth();

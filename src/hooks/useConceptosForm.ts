@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react';
 import { calcularUtilidad } from '@/lib/financialUtils';
-import type { ConceptoVentaLocal, ConceptoCostoLocal } from '@/data/conceptoTypes';
+import type { ConceptoVentaLocal, ConceptoCostoLocal } from "@/types/conceptoTypes";
 
 interface UseConceptosFormOptions {
   ventaInicial?: ConceptoVentaLocal[];

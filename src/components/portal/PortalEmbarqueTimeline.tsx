@@ -2,7 +2,7 @@ import { Clock, MapPin } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { formatDate } from "@/lib/formatters";
-import { ICONO_EVENTO } from "@/data/embarqueConstants";
+import { ICONO_EVENTO } from "@/constants/embarqueConstants";
 import type { Tables } from "@/integrations/supabase/types";
 
 interface Props {

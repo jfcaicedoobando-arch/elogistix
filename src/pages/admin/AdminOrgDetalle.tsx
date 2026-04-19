@@ -12,7 +12,7 @@ import { ArrowLeft, Building2, Users, Ship, UserCheck, FileText, Calendar, Check
 import AgregarMiembroOrgDialog from "@/components/admin/AgregarMiembroOrgDialog";
 import { formatDate } from "@/lib/formatters";
 import { useAdminOrgDetalle, type MemberRow } from "@/hooks/useAdminOrgDetalle";
-import type { AppRole } from "@/data/types";
+import type { AppRole } from "@/types/types";
 
 const roleBadge: Record<string, string> = {
   super_admin: "bg-primary text-primary-foreground",

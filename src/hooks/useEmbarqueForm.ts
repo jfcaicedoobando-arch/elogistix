@@ -3,7 +3,7 @@ import { useForm, type UseFormReturn } from "react-hook-form";
 import { useToast } from "@/hooks/use-toast";
 import { uploadFile } from "@/services/storage";
 import { useExchangeRates } from "@/hooks/useExchangeRates";
-import { getDocsForMode } from "@/data/embarqueConstants";
+import { getDocsForMode } from "@/constants/embarqueConstants";
 import type { DocumentoChecklist } from "@/components/DocumentChecklist";
 import {
   DEFAULT_EMBARQUE_VALUES,
@@ -17,7 +17,7 @@ import {
   type CotizacionParaVincular,
 } from "@/lib/mappers/embarque";
 import type { Tables } from "@/integrations/supabase/types";
-import type { ConceptoVentaLocal, ConceptoCostoLocal } from "@/data/conceptoTypes";
+import type { ConceptoVentaLocal, ConceptoCostoLocal } from "@/types/conceptoTypes";
 
 // Re-exports para compatibilidad con consumidores existentes
 export type { EmbarqueFormValues } from "@/lib/mappers/embarque";
