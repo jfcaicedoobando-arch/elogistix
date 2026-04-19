@@ -11,6 +11,13 @@ export interface ChangelogEntry {
 /** Entradas recientes (v8.x). Las anteriores se cargan dinámicamente. */
 export const recentChangelog: ChangelogEntry[] = [
   {
+    version: "8.39.0",
+    date: "2026-04-19",
+    type: "minor",
+    title: "Crear embarque desde cotización — wizard pre-rellenado",
+    description: "Nuevo flujo 'Crear Embarque' visible en el detalle de cotizaciones Aceptadas. Al pulsar el botón se abre el wizard de Nuevo Embarque con la cotización ya vinculada y todos los datos pre-cargados: cliente, modo, tipo, incoterm, ruta (origen/destino), descripción de mercancía, peso, volumen, piezas, tipo de carga y contenedor. Además se hidratan automáticamente los conceptos de venta (desde el JSONB de la cotización) y los conceptos de costo (desde la tabla cotizacion_costos), incluyendo el match de proveedor por nombre. Al finalizar el wizard, el embarque queda enlazado vía cotizacion_id y la cotización se marca como Embarcada. Coexiste con el botón 'Generar Embarques' (que sigue creando N embarques en background según num_contenedores) — el nuevo flujo es para crear un único embarque revisando datos paso a paso.",
+  },
+  {
     version: "8.38.0",
     date: "2026-04-19",
     type: "minor",
