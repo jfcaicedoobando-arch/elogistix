@@ -13,6 +13,7 @@ export {
   useEmbarques,
   useEmbarquesPaginados,
   useEmbarque,
+  usePrefetchEmbarque,
   useEmbarqueConceptosVenta,
   useEmbarqueConceptosCosto,
   useEmbarqueDocumentos,

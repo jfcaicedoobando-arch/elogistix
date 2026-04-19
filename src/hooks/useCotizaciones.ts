@@ -16,6 +16,7 @@ export type {
 export {
   useCotizaciones,
   useCotizacion,
+  usePrefetchCotizacion,
   useCotizacionesAceptadas,
   useEmbarquesVinculados,
 } from './useCotizacionQueries';
