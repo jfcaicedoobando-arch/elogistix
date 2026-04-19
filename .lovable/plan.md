@@ -1,31 +1,69 @@
 
-Usuario quiere ejecutar las 5 acciones del plan que propuse sobre los 3 puntos citados. Verifico tamaños primero mentalmente con lo que ya sé:
-- Reportes.tsx: ~270 líneas (visto en contexto)
-- ClienteDetalle.tsx: ~280 (mencionado)
-- 22 hooks useCotizacion*/useEmbarque* en src/hooks/ plano
+El usuario pide implementar el flujo "Crear embarque desde cotización" con:
+1. Botón en `CotizacionDetalle` que abra el wizard de embarques pre-llenado.
+2. Pre-rellenar: cliente, ruta, mercancía y conceptos (venta y costo).
+3. Marcar la cotización como `Convertida` (o estado equivalente) y enlazarla al embarque vía `cotizacion_id`.
 
-Plan v8.38.0 — Reorganización final.
+## Investigación
 
-## Acciones
+Ya existe infraestructura clave:
+- `useEmbarqueForm` tiene `vincularCotizacion(cot)` / `desvincularCotizacion()` — usados en `NuevoEmbarque.tsx`.
+- `useConvertirCotizacionAEmbarques` (en `useCotizacionConversions.ts`) — hace el split por contenedor desde detalle de cotización; ya marca la cotización como `Embarcada` y crea conceptos. Útil pero NO abre el wizard, lo hace en background.
+- `NuevoEmbarque.tsx` ya soporta `cotizacionVinculada` vía estado y registra el vínculo (`cotizacion_id`) y cambia estado a `Embarcada`.
+- `useCotizacionesAceptadas()` ya alimenta el selector dentro del wizard.
+- Estado `Embarcada` ya existe en el enum `estado_cotizacion` (visto en `useCotizacionConversions`).
 
-**1. Reorganizar hooks en subcarpetas**
-- Crear `src/hooks/cotizacion/` y mover: `useCotizacionTypes`, `useCotizacionQueries`, `useCotizacionMutations`, `useCotizacionConversions`, `useCotizacionCostos`, `useCotizacionPL`, `useCotizacionDetalleState`, `useCotizacionDetalleHandlers`, `useCotizacionWizardForm`, `useCotizacionWizardSteps`, `useConceptosVentaCotizacion`, `useDuplicarCotizacion`, `usePortalCotizacionDetalle`, `usePortalCotizacionMutations`
-- Crear `src/hooks/embarque/` y mover: `useEmbarqueQueries`, `useEmbarqueMutations`, `useEmbarqueForm`, `useEmbarqueFinancials`, `useEmbarqueDetalleActions`, `useEmbarqueDetalleTracking`, `useEmbarqueDocumentosActions`, `useEmbarqueEstadoActions`, `useEmbarquesListData`, `useEmbarquesPageState`, `useEmbarquesRelacionados`, `useEventosEmbarque`
-- Mantener barrels `useCotizaciones.ts` y `useEmbarques.ts` en `src/hooks/` (raíz) para no romper imports externos
-- Actualizar imports internos de los barrels a las nuevas rutas
+El estado pedido es "Convertida". Verificar enum existente: el código actual usa `'Embarcada'`. Para no crear migración, usaré `'Embarcada'` que es el valor canónico ya implementado y semánticamente equivalente.
 
-**2. Refactor preventivo de pages cercanas al límite ESLint (250 LOC)**
-- `Reportes.tsx`: extraer `<ReportesFiltros>`, `<ReportesKpiCards>`, `<ReportesTopChart>`, `<ReportesTablaClientes>` a `src/components/reportes/`
-- `ClienteDetalle.tsx`: revisar y extraer secciones si supera 250 LOC
+## Diseño
 
-**3. Documentación**
-- Actualizar `ARCHITECTURE.md` con nueva estructura `hooks/cotizacion/` y `hooks/embarque/`
-- Añadir entrada v8.38.0 al `Changelog.tsx`
-- Actualizar entrada en `changelogData.ts` (es lo mismo o paralelo)
+**Flujo elegido**: Navegación desde detalle de cotización al wizard de embarque con la cotización pre-vinculada vía `location.state` (no query param para no exponer IDs ni romper deep-links).
 
-## Riesgo
-Bajo. Los barrels absorben los movimientos. Se ejecutará `npm test` al final para confirmar 139/139.
+### Cambios
 
-## Archivos no tocados
-- `src/integrations/supabase/types.ts` — auto-generado, intocable
-- 6 hooks restantes que no son cotización/embarque (`useBitacora`, `useClientes`, `useDashboardData`, etc.) se quedan en raíz
+**1. `CotizacionDetalle.tsx`**
+- Añadir botón "Crear embarque" en el header de acciones, visible solo si:
+  - `canEdit === true`
+  - `cotizacion.estado === 'Aceptada'` (regla de negocio: solo aceptadas se convierten)
+  - `embarquesVinculados.length === 0` (evitar duplicados; si ya hay embarques, mostrar botón secundario "Crear otro embarque")
+- Al click: `navigate('/embarques/nuevo', { state: { cotizacionPrevinculada: cotizacion } })`.
+
+**2. `NuevoEmbarque.tsx`**
+- Leer `location.state?.cotizacionPrevinculada` con `useLocation()`.
+- En `useEffect` inicial (una sola vez): si existe, llamar `handleVincularCotizacion(cot)` automáticamente.
+- Mostrar un toast informativo "Datos pre-rellenados desde cotización {folio}".
+- Limpiar `location.state` tras consumirlo (`window.history.replaceState`) para que un refresh no repita.
+
+**3. `useEmbarqueForm.ts` — verificar `vincularCotizacion`**
+- Confirmar que ya pre-llena: cliente, modo, tipo, incoterm, descripción mercancía, peso, volumen, piezas, ruta (origen/destino), tipo_carga, tipo_contenedor, operador.
+- Si falta algún campo (ej. `num_contenedores`, conceptos), extender el método para que también:
+  - Cargue conceptos de venta desde `cotizacion.conceptos_venta` (jsonb) → setea en `useConceptosForm`.
+  - Cargue conceptos de costo desde la tabla `cotizacion_costos` (query async).
+
+**4. `useConceptosForm.ts`**
+- Exponer setters `setConceptosVenta(items)` y `setConceptosCosto(items)` para hidratar desde cotización (si no existen ya).
+
+**5. Pre-llenado de conceptos (lógica de hidratación)**
+- En `NuevoEmbarque.tsx` tras vincular: query `cotizacion_costos` por `cotizacion_id` → mapear a estructura de `conceptosCosto` (concepto, monto=costo_unitario, moneda, proveedor).
+- Mapear `cotizacion.conceptos_venta` (jsonb) → estructura de `conceptosVenta` (descripción, cantidad, precio_unitario, moneda).
+
+**6. Marcar cotización como convertida**
+- Ya ocurre en `handleFinish` de `NuevoEmbarque.tsx`: `updateEstadoCotizacion.mutateAsync({ id, estado: 'Embarcada' })`. Validar que se ejecuta y registra bitácora.
+
+**7. Changelog v8.39.0**
+- Añadir entrada en `src/data/changelogData.ts`.
+
+### Archivos a editar
+1. `src/pages/CotizacionDetalle.tsx` — botón "Crear embarque"
+2. `src/pages/NuevoEmbarque.tsx` — leer `location.state`, hidratar conceptos
+3. `src/hooks/embarque/useEmbarqueForm.ts` — verificar/extender `vincularCotizacion`
+4. `src/hooks/useConceptosForm.ts` — exponer setters si faltan
+5. `src/data/changelogData.ts` — entrada v8.39.0
+
+### Riesgos
+- Bajo. El botón es aditivo, el wizard ya soporta vinculación manual.
+- Posible duplicación si el usuario abandona el wizard tras vincular: la cotización no cambia de estado hasta `handleFinish`, así que es seguro.
+
+### Validación post-implementación
+- Test manual: abrir cotización Aceptada → botón visible → click → wizard abre con datos → completar → embarque creado con `cotizacion_id` → cotización pasa a `Embarcada`.
+- Correr `npm test` para asegurar 139/139.
