@@ -1,6 +1,7 @@
 import type { ChangelogEntry } from "../changelogData";
 
 export const legacyChangelog: ChangelogEntry[] = [
+  {
     version: "7.11.0",
     date: "2026-04-09",
     type: "minor",
