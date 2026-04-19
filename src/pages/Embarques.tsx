@@ -1,13 +1,11 @@
-import { useState, useMemo, useCallback } from "react";
+import { useState, useMemo } from "react";
 import { Plus, Ship, Download } from "lucide-react";
-import { useQueryClient } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
-import { queryKeys } from "@/lib/queryKeys";
 import { exportToCsv } from "@/generators/exportCsv";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { useEliminarEmbarque, calcularEstadoEmbarque } from "@/hooks/useEmbarques";
+import { usePrefetchEmbarque } from "@/hooks/useEmbarqueQueries";
 import { useOperadoresDistintos } from "@/hooks/useOperadoresDistintos";
 import { getErrorMessage } from "@/lib/errorUtils";
 import { useClientesForSelect } from "@/hooks/useClientes";
@@ -27,24 +25,12 @@ import { buildEmbarqueColumns } from "@/components/embarque/embarqueColumns";
 
 export default function Embarques() {
   const navigate = useNavigate();
-  const queryClient = useQueryClient();
   const { data: clientes = [] } = useClientesForSelect();
   const { canEdit } = usePermissions();
   const { toast } = useToast();
   const eliminarEmbarque = useEliminarEmbarque();
   const registrarActividad = useRegistrarActividad();
-
-  const prefetchEmbarque = useCallback((id: string) => {
-    queryClient.prefetchQuery({
-      queryKey: queryKeys.embarques.detail(id),
-      queryFn: async () => {
-        const { data, error } = await supabase.from('embarques').select('*').eq('id', id).single();
-        if (error) throw error;
-        return data;
-      },
-      staleTime: 30_000,
-    });
-  }, [queryClient]);
+  const prefetchEmbarque = usePrefetchEmbarque();
 
   const state = useEmbarquesPageState();
   const {
