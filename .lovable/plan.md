@@ -1,48 +1,31 @@
 
+Usuario quiere ejecutar las 5 acciones del plan que propuse sobre los 3 puntos citados. Verifico tamaños primero mentalmente con lo que ya sé:
+- Reportes.tsx: ~270 líneas (visto en contexto)
+- ClienteDetalle.tsx: ~280 (mencionado)
+- 22 hooks useCotizacion*/useEmbarque* en src/hooks/ plano
 
-# Auditoría de arquitectura — Libre Carga (post v8.36.0)
+Plan v8.38.0 — Reorganización final.
 
-## Estado actual: muy saludable
-La auditoría previa (v8.33–v8.36) ya cerró los problemas críticos. Hoy el código está en buena forma:
+## Acciones
 
-- ✅ **0 fugas de capa relevantes**: `supabase.from(...)` solo aparece en `Login.tsx` (auth, justificado)
-- ✅ **Barrels 100% respetados**: ningún componente importa directamente de `useEmbarqueQueries`/`useCotizacionQueries`
-- ✅ `src/data/` limpio: solo datasets puros (`changelog/`, `ports.ts`)
-- ✅ Capas `services/`, `lib/`, `types/`, `constants/` bien separadas
-- ✅ 139/139 tests pasando
-- ✅ `ARCHITECTURE.md` formaliza el contrato
+**1. Reorganizar hooks en subcarpetas**
+- Crear `src/hooks/cotizacion/` y mover: `useCotizacionTypes`, `useCotizacionQueries`, `useCotizacionMutations`, `useCotizacionConversions`, `useCotizacionCostos`, `useCotizacionPL`, `useCotizacionDetalleState`, `useCotizacionDetalleHandlers`, `useCotizacionWizardForm`, `useCotizacionWizardSteps`, `useConceptosVentaCotizacion`, `useDuplicarCotizacion`, `usePortalCotizacionDetalle`, `usePortalCotizacionMutations`
+- Crear `src/hooks/embarque/` y mover: `useEmbarqueQueries`, `useEmbarqueMutations`, `useEmbarqueForm`, `useEmbarqueFinancials`, `useEmbarqueDetalleActions`, `useEmbarqueDetalleTracking`, `useEmbarqueDocumentosActions`, `useEmbarqueEstadoActions`, `useEmbarquesListData`, `useEmbarquesPageState`, `useEmbarquesRelacionados`, `useEventosEmbarque`
+- Mantener barrels `useCotizaciones.ts` y `useEmbarques.ts` en `src/hooks/` (raíz) para no romper imports externos
+- Actualizar imports internos de los barrels a las nuevas rutas
 
-## Hallazgos restantes (todos menores)
+**2. Refactor preventivo de pages cercanas al límite ESLint (250 LOC)**
+- `Reportes.tsx`: extraer `<ReportesFiltros>`, `<ReportesKpiCards>`, `<ReportesTopChart>`, `<ReportesTablaClientes>` a `src/components/reportes/`
+- `ClienteDetalle.tsx`: revisar y extraer secciones si supera 250 LOC
 
-### 🟡 Oportunidades de mejora moderadas
+**3. Documentación**
+- Actualizar `ARCHITECTURE.md` con nueva estructura `hooks/cotizacion/` y `hooks/embarque/`
+- Añadir entrada v8.38.0 al `Changelog.tsx`
+- Actualizar entrada en `changelogData.ts` (es lo mismo o paralelo)
 
-1. **`src/data/changelog/legacy.ts` (1,523 líneas)** — Es un dataset histórico cargado dinámicamente, así que no impacta el bundle inicial. Pero si crece más, conviene partirlo por año (`legacy-2024.ts`, `legacy-2023.ts`). **Esfuerzo XS, impacto bajo.**
+## Riesgo
+Bajo. Los barrels absorben los movimientos. Se ejecutará `npm test` al final para confirmar 139/139.
 
-2. **`src/data/changelogData.ts` (428 líneas)** — Acumula todas las entradas v8.x. Aplica el mismo patrón: cuando llegue a v9.x, mover v8.x a legacy. Por ahora ok.
-
-3. **`src/components/operaciones/DesempenoOperadores.tsx` (290 líneas)** — Componente más pesado de UI. Probable mezcla de cálculos + render. Candidato a extraer lógica a `useDesempenoChartData` (que ya existe — verificar si se aprovecha al máximo).
-
-4. **`src/components/cotizacion/conceptos/ConceptoRows.tsx` (238 líneas)** — Muchas filas + handlers inline. Candidato a partir en sub-componentes (`ConceptoRowVenta`, `ConceptoRowCosto`).
-
-5. **`src/components/cliente/NuevoClienteDialog.tsx` (228 líneas)** — Wizard en un solo archivo. Si crece, partir steps en archivos separados como ya se hizo con embarque.
-
-### 🟢 Observaciones (no requieren acción)
-
-6. **22 hooks `useCotizacion*` + `useEmbarque*`** — Documentado como deuda aceptada en `ARCHITECTURE.md`. Mantener.
-7. **`src/integrations/supabase/types.ts` (1,816 líneas)** — Auto-generado, no tocar. ✅
-8. **Pages 200–290 líneas** (`ClienteDetalle`, `Reportes`, `PortalDashboard`, `Cotizaciones`, `Embarques`) — En el umbral aceptable. No urgente.
-
-## Plan de remediación ordenado
-
-| # | Acción | Riesgo | Esfuerzo | Prioridad |
-|---|--------|--------|----------|-----------|
-| 1 | Verificar que `DesempenoOperadores.tsx` delega cálculos a `useDesempenoChartData` y extraer lo que quede inline | Bajo | S | Media |
-| 2 | Partir `ConceptoRows.tsx` en sub-componentes por tipo de fila | Bajo | S | Media |
-| 3 | Añadir guardrails de tamaño (ESLint `max-lines`) para evitar regresiones futuras | Nulo | XS | Baja |
-| 4 | (Cuando llegue v9.x) mover entradas v8.x de `changelogData.ts` a `legacy.ts` | Nulo | XS | Diferida |
-| 5 | (Si crece) partir `NuevoClienteDialog.tsx` en steps | Bajo | M | Diferida |
-
-## Recomendación
-
-La arquitectura está **en muy buen estado**. No hay nada urgente. Sugiero ejecutar **#1 y #2** (refactors menores de UI) más **#3** (lint guardrail preventivo) en una sola iteración — todo bajo riesgo, ~30 min de trabajo. El resto es deuda diferida razonable.
-
+## Archivos no tocados
+- `src/integrations/supabase/types.ts` — auto-generado, intocable
+- 6 hooks restantes que no son cotización/embarque (`useBitacora`, `useClientes`, `useDashboardData`, etc.) se quedan en raíz
