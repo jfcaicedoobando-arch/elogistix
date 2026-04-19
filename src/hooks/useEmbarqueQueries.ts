@@ -1,4 +1,4 @@
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import type { Tables, TablesInsert } from '@/integrations/supabase/types';
 import { queryKeys } from '@/lib/queryKeys';
@@ -117,6 +117,26 @@ export function useEmbarque(id: string | undefined) {
     enabled: !!id,
     staleTime: 30_000,
   });
+}
+
+/** Hook para prefetch en hover (lista → detalle) */
+export function usePrefetchEmbarque() {
+  const queryClient = useQueryClient();
+  return (id: string) => {
+    queryClient.prefetchQuery({
+      queryKey: queryKeys.embarques.detail(id),
+      queryFn: async () => {
+        const { data, error } = await supabase
+          .from('embarques')
+          .select(EMBARQUE_DETAIL_COLUMNS)
+          .eq('id', id)
+          .single();
+        if (error) throw error;
+        return data as EmbarqueRow;
+      },
+      staleTime: 30_000,
+    });
+  };
 }
 
 export function useEmbarqueConceptosVenta(embarqueId: string | undefined) {

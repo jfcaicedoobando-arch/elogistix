@@ -1,8 +1,5 @@
-import { useState, useMemo, useCallback } from "react";
+import { useState, useMemo } from "react";
 import { Plus, Trash2, MoreHorizontal, Pencil, Download, TrendingUp, CheckCircle, XCircle, BarChart3, Copy } from "lucide-react";
-import { useQueryClient } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
-import { queryKeys } from "@/lib/queryKeys";
 import { exportToCsv } from "@/generators/exportCsv";
 import { KpiCard } from "@/components/operaciones/KpiCard";
 import { Card, CardContent } from "@/components/ui/card";
@@ -13,6 +10,7 @@ import {
 } from "@/components/ui/select";
 import { useNavigate } from "react-router-dom";
 import { useCotizaciones, useDeleteCotizacion } from "@/hooks/useCotizaciones";
+import { usePrefetchCotizacion } from "@/hooks/useCotizacionQueries";
 import { useDuplicarCotizacion } from "@/hooks/useDuplicarCotizacion";
 import { getErrorMessage } from "@/lib/errorUtils";
 import { useClientesForSelect } from "@/hooks/useClientes";
