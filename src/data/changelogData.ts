@@ -11,6 +11,13 @@ export interface ChangelogEntry {
 /** Entradas recientes (v8.x). Las anteriores se cargan dinámicamente. */
 export const recentChangelog: ChangelogEntry[] = [
   {
+    version: "8.34.0",
+    date: "2026-04-19",
+    type: "minor",
+    title: "Continuación auditoría — types/, constants/, tests services y shadcn read-only",
+    description: "Segunda tanda de la auditoría de arquitectura: (1) Reorganización de src/data/: los archivos *Types.ts se movieron a src/types/ y los *Constants.ts a src/constants/. Los archivos originales se conservan como re-exports marcados @deprecated para no romper imports existentes (cero cambios en ~35 archivos consumidores). (2) Cobertura de tests: nuevos suites unitarios para services/trackingService (4 tests) y services/csfService (3 tests) con mocks de fetch y supabase.auth — los services ahora tienen pruebas. (3) src/components/ui/README.md documenta que los componentes shadcn son read-only y el procedimiento para wrappers. Build verde, 139 tests pasando.",
+  },
+  {
     version: "8.33.0",
     date: "2026-04-19",
     type: "minor",
