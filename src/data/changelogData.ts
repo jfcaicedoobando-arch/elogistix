@@ -11,6 +11,13 @@ export interface ChangelogEntry {
 /** Entradas recientes (v8.x). Las anteriores se cargan dinámicamente. */
 export const recentChangelog: ChangelogEntry[] = [
   {
+    version: "8.38.0",
+    date: "2026-04-19",
+    type: "minor",
+    title: "Reorganización final de hooks + refactor preventivo de páginas",
+    description: "Reorganización del directorio src/hooks/: los 14 hooks de cotización se movieron a hooks/cotizacion/ y los 12 hooks de embarque a hooks/embarque/, dejando en raíz solo hooks transversales (auth, dashboard, clientes, etc.). Los barrels useCotizaciones.ts y useEmbarques.ts mantienen la API pública intacta — los ~40 consumidores externos siguen funcionando sin tocarse. Refactor preventivo de las dos pages que excedían el nuevo límite ESLint de 250 LOC: Reportes.tsx (276 → 105 LOC) ahora delega en ReportesFiltros, ReportesKpiCards, ReportesTopChart y ReportesTablaClientes; ClienteDetalle.tsx (291 → 230 LOC) extrae las 6 cards de resumen a ClienteSummaryCards. ARCHITECTURE.md documenta la nueva convención de hooks de dominio. 139/139 tests verdes.",
+  },
+  {
     version: "8.37.0",
     date: "2026-04-19",
     type: "patch",
