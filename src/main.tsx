@@ -3,6 +3,7 @@ import App from "./App.tsx";
 import "./index.css";
 import { AuthProvider } from "./contexts/AuthContext";
 import { OrganizationProvider } from "./contexts/OrganizationContext";
+import { ThemeProvider } from "./contexts/ThemeContext";
 
 const CHUNK_ERROR_RELOAD_KEY = "chunk-error-auto-reload";
 
@@ -22,9 +23,11 @@ window.addEventListener("load", () => {
 });
 
 createRoot(document.getElementById("root")!).render(
-  <AuthProvider>
-    <OrganizationProvider>
-      <App />
-    </OrganizationProvider>
-  </AuthProvider>
+  <ThemeProvider>
+    <AuthProvider>
+      <OrganizationProvider>
+        <App />
+      </OrganizationProvider>
+    </AuthProvider>
+  </ThemeProvider>
 );

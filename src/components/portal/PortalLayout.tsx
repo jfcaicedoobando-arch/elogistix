@@ -8,6 +8,7 @@ import { Separator } from "@/components/ui/separator";
 import librecargaLogo from "@/assets/librecarga-logo.png";
 import { usePortalClienteName, usePortalOrgName } from "@/hooks/usePortalData";
 import { useState, useMemo } from "react";
+import { ThemeToggle } from "@/components/ThemeToggle";
 
 const navItems = [
   { label: "Inicio", href: "/portal", icon: LayoutDashboard },
@@ -160,6 +161,7 @@ export default function PortalLayout() {
             <Avatar className="h-8 w-8">
               <AvatarFallback className="bg-accent/10 text-accent text-xs font-semibold">{initials}</AvatarFallback>
             </Avatar>
+            <ThemeToggle />
             <Button variant="ghost" size="sm" onClick={handleSignOut} className="hidden sm:flex">
               <LogOut className="h-4 w-4 mr-1" /> Salir
             </Button>
