@@ -16,7 +16,7 @@ import { CotizacionDetalleEmbarques, CotizacionDetalleAcciones } from "@/compone
 import { getEstadoColor } from "@/lib/uiMappings";
 import { formatDate, formatCurrency } from "@/lib/formatters";
 import { ArrowLeft, FileDown } from "lucide-react";
-import { useCotizacionDetalleState } from "@/hooks/useCotizacionDetalleState";
+import { useCotizacionDetalleState } from "@/hooks/cotizacion/useCotizacionDetalleState";
 
 // Lazy-loaded PDF generator (jsPDF + autotable are heavy; only load on demand)
 const handleExportarPdf = async (cotizacion: Parameters<typeof import("@/generators/cotizacionPdf").generarPdfCotizacion>[0], tasaIva: number) => {

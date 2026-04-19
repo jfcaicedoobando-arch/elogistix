@@ -1,7 +1,7 @@
 import { useCallback } from "react";
 import type { UseFormReturn } from "react-hook-form";
 import type { NavigateFunction } from "react-router-dom";
-import type { CostoCotizacion } from "@/hooks/useCotizacionCostos";
+import type { CostoCotizacion } from "@/hooks/cotizacion/useCotizacionCostos";
 import type { CreateCotizacionInput, CotizacionRow, ConceptoVentaCotizacion } from "@/hooks/useCotizaciones";
 import type { FilaCostoLocal } from "@/components/cotizacion/SeccionCostosInternosPLUnificado";
 import type { CotizacionFormValues } from "@/lib/mappers/cotizacionForm";

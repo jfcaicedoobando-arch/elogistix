@@ -13,8 +13,8 @@ import {
   useEmbarqueFacturas,
   calcularEstadoEmbarque,
 } from "@/hooks/useEmbarques";
-import { useEmbarqueFinancials } from "@/hooks/useEmbarqueFinancials";
-import { useEmbarqueDetalleActions, getSiguienteEstado } from "@/hooks/useEmbarqueDetalleActions";
+import { useEmbarqueFinancials } from "@/hooks/embarque/useEmbarqueFinancials";
+import { useEmbarqueDetalleActions, getSiguienteEstado } from "@/hooks/embarque/useEmbarqueDetalleActions";
 import { TabResumen } from "@/components/embarque/TabResumen";
 import { TabDocumentos } from "@/components/embarque/TabDocumentos";
 import { TabCostos } from "@/components/embarque/TabCostos";
@@ -23,7 +23,7 @@ import { TabNotas } from "@/components/embarque/TabNotas";
 import { TabTracking } from "@/components/embarque/TabTracking";
 import DialogDuplicarEmbarque from "@/components/embarque/DialogDuplicarEmbarque";
 import DialogEliminarEmbarque from "@/components/embarque/DialogEliminarEmbarque";
-import { useEmbarqueDetalleTracking } from "@/hooks/useEmbarqueDetalleTracking";
+import { useEmbarqueDetalleTracking } from "@/hooks/embarque/useEmbarqueDetalleTracking";
 import { EmbarqueDetalleHeader } from "@/components/embarque/EmbarqueDetalleHeader";
 
 export default function EmbarqueDetalle() {

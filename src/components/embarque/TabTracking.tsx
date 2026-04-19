@@ -6,7 +6,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { Plus, MapPin, Clock, User } from 'lucide-react';
-import { useEventosEmbarque, useCreateEventoEmbarque, TIPOS_EVENTO_TRACKING } from '@/hooks/useEventosEmbarque';
+import { useEventosEmbarque, useCreateEventoEmbarque, TIPOS_EVENTO_TRACKING } from '@/hooks/embarque/useEventosEmbarque';
 import { ICONO_EVENTO } from "@/constants/embarqueConstants";
 import { useAuth } from '@/contexts/AuthContext';
 import { usePermissions } from '@/hooks/usePermissions';

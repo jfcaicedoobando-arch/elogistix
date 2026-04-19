@@ -10,7 +10,7 @@ export type {
   DimensionAerea,
   CotizacionRow,
   CreateCotizacionInput,
-} from './useCotizacionTypes';
+} from './cotizacion/useCotizacionTypes';
 
 // Queries
 export {
@@ -19,7 +19,7 @@ export {
   usePrefetchCotizacion,
   useCotizacionesAceptadas,
   useEmbarquesVinculados,
-} from './useCotizacionQueries';
+} from './cotizacion/useCotizacionQueries';
 
 // Mutations
 export {
@@ -27,10 +27,10 @@ export {
   useUpdateCotizacion,
   useDeleteCotizacion,
   useUpdateEstadoCotizacion,
-} from './useCotizacionMutations';
+} from './cotizacion/useCotizacionMutations';
 
 // Conversions
 export {
   useConvertirProspectoACliente,
   useConvertirCotizacionAEmbarques,
-} from './useCotizacionConversions';
+} from './cotizacion/useCotizacionConversions';

@@ -9,6 +9,9 @@ src/
 ├── pages/          → Composición de UI por ruta. NO tocan Supabase ni lógica de dominio.
 ├── components/     → Componentes reutilizables y específicos de feature.
 ├── hooks/          → React Query + estado local + side effects (toasts, navegación).
+│   ├── cotizacion/     → Hooks específicos del dominio de cotizaciones.
+│   ├── embarque/       → Hooks específicos del dominio de embarques.
+│   └── *.ts            → Hooks transversales (auth, permisos, dashboard, clientes, etc.).
 ├── services/       → Acceso puro a datos (Supabase, edge functions, fetch). Sin React Query.
 ├── lib/            → Utilidades puras y reutilizables.
 │   ├── domain/         → Reglas de dominio (cálculos de estado, validaciones).
@@ -22,6 +25,8 @@ src/
 ├── generators/     → Generación de archivos (PDF, CSV).
 └── integrations/   → Clientes auto-generados (Supabase). NO editar.
 ```
+
+> **Convención de hooks de dominio**: los consumidores externos importan siempre desde los barrels `@/hooks/useCotizaciones` y `@/hooks/useEmbarques`. Los archivos individuales bajo `hooks/cotizacion/` y `hooks/embarque/` son detalle de implementación — solo se importan directamente cuando exponen una API que no pasa por el barrel (ej. `useCotizacionWizardForm`, `useEmbarqueDetalleActions`).
 
 ## Reglas
 

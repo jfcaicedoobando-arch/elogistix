@@ -8,7 +8,7 @@ import {
 import { Plus, Trash2, Ruler } from "lucide-react";
 import type { DimensionLCL } from "@/hooks/useCotizaciones";
 import SeccionMercanciaWrapper from "./SeccionMercanciaWrapper";
-import type { CotizacionFormValues } from "@/hooks/useCotizacionWizardForm";
+import type { CotizacionFormValues } from "@/hooks/cotizacion/useCotizacionWizardForm";
 
 interface Props {
   msdsFile: File | null;

@@ -1,5 +1,5 @@
 import type { ConceptoVentaCotizacion, DimensionLCL, DimensionAerea } from '@/hooks/useCotizaciones';
-import type { CotizacionFormValues } from '@/hooks/useCotizacionWizardForm';
+import type { CotizacionFormValues } from '@/hooks/cotizacion/useCotizacionWizardForm';
 
 /**
  * Construye el payload de datos generales (Paso 1) para crear/actualizar una cotización.

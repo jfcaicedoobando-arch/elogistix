@@ -17,9 +17,9 @@ import { DataTable } from "@/components/DataTable";
 import type { EmbarqueRow } from "@/hooks/useEmbarques";
 import DoubleConfirmDeleteDialog from "@/components/DoubleConfirmDeleteDialog";
 import DialogDuplicarEmbarque from "@/components/embarque/DialogDuplicarEmbarque";
-import { useEmbarquesListExtras } from "@/hooks/useEmbarquesListData";
+import { useEmbarquesListExtras } from "@/hooks/embarque/useEmbarquesListData";
 import EmbarquesFiltros from "@/components/embarque/EmbarquesFiltros";
-import { useEmbarquesPageState } from "@/hooks/useEmbarquesPageState";
+import { useEmbarquesPageState } from "@/hooks/embarque/useEmbarquesPageState";
 import { buildEmbarqueColumns } from "@/components/embarque/embarqueColumns";
 
 export default function Embarques() {

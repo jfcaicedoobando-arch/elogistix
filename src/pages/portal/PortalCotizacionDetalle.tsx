@@ -21,12 +21,12 @@ import { getErrorMessage } from "@/lib/errorUtils";
 import SeccionMercanciaCotizacionDetalle from "@/components/cotizacion/SeccionMercanciaCotizacionDetalle";
 import TablaConceptosGenerico from "@/components/cotizacion/TablaConceptosGenerico";
 import ResumenTotalesCotizacion from "@/components/cotizacion/ResumenTotalesCotizacion";
-import { usePortalCotizacionDetalle } from "@/hooks/usePortalCotizacionDetalle";
+import { usePortalCotizacionDetalle } from "@/hooks/cotizacion/usePortalCotizacionDetalle";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Textarea } from "@/components/ui/textarea";
 import { getEstadoColor } from "@/lib/uiMappings";
 import type { Tables } from "@/integrations/supabase/types";
-import { useResponderCotizacion } from "@/hooks/usePortalCotizacionMutations";
+import { useResponderCotizacion } from "@/hooks/cotizacion/usePortalCotizacionMutations";
 
 export default function PortalCotizacionDetalle() {
   const { id } = useParams<{ id: string }>();

@@ -1,6 +1,6 @@
 import { useFormContext } from "react-hook-form";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import type { EmbarqueFormValues } from "@/hooks/useEmbarqueForm";
+import type { EmbarqueFormValues } from "@/hooks/embarque/useEmbarqueForm";
 import type { CotizacionRow } from "@/hooks/useCotizaciones";
 import { useExpedientesCliente, type ExpedienteCliente } from "@/hooks/useEmbarques";
 import { BloqueClienteContactos } from "./secciones/BloqueClienteContactos";

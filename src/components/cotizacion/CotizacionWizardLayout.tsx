@@ -30,7 +30,7 @@ const WIZARD_STEPS = [
 ];
 
 interface CotizacionWizardLayoutProps {
-  w: ReturnType<typeof import("@/hooks/useCotizacionWizardForm").useCotizacionWizardForm>;
+  w: ReturnType<typeof import("@/hooks/cotizacion/useCotizacionWizardForm").useCotizacionWizardForm>;
   clientes: { id: string; nombre: string }[];
   title: string;
   subtitle?: string;

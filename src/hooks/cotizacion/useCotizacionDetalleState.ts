@@ -8,7 +8,7 @@ import {
   calcularTotalesConceptos,
   getNombreDestinatario,
 } from "@/lib/parsers/cotizacionDetalle";
-import { useCotizacionDetalleHandlers } from "@/hooks/useCotizacionDetalleHandlers";
+import { useCotizacionDetalleHandlers } from "@/hooks/cotizacion/useCotizacionDetalleHandlers";
 
 /**
  * Orquestador del detalle de cotización: combina queries (cotización + embarques vinculados),

@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { ArrowLeft, Pencil, Building2, Loader2, Ship, FileText, Users, DollarSign, TrendingUp, AlertCircle } from "lucide-react";
+import { ArrowLeft, Pencil, Building2, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
@@ -12,7 +12,6 @@ import { usePermissions } from "@/hooks/usePermissions";
 import { useRegistrarActividad } from "@/hooks/useBitacora";
 import { getErrorMessage } from "@/lib/errorUtils";
 
-import { formatCurrency } from "@/lib/formatters";
 import TabPortalCliente from "@/components/cliente/TabPortalCliente";
 import { DataTable } from "@/components/DataTable";
 import { embarqueColumns, cotizacionColumns } from "@/components/cliente/clienteColumns";
@@ -23,6 +22,7 @@ import DialogContacto from "@/components/cliente/DialogContacto";
 import DialogEditarCliente from "@/components/cliente/DialogEditarCliente";
 import TablaContactos from "@/components/cliente/TablaContactos";
 import DoubleConfirmDeleteDialog from "@/components/DoubleConfirmDeleteDialog";
+import ClienteSummaryCards from "@/components/cliente/ClienteSummaryCards";
 
 export default function ClienteDetalle() {
   const { id } = useParams<{ id: string }>();
@@ -124,75 +124,14 @@ export default function ClienteDetalle() {
         )}
       </div>
 
-      {/* Summary cards */}
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-        <Card>
-          <CardContent className="p-4 flex items-center gap-3">
-            <div className="rounded-xl p-3 bg-blue-50 text-blue-600">
-              <Ship className="h-5 w-5" />
-            </div>
-            <div>
-              <p className="text-xs text-muted-foreground">Embarques</p>
-              <p className="text-xl font-bold">{embarquesCliente.length}</p>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4 flex items-center gap-3">
-            <div className="rounded-xl p-3 bg-violet-50 text-violet-600">
-              <FileText className="h-5 w-5" />
-            </div>
-            <div>
-              <p className="text-xs text-muted-foreground">Cotizaciones</p>
-              <p className="text-xl font-bold">{cotizacionesCliente.length}</p>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4 flex items-center gap-3">
-            <div className="rounded-xl p-3 bg-emerald-50 text-emerald-600">
-              <Users className="h-5 w-5" />
-            </div>
-            <div>
-              <p className="text-xs text-muted-foreground">Contactos</p>
-              <p className="text-xl font-bold">{contactos.length}</p>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4 flex items-center gap-3">
-            <div className="rounded-xl p-3 bg-cyan-50 text-cyan-600">
-              <DollarSign className="h-5 w-5" />
-            </div>
-            <div>
-              <p className="text-xs text-muted-foreground">Facturado</p>
-              <p className="text-lg font-bold">{formatCurrency(financials?.facturadoUSD ?? 0, 'USD')}</p>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4 flex items-center gap-3">
-            <div className="rounded-xl p-3 bg-amber-50 text-amber-600">
-              <AlertCircle className="h-5 w-5" />
-            </div>
-            <div>
-              <p className="text-xs text-muted-foreground">Pendiente</p>
-              <p className="text-lg font-bold">{formatCurrency(financials?.pendienteUSD ?? 0, 'USD')}</p>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4 flex items-center gap-3">
-            <div className="rounded-xl p-3 bg-green-50 text-green-600">
-              <TrendingUp className="h-5 w-5" />
-            </div>
-            <div>
-              <p className="text-xs text-muted-foreground">Profit</p>
-              <p className="text-lg font-bold">{formatCurrency(financials?.profitUSD ?? 0, 'USD')}</p>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+      <ClienteSummaryCards
+        embarques={embarquesCliente.length}
+        cotizaciones={cotizacionesCliente.length}
+        contactos={contactos.length}
+        facturadoUSD={financials?.facturadoUSD ?? 0}
+        pendienteUSD={financials?.pendienteUSD ?? 0}
+        profitUSD={financials?.profitUSD ?? 0}
+      />
 
       <Tabs defaultValue="informacion">
         <TabsList>

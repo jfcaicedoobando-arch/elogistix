@@ -9,7 +9,7 @@ import { useNavigate } from "react-router-dom";
 import { Link } from "lucide-react";
 import type { EmbarqueRow } from "@/hooks/useEmbarques";
 import { calcularEstadoEmbarque } from "@/lib/domain/embarque";
-import { useEmbarquesRelacionados } from "@/hooks/useEmbarquesRelacionados";
+import { useEmbarquesRelacionados } from "@/hooks/embarque/useEmbarquesRelacionados";
 
 interface Props {
   embarque: EmbarqueRow;

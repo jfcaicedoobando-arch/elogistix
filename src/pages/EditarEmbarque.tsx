@@ -15,7 +15,7 @@ import { useClientesForSelect, useContactosCliente } from "@/hooks/useClientes";
 import { useAuth } from "@/contexts/AuthContext";
 import { useRegistrarActividad } from "@/hooks/useBitacora";
 import { useConceptosForm } from "@/hooks/useConceptosForm";
-import { useEmbarqueForm } from "@/hooks/useEmbarqueForm";
+import { useEmbarqueForm } from "@/hooks/embarque/useEmbarqueForm";
 import { getErrorMessage } from "@/lib/errorUtils";
 import { EmbarqueWizardLayout } from "@/components/embarque/EmbarqueWizardLayout";
 import { StepDatosGenerales } from "@/components/embarque/StepDatosGenerales";

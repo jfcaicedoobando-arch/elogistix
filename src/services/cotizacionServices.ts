@@ -2,9 +2,9 @@
  * Funciones de guardado para cada paso del wizard de cotizaciones.
  * Extraídas de useCotizacionWizardForm para reducir complejidad del hook.
  */
-import type { CotizacionFormValues } from "@/hooks/useCotizacionWizardForm";
+import type { CotizacionFormValues } from "@/hooks/cotizacion/useCotizacionWizardForm";
 import type { CreateCotizacionInput } from "@/hooks/useCotizaciones";
-import type { CostoCotizacion } from "@/hooks/useCotizacionCostos";
+import type { CostoCotizacion } from "@/hooks/cotizacion/useCotizacionCostos";
 import type { FilaCostoLocal } from "@/components/cotizacion/SeccionCostosInternosPLUnificado";
 import { CONCEPTOS_CON_IVA_USD } from "@/constants/cotizacionConstants";
 import { calcularTotalConIVA } from "@/lib/financialUtils";
