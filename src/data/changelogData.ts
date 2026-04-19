@@ -11,6 +11,13 @@ export interface ChangelogEntry {
 /** Entradas recientes (v8.x). Las anteriores se cargan dinámicamente. */
 export const recentChangelog: ChangelogEntry[] = [
   {
+    version: "8.37.0",
+    date: "2026-04-19",
+    type: "patch",
+    title: "Refactor UI — modularización de ConceptoRows y DesempenoOperadores",
+    description: "Cierre suave de la auditoría: (1) ConceptoRows.tsx (238 LOC) dividido en archivos independientes UnidadMedidaSelect.tsx, ConceptoRowUSD.tsx y ConceptoRowMXN.tsx; el archivo original queda como barrel re-export para no romper consumidores. (2) DesempenoOperadores.tsx (290 LOC → 132 LOC) extrae OperadorCard.tsx, ClienteExpandible.tsx y desempenoVisuals.ts (constantes ESTADO_COLOR/ESTADO_ICON). (3) Guardrail ESLint reforzado: max-lines bajado de 300 → 250 LOC para detectar drift más temprano. 139 tests verdes.",
+  },
+  {
     version: "8.36.0",
     date: "2026-04-19",
     type: "patch",
