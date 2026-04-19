@@ -11,7 +11,7 @@ import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { CalendarIcon } from "lucide-react";
 import PortSelect from "@/components/PortSelect";
-import type { CotizacionFormValues } from "@/hooks/useCotizacionWizardForm";
+import type { CotizacionFormValues } from "@/hooks/cotizacion/useCotizacionWizardForm";
 
 export default function SeccionRutaCotizacion() {
   const { watch, setValue } = useFormContext<CotizacionFormValues>();

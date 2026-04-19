@@ -6,7 +6,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useTiposContenedor } from "@/hooks/useTiposContenedor";
 import PortSelect from "@/components/PortSelect";
 import NavieraSelect from "@/components/NavieraSelect";
-import type { EmbarqueFormValues } from "@/hooks/useEmbarqueForm";
+import type { EmbarqueFormValues } from "@/hooks/embarque/useEmbarqueForm";
 
 export function StepDatosRuta() {
   const { register, watch, setValue } = useFormContext<EmbarqueFormValues>();

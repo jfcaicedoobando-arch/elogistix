@@ -2,7 +2,7 @@ import { useState, useCallback } from "react";
 import { useForm } from "react-hook-form";
 import type { NavigateFunction } from "react-router-dom";
 import type { ConceptoVentaCotizacion, CotizacionRow, CreateCotizacionInput } from "@/hooks/useCotizaciones";
-import type { CostoCotizacion } from "@/hooks/useCotizacionCostos";
+import type { CostoCotizacion } from "@/hooks/cotizacion/useCotizacionCostos";
 import type { FilaCostoLocal } from "@/components/cotizacion/SeccionCostosInternosPLUnificado";
 import { buildPaso1Data as buildPaso1Mapper } from "@/lib/mappers/cotizacion";
 import {
@@ -12,9 +12,9 @@ import {
   type CotizacionInitialData,
   type CotizacionInitialCosto,
 } from "@/lib/mappers/cotizacionForm";
-import { useConceptosVentaCotizacion } from "@/hooks/useConceptosVentaCotizacion";
-import { useCotizacionPL } from "@/hooks/useCotizacionPL";
-import { useCotizacionWizardSteps } from "@/hooks/useCotizacionWizardSteps";
+import { useConceptosVentaCotizacion } from "@/hooks/cotizacion/useConceptosVentaCotizacion";
+import { useCotizacionPL } from "@/hooks/cotizacion/useCotizacionPL";
+import { useCotizacionWizardSteps } from "@/hooks/cotizacion/useCotizacionWizardSteps";
 
 // Re-exports para preservar la API pública existente
 export { COTIZACION_FORM_DEFAULTS } from "@/lib/mappers/cotizacionForm";

@@ -3,15 +3,15 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
 import { useClientesForSelect } from "@/hooks/useClientes";
 import { useCotizacion, useUpdateCotizacion, useCreateCotizacion } from "@/hooks/useCotizaciones";
-import { useCotizacionCostos, useUpsertCotizacionCostos } from "@/hooks/useCotizacionCostos";
+import { useCotizacionCostos, useUpsertCotizacionCostos } from "@/hooks/cotizacion/useCotizacionCostos";
 import { useRegistrarActividad } from "@/hooks/useBitacora";
 import { useAuth } from "@/contexts/AuthContext";
 import { usePermissions } from "@/hooks/usePermissions";
-import { useCotizacionWizardForm } from "@/hooks/useCotizacionWizardForm";
+import { useCotizacionWizardForm } from "@/hooks/cotizacion/useCotizacionWizardForm";
 import CotizacionWizardLayout from "@/components/cotizacion/CotizacionWizardLayout";
 import type { NavigateFunction } from "react-router-dom";
 import type { CotizacionRow } from "@/hooks/useCotizaciones";
-import type { CostoCotizacion } from "@/hooks/useCotizacionCostos";
+import type { CostoCotizacion } from "@/hooks/cotizacion/useCotizacionCostos";
 
 export default function EditarCotizacion() {
   const { id } = useParams<{ id: string }>();

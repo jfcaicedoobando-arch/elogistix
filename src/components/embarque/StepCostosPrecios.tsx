@@ -8,7 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { CATALOGO_CONCEPTOS } from "@/constants/embarqueConstants";
-import type { EmbarqueFormValues } from "@/hooks/useEmbarqueForm";
+import type { EmbarqueFormValues } from "@/hooks/embarque/useEmbarqueForm";
 import type { ConceptoVentaLocal as ConceptoVentaRow, ConceptoCostoLocal as ConceptoCostoRow } from "@/types/conceptoTypes";
 
 interface Proveedor {

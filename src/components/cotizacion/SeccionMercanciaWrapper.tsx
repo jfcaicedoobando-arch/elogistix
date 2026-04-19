@@ -10,7 +10,7 @@ import {
   Accordion, AccordionContent, AccordionItem, AccordionTrigger,
 } from "@/components/ui/accordion";
 import { Upload } from "lucide-react";
-import type { CotizacionFormValues } from "@/hooks/useCotizacionWizardForm";
+import type { CotizacionFormValues } from "@/hooks/cotizacion/useCotizacionWizardForm";
 
 export const TIPOS_CARGA = ['Carga General', 'Mercancía Peligrosa'];
 export const SECTORES = [

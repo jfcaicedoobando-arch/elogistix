@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/select";
 import { useNavigate } from "react-router-dom";
 import { useCotizaciones, useDeleteCotizacion, usePrefetchCotizacion } from "@/hooks/useCotizaciones";
-import { useDuplicarCotizacion } from "@/hooks/useDuplicarCotizacion";
+import { useDuplicarCotizacion } from "@/hooks/cotizacion/useDuplicarCotizacion";
 import { getErrorMessage } from "@/lib/errorUtils";
 import { useClientesForSelect } from "@/hooks/useClientes";
 import { usePermissions } from "@/hooks/usePermissions";

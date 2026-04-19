@@ -6,7 +6,7 @@ import { getErrorMessage } from "@/lib/errorUtils";
 import { usePermissions } from "@/hooks/usePermissions";
 import {
   useCotizacionCostos, useUpsertCotizacionCostos, type CostoCotizacion,
-} from "@/hooks/useCotizacionCostos";
+} from "@/hooks/cotizacion/useCotizacionCostos";
 import type { ConceptoVentaCotizacion } from "@/hooks/useCotizaciones";
 import ResumenPL from "./ResumenPL";
 import TablaCostosDetalle from "./TablaCostosDetalle";

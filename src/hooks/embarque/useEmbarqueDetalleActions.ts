@@ -1,6 +1,6 @@
 import type { EmbarqueRow } from "@/hooks/useEmbarques";
-import { useEmbarqueEstadoActions, getSiguienteEstado } from "@/hooks/useEmbarqueEstadoActions";
-import { useEmbarqueDocumentosActions } from "@/hooks/useEmbarqueDocumentosActions";
+import { useEmbarqueEstadoActions, getSiguienteEstado } from "@/hooks/embarque/useEmbarqueEstadoActions";
+import { useEmbarqueDocumentosActions } from "@/hooks/embarque/useEmbarqueDocumentosActions";
 
 // Re-export para preservar la API pública (EmbarqueDetalle.tsx importa desde aquí)
 export { getSiguienteEstado };
