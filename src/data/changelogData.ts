@@ -11,6 +11,13 @@ export interface ChangelogEntry {
 /** Entradas recientes (v8.x). Las anteriores se cargan dinámicamente. */
 export const recentChangelog: ChangelogEntry[] = [
   {
+    version: "8.33.0",
+    date: "2026-04-19",
+    type: "minor",
+    title: "Auditoría arquitectura — capa limpia + changelog lazy + ARCHITECTURE.md",
+    description: "Aplicados los items críticos de la auditoría: (1) Eliminadas las llamadas directas a supabase.from(...) en Cotizaciones.tsx y Embarques.tsx; ahora usan los nuevos hooks usePrefetchCotizacion / usePrefetchEmbarque. (2) TrackingPublico.tsx delega la llamada a la edge function al nuevo services/trackingService.ts, manteniendo la página libre de detalles de transporte. (3) changelogData.ts se partió en recentChangelog (v8.x, 400 líneas, eager) y changelog/legacy.ts (v0–v7.x, 1500 líneas, dynamic import bajo demanda). El chunk inicial de Changelog cayó de ~340kB a 34kB. (4) Nuevo ARCHITECTURE.md documenta el contrato pages/hooks/services. Sin cambios funcionales: 132 tests siguen verdes.",
+  },
+  {
     version: "8.32.0",
     date: "2026-04-18",
     type: "minor",
