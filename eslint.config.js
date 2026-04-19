@@ -22,7 +22,8 @@ export default tseslint.config(
       "react-refresh/only-export-components": ["warn", { allowConstantExport: true }],
       "@typescript-eslint/no-unused-vars": "off",
       // Architectural guardrails — prevent drift back into oversized files
-      "max-lines": ["warn", { max: 300, skipBlankLines: true, skipComments: true }],
+      // Hard cap at 300 LOC; soft warning at 250 to encourage early splitting.
+      "max-lines": ["warn", { max: 250, skipBlankLines: true, skipComments: true }],
       "max-lines-per-function": ["warn", { max: 150, skipBlankLines: true, skipComments: true, IIFEs: true }],
       "complexity": ["warn", { max: 15 }],
       "max-depth": ["warn", 4],
