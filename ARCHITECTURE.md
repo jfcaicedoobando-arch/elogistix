@@ -15,9 +15,9 @@ src/
 │   ├── mappers/        → Transformación entre formato DB ↔ UI.
 │   ├── parsers/        → Parsing de payloads (CSF, dashboard).
 │   └── *.ts            → formatters, errorUtils, queryKeys, etc.
-├── data/           → Datasets estáticos (changelog, seeds).
-├── constants/      → (futuro) Constantes UI/dominio.
-├── types/          → (futuro) Tipos compartidos entre módulos.
+├── data/           → Datasets estáticos (changelog, seeds, ports).
+├── constants/      → Constantes de dominio/UI (cotización, embarque, proveedor, wizard).
+├── types/          → Tipos compartidos entre módulos.
 ├── contexts/       → React Contexts (Auth, Organization).
 ├── generators/     → Generación de archivos (PDF, CSV).
 └── integrations/   → Clientes auto-generados (Supabase). NO editar.
@@ -68,3 +68,9 @@ Nunca poner secrets en cliente. Las edge functions usan service-role; la UI usa 
 ## Cuándo NO crear un service
 - El acceso es trivial (`.from('x').select(...)` directo) y vive en un solo hook.
 - Sería un wrapper 1:1 sin valor.
+
+## Deuda técnica aceptada (auditoría v8.36.0)
+
+- **Hooks Detalle fragmentados**: `useCotizacionDetalleState` + `useCotizacionDetalleHandlers` y `useEmbarqueDetalleActions` + `useEmbarqueEstadoActions` + `useEmbarqueDocumentosActions` mantienen su separación queries/mutations a propósito. Fusionarlos perjudicaría testabilidad sin reducir complejidad real.
+- **Naming bilingüe**: regla #4 cubre el patrón es/en. No se renombran archivos existentes para evitar ruido en historial.
+- **Re-exports `@/data/*`**: eliminados por completo en v8.36.0.
