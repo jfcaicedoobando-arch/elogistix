@@ -2,6 +2,7 @@ import { Outlet } from "react-router-dom";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AdminSidebar } from "./AdminSidebar";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
+import { ThemeToggle } from "@/components/ThemeToggle";
 
 export function AdminLayout() {
   return (
@@ -14,6 +15,9 @@ export function AdminLayout() {
             <h1 className="text-sm font-semibold tracking-wide text-muted-foreground uppercase">
               Panel de Administración
             </h1>
+            <div className="ml-auto">
+              <ThemeToggle />
+            </div>
           </header>
           <main className="flex-1 overflow-auto p-6">
             <ErrorBoundary>

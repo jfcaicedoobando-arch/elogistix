@@ -3,6 +3,7 @@ import { AppSidebar } from "@/components/AppSidebar";
 import { Outlet } from "react-router-dom";
 import { GlobalSearch } from "@/components/GlobalSearch";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
+import { ThemeToggle } from "@/components/ThemeToggle";
 
 export function Layout() {
   return (
@@ -15,8 +16,9 @@ export function Layout() {
             <h1 className="text-sm font-semibold tracking-wide text-muted-foreground uppercase">
               Plataforma de Operaciones
             </h1>
-            <div className="ml-auto">
+            <div className="ml-auto flex items-center gap-2">
               <GlobalSearch />
+              <ThemeToggle />
             </div>
           </header>
           <main className="flex-1 overflow-auto p-6">

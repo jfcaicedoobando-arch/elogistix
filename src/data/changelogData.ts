@@ -11,6 +11,13 @@ export interface ChangelogEntry {
 /** Entradas recientes (v8.x). Las anteriores se cargan dinámicamente. */
 export const recentChangelog: ChangelogEntry[] = [
   {
+    version: "8.40.0",
+    date: "2026-04-19",
+    type: "minor",
+    title: "Modo oscuro con toggle en el header",
+    description: "Nuevo ThemeProvider que gestiona el tema (claro/oscuro) y lo persiste en localStorage bajo la clave 'librecarga-theme'. En la primera visita se respeta la preferencia del sistema operativo (prefers-color-scheme). Se añade un botón de toggle (sol/luna) en los tres headers principales: Layout interno, AdminLayout (panel de Super Admin) y PortalLayout (portal de cliente). La paleta dark se recalibró sobre los tokens HSL existentes para mejorar contraste y legibilidad: fondos azul-marino corporativos en lugar de negro puro, sidebar ligeramente más oscuro que el fondo principal, primary invertido al azul eléctrico de marca para mayor presencia, y tokens semánticos de estado (Llegada, En Proceso, Cerrado) ajustados para mantener jerarquía visual sobre fondo oscuro. Sin migración ni cambios de schema.",
+  },
+  {
     version: "8.39.0",
     date: "2026-04-19",
     type: "minor",
