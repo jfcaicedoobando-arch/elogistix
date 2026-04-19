@@ -1,8 +1,13 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useCallback } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { changelog, type ChangeType } from "@/data/changelogData";
+import {
+  recentChangelog,
+  loadLegacyChangelog,
+  type ChangeType,
+  type ChangelogEntry,
+} from "@/data/changelogData";
 
 const typeConfig: Record<ChangeType, { label: string; className: string }> = {
   major: { label: "Major", className: "bg-destructive text-destructive-foreground" },
@@ -14,12 +19,42 @@ const PAGE_SIZE = 20;
 
 export default function Changelog() {
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
+  const [legacy, setLegacy] = useState<ChangelogEntry[] | null>(null);
+  const [loadingLegacy, setLoadingLegacy] = useState(false);
+
+  const allEntries = useMemo(
+    () => (legacy ? [...recentChangelog, ...legacy] : recentChangelog),
+    [legacy],
+  );
 
   const visibleEntries = useMemo(
-    () => changelog.slice(0, visibleCount),
-    [visibleCount],
+    () => allEntries.slice(0, visibleCount),
+    [allEntries, visibleCount],
   );
-  const hasMore = visibleCount < changelog.length;
+
+  const handleLoadMore = useCallback(async () => {
+    // Si todavía hay items recientes sin mostrar, solo aumenta el contador.
+    if (visibleCount < recentChangelog.length) {
+      setVisibleCount((c) => c + PAGE_SIZE);
+      return;
+    }
+    // Si ya mostramos todo el reciente y aún no cargamos legacy, hacerlo.
+    if (!legacy && !loadingLegacy) {
+      setLoadingLegacy(true);
+      const data = await loadLegacyChangelog();
+      setLegacy(data);
+      setLoadingLegacy(false);
+      setVisibleCount((c) => c + PAGE_SIZE);
+      return;
+    }
+    setVisibleCount((c) => c + PAGE_SIZE);
+  }, [visibleCount, legacy, loadingLegacy]);
+
+  const totalKnown = legacy ? allEntries.length : recentChangelog.length;
+  const hasMore = visibleCount < totalKnown || !legacy;
+  const remaining = legacy
+    ? Math.max(0, allEntries.length - visibleCount)
+    : null;
 
   return (
     <div className="max-w-3xl mx-auto space-y-6">
@@ -56,9 +91,14 @@ export default function Changelog() {
         <div className="flex justify-center pt-2">
           <Button
             variant="outline"
-            onClick={() => setVisibleCount((c) => c + PAGE_SIZE)}
+            onClick={handleLoadMore}
+            disabled={loadingLegacy}
           >
-            Ver más ({changelog.length - visibleCount} restantes)
+            {loadingLegacy
+              ? "Cargando histórico…"
+              : remaining !== null
+              ? `Ver más (${remaining} restantes)`
+              : "Ver más"}
           </Button>
         </div>
       )}

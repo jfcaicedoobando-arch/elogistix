@@ -62,6 +62,26 @@ export function useCotizacion(id: string | undefined) {
   });
 }
 
+/** Hook para prefetch en hover (lista → detalle) */
+export function usePrefetchCotizacion() {
+  const queryClient = useQueryClient();
+  return (id: string) => {
+    queryClient.prefetchQuery({
+      queryKey: queryKeys.cotizaciones.detail(id),
+      queryFn: async () => {
+        const { data, error } = await supabase
+          .from('cotizaciones')
+          .select('*')
+          .eq('id', id)
+          .single();
+        if (error) throw error;
+        return data as unknown as CotizacionRow;
+      },
+      staleTime: 30_000,
+    });
+  };
+}
+
 /** Embarques vinculados a una cotización */
 export function useEmbarquesVinculados(cotizacionId: string | undefined) {
   return useQuery({
