@@ -46,8 +46,8 @@ describe("sanitizeStorageKey", () => {
 });
 
 describe("sanitizeFileName", () => {
-  it("preserva la extensión sanitizando el nombre base", () => {
-    expect(sanitizeFileName("172-04513806_提单.pdf")).toBe("172-04513806_.pdf");
+  it("preserva la extensión sanitizando el nombre base (CJK colapsado)", () => {
+    expect(sanitizeFileName("172-04513806_提单.pdf")).toBe("172-04513806.pdf");
   });
 
   it("respeta extensión en mayúsculas", () => {
@@ -89,7 +89,7 @@ describe("buildEmbarqueDocPath", () => {
       "172-04513806_提单.pdf",
     );
     expect(path).toMatch(
-      /^embarques\/ELIMP00180\/Air_Waybill_AWB\/\d+_172-04513806_\.pdf$/,
+      /^embarques\/ELIMP00180\/Air_Waybill_AWB\/\d+_172-04513806\.pdf$/,
     );
   });
 
