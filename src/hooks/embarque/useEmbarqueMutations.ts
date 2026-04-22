@@ -181,7 +181,8 @@ export function useUploadDocumentoEmbarque() {
   return useMutation({
     mutationFn: async ({ embarqueId, docId, file }: { embarqueId: string; docId: string; file: File }) => {
       const { uploadFile } = await import('@/services/storage');
-      const path = `embarques/${embarqueId}/${docId}/${file.name}`;
+      const { sanitizeFileName, sanitizeStorageKey } = await import('@/lib/storageUtils');
+      const path = `embarques/${sanitizeStorageKey(embarqueId)}/${sanitizeStorageKey(docId)}/${sanitizeFileName(file.name)}`;
       await uploadFile(path, file);
       const { error } = await supabase
         .from('documentos_embarque')

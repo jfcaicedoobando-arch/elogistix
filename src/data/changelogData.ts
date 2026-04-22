@@ -11,6 +11,13 @@ export interface ChangelogEntry {
 /** Entradas recientes (v8.x). Las anteriores se cargan dinámicamente. */
 export const recentChangelog: ChangelogEntry[] = [
   {
+    version: "8.40.1",
+    date: "2026-04-22",
+    type: "patch",
+    title: "Fix: Sanitización de nombres de archivo en Storage",
+    description: "Corrige el error 'Invalid key' que aparecía al subir documentos a un embarque cuando el nombre del archivo, del documento o del expediente contenía caracteres no permitidos por Supabase Storage (acentos, espacios, paréntesis, ideogramas CJK, símbolos). Nueva utilidad src/lib/storageUtils.ts (sanitizeStorageKey, sanitizeFileName, buildEmbarqueDocPath) que normaliza Unicode, elimina diacríticos, reemplaza caracteres no-ASCII por '_', colapsa repeticiones, preserva la extensión y limita la longitud por segmento. Aplicada en los 3 puntos de upload de embarques: creación inicial (embarqueServices), carga posterior por documento (useUploadDocumentoEmbarque) y MSDS (useEmbarqueForm). Mensaje de error mejorado en useEmbarqueDocumentosActions: si Supabase devuelve 'Invalid key' se muestra una guía clara al usuario para renombrar el archivo. Cobertura con 17 nuevos tests unitarios.",
+  },
+  {
     version: "8.40.0",
     date: "2026-04-19",
     type: "minor",
