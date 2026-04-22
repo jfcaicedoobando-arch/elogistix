@@ -1,5 +1,6 @@
 import { supabase } from '@/integrations/supabase/client';
 import { uploadFile } from '@/services/storage';
+import { buildEmbarqueDocPath } from '@/lib/storageUtils';
 
 /**
  * Resuelve o genera un número de expediente para un nuevo embarque.
@@ -42,7 +43,7 @@ export async function subirDocumentosEmbarque(
   const tareas = documentosChecklist.map(async (doc) => {
     const file = archivos[doc.nombre];
     if (file) {
-      const ruta = `embarques/${expediente}/${doc.nombre}/${Date.now()}_${file.name}`;
+      const ruta = buildEmbarqueDocPath(expediente, doc.nombre, file.name);
       await uploadFile(ruta, file);
       return { nombre: doc.nombre, archivo: ruta };
     }
