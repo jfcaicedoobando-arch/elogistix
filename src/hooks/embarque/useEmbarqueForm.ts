@@ -48,7 +48,8 @@ export function useEmbarqueForm() {
   const handleMsdsUpload = async (archivo: File) => {
     methods.setValue("subiendoMsds", true);
     try {
-      const ruta = `embarques/msds/${Date.now()}_${archivo.name}`;
+      const { sanitizeFileName } = await import("@/lib/storageUtils");
+      const ruta = `embarques/msds/${Date.now()}_${sanitizeFileName(archivo.name)}`;
       await uploadFile(ruta, archivo);
       methods.setValue("msdsArchivo", ruta);
     } catch {

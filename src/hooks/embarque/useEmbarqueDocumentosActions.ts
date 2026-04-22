@@ -33,7 +33,15 @@ export function useEmbarqueDocumentosActions(embarque: EmbarqueRow | undefined, 
       });
       toast({ title: "Archivo subido correctamente" });
     } catch (err: unknown) {
-      toast({ title: "Error al subir archivo", description: getErrorMessage(err), variant: "destructive" });
+      const raw = getErrorMessage(err);
+      const isInvalidKey = /invalid key/i.test(raw);
+      toast({
+        title: "Error al subir archivo",
+        description: isInvalidKey
+          ? "El nombre del archivo contiene caracteres no permitidos. Renombra el archivo (sin acentos, espacios ni caracteres especiales) y vuelve a intentar."
+          : raw,
+        variant: "destructive",
+      });
     }
   };
 
