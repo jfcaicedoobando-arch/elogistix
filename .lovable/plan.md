@@ -1,69 +1,77 @@
 
-El usuario pide implementar el flujo "Crear embarque desde cotización" con:
-1. Botón en `CotizacionDetalle` que abra el wizard de embarques pre-llenado.
-2. Pre-rellenar: cliente, ruta, mercancía y conceptos (venta y costo).
-3. Marcar la cotización como `Convertida` (o estado equivalente) y enlazarla al embarque vía `cotizacion_id`.
+# Fix: Sanitización de paths en Supabase Storage
 
-## Investigación
+## Problema
+El upload de documentos de embarque falla con `Invalid key` cuando el nombre del archivo o del documento contiene caracteres no permitidos por Supabase Storage (CJK, espacios, paréntesis, acentos, etc.).
 
-Ya existe infraestructura clave:
-- `useEmbarqueForm` tiene `vincularCotizacion(cot)` / `desvincularCotizacion()` — usados en `NuevoEmbarque.tsx`.
-- `useConvertirCotizacionAEmbarques` (en `useCotizacionConversions.ts`) — hace el split por contenedor desde detalle de cotización; ya marca la cotización como `Embarcada` y crea conceptos. Útil pero NO abre el wizard, lo hace en background.
-- `NuevoEmbarque.tsx` ya soporta `cotizacionVinculada` vía estado y registra el vínculo (`cotizacion_id`) y cambia estado a `Embarcada`.
-- `useCotizacionesAceptadas()` ya alimenta el selector dentro del wizard.
-- Estado `Embarcada` ya existe en el enum `estado_cotizacion` (visto en `useCotizacionConversions`).
+Path actual generado:
+```
+embarques/ELIMP00180/Air Waybill (AWB)/1776874875004_提单 172-04513806.pdf
+                     ^^^^^^^^^^^^^^^^^                  ^^^^^^
+                     espacios + paréntesis              chinos
+```
 
-El estado pedido es "Convertida". Verificar enum existente: el código actual usa `'Embarcada'`. Para no crear migración, usaré `'Embarcada'` que es el valor canónico ya implementado y semánticamente equivalente.
+Supabase Storage solo acepta keys con caracteres ASCII seguros.
 
-## Diseño
+## Solución
 
-**Flujo elegido**: Navegación desde detalle de cotización al wizard de embarque con la cotización pre-vinculada vía `location.state` (no query param para no exponer IDs ni romper deep-links).
+### 1. Crear utilidad de sanitización: `src/lib/storageUtils.ts` (nuevo)
+Función `sanitizeStorageKey(value)` que:
+- Normaliza Unicode (NFD) y elimina diacríticos (acentos)
+- Reemplaza caracteres no-ASCII (chinos, árabes, etc.) por `_`
+- Reemplaza espacios y caracteres no permitidos `[^A-Za-z0-9._-]` por `_`
+- Colapsa `_` repetidos
+- Recorta `_` al inicio/final
+- Preserva la extensión del archivo
+- Limita longitud a 80 caracteres por segmento
 
-### Cambios
+Función `buildEmbarqueDocPath(expediente, docNombre, fileName)` que arma el path final ya sanitizado:
+```
+embarques/{expediente_sano}/{doc_sano}/{timestamp}_{file_sano}.{ext}
+```
 
-**1. `CotizacionDetalle.tsx`**
-- Añadir botón "Crear embarque" en el header de acciones, visible solo si:
-  - `canEdit === true`
-  - `cotizacion.estado === 'Aceptada'` (regla de negocio: solo aceptadas se convierten)
-  - `embarquesVinculados.length === 0` (evitar duplicados; si ya hay embarques, mostrar botón secundario "Crear otro embarque")
-- Al click: `navigate('/embarques/nuevo', { state: { cotizacionPrevinculada: cotizacion } })`.
+### 2. Aplicar en los 3 puntos de upload
+- `src/services/embarqueServices.ts:45` (creación de embarque)
+- `src/hooks/embarque/useEmbarqueMutations.ts` `useUploadDocumentoEmbarque` (carga posterior)
+- Revisar `src/components/cliente/...` por si los documentos de onboarding del cliente sufren lo mismo y aplicar la misma utilidad ahí.
 
-**2. `NuevoEmbarque.tsx`**
-- Leer `location.state?.cotizacionPrevinculada` con `useLocation()`.
-- En `useEffect` inicial (una sola vez): si existe, llamar `handleVincularCotizacion(cot)` automáticamente.
-- Mostrar un toast informativo "Datos pre-rellenados desde cotización {folio}".
-- Limpiar `location.state` tras consumirlo (`window.history.replaceState`) para que un refresh no repita.
+### 3. Tests unitarios: `src/lib/__tests__/storageUtils.test.ts`
+Casos cubiertos:
+- `Air Waybill (AWB)` → `Air_Waybill_AWB`
+- `172-04513806_提单.pdf` → `172-04513806_.pdf` (extensión preservada)
+- `Constancia Situación Fiscal.pdf` → `Constancia_Situacion_Fiscal.pdf`
+- `documento  con   espacios.PDF` → `documento_con_espacios.PDF`
+- `archivo!@#$%^&.docx` → `archivo_.docx`
+- Nombres muy largos → truncados a 80 chars conservando extensión
+- Extensiones múltiples (`.tar.gz`) → solo última extensión
 
-**3. `useEmbarqueForm.ts` — verificar `vincularCotizacion`**
-- Confirmar que ya pre-llena: cliente, modo, tipo, incoterm, descripción mercancía, peso, volumen, piezas, ruta (origen/destino), tipo_carga, tipo_contenedor, operador.
-- Si falta algún campo (ej. `num_contenedores`, conceptos), extender el método para que también:
-  - Cargue conceptos de venta desde `cotizacion.conceptos_venta` (jsonb) → setea en `useConceptosForm`.
-  - Cargue conceptos de costo desde la tabla `cotizacion_costos` (query async).
+### 4. Toast más claro
+En `useEmbarqueDocumentosActions.ts` el catch ya usa `getErrorMessage(err)`. Mejorar para que cuando detecte `Invalid key` muestre: "El nombre del archivo contiene caracteres no permitidos. Renombra el archivo y vuelve a intentar." (defensa en profundidad por si algún día el sanitizador falla).
 
-**4. `useConceptosForm.ts`**
-- Exponer setters `setConceptosVenta(items)` y `setConceptosCosto(items)` para hidratar desde cotización (si no existen ya).
+### 5. Changelog
+Agregar entrada patch en `src/pages/Changelog.tsx`:
+```
+v8.41.1 - Fix: Sanitización de nombres de archivo
+- Corrige error "Invalid key" al subir documentos con caracteres especiales (CJK, acentos, paréntesis, espacios).
+- Aplica sanitización automática a paths de Storage en embarques y onboarding de clientes.
+```
 
-**5. Pre-llenado de conceptos (lógica de hidratación)**
-- En `NuevoEmbarque.tsx` tras vincular: query `cotizacion_costos` por `cotizacion_id` → mapear a estructura de `conceptosCosto` (concepto, monto=costo_unitario, moneda, proveedor).
-- Mapear `cotizacion.conceptos_venta` (jsonb) → estructura de `conceptosVenta` (descripción, cantidad, precio_unitario, moneda).
+## Archivos afectados
+| Archivo | Cambio |
+|---|---|
+| `src/lib/storageUtils.ts` | Nuevo: sanitización |
+| `src/lib/__tests__/storageUtils.test.ts` | Nuevo: tests |
+| `src/services/embarqueServices.ts` | Usar `buildEmbarqueDocPath` |
+| `src/hooks/embarque/useEmbarqueMutations.ts` | Usar `buildEmbarqueDocPath` en `useUploadDocumentoEmbarque` |
+| `src/hooks/embarque/useEmbarqueDocumentosActions.ts` | Mejorar mensaje de error |
+| Documentos de cliente (onboarding) | Aplicar misma sanitización si construyen paths similares |
+| `src/pages/Changelog.tsx` | Entrada v8.41.1 |
 
-**6. Marcar cotización como convertida**
-- Ya ocurre en `handleFinish` de `NuevoEmbarque.tsx`: `updateEstadoCotizacion.mutateAsync({ id, estado: 'Embarcada' })`. Validar que se ejecuta y registra bitácora.
+## Riesgos
+- **Bajo**. Sanitizar solo afecta archivos nuevos. Archivos ya subidos con paths válidos no se tocan.
+- Dos archivos con nombres distintos podrían colapsar al mismo path sanitizado (ej. `Factura.pdf` y `Factúra.pdf`), pero el prefijo `Date.now()` evita colisiones.
 
-**7. Changelog v8.39.0**
-- Añadir entrada en `src/data/changelogData.ts`.
-
-### Archivos a editar
-1. `src/pages/CotizacionDetalle.tsx` — botón "Crear embarque"
-2. `src/pages/NuevoEmbarque.tsx` — leer `location.state`, hidratar conceptos
-3. `src/hooks/embarque/useEmbarqueForm.ts` — verificar/extender `vincularCotizacion`
-4. `src/hooks/useConceptosForm.ts` — exponer setters si faltan
-5. `src/data/changelogData.ts` — entrada v8.39.0
-
-### Riesgos
-- Bajo. El botón es aditivo, el wizard ya soporta vinculación manual.
-- Posible duplicación si el usuario abandona el wizard tras vincular: la cotización no cambia de estado hasta `handleFinish`, así que es seguro.
-
-### Validación post-implementación
-- Test manual: abrir cotización Aceptada → botón visible → click → wizard abre con datos → completar → embarque creado con `cotizacion_id` → cotización pasa a `Embarcada`.
-- Correr `npm test` para asegurar 139/139.
+## Validación post-fix
+- Subir manualmente un archivo con nombre chino → debe funcionar.
+- Subir a un documento llamado `Air Waybill (AWB)` → debe funcionar.
+- Correr `npm test` → 139+ tests verdes (los nuevos suman).
