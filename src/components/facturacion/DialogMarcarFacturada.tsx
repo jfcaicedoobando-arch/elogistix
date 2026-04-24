@@ -3,10 +3,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Loader2, Paperclip, X, FileText, FileCode2, Sparkles, AlertTriangle } from "lucide-react";
+import { Loader2, Paperclip, X, FileText, FileCode2 } from "lucide-react";
 import { useMarcarProformaFacturada, type ProformaRow } from "@/hooks/embarque/useProformas";
-import { extraerFolioDesdePdf } from "@/lib/pdfFolioExtractor";
-import { toast } from "sonner";
 
 interface Props {
   open: boolean;
@@ -19,9 +17,6 @@ export function DialogMarcarFacturada({ open, onOpenChange, proforma }: Props) {
   const [fecha, setFecha] = useState(new Date().toISOString().slice(0, 10));
   const [pdfFile, setPdfFile] = useState<File | null>(null);
   const [xmlFile, setXmlFile] = useState<File | null>(null);
-  const [extrayendoFolio, setExtrayendoFolio] = useState(false);
-  const [folioAutoDetectado, setFolioAutoDetectado] = useState(false);
-  const [errorExtraccion, setErrorExtraccion] = useState(false);
   const pdfInputRef = useRef<HTMLInputElement>(null);
   const xmlInputRef = useRef<HTMLInputElement>(null);
   const marcar = useMarcarProformaFacturada();
@@ -32,36 +27,8 @@ export function DialogMarcarFacturada({ open, onOpenChange, proforma }: Props) {
       setFecha(new Date().toISOString().slice(0, 10));
       setPdfFile(null);
       setXmlFile(null);
-      setExtrayendoFolio(false);
-      setFolioAutoDetectado(false);
-      setErrorExtraccion(false);
     }
   }, [open]);
-
-  const handlePdfSelected = async (file: File | null) => {
-    setPdfFile(file);
-    setErrorExtraccion(false);
-    setFolioAutoDetectado(false);
-    if (!file) return;
-
-    setExtrayendoFolio(true);
-    try {
-      const folioExtraido = await extraerFolioDesdePdf(file);
-      if (folioExtraido) {
-        setFolio(folioExtraido);
-        setFolioAutoDetectado(true);
-        toast.success(`Folio detectado: ${folioExtraido}`);
-      } else {
-        setErrorExtraccion(true);
-        toast.warning("No se pudo leer el folio automáticamente");
-      }
-    } catch {
-      setErrorExtraccion(true);
-      toast.warning("No se pudo leer el folio automáticamente");
-    } finally {
-      setExtrayendoFolio(false);
-    }
-  };
 
   const handleConfirm = async () => {
     if (!proforma || !folio.trim()) return;
@@ -82,8 +49,6 @@ export function DialogMarcarFacturada({ open, onOpenChange, proforma }: Props) {
 
   const clearPdf = () => {
     setPdfFile(null);
-    setFolioAutoDetectado(false);
-    setErrorExtraccion(false);
     if (pdfInputRef.current) pdfInputRef.current.value = "";
   };
   const clearXml = () => {
@@ -106,28 +71,10 @@ export function DialogMarcarFacturada({ open, onOpenChange, proforma }: Props) {
             <Input
               id="folio"
               value={folio}
-              onChange={(e) => {
-                setFolio(e.target.value);
-                setFolioAutoDetectado(false);
-              }}
+              onChange={(e) => setFolio(e.target.value)}
               placeholder="Ej. A-12345"
               autoFocus
             />
-            {extrayendoFolio && (
-              <p className="text-xs text-muted-foreground flex items-center gap-1.5">
-                <Loader2 className="h-3 w-3 animate-spin" /> Leyendo folio del PDF...
-              </p>
-            )}
-            {folioAutoDetectado && !extrayendoFolio && (
-              <p className="text-xs text-emerald-600 flex items-center gap-1.5">
-                <Sparkles className="h-3 w-3" /> Folio detectado automáticamente del PDF
-              </p>
-            )}
-            {errorExtraccion && !extrayendoFolio && (
-              <p className="text-xs text-amber-600 flex items-center gap-1.5">
-                <AlertTriangle className="h-3 w-3" /> No se pudo leer el folio automáticamente, ingrésalo manualmente
-              </p>
-            )}
           </div>
           <div className="space-y-2">
             <Label htmlFor="fecha">Fecha de facturación</Label>
@@ -161,8 +108,7 @@ export function DialogMarcarFacturada({ open, onOpenChange, proforma }: Props) {
                   ref={pdfInputRef}
                   type="file"
                   accept=".pdf,application/pdf"
-                  onChange={(e) => handlePdfSelected(e.target.files?.[0] ?? null)}
-                  disabled={extrayendoFolio}
+                  onChange={(e) => setPdfFile(e.target.files?.[0] ?? null)}
                 />
               )}
             </div>

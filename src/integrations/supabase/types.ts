@@ -1282,14 +1282,10 @@ export type Database = {
           bl_master: string | null
           cliente_id: string
           cliente_nombre: string
-          consolidada_en: string | null
           created_at: string
           created_by: string | null
           dias_credito: number | null
-          embarque_id: string | null
-          embarques_ids: string[] | null
-          es_consolidada: boolean
-          estado_aprobacion: string
+          embarque_id: string
           estado_proforma: string
           expediente: string
           factura_id: string | null
@@ -1313,14 +1309,10 @@ export type Database = {
           bl_master?: string | null
           cliente_id: string
           cliente_nombre: string
-          consolidada_en?: string | null
           created_at?: string
           created_by?: string | null
           dias_credito?: number | null
-          embarque_id?: string | null
-          embarques_ids?: string[] | null
-          es_consolidada?: boolean
-          estado_aprobacion?: string
+          embarque_id: string
           estado_proforma?: string
           expediente: string
           factura_id?: string | null
@@ -1344,14 +1336,10 @@ export type Database = {
           bl_master?: string | null
           cliente_id?: string
           cliente_nombre?: string
-          consolidada_en?: string | null
           created_at?: string
           created_by?: string | null
           dias_credito?: number | null
-          embarque_id?: string | null
-          embarques_ids?: string[] | null
-          es_consolidada?: boolean
-          estado_aprobacion?: string
+          embarque_id?: string
           estado_proforma?: string
           expediente?: string
           factura_id?: string | null
@@ -1377,13 +1365,6 @@ export type Database = {
             columns: ["cliente_id"]
             isOneToOne: false
             referencedRelation: "clientes"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "proformas_consolidada_en_fkey"
-            columns: ["consolidada_en"]
-            isOneToOne: false
-            referencedRelation: "proformas"
             referencedColumns: ["id"]
           },
           {

@@ -11,27 +11,6 @@ export interface ChangelogEntry {
 /** Entradas recientes (v8.x). Las anteriores se cargan dinámicamente. */
 export const recentChangelog: ChangelogEntry[] = [
   {
-    version: "8.50.0",
-    date: "2026-04-24",
-    type: "minor",
-    title: "Pre-Facturación: flujo de aprobación de proformas",
-    description: "Las proformas creadas desde el embarque ahora nacen en estado 'borrador' y deben ser aprobadas (o consolidadas y aprobadas) en Pre-Facturación → Expedientes antes de aparecer en el área de Proformas. La tab Expedientes muestra los expedientes con sus proformas en borrador y un botón contextual: 'Aprobar' cuando hay 1 proforma o 'Consolidar y Aprobar' cuando hay 2 o más, abriendo un diálogo con checkboxes, totales consolidados en tiempo real y campo de días de crédito. Al consolidar se crea una nueva proforma aprobada que absorbe los conceptos y marca las originales como 'consolidada' enlazándolas a la nueva. En el detalle del embarque (Tab Facturación) cada proforma muestra un badge de su estado de aprobación: Pendiente de aprobación (ámbar), Aprobada (verde) o Consolidada en PRO-XXXX (azul). La tab Proformas solo muestra proformas aprobadas. Migración de BD: nuevos campos estado_aprobacion y consolidada_en en la tabla proformas (las proformas existentes se marcan como aprobadas para preservar la visibilidad).",
-  },
-  {
-    version: "8.49.0",
-    date: "2026-04-24",
-    type: "minor",
-    title: "Pre-Facturación: proformas consolidadas a nivel de expediente",
-    description: "Nueva funcionalidad para facturar todos los contenedores de un mismo BL Master en una sola proforma. (1) Nueva tab 'Expedientes' en Pre-Facturación que agrupa los embarques por BL Master mostrando contenedores, totales pendientes USD/MXN y estado de proforma (Sin proforma / Parcial / Completa) con filtros y búsqueda. (2) Diálogo de proforma consolidada que muestra los conceptos pendientes agrupados por contenedor, con selección individual y toggle de IVA por concepto, totales consolidados en tiempo real, días de crédito editable y flujo de revisión en 2 pasos. (3) Al confirmar se crea un único registro en proformas con los nuevos campos es_consolidada=true y embarques_ids[]; se marcan los conceptos como en_proforma y se actualiza tiene_proforma=true en todos los embarques involucrados. (4) PDF de proforma consolidada que muestra los conceptos agrupados por contenedor con totales finales. (5) En la tab 'Proformas' se agregaron las columnas 'Tipo' (Individual / Consolidada con cantidad de contenedores) y 'BL Master'. La descarga de PDF detecta automáticamente el tipo y usa el generador correcto.",
-  },
-  {
-    version: "8.48.0",
-    date: "2026-04-24",
-    type: "minor",
-    title: "Facturación: extracción automática del folio desde el PDF",
-    description: "Al subir el PDF de la factura timbrada en el diálogo 'Marcar Facturada', el sistema lee automáticamente el contenido del PDF y extrae el folio buscando patrones como 'FOLIO: XXX', 'FOLIO FISCAL' o 'NÚMERO DE FOLIO' (basado en el formato estándar de CFDI mexicanos). El folio detectado se coloca automáticamente en el campo 'Folio de factura' (que sigue siendo editable). Se muestra un indicador 'Leyendo folio del PDF...' durante el proceso, una confirmación verde cuando se detecta correctamente, o un aviso ámbar si no se pudo extraer (en cuyo caso la contadora lo ingresa manualmente). Implementado con pdfjs-dist en el navegador, sin necesidad de subir el archivo al servidor para procesarlo.",
-  },
-  {
     version: "8.47.0",
     date: "2026-04-24",
     type: "minor",
