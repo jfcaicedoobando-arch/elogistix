@@ -11,6 +11,13 @@ export interface ChangelogEntry {
 /** Entradas recientes (v8.x). Las anteriores se cargan dinámicamente. */
 export const recentChangelog: ChangelogEntry[] = [
   {
+    version: "8.49.0",
+    date: "2026-04-24",
+    type: "minor",
+    title: "Pre-Facturación: tipo Individual/Consolidada, badges de revisión y PDF agrupado por contenedor",
+    description: "Cierre del flujo de revisión de proformas. (1) En la pestaña 'Proformas' (que ya solo muestra las aprobadas) se añadieron las columnas 'BL Master' y 'Tipo': 'Individual' para proformas normales o 'Consolidada (N)' para las que agruparon N proformas originales. (2) En el detalle del embarque (TabFacturacion), cada proforma muestra ahora un doble badge: estado de revisión (Pendiente de revisión / Aprobada / Consolidada en PRO-XXXX) y estado de pago (Facturada / Pago pendiente). (3) Nueva tabla proforma_conceptos_consolidados que guarda el snapshot de conceptos por contenedor cuando se crea una proforma consolidada (descripción, cantidad, precio unitario, total, IVA, moneda, contenedor, tipo de contenedor y embarque de origen). (4) El generador de PDF detecta proformas consolidadas y produce un layout especial: agrupa los conceptos por '📦 Contenedor: XXX (Tipo)', muestra subtotal por contenedor, y al final los totales globales USD/MXN; también añade un badge 'CONSOLIDADA' al header.",
+  },
+  {
     version: "8.48.0",
     date: "2026-04-24",
     type: "minor",
