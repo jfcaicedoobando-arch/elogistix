@@ -6,7 +6,7 @@ import { toast } from 'sonner';
 
 export type ProformaRow = Tables<'proformas'>;
 
-/** Lista las proformas de un embarque */
+/** Lista las proformas de un embarque (incluye URLs de la factura asociada si existe) */
 export function useProformasEmbarque(embarqueId?: string) {
   return useQuery({
     queryKey: ['proformas', 'embarque', embarqueId],
@@ -14,11 +14,12 @@ export function useProformasEmbarque(embarqueId?: string) {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('proformas')
-        .select('*')
+        .select('*, facturas:factura_id(factura_pdf_url, factura_xml_url)')
         .eq('embarque_id', embarqueId!)
         .order('created_at', { ascending: false });
       if (error) throw error;
-      return data as ProformaRow[];
+      // tipo se define más abajo, hacemos cast tras la declaración
+      return data as unknown as Array<ProformaRow & { facturas: { factura_pdf_url: string | null; factura_xml_url: string | null } | null }>;
     },
     staleTime: 30_000,
   });
