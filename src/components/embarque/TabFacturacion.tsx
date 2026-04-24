@@ -71,19 +71,20 @@ export function TabFacturacion({ facturas, canEdit, embarque }: Props) {
   const handleDescargarProforma = async (proformaId: string) => {
     const proforma = proformas.find(p => p.id === proformaId);
     if (!proforma) return;
-    // Cargar conceptos asociados a esta proforma
-    const { data: conceptosProforma, error } = await supabase
-      .from('conceptos_venta')
-      .select('*')
-      .eq('proforma_id', proformaId);
-    if (error) {
+    // Cargar conceptos y cliente en paralelo
+    const [conceptosRes, clienteRes] = await Promise.all([
+      supabase.from('conceptos_venta').select('*').eq('proforma_id', proformaId),
+      supabase.from('clientes').select('nombre, rfc, direccion, ciudad, estado, cp').eq('id', embarque.cliente_id).maybeSingle(),
+    ]);
+    if (conceptosRes.error) {
       toast.error('Error al cargar conceptos');
       return;
     }
     generarPdfProforma({
       proforma,
       embarque,
-      conceptos: conceptosProforma || [],
+      conceptos: conceptosRes.data || [],
+      cliente: clienteRes.data,
       tasaIva,
     });
   };
