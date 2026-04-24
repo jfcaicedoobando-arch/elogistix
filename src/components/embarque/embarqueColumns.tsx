@@ -46,6 +46,18 @@ export function buildEmbarqueColumns({
         return (
           <span className="flex items-center gap-1">
             {e.expediente}
+            {e.tiene_proforma && (
+              <TooltipProvider delayDuration={200}>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Badge variant="outline" className="h-4 px-1 text-[9px] font-bold bg-amber-50 text-amber-700 border-amber-300 leading-none">PRO</Badge>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p className="text-xs">Tiene proforma generada</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            )}
             {hayPendientes && (
               <TooltipProvider delayDuration={200}>
                 <Tooltip>
