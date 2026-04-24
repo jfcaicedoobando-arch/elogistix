@@ -11,6 +11,13 @@ export interface ChangelogEntry {
 /** Entradas recientes (v8.x). Las anteriores se cargan dinámicamente. */
 export const recentChangelog: ChangelogEntry[] = [
   {
+    version: "8.45.0",
+    date: "2026-04-24",
+    type: "minor",
+    title: "Proformas: ejecutivo de operaciones y días de crédito",
+    description: "Las proformas ahora capturan dos campos adicionales clave para la gestión comercial: el ejecutivo de operaciones (tomado automáticamente del operador asignado al embarque) y los días de crédito (campo numérico editable que se inicializa con el valor predeterminado del cliente, si está configurado). En el diálogo 'Generar Proforma' (Paso 1) se añadió un input numérico de días de crédito junto a la visualización del ejecutivo asignado; en el Paso 2 ambos datos se incluyen en el resumen de confirmación. El PDF de la proforma muestra una nueva sección 'Condiciones Comerciales' con el ejecutivo y los días de crédito (mostrando 'Contado' cuando el valor es 0). En la tabla 'Proformas Generadas' del detalle del embarque se incorporaron las columnas 'Operador' y 'Días Crédito'; en la tabla global del módulo Pre-Facturación se añadieron las mismas columnas (después de Cliente) y se incluyen en la exportación CSV. Adicionalmente, se agregó el campo dias_credito al catálogo de clientes para servir como valor por defecto.",
+  },
+  {
     version: "8.44.0",
     date: "2026-04-24",
     type: "minor",
