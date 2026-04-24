@@ -15,6 +15,7 @@ export function useEmbarquesPageState() {
   const [filterEstado, setFilterEstado] = useState<string>("todos");
   const [filterCliente, setFilterCliente] = useState<string>("todos");
   const [filterOperador, setFilterOperador] = useState<string>("todos");
+  const [filterProforma, setFilterProforma] = useState<string>("todos");
   const [fechaDesde, setFechaDesde] = useState("");
   const [fechaHasta, setFechaHasta] = useState("");
   const [page, setPage] = useState(0);
@@ -28,6 +29,7 @@ export function useEmbarquesPageState() {
     filterEstado,
     filterCliente,
     filterOperador,
+    filterProforma,
     page,
     pageSize,
     fechaDesde,
@@ -56,6 +58,7 @@ export function useEmbarquesPageState() {
     filterEstado === "todos" &&
     filterCliente === "todos" &&
     filterOperador === "todos" &&
+    filterProforma === "todos" &&
     !fechaDesde &&
     !fechaHasta;
 
@@ -64,7 +67,7 @@ export function useEmbarquesPageState() {
 
   return {
     // values
-    search, filterModo, filterEstado, filterCliente, filterOperador,
+    search, filterModo, filterEstado, filterCliente, filterOperador, filterProforma,
     fechaDesde, fechaHasta, page, pageSize, debouncedSearch,
     // setters
     setSearch: wrap(setSearch),
@@ -72,6 +75,7 @@ export function useEmbarquesPageState() {
     setFilterEstado: wrap(setFilterEstado),
     setFilterCliente: wrap(setFilterCliente),
     setFilterOperador: wrap(setFilterOperador),
+    setFilterProforma: wrap(setFilterProforma),
     setFechaDesde: wrap(setFechaDesde),
     setFechaHasta: wrap(setFechaHasta),
     setPage,
