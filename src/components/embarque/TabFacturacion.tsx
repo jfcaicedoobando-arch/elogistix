@@ -311,6 +311,44 @@ export function TabFacturacion({ facturas, canEdit, embarque }: Props) {
         embarque={embarque}
         conceptosPendientes={conceptosPendientes}
       />
+
+      <AlertDialog open={!!proformaAEliminar} onOpenChange={(o) => !o && setProformaAEliminar(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Eliminar proforma</AlertDialogTitle>
+            <AlertDialogDescription>
+              ¿Estás seguro de eliminar la proforma <strong>{proformaAEliminar?.numero}</strong>? Los conceptos volverán a estado Pendiente.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={eliminarProforma.isPending}>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              disabled={eliminarProforma.isPending}
+              onClick={async (e) => {
+                e.preventDefault();
+                if (!proformaAEliminar) return;
+                try {
+                  await eliminarProforma.mutateAsync({
+                    proformaId: proformaAEliminar.id,
+                    embarqueId: embarque.id,
+                    numero: proformaAEliminar.numero,
+                  });
+                  setProformaAEliminar(null);
+                } catch {
+                  // Error manejado en hook
+                }
+              }}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {eliminarProforma.isPending ? (
+                <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Eliminando...</>
+              ) : (
+                <>Eliminar</>
+              )}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
