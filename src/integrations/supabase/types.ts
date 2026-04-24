@@ -1291,6 +1291,7 @@ export type Database = {
           es_consolidada: boolean
           estado_aprobacion: string
           estado_proforma: string
+          estado_revision: string
           expediente: string
           factura_id: string | null
           fecha_emision: string
@@ -1303,6 +1304,7 @@ export type Database = {
           numero: string
           operador: string | null
           organization_id: string
+          proformas_origen: string[] | null
           subtotal_mxn: number
           subtotal_usd: number
           total_mxn: number
@@ -1322,6 +1324,7 @@ export type Database = {
           es_consolidada?: boolean
           estado_aprobacion?: string
           estado_proforma?: string
+          estado_revision?: string
           expediente: string
           factura_id?: string | null
           fecha_emision?: string
@@ -1334,6 +1337,7 @@ export type Database = {
           numero: string
           operador?: string | null
           organization_id?: string
+          proformas_origen?: string[] | null
           subtotal_mxn?: number
           subtotal_usd?: number
           total_mxn?: number
@@ -1353,6 +1357,7 @@ export type Database = {
           es_consolidada?: boolean
           estado_aprobacion?: string
           estado_proforma?: string
+          estado_revision?: string
           expediente?: string
           factura_id?: string | null
           fecha_emision?: string
@@ -1365,6 +1370,7 @@ export type Database = {
           numero?: string
           operador?: string | null
           organization_id?: string
+          proformas_origen?: string[] | null
           subtotal_mxn?: number
           subtotal_usd?: number
           total_mxn?: number
