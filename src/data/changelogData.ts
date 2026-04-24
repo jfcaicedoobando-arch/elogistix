@@ -11,6 +11,13 @@ export interface ChangelogEntry {
 /** Entradas recientes (v8.x). Las anteriores se cargan dinámicamente. */
 export const recentChangelog: ChangelogEntry[] = [
   {
+    version: "8.45.1",
+    date: "2026-04-24",
+    type: "patch",
+    title: "Fix: Campos faltantes en query de conceptos de venta",
+    description: "Corregida la función useEmbarqueConceptosVenta en useEmbarqueQueries.ts para incluir los campos estado_facturacion, proforma_id y aplica_iva en la selección. Estos campos son necesarios para mostrar correctamente el estado de facturación de cada concepto (Pendiente/En proforma) y el toggle de IVA en el diálogo de generación de proformas.",
+  },
+  {
     version: "8.45.0",
     date: "2026-04-24",
     type: "minor",
