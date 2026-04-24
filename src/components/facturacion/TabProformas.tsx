@@ -56,25 +56,30 @@ export function TabProformas() {
   const handleDescargar = async (proforma: ProformaRow) => {
     setDownloadingId(proforma.id);
     try {
-      const [embarqueRes, conceptosRes, clienteRes] = await Promise.all([
+      const esConsolidada = !!proforma.es_consolidada;
+
+      const [embarqueRes, conceptosRes, clienteRes, consolidadosRes] = await Promise.all([
         supabase
           .from('embarques')
           .select('expediente, bl_master, modo, tipo, incoterm, puerto_origen, puerto_destino, aeropuerto_origen, aeropuerto_destino, ciudad_origen, ciudad_destino, naviera, aerolinea, descripcion_mercancia')
           .eq('id', proforma.embarque_id)
           .single(),
-        supabase
-          .from('conceptos_venta')
-          .select('*')
-          .eq('proforma_id', proforma.id),
+        esConsolidada
+          ? Promise.resolve({ data: [] as any[], error: null as any })
+          : supabase.from('conceptos_venta').select('*').eq('proforma_id', proforma.id),
         supabase
           .from('clientes')
           .select('nombre, rfc, direccion, ciudad, estado, cp')
           .eq('id', proforma.cliente_id)
           .maybeSingle(),
+        esConsolidada
+          ? supabase.from('proforma_conceptos_consolidados').select('*').eq('proforma_id', proforma.id)
+          : Promise.resolve({ data: [] as any[], error: null as any }),
       ]);
 
       if (embarqueRes.error) throw embarqueRes.error;
       if (conceptosRes.error) throw conceptosRes.error;
+      if (consolidadosRes.error) throw consolidadosRes.error;
 
       generarPdfProforma({
         proforma,
@@ -82,6 +87,7 @@ export function TabProformas() {
         conceptos: conceptosRes.data || [],
         cliente: clienteRes.data,
         tasaIva,
+        conceptosConsolidados: consolidadosRes.data || [],
       });
     } catch (e) {
       toast.error('Error al generar PDF: ' + (e as Error).message);
@@ -98,6 +104,29 @@ export function TabProformas() {
     {
       key: "expediente", header: "Expediente", width: "w-[120px]",
       sortable: true, sortValue: (p) => p.expediente, render: (p) => p.expediente,
+    },
+    {
+      key: "bl_master", header: "BL Master", width: "w-[140px]", className: "text-xs font-mono",
+      sortable: true, sortValue: (p) => p.bl_master ?? '',
+      render: (p) => p.bl_master || <span className="text-muted-foreground">—</span>,
+    },
+    {
+      key: "tipo", header: "Tipo", width: "w-[140px]",
+      sortable: true,
+      sortValue: (p) => p.es_consolidada ? `Consolidada-${(p.proformas_origen?.length ?? 0)}` : 'Individual',
+      render: (p) => {
+        if (p.es_consolidada) {
+          const n = p.proformas_origen?.length ?? 0;
+          return (
+            <Badge className="bg-blue-100 text-blue-800 border-blue-200 hover:bg-blue-100">
+              Consolidada{n > 0 ? ` (${n})` : ''}
+            </Badge>
+          );
+        }
+        return (
+          <Badge variant="secondary" className="bg-slate-100 text-slate-700">Individual</Badge>
+        );
+      },
     },
     {
       key: "cliente", header: "Cliente", width: "min-w-[180px]", className: "max-w-[220px] truncate",
