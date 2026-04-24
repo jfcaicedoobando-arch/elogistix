@@ -428,6 +428,7 @@ export function useAprobarProformas() {
 
 interface ConsolidarProformasParams {
   proformaIds: string[];
+  /** Embarque "ancla" para la nueva proforma (puede ser cualquiera de los originales). */
   embarqueId: string;
   clienteId: string;
   clienteNombre: string;
