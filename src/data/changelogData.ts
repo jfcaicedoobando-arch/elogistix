@@ -11,6 +11,13 @@ export interface ChangelogEntry {
 /** Entradas recientes (v8.x). Las anteriores se cargan dinámicamente. */
 export const recentChangelog: ChangelogEntry[] = [
   {
+    version: "8.44.0",
+    date: "2026-04-24",
+    type: "minor",
+    title: "Proformas: flujo de revisión en 2 pasos y eliminación",
+    description: "El diálogo 'Generar Proforma' ahora utiliza un flujo de dos pasos para evitar generaciones accidentales. Paso 1 (Selección y revisión): el usuario marca conceptos, ajusta el toggle de IVA por concepto (MXN bloqueado en activo, USD editable) y ve los totales en tiempo real; el botón 'Revisar Proforma' avanza sin guardar nada. Paso 2 (Confirmación): muestra un resumen final con la tabla detallada de conceptos, indicadores de IVA por línea, totales por moneda y notas; el botón 'Volver' permite regresar a editar y solo 'Confirmar y Generar' persiste los cambios (crea la proforma, marca los conceptos como en_proforma, actualiza tiene_proforma=true y descarga el PDF). Adicionalmente, en la tabla 'Proformas Generadas' del embarque se incorporó el botón 'Eliminar' con confirmación: al confirmar libera los conceptos asociados (estado pendiente, proforma_id=null), elimina el registro de la proforma y, si era la única del embarque, marca tiene_proforma=false.",
+  },
+  {
     version: "8.43.1",
     date: "2026-04-24",
     type: "patch",
