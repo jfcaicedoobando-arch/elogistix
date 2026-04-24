@@ -222,6 +222,7 @@ export function useCrearProformaConsolidada() {
           notas: params.notas ?? null,
           operador: params.operador ?? null,
           dias_credito: params.diasCredito ?? null,
+          estado_aprobacion: 'aprobada',
           organization_id: organizationId,
         })
         .select()
