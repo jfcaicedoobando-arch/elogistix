@@ -11,6 +11,13 @@ export interface ChangelogEntry {
 /** Entradas recientes (v8.x). Las anteriores se cargan dinámicamente. */
 export const recentChangelog: ChangelogEntry[] = [
   {
+    version: "8.41.0",
+    date: "2026-04-24",
+    type: "minor",
+    title: "Sistema de proformas: base de datos, badge visual y filtro",
+    description: "Se sienta la base del módulo de proformas. Base de datos: nueva tabla 'proformas' con campos separados USD y MXN (subtotal, IVA, total), número consecutivo único por organización con formato 'PRO-AAAA-NNNN' (reinicia cada año) generado por la función generar_numero_proforma. La columna 'tiene_proforma' del embarque se sincroniza automáticamente vía trigger al crear o eliminar proformas, sin afectar el flujo operativo de estados (Confirmado → En Tránsito → Llegada → En Proceso → EIR → Cerrado). Conceptos de venta ahora incluyen 'estado_facturacion' (pendiente/en_proforma) y 'proforma_id' para trazabilidad. UI: nuevo componente ProformaBadge que muestra un badge grande prominente 'SIN PROFORMA' (naranja con triángulo de alerta) o 'PROFORMA GENERADA' (verde con check) en el encabezado del detalle del embarque y como columna en la lista. Filtro: nuevo selector en la lista de embarques (Todas / Con proforma / Sin proforma) que opera server-side. Políticas RLS multi-tenant aplicadas (acceso por organización + lectura propia para clientes).",
+  },
+  {
     version: "8.40.1",
     date: "2026-04-22",
     type: "patch",
