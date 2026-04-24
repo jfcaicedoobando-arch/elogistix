@@ -9,7 +9,7 @@ import PaginationControls from "@/components/PaginationControls";
 import { DataTable, type DataTableColumn } from "@/components/DataTable";
 import { exportToCsv } from "@/generators/exportCsv";
 import { formatCurrency, formatDate } from "@/lib/formatters";
-import { useProformas, type ProformaRow } from "@/hooks/embarque/useProformas";
+import { useProformas, type ProformaRow, type ProformaConFactura } from "@/hooks/embarque/useProformas";
 import { useTasaIVA } from "@/hooks/useTasaIVA";
 import { generarPdfProforma } from "@/generators/proformaPdf";
 import { supabase } from "@/integrations/supabase/client";
