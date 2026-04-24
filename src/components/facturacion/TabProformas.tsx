@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react";
-import { Download, FileCheck2 } from "lucide-react";
+import { Download, FileCheck2, FileText, FileCode2 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -9,7 +9,7 @@ import PaginationControls from "@/components/PaginationControls";
 import { DataTable, type DataTableColumn } from "@/components/DataTable";
 import { exportToCsv } from "@/generators/exportCsv";
 import { formatCurrency, formatDate } from "@/lib/formatters";
-import { useProformas, type ProformaRow } from "@/hooks/embarque/useProformas";
+import { useProformas, type ProformaRow, type ProformaConFactura } from "@/hooks/embarque/useProformas";
 import { useTasaIVA } from "@/hooks/useTasaIVA";
 import { generarPdfProforma } from "@/generators/proformaPdf";
 import { supabase } from "@/integrations/supabase/client";
@@ -90,7 +90,7 @@ export function TabProformas() {
     }
   };
 
-  const columns: DataTableColumn<ProformaRow>[] = [
+  const columns: DataTableColumn<ProformaConFactura>[] = [
     {
       key: "numero", header: "# Proforma", width: "w-[140px]", className: "font-medium",
       sticky: true, sortable: true, sortValue: (p) => p.numero, render: (p) => p.numero,
@@ -140,11 +140,30 @@ export function TabProformas() {
       },
     },
     {
-      key: "folio_factura", header: "Folio Factura", width: "w-[130px]", className: "text-xs",
+      key: "folio_factura", header: "Folio Factura", width: "w-[180px]", className: "text-xs",
       sortable: true, sortValue: (p) => p.folio_factura_externa ?? '',
-      render: (p) => p.folio_factura_externa
-        ? <span className="font-mono">{p.folio_factura_externa}</span>
-        : <span className="text-muted-foreground">—</span>,
+      render: (p) => {
+        if (!p.folio_factura_externa) return <span className="text-muted-foreground">—</span>;
+        const pdfUrl = p.facturas?.factura_pdf_url;
+        const xmlUrl = p.facturas?.factura_xml_url;
+        return (
+          <div className="flex items-center gap-1">
+            <span className="font-mono">{p.folio_factura_externa}</span>
+            {pdfUrl && (
+              <a href={pdfUrl} target="_blank" rel="noopener noreferrer" download
+                title="Descargar PDF" onClick={(e) => e.stopPropagation()}>
+                <FileText className="h-3.5 w-3.5 text-red-600 hover:text-red-700" />
+              </a>
+            )}
+            {xmlUrl && (
+              <a href={xmlUrl} target="_blank" rel="noopener noreferrer" download
+                title="Descargar XML" onClick={(e) => e.stopPropagation()}>
+                <FileCode2 className="h-3.5 w-3.5 text-blue-600 hover:text-blue-700" />
+              </a>
+            )}
+          </div>
+        );
+      },
     },
     {
       key: "acciones", header: "Acciones", width: "w-[200px]",

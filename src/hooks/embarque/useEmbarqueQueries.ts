@@ -216,7 +216,7 @@ export function useEmbarqueFacturas(embarqueId: string | undefined) {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('facturas')
-        .select('id, numero, embarque_id, expediente, cliente_id, cliente_nombre, estado, moneda, subtotal, iva, total, tipo_cambio, fecha_emision, fecha_vencimiento, referencia_bl, notas, organization_id, created_at, updated_at')
+        .select('id, numero, embarque_id, expediente, cliente_id, cliente_nombre, estado, moneda, subtotal, iva, total, tipo_cambio, fecha_emision, fecha_vencimiento, referencia_bl, notas, organization_id, created_at, updated_at, proforma_id, factura_pdf_url, factura_xml_url')
         .eq('embarque_id', embarqueId!);
       if (error) throw error;
       return data;

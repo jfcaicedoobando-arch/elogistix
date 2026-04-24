@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react";
-import { Download } from "lucide-react";
+import { Download, FileText, FileCode2 } from "lucide-react";
 import { exportToCsv } from "@/generators/exportCsv";
 import SearchInput from "@/components/SearchInput";
 import { Card, CardContent } from "@/components/ui/card";
@@ -30,12 +30,42 @@ type Factura = ReturnType<typeof useFacturas>["data"] extends (infer U)[] | unde
 const facturaColumns: DataTableColumn<Factura>[] = [
   { key: "numero", header: "# Factura", width: "w-[110px]", className: "font-medium", sticky: true, sortable: true, sortValue: (f) => f.numero, render: (f) => f.numero },
   { key: "expediente", header: "Expediente", width: "w-[110px]", render: (f) => f.expediente },
+  {
+    key: "proforma", header: "Proforma", width: "w-[130px]", className: "text-xs",
+    render: (f) => f.proformas?.numero
+      ? <span className="font-mono">{f.proformas.numero}</span>
+      : <span className="text-muted-foreground">—</span>,
+  },
   { key: "cliente", header: "Cliente", width: "min-w-[160px]", className: "max-w-[180px] truncate", render: (f) => f.cliente_nombre },
   { key: "monto", header: "Monto", width: "w-[110px]", className: "font-medium", sortable: true, sortValue: (f) => f.total, render: (f) => formatCurrency(f.total, f.moneda) },
   { key: "moneda", header: "Moneda", width: "w-[70px]", render: (f) => f.moneda },
   { key: "emision", header: "Emisión", width: "w-[100px]", className: "text-xs", sortable: true, sortValue: (f) => f.fecha_emision, render: (f) => formatDate(f.fecha_emision) },
   { key: "vencimiento", header: "Vencimiento", width: "w-[100px]", className: "text-xs", sortable: true, sortValue: (f) => f.fecha_vencimiento, render: (f) => formatDate(f.fecha_vencimiento) },
   { key: "estado", header: "Estado", width: "w-[100px]", sortable: true, sortValue: (f) => f.estado, render: (f) => <Badge className={getEstadoColor(f.estado)}>{f.estado}</Badge> },
+  {
+    key: "archivos", header: "Archivos", width: "w-[110px]",
+    render: (f) => {
+      if (!f.factura_pdf_url && !f.factura_xml_url) return <span className="text-muted-foreground text-xs">—</span>;
+      return (
+        <div className="flex items-center gap-1">
+          {f.factura_pdf_url && (
+            <Button asChild variant="outline" size="icon" className="h-7 w-7" title="Descargar PDF">
+              <a href={f.factura_pdf_url} target="_blank" rel="noopener noreferrer" download>
+                <FileText className="h-3.5 w-3.5 text-red-600" />
+              </a>
+            </Button>
+          )}
+          {f.factura_xml_url && (
+            <Button asChild variant="outline" size="icon" className="h-7 w-7" title="Descargar XML">
+              <a href={f.factura_xml_url} target="_blank" rel="noopener noreferrer" download>
+                <FileCode2 className="h-3.5 w-3.5 text-blue-600" />
+              </a>
+            </Button>
+          )}
+        </div>
+      );
+    },
+  },
 ];
 
 export default function Facturacion() {
