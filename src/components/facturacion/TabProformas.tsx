@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react";
-import { Download, FileText } from "lucide-react";
+import { Download } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import SearchInput from "@/components/SearchInput";
@@ -169,12 +169,7 @@ export function TabProformas() {
             columns={columns}
             data={paginated}
             isLoading={isLoading}
-            emptyMessage={
-              <div className="flex flex-col items-center gap-2 py-8 text-muted-foreground">
-                <FileText className="h-8 w-8 opacity-50" />
-                <p className="text-sm">No hay proformas generadas</p>
-              </div>
-            }
+            emptyMessage="No hay proformas generadas"
             rowKey={(p) => p.id}
           />
           <PaginationControls
