@@ -114,6 +114,7 @@ export function useCrearProforma() {
           notas: params.notas ?? null,
           operador: params.operador ?? null,
           dias_credito: params.diasCredito ?? null,
+          estado_aprobacion: 'borrador',
           organization_id: organizationId,
         })
         .select()
@@ -137,7 +138,7 @@ export function useCrearProforma() {
       return proforma as ProformaRow;
     },
     onSuccess: (proforma) => {
-      toast.success(`Proforma ${proforma.numero} generada`);
+      toast.success(`Proforma ${proforma.numero} generada en borrador. Apruébala en Pre-Facturación → Expedientes.`);
       queryClient.invalidateQueries({ queryKey: ['proformas', 'embarque', proforma.embarque_id] });
       queryClient.invalidateQueries({ queryKey: ['embarque', proforma.embarque_id] });
       queryClient.invalidateQueries({ queryKey: ['conceptos_venta'] });
@@ -221,6 +222,7 @@ export function useCrearProformaConsolidada() {
           notas: params.notas ?? null,
           operador: params.operador ?? null,
           dias_credito: params.diasCredito ?? null,
+          estado_aprobacion: 'aprobada',
           organization_id: organizationId,
         })
         .select()
@@ -463,5 +465,125 @@ export function useEliminarProforma() {
     onError: (error: Error) => {
       toast.error(`Error al eliminar proforma: ${error.message}`);
     },
+  });
+}
+
+/** Aprueba una proforma en borrador (la deja visible en el área de Proformas). */
+export function useAprobarProforma() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (params: { proformaId: string; numero: string }) => {
+      const { error } = await supabase
+        .from('proformas')
+        .update({ estado_aprobacion: 'aprobada' })
+        .eq('id', params.proformaId);
+      if (error) throw error;
+      return params;
+    },
+    onSuccess: (params) => {
+      toast.success(`Proforma ${params.numero} aprobada`);
+      queryClient.invalidateQueries({ queryKey: ['proformas'] });
+      queryClient.invalidateQueries({ queryKey: ['expedientes-consolidados'] });
+    },
+    onError: (e: Error) => toast.error(`Error al aprobar: ${e.message}`),
+  });
+}
+
+interface ConsolidarYAprobarParams {
+  /** IDs de proformas en borrador a consolidar */
+  proformaIds: string[];
+  /** IDs de embarques implicados (para embarques_ids de la nueva proforma) */
+  embarquesIds: string[];
+  embarquePrincipalId: string;
+  clienteId: string;
+  clienteNombre: string;
+  expediente: string;
+  blMaster?: string | null;
+  totales: {
+    subtotal_usd: number;
+    iva_usd: number;
+    total_usd: number;
+    subtotal_mxn: number;
+    iva_mxn: number;
+    total_mxn: number;
+  };
+  diasCredito?: number | null;
+  operador?: string | null;
+  notas?: string | null;
+}
+
+/**
+ * Crea una nueva proforma consolidada APROBADA a partir de varias proformas en borrador.
+ * - Reasigna los conceptos_venta de las proformas origen a la nueva proforma.
+ * - Marca las proformas origen como estado_aprobacion='consolidada' y consolidada_en=nueva.
+ */
+export function useConsolidarYAprobar() {
+  const queryClient = useQueryClient();
+  const { organizationId } = useOrgFilter();
+
+  return useMutation({
+    mutationFn: async (params: ConsolidarYAprobarParams) => {
+      if (!organizationId) throw new Error('Organización no disponible');
+      if (params.proformaIds.length < 2) throw new Error('Selecciona al menos 2 proformas');
+
+      // 1. Generar número
+      const { data: numero, error: errNum } = await supabase
+        .rpc('generar_numero_proforma', { p_org_id: organizationId });
+      if (errNum) throw errNum;
+
+      // 2. Crear nueva proforma consolidada APROBADA
+      const { data: nueva, error: errIns } = await supabase
+        .from('proformas')
+        .insert({
+          numero: numero as string,
+          embarque_id: params.embarquePrincipalId,
+          es_consolidada: true,
+          embarques_ids: params.embarquesIds,
+          estado_aprobacion: 'aprobada',
+          cliente_id: params.clienteId,
+          cliente_nombre: params.clienteNombre,
+          expediente: params.expediente,
+          bl_master: params.blMaster ?? null,
+          subtotal_usd: params.totales.subtotal_usd,
+          iva_usd: params.totales.iva_usd,
+          total_usd: params.totales.total_usd,
+          subtotal_mxn: params.totales.subtotal_mxn,
+          iva_mxn: params.totales.iva_mxn,
+          total_mxn: params.totales.total_mxn,
+          dias_credito: params.diasCredito ?? null,
+          operador: params.operador ?? null,
+          notas: params.notas ?? null,
+          organization_id: organizationId,
+        })
+        .select()
+        .single();
+      if (errIns) throw errIns;
+
+      // 3. Reasignar conceptos al nuevo id
+      const { error: errCs } = await supabase
+        .from('conceptos_venta')
+        .update({ proforma_id: nueva.id })
+        .in('proforma_id', params.proformaIds);
+      if (errCs) {
+        await supabase.from('proformas').delete().eq('id', nueva.id);
+        throw errCs;
+      }
+
+      // 4. Marcar proformas origen como consolidadas
+      const { error: errUpd } = await supabase
+        .from('proformas')
+        .update({ estado_aprobacion: 'consolidada', consolidada_en: nueva.id })
+        .in('id', params.proformaIds);
+      if (errUpd) throw errUpd;
+
+      return nueva as ProformaRow;
+    },
+    onSuccess: (nueva) => {
+      toast.success(`Proformas consolidadas en ${nueva.numero}`);
+      queryClient.invalidateQueries({ queryKey: ['proformas'] });
+      queryClient.invalidateQueries({ queryKey: ['expedientes-consolidados'] });
+      queryClient.invalidateQueries({ queryKey: ['conceptos_venta'] });
+    },
+    onError: (e: Error) => toast.error(`Error al consolidar: ${e.message}`),
   });
 }
