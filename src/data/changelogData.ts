@@ -11,6 +11,13 @@ export interface ChangelogEntry {
 /** Entradas recientes (v8.x). Las anteriores se cargan dinámicamente. */
 export const recentChangelog: ChangelogEntry[] = [
   {
+    version: "8.50.0",
+    date: "2026-04-24",
+    type: "minor",
+    title: "Pre-Facturación: flujo de aprobación de proformas",
+    description: "Las proformas creadas desde el embarque ahora nacen en estado 'borrador' y deben ser aprobadas (o consolidadas y aprobadas) en Pre-Facturación → Expedientes antes de aparecer en el área de Proformas. La tab Expedientes muestra los expedientes con sus proformas en borrador y un botón contextual: 'Aprobar' cuando hay 1 proforma o 'Consolidar y Aprobar' cuando hay 2 o más, abriendo un diálogo con checkboxes, totales consolidados en tiempo real y campo de días de crédito. Al consolidar se crea una nueva proforma aprobada que absorbe los conceptos y marca las originales como 'consolidada' enlazándolas a la nueva. En el detalle del embarque (Tab Facturación) cada proforma muestra un badge de su estado de aprobación: Pendiente de aprobación (ámbar), Aprobada (verde) o Consolidada en PRO-XXXX (azul). La tab Proformas solo muestra proformas aprobadas. Migración de BD: nuevos campos estado_aprobacion y consolidada_en en la tabla proformas (las proformas existentes se marcan como aprobadas para preservar la visibilidad).",
+  },
+  {
     version: "8.49.0",
     date: "2026-04-24",
     type: "minor",
