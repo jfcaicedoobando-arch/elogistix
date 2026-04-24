@@ -11,6 +11,13 @@ export interface ChangelogEntry {
 /** Entradas recientes (v8.x). Las anteriores se cargan dinámicamente. */
 export const recentChangelog: ChangelogEntry[] = [
   {
+    version: "8.42.0",
+    date: "2026-04-24",
+    type: "minor",
+    title: "Generación de proformas desde el embarque",
+    description: "Nueva funcionalidad para generar proformas directamente desde la pestaña Facturación del detalle del embarque. Cada concepto de venta muestra ahora su estado: 'Pendiente' (gris con reloj) o 'En proforma' (verde con check), junto con un resumen de totales agrupados por moneda (MXN/USD). Botón 'Generar Proforma' visible cuando hay conceptos pendientes, con badge que indica la cantidad disponible. Diálogo modal permite seleccionar conceptos individualmente mediante checkboxes (todos seleccionados por defecto), recalculando totales en tiempo real. Cálculo de IVA automático: conceptos en MXN siempre llevan IVA; conceptos en USD usan el nuevo campo 'aplica_iva' de conceptos_venta para determinar si aplica. Tasa de IVA leída desde configuración (useTasaIVA). Al confirmar: se genera número consecutivo (PRO-AAAA-NNNN) vía RPC, se inserta la proforma con totales separados USD/MXN, se marcan los conceptos seleccionados como 'en_proforma' con su proforma_id (rollback automático en caso de error), se actualiza el badge del embarque vía trigger y se descarga el PDF automáticamente. Nueva sección 'Proformas Generadas' lista el historial con número, fecha, totales y botón de descarga (regenera el PDF a partir de los conceptos asociados). El generador PDF (src/generators/proformaPdf.ts) reutiliza el estilo y layout de cotizacionPdf.ts e incluye datos del embarque, conceptos en USD/MXN con desglose de IVA y resumen de totales.",
+  },
+  {
     version: "8.41.0",
     date: "2026-04-24",
     type: "minor",

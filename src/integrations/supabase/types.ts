@@ -279,6 +279,7 @@ export type Database = {
       }
       conceptos_venta: {
         Row: {
+          aplica_iva: boolean
           cantidad: number
           created_at: string
           descripcion: string
@@ -292,6 +293,7 @@ export type Database = {
           total: number
         }
         Insert: {
+          aplica_iva?: boolean
           cantidad?: number
           created_at?: string
           descripcion: string
@@ -305,6 +307,7 @@ export type Database = {
           total?: number
         }
         Update: {
+          aplica_iva?: boolean
           cantidad?: number
           created_at?: string
           descripcion?: string
