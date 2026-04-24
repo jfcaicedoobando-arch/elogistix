@@ -149,28 +149,138 @@ interface MarcarFacturadaParams {
   embarqueId: string;
   folioFacturaExterna: string;
   fechaFacturacion: string; // YYYY-MM-DD
+  pdfFile?: File | null;
+  xmlFile?: File | null;
 }
 
-/** Marca una proforma como facturada con su folio externo */
+function addDays(yyyyMmDd: string, days: number): string {
+  const d = new Date(yyyyMmDd + 'T00:00:00');
+  d.setDate(d.getDate() + days);
+  return d.toISOString().slice(0, 10);
+}
+
+/** Marca una proforma como facturada: sube archivos, crea registro(s) en facturas y actualiza la proforma */
 export function useMarcarProformaFacturada() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (params: MarcarFacturadaParams) => {
-      const { error } = await supabase
+      // 1. Cargar proforma completa
+      const { data: proforma, error: errProf } = await supabase
+        .from('proformas')
+        .select('*')
+        .eq('id', params.proformaId)
+        .single();
+      if (errProf) throw errProf;
+
+      // 2. Subir archivos (opcional)
+      let pdfUrl: string | null = null;
+      let xmlUrl: string | null = null;
+      const basePath = `${proforma.organization_id}/${proforma.id}`;
+
+      if (params.pdfFile) {
+        const path = `${basePath}/factura.pdf`;
+        const { error: errUp } = await supabase.storage
+          .from('facturas')
+          .upload(path, params.pdfFile, { upsert: true, contentType: 'application/pdf' });
+        if (errUp) throw new Error(`Error al subir PDF: ${errUp.message}`);
+        pdfUrl = supabase.storage.from('facturas').getPublicUrl(path).data.publicUrl;
+      }
+      if (params.xmlFile) {
+        const path = `${basePath}/factura.xml`;
+        const { error: errUp } = await supabase.storage
+          .from('facturas')
+          .upload(path, params.xmlFile, { upsert: true, contentType: 'application/xml' });
+        if (errUp) throw new Error(`Error al subir XML: ${errUp.message}`);
+        xmlUrl = supabase.storage.from('facturas').getPublicUrl(path).data.publicUrl;
+      }
+
+      // 3. Calcular vencimiento
+      const dias = proforma.dias_credito ?? 0;
+      const fechaVencimiento = addDays(params.fechaFacturacion, dias);
+
+      // 4. Crear registros en facturas (uno por moneda con monto > 0)
+      const facturasACrear: Array<{
+        numero: string;
+        proforma_id: string;
+        embarque_id: string;
+        cliente_id: string;
+        cliente_nombre: string;
+        expediente: string;
+        fecha_emision: string;
+        fecha_vencimiento: string;
+        estado: 'Emitida';
+        moneda: 'USD' | 'MXN';
+        subtotal: number;
+        iva: number;
+        total: number;
+        factura_pdf_url: string | null;
+        factura_xml_url: string | null;
+        organization_id: string;
+      }> = [];
+
+      const baseFactura = {
+        numero: params.folioFacturaExterna,
+        proforma_id: proforma.id,
+        embarque_id: proforma.embarque_id,
+        cliente_id: proforma.cliente_id,
+        cliente_nombre: proforma.cliente_nombre,
+        expediente: proforma.expediente,
+        fecha_emision: params.fechaFacturacion,
+        fecha_vencimiento: fechaVencimiento,
+        estado: 'Emitida' as const,
+        factura_pdf_url: pdfUrl,
+        factura_xml_url: xmlUrl,
+        organization_id: proforma.organization_id,
+      };
+
+      if (Number(proforma.total_usd) > 0) {
+        facturasACrear.push({
+          ...baseFactura,
+          moneda: 'USD',
+          subtotal: Number(proforma.subtotal_usd),
+          iva: Number(proforma.iva_usd),
+          total: Number(proforma.total_usd),
+        });
+      }
+      if (Number(proforma.total_mxn) > 0) {
+        facturasACrear.push({
+          ...baseFactura,
+          moneda: 'MXN',
+          subtotal: Number(proforma.subtotal_mxn),
+          iva: Number(proforma.iva_mxn),
+          total: Number(proforma.total_mxn),
+        });
+      }
+
+      let primeraFacturaId: string | null = null;
+      if (facturasACrear.length > 0) {
+        const { data: facturasCreadas, error: errFact } = await supabase
+          .from('facturas')
+          .insert(facturasACrear)
+          .select('id');
+        if (errFact) throw new Error(`Error al crear factura: ${errFact.message}`);
+        primeraFacturaId = facturasCreadas?.[0]?.id ?? null;
+      }
+
+      // 5. Actualizar proforma
+      const { error: errUpd } = await supabase
         .from('proformas')
         .update({
           estado_proforma: 'facturada',
           folio_factura_externa: params.folioFacturaExterna,
           fecha_facturacion: params.fechaFacturacion,
+          factura_id: primeraFacturaId,
         })
         .eq('id', params.proformaId);
-      if (error) throw error;
+      if (errUpd) throw errUpd;
+
       return params;
     },
     onSuccess: (params) => {
-      toast.success('Proforma marcada como facturada');
+      toast.success('Proforma facturada y registro de factura creado');
       queryClient.invalidateQueries({ queryKey: ['proformas', 'all'] });
       queryClient.invalidateQueries({ queryKey: ['proformas', 'embarque', params.embarqueId] });
+      queryClient.invalidateQueries({ queryKey: ['facturas'] });
     },
     onError: (error: Error) => {
       toast.error(`Error: ${error.message}`);
