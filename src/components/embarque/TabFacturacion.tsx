@@ -244,9 +244,32 @@ export function TabFacturacion({ facturas, canEdit, embarque }: Props) {
               <TableBody>
                 {proformas.map(p => {
                   const facturada = (p.estado_proforma ?? 'pendiente') === 'facturada';
+                  const aprobacion = (p.estado_aprobacion ?? 'aprobada') as 'borrador' | 'aprobada' | 'consolidada';
+                  const numeroConsolidada = aprobacion === 'consolidada' && p.consolidada_en
+                    ? proformas.find(x => x.id === p.consolidada_en)?.numero
+                    : null;
                   return (
                   <TableRow key={p.id}>
-                    <TableCell className="font-medium">{p.numero}</TableCell>
+                    <TableCell className="font-medium">
+                      <div className="flex items-center gap-2">
+                        <span>{p.numero}</span>
+                        {aprobacion === 'borrador' && (
+                          <Badge className="bg-amber-100 text-amber-800 border-amber-200 hover:bg-amber-100 text-xs">
+                            Pendiente de aprobación
+                          </Badge>
+                        )}
+                        {aprobacion === 'aprobada' && (
+                          <Badge className="bg-green-100 text-green-800 border-green-200 hover:bg-green-100 text-xs">
+                            Aprobada
+                          </Badge>
+                        )}
+                        {aprobacion === 'consolidada' && (
+                          <Badge className="bg-blue-100 text-blue-800 border-blue-200 hover:bg-blue-100 text-xs">
+                            Consolidada{numeroConsolidada ? ` en ${numeroConsolidada}` : ''}
+                          </Badge>
+                        )}
+                      </div>
+                    </TableCell>
                     <TableCell>{formatDate(p.fecha_emision)}</TableCell>
                     <TableCell className="text-sm">{p.operador || <span className="text-muted-foreground">—</span>}</TableCell>
                     <TableCell className="text-right text-sm">
