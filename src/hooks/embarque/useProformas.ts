@@ -149,6 +149,122 @@ export function useCrearProforma() {
   });
 }
 
+interface CrearProformaConsolidadaParams {
+  /** IDs de embarques que comparten BL/expediente */
+  embarquesIds: string[];
+  /** Embarque "principal" (típicamente el primero) usado como referencia */
+  embarquePrincipalId: string;
+  clienteId: string;
+  clienteNombre: string;
+  expediente: string;
+  blMaster?: string | null;
+  /** Conceptos seleccionados (de cualquiera de los embarques del grupo) */
+  conceptoIds: string[];
+  totales: {
+    subtotal_usd: number;
+    iva_usd: number;
+    total_usd: number;
+    subtotal_mxn: number;
+    iva_mxn: number;
+    total_mxn: number;
+  };
+  notas?: string;
+  operador?: string | null;
+  diasCredito?: number | null;
+  ivaOverrides?: Record<string, boolean>;
+}
+
+/** Crea una proforma CONSOLIDADA que agrupa conceptos de múltiples embarques (mismo BL) */
+export function useCrearProformaConsolidada() {
+  const queryClient = useQueryClient();
+  const { organizationId } = useOrgFilter();
+
+  return useMutation({
+    mutationFn: async (params: CrearProformaConsolidadaParams) => {
+      if (!organizationId) throw new Error('Organización no disponible');
+      if (params.conceptoIds.length === 0) throw new Error('Debe seleccionar al menos un concepto');
+      if (params.embarquesIds.length === 0) throw new Error('Debe haber al menos un embarque');
+
+      // 0. Aplicar overrides de IVA
+      if (params.ivaOverrides) {
+        const updates = Object.entries(params.ivaOverrides).map(([id, aplica]) =>
+          supabase.from('conceptos_venta').update({ aplica_iva: aplica }).eq('id', id)
+        );
+        const results = await Promise.all(updates);
+        const firstErr = results.find(r => r.error);
+        if (firstErr?.error) throw firstErr.error;
+      }
+
+      // 1. Generar número
+      const { data: numero, error: errNum } = await supabase
+        .rpc('generar_numero_proforma', { p_org_id: organizationId });
+      if (errNum) throw errNum;
+
+      // 2. Insertar proforma consolidada
+      const { data: proforma, error: errProf } = await supabase
+        .from('proformas')
+        .insert({
+          numero: numero as string,
+          embarque_id: params.embarquePrincipalId,
+          es_consolidada: true,
+          embarques_ids: params.embarquesIds,
+          cliente_id: params.clienteId,
+          cliente_nombre: params.clienteNombre,
+          expediente: params.expediente,
+          bl_master: params.blMaster ?? null,
+          subtotal_usd: params.totales.subtotal_usd,
+          iva_usd: params.totales.iva_usd,
+          total_usd: params.totales.total_usd,
+          subtotal_mxn: params.totales.subtotal_mxn,
+          iva_mxn: params.totales.iva_mxn,
+          total_mxn: params.totales.total_mxn,
+          notas: params.notas ?? null,
+          operador: params.operador ?? null,
+          dias_credito: params.diasCredito ?? null,
+          organization_id: organizationId,
+        })
+        .select()
+        .single();
+      if (errProf) throw errProf;
+
+      // 3. Marcar conceptos como en_proforma
+      const { error: errUpd } = await supabase
+        .from('conceptos_venta')
+        .update({ estado_facturacion: 'en_proforma', proforma_id: proforma.id })
+        .in('id', params.conceptoIds);
+      if (errUpd) {
+        await supabase.from('proformas').delete().eq('id', proforma.id);
+        throw errUpd;
+      }
+
+      // 4. Marcar tiene_proforma = true en TODOS los embarques que tengan al menos un concepto incluido
+      const { data: conceptosCargados } = await supabase
+        .from('conceptos_venta')
+        .select('embarque_id')
+        .in('id', params.conceptoIds);
+      const embarquesConProforma = Array.from(new Set((conceptosCargados || []).map(c => c.embarque_id)));
+      if (embarquesConProforma.length > 0) {
+        await supabase
+          .from('embarques')
+          .update({ tiene_proforma: true })
+          .in('id', embarquesConProforma);
+      }
+
+      return proforma as ProformaRow;
+    },
+    onSuccess: (proforma) => {
+      toast.success(`Proforma consolidada ${proforma.numero} generada`);
+      queryClient.invalidateQueries({ queryKey: ['proformas'] });
+      queryClient.invalidateQueries({ queryKey: ['expedientes-consolidados'] });
+      queryClient.invalidateQueries({ queryKey: ['conceptos_venta'] });
+      queryClient.invalidateQueries({ queryKey: ['embarques'] });
+    },
+    onError: (error: Error) => {
+      toast.error(`Error al generar proforma consolidada: ${error.message}`);
+    },
+  });
+}
+
 interface MarcarFacturadaParams {
   proformaId: string;
   embarqueId: string;
