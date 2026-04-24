@@ -151,7 +151,7 @@ export function useEmbarqueConceptosVenta(embarqueId: string | undefined) {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('conceptos_venta')
-        .select('id, embarque_id, descripcion, cantidad, precio_unitario, total, moneda, organization_id, created_at')
+        .select('id, embarque_id, descripcion, cantidad, precio_unitario, total, moneda, organization_id, created_at, estado_facturacion, proforma_id, aplica_iva')
         .eq('embarque_id', embarqueId!);
       if (error) throw error;
       return data as ConceptoVentaRow[];
