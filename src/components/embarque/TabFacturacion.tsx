@@ -1,15 +1,25 @@
 import { useState, useMemo } from "react";
-import { FileText, Download, CheckCircle2, Clock, Receipt } from "lucide-react";
+import { FileText, Download, CheckCircle2, Clock, Receipt, Trash2, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { formatCurrency, formatDate } from "@/lib/formatters";
 import { getEstadoColor } from "@/lib/uiMappings";
 import { calcularIVA } from "@/lib/financialUtils";
 import { useTasaIVA } from "@/hooks/useTasaIVA";
 import { useEmbarqueConceptosVenta } from "@/hooks/useEmbarques";
-import { useProformasEmbarque } from "@/hooks/embarque/useProformas";
+import { useProformasEmbarque, useEliminarProforma } from "@/hooks/embarque/useProformas";
 import { DialogGenerarProforma } from "./DialogGenerarProforma";
 import { generarPdfProforma } from "@/generators/proformaPdf";
 import { supabase } from "@/integrations/supabase/client";
