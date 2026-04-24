@@ -9,6 +9,7 @@ import type { EmbarqueRow } from "@/hooks/useEmbarques";
 import { formatDate, getOrigen, getDestino, shortName } from "@/lib/formatters";
 import { getEstadoColor, getModoIcon } from "@/lib/uiMappings";
 import EmbarqueRowActions from "./EmbarqueRowActions";
+import { ProformaBadge } from "./ProformaBadge";
 
 export interface DocsInfo { pendientes: number; total: number }
 export interface LiquidacionInfo { pagados: number; total: number }
@@ -87,6 +88,12 @@ export function buildEmbarqueColumns({
     {
       key: "liquidacion", header: "Costos", width: "w-[90px]",
       render: (e) => <LiquidacionBadge info={liquidacionMap[e.id]} />,
+    },
+    {
+      key: "proforma", header: "Proforma", width: "w-[180px]",
+      sortable: true,
+      sortValue: (e) => (e.tiene_proforma ? "1" : "0"),
+      render: (e) => <ProformaBadge tieneProforma={e.tiene_proforma} size="sm" />,
     },
   ];
 

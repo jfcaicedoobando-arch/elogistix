@@ -7,6 +7,7 @@ import {
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { getEstadoColor, getModoIcon } from "@/lib/uiMappings";
+import { ProformaBadge } from "./ProformaBadge";
 import type { EmbarqueRow } from "@/hooks/useEmbarques";
 
 interface Props {
@@ -36,10 +37,11 @@ export function EmbarqueDetalleHeader({
         <ArrowLeft className="h-5 w-5" />
       </Button>
       <div className="flex-1">
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 flex-wrap">
           <h1 className="text-2xl font-bold">{embarque.expediente}</h1>
           <Badge className={getEstadoColor(estadoVisual)}>{estadoVisual}</Badge>
           <span className="text-lg">{getModoIcon(embarque.modo)}</span>
+          <ProformaBadge tieneProforma={embarque.tiene_proforma} size="lg" />
         </div>
         <p className="text-sm text-muted-foreground">{embarque.cliente_nombre}</p>
       </div>
