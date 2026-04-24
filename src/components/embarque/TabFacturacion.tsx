@@ -246,9 +246,21 @@ export function TabFacturacion({ facturas, canEdit, embarque }: Props) {
                       {Number(p.total_mxn) > 0 ? formatCurrency(Number(p.total_mxn), 'MXN') : '—'}
                     </TableCell>
                     <TableCell className="text-right">
-                      <Button variant="outline" size="sm" onClick={() => handleDescargarProforma(p.id)}>
-                        <Download className="h-3.5 w-3.5 mr-1" /> Descargar
-                      </Button>
+                      <div className="flex items-center justify-end gap-1">
+                        <Button variant="outline" size="sm" onClick={() => handleDescargarProforma(p.id)}>
+                          <Download className="h-3.5 w-3.5 mr-1" /> Descargar
+                        </Button>
+                        {canEdit && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setProformaAEliminar({ id: p.id, numero: p.numero })}
+                            className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                          >
+                            <Trash2 className="h-3.5 w-3.5 mr-1" /> Eliminar
+                          </Button>
+                        )}
+                      </div>
                     </TableCell>
                   </TableRow>
                 ))}
