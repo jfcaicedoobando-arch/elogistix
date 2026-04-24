@@ -89,6 +89,16 @@ export function TabProformas() {
       sortable: true, sortValue: (p) => p.cliente_nombre, render: (p) => p.cliente_nombre,
     },
     {
+      key: "operador", header: "Operador", width: "w-[140px]", className: "text-xs",
+      sortable: true, sortValue: (p) => p.operador || '',
+      render: (p) => p.operador || <span className="text-muted-foreground">—</span>,
+    },
+    {
+      key: "dias_credito", header: "Días Crédito", width: "w-[110px]", className: "text-right text-xs",
+      sortable: true, sortValue: (p) => p.dias_credito ?? -1,
+      render: (p) => p.dias_credito == null ? '—' : Number(p.dias_credito) === 0 ? 'Contado' : `${p.dias_credito} días`,
+    },
+    {
       key: "monto_usd", header: "Monto USD", width: "w-[120px]", className: "text-right",
       sortable: true, sortValue: (p) => Number(p.total_usd),
       render: (p) => Number(p.total_usd) > 0 ? formatCurrency(Number(p.total_usd), 'USD') : '—',
