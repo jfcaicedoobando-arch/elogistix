@@ -5,6 +5,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
+import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Loader2, FileText, ArrowLeft, ArrowRight, CheckCircle2 } from "lucide-react";
@@ -35,8 +36,9 @@ export function DialogGenerarProforma({ open, onOpenChange, embarque, conceptosP
   const [seleccionados, setSeleccionados] = useState<Set<string>>(new Set());
   const [ivaPorConcepto, setIvaPorConcepto] = useState<Record<string, boolean>>({});
   const [notas, setNotas] = useState("");
+  const [diasCredito, setDiasCredito] = useState<string>("");
 
-  // Reset al abrir
+  // Reset al abrir + cargar dias_credito del cliente como default
   useEffect(() => {
     if (open) {
       setPaso('seleccion');
@@ -47,8 +49,22 @@ export function DialogGenerarProforma({ open, onOpenChange, embarque, conceptosP
       });
       setIvaPorConcepto(ivaInit);
       setNotas("");
+      setDiasCredito("");
+      // Cargar dias_credito del cliente como default
+      if (embarque.cliente_id) {
+        supabase
+          .from('clientes')
+          .select('dias_credito')
+          .eq('id', embarque.cliente_id)
+          .maybeSingle()
+          .then(({ data }) => {
+            if (data?.dias_credito != null) {
+              setDiasCredito(String(data.dias_credito));
+            }
+          });
+      }
     }
-  }, [open, conceptosPendientes]);
+  }, [open, conceptosPendientes, embarque.cliente_id]);
 
   const toggle = (id: string) => {
     setSeleccionados(prev => {
