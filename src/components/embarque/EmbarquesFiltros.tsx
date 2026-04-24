@@ -22,6 +22,8 @@ interface Props {
   onFilterClienteChange: (v: string) => void;
   filterOperador: string;
   onFilterOperadorChange: (v: string) => void;
+  filterProforma: string;
+  onFilterProformaChange: (v: string) => void;
   fechaDesde: string;
   onFechaDesdeChange: (v: string) => void;
   fechaHasta: string;
@@ -36,6 +38,7 @@ export default function EmbarquesFiltros({
   filterEstado, onFilterEstadoChange,
   filterCliente, onFilterClienteChange,
   filterOperador, onFilterOperadorChange,
+  filterProforma, onFilterProformaChange,
   fechaDesde, onFechaDesdeChange,
   fechaHasta, onFechaHastaChange,
   clientes, operadores,
@@ -74,6 +77,14 @@ export default function EmbarquesFiltros({
         <SelectContent>
           <SelectItem value="todos">Todos los operadores</SelectItem>
           {operadores.map(op => <SelectItem key={op} value={op}>{op}</SelectItem>)}
+        </SelectContent>
+      </Select>
+      <Select value={filterProforma} onValueChange={onFilterProformaChange}>
+        <SelectTrigger className="w-[170px]"><SelectValue placeholder="Proforma" /></SelectTrigger>
+        <SelectContent>
+          <SelectItem value="todos">Todas las proformas</SelectItem>
+          <SelectItem value="con">Con proforma</SelectItem>
+          <SelectItem value="sin">Sin proforma</SelectItem>
         </SelectContent>
       </Select>
       <Input type="date" value={fechaDesde} onChange={(e) => onFechaDesdeChange(e.target.value)} className="w-[150px]" placeholder="Desde (ETD)" title="ETD desde" />
