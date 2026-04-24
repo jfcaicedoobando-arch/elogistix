@@ -161,7 +161,8 @@ export function DialogMarcarFacturada({ open, onOpenChange, proforma }: Props) {
                   ref={pdfInputRef}
                   type="file"
                   accept=".pdf,application/pdf"
-                  onChange={(e) => setPdfFile(e.target.files?.[0] ?? null)}
+                  onChange={(e) => handlePdfSelected(e.target.files?.[0] ?? null)}
+                  disabled={extrayendoFolio}
                 />
               )}
             </div>
