@@ -24,7 +24,7 @@ export function useProformasEmbarque(embarqueId?: string) {
   });
 }
 
-/** Lista todas las proformas de la organización */
+/** Lista todas las proformas de la organización (incluye URLs de la factura asociada si existe) */
 export function useProformas() {
   const { organizationId } = useOrgFilter();
   return useQuery({
@@ -33,15 +33,19 @@ export function useProformas() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('proformas')
-        .select('*')
+        .select('*, facturas:factura_id(factura_pdf_url, factura_xml_url)')
         .eq('organization_id', organizationId!)
         .order('created_at', { ascending: false });
       if (error) throw error;
-      return data as ProformaRow[];
+      return data as ProformaConFactura[];
     },
     staleTime: 30_000,
   });
 }
+
+export type ProformaConFactura = ProformaRow & {
+  facturas: { factura_pdf_url: string | null; factura_xml_url: string | null } | null;
+};
 
 interface CrearProformaParams {
   embarqueId: string;
