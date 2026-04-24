@@ -176,8 +176,9 @@ export function useCrearProforma() {
       return proforma as ProformaRow;
     },
     onSuccess: (proforma) => {
-      toast.success(`Proforma ${proforma.numero} generada`);
+      toast.success(`Proforma ${proforma.numero} generada (pendiente de revisión)`);
       queryClient.invalidateQueries({ queryKey: ['proformas', 'embarque', proforma.embarque_id] });
+      queryClient.invalidateQueries({ queryKey: ['proformas', 'pendientes'] });
       queryClient.invalidateQueries({ queryKey: ['embarque', proforma.embarque_id] });
       queryClient.invalidateQueries({ queryKey: ['conceptos_venta'] });
       queryClient.invalidateQueries({ queryKey: ['embarques'] });
