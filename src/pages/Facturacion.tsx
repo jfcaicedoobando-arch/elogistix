@@ -137,12 +137,19 @@ export default function Facturacion() {
         <p className="text-sm text-muted-foreground">Control de proformas, facturas emitidas y gastos por liquidar</p>
       </div>
 
-      <Tabs defaultValue="proformas">
+      <Tabs defaultValue={proformasPendientes.length > 0 ? "pendientes" : "proformas"}>
         <TabsList>
+          <TabsTrigger value="pendientes">
+            Pendientes{proformasPendientes.length > 0 ? ` (${proformasPendientes.length})` : ''}
+          </TabsTrigger>
           <TabsTrigger value="proformas">Proformas</TabsTrigger>
           <TabsTrigger value="facturas">Facturas</TabsTrigger>
           <TabsTrigger value="liquidacion">Liquidación de Gastos</TabsTrigger>
         </TabsList>
+
+        <TabsContent value="pendientes">
+          <TabProformasPendientes />
+        </TabsContent>
 
         <TabsContent value="proformas">
           <TabProformas />
