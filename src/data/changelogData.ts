@@ -11,6 +11,13 @@ export interface ChangelogEntry {
 /** Entradas recientes (v8.x). Las anteriores se cargan dinámicamente. */
 export const recentChangelog: ChangelogEntry[] = [
   {
+    version: "8.48.0",
+    date: "2026-04-24",
+    type: "minor",
+    title: "Facturación: extracción automática del folio desde el PDF",
+    description: "Al subir el PDF de la factura timbrada en el diálogo 'Marcar Facturada', el sistema lee automáticamente el contenido del PDF y extrae el folio buscando patrones como 'FOLIO: XXX', 'FOLIO FISCAL' o 'NÚMERO DE FOLIO' (basado en el formato estándar de CFDI mexicanos). El folio detectado se coloca automáticamente en el campo 'Folio de factura' (que sigue siendo editable). Se muestra un indicador 'Leyendo folio del PDF...' durante el proceso, una confirmación verde cuando se detecta correctamente, o un aviso ámbar si no se pudo extraer (en cuyo caso la contadora lo ingresa manualmente). Implementado con pdfjs-dist en el navegador, sin necesidad de subir el archivo al servidor para procesarlo.",
+  },
+  {
     version: "8.47.0",
     date: "2026-04-24",
     type: "minor",
