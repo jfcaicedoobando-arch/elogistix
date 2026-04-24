@@ -7,7 +7,7 @@ import { useOrgFilter } from '@/hooks/useOrgFilter';
 export type FacturaRow = Tables<'facturas'>;
 
 /** Columnas para lista de facturas (UI tabla + reportes) */
-const FACTURA_LIST_COLUMNS = 'id, numero, cliente_nombre, expediente, total, moneda, fecha_emision, fecha_vencimiento, estado' as const;
+const FACTURA_LIST_COLUMNS = 'id, numero, cliente_nombre, expediente, total, moneda, fecha_emision, fecha_vencimiento, estado, proforma_id, factura_pdf_url, factura_xml_url, proformas:proforma_id(numero)' as const;
 
 export function useFacturas() {
   const { organizationId } = useOrgFilter();
