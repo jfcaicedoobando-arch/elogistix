@@ -11,6 +11,13 @@ export interface ChangelogEntry {
 /** Entradas recientes (v8.x). Las anteriores se cargan dinámicamente. */
 export const recentChangelog: ChangelogEntry[] = [
   {
+    version: "8.45.2",
+    date: "2026-04-24",
+    type: "patch",
+    title: "Proformas: formato especial para Flete Terrestre en PDF",
+    description: "El generador de PDF de proformas ahora muestra el concepto 'Flete Terrestre' como 'Servicios de Logística (Flete Terrestre)' para cumplir con los requisitos de facturación. Esta transformación solo aplica al documento PDF generado; la descripción original se mantiene sin cambios en la base de datos y en las tablas de la interfaz.",
+  },
+  {
     version: "8.45.1",
     date: "2026-04-24",
     type: "patch",
