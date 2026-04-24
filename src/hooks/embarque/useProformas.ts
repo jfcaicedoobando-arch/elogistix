@@ -59,6 +59,8 @@ interface CrearProformaParams {
     total_mxn: number;
   };
   notas?: string;
+  /** Mapa conceptoId → aplica_iva decidido por el usuario (solo USD; MXN siempre true) */
+  ivaOverrides?: Record<string, boolean>;
 }
 
 /** Crea una proforma y marca conceptos como en_proforma */
@@ -70,6 +72,16 @@ export function useCrearProforma() {
     mutationFn: async (params: CrearProformaParams) => {
       if (!organizationId) throw new Error('Organización no disponible');
       if (params.conceptoIds.length === 0) throw new Error('Debe seleccionar al menos un concepto');
+
+      // 0. Aplicar overrides de IVA en los conceptos seleccionados (uno por uno para respetar el valor)
+      if (params.ivaOverrides) {
+        const updates = Object.entries(params.ivaOverrides).map(([id, aplica]) =>
+          supabase.from('conceptos_venta').update({ aplica_iva: aplica }).eq('id', id)
+        );
+        const results = await Promise.all(updates);
+        const firstErr = results.find(r => r.error);
+        if (firstErr?.error) throw firstErr.error;
+      }
 
       // 1. Generar número consecutivo
       const { data: numero, error: errNum } = await supabase

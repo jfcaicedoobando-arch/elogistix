@@ -11,6 +11,13 @@ export interface ChangelogEntry {
 /** Entradas recientes (v8.x). Las anteriores se cargan dinámicamente. */
 export const recentChangelog: ChangelogEntry[] = [
   {
+    version: "8.43.1",
+    date: "2026-04-24",
+    type: "patch",
+    title: "Toggle de IVA por concepto en proformas",
+    description: "El diálogo 'Generar Proforma' ahora incluye un switch de IVA por cada concepto de la lista. Reglas: los conceptos en MXN tienen el switch activo y deshabilitado (siempre llevan IVA al 16%); los conceptos en USD permiten al usuario decidir si aplica IVA, inicializándose con el valor del campo aplica_iva del concepto. El switch se desactiva si el concepto no está seleccionado. Los totales (Subtotal, IVA y Total por moneda) se recalculan en tiempo real al cambiar cualquier toggle. Al generar la proforma, la decisión del usuario se persiste en cada concepto (campo aplica_iva en conceptos_venta) antes de marcarlos como 'en_proforma', garantizando que el PDF y el historial reflejen exactamente lo seleccionado.",
+  },
+  {
     version: "8.43.0",
     date: "2026-04-24",
     type: "minor",
