@@ -139,3 +139,60 @@ export function useCrearProforma() {
     },
   });
 }
+
+interface EliminarProformaParams {
+  proformaId: string;
+  embarqueId: string;
+  numero: string;
+}
+
+/** Elimina una proforma, libera sus conceptos y actualiza tiene_proforma del embarque */
+export function useEliminarProforma() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (params: EliminarProformaParams) => {
+      // 1. Liberar conceptos: pendiente y quitar proforma_id
+      const { error: errUpd } = await supabase
+        .from('conceptos_venta')
+        .update({ estado_facturacion: 'pendiente', proforma_id: null })
+        .eq('proforma_id', params.proformaId);
+      if (errUpd) throw errUpd;
+
+      // 2. Eliminar la proforma
+      const { error: errDel } = await supabase
+        .from('proformas')
+        .delete()
+        .eq('id', params.proformaId);
+      if (errDel) throw errDel;
+
+      // 3. Verificar si quedan otras proformas; si no, marcar tiene_proforma = false
+      const { count, error: errCount } = await supabase
+        .from('proformas')
+        .select('id', { count: 'exact', head: true })
+        .eq('embarque_id', params.embarqueId);
+      if (errCount) throw errCount;
+
+      if ((count ?? 0) === 0) {
+        const { error: errEmb } = await supabase
+          .from('embarques')
+          .update({ tiene_proforma: false })
+          .eq('id', params.embarqueId);
+        if (errEmb) throw errEmb;
+      }
+
+      return params;
+    },
+    onSuccess: (params) => {
+      toast.success('Proforma eliminada correctamente');
+      queryClient.invalidateQueries({ queryKey: ['proformas', 'embarque', params.embarqueId] });
+      queryClient.invalidateQueries({ queryKey: ['proformas', 'all'] });
+      queryClient.invalidateQueries({ queryKey: ['embarque', params.embarqueId] });
+      queryClient.invalidateQueries({ queryKey: ['conceptos_venta'] });
+      queryClient.invalidateQueries({ queryKey: ['embarques'] });
+    },
+    onError: (error: Error) => {
+      toast.error(`Error al eliminar proforma: ${error.message}`);
+    },
+  });
+}
