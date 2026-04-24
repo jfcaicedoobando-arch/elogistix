@@ -28,8 +28,14 @@ export function TabProformas() {
   const [downloadingId, setDownloadingId] = useState<string | null>(null);
   const [proformaAFacturar, setProformaAFacturar] = useState<ProformaRow | null>(null);
 
-  const { data: proformas = [], isLoading } = useProformas();
+  const { data: proformasAll = [], isLoading } = useProformas();
   const tasaIva = useTasaIVA();
+
+  // Solo proformas aprobadas (excluye borradores y consolidadas absorbidas)
+  const proformas = useMemo(
+    () => proformasAll.filter(p => (p.estado_aprobacion ?? 'aprobada') === 'aprobada'),
+    [proformasAll]
+  );
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
