@@ -24,6 +24,25 @@ export function useProformasEmbarque(embarqueId?: string) {
   });
 }
 
+/** Lista todas las proformas de la organización */
+export function useProformas() {
+  const { organizationId } = useOrgFilter();
+  return useQuery({
+    queryKey: ['proformas', 'all', organizationId],
+    enabled: !!organizationId,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('proformas')
+        .select('*')
+        .eq('organization_id', organizationId!)
+        .order('created_at', { ascending: false });
+      if (error) throw error;
+      return data as ProformaRow[];
+    },
+    staleTime: 30_000,
+  });
+}
+
 interface CrearProformaParams {
   embarqueId: string;
   clienteId: string;

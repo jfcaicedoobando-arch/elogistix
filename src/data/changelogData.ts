@@ -11,6 +11,13 @@ export interface ChangelogEntry {
 /** Entradas recientes (v8.x). Las anteriores se cargan dinámicamente. */
 export const recentChangelog: ChangelogEntry[] = [
   {
+    version: "8.43.0",
+    date: "2026-04-24",
+    type: "minor",
+    title: "Pre-Facturación: tab Proformas y PDF mejorado",
+    description: "Se renombra el módulo 'Facturación' a 'Pre-Facturación' (sidebar y título de página) para reflejar mejor el flujo operativo (proformas → facturas → liquidación). Nueva pestaña 'Proformas' como vista por defecto del módulo, que lista todas las proformas de la organización con columnas: # Proforma, Expediente, Cliente, Monto USD, Monto MXN, Fecha y Acciones. Incluye búsqueda por número/expediente/cliente, exportación a CSV con todos los desgloses (subtotal, IVA y total por moneda), paginación server-side y botón 'Descargar' por fila que regenera el PDF cargando en paralelo embarque, conceptos asociados y datos fiscales del cliente. PDF rediseñado: encabezado con título 'PROFORMA' grande (32px, espaciado de letras) y badge 'SIN VALIDEZ FISCAL' en ámbar; bloque de Datos del Cliente con razón social, RFC y dirección completa (dirección + ciudad + estado + CP); bloque de Datos del Embarque en grid de 3 columnas con modo, tipo, incoterm, ruta origen→destino y descripción de mercancía; tablas separadas por moneda con bloque de subtotales/IVA/total destacado al pie de cada tabla (USD muestra IVA solo si algún concepto lo lleva; MXN siempre muestra IVA al 16%); aviso amarillo prominente al pie 'Este documento es una proforma y no tiene validez fiscal'. Tasa de IVA leída desde useTasaIVA.",
+  },
+  {
     version: "8.42.0",
     date: "2026-04-24",
     type: "minor",

@@ -11,6 +11,7 @@ import { calcularIVA } from "@/lib/financialUtils";
 import { useTasaIVA } from "@/hooks/useTasaIVA";
 import { useCrearProforma } from "@/hooks/embarque/useProformas";
 import { generarPdfProforma } from "@/generators/proformaPdf";
+import { supabase } from "@/integrations/supabase/client";
 import type { Tables } from "@/integrations/supabase/types";
 
 type ConceptoVenta = Tables<'conceptos_venta'>;
@@ -90,11 +91,18 @@ export function DialogGenerarProforma({ open, onOpenChange, embarque, conceptosP
         totales,
         notas: notas.trim() || undefined,
       });
+      // Cargar datos del cliente para el PDF
+      const { data: cliente } = await supabase
+        .from('clientes')
+        .select('nombre, rfc, direccion, ciudad, estado, cp')
+        .eq('id', embarque.cliente_id)
+        .maybeSingle();
       // Generar y descargar PDF
       generarPdfProforma({
         proforma,
         embarque,
         conceptos: conceptosSeleccionados,
+        cliente,
         tasaIva,
       });
       onOpenChange(false);
