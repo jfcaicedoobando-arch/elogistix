@@ -44,7 +44,7 @@ const dashboardItems = [
 const gestionItems = [
   { title: "Cotizaciones", url: "/cotizaciones", icon: ClipboardList },
   { title: "Embarques", url: "/embarques", icon: Ship },
-  { title: "Facturación", url: "/facturacion", icon: FileText },
+  { title: "Pre-Facturación", url: "/facturacion", icon: FileText },
 ];
 
 const reportesItems = [
