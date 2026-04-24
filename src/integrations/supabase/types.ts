@@ -1265,6 +1265,7 @@ export type Database = {
           cliente_nombre: string
           created_at: string
           created_by: string | null
+          dias_credito: number | null
           embarque_id: string
           expediente: string
           fecha_emision: string
@@ -1273,6 +1274,7 @@ export type Database = {
           iva_usd: number
           notas: string | null
           numero: string
+          operador: string | null
           organization_id: string
           subtotal_mxn: number
           subtotal_usd: number
@@ -1286,6 +1288,7 @@ export type Database = {
           cliente_nombre: string
           created_at?: string
           created_by?: string | null
+          dias_credito?: number | null
           embarque_id: string
           expediente: string
           fecha_emision?: string
@@ -1294,6 +1297,7 @@ export type Database = {
           iva_usd?: number
           notas?: string | null
           numero: string
+          operador?: string | null
           organization_id?: string
           subtotal_mxn?: number
           subtotal_usd?: number
@@ -1307,6 +1311,7 @@ export type Database = {
           cliente_nombre?: string
           created_at?: string
           created_by?: string | null
+          dias_credito?: number | null
           embarque_id?: string
           expediente?: string
           fecha_emision?: string
@@ -1315,6 +1320,7 @@ export type Database = {
           iva_usd?: number
           notas?: string | null
           numero?: string
+          operador?: string | null
           organization_id?: string
           subtotal_mxn?: number
           subtotal_usd?: number
