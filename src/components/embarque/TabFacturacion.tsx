@@ -307,22 +307,54 @@ export function TabFacturacion({ facturas, canEdit, embarque }: Props) {
               <TableHeader>
                 <TableRow>
                   <TableHead># Factura</TableHead>
+                  <TableHead>Proforma</TableHead>
                   <TableHead>Monto</TableHead>
                   <TableHead>Moneda</TableHead>
                   <TableHead>Fecha</TableHead>
                   <TableHead>Estado</TableHead>
+                  <TableHead>Archivos</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {facturas.map(factura => (
-                  <TableRow key={factura.id}>
-                    <TableCell className="font-medium">{factura.numero}</TableCell>
-                    <TableCell>{formatCurrency(Number(factura.total), factura.moneda)}</TableCell>
-                    <TableCell>{factura.moneda}</TableCell>
-                    <TableCell>{formatDate(factura.fecha_emision)}</TableCell>
-                    <TableCell><Badge className={getEstadoColor(factura.estado)}>{factura.estado}</Badge></TableCell>
-                  </TableRow>
-                ))}
+                {facturas.map(factura => {
+                  const proformaNumero = factura.proforma_id
+                    ? proformas.find(p => p.id === factura.proforma_id)?.numero
+                    : null;
+                  return (
+                    <TableRow key={factura.id}>
+                      <TableCell className="font-medium">{factura.numero}</TableCell>
+                      <TableCell className="text-xs">
+                        {proformaNumero
+                          ? <span className="font-mono">{proformaNumero}</span>
+                          : <span className="text-muted-foreground">—</span>}
+                      </TableCell>
+                      <TableCell>{formatCurrency(Number(factura.total), factura.moneda)}</TableCell>
+                      <TableCell>{factura.moneda}</TableCell>
+                      <TableCell>{formatDate(factura.fecha_emision)}</TableCell>
+                      <TableCell><Badge className={getEstadoColor(factura.estado)}>{factura.estado}</Badge></TableCell>
+                      <TableCell>
+                        {!factura.factura_pdf_url && !factura.factura_xml_url ? (
+                          <span className="text-muted-foreground text-xs">—</span>
+                        ) : (
+                          <div className="flex items-center gap-1">
+                            {factura.factura_pdf_url && (
+                              <a href={factura.factura_pdf_url} target="_blank" rel="noopener noreferrer" download
+                                title="Descargar PDF" className="inline-flex">
+                                <FileText className="h-4 w-4 text-red-600 hover:text-red-700" />
+                              </a>
+                            )}
+                            {factura.factura_xml_url && (
+                              <a href={factura.factura_xml_url} target="_blank" rel="noopener noreferrer" download
+                                title="Descargar XML" className="inline-flex">
+                                <FileCode2 className="h-4 w-4 text-blue-600 hover:text-blue-700" />
+                              </a>
+                            )}
+                          </div>
+                        )}
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
               </TableBody>
             </Table>
           ) : (
