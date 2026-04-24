@@ -118,6 +118,7 @@ export function DialogGenerarProforma({ open, onOpenChange, embarque, conceptosP
         ivaOverrides[c.id] = c.moneda === 'MXN' ? true : !!ivaPorConcepto[c.id];
       });
 
+      const diasCreditoNum = diasCredito.trim() === '' ? null : Number(diasCredito);
       const proforma = await crearProforma.mutateAsync({
         embarqueId: embarque.id,
         clienteId: embarque.cliente_id,
@@ -127,6 +128,8 @@ export function DialogGenerarProforma({ open, onOpenChange, embarque, conceptosP
         conceptoIds: Array.from(seleccionados),
         totales,
         notas: notas.trim() || undefined,
+        operador: embarque.operador || null,
+        diasCredito: Number.isFinite(diasCreditoNum as number) ? (diasCreditoNum as number) : null,
         ivaOverrides,
       });
       const { data: cliente } = await supabase
