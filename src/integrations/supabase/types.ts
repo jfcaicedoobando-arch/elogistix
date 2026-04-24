@@ -796,7 +796,6 @@ export type Database = {
           puerto_destino: string | null
           puerto_origen: string | null
           shipper: string
-          tiene_proforma: boolean
           tipo: Database["public"]["Enums"]["tipo_operacion"]
           tipo_cambio_eur: number
           tipo_cambio_usd: number
@@ -846,7 +845,6 @@ export type Database = {
           puerto_destino?: string | null
           puerto_origen?: string | null
           shipper?: string
-          tiene_proforma?: boolean
           tipo: Database["public"]["Enums"]["tipo_operacion"]
           tipo_cambio_eur?: number
           tipo_cambio_usd?: number
@@ -896,7 +894,6 @@ export type Database = {
           puerto_destino?: string | null
           puerto_origen?: string | null
           shipper?: string
-          tiene_proforma?: boolean
           tipo?: Database["public"]["Enums"]["tipo_operacion"]
           tipo_cambio_eur?: number
           tipo_cambio_usd?: number
@@ -1242,72 +1239,6 @@ export type Database = {
         }
         Relationships: []
       }
-      proformas: {
-        Row: {
-          cliente_id: string | null
-          cliente_nombre: string
-          conceptos: Json
-          created_at: string
-          created_by: string | null
-          embarque_id: string
-          estado: Database["public"]["Enums"]["estado_proforma"]
-          expediente: string
-          factura_externa_folio: string | null
-          fecha_facturacion: string | null
-          id: string
-          iva: number
-          moneda: Database["public"]["Enums"]["moneda"]
-          notas: string | null
-          numero: string
-          organization_id: string
-          subtotal: number
-          total: number
-          updated_at: string
-        }
-        Insert: {
-          cliente_id?: string | null
-          cliente_nombre?: string
-          conceptos?: Json
-          created_at?: string
-          created_by?: string | null
-          embarque_id: string
-          estado?: Database["public"]["Enums"]["estado_proforma"]
-          expediente?: string
-          factura_externa_folio?: string | null
-          fecha_facturacion?: string | null
-          id?: string
-          iva?: number
-          moneda?: Database["public"]["Enums"]["moneda"]
-          notas?: string | null
-          numero: string
-          organization_id?: string
-          subtotal?: number
-          total?: number
-          updated_at?: string
-        }
-        Update: {
-          cliente_id?: string | null
-          cliente_nombre?: string
-          conceptos?: Json
-          created_at?: string
-          created_by?: string | null
-          embarque_id?: string
-          estado?: Database["public"]["Enums"]["estado_proforma"]
-          expediente?: string
-          factura_externa_folio?: string | null
-          fecha_facturacion?: string | null
-          id?: string
-          iva?: number
-          moneda?: Database["public"]["Enums"]["moneda"]
-          notas?: string | null
-          numero?: string
-          organization_id?: string
-          subtotal?: number
-          total?: number
-          updated_at?: string
-        }
-        Relationships: []
-      }
       proveedores: {
         Row: {
           contacto: string
@@ -1547,10 +1478,6 @@ export type Database = {
         Args: { _org_id: string; _user_id: string }
         Returns: boolean
       }
-      marcar_proforma_facturada: {
-        Args: { p_fecha: string; p_folio: string; p_id: string }
-        Returns: undefined
-      }
       operaciones_stats: { Args: never; Returns: Json }
       operadores_distintos: {
         Args: never
@@ -1633,7 +1560,6 @@ export type Database = {
         | "Vencida"
         | "Cancelada"
       estado_liquidacion: "Pendiente" | "Pagado"
-      estado_proforma: "Pendiente" | "Facturada" | "Cancelada"
       incoterm:
         | "EXW"
         | "FOB"
@@ -1834,7 +1760,6 @@ export const Constants = {
       ],
       estado_factura: ["Borrador", "Emitida", "Pagada", "Vencida", "Cancelada"],
       estado_liquidacion: ["Pendiente", "Pagado"],
-      estado_proforma: ["Pendiente", "Facturada", "Cancelada"],
       incoterm: [
         "EXW",
         "FOB",

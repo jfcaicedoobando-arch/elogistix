@@ -133,15 +133,7 @@ export default function EmbarqueDetalle() {
         </TabsContent>
 
         <TabsContent value="facturacion">
-          <TabFacturacion
-            facturas={facturas}
-            canEdit={canEdit}
-            embarqueId={id!}
-            expediente={embarque?.expediente || ''}
-            clienteId={embarque?.cliente_id || null}
-            clienteNombre={embarque?.cliente_nombre || ''}
-            conceptosVenta={conceptosVenta}
-          />
+          <TabFacturacion facturas={facturas} canEdit={canEdit} />
         </TabsContent>
 
         <TabsContent value="tracking">

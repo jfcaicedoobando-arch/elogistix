@@ -11,13 +11,6 @@ export interface ChangelogEntry {
 /** Entradas recientes (v8.x). Las anteriores se cargan dinámicamente. */
 export const recentChangelog: ChangelogEntry[] = [
   {
-    version: "8.41.0",
-    date: "2026-04-24",
-    type: "minor",
-    title: "Proformas: generación desde embarques y seguimiento en Facturación",
-    description: "Nuevo módulo de Proformas (documentos no fiscales) que permite a la operación generar una proforma desde el detalle del embarque (Tab Facturación), autocargada con los conceptos de venta y editable (descripción, cantidad, precio, moneda, IVA opcional). Las proformas quedan registradas con numeración consecutiva por embarque (PRO-{expediente}-{nn}) y los conceptos se almacenan como snapshot inmutable. Cada embarque con proforma activa muestra un badge 'PRO' en la lista. Nueva pestaña 'Proformas' en el módulo de Facturación con filtro por estado (Pendiente/Facturada/Cancelada) y badge con contador de pendientes; la contadora descarga el PDF (con marca de agua y aviso 'DOCUMENTO NO FISCAL'), factura en su software externo y registra manualmente el folio fiscal y la fecha de facturación con el botón 'Facturar', dejando trazabilidad completa. Migración: nueva tabla public.proformas con RLS multi-tenant + portal cliente, nuevo enum estado_proforma, columna embarques.tiene_proforma sincronizada por trigger, RPC marcar_proforma_facturada.",
-  },
-  {
     version: "8.40.1",
     date: "2026-04-22",
     type: "patch",
