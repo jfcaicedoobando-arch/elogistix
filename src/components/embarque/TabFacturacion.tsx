@@ -35,6 +35,9 @@ interface Factura {
   moneda: string;
   fecha_emision: string;
   estado: string;
+  proforma_id?: string | null;
+  factura_pdf_url?: string | null;
+  factura_xml_url?: string | null;
 }
 
 interface Props {
