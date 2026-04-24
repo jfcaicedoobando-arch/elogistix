@@ -6,6 +6,15 @@ import { useOrgFilter } from '@/hooks/useOrgFilter';
 
 export type FacturaRow = Tables<'facturas'>;
 
+export type FacturaListItem = Pick<
+  FacturaRow,
+  'id' | 'numero' | 'cliente_nombre' | 'expediente' | 'total' | 'moneda'
+  | 'fecha_emision' | 'fecha_vencimiento' | 'estado'
+  | 'proforma_id' | 'factura_pdf_url' | 'factura_xml_url'
+> & {
+  proformas: { numero: string } | null;
+};
+
 /** Columnas para lista de facturas (UI tabla + reportes) */
 const FACTURA_LIST_COLUMNS = 'id, numero, cliente_nombre, expediente, total, moneda, fecha_emision, fecha_vencimiento, estado, proforma_id, factura_pdf_url, factura_xml_url, proformas:proforma_id(numero)' as const;
 
@@ -21,7 +30,7 @@ export function useFacturas() {
       if (organizationId) query = query.eq('organization_id', organizationId);
       const { data, error } = await query;
       if (error) throw error;
-      return data as FacturaRow[];
+      return (data ?? []) as unknown as FacturaListItem[];
     },
   });
 }
