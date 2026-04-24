@@ -452,22 +452,32 @@ export function useConsolidarProformas() {
       if (!organizationId) throw new Error('Organización no disponible');
       if (params.proformaIds.length < 2) throw new Error('Selecciona al menos 2 proformas para consolidar');
 
+      // 1. Cargar proformas originales con su embarque (para contenedor / tipo)
       const { data: originales, error: errLoad } = await supabase
         .from('proformas')
-        .select('id, subtotal_usd, iva_usd, total_usd, subtotal_mxn, iva_mxn, total_mxn')
+        .select('id, embarque_id, subtotal_usd, iva_usd, total_usd, subtotal_mxn, iva_mxn, total_mxn, embarques:embarque_id(contenedor, tipo_contenedor)')
         .in('id', params.proformaIds);
       if (errLoad) throw errLoad;
       if (!originales || originales.length !== params.proformaIds.length) {
         throw new Error('No se pudieron cargar todas las proformas seleccionadas');
       }
 
-      const sum = (key: 'subtotal_usd' | 'iva_usd' | 'total_usd' | 'subtotal_mxn' | 'iva_mxn' | 'total_mxn') =>
-        originales.reduce((acc, p) => acc + Number(p[key] ?? 0), 0);
+      // 2. Cargar todos los conceptos asociados a esas proformas (para snapshot consolidado)
+      const { data: conceptosOrig, error: errConc } = await supabase
+        .from('conceptos_venta')
+        .select('descripcion, cantidad, precio_unitario, total, moneda, aplica_iva, proforma_id')
+        .in('proforma_id', params.proformaIds);
+      if (errConc) throw errConc;
 
+      const sum = (key: 'subtotal_usd' | 'iva_usd' | 'total_usd' | 'subtotal_mxn' | 'iva_mxn' | 'total_mxn') =>
+        originales.reduce((acc, p) => acc + Number((p as any)[key] ?? 0), 0);
+
+      // 3. Generar número de la nueva proforma
       const { data: numero, error: errNum } = await supabase
         .rpc('generar_numero_proforma', { p_org_id: organizationId });
       if (errNum) throw errNum;
 
+      // 4. Insertar la proforma consolidada
       const { data: nueva, error: errIns } = await supabase
         .from('proformas')
         .insert({
@@ -495,11 +505,53 @@ export function useConsolidarProformas() {
         .single();
       if (errIns) throw errIns;
 
+      // 5. Snapshot de conceptos en proforma_conceptos_consolidados (agrupados por contenedor)
+      const proformaToEmbarque = new Map<string, { contenedor: string | null; tipo: string | null }>();
+      for (const o of originales as any[]) {
+        proformaToEmbarque.set(o.id as string, {
+          contenedor: o.embarques?.contenedor ?? null,
+          tipo: o.embarques?.tipo_contenedor ?? null,
+        });
+      }
+
+      const TASA = 0.16;
+      const conceptosSnap = (conceptosOrig ?? []).map(c => {
+        const meta = proformaToEmbarque.get(c.proforma_id as string) ?? { contenedor: null, tipo: null };
+        const totalLinea = Number(c.cantidad) * Number(c.precio_unitario);
+        const ivaLinea = c.aplica_iva ? totalLinea * TASA : 0;
+        return {
+          proforma_id: nueva.id,
+          embarque_id: (originales as any[]).find(o => o.id === c.proforma_id)?.embarque_id ?? null,
+          contenedor: meta.contenedor,
+          tipo_contenedor: meta.tipo,
+          descripcion: c.descripcion,
+          cantidad: Number(c.cantidad),
+          precio_unitario: Number(c.precio_unitario),
+          total: totalLinea,
+          moneda: c.moneda,
+          aplica_iva: !!c.aplica_iva,
+          iva: ivaLinea,
+          organization_id: organizationId,
+        };
+      });
+
+      if (conceptosSnap.length > 0) {
+        const { error: errSnap } = await supabase
+          .from('proforma_conceptos_consolidados')
+          .insert(conceptosSnap);
+        if (errSnap) {
+          await supabase.from('proformas').delete().eq('id', nueva.id);
+          throw errSnap;
+        }
+      }
+
+      // 6. Marcar originales como consolidadas
       const { error: errUpd } = await supabase
         .from('proformas')
         .update({ estado_revision: 'consolidada', consolidada_en: nueva.id })
         .in('id', params.proformaIds);
       if (errUpd) {
+        await supabase.from('proforma_conceptos_consolidados').delete().eq('proforma_id', nueva.id);
         await supabase.from('proformas').delete().eq('id', nueva.id);
         throw errUpd;
       }
