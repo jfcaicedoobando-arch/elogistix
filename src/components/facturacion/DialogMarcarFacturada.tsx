@@ -1,9 +1,9 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Loader2 } from "lucide-react";
+import { Loader2, Paperclip, X, FileText, FileCode2 } from "lucide-react";
 import { useMarcarProformaFacturada, type ProformaRow } from "@/hooks/embarque/useProformas";
 
 interface Props {
@@ -15,12 +15,18 @@ interface Props {
 export function DialogMarcarFacturada({ open, onOpenChange, proforma }: Props) {
   const [folio, setFolio] = useState("");
   const [fecha, setFecha] = useState(new Date().toISOString().slice(0, 10));
+  const [pdfFile, setPdfFile] = useState<File | null>(null);
+  const [xmlFile, setXmlFile] = useState<File | null>(null);
+  const pdfInputRef = useRef<HTMLInputElement>(null);
+  const xmlInputRef = useRef<HTMLInputElement>(null);
   const marcar = useMarcarProformaFacturada();
 
   useEffect(() => {
     if (open) {
       setFolio("");
       setFecha(new Date().toISOString().slice(0, 10));
+      setPdfFile(null);
+      setXmlFile(null);
     }
   }, [open]);
 
@@ -32,11 +38,22 @@ export function DialogMarcarFacturada({ open, onOpenChange, proforma }: Props) {
         embarqueId: proforma.embarque_id,
         folioFacturaExterna: folio.trim(),
         fechaFacturacion: fecha,
+        pdfFile,
+        xmlFile,
       });
       onOpenChange(false);
     } catch {
       // toast en hook
     }
+  };
+
+  const clearPdf = () => {
+    setPdfFile(null);
+    if (pdfInputRef.current) pdfInputRef.current.value = "";
+  };
+  const clearXml = () => {
+    setXmlFile(null);
+    if (xmlInputRef.current) xmlInputRef.current.value = "";
   };
 
   return (
@@ -67,6 +84,56 @@ export function DialogMarcarFacturada({ open, onOpenChange, proforma }: Props) {
               value={fecha}
               onChange={(e) => setFecha(e.target.value)}
             />
+          </div>
+
+          <div className="space-y-3 pt-2 border-t">
+            <div className="flex items-center gap-2 text-sm font-medium">
+              <Paperclip className="h-4 w-4" /> Adjuntar factura timbrada (opcional)
+            </div>
+
+            {/* PDF */}
+            <div className="space-y-1">
+              <Label htmlFor="pdf" className="text-xs">Factura PDF</Label>
+              {pdfFile ? (
+                <div className="flex items-center gap-2 rounded-md border bg-muted/40 px-2 py-1.5 text-sm">
+                  <FileText className="h-4 w-4 text-red-600 shrink-0" />
+                  <span className="truncate flex-1">{pdfFile.name}</span>
+                  <Button type="button" variant="ghost" size="icon" className="h-6 w-6" onClick={clearPdf}>
+                    <X className="h-3.5 w-3.5" />
+                  </Button>
+                </div>
+              ) : (
+                <Input
+                  id="pdf"
+                  ref={pdfInputRef}
+                  type="file"
+                  accept=".pdf,application/pdf"
+                  onChange={(e) => setPdfFile(e.target.files?.[0] ?? null)}
+                />
+              )}
+            </div>
+
+            {/* XML */}
+            <div className="space-y-1">
+              <Label htmlFor="xml" className="text-xs">Factura XML</Label>
+              {xmlFile ? (
+                <div className="flex items-center gap-2 rounded-md border bg-muted/40 px-2 py-1.5 text-sm">
+                  <FileCode2 className="h-4 w-4 text-blue-600 shrink-0" />
+                  <span className="truncate flex-1">{xmlFile.name}</span>
+                  <Button type="button" variant="ghost" size="icon" className="h-6 w-6" onClick={clearXml}>
+                    <X className="h-3.5 w-3.5" />
+                  </Button>
+                </div>
+              ) : (
+                <Input
+                  id="xml"
+                  ref={xmlInputRef}
+                  type="file"
+                  accept=".xml,application/xml,text/xml"
+                  onChange={(e) => setXmlFile(e.target.files?.[0] ?? null)}
+                />
+              )}
+            </div>
           </div>
         </div>
         <DialogFooter>
