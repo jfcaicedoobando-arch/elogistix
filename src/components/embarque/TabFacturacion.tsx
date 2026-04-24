@@ -48,6 +48,8 @@ export function TabFacturacion({ facturas, canEdit, embarque }: Props) {
   const [dialogOpen, setDialogOpen] = useState(false);
   const { data: conceptos = [] } = useEmbarqueConceptosVenta(embarque.id);
   const { data: proformas = [] } = useProformasEmbarque(embarque.id);
+  const eliminarProforma = useEliminarProforma();
+  const [proformaAEliminar, setProformaAEliminar] = useState<{ id: string; numero: string } | null>(null);
 
   const conceptosPendientes = useMemo(
     () => conceptos.filter(c => c.estado_facturacion !== 'en_proforma'),
