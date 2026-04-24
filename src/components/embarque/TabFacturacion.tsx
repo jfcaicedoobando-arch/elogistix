@@ -259,11 +259,29 @@ export function TabFacturacion({ facturas, canEdit, embarque }: Props) {
                       {Number(p.total_mxn) > 0 ? formatCurrency(Number(p.total_mxn), 'MXN') : '—'}
                     </TableCell>
                     <TableCell>
-                      {facturada ? (
-                        <Badge className="bg-green-100 text-green-800 border-green-200 hover:bg-green-100">Facturada</Badge>
-                      ) : (
-                        <Badge className="bg-amber-100 text-amber-800 border-amber-200 hover:bg-amber-100">Pendiente</Badge>
-                      )}
+                      <div className="flex flex-col gap-1">
+                        {(() => {
+                          const rev = p.estado_revision ?? 'aprobada';
+                          if (rev === 'pendiente') {
+                            return <Badge className="bg-amber-100 text-amber-800 border-amber-200 hover:bg-amber-100 w-fit">Pendiente de revisión</Badge>;
+                          }
+                          if (rev === 'consolidada') {
+                            const consolidadaEnId = (p as any).consolidada_en as string | null;
+                            const consolidadaNumero = proformas.find(x => x.id === consolidadaEnId)?.numero;
+                            return (
+                              <Badge className="bg-blue-100 text-blue-800 border-blue-200 hover:bg-blue-100 w-fit">
+                                Consolidada{consolidadaNumero ? ` en ${consolidadaNumero}` : ''}
+                              </Badge>
+                            );
+                          }
+                          return <Badge className="bg-emerald-100 text-emerald-800 border-emerald-200 hover:bg-emerald-100 w-fit">Aprobada</Badge>;
+                        })()}
+                        {facturada ? (
+                          <Badge className="bg-green-100 text-green-800 border-green-200 hover:bg-green-100 w-fit">Facturada</Badge>
+                        ) : (
+                          <Badge className="bg-amber-50 text-amber-700 border-amber-200 hover:bg-amber-50 w-fit">Pago pendiente</Badge>
+                        )}
+                      </div>
                     </TableCell>
                     <TableCell className="text-xs">
                       {p.folio_factura_externa
