@@ -96,8 +96,23 @@ export function TabProformas() {
       sticky: true, sortable: true, sortValue: (p) => p.numero, render: (p) => p.numero,
     },
     {
+      key: "tipo", header: "Tipo", width: "w-[130px]",
+      render: (p) => p.es_consolidada ? (
+        <Badge className="bg-blue-100 text-blue-800 border-blue-200 hover:bg-blue-100">
+          Consolidada ({p.embarques_ids?.length ?? 0})
+        </Badge>
+      ) : (
+        <Badge variant="outline">Individual</Badge>
+      ),
+    },
+    {
       key: "expediente", header: "Expediente", width: "w-[120px]",
       sortable: true, sortValue: (p) => p.expediente, render: (p) => p.expediente,
+    },
+    {
+      key: "bl_master", header: "BL Master", width: "w-[140px]", className: "text-xs font-mono",
+      sortable: true, sortValue: (p) => p.bl_master ?? '',
+      render: (p) => p.bl_master || <span className="text-muted-foreground">—</span>,
     },
     {
       key: "cliente", header: "Cliente", width: "min-w-[180px]", className: "max-w-[220px] truncate",
