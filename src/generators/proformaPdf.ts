@@ -15,6 +15,13 @@ interface GenerarPdfProformaParams {
   tasaIva?: number;
 }
 
+function formatearDescripcionConcepto(descripcion: string): string {
+  if (descripcion.toLowerCase() === 'flete terrestre') {
+    return 'Servicios de Logística (Flete Terrestre)';
+  }
+  return descripcion;
+}
+
 export function generarPdfProforma({ proforma, embarque, conceptos, cliente, tasaIva = TASA_IVA }: GenerarPdfProformaParams) {
   const conceptosUSD = conceptos.filter(c => c.moneda === 'USD');
   const conceptosMXN = conceptos.filter(c => c.moneda === 'MXN');
@@ -33,14 +40,14 @@ export function generarPdfProforma({ proforma, embarque, conceptos, cliente, tas
     const headerCols = hayIva
       ? `<th>Descripción</th><th class="right">Cant.</th><th class="right">P. Unit.</th><th class="right">Total</th><th class="right">IVA</th>`
       : `<th>Descripción</th><th class="right">Cant.</th><th class="right">P. Unit.</th><th class="right">Total</th>`;
-    const rows = conceptosUSD.map(c => {
-      const sub = Number(c.cantidad) * Number(c.precio_unitario);
-      if (hayIva) {
-        const iva = c.aplica_iva ? calcularIVA(sub, tasaIva) : 0;
-        return `<tr><td>${c.descripcion}</td><td class="right">${c.cantidad}</td><td class="right">${formatCurrency(Number(c.precio_unitario), 'USD')}</td><td class="right">${formatCurrency(sub, 'USD')}</td><td class="right">${c.aplica_iva ? formatCurrency(iva, 'USD') : '—'}</td></tr>`;
-      }
-      return `<tr><td>${c.descripcion}</td><td class="right">${c.cantidad}</td><td class="right">${formatCurrency(Number(c.precio_unitario), 'USD')}</td><td class="right">${formatCurrency(sub, 'USD')}</td></tr>`;
-    }).join('');
+      const rows = conceptosUSD.map(c => {
+        const sub = Number(c.cantidad) * Number(c.precio_unitario);
+        if (hayIva) {
+          const iva = c.aplica_iva ? calcularIVA(sub, tasaIva) : 0;
+          return `<tr><td>${formatearDescripcionConcepto(c.descripcion)}</td><td class="right">${c.cantidad}</td><td class="right">${formatCurrency(Number(c.precio_unitario), 'USD')}</td><td class="right">${formatCurrency(sub, 'USD')}</td><td class="right">${c.aplica_iva ? formatCurrency(iva, 'USD') : '—'}</td></tr>`;
+        }
+        return `<tr><td>${formatearDescripcionConcepto(c.descripcion)}</td><td class="right">${c.cantidad}</td><td class="right">${formatCurrency(Number(c.precio_unitario), 'USD')}</td><td class="right">${formatCurrency(sub, 'USD')}</td></tr>`;
+      }).join('');
     return `
       <h4>Conceptos en USD</h4>
       <table>
@@ -58,7 +65,7 @@ export function generarPdfProforma({ proforma, embarque, conceptos, cliente, tas
     if (conceptosMXN.length === 0) return '';
     const rows = conceptosMXN.map(c => {
       const sub = Number(c.cantidad) * Number(c.precio_unitario);
-      return `<tr><td>${c.descripcion}</td><td class="right">${c.cantidad}</td><td class="right">${formatCurrency(Number(c.precio_unitario), 'MXN')}</td><td class="right">${formatCurrency(sub, 'MXN')}</td></tr>`;
+      return `<tr><td>${formatearDescripcionConcepto(c.descripcion)}</td><td class="right">${c.cantidad}</td><td class="right">${formatCurrency(Number(c.precio_unitario), 'MXN')}</td><td class="right">${formatCurrency(sub, 'MXN')}</td></tr>`;
     }).join('');
     return `
       <h4>Conceptos en MXN</h4>
