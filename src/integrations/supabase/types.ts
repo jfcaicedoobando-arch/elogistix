@@ -1277,6 +1277,65 @@ export type Database = {
         }
         Relationships: []
       }
+      proforma_conceptos_consolidados: {
+        Row: {
+          aplica_iva: boolean
+          cantidad: number
+          contenedor: string | null
+          created_at: string
+          descripcion: string
+          embarque_id: string | null
+          id: string
+          iva: number
+          moneda: Database["public"]["Enums"]["moneda"]
+          organization_id: string
+          precio_unitario: number
+          proforma_id: string
+          tipo_contenedor: string | null
+          total: number
+        }
+        Insert: {
+          aplica_iva?: boolean
+          cantidad?: number
+          contenedor?: string | null
+          created_at?: string
+          descripcion: string
+          embarque_id?: string | null
+          id?: string
+          iva?: number
+          moneda?: Database["public"]["Enums"]["moneda"]
+          organization_id?: string
+          precio_unitario?: number
+          proforma_id: string
+          tipo_contenedor?: string | null
+          total?: number
+        }
+        Update: {
+          aplica_iva?: boolean
+          cantidad?: number
+          contenedor?: string | null
+          created_at?: string
+          descripcion?: string
+          embarque_id?: string | null
+          id?: string
+          iva?: number
+          moneda?: Database["public"]["Enums"]["moneda"]
+          organization_id?: string
+          precio_unitario?: number
+          proforma_id?: string
+          tipo_contenedor?: string | null
+          total?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "proforma_conceptos_consolidados_proforma_id_fkey"
+            columns: ["proforma_id"]
+            isOneToOne: false
+            referencedRelation: "proformas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       proformas: {
         Row: {
           bl_master: string | null
