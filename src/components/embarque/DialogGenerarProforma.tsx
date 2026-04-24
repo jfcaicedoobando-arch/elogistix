@@ -3,6 +3,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogD
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
+import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Loader2, FileText } from "lucide-react";
@@ -28,12 +29,19 @@ export function DialogGenerarProforma({ open, onOpenChange, embarque, conceptosP
   const tasaIva = useTasaIVA();
   const crearProforma = useCrearProforma();
   const [seleccionados, setSeleccionados] = useState<Set<string>>(new Set());
+  const [ivaPorConcepto, setIvaPorConcepto] = useState<Record<string, boolean>>({});
   const [notas, setNotas] = useState("");
 
-  // Reset al abrir: seleccionar todos por defecto
+  // Reset al abrir: seleccionar todos por defecto e inicializar IVA
   useEffect(() => {
     if (open) {
       setSeleccionados(new Set(conceptosPendientes.map(c => c.id)));
+      const ivaInit: Record<string, boolean> = {};
+      conceptosPendientes.forEach(c => {
+        // MXN siempre true; USD toma el valor existente del concepto
+        ivaInit[c.id] = c.moneda === 'MXN' ? true : !!c.aplica_iva;
+      });
+      setIvaPorConcepto(ivaInit);
       setNotas("");
     }
   }, [open, conceptosPendientes]);
@@ -55,12 +63,17 @@ export function DialogGenerarProforma({ open, onOpenChange, embarque, conceptosP
     }
   };
 
+  const toggleIva = (id: string, moneda: string) => {
+    if (moneda === 'MXN') return; // bloqueado
+    setIvaPorConcepto(prev => ({ ...prev, [id]: !prev[id] }));
+  };
+
   const conceptosSeleccionados = useMemo(
     () => conceptosPendientes.filter(c => seleccionados.has(c.id)),
     [conceptosPendientes, seleccionados]
   );
 
-  // Calcular totales por moneda
+  // Calcular totales por moneda usando ivaPorConcepto
   const totales = useMemo(() => {
     const usd = conceptosSeleccionados.filter(c => c.moneda === 'USD');
     const mxn = conceptosSeleccionados.filter(c => c.moneda === 'MXN');
@@ -68,7 +81,7 @@ export function DialogGenerarProforma({ open, onOpenChange, embarque, conceptosP
     const subtotal_usd = usd.reduce((s, c) => s + Number(c.cantidad) * Number(c.precio_unitario), 0);
     const iva_usd = usd.reduce((s, c) => {
       const sub = Number(c.cantidad) * Number(c.precio_unitario);
-      return c.aplica_iva ? s + calcularIVA(sub, tasaIva) : s;
+      return ivaPorConcepto[c.id] ? s + calcularIVA(sub, tasaIva) : s;
     }, 0);
     const total_usd = subtotal_usd + iva_usd;
 
@@ -77,10 +90,16 @@ export function DialogGenerarProforma({ open, onOpenChange, embarque, conceptosP
     const total_mxn = subtotal_mxn + iva_mxn;
 
     return { subtotal_usd, iva_usd, total_usd, subtotal_mxn, iva_mxn, total_mxn };
-  }, [conceptosSeleccionados, tasaIva]);
+  }, [conceptosSeleccionados, tasaIva, ivaPorConcepto]);
 
   const handleGenerar = async () => {
     try {
+      // Construir overrides solo para los conceptos seleccionados
+      const ivaOverrides: Record<string, boolean> = {};
+      conceptosSeleccionados.forEach(c => {
+        ivaOverrides[c.id] = c.moneda === 'MXN' ? true : !!ivaPorConcepto[c.id];
+      });
+
       const proforma = await crearProforma.mutateAsync({
         embarqueId: embarque.id,
         clienteId: embarque.cliente_id,
@@ -90,6 +109,7 @@ export function DialogGenerarProforma({ open, onOpenChange, embarque, conceptosP
         conceptoIds: Array.from(seleccionados),
         totales,
         notas: notas.trim() || undefined,
+        ivaOverrides,
       });
       // Cargar datos del cliente para el PDF
       const { data: cliente } = await supabase
@@ -97,11 +117,16 @@ export function DialogGenerarProforma({ open, onOpenChange, embarque, conceptosP
         .select('nombre, rfc, direccion, ciudad, estado, cp')
         .eq('id', embarque.cliente_id)
         .maybeSingle();
+      // Conceptos con aplica_iva reflejando la selección del usuario (para el PDF)
+      const conceptosParaPdf = conceptosSeleccionados.map(c => ({
+        ...c,
+        aplica_iva: ivaOverrides[c.id],
+      }));
       // Generar y descargar PDF
       generarPdfProforma({
         proforma,
         embarque,
-        conceptos: conceptosSeleccionados,
+        conceptos: conceptosParaPdf,
         cliente,
         tasaIva,
       });
@@ -120,7 +145,7 @@ export function DialogGenerarProforma({ open, onOpenChange, embarque, conceptosP
         <DialogHeader>
           <DialogTitle>Generar Proforma</DialogTitle>
           <DialogDescription>
-            Selecciona los conceptos a incluir en la proforma. Se generará un número consecutivo y se descargará el PDF.
+            Selecciona los conceptos y decide si aplica IVA en cada uno (MXN siempre lleva IVA).
           </DialogDescription>
         </DialogHeader>
 
@@ -133,15 +158,18 @@ export function DialogGenerarProforma({ open, onOpenChange, embarque, conceptosP
                   Seleccionar todos ({totalSeleccionados}/{conceptosPendientes.length})
                 </Label>
               </div>
+              <span className="text-xs text-muted-foreground">IVA por concepto</span>
             </div>
             <div className="divide-y max-h-[300px] overflow-y-auto">
               {conceptosPendientes.map(c => {
                 const sub = Number(c.cantidad) * Number(c.precio_unitario);
-                const aplicaIva = c.moneda === 'MXN' || c.aplica_iva;
+                const isSelected = seleccionados.has(c.id);
+                const ivaActivo = ivaPorConcepto[c.id] ?? false;
+                const ivaBloqueado = c.moneda === 'MXN';
                 return (
                   <div key={c.id} className="flex items-start gap-3 p-3 hover:bg-muted/30">
                     <Checkbox
-                      checked={seleccionados.has(c.id)}
+                      checked={isSelected}
                       onCheckedChange={() => toggle(c.id)}
                       className="mt-1"
                     />
@@ -149,13 +177,26 @@ export function DialogGenerarProforma({ open, onOpenChange, embarque, conceptosP
                       <div className="flex items-center gap-2 flex-wrap">
                         <span className="font-medium text-sm">{c.descripcion}</span>
                         <Badge variant="outline" className="text-xs">{c.moneda}</Badge>
-                        {aplicaIva && (
-                          <Badge variant="secondary" className="text-xs bg-amber-100 text-amber-800">+IVA</Badge>
-                        )}
                       </div>
                       <div className="text-xs text-muted-foreground mt-0.5">
                         {c.cantidad} × {formatCurrency(Number(c.precio_unitario), c.moneda)} = {formatCurrency(sub, c.moneda)}
                       </div>
+                    </div>
+                    <div className="flex flex-col items-end gap-1 shrink-0">
+                      <div className="flex items-center gap-2">
+                        <Label htmlFor={`iva-${c.id}`} className="text-xs text-muted-foreground cursor-pointer">
+                          IVA
+                        </Label>
+                        <Switch
+                          id={`iva-${c.id}`}
+                          checked={ivaActivo}
+                          onCheckedChange={() => toggleIva(c.id, c.moneda)}
+                          disabled={ivaBloqueado || !isSelected}
+                        />
+                      </div>
+                      {ivaBloqueado && (
+                        <span className="text-[10px] text-muted-foreground">Obligatorio MXN</span>
+                      )}
                     </div>
                   </div>
                 );
