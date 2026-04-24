@@ -254,6 +254,30 @@ export function DialogGenerarProforma({ open, onOpenChange, embarque, conceptosP
               )}
             </div>
 
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <div>
+                <Label htmlFor="dias-credito" className="text-sm">Días de crédito</Label>
+                <Input
+                  id="dias-credito"
+                  type="number"
+                  min={0}
+                  value={diasCredito}
+                  onChange={(e) => setDiasCredito(e.target.value)}
+                  placeholder="0 = Contado"
+                  className="mt-1"
+                />
+                <p className="text-[11px] text-muted-foreground mt-1">
+                  Por defecto se toma del cliente. 0 = Contado.
+                </p>
+              </div>
+              <div>
+                <Label className="text-sm">Ejecutivo de Operaciones</Label>
+                <div className="mt-1 px-3 py-2 rounded-md border bg-muted/30 text-sm">
+                  {embarque.operador || <span className="text-muted-foreground italic">Sin asignar</span>}
+                </div>
+              </div>
+            </div>
+
             <div>
               <Label htmlFor="notas" className="text-sm">Notas (opcional)</Label>
               <Textarea
