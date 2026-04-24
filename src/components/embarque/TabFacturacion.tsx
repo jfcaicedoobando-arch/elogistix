@@ -233,11 +233,15 @@ export function TabFacturacion({ facturas, canEdit, embarque }: Props) {
                   <TableHead className="text-right">Días Crédito</TableHead>
                   <TableHead className="text-right">Total USD</TableHead>
                   <TableHead className="text-right">Total MXN</TableHead>
+                  <TableHead>Estado</TableHead>
+                  <TableHead>Folio Factura</TableHead>
                   <TableHead className="text-right">Acciones</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {proformas.map(p => (
+                {proformas.map(p => {
+                  const facturada = (p.estado_proforma ?? 'pendiente') === 'facturada';
+                  return (
                   <TableRow key={p.id}>
                     <TableCell className="font-medium">{p.numero}</TableCell>
                     <TableCell>{formatDate(p.fecha_emision)}</TableCell>
@@ -251,12 +255,24 @@ export function TabFacturacion({ facturas, canEdit, embarque }: Props) {
                     <TableCell className="text-right">
                       {Number(p.total_mxn) > 0 ? formatCurrency(Number(p.total_mxn), 'MXN') : '—'}
                     </TableCell>
+                    <TableCell>
+                      {facturada ? (
+                        <Badge className="bg-green-100 text-green-800 border-green-200 hover:bg-green-100">Facturada</Badge>
+                      ) : (
+                        <Badge className="bg-amber-100 text-amber-800 border-amber-200 hover:bg-amber-100">Pendiente</Badge>
+                      )}
+                    </TableCell>
+                    <TableCell className="text-xs">
+                      {p.folio_factura_externa
+                        ? <span className="font-mono">{p.folio_factura_externa}</span>
+                        : <span className="text-muted-foreground">—</span>}
+                    </TableCell>
                     <TableCell className="text-right">
                       <div className="flex items-center justify-end gap-1">
                         <Button variant="outline" size="sm" onClick={() => handleDescargarProforma(p.id)}>
                           <Download className="h-3.5 w-3.5 mr-1" /> Descargar
                         </Button>
-                        {canEdit && (
+                        {canEdit && !facturada && (
                           <Button
                             variant="outline"
                             size="sm"
@@ -269,7 +285,8 @@ export function TabFacturacion({ facturas, canEdit, embarque }: Props) {
                       </div>
                     </TableCell>
                   </TableRow>
-                ))}
+                  );
+                })}
               </TableBody>
             </Table>
           )}
