@@ -1,15 +1,25 @@
 import { useState, useMemo } from "react";
-import { FileText, Download, CheckCircle2, Clock, Receipt } from "lucide-react";
+import { FileText, Download, CheckCircle2, Clock, Receipt, Trash2, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { formatCurrency, formatDate } from "@/lib/formatters";
 import { getEstadoColor } from "@/lib/uiMappings";
 import { calcularIVA } from "@/lib/financialUtils";
 import { useTasaIVA } from "@/hooks/useTasaIVA";
 import { useEmbarqueConceptosVenta } from "@/hooks/useEmbarques";
-import { useProformasEmbarque } from "@/hooks/embarque/useProformas";
+import { useProformasEmbarque, useEliminarProforma } from "@/hooks/embarque/useProformas";
 import { DialogGenerarProforma } from "./DialogGenerarProforma";
 import { generarPdfProforma } from "@/generators/proformaPdf";
 import { supabase } from "@/integrations/supabase/client";
@@ -38,6 +48,8 @@ export function TabFacturacion({ facturas, canEdit, embarque }: Props) {
   const [dialogOpen, setDialogOpen] = useState(false);
   const { data: conceptos = [] } = useEmbarqueConceptosVenta(embarque.id);
   const { data: proformas = [] } = useProformasEmbarque(embarque.id);
+  const eliminarProforma = useEliminarProforma();
+  const [proformaAEliminar, setProformaAEliminar] = useState<{ id: string; numero: string } | null>(null);
 
   const conceptosPendientes = useMemo(
     () => conceptos.filter(c => c.estado_facturacion !== 'en_proforma'),
@@ -234,9 +246,21 @@ export function TabFacturacion({ facturas, canEdit, embarque }: Props) {
                       {Number(p.total_mxn) > 0 ? formatCurrency(Number(p.total_mxn), 'MXN') : '—'}
                     </TableCell>
                     <TableCell className="text-right">
-                      <Button variant="outline" size="sm" onClick={() => handleDescargarProforma(p.id)}>
-                        <Download className="h-3.5 w-3.5 mr-1" /> Descargar
-                      </Button>
+                      <div className="flex items-center justify-end gap-1">
+                        <Button variant="outline" size="sm" onClick={() => handleDescargarProforma(p.id)}>
+                          <Download className="h-3.5 w-3.5 mr-1" /> Descargar
+                        </Button>
+                        {canEdit && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setProformaAEliminar({ id: p.id, numero: p.numero })}
+                            className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                          >
+                            <Trash2 className="h-3.5 w-3.5 mr-1" /> Eliminar
+                          </Button>
+                        )}
+                      </div>
                     </TableCell>
                   </TableRow>
                 ))}
@@ -287,6 +311,44 @@ export function TabFacturacion({ facturas, canEdit, embarque }: Props) {
         embarque={embarque}
         conceptosPendientes={conceptosPendientes}
       />
+
+      <AlertDialog open={!!proformaAEliminar} onOpenChange={(o) => !o && setProformaAEliminar(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Eliminar proforma</AlertDialogTitle>
+            <AlertDialogDescription>
+              ¿Estás seguro de eliminar la proforma <strong>{proformaAEliminar?.numero}</strong>? Los conceptos volverán a estado Pendiente.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={eliminarProforma.isPending}>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              disabled={eliminarProforma.isPending}
+              onClick={async (e) => {
+                e.preventDefault();
+                if (!proformaAEliminar) return;
+                try {
+                  await eliminarProforma.mutateAsync({
+                    proformaId: proformaAEliminar.id,
+                    embarqueId: embarque.id,
+                    numero: proformaAEliminar.numero,
+                  });
+                  setProformaAEliminar(null);
+                } catch {
+                  // Error manejado en hook
+                }
+              }}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {eliminarProforma.isPending ? (
+                <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Eliminando...</>
+              ) : (
+                <>Eliminar</>
+              )}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
