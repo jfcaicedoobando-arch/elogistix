@@ -1,7 +1,9 @@
 import { useState, useMemo } from "react";
-import { Download } from "lucide-react";
+import { Download, FileCheck2 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import SearchInput from "@/components/SearchInput";
 import PaginationControls from "@/components/PaginationControls";
 import { DataTable, type DataTableColumn } from "@/components/DataTable";
@@ -12,27 +14,41 @@ import { useTasaIVA } from "@/hooks/useTasaIVA";
 import { generarPdfProforma } from "@/generators/proformaPdf";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { DialogMarcarFacturada } from "./DialogMarcarFacturada";
 
 const DEFAULT_PAGE_SIZE = 20;
+type FiltroEstado = "todas" | "pendiente" | "facturada";
 
 export function TabProformas() {
   const [search, setSearch] = useState("");
+  const [filtroEstado, setFiltroEstado] = useState<FiltroEstado>("todas");
   const [page, setPage] = useState(0);
   const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
   const [downloadingId, setDownloadingId] = useState<string | null>(null);
+  const [proformaAFacturar, setProformaAFacturar] = useState<ProformaRow | null>(null);
 
   const { data: proformas = [], isLoading } = useProformas();
   const tasaIva = useTasaIVA();
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
-    if (!q) return proformas;
-    return proformas.filter(p =>
-      p.numero.toLowerCase().includes(q) ||
-      p.expediente.toLowerCase().includes(q) ||
-      p.cliente_nombre.toLowerCase().includes(q)
-    );
-  }, [proformas, search]);
+    return proformas.filter(p => {
+      if (filtroEstado !== "todas" && (p.estado_proforma ?? "pendiente") !== filtroEstado) return false;
+      if (!q) return true;
+      return (
+        p.numero.toLowerCase().includes(q) ||
+        p.expediente.toLowerCase().includes(q) ||
+        p.cliente_nombre.toLowerCase().includes(q) ||
+        (p.folio_factura_externa ?? "").toLowerCase().includes(q)
+      );
+    });
+  }, [proformas, search, filtroEstado]);
+
+  const counts = useMemo(() => ({
+    todas: proformas.length,
+    pendiente: proformas.filter(p => (p.estado_proforma ?? "pendiente") === "pendiente").length,
+    facturada: proformas.filter(p => p.estado_proforma === "facturada").length,
+  }), [proformas]);
 
   const paginated = filtered.slice(page * pageSize, (page + 1) * pageSize);
   const totalPages = Math.ceil(filtered.length / pageSize);
@@ -40,7 +56,6 @@ export function TabProformas() {
   const handleDescargar = async (proforma: ProformaRow) => {
     setDownloadingId(proforma.id);
     try {
-      // Cargar embarque, conceptos y cliente en paralelo
       const [embarqueRes, conceptosRes, clienteRes] = await Promise.all([
         supabase
           .from('embarques')
@@ -113,30 +128,70 @@ export function TabProformas() {
       sortable: true, sortValue: (p) => p.fecha_emision, render: (p) => formatDate(p.fecha_emision),
     },
     {
-      key: "acciones", header: "Acciones", width: "w-[120px]",
-      render: (p) => (
-        <Button
-          variant="outline"
-          size="sm"
-          disabled={downloadingId === p.id}
-          onClick={(e) => { e.stopPropagation(); handleDescargar(p); }}
-        >
-          <Download className="h-3.5 w-3.5 mr-1" /> Descargar
-        </Button>
-      ),
+      key: "estado", header: "Estado", width: "w-[110px]",
+      sortable: true, sortValue: (p) => p.estado_proforma ?? "pendiente",
+      render: (p) => {
+        const estado = p.estado_proforma ?? "pendiente";
+        return estado === "facturada" ? (
+          <Badge className="bg-green-100 text-green-800 border-green-200 hover:bg-green-100">Facturada</Badge>
+        ) : (
+          <Badge className="bg-amber-100 text-amber-800 border-amber-200 hover:bg-amber-100">Pendiente</Badge>
+        );
+      },
+    },
+    {
+      key: "folio_factura", header: "Folio Factura", width: "w-[130px]", className: "text-xs",
+      sortable: true, sortValue: (p) => p.folio_factura_externa ?? '',
+      render: (p) => p.folio_factura_externa
+        ? <span className="font-mono">{p.folio_factura_externa}</span>
+        : <span className="text-muted-foreground">—</span>,
+    },
+    {
+      key: "acciones", header: "Acciones", width: "w-[200px]",
+      render: (p) => {
+        const facturada = (p.estado_proforma ?? "pendiente") === "facturada";
+        return (
+          <div className="flex items-center gap-1">
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={downloadingId === p.id}
+              onClick={(e) => { e.stopPropagation(); handleDescargar(p); }}
+            >
+              <Download className="h-3.5 w-3.5 mr-1" /> PDF
+            </Button>
+            {!facturada && (
+              <Button
+                variant="default"
+                size="sm"
+                onClick={(e) => { e.stopPropagation(); setProformaAFacturar(p); }}
+              >
+                <FileCheck2 className="h-3.5 w-3.5 mr-1" /> Facturada
+              </Button>
+            )}
+          </div>
+        );
+      },
     },
   ];
 
   return (
     <div className="space-y-4">
       <Card>
-        <CardContent className="p-4 flex flex-wrap gap-3">
+        <CardContent className="p-4 flex flex-wrap gap-3 items-center">
           <SearchInput
             value={search}
             onChange={(v) => { setSearch(v); setPage(0); }}
-            placeholder="Buscar por número, expediente o cliente..."
+            placeholder="Buscar por número, expediente, cliente o folio..."
             className="flex-1 min-w-[240px]"
           />
+          <Tabs value={filtroEstado} onValueChange={(v) => { setFiltroEstado(v as FiltroEstado); setPage(0); }}>
+            <TabsList>
+              <TabsTrigger value="todas">Todas ({counts.todas})</TabsTrigger>
+              <TabsTrigger value="pendiente">Pendientes ({counts.pendiente})</TabsTrigger>
+              <TabsTrigger value="facturada">Facturadas ({counts.facturada})</TabsTrigger>
+            </TabsList>
+          </Tabs>
           <Button
             variant="outline"
             disabled={filtered.length === 0}
@@ -155,6 +210,9 @@ export function TabProformas() {
                 { key: "iva_mxn", label: "IVA MXN" },
                 { key: "total_mxn", label: "Total MXN" },
                 { key: "fecha", label: "Fecha" },
+                { key: "estado", label: "Estado" },
+                { key: "folio_factura", label: "Folio Factura" },
+                { key: "fecha_facturacion", label: "Fecha Facturación" },
               ],
               filtered.map(p => ({
                 numero: p.numero,
@@ -169,6 +227,9 @@ export function TabProformas() {
                 iva_mxn: Number(p.iva_mxn),
                 total_mxn: Number(p.total_mxn),
                 fecha: p.fecha_emision,
+                estado: p.estado_proforma ?? 'pendiente',
+                folio_factura: p.folio_factura_externa ?? '',
+                fecha_facturacion: p.fecha_facturacion ?? '',
               })),
             )}
           >
@@ -195,6 +256,12 @@ export function TabProformas() {
           />
         </CardContent>
       </Card>
+
+      <DialogMarcarFacturada
+        open={!!proformaAFacturar}
+        onOpenChange={(o) => !o && setProformaAFacturar(null)}
+        proforma={proformaAFacturar}
+      />
     </div>
   );
 }

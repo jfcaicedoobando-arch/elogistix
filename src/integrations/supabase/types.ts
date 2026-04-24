@@ -1270,8 +1270,11 @@ export type Database = {
           created_by: string | null
           dias_credito: number | null
           embarque_id: string
+          estado_proforma: string
           expediente: string
           fecha_emision: string
+          fecha_facturacion: string | null
+          folio_factura_externa: string | null
           id: string
           iva_mxn: number
           iva_usd: number
@@ -1293,8 +1296,11 @@ export type Database = {
           created_by?: string | null
           dias_credito?: number | null
           embarque_id: string
+          estado_proforma?: string
           expediente: string
           fecha_emision?: string
+          fecha_facturacion?: string | null
+          folio_factura_externa?: string | null
           id?: string
           iva_mxn?: number
           iva_usd?: number
@@ -1316,8 +1322,11 @@ export type Database = {
           created_by?: string | null
           dias_credito?: number | null
           embarque_id?: string
+          estado_proforma?: string
           expediente?: string
           fecha_emision?: string
+          fecha_facturacion?: string | null
+          folio_factura_externa?: string | null
           id?: string
           iva_mxn?: number
           iva_usd?: number
