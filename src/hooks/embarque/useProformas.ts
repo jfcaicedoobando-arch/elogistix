@@ -59,6 +59,8 @@ interface CrearProformaParams {
     total_mxn: number;
   };
   notas?: string;
+  operador?: string | null;
+  diasCredito?: number | null;
   /** Mapa conceptoId → aplica_iva decidido por el usuario (solo USD; MXN siempre true) */
   ivaOverrides?: Record<string, boolean>;
 }
@@ -105,6 +107,8 @@ export function useCrearProforma() {
           iva_mxn: params.totales.iva_mxn,
           total_mxn: params.totales.total_mxn,
           notas: params.notas ?? null,
+          operador: params.operador ?? null,
+          dias_credito: params.diasCredito ?? null,
           organization_id: organizationId,
         })
         .select()

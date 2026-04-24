@@ -229,6 +229,8 @@ export function TabFacturacion({ facturas, canEdit, embarque }: Props) {
                 <TableRow>
                   <TableHead>Número</TableHead>
                   <TableHead>Fecha</TableHead>
+                  <TableHead>Operador</TableHead>
+                  <TableHead className="text-right">Días Crédito</TableHead>
                   <TableHead className="text-right">Total USD</TableHead>
                   <TableHead className="text-right">Total MXN</TableHead>
                   <TableHead className="text-right">Acciones</TableHead>
@@ -239,6 +241,10 @@ export function TabFacturacion({ facturas, canEdit, embarque }: Props) {
                   <TableRow key={p.id}>
                     <TableCell className="font-medium">{p.numero}</TableCell>
                     <TableCell>{formatDate(p.fecha_emision)}</TableCell>
+                    <TableCell className="text-sm">{p.operador || <span className="text-muted-foreground">—</span>}</TableCell>
+                    <TableCell className="text-right text-sm">
+                      {p.dias_credito == null ? '—' : Number(p.dias_credito) === 0 ? 'Contado' : `${p.dias_credito} días`}
+                    </TableCell>
                     <TableCell className="text-right">
                       {Number(p.total_usd) > 0 ? formatCurrency(Number(p.total_usd), 'USD') : '—'}
                     </TableCell>

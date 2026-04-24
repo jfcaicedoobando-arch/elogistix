@@ -137,6 +137,14 @@ export function generarPdfProforma({ proforma, embarque, conceptos, cliente, tas
   </section>
 
   <section>
+    <h3>Condiciones Comerciales</h3>
+    <div class="grid">
+      <div class="cell"><span class="label">Ejecutivo de Operaciones</span><span class="value">${proforma.operador || '—'}</span></div>
+      <div class="cell"><span class="label">Días de crédito</span><span class="value">${proforma.dias_credito == null ? '—' : (Number(proforma.dias_credito) === 0 ? 'Contado' : `${proforma.dias_credito} días`)}</span></div>
+    </div>
+  </section>
+
+  <section>
     <h3>Conceptos</h3>
     ${buildUsdTable()}
     ${buildMxnTable()}

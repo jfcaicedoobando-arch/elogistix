@@ -5,6 +5,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
+import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Loader2, FileText, ArrowLeft, ArrowRight, CheckCircle2 } from "lucide-react";
@@ -35,8 +36,9 @@ export function DialogGenerarProforma({ open, onOpenChange, embarque, conceptosP
   const [seleccionados, setSeleccionados] = useState<Set<string>>(new Set());
   const [ivaPorConcepto, setIvaPorConcepto] = useState<Record<string, boolean>>({});
   const [notas, setNotas] = useState("");
+  const [diasCredito, setDiasCredito] = useState<string>("");
 
-  // Reset al abrir
+  // Reset al abrir + cargar dias_credito del cliente como default
   useEffect(() => {
     if (open) {
       setPaso('seleccion');
@@ -47,8 +49,22 @@ export function DialogGenerarProforma({ open, onOpenChange, embarque, conceptosP
       });
       setIvaPorConcepto(ivaInit);
       setNotas("");
+      setDiasCredito("");
+      // Cargar dias_credito del cliente como default
+      if (embarque.cliente_id) {
+        supabase
+          .from('clientes')
+          .select('dias_credito')
+          .eq('id', embarque.cliente_id)
+          .maybeSingle()
+          .then(({ data }) => {
+            if (data?.dias_credito != null) {
+              setDiasCredito(String(data.dias_credito));
+            }
+          });
+      }
     }
-  }, [open, conceptosPendientes]);
+  }, [open, conceptosPendientes, embarque.cliente_id]);
 
   const toggle = (id: string) => {
     setSeleccionados(prev => {
@@ -102,6 +118,7 @@ export function DialogGenerarProforma({ open, onOpenChange, embarque, conceptosP
         ivaOverrides[c.id] = c.moneda === 'MXN' ? true : !!ivaPorConcepto[c.id];
       });
 
+      const diasCreditoNum = diasCredito.trim() === '' ? null : Number(diasCredito);
       const proforma = await crearProforma.mutateAsync({
         embarqueId: embarque.id,
         clienteId: embarque.cliente_id,
@@ -111,6 +128,8 @@ export function DialogGenerarProforma({ open, onOpenChange, embarque, conceptosP
         conceptoIds: Array.from(seleccionados),
         totales,
         notas: notas.trim() || undefined,
+        operador: embarque.operador || null,
+        diasCredito: Number.isFinite(diasCreditoNum as number) ? (diasCreditoNum as number) : null,
         ivaOverrides,
       });
       const { data: cliente } = await supabase
@@ -235,6 +254,30 @@ export function DialogGenerarProforma({ open, onOpenChange, embarque, conceptosP
               )}
             </div>
 
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <div>
+                <Label htmlFor="dias-credito" className="text-sm">Días de crédito</Label>
+                <Input
+                  id="dias-credito"
+                  type="number"
+                  min={0}
+                  value={diasCredito}
+                  onChange={(e) => setDiasCredito(e.target.value)}
+                  placeholder="0 = Contado"
+                  className="mt-1"
+                />
+                <p className="text-[11px] text-muted-foreground mt-1">
+                  Por defecto se toma del cliente. 0 = Contado.
+                </p>
+              </div>
+              <div>
+                <Label className="text-sm">Ejecutivo de Operaciones</Label>
+                <div className="mt-1 px-3 py-2 rounded-md border bg-muted/30 text-sm">
+                  {embarque.operador || <span className="text-muted-foreground italic">Sin asignar</span>}
+                </div>
+              </div>
+            </div>
+
             <div>
               <Label htmlFor="notas" className="text-sm">Notas (opcional)</Label>
               <Textarea
@@ -297,6 +340,19 @@ export function DialogGenerarProforma({ open, onOpenChange, embarque, conceptosP
                   })}
                 </TableBody>
               </Table>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3 text-sm">
+              <div className="rounded-md border p-3 bg-muted/20">
+                <p className="text-xs text-muted-foreground">Ejecutivo de Operaciones</p>
+                <p className="font-semibold mt-0.5">{embarque.operador || '—'}</p>
+              </div>
+              <div className="rounded-md border p-3 bg-muted/20">
+                <p className="text-xs text-muted-foreground">Días de crédito</p>
+                <p className="font-semibold mt-0.5">
+                  {diasCredito.trim() === '' ? '—' : Number(diasCredito) === 0 ? 'Contado' : `${diasCredito} días`}
+                </p>
+              </div>
             </div>
 
             <div className="rounded-md border-2 border-primary/30 bg-primary/5 p-4 space-y-2">
