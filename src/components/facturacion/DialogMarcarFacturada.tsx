@@ -106,10 +106,28 @@ export function DialogMarcarFacturada({ open, onOpenChange, proforma }: Props) {
             <Input
               id="folio"
               value={folio}
-              onChange={(e) => setFolio(e.target.value)}
+              onChange={(e) => {
+                setFolio(e.target.value);
+                setFolioAutoDetectado(false);
+              }}
               placeholder="Ej. A-12345"
               autoFocus
             />
+            {extrayendoFolio && (
+              <p className="text-xs text-muted-foreground flex items-center gap-1.5">
+                <Loader2 className="h-3 w-3 animate-spin" /> Leyendo folio del PDF...
+              </p>
+            )}
+            {folioAutoDetectado && !extrayendoFolio && (
+              <p className="text-xs text-emerald-600 flex items-center gap-1.5">
+                <Sparkles className="h-3 w-3" /> Folio detectado automáticamente del PDF
+              </p>
+            )}
+            {errorExtraccion && !extrayendoFolio && (
+              <p className="text-xs text-amber-600 flex items-center gap-1.5">
+                <AlertTriangle className="h-3 w-3" /> No se pudo leer el folio automáticamente, ingrésalo manualmente
+              </p>
+            )}
           </div>
           <div className="space-y-2">
             <Label htmlFor="fecha">Fecha de facturación</Label>
