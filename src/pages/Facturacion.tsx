@@ -78,6 +78,7 @@ export default function Facturacion() {
 
   const { data: facturas = [], isLoading: loadingFacturas } = useFacturas();
   const { data: gastosPendientes = [], isLoading: loadingGastos } = useGastosPendientes();
+  const { data: proformasPendientes = [] } = useProformasPendientes();
   const marcarPagado = useMarcarCostoPagado();
   const { canEdit } = usePermissions();
   const { toast } = useToast();
