@@ -86,12 +86,17 @@ export function TabFacturacion({ facturas, canEdit, embarque }: Props) {
   const handleDescargarProforma = async (proformaId: string) => {
     const proforma = proformas.find(p => p.id === proformaId);
     if (!proforma) return;
-    // Cargar conceptos y cliente en paralelo
-    const [conceptosRes, clienteRes] = await Promise.all([
-      supabase.from('conceptos_venta').select('*').eq('proforma_id', proformaId),
+    const esConsolidada = !!proforma.es_consolidada;
+    const [conceptosRes, clienteRes, consolidadosRes] = await Promise.all([
+      esConsolidada
+        ? Promise.resolve({ data: [] as any[], error: null as any })
+        : supabase.from('conceptos_venta').select('*').eq('proforma_id', proformaId),
       supabase.from('clientes').select('nombre, rfc, direccion, ciudad, estado, cp').eq('id', embarque.cliente_id).maybeSingle(),
+      esConsolidada
+        ? supabase.from('proforma_conceptos_consolidados').select('*').eq('proforma_id', proformaId)
+        : Promise.resolve({ data: [] as any[], error: null as any }),
     ]);
-    if (conceptosRes.error) {
+    if (conceptosRes.error || consolidadosRes.error) {
       toast.error('Error al cargar conceptos');
       return;
     }
@@ -101,6 +106,7 @@ export function TabFacturacion({ facturas, canEdit, embarque }: Props) {
       conceptos: conceptosRes.data || [],
       cliente: clienteRes.data,
       tasaIva,
+      conceptosConsolidados: consolidadosRes.data || [],
     });
   };
 
