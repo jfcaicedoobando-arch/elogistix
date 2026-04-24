@@ -114,6 +114,7 @@ export function useCrearProforma() {
           notas: params.notas ?? null,
           operador: params.operador ?? null,
           dias_credito: params.diasCredito ?? null,
+          estado_aprobacion: 'borrador',
           organization_id: organizationId,
         })
         .select()
@@ -137,7 +138,7 @@ export function useCrearProforma() {
       return proforma as ProformaRow;
     },
     onSuccess: (proforma) => {
-      toast.success(`Proforma ${proforma.numero} generada`);
+      toast.success(`Proforma ${proforma.numero} generada en borrador. Apruébala en Pre-Facturación → Expedientes.`);
       queryClient.invalidateQueries({ queryKey: ['proformas', 'embarque', proforma.embarque_id] });
       queryClient.invalidateQueries({ queryKey: ['embarque', proforma.embarque_id] });
       queryClient.invalidateQueries({ queryKey: ['conceptos_venta'] });
