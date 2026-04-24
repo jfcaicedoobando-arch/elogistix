@@ -15,6 +15,13 @@ interface GenerarPdfProformaParams {
   tasaIva?: number;
 }
 
+function formatearDescripcionConcepto(descripcion: string): string {
+  if (descripcion.toLowerCase() === 'flete terrestre') {
+    return 'Servicios de Logística (Flete Terrestre)';
+  }
+  return descripcion;
+}
+
 export function generarPdfProforma({ proforma, embarque, conceptos, cliente, tasaIva = TASA_IVA }: GenerarPdfProformaParams) {
   const conceptosUSD = conceptos.filter(c => c.moneda === 'USD');
   const conceptosMXN = conceptos.filter(c => c.moneda === 'MXN');
