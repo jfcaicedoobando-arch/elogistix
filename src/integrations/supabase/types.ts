@@ -106,6 +106,7 @@ export type Database = {
           contacto: string
           cp: string
           created_at: string
+          dias_credito: number | null
           direccion: string
           email: string
           estado: string
@@ -121,6 +122,7 @@ export type Database = {
           contacto?: string
           cp?: string
           created_at?: string
+          dias_credito?: number | null
           direccion?: string
           email?: string
           estado?: string
@@ -136,6 +138,7 @@ export type Database = {
           contacto?: string
           cp?: string
           created_at?: string
+          dias_credito?: number | null
           direccion?: string
           email?: string
           estado?: string
