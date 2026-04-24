@@ -342,8 +342,19 @@ export function DialogGenerarProforma({ open, onOpenChange, embarque, conceptosP
               </Table>
             </div>
 
-            <div className="rounded-md border-2 border-primary/30 bg-primary/5 p-4 space-y-2">
-              <h4 className="font-semibold text-sm mb-2">Totales finales</h4>
+            <div className="grid grid-cols-2 gap-3 text-sm">
+              <div className="rounded-md border p-3 bg-muted/20">
+                <p className="text-xs text-muted-foreground">Ejecutivo de Operaciones</p>
+                <p className="font-semibold mt-0.5">{embarque.operador || '—'}</p>
+              </div>
+              <div className="rounded-md border p-3 bg-muted/20">
+                <p className="text-xs text-muted-foreground">Días de crédito</p>
+                <p className="font-semibold mt-0.5">
+                  {diasCredito.trim() === '' ? '—' : Number(diasCredito) === 0 ? 'Contado' : `${diasCredito} días`}
+                </p>
+              </div>
+            </div>
+
               {totales.subtotal_usd > 0 && (
                 <div className="space-y-1 text-sm">
                   <div className="flex justify-between"><span>Subtotal USD:</span><span>{formatCurrency(totales.subtotal_usd, 'USD')}</span></div>
