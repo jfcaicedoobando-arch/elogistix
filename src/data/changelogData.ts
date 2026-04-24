@@ -11,6 +11,13 @@ export interface ChangelogEntry {
 /** Entradas recientes (v8.x). Las anteriores se cargan dinámicamente. */
 export const recentChangelog: ChangelogEntry[] = [
   {
+    version: "8.47.0",
+    date: "2026-04-24",
+    type: "minor",
+    title: "Facturación: creación automática de factura y archivos timbrados",
+    description: "Al marcar una proforma como facturada, ahora se crea automáticamente el registro en la tabla de facturas (una por moneda si la proforma tiene USD y MXN), con folio, fechas, vencimiento calculado según los días de crédito y vínculo a la proforma origen. Se pueden adjuntar opcionalmente los archivos PDF y XML de la factura timbrada (subidos al bucket público 'facturas'). En la tabla de Facturas del módulo Pre-Facturación se añadieron las columnas 'Proforma' (folio de origen) y 'Archivos' (descarga rápida de PDF/XML). En la tabla de Proformas, junto al folio de factura aparecen iconos para descargar los archivos timbrados. En el detalle del embarque, la sección 'Facturas' muestra la proforma de origen y los archivos, y la sección 'Proformas Generadas' incluye los iconos de descarga PDF/XML cuando ya está facturada.",
+  },
+  {
     version: "8.46.0",
     date: "2026-04-24",
     type: "minor",
