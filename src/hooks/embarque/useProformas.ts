@@ -144,6 +144,40 @@ export function useCrearProforma() {
   });
 }
 
+interface MarcarFacturadaParams {
+  proformaId: string;
+  embarqueId: string;
+  folioFacturaExterna: string;
+  fechaFacturacion: string; // YYYY-MM-DD
+}
+
+/** Marca una proforma como facturada con su folio externo */
+export function useMarcarProformaFacturada() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (params: MarcarFacturadaParams) => {
+      const { error } = await supabase
+        .from('proformas')
+        .update({
+          estado_proforma: 'facturada',
+          folio_factura_externa: params.folioFacturaExterna,
+          fecha_facturacion: params.fechaFacturacion,
+        })
+        .eq('id', params.proformaId);
+      if (error) throw error;
+      return params;
+    },
+    onSuccess: (params) => {
+      toast.success('Proforma marcada como facturada');
+      queryClient.invalidateQueries({ queryKey: ['proformas', 'all'] });
+      queryClient.invalidateQueries({ queryKey: ['proformas', 'embarque', params.embarqueId] });
+    },
+    onError: (error: Error) => {
+      toast.error(`Error: ${error.message}`);
+    },
+  });
+}
+
 interface EliminarProformaParams {
   proformaId: string;
   embarqueId: string;
