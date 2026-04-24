@@ -1285,7 +1285,9 @@ export type Database = {
           created_at: string
           created_by: string | null
           dias_credito: number | null
-          embarque_id: string
+          embarque_id: string | null
+          embarques_ids: string[] | null
+          es_consolidada: boolean
           estado_proforma: string
           expediente: string
           factura_id: string | null
@@ -1312,7 +1314,9 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           dias_credito?: number | null
-          embarque_id: string
+          embarque_id?: string | null
+          embarques_ids?: string[] | null
+          es_consolidada?: boolean
           estado_proforma?: string
           expediente: string
           factura_id?: string | null
@@ -1339,7 +1343,9 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           dias_credito?: number | null
-          embarque_id?: string
+          embarque_id?: string | null
+          embarques_ids?: string[] | null
+          es_consolidada?: boolean
           estado_proforma?: string
           expediente?: string
           factura_id?: string | null

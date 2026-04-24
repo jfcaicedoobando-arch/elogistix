@@ -12,6 +12,7 @@ import { formatCurrency, formatDate } from "@/lib/formatters";
 import { useProformas, type ProformaRow, type ProformaConFactura } from "@/hooks/embarque/useProformas";
 import { useTasaIVA } from "@/hooks/useTasaIVA";
 import { generarPdfProforma } from "@/generators/proformaPdf";
+import { generarPdfProformaConsolidada, type ContenedorConConceptos } from "@/generators/proformaConsolidadaPdf";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { DialogMarcarFacturada } from "./DialogMarcarFacturada";
@@ -56,33 +57,41 @@ export function TabProformas() {
   const handleDescargar = async (proforma: ProformaRow) => {
     setDownloadingId(proforma.id);
     try {
-      const [embarqueRes, conceptosRes, clienteRes] = await Promise.all([
-        supabase
+      const { data: clienteData } = await supabase
+        .from('clientes')
+        .select('nombre, rfc, direccion, ciudad, estado, cp')
+        .eq('id', proforma.cliente_id).maybeSingle();
+
+      const { data: conceptos, error: errC } = await supabase
+        .from('conceptos_venta').select('*').eq('proforma_id', proforma.id);
+      if (errC) throw errC;
+
+      if (proforma.es_consolidada && proforma.embarques_ids?.length) {
+        const { data: embarques, error: errE } = await supabase
+          .from('embarques')
+          .select('id, expediente, contenedor, tipo_contenedor')
+          .in('id', proforma.embarques_ids);
+        if (errE) throw errE;
+
+        const contenedores: ContenedorConConceptos[] = (embarques || []).map(e => ({
+          embarque: e,
+          conceptos: (conceptos || []).filter(c => c.embarque_id === e.id),
+        })).filter(c => c.conceptos.length > 0);
+
+        generarPdfProformaConsolidada({
+          proforma, blMaster: proforma.bl_master, contenedores, cliente: clienteData, tasaIva,
+        });
+      } else if (proforma.embarque_id) {
+        const { data: embarque, error: errE } = await supabase
           .from('embarques')
           .select('expediente, bl_master, modo, tipo, incoterm, puerto_origen, puerto_destino, aeropuerto_origen, aeropuerto_destino, ciudad_origen, ciudad_destino, naviera, aerolinea, descripcion_mercancia')
-          .eq('id', proforma.embarque_id)
-          .single(),
-        supabase
-          .from('conceptos_venta')
-          .select('*')
-          .eq('proforma_id', proforma.id),
-        supabase
-          .from('clientes')
-          .select('nombre, rfc, direccion, ciudad, estado, cp')
-          .eq('id', proforma.cliente_id)
-          .maybeSingle(),
-      ]);
+          .eq('id', proforma.embarque_id).single();
+        if (errE) throw errE;
 
-      if (embarqueRes.error) throw embarqueRes.error;
-      if (conceptosRes.error) throw conceptosRes.error;
-
-      generarPdfProforma({
-        proforma,
-        embarque: embarqueRes.data,
-        conceptos: conceptosRes.data || [],
-        cliente: clienteRes.data,
-        tasaIva,
-      });
+        generarPdfProforma({
+          proforma, embarque, conceptos: conceptos || [], cliente: clienteData, tasaIva,
+        });
+      }
     } catch (e) {
       toast.error('Error al generar PDF: ' + (e as Error).message);
     } finally {
@@ -96,8 +105,23 @@ export function TabProformas() {
       sticky: true, sortable: true, sortValue: (p) => p.numero, render: (p) => p.numero,
     },
     {
+      key: "tipo", header: "Tipo", width: "w-[130px]",
+      render: (p) => p.es_consolidada ? (
+        <Badge className="bg-blue-100 text-blue-800 border-blue-200 hover:bg-blue-100">
+          Consolidada ({p.embarques_ids?.length ?? 0})
+        </Badge>
+      ) : (
+        <Badge variant="outline">Individual</Badge>
+      ),
+    },
+    {
       key: "expediente", header: "Expediente", width: "w-[120px]",
       sortable: true, sortValue: (p) => p.expediente, render: (p) => p.expediente,
+    },
+    {
+      key: "bl_master", header: "BL Master", width: "w-[140px]", className: "text-xs font-mono",
+      sortable: true, sortValue: (p) => p.bl_master ?? '',
+      render: (p) => p.bl_master || <span className="text-muted-foreground">—</span>,
     },
     {
       key: "cliente", header: "Cliente", width: "min-w-[180px]", className: "max-w-[220px] truncate",

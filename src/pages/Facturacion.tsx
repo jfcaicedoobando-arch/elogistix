@@ -20,6 +20,7 @@ import PaginationControls from "@/components/PaginationControls";
 import { DataTable, type DataTableColumn } from "@/components/DataTable";
 import type { Database } from "@/integrations/supabase/types";
 import { TabProformas } from "@/components/facturacion/TabProformas";
+import { TabExpedientes } from "@/components/facturacion/TabExpedientes";
 
 type EstadoFactura = Database["public"]["Enums"]["estado_factura"];
 const ESTADOS_FACTURA: EstadoFactura[] = ['Borrador', 'Emitida', 'Pagada', 'Vencida', 'Cancelada'];
@@ -134,12 +135,17 @@ export default function Facturacion() {
         <p className="text-sm text-muted-foreground">Control de proformas, facturas emitidas y gastos por liquidar</p>
       </div>
 
-      <Tabs defaultValue="proformas">
+      <Tabs defaultValue="expedientes">
         <TabsList>
+          <TabsTrigger value="expedientes">Expedientes</TabsTrigger>
           <TabsTrigger value="proformas">Proformas</TabsTrigger>
           <TabsTrigger value="facturas">Facturas</TabsTrigger>
           <TabsTrigger value="liquidacion">Liquidación de Gastos</TabsTrigger>
         </TabsList>
+
+        <TabsContent value="expedientes">
+          <TabExpedientes />
+        </TabsContent>
 
         <TabsContent value="proformas">
           <TabProformas />

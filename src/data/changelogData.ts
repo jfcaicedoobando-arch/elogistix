@@ -11,6 +11,13 @@ export interface ChangelogEntry {
 /** Entradas recientes (v8.x). Las anteriores se cargan dinámicamente. */
 export const recentChangelog: ChangelogEntry[] = [
   {
+    version: "8.49.0",
+    date: "2026-04-24",
+    type: "minor",
+    title: "Pre-Facturación: proformas consolidadas a nivel de expediente",
+    description: "Nueva funcionalidad para facturar todos los contenedores de un mismo BL Master en una sola proforma. (1) Nueva tab 'Expedientes' en Pre-Facturación que agrupa los embarques por BL Master mostrando contenedores, totales pendientes USD/MXN y estado de proforma (Sin proforma / Parcial / Completa) con filtros y búsqueda. (2) Diálogo de proforma consolidada que muestra los conceptos pendientes agrupados por contenedor, con selección individual y toggle de IVA por concepto, totales consolidados en tiempo real, días de crédito editable y flujo de revisión en 2 pasos. (3) Al confirmar se crea un único registro en proformas con los nuevos campos es_consolidada=true y embarques_ids[]; se marcan los conceptos como en_proforma y se actualiza tiene_proforma=true en todos los embarques involucrados. (4) PDF de proforma consolidada que muestra los conceptos agrupados por contenedor con totales finales. (5) En la tab 'Proformas' se agregaron las columnas 'Tipo' (Individual / Consolidada con cantidad de contenedores) y 'BL Master'. La descarga de PDF detecta automáticamente el tipo y usa el generador correcto.",
+  },
+  {
     version: "8.48.0",
     date: "2026-04-24",
     type: "minor",
