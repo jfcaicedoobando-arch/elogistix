@@ -20,6 +20,8 @@ import PaginationControls from "@/components/PaginationControls";
 import { DataTable, type DataTableColumn } from "@/components/DataTable";
 import type { Database } from "@/integrations/supabase/types";
 import { TabProformas } from "@/components/facturacion/TabProformas";
+import { TabProformasPendientes } from "@/components/facturacion/TabProformasPendientes";
+import { useProformasPendientes } from "@/hooks/embarque/useProformas";
 
 type EstadoFactura = Database["public"]["Enums"]["estado_factura"];
 const ESTADOS_FACTURA: EstadoFactura[] = ['Borrador', 'Emitida', 'Pagada', 'Vencida', 'Cancelada'];
@@ -76,6 +78,7 @@ export default function Facturacion() {
 
   const { data: facturas = [], isLoading: loadingFacturas } = useFacturas();
   const { data: gastosPendientes = [], isLoading: loadingGastos } = useGastosPendientes();
+  const { data: proformasPendientes = [] } = useProformasPendientes();
   const marcarPagado = useMarcarCostoPagado();
   const { canEdit } = usePermissions();
   const { toast } = useToast();
@@ -134,12 +137,19 @@ export default function Facturacion() {
         <p className="text-sm text-muted-foreground">Control de proformas, facturas emitidas y gastos por liquidar</p>
       </div>
 
-      <Tabs defaultValue="proformas">
+      <Tabs defaultValue={proformasPendientes.length > 0 ? "pendientes" : "proformas"}>
         <TabsList>
+          <TabsTrigger value="pendientes">
+            Pendientes{proformasPendientes.length > 0 ? ` (${proformasPendientes.length})` : ''}
+          </TabsTrigger>
           <TabsTrigger value="proformas">Proformas</TabsTrigger>
           <TabsTrigger value="facturas">Facturas</TabsTrigger>
           <TabsTrigger value="liquidacion">Liquidación de Gastos</TabsTrigger>
         </TabsList>
+
+        <TabsContent value="pendientes">
+          <TabProformasPendientes />
+        </TabsContent>
 
         <TabsContent value="proformas">
           <TabProformas />

@@ -25,7 +25,11 @@ export function useProformasEmbarque(embarqueId?: string) {
   });
 }
 
-/** Lista todas las proformas de la organización (incluye URLs de la factura asociada si existe) */
+/**
+ * Lista las proformas de la organización que ya pasaron revisión (aprobadas).
+ * Excluye las pendientes de revisión y las consolidadas (originales que se fusionaron en otra).
+ * Incluye URLs de la factura asociada si existe.
+ */
 export function useProformas() {
   const { organizationId } = useOrgFilter();
   return useQuery({
@@ -36,9 +40,44 @@ export function useProformas() {
         .from('proformas')
         .select('*, facturas:factura_id(factura_pdf_url, factura_xml_url)')
         .eq('organization_id', organizationId!)
+        .eq('estado_revision', 'aprobada')
         .order('created_at', { ascending: false });
       if (error) throw error;
       return data as ProformaConFactura[];
+    },
+    staleTime: 30_000,
+  });
+}
+
+export type ProformaPendienteConEmbarque = ProformaRow & {
+  embarques: {
+    expediente: string;
+    bl_master: string | null;
+    cliente_nombre: string;
+    contenedor: string | null;
+    tipo_contenedor: string | null;
+  } | null;
+};
+
+/**
+ * Lista las proformas pendientes de revisión, con datos del embarque
+ * (contenedor, tipo_contenedor, bl_master) para poder agruparlas por expediente
+ * y subagruparlas por contenedor en la nueva tab "Pendientes".
+ */
+export function useProformasPendientes() {
+  const { organizationId } = useOrgFilter();
+  return useQuery({
+    queryKey: ['proformas', 'pendientes', organizationId],
+    enabled: !!organizationId,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('proformas')
+        .select('*, embarques:embarque_id(expediente, bl_master, cliente_nombre, contenedor, tipo_contenedor)')
+        .eq('organization_id', organizationId!)
+        .eq('estado_revision', 'pendiente')
+        .order('created_at', { ascending: false });
+      if (error) throw error;
+      return data as ProformaPendienteConEmbarque[];
     },
     staleTime: 30_000,
   });
@@ -137,8 +176,9 @@ export function useCrearProforma() {
       return proforma as ProformaRow;
     },
     onSuccess: (proforma) => {
-      toast.success(`Proforma ${proforma.numero} generada`);
+      toast.success(`Proforma ${proforma.numero} generada (pendiente de revisión)`);
       queryClient.invalidateQueries({ queryKey: ['proformas', 'embarque', proforma.embarque_id] });
+      queryClient.invalidateQueries({ queryKey: ['proformas', 'pendientes'] });
       queryClient.invalidateQueries({ queryKey: ['embarque', proforma.embarque_id] });
       queryClient.invalidateQueries({ queryKey: ['conceptos_venta'] });
       queryClient.invalidateQueries({ queryKey: ['embarques'] });
@@ -346,6 +386,132 @@ export function useEliminarProforma() {
     },
     onError: (error: Error) => {
       toast.error(`Error al eliminar proforma: ${error.message}`);
+    },
+  });
+}
+
+// ──────────────────────────────────────────────────────────────────────────────
+// Flujo de revisión: aprobación individual y consolidación
+// ──────────────────────────────────────────────────────────────────────────────
+
+interface AprobarProformasParams {
+  proformaIds: string[];
+}
+
+/** Marca un conjunto de proformas como aprobadas (pasan a la pestaña "Proformas"). */
+export function useAprobarProformas() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (params: AprobarProformasParams) => {
+      if (params.proformaIds.length === 0) throw new Error('Selecciona al menos una proforma');
+      const { error } = await supabase
+        .from('proformas')
+        .update({ estado_revision: 'aprobada' })
+        .in('id', params.proformaIds);
+      if (error) throw error;
+      return params;
+    },
+    onSuccess: (params) => {
+      toast.success(
+        params.proformaIds.length === 1
+          ? 'Proforma aprobada'
+          : `${params.proformaIds.length} proformas aprobadas`,
+      );
+      queryClient.invalidateQueries({ queryKey: ['proformas'] });
+      queryClient.invalidateQueries({ queryKey: ['embarque'] });
+    },
+    onError: (error: Error) => {
+      toast.error(`Error al aprobar: ${error.message}`);
+    },
+  });
+}
+
+interface ConsolidarProformasParams {
+  proformaIds: string[];
+  embarqueId: string;
+  clienteId: string;
+  clienteNombre: string;
+  expediente: string;
+  blMaster: string | null;
+  operador: string | null;
+  diasCredito: number | null;
+}
+
+/**
+ * Crea una nueva proforma consolidada que agrupa varias proformas pendientes:
+ * - Suma totales USD y MXN.
+ * - Marca las originales como `consolidada` y guarda la referencia en `consolidada_en`.
+ * - La nueva proforma queda como `aprobada` y `es_consolidada = true`.
+ */
+export function useConsolidarProformas() {
+  const queryClient = useQueryClient();
+  const { organizationId } = useOrgFilter();
+  return useMutation({
+    mutationFn: async (params: ConsolidarProformasParams) => {
+      if (!organizationId) throw new Error('Organización no disponible');
+      if (params.proformaIds.length < 2) throw new Error('Selecciona al menos 2 proformas para consolidar');
+
+      const { data: originales, error: errLoad } = await supabase
+        .from('proformas')
+        .select('id, subtotal_usd, iva_usd, total_usd, subtotal_mxn, iva_mxn, total_mxn')
+        .in('id', params.proformaIds);
+      if (errLoad) throw errLoad;
+      if (!originales || originales.length !== params.proformaIds.length) {
+        throw new Error('No se pudieron cargar todas las proformas seleccionadas');
+      }
+
+      const sum = (key: 'subtotal_usd' | 'iva_usd' | 'total_usd' | 'subtotal_mxn' | 'iva_mxn' | 'total_mxn') =>
+        originales.reduce((acc, p) => acc + Number(p[key] ?? 0), 0);
+
+      const { data: numero, error: errNum } = await supabase
+        .rpc('generar_numero_proforma', { p_org_id: organizationId });
+      if (errNum) throw errNum;
+
+      const { data: nueva, error: errIns } = await supabase
+        .from('proformas')
+        .insert({
+          numero: numero as string,
+          embarque_id: params.embarqueId,
+          cliente_id: params.clienteId,
+          cliente_nombre: params.clienteNombre,
+          expediente: params.expediente,
+          bl_master: params.blMaster,
+          subtotal_usd: sum('subtotal_usd'),
+          iva_usd: sum('iva_usd'),
+          total_usd: sum('total_usd'),
+          subtotal_mxn: sum('subtotal_mxn'),
+          iva_mxn: sum('iva_mxn'),
+          total_mxn: sum('total_mxn'),
+          notas: `Consolidación de ${params.proformaIds.length} proformas`,
+          operador: params.operador,
+          dias_credito: params.diasCredito,
+          organization_id: organizationId,
+          estado_revision: 'aprobada',
+          es_consolidada: true,
+          proformas_origen: params.proformaIds,
+        })
+        .select()
+        .single();
+      if (errIns) throw errIns;
+
+      const { error: errUpd } = await supabase
+        .from('proformas')
+        .update({ estado_revision: 'consolidada', consolidada_en: nueva.id })
+        .in('id', params.proformaIds);
+      if (errUpd) {
+        await supabase.from('proformas').delete().eq('id', nueva.id);
+        throw errUpd;
+      }
+
+      return nueva as ProformaRow;
+    },
+    onSuccess: (nueva) => {
+      toast.success(`Proformas consolidadas en ${nueva.numero}`);
+      queryClient.invalidateQueries({ queryKey: ['proformas'] });
+      queryClient.invalidateQueries({ queryKey: ['embarque'] });
+    },
+    onError: (error: Error) => {
+      toast.error(`Error al consolidar: ${error.message}`);
     },
   });
 }

@@ -11,6 +11,13 @@ export interface ChangelogEntry {
 /** Entradas recientes (v8.x). Las anteriores se cargan dinámicamente. */
 export const recentChangelog: ChangelogEntry[] = [
   {
+    version: "8.48.0",
+    date: "2026-04-24",
+    type: "minor",
+    title: "Pre-Facturación: nueva pestaña 'Pendientes' con consolidación de proformas",
+    description: "Se introdujo una etapa intermedia de revisión en el flujo de proformas. (1) Cambios en BD: nuevos campos estado_revision (pendiente/aprobada/consolidada) y proformas_origen (array de IDs originales) en la tabla proformas; las proformas existentes fueron migradas a 'aprobada' para no afectar el listado actual. (2) Toda nueva proforma generada nace en estado 'pendiente' y aparece en la nueva pestaña 'Pendientes' (primera del módulo Pre-Facturación), con badge de conteo. (3) La pestaña agrupa por expediente y subagrupa por contenedor, mostrando BL, cliente, número de proforma, monto principal (USD si aplica, si no MXN) y fecha; cada expediente se puede expandir/contraer y filtrar por expediente, BL o cliente. (4) Checkboxes para seleccionar proformas con totalizador en tiempo real (USD y MXN). (5) Botón 'Consolidar y aprobar': crea una nueva proforma consolidada del mismo expediente sumando todos los totales, marcando las originales como 'consolidada' y enlazándolas vía consolidada_en; la nueva proforma queda directamente aprobada. (6) Botón 'Aprobar individual': mueve las proformas seleccionadas al listado de 'Proformas' sin fusionarlas. (7) La pestaña 'Proformas' ahora solo muestra las aprobadas (oculta pendientes y originales consolidadas).",
+  },
+  {
     version: "8.47.0",
     date: "2026-04-24",
     type: "minor",
