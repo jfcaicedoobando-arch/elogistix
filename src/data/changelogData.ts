@@ -11,6 +11,13 @@ export interface ChangelogEntry {
 /** Entradas recientes (v8.x). Las anteriores se cargan dinámicamente. */
 export const recentChangelog: ChangelogEntry[] = [
   {
+    version: "8.46.0",
+    date: "2026-04-24",
+    type: "minor",
+    title: "Proformas: marcado como facturada con folio externo",
+    description: "Las proformas ahora pueden marcarse como facturadas registrando el folio de la factura emitida en el sistema externo de la contadora. Cambios: (1) Nuevos campos en la tabla proformas: estado_proforma (pendiente/facturada), folio_factura_externa y fecha_facturacion. (2) En la tabla del módulo Pre-Facturación se añadieron las columnas 'Estado' (badge amarillo Pendiente / verde Facturada) y 'Folio Factura', además de un filtro por estado (Todas / Pendientes / Facturadas) con conteos. (3) Botón 'Marcada Facturada' en cada fila pendiente que abre un diálogo con campos folio (requerido) y fecha de facturación (por defecto hoy); las proformas ya facturadas solo muestran 'Descargar PDF'. (4) En la tabla 'Proformas Generadas' del detalle del embarque (TabFacturacion) también se muestran el estado y folio de factura externa, y se oculta el botón Eliminar para proformas facturadas. (5) Búsqueda y exportación CSV incluyen el folio de factura externa.",
+  },
+  {
     version: "8.45.2",
     date: "2026-04-24",
     type: "patch",
