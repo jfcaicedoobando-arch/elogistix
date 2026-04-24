@@ -106,6 +106,29 @@ export function TabProformas() {
       sortable: true, sortValue: (p) => p.expediente, render: (p) => p.expediente,
     },
     {
+      key: "bl_master", header: "BL Master", width: "w-[140px]", className: "text-xs font-mono",
+      sortable: true, sortValue: (p) => p.bl_master ?? '',
+      render: (p) => p.bl_master || <span className="text-muted-foreground">—</span>,
+    },
+    {
+      key: "tipo", header: "Tipo", width: "w-[140px]",
+      sortable: true,
+      sortValue: (p) => p.es_consolidada ? `Consolidada-${(p.proformas_origen?.length ?? 0)}` : 'Individual',
+      render: (p) => {
+        if (p.es_consolidada) {
+          const n = p.proformas_origen?.length ?? 0;
+          return (
+            <Badge className="bg-blue-100 text-blue-800 border-blue-200 hover:bg-blue-100">
+              Consolidada{n > 0 ? ` (${n})` : ''}
+            </Badge>
+          );
+        }
+        return (
+          <Badge variant="secondary" className="bg-slate-100 text-slate-700">Individual</Badge>
+        );
+      },
+    },
+    {
       key: "cliente", header: "Cliente", width: "min-w-[180px]", className: "max-w-[220px] truncate",
       sortable: true, sortValue: (p) => p.cliente_nombre, render: (p) => p.cliente_nombre,
     },
