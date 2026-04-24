@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react";
-import { Download } from "lucide-react";
+import { Download, FileText, FileCode2 } from "lucide-react";
 import { exportToCsv } from "@/generators/exportCsv";
 import SearchInput from "@/components/SearchInput";
 import { Card, CardContent } from "@/components/ui/card";
