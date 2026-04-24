@@ -19,6 +19,9 @@ export function DialogMarcarFacturada({ open, onOpenChange, proforma }: Props) {
   const [fecha, setFecha] = useState(new Date().toISOString().slice(0, 10));
   const [pdfFile, setPdfFile] = useState<File | null>(null);
   const [xmlFile, setXmlFile] = useState<File | null>(null);
+  const [extrayendoFolio, setExtrayendoFolio] = useState(false);
+  const [folioAutoDetectado, setFolioAutoDetectado] = useState(false);
+  const [errorExtraccion, setErrorExtraccion] = useState(false);
   const pdfInputRef = useRef<HTMLInputElement>(null);
   const xmlInputRef = useRef<HTMLInputElement>(null);
   const marcar = useMarcarProformaFacturada();
@@ -29,8 +32,36 @@ export function DialogMarcarFacturada({ open, onOpenChange, proforma }: Props) {
       setFecha(new Date().toISOString().slice(0, 10));
       setPdfFile(null);
       setXmlFile(null);
+      setExtrayendoFolio(false);
+      setFolioAutoDetectado(false);
+      setErrorExtraccion(false);
     }
   }, [open]);
+
+  const handlePdfSelected = async (file: File | null) => {
+    setPdfFile(file);
+    setErrorExtraccion(false);
+    setFolioAutoDetectado(false);
+    if (!file) return;
+
+    setExtrayendoFolio(true);
+    try {
+      const folioExtraido = await extraerFolioDesdePdf(file);
+      if (folioExtraido) {
+        setFolio(folioExtraido);
+        setFolioAutoDetectado(true);
+        toast.success(`Folio detectado: ${folioExtraido}`);
+      } else {
+        setErrorExtraccion(true);
+        toast.warning("No se pudo leer el folio automáticamente");
+      }
+    } catch {
+      setErrorExtraccion(true);
+      toast.warning("No se pudo leer el folio automáticamente");
+    } finally {
+      setExtrayendoFolio(false);
+    }
+  };
 
   const handleConfirm = async () => {
     if (!proforma || !folio.trim()) return;
@@ -51,6 +82,8 @@ export function DialogMarcarFacturada({ open, onOpenChange, proforma }: Props) {
 
   const clearPdf = () => {
     setPdfFile(null);
+    setFolioAutoDetectado(false);
+    setErrorExtraccion(false);
     if (pdfInputRef.current) pdfInputRef.current.value = "";
   };
   const clearXml = () => {
