@@ -25,7 +25,11 @@ export function useProformasEmbarque(embarqueId?: string) {
   });
 }
 
-/** Lista todas las proformas de la organización (incluye URLs de la factura asociada si existe) */
+/**
+ * Lista las proformas de la organización que ya pasaron revisión (aprobadas).
+ * Excluye las pendientes de revisión y las consolidadas (originales que se fusionaron en otra).
+ * Incluye URLs de la factura asociada si existe.
+ */
 export function useProformas() {
   const { organizationId } = useOrgFilter();
   return useQuery({
@@ -36,9 +40,44 @@ export function useProformas() {
         .from('proformas')
         .select('*, facturas:factura_id(factura_pdf_url, factura_xml_url)')
         .eq('organization_id', organizationId!)
+        .eq('estado_revision', 'aprobada')
         .order('created_at', { ascending: false });
       if (error) throw error;
       return data as ProformaConFactura[];
+    },
+    staleTime: 30_000,
+  });
+}
+
+export type ProformaPendienteConEmbarque = ProformaRow & {
+  embarques: {
+    expediente: string;
+    bl_master: string | null;
+    cliente_nombre: string;
+    contenedor: string | null;
+    tipo_contenedor: string | null;
+  } | null;
+};
+
+/**
+ * Lista las proformas pendientes de revisión, con datos del embarque
+ * (contenedor, tipo_contenedor, bl_master) para poder agruparlas por expediente
+ * y subagruparlas por contenedor en la nueva tab "Pendientes".
+ */
+export function useProformasPendientes() {
+  const { organizationId } = useOrgFilter();
+  return useQuery({
+    queryKey: ['proformas', 'pendientes', organizationId],
+    enabled: !!organizationId,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('proformas')
+        .select('*, embarques:embarque_id(expediente, bl_master, cliente_nombre, contenedor, tipo_contenedor)')
+        .eq('organization_id', organizationId!)
+        .eq('estado_revision', 'pendiente')
+        .order('created_at', { ascending: false });
+      if (error) throw error;
+      return data as ProformaPendienteConEmbarque[];
     },
     staleTime: 30_000,
   });
