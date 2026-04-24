@@ -90,7 +90,7 @@ export function TabProformas() {
     }
   };
 
-  const columns: DataTableColumn<ProformaRow>[] = [
+  const columns: DataTableColumn<ProformaConFactura>[] = [
     {
       key: "numero", header: "# Proforma", width: "w-[140px]", className: "font-medium",
       sticky: true, sortable: true, sortValue: (p) => p.numero, render: (p) => p.numero,
