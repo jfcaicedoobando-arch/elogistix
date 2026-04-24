@@ -1011,6 +1011,8 @@ export type Database = {
           embarque_id: string
           estado: Database["public"]["Enums"]["estado_factura"]
           expediente: string
+          factura_pdf_url: string | null
+          factura_xml_url: string | null
           fecha_emision: string
           fecha_vencimiento: string
           id: string
@@ -1019,6 +1021,7 @@ export type Database = {
           notas: string | null
           numero: string
           organization_id: string
+          proforma_id: string | null
           referencia_bl: string | null
           subtotal: number
           tipo_cambio: number
@@ -1032,6 +1035,8 @@ export type Database = {
           embarque_id: string
           estado?: Database["public"]["Enums"]["estado_factura"]
           expediente?: string
+          factura_pdf_url?: string | null
+          factura_xml_url?: string | null
           fecha_emision?: string
           fecha_vencimiento?: string
           id?: string
@@ -1040,6 +1045,7 @@ export type Database = {
           notas?: string | null
           numero: string
           organization_id?: string
+          proforma_id?: string | null
           referencia_bl?: string | null
           subtotal?: number
           tipo_cambio?: number
@@ -1053,6 +1059,8 @@ export type Database = {
           embarque_id?: string
           estado?: Database["public"]["Enums"]["estado_factura"]
           expediente?: string
+          factura_pdf_url?: string | null
+          factura_xml_url?: string | null
           fecha_emision?: string
           fecha_vencimiento?: string
           id?: string
@@ -1061,6 +1069,7 @@ export type Database = {
           notas?: string | null
           numero?: string
           organization_id?: string
+          proforma_id?: string | null
           referencia_bl?: string | null
           subtotal?: number
           tipo_cambio?: number
@@ -1087,6 +1096,13 @@ export type Database = {
             columns: ["organization_id"]
             isOneToOne: false
             referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "facturas_proforma_id_fkey"
+            columns: ["proforma_id"]
+            isOneToOne: false
+            referencedRelation: "proformas"
             referencedColumns: ["id"]
           },
         ]
@@ -1272,6 +1288,7 @@ export type Database = {
           embarque_id: string
           estado_proforma: string
           expediente: string
+          factura_id: string | null
           fecha_emision: string
           fecha_facturacion: string | null
           folio_factura_externa: string | null
@@ -1298,6 +1315,7 @@ export type Database = {
           embarque_id: string
           estado_proforma?: string
           expediente: string
+          factura_id?: string | null
           fecha_emision?: string
           fecha_facturacion?: string | null
           folio_factura_externa?: string | null
@@ -1324,6 +1342,7 @@ export type Database = {
           embarque_id?: string
           estado_proforma?: string
           expediente?: string
+          factura_id?: string | null
           fecha_emision?: string
           fecha_facturacion?: string | null
           folio_factura_externa?: string | null
@@ -1353,6 +1372,13 @@ export type Database = {
             columns: ["embarque_id"]
             isOneToOne: false
             referencedRelation: "embarques"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "proformas_factura_id_fkey"
+            columns: ["factura_id"]
+            isOneToOne: false
+            referencedRelation: "facturas"
             referencedColumns: ["id"]
           },
         ]
