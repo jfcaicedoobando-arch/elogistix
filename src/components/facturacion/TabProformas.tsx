@@ -56,25 +56,30 @@ export function TabProformas() {
   const handleDescargar = async (proforma: ProformaRow) => {
     setDownloadingId(proforma.id);
     try {
-      const [embarqueRes, conceptosRes, clienteRes] = await Promise.all([
+      const esConsolidada = !!proforma.es_consolidada;
+
+      const [embarqueRes, conceptosRes, clienteRes, consolidadosRes] = await Promise.all([
         supabase
           .from('embarques')
           .select('expediente, bl_master, modo, tipo, incoterm, puerto_origen, puerto_destino, aeropuerto_origen, aeropuerto_destino, ciudad_origen, ciudad_destino, naviera, aerolinea, descripcion_mercancia')
           .eq('id', proforma.embarque_id)
           .single(),
-        supabase
-          .from('conceptos_venta')
-          .select('*')
-          .eq('proforma_id', proforma.id),
+        esConsolidada
+          ? Promise.resolve({ data: [] as any[], error: null as any })
+          : supabase.from('conceptos_venta').select('*').eq('proforma_id', proforma.id),
         supabase
           .from('clientes')
           .select('nombre, rfc, direccion, ciudad, estado, cp')
           .eq('id', proforma.cliente_id)
           .maybeSingle(),
+        esConsolidada
+          ? supabase.from('proforma_conceptos_consolidados').select('*').eq('proforma_id', proforma.id)
+          : Promise.resolve({ data: [] as any[], error: null as any }),
       ]);
 
       if (embarqueRes.error) throw embarqueRes.error;
       if (conceptosRes.error) throw conceptosRes.error;
+      if (consolidadosRes.error) throw consolidadosRes.error;
 
       generarPdfProforma({
         proforma,
@@ -82,6 +87,7 @@ export function TabProformas() {
         conceptos: conceptosRes.data || [],
         cliente: clienteRes.data,
         tasaIva,
+        conceptosConsolidados: consolidadosRes.data || [],
       });
     } catch (e) {
       toast.error('Error al generar PDF: ' + (e as Error).message);
