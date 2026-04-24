@@ -275,6 +275,20 @@ export function TabFacturacion({ facturas, canEdit, embarque }: Props) {
                         <Button variant="outline" size="sm" onClick={() => handleDescargarProforma(p.id)}>
                           <Download className="h-3.5 w-3.5 mr-1" /> Descargar
                         </Button>
+                        {p.facturas?.factura_pdf_url && (
+                          <Button asChild variant="outline" size="icon" className="h-8 w-8" title="Descargar factura PDF">
+                            <a href={p.facturas.factura_pdf_url} target="_blank" rel="noopener noreferrer" download>
+                              <FileText className="h-3.5 w-3.5 text-red-600" />
+                            </a>
+                          </Button>
+                        )}
+                        {p.facturas?.factura_xml_url && (
+                          <Button asChild variant="outline" size="icon" className="h-8 w-8" title="Descargar factura XML">
+                            <a href={p.facturas.factura_xml_url} target="_blank" rel="noopener noreferrer" download>
+                              <FileCode2 className="h-3.5 w-3.5 text-blue-600" />
+                            </a>
+                          </Button>
+                        )}
                         {canEdit && !facturada && (
                           <Button
                             variant="outline"
