@@ -33,9 +33,9 @@ export default function Embarques() {
 
   const state = useEmbarquesPageState();
   const {
-    search, filterModo, filterEstado, filterCliente, filterOperador,
+    search, filterModo, filterEstado, filterCliente, filterOperador, filterProforma,
     fechaDesde, fechaHasta, page, pageSize,
-    setSearch, setFilterModo, setFilterEstado, setFilterCliente, setFilterOperador,
+    setSearch, setFilterModo, setFilterEstado, setFilterCliente, setFilterOperador, setFilterProforma,
     setFechaDesde, setFechaHasta, setPage, setPageSize,
     embarques, filtered, displayCount, totalPages, isLoading, isEmptyState,
   } = state;
@@ -183,6 +183,8 @@ export default function Embarques() {
                 onFilterClienteChange={setFilterCliente}
                 filterOperador={filterOperador}
                 onFilterOperadorChange={setFilterOperador}
+                filterProforma={filterProforma}
+                onFilterProformaChange={setFilterProforma}
                 fechaDesde={fechaDesde}
                 onFechaDesdeChange={setFechaDesde}
                 fechaHasta={fechaHasta}

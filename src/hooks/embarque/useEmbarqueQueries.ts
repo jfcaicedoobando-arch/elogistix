@@ -11,7 +11,7 @@ type DocumentoEmbarqueRow = Tables<'documentos_embarque'>;
 type NotaEmbarqueRow = Tables<'notas_embarque'>;
 
 /** Columnas necesarias para listas y dashboard (evita select('*')) */
-const EMBARQUE_LIST_COLUMNS = 'id, expediente, bl_master, cliente_id, cliente_nombre, modo, estado, etd, eta, operador, puerto_origen, puerto_destino, aeropuerto_origen, aeropuerto_destino, ciudad_origen, ciudad_destino, contenedor, tipo_contenedor, descripcion_mercancia, tipo, created_at, tipo_cambio_usd, tipo_cambio_eur' as const;
+const EMBARQUE_LIST_COLUMNS = 'id, expediente, bl_master, cliente_id, cliente_nombre, modo, estado, etd, eta, operador, puerto_origen, puerto_destino, aeropuerto_origen, aeropuerto_destino, ciudad_origen, ciudad_destino, contenedor, tipo_contenedor, descripcion_mercancia, tipo, created_at, tipo_cambio_usd, tipo_cambio_eur, tiene_proforma' as const;
 
 /** Hook original: descarga TODOS los embarques. Usar solo para Dashboard/Operaciones que necesitan el dataset completo. */
 export function useEmbarques() {
@@ -40,6 +40,7 @@ interface UseEmbarquesPaginadosParams {
   filterEstado: string;
   filterCliente: string;
   filterOperador: string;
+  filterProforma?: string;
   page: number;
   pageSize: number;
   fechaDesde?: string;
@@ -47,10 +48,10 @@ interface UseEmbarquesPaginadosParams {
 }
 
 export function useEmbarquesPaginados({
-  search, filterModo, filterEstado, filterCliente, filterOperador, page, pageSize, fechaDesde, fechaHasta,
+  search, filterModo, filterEstado, filterCliente, filterOperador, filterProforma = 'todos', page, pageSize, fechaDesde, fechaHasta,
 }: UseEmbarquesPaginadosParams) {
   const { organizationId } = useOrgFilter();
-  const filters = { search, filterModo, filterEstado, filterCliente, filterOperador, page, pageSize, fechaDesde, fechaHasta, organizationId };
+  const filters = { search, filterModo, filterEstado, filterCliente, filterOperador, filterProforma, page, pageSize, fechaDesde, fechaHasta, organizationId };
 
   return useQuery({
     queryKey: queryKeys.embarques.list(filters),
@@ -79,6 +80,11 @@ export function useEmbarquesPaginados({
       if (filterOperador !== 'todos') {
         query = query.eq('operador', filterOperador);
       }
+      if (filterProforma === 'con') {
+        query = query.eq('tiene_proforma', true);
+      } else if (filterProforma === 'sin') {
+        query = query.eq('tiene_proforma', false);
+      }
       if (fechaDesde) {
         query = query.gte('etd', fechaDesde);
       }
@@ -99,7 +105,7 @@ export function useEmbarquesPaginados({
 }
 
 /** Columnas completas para vista detalle (todas excepto las que nunca se leen aquí) */
-const EMBARQUE_DETAIL_COLUMNS = 'id, expediente, bl_master, bl_house, mawb, hawb, carta_porte, cliente_id, cliente_nombre, consignatario, shipper, modo, tipo, estado, etd, eta, fecha_creacion, fecha_llegada_real, operador, agente, naviera, aerolinea, transportista, contenedor, tipo_contenedor, tipo_servicio, tipo_carga, descripcion_mercancia, peso_kg, volumen_m3, piezas, incoterm, puerto_origen, puerto_destino, aeropuerto_origen, aeropuerto_destino, ciudad_origen, ciudad_destino, msds_archivo, organization_id, cotizacion_id, tipo_cambio_usd, tipo_cambio_eur, created_at, updated_at' as const;
+const EMBARQUE_DETAIL_COLUMNS = 'id, expediente, bl_master, bl_house, mawb, hawb, carta_porte, cliente_id, cliente_nombre, consignatario, shipper, modo, tipo, estado, etd, eta, fecha_creacion, fecha_llegada_real, operador, agente, naviera, aerolinea, transportista, contenedor, tipo_contenedor, tipo_servicio, tipo_carga, descripcion_mercancia, peso_kg, volumen_m3, piezas, incoterm, puerto_origen, puerto_destino, aeropuerto_origen, aeropuerto_destino, ciudad_origen, ciudad_destino, msds_archivo, organization_id, cotizacion_id, tipo_cambio_usd, tipo_cambio_eur, tiene_proforma, created_at, updated_at' as const;
 
 export function useEmbarque(id: string | undefined) {
   return useQuery({

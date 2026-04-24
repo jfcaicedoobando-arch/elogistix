@@ -283,10 +283,12 @@ export type Database = {
           created_at: string
           descripcion: string
           embarque_id: string
+          estado_facturacion: string
           id: string
           moneda: Database["public"]["Enums"]["moneda"]
           organization_id: string
           precio_unitario: number
+          proforma_id: string | null
           total: number
         }
         Insert: {
@@ -294,10 +296,12 @@ export type Database = {
           created_at?: string
           descripcion: string
           embarque_id: string
+          estado_facturacion?: string
           id?: string
           moneda?: Database["public"]["Enums"]["moneda"]
           organization_id?: string
           precio_unitario?: number
+          proforma_id?: string | null
           total?: number
         }
         Update: {
@@ -305,10 +309,12 @@ export type Database = {
           created_at?: string
           descripcion?: string
           embarque_id?: string
+          estado_facturacion?: string
           id?: string
           moneda?: Database["public"]["Enums"]["moneda"]
           organization_id?: string
           precio_unitario?: number
+          proforma_id?: string | null
           total?: number
         }
         Relationships: [
@@ -324,6 +330,13 @@ export type Database = {
             columns: ["organization_id"]
             isOneToOne: false
             referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "conceptos_venta_proforma_id_fkey"
+            columns: ["proforma_id"]
+            isOneToOne: false
+            referencedRelation: "proformas"
             referencedColumns: ["id"]
           },
         ]
@@ -1244,69 +1257,84 @@ export type Database = {
       }
       proformas: {
         Row: {
-          cliente_id: string | null
+          bl_master: string | null
+          cliente_id: string
           cliente_nombre: string
-          conceptos: Json
           created_at: string
           created_by: string | null
           embarque_id: string
-          estado: Database["public"]["Enums"]["estado_proforma"]
           expediente: string
-          factura_externa_folio: string | null
-          fecha_facturacion: string | null
+          fecha_emision: string
           id: string
-          iva: number
-          moneda: Database["public"]["Enums"]["moneda"]
+          iva_mxn: number
+          iva_usd: number
           notas: string | null
           numero: string
           organization_id: string
-          subtotal: number
-          total: number
+          subtotal_mxn: number
+          subtotal_usd: number
+          total_mxn: number
+          total_usd: number
           updated_at: string
         }
         Insert: {
-          cliente_id?: string | null
-          cliente_nombre?: string
-          conceptos?: Json
+          bl_master?: string | null
+          cliente_id: string
+          cliente_nombre: string
           created_at?: string
           created_by?: string | null
           embarque_id: string
-          estado?: Database["public"]["Enums"]["estado_proforma"]
-          expediente?: string
-          factura_externa_folio?: string | null
-          fecha_facturacion?: string | null
+          expediente: string
+          fecha_emision?: string
           id?: string
-          iva?: number
-          moneda?: Database["public"]["Enums"]["moneda"]
+          iva_mxn?: number
+          iva_usd?: number
           notas?: string | null
           numero: string
           organization_id?: string
-          subtotal?: number
-          total?: number
+          subtotal_mxn?: number
+          subtotal_usd?: number
+          total_mxn?: number
+          total_usd?: number
           updated_at?: string
         }
         Update: {
-          cliente_id?: string | null
+          bl_master?: string | null
+          cliente_id?: string
           cliente_nombre?: string
-          conceptos?: Json
           created_at?: string
           created_by?: string | null
           embarque_id?: string
-          estado?: Database["public"]["Enums"]["estado_proforma"]
           expediente?: string
-          factura_externa_folio?: string | null
-          fecha_facturacion?: string | null
+          fecha_emision?: string
           id?: string
-          iva?: number
-          moneda?: Database["public"]["Enums"]["moneda"]
+          iva_mxn?: number
+          iva_usd?: number
           notas?: string | null
           numero?: string
           organization_id?: string
-          subtotal?: number
-          total?: number
+          subtotal_mxn?: number
+          subtotal_usd?: number
+          total_mxn?: number
+          total_usd?: number
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "proformas_cliente_id_fkey"
+            columns: ["cliente_id"]
+            isOneToOne: false
+            referencedRelation: "clientes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "proformas_embarque_id_fkey"
+            columns: ["embarque_id"]
+            isOneToOne: false
+            referencedRelation: "embarques"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       proveedores: {
         Row: {
@@ -1534,6 +1562,7 @@ export type Database = {
         }[]
       }
       generar_expediente: { Args: { tipo_op: string }; Returns: string }
+      generar_numero_proforma: { Args: { p_org_id: string }; Returns: string }
       get_user_context: { Args: never; Returns: Json }
       get_user_org_ids: { Args: { _user_id: string }; Returns: string[] }
       has_role: {
