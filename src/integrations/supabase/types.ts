@@ -1282,11 +1282,16 @@ export type Database = {
           bl_master: string | null
           cliente_id: string
           cliente_nombre: string
+          consolidada_en: string | null
           created_at: string
           created_by: string | null
           dias_credito: number | null
-          embarque_id: string
+          embarque_id: string | null
+          embarques_ids: string[] | null
+          es_consolidada: boolean
+          estado_aprobacion: string
           estado_proforma: string
+          estado_revision: string
           expediente: string
           factura_id: string | null
           fecha_emision: string
@@ -1299,6 +1304,7 @@ export type Database = {
           numero: string
           operador: string | null
           organization_id: string
+          proformas_origen: string[] | null
           subtotal_mxn: number
           subtotal_usd: number
           total_mxn: number
@@ -1309,11 +1315,16 @@ export type Database = {
           bl_master?: string | null
           cliente_id: string
           cliente_nombre: string
+          consolidada_en?: string | null
           created_at?: string
           created_by?: string | null
           dias_credito?: number | null
-          embarque_id: string
+          embarque_id?: string | null
+          embarques_ids?: string[] | null
+          es_consolidada?: boolean
+          estado_aprobacion?: string
           estado_proforma?: string
+          estado_revision?: string
           expediente: string
           factura_id?: string | null
           fecha_emision?: string
@@ -1326,6 +1337,7 @@ export type Database = {
           numero: string
           operador?: string | null
           organization_id?: string
+          proformas_origen?: string[] | null
           subtotal_mxn?: number
           subtotal_usd?: number
           total_mxn?: number
@@ -1336,11 +1348,16 @@ export type Database = {
           bl_master?: string | null
           cliente_id?: string
           cliente_nombre?: string
+          consolidada_en?: string | null
           created_at?: string
           created_by?: string | null
           dias_credito?: number | null
-          embarque_id?: string
+          embarque_id?: string | null
+          embarques_ids?: string[] | null
+          es_consolidada?: boolean
+          estado_aprobacion?: string
           estado_proforma?: string
+          estado_revision?: string
           expediente?: string
           factura_id?: string | null
           fecha_emision?: string
@@ -1353,6 +1370,7 @@ export type Database = {
           numero?: string
           operador?: string | null
           organization_id?: string
+          proformas_origen?: string[] | null
           subtotal_mxn?: number
           subtotal_usd?: number
           total_mxn?: number
@@ -1365,6 +1383,13 @@ export type Database = {
             columns: ["cliente_id"]
             isOneToOne: false
             referencedRelation: "clientes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "proformas_consolidada_en_fkey"
+            columns: ["consolidada_en"]
+            isOneToOne: false
+            referencedRelation: "proformas"
             referencedColumns: ["id"]
           },
           {
