@@ -3,7 +3,7 @@
  * La lógica de negocio vive en `services/proformaServices.ts` y `lib/domain/proforma.ts`.
  */
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { toast } from "sonner";
+import { toast } from "@/hooks/use-toast";
 import { useOrgFilter } from "@/hooks/useOrgFilter";
 import { queryKeys } from "@/lib/queryKeys";
 import {
