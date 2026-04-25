@@ -125,7 +125,7 @@ export function DialogGenerarProforma({ open, onOpenChange, embarque, conceptosP
         diasCredito: Number.isFinite(diasCreditoNum as number) ? (diasCreditoNum as number) : null,
         ivaOverrides,
       });
-      const { data: cliente } = { data: await fetchClienteParaPdf(embarque.cliente_id) };
+      const cliente = await fetchClienteParaPdf(embarque.cliente_id);
       const conceptosParaPdf = conceptosSeleccionados.map(c => ({
         ...c,
         aplica_iva: ivaOverrides[c.id],
