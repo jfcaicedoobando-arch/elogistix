@@ -11,6 +11,13 @@ export interface ChangelogEntry {
 /** Entradas recientes (v8.x). Las anteriores se cargan dinámicamente. */
 export const recentChangelog: ChangelogEntry[] = [
   {
+    version: "8.69.0",
+    date: "2026-04-25",
+    type: "minor",
+    title: "Auditoría arquitectónica: pasos críticos 1-3 y 9 implementados",
+    description: "Tras la auditoría read-only del codebase, se ejecutaron los hallazgos de mayor impacto. (1) Toasts unificados: los hooks useProformas y useDescargarProformaPdf migraron de 'sonner' a '@/hooks/use-toast', dejando una sola API de notificaciones en toda la app. (2) Hooks que aún tocaban supabase.from directo se movieron a la capa de servicios: nuevos clientUserService, reportesService (sidebar_alert_counts, profit_por_embarque, profit_por_cliente, operadores_distintos), searchService (busqueda_global, createDocumentoSignedUrl) y usuarioService (fetchUsuariosOrganizacion, updateUserRole, createUserViaEdgeFunction, deleteUserViaEdgeFunction). Refactorizados: useUsuarios, useUsuarioMutations, useClientUsersMutations, useSidebarAlerts, useRentabilidadClientes, useProfitMaps, useOperadoresDistintos, useGlobalSearch y usePortalDocumentDownload — ahora son delgados (solo cache + tipos). (3) usePortalData modularizado: las 9 queries y 6 constantes de columnas inline se extrajeron a services/portal/{columns,queries}.ts; el hook quedó como capa de cache. (9) Eliminado refetch manual en Usuarios.tsx; useCreateUser ahora invalida queryKeys.usuarios.all automáticamente. Build verde, 191/191 pruebas pasando. Pasos 4-8, 10-11 (refactor de TabProformas, DialogGenerarProforma, adelgazar useNuevoEmbarqueWizard, tokenizar colores, reorganizar lib/) quedan documentados para próximas iteraciones.",
+  },
+  {
     version: "8.68.0",
     date: "2026-04-25",
     type: "minor",
