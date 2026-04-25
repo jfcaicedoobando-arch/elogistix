@@ -4,7 +4,7 @@
  * y la invocación del generador, eliminando duplicación entre TabFacturacion y TabProformas.
  */
 import { useState, useCallback } from "react";
-import { toast } from "sonner";
+import { toast } from "@/hooks/use-toast";
 import { generarPdfProforma } from "@/generators/proformaPdf";
 import { useTasaIVA } from "@/hooks/useTasaIVA";
 import {
