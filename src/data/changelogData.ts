@@ -11,6 +11,13 @@ export interface ChangelogEntry {
 /** Entradas recientes (v8.x). Las anteriores se cargan dinámicamente. */
 export const recentChangelog: ChangelogEntry[] = [
   {
+    version: "8.55.0",
+    date: "2026-04-25",
+    type: "minor",
+    title: "Refactor: descomposición del Dashboard del Portal de clientes",
+    description: "Refactor 100% interno sin cambios visibles. La página PortalDashboard (280 líneas con welcome, KPIs clicables, distribución de estados, próximos arribos, facturación pendiente y embarques recientes en un único archivo) se descompone en seis subcomponentes presentacionales bajo components/portal/dashboard/: PortalWelcomeCard, PortalKpiGrid, PortalEstadoEmbarquesCard, PortalProximosArribosCard, PortalFacturacionPendienteCard y PortalEmbarquesRecientesCard. La página queda en ~85 líneas dedicadas únicamente a orquestar los hooks de datos (usePortalEmbarques, usePortalCotizaciones, usePortalFacturas, usePortalDashboardKpis) y a componer el layout. Cada tarjeta recibe props tipadas estrictas y es reutilizable de forma independiente.",
+  },
+  {
     version: "8.54.0",
     date: "2026-04-25",
     type: "minor",
