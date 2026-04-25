@@ -250,7 +250,7 @@ export function TabFacturacion({ facturas, canEdit, embarque }: Props) {
                             return <Badge className="bg-amber-100 text-amber-800 border-amber-200 hover:bg-amber-100 w-fit">Pendiente de revisión</Badge>;
                           }
                           if (rev === 'consolidada') {
-                            const consolidadaEnId = (p as any).consolidada_en as string | null;
+                            const consolidadaEnId = p.consolidada_en;
                             const consolidadaNumero = proformas.find(x => x.id === consolidadaEnId)?.numero;
                             return (
                               <Badge className="bg-blue-100 text-blue-800 border-blue-200 hover:bg-blue-100 w-fit">
