@@ -27,7 +27,7 @@ export default function Usuarios() {
   const [deleteTarget, setDeleteTarget] = useState<UserRow | null>(null);
   const { toast } = useToast();
   const { user } = useAuth();
-  const { data: users = [], isLoading, refetch } = useUsuarios();
+  const { data: users = [], isLoading } = useUsuarios();
   const updateRole = useUpdateUserRole();
   const deleteUser = useDeleteUser();
 
