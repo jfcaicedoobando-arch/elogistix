@@ -11,6 +11,20 @@ export interface ChangelogEntry {
 /** Entradas recientes (v8.x). Las anteriores se cargan dinámicamente. */
 export const recentChangelog: ChangelogEntry[] = [
   {
+    version: "8.68.0",
+    date: "2026-04-25",
+    type: "minor",
+    title: "proformaServices.ts modularizado en submódulos",
+    description: "Paso 11 (final) de la auditoría arquitectónica. Siguiendo el mismo patrón aplicado a embarqueServices, el archivo proformaServices.ts (385 líneas) se dividió en 5 submódulos en src/services/proforma/: types.ts (ProformaRow, ProformaConFactura, ProformaPendienteConEmbarque y demás contratos compartidos), queries.ts (fetchProformasEmbarque, fetchProformasAprobadas, fetchProformasPendientes, fetchClienteParaPdf, fetchEmbarqueParaPdf, fetchConceptosProforma, fetchConceptosConsolidados), crud.ts (crearProforma con rollback, eliminarProforma con sincronización del flag tiene_proforma del embarque, aprobarProformas), facturar.ts (marcarProformaFacturada: subida de PDF/XML a Storage, generación de facturas USD/MXN y vinculación) y consolidar.ts (consolidarProformas vía RPC atómica). El archivo original quedó como barrel de re-exports manteniendo la API pública intacta para los hooks de proformas y facturación. Beneficio: el flujo más complejo del negocio (proforma → factura → consolidación) ahora es navegable por responsabilidad y cada submódulo se puede testear de forma aislada. Build verde, 191/191 pruebas pasando.",
+  },
+  {
+    version: "8.67.0",
+    date: "2026-04-25",
+    type: "minor",
+    title: "embarqueServices.ts modularizado en submódulos",
+    description: "Paso 10 de la auditoría arquitectónica. El archivo embarqueServices.ts (441 líneas) se dividió en 5 submódulos cohesivos en src/services/embarque/: columns.ts (constantes EMBARQUE_LIST_COLUMNS y EMBARQUE_DETAIL_COLUMNS centralizadas para evitar selecciones inconsistentes), queries.ts (fetchEmbarques, fetchEmbarquesPaginados con todos los filtros, fetchEmbarqueById, conceptos venta/costo, documentos, notas, facturas, expedientes por cliente, proveedores para select, embarques relacionados y embarques_list_extras vía RPC), mutations.ts (RPCs crearEmbarqueRpc, actualizarEmbarqueRpc, duplicarEmbarqueRpc, eliminarEmbarqueRpc, cambio de estado y notas tipadas), eventos.ts (fetch e insert de eventos de tracking) y documentos.ts (resolverExpediente, subirDocumentosEmbarque para creación, uploadDocumentoEmbarque y deleteDocumentoEmbarque para gestión post-creación). El archivo original quedó como barrel de re-exports, manteniendo la API pública intacta — los 6 hooks consumidores (useEmbarqueQueries, useEmbarqueMutations, useEmbarquesListData, useEventosEmbarque, useEmbarquesRelacionados, useNuevoEmbarqueWizard) siguen funcionando sin cambios. Beneficio: cada responsabilidad (lectura, escritura, tracking, archivos) se navega y testea de forma aislada; cambios en columnas se hacen en un único archivo. Build verde, 191/191 pruebas pasando.",
+  },
+  {
     version: "8.66.0",
     date: "2026-04-25",
     type: "minor",
