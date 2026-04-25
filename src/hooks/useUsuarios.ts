@@ -56,7 +56,7 @@ export function useUpdateUserRole() {
       if (error) throw error;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: QUERY_KEY });
+      queryClient.invalidateQueries({ queryKey: queryKeys.usuarios.all });
     },
   });
 }
@@ -73,7 +73,7 @@ export function useDeleteUser() {
       return data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: QUERY_KEY });
+      queryClient.invalidateQueries({ queryKey: queryKeys.usuarios.all });
     },
   });
 }
