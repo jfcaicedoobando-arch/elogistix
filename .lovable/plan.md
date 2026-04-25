@@ -1,123 +1,110 @@
-# Auditoría arquitectónica del codebase — Reporte read-only
+# Auditoría arquitectónica (post v8.69.0)
 
-## Veredicto general
+## Estado general
 
-La arquitectura está **en muy buen estado**. Los pasos 1-11 ya pagaron casi toda la deuda técnica relevante:
+La arquitectura está en muy buen estado tras los refactors recientes:
+- **Servicios**: 19 servicios + 3 directorios modulares (`embarque/`, `proforma/`, `portal/`, `cotizacion/`).
+- **Hooks**: la mayoría son wrappers delgados de React Query sobre servicios.
+- **Páginas**: todas por debajo de 250 líneas, actuando como contenedores presentacionales.
+- **Dominio**: lógica financiera, de proforma, embarque y cotización centralizada en `src/lib/domain/` y `src/lib/parsers/`.
+- **Tests**: 191/191 pasando.
+- **Toast**: ya unificado en `useToast` (no quedan imports de `sonner`).
+- **Componentes UI**: ningún componente fuera de `ui/` accede directo a Supabase (todo migrado).
 
-- Capa `services/` aislada de React (sin hooks, sin toasts).
-- Capa `lib/domain/` con lógica de negocio pura y testeada.
-- Capa `lib/parsers/` separada del fetching (Dashboard, CotizacionDetalle).
-- Hooks orquestadores delgados (controller hooks de los wizards).
-- Query keys centralizados en `lib/queryKeys.ts`.
-- Páginas casi puramente presentacionales (no hay `useEffect` con fetching imperativo, no hay `useQuery` inline en pages).
-- Sin `as any`, sin `console.log` de debug, sin `cd` en scripts.
-- 191/191 pruebas verdes.
+## Hallazgos abiertos (priorizados)
 
-Los hallazgos restantes son **refinamientos**, no problemas de fondo.
+### Críticos (deuda técnica activa)
 
----
+**C1 — Hooks que aún hacen `supabase.rpc/from` directo (6 archivos)**
+Quedan 6 hooks que conservan llamadas directas a Supabase, lo que rompe el patrón "hook = wrapper de servicio":
+- `useConfiguracion.ts` — lectura/escritura de `public.configuracion`.
+- `useConfiguracionGlobal.ts` — lectura/escritura global.
+- `usePlanes.ts` — CRUD de planes.
+- `useFacturas.ts` — listado de facturas.
+- `useDashboardData.ts` — 2 RPC (`dashboard_summary`, `dashboard_details`).
+- `useOperacionesData.ts` — 1 RPC (`operaciones_stats`).
 
-## Hallazgos priorizados
+**C2 — `useNuevoEmbarqueWizard.ts` (336 líneas)**
+Es el hook más grande del repo. Mezcla estado del wizard + validación + hidratación desde cotización + manejo de expedientes + subida de documentos. Debería extraerse a:
+- `lib/domain/embarqueWizard.ts` (validaciones puras + hidratación desde cotización).
+- `useNuevoEmbarqueWizard.ts` queda como orquestador (<150 líneas).
 
-### CRÍTICO — Inexistente
-No se detectaron problemas críticos: no hay lógica de negocio embebida en componentes UI, no hay imports de `supabase/client` en `pages/` ni en `components/`, y no hay duplicación de RLS.
+### Medios (mejoras de cohesión)
 
-### ALTO — Refinamientos de impacto medible
+**M1 — `TabProformas.tsx` (270 líneas) y `TabProformasPendientes.tsx` (246 líneas)**
+Contienen filtrado, conteos, definiciones de columnas y paginación inline. Extraer:
+- `useTabProformasController()` con `filtered`, `counts`, `paginated`, `columns`.
+- Componente queda <120 líneas (solo JSX).
 
-**A1. Inconsistencia de toasts: `useToast` (shadcn) vs `sonner`**
-Coexisten dos sistemas de notificaciones:
-- 40 archivos importan `@/hooks/use-toast`.
-- 2 archivos importan `sonner` directamente (`useProformas.ts`, `useDescargarProformaPdf.ts`).
+**M2 — `DialogGenerarProforma.tsx` (237 líneas)**
+Ya no llama a Supabase directo, pero gestiona estado de wizard multi-paso (selección → confirmación). Extraer un `useDialogGenerarProformaController()`.
 
-Cada librería tiene su propia API y estilo visual. El usuario percibe toasts distintos según el flujo. Hay que elegir uno y migrar el otro — preferentemente `useToast` porque es el predominante.
+**M3 — Colores hardcodeados (15+ archivos)**
+Persisten clases tipo `bg-blue-100 text-blue-800` para badges de estado en:
+- `TabProformas.tsx`, `ProformaBadge.tsx`, `embarqueColumns.tsx`, `BloqueVinculacion.tsx`, `HistorialProformas.tsx`, `ResumenConceptosVenta.tsx`, `KpiCard.tsx`, `OperacionesWidgets.tsx`, `ClienteSummaryCards.tsx`, `ReportesKpiCards.tsx`, `ReportesTablaClientes.tsx`, `cotizacion/CotizacionWizardLayout.tsx`, `pages/Operaciones.tsx`, `admin/AdminOrganizaciones.tsx`, etc.
 
-**A2. Hooks que aún tocan `supabase.from(...)` sin pasar por `services/`**
-Quedan pequeños hooks que hablan directo con el cliente, saltándose la capa de servicios:
-- `useUsuarios.ts` (membership query + edge function)
-- `useUsuarioMutations.ts` (insert directo en `organization_members`)
-- `useClientUsersMutations.ts` (delete directo en `client_users`)
-- `useSidebarAlerts.ts`, `useRentabilidadClientes.ts`, `useProfitMaps.ts`, `useOperadoresDistintos.ts`, `useGlobalSearch.ts`, `usePortalDocumentDownload.ts`
+Solución: tokens semánticos en `index.css` + `tailwind.config.ts` (`success`, `warning`, `info`, `pending`) y un `<StatusBadge variant="..."/>` reutilizable.
 
-Convención del repo: los hooks orquestan React Query + cache; los `services/` hacen el I/O. Estos hooks rompen la convención.
+**M4 — `src/data/changelog/legacy.ts` (1523 líneas) y `changelogData.ts` (694 líneas)**
+El changelog crece sin techo. Recomendado: dividir por año (`changelog/2024.ts`, `changelog/2025.ts`, `changelog/2026.ts`) y mantener solo las últimas N entradas en el bundle inicial (lazy-load del histórico).
 
-**A3. `usePortalData.ts` debe modularizarse igual que `embarqueServices`**
-173 líneas con 9 queries distintas + 3 constantes de columnas inline (`PORTAL_EMBARQUE_DETAIL_COLUMNS`, `PORTAL_EVENTO_COLUMNS`, `PORTAL_DOCUMENTO_COLUMNS`). Mismo patrón que ya se aplicó a embarques: extraer a `services/portal/{queries,columns}.ts` y dejar el hook como capa de cache.
+### Opcionales (cosmético / organización)
 
-### MEDIO — Higiene y consistencia
-
-**M1. Componentes UI grandes en `facturacion/`**
-- `TabProformas.tsx` (270 líneas) y `TabProformasPendientes.tsx` (246 líneas) mezclan: estado de filtros, paginación, selección, definición de columnas inline (con badges hardcodeados) y render de la tabla. Patrón clásico para extraer:
-  - `useTabProformas()` → hook con filtros, paginación, conteos.
-  - `proformasColumns.tsx` → definición de columnas.
-  - El componente queda solo con el JSX y los handlers de UI.
-
-**M2. `DialogGenerarProforma.tsx` (237 líneas)**
-Mismo patrón. Ya tiene un controller hook parcial (`useProformaDialog`), pero la lógica de estados internos del diálogo (selección de conceptos, overrides de IVA, totales calculados) sigue dentro del componente. Extraer todo a `useDialogGenerarProformaState()`.
-
-**M3. `useNuevoEmbarqueWizard.ts` (336 líneas) — el más grande del repo**
-Aunque ya está extraído de la página, el hook absorbió mucha responsabilidad:
-1. Hidratación desde cotización (lógica pura: parsing y mapeo).
-2. Manejo de modo expediente (nuevo vs existente).
-3. Validación step 1 (lógica pura).
-4. Auto-pre-vinculación desde otra ruta.
-5. Orquestación del submit (5 mutaciones encadenadas).
-
-Las piezas (1) y (3) son funciones puras y deberían estar en `lib/domain/embarque.ts` (o un nuevo `lib/domain/nuevoEmbarque.ts`) con tests unitarios. La (5) puede vivir en un service orquestador (`services/embarque/crearEmbarqueFlow.ts`) que el hook solo invoca.
-
-**M4. `useEmbarques.ts` y barrels que reexportan demasiado**
-`useEmbarques.ts` reexporta 11 nombres de queries + 9 mutations + tipos. Es cómodo, pero esconde cuáles archivos consumen qué. Los nuevos consumidores deberían importar directamente desde `hooks/embarque/useEmbarqueQueries` o `useEmbarqueMutations`. El barrel se mantiene solo por compatibilidad.
-
-**M5. Colores hardcoded fuera del design system**
-Aunque la convención dice "siempre tokens semánticos", encontré `bg-blue-100`, `text-blue-800`, `bg-red-*`, `bg-green-*` en 15 archivos UI (mayoría son badges de estado en `TabProformas`, `OperacionesWidgets`, `DashboardStatusCards`, `TablaCostosLocal`, etc.). Centralizar como variantes en `index.css` (`--badge-info`, `--badge-warning`, `--badge-success`) o definir un componente `<StatusBadge variant="…" />` que mapee internamente.
-
-### BAJO — Opcional / cosmético
-
-**B1. Reorganizar `lib/` por categoría**
-11 archivos sueltos en `src/lib/`. Una jerarquía más navegable:
+**O1 — Reorganización de `src/lib/`**
+11 archivos sueltos en la raíz. Agruparlos en subcarpetas semánticas:
 ```text
-lib/
-  formatters/   (formatters.ts, financialUtils.ts, profitUtils.ts, costosUSD.ts)
-  storage/      (storageUtils.ts)
-  config/       (estadoConfig.ts, uiMappings.ts)
-  utils/        (utils.ts, errorUtils.ts, contactoUtils.ts)
-  queryKeys.ts
-  domain/, mappers/, parsers/  (ya existen)
+src/lib/
+  formatters/   ← formatters.ts
+  financial/    ← financialUtils.ts, profitUtils.ts, costosUSD.ts
+  storage/      ← storageUtils.ts
+  ui/           ← uiMappings.ts, estadoConfig.ts
+  errors/       ← errorUtils.ts
+  contacto/     ← contactoUtils.ts
+  query/        ← queryKeys.ts
+  domain/, mappers/, parsers/  ← (ya existen)
+  utils.ts      ← (cn helper, queda en raíz)
 ```
-Cero cambio funcional, pero reduce ruido visual.
 
-**B2. Tests de dominio puro faltantes**
-- `lib/domain/configuracion.ts` (16 líneas): sin tests; trivial pero merece una prueba para mantener la convención.
-- Si se extraen `validateStep1` e hidratación (M3), añadir suite.
+**O2 — Componentes UI shadcn no usados**
+`carousel.tsx` (224 líneas), `menubar.tsx` (207 líneas), `chart.tsx` (303 líneas), `context-menu.tsx` (178 líneas) — verificar uso real y borrar los no consumidos para reducir bundle.
 
-**B3. `useConfiguracionState.ts` (110 líneas)**
-No revisado en esta auditoría; vale mirarlo en caso de tener lógica de negocio embebida.
+**O3 — `usuarioService.ts` Edge Functions**
+La gestión de usuarios va por Edge Functions; documentar este contrato en un README dentro de `src/services/` para mantener consistencia con el resto que va por RPC/PostgREST.
 
-**B4. Desuso del refetch manual**
-`Usuarios.tsx` usa `refetch` del hook directamente; el resto del repo confía en invalidaciones de cache desde mutations. Inconsistencia menor — quitar el `refetch` y dejar que `useUpdateUserRole`/`useDeleteUser` invaliden `queryKeys.usuarios.all` (ya lo hacen).
+## Plan de acción ordenado
 
----
+| # | Versión | Acción | Riesgo | Impacto |
+|---|---------|--------|--------|---------|
+| 1 | v8.70.0 | **C1**: Migrar 6 hooks restantes a servicios (`configuracionService`, `planesService`, `facturasService`, `dashboardService`, `operacionesService`). Eliminar imports directos a `supabase`. | Bajo | Alto |
+| 2 | v8.71.0 | **C2**: Extraer dominio de `useNuevoEmbarqueWizard` a `lib/domain/embarqueWizard.ts`. Tests unitarios para validación e hidratación. | Medio | Alto |
+| 3 | v8.72.0 | **M1**: Controller hooks para `TabProformas` y `TabProformasPendientes`. | Bajo | Medio |
+| 4 | v8.73.0 | **M2**: Controller hook para `DialogGenerarProforma`. | Bajo | Medio |
+| 5 | v8.74.0 | **M3**: Sistema de tokens semánticos + `<StatusBadge>` y migración masiva de colores hardcodeados. | Medio (visual) | Alto (consistencia) |
+| 6 | v8.75.0 | **M4**: Particionar `changelog/` por año + lazy-load histórico. | Bajo | Medio (bundle) |
+| 7 | v8.76.0 | **O1**: Reorganizar `src/lib/` en subcarpetas semánticas. | Bajo (muchos imports) | Bajo |
+| 8 | v8.77.0 | **O2**: Auditoría y limpieza de componentes shadcn no usados. | Muy bajo | Bajo (bundle) |
 
-## Plan recomendado (orden de ejecución)
+## Detalles técnicos por paso
 
-| # | Tarea | Categoría | Esfuerzo |
-|---|-------|-----------|----------|
-| 1 | Unificar sistema de toasts: migrar los 2 hooks de `sonner` → `useToast` (o decidir lo contrario y migrar 40 archivos — preferible la primera). | A1 | XS |
-| 2 | Mover los hooks que aún hacen `supabase.from(...)` a llamar `services/` (crear `userService`, `clientUserService`, `sidebarAlertsService`, etc. cuando no existan). | A2 | M |
-| 3 | Modularizar `usePortalData.ts` → `services/portal/{queries,columns}.ts` siguiendo el patrón de `embarqueServices`. | A3 | S |
-| 4 | Extraer columnas + controller hook de `TabProformas` y `TabProformasPendientes`. | M1 | M |
-| 5 | Extraer estado interno del `DialogGenerarProforma` a un controller hook (`useDialogGenerarProformaState`). | M2 | S |
-| 6 | Adelgazar `useNuevoEmbarqueWizard`: mover hidratación + validación a `lib/domain/nuevoEmbarque.ts` con tests, mover orquestación del submit a `services/embarque/crearEmbarqueFlow.ts`. | M3 | M |
-| 7 | Auditar `useConfiguracionState.ts` (110 líneas) y aplicar el mismo patrón si hay lógica embebida. | B3 | S |
-| 8 | Reemplazar colores hardcoded `bg-blue-*`, `text-red-*`, etc. por tokens semánticos o un `<StatusBadge>` reutilizable. | M5 | M |
-| 9 | Eliminar `refetch` manual en `Usuarios.tsx` y confiar en invalidaciones. | B4 | XS |
-| 10 | Reorganizar `src/lib/` por categoría (`formatters/`, `storage/`, `config/`, `utils/`). | B1 | S (mecánico) |
-| 11 | Añadir tests para `lib/domain/configuracion.ts` y nuevos puros extraídos. | B2 | XS |
+**Paso 1 (C1)** — Servicios nuevos a crear:
+- `configuracionService.ts` ya existe → mover lógica de `useConfiguracion.ts` y `useConfiguracionGlobal.ts` allí.
+- Crear `planesService.ts`, `facturasService.ts`, `dashboardService.ts`, `operacionesService.ts`.
+- Hooks quedan como `useQuery({ queryFn: () => fetchX() })`.
 
-## Resumen ejecutivo
+**Paso 2 (C2)** — Funciones puras a extraer:
+- `validateStepDatosGenerales(form): EmbarqueValidationErrors`
+- `hydrateFromCotizacion(cotizacion, costos): Partial<EmbarqueForm>`
+- `resolverModoExpediente(clientes, clienteId): ModoExpediente`
 
-- **Critical issues: 0.**
-- **High-impact (A1-A3):** consistencia de toasts, hooks que aún saltan la capa de servicios, modularización de `usePortalData`. Son ~1-2 horas total.
-- **Medium (M1-M5):** componentes/hook grandes restantes y colores hardcoded. Es la parte más voluminosa (~1 día) pero ninguno bloquea features.
-- **Low (B1-B4):** organización visual de `lib/`, tests de cobertura, limpieza menor.
+**Paso 5 (M3)** — Tokens propuestos en `index.css`:
+```css
+--status-success: 142 71% 45%;
+--status-warning: 38 92% 50%;
+--status-info: 217 91% 60%;
+--status-pending: 220 14% 75%;
+--status-danger: 0 84% 60%;
+```
 
-Recomiendo ejecutar en orden numérico — los pasos 1-3 son las únicas mejoras estructurales que aún quedan; del 4 en adelante son refinamientos progresivos que pueden intercalarse con trabajo de producto sin urgencia.
+## Próximo paso
+
+Ejecutar **Paso 1 (v8.70.0)** — migración de los 6 hooks restantes a servicios. Es el cambio de mayor impacto, menor riesgo y deja el patrón "hook = wrapper" 100% consistente en todo el repo.

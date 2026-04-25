@@ -1,7 +1,7 @@
 import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
 import { queryKeys } from "@/lib/queryKeys";
+import { fetchOperacionesStats } from "@/services/operacionesService";
 
 export const MAX_CONTENEDORES = 150;
 
@@ -120,11 +120,7 @@ interface ServerStats {
 export function useOperacionesData(_periodo: PeriodoFiltro = "mes") {
   const { data: stats, isLoading } = useQuery({
     queryKey: queryKeys.operaciones.stats,
-    queryFn: async () => {
-      const { data, error } = await supabase.rpc("operaciones_stats");
-      if (error) throw error;
-      return data as unknown as ServerStats;
-    },
+    queryFn: fetchOperacionesStats,
     staleTime: 60_000,
   });
 

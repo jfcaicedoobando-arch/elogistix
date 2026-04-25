@@ -1,7 +1,7 @@
 import { useState, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
 import { queryKeys } from "@/lib/queryKeys";
+import { fetchDashboardSummary, fetchDashboardDetails } from "@/services/dashboardService";
 import {
   ESTADOS_FILTRO,
   parseConteoPorEstado,
@@ -37,11 +37,7 @@ export function useDashboardData() {
   // Summary: KPIs + conteos + resumen mensual — payload pequeño, carga eager
   const { data: summary, isLoading } = useQuery({
     queryKey: [...queryKeys.dashboard.stats, "summary"],
-    queryFn: async () => {
-      const { data, error } = await supabase.rpc("dashboard_summary" as never);
-      if (error) throw error;
-      return data as Record<string, unknown>;
-    },
+    queryFn: fetchDashboardSummary,
     staleTime: 5 * 60_000,
     gcTime: 10 * 60_000,
   });
@@ -49,11 +45,7 @@ export function useDashboardData() {
   // Details: listas largas — solo después de que summary terminó (no bloquea TTI)
   const { data: details } = useQuery({
     queryKey: [...queryKeys.dashboard.stats, "details"],
-    queryFn: async () => {
-      const { data, error } = await supabase.rpc("dashboard_details" as never);
-      if (error) throw error;
-      return data as Record<string, unknown>;
-    },
+    queryFn: fetchDashboardDetails,
     enabled: !!summary,
     staleTime: 5 * 60_000,
     gcTime: 10 * 60_000,

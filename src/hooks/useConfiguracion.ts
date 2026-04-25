@@ -1,30 +1,19 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
-import type { Json } from "@/integrations/supabase/types";
 import { useToast } from "@/hooks/use-toast";
 import { queryKeys } from "@/lib/queryKeys";
+import {
+  fetchConfiguracion,
+  updateConfiguracionByCategoriaClave,
+  type ConfigItem,
+} from "@/services/configuracionService";
 
-export interface ConfigItem {
-  id: string;
-  categoria: string;
-  clave: string;
-  valor: unknown;
-  descripcion: string;
-}
+export type { ConfigItem };
 
 export function useConfiguracion() {
   return useQuery<ConfigItem[]>({
     queryKey: queryKeys.configuracion.all,
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("configuracion")
-        .select("*")
-        .order("categoria")
-        .order("clave");
-      if (error) throw error;
-      return (data ?? []) as unknown as ConfigItem[];
-    },
-    staleTime: 5 * 60 * 1000, // 5 min cache
+    queryFn: fetchConfiguracion,
+    staleTime: 5 * 60 * 1000,
   });
 }
 
@@ -53,20 +42,7 @@ export function useUpdateConfiguracion() {
   const { toast } = useToast();
 
   return useMutation({
-    mutationFn: async (items: { categoria: string; clave: string; valor: unknown }[]) => {
-      // Batch all updates in parallel instead of sequential loop
-      const results = await Promise.all(
-        items.map((item) =>
-          supabase
-            .from("configuracion")
-            .update({ valor: item.valor as Json })
-            .eq("categoria", item.categoria)
-            .eq("clave", item.clave)
-        )
-      );
-      const firstError = results.find((r) => r.error);
-      if (firstError?.error) throw firstError.error;
-    },
+    mutationFn: updateConfiguracionByCategoriaClave,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.configuracion.all });
       toast({ title: "Configuración guardada" });
