@@ -78,16 +78,8 @@ export async function fetchClienteParaPdf(clienteId: string) {
   return data;
 }
 
-/** Días de crédito por defecto del cliente (para precargar el diálogo de proforma). */
-export async function fetchDiasCreditoCliente(clienteId: string): Promise<number | null> {
-  const { data, error } = await supabase
-    .from("clientes")
-    .select("dias_credito")
-    .eq("id", clienteId)
-    .maybeSingle();
-  if (error) throw error;
-  return data?.dias_credito ?? null;
-}
+/** Días de crédito por defecto del cliente (re-export para compatibilidad). */
+export { fetchDiasCreditoCliente } from "@/services/clienteService";
 
 export async function fetchEmbarqueParaPdf(embarqueId: string) {
   const { data, error } = await supabase
