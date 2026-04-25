@@ -51,9 +51,9 @@ describe("buildConceptosFromCostos", () => {
     expect(out.usd[0].total).toBe(200);
   });
 
-  it("USD con IVA si el concepto está en CONCEPTOS_CON_IVA_USD (Seguro)", () => {
+  it("USD con IVA si el concepto está en CONCEPTOS_CON_IVA_USD (Handling)", () => {
     const out = buildConceptosFromCostos(
-      [fila({ moneda: "USD", concepto: "Seguro", precio_venta: 100, cantidad: 1 })],
+      [fila({ moneda: "USD", concepto: "Handling", precio_venta: 100, cantidad: 1 })],
       TASA,
     );
     expect(out.usd[0].aplica_iva).toBe(true);
