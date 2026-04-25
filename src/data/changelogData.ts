@@ -11,6 +11,13 @@ export interface ChangelogEntry {
 /** Entradas recientes (v8.x). Las anteriores se cargan dinámicamente. */
 export const recentChangelog: ChangelogEntry[] = [
   {
+    version: "8.53.0",
+    date: "2026-04-25",
+    type: "minor",
+    title: "Refactor: descomposición del hook de detalle de organización",
+    description: "Refactor 100% interno sin cambios visibles. Se descompone useAdminOrgDetalle (un 'God Hook' de ~245 líneas con 9 queries y mutaciones mezcladas) en cuatro hooks especializados con responsabilidades claras: useAdminOrgInfo (lectura, edición y activación de la organización), useAdminOrgKpis (los cuatro contadores agregados), useAdminOrgMembers (listado y mutaciones de miembros) y useAdminOrgConfig (configuración por categoría). El hook original se conserva como composición ligera para no romper AdminOrgDetalle. La I/O se mueve a adminServices.ts (fetchAdminOrganization, updateAdminOrganization, setOrganizationActivo, countOrg*, fetchOrgMembers, updateOrgMemberRole, removeOrgMember). La función pura de agrupación de configuración por categoría se extrae a lib/domain/configuracion.ts. Resultado: hooks pequeños, testeables individualmente, y cero llamadas directas a Supabase desde los hooks de admin.",
+  },
+  {
     version: "8.52.0",
     date: "2026-04-25",
     type: "minor",

@@ -110,7 +110,94 @@ export async function createOrganization(input: { nombre: string; rfc: string })
   if (error) throw error;
 }
 
+// ─── Org detail ─────────────────────────────────────────────────────────────
+export async function fetchAdminOrganization(id: string) {
+  const { data, error } = await supabase
+    .from("organizations")
+    .select("*")
+    .eq("id", id)
+    .single();
+  if (error) throw error;
+  return data;
+}
+
+export async function updateAdminOrganization(
+  id: string,
+  payload: { nombre: string; rfc: string; plan: string },
+): Promise<void> {
+  const { error } = await supabase
+    .from("organizations")
+    .update(payload)
+    .eq("id", id);
+  if (error) throw error;
+}
+
+export async function setOrganizationActivo(id: string, activo: boolean): Promise<void> {
+  const { error } = await supabase
+    .from("organizations")
+    .update({ activo })
+    .eq("id", id);
+  if (error) throw error;
+}
+
+async function countByOrg(table: "organization_members" | "embarques" | "clientes" | "cotizaciones", orgId: string): Promise<number> {
+  const { count, error } = await supabase
+    .from(table)
+    .select("id", { count: "exact", head: true })
+    .eq("organization_id", orgId);
+  if (error) throw error;
+  return count ?? 0;
+}
+
+export const countOrgMembers = (orgId: string) => countByOrg("organization_members", orgId);
+export const countOrgEmbarques = (orgId: string) => countByOrg("embarques", orgId);
+export const countOrgClientes = (orgId: string) => countByOrg("clientes", orgId);
+export const countOrgCotizaciones = (orgId: string) => countByOrg("cotizaciones", orgId);
+
 // ─── Members ────────────────────────────────────────────────────────────────
+export interface OrgMemberRow {
+  id: string;
+  user_id: string;
+  role: AppRole;
+  email?: string;
+}
+
+export async function fetchOrgMembers(orgId: string): Promise<OrgMemberRow[]> {
+  const { data, error } = await supabase
+    .from("organization_members")
+    .select("id, user_id, role")
+    .eq("organization_id", orgId)
+    .order("created_at");
+  if (error) throw error;
+
+  const emailMap: Record<string, string> = {};
+  try {
+    const users = await fetchAvailableUsers();
+    users.forEach((u) => { emailMap[u.id] = u.email; });
+  } catch { /* edge function may be unavailable */ }
+
+  return (data ?? []).map((m) => ({
+    ...m,
+    email: emailMap[m.user_id] || m.user_id,
+  })) as OrgMemberRow[];
+}
+
+export async function updateOrgMemberRole(memberId: string, role: AppRole): Promise<void> {
+  const { error } = await supabase
+    .from("organization_members")
+    .update({ role })
+    .eq("id", memberId);
+  if (error) throw error;
+}
+
+export async function removeOrgMember(memberId: string): Promise<void> {
+  const { error } = await supabase
+    .from("organization_members")
+    .delete()
+    .eq("id", memberId);
+  if (error) throw error;
+}
+
 export async function addOrgMember(params: {
   organizationId: string;
   userId: string;
