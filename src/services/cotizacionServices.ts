@@ -11,7 +11,7 @@ import type {
   CreateCotizacionInput,
 } from "@/hooks/cotizacion/useCotizacionTypes";
 import type { CostoCotizacion } from "@/hooks/cotizacion/useCotizacionCostos";
-import type { FilaCostoLocal } from "@/components/cotizacion/SeccionCostosInternosPLUnificado";
+import type { FilaCostoLocal } from "@/types/cotizacionPLTypes";
 import { CONCEPTOS_CON_IVA_USD } from "@/constants/cotizacionConstants";
 import { calcularTotalConIVA } from "@/lib/financialUtils";
 
