@@ -11,6 +11,13 @@ export interface ChangelogEntry {
 /** Entradas recientes (v8.x). Las anteriores se cargan dinámicamente. */
 export const recentChangelog: ChangelogEntry[] = [
   {
+    version: "8.50.1",
+    date: "2026-04-25",
+    type: "patch",
+    title: "Pre-Facturación: consolidación atómica en BD y query keys centralizadas",
+    description: "Mejoras internas finales del refactor del módulo de proformas. (1) La consolidación de proformas (sumar totales, crear la nueva, copiar conceptos agrupados por contenedor y marcar las originales) ahora corre en una sola transacción atómica vía la nueva función de base de datos consolidar_proformas: si cualquier paso falla, todo se revierte automáticamente sin rollbacks manuales del cliente. (2) Las query keys de proformas (lista por embarque, pendientes, aprobadas y conceptos de venta) están ahora centralizadas en lib/queryKeys.ts y se consumen de forma tipada desde el hook useProformas, eliminando strings hard-codeados duplicados; además se introdujo un helper invalidateProformaCaches que evita repetir la lógica de invalidación en cada mutación. (3) Se eliminaron del módulo de dominio las funciones sumarTotalesProformas y construirSnapshotConsolidado que quedaron sin uso al migrar la lógica a la base de datos.",
+  },
+  {
     version: "8.50.0",
     date: "2026-04-25",
     type: "minor",
