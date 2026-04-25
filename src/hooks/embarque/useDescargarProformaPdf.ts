@@ -50,7 +50,7 @@ export function useDescargarProformaPdf() {
         ]);
 
         if (!embarque) {
-          toast.error("No se pudo cargar el embarque asociado");
+          toast({ title: "No se pudo cargar el embarque asociado", variant: "destructive" });
           return;
         }
 
@@ -63,7 +63,7 @@ export function useDescargarProformaPdf() {
           conceptosConsolidados: consolidados,
         });
       } catch (e) {
-        toast.error("Error al generar PDF: " + (e as Error).message);
+        toast({ title: "Error al generar PDF: " + (e as Error).message, variant: "destructive" });
       } finally {
         setDownloadingId(null);
       }
