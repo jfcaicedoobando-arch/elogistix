@@ -1660,6 +1660,59 @@ export type Database = {
           url: string
         }[]
       }
+      consolidar_proformas: {
+        Args: {
+          p_bl_master: string
+          p_cliente_id: string
+          p_cliente_nombre: string
+          p_dias_credito: number
+          p_embarque_id: string
+          p_expediente: string
+          p_operador: string
+          p_organization_id: string
+          p_proforma_ids: string[]
+          p_tasa_iva: number
+        }
+        Returns: {
+          bl_master: string | null
+          cliente_id: string
+          cliente_nombre: string
+          consolidada_en: string | null
+          created_at: string
+          created_by: string | null
+          dias_credito: number | null
+          embarque_id: string | null
+          embarques_ids: string[] | null
+          es_consolidada: boolean
+          estado_aprobacion: string
+          estado_proforma: string
+          estado_revision: string
+          expediente: string
+          factura_id: string | null
+          fecha_emision: string
+          fecha_facturacion: string | null
+          folio_factura_externa: string | null
+          id: string
+          iva_mxn: number
+          iva_usd: number
+          notas: string | null
+          numero: string
+          operador: string | null
+          organization_id: string
+          proformas_origen: string[] | null
+          subtotal_mxn: number
+          subtotal_usd: number
+          total_mxn: number
+          total_usd: number
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "proformas"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       crear_embarque_completo: {
         Args: {
           p_conceptos_costo?: Json
