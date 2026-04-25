@@ -1,6 +1,7 @@
 import { supabase } from '@/integrations/supabase/client';
 import { uploadFile } from '@/services/storage';
 import { buildEmbarqueDocPath } from '@/lib/storageUtils';
+import type { Enums } from '@/integrations/supabase/types';
 
 /**
  * Resuelve o genera un número de expediente para un nuevo embarque.
