@@ -52,3 +52,46 @@ export async function subirDocumentosEmbarque(
 
   return Promise.all(tareas);
 }
+
+// ─── Eventos de tracking ─────────────────────────────────────────────────────
+
+export interface EventoEmbarqueRow {
+  id: string;
+  embarque_id: string;
+  tipo: string;
+  descripcion: string;
+  ubicacion: string;
+  fecha: string;
+  usuario: string;
+  created_at: string;
+}
+
+export async function fetchEventosEmbarque(embarqueId: string): Promise<EventoEmbarqueRow[]> {
+  const { data, error } = await supabase
+    .from("eventos_embarque")
+    .select("*")
+    .eq("embarque_id", embarqueId)
+    .order("fecha", { ascending: false });
+  if (error) throw error;
+  return (data ?? []) as EventoEmbarqueRow[];
+}
+
+export async function insertEventoEmbarque(input: {
+  embarqueId: string;
+  tipo: string;
+  descripcion: string;
+  ubicacion: string;
+  fecha: string;
+  usuario: string;
+}): Promise<void> {
+  const { error } = await supabase.from("eventos_embarque").insert({
+    embarque_id: input.embarqueId,
+    // @ts-expect-error: enum tipo_evento_tracking validado en UI
+    tipo: input.tipo,
+    descripcion: input.descripcion,
+    ubicacion: input.ubicacion,
+    fecha: input.fecha,
+    usuario: input.usuario,
+  });
+  if (error) throw error;
+}
