@@ -1,7 +1,13 @@
 /**
- * Reglas de dominio puras para Embarques.
+ * Lógica pura de dominio de embarques.
  * Sin dependencias de Supabase, React Query ni UI.
+ * Ubicación canónica desde Fase 8.
  */
+export * from "../embarqueLogic";
+
+// ============================================================
+// Reglas para registro automático de eventos de tracking al cambiar estado
+// ============================================================
 
 /**
  * Mapeo de estado de embarque al tipo de evento de tracking que se debe registrar
