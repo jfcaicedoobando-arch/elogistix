@@ -1,14 +1,24 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
 import type { Tables, TablesInsert } from "@/integrations/supabase/types";
 import { queryKeys } from "@/lib/queryKeys";
 import { useOrgFilter } from "@/hooks/useOrgFilter";
+import {
+  fetchClientesPaginados,
+  fetchClientes,
+  fetchClientesForSelect,
+  fetchCliente,
+  createCliente,
+  updateCliente,
+  fetchContactosCliente,
+  createContacto,
+  updateContacto,
+  deleteContacto,
+  fetchEmbarquesCliente,
+  fetchCotizacionesCliente,
+} from "@/services/clienteService";
 
-export type Cliente = Tables<'clientes'>;
-export type ContactoCliente = Tables<'contactos_cliente'>;
-
-/** Columnas necesarias para la tabla de clientes y reportes */
-const CLIENTE_LIST_COLUMNS = 'id, nombre, rfc, ciudad, estado, contacto, telefono' as const;
+export type Cliente = Tables<"clientes">;
+export type ContactoCliente = Tables<"contactos_cliente">;
 
 // --- Hook paginado server-side para la vista de lista ---
 
@@ -24,25 +34,7 @@ export function useClientesPaginados({ search, page, pageSize }: UseClientesPagi
 
   return useQuery({
     queryKey: queryKeys.clientes.list(filters),
-    queryFn: async () => {
-      let query = supabase
-        .from('clientes')
-        .select(CLIENTE_LIST_COLUMNS, { count: 'exact' })
-        .order('nombre');
-
-      if (organizationId) query = query.eq('organization_id', organizationId);
-      if (search) {
-        query = query.or(`nombre.ilike.%${search}%,rfc.ilike.%${search}%`);
-      }
-
-      const from = page * pageSize;
-      const to = from + pageSize - 1;
-      query = query.range(from, to);
-
-      const { data, error, count } = await query;
-      if (error) throw error;
-      return { data: data ?? [], count: count ?? 0 };
-    },
+    queryFn: () => fetchClientesPaginados({ search, page, pageSize, organizationId }),
     placeholderData: (prev) => prev,
   });
 }
@@ -53,37 +45,15 @@ export function useClientes() {
   const { organizationId } = useOrgFilter();
   return useQuery({
     queryKey: [...queryKeys.clientes.all, organizationId],
-    queryFn: async () => {
-      let query = supabase
-        .from("clientes")
-        .select(CLIENTE_LIST_COLUMNS)
-        .order("nombre");
-      if (organizationId) query = query.eq('organization_id', organizationId);
-      const { data, error } = await query;
-      if (error) throw error;
-      return data;
-    },
+    queryFn: () => fetchClientes(organizationId),
   });
 }
-
-// --- Hooks de detalle, contactos, CRUD (sin cambios) ---
-
-const CLIENTE_DETAIL_COLUMNS = 'id, nombre, rfc, direccion, ciudad, estado, cp, contacto, telefono, email, organization_id, created_at, updated_at' as const;
-const CONTACTO_COLUMNS = 'id, cliente_id, tipo, nombre, contacto, rfc, telefono, email, direccion, ciudad, pais, organization_id, created_at' as const;
 
 export function useCliente(id: string | undefined) {
   return useQuery({
     queryKey: queryKeys.clientes.detail(id!),
     enabled: !!id,
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("clientes")
-        .select(CLIENTE_DETAIL_COLUMNS)
-        .eq("id", id!)
-        .single();
-      if (error) throw error;
-      return data;
-    },
+    queryFn: () => fetchCliente(id!),
   });
 }
 
@@ -91,30 +61,14 @@ export function useContactosCliente(clienteId: string | undefined) {
   return useQuery({
     queryKey: queryKeys.clientes.contactos(clienteId!),
     enabled: !!clienteId,
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("contactos_cliente")
-        .select(CONTACTO_COLUMNS)
-        .eq("cliente_id", clienteId!)
-        .order("nombre");
-      if (error) throw error;
-      return data;
-    },
+    queryFn: () => fetchContactosCliente(clienteId!),
   });
 }
 
 export function useCreateCliente() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async (cliente: TablesInsert<"clientes">) => {
-      const { data, error } = await supabase
-        .from("clientes")
-        .insert(cliente)
-        .select()
-        .single();
-      if (error) throw error;
-      return data;
-    },
+    mutationFn: (cliente: TablesInsert<"clientes">) => createCliente(cliente),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.clientes.all });
     },
@@ -124,44 +78,28 @@ export function useCreateCliente() {
 export function useCreateContacto() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async (contacto: TablesInsert<"contactos_cliente">) => {
-      const { data, error } = await supabase
-        .from("contactos_cliente")
-        .insert(contacto)
-        .select()
-        .single();
-      if (error) throw error;
-      return data;
-    },
-    onSuccess: (_resultado, vars) => queryClient.invalidateQueries({ queryKey: queryKeys.clientes.contactos(vars.cliente_id) }),
+    mutationFn: (contacto: TablesInsert<"contactos_cliente">) => createContacto(contacto),
+    onSuccess: (_resultado, vars) =>
+      queryClient.invalidateQueries({ queryKey: queryKeys.clientes.contactos(vars.cliente_id) }),
   });
 }
 
 export function useUpdateContacto() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async ({ id, cliente_id, ...updates }: Partial<ContactoCliente> & { id: string; cliente_id: string }) => {
-      const { error } = await supabase
-        .from("contactos_cliente")
-        .update(updates)
-        .eq("id", id);
-      if (error) throw error;
-    },
-    onSuccess: (_resultado, vars) => queryClient.invalidateQueries({ queryKey: queryKeys.clientes.contactos(vars.cliente_id) }),
+    mutationFn: ({ id, cliente_id, ...updates }: Partial<ContactoCliente> & { id: string; cliente_id: string }) =>
+      updateContacto(id, updates),
+    onSuccess: (_resultado, vars) =>
+      queryClient.invalidateQueries({ queryKey: queryKeys.clientes.contactos(vars.cliente_id) }),
   });
 }
 
 export function useDeleteContacto() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async ({ id, cliente_id }: { id: string; cliente_id: string }) => {
-      const { error } = await supabase
-        .from("contactos_cliente")
-        .delete()
-        .eq("id", id);
-      if (error) throw error;
-    },
-    onSuccess: (_resultado, vars) => queryClient.invalidateQueries({ queryKey: queryKeys.clientes.contactos(vars.cliente_id) }),
+    mutationFn: ({ id }: { id: string; cliente_id: string }) => deleteContacto(id),
+    onSuccess: (_resultado, vars) =>
+      queryClient.invalidateQueries({ queryKey: queryKeys.clientes.contactos(vars.cliente_id) }),
   });
 }
 
@@ -169,16 +107,7 @@ export function useClientesForSelect() {
   const { organizationId } = useOrgFilter();
   return useQuery({
     queryKey: [...queryKeys.clientes.select, organizationId],
-    queryFn: async () => {
-      let query = supabase
-        .from('clientes')
-        .select('id, nombre')
-        .order('nombre');
-      if (organizationId) query = query.eq('organization_id', organizationId);
-      const { data, error } = await query;
-      if (error) throw error;
-      return data;
-    },
+    queryFn: () => fetchClientesForSelect(organizationId),
   });
 }
 
@@ -186,15 +115,7 @@ export function useEmbarquesCliente(clienteId: string | undefined) {
   return useQuery({
     queryKey: queryKeys.clientes.embarques(clienteId!),
     enabled: !!clienteId,
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("embarques")
-        .select("id, expediente, modo, tipo, estado, etd, eta, puerto_origen, puerto_destino, aeropuerto_origen, aeropuerto_destino, ciudad_origen, ciudad_destino, cliente_nombre")
-        .eq("cliente_id", clienteId!)
-        .order("created_at", { ascending: false });
-      if (error) throw error;
-      return data ?? [];
-    },
+    queryFn: () => fetchEmbarquesCliente(clienteId!),
   });
 }
 
@@ -202,31 +123,14 @@ export function useCotizacionesCliente(clienteId: string | undefined) {
   return useQuery({
     queryKey: queryKeys.clientes.cotizaciones(clienteId!),
     enabled: !!clienteId,
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("cotizaciones")
-        .select("id, folio, modo, tipo, origen, destino, estado, subtotal, moneda, created_at")
-        .eq("cliente_id", clienteId!)
-        .order("created_at", { ascending: false });
-      if (error) throw error;
-      return data ?? [];
-    },
+    queryFn: () => fetchCotizacionesCliente(clienteId!),
   });
 }
 
 export function useUpdateCliente() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async ({ id, ...updates }: Partial<Cliente> & { id: string }) => {
-      const { data, error } = await supabase
-        .from("clientes")
-        .update(updates)
-        .eq("id", id)
-        .select()
-        .single();
-      if (error) throw error;
-      return data;
-    },
+    mutationFn: ({ id, ...updates }: Partial<Cliente> & { id: string }) => updateCliente(id, updates),
     onSuccess: (clienteActualizado) => {
       queryClient.invalidateQueries({ queryKey: queryKeys.clientes.all });
       queryClient.invalidateQueries({ queryKey: queryKeys.clientes.detail(clienteActualizado.id) });

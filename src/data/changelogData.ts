@@ -11,6 +11,13 @@ export interface ChangelogEntry {
 /** Entradas recientes (v8.x). Las anteriores se cargan dinámicamente. */
 export const recentChangelog: ChangelogEntry[] = [
   {
+    version: "8.60.0",
+    date: "2026-04-25",
+    type: "minor",
+    title: "Nuevo services/clienteService.ts — useClientes deja de tocar Supabase",
+    description: "Paso 3 de la auditoría arquitectónica. Se creó services/clienteService.ts como capa única de acceso a las tablas clientes y contactos_cliente, centralizando: fetchClientesPaginados, fetchClientes, fetchClientesForSelect, fetchCliente, createCliente, updateCliente, fetchContactosCliente/createContacto/updateContacto/deleteContacto, fetchEmbarquesCliente, fetchCotizacionesCliente y fetchDiasCreditoCliente (que antes vivía en proformaServices.ts y se reexporta desde ahí para no romper imports). El hook src/hooks/useClientes.ts se redujo a una capa de React Query pura: cada hook delega 100% al service, sin llamadas directas a supabase ni queries inline. Beneficio: la jerarquía Hooks → Services → Supabase queda completa para el dominio de clientes; los selects de columnas (CLIENTE_LIST_COLUMNS, CLIENTE_DETAIL_COLUMNS, CONTACTO_COLUMNS) viven en un solo lugar y pueden testearse de forma aislada. Build verde, 177/177 pruebas pasando.",
+  },
+  {
     version: "8.59.0",
     date: "2026-04-25",
     type: "minor",
