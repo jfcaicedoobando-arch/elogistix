@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
+import { signInWithEmail, resolveLandingRoute } from "@/services/authService";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -20,32 +20,15 @@ export default function Login() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-
-    const { data: signInData, error } = await supabase.auth.signInWithPassword({ email, password });
-    setLoading(false);
-    if (error) {
-      toast({ title: "Error al iniciar sesión", description: error.message, variant: "destructive" });
-      return;
+    try {
+      const { role } = await signInWithEmail(email, password);
+      navigate(resolveLandingRoute(role), { replace: true });
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Error desconocido";
+      toast({ title: "Error al iniciar sesión", description: message, variant: "destructive" });
+    } finally {
+      setLoading(false);
     }
-
-    const userId = signInData.user?.id;
-    if (userId) {
-      const { data: roleData } = await supabase
-        .from("user_roles")
-        .select("role")
-        .eq("user_id", userId)
-        .limit(1)
-        .single();
-      if (roleData?.role === "super_admin") {
-        navigate("/admin", { replace: true });
-        return;
-      }
-      if (roleData?.role === "cliente") {
-        navigate("/portal", { replace: true });
-        return;
-      }
-    }
-    navigate("/", { replace: true });
   };
 
   return (
