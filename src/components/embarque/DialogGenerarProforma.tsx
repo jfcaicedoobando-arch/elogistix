@@ -131,7 +131,7 @@ export function DialogGenerarProforma({ open, onOpenChange, embarque, conceptosP
         tasaIva,
         ivaOverrides,
       });
-      const cliente = await fetchClienteParaPdf(embarque.cliente_id);
+      const cliente = await fetchClienteParaPdfCached(embarque.cliente_id);
       const conceptosParaPdf = conceptosSeleccionados.map(c => ({
         ...c,
         aplica_iva: ivaOverrides[c.id],
