@@ -457,9 +457,13 @@ export async function consolidarProformas(params: ConsolidarProformasParams): Pr
   });
 
   if (conceptosSnap.length > 0) {
+    const snapTyped = conceptosSnap.map((s) => ({
+      ...s,
+      moneda: s.moneda as "USD" | "MXN" | "EUR",
+    }));
     const { error: errSnap } = await supabase
       .from("proforma_conceptos_consolidados")
-      .insert(conceptosSnap);
+      .insert(snapTyped);
     if (errSnap) {
       await supabase.from("proformas").delete().eq("id", nueva.id);
       throw errSnap;
