@@ -1,31 +1,21 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { queryKeys } from "@/lib/queryKeys";
+import {
+  fetchPuertos,
+  insertPuerto,
+  setPuertoActivo,
+  deletePuerto,
+  type Puerto,
+} from "@/services/catalogosService";
 
-export interface Puerto {
-  id: string;
-  code: string;
-  name: string;
-  country: string;
-  activo: boolean;
-  created_at: string;
-}
+export type { Puerto };
 
 /** Puertos activos ordenados por país → nombre */
 export function usePuertos() {
   return useQuery<Puerto[]>({
     queryKey: queryKeys.puertos.activos,
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("puertos")
-        .select("*")
-        .eq("activo", true)
-        .order("country")
-        .order("name");
-      if (error) throw error;
-      return (data ?? []) as unknown as Puerto[];
-    },
+    queryFn: () => fetchPuertos(false),
     staleTime: 30 * 60 * 1000,
   });
 }
@@ -34,15 +24,7 @@ export function usePuertos() {
 export function useAllPuertos() {
   return useQuery<Puerto[]>({
     queryKey: queryKeys.puertos.todos,
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("puertos")
-        .select("*")
-        .order("country")
-        .order("name");
-      if (error) throw error;
-      return (data ?? []) as unknown as Puerto[];
-    },
+    queryFn: () => fetchPuertos(true),
     staleTime: 60 * 1000,
   });
 }
@@ -50,16 +32,10 @@ export function useAllPuertos() {
 export function useAdminPuertos() {
   const queryClient = useQueryClient();
   const { toast } = useToast();
-
-  const invalidate = () => {
-    queryClient.invalidateQueries({ queryKey: queryKeys.puertos.all });
-  };
+  const invalidate = () => queryClient.invalidateQueries({ queryKey: queryKeys.puertos.all });
 
   const agregarPuerto = useMutation({
-    mutationFn: async (puerto: { code: string; name: string; country: string }) => {
-      const { error } = await supabase.from("puertos").insert(puerto);
-      if (error) throw error;
-    },
+    mutationFn: (puerto: { code: string; name: string; country: string }) => insertPuerto(puerto),
     onSuccess: () => {
       invalidate();
       toast({ title: "Puerto agregado" });
@@ -70,10 +46,7 @@ export function useAdminPuertos() {
   });
 
   const toggleActivo = useMutation({
-    mutationFn: async ({ id, activo }: { id: string; activo: boolean }) => {
-      const { error } = await supabase.from("puertos").update({ activo }).eq("id", id);
-      if (error) throw error;
-    },
+    mutationFn: ({ id, activo }: { id: string; activo: boolean }) => setPuertoActivo(id, activo),
     onSuccess: () => invalidate(),
     onError: (e: Error) => {
       toast({ title: "Error al actualizar", description: e.message, variant: "destructive" });
@@ -81,10 +54,7 @@ export function useAdminPuertos() {
   });
 
   const eliminarPuerto = useMutation({
-    mutationFn: async (id: string) => {
-      const { error } = await supabase.from("puertos").delete().eq("id", id);
-      if (error) throw error;
-    },
+    mutationFn: (id: string) => deletePuerto(id),
     onSuccess: () => {
       invalidate();
       toast({ title: "Puerto eliminado" });

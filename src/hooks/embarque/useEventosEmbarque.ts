@@ -1,7 +1,9 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
-import type { Enums } from '@/integrations/supabase/types';
-import { queryKeys } from '@/lib/queryKeys';
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { queryKeys } from "@/lib/queryKeys";
+import {
+  fetchEventosEmbarque,
+  insertEventoEmbarque,
+} from "@/services/embarqueServices";
 
 export interface EventoEmbarque {
   id: string;
@@ -15,31 +17,23 @@ export interface EventoEmbarque {
 }
 
 export const TIPOS_EVENTO_TRACKING = [
-  'Zarpe',
-  'Transbordo',
-  'Arribo a Puerto',
-  'Descarga',
-  'Despacho Aduanal',
-  'Liberación',
-  'En Ruta Terrestre',
-  'Entrega',
-  'Demora',
-  'Inspección',
-  'Otro',
+  "Zarpe",
+  "Transbordo",
+  "Arribo a Puerto",
+  "Descarga",
+  "Despacho Aduanal",
+  "Liberación",
+  "En Ruta Terrestre",
+  "Entrega",
+  "Demora",
+  "Inspección",
+  "Otro",
 ] as const;
 
 export function useEventosEmbarque(embarqueId: string | undefined) {
   return useQuery({
     queryKey: queryKeys.embarques.eventos(embarqueId!),
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('eventos_embarque')
-        .select('*')
-        .eq('embarque_id', embarqueId!)
-        .order('fecha', { ascending: false });
-      if (error) throw error;
-      return (data ?? []) as EventoEmbarque[];
-    },
+    queryFn: () => fetchEventosEmbarque(embarqueId!),
     enabled: !!embarqueId,
   });
 }
@@ -56,17 +50,7 @@ interface CreateEventoInput {
 export function useCreateEventoEmbarque() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async ({ embarqueId, tipo, descripcion, ubicacion, fecha, usuario }: CreateEventoInput) => {
-      const { error } = await supabase.from('eventos_embarque').insert({
-        embarque_id: embarqueId,
-        tipo: tipo as Enums<'tipo_evento_tracking'>,
-        descripcion,
-        ubicacion,
-        fecha,
-        usuario,
-      });
-      if (error) throw error;
-    },
+    mutationFn: (input: CreateEventoInput) => insertEventoEmbarque(input),
     onSuccess: (_r, vars) => {
       qc.invalidateQueries({ queryKey: queryKeys.embarques.eventos(vars.embarqueId) });
     },
