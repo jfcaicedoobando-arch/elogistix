@@ -11,6 +11,13 @@ export interface ChangelogEntry {
 /** Entradas recientes (v8.x). Las anteriores se cargan dinámicamente. */
 export const recentChangelog: ChangelogEntry[] = [
   {
+    version: "8.54.0",
+    date: "2026-04-25",
+    type: "minor",
+    title: "Refactor: descomposición de la página de detalle de organización",
+    description: "Refactor 100% interno sin cambios visibles. La página AdminOrgDetalle (279 líneas con header, KPIs, info editable, tabla de miembros, diálogos de confirmación y configuración mezclados en un solo archivo) se descompone en cuatro subcomponentes presentacionales bajo components/admin/org-detalle/: OrgHeader, OrgInfoCard, OrgMembersCard y OrgConfigCard. La página queda en ~80 líneas dedicadas únicamente a orquestar el hook useAdminOrgDetalle y conectar callbacks con los componentes hijos. Cada subcomponente recibe props tipadas estrictas y es independiente del hook, lo que facilita pruebas y reutilización.",
+  },
+  {
     version: "8.53.0",
     date: "2026-04-25",
     type: "minor",
