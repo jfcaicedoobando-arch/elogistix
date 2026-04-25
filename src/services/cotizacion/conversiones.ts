@@ -8,6 +8,11 @@
 import { supabase } from "@/integrations/supabase/client";
 import type { Json, Tables, TablesInsert } from "@/integrations/supabase/types";
 import type { CotizacionRow } from "@/types/cotizacionTypes";
+import {
+  calcularFechaVigencia,
+  filtrarCostosParaContenedor,
+  mapCostosACostosEmbarque,
+} from "@/lib/domain/cotizacion";
 import { generarFolioCotizacion } from "./crud";
 
 type CotizacionInsert = TablesInsert<"cotizaciones">;
@@ -25,8 +30,7 @@ export async function duplicarCotizacion(
   if (errOrig) throw errOrig;
 
   const folio = await generarFolioCotizacion();
-  const fechaVigencia = new Date();
-  fechaVigencia.setDate(fechaVigencia.getDate() + (orig.vigencia_dias ?? 15));
+  const fechaVigencia = calcularFechaVigencia(new Date(), orig.vigencia_dias);
 
   const {
     id: _id,
@@ -44,7 +48,7 @@ export async function duplicarCotizacion(
     folio,
     estado: "Borrador",
     embarque_id: null,
-    fecha_vigencia: fechaVigencia.toISOString().split("T")[0],
+    fecha_vigencia: fechaVigencia,
     conceptos_venta: rest.conceptos_venta as Json,
     dimensiones_lcl: rest.dimensiones_lcl as Json,
     dimensiones_aereas: rest.dimensiones_aereas as Json,
@@ -181,20 +185,13 @@ export async function convertirCotizacionAEmbarques(
     if (errorEmb) throw errorEmb;
 
     if (costos && costos.length > 0) {
-      const conceptosParaInsertar = costos.filter((c) => {
-        const um = c.unidad_medida ?? "Contenedor";
-        if (um === "BL") return i === 0;
-        return true;
-      });
+      const conceptosParaInsertar = filtrarCostosParaContenedor(costos, i);
 
       if (conceptosParaInsertar.length > 0) {
-        const rows: TablesInsert<"conceptos_costo">[] = conceptosParaInsertar.map((c) => ({
-          embarque_id: embarque.id,
-          concepto: c.concepto,
-          monto: c.costo_unitario,
-          moneda: c.moneda as TablesInsert<"conceptos_costo">["moneda"],
-          proveedor_nombre: c.proveedor,
-        }));
+        const rows = mapCostosACostosEmbarque(
+          conceptosParaInsertar,
+          embarque.id,
+        ) as TablesInsert<"conceptos_costo">[];
 
         const { error: errorConceptos } = await supabase.from("conceptos_costo").insert(rows);
         if (errorConceptos) throw errorConceptos;

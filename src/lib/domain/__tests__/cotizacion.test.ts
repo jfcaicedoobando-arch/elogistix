@@ -1,5 +1,11 @@
 import { describe, it, expect } from "vitest";
-import { buildConceptosFromCostos } from "@/lib/domain/cotizacion";
+import {
+  buildConceptosFromCostos,
+  filtrarCostosParaContenedor,
+  mapCostosACostosEmbarque,
+  calcularFechaVigencia,
+  type CotizacionCostoLike,
+} from "@/lib/domain/cotizacion";
 import type { FilaCostoLocal } from "@/types/cotizacionPLTypes";
 
 const TASA = 0.16;
@@ -67,5 +73,104 @@ describe("buildConceptosFromCostos", () => {
     );
     expect(out.usd[0].unidad_medida).toBe("BL");
     expect(out.usd[0].cantidad).toBe(3);
+  });
+});
+
+describe("filtrarCostosParaContenedor", () => {
+  const costos = [
+    { concepto: "Flete", unidad_medida: "Contenedor" },
+    { concepto: "BL fee", unidad_medida: "BL" },
+    { concepto: "Maniobras", unidad_medida: "Bulto" },
+    { concepto: "Sin UM", unidad_medida: null },
+  ];
+
+  it("incluye costos BL solo en el primer contenedor (i=0)", () => {
+    const out = filtrarCostosParaContenedor(costos, 0);
+    expect(out.map((c) => c.concepto)).toEqual([
+      "Flete",
+      "BL fee",
+      "Maniobras",
+      "Sin UM",
+    ]);
+  });
+
+  it("excluye costos BL en contenedores posteriores (i>0)", () => {
+    const out = filtrarCostosParaContenedor(costos, 1);
+    expect(out.map((c) => c.concepto)).toEqual(["Flete", "Maniobras", "Sin UM"]);
+  });
+
+  it("trata unidad_medida null como 'Contenedor' (siempre incluido)", () => {
+    const out = filtrarCostosParaContenedor(
+      [{ concepto: "X", unidad_medida: null }],
+      5,
+    );
+    expect(out).toHaveLength(1);
+  });
+});
+
+describe("mapCostosACostosEmbarque", () => {
+  const costos: CotizacionCostoLike[] = [
+    {
+      concepto: "Flete",
+      costo_unitario: 1500,
+      moneda: "USD",
+      proveedor: "Maersk",
+    },
+    {
+      concepto: "Maniobras",
+      costo_unitario: 800,
+      moneda: "MXN",
+      proveedor: null,
+    },
+  ];
+
+  it("mapea costos a inserts de conceptos_costo con embarque_id", () => {
+    const out = mapCostosACostosEmbarque(costos, "emb-1");
+    expect(out).toEqual([
+      {
+        embarque_id: "emb-1",
+        concepto: "Flete",
+        monto: 1500,
+        moneda: "USD",
+        proveedor_nombre: "Maersk",
+      },
+      {
+        embarque_id: "emb-1",
+        concepto: "Maniobras",
+        monto: 800,
+        moneda: "MXN",
+        proveedor_nombre: null,
+      },
+    ]);
+  });
+
+  it("convierte proveedor undefined en null", () => {
+    const out = mapCostosACostosEmbarque(
+      [{ concepto: "X", costo_unitario: 10, moneda: "USD" }],
+      "emb-9",
+    );
+    expect(out[0].proveedor_nombre).toBeNull();
+  });
+});
+
+describe("calcularFechaVigencia", () => {
+  it("suma vigenciaDias a la fecha base y devuelve YYYY-MM-DD", () => {
+    const base = new Date("2026-01-10T00:00:00Z");
+    expect(calcularFechaVigencia(base, 15)).toBe("2026-01-25");
+  });
+
+  it("usa default de 15 días cuando vigenciaDias es null", () => {
+    const base = new Date("2026-01-01T00:00:00Z");
+    expect(calcularFechaVigencia(base, null)).toBe("2026-01-16");
+  });
+
+  it("usa default de 15 días cuando vigenciaDias es undefined", () => {
+    const base = new Date("2026-02-01T00:00:00Z");
+    expect(calcularFechaVigencia(base, undefined)).toBe("2026-02-16");
+  });
+
+  it("acepta vigencias de 0 días (mismo día)", () => {
+    const base = new Date("2026-03-15T00:00:00Z");
+    expect(calcularFechaVigencia(base, 0)).toBe("2026-03-15");
   });
 });

@@ -11,6 +11,13 @@ export interface ChangelogEntry {
 /** Entradas recientes (v8.x). Las anteriores se cargan dinámicamente. */
 export const recentChangelog: ChangelogEntry[] = [
   {
+    version: "8.61.0",
+    date: "2026-04-25",
+    type: "minor",
+    title: "Más dominio puro de cotización extraído del service",
+    description: "Paso 4 de la auditoría arquitectónica. Se trasladaron tres reglas de negocio que vivían embebidas en services/cotizacion/conversiones.ts a lib/domain/cotizacion.ts: (1) filtrarCostosParaContenedor — la regla de que los costos con unidad de medida 'BL' solo se replican en el primer contenedor cuando una cotización se convierte en N embarques; (2) mapCostosACostosEmbarque — la transformación de cotizacion_costos a inserts de conceptos_costo, sin acoplamiento a tipos de Supabase en runtime; y (3) calcularFechaVigencia — el cálculo de fecha_vigencia (YYYY-MM-DD) sumando vigencia_dias a una fecha base, con default de 15 días. El service ahora orquesta llamadas a Supabase pero la lógica de negocio queda probada de forma aislada (9 nuevas pruebas unitarias, 186/186 totales pasando). Beneficio: las reglas críticas de la conversión cotización→embarques son refactorizables y verificables sin levantar la base de datos.",
+  },
+  {
     version: "8.60.0",
     date: "2026-04-25",
     type: "minor",
