@@ -48,7 +48,7 @@ export async function duplicarCotizacion(
     folio,
     estado: "Borrador",
     embarque_id: null,
-    fecha_vigencia: fechaVigencia.toISOString().split("T")[0],
+    fecha_vigencia: fechaVigencia,
     conceptos_venta: rest.conceptos_venta as Json,
     dimensiones_lcl: rest.dimensiones_lcl as Json,
     dimensiones_aereas: rest.dimensiones_aereas as Json,
