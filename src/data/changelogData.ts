@@ -11,6 +11,13 @@ export interface ChangelogEntry {
 /** Entradas recientes (v8.x). Las anteriores se cargan dinámicamente. */
 export const recentChangelog: ChangelogEntry[] = [
   {
+    version: "8.59.0",
+    date: "2026-04-25",
+    type: "minor",
+    title: "Partición de cotizacionServices y nuevo dominio puro de cotización",
+    description: "Refactor interno sin cambios visibles. El monolito services/cotizacionServices.ts (575 L) se descompuso por responsabilidad en services/cotizacion/{crud,costos,conversiones,wizard}.ts: CRUD/queries de la tabla cotizaciones, gestión de cotizacion_costos, conversiones de alto nivel (duplicar, prospecto→cliente, cotización→embarques, respuesta del portal) y orquestadores del wizard (savePaso1/2/3/Final). Adicionalmente se creó lib/domain/cotizacion.ts con la función pura buildConceptosFromCostos que antes vivía en el service mezclada con I/O. El archivo cotizacionServices.ts se mantiene como barrel que re-exporta toda la API pública para no romper imports existentes. Se añadieron 6 pruebas unitarias para el nuevo dominio (177 pruebas en total pasando). Beneficio: cada archivo del dominio cotización es independiente, fácil de localizar y testear.",
+  },
+  {
     version: "8.58.0",
     date: "2026-04-25",
     type: "minor",
