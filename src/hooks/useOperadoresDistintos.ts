@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
 import { queryKeys } from "@/lib/queryKeys";
+import { fetchOperadoresDistintos } from "@/services/reportesService";
 
 /**
  * Hook que obtiene los operadores únicos desde una RPC server-side.
@@ -9,10 +9,6 @@ import { queryKeys } from "@/lib/queryKeys";
 export function useOperadoresDistintos() {
   return useQuery({
     queryKey: queryKeys.operadores.distintos,
-    queryFn: async () => {
-      const { data, error } = await supabase.rpc("operadores_distintos");
-      if (error) throw error;
-      return (data ?? []).map((r: { operador: string }) => r.operador);
-    },
+    queryFn: fetchOperadoresDistintos,
   });
 }

@@ -1,8 +1,8 @@
+import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
 import { queryKeys } from "@/lib/queryKeys";
 import { calcularUtilidad, calcularMargen } from "@/lib/financialUtils";
-import { useMemo } from "react";
+import { fetchProfitPorCliente } from "@/services/reportesService";
 
 interface FiltrosRentabilidad {
   fechaDesde?: string;
@@ -23,20 +23,12 @@ export interface RentabilidadCliente {
 export function useRentabilidadClientes(filtros: FiltrosRentabilidad) {
   const { data: raw = [], isLoading } = useQuery({
     queryKey: queryKeys.reportes.rentabilidadClientes(filtros),
-    queryFn: async () => {
-      const { data, error } = await supabase.rpc("profit_por_cliente", {
-        _fecha_desde: filtros.fechaDesde || null,
-        _fecha_hasta: filtros.fechaHasta || null,
-        _modo: filtros.modo || null,
-      });
-      if (error) throw error;
-      return data ?? [];
-    },
+    queryFn: () => fetchProfitPorCliente(filtros),
   });
 
   const clientes: RentabilidadCliente[] = useMemo(
     () =>
-      raw.map((r: { cliente_id: string; cliente_nombre: string; total_embarques: number; venta_usd: number; costo_usd: number }) => {
+      raw.map((r) => {
         const venta = Number(r.venta_usd);
         const costo = Number(r.costo_usd);
         return {

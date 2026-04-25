@@ -1,19 +1,11 @@
 import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
 import { queryKeys } from '@/lib/queryKeys';
+import { fetchSidebarAlertCounts } from '@/services/reportesService';
 
 export function useSidebarAlerts() {
   const { data } = useQuery({
     queryKey: queryKeys.sidebar.alertCounts,
-    queryFn: async () => {
-      const { data, error } = await supabase.rpc('sidebar_alert_counts');
-      if (error) throw error;
-      const row = data?.[0] ?? { embarques_demora: 0, facturas_vencidas: 0 };
-      return {
-        embarquesDemora: Number(row.embarques_demora),
-        facturasVencidas: Number(row.facturas_vencidas),
-      };
-    },
+    queryFn: fetchSidebarAlertCounts,
     staleTime: 5 * 60_000, // 5 min — alertas no requieren refresco frecuente
     gcTime: 10 * 60_000,
   });
