@@ -26,12 +26,12 @@ export interface BuildColumnsParams {
 function LiquidacionBadge({ info }: { info?: LiquidacionInfo }) {
   if (!info || info.total === 0) return <span className="text-xs text-muted-foreground">—</span>;
   if (info.pagados === info.total) {
-    return <Badge variant="secondary" className="text-xs bg-emerald-100 text-emerald-700 border-emerald-300">Pagado</Badge>;
+    return <Badge variant="success" className="text-xs">Pagado</Badge>;
   }
   if (info.pagados > 0) {
-    return <Badge variant="secondary" className="text-xs bg-amber-100 text-amber-700 border-amber-300">Parcial</Badge>;
+    return <Badge variant="warning" className="text-xs">Parcial</Badge>;
   }
-  return <Badge variant="secondary" className="text-xs bg-red-100 text-red-700 border-red-300">Pendiente</Badge>;
+  return <Badge variant="destructive" className="text-xs">Pendiente</Badge>;
 }
 
 export function buildEmbarqueColumns({

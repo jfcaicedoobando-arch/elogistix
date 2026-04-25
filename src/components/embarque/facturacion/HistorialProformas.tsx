@@ -46,16 +46,16 @@ export function HistorialProformas({ proformas, canEdit, isDeleting, onDescargar
                 const rev = p.estado_revision ?? "aprobada";
                 let badgeRevision;
                 if (rev === "pendiente") {
-                  badgeRevision = <Badge className="bg-amber-100 text-amber-800 border-amber-200 hover:bg-amber-100 w-fit">Pendiente de revisión</Badge>;
+                  badgeRevision = <Badge variant="warning" className="w-fit">Pendiente de revisión</Badge>;
                 } else if (rev === "consolidada") {
                   const consolidadaNumero = proformas.find(x => x.id === p.consolidada_en)?.numero;
                   badgeRevision = (
-                    <Badge className="bg-blue-100 text-blue-800 border-blue-200 hover:bg-blue-100 w-fit">
+                    <Badge variant="info" className="w-fit">
                       Consolidada{consolidadaNumero ? ` en ${consolidadaNumero}` : ""}
                     </Badge>
                   );
                 } else {
-                  badgeRevision = <Badge className="bg-emerald-100 text-emerald-800 border-emerald-200 hover:bg-emerald-100 w-fit">Aprobada</Badge>;
+                  badgeRevision = <Badge variant="success" className="w-fit">Aprobada</Badge>;
                 }
 
                 return (
@@ -76,9 +76,9 @@ export function HistorialProformas({ proformas, canEdit, isDeleting, onDescargar
                       <div className="flex flex-col gap-1">
                         {badgeRevision}
                         {facturada ? (
-                          <Badge className="bg-green-100 text-green-800 border-green-200 hover:bg-green-100 w-fit">Facturada</Badge>
+                          <Badge variant="success" className="w-fit">Facturada</Badge>
                         ) : (
-                          <Badge className="bg-amber-50 text-amber-700 border-amber-200 hover:bg-amber-50 w-fit">Pago pendiente</Badge>
+                          <Badge variant="warning" className="w-fit">Pago pendiente</Badge>
                         )}
                       </div>
                     </TableCell>
