@@ -364,122 +364,30 @@ export interface ConsolidarProformasParams {
   tasaIva: number;
 }
 
-type ProformaOriginalLite = {
-  id: string;
-  embarque_id: string | null;
-  subtotal_usd: number | string | null;
-  iva_usd: number | string | null;
-  total_usd: number | string | null;
-  subtotal_mxn: number | string | null;
-  iva_mxn: number | string | null;
-  total_mxn: number | string | null;
-  embarques: { contenedor: string | null; tipo_contenedor: string | null } | null;
-};
-
+/**
+ * Consolida varias proformas en una nueva. Toda la lógica corre en una RPC
+ * atómica del lado del servidor (`consolidar_proformas`), por lo que no se
+ * requiere rollback manual: si algún paso falla, la transacción completa
+ * se revierte y no quedan registros huérfanos.
+ */
 export async function consolidarProformas(params: ConsolidarProformasParams): Promise<ProformaRow> {
   if (params.proformaIds.length < 2) {
     throw new Error("Selecciona al menos 2 proformas para consolidar");
   }
 
-  // 1. Cargar originales
-  const { data: originalesRaw, error: errLoad } = await supabase
-    .from("proformas")
-    .select(
-      "id, embarque_id, subtotal_usd, iva_usd, total_usd, subtotal_mxn, iva_mxn, total_mxn, embarques:embarque_id(contenedor, tipo_contenedor)",
-    )
-    .in("id", params.proformaIds);
-  if (errLoad) throw errLoad;
-  const originales = (originalesRaw ?? []) as unknown as ProformaOriginalLite[];
-  if (originales.length !== params.proformaIds.length) {
-    throw new Error("No se pudieron cargar todas las proformas seleccionadas");
-  }
-
-  // 2. Cargar conceptos
-  const { data: conceptosOrig, error: errConc } = await supabase
-    .from("conceptos_venta")
-    .select("descripcion, cantidad, precio_unitario, total, moneda, aplica_iva, proforma_id")
-    .in("proforma_id", params.proformaIds);
-  if (errConc) throw errConc;
-
-  // 3. Sumar totales (lógica pura)
-  const totales = sumarTotalesProformas(originales);
-
-  // 4. Generar número y crear proforma consolidada
-  const { data: numero, error: errNum } = await supabase.rpc("generar_numero_proforma", {
-    p_org_id: params.organizationId,
+  const { data, error } = await supabase.rpc("consolidar_proformas", {
+    p_organization_id: params.organizationId,
+    p_proforma_ids: params.proformaIds,
+    p_embarque_id: params.embarqueId,
+    p_cliente_id: params.clienteId,
+    p_cliente_nombre: params.clienteNombre,
+    p_expediente: params.expediente,
+    p_bl_master: params.blMaster,
+    p_operador: params.operador,
+    p_dias_credito: params.diasCredito,
+    p_tasa_iva: params.tasaIva,
   });
-  if (errNum) throw errNum;
-
-  const { data: nueva, error: errIns } = await supabase
-    .from("proformas")
-    .insert({
-      numero: numero as string,
-      embarque_id: params.embarqueId,
-      cliente_id: params.clienteId,
-      cliente_nombre: params.clienteNombre,
-      expediente: params.expediente,
-      bl_master: params.blMaster,
-      ...totales,
-      notas: `Consolidación de ${params.proformaIds.length} proformas`,
-      operador: params.operador,
-      dias_credito: params.diasCredito,
-      organization_id: params.organizationId,
-      estado_revision: "aprobada",
-      es_consolidada: true,
-      proformas_origen: params.proformaIds,
-    })
-    .select()
-    .single();
-  if (errIns) throw errIns;
-
-  // 5. Snapshot conceptos consolidados
-  const metaPorProforma = new Map<string, MetaEmbarqueProforma>();
-  for (const o of originales) {
-    metaPorProforma.set(o.id, {
-      embarque_id: o.embarque_id,
-      contenedor: o.embarques?.contenedor ?? null,
-      tipo_contenedor: o.embarques?.tipo_contenedor ?? null,
-    });
-  }
-  const conceptosSnap = construirSnapshotConsolidado({
-    conceptos: (conceptosOrig ?? []).map((c) => ({
-      descripcion: c.descripcion,
-      cantidad: c.cantidad as number,
-      precio_unitario: c.precio_unitario as number,
-      moneda: c.moneda as string,
-      aplica_iva: c.aplica_iva,
-      proforma_id: c.proforma_id as string,
-    })),
-    metaPorProforma,
-    proformaConsolidadaId: nueva.id,
-    organizationId: params.organizationId,
-    tasaIva: params.tasaIva,
-  });
-
-  if (conceptosSnap.length > 0) {
-    const snapTyped = conceptosSnap.map((s) => ({
-      ...s,
-      moneda: s.moneda as "USD" | "MXN" | "EUR",
-    }));
-    const { error: errSnap } = await supabase
-      .from("proforma_conceptos_consolidados")
-      .insert(snapTyped);
-    if (errSnap) {
-      await supabase.from("proformas").delete().eq("id", nueva.id);
-      throw errSnap;
-    }
-  }
-
-  // 6. Marcar originales como consolidadas
-  const { error: errUpd } = await supabase
-    .from("proformas")
-    .update({ estado_revision: "consolidada", consolidada_en: nueva.id })
-    .in("id", params.proformaIds);
-  if (errUpd) {
-    await supabase.from("proforma_conceptos_consolidados").delete().eq("proforma_id", nueva.id);
-    await supabase.from("proformas").delete().eq("id", nueva.id);
-    throw errUpd;
-  }
-
-  return nueva as ProformaRow;
+  if (error) throw error;
+  if (!data) throw new Error("La consolidación no devolvió la proforma resultante");
+  return data as unknown as ProformaRow;
 }
