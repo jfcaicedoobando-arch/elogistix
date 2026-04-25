@@ -1,30 +1,19 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
 import { queryKeys } from '@/lib/queryKeys';
 import type { CotizacionRow } from './useCotizacionTypes';
 import { useOrgFilter } from '@/hooks/useOrgFilter';
-
-/** Columnas necesarias para la tabla de cotizaciones (evita select('*')) */
-const COTIZACION_LIST_COLUMNS = 'id, folio, cliente_id, cliente_nombre, modo, origen, destino, subtotal, moneda, estado, fecha_vigencia, created_at, descripcion_mercancia' as const;
-
-/** Columnas necesarias para el combobox de vincular cotización */
-const COTIZACION_ACEPTADA_COLUMNS = 'id, folio, cliente_id, cliente_nombre, modo, tipo, incoterm, descripcion_mercancia, tipo_carga, tipo_contenedor, peso_kg, volumen_m3, piezas, operador, origen, destino, notas' as const;
+import {
+  fetchCotizaciones,
+  fetchCotizacionesAceptadas,
+  fetchCotizacionById,
+  fetchEmbarquesVinculados,
+} from '@/services/cotizacionServices';
 
 export function useCotizacionesAceptadas() {
   const { organizationId } = useOrgFilter();
   return useQuery({
     queryKey: [...queryKeys.cotizaciones.all, 'aceptadas', organizationId] as const,
-    queryFn: async () => {
-      let query = supabase
-        .from('cotizaciones')
-        .select(COTIZACION_ACEPTADA_COLUMNS)
-        .eq('estado', 'Aceptada')
-        .order('created_at', { ascending: false });
-      if (organizationId) query = query.eq('organization_id', organizationId);
-      const { data, error } = await query;
-      if (error) throw error;
-      return data as unknown as CotizacionRow[];
-    },
+    queryFn: () => fetchCotizacionesAceptadas(organizationId),
   });
 }
 
@@ -32,32 +21,14 @@ export function useCotizaciones() {
   const { organizationId } = useOrgFilter();
   return useQuery({
     queryKey: [...queryKeys.cotizaciones.all, organizationId],
-    queryFn: async () => {
-      let query = supabase
-        .from('cotizaciones')
-        .select(COTIZACION_LIST_COLUMNS)
-        .order('created_at', { ascending: false });
-      if (organizationId) query = query.eq('organization_id', organizationId);
-      const { data, error } = await query;
-      if (error) throw error;
-      return data as unknown as CotizacionRow[];
-    },
+    queryFn: () => fetchCotizaciones(organizationId),
   });
 }
 
 export function useCotizacion(id: string | undefined) {
-  return useQuery({
+  return useQuery<CotizacionRow>({
     queryKey: queryKeys.cotizaciones.detail(id!),
-    queryFn: async () => {
-      if (!id) throw new Error('No id');
-      const { data, error } = await supabase
-        .from('cotizaciones')
-        .select('*')
-        .eq('id', id)
-        .single();
-      if (error) throw error;
-      return data as unknown as CotizacionRow;
-    },
+    queryFn: () => fetchCotizacionById(id!),
     enabled: !!id,
   });
 }
@@ -68,15 +39,7 @@ export function usePrefetchCotizacion() {
   return (id: string) => {
     queryClient.prefetchQuery({
       queryKey: queryKeys.cotizaciones.detail(id),
-      queryFn: async () => {
-        const { data, error } = await supabase
-          .from('cotizaciones')
-          .select('*')
-          .eq('id', id)
-          .single();
-        if (error) throw error;
-        return data as unknown as CotizacionRow;
-      },
+      queryFn: () => fetchCotizacionById(id),
       staleTime: 30_000,
     });
   };
@@ -86,15 +49,7 @@ export function usePrefetchCotizacion() {
 export function useEmbarquesVinculados(cotizacionId: string | undefined) {
   return useQuery({
     queryKey: queryKeys.cotizaciones.embarquesVinculados(cotizacionId!),
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('embarques')
-        .select('id, expediente, estado, created_at')
-        .eq('cotizacion_id', cotizacionId!)
-        .order('created_at', { ascending: true });
-      if (error) throw error;
-      return data;
-    },
+    queryFn: () => fetchEmbarquesVinculados(cotizacionId!),
     enabled: !!cotizacionId,
   });
 }
