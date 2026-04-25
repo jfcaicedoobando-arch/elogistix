@@ -20,10 +20,8 @@ import { calcularIVA } from "@/lib/financialUtils";
 import { useTasaIVA } from "@/hooks/useTasaIVA";
 import { useEmbarqueConceptosVenta } from "@/hooks/useEmbarques";
 import { useProformasEmbarque, useEliminarProforma } from "@/hooks/embarque/useProformas";
+import { useDescargarProformaPdf } from "@/hooks/embarque/useDescargarProformaPdf";
 import { DialogGenerarProforma } from "./DialogGenerarProforma";
-import { generarPdfProforma } from "@/generators/proformaPdf";
-import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
 import type { Tables } from "@/integrations/supabase/types";
 
 type EmbarqueRow = Tables<'embarques'>;
@@ -52,6 +50,7 @@ export function TabFacturacion({ facturas, canEdit, embarque }: Props) {
   const { data: conceptos = [] } = useEmbarqueConceptosVenta(embarque.id);
   const { data: proformas = [] } = useProformasEmbarque(embarque.id);
   const eliminarProforma = useEliminarProforma();
+  const { descargar: descargarProformaPdf } = useDescargarProformaPdf();
   const [proformaAEliminar, setProformaAEliminar] = useState<{ id: string; numero: string } | null>(null);
 
   const conceptosPendientes = useMemo(
@@ -86,28 +85,7 @@ export function TabFacturacion({ facturas, canEdit, embarque }: Props) {
   const handleDescargarProforma = async (proformaId: string) => {
     const proforma = proformas.find(p => p.id === proformaId);
     if (!proforma) return;
-    const esConsolidada = !!proforma.es_consolidada;
-    const [conceptosRes, clienteRes, consolidadosRes] = await Promise.all([
-      esConsolidada
-        ? Promise.resolve({ data: [] as any[], error: null as any })
-        : supabase.from('conceptos_venta').select('*').eq('proforma_id', proformaId),
-      supabase.from('clientes').select('nombre, rfc, direccion, ciudad, estado, cp').eq('id', embarque.cliente_id).maybeSingle(),
-      esConsolidada
-        ? supabase.from('proforma_conceptos_consolidados').select('*').eq('proforma_id', proformaId)
-        : Promise.resolve({ data: [] as any[], error: null as any }),
-    ]);
-    if (conceptosRes.error || consolidadosRes.error) {
-      toast.error('Error al cargar conceptos');
-      return;
-    }
-    generarPdfProforma({
-      proforma,
-      embarque,
-      conceptos: conceptosRes.data || [],
-      cliente: clienteRes.data,
-      tasaIva,
-      conceptosConsolidados: consolidadosRes.data || [],
-    });
+    await descargarProformaPdf(proforma, { embarqueOverride: embarque });
   };
 
   return (
@@ -272,7 +250,7 @@ export function TabFacturacion({ facturas, canEdit, embarque }: Props) {
                             return <Badge className="bg-amber-100 text-amber-800 border-amber-200 hover:bg-amber-100 w-fit">Pendiente de revisión</Badge>;
                           }
                           if (rev === 'consolidada') {
-                            const consolidadaEnId = (p as any).consolidada_en as string | null;
+                            const consolidadaEnId = p.consolidada_en;
                             const consolidadaNumero = proformas.find(x => x.id === consolidadaEnId)?.numero;
                             return (
                               <Badge className="bg-blue-100 text-blue-800 border-blue-200 hover:bg-blue-100 w-fit">

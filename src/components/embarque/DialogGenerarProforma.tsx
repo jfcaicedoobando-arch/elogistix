@@ -14,7 +14,7 @@ import { calcularIVA } from "@/lib/financialUtils";
 import { useTasaIVA } from "@/hooks/useTasaIVA";
 import { useCrearProforma } from "@/hooks/embarque/useProformas";
 import { generarPdfProforma } from "@/generators/proformaPdf";
-import { supabase } from "@/integrations/supabase/client";
+import { fetchClienteParaPdf, fetchDiasCreditoCliente } from "@/services/proformaServices";
 import type { Tables } from "@/integrations/supabase/types";
 
 type ConceptoVenta = Tables<'conceptos_venta'>;
@@ -52,16 +52,9 @@ export function DialogGenerarProforma({ open, onOpenChange, embarque, conceptosP
       setDiasCredito("");
       // Cargar dias_credito del cliente como default
       if (embarque.cliente_id) {
-        supabase
-          .from('clientes')
-          .select('dias_credito')
-          .eq('id', embarque.cliente_id)
-          .maybeSingle()
-          .then(({ data }) => {
-            if (data?.dias_credito != null) {
-              setDiasCredito(String(data.dias_credito));
-            }
-          });
+        fetchDiasCreditoCliente(embarque.cliente_id).then((dias) => {
+          if (dias != null) setDiasCredito(String(dias));
+        }).catch(() => { /* fallback silencioso */ });
       }
     }
   }, [open, conceptosPendientes, embarque.cliente_id]);
@@ -132,11 +125,7 @@ export function DialogGenerarProforma({ open, onOpenChange, embarque, conceptosP
         diasCredito: Number.isFinite(diasCreditoNum as number) ? (diasCreditoNum as number) : null,
         ivaOverrides,
       });
-      const { data: cliente } = await supabase
-        .from('clientes')
-        .select('nombre, rfc, direccion, ciudad, estado, cp')
-        .eq('id', embarque.cliente_id)
-        .maybeSingle();
+      const cliente = await fetchClienteParaPdf(embarque.cliente_id);
       const conceptosParaPdf = conceptosSeleccionados.map(c => ({
         ...c,
         aplica_iva: ivaOverrides[c.id],
