@@ -1,4 +1,4 @@
-import type { ConceptoVentaCotizacion, DimensionLCL, DimensionAerea } from '@/hooks/useCotizaciones';
+import type { ConceptoVentaCotizacion, DimensionLCL, DimensionAerea } from '@/types/cotizacionTypes';
 import type { CotizacionFormValues } from '@/hooks/cotizacion/useCotizacionWizardForm';
 
 /**

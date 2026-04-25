@@ -2,7 +2,7 @@
  * Pure helpers for parsing/computing totals from a cotización's `conceptos_venta` JSON column.
  * Extracted from useCotizacionDetalleState to keep the hook focused on orchestration.
  */
-import type { ConceptoVentaCotizacion } from "@/hooks/useCotizaciones";
+import type { ConceptoVentaCotizacion } from "@/types/cotizacionTypes";
 import { calcularIVA } from "@/lib/financialUtils";
 
 export interface ConceptosTotales {
