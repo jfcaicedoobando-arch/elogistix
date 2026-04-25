@@ -8,6 +8,11 @@
 import { supabase } from "@/integrations/supabase/client";
 import type { Json, Tables, TablesInsert } from "@/integrations/supabase/types";
 import type { CotizacionRow } from "@/types/cotizacionTypes";
+import {
+  calcularFechaVigencia,
+  filtrarCostosParaContenedor,
+  mapCostosACostosEmbarque,
+} from "@/lib/domain/cotizacion";
 import { generarFolioCotizacion } from "./crud";
 
 type CotizacionInsert = TablesInsert<"cotizaciones">;
@@ -25,8 +30,7 @@ export async function duplicarCotizacion(
   if (errOrig) throw errOrig;
 
   const folio = await generarFolioCotizacion();
-  const fechaVigencia = new Date();
-  fechaVigencia.setDate(fechaVigencia.getDate() + (orig.vigencia_dias ?? 15));
+  const fechaVigencia = calcularFechaVigencia(new Date(), orig.vigencia_dias);
 
   const {
     id: _id,
