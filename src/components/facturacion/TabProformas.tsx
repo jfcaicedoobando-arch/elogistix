@@ -21,11 +21,10 @@ export function TabProformas() {
   const [filtroEstado, setFiltroEstado] = useState<FiltroEstado>("todas");
   const [page, setPage] = useState(0);
   const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
-  const [downloadingId, setDownloadingId] = useState<string | null>(null);
   const [proformaAFacturar, setProformaAFacturar] = useState<ProformaRow | null>(null);
 
   const { data: proformas = [], isLoading } = useProformas();
-  const tasaIva = useTasaIVA();
+  const { descargar, downloadingId } = useDescargarProformaPdf();
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
@@ -50,48 +49,7 @@ export function TabProformas() {
   const paginated = filtered.slice(page * pageSize, (page + 1) * pageSize);
   const totalPages = Math.ceil(filtered.length / pageSize);
 
-  const handleDescargar = async (proforma: ProformaRow) => {
-    setDownloadingId(proforma.id);
-    try {
-      const esConsolidada = !!proforma.es_consolidada;
-
-      const [embarqueRes, conceptosRes, clienteRes, consolidadosRes] = await Promise.all([
-        supabase
-          .from('embarques')
-          .select('expediente, bl_master, modo, tipo, incoterm, puerto_origen, puerto_destino, aeropuerto_origen, aeropuerto_destino, ciudad_origen, ciudad_destino, naviera, aerolinea, descripcion_mercancia')
-          .eq('id', proforma.embarque_id)
-          .single(),
-        esConsolidada
-          ? Promise.resolve({ data: [] as any[], error: null as any })
-          : supabase.from('conceptos_venta').select('*').eq('proforma_id', proforma.id),
-        supabase
-          .from('clientes')
-          .select('nombre, rfc, direccion, ciudad, estado, cp')
-          .eq('id', proforma.cliente_id)
-          .maybeSingle(),
-        esConsolidada
-          ? supabase.from('proforma_conceptos_consolidados').select('*').eq('proforma_id', proforma.id)
-          : Promise.resolve({ data: [] as any[], error: null as any }),
-      ]);
-
-      if (embarqueRes.error) throw embarqueRes.error;
-      if (conceptosRes.error) throw conceptosRes.error;
-      if (consolidadosRes.error) throw consolidadosRes.error;
-
-      generarPdfProforma({
-        proforma,
-        embarque: embarqueRes.data,
-        conceptos: conceptosRes.data || [],
-        cliente: clienteRes.data,
-        tasaIva,
-        conceptosConsolidados: consolidadosRes.data || [],
-      });
-    } catch (e) {
-      toast.error('Error al generar PDF: ' + (e as Error).message);
-    } finally {
-      setDownloadingId(null);
-    }
-  };
+  const handleDescargar = (proforma: ProformaRow) => descargar(proforma);
 
   const columns: DataTableColumn<ProformaConFactura>[] = [
     {
