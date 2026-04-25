@@ -1,6 +1,7 @@
 import { supabase } from '@/integrations/supabase/client';
 import { uploadFile } from '@/services/storage';
 import { buildEmbarqueDocPath } from '@/lib/storageUtils';
+import type { Enums } from '@/integrations/supabase/types';
 
 /**
  * Resuelve o genera un número de expediente para un nuevo embarque.
@@ -51,4 +52,48 @@ export async function subirDocumentosEmbarque(
   });
 
   return Promise.all(tareas);
+}
+
+// ─── Eventos de tracking ─────────────────────────────────────────────────────
+
+export interface EventoEmbarqueRow {
+  id: string;
+  embarque_id: string;
+  tipo: string;
+  descripcion: string;
+  ubicacion: string;
+  fecha: string;
+  usuario: string;
+  created_at: string;
+}
+
+export async function fetchEventosEmbarque(embarqueId: string): Promise<EventoEmbarqueRow[]> {
+  const { data, error } = await supabase
+    .from("eventos_embarque")
+    .select("*")
+    .eq("embarque_id", embarqueId)
+    .order("fecha", { ascending: false });
+  if (error) throw error;
+  return (data ?? []) as EventoEmbarqueRow[];
+}
+
+export async function insertEventoEmbarque(input: {
+  embarqueId: string;
+  tipo: string;
+  descripcion: string;
+  ubicacion: string;
+  fecha: string;
+  usuario: string;
+}): Promise<void> {
+  const { error } = await supabase.from("eventos_embarque").insert([
+    {
+      embarque_id: input.embarqueId,
+      tipo: input.tipo as Enums<"tipo_evento_tracking">,
+      descripcion: input.descripcion,
+      ubicacion: input.ubicacion,
+      fecha: input.fecha,
+      usuario: input.usuario,
+    },
+  ]);
+  if (error) throw error;
 }

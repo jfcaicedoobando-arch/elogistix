@@ -13,71 +13,11 @@ import {
   type ProformaPendienteConEmbarque,
 } from "@/hooks/embarque/useProformas";
 import { useTasaIVA } from "@/hooks/useTasaIVA";
-
-/** Agrupación: expediente → contenedor → proformas. */
-type GrupoContenedor = {
-  contenedor: string | null;
-  tipo_contenedor: string | null;
-  proformas: ProformaPendienteConEmbarque[];
-};
-type GrupoExpediente = {
-  expediente: string;
-  embarqueId: string;
-  blMaster: string | null;
-  clienteId: string;
-  clienteNombre: string;
-  operador: string | null;
-  diasCredito: number | null;
-  proformas: ProformaPendienteConEmbarque[];
-  contenedores: GrupoContenedor[];
-};
-
-function agrupar(proformas: ProformaPendienteConEmbarque[]): GrupoExpediente[] {
-  const porExpediente = new Map<string, GrupoExpediente>();
-
-  for (const p of proformas) {
-    const key = p.expediente;
-    if (!porExpediente.has(key)) {
-      porExpediente.set(key, {
-        expediente: p.expediente,
-        embarqueId: p.embarque_id!,
-        blMaster: p.embarques?.bl_master ?? p.bl_master ?? null,
-        clienteId: p.cliente_id,
-        clienteNombre: p.cliente_nombre,
-        operador: p.operador,
-        diasCredito: p.dias_credito,
-        proformas: [],
-        contenedores: [],
-      });
-    }
-    porExpediente.get(key)!.proformas.push(p);
-  }
-
-  // Subagrupar por contenedor
-  for (const grupo of porExpediente.values()) {
-    const porContenedor = new Map<string, GrupoContenedor>();
-    for (const p of grupo.proformas) {
-      const cont = p.embarques?.contenedor ?? null;
-      const tipoCont = p.embarques?.tipo_contenedor ?? null;
-      const key = cont ?? '__sin_contenedor__';
-      if (!porContenedor.has(key)) {
-        porContenedor.set(key, { contenedor: cont, tipo_contenedor: tipoCont, proformas: [] });
-      }
-      porContenedor.get(key)!.proformas.push(p);
-    }
-    grupo.contenedores = Array.from(porContenedor.values());
-  }
-
-  return Array.from(porExpediente.values()).sort((a, b) => a.expediente.localeCompare(b.expediente));
-}
-
-/** Devuelve el monto principal a mostrar de una proforma (USD si hay, si no MXN). */
-function montoPrincipal(p: ProformaPendienteConEmbarque): { valor: number; moneda: 'USD' | 'MXN' } {
-  const usd = Number(p.total_usd ?? 0);
-  const mxn = Number(p.total_mxn ?? 0);
-  if (usd > 0) return { valor: usd, moneda: 'USD' };
-  return { valor: mxn, moneda: 'MXN' };
-}
+import {
+  agruparProformasPendientes,
+  montoPrincipalProforma,
+  totalesProformasSeleccionadas,
+} from "@/lib/domain/proforma";
 
 export function TabProformasPendientes() {
   const [search, setSearch] = useState("");
@@ -101,7 +41,10 @@ export function TabProformasPendientes() {
     );
   }, [proformas, search]);
 
-  const grupos = useMemo(() => agrupar(filtradas), [filtradas]);
+  const grupos = useMemo(
+    () => agruparProformasPendientes<ProformaPendienteConEmbarque>(filtradas),
+    [filtradas],
+  );
 
   const toggleSelect = (id: string) => {
     setSelectedIds(prev => {
@@ -129,17 +72,10 @@ export function TabProformasPendientes() {
   }, [grupos, selectedIds]);
 
   // Totales de la selección global (sumados por moneda)
-  const totalesSeleccion = useMemo(() => {
-    let usd = 0;
-    let mxn = 0;
-    for (const p of proformas) {
-      if (selectedIds.has(p.id)) {
-        usd += Number(p.total_usd ?? 0);
-        mxn += Number(p.total_mxn ?? 0);
-      }
-    }
-    return { usd, mxn };
-  }, [proformas, selectedIds]);
+  const totalesSeleccion = useMemo(
+    () => totalesProformasSeleccionadas(proformas, selectedIds),
+    [proformas, selectedIds],
+  );
 
   const totalSeleccionadas = selectedIds.size;
 
@@ -274,7 +210,7 @@ export function TabProformasPendientes() {
                         </div>
                         <div className="rounded-md border divide-y">
                           {cont.proformas.map(p => {
-                            const monto = montoPrincipal(p);
+                            const monto = montoPrincipalProforma(p);
                             const checked = selectedIds.has(p.id);
                             return (
                               <label

@@ -1,5 +1,7 @@
 import { supabase } from "@/integrations/supabase/client";
+import type { Tables } from "@/integrations/supabase/types";
 
+type TrackingLinkRow = Tables<"tracking_links">;
 export interface TrackingPublicoData {
   embarque: {
     expediente: string;
@@ -48,4 +50,37 @@ export async function fetchTrackingPublico(token: string): Promise<TrackingPubli
     throw new Error(body.error || "Error al cargar tracking");
   }
   return res.json();
+}
+
+// ─── tracking_links CRUD ──────────────────────────────────────────────────────
+
+export async function fetchTrackingLinks(embarqueId: string): Promise<TrackingLinkRow[]> {
+  const { data, error } = await supabase
+    .from("tracking_links")
+    .select("*")
+    .eq("embarque_id", embarqueId)
+    .order("created_at", { ascending: false });
+  if (error) throw error;
+  return data ?? [];
+}
+
+export async function createTrackingLink(params: {
+  embarqueId: string;
+  expiresAt?: string | null;
+}): Promise<TrackingLinkRow> {
+  const { data, error } = await supabase
+    .from("tracking_links")
+    .insert({
+      embarque_id: params.embarqueId,
+      expires_at: params.expiresAt || null,
+    })
+    .select()
+    .single();
+  if (error) throw error;
+  return data;
+}
+
+export async function deleteTrackingLink(id: string): Promise<void> {
+  const { error } = await supabase.from("tracking_links").delete().eq("id", id);
+  if (error) throw error;
 }

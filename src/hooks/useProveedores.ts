@@ -1,18 +1,22 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
-import type { Tables, TablesInsert, TablesUpdate } from "@/integrations/supabase/types";
+import type { TablesInsert, TablesUpdate, Enums } from "@/integrations/supabase/types";
 import { queryKeys } from "@/lib/queryKeys";
-import type { Enums } from "@/integrations/supabase/types";
 import { useOrgFilter } from "@/hooks/useOrgFilter";
-type TipoProveedor = Enums<'tipo_proveedor'>;
+import {
+  fetchProveedoresPaginados,
+  fetchProveedor,
+  insertProveedor,
+  updateProveedor as svcUpdate,
+  deleteProveedor as svcDelete,
+  fetchProveedorOperaciones,
+  type Proveedor,
+  type ProveedorListItem,
+  type ProveedorOperacion,
+} from "@/services/proveedorServices";
 
-/** Columnas necesarias para la tabla de proveedores */
-const PROVEEDOR_LIST_COLUMNS = 'id, nombre, tipo, rfc, contacto, moneda_preferida' as const;
+type TipoProveedor = Enums<"tipo_proveedor">;
 
-export type Proveedor = Tables<'proveedores'>;
-export type ProveedorListItem = Pick<Proveedor, 'id' | 'nombre' | 'tipo' | 'rfc' | 'contacto' | 'moneda_preferida'>;
-
-// --- Hook paginado server-side para la vista de lista ---
+export type { Proveedor, ProveedorListItem, ProveedorOperacion };
 
 interface UseProveedoresPaginadosParams {
   tipo: TipoProveedor;
@@ -21,64 +25,39 @@ interface UseProveedoresPaginadosParams {
   pageSize: number;
 }
 
-export function useProveedoresPaginados({ tipo, search, page, pageSize }: UseProveedoresPaginadosParams) {
+export function useProveedoresPaginados({
+  tipo,
+  search,
+  page,
+  pageSize,
+}: UseProveedoresPaginadosParams) {
   const { organizationId } = useOrgFilter();
   const filters = { tipo, search, page, pageSize, organizationId };
 
   return useQuery({
     queryKey: queryKeys.proveedores.list(filters),
-    queryFn: async () => {
-      let query = supabase
-        .from('proveedores')
-        .select(PROVEEDOR_LIST_COLUMNS, { count: 'exact' })
-        .eq('tipo', tipo)
-        .order('nombre');
-
-      if (organizationId) query = query.eq('organization_id', organizationId);
-
-      if (search) {
-        query = query.ilike('nombre', `%${search}%`);
-      }
-
-      const from = page * pageSize;
-      const to = from + pageSize - 1;
-      query = query.range(from, to);
-
-      const { data, error, count } = await query;
-      if (error) throw error;
-      return { data: (data ?? []) as ProveedorListItem[], count: count ?? 0 };
-    },
+    queryFn: () =>
+      fetchProveedoresPaginados({ tipo, search, page, pageSize, organizationId }),
     placeholderData: (prev) => prev,
   });
 }
-
-// --- Hook de mutaciones para Proveedores (sin query de lista) ---
 
 export function useProveedorMutations() {
   const queryClient = useQueryClient();
 
   const addProveedorMutation = useMutation({
-    mutationFn: async (prov: TablesInsert<"proveedores">) => {
-      const { data, error } = await supabase.from("proveedores").insert(prov).select().single();
-      if (error) throw error;
-      return data;
-    },
+    mutationFn: (prov: TablesInsert<"proveedores">) => insertProveedor(prov),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.proveedores.all }),
   });
 
   const updateProveedorMutation = useMutation({
-    mutationFn: async ({ id, data }: { id: string; data: TablesUpdate<"proveedores"> }) => {
-      const { error } = await supabase.from("proveedores").update(data).eq("id", id);
-      if (error) throw error;
-    },
+    mutationFn: ({ id, data }: { id: string; data: TablesUpdate<"proveedores"> }) =>
+      svcUpdate(id, data),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.proveedores.all }),
   });
 
   const deleteProveedorMutation = useMutation({
-    mutationFn: async (id: string) => {
-      const { error } = await supabase.from("proveedores").delete().eq("id", id);
-      if (error) throw error;
-    },
+    mutationFn: (id: string) => svcDelete(id),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.proveedores.all }),
   });
 
@@ -93,60 +72,18 @@ export function useProveedorMutations() {
   };
 }
 
-
-const PROVEEDOR_DETAIL_COLUMNS = 'id, nombre, tipo, rfc, contacto, telefono, email, moneda_preferida, origen_proveedor, pais, organization_id, created_at, updated_at' as const;
-
 export function useProveedor(id: string | undefined) {
   return useQuery({
     queryKey: queryKeys.proveedores.detail(id!),
     enabled: !!id,
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("proveedores")
-        .select(PROVEEDOR_DETAIL_COLUMNS)
-        .eq("id", id!)
-        .maybeSingle();
-      if (error) throw error;
-      return data;
-    },
+    queryFn: () => fetchProveedor(id!),
   });
-}
-
-/** Operaciones (conceptos de costo) vinculadas a un proveedor */
-export interface ProveedorOperacion {
-  concepto: string;
-  monto: number;
-  moneda: string;
-  estadoLiquidacion: string;
-  fechaVencimiento: string | null;
-  expediente: string;
-  embarqueId: string;
-  clienteNombre: string;
 }
 
 export function useProveedorOperaciones(proveedorId: string | undefined) {
   return useQuery({
     queryKey: queryKeys.proveedores.operaciones(proveedorId!),
     enabled: !!proveedorId,
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("conceptos_costo")
-        .select("*, embarques!conceptos_costo_embarque_id_fkey(expediente, id, cliente_nombre)")
-        .eq("proveedor_id", proveedorId!);
-      if (error) throw error;
-      return (data ?? []).map((row) => {
-        const embarque = row.embarques as unknown as { expediente: string; id: string; cliente_nombre: string } | null;
-        return {
-          concepto: row.concepto,
-          monto: Number(row.monto),
-          moneda: row.moneda,
-          estadoLiquidacion: row.estado_liquidacion,
-          fechaVencimiento: row.fecha_vencimiento,
-          expediente: embarque?.expediente ?? '',
-          embarqueId: embarque?.id ?? '',
-          clienteNombre: embarque?.cliente_nombre ?? '',
-        } satisfies ProveedorOperacion;
-      });
-    },
+    queryFn: () => fetchProveedorOperaciones(proveedorId!),
   });
 }

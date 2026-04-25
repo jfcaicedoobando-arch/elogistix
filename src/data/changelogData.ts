@@ -11,6 +11,13 @@ export interface ChangelogEntry {
 /** Entradas recientes (v8.x). Las anteriores se cargan dinámicamente. */
 export const recentChangelog: ChangelogEntry[] = [
   {
+    version: "8.51.0",
+    date: "2026-04-25",
+    type: "minor",
+    title: "Refactor arquitectónico transversal: catálogos, bitácora y proveedores",
+    description: "Continuación de la limpieza arquitectónica iniciada en v8.50. Este refactor es 100% interno y no cambia ninguna funcionalidad visible para el usuario. (1) Nueva capa de servicios para los módulos que aún tenían SQL crudo dentro de los hooks: catalogosService (navieras, puertos, tipos de contenedor, tipo de cambio), bitacoraService, proveedorServices, configuracionService, clienteFinancialsService y extensión de trackingService y embarqueServices con eventos de tracking. (2) Diez hooks adelgazados (useNavieras, usePuertos, useTiposContenedor, useExchangeRates, useEventosEmbarque, useBitacora, useProveedores, useTrackingLinks, useConfiguracionOrg, useClienteFinancials) que ahora solo manejan estado de React Query, delegando toda la I/O y el mapeo a sus services. (3) Centralización de las query keys restantes en lib/queryKeys.ts (trackingLinks y clienteFinancials) eliminando los últimos strings hard-codeados, y arreglo del query key suelto en invalidateProformaCaches. (4) Lógica de agrupación de proformas pendientes (por expediente y por contenedor), suma de seleccionadas y elección de moneda principal extraída de TabProformasPendientes a lib/domain/proforma.ts como funciones puras y testeables. Resultado: el componente queda enfocado solo en presentación e interacción.",
+  },
+  {
     version: "8.50.1",
     date: "2026-04-25",
     type: "patch",
