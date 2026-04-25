@@ -1,131 +1,123 @@
-# Auditoría de arquitectura — Libre Carga
+# Auditoría arquitectónica del codebase — Reporte read-only
 
-Análisis de adherencia al contrato definido en `ARCHITECTURE.md` (Pages → Hooks → Services → Lib). En general la base es **sólida**: hay barrels claros, separación de mappers/parsers, y la mayoría de pages no tocan Supabase. Sin embargo, **el módulo de Pre-Facturación / Proformas concentra casi toda la deuda técnica** acumulada en las últimas 5–6 iteraciones.
+## Veredicto general
 
----
+La arquitectura está **en muy buen estado**. Los pasos 1-11 ya pagaron casi toda la deuda técnica relevante:
 
-## Hallazgos principales
+- Capa `services/` aislada de React (sin hooks, sin toasts).
+- Capa `lib/domain/` con lógica de negocio pura y testeada.
+- Capa `lib/parsers/` separada del fetching (Dashboard, CotizacionDetalle).
+- Hooks orquestadores delgados (controller hooks de los wizards).
+- Query keys centralizados en `lib/queryKeys.ts`.
+- Páginas casi puramente presentacionales (no hay `useEffect` con fetching imperativo, no hay `useQuery` inline en pages).
+- Sin `as any`, sin `console.log` de debug, sin `cd` en scripts.
+- 191/191 pruebas verdes.
 
-### 1. Violaciones de la regla "Pages/Components NO tocan Supabase"
-La regla #1 de `ARCHITECTURE.md` se rompe en 5 archivos:
-
-| Archivo | Qué hace | Por qué es problema |
-|---|---|---|
-| `src/components/embarque/TabFacturacion.tsx` (450 L) | `Promise.all` con 3 queries Supabase para armar el PDF (líneas 90–98) | Lógica de carga de datos en componente UI; imposible reutilizar para descarga desde otra vista. |
-| `src/components/facturacion/TabProformas.tsx` (315 L) | Mismo patrón: 4 queries Supabase para descargar PDF (líneas 61–78) | **Duplicado** del bloque anterior — dos componentes mantienen la misma lógica de hidratación. |
-| `src/components/embarque/DialogGenerarProforma.tsx` (420 L) | `supabase.from('clientes').select('dias_credito')` (líneas 55–60) | Lectura puntual que debería ser un hook (`useClienteDiasCredito`). |
-| `src/pages/NuevoEmbarque.tsx` | `supabase.from('cotizacion_costos').select(...)` (líneas 88–91) | Carga de costos de cotización embebida en la página. |
-| `src/pages/Login.tsx` | `supabase.auth.signInWithPassword(...)` | Aceptable (auth simple), pero idealmente vive en `AuthContext` o un hook `useLogin`. |
-
-### 2. `useProformas.ts` es demasiado grande (570 líneas, 6 hooks mezclados)
-Concentra: queries (`useProformasEmbarque`, `useProformas`, `useProformasPendientes`), mutations CRUD (`useCrearProforma`, `useEliminarProforma`), mutations de flujo (`useMarcarProformaFacturada`, `useAprobarProformas`, `useConsolidarProformas`).
-
-Problemas concretos:
-- Mutaciones con **lógica de negocio densa** (cálculos, snapshots, rollbacks manuales) viviendo dentro del hook → debería estar en `services/proformaServices.ts` y/o `lib/domain/proforma.ts`.
-- **Tasa IVA hard-codeada** `const TASA = 0.16;` (línea 517) cuando ya existe `useTasaIVA()` y `lib/financialUtils.calcularIVA`. Riesgo: si la contadora cambia el IVA, los snapshots consolidados quedan desfasados.
-- **Casts `as any`** repetidos (líneas 473, 510, 519, 524) por una query con join — falta tipo dedicado.
-- **Rollbacks manuales** ante fallos de inserción: deberían ser una función RPC transaccional en Supabase para garantizar atomicidad real (hoy un fallo de red entre pasos deja datos inconsistentes).
-
-### 3. Falta una capa `services/proformaServices.ts`
-Siguiendo la convención de `embarqueServices.ts` y `cotizacionServices.ts`, las mutaciones complejas de proformas deberían descomponerse en:
-- `services/proformaServices.ts` → acceso puro: `crearProformaConRollback`, `consolidarProformas`, `marcarFacturada`, `subirArchivosFactura`.
-- `lib/domain/proforma.ts` → cálculos puros: agrupación por contenedor, suma de totales, snapshots de conceptos.
-- `hooks/embarque/useProformas.ts` → solo orquestación React Query (cache + toasts).
-
-### 4. Duplicación del flujo "descargar PDF de proforma"
-El mismo bloque (cargar embarque + conceptos + cliente + consolidados → invocar `generarPdfProforma`) está copiado en `TabFacturacion.tsx` y `TabProformas.tsx`. Cualquier cambio (ej. hoy ya pasó con "Servicios de Logística") obliga a tocar dos lugares.
-
-**Solución**: crear `hooks/embarque/useDescargarProformaPdf.ts` que devuelve `(proforma) => Promise<void>`.
-
-### 5. Componentes UI con responsabilidades mezcladas
-- `TabFacturacion.tsx` (450 L) hace: render de tabla + cálculo de totales + descarga PDF + diálogo eliminar + carga datos. Debería partirse en `<TablaConceptosVenta />`, `<TablaProformas />`, `<TablaFacturas />`.
-- `DialogGenerarProforma.tsx` (420 L) mezcla wizard (paso selección/confirmación), cálculo de IVA, side effect de cargar `dias_credito`, y submit. La lógica de cálculo debería bajar a `lib/domain/proforma.ts`.
-
-### 6. Inconsistencia en la capa `services/`
-- `cotizacionServices.ts` (135 L) y `embarqueServices.ts` (54 L) → bien.
-- Pero `useProformas.ts`, `useEmbarqueMutations.ts` (252 L), `useEmbarqueQueries.ts` (287 L) hacen acceso directo a Supabase **dentro del hook**, sin pasar por un service. Esto es un patrón aceptado para acceso trivial (Regla "cuándo NO crear un service"), pero las mutaciones con multiples pasos transaccionales sí ameritan un service.
-
-### 7. Manejo de tipos: casts `as any` y `as unknown as`
-- `useProformas.ts` línea 22: `data as unknown as Array<...>` — el tipo del join puede declararse como tipo nominal exportado.
-- ~18 ocurrencias de `as any` / `: any` en el codebase, concentradas en hooks de proformas.
-
-### 8. Invalidación de cache demasiado amplia
-Varias mutaciones invalidan `['proformas']`, `['embarque']`, `['embarques']`, `['conceptos_venta']` sin filtros — refetch innecesario en listas grandes. Considerar `queryKeys.ts` centralizado (ya existe `lib/queryKeys.ts`) y usarlo consistentemente.
-
-### 9. Constraint de IVA en CHECK constraint vs. trigger
-La regla del proyecto menciona usar triggers para validaciones temporales, pero el snapshot de proformas consolidadas guarda `iva` calculado con tasa hard-codeada. Si la tasa cambia, no hay re-cálculo. Considerar guardar `tasa_iva_aplicada` en cada fila para auditoría histórica.
-
-### 10. `src/data/changelog/legacy.ts` (1523 L)
-Archivo histórico muy grande pero aceptable (es un dataset estático). No es crítico, pero impacta el tiempo de cold-start del bundle si se importa en otra ruta. Verificar que solo `Changelog.tsx` lo importe (lazy-loaded).
+Los hallazgos restantes son **refinamientos**, no problemas de fondo.
 
 ---
 
-## Plan de acción priorizado
+## Hallazgos priorizados
 
-### CRÍTICO (deuda activa, riesgo de bug)
+### CRÍTICO — Inexistente
+No se detectaron problemas críticos: no hay lógica de negocio embebida en componentes UI, no hay imports de `supabase/client` en `pages/` ni en `components/`, y no hay duplicación de RLS.
 
-1. **Refactor de `useProformas.ts` (570 L → ~150 L)**
-   - Crear `src/services/proformaServices.ts` con: `crearProforma`, `marcarFacturada`, `consolidarProformas`, `eliminarProforma`, `aprobarProformas`.
-   - Crear `src/lib/domain/proforma.ts` con: `agruparConceptosPorContenedor`, `sumarTotalesProformas`, `construirSnapshotConsolidado(conceptos, embarques, tasaIva)`.
-   - Hook queda solo con `useQuery`/`useMutation` + invalidaciones + toasts.
+### ALTO — Refinamientos de impacto medible
 
-2. **Eliminar tasa IVA hard-codeada (`const TASA = 0.16`)** en consolidación. Pasar `tasaIva` desde el componente que dispara la mutación, igual que ya se hace en `TabFacturacion`.
+**A1. Inconsistencia de toasts: `useToast` (shadcn) vs `sonner`**
+Coexisten dos sistemas de notificaciones:
+- 40 archivos importan `@/hooks/use-toast`.
+- 2 archivos importan `sonner` directamente (`useProformas.ts`, `useDescargarProformaPdf.ts`).
 
-3. **Mover transacciones críticas a funciones RPC en Supabase**
-   - `crear_proforma_con_conceptos(...)` — atómica.
-   - `consolidar_proformas(...)` — atómica con snapshot.
-   - `marcar_proforma_facturada(...)` — atómica con creación de facturas.
-   Elimina los rollbacks manuales y previene estados inconsistentes ante fallos de red.
+Cada librería tiene su propia API y estilo visual. El usuario percibe toasts distintos según el flujo. Hay que elegir uno y migrar el otro — preferentemente `useToast` porque es el predominante.
 
-### ALTO (duplicación y mantenibilidad)
+**A2. Hooks que aún tocan `supabase.from(...)` sin pasar por `services/`**
+Quedan pequeños hooks que hablan directo con el cliente, saltándose la capa de servicios:
+- `useUsuarios.ts` (membership query + edge function)
+- `useUsuarioMutations.ts` (insert directo en `organization_members`)
+- `useClientUsersMutations.ts` (delete directo en `client_users`)
+- `useSidebarAlerts.ts`, `useRentabilidadClientes.ts`, `useProfitMaps.ts`, `useOperadoresDistintos.ts`, `useGlobalSearch.ts`, `usePortalDocumentDownload.ts`
 
-4. **Crear `useDescargarProformaPdf` hook compartido** y reemplazar las dos copias en `TabFacturacion.tsx` y `TabProformas.tsx`.
+Convención del repo: los hooks orquestan React Query + cache; los `services/` hacen el I/O. Estos hooks rompen la convención.
 
-5. **Partir `TabFacturacion.tsx`** en sub-componentes:
-   - `ConceptosVentaSeccion.tsx`
-   - `ProformasSeccion.tsx`
-   - `FacturasSeccion.tsx`
-   - Su archivo padre orquesta props y data.
+**A3. `usePortalData.ts` debe modularizarse igual que `embarqueServices`**
+173 líneas con 9 queries distintas + 3 constantes de columnas inline (`PORTAL_EMBARQUE_DETAIL_COLUMNS`, `PORTAL_EVENTO_COLUMNS`, `PORTAL_DOCUMENTO_COLUMNS`). Mismo patrón que ya se aplicó a embarques: extraer a `services/portal/{queries,columns}.ts` y dejar el hook como capa de cache.
 
-6. **Partir `DialogGenerarProforma.tsx`** en:
-   - `PasoSeleccionConceptos.tsx`
-   - `PasoConfirmacionProforma.tsx`
-   - Lógica de cálculo en `lib/domain/proforma.ts`.
+### MEDIO — Higiene y consistencia
 
-7. **Sacar `supabase.from('clientes')` de `DialogGenerarProforma`** → crear `useClienteResumen(clienteId)` reutilizable (lo necesitará también el PDF).
+**M1. Componentes UI grandes en `facturacion/`**
+- `TabProformas.tsx` (270 líneas) y `TabProformasPendientes.tsx` (246 líneas) mezclan: estado de filtros, paginación, selección, definición de columnas inline (con badges hardcodeados) y render de la tabla. Patrón clásico para extraer:
+  - `useTabProformas()` → hook con filtros, paginación, conteos.
+  - `proformasColumns.tsx` → definición de columnas.
+  - El componente queda solo con el JSX y los handlers de UI.
 
-### MEDIO (limpieza y consistencia)
+**M2. `DialogGenerarProforma.tsx` (237 líneas)**
+Mismo patrón. Ya tiene un controller hook parcial (`useProformaDialog`), pero la lógica de estados internos del diálogo (selección de conceptos, overrides de IVA, totales calculados) sigue dentro del componente. Extraer todo a `useDialogGenerarProformaState()`.
 
-8. **Definir tipos nominales para joins de Supabase** (eliminar `as unknown as` y `as any`):
-   ```ts
-   export type ProformaConFactura = ProformaRow & { facturas: { ... } | null };
-   ```
-   Aplicarlo en `useProformas.ts` y queries similares.
+**M3. `useNuevoEmbarqueWizard.ts` (336 líneas) — el más grande del repo**
+Aunque ya está extraído de la página, el hook absorbió mucha responsabilidad:
+1. Hidratación desde cotización (lógica pura: parsing y mapeo).
+2. Manejo de modo expediente (nuevo vs existente).
+3. Validación step 1 (lógica pura).
+4. Auto-pre-vinculación desde otra ruta.
+5. Orquestación del submit (5 mutaciones encadenadas).
 
-9. **Centralizar query keys** en `lib/queryKeys.ts` para todas las invalidaciones de proformas/facturas/embarques. Usar funciones tipadas.
+Las piezas (1) y (3) son funciones puras y deberían estar en `lib/domain/embarque.ts` (o un nuevo `lib/domain/nuevoEmbarque.ts`) con tests unitarios. La (5) puede vivir en un service orquestador (`services/embarque/crearEmbarqueFlow.ts`) que el hook solo invoca.
 
-10. **Mover `signInWithPassword` de `Login.tsx`** a `AuthContext` o `useLogin` hook (consistencia con regla #1).
+**M4. `useEmbarques.ts` y barrels que reexportan demasiado**
+`useEmbarques.ts` reexporta 11 nombres de queries + 9 mutations + tipos. Es cómodo, pero esconde cuáles archivos consumen qué. Los nuevos consumidores deberían importar directamente desde `hooks/embarque/useEmbarqueQueries` o `useEmbarqueMutations`. El barrel se mantiene solo por compatibilidad.
 
-11. **Sacar `supabase.from('cotizacion_costos')` de `NuevoEmbarque.tsx`** → mover a `services/cotizacionServices.ts` y exponer como hook `useCotizacionCostosLite(cotId)`.
+**M5. Colores hardcoded fuera del design system**
+Aunque la convención dice "siempre tokens semánticos", encontré `bg-blue-100`, `text-blue-800`, `bg-red-*`, `bg-green-*` en 15 archivos UI (mayoría son badges de estado en `TabProformas`, `OperacionesWidgets`, `DashboardStatusCards`, `TablaCostosLocal`, etc.). Centralizar como variantes en `index.css` (`--badge-info`, `--badge-warning`, `--badge-success`) o definir un componente `<StatusBadge variant="…" />` que mapee internamente.
 
-### OPCIONAL (mejoras menores)
+### BAJO — Opcional / cosmético
 
-12. **Auditar `useEmbarqueQueries.ts` (287 L)** y considerar partir queries muy grandes (joins) en hooks especializados.
+**B1. Reorganizar `lib/` por categoría**
+11 archivos sueltos en `src/lib/`. Una jerarquía más navegable:
+```text
+lib/
+  formatters/   (formatters.ts, financialUtils.ts, profitUtils.ts, costosUSD.ts)
+  storage/      (storageUtils.ts)
+  config/       (estadoConfig.ts, uiMappings.ts)
+  utils/        (utils.ts, errorUtils.ts, contactoUtils.ts)
+  queryKeys.ts
+  domain/, mappers/, parsers/  (ya existen)
+```
+Cero cambio funcional, pero reduce ruido visual.
 
-13. **Guardar `tasa_iva_aplicada` en `proformas` y `proforma_conceptos_consolidados`** para trazabilidad histórica si la tasa cambia.
+**B2. Tests de dominio puro faltantes**
+- `lib/domain/configuracion.ts` (16 líneas): sin tests; trivial pero merece una prueba para mantener la convención.
+- Si se extraen `validateStep1` e hidratación (M3), añadir suite.
 
-14. **Verificar que `data/changelog/legacy.ts` solo se importe en lazy chunk** de `Changelog.tsx` (no en el bundle principal).
+**B3. `useConfiguracionState.ts` (110 líneas)**
+No revisado en esta auditoría; vale mirarlo en caso de tener lógica de negocio embebida.
 
-15. **Documentar en `ARCHITECTURE.md`** el patrón "transacciones complejas → RPC en Supabase" como recomendación oficial.
-
-16. **Tests unitarios para `lib/domain/proforma.ts`** una vez extraído (cálculos puros, fáciles de testear).
+**B4. Desuso del refetch manual**
+`Usuarios.tsx` usa `refetch` del hook directamente; el resto del repo confía en invalidaciones de cache desde mutations. Inconsistencia menor — quitar el `refetch` y dejar que `useUpdateUserRole`/`useDeleteUser` invaliden `queryKeys.usuarios.all` (ya lo hacen).
 
 ---
 
-## Resumen
+## Plan recomendado (orden de ejecución)
 
-- ✅ La arquitectura base está bien definida y la mayor parte del código la respeta.
-- ⚠️ El módulo de proformas (introducido en v8.45–v8.49) acumuló deuda: hooks de 570 L, lógica duplicada en componentes, IVA hard-codeado, rollbacks manuales no atómicos.
-- 🎯 Atacando los puntos 1–4 se elimina ~80% del riesgo y se reducen ~400 líneas de código duplicado.
+| # | Tarea | Categoría | Esfuerzo |
+|---|-------|-----------|----------|
+| 1 | Unificar sistema de toasts: migrar los 2 hooks de `sonner` → `useToast` (o decidir lo contrario y migrar 40 archivos — preferible la primera). | A1 | XS |
+| 2 | Mover los hooks que aún hacen `supabase.from(...)` a llamar `services/` (crear `userService`, `clientUserService`, `sidebarAlertsService`, etc. cuando no existan). | A2 | M |
+| 3 | Modularizar `usePortalData.ts` → `services/portal/{queries,columns}.ts` siguiendo el patrón de `embarqueServices`. | A3 | S |
+| 4 | Extraer columnas + controller hook de `TabProformas` y `TabProformasPendientes`. | M1 | M |
+| 5 | Extraer estado interno del `DialogGenerarProforma` a un controller hook (`useDialogGenerarProformaState`). | M2 | S |
+| 6 | Adelgazar `useNuevoEmbarqueWizard`: mover hidratación + validación a `lib/domain/nuevoEmbarque.ts` con tests, mover orquestación del submit a `services/embarque/crearEmbarqueFlow.ts`. | M3 | M |
+| 7 | Auditar `useConfiguracionState.ts` (110 líneas) y aplicar el mismo patrón si hay lógica embebida. | B3 | S |
+| 8 | Reemplazar colores hardcoded `bg-blue-*`, `text-red-*`, etc. por tokens semánticos o un `<StatusBadge>` reutilizable. | M5 | M |
+| 9 | Eliminar `refetch` manual en `Usuarios.tsx` y confiar en invalidaciones. | B4 | XS |
+| 10 | Reorganizar `src/lib/` por categoría (`formatters/`, `storage/`, `config/`, `utils/`). | B1 | S (mecánico) |
+| 11 | Añadir tests para `lib/domain/configuracion.ts` y nuevos puros extraídos. | B2 | XS |
 
-¿Procedo con el plan en este orden cuando aprobemos?
+## Resumen ejecutivo
+
+- **Critical issues: 0.**
+- **High-impact (A1-A3):** consistencia de toasts, hooks que aún saltan la capa de servicios, modularización de `usePortalData`. Son ~1-2 horas total.
+- **Medium (M1-M5):** componentes/hook grandes restantes y colores hardcoded. Es la parte más voluminosa (~1 día) pero ninguno bloquea features.
+- **Low (B1-B4):** organización visual de `lib/`, tests de cobertura, limpieza menor.
+
+Recomiendo ejecutar en orden numérico — los pasos 1-3 son las únicas mejoras estructurales que aún quedan; del 4 en adelante son refinamientos progresivos que pueden intercalarse con trabajo de producto sin urgencia.
