@@ -1,33 +1,20 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
-import type { Json } from "@/integrations/supabase/types";
 import { useToast } from "@/hooks/use-toast";
 import { queryKeys } from "@/lib/queryKeys";
+import {
+  fetchConfiguracionByOrg,
+  updateConfiguracionItems,
+  type ConfigItem,
+} from "@/services/configuracionService";
 
-export interface ConfigItem {
-  id: string;
-  categoria: string;
-  clave: string;
-  valor: unknown;
-  descripcion: string;
-  organization_id: string;
-}
+export type { ConfigItem };
 
 /** Config para una org específica (impersonación) */
 export function useConfiguracionByOrg(orgId: string | null) {
   return useQuery<ConfigItem[]>({
     queryKey: orgId ? queryKeys.configuracionOrg.byOrg(orgId) : ["noop"],
     enabled: !!orgId,
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("configuracion")
-        .select("*")
-        .eq("organization_id", orgId!)
-        .order("categoria")
-        .order("clave");
-      if (error) throw error;
-      return (data ?? []) as unknown as ConfigItem[];
-    },
+    queryFn: () => fetchConfiguracionByOrg(orgId!),
     staleTime: 60 * 1000,
   });
 }
@@ -37,17 +24,9 @@ export function useUpdateConfiguracionOrg() {
   const { toast } = useToast();
 
   return useMutation({
-    mutationFn: async (items: { id: string; valor: unknown }[]) => {
-      for (const item of items) {
-        const { error } = await supabase
-          .from("configuracion")
-          .update({ valor: item.valor as Json })
-          .eq("id", item.id);
-        if (error) throw error;
-      }
-    },
+    mutationFn: (items: { id: string; valor: unknown }[]) => updateConfiguracionItems(items),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["configuracion"] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.configuracion.all });
       toast({ title: "Configuración de organización guardada" });
     },
     onError: (error: Error) => {

@@ -71,7 +71,7 @@ function invalidateProformaCaches(qc: ReturnType<typeof useQueryClient>, embarqu
   qc.invalidateQueries({ queryKey: queryKeys.embarques.all });
   if (embarqueId) {
     qc.invalidateQueries({ queryKey: queryKeys.proformas.embarque(embarqueId) });
-    qc.invalidateQueries({ queryKey: ['embarque', embarqueId] });
+    qc.invalidateQueries({ queryKey: queryKeys.embarques.detail(embarqueId) });
   }
 }
 
