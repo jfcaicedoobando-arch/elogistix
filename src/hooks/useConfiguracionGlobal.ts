@@ -1,28 +1,18 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { queryKeys } from "@/lib/queryKeys";
+import {
+  fetchConfiguracionGlobal,
+  updateConfiguracionGlobalItems,
+  type ConfigGlobalItem,
+} from "@/services/configuracionService";
 
-export interface ConfigGlobalItem {
-  id: string;
-  categoria: string;
-  clave: string;
-  valor: unknown;
-  descripcion: string;
-}
+export type { ConfigGlobalItem };
 
 export function useConfiguracionGlobal() {
   return useQuery<ConfigGlobalItem[]>({
     queryKey: queryKeys.configuracionGlobal.all,
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("configuracion_global")
-        .select("*")
-        .order("categoria")
-        .order("clave");
-      if (error) throw error;
-      return (data ?? []) as unknown as ConfigGlobalItem[];
-    },
+    queryFn: fetchConfiguracionGlobal,
     staleTime: 5 * 60 * 1000,
   });
 }
@@ -50,16 +40,7 @@ export function useUpdateConfiguracionGlobal() {
   const { toast } = useToast();
 
   return useMutation({
-    mutationFn: async (items: { categoria: string; clave: string; valor: unknown }[]) => {
-      for (const item of items) {
-        const { error } = await supabase
-          .from("configuracion_global")
-          .update({ valor: JSON.parse(JSON.stringify(item.valor)) })
-          .eq("categoria", item.categoria)
-          .eq("clave", item.clave);
-        if (error) throw error;
-      }
-    },
+    mutationFn: updateConfiguracionGlobalItems,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.configuracionGlobal.all });
       toast({ title: "Configuración global guardada" });
