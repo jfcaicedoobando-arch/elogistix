@@ -5,6 +5,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { useOrgFilter } from "@/hooks/useOrgFilter";
+import { queryKeys } from "@/lib/queryKeys";
 import {
   aprobarProformas as svcAprobar,
   consolidarProformas as svcConsolidar,
@@ -32,7 +33,7 @@ export type { ProformaConFactura, ProformaPendienteConEmbarque, ProformaRow };
 
 export function useProformasEmbarque(embarqueId?: string) {
   return useQuery({
-    queryKey: ["proformas", "embarque", embarqueId],
+    queryKey: queryKeys.proformas.embarque(embarqueId),
     enabled: !!embarqueId,
     queryFn: () => fetchProformasEmbarque(embarqueId!),
     staleTime: 30_000,
@@ -42,7 +43,7 @@ export function useProformasEmbarque(embarqueId?: string) {
 export function useProformas() {
   const { organizationId } = useOrgFilter();
   return useQuery({
-    queryKey: ["proformas", "all", organizationId],
+    queryKey: queryKeys.proformas.aprobadas(organizationId),
     enabled: !!organizationId,
     queryFn: () => fetchProformasAprobadas(organizationId!),
     staleTime: 30_000,
@@ -52,7 +53,7 @@ export function useProformas() {
 export function useProformasPendientes() {
   const { organizationId } = useOrgFilter();
   return useQuery({
-    queryKey: ["proformas", "pendientes", organizationId],
+    queryKey: queryKeys.proformas.pendientes(organizationId),
     enabled: !!organizationId,
     queryFn: () => fetchProformasPendientes(organizationId!),
     staleTime: 30_000,
@@ -62,6 +63,17 @@ export function useProformasPendientes() {
 // ──────────────────────────────────────────────────────────────────────────────
 // Mutations
 // ──────────────────────────────────────────────────────────────────────────────
+
+/** Invalida todas las queries impactadas por cambios en proformas. */
+function invalidateProformaCaches(qc: ReturnType<typeof useQueryClient>, embarqueId?: string | null) {
+  qc.invalidateQueries({ queryKey: queryKeys.proformas.all });
+  qc.invalidateQueries({ queryKey: queryKeys.proformas.conceptosVenta });
+  qc.invalidateQueries({ queryKey: queryKeys.embarques.all });
+  if (embarqueId) {
+    qc.invalidateQueries({ queryKey: queryKeys.proformas.embarque(embarqueId) });
+    qc.invalidateQueries({ queryKey: ['embarque', embarqueId] });
+  }
+}
 
 export function useCrearProforma() {
   const queryClient = useQueryClient();
@@ -73,11 +85,7 @@ export function useCrearProforma() {
     },
     onSuccess: (proforma) => {
       toast.success(`Proforma ${proforma.numero} generada (pendiente de revisión)`);
-      queryClient.invalidateQueries({ queryKey: ["proformas", "embarque", proforma.embarque_id] });
-      queryClient.invalidateQueries({ queryKey: ["proformas", "pendientes"] });
-      queryClient.invalidateQueries({ queryKey: ["embarque", proforma.embarque_id] });
-      queryClient.invalidateQueries({ queryKey: ["conceptos_venta"] });
-      queryClient.invalidateQueries({ queryKey: ["embarques"] });
+      invalidateProformaCaches(queryClient, proforma.embarque_id);
     },
     onError: (error: Error) => {
       toast.error(`Error al generar proforma: ${error.message}`);
@@ -92,9 +100,8 @@ export function useMarcarProformaFacturada() {
       svcMarcarFacturada(params).then(() => params),
     onSuccess: (params) => {
       toast.success("Proforma facturada y registro de factura creado");
-      queryClient.invalidateQueries({ queryKey: ["proformas", "all"] });
-      queryClient.invalidateQueries({ queryKey: ["proformas", "embarque", params.embarqueId] });
-      queryClient.invalidateQueries({ queryKey: ["facturas"] });
+      invalidateProformaCaches(queryClient, params.embarqueId);
+      queryClient.invalidateQueries({ queryKey: queryKeys.facturas.all });
     },
     onError: (error: Error) => {
       toast.error(`Error: ${error.message}`);
@@ -109,11 +116,7 @@ export function useEliminarProforma() {
       svcEliminar(params).then(() => params),
     onSuccess: (params) => {
       toast.success("Proforma eliminada correctamente");
-      queryClient.invalidateQueries({ queryKey: ["proformas", "embarque", params.embarqueId] });
-      queryClient.invalidateQueries({ queryKey: ["proformas", "all"] });
-      queryClient.invalidateQueries({ queryKey: ["embarque", params.embarqueId] });
-      queryClient.invalidateQueries({ queryKey: ["conceptos_venta"] });
-      queryClient.invalidateQueries({ queryKey: ["embarques"] });
+      invalidateProformaCaches(queryClient, params.embarqueId);
     },
     onError: (error: Error) => {
       toast.error(`Error al eliminar proforma: ${error.message}`);
@@ -132,8 +135,7 @@ export function useAprobarProformas() {
           ? "Proforma aprobada"
           : `${params.proformaIds.length} proformas aprobadas`,
       );
-      queryClient.invalidateQueries({ queryKey: ["proformas"] });
-      queryClient.invalidateQueries({ queryKey: ["embarque"] });
+      invalidateProformaCaches(queryClient);
     },
     onError: (error: Error) => {
       toast.error(`Error al aprobar: ${error.message}`);
@@ -151,8 +153,7 @@ export function useConsolidarProformas() {
     },
     onSuccess: (nueva) => {
       toast.success(`Proformas consolidadas en ${nueva.numero}`);
-      queryClient.invalidateQueries({ queryKey: ["proformas"] });
-      queryClient.invalidateQueries({ queryKey: ["embarque"] });
+      invalidateProformaCaches(queryClient, nueva.embarque_id);
     },
     onError: (error: Error) => {
       toast.error(`Error al consolidar: ${error.message}`);
