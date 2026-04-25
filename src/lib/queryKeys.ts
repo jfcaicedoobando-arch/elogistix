@@ -15,6 +15,13 @@ export const queryKeys = {
     eventos: (id: string) => ['eventos_embarque', id] as const,
     relacionados: (id: string, blMaster: string) => ['embarques', 'relacionados', id, blMaster] as const,
   },
+  proformas: {
+    all: ['proformas'] as const,
+    embarque: (embarqueId?: string) => ['proformas', 'embarque', embarqueId] as const,
+    pendientes: (orgId?: string | null) => ['proformas', 'pendientes', orgId] as const,
+    aprobadas: (orgId?: string | null) => ['proformas', 'all', orgId] as const,
+    conceptosVenta: ['conceptos_venta'] as const,
+  },
   cotizaciones: {
     all: ['cotizaciones'] as const,
     detail: (id: string) => ['cotizaciones', id] as const,
