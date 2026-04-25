@@ -11,6 +11,13 @@ export interface ChangelogEntry {
 /** Entradas recientes (v8.x). Las anteriores se cargan dinámicamente. */
 export const recentChangelog: ChangelogEntry[] = [
   {
+    version: "8.52.0",
+    date: "2026-04-25",
+    type: "minor",
+    title: "Refactor: capa de servicios completa para embarques, cotizaciones y administración",
+    description: "Tercera y última fase del refactor arquitectónico transversal. 100% interno, sin cambios visibles para el usuario. (1) embarqueServices.ts ahora encapsula todas las llamadas a Supabase del módulo de embarques: queries paginadas, detalle, conceptos de venta/costo, documentos, notas, facturas, expedientes por cliente, list-extras, relacionados por BL, y mutaciones (crear/actualizar/duplicar/eliminar vía RPC, cambio de estado, notas, eventos de tracking, subida y borrado de documentos). Los hooks useEmbarqueQueries, useEmbarqueMutations, useEmbarquesListData y useEmbarquesRelacionados quedan reducidos a manejo de React Query. (2) cotizacionServices.ts unifica queries (lista, aceptadas, detalle, embarques vinculados), mutaciones CRUD, generación de folio, costos, duplicación, conversiones (prospecto→cliente y cotización→embarques) y respuesta del portal. Seis hooks de cotización (useCotizacionQueries, useCotizacionMutations, useCotizacionCostos, useCotizacionConversions, useDuplicarCotizacion, usePortalCotizacionMutations) ahora solo orquestan caché. (3) Nuevo adminServices.ts con stats del super admin, listado y creación de organizaciones, usuarios disponibles vía edge function y alta de miembros. useAdminData, useOrganizationsList y useOrgMembersMutations migrados. Resultado: las únicas llamadas directas a Supabase desde hooks que quedan son hooks muy específicos (portal, dashboard, búsqueda global), preparando el terreno para futuras pruebas unitarias del service layer.",
+  },
+  {
     version: "8.51.0",
     date: "2026-04-25",
     type: "minor",

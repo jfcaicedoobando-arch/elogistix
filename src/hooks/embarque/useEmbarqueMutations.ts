@@ -1,10 +1,20 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
-import type { Json, Tables, TablesInsert, Enums } from '@/integrations/supabase/types';
-type EmbarqueRow = Tables<'embarques'>;
+import type { Tables, TablesInsert } from '@/integrations/supabase/types';
 import { queryKeys } from '@/lib/queryKeys';
+import {
+  crearEmbarqueRpc,
+  actualizarEmbarqueRpc,
+  duplicarEmbarqueRpc,
+  eliminarEmbarqueRpc,
+  actualizarEstadoEmbarque,
+  insertarNotaCambioEstado,
+  insertarNotaEmbarque,
+  insertEventoEmbarque,
+  uploadDocumentoEmbarque,
+  deleteDocumentoEmbarque,
+} from '@/services/embarqueServices';
 
-type EmbarqueInsert = TablesInsert<'embarques'>;
+type EmbarqueRow = Tables<'embarques'>;
 
 // ─── Create ──────────────────────────────────────────────
 interface CreateEmbarqueInput {
@@ -17,15 +27,8 @@ interface CreateEmbarqueInput {
 export function useCreateEmbarque() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async ({ embarque, conceptosVenta, conceptosCosto, documentos }: CreateEmbarqueInput) => {
-      const { data, error } = await supabase.rpc('crear_embarque_completo', {
-        p_embarque: embarque as unknown as Json,
-        p_conceptos_venta: conceptosVenta as unknown as Json,
-        p_conceptos_costo: conceptosCosto as unknown as Json,
-        p_documentos: documentos as unknown as Json,
-      });
-      if (error) throw error;
-      const result = data as unknown as { id: string };
+    mutationFn: async (input: CreateEmbarqueInput) => {
+      const result = await crearEmbarqueRpc(input);
       return { id: result.id } as unknown as EmbarqueRow;
     },
     onSuccess: () => {
@@ -46,15 +49,9 @@ interface UpdateEmbarqueInput {
 export function useUpdateEmbarque() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async ({ id, embarque, conceptosVenta, conceptosCosto }: UpdateEmbarqueInput) => {
-      const { error } = await supabase.rpc('actualizar_embarque_completo', {
-        p_embarque_id: id,
-        p_embarque: embarque as unknown as Json,
-        p_conceptos_venta: conceptosVenta as unknown as Json,
-        p_conceptos_costo: conceptosCosto as unknown as Json,
-      });
-      if (error) throw error;
-      return { id } as EmbarqueRow;
+    mutationFn: async (input: UpdateEmbarqueInput) => {
+      await actualizarEmbarqueRpc(input);
+      return { id: input.id } as EmbarqueRow;
     },
     onSuccess: (embarqueActualizado) => {
       queryClient.invalidateQueries({ queryKey: queryKeys.embarques.all });
@@ -80,14 +77,8 @@ interface DuplicarEmbarqueInput {
 export function useDuplicarEmbarque() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async ({ embarqueOrigen, copias }: DuplicarEmbarqueInput) => {
-      const { data, error } = await supabase.rpc('duplicar_embarque_completo', {
-        p_embarque_origen_id: embarqueOrigen.id,
-        p_copias: copias as unknown as Json,
-      });
-      if (error) throw error;
-      return data as unknown as { id: string; expediente: string }[];
-    },
+    mutationFn: ({ embarqueOrigen, copias }: DuplicarEmbarqueInput) =>
+      duplicarEmbarqueRpc(embarqueOrigen.id, copias),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.embarques.all });
     },
@@ -106,9 +97,9 @@ const ESTADO_A_EVENTO: Record<string, string> = {
 };
 
 async function insertarEventoTracking(embarqueId: string, nuevoEstado: string, usuario: string) {
-  const tipoEvento = (ESTADO_A_EVENTO[nuevoEstado] ?? 'Otro') as Enums<'tipo_evento_tracking'>;
-  await supabase.from('eventos_embarque').insert({
-    embarque_id: embarqueId,
+  const tipoEvento = ESTADO_A_EVENTO[nuevoEstado] ?? 'Otro';
+  await insertEventoEmbarque({
+    embarqueId,
     tipo: tipoEvento,
     descripcion: `Estado cambiado a "${nuevoEstado}"`,
     ubicacion: '',
@@ -122,23 +113,8 @@ export function useAvanzarEstadoEmbarque() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async ({ embarqueId, nuevoEstado, usuarioEmail }: { embarqueId: string; nuevoEstado: string; usuarioEmail: string }) => {
-      const { error: errorEstado } = await supabase
-        .from('embarques')
-        .update({ estado: nuevoEstado as EmbarqueInsert['estado'] })
-        .eq('id', embarqueId);
-      if (errorEstado) throw errorEstado;
-
-      const { error: errorNota } = await supabase
-        .from('notas_embarque')
-        .insert({
-          embarque_id: embarqueId,
-          contenido: `Estado cambiado a "${nuevoEstado}"`,
-          tipo: 'cambio_estado' as const,
-          usuario: usuarioEmail,
-        });
-      if (errorNota) throw errorNota;
-
-      // Evento de tracking automático
+      await actualizarEstadoEmbarque(embarqueId, nuevoEstado);
+      await insertarNotaCambioEstado(embarqueId, `Estado cambiado a "${nuevoEstado}"`, usuarioEmail);
       await insertarEventoTracking(embarqueId, nuevoEstado, usuarioEmail);
     },
     onSuccess: (_resultado, vars) => {
@@ -151,18 +127,11 @@ export function useAvanzarEstadoEmbarque() {
 }
 
 // ─── Sincronizar Estado Calculado ─────────────────────────
-/** Actualiza el estado en BD si el estado calculado difiere del almacenado */
 export function useSyncEstadoEmbarque() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async ({ embarqueId, nuevoEstado }: { embarqueId: string; nuevoEstado: string }) => {
-      const { error } = await supabase
-        .from('embarques')
-        .update({ estado: nuevoEstado as EmbarqueInsert['estado'] })
-        .eq('id', embarqueId);
-      if (error) throw error;
-
-      // Evento de tracking automático (sync automático por ETD/ETA)
+      await actualizarEstadoEmbarque(embarqueId, nuevoEstado);
       await insertarEventoTracking(embarqueId, nuevoEstado, 'sistema');
     },
     onSuccess: (_r, vars) => {
@@ -174,23 +143,11 @@ export function useSyncEstadoEmbarque() {
 }
 
 // ─── Upload Documento ────────────────────────────────────
-type DocumentoEstado = TablesInsert<'documentos_embarque'>['estado'];
-
 export function useUploadDocumentoEmbarque() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async ({ embarqueId, docId, file }: { embarqueId: string; docId: string; file: File }) => {
-      const { uploadFile } = await import('@/services/storage');
-      const { sanitizeFileName, sanitizeStorageKey } = await import('@/lib/storageUtils');
-      const path = `embarques/${sanitizeStorageKey(embarqueId)}/${sanitizeStorageKey(docId)}/${sanitizeFileName(file.name)}`;
-      await uploadFile(path, file);
-      const { error } = await supabase
-        .from('documentos_embarque')
-        .update({ archivo: path, estado: 'Recibido' as DocumentoEstado })
-        .eq('id', docId);
-      if (error) throw error;
-      return { path, fileName: file.name };
-    },
+    mutationFn: ({ embarqueId, docId, file }: { embarqueId: string; docId: string; file: File }) =>
+      uploadDocumentoEmbarque(embarqueId, docId, file),
     onSuccess: (_r, vars) => {
       queryClient.invalidateQueries({ queryKey: queryKeys.embarques.documentos(vars.embarqueId) });
     },
@@ -201,12 +158,8 @@ export function useUploadDocumentoEmbarque() {
 export function useDeleteDocumentoEmbarque() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async ({ embarqueId, docId, archivoPath }: { embarqueId: string; docId: string; archivoPath: string }) => {
-      const { deleteFile } = await import('@/services/storage');
-      await deleteFile(archivoPath);
-      const { error } = await supabase.from('documentos_embarque').delete().eq('id', docId);
-      if (error) throw error;
-    },
+    mutationFn: ({ docId, archivoPath }: { embarqueId: string; docId: string; archivoPath: string }) =>
+      deleteDocumentoEmbarque(docId, archivoPath),
     onSuccess: (_r, vars) => {
       queryClient.invalidateQueries({ queryKey: queryKeys.embarques.documentos(vars.embarqueId) });
     },
@@ -217,17 +170,8 @@ export function useDeleteDocumentoEmbarque() {
 export function useCreateNotaEmbarque() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async ({ embarqueId, contenido, usuario }: { embarqueId: string; contenido: string; usuario: string }) => {
-      const { error } = await supabase
-        .from('notas_embarque')
-        .insert({
-          embarque_id: embarqueId,
-          contenido,
-          tipo: 'nota' as const,
-          usuario,
-        });
-      if (error) throw error;
-    },
+    mutationFn: ({ embarqueId, contenido, usuario }: { embarqueId: string; contenido: string; usuario: string }) =>
+      insertarNotaEmbarque(embarqueId, contenido, usuario),
     onSuccess: (_resultado, vars) => {
       queryClient.invalidateQueries({ queryKey: queryKeys.embarques.notas(vars.embarqueId) });
     },
@@ -238,12 +182,7 @@ export function useCreateNotaEmbarque() {
 export function useEliminarEmbarque() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async (embarqueId: string) => {
-      const { error } = await supabase.rpc('eliminar_embarque_completo', {
-        p_embarque_id: embarqueId,
-      });
-      if (error) throw error;
-    },
+    mutationFn: (embarqueId: string) => eliminarEmbarqueRpc(embarqueId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.embarques.all });
       queryClient.invalidateQueries({ queryKey: queryKeys.cotizaciones.all });
