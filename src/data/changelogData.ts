@@ -11,6 +11,13 @@ export interface ChangelogEntry {
 /** Entradas recientes (v8.x). Las anteriores se cargan dinámicamente. */
 export const recentChangelog: ChangelogEntry[] = [
   {
+    version: "8.63.0",
+    date: "2026-04-25",
+    type: "minor",
+    title: "Reglas de cambio de estado de embarque movidas a dominio puro",
+    description: "Paso 6 de la auditoría arquitectónica. La verificación confirmó que useEmbarqueMutations.ts ya no toca Supabase directamente (todas sus mutaciones delegan al service embarqueServices.ts), por lo que el foco se trasladó al segundo punto pendiente: lógica de negocio embebida en el hook. Se trasladaron al dominio puro lib/domain/embarque.ts las reglas que decidían qué evento de tracking generar al avanzar el estado de un embarque: el mapa ESTADO_A_EVENTO_TRACKING (Confirmado→Otro, En Tránsito→Zarpe, Arribo→Arribo a Puerto, En Aduana→Despacho Aduanal, Entregado→Entrega, EIR→Liberación, Cerrado→Otro), la función tipoEventoParaEstado (con fallback 'Otro') y descripcionEventoCambioEstado (formato estándar con comillas). El hook ahora solo orquesta la mutación y consume estas funciones. Se añadieron 5 pruebas unitarias para las nuevas reglas (191/191 totales pasando). Beneficio: cualquier cambio futuro en la matriz estado→evento se hace en un único archivo testeado sin tocar React Query ni hooks.",
+  },
+  {
     version: "8.62.0",
     date: "2026-04-25",
     type: "minor",
