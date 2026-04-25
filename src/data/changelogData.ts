@@ -11,6 +11,13 @@ export interface ChangelogEntry {
 /** Entradas recientes (v8.x). Las anteriores se cargan dinámicamente. */
 export const recentChangelog: ChangelogEntry[] = [
   {
+    version: "8.70.0",
+    date: "2026-04-25",
+    type: "minor",
+    title: "Auditoría: hooks restantes migrados a capa de servicios",
+    description: "Paso 1 (C1) de la nueva ronda de auditoría arquitectónica. Los 6 hooks que aún hacían llamadas directas a supabase.from / supabase.rpc se migraron a la capa de servicios, completando al 100% el patrón 'hook = wrapper delgado de React Query'. Servicios nuevos: planesService.ts (fetchPlanes, updatePlan), facturasService.ts (fetchFacturas, fetchGastosPendientes, marcarCostoPagado, FACTURA_LIST_COLUMNS centralizado), dashboardService.ts (fetchDashboardSummary, fetchDashboardDetails) y operacionesService.ts (fetchOperacionesStats con todos los tipos del payload del RPC). configuracionService.ts se extendió con fetchConfiguracion, updateConfiguracionByCategoriaClave, fetchConfiguracionGlobal y updateConfiguracionGlobalItems. Refactorizados: useConfiguracion, useConfiguracionGlobal, usePlanes, useFacturas, useDashboardData y useOperacionesData — todos quedaron como capas finas de orquestación de cache, sin imports directos de '@/integrations/supabase/client'. Verificación: 0 imports de supabase client en src/hooks/, tsc limpio, 191/191 pruebas pasando. Próximo paso (v8.71.0): adelgazar useNuevoEmbarqueWizard extrayendo validación e hidratación a lib/domain/embarqueWizard.ts.",
+  },
+  {
     version: "8.69.0",
     date: "2026-04-25",
     type: "minor",
