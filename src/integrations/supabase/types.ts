@@ -1291,6 +1291,7 @@ export type Database = {
           organization_id: string
           precio_unitario: number
           proforma_id: string
+          tasa_iva_aplicada: number
           tipo_contenedor: string | null
           total: number
         }
@@ -1307,6 +1308,7 @@ export type Database = {
           organization_id?: string
           precio_unitario?: number
           proforma_id: string
+          tasa_iva_aplicada?: number
           tipo_contenedor?: string | null
           total?: number
         }
@@ -1323,6 +1325,7 @@ export type Database = {
           organization_id?: string
           precio_unitario?: number
           proforma_id?: string
+          tasa_iva_aplicada?: number
           tipo_contenedor?: string | null
           total?: number
         }
@@ -1366,6 +1369,7 @@ export type Database = {
           proformas_origen: string[] | null
           subtotal_mxn: number
           subtotal_usd: number
+          tasa_iva_aplicada: number
           total_mxn: number
           total_usd: number
           updated_at: string
@@ -1399,6 +1403,7 @@ export type Database = {
           proformas_origen?: string[] | null
           subtotal_mxn?: number
           subtotal_usd?: number
+          tasa_iva_aplicada?: number
           total_mxn?: number
           total_usd?: number
           updated_at?: string
@@ -1432,6 +1437,7 @@ export type Database = {
           proformas_origen?: string[] | null
           subtotal_mxn?: number
           subtotal_usd?: number
+          tasa_iva_aplicada?: number
           total_mxn?: number
           total_usd?: number
           updated_at?: string
@@ -1702,6 +1708,7 @@ export type Database = {
           proformas_origen: string[] | null
           subtotal_mxn: number
           subtotal_usd: number
+          tasa_iva_aplicada: number
           total_mxn: number
           total_usd: number
           updated_at: string
