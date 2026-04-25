@@ -6,9 +6,6 @@ import { supabase } from "@/integrations/supabase/client";
 import type { Tables } from "@/integrations/supabase/types";
 import {
   calcularTotalesProforma,
-  construirSnapshotConsolidado,
-  sumarTotalesProformas,
-  type MetaEmbarqueProforma,
 } from "@/lib/domain/proforma";
 
 export type ProformaRow = Tables<"proformas">;
