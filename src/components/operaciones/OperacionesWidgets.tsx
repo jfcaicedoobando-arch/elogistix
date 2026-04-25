@@ -43,7 +43,7 @@ export function RiesgoIndicador({ criticos, enPuerto, porArribar }: { criticos: 
 // ─── Capacity bar ────────────────────────────────────────
 export function CapacityBar({ count, max }: { count: number; max: number }) {
   const pct = Math.min((count / max) * 100, 100);
-  const colorClass = pct > 80 ? "[&>div]:bg-red-500" : pct > 60 ? "[&>div]:bg-amber-500" : "[&>div]:bg-emerald-500";
+  const colorClass = pct > 80 ? "[&>div]:bg-destructive" : pct > 60 ? "[&>div]:bg-warning" : "[&>div]:bg-success";
   return (
     <div className="flex items-center gap-2">
       <Progress value={pct} className={`h-2 w-20 ${colorClass}`} />

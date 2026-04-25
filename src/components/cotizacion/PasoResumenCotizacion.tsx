@@ -126,7 +126,7 @@ export default function PasoResumenCotizacion({
         <span className="text-base font-bold">Total MXN (c/IVA): {formatCurrency(totalMXN, 'MXN')}</span>
       </div>
 
-      <div className="flex items-center gap-2 p-3 rounded-md bg-amber-50 border border-amber-200 text-amber-700 text-sm">
+      <div className="flex items-center gap-2 p-3 rounded-md bg-warning/10 border border-warning/30 [color:hsl(var(--warning))] text-sm">
         <Info className="h-4 w-4 flex-shrink-0" />
         La cotización se guardará en estado Borrador.
       </div>

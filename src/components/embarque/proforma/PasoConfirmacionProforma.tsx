@@ -22,8 +22,8 @@ export function PasoConfirmacionProforma({
 }: Props) {
   return (
     <div className="space-y-4">
-      <div className="rounded-md border bg-amber-50/50 border-amber-200 p-3 text-sm">
-        <p className="text-amber-900">
+      <div className="rounded-md border bg-warning/10 border-warning/30 p-3 text-sm">
+        <p className="[color:hsl(var(--warning))]">
           <strong>Importante:</strong> Aún no se ha guardado nada. Revisa el resumen y confirma para generar la proforma y descargar el PDF.
         </p>
       </div>
@@ -56,7 +56,7 @@ export function PasoConfirmacionProforma({
                   <TableCell>{c.moneda}</TableCell>
                   <TableCell className="text-center">
                     {aplicaIva ? (
-                      <Badge className="bg-green-100 text-green-800 border-green-200 hover:bg-green-100 text-xs">
+                      <Badge variant="success" className="text-xs">
                         <CheckCircle2 className="h-3 w-3 mr-0.5" /> Sí
                       </Badge>
                     ) : (
