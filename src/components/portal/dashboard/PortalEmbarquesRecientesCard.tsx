@@ -15,7 +15,12 @@ interface EmbarqueItem {
   etd?: string | null;
   eta?: string | null;
   estado?: string | null;
-  [key: string]: unknown;
+  puerto_origen?: string;
+  aeropuerto_origen?: string;
+  ciudad_origen?: string;
+  puerto_destino?: string;
+  aeropuerto_destino?: string;
+  ciudad_destino?: string;
 }
 
 interface Props {
