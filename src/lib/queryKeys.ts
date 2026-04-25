@@ -127,6 +127,9 @@ export const queryKeys = {
   sidebar: {
     alertCounts: ['sidebar-alert-counts'] as const,
   },
+  usuarios: {
+    all: ['usuarios'] as const,
+  },
   admin: {
     organizations: ['admin-organizations'] as const,
     allUsers: ['admin-all-users'] as const,

@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { queryKeys } from '@/lib/queryKeys';
 import type { AppRole } from "@/types/types";
 
 export interface UserRow {
@@ -9,11 +10,9 @@ export interface UserRow {
   created_at: string;
 }
 
-const QUERY_KEY = ['usuarios'];
-
 export function useUsuarios() {
   return useQuery({
-    queryKey: QUERY_KEY,
+    queryKey: queryKeys.usuarios.all,
     queryFn: async (): Promise<UserRow[]> => {
       // Get organization members for the current org
       const { data: membersData, error: membersError } = await supabase
@@ -57,7 +56,7 @@ export function useUpdateUserRole() {
       if (error) throw error;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: QUERY_KEY });
+      queryClient.invalidateQueries({ queryKey: queryKeys.usuarios.all });
     },
   });
 }
@@ -74,7 +73,7 @@ export function useDeleteUser() {
       return data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: QUERY_KEY });
+      queryClient.invalidateQueries({ queryKey: queryKeys.usuarios.all });
     },
   });
 }
