@@ -33,7 +33,11 @@ import {
   subirDocumentosEmbarque,
 } from "@/services/embarqueServices";
 import { fetchCotizacionCostosForEmbarque } from "@/services/cotizacionServices";
-import { parseConceptos } from "@/lib/parsers/cotizacionDetalle";
+import {
+  validateDatosGenerales,
+  mapConceptosVentaFromCotizacion,
+  mapConceptosCostoFromCotizacion,
+} from "@/lib/domain/embarqueWizard";
 import { getErrorMessage } from "@/lib/errorUtils";
 import type { EmbarqueValidationErrors } from "@/components/embarque/StepDatosGenerales";
 
@@ -109,32 +113,12 @@ export function useNuevoEmbarqueWizard() {
   // ── Hidratación desde cotización ───────────────────────────
   const hidratarConceptosDesdeCotizacion = useCallback(
     async (cot: CotizacionRow) => {
-      const ventas = parseConceptos(cot.conceptos_venta);
-      if (ventas.length > 0) {
-        setConceptosVenta(
-          ventas.map((v, idx) => ({
-            id: idx + 1,
-            concepto: v.descripcion ?? "",
-            cantidad: Number(v.cantidad) || 1,
-            precioUnitario: Number(v.precio_unitario) || 0,
-            moneda: v.moneda || "MXN",
-          })),
-        );
-      }
+      const ventas = mapConceptosVentaFromCotizacion(cot);
+      if (ventas.length > 0) setConceptosVenta(ventas);
+
       const costos = await fetchCotizacionCostosForEmbarque(cot.id);
       if (costos.length > 0) {
-        setConceptosCosto(
-          costos.map((c, idx) => {
-            const provMatch = proveedoresDb.find((p) => p.nombre === c.proveedor);
-            return {
-              id: idx + 1,
-              proveedorId: provMatch?.id ?? "",
-              concepto: c.concepto,
-              monto: Number(c.costo_unitario) || 0,
-              moneda: c.moneda || "MXN",
-            };
-          }),
-        );
+        setConceptosCosto(mapConceptosCostoFromCotizacion(costos, proveedoresDb));
       }
     },
     [setConceptosVenta, setConceptosCosto, proveedoresDb],
@@ -201,13 +185,7 @@ export function useNuevoEmbarqueWizard() {
 
   // ── Validación step 1 ──────────────────────────────────────
   const validateStep1 = useCallback((): boolean => {
-    const v = methods.getValues();
-    const errors: EmbarqueValidationErrors = {};
-    if (!v.modo) errors.modo = "Selecciona un modo de transporte";
-    if (!v.tipo) errors.tipo = "Selecciona un tipo de operación";
-    if (!v.clienteId) errors.clienteId = "Selecciona un cliente";
-    if (!v.descripcionMercancia.trim())
-      errors.descripcionMercancia = "Ingresa la descripción de la mercancía";
+    const errors = validateDatosGenerales(methods.getValues());
     setValidationErrors(errors);
     return Object.keys(errors).length === 0;
   }, [methods]);
