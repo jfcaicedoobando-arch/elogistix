@@ -12,11 +12,8 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 
-export interface DocumentoChecklist {
-  nombre: string;
-  archivo?: string;
-  adjuntado: boolean;
-}
+export type { DocumentoChecklist } from "@/types/documentoChecklistTypes";
+import type { DocumentoChecklist } from "@/types/documentoChecklistTypes";
 
 interface Props {
   documentos: DocumentoChecklist[];

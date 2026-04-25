@@ -1,32 +1,10 @@
 /**
- * Tipos compartidos para las tablas de costos internos P&L (Cotización).
- * Extraído de SeccionCostosInternosPLUnificado para evitar dependencias circulares
- * entre el componente padre y las subtablas (TablaCostosLocal/TablaCostosDetalle).
+ * Re-export de tipos P&L (ahora viven en `@/types/cotizacionPLTypes`) más helper UI.
+ * Tipos en este archivo se preservan como re-export para no romper consumidores legacy.
  */
 import { calcularTotalesPL } from "@/lib/profitUtils";
 
-export interface FilaCostoLocal {
-  concepto: string;
-  moneda: "USD" | "MXN";
-  proveedor: string;
-  cantidad: number;
-  costo_unitario: number;
-  precio_venta: number;
-  unidad_medida: string;
-  aplica_iva?: boolean;
-  notas?: string;
-}
-
-export interface FilaCostoDetalle {
-  concepto: string;
-  moneda: "USD" | "MXN";
-  proveedor: string;
-  cantidad: number;
-  costo_unitario: number;
-  venta: number;
-  aplica_iva?: boolean;
-  notas?: string;
-}
+export type { FilaCostoLocal, FilaCostoDetalle } from "@/types/cotizacionPLTypes";
 
 /** Helper compartido para calcular totales P&L a partir de filas heterogéneas. */
 export function calcTotalsPL(rows: { cantidad: number; costo: number; venta: number }[]) {
