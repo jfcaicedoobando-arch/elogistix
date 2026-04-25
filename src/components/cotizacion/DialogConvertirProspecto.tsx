@@ -46,5 +46,3 @@ export default function DialogConvertirProspecto({
     </Dialog>
   );
 }
-
-export type { ClienteFormData };
