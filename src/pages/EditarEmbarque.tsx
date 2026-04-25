@@ -1,22 +1,8 @@
-import { useState, useEffect } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import { FormProvider } from "react-hook-form";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
-import { useToast } from "@/hooks/use-toast";
-import {
-  useEmbarque,
-  useEmbarqueConceptosVenta,
-  useEmbarqueConceptosCosto,
-  useProveedoresForSelect,
-  useUpdateEmbarque,
-} from "@/hooks/useEmbarques";
-import { useClientesForSelect, useContactosCliente } from "@/hooks/useClientes";
-import { useAuth } from "@/contexts/AuthContext";
-import { useRegistrarActividad } from "@/hooks/useBitacora";
-import { useConceptosForm } from "@/hooks/useConceptosForm";
-import { useEmbarqueForm } from "@/hooks/embarque/useEmbarqueForm";
-import { getErrorMessage } from "@/lib/errorUtils";
+import { useEditarEmbarqueWizard } from "@/hooks/embarque/useEditarEmbarqueWizard";
 import { EmbarqueWizardLayout } from "@/components/embarque/EmbarqueWizardLayout";
 import { StepDatosGenerales } from "@/components/embarque/StepDatosGenerales";
 import { StepDatosRuta } from "@/components/embarque/StepDatosRuta";
@@ -30,89 +16,20 @@ const steps = [
 
 export default function EditarEmbarque() {
   const { id } = useParams();
-  const navigate = useNavigate();
-  const { user } = useAuth();
-  const { toast } = useToast();
-  const { data: embarque, isLoading } = useEmbarque(id);
-  const { data: conceptosVentaDb = [], isLoading: cargandoVenta } = useEmbarqueConceptosVenta(id);
-  const { data: conceptosCostoDb = [], isLoading: cargandoCosto } = useEmbarqueConceptosCosto(id);
-  const { data: clientes = [] } = useClientesForSelect();
-  const { data: proveedoresDb = [] } = useProveedoresForSelect();
-  const updateEmbarque = useUpdateEmbarque();
-  const registrarActividad = useRegistrarActividad();
-
-  const [initialized, setInitialized] = useState(false);
-  const [currentStep, setCurrentStep] = useState(1);
-
-  const { methods, handleMsdsUpload, inicializarDesdeEmbarque, buildEmbarquePayload, buildConceptosVentaPayload, buildConceptosCostoPayload } = useEmbarqueForm();
-  const clienteId = methods.watch('clienteId');
-  const { data: contactos = [] } = useContactosCliente(clienteId || undefined);
+  const {
+    embarque, isLoading, methods, currentStep, setCurrentStep,
+    clientes, proveedoresDb, contactos, selectedCliente,
+    handleMsdsUpload, handleSave, isPending, navigate, conceptosForm,
+  } = useEditarEmbarqueWizard(id);
 
   const {
     conceptosVenta, conceptosCosto,
     updateConceptoVenta, addConceptoVenta, removeConceptoVenta,
     updateConceptoCosto, addConceptoCosto, removeConceptoCosto,
     subtotalVenta, totalCosto, utilidadEstimada,
-    inicializarVenta, inicializarCosto,
-  } = useConceptosForm();
+  } = conceptosForm;
 
-  useEffect(() => {
-    if (!embarque || initialized) return;
-    inicializarDesdeEmbarque(embarque);
-    setInitialized(true);
-  }, [embarque, initialized]);
-
-  useEffect(() => {
-    if (!initialized || conceptosVentaDb.length === 0) return;
-    inicializarVenta(conceptosVentaDb.map((v, i) => ({
-      id: i + 1,
-      concepto: v.descripcion,
-      cantidad: v.cantidad,
-      precioUnitario: Number(v.precio_unitario),
-      moneda: v.moneda,
-    })));
-  }, [conceptosVentaDb, initialized]);
-
-  useEffect(() => {
-    if (!initialized || conceptosCostoDb.length === 0) return;
-    inicializarCosto(conceptosCostoDb.map((c, i) => ({
-      id: i + 1,
-      proveedorId: c.proveedor_id ?? '',
-      concepto: c.concepto,
-      monto: Number(c.monto),
-      moneda: c.moneda,
-    })));
-  }, [conceptosCostoDb, initialized]);
-
-  const selectedCliente = clientes.find(c => c.id === clienteId);
-
-  const handleSave = async () => {
-    if (!id || !embarque) return;
-    try {
-      await updateEmbarque.mutateAsync({
-        id,
-        embarque: buildEmbarquePayload(contactos, selectedCliente?.nombre || '', user?.email || ''),
-        conceptosVenta: buildConceptosVentaPayload(conceptosVenta),
-        conceptosCosto: buildConceptosCostoPayload(conceptosCosto, proveedoresDb),
-      });
-
-      const v = methods.getValues();
-      registrarActividad.mutate({
-        accion: 'editar',
-        modulo: 'embarques',
-        entidad_id: id,
-        entidad_nombre: embarque.expediente,
-        detalles: { cliente: selectedCliente?.nombre ?? '', modo: v.modo, tipo: v.tipo },
-      });
-
-      toast({ title: "Embarque actualizado", description: `${embarque.expediente} guardado correctamente.` });
-      navigate(`/embarques/${id}`);
-    } catch (err: unknown) {
-      toast({ title: "Error al actualizar", description: getErrorMessage(err), variant: "destructive" });
-    }
-  };
-
-  if (isLoading || cargandoVenta || cargandoCosto) {
+  if (isLoading) {
     return (
       <div className="flex flex-col h-[calc(100vh-4rem)] -m-6">
         <div className="flex-none border-b bg-background p-4 space-y-3">
@@ -147,7 +64,7 @@ export default function EditarEmbarque() {
         currentStep={currentStep}
         setCurrentStep={setCurrentStep}
         totalSteps={3}
-        isPending={updateEmbarque.isPending}
+        isPending={isPending}
         saveLabel="Guardar Cambios"
         onBack={() => navigate(`/embarques/${id}`)}
         onFinish={handleSave}

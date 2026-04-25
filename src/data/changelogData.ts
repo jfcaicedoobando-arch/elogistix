@@ -11,6 +11,13 @@ export interface ChangelogEntry {
 /** Entradas recientes (v8.x). Las anteriores se cargan dinámicamente. */
 export const recentChangelog: ChangelogEntry[] = [
   {
+    version: "8.66.0",
+    date: "2026-04-25",
+    type: "minor",
+    title: "EditarEmbarque migrado a controller hook (183→100 líneas)",
+    description: "Paso 9 de la auditoría arquitectónica, completando la simetría con NuevoEmbarque (Paso 7). Se extrajo toda la lógica de carga, hidratación y submit de la página EditarEmbarque.tsx al nuevo controller hook hooks/embarque/useEditarEmbarqueWizard.ts: carga del embarque y sus conceptos de venta/costo, hidratación del formulario una sola vez (guard initialized), hidratación independiente de cada lista de conceptos cuando llegan de la base, lookup del cliente seleccionado y orquestación completa del guardado (updateEmbarque → registrarActividad → toast → navegación). La página pasó de 183 a 100 líneas (-45%) y queda como un componente puramente presentacional que consume el hook y renderiza los 3 pasos del wizard. Beneficio: ahora ambos wizards (alta y edición) comparten el mismo patrón controller-hook + página presentacional, lo que facilita futuras extensiones (p. ej. duplicar embarque o vista de solo lectura) sin duplicar lógica. Build verde, 191/191 pruebas pasando.",
+  },
+  {
     version: "8.65.0",
     date: "2026-04-25",
     type: "patch",
