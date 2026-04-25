@@ -210,7 +210,7 @@ export function TabProformasPendientes() {
                         </div>
                         <div className="rounded-md border divide-y">
                           {cont.proformas.map(p => {
-                            const monto = montoPrincipal(p);
+                            const monto = montoPrincipalProforma(p);
                             const checked = selectedIds.has(p.id);
                             return (
                               <label
