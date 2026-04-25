@@ -11,6 +11,13 @@ export interface ChangelogEntry {
 /** Entradas recientes (v8.x). Las anteriores se cargan dinámicamente. */
 export const recentChangelog: ChangelogEntry[] = [
   {
+    version: "8.62.0",
+    date: "2026-04-25",
+    type: "minor",
+    title: "DialogGenerarProforma migrado a React Query",
+    description: "Paso 5 de la auditoría arquitectónica. El diálogo de generación de proforma reemplazó sus fetches imperativos (fetchDiasCreditoCliente dentro de useEffect y fetchClienteParaPdf dentro del handler de confirmación) por hooks dedicados de React Query: useDiasCreditoCliente (precarga reactiva, cache de 5 min, key clientes.diasCredito) y useFetchClienteParaPdf (helper basado en queryClient.fetchQuery con cache de 5 min, key clientes.paraPdf). Se añadieron las nuevas keys al factory central de queryKeys. Beneficio: los datos del cliente se cachean entre aperturas del diálogo (evita fetches duplicados al generar varias proformas seguidas), el código se vuelve declarativo, los errores y estados de carga quedan integrados al ecosistema de React Query, y el patrón es coherente con el resto del proyecto. Build verde, 186/186 pruebas pasando.",
+  },
+  {
     version: "8.61.0",
     date: "2026-04-25",
     type: "minor",
