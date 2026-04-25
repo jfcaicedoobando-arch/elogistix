@@ -87,6 +87,7 @@ export function TabProformasPendientes() {
   const { data: proformas = [], isLoading } = useProformasPendientes();
   const aprobar = useAprobarProformas();
   const consolidar = useConsolidarProformas();
+  const tasaIva = useTasaIVA();
 
   const filtradas = useMemo(() => {
     const q = search.trim().toLowerCase();
@@ -162,6 +163,7 @@ export function TabProformasPendientes() {
         blMaster: grupo.blMaster,
         operador: grupo.operador,
         diasCredito: grupo.diasCredito,
+        tasaIva,
       },
       { onSuccess: () => setSelectedIds(new Set()) }
     );
