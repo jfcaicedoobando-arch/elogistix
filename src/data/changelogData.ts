@@ -11,6 +11,13 @@ export interface ChangelogEntry {
 /** Entradas recientes (v8.x). Las anteriores se cargan dinámicamente. */
 export const recentChangelog: ChangelogEntry[] = [
   {
+    version: "8.50.0",
+    date: "2026-04-25",
+    type: "minor",
+    title: "Refactor arquitectónico del módulo Pre-Facturación",
+    description: "Refactor interno (sin cambios funcionales para el usuario) que limpia la deuda técnica detectada en la auditoría del módulo de proformas. (1) Nueva capa de dominio (lib/domain/proforma.ts) con funciones puras para cálculo de totales, suma de proformas consolidadas y construcción de snapshots de conceptos. (2) Nueva capa de servicios (services/proformaServices.ts y services/authService.ts) que centraliza todas las llamadas a la base de datos y el login, con tipos nominales para evitar 'as any' en los joins. (3) Hook useProformas reducido de 570 a 158 líneas: ahora solo orquesta React Query y toasts, delegando reglas de negocio al service. (4) Nuevo hook compartido useDescargarProformaPdf que centraliza la descarga de PDF (antes duplicada entre TabFacturacion y TabProformas). (5) Eliminación del IVA hardcodeado (16%): ahora se obtiene dinámicamente con useTasaIVA(). (6) DialogGenerarProforma y TabFacturacion partidos en sub-componentes presentacionales (PasoSeleccionConceptos, PasoConfirmacionProforma, ResumenConceptosVenta, HistorialProformas, HistorialFacturas) para mejorar mantenibilidad. (7) Sacadas todas las llamadas directas a Supabase de Login.tsx y NuevoEmbarque.tsx hacia sus respectivos services.",
+  },
+  {
     version: "8.49.0",
     date: "2026-04-24",
     type: "minor",
