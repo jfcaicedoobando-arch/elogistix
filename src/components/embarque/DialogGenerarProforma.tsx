@@ -6,8 +6,11 @@ import { Loader2, FileText, ArrowLeft, ArrowRight } from "lucide-react";
 import { calcularIVA } from "@/lib/financialUtils";
 import { useTasaIVA } from "@/hooks/useTasaIVA";
 import { useCrearProforma } from "@/hooks/embarque/useProformas";
+import {
+  useDiasCreditoCliente,
+  useFetchClienteParaPdf,
+} from "@/hooks/embarque/useProformaDialog";
 import { generarPdfProforma } from "@/generators/proformaPdf";
-import { fetchClienteParaPdf, fetchDiasCreditoCliente } from "@/services/proformaServices";
 import { PasoSeleccionConceptos } from "./proforma/PasoSeleccionConceptos";
 import { PasoConfirmacionProforma } from "./proforma/PasoConfirmacionProforma";
 import type { Tables } from "@/integrations/supabase/types";
@@ -27,13 +30,19 @@ type Paso = 'seleccion' | 'confirmacion';
 export function DialogGenerarProforma({ open, onOpenChange, embarque, conceptosPendientes }: Props) {
   const tasaIva = useTasaIVA();
   const crearProforma = useCrearProforma();
+  const fetchClienteParaPdfCached = useFetchClienteParaPdf();
+  const { data: diasCreditoDefault } = useDiasCreditoCliente(
+    embarque.cliente_id,
+    open,
+  );
+
   const [paso, setPaso] = useState<Paso>('seleccion');
   const [seleccionados, setSeleccionados] = useState<Set<string>>(new Set());
   const [ivaPorConcepto, setIvaPorConcepto] = useState<Record<string, boolean>>({});
   const [notas, setNotas] = useState("");
   const [diasCredito, setDiasCredito] = useState<string>("");
 
-  // Reset al abrir + cargar dias_credito del cliente como default
+  // Reset al abrir
   useEffect(() => {
     if (open) {
       setPaso('seleccion');
@@ -45,13 +54,15 @@ export function DialogGenerarProforma({ open, onOpenChange, embarque, conceptosP
       setIvaPorConcepto(ivaInit);
       setNotas("");
       setDiasCredito("");
-      if (embarque.cliente_id) {
-        fetchDiasCreditoCliente(embarque.cliente_id).then((dias) => {
-          if (dias != null) setDiasCredito(String(dias));
-        }).catch(() => { /* fallback silencioso */ });
-      }
     }
-  }, [open, conceptosPendientes, embarque.cliente_id]);
+  }, [open, conceptosPendientes]);
+
+  // Precarga días de crédito del cliente cuando el query se resuelve
+  useEffect(() => {
+    if (open && diasCreditoDefault != null) {
+      setDiasCredito(String(diasCreditoDefault));
+    }
+  }, [open, diasCreditoDefault]);
 
   const toggle = (id: string) => {
     setSeleccionados(prev => {
@@ -120,7 +131,7 @@ export function DialogGenerarProforma({ open, onOpenChange, embarque, conceptosP
         tasaIva,
         ivaOverrides,
       });
-      const cliente = await fetchClienteParaPdf(embarque.cliente_id);
+      const cliente = await fetchClienteParaPdfCached(embarque.cliente_id);
       const conceptosParaPdf = conceptosSeleccionados.map(c => ({
         ...c,
         aplica_iva: ivaOverrides[c.id],

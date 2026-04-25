@@ -37,6 +37,8 @@ export const queryKeys = {
     clientUsers: (id: string) => ['client_users', id] as const,
     embarques: (id: string) => ['clientes', 'embarques', id] as const,
     cotizaciones: (id: string) => ['clientes', 'cotizaciones', id] as const,
+    diasCredito: (id: string) => ['clientes', 'dias_credito', id] as const,
+    paraPdf: (id: string) => ['clientes', 'para_pdf', id] as const,
   },
   facturas: {
     all: ['facturas'] as const,
