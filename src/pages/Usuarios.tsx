@@ -100,7 +100,7 @@ export default function Usuarios() {
         </Button>
       </div>
 
-      <NuevoUsuarioDialog open={dialogOpen} onOpenChange={setDialogOpen} onCreated={() => refetch()} />
+      <NuevoUsuarioDialog open={dialogOpen} onOpenChange={setDialogOpen} onCreated={() => { /* invalidación automática vía useCreateUser */ }} />
 
       <DoubleConfirmDeleteDialog
         open={!!deleteTarget}
