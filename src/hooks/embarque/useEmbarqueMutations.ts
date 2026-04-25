@@ -86,22 +86,16 @@ export function useDuplicarEmbarque() {
 }
 
 // ─── Mapeo estado → tipo evento tracking ─────────────────
-const ESTADO_A_EVENTO: Record<string, string> = {
-  'Confirmado': 'Otro',
-  'En Tránsito': 'Zarpe',
-  'Arribo': 'Arribo a Puerto',
-  'En Aduana': 'Despacho Aduanal',
-  'Entregado': 'Entrega',
-  'EIR': 'Liberación',
-  'Cerrado': 'Otro',
-};
+import {
+  tipoEventoParaEstado,
+  descripcionEventoCambioEstado,
+} from '@/lib/domain/embarque';
 
 async function insertarEventoTracking(embarqueId: string, nuevoEstado: string, usuario: string) {
-  const tipoEvento = ESTADO_A_EVENTO[nuevoEstado] ?? 'Otro';
   await insertEventoEmbarque({
     embarqueId,
-    tipo: tipoEvento,
-    descripcion: `Estado cambiado a "${nuevoEstado}"`,
+    tipo: tipoEventoParaEstado(nuevoEstado),
+    descripcion: descripcionEventoCambioEstado(nuevoEstado),
     ubicacion: '',
     fecha: new Date().toISOString(),
     usuario,
