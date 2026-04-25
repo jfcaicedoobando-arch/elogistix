@@ -14,7 +14,7 @@ import { useConceptosForm } from "@/hooks/useConceptosForm";
 import { useEmbarqueForm } from "@/hooks/embarque/useEmbarqueForm";
 import { useCotizacionesAceptadas, useUpdateEstadoCotizacion, useCotizacion, type CotizacionRow } from "@/hooks/useCotizaciones";
 import { resolverExpediente, subirDocumentosEmbarque } from "@/services/embarqueServices";
-import { supabase } from "@/integrations/supabase/client";
+import { fetchCotizacionCostosForEmbarque } from "@/services/cotizacionServices";
 import { parseConceptos } from "@/lib/parsers/cotizacionDetalle";
 import { getErrorMessage } from "@/lib/errorUtils";
 import { EmbarqueWizardLayout } from "@/components/embarque/EmbarqueWizardLayout";
@@ -85,11 +85,8 @@ export default function NuevoEmbarque() {
       })));
     }
     // 2. Conceptos de costo desde la tabla cotizacion_costos
-    const { data: costos } = await supabase
-      .from('cotizacion_costos')
-      .select('concepto, costo_unitario, moneda, proveedor')
-      .eq('cotizacion_id', cot.id);
-    if (costos && costos.length > 0) {
+    const costos = await fetchCotizacionCostosForEmbarque(cot.id);
+    if (costos.length > 0) {
       setConceptosCosto(costos.map((c, idx) => {
         const provMatch = proveedoresDb.find(p => p.nombre === c.proveedor);
         return {

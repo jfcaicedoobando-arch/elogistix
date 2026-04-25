@@ -133,3 +133,28 @@ export async function savePasoFinal(opts: {
     entidad_id: cotizacionId, entidad_nombre: "",
   });
 }
+
+// ── Lookups para hidratación de embarque vinculado ──
+import { supabase } from "@/integrations/supabase/client";
+
+export interface CotizacionCostoLookup {
+  concepto: string;
+  costo_unitario: number | string | null;
+  moneda: string | null;
+  proveedor: string | null;
+}
+
+/**
+ * Obtiene los costos de una cotización para hidratar el wizard de embarque
+ * cuando se vincula una cotización aceptada.
+ */
+export async function fetchCotizacionCostosForEmbarque(
+  cotizacionId: string,
+): Promise<CotizacionCostoLookup[]> {
+  const { data, error } = await supabase
+    .from("cotizacion_costos")
+    .select("concepto, costo_unitario, moneda, proveedor")
+    .eq("cotizacion_id", cotizacionId);
+  if (error) throw new Error(error.message);
+  return (data ?? []) as CotizacionCostoLookup[];
+}
