@@ -1,5 +1,7 @@
 import { supabase } from "@/integrations/supabase/client";
+import type { Tables } from "@/integrations/supabase/types";
 
+type TrackingLinkRow = Tables<"tracking_links">;
 export interface TrackingPublicoData {
   embarque: {
     expediente: string;
