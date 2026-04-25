@@ -61,3 +61,123 @@ export function calcularTotalesProforma(
     total_mxn: subtotal_mxn + iva_mxn,
   };
 }
+
+// ─── Agrupación de proformas pendientes (UI helper puro) ─────────────────────
+
+/**
+ * Forma mínima de proforma pendiente que esta lógica necesita.
+ * Definida aquí para no acoplar el dominio al tipo Supabase del hook.
+ */
+export interface ProformaPendienteLite {
+  id: string;
+  numero: string;
+  expediente: string;
+  embarque_id: string | null;
+  cliente_id: string;
+  cliente_nombre: string;
+  operador: string | null;
+  dias_credito: number | null;
+  bl_master: string | null;
+  total_usd: number | string | null;
+  total_mxn: number | string | null;
+  embarques?: {
+    bl_master?: string | null;
+    contenedor?: string | null;
+    tipo_contenedor?: string | null;
+  } | null;
+}
+
+export interface GrupoContenedor<T extends ProformaPendienteLite = ProformaPendienteLite> {
+  contenedor: string | null;
+  tipo_contenedor: string | null;
+  proformas: T[];
+}
+
+export interface GrupoExpediente<T extends ProformaPendienteLite = ProformaPendienteLite> {
+  expediente: string;
+  embarqueId: string;
+  blMaster: string | null;
+  clienteId: string;
+  clienteNombre: string;
+  operador: string | null;
+  diasCredito: number | null;
+  proformas: T[];
+  contenedores: GrupoContenedor<T>[];
+}
+
+/**
+ * Agrupa proformas por expediente y, dentro de cada expediente, por contenedor.
+ * Devuelve los grupos ordenados alfabéticamente por expediente.
+ */
+export function agruparProformasPendientes<T extends ProformaPendienteLite>(
+  proformas: T[],
+): GrupoExpediente<T>[] {
+  const porExpediente = new Map<string, GrupoExpediente<T>>();
+
+  for (const p of proformas) {
+    const key = p.expediente;
+    if (!porExpediente.has(key)) {
+      porExpediente.set(key, {
+        expediente: p.expediente,
+        embarqueId: p.embarque_id!,
+        blMaster: p.embarques?.bl_master ?? p.bl_master ?? null,
+        clienteId: p.cliente_id,
+        clienteNombre: p.cliente_nombre,
+        operador: p.operador,
+        diasCredito: p.dias_credito,
+        proformas: [],
+        contenedores: [],
+      });
+    }
+    porExpediente.get(key)!.proformas.push(p);
+  }
+
+  for (const grupo of porExpediente.values()) {
+    const porContenedor = new Map<string, GrupoContenedor<T>>();
+    for (const p of grupo.proformas) {
+      const cont = p.embarques?.contenedor ?? null;
+      const tipoCont = p.embarques?.tipo_contenedor ?? null;
+      const key = cont ?? "__sin_contenedor__";
+      if (!porContenedor.has(key)) {
+        porContenedor.set(key, { contenedor: cont, tipo_contenedor: tipoCont, proformas: [] });
+      }
+      porContenedor.get(key)!.proformas.push(p);
+    }
+    grupo.contenedores = Array.from(porContenedor.values());
+  }
+
+  return Array.from(porExpediente.values()).sort((a, b) =>
+    a.expediente.localeCompare(b.expediente),
+  );
+}
+
+/**
+ * Devuelve el monto principal a mostrar de una proforma pendiente:
+ * USD si hay, en caso contrario MXN.
+ */
+export function montoPrincipalProforma(
+  p: Pick<ProformaPendienteLite, "total_usd" | "total_mxn">,
+): { valor: number; moneda: Moneda } {
+  const usd = Number(p.total_usd ?? 0);
+  const mxn = Number(p.total_mxn ?? 0);
+  if (usd > 0) return { valor: usd, moneda: "USD" };
+  return { valor: mxn, moneda: "MXN" };
+}
+
+/**
+ * Suma totales (USD/MXN) de un subconjunto de proformas seleccionadas por id.
+ */
+export function totalesProformasSeleccionadas<T extends ProformaPendienteLite>(
+  proformas: T[],
+  selectedIds: ReadonlySet<string>,
+): { usd: number; mxn: number } {
+  let usd = 0;
+  let mxn = 0;
+  for (const p of proformas) {
+    if (selectedIds.has(p.id)) {
+      usd += Number(p.total_usd ?? 0);
+      mxn += Number(p.total_mxn ?? 0);
+    }
+  }
+  return { usd, mxn };
+}
