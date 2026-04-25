@@ -11,6 +11,13 @@ export interface ChangelogEntry {
 /** Entradas recientes (v8.x). Las anteriores se cargan dinámicamente. */
 export const recentChangelog: ChangelogEntry[] = [
   {
+    version: "8.65.0",
+    date: "2026-04-25",
+    type: "patch",
+    title: "useUsuarios estandarizado al factory central de queryKeys",
+    description: "Paso 8 de la auditoría arquitectónica. Se eliminó el query key local hardcodeado ['usuarios'] de hooks/useUsuarios.ts y se reemplazó por la entrada queryKeys.usuarios.all del factory central lib/queryKeys.ts. Ahora useUsuarios, useUpdateUserRole y useDeleteUser comparten la misma referencia tipada que el resto de la aplicación, lo que asegura invalidaciones consistentes entre módulos y elimina la última fuente de divergencia de keys en hooks de gestión de usuarios. Beneficio: cualquier futura mutación que afecte a la lista de miembros (p. ej. invitaciones desde admin) puede invalidar queryKeys.usuarios.all y refrescar de forma fiable la tabla de usuarios. Build verde, 191/191 pruebas pasando.",
+  },
+  {
     version: "8.64.0",
     date: "2026-04-25",
     type: "minor",
