@@ -26,9 +26,9 @@ interface Props {
 }
 
 const margenBadge = (m: number) => {
-  if (m >= 20) return <Badge className="bg-emerald-100 text-emerald-700 hover:bg-emerald-100">{m.toFixed(1)}%</Badge>;
-  if (m >= 10) return <Badge className="bg-yellow-100 text-yellow-700 hover:bg-yellow-100">{m.toFixed(1)}%</Badge>;
-  return <Badge className="bg-red-100 text-red-700 hover:bg-red-100">{m.toFixed(1)}%</Badge>;
+  if (m >= 20) return <Badge variant="success">{m.toFixed(1)}%</Badge>;
+  if (m >= 10) return <Badge variant="warning">{m.toFixed(1)}%</Badge>;
+  return <Badge variant="destructive">{m.toFixed(1)}%</Badge>;
 };
 
 const arrow = (active: boolean, dir: "asc" | "desc") => (active ? (dir === "desc" ? "↓" : "↑") : "");

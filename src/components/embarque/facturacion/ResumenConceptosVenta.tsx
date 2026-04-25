@@ -88,7 +88,7 @@ export function ResumenConceptosVenta({ conceptos, tasaIva, canEdit, onGenerarPr
                       <TableCell className="font-medium">
                         {c.descripcion}
                         {c.moneda === "USD" && c.aplica_iva && (
-                          <Badge variant="outline" className="ml-2 text-xs bg-amber-50 text-amber-700 border-amber-200">+IVA</Badge>
+                          <Badge variant="warning" className="ml-2 text-xs">+IVA</Badge>
                         )}
                       </TableCell>
                       <TableCell className="text-right">{c.cantidad}</TableCell>
@@ -97,11 +97,11 @@ export function ResumenConceptosVenta({ conceptos, tasaIva, canEdit, onGenerarPr
                       <TableCell>{c.moneda}</TableCell>
                       <TableCell>
                         {enProforma ? (
-                          <Badge className="bg-green-100 text-green-800 border-green-200 hover:bg-green-100">
+                          <Badge variant="success">
                             <CheckCircle2 className="h-3 w-3 mr-1" /> En proforma
                           </Badge>
                         ) : (
-                          <Badge variant="secondary" className="bg-gray-100 text-gray-700">
+                          <Badge variant="neutral">
                             <Clock className="h-3 w-3 mr-1" /> Pendiente
                           </Badge>
                         )}
