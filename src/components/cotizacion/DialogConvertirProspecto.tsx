@@ -5,17 +5,7 @@ import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
 } from "@/components/ui/dialog";
 
-interface ClienteFormData {
-  nombre: string;
-  contacto: string;
-  email: string;
-  telefono: string;
-  rfc: string;
-  direccion: string;
-  ciudad: string;
-  estado: string;
-  cp: string;
-}
+import type { ClienteFormData } from "@/types/clienteFormTypes";
 
 interface Props {
   open: boolean;
@@ -56,5 +46,3 @@ export default function DialogConvertirProspecto({
     </Dialog>
   );
 }
-
-export type { ClienteFormData };

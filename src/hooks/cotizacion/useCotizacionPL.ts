@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 import { calcularTotalesPL, type TotalesPL } from "@/lib/profitUtils";
-import type { FilaCostoLocal } from "@/components/cotizacion/SeccionCostosInternosPLUnificado";
+import type { FilaCostoLocal } from "@/types/cotizacionPLTypes";
 
 /**
  * Calcula los totales de P&L (USD y MXN) a partir de las filas de costos internos.

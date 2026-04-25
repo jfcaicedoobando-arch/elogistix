@@ -11,6 +11,13 @@ export interface ChangelogEntry {
 /** Entradas recientes (v8.x). Las anteriores se cargan dinámicamente. */
 export const recentChangelog: ChangelogEntry[] = [
   {
+    version: "8.58.0",
+    date: "2026-04-25",
+    type: "minor",
+    title: "Tipos de dominio centralizados en src/types/ — fin de la inversión de capas",
+    description: "Refactor interno sin cambios visibles que cierra la principal deuda detectada en la auditoría: la inversión de dependencias entre capas. Se movieron a src/types/ los tipos que vivían en components/ y hooks/ y eran consumidos por services/ y lib/: ConceptoVentaCotizacion, DimensionLCL, DimensionAerea, CotizacionRow, CreateCotizacionInput (→ cotizacionTypes.ts), FilaCostoLocal y FilaCostoDetalle (→ cotizacionPLTypes.ts), DocumentoChecklist (→ documentoChecklistTypes.ts), ClienteFormData (→ clienteFormTypes.ts) y CostoCotizacion (→ cotizacionCostoTypes.ts). Los archivos originales conservan re-exports para no romper consumidores. Resultado: cero imports ascendentes desde services/, lib/ o generators/ hacia components/, hooks/ o pages/; la jerarquía Pages → Hooks → Services → Lib se respeta ahora al 100%. Build verde, 171/171 pruebas pasando.",
+  },
+  {
     version: "8.57.0",
     date: "2026-04-25",
     type: "minor",

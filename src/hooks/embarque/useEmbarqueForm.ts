@@ -4,7 +4,7 @@ import { useToast } from "@/hooks/use-toast";
 import { uploadFile } from "@/services/storage";
 import { useExchangeRates } from "@/hooks/useExchangeRates";
 import { getDocsForMode } from "@/constants/embarqueConstants";
-import type { DocumentoChecklist } from "@/components/DocumentChecklist";
+import type { DocumentoChecklist } from "@/types/documentoChecklistTypes";
 import {
   DEFAULT_EMBARQUE_VALUES,
   mapEmbarqueRowToFormValues,
