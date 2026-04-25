@@ -52,6 +52,13 @@ export const queryKeys = {
   configuracion: {
     all: ['configuracion'] as const,
   },
+  trackingLinks: {
+    all: ['tracking_links'] as const,
+    byEmbarque: (embarqueId?: string) => ['tracking_links', embarqueId] as const,
+  },
+  clienteFinancials: {
+    byCliente: (clienteId?: string) => ['cliente-financials', clienteId] as const,
+  },
   puertos: {
     all: ['puertos'] as const,
     activos: ['puertos', 'activos'] as const,
