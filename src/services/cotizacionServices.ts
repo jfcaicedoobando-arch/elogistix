@@ -5,12 +5,12 @@
 import { supabase } from "@/integrations/supabase/client";
 import { uploadFile } from "@/services/storage";
 import type { Json, Tables, TablesInsert } from "@/integrations/supabase/types";
-import type { CotizacionFormValues } from "@/hooks/cotizacion/useCotizacionWizardForm";
+import type { CotizacionFormValues } from "@/types/cotizacionFormTypes";
 import type {
   CotizacionRow,
   CreateCotizacionInput,
 } from "@/hooks/cotizacion/useCotizacionTypes";
-import type { CostoCotizacion } from "@/hooks/cotizacion/useCotizacionCostos";
+import type { CostoCotizacion } from "@/types/cotizacionCostoTypes";
 import type { FilaCostoLocal } from "@/types/cotizacionPLTypes";
 import { CONCEPTOS_CON_IVA_USD } from "@/constants/cotizacionConstants";
 import { calcularTotalConIVA } from "@/lib/financialUtils";
