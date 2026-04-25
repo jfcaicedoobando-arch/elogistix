@@ -85,14 +85,15 @@ export async function insertEventoEmbarque(input: {
   fecha: string;
   usuario: string;
 }): Promise<void> {
-  const { error } = await supabase.from("eventos_embarque").insert({
-    embarque_id: input.embarqueId,
-    // @ts-expect-error: enum tipo_evento_tracking validado en UI
-    tipo: input.tipo,
-    descripcion: input.descripcion,
-    ubicacion: input.ubicacion,
-    fecha: input.fecha,
-    usuario: input.usuario,
-  });
+  const { error } = await supabase.from("eventos_embarque").insert([
+    {
+      embarque_id: input.embarqueId,
+      tipo: input.tipo as Enums<"tipo_evento_tracking">,
+      descripcion: input.descripcion,
+      ubicacion: input.ubicacion,
+      fecha: input.fecha,
+      usuario: input.usuario,
+    },
+  ]);
   if (error) throw error;
 }
