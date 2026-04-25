@@ -117,6 +117,7 @@ export function DialogGenerarProforma({ open, onOpenChange, embarque, conceptosP
         notas: notas.trim() || undefined,
         operador: embarque.operador || null,
         diasCredito: Number.isFinite(diasCreditoNum as number) ? (diasCreditoNum as number) : null,
+        tasaIva,
         ivaOverrides,
       });
       const cliente = await fetchClienteParaPdf(embarque.cliente_id);

@@ -137,6 +137,8 @@ export interface CrearProformaParams {
   notas: string | null;
   operador: string | null;
   diasCredito: number | null;
+  /** Tasa de IVA usada al calcular `totales`. Se persiste para auditoría histórica. */
+  tasaIva: number;
   /** Mapa conceptoId → aplica_iva (solo USD; MXN siempre true) */
   ivaOverrides?: Record<string, boolean>;
 }
@@ -182,6 +184,7 @@ export async function crearProforma(params: CrearProformaParams): Promise<Profor
       operador: params.operador,
       dias_credito: params.diasCredito,
       organization_id: params.organizationId,
+      tasa_iva_aplicada: params.tasaIva,
     })
     .select()
     .single();

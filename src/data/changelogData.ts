@@ -11,6 +11,13 @@ export interface ChangelogEntry {
 /** Entradas recientes (v8.x). Las anteriores se cargan dinámicamente. */
 export const recentChangelog: ChangelogEntry[] = [
   {
+    version: "8.57.0",
+    date: "2026-04-25",
+    type: "minor",
+    title: "Trazabilidad histórica de la tasa de IVA en proformas",
+    description: "Mejora de auditoría sin cambios visibles. Se agregan las columnas tasa_iva_aplicada a las tablas proformas y proforma_conceptos_consolidados, y la función atómica consolidar_proformas se actualiza para persistirla tanto en la cabecera como en cada concepto consolidado. El service crearProforma ahora exige y guarda la tasa que el componente usó para calcular subtotal/IVA/total. Beneficio: si la organización cambia su tasa de IVA en el futuro (por ejemplo de 16% a 8%), las proformas y consolidados emitidos previamente conservan la tasa exacta con la que fueron calculados, garantizando trazabilidad fiscal y cuadres históricos correctos. Valor por defecto 0.16 para registros previos.",
+  },
+  {
     version: "8.56.0",
     date: "2026-04-25",
     type: "minor",
