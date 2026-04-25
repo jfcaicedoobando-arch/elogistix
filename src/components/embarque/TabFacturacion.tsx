@@ -20,10 +20,8 @@ import { calcularIVA } from "@/lib/financialUtils";
 import { useTasaIVA } from "@/hooks/useTasaIVA";
 import { useEmbarqueConceptosVenta } from "@/hooks/useEmbarques";
 import { useProformasEmbarque, useEliminarProforma } from "@/hooks/embarque/useProformas";
+import { useDescargarProformaPdf } from "@/hooks/embarque/useDescargarProformaPdf";
 import { DialogGenerarProforma } from "./DialogGenerarProforma";
-import { generarPdfProforma } from "@/generators/proformaPdf";
-import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
 import type { Tables } from "@/integrations/supabase/types";
 
 type EmbarqueRow = Tables<'embarques'>;
