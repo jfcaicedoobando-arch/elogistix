@@ -10,10 +10,7 @@ import { DataTable, type DataTableColumn } from "@/components/DataTable";
 import { exportToCsv } from "@/generators/exportCsv";
 import { formatCurrency, formatDate } from "@/lib/formatters";
 import { useProformas, type ProformaRow, type ProformaConFactura } from "@/hooks/embarque/useProformas";
-import { useTasaIVA } from "@/hooks/useTasaIVA";
-import { generarPdfProforma } from "@/generators/proformaPdf";
-import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
+import { useDescargarProformaPdf } from "@/hooks/embarque/useDescargarProformaPdf";
 import { DialogMarcarFacturada } from "./DialogMarcarFacturada";
 
 const DEFAULT_PAGE_SIZE = 20;
