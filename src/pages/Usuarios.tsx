@@ -27,7 +27,7 @@ export default function Usuarios() {
   const [deleteTarget, setDeleteTarget] = useState<UserRow | null>(null);
   const { toast } = useToast();
   const { user } = useAuth();
-  const { data: users = [], isLoading, refetch } = useUsuarios();
+  const { data: users = [], isLoading } = useUsuarios();
   const updateRole = useUpdateUserRole();
   const deleteUser = useDeleteUser();
 
@@ -100,7 +100,7 @@ export default function Usuarios() {
         </Button>
       </div>
 
-      <NuevoUsuarioDialog open={dialogOpen} onOpenChange={setDialogOpen} onCreated={() => refetch()} />
+      <NuevoUsuarioDialog open={dialogOpen} onOpenChange={setDialogOpen} onCreated={() => { /* invalidación automática vía useCreateUser */ }} />
 
       <DoubleConfirmDeleteDialog
         open={!!deleteTarget}

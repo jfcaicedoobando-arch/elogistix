@@ -1,5 +1,5 @@
 import { useCallback } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import { buscarGlobal } from "@/services/searchService";
 
 export interface GlobalSearchResult {
   id: string;
@@ -9,27 +9,13 @@ export interface GlobalSearchResult {
   url: string;
 }
 
-interface RpcRow {
-  id: string;
-  label: string;
-  sublabel: string;
-  tipo: string;
-  url: string;
-}
-
 /**
- * Hook para búsqueda global vía RPC `busqueda_global`.
- * Aísla el acceso a Supabase del componente UI.
+ * Hook para búsqueda global. Delega el I/O al search service.
  */
 export function useGlobalSearch() {
   return useCallback(async (termino: string, limite = 5): Promise<GlobalSearchResult[]> => {
-    if (!termino.trim()) return [];
-    const { data, error } = await supabase.rpc("busqueda_global", { termino, limite });
-    if (error) {
-      console.error("Error en búsqueda global:", error);
-      return [];
-    }
-    return (data ?? []).map((r: RpcRow) => ({
+    const rows = await buscarGlobal(termino, limite);
+    return rows.map((r) => ({
       id: r.id,
       label: r.label,
       sublabel: r.sublabel,

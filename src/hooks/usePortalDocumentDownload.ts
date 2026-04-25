@@ -1,6 +1,6 @@
 import { useState, useCallback } from "react";
-import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { createDocumentoSignedUrl } from "@/services/searchService";
 
 /**
  * Encapsula la descarga de documentos del portal (signed URL + blob fallback).
@@ -12,13 +12,10 @@ export function usePortalDocumentDownload() {
   const handleDownload = useCallback(async (archivo: string, docId: string) => {
     setDownloadingId(docId);
     try {
-      const { data, error } = await supabase.storage
-        .from("documentos")
-        .createSignedUrl(archivo, 300);
-      if (error) throw error;
+      const signedUrl = await createDocumentoSignedUrl(archivo, 300);
       const filename = archivo.split("/").pop() || "documento";
       try {
-        const response = await fetch(data.signedUrl);
+        const response = await fetch(signedUrl);
         if (!response.ok) throw new Error("Download failed");
         const blob = await response.blob();
         const blobUrl = URL.createObjectURL(blob);
@@ -30,7 +27,7 @@ export function usePortalDocumentDownload() {
         document.body.removeChild(a);
         URL.revokeObjectURL(blobUrl);
       } catch {
-        window.open(data.signedUrl, "_blank");
+        window.open(signedUrl, "_blank");
       }
     } catch {
       toast({ title: "Error al descargar", variant: "destructive" });

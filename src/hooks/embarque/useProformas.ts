@@ -3,7 +3,7 @@
  * La lógica de negocio vive en `services/proformaServices.ts` y `lib/domain/proforma.ts`.
  */
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { toast } from "sonner";
+import { toast } from "@/hooks/use-toast";
 import { useOrgFilter } from "@/hooks/useOrgFilter";
 import { queryKeys } from "@/lib/queryKeys";
 import {
@@ -84,11 +84,11 @@ export function useCrearProforma() {
       return svcCrear({ ...params, organizationId });
     },
     onSuccess: (proforma) => {
-      toast.success(`Proforma ${proforma.numero} generada (pendiente de revisión)`);
+      toast({ title: `Proforma ${proforma.numero} generada (pendiente de revisión)` });
       invalidateProformaCaches(queryClient, proforma.embarque_id);
     },
     onError: (error: Error) => {
-      toast.error(`Error al generar proforma: ${error.message}`);
+      toast({ title: `Error al generar proforma: ${error.message}`, variant: "destructive" });
     },
   });
 }
@@ -99,12 +99,12 @@ export function useMarcarProformaFacturada() {
     mutationFn: (params: MarcarFacturadaParams & { embarqueId: string }) =>
       svcMarcarFacturada(params).then(() => params),
     onSuccess: (params) => {
-      toast.success("Proforma facturada y registro de factura creado");
+      toast({ title: "Proforma facturada y registro de factura creado" });
       invalidateProformaCaches(queryClient, params.embarqueId);
       queryClient.invalidateQueries({ queryKey: queryKeys.facturas.all });
     },
     onError: (error: Error) => {
-      toast.error(`Error: ${error.message}`);
+      toast({ title: `Error: ${error.message}`, variant: "destructive" });
     },
   });
 }
@@ -115,11 +115,11 @@ export function useEliminarProforma() {
     mutationFn: (params: EliminarProformaParams & { numero: string }) =>
       svcEliminar(params).then(() => params),
     onSuccess: (params) => {
-      toast.success("Proforma eliminada correctamente");
+      toast({ title: "Proforma eliminada correctamente" });
       invalidateProformaCaches(queryClient, params.embarqueId);
     },
     onError: (error: Error) => {
-      toast.error(`Error al eliminar proforma: ${error.message}`);
+      toast({ title: `Error al eliminar proforma: ${error.message}`, variant: "destructive" });
     },
   });
 }
@@ -130,15 +130,15 @@ export function useAprobarProformas() {
     mutationFn: (params: { proformaIds: string[] }) =>
       svcAprobar(params.proformaIds).then(() => params),
     onSuccess: (params) => {
-      toast.success(
-        params.proformaIds.length === 1
+      toast({
+        title: params.proformaIds.length === 1
           ? "Proforma aprobada"
           : `${params.proformaIds.length} proformas aprobadas`,
-      );
+      });
       invalidateProformaCaches(queryClient);
     },
     onError: (error: Error) => {
-      toast.error(`Error al aprobar: ${error.message}`);
+      toast({ title: `Error al aprobar: ${error.message}`, variant: "destructive" });
     },
   });
 }
@@ -152,11 +152,11 @@ export function useConsolidarProformas() {
       return svcConsolidar({ ...params, organizationId });
     },
     onSuccess: (nueva) => {
-      toast.success(`Proformas consolidadas en ${nueva.numero}`);
+      toast({ title: `Proformas consolidadas en ${nueva.numero}` });
       invalidateProformaCaches(queryClient, nueva.embarque_id);
     },
     onError: (error: Error) => {
-      toast.error(`Error al consolidar: ${error.message}`);
+      toast({ title: `Error al consolidar: ${error.message}`, variant: "destructive" });
     },
   });
 }
