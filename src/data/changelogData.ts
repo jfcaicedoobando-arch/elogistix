@@ -11,6 +11,13 @@ export interface ChangelogEntry {
 /** Entradas recientes (v8.x). Las anteriores se cargan dinámicamente. */
 export const recentChangelog: ChangelogEntry[] = [
   {
+    version: "8.56.0",
+    date: "2026-04-25",
+    type: "minor",
+    title: "Tests del dominio de proformas y guía oficial de transacciones RPC",
+    description: "Mejora interna de calidad sin cambios visibles. Se agregan 15 pruebas unitarias para lib/domain/proforma.ts (calcularTotalesProforma, agruparProformasPendientes, montoPrincipalProforma, totalesProformasSeleccionadas) cubriendo IVA fijo en MXN, override de IVA en USD, agrupación por expediente y contenedor, fallback a __sin_contenedor__, prioridad USD/MXN y suma de selecciones. Se documenta en ARCHITECTURE.md el patrón oficial 'Transacciones complejas → RPC en Supabase' explicando por qué los rollbacks manuales en JS no son atómicos y cómo modelar funciones plpgsql security definer consumidas desde el service. Resultado: 171 pruebas pasan en CI y la guía arquitectónica refleja la práctica actual.",
+  },
+  {
     version: "8.55.0",
     date: "2026-04-25",
     type: "minor",

@@ -74,6 +74,19 @@ Nunca poner secrets en cliente. Las edge functions usan service-role; la UI usa 
 - El acceso es trivial (`.from('x').select(...)` directo) y vive en un solo hook.
 - Sería un wrapper 1:1 sin valor.
 
+## Transacciones complejas → RPC en Supabase
+
+Cuando una operación implica **múltiples escrituras dependientes** (insertar cabecera + N detalles, snapshots consolidados, encadenar facturación con conceptos), debe implementarse como una **función RPC** en `supabase/migrations/` y consumirse vía `supabase.rpc('nombre_funcion', { ... })` desde el service.
+
+**Por qué**: los rollbacks manuales en JS (try/catch + delete del registro padre) no son atómicos. Si el cliente pierde la red entre dos pasos, la base queda en estado inconsistente. Una función RPC corre en una sola transacción de Postgres y garantiza atomicidad real.
+
+**Patrón**:
+1. Migración SQL define `create or replace function public.<accion>(...) returns ... language plpgsql security definer`.
+2. `services/<dominio>Services.ts` expone una función async que invoca `supabase.rpc(...)`.
+3. El hook (`useMutation`) solo orquesta cache e invalidaciones.
+
+Ejemplos canónicos en el repo: `crear_proforma_con_conceptos`, `consolidar_proformas`, `eliminar_embarque_cascada`.
+
 ## Deuda técnica aceptada (auditoría v8.36.0)
 
 - **Hooks Detalle fragmentados**: `useCotizacionDetalleState` + `useCotizacionDetalleHandlers` y `useEmbarqueDetalleActions` + `useEmbarqueEstadoActions` + `useEmbarqueDocumentosActions` mantienen su separación queries/mutations a propósito. Fusionarlos perjudicaría testabilidad sin reducir complejidad real.
