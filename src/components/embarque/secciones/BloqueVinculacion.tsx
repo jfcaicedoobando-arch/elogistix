@@ -45,7 +45,7 @@ export function BloqueVinculacion({
         <Label>¿Vincular a cotización existente? (opcional)</Label>
         {cotizacionVinculada ? (
           <div className="flex items-center gap-2">
-            <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200 dark:bg-green-950 dark:text-green-300 dark:border-green-800 px-3 py-1.5 text-sm">
+            <Badge variant="success" className="px-3 py-1.5 text-sm">
               ✓ Vinculada a {cotizacionVinculada.folio} — {cotizacionVinculada.cliente_nombre}
             </Badge>
             <Button type="button" variant="ghost" size="icon" className="h-7 w-7" onClick={onDesvincularCotizacion}>
@@ -111,7 +111,7 @@ export function BloqueVinculacion({
             <div className="space-y-2">
               {expedienteSeleccionado ? (
                 <div className="flex items-center gap-2">
-                  <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-950 dark:text-blue-300 dark:border-blue-800 px-3 py-1.5 text-sm">
+                  <Badge variant="info" className="px-3 py-1.5 text-sm">
                     📦 {expedienteSeleccionado.expediente}
                     {expedienteSeleccionado.bl_master && ` | BL: ${expedienteSeleccionado.bl_master}`}
                     {` (${expedienteSeleccionado.total_embarques} embarque${expedienteSeleccionado.total_embarques > 1 ? 's' : ''})`}

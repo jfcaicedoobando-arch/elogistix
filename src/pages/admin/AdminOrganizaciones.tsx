@@ -65,7 +65,7 @@ export default function AdminOrganizaciones() {
       header: "Estado",
       width: "w-[100px]",
       render: (o) => (
-        <Badge className={o.activo ? "bg-green-600 text-white" : "bg-muted text-muted-foreground"}>
+        <Badge variant={o.activo ? "success" : "neutral"}>
           {o.activo ? "Activa" : "Inactiva"}
         </Badge>
       ),
