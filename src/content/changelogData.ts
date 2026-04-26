@@ -15,6 +15,13 @@ export interface ChangelogEntry {
  */
 export const recentChangelog: ChangelogEntry[] = [
   {
+    version: "8.98.0",
+    date: "2026-04-26",
+    type: "minor",
+    title: "Auditoría: limpieza de shims, controllers de Operaciones/PortalEmbarques y partición de changelog v8/v4",
+    description: "Cinco mejoras de higiene arquitectónica ejecutadas en un solo paso, sin cambios funcionales. (1) Eliminados 29 archivos shim de retrocompatibilidad (~70 imports reapuntados a la ubicación canónica): src/lib/ui/wizardFeedback.ts, los 12 shims de hooks raíz que solo re-exportaban a hooks/catalogos|configuracion|portal|cliente|dashboard|facturacion|proveedor (useConfiguracion*, useExchangeRates, useOperadoresDistintos, usePortalDashboardKpis, usePortalData, usePortalDocumentDownload, usePuertos, useTasaIVA, useTiposContenedor, useClientes, useDashboardData, useFacturas, useNavieras, useProveedores) y los 9 shims de services raíz (authService, bitacoraService, catalogosService, configuracionService, csfService, dashboardService, facturasService, searchService, usuarioService, storage). Beneficio: ya no existen dos rutas para importar lo mismo, evitando confusión y bundles duplicados. (2) Carpeta src/components/shared/ eliminada (su único contenido vivo, ProfitBadge, ya tenía ubicación canónica en src/components/ProfitBadge). (3) Extraídos los 2 controllers pendientes que rompían el patrón aplicado al resto de pages en v8.90-v8.92: src/hooks/portal/usePortalEmbarquesController.ts (centraliza queries de clientes vinculados, embarques, filtros search/estado/modo y agrupamiento por expediente) y src/hooks/operaciones/useOperacionesPageController.ts (estado de filtros periodo/operadorChart, derivados chartData/balancePct/contPct/totalAlertas y fecha localizada). PortalEmbarques.tsx y Operaciones.tsx quedan como UI pura. (4) Partido src/content/changelog/v8.ts (774 LOC, 110 entradas) en 6 chunks de 20 entradas (~144 LOC c/u) bajo src/content/changelog/v8/chunks/, y src/content/changelog/v4.ts (690 LOC, 98 entradas) en 4 chunks de 25. Los archivos v8.ts y v4.ts originales quedan como barrels delgados (16-20 LOC) que importan y concatenan los chunks; orden y API pública preservados. (5) Auditados los 3 componentes SeccionCostosInternosPL{Detalle,Local,Unificado}: NO son duplicación sino dispatcher con discriminated union (Unificado) + dos implementaciones especializadas (Detalle persiste en BD, Local opera en memoria del wizard); arquitectura correcta, no se modifican. Resultado neto: 30 archivos eliminados, 2 controllers nuevos, 12 archivos de chunks creados. Build limpio (tsc) y 206/206 tests pasando.",
+  },
+  {
     version: "8.97.0",
     date: "2026-04-26",
     type: "minor",

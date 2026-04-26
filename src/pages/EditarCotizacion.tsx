@@ -1,7 +1,7 @@
 import { useParams, useNavigate, Navigate } from "react-router-dom";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
-import { useClientesForSelect } from "@/hooks/useClientes";
+import { useClientesForSelect } from "@/hooks/cliente/useClientes";
 import { useCotizacion, useUpdateCotizacion, useCreateCotizacion } from "@/hooks/useCotizaciones";
 import { useCotizacionCostos, useUpsertCotizacionCostos } from "@/hooks/cotizacion/useCotizacionCostos";
 import { useRegistrarActividad } from "@/hooks/useBitacora";

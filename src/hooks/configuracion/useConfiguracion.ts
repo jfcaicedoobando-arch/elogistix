@@ -6,7 +6,7 @@ import {
   fetchConfiguracion,
   updateConfiguracionByCategoriaClave,
   type ConfigItem,
-} from "@/services/configuracionService";
+} from "@/services/configuracion";
 
 export type { ConfigItem };
 

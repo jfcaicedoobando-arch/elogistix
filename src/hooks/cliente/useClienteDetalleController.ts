@@ -10,7 +10,7 @@ import {
   useUpdateCliente,
   useEmbarquesCliente,
   useCotizacionesCliente,
-} from "@/hooks/useClientes";
+} from "@/hooks/cliente/useClientes";
 import { useClienteFinancials } from "@/hooks/useClienteFinancials";
 import { useToast } from "@/hooks/use-toast";
 import { usePermissions } from "@/hooks/usePermissions";
