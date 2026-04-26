@@ -1,9 +1,9 @@
 /**
- * Acceso puro a datos para proformas. Sin React Query, sin toasts.
- * Barrel re-export. La lógica vive en submódulos en src/services/proforma/.
+ * Barrel del dominio Proforma (folder-style).
+ * Acceso puro a datos. Sin React Query, sin toasts.
  */
-export * from "./proforma/types";
-export * from "./proforma/queries";
-export * from "./proforma/crud";
-export * from "./proforma/facturar";
-export * from "./proforma/consolidar";
+export * from "./types";
+export * from "./queries";
+export * from "./crud";
+export * from "./facturar";
+export * from "./consolidar";

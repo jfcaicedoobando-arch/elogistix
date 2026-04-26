@@ -1,9 +1,9 @@
 /**
- * Barrel del dominio admin. La implementación se divide en:
- *  - services/admin/stats.ts        → KPIs globales y por organización
- *  - services/admin/organizations.ts → CRUD de organizaciones
- *  - services/admin/members.ts      → miembros y usuarios globales
+ * Barrel del dominio Admin (folder-style).
+ *  - stats         → KPIs globales y por organización
+ *  - organizations → CRUD de organizaciones
+ *  - members       → miembros y usuarios globales
  */
-export * from "./admin/stats";
-export * from "./admin/organizations";
-export * from "./admin/members";
+export * from "./stats";
+export * from "./organizations";
+export * from "./members";
