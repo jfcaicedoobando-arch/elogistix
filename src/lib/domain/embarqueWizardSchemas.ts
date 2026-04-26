@@ -27,19 +27,9 @@ export const ALLOWED_MIME_TYPES = [
 export type StepValidationErrors = Record<string, string>;
 
 // ── Helper de formato unificado ───────────────────────────────────────
-/**
- * Formatea un mensaje de validación con el patrón estándar:
- *   "Campo: razón."
- * Garantiza punto final y sin saltos.
- *
- * NOTA: ya no se invoca directamente desde este archivo (todos los textos
- * vienen del catálogo central `errorCatalog.ts`), pero se mantiene exportada
- * porque el propio catálogo y código externo la consumen.
- */
-export function formatValidationMessage(field: string, reason: string): string {
-  const cleanReason = reason.trim().replace(/[.!]+$/u, "");
-  return `${field.trim()}: ${cleanReason}.`;
-}
+// Re-exportado desde validationFormat.ts (módulo neutro sin ciclo) para
+// mantener compatibilidad con consumidores externos.
+export { formatValidationMessage } from "./validationFormat";
 
 // ── Helpers ───────────────────────────────────────────────────────────
 function flattenZodErrors(error: z.ZodError): StepValidationErrors {

@@ -15,7 +15,7 @@
  *  - Nombres en español MX, tuteo, sin signos de admiración.
  *  - Las claves son estructurales (no se traducen): siempre lowerCamelCase.
  */
-import { formatValidationMessage } from "./embarqueWizardSchemas";
+import { formatValidationMessage } from "./validationFormat";
 
 // ── Etiquetas de campos (única fuente de verdad) ──────────────────────
 export const FIELD_LABELS = {
