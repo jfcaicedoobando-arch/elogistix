@@ -9,7 +9,7 @@ import { UserPlus, Trash2, Globe, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { getErrorMessage } from "@/lib/errors";
 import { formatDate } from "@/lib/formatters";
-import { notifyError } from "@/lib/ui/appFeedback";
+import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 import {
   useClientUsers,
   useInviteClientUser,
@@ -37,7 +37,7 @@ export default function TabPortalCliente({ clienteId, organizationId, canEdit }:
       { email: inviteEmail, cliente_id: clienteId, organization_id: organizationId },
       {
         onSuccess: (data) => {
-          toast({
+          notifySuccess(toast, {
             title: data.is_new ? "Invitación enviada" : "Usuario vinculado",
             description: data.is_new
               ? "Se creó la cuenta y se envió un correo para establecer contraseña."
@@ -55,7 +55,7 @@ export default function TabPortalCliente({ clienteId, organizationId, canEdit }:
 
   const handleRevoke = (id: string) => {
     revokeMutation.mutate(id, {
-      onSuccess: () => toast({ title: "Acceso revocado" }),
+      onSuccess: () => notifySuccess(toast, { title: "Acceso revocado" }),
       onError: (err: unknown) => notifyError(toast, { title: "Error", message: getErrorMessage(err) }),
     });
   };

@@ -131,7 +131,7 @@ export function useAprobarProformas() {
     mutationFn: (params: { proformaIds: string[] }) =>
       svcAprobar(params.proformaIds).then(() => params),
     onSuccess: (params) => {
-      toast({
+      notifySuccess(toast, {
         title: params.proformaIds.length === 1
           ? "Proforma aprobada"
           : `${params.proformaIds.length} proformas aprobadas`,

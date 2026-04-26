@@ -117,7 +117,7 @@ export function useNuevoClienteController(onClose: () => void) {
       }));
 
       setCsfFile(file);
-      toast({
+      notifySuccess(toast, {
         title: "Datos extraídos",
         description: "Revisa la información antes de continuar.",
       });
