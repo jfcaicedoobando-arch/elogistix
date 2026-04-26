@@ -1,5 +1,5 @@
 import type { CotizacionRow, DimensionLCL, DimensionAerea } from '@/types/cotizacionTypes';
-import { calcularIVA, TASA_IVA } from '@/lib/financialUtils';
+import { calcularIVA, TASA_IVA } from '@/lib/financial/financialUtils';
 import { formatCurrency } from '@/lib/formatters';
 import { formatDate } from '@/lib/formatters';
 

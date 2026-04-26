@@ -3,7 +3,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { formatCurrency, formatDate } from "@/lib/formatters";
-import { getEstadoColor } from "@/lib/uiMappings";
+import { getEstadoColor } from "@/lib/ui/uiMappings";
 import type { ProformaConFactura } from "@/services/proformaServices";
 
 interface Factura {

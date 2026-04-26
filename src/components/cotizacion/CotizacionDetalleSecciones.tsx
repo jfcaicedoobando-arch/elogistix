@@ -3,7 +3,7 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
-import { getEstadoColor } from "@/lib/uiMappings";
+import { getEstadoColor } from "@/lib/ui/uiMappings";
 import { formatDate } from "@/lib/formatters";
 
 interface EmbarqueVinculado {

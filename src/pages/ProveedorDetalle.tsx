@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/table";
 import { useProveedor, useProveedorMutations, useProveedorOperaciones } from "@/hooks/useProveedores";
 import { formatCurrency } from "@/lib/formatters";
-import { getEstadoColor } from "@/lib/uiMappings";
+import { getEstadoColor } from "@/lib/ui/uiMappings";
 import EditarProveedorDialog from "@/components/proveedor/EditarProveedorDialog";
 import { useToast } from "@/hooks/use-toast";
 import { usePermissions } from "@/hooks/usePermissions";

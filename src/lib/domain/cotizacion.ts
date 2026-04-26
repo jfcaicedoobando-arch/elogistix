@@ -3,7 +3,7 @@
  * Sin dependencias de Supabase, React Query ni UI.
  */
 import { CONCEPTOS_CON_IVA_USD } from "@/constants/cotizacionConstants";
-import { calcularTotalConIVA } from "@/lib/financialUtils";
+import { calcularTotalConIVA } from "@/lib/financial/financialUtils";
 import type { FilaCostoLocal } from "@/types/cotizacionPLTypes";
 
 export interface ConceptoVentaPrellenado {

@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { formatDate } from "@/lib/formatters";
-import { getEstadoColor, getModoIcon } from "@/lib/uiMappings";
+import { getEstadoColor, getModoIcon } from "@/lib/ui/uiMappings";
 
 describe("formatDate", () => {
   it("devuelve '-' para cadena vacía", () => {

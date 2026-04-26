@@ -3,7 +3,7 @@
  * (selección → confirmación), totales, IVA por concepto y submit.
  */
 import { useState, useMemo, useEffect } from "react";
-import { calcularIVA } from "@/lib/financialUtils";
+import { calcularIVA } from "@/lib/financial/financialUtils";
 import { useTasaIVA } from "@/hooks/useTasaIVA";
 import { useCrearProforma } from "@/hooks/embarque/useProformas";
 import {

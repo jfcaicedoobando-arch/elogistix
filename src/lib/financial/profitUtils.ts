@@ -1,4 +1,4 @@
-import { calcularUtilidad, calcularMargen } from "@/lib/financialUtils";
+import { calcularUtilidad, calcularMargen } from "@/lib/financial/financialUtils";
 
 /** Resultado de cálculo de totales P&L */
 export interface TotalesPL {

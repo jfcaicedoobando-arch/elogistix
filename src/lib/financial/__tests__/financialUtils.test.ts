@@ -8,7 +8,7 @@ import {
   convertirAMXN,
   convertirAUSD,
   TASA_IVA,
-} from "@/lib/financialUtils";
+} from "@/lib/financial/financialUtils";
 
 describe("calcularIVA", () => {
   it("aplica 16% por defecto", () => {

@@ -1,6 +1,6 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import type { Tables, TablesInsert } from '@/integrations/supabase/types';
-import { queryKeys } from '@/lib/queryKeys';
+import { queryKeys } from '@/lib/query';
 import {
   crearEmbarqueRpc,
   actualizarEmbarqueRpc,

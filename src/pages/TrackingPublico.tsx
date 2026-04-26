@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { getEstadoColor, getModoIcon } from "@/lib/uiMappings";
+import { getEstadoColor, getModoIcon } from "@/lib/ui/uiMappings";
 import { formatDate, getOrigen, getDestino } from "@/lib/formatters";
 import { ICONO_EVENTO } from "@/constants/embarqueConstants";
 import { Clock, MapPin, Ship, AlertTriangle } from "lucide-react";

@@ -38,7 +38,7 @@ import {
   mapConceptosVentaFromCotizacion,
   mapConceptosCostoFromCotizacion,
 } from "@/lib/domain/embarqueWizard";
-import { getErrorMessage } from "@/lib/errorUtils";
+import { getErrorMessage } from "@/lib/errors";
 import type { EmbarqueValidationErrors } from "@/components/embarque/StepDatosGenerales";
 
 type ModoExpediente = "nuevo" | "existente";

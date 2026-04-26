@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Users, UserPlus, Trash2 } from "lucide-react";
 import { DataTable, type DataTableColumn } from "@/components/DataTable";
 import { useToast } from "@/hooks/use-toast";
-import { getErrorMessage } from "@/lib/errorUtils";
+import { getErrorMessage } from "@/lib/errors";
 import NuevoUsuarioDialog from "@/components/usuario/NuevoUsuarioDialog";
 import DoubleConfirmDeleteDialog from "@/components/DoubleConfirmDeleteDialog";
 import { useAdminGlobalUsers, type GlobalUserRow } from "@/hooks/useAdminData";

@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
-import { queryKeys } from "@/lib/queryKeys";
+import { queryKeys } from "@/lib/query";
 import { fetchPlanes, updatePlan, type Plan } from "@/services/planesService";
 
 export type { Plan };

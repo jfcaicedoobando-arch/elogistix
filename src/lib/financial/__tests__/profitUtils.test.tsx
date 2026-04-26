@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { render, screen } from "@testing-library/react";
-import { calcularTotalesPL } from "@/lib/profitUtils";
+import { calcularTotalesPL } from "@/lib/financial/profitUtils";
 import { ProfitBadge, RentabilidadGlobalBadge } from "@/components/shared/ProfitBadge";
 
 describe("calcularTotalesPL", () => {

@@ -6,9 +6,9 @@ import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow, TableFooter,
 } from "@/components/ui/table";
 import { formatCurrency } from "@/lib/formatters";
-import { calcularUtilidad, calcularMargen } from "@/lib/financialUtils";
+import { calcularUtilidad, calcularMargen } from "@/lib/financial/financialUtils";
 import { ProfitBadge } from "@/components/shared/ProfitBadge";
-import type { TotalesPL } from "@/lib/profitUtils";
+import type { TotalesPL } from "@/lib/financial/profitUtils";
 
 interface FilaCostoDetalle {
   concepto: string;

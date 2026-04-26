@@ -3,7 +3,7 @@
  * Centralizan los fetches que antes vivían imperativamente dentro del dialog.
  */
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { queryKeys } from "@/lib/queryKeys";
+import { queryKeys } from "@/lib/query";
 import { fetchDiasCreditoCliente } from "@/services/clienteService";
 import { fetchClienteParaPdf } from "@/services/proformaServices";
 

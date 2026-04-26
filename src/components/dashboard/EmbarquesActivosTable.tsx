@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { DataTable, type DataTableColumn } from "@/components/DataTable";
 import { formatDate, formatCurrency, getOrigen, getDestino } from "@/lib/formatters";
-import { getModoIcon, getEstadoColor } from "@/lib/uiMappings";
+import { getModoIcon, getEstadoColor } from "@/lib/ui/uiMappings";
 import type { EmbarqueMesSiguiente, ResumenFacturacion } from "@/hooks/useDashboardData";
 
 import { CalendarDays, DollarSign, TrendingUp, FileCheck, Package } from "lucide-react";

@@ -13,7 +13,7 @@ import ResumenTotalesCotizacion from "@/components/cotizacion/ResumenTotalesCoti
 import DialogConvertirProspecto from "@/components/cotizacion/DialogConvertirProspecto";
 import SeccionMercanciaCotizacionDetalle from "@/components/cotizacion/SeccionMercanciaCotizacionDetalle";
 import { CotizacionDetalleEmbarques, CotizacionDetalleAcciones } from "@/components/cotizacion/CotizacionDetalleSecciones";
-import { getEstadoColor } from "@/lib/uiMappings";
+import { getEstadoColor } from "@/lib/ui/uiMappings";
 import { formatDate, formatCurrency } from "@/lib/formatters";
 import { ArrowLeft, FileDown } from "lucide-react";
 import { useCotizacionDetalleState } from "@/hooks/cotizacion/useCotizacionDetalleState";

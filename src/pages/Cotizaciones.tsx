@@ -11,12 +11,12 @@ import {
 import { useNavigate } from "react-router-dom";
 import { useCotizaciones, useDeleteCotizacion, usePrefetchCotizacion } from "@/hooks/useCotizaciones";
 import { useDuplicarCotizacion } from "@/hooks/cotizacion/useDuplicarCotizacion";
-import { getErrorMessage } from "@/lib/errorUtils";
+import { getErrorMessage } from "@/lib/errors";
 import { useClientesForSelect } from "@/hooks/useClientes";
 import { usePermissions } from "@/hooks/usePermissions";
 import { useToast } from "@/hooks/use-toast";
 import { formatDate } from "@/lib/formatters";
-import { getEstadoColor } from "@/lib/uiMappings";
+import { getEstadoColor } from "@/lib/ui/uiMappings";
 import { formatCurrency } from "@/lib/formatters";
 import SearchInput from "@/components/SearchInput";
 import PaginationControls from "@/components/PaginationControls";

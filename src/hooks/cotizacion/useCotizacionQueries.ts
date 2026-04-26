@@ -1,5 +1,5 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { queryKeys } from '@/lib/queryKeys';
+import { queryKeys } from '@/lib/query';
 import type { CotizacionRow } from './useCotizacionTypes';
 import { useOrgFilter } from '@/hooks/useOrgFilter';
 import {

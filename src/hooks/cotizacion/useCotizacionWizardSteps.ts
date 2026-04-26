@@ -6,7 +6,7 @@ import type { CreateCotizacionInput, CotizacionRow, ConceptoVentaCotizacion } fr
 import type { FilaCostoLocal } from "@/types/cotizacionPLTypes";
 import type { CotizacionFormValues } from "@/lib/mappers/cotizacionForm";
 import { savePaso1, savePaso2, savePaso3, savePasoFinal, buildConceptosFromCostos } from "@/services/cotizacionServices";
-import { getErrorMessage } from "@/lib/errorUtils";
+import { getErrorMessage } from "@/lib/errors";
 
 interface ToastFn {
   (opts: { title: string; description?: string; variant?: "destructive" | "default" }): void;

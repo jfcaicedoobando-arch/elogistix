@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { calcularTotalesPL, type TotalesPL } from "@/lib/profitUtils";
+import { calcularTotalesPL, type TotalesPL } from "@/lib/financial/profitUtils";
 import type { FilaCostoLocal } from "@/types/cotizacionPLTypes";
 
 /**

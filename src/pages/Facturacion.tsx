@@ -13,7 +13,7 @@ import { useFacturas, useGastosPendientes, useMarcarCostoPagado } from "@/hooks/
 import { useRegistrarActividad } from "@/hooks/useBitacora";
 import { formatCurrency } from "@/lib/formatters";
 import { formatDate } from "@/lib/formatters";
-import { getEstadoColor } from "@/lib/uiMappings";
+import { getEstadoColor } from "@/lib/ui/uiMappings";
 import { useToast } from "@/hooks/use-toast";
 import { usePermissions } from "@/hooks/usePermissions";
 import PaginationControls from "@/components/PaginationControls";

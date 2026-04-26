@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { formatDate } from "@/lib/formatters";
-import { getModoIcon } from "@/lib/uiMappings";
+import { getModoIcon } from "@/lib/ui/uiMappings";
 import type { ProximoArribo } from "@/hooks/useDashboardData";
 
 interface Props {
