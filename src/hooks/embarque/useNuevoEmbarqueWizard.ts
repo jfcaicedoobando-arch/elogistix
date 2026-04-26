@@ -49,7 +49,7 @@ export function useNuevoEmbarqueWizard() {
 
   // ── Estado local del wizard ────────────────────────────────
   const [currentStep, setCurrentStep] = useState(1);
-  const [validationErrors, setValidationErrors] = useState<EmbarqueValidationErrors>({});
+  const [validationErrors, setValidationErrors] = useState<Record<number, StepValidationErrors>>({});
   const [cotizacionVinculada, setCotizacionVinculada] = useState<CotizacionRow | null>(null);
   const [modoExpediente, setModoExpediente] = useState<ModoExpediente>("nuevo");
   const [expedienteSeleccionado, setExpedienteSeleccionado] =
