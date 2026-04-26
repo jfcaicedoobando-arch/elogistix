@@ -90,7 +90,7 @@ Mantener `types.ts` deprecado solo durante este ciclo y eliminarlo al final.
 | 1 | v8.79.0 | **C1**: Extraer `useEmbarqueSubmitOrchestrator` de `useNuevoEmbarqueWizard`. | Medio | Alto | ✅ |
 | 2 | v8.80.0 | **M2**: Reducir `PortalCotizacionDetalle.tsx` bajo 250 LOC (sub-componentes o más controller). | Bajo | Medio | ✅ |
 | 3 | v8.81.0 | **M1**: Controller `useListPageState` genérico + migración de 4 páginas. | Medio | Alto (DX) | ✅ |
-| 4 | v8.82.0 | **O1**: Split `adminServices.ts` en `services/admin/{stats,organizations,members}` + barrel. | Bajo | Medio |
+| 4 | v8.82.0 | **O1**: Split `adminServices.ts` en `services/admin/{stats,organizations,members}` + barrel. | Bajo | Medio | ✅ |
 | 5 | v8.83.0 | **O2**: Split `clienteService.ts` en `services/cliente/{crud,contactos,relacionados}` + barrel. | Bajo | Medio |
 | 6 | v8.84.0 | **O4**: Renombrar `src/types/*Types.ts` → `src/types/*.ts` y eliminar `types.ts` deprecado. | Muy bajo | Bajo (DX) |
 
