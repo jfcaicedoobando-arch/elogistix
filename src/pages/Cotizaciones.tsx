@@ -1,4 +1,5 @@
 import { useState, useMemo } from "react";
+import { useListPageState } from "@/hooks/useListPageState";
 import { Plus, Trash2, MoreHorizontal, Pencil, Download, TrendingUp, CheckCircle, XCircle, BarChart3, Copy } from "lucide-react";
 import { exportToCsv } from "@/generators/exportCsv";
 import { KpiCard } from "@/components/operaciones/KpiCard";
@@ -27,7 +28,6 @@ import {
 } from "@/components/ui/dropdown-menu";
 
 const ESTADOS = ['Borrador', 'Enviada', 'Aceptada', 'Rechazada', 'Vencida', 'Embarcada'];
-const DEFAULT_PAGE_SIZE = 20;
 
 type Cotizacion = ReturnType<typeof useCotizaciones>["data"] extends (infer U)[] | undefined ? U : never;
 
@@ -36,16 +36,18 @@ export default function Cotizaciones() {
   const { data: cotizaciones = [], isLoading } = useCotizaciones();
   const { data: clientes = [] } = useClientesForSelect();
   const prefetchCotizacion = usePrefetchCotizacion();
-  const [search, setSearch] = useState("");
-  const [filterEstado, setFilterEstado] = useState<string>("todos");
-  const [filterCliente, setFilterCliente] = useState<string>("todos");
-  const [page, setPage] = useState(0);
-  const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
   const { canEdit } = usePermissions();
   const deleteCotizacion = useDeleteCotizacion();
   const duplicarCotizacion = useDuplicarCotizacion();
   const { toast } = useToast();
   const [cotizacionAEliminar, setCotizacionAEliminar] = useState<string | null>(null);
+
+  const {
+    search, filters, page, pageSize,
+    setSearch, setFilter, setPage, setPageSize, paginate,
+  } = useListPageState({ estado: "todos", cliente: "todos" });
+  const filterEstado = filters.estado;
+  const filterCliente = filters.cliente;
 
   const filtered = useMemo(() => {
     return cotizaciones.filter((cotizacion) => {
@@ -59,8 +61,7 @@ export default function Cotizaciones() {
     });
   }, [cotizaciones, search, filterEstado, filterCliente]);
 
-  const paginated = filtered.slice(page * pageSize, (page + 1) * pageSize);
-  const totalPages = Math.ceil(filtered.length / pageSize);
+  const { items: paginated, totalPages } = paginate(filtered);
 
   // KPI de conversión
   const kpis = useMemo(() => {
@@ -188,18 +189,18 @@ export default function Cotizaciones() {
           <div className="flex flex-wrap gap-4">
             <SearchInput
               value={search}
-              onChange={(valor) => { setSearch(valor); setPage(0); }}
+              onChange={setSearch}
               placeholder="Buscar por folio, cliente o mercancía..."
               className="flex-1 min-w-[200px]"
             />
-            <Select value={filterEstado} onValueChange={(valorSeleccionado) => { setFilterEstado(valorSeleccionado); setPage(0); }}>
+            <Select value={filterEstado} onValueChange={(v) => setFilter("estado", v)}>
               <SelectTrigger className="w-[160px]"><SelectValue placeholder="Estado" /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="todos">Todos los estados</SelectItem>
                 {ESTADOS.map(estadoCotizacion => <SelectItem key={estadoCotizacion} value={estadoCotizacion}>{estadoCotizacion}</SelectItem>)}
               </SelectContent>
             </Select>
-            <Select value={filterCliente} onValueChange={(valorSeleccionado) => { setFilterCliente(valorSeleccionado); setPage(0); }}>
+            <Select value={filterCliente} onValueChange={(v) => setFilter("cliente", v)}>
               <SelectTrigger className="w-[200px]"><SelectValue placeholder="Cliente" /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="todos">Todos los clientes</SelectItem>

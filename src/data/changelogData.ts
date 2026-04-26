@@ -11,6 +11,13 @@ export interface ChangelogEntry {
 /** Entradas recientes (v8.x). Las anteriores se cargan dinámicamente. */
 export const recentChangelog: ChangelogEntry[] = [
   {
+    version: "8.81.0",
+    date: "2026-04-26",
+    type: "patch",
+    title: "Auditoría: hook genérico useListPageState para páginas de listado",
+    description: "Paso M1 de la nueva auditoría arquitectónica. Las páginas de listado del sistema repetían el mismo combo de 4 useState (search + filtros + page + pageSize) más el reset manual de página al cambiar cualquier filtro y el cálculo inline de paginated/totalPages. Se creó el hook genérico src/hooks/useListPageState.ts (80 LOC) parametrizado por un blob de filtros tipado por el consumidor (TFilters extends Record<string, string>). Expone search, filters, page, pageSize, setSearch/setFilter/setPage/setPageSize/resetPage y un helper paginate<T>(items) que devuelve { items, totalPages: max(1, ceil(len/size)) }. setSearch y setFilter resetean automáticamente la página a 0 evitando el bug clásico de quedarse en una página vacía después de filtrar. Se migraron Cotizaciones.tsx (eliminó 4 useState + DEFAULT_PAGE_SIZE local + reset manual en 4 callbacks) y Facturacion.tsx (eliminó 4 useState + reset manual en 2 callbacks). Embarques.tsx mantiene su useEmbarquesPageState específico (7+ filtros + rango de fechas, lógica más rica que el genérico) y ClienteDetalle.tsx no aplica (página de detalle, no listado). Cobertura: 5 nuevos tests para inicialización, reset de página en setSearch/setFilter, paginate con corte correcto y totalPages>=1 para arrays vacíos. Build verde, 201/201 pruebas pasando.",
+  },
+  {
     version: "8.80.0",
     date: "2026-04-26",
     type: "patch",
