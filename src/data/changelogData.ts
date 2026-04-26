@@ -11,6 +11,13 @@ export interface ChangelogEntry {
 /** Entradas recientes (v8.x). Las anteriores se cargan dinámicamente. */
 export const recentChangelog: ChangelogEntry[] = [
   {
+    version: "8.72.0",
+    date: "2026-04-26",
+    type: "minor",
+    title: "Auditoría: changelog particionado, lib/ reorganizado y limpieza de UI",
+    description: "Cierre de los pasos M4, O1 y O2 de la auditoría arquitectónica. (M4) El histórico changelog/legacy.ts (1523 líneas, 217 entradas) se dividió en archivos por major version: v1.ts, v2.ts, v3.ts, v4.ts (98 entradas — el más grande), v5.ts, v6.ts y v7.ts. legacy.ts ahora es un agregador delgado que se sigue cargando con import() dinámico desde Changelog.tsx, manteniendo la lazy-load del histórico completo. Beneficio: cada major se navega/edita por separado y futuras particiones por bundle son triviales. (O1) Reorganización de src/lib/ en subcarpetas semánticas: formatters/, financial/ (financialUtils, profitUtils, costosUSD), storage/, ui/ (uiMappings, estadoConfig), errors/, contacto/ y query/. Solo utils.ts queda en la raíz. Los tests acompañaron a sus archivos a __tests__ por subcarpeta. Se actualizaron 116 archivos consumidores con los nuevos paths @/lib/<categoria>. (O2) Eliminados 17 componentes shadcn/ui sin uso real en el proyecto: aspect-ratio, breadcrumb, carousel, chart, context-menu, drawer, form, hover-card, input-otp, menubar, navigation-menu, pagination, resizable, scroll-area, slider, toggle y toggle-group. La carpeta src/components/ui/ pasa de 47 a 30 archivos, reduciendo bundle y ruido visual al navegar la UI. Verificación: tsc limpio y 196/196 pruebas pasando. Con esto se cierran los 8 pasos del plan de auditoría (C1, C2, M1–M4, O1, O2).",
+  },
+  {
     version: "8.71.0",
     date: "2026-04-25",
     type: "minor",
