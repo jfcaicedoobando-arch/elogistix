@@ -93,7 +93,30 @@ Estas excepciones son intencionales y NO deben marcarse como violación de capa 
 
 - **Mappers pueden importar `type Tables` de Supabase**. Los archivos en `src/lib/mappers/` (notablemente `embarqueFromDb.ts` y `embarqueToDb.ts`) importan `type Tables` / `type TablesInsert` desde `@/integrations/supabase/types`. Es su razón de ser: traducen entre el formato de la BD y el formato de UI. Sin esos tipos, los mappers no pueden cumplir su contrato.
 - **`import type` no cuenta como violación de capa**. Una page o componente puede importar tipos de `@/integrations/supabase/types` (por ejemplo `type Tables<'contactos_cliente'>`) sin que esto rompa la regla "Pages no tocan Supabase". Lo prohibido son las llamadas runtime: `supabase.from(...)`, `supabase.rpc(...)`, `supabase.storage`, `supabase.functions`.
-- **`src/data/` vs `src/content/`**: `src/data/` está reservado para datasets de dominio (ej. `ports.ts`, seeds). El contenido editorial — como el changelog — vive de facto en `src/data/changelog/` por inercia histórica; nuevas adiciones de contenido editorial deberían ir a `src/content/`.
+- **`src/data/` vs `src/content/`**: `src/data/` está reservado para datasets de dominio (ej. `ports.ts`, seeds). El contenido editorial (changelog, copy de marketing) vive en `src/content/` desde v8.86.0.
+
+## Convención de barrels
+
+Convención unificada en `src/services/` desde v8.86.0:
+
+- **Folder + `index.ts`**: cada dominio es una carpeta con `index.ts` que re-exporta sus submódulos.
+  Ejemplo: `src/services/cliente/{index,crud,contactos,relacionados}.ts`.
+- **Naming sin sufijo**: la carpeta se llama por el dominio en singular (`cliente`, `embarque`, `cotizacion`, `proforma`, `admin`). Nada de `xService.ts` o `xServices.ts` sueltos en `src/services/`.
+- **Import desde el barrel**: consumidores importan `@/services/<dominio>`. Importar de submódulos (`@/services/cliente/crud`) está permitido pero no es lo idiomático.
+
+Misma convención en `src/lib/` (formatters, financial, storage, ui, errors, contacto, query). Excepción: `src/lib/utils.ts` y `src/lib/mappers/*.ts` (mappers no son barrels).
+
+## Auditoría de `useEffect` (v8.86.0)
+
+Los 30 `useEffect` activos en producción fueron revisados uno por uno. Todos son legítimos y se agrupan en 5 categorías; no hay candidatos a migración a `useQuery` o `useMemo`:
+
+1. **Sincronización de form** (Dialogs, wizards): `reset(defaults)` cuando cambian props del registro a editar.
+2. **Subscripciones a APIs externas**: Supabase auth listener, Organization context, Theme, GlobalSearch (atajo Ctrl+K).
+3. **Hidratación de wizards de embarque**: cargar datos remotos al form cuando llegan los queries.
+4. **Hooks utilitarios**: `useDebounce`, paginación reactiva en `Proveedores.tsx`.
+5. **shadcn read-only**: `sidebar.tsx`, `use-toast.ts`, `use-mobile.tsx` (no se editan, ver regla #3).
+
+Auditorías futuras: si aparece un `useEffect` nuevo, debe encajar en una de estas 5 categorías o ser candidato a refactor.
 
 ## Deuda técnica aceptada (auditoría v8.36.0)
 
