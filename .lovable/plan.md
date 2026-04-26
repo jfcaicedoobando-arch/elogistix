@@ -91,7 +91,3 @@ Ejecutar **Paso 3 (v8.75.0)** — tokens semánticos para KPIs (`--metric-positi
 Crear `<KpiBadge variant="positive|warning|danger|neutral" />` reutilizable.
 
 **Paso 4 (O1)** — Verificar antes de borrar con `rg "from ['\"]<dep>" src` para cada paquete.
-
-## Próximo paso
-
-Ejecutar **Paso 1 (v8.73.0)** — adelgazar `useNuevoEmbarqueWizard`. Es el único hook que aún rompe el guardrail de 250 LOC y consolida el patrón "hook delgado + dominio puro testeable" en el wizard más complejo del repo.
