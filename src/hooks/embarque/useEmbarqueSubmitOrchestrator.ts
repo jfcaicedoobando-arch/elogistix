@@ -82,7 +82,7 @@ export function useEmbarqueSubmitOrchestrator() {
         });
       } catch (err: unknown) {
         toast({
-          title: "Error al generar expediente",
+          title: "Error: generación de expediente",
           description: getErrorMessage(err),
           variant: "destructive",
         });
@@ -99,7 +99,7 @@ export function useEmbarqueSubmitOrchestrator() {
         );
       } catch (err: unknown) {
         toast({
-          title: "Error al subir documentos",
+          title: "Error: subida de documentos",
           description: getErrorMessage(err),
           variant: "destructive",
         });
@@ -122,7 +122,7 @@ export function useEmbarqueSubmitOrchestrator() {
         });
       } catch (err: unknown) {
         toast({
-          title: "Error al guardar embarque",
+          title: "Error: guardado del embarque",
           description: getErrorMessage(err),
           variant: "destructive",
         });
@@ -139,7 +139,7 @@ export function useEmbarqueSubmitOrchestrator() {
         } catch (err: unknown) {
           toast({
             title: "Embarque creado con advertencia",
-            description: `No se pudo actualizar el estado de la cotización: ${getErrorMessage(err)}`,
+            description: `Cotización: no se pudo actualizar el estado (${getErrorMessage(err)}).`,
           });
         }
       }
@@ -160,7 +160,7 @@ export function useEmbarqueSubmitOrchestrator() {
 
       toast({
         title: "Embarque creado",
-        description: `Expediente ${expediente} registrado correctamente.`,
+        description: `Expediente ${expediente}: registrado correctamente.`,
       });
       navigate("/embarques");
       return true;
