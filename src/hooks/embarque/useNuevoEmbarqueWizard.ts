@@ -1,13 +1,12 @@
 /**
  * Controller hook del wizard "Nuevo Embarque".
- * Encapsula todo el estado, validaciones, hidratación desde cotización,
- * manejo de expedientes y la mutación de creación.
+ * Encapsula estado, validaciones, expediente y orquestación del submit.
  *
- * La página NuevoEmbarque.tsx queda como un componente puramente presentacional
- * que consume este hook y dispara el render de los pasos.
+ * Lógica pura → `lib/domain/embarqueWizard.ts`.
+ * Hidratación inicial → `useCotizacionHydration`.
  */
 import { useState, useCallback, useEffect, useRef } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import {
   useProveedoresForSelect,
@@ -22,10 +21,10 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useRegistrarActividad } from "@/hooks/useBitacora";
 import { useConceptosForm } from "@/hooks/useConceptosForm";
 import { useEmbarqueForm } from "@/hooks/embarque/useEmbarqueForm";
+import { useCotizacionHydration } from "@/hooks/embarque/useCotizacionHydration";
 import {
   useCotizacionesAceptadas,
   useUpdateEstadoCotizacion,
-  useCotizacion,
   type CotizacionRow,
 } from "@/hooks/useCotizaciones";
 import {
@@ -37,6 +36,8 @@ import {
   validateDatosGenerales,
   mapConceptosVentaFromCotizacion,
   mapConceptosCostoFromCotizacion,
+  resolveExpedienteForSubmit,
+  buildBitacoraDetalles,
 } from "@/lib/domain/embarqueWizard";
 import { getErrorMessage } from "@/lib/errors";
 import type { EmbarqueValidationErrors } from "@/components/embarque/StepDatosGenerales";
@@ -45,7 +46,6 @@ type ModoExpediente = "nuevo" | "existente";
 
 export function useNuevoEmbarqueWizard() {
   const navigate = useNavigate();
-  const location = useLocation();
   const { user } = useAuth();
   const { toast } = useToast();
 
@@ -58,12 +58,6 @@ export function useNuevoEmbarqueWizard() {
   const createEmbarque = useCreateEmbarque();
   const registrarActividad = useRegistrarActividad();
   const updateEstadoCotizacion = useUpdateEstadoCotizacion();
-
-  // ── Pre-vinculación desde detalle de cotización ────────────
-  const cotizacionPrevinculadaId = (
-    location.state as { cotizacionPrevinculadaId?: string } | null
-  )?.cotizacionPrevinculadaId;
-  const { data: cotizacionPrevinculada } = useCotizacion(cotizacionPrevinculadaId);
 
   // ── Estado local del wizard ────────────────────────────────
   const [currentStep, setCurrentStep] = useState(1);
@@ -140,19 +134,8 @@ export function useNuevoEmbarqueWizard() {
     setExpedienteSeleccionado(null);
   }, [desvincularCotizacion]);
 
-  // ── Auto-pre-vinculación desde CotizacionDetalle ───────────
-  const yaPrevinculadoRef = useRef(false);
-  useEffect(() => {
-    if (yaPrevinculadoRef.current) return;
-    if (!cotizacionPrevinculada) return;
-    yaPrevinculadoRef.current = true;
-    handleVincularCotizacion(cotizacionPrevinculada);
-    toast({
-      title: "Datos pre-rellenados",
-      description: `Cotización ${cotizacionPrevinculada.folio} vinculada automáticamente.`,
-    });
-    window.history.replaceState({}, "");
-  }, [cotizacionPrevinculada, handleVincularCotizacion, toast]);
+  // Pre-vinculación automática desde CotizacionDetalle
+  useCotizacionHydration({ onPrevincular: handleVincularCotizacion });
 
   // ── Reset del expediente al cambiar de cliente ─────────────
   const prevClienteRef = useRef(clienteId);
@@ -206,12 +189,13 @@ export function useNuevoEmbarqueWizard() {
     const v = methods.getValues();
 
     try {
-      let expediente: string;
-      if (modoExpediente === "existente" && expedienteSeleccionado) {
-        expediente = expedienteSeleccionado.expediente;
-      } else {
-        expediente = await resolverExpediente(v.blMaster, v.tipo);
-      }
+      const expediente = await resolveExpedienteForSubmit({
+        modoExpediente,
+        expedienteSeleccionado,
+        blMaster: v.blMaster,
+        tipo: v.tipo,
+        resolverNuevo: resolverExpediente,
+      });
 
       const docPayload = await subirDocumentosEmbarque(
         expediente,
@@ -243,13 +227,13 @@ export function useNuevoEmbarqueWizard() {
         accion: "crear",
         modulo: "embarques",
         entidad_nombre: expediente,
-        detalles: {
+        detalles: buildBitacoraDetalles({
           modo: v.modo,
           tipo: v.tipo,
-          cliente: selectedCliente?.nombre ?? "",
-          cotizacion_folio: cotizacionVinculada?.folio ?? null,
-          asociado_a_existente: modoExpediente === "existente",
-        },
+          clienteNombre: selectedCliente?.nombre ?? "",
+          cotizacionFolio: cotizacionVinculada?.folio ?? null,
+          modoExpediente,
+        }),
       });
 
       toast({
