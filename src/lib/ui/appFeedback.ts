@@ -9,20 +9,17 @@
  *
  * Mantiene un único punto de cambio para tono y formato. Reemplaza el viejo
  * `wizardFeedback.ts` (que sigue funcionando como re-export para compatibilidad).
+ *
+ * El parámetro `toast` se tipa de forma muy permisiva (`AnyToastFn`) para
+ * aceptar tanto el `toast` de `@/hooks/use-toast` (cuyas variantes propias son
+ * `default | destructive`, aunque las shadcn variants añaden `warning|success`)
+ * como el de sonner u otros wrappers. La invariante de severidad se garantiza
+ * dentro de cada helper.
  */
-import type * as React from "react";
 import { STEP_LABELS } from "@/lib/domain/embarqueWizardSchemas";
 
-// Tipo deliberadamente permisivo para aceptar tanto el `toast` de
-// `@/hooks/use-toast` como el de `sonner` u otros wrappers compatibles.
-// La validación de severidades se hace en estos helpers, no en el tipo.
-type ToastFn = (props: {
-  title?: React.ReactNode;
-  description?: React.ReactNode;
-  variant?: string;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  [key: string]: any;
-}) => unknown;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export type AnyToastFn = (props: any) => unknown;
 
 export interface ErrorNotifyOptions {
   /** Número de paso del wizard (1..4). Genera título "Revisa el Paso N: <nombre>". */
@@ -38,7 +35,7 @@ export interface ErrorNotifyOptions {
 }
 
 /** Emite un toast bloqueante (variant destructive). */
-export function notifyError(toast: ToastFn, opts: ErrorNotifyOptions) {
+export function notifyError(toast: AnyToastFn, opts: ErrorNotifyOptions) {
   const { step, phase, errors, message, title } = opts;
   const description = message ?? (errors ? Object.values(errors)[0] : undefined);
 
@@ -59,7 +56,7 @@ export function notifyError(toast: ToastFn, opts: ErrorNotifyOptions) {
 
 /** Emite un toast de advertencia (no bloquea). */
 export function notifyWarning(
-  toast: ToastFn,
+  toast: AnyToastFn,
   opts: { title: string; description?: string },
 ) {
   toast({ title: opts.title, description: opts.description, variant: "warning" });
@@ -67,7 +64,7 @@ export function notifyWarning(
 
 /** Emite un toast de éxito (cualquier confirmación de acción exitosa). */
 export function notifySuccess(
-  toast: ToastFn,
+  toast: AnyToastFn,
   opts: { title: string; description?: string },
 ) {
   toast({ title: opts.title, description: opts.description, variant: "success" });
