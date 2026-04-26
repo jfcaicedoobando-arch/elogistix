@@ -11,6 +11,13 @@ export interface ChangelogEntry {
 /** Entradas recientes (v8.x). Las anteriores se cargan dinámicamente. */
 export const recentChangelog: ChangelogEntry[] = [
   {
+    version: "8.83.0",
+    date: "2026-04-26",
+    type: "patch",
+    title: "Auditoría: split de clienteService en crud/contactos/relacionados",
+    description: "Paso O2 de la auditoría arquitectónica. El archivo src/services/clienteService.ts (201 LOC, 16 funciones) mezclaba tres responsabilidades del dominio cliente: CRUD/listados, contactos asociados y queries relacionadas (embarques y cotizaciones del cliente). Siguiendo el mismo patrón aplicado a embarqueServices, proformaServices y adminServices, se distribuyó la implementación en src/services/cliente/ con tres módulos cohesivos — crud.ts (CLIENTE_LIST_COLUMNS, CLIENTE_DETAIL_COLUMNS, fetchClientesPaginados, fetchClientes, fetchClientesForSelect, fetchCliente, fetchDiasCreditoCliente, createCliente, updateCliente y el tipo Cliente), contactos.ts (CONTACTO_COLUMNS, fetchContactosCliente, createContacto, updateContacto, deleteContacto y el tipo ContactoCliente) y relacionados.ts (fetchEmbarquesCliente, fetchCotizacionesCliente). El archivo src/services/clienteService.ts queda como barrel de 9 LOC que re-exporta los tres módulos, manteniendo compatibilidad total con los 3 consumidores existentes (useClientes, useProformaDialog y proforma/queries.ts). Build verde y 201/201 pruebas pasando.",
+  },
+  {
     version: "8.82.0",
     date: "2026-04-26",
     type: "patch",
