@@ -1,134 +1,38 @@
-# Plan: Refactor arquitectónico integral
+# Mejorar ARCHITECTURE.md (v8.88.0)
 
-Basado en la auditoría previa. 13 hallazgos agrupados en 3 fases ejecutables. Cada fase termina con tests verdes (201/201) y entrada en changelog.
+Reescribir `ARCHITECTURE.md` aplicando los 3 bloques propuestos: estructura/navegación, reglas faltantes y pulido. El archivo pasa de 125 a ~250 líneas, sigue formato Markdown plano sin emojis.
 
----
+## Cambios concretos
 
-## Fase 1 — Críticos (alto impacto, riesgo bajo)
+### Bloque 1 — Estructura
+- Añadir cabecera con versión y fecha (`Última revisión: v8.88.0 — 2026-04-26`) y referencia espejo a `mem://technical/architecture-and-standards`.
+- Insertar **tabla de contenidos** con 14 secciones numeradas.
+- Renombrar "Capas" → **"Estructura de carpetas"**; añadir `content/` como carpeta separada de `data/`.
+- Nueva sección **"Flujo de datos canónico"** con diagrama ASCII Page → Hook → Service → Supabase → Mapper → Component.
+- Mover la nota sobre barrels de hooks de dominio (línea 29) a una sección numerada propia.
 
-### Paso 1 · Lazy-load del Changelog
-- Convertir `Changelog.tsx` a `React.lazy` en `App.tsx`.
-- Cambiar `src/data/changelogData.ts` para hacer dynamic `import()` de cada `changelog/v*.ts` sólo cuando la página los pida.
-- **Resultado**: ~700 LOC fuera del bundle inicial.
+### Bloque 2 — Reglas que faltan
+- **§7 Naming**: consolida regla #4 + patrones es/en + convenciones para hooks, controllers, tipos, componentes, services y archivos de tipos.
+- **§8 React Query**: query keys centralizados en `lib/queryKeys.ts`, `staleTime` por tipo (catálogos 5min, operativos 30s, reportes 1min), invalidación desde el hook que escribe, selección explícita de columnas, paginación server-side.
+- **§9 Performance / Lazy-loading**: páginas lazy en router, dynamic import para generadores PDF (jsPDF), patrón changelog para datasets grandes, recuperación de chunks, regla >50KB, criterio de memoización.
+- **§10 RLS y multi-tenant**: `organization_id` obligatorio, roles en `user_roles` (nunca `profiles`), `security definer`, edge functions con service-role, patrón portal cliente.
+- **§11 Testing**: Vitest + Testing Library (201 tests), qué se testea (`lib/`, services puros, hooks complejos), qué NO (shadcn, pages, mappers triviales), ubicación `__tests__/` colocalizada, comandos.
+- **§3.5 Controllers de página**: pages densas (>5 hooks) extraen lógica a `use<Page>PageController`, patrón canónico desde v8.85.0.
 
-### Paso 2 · Documentar excepciones de capa
-- Añadir sección "Excepciones autorizadas" en `ARCHITECTURE.md`:
-  - Mappers en `lib/mappers/` pueden importar `type Tables` de Supabase (es su razón de ser).
-  - `import type` desde Supabase no cuenta como violación de capa.
-- Aclarar que `data/` es para datasets de dominio; el contenido editorial (changelog) vive en `src/content/`.
-
-### Paso 3 · Extraer controllers de pages densas
-Crear hooks-controller siguiendo el patrón ya usado en `useTabProformasController`:
-- `src/hooks/reportes/useReportesPageController.ts` ← absorbe los 9 hooks de `Reportes.tsx`.
-- `src/hooks/cliente/useClienteDetalleController.ts` ← absorbe los 6 hooks de `ClienteDetalle.tsx`.
-- Aplicar `useListPageState` en `Clientes.tsx` y `Proveedores.tsx` (ya existe el hook, falta consumirlo).
-
-**Cierre Fase 1**: changelog v8.85.0, tests verdes.
-
----
-
-## Fase 2 — Importantes (consistencia)
-
-### Paso 4 · Estandarizar barrels
-Convención única: **barrel-folder** con `index.ts`, naming en plural consistente.
-- Renombrar:
-  - `services/clienteService.ts` → `services/cliente/index.ts`
-  - `services/embarqueServices.ts` → `services/embarque/index.ts`
-  - `services/adminServices.ts` → `services/admin/index.ts`
-  - `services/proformaServices.ts` → `services/proforma/index.ts`
-  - `services/cotizacionServices.ts` → `services/cotizacion/index.ts`
-- Actualizar imports en todo `src/` (aliases `@/services/cliente`, etc., siguen funcionando).
-
-### Paso 5 · Reorganizar contenido editorial
-- Mover `src/data/changelog/` y `src/data/changelogData.ts` a `src/content/changelog/`.
-- Dejar en `src/data/`: sólo `ports.ts` (dataset de dominio).
-- Actualizar imports.
-
-### Paso 6 · Split de `AuthContext`
-Dividir `src/contexts/AuthContext.tsx` (212 LOC) en:
-- `useAuthSession` — sesión Supabase (login/logout/listener).
-- `useAuthProfile` — perfil + roles efectivos.
-- `AuthContext` queda como compositor delgado (~60 LOC).
-
-### Paso 7 · Auditoría de `useEffect`
-Pase de revisión sobre los 29 `useEffect` activos. Para cada uno:
-- ¿Puede ser `useQuery` con `enabled`? → migrar.
-- ¿Puede ser `useMemo` derivado? → reemplazar.
-- ¿Tiene deps incorrectas? → corregir.
-- Documentar los que deben quedarse como están.
-
-**Cierre Fase 2**: changelog v8.86.0, tests verdes.
-
----
-
-## Fase 3 — Opcionales (refinamiento)
-
-### Paso 8 · Lazy-load generadores PDF
-- En los callsites de "Descargar PDF", reemplazar import estático por `const { generar } = await import('@/generators/cotizacionPdf')`.
-- Mismo tratamiento para `proformaPdf.ts`.
-- **Resultado**: jsPDF fuera del bundle inicial (~200KB+).
-
-### Paso 9 · Consolidar tipos sueltos
-- Mover `src/components/cotizacion/costosPLTypes.ts` a `src/types/cotizacionPL.ts` (consolidar con el existente).
-
-### Paso 10 · Marcar `use-toast.ts` como read-only shadcn
-- Añadir comentario de cabecera `// shadcn read-only — no editar` en `src/hooks/use-toast.ts`, alineado con la regla #3 de ARCHITECTURE.md.
-
-**Cierre Fase 3**: changelog v8.87.0, tests verdes.
-
----
+### Bloque 3 — Pulido
+- Consolidar "Excepciones autorizadas" + "Convención de barrels" + "Auditoría de useEffect" + decisiones nuevas (lazy-load PDF, tipos en `src/types/`) bajo **§12 "Decisiones explícitas (con fecha)"** — una sola zona histórica.
+- Renombrar "Deuda técnica aceptada" → **§13 "Decisiones de no hacer"** (comunica intencionalidad). Añade entrada de `costosPLTypes.ts`.
+- Corregir referencia obsoleta en §6 (transacciones RPC): `services/<dominio>Services.ts` → `services/<dominio>/index.ts` (alineado a convención v8.86.0).
+- **§14 Glosario**: 12 términos del proyecto (embarque, expediente, cotización, proforma, concepto, P&L, CSF, incoterm, organización, cliente, operador, portal de clientes).
 
 ## Detalles técnicos
 
-### Patrón de extracción de controller (Paso 3)
-```ts
-// src/hooks/reportes/useReportesPageController.ts
-export function useReportesPageController() {
-  const filtros = useReportesFiltros();
-  const kpis = useReportesKpis(filtros.value);
-  const tabla = useReportesTabla(filtros.value);
-  // ... resto de hooks
-  return { filtros, kpis, tabla, /* handlers */ };
-}
+- Formato: Markdown plano, sin frontmatter, sin emojis. Diagramas ASCII en bloques ` ```text `.
+- Sólo se modifica `ARCHITECTURE.md`. No hay cambios de código fuente.
+- Tras la edición:
+  - Actualizar entrada en `src/content/changelogData.ts` con versión 8.88.0, tipo `patch`, describiendo la reorganización del documento.
+  - Verificar build (`bunx tsc --noEmit`) y tests (`bunx vitest run`) — esperado verde y 201/201 ya que es solo doc + changelog.
 
-// src/pages/Reportes.tsx queda como composición pura de UI
-const { filtros, kpis, tabla } = useReportesPageController();
-```
+## Resultado esperado
 
-### Patrón lazy-load PDF (Paso 8)
-```ts
-const handleDescargar = async () => {
-  const { generarCotizacionPdf } = await import("@/generators/cotizacionPdf");
-  await generarCotizacionPdf(cotizacion);
-};
-```
-
-### Patrón split AuthContext (Paso 6)
-```ts
-// useAuthSession.ts → session, signIn, signOut
-// useAuthProfile.ts → profile, roles, organization
-// AuthContext.tsx → const session = useAuthSession(); const profile = useAuthProfile(session);
-```
-
----
-
-## Criterios de éxito
-
-- 201/201 tests verdes al cierre de cada fase.
-- Build TypeScript limpio.
-- Bundle inicial reducido (Paso 1 + 8).
-- Pages densas reducidas a < 100 LOC con composición pura.
-- Una sola convención de barrels en todo `src/services/`.
-- ARCHITECTURE.md actualizado con excepciones documentadas.
-
-## Fuera de alcance
-
-- Mejoras de performance ya planificadas (índices DB, memoización, `staleTime`) — viven en su propio plan.
-- Migración de `ports.ts` restante a BD (ya parcial según memoria).
-- Reescritura de `components/ui/` (read-only shadcn).
-
----
-
-## Ejecución sugerida
-
-¿Ejecuto **Fase 1 completa** (Pasos 1-3) en una sola iteración, luego confirmo antes de seguir? Es el bloque de mayor valor con menor riesgo.
+`ARCHITECTURE.md` queda con TOC navegable, secciones que cubren los gaps reales (testing, performance, RLS, naming, React Query), y una sola zona histórica con fechas en lugar de 4 bloques sueltos.
