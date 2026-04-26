@@ -4,8 +4,8 @@
  */
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/query";
-import { fetchDiasCreditoCliente } from "@/services/clienteService";
-import { fetchClienteParaPdf } from "@/services/proformaServices";
+import { fetchDiasCreditoCliente } from "@/services/cliente";
+import { fetchClienteParaPdf } from "@/services/proforma";
 
 /**
  * Días de crédito por defecto del cliente (precarga del diálogo de proforma).

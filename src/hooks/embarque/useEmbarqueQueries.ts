@@ -12,7 +12,7 @@ import {
   fetchEmbarqueFacturas,
   fetchExpedientesCliente,
   fetchProveedoresForSelect,
-} from '@/services/embarqueServices';
+} from '@/services/embarque';
 
 /** Hook original: descarga TODOS los embarques. Usar solo para Dashboard/Operaciones. */
 export function useEmbarques() {
@@ -127,7 +127,7 @@ export function useEmbarqueFacturas(embarqueId: string | undefined) {
   });
 }
 
-export type { ExpedienteCliente } from '@/services/embarqueServices';
+export type { ExpedienteCliente } from '@/services/embarque';
 
 export function useExpedientesCliente(clienteId: string | undefined) {
   const { organizationId } = useOrgFilter();

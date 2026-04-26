@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/query";
-import { addOrgMember, fetchAvailableUsers } from "@/services/adminServices";
+import { addOrgMember, fetchAvailableUsers } from "@/services/admin";
 
 /**
  * Lista todos los usuarios disponibles vía edge function `list-users`.

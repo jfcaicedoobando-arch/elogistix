@@ -24,7 +24,7 @@ import {
   useCotizacionesAceptadas,
   type CotizacionRow,
 } from "@/hooks/useCotizaciones";
-import { fetchCotizacionCostosForEmbarque } from "@/services/cotizacionServices";
+import { fetchCotizacionCostosForEmbarque } from "@/services/cotizacion";
 import {
   validateDatosGenerales,
   mapConceptosVentaFromCotizacion,

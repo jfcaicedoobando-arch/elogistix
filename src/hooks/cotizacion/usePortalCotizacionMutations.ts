@@ -1,6 +1,6 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/query";
-import { portalResponderCotizacion } from "@/services/cotizacionServices";
+import { portalResponderCotizacion } from "@/services/cotizacion";
 
 export function useResponderCotizacion(cotizacionId: string) {
   const queryClient = useQueryClient();

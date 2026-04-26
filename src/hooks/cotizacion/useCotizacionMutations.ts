@@ -6,7 +6,7 @@ import {
   updateCotizacion as svcUpdate,
   deleteCotizacion as svcDelete,
   updateEstadoCotizacion as svcUpdateEstado,
-} from '@/services/cotizacionServices';
+} from '@/services/cotizacion';
 
 export function useCreateCotizacion() {
   const queryClient = useQueryClient();

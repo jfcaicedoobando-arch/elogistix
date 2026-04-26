@@ -15,7 +15,7 @@ import {
   deleteContacto,
   fetchEmbarquesCliente,
   fetchCotizacionesCliente,
-} from "@/services/clienteService";
+} from "@/services/cliente";
 
 export type Cliente = Tables<"clientes">;
 export type ContactoCliente = Tables<"contactos_cliente">;

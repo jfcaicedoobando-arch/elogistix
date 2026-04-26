@@ -3,7 +3,7 @@ import { queryKeys } from "@/lib/query";
 import {
   fetchEventosEmbarque,
   insertEventoEmbarque,
-} from "@/services/embarqueServices";
+} from "@/services/embarque";
 
 export interface EventoEmbarque {
   id: string;

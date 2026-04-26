@@ -9,7 +9,7 @@ import {
   fetchAdminOrganization,
   setOrganizationActivo,
   updateAdminOrganization,
-} from "@/services/adminServices";
+} from "@/services/admin";
 
 export function useAdminOrgInfo(id: string | undefined) {
   const { toast } = useToast();
