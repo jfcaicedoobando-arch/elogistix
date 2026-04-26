@@ -1,0 +1,88 @@
+import type { ChangelogEntry } from "../changelogData";
+
+export const changelogV6: ChangelogEntry[] = [
+  {
+    version: "6.7.1",
+    date: "2026-03-27",
+    type: "patch",
+    title: "Eliminar miembros de organización",
+    description: "Se puede eliminar miembros de una organización desde la página de detalle, con confirmación antes de proceder.",
+  },
+  {
+    version: "6.7.0",
+    date: "2026-03-27",
+    type: "minor",
+    title: "Catálogos de navieras y tipos de contenedor",
+    description: "Se crearon catálogos dinámicos para navieras y tipos de contenedor, migrando los datos estáticos a la base de datos con gestión completa (agregar, activar/desactivar, eliminar) desde Catálogos Globales.",
+  },
+  {
+    version: "6.6.0",
+    date: "2026-03-27",
+    type: "minor",
+    title: "Agregar miembros a organización",
+    description: "Se puede agregar usuarios existentes como miembros de una organización desde la página de detalle, seleccionando el usuario y asignándole un rol.",
+  },
+  {
+    version: "6.5.3",
+    date: "2026-03-27",
+    type: "patch",
+    title: "Eliminar tab Plataforma redundante",
+    description: "Se removió el tab 'Plataforma' de la configuración global por ser redundante. El campo de email de soporte se movió al tab de Seguridad.",
+  },
+  {
+    version: "6.5.2",
+    date: "2026-03-27",
+    type: "patch",
+    title: "Toggle activar/desactivar organización",
+    description: "Se agregó un switch en el header del detalle de organización para activar o desactivar la organización con feedback inmediato.",
+  },
+  {
+    version: "6.5.1",
+    date: "2026-03-27",
+    type: "patch",
+    title: "Edición inline de organización",
+    description: "El detalle de organización ahora permite editar nombre, RFC y plan directamente con un botón de editar/guardar. El selector de plan muestra los planes activos desde la base de datos.",
+  },
+  {
+    version: "6.5.0",
+    date: "2026-03-27",
+    type: "minor",
+    title: "Detalle enriquecido de organización",
+    description: "La página de detalle de una organización en el panel de administración ahora muestra KPIs (miembros, embarques, clientes, cotizaciones), información general (nombre, RFC, plan, fecha de creación, estado), tabla de miembros con cambio de rol y sección de configuración personalizada. Incluye botón de regreso a la lista.",
+  },
+  {
+    version: "6.4.0",
+    date: "2026-03-27",
+    type: "minor",
+    title: "Rebranding completo: Libre Carga",
+    description: "Renombrada toda la plataforma de Elogistix a Libre Carga. Nuevo logo SVG, favicon actualizado, metadatos OG/Twitter actualizados, referencias en sidebar, login, PDFs de cotización y documentos de cliente. Nueva identidad visual con ícono de contenedor estilizado en azul marino y azul eléctrico.",
+  },
+  {
+    version: "6.3.0",
+    date: "2026-03-27",
+    type: "minor",
+    title: "Configuración Global del Super Admin",
+    description: "Nueva página de Configuración Global con 4 secciones: Plataforma (identidad de marca), Planes y Límites (gestión de planes para organizaciones), Seguridad Global (políticas de contraseña, sesión y registro) y Catálogos Globales (puertos, navieras, contenedores). Incluye sección de impersonación para ver/editar la configuración de cada organización. Nuevas tablas configuracion_global y planes.",
+  },
+  {
+    version: "6.2.0",
+    date: "2026-03-27",
+    type: "minor",
+    title: "Panel exclusivo para Super Admin",
+    description: "El Super Admin ya no pertenece a ninguna organización y opera exclusivamente desde /admin. Al iniciar sesión se redirige automáticamente al panel de administración. Se agregó página de Configuración Global y se eliminó el enlace 'Ir a la app' del sidebar admin.",
+  },
+  {
+    version: "6.1.0",
+    date: "2026-03-27",
+    type: "minor",
+    title: "Selector de organización para Super Admin",
+    description: "Nuevo componente OrgSwitcher en el sidebar que permite a usuarios super_admin cambiar entre organizaciones. Todos los hooks de consulta principales (embarques, clientes, cotizaciones, proveedores, facturas) ahora filtran datos por la organización activa seleccionada, garantizando el aislamiento visual de datos en la interfaz.",
+  },
+  {
+    version: "6.0.0",
+    date: "2026-03-26",
+    type: "major",
+    title: "Arquitectura Multi-Tenant con Super Admin",
+    description: "Migración completa a arquitectura multi-tenant. Nuevas tablas organizations y organization_members. Nuevo rol super_admin con dashboard dedicado para administrar organizaciones, usuarios y métricas globales. Todas las tablas de datos ahora incluyen organization_id con aislamiento por RLS. Funciones RPC actualizadas para filtrar por organización del usuario autenticado.",
+  },
+];
