@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -16,8 +15,6 @@ import {
 } from "@/components/ui/alert-dialog";
 import { ArrowLeft, CheckCircle2, XCircle, Info, MessageSquare } from "lucide-react";
 import { usePortalCotizacion } from "@/hooks/usePortalData";
-import { useToast } from "@/hooks/use-toast";
-import { getErrorMessage } from "@/lib/errors";
 import SeccionMercanciaCotizacionDetalle from "@/components/cotizacion/SeccionMercanciaCotizacionDetalle";
 import TablaConceptosGenerico from "@/components/cotizacion/TablaConceptosGenerico";
 import ResumenTotalesCotizacion from "@/components/cotizacion/ResumenTotalesCotizacion";
@@ -26,41 +23,22 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Textarea } from "@/components/ui/textarea";
 import { getEstadoColor } from "@/lib/ui/uiMappings";
 import type { Tables } from "@/integrations/supabase/types";
-import { useResponderCotizacion } from "@/hooks/cotizacion/usePortalCotizacionMutations";
+import { usePortalCotizacionDetalleController } from "@/hooks/cotizacion/usePortalCotizacionDetalleController";
 
 export default function PortalCotizacionDetalle() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { data: cot, isLoading } = usePortalCotizacion(id);
   const totales = usePortalCotizacionDetalle(cot);
-  const { toast } = useToast();
-
-  const [confirmAction, setConfirmAction] = useState<"Aceptada" | "Rechazada" | null>(null);
-  const [comentario, setComentario] = useState("");
-  const responderMutation = useResponderCotizacion(id ?? "");
-
-  const handleResponder = async () => {
-    if (!confirmAction || !id) return;
-    responderMutation.mutate(
-      { respuesta: confirmAction, comentario },
-      {
-        onSuccess: () => {
-          toast({
-            title: confirmAction === "Aceptada"
-              ? "Cotización aceptada exitosamente"
-              : "Cotización rechazada",
-          });
-          setConfirmAction(null);
-          setComentario("");
-        },
-        onError: (err: unknown) => {
-          toast({ title: "Error", description: getErrorMessage(err), variant: "destructive" });
-          setConfirmAction(null);
-          setComentario("");
-        },
-      }
-    )
-  };
+  const {
+    confirmAction,
+    setConfirmAction,
+    comentario,
+    setComentario,
+    handleResponder,
+    onDialogOpenChange,
+    isPending,
+  } = usePortalCotizacionDetalleController(id);
 
   if (isLoading) {
     return (
