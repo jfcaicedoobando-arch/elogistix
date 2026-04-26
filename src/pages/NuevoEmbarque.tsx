@@ -31,7 +31,7 @@ export default function NuevoEmbarque() {
         saveLabel="Crear Embarque"
         onBack={() => navigate("/embarques")}
         onFinish={w.handleFinish}
-        validateStep={(step) => (step === 1 ? w.validateStep1() : true)}
+        validateStep={(step) => w.validateStep(step)}
       >
         {w.currentStep === 1 && (
           <StepDatosGenerales
@@ -39,7 +39,7 @@ export default function NuevoEmbarque() {
             clienteNombre={w.selectedCliente?.nombre || ""}
             contactos={w.contactos}
             onMsdsUpload={w.handleMsdsUpload}
-            errors={w.validationErrors}
+            errors={w.validationErrors[1] || {}}
             cotizacionesAceptadas={w.cotizacionesAceptadas}
             cotizacionVinculada={w.cotizacionVinculada}
             onVincularCotizacion={w.handleVincularCotizacion}
@@ -50,11 +50,17 @@ export default function NuevoEmbarque() {
             onSeleccionarExpediente={w.handleSeleccionarExpediente}
           />
         )}
-        {w.currentStep === 2 && <StepDatosRuta />}
+        {w.currentStep === 2 && (
+          <StepDatosRuta
+            errors={w.validationErrors[2] || {}}
+            diasTransitoSugerencia={w.cotizacionVinculada?.tiempo_transito_dias ?? null}
+          />
+        )}
         {w.currentStep === 3 && (
           <StepDocumentos
             documentos={w.getDocumentosChecklist(w.modo)}
             onFileChange={w.setDocumentoArchivo}
+            errors={w.validationErrors[3] || {}}
           />
         )}
         {w.currentStep === 4 && (
@@ -71,6 +77,7 @@ export default function NuevoEmbarque() {
             updateConceptoCosto={w.updateConceptoCosto}
             addConceptoCosto={w.addConceptoCosto}
             removeConceptoCosto={w.removeConceptoCosto}
+            errors={w.validationErrors[4] || {}}
           />
         )}
       </EmbarqueWizardLayout>

@@ -26,11 +26,16 @@ import {
 } from "@/hooks/useCotizaciones";
 import { fetchCotizacionCostosForEmbarque } from "@/services/cotizacion";
 import {
-  validateDatosGenerales,
   mapConceptosVentaFromCotizacion,
   mapConceptosCostoFromCotizacion,
 } from "@/lib/domain/embarqueWizard";
-import type { EmbarqueValidationErrors } from "@/components/embarque/StepDatosGenerales";
+import {
+  validateStepDatosGenerales,
+  validateStepRuta,
+  validateStepDocumentos,
+  validateStepCostos,
+  type StepValidationErrors,
+} from "@/lib/domain/embarqueWizardSchemas";
 
 type ModoExpediente = "nuevo" | "existente";
 
@@ -44,7 +49,7 @@ export function useNuevoEmbarqueWizard() {
 
   // ── Estado local del wizard ────────────────────────────────
   const [currentStep, setCurrentStep] = useState(1);
-  const [validationErrors, setValidationErrors] = useState<EmbarqueValidationErrors>({});
+  const [validationErrors, setValidationErrors] = useState<Record<number, StepValidationErrors>>({});
   const [cotizacionVinculada, setCotizacionVinculada] = useState<CotizacionRow | null>(null);
   const [modoExpediente, setModoExpediente] = useState<ModoExpediente>("nuevo");
   const [expedienteSeleccionado, setExpedienteSeleccionado] =
@@ -125,26 +130,71 @@ export function useNuevoEmbarqueWizard() {
     [methods],
   );
 
-  // ── Validación step 1 ──────────────────────────────────────
-  const validateStep1 = useCallback((): boolean => {
-    const errors = validateDatosGenerales(methods.getValues());
-    setValidationErrors(errors);
-    return Object.keys(errors).length === 0;
-  }, [methods]);
+  // ── Validación por paso (zod) ──────────────────────────────
+  const validateStep = useCallback(
+    (step: number): boolean => {
+      const values = methods.getValues();
+      let errors: StepValidationErrors = {};
+
+      if (step === 1) {
+        errors = validateStepDatosGenerales(values);
+      } else if (step === 2) {
+        errors = validateStepRuta(values);
+      } else if (step === 3) {
+        const archivos: Record<string, { size: number; type: string }> = {};
+        for (const [nombre, file] of Object.entries(form.documentosArchivos)) {
+          archivos[nombre] = { size: file.size, type: file.type };
+        }
+        errors = validateStepDocumentos(archivos);
+      } else if (step === 4) {
+        errors = validateStepCostos({
+          conceptosVenta: conceptos.conceptosVenta.map((v) => ({
+            id: v.id,
+            concepto: v.concepto,
+            cantidad: v.cantidad,
+            precioUnitario: v.precioUnitario,
+            moneda: v.moneda,
+          })),
+          conceptosCosto: conceptos.conceptosCosto.map((c) => ({
+            id: c.id,
+            proveedorId: c.proveedorId,
+            concepto: c.concepto,
+            monto: c.monto,
+            moneda: c.moneda,
+          })),
+          tipoCambioUSD: values.tipoCambioUSD,
+          tipoCambioEUR: values.tipoCambioEUR,
+        });
+      }
+
+      setValidationErrors((prev) => ({ ...prev, [step]: errors }));
+
+      if (Object.keys(errors).length > 0) {
+        toast({
+          title: `Revisa el paso ${step}`,
+          description: Object.values(errors)[0],
+          variant: "destructive",
+        });
+        return false;
+      }
+      return true;
+    },
+    [methods, form.documentosArchivos, conceptos.conceptosVenta, conceptos.conceptosCosto, toast],
+  );
+
+  // Compatibilidad con consumidores antiguos
+  const validateStep1 = useCallback(() => validateStep(1), [validateStep]);
 
   // ── Submit final (delegado al orquestador) ─────────────────
   const orchestrator = useEmbarqueSubmitOrchestrator();
 
   const handleFinish = async () => {
-    if (!validateStep1()) {
-      setCurrentStep(1);
-      toast({
-        title: "Campos requeridos",
-        description:
-          "Completa todos los campos obligatorios marcados con * en Datos Generales.",
-        variant: "destructive",
-      });
-      return;
+    // Validar todos los pasos antes de enviar
+    for (const step of [1, 2, 3, 4]) {
+      if (!validateStep(step)) {
+        setCurrentStep(step);
+        return;
+      }
     }
 
     await orchestrator.submit({
@@ -172,6 +222,7 @@ export function useNuevoEmbarqueWizard() {
     currentStep,
     setCurrentStep,
     validationErrors,
+    validateStep,
     validateStep1,
     // Catálogos / contactos
     clientes,
