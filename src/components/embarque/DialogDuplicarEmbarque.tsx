@@ -11,6 +11,7 @@ import { useTiposContenedor } from "@/hooks/useTiposContenedor";
 import { getErrorMessage } from "@/lib/errors";
 import { useToast } from "@/hooks/use-toast";
 import { useDuplicarEmbarque, type EmbarqueRow } from "@/hooks/useEmbarques";
+import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 
 interface FilaCopia {
   num_contenedor: string;
@@ -60,10 +61,10 @@ export default function DialogDuplicarEmbarque({ embarque, open, onOpenChange }:
   const handleDuplicar = async () => {
     try {
       const creados = await duplicarEmbarque.mutateAsync({ embarqueOrigen: embarque, copias: filaCopias });
-      toast({ title: `Se crearon ${creados.length} embarque(s)`, description: creados.map(c => c.expediente).join(', ') });
+      notifySuccess(toast, { title: `Se crearon ${creados.length} embarque(s)`, description: creados.map(c => c.expediente).join(', ') });
       onOpenChange(false);
     } catch (err: unknown) {
-      toast({ title: "Error al duplicar", description: getErrorMessage(err), variant: "destructive" });
+      notifyError(toast, { title: "Error al duplicar", message: getErrorMessage(err) });
     }
   };
 

@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { queryKeys } from "@/lib/query";
+import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 import {
   fetchAdminOrganization,
   setOrganizationActivo,
@@ -39,11 +40,11 @@ export function useAdminOrgInfo(id: string | undefined) {
       updateAdminOrganization(id!, payload),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.admin.org(id!) });
-      toast({ title: "Organización actualizada" });
+      notifySuccess(toast, { title: "Organización actualizada" });
       setEditing(false);
     },
     onError: (error: Error) => {
-      toast({ title: "Error al actualizar", description: error.message, variant: "destructive" });
+      notifyError(toast, { title: "Error al actualizar", message: error.message });
     },
   });
 
@@ -54,7 +55,7 @@ export function useAdminOrgInfo(id: string | undefined) {
       toast({ title: activo ? "Organización activada" : "Organización desactivada" });
     },
     onError: (error: Error) => {
-      toast({ title: "Error", description: error.message, variant: "destructive" });
+      notifyError(toast, { title: "Error", message: error.message });
     },
   });
 

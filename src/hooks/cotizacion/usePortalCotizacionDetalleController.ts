@@ -2,6 +2,7 @@ import { useState, useCallback } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { getErrorMessage } from "@/lib/errors";
 import { useResponderCotizacion } from "@/hooks/cotizacion/usePortalCotizacionMutations";
+import { notifyError } from "@/lib/ui/appFeedback";
 
 export type RespuestaCotizacion = "Aceptada" | "Rechazada";
 
@@ -36,11 +37,8 @@ export function usePortalCotizacionDetalleController(cotizacionId: string | unde
           reset();
         },
         onError: (err: unknown) => {
-          toast({
-            title: "Error",
-            description: getErrorMessage(err),
-            variant: "destructive",
-          });
+          notifyError(toast, { title: "Error",
+            message: getErrorMessage(err) });
           reset();
         },
       },

@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { queryKeys } from "@/lib/query";
+import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 import {
   fetchConfiguracion,
   updateConfiguracionByCategoriaClave,
@@ -45,10 +46,10 @@ export function useUpdateConfiguracion() {
     mutationFn: updateConfiguracionByCategoriaClave,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.configuracion.all });
-      toast({ title: "Configuración guardada" });
+      notifySuccess(toast, { title: "Configuración guardada" });
     },
     onError: (error: Error) => {
-      toast({ title: "Error al guardar", description: error.message, variant: "destructive" });
+      notifyError(toast, { title: "Error al guardar", message: error.message });
     },
   });
 }

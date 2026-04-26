@@ -11,6 +11,7 @@ import type { ConceptoVentaCotizacion } from "@/hooks/useCotizaciones";
 import ResumenPL from "./ResumenPL";
 import TablaCostosDetalle from "./TablaCostosDetalle";
 import { calcTotalsPL, type FilaCostoDetalle } from "./costosPLTypes";
+import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 
 interface Props {
   cotizacionId: string;
@@ -105,9 +106,9 @@ export default function SeccionCostosInternosPLDetalle({ cotizacionId, conceptos
     }));
     try {
       await upsert.mutateAsync({ cotizacionId, costos });
-      toast({ title: "Costos guardados correctamente" });
+      notifySuccess(toast, { title: "Costos guardados correctamente" });
     } catch (err: unknown) {
-      toast({ title: "Error al guardar", description: getErrorMessage(err), variant: "destructive" });
+      notifyError(toast, { title: "Error al guardar", message: getErrorMessage(err) });
     }
   };
 

@@ -1,6 +1,7 @@
 import { useState, useCallback } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { createDocumentoSignedUrl } from "@/services/searchService";
+import { notifyError } from "@/lib/ui/appFeedback";
 
 /**
  * Encapsula la descarga de documentos del portal (signed URL + blob fallback).
@@ -30,7 +31,7 @@ export function usePortalDocumentDownload() {
         window.open(signedUrl, "_blank");
       }
     } catch {
-      toast({ title: "Error al descargar", variant: "destructive" });
+      notifyError(toast, { title: "Error al descargar" });
     } finally {
       setDownloadingId(null);
     }

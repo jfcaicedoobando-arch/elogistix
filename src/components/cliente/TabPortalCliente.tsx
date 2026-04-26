@@ -9,6 +9,7 @@ import { UserPlus, Trash2, Globe, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { getErrorMessage } from "@/lib/errors";
 import { formatDate } from "@/lib/formatters";
+import { notifyError } from "@/lib/ui/appFeedback";
 import {
   useClientUsers,
   useInviteClientUser,
@@ -46,7 +47,7 @@ export default function TabPortalCliente({ clienteId, organizationId, canEdit }:
           setInviteEmail("");
         },
         onError: (err: unknown) => {
-          toast({ title: "Error", description: getErrorMessage(err), variant: "destructive" });
+          notifyError(toast, { title: "Error", message: getErrorMessage(err) });
         },
       }
     );
@@ -55,7 +56,7 @@ export default function TabPortalCliente({ clienteId, organizationId, canEdit }:
   const handleRevoke = (id: string) => {
     revokeMutation.mutate(id, {
       onSuccess: () => toast({ title: "Acceso revocado" }),
-      onError: (err: unknown) => toast({ title: "Error", description: getErrorMessage(err), variant: "destructive" }),
+      onError: (err: unknown) => notifyError(toast, { title: "Error", message: getErrorMessage(err) }),
     });
   };
 
