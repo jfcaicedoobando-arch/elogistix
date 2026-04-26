@@ -11,6 +11,7 @@
 import { useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
+import { notifyError, notifyWarning, notifySuccess } from "@/lib/ui/wizardFeedback";
 import { useAuth } from "@/contexts/AuthContext";
 import { useRegistrarActividad } from "@/hooks/useBitacora";
 import {
