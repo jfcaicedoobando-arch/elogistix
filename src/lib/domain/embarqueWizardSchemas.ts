@@ -171,7 +171,7 @@ export function validateStepRuta(input: StepRutaInput): StepValidationErrors {
     isValidDateStr(input.eta) &&
     new Date(input.eta!) < new Date(input.etd!)
   ) {
-    errors.eta = fmt("ETA", "debe ser igual o posterior al ETD");
+    errors.eta = msg("2.eta.afterEtd");
   }
 
   return errors;
@@ -187,13 +187,16 @@ export interface DocumentoArchivoValidacion {
 export function validateArchivo(
   file: DocumentoArchivoValidacion,
 ): string | null {
-  const label = `Documento ${file.nombre}`;
   if (file.size > MAX_FILE_SIZE_BYTES) {
-    const mb = (file.size / 1024 / 1024).toFixed(1);
-    return fmt(label, `excede ${MAX_FILE_SIZE_MB} MB (${mb} MB)`);
+    const sizeMb = (file.size / 1024 / 1024).toFixed(1);
+    return getMessage("3.documento.tooLarge", {
+      nombre: file.nombre,
+      sizeMb,
+      maxMb: MAX_FILE_SIZE_MB,
+    });
   }
   if (file.type && !ALLOWED_MIME_TYPES.includes(file.type as never)) {
-    return fmt(label, "formato no permitido. Usa PDF, JPG, PNG, XLSX o DOCX");
+    return getMessage("3.documento.invalidMime", { nombre: file.nombre });
   }
   return null;
 }
@@ -244,10 +247,10 @@ export function validateStepCostos(input: StepCostosInput): StepValidationErrors
     : input.tipoCambioEUR;
 
   if (!isFinite(tcUSD) || tcUSD <= 0) {
-    errors.tipoCambioUSD = fmt("Tipo de cambio USD", "debe ser mayor a 0");
+    errors.tipoCambioUSD = msg("4.tipoCambioUSD.positive");
   }
   if (!isFinite(tcEUR) || tcEUR <= 0) {
-    errors.tipoCambioEUR = fmt("Tipo de cambio EUR", "debe ser mayor a 0");
+    errors.tipoCambioEUR = msg("4.tipoCambioEUR.positive");
   }
 
   // Conceptos de venta
@@ -255,17 +258,11 @@ export function validateStepCostos(input: StepCostosInput): StepValidationErrors
     (v) => v.concepto.trim() && v.precioUnitario > 0 && v.cantidad >= 1,
   );
   if (ventasValidas.length === 0) {
-    errors.conceptosVenta = fmt(
-      "Conceptos de venta",
-      "agrega al menos uno con cantidad ≥ 1 y precio > 0",
-    );
+    errors.conceptosVenta = msg("4.conceptosVenta.required");
   } else {
     for (const v of input.conceptosVenta) {
       if (v.concepto.trim() && (v.cantidad < 1 || v.precioUnitario < 0)) {
-        errors[`venta_${v.id}`] = fmt(
-          `Concepto de venta #${v.id}`,
-          "cantidad ≥ 1 y precio ≥ 0",
-        );
+        errors[`venta_${v.id}`] = getMessage("4.conceptoVenta.invalid", { id: v.id });
       }
     }
   }
@@ -275,17 +272,11 @@ export function validateStepCostos(input: StepCostosInput): StepValidationErrors
     (c) => c.concepto.trim() && c.proveedorId && c.monto >= 0,
   );
   if (costosValidos.length === 0) {
-    errors.conceptosCosto = fmt(
-      "Conceptos de costo",
-      "agrega al menos uno con proveedor, concepto y monto ≥ 0",
-    );
+    errors.conceptosCosto = msg("4.conceptosCosto.required");
   } else {
     for (const c of input.conceptosCosto) {
       if (c.concepto.trim() && c.monto < 0) {
-        errors[`costo_${c.id}`] = fmt(
-          `Concepto de costo #${c.id}`,
-          "monto no puede ser negativo",
-        );
+        errors[`costo_${c.id}`] = getMessage("4.conceptoCosto.negativeAmount", { id: c.id });
       }
     }
   }
