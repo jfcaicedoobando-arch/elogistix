@@ -26,16 +26,18 @@ export interface ErrorNotifyOptions {
   phase?: string;
   /** Errores por campo (formato `Campo: razón.`). Toma el primero como descripción. */
   errors?: Record<string, string>;
-  /** Mensaje libre alternativo a `errors`. */
+  /** Mensaje libre alternativo a `errors` (sinónimo de `description`). */
   message?: string;
+  /** Descripción libre del error (alias preferido para llamadas simples). */
+  description?: string;
   /** Override de título. */
   title?: string;
 }
 
 /** Emite un toast bloqueante (variant destructive). */
 export function notifyError(toast: AnyToastFn, opts: ErrorNotifyOptions) {
-  const { step, phase, errors, message, title } = opts;
-  const description = message ?? (errors ? Object.values(errors)[0] : undefined);
+  const { step, phase, errors, message, description: descOpt, title } = opts;
+  const description = descOpt ?? message ?? (errors ? Object.values(errors)[0] : undefined);
 
   let computedTitle = title;
   if (!computedTitle) {
