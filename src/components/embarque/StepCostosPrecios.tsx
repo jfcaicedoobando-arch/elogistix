@@ -32,6 +32,7 @@ interface Props {
   updateConceptoCosto: (id: number, field: keyof ConceptoCostoRow, value: string | number | boolean) => void;
   addConceptoCosto: () => void;
   removeConceptoCosto: (id: number) => void;
+  errors?: StepValidationErrors;
 }
 
 export function StepCostosPrecios(props: Props) {
@@ -40,6 +41,7 @@ export function StepCostosPrecios(props: Props) {
     subtotalVenta, totalCosto, utilidadEstimada,
     updateConceptoVenta, addConceptoVenta, removeConceptoVenta,
     updateConceptoCosto, addConceptoCosto, removeConceptoCosto,
+    errors = {},
   } = props;
 
   const { watch, register, setValue } = useFormContext<EmbarqueFormValues>();
