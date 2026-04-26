@@ -2,6 +2,13 @@ import type { ChangelogEntry } from "../../../changelogData";
 
 export const chunk0: ChangelogEntry[] = [
   {
+    version: "8.98.0",
+    date: "2026-04-26",
+    type: "patch",
+    title: "Refactor: split de useNuevoEmbarqueWizard en sub-hooks cohesivos",
+    description: "Cierre del plan de auditoría arquitectónica. El hook controlador del wizard de creación de embarques (useNuevoEmbarqueWizard, 260 LOC) acumulaba cuatro responsabilidades: estado del wizard y catálogos, vinculación con cotización aceptada y selección de expediente, validación zod por paso, y orquestación del submit final. Se extrajeron dos sub-hooks dedicados — useNuevoEmbarqueExpediente (117 LOC: estado de cotización vinculada, modo nuevo/existente, hidratación de conceptos venta/costo desde la cotización, reset al cambiar de cliente) y useNuevoEmbarqueValidation (89 LOC: validación zod paso a paso con notificación de errores) — manteniendo la API pública del hook intacta. El controlador queda en 139 LOC dedicado únicamente a composición y submit. Sin cambios funcionales, sin breaking changes para los componentes consumidores. Build TypeScript verde y 205/205 pruebas pasando.",
+  },
+  {
     version: "8.97.0",
     date: "2026-04-26",
     type: "patch",
