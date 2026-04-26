@@ -8,6 +8,7 @@
  */
 import { useState, useCallback, useEffect, useRef } from "react";
 import { useToast } from "@/hooks/use-toast";
+import { notifyError } from "@/lib/ui/appFeedback";
 import {
   useProveedoresForSelect,
   type ExpedienteCliente,
@@ -171,12 +172,7 @@ export function useNuevoEmbarqueWizard() {
       setValidationErrors((prev) => ({ ...prev, [step]: errors }));
 
       if (Object.keys(errors).length > 0) {
-        const stepLabel = STEP_LABELS[step] ?? `Paso ${step}`;
-        toast({
-          title: `Revisa el Paso ${step}: ${stepLabel}`,
-          description: Object.values(errors)[0],
-          variant: "destructive",
-        });
+        notifyError(toast, { step, errors });
         return false;
       }
       return true;
