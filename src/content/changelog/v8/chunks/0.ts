@@ -2,6 +2,13 @@ import type { ChangelogEntry } from "../../../changelogData";
 
 export const chunk0: ChangelogEntry[] = [
   {
+    version: "8.99.0",
+    date: "2026-04-26",
+    type: "patch",
+    title: "Refinamiento arquitectónico final: barrels, agrupación de páginas y splits cohesivos",
+    description: "Cierre de la auditoría arquitectónica de abril 2026 con 5 mejoras aplicadas en un solo paso. (1) Barrels de hooks unificados: se crearon index.ts en los 10 dominios que faltaban (cotizacion, embarque, cliente, proveedor, usuario, admin, dashboard, operaciones, reportes, facturacion) habilitando imports limpios tipo `import { useEmbarques } from '@/hooks/embarque'`. (2) Páginas agrupadas por dominio: las 23 páginas raíz de src/pages/ se reorganizaron en sub-carpetas semánticas (auth/, dashboard/, embarques/, cotizaciones/, clientes/, proveedores/, facturacion/, admin-org/), alineadas con el patrón ya existente de admin/ y portal/. App.tsx y AuthContext.tsx actualizados con las nuevas rutas de import lazy. (3) Split de services/cotizacion/conversiones.ts (225 LOC) en una carpeta conversiones/ con 4 archivos cohesivos: duplicar.ts, prospecto.ts, embarques.ts y portal.ts más un barrel index.ts que mantiene la API pública intacta. (4) Split de useEmbarqueMutations.ts (185 LOC) en hooks/embarque/mutations/ con tres archivos por responsabilidad (useCreateEmbarque, useUpdateEmbarque, useDeleteEmbarque); el archivo original se conserva como re-export para compatibilidad. (5) Extracción del estado UI puro de useTabProformasController.tsx (214 LOC) hacia un nuevo hook useTabProformasState que encapsula filtros, paginación y derivados de filtrado, dejando al controller como orquestador delgado. Cero cambios funcionales: build TypeScript verde y 205/205 pruebas pasando. Con esta entrega la arquitectura del proyecto queda con 0 llamadas directas a supabase desde components/pages, hooks y servicios totalmente organizados por dominio, y barrels consistentes en todas las capas.",
+  },
+  {
     version: "8.97.0",
     date: "2026-04-26",
     type: "patch",
