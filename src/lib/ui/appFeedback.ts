@@ -10,12 +10,18 @@
  * Mantiene un único punto de cambio para tono y formato. Reemplaza el viejo
  * `wizardFeedback.ts` (que sigue funcionando como re-export para compatibilidad).
  */
+import type * as React from "react";
 import { STEP_LABELS } from "@/lib/domain/embarqueWizardSchemas";
 
+// Tipo deliberadamente permisivo para aceptar tanto el `toast` de
+// `@/hooks/use-toast` como el de `sonner` u otros wrappers compatibles.
+// La validación de severidades se hace en estos helpers, no en el tipo.
 type ToastFn = (props: {
-  title?: string;
-  description?: string;
-  variant?: "default" | "destructive" | "warning" | "success";
+  title?: React.ReactNode;
+  description?: React.ReactNode;
+  variant?: string;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  [key: string]: any;
 }) => unknown;
 
 export interface ErrorNotifyOptions {
