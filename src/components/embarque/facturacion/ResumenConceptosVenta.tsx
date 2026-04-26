@@ -131,11 +131,11 @@ export function ResumenConceptosVenta({ conceptos, tasaIva, canEdit, onGenerarPr
                   )}
                 </div>
               </div>
-              <div className="rounded-md border border-green-200 bg-green-50/50 p-3">
+              <div className="rounded-md border border-success/30 bg-success/5 p-3">
                 <div className="flex items-center gap-2 mb-2">
-                  <CheckCircle2 className="h-4 w-4 text-green-600" />
+                  <CheckCircle2 className="h-4 w-4 text-success" />
                   <span className="text-sm font-semibold">En proforma</span>
-                  <Badge className="ml-auto bg-green-100 text-green-800 border-green-200">{conceptosEnProforma.length}</Badge>
+                  <Badge className="ml-auto bg-success/15 text-success border-success/30">{conceptosEnProforma.length}</Badge>
                 </div>
                 <div className="text-sm space-y-0.5">
                   {totales.enProforma.totalMxn > 0 && (

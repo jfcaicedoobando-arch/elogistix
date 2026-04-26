@@ -1,5 +1,6 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import { kpiIconChipClasses, type KpiTone } from "@/lib/ui/kpiTones";
 
 export function KpiCard({
   titulo, valor, subtitulo, icono: Icono, color, loading, children,
@@ -8,20 +9,22 @@ export function KpiCard({
   valor: string | number;
   subtitulo?: string;
   icono: React.ElementType;
-  color: string;
+  /** Tono categórico del icono. Acepta KpiTone o aliases legacy. */
+  color: KpiTone | "blue" | "violet" | "emerald" | "red";
   loading?: boolean;
   children?: React.ReactNode;
 }) {
-  const colorMap: Record<string, string> = {
-    blue:    "bg-blue-50 text-blue-600",
-    violet:  "bg-violet-50 text-violet-600",
-    emerald: "bg-emerald-50 text-emerald-600",
-    red:     "bg-red-50 text-red-600",
+  const aliasMap: Record<string, KpiTone> = {
+    blue: "info",
+    violet: "accent",
+    emerald: "success",
+    red: "danger",
   };
+  const tone: KpiTone = (aliasMap[color] ?? color) as KpiTone;
   return (
     <Card className="rounded-2xl shadow-sm border-0 bg-card">
       <CardContent className="p-5 flex items-center gap-4">
-        <div className={`rounded-xl p-3 ${colorMap[color] ?? colorMap.blue}`}>
+        <div className={`rounded-xl p-3 ${kpiIconChipClasses(tone)}`}>
           <Icono className="h-5 w-5" />
         </div>
         <div className="min-w-0 flex-1">
