@@ -83,12 +83,12 @@ export default function Operaciones() {
 
       {/* ── KPIs globales ─────────────────────────────── */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <KpiCard titulo="Cargas activas" valor={global.totalActivas} icono={Package} color="blue" loading={isLoading} />
-        <KpiCard titulo="Contenedores" valor={`${global.totalContenedores} / ${MAX_CONTENEDORES}`} icono={Container} color="violet" loading={isLoading}>
-          {!isLoading && <Progress value={contPct} className="h-1.5 mt-1.5 [&>div]:bg-violet-500" />}
+        <KpiCard titulo="Cargas activas" valor={global.totalActivas} icono={Package} color="info" loading={isLoading} />
+        <KpiCard titulo="Contenedores" valor={`${global.totalContenedores} / ${MAX_CONTENEDORES}`} icono={Container} color="accent" loading={isLoading}>
+          {!isLoading && <Progress value={contPct} className="h-1.5 mt-1.5 [&>div]:bg-kpi-accent" />}
         </KpiCard>
-        <KpiCard titulo="Profit total USD" valor={formatCurrency(global.totalProfit, "USD")} icono={TrendingUp} color="emerald" loading={isLoading} />
-        <KpiCard titulo="Alertas de riesgo" valor={totalAlertas} subtitulo={totalAlertas > 0 ? `${global.totalCriticos} críticos · ${global.totalEnPuerto} en puerto` : "Sin alertas"} icono={AlertTriangle} color="red" loading={isLoading} />
+        <KpiCard titulo="Profit total USD" valor={formatCurrency(global.totalProfit, "USD")} icono={TrendingUp} color="success" loading={isLoading} />
+        <KpiCard titulo="Alertas de riesgo" valor={totalAlertas} subtitulo={totalAlertas > 0 ? `${global.totalCriticos} críticos · ${global.totalEnPuerto} en puerto` : "Sin alertas"} icono={AlertTriangle} color="danger" loading={isLoading} />
       </div>
 
       {/* ── Desempeño por Operador ───────────────────── */}
@@ -113,16 +113,16 @@ export default function Operaciones() {
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-3 gap-3 mb-4">
-            <div className="rounded-xl bg-blue-50 p-3 text-center">
-              <p className="text-xs text-blue-600 font-medium">ETD este mes</p>
-              <p className="text-xl font-bold text-blue-700">{creadasEsteMes}</p>
+            <div className="rounded-xl bg-kpi-info-soft p-3 text-center">
+              <p className="text-xs text-kpi-info font-medium">ETD este mes</p>
+              <p className="text-xl font-bold text-kpi-info">{creadasEsteMes}</p>
             </div>
-            <div className="rounded-xl bg-emerald-50 p-3 text-center">
-              <p className="text-xs text-emerald-600 font-medium">Llegadas este mes</p>
-              <p className="text-xl font-bold text-emerald-700">{llegadasEsteMes}</p>
+            <div className="rounded-xl bg-kpi-success-soft p-3 text-center">
+              <p className="text-xs text-kpi-success font-medium">Llegadas este mes</p>
+              <p className="text-xl font-bold text-kpi-success">{llegadasEsteMes}</p>
             </div>
-            <div className="rounded-xl bg-violet-600 p-3 text-center">
-              <p className="text-xs text-violet-100 font-medium">Activas hoy</p>
+            <div className="rounded-xl bg-kpi-accent p-3 text-center">
+              <p className="text-xs text-white/80 font-medium">Activas hoy</p>
               <p className="text-xl font-bold text-white">{global.activasHoy}</p>
             </div>
           </div>
@@ -136,8 +136,8 @@ export default function Operaciones() {
                 <XAxis dataKey="mes" tick={{ fontSize: 12 }} />
                 <YAxis allowDecimals={false} tick={{ fontSize: 12 }} />
                 <RechartsTooltip />
-                <Line type="monotone" dataKey="creadas" name="Por ETD" stroke="#3b82f6" strokeWidth={2} dot={{ r: 4, fill: "#3b82f6" }} />
-                <Line type="monotone" dataKey="llegadas" name="Llegadas" stroke="#10b981" strokeWidth={2} dot={{ r: 4, fill: "#10b981" }} />
+                <Line type="monotone" dataKey="creadas" name="Por ETD" stroke="hsl(var(--kpi-info))" strokeWidth={2} dot={{ r: 4, fill: "hsl(var(--kpi-info))" }} />
+                <Line type="monotone" dataKey="llegadas" name="Llegadas" stroke="hsl(var(--kpi-success))" strokeWidth={2} dot={{ r: 4, fill: "hsl(var(--kpi-success))" }} />
               </LineChart>
             </ResponsiveContainer>
           )}
@@ -145,7 +145,7 @@ export default function Operaciones() {
           <Separator className="my-4" />
           <div className="flex items-center gap-3">
             <span className="text-xs text-muted-foreground whitespace-nowrap">Balance ETD/llegadas</span>
-            <Progress value={Math.min(balancePct, 100)} className={`h-2 flex-1 ${balancePct >= 100 ? "[&>div]:bg-emerald-500" : "[&>div]:bg-amber-500"}`} />
+            <Progress value={Math.min(balancePct, 100)} className={`h-2 flex-1 ${balancePct >= 100 ? "[&>div]:bg-success" : "[&>div]:bg-warning"}`} />
             <span className="text-xs font-medium">{balancePct}%</span>
           </div>
         </CardContent>

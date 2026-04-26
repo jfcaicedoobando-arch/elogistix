@@ -10,7 +10,7 @@ export function RiesgoIndicador({ criticos, enPuerto, porArribar }: { criticos: 
   const total = criticos + enPuerto + porArribar;
   if (total === 0) {
     return (
-      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium bg-emerald-100 text-emerald-700">
+      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium bg-success/15 text-success">
         ✓ Sin riesgo
       </span>
     );
@@ -19,19 +19,19 @@ export function RiesgoIndicador({ criticos, enPuerto, porArribar }: { criticos: 
   return (
     <div className="flex flex-wrap items-center gap-1">
       {criticos > 0 && (
-        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold bg-red-600 text-white">
+        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold bg-destructive text-destructive-foreground">
           <AlertTriangle className="h-3 w-3" />
           {criticos} crítica{criticos > 1 ? "s" : ""}
         </span>
       )}
       {enPuerto > 0 && (
-        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold border border-amber-400 bg-amber-50 text-amber-700">
+        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold border border-warning/40 bg-warning/10 text-warning">
           <Anchor className="h-3 w-3" />
           {enPuerto} en puerto
         </span>
       )}
       {porArribar > 0 && (
-        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold border border-sky-300 bg-sky-50 text-sky-700">
+        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold border border-kpi-secondary/40 bg-kpi-secondary-soft text-kpi-secondary">
           <Ship className="h-3 w-3" />
           {porArribar} por arribar
         </span>
@@ -54,10 +54,10 @@ export function CapacityBar({ count, max }: { count: number; max: number }) {
 
 // ─── Risk badge ──────────────────────────────────────────
 const RISK_BADGE_CONFIG: Record<NivelRiesgo, { icon: React.ElementType; className: string; label: string }> = {
-  critico:     { icon: AlertTriangle, className: "bg-red-600 text-white", label: "Crítico" },
-  en_puerto:   { icon: Anchor, className: "border border-amber-400 bg-amber-50 text-amber-700", label: "En Puerto" },
-  por_arribar: { icon: Ship, className: "border border-sky-300 bg-sky-50 text-sky-700", label: "Por Arribar" },
-  ok:          { icon: Ship, className: "bg-emerald-100 text-emerald-700", label: "OK" },
+  critico:     { icon: AlertTriangle, className: "bg-destructive text-destructive-foreground", label: "Crítico" },
+  en_puerto:   { icon: Anchor, className: "border border-warning/40 bg-warning/10 text-warning", label: "En Puerto" },
+  por_arribar: { icon: Ship, className: "border border-kpi-secondary/40 bg-kpi-secondary-soft text-kpi-secondary", label: "Por Arribar" },
+  ok:          { icon: Ship, className: "bg-success/15 text-success", label: "OK" },
 };
 
 export function RiskBadge({ nivel }: { nivel: NivelRiesgo }) {

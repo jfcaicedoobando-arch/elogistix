@@ -21,7 +21,7 @@ export interface ConceptoRowProps {
 export function ConceptoRowUSD({ concepto: c, index: i, total, actualizar, eliminar }: ConceptoRowProps) {
   const puedeIva = (CONCEPTOS_CON_IVA_USD as readonly string[]).includes(c.descripcion);
   return (
-    <div className={`grid grid-cols-12 gap-2 items-end rounded-md px-1 py-1 ${c.aplica_iva ? 'bg-amber-50/30' : ''}`}>
+    <div className={`grid grid-cols-12 gap-2 items-end rounded-md px-1 py-1 ${c.aplica_iva ? 'bg-warning/5' : ''}`}>
       <div className="col-span-3">
         {i === 0 && <Label className="text-xs">Concepto</Label>}
         {c.descripcion !== '' && !(CONCEPTOS_COSTO_USD as readonly string[]).includes(c.descripcion) && c.descripcion !== 'Otro' ? (
