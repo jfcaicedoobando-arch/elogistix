@@ -1,4 +1,4 @@
-# Auditoría arquitectónica (post v8.74.0)
+# Auditoría arquitectónica (post v8.75.0)
 
 ## Estado general
 
