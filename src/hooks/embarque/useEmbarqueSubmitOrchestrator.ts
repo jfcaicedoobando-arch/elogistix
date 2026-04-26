@@ -31,37 +31,32 @@ import {
 } from "@/lib/domain/embarqueWizard";
 import { getErrorMessage } from "@/lib/errors";
 import type { Tables } from "@/integrations/supabase/types";
+import type { DocumentoChecklist } from "@/types/documentoChecklistTypes";
+import type { ConceptoVentaLocal, ConceptoCostoLocal } from "@/types/conceptoTypes";
+import type { useEmbarqueForm } from "@/hooks/embarque/useEmbarqueForm";
 
 type ContactoRow = Pick<Tables<"contactos_cliente">, "id" | "nombre" | "tipo" | "pais">;
 type ProveedorRow = { id: string; nombre: string };
 type ModoExpediente = "nuevo" | "existente";
+type EmbarqueFormApi = ReturnType<typeof useEmbarqueForm>;
 
 export interface SubmitOrchestratorParams {
   /** Valores actuales del formulario (RHF.getValues()). */
-  values: {
-    modo: string;
-    tipo: string;
-    blMaster: string;
-  };
+  values: { modo: string; tipo: string; blMaster: string };
   modoExpediente: ModoExpediente;
   expedienteSeleccionado: ExpedienteCliente | null;
   cotizacionVinculada: CotizacionRow | null;
   contactos: ContactoRow[];
   selectedClienteNombre: string;
   proveedoresDb: ProveedorRow[];
-  documentosArchivos: Record<string, File | null>;
-  // Builders inyectados desde useEmbarqueForm
-  buildEmbarquePayload: (
-    contactos: ContactoRow[],
-    clienteNombre: string,
-    operador: string,
-  ) => Record<string, unknown>;
-  buildConceptosVentaPayload: (cv: unknown[]) => unknown[];
-  buildConceptosCostoPayload: (cc: unknown[], proveedores: ProveedorRow[]) => unknown[];
-  getDocumentosChecklist: (modo: string) => Array<{ tipo: string }> & unknown[];
-  // Conceptos en estado local
-  conceptosVenta: unknown[];
-  conceptosCosto: unknown[];
+  documentosArchivos: Record<string, File>;
+  // Builders inyectados desde useEmbarqueForm (tipos reales)
+  buildEmbarquePayload: EmbarqueFormApi["buildEmbarquePayload"];
+  buildConceptosVentaPayload: EmbarqueFormApi["buildConceptosVentaPayload"];
+  buildConceptosCostoPayload: EmbarqueFormApi["buildConceptosCostoPayload"];
+  getDocumentosChecklist: (modo: string) => DocumentoChecklist[];
+  conceptosVenta: ConceptoVentaLocal[];
+  conceptosCosto: ConceptoCostoLocal[];
 }
 
 export function useEmbarqueSubmitOrchestrator() {
@@ -97,9 +92,9 @@ export function useEmbarqueSubmitOrchestrator() {
         };
 
         await createEmbarque.mutateAsync({
-          embarque: embarquePayload as never,
-          conceptosVenta: p.buildConceptosVentaPayload(p.conceptosVenta) as never,
-          conceptosCosto: p.buildConceptosCostoPayload(p.conceptosCosto, p.proveedoresDb) as never,
+          embarque: embarquePayload,
+          conceptosVenta: p.buildConceptosVentaPayload(p.conceptosVenta),
+          conceptosCosto: p.buildConceptosCostoPayload(p.conceptosCosto, p.proveedoresDb),
           documentos: docPayload,
         });
 
