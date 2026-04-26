@@ -1,32 +1,15 @@
-import { useState } from "react";
 import { ArrowLeft, ArrowRight, Loader2, Upload, FileText } from "lucide-react";
-import { getErrorMessage } from "@/lib/errors";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription,
 } from "@/components/ui/dialog";
-import { useCreateCliente } from "@/hooks/useClientes";
-import { useToast } from "@/hooks/use-toast";
-import { useRegistrarActividad } from "@/hooks/useBitacora";
-import DocumentChecklist, { type DocumentoChecklist } from "@/components/DocumentChecklist";
-import { parseCsf } from "@/services/csfService";
-
-const emptyCliente = {
-  nombre: "", rfc: "", direccion: "", ciudad: "", estado: "", cp: "", contacto: "", email: "", telefono: "",
-};
-
-const DOCS_OBLIGATORIOS = [
-  'Constancia de Situación Fiscal (CSF)', 'CIF', 'Opinión fiscal', 'Acta constitutiva',
-  'INE RL', 'Poder notarial', 'Comprobante de domicilio', 'Datos bancarios',
-  'Opinión de cumplimiento IMSS/Infonavit', 'Contrato de servicios con Libre Carga',
-  'Estados financieros último corte',
-];
-
-type ModoAlta = "manual" | "csf";
-
-type ClienteForm = typeof emptyCliente;
+import DocumentChecklist from "@/components/DocumentChecklist";
+import {
+  useNuevoClienteController,
+  type ClienteForm,
+} from "@/hooks/cliente/useNuevoClienteController";
 
 const FORM_FIELDS: { label: string; field: keyof ClienteForm; full?: boolean; required?: boolean }[] = [
   { label: "Nombre / Razón Social", field: "nombre", full: true, required: true },
@@ -46,123 +29,40 @@ interface Props {
 }
 
 export default function NuevoClienteDialog({ open, onOpenChange }: Props) {
-  const { toast } = useToast();
-  const createCliente = useCreateCliente();
-  const registrarActividad = useRegistrarActividad();
-
-  const [form, setForm] = useState<ClienteForm>(emptyCliente);
-  const [step, setStep] = useState<1 | 2>(1);
-  const [documentos, setDocumentos] = useState<DocumentoChecklist[]>([]);
-  const [modoAlta, setModoAlta] = useState<ModoAlta>("manual");
-  const [parsingCsf, setParsingCsf] = useState(false);
-  const [csfFile, setCsfFile] = useState<File | null>(null);
-
-  const handleChange = (field: keyof ClienteForm, value: string) =>
-    setForm(prev => ({ ...prev, [field]: value }));
-
-  const isStep1Valid = () => form.nombre.trim() && form.rfc.trim() && form.cp.trim();
-
-  const handleNext = () => {
-    if (!isStep1Valid()) return;
-    setDocumentos(DOCS_OBLIGATORIOS.map(nombre => {
-      if (nombre === 'Constancia de Situación Fiscal (CSF)' && csfFile) {
-        return { nombre, adjuntado: true, archivo: csfFile.name };
-      }
-      return { nombre, adjuntado: false };
-    }));
-    setStep(2);
-  };
-
-  const handleFileChange = (docNombre: string, file: File | undefined) => {
-    setDocumentos(prev =>
-      prev.map(d => d.nombre === docNombre ? { ...d, archivo: file?.name, adjuntado: !!file } : d)
-    );
-  };
-
-  const allDocsAdjuntados = documentos.length > 0 && documentos.every(d => d.adjuntado);
-
-  const handleSave = async () => {
-    if (!allDocsAdjuntados) return;
-    try {
-      const clienteCreado = await createCliente.mutateAsync(form);
-      registrarActividad.mutate({
-        accion: 'crear', modulo: 'clientes',
-        entidad_id: clienteCreado.id, entidad_nombre: clienteCreado.nombre,
-      });
-      toast({ title: "Cliente creado exitosamente" });
-      resetAndClose();
-    } catch (error: unknown) {
-      const msg = getErrorMessage(error);
-      toast({ title: "Error al crear cliente", description: msg, variant: "destructive" });
-    }
-  };
-
-  const resetAndClose = () => {
-    setForm(emptyCliente);
-    setStep(1);
-    setDocumentos([]);
-    setModoAlta("manual");
-    setCsfFile(null);
-    onOpenChange(false);
-  };
-
-  const handleCsfUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    if (file.type !== "application/pdf") {
-      toast({ title: "Archivo inválido", description: "Solo se aceptan archivos PDF.", variant: "destructive" });
-      return;
-    }
-
-    setParsingCsf(true);
-    try {
-      const datos = await parseCsf(file);
-      setForm(prev => ({
-        ...prev,
-        nombre: datos.nombre || prev.nombre,
-        rfc: datos.rfc || prev.rfc,
-        cp: datos.cp || prev.cp,
-        direccion: datos.direccion || prev.direccion,
-        ciudad: datos.ciudad || prev.ciudad,
-        estado: datos.estado || prev.estado,
-      }));
-
-      setCsfFile(file);
-      toast({ title: "Datos extraídos", description: "Revisa la información antes de continuar." });
-    } catch (error: unknown) {
-      const msg = getErrorMessage(error);
-      toast({ title: "Error al leer CSF", description: msg, variant: "destructive" });
-    } finally {
-      setParsingCsf(false);
-      e.target.value = "";
-    }
-  };
+  const c = useNuevoClienteController(() => onOpenChange(false));
 
   return (
-    <Dialog open={open} onOpenChange={(abierto) => { if (!abierto) resetAndClose(); else onOpenChange(abierto); }}>
+    <Dialog
+      open={open}
+      onOpenChange={(abierto) => {
+        if (!abierto) c.resetAndClose();
+        else onOpenChange(abierto);
+      }}
+    >
       <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Nuevo Cliente — Paso {step} de 2</DialogTitle>
+          <DialogTitle>Nuevo Cliente — Paso {c.step} de 2</DialogTitle>
           <DialogDescription>
-            {step === 1 ? 'Ingresa los datos del nuevo cliente o sube su Constancia de Situación Fiscal (CSF).' : 'Adjunta todos los documentos obligatorios para crear el cliente.'}
+            {c.step === 1
+              ? 'Ingresa los datos del nuevo cliente o sube su Constancia de Situación Fiscal (CSF).'
+              : 'Adjunta todos los documentos obligatorios para crear el cliente.'}
           </DialogDescription>
         </DialogHeader>
 
-        {step === 1 && (
+        {c.step === 1 && (
           <div className="space-y-4">
             <div className="flex gap-2">
-              <Button type="button" variant={modoAlta === "manual" ? "default" : "outline"} size="sm" onClick={() => setModoAlta("manual")}>
+              <Button type="button" variant={c.modoAlta === "manual" ? "default" : "outline"} size="sm" onClick={() => c.setModoAlta("manual")}>
                 <FileText className="h-4 w-4 mr-1" /> Manual
               </Button>
-              <Button type="button" variant={modoAlta === "csf" ? "default" : "outline"} size="sm" onClick={() => setModoAlta("csf")}>
+              <Button type="button" variant={c.modoAlta === "csf" ? "default" : "outline"} size="sm" onClick={() => c.setModoAlta("csf")}>
                 <Upload className="h-4 w-4 mr-1" /> Subir CSF
               </Button>
             </div>
 
-            {modoAlta === "csf" && (
+            {c.modoAlta === "csf" && (
               <div className="border-2 border-dashed border-muted-foreground/25 rounded-lg p-6 text-center space-y-2">
-                {parsingCsf ? (
+                {c.parsingCsf ? (
                   <div className="flex flex-col items-center gap-2">
                     <Loader2 className="h-8 w-8 animate-spin text-primary" />
                     <p className="text-sm text-muted-foreground">Extrayendo datos del CSF…</p>
@@ -175,7 +75,7 @@ export default function NuevoClienteDialog({ open, onOpenChange }: Props) {
                       <Button type="button" variant="outline" size="sm" asChild>
                         <span>Seleccionar PDF</span>
                       </Button>
-                      <input type="file" accept="application/pdf" className="hidden" onChange={handleCsfUpload} />
+                      <input type="file" accept="application/pdf" className="hidden" onChange={c.handleCsfUpload} />
                     </label>
                   </>
                 )}
@@ -186,37 +86,37 @@ export default function NuevoClienteDialog({ open, onOpenChange }: Props) {
               {FORM_FIELDS.map(({ label, field, full, required }) => (
                 <div key={field} className={full ? "col-span-2" : ""}>
                   <Label className="text-xs">{label}{required && <span className="text-destructive ml-0.5">*</span>}</Label>
-                  <Input value={form[field]} onChange={(e) => handleChange(field, e.target.value)} className="mt-1" />
+                  <Input value={c.form[field]} onChange={(e) => c.handleChange(field, e.target.value)} className="mt-1" />
                 </div>
               ))}
             </div>
           </div>
         )}
 
-        {step === 2 && (
+        {c.step === 2 && (
           <DocumentChecklist
-            documentos={documentos}
-            onFileChange={handleFileChange}
+            documentos={c.documentos}
+            onFileChange={c.handleFileChange}
             descripcion="Todos los documentos deben estar adjuntados para poder crear el cliente."
           />
         )}
 
         <DialogFooter>
-          {step === 1 && (
+          {c.step === 1 && (
             <>
-              <Button variant="outline" onClick={resetAndClose}>Cancelar</Button>
-              <Button onClick={handleNext} disabled={!isStep1Valid()}>
+              <Button variant="outline" onClick={c.resetAndClose}>Cancelar</Button>
+              <Button onClick={c.handleNext} disabled={!c.isStep1Valid}>
                 Siguiente <ArrowRight className="h-4 w-4 ml-1" />
               </Button>
             </>
           )}
-          {step === 2 && (
+          {c.step === 2 && (
             <>
-              <Button variant="outline" onClick={() => setStep(1)}>
+              <Button variant="outline" onClick={() => c.setStep(1)}>
                 <ArrowLeft className="h-4 w-4 mr-1" /> Atrás
               </Button>
-              <Button onClick={handleSave} disabled={!allDocsAdjuntados || createCliente.isPending}>
-                {createCliente.isPending ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : null}
+              <Button onClick={c.handleSave} disabled={!c.allDocsAdjuntados || c.isSaving}>
+                {c.isSaving ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : null}
                 Crear
               </Button>
             </>

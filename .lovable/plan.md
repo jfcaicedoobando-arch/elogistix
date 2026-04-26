@@ -1,112 +1,48 @@
-# Auditoría arquitectónica v8.89.0 → mejoras detectadas
+## Auditoría rápida (v8.89.0) — Top 5 mejoras ejecutables en un solo paso
 
-Estado general: **muy sano** tras Fases 1-3. La estructura por capas se respeta (cero violaciones de §3.1 — ninguna page ni componente importa el cliente Supabase directo). Lo que queda son **inconsistencias de organización** y **densidad excesiva** en algunas páginas. No hay anti-patrones graves.
+### Hallazgos clave
 
-## Hallazgos por categoría
+1. **17 servicios standalone** en `src/services/*.ts` no siguen la convención folder/barrel (`folder/index.ts`) que sí usan `cotizacion/`, `embarque/`, `cliente/`, `proforma/`, `admin/`, `portal/`.
+2. **38 hooks sueltos** en la raíz de `src/hooks/` mezclan dominios (portal, configuración, catálogos, dashboard, admin) sin agrupación.
+3. **Diálogos densos**: `NuevoClienteDialog.tsx` (228 LOC) y `NuevoProveedorDialog.tsx` (202 LOC) mezclan estado, parsing CSF, validación y UI.
+4. **Carpetas underutilized**: `src/components/shared/` contiene un único archivo (`ProfitBadge.tsx`); `src/test/` solo `setup.ts`.
+5. **`useCotizaciones.ts` y `useEmbarques.ts`** ya son barrels correctos — buen patrón a replicar para hooks de catálogos.
 
-### A. Inconsistencia de barrels en `src/services/` (alta prioridad)
+---
 
-La regla v8.86.0 dice "folder + index.ts, sin sufijo Service". Hoy quedan **17 archivos sueltos en raíz** que no la cumplen:
+### Top 5 mejoras (ejecutables en un solo paso, v8.90.0)
 
-```text
-authService.ts            bitacoraService.ts        catalogosService.ts
-clientUserService.ts      clienteFinancialsService.ts  configuracionService.ts
-csfService.ts             dashboardService.ts       facturasService.ts
-operacionesService.ts     planesService.ts          proveedorServices.ts
-reportesService.ts        searchService.ts          storage.ts
-trackingService.ts        usuarioService.ts
-```
+1. **Agrupar hooks de catálogos** en `src/hooks/catalogos/`
+   - Mover: `useNavieras.ts`, `usePuertos.ts`, `useTiposContenedor.ts`, `useOperadoresDistintos.ts`, `useTasaIVA.ts`, `useExchangeRates.ts`.
+   - Crear barrel `src/hooks/catalogos/index.ts` y mantener re-exports en la raíz para no romper imports.
 
-Co-existen con `cliente/`, `embarque/`, `cotizacion/`, `proforma/`, `admin/`, `portal/` que sí siguen la regla. Inconsistencia interna del propio `services/`. La mayoría tiene 1 sólo consumidor; los más populares (storage, reportes, catalogos) son los que más justifican migrar a folder.
+2. **Agrupar hooks de configuración** en `src/hooks/configuracion/`
+   - Mover: `useConfiguracion.ts`, `useConfiguracionGlobal.ts`, `useConfiguracionOrg.ts`, `useConfiguracionState.ts`.
+   - Barrel `index.ts` + re-exports raíz.
 
-### B. Hooks raíz desorganizados (alta prioridad)
+3. **Agrupar hooks de portal** en `src/hooks/portal/`
+   - Mover: `usePortalData.ts`, `usePortalDashboardKpis.ts`, `usePortalDocumentDownload.ts`.
+   - Barrel `index.ts` + re-exports raíz.
 
-`src/hooks/` tiene **38 archivos sueltos** en raíz (muchos más que los 6 sub-dominios actuales). Agrupaciones obvias detectadas:
+4. **Estandarizar 3 servicios críticos** a folder/barrel
+   - Convertir `authService.ts`, `storage.ts` y `csfService.ts` en `services/auth/`, `services/storage/`, `services/csf/` con `index.ts` (re-exports).
+   - Mantener archivos antiguos como shim de re-export para evitar romper imports.
 
-- **Portal**: `usePortalDashboardKpis`, `usePortalData`, `usePortalDocumentDownload` → `hooks/portal/`. Ya hay 2 hooks portal en `hooks/cotizacion/`, fragmenta el dominio.
-- **Cliente**: `useClientes`, `useClienteFinancials`, `useClientUsersMutations` → `hooks/cliente/` (ya existe).
-- **Configuración**: `useConfiguracion`, `useConfiguracionGlobal`, `useConfiguracionOrg`, `useConfiguracionState` → `hooks/configuracion/`.
-- **Catálogos**: `useNavieras`, `usePuertos`, `useTiposContenedor`, `useExchangeRates`, `useTasaIVA`, `useOperadoresDistintos` → `hooks/catalogos/`.
-- **Admin/Org**: `useAdminData`, `useAdminOrgDetalle`, `useOrganizationsList`, `useOrgFilter`, `useOrgMembersMutations`, `usePlanes` → `hooks/admin/` (ya existe parcialmente).
-- **Dashboard**: `useDashboardData`, `useDesempenoChartData`, `useOperacionesData`, `useSidebarAlerts`, `useRentabilidadClientes` → `hooks/dashboard/`.
+5. **Extraer controller de `NuevoClienteDialog`** → `useNuevoClienteController.ts`
+   - Mover lógica de estado (`form`, `step`, `documentos`, `modoAlta`, `csfFile`), handlers (`handleNext`, `handleSave`, `handleCsfUpload`, `handleFileChange`) y validaciones a `src/hooks/cliente/useNuevoClienteController.ts`.
+   - Dejar el diálogo como componente puramente presentacional (~80 LOC).
 
-Los transversales legítimos (`useDebounce`, `useListPageState`, `usePermissions`, `useGlobalSearch`, `useBitacora`, `use-mobile`, `use-toast`) sí pueden quedar en raíz.
+---
 
-### C. Densidad excesiva en páginas (media prioridad)
+### Detalles técnicos
 
-Pages con >10 hooks ya superan el umbral de la regla §3.5 ("controllers para pages densas"):
+- **Sin breaking changes**: todas las migraciones de hooks/servicios mantienen re-exports en la ruta original.
+- **Verificación**: `bun run typecheck` + `bunx vitest run` (184 tests deben seguir pasando).
+- **Documentación**: actualizar `ARCHITECTURE.md` (subsección de hooks por dominio) y agregar entrada **v8.90.0** a `src/content/changelog/v8.ts` + `Changelog.tsx`.
 
-| Page | Hooks | Acción |
-|---|---|---|
-| Embarques.tsx (241 LOC) | 14 | Extraer `useEmbarquesPageController` |
-| EmbarqueDetalle.tsx | 13 | Extraer `useEmbarqueDetallePageController` (los hooks de acciones ya existen, falta el agregador) |
-| Cotizaciones.tsx (245 LOC) | 12 | Extraer `useCotizacionesPageController` |
-| Proveedores.tsx | 10 | Extraer `useProveedoresPageController` |
-| ProveedorDetalle.tsx | 10 | Extraer `useProveedorDetalleController` |
-| EditarCotizacion.tsx | 9 | Extraer `useEditarCotizacionController` |
+### Fuera de alcance (para iteraciones futuras)
 
-Reportes y Cliente Detalle ya están refactorizados (Fase 1) — usar mismo patrón.
-
-### D. Carpeta `src/test/` con un solo archivo (baja)
-
-`src/test/` contiene **únicamente** `setup.ts` (config de Vitest). Después de borrar `example.test.ts` en v8.89.0, la carpeta tiene un único propósito. Opciones:
-1. Mover a `src/setupTests.ts` o `vitest.setup.ts` en raíz (convención más común en el ecosistema).
-2. Dejar como está (acepta como configuración).
-
-Hoy está documentado en `vitest.config.ts` como `setupFiles: ["./src/test/setup.ts"]`; el cambio es trivial.
-
-### E. `src/components/shared/` infrautilizado (baja)
-
-Sólo contiene `ProfitBadge.tsx`. Carpeta entera para 1 componente. Decidir:
-- Promover a `src/components/ProfitBadge.tsx` (raíz, donde están los 18 componentes globales como DataTable, GlobalSearch, etc.).
-- O documentar la convención: "shared/ es el lugar canónico para componentes cross-domain" y mover otros componentes globales aquí (Layout, ErrorBoundary, ProtectedRoute…).
-
-Lo que NO debe quedar: una carpeta con un solo archivo sin convención clara.
-
-### F. Componentes grandes (media prioridad)
-
-| Componente | LOC | Síntoma |
-|---|---|---|
-| `NuevoClienteDialog` (228) | Wizard de alta cliente; probablemente mezcla form + servicios CSF + UI. |
-| `CotizacionWizardLayout` (222) | Layout + lógica de pasos. |
-| `NuevoProveedorDialog` (202) | Mismo patrón que NuevoClienteDialog. |
-| `PortalLayout` (196) | Layout portal cliente. |
-| `AppSidebar` (204) | Aceptable (mucho JSX declarativo de nav). |
-| `DataTable` (184) | Componente genérico reutilizable; LOC justificada. |
-
-Los Dialogs con >200 LOC se benefician de extraer su lógica a controllers (`useNuevoClienteDialogController`, `useNuevoProveedorDialogController`). Mismo patrón que aplicado a páginas.
-
-### G. `usePortalCotizacion*` mal ubicado (baja)
-
-Viven en `hooks/cotizacion/` por tema, pero conceptualmente pertenecen al **portal de clientes**. Si se crea `hooks/portal/` (hallazgo B), moverlos ahí o mantenerlos donde están y documentar la decisión.
-
-### H. Sin TODO/FIXME pendientes ✓
-
-Cero comentarios de deuda técnica en código activo. `console.log` solo aparece en archivos legítimos (ErrorBoundary, NotFound, searchService).
-
-## Plan ordenado (crítico → opcional)
-
-1. **Estandarizar barrels en `src/services/`**: migrar los 17 servicios sueltos a folder + index.ts. Empezar por los de >2 consumidores (storage, reportes, catalogos, tracking, configuracion). Para los de 1 consumidor evaluar si tiene sentido un folder o si conviene fusionar con un dominio existente. Actualizar 30+ imports.
-
-2. **Reagrupar `src/hooks/`**: crear `hooks/portal/`, `hooks/configuracion/`, `hooks/catalogos/`, `hooks/dashboard/`; mover los hooks raíz que correspondan (lista en §B). Mover `useClientes`, `useClienteFinancials`, `useClientUsersMutations` a `hooks/cliente/` existente. Actualizar imports.
-
-3. **Extraer controllers de páginas densas** (§C): empezar por `Embarques.tsx` (14 hooks) y `Cotizaciones.tsx` (12 hooks). Patrón canónico ya aplicado en Reportes/ClienteDetalle.
-
-4. **Extraer controllers de Dialogs densos** (§F): `useNuevoClienteDialogController`, `useNuevoProveedorDialogController`, `useCotizacionWizardLayoutController`. Bajan los componentes de >200 a ~120 LOC.
-
-5. **Decidir destino de `src/components/shared/`** (§E): promover `ProfitBadge` a raíz y eliminar la carpeta, **o** mover los componentes cross-domain a `shared/` y documentar.
-
-6. **Mover `src/test/setup.ts`** (§D) a `vitest.setup.ts` raíz y actualizar `vitest.config.ts`. Eliminar carpeta `src/test/`.
-
-7. **Reubicar `usePortalCotizacion*`** (§G) a `hooks/portal/` cuando exista, o documentar la excepción en ARCHITECTURE.md.
-
-8. **Documentar en ARCHITECTURE.md**: criterios para cuándo crear sub-carpeta en `hooks/` (umbral sugerido: ≥3 archivos de un mismo dominio) y reforzar la convención de barrels en services.
-
-## Detalles técnicos
-
-- Cero violaciones de capa detectadas (regla §3.1 limpia en pages y components).
-- Bundle inicial ya optimizado (lazy de páginas, jsPDF dinámico, changelog tiered).
-- Pruebas: 184/184 verdes; cobertura concentrada en `lib/` y hooks complejos como debe ser.
-- Total LOC src/ excluyendo UI/tests/changelog: ~28K — proyecto medio bien dimensionado.
-
-**Recomendación**: ejecutar pasos 1-3 en una primera iteración (v8.90.0); pasos 4-5 en v8.91.0; pasos 6-8 son nice-to-have y se pueden diferir.
+- Migrar los 14 servicios restantes a folder/barrel.
+- Extraer controller de `NuevoProveedorDialog`.
+- Aplicar patrón controller a `Embarques.tsx` y `Cotizaciones.tsx` (requiere refactor más profundo).
+- Promover `ProfitBadge` a `components/` y eliminar `components/shared/`.
