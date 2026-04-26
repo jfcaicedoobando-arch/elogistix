@@ -67,12 +67,12 @@ Es código shadcn estándar. **No tocar** salvo que se quiera customizar fuertem
 | 2 | v8.74.0 | **M1**: Controller hooks para `PortalCotizacionDetalle` y `PortalEmbarqueDetalle`. | Bajo | Medio | ✅ |
 | 3 | v8.75.0 | **M2**: Tokens semánticos para KPIs y migrar los 8 archivos restantes a variantes. | Bajo (visual) | Medio | ✅ |
 | 4 | v8.76.0 | **O1**: Desinstalar dependencias huérfanas (`embla`, `vaul`, `input-otp`, `react-resizable-panels`). | Muy bajo | Bajo (bundle) | ✅ |
-| 5 | v8.77.0 | **M3**: Split de `mappers/embarque.ts` por dirección si supera 250 LOC nuevamente. | Bajo | Bajo | ⏳ |
+| 5 | v8.77.0 | **M3**: Split de `mappers/embarque.ts` por dirección. | Bajo | Bajo | ✅ |
 | 6 | v8.78.0 | **O2 + O3**: Renombrar/dividir `types/types.ts` y añadir barrels en `lib/financial` y `lib/ui`. | Muy bajo | Bajo | ⏳ |
 
 ## Próximo paso
 
-Ejecutar **Paso 5 (v8.77.0)** — revisar `lib/mappers/embarque.ts` (~241 LOC, cerca del guardrail) y dividirlo por dirección (`embarqueFromDb.ts` / `embarqueToDb.ts`) si conviene.
+Ejecutar **Paso 6 (v8.78.0)** — auditar `src/types/types.ts` (renombrar/dividir según dominio) y añadir barrels `index.ts` en `lib/financial` y `lib/ui`.
 
 ## Detalles técnicos
 
