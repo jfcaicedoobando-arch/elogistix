@@ -40,7 +40,6 @@ src/
 │   ├── mappers/        → Transformación entre formato DB ↔ UI.
 │   ├── parsers/        → Parsing de payloads (CSF, dashboard).
 │   └── *.ts            → formatters, errorUtils, queryKeys, etc.
-├── data/           → Datasets de dominio (ports, seeds). NO contenido editorial.
 ├── content/        → Contenido editorial (changelog, copy de marketing).
 ├── constants/      → Constantes de dominio/UI (cotización, embarque, proveedor, wizard).
 ├── types/          → Tipos compartidos entre módulos.
