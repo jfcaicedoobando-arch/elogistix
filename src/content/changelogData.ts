@@ -15,6 +15,13 @@ export interface ChangelogEntry {
  */
 export const recentChangelog: ChangelogEntry[] = [
   {
+    version: "8.93.0",
+    date: "2026-04-26",
+    type: "minor",
+    title: "Wizard Nuevo Embarque: validaciones consistentes y manejo de errores granular",
+    description: "Validación end-to-end con zod para los 4 pasos del wizard de Nuevo Embarque (antes solo el paso 1 validaba). Nuevo módulo src/lib/domain/embarqueWizardSchemas.ts con schemas por paso: (1) Datos Generales (modo, tipo, cliente, descripción), (2) Ruta condicional por modo de transporte —Marítimo (puertos, naviera, tipo servicio, contenedor, tipo contenedor), Aéreo (aeropuertos, MAWB) y Terrestre (ciudades, transportista)— con validación cruzada ETA ≥ ETD, (3) Documentos (tamaño máx 10MB, MIME PDF/JPG/PNG/XLSX/DOCX), (4) Costos y Pricing (al menos 1 concepto venta y 1 de costo válidos, cantidad ≥ 1, montos ≥ 0, tipos de cambio USD/EUR > 0). El controller useNuevoEmbarqueWizard ahora expone validateStep(step) unificado y valida los 4 pasos antes de enviar (handleFinish), saltando al primer paso con error y mostrando toast contextual. Cada Step component (StepDatosRuta, StepDocumentos, StepCostosPrecios) recibe sus errores y muestra mensajes inline o en Alert. Cálculo automático de ETA sugerida al ingresar ETD si la cotización vinculada tiene tiempo_transito_dias. Manejo granular de errores en useEmbarqueSubmitOrchestrator: cada fase (resolverExpediente, subirDocumentos, createEmbarque, updateEstadoCotizacion) tiene su propio try/catch con mensaje específico; la actualización del estado de la cotización ahora es no-bloqueante (warning si falla). Nuevo archivo de tests src/lib/domain/__tests__/embarqueWizardSchemas.test.ts (17 casos). Build limpio (tsc), 201/201 pruebas pasando (184 + 17 nuevas).",
+  },
+  {
     version: "8.92.0",
     date: "2026-04-26",
     type: "minor",
