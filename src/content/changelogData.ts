@@ -15,6 +15,13 @@ export interface ChangelogEntry {
  */
 export const recentChangelog: ChangelogEntry[] = [
   {
+    version: "8.97.0",
+    date: "2026-04-26",
+    type: "minor",
+    title: "Severidad uniforme de feedback en toda la app (notifyError/Warning/Success)",
+    description: "Generalización del estándar de severidad del wizard de embarques a TODA la aplicación. Nuevo módulo src/lib/ui/appFeedback.ts expone tres helpers únicos: notifyError (variant destructive, bloqueante), notifyWarning (variant warning, no bloquea pero requiere atención) y notifySuccess (variant success, cualquier 'creado/guardado/eliminado/actualizado'). El antiguo src/lib/ui/wizardFeedback.ts queda como re-export para compatibilidad. Migración masiva: ~122 llamadas a toast() en ~50 archivos refactorizadas: todos los variant 'destructive' pasan a notifyError; toda confirmación de acción exitosa (alta de cliente, proveedor, usuario, organización; aprobación/rechazo de cotización; aprobación/eliminación/consolidación de proformas; activación/desactivación de organización; revocación de acceso al portal; extracción de CSF; eliminación de embarques, etc.) pasa a notifySuccess; los embarques creados con cotización fallida pasan a notifyWarning. Los toasts del wizard de Nuevo Embarque (validación de pasos y orquestador de submit) también migrados al helper unificado. Se mantienen como 'default' los avisos puramente informativos no asociados a acción del usuario (ej. 'Datos pre-rellenados' al hidratar desde cotización). Tipo permisivo AnyToastFn para aceptar tanto el wrapper shadcn como sonner sin fricción de TypeScript. Tests 206/206 pasando.",
+  },
+  {
     version: "8.96.0",
     date: "2026-04-26",
     type: "minor",
