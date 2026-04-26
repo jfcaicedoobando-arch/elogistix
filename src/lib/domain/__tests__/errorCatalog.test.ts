@@ -44,7 +44,7 @@ describe("errorCatalog", () => {
   });
 
   it("clave desconocida no rompe y devuelve la propia clave", () => {
-    // @ts-expect-error — probamos resiliencia ante typos
-    expect(getMessage("99.no.existe")).toBe("99.no.existe");
+    // Cast: probamos resiliencia ante typos
+    expect(getMessage("99.no.existe" as never)).toBe("99.no.existe");
   });
 });
