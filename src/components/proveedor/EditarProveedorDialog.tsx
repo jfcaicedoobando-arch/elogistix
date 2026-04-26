@@ -1,15 +1,18 @@
-import { useState, useEffect, useMemo } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import type { Enums, Tables, TablesUpdate } from "@/integrations/supabase/types";
-type TipoProveedor = Enums<'tipo_proveedor'>;
-type Moneda = Enums<'moneda'>;
-import { TIPOS_PROVEEDOR as TIPOS, MONEDAS_PROVEEDOR as MONEDAS, PAISES_PROVEEDOR as PAISES } from "@/constants/proveedorConstants";
+import {
+  TIPOS_PROVEEDOR as TIPOS,
+  MONEDAS_PROVEEDOR as MONEDAS,
+  PAISES_PROVEEDOR as PAISES,
+} from "@/constants/proveedorConstants";
+import { useEditarProveedorController } from "@/hooks/proveedor/useEditarProveedorController";
 
-type Proveedor = Tables<'proveedores'>;
+type Proveedor = Tables<"proveedores">;
+type Moneda = Enums<"moneda">;
 
 interface Props {
   proveedor: Proveedor;
@@ -18,56 +21,13 @@ interface Props {
   onSave: (id: string, data: TablesUpdate<"proveedores">) => void;
 }
 
+function FieldError({ message }: { message: string | null }) {
+  if (!message) return null;
+  return <p className="text-sm text-destructive">{message}</p>;
+}
+
 export default function EditarProveedorDialog({ proveedor, open, onOpenChange, onSave }: Props) {
-  const [form, setForm] = useState({ ...proveedor });
-  const [touched, setTouched] = useState<Record<string, boolean>>({});
-
-  useEffect(() => {
-    if (open) {
-      setForm({ ...proveedor });
-      setTouched({});
-    }
-  }, [open, proveedor]);
-
-  const isAgenteCarga = form.tipo === 'Agente de Carga';
-  const rfcLabel = form.origen_proveedor === 'Extranjero' ? 'Tax ID' : 'RFC';
-
-  const errors = useMemo(() => {
-    const e: Record<string, string> = {};
-    if (!form.origen_proveedor) e.origen_proveedor = "El origen es requerido";
-    if (!form.nombre.trim()) e.nombre = "El nombre es requerido";
-    if (!form.rfc.trim()) e.rfc = `El ${form.origen_proveedor === 'Extranjero' ? 'Tax ID' : 'RFC'} es requerido`;
-    if (isAgenteCarga && !form.pais) e.pais = "El país es requerido";
-    if (form.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) e.email = "Email inválido";
-    return e;
-  }, [form.origen_proveedor, form.nombre, form.rfc, form.pais, form.email, isAgenteCarga]);
-
-  const isValid = Object.keys(errors).length === 0;
-
-  const markTouched = (field: string) => setTouched(prev => ({ ...prev, [field]: true }));
-
-  const handleSave = () => {
-    if (!isValid) {
-      // Mark all fields as touched to show errors
-      setTouched({ origen_proveedor: true, nombre: true, rfc: true, pais: true, email: true });
-      return;
-    }
-    onSave(proveedor.id, form);
-    onOpenChange(false);
-  };
-
-  const handleTipoChange = (valorSeleccionado: string) => {
-    setForm(formularioActual => ({
-      ...formularioActual,
-      tipo: valorSeleccionado as TipoProveedor,
-      pais: valorSeleccionado === 'Agente de Carga' ? formularioActual.pais : '',
-    }));
-  };
-
-  const fieldError = (field: string) =>
-    touched[field] && errors[field] ? (
-      <p className="text-sm text-destructive">{errors[field]}</p>
-    ) : null;
+  const c = useEditarProveedorController(proveedor, open, onSave, () => onOpenChange(false));
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -78,82 +38,97 @@ export default function EditarProveedorDialog({ proveedor, open, onOpenChange, o
         <div className="space-y-4">
           <div className="space-y-2">
             <Label>Origen *</Label>
-            <Select value={form.origen_proveedor || ''} onValueChange={valorSeleccionado => { setForm(f => ({ ...f, origen_proveedor: valorSeleccionado as 'Nacional' | 'Extranjero' })); markTouched('origen_proveedor'); }}>
+            <Select
+              value={c.form.origen_proveedor || ""}
+              onValueChange={(v) => { c.setField("origen_proveedor", v as "Nacional" | "Extranjero"); c.markTouched("origen_proveedor"); }}
+            >
               <SelectTrigger><SelectValue placeholder="Selecciona origen" /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="Nacional">Nacional</SelectItem>
                 <SelectItem value="Extranjero">Extranjero</SelectItem>
               </SelectContent>
             </Select>
-            {fieldError('origen_proveedor')}
+            <FieldError message={c.fieldErrorMessage("origen_proveedor")} />
           </div>
           <div className="space-y-2">
             <Label>Nombre *</Label>
-            <Input value={form.nombre} onChange={e => setForm(f => ({ ...f, nombre: e.target.value }))} onBlur={() => markTouched('nombre')} />
-            {fieldError('nombre')}
+            <Input
+              value={c.form.nombre}
+              onChange={(e) => c.setField("nombre", e.target.value)}
+              onBlur={() => c.markTouched("nombre")}
+            />
+            <FieldError message={c.fieldErrorMessage("nombre")} />
           </div>
           <div className="space-y-2">
             <Label>Tipo</Label>
-            <Select value={form.tipo} onValueChange={handleTipoChange}>
+            <Select value={c.form.tipo} onValueChange={c.handleTipoChange}>
               <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>
-                {TIPOS.map(tipoProveedor => <SelectItem key={tipoProveedor} value={tipoProveedor}>{tipoProveedor}</SelectItem>)}
+                {TIPOS.map((t) => <SelectItem key={t} value={t}>{t}</SelectItem>)}
               </SelectContent>
             </Select>
           </div>
 
-          {isAgenteCarga && (
+          {c.isAgenteCarga && (
             <div className="space-y-2">
               <Label>País *</Label>
-              <Select value={form.pais || ''} onValueChange={valorSeleccionado => { setForm(f => ({ ...f, pais: valorSeleccionado, rfc: '' })); markTouched('pais'); }}>
+              <Select
+                value={c.form.pais || ""}
+                onValueChange={(v) => { c.setField("pais", v); c.setField("rfc", ""); c.markTouched("pais"); }}
+              >
                 <SelectTrigger><SelectValue placeholder="Selecciona un país" /></SelectTrigger>
                 <SelectContent>
-                  {PAISES.map(pais => <SelectItem key={pais} value={pais}>{pais}</SelectItem>)}
+                  {PAISES.map((p) => <SelectItem key={p} value={p}>{p}</SelectItem>)}
                 </SelectContent>
               </Select>
-              {fieldError('pais')}
+              <FieldError message={c.fieldErrorMessage("pais")} />
             </div>
           )}
 
-          {(!isAgenteCarga || form.pais) && (
+          {(!c.isAgenteCarga || c.form.pais) && (
             <div className="space-y-2">
-              <Label>{rfcLabel} *</Label>
+              <Label>{c.rfcLabel} *</Label>
               <Input
-                value={form.rfc}
-                onChange={e => setForm(f => ({ ...f, rfc: e.target.value }))}
-                onBlur={() => markTouched('rfc')}
-                placeholder={form.origen_proveedor === 'Extranjero' ? 'Ingresa el Tax ID' : 'Ingresa el RFC'}
+                value={c.form.rfc}
+                onChange={(e) => c.setField("rfc", e.target.value)}
+                onBlur={() => c.markTouched("rfc")}
+                placeholder={c.form.origen_proveedor === "Extranjero" ? "Ingresa el Tax ID" : "Ingresa el RFC"}
               />
-              {fieldError('rfc')}
+              <FieldError message={c.fieldErrorMessage("rfc")} />
             </div>
           )}
 
           <div className="space-y-2">
             <Label>Contacto</Label>
-            <Input value={form.contacto} onChange={e => setForm(f => ({ ...f, contacto: e.target.value }))} />
+            <Input value={c.form.contacto} onChange={(e) => c.setField("contacto", e.target.value)} />
           </div>
           <div className="space-y-2">
             <Label>Email</Label>
-            <Input type="email" value={form.email} onChange={e => setForm(f => ({ ...f, email: e.target.value }))} onBlur={() => markTouched('email')} />
-            {fieldError('email')}
+            <Input
+              type="email"
+              value={c.form.email}
+              onChange={(e) => c.setField("email", e.target.value)}
+              onBlur={() => c.markTouched("email")}
+            />
+            <FieldError message={c.fieldErrorMessage("email")} />
           </div>
           <div className="space-y-2">
             <Label>Teléfono</Label>
-            <Input value={form.telefono} onChange={e => setForm(f => ({ ...f, telefono: e.target.value }))} />
+            <Input value={c.form.telefono} onChange={(e) => c.setField("telefono", e.target.value)} />
           </div>
           <div className="space-y-2">
             <Label>Moneda Preferida</Label>
-            <Select value={form.moneda_preferida} onValueChange={valorSeleccionado => setForm(f => ({ ...f, moneda_preferida: valorSeleccionado as Moneda }))}>
+            <Select value={c.form.moneda_preferida} onValueChange={(v) => c.setField("moneda_preferida", v as Moneda)}>
               <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>
-                {MONEDAS.map(moneda => <SelectItem key={moneda} value={moneda}>{moneda}</SelectItem>)}
+                {MONEDAS.map((m) => <SelectItem key={m} value={m}>{m}</SelectItem>)}
               </SelectContent>
             </Select>
           </div>
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>
-          <Button onClick={handleSave} disabled={!isValid}>Guardar</Button>
+          <Button onClick={c.handleSave} disabled={!c.isValid}>Guardar</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
