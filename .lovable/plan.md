@@ -1,89 +1,96 @@
-# Validaciones consistentes y manejo de errores — Wizard "Nuevo Embarque"
+# Estandarización de mensajes de validación – Wizard "Nuevo Embarque" (v8.94.0)
 
-## Estado actual (auditoría)
+## Objetivo
+Unificar tono, formato y severidad de **todos** los mensajes de error del wizard de 4 pasos para que sean consistentes, predecibles y accionables.
 
-**Validación existente**
-- Solo el **Paso 1** (Datos Generales) valida, mediante `validateDatosGenerales` en `lib/domain/embarqueWizard.ts` (4 campos: modo, tipo, clienteId, descripcionMercancia).
-- Los **Pasos 2, 3 y 4 no validan nada** antes de avanzar (`validateStep={(step) => step === 1 ? ... : true}` en `NuevoEmbarque.tsx`).
-- El submit final solo re-valida el Paso 1, no los demás.
+## Estándar único a aplicar
 
-**Brechas críticas detectadas**
-1. **Paso 2 (Ruta)**: campos marcados `*` (Puerto Origen/Destino, Naviera, Tipo Servicio, Contenedor, Tipo Contenedor, ETD, ETA) **no se validan**. Tampoco se valida que `ETA ≥ ETD`.
-2. **Paso 3 (Documentos)**: no hay tamaño máximo de archivo, ni validación de tipo MIME, ni feedback de cuántos están adjuntos vs faltantes.
-3. **Paso 4 (Costos/Pricing)**: conceptos de venta y costo permiten cantidades 0, montos negativos, proveedor vacío, concepto vacío. Tipos de cambio pueden ser ≤ 0.
-4. **Errores de submit**: solo se muestra un toast genérico; si fallan documentos, expediente o cotización, no se sabe cuál.
-5. **Sin esquema único**: la validación está en código imperativo, no en zod (a pesar de que el proyecto ya usa zod en otros lugares).
-
-## Cambios propuestos (v8.93.0)
-
-### 1. Esquemas zod centralizados — `lib/domain/embarqueWizardSchemas.ts` (nuevo)
-Definir un schema por paso + uno global, todos derivando los mismos tipos:
-
-```text
-embarqueWizardSchemas.ts
-├── stepDatosGeneralesSchema
-├── stepRutaSchema (condicional por modo: Marítimo/Aéreo/Terrestre)
-├── stepDocumentosSchema (valida File: maxSize 10MB, MIME permitidos)
-├── stepCostosSchema (cantidad ≥1, montos ≥0, TC > 0)
-└── validateETDETA helper (ETA ≥ ETD, ETD no en pasado lejano)
+### Formato del mensaje
 ```
-
-Reglas clave:
-- **Ruta Marítima**: puertoOrigen, puertoDestino, naviera, tipoServicio, contenedor (si FCL), tipoContenedor (si FCL), ETD, ETA obligatorios. ETA ≥ ETD.
-- **Ruta Aérea**: aeropuertoOrigen, aeropuertoDestino, MAWB, ETD, ETA. Validación cruzada de fechas.
-- **Ruta Terrestre**: ciudadOrigen, ciudadDestino, transportista, ETD, ETA.
-- **Documentos**: tamaño máx 10MB, MIME = pdf/jpg/png/xlsx/docx. No se exige adjuntar todos (siguen siendo opcionales) pero sí valida los que se suben.
-- **Costos**: al menos 1 concepto venta y 1 concepto costo válidos; cantidad ≥ 1; precio/monto ≥ 0; tipos de cambio USD/EUR > 0.
-
-### 2. Refactor `useNuevoEmbarqueWizard.ts`
-- Reemplazar `validateStep1` por un `validateStep(step)` único que ejecuta el schema de zod correspondiente.
-- Mantener `validationErrors` por paso (record `{ [step]: errors }`) para mostrar inline en cada step.
-- En `handleFinish`: ejecutar `validateAll()` antes del submit; si falla, saltar al primer paso con error y mostrar toast claro indicando qué corregir.
-
-### 3. UI — feedback de errores en cada paso
-- **StepDatosRuta**: agregar `<p className="text-xs text-destructive">` debajo de cada campo con error (mismo patrón de StepDatosGenerales). Usar `useFormContext` + estado de errores del controller.
-- **StepDocumentos**: agregar contador "X de Y adjuntos · Z opcionales", y mostrar error si un archivo excede 10MB o tipo inválido (toast).
-- **StepCostosPrecios**: borde rojo en celdas con valor inválido + texto descriptivo bajo cada tabla cuando haya filas inválidas.
-
-### 4. Manejo de errores granular en submit (`useEmbarqueSubmitOrchestrator.ts`)
-Envolver cada fase en su propio try/catch con mensaje contextual:
-
-```text
-resolveExpediente()        → "Error al generar expediente"
-subirDocumentos()          → "Error al subir documentos: {nombre}"
-createEmbarque()           → "Error al guardar embarque"
-updateEstadoCotizacion()   → "Embarque creado, pero no se pudo actualizar cotización" (warning, no destructive)
+"<Etiqueta del campo>: <razón en imperativo o descriptiva>."
 ```
+Ejemplos:
+- `"Modo de transporte: selecciona una opción."`
+- `"Puerto de destino: campo obligatorio."`
+- `"ETA: debe ser igual o posterior al ETD."`
+- `"Tipo de cambio USD: debe ser mayor a 0."`
+- `"Documento BL: el archivo excede 10 MB (12.4 MB)."`
 
-### 5. Cálculo automático ETD/ETA inteligente
-- En `StepDatosRuta`, al seleccionar puertos/naviera (si modo Marítimo), si hay datos previos de cotización vinculada con `tiempo_transito_dias`, sugerir ETA = ETD + tránsito (campo editable, solo placeholder/sugerencia).
-- Validar en zod: si ambas fechas presentes, ETA ≥ ETD; si solo una, advertir pero no bloquear.
+### Reglas de tono
+- Español mexicano, **tuteo** ("selecciona", "ingresa", "agrega").
+- Termina con punto.
+- Sin signos de admiración. Sin mayúsculas tipo grito.
+- Razones cortas (≤ 60 caracteres después de los dos puntos).
 
-### 6. Tests (`src/lib/domain/__tests__/embarqueWizardSchemas.test.ts`)
-- Cobertura de los 4 schemas, casos válidos/inválidos por modo de transporte.
-- Validación cruzada de fechas (ETA ≥ ETD).
-- Validación de archivos (tamaño/MIME).
+### Niveles de severidad (uniformes)
+| Severidad | Uso | UI |
+|---|---|---|
+| **error** (`destructive`) | Campo obligatorio faltante, valor inválido, fallo de submit | Toast rojo + borde rojo en campo + texto rojo bajo el campo |
+| **warning** (default) | Operación parcialmente exitosa (ej. embarque creado pero cotización no actualizada) | Toast neutro |
+| **success** | Submit completo | Toast neutro con título "Embarque creado" |
 
-## Resumen técnico
+### Estructura uniforme de toasts
+- **Título**: contexto corto y consistente (`"Revisa el Paso 2: Ruta"`, `"Error al subir documentos"`, `"Embarque creado"`).
+- **Descripción**: el primer mensaje en formato `Campo: razón.` (sin listar todos para no saturar).
+- **Variant**: `destructive` solo para errores reales.
 
-**Archivos nuevos (2)**
-- `src/lib/domain/embarqueWizardSchemas.ts` — schemas zod por paso.
-- `src/lib/domain/__tests__/embarqueWizardSchemas.test.ts` — pruebas unitarias.
+## Cambios concretos
 
-**Archivos modificados (5)**
-- `src/hooks/embarque/useNuevoEmbarqueWizard.ts` — `validateStep` unificado, `validationErrors` por paso, `validateAll` previo a submit.
-- `src/pages/NuevoEmbarque.tsx` — pasar errores de cada paso a su componente, `validateStep` ahora cubre los 4 pasos.
-- `src/components/embarque/StepDatosRuta.tsx` — mensajes inline de error + sugerencia de ETA.
-- `src/components/embarque/StepDocumentos.tsx` — contador de adjuntos + validación tamaño/MIME.
-- `src/components/embarque/StepCostosPrecios.tsx` — borde rojo en celdas inválidas + mensaje resumen.
-- `src/hooks/embarque/useEmbarqueSubmitOrchestrator.ts` — try/catch granular por fase.
-- `src/lib/domain/embarqueWizard.ts` — re-export de schemas para mantener API.
-- `src/content/changelogData.ts` — entrada v8.93.0.
+### 1. `src/lib/domain/embarqueWizardSchemas.ts`
+Reescribir todos los `message` de Zod y los strings hardcodeados al formato `Campo: razón.`. Ejemplos de mapeo:
 
-**Garantías**
-- Sin breaking changes para consumidores externos del wizard (mismas firmas públicas del controller).
-- Verificación con `tsc --noEmit` y `vitest run` (objetivo: 184 + nuevos tests, todos verdes).
-- No se modifican payloads enviados a Supabase — solo se valida antes.
-- No se cambia el flujo de submit, solo se hace más robusto.
+| Antes | Después |
+|---|---|
+| `"Selecciona un modo de transporte"` | `"Modo de transporte: selecciona una opción."` |
+| `"Selecciona un tipo de operación"` | `"Tipo de operación: selecciona una opción."` |
+| `"Selecciona un cliente"` | `"Cliente: selecciona uno del catálogo."` |
+| `"Ingresa la descripción de la mercancía"` | `"Descripción de mercancía: campo obligatorio."` |
+| `"Máximo 500 caracteres"` | `"Descripción de mercancía: máximo 500 caracteres."` |
+| `"Ingresa la fecha de salida (ETD)"` | `"ETD: campo obligatorio."` |
+| `"La fecha de llegada (ETA) debe ser posterior o igual al ETD"` | `"ETA: debe ser igual o posterior al ETD."` |
+| `"Selecciona puerto de origen"` | `"Puerto de origen: selecciona uno del catálogo."` |
+| `"Selecciona FCL o LCL"` | `"Tipo de servicio: selecciona FCL o LCL."` |
+| `"Ingresa número de contenedor"` | `"Contenedor: campo obligatorio."` |
+| `"Ingresa el MAWB"` | `"MAWB: campo obligatorio."` |
+| `"El archivo excede 10MB (12.4MB)"` | `"Documento <nombre>: excede 10 MB (12.4 MB)."` |
+| `"Formato no permitido (...)"` | `"Documento <nombre>: formato no permitido. Usa PDF, JPG, PNG, XLSX o DOCX."` |
+| `"Agrega al menos un concepto de venta válido..."` | `"Conceptos de venta: agrega al menos uno con cantidad ≥ 1 y precio > 0."` |
+| `"Cantidad debe ser ≥ 1 y precio ≥ 0"` | `"Concepto de venta #<id>: cantidad ≥ 1 y precio ≥ 0."` |
+| `"El tipo de cambio USD debe ser mayor a 0"` | `"Tipo de cambio USD: debe ser mayor a 0."` |
+| `"El monto no puede ser negativo"` | `"Concepto de costo #<id>: monto no puede ser negativo."` |
 
-¿Apruebas para ejecutar v8.93.0?
+Todos los mensajes pasarán a través de un único helper `formatValidationMessage(field, reason)` para garantizar consistencia futura.
+
+### 2. `src/hooks/embarque/useNuevoEmbarqueWizard.ts`
+- Estandarizar título del toast de validación a: `"Revisa el Paso N: <nombre>"` (Datos generales / Ruta / Documentos / Costos).
+- La descripción usa el primer mensaje ya estandarizado del schema.
+- Severidad: siempre `destructive` para validación bloqueante.
+
+### 3. `src/hooks/embarque/useEmbarqueSubmitOrchestrator.ts`
+Renombrar títulos a un patrón uniforme `"Error: <fase>"`:
+- `"Error: generación de expediente"`
+- `"Error: subida de documentos"`
+- `"Error: guardado del embarque"`
+- Toast de cotización no actualizada cambia a variant default + título `"Embarque creado con advertencia"` (se mantiene, ya cumple).
+- Toast de éxito mantiene `"Embarque creado"` + descripción `"Expediente <X>: registrado correctamente."`.
+
+### 4. `src/components/embarque/StepDocumentos.tsx`
+Toast de archivo rechazado pasa de `"Archivo rechazado: <nombre>"` (título) + razón (descripción) a:
+- Título: `"Documento rechazado"`
+- Descripción: `"<nombre>: <razón>."` (alineado al formato global).
+
+### 5. Tests
+Actualizar `src/lib/domain/__tests__/embarqueWizardSchemas.test.ts` para validar los nuevos strings exactos (regex laxo si se prefiere robustez frente a futuros ajustes menores).
+
+### 6. Changelog
+Añadir entrada **v8.94.0** en `src/content/changelogData.ts`:
+> Estandarización de mensajes de validación del wizard de embarques (formato `Campo: razón`, tono y severidad uniformes en los 4 pasos).
+
+## Fuera de alcance
+- No se cambia la lógica de validación, solo los textos y la presentación.
+- No se introducen nuevas reglas de validación.
+- No se toca el wizard de edición (`useEditarEmbarqueWizard`) en este paso; se hará en una siguiente iteración si se aprueba.
+
+## Verificación
+- `bun run build` limpio.
+- Suite de tests verde (incluyendo los 17 tests actualizados).
