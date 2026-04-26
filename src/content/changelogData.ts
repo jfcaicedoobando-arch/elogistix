@@ -15,6 +15,13 @@ export interface ChangelogEntry {
  */
 export const recentChangelog: ChangelogEntry[] = [
   {
+    version: "8.90.0",
+    date: "2026-04-26",
+    type: "minor",
+    title: "Auditoría: agrupación de hooks (catálogos/configuración/portal), 3 services a folder/barrel y controller de NuevoClienteDialog",
+    description: "Top 5 mejoras de la auditoría arquitectónica ejecutadas en un solo paso, sin breaking changes. (1) src/hooks/catalogos/ agrupa useNavieras, usePuertos, useTiposContenedor, useOperadoresDistintos, useTasaIVA y useExchangeRates con barrel index.ts. (2) src/hooks/configuracion/ agrupa useConfiguracion, useConfiguracionGlobal, useConfiguracionOrg y useConfiguracionState con barrel. (3) src/hooks/portal/ agrupa usePortalData, usePortalDashboardKpis y usePortalDocumentDownload con barrel. (4) Tres services críticos pasan al patrón folder/barrel: services/auth/, services/storage/ y services/csf/ con index.ts (los archivos antiguos services/authService.ts, services/storage.ts y services/csfService.ts quedan como shim de re-export para preservar todos los imports existentes). (5) NuevoClienteDialog (228 LOC, mezclaba estado del wizard, parsing CSF, validación, mutación y UI) se redujo a ~120 LOC presentacionales tras extraer toda la lógica al hook src/hooks/cliente/useNuevoClienteController.ts (~150 LOC). Todos los hooks raíz movidos quedan como shim de re-export desde su nueva ubicación, garantizando que ningún import de la app o tests se rompa. Build verde, 184/184 pruebas pasando.",
+  },
+  {
     version: "8.89.0",
     date: "2026-04-26",
     type: "patch",
