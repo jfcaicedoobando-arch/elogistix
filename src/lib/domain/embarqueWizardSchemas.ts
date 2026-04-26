@@ -31,14 +31,15 @@ export type StepValidationErrors = Record<string, string>;
  * Formatea un mensaje de validación con el patrón estándar:
  *   "Campo: razón."
  * Garantiza punto final y sin saltos.
+ *
+ * NOTA: ya no se invoca directamente desde este archivo (todos los textos
+ * vienen del catálogo central `errorCatalog.ts`), pero se mantiene exportada
+ * porque el propio catálogo y código externo la consumen.
  */
 export function formatValidationMessage(field: string, reason: string): string {
   const cleanReason = reason.trim().replace(/[.!]+$/u, "");
   return `${field.trim()}: ${cleanReason}.`;
 }
-
-// Atajo interno
-const fmt = formatValidationMessage;
 
 // ── Helpers ───────────────────────────────────────────────────────────
 function flattenZodErrors(error: z.ZodError): StepValidationErrors {
