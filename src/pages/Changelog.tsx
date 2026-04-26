@@ -8,7 +8,7 @@ import {
   loadLegacyChangelog,
   type ChangeType,
   type ChangelogEntry,
-} from "@/data/changelogData";
+} from "@/content/changelogData";
 
 const typeConfig: Record<ChangeType, { label: string; className: string }> = {
   major: { label: "Major", className: "bg-destructive text-destructive-foreground" },
