@@ -65,42 +65,45 @@ export const STEP_LABELS: Record<number, string> = {
 };
 
 // ── Paso 1: Datos Generales ───────────────────────────────────────────
+// Mensajes obtenidos del catálogo central (src/lib/domain/errorCatalog.ts).
+import { msg, getMessage } from "./errorCatalog";
+
 export const stepDatosGeneralesSchema = z.object({
-  modo: z.string().min(1, fmt("Modo de transporte", "selecciona una opción")),
-  tipo: z.string().min(1, fmt("Tipo de operación", "selecciona una opción")),
-  clienteId: z.string().min(1, fmt("Cliente", "selecciona uno del catálogo")),
+  modo: z.string().min(1, msg("1.modo.required")),
+  tipo: z.string().min(1, msg("1.tipo.required")),
+  clienteId: z.string().min(1, msg("1.clienteId.required")),
   descripcionMercancia: z
     .string()
     .trim()
-    .min(1, fmt("Descripción de mercancía", "campo obligatorio"))
-    .max(500, fmt("Descripción de mercancía", "máximo 500 caracteres")),
+    .min(1, msg("1.descripcionMercancia.required"))
+    .max(500, msg("1.descripcionMercancia.maxLength")),
 });
 
 // ── Paso 2: Ruta (condicional por modo) ───────────────────────────────
 const baseRutaFields = z.object({
-  etd: z.string().min(1, fmt("ETD", "campo obligatorio")),
-  eta: z.string().min(1, fmt("ETA", "campo obligatorio")),
+  etd: z.string().min(1, msg("2.etd.required")),
+  eta: z.string().min(1, msg("2.eta.required")),
 });
 
 const maritimoRuta = z.object({
-  puertoOrigen: z.string().trim().min(1, fmt("Puerto de origen", "selecciona uno del catálogo")),
-  puertoDestino: z.string().trim().min(1, fmt("Puerto de destino", "selecciona uno del catálogo")),
-  naviera: z.string().trim().min(1, fmt("Naviera", "selecciona una opción")),
-  tipoServicio: z.string().min(1, fmt("Tipo de servicio", "selecciona FCL o LCL")),
-  contenedor: z.string().trim().min(1, fmt("Contenedor", "campo obligatorio")),
-  tipoContenedor: z.string().trim().min(1, fmt("Tipo de contenedor", "selecciona una opción")),
+  puertoOrigen: z.string().trim().min(1, msg("2.puertoOrigen.required")),
+  puertoDestino: z.string().trim().min(1, msg("2.puertoDestino.required")),
+  naviera: z.string().trim().min(1, msg("2.naviera.required")),
+  tipoServicio: z.string().min(1, msg("2.tipoServicio.required")),
+  contenedor: z.string().trim().min(1, msg("2.contenedor.required")),
+  tipoContenedor: z.string().trim().min(1, msg("2.tipoContenedor.required")),
 });
 
 const aereoRuta = z.object({
-  aeropuertoOrigen: z.string().trim().min(1, fmt("Aeropuerto de origen", "campo obligatorio")),
-  aeropuertoDestino: z.string().trim().min(1, fmt("Aeropuerto de destino", "campo obligatorio")),
-  mawb: z.string().trim().min(1, fmt("MAWB", "campo obligatorio")),
+  aeropuertoOrigen: z.string().trim().min(1, msg("2.aeropuertoOrigen.required")),
+  aeropuertoDestino: z.string().trim().min(1, msg("2.aeropuertoDestino.required")),
+  mawb: z.string().trim().min(1, msg("2.mawb.required")),
 });
 
 const terrestreRuta = z.object({
-  ciudadOrigen: z.string().trim().min(1, fmt("Ciudad de origen", "campo obligatorio")),
-  ciudadDestino: z.string().trim().min(1, fmt("Ciudad de destino", "campo obligatorio")),
-  transportista: z.string().trim().min(1, fmt("Transportista", "campo obligatorio")),
+  ciudadOrigen: z.string().trim().min(1, msg("2.ciudadOrigen.required")),
+  ciudadDestino: z.string().trim().min(1, msg("2.ciudadDestino.required")),
+  transportista: z.string().trim().min(1, msg("2.transportista.required")),
 });
 
 export interface StepRutaInput {
