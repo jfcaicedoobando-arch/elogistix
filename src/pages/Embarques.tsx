@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { useEliminarEmbarque, calcularEstadoEmbarque, usePrefetchEmbarque } from "@/hooks/useEmbarques";
 import { useOperadoresDistintos } from "@/hooks/useOperadoresDistintos";
-import { getErrorMessage } from "@/lib/errorUtils";
+import { getErrorMessage } from "@/lib/errors";
 import { useClientesForSelect } from "@/hooks/useClientes";
 import { usePermissions } from "@/hooks/usePermissions";
 import { useRegistrarActividad } from "@/hooks/useBitacora";

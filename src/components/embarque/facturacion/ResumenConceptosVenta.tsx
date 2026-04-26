@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { formatCurrency } from "@/lib/formatters";
-import { calcularIVA } from "@/lib/financialUtils";
+import { calcularIVA } from "@/lib/financial/financialUtils";
 import type { Tables } from "@/integrations/supabase/types";
 
 type ConceptoVenta = Tables<"conceptos_venta">;

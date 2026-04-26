@@ -5,7 +5,7 @@
  * Todo lo de aquí es 100% testeable sin React.
  */
 
-import { resolverContacto } from "@/lib/contactoUtils";
+import { resolverContacto } from "@/lib/contacto";
 import type { Tables, TablesInsert } from "@/integrations/supabase/types";
 import type { ConceptoVentaLocal, ConceptoCostoLocal } from "@/types/conceptoTypes";
 

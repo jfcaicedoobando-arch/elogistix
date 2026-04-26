@@ -13,7 +13,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useRegistrarActividad } from "@/hooks/useBitacora";
 import { useConceptosForm } from "@/hooks/useConceptosForm";
 import { useEmbarqueForm } from "@/hooks/embarque/useEmbarqueForm";
-import { getErrorMessage } from "@/lib/errorUtils";
+import { getErrorMessage } from "@/lib/errors";
 
 /**
  * Controller hook para la página EditarEmbarque.

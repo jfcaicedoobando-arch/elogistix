@@ -1,4 +1,4 @@
-import { calcularIVA, TASA_IVA } from '@/lib/financialUtils';
+import { calcularIVA, TASA_IVA } from '@/lib/financial/financialUtils';
 import { formatCurrency, formatDate } from '@/lib/formatters';
 import type { Tables } from '@/integrations/supabase/types';
 

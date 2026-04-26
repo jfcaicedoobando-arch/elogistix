@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { convertirAMXN, calcularUtilidad, calcularMargen, type Moneda } from '@/lib/financialUtils';
+import { convertirAMXN, calcularUtilidad, calcularMargen, type Moneda } from '@/lib/financial/financialUtils';
 
 interface ConceptoVenta {
   total: number;

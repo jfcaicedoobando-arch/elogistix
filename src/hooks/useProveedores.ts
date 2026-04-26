@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import type { TablesInsert, TablesUpdate, Enums } from "@/integrations/supabase/types";
-import { queryKeys } from "@/lib/queryKeys";
+import { queryKeys } from "@/lib/query";
 import { useOrgFilter } from "@/hooks/useOrgFilter";
 import {
   fetchProveedoresPaginados,

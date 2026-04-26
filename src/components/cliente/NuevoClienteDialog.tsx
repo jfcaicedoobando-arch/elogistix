@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { ArrowLeft, ArrowRight, Loader2, Upload, FileText } from "lucide-react";
-import { getErrorMessage } from "@/lib/errorUtils";
+import { getErrorMessage } from "@/lib/errors";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";

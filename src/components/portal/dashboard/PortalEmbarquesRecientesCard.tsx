@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
-import { getEstadoColor, getModoIcon } from "@/lib/uiMappings";
+import { getEstadoColor, getModoIcon } from "@/lib/ui/uiMappings";
 import { calcularEstadoEmbarque } from "@/lib/domain/embarque";
 import { formatDate, getOrigen, getDestino } from "@/lib/formatters";
 

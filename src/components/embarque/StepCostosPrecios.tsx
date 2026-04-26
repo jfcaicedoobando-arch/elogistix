@@ -2,7 +2,7 @@ import { useMemo } from "react";
 import { useFormContext } from "react-hook-form";
 import { Trash2 } from "lucide-react";
 import { formatCurrency } from "@/lib/formatters";
-import { aUSD, sumarEnUSD } from "@/lib/costosUSD";
+import { aUSD, sumarEnUSD } from "@/lib/financial/costosUSD";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";

@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
 import { usePortalEmbarque, usePortalEventos, usePortalDocumentos } from "@/hooks/usePortalData";
-import { getEstadoColor, getModoIcon } from "@/lib/uiMappings";
+import { getEstadoColor, getModoIcon } from "@/lib/ui/uiMappings";
 import { calcularEstadoEmbarque } from "@/lib/domain/embarque";
 import { formatDate, getOrigen, getDestino } from "@/lib/formatters";
 import { parseISO, differenceInDays } from "date-fns";

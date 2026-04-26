@@ -10,7 +10,7 @@ import { useClienteFinancials } from "@/hooks/useClienteFinancials";
 import { useToast } from "@/hooks/use-toast";
 import { usePermissions } from "@/hooks/usePermissions";
 import { useRegistrarActividad } from "@/hooks/useBitacora";
-import { getErrorMessage } from "@/lib/errorUtils";
+import { getErrorMessage } from "@/lib/errors";
 
 import TabPortalCliente from "@/components/cliente/TabPortalCliente";
 import { DataTable } from "@/components/DataTable";

@@ -2,7 +2,7 @@ import { Calendar, ArrowRight, Package } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
-import { getModoIcon } from "@/lib/uiMappings";
+import { getModoIcon } from "@/lib/ui/uiMappings";
 import { formatDate } from "@/lib/formatters";
 
 interface ArriboItem {

@@ -2,7 +2,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ESTADOS_FILTRO, type EstadoFiltro } from "@/hooks/useDashboardData";
-import { ESTADO_CONFIG } from "@/lib/estadoConfig";
+import { ESTADO_CONFIG } from "@/lib/ui/estadoConfig";
 import { CalendarDays, TrendingUp, Ship, CheckCircle2 } from "lucide-react";
 import { formatCurrency } from "@/lib/formatters";
 

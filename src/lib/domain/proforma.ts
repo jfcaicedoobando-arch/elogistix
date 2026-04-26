@@ -2,7 +2,7 @@
  * Lógica de dominio pura para proformas. Sin dependencias de React, Supabase ni I/O.
  * Testeable de forma aislada.
  */
-import { calcularIVA } from "@/lib/financialUtils";
+import { calcularIVA } from "@/lib/financial/financialUtils";
 
 export type Moneda = "USD" | "MXN";
 

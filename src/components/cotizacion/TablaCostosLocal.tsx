@@ -6,11 +6,11 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Plus, Trash2 } from "lucide-react";
 import { formatCurrency } from "@/lib/formatters";
-import { calcularUtilidad, calcularMargen } from "@/lib/financialUtils";
+import { calcularUtilidad, calcularMargen } from "@/lib/financial/financialUtils";
 import { ProfitBadge } from "@/components/shared/ProfitBadge";
 import { CONCEPTOS_COSTO_USD, CONCEPTOS_COSTO_MXN } from "@/constants/cotizacionConstants";
 import type { FilaCostoLocal } from "./SeccionCostosInternosPLUnificado";
-import type { TotalesPL } from "@/lib/profitUtils";
+import type { TotalesPL } from "@/lib/financial/profitUtils";
 
 const UNIDADES_MEDIDA = ['BL', 'W/M', 'Documento', 'Contenedor', 'Kilo', 'Embarque'];
 

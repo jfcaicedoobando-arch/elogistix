@@ -3,7 +3,7 @@ import {
   sanitizeStorageKey,
   sanitizeFileName,
   buildEmbarqueDocPath,
-} from "@/lib/storageUtils";
+} from "@/lib/storage";
 
 describe("sanitizeStorageKey", () => {
   it("reemplaza espacios y paréntesis por underscore", () => {

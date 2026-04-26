@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { DollarSign, Banknote, Save } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { getErrorMessage } from "@/lib/errorUtils";
+import { getErrorMessage } from "@/lib/errors";
 import { usePermissions } from "@/hooks/usePermissions";
 import {
   useCotizacionCostos, useUpsertCotizacionCostos, type CostoCotizacion,

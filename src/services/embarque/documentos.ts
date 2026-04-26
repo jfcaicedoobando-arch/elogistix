@@ -4,7 +4,7 @@ import {
   buildEmbarqueDocPath,
   sanitizeFileName,
   sanitizeStorageKey,
-} from '@/lib/storageUtils';
+} from '@/lib/storage';
 import type { TablesInsert } from '@/integrations/supabase/types';
 
 type DocumentoEstado = TablesInsert<'documentos_embarque'>['estado'];

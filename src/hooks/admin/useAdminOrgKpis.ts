@@ -2,7 +2,7 @@
  * KPIs de conteo por organización (miembros, embarques, clientes, cotizaciones).
  */
 import { useQuery } from "@tanstack/react-query";
-import { queryKeys } from "@/lib/queryKeys";
+import { queryKeys } from "@/lib/query";
 import {
   countOrgClientes,
   countOrgCotizaciones,

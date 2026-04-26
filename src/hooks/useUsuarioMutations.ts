@@ -1,5 +1,5 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { queryKeys } from "@/lib/queryKeys";
+import { queryKeys } from "@/lib/query";
 import {
   createUserViaEdgeFunction,
   deleteUserViaEdgeFunctionAuth,

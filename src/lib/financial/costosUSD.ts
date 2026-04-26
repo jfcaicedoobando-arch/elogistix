@@ -3,7 +3,7 @@
  * Pura conversión de moneda — sin React, sin formato.
  */
 
-import { convertirAUSD, type Moneda } from "@/lib/financialUtils";
+import { convertirAUSD, type Moneda } from "@/lib/financial/financialUtils";
 
 interface MontoEnMoneda {
   monto: number;

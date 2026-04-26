@@ -1,5 +1,5 @@
 import { useConfigValue } from "@/hooks/useConfiguracion";
-import { TASA_IVA } from "@/lib/financialUtils";
+import { TASA_IVA } from "@/lib/financial/financialUtils";
 
 /**
  * Lee la tasa de IVA desde la tabla de configuración (facturacion.tasa_iva).

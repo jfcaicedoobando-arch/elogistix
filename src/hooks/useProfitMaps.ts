@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { queryKeys } from "@/lib/queryKeys";
+import { queryKeys } from "@/lib/query";
 import { fetchProfitPorEmbarque } from "@/services/reportesService";
 
 /**

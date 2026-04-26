@@ -11,7 +11,7 @@ import { ICONO_EVENTO } from "@/constants/embarqueConstants";
 import { useAuth } from '@/contexts/AuthContext';
 import { usePermissions } from '@/hooks/usePermissions';
 import { useToast } from '@/hooks/use-toast';
-import { getErrorMessage } from '@/lib/errorUtils';
+import { getErrorMessage } from '@/lib/errors';
 import { formatDate } from '@/lib/formatters';
 
 interface Props {
