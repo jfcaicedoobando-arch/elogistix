@@ -231,7 +231,7 @@ export default function PortalCotizacionDetalle() {
       )}
 
       {/* Dialog de confirmación */}
-      <AlertDialog open={!!confirmAction} onOpenChange={(open) => { if (!open) { setConfirmAction(null); setComentario(""); } }}>
+      <AlertDialog open={!!confirmAction} onOpenChange={onDialogOpenChange}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>
@@ -250,13 +250,13 @@ export default function PortalCotizacionDetalle() {
             className="min-h-[80px]"
           />
           <AlertDialogFooter>
-            <AlertDialogCancel disabled={responderMutation.isPending}>Cancelar</AlertDialogCancel>
+            <AlertDialogCancel disabled={isPending}>Cancelar</AlertDialogCancel>
             <AlertDialogAction
               onClick={handleResponder}
-              disabled={responderMutation.isPending}
+              disabled={isPending}
               className={confirmAction === "Rechazada" ? "bg-destructive text-destructive-foreground hover:bg-destructive/90" : ""}
             >
-              {responderMutation.isPending ? "Procesando..." : confirmAction === "Aceptada" ? "Sí, aceptar" : "Sí, rechazar"}
+              {isPending ? "Procesando..." : confirmAction === "Aceptada" ? "Sí, aceptar" : "Sí, rechazar"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
