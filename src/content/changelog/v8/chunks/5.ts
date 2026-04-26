@@ -1,4 +1,4 @@
-import type { ChangelogEntry } from "../../changelogData";
+import type { ChangelogEntry } from "../../../changelogData";
 
 export const chunk5: ChangelogEntry[] = [
   {
