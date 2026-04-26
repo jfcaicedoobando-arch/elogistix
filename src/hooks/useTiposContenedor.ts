@@ -17,7 +17,6 @@ export function useTiposContenedor() {
     queryKey: queryKeys.tiposContenedor.activos,
     queryFn: () => fetchTiposContenedor(false),
     staleTime: 30 * 60 * 1000,
-    gcTime: 60 * 60 * 1000,
   });
 }
 

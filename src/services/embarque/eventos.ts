@@ -12,13 +12,10 @@ export interface EventoEmbarqueRow {
   created_at: string;
 }
 
-const EVENTO_COLUMNS =
-  "id, embarque_id, tipo, descripcion, ubicacion, fecha, usuario, created_at" as const;
-
 export async function fetchEventosEmbarque(embarqueId: string): Promise<EventoEmbarqueRow[]> {
   const { data, error } = await supabase
     .from('eventos_embarque')
-    .select(EVENTO_COLUMNS)
+    .select('*')
     .eq('embarque_id', embarqueId)
     .order('fecha', { ascending: false });
   if (error) throw error;

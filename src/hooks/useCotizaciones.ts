@@ -19,7 +19,6 @@ export {
   usePrefetchCotizacion,
   useCotizacionesAceptadas,
   useEmbarquesVinculados,
-  useCotizacionesPaginadas,
 } from './cotizacion/useCotizacionQueries';
 
 // Mutations

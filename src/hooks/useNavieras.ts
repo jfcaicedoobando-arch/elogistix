@@ -17,7 +17,6 @@ export function useNavieras() {
     queryKey: queryKeys.navieras.activas,
     queryFn: () => fetchNavieras(false),
     staleTime: 30 * 60 * 1000,
-    gcTime: 60 * 60 * 1000,
   });
 }
 

@@ -13,8 +13,7 @@ export function useConfiguracion() {
   return useQuery<ConfigItem[]>({
     queryKey: queryKeys.configuracion.all,
     queryFn: fetchConfiguracion,
-    staleTime: 10 * 60 * 1000,
-    gcTime: 30 * 60 * 1000,
+    staleTime: 5 * 60 * 1000,
   });
 }
 

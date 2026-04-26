@@ -14,13 +14,11 @@ export interface ConfigItem {
   organization_id?: string;
 }
 
-const CONFIG_COLUMNS = "id, categoria, clave, valor, descripcion, organization_id" as const;
-
 // ── Configuración por organización (usada por panel de admin de ORG) ───────
 export async function fetchConfiguracionByOrg(orgId: string): Promise<ConfigItem[]> {
   const { data, error } = await supabase
     .from("configuracion")
-    .select(CONFIG_COLUMNS)
+    .select("*")
     .eq("organization_id", orgId)
     .order("categoria")
     .order("clave");
@@ -44,7 +42,7 @@ export async function updateConfiguracionItems(
 export async function fetchConfiguracion(): Promise<ConfigItem[]> {
   const { data, error } = await supabase
     .from("configuracion")
-    .select(CONFIG_COLUMNS)
+    .select("*")
     .order("categoria")
     .order("clave");
   if (error) throw error;
@@ -79,7 +77,7 @@ export interface ConfigGlobalItem {
 export async function fetchConfiguracionGlobal(): Promise<ConfigGlobalItem[]> {
   const { data, error } = await supabase
     .from("configuracion_global")
-    .select("id, categoria, clave, valor, descripcion")
+    .select("*")
     .order("categoria")
     .order("clave");
   if (error) throw error;
