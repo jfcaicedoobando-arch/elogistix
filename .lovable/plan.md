@@ -104,4 +104,4 @@ Mantener `types.ts` deprecado solo durante este ciclo y eliminarlo al final.
 
 ## Próximo paso
 
-Ejecutar el **Paso 4 (v8.82.0)** — split de `adminServices.ts` en `services/admin/{stats,organizations,members}` + barrel.
+Ejecutar el **Paso 5 (v8.83.0)** — split de `clienteService.ts` en `services/cliente/{crud,contactos,relacionados}` + barrel.
