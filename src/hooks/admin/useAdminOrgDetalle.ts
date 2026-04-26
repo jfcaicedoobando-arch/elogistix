@@ -3,7 +3,7 @@
  * Mantiene la API pública previa para evitar refactor en componentes consumidores.
  */
 import { useState } from "react";
-import { usePlanes } from "@/hooks/usePlanes";
+import { usePlanes } from "@/hooks/admin/usePlanes";
 import { useAdminOrgInfo } from "@/hooks/admin/useAdminOrgInfo";
 import { useAdminOrgKpis } from "@/hooks/admin/useAdminOrgKpis";
 import { useAdminOrgMembers, type MemberRow } from "@/hooks/admin/useAdminOrgMembers";

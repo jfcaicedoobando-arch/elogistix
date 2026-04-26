@@ -7,7 +7,7 @@ import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import type { DocumentoEmbarqueRow } from "@/hooks/useEmbarques";
+import type { DocumentoEmbarqueRow } from "@/hooks/embarque/useEmbarques";
 
 interface Props {
   documentos: DocumentoEmbarqueRow[];

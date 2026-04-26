@@ -11,7 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useTiposContenedor } from "@/hooks/catalogos/useTiposContenedor";
 import { getErrorMessage } from "@/lib/errors";
 import { useToast } from "@/hooks/use-toast";
-import { useDuplicarEmbarque, type EmbarqueRow } from "@/hooks/useEmbarques";
+import { useDuplicarEmbarque, type EmbarqueRow } from "@/hooks/embarque/useEmbarques";
 
 interface FilaCopia {
   num_contenedor: string;

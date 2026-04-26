@@ -6,7 +6,7 @@
  * - Validación del paso 1 (Datos Generales).
  * - Hidratación de conceptos venta/costo a partir de una cotización.
  */
-import type { CotizacionRow } from "@/hooks/useCotizaciones";
+import type { CotizacionRow } from "@/hooks/cotizacion/useCotizaciones";
 import type { EmbarqueValidationErrors } from "@/components/embarque/StepDatosGenerales";
 import { parseConceptos } from "@/lib/parsers/cotizacionDetalle";
 

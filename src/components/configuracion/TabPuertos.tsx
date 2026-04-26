@@ -6,8 +6,8 @@ import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Plus, Trash2 } from "lucide-react";
 import { useAllPuertos, useAdminPuertos } from "@/hooks/catalogos/usePuertos";
-import SearchInput from "@/components/SearchInput";
-import { DataTable, type DataTableColumn } from "@/components/DataTable";
+import SearchInput from "@/components/selects/SearchInput";
+import { DataTable, type DataTableColumn } from "@/components/shared/DataTable";
 
 type Puerto = { id: string; code: string; name: string; country: string; activo: boolean };
 

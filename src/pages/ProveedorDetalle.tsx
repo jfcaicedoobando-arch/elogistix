@@ -10,7 +10,7 @@ import {
 import { formatCurrency } from "@/lib/formatters";
 import { getEstadoColor } from "@/lib/ui/uiMappings";
 import EditarProveedorDialog from "@/components/proveedor/EditarProveedorDialog";
-import DoubleConfirmDeleteDialog from "@/components/DoubleConfirmDeleteDialog";
+import DoubleConfirmDeleteDialog from "@/components/shared/DoubleConfirmDeleteDialog";
 import { useProveedorDetalleController } from "@/hooks/proveedor/useProveedorDetalleController";
 
 export default function ProveedorDetalle() {

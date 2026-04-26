@@ -6,7 +6,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useToast } from "@/hooks/use-toast";
 import { Loader2 } from "lucide-react";
 import { getErrorMessage } from "@/lib/errors";
-import { useAvailableUsers, useAddOrgMember } from "@/hooks/useOrgMembersMutations";
+import { useAvailableUsers, useAddOrgMember } from "@/hooks/admin/useOrgMembersMutations";
 import type { AppRole } from "@/types/appRole";
 import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 

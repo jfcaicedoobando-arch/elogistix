@@ -5,7 +5,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Trash2 } from "lucide-react";
-import type { ConceptoVentaCotizacion } from "@/hooks/useCotizaciones";
+import type { ConceptoVentaCotizacion } from "@/hooks/cotizacion/useCotizaciones";
 import { formatCurrency } from "@/lib/formatters";
 import { CONCEPTOS_COSTO_USD, CONCEPTOS_CON_IVA_USD } from "@/constants/cotizacionConstants";
 import { UnidadMedidaSelect } from "./UnidadMedidaSelect";

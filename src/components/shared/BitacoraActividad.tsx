@@ -3,7 +3,7 @@ import {
   Plus, Edit, Trash2, RefreshCw, Upload, LogIn, FileText, Activity,
   MessageSquare, FileX,
 } from "lucide-react";
-import type { EntradaBitacora } from "@/hooks/useBitacora";
+import type { EntradaBitacora } from "@/hooks/shared/useBitacora";
 
 const ICONOS_ACCION: Record<string, typeof Plus> = {
   crear: Plus,

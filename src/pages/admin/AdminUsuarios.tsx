@@ -2,13 +2,13 @@ import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Users, UserPlus, Trash2 } from "lucide-react";
-import { DataTable, type DataTableColumn } from "@/components/DataTable";
+import { DataTable, type DataTableColumn } from "@/components/shared/DataTable";
 import { useToast } from "@/hooks/use-toast";
 import { getErrorMessage } from "@/lib/errors";
 import NuevoUsuarioDialog from "@/components/usuario/NuevoUsuarioDialog";
-import DoubleConfirmDeleteDialog from "@/components/DoubleConfirmDeleteDialog";
-import { useAdminGlobalUsers, type GlobalUserRow } from "@/hooks/useAdminData";
-import { useDeleteUser } from "@/hooks/useUsuarioMutations";
+import DoubleConfirmDeleteDialog from "@/components/shared/DoubleConfirmDeleteDialog";
+import { useAdminGlobalUsers, type GlobalUserRow } from "@/hooks/admin/useAdminData";
+import { useDeleteUser } from "@/hooks/usuario/useUsuarioMutations";
 import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 
 export default function AdminUsuarios() {

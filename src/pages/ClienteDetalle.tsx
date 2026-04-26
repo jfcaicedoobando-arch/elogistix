@@ -4,12 +4,12 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 import TabPortalCliente from "@/components/cliente/TabPortalCliente";
-import { DataTable } from "@/components/DataTable";
+import { DataTable } from "@/components/shared/DataTable";
 import { embarqueColumns, cotizacionColumns } from "@/components/cliente/clienteColumns";
 import DialogContacto from "@/components/cliente/DialogContacto";
 import DialogEditarCliente from "@/components/cliente/DialogEditarCliente";
 import TablaContactos from "@/components/cliente/TablaContactos";
-import DoubleConfirmDeleteDialog from "@/components/DoubleConfirmDeleteDialog";
+import DoubleConfirmDeleteDialog from "@/components/shared/DoubleConfirmDeleteDialog";
 import ClienteSummaryCards from "@/components/cliente/ClienteSummaryCards";
 import { useClienteDetalleController } from "@/hooks/cliente/useClienteDetalleController";
 

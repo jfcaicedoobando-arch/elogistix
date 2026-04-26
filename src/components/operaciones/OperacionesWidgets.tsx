@@ -3,7 +3,7 @@ import { Progress } from "@/components/ui/progress";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { ResponsiveContainer, BarChart, Bar, XAxis, LabelList } from "recharts";
 import { useNavigate } from "react-router-dom";
-import type { NivelRiesgo, CargaRiesgo } from "@/hooks/useOperacionesData";
+import type { NivelRiesgo, CargaRiesgo } from "@/hooks/operaciones/useOperacionesData";
 
 // ─── Risk indicator chips ────────────────────────────────
 export function RiesgoIndicador({ criticos, enPuerto, porArribar }: { criticos: number; enPuerto: number; porArribar: number }) {

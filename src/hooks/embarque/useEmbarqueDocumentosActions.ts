@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
-import { useRegistrarActividad } from "@/hooks/useBitacora";
+import { useRegistrarActividad } from "@/hooks/shared/useBitacora";
 import { getSignedUrl } from "@/services/storage/index";
 import { getErrorMessage } from "@/lib/errors";
 import {
@@ -8,7 +8,7 @@ import {
   useDeleteDocumentoEmbarque,
   type EmbarqueRow,
   type DocumentoEmbarqueRow,
-} from "@/hooks/useEmbarques";
+} from "@/hooks/embarque/useEmbarques";
 import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 
 /**

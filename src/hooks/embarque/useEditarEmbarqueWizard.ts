@@ -7,12 +7,12 @@ import {
   useEmbarqueConceptosCosto,
   useProveedoresForSelect,
   useUpdateEmbarque,
-} from "@/hooks/useEmbarques";
+} from "@/hooks/embarque/useEmbarques";
 import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 import { useClientesForSelect, useContactosCliente } from "@/hooks/cliente/useClientes";
 import { useAuth } from "@/contexts/AuthContext";
-import { useRegistrarActividad } from "@/hooks/useBitacora";
-import { useConceptosForm } from "@/hooks/useConceptosForm";
+import { useRegistrarActividad } from "@/hooks/shared/useBitacora";
+import { useConceptosForm } from "@/hooks/cotizacion/useConceptosForm";
 import { useEmbarqueForm } from "@/hooks/embarque/useEmbarqueForm";
 import { getErrorMessage } from "@/lib/errors";
 

@@ -1,8 +1,8 @@
 import { Outlet } from "react-router-dom";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AdminSidebar } from "./AdminSidebar";
-import { ErrorBoundary } from "@/components/ErrorBoundary";
-import { ThemeToggle } from "@/components/ThemeToggle";
+import { ErrorBoundary } from "@/components/shared/ErrorBoundary";
+import { ThemeToggle } from "@/components/layout/ThemeToggle";
 
 export function AdminLayout() {
   return (

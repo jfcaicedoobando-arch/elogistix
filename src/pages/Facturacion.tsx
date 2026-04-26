@@ -1,5 +1,5 @@
 import { Download, FileText, FileCode2 } from "lucide-react";
-import SearchInput from "@/components/SearchInput";
+import SearchInput from "@/components/selects/SearchInput";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -10,8 +10,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useFacturas } from "@/hooks/facturacion/useFacturas";
 import { formatCurrency, formatDate } from "@/lib/formatters";
 import { getEstadoColor } from "@/lib/ui/uiMappings";
-import PaginationControls from "@/components/PaginationControls";
-import { DataTable, type DataTableColumn } from "@/components/DataTable";
+import PaginationControls from "@/components/shared/PaginationControls";
+import { DataTable, type DataTableColumn } from "@/components/shared/DataTable";
 import type { Database } from "@/integrations/supabase/types";
 import { TabProformas } from "@/components/facturacion/TabProformas";
 import { TabProformasPendientes } from "@/components/facturacion/TabProformasPendientes";

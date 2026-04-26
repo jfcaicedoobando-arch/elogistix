@@ -1,9 +1,9 @@
 import { Plus, Ship, Download } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import PaginationControls from "@/components/PaginationControls";
-import { DataTable } from "@/components/DataTable";
-import DoubleConfirmDeleteDialog from "@/components/DoubleConfirmDeleteDialog";
+import PaginationControls from "@/components/shared/PaginationControls";
+import { DataTable } from "@/components/shared/DataTable";
+import DoubleConfirmDeleteDialog from "@/components/shared/DoubleConfirmDeleteDialog";
 import DialogDuplicarEmbarque from "@/components/embarque/DialogDuplicarEmbarque";
 import EmbarquesFiltros from "@/components/embarque/EmbarquesFiltros";
 import { useEmbarquesPageController } from "@/hooks/embarque/useEmbarquesPageController";

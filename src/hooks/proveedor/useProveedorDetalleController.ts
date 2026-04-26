@@ -2,8 +2,8 @@ import { useState, useCallback } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useProveedor, useProveedorMutations, useProveedorOperaciones } from "@/hooks/proveedor/useProveedores";
 import { useToast } from "@/hooks/use-toast";
-import { usePermissions } from "@/hooks/usePermissions";
-import { useRegistrarActividad } from "@/hooks/useBitacora";
+import { usePermissions } from "@/hooks/shared/usePermissions";
+import { useRegistrarActividad } from "@/hooks/shared/useBitacora";
 import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 
 /**

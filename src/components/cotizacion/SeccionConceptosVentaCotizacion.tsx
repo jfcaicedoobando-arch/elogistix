@@ -1,7 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
-import type { ConceptoVentaCotizacion } from "@/hooks/useCotizaciones";
+import type { ConceptoVentaCotizacion } from "@/hooks/cotizacion/useCotizaciones";
 import { formatCurrency } from "@/lib/formatters";
 import { useTasaIVA } from "@/hooks/catalogos/useTasaIVA";
 import { ConceptoRowUSD, ConceptoRowMXN } from "./conceptos/ConceptoRows";

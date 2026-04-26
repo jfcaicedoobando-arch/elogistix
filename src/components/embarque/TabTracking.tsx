@@ -9,7 +9,7 @@ import { Plus, MapPin, Clock, User } from 'lucide-react';
 import { useEventosEmbarque, useCreateEventoEmbarque, TIPOS_EVENTO_TRACKING } from '@/hooks/embarque/useEventosEmbarque';
 import { ICONO_EVENTO } from "@/constants/embarqueConstants";
 import { useAuth } from '@/contexts/AuthContext';
-import { usePermissions } from '@/hooks/usePermissions';
+import { usePermissions } from '@/hooks/shared/usePermissions';
 import { useToast } from '@/hooks/use-toast';
 import { getErrorMessage } from '@/lib/errors';
 import { formatDate } from '@/lib/formatters';

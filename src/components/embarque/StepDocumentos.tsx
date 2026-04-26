@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import DocumentChecklist, { type DocumentoChecklist } from "@/components/DocumentChecklist";
+import DocumentChecklist, { type DocumentoChecklist } from "@/components/shared/DocumentChecklist";
 import { ValidationAlert } from "@/components/feedback/ValidationAlert";
 import {
   validateArchivo,

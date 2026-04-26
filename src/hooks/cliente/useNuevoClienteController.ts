@@ -2,9 +2,9 @@ import { useState } from "react";
 import { getErrorMessage } from "@/lib/errors";
 import { useToast } from "@/hooks/use-toast";
 import { useCreateCliente } from "@/hooks/cliente/useClientes";
-import { useRegistrarActividad } from "@/hooks/useBitacora";
+import { useRegistrarActividad } from "@/hooks/shared/useBitacora";
 import { parseCsf } from "@/services/csf";
-import type { DocumentoChecklist } from "@/components/DocumentChecklist";
+import type { DocumentoChecklist } from "@/components/shared/DocumentChecklist";
 import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 
 export const EMPTY_CLIENTE = {

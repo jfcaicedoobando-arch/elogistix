@@ -1,6 +1,6 @@
 import { useState } from "react";
 import type { Enums, TablesInsert } from "@/integrations/supabase/types";
-import type { DocumentoChecklist } from "@/components/DocumentChecklist";
+import type { DocumentoChecklist } from "@/components/shared/DocumentChecklist";
 
 type TipoProveedor = Enums<"tipo_proveedor">;
 type Moneda = Enums<"moneda">;

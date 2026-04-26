@@ -7,8 +7,8 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { cn } from "@/lib/utils";
-import type { CotizacionRow } from "@/hooks/useCotizaciones";
-import type { ExpedienteCliente } from "@/hooks/useEmbarques";
+import type { CotizacionRow } from "@/hooks/cotizacion/useCotizaciones";
+import type { ExpedienteCliente } from "@/hooks/embarque/useEmbarques";
 
 interface Props {
   cotizacionesAceptadas: CotizacionRow[];

@@ -3,14 +3,14 @@ import { useNavigate } from "react-router-dom";
 import { Users, Plus } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import SearchInput from "@/components/SearchInput";
+import SearchInput from "@/components/selects/SearchInput";
 import { useClientesPaginados } from "@/hooks/cliente/useClientes";
-import { usePermissions } from "@/hooks/usePermissions";
+import { usePermissions } from "@/hooks/shared/usePermissions";
 import NuevoClienteDialog from "@/components/cliente/NuevoClienteDialog";
-import PaginationControls from "@/components/PaginationControls";
-import { useDebounce } from "@/hooks/useDebounce";
-import { DataTable, type DataTableColumn } from "@/components/DataTable";
-import { useListPageState } from "@/hooks/useListPageState";
+import PaginationControls from "@/components/shared/PaginationControls";
+import { useDebounce } from "@/hooks/shared/useDebounce";
+import { DataTable, type DataTableColumn } from "@/components/shared/DataTable";
+import { useListPageState } from "@/hooks/shared/useListPageState";
 
 type ClienteRow = { id: string; nombre: string; rfc: string; ciudad: string; estado: string; contacto: string; telefono: string };
 

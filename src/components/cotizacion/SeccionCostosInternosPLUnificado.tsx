@@ -1,4 +1,4 @@
-import type { ConceptoVentaCotizacion } from "@/hooks/useCotizaciones";
+import type { ConceptoVentaCotizacion } from "@/hooks/cotizacion/useCotizaciones";
 import SeccionCostosInternosPLLocal from "./SeccionCostosInternosPLLocal";
 import SeccionCostosInternosPLDetalle from "./SeccionCostosInternosPLDetalle";
 import type { FilaCostoLocal } from "./costosPLTypes";

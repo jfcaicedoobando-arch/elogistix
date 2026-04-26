@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { renderHook, act } from "@testing-library/react";
-import { useListPageState } from "@/hooks/useListPageState";
+import { useListPageState } from "@/hooks/shared/useListPageState";
 
 describe("useListPageState", () => {
   it("inicializa con defaults", () => {

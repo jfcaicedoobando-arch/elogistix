@@ -4,7 +4,7 @@
  */
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "@/hooks/use-toast";
-import { useOrgFilter } from "@/hooks/useOrgFilter";
+import { useOrgFilter } from "@/hooks/shared/useOrgFilter";
 import { queryKeys } from "@/lib/query";
 import {
   aprobarProformas as svcAprobar,

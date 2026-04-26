@@ -6,7 +6,7 @@ import { OrgHeader } from "@/components/admin/org-detalle/OrgHeader";
 import { OrgInfoCard } from "@/components/admin/org-detalle/OrgInfoCard";
 import { OrgMembersCard } from "@/components/admin/org-detalle/OrgMembersCard";
 import { OrgConfigCard } from "@/components/admin/org-detalle/OrgConfigCard";
-import { useAdminOrgDetalle } from "@/hooks/useAdminOrgDetalle";
+import { useAdminOrgDetalle } from "@/hooks/admin/useAdminOrgDetalle";
 
 export default function AdminOrgDetalle() {
   const { id } = useParams<{ id: string }>();

@@ -1,6 +1,6 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { queryKeys } from '@/lib/query';
-import { useOrgFilter } from '@/hooks/useOrgFilter';
+import { useOrgFilter } from '@/hooks/shared/useOrgFilter';
 import {
   fetchEmbarques,
   fetchEmbarquesPaginados,

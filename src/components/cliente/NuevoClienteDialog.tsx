@@ -5,7 +5,7 @@ import { Label } from "@/components/ui/label";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription,
 } from "@/components/ui/dialog";
-import DocumentChecklist from "@/components/DocumentChecklist";
+import DocumentChecklist from "@/components/shared/DocumentChecklist";
 import {
   useNuevoClienteController,
   type ClienteForm,

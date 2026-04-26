@@ -6,8 +6,8 @@ import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { Save, Pencil } from "lucide-react";
-import { usePlanes, useUpdatePlan, type Plan } from "@/hooks/usePlanes";
-import { DataTable, type DataTableColumn } from "@/components/DataTable";
+import { usePlanes, useUpdatePlan, type Plan } from "@/hooks/admin/usePlanes";
+import { DataTable, type DataTableColumn } from "@/components/shared/DataTable";
 
 export default function TabPlanes() {
   const { data: planes = [], isLoading } = usePlanes();

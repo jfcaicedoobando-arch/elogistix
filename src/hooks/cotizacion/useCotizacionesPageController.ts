@@ -1,11 +1,11 @@
 import { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
-import { useListPageState } from "@/hooks/useListPageState";
-import { useCotizaciones, useDeleteCotizacion, usePrefetchCotizacion } from "@/hooks/useCotizaciones";
+import { useListPageState } from "@/hooks/shared/useListPageState";
+import { useCotizaciones, useDeleteCotizacion, usePrefetchCotizacion } from "@/hooks/cotizacion/useCotizaciones";
 import { useDuplicarCotizacion } from "@/hooks/cotizacion/useDuplicarCotizacion";
 import { useClientesForSelect } from "@/hooks/cliente/useClientes";
-import { usePermissions } from "@/hooks/usePermissions";
+import { usePermissions } from "@/hooks/shared/usePermissions";
 import { getErrorMessage } from "@/lib/errors";
 import { exportToCsv } from "@/generators/exportCsv";
 import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";

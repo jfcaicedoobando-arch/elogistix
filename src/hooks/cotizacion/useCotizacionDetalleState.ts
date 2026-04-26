@@ -1,8 +1,8 @@
 import { useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTasaIVA } from "@/hooks/catalogos/useTasaIVA";
-import { useCotizacion, useEmbarquesVinculados } from "@/hooks/useCotizaciones";
-import { usePermissions } from "@/hooks/usePermissions";
+import { useCotizacion, useEmbarquesVinculados } from "@/hooks/cotizacion/useCotizaciones";
+import { usePermissions } from "@/hooks/shared/usePermissions";
 import {
   parseConceptos,
   calcularTotalesConceptos,

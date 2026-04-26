@@ -8,7 +8,7 @@ import { Separator } from "@/components/ui/separator";
 import librecargaLogo from "@/assets/librecarga-logo.png";
 import { usePortalClienteName, usePortalOrgName } from "@/hooks/portal/usePortalData";
 import { useState, useMemo } from "react";
-import { ThemeToggle } from "@/components/ThemeToggle";
+import { ThemeToggle } from "@/components/layout/ThemeToggle";
 
 const navItems = [
   { label: "Inicio", href: "/portal", icon: LayoutDashboard },

@@ -1,8 +1,8 @@
 import { describe, it, expect } from "vitest";
 import { render, screen } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
-import { BitacoraActividad } from "@/components/BitacoraActividad";
-import type { EntradaBitacora } from "@/hooks/useBitacora";
+import { BitacoraActividad } from "@/components/shared/BitacoraActividad";
+import type { EntradaBitacora } from "@/hooks/shared/useBitacora";
 
 const entrada = (overrides: Partial<EntradaBitacora> = {}): EntradaBitacora => ({
   id: "1",

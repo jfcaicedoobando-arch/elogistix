@@ -1,10 +1,10 @@
 import { useMemo, useCallback } from "react";
-import { useListPageState } from "@/hooks/useListPageState";
+import { useListPageState } from "@/hooks/shared/useListPageState";
 import { exportToCsv } from "@/generators/exportCsv";
 import { useFacturas, useGastosPendientes, useMarcarCostoPagado } from "@/hooks/facturacion/useFacturas";
-import { useRegistrarActividad } from "@/hooks/useBitacora";
+import { useRegistrarActividad } from "@/hooks/shared/useBitacora";
 import { useToast } from "@/hooks/use-toast";
-import { usePermissions } from "@/hooks/usePermissions";
+import { usePermissions } from "@/hooks/shared/usePermissions";
 import { useProformasPendientes } from "@/hooks/embarque/useProformas";
 import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 

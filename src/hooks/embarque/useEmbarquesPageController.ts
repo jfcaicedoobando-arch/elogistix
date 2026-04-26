@@ -1,12 +1,12 @@
 import { useState, useMemo, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { exportToCsv } from "@/generators/exportCsv";
-import { useEliminarEmbarque, calcularEstadoEmbarque, usePrefetchEmbarque } from "@/hooks/useEmbarques";
-import type { EmbarqueRow } from "@/hooks/useEmbarques";
+import { useEliminarEmbarque, calcularEstadoEmbarque, usePrefetchEmbarque } from "@/hooks/embarque/useEmbarques";
+import type { EmbarqueRow } from "@/hooks/embarque/useEmbarques";
 import { useOperadoresDistintos } from "@/hooks/catalogos/useOperadoresDistintos";
 import { useClientesForSelect } from "@/hooks/cliente/useClientes";
-import { usePermissions } from "@/hooks/usePermissions";
-import { useRegistrarActividad } from "@/hooks/useBitacora";
+import { usePermissions } from "@/hooks/shared/usePermissions";
+import { useRegistrarActividad } from "@/hooks/shared/useBitacora";
 import { useToast } from "@/hooks/use-toast";
 import { getErrorMessage } from "@/lib/errors";
 import { getOrigen, getDestino } from "@/lib/formatters";

@@ -1,6 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Building2, Users, Ship, FileText } from "lucide-react";
-import { useAdminDashboardStats } from "@/hooks/useAdminData";
+import { useAdminDashboardStats } from "@/hooks/admin/useAdminData";
 
 export default function AdminDashboard() {
   const { data: stats, isLoading } = useAdminDashboardStats();

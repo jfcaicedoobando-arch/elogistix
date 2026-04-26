@@ -12,10 +12,10 @@ import {
   useCotizacionesCliente,
 } from "@/hooks/cliente/useClientes";
 import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
-import { useClienteFinancials } from "@/hooks/useClienteFinancials";
+import { useClienteFinancials } from "@/hooks/cliente/useClienteFinancials";
 import { useToast } from "@/hooks/use-toast";
-import { usePermissions } from "@/hooks/usePermissions";
-import { useRegistrarActividad } from "@/hooks/useBitacora";
+import { usePermissions } from "@/hooks/shared/usePermissions";
+import { useRegistrarActividad } from "@/hooks/shared/useBitacora";
 import { getErrorMessage } from "@/lib/errors";
 import type { Tables, Enums } from "@/integrations/supabase/types";
 
