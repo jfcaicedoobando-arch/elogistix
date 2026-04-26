@@ -5,7 +5,7 @@
  */
 import { useState, useCallback } from "react";
 import { toast } from "@/hooks/use-toast";
-import { generarPdfProforma } from "@/generators/proformaPdf";
+import type { generarPdfProforma } from "@/generators/proformaPdf";
 import { useTasaIVA } from "@/hooks/useTasaIVA";
 import {
   fetchClienteParaPdf,
@@ -54,6 +54,7 @@ export function useDescargarProformaPdf() {
           return;
         }
 
+        const { generarPdfProforma } = await import("@/generators/proformaPdf");
         generarPdfProforma({
           proforma,
           embarque,

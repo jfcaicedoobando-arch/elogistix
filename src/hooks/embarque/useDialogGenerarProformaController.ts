@@ -10,7 +10,7 @@ import {
   useDiasCreditoCliente,
   useFetchClienteParaPdf,
 } from "@/hooks/embarque/useProformaDialog";
-import { generarPdfProforma } from "@/generators/proformaPdf";
+
 import type { Tables } from "@/integrations/supabase/types";
 
 type ConceptoVenta = Tables<"conceptos_venta">;
@@ -128,6 +128,7 @@ export function useDialogGenerarProformaController(
         ...c,
         aplica_iva: ivaOverrides[c.id],
       }));
+      const { generarPdfProforma } = await import("@/generators/proformaPdf");
       generarPdfProforma({
         proforma,
         embarque,

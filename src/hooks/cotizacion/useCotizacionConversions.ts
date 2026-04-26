@@ -1,7 +1,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/contexts/AuthContext';
 import { queryKeys } from '@/lib/query';
-import type { CotizacionRow } from './useCotizacionTypes';
+import type { CotizacionRow } from '@/types/cotizacion';
 import {
   convertirProspectoACliente,
   convertirCotizacionAEmbarques,

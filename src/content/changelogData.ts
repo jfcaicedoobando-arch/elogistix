@@ -15,6 +15,13 @@ export interface ChangelogEntry {
  */
 export const recentChangelog: ChangelogEntry[] = [
   {
+    version: "8.87.0",
+    date: "2026-04-26",
+    type: "minor",
+    title: "Refactor arquitectónico Fase 3: lazy-load PDF y consolidación de tipos",
+    description: "Pasos 8-10 del plan de auditoría arquitectónica integral. (8) Lazy-load de jsPDF: el generador @/generators/proformaPdf (que arrastra ~200KB de jsPDF + jspdf-autotable) ahora se carga vía dynamic import() en useDescargarProformaPdf y useDialogGenerarProformaController, eliminándolo del bundle inicial y dejándolo sólo en el chunk de la acción de descarga. cotizacionPdf ya estaba lazy desde antes. (9) Consolidación de tipos: se eliminó el re-export legacy src/hooks/cotizacion/useCotizacionTypes.ts y se migraron los 4 consumidores restantes (useCotizacionQueries, useCotizacionMutations, useCotizacionConversions, useCotizaciones, usePortalCotizacionDetalle) a importar directamente desde @/types/cotizacion. costosPLTypes.ts se conserva por contener el helper UI calcTotalsPL usado por SeccionCostosInternosPL{Local,Detalle}. (10) Se confirmó que la regla de shadcn read-only (use-toast.ts, use-mobile.tsx, sidebar.tsx) ya estaba documentada en ARCHITECTURE.md sección 3 + checklist. Build verde y 201/201 pruebas pasando.",
+  },
+  {
     version: "8.86.0",
     date: "2026-04-26",
     type: "minor",
