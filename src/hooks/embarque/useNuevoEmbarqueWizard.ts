@@ -34,7 +34,6 @@ import {
   validateStepRuta,
   validateStepDocumentos,
   validateStepCostos,
-  STEP_LABELS,
   type StepValidationErrors,
 } from "@/lib/domain/embarqueWizardSchemas";
 import { notifyError } from "@/lib/ui/wizardFeedback";
