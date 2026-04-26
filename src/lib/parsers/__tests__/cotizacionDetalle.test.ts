@@ -4,7 +4,7 @@ import {
   calcularTotalesConceptos,
   getNombreDestinatario,
 } from "@/lib/parsers/cotizacionDetalle";
-import type { ConceptoVentaCotizacion } from "@/types/cotizacionTypes";
+import type { ConceptoVentaCotizacion } from "@/types/cotizacion";
 
 const concepto = (over: Partial<ConceptoVentaCotizacion>): ConceptoVentaCotizacion => ({
   descripcion: "Flete",

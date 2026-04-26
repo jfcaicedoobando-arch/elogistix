@@ -2,14 +2,14 @@
  * Mappers puros entre el formulario de cotización (RHF) y la BD.
  * Tipos del formulario viven en `@/data/cotizacionFormTypes` (capa neutra).
  */
-import type { ConceptoVentaCotizacion, DimensionLCL, DimensionAerea } from "@/types/cotizacionTypes";
-import type { FilaCostoLocal } from "@/types/cotizacionPLTypes";
+import type { ConceptoVentaCotizacion, DimensionLCL, DimensionAerea } from "@/types/cotizacion";
+import type { FilaCostoLocal } from "@/types/cotizacionPL";
 import {
   type CotizacionFormValues,
   type CotizacionInitialData,
   type CotizacionInitialCosto,
   COTIZACION_FORM_DEFAULTS,
-} from "@/types/cotizacionFormTypes";
+} from "@/types/cotizacionForm";
 
 // Re-exports para preservar la API pública usada por consumidores existentes.
 export type { CotizacionFormValues, CotizacionInitialData, CotizacionInitialCosto };

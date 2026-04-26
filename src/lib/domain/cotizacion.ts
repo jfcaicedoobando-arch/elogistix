@@ -4,7 +4,7 @@
  */
 import { CONCEPTOS_CON_IVA_USD } from "@/constants/cotizacionConstants";
 import { calcularTotalConIVA } from "@/lib/financial/financialUtils";
-import type { FilaCostoLocal } from "@/types/cotizacionPLTypes";
+import type { FilaCostoLocal } from "@/types/cotizacionPL";
 
 export interface ConceptoVentaPrellenado {
   descripcion: string;

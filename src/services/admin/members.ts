@@ -2,7 +2,7 @@
  * Miembros de organización y usuarios globales para la consola super admin.
  */
 import { supabase } from "@/integrations/supabase/client";
-import type { AppRole } from "@/types/types";
+import type { AppRole } from "@/types/appRole";
 
 export interface GlobalUserRow {
   user_id: string;

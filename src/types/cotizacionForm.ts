@@ -3,7 +3,7 @@
  * Movido desde src/lib/cotizacionFormMappers.ts para romper la inversión de
  * dependencia (lib no debe importar tipos desde components).
  */
-import type { ConceptoVentaCotizacion, DimensionLCL, DimensionAerea } from "@/types/cotizacionTypes";
+import type { ConceptoVentaCotizacion, DimensionLCL, DimensionAerea } from "@/types/cotizacion";
 
 export interface CotizacionFormValues {
   esProspecto: boolean;

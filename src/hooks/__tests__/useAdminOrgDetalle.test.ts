@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import type { AppRole } from "@/types/types";
+import type { AppRole } from "@/types/appRole";
 
 // Test the pure logic used by useAdminOrgDetalle: MemberRow interface and config grouping.
 

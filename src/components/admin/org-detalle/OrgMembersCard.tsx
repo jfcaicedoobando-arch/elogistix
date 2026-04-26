@@ -6,7 +6,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { DataTable, type DataTableColumn } from "@/components/DataTable";
 import { Trash2, UserPlus, Users } from "lucide-react";
 import type { MemberRow } from "@/hooks/admin/useAdminOrgMembers";
-import type { AppRole } from "@/types/types";
+import type { AppRole } from "@/types/appRole";
 
 const roleBadge: Record<string, string> = {
   super_admin: "bg-primary text-primary-foreground",

@@ -2,7 +2,7 @@
  * Cotizaciones — Costos (`cotizacion_costos`): CRUD + lookups para hidratación.
  */
 import { supabase } from "@/integrations/supabase/client";
-import type { CostoCotizacion } from "@/types/cotizacionCostoTypes";
+import type { CostoCotizacion } from "@/types/cotizacionCosto";
 
 export async function fetchCotizacionCostos(
   cotizacionId: string,

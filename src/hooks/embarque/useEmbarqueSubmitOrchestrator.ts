@@ -31,8 +31,8 @@ import {
 } from "@/lib/domain/embarqueWizard";
 import { getErrorMessage } from "@/lib/errors";
 import type { Tables } from "@/integrations/supabase/types";
-import type { DocumentoChecklist } from "@/types/documentoChecklistTypes";
-import type { ConceptoVentaLocal, ConceptoCostoLocal } from "@/types/conceptoTypes";
+import type { DocumentoChecklist } from "@/types/documentoChecklist";
+import type { ConceptoVentaLocal, ConceptoCostoLocal } from "@/types/concepto";
 import type { useEmbarqueForm } from "@/hooks/embarque/useEmbarqueForm";
 
 type ContactoRow = Pick<Tables<"contactos_cliente">, "id" | "nombre" | "tipo" | "pais">;

@@ -7,7 +7,7 @@
  */
 import { supabase } from "@/integrations/supabase/client";
 import type { Json, Tables, TablesInsert } from "@/integrations/supabase/types";
-import type { CotizacionRow } from "@/types/cotizacionTypes";
+import type { CotizacionRow } from "@/types/cotizacion";
 import {
   calcularFechaVigencia,
   filtrarCostosParaContenedor,
