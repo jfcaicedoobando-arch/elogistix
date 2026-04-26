@@ -21,8 +21,6 @@ export * from "./useEmbarquesPageState";
 export * from "./useEmbarquesRelacionados";
 export * from "./useEventosEmbarque";
 export * from "./useNuevoEmbarqueWizard";
-export * from "./useNuevoEmbarqueExpediente";
-export * from "./useNuevoEmbarqueValidation";
 export * from "./usePortalEmbarqueDetalleController";
 export * from "./useProfitMaps";
 export * from "./useProformaDialog";
