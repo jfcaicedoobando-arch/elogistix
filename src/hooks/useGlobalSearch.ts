@@ -1,5 +1,5 @@
 import { useCallback } from "react";
-import { buscarGlobal } from "@/services/search";
+import { buscarGlobal } from "@/services/searchService";
 
 export interface GlobalSearchResult {
   id: string;

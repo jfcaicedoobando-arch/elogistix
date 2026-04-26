@@ -5,7 +5,7 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Plus, Trash2 } from "lucide-react";
-import { useAllNavieras, useAdminNavieras } from "@/hooks/catalogos/useNavieras";
+import { useAllNavieras, useAdminNavieras } from "@/hooks/useNavieras";
 import SearchInput from "@/components/SearchInput";
 import { DataTable, type DataTableColumn } from "@/components/DataTable";
 

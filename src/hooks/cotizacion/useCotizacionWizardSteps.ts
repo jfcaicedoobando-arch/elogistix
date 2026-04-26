@@ -7,7 +7,6 @@ import type { FilaCostoLocal } from "@/types/cotizacionPL";
 import type { CotizacionFormValues } from "@/lib/mappers/cotizacionForm";
 import { savePaso1, savePaso2, savePaso3, savePasoFinal, buildConceptosFromCostos } from "@/services/cotizacion";
 import { getErrorMessage } from "@/lib/errors";
-import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 
 interface ToastFn {
   (opts: { title: string; description?: string; variant?: "destructive" | "default" }): void;
@@ -60,15 +59,15 @@ export function useCotizacionWizardSteps({
     const v = form.getValues();
     if (currentStep === 1) {
       if (!v.esProspecto && !v.clienteId) {
-        notifyError(toast, { title: "Selecciona un cliente" });
+        toast({ title: "Selecciona un cliente", variant: "destructive" });
         return;
       }
       if (v.esProspecto && !v.prospectoEmpresa.trim()) {
-        notifyError(toast, { title: "Ingresa el nombre de la empresa del prospecto" });
+        toast({ title: "Ingresa el nombre de la empresa del prospecto", variant: "destructive" });
         return;
       }
       if (v.esProspecto && !v.prospectoContacto.trim()) {
-        notifyError(toast, { title: "Ingresa el nombre del contacto del prospecto" });
+        toast({ title: "Ingresa el nombre del contacto del prospecto", variant: "destructive" });
         return;
       }
       try {
@@ -79,7 +78,7 @@ export function useCotizacionWizardSteps({
         if (!cotizacionId) setCotizacionId(id);
         setCurrentStep(2);
       } catch (err: unknown) {
-        notifyError(toast, { title: "Error al guardar datos generales", message: getErrorMessage(err) });
+        toast({ title: "Error al guardar datos generales", description: getErrorMessage(err), variant: "destructive" });
       }
     } else if (currentStep === 2) {
       try {
@@ -94,13 +93,13 @@ export function useCotizacionWizardSteps({
         }
         setCurrentStep(3);
       } catch (err: unknown) {
-        notifyError(toast, { title: "Error al guardar costos", message: getErrorMessage(err) });
+        toast({ title: "Error al guardar costos", description: getErrorMessage(err), variant: "destructive" });
       }
     } else if (currentStep === 3) {
       const conceptosUSDValidos = conceptosUSD.filter(c => c.descripcion?.trim());
       const conceptosMXNValidos = conceptosMXN.filter(c => c.descripcion?.trim());
       if (conceptosUSDValidos.length === 0 && conceptosMXNValidos.length === 0) {
-        notifyError(toast, { title: "Agrega al menos un concepto de venta" });
+        toast({ title: "Agrega al menos un concepto de venta", variant: "destructive" });
         return;
       }
       try {
@@ -114,7 +113,7 @@ export function useCotizacionWizardSteps({
         }
         setCurrentStep(4);
       } catch (err: unknown) {
-        notifyError(toast, { title: "Error al guardar conceptos de venta", message: getErrorMessage(err) });
+        toast({ title: "Error al guardar conceptos de venta", description: getErrorMessage(err), variant: "destructive" });
       }
     }
   }, [
@@ -132,10 +131,10 @@ export function useCotizacionWizardSteps({
         mutations: { updateCotizacion },
         registrarActividad: registrarActividad.mutate,
       });
-      notifySuccess(toast, { title: isEditMode ? "Cotización actualizada exitosamente" : "Cotización creada exitosamente" });
+      toast({ title: isEditMode ? "Cotización actualizada exitosamente" : "Cotización creada exitosamente" });
       navigate(`/cotizaciones/${cotizacionId}`);
     } catch (err: unknown) {
-      notifyError(toast, { title: "Error al finalizar cotización", message: getErrorMessage(err) });
+      toast({ title: "Error al finalizar cotización", description: getErrorMessage(err), variant: "destructive" });
     }
   }, [cotizacionId, updateCotizacion, registrarActividad, toast, navigate, isEditMode]);
 

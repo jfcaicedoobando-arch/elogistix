@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { usePortalDocumentDownload } from "@/hooks/portal/usePortalDocumentDownload";
+import { usePortalDocumentDownload } from "@/hooks/usePortalDocumentDownload";
 import type { Tables } from "@/integrations/supabase/types";
 
 const DOC_ESTADO_ICON: Record<string, { icon: typeof FileCheck; color: string }> = {

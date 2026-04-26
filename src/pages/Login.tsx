@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { signInWithEmail, resolveLandingRoute } from "@/services/auth";
+import { signInWithEmail, resolveLandingRoute } from "@/services/authService";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -8,7 +8,6 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import librecargaLogo from "@/assets/librecarga-logo.png";
-import { notifyError } from "@/lib/ui/appFeedback";
 
 export default function Login() {
   const [email, setEmail] = useState("");
@@ -26,7 +25,7 @@ export default function Login() {
       navigate(resolveLandingRoute(role), { replace: true });
     } catch (err) {
       const message = err instanceof Error ? err.message : "Error desconocido";
-      notifyError(toast, { title: "Error al iniciar sesión", message: message });
+      toast({ title: "Error al iniciar sesión", description: message, variant: "destructive" });
     } finally {
       setLoading(false);
     }

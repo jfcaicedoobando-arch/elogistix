@@ -5,7 +5,7 @@ import {
   updateUserRole,
   deleteUserViaEdgeFunction,
   type UserRow,
-} from '@/services/usuario';
+} from '@/services/usuarioService';
 import type { AppRole } from "@/types/appRole";
 
 export type { UserRow };

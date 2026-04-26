@@ -6,7 +6,7 @@ import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
 import librecargaLogo from "@/assets/librecarga-logo.png";
-import { usePortalClienteName, usePortalOrgName } from "@/hooks/portal/usePortalData";
+import { usePortalClienteName, usePortalOrgName } from "@/hooks/usePortalData";
 import { useState, useMemo } from "react";
 import { ThemeToggle } from "@/components/ThemeToggle";
 

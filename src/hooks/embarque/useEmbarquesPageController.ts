@@ -3,8 +3,8 @@ import { useNavigate } from "react-router-dom";
 import { exportToCsv } from "@/generators/exportCsv";
 import { useEliminarEmbarque, calcularEstadoEmbarque, usePrefetchEmbarque } from "@/hooks/useEmbarques";
 import type { EmbarqueRow } from "@/hooks/useEmbarques";
-import { useOperadoresDistintos } from "@/hooks/catalogos/useOperadoresDistintos";
-import { useClientesForSelect } from "@/hooks/cliente/useClientes";
+import { useOperadoresDistintos } from "@/hooks/useOperadoresDistintos";
+import { useClientesForSelect } from "@/hooks/useClientes";
 import { usePermissions } from "@/hooks/usePermissions";
 import { useRegistrarActividad } from "@/hooks/useBitacora";
 import { useToast } from "@/hooks/use-toast";
@@ -13,7 +13,6 @@ import { getOrigen, getDestino } from "@/lib/formatters";
 import { useEmbarquesListExtras } from "@/hooks/embarque/useEmbarquesListData";
 import { useEmbarquesPageState } from "@/hooks/embarque/useEmbarquesPageState";
 import { buildEmbarqueColumns } from "@/components/embarque/embarqueColumns";
-import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 
 /**
  * Controller que centraliza estado, queries y handlers de la página de Embarques.
@@ -51,9 +50,9 @@ export function useEmbarquesPageController() {
         entidad_id: id, entidad_nombre: expediente,
         detalles: { cliente: cliente_nombre, modo },
       });
-      notifySuccess(toast, { title: "Embarque eliminado", description: `${expediente} fue eliminado permanentemente.` });
+      toast({ title: "Embarque eliminado", description: `${expediente} fue eliminado permanentemente.` });
     } catch (err: unknown) {
-      notifyError(toast, { title: "Error al eliminar", message: getErrorMessage(err) });
+      toast({ title: "Error al eliminar", description: getErrorMessage(err), variant: "destructive" });
     }
     setEmbarqueAEliminar(null);
   }, [embarqueAEliminar, eliminarEmbarque, registrarActividad, toast]);

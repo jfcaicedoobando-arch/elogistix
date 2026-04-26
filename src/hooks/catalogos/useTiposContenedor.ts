@@ -1,14 +1,13 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { queryKeys } from "@/lib/query";
-import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 import {
   fetchTiposContenedor,
   insertTipoContenedor,
   setTipoContenedorActivo,
   deleteTipoContenedor,
   type TipoContenedor,
-} from "@/services/catalogos";
+} from "@/services/catalogosService";
 
 export type { TipoContenedor };
 
@@ -40,10 +39,10 @@ export function useAdminTiposContenedor() {
     mutationFn: (input: { code: string; name: string }) => insertTipoContenedor(input),
     onSuccess: () => {
       invalidate();
-      notifySuccess(toast, { title: "Tipo de contenedor agregado" });
+      toast({ title: "Tipo de contenedor agregado" });
     },
     onError: (e: Error) => {
-      notifyError(toast, { title: "Error al agregar tipo", message: e.message });
+      toast({ title: "Error al agregar tipo", description: e.message, variant: "destructive" });
     },
   });
 
@@ -52,7 +51,7 @@ export function useAdminTiposContenedor() {
       setTipoContenedorActivo(id, activo),
     onSuccess: () => invalidate(),
     onError: (e: Error) => {
-      notifyError(toast, { title: "Error al actualizar", message: e.message });
+      toast({ title: "Error al actualizar", description: e.message, variant: "destructive" });
     },
   });
 
@@ -60,10 +59,10 @@ export function useAdminTiposContenedor() {
     mutationFn: (id: string) => deleteTipoContenedor(id),
     onSuccess: () => {
       invalidate();
-      notifySuccess(toast, { title: "Tipo de contenedor eliminado" });
+      toast({ title: "Tipo de contenedor eliminado" });
     },
     onError: (e: Error) => {
-      notifyError(toast, { title: "Error al eliminar", message: e.message });
+      toast({ title: "Error al eliminar", description: e.message, variant: "destructive" });
     },
   });
 

@@ -1,12 +1,11 @@
 import { useMemo, useCallback } from "react";
 import { useListPageState } from "@/hooks/useListPageState";
 import { exportToCsv } from "@/generators/exportCsv";
-import { useFacturas, useGastosPendientes, useMarcarCostoPagado } from "@/hooks/facturacion/useFacturas";
+import { useFacturas, useGastosPendientes, useMarcarCostoPagado } from "@/hooks/useFacturas";
 import { useRegistrarActividad } from "@/hooks/useBitacora";
 import { useToast } from "@/hooks/use-toast";
 import { usePermissions } from "@/hooks/usePermissions";
 import { useProformasPendientes } from "@/hooks/embarque/useProformas";
-import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 
 /**
  * Controller para la página de Pre-Facturación.
@@ -49,9 +48,9 @@ export function useFacturacionPageController() {
           entidad_id: id,
           entidad_nombre: 'Gasto marcado como pagado',
         });
-        notifySuccess(toast, { title: "Gasto marcado como pagado" });
+        toast({ title: "Gasto marcado como pagado" });
       },
-      onError: () => notifyError(toast, { title: "Error al marcar como pagado" }),
+      onError: () => toast({ title: "Error al marcar como pagado", variant: "destructive" }),
     });
   }, [marcarPagado, registrarActividad, toast]);
 

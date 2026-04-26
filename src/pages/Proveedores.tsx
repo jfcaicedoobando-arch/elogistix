@@ -5,8 +5,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import SearchInput from "@/components/SearchInput";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useProveedoresPaginados, useProveedorMutations } from "@/hooks/proveedor/useProveedores";
-import type { ProveedorListItem } from "@/hooks/proveedor/useProveedores";
+import { useProveedoresPaginados, useProveedorMutations } from "@/hooks/useProveedores";
+import type { ProveedorListItem } from "@/hooks/useProveedores";
 import NuevoProveedorDialog from "@/components/proveedor/NuevoProveedorDialog";
 import PaginationControls from "@/components/PaginationControls";
 import { useToast } from "@/hooks/use-toast";
@@ -16,7 +16,6 @@ import { useDebounce } from "@/hooks/useDebounce";
 import { DataTable, type DataTableColumn } from "@/components/DataTable";
 import { useListPageState } from "@/hooks/useListPageState";
 import type { Tables, Enums } from "@/integrations/supabase/types";
-import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 type TipoProveedor = Enums<'tipo_proveedor'>;
 type Proveedor = Tables<'proveedores'>;
 
@@ -101,9 +100,9 @@ export default function Proveedores() {
         entidad_id: proveedorCreado.id,
         entidad_nombre: data.nombre,
       });
-      notifySuccess(toast, { title: "Proveedor creado correctamente" });
+      toast({ title: "Proveedor creado correctamente" });
     } catch {
-      notifyError(toast, { title: "Error al crear proveedor" });
+      toast({ title: "Error al crear proveedor", variant: "destructive" });
     }
   };
 

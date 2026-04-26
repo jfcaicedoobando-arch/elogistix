@@ -7,8 +7,8 @@ import { chunk4 } from "./v8/chunks/4";
 import { chunk5 } from "./v8/chunks/5";
 
 /**
- * V8 changelog: split into chunks of 20 entries to keep
- * each file under ~200 LOC. Order is preserved (most recent first).
+ * V8 changelog: split into chunks of 20 entries
+ * to keep each file manageable. Order is preserved (most recent first).
  */
 export const changelogV8: ChangelogEntry[] = [
   ...chunk0,

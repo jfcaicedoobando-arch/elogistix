@@ -2,7 +2,6 @@ import { useState, useCallback } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { getErrorMessage } from "@/lib/errors";
 import { useResponderCotizacion } from "@/hooks/cotizacion/usePortalCotizacionMutations";
-import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 
 export type RespuestaCotizacion = "Aceptada" | "Rechazada";
 
@@ -28,7 +27,7 @@ export function usePortalCotizacionDetalleController(cotizacionId: string | unde
       { respuesta: confirmAction, comentario },
       {
         onSuccess: () => {
-          notifySuccess(toast, {
+          toast({
             title:
               confirmAction === "Aceptada"
                 ? "Cotización aceptada exitosamente"
@@ -37,8 +36,11 @@ export function usePortalCotizacionDetalleController(cotizacionId: string | unde
           reset();
         },
         onError: (err: unknown) => {
-          notifyError(toast, { title: "Error",
-            message: getErrorMessage(err) });
+          toast({
+            title: "Error",
+            description: getErrorMessage(err),
+            variant: "destructive",
+          });
           reset();
         },
       },

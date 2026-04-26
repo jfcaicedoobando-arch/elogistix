@@ -9,7 +9,6 @@ import { UserPlus, Trash2, Globe, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { getErrorMessage } from "@/lib/errors";
 import { formatDate } from "@/lib/formatters";
-import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 import {
   useClientUsers,
   useInviteClientUser,
@@ -37,7 +36,7 @@ export default function TabPortalCliente({ clienteId, organizationId, canEdit }:
       { email: inviteEmail, cliente_id: clienteId, organization_id: organizationId },
       {
         onSuccess: (data) => {
-          notifySuccess(toast, {
+          toast({
             title: data.is_new ? "Invitación enviada" : "Usuario vinculado",
             description: data.is_new
               ? "Se creó la cuenta y se envió un correo para establecer contraseña."
@@ -47,7 +46,7 @@ export default function TabPortalCliente({ clienteId, organizationId, canEdit }:
           setInviteEmail("");
         },
         onError: (err: unknown) => {
-          notifyError(toast, { title: "Error", message: getErrorMessage(err) });
+          toast({ title: "Error", description: getErrorMessage(err), variant: "destructive" });
         },
       }
     );
@@ -55,8 +54,8 @@ export default function TabPortalCliente({ clienteId, organizationId, canEdit }:
 
   const handleRevoke = (id: string) => {
     revokeMutation.mutate(id, {
-      onSuccess: () => notifySuccess(toast, { title: "Acceso revocado" }),
-      onError: (err: unknown) => notifyError(toast, { title: "Error", message: getErrorMessage(err) }),
+      onSuccess: () => toast({ title: "Acceso revocado" }),
+      onError: (err: unknown) => toast({ title: "Error", description: getErrorMessage(err), variant: "destructive" }),
     });
   };
 

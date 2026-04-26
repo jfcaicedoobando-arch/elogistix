@@ -15,7 +15,6 @@ import {
 import { Label } from "@/components/ui/label";
 import { useNavigate } from "react-router-dom";
 import { useAdminOrganizations, useCreateOrganization, type OrgRow } from "@/hooks/useAdminData";
-import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 
 export default function AdminOrganizaciones() {
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -31,13 +30,13 @@ export default function AdminOrganizaciones() {
   const handleCreate = () => {
     createOrg.mutate({ nombre, rfc }, {
       onSuccess: () => {
-        notifySuccess(toast, { title: "Organización creada" });
+        toast({ title: "Organización creada" });
         setDialogOpen(false);
         setNombre("");
         setRfc("");
       },
       onError: (err: Error) => {
-        notifyError(toast, { title: "Error", message: err.message });
+        toast({ title: "Error", description: err.message, variant: "destructive" });
       },
     });
   };

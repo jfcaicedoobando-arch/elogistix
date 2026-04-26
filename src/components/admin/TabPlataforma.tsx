@@ -4,7 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Save } from "lucide-react";
-import { useConfigGlobalCategoria, useUpdateConfiguracionGlobal } from "@/hooks/configuracion/useConfiguracionGlobal";
+import { useConfigGlobalCategoria, useUpdateConfiguracionGlobal } from "@/hooks/useConfiguracionGlobal";
 
 export default function TabPlataforma() {
   const config = useConfigGlobalCategoria("plataforma");

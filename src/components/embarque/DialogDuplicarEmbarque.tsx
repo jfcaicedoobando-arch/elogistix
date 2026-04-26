@@ -7,11 +7,10 @@ import {
 } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useTiposContenedor } from "@/hooks/catalogos/useTiposContenedor";
+import { useTiposContenedor } from "@/hooks/useTiposContenedor";
 import { getErrorMessage } from "@/lib/errors";
 import { useToast } from "@/hooks/use-toast";
 import { useDuplicarEmbarque, type EmbarqueRow } from "@/hooks/useEmbarques";
-import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 
 interface FilaCopia {
   num_contenedor: string;
@@ -61,10 +60,10 @@ export default function DialogDuplicarEmbarque({ embarque, open, onOpenChange }:
   const handleDuplicar = async () => {
     try {
       const creados = await duplicarEmbarque.mutateAsync({ embarqueOrigen: embarque, copias: filaCopias });
-      notifySuccess(toast, { title: `Se crearon ${creados.length} embarque(s)`, description: creados.map(c => c.expediente).join(', ') });
+      toast({ title: `Se crearon ${creados.length} embarque(s)`, description: creados.map(c => c.expediente).join(', ') });
       onOpenChange(false);
     } catch (err: unknown) {
-      notifyError(toast, { title: "Error al duplicar", message: getErrorMessage(err) });
+      toast({ title: "Error al duplicar", description: getErrorMessage(err), variant: "destructive" });
     }
   };
 

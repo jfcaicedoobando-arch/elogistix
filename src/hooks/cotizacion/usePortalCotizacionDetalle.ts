@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { useTasaIVA } from "@/hooks/catalogos/useTasaIVA";
+import { useTasaIVA } from "@/hooks/useTasaIVA";
 import type { ConceptoVentaCotizacion } from "@/types/cotizacion";
 import { calcularSubtotal, calcularIVA } from "@/lib/financial/financialUtils";
 

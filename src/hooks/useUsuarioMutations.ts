@@ -4,7 +4,7 @@ import {
   createUserViaEdgeFunction,
   deleteUserViaEdgeFunctionAuth,
   type CreateUserParams,
-} from "@/services/usuario";
+} from "@/services/usuarioService";
 
 export function useCreateUser() {
   const queryClient = useQueryClient();

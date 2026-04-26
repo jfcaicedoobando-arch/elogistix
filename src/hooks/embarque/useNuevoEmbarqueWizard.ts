@@ -8,7 +8,6 @@
  */
 import { useState, useCallback, useEffect, useRef } from "react";
 import { useToast } from "@/hooks/use-toast";
-import { notifyError } from "@/lib/ui/appFeedback";
 import {
   useProveedoresForSelect,
   type ExpedienteCliente,
@@ -16,7 +15,7 @@ import {
 import {
   useClientesForSelect,
   useContactosCliente,
-} from "@/hooks/cliente/useClientes";
+} from "@/hooks/useClientes";
 import { useConceptosForm } from "@/hooks/useConceptosForm";
 import { useEmbarqueForm } from "@/hooks/embarque/useEmbarqueForm";
 import { useCotizacionHydration } from "@/hooks/embarque/useCotizacionHydration";
@@ -37,6 +36,7 @@ import {
   validateStepCostos,
   type StepValidationErrors,
 } from "@/lib/domain/embarqueWizardSchemas";
+import { notifyError } from "@/lib/ui/wizardFeedback";
 
 type ModoExpediente = "nuevo" | "existente";
 

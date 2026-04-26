@@ -10,14 +10,13 @@ import {
   useUpdateCliente,
   useEmbarquesCliente,
   useCotizacionesCliente,
-} from "@/hooks/cliente/useClientes";
+} from "@/hooks/useClientes";
 import { useClienteFinancials } from "@/hooks/useClienteFinancials";
 import { useToast } from "@/hooks/use-toast";
 import { usePermissions } from "@/hooks/usePermissions";
 import { useRegistrarActividad } from "@/hooks/useBitacora";
 import { getErrorMessage } from "@/lib/errors";
 import type { Tables, Enums } from "@/integrations/supabase/types";
-import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 
 type ContactoCliente = Tables<"contactos_cliente">;
 type TipoContacto = Enums<"tipo_contacto">;
@@ -86,15 +85,15 @@ export function useClienteDetalleController() {
     try {
       if (editingId) {
         await updateContacto.mutateAsync({ id: editingId, cliente_id: cliente.id, ...data });
-        notifySuccess(toast, { title: "Contacto actualizado" });
+        toast({ title: "Contacto actualizado" });
       } else {
         await createContacto.mutateAsync({ cliente_id: cliente.id, ...data });
-        notifySuccess(toast, { title: "Contacto creado" });
+        toast({ title: "Contacto creado" });
       }
       setContactDialogOpen(false);
       setEditingContacto(null);
     } catch (err: unknown) {
-      notifyError(toast, { title: "Error", message: getErrorMessage(err) });
+      toast({ title: "Error", description: getErrorMessage(err), variant: "destructive" });
     }
   };
 
@@ -108,10 +107,10 @@ export function useClienteDetalleController() {
         entidad_id: cliente.id,
         entidad_nombre: data.nombre,
       });
-      notifySuccess(toast, { title: "Cliente actualizado" });
+      toast({ title: "Cliente actualizado" });
       setEditClienteOpen(false);
     } catch (err: unknown) {
-      notifyError(toast, { title: "Error", message: getErrorMessage(err) });
+      toast({ title: "Error", description: getErrorMessage(err), variant: "destructive" });
     }
   };
 
@@ -124,9 +123,9 @@ export function useClienteDetalleController() {
     if (!deletingContactoId || !cliente) return;
     try {
       await deleteContacto.mutateAsync({ id: deletingContactoId, cliente_id: cliente.id });
-      notifySuccess(toast, { title: "Contacto eliminado" });
+      toast({ title: "Contacto eliminado" });
     } catch (err: unknown) {
-      notifyError(toast, { title: "Error", message: getErrorMessage(err) });
+      toast({ title: "Error", description: getErrorMessage(err), variant: "destructive" });
     }
   };
 

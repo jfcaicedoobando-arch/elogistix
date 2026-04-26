@@ -11,6 +11,7 @@
 import { useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
+import { notifyError, notifyWarning, notifySuccess } from "@/lib/ui/wizardFeedback";
 import { useAuth } from "@/contexts/AuthContext";
 import { useRegistrarActividad } from "@/hooks/useBitacora";
 import {
@@ -30,7 +31,6 @@ import {
   buildBitacoraDetalles,
 } from "@/lib/domain/embarqueWizard";
 import { getErrorMessage } from "@/lib/errors";
-import { notifyError, notifyWarning, notifySuccess } from "@/lib/ui/appFeedback";
 import type { Tables } from "@/integrations/supabase/types";
 import type { DocumentoChecklist } from "@/types/documentoChecklist";
 import type { ConceptoVentaLocal, ConceptoCostoLocal } from "@/types/concepto";
@@ -82,7 +82,11 @@ export function useEmbarqueSubmitOrchestrator() {
           resolverNuevo: resolverExpediente,
         });
       } catch (err: unknown) {
-        notifyError(toast, { phase: "generación de expediente", message: getErrorMessage(err) });
+        toast({
+          title: "Error: generación de expediente",
+          description: getErrorMessage(err),
+          variant: "destructive",
+        });
         return false;
       }
 
@@ -95,7 +99,11 @@ export function useEmbarqueSubmitOrchestrator() {
           p.documentosArchivos,
         );
       } catch (err: unknown) {
-        notifyError(toast, { phase: "subida de documentos", message: getErrorMessage(err) });
+        toast({
+          title: "Error: subida de documentos",
+          description: getErrorMessage(err),
+          variant: "destructive",
+        });
         return false;
       }
 

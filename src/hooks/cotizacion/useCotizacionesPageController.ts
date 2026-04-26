@@ -4,11 +4,10 @@ import { useToast } from "@/hooks/use-toast";
 import { useListPageState } from "@/hooks/useListPageState";
 import { useCotizaciones, useDeleteCotizacion, usePrefetchCotizacion } from "@/hooks/useCotizaciones";
 import { useDuplicarCotizacion } from "@/hooks/cotizacion/useDuplicarCotizacion";
-import { useClientesForSelect } from "@/hooks/cliente/useClientes";
+import { useClientesForSelect } from "@/hooks/useClientes";
 import { usePermissions } from "@/hooks/usePermissions";
 import { getErrorMessage } from "@/lib/errors";
 import { exportToCsv } from "@/generators/exportCsv";
-import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 
 export const ESTADOS_COTIZACION = [
   "Borrador",
@@ -77,10 +76,10 @@ export function useCotizacionesPageController() {
   const duplicar = (id: string) => {
     duplicarCotizacion.mutate(id, {
       onSuccess: (data) => {
-        notifySuccess(toast, { title: "Cotización duplicada", description: `Se creó ${data.folio} como Borrador.` });
+        toast({ title: "Cotización duplicada", description: `Se creó ${data.folio} como Borrador.` });
       },
       onError: (err) => {
-        notifyError(toast, { title: "Error al duplicar", message: getErrorMessage(err) });
+        toast({ title: "Error al duplicar", description: getErrorMessage(err), variant: "destructive" });
       },
     });
   };
@@ -89,9 +88,9 @@ export function useCotizacionesPageController() {
     if (!cotizacionAEliminar) return;
     try {
       await deleteCotizacion.mutateAsync(cotizacionAEliminar);
-      notifySuccess(toast, { title: "Cotización eliminada correctamente" });
+      toast({ title: "Cotización eliminada correctamente" });
     } catch (err: unknown) {
-      notifyError(toast, { title: "Error al eliminar", message: getErrorMessage(err) });
+      toast({ title: "Error al eliminar", description: getErrorMessage(err), variant: "destructive" });
     }
     setCotizacionAEliminar(null);
   };

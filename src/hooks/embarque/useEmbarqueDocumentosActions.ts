@@ -1,9 +1,8 @@
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { useRegistrarActividad } from "@/hooks/useBitacora";
-import { getSignedUrl } from "@/services/storage/index";
+import { getSignedUrl } from "@/services/storage";
 import { getErrorMessage } from "@/lib/errors";
-import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 import {
   useUploadDocumentoEmbarque,
   useDeleteDocumentoEmbarque,
@@ -32,14 +31,17 @@ export function useEmbarqueDocumentosActions(embarque: EmbarqueRow | undefined, 
         entidad_id: id, entidad_nombre: embarque?.expediente ?? '',
         detalles: { documento: file.name },
       });
-      notifySuccess(toast, { title: "Archivo subido correctamente" });
+      toast({ title: "Archivo subido correctamente" });
     } catch (err: unknown) {
       const raw = getErrorMessage(err);
       const isInvalidKey = /invalid key/i.test(raw);
-      notifyError(toast, { title: "Error al subir archivo",
-        message: isInvalidKey
+      toast({
+        title: "Error al subir archivo",
+        description: isInvalidKey
           ? "El nombre del archivo contiene caracteres no permitidos. Renombra el archivo (sin acentos, espacios ni caracteres especiales) y vuelve a intentar."
-          : raw });
+          : raw,
+        variant: "destructive",
+      });
     }
   };
 
@@ -52,9 +54,9 @@ export function useEmbarqueDocumentosActions(embarque: EmbarqueRow | undefined, 
         entidad_id: id, entidad_nombre: embarque?.expediente ?? '',
         detalles: { documento: doc.nombre },
       });
-      notifySuccess(toast, { title: "Documento eliminado correctamente" });
+      toast({ title: "Documento eliminado correctamente" });
     } catch (err: unknown) {
-      notifyError(toast, { title: "Error al eliminar documento", message: getErrorMessage(err) });
+      toast({ title: "Error al eliminar documento", description: getErrorMessage(err), variant: "destructive" });
     }
   };
 
@@ -75,7 +77,7 @@ export function useEmbarqueDocumentosActions(embarque: EmbarqueRow | undefined, 
       document.body.removeChild(a);
       URL.revokeObjectURL(blobUrl);
     } catch (err: unknown) {
-      notifyError(toast, { title: "Error al descargar", message: getErrorMessage(err) });
+      toast({ title: "Error al descargar", description: getErrorMessage(err), variant: "destructive" });
     } finally {
       setDownloadingDocId(null);
     }

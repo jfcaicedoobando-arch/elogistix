@@ -1,74 +1,96 @@
-# Auditoría de arquitectura
+# Estandarización de mensajes de validación – Wizard "Nuevo Embarque" (v8.94.0)
 
-## Estado general
+## Objetivo
+Unificar tono, formato y severidad de **todos** los mensajes de error del wizard de 4 pasos para que sean consistentes, predecibles y accionables.
 
-La arquitectura está **sana**. Hallazgos positivos:
+## Estándar único a aplicar
 
-- **Cero** imports directos de Supabase desde `src/components/` o `src/pages/` — la separación UI ↔ datos está bien respetada (todo pasa por `src/services/` o `src/hooks/`).
-- `src/services/` ya migró casi por completo al patrón `folder/barrel` (cliente, cotizacion, embarque, proforma, admin, auth, csf, dashboard, etc.).
-- `src/hooks/` está bien agrupado por dominio (catalogos, configuracion, cliente, cotizacion, embarque, facturacion, portal, proveedor, dashboard, admin, reportes).
-- 206/206 tests pasando, build TS limpio.
-- El componente más grande de la app (excluyendo `ui/sidebar.tsx` de shadcn) son **227 LOC** (`PortalEmbarqueDetalle`), por debajo del umbral de problema.
+### Formato del mensaje
+```
+"<Etiqueta del campo>: <razón en imperativo o descriptiva>."
+```
+Ejemplos:
+- `"Modo de transporte: selecciona una opción."`
+- `"Puerto de destino: campo obligatorio."`
+- `"ETA: debe ser igual o posterior al ETD."`
+- `"Tipo de cambio USD: debe ser mayor a 0."`
+- `"Documento BL: el archivo excede 10 MB (12.4 MB)."`
 
-No hay deuda arquitectónica grave. Las 5 mejoras siguientes son **higiene táctica** ejecutables en un solo paso, ordenadas de más a menos impacto.
+### Reglas de tono
+- Español mexicano, **tuteo** ("selecciona", "ingresa", "agrega").
+- Termina con punto.
+- Sin signos de admiración. Sin mayúsculas tipo grito.
+- Razones cortas (≤ 60 caracteres después de los dos puntos).
 
----
+### Niveles de severidad (uniformes)
+| Severidad | Uso | UI |
+|---|---|---|
+| **error** (`destructive`) | Campo obligatorio faltante, valor inválido, fallo de submit | Toast rojo + borde rojo en campo + texto rojo bajo el campo |
+| **warning** (default) | Operación parcialmente exitosa (ej. embarque creado pero cotización no actualizada) | Toast neutro |
+| **success** | Submit completo | Toast neutro con título "Embarque creado" |
 
-## 5 mejoras (ejecutables en 1 paso)
+### Estructura uniforme de toasts
+- **Título**: contexto corto y consistente (`"Revisa el Paso 2: Ruta"`, `"Error al subir documentos"`, `"Embarque creado"`).
+- **Descripción**: el primer mensaje en formato `Campo: razón.` (sin listar todos para no saturar).
+- **Variant**: `destructive` solo para errores reales.
 
-### 1. Eliminar shims muertos y consolidar imports (CRÍTICO higiene)
+## Cambios concretos
 
-Tras las migraciones recientes quedan **28 archivos shim** (1-2 líneas que solo re-exportan). Trece de ellos tienen ≤2 importadores. Conservarlos confunde a la AI y a desarrolladores nuevos sobre cuál es la ubicación canónica.
+### 1. `src/lib/domain/embarqueWizardSchemas.ts`
+Reescribir todos los `message` de Zod y los strings hardcodeados al formato `Campo: razón.`. Ejemplos de mapeo:
 
-Acción:
-- Borrar shims con **0 importadores**: `src/lib/ui/wizardFeedback.ts`.
-- Reapuntar los importadores de los 27 shims restantes (`src/hooks/use*.ts` y `src/services/*Service.ts` re-exports) a la ubicación canónica vía `rg` + reemplazo, y borrar los shims.
-- Total: ~28 archivos eliminados, ~70 imports actualizados en el resto del código.
+| Antes | Después |
+|---|---|
+| `"Selecciona un modo de transporte"` | `"Modo de transporte: selecciona una opción."` |
+| `"Selecciona un tipo de operación"` | `"Tipo de operación: selecciona una opción."` |
+| `"Selecciona un cliente"` | `"Cliente: selecciona uno del catálogo."` |
+| `"Ingresa la descripción de la mercancía"` | `"Descripción de mercancía: campo obligatorio."` |
+| `"Máximo 500 caracteres"` | `"Descripción de mercancía: máximo 500 caracteres."` |
+| `"Ingresa la fecha de salida (ETD)"` | `"ETD: campo obligatorio."` |
+| `"La fecha de llegada (ETA) debe ser posterior o igual al ETD"` | `"ETA: debe ser igual o posterior al ETD."` |
+| `"Selecciona puerto de origen"` | `"Puerto de origen: selecciona uno del catálogo."` |
+| `"Selecciona FCL o LCL"` | `"Tipo de servicio: selecciona FCL o LCL."` |
+| `"Ingresa número de contenedor"` | `"Contenedor: campo obligatorio."` |
+| `"Ingresa el MAWB"` | `"MAWB: campo obligatorio."` |
+| `"El archivo excede 10MB (12.4MB)"` | `"Documento <nombre>: excede 10 MB (12.4 MB)."` |
+| `"Formato no permitido (...)"` | `"Documento <nombre>: formato no permitido. Usa PDF, JPG, PNG, XLSX o DOCX."` |
+| `"Agrega al menos un concepto de venta válido..."` | `"Conceptos de venta: agrega al menos uno con cantidad ≥ 1 y precio > 0."` |
+| `"Cantidad debe ser ≥ 1 y precio ≥ 0"` | `"Concepto de venta #<id>: cantidad ≥ 1 y precio ≥ 0."` |
+| `"El tipo de cambio USD debe ser mayor a 0"` | `"Tipo de cambio USD: debe ser mayor a 0."` |
+| `"El monto no puede ser negativo"` | `"Concepto de costo #<id>: monto no puede ser negativo."` |
 
-### 2. Partir `src/content/changelog/v8.ts` (774 LOC) por minor
+Todos los mensajes pasarán a través de un único helper `formatValidationMessage(field, reason)` para garantizar consistencia futura.
 
-`v8.ts` ya pesa más que `v4.ts` y crece cada release. El módulo se carga lazy pero al expandirse v9, v10… el patrón será insostenible.
+### 2. `src/hooks/embarque/useNuevoEmbarqueWizard.ts`
+- Estandarizar título del toast de validación a: `"Revisa el Paso N: <nombre>"` (Datos generales / Ruta / Documentos / Costos).
+- La descripción usa el primer mensaje ya estandarizado del schema.
+- Severidad: siempre `destructive` para validación bloqueante.
 
-Acción:
-- Dividir `v8.ts` en `v8/` con un archivo por bloque de minor (`v8.0.ts`, `v8.50.ts`, `v8.90.ts`, `v8.97.ts`) e `index.ts` que concatena.
-- Aplicar el mismo split a `v4.ts` (690 LOC).
-- Sin cambios funcionales: el array final es idéntico.
+### 3. `src/hooks/embarque/useEmbarqueSubmitOrchestrator.ts`
+Renombrar títulos a un patrón uniforme `"Error: <fase>"`:
+- `"Error: generación de expediente"`
+- `"Error: subida de documentos"`
+- `"Error: guardado del embarque"`
+- Toast de cotización no actualizada cambia a variant default + título `"Embarque creado con advertencia"` (se mantiene, ya cumple).
+- Toast de éxito mantiene `"Embarque creado"` + descripción `"Expediente <X>: registrado correctamente."`.
 
-### 3. Extraer 2 controllers pendientes (`PortalEmbarques`, `Operaciones`)
+### 4. `src/components/embarque/StepDocumentos.tsx`
+Toast de archivo rechazado pasa de `"Archivo rechazado: <nombre>"` (título) + razón (descripción) a:
+- Título: `"Documento rechazado"`
+- Descripción: `"<nombre>: <razón>."` (alineado al formato global).
 
-Son los únicos pages con ≥4 hooks y ≥150 LOC sin controller dedicado, rompiendo el patrón aplicado al resto de pages en v8.90-v8.92.
+### 5. Tests
+Actualizar `src/lib/domain/__tests__/embarqueWizardSchemas.test.ts` para validar los nuevos strings exactos (regex laxo si se prefiere robustez frente a futuros ajustes menores).
 
-Acción:
-- Crear `src/hooks/portal/usePortalEmbarquesController.ts` y `src/hooks/operaciones/useOperacionesPageController.ts`.
-- Mover estado, queries, filtros y handlers; el page queda como UI + columnas.
+### 6. Changelog
+Añadir entrada **v8.94.0** en `src/content/changelogData.ts`:
+> Estandarización de mensajes de validación del wizard de embarques (formato `Campo: razón`, tono y severidad uniformes en los 4 pasos).
 
-### 4. Eliminar duplicación `SeccionCostosInternosPL{Detalle,Local,Unificado}.tsx`
+## Fuera de alcance
+- No se cambia la lógica de validación, solo los textos y la presentación.
+- No se introducen nuevas reglas de validación.
+- No se toca el wizard de edición (`useEditarEmbarqueWizard`) en este paso; se hará en una siguiente iteración si se aprueba.
 
-Tres componentes con nombres casi idénticos en `src/components/cotizacion/`. `Unificado` ya existe; `Detalle` y `Local` son anteriores.
-
-Acción:
-- Verificar importadores de `Detalle` y `Local`; si `Unificado` cubre ambos casos, borrar los dos antiguos y reapuntar imports. Si difieren funcionalmente, renombrar para que la diferencia quede explícita en el nombre.
-
-### 5. Promover `src/components/shared/` a su ubicación final y borrar la carpeta
-
-`src/components/shared/` solo contiene 2 archivos: `ProfitBadge.tsx` (shim de re-export → `components/ProfitBadge.tsx`) y `ValidationAlert.tsx`. La carpeta `shared/` quedó marcada para eliminación en v8.91.0 y nunca se cerró.
-
-Acción:
-- Mover `ValidationAlert.tsx` a `src/components/ValidationAlert.tsx` (o `src/components/feedback/`).
-- Borrar `src/components/shared/ProfitBadge.tsx` (shim) y reapuntar sus 5 importadores.
-- Borrar la carpeta `shared/`.
-
----
-
-## Detalle técnico
-
-- **Verificación**: tras los 5 cambios correr `bunx tsc --noEmit` y `bunx vitest run` (objetivo: 206/206 verde).
-- **Sin cambios de comportamiento**: las 5 mejoras son refactor estructural puro — no tocan lógica de negocio, queries, RLS ni UI visible.
-- **Changelog**: una sola entrada `v8.98.0` (minor) describiendo la limpieza arquitectónica.
-
-## Lo que NO se incluye (descartado tras revisión)
-
-- Partir `CotizacionWizardLayout.tsx` (222 LOC): es composición declarativa, ya está bien.
-- Mover toasts de `TabTracking` a un controller: solo tiene 4 useState locales del form, no justifica el overhead.
-- Tocar `src/integrations/supabase/types.ts` (2111 LOC): autogenerado, prohibido.
-- Reorganizar `src/lib/`: ya tiene la estructura por capa correcta (domain, financial, formatters, mappers, parsers, ui, errors, query, storage, contacto).
+## Verificación
+- `bun run build` limpio.
+- Suite de tests verde (incluyendo los 17 tests actualizados).

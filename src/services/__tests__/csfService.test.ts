@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { parseCsf } from "@/services/csf";
+import { parseCsf } from "@/services/csfService";
 
 vi.mock("@/integrations/supabase/client", () => ({
   supabase: {

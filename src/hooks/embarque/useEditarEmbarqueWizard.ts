@@ -8,13 +8,12 @@ import {
   useProveedoresForSelect,
   useUpdateEmbarque,
 } from "@/hooks/useEmbarques";
-import { useClientesForSelect, useContactosCliente } from "@/hooks/cliente/useClientes";
+import { useClientesForSelect, useContactosCliente } from "@/hooks/useClientes";
 import { useAuth } from "@/contexts/AuthContext";
 import { useRegistrarActividad } from "@/hooks/useBitacora";
 import { useConceptosForm } from "@/hooks/useConceptosForm";
 import { useEmbarqueForm } from "@/hooks/embarque/useEmbarqueForm";
 import { getErrorMessage } from "@/lib/errors";
-import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 
 /**
  * Controller hook para la página EditarEmbarque.
@@ -102,10 +101,10 @@ export function useEditarEmbarqueWizard(id: string | undefined) {
         detalles: { cliente: selectedCliente?.nombre ?? '', modo: v.modo, tipo: v.tipo },
       });
 
-      notifySuccess(toast, { title: "Embarque actualizado", description: `${embarque.expediente} guardado correctamente.` });
+      toast({ title: "Embarque actualizado", description: `${embarque.expediente} guardado correctamente.` });
       navigate(`/embarques/${id}`);
     } catch (err: unknown) {
-      notifyError(toast, { title: "Error al actualizar", message: getErrorMessage(err) });
+      toast({ title: "Error al actualizar", description: getErrorMessage(err), variant: "destructive" });
     }
   };
 

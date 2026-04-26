@@ -1,7 +1,7 @@
 /**
  * Lectura y agrupación de configuración por categoría para una organización.
  */
-import { useConfiguracionByOrg } from "@/hooks/configuracion/useConfiguracionOrg";
+import { useConfiguracionByOrg } from "@/hooks/useConfiguracionOrg";
 import { agruparConfigPorCategoria } from "@/lib/domain/configuracion";
 
 export function useAdminOrgConfig(id: string | undefined) {

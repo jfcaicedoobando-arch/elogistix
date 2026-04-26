@@ -8,7 +8,6 @@ import { useNavigate } from "react-router-dom";
 import { useEliminarEmbarque, type EmbarqueRow } from "@/hooks/useEmbarques";
 import { useRegistrarActividad } from "@/hooks/useBitacora";
 import { getErrorMessage } from "@/lib/errors";
-import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 
 interface Props {
   embarque: EmbarqueRow;
@@ -33,10 +32,10 @@ export default function DialogEliminarEmbarque({ embarque, open, onOpenChange }:
         entidad_nombre: embarque.expediente,
         detalles: { cliente: embarque.cliente_nombre, modo: embarque.modo, tipo: embarque.tipo },
       });
-      notifySuccess(toast, { title: "Embarque eliminado", description: `${embarque.expediente} fue eliminado permanentemente.` });
+      toast({ title: "Embarque eliminado", description: `${embarque.expediente} fue eliminado permanentemente.` });
       navigate("/embarques");
     } catch (err: unknown) {
-      notifyError(toast, { title: "Error al eliminar", message: getErrorMessage(err) });
+      toast({ title: "Error al eliminar", description: getErrorMessage(err), variant: "destructive" });
     } finally {
       onOpenChange(false);
       setPaso2(false);

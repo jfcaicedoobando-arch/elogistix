@@ -6,8 +6,7 @@
 import { useState, useCallback } from "react";
 import { toast } from "@/hooks/use-toast";
 import type { generarPdfProforma } from "@/generators/proformaPdf";
-import { useTasaIVA } from "@/hooks/catalogos/useTasaIVA";
-import { notifyError } from "@/lib/ui/appFeedback";
+import { useTasaIVA } from "@/hooks/useTasaIVA";
 import {
   fetchClienteParaPdf,
   fetchConceptosConsolidados,
@@ -51,7 +50,7 @@ export function useDescargarProformaPdf() {
         ]);
 
         if (!embarque) {
-          notifyError(toast, { title: "No se pudo cargar el embarque asociado" });
+          toast({ title: "No se pudo cargar el embarque asociado", variant: "destructive" });
           return;
         }
 
@@ -65,7 +64,7 @@ export function useDescargarProformaPdf() {
           conceptosConsolidados: consolidados,
         });
       } catch (e) {
-        notifyError(toast, { title: "Error al generar PDF: " + (e as Error).message });
+        toast({ title: "Error al generar PDF: " + (e as Error).message, variant: "destructive" });
       } finally {
         setDownloadingId(null);
       }

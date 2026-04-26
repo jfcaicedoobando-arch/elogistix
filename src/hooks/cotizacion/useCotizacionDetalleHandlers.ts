@@ -8,7 +8,6 @@ import {
   type CotizacionRow,
 } from "@/hooks/useCotizaciones";
 import type { ClienteFormData } from "@/types/clienteForm";
-import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 
 /**
  * Hook focalizado en las acciones (mutations + handlers + diálogos) del detalle de cotización.
@@ -31,9 +30,9 @@ export function useCotizacionDetalleHandlers(cotizacion: CotizacionRow | undefin
     if (!cotizacion) return;
     try {
       await actualizarEstado.mutateAsync({ id: cotizacion.id, estado });
-      notifySuccess(toast, { title: `Estado actualizado a "${estado}"` });
+      toast({ title: `Estado actualizado a "${estado}"` });
     } catch (err: unknown) {
-      notifyError(toast, { title: "Error", message: getErrorMessage(err) });
+      toast({ title: "Error", description: getErrorMessage(err), variant: "destructive" });
     }
   };
 
@@ -51,7 +50,7 @@ export function useCotizacionDetalleHandlers(cotizacion: CotizacionRow | undefin
 
   const handleConvertir = async () => {
     if (!cotizacion || !clienteForm.nombre.trim()) {
-      notifyError(toast, { title: "El nombre es obligatorio" });
+      toast({ title: "El nombre es obligatorio", variant: "destructive" });
       return;
     }
     try {
@@ -59,10 +58,10 @@ export function useCotizacionDetalleHandlers(cotizacion: CotizacionRow | undefin
         cotizacionId: cotizacion.id,
         clienteData: clienteForm,
       });
-      notifySuccess(toast, { title: `Cliente "${cliente.nombre}" creado exitosamente` });
+      toast({ title: `Cliente "${cliente.nombre}" creado exitosamente` });
       setShowConvertir(false);
     } catch (err: unknown) {
-      notifyError(toast, { title: "Error al convertir prospecto", message: getErrorMessage(err) });
+      toast({ title: "Error al convertir prospecto", description: getErrorMessage(err), variant: "destructive" });
     }
   };
 
@@ -70,10 +69,10 @@ export function useCotizacionDetalleHandlers(cotizacion: CotizacionRow | undefin
     if (!cotizacion) return;
     try {
       await convertirAEmbarques.mutateAsync(cotizacion);
-      notifySuccess(toast, { title: `Se generaron ${cotizacion.num_contenedores} embarques exitosamente` });
+      toast({ title: `Se generaron ${cotizacion.num_contenedores} embarques exitosamente` });
       setShowConfirmarConvertir(false);
     } catch (err: unknown) {
-      notifyError(toast, { title: "Error al generar embarques", message: getErrorMessage(err) });
+      toast({ title: "Error al generar embarques", description: getErrorMessage(err), variant: "destructive" });
     }
   };
 

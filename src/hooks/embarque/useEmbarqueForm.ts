@@ -1,8 +1,8 @@
 import { useEffect, useCallback, useState } from "react";
 import { useForm, type UseFormReturn } from "react-hook-form";
 import { useToast } from "@/hooks/use-toast";
-import { uploadFile } from "@/services/storage/index";
-import { useExchangeRates } from "@/hooks/catalogos/useExchangeRates";
+import { uploadFile } from "@/services/storage";
+import { useExchangeRates } from "@/hooks/useExchangeRates";
 import { getDocsForMode } from "@/constants/embarqueConstants";
 import type { DocumentoChecklist } from "@/types/documentoChecklist";
 import {
@@ -18,7 +18,6 @@ import {
 } from "@/lib/mappers/embarque";
 import type { Tables } from "@/integrations/supabase/types";
 import type { ConceptoVentaLocal, ConceptoCostoLocal } from "@/types/concepto";
-import { notifyError } from "@/lib/ui/appFeedback";
 
 // Re-exports para compatibilidad con consumidores existentes
 export type { EmbarqueFormValues } from "@/lib/mappers/embarque";
@@ -54,7 +53,7 @@ export function useEmbarqueForm() {
       await uploadFile(ruta, archivo);
       methods.setValue("msdsArchivo", ruta);
     } catch {
-      notifyError(toast, { title: "Error al subir MSDS" });
+      toast({ title: "Error al subir MSDS", variant: "destructive" });
     } finally {
       methods.setValue("subiendoMsds", false);
     }

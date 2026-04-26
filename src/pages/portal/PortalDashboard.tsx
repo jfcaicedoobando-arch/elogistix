@@ -7,8 +7,8 @@ import {
   usePortalClientUsers,
   usePortalClienteName,
   usePortalOrgName,
-} from "@/hooks/portal/usePortalData";
-import { usePortalDashboardKpis } from "@/hooks/portal/usePortalDashboardKpis";
+} from "@/hooks/usePortalData";
+import { usePortalDashboardKpis } from "@/hooks/usePortalDashboardKpis";
 
 import { PortalWelcomeCard } from "@/components/portal/dashboard/PortalWelcomeCard";
 import { PortalKpiGrid } from "@/components/portal/dashboard/PortalKpiGrid";

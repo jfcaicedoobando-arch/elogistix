@@ -4,7 +4,7 @@
  */
 import { useState, useMemo, useEffect } from "react";
 import { calcularIVA } from "@/lib/financial/financialUtils";
-import { useTasaIVA } from "@/hooks/catalogos/useTasaIVA";
+import { useTasaIVA } from "@/hooks/useTasaIVA";
 import { useCrearProforma } from "@/hooks/embarque/useProformas";
 import {
   useDiasCreditoCliente,

@@ -1,11 +1,10 @@
 import { useState } from "react";
 import { getErrorMessage } from "@/lib/errors";
 import { useToast } from "@/hooks/use-toast";
-import { useCreateCliente } from "@/hooks/cliente/useClientes";
+import { useCreateCliente } from "@/hooks/useClientes";
 import { useRegistrarActividad } from "@/hooks/useBitacora";
-import { parseCsf } from "@/services/csf";
+import { parseCsf } from "@/services/csfService";
 import type { DocumentoChecklist } from "@/components/DocumentChecklist";
-import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 
 export const EMPTY_CLIENTE = {
   nombre: "", rfc: "", direccion: "", ciudad: "", estado: "", cp: "", contacto: "", email: "", telefono: "",
@@ -85,11 +84,14 @@ export function useNuevoClienteController(onClose: () => void) {
         accion: 'crear', modulo: 'clientes',
         entidad_id: clienteCreado.id, entidad_nombre: clienteCreado.nombre,
       });
-      notifySuccess(toast, { title: "Cliente creado exitosamente" });
+      toast({ title: "Cliente creado exitosamente" });
       resetAndClose();
     } catch (error: unknown) {
-      notifyError(toast, { title: "Error al crear cliente",
-        message: getErrorMessage(error) });
+      toast({
+        title: "Error al crear cliente",
+        description: getErrorMessage(error),
+        variant: "destructive",
+      });
     }
   };
 
@@ -98,8 +100,11 @@ export function useNuevoClienteController(onClose: () => void) {
     if (!file) return;
 
     if (file.type !== "application/pdf") {
-      notifyError(toast, { title: "Archivo inválido",
-        message: "Solo se aceptan archivos PDF." });
+      toast({
+        title: "Archivo inválido",
+        description: "Solo se aceptan archivos PDF.",
+        variant: "destructive",
+      });
       return;
     }
 
@@ -117,13 +122,16 @@ export function useNuevoClienteController(onClose: () => void) {
       }));
 
       setCsfFile(file);
-      notifySuccess(toast, {
+      toast({
         title: "Datos extraídos",
         description: "Revisa la información antes de continuar.",
       });
     } catch (error: unknown) {
-      notifyError(toast, { title: "Error al leer CSF",
-        message: getErrorMessage(error) });
+      toast({
+        title: "Error al leer CSF",
+        description: getErrorMessage(error),
+        variant: "destructive",
+      });
     } finally {
       setParsingCsf(false);
       e.target.value = "";

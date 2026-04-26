@@ -10,7 +10,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { useTasaIVA } from "@/hooks/catalogos/useTasaIVA";
+import { useTasaIVA } from "@/hooks/useTasaIVA";
 import { useEmbarqueConceptosVenta } from "@/hooks/useEmbarques";
 import { useProformasEmbarque, useEliminarProforma } from "@/hooks/embarque/useProformas";
 import { useDescargarProformaPdf } from "@/hooks/embarque/useDescargarProformaPdf";

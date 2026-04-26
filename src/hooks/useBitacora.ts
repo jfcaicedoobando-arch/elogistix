@@ -7,7 +7,7 @@ import {
   insertBitacora,
   type EntradaBitacora,
   type FiltrosBitacora,
-} from "@/services/bitacora";
+} from "@/services/bitacoraService";
 import type { Json } from "@/integrations/supabase/types";
 
 export type { EntradaBitacora };
