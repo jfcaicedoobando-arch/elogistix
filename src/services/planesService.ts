@@ -18,7 +18,7 @@ export interface Plan {
 export async function fetchPlanes(): Promise<Plan[]> {
   const { data, error } = await supabase
     .from("planes")
-    .select("*")
+    .select("id, nombre, max_usuarios, max_embarques_mes, almacenamiento_mb, precio_mensual, activo, created_at")
     .order("precio_mensual");
   if (error) throw error;
   return (data ?? []) as unknown as Plan[];

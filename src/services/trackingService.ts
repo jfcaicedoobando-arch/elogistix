@@ -57,7 +57,7 @@ export async function fetchTrackingPublico(token: string): Promise<TrackingPubli
 export async function fetchTrackingLinks(embarqueId: string): Promise<TrackingLinkRow[]> {
   const { data, error } = await supabase
     .from("tracking_links")
-    .select("*")
+    .select("id, embarque_id, token, expires_at, created_at, created_by, organization_id")
     .eq("embarque_id", embarqueId)
     .order("created_at", { ascending: false });
   if (error) throw error;

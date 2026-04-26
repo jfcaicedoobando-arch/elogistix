@@ -17,7 +17,9 @@ function addDays(yyyyMmDd: string, days: number): string {
 export async function marcarProformaFacturada(params: MarcarFacturadaParams): Promise<void> {
   const { data: proforma, error: errProf } = await supabase
     .from("proformas")
-    .select("*")
+    .select(
+      "id, organization_id, embarque_id, cliente_id, cliente_nombre, expediente, dias_credito, subtotal_usd, iva_usd, total_usd, subtotal_mxn, iva_mxn, total_mxn",
+    )
     .eq("id", params.proformaId)
     .single();
   if (errProf) throw errProf;

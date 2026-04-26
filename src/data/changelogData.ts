@@ -11,6 +11,13 @@ export interface ChangelogEntry {
 /** Entradas recientes (v8.x). Las anteriores se cargan dinámicamente. */
 export const recentChangelog: ChangelogEntry[] = [
   {
+    version: "8.85.0",
+    date: "2026-04-26",
+    type: "minor",
+    title: "Auditoría de rendimiento: assets, índices DB y caché",
+    description: "Optimización integral de rendimiento (puntos 1-8 de la auditoría). Assets: el logo migra de PNG (154 KB) a SVG (668 B) en Login, AppSidebar y PortalLayout, y el favicon PNG se reduce de 131 KB a ~3 KB eliminando además el favicon.ico legacy — ahorro acumulado ~440 KB en la carga inicial. Base de datos: nueva migración con extensión pg_trgm e índices GIN trigram sobre embarques.expediente/cliente_nombre/bl_master/descripcion_mercancia y cotizaciones.folio/cliente_nombre/descripcion_mercancia, más índices btree compuestos (organization_id, created_at DESC) y por cliente_id, operador y estado para acelerar filtros y orden de las listas. Servicios: 9 queries con select('*') reemplazadas por listas explícitas de columnas (cotizacion crud/costos/conversiones, eventos_embarque, proforma/facturar, portal cotizacion/client_users, configuracion, configuracion_global, tracking_links, planes) y nuevo COTIZACION_DETAIL_COLUMNS reutilizable. Hook useCotizacionesPaginadas + servicio fetchCotizacionesPaginadas con range/count para preparar paginación server-side de la página de Cotizaciones. Caché: staleTime extendido a 30 min en puertos, navieras y tipos de contenedor (con gcTime 60 min) y a 10 min en configuración (gcTime 30 min) — reduce refetches al cambiar de página. Memoización: ProfitBadge y RentabilidadGlobalBadge envueltos en React.memo para evitar re-renders en tablas de Reportes/Dashboard. Build verde, sin advertencias de seguridad nuevas.",
+  },
+  {
     version: "8.84.0",
     date: "2026-04-26",
     type: "patch",

@@ -63,7 +63,9 @@ export async function fetchPortalCotizaciones(clienteIds: string[]) {
 export async function fetchPortalCotizacion(id: string) {
   const { data, error } = await supabase
     .from("cotizaciones")
-    .select("*")
+    .select(
+      "id, folio, cliente_id, cliente_nombre, modo, tipo, incoterm, descripcion_mercancia, descripcion_adicional, peso_kg, volumen_m3, piezas, origen, destino, conceptos_venta, subtotal, moneda, vigencia_dias, fecha_vigencia, notas, estado, tipo_carga, tipo_embarque, tipo_contenedor, tipo_peso, sector_economico, tiempo_transito_dias, dias_libres_destino, dias_almacenaje, frecuencia, ruta_texto, validez_propuesta, tipo_movimiento, seguro, valor_seguro_usd, carta_garantia, num_contenedores, dimensiones_lcl, dimensiones_aereas, msds_archivo, created_at",
+    )
     .eq("id", id)
     .single();
   if (error) throw error;
@@ -82,7 +84,9 @@ export async function fetchPortalFacturas(clienteIds: string[]) {
 }
 
 export async function fetchPortalClientUsers() {
-  const { data, error } = await supabase.from("client_users").select("*");
+  const { data, error } = await supabase
+    .from("client_users")
+    .select("id, user_id, cliente_id, created_at");
   if (error) throw error;
   return data ?? [];
 }

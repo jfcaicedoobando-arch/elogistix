@@ -7,6 +7,7 @@ import {
   fetchCotizacionesAceptadas,
   fetchCotizacionById,
   fetchEmbarquesVinculados,
+  fetchCotizacionesPaginadas,
 } from '@/services/cotizacionServices';
 
 export function useCotizacionesAceptadas() {
@@ -22,6 +23,24 @@ export function useCotizaciones() {
   return useQuery({
     queryKey: [...queryKeys.cotizaciones.all, organizationId],
     queryFn: () => fetchCotizaciones(organizationId),
+  });
+}
+
+interface UseCotizacionesPaginadasParams {
+  search: string;
+  filterEstado: string;
+  filterCliente: string;
+  page: number;
+  pageSize: number;
+}
+
+export function useCotizacionesPaginadas(params: UseCotizacionesPaginadasParams) {
+  const { organizationId } = useOrgFilter();
+  const filters = { ...params, organizationId };
+  return useQuery({
+    queryKey: [...queryKeys.cotizaciones.all, 'paginadas', filters] as const,
+    queryFn: () => fetchCotizacionesPaginadas({ ...params, organizationId }),
+    placeholderData: (prev) => prev,
   });
 }
 

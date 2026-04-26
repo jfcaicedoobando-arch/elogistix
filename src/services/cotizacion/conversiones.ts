@@ -13,7 +13,8 @@ import {
   filtrarCostosParaContenedor,
   mapCostosACostosEmbarque,
 } from "@/lib/domain/cotizacion";
-import { generarFolioCotizacion } from "./crud";
+import { generarFolioCotizacion, COTIZACION_DETAIL_COLUMNS } from "./crud";
+import { COTIZACION_COSTO_COLUMNS } from "./costos";
 
 type CotizacionInsert = TablesInsert<"cotizaciones">;
 type EmbarqueInsert = TablesInsert<"embarques">;
@@ -24,7 +25,7 @@ export async function duplicarCotizacion(
 ): Promise<{ id: string; folio: string }> {
   const { data: orig, error: errOrig } = await supabase
     .from("cotizaciones")
-    .select("*")
+    .select(COTIZACION_DETAIL_COLUMNS)
     .eq("id", cotizacionId)
     .single();
   if (errOrig) throw errOrig;
@@ -64,7 +65,7 @@ export async function duplicarCotizacion(
   // Duplicate costos
   const { data: costos } = await supabase
     .from("cotizacion_costos")
-    .select("*")
+    .select(COTIZACION_COSTO_COLUMNS)
     .eq("cotizacion_id", cotizacionId);
   if (costos && costos.length > 0) {
     const nuevos = costos.map(
@@ -146,7 +147,7 @@ export async function convertirCotizacionAEmbarques(
 ): Promise<Tables<"embarques">[]> {
   const { data: costos, error: errorCostos } = await supabase
     .from("cotizacion_costos")
-    .select("*")
+    .select(COTIZACION_COSTO_COLUMNS)
     .eq("cotizacion_id", cotizacion.id);
   if (errorCostos) throw errorCostos;
 
