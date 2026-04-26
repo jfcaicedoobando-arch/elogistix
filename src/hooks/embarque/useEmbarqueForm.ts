@@ -1,8 +1,8 @@
 import { useEffect, useCallback, useState } from "react";
 import { useForm, type UseFormReturn } from "react-hook-form";
 import { useToast } from "@/hooks/use-toast";
-import { uploadFile } from "@/services/storage";
-import { useExchangeRates } from "@/hooks/useExchangeRates";
+import { uploadFile } from "@/services/storage/index";
+import { useExchangeRates } from "@/hooks/catalogos/useExchangeRates";
 import { getDocsForMode } from "@/constants/embarqueConstants";
 import type { DocumentoChecklist } from "@/types/documentoChecklist";
 import {

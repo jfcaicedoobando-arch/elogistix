@@ -8,7 +8,7 @@ import {
   type StepValidationErrors,
 } from "@/lib/domain/embarqueWizardSchemas";
 import { useToast } from "@/hooks/use-toast";
-import { notifyError } from "@/lib/ui/wizardFeedback";
+import { notifyError } from "@/lib/ui/appFeedback";
 
 interface Props {
   documentos: DocumentoChecklist[];

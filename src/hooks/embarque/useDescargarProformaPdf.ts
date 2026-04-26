@@ -6,7 +6,7 @@
 import { useState, useCallback } from "react";
 import { toast } from "@/hooks/use-toast";
 import type { generarPdfProforma } from "@/generators/proformaPdf";
-import { useTasaIVA } from "@/hooks/useTasaIVA";
+import { useTasaIVA } from "@/hooks/catalogos/useTasaIVA";
 import {
   fetchClienteParaPdf,
   fetchConceptosConsolidados,

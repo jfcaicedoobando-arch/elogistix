@@ -7,7 +7,7 @@ import {
   setTipoContenedorActivo,
   deleteTipoContenedor,
   type TipoContenedor,
-} from "@/services/catalogosService";
+} from "@/services/catalogos";
 
 export type { TipoContenedor };
 

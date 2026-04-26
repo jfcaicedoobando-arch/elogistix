@@ -7,7 +7,7 @@ import {
 } from "@/components/ui/table";
 import { formatCurrency } from "@/lib/formatters";
 import { calcularUtilidad, calcularMargen } from "@/lib/financial/financialUtils";
-import { ProfitBadge } from "@/components/shared/ProfitBadge";
+import { ProfitBadge } from "@/components/ProfitBadge";
 import type { TotalesPL } from "@/lib/financial/profitUtils";
 
 interface FilaCostoDetalle {

@@ -7,7 +7,7 @@ import {
   setPuertoActivo,
   deletePuerto,
   type Puerto,
-} from "@/services/catalogosService";
+} from "@/services/catalogos";
 
 export type { Puerto };
 

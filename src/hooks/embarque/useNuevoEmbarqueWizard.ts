@@ -15,7 +15,7 @@ import {
 import {
   useClientesForSelect,
   useContactosCliente,
-} from "@/hooks/useClientes";
+} from "@/hooks/cliente/useClientes";
 import { useConceptosForm } from "@/hooks/useConceptosForm";
 import { useEmbarqueForm } from "@/hooks/embarque/useEmbarqueForm";
 import { useCotizacionHydration } from "@/hooks/embarque/useCotizacionHydration";
@@ -36,7 +36,7 @@ import {
   validateStepCostos,
   type StepValidationErrors,
 } from "@/lib/domain/embarqueWizardSchemas";
-import { notifyError } from "@/lib/ui/wizardFeedback";
+import { notifyError } from "@/lib/ui/appFeedback";
 
 type ModoExpediente = "nuevo" | "existente";
 

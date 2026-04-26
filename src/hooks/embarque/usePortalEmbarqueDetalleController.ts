@@ -4,7 +4,7 @@ import {
   usePortalEmbarque,
   usePortalEventos,
   usePortalDocumentos,
-} from "@/hooks/usePortalData";
+} from "@/hooks/portal/usePortalData";
 import { calcularEstadoEmbarque } from "@/lib/domain/embarque";
 
 export interface ProgressStep {

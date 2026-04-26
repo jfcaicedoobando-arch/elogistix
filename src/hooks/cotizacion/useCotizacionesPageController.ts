@@ -4,7 +4,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useListPageState } from "@/hooks/useListPageState";
 import { useCotizaciones, useDeleteCotizacion, usePrefetchCotizacion } from "@/hooks/useCotizaciones";
 import { useDuplicarCotizacion } from "@/hooks/cotizacion/useDuplicarCotizacion";
-import { useClientesForSelect } from "@/hooks/useClientes";
+import { useClientesForSelect } from "@/hooks/cliente/useClientes";
 import { usePermissions } from "@/hooks/usePermissions";
 import { getErrorMessage } from "@/lib/errors";
 import { exportToCsv } from "@/generators/exportCsv";
