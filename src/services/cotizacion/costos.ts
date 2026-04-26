@@ -4,12 +4,15 @@
 import { supabase } from "@/integrations/supabase/client";
 import type { CostoCotizacion } from "@/types/cotizacionCosto";
 
+export const COTIZACION_COSTO_COLUMNS =
+  "id, cotizacion_id, concepto, moneda, proveedor, cantidad, costo_unitario, precio_venta, unidad_medida, notas, created_at, updated_at" as const;
+
 export async function fetchCotizacionCostos(
   cotizacionId: string,
 ): Promise<CostoCotizacion[]> {
   const { data, error } = await supabase
     .from("cotizacion_costos")
-    .select("*")
+    .select(COTIZACION_COSTO_COLUMNS)
     .eq("cotizacion_id", cotizacionId);
   if (error) throw error;
   return (data ?? []) as unknown as CostoCotizacion[];
