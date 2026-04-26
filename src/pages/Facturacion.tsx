@@ -1,7 +1,4 @@
-import { useMemo } from "react";
-import { useListPageState } from "@/hooks/useListPageState";
 import { Download, FileText, FileCode2 } from "lucide-react";
-import { exportToCsv } from "@/generators/exportCsv";
 import SearchInput from "@/components/SearchInput";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -10,23 +7,18 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useFacturas, useGastosPendientes, useMarcarCostoPagado } from "@/hooks/useFacturas";
-import { useRegistrarActividad } from "@/hooks/useBitacora";
-import { formatCurrency } from "@/lib/formatters";
-import { formatDate } from "@/lib/formatters";
+import { useFacturas } from "@/hooks/useFacturas";
+import { formatCurrency, formatDate } from "@/lib/formatters";
 import { getEstadoColor } from "@/lib/ui/uiMappings";
-import { useToast } from "@/hooks/use-toast";
-import { usePermissions } from "@/hooks/usePermissions";
 import PaginationControls from "@/components/PaginationControls";
 import { DataTable, type DataTableColumn } from "@/components/DataTable";
 import type { Database } from "@/integrations/supabase/types";
 import { TabProformas } from "@/components/facturacion/TabProformas";
 import { TabProformasPendientes } from "@/components/facturacion/TabProformasPendientes";
-import { useProformasPendientes } from "@/hooks/embarque/useProformas";
+import { useFacturacionPageController } from "@/hooks/facturacion/useFacturacionPageController";
 
 type EstadoFactura = Database["public"]["Enums"]["estado_factura"];
 const ESTADOS_FACTURA: EstadoFactura[] = ['Borrador', 'Emitida', 'Pagada', 'Vencida', 'Cancelada'];
-
 
 type Factura = ReturnType<typeof useFacturas>["data"] extends (infer U)[] | undefined ? U : never;
 
@@ -73,44 +65,15 @@ const facturaColumns: DataTableColumn<Factura>[] = [
 
 export default function Facturacion() {
   const {
-    search, filters, page, pageSize,
-    setSearch, setFilter, setPage, setPageSize, paginate,
-  } = useListPageState({ estado: "todos" });
-  const filterEstado = filters.estado;
-
-  const { data: facturas = [], isLoading: loadingFacturas } = useFacturas();
-  const { data: gastosPendientes = [], isLoading: loadingGastos } = useGastosPendientes();
-  const { data: proformasPendientes = [] } = useProformasPendientes();
-  const marcarPagado = useMarcarCostoPagado();
-  const { canEdit } = usePermissions();
-  const { toast } = useToast();
-
-  const filtered = useMemo(() => {
-    return facturas.filter(factura => {
-      const matchSearch = !search || factura.numero.toLowerCase().includes(search.toLowerCase()) || factura.cliente_nombre.toLowerCase().includes(search.toLowerCase());
-      const matchEstado = filterEstado === "todos" || factura.estado === filterEstado;
-      return matchSearch && matchEstado;
-    });
-  }, [search, filterEstado, facturas]);
-
-  const { items: paginatedFacturas, totalPages } = paginate(filtered);
-
-  const registrarActividad = useRegistrarActividad();
-
-  const handleMarcarPagado = (id: string) => {
-    marcarPagado.mutate({ id }, {
-      onSuccess: () => {
-        registrarActividad.mutate({
-          accion: 'editar',
-          modulo: 'facturas',
-          entidad_id: id,
-          entidad_nombre: 'Gasto marcado como pagado',
-        });
-        toast({ title: "Gasto marcado como pagado" });
-      },
-      onError: () => toast({ title: "Error al marcar como pagado", variant: "destructive" }),
-    });
-  };
+    search, setSearch,
+    filterEstado, setFilter,
+    page, setPage, pageSize, setPageSize,
+    paginatedFacturas, totalPages,
+    gastosPendientes, proformasPendientes,
+    loadingFacturas, loadingGastos,
+    canEdit, marcarPagadoPending,
+    handleMarcarPagado, exportarFacturasCsv,
+  } = useFacturacionPageController();
 
   type GastoPendiente = (typeof gastosPendientes)[number];
 
@@ -124,7 +87,7 @@ export default function Facturacion() {
     { key: "estado", header: "Estado", width: "w-[100px]", render: () => <Badge className={getEstadoColor("Pendiente")}>Pendiente</Badge> },
     {
       key: "acciones", header: "Acciones", render: (g) => canEdit ? (
-        <Button variant="outline" size="sm" disabled={marcarPagado.isPending} onClick={() => handleMarcarPagado(g.id)}>
+        <Button variant="outline" size="sm" disabled={marcarPagadoPending} onClick={() => handleMarcarPagado(g.id)}>
           Marcar Pagado
         </Button>
       ) : null,
@@ -160,29 +123,7 @@ export default function Facturacion() {
           <Card>
             <CardContent className="p-4 flex flex-wrap gap-3">
               <SearchInput value={search} onChange={setSearch} placeholder="Buscar factura o cliente..." className="flex-1 min-w-[200px]" />
-              <Button variant="outline" onClick={() => exportToCsv(
-                `facturas_${new Date().toISOString().slice(0, 10)}.csv`,
-                [
-                  { key: "numero", label: "# Factura" },
-                  { key: "expediente", label: "Expediente" },
-                  { key: "cliente", label: "Cliente" },
-                  { key: "total", label: "Monto" },
-                  { key: "moneda", label: "Moneda" },
-                  { key: "emision", label: "Emisión" },
-                  { key: "vencimiento", label: "Vencimiento" },
-                  { key: "estado", label: "Estado" },
-                ],
-                filtered.map(f => ({
-                  numero: f.numero,
-                  expediente: f.expediente,
-                  cliente: f.cliente_nombre,
-                  total: f.total,
-                  moneda: f.moneda,
-                  emision: f.fecha_emision,
-                  vencimiento: f.fecha_vencimiento,
-                  estado: f.estado,
-                })),
-              )}>
+              <Button variant="outline" onClick={exportarFacturasCsv}>
                 <Download className="h-4 w-4 mr-2" /> Exportar CSV
               </Button>
               <Select value={filterEstado} onValueChange={(v) => setFilter("estado", v)}>
