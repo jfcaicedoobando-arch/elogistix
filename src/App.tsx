@@ -3,10 +3,10 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import { Layout } from "./components/Layout";
-import { ProtectedRoute } from "./components/ProtectedRoute";
-import { PortalProtectedRoute } from "./components/PortalProtectedRoute";
-import RouteLoadingFallback from "./components/RouteLoadingFallback";
+import { Layout } from "./components/layout/Layout";
+import { ProtectedRoute } from "./components/auth/ProtectedRoute";
+import { PortalProtectedRoute } from "./components/auth/PortalProtectedRoute";
+import RouteLoadingFallback from "./components/layout/RouteLoadingFallback";
 
 // Lazy-loaded pages
 const Login = lazy(() => import("./pages/Login"));

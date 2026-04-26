@@ -19,7 +19,7 @@ export {
   usePrefetchCotizacion,
   useCotizacionesAceptadas,
   useEmbarquesVinculados,
-} from './cotizacion/useCotizacionQueries';
+} from './useCotizacionQueries';
 
 // Mutations
 export {
@@ -27,10 +27,10 @@ export {
   useUpdateCotizacion,
   useDeleteCotizacion,
   useUpdateEstadoCotizacion,
-} from './cotizacion/useCotizacionMutations';
+} from './useCotizacionMutations';
 
 // Conversions
 export {
   useConvertirProspectoACliente,
   useConvertirCotizacionAEmbarques,
-} from './cotizacion/useCotizacionConversions';
+} from './useCotizacionConversions';
