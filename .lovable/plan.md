@@ -65,14 +65,14 @@ Es código shadcn estándar. **No tocar** salvo que se quiera customizar fuertem
 |---|---------|--------|--------|---------|--------|
 | 1 | v8.73.0 | **C1**: Adelgazar `useNuevoEmbarqueWizard`. | Medio | Alto | ✅ |
 | 2 | v8.74.0 | **M1**: Controller hooks para `PortalCotizacionDetalle` y `PortalEmbarqueDetalle`. | Bajo | Medio | ✅ |
-| 3 | v8.75.0 | **M2**: Tokens semánticos para KPIs y migrar los 7 archivos restantes a variantes. | Bajo (visual) | Medio | ⏳ |
+| 3 | v8.75.0 | **M2**: Tokens semánticos para KPIs y migrar los 8 archivos restantes a variantes. | Bajo (visual) | Medio | ✅ |
 | 4 | v8.76.0 | **O1**: Desinstalar dependencias huérfanas (`embla`, `vaul`, `input-otp`, `react-resizable-panels`). | Muy bajo | Bajo (bundle) | ⏳ |
 | 5 | v8.77.0 | **M3**: Split de `mappers/embarque.ts` por dirección si supera 250 LOC nuevamente. | Bajo | Bajo | ⏳ |
 | 6 | v8.78.0 | **O2 + O3**: Renombrar/dividir `types/types.ts` y añadir barrels en `lib/financial` y `lib/ui`. | Muy bajo | Bajo | ⏳ |
 
 ## Próximo paso
 
-Ejecutar **Paso 3 (v8.75.0)** — tokens semánticos para KPIs (`--metric-positive/warning/danger/neutral`) y migrar los 7 archivos restantes con `bg-{color}-{n}` hardcodeado a un componente reutilizable `<KpiBadge variant="..." />`.
+Ejecutar **Paso 4 (v8.76.0)** — desinstalar dependencias huérfanas tras la limpieza de shadcn (verificar previamente con `rg "from ['\"]<dep>" src` cada paquete).
 
 ## Detalles técnicos
 

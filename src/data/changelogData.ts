@@ -11,6 +11,13 @@ export interface ChangelogEntry {
 /** Entradas recientes (v8.x). Las anteriores se cargan dinámicamente. */
 export const recentChangelog: ChangelogEntry[] = [
   {
+    version: "8.75.0",
+    date: "2026-04-26",
+    type: "minor",
+    title: "Auditoría: paleta KPI tokenizada y cero colores hardcodeados",
+    description: "Paso M2 de la auditoría arquitectónica. Los 8 archivos restantes del proyecto que usaban clases Tailwind con colores literales (bg-blue-50, bg-emerald-100, bg-violet-600, bg-amber-50, bg-cyan-500, etc.) se migraron a una paleta categórica tokenizada. Se añadieron 6 tonos KPI a index.css (--kpi-info, --kpi-success, --kpi-accent, --kpi-warning, --kpi-secondary, --kpi-danger), cada uno con su variante -soft para fondos pastel. Los tokens son intencionalmente categóricos (no semánticos) para diferenciar tarjetas KPI entre sí, mientras que para semántica de estado se sigue usando success/warning/destructive. Se registraron como utilidades Tailwind kpi.{tone} y kpi.{tone}.soft, y se centralizó el mapeo en lib/ui/kpiTones.ts (helpers kpiIconChipClasses y kpiSolidClasses + tipo KpiTone). Variantes dark calibradas para preservar contraste. Archivos refactorizados: KpiCard.tsx (con back-compat de aliases legacy blue/violet/emerald/red), ClienteSummaryCards.tsx, ReportesKpiCards.tsx, OperacionesWidgets.tsx (chips de RiesgoIndicador y RiskBadge), pages/Operaciones.tsx (tarjetas inline + colores stroke de Recharts movidos a hsl(var(--kpi-*))), DashboardStatusCards.tsx, ResumenConceptosVenta.tsx (badge En proforma a success) y ConceptoRowUSD.tsx (highlight aplica_iva a warning). Build verde, 196/196 pruebas pasando.",
+  },
+  {
     version: "8.74.0",
     date: "2026-04-26",
     type: "patch",
