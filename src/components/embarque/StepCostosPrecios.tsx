@@ -62,8 +62,20 @@ export function StepCostosPrecios(props: Props) {
     [conceptosVenta, tcUSD, tcEUR]
   );
 
+  const errorsList = Object.entries(errors);
+
   return (
     <div className="space-y-6">
+      {errorsList.length > 0 && (
+        <Alert variant="destructive">
+          <AlertCircle className="h-4 w-4" />
+          <AlertDescription>
+            {errorsList.map(([k, v]) => (
+              <div key={k}>{v}</div>
+            ))}
+          </AlertDescription>
+        </Alert>
+      )}
       <Card>
         <CardHeader><CardTitle className="text-sm">Conceptos de Costo</CardTitle></CardHeader>
         <CardContent>
