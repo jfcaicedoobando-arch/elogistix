@@ -2,13 +2,13 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { queryKeys } from "@/lib/query";
 import {
-import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
   fetchNavieras,
   insertNaviera,
   setNavieraActivo,
   deleteNaviera,
   type Naviera,
 } from "@/services/catalogos";
+import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 
 export type { Naviera };
 

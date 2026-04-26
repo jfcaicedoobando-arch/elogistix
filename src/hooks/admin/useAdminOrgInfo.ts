@@ -6,11 +6,11 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { queryKeys } from "@/lib/query";
 import {
-import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
   fetchAdminOrganization,
   setOrganizationActivo,
   updateAdminOrganization,
 } from "@/services/admin";
+import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 
 export function useAdminOrgInfo(id: string | undefined) {
   const { toast } = useToast();

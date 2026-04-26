@@ -6,7 +6,6 @@ import { useExchangeRates } from "@/hooks/catalogos/useExchangeRates";
 import { getDocsForMode } from "@/constants/embarqueConstants";
 import type { DocumentoChecklist } from "@/types/documentoChecklist";
 import {
-import { notifyError } from "@/lib/ui/appFeedback";
   DEFAULT_EMBARQUE_VALUES,
   mapEmbarqueRowToFormValues,
   buildEmbarquePayload as buildPayload,
@@ -17,6 +16,7 @@ import { notifyError } from "@/lib/ui/appFeedback";
   type EmbarqueFormValues,
   type CotizacionParaVincular,
 } from "@/lib/mappers/embarque";
+import { notifyError } from "@/lib/ui/appFeedback";
 import type { Tables } from "@/integrations/supabase/types";
 import type { ConceptoVentaLocal, ConceptoCostoLocal } from "@/types/concepto";
 

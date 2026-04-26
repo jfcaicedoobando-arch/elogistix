@@ -2,13 +2,13 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { queryKeys } from "@/lib/query";
 import {
-import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
   fetchPuertos,
   insertPuerto,
   setPuertoActivo,
   deletePuerto,
   type Puerto,
 } from "@/services/catalogos";
+import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 
 export type { Puerto };
 

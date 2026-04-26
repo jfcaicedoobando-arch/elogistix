@@ -6,13 +6,13 @@ import { Building2, Plus } from "lucide-react";
 import { DataTable, type DataTableColumn } from "@/components/DataTable";
 import { useToast } from "@/hooks/use-toast";
 import {
-import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
+import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 import { Label } from "@/components/ui/label";
 import { useNavigate } from "react-router-dom";
 import { useAdminOrganizations, useCreateOrganization, type OrgRow } from "@/hooks/useAdminData";

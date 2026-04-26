@@ -4,12 +4,12 @@ import { useRegistrarActividad } from "@/hooks/useBitacora";
 import { getErrorMessage } from "@/lib/errors";
 import { ESTADOS_EMBARQUE } from "@/constants/embarqueConstants";
 import {
-import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
   useAvanzarEstadoEmbarque,
   useSyncEstadoEmbarque,
   calcularEstadoEmbarque,
   type EmbarqueRow,
 } from "@/hooks/useEmbarques";
+import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 import { useEffect } from "react";
 
 export function getSiguienteEstado(estadoActual: string) {

@@ -7,7 +7,6 @@ import { toast } from "@/hooks/use-toast";
 import { useOrgFilter } from "@/hooks/useOrgFilter";
 import { queryKeys } from "@/lib/query";
 import {
-import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
   aprobarProformas as svcAprobar,
   consolidarProformas as svcConsolidar,
   crearProforma as svcCrear,
@@ -24,6 +23,7 @@ import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
   type ProformaPendienteConEmbarque,
   type ProformaRow,
 } from "@/services/proforma";
+import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 
 // Re-export tipos para que componentes/pages no tengan que importar del service.
 export type { ProformaConFactura, ProformaPendienteConEmbarque, ProformaRow };

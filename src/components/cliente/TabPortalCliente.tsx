@@ -10,11 +10,11 @@ import { useToast } from "@/hooks/use-toast";
 import { getErrorMessage } from "@/lib/errors";
 import { formatDate } from "@/lib/formatters";
 import {
-import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
   useClientUsers,
   useInviteClientUser,
   useRevokeClientUser,
 } from "@/hooks/useClientUsersMutations";
+import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 
 interface Props {
   clienteId: string;

@@ -5,12 +5,12 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { queryKeys } from "@/lib/query";
 import {
-import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
   fetchOrgMembers,
   removeOrgMember,
   updateOrgMemberRole,
   type OrgMemberRow,
 } from "@/services/admin";
+import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 import type { AppRole } from "@/types/appRole";
 
 export type MemberRow = OrgMemberRow;
