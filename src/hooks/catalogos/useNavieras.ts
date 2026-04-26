@@ -7,7 +7,7 @@ import {
   setNavieraActivo,
   deleteNaviera,
   type Naviera,
-} from "@/services/catalogosService";
+} from "@/services/catalogos";
 
 export type { Naviera };
 

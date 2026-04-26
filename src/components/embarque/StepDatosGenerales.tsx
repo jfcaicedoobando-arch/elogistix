@@ -1,6 +1,6 @@
 import { useFormContext } from "react-hook-form";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ValidationAlert } from "@/components/shared/ValidationAlert";
+import { ValidationAlert } from "@/components/feedback/ValidationAlert";
 import type { EmbarqueFormValues } from "@/hooks/embarque/useEmbarqueForm";
 import type { CotizacionRow } from "@/hooks/useCotizaciones";
 import { useExpedientesCliente, type ExpedienteCliente } from "@/hooks/useEmbarques";

@@ -1,7 +1,7 @@
 import { useMemo, useCallback } from "react";
 import { useListPageState } from "@/hooks/useListPageState";
 import { exportToCsv } from "@/generators/exportCsv";
-import { useFacturas, useGastosPendientes, useMarcarCostoPagado } from "@/hooks/useFacturas";
+import { useFacturas, useGastosPendientes, useMarcarCostoPagado } from "@/hooks/facturacion/useFacturas";
 import { useRegistrarActividad } from "@/hooks/useBitacora";
 import { useToast } from "@/hooks/use-toast";
 import { usePermissions } from "@/hooks/usePermissions";

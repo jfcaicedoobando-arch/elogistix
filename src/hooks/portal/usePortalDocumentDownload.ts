@@ -1,6 +1,6 @@
 import { useState, useCallback } from "react";
 import { useToast } from "@/hooks/use-toast";
-import { createDocumentoSignedUrl } from "@/services/searchService";
+import { createDocumentoSignedUrl } from "@/services/search";
 
 /**
  * Encapsula la descarga de documentos del portal (signed URL + blob fallback).

@@ -1,7 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Info } from "lucide-react";
 import { formatCurrency } from "@/lib/formatters";
-import { ProfitBadge } from "@/components/shared/ProfitBadge";
+import { ProfitBadge } from "@/components/ProfitBadge";
 
 interface TotalesPL {
   totalCosto: number;

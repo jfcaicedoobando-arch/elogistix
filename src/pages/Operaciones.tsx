@@ -1,71 +1,31 @@
-import { useState, useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
-import {
-  TrendingUp, AlertTriangle, Package, Container, Ship,
-} from "lucide-react";
+import { TrendingUp, AlertTriangle, Package, Container, Ship } from "lucide-react";
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip,
   ResponsiveContainer,
 } from "recharts";
-import {
-  useOperacionesData, MAX_CONTENEDORES,
-  type PeriodoFiltro,
-} from "@/hooks/useOperacionesData";
+import { MAX_CONTENEDORES, type PeriodoFiltro } from "@/hooks/useOperacionesData";
 import { formatCurrency } from "@/lib/formatters";
 import { KpiCard } from "@/components/operaciones/KpiCard";
 import { DesempenoOperadores } from "@/components/operaciones/DesempenoOperadores";
+import { useOperacionesPageController } from "@/hooks/operaciones/useOperacionesPageController";
 
 export default function Operaciones() {
-  const [periodo, setPeriodo] = useState<PeriodoFiltro>("mes");
-  const [operadorChart, setOperadorChart] = useState<string>("todos");
-  const { isLoading, operadores, global } = useOperacionesData(periodo);
-
-
-  const hoyStr = new Date().toLocaleDateString("es-MX", {
-    weekday: "long", day: "numeric", month: "long", year: "numeric",
-  });
-
-  const chartData = useMemo(() => {
-    if (operadorChart === "todos") return global.historicoCreadosPorMes;
-    const op = operadores.find((o) => o.nombre === operadorChart);
-    if (!op) return global.historicoCreadosPorMes;
-    return op.historicoCreadosPorMes.map((c, i) => ({
-      mes: c.mes,
-      creadas: c.valor,
-      llegadas: op.historicoLlegadosPorMes[i]?.valor || 0,
-    }));
-  }, [operadorChart, operadores, global]);
-
-  const creadasEsteMes = operadorChart === "todos"
-    ? global.creadasEsteMes
-    : operadores.find((o) => o.nombre === operadorChart)?.cargasEsteMes ?? 0;
-
-  const llegadasEsteMes = operadorChart === "todos"
-    ? global.llegadasEsteMes
-    : (() => {
-        const op = operadores.find((o) => o.nombre === operadorChart);
-        if (!op) return 0;
-        const last = op.historicoLlegadosPorMes[op.historicoLlegadosPorMes.length - 1];
-        return last?.valor || 0;
-      })();
-
-  const balancePct = creadasEsteMes > 0
-    ? Math.round((llegadasEsteMes / creadasEsteMes) * 100)
-    : 100;
-
-  const contPct = global.totalContenedores > 0
-    ? Math.round((global.totalContenedores / MAX_CONTENEDORES) * 100)
-    : 0;
-
-  const totalAlertas = global.totalCriticos + global.totalEnPuerto;
+  const {
+    periodo, setPeriodo,
+    operadorChart, setOperadorChart,
+    isLoading, operadores, global,
+    hoyStr, chartData,
+    creadasEsteMes, llegadasEsteMes,
+    balancePct, contPct, totalAlertas,
+  } = useOperacionesPageController();
 
   return (
     <div className="space-y-6">
-      {/* ── HEADER ───────────────────────────────────── */}
       <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-2">
         <div>
           <h1 className="text-2xl font-bold text-foreground">Dashboard de Operaciones</h1>
@@ -81,7 +41,6 @@ export default function Operaciones() {
         </Select>
       </div>
 
-      {/* ── KPIs globales ─────────────────────────────── */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <KpiCard titulo="Cargas activas" valor={global.totalActivas} icono={Package} color="info" loading={isLoading} />
         <KpiCard titulo="Contenedores" valor={`${global.totalContenedores} / ${MAX_CONTENEDORES}`} icono={Container} color="accent" loading={isLoading}>
@@ -91,10 +50,8 @@ export default function Operaciones() {
         <KpiCard titulo="Alertas de riesgo" valor={totalAlertas} subtitulo={totalAlertas > 0 ? `${global.totalCriticos} críticos · ${global.totalEnPuerto} en puerto` : "Sin alertas"} icono={AlertTriangle} color="danger" loading={isLoading} />
       </div>
 
-      {/* ── Desempeño por Operador ───────────────────── */}
       <DesempenoOperadores operadores={operadores} isLoading={isLoading} />
 
-      {/* ── Tendencia de cargas ────────────────────────── */}
       <Card className="rounded-2xl shadow-sm border-0 bg-card">
         <CardHeader className="pb-2">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">

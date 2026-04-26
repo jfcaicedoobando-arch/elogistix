@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { useRegistrarActividad } from "@/hooks/useBitacora";
-import { getSignedUrl } from "@/services/storage";
+import { getSignedUrl } from "@/services/storage/index";
 import { getErrorMessage } from "@/lib/errors";
 import {
   useUploadDocumentoEmbarque,

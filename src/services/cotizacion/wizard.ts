@@ -5,7 +5,7 @@
  * concretas de React Query (las recibe el hook que las invoca). Es una concesión
  * deliberada para reutilizar el wizard tanto en NuevaCotizacion como en EditarCotizacion.
  */
-import { uploadFile } from "@/services/storage";
+import { uploadFile } from "@/services/storage/index";
 import type { CotizacionFormValues } from "@/types/cotizacionForm";
 import type { CreateCotizacionInput } from "@/types/cotizacion";
 import type { CostoCotizacion } from "@/types/cotizacionCosto";

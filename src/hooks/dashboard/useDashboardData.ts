@@ -1,7 +1,7 @@
 import { useState, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/query";
-import { fetchDashboardSummary, fetchDashboardDetails } from "@/services/dashboardService";
+import { fetchDashboardSummary, fetchDashboardDetails } from "@/services/dashboard";
 import {
   ESTADOS_FILTRO,
   parseConteoPorEstado,

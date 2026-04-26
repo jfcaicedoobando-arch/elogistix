@@ -4,7 +4,7 @@ import { Users, Plus } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import SearchInput from "@/components/SearchInput";
-import { useClientesPaginados } from "@/hooks/useClientes";
+import { useClientesPaginados } from "@/hooks/cliente/useClientes";
 import { usePermissions } from "@/hooks/usePermissions";
 import NuevoClienteDialog from "@/components/cliente/NuevoClienteDialog";
 import PaginationControls from "@/components/PaginationControls";

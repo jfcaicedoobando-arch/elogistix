@@ -5,7 +5,7 @@ import {
   fetchConfiguracionGlobal,
   updateConfiguracionGlobalItems,
   type ConfigGlobalItem,
-} from "@/services/configuracionService";
+} from "@/services/configuracion";
 
 export type { ConfigGlobalItem };
 

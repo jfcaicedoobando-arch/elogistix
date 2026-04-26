@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/query";
-import { fetchExchangeRates } from "@/services/catalogosService";
+import { fetchExchangeRates } from "@/services/catalogos";
 
 export function useExchangeRates() {
   return useQuery({

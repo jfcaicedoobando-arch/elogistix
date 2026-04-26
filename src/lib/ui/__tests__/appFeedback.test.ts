@@ -1,7 +1,7 @@
 import { describe, it, expect, vi } from "vitest";
-import { notifyError, notifyWarning, notifySuccess } from "../wizardFeedback";
+import { notifyError, notifyWarning, notifySuccess } from "../appFeedback";
 
-describe("wizardFeedback", () => {
+describe("appFeedback", () => {
   it("notifyError con step usa título 'Revisa el Paso N: <nombre>'", () => {
     const toast = vi.fn();
     notifyError(toast, { step: 2, errors: { puertoOrigen: "Puerto de origen: campo obligatorio." } });
