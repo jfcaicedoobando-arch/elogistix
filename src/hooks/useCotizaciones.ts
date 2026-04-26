@@ -10,7 +10,7 @@ export type {
   DimensionAerea,
   CotizacionRow,
   CreateCotizacionInput,
-} from './cotizacion/useCotizacionTypes';
+} from '@/types/cotizacion';
 
 // Queries
 export {

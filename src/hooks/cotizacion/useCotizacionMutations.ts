@@ -1,6 +1,6 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { queryKeys } from '@/lib/query';
-import type { CreateCotizacionInput } from './useCotizacionTypes';
+import type { CreateCotizacionInput } from '@/types/cotizacion';
 import {
   crearCotizacion as svcCrear,
   updateCotizacion as svcUpdate,
