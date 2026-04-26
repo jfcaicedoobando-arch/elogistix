@@ -8,7 +8,7 @@ import { useTiposContenedor } from "@/hooks/useTiposContenedor";
 import PortSelect from "@/components/PortSelect";
 import NavieraSelect from "@/components/NavieraSelect";
 import { sugerirETA, type StepValidationErrors } from "@/lib/domain/embarqueWizardSchemas";
-import { ValidationAlert } from "@/components/shared/ValidationAlert";
+import { ValidationAlert } from "@/components/feedback/ValidationAlert";
 import type { EmbarqueFormValues } from "@/hooks/embarque/useEmbarqueForm";
 
 interface Props {

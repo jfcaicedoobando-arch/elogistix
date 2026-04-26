@@ -1,7 +1,7 @@
 import { useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import DocumentChecklist, { type DocumentoChecklist } from "@/components/DocumentChecklist";
-import { ValidationAlert } from "@/components/shared/ValidationAlert";
+import { ValidationAlert } from "@/components/feedback/ValidationAlert";
 import {
   validateArchivo,
   MAX_FILE_SIZE_MB,
