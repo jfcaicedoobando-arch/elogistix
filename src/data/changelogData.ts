@@ -11,6 +11,13 @@ export interface ChangelogEntry {
 /** Entradas recientes (v8.x). Las anteriores se cargan dinámicamente. */
 export const recentChangelog: ChangelogEntry[] = [
   {
+    version: "8.76.0",
+    date: "2026-04-26",
+    type: "patch",
+    title: "Auditoría: dependencias huérfanas eliminadas del bundle",
+    description: "Paso O1 de la auditoría arquitectónica. Tras la eliminación de 17 componentes shadcn no usados en v8.72.0, sus librerías subyacentes seguían instaladas en package.json sumando peso al bundle y al árbol de node_modules. Se verificó con ripgrep que no quedaba ningún `from \"<dep>\"` en src/ y se desinstalaron 4 dependencias huérfanas: embla-carousel-react (carousel), vaul (drawer), input-otp (OTP input) y react-resizable-panels (resizable). Resultado: 4 paquetes raíz removidos del lockfile, build verde y 196/196 pruebas pasando.",
+  },
+  {
     version: "8.75.0",
     date: "2026-04-26",
     type: "minor",
