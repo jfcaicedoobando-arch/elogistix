@@ -121,13 +121,13 @@
     --state-en-proceso: 262 83% 70%;
     --state-cerrado: 160 70% 50%;
 
-    /* KPI categóricos en dark — fondos sutiles con baja opacidad */
-    --kpi-info: 217 91% 65%;          --kpi-info-soft: 217 91% 60% / 0.15;
-    --kpi-success: 152 65% 55%;       --kpi-success-soft: 152 65% 50% / 0.15;
-    --kpi-accent: 262 83% 70%;        --kpi-accent-soft: 262 83% 65% / 0.15;
-    --kpi-warning: 38 92% 60%;        --kpi-warning-soft: 38 92% 55% / 0.15;
-    --kpi-secondary: 199 89% 65%;     --kpi-secondary-soft: 199 89% 60% / 0.15;
-    --kpi-danger: 0 72% 65%;          --kpi-danger-soft: 0 72% 60% / 0.15;
+    /* KPI categóricos en dark — solo color base; fondos derivan vía opacidad (Tailwind /15) */
+    --kpi-info: 217 91% 65%;          --kpi-info-soft: 217 33% 18%;
+    --kpi-success: 152 65% 55%;       --kpi-success-soft: 152 30% 18%;
+    --kpi-accent: 262 83% 70%;        --kpi-accent-soft: 262 30% 22%;
+    --kpi-warning: 38 92% 60%;        --kpi-warning-soft: 38 35% 20%;
+    --kpi-secondary: 199 89% 65%;     --kpi-secondary-soft: 199 35% 20%;
+    --kpi-danger: 0 72% 65%;          --kpi-danger-soft: 0 35% 22%;
   }
 }
 

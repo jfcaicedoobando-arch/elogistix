@@ -72,6 +72,14 @@ export default {
           DEFAULT: "hsl(var(--info))",
           foreground: "hsl(var(--info-foreground))",
         },
+        kpi: {
+          info:      { DEFAULT: "hsl(var(--kpi-info))",      soft: "hsl(var(--kpi-info-soft))" },
+          success:   { DEFAULT: "hsl(var(--kpi-success))",   soft: "hsl(var(--kpi-success-soft))" },
+          accent:    { DEFAULT: "hsl(var(--kpi-accent))",    soft: "hsl(var(--kpi-accent-soft))" },
+          warning:   { DEFAULT: "hsl(var(--kpi-warning))",   soft: "hsl(var(--kpi-warning-soft))" },
+          secondary: { DEFAULT: "hsl(var(--kpi-secondary))", soft: "hsl(var(--kpi-secondary-soft))" },
+          danger:    { DEFAULT: "hsl(var(--kpi-danger))",    soft: "hsl(var(--kpi-danger-soft))" },
+        },
       },
       borderRadius: {
         lg: "var(--radius)",
