@@ -1,5 +1,4 @@
-import { useState } from "react";
-import { useParams, useNavigate, Link } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { ArrowLeft, Truck, Pencil, Trash2 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -8,27 +7,31 @@ import { Skeleton } from "@/components/ui/skeleton";
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
-import { useProveedor, useProveedorMutations, useProveedorOperaciones } from "@/hooks/useProveedores";
 import { formatCurrency } from "@/lib/formatters";
 import { getEstadoColor } from "@/lib/ui/uiMappings";
 import EditarProveedorDialog from "@/components/proveedor/EditarProveedorDialog";
-import { useToast } from "@/hooks/use-toast";
-import { usePermissions } from "@/hooks/usePermissions";
-import { useRegistrarActividad } from "@/hooks/useBitacora";
 import DoubleConfirmDeleteDialog from "@/components/DoubleConfirmDeleteDialog";
+import { useProveedorDetalleController } from "@/hooks/proveedor/useProveedorDetalleController";
 
 export default function ProveedorDetalle() {
-  const { id } = useParams<{ id: string }>();
-  const navigate = useNavigate();
-  const { data: proveedor, isLoading } = useProveedor(id);
-  const { updateProveedor, deleteProveedor, isDeleting } = useProveedorMutations();
-  const [editOpen, setEditOpen] = useState(false);
-  const [deleteOpen, setDeleteOpen] = useState(false);
-  const { canEdit, isAdmin } = usePermissions();
-  const registrarActividad = useRegistrarActividad();
-  const { toast } = useToast();
-
-  const { data: operaciones = [] } = useProveedorOperaciones(id);
+  const {
+    proveedor,
+    isLoading,
+    isDeleting,
+    operaciones,
+    totalFacturado,
+    totalPagado,
+    totalPendiente,
+    canEdit,
+    isAdmin,
+    editOpen,
+    setEditOpen,
+    deleteOpen,
+    setDeleteOpen,
+    handleUpdate,
+    handleDelete,
+    navigate,
+  } = useProveedorDetalleController();
 
   if (isLoading) {
     return <div className="space-y-4 p-8">{[1,2,3].map(indice => <Skeleton key={indice} className="h-24 w-full" />)}</div>;
@@ -44,35 +47,6 @@ export default function ProveedorDetalle() {
       </div>
     );
   }
-
-  const totalFacturado = operaciones.reduce((sum, operacion) => sum + operacion.monto, 0);
-  const totalPagado = operaciones.filter(operacion => operacion.estadoLiquidacion === 'Pagado').reduce((sum, operacion) => sum + operacion.monto, 0);
-  const totalPendiente = totalFacturado - totalPagado;
-
-  const handleUpdate = async (id: string, data: Record<string, unknown>) => {
-    try {
-      await updateProveedor(id, data);
-      toast({ title: "Proveedor actualizado" });
-    } catch {
-      toast({ title: "Error al actualizar", variant: "destructive" });
-    }
-  };
-
-  const handleDelete = async () => {
-    try {
-      await deleteProveedor(proveedor.id);
-      registrarActividad.mutate({
-        accion: 'eliminar',
-        modulo: 'proveedores',
-        entidad_id: proveedor.id,
-        entidad_nombre: proveedor.nombre,
-      });
-      toast({ title: "Proveedor eliminado" });
-      navigate("/proveedores");
-    } catch {
-      toast({ title: "Error al eliminar proveedor", variant: "destructive" });
-    }
-  };
 
   return (
     <div className="space-y-6">
