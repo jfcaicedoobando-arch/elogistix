@@ -8,6 +8,7 @@ import { useTiposContenedor } from "@/hooks/useTiposContenedor";
 import PortSelect from "@/components/PortSelect";
 import NavieraSelect from "@/components/NavieraSelect";
 import { sugerirETA, type StepValidationErrors } from "@/lib/domain/embarqueWizardSchemas";
+import { ValidationAlert } from "@/components/shared/ValidationAlert";
 import type { EmbarqueFormValues } from "@/hooks/embarque/useEmbarqueForm";
 
 interface Props {
@@ -33,10 +34,13 @@ export function StepDatosRuta({ errors = {}, diasTransitoSugerencia }: Props) {
     }
   }, [etd, eta, diasTransitoSugerencia, setValue]);
 
+  const hasErrors = Object.keys(errors).length > 0;
+
   return (
     <Card>
       <CardHeader><CardTitle>Datos de Ruta {modo && `— ${modo}`}</CardTitle></CardHeader>
       <CardContent className="space-y-4">
+        {hasErrors && <ValidationAlert severity="error" errors={errors} />}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {(modo === 'Marítimo' || !modo) && (<>
             <div className="space-y-2">

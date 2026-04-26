@@ -15,6 +15,13 @@ export interface ChangelogEntry {
  */
 export const recentChangelog: ChangelogEntry[] = [
   {
+    version: "8.95.0",
+    date: "2026-04-26",
+    type: "minor",
+    title: "Severidad uniforme y estilo único de feedback en el wizard de embarques",
+    description: "Definición y aplicación de una regla única de severidad para los 4 pasos del wizard: bloqueante (error) impide avanzar/enviar, advertencia no bloquea, éxito al completar. Nuevas variantes 'warning' y 'success' añadidas a los componentes shadcn Alert y Toast usando los tokens semánticos --warning/--success existentes. Nuevo componente compartido src/components/shared/ValidationAlert.tsx con los tres niveles (error/warning/success), iconos consistentes (AlertCircle/AlertTriangle/CheckCircle2), título por defecto y lista de mensajes en formato 'Campo: razón.'. Nuevo helper src/lib/ui/wizardFeedback.ts con notifyError/notifyWarning/notifySuccess para centralizar la emisión de toasts del wizard. Aplicado en useNuevoEmbarqueWizard (validación bloqueante por paso), useEmbarqueSubmitOrchestrator (errores de fase bloqueantes, advertencia para cotización no actualizada, éxito al crear) y los 4 Step components (StepDatosGenerales, StepDatosRuta, StepDocumentos, StepCostosPrecios) que ahora muestran ValidationAlert con el mismo layout. StepDocumentos añade una advertencia no-bloqueante cuando hay documentos pendientes. Nuevo test wizardFeedback.test.ts (4 casos). Tests 205/205 pasando.",
+  },
+  {
     version: "8.94.0",
     date: "2026-04-26",
     type: "patch",
