@@ -1,7 +1,8 @@
-import { useState, useMemo } from "react";
-import { useListPageState } from "@/hooks/useListPageState";
-import { Plus, Trash2, MoreHorizontal, Pencil, Download, TrendingUp, CheckCircle, XCircle, BarChart3, Copy } from "lucide-react";
-import { exportToCsv } from "@/generators/exportCsv";
+import { useMemo } from "react";
+import {
+  Plus, Trash2, MoreHorizontal, Pencil, Download, TrendingUp,
+  CheckCircle, XCircle, BarChart3, Copy,
+} from "lucide-react";
 import { KpiCard } from "@/components/operaciones/KpiCard";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -9,16 +10,8 @@ import { Badge } from "@/components/ui/badge";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
-import { useNavigate } from "react-router-dom";
-import { useCotizaciones, useDeleteCotizacion, usePrefetchCotizacion } from "@/hooks/useCotizaciones";
-import { useDuplicarCotizacion } from "@/hooks/cotizacion/useDuplicarCotizacion";
-import { getErrorMessage } from "@/lib/errors";
-import { useClientesForSelect } from "@/hooks/useClientes";
-import { usePermissions } from "@/hooks/usePermissions";
-import { useToast } from "@/hooks/use-toast";
-import { formatDate } from "@/lib/formatters";
+import { formatDate, formatCurrency } from "@/lib/formatters";
 import { getEstadoColor } from "@/lib/ui/uiMappings";
-import { formatCurrency } from "@/lib/formatters";
 import SearchInput from "@/components/SearchInput";
 import PaginationControls from "@/components/PaginationControls";
 import { DataTable, type DataTableColumn } from "@/components/DataTable";
@@ -26,69 +19,32 @@ import DoubleConfirmDeleteDialog from "@/components/DoubleConfirmDeleteDialog";
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-
-const ESTADOS = ['Borrador', 'Enviada', 'Aceptada', 'Rechazada', 'Vencida', 'Embarcada'];
-
-type Cotizacion = ReturnType<typeof useCotizaciones>["data"] extends (infer U)[] | undefined ? U : never;
+import {
+  useCotizacionesPageController,
+  ESTADOS_COTIZACION,
+  type CotizacionListItem,
+} from "@/hooks/cotizacion/useCotizacionesPageController";
 
 export default function Cotizaciones() {
-  const navigate = useNavigate();
-  const { data: cotizaciones = [], isLoading } = useCotizaciones();
-  const { data: clientes = [] } = useClientesForSelect();
-  const prefetchCotizacion = usePrefetchCotizacion();
-  const { canEdit } = usePermissions();
-  const deleteCotizacion = useDeleteCotizacion();
-  const duplicarCotizacion = useDuplicarCotizacion();
-  const { toast } = useToast();
-  const [cotizacionAEliminar, setCotizacionAEliminar] = useState<string | null>(null);
+  const c = useCotizacionesPageController();
 
-  const {
-    search, filters, page, pageSize,
-    setSearch, setFilter, setPage, setPageSize, paginate,
-  } = useListPageState({ estado: "todos", cliente: "todos" });
-  const filterEstado = filters.estado;
-  const filterCliente = filters.cliente;
-
-  const filtered = useMemo(() => {
-    return cotizaciones.filter((cotizacion) => {
-      const matchSearch = !search ||
-        cotizacion.folio.toLowerCase().includes(search.toLowerCase()) ||
-        cotizacion.cliente_nombre.toLowerCase().includes(search.toLowerCase()) ||
-        cotizacion.descripcion_mercancia.toLowerCase().includes(search.toLowerCase());
-      const matchEstado = filterEstado === "todos" || cotizacion.estado === filterEstado;
-      const matchCliente = filterCliente === "todos" || cotizacion.cliente_id === filterCliente;
-      return matchSearch && matchEstado && matchCliente;
-    });
-  }, [cotizaciones, search, filterEstado, filterCliente]);
-
-  const { items: paginated, totalPages } = paginate(filtered);
-
-  // KPI de conversión
-  const kpis = useMemo(() => {
-    const total = filtered.length;
-    const aceptadas = filtered.filter(c => c.estado === "Aceptada" || c.estado === "Embarcada").length;
-    const rechazadas = filtered.filter(c => c.estado === "Rechazada").length;
-    const tasa = total > 0 ? ((aceptadas / total) * 100).toFixed(1) : "0.0";
-    return { total, aceptadas, rechazadas, tasa };
-  }, [filtered]);
-
-  const columns: DataTableColumn<Cotizacion>[] = useMemo(() => {
-    const cols: DataTableColumn<Cotizacion>[] = [
-      { key: "folio", header: "Folio", width: "w-[100px]", className: "font-medium", sticky: true, sortable: true, sortValue: (c) => c.folio, render: (c) => c.folio },
-      { key: "cliente", header: "Cliente", width: "min-w-[160px]", className: "max-w-[180px] truncate", sortable: true, sortValue: (c) => c.cliente_nombre, render: (c) => c.cliente_nombre },
-      { key: "modo", header: "Modo", width: "w-[80px]", className: "text-xs", render: (c) => c.modo },
-      { key: "ruta", header: "Origen → Destino", width: "min-w-[160px]", className: "text-xs", render: (c) => `${c.origen || "-"} → ${c.destino || "-"}` },
-      { key: "subtotal", header: "Subtotal", width: "w-[110px]", className: "text-right text-xs", headerClassName: "text-right", sortable: true, sortValue: (c) => c.subtotal, render: (c) => formatCurrency(c.subtotal, c.moneda) },
-      { key: "estado", header: "Estado", width: "w-[100px]", sortable: true, sortValue: (c) => c.estado, render: (c) => <Badge variant="secondary" className={`text-xs ${getEstadoColor(c.estado)}`}>{c.estado}</Badge> },
-      { key: "vigencia", header: "Vigencia", width: "w-[100px]", className: "text-xs", render: (c) => c.fecha_vigencia ? formatDate(c.fecha_vigencia) : "-" },
-      { key: "fecha", header: "Fecha", width: "w-[130px]", className: "text-xs", sortable: true, sortValue: (c) => c.created_at, render: (c) => new Date(c.created_at).toLocaleString('es-MX', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }) },
+  const columns: DataTableColumn<CotizacionListItem>[] = useMemo(() => {
+    const cols: DataTableColumn<CotizacionListItem>[] = [
+      { key: "folio", header: "Folio", width: "w-[100px]", className: "font-medium", sticky: true, sortable: true, sortValue: (r) => r.folio, render: (r) => r.folio },
+      { key: "cliente", header: "Cliente", width: "min-w-[160px]", className: "max-w-[180px] truncate", sortable: true, sortValue: (r) => r.cliente_nombre, render: (r) => r.cliente_nombre },
+      { key: "modo", header: "Modo", width: "w-[80px]", className: "text-xs", render: (r) => r.modo },
+      { key: "ruta", header: "Origen → Destino", width: "min-w-[160px]", className: "text-xs", render: (r) => `${r.origen || "-"} → ${r.destino || "-"}` },
+      { key: "subtotal", header: "Subtotal", width: "w-[110px]", className: "text-right text-xs", headerClassName: "text-right", sortable: true, sortValue: (r) => r.subtotal, render: (r) => formatCurrency(r.subtotal, r.moneda) },
+      { key: "estado", header: "Estado", width: "w-[100px]", sortable: true, sortValue: (r) => r.estado, render: (r) => <Badge variant="secondary" className={`text-xs ${getEstadoColor(r.estado)}`}>{r.estado}</Badge> },
+      { key: "vigencia", header: "Vigencia", width: "w-[100px]", className: "text-xs", render: (r) => r.fecha_vigencia ? formatDate(r.fecha_vigencia) : "-" },
+      { key: "fecha", header: "Fecha", width: "w-[130px]", className: "text-xs", sortable: true, sortValue: (r) => r.created_at, render: (r) => new Date(r.created_at).toLocaleString('es-MX', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }) },
     ];
-    if (canEdit) {
+    if (c.canEdit) {
       cols.push({
         key: "acciones",
         header: "",
         headerClassName: "w-[60px]",
-        render: (c) => (
+        render: (r) => (
           <DropdownMenu>
             <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
               <Button variant="ghost" size="icon" className="h-8 w-8">
@@ -96,24 +52,17 @@ export default function Cotizaciones() {
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={(e) => { e.stopPropagation(); navigate(`/cotizaciones/${c.id}/editar`); }}>
+              <DropdownMenuItem onClick={(e) => { e.stopPropagation(); c.irAEditar(r.id); }}>
                 <Pencil className="mr-2 h-4 w-4" /> Editar
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={(e) => {
-                e.stopPropagation();
-                duplicarCotizacion.mutate(c.id, {
-                  onSuccess: (data) => {
-                    toast({ title: "Cotización duplicada", description: `Se creó ${data.folio} como Borrador.` });
-                  },
-                  onError: (err) => {
-                    toast({ title: "Error al duplicar", description: getErrorMessage(err), variant: "destructive" });
-                  },
-                });
-              }}>
+              <DropdownMenuItem onClick={(e) => { e.stopPropagation(); c.duplicar(r.id); }}>
                 <Copy className="mr-2 h-4 w-4" /> Duplicar
               </DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem className="text-destructive focus:text-destructive" onClick={(e) => { e.stopPropagation(); setCotizacionAEliminar(c.id); }}>
+              <DropdownMenuItem
+                className="text-destructive focus:text-destructive"
+                onClick={(e) => { e.stopPropagation(); c.setCotizacionAEliminar(r.id); }}
+              >
                 <Trash2 className="mr-2 h-4 w-4" /> Eliminar
               </DropdownMenuItem>
             </DropdownMenuContent>
@@ -122,89 +71,59 @@ export default function Cotizaciones() {
       });
     }
     return cols;
-  }, [canEdit]);
-
-  const handleDeleteCotizacion = async () => {
-    if (!cotizacionAEliminar) return;
-    try {
-      await deleteCotizacion.mutateAsync(cotizacionAEliminar);
-      toast({ title: "Cotización eliminada correctamente" });
-    } catch (err: unknown) {
-      toast({ title: "Error al eliminar", description: getErrorMessage(err), variant: "destructive" });
-    }
-    setCotizacionAEliminar(null);
-  };
+  }, [c]);
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold">Cotizaciones</h1>
-          <p className="text-sm text-muted-foreground">{filtered.length} cotizaciones encontradas</p>
+          <p className="text-sm text-muted-foreground">{c.filtered.length} cotizaciones encontradas</p>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" onClick={() => exportToCsv(
-            `cotizaciones_${new Date().toISOString().slice(0, 10)}.csv`,
-            [
-              { key: "folio", label: "Folio" },
-              { key: "cliente", label: "Cliente" },
-              { key: "modo", label: "Modo" },
-              { key: "ruta", label: "Ruta" },
-              { key: "subtotal", label: "Subtotal" },
-              { key: "moneda", label: "Moneda" },
-              { key: "estado", label: "Estado" },
-              { key: "vigencia", label: "Vigencia" },
-            ],
-            filtered.map(c => ({
-              folio: c.folio,
-              cliente: c.cliente_nombre,
-              modo: c.modo,
-              ruta: `${c.origen || ""} → ${c.destino || ""}`,
-              subtotal: c.subtotal,
-              moneda: c.moneda,
-              estado: c.estado,
-              vigencia: c.fecha_vigencia || "",
-            })),
-          )}>
+          <Button variant="outline" onClick={c.exportar}>
             <Download className="h-4 w-4 mr-2" /> Exportar CSV
           </Button>
-          {canEdit && (
-            <Button onClick={() => navigate("/cotizaciones/nueva")}>
+          {c.canEdit && (
+            <Button onClick={c.irANueva}>
               <Plus className="h-4 w-4 mr-2" /> Nueva Cotización
             </Button>
           )}
         </div>
       </div>
 
-      {/* KPI Cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <KpiCard titulo="Total cotizaciones" valor={kpis.total} icono={BarChart3} color="blue" />
-        <KpiCard titulo="Aceptadas" valor={kpis.aceptadas} icono={CheckCircle} color="emerald" />
-        <KpiCard titulo="Rechazadas" valor={kpis.rechazadas} icono={XCircle} color="red" />
-        <KpiCard titulo="Tasa de conversión" valor={`${kpis.tasa}%`} icono={TrendingUp} color="violet" />
+        <KpiCard titulo="Total cotizaciones" valor={c.kpis.total} icono={BarChart3} color="blue" />
+        <KpiCard titulo="Aceptadas" valor={c.kpis.aceptadas} icono={CheckCircle} color="emerald" />
+        <KpiCard titulo="Rechazadas" valor={c.kpis.rechazadas} icono={XCircle} color="red" />
+        <KpiCard titulo="Tasa de conversión" valor={`${c.kpis.tasa}%`} icono={TrendingUp} color="violet" />
       </div>
 
       <Card>
         <CardContent className="p-4">
           <div className="flex flex-wrap gap-4">
             <SearchInput
-              value={search}
-              onChange={setSearch}
+              value={c.search}
+              onChange={c.setSearch}
               placeholder="Buscar por folio, cliente o mercancía..."
               className="flex-1 min-w-[200px]"
             />
-            <Select value={filterEstado} onValueChange={(v) => setFilter("estado", v)}>
+            <Select value={c.filterEstado} onValueChange={(v) => c.setFilter("estado", v)}>
               <SelectTrigger className="w-[160px]"><SelectValue placeholder="Estado" /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="todos">Todos los estados</SelectItem>
-                {ESTADOS.map(estadoCotizacion => <SelectItem key={estadoCotizacion} value={estadoCotizacion}>{estadoCotizacion}</SelectItem>)}
+                {ESTADOS_COTIZACION.map((e) => <SelectItem key={e} value={e}>{e}</SelectItem>)}
               </SelectContent>
             </Select>
-            <Select value={filterCliente} onValueChange={(v) => setFilter("cliente", v)}>
+            <Select value={c.filterCliente} onValueChange={(v) => c.setFilter("cliente", v)}>
               <SelectTrigger className="w-[200px]"><SelectValue placeholder="Cliente" /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="todos">Todos los clientes</SelectItem>
-                {clientes.map(cliente => <SelectItem key={cliente.id} value={cliente.id}>{cliente.nombre.split(' ').slice(0, 3).join(' ')}</SelectItem>)}
+                {c.clientes.map((cli) => (
+                  <SelectItem key={cli.id} value={cli.id}>
+                    {cli.nombre.split(' ').slice(0, 3).join(' ')}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>
@@ -215,30 +134,30 @@ export default function Cotizaciones() {
         <CardContent className="p-0">
           <DataTable
             columns={columns}
-            data={paginated}
-            isLoading={isLoading}
+            data={c.paginated}
+            isLoading={c.isLoading}
             emptyMessage="No se encontraron cotizaciones"
-            onRowClick={(c) => navigate(`/cotizaciones/${c.id}`)}
-            onRowMouseEnter={(c) => prefetchCotizacion(c.id)}
-            rowKey={(c) => c.id}
+            onRowClick={(r) => c.irADetalle(r.id)}
+            onRowMouseEnter={(r) => c.prefetchCotizacion(r.id)}
+            rowKey={(r) => r.id}
           />
           <PaginationControls
-            page={page}
-            totalPages={totalPages}
-            onPageChange={setPage}
-            pageSize={pageSize}
-            onPageSizeChange={(s) => { setPageSize(s); setPage(0); }}
+            page={c.page}
+            totalPages={c.totalPages}
+            onPageChange={c.setPage}
+            pageSize={c.pageSize}
+            onPageSizeChange={(s) => { c.setPageSize(s); c.setPage(0); }}
           />
         </CardContent>
       </Card>
 
       <DoubleConfirmDeleteDialog
-        open={!!cotizacionAEliminar}
-        onOpenChange={(open) => { if (!open) setCotizacionAEliminar(null); }}
+        open={!!c.cotizacionAEliminar}
+        onOpenChange={(open) => { if (!open) c.setCotizacionAEliminar(null); }}
         entityName="cotización"
         description="Esta acción eliminará la cotización de forma permanente."
-        onConfirm={handleDeleteCotizacion}
-        isPending={deleteCotizacion.isPending}
+        onConfirm={c.confirmarEliminar}
+        isPending={c.isDeleting}
       />
     </div>
   );
