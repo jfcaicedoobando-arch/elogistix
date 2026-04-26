@@ -11,6 +11,13 @@ export interface ChangelogEntry {
 /** Entradas recientes (v8.x). Las anteriores se cargan dinámicamente. */
 export const recentChangelog: ChangelogEntry[] = [
   {
+    version: "8.77.0",
+    date: "2026-04-26",
+    type: "patch",
+    title: "Auditoría: mappers de embarque divididos por dirección",
+    description: "Paso M3 de la auditoría arquitectónica. El archivo lib/mappers/embarque.ts (241 LOC) estaba al borde del guardrail de 250 y mezclaba responsabilidades opuestas: mapeos BD→form, form→BD y vinculación con cotizaciones. Se dividió en tres módulos cohesivos por dirección de mapeo: (1) embarqueFromDb.ts contiene el tipo EmbarqueFormValues, los DEFAULT_EMBARQUE_VALUES y mapEmbarqueRowToFormValues (BD → formulario para edición); (2) embarqueToDb.ts agrupa buildEmbarquePayload, buildConceptosVentaPayload y buildConceptosCostoPayload (formulario → payloads de inserción); (3) embarqueCotizacion.ts encapsula buildVincularCotizacionUpdates y buildDesvincularCotizacionUpdates junto con la interfaz CotizacionParaVincular. El archivo embarque.ts queda como barrel re-exportando los tres submódulos, manteniendo compatibilidad total con consumidores existentes (useEmbarqueForm.ts y los tests). Build verde, 196/196 pruebas pasando.",
+  },
+  {
     version: "8.76.0",
     date: "2026-04-26",
     type: "patch",
