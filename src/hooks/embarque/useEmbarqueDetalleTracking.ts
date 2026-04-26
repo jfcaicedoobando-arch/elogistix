@@ -1,5 +1,6 @@
 import { useCreateTrackingLink } from "@/hooks/useTrackingLinks";
 import { useToast } from "@/hooks/use-toast";
+import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 
 /**
  * Encapsula la creación y copiado al portapapeles del enlace público
@@ -15,9 +16,9 @@ export function useEmbarqueDetalleTracking(embarqueId: string | undefined) {
       const link = await createTrackingLink.mutateAsync({ embarqueId });
       const url = `${window.location.origin}/tracking/${link.token}`;
       await navigator.clipboard.writeText(url);
-      toast({ title: "Enlace copiado", description: "El enlace de tracking fue copiado al portapapeles." });
+      notifySuccess(toast, { title: "Enlace copiado", description: "El enlace de tracking fue copiado al portapapeles." });
     } catch {
-      toast({ title: "Error al generar enlace", variant: "destructive" });
+      notifyError(toast, { title: "Error al generar enlace" });
     }
   };
 

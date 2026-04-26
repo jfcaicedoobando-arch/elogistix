@@ -21,6 +21,7 @@ const roleBadge: Record<AppRole, string> = {
 };
 
 import { formatDate } from "@/lib/formatters";
+import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 
 export default function Usuarios() {
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -34,9 +35,9 @@ export default function Usuarios() {
   const handleRoleChange = async (userId: string, newRole: AppRole) => {
     try {
       await updateRole.mutateAsync({ userId, newRole });
-      toast({ title: "Rol actualizado" });
+      notifySuccess(toast, { title: "Rol actualizado" });
     } catch (err: unknown) {
-      toast({ title: "Error al cambiar rol", description: getErrorMessage(err), variant: "destructive" });
+      notifyError(toast, { title: "Error al cambiar rol", message: getErrorMessage(err) });
     }
   };
 
@@ -46,7 +47,7 @@ export default function Usuarios() {
       await deleteUser.mutateAsync(deleteTarget.user_id);
       toast({ title: "Usuario eliminado", description: `${deleteTarget.email} fue eliminado del sistema.` });
     } catch (err: unknown) {
-      toast({ title: "Error al eliminar usuario", description: getErrorMessage(err), variant: "destructive" });
+      notifyError(toast, { title: "Error al eliminar usuario", message: getErrorMessage(err) });
     }
   };
 

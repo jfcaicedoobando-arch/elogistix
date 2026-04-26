@@ -17,6 +17,7 @@ import { usePermissions } from "@/hooks/usePermissions";
 import { useRegistrarActividad } from "@/hooks/useBitacora";
 import { getErrorMessage } from "@/lib/errors";
 import type { Tables, Enums } from "@/integrations/supabase/types";
+import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 
 type ContactoCliente = Tables<"contactos_cliente">;
 type TipoContacto = Enums<"tipo_contacto">;
@@ -85,15 +86,15 @@ export function useClienteDetalleController() {
     try {
       if (editingId) {
         await updateContacto.mutateAsync({ id: editingId, cliente_id: cliente.id, ...data });
-        toast({ title: "Contacto actualizado" });
+        notifySuccess(toast, { title: "Contacto actualizado" });
       } else {
         await createContacto.mutateAsync({ cliente_id: cliente.id, ...data });
-        toast({ title: "Contacto creado" });
+        notifySuccess(toast, { title: "Contacto creado" });
       }
       setContactDialogOpen(false);
       setEditingContacto(null);
     } catch (err: unknown) {
-      toast({ title: "Error", description: getErrorMessage(err), variant: "destructive" });
+      notifyError(toast, { title: "Error", message: getErrorMessage(err) });
     }
   };
 
@@ -107,10 +108,10 @@ export function useClienteDetalleController() {
         entidad_id: cliente.id,
         entidad_nombre: data.nombre,
       });
-      toast({ title: "Cliente actualizado" });
+      notifySuccess(toast, { title: "Cliente actualizado" });
       setEditClienteOpen(false);
     } catch (err: unknown) {
-      toast({ title: "Error", description: getErrorMessage(err), variant: "destructive" });
+      notifyError(toast, { title: "Error", message: getErrorMessage(err) });
     }
   };
 
@@ -123,9 +124,9 @@ export function useClienteDetalleController() {
     if (!deletingContactoId || !cliente) return;
     try {
       await deleteContacto.mutateAsync({ id: deletingContactoId, cliente_id: cliente.id });
-      toast({ title: "Contacto eliminado" });
+      notifySuccess(toast, { title: "Contacto eliminado" });
     } catch (err: unknown) {
-      toast({ title: "Error", description: getErrorMessage(err), variant: "destructive" });
+      notifyError(toast, { title: "Error", message: getErrorMessage(err) });
     }
   };
 

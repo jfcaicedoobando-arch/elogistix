@@ -10,6 +10,7 @@ import {
   type EmbarqueRow,
 } from "@/hooks/useEmbarques";
 import { useEffect } from "react";
+import { notifyError } from "@/lib/ui/appFeedback";
 
 export function getSiguienteEstado(estadoActual: string) {
   const idx = (ESTADOS_EMBARQUE as readonly string[]).indexOf(estadoActual);
@@ -57,7 +58,7 @@ export function useEmbarqueEstadoActions(embarque: EmbarqueRow | undefined, id: 
       });
       toast({ title: `Estado actualizado a "${siguiente}"` });
     } catch (err: unknown) {
-      toast({ title: "Error al cambiar estado", description: getErrorMessage(err), variant: "destructive" });
+      notifyError(toast, { title: "Error al cambiar estado", message: getErrorMessage(err) });
     }
   };
 

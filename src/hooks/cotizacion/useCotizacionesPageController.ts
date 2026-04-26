@@ -8,6 +8,7 @@ import { useClientesForSelect } from "@/hooks/useClientes";
 import { usePermissions } from "@/hooks/usePermissions";
 import { getErrorMessage } from "@/lib/errors";
 import { exportToCsv } from "@/generators/exportCsv";
+import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 
 export const ESTADOS_COTIZACION = [
   "Borrador",
@@ -79,7 +80,7 @@ export function useCotizacionesPageController() {
         toast({ title: "Cotización duplicada", description: `Se creó ${data.folio} como Borrador.` });
       },
       onError: (err) => {
-        toast({ title: "Error al duplicar", description: getErrorMessage(err), variant: "destructive" });
+        notifyError(toast, { title: "Error al duplicar", message: getErrorMessage(err) });
       },
     });
   };
@@ -88,9 +89,9 @@ export function useCotizacionesPageController() {
     if (!cotizacionAEliminar) return;
     try {
       await deleteCotizacion.mutateAsync(cotizacionAEliminar);
-      toast({ title: "Cotización eliminada correctamente" });
+      notifySuccess(toast, { title: "Cotización eliminada correctamente" });
     } catch (err: unknown) {
-      toast({ title: "Error al eliminar", description: getErrorMessage(err), variant: "destructive" });
+      notifyError(toast, { title: "Error al eliminar", message: getErrorMessage(err) });
     }
     setCotizacionAEliminar(null);
   };

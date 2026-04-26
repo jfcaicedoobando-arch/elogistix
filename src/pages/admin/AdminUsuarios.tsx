@@ -9,6 +9,7 @@ import NuevoUsuarioDialog from "@/components/usuario/NuevoUsuarioDialog";
 import DoubleConfirmDeleteDialog from "@/components/DoubleConfirmDeleteDialog";
 import { useAdminGlobalUsers, type GlobalUserRow } from "@/hooks/useAdminData";
 import { useDeleteUser } from "@/hooks/useUsuarioMutations";
+import { notifyError } from "@/lib/ui/appFeedback";
 
 export default function AdminUsuarios() {
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -26,7 +27,7 @@ export default function AdminUsuarios() {
         setDeleteTarget(null);
       },
       onError: (err: unknown) => {
-        toast({ title: "Error", description: getErrorMessage(err), variant: "destructive" });
+        notifyError(toast, { title: "Error", message: getErrorMessage(err) });
         setDeleteTarget(null);
       },
     });

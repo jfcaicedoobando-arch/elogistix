@@ -6,6 +6,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "@/hooks/use-toast";
 import { useOrgFilter } from "@/hooks/useOrgFilter";
 import { queryKeys } from "@/lib/query";
+import { notifySuccess } from "@/lib/ui/appFeedback";
 import {
   aprobarProformas as svcAprobar,
   consolidarProformas as svcConsolidar,
@@ -99,7 +100,7 @@ export function useMarcarProformaFacturada() {
     mutationFn: (params: MarcarFacturadaParams & { embarqueId: string }) =>
       svcMarcarFacturada(params).then(() => params),
     onSuccess: (params) => {
-      toast({ title: "Proforma facturada y registro de factura creado" });
+      notifySuccess(toast, { title: "Proforma facturada y registro de factura creado" });
       invalidateProformaCaches(queryClient, params.embarqueId);
       queryClient.invalidateQueries({ queryKey: queryKeys.facturas.all });
     },
@@ -115,7 +116,7 @@ export function useEliminarProforma() {
     mutationFn: (params: EliminarProformaParams & { numero: string }) =>
       svcEliminar(params).then(() => params),
     onSuccess: (params) => {
-      toast({ title: "Proforma eliminada correctamente" });
+      notifySuccess(toast, { title: "Proforma eliminada correctamente" });
       invalidateProformaCaches(queryClient, params.embarqueId);
     },
     onError: (error: Error) => {

@@ -8,6 +8,7 @@ import { Loader2 } from "lucide-react";
 import { getErrorMessage } from "@/lib/errors";
 import { useAvailableUsers, useAddOrgMember } from "@/hooks/useOrgMembersMutations";
 import type { AppRole } from "@/types/appRole";
+import { notifyError } from "@/lib/ui/appFeedback";
 
 interface Props {
   open: boolean;
@@ -41,7 +42,7 @@ export default function AgregarMiembroOrgDialog({ open, onOpenChange, organizati
       onOpenChange(false);
       onAdded();
     } catch (err: unknown) {
-      toast({ title: "Error", description: getErrorMessage(err), variant: "destructive" });
+      notifyError(toast, { title: "Error", message: getErrorMessage(err) });
     }
   };
 

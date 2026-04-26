@@ -11,6 +11,7 @@ import { useRegistrarActividad } from "@/hooks/useBitacora";
 import { getErrorMessage } from "@/lib/errors";
 import { useToast } from "@/hooks/use-toast";
 import type { NotaEmbarqueRow } from "@/hooks/useEmbarques";
+import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 
 interface Props {
   notas: NotaEmbarqueRow[];
@@ -40,9 +41,9 @@ export function TabNotas({ notas, embarqueId }: Props) {
         detalles: { nota: texto.trim() },
       });
       setTexto("");
-      toast({ title: "Nota agregada" });
+      notifySuccess(toast, { title: "Nota agregada" });
     } catch (err: unknown) {
-      toast({ title: "Error al agregar nota", description: getErrorMessage(err), variant: "destructive" });
+      notifyError(toast, { title: "Error al agregar nota", message: getErrorMessage(err) });
     }
   };
 

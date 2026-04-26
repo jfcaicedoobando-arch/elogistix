@@ -14,6 +14,7 @@ import { useRegistrarActividad } from "@/hooks/useBitacora";
 import { useConceptosForm } from "@/hooks/useConceptosForm";
 import { useEmbarqueForm } from "@/hooks/embarque/useEmbarqueForm";
 import { getErrorMessage } from "@/lib/errors";
+import { notifyError } from "@/lib/ui/appFeedback";
 
 /**
  * Controller hook para la página EditarEmbarque.
@@ -104,7 +105,7 @@ export function useEditarEmbarqueWizard(id: string | undefined) {
       toast({ title: "Embarque actualizado", description: `${embarque.expediente} guardado correctamente.` });
       navigate(`/embarques/${id}`);
     } catch (err: unknown) {
-      toast({ title: "Error al actualizar", description: getErrorMessage(err), variant: "destructive" });
+      notifyError(toast, { title: "Error al actualizar", message: getErrorMessage(err) });
     }
   };
 

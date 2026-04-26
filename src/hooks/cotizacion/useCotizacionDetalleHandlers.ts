@@ -8,6 +8,7 @@ import {
   type CotizacionRow,
 } from "@/hooks/useCotizaciones";
 import type { ClienteFormData } from "@/types/clienteForm";
+import { notifyError } from "@/lib/ui/appFeedback";
 
 /**
  * Hook focalizado en las acciones (mutations + handlers + diálogos) del detalle de cotización.
@@ -32,7 +33,7 @@ export function useCotizacionDetalleHandlers(cotizacion: CotizacionRow | undefin
       await actualizarEstado.mutateAsync({ id: cotizacion.id, estado });
       toast({ title: `Estado actualizado a "${estado}"` });
     } catch (err: unknown) {
-      toast({ title: "Error", description: getErrorMessage(err), variant: "destructive" });
+      notifyError(toast, { title: "Error", message: getErrorMessage(err) });
     }
   };
 
@@ -50,7 +51,7 @@ export function useCotizacionDetalleHandlers(cotizacion: CotizacionRow | undefin
 
   const handleConvertir = async () => {
     if (!cotizacion || !clienteForm.nombre.trim()) {
-      toast({ title: "El nombre es obligatorio", variant: "destructive" });
+      notifyError(toast, { title: "El nombre es obligatorio" });
       return;
     }
     try {
@@ -61,7 +62,7 @@ export function useCotizacionDetalleHandlers(cotizacion: CotizacionRow | undefin
       toast({ title: `Cliente "${cliente.nombre}" creado exitosamente` });
       setShowConvertir(false);
     } catch (err: unknown) {
-      toast({ title: "Error al convertir prospecto", description: getErrorMessage(err), variant: "destructive" });
+      notifyError(toast, { title: "Error al convertir prospecto", message: getErrorMessage(err) });
     }
   };
 
@@ -72,7 +73,7 @@ export function useCotizacionDetalleHandlers(cotizacion: CotizacionRow | undefin
       toast({ title: `Se generaron ${cotizacion.num_contenedores} embarques exitosamente` });
       setShowConfirmarConvertir(false);
     } catch (err: unknown) {
-      toast({ title: "Error al generar embarques", description: getErrorMessage(err), variant: "destructive" });
+      notifyError(toast, { title: "Error al generar embarques", message: getErrorMessage(err) });
     }
   };
 
