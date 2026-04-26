@@ -11,6 +11,13 @@ export interface ChangelogEntry {
 /** Entradas recientes (v8.x). Las anteriores se cargan dinámicamente. */
 export const recentChangelog: ChangelogEntry[] = [
   {
+    version: "8.79.0",
+    date: "2026-04-26",
+    type: "patch",
+    title: "Auditoría: orquestador de submit extraído del wizard de embarques",
+    description: "Paso C1 de la nueva auditoría arquitectónica (abril 2026). El hook useNuevoEmbarqueWizard.ts había vuelto a 298 LOC, superando el guardrail de 250 al reincorporar lógica de submit. Se creó el nuevo hook useEmbarqueSubmitOrchestrator.ts (143 LOC) que encapsula toda la cadena de side-effects del submit: resolveExpedienteForSubmit → subirDocumentosEmbarque → createEmbarque.mutateAsync → updateEstadoCotizacion (si hay vínculo) → registrarActividad. Recibe sus dependencias por parámetros tipados (SubmitOrchestratorParams) usando los tipos reales de useEmbarqueForm (ReturnType), DocumentoChecklist y los tipos de conceptos, eliminando todos los `as never` intermedios. El wizard pasa de 298 a 212 LOC (29% menos), mantiene un único useEffect (reset de expediente al cambiar cliente) y queda enfocado en gestión de estado y vinculación. Como bonus, se eliminó la fuga de `navigate` por el return del hook: ahora la página NuevoEmbarque obtiene su propio useNavigate, mejorando el aislamiento. Build verde, 196/196 pruebas pasando.",
+  },
+  {
     version: "8.78.0",
     date: "2026-04-26",
     type: "patch",

@@ -1,4 +1,5 @@
 import { FormProvider } from "react-hook-form";
+import { useNavigate } from "react-router-dom";
 import { EmbarqueWizardLayout } from "@/components/embarque/EmbarqueWizardLayout";
 import { StepDatosGenerales } from "@/components/embarque/StepDatosGenerales";
 import { StepDatosRuta } from "@/components/embarque/StepDatosRuta";
@@ -14,6 +15,7 @@ const steps = [
 ];
 
 export default function NuevoEmbarque() {
+  const navigate = useNavigate();
   const w = useNuevoEmbarqueWizard();
 
   return (
@@ -27,7 +29,7 @@ export default function NuevoEmbarque() {
         totalSteps={4}
         isPending={w.isPending}
         saveLabel="Crear Embarque"
-        onBack={() => w.navigate("/embarques")}
+        onBack={() => navigate("/embarques")}
         onFinish={w.handleFinish}
         validateStep={(step) => (step === 1 ? w.validateStep1() : true)}
       >

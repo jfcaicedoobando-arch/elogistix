@@ -1,93 +1,107 @@
-# Auditoría arquitectónica (post v8.76.0)
+# Auditoría arquitectónica — abril 2026 (post v8.78.0)
 
-## Estado general
+## Estado general: muy saludable
 
-Excelente. Tras los 8 pasos del plan anterior:
-- **0 imports directos a Supabase** desde `hooks/`, `components/` o `pages/`.
-- **0 imports de `sonner`** (toasts unificados en `useToast`).
-- `src/lib/` reorganizado en subcarpetas semánticas.
-- Histórico de changelog particionado por major.
-- 17 componentes shadcn no usados eliminados.
-- **196/196 tests** pasando, tsc limpio.
+Lo que ya está limpio (no requiere acción):
 
-La base es sólida. Lo que queda es **deuda menor** y **pulido fino**.
+- **0 imports directos a Supabase** desde `hooks/`, `components/`, `pages/`.
+- **0 imports de `sonner`** (toasts unificados).
+- **0 colores Tailwind hardcodeados** en `components/` y `pages/`.
+- **0 componentes UI huérfanos** en `src/components/ui/`.
+- **0 `console.log` / `: any` / `TODO`** en código de producción (los 2 `console.error` que quedan están justificados: ErrorBoundary y NotFound).
+- **0 `useEffect` en páginas** salvo NotFound (logging legítimo).
+- **196/196 tests** pasando, `tsc` limpio.
 
-## Hallazgos abiertos (priorizados)
+Lo que sigue es **deuda residual menor**.
+
+## Hallazgos
 
 ### Críticos
 
-**C1 — `useNuevoEmbarqueWizard.ts` (314 LOC)**
-Sigue siendo el único hook que excede el guardrail de 250 LOC (junto con `sidebar.tsx` de shadcn que no se toca). Aunque parte de la lógica ya se extrajo en v8.71 a `lib/domain/embarqueWizard.ts`, el hook aún concentra: estado del wizard + hidratación desde cotización + manejo de `modoExpediente` + orquestación del submit con 4 servicios (resolverExpediente, subirDocumentos, createEmbarque, updateEstadoCotizacion, registrarActividad).
+**C1 — `useNuevoEmbarqueWizard.ts` volvió a 298 LOC**
 
-Sub-extracciones posibles:
-- `useCotizacionHydration(cotizacionId)` → encapsula el `useCotizacion` + `useEffect` que hidrata el form al elegir cotización.
-- `useExpedienteResolver(clienteId, modoExpediente)` → expediente nuevo/existente.
-- `submitNuevoEmbarque()` como función pura en `lib/domain/embarqueWizard.ts` que reciba dependencies inyectadas (testeable sin React).
+Tras el adelgazamiento de v8.73 (314 → 290), se reincorporaron ~8 líneas y vuelve a estar por encima del guardrail de 250. Es el único hook del repo que lo supera. Propuesta: extraer un sub-hook `useEmbarqueSubmitOrchestrator` que encapsule la cadena `resolverExpediente → subirDocumentos → createEmbarque → updateEstadoCotizacion → registrarActividad`.
 
 ### Medios
 
-**M1 — Páginas portal con lógica de UI compleja**
-- `PortalCotizacionDetalle.tsx` (288 LOC): mezcla render + estado de confirmación + handlers de aceptar/rechazar + textarea de comentario.
-- `PortalEmbarqueDetalle.tsx` (251 LOC): lógica similar de estado local mezclada con presentación.
+**M1 — Páginas de listado con responsabilidades mezcladas**
 
-Ambas exceden 250 LOC. Extraer un controller hook por página (mismo patrón aplicado en `TabProformas`).
+4 páginas repiten el mismo patrón inline (filtros + paginación + ordenamiento + diálogo de eliminar):
 
-**M2 — Colores categóricos hardcodeados aún presentes**
-Quedan ~7 archivos con clases `bg-{color}-{n}`:
-`ConceptoRowUSD.tsx`, `ResumenConceptosVenta.tsx`, `ReportesKpiCards.tsx`, `OperacionesWidgets.tsx`, `ClienteSummaryCards.tsx`, `pages/Operaciones.tsx`, `KpiCard.tsx`.
+- `Cotizaciones.tsx` (244 LOC, 7 `useState`, 14 hooks/dialogs)
+- `Embarques.tsx` (241 LOC) — ya tiene `useEmbarquesPageState`, parcial
+- `Facturacion.tsx` (233 LOC)
+- `ClienteDetalle.tsx` (230 LOC, 6 `useState`, 24 referencias a state/dialogs)
 
-(Los archivos `lib/ui/uiMappings.ts` y `estadoConfig.ts` se mantienen — son **paletas categóricas** intencionales, no semánticas, y ya están centralizadas.)
+Patrón común: `search + filterEstado + filterCliente + page + pageSize + recordAEliminar`. Extraer un hook genérico `useListPageState<TFilter>()` o controllers específicos por página (`useCotizacionesPageState`, `useFacturacionPageState`, `useClienteDetallePageState`).
 
-Definir tokens semánticos extra (`--metric-positive`, `--metric-neutral`, `--metric-warning`) o reutilizar `success/warning/info` para KPIs.
+**M2 — `PortalCotizacionDetalle.tsx` volvió a 266 LOC**
 
-**M3 — `lib/mappers/embarque.ts` (241 LOC)**
-Cerca del límite. Contiene mappers de form↔DB para embarques. Posible split por dirección (`embarqueFromDb.ts` / `embarqueToDb.ts`) si crece más.
+Tras la extracción de v8.74 a `usePortalCotizacionDetalleController`, la página subió de nuevo por encima de 250. Revisar qué se reincorporó (probable JSX o sub-componentes) y mover lo derivable al controller o partir el JSX en sub-componentes (`AceptarRechazarPanel`, `CotizacionConceptosSummary`).
 
 ### Opcionales
 
-**O1 — Dependencias huérfanas en `package.json`**
-Se eliminaron 17 componentes shadcn pero las libs siguen instaladas:
-`embla-carousel-react`, `react-resizable-panels`, `vaul`, `input-otp`. Quitarlas reduce `node_modules` y bundle.
+**O1 — `adminServices.ts` (212 LOC, 17 funciones exportadas)**
 
-**O2 — `src/types/types.ts` genérico**
-Archivo con nombre poco descriptivo. Auditar contenido y renombrar/dividir según dominio (p. ej. `commonTypes.ts`, o mover a sus dominios respectivos).
+Mezcla 3 dominios distintos: KPIs globales, organizaciones (CRUD + activar) y miembros de organización (CRUD + roles). Split sugerido:
 
-**O3 — Subcarpetas vacías en `lib/` agregar `index.ts` barrels**
-Subcarpetas como `formatters/`, `storage/`, `errors/`, `contacto/`, `query/` ya tienen `index.ts`. Las que tienen múltiples archivos (`financial/`, `ui/`) podrían añadir un `index.ts` barrel para imports más limpios:
-`import { formatCurrency, calcularUtilidad } from "@/lib/financial"` en lugar de `/financial/financialUtils`.
+```text
+src/services/admin/
+  ├── stats.ts       (fetchAdminDashboardStats, count*)
+  ├── organizations.ts (fetch/create/update/setActivo)
+  └── members.ts     (fetchOrgMembers, addOrgMember, update/removeRole)
+src/services/adminServices.ts → barrel
+```
 
-**O4 — `src/components/ui/sidebar.tsx` (637 LOC)**
-Es código shadcn estándar. **No tocar** salvo que se quiera customizar fuertemente.
+Mismo patrón aplicado ya con éxito a `embarqueServices` y `proformaServices`.
+
+**O2 — `clienteService.ts` (201 LOC, 16 funciones)**
+
+Misma señal: mezcla CRUD de clientes + contactos + queries relacionadas (embarques/cotizaciones del cliente). Split análogo:
+
+```text
+src/services/cliente/
+  ├── crud.ts       (fetch/create/update + paginación)
+  ├── contactos.ts  (fetch/create/update/delete contactos)
+  └── relacionados.ts (embarques + cotizaciones del cliente)
+```
+
+**O3 — `services/cotizacion/conversiones.ts` (225 LOC)**
+
+Cerca del límite. Si crece más, dividir por tipo de conversión.
+
+**O4 — Naming inconsistente en `src/types/`**
+
+8 archivos con sufijo `Types.ts` (`cotizacionTypes`, `clienteFormTypes`, etc.) más 2 sin sufijo (`appRole.ts`, `types.ts` deprecado). Decidir convención única — recomendado: **sin sufijo `Types`** (más idiomático TS y consistente con `appRole.ts`):
+
+```text
+cotizacionTypes.ts → cotizacion.ts
+clienteFormTypes.ts → clienteForm.ts
+conceptoTypes.ts → concepto.ts
+...
+```
+
+Mantener `types.ts` deprecado solo durante este ciclo y eliminarlo al final.
 
 ## Plan de acción ordenado
 
-| # | Versión | Acción | Riesgo | Impacto | Estado |
-|---|---------|--------|--------|---------|--------|
-| 1 | v8.73.0 | **C1**: Adelgazar `useNuevoEmbarqueWizard`. | Medio | Alto | ✅ |
-| 2 | v8.74.0 | **M1**: Controller hooks para `PortalCotizacionDetalle` y `PortalEmbarqueDetalle`. | Bajo | Medio | ✅ |
-| 3 | v8.75.0 | **M2**: Tokens semánticos para KPIs y migrar los 8 archivos restantes a variantes. | Bajo (visual) | Medio | ✅ |
-| 4 | v8.76.0 | **O1**: Desinstalar dependencias huérfanas (`embla`, `vaul`, `input-otp`, `react-resizable-panels`). | Muy bajo | Bajo (bundle) | ✅ |
-| 5 | v8.77.0 | **M3**: Split de `mappers/embarque.ts` por dirección. | Bajo | Bajo | ✅ |
-| 6 | v8.78.0 | **O2 + O3**: Renombrar/dividir `types/types.ts` y añadir barrels en `lib/financial` y `lib/ui`. | Muy bajo | Bajo | ✅ |
+| # | Versión | Acción | Riesgo | Impacto |
+|---|---------|--------|--------|---------|
+| 1 | v8.79.0 | **C1**: Extraer `useEmbarqueSubmitOrchestrator` de `useNuevoEmbarqueWizard`. | Medio | Alto | ✅ |
+| 2 | v8.80.0 | **M2**: Reducir `PortalCotizacionDetalle.tsx` bajo 250 LOC (sub-componentes o más controller). | Bajo | Medio |
+| 3 | v8.81.0 | **M1**: Controller `useListPageState` genérico + migración de 4 páginas. | Medio | Alto (DX) |
+| 4 | v8.82.0 | **O1**: Split `adminServices.ts` en `services/admin/{stats,organizations,members}` + barrel. | Bajo | Medio |
+| 5 | v8.83.0 | **O2**: Split `clienteService.ts` en `services/cliente/{crud,contactos,relacionados}` + barrel. | Bajo | Medio |
+| 6 | v8.84.0 | **O4**: Renombrar `src/types/*Types.ts` → `src/types/*.ts` y eliminar `types.ts` deprecado. | Muy bajo | Bajo (DX) |
+
+## Convenciones a respetar (recordatorio)
+
+- Guardrail de **250 LOC** por archivo (excepto `sidebar.tsx` shadcn y `supabase/types.ts` autogenerado).
+- **Cero** imports directos a Supabase fuera de `services/`.
+- Toasts solo vía `useToast`.
+- Colores solo vía tokens semánticos / `kpi.*`.
+- Cada cambio incrementa `changelogData.ts` (recientes) o el archivo de versión correspondiente.
 
 ## Próximo paso
 
-✅ **Plan completado.** Los 6 pasos de la auditoría arquitectónica post v8.72 están finalizados. La base de código cumple los guardrails de tamaño, separación de responsabilidades, tokenización de colores, dependencias mínimas y barrels semánticos en `lib/`. Próximas auditorías deberán partir de un nuevo análisis fresco.
-
-## Detalles técnicos
-
-**Paso 1 (C1)** — Funciones a extraer:
-- `useCotizacionHydration({ cotizacionId, proveedores, onHydrate })` — hook con `useCotizacion` + `useEffect`.
-- `lib/domain/embarqueWizard.ts::buildSubmitPayload(form, conceptos, expediente)` — pura.
-- `lib/domain/embarqueWizard.ts::resolveModoExpediente(clientes, clienteId)` — ya parcialmente extraída, completar.
-
-**Paso 3 (M2)** — Tokens propuestos en `index.css`:
-```css
---metric-positive: 142 71% 45%;  /* alias de success para KPIs */
---metric-warning:  38 92% 50%;
---metric-danger:   0 84% 60%;
---metric-neutral:  220 14% 75%;
-```
-Crear `<KpiBadge variant="positive|warning|danger|neutral" />` reutilizable.
-
-**Paso 4 (O1)** — Verificar antes de borrar con `rg "from ['\"]<dep>" src` para cada paquete.
+Ejecutar el **Paso 2 (v8.80.0)** — reducir `PortalCotizacionDetalle.tsx` (266 LOC) bajo el guardrail de 250.
