@@ -1,5 +1,5 @@
 import { supabase } from '@/integrations/supabase/client';
-import { uploadFile, deleteFile } from '@/services/storage';
+import { uploadFile, deleteFile } from '@/services/storage/index';
 import {
   buildEmbarqueDocPath,
   sanitizeFileName,
