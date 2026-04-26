@@ -11,6 +11,13 @@ export interface ChangelogEntry {
 /** Entradas recientes (v8.x). Las anteriores se cargan dinámicamente. */
 export const recentChangelog: ChangelogEntry[] = [
   {
+    version: "8.82.0",
+    date: "2026-04-26",
+    type: "patch",
+    title: "Auditoría: split de adminServices en stats/organizations/members",
+    description: "Paso O1 de la auditoría arquitectónica. El archivo src/services/adminServices.ts (212 LOC, 17 funciones) mezclaba tres dominios distintos: KPIs globales, CRUD de organizaciones y gestión de miembros. Se aplicó el patrón ya validado en embarqueServices y proformaServices: la lógica se distribuyó en src/services/admin/ con tres módulos cohesivos — stats.ts (fetchAdminDashboardStats + countOrgMembers/Embarques/Clientes/Cotizaciones), organizations.ts (fetchAdminOrganizations, fetchOrganizationsList, createOrganization, fetchAdminOrganization, updateAdminOrganization, setOrganizationActivo) y members.ts (fetchAvailableUsers, fetchAdminGlobalUsers, fetchOrgMembers, addOrgMember, updateOrgMemberRole, removeOrgMember). El archivo src/services/adminServices.ts queda como barrel de 9 LOC que re-exporta los tres módulos, manteniendo compatibilidad total con los 6 consumidores existentes (useAdminData, useOrganizationsList, useOrgMembersMutations, useAdminOrgMembers, useAdminOrgKpis, useAdminOrgInfo). Build verde y 201/201 pruebas pasando.",
+  },
+  {
     version: "8.81.0",
     date: "2026-04-26",
     type: "patch",
