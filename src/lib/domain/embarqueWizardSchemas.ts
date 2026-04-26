@@ -2,12 +2,17 @@
  * Esquemas de validación zod para el wizard "Nuevo Embarque".
  * Cada paso tiene su propio schema para validar de forma incremental.
  *
- * Estándar de mensajes (v8.94.0):
- *   "Etiqueta del campo: razón en imperativo o descriptiva."
+ * Estándar de mensajes (v8.96.0):
+ *   - Todos los textos provienen del catálogo central `errorCatalog.ts`.
+ *   - Patrón: "Etiqueta del campo: razón en imperativo o descriptiva."
  *   - Español MX, tuteo, termina con punto, sin signos de admiración.
- *   - Generado siempre vía `formatValidationMessage(field, reason)` para mantener consistencia.
+ *   - Cualquier ajuste de tono/idioma se hace en `errorCatalog.ts` (única fuente).
  */
 import { z } from "zod";
+import { msg, getMessage } from "@/lib/domain/errorCatalog";
+
+// Re-export del helper neutro para compatibilidad con imports existentes
+export { formatValidationMessage } from "./validationFormat";
 
 // ── Constantes de validación ──────────────────────────────────────────
 export const MAX_FILE_SIZE_MB = 10;
@@ -25,20 +30,6 @@ export const ALLOWED_MIME_TYPES = [
 
 // ── Tipo plano de errores por campo ───────────────────────────────────
 export type StepValidationErrors = Record<string, string>;
-
-// ── Helper de formato unificado ───────────────────────────────────────
-/**
- * Formatea un mensaje de validación con el patrón estándar:
- *   "Campo: razón."
- * Garantiza punto final y sin saltos.
- */
-export function formatValidationMessage(field: string, reason: string): string {
-  const cleanReason = reason.trim().replace(/[.!]+$/u, "");
-  return `${field.trim()}: ${cleanReason}.`;
-}
-
-// Atajo interno
-const fmt = formatValidationMessage;
 
 // ── Helpers ───────────────────────────────────────────────────────────
 function flattenZodErrors(error: z.ZodError): StepValidationErrors {
@@ -66,41 +57,41 @@ export const STEP_LABELS: Record<number, string> = {
 
 // ── Paso 1: Datos Generales ───────────────────────────────────────────
 export const stepDatosGeneralesSchema = z.object({
-  modo: z.string().min(1, fmt("Modo de transporte", "selecciona una opción")),
-  tipo: z.string().min(1, fmt("Tipo de operación", "selecciona una opción")),
-  clienteId: z.string().min(1, fmt("Cliente", "selecciona uno del catálogo")),
+  modo: z.string().min(1, msg("1.modo.required")),
+  tipo: z.string().min(1, msg("1.tipo.required")),
+  clienteId: z.string().min(1, msg("1.clienteId.required")),
   descripcionMercancia: z
     .string()
     .trim()
-    .min(1, fmt("Descripción de mercancía", "campo obligatorio"))
-    .max(500, fmt("Descripción de mercancía", "máximo 500 caracteres")),
+    .min(1, msg("1.descripcion.required"))
+    .max(500, msg("1.descripcion.maxLen")),
 });
 
 // ── Paso 2: Ruta (condicional por modo) ───────────────────────────────
 const baseRutaFields = z.object({
-  etd: z.string().min(1, fmt("ETD", "campo obligatorio")),
-  eta: z.string().min(1, fmt("ETA", "campo obligatorio")),
+  etd: z.string().min(1, msg("2.etd.required")),
+  eta: z.string().min(1, msg("2.eta.required")),
 });
 
 const maritimoRuta = z.object({
-  puertoOrigen: z.string().trim().min(1, fmt("Puerto de origen", "selecciona uno del catálogo")),
-  puertoDestino: z.string().trim().min(1, fmt("Puerto de destino", "selecciona uno del catálogo")),
-  naviera: z.string().trim().min(1, fmt("Naviera", "selecciona una opción")),
-  tipoServicio: z.string().min(1, fmt("Tipo de servicio", "selecciona FCL o LCL")),
-  contenedor: z.string().trim().min(1, fmt("Contenedor", "campo obligatorio")),
-  tipoContenedor: z.string().trim().min(1, fmt("Tipo de contenedor", "selecciona una opción")),
+  puertoOrigen: z.string().trim().min(1, msg("2.puertoOrigen.required")),
+  puertoDestino: z.string().trim().min(1, msg("2.puertoDestino.required")),
+  naviera: z.string().trim().min(1, msg("2.naviera.required")),
+  tipoServicio: z.string().min(1, msg("2.tipoServicio.required")),
+  contenedor: z.string().trim().min(1, msg("2.contenedor.required")),
+  tipoContenedor: z.string().trim().min(1, msg("2.tipoContenedor.required")),
 });
 
 const aereoRuta = z.object({
-  aeropuertoOrigen: z.string().trim().min(1, fmt("Aeropuerto de origen", "campo obligatorio")),
-  aeropuertoDestino: z.string().trim().min(1, fmt("Aeropuerto de destino", "campo obligatorio")),
-  mawb: z.string().trim().min(1, fmt("MAWB", "campo obligatorio")),
+  aeropuertoOrigen: z.string().trim().min(1, msg("2.aeropuertoOrigen.required")),
+  aeropuertoDestino: z.string().trim().min(1, msg("2.aeropuertoDestino.required")),
+  mawb: z.string().trim().min(1, msg("2.mawb.required")),
 });
 
 const terrestreRuta = z.object({
-  ciudadOrigen: z.string().trim().min(1, fmt("Ciudad de origen", "campo obligatorio")),
-  ciudadDestino: z.string().trim().min(1, fmt("Ciudad de destino", "campo obligatorio")),
-  transportista: z.string().trim().min(1, fmt("Transportista", "campo obligatorio")),
+  ciudadOrigen: z.string().trim().min(1, msg("2.ciudadOrigen.required")),
+  ciudadDestino: z.string().trim().min(1, msg("2.ciudadDestino.required")),
+  transportista: z.string().trim().min(1, msg("2.transportista.required")),
 });
 
 export interface StepRutaInput {
@@ -124,14 +115,12 @@ export interface StepRutaInput {
 export function validateStepRuta(input: StepRutaInput): StepValidationErrors {
   const errors: StepValidationErrors = {};
 
-  // Validación base (fechas)
   const baseRes = baseRutaFields.safeParse({
     etd: input.etd ?? "",
     eta: input.eta ?? "",
   });
   if (!baseRes.success) Object.assign(errors, flattenZodErrors(baseRes.error));
 
-  // Validación condicional por modo
   if (input.modo === "Marítimo" || !input.modo) {
     const r = maritimoRuta.safeParse({
       puertoOrigen: input.puertoOrigen ?? "",
@@ -139,7 +128,6 @@ export function validateStepRuta(input: StepRutaInput): StepValidationErrors {
       naviera: input.naviera ?? "",
       tipoServicio: input.tipoServicio ?? "",
       contenedor: input.contenedor ?? "",
-      // Si es LCL, el tipo se autocompleta como "LCL"
       tipoContenedor:
         input.tipoServicio === "LCL"
           ? input.tipoContenedor || "LCL"
@@ -162,13 +150,12 @@ export function validateStepRuta(input: StepRutaInput): StepValidationErrors {
     if (!r.success) Object.assign(errors, flattenZodErrors(r.error));
   }
 
-  // Validación cruzada de fechas
   if (
     isValidDateStr(input.etd) &&
     isValidDateStr(input.eta) &&
     new Date(input.eta!) < new Date(input.etd!)
   ) {
-    errors.eta = fmt("ETA", "debe ser igual o posterior al ETD");
+    errors.eta = msg("2.eta.afterEtd");
   }
 
   return errors;
@@ -184,13 +171,16 @@ export interface DocumentoArchivoValidacion {
 export function validateArchivo(
   file: DocumentoArchivoValidacion,
 ): string | null {
-  const label = `Documento ${file.nombre}`;
   if (file.size > MAX_FILE_SIZE_BYTES) {
-    const mb = (file.size / 1024 / 1024).toFixed(1);
-    return fmt(label, `excede ${MAX_FILE_SIZE_MB} MB (${mb} MB)`);
+    const sizeMb = (file.size / 1024 / 1024).toFixed(1);
+    return getMessage("3.documento.tooLarge", {
+      nombre: file.nombre,
+      sizeMb,
+      maxMb: MAX_FILE_SIZE_MB,
+    });
   }
   if (file.type && !ALLOWED_MIME_TYPES.includes(file.type as never)) {
-    return fmt(label, "formato no permitido. Usa PDF, JPG, PNG, XLSX o DOCX");
+    return getMessage("3.documento.badFormat", { nombre: file.nombre });
   }
   return null;
 }
@@ -241,48 +231,34 @@ export function validateStepCostos(input: StepCostosInput): StepValidationErrors
     : input.tipoCambioEUR;
 
   if (!isFinite(tcUSD) || tcUSD <= 0) {
-    errors.tipoCambioUSD = fmt("Tipo de cambio USD", "debe ser mayor a 0");
+    errors.tipoCambioUSD = msg("4.tcUSD.positive");
   }
   if (!isFinite(tcEUR) || tcEUR <= 0) {
-    errors.tipoCambioEUR = fmt("Tipo de cambio EUR", "debe ser mayor a 0");
+    errors.tipoCambioEUR = msg("4.tcEUR.positive");
   }
 
-  // Conceptos de venta
   const ventasValidas = input.conceptosVenta.filter(
     (v) => v.concepto.trim() && v.precioUnitario > 0 && v.cantidad >= 1,
   );
   if (ventasValidas.length === 0) {
-    errors.conceptosVenta = fmt(
-      "Conceptos de venta",
-      "agrega al menos uno con cantidad ≥ 1 y precio > 0",
-    );
+    errors.conceptosVenta = msg("4.ventas.minOne");
   } else {
     for (const v of input.conceptosVenta) {
       if (v.concepto.trim() && (v.cantidad < 1 || v.precioUnitario < 0)) {
-        errors[`venta_${v.id}`] = fmt(
-          `Concepto de venta #${v.id}`,
-          "cantidad ≥ 1 y precio ≥ 0",
-        );
+        errors[`venta_${v.id}`] = getMessage("4.venta.invalid", { id: v.id });
       }
     }
   }
 
-  // Conceptos de costo
   const costosValidos = input.conceptosCosto.filter(
     (c) => c.concepto.trim() && c.proveedorId && c.monto >= 0,
   );
   if (costosValidos.length === 0) {
-    errors.conceptosCosto = fmt(
-      "Conceptos de costo",
-      "agrega al menos uno con proveedor, concepto y monto ≥ 0",
-    );
+    errors.conceptosCosto = msg("4.costos.minOne");
   } else {
     for (const c of input.conceptosCosto) {
       if (c.concepto.trim() && c.monto < 0) {
-        errors[`costo_${c.id}`] = fmt(
-          `Concepto de costo #${c.id}`,
-          "monto no puede ser negativo",
-        );
+        errors[`costo_${c.id}`] = getMessage("4.costo.invalid", { id: c.id });
       }
     }
   }
