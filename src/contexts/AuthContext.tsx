@@ -58,9 +58,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       else setTimeout(cb, 1500);
     };
     idle(() => {
-      void import("@/pages/Embarques");
-      void import("@/pages/Cotizaciones");
-      void import("@/pages/Dashboard");
+      void import("@/pages/embarques/Embarques");
+      void import("@/pages/cotizaciones/Cotizaciones");
+      void import("@/pages/dashboard/Dashboard");
     });
   }, [user, loading]);
 

@@ -56,7 +56,7 @@ const PortalEmbarqueDetalle = lazy(() => import("./pages/portal/PortalEmbarqueDe
 const PortalCotizaciones = lazy(() => import("./pages/portal/PortalCotizaciones"));
 const PortalCotizacionDetalle = lazy(() => import("./pages/portal/PortalCotizacionDetalle"));
 const PortalFacturas = lazy(() => import("./pages/portal/PortalFacturas"));
-const TrackingPublico = lazy(() => import("./pages/TrackingPublico"));
+
 
 // Admin layout
 import { AdminLayout } from "./components/admin/AdminLayout";
