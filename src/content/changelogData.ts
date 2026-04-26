@@ -15,6 +15,13 @@ export interface ChangelogEntry {
  */
 export const recentChangelog: ChangelogEntry[] = [
   {
+    version: "8.91.0",
+    date: "2026-04-26",
+    type: "minor",
+    title: "Auditoría: controllers de proveedor y Cotizaciones, 3 services a folder/barrel y promoción de ProfitBadge",
+    description: "Top 5 mejoras de la auditoría arquitectónica post-v8.90.0 ejecutadas en un solo paso, sin breaking changes. (1) NuevoProveedorDialog (202 LOC, mezclaba estado wizard + validación + handlers + UI) reducido a ~120 LOC presentacionales tras extraer src/hooks/proveedor/useNuevoProveedorController.ts (~120 LOC) que centraliza estado, validación, derivados (isAgenteCarga, rfcLabel) y orquestación de pasos. (2) EditarProveedorDialog (161 LOC) reducido a UI pura tras extraer src/hooks/proveedor/useEditarProveedorController.ts que encapsula estado del form, errores derivados con touched-fields, validación de email y handler de guardado. (3) Cotizaciones.tsx (245 LOC, 7 hooks + filtros + KPIs + handlers inline) reducido a composición de columnas + JSX (~155 LOC) tras extraer src/hooks/cotizacion/useCotizacionesPageController.ts (~150 LOC) que orquesta useCotizaciones, useDeleteCotizacion, useDuplicarCotizacion, useClientesForSelect, useListPageState, KPIs derivados y handlers (duplicar, exportar CSV, eliminar, navegación). (4) Tres services críticos pasan al patrón folder/barrel: services/dashboard/, services/facturas/ y services/search/ con index.ts; los archivos antiguos services/dashboardService.ts, services/facturasService.ts y services/searchService.ts quedan como shim de re-export para preservar imports. (5) ProfitBadge promovido de src/components/shared/ a src/components/ProfitBadge.tsx; src/components/shared/ProfitBadge.tsx queda como shim de re-export (la carpeta shared/ se eliminará en una futura iteración una vez migrados los 5 importadores). Build verde, 184/184 pruebas pasando.",
+  },
+  {
     version: "8.90.0",
     date: "2026-04-26",
     type: "minor",
