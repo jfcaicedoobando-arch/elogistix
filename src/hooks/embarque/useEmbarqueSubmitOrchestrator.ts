@@ -122,11 +122,7 @@ export function useEmbarqueSubmitOrchestrator() {
           documentos: docPayload,
         });
       } catch (err: unknown) {
-        toast({
-          title: "Error: guardado del embarque",
-          description: getErrorMessage(err),
-          variant: "destructive",
-        });
+        notifyError(toast, { phase: "guardado del embarque", message: getErrorMessage(err) });
         return false;
       }
 
@@ -138,7 +134,7 @@ export function useEmbarqueSubmitOrchestrator() {
             estado: "Embarcada",
           });
         } catch (err: unknown) {
-          toast({
+          notifyWarning(toast, {
             title: "Embarque creado con advertencia",
             description: `Cotización: no se pudo actualizar el estado (${getErrorMessage(err)}).`,
           });
@@ -159,7 +155,7 @@ export function useEmbarqueSubmitOrchestrator() {
         }),
       });
 
-      toast({
+      notifySuccess(toast, {
         title: "Embarque creado",
         description: `Expediente ${expediente}: registrado correctamente.`,
       });
