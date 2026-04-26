@@ -14,6 +14,7 @@ export {
   generarFolioCotizacion,
   fetchCotizaciones,
   fetchCotizacionesAceptadas,
+  fetchCotizacionesPaginadas,
   fetchCotizacionById,
   fetchEmbarquesVinculados,
   crearCotizacion,
