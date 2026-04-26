@@ -15,6 +15,13 @@ export interface ChangelogEntry {
  */
 export const recentChangelog: ChangelogEntry[] = [
   {
+    version: "8.88.0",
+    date: "2026-04-26",
+    type: "patch",
+    title: "ARCHITECTURE.md reorganizado: TOC, naming, React Query, performance, RLS, testing y glosario",
+    description: "Reescritura integral del documento de arquitectura para cerrar gaps de documentación detectados en la auditoría. Cambios: (Bloque 1) Cabecera con versión y fecha de revisión, referencia espejo a mem://technical/architecture-and-standards, tabla de contenidos con 14 secciones numeradas, nueva §2 'Flujo de datos canónico' con diagrama ASCII (Page → Hook → Service → Supabase → Mapper → Component), inclusión explícita de src/content/ separado de src/data/, sección dedicada para hooks de dominio. (Bloque 2) Nuevas secciones: §7 Naming (consolida patrones es/en + convenciones para hooks, controllers, tipos, componentes, services), §8 React Query (queryKeys centralizados, staleTime por tipo de dato, política de invalidación, paginación servidor), §9 Performance/Lazy-loading (páginas lazy, jsPDF dinámico, patrón changelog, regla >50KB), §10 RLS y multi-tenant (organization_id, user_roles, security definer, edge functions), §11 Testing (Vitest, qué se testea y qué no, ubicación __tests__/, comandos), §3.5 Controllers de página formalizados. (Bloque 3) Consolidación de 'Excepciones autorizadas' + 'Convención de barrels' + 'Auditoría useEffect' bajo §12 'Decisiones explícitas (con fecha)'; renombrado de 'Deuda técnica aceptada' a §13 'Decisiones de no hacer' añadiendo entrada de costosPLTypes.ts; corrección de referencia obsoleta en §6 (services/<dominio>Services.ts → services/<dominio>/index.ts); §14 Glosario con 12 términos del proyecto (embarque, expediente, cotización, proforma, concepto, P&L, CSF, incoterm, organización, cliente, operador, portal de clientes). El archivo crece de 125 a ~250 líneas pero gana navegabilidad y cubre los gaps reales de onboarding. Sin cambios de código fuente; build verde y 201/201 pruebas pasando.",
+  },
+  {
     version: "8.87.0",
     date: "2026-04-26",
     type: "minor",
