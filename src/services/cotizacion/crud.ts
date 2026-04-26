@@ -58,14 +58,55 @@ export async function fetchCotizacionesAceptadas(organizationId: string | null) 
   return data as unknown as CotizacionRow[];
 }
 
+export const COTIZACION_DETAIL_COLUMNS =
+  "id, folio, organization_id, cliente_id, cliente_nombre, es_prospecto, prospecto_empresa, prospecto_contacto, prospecto_email, prospecto_telefono, modo, tipo, incoterm, descripcion_mercancia, peso_kg, volumen_m3, piezas, origen, destino, conceptos_venta, subtotal, moneda, vigencia_dias, fecha_vigencia, notas, operador, tipo_carga, msds_archivo, tipo_embarque, tipo_contenedor, tipo_peso, descripcion_adicional, sector_economico, dimensiones_lcl, dimensiones_aereas, dias_libres_destino, dias_almacenaje, tiempo_transito_dias, frecuencia, ruta_texto, validez_propuesta, tipo_movimiento, seguro, valor_seguro_usd, carta_garantia, num_contenedores, estado, embarque_id, created_at, updated_at" as const;
+
 export async function fetchCotizacionById(id: string): Promise<CotizacionRow> {
   const { data, error } = await supabase
     .from("cotizaciones")
-    .select("*")
+    .select(COTIZACION_DETAIL_COLUMNS)
     .eq("id", id)
     .single();
   if (error) throw error;
   return data as unknown as CotizacionRow;
+}
+
+// ─── Listado paginado server-side (filtros + búsqueda + count) ─────────────
+export interface CotizacionesPaginadasFilters {
+  organizationId: string | null;
+  search: string;
+  filterEstado: string;
+  filterCliente: string;
+  page: number;
+  pageSize: number;
+}
+
+export async function fetchCotizacionesPaginadas(
+  f: CotizacionesPaginadasFilters,
+): Promise<{ data: CotizacionRow[]; count: number }> {
+  let query = supabase
+    .from("cotizaciones")
+    .select(COTIZACION_LIST_COLUMNS, { count: "exact" })
+    .order("created_at", { ascending: false });
+
+  if (f.organizationId) query = query.eq("organization_id", f.organizationId);
+  if (f.filterEstado !== "todos") {
+    query = query.eq("estado", f.filterEstado as CotizacionInsert["estado"]);
+  }
+  if (f.filterCliente !== "todos") query = query.eq("cliente_id", f.filterCliente);
+  if (f.search) {
+    query = query.or(
+      `folio.ilike.%${f.search}%,cliente_nombre.ilike.%${f.search}%,descripcion_mercancia.ilike.%${f.search}%`,
+    );
+  }
+
+  const from = f.page * f.pageSize;
+  const to = from + f.pageSize - 1;
+  query = query.range(from, to);
+
+  const { data, error, count } = await query;
+  if (error) throw error;
+  return { data: (data ?? []) as unknown as CotizacionRow[], count: count ?? 0 };
 }
 
 export async function fetchEmbarquesVinculados(cotizacionId: string) {
