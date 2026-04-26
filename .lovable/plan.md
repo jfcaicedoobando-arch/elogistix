@@ -1,107 +1,73 @@
-# Auditoría arquitectónica — abril 2026 (post v8.78.0)
+# Auditoría de Rendimiento — Libre Carga
 
-## Estado general: muy saludable
+Análisis de la aplicación realizado sobre rutas, hooks, servicios, bundle y assets. Recomendaciones ordenadas por **impacto vs esfuerzo**. **No se hicieron cambios de código.**
 
-Lo que ya está limpio (no requiere acción):
+---
 
-- **0 imports directos a Supabase** desde `hooks/`, `components/`, `pages/`.
-- **0 imports de `sonner`** (toasts unificados).
-- **0 colores Tailwind hardcodeados** en `components/` y `pages/`.
-- **0 componentes UI huérfanos** en `src/components/ui/`.
-- **0 `console.log` / `: any` / `TODO`** en código de producción (los 2 `console.error` que quedan están justificados: ErrorBoundary y NotFound).
-- **0 `useEffect` en páginas** salvo NotFound (logging legítimo).
-- **196/196 tests** pasando, `tsc` limpio.
+## 1. Assets y carga inicial (alto impacto, bajo esfuerzo)
 
-Lo que sigue es **deuda residual menor**.
+- **`librecarga-logo.png` (154 KB)** se importa desde 3 lugares (`Login.tsx`, `AppSidebar.tsx`, `PortalLayout.tsx`). Existe ya un `librecarga-logo.svg` (668 B) en `public/`. **Migrar todos los imports al SVG** reduce ~460 KB de descarga inicial y elimina rasterización.
+- **`favicon.png` (131 KB)** y **`favicon.ico` (20 KB)**: el PNG es excesivo para un favicon. Reemplazar por uno de 32×32 / 64×64 (~2–5 KB).
+- **`changelogData.ts` (792 LOC)** + 7 archivos `changelog/v*.ts` se importan desde rutas que no son `/changelog`. Verificar que el módulo solo se cargue al entrar a `/changelog` (lazy import dentro de la página, no en la barrel global).
 
-## Hallazgos
+## 2. Consultas a base de datos (alto impacto)
 
-### Críticos
+- **22 queries usando `.select('*')`** en servicios (`trackingService`, `proforma/queries`, `cotizacion/crud`, `cotizacion/costos`, `cotizacion/conversiones`, `embarque/eventos`, `proforma/facturar`, `configuracionService`, `portal/queries`, `planesService`). Cada una transmite columnas innecesarias. **Reemplazar por listas de columnas explícitas** (ya se hace bien en `embarque/queries.ts` con `EMBARQUE_LIST_COLUMNS`). Aplicar el mismo patrón a los demás servicios.
+- **`useCotizaciones()` en `Cotizaciones.tsx` carga TODAS las cotizaciones sin paginación servidor** (a diferencia de Embarques/Clientes/Proveedores que sí tienen `fetchEmbarquesPaginados`). Implementar paginación server-side con `range()` + `count: 'exact'`. Lo mismo revisar para `Facturacion.tsx`.
+- **Filtro `.or()` con `ilike` en `fetchEmbarquesPaginados`** sobre 4 columnas sin índices generará scans secuenciales en tablas grandes. Crear índices `GIN` con `pg_trgm` sobre `expediente`, `cliente_nombre`, `bl_master` para acelerar búsquedas.
 
-**C1 — `useNuevoEmbarqueWizard.ts` volvió a 298 LOC**
+## 3. React Query — caché y deduplicación
 
-Tras el adelgazamiento de v8.73 (314 → 290), se reincorporaron ~8 líneas y vuelve a estar por encima del guardrail de 250. Es el único hook del repo que lo supera. Propuesta: extraer un sub-hook `useEmbarqueSubmitOrchestrator` que encapsule la cadena `resolverExpediente → subirDocumentos → createEmbarque → updateEstadoCotizacion → registrarActividad`.
+- `staleTime` global = **30 s** es bajo para catálogos casi estáticos. Subir a **5–10 min** específicamente para: `usePuertos`, `useNavieras`, `useTiposContenedor`, `useProveedores` (en selects), `useTasaIVA`, `useConfiguracion`. Reduce refetches al cambiar de página.
+- **Múltiples páginas vuelven a llamar `useClientes()` / `useProveedores()` enteros** solo para poblar selects. Considerar un endpoint ligero `fetchClientesMinimos(id, nombre)` para selects, separado del listado completo.
+- Activar `placeholderData: keepPreviousData` en queries paginadas (Embarques, Clientes, Proveedores) para que la paginación no muestre skeleton al cambiar de página.
 
-### Medios
+## 4. Re-renders y trabajo en main thread (impacto medio)
 
-**M1 — Páginas de listado con responsabilidades mezcladas**
+- **Cero usos de `React.memo`** en todo `src/`. Tablas grandes (`DataTable`) se re-renderizan completas al cambiar cualquier estado del padre. Memorizar:
+  - Filas de `DataTable` (envolver `TableRow` interno con `memo` y comparador estable).
+  - Componentes pesados como `OperacionesWidgets`, `DesempenoOperadores`, `ReportesTopChart`, badges (`ProfitBadge`, `EstadoBadge`).
+- Confirmar que las `columns: DataTableColumn[]` en cada página están en `useMemo`; si se redefinen en cada render, la tabla pierde memorización.
+- **`AppSidebar` se re-renderiza con cada navegación** (usa `useLocation`). Splittearlo: parte estática (logo, nav items) memorizada; solo el indicador de ruta activa reactivo.
 
-4 páginas repiten el mismo patrón inline (filtros + paginación + ordenamiento + diálogo de eliminar):
+## 5. Bundle y vendor splitting (impacto medio)
 
-- `Cotizaciones.tsx` (244 LOC, 7 `useState`, 14 hooks/dialogs)
-- `Embarques.tsx` (241 LOC) — ya tiene `useEmbarquesPageState`, parcial
-- `Facturacion.tsx` (233 LOC)
-- `ClienteDetalle.tsx` (230 LOC, 6 `useState`, 24 referencias a state/dialogs)
+- **`vite.config.ts` ya divide vendors** (react, query, charts, radix). Bien. Mejoras adicionales:
+  - Mover `recharts` (solo usado en 4 archivos) a chunks por-ruta en lugar de vendor global, ya que se incluye aunque el usuario nunca abra Operaciones/Reportes.
+  - Verificar tree-shaking de `lucide-react`: cada icono se importa nominal (`import { Ship } from "lucide-react"`) lo cual es correcto; revisar que no haya `import * as Icons`.
+  - `date-fns` se usa con imports nominales (correcto). Considerar eliminar `Locale` import duplicado si solo se usa `es`.
+- Generar el bundle con `ANALYZE=true npm run build` (ya está configurado el plugin `visualizer`) y revisar `dist/bundle-stats.html` para identificar el chunk más pesado.
 
-Patrón común: `search + filterEstado + filterCliente + page + pageSize + recordAEliminar`. Extraer un hook genérico `useListPageState<TFilter>()` o controllers específicos por página (`useCotizacionesPageState`, `useFacturacionPageState`, `useClienteDetallePageState`).
+## 6. Hooks y orquestación de datos
 
-**M2 — `PortalCotizacionDetalle.tsx` volvió a 266 LOC**
+- **`useDashboardData`**: carga `summary` + `details` en serie (details depende de summary). Es buen patrón para TTI. Verificar que el RPC `dashboard_stats()` esté indexado y no recalcule en cada llamada (cachear en Postgres con materialized views si es lento).
+- **`useEmbarquesListExtras`**: query única por página de embarques (bien, evita N+1). Confirmar que el RPC retorna en <200 ms; si no, agregar índice por `embarque_id` en tablas de documentos/conceptos.
+- **`useExchangeRates`**: `staleTime` 1 h es razonable. No requiere cambios.
+- **`useSidebarAlerts`**: 5 min OK. Si la query es costosa, mover los conteos a un RPC dedicado en vez de varias queries.
 
-Tras la extracción de v8.74 a `usePortalCotizacionDetalleController`, la página subió de nuevo por encima de 250. Revisar qué se reincorporó (probable JSX o sub-componentes) y mover lo derivable al controller o partir el JSX en sub-componentes (`AceptarRechazarPanel`, `CotizacionConceptosSummary`).
+## 7. Otros
 
-### Opcionales
+- **`PortalCotizacionDetalle`, `EmbarqueDetalle`, `CotizacionDetalle`**: cada uno hace múltiples queries en paralelo al montar. Considerar un único RPC `embarque_full(id)` que devuelva embarque + conceptos + documentos + notas en un solo round-trip.
+- **`useProfitMaps` y cálculos financieros**: validar que se ejecutan dentro de `useMemo` y no en cada render del padre.
+- **Error en consola actual**: `Function components cannot be given refs` en `RouteLoadingFallback` y `Login`. Envolver con `forwardRef` cuando se usan dentro de Suspense con refs implícitas. No es performance, pero contamina logs.
 
-**O1 — `adminServices.ts` (212 LOC, 17 funciones exportadas)**
+---
 
-Mezcla 3 dominios distintos: KPIs globales, organizaciones (CRUD + activar) y miembros de organización (CRUD + roles). Split sugerido:
+## Resumen priorizado
 
-```text
-src/services/admin/
-  ├── stats.ts       (fetchAdminDashboardStats, count*)
-  ├── organizations.ts (fetch/create/update/setActivo)
-  └── members.ts     (fetchOrgMembers, addOrgMember, update/removeRole)
-src/services/adminServices.ts → barrel
-```
+| # | Acción | Impacto | Esfuerzo |
+|---|--------|---------|----------|
+| 1 | Cambiar `.png` del logo por `.svg` (3 archivos) | Alto | Mínimo |
+| 2 | Reducir tamaño del favicon | Alto | Mínimo |
+| 3 | Paginación server-side en Cotizaciones y Facturación | Alto | Medio |
+| 4 | Reemplazar `select('*')` por columnas explícitas (22 queries) | Alto | Medio |
+| 5 | Subir `staleTime` a 5–10 min en catálogos estáticos | Medio | Mínimo |
+| 6 | `keepPreviousData` en queries paginadas | Medio | Mínimo |
+| 7 | `React.memo` en filas de `DataTable` y badges | Medio | Medio |
+| 8 | Índices `pg_trgm` para búsquedas `ilike` en embarques | Medio | Bajo |
+| 9 | Endpoint ligero para selects de Clientes/Proveedores | Medio | Medio |
+| 10 | Ejecutar `ANALYZE=true` y revisar bundle | Diagnóstico | Mínimo |
+| 11 | Memorizar `AppSidebar` (parte estática) | Bajo | Bajo |
+| 12 | Consolidar queries de detalle en un RPC único | Alto | Alto |
 
-Mismo patrón aplicado ya con éxito a `embarqueServices` y `proformaServices`.
-
-**O2 — `clienteService.ts` (201 LOC, 16 funciones)**
-
-Misma señal: mezcla CRUD de clientes + contactos + queries relacionadas (embarques/cotizaciones del cliente). Split análogo:
-
-```text
-src/services/cliente/
-  ├── crud.ts       (fetch/create/update + paginación)
-  ├── contactos.ts  (fetch/create/update/delete contactos)
-  └── relacionados.ts (embarques + cotizaciones del cliente)
-```
-
-**O3 — `services/cotizacion/conversiones.ts` (225 LOC)**
-
-Cerca del límite. Si crece más, dividir por tipo de conversión.
-
-**O4 — Naming inconsistente en `src/types/`**
-
-8 archivos con sufijo `Types.ts` (`cotizacionTypes`, `clienteFormTypes`, etc.) más 2 sin sufijo (`appRole.ts`, `types.ts` deprecado). Decidir convención única — recomendado: **sin sufijo `Types`** (más idiomático TS y consistente con `appRole.ts`):
-
-```text
-cotizacionTypes.ts → cotizacion.ts
-clienteFormTypes.ts → clienteForm.ts
-conceptoTypes.ts → concepto.ts
-...
-```
-
-Mantener `types.ts` deprecado solo durante este ciclo y eliminarlo al final.
-
-## Plan de acción ordenado
-
-| # | Versión | Acción | Riesgo | Impacto |
-|---|---------|--------|--------|---------|
-| 1 | v8.79.0 | **C1**: Extraer `useEmbarqueSubmitOrchestrator` de `useNuevoEmbarqueWizard`. | Medio | Alto | ✅ |
-| 2 | v8.80.0 | **M2**: Reducir `PortalCotizacionDetalle.tsx` bajo 250 LOC (sub-componentes o más controller). | Bajo | Medio | ✅ |
-| 3 | v8.81.0 | **M1**: Controller `useListPageState` genérico + migración de 4 páginas. | Medio | Alto (DX) | ✅ |
-| 4 | v8.82.0 | **O1**: Split `adminServices.ts` en `services/admin/{stats,organizations,members}` + barrel. | Bajo | Medio | ✅ |
-| 5 | v8.83.0 | **O2**: Split `clienteService.ts` en `services/cliente/{crud,contactos,relacionados}` + barrel. | Bajo | Medio | ✅ |
-| 6 | v8.84.0 | **O4**: Renombrar `src/types/*Types.ts` → `src/types/*.ts` y eliminar `types.ts` deprecado. | Muy bajo | Bajo (DX) | ✅ |
-
-## Convenciones a respetar (recordatorio)
-
-- Guardrail de **250 LOC** por archivo (excepto `sidebar.tsx` shadcn y `supabase/types.ts` autogenerado).
-- **Cero** imports directos a Supabase fuera de `services/`.
-- Toasts solo vía `useToast`.
-- Colores solo vía tokens semánticos / `kpi.*`.
-- Cada cambio incrementa `changelogData.ts` (recientes) o el archivo de versión correspondiente.
-
-## Próximo paso
-
-**Plan completado al 100% (6/6 pasos, v8.79.0 → v8.84.0).** El repositorio cumple los guardrails de la auditoría: ningún archivo > 250 LOC fuera de las excepciones autogeneradas, servicios divididos por dominio, hook genérico para páginas de listado, sub-componentes para portal y convención unificada en `src/types/`. Próxima auditoría: cuando se acumulen ≥ 5 versiones minor o aparezca un nuevo archivo > 250 LOC.
+Si apruebas, puedo implementar los puntos 1–8 en una sola iteración (alto impacto, esfuerzo combinado bajo-medio) y dejar los puntos 9–12 para una segunda fase.
