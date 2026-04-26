@@ -11,6 +11,13 @@ export interface ChangelogEntry {
 /** Entradas recientes (v8.x). Las anteriores se cargan dinámicamente. */
 export const recentChangelog: ChangelogEntry[] = [
   {
+    version: "8.73.0",
+    date: "2026-04-26",
+    type: "patch",
+    title: "Auditoría: useNuevoEmbarqueWizard adelgazado bajo el guardrail",
+    description: "Paso C1 de la nueva auditoría arquitectónica. El hook controller useNuevoEmbarqueWizard.ts (314 LOC) era el único hook del repo que aún superaba el guardrail de 250 LOC. Se aplicaron dos extracciones: (1) la pre-vinculación automática de cotización (lectura de location.state, useCotizacion, useEffect con guarda anti-doble-ejecución y toast de notificación) se movió al nuevo hook useCotizacionHydration.ts, dejando la página NuevoEmbarque libre de plomería de inicialización; (2) la orquestación del submit añadió dos funciones puras testeables a lib/domain/embarqueWizard.ts: resolveExpedienteForSubmit (decide reutilizar expediente existente o resolver uno nuevo, con la resolución del nuevo inyectada como callback) y buildBitacoraDetalles (construye el payload de detalles para registrarActividad). El controller pasa de 314 a ~290 LOC y elimina dos useEffect inline, mientras que el dominio gana cobertura potencial sin acoplarse a React. Build verde, 196/196 pruebas pasando.",
+  },
+  {
     version: "8.72.0",
     date: "2026-04-26",
     type: "minor",

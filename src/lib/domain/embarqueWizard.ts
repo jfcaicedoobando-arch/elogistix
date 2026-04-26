@@ -102,3 +102,49 @@ export function mapConceptosCostoFromCotizacion(
     };
   });
 }
+
+// ── Orquestación del submit (pura, dependencias inyectadas) ───────────
+
+export interface ExpedienteSeleccionRef {
+  expediente: string;
+  bl_master?: string | null;
+}
+
+export interface ResolverExpedienteArgs {
+  modoExpediente: "nuevo" | "existente";
+  expedienteSeleccionado: ExpedienteSeleccionRef | null;
+  blMaster: string;
+  tipo: string;
+  resolverNuevo: (blMaster: string, tipo: string) => Promise<string>;
+}
+
+/**
+ * Decide si reutilizar un expediente existente o resolver uno nuevo.
+ * Pura: la resolución del nuevo expediente se delega a la función inyectada.
+ */
+export async function resolveExpedienteForSubmit(
+  args: ResolverExpedienteArgs,
+): Promise<string> {
+  if (args.modoExpediente === "existente" && args.expedienteSeleccionado) {
+    return args.expedienteSeleccionado.expediente;
+  }
+  return args.resolverNuevo(args.blMaster, args.tipo);
+}
+
+export interface BuildBitacoraDetallesArgs {
+  modo: string;
+  tipo: string;
+  clienteNombre: string;
+  cotizacionFolio: string | null;
+  modoExpediente: "nuevo" | "existente";
+}
+
+export function buildBitacoraDetalles(args: BuildBitacoraDetallesArgs) {
+  return {
+    modo: args.modo,
+    tipo: args.tipo,
+    cliente: args.clienteNombre,
+    cotizacion_folio: args.cotizacionFolio,
+    asociado_a_existente: args.modoExpediente === "existente",
+  };
+}
