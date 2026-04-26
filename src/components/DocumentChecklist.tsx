@@ -12,8 +12,8 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 
-export type { DocumentoChecklist } from "@/types/documentoChecklistTypes";
-import type { DocumentoChecklist } from "@/types/documentoChecklistTypes";
+export type { DocumentoChecklist } from "@/types/documentoChecklist";
+import type { DocumentoChecklist } from "@/types/documentoChecklist";
 
 interface Props {
   documentos: DocumentoChecklist[];

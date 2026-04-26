@@ -3,7 +3,7 @@ import { useForm } from "react-hook-form";
 import type { NavigateFunction } from "react-router-dom";
 import type { ConceptoVentaCotizacion, CotizacionRow, CreateCotizacionInput } from "@/hooks/useCotizaciones";
 import type { CostoCotizacion } from "@/hooks/cotizacion/useCotizacionCostos";
-import type { FilaCostoLocal } from "@/types/cotizacionPLTypes";
+import type { FilaCostoLocal } from "@/types/cotizacionPL";
 import { buildPaso1Data as buildPaso1Mapper } from "@/lib/mappers/cotizacion";
 import {
   buildCotizacionDefaultValues,

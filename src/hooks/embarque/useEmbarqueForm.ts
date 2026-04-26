@@ -4,7 +4,7 @@ import { useToast } from "@/hooks/use-toast";
 import { uploadFile } from "@/services/storage";
 import { useExchangeRates } from "@/hooks/useExchangeRates";
 import { getDocsForMode } from "@/constants/embarqueConstants";
-import type { DocumentoChecklist } from "@/types/documentoChecklistTypes";
+import type { DocumentoChecklist } from "@/types/documentoChecklist";
 import {
   DEFAULT_EMBARQUE_VALUES,
   mapEmbarqueRowToFormValues,
@@ -17,7 +17,7 @@ import {
   type CotizacionParaVincular,
 } from "@/lib/mappers/embarque";
 import type { Tables } from "@/integrations/supabase/types";
-import type { ConceptoVentaLocal, ConceptoCostoLocal } from "@/types/conceptoTypes";
+import type { ConceptoVentaLocal, ConceptoCostoLocal } from "@/types/concepto";
 
 // Re-exports para compatibilidad con consumidores existentes
 export type { EmbarqueFormValues } from "@/lib/mappers/embarque";

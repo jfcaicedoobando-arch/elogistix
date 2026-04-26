@@ -11,6 +11,13 @@ export interface ChangelogEntry {
 /** Entradas recientes (v8.x). Las anteriores se cargan dinámicamente. */
 export const recentChangelog: ChangelogEntry[] = [
   {
+    version: "8.84.0",
+    date: "2026-04-26",
+    type: "patch",
+    title: "Auditoría: convención unificada en src/types (sin sufijo Types)",
+    description: "Paso O4 (último) de la auditoría arquitectónica de abril 2026. La carpeta src/types/ tenía 8 archivos con sufijo redundante 'Types' (clienteFormTypes, conceptoTypes, cotizacionCostoTypes, cotizacionFormTypes, cotizacionPLTypes, cotizacionTypes, documentoChecklistTypes) más 2 sin sufijo (appRole y types deprecado), produciendo inconsistencia. Se renombraron los 7 archivos a su forma sin sufijo (clienteForm.ts, concepto.ts, cotizacionCosto.ts, cotizacionForm.ts, cotizacionPL.ts, cotizacion.ts, documentoChecklist.ts) y se actualizaron todos los imports del proyecto a la nueva ruta. Adicionalmente se eliminó src/types/types.ts (barrel deprecado de v8.78.0) migrando los 11 consumidores restantes (AuthContext, ProtectedRoute, hooks de usuarios y admin, páginas y componentes de admin, services/admin/members) a `@/types/appRole` directamente. Resultado: src/types/ contiene ahora 8 archivos con convención homogénea sin sufijo, alineada con TS idiomático. Build verde y 201/201 pruebas pasando. Cierre completo del plan de auditoría arquitectónica de abril 2026 (6/6 pasos implementados desde v8.79.0).",
+  },
+  {
     version: "8.83.0",
     date: "2026-04-26",
     type: "patch",

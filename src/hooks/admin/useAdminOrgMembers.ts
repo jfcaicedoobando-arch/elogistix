@@ -10,7 +10,7 @@ import {
   updateOrgMemberRole,
   type OrgMemberRow,
 } from "@/services/adminServices";
-import type { AppRole } from "@/types/types";
+import type { AppRole } from "@/types/appRole";
 
 export type MemberRow = OrgMemberRow;
 

@@ -3,7 +3,7 @@
  */
 import { supabase } from "@/integrations/supabase/client";
 import type { Json, TablesInsert } from "@/integrations/supabase/types";
-import type { CotizacionRow, CreateCotizacionInput } from "@/types/cotizacionTypes";
+import type { CotizacionRow, CreateCotizacionInput } from "@/types/cotizacion";
 
 type CotizacionInsert = TablesInsert<"cotizaciones">;
 type CotizacionUpdate = Partial<CotizacionInsert>;

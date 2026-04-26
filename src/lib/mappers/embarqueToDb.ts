@@ -4,7 +4,7 @@
 
 import { resolverContacto } from "@/lib/contacto";
 import type { Tables, TablesInsert } from "@/integrations/supabase/types";
-import type { ConceptoVentaLocal, ConceptoCostoLocal } from "@/types/conceptoTypes";
+import type { ConceptoVentaLocal, ConceptoCostoLocal } from "@/types/concepto";
 import type { EmbarqueFormValues } from "./embarqueFromDb";
 
 type ContactoRow = Pick<Tables<"contactos_cliente">, "id" | "nombre" | "tipo" | "pais">;

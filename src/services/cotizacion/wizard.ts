@@ -6,10 +6,10 @@
  * deliberada para reutilizar el wizard tanto en NuevaCotizacion como en EditarCotizacion.
  */
 import { uploadFile } from "@/services/storage";
-import type { CotizacionFormValues } from "@/types/cotizacionFormTypes";
-import type { CreateCotizacionInput } from "@/types/cotizacionTypes";
-import type { CostoCotizacion } from "@/types/cotizacionCostoTypes";
-import type { FilaCostoLocal } from "@/types/cotizacionPLTypes";
+import type { CotizacionFormValues } from "@/types/cotizacionForm";
+import type { CreateCotizacionInput } from "@/types/cotizacion";
+import type { CostoCotizacion } from "@/types/cotizacionCosto";
+import type { FilaCostoLocal } from "@/types/cotizacionPL";
 
 interface Mutations {
   crearCotizacion: { mutateAsync: (d: CreateCotizacionInput) => Promise<{ id: string }> };

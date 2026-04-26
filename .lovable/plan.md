@@ -92,7 +92,7 @@ Mantener `types.ts` deprecado solo durante este ciclo y eliminarlo al final.
 | 3 | v8.81.0 | **M1**: Controller `useListPageState` genérico + migración de 4 páginas. | Medio | Alto (DX) | ✅ |
 | 4 | v8.82.0 | **O1**: Split `adminServices.ts` en `services/admin/{stats,organizations,members}` + barrel. | Bajo | Medio | ✅ |
 | 5 | v8.83.0 | **O2**: Split `clienteService.ts` en `services/cliente/{crud,contactos,relacionados}` + barrel. | Bajo | Medio | ✅ |
-| 6 | v8.84.0 | **O4**: Renombrar `src/types/*Types.ts` → `src/types/*.ts` y eliminar `types.ts` deprecado. | Muy bajo | Bajo (DX) |
+| 6 | v8.84.0 | **O4**: Renombrar `src/types/*Types.ts` → `src/types/*.ts` y eliminar `types.ts` deprecado. | Muy bajo | Bajo (DX) | ✅ |
 
 ## Convenciones a respetar (recordatorio)
 
@@ -104,4 +104,4 @@ Mantener `types.ts` deprecado solo durante este ciclo y eliminarlo al final.
 
 ## Próximo paso
 
-Ejecutar el **Paso 6 (v8.84.0)** — renombrar `src/types/*Types.ts` → `src/types/*.ts` y eliminar `types.ts` deprecado.
+**Plan completado al 100% (6/6 pasos, v8.79.0 → v8.84.0).** El repositorio cumple los guardrails de la auditoría: ningún archivo > 250 LOC fuera de las excepciones autogeneradas, servicios divididos por dominio, hook genérico para páginas de listado, sub-componentes para portal y convención unificada en `src/types/`. Próxima auditoría: cuando se acumulen ≥ 5 versiones minor o aparezca un nuevo archivo > 250 LOC.

@@ -9,7 +9,7 @@ import NuevoUsuarioDialog from "@/components/usuario/NuevoUsuarioDialog";
 import { DataTable, type DataTableColumn } from "@/components/DataTable";
 import { useUsuarios, useUpdateUserRole, useDeleteUser, type UserRow } from "@/hooks/useUsuarios";
 import DoubleConfirmDeleteDialog from "@/components/DoubleConfirmDeleteDialog";
-import type { AppRole } from "@/types/types";
+import type { AppRole } from "@/types/appRole";
 import { useAuth } from "@/contexts/AuthContext";
 
 const roleBadge: Record<AppRole, string> = {

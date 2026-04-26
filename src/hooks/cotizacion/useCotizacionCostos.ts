@@ -5,8 +5,8 @@ import {
   upsertCotizacionCostos,
 } from '@/services/cotizacionServices';
 
-export type { CostoCotizacion } from '@/types/cotizacionCostoTypes';
-import type { CostoCotizacion } from '@/types/cotizacionCostoTypes';
+export type { CostoCotizacion } from '@/types/cotizacionCosto';
+import type { CostoCotizacion } from '@/types/cotizacionCosto';
 
 export function useCotizacionCostos(cotizacionId: string | undefined) {
   return useQuery({

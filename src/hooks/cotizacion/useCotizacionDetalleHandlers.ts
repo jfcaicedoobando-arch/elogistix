@@ -7,7 +7,7 @@ import {
   useConvertirCotizacionAEmbarques,
   type CotizacionRow,
 } from "@/hooks/useCotizaciones";
-import type { ClienteFormData } from "@/types/clienteFormTypes";
+import type { ClienteFormData } from "@/types/clienteForm";
 
 /**
  * Hook focalizado en las acciones (mutations + handlers + diálogos) del detalle de cotización.

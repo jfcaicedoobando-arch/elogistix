@@ -1,5 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
-import type { AppRole } from "@/types/types";
+import type { AppRole } from "@/types/appRole";
 
 export interface UserRow {
   user_id: string;

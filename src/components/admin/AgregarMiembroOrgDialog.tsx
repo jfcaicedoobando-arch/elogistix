@@ -7,7 +7,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Loader2 } from "lucide-react";
 import { getErrorMessage } from "@/lib/errors";
 import { useAvailableUsers, useAddOrgMember } from "@/hooks/useOrgMembersMutations";
-import type { AppRole } from "@/types/types";
+import type { AppRole } from "@/types/appRole";
 
 interface Props {
   open: boolean;

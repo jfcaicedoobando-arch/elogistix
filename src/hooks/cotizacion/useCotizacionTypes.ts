@@ -1,5 +1,5 @@
 /**
- * @deprecated Importar tipos desde `@/types/cotizacionTypes`.
+ * @deprecated Importar tipos desde `@/types/cotizacion`.
  * Este archivo se conserva como re-export para no romper consumidores legacy.
  */
 export type {
@@ -8,4 +8,4 @@ export type {
   DimensionAerea,
   CotizacionRow,
   CreateCotizacionInput,
-} from "@/types/cotizacionTypes";
+} from "@/types/cotizacion";
