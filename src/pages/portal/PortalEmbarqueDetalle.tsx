@@ -5,47 +5,27 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
-import { usePortalEmbarque, usePortalEventos, usePortalDocumentos } from "@/hooks/usePortalData";
 import { getEstadoColor, getModoIcon } from "@/lib/ui/uiMappings";
-import { calcularEstadoEmbarque } from "@/lib/domain/embarque";
 import { formatDate, getOrigen, getDestino } from "@/lib/formatters";
-import { parseISO, differenceInDays } from "date-fns";
-import { useMemo } from "react";
 import { PortalEmbarqueTimeline } from "@/components/portal/PortalEmbarqueTimeline";
 import { PortalEmbarqueDocumentos } from "@/components/portal/PortalEmbarqueDocumentos";
-
-// Progress steps for visual tracker
-const PROGRESS_STEPS = [
-  { key: "Confirmado", label: "Confirmado", icon: "📋" },
-  { key: "En Tránsito", label: "En Tránsito", icon: "🚢" },
-  { key: "Arribo", label: "Arribo", icon: "⚓" },
-  { key: "En Aduana", label: "Aduana", icon: "🛃" },
-  { key: "Entregado", label: "Entregado", icon: "🏁" },
-];
+import { usePortalEmbarqueDetalleController } from "@/hooks/embarque/usePortalEmbarqueDetalleController";
 
 export default function PortalEmbarqueDetalle() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { data: embarque, isLoading } = usePortalEmbarque(id);
-  const { data: eventos = [] } = usePortalEventos(id);
-  const { data: documentos = [] } = usePortalDocumentos(id);
-
-  // Determine current step index for progress tracker
-  const currentStepIndex = useMemo(() => {
-    if (!embarque) return -1;
-    const estado = calcularEstadoEmbarque(embarque.modo, embarque.tipo, embarque.etd, embarque.eta, embarque.estado);
-    const idx = PROGRESS_STEPS.findIndex((s) => s.key === estado);
-    if (estado === "Cerrado" || estado === "EIR") return PROGRESS_STEPS.length;
-    return idx >= 0 ? idx : 0;
-  }, [embarque]);
-
-  // Days until ETA
-  const diasParaEta = useMemo(() => {
-    if (!embarque?.eta) return null;
-    try {
-      return differenceInDays(parseISO(embarque.eta), new Date());
-    } catch { return null; }
-  }, [embarque]);
+  const {
+    embarque,
+    isLoading,
+    eventos,
+    documentos,
+    estadoVisual,
+    currentStepIndex,
+    diasParaEta,
+    docsValidados,
+    docsTotal,
+    progressSteps,
+  } = usePortalEmbarqueDetalleController(id);
 
   if (isLoading) {
     return <div className="space-y-6"><Skeleton className="h-10 w-64" /><Skeleton className="h-20 w-full" /><Skeleton className="h-64 w-full" /></div>;
@@ -60,10 +40,6 @@ export default function PortalEmbarqueDetalle() {
       </div>
     );
   }
-
-  const estadoVisual = calcularEstadoEmbarque(embarque.modo, embarque.tipo, embarque.etd, embarque.eta, embarque.estado);
-  const docsValidados = documentos.filter((d) => d.estado === "Validado").length;
-  const docsTotal = documentos.length;
 
   return (
     <div className="space-y-6">
@@ -91,10 +67,10 @@ export default function PortalEmbarqueDetalle() {
             <div className="absolute top-5 left-0 right-0 h-0.5 bg-border" />
             <div
               className="absolute top-5 left-0 h-0.5 bg-accent transition-all duration-500"
-              style={{ width: `${Math.min(100, (currentStepIndex / (PROGRESS_STEPS.length - 1)) * 100)}%` }}
+              style={{ width: `${Math.min(100, (currentStepIndex / (progressSteps.length - 1)) * 100)}%` }}
             />
 
-            {PROGRESS_STEPS.map((step, i) => {
+            {progressSteps.map((step, i) => {
               const isCompleted = i < currentStepIndex;
               const isCurrent = i === currentStepIndex;
               return (
