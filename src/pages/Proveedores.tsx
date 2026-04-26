@@ -16,6 +16,7 @@ import { useDebounce } from "@/hooks/useDebounce";
 import { DataTable, type DataTableColumn } from "@/components/DataTable";
 import { useListPageState } from "@/hooks/useListPageState";
 import type { Tables, Enums } from "@/integrations/supabase/types";
+import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 type TipoProveedor = Enums<'tipo_proveedor'>;
 type Proveedor = Tables<'proveedores'>;
 
@@ -100,9 +101,9 @@ export default function Proveedores() {
         entidad_id: proveedorCreado.id,
         entidad_nombre: data.nombre,
       });
-      toast({ title: "Proveedor creado correctamente" });
+      notifySuccess(toast, { title: "Proveedor creado correctamente" });
     } catch {
-      toast({ title: "Error al crear proveedor", variant: "destructive" });
+      notifyError(toast, { title: "Error al crear proveedor"});
     }
   };
 

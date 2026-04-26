@@ -6,6 +6,7 @@ import { useExchangeRates } from "@/hooks/catalogos/useExchangeRates";
 import { getDocsForMode } from "@/constants/embarqueConstants";
 import type { DocumentoChecklist } from "@/types/documentoChecklist";
 import {
+import { notifyError } from "@/lib/ui/appFeedback";
   DEFAULT_EMBARQUE_VALUES,
   mapEmbarqueRowToFormValues,
   buildEmbarquePayload as buildPayload,
@@ -53,7 +54,7 @@ export function useEmbarqueForm() {
       await uploadFile(ruta, archivo);
       methods.setValue("msdsArchivo", ruta);
     } catch {
-      toast({ title: "Error al subir MSDS", variant: "destructive" });
+      notifyError(toast, { title: "Error al subir MSDS"});
     } finally {
       methods.setValue("subiendoMsds", false);
     }

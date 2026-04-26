@@ -6,6 +6,7 @@ import { Building2, Plus } from "lucide-react";
 import { DataTable, type DataTableColumn } from "@/components/DataTable";
 import { useToast } from "@/hooks/use-toast";
 import {
+import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
   Dialog,
   DialogContent,
   DialogHeader,
@@ -30,13 +31,13 @@ export default function AdminOrganizaciones() {
   const handleCreate = () => {
     createOrg.mutate({ nombre, rfc }, {
       onSuccess: () => {
-        toast({ title: "Organización creada" });
+        notifySuccess(toast, { title: "Organización creada" });
         setDialogOpen(false);
         setNombre("");
         setRfc("");
       },
       onError: (err: Error) => {
-        toast({ title: "Error", description: err.message, variant: "destructive" });
+        notifyError(toast, { title: "Error", description: err.message});
       },
     });
   };

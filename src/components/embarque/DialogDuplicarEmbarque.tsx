@@ -3,6 +3,7 @@ import { Plus, Minus, Info } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
+import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
   Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle,
 } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -60,10 +61,10 @@ export default function DialogDuplicarEmbarque({ embarque, open, onOpenChange }:
   const handleDuplicar = async () => {
     try {
       const creados = await duplicarEmbarque.mutateAsync({ embarqueOrigen: embarque, copias: filaCopias });
-      toast({ title: `Se crearon ${creados.length} embarque(s)`, description: creados.map(c => c.expediente).join(', ') });
+      notifySuccess(toast, { title: `Se crearon ${creados.length} embarque(s)`, description: creados.map(c => c.expediente).join(', ') });
       onOpenChange(false);
     } catch (err: unknown) {
-      toast({ title: "Error al duplicar", description: getErrorMessage(err), variant: "destructive" });
+      notifyError(toast, { title: "Error al duplicar", description: getErrorMessage(err)});
     }
   };
 

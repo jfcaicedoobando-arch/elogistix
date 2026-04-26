@@ -8,6 +8,7 @@ import { Loader2 } from "lucide-react";
 import { getErrorMessage } from "@/lib/errors";
 import { useAvailableUsers, useAddOrgMember } from "@/hooks/useOrgMembersMutations";
 import type { AppRole } from "@/types/appRole";
+import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 
 interface Props {
   open: boolean;
@@ -37,11 +38,11 @@ export default function AgregarMiembroOrgDialog({ open, onOpenChange, organizati
     try {
       await addMember.mutateAsync({ organizationId, userId: selectedUserId, role });
       const user = users.find((u) => u.id === selectedUserId);
-      toast({ title: "Miembro agregado", description: `${user?.email ?? "Usuario"} agregado como ${role}` });
+      notifySuccess(toast, { title: "Miembro agregado", description: `${user?.email ?? "Usuario"} agregado como ${role}` });
       onOpenChange(false);
       onAdded();
     } catch (err: unknown) {
-      toast({ title: "Error", description: getErrorMessage(err), variant: "destructive" });
+      notifyError(toast, { title: "Error", description: getErrorMessage(err)});
     }
   };
 

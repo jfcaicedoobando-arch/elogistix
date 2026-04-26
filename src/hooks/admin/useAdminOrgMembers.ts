@@ -5,6 +5,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { queryKeys } from "@/lib/query";
 import {
+import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
   fetchOrgMembers,
   removeOrgMember,
   updateOrgMemberRole,
@@ -29,7 +30,7 @@ export function useAdminOrgMembers(id: string | undefined) {
       updateOrgMemberRole(memberId, role),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.admin.orgMembers(id!) });
-      toast({ title: "Rol actualizado" });
+      notifySuccess(toast, { title: "Rol actualizado" });
     },
   });
 
@@ -38,10 +39,10 @@ export function useAdminOrgMembers(id: string | undefined) {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.admin.orgMembers(id!) });
       queryClient.invalidateQueries({ queryKey: queryKeys.admin.orgCountMembers(id!) });
-      toast({ title: "Miembro eliminado de la organización" });
+      notifySuccess(toast, { title: "Miembro eliminado de la organización" });
     },
     onError: (error: Error) => {
-      toast({ title: "Error al eliminar miembro", description: error.message, variant: "destructive" });
+      notifyError(toast, { title: "Error al eliminar miembro", description: error.message});
     },
   });
 

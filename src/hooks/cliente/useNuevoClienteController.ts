@@ -5,6 +5,7 @@ import { useCreateCliente } from "@/hooks/cliente/useClientes";
 import { useRegistrarActividad } from "@/hooks/useBitacora";
 import { parseCsf } from "@/services/csf";
 import type { DocumentoChecklist } from "@/components/DocumentChecklist";
+import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 
 export const EMPTY_CLIENTE = {
   nombre: "", rfc: "", direccion: "", ciudad: "", estado: "", cp: "", contacto: "", email: "", telefono: "",
@@ -84,13 +85,12 @@ export function useNuevoClienteController(onClose: () => void) {
         accion: 'crear', modulo: 'clientes',
         entidad_id: clienteCreado.id, entidad_nombre: clienteCreado.nombre,
       });
-      toast({ title: "Cliente creado exitosamente" });
+      notifySuccess(toast, { title: "Cliente creado exitosamente" });
       resetAndClose();
     } catch (error: unknown) {
-      toast({
+      notifyError(toast, {
         title: "Error al crear cliente",
-        description: getErrorMessage(error),
-        variant: "destructive",
+        description: getErrorMessage(error)
       });
     }
   };
@@ -100,10 +100,9 @@ export function useNuevoClienteController(onClose: () => void) {
     if (!file) return;
 
     if (file.type !== "application/pdf") {
-      toast({
+      notifyError(toast, {
         title: "Archivo inválido",
-        description: "Solo se aceptan archivos PDF.",
-        variant: "destructive",
+        description: "Solo se aceptan archivos PDF."
       });
       return;
     }
@@ -122,15 +121,13 @@ export function useNuevoClienteController(onClose: () => void) {
       }));
 
       setCsfFile(file);
-      toast({
+      notifySuccess(toast, {
         title: "Datos extraídos",
-        description: "Revisa la información antes de continuar.",
-      });
+        description: "Revisa la información antes de continuar."});
     } catch (error: unknown) {
-      toast({
+      notifyError(toast, {
         title: "Error al leer CSF",
-        description: getErrorMessage(error),
-        variant: "destructive",
+        description: getErrorMessage(error)
       });
     } finally {
       setParsingCsf(false);

@@ -82,10 +82,9 @@ export function useEmbarqueSubmitOrchestrator() {
           resolverNuevo: resolverExpediente,
         });
       } catch (err: unknown) {
-        toast({
+        notifyError(toast, {
           title: "Error: generación de expediente",
-          description: getErrorMessage(err),
-          variant: "destructive",
+          description: getErrorMessage(err)
         });
         return false;
       }
@@ -99,10 +98,9 @@ export function useEmbarqueSubmitOrchestrator() {
           p.documentosArchivos,
         );
       } catch (err: unknown) {
-        toast({
+        notifyError(toast, {
           title: "Error: subida de documentos",
-          description: getErrorMessage(err),
-          variant: "destructive",
+          description: getErrorMessage(err)
         });
         return false;
       }

@@ -9,6 +9,7 @@ import { Loader2 } from "lucide-react";
 import { getErrorMessage } from "@/lib/errors";
 import { useCreateUser } from "@/hooks/useUsuarioMutations";
 import { useOrganizationsList } from "@/hooks/useOrganizationsList";
+import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 
 interface Props {
   open: boolean;
@@ -31,11 +32,11 @@ export default function NuevoUsuarioDialog({ open, onOpenChange, onCreated, show
     e.preventDefault();
     if (!email || !password) return;
     if (showOrgSelector && !orgId) {
-      toast({ title: "Error", description: "Selecciona una organización", variant: "destructive" });
+      notifyError(toast, { title: "Error", description: "Selecciona una organización"});
       return;
     }
     if (password.length < 6) {
-      toast({ title: "Error", description: "La contraseña debe tener al menos 6 caracteres", variant: "destructive" });
+      notifyError(toast, { title: "Error", description: "La contraseña debe tener al menos 6 caracteres"});
       return;
     }
 
@@ -43,7 +44,7 @@ export default function NuevoUsuarioDialog({ open, onOpenChange, onCreated, show
       { email, password, role, orgId: showOrgSelector ? orgId : undefined },
       {
         onSuccess: () => {
-          toast({ title: "Usuario creado", description: `Se registró ${email} como ${role}` });
+          notifySuccess(toast, { title: "Usuario creado", description: `Se registró ${email} como ${role}` });
           setEmail("");
           setPassword("");
           setRole("viewer");
@@ -52,7 +53,7 @@ export default function NuevoUsuarioDialog({ open, onOpenChange, onCreated, show
           onCreated();
         },
         onError: (err: unknown) => {
-          toast({ title: "Error", description: getErrorMessage(err), variant: "destructive" });
+          notifyError(toast, { title: "Error", description: getErrorMessage(err)});
         },
       }
     );

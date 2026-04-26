@@ -13,6 +13,7 @@ import { usePermissions } from '@/hooks/usePermissions';
 import { useToast } from '@/hooks/use-toast';
 import { getErrorMessage } from '@/lib/errors';
 import { formatDate } from '@/lib/formatters';
+import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 
 interface Props {
   embarqueId: string;
@@ -44,14 +45,14 @@ export function TabTracking({ embarqueId }: Props) {
         fecha: new Date(fecha).toISOString(),
         usuario: user?.email ?? '',
       });
-      toast({ title: 'Evento registrado' });
+      notifySuccess(toast, { title: 'Evento registrado' });
       setFormAbierto(false);
       setTipo('');
       setDescripcion('');
       setUbicacion('');
       setFecha(new Date().toISOString().slice(0, 16));
     } catch (err: unknown) {
-      toast({ title: 'Error al registrar evento', description: getErrorMessage(err), variant: 'destructive' });
+      notifyError(toast, { title: 'Error al registrar evento', description: getErrorMessage(err)});
     }
   };
 

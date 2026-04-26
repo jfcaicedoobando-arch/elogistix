@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { queryKeys } from "@/lib/query";
 import { fetchPlanes, updatePlan, type Plan } from "@/services/planesService";
+import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 
 export type { Plan };
 
@@ -21,10 +22,10 @@ export function useUpdatePlan() {
     mutationFn: updatePlan,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.planes.all });
-      toast({ title: "Plan actualizado" });
+      notifySuccess(toast, { title: "Plan actualizado" });
     },
     onError: (error: Error) => {
-      toast({ title: "Error al actualizar plan", description: error.message, variant: "destructive" });
+      notifyError(toast, { title: "Error al actualizar plan", description: error.message});
     },
   });
 }

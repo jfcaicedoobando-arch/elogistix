@@ -4,6 +4,7 @@ import { useProveedor, useProveedorMutations, useProveedorOperaciones } from "@/
 import { useToast } from "@/hooks/use-toast";
 import { usePermissions } from "@/hooks/usePermissions";
 import { useRegistrarActividad } from "@/hooks/useBitacora";
+import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 
 /**
  * Controller para la página de detalle de proveedor.
@@ -31,9 +32,9 @@ export function useProveedorDetalleController() {
   const handleUpdate = useCallback(async (provId: string, data: Record<string, unknown>) => {
     try {
       await updateProveedor(provId, data);
-      toast({ title: "Proveedor actualizado" });
+      notifySuccess(toast, { title: "Proveedor actualizado" });
     } catch {
-      toast({ title: "Error al actualizar", variant: "destructive" });
+      notifyError(toast, { title: "Error al actualizar"});
     }
   }, [updateProveedor, toast]);
 
@@ -47,10 +48,10 @@ export function useProveedorDetalleController() {
         entidad_id: proveedor.id,
         entidad_nombre: proveedor.nombre,
       });
-      toast({ title: "Proveedor eliminado" });
+      notifySuccess(toast, { title: "Proveedor eliminado" });
       navigate("/proveedores");
     } catch {
-      toast({ title: "Error al eliminar proveedor", variant: "destructive" });
+      notifyError(toast, { title: "Error al eliminar proveedor"});
     }
   }, [proveedor, deleteProveedor, registrarActividad, toast, navigate]);
 

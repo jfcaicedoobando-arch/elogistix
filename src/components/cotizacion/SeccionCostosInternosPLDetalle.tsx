@@ -5,6 +5,7 @@ import { useToast } from "@/hooks/use-toast";
 import { getErrorMessage } from "@/lib/errors";
 import { usePermissions } from "@/hooks/usePermissions";
 import {
+import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
   useCotizacionCostos, useUpsertCotizacionCostos, type CostoCotizacion,
 } from "@/hooks/cotizacion/useCotizacionCostos";
 import type { ConceptoVentaCotizacion } from "@/hooks/useCotizaciones";
@@ -105,9 +106,9 @@ export default function SeccionCostosInternosPLDetalle({ cotizacionId, conceptos
     }));
     try {
       await upsert.mutateAsync({ cotizacionId, costos });
-      toast({ title: "Costos guardados correctamente" });
+      notifySuccess(toast, { title: "Costos guardados correctamente" });
     } catch (err: unknown) {
-      toast({ title: "Error al guardar", description: getErrorMessage(err), variant: "destructive" });
+      notifyError(toast, { title: "Error al guardar", description: getErrorMessage(err)});
     }
   };
 

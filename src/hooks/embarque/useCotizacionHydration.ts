@@ -10,6 +10,7 @@ import { useEffect, useRef } from "react";
 import { useLocation } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { useCotizacion, type CotizacionRow } from "@/hooks/useCotizaciones";
+import { notifySuccess } from "@/lib/ui/appFeedback";
 
 interface UseCotizacionHydrationArgs {
   onPrevincular: (cot: CotizacionRow) => void;
@@ -31,10 +32,9 @@ export function useCotizacionHydration({ onPrevincular }: UseCotizacionHydration
     if (!cotizacionPrevinculada) return;
     yaPrevinculadoRef.current = true;
     onPrevincular(cotizacionPrevinculada);
-    toast({
+    notifySuccess(toast, {
       title: "Datos pre-rellenados",
-      description: `Cotización ${cotizacionPrevinculada.folio} vinculada automáticamente.`,
-    });
+      description: `Cotización ${cotizacionPrevinculada.folio} vinculada automáticamente.`});
     window.history.replaceState({}, "");
   }, [cotizacionPrevinculada, onPrevincular, toast]);
 }

@@ -1,5 +1,6 @@
 import { useState } from "react";
 import {
+import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
@@ -32,10 +33,10 @@ export default function DialogEliminarEmbarque({ embarque, open, onOpenChange }:
         entidad_nombre: embarque.expediente,
         detalles: { cliente: embarque.cliente_nombre, modo: embarque.modo, tipo: embarque.tipo },
       });
-      toast({ title: "Embarque eliminado", description: `${embarque.expediente} fue eliminado permanentemente.` });
+      notifySuccess(toast, { title: "Embarque eliminado", description: `${embarque.expediente} fue eliminado permanentemente.` });
       navigate("/embarques");
     } catch (err: unknown) {
-      toast({ title: "Error al eliminar", description: getErrorMessage(err), variant: "destructive" });
+      notifyError(toast, { title: "Error al eliminar", description: getErrorMessage(err)});
     } finally {
       onOpenChange(false);
       setPaso2(false);

@@ -11,6 +11,7 @@ import { useUsuarios, useUpdateUserRole, useDeleteUser, type UserRow } from "@/h
 import DoubleConfirmDeleteDialog from "@/components/DoubleConfirmDeleteDialog";
 import type { AppRole } from "@/types/appRole";
 import { useAuth } from "@/contexts/AuthContext";
+import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 
 const roleBadge: Record<AppRole, string> = {
   super_admin: "bg-primary text-primary-foreground",
@@ -34,9 +35,9 @@ export default function Usuarios() {
   const handleRoleChange = async (userId: string, newRole: AppRole) => {
     try {
       await updateRole.mutateAsync({ userId, newRole });
-      toast({ title: "Rol actualizado" });
+      notifySuccess(toast, { title: "Rol actualizado" });
     } catch (err: unknown) {
-      toast({ title: "Error al cambiar rol", description: getErrorMessage(err), variant: "destructive" });
+      notifyError(toast, { title: "Error al cambiar rol", description: getErrorMessage(err)});
     }
   };
 
@@ -44,9 +45,9 @@ export default function Usuarios() {
     if (!deleteTarget) return;
     try {
       await deleteUser.mutateAsync(deleteTarget.user_id);
-      toast({ title: "Usuario eliminado", description: `${deleteTarget.email} fue eliminado del sistema.` });
+      notifySuccess(toast, { title: "Usuario eliminado", description: `${deleteTarget.email} fue eliminado del sistema.` });
     } catch (err: unknown) {
-      toast({ title: "Error al eliminar usuario", description: getErrorMessage(err), variant: "destructive" });
+      notifyError(toast, { title: "Error al eliminar usuario", description: getErrorMessage(err)});
     }
   };
 

@@ -4,6 +4,7 @@ import { useRegistrarActividad } from "@/hooks/useBitacora";
 import { getErrorMessage } from "@/lib/errors";
 import { ESTADOS_EMBARQUE } from "@/constants/embarqueConstants";
 import {
+import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
   useAvanzarEstadoEmbarque,
   useSyncEstadoEmbarque,
   calcularEstadoEmbarque,
@@ -55,9 +56,9 @@ export function useEmbarqueEstadoActions(embarque: EmbarqueRow | undefined, id: 
         entidad_id: id, entidad_nombre: embarque.expediente,
         detalles: { estado_anterior: embarque.estado, estado_nuevo: siguiente },
       });
-      toast({ title: `Estado actualizado a "${siguiente}"` });
+      notifySuccess(toast, { title: `Estado actualizado a "${siguiente}"` });
     } catch (err: unknown) {
-      toast({ title: "Error al cambiar estado", description: getErrorMessage(err), variant: "destructive" });
+      notifyError(toast, { title: "Error al cambiar estado", description: getErrorMessage(err)});
     }
   };
 
