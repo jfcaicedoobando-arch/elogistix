@@ -171,12 +171,12 @@ export function useTabProformasController() {
   }));
 
   return {
-    // estado
+    // estado (delegado a useTabProformasState)
     search, filtroEstado, page, pageSize,
-    setSearch: (v: string) => { setSearch(v); setPage(0); },
-    setFiltroEstado: (v: FiltroEstadoProforma) => { setFiltroEstado(v); setPage(0); },
-    setPage,
-    setPageSize: (s: number) => { setPageSize(s); setPage(0); },
+    setSearch: state.setSearch,
+    setFiltroEstado: state.setFiltroEstado,
+    setPage: state.setPage,
+    setPageSize: state.setPageSize,
     // datos derivados
     isLoading, proformas, filtered, paginated, counts, totalPages, columns,
     csvColumns, csvRows,

@@ -5,3 +5,4 @@ export * from "./useFacturacionPageController";
 export * from "./useFacturas";
 export * from "./useTabProformasController";
 export * from "./useTabProformasPendientesController";
+export * from "./useTabProformasState";
