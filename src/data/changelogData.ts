@@ -11,6 +11,13 @@ export interface ChangelogEntry {
 /** Entradas recientes (v8.x). Las anteriores se cargan dinámicamente. */
 export const recentChangelog: ChangelogEntry[] = [
   {
+    version: "8.80.0",
+    date: "2026-04-26",
+    type: "patch",
+    title: "Auditoría: PortalCotizacionDetalle dividido en sub-componentes",
+    description: "Paso M2 de la nueva auditoría arquitectónica. La página PortalCotizacionDetalle.tsx (266 LOC) había vuelto a superar el guardrail de 250 al concentrar header, banners de estado, datos generales y diálogo de confirmación en un solo render. Se extrajeron tres sub-componentes presentacionales bajo src/components/portal/cotizacion/: (1) PortalCotizacionHeader (58 LOC) — título + badge de estado + acciones Aceptar/Rechazar; (2) PortalCotizacionEstadoBanner (60 LOC) — banners contextuales para Aceptada/Rechazada/Enviada con renderizado opcional del comentario_cliente; (3) PortalCotizacionConfirmDialog (70 LOC) — diálogo de confirmación con textarea para comentario opcional. La página queda en 166 LOC (37% menos), enfocada en orquestar el layout (skeleton, datos generales card, secciones de mercancía/conceptos/totales/notas) sin mezclar JSX de UI compleja. El controller hook permanece intacto. Build verde, 196/196 pruebas pasando.",
+  },
+  {
     version: "8.79.0",
     date: "2026-04-26",
     type: "patch",
