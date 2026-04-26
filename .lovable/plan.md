@@ -68,11 +68,11 @@ Es código shadcn estándar. **No tocar** salvo que se quiera customizar fuertem
 | 3 | v8.75.0 | **M2**: Tokens semánticos para KPIs y migrar los 8 archivos restantes a variantes. | Bajo (visual) | Medio | ✅ |
 | 4 | v8.76.0 | **O1**: Desinstalar dependencias huérfanas (`embla`, `vaul`, `input-otp`, `react-resizable-panels`). | Muy bajo | Bajo (bundle) | ✅ |
 | 5 | v8.77.0 | **M3**: Split de `mappers/embarque.ts` por dirección. | Bajo | Bajo | ✅ |
-| 6 | v8.78.0 | **O2 + O3**: Renombrar/dividir `types/types.ts` y añadir barrels en `lib/financial` y `lib/ui`. | Muy bajo | Bajo | ⏳ |
+| 6 | v8.78.0 | **O2 + O3**: Renombrar/dividir `types/types.ts` y añadir barrels en `lib/financial` y `lib/ui`. | Muy bajo | Bajo | ✅ |
 
 ## Próximo paso
 
-Ejecutar **Paso 6 (v8.78.0)** — auditar `src/types/types.ts` (renombrar/dividir según dominio) y añadir barrels `index.ts` en `lib/financial` y `lib/ui`.
+✅ **Plan completado.** Los 6 pasos de la auditoría arquitectónica post v8.72 están finalizados. La base de código cumple los guardrails de tamaño, separación de responsabilidades, tokenización de colores, dependencias mínimas y barrels semánticos en `lib/`. Próximas auditorías deberán partir de un nuevo análisis fresco.
 
 ## Detalles técnicos
 
