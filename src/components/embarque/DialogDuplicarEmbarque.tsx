@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import {
   Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle,
 } from "@/components/ui/dialog";
+import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useTiposContenedor } from "@/hooks/catalogos/useTiposContenedor";
@@ -60,10 +61,10 @@ export default function DialogDuplicarEmbarque({ embarque, open, onOpenChange }:
   const handleDuplicar = async () => {
     try {
       const creados = await duplicarEmbarque.mutateAsync({ embarqueOrigen: embarque, copias: filaCopias });
-      toast({ title: `Se crearon ${creados.length} embarque(s)`, description: creados.map(c => c.expediente).join(', ') });
+      notifySuccess(toast, { title: `Se crearon ${creados.length} embarque(s)`, description: creados.map(c => c.expediente).join(', ') });
       onOpenChange(false);
     } catch (err: unknown) {
-      toast({ title: "Error al duplicar", description: getErrorMessage(err), variant: "destructive" });
+      notifyError(toast, { title: "Error al duplicar", description: getErrorMessage(err)});
     }
   };
 

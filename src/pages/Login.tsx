@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import librecargaLogo from "@/assets/librecarga-logo.png";
+import { notifyError } from "@/lib/ui/appFeedback";
 
 export default function Login() {
   const [email, setEmail] = useState("");
@@ -25,7 +26,7 @@ export default function Login() {
       navigate(resolveLandingRoute(role), { replace: true });
     } catch (err) {
       const message = err instanceof Error ? err.message : "Error desconocido";
-      toast({ title: "Error al iniciar sesión", description: message, variant: "destructive" });
+      notifyError(toast, { title: "Error al iniciar sesión", description: message});
     } finally {
       setLoading(false);
     }

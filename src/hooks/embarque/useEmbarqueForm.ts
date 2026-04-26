@@ -16,6 +16,7 @@ import {
   type EmbarqueFormValues,
   type CotizacionParaVincular,
 } from "@/lib/mappers/embarque";
+import { notifyError } from "@/lib/ui/appFeedback";
 import type { Tables } from "@/integrations/supabase/types";
 import type { ConceptoVentaLocal, ConceptoCostoLocal } from "@/types/concepto";
 
@@ -53,7 +54,7 @@ export function useEmbarqueForm() {
       await uploadFile(ruta, archivo);
       methods.setValue("msdsArchivo", ruta);
     } catch {
-      toast({ title: "Error al subir MSDS", variant: "destructive" });
+      notifyError(toast, { title: "Error al subir MSDS"});
     } finally {
       methods.setValue("subiendoMsds", false);
     }

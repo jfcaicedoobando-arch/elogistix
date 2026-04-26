@@ -14,6 +14,7 @@ import {
   useInviteClientUser,
   useRevokeClientUser,
 } from "@/hooks/useClientUsersMutations";
+import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 
 interface Props {
   clienteId: string;
@@ -36,17 +37,16 @@ export default function TabPortalCliente({ clienteId, organizationId, canEdit }:
       { email: inviteEmail, cliente_id: clienteId, organization_id: organizationId },
       {
         onSuccess: (data) => {
-          toast({
+          notifySuccess(toast, {
             title: data.is_new ? "Invitación enviada" : "Usuario vinculado",
             description: data.is_new
               ? "Se creó la cuenta y se envió un correo para establecer contraseña."
-              : "El usuario existente fue vinculado a este cliente.",
-          });
+              : "El usuario existente fue vinculado a este cliente."});
           setInviteOpen(false);
           setInviteEmail("");
         },
         onError: (err: unknown) => {
-          toast({ title: "Error", description: getErrorMessage(err), variant: "destructive" });
+          notifyError(toast, { title: "Error", description: getErrorMessage(err)});
         },
       }
     );
@@ -54,8 +54,8 @@ export default function TabPortalCliente({ clienteId, organizationId, canEdit }:
 
   const handleRevoke = (id: string) => {
     revokeMutation.mutate(id, {
-      onSuccess: () => toast({ title: "Acceso revocado" }),
-      onError: (err: unknown) => toast({ title: "Error", description: getErrorMessage(err), variant: "destructive" }),
+      onSuccess: () => notifySuccess(toast, { title: "Acceso revocado" }),
+      onError: (err: unknown) => notifyError(toast, { title: "Error", description: getErrorMessage(err)}),
     });
   };
 

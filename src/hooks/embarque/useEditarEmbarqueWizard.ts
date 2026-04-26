@@ -8,6 +8,7 @@ import {
   useProveedoresForSelect,
   useUpdateEmbarque,
 } from "@/hooks/useEmbarques";
+import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 import { useClientesForSelect, useContactosCliente } from "@/hooks/cliente/useClientes";
 import { useAuth } from "@/contexts/AuthContext";
 import { useRegistrarActividad } from "@/hooks/useBitacora";
@@ -101,10 +102,10 @@ export function useEditarEmbarqueWizard(id: string | undefined) {
         detalles: { cliente: selectedCliente?.nombre ?? '', modo: v.modo, tipo: v.tipo },
       });
 
-      toast({ title: "Embarque actualizado", description: `${embarque.expediente} guardado correctamente.` });
+      notifySuccess(toast, { title: "Embarque actualizado", description: `${embarque.expediente} guardado correctamente.` });
       navigate(`/embarques/${id}`);
     } catch (err: unknown) {
-      toast({ title: "Error al actualizar", description: getErrorMessage(err), variant: "destructive" });
+      notifyError(toast, { title: "Error al actualizar", description: getErrorMessage(err)});
     }
   };
 

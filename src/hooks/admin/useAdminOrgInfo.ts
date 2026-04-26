@@ -10,6 +10,7 @@ import {
   setOrganizationActivo,
   updateAdminOrganization,
 } from "@/services/admin";
+import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 
 export function useAdminOrgInfo(id: string | undefined) {
   const { toast } = useToast();
@@ -39,11 +40,11 @@ export function useAdminOrgInfo(id: string | undefined) {
       updateAdminOrganization(id!, payload),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.admin.org(id!) });
-      toast({ title: "Organización actualizada" });
+      notifySuccess(toast, { title: "Organización actualizada" });
       setEditing(false);
     },
     onError: (error: Error) => {
-      toast({ title: "Error al actualizar", description: error.message, variant: "destructive" });
+      notifyError(toast, { title: "Error al actualizar", description: error.message});
     },
   });
 
@@ -51,10 +52,10 @@ export function useAdminOrgInfo(id: string | undefined) {
     mutationFn: (activo: boolean) => setOrganizationActivo(id!, activo),
     onSuccess: (_, activo) => {
       queryClient.invalidateQueries({ queryKey: queryKeys.admin.org(id!) });
-      toast({ title: activo ? "Organización activada" : "Organización desactivada" });
+      notifySuccess(toast, { title: activo ? "Organización activada" : "Organización desactivada" });
     },
     onError: (error: Error) => {
-      toast({ title: "Error", description: error.message, variant: "destructive" });
+      notifyError(toast, { title: "Error", description: error.message});
     },
   });
 

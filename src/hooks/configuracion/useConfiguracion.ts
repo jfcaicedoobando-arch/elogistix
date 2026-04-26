@@ -6,6 +6,7 @@ import {
   updateConfiguracionByCategoriaClave,
   type ConfigItem,
 } from "@/services/configuracion";
+import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 
 export type { ConfigItem };
 
@@ -45,10 +46,10 @@ export function useUpdateConfiguracion() {
     mutationFn: updateConfiguracionByCategoriaClave,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.configuracion.all });
-      toast({ title: "Configuración guardada" });
+      notifySuccess(toast, { title: "Configuración guardada" });
     },
     onError: (error: Error) => {
-      toast({ title: "Error al guardar", description: error.message, variant: "destructive" });
+      notifyError(toast, { title: "Error al guardar", description: error.message});
     },
   });
 }

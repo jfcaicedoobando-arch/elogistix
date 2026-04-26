@@ -14,6 +14,7 @@ import {
   fetchEmbarqueParaPdf,
   type ProformaRow,
 } from "@/services/proforma";
+import { notifyError } from "@/lib/ui/appFeedback";
 
 interface ProformaInput {
   id: string;
@@ -50,7 +51,7 @@ export function useDescargarProformaPdf() {
         ]);
 
         if (!embarque) {
-          toast({ title: "No se pudo cargar el embarque asociado", variant: "destructive" });
+          notifyError(toast, { title: "No se pudo cargar el embarque asociado"});
           return;
         }
 
@@ -64,7 +65,7 @@ export function useDescargarProformaPdf() {
           conceptosConsolidados: consolidados,
         });
       } catch (e) {
-        toast({ title: "Error al generar PDF: " + (e as Error).message, variant: "destructive" });
+        notifyError(toast, { title: "Error al generar PDF: " + (e as Error).message});
       } finally {
         setDownloadingId(null);
       }

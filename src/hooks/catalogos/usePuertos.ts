@@ -8,6 +8,7 @@ import {
   deletePuerto,
   type Puerto,
 } from "@/services/catalogos";
+import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 
 export type { Puerto };
 
@@ -38,10 +39,10 @@ export function useAdminPuertos() {
     mutationFn: (puerto: { code: string; name: string; country: string }) => insertPuerto(puerto),
     onSuccess: () => {
       invalidate();
-      toast({ title: "Puerto agregado" });
+      notifySuccess(toast, { title: "Puerto agregado" });
     },
     onError: (e: Error) => {
-      toast({ title: "Error al agregar puerto", description: e.message, variant: "destructive" });
+      notifyError(toast, { title: "Error al agregar puerto", description: e.message});
     },
   });
 
@@ -49,7 +50,7 @@ export function useAdminPuertos() {
     mutationFn: ({ id, activo }: { id: string; activo: boolean }) => setPuertoActivo(id, activo),
     onSuccess: () => invalidate(),
     onError: (e: Error) => {
-      toast({ title: "Error al actualizar", description: e.message, variant: "destructive" });
+      notifyError(toast, { title: "Error al actualizar", description: e.message});
     },
   });
 
@@ -57,10 +58,10 @@ export function useAdminPuertos() {
     mutationFn: (id: string) => deletePuerto(id),
     onSuccess: () => {
       invalidate();
-      toast({ title: "Puerto eliminado" });
+      notifySuccess(toast, { title: "Puerto eliminado" });
     },
     onError: (e: Error) => {
-      toast({ title: "Error al eliminar", description: e.message, variant: "destructive" });
+      notifyError(toast, { title: "Error al eliminar", description: e.message});
     },
   });
 

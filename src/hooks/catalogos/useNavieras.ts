@@ -8,6 +8,7 @@ import {
   deleteNaviera,
   type Naviera,
 } from "@/services/catalogos";
+import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 
 export type { Naviera };
 
@@ -38,10 +39,10 @@ export function useAdminNavieras() {
     mutationFn: (input: { code: string; name: string }) => insertNaviera(input),
     onSuccess: () => {
       invalidate();
-      toast({ title: "Naviera agregada" });
+      notifySuccess(toast, { title: "Naviera agregada" });
     },
     onError: (e: Error) => {
-      toast({ title: "Error al agregar naviera", description: e.message, variant: "destructive" });
+      notifyError(toast, { title: "Error al agregar naviera", description: e.message});
     },
   });
 
@@ -49,7 +50,7 @@ export function useAdminNavieras() {
     mutationFn: ({ id, activo }: { id: string; activo: boolean }) => setNavieraActivo(id, activo),
     onSuccess: () => invalidate(),
     onError: (e: Error) => {
-      toast({ title: "Error al actualizar", description: e.message, variant: "destructive" });
+      notifyError(toast, { title: "Error al actualizar", description: e.message});
     },
   });
 
@@ -57,10 +58,10 @@ export function useAdminNavieras() {
     mutationFn: (id: string) => deleteNaviera(id),
     onSuccess: () => {
       invalidate();
-      toast({ title: "Naviera eliminada" });
+      notifySuccess(toast, { title: "Naviera eliminada" });
     },
     onError: (e: Error) => {
-      toast({ title: "Error al eliminar", description: e.message, variant: "destructive" });
+      notifyError(toast, { title: "Error al eliminar", description: e.message});
     },
   });
 

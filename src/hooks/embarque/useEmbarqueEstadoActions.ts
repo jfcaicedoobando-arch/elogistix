@@ -9,6 +9,7 @@ import {
   calcularEstadoEmbarque,
   type EmbarqueRow,
 } from "@/hooks/useEmbarques";
+import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 import { useEffect } from "react";
 
 export function getSiguienteEstado(estadoActual: string) {
@@ -55,9 +56,9 @@ export function useEmbarqueEstadoActions(embarque: EmbarqueRow | undefined, id: 
         entidad_id: id, entidad_nombre: embarque.expediente,
         detalles: { estado_anterior: embarque.estado, estado_nuevo: siguiente },
       });
-      toast({ title: `Estado actualizado a "${siguiente}"` });
+      notifySuccess(toast, { title: `Estado actualizado a "${siguiente}"` });
     } catch (err: unknown) {
-      toast({ title: "Error al cambiar estado", description: getErrorMessage(err), variant: "destructive" });
+      notifyError(toast, { title: "Error al cambiar estado", description: getErrorMessage(err)});
     }
   };
 

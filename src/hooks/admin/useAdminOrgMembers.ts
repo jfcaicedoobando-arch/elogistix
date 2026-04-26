@@ -10,6 +10,7 @@ import {
   updateOrgMemberRole,
   type OrgMemberRow,
 } from "@/services/admin";
+import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 import type { AppRole } from "@/types/appRole";
 
 export type MemberRow = OrgMemberRow;
@@ -29,7 +30,7 @@ export function useAdminOrgMembers(id: string | undefined) {
       updateOrgMemberRole(memberId, role),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.admin.orgMembers(id!) });
-      toast({ title: "Rol actualizado" });
+      notifySuccess(toast, { title: "Rol actualizado" });
     },
   });
 
@@ -38,10 +39,10 @@ export function useAdminOrgMembers(id: string | undefined) {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.admin.orgMembers(id!) });
       queryClient.invalidateQueries({ queryKey: queryKeys.admin.orgCountMembers(id!) });
-      toast({ title: "Miembro eliminado de la organización" });
+      notifySuccess(toast, { title: "Miembro eliminado de la organización" });
     },
     onError: (error: Error) => {
-      toast({ title: "Error al eliminar miembro", description: error.message, variant: "destructive" });
+      notifyError(toast, { title: "Error al eliminar miembro", description: error.message});
     },
   });
 

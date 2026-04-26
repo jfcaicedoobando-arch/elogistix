@@ -2,6 +2,13 @@ import type { ChangelogEntry } from "../../../changelogData";
 
 export const chunk0: ChangelogEntry[] = [
   {
+    version: "8.96.0",
+    date: "2026-04-26",
+    type: "patch",
+    title: "Unificación global de feedback (toasts) vía appFeedback",
+    description: "Migración masiva de 131 llamadas inline `toast({ title, description, variant })` distribuidas en 41 archivos (hooks, páginas y componentes de admin, cliente, embarque, cotización, configuración, catálogos, proveedor, portal y facturación) hacia los helpers semánticos `notifyError`, `notifyWarning` y `notifySuccess` expuestos por `src/lib/ui/appFeedback.ts`. La unificación garantiza severidades consistentes (destructive/warning/success) en toda la aplicación, elimina duplicación de la propiedad `variant`, y centraliza un único punto de cambio para futuras mejoras (telemetría de errores, internacionalización, ajustes visuales). Solo se conservaron como inline los casos especiales con `action:` (toasts con JSX/CTA). Build TypeScript verde y 205/205 pruebas pasando.",
+  },
+  {
     version: "8.84.0",
     date: "2026-04-26",
     type: "patch",
