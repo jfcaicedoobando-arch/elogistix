@@ -56,6 +56,16 @@
     --state-llegada: 199 89% 48%;
     --state-en-proceso: 262 83% 58%;
     --state-cerrado: 160 84% 39%;
+
+    /* Paleta categórica para KPIs/métricas (azul, esmeralda, violeta, ámbar, cian, rojo).
+       Cada token tiene variante `-soft` (fondo pastel) y normal (texto/icono).
+       Son intencionalmente categóricas — no semánticas — para diferenciar tarjetas. */
+    --kpi-info: 217 91% 50%;          --kpi-info-soft: 214 100% 96%;
+    --kpi-success: 160 84% 39%;       --kpi-success-soft: 152 81% 96%;
+    --kpi-accent: 262 83% 58%;        --kpi-accent-soft: 270 100% 97%;
+    --kpi-warning: 38 92% 50%;        --kpi-warning-soft: 48 100% 96%;
+    --kpi-secondary: 199 89% 48%;     --kpi-secondary-soft: 204 100% 96%;
+    --kpi-danger: 0 84% 60%;          --kpi-danger-soft: 0 100% 97%;
   }
 
   .dark {
@@ -110,6 +120,14 @@
     --state-llegada: 199 89% 60%;
     --state-en-proceso: 262 83% 70%;
     --state-cerrado: 160 70% 50%;
+
+    /* KPI categóricos en dark — fondos sutiles con baja opacidad */
+    --kpi-info: 217 91% 65%;          --kpi-info-soft: 217 91% 60% / 0.15;
+    --kpi-success: 152 65% 55%;       --kpi-success-soft: 152 65% 50% / 0.15;
+    --kpi-accent: 262 83% 70%;        --kpi-accent-soft: 262 83% 65% / 0.15;
+    --kpi-warning: 38 92% 60%;        --kpi-warning-soft: 38 92% 55% / 0.15;
+    --kpi-secondary: 199 89% 65%;     --kpi-secondary-soft: 199 89% 60% / 0.15;
+    --kpi-danger: 0 72% 65%;          --kpi-danger-soft: 0 72% 60% / 0.15;
   }
 }
 
