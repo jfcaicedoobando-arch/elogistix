@@ -1,4 +1,5 @@
-import { useState, useMemo } from "react";
+import { useMemo } from "react";
+import { useListPageState } from "@/hooks/useListPageState";
 import { Download, FileText, FileCode2 } from "lucide-react";
 import { exportToCsv } from "@/generators/exportCsv";
 import SearchInput from "@/components/SearchInput";
@@ -25,7 +26,7 @@ import { useProformasPendientes } from "@/hooks/embarque/useProformas";
 
 type EstadoFactura = Database["public"]["Enums"]["estado_factura"];
 const ESTADOS_FACTURA: EstadoFactura[] = ['Borrador', 'Emitida', 'Pagada', 'Vencida', 'Cancelada'];
-const DEFAULT_PAGE_SIZE = 20;
+
 
 type Factura = ReturnType<typeof useFacturas>["data"] extends (infer U)[] | undefined ? U : never;
 
@@ -71,10 +72,11 @@ const facturaColumns: DataTableColumn<Factura>[] = [
 ];
 
 export default function Facturacion() {
-  const [search, setSearch] = useState("");
-  const [filterEstado, setFilterEstado] = useState<string>("todos");
-  const [page, setPage] = useState(0);
-  const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
+  const {
+    search, filters, page, pageSize,
+    setSearch, setFilter, setPage, setPageSize, paginate,
+  } = useListPageState({ estado: "todos" });
+  const filterEstado = filters.estado;
 
   const { data: facturas = [], isLoading: loadingFacturas } = useFacturas();
   const { data: gastosPendientes = [], isLoading: loadingGastos } = useGastosPendientes();
@@ -91,8 +93,7 @@ export default function Facturacion() {
     });
   }, [search, filterEstado, facturas]);
 
-  const paginatedFacturas = filtered.slice(page * pageSize, (page + 1) * pageSize);
-  const totalPages = Math.ceil(filtered.length / pageSize);
+  const { items: paginatedFacturas, totalPages } = paginate(filtered);
 
   const registrarActividad = useRegistrarActividad();
 
@@ -158,7 +159,7 @@ export default function Facturacion() {
         <TabsContent value="facturas" className="space-y-4">
           <Card>
             <CardContent className="p-4 flex flex-wrap gap-3">
-              <SearchInput value={search} onChange={(v) => { setSearch(v); setPage(0); }} placeholder="Buscar factura o cliente..." className="flex-1 min-w-[200px]" />
+              <SearchInput value={search} onChange={setSearch} placeholder="Buscar factura o cliente..." className="flex-1 min-w-[200px]" />
               <Button variant="outline" onClick={() => exportToCsv(
                 `facturas_${new Date().toISOString().slice(0, 10)}.csv`,
                 [
@@ -184,7 +185,7 @@ export default function Facturacion() {
               )}>
                 <Download className="h-4 w-4 mr-2" /> Exportar CSV
               </Button>
-              <Select value={filterEstado} onValueChange={setFilterEstado}>
+              <Select value={filterEstado} onValueChange={(v) => setFilter("estado", v)}>
                 <SelectTrigger className="w-[160px]"><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="todos">Todos</SelectItem>
