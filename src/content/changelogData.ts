@@ -15,6 +15,13 @@ export interface ChangelogEntry {
  */
 export const recentChangelog: ChangelogEntry[] = [
   {
+    version: "8.89.0",
+    date: "2026-04-26",
+    type: "patch",
+    title: "Limpieza de tests obsoletos: -17 pruebas tautológicas, +1 regla en ARCHITECTURE",
+    description: "Auditoría completa de los 25 archivos de test (201 pruebas) detectó cobertura redundante. Eliminados: src/test/example.test.ts (smoke-test trivial expect(true).toBe(true)), src/lib/__tests__/utils.test.ts (probaba cn() que es wrapper de clsx+tailwind-merge), src/constants/__tests__/proveedorConstants.test.ts (afirmaciones tautológicas sobre arrays literales), src/data/__tests__/ports.test.ts y src/data/ports.ts (catálogo migrado a BD desde v7.x; el archivo era seed sin consumidores). 6 tests tautológicos recortados de embarqueConstants.test.ts (afirmaciones sobre longitudes y miembros de ESTADOS_EMBARQUE / CATALOGO_CONCEPTOS); se conservan los 4 tests de getDocsForMode que sí cubren lógica condicional. Carpeta src/data/ eliminada por completo (sin contenido). ARCHITECTURE.md §11 actualizada con regla explícita 'no testear constantes literales ni wrappers de terceros' y §12 documenta la desaparición de src/data/. Resultado: 25 → 21 archivos de test, 201 → 184 pruebas, 100% pasando, sin pérdida de cobertura real (los 17 tests removidos eran tautologías o probaban librerías ajenas).",
+  },
+  {
     version: "8.88.0",
     date: "2026-04-26",
     type: "patch",

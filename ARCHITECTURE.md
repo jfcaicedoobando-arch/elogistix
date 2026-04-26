@@ -40,7 +40,6 @@ src/
 │   ├── mappers/        → Transformación entre formato DB ↔ UI.
 │   ├── parsers/        → Parsing de payloads (CSF, dashboard).
 │   └── *.ts            → formatters, errorUtils, queryKeys, etc.
-├── data/           → Datasets de dominio (ports, seeds). NO contenido editorial.
 ├── content/        → Contenido editorial (changelog, copy de marketing).
 ├── constants/      → Constantes de dominio/UI (cotización, embarque, proveedor, wizard).
 ├── types/          → Tipos compartidos entre módulos.
@@ -189,18 +188,20 @@ Ejemplos canónicos en el repo: `crear_proforma_con_conceptos`, `consolidar_prof
 
 ## 11. Testing
 
-- **Stack**: Vitest + Testing Library. 201 tests vigentes (v8.87.0).
+- **Stack**: Vitest + Testing Library. 184 tests vigentes (v8.89.0).
 - **Qué se testea**:
   - `src/lib/` (financial, domain, storage, ui, mappers complejos): puro, alta cobertura.
-  - `src/services/` puros con lógica no trivial.
-  - Hooks con orquestación compleja (`useEmbarquesListData`, `useConfiguracionState`).
-  - Constantes derivadas (`proveedorConstants`).
+  - `src/services/` puros con lógica no trivial (csfService, trackingService).
+  - Hooks con orquestación compleja (`useEmbarquesListData`, `useConfiguracionState`, `useAdminOrgDetalle`, `usePermissions`).
+  - Funciones derivadas en constantes (`getDocsForMode`).
 - **Qué NO se testea**:
   - Componentes shadcn ni wrappers triviales.
   - Pages (composición pura — se cubren vía tests de hooks/controller).
   - Mappers 1:1 sin lógica.
+  - **Constantes literales y wrappers de terceros**: no testear arrays/objetos hardcodeados (es tautológico) ni funciones que sólo delegan a una librería externa (ej. `cn()` sobre `clsx + tailwind-merge`). Sí testear funciones que derivan/calculan a partir de la constante.
 - **Ubicación**: carpeta `__tests__/` colocalizada junto al archivo bajo test. Convención de nombre: `<archivo>.test.ts`.
 - **Comandos**: `bunx vitest run` (tests). `bunx tsc --noEmit` (type-check).
+
 
 ## 12. Decisiones explícitas (con fecha)
 
@@ -208,7 +209,7 @@ Estas decisiones son intencionales. **NO marcarlas como violación de capa** en 
 
 - **Mappers pueden importar `type Tables` de Supabase** (siempre). Los archivos en `src/lib/mappers/` traducen entre BD y UI; sin esos tipos no pueden cumplir su contrato.
 - **`import type` no cuenta como violación de capa** (siempre). Una page o componente puede importar `type Tables<'contactos_cliente'>` desde `@/integrations/supabase/types`. Lo prohibido son llamadas runtime (`supabase.from`, `supabase.rpc`, `supabase.storage`, `supabase.functions`).
-- **`src/data/` vs `src/content/`** (v8.86.0). `data/` para datasets de dominio (`ports.ts`, seeds). `content/` para contenido editorial (changelog, copy).
+- **`src/content/` para contenido editorial** (v8.86.0, refinado en v8.89.0). El changelog y copy de marketing viven en `src/content/`. Desde v8.89.0 ya no existe `src/data/` (el catálogo de puertos vive en BD; no quedan datasets estáticos).
 - **Barrel folder en `src/services/`** (v8.86.0). Eliminados los 5 barrel-archivo (`xService.ts`, `xServices.ts`); convención unificada a `<dominio>/index.ts`.
 - **AuthContext modular** (v8.86.0). Dividido en `useAuthSession` + `useAuthProfile` + `useLoginAudit` + compositor delgado.
 - **Auditoría de `useEffect`** (v8.86.0). Los 30 `useEffect` activos son legítimos y caen en 5 categorías:
