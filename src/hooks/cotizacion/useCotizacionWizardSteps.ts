@@ -7,7 +7,7 @@ import type { FilaCostoLocal } from "@/types/cotizacionPL";
 import type { CotizacionFormValues } from "@/lib/mappers/cotizacionForm";
 import { savePaso1, savePaso2, savePaso3, savePasoFinal, buildConceptosFromCostos } from "@/services/cotizacion";
 import { getErrorMessage } from "@/lib/errors";
-import { notifyError } from "@/lib/ui/appFeedback";
+import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 
 interface ToastFn {
   (opts: { title: string; description?: string; variant?: "destructive" | "default" }): void;
@@ -132,7 +132,7 @@ export function useCotizacionWizardSteps({
         mutations: { updateCotizacion },
         registrarActividad: registrarActividad.mutate,
       });
-      toast({ title: isEditMode ? "Cotización actualizada exitosamente" : "Cotización creada exitosamente" });
+      notifySuccess(toast, { title: isEditMode ? "Cotización actualizada exitosamente" : "Cotización creada exitosamente" });
       navigate(`/cotizaciones/${cotizacionId}`);
     } catch (err: unknown) {
       notifyError(toast, { title: "Error al finalizar cotización", message: getErrorMessage(err) });

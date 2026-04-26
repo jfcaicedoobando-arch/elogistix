@@ -8,7 +8,7 @@ import {
   type CotizacionRow,
 } from "@/hooks/useCotizaciones";
 import type { ClienteFormData } from "@/types/clienteForm";
-import { notifyError } from "@/lib/ui/appFeedback";
+import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 
 /**
  * Hook focalizado en las acciones (mutations + handlers + diálogos) del detalle de cotización.
@@ -31,7 +31,7 @@ export function useCotizacionDetalleHandlers(cotizacion: CotizacionRow | undefin
     if (!cotizacion) return;
     try {
       await actualizarEstado.mutateAsync({ id: cotizacion.id, estado });
-      toast({ title: `Estado actualizado a "${estado}"` });
+      notifySuccess(toast, { title: `Estado actualizado a "${estado}"` });
     } catch (err: unknown) {
       notifyError(toast, { title: "Error", message: getErrorMessage(err) });
     }
@@ -59,7 +59,7 @@ export function useCotizacionDetalleHandlers(cotizacion: CotizacionRow | undefin
         cotizacionId: cotizacion.id,
         clienteData: clienteForm,
       });
-      toast({ title: `Cliente "${cliente.nombre}" creado exitosamente` });
+      notifySuccess(toast, { title: `Cliente "${cliente.nombre}" creado exitosamente` });
       setShowConvertir(false);
     } catch (err: unknown) {
       notifyError(toast, { title: "Error al convertir prospecto", message: getErrorMessage(err) });
@@ -70,7 +70,7 @@ export function useCotizacionDetalleHandlers(cotizacion: CotizacionRow | undefin
     if (!cotizacion) return;
     try {
       await convertirAEmbarques.mutateAsync(cotizacion);
-      toast({ title: `Se generaron ${cotizacion.num_contenedores} embarques exitosamente` });
+      notifySuccess(toast, { title: `Se generaron ${cotizacion.num_contenedores} embarques exitosamente` });
       setShowConfirmarConvertir(false);
     } catch (err: unknown) {
       notifyError(toast, { title: "Error al generar embarques", message: getErrorMessage(err) });

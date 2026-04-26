@@ -13,7 +13,7 @@ import { getOrigen, getDestino } from "@/lib/formatters";
 import { useEmbarquesListExtras } from "@/hooks/embarque/useEmbarquesListData";
 import { useEmbarquesPageState } from "@/hooks/embarque/useEmbarquesPageState";
 import { buildEmbarqueColumns } from "@/components/embarque/embarqueColumns";
-import { notifyError } from "@/lib/ui/appFeedback";
+import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 
 /**
  * Controller que centraliza estado, queries y handlers de la página de Embarques.
@@ -51,7 +51,7 @@ export function useEmbarquesPageController() {
         entidad_id: id, entidad_nombre: expediente,
         detalles: { cliente: cliente_nombre, modo },
       });
-      toast({ title: "Embarque eliminado", description: `${expediente} fue eliminado permanentemente.` });
+      notifySuccess(toast, { title: "Embarque eliminado", description: `${expediente} fue eliminado permanentemente.` });
     } catch (err: unknown) {
       notifyError(toast, { title: "Error al eliminar", message: getErrorMessage(err) });
     }

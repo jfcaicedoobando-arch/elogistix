@@ -77,7 +77,7 @@ export function useCotizacionesPageController() {
   const duplicar = (id: string) => {
     duplicarCotizacion.mutate(id, {
       onSuccess: (data) => {
-        toast({ title: "Cotización duplicada", description: `Se creó ${data.folio} como Borrador.` });
+        notifySuccess(toast, { title: "Cotización duplicada", description: `Se creó ${data.folio} como Borrador.` });
       },
       onError: (err) => {
         notifyError(toast, { title: "Error al duplicar", message: getErrorMessage(err) });

@@ -9,7 +9,7 @@ import { Loader2 } from "lucide-react";
 import { getErrorMessage } from "@/lib/errors";
 import { useCreateUser } from "@/hooks/useUsuarioMutations";
 import { useOrganizationsList } from "@/hooks/useOrganizationsList";
-import { notifyError } from "@/lib/ui/appFeedback";
+import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 
 interface Props {
   open: boolean;
@@ -44,7 +44,7 @@ export default function NuevoUsuarioDialog({ open, onOpenChange, onCreated, show
       { email, password, role, orgId: showOrgSelector ? orgId : undefined },
       {
         onSuccess: () => {
-          toast({ title: "Usuario creado", description: `Se registró ${email} como ${role}` });
+          notifySuccess(toast, { title: "Usuario creado", description: `Se registró ${email} como ${role}` });
           setEmail("");
           setPassword("");
           setRole("viewer");

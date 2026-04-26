@@ -45,7 +45,7 @@ export default function Usuarios() {
     if (!deleteTarget) return;
     try {
       await deleteUser.mutateAsync(deleteTarget.user_id);
-      toast({ title: "Usuario eliminado", description: `${deleteTarget.email} fue eliminado del sistema.` });
+      notifySuccess(toast, { title: "Usuario eliminado", description: `${deleteTarget.email} fue eliminado del sistema.` });
     } catch (err: unknown) {
       notifyError(toast, { title: "Error al eliminar usuario", message: getErrorMessage(err) });
     }

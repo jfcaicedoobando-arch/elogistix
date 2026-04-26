@@ -6,7 +6,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "@/hooks/use-toast";
 import { useOrgFilter } from "@/hooks/useOrgFilter";
 import { queryKeys } from "@/lib/query";
-import { notifySuccess } from "@/lib/ui/appFeedback";
+import { notifySuccess, notifyError } from "@/lib/ui/appFeedback";
 import {
   aprobarProformas as svcAprobar,
   consolidarProformas as svcConsolidar,
@@ -85,11 +85,11 @@ export function useCrearProforma() {
       return svcCrear({ ...params, organizationId });
     },
     onSuccess: (proforma) => {
-      toast({ title: `Proforma ${proforma.numero} generada (pendiente de revisión)` });
+      notifySuccess(toast, { title: `Proforma ${proforma.numero} generada (pendiente de revisión)` });
       invalidateProformaCaches(queryClient, proforma.embarque_id);
     },
     onError: (error: Error) => {
-      toast({ title: `Error al generar proforma: ${error.message}`, variant: "destructive" });
+      notifyError(toast, { title: `Error al generar proforma: ${error.message}` });
     },
   });
 }
@@ -105,7 +105,7 @@ export function useMarcarProformaFacturada() {
       queryClient.invalidateQueries({ queryKey: queryKeys.facturas.all });
     },
     onError: (error: Error) => {
-      toast({ title: `Error: ${error.message}`, variant: "destructive" });
+      notifyError(toast, { title: `Error: ${error.message}` });
     },
   });
 }
@@ -120,7 +120,7 @@ export function useEliminarProforma() {
       invalidateProformaCaches(queryClient, params.embarqueId);
     },
     onError: (error: Error) => {
-      toast({ title: `Error al eliminar proforma: ${error.message}`, variant: "destructive" });
+      notifyError(toast, { title: `Error al eliminar proforma: ${error.message}` });
     },
   });
 }
@@ -139,7 +139,7 @@ export function useAprobarProformas() {
       invalidateProformaCaches(queryClient);
     },
     onError: (error: Error) => {
-      toast({ title: `Error al aprobar: ${error.message}`, variant: "destructive" });
+      notifyError(toast, { title: `Error al aprobar: ${error.message}` });
     },
   });
 }
@@ -153,11 +153,11 @@ export function useConsolidarProformas() {
       return svcConsolidar({ ...params, organizationId });
     },
     onSuccess: (nueva) => {
-      toast({ title: `Proformas consolidadas en ${nueva.numero}` });
+      notifySuccess(toast, { title: `Proformas consolidadas en ${nueva.numero}` });
       invalidateProformaCaches(queryClient, nueva.embarque_id);
     },
     onError: (error: Error) => {
-      toast({ title: `Error al consolidar: ${error.message}`, variant: "destructive" });
+      notifyError(toast, { title: `Error al consolidar: ${error.message}` });
     },
   });
 }

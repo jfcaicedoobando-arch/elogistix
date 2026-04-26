@@ -9,7 +9,7 @@ import NuevoUsuarioDialog from "@/components/usuario/NuevoUsuarioDialog";
 import DoubleConfirmDeleteDialog from "@/components/DoubleConfirmDeleteDialog";
 import { useAdminGlobalUsers, type GlobalUserRow } from "@/hooks/useAdminData";
 import { useDeleteUser } from "@/hooks/useUsuarioMutations";
-import { notifyError } from "@/lib/ui/appFeedback";
+import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 
 export default function AdminUsuarios() {
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -22,7 +22,7 @@ export default function AdminUsuarios() {
     if (!deleteTarget) return;
     deleteUser.mutate(deleteTarget.user_id, {
       onSuccess: () => {
-        toast({ title: "Usuario eliminado", description: `Se eliminó ${deleteTarget.email} del sistema.` });
+        notifySuccess(toast, { title: "Usuario eliminado", description: `Se eliminó ${deleteTarget.email} del sistema.` });
         refetch();
         setDeleteTarget(null);
       },
