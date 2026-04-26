@@ -1,83 +1,40 @@
-import { useState, useMemo } from "react";
 import { Plus, Ship, Download } from "lucide-react";
-import { exportToCsv } from "@/generators/exportCsv";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { useNavigate } from "react-router-dom";
-import { useEliminarEmbarque, calcularEstadoEmbarque, usePrefetchEmbarque } from "@/hooks/useEmbarques";
-import { useOperadoresDistintos } from "@/hooks/useOperadoresDistintos";
-import { getErrorMessage } from "@/lib/errors";
-import { useClientesForSelect } from "@/hooks/useClientes";
-import { usePermissions } from "@/hooks/usePermissions";
-import { useRegistrarActividad } from "@/hooks/useBitacora";
-import { useToast } from "@/hooks/use-toast";
-import { getOrigen, getDestino } from "@/lib/formatters";
 import PaginationControls from "@/components/PaginationControls";
 import { DataTable } from "@/components/DataTable";
-import type { EmbarqueRow } from "@/hooks/useEmbarques";
 import DoubleConfirmDeleteDialog from "@/components/DoubleConfirmDeleteDialog";
 import DialogDuplicarEmbarque from "@/components/embarque/DialogDuplicarEmbarque";
-import { useEmbarquesListExtras } from "@/hooks/embarque/useEmbarquesListData";
 import EmbarquesFiltros from "@/components/embarque/EmbarquesFiltros";
-import { useEmbarquesPageState } from "@/hooks/embarque/useEmbarquesPageState";
-import { buildEmbarqueColumns } from "@/components/embarque/embarqueColumns";
+import { useEmbarquesPageController } from "@/hooks/embarque/useEmbarquesPageController";
 
 export default function Embarques() {
-  const navigate = useNavigate();
-  const { data: clientes = [] } = useClientesForSelect();
-  const { canEdit } = usePermissions();
-  const { toast } = useToast();
-  const eliminarEmbarque = useEliminarEmbarque();
-  const registrarActividad = useRegistrarActividad();
-  const prefetchEmbarque = usePrefetchEmbarque();
+  const {
+    state,
+    clientes,
+    operadoresUnicos,
+    columns,
+    isLoading,
+    isEmptyState,
+    canEdit,
+    embarqueAEliminar,
+    setEmbarqueAEliminar,
+    embarqueADuplicar,
+    setEmbarqueADuplicar,
+    handleEliminar,
+    exportarCsv,
+    eliminarEmbarquePending,
+    navigate,
+    prefetchEmbarque,
+  } = useEmbarquesPageController();
 
-  const state = useEmbarquesPageState();
   const {
     search, filterModo, filterEstado, filterCliente, filterOperador, filterProforma,
     fechaDesde, fechaHasta, page, pageSize,
     setSearch, setFilterModo, setFilterEstado, setFilterCliente, setFilterOperador, setFilterProforma,
     setFechaDesde, setFechaHasta, setPage, setPageSize,
-    embarques, filtered, displayCount, totalPages, isLoading, isEmptyState,
+    filtered, displayCount, totalPages,
   } = state;
-
-  const [embarqueAEliminar, setEmbarqueAEliminar] = useState<EmbarqueRow | null>(null);
-  const [embarqueADuplicar, setEmbarqueADuplicar] = useState<EmbarqueRow | null>(null);
-
-  const { data: operadoresUnicos = [] } = useOperadoresDistintos();
-
-  const embarqueIds = useMemo(() => embarques.map(e => e.id), [embarques]);
-  const { data: extrasData } = useEmbarquesListExtras(embarqueIds);
-  const liquidacionMap = extrasData?.liquidacion ?? {};
-  const docsMap = extrasData?.docs ?? {};
-
-  const handleEliminar = async () => {
-    if (!embarqueAEliminar) return;
-    const { id, expediente, cliente_nombre, modo } = embarqueAEliminar;
-    try {
-      await eliminarEmbarque.mutateAsync(id);
-      registrarActividad.mutate({
-        accion: 'eliminar', modulo: 'embarques',
-        entidad_id: id, entidad_nombre: expediente,
-        detalles: { cliente: cliente_nombre, modo },
-      });
-      toast({ title: "Embarque eliminado", description: `${expediente} fue eliminado permanentemente.` });
-    } catch (err: unknown) {
-      toast({ title: "Error al eliminar", description: getErrorMessage(err), variant: "destructive" });
-    }
-    setEmbarqueAEliminar(null);
-  };
-
-  const columns = useMemo(
-    () => buildEmbarqueColumns({
-      canEdit,
-      docsMap,
-      liquidacionMap,
-      onEditar: (e) => navigate(`/embarques/${e.id}/editar`),
-      onDuplicar: setEmbarqueADuplicar,
-      onEliminar: setEmbarqueAEliminar,
-    }),
-    [canEdit, liquidacionMap, docsMap, navigate],
-  );
 
   return (
     <div className="space-y-6">
@@ -88,53 +45,7 @@ export default function Embarques() {
         </div>
         <div className="flex gap-2">
           {!isEmptyState && (
-            <Button variant="outline" onClick={() => exportToCsv(
-              `embarques_${new Date().toISOString().slice(0, 10)}.csv`,
-              [
-                { key: "expediente", label: "Expediente" },
-                { key: "bl_master", label: "BL Master" },
-                { key: "cliente_nombre", label: "Cliente" },
-                { key: "modo", label: "Modo" },
-                { key: "tipo", label: "Tipo Operación" },
-                { key: "origen", label: "Origen" },
-                { key: "destino", label: "Destino" },
-                { key: "estado", label: "Estado" },
-                { key: "etd", label: "ETD" },
-                { key: "eta", label: "ETA" },
-                { key: "operador", label: "Operador" },
-                { key: "contenedor", label: "Contenedor" },
-                { key: "tipo_contenedor", label: "Tipo Contenedor" },
-                { key: "descripcion_mercancia", label: "Descripción Mercancía" },
-                { key: "tipo_cambio_usd", label: "T/C USD" },
-                { key: "tipo_cambio_eur", label: "T/C EUR" },
-                { key: "liquidacion", label: "Estado Costos" },
-                { key: "created_at", label: "Fecha Creación" },
-              ],
-              filtered.map(e => {
-                const liq = liquidacionMap[e.id];
-                const estadoLiq = !liq || liq.total === 0 ? "—" : liq.pagados === liq.total ? "Pagado" : liq.pagados > 0 ? "Parcial" : "Pendiente";
-                return {
-                  expediente: e.expediente,
-                  bl_master: e.bl_master || "",
-                  cliente_nombre: e.cliente_nombre,
-                  modo: e.modo,
-                  tipo: e.tipo,
-                  origen: getOrigen(e),
-                  destino: getDestino(e),
-                  estado: calcularEstadoEmbarque(e.modo, e.tipo, e.etd, e.eta, e.estado),
-                  etd: e.etd || "",
-                  eta: e.eta || "",
-                  operador: e.operador || "",
-                  contenedor: e.contenedor || "",
-                  tipo_contenedor: e.tipo_contenedor || "",
-                  descripcion_mercancia: e.descripcion_mercancia || "",
-                  tipo_cambio_usd: e.tipo_cambio_usd ?? "",
-                  tipo_cambio_eur: e.tipo_cambio_eur ?? "",
-                  liquidacion: estadoLiq,
-                  created_at: e.created_at ? new Date(e.created_at).toLocaleDateString("es-MX") : "",
-                };
-              }),
-            )}>
+            <Button variant="outline" onClick={exportarCsv}>
               <Download className="h-4 w-4 mr-2" /> Exportar CSV
             </Button>
           )}
@@ -226,7 +137,7 @@ export default function Embarques() {
         description={`El embarque ${embarqueAEliminar?.expediente} será eliminado permanentemente.`}
         finalDescription={`Esta acción no se puede deshacer. Se eliminarán todos los datos, documentos y costos asociados al embarque ${embarqueAEliminar?.expediente}.`}
         onConfirm={handleEliminar}
-        isPending={eliminarEmbarque.isPending}
+        isPending={eliminarEmbarquePending}
       />
       {embarqueADuplicar && (
         <DialogDuplicarEmbarque
