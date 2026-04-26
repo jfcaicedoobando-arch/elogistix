@@ -1,63 +1,46 @@
 /**
  * Controller hook del wizard "Nuevo Embarque".
- * Encapsula estado, validaciones, expediente y orquestación del submit.
+ * Encapsula estado del wizard, validaciones, expediente y vinculación.
  *
  * Lógica pura → `lib/domain/embarqueWizard.ts`.
  * Hidratación inicial → `useCotizacionHydration`.
+ * Orquestación del submit → `useEmbarqueSubmitOrchestrator`.
  */
 import { useState, useCallback, useEffect, useRef } from "react";
-import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import {
   useProveedoresForSelect,
-  useCreateEmbarque,
   type ExpedienteCliente,
 } from "@/hooks/useEmbarques";
 import {
   useClientesForSelect,
   useContactosCliente,
 } from "@/hooks/useClientes";
-import { useAuth } from "@/contexts/AuthContext";
-import { useRegistrarActividad } from "@/hooks/useBitacora";
 import { useConceptosForm } from "@/hooks/useConceptosForm";
 import { useEmbarqueForm } from "@/hooks/embarque/useEmbarqueForm";
 import { useCotizacionHydration } from "@/hooks/embarque/useCotizacionHydration";
+import { useEmbarqueSubmitOrchestrator } from "@/hooks/embarque/useEmbarqueSubmitOrchestrator";
 import {
   useCotizacionesAceptadas,
-  useUpdateEstadoCotizacion,
   type CotizacionRow,
 } from "@/hooks/useCotizaciones";
-import {
-  resolverExpediente,
-  subirDocumentosEmbarque,
-} from "@/services/embarqueServices";
 import { fetchCotizacionCostosForEmbarque } from "@/services/cotizacionServices";
 import {
   validateDatosGenerales,
   mapConceptosVentaFromCotizacion,
   mapConceptosCostoFromCotizacion,
-  resolveExpedienteForSubmit,
-  buildBitacoraDetalles,
 } from "@/lib/domain/embarqueWizard";
-import { getErrorMessage } from "@/lib/errors";
 import type { EmbarqueValidationErrors } from "@/components/embarque/StepDatosGenerales";
 
 type ModoExpediente = "nuevo" | "existente";
 
 export function useNuevoEmbarqueWizard() {
-  const navigate = useNavigate();
-  const { user } = useAuth();
   const { toast } = useToast();
 
   // ── Catálogos ──────────────────────────────────────────────
   const { data: clientes = [] } = useClientesForSelect();
   const { data: proveedoresDb = [] } = useProveedoresForSelect();
   const { data: cotizacionesAceptadas = [] } = useCotizacionesAceptadas();
-
-  // ── Mutaciones ─────────────────────────────────────────────
-  const createEmbarque = useCreateEmbarque();
-  const registrarActividad = useRegistrarActividad();
-  const updateEstadoCotizacion = useUpdateEstadoCotizacion();
 
   // ── Estado local del wizard ────────────────────────────────
   const [currentStep, setCurrentStep] = useState(1);
@@ -68,39 +51,16 @@ export function useNuevoEmbarqueWizard() {
     useState<ExpedienteCliente | null>(null);
 
   // ── Form principal del embarque ────────────────────────────
-  const {
-    methods,
-    handleMsdsUpload,
-    buildEmbarquePayload,
-    buildConceptosVentaPayload,
-    buildConceptosCostoPayload,
-    documentosArchivos,
-    setDocumentoArchivo,
-    getDocumentosChecklist,
-    vincularCotizacion,
-    desvincularCotizacion,
-  } = useEmbarqueForm();
+  const form = useEmbarqueForm();
+  const { methods } = form;
 
   const clienteId = methods.watch("clienteId");
   const modo = methods.watch("modo");
   const { data: contactos = [] } = useContactosCliente(clienteId || undefined);
 
   // ── Conceptos venta/costo ──────────────────────────────────
-  const {
-    conceptosVenta,
-    conceptosCosto,
-    updateConceptoVenta,
-    addConceptoVenta,
-    removeConceptoVenta,
-    updateConceptoCosto,
-    addConceptoCosto,
-    removeConceptoCosto,
-    subtotalVenta,
-    totalCosto,
-    utilidadEstimada,
-    setConceptosVenta,
-    setConceptosCosto,
-  } = useConceptosForm();
+  const conceptos = useConceptosForm();
+  const { setConceptosVenta, setConceptosCosto } = conceptos;
 
   const selectedCliente = clientes.find((c) => c.id === clienteId);
 
@@ -121,20 +81,19 @@ export function useNuevoEmbarqueWizard() {
   const handleVincularCotizacion = useCallback(
     (cot: CotizacionRow) => {
       setCotizacionVinculada(cot);
-      vincularCotizacion(cot);
+      form.vincularCotizacion(cot);
       void hidratarConceptosDesdeCotizacion(cot);
     },
-    [vincularCotizacion, hidratarConceptosDesdeCotizacion],
+    [form, hidratarConceptosDesdeCotizacion],
   );
 
   const handleDesvincularCotizacion = useCallback(() => {
     setCotizacionVinculada(null);
-    desvincularCotizacion();
+    form.desvincularCotizacion();
     setModoExpediente("nuevo");
     setExpedienteSeleccionado(null);
-  }, [desvincularCotizacion]);
+  }, [form]);
 
-  // Pre-vinculación automática desde CotizacionDetalle
   useCotizacionHydration({ onPrevincular: handleVincularCotizacion });
 
   // ── Reset del expediente al cambiar de cliente ─────────────
@@ -173,7 +132,9 @@ export function useNuevoEmbarqueWizard() {
     return Object.keys(errors).length === 0;
   }, [methods]);
 
-  // ── Submit final ───────────────────────────────────────────
+  // ── Submit final (delegado al orquestador) ─────────────────
+  const orchestrator = useEmbarqueSubmitOrchestrator();
+
   const handleFinish = async () => {
     if (!validateStep1()) {
       setCurrentStep(1);
@@ -186,68 +147,22 @@ export function useNuevoEmbarqueWizard() {
       return;
     }
 
-    const v = methods.getValues();
-
-    try {
-      const expediente = await resolveExpedienteForSubmit({
-        modoExpediente,
-        expedienteSeleccionado,
-        blMaster: v.blMaster,
-        tipo: v.tipo,
-        resolverNuevo: resolverExpediente,
-      });
-
-      const docPayload = await subirDocumentosEmbarque(
-        expediente,
-        getDocumentosChecklist(v.modo),
-        documentosArchivos,
-      );
-
-      const embarquePayload = {
-        expediente,
-        ...buildEmbarquePayload(contactos, selectedCliente?.nombre || "", user?.email || ""),
-        ...(cotizacionVinculada ? { cotizacion_id: cotizacionVinculada.id } : {}),
-      };
-
-      await createEmbarque.mutateAsync({
-        embarque: embarquePayload,
-        conceptosVenta: buildConceptosVentaPayload(conceptosVenta),
-        conceptosCosto: buildConceptosCostoPayload(conceptosCosto, proveedoresDb),
-        documentos: docPayload,
-      });
-
-      if (cotizacionVinculada) {
-        await updateEstadoCotizacion.mutateAsync({
-          id: cotizacionVinculada.id,
-          estado: "Embarcada",
-        });
-      }
-
-      registrarActividad.mutate({
-        accion: "crear",
-        modulo: "embarques",
-        entidad_nombre: expediente,
-        detalles: buildBitacoraDetalles({
-          modo: v.modo,
-          tipo: v.tipo,
-          clienteNombre: selectedCliente?.nombre ?? "",
-          cotizacionFolio: cotizacionVinculada?.folio ?? null,
-          modoExpediente,
-        }),
-      });
-
-      toast({
-        title: "Embarque creado",
-        description: `Expediente ${expediente} registrado correctamente.`,
-      });
-      navigate("/embarques");
-    } catch (err: unknown) {
-      toast({
-        title: "Error al crear embarque",
-        description: getErrorMessage(err),
-        variant: "destructive",
-      });
-    }
+    await orchestrator.submit({
+      values: methods.getValues(),
+      modoExpediente,
+      expedienteSeleccionado,
+      cotizacionVinculada,
+      contactos,
+      selectedClienteNombre: selectedCliente?.nombre || "",
+      proveedoresDb,
+      documentosArchivos: form.documentosArchivos,
+      buildEmbarquePayload: form.buildEmbarquePayload,
+      buildConceptosVentaPayload: form.buildConceptosVentaPayload,
+      buildConceptosCostoPayload: form.buildConceptosCostoPayload,
+      getDocumentosChecklist: form.getDocumentosChecklist,
+      conceptosVenta: conceptos.conceptosVenta,
+      conceptosCosto: conceptos.conceptosCosto,
+    });
   };
 
   return {
@@ -275,24 +190,23 @@ export function useNuevoEmbarqueWizard() {
     handleModoExpedienteChange,
     handleSeleccionarExpediente,
     // Documentos
-    handleMsdsUpload,
-    setDocumentoArchivo,
-    getDocumentosChecklist,
+    handleMsdsUpload: form.handleMsdsUpload,
+    setDocumentoArchivo: form.setDocumentoArchivo,
+    getDocumentosChecklist: form.getDocumentosChecklist,
     // Conceptos
-    conceptosVenta,
-    conceptosCosto,
-    updateConceptoVenta,
-    addConceptoVenta,
-    removeConceptoVenta,
-    updateConceptoCosto,
-    addConceptoCosto,
-    removeConceptoCosto,
-    subtotalVenta,
-    totalCosto,
-    utilidadEstimada,
+    conceptosVenta: conceptos.conceptosVenta,
+    conceptosCosto: conceptos.conceptosCosto,
+    updateConceptoVenta: conceptos.updateConceptoVenta,
+    addConceptoVenta: conceptos.addConceptoVenta,
+    removeConceptoVenta: conceptos.removeConceptoVenta,
+    updateConceptoCosto: conceptos.updateConceptoCosto,
+    addConceptoCosto: conceptos.addConceptoCosto,
+    removeConceptoCosto: conceptos.removeConceptoCosto,
+    subtotalVenta: conceptos.subtotalVenta,
+    totalCosto: conceptos.totalCosto,
+    utilidadEstimada: conceptos.utilidadEstimada,
     // Submit
     handleFinish,
-    isPending: createEmbarque.isPending,
-    navigate,
+    isPending: orchestrator.isPending,
   };
 }
