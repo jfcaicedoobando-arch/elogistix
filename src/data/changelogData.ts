@@ -11,6 +11,13 @@ export interface ChangelogEntry {
 /** Entradas recientes (v8.x). Las anteriores se cargan dinámicamente. */
 export const recentChangelog: ChangelogEntry[] = [
   {
+    version: "8.74.0",
+    date: "2026-04-26",
+    type: "patch",
+    title: "Auditoría: controller hooks para páginas detalle del Portal",
+    description: "Paso M1 de la auditoría arquitectónica. Las páginas PortalCotizacionDetalle.tsx (288 LOC) y PortalEmbarqueDetalle.tsx (251 LOC) mezclaban estado local, mutaciones, derivaciones y presentación, superando el guardrail de 250 LOC. Se crearon dos controller hooks que aíslan el estado y la lógica derivada, dejando las páginas como capa puramente de presentación. (1) usePortalCotizacionDetalleController encapsula el estado de confirmación (acción Aceptar/Rechazar + comentario), la mutación useResponderCotizacion, los toasts de éxito/error y el reset del diálogo. (2) usePortalEmbarqueDetalleController carga embarque/eventos/documentos y memoiza valores derivados: estadoVisual (vía calcularEstadoEmbarque del dominio), currentStepIndex sobre PORTAL_EMBARQUE_PROGRESS_STEPS, diasParaEta y conteos de docs validados/total. Las constantes del tracker se exportan desde el hook para reutilizarse. Ambas páginas bajan bajo el límite y eliminan imports directos a hooks de datos, dominio y date-fns. Build verde, 196/196 pruebas pasando.",
+  },
+  {
     version: "8.73.0",
     date: "2026-04-26",
     type: "patch",
