@@ -7,7 +7,7 @@ import {
   fetchCotizacionesAceptadas,
   fetchCotizacionById,
   fetchEmbarquesVinculados,
-} from '@/services/cotizacionServices';
+} from '@/services/cotizacion';
 
 export function useCotizacionesAceptadas() {
   const { organizationId } = useOrgFilter();

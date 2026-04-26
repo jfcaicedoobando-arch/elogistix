@@ -8,7 +8,7 @@ import {
   type AdminOrgStats,
   type GlobalUserRow,
   type OrgRow,
-} from '@/services/adminServices';
+} from '@/services/admin';
 
 export type { AdminOrgStats, GlobalUserRow, OrgRow };
 

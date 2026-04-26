@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { formatCurrency, formatDate } from "@/lib/formatters";
-import type { ProformaConFactura } from "@/services/proformaServices";
+import type { ProformaConFactura } from "@/services/proforma";
 
 interface Props {
   proformas: ProformaConFactura[];

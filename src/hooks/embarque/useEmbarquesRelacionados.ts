@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/query";
-import { fetchEmbarquesRelacionados } from "@/services/embarqueServices";
+import { fetchEmbarquesRelacionados } from "@/services/embarque";
 
 /**
  * Devuelve embarques que comparten BL Master con el embarque actual (excluyéndolo).

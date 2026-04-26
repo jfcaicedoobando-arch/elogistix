@@ -15,6 +15,13 @@ export interface ChangelogEntry {
  */
 export const recentChangelog: ChangelogEntry[] = [
   {
+    version: "8.86.0",
+    date: "2026-04-26",
+    type: "minor",
+    title: "Refactor arquitectónico Fase 2: barrels unificados, content/, AuthContext modular",
+    description: "Pasos 4-7 del plan de auditoría arquitectónica integral. (4) Convención de barrels estandarizada en src/services/: los 5 barrel-archivo (clienteService, embarqueServices, adminServices, proformaServices, cotizacionServices) se eliminaron y su contenido se movió a index.ts dentro de cada carpeta de dominio. Naming homogéneo (singular, sin sufijo Service/Services). 30+ imports en hooks, componentes y páginas actualizados a la convención @/services/<dominio>. (5) Reorganización editorial: src/data/changelog/ y src/data/changelogData.ts movidos a src/content/changelog/ y src/content/changelogData.ts respectivamente. src/data/ queda reservado a datasets de dominio (ports.ts y su test). (6) AuthContext.tsx (212 LOC) dividido en 4 archivos: useAuthSession (sesión + listener Supabase, ignorando TOKEN_REFRESHED para no invalidar React Query cada 60s), useAuthProfile (perfil + roles + organización vía RPC get_user_context con cache TTL e in-flight de-dupe), useLoginAudit (registro de login en bitácora con guarda sessionStorage) y AuthContext.tsx como compositor delgado (~85 LOC). (7) Auditoría de los 30 useEffect activos: todos legítimos, agrupados en 5 categorías documentadas en ARCHITECTURE.md (sincronización form, listeners, hidratación wizards, hooks utilitarios, shadcn read-only). ARCHITECTURE.md actualizado con secciones 'Convención de barrels' y 'Auditoría de useEffect'. Build verde y 201/201 pruebas pasando.",
+  },
+  {
     version: "8.85.0",
     date: "2026-04-26",
     type: "minor",

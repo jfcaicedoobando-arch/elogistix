@@ -6,7 +6,7 @@ import {
   convertirProspectoACliente,
   convertirCotizacionAEmbarques,
   type ProspectoAClienteInput,
-} from '@/services/cotizacionServices';
+} from '@/services/cotizacion';
 
 /** Convierte un prospecto en cliente y actualiza la cotización */
 export function useConvertirProspectoACliente() {

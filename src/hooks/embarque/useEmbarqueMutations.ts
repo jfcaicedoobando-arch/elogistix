@@ -12,7 +12,7 @@ import {
   insertEventoEmbarque,
   uploadDocumentoEmbarque,
   deleteDocumentoEmbarque,
-} from '@/services/embarqueServices';
+} from '@/services/embarque';
 
 type EmbarqueRow = Tables<'embarques'>;
 

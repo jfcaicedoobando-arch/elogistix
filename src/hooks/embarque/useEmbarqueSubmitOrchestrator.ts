@@ -24,7 +24,7 @@ import {
 import {
   resolverExpediente,
   subirDocumentosEmbarque,
-} from "@/services/embarqueServices";
+} from "@/services/embarque";
 import {
   resolveExpedienteForSubmit,
   buildBitacoraDetalles,

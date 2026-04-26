@@ -13,7 +13,7 @@ import {
   fetchConceptosProforma,
   fetchEmbarqueParaPdf,
   type ProformaRow,
-} from "@/services/proformaServices";
+} from "@/services/proforma";
 
 interface ProformaInput {
   id: string;

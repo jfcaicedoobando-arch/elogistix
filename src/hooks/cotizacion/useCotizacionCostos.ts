@@ -3,7 +3,7 @@ import { queryKeys } from '@/lib/query';
 import {
   fetchCotizacionCostos,
   upsertCotizacionCostos,
-} from '@/services/cotizacionServices';
+} from '@/services/cotizacion';
 
 export type { CostoCotizacion } from '@/types/cotizacionCosto';
 import type { CostoCotizacion } from '@/types/cotizacionCosto';
