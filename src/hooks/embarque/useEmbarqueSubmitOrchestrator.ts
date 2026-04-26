@@ -30,6 +30,7 @@ import {
   buildBitacoraDetalles,
 } from "@/lib/domain/embarqueWizard";
 import { getErrorMessage } from "@/lib/errors";
+import { notifyError, notifyWarning, notifySuccess } from "@/lib/ui/appFeedback";
 import type { Tables } from "@/integrations/supabase/types";
 import type { DocumentoChecklist } from "@/types/documentoChecklist";
 import type { ConceptoVentaLocal, ConceptoCostoLocal } from "@/types/concepto";
@@ -81,11 +82,7 @@ export function useEmbarqueSubmitOrchestrator() {
           resolverNuevo: resolverExpediente,
         });
       } catch (err: unknown) {
-        toast({
-          title: "Error: generación de expediente",
-          description: getErrorMessage(err),
-          variant: "destructive",
-        });
+        notifyError(toast, { phase: "generación de expediente", message: getErrorMessage(err) });
         return false;
       }
 
@@ -98,11 +95,7 @@ export function useEmbarqueSubmitOrchestrator() {
           p.documentosArchivos,
         );
       } catch (err: unknown) {
-        toast({
-          title: "Error: subida de documentos",
-          description: getErrorMessage(err),
-          variant: "destructive",
-        });
+        notifyError(toast, { phase: "subida de documentos", message: getErrorMessage(err) });
         return false;
       }
 
@@ -121,11 +114,7 @@ export function useEmbarqueSubmitOrchestrator() {
           documentos: docPayload,
         });
       } catch (err: unknown) {
-        toast({
-          title: "Error: guardado del embarque",
-          description: getErrorMessage(err),
-          variant: "destructive",
-        });
+        notifyError(toast, { phase: "guardado del embarque", message: getErrorMessage(err) });
         return false;
       }
 
@@ -137,7 +126,7 @@ export function useEmbarqueSubmitOrchestrator() {
             estado: "Embarcada",
           });
         } catch (err: unknown) {
-          toast({
+          notifyWarning(toast, {
             title: "Embarque creado con advertencia",
             description: `Cotización: no se pudo actualizar el estado (${getErrorMessage(err)}).`,
           });
@@ -158,7 +147,7 @@ export function useEmbarqueSubmitOrchestrator() {
         }),
       });
 
-      toast({
+      notifySuccess(toast, {
         title: "Embarque creado",
         description: `Expediente ${expediente}: registrado correctamente.`,
       });
