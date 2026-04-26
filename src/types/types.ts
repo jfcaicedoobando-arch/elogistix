@@ -1,4 +1,5 @@
-import type { Enums } from "@/integrations/supabase/types";
-
-/** Centralized role type derived from the database enum */
-export type AppRole = Enums<"app_role">;
+/**
+ * @deprecated Importa directamente desde "@/types/appRole".
+ * Este barrel se mantiene por compatibilidad con consumidores existentes.
+ */
+export type { AppRole } from "./appRole";

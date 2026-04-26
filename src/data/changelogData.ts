@@ -11,6 +11,13 @@ export interface ChangelogEntry {
 /** Entradas recientes (v8.x). Las anteriores se cargan dinámicamente. */
 export const recentChangelog: ChangelogEntry[] = [
   {
+    version: "8.78.0",
+    date: "2026-04-26",
+    type: "patch",
+    title: "Auditoría: types/types.ts renombrado y barrels en lib/financial y lib/ui",
+    description: "Pasos O2 y O3 de la auditoría arquitectónica. (O2) El archivo src/types/types.ts era genérico en nombre y solo contenía el tipo AppRole. Se movió la definición a src/types/appRole.ts (nombre descriptivo alineado con su contenido) y se dejó types.ts como barrel deprecado que re-exporta el tipo, manteniendo compatibilidad total con los 11 consumidores existentes (AuthContext, ProtectedRoute, hooks de usuarios y admin, páginas y componentes de admin). (O3) Se añadieron barrels index.ts en src/lib/financial (re-exporta financialUtils, profitUtils y costosUSD) y src/lib/ui (re-exporta uiMappings, estadoConfig y kpiTones), permitiendo imports más limpios del estilo `import { calcularUtilidad } from \"@/lib/financial\"` o `import { kpiIconChipClasses } from \"@/lib/ui\"` sin necesidad de apuntar al subarchivo concreto. Build verde y 196/196 pruebas pasando.",
+  },
+  {
     version: "8.77.0",
     date: "2026-04-26",
     type: "patch",
