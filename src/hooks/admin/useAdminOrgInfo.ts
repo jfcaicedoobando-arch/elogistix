@@ -52,7 +52,7 @@ export function useAdminOrgInfo(id: string | undefined) {
     mutationFn: (activo: boolean) => setOrganizationActivo(id!, activo),
     onSuccess: (_, activo) => {
       queryClient.invalidateQueries({ queryKey: queryKeys.admin.org(id!) });
-      toast({ title: activo ? "Organización activada" : "Organización desactivada" });
+      notifySuccess(toast, { title: activo ? "Organización activada" : "Organización desactivada" });
     },
     onError: (error: Error) => {
       notifyError(toast, { title: "Error", message: error.message });
