@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import librecargaLogo from "@/assets/librecarga-logo.svg";
+import librecargaLogo from "@/assets/librecarga-logo.png";
 
 export default function Login() {
   const [email, setEmail] = useState("");
