@@ -9,29 +9,37 @@ import { PortalProtectedRoute } from "./components/auth/PortalProtectedRoute";
 import RouteLoadingFallback from "./components/layout/RouteLoadingFallback";
 
 // Lazy-loaded pages
-const Login = lazy(() => import("./pages/Login"));
-const NotFound = lazy(() => import("./pages/NotFound"));
-const Dashboard = lazy(() => import("./pages/Dashboard"));
-const Operaciones = lazy(() => import("./pages/Operaciones"));
-const Embarques = lazy(() => import("./pages/Embarques"));
-const EmbarqueDetalle = lazy(() => import("./pages/EmbarqueDetalle"));
-const NuevoEmbarque = lazy(() => import("./pages/NuevoEmbarque"));
-const EditarEmbarque = lazy(() => import("./pages/EditarEmbarque"));
-const Facturacion = lazy(() => import("./pages/Facturacion"));
-const Clientes = lazy(() => import("./pages/Clientes"));
-const ClienteDetalle = lazy(() => import("./pages/ClienteDetalle"));
-const Proveedores = lazy(() => import("./pages/Proveedores"));
-const ProveedorDetalle = lazy(() => import("./pages/ProveedorDetalle"));
+const Login = lazy(() => import("./pages/auth/Login"));
+const NotFound = lazy(() => import("./pages/auth/NotFound"));
+const TrackingPublico = lazy(() => import("./pages/auth/TrackingPublico"));
 
-const Cotizaciones = lazy(() => import("./pages/Cotizaciones"));
-const NuevaCotizacion = lazy(() => import("./pages/NuevaCotizacion"));
-const CotizacionDetalle = lazy(() => import("./pages/CotizacionDetalle"));
-const EditarCotizacion = lazy(() => import("./pages/EditarCotizacion"));
-const Reportes = lazy(() => import("./pages/Reportes"));
-const Changelog = lazy(() => import("./pages/Changelog"));
-const Bitacora = lazy(() => import("./pages/Bitacora"));
-const Usuarios = lazy(() => import("./pages/Usuarios"));
-const Configuracion = lazy(() => import("./pages/Configuracion"));
+const Dashboard = lazy(() => import("./pages/dashboard/Dashboard"));
+const Operaciones = lazy(() => import("./pages/dashboard/Operaciones"));
+const Reportes = lazy(() => import("./pages/dashboard/Reportes"));
+const Bitacora = lazy(() => import("./pages/dashboard/Bitacora"));
+const Changelog = lazy(() => import("./pages/dashboard/Changelog"));
+
+const Embarques = lazy(() => import("./pages/embarques/Embarques"));
+const EmbarqueDetalle = lazy(() => import("./pages/embarques/EmbarqueDetalle"));
+const NuevoEmbarque = lazy(() => import("./pages/embarques/NuevoEmbarque"));
+const EditarEmbarque = lazy(() => import("./pages/embarques/EditarEmbarque"));
+
+const Cotizaciones = lazy(() => import("./pages/cotizaciones/Cotizaciones"));
+const NuevaCotizacion = lazy(() => import("./pages/cotizaciones/NuevaCotizacion"));
+const CotizacionDetalle = lazy(() => import("./pages/cotizaciones/CotizacionDetalle"));
+const EditarCotizacion = lazy(() => import("./pages/cotizaciones/EditarCotizacion"));
+
+const Clientes = lazy(() => import("./pages/clientes/Clientes"));
+const ClienteDetalle = lazy(() => import("./pages/clientes/ClienteDetalle"));
+
+const Proveedores = lazy(() => import("./pages/proveedores/Proveedores"));
+const ProveedorDetalle = lazy(() => import("./pages/proveedores/ProveedorDetalle"));
+
+const Facturacion = lazy(() => import("./pages/facturacion/Facturacion"));
+
+const Usuarios = lazy(() => import("./pages/admin-org/Usuarios"));
+const Configuracion = lazy(() => import("./pages/admin-org/Configuracion"));
+
 
 // Admin pages
 const AdminDashboard = lazy(() => import("./pages/admin/AdminDashboard"));
@@ -48,7 +56,7 @@ const PortalEmbarqueDetalle = lazy(() => import("./pages/portal/PortalEmbarqueDe
 const PortalCotizaciones = lazy(() => import("./pages/portal/PortalCotizaciones"));
 const PortalCotizacionDetalle = lazy(() => import("./pages/portal/PortalCotizacionDetalle"));
 const PortalFacturas = lazy(() => import("./pages/portal/PortalFacturas"));
-const TrackingPublico = lazy(() => import("./pages/TrackingPublico"));
+
 
 // Admin layout
 import { AdminLayout } from "./components/admin/AdminLayout";

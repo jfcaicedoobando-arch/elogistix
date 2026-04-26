@@ -1,6 +1,7 @@
 /**
- * Controller del componente <TabProformas/>: encapsula filtrado, paginación,
- * conteos por estado y construcción de las columnas de la tabla.
+ * Controller del componente <TabProformas/>: orquesta el estado UI (delegado a
+ * `useTabProformasState`), las columnas de tabla y la integración con
+ * descarga de PDF + dialog de facturación.
  */
 import { useState, useMemo } from "react";
 import { Download, FileCheck2, FileText, FileCode2 } from "lucide-react";
@@ -10,48 +11,19 @@ import { type DataTableColumn } from "@/components/shared/DataTable";
 import { formatCurrency, formatDate } from "@/lib/formatters";
 import { useProformas, type ProformaRow, type ProformaConFactura } from "@/hooks/embarque/useProformas";
 import { useDescargarProformaPdf } from "@/hooks/embarque/useDescargarProformaPdf";
+import { useTabProformasState, type FiltroEstadoProforma } from "./useTabProformasState";
 
-const DEFAULT_PAGE_SIZE = 20;
-export type FiltroEstadoProforma = "todas" | "pendiente" | "facturada";
+export type { FiltroEstadoProforma };
 
 export function useTabProformasController() {
-  const [search, setSearch] = useState("");
-  const [filtroEstado, setFiltroEstado] = useState<FiltroEstadoProforma>("todas");
-  const [page, setPage] = useState(0);
-  const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
   const [proformaAFacturar, setProformaAFacturar] = useState<ProformaRow | null>(null);
 
   const { data: proformas = [], isLoading } = useProformas();
   const { descargar, downloadingId } = useDescargarProformaPdf();
 
-  const filtered = useMemo(() => {
-    const q = search.trim().toLowerCase();
-    return proformas.filter((p) => {
-      if (filtroEstado !== "todas" && (p.estado_proforma ?? "pendiente") !== filtroEstado) return false;
-      if (!q) return true;
-      return (
-        p.numero.toLowerCase().includes(q) ||
-        p.expediente.toLowerCase().includes(q) ||
-        p.cliente_nombre.toLowerCase().includes(q) ||
-        (p.folio_factura_externa ?? "").toLowerCase().includes(q)
-      );
-    });
-  }, [proformas, search, filtroEstado]);
+  const state = useTabProformasState(proformas);
+  const { filtered, paginated, counts, totalPages, search, filtroEstado, page, pageSize } = state;
 
-  const counts = useMemo(
-    () => ({
-      todas: proformas.length,
-      pendiente: proformas.filter((p) => (p.estado_proforma ?? "pendiente") === "pendiente").length,
-      facturada: proformas.filter((p) => p.estado_proforma === "facturada").length,
-    }),
-    [proformas],
-  );
-
-  const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
-  const paginated = useMemo(
-    () => filtered.slice(page * pageSize, (page + 1) * pageSize),
-    [filtered, page, pageSize],
-  );
 
   const columns: DataTableColumn<ProformaConFactura>[] = useMemo(() => [
     {
@@ -199,12 +171,12 @@ export function useTabProformasController() {
   }));
 
   return {
-    // estado
+    // estado (delegado a useTabProformasState)
     search, filtroEstado, page, pageSize,
-    setSearch: (v: string) => { setSearch(v); setPage(0); },
-    setFiltroEstado: (v: FiltroEstadoProforma) => { setFiltroEstado(v); setPage(0); },
-    setPage,
-    setPageSize: (s: number) => { setPageSize(s); setPage(0); },
+    setSearch: state.setSearch,
+    setFiltroEstado: state.setFiltroEstado,
+    setPage: state.setPage,
+    setPageSize: state.setPageSize,
     // datos derivados
     isLoading, proformas, filtered, paginated, counts, totalPages, columns,
     csvColumns, csvRows,
