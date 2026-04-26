@@ -15,6 +15,13 @@ export interface ChangelogEntry {
  */
 export const recentChangelog: ChangelogEntry[] = [
   {
+    version: "8.92.0",
+    date: "2026-04-26",
+    type: "minor",
+    title: "Auditoría: 3 page controllers, 4 services y 4 hooks raíz reorganizados",
+    description: "Top 5 mejoras de la auditoría post-v8.91.0 ejecutadas en un solo paso, sin breaking changes. (1) Embarques.tsx (241 LOC con 5 useState/useMemo + handler de eliminar + builder de exportToCsv inline) reducido a UI pura (~150 LOC) tras extraer src/hooks/embarque/useEmbarquesPageController.ts que orquesta filtros, query de embarques, prefetch, permisos, dialogs (eliminar/duplicar), columnas y export CSV. (2) Facturacion.tsx (234 LOC) reducido a composición + columnas (~165 LOC) tras extraer src/hooks/facturacion/useFacturacionPageController.ts (filtros server-side, paginación, mutación marcarPagado, registro de bitácora, export CSV). (3) ProveedorDetalle.tsx (196 LOC con 3 useState + cálculos de totales + 2 handlers de mutación inline) reducido a UI pura (~155 LOC) tras extraer src/hooks/proveedor/useProveedorDetalleController.ts (carga proveedor, operaciones, totales facturado/pagado/pendiente, dialogs, handlers de update/delete con bitácora). (4) Cuatro services críticos migrados al patrón folder/barrel: services/bitacora/, services/catalogos/, services/configuracion/ y services/usuario/ con index.ts; los archivos antiguos quedan como shim de re-export. (5) Cuatro hooks raíz movidos a sus carpetas de dominio: useClientes → hooks/cliente/, useProveedores → hooks/proveedor/, useFacturas → hooks/facturacion/ y useDashboardData → hooks/dashboard/ (nueva carpeta); los archivos raíz quedan como shim. Build limpio (tsc), 184/184 pruebas pasando.",
+  },
+  {
     version: "8.91.0",
     date: "2026-04-26",
     type: "minor",
