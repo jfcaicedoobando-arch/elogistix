@@ -8,7 +8,7 @@ import {
   useProveedoresForSelect,
   useUpdateEmbarque,
 } from "@/hooks/useEmbarques";
-import { useClientesForSelect, useContactosCliente } from "@/hooks/useClientes";
+import { useClientesForSelect, useContactosCliente } from "@/hooks/cliente/useClientes";
 import { useAuth } from "@/contexts/AuthContext";
 import { useRegistrarActividad } from "@/hooks/useBitacora";
 import { useConceptosForm } from "@/hooks/useConceptosForm";

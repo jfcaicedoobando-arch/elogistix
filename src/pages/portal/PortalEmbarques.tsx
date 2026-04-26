@@ -5,7 +5,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Collapsible, CollapsibleTrigger, CollapsibleContent } from "@/components/ui/collapsible";
-import { usePortalEmbarques, usePortalClientUsers } from "@/hooks/usePortalData";
+import { usePortalEmbarques, usePortalClientUsers } from "@/hooks/portal/usePortalData";
 import { getEstadoColor } from "@/lib/ui/uiMappings";
 import { calcularEstadoEmbarque } from "@/lib/domain/embarque";
 import { getOrigen, getDestino } from "@/lib/formatters";

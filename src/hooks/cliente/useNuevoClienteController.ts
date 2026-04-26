@@ -1,9 +1,9 @@
 import { useState } from "react";
 import { getErrorMessage } from "@/lib/errors";
 import { useToast } from "@/hooks/use-toast";
-import { useCreateCliente } from "@/hooks/useClientes";
+import { useCreateCliente } from "@/hooks/cliente/useClientes";
 import { useRegistrarActividad } from "@/hooks/useBitacora";
-import { parseCsf } from "@/services/csfService";
+import { parseCsf } from "@/services/csf";
 import type { DocumentoChecklist } from "@/components/DocumentChecklist";
 import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 
