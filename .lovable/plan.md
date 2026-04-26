@@ -1,73 +1,134 @@
-# Auditoría de Rendimiento — Libre Carga
+# Plan: Refactor arquitectónico integral
 
-Análisis de la aplicación realizado sobre rutas, hooks, servicios, bundle y assets. Recomendaciones ordenadas por **impacto vs esfuerzo**. **No se hicieron cambios de código.**
-
----
-
-## 1. Assets y carga inicial (alto impacto, bajo esfuerzo)
-
-- **`librecarga-logo.png` (154 KB)** se importa desde 3 lugares (`Login.tsx`, `AppSidebar.tsx`, `PortalLayout.tsx`). Existe ya un `librecarga-logo.svg` (668 B) en `public/`. **Migrar todos los imports al SVG** reduce ~460 KB de descarga inicial y elimina rasterización.
-- **`favicon.png` (131 KB)** y **`favicon.ico` (20 KB)**: el PNG es excesivo para un favicon. Reemplazar por uno de 32×32 / 64×64 (~2–5 KB).
-- **`changelogData.ts` (792 LOC)** + 7 archivos `changelog/v*.ts` se importan desde rutas que no son `/changelog`. Verificar que el módulo solo se cargue al entrar a `/changelog` (lazy import dentro de la página, no en la barrel global).
-
-## 2. Consultas a base de datos (alto impacto)
-
-- **22 queries usando `.select('*')`** en servicios (`trackingService`, `proforma/queries`, `cotizacion/crud`, `cotizacion/costos`, `cotizacion/conversiones`, `embarque/eventos`, `proforma/facturar`, `configuracionService`, `portal/queries`, `planesService`). Cada una transmite columnas innecesarias. **Reemplazar por listas de columnas explícitas** (ya se hace bien en `embarque/queries.ts` con `EMBARQUE_LIST_COLUMNS`). Aplicar el mismo patrón a los demás servicios.
-- **`useCotizaciones()` en `Cotizaciones.tsx` carga TODAS las cotizaciones sin paginación servidor** (a diferencia de Embarques/Clientes/Proveedores que sí tienen `fetchEmbarquesPaginados`). Implementar paginación server-side con `range()` + `count: 'exact'`. Lo mismo revisar para `Facturacion.tsx`.
-- **Filtro `.or()` con `ilike` en `fetchEmbarquesPaginados`** sobre 4 columnas sin índices generará scans secuenciales en tablas grandes. Crear índices `GIN` con `pg_trgm` sobre `expediente`, `cliente_nombre`, `bl_master` para acelerar búsquedas.
-
-## 3. React Query — caché y deduplicación
-
-- `staleTime` global = **30 s** es bajo para catálogos casi estáticos. Subir a **5–10 min** específicamente para: `usePuertos`, `useNavieras`, `useTiposContenedor`, `useProveedores` (en selects), `useTasaIVA`, `useConfiguracion`. Reduce refetches al cambiar de página.
-- **Múltiples páginas vuelven a llamar `useClientes()` / `useProveedores()` enteros** solo para poblar selects. Considerar un endpoint ligero `fetchClientesMinimos(id, nombre)` para selects, separado del listado completo.
-- Activar `placeholderData: keepPreviousData` en queries paginadas (Embarques, Clientes, Proveedores) para que la paginación no muestre skeleton al cambiar de página.
-
-## 4. Re-renders y trabajo en main thread (impacto medio)
-
-- **Cero usos de `React.memo`** en todo `src/`. Tablas grandes (`DataTable`) se re-renderizan completas al cambiar cualquier estado del padre. Memorizar:
-  - Filas de `DataTable` (envolver `TableRow` interno con `memo` y comparador estable).
-  - Componentes pesados como `OperacionesWidgets`, `DesempenoOperadores`, `ReportesTopChart`, badges (`ProfitBadge`, `EstadoBadge`).
-- Confirmar que las `columns: DataTableColumn[]` en cada página están en `useMemo`; si se redefinen en cada render, la tabla pierde memorización.
-- **`AppSidebar` se re-renderiza con cada navegación** (usa `useLocation`). Splittearlo: parte estática (logo, nav items) memorizada; solo el indicador de ruta activa reactivo.
-
-## 5. Bundle y vendor splitting (impacto medio)
-
-- **`vite.config.ts` ya divide vendors** (react, query, charts, radix). Bien. Mejoras adicionales:
-  - Mover `recharts` (solo usado en 4 archivos) a chunks por-ruta en lugar de vendor global, ya que se incluye aunque el usuario nunca abra Operaciones/Reportes.
-  - Verificar tree-shaking de `lucide-react`: cada icono se importa nominal (`import { Ship } from "lucide-react"`) lo cual es correcto; revisar que no haya `import * as Icons`.
-  - `date-fns` se usa con imports nominales (correcto). Considerar eliminar `Locale` import duplicado si solo se usa `es`.
-- Generar el bundle con `ANALYZE=true npm run build` (ya está configurado el plugin `visualizer`) y revisar `dist/bundle-stats.html` para identificar el chunk más pesado.
-
-## 6. Hooks y orquestación de datos
-
-- **`useDashboardData`**: carga `summary` + `details` en serie (details depende de summary). Es buen patrón para TTI. Verificar que el RPC `dashboard_stats()` esté indexado y no recalcule en cada llamada (cachear en Postgres con materialized views si es lento).
-- **`useEmbarquesListExtras`**: query única por página de embarques (bien, evita N+1). Confirmar que el RPC retorna en <200 ms; si no, agregar índice por `embarque_id` en tablas de documentos/conceptos.
-- **`useExchangeRates`**: `staleTime` 1 h es razonable. No requiere cambios.
-- **`useSidebarAlerts`**: 5 min OK. Si la query es costosa, mover los conteos a un RPC dedicado en vez de varias queries.
-
-## 7. Otros
-
-- **`PortalCotizacionDetalle`, `EmbarqueDetalle`, `CotizacionDetalle`**: cada uno hace múltiples queries en paralelo al montar. Considerar un único RPC `embarque_full(id)` que devuelva embarque + conceptos + documentos + notas en un solo round-trip.
-- **`useProfitMaps` y cálculos financieros**: validar que se ejecutan dentro de `useMemo` y no en cada render del padre.
-- **Error en consola actual**: `Function components cannot be given refs` en `RouteLoadingFallback` y `Login`. Envolver con `forwardRef` cuando se usan dentro de Suspense con refs implícitas. No es performance, pero contamina logs.
+Basado en la auditoría previa. 13 hallazgos agrupados en 3 fases ejecutables. Cada fase termina con tests verdes (201/201) y entrada en changelog.
 
 ---
 
-## Resumen priorizado
+## Fase 1 — Críticos (alto impacto, riesgo bajo)
 
-| # | Acción | Impacto | Esfuerzo |
-|---|--------|---------|----------|
-| 1 | Cambiar `.png` del logo por `.svg` (3 archivos) | Alto | Mínimo |
-| 2 | Reducir tamaño del favicon | Alto | Mínimo |
-| 3 | Paginación server-side en Cotizaciones y Facturación | Alto | Medio |
-| 4 | Reemplazar `select('*')` por columnas explícitas (22 queries) | Alto | Medio |
-| 5 | Subir `staleTime` a 5–10 min en catálogos estáticos | Medio | Mínimo |
-| 6 | `keepPreviousData` en queries paginadas | Medio | Mínimo |
-| 7 | `React.memo` en filas de `DataTable` y badges | Medio | Medio |
-| 8 | Índices `pg_trgm` para búsquedas `ilike` en embarques | Medio | Bajo |
-| 9 | Endpoint ligero para selects de Clientes/Proveedores | Medio | Medio |
-| 10 | Ejecutar `ANALYZE=true` y revisar bundle | Diagnóstico | Mínimo |
-| 11 | Memorizar `AppSidebar` (parte estática) | Bajo | Bajo |
-| 12 | Consolidar queries de detalle en un RPC único | Alto | Alto |
+### Paso 1 · Lazy-load del Changelog
+- Convertir `Changelog.tsx` a `React.lazy` en `App.tsx`.
+- Cambiar `src/data/changelogData.ts` para hacer dynamic `import()` de cada `changelog/v*.ts` sólo cuando la página los pida.
+- **Resultado**: ~700 LOC fuera del bundle inicial.
 
-Si apruebas, puedo implementar los puntos 1–8 en una sola iteración (alto impacto, esfuerzo combinado bajo-medio) y dejar los puntos 9–12 para una segunda fase.
+### Paso 2 · Documentar excepciones de capa
+- Añadir sección "Excepciones autorizadas" en `ARCHITECTURE.md`:
+  - Mappers en `lib/mappers/` pueden importar `type Tables` de Supabase (es su razón de ser).
+  - `import type` desde Supabase no cuenta como violación de capa.
+- Aclarar que `data/` es para datasets de dominio; el contenido editorial (changelog) vive en `src/content/`.
+
+### Paso 3 · Extraer controllers de pages densas
+Crear hooks-controller siguiendo el patrón ya usado en `useTabProformasController`:
+- `src/hooks/reportes/useReportesPageController.ts` ← absorbe los 9 hooks de `Reportes.tsx`.
+- `src/hooks/cliente/useClienteDetalleController.ts` ← absorbe los 6 hooks de `ClienteDetalle.tsx`.
+- Aplicar `useListPageState` en `Clientes.tsx` y `Proveedores.tsx` (ya existe el hook, falta consumirlo).
+
+**Cierre Fase 1**: changelog v8.85.0, tests verdes.
+
+---
+
+## Fase 2 — Importantes (consistencia)
+
+### Paso 4 · Estandarizar barrels
+Convención única: **barrel-folder** con `index.ts`, naming en plural consistente.
+- Renombrar:
+  - `services/clienteService.ts` → `services/cliente/index.ts`
+  - `services/embarqueServices.ts` → `services/embarque/index.ts`
+  - `services/adminServices.ts` → `services/admin/index.ts`
+  - `services/proformaServices.ts` → `services/proforma/index.ts`
+  - `services/cotizacionServices.ts` → `services/cotizacion/index.ts`
+- Actualizar imports en todo `src/` (aliases `@/services/cliente`, etc., siguen funcionando).
+
+### Paso 5 · Reorganizar contenido editorial
+- Mover `src/data/changelog/` y `src/data/changelogData.ts` a `src/content/changelog/`.
+- Dejar en `src/data/`: sólo `ports.ts` (dataset de dominio).
+- Actualizar imports.
+
+### Paso 6 · Split de `AuthContext`
+Dividir `src/contexts/AuthContext.tsx` (212 LOC) en:
+- `useAuthSession` — sesión Supabase (login/logout/listener).
+- `useAuthProfile` — perfil + roles efectivos.
+- `AuthContext` queda como compositor delgado (~60 LOC).
+
+### Paso 7 · Auditoría de `useEffect`
+Pase de revisión sobre los 29 `useEffect` activos. Para cada uno:
+- ¿Puede ser `useQuery` con `enabled`? → migrar.
+- ¿Puede ser `useMemo` derivado? → reemplazar.
+- ¿Tiene deps incorrectas? → corregir.
+- Documentar los que deben quedarse como están.
+
+**Cierre Fase 2**: changelog v8.86.0, tests verdes.
+
+---
+
+## Fase 3 — Opcionales (refinamiento)
+
+### Paso 8 · Lazy-load generadores PDF
+- En los callsites de "Descargar PDF", reemplazar import estático por `const { generar } = await import('@/generators/cotizacionPdf')`.
+- Mismo tratamiento para `proformaPdf.ts`.
+- **Resultado**: jsPDF fuera del bundle inicial (~200KB+).
+
+### Paso 9 · Consolidar tipos sueltos
+- Mover `src/components/cotizacion/costosPLTypes.ts` a `src/types/cotizacionPL.ts` (consolidar con el existente).
+
+### Paso 10 · Marcar `use-toast.ts` como read-only shadcn
+- Añadir comentario de cabecera `// shadcn read-only — no editar` en `src/hooks/use-toast.ts`, alineado con la regla #3 de ARCHITECTURE.md.
+
+**Cierre Fase 3**: changelog v8.87.0, tests verdes.
+
+---
+
+## Detalles técnicos
+
+### Patrón de extracción de controller (Paso 3)
+```ts
+// src/hooks/reportes/useReportesPageController.ts
+export function useReportesPageController() {
+  const filtros = useReportesFiltros();
+  const kpis = useReportesKpis(filtros.value);
+  const tabla = useReportesTabla(filtros.value);
+  // ... resto de hooks
+  return { filtros, kpis, tabla, /* handlers */ };
+}
+
+// src/pages/Reportes.tsx queda como composición pura de UI
+const { filtros, kpis, tabla } = useReportesPageController();
+```
+
+### Patrón lazy-load PDF (Paso 8)
+```ts
+const handleDescargar = async () => {
+  const { generarCotizacionPdf } = await import("@/generators/cotizacionPdf");
+  await generarCotizacionPdf(cotizacion);
+};
+```
+
+### Patrón split AuthContext (Paso 6)
+```ts
+// useAuthSession.ts → session, signIn, signOut
+// useAuthProfile.ts → profile, roles, organization
+// AuthContext.tsx → const session = useAuthSession(); const profile = useAuthProfile(session);
+```
+
+---
+
+## Criterios de éxito
+
+- 201/201 tests verdes al cierre de cada fase.
+- Build TypeScript limpio.
+- Bundle inicial reducido (Paso 1 + 8).
+- Pages densas reducidas a < 100 LOC con composición pura.
+- Una sola convención de barrels en todo `src/services/`.
+- ARCHITECTURE.md actualizado con excepciones documentadas.
+
+## Fuera de alcance
+
+- Mejoras de performance ya planificadas (índices DB, memoización, `staleTime`) — viven en su propio plan.
+- Migración de `ports.ts` restante a BD (ya parcial según memoria).
+- Reescritura de `components/ui/` (read-only shadcn).
+
+---
+
+## Ejecución sugerida
+
+¿Ejecuto **Fase 1 completa** (Pasos 1-3) en una sola iteración, luego confirmo antes de seguir? Es el bloque de mayor valor con menor riesgo.

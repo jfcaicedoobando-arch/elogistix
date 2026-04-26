@@ -1,51 +1,48 @@
-import { useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
 import { ArrowLeft, Pencil, Building2, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useCliente, useContactosCliente, useCreateContacto, useUpdateContacto, useDeleteContacto, useUpdateCliente, useEmbarquesCliente, useCotizacionesCliente } from "@/hooks/useClientes";
-import { useClienteFinancials } from "@/hooks/useClienteFinancials";
-import { useToast } from "@/hooks/use-toast";
-import { usePermissions } from "@/hooks/usePermissions";
-import { useRegistrarActividad } from "@/hooks/useBitacora";
-import { getErrorMessage } from "@/lib/errors";
 
 import TabPortalCliente from "@/components/cliente/TabPortalCliente";
 import { DataTable } from "@/components/DataTable";
 import { embarqueColumns, cotizacionColumns } from "@/components/cliente/clienteColumns";
-import type { Tables, Enums } from "@/integrations/supabase/types";
-type ContactoCliente = Tables<'contactos_cliente'>;
-type TipoContacto = Enums<'tipo_contacto'>;
 import DialogContacto from "@/components/cliente/DialogContacto";
 import DialogEditarCliente from "@/components/cliente/DialogEditarCliente";
 import TablaContactos from "@/components/cliente/TablaContactos";
 import DoubleConfirmDeleteDialog from "@/components/DoubleConfirmDeleteDialog";
 import ClienteSummaryCards from "@/components/cliente/ClienteSummaryCards";
+import { useClienteDetalleController } from "@/hooks/cliente/useClienteDetalleController";
 
 export default function ClienteDetalle() {
-  const { id } = useParams<{ id: string }>();
-  const navigate = useNavigate();
-  const { toast } = useToast();
-
-  const { data: cliente, isLoading: loadingCliente } = useCliente(id);
-  const { data: contactos = [], isLoading: loadingContactos } = useContactosCliente(id);
-  const { data: embarquesCliente = [], isLoading: loadingEmbarques } = useEmbarquesCliente(id);
-  const { data: cotizacionesCliente = [], isLoading: loadingCotizaciones } = useCotizacionesCliente(id);
-  const { data: financials } = useClienteFinancials(id);
-  const createContacto = useCreateContacto();
-  const updateContacto = useUpdateContacto();
-  const deleteContacto = useDeleteContacto();
-  const updateCliente = useUpdateCliente();
-  const { canEdit } = usePermissions();
-  const registrarActividad = useRegistrarActividad();
-
-  const [contactDialogOpen, setContactDialogOpen] = useState(false);
-  const [editingContacto, setEditingContacto] = useState<ContactoCliente | null>(null);
-  const [editClienteOpen, setEditClienteOpen] = useState(false);
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [deletingContactoId, setDeletingContactoId] = useState<string | null>(null);
+  const {
+    navigate,
+    cliente,
+    loadingCliente,
+    contactos,
+    loadingContactos,
+    embarquesCliente,
+    loadingEmbarques,
+    cotizacionesCliente,
+    loadingCotizaciones,
+    financials,
+    canEdit,
+    isContactSaving,
+    isClientSaving,
+    isContactDeleting,
+    contactDialogOpen,
+    setContactDialogOpen,
+    editingContacto,
+    editClienteOpen,
+    setEditClienteOpen,
+    deleteDialogOpen,
+    closeDeleteDialog,
+    handleSaveContacto,
+    handleSaveCliente,
+    startDelete,
+    confirmDelete,
+    openNewContact,
+    openEditContact,
+  } = useClienteDetalleController();
 
   if (loadingCliente) {
     return (
@@ -63,49 +60,6 @@ export default function ClienteDetalle() {
       </div>
     );
   }
-
-  const handleSaveContacto = async (data: { nombre: string; rfc: string; tipo: TipoContacto; pais: string; ciudad: string; direccion: string; contacto: string; email: string; telefono: string }, editingId: string | null) => {
-    try {
-      if (editingId) {
-        await updateContacto.mutateAsync({ id: editingId, cliente_id: cliente.id, ...data });
-        toast({ title: "Contacto actualizado" });
-      } else {
-        await createContacto.mutateAsync({ cliente_id: cliente.id, ...data });
-        toast({ title: "Contacto creado" });
-      }
-      setContactDialogOpen(false);
-      setEditingContacto(null);
-    } catch (err: unknown) {
-      toast({ title: "Error", description: getErrorMessage(err), variant: "destructive" });
-    }
-  };
-
-  const handleSaveCliente = async (data: { nombre: string; rfc: string; direccion: string; ciudad: string; estado: string; cp: string; contacto: string; email: string; telefono: string }) => {
-    try {
-      await updateCliente.mutateAsync({ id: cliente.id, ...data });
-      registrarActividad.mutate({
-        accion: 'editar', modulo: 'clientes',
-        entidad_id: cliente.id, entidad_nombre: data.nombre,
-      });
-      toast({ title: "Cliente actualizado" });
-      setEditClienteOpen(false);
-    } catch (err: unknown) {
-      toast({ title: "Error", description: getErrorMessage(err), variant: "destructive" });
-    }
-  };
-
-  const startDelete = (contactoId: string) => { setDeletingContactoId(contactoId); setDeleteDialogOpen(true); };
-  const confirmDelete = async () => {
-    if (!deletingContactoId) return;
-    try {
-      await deleteContacto.mutateAsync({ id: deletingContactoId, cliente_id: cliente.id });
-      toast({ title: "Contacto eliminado" });
-    } catch (err: unknown) {
-      toast({ title: "Error", description: getErrorMessage(err), variant: "destructive" });
-    }
-  };
-
-
 
   return (
     <div className="space-y-6">
@@ -143,7 +97,11 @@ export default function ClienteDetalle() {
 
         <TabsContent value="informacion" className="space-y-6">
           <Card>
-            <CardHeader className="pb-2"><CardTitle className="text-sm flex items-center gap-2"><Building2 className="h-4 w-4" />Información General</CardTitle></CardHeader>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm flex items-center gap-2">
+                <Building2 className="h-4 w-4" />Información General
+              </CardTitle>
+            </CardHeader>
             <CardContent className="text-sm space-y-1">
               <p>{cliente.direccion}</p>
               <p>{cliente.ciudad}, {cliente.estado} {cliente.cp}</p>
@@ -159,8 +117,8 @@ export default function ClienteDetalle() {
             contactos={contactos}
             isLoading={loadingContactos}
             canEdit={canEdit}
-            onAdd={() => { setEditingContacto(null); setContactDialogOpen(true); }}
-            onEdit={(c) => { setEditingContacto(c); setContactDialogOpen(true); }}
+            onAdd={openNewContact}
+            onEdit={openEditContact}
             onDelete={startDelete}
           />
         </TabsContent>
@@ -205,25 +163,35 @@ export default function ClienteDetalle() {
         onOpenChange={setContactDialogOpen}
         contacto={editingContacto}
         onSave={handleSaveContacto}
-        isSaving={createContacto.isPending || updateContacto.isPending}
+        isSaving={isContactSaving}
       />
 
       <DialogEditarCliente
         open={editClienteOpen}
         onOpenChange={setEditClienteOpen}
-        cliente={{ nombre: cliente.nombre, rfc: cliente.rfc, direccion: cliente.direccion, ciudad: cliente.ciudad, estado: cliente.estado, cp: cliente.cp, contacto: cliente.contacto, email: cliente.email, telefono: cliente.telefono }}
+        cliente={{
+          nombre: cliente.nombre,
+          rfc: cliente.rfc,
+          direccion: cliente.direccion,
+          ciudad: cliente.ciudad,
+          estado: cliente.estado,
+          cp: cliente.cp,
+          contacto: cliente.contacto,
+          email: cliente.email,
+          telefono: cliente.telefono,
+        }}
         onSave={handleSaveCliente}
-        isSaving={updateCliente.isPending}
+        isSaving={isClientSaving}
       />
 
       <DoubleConfirmDeleteDialog
         open={deleteDialogOpen}
-        onOpenChange={(open) => { setDeleteDialogOpen(open); if (!open) setDeletingContactoId(null); }}
+        onOpenChange={closeDeleteDialog}
         entityName="este contacto"
         description="Estás a punto de eliminar este contacto del cliente. ¿Deseas continuar?"
         finalDescription="Esta acción no se puede deshacer. El contacto será eliminado permanentemente. ¿Confirmas la eliminación?"
         onConfirm={confirmDelete}
-        isPending={deleteContacto.isPending}
+        isPending={isContactDeleting}
       />
     </div>
   );

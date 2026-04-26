@@ -10,8 +10,7 @@ import NuevoClienteDialog from "@/components/cliente/NuevoClienteDialog";
 import PaginationControls from "@/components/PaginationControls";
 import { useDebounce } from "@/hooks/useDebounce";
 import { DataTable, type DataTableColumn } from "@/components/DataTable";
-
-const DEFAULT_PAGE_SIZE = 20;
+import { useListPageState } from "@/hooks/useListPageState";
 
 type ClienteRow = { id: string; nombre: string; rfc: string; ciudad: string; estado: string; contacto: string; telefono: string };
 
@@ -27,10 +26,8 @@ export default function Clientes() {
   const navigate = useNavigate();
   const { canEdit } = usePermissions();
 
-  const [search, setSearch] = useState("");
+  const { search, setSearch, page, setPage, pageSize, setPageSize } = useListPageState({});
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [page, setPage] = useState(0);
-  const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
 
   const debouncedSearch = useDebounce(search, 300);
 
@@ -59,7 +56,7 @@ export default function Clientes() {
 
       <Card>
         <CardContent className="p-4">
-          <SearchInput value={search} onChange={(v) => { setSearch(v); setPage(0); }} placeholder="Buscar por nombre o RFC..." />
+          <SearchInput value={search} onChange={setSearch} placeholder="Buscar por nombre o RFC..." />
         </CardContent>
       </Card>
 

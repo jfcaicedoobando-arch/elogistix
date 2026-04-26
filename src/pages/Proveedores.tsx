@@ -1,10 +1,9 @@
-import { useState, useRef } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Truck, Plus } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import SearchInput from "@/components/SearchInput";
-import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useProveedoresPaginados, useProveedorMutations } from "@/hooks/useProveedores";
 import type { ProveedorListItem } from "@/hooks/useProveedores";
@@ -15,11 +14,10 @@ import { usePermissions } from "@/hooks/usePermissions";
 import { useRegistrarActividad } from "@/hooks/useBitacora";
 import { useDebounce } from "@/hooks/useDebounce";
 import { DataTable, type DataTableColumn } from "@/components/DataTable";
+import { useListPageState } from "@/hooks/useListPageState";
 import type { Tables, Enums } from "@/integrations/supabase/types";
 type TipoProveedor = Enums<'tipo_proveedor'>;
 type Proveedor = Tables<'proveedores'>;
-
-const DEFAULT_PAGE_SIZE = 20;
 
 const TABS: { label: string; tipo: TipoProveedor }[] = [
   { label: 'Navieras', tipo: 'Naviera' },
@@ -42,9 +40,13 @@ const proveedorColumns: DataTableColumn<ProveedorListItem>[] = [
 ];
 
 function ProveedorTable({ tipo, search, onSelect }: { tipo: TipoProveedor; search: string; onSelect: (id: string) => void }) {
-  const [page, setPage] = useState(0);
-  const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
+  const { page, setPage, pageSize, setPageSize, resetPage } = useListPageState({});
   const debouncedSearch = useDebounce(search, 300);
+
+  // Reset a página 0 cuando cambia el término de búsqueda debounced.
+  useEffect(() => {
+    resetPage();
+  }, [debouncedSearch, resetPage]);
 
   const { data: resultado, isLoading } = useProveedoresPaginados({
     tipo,
@@ -56,13 +58,6 @@ function ProveedorTable({ tipo, search, onSelect }: { tipo: TipoProveedor; searc
   const proveedores = resultado?.data ?? [];
   const totalCount = resultado?.count ?? 0;
   const totalPages = Math.ceil(totalCount / pageSize);
-
-  // Reset page when search changes
-  const prevSearchRef = useRef(debouncedSearch);
-  if (prevSearchRef.current !== debouncedSearch) {
-    prevSearchRef.current = debouncedSearch;
-    if (page !== 0) setPage(0);
-  }
 
   return (
     <Card>

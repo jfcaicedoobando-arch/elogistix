@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import {
   recentChangelog,
+  loadChangelogV8,
   loadLegacyChangelog,
   type ChangeType,
   type ChangelogEntry,
@@ -19,13 +20,16 @@ const PAGE_SIZE = 20;
 
 export default function Changelog() {
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
+  const [v8Entries, setV8Entries] = useState<ChangelogEntry[] | null>(null);
   const [legacy, setLegacy] = useState<ChangelogEntry[] | null>(null);
-  const [loadingLegacy, setLoadingLegacy] = useState(false);
+  const [loading, setLoading] = useState(false);
 
-  const allEntries = useMemo(
-    () => (legacy ? [...recentChangelog, ...legacy] : recentChangelog),
-    [legacy],
-  );
+  const allEntries = useMemo(() => {
+    const parts: ChangelogEntry[] = [...recentChangelog];
+    if (v8Entries) parts.push(...v8Entries);
+    if (legacy) parts.push(...legacy);
+    return parts;
+  }, [v8Entries, legacy]);
 
   const visibleEntries = useMemo(
     () => allEntries.slice(0, visibleCount),
@@ -33,28 +37,41 @@ export default function Changelog() {
   );
 
   const handleLoadMore = useCallback(async () => {
-    // Si todavía hay items recientes sin mostrar, solo aumenta el contador.
+    // 1) Si aún hay items recientes sin mostrar, sólo aumenta contador.
     if (visibleCount < recentChangelog.length) {
       setVisibleCount((c) => c + PAGE_SIZE);
       return;
     }
-    // Si ya mostramos todo el reciente y aún no cargamos legacy, hacerlo.
-    if (!legacy && !loadingLegacy) {
-      setLoadingLegacy(true);
+    // 2) Cargar v8 si aún no está.
+    if (!v8Entries && !loading) {
+      setLoading(true);
+      const data = await loadChangelogV8();
+      setV8Entries(data);
+      setLoading(false);
+      setVisibleCount((c) => c + PAGE_SIZE);
+      return;
+    }
+    // 3) Si v8 ya cargó pero faltan items por mostrar, sólo aumenta contador.
+    if (v8Entries && visibleCount < recentChangelog.length + v8Entries.length) {
+      setVisibleCount((c) => c + PAGE_SIZE);
+      return;
+    }
+    // 4) Cargar legacy si aún no está.
+    if (!legacy && !loading) {
+      setLoading(true);
       const data = await loadLegacyChangelog();
       setLegacy(data);
-      setLoadingLegacy(false);
+      setLoading(false);
       setVisibleCount((c) => c + PAGE_SIZE);
       return;
     }
     setVisibleCount((c) => c + PAGE_SIZE);
-  }, [visibleCount, legacy, loadingLegacy]);
+  }, [visibleCount, v8Entries, legacy, loading]);
 
-  const totalKnown = legacy ? allEntries.length : recentChangelog.length;
-  const hasMore = visibleCount < totalKnown || !legacy;
-  const remaining = legacy
-    ? Math.max(0, allEntries.length - visibleCount)
-    : null;
+  const knownTotal = allEntries.length;
+  // Hasta cargar legacy, no sabemos el total real → mostramos botón siempre.
+  const hasMore = visibleCount < knownTotal || !legacy;
+  const remaining = legacy ? Math.max(0, knownTotal - visibleCount) : null;
 
   return (
     <div className="max-w-3xl mx-auto space-y-6">
@@ -89,13 +106,9 @@ export default function Changelog() {
 
       {hasMore && (
         <div className="flex justify-center pt-2">
-          <Button
-            variant="outline"
-            onClick={handleLoadMore}
-            disabled={loadingLegacy}
-          >
-            {loadingLegacy
-              ? "Cargando histórico…"
+          <Button variant="outline" onClick={handleLoadMore} disabled={loading}>
+            {loading
+              ? "Cargando…"
               : remaining !== null
               ? `Ver más (${remaining} restantes)`
               : "Ver más"}

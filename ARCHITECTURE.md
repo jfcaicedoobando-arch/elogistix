@@ -87,6 +87,14 @@ Cuando una operación implica **múltiples escrituras dependientes** (insertar c
 
 Ejemplos canónicos en el repo: `crear_proforma_con_conceptos`, `consolidar_proformas`, `eliminar_embarque_cascada`.
 
+## Excepciones autorizadas
+
+Estas excepciones son intencionales y NO deben marcarse como violación de capa en futuras auditorías:
+
+- **Mappers pueden importar `type Tables` de Supabase**. Los archivos en `src/lib/mappers/` (notablemente `embarqueFromDb.ts` y `embarqueToDb.ts`) importan `type Tables` / `type TablesInsert` desde `@/integrations/supabase/types`. Es su razón de ser: traducen entre el formato de la BD y el formato de UI. Sin esos tipos, los mappers no pueden cumplir su contrato.
+- **`import type` no cuenta como violación de capa**. Una page o componente puede importar tipos de `@/integrations/supabase/types` (por ejemplo `type Tables<'contactos_cliente'>`) sin que esto rompa la regla "Pages no tocan Supabase". Lo prohibido son las llamadas runtime: `supabase.from(...)`, `supabase.rpc(...)`, `supabase.storage`, `supabase.functions`.
+- **`src/data/` vs `src/content/`**: `src/data/` está reservado para datasets de dominio (ej. `ports.ts`, seeds). El contenido editorial — como el changelog — vive de facto en `src/data/changelog/` por inercia histórica; nuevas adiciones de contenido editorial deberían ir a `src/content/`.
+
 ## Deuda técnica aceptada (auditoría v8.36.0)
 
 - **Hooks Detalle fragmentados**: `useCotizacionDetalleState` + `useCotizacionDetalleHandlers` y `useEmbarqueDetalleActions` + `useEmbarqueEstadoActions` + `useEmbarqueDocumentosActions` mantienen su separación queries/mutations a propósito. Fusionarlos perjudicaría testabilidad sin reducir complejidad real.
