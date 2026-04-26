@@ -1,6 +1,5 @@
 import { useFormContext } from "react-hook-form";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { ValidationAlert } from "@/components/shared/ValidationAlert";
 import type { EmbarqueFormValues } from "@/hooks/embarque/useEmbarqueForm";
 import type { CotizacionRow } from "@/hooks/useCotizaciones";
 import { useExpedientesCliente, type ExpedienteCliente } from "@/hooks/useEmbarques";
@@ -62,14 +61,10 @@ export function StepDatosGenerales({
   const clienteId = watch('clienteId');
   const { data: expedientesCliente = [] } = useExpedientesCliente(clienteId || undefined);
 
-  const errorsRecord = errors as Record<string, string>;
-  const hasErrors = Object.keys(errorsRecord).length > 0;
-
   return (
     <Card>
       <CardHeader><CardTitle>Datos Generales</CardTitle></CardHeader>
       <CardContent className="space-y-4">
-        {hasErrors && <ValidationAlert severity="error" errors={errorsRecord} />}
         <BloqueVinculacion
           cotizacionesAceptadas={cotizacionesAceptadas}
           cotizacionVinculada={cotizacionVinculada}

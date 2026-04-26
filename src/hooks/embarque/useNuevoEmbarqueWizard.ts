@@ -34,9 +34,9 @@ import {
   validateStepRuta,
   validateStepDocumentos,
   validateStepCostos,
+  STEP_LABELS,
   type StepValidationErrors,
 } from "@/lib/domain/embarqueWizardSchemas";
-import { notifyError } from "@/lib/ui/wizardFeedback";
 
 type ModoExpediente = "nuevo" | "existente";
 
@@ -171,7 +171,12 @@ export function useNuevoEmbarqueWizard() {
       setValidationErrors((prev) => ({ ...prev, [step]: errors }));
 
       if (Object.keys(errors).length > 0) {
-        notifyError(toast, { step, errors });
+        const stepLabel = STEP_LABELS[step] ?? `Paso ${step}`;
+        toast({
+          title: `Revisa el Paso ${step}: ${stepLabel}`,
+          description: Object.values(errors)[0],
+          variant: "destructive",
+        });
         return false;
       }
       return true;

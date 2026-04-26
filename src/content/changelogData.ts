@@ -15,11 +15,11 @@ export interface ChangelogEntry {
  */
 export const recentChangelog: ChangelogEntry[] = [
   {
-    version: "8.95.0",
+    version: "8.96.0",
     date: "2026-04-26",
     type: "minor",
-    title: "Severidad uniforme y estilo único de feedback en el wizard de embarques",
-    description: "Definición y aplicación de una regla única de severidad para los 4 pasos del wizard: bloqueante (error) impide avanzar/enviar, advertencia no bloquea, éxito al completar. Nuevas variantes 'warning' y 'success' añadidas a los componentes shadcn Alert y Toast usando los tokens semánticos --warning/--success existentes. Nuevo componente compartido src/components/shared/ValidationAlert.tsx con los tres niveles (error/warning/success), iconos consistentes (AlertCircle/AlertTriangle/CheckCircle2), título por defecto y lista de mensajes en formato 'Campo: razón.'. Nuevo helper src/lib/ui/wizardFeedback.ts con notifyError/notifyWarning/notifySuccess para centralizar la emisión de toasts del wizard. Aplicado en useNuevoEmbarqueWizard (validación bloqueante por paso), useEmbarqueSubmitOrchestrator (errores de fase bloqueantes, advertencia para cotización no actualizada, éxito al crear) y los 4 Step components (StepDatosGenerales, StepDatosRuta, StepDocumentos, StepCostosPrecios) que ahora muestran ValidationAlert con el mismo layout. StepDocumentos añade una advertencia no-bloqueante cuando hay documentos pendientes. Nuevo test wizardFeedback.test.ts (4 casos). Tests 205/205 pasando.",
+    title: "Catálogo central de mensajes de error con claves por campo y paso",
+    description: "Nuevo catálogo central src/lib/domain/errorCatalog.ts como única fuente de verdad para los textos de validación del wizard de embarques. Cada mensaje se identifica con una clave estable '<step>.<campo>.<regla>' (ej. '2.eta.afterEtd', '3.documento.tooLarge'), las etiquetas de campo están centralizadas en FIELD_LABELS, y los mensajes con valores dinámicos (ids, tamaños, nombres de archivo) usan funciones que reciben parámetros tipados. API del catálogo: msg(key) para Zod refinements y getMessage(key, params) para mensajes con interpolación. Se extrajo formatValidationMessage a un módulo neutro src/lib/domain/validationFormat.ts para evitar ciclos de import. El schema embarqueWizardSchemas.ts ya no contiene strings inline: todas las llamadas a fmt() fueron reemplazadas por msg()/getMessage(). Imposible ahora introducir variaciones del mismo error en distintos archivos: cualquier cambio de tono o traducción se hace en un solo lugar. Test src/lib/domain/__tests__/errorCatalog.test.ts cubre claves estáticas, dinámicas, formato 'Campo: razón.' para todas las claves del catálogo y resiliencia ante claves desconocidas. Tests 206/206 pasando.",
   },
   {
     version: "8.94.0",

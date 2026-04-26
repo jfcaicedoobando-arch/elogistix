@@ -1,14 +1,14 @@
 import { useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import DocumentChecklist, { type DocumentoChecklist } from "@/components/DocumentChecklist";
-import { ValidationAlert } from "@/components/shared/ValidationAlert";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { AlertCircle } from "lucide-react";
 import {
   validateArchivo,
   MAX_FILE_SIZE_MB,
   type StepValidationErrors,
 } from "@/lib/domain/embarqueWizardSchemas";
 import { useToast } from "@/hooks/use-toast";
-import { notifyError } from "@/lib/ui/wizardFeedback";
 
 interface Props {
   documentos: DocumentoChecklist[];
@@ -20,14 +20,13 @@ export function StepDocumentos({ documentos, onFileChange, errors = {} }: Props)
   const { toast } = useToast();
   const adjuntados = useMemo(() => documentos.filter((d) => d.adjuntado).length, [documentos]);
   const total = documentos.length;
-  const pendientes = total - adjuntados;
-  const hasErrors = Object.keys(errors).length > 0;
+  const erroresList = Object.entries(errors);
 
   const handleFileChange = (nombre: string, file: File | undefined) => {
     if (file) {
       const err = validateArchivo({ nombre, size: file.size, type: file.type });
       if (err) {
-        notifyError(toast, { title: "Documento rechazado", message: err });
+        toast({ title: "Documento rechazado", description: err, variant: "destructive" });
         return;
       }
     }
@@ -45,13 +44,15 @@ export function StepDocumentos({ documentos, onFileChange, errors = {} }: Props)
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-3">
-        {hasErrors && <ValidationAlert severity="error" errors={errors} />}
-        {!hasErrors && pendientes > 0 && (
-          <ValidationAlert
-            severity="warning"
-            title="Documentos pendientes"
-            message={`Faltan ${pendientes} de ${total} documentos. Puedes adjuntarlos ahora o más tarde desde el detalle del embarque.`}
-          />
+        {erroresList.length > 0 && (
+          <Alert variant="destructive">
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription>
+              {erroresList.map(([k, v]) => (
+                <div key={k}><strong>{k}:</strong> {v}</div>
+              ))}
+            </AlertDescription>
+          </Alert>
         )}
         <DocumentChecklist
           documentos={documentos}

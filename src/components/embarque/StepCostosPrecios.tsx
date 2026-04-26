@@ -8,7 +8,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { CATALOGO_CONCEPTOS } from "@/constants/embarqueConstants";
-import { ValidationAlert } from "@/components/shared/ValidationAlert";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { AlertCircle } from "lucide-react";
 import type { StepValidationErrors } from "@/lib/domain/embarqueWizardSchemas";
 import type { EmbarqueFormValues } from "@/hooks/embarque/useEmbarqueForm";
 import type { ConceptoVentaLocal as ConceptoVentaRow, ConceptoCostoLocal as ConceptoCostoRow } from "@/types/concepto";
@@ -61,11 +62,20 @@ export function StepCostosPrecios(props: Props) {
     [conceptosVenta, tcUSD, tcEUR]
   );
 
-  const hasErrors = Object.keys(errors).length > 0;
+  const errorsList = Object.entries(errors);
 
   return (
     <div className="space-y-6">
-      {hasErrors && <ValidationAlert severity="error" errors={errors} />}
+      {errorsList.length > 0 && (
+        <Alert variant="destructive">
+          <AlertCircle className="h-4 w-4" />
+          <AlertDescription>
+            {errorsList.map(([k, v]) => (
+              <div key={k}>{v}</div>
+            ))}
+          </AlertDescription>
+        </Alert>
+      )}
       <Card>
         <CardHeader><CardTitle className="text-sm">Conceptos de Costo</CardTitle></CardHeader>
         <CardContent>
