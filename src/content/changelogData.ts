@@ -15,6 +15,13 @@ export interface ChangelogEntry {
  */
 export const recentChangelog: ChangelogEntry[] = [
   {
+    version: "8.94.0",
+    date: "2026-04-26",
+    type: "patch",
+    title: "Wizard Nuevo Embarque: mensajes de validación estandarizados",
+    description: "Unificación de tono, formato y severidad de todos los mensajes de error del wizard de embarques bajo el patrón 'Campo: razón.' (español MX, tuteo, sin signos de admiración). Nuevo helper formatValidationMessage(field, reason) y constante STEP_LABELS en src/lib/domain/embarqueWizardSchemas.ts garantizan consistencia futura. Toasts de validación pasan a 'Revisa el Paso N: <nombre>' (Datos generales / Ruta / Documentos / Costos). Toasts de error de submit pasan al patrón 'Error: <fase>' (generación de expediente / subida de documentos / guardado del embarque). El toast de archivo rechazado en StepDocumentos se reformatea con título 'Documento rechazado' y descripción en el mismo formato. Sin cambios funcionales: la lógica de validación se mantiene idéntica.",
+  },
+  {
     version: "8.93.0",
     date: "2026-04-26",
     type: "minor",

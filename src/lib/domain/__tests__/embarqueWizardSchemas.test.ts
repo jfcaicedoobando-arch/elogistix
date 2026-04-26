@@ -99,7 +99,7 @@ describe("validateArchivo", () => {
   });
   it("rechaza tipo no permitido", () => {
     const r = validateArchivo({ nombre: "x", size: 100, type: "application/x-msdownload" });
-    expect(r).toMatch(/Formato/);
+    expect(r).toMatch(/formato/i);
   });
 });
 

@@ -26,7 +26,7 @@ export function StepDocumentos({ documentos, onFileChange, errors = {} }: Props)
     if (file) {
       const err = validateArchivo({ nombre, size: file.size, type: file.type });
       if (err) {
-        toast({ title: `Archivo rechazado: ${nombre}`, description: err, variant: "destructive" });
+        toast({ title: "Documento rechazado", description: err, variant: "destructive" });
         return;
       }
     }
