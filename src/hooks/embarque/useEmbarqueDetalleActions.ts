@@ -1,4 +1,4 @@
-import type { EmbarqueRow } from "@/hooks/useEmbarques";
+import type { EmbarqueRow } from "@/hooks/embarque/useEmbarques";
 import { useEmbarqueEstadoActions, getSiguienteEstado } from "@/hooks/embarque/useEmbarqueEstadoActions";
 import { useEmbarqueDocumentosActions } from "@/hooks/embarque/useEmbarqueDocumentosActions";
 

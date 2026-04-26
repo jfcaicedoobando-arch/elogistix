@@ -13,7 +13,7 @@ import {
   useClientUsers,
   useInviteClientUser,
   useRevokeClientUser,
-} from "@/hooks/useClientUsersMutations";
+} from "@/hooks/cliente/useClientUsersMutations";
 import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 
 interface Props {

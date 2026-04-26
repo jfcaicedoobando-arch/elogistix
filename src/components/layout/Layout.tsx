@@ -1,9 +1,9 @@
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
-import { AppSidebar } from "@/components/AppSidebar";
+import { AppSidebar } from "@/components/layout/AppSidebar";
 import { Outlet } from "react-router-dom";
-import { GlobalSearch } from "@/components/GlobalSearch";
-import { ErrorBoundary } from "@/components/ErrorBoundary";
-import { ThemeToggle } from "@/components/ThemeToggle";
+import { GlobalSearch } from "@/components/shared/GlobalSearch";
+import { ErrorBoundary } from "@/components/shared/ErrorBoundary";
+import { ThemeToggle } from "@/components/layout/ThemeToggle";
 
 export function Layout() {
   return (

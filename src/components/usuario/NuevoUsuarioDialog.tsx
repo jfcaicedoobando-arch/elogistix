@@ -7,8 +7,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useToast } from "@/hooks/use-toast";
 import { Loader2 } from "lucide-react";
 import { getErrorMessage } from "@/lib/errors";
-import { useCreateUser } from "@/hooks/useUsuarioMutations";
-import { useOrganizationsList } from "@/hooks/useOrganizationsList";
+import { useCreateUser } from "@/hooks/usuario/useUsuarioMutations";
+import { useOrganizationsList } from "@/hooks/admin/useOrganizationsList";
 import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 
 interface Props {

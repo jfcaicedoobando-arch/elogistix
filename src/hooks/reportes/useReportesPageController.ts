@@ -2,7 +2,7 @@ import { useMemo, useState } from "react";
 import { format, startOfMonth, endOfMonth } from "date-fns";
 
 import { exportToCsv } from "@/generators/exportCsv";
-import { useRentabilidadClientes } from "@/hooks/useRentabilidadClientes";
+import { useRentabilidadClientes } from "@/hooks/cliente/useRentabilidadClientes";
 import type { SortField } from "@/components/reportes/ReportesTablaClientes";
 
 /**

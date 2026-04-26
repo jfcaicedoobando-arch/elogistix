@@ -3,7 +3,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
-import { DataTable, type DataTableColumn } from "@/components/DataTable";
+import { DataTable, type DataTableColumn } from "@/components/shared/DataTable";
 import { Trash2, UserPlus, Users } from "lucide-react";
 import type { MemberRow } from "@/hooks/admin/useAdminOrgMembers";
 import type { AppRole } from "@/types/appRole";

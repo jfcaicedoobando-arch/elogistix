@@ -8,7 +8,7 @@ import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip,
   ResponsiveContainer,
 } from "recharts";
-import { MAX_CONTENEDORES, type PeriodoFiltro } from "@/hooks/useOperacionesData";
+import { MAX_CONTENEDORES, type PeriodoFiltro } from "@/hooks/operaciones/useOperacionesData";
 import { formatCurrency } from "@/lib/formatters";
 import { KpiCard } from "@/components/operaciones/KpiCard";
 import { DesempenoOperadores } from "@/components/operaciones/DesempenoOperadores";

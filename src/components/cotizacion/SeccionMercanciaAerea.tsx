@@ -6,7 +6,7 @@ import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
 import { Plus, Trash2, Ruler } from "lucide-react";
-import type { DimensionAerea } from "@/hooks/useCotizaciones";
+import type { DimensionAerea } from "@/hooks/cotizacion/useCotizaciones";
 import SeccionMercanciaWrapper from "./SeccionMercanciaWrapper";
 import type { CotizacionFormValues } from "@/hooks/cotizacion/useCotizacionWizardForm";
 

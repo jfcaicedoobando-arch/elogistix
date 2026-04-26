@@ -11,7 +11,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { useTasaIVA } from "@/hooks/catalogos/useTasaIVA";
-import { useEmbarqueConceptosVenta } from "@/hooks/useEmbarques";
+import { useEmbarqueConceptosVenta } from "@/hooks/embarque/useEmbarques";
 import { useProformasEmbarque, useEliminarProforma } from "@/hooks/embarque/useProformas";
 import { useDescargarProformaPdf } from "@/hooks/embarque/useDescargarProformaPdf";
 import { DialogGenerarProforma } from "./DialogGenerarProforma";

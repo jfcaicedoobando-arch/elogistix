@@ -7,7 +7,7 @@ import { ESTADOS_EMBARQUE } from "@/constants/embarqueConstants";
 import { DetailRow } from "./DetailRow";
 import { useNavigate } from "react-router-dom";
 import { Link } from "lucide-react";
-import type { EmbarqueRow } from "@/hooks/useEmbarques";
+import type { EmbarqueRow } from "@/hooks/embarque/useEmbarques";
 import { calcularEstadoEmbarque } from "@/lib/domain/embarque";
 import { useEmbarquesRelacionados } from "@/hooks/embarque/useEmbarquesRelacionados";
 

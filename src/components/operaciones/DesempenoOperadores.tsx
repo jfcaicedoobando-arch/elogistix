@@ -12,8 +12,8 @@ import {
   Tooltip as RechartsTooltip,
   Legend,
 } from "recharts";
-import type { OperadorData } from "@/hooks/useOperacionesData";
-import { useDesempenoChartData, ESTADOS_KEYS } from "@/hooks/useDesempenoChartData";
+import type { OperadorData } from "@/hooks/operaciones/useOperacionesData";
+import { useDesempenoChartData, ESTADOS_KEYS } from "@/hooks/operaciones/useDesempenoChartData";
 import { ESTADO_COLOR } from "./desempenoVisuals";
 import { OperadorCard } from "./OperadorCard";
 

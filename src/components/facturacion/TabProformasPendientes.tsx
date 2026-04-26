@@ -3,7 +3,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
-import SearchInput from "@/components/SearchInput";
+import SearchInput from "@/components/selects/SearchInput";
 import { formatCurrency, formatDate } from "@/lib/formatters";
 import { montoPrincipalProforma } from "@/lib/domain/proforma";
 import { useTabProformasPendientesController } from "@/hooks/facturacion/useTabProformasPendientesController";

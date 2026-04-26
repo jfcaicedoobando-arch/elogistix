@@ -11,19 +11,19 @@ import { useToast } from "@/hooks/use-toast";
 import {
   useProveedoresForSelect,
   type ExpedienteCliente,
-} from "@/hooks/useEmbarques";
+} from "@/hooks/embarque/useEmbarques";
 import {
   useClientesForSelect,
   useContactosCliente,
 } from "@/hooks/cliente/useClientes";
-import { useConceptosForm } from "@/hooks/useConceptosForm";
+import { useConceptosForm } from "@/hooks/cotizacion/useConceptosForm";
 import { useEmbarqueForm } from "@/hooks/embarque/useEmbarqueForm";
 import { useCotizacionHydration } from "@/hooks/embarque/useCotizacionHydration";
 import { useEmbarqueSubmitOrchestrator } from "@/hooks/embarque/useEmbarqueSubmitOrchestrator";
 import {
   useCotizacionesAceptadas,
   type CotizacionRow,
-} from "@/hooks/useCotizaciones";
+} from "@/hooks/cotizacion/useCotizaciones";
 import { fetchCotizacionCostosForEmbarque } from "@/services/cotizacion";
 import {
   mapConceptosVentaFromCotizacion,

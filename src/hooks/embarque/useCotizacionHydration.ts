@@ -9,7 +9,7 @@
 import { useEffect, useRef } from "react";
 import { useLocation } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
-import { useCotizacion, type CotizacionRow } from "@/hooks/useCotizaciones";
+import { useCotizacion, type CotizacionRow } from "@/hooks/cotizacion/useCotizaciones";
 import { notifySuccess } from "@/lib/ui/appFeedback";
 
 interface UseCotizacionHydrationArgs {

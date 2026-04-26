@@ -10,7 +10,7 @@ import {
   MONEDAS_PROVEEDOR as MONEDAS,
   PAISES_PROVEEDOR as PAISES,
 } from "@/constants/proveedorConstants";
-import DocumentChecklist from "@/components/DocumentChecklist";
+import DocumentChecklist from "@/components/shared/DocumentChecklist";
 import { useNuevoProveedorController } from "@/hooks/proveedor/useNuevoProveedorController";
 import type { Enums } from "@/integrations/supabase/types";
 

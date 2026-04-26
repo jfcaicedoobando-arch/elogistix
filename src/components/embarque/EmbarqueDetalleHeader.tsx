@@ -8,7 +8,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { getEstadoColor, getModoIcon } from "@/lib/ui/uiMappings";
 import { ProformaBadge } from "./ProformaBadge";
-import type { EmbarqueRow } from "@/hooks/useEmbarques";
+import type { EmbarqueRow } from "@/hooks/embarque/useEmbarques";
 
 interface Props {
   embarque: EmbarqueRow;

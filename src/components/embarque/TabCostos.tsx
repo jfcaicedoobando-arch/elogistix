@@ -3,7 +3,7 @@ import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { formatCurrency } from "@/lib/formatters";
 import { getEstadoColor } from "@/lib/ui/uiMappings";
-import type { ConceptoVentaRow, ConceptoCostoRow } from "@/hooks/useEmbarques";
+import type { ConceptoVentaRow, ConceptoCostoRow } from "@/hooks/embarque/useEmbarques";
 
 interface Props {
   conceptosVenta: ConceptoVentaRow[];

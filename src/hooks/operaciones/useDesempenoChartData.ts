@@ -3,7 +3,7 @@
  * Extraído de DesempenoOperadores para separar cómputo del render.
  */
 import { useMemo } from "react";
-import type { OperadorData, DesgloseEstados } from "@/hooks/useOperacionesData";
+import type { OperadorData, DesgloseEstados } from "@/hooks/operaciones/useOperacionesData";
 
 export const ESTADOS_KEYS: (keyof DesgloseEstados)[] = [
   "Confirmado",

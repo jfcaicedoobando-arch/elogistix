@@ -5,10 +5,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Skeleton } from "@/components/ui/skeleton";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
-import PaginationControls from "@/components/PaginationControls";
-import { BitacoraActividad } from "@/components/BitacoraActividad";
-import { useBitacora } from "@/hooks/useBitacora";
-import { usePermissions } from "@/hooks/usePermissions";
+import PaginationControls from "@/components/shared/PaginationControls";
+import { BitacoraActividad } from "@/components/shared/BitacoraActividad";
+import { useBitacora } from "@/hooks/shared/useBitacora";
+import { usePermissions } from "@/hooks/shared/usePermissions";
 
 const MODULOS = [
   { valor: "todos", etiqueta: "Todos los módulos" },

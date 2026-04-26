@@ -12,10 +12,10 @@ import {
 } from "@/components/ui/select";
 import { formatDate, formatCurrency } from "@/lib/formatters";
 import { getEstadoColor } from "@/lib/ui/uiMappings";
-import SearchInput from "@/components/SearchInput";
-import PaginationControls from "@/components/PaginationControls";
-import { DataTable, type DataTableColumn } from "@/components/DataTable";
-import DoubleConfirmDeleteDialog from "@/components/DoubleConfirmDeleteDialog";
+import SearchInput from "@/components/selects/SearchInput";
+import PaginationControls from "@/components/shared/PaginationControls";
+import { DataTable, type DataTableColumn } from "@/components/shared/DataTable";
+import DoubleConfirmDeleteDialog from "@/components/shared/DoubleConfirmDeleteDialog";
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";

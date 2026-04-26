@@ -6,7 +6,7 @@ import { useState, useMemo } from "react";
 import { Download, FileCheck2, FileText, FileCode2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { type DataTableColumn } from "@/components/DataTable";
+import { type DataTableColumn } from "@/components/shared/DataTable";
 import { formatCurrency, formatDate } from "@/lib/formatters";
 import { useProformas, type ProformaRow, type ProformaConFactura } from "@/hooks/embarque/useProformas";
 import { useDescargarProformaPdf } from "@/hooks/embarque/useDescargarProformaPdf";

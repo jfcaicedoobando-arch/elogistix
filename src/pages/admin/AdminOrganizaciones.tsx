@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Building2, Plus } from "lucide-react";
-import { DataTable, type DataTableColumn } from "@/components/DataTable";
+import { DataTable, type DataTableColumn } from "@/components/shared/DataTable";
 import { useToast } from "@/hooks/use-toast";
 import {
   Dialog,
@@ -15,7 +15,7 @@ import {
 import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 import { Label } from "@/components/ui/label";
 import { useNavigate } from "react-router-dom";
-import { useAdminOrganizations, useCreateOrganization, type OrgRow } from "@/hooks/useAdminData";
+import { useAdminOrganizations, useCreateOrganization, type OrgRow } from "@/hooks/admin/useAdminData";
 
 export default function AdminOrganizaciones() {
   const [dialogOpen, setDialogOpen] = useState(false);

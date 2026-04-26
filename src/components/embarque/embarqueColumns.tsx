@@ -3,9 +3,9 @@ import { Badge } from "@/components/ui/badge";
 import {
   Tooltip, TooltipContent, TooltipTrigger, TooltipProvider,
 } from "@/components/ui/tooltip";
-import type { DataTableColumn } from "@/components/DataTable";
-import { calcularEstadoEmbarque } from "@/hooks/useEmbarques";
-import type { EmbarqueRow } from "@/hooks/useEmbarques";
+import type { DataTableColumn } from "@/components/shared/DataTable";
+import { calcularEstadoEmbarque } from "@/hooks/embarque/useEmbarques";
+import type { EmbarqueRow } from "@/hooks/embarque/useEmbarques";
 import { formatDate, getOrigen, getDestino, shortName } from "@/lib/formatters";
 import { getEstadoColor, getModoIcon } from "@/lib/ui/uiMappings";
 import EmbarqueRowActions from "./EmbarqueRowActions";

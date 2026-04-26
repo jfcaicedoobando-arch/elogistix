@@ -9,7 +9,7 @@ import {
   CommandItem,
   CommandList,
 } from "@/components/ui/command";
-import { useGlobalSearch, type GlobalSearchResult } from "@/hooks/useGlobalSearch";
+import { useGlobalSearch, type GlobalSearchResult } from "@/hooks/shared/useGlobalSearch";
 
 type SearchResult = GlobalSearchResult;
 

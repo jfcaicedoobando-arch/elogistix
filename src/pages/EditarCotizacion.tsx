@@ -2,15 +2,15 @@ import { useParams, useNavigate, Navigate } from "react-router-dom";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
 import { useClientesForSelect } from "@/hooks/cliente/useClientes";
-import { useCotizacion, useUpdateCotizacion, useCreateCotizacion } from "@/hooks/useCotizaciones";
+import { useCotizacion, useUpdateCotizacion, useCreateCotizacion } from "@/hooks/cotizacion/useCotizaciones";
 import { useCotizacionCostos, useUpsertCotizacionCostos } from "@/hooks/cotizacion/useCotizacionCostos";
-import { useRegistrarActividad } from "@/hooks/useBitacora";
+import { useRegistrarActividad } from "@/hooks/shared/useBitacora";
 import { useAuth } from "@/contexts/AuthContext";
-import { usePermissions } from "@/hooks/usePermissions";
+import { usePermissions } from "@/hooks/shared/usePermissions";
 import { useCotizacionWizardForm } from "@/hooks/cotizacion/useCotizacionWizardForm";
 import CotizacionWizardLayout from "@/components/cotizacion/CotizacionWizardLayout";
 import type { NavigateFunction } from "react-router-dom";
-import type { CotizacionRow } from "@/hooks/useCotizaciones";
+import type { CotizacionRow } from "@/hooks/cotizacion/useCotizaciones";
 import type { CostoCotizacion } from "@/hooks/cotizacion/useCotizacionCostos";
 
 export default function EditarCotizacion() {

@@ -2,7 +2,7 @@ import { useCallback } from "react";
 import type { UseFormReturn } from "react-hook-form";
 import type { NavigateFunction } from "react-router-dom";
 import type { CostoCotizacion } from "@/hooks/cotizacion/useCotizacionCostos";
-import type { CreateCotizacionInput, CotizacionRow, ConceptoVentaCotizacion } from "@/hooks/useCotizaciones";
+import type { CreateCotizacionInput, CotizacionRow, ConceptoVentaCotizacion } from "@/hooks/cotizacion/useCotizaciones";
 import type { FilaCostoLocal } from "@/types/cotizacionPL";
 import type { CotizacionFormValues } from "@/lib/mappers/cotizacionForm";
 import { savePaso1, savePaso2, savePaso3, savePasoFinal, buildConceptosFromCostos } from "@/services/cotizacion";

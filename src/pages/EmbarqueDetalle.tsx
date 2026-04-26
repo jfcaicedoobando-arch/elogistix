@@ -2,7 +2,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
-import { usePermissions } from "@/hooks/usePermissions";
+import { usePermissions } from "@/hooks/shared/usePermissions";
 import { useState } from "react";
 import {
   useEmbarque,
@@ -12,7 +12,7 @@ import {
   useEmbarqueNotas,
   useEmbarqueFacturas,
   calcularEstadoEmbarque,
-} from "@/hooks/useEmbarques";
+} from "@/hooks/embarque/useEmbarques";
 import { useEmbarqueFinancials } from "@/hooks/embarque/useEmbarqueFinancials";
 import { useEmbarqueDetalleActions, getSiguienteEstado } from "@/hooks/embarque/useEmbarqueDetalleActions";
 import { TabResumen } from "@/components/embarque/TabResumen";

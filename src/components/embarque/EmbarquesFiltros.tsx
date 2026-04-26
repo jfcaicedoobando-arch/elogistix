@@ -4,7 +4,7 @@ import {
 } from "@/components/ui/select";
 import { getModoIcon } from "@/lib/ui/uiMappings";
 import { ESTADOS_EMBARQUE, MODOS_TRANSPORTE } from "@/constants/embarqueConstants";
-import SearchInput from "@/components/SearchInput";
+import SearchInput from "@/components/selects/SearchInput";
 
 interface ClienteOption {
   id: string;

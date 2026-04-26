@@ -13,15 +13,15 @@ import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { notifyError, notifyWarning, notifySuccess } from "@/lib/ui/appFeedback";
 import { useAuth } from "@/contexts/AuthContext";
-import { useRegistrarActividad } from "@/hooks/useBitacora";
+import { useRegistrarActividad } from "@/hooks/shared/useBitacora";
 import {
   useCreateEmbarque,
   type ExpedienteCliente,
-} from "@/hooks/useEmbarques";
+} from "@/hooks/embarque/useEmbarques";
 import {
   useUpdateEstadoCotizacion,
   type CotizacionRow,
-} from "@/hooks/useCotizaciones";
+} from "@/hooks/cotizacion/useCotizaciones";
 import {
   resolverExpediente,
   subirDocumentosEmbarque,

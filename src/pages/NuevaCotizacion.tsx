@@ -1,9 +1,9 @@
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { useClientesForSelect } from "@/hooks/cliente/useClientes";
-import { useCreateCotizacion, useUpdateCotizacion } from "@/hooks/useCotizaciones";
+import { useCreateCotizacion, useUpdateCotizacion } from "@/hooks/cotizacion/useCotizaciones";
 import { useUpsertCotizacionCostos } from "@/hooks/cotizacion/useCotizacionCostos";
-import { useRegistrarActividad } from "@/hooks/useBitacora";
+import { useRegistrarActividad } from "@/hooks/shared/useBitacora";
 import { useAuth } from "@/contexts/AuthContext";
 import { useCotizacionWizardForm } from "@/hooks/cotizacion/useCotizacionWizardForm";
 import CotizacionWizardLayout from "@/components/cotizacion/CotizacionWizardLayout";

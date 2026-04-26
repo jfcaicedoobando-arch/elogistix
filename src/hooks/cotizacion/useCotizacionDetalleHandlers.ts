@@ -6,7 +6,7 @@ import {
   useConvertirProspectoACliente,
   useConvertirCotizacionAEmbarques,
   type CotizacionRow,
-} from "@/hooks/useCotizaciones";
+} from "@/hooks/cotizacion/useCotizaciones";
 import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 import type { ClienteFormData } from "@/types/clienteForm";
 

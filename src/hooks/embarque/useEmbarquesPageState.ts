@@ -3,9 +3,9 @@
  * Extraído de src/pages/Embarques.tsx para separar UI de orquestación.
  */
 import { useState, useMemo } from "react";
-import { useDebounce } from "@/hooks/useDebounce";
-import { useEmbarquesPaginados, calcularEstadoEmbarque } from "@/hooks/useEmbarques";
-import type { EmbarqueRow } from "@/hooks/useEmbarques";
+import { useDebounce } from "@/hooks/shared/useDebounce";
+import { useEmbarquesPaginados, calcularEstadoEmbarque } from "@/hooks/embarque/useEmbarques";
+import type { EmbarqueRow } from "@/hooks/embarque/useEmbarques";
 
 const DEFAULT_PAGE_SIZE = 20;
 

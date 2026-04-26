@@ -14,12 +14,12 @@ import {
   Settings,
   BarChart3,
 } from "lucide-react";
-import { NavLink } from "@/components/NavLink";
+import { NavLink } from "@/components/layout/NavLink";
 import librecargaLogo from "@/assets/librecarga-logo.png";
 import { useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useOrganization } from "@/contexts/OrganizationContext";
-import { useSidebarAlerts } from "@/hooks/useSidebarAlerts";
+import { useSidebarAlerts } from "@/hooks/shared/useSidebarAlerts";
 import {
   Sidebar,
   SidebarContent,
@@ -68,7 +68,7 @@ const adminItems = [
 
 // Import Building2 for admin link
 import { Building2 } from "lucide-react";
-import { OrgSwitcher } from "@/components/OrgSwitcher";
+import { OrgSwitcher } from "@/components/layout/OrgSwitcher";
 
 export function AppSidebar() {
   const { state } = useSidebar();

@@ -3,7 +3,7 @@
  * Movido desde src/hooks/cotizacion/useCotizacionTypes.ts para que services/lib/generators
  * puedan importar tipos sin invertir la jerarquía de capas.
  *
- * El barrel `@/hooks/useCotizaciones` los re-exporta para preservar la API pública.
+ * El barrel `@/hooks/cotizacion/useCotizaciones` los re-exporta para preservar la API pública.
  */
 import type { Tables } from '@/integrations/supabase/types';
 

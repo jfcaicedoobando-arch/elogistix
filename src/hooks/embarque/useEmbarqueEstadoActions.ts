@@ -1,6 +1,6 @@
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
-import { useRegistrarActividad } from "@/hooks/useBitacora";
+import { useRegistrarActividad } from "@/hooks/shared/useBitacora";
 import { getErrorMessage } from "@/lib/errors";
 import { ESTADOS_EMBARQUE } from "@/constants/embarqueConstants";
 import {
@@ -8,7 +8,7 @@ import {
   useSyncEstadoEmbarque,
   calcularEstadoEmbarque,
   type EmbarqueRow,
-} from "@/hooks/useEmbarques";
+} from "@/hooks/embarque/useEmbarques";
 import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 import { useEffect } from "react";
 
