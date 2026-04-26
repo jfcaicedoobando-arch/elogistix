@@ -26,11 +26,16 @@ import {
 } from "@/hooks/useCotizaciones";
 import { fetchCotizacionCostosForEmbarque } from "@/services/cotizacion";
 import {
-  validateDatosGenerales,
   mapConceptosVentaFromCotizacion,
   mapConceptosCostoFromCotizacion,
 } from "@/lib/domain/embarqueWizard";
-import type { EmbarqueValidationErrors } from "@/components/embarque/StepDatosGenerales";
+import {
+  validateStepDatosGenerales,
+  validateStepRuta,
+  validateStepDocumentos,
+  validateStepCostos,
+  type StepValidationErrors,
+} from "@/lib/domain/embarqueWizardSchemas";
 
 type ModoExpediente = "nuevo" | "existente";
 
