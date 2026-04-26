@@ -1,64 +1,85 @@
-# Auditoría arquitectónica — Estado actual
+## Auditoría arquitectónica — estado actual
 
-Tras los refactors recientes (eliminación de shims, extracción de controllers, catálogo de errores, ValidationAlert reubicado) la arquitectura está **mayoritariamente limpia**:
+Tras los refactors v8.95–v8.98 (notificaciones unificadas, reorganización de hooks/componentes, descomposición del wizard), la arquitectura está **mayormente sana**:
 
-- ✅ `services/` bien segmentado por dominio
-- ✅ `hooks/` agrupados por feature
-- ✅ Páginas delgadas (la más grande tiene 227 líneas)
-- ✅ Sin shims/re-exports redundantes
-- ✅ Catálogo de errores y feedback centralizados disponibles
+- ✅ **Separación de capas correcta**: 0 llamadas directas a `supabase.from/rpc` desde `components/` o `pages/`. Solo 5 imports legítimos de UI a `services/` (tipos + helpers de auth/storage en Login y TrackingPublico).
+- ✅ **Hooks organizados por dominio** (`admin/`, `cliente/`, `cotizacion/`, `embarque/`, `portal/`, `shared/`, etc.).
+- ✅ **Componentes organizados** en `layout/`, `auth/`, `selects/`, `shared/` + carpetas por dominio.
+- ✅ **`services/` por dominio** con barrels (`embarque/`, `cotizacion/`, `portal/`, etc.).
+- ✅ **205/205 tests pasando**, TypeScript limpio.
 
-## Hallazgos restantes (5 mejoras)
+### Hallazgos menores restantes
 
-### 1. CRÍTICO — Toasts inline sin migrar (49 archivos)
-`appFeedback.ts` existe pero solo lo usan 4 archivos. Los 49 restantes siguen llamando `toast({ title, description, variant })` directamente, lo que rompe la consistencia de severidad (warning/error/success) y dificulta cambios futuros (ej. internacionalización, telemetría).
+1. **Inconsistencia en barrels de hooks**: `cotizacion/`, `embarque/`, `cliente/`, `proveedor/`, `usuario/`, `admin/`, `dashboard/`, `operaciones/`, `reportes/`, `facturacion/` **no tienen `index.ts`**, mientras que `portal/`, `catalogos/`, `configuracion/`, `shared/` **sí lo tienen**. Esto provoca imports verbosos y poco uniformes.
+2. **Páginas planas en `src/pages/`**: 23 archivos en raíz, sin agrupación por dominio (a diferencia de `pages/admin/` y `pages/portal/` que sí están agrupadas).
+3. **`useEmbarqueMutations.ts` (185 LOC)** mezcla mutaciones de creación, actualización, eliminación y cambio de estado — candidato a split por responsabilidad.
+4. **`services/cotizacion/conversiones.ts` (225 LOC)** agrupa 4 conversiones heterogéneas (duplicar / prospecto→cliente / cotización→embarques / portal-respuesta). Candidato a split.
+5. **`useTabProformasController.tsx` (214 LOC)** mezcla estado UI + orquestación de mutaciones — candidato a split entre estado y handlers.
 
-Top ofensores: `useProformas.ts` (10), `useCotizacionWizardSteps.ts` (9), `useCotizacionDetalleHandlers.ts` (7), `useClienteDetalleController.ts` (7), `useEmbarqueDocumentosActions.ts` (5), `useNuevoClienteController.ts` (5), catálogos (5 c/u).
-
-### 2. MEDIO — Componentes sueltos en raíz de `src/components/`
-19 archivos `.tsx` viven directamente en `src/components/` mezclando layout, navegación, utilitarios y selectores. Mover a subcarpetas semánticas:
-- `layout/`: `AppSidebar`, `Layout`, `NavLink`, `OrgSwitcher`, `ThemeToggle`, `RouteLoadingFallback`
-- `auth/`: `ProtectedRoute`, `PortalProtectedRoute`
-- `selects/`: `NavieraSelect`, `PortSelect`, `SearchInput`
-- `shared/`: `DataTable`, `PaginationControls`, `DocumentChecklist`, `DoubleConfirmDeleteDialog`, `ErrorBoundary`, `BitacoraActividad`, `GlobalSearch`
-
-### 3. MEDIO — Hooks sueltos en raíz de `src/hooks/`
-24 hooks `.ts` en raíz que pertenecen a features ya existentes:
-- → `admin/`: `useAdminData`, `useAdminOrgDetalle`, `useOrganizationsList`, `useOrgMembersMutations`, `usePlanes`
-- → `cliente/`: `useClienteFinancials`, `useClientUsersMutations`, `useRentabilidadClientes`
-- → `embarque/`: `useEmbarques`, `useTrackingLinks`, `useProfitMaps`
-- → `cotizacion/`: `useCotizaciones`, `useConceptosForm`
-- → `operaciones/`: `useOperacionesData`, `useDesempenoChartData`
-- → `usuario/`: `useUsuarios`, `useUsuarioMutations`
-- → `shared/`: `useDebounce`, `useListPageState`, `useOrgFilter`, `usePermissions`, `useSidebarAlerts`, `useBitacora`, `useGlobalSearch`
-
-### 4. BAJO — Hook gigante `useNuevoEmbarqueWizard.ts` (260 líneas)
-Único hook por encima del umbral cómodo (200 líneas). Contiene paso-a-paso, validación, persistencia parcial y submit. Se puede dividir en `useNuevoEmbarqueWizardSteps` + `useNuevoEmbarqueWizardSubmit`.
-
-### 5. BAJO — `ProfitBadge.tsx` resucitado en raíz
-Se eliminó en el refactor anterior y volvió a aparecer en `src/components/ProfitBadge.tsx` (1.5 KB). Verificar si es duplicado o si reemplaza a uno en `dashboard/`.
+Ninguno es crítico. Son mejoras incrementales de mantenibilidad.
 
 ---
 
-## Plan de ejecución (1 paso)
+## 5 mejoras propuestas (ejecutables en 1 solo paso, v8.99.0)
 
-Las mejoras **#2, #3 y #5** son refactors de movimiento de archivos con **alto riesgo de romper imports en cascada** (sin cambios funcionales pero ~150 imports a actualizar). La **#4** requiere análisis cuidadoso del wizard. La **#1** aporta el mayor beneficio arquitectónico real.
+Ordenadas de mayor a menor impacto:
 
-**Propuesta**: ejecutar en este turno **solo la mejora #1** (la más impactante y autocontenida), más una verificación de la #5:
+### 1. Unificar barrels de hooks por dominio (CRÍTICO para DX)
+Crear `index.ts` en los 10 dominios de hooks que faltan (`cotizacion`, `embarque`, `cliente`, `proveedor`, `usuario`, `admin`, `dashboard`, `operaciones`, `reportes`, `facturacion`) re-exportando todos los hooks. Permite imports limpios:
+```ts
+// Antes
+import { useEmbarques } from "@/hooks/embarque/useEmbarques";
+import { useEmbarqueForm } from "@/hooks/embarque/useEmbarqueForm";
+// Después
+import { useEmbarques, useEmbarqueForm } from "@/hooks/embarque";
+```
+Sin tocar imports existentes (siguen funcionando), pero habilitan adopción gradual.
 
-1. **Migrar los 49 archivos** de `toast({...})` inline a `notifyError`/`notifyWarning`/`notifySuccess`/`notifyInfo` desde `@/lib/ui/appFeedback`. Mapeo:
-   - `variant: "destructive"` → `notifyError`
-   - títulos con "Atención"/"Advertencia" → `notifyWarning`
-   - resto sin variant → `notifySuccess` o `notifyInfo` según contenido
-2. **Verificar `ProfitBadge.tsx`**: si es duplicado del de `dashboard/`, eliminarlo y reapuntar imports; si no, moverlo a `components/shared/`.
-3. **Ejecutar** `bunx tsc --noEmit` y suite de tests para validar.
-4. **Añadir entrada de changelog** v8.96.0 documentando la unificación de feedback.
+### 2. Agrupar páginas por dominio en `src/pages/`
+Mover las 23 páginas raíz a sub-carpetas semánticas, alineado con el patrón ya existente de `admin/` y `portal/`:
+```text
+pages/
+  auth/        → Login, TrackingPublico, NotFound
+  dashboard/   → Dashboard, Operaciones, Reportes, Bitacora, Changelog
+  embarques/   → Embarques, EmbarqueDetalle, NuevoEmbarque, EditarEmbarque
+  cotizaciones/→ Cotizaciones, CotizacionDetalle, NuevaCotizacion, EditarCotizacion
+  clientes/    → Clientes, ClienteDetalle
+  proveedores/ → Proveedores, ProveedorDetalle
+  facturacion/ → Facturacion
+  admin-org/   → Configuracion, Usuarios   (admin de organización)
+```
+Actualizar imports lazy en `src/App.tsx`.
 
-Las mejoras #2, #3 y #4 quedan como propuestas para iteraciones siguientes (movimientos masivos de archivos merecen su propio turno aislado para revisión).
+### 3. Split de `services/cotizacion/conversiones.ts`
+Dividir en 4 archivos cohesivos bajo `services/cotizacion/conversiones/`:
+- `duplicar.ts` — `duplicarCotizacion`
+- `prospecto.ts` — `convertirProspectoACliente`
+- `embarques.ts` — `convertirCotizacionAEmbarques`
+- `portal.ts` — `portalResponderCotizacion`
+
+Mantener `conversiones/index.ts` re-exportando todo para no romper consumidores.
+
+### 4. Split de `useEmbarqueMutations.ts`
+Separar en 3 hooks por responsabilidad bajo `hooks/embarque/mutations/`:
+- `useCreateEmbarque.ts`
+- `useUpdateEmbarque.ts`
+- `useDeleteEmbarque.ts`
+
+Mantener `useEmbarqueMutations.ts` como barrel re-export.
+
+### 5. Split de `useTabProformasController.tsx`
+Extraer la lógica de estado UI (filtros, paginación, selección) a `useTabProformasState.ts` y dejar el controller original como orquestador delgado de mutaciones + estado compuesto.
+
+---
 
 ## Detalles técnicos
 
-- `appFeedback` ya expone: `notifyError`, `notifyWarning`, `notifySuccess`, `notifyInfo` con tonos consistentes con `kpiTones`.
-- No hay cambios de comportamiento visible al usuario más allá de severidad correcta en tonos de los toasts.
-- Sin migraciones de base de datos.
-- Sin nuevos paquetes.
+- **Cero cambios funcionales**: solo reorganización + nuevos barrels.
+- **Compatibilidad backward**: todos los splits mantienen archivos/exports originales como re-exports para no romper consumidores ni tests.
+- **Verificación**: `bunx tsc --noEmit` + `bunx vitest run` deben pasar 205/205.
+- **Changelog**: agregar entrada **v8.99.0 — Refinamiento arquitectónico final** en `src/content/changelog/v8/chunks/0.ts`.
+- **Memoria**: actualizar `mem://technical/architecture-and-standards` si procede.
+
+## Si prefieres no aplicar todas
+
+Si solo quieres lo de mayor impacto, las mejoras **#1 (barrels)** y **#2 (agrupar pages)** son las que más impacto tienen en DX y descubribilidad. #3, #4, #5 son refinamientos de cohesión que pueden dejarse para más adelante sin riesgo.
