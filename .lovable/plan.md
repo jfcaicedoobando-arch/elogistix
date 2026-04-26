@@ -1,110 +1,93 @@
-# Auditoría arquitectónica (post v8.69.0)
+# Auditoría arquitectónica (post v8.72.0)
 
 ## Estado general
 
-La arquitectura está en muy buen estado tras los refactors recientes:
-- **Servicios**: 19 servicios + 3 directorios modulares (`embarque/`, `proforma/`, `portal/`, `cotizacion/`).
-- **Hooks**: la mayoría son wrappers delgados de React Query sobre servicios.
-- **Páginas**: todas por debajo de 250 líneas, actuando como contenedores presentacionales.
-- **Dominio**: lógica financiera, de proforma, embarque y cotización centralizada en `src/lib/domain/` y `src/lib/parsers/`.
-- **Tests**: 191/191 pasando.
-- **Toast**: ya unificado en `useToast` (no quedan imports de `sonner`).
-- **Componentes UI**: ningún componente fuera de `ui/` accede directo a Supabase (todo migrado).
+Excelente. Tras los 8 pasos del plan anterior:
+- **0 imports directos a Supabase** desde `hooks/`, `components/` o `pages/`.
+- **0 imports de `sonner`** (toasts unificados en `useToast`).
+- `src/lib/` reorganizado en subcarpetas semánticas.
+- Histórico de changelog particionado por major.
+- 17 componentes shadcn no usados eliminados.
+- **196/196 tests** pasando, tsc limpio.
+
+La base es sólida. Lo que queda es **deuda menor** y **pulido fino**.
 
 ## Hallazgos abiertos (priorizados)
 
-### Críticos (deuda técnica activa)
+### Críticos
 
-**C1 — Hooks que aún hacen `supabase.rpc/from` directo (6 archivos)**
-Quedan 6 hooks que conservan llamadas directas a Supabase, lo que rompe el patrón "hook = wrapper de servicio":
-- `useConfiguracion.ts` — lectura/escritura de `public.configuracion`.
-- `useConfiguracionGlobal.ts` — lectura/escritura global.
-- `usePlanes.ts` — CRUD de planes.
-- `useFacturas.ts` — listado de facturas.
-- `useDashboardData.ts` — 2 RPC (`dashboard_summary`, `dashboard_details`).
-- `useOperacionesData.ts` — 1 RPC (`operaciones_stats`).
+**C1 — `useNuevoEmbarqueWizard.ts` (314 LOC)**
+Sigue siendo el único hook que excede el guardrail de 250 LOC (junto con `sidebar.tsx` de shadcn que no se toca). Aunque parte de la lógica ya se extrajo en v8.71 a `lib/domain/embarqueWizard.ts`, el hook aún concentra: estado del wizard + hidratación desde cotización + manejo de `modoExpediente` + orquestación del submit con 4 servicios (resolverExpediente, subirDocumentos, createEmbarque, updateEstadoCotizacion, registrarActividad).
 
-**C2 — `useNuevoEmbarqueWizard.ts` (336 líneas)**
-Es el hook más grande del repo. Mezcla estado del wizard + validación + hidratación desde cotización + manejo de expedientes + subida de documentos. Debería extraerse a:
-- `lib/domain/embarqueWizard.ts` (validaciones puras + hidratación desde cotización).
-- `useNuevoEmbarqueWizard.ts` queda como orquestador (<150 líneas).
+Sub-extracciones posibles:
+- `useCotizacionHydration(cotizacionId)` → encapsula el `useCotizacion` + `useEffect` que hidrata el form al elegir cotización.
+- `useExpedienteResolver(clienteId, modoExpediente)` → expediente nuevo/existente.
+- `submitNuevoEmbarque()` como función pura en `lib/domain/embarqueWizard.ts` que reciba dependencies inyectadas (testeable sin React).
 
-### Medios (mejoras de cohesión)
+### Medios
 
-**M1 — `TabProformas.tsx` (270 líneas) y `TabProformasPendientes.tsx` (246 líneas)**
-Contienen filtrado, conteos, definiciones de columnas y paginación inline. Extraer:
-- `useTabProformasController()` con `filtered`, `counts`, `paginated`, `columns`.
-- Componente queda <120 líneas (solo JSX).
+**M1 — Páginas portal con lógica de UI compleja**
+- `PortalCotizacionDetalle.tsx` (288 LOC): mezcla render + estado de confirmación + handlers de aceptar/rechazar + textarea de comentario.
+- `PortalEmbarqueDetalle.tsx` (251 LOC): lógica similar de estado local mezclada con presentación.
 
-**M2 — `DialogGenerarProforma.tsx` (237 líneas)**
-Ya no llama a Supabase directo, pero gestiona estado de wizard multi-paso (selección → confirmación). Extraer un `useDialogGenerarProformaController()`.
+Ambas exceden 250 LOC. Extraer un controller hook por página (mismo patrón aplicado en `TabProformas`).
 
-**M3 — Colores hardcodeados (15+ archivos)**
-Persisten clases tipo `bg-blue-100 text-blue-800` para badges de estado en:
-- `TabProformas.tsx`, `ProformaBadge.tsx`, `embarqueColumns.tsx`, `BloqueVinculacion.tsx`, `HistorialProformas.tsx`, `ResumenConceptosVenta.tsx`, `KpiCard.tsx`, `OperacionesWidgets.tsx`, `ClienteSummaryCards.tsx`, `ReportesKpiCards.tsx`, `ReportesTablaClientes.tsx`, `cotizacion/CotizacionWizardLayout.tsx`, `pages/Operaciones.tsx`, `admin/AdminOrganizaciones.tsx`, etc.
+**M2 — Colores categóricos hardcodeados aún presentes**
+Quedan ~7 archivos con clases `bg-{color}-{n}`:
+`ConceptoRowUSD.tsx`, `ResumenConceptosVenta.tsx`, `ReportesKpiCards.tsx`, `OperacionesWidgets.tsx`, `ClienteSummaryCards.tsx`, `pages/Operaciones.tsx`, `KpiCard.tsx`.
 
-Solución: tokens semánticos en `index.css` + `tailwind.config.ts` (`success`, `warning`, `info`, `pending`) y un `<StatusBadge variant="..."/>` reutilizable.
+(Los archivos `lib/ui/uiMappings.ts` y `estadoConfig.ts` se mantienen — son **paletas categóricas** intencionales, no semánticas, y ya están centralizadas.)
 
-**M4 — `src/data/changelog/legacy.ts` (1523 líneas) y `changelogData.ts` (694 líneas)**
-El changelog crece sin techo. Recomendado: dividir por año (`changelog/2024.ts`, `changelog/2025.ts`, `changelog/2026.ts`) y mantener solo las últimas N entradas en el bundle inicial (lazy-load del histórico).
+Definir tokens semánticos extra (`--metric-positive`, `--metric-neutral`, `--metric-warning`) o reutilizar `success/warning/info` para KPIs.
 
-### Opcionales (cosmético / organización)
+**M3 — `lib/mappers/embarque.ts` (241 LOC)**
+Cerca del límite. Contiene mappers de form↔DB para embarques. Posible split por dirección (`embarqueFromDb.ts` / `embarqueToDb.ts`) si crece más.
 
-**O1 — Reorganización de `src/lib/`**
-11 archivos sueltos en la raíz. Agruparlos en subcarpetas semánticas:
-```text
-src/lib/
-  formatters/   ← formatters.ts
-  financial/    ← financialUtils.ts, profitUtils.ts, costosUSD.ts
-  storage/      ← storageUtils.ts
-  ui/           ← uiMappings.ts, estadoConfig.ts
-  errors/       ← errorUtils.ts
-  contacto/     ← contactoUtils.ts
-  query/        ← queryKeys.ts
-  domain/, mappers/, parsers/  ← (ya existen)
-  utils.ts      ← (cn helper, queda en raíz)
-```
+### Opcionales
 
-**O2 — Componentes UI shadcn no usados**
-`carousel.tsx` (224 líneas), `menubar.tsx` (207 líneas), `chart.tsx` (303 líneas), `context-menu.tsx` (178 líneas) — verificar uso real y borrar los no consumidos para reducir bundle.
+**O1 — Dependencias huérfanas en `package.json`**
+Se eliminaron 17 componentes shadcn pero las libs siguen instaladas:
+`embla-carousel-react`, `react-resizable-panels`, `vaul`, `input-otp`. Quitarlas reduce `node_modules` y bundle.
 
-**O3 — `usuarioService.ts` Edge Functions**
-La gestión de usuarios va por Edge Functions; documentar este contrato en un README dentro de `src/services/` para mantener consistencia con el resto que va por RPC/PostgREST.
+**O2 — `src/types/types.ts` genérico**
+Archivo con nombre poco descriptivo. Auditar contenido y renombrar/dividir según dominio (p. ej. `commonTypes.ts`, o mover a sus dominios respectivos).
+
+**O3 — Subcarpetas vacías en `lib/` agregar `index.ts` barrels**
+Subcarpetas como `formatters/`, `storage/`, `errors/`, `contacto/`, `query/` ya tienen `index.ts`. Las que tienen múltiples archivos (`financial/`, `ui/`) podrían añadir un `index.ts` barrel para imports más limpios:
+`import { formatCurrency, calcularUtilidad } from "@/lib/financial"` en lugar de `/financial/financialUtils`.
+
+**O4 — `src/components/ui/sidebar.tsx` (637 LOC)**
+Es código shadcn estándar. **No tocar** salvo que se quiera customizar fuertemente.
 
 ## Plan de acción ordenado
 
 | # | Versión | Acción | Riesgo | Impacto |
 |---|---------|--------|--------|---------|
-| 1 | v8.70.0 | **C1**: Migrar 6 hooks restantes a servicios (`configuracionService`, `planesService`, `facturasService`, `dashboardService`, `operacionesService`). Eliminar imports directos a `supabase`. | Bajo | Alto |
-| 2 | v8.71.0 | **C2**: Extraer dominio de `useNuevoEmbarqueWizard` a `lib/domain/embarqueWizard.ts`. Tests unitarios para validación e hidratación. | Medio | Alto |
-| 3 | v8.72.0 | **M1**: Controller hooks para `TabProformas` y `TabProformasPendientes`. | Bajo | Medio |
-| 4 | v8.73.0 | **M2**: Controller hook para `DialogGenerarProforma`. | Bajo | Medio |
-| 5 | v8.74.0 | **M3**: Sistema de tokens semánticos + `<StatusBadge>` y migración masiva de colores hardcodeados. | Medio (visual) | Alto (consistencia) |
-| 6 | v8.75.0 | **M4**: Particionar `changelog/` por año + lazy-load histórico. | Bajo | Medio (bundle) |
-| 7 | v8.76.0 | **O1**: Reorganizar `src/lib/` en subcarpetas semánticas. | Bajo (muchos imports) | Bajo |
-| 8 | v8.77.0 | **O2**: Auditoría y limpieza de componentes shadcn no usados. | Muy bajo | Bajo (bundle) |
+| 1 | v8.73.0 | **C1**: Adelgazar `useNuevoEmbarqueWizard` extrayendo hidratación + submit a hooks/dominio. Bajar de 314 → <200 LOC. | Medio | Alto |
+| 2 | v8.74.0 | **M1**: Controller hooks para `PortalCotizacionDetalle` y `PortalEmbarqueDetalle`. | Bajo | Medio |
+| 3 | v8.75.0 | **M2**: Tokens semánticos para KPIs y migrar los 7 archivos restantes a variantes. | Bajo (visual) | Medio |
+| 4 | v8.76.0 | **O1**: Desinstalar dependencias huérfanas (`embla`, `vaul`, `input-otp`, `react-resizable-panels`). | Muy bajo | Bajo (bundle) |
+| 5 | v8.77.0 | **M3**: Split de `mappers/embarque.ts` por dirección si supera 250 LOC nuevamente. | Bajo | Bajo |
+| 6 | v8.78.0 | **O2 + O3**: Renombrar/dividir `types/types.ts` y añadir barrels en `lib/financial` y `lib/ui`. | Muy bajo | Bajo |
 
-## Detalles técnicos por paso
+## Detalles técnicos
 
-**Paso 1 (C1)** — Servicios nuevos a crear:
-- `configuracionService.ts` ya existe → mover lógica de `useConfiguracion.ts` y `useConfiguracionGlobal.ts` allí.
-- Crear `planesService.ts`, `facturasService.ts`, `dashboardService.ts`, `operacionesService.ts`.
-- Hooks quedan como `useQuery({ queryFn: () => fetchX() })`.
+**Paso 1 (C1)** — Funciones a extraer:
+- `useCotizacionHydration({ cotizacionId, proveedores, onHydrate })` — hook con `useCotizacion` + `useEffect`.
+- `lib/domain/embarqueWizard.ts::buildSubmitPayload(form, conceptos, expediente)` — pura.
+- `lib/domain/embarqueWizard.ts::resolveModoExpediente(clientes, clienteId)` — ya parcialmente extraída, completar.
 
-**Paso 2 (C2)** — Funciones puras a extraer:
-- `validateStepDatosGenerales(form): EmbarqueValidationErrors`
-- `hydrateFromCotizacion(cotizacion, costos): Partial<EmbarqueForm>`
-- `resolverModoExpediente(clientes, clienteId): ModoExpediente`
-
-**Paso 5 (M3)** — Tokens propuestos en `index.css`:
+**Paso 3 (M2)** — Tokens propuestos en `index.css`:
 ```css
---status-success: 142 71% 45%;
---status-warning: 38 92% 50%;
---status-info: 217 91% 60%;
---status-pending: 220 14% 75%;
---status-danger: 0 84% 60%;
+--metric-positive: 142 71% 45%;  /* alias de success para KPIs */
+--metric-warning:  38 92% 50%;
+--metric-danger:   0 84% 60%;
+--metric-neutral:  220 14% 75%;
 ```
+Crear `<KpiBadge variant="positive|warning|danger|neutral" />` reutilizable.
+
+**Paso 4 (O1)** — Verificar antes de borrar con `rg "from ['\"]<dep>" src` para cada paquete.
 
 ## Próximo paso
 
-Ejecutar **Paso 1 (v8.70.0)** — migración de los 6 hooks restantes a servicios. Es el cambio de mayor impacto, menor riesgo y deja el patrón "hook = wrapper" 100% consistente en todo el repo.
+Ejecutar **Paso 1 (v8.73.0)** — adelgazar `useNuevoEmbarqueWizard`. Es el único hook que aún rompe el guardrail de 250 LOC y consolida el patrón "hook delgado + dominio puro testeable" en el wizard más complejo del repo.
