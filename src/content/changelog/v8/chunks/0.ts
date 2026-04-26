@@ -2,6 +2,13 @@ import type { ChangelogEntry } from "../../../changelogData";
 
 export const chunk0: ChangelogEntry[] = [
   {
+    version: "8.97.0",
+    date: "2026-04-26",
+    type: "patch",
+    title: "Reorganización: subcarpetas semánticas en components/ y hooks/",
+    description: "Continuación del plan de auditoría arquitectónica. Se eliminaron 19 archivos sueltos en la raíz de src/components/ y 22 en la raíz de src/hooks/ reubicándolos en subcarpetas con propósito claro. components/: layout/ (AppSidebar, Layout, NavLink, OrgSwitcher, ThemeToggle, RouteLoadingFallback), auth/ (ProtectedRoute, PortalProtectedRoute), selects/ (NavieraSelect, PortSelect, SearchInput) y shared/ (DataTable, PaginationControls, DocumentChecklist, DoubleConfirmDeleteDialog, ErrorBoundary, BitacoraActividad, GlobalSearch, ProfitBadge). hooks/: admin/ (useAdminData, useAdminOrgDetalle, useOrganizationsList, useOrgMembersMutations, usePlanes), cliente/ (useClienteFinancials, useClientUsersMutations, useRentabilidadClientes), embarque/ (useEmbarques, useTrackingLinks, useProfitMaps), cotizacion/ (useCotizaciones, useConceptosForm), operaciones/ (useOperacionesData, useDesempenoChartData), usuario/ (useUsuarios, useUsuarioMutations) y shared/ (useDebounce, useListPageState, useOrgFilter, usePermissions, useSidebarAlerts, useBitacora, useGlobalSearch). Total: 43 archivos movidos y 111 archivos consumidores con imports actualizados automáticamente. Sin cambios funcionales. Build TypeScript verde y 205/205 pruebas pasando.",
+  },
+  {
     version: "8.96.0",
     date: "2026-04-26",
     type: "patch",
