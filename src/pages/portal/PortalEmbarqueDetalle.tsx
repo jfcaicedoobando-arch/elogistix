@@ -67,10 +67,10 @@ export default function PortalEmbarqueDetalle() {
             <div className="absolute top-5 left-0 right-0 h-0.5 bg-border" />
             <div
               className="absolute top-5 left-0 h-0.5 bg-accent transition-all duration-500"
-              style={{ width: `${Math.min(100, (currentStepIndex / (PROGRESS_STEPS.length - 1)) * 100)}%` }}
+              style={{ width: `${Math.min(100, (currentStepIndex / (progressSteps.length - 1)) * 100)}%` }}
             />
 
-            {PROGRESS_STEPS.map((step, i) => {
+            {progressSteps.map((step, i) => {
               const isCompleted = i < currentStepIndex;
               const isCurrent = i === currentStepIndex;
               return (
