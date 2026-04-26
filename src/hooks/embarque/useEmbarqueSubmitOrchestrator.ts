@@ -70,21 +70,44 @@ export function useEmbarqueSubmitOrchestrator() {
 
   const submit = useCallback(
     async (p: SubmitOrchestratorParams): Promise<boolean> => {
+      // Fase 1: resolver expediente
+      let expediente: string;
       try {
-        const expediente = await resolveExpedienteForSubmit({
+        expediente = await resolveExpedienteForSubmit({
           modoExpediente: p.modoExpediente,
           expedienteSeleccionado: p.expedienteSeleccionado,
           blMaster: p.values.blMaster,
           tipo: p.values.tipo,
           resolverNuevo: resolverExpediente,
         });
+      } catch (err: unknown) {
+        toast({
+          title: "Error al generar expediente",
+          description: getErrorMessage(err),
+          variant: "destructive",
+        });
+        return false;
+      }
 
-        const docPayload = await subirDocumentosEmbarque(
+      // Fase 2: subir documentos
+      let docPayload;
+      try {
+        docPayload = await subirDocumentosEmbarque(
           expediente,
           p.getDocumentosChecklist(p.values.modo),
           p.documentosArchivos,
         );
+      } catch (err: unknown) {
+        toast({
+          title: "Error al subir documentos",
+          description: getErrorMessage(err),
+          variant: "destructive",
+        });
+        return false;
+      }
 
+      // Fase 3: crear embarque
+      try {
         const embarquePayload = {
           expediente,
           ...p.buildEmbarquePayload(p.contactos, p.selectedClienteNombre, user?.email || ""),
@@ -97,41 +120,50 @@ export function useEmbarqueSubmitOrchestrator() {
           conceptosCosto: p.buildConceptosCostoPayload(p.conceptosCosto, p.proveedoresDb),
           documentos: docPayload,
         });
-
-        if (p.cotizacionVinculada) {
-          await updateEstadoCotizacion.mutateAsync({
-            id: p.cotizacionVinculada.id,
-            estado: "Embarcada",
-          });
-        }
-
-        registrarActividad.mutate({
-          accion: "crear",
-          modulo: "embarques",
-          entidad_nombre: expediente,
-          detalles: buildBitacoraDetalles({
-            modo: p.values.modo,
-            tipo: p.values.tipo,
-            clienteNombre: p.selectedClienteNombre,
-            cotizacionFolio: p.cotizacionVinculada?.folio ?? null,
-            modoExpediente: p.modoExpediente,
-          }),
-        });
-
-        toast({
-          title: "Embarque creado",
-          description: `Expediente ${expediente} registrado correctamente.`,
-        });
-        navigate("/embarques");
-        return true;
       } catch (err: unknown) {
         toast({
-          title: "Error al crear embarque",
+          title: "Error al guardar embarque",
           description: getErrorMessage(err),
           variant: "destructive",
         });
         return false;
       }
+
+      // Fase 4: actualizar cotización (no bloqueante)
+      if (p.cotizacionVinculada) {
+        try {
+          await updateEstadoCotizacion.mutateAsync({
+            id: p.cotizacionVinculada.id,
+            estado: "Embarcada",
+          });
+        } catch (err: unknown) {
+          toast({
+            title: "Embarque creado con advertencia",
+            description: `No se pudo actualizar el estado de la cotización: ${getErrorMessage(err)}`,
+          });
+        }
+      }
+
+      // Fase 5: bitácora (no bloqueante)
+      registrarActividad.mutate({
+        accion: "crear",
+        modulo: "embarques",
+        entidad_nombre: expediente,
+        detalles: buildBitacoraDetalles({
+          modo: p.values.modo,
+          tipo: p.values.tipo,
+          clienteNombre: p.selectedClienteNombre,
+          cotizacionFolio: p.cotizacionVinculada?.folio ?? null,
+          modoExpediente: p.modoExpediente,
+        }),
+      });
+
+      toast({
+        title: "Embarque creado",
+        description: `Expediente ${expediente} registrado correctamente.`,
+      });
+      navigate("/embarques");
+      return true;
     },
     [createEmbarque, updateEstadoCotizacion, registrarActividad, toast, navigate, user?.email],
   );
