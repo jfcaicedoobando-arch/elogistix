@@ -188,7 +188,7 @@ Ejemplos canónicos en el repo: `crear_proforma_con_conceptos`, `consolidar_prof
 
 ## 11. Testing
 
-- **Stack**: Vitest + Testing Library. 189 tests vigentes (v8.89.0).
+- **Stack**: Vitest + Testing Library. 184 tests vigentes (v8.89.0).
 - **Qué se testea**:
   - `src/lib/` (financial, domain, storage, ui, mappers complejos): puro, alta cobertura.
   - `src/services/` puros con lógica no trivial (csfService, trackingService).
