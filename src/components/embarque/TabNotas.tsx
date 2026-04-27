@@ -78,7 +78,11 @@ export function TabNotas({ notas, embarqueId }: Props) {
                 </div>
                 <div className="pb-4">
                   <p className="font-medium">{nota.contenido}</p>
-                  <p className="text-xs text-muted-foreground">{nota.usuario} · {new Date(nota.fecha).toLocaleString('es-MX', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</p>
+                  <p className="text-xs text-muted-foreground">
+                    <span title={nota.usuario}>{nombreDesdeEmail(nota.usuario)}</span>
+                    {" · "}
+                    {formatDate(nota.fecha, "dd/MM/yyyy HH:mm")}
+                  </p>
                 </div>
               </div>
             ))}
