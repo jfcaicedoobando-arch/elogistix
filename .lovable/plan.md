@@ -1,47 +1,53 @@
-## Restringir cotizaciones visibles a clientes
+## Respuesta corta
 
-Los clientes verán únicamente cotizaciones en estado **Enviada**, **Aceptada** o **Rechazada**. Borrador, Vencida y Cancelada quedan ocultas.
+**No.** Hoy el portal del cliente **no muestra** si una cotización aceptada ya se convirtió en embarque. Verifiqué la base de datos:
 
-### 1. Migración SQL — Endurecer la política RLS
+- La tabla `embarques` tiene la columna `cotizacion_id` (vínculo correcto), pero solo **1 de 206 embarques** la tiene poblada.
+- La columna espejo `cotizaciones.embarque_id` existe pero está vacía en todas las cotizaciones aceptadas (COT-2026-0055, 0054, 0047, 0032, etc.).
+- Ni `PortalCotizaciones.tsx` ni `PortalCotizacionDetalle.tsx` consultan ese vínculo.
 
-Defensa primaria a nivel de base de datos. Aunque alguien intente consultar directamente la API, no podrá leer cotizaciones en borrador.
+Resultado: el cliente acepta una cotización y se queda "a ciegas" — no sabe si su carga ya está en operación ni puede saltar al embarque.
 
-```sql
-DROP POLICY IF EXISTS "Cliente read own cotizaciones" ON public.cotizaciones;
+---
 
-CREATE POLICY "Cliente read own cotizaciones"
-ON public.cotizaciones
-FOR SELECT
-TO authenticated
-USING (
-  has_role(auth.uid(), 'cliente'::app_role)
-  AND cliente_id IN (SELECT current_user_client_ids())
-  AND estado IN (
-    'Enviada'::estado_cotizacion,
-    'Aceptada'::estado_cotizacion,
-    'Rechazada'::estado_cotizacion
-  )
-);
-```
+## Plan propuesto (v8.99.4)
 
-### 2. Filtro defensivo en frontend
+### 1. Backfill + garantizar el vínculo en backend
 
-`src/services/portal/queries.ts` → añadir `.in("estado", [...])` a `fetchPortalCotizaciones` para evitar incluso solicitar registros que la RLS rechazaría. Mantiene la UI rápida y consistente.
+Migración SQL que:
+- **Backfill**: para cada cotización con `estado IN ('Aceptada')` que aún no tenga embarque, busca un embarque cuyo `cotizacion_id` la apunte y rellena `cotizaciones.embarque_id` con ese valor.
+- **Trigger** `AFTER INSERT/UPDATE` en `embarques`: cuando se crea/actualiza un embarque con `cotizacion_id` no nulo, sincroniza automáticamente `cotizaciones.embarque_id`. Así nunca más quedan desincronizados.
+- Revisar la función de conversión cotización→embarque (`services/cotizacion/conversiones/embarques.ts`) para que también escriba `cotizaciones.embarque_id` al crear el embarque (defensa en profundidad junto al trigger).
 
-```ts
-const PORTAL_COTIZACION_ESTADOS_VISIBLES = ["Enviada", "Aceptada", "Rechazada"] as const;
+### 2. Exponer el dato al portal
 
-// dentro de fetchPortalCotizaciones:
-.in("estado", PORTAL_COTIZACION_ESTADOS_VISIBLES)
-```
+- Ampliar `fetchPortalCotizaciones` y `fetchPortalCotizacionDetalle` para incluir `embarque_id` y, vía join, el `expediente` del embarque relacionado.
+- Como las RLS del portal ya permiten al cliente leer sus propios embarques, no hace falta cambiar políticas.
 
-### 3. Changelog
+### 3. UI en el portal
 
-Entrada **v8.99.3** en `src/content/changelog/v8/chunks/0.ts`: "Mejora de privacidad en portal del cliente: las cotizaciones en estado Borrador, Vencida y Cancelada ya no son visibles. Solo se exponen Enviada, Aceptada y Rechazada."
+**Listado `/portal/cotizaciones`**:
+- Para cotizaciones `Aceptada` con embarque vinculado: badge verde "Embarque creado · EXP-XXXX" junto al folio.
+- Sin embarque aún: badge ámbar "Pendiente de operación".
 
-### Resultado
+**Detalle `/portal/cotizaciones/:id`** (en `PortalCotizacionEstadoBanner`):
+- Si `Aceptada` + tiene embarque: banner verde con texto "Esta cotización ya está en operación" y botón **"Ver embarque EXP-XXXX →"** que navega a `/portal/embarques/:embarqueId`.
+- Si `Aceptada` sin embarque: mensaje informativo "Tu cotización fue aceptada. Te notificaremos cuando inicie la operación."
 
-- ✅ Cliente ya no ve trabajo interno (borradores con precios tentativos)
-- ✅ Cliente sigue viendo histórico relevante (aceptadas y rechazadas)
-- ✅ Doble capa: RLS + filtro frontend
-- ✅ Operadores y staff interno no se ven afectados (otra política los cubre)
+### 4. Changelog
+
+Entrada **v8.99.4** en `src/content/changelog/v8/chunks/0.ts`:
+> Trazabilidad cotización → embarque en el portal del cliente. Las cotizaciones aceptadas ahora muestran si ya están en operación e incluyen acceso directo al embarque vinculado.
+
+---
+
+## Archivos a tocar
+
+- `supabase/migrations/<nuevo>.sql` (backfill + trigger)
+- `src/services/cotizacion/conversiones/embarques.ts` (escribir embarque_id de vuelta)
+- `src/services/portal/queries.ts` + `columns.ts` (incluir vínculo)
+- `src/pages/portal/PortalCotizaciones.tsx` (badge en listado)
+- `src/components/portal/cotizacion/PortalCotizacionEstadoBanner.tsx` (banner + botón)
+- `src/content/changelog/v8/chunks/0.ts`
+
+¿Procedo con esta implementación?
