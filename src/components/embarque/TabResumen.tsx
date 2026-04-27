@@ -49,7 +49,7 @@ export function TabResumen({ embarque }: Props) {
         <Card>
           <CardHeader className="pb-3"><CardTitle className="text-sm">Datos Generales</CardTitle></CardHeader>
           <CardContent className="space-y-2 text-sm">
-            <DetailRow label="Modo" value={`${getModoIcon(embarque.modo)} ${embarque.modo}`} />
+            <DetailRow label="Modo" value={<><ModoIcon modo={embarque.modo} size={14} /> {embarque.modo}</>} />
             <DetailRow label="Tipo" value={embarque.tipo} />
             <DetailRow label="Incoterm" value={embarque.incoterm} />
             <DetailRow label="Mercancía" value={toTitleCase(embarque.descripcion_mercancia)} />
