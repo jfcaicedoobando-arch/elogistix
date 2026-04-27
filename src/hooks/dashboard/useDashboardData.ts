@@ -7,6 +7,7 @@ import {
   parseConteoPorEstado,
   parseArribosEsteMes,
   parseResumenMesSiguiente,
+  parseEmbarquesMesSiguiente,
   parseCargasPorCliente,
   combinarActivos,
   type EstadoFiltro,
