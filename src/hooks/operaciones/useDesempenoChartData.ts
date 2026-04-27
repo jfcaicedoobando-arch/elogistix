@@ -22,11 +22,22 @@ export interface ChartRow {
   Cerrado: number;
 }
 
+/** Convierte "alan.hernandez@elogistixshipping.com" → "Alan Hernandez" */
+function shortNameFromEmail(raw: string): string {
+  if (!raw) return "—";
+  const local = raw.includes("@") ? raw.split("@")[0] : raw;
+  return local
+    .split(/[._-]/)
+    .filter(Boolean)
+    .map((p) => p.charAt(0).toUpperCase() + p.slice(1).toLowerCase())
+    .join(" ");
+}
+
 export function useDesempenoChartData(operadores: OperadorData[]): ChartRow[] {
   return useMemo(
     () =>
       operadores.map((op) => ({
-        nombre: op.nombre,
+        nombre: shortNameFromEmail(op.nombre),
         Confirmado: op.desgloseEstados.Confirmado,
         "En Tránsito": op.desgloseEstados["En Tránsito"],
         Llegada: op.desgloseEstados.Llegada,

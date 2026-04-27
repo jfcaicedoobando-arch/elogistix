@@ -1,10 +1,10 @@
-import { Input } from "@/components/ui/input";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { getModoIcon } from "@/lib/ui/uiMappings";
 import { ESTADOS_EMBARQUE, MODOS_TRANSPORTE } from "@/constants/embarqueConstants";
 import SearchInput from "@/components/selects/SearchInput";
+import { DatePickerMx } from "@/components/ui/date-picker-mx";
 
 interface ClienteOption {
   id: string;
@@ -87,8 +87,8 @@ export default function EmbarquesFiltros({
           <SelectItem value="sin">Sin proforma</SelectItem>
         </SelectContent>
       </Select>
-      <Input type="date" value={fechaDesde} onChange={(e) => onFechaDesdeChange(e.target.value)} className="w-[150px]" placeholder="Desde (ETD)" title="ETD desde" />
-      <Input type="date" value={fechaHasta} onChange={(e) => onFechaHastaChange(e.target.value)} className="w-[150px]" placeholder="Hasta (ETA)" title="ETA hasta" />
+      <DatePickerMx value={fechaDesde} onChange={onFechaDesdeChange} className="w-[160px]" placeholder="Desde (ETD)" title="ETD desde" />
+      <DatePickerMx value={fechaHasta} onChange={onFechaHastaChange} className="w-[160px]" placeholder="Hasta (ETA)" title="ETA hasta" />
     </div>
   );
 }

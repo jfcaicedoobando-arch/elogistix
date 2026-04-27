@@ -2,6 +2,13 @@ import type { ChangelogEntry } from "../../../changelogData";
 
 export const chunk0: ChangelogEntry[] = [
   {
+    version: "8.99.12",
+    date: "2026-04-27",
+    type: "patch",
+    title: "Auditoría visual: 6 correcciones de UI/UX en pantallas principales",
+    description: "Pase de pulido visual basado en revisión heurística de las pantallas principales. (1) Dashboard principal — barras de proporción del card 'Cargas activas por cliente' ahora son legibles en modo oscuro (sólido bg-primary sobre bg-secondary con borde sutil) y muestran el porcentaje numérico al lado. (2) Header del dashboard — la fecha 'Domingo, 26 De Abril De 2026' se renderizaba con title-case incorrecto por un CSS capitalize global; ahora se normaliza manualmente para preservar 'de' en minúsculas ('Domingo, 26 de abril de 2026'). (3) Tablas (Embarques, Cotizaciones, Pre-Facturación) — folios, expedientes, # proforma, cifras y badges de estado ahora son whitespace-nowrap para evitar saltos de línea innecesarios; columnas Estado y Folio ampliadas. (4) Filtros de Embarques — los inputs <input type='date'> con placeholder 'mm/dd/yyyy' (formato US) fueron reemplazados por un nuevo componente DatePickerMx que muestra el formato mexicano DD/MM/YYYY usando Calendar/Popover, con botón para limpiar. (5) Gráfica 'Desempeño por Operador' — las etiquetas del eje X mostraban emails completos rotados que se solapaban con la leyenda; ahora se muestra un nombre corto derivado del email ('alan.hernandez@…' → 'Alan Hernandez'), sin rotación, y la leyenda se movió a la esquina superior derecha. (6) Loader de navegación — el RouteLoadingFallback ocupaba la pantalla entera al cambiar de ruta (sidebar y header desaparecían); ahora se contiene dentro del <main> del Layout, preservando el shell.",
+  },
+  {
     version: "8.99.11",
     date: "2026-04-27",
     type: "patch",
