@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
 import { Button } from "@/components/ui/button";
-import { DollarSign, Banknote, Save } from "lucide-react";
+import { DollarSign, Banknote, Save, Pencil, X } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { getErrorMessage } from "@/lib/errors";
 import { usePermissions } from "@/hooks/shared/usePermissions";
@@ -31,6 +31,7 @@ export default function SeccionCostosInternosPLDetalle({ cotizacionId, conceptos
 
   const [filas, setFilas] = useState<FilaCostoDetalle[]>([]);
   const [initialized, setInitialized] = useState(false);
+  const [editMode, setEditMode] = useState(false);
 
   useEffect(() => {
     if (isLoading || initialized) return;
@@ -107,6 +108,7 @@ export default function SeccionCostosInternosPLDetalle({ cotizacionId, conceptos
     try {
       await upsert.mutateAsync({ cotizacionId, costos });
       notifySuccess(toast, { title: "Costos guardados correctamente" });
+      setEditMode(false);
     } catch (err: unknown) {
       notifyError(toast, { title: "Error al guardar", description: getErrorMessage(err)});
     }
@@ -116,22 +118,35 @@ export default function SeccionCostosInternosPLDetalle({ cotizacionId, conceptos
 
   return (
     <div className="space-y-4">
+      {canEdit && filas.length > 0 && (
+        <div className="flex justify-end">
+          {editMode ? (
+            <Button variant="outline" size="sm" onClick={() => setEditMode(false)} disabled={upsert.isPending}>
+              <X className="h-4 w-4 mr-1" /> Cancelar edición
+            </Button>
+          ) : (
+            <Button variant="outline" size="sm" onClick={() => setEditMode(true)}>
+              <Pencil className="h-4 w-4 mr-1" /> Editar costos
+            </Button>
+          )}
+        </div>
+      )}
       <TablaCostosDetalle
         filas={filas} filasMoneda={filasUSD} moneda="USD"
         title="Costos en USD" icon={<DollarSign className="h-4 w-4 text-violet-500" />}
-        totales={totalesUSD} canEdit={canEdit} onUpdate={updateFila}
+        totales={totalesUSD} canEdit={canEdit && editMode} onUpdate={updateFila}
       />
       <TablaCostosDetalle
         filas={filas} filasMoneda={filasMXN} moneda="MXN"
         title="Costos en MXN" icon={<Banknote className="h-4 w-4 text-violet-500" />}
-        totales={totalesMXN} canEdit={canEdit} onUpdate={updateFila}
+        totales={totalesMXN} canEdit={canEdit && editMode} onUpdate={updateFila}
       />
       <ResumenPL
         totalesUSD={totalesUSD} totalesMXN={totalesMXN}
         tieneUSD={filasUSD.length > 0} tieneMXN={filasMXN.length > 0}
         notaPie="El IVA no forma parte del profit"
       />
-      {canEdit && filas.length > 0 && (
+      {canEdit && editMode && filas.length > 0 && (
         <div className="flex justify-end">
           <Button onClick={handleGuardar} disabled={upsert.isPending}>
             <Save className="h-4 w-4 mr-1" />

@@ -17,6 +17,7 @@ import { DataTable, type DataTableColumn } from "@/components/shared/DataTable";
 import { useListPageState } from "@/hooks/shared/useListPageState";
 import type { Tables, Enums } from "@/integrations/supabase/types";
 import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
+import { toTitleCase } from "@/lib/formatters";
 type TipoProveedor = Enums<'tipo_proveedor'>;
 type Proveedor = Tables<'proveedores'>;
 
@@ -34,9 +35,9 @@ const TABS: { label: string; tipo: TipoProveedor }[] = [
 ];
 
 const proveedorColumns: DataTableColumn<ProveedorListItem>[] = [
-  { key: "nombre", header: "Nombre", width: "min-w-[180px]", className: "font-medium", sortable: true, sortValue: (p) => p.nombre, render: (p) => p.nombre },
+  { key: "nombre", header: "Nombre", width: "min-w-[180px]", className: "font-medium", sortable: true, sortValue: (p) => p.nombre, render: (p) => <span title={p.nombre}>{toTitleCase(p.nombre)}</span> },
   { key: "rfc", header: "RFC", width: "w-[130px]", className: "text-xs font-mono", sortable: true, sortValue: (p) => p.rfc, render: (p) => p.rfc },
-  { key: "contacto", header: "Contacto", width: "w-[140px]", className: "text-xs", render: (p) => p.contacto },
+  { key: "contacto", header: "Contacto", width: "w-[140px]", className: "text-xs", render: (p) => p.contacto ? <span title={p.contacto}>{toTitleCase(p.contacto)}</span> : null },
   { key: "moneda", header: "Moneda", width: "w-[80px]", className: "text-xs", render: (p) => p.moneda_preferida },
 ];
 

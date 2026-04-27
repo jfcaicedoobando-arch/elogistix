@@ -14,7 +14,7 @@ import DialogConvertirProspecto from "@/components/cotizacion/DialogConvertirPro
 import SeccionMercanciaCotizacionDetalle from "@/components/cotizacion/SeccionMercanciaCotizacionDetalle";
 import { CotizacionDetalleEmbarques, CotizacionDetalleAcciones } from "@/components/cotizacion/CotizacionDetalleSecciones";
 import { getEstadoColor } from "@/lib/ui/uiMappings";
-import { formatDate, formatCurrency } from "@/lib/formatters";
+import { formatDate, formatCurrency, toTitleCase, nombreDesdeEmail } from "@/lib/formatters";
 import { ArrowLeft, FileDown } from "lucide-react";
 import { useCotizacionDetalleState } from "@/hooks/cotizacion/useCotizacionDetalleState";
 
@@ -56,9 +56,9 @@ export default function CotizacionDetalle() {
         <Button variant="ghost" size="icon" onClick={() => navigate("/cotizaciones")}>
           <ArrowLeft className="h-4 w-4" />
         </Button>
-        <div className="flex-1">
+        <div className="flex-1 min-w-0">
           <h1 className="text-2xl font-bold">{cotizacion.folio}</h1>
-          <p className="text-sm text-muted-foreground">{nombreDestinatario}</p>
+          <p className="text-sm text-muted-foreground truncate">{toTitleCase(nombreDestinatario)}</p>
         </div>
         <Badge className={getEstadoColor(cotizacion.estado)}>{cotizacion.estado}</Badge>
         <Button variant="outline" size="sm" onClick={() => handleExportarPdf(cotizacion, tasaIva)}>
@@ -98,14 +98,14 @@ export default function CotizacionDetalle() {
       <Card>
         <CardHeader><CardTitle className="text-lg">Datos Generales</CardTitle></CardHeader>
         <CardContent>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-            <div><span className="text-muted-foreground">Modo</span><p className="font-medium">{cotizacion.modo}</p></div>
-            <div><span className="text-muted-foreground">Tipo</span><p className="font-medium">{cotizacion.tipo}</p></div>
-            <div><span className="text-muted-foreground">Incoterm</span><p className="font-medium">{cotizacion.incoterm}</p></div>
-            <div><span className="text-muted-foreground">Origen</span><p className="font-medium">{cotizacion.origen || '-'}</p></div>
-            <div><span className="text-muted-foreground">Destino</span><p className="font-medium">{cotizacion.destino || '-'}</p></div>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm [&>div]:min-w-0 [&>div>p]:truncate">
+            <div><span className="text-muted-foreground">Modo</span><p className="font-medium" title={cotizacion.modo}>{cotizacion.modo}</p></div>
+            <div><span className="text-muted-foreground">Tipo</span><p className="font-medium" title={cotizacion.tipo}>{cotizacion.tipo}</p></div>
+            <div><span className="text-muted-foreground">Incoterm</span><p className="font-medium" title={cotizacion.incoterm}>{cotizacion.incoterm}</p></div>
+            <div><span className="text-muted-foreground">Origen</span><p className="font-medium" title={cotizacion.origen || ''}>{cotizacion.origen || '-'}</p></div>
+            <div><span className="text-muted-foreground">Destino</span><p className="font-medium" title={cotizacion.destino || ''}>{cotizacion.destino || '-'}</p></div>
             <div><span className="text-muted-foreground">Vigencia</span><p className="font-medium">{cotizacion.vigencia_dias} días ({cotizacion.fecha_vigencia ? formatDate(cotizacion.fecha_vigencia) : '-'})</p></div>
-            <div><span className="text-muted-foreground">Operador</span><p className="font-medium">{cotizacion.operador || '-'}</p></div>
+            <div><span className="text-muted-foreground">Operador</span><p className="font-medium" title={cotizacion.operador || ''}>{cotizacion.operador ? nombreDesdeEmail(cotizacion.operador) : '-'}</p></div>
             {cotizacion.tiempo_transito_dias != null && (
               <div><span className="text-muted-foreground">Tiempo de tránsito</span><p className="font-medium">{cotizacion.tiempo_transito_dias} días</p></div>
             )}
@@ -122,7 +122,7 @@ export default function CotizacionDetalle() {
               <div><span className="text-muted-foreground">Frecuencia</span><p className="font-medium">{cotizacion.frecuencia}</p></div>
             )}
             {cotizacion.ruta_texto && (
-              <div className="col-span-2"><span className="text-muted-foreground">Ruta</span><p className="font-medium">{cotizacion.ruta_texto}</p></div>
+              <div className="col-span-2"><span className="text-muted-foreground">Ruta</span><p className="font-medium" title={cotizacion.ruta_texto}>{cotizacion.ruta_texto}</p></div>
             )}
             {cotizacion.validez_propuesta && (
               <div><span className="text-muted-foreground">Validez propuesta</span><p className="font-medium">{formatDate(cotizacion.validez_propuesta)}</p></div>

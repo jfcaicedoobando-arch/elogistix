@@ -56,12 +56,12 @@ export default function TablaCostosDetalle({ filas, filasMoneda, moneda, title, 
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Concepto</TableHead>
-                <TableHead>Proveedor</TableHead>
-                <TableHead className="text-right">Costo Unit.</TableHead>
-                <TableHead className="text-right">Venta</TableHead>
-                <TableHead className="text-right">Profit</TableHead>
-                <TableHead className="text-right">% Profit</TableHead>
+                <TableHead className="whitespace-nowrap">Concepto</TableHead>
+                <TableHead className="whitespace-nowrap">Proveedor</TableHead>
+                <TableHead className="text-right whitespace-nowrap">Costo Unit.</TableHead>
+                <TableHead className="text-right whitespace-nowrap">Venta</TableHead>
+                <TableHead className="text-right whitespace-nowrap">Profit</TableHead>
+                <TableHead className="text-right whitespace-nowrap">% Profit</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -85,9 +85,8 @@ export default function TablaCostosDetalle({ filas, filasMoneda, moneda, title, 
                           <Input type="number" value={fila.costo_unitario || ""} onChange={e => onUpdate(globalIdx, "costo_unitario", e.target.value)} className="h-8 text-sm text-right w-28 ml-auto" min={0} step={0.01} />
                         ) : <span className="text-sm">{formatCurrency(fila.costo_unitario, moneda)}</span>}
                       </TableCell>
-                      <TableCell className="text-right text-sm">
+                      <TableCell className="text-right text-sm whitespace-nowrap">
                         {formatCurrency(fila.venta, moneda)}
-                        {fila.aplica_iva && <span className="text-xs text-muted-foreground ml-1">+ IVA</span>}
                       </TableCell>
                       <TableCell className={`text-right text-sm font-medium ${profit >= 0 ? "text-emerald-600" : "text-red-600"}`}>
                         {formatCurrency(profit, moneda)}

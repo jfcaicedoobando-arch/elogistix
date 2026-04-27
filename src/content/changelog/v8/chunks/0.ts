@@ -2,6 +2,13 @@ import type { ChangelogEntry } from "../../../changelogData";
 
 export const chunk0: ChangelogEntry[] = [
   {
+    version: "8.99.18",
+    date: "2026-04-27",
+    type: "patch",
+    title: "Auditoría visual Fase 7: Cotización (bug overflow), Proveedores y Bitácora",
+    description: "Séptima fase de auditoría UI/UX sobre módulos no cubiertos. (1) Detalle de Cotización · BUG VISUAL — en la card 'Datos Generales' el campo Operador mostraba el email crudo ('karla.garcia@elogistixshipping.com') y al desbordar el grid se sobreponía visualmente con el campo 'Tiempo de tránsito' a la derecha (texto encima de texto); se aplica nombreDesdeEmail para mostrar 'Karla Garcia' y se añade min-w-0 + truncate (con tooltip nativo via title) a todas las celdas del grid de 4 columnas para prevenir overflow horizontal. El subtítulo del cliente ('INDIMEX TRADING') ahora pasa por toTitleCase. (2) Tab Costos de Cotización — modo edición por defecto reemplazado por modo lectura con botón 'Editar costos' explícito que activa los inputs y revela 'Guardar Costos'; al guardar exitosamente se vuelve automáticamente a modo lectura. Esto previene guardados accidentales y se alinea con el resto del sistema. Los headers % Profit, Costo Unit., Profit, Venta, Concepto y Proveedor reciben whitespace-nowrap para evitar quiebres en dos líneas. Se elimina el sufijo '+ IVA' de la columna Venta (era inconsistente — solo aparecía en algunas filas y la nota al pie ya indica que el P&L se calcula sin IVA). (3) Lista de Proveedores — los nombres aparecían inconsistentes ('COSCO SHIPPING LINES MEXICO S DE RL DE CV', 'EVERGREEN SHIPPING AGENCY MEXICO, S.A. DE C.V.', 'WAN HAI LINES MEXIC' en mayúsculas vs 'Ocean Network Express Pte. Ltd.' en Title Case); ahora todos pasan por toTitleCase y exponen el nombre completo via tooltip. La columna Contacto ('DARREN', 'Prueba') recibe el mismo tratamiento. (4) Bitácora — los usuarios se mostraban con el slug del email ('alan.hernandez', 'valeria.zamora', 'magali.reynoso'); ahora se aplica nombreDesdeEmail para mostrar 'Alan Hernandez', 'Valeria Zamora', 'Magali Reynoso', con el email completo disponible vía tooltip. El timestamp relativo ('hace 2d') ahora expone la fecha y hora absoluta vía tooltip nativo en formato dd/MM/yyyy HH:mm.",
+  },
+  {
     version: "8.99.17",
     date: "2026-04-27",
     type: "patch",
