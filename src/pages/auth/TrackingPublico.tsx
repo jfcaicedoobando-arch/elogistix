@@ -71,7 +71,7 @@ export default function TrackingPublico() {
         <div className="flex items-center gap-3 flex-wrap">
           <h1 className="text-2xl font-bold">{e.expediente}</h1>
           <Badge className={getEstadoColor(e.estado)}>{e.estado}</Badge>
-          <span className="text-lg">{getModoIcon(e.modo)}</span>
+          <ModoIcon modo={e.modo} size={18} circle />
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
