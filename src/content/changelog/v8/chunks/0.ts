@@ -2,6 +2,13 @@ import type { ChangelogEntry } from "../../../changelogData";
 
 export const chunk0: ChangelogEntry[] = [
   {
+    version: "8.99.25",
+    date: "2026-04-27",
+    type: "patch",
+    title: "Auditoría visual Fase 14: Estandarización de empty states en Facturación y Tracking",
+    description: "Décima cuarta fase de auditoría — barrido sobre estados vacíos (empty states) inconsistentes en el módulo de Facturación del embarque y la pestaña Tracking. Se detectó que mientras el portal del cliente y los listados principales (Embarques, Cotizaciones, Facturación) ya usaban EmptyState o un patrón consistente con icono + texto centrado, los componentes internos del detalle de embarque seguían mostrando placeholders de texto plano sin jerarquía visual. (1) HistorialProformas (embarque/facturacion) — el placeholder 'No hay proformas generadas para este embarque' (text-sm sin contexto visual) ahora muestra el icono Receipt + texto centrado con padding p-8, alineado al patrón del portal (PortalEmbarqueDocumentos, PortalEmbarquesRecientesCard). (2) HistorialFacturas — mismo tratamiento con icono Receipt; antes era un único <div> de texto plano que se confundía con celdas vacías. (3) ResumenConceptosVenta — el mensaje 'No hay conceptos de venta registrados...' ahora incluye icono Receipt y respeta la jerarquía visual del resto de cards de la pestaña Facturación. (4) TabTracking · Línea de Tiempo — el estado 'Cargando eventos...' era un <p> plano sin spinner (UX confusa porque parecía un mensaje permanente); ahora muestra <Loader2 className=\"animate-spin\"/> + texto, consistente con otros estados de carga. El empty state 'No hay eventos de tracking registrados.' incluye el icono Clock para reforzar contexto semántico. Resultado: 4 archivos normalizados, 1 import añadido (Loader2 en TabTracking), 0 cambios funcionales; tsc --noEmit pasa limpio.",
+  },
+  {
     version: "8.99.24",
     date: "2026-04-27",
     type: "patch",

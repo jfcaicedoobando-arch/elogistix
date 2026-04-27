@@ -63,8 +63,11 @@ export function ResumenConceptosVenta({ conceptos, tasaIva, canEdit, onGenerarPr
       </CardHeader>
       <CardContent className="p-0">
         {conceptos.length === 0 ? (
-          <div className="p-8 text-center text-muted-foreground text-sm">
-            No hay conceptos de venta registrados. Agrega conceptos en la pestaña Costos.
+          <div className="p-8 text-center">
+            <Receipt className="h-8 w-8 mx-auto text-muted-foreground/40 mb-2" />
+            <p className="text-sm text-muted-foreground">
+              No hay conceptos de venta registrados. Agrega conceptos en la pestaña Costos.
+            </p>
           </div>
         ) : (
           <>

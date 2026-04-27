@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { Plus, MapPin, Clock, User } from 'lucide-react';
+import { Plus, MapPin, Clock, User, Loader2 } from 'lucide-react';
 import { useEventosEmbarque, useCreateEventoEmbarque, TIPOS_EVENTO_TRACKING } from '@/hooks/embarque/useEventosEmbarque';
 import { ICONO_EVENTO } from "@/constants/embarqueConstants";
 import { useAuth } from '@/contexts/AuthContext';
@@ -118,11 +118,14 @@ export function TabTracking({ embarqueId }: Props) {
         </CardHeader>
         <CardContent>
           {isLoading ? (
-            <p className="text-sm text-muted-foreground">Cargando eventos...</p>
+            <div className="flex items-center justify-center py-8 text-sm text-muted-foreground">
+              <Loader2 className="h-4 w-4 mr-2 animate-spin" /> Cargando eventos...
+            </div>
           ) : eventos.length === 0 ? (
-            <p className="text-sm text-muted-foreground text-center py-8">
-              No hay eventos de tracking registrados.
-            </p>
+            <div className="text-center py-8">
+              <Clock className="h-8 w-8 mx-auto text-muted-foreground/40 mb-2" />
+              <p className="text-sm text-muted-foreground">No hay eventos de tracking registrados.</p>
+            </div>
           ) : (
             <div className="relative">
               {/* Línea vertical */}
