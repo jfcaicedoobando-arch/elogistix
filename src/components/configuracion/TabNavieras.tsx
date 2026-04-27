@@ -42,7 +42,7 @@ export default function TabNavieras() {
     {
       key: "eliminar", header: "", headerClassName: "w-12",
       render: (n) => (
-        <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:text-destructive" onClick={() => eliminarNaviera.mutate(n.id)}>
+        <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:text-destructive" onClick={() => eliminarNaviera.mutate(n.id)} aria-label={`Eliminar naviera ${n.name}`}>
           <Trash2 className="h-4 w-4" />
         </Button>
       ),

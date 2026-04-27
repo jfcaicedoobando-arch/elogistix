@@ -16,7 +16,7 @@ export default function EmbarqueRowActions({ embarque, onEditar, onDuplicar, onE
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild onClick={(ev) => ev.stopPropagation()}>
-        <Button variant="ghost" size="icon" className="h-8 w-8">
+        <Button variant="ghost" size="icon" className="h-8 w-8" aria-label={`Acciones del embarque ${embarque.expediente}`}>
           <MoreHorizontal className="h-4 w-4" />
         </Button>
       </DropdownMenuTrigger>

@@ -2,6 +2,13 @@ import type { ChangelogEntry } from "../../../changelogData";
 
 export const chunk0: ChangelogEntry[] = [
   {
+    version: "8.99.24",
+    date: "2026-04-27",
+    type: "patch",
+    title: "Auditoría visual Fase 13: Accesibilidad (aria-labels) y bug Imprimir",
+    description: "Décima tercera fase de auditoría — barrido sistemático sobre botones icon-only sin aria-label (problema serio de accesibilidad para lectores de pantalla y herramientas de QA automatizadas) y un bug funcional descubierto en el detalle de embarque. (1) BUG FUNCIONAL · Botón Imprimir — el botón 'Imprimir' del header del detalle de embarque (EmbarqueDetalleHeader.tsx línea 79) no tenía onClick, por lo que el click no hacía absolutamente nada (engañando al usuario). Ahora invoca window.print() correctamente. (2) Accesibilidad · barrido masivo de aria-labels — se detectaron y corrigieron 23 botones con `size=\"icon\"` que carecían de aria-label, distribuidos en 17 archivos: navegación 'volver' (EmbarqueDetalleHeader, ClienteDetalle, CotizacionDetalle, ProveedorDetalle, OrgHeader, PortalEmbarqueDetalle, PortalCotizacionHeader, EmbarqueWizardLayout, CotizacionWizardLayout), eliminación con contexto (TablaContactos, OrgMembersCard, TabNavieras, TabPuertos, TabTiposContenedor, AdminUsuarios, admin-org/Usuarios, EmbarqueRowActions, Cotizaciones), wizards de cotización (SeccionMercanciaAerea, SeccionMercanciaMaritimeLCL, ConceptoRowMXN, ConceptoRowUSD, TablaCostosLocal, StepCostosPrecios), diálogos (DialogDuplicarEmbarque +/-, DialogMarcarFacturada quitar PDF/XML), descarga de PDF/XML (HistorialProformas, Facturacion), portal (PortalLayout menú móvil), navegación lateral (OrgSwitcher), notas (TabNotas botón enviar), y desvinculación (BloqueVinculacion). Los aria-labels son contextuales — incluyen el nombre/expediente del registro cuando aplica (ej. 'Eliminar contacto Juan Pérez', 'Acciones del embarque MX-001-2026') para que un lector de pantalla anuncie la acción exacta sin ambigüedad. ThemeToggle, sidebar.tsx (sr-only span) ya tenían soporte de accesibilidad correcto y no se tocaron. Total: 1 bug funcional crítico arreglado, 23 botones con accesibilidad mejorada, 0 cambios de tipos.",
+  },
+  {
     version: "8.99.23",
     date: "2026-04-27",
     type: "patch",

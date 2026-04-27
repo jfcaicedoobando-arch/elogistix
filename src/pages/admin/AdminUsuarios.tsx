@@ -48,7 +48,7 @@ export default function AdminUsuarios() {
     {
       key: "actions", header: "", width: "w-[60px]",
       render: (u) => (
-        <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-destructive" onClick={() => setDeleteTarget(u)} title="Eliminar usuario">
+        <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-destructive" onClick={() => setDeleteTarget(u)} title="Eliminar usuario" aria-label="Eliminar usuario">
           <Trash2 className="h-4 w-4" />
         </Button>
       ),

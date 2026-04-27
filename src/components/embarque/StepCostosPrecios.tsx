@@ -91,7 +91,7 @@ export function StepCostosPrecios(props: Props) {
                     <SelectContent><SelectItem value="MXN">MXN</SelectItem><SelectItem value="USD">USD</SelectItem><SelectItem value="EUR">EUR</SelectItem></SelectContent>
                   </Select>
                   <Input readOnly value={formatCurrency(totalUSD, 'USD')} className="text-sm bg-muted font-semibold" />
-                  <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => removeConceptoCosto(costo.id)} disabled={conceptosCosto.length <= 1}>
+                  <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => removeConceptoCosto(costo.id)} disabled={conceptosCosto.length <= 1} aria-label="Eliminar concepto de costo">
                     <Trash2 className="h-4 w-4 text-destructive" />
                   </Button>
                 </div>
@@ -126,7 +126,7 @@ export function StepCostosPrecios(props: Props) {
                     <SelectContent><SelectItem value="MXN">MXN</SelectItem><SelectItem value="USD">USD</SelectItem><SelectItem value="EUR">EUR</SelectItem></SelectContent>
                   </Select>
                   <Input readOnly value={formatCurrency(totalUSD, 'USD')} className="text-sm bg-muted font-semibold" />
-                  <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => removeConceptoVenta(venta.id)} disabled={conceptosVenta.length <= 1}>
+                  <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => removeConceptoVenta(venta.id)} disabled={conceptosVenta.length <= 1} aria-label="Eliminar concepto de venta">
                     <Trash2 className="h-4 w-4 text-destructive" />
                   </Button>
                 </div>

@@ -17,7 +17,7 @@ export function OrgSwitcher({ collapsed }: { collapsed?: boolean }) {
     return (
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button variant="ghost" size="icon" className="w-full">
+          <Button variant="ghost" size="icon" className="w-full" aria-label="Cambiar de organización">
             <Building2 className="h-4 w-4" />
           </Button>
         </DropdownMenuTrigger>

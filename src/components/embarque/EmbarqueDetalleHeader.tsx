@@ -35,7 +35,7 @@ export function EmbarqueDetalleHeader({
   return (
     <div className="flex flex-col lg:flex-row lg:items-start gap-4">
       <div className="flex items-start gap-3 flex-1 min-w-0">
-        <Button variant="ghost" size="icon" onClick={() => navigate("/embarques")} className="shrink-0">
+        <Button variant="ghost" size="icon" onClick={() => navigate("/embarques")} className="shrink-0" aria-label="Volver a la lista de embarques">
           <ArrowLeft className="h-5 w-5" />
         </Button>
         <div className="flex-1 min-w-0">
@@ -76,7 +76,7 @@ export function EmbarqueDetalleHeader({
         <Button variant="outline" size="sm" onClick={onCompartirTracking} disabled={trackingPending}>
           <Share2 className="h-4 w-4 mr-1" /> Compartir
         </Button>
-        <Button variant="outline" size="sm"><Printer className="h-4 w-4 mr-1" /> Imprimir</Button>
+        <Button variant="outline" size="sm" onClick={() => window.print()}><Printer className="h-4 w-4 mr-1" /> Imprimir</Button>
         {canEdit && (
           <Button variant="destructive" size="sm" onClick={onAbrirEliminar}>
             <Trash2 className="h-4 w-4 mr-1" /> Eliminar

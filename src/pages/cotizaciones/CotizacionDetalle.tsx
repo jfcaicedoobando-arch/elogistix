@@ -53,7 +53,7 @@ export default function CotizacionDetalle() {
     <div className="max-w-4xl mx-auto space-y-6">
       {/* Encabezado */}
       <div className="flex items-center gap-3">
-        <Button variant="ghost" size="icon" onClick={() => navigate("/cotizaciones")}>
+        <Button variant="ghost" size="icon" onClick={() => navigate("/cotizaciones")} aria-label="Volver a cotizaciones">
           <ArrowLeft className="h-4 w-4" />
         </Button>
         <div className="flex-1 min-w-0">

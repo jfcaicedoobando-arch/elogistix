@@ -104,6 +104,7 @@ export default function Usuarios() {
             size="icon"
             className="text-muted-foreground hover:text-destructive"
             onClick={(e) => { e.stopPropagation(); setDeleteTarget(u); }}
+            aria-label={`Eliminar usuario ${u.email}`}
           >
             <Trash2 className="h-4 w-4" />
           </Button>
