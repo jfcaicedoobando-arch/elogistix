@@ -9,6 +9,7 @@ import { useProveedoresPaginados, useProveedorMutations } from "@/hooks/proveedo
 import type { ProveedorListItem } from "@/hooks/proveedor/useProveedores";
 import NuevoProveedorDialog from "@/components/proveedor/NuevoProveedorDialog";
 import PaginationControls from "@/components/shared/PaginationControls";
+import { PageHeader } from "@/components/shared/PageHeader";
 import { useToast } from "@/hooks/use-toast";
 import { usePermissions } from "@/hooks/shared/usePermissions";
 import { useRegistrarActividad } from "@/hooks/shared/useBitacora";
