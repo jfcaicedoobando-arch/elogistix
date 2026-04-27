@@ -56,12 +56,12 @@ export default function TablaCostosDetalle({ filas, filasMoneda, moneda, title, 
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Concepto</TableHead>
-                <TableHead>Proveedor</TableHead>
-                <TableHead className="text-right">Costo Unit.</TableHead>
-                <TableHead className="text-right">Venta</TableHead>
-                <TableHead className="text-right">Profit</TableHead>
-                <TableHead className="text-right">% Profit</TableHead>
+                <TableHead className="whitespace-nowrap">Concepto</TableHead>
+                <TableHead className="whitespace-nowrap">Proveedor</TableHead>
+                <TableHead className="text-right whitespace-nowrap">Costo Unit.</TableHead>
+                <TableHead className="text-right whitespace-nowrap">Venta</TableHead>
+                <TableHead className="text-right whitespace-nowrap">Profit</TableHead>
+                <TableHead className="text-right whitespace-nowrap">% Profit</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
