@@ -11,6 +11,7 @@ import {
 import { MAX_CONTENEDORES, type PeriodoFiltro } from "@/hooks/operaciones/useOperacionesData";
 import { formatCurrency } from "@/lib/formatters";
 import { KpiCard } from "@/components/operaciones/KpiCard";
+import { PageHeader } from "@/components/shared/PageHeader";
 import { DesempenoOperadores } from "@/components/operaciones/DesempenoOperadores";
 import { useOperacionesPageController } from "@/hooks/operaciones/useOperacionesPageController";
 
@@ -26,20 +27,20 @@ export default function Operaciones() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-2">
-        <div>
-          <h1 className="text-2xl font-bold text-foreground">Dashboard de Operaciones</h1>
-          <p className="text-sm text-muted-foreground">{hoyStr}</p>
-        </div>
-        <Select value={periodo} onValueChange={(v) => setPeriodo(v as PeriodoFiltro)}>
-          <SelectTrigger className="w-[180px]"><SelectValue /></SelectTrigger>
-          <SelectContent>
-            <SelectItem value="mes">Este mes</SelectItem>
-            <SelectItem value="3meses">Últimos 3 meses</SelectItem>
-            <SelectItem value="anio">Este año</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
+      <PageHeader
+        title="Dashboard de Operaciones"
+        description={hoyStr}
+        actions={
+          <Select value={periodo} onValueChange={(v) => setPeriodo(v as PeriodoFiltro)}>
+            <SelectTrigger className="w-[180px]"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="mes">Este mes</SelectItem>
+              <SelectItem value="3meses">Últimos 3 meses</SelectItem>
+              <SelectItem value="anio">Este año</SelectItem>
+            </SelectContent>
+          </Select>
+        }
+      />
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <KpiCard titulo="Cargas activas" valor={global.totalActivas} icono={Package} color="info" loading={isLoading} />

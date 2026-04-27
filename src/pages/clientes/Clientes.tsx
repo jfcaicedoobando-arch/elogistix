@@ -8,6 +8,7 @@ import { useClientesPaginados } from "@/hooks/cliente/useClientes";
 import { usePermissions } from "@/hooks/shared/usePermissions";
 import NuevoClienteDialog from "@/components/cliente/NuevoClienteDialog";
 import PaginationControls from "@/components/shared/PaginationControls";
+import { PageHeader } from "@/components/shared/PageHeader";
 import { useDebounce } from "@/hooks/shared/useDebounce";
 import { DataTable, type DataTableColumn } from "@/components/shared/DataTable";
 import { useListPageState } from "@/hooks/shared/useListPageState";
@@ -47,20 +48,18 @@ export default function Clientes() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <div className="flex items-center gap-3">
-            <Users className="h-6 w-6 text-accent" />
-            <h1 className="text-2xl font-bold">Clientes</h1>
-          </div>
-          <p className="text-sm text-muted-foreground mt-1">{totalCount} clientes registrados</p>
-        </div>
-        {canEdit && (
-          <Button onClick={() => setDialogOpen(true)} className="w-full sm:w-auto">
-            <Plus className="h-4 w-4 mr-1" />Nuevo Cliente
-          </Button>
-        )}
-      </div>
+      <PageHeader
+        icon={<Users className="h-6 w-6 text-accent" />}
+        title="Clientes"
+        description={`${totalCount} clientes registrados`}
+        actions={
+          canEdit ? (
+            <Button onClick={() => setDialogOpen(true)} className="w-full sm:w-auto">
+              <Plus className="h-4 w-4 mr-1" />Nuevo Cliente
+            </Button>
+          ) : null
+        }
+      />
 
       <Card>
         <CardContent className="p-4">

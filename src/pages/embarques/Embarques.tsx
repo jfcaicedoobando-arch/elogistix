@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import PaginationControls from "@/components/shared/PaginationControls";
 import { DataTable } from "@/components/shared/DataTable";
 import DoubleConfirmDeleteDialog from "@/components/shared/DoubleConfirmDeleteDialog";
+import { PageHeader } from "@/components/shared/PageHeader";
 import DialogDuplicarEmbarque from "@/components/embarque/DialogDuplicarEmbarque";
 import EmbarquesFiltros from "@/components/embarque/EmbarquesFiltros";
 import { useEmbarquesPageController } from "@/hooks/embarque/useEmbarquesPageController";
@@ -38,24 +39,24 @@ export default function Embarques() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h1 className="text-2xl font-bold">Embarques</h1>
-          <p className="text-sm text-muted-foreground">{displayCount} embarques encontrados</p>
-        </div>
-        <div className="flex flex-col gap-2 sm:flex-row sm:gap-2">
-          {!isEmptyState && (
-            <Button variant="outline" onClick={exportarCsv} className="w-full sm:w-auto">
-              <Download className="h-4 w-4 mr-2" /> Exportar CSV
-            </Button>
-          )}
-          {canEdit && !isEmptyState && (
-            <Button onClick={() => navigate("/embarques/nuevo")} className="w-full sm:w-auto">
-              <Plus className="h-4 w-4 mr-2" /> Nuevo Embarque
-            </Button>
-          )}
-        </div>
-      </div>
+      <PageHeader
+        title="Embarques"
+        description={`${displayCount} embarques encontrados`}
+        actions={
+          <>
+            {!isEmptyState && (
+              <Button variant="outline" onClick={exportarCsv} className="w-full sm:w-auto">
+                <Download className="h-4 w-4 mr-2" /> Exportar CSV
+              </Button>
+            )}
+            {canEdit && !isEmptyState && (
+              <Button onClick={() => navigate("/embarques/nuevo")} className="w-full sm:w-auto">
+                <Plus className="h-4 w-4 mr-2" /> Nuevo Embarque
+              </Button>
+            )}
+          </>
+        }
+      />
 
       {isEmptyState ? (
         <Card className="shadow-md">

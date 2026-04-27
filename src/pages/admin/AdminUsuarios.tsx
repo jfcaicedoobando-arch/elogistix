@@ -7,6 +7,7 @@ import { useToast } from "@/hooks/use-toast";
 import { getErrorMessage } from "@/lib/errors";
 import NuevoUsuarioDialog from "@/components/usuario/NuevoUsuarioDialog";
 import DoubleConfirmDeleteDialog from "@/components/shared/DoubleConfirmDeleteDialog";
+import { PageHeader } from "@/components/shared/PageHeader";
 import { useAdminGlobalUsers, type GlobalUserRow } from "@/hooks/admin/useAdminData";
 import { useDeleteUser } from "@/hooks/usuario/useUsuarioMutations";
 import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
@@ -57,18 +58,16 @@ export default function AdminUsuarios() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <Users className="h-6 w-6 text-primary" />
-          <div>
-            <h1 className="text-2xl font-bold tracking-tight">Usuarios Globales</h1>
-            <p className="text-sm text-muted-foreground">Todos los usuarios de todas las organizaciones.</p>
-          </div>
-        </div>
-        <Button onClick={() => setDialogOpen(true)}>
-          <UserPlus className="h-4 w-4" /> Nuevo Usuario
-        </Button>
-      </div>
+      <PageHeader
+        icon={<Users className="h-6 w-6 text-primary" />}
+        title="Usuarios Globales"
+        description="Todos los usuarios de todas las organizaciones."
+        actions={
+          <Button onClick={() => setDialogOpen(true)}>
+            <UserPlus className="h-4 w-4" /> Nuevo Usuario
+          </Button>
+        }
+      />
 
       <NuevoUsuarioDialog open={dialogOpen} onOpenChange={setDialogOpen} onCreated={() => refetch()} showOrgSelector />
 

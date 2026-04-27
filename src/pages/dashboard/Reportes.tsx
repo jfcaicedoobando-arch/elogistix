@@ -1,6 +1,7 @@
 import { Download } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import { PageHeader } from "@/components/shared/PageHeader";
 import ReportesFiltros from "@/components/reportes/ReportesFiltros";
 import ReportesKpiCards from "@/components/reportes/ReportesKpiCards";
 import ReportesTopChart from "@/components/reportes/ReportesTopChart";
@@ -28,15 +29,15 @@ export default function Reportes() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-foreground">Rentabilidad por Cliente</h1>
-          <p className="text-sm text-muted-foreground">P&amp;L agrupado por cuenta con filtros de periodo y modo</p>
-        </div>
-        <Button variant="outline" size="sm" onClick={handleExport} disabled={!canExport}>
-          <Download className="h-4 w-4 mr-2" /> Exportar CSV
-        </Button>
-      </div>
+      <PageHeader
+        title="Rentabilidad por Cliente"
+        description="P&L agrupado por cuenta con filtros de periodo y modo"
+        actions={
+          <Button variant="outline" size="sm" onClick={handleExport} disabled={!canExport}>
+            <Download className="h-4 w-4 mr-2" /> Exportar CSV
+          </Button>
+        }
+      />
 
       <ReportesFiltros
         fechaDesde={fechaDesde}

@@ -12,6 +12,7 @@ import { formatCurrency, formatDate, toTitleCase } from "@/lib/formatters";
 import { getEstadoColor } from "@/lib/ui/uiMappings";
 import PaginationControls from "@/components/shared/PaginationControls";
 import { DataTable, type DataTableColumn } from "@/components/shared/DataTable";
+import { PageHeader } from "@/components/shared/PageHeader";
 import type { Database } from "@/integrations/supabase/types";
 import { TabProformas } from "@/components/facturacion/TabProformas";
 import { TabProformasPendientes } from "@/components/facturacion/TabProformasPendientes";
@@ -94,10 +95,10 @@ export default function Facturacion() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold">Pre-Facturación</h1>
-        <p className="text-sm text-muted-foreground">Control de proformas, facturas emitidas y gastos por liquidar</p>
-      </div>
+      <PageHeader
+        title="Pre-Facturación"
+        description="Control de proformas, facturas emitidas y gastos por liquidar"
+      />
 
       <Tabs defaultValue={proformasPendientes.length > 0 ? "pendientes" : "proformas"}>
         <TabsList>

@@ -9,6 +9,7 @@ import { calcularEstadoEmbarque } from "@/lib/domain/embarque";
 import { getOrigen, getDestino } from "@/lib/formatters";
 import EmbarqueCard from "@/components/portal/EmbarqueCard";
 import EmptyState from "@/components/empty/EmptyState";
+import { PageHeader } from "@/components/shared/PageHeader";
 import { Search, Ship, Filter, Package, ChevronDown } from "lucide-react";
 import { usePortalEmbarquesController } from "@/hooks/portal/usePortalEmbarquesController";
 
@@ -40,10 +41,10 @@ export default function PortalEmbarques() {
 
   return (
     <div className="space-y-5">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold">Mis Embarques</h1>
-        <span className="text-sm text-muted-foreground">{filtered.length} de {embarques.length}</span>
-      </div>
+      <PageHeader
+        title="Mis Embarques"
+        actions={<span className="text-sm text-muted-foreground tabular-nums">{filtered.length} de {embarques.length}</span>}
+      />
 
       <div className="flex flex-col sm:flex-row gap-3">
         <div className="relative flex-1">
