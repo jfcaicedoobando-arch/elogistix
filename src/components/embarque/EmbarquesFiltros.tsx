@@ -55,7 +55,7 @@ export default function EmbarquesFiltros({
         <SelectTrigger className="w-[150px] min-w-[140px]"><SelectValue placeholder="Modo" className="truncate" /></SelectTrigger>
         <SelectContent>
           <SelectItem value="todos">Todos los modos</SelectItem>
-          {MODOS_TRANSPORTE.map(m => <SelectItem key={m} value={m}>{getModoIcon(m)} {m}</SelectItem>)}
+          {MODOS_TRANSPORTE.map(m => <SelectItem key={m} value={m}><span className="inline-flex items-center gap-2"><ModoIcon modo={m} size={14} /> {m}</span></SelectItem>)}
         </SelectContent>
       </Select>
       <Select value={filterEstado} onValueChange={onFilterEstadoChange}>
