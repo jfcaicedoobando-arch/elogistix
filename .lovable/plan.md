@@ -1,90 +1,83 @@
 
-# Auditoría Visual de Libre Carga — Hallazgos y Plan de Trabajo
+# Auditoría visual UI/UX — Fase 4 (v8.99.15)
 
-Inspeccioné las pantallas principales (Dashboard, Embarques, Cotizaciones, Clientes, Operaciones, Pre-Facturación, Detalle de Embarque) en escritorio (1366×768) y móvil (360×800) en modo oscuro. Documento abajo los hallazgos por severidad y propongo un plan en 3 fases.
+## Hallazgos
 
----
+Capturé pantallas en tablet (768px) y laptop (1366px). Encontré **8 problemas** nuevos o regresiones, ordenados por severidad.
 
-## Hallazgos por pantalla
+### 1. `toTitleCase` demasiado agresivo (CRÍTICO)
+En `/clientes` se ven nombres mal capitalizados:
+- "BUENO Alimentos" — "BUENO" tratado como sigla
+- "SANTA Catarina, NUEVO León" — palabras válidas tratadas como siglas
+- "Chipilo DE Francisco Javier MINA, Puebla" — "DE" en mayúsculas, "MINA" tratado como sigla
+- "Distribuciones Agrisolutions S a P I DE CV" — siglas mal partidas
+- "Comercializadora Vistrain-gonzalez" — segundo segmento tras guión sin capitalizar
 
-### 1. Dashboard principal (`/`)
-- **Crítico — barras "Cargas activas por cliente" invisibles:** las mini-barras de proporción usan `bg-muted` + `bg-primary/40`; en modo oscuro ambos son tonos azul-marino muy cercanos, las barras se ven como guiones grises planos. Sin contraste, no comunican proporción.
-- **Importante — Tabla "Embarques":** el badge "En Tránsito" se rompe en 2 líneas; los badges de estado deberían ser `whitespace-nowrap`.
-- **Importante — Capitalización de fecha:** "Domingo, 26 De Abril De 2026" — las preposiciones "de" no deben ir capitalizadas; `toLocaleDateString` + CSS `capitalize` aplica title-case a TODAS las palabras. Debe usarse `first-letter:uppercase` o normalizar la cadena manualmente.
-- **Importante — Mobile (360px):** los 5 KPIs de estado solo muestran 2; el resto queda fuera de pantalla sin scroll horizontal evidente. La línea conectora en `DashboardStatusCards` fuerza un layout flex sin wrap. KPI "Arribos este mes" trunca "USD 20,774…".
+**Causa**: el regex `^([A-Z]\.?){2,5}$` matchea cualquier palabra de 2-5 letras todas mayúsculas. Hay que **invertir** la lógica: solo preservar mayúsculas si el original ya tiene puntos (S.A., C.V.) o si está en una whitelist mínima (RFC, CFDI, IVA, USD, EUR, MXN, USA, EU, UE).
 
-### 2. Lista de Embarques (`/embarques`)
-- **Crítico — inputs `<input type="date">` muestran placeholder "mm/dd/yyyy"** en vez de DD/MM/YYYY (incumple memoria de localización mexicana).
-- **Crítico — desbordamiento horizontal:** la tabla rebasa el ancho del contenedor; columna ESTADO se corta ("En Trán…", "Confir…"). Falta `min-w` en la columna o `overflow-x-auto` con scroll cómodo, y los badges pegados al borde.
-- **Importante — Selects truncados:** "Todos los..." ocupa el botón y no se ve qué se filtra.
-- **Menor — iconos de alerta amarillos sin tooltip visible** junto a expediente; no es claro qué alertan.
+### 2. Cliente en MAYÚSCULAS en tablas y cards principales
+- Tabla **Embarques**: "INDIMEX TRADING", "ROLLOS Y ETIQUETA..."
+- Tabla **Cotizaciones**: "INDIMEX TRADING", "GOLDEN FOODS", "BUENO ALIMENTOS"
+- Cards **Alertas de Demora** y **Próximos Arribos** en dashboard: "INDIMEX TRADING", "CORPORATIVO ESPECIALIZADO EN COMERCIO ELITE..."
 
-### 3. Lista de Cotizaciones (`/cotizaciones`)
-- **Crítico — Folio se rompe en 3 líneas** ("COT-/2026-/0058"); falta `whitespace-nowrap` o `tabular-nums` en columna FOLIO.
-- **Importante — Modo sin icono** (a diferencia de embarques) — inconsistencia con el resto del sistema.
-- **Importante — KPI cards desbalanceadas:** los iconos circulares grandes a la izquierda dejan mucho espacio vacío arriba/abajo; números desalineados respecto a la etiqueta.
-- **Menor — Selects truncados** ("Todos los...").
+Aplicar `toTitleCase` (versión corregida) en estos displays.
 
-### 4. Clientes (`/clientes`)
-- **Importante — Capitalización inconsistente** en columna CONTACTO ("EDUARDO VARGAS1" vs "Yuliana Reyes"). Conviene normalizar a Title Case en presentación.
-- **Importante — Teléfono sin formato** ("5553083347" vs "+52 1 442 170 6966" vs vacío). Falta máscara/formatter (`+52 555 308 3347`).
-- **Menor — Ciudades en MAYÚSCULAS sin acentos**; aplicar Title Case en render.
+### 3. Fecha con capitalización incorrecta en Operaciones
+"Domingo, 26 De Abril De 2026" — el fix de Fase 1 solo se hizo en `Dashboard.tsx`. Replicar en el header de `/operaciones`.
 
-### 5. Operaciones (`/operaciones`)
-- **Crítico — Gráfica de barras apiladas con etiquetas X rotadas** mostrando emails completos (`alan.hernandez@elogistixshipping.com`) que **se solapan con la leyenda** ("Confirmado · En Tránsito · Llegada…"). Caos visual.
-- **Solución:** mostrar nombre/inicial en eje X (no email), dar `bottom margin` mayor, mover leyenda arriba.
+### 4. Tarjetas de operadores muestran email en vez de nombre
+En `/operaciones`, debajo del gráfico, las cards muestran "alan.hernandez@elogis...", "magali.reynoso@elogi...". El gráfico ya muestra el nombre derivado, las cards no. Aplicar el mismo helper de derivación de nombre.
 
-### 6. Pre-Facturación (`/facturacion`)
-- **Crítico — # Proforma se rompe en 2 líneas** ("PRO-2026-/0006"); igual problema que cotizaciones.
-- **Crítico — Columna MONTO se corta** (solo se ve "USD"); tabla rebasa contenedor.
-- **Importante — Operador es email completo** en vez de nombre; reduce legibilidad.
-- **Importante — Badge "Consolidada (2)" en 2 líneas** por el paréntesis.
+### 5. Columna "Estado" cortada en tabla de Embarques
+En 1366px la columna se trunca a "Confir...", "Arribo", "En Trán...". La tabla excede el viewport por la suma de `min-w` de columnas. Reducir min-w de columnas largas (cliente a 140px, ensanchar Estado a 110px y `whitespace-nowrap`), o envolver la tabla en scroll horizontal con sombra de hint.
 
-### 7. Detalle de Embarque (`/embarques/:id`)
-- **Importante — Jerarquía del header confusa:** badge "SIN PROFORMA" amarillo grueso compite visualmente con el CTA primario "Avanzar a En Aduana", y el nombre del cliente queda debajo del badge en gris pequeño.
-- **Importante — Toolbar con 6 botones** apretada — agrupar acciones secundarias (Duplicar, Compartir Tracking, Imprimir) en menú "•••".
-- **Menor — Inconsistencia de moneda en tab Costos:** KPIs ("$6,073.24") sin prefijo USD, pero las tablas debajo sí lo muestran ("USD 350.00").
+### 6. Sidebar siempre visible en tablet (768px)
+El sidebar fijo de 256px en pantallas <1024px deja solo ~510px para el contenido, lo que hace que la línea de tiempo del dashboard solo muestre 3 de 5 estados aunque tenga `min-w-[600px]` (el overflow-x-auto sí funciona pero la UX pierde). Hacer el sidebar **colapsable por defecto en <lg** (botón hamburguesa toggle ya existente).
 
-### 8. Loader de rutas (transversal)
-- **Importante — `RouteLoadingFallback` ocupa toda la pantalla** y oculta sidebar/header al navegar entre páginas; rompe la sensación de continuidad. Debería ocupar solo el área `<main>`.
+### 7. Vigencia de cotizaciones sin indicador visual
+La columna "Vigencia" muestra solo la fecha sin advertencia visual cuando está próxima a vencer. Agregar badge sutil:
+- Vigencia ≤ 3 días: badge rojo "Vence pronto"
+- Vencida: badge rojo "Vencida"
+- Sin urgencia: solo fecha
 
----
+### 8. Formato de fecha con coma redundante en Cotizaciones
+"23/04/2026, 04:06 p.m." → más limpio: "23/04/2026 16:06" (24h, sin coma, sin a.m./p.m.). Alinea con el estándar de localización mexicana del proyecto.
 
-## Plan de Trabajo (3 fases)
+## Cambios a realizar
 
-### Fase 1 — Correcciones críticas (alto impacto visual)
-1. **Dashboard / CargasActivasClienteCard**: cambiar barra a `bg-secondary` + `bg-primary` (sólido), aumentar a `h-2.5`, añadir borde sutil para asegurar contraste en dark.
-2. **Localización de fechas**: reemplazar `<input type="date">` por componente `Calendar/Popover` ya disponible en shadcn (formato DD/MM/YYYY) en filtros de Embarques y otros.
-3. **Capitalización de fecha header dashboard**: normalizar manualmente ("domingo, 26 de abril de 2026" → con sólo primera letra capitalizada) en `Dashboard.tsx` en lugar de CSS `capitalize`.
-4. **Folios y números de proforma**: añadir `whitespace-nowrap` a las columnas FOLIO/EXPEDIENTE/# PROFORMA en `clienteColumns.tsx`, columnas de cotizaciones y proformas. Aplicar mínimo ancho `min-w-[110px]`.
-5. **Tablas con desbordamiento (Embarques, Pre-Facturación)**: revisar `DataTable` para asegurar scroll horizontal cómodo con `overflow-x-auto` + ancho mínimo en columnas críticas (ESTADO, MONTO).
-6. **Operaciones — gráfica `DesempenoOperadores`**: extraer nombre del email (`split('@')[0]`), aumentar margen inferior, mover leyenda al top.
-7. **RouteLoadingFallback**: contener dentro del `<main>` para preservar shell (sidebar + header).
+### Frontend
 
-### Fase 2 — Mejoras de consistencia
-8. **Badges de estado**: `whitespace-nowrap` global en `getEstadoColor` o en componente Badge wrapper.
-9. **Selects truncados**: aumentar `min-width` de los SelectTrigger en filtros (mínimo 160px) o usar etiquetas más cortas ("Estado", "Modo").
-10. **Operador (email → nombre)** en tablas de Pre-Facturación: helper que convierta `alan.hernandez@…` a "Alan Hernández".
-11. **Mobile de DashboardStatusCards**: permitir `flex-wrap` o convertir a grid 2 columnas en móvil; ocultar la línea conectora en breakpoints `<sm`.
-12. **Header de Detalle de Embarque**: rediseñar a un layout vertical claro — nombre cliente como subtítulo grande debajo del expediente; badge "SIN PROFORMA" como `variant="outline"` más delgado; agrupar acciones secundarias en un menú "Más".
+**`src/lib/formatters/index.ts`** — reescribir `toTitleCase`:
+- Solo preservar mayúsculas si la palabra ORIGINAL contiene puntos (`S.A.`, `C.V.`, `S.A.P.I.`)
+- Whitelist explícita corta: `RFC`, `CFDI`, `IVA`, `USD`, `EUR`, `MXN`, `USA`, `EU`, `UE`, `LCL`, `FCL`, `BL`, `ETD`, `ETA`, `CSF`
+- Conectores en minúscula (de, del, la, etc.) solo si NO son la primera palabra
+- Manejar guiones internos: capitalizar después de `-`
+- Quitar números pegados al final del nombre (display only): "Eduardo Vargas1" → "Eduardo Vargas"
 
-### Fase 3 — Pulido
-13. **Capitalización de nombres** (clientes, contactos, ciudades): pequeño helper `toTitleCase` aplicado en columnas de presentación.
-14. **Formato de teléfono** mexicano consistente (helper `formatPhoneMx`).
-15. **Consistencia de moneda en KPIs de Costos**: añadir prefijo "USD" a los KPIs de "Total Venta / Total Costo / Utilidad" para alinearlos con las tablas.
-16. **Tooltip en iconos de alerta** de la lista de embarques explicando qué documentación falta.
-17. **Iconos de modo en Cotizaciones** (mismo patrón que embarques).
+**`src/components/embarque/embarqueColumns.tsx`** — aplicar `toTitleCase` al render de cliente; ensanchar columna Estado (`w-[110px]`), reducir cliente (`max-w-[160px]`).
 
-### Cambios de soporte
-- Actualizar `src/pages/Changelog.tsx` con una entrada nueva por cada fase entregada.
+**`src/pages/cotizaciones/Cotizaciones.tsx`** — `toTitleCase` en cliente y reformatear fecha sin coma + 24h; agregar badge de vigencia.
 
----
+**`src/components/dashboard/AlertasDemoraCard.tsx`** y **`ProximosArribosCard.tsx`** — `toTitleCase` en `cliente_nombre`.
 
-## Detalles técnicos relevantes
+**`src/pages/operaciones/Operaciones.tsx`** (o componente de header) — replicar la corrección de capitalización de fecha que se hizo en `Dashboard.tsx`.
 
-- Las barras grises del Dashboard se deben a clases `bg-muted` + `bg-primary/40` en `CargasActivasClienteCard.tsx` (línea 86-90); la solución es subir el contraste y eliminar la opacidad.
-- El loader global está en `src/components/layout/RouteLoadingFallback.tsx` y se monta como Suspense fallback en `App.tsx`; se debe envolver el `Outlet` en su propio Suspense dentro del `Layout`.
-- Las tablas usan `DataTable` (`src/components/shared/DataTable.tsx`); validar si el wrapper tiene `overflow-x-auto` y si las celdas críticas heredan `whitespace-nowrap`.
-- La gráfica de Operaciones (`src/components/operaciones/DesempenoOperadores.tsx`) usa probablemente Recharts; transformar `dataKey` del eje X a un campo derivado `nombreCorto`.
+**`src/components/operaciones/OperadorCard.tsx`** — usar `getNombreCorto(email)` (helper que ya existe en `useDesempenoChartData`) en `operador.nombre` cuando viene como email.
 
-¿Procedo en orden de fases o prefieres priorizar algún hallazgo en particular?
+**`src/components/layout/Sidebar.tsx`** (o equivalente) — colapsar por defecto en breakpoint `<lg` (1024px); mantener toggle accesible.
+
+**`src/content/changelog/v8/chunks/0.ts`** — entrada v8.99.15.
+
+### Sin cambios en BD
+
+Solo trabajo de presentación; ningún schema o RPC se modifica.
+
+## Sin trabajo
+
+- Iconos del card "Próximos Arribos" se ven correctos en revisión cercana (no es bug, es el indicador de modo).
+- KPIs de Operaciones (Cargas activas, Contenedores, Profit total, Alertas) se ven bien.
+
+## Validación
+
+- Capturar screenshot post-fix en 768px y 1366px de: Dashboard principal, Embarques (lista), Cotizaciones (lista), Clientes (lista) y Operaciones.
+- Verificar en BD vía sample: clientes "BUENO Alimentos", "SANTA Catarina, NUEVO León", "INDIMEX TRADING", "Corporativo Especializado EN Comercio ELITE S.A. DE C.V." se renderizan correctamente.
