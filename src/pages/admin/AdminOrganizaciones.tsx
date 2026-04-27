@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/dialog";
 import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 import { Label } from "@/components/ui/label";
+import { dialogSize } from "@/lib/ui/dialogTokens";
 import { useNavigate } from "react-router-dom";
 import { useAdminOrganizations, useCreateOrganization, type OrgRow } from "@/hooks/admin/useAdminData";
 import { toTitleCase } from "@/lib/formatters";
