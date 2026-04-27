@@ -11,7 +11,7 @@ export * from "./useEmbarqueDocumentosActions";
 export * from "./useEmbarqueEstadoActions";
 export * from "./useEmbarqueFinancials";
 export * from "./useEmbarqueForm";
-export * from "./useEmbarqueMutations";
+export * from "./mutations";
 export * from "./useEmbarqueQueries";
 export * from "./useEmbarqueSubmitOrchestrator";
 export * from "./useEmbarques";
