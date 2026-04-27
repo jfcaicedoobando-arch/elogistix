@@ -9,7 +9,7 @@ import type { Tables } from "@/integrations/supabase/types";
 const DOC_ESTADO_ICON: Record<string, { icon: typeof FileCheck; color: string }> = {
   Pendiente: { icon: FileX, color: "text-amber-500" },
   Recibido: { icon: FileCheck, color: "text-accent" },
-  Validado: { icon: FileCheck, color: "text-green-600" },
+  Validado: { icon: FileCheck, color: "text-success" },
 };
 
 interface Props {

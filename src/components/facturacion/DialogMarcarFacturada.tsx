@@ -96,7 +96,7 @@ export function DialogMarcarFacturada({ open, onOpenChange, proforma }: Props) {
               <Label htmlFor="pdf" className="text-xs">Factura PDF</Label>
               {pdfFile ? (
                 <div className="flex items-center gap-2 rounded-md border bg-muted/40 px-2 py-1.5 text-sm">
-                  <FileText className="h-4 w-4 text-red-600 shrink-0" />
+                  <FileText className="h-4 w-4 text-destructive shrink-0" />
                   <span className="truncate flex-1">{pdfFile.name}</span>
                   <Button type="button" variant="ghost" size="icon" className="h-6 w-6" onClick={clearPdf}>
                     <X className="h-3.5 w-3.5" />
@@ -118,7 +118,7 @@ export function DialogMarcarFacturada({ open, onOpenChange, proforma }: Props) {
               <Label htmlFor="xml" className="text-xs">Factura XML</Label>
               {xmlFile ? (
                 <div className="flex items-center gap-2 rounded-md border bg-muted/40 px-2 py-1.5 text-sm">
-                  <FileCode2 className="h-4 w-4 text-blue-600 shrink-0" />
+                  <FileCode2 className="h-4 w-4 text-info shrink-0" />
                   <span className="truncate flex-1">{xmlFile.name}</span>
                   <Button type="button" variant="ghost" size="icon" className="h-6 w-6" onClick={clearXml}>
                     <X className="h-3.5 w-3.5" />

@@ -88,7 +88,7 @@ export default function TablaCostosDetalle({ filas, filasMoneda, moneda, title, 
                       <TableCell className="text-right text-sm whitespace-nowrap">
                         {formatCurrency(fila.venta, moneda)}
                       </TableCell>
-                      <TableCell className={`text-right text-sm font-medium ${profit >= 0 ? "text-emerald-600" : "text-red-600"}`}>
+                      <TableCell className={`text-right text-sm font-medium ${profit >= 0 ? "text-success" : "text-destructive"}`}>
                         {formatCurrency(profit, moneda)}
                       </TableCell>
                       <TableCell className="text-right"><ProfitBadge porcentaje={pct} /></TableCell>
@@ -118,7 +118,7 @@ export default function TablaCostosDetalle({ filas, filasMoneda, moneda, title, 
                 <TableCell colSpan={2}>Totales</TableCell>
                 <TableCell className="text-right">{formatCurrency(totales.totalCosto, moneda)}</TableCell>
                 <TableCell className="text-right">{formatCurrency(totales.totalVenta, moneda)}</TableCell>
-                <TableCell className={`text-right ${totales.profit >= 0 ? "text-emerald-600" : "text-red-600"}`}>
+                <TableCell className={`text-right ${totales.profit >= 0 ? "text-success" : "text-destructive"}`}>
                   {formatCurrency(totales.profit, moneda)}
                 </TableCell>
                 <TableCell className="text-right"><ProfitBadge porcentaje={totales.porcentaje} /></TableCell>

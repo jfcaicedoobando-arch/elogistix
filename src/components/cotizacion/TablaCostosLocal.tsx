@@ -128,7 +128,7 @@ export default function TablaCostosLocal({ filas, filasMoneda, moneda, title, ic
                       className="h-8 text-sm text-right w-[110px]"
                     />
                   </div>
-                  <span className={`text-sm font-medium w-[100px] text-right ${profit >= 0 ? "text-emerald-600" : "text-red-600"}`}>
+                  <span className={`text-sm font-medium w-[100px] text-right ${profit >= 0 ? "text-success" : "text-destructive"}`}>
                     {formatCurrency(profit, moneda)}
                   </span>
                   <div className="w-[70px] flex justify-center"><ProfitBadge porcentaje={pct} /></div>
@@ -151,7 +151,7 @@ export default function TablaCostosLocal({ filas, filasMoneda, moneda, title, ic
               <div className="flex items-center gap-2">
                 <span className="w-[110px] text-right">{formatCurrency(totales.totalCosto, moneda)}</span>
                 <span className="w-[110px] text-right">{formatCurrency(totales.totalVenta, moneda)}</span>
-                <span className={`w-[100px] text-right ${totales.profit >= 0 ? "text-emerald-600" : "text-red-600"}`}>
+                <span className={`w-[100px] text-right ${totales.profit >= 0 ? "text-success" : "text-destructive"}`}>
                   {formatCurrency(totales.profit, moneda)}
                 </span>
                 <div className="w-[70px] flex justify-center"><ProfitBadge porcentaje={totales.porcentaje} /></div>
