@@ -58,7 +58,7 @@ export default function TabPlanes() {
             onChange={(e) => setEditValues({ ...editValues, max_usuarios: Number(e.target.value) })}
           />
         ) : (
-          p.max_usuarios.toLocaleString("es-MX")
+          formatNumber(p.max_usuarios)
         ),
     },
     {
