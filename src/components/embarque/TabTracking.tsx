@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -118,14 +119,9 @@ export function TabTracking({ embarqueId }: Props) {
         </CardHeader>
         <CardContent>
           {isLoading ? (
-            <div className="flex items-center justify-center py-8 text-sm text-muted-foreground">
-              <Loader2 className="h-4 w-4 mr-2 animate-spin" /> Cargando eventos...
-            </div>
+            <EmptyStateInline loading message="Cargando eventos..." />
           ) : eventos.length === 0 ? (
-            <div className="text-center py-8">
-              <Clock className="h-8 w-8 mx-auto text-muted-foreground/40 mb-2" />
-              <p className="text-sm text-muted-foreground">No hay eventos de tracking registrados.</p>
-            </div>
+            <EmptyStateInline icon={Clock} message="No hay eventos de tracking registrados." />
           ) : (
             <div className="relative">
               {/* Línea vertical */}

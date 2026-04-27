@@ -1,4 +1,5 @@
 import { Calendar, ArrowRight, Package } from "lucide-react";
+import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
@@ -37,10 +38,7 @@ export function PortalProximosArribosCard({ items }: Props) {
       </CardHeader>
       <CardContent>
         {items.length === 0 ? (
-          <div className="text-center py-8">
-            <Package className="h-8 w-8 mx-auto text-muted-foreground/40 mb-2" />
-            <p className="text-sm text-muted-foreground">No hay arribos próximos.</p>
-          </div>
+          <EmptyStateInline icon={Package} message="No hay arribos próximos." />
         ) : (
           <div className="space-y-2">
             {items.map((e) => (

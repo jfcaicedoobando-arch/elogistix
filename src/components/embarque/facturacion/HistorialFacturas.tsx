@@ -1,4 +1,5 @@
 import { FileCode2, FileText, Receipt } from "lucide-react";
+import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -86,10 +87,7 @@ export function HistorialFacturas({ facturas, proformas }: Props) {
             </TableBody>
           </Table>
         ) : (
-          <div className="p-8 text-center">
-            <Receipt className="h-8 w-8 mx-auto text-muted-foreground/40 mb-2" />
-            <p className="text-sm text-muted-foreground">No hay facturas generadas para este embarque.</p>
-          </div>
+          <EmptyStateInline icon={Receipt} message="No hay facturas generadas para este embarque." />
         )}
       </CardContent>
     </Card>
