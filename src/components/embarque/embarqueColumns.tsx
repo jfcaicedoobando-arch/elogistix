@@ -39,7 +39,7 @@ export function buildEmbarqueColumns({
 }: BuildColumnsParams): DataTableColumn<EmbarqueRow>[] {
   const base: DataTableColumn<EmbarqueRow>[] = [
     {
-      key: "expediente", header: "Expediente", width: "w-[130px]", className: "font-medium",
+      key: "expediente", header: "Expediente", width: "w-[130px]", className: "font-medium whitespace-nowrap",
       sticky: true, sortable: true, sortValue: (e) => e.expediente,
       render: (e) => {
         const docInfo = docsMap[e.id];
