@@ -135,7 +135,22 @@ export function parseResumenMesSiguiente(stats: DashboardStats): ResumenFacturac
 
 export function parseCargasPorCliente(stats: DashboardStats): CargaPorCliente[] {
   if (!stats?.cargasPorCliente) return [];
-  return stats.cargasPorCliente as CargaPorCliente[];
+  const raw = stats.cargasPorCliente as Array<Record<string, unknown>>;
+  return raw.map((r) => {
+    const desgloseRaw = (r.desglose as Record<string, number> | undefined) ?? {};
+    return {
+      clienteId: String(r.clienteId ?? r.cliente_id ?? ""),
+      clienteNombre: String(r.clienteNombre ?? r.cliente_nombre ?? "Sin cliente"),
+      total: Number(r.total ?? 0),
+      desglose: {
+        Confirmado: Number(desgloseRaw["Confirmado"] ?? 0),
+        "En Tránsito": Number(desgloseRaw["En Tránsito"] ?? 0),
+        Arribo: Number(desgloseRaw["Arribo"] ?? 0),
+        "En Aduana": Number(desgloseRaw["En Aduana"] ?? 0),
+        Entregado: Number(desgloseRaw["Entregado"] ?? 0),
+      },
+    };
+  });
 }
 
 /** Combina y deduplica los embarques presentes en los distintos cortes del dashboard. */
