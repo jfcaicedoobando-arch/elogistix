@@ -2,6 +2,13 @@ import type { ChangelogEntry } from "../../../changelogData";
 
 export const chunk0: ChangelogEntry[] = [
   {
+    version: "8.99.10",
+    date: "2026-04-27",
+    type: "patch",
+    title: "Fix definitivo: 'Cargas activas por cliente' en dashboard principal",
+    description: "El fix anterior (v8.99.9) se aplicó a dashboard_stats(), pero el dashboard principal consume dashboard_details() (split de payload por rendimiento). Por eso el card seguía mostrando solo el número total sin nombre de cliente ni desglose por estado. Cambios: (1) dashboard_details() ahora emite cargasPorCliente con llaves en camelCase (clienteId, clienteNombre) e incluye el campo 'desglose' con conteos por estado real (Confirmado, En Tránsito, Arribo, En Aduana, Entregado). (2) parseCargasPorCliente() en el frontend se reforzó para tolerar tanto el formato nuevo como el antiguo y rellenar 'desglose' vacío si llegara a faltar — defensa en profundidad contra regresiones silenciosas.",
+  },
+  {
     version: "8.99.9",
     date: "2026-04-27",
     type: "patch",
