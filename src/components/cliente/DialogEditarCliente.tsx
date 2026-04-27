@@ -41,7 +41,7 @@ export default function DialogEditarCliente({ open, onOpenChange, cliente, onSav
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-lg">
+      <DialogContent className={dialogSize.lg}>
         <DialogHeader>
           <DialogTitle>Editar Cliente</DialogTitle>
           <DialogDescription>Modifica los datos generales del cliente.</DialogDescription>

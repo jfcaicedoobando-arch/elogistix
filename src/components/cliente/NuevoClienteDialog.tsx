@@ -39,7 +39,7 @@ export default function NuevoClienteDialog({ open, onOpenChange }: Props) {
         else onOpenChange(abierto);
       }}
     >
-      <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto">
+      <DialogContent className={cn(dialogSize.lg, scrollableDialog)}>
         <DialogHeader>
           <DialogTitle>Nuevo Cliente — Paso {c.step} de 2</DialogTitle>
           <DialogDescription>

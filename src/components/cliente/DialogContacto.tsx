@@ -51,7 +51,7 @@ export default function DialogContacto({ open, onOpenChange, contacto, onSave, i
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-lg">
+      <DialogContent className={dialogSize.lg}>
         <DialogHeader>
           <DialogTitle>{contacto ? 'Editar Contacto' : 'Nuevo Contacto'}</DialogTitle>
           <DialogDescription>Proveedor, exportador o importador asociado a este cliente.</DialogDescription>

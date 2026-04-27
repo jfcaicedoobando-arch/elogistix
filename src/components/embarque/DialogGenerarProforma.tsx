@@ -24,7 +24,7 @@ export function DialogGenerarProforma({ open, onOpenChange, embarque, conceptosP
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className={cn(dialogSize["3xl"], scrollableDialog)}>
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             {c.paso === 'seleccion' ? (

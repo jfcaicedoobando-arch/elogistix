@@ -25,7 +25,7 @@ export default function NuevoProveedorDialog({ open, onOpenChange, onSave }: Pro
 
   return (
     <Dialog open={open} onOpenChange={(abierto) => { if (!abierto) c.resetAndClose(); else onOpenChange(abierto); }}>
-      <DialogContent className="sm:max-w-md max-h-[85vh] overflow-y-auto">
+      <DialogContent className={cn(dialogSize.md, scrollableDialog)}>
         <DialogHeader>
           <DialogTitle>Nuevo Proveedor — Paso {c.step} de 2</DialogTitle>
         </DialogHeader>

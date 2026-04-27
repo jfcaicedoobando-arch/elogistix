@@ -31,7 +31,7 @@ export default function EditarProveedorDialog({ proveedor, open, onOpenChange, o
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className={dialogSize.md}>
         <DialogHeader>
           <DialogTitle>Editar Proveedor</DialogTitle>
         </DialogHeader>

@@ -70,7 +70,7 @@ export default function DialogDuplicarEmbarque({ embarque, open, onOpenChange }:
 
   return (
     <Dialog open={open} onOpenChange={(v) => { if (!v) setFilaCopias([crearFilaInicial()]); onOpenChange(v); }}>
-      <DialogContent className="max-w-4xl max-h-[85vh] overflow-y-auto">
+      <DialogContent className={cn(dialogSize["4xl"], scrollableDialog)}>
         <DialogHeader>
           <DialogTitle>Duplicar Embarque</DialogTitle>
           <DialogDescription>Desde {embarque.expediente} — BL: {embarque.bl_master || 'N/A'}</DialogDescription>

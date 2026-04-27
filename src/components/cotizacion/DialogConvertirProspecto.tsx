@@ -21,7 +21,7 @@ export default function DialogConvertirProspecto({
 }: Props) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-lg">
+      <DialogContent className={dialogSize.lg}>
         <DialogHeader>
           <DialogTitle>Convertir Prospecto a Cliente</DialogTitle>
         </DialogHeader>

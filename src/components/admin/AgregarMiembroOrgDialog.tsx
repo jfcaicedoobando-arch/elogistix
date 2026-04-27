@@ -48,7 +48,7 @@ export default function AgregarMiembroOrgDialog({ open, onOpenChange, organizati
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className={dialogSize.md}>
         <DialogHeader>
           <DialogTitle>Agregar miembro</DialogTitle>
           <DialogDescription>Selecciona un usuario existente para agregarlo a esta organización.</DialogDescription>

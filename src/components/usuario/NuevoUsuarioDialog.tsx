@@ -61,7 +61,7 @@ export default function NuevoUsuarioDialog({ open, onOpenChange, onCreated, show
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className={dialogSize.md}>
         <DialogHeader>
           <DialogTitle>{showOrgSelector ? "Nuevo Usuario Global" : "Nuevo Usuario"}</DialogTitle>
           <DialogDescription>
