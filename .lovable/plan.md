@@ -1,83 +1,69 @@
-# Auditoría UI/UX Fase 6 — Pendientes en módulos no auditados (v8.99.17)
+# Auditoría UI/UX Fase 7 — Detalle de Cotización, Proveedores y Bitácora (v8.99.18)
 
-Recorrido de Pre-Facturación, Rentabilidad y Detalle de Embarque (módulos no cubiertos en fases anteriores). **Sí hay mejoras pendientes**, principalmente por inconsistencia de Title Case en módulos que se quedaron fuera del barrido previo.
+Continuación de la auditoría visual sobre módulos no cubiertos. **Sí hay mejoras pendientes**, incluyendo un **bug visible de superposición de texto** en el detalle de cotización.
 
-## Hallazgos
+## Hallazgos por orden de severidad
 
-### 1. Pre-Facturación · Tab Facturas
-- Cliente `INDIMEX TRADING` en MAYÚSCULAS — falta `toTitleCase`.
-- Columna `# FACTURA` rompe en 2 líneas (header).
-- Folio de proforma `PRO-2026-0003` rompe en 2 líneas — falta `whitespace-nowrap`.
-- Iconos de archivos (PDF rojo / XML azul) sin tooltip.
+### 1. Detalle de Cotización · BUG VISUAL (alta prioridad)
+- En la card "Datos Generales", el campo **Operador** muestra el email crudo (`karla.garcia@elogistixshipping.com`) y, al desbordar la celda del grid, **se sobrepone con "Tiempo de tránsito 5 días"** del campo a la derecha. Texto encima de texto.
+- Causas: no se aplica `nombreDesdeEmail` y la celda no tiene `truncate`/`min-w-0`.
+- Adicional: el cliente del header (`INDIMEX TRADING`) está en MAYÚSCULAS — falta `toTitleCase`.
+- Validez/Vigencia: dos campos casi redundantes ("Vigencia: 7 días (30/04/2026)" y "Validez propuesta: 30/04/2026"). Considerar fusionar en un solo campo o renombrar para que la diferencia sea clara.
 
-### 2. Pre-Facturación · Tab Liquidación de Gastos
-- Proveedores **mezclados**: `LONGSAIL SUPPLY CHAIN CO.,LTD.`, `COSCO SHIPPING LINES MEXICO S DE RL DE CV`, `EVERGREEN SHIPPING AGENCY MEXICO, S.A. DE C.V.` en mayúsculas vs `Ocean Network Express Pte. Ltd.` en Title Case. Aplicar `toTitleCase`.
-- Columna Monto duplica la moneda: muestra `USD 2,248.00` y luego columna separada `USD`. Eliminar la columna Moneda redundante (la cifra ya la incluye) o quitar el prefijo del monto.
-- Filas en MXN muestran `$57,000.00` (signo $) mientras USD usa prefijo `USD`. Unificar a `MXN 57,000.00` para consistencia (el formatter ya lo soporta vía `formatCurrency`).
+### 2. Detalle de Cotización · Tab Costos
+- Header `% PROFIT` rompe en 2 líneas — agregar `whitespace-nowrap`.
+- La página entra **directo en modo edición** (inputs activos para Proveedor/Costo Unit. + botón flotante "Guardar Costos"). No hay botón "Editar" previo. Debería iniciar en modo lectura y entrar a edición vía acción explícita, igual que el resto del sistema. Esto evita guardados accidentales.
+- Línea "Release" muestra `USD 95.00 + IVA` mientras otras líneas no muestran sufijo IVA — inconsistencia visual.
+- Las columnas "Notas (opcional)" como `<textarea>` ocupan toda la fila incluso vacías; podrían colapsarse a un botón "+ Nota" que expanda al hacer click.
 
-### 3. Pre-Facturación · Tab Proformas
-- Estado vacío muestra **skeletons indefinidos** en lugar de un EmptyState cuando `count === 0`. Reutilizar `EmptyState` con icono `FileSpreadsheet`.
-- Headers de columna (`# PROFORMA`, `BL MASTER`, `DÍAS CRÉDITO`, `MONTO USD`, `MONTO MXN`) rompen en 2 líneas — agregar `whitespace-nowrap`.
+### 3. Proveedores
+- Nombres mezclados: `COSCO SHIPPING LINES MEXICO S DE RL DE CV`, `EVERGREEN SHIPPING AGENCY MEXICO, S.A. DE C.V.`, `SHENZHEN GOLDEN SHIPPING CO.,LTD`, `WAN HAI LINES MEXIC`, `YANG MING`, `ZIM INTEGRATED SHIPPING SERVICES LTD`, `prueba` en MAYÚSCULAS/lowercase, junto a `Ocean Network Express Pte. Ltd.` en Title Case. Aplicar `toTitleCase` a la columna Nombre.
+- Columna Contacto (`DARREN`, `Prueba`) — aplicar `toTitleCase`.
+- Tabs de categorías (`Agentes Aduanales`, `Agentes de Carga`) están casi pegados visualmente — agregar `gap-1` o padding consistente.
 
-### 4. Pre-Facturación · Tab Pendientes
-- Botones "Consolidar y aprobar" y "Aprobar individual" se ven activos cuando `0 seleccionadas` — confunde al usuario. Aplicar `disabled` real y el estilo deshabilitado del design system.
-- EmptyState es texto plano — usar el componente `EmptyState` compartido.
+### 4. Bitácora
+- Usuarios mostrados como `alan.hernandez`, `valeria.zamora`, `magali.reynoso` (slug del email). Usar `nombreDesdeEmail` para obtener "Alan Hernandez", "Valeria Zamora", "Magali Reynoso".
+- Timestamps relativos ("hace 2d") sin tooltip con fecha absoluta — agregar `title=` con la fecha en formato `dd/MM/yyyy HH:mm`.
+- Acciones (`Editar`, `Cambiar Estado`) sin badge de color que las diferencie. Nice-to-have: aplicar variante de badge según tipo de acción (success para Crear, warning para Cambiar Estado, secondary para Editar, destructive para Eliminar).
 
-### 5. Rentabilidad por Cliente
-- Clientes en gráfica `Top 10 por Profit` y tabla `Desglose por Cliente` en MAYÚSCULAS (`INDIMEX TRADING`, `INVERSIONES Y SOLU...`, `FASTCOLD TECH`, `ENTERA SALUD ANIMA...`). Aplicar `toTitleCase`.
-- Etiquetas largas del eje Y consumen ~40% del ancho de la gráfica. Solución: usar `shortName` (primera palabra significativa) o truncar a 18 chars con tooltip.
-- Título "Top 10 por Profit" cuando solo hay 5 — cambiar a "Top {N} por Profit" dinámico.
-- Labels "Desde" y "Hasta" pequeños y mal alineados con sus inputs — apilar como `<Label>` arriba del input, igual que "Modo".
+### 5. Detalle de Cotización · Header
+- El subtítulo del cliente debería pasar por `toTitleCase` (igual que ya hicimos en el header de Embarque en Fase 6).
 
-### 6. Detalle de Embarque (Resumen)
-- Subtítulo del cliente en header: `ROLLOS Y ETIQUETAS ROLLE...` en MAYÚSCULAS. Aplicar `toTitleCase`.
-- Mercancía: `PLASTIC BAG` en MAYÚSCULAS. Capitalizar.
-- Operador muestra `magali.reynoso@elogistixshipping.com` (email crudo) en Datos Generales. Aplicar `nombreDesdeEmail`.
-- Shipper: `VIETPAK COMPANY LIMITED — Proveedor (VIETNAM)` — Title Case + el sufijo `(VIETNAM)` debería ser `(Vietnam)`.
-- Consignatario: `ELOGISTIX SHIPPING S DE RL DE CV` — Title Case (el formatter ya soporta `S`, `DE`, `RL`, `CV`).
+## Plan de Trabajo (v8.99.18)
 
-## Plan de Trabajo (v8.99.17)
+1. **CotizacionDetalle / Datos Generales** (`src/pages/cotizaciones/CotizacionDetalle.tsx` + componentes hijos):
+   - Aplicar `nombreDesdeEmail` al campo Operador.
+   - Agregar `min-w-0 truncate` (con tooltip via `title`) a las celdas del grid de datos para evitar overflow horizontal.
+   - Aplicar `toTitleCase(cliente_nombre)` en el header.
 
-1. **TabFacturas / TabProformas / TabLiquidacionGastos** (`src/components/facturacion/`):
-   - Aplicar `toTitleCase` a clientes y proveedores.
-   - Agregar `whitespace-nowrap` a headers y a folios.
-   - Eliminar columna Moneda redundante en Liquidación; usar `formatCurrency(monto, moneda)` para el unique display.
-   - Tooltips nativos (`title=`) en iconos PDF/XML ("Ver PDF", "Ver XML").
+2. **Tab Costos de Cotización**:
+   - `whitespace-nowrap` en header `% Profit` y `Costo Unit.`.
+   - Cambiar comportamiento por defecto a modo lectura. Agregar botón "Editar costos" que active los inputs y revele "Guardar Costos". Al guardar o cancelar, vuelve a modo lectura.
+   - Quitar el sufijo "+ IVA" de la columna Venta (manejarlo en el resumen P&L que ya indica "El IVA no forma parte del profit").
 
-2. **TabPendientes** (`src/components/facturacion/TabPendientes.tsx`):
-   - Pasar `disabled` real a los botones cuando `seleccionadas === 0`.
-   - Reemplazar texto plano "No hay proformas pendientes" por `<EmptyState icon={CheckCircle2} title="Todo al día" description="No hay proformas pendientes de revisión." />`.
+3. **Lista de Proveedores** (`src/pages/proveedores/Proveedores.tsx` o columnas):
+   - `toTitleCase` en columna Nombre y Contacto, con tooltip nativo.
+   - `gap-1` o `space-x-1` en `TabsList` de categorías.
 
-3. **Tab Proformas EmptyState**: Si `data.length === 0 && !isLoading`, mostrar `EmptyState` en lugar de skeletons.
+4. **Bitácora** (`src/pages/dashboard/Bitacora.tsx` y/o componente de fila):
+   - Reemplazar el slug crudo del email por `nombreDesdeEmail`.
+   - Agregar `title=` con `formatDateTime` al texto "hace 2d".
+   - Mapear tipo de acción a `Badge` con variante semántica (`Crear` → success, `Editar` → secondary, `Cambiar Estado` → warning, `Eliminar` → destructive, `Login` → info).
 
-4. **Reportes / Rentabilidad** (`src/pages/dashboard/Rentabilidad.tsx` o `src/pages/Reportes.tsx`):
-   - Aplicar `toTitleCase` a `cliente_nombre` en gráfica (`Bar` con función `tickFormatter`) y tabla.
-   - Limitar etiquetas del eje Y a 18 chars con `...` y `width=140`.
-   - Cambiar título a `Top {top.length} por Profit`.
-   - Reorganizar filtros con `<Label>` arriba en grid `flex-col gap-1`.
-
-5. **EmbarqueDetalleHeader** (`src/components/embarque/EmbarqueDetalleHeader.tsx`):
-   - Aplicar `toTitleCase(cliente_nombre)` en el subtítulo.
-
-6. **TabResumen** (`src/components/embarque/TabResumen.tsx`):
-   - Aplicar `toTitleCase` a Mercancía, Shipper y Consignatario.
-   - Aplicar `nombreDesdeEmail` a Operador.
-
-7. **Changelog v8.99.17** documentando los 6 grupos.
+5. **Changelog v8.99.18** documentando los 4 grupos.
 
 ## Detalles Técnicos
 
-- Reutilizar `EmptyState` ya creado en `src/components/empty/EmptyState.tsx` (Fase 5).
-- Para evitar romper datos legítimos en mayúsculas (códigos como `WANHAI`, `FCL`, `MXESE`), no aplicar Title Case en columnas de códigos UN/LOCODE, navieras de catálogo, ni en BL/Contenedores.
-- Eje Y de Recharts: `<YAxis dataKey="cliente" type="category" tickFormatter={(v) => v.length > 18 ? v.slice(0, 18) + '…' : v} width={140} />`.
+- Para el modo lectura/edición de costos en cotización: usar un estado local `const [editMode, setEditMode] = useState(false)` y condicionar el render de cada input vs `<span>{value}</span>`.
+- La superposición del operador en cotización es un overflow del grid; añadir `overflow-hidden text-ellipsis whitespace-nowrap` en el `<p>` del valor o convertir a `truncate` con `min-w-0` en el contenedor flex.
+- Para Bitácora, exponer un helper `getActionBadgeVariant(accion: string)` en `src/lib/ui/uiMappings.ts`.
 
-## Archivos a Modificar
+## Archivos a Modificar (estimación)
 
-- `src/components/facturacion/TabFacturas.tsx`
-- `src/components/facturacion/TabProformas.tsx`
-- `src/components/facturacion/TabLiquidacionGastos.tsx`
-- `src/components/facturacion/TabPendientes.tsx`
-- `src/pages/Reportes.tsx` (o equivalente Rentabilidad)
-- `src/components/embarque/EmbarqueDetalleHeader.tsx`
-- `src/components/embarque/TabResumen.tsx`
+- `src/pages/cotizaciones/CotizacionDetalle.tsx` (header)
+- `src/components/cotizacion/SeccionDatosGenerales.tsx` (o similar — confirmar al implementar)
+- `src/components/cotizacion/SeccionCostos.tsx` (modo edición)
+- `src/pages/proveedores/Proveedores.tsx` o sus columnas
+- `src/pages/dashboard/Bitacora.tsx` (o componente de fila)
+- `src/lib/ui/uiMappings.ts` (mapper de badges)
 - `src/content/changelog/v8/chunks/0.ts`
