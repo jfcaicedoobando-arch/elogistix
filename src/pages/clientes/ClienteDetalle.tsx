@@ -106,9 +106,9 @@ export default function ClienteDetalle() {
               <p>{cliente.direccion}</p>
               <p>{cliente.ciudad}, {cliente.estado} {cliente.cp}</p>
               <div className="pt-2 border-t mt-2 space-y-1">
-                <p><span className="text-muted-foreground">Contacto:</span> {cliente.contacto}</p>
+                <p><span className="text-muted-foreground">Contacto:</span> {toTitleCase(cliente.contacto)}</p>
                 <p><span className="text-muted-foreground">Email:</span> {cliente.email}</p>
-                <p><span className="text-muted-foreground">Tel:</span> {cliente.telefono}</p>
+                <p><span className="text-muted-foreground">Tel:</span> {formatPhoneMx(cliente.telefono)}</p>
               </div>
             </CardContent>
           </Card>

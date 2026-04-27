@@ -11,15 +11,16 @@ import PaginationControls from "@/components/shared/PaginationControls";
 import { useDebounce } from "@/hooks/shared/useDebounce";
 import { DataTable, type DataTableColumn } from "@/components/shared/DataTable";
 import { useListPageState } from "@/hooks/shared/useListPageState";
+import { toTitleCase, formatPhoneMx } from "@/lib/formatters";
 
 type ClienteRow = { id: string; nombre: string; rfc: string; ciudad: string; estado: string; contacto: string; telefono: string };
 
 const columns: DataTableColumn<ClienteRow>[] = [
-  { key: "nombre", header: "Nombre", width: "min-w-[180px]", className: "font-medium max-w-[200px] truncate", sortable: true, sortValue: (c) => c.nombre, render: (c) => c.nombre },
-  { key: "rfc", header: "RFC", width: "w-[130px]", className: "text-xs font-mono", sortable: true, sortValue: (c) => c.rfc, render: (c) => c.rfc },
-  { key: "ciudad", header: "Ciudad", width: "w-[150px]", className: "text-xs", sortable: true, sortValue: (c) => c.ciudad, render: (c) => `${c.ciudad}, ${c.estado}` },
-  { key: "contacto", header: "Contacto", width: "w-[140px]", className: "text-xs", render: (c) => c.contacto },
-  { key: "telefono", header: "Teléfono", width: "w-[120px]", className: "text-xs", render: (c) => c.telefono },
+  { key: "nombre", header: "Nombre", width: "min-w-[180px]", className: "font-medium max-w-[200px] truncate", sortable: true, sortValue: (c) => c.nombre, render: (c) => toTitleCase(c.nombre) },
+  { key: "rfc", header: "RFC", width: "w-[130px]", className: "text-xs font-mono", sortable: true, sortValue: (c) => c.rfc, render: (c) => (c.rfc || "").toUpperCase() },
+  { key: "ciudad", header: "Ciudad", width: "w-[150px]", className: "text-xs", sortable: true, sortValue: (c) => c.ciudad, render: (c) => `${toTitleCase(c.ciudad)}, ${toTitleCase(c.estado)}` },
+  { key: "contacto", header: "Contacto", width: "w-[140px]", className: "text-xs", render: (c) => toTitleCase(c.contacto) },
+  { key: "telefono", header: "Teléfono", width: "w-[130px]", className: "text-xs whitespace-nowrap", render: (c) => formatPhoneMx(c.telefono) },
 ];
 
 export default function Clientes() {
