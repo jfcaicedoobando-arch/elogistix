@@ -13,6 +13,20 @@ export const formatCurrency = (amount: number, currency: string = 'MXN'): string
   return formatted;
 };
 
+/** Formatea un número entero/decimal con separadores de miles mexicanos. */
+export const formatNumber = (
+  value: number | null | undefined,
+  options: { decimals?: number; suffix?: string } = {}
+): string => {
+  if (value === null || value === undefined || Number.isNaN(value)) return "—";
+  const { decimals, suffix } = options;
+  const formatted = new Intl.NumberFormat("es-MX", {
+    minimumFractionDigits: decimals ?? 0,
+    maximumFractionDigits: decimals ?? (Number.isInteger(value) ? 0 : 2),
+  }).format(value);
+  return suffix ? `${formatted} ${suffix}` : formatted;
+};
+
 /** Extrae la primera parte de un nombre compuesto (antes de coma o guión largo) */
 export const shortName = (raw: string | null): string =>
   raw?.split(/[,—]/)[0].trim() || "-";
