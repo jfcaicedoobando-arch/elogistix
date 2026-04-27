@@ -7,6 +7,7 @@ import {
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { getEstadoColor, getModoIcon } from "@/lib/ui/uiMappings";
+import { toTitleCase } from "@/lib/formatters";
 import { ProformaBadge } from "./ProformaBadge";
 import type { EmbarqueRow } from "@/hooks/embarque/useEmbarques";
 
