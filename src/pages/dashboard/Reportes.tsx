@@ -1,6 +1,7 @@
 import { Download } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import { PageHeader } from "@/components/shared/PageHeader";
 import ReportesFiltros from "@/components/reportes/ReportesFiltros";
 import ReportesKpiCards from "@/components/reportes/ReportesKpiCards";
 import ReportesTopChart from "@/components/reportes/ReportesTopChart";
