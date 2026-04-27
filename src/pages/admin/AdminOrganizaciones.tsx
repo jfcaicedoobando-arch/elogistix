@@ -79,19 +79,17 @@ export default function AdminOrganizaciones() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <Building2 className="h-6 w-6 text-primary" />
-          <div>
-            <h1 className="text-2xl font-bold tracking-tight">Organizaciones</h1>
-            <p className="text-sm text-muted-foreground">Gestiona las empresas que utilizan la plataforma.</p>
-          </div>
-        </div>
-        <Button onClick={() => setDialogOpen(true)}>
-          <Plus className="h-4 w-4 mr-1" />
-          Nueva Organización
-        </Button>
-      </div>
+      <PageHeader
+        icon={<Building2 className="h-6 w-6 text-primary" />}
+        title="Organizaciones"
+        description="Gestiona las empresas que utilizan la plataforma."
+        actions={
+          <Button onClick={() => setDialogOpen(true)}>
+            <Plus className="h-4 w-4 mr-1" />
+            Nueva Organización
+          </Button>
+        }
+      />
 
       <div className="rounded-md border">
         <DataTable
