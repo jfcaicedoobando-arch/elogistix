@@ -43,14 +43,14 @@ const facturaColumns: DataTableColumn<Factura>[] = [
       return (
         <div className="flex items-center gap-1">
           {f.factura_pdf_url && (
-            <Button asChild variant="outline" size="icon" className="h-7 w-7" title="Descargar PDF">
+            <Button asChild variant="outline" size="icon" className="h-7 w-7" title="Descargar PDF" aria-label="Descargar PDF">
               <a href={f.factura_pdf_url} target="_blank" rel="noopener noreferrer" download>
                 <FileText className="h-3.5 w-3.5 text-destructive" />
               </a>
             </Button>
           )}
           {f.factura_xml_url && (
-            <Button asChild variant="outline" size="icon" className="h-7 w-7" title="Descargar XML">
+            <Button asChild variant="outline" size="icon" className="h-7 w-7" title="Descargar XML" aria-label="Descargar XML">
               <a href={f.factura_xml_url} target="_blank" rel="noopener noreferrer" download>
                 <FileCode2 className="h-3.5 w-3.5 text-info" />
               </a>

@@ -93,14 +93,14 @@ export function HistorialProformas({ proformas, canEdit, isDeleting, onDescargar
                           <Download className="h-3.5 w-3.5 mr-1" /> Descargar
                         </Button>
                         {p.facturas?.factura_pdf_url && (
-                          <Button asChild variant="outline" size="icon" className="h-8 w-8" title="Descargar factura PDF">
+                          <Button asChild variant="outline" size="icon" className="h-8 w-8" title="Descargar factura PDF" aria-label="Descargar factura PDF">
                             <a href={p.facturas.factura_pdf_url} target="_blank" rel="noopener noreferrer" download>
                               <FileText className="h-3.5 w-3.5 text-destructive" />
                             </a>
                           </Button>
                         )}
                         {p.facturas?.factura_xml_url && (
-                          <Button asChild variant="outline" size="icon" className="h-8 w-8" title="Descargar factura XML">
+                          <Button asChild variant="outline" size="icon" className="h-8 w-8" title="Descargar factura XML" aria-label="Descargar factura XML">
                             <a href={p.facturas.factura_xml_url} target="_blank" rel="noopener noreferrer" download>
                               <FileCode2 className="h-3.5 w-3.5 text-info" />
                             </a>

@@ -45,7 +45,7 @@ export default function PortalEmbarqueDetalle() {
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-start gap-4">
-        <Button variant="ghost" size="icon" onClick={() => navigate("/portal/embarques")} className="mt-0.5">
+        <Button variant="ghost" size="icon" onClick={() => navigate("/portal/embarques")} className="mt-0.5" aria-label="Volver a mis embarques">
           <ArrowLeft className="h-5 w-5" />
         </Button>
         <div className="flex-1 min-w-0">

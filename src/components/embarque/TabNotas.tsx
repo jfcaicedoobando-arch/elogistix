@@ -60,7 +60,7 @@ export function TabNotas({ notas, embarqueId }: Props) {
               onChange={e => setTexto(e.target.value)}
               className="min-h-[60px]"
             />
-            <Button size="icon" className="shrink-0 self-end" onClick={handleSubmit} disabled={!texto.trim() || crearNota.isPending}>
+            <Button size="icon" className="shrink-0 self-end" onClick={handleSubmit} aria-label="Enviar nota" disabled={!texto.trim() || crearNota.isPending}>
               {crearNota.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
             </Button>
           </div>

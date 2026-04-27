@@ -98,7 +98,7 @@ export function DialogMarcarFacturada({ open, onOpenChange, proforma }: Props) {
                 <div className="flex items-center gap-2 rounded-md border bg-muted/40 px-2 py-1.5 text-sm">
                   <FileText className="h-4 w-4 text-destructive shrink-0" />
                   <span className="truncate flex-1">{pdfFile.name}</span>
-                  <Button type="button" variant="ghost" size="icon" className="h-6 w-6" onClick={clearPdf}>
+                  <Button type="button" variant="ghost" size="icon" className="h-6 w-6" onClick={clearPdf} aria-label="Quitar PDF">
                     <X className="h-3.5 w-3.5" />
                   </Button>
                 </div>
@@ -120,7 +120,7 @@ export function DialogMarcarFacturada({ open, onOpenChange, proforma }: Props) {
                 <div className="flex items-center gap-2 rounded-md border bg-muted/40 px-2 py-1.5 text-sm">
                   <FileCode2 className="h-4 w-4 text-info shrink-0" />
                   <span className="truncate flex-1">{xmlFile.name}</span>
-                  <Button type="button" variant="ghost" size="icon" className="h-6 w-6" onClick={clearXml}>
+                  <Button type="button" variant="ghost" size="icon" className="h-6 w-6" onClick={clearXml} aria-label="Quitar XML">
                     <X className="h-3.5 w-3.5" />
                   </Button>
                 </div>

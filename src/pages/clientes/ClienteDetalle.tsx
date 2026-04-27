@@ -65,7 +65,7 @@ export default function ClienteDetalle() {
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-4">
-        <Button variant="ghost" size="icon" onClick={() => navigate("/clientes")}>
+        <Button variant="ghost" size="icon" onClick={() => navigate("/clientes")} aria-label="Volver a clientes">
           <ArrowLeft className="h-5 w-5" />
         </Button>
         <div className="flex-1">

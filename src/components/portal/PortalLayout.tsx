@@ -76,7 +76,7 @@ export default function PortalLayout() {
             {/* Mobile menu trigger */}
             <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
               <SheetTrigger asChild>
-                <Button variant="ghost" size="icon" className="md:hidden">
+                <Button variant="ghost" size="icon" className="md:hidden" aria-label="Abrir menú">
                   <Menu className="h-5 w-5" />
                 </Button>
               </SheetTrigger>
