@@ -1,10 +1,10 @@
-import { Input } from "@/components/ui/input";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { getModoIcon } from "@/lib/ui/uiMappings";
 import { ESTADOS_EMBARQUE, MODOS_TRANSPORTE } from "@/constants/embarqueConstants";
 import SearchInput from "@/components/selects/SearchInput";
+import { DatePickerMx } from "@/components/ui/date-picker-mx";
 
 interface ClienteOption {
   id: string;
