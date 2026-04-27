@@ -29,7 +29,7 @@ export default function Operaciones() {
       <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-2">
         <div>
           <h1 className="text-2xl font-bold text-foreground">Dashboard de Operaciones</h1>
-          <p className="text-sm text-muted-foreground capitalize">{hoyStr}</p>
+          <p className="text-sm text-muted-foreground">{hoyStr}</p>
         </div>
         <Select value={periodo} onValueChange={(v) => setPeriodo(v as PeriodoFiltro)}>
           <SelectTrigger className="w-[180px]"><SelectValue /></SelectTrigger>
