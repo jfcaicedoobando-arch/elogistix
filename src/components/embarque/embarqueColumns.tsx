@@ -72,8 +72,8 @@ export function buildEmbarqueColumns({
     } },
     {
       key: "modo", header: "Modo", width: "w-[90px]", render: (e) => (
-        <span className="flex items-center gap-1">
-          {getModoIcon(e.modo)} <span className="text-xs">{e.modo}</span>
+        <span className="flex items-center gap-1.5">
+          <ModoIcon modo={e.modo} size={14} /> <span className="text-xs">{e.modo}</span>
         </span>
       ),
     },
