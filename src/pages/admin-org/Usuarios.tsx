@@ -9,6 +9,7 @@ import NuevoUsuarioDialog from "@/components/usuario/NuevoUsuarioDialog";
 import { DataTable, type DataTableColumn } from "@/components/shared/DataTable";
 import { useUsuarios, useUpdateUserRole, useDeleteUser, type UserRow } from "@/hooks/usuario/useUsuarios";
 import DoubleConfirmDeleteDialog from "@/components/shared/DoubleConfirmDeleteDialog";
+import { PageHeader } from "@/components/shared/PageHeader";
 import {
   AlertDialog,
   AlertDialogAction,
