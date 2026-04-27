@@ -69,13 +69,20 @@ export function useConfiguracionState() {
   const { data: config, isLoading } = useConfiguracion();
   const updateConfig = useUpdateConfiguracion();
   const [s, setS] = useState<ConfigState>(INITIAL_STATE);
+  const [baseline, setBaseline] = useState<ConfigState>(INITIAL_STATE);
 
   useEffect(() => {
-    if (config) setS(buildStateFromConfig(config));
+    if (config) {
+      const next = buildStateFromConfig(config);
+      setS(next);
+      setBaseline(next);
+    }
   }, [config]);
 
   const set = <K extends keyof ConfigState>(key: K) => (value: ConfigState[K]) =>
     setS(prev => ({ ...prev, [key]: value }));
+
+  const isDirty = JSON.stringify(s) !== JSON.stringify(baseline);
 
   const handleSave = () => {
     updateConfig.mutate([
@@ -103,8 +110,10 @@ export function useConfiguracionState() {
       { categoria: "alertas", clave: "dias_eta_alerta", valor: parseInt(s.diasEta) || 7 },
       { categoria: "alertas", clave: "dias_eta_critica", valor: parseInt(s.diasEtaCritica) || 3 },
       { categoria: "alertas", clave: "dias_factura_vencer", valor: parseInt(s.diasFactVencer) || 7 },
-    ]);
+    ], {
+      onSuccess: () => setBaseline(s),
+    });
   };
 
-  return { s, set, isLoading, isSaving: updateConfig.isPending, handleSave };
+  return { s, set, isLoading, isSaving: updateConfig.isPending, isDirty, handleSave };
 }
