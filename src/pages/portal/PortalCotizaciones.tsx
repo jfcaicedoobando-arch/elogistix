@@ -46,10 +46,10 @@ export default function PortalCotizaciones() {
 
   return (
     <div className="space-y-5">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold">Mis Cotizaciones</h1>
-        <span className="text-sm text-muted-foreground">{filtered.length} de {cotizaciones.length}</span>
-      </div>
+      <PageHeader
+        title="Mis Cotizaciones"
+        actions={<span className="text-sm text-muted-foreground tabular-nums">{filtered.length} de {cotizaciones.length}</span>}
+      />
 
       <div className="flex flex-col sm:flex-row gap-3">
         <div className="relative flex-1">
