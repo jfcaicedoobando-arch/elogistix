@@ -1,83 +1,98 @@
+# Auditoría UI/UX — Pendientes detectados (v8.99.16)
 
-# Auditoría visual UI/UX — Fase 4 (v8.99.15)
+Tras recorrer Dashboard, Embarques, Cotizaciones, Clientes, Operaciones y la vista mobile (375px), quedaron varios detalles de pulido. Ningún bug bloqueante, todo es polish.
 
 ## Hallazgos
 
-Capturé pantallas en tablet (768px) y laptop (1366px). Encontré **8 problemas** nuevos o regresiones, ordenados por severidad.
+### 1. Página 404 en inglés
+`/dashboard` (y cualquier ruta inválida) muestra "Oops! Page not found / Return to Home". Viola la regla de localización mexicana del proyecto.
 
-### 1. `toTitleCase` demasiado agresivo (CRÍTICO)
-En `/clientes` se ven nombres mal capitalizados:
-- "BUENO Alimentos" — "BUENO" tratado como sigla
-- "SANTA Catarina, NUEVO León" — palabras válidas tratadas como siglas
-- "Chipilo DE Francisco Javier MINA, Puebla" — "DE" en mayúsculas, "MINA" tratado como sigla
-- "Distribuciones Agrisolutions S a P I DE CV" — siglas mal partidas
-- "Comercializadora Vistrain-gonzalez" — segundo segmento tras guión sin capitalizar
+### 2. Teléfonos con lada de 3 dígitos mal formateados
+`formatPhoneMx` siempre toma 2 dígitos como lada. Resultado visible en Clientes:
+- `+52 4422170696` → muestra `+52 (44) 2170-6966` (incorrecto)
+- Esperado: `+52 (442) 170-6966` para ladas 3-dígitos (Querétaro 442, Puebla 222, Cancún 998, etc.)
 
-**Causa**: el regex `^([A-Z]\.?){2,5}$` matchea cualquier palabra de 2-5 letras todas mayúsculas. Hay que **invertir** la lógica: solo preservar mayúsculas si el original ya tiene puntos (S.A., C.V.) o si está en una whitelist mínima (RFC, CFDI, IVA, USD, EUR, MXN, USA, EU, UE).
+México usa lada de 2 dígitos solo en CDMX (55), MTY (81) y GDL (33); el resto son 3 dígitos.
 
-### 2. Cliente en MAYÚSCULAS en tablas y cards principales
-- Tabla **Embarques**: "INDIMEX TRADING", "ROLLOS Y ETIQUETA..."
-- Tabla **Cotizaciones**: "INDIMEX TRADING", "GOLDEN FOODS", "BUENO ALIMENTOS"
-- Cards **Alertas de Demora** y **Próximos Arribos** en dashboard: "INDIMEX TRADING", "CORPORATIVO ESPECIALIZADO EN COMERCIO ELITE..."
+### 3. Conector "Y" no se baja a minúscula en nombres
+Cliente "Entera Salud Animal Y Nutricion S.A. de C.V" debería leer "Entera Salud Animal y Nutrición…". Falta agregar variantes mayúsculas al matcher de conectores (`Y`, `E`, `De`, etc.) — actualmente solo se compara en minúsculas tras `cleaned.toLowerCase()`, pero el guard `idx > 0` se cumple. **Verificar:** el bug real es que el dataset envía "Y" con acentos perdidos, y `processToken` sí lo baja. Validar en código si hace falta extender la lista o si el formatter lo maneja correctamente y es puramente data.
 
-Aplicar `toTitleCase` (versión corregida) en estos displays.
+### 4. Header de página rebasa en mobile (375px)
+En `/embarques` el botón "+ Nuevo Embarque" se corta por la derecha porque el header se mantiene en una sola fila. Aplica también a Cotizaciones y Clientes. Hay que apilar verticalmente (`flex-col` en `<sm`, `flex-row` en `≥sm`) y dar `w-full` a botones primarios en mobile.
 
-### 3. Fecha con capitalización incorrecta en Operaciones
-"Domingo, 26 De Abril De 2026" — el fix de Fase 1 solo se hizo en `Dashboard.tsx`. Replicar en el header de `/operaciones`.
+### 5. Cotizaciones: vigencia inconsistente y filas de altura variable
+- Algunas filas muestran badge "3d · 30/04/2026" y otras (mismo estado Borrador) solo "31/05/2026" sin badge. La regla actual marca solo cotizaciones que vencen en ≤3 días, pero se aplica también a Borrador/Aceptada/Rechazada cuando ya no aplica vencer.
+- Columna "Origen → Destino" envuelve a 3 líneas y descompone la altura. Necesita `truncate` con tooltip.
+- Esperado: el badge de vigencia solo debe aparecer en estado **Enviada** (donde la vigencia importa). Para Borrador/Aceptada/Rechazada, mostrar solo la fecha.
 
-### 4. Tarjetas de operadores muestran email en vez de nombre
-En `/operaciones`, debajo del gráfico, las cards muestran "alan.hernandez@elogis...", "magali.reynoso@elogi...". El gráfico ya muestra el nombre derivado, las cards no. Aplicar el mismo helper de derivación de nombre.
+### 6. Embarques: cliente truncado sin tooltip
+"Rollos y Etiquetas..." se corta sin `title` ni tooltip. Misma columna en Cotizaciones tiene el mismo problema con "Quimcelt Powder Coa...". Agregar `title={cliente}` o `<Tooltip>` al span truncado.
 
-### 5. Columna "Estado" cortada en tabla de Embarques
-En 1366px la columna se trunca a "Confir...", "Arribo", "En Trán...". La tabla excede el viewport por la suma de `min-w` de columnas. Reducir min-w de columnas largas (cliente a 140px, ensanchar Estado a 110px y `whitespace-nowrap`), o envolver la tabla en scroll horizontal con sombra de hint.
+### 7. Pantallas de error/empty muy básicas
+"Embarque no encontrado" en `/embarques/:id` inválido muestra solo texto y un botón. Mejorar con icono (`PackageX`), título grande y subtexto explicativo, alineado al estilo del resto de la app.
 
-### 6. Sidebar siempre visible en tablet (768px)
-El sidebar fijo de 256px en pantallas <1024px deja solo ~510px para el contenido, lo que hace que la línea de tiempo del dashboard solo muestre 3 de 5 estados aunque tenga `min-w-[600px]` (el overflow-x-auto sí funciona pero la UX pierde). Hacer el sidebar **colapsable por defecto en <lg** (botón hamburguesa toggle ya existente).
+### 8. Operadores en Operaciones sin acentos
+"Alan Hernandez", "Magali Reynoso", "Juanluis Martinez", "Valeria Zamora" — derivados de email así que es esperado, pero podemos:
+- Detectar si en `usuarios` hay un `nombre_completo` poblado y usarlo en vez de derivar del email.
 
-### 7. Vigencia de cotizaciones sin indicador visual
-La columna "Vigencia" muestra solo la fecha sin advertencia visual cuando está próxima a vencer. Agregar badge sutil:
-- Vigencia ≤ 3 días: badge rojo "Vence pronto"
-- Vencida: badge rojo "Vencida"
-- Sin urgencia: solo fecha
+### 9. "México" sin acento en Clientes
+Ciudad mostrada "Mexico, CDMX". Probable que venga así del catálogo. Aplicar un mini-diccionario de correcciones comunes (`Mexico → México`, `Queretaro → Querétaro`, `Yucatan → Yucatán`, `Nuevo Leon → Nuevo León`, etc.) dentro del helper de display.
 
-### 8. Formato de fecha con coma redundante en Cotizaciones
-"23/04/2026, 04:06 p.m." → más limpio: "23/04/2026 16:06" (24h, sin coma, sin a.m./p.m.). Alinea con el estándar de localización mexicana del proyecto.
+## Plan de Trabajo (v8.99.16)
 
-## Cambios a realizar
+1. **NotFound.tsx**: Traducir a español ("404 — Página no encontrada", "Volver al inicio") y mejorar layout con icono.
+2. **`formatPhoneMx`**: Aceptar ladas de 3 dígitos. Lista corta de ladas de 2 dígitos (`55`, `81`, `33`); el resto se formatea como `(NNN) NNN-NNNN`.
+3. **Headers mobile**: Crear helper de layout en `Cotizaciones.tsx`, `Embarques.tsx`, `Clientes.tsx` para apilar título + acciones (`flex-col gap-3 sm:flex-row sm:items-center sm:justify-between`).
+4. **Cotizaciones**:
+   - Restringir badge de vigencia a estado `enviada`.
+   - Truncar "Origen → Destino" con tooltip nativo, max 1 línea.
+   - Agregar `title` al cliente truncado.
+5. **Embarques**: Agregar `title` al span de cliente en `embarqueColumns.tsx`.
+6. **Helper `correctSpanishPlace`** en formatters: aplicar a ciudad/estado en `Clientes.tsx` y `ClienteDetalle.tsx`.
+7. **OperadorCard**: Si llega `nombre_completo`, usarlo; fallback a `nombreDesdeEmail`.
+8. **NoEncontrado genérico**: Componente compartido `EmptyState` con icono + mensaje + acción, reutilizable en detalles vacíos.
+9. **Changelog**: Agregar entrada v8.99.16 documentando cada punto.
 
-### Frontend
+## Detalles Técnicos
 
-**`src/lib/formatters/index.ts`** — reescribir `toTitleCase`:
-- Solo preservar mayúsculas si la palabra ORIGINAL contiene puntos (`S.A.`, `C.V.`, `S.A.P.I.`)
-- Whitelist explícita corta: `RFC`, `CFDI`, `IVA`, `USD`, `EUR`, `MXN`, `USA`, `EU`, `UE`, `LCL`, `FCL`, `BL`, `ETD`, `ETA`, `CSF`
-- Conectores en minúscula (de, del, la, etc.) solo si NO son la primera palabra
-- Manejar guiones internos: capitalizar después de `-`
-- Quitar números pegados al final del nombre (display only): "Eduardo Vargas1" → "Eduardo Vargas"
+```ts
+// formatPhoneMx (nuevo)
+const LADAS_2_DIGITOS = new Set(["55", "81", "33"]);
+function splitLada(local: string): [string, string] {
+  if (LADAS_2_DIGITOS.has(local.slice(0, 2))) return [local.slice(0,2), local.slice(2)];
+  return [local.slice(0,3), local.slice(3)];
+}
+// Resultado: (442) 217-0696 / (55) 1234-5678
+```
 
-**`src/components/embarque/embarqueColumns.tsx`** — aplicar `toTitleCase` al render de cliente; ensanchar columna Estado (`w-[110px]`), reducir cliente (`max-w-[160px]`).
+```ts
+// correctSpanishPlace
+const ACENTOS_LUGARES: Record<string,string> = {
+  "mexico": "México", "queretaro": "Querétaro",
+  "yucatan": "Yucatán", "nuevo leon": "Nuevo León",
+  "michoacan": "Michoacán", "atizapan": "Atizapán",
+  "san andres cholula": "San Andrés Cholula",
+};
+```
 
-**`src/pages/cotizaciones/Cotizaciones.tsx`** — `toTitleCase` en cliente y reformatear fecha sin coma + 24h; agregar badge de vigencia.
+```tsx
+// Header responsivo (patrón a aplicar)
+<div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+  <div>{titulo + subtitulo}</div>
+  <div className="flex flex-col gap-2 sm:flex-row sm:gap-3">{botones}</div>
+</div>
+```
 
-**`src/components/dashboard/AlertasDemoraCard.tsx`** y **`ProximosArribosCard.tsx`** — `toTitleCase` en `cliente_nombre`.
+## Archivos a Modificar
 
-**`src/pages/operaciones/Operaciones.tsx`** (o componente de header) — replicar la corrección de capitalización de fecha que se hizo en `Dashboard.tsx`.
-
-**`src/components/operaciones/OperadorCard.tsx`** — usar `getNombreCorto(email)` (helper que ya existe en `useDesempenoChartData`) en `operador.nombre` cuando viene como email.
-
-**`src/components/layout/Sidebar.tsx`** (o equivalente) — colapsar por defecto en breakpoint `<lg` (1024px); mantener toggle accesible.
-
-**`src/content/changelog/v8/chunks/0.ts`** — entrada v8.99.15.
-
-### Sin cambios en BD
-
-Solo trabajo de presentación; ningún schema o RPC se modifica.
-
-## Sin trabajo
-
-- Iconos del card "Próximos Arribos" se ven correctos en revisión cercana (no es bug, es el indicador de modo).
-- KPIs de Operaciones (Cargas activas, Contenedores, Profit total, Alertas) se ven bien.
-
-## Validación
-
-- Capturar screenshot post-fix en 768px y 1366px de: Dashboard principal, Embarques (lista), Cotizaciones (lista), Clientes (lista) y Operaciones.
-- Verificar en BD vía sample: clientes "BUENO Alimentos", "SANTA Catarina, NUEVO León", "INDIMEX TRADING", "Corporativo Especializado EN Comercio ELITE S.A. DE C.V." se renderizan correctamente.
+- `src/pages/NotFound.tsx`
+- `src/lib/formatters/index.ts`
+- `src/components/empty/EmptyState.tsx` (nuevo)
+- `src/pages/embarques/Embarques.tsx` (header)
+- `src/pages/cotizaciones/Cotizaciones.tsx` (header + vigencia + truncate)
+- `src/pages/clientes/Clientes.tsx` (header + corrección de lugar)
+- `src/pages/clientes/ClienteDetalle.tsx`
+- `src/components/embarque/embarqueColumns.tsx` (tooltip cliente)
+- `src/components/operaciones/OperadorCard.tsx` (preferir nombre_completo)
+- `src/pages/embarques/EmbarqueDetalle.tsx` (usar EmptyState)
+- `src/content/changelog/v8/chunks/0.ts`
