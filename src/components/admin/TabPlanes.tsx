@@ -96,7 +96,7 @@ export default function TabPlanes() {
     {
       key: "precio",
       header: "Precio/Mes",
-      className: "text-right",
+      className: "text-right tabular-nums",
       render: (p) =>
         editingId === p.id ? (
           <Input
