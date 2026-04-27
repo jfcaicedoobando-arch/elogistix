@@ -38,7 +38,7 @@ export function StepDatosRuta({ errors = {}, diasTransitoSugerencia }: Props) {
 
   return (
     <Card>
-      <CardHeader><CardTitle>Datos de Ruta {modo && `— ${modo}`}</CardTitle></CardHeader>
+      <CardHeader className="pb-3"><CardTitle className="text-base font-semibold">Datos de Ruta {modo && `— ${modo}`}</CardTitle></CardHeader>
       <CardContent className="space-y-4">
         {hasErrors && <ValidationAlert severity="error" errors={errors} />}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

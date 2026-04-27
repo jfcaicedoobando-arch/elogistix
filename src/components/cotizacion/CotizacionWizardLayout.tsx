@@ -1,14 +1,15 @@
 import { useEffect, useRef } from "react";
 import { FormProvider } from "react-hook-form";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import {
   Accordion, AccordionContent, AccordionItem, AccordionTrigger,
 } from "@/components/ui/accordion";
 import { ArrowLeft, Save, ChevronRight, ChevronLeft, Info, Package, StickyNote, Loader2 } from "lucide-react";
+import { WizardSection } from "@/components/shared/WizardSection";
 
 import { StepIndicator } from "@/components/embarque/StepIndicator";
 import SeccionDestinatario from "@/components/cotizacion/SeccionDestinatario";
@@ -86,34 +87,39 @@ export default function CotizacionWizardLayout({
               <>
                 <SeccionDestinatario clientes={clientes} />
                 <SeccionDatosGeneralesCotizacion />
-                <Card>
-                  <CardHeader><CardTitle className="text-lg">Mercancía</CardTitle></CardHeader>
-                  <CardContent>
-                    {w.esMaritimo ? (
-                      <div className="space-y-4">
-                        <div className="flex gap-4">
-                          <label className="flex items-center gap-2 cursor-pointer">
-                            <input type="radio" name="tipo-embarque" checked={tipoEmbarque === "FCL"} onChange={() => w.handleCambiarTipoEmbarque("FCL")} className="accent-primary" />
-                            <span className="text-sm font-medium">FCL (Contenedor completo)</span>
-                          </label>
-                          <label className="flex items-center gap-2 cursor-pointer">
-                            <input type="radio" name="tipo-embarque" checked={tipoEmbarque === "LCL"} onChange={() => w.handleCambiarTipoEmbarque("LCL")} className="accent-primary" />
-                            <span className="text-sm font-medium">LCL (Carga consolidada)</span>
-                          </label>
+                <WizardSection title="Mercancía">
+                  {w.esMaritimo ? (
+                    <div className="space-y-4">
+                      <RadioGroup
+                        value={tipoEmbarque}
+                        onValueChange={(v) => w.handleCambiarTipoEmbarque(v as "FCL" | "LCL")}
+                        className="flex gap-6"
+                      >
+                        <div className="flex items-center gap-2">
+                          <RadioGroupItem value="FCL" id="tipo-fcl" />
+                          <Label htmlFor="tipo-fcl" className="cursor-pointer text-sm font-medium">
+                            FCL (Contenedor completo)
+                          </Label>
                         </div>
-                        {tipoEmbarque === "FCL" ? (
-                          <SeccionMercanciaMaritimaFCL msdsFile={w.msdsFile} setMsdsFile={w.setMsdsFile} />
-                        ) : (
-                          <SeccionMercanciaMaritimeLCL msdsFile={w.msdsFile} setMsdsFile={w.setMsdsFile} />
-                        )}
-                      </div>
-                    ) : w.esAereo ? (
-                      <SeccionMercanciaAerea msdsFile={w.msdsFile} setMsdsFile={w.setMsdsFile} />
-                    ) : (
-                      <SeccionMercanciaGeneral msdsFile={w.msdsFile} setMsdsFile={w.setMsdsFile} />
-                    )}
-                  </CardContent>
-                </Card>
+                        <div className="flex items-center gap-2">
+                          <RadioGroupItem value="LCL" id="tipo-lcl" />
+                          <Label htmlFor="tipo-lcl" className="cursor-pointer text-sm font-medium">
+                            LCL (Carga consolidada)
+                          </Label>
+                        </div>
+                      </RadioGroup>
+                      {tipoEmbarque === "FCL" ? (
+                        <SeccionMercanciaMaritimaFCL msdsFile={w.msdsFile} setMsdsFile={w.setMsdsFile} />
+                      ) : (
+                        <SeccionMercanciaMaritimeLCL msdsFile={w.msdsFile} setMsdsFile={w.setMsdsFile} />
+                      )}
+                    </div>
+                  ) : w.esAereo ? (
+                    <SeccionMercanciaAerea msdsFile={w.msdsFile} setMsdsFile={w.setMsdsFile} />
+                  ) : (
+                    <SeccionMercanciaGeneral msdsFile={w.msdsFile} setMsdsFile={w.setMsdsFile} />
+                  )}
+                </WizardSection>
                 <SeccionRutaCotizacion />
 
                 {/* Campos opcionales colapsados */}
