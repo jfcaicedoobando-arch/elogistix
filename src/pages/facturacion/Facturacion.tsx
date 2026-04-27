@@ -95,10 +95,10 @@ export default function Facturacion() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold">Pre-Facturación</h1>
-        <p className="text-sm text-muted-foreground">Control de proformas, facturas emitidas y gastos por liquidar</p>
-      </div>
+      <PageHeader
+        title="Pre-Facturación"
+        description="Control de proformas, facturas emitidas y gastos por liquidar"
+      />
 
       <Tabs defaultValue={proformasPendientes.length > 0 ? "pendientes" : "proformas"}>
         <TabsList>
