@@ -2,6 +2,13 @@ import type { ChangelogEntry } from "../../../changelogData";
 
 export const chunk0: ChangelogEntry[] = [
   {
+    version: "8.99.6",
+    date: "2026-04-27",
+    type: "minor",
+    title: "Nuevo estado de cotización: 'En operación' (antes 'Embarcada')",
+    description: "Renombramos el estado 'Embarcada' a 'En operación' para reflejar mejor el flujo: una cotización es Enviada → Aceptada → En operación (cuando ya tiene embarque vinculado). Cambios: (1) Migración del enum estado_cotizacion eliminando 'Embarcada' y agregando 'En operación'; las 4 cotizaciones que estaban como 'Embarcada' se migraron automáticamente. (2) Trigger trg_sync_cotizacion_embarque_link mejorado: ahora, además de poblar embarque_id, promueve automáticamente el estado de 'Aceptada' a 'En operación' cuando se crea un embarque desde la cotización (cero acción manual). (3) Política RLS 'Cliente read own cotizaciones' actualizada con el nuevo nombre. (4) UI actualizada en todos los puntos: filtros, KPIs, badges, conversión de cotización → embarque y banner del portal del cliente. Beneficio: el equipo comercial puede distinguir claramente qué cotizaciones aceptadas siguen pendientes de operar vs cuáles ya están en operación, y el lenguaje del portal del cliente queda 100% consistente con el badge 'En operación · EXP-XXXX' que ya se mostraba.",
+  },
+  {
     version: "8.99.5",
     date: "2026-04-27",
     type: "patch",
