@@ -1,4 +1,4 @@
-import { Suspense } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/layout/AppSidebar";
 import { Outlet } from "react-router-dom";
@@ -8,8 +8,18 @@ import { ThemeToggle } from "@/components/layout/ThemeToggle";
 import RouteLoadingFallback from "@/components/layout/RouteLoadingFallback";
 
 export function Layout() {
+  // En tablet (<lg = 1024px) el sidebar arranca colapsado para liberar ancho útil.
+  const [defaultOpen, setDefaultOpen] = useState(() =>
+    typeof window === "undefined" ? true : window.innerWidth >= 1024
+  );
+  useEffect(() => {
+    const onResize = () => setDefaultOpen(window.innerWidth >= 1024);
+    window.addEventListener("resize", onResize);
+    return () => window.removeEventListener("resize", onResize);
+  }, []);
+
   return (
-    <SidebarProvider>
+    <SidebarProvider defaultOpen={defaultOpen}>
       <div className="min-h-screen flex w-full">
         <AppSidebar />
         <div className="flex-1 flex flex-col min-w-0">
