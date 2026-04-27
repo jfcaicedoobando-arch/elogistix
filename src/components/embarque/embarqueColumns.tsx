@@ -6,7 +6,7 @@ import {
 import type { DataTableColumn } from "@/components/shared/DataTable";
 import { calcularEstadoEmbarque } from "@/hooks/embarque/useEmbarques";
 import type { EmbarqueRow } from "@/hooks/embarque/useEmbarques";
-import { formatDate, getOrigen, getDestino, shortName } from "@/lib/formatters";
+import { formatDate, getOrigen, getDestino, shortName, toTitleCase } from "@/lib/formatters";
 import { getEstadoColor, getModoIcon } from "@/lib/ui/uiMappings";
 import EmbarqueRowActions from "./EmbarqueRowActions";
 import { ProformaBadge } from "./ProformaBadge";
@@ -65,7 +65,7 @@ export function buildEmbarqueColumns({
     },
     { key: "bl", header: "BL Master", width: "w-[120px]", className: "text-xs", render: (e) => e.bl_master || "-" },
     { key: "contenedor", header: "Contenedor", width: "w-[130px]", className: "text-xs font-mono", render: (e) => e.contenedor || <span className="text-muted-foreground">-</span> },
-    { key: "cliente", header: "Cliente", width: "min-w-[160px]", className: "max-w-[180px] truncate", sortable: true, sortValue: (e) => e.cliente_nombre, render: (e) => e.cliente_nombre },
+    { key: "cliente", header: "Cliente", width: "min-w-[140px]", className: "max-w-[160px] truncate", sortable: true, sortValue: (e) => e.cliente_nombre, render: (e) => toTitleCase(e.cliente_nombre) },
     {
       key: "modo", header: "Modo", width: "w-[90px]", render: (e) => (
         <span className="flex items-center gap-1">
@@ -78,7 +78,7 @@ export function buildEmbarqueColumns({
     { key: "etd", header: "ETD", width: "w-[90px]", className: "text-xs", sortable: true, sortValue: (e) => e.etd || "", render: (e) => formatDate(e.etd || "") },
     { key: "eta", header: "ETA", width: "w-[90px]", className: "text-xs", sortable: true, sortValue: (e) => e.eta || "", render: (e) => formatDate(e.eta || "") },
     {
-      key: "estado", header: "Estado", width: "w-[120px]", sortable: true,
+      key: "estado", header: "Estado", width: "w-[110px]", sortable: true,
       sortValue: (e) => calcularEstadoEmbarque(e.modo, e.tipo, e.etd, e.eta, e.estado),
       render: (e) => {
         const estado = calcularEstadoEmbarque(e.modo, e.tipo, e.etd, e.eta, e.estado);

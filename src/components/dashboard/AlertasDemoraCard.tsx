@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import type { AlertaDemora } from "@/hooks/dashboard/useDashboardData";
+import { toTitleCase } from "@/lib/formatters";
 
 interface Props {
   alertas: AlertaDemora[];
@@ -53,7 +54,7 @@ export const AlertasDemoraCard = memo(function AlertasDemoraCard({ alertas, isLo
               <div className="min-w-0 flex-1">
                 <p className="text-sm font-medium truncate">{e.expediente}</p>
                 <p className="text-xs text-muted-foreground truncate">
-                  {e.cliente_nombre}
+                  {toTitleCase(e.cliente_nombre)}
                 </p>
               </div>
               <ArrowRight className="h-4 w-4 text-muted-foreground shrink-0" />

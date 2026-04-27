@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { formatDate } from "@/lib/formatters";
+import { formatDate, toTitleCase } from "@/lib/formatters";
 import { getModoIcon } from "@/lib/ui/uiMappings";
 import type { ProximoArribo } from "@/hooks/dashboard/useDashboardData";
 
@@ -50,7 +50,7 @@ export const ProximosArribosCard = memo(function ProximosArribosCard({ arribos, 
               </div>
               <div className="min-w-0 flex-1">
                 <p className="text-sm font-medium truncate">
-                  {e.expediente} — {e.cliente_nombre}
+                  {e.expediente} — {toTitleCase(e.cliente_nombre)}
                 </p>
                 <p className="text-xs text-muted-foreground">
                   ETA: {formatDate(e.eta!)} ·{" "}
