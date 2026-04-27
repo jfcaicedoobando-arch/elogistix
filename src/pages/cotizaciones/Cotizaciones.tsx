@@ -16,6 +16,7 @@ import SearchInput from "@/components/selects/SearchInput";
 import PaginationControls from "@/components/shared/PaginationControls";
 import { DataTable, type DataTableColumn } from "@/components/shared/DataTable";
 import DoubleConfirmDeleteDialog from "@/components/shared/DoubleConfirmDeleteDialog";
+import { PageHeader } from "@/components/shared/PageHeader";
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
