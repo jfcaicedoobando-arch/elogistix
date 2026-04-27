@@ -63,7 +63,7 @@ export default function Cotizaciones() {
       { key: "subtotal", header: "Subtotal", width: "w-[110px]", className: "text-right text-xs whitespace-nowrap", headerClassName: "text-right", sortable: true, sortValue: (r) => r.subtotal, render: (r) => formatCurrency(r.subtotal, r.moneda) },
       { key: "estado", header: "Estado", width: "w-[110px]", sortable: true, sortValue: (r) => r.estado, render: (r) => <Badge variant="secondary" className={`text-xs whitespace-nowrap ${getEstadoColor(r.estado)}`}>{r.estado}</Badge> },
       { key: "vigencia", header: "Vigencia", width: "w-[140px]", className: "text-xs", render: renderVigencia },
-      { key: "fecha", header: "Fecha", width: "w-[130px]", className: "text-xs whitespace-nowrap", sortable: true, sortValue: (r) => r.created_at, render: (r) => new Date(r.created_at).toLocaleString('es-MX', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: false }).replace(',', '') },
+      { key: "fecha", header: "Fecha", width: "w-[130px]", className: "text-xs whitespace-nowrap", sortable: true, sortValue: (r) => r.created_at, render: (r) => formatDate(r.created_at, "dd/MM/yyyy HH:mm") },
     ];
     if (c.canEdit) {
       cols.push({
