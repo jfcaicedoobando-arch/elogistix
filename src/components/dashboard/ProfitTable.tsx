@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { DataTable, type DataTableColumn } from "@/components/shared/DataTable";
-import { formatCurrency } from "@/lib/formatters";
+import { formatCurrency, toTitleCase } from "@/lib/formatters";
 import type { EmbarqueConProfit } from "@/hooks/dashboard/useDashboardData";
 
 interface Props {
@@ -14,7 +14,7 @@ interface Props {
 
 const columns: DataTableColumn<EmbarqueConProfit>[] = [
   { key: "expediente", header: "Expediente", className: "font-medium", render: (e) => e.expediente },
-  { key: "cliente", header: "Cliente", className: "max-w-[180px] truncate", render: (e) => e.cliente_nombre },
+  { key: "cliente", header: "Cliente", className: "max-w-[180px] truncate", render: (e) => <span title={e.cliente_nombre}>{toTitleCase(e.cliente_nombre)}</span> },
   { key: "venta", header: "Venta USD", className: "text-right tabular-nums", headerClassName: "text-right", render: (e) => formatCurrency(e.ventaUSD, "USD") },
   { key: "costo", header: "Costo USD", className: "text-right tabular-nums", headerClassName: "text-right", render: (e) => formatCurrency(e.costoUSD, "USD") },
   {

@@ -166,9 +166,9 @@ export default function PortalEmbarqueDetalle() {
                   <dt className="text-muted-foreground">Destino</dt>
                   <dd className="font-medium">{getDestino(embarque)}</dd>
                   <dt className="text-muted-foreground">ETD</dt>
-                  <dd className="font-medium">{embarque.etd || "—"}</dd>
+                  <dd className="font-medium">{embarque.etd ? formatDate(embarque.etd) : "—"}</dd>
                   <dt className="text-muted-foreground">ETA</dt>
-                  <dd className="font-medium">{embarque.eta || "—"}</dd>
+                  <dd className="font-medium">{embarque.eta ? formatDate(embarque.eta) : "—"}</dd>
                   {embarque.naviera && <>
                     <dt className="text-muted-foreground">Naviera</dt>
                     <dd className="font-medium">{embarque.naviera}</dd>

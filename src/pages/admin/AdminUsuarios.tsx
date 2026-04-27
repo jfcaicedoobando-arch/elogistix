@@ -10,6 +10,7 @@ import DoubleConfirmDeleteDialog from "@/components/shared/DoubleConfirmDeleteDi
 import { useAdminGlobalUsers, type GlobalUserRow } from "@/hooks/admin/useAdminData";
 import { useDeleteUser } from "@/hooks/usuario/useUsuarioMutations";
 import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
+import { getRoleLabel } from "@/lib/ui/uiMappings";
 
 export default function AdminUsuarios() {
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -43,7 +44,7 @@ export default function AdminUsuarios() {
   const columns: DataTableColumn<GlobalUserRow>[] = [
     { key: "email", header: "Email", width: "min-w-[200px]", className: "font-medium", sortable: true, sortValue: (u) => u.email, render: (u) => u.email },
     { key: "org", header: "Organización", width: "w-[180px]", sortable: true, sortValue: (u) => u.org_nombre, render: (u) => u.org_nombre },
-    { key: "role", header: "Rol", width: "w-[120px]", render: (u) => <Badge className={roleBadge[u.role] ?? ""}>{u.role}</Badge> },
+    { key: "role", header: "Rol", width: "w-[120px]", render: (u) => <Badge className={roleBadge[u.role] ?? ""}>{getRoleLabel(u.role)}</Badge> },
     {
       key: "actions", header: "", width: "w-[60px]",
       render: (u) => (

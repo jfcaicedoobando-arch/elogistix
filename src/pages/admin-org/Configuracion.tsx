@@ -12,7 +12,7 @@ import TabAlertas from "@/components/configuracion/TabAlertas";
 import TabPuertos from "@/components/configuracion/TabPuertos";
 
 export default function Configuracion() {
-  const { s, set, isLoading, isSaving, handleSave } = useConfiguracionState();
+  const { s, set, isLoading, isSaving, isDirty, handleSave } = useConfiguracionState();
 
   if (isLoading) {
     return (
@@ -35,9 +35,9 @@ export default function Configuracion() {
           <h1 className="text-2xl font-bold text-foreground">Configuración</h1>
           <p className="text-sm text-muted-foreground">Parámetros generales del sistema</p>
         </div>
-        <Button onClick={handleSave} disabled={isSaving}>
+        <Button onClick={handleSave} disabled={isSaving || !isDirty} title={!isDirty ? "No hay cambios pendientes" : undefined}>
           <Save className="h-4 w-4 mr-2" />
-          {isSaving ? "Guardando..." : "Guardar Cambios"}
+          {isSaving ? "Guardando..." : isDirty ? "Guardar Cambios" : "Sin Cambios"}
         </Button>
       </div>
 

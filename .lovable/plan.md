@@ -1,69 +1,86 @@
-# Auditoría UI/UX Fase 7 — Detalle de Cotización, Proveedores y Bitácora (v8.99.18)
+# Auditoría UI/UX Fase 8 — Portal Cliente, Dashboards y Administración (v8.99.19)
 
-Continuación de la auditoría visual sobre módulos no cubiertos. **Sí hay mejoras pendientes**, incluyendo un **bug visible de superposición de texto** en el detalle de cotización.
+**Sí hay mejoras pendientes.** No son bugs críticos, pero existen inconsistencias visibles en módulos que aún no habían pasado por las fases previas.
 
-## Hallazgos por orden de severidad
+## Hallazgos
 
-### 1. Detalle de Cotización · BUG VISUAL (alta prioridad)
-- En la card "Datos Generales", el campo **Operador** muestra el email crudo (`karla.garcia@elogistixshipping.com`) y, al desbordar la celda del grid, **se sobrepone con "Tiempo de tránsito 5 días"** del campo a la derecha. Texto encima de texto.
-- Causas: no se aplica `nombreDesdeEmail` y la celda no tiene `truncate`/`min-w-0`.
-- Adicional: el cliente del header (`INDIMEX TRADING`) está en MAYÚSCULAS — falta `toTitleCase`.
-- Validez/Vigencia: dos campos casi redundantes ("Vigencia: 7 días (30/04/2026)" y "Validez propuesta: 30/04/2026"). Considerar fusionar en un solo campo o renombrar para que la diferencia sea clara.
+### 1. Dashboard Operativo · Tablas con nombres en CAPS
+Inconsistencia: `AlertasDemoraCard` y `ProximosArribosCard` ya aplican `toTitleCase` al cliente, pero estas tres no:
+- `src/components/dashboard/ProfitTable.tsx` — columna Cliente renderiza `e.cliente_nombre` crudo.
+- `src/components/dashboard/EmbarquesActivosTable.tsx` — columna Cliente cruda.
+- `src/components/operaciones/OperacionesWidgets.tsx` — celda `c.cliente_nombre` cruda.
+- `src/components/operaciones/ClienteExpandible.tsx` — `cliente.nombre` crudo.
 
-### 2. Detalle de Cotización · Tab Costos
-- Header `% PROFIT` rompe en 2 líneas — agregar `whitespace-nowrap`.
-- La página entra **directo en modo edición** (inputs activos para Proveedor/Costo Unit. + botón flotante "Guardar Costos"). No hay botón "Editar" previo. Debería iniciar en modo lectura y entrar a edición vía acción explícita, igual que el resto del sistema. Esto evita guardados accidentales.
-- Línea "Release" muestra `USD 95.00 + IVA` mientras otras líneas no muestran sufijo IVA — inconsistencia visual.
-- Las columnas "Notas (opcional)" como `<textarea>` ocupan toda la fila incluso vacías; podrían colapsarse a un botón "+ Nota" que expanda al hacer click.
+Resultado: en el mismo dashboard se ven "Indimex Trading" en una card y "INDIMEX TRADING" en la tabla justo debajo.
 
-### 3. Proveedores
-- Nombres mezclados: `COSCO SHIPPING LINES MEXICO S DE RL DE CV`, `EVERGREEN SHIPPING AGENCY MEXICO, S.A. DE C.V.`, `SHENZHEN GOLDEN SHIPPING CO.,LTD`, `WAN HAI LINES MEXIC`, `YANG MING`, `ZIM INTEGRATED SHIPPING SERVICES LTD`, `prueba` en MAYÚSCULAS/lowercase, junto a `Ocean Network Express Pte. Ltd.` en Title Case. Aplicar `toTitleCase` a la columna Nombre.
-- Columna Contacto (`DARREN`, `Prueba`) — aplicar `toTitleCase`.
-- Tabs de categorías (`Agentes Aduanales`, `Agentes de Carga`) están casi pegados visualmente — agregar `gap-1` o padding consistente.
+### 2. Portal Cliente · Empty states inconsistentes
+`PortalEmbarques.tsx`, `PortalCotizaciones.tsx`, `PortalFacturas.tsx` usan bloques manuales de "no hay resultados" con icono + texto, en lugar del componente `EmptyState` ya estandarizado en el sistema interno (Fase anterior). Romper la consistencia entre app interna y portal.
 
-### 4. Bitácora
-- Usuarios mostrados como `alan.hernandez`, `valeria.zamora`, `magali.reynoso` (slug del email). Usar `nombreDesdeEmail` para obtener "Alan Hernandez", "Valeria Zamora", "Magali Reynoso".
-- Timestamps relativos ("hace 2d") sin tooltip con fecha absoluta — agregar `title=` con la fecha en formato `dd/MM/yyyy HH:mm`.
-- Acciones (`Editar`, `Cambiar Estado`) sin badge de color que las diferencie. Nice-to-have: aplicar variante de badge según tipo de acción (success para Crear, warning para Cambiar Estado, secondary para Editar, destructive para Eliminar).
+### 3. Portal · Detalle de Embarque y Cotización
+- `PortalEmbarqueDetalle.tsx` líneas 169-171: ETD/ETA renderizan `embarque.etd || "—"` (string ISO `2026-04-30`) en lugar de `formatDate(embarque.etd)`. Inconsistente con las cards de arriba que sí formatean.
+- `PortalCotizacionDetalle.tsx` línea 105: `cot.fecha_vigencia || "—"` también ISO crudo.
+- Header del portal cotización pasa `clienteNombre={cot.cliente_nombre}` sin Title Case.
 
-### 5. Detalle de Cotización · Header
-- El subtítulo del cliente debería pasar por `toTitleCase` (igual que ya hicimos en el header de Embarque en Fase 6).
+### 4. Administración · Usuarios y Organizaciones
+- `Admin/Usuarios.tsx` y `admin-org/Usuarios.tsx`: badge de rol muestra el slug interno (`super_admin`, `operador`) en minúsculas con guión bajo. Debería mostrar "Super Admin", "Operador", etc.
+- Email mostrado como string crudo (sin tooltip). En `admin-org/Usuarios.tsx` el rol "cliente" no aparece en el `Select` de cambio de rol pero sí puede aparecer en la columna "Rol actual" — desincronización menor.
+- `AdminOrganizaciones.tsx`: nombre de organización render directo (puede venir en MAYÚSCULAS desde DB) — falta `toTitleCase`.
+- Falta un "Confirm dialog" o aviso cuando se cambia el rol de un usuario en `admin-org/Usuarios.tsx` — actualmente cambia directo al seleccionar (acción destructiva sin confirmación).
 
-## Plan de Trabajo (v8.99.18)
+### 5. Configuración Org · Tabs en mobile (viewport actual 742px)
+`admin-org/Configuracion.tsx`: 7 tabs con `flex-wrap h-auto gap-1` — en 742px las tabs se rompen a 2 filas, pero el indicador activo no se diferencia bien. Funcional pero apretado. Mejora menor: agregar `text-xs` a las labels en mobile o icon-only debajo de breakpoint sm.
 
-1. **CotizacionDetalle / Datos Generales** (`src/pages/cotizaciones/CotizacionDetalle.tsx` + componentes hijos):
-   - Aplicar `nombreDesdeEmail` al campo Operador.
-   - Agregar `min-w-0 truncate` (con tooltip via `title`) a las celdas del grid de datos para evitar overflow horizontal.
-   - Aplicar `toTitleCase(cliente_nombre)` en el header.
+### 6. Configuración Org · Sin "guardar pendiente"
+El botón "Guardar Cambios" siempre está habilitado, incluso sin cambios. Sería ideal un estado dirty para deshabilitarlo y prevenir guardados innecesarios.
 
-2. **Tab Costos de Cotización**:
-   - `whitespace-nowrap` en header `% Profit` y `Costo Unit.`.
-   - Cambiar comportamiento por defecto a modo lectura. Agregar botón "Editar costos" que active los inputs y revele "Guardar Costos". Al guardar o cancelar, vuelve a modo lectura.
-   - Quitar el sufijo "+ IVA" de la columna Venta (manejarlo en el resumen P&L que ya indica "El IVA no forma parte del profit").
+## Plan de Trabajo (v8.99.19)
 
-3. **Lista de Proveedores** (`src/pages/proveedores/Proveedores.tsx` o columnas):
-   - `toTitleCase` en columna Nombre y Contacto, con tooltip nativo.
-   - `gap-1` o `space-x-1` en `TabsList` de categorías.
+1. **Title Case en dashboards** (impacto visual inmediato):
+   - `ProfitTable.tsx`, `EmbarquesActivosTable.tsx`: aplicar `toTitleCase(e.cliente_nombre)` con `title=` para nombre original.
+   - `OperacionesWidgets.tsx`, `ClienteExpandible.tsx`: aplicar `toTitleCase`.
 
-4. **Bitácora** (`src/pages/dashboard/Bitacora.tsx` y/o componente de fila):
-   - Reemplazar el slug crudo del email por `nombreDesdeEmail`.
-   - Agregar `title=` con `formatDateTime` al texto "hace 2d".
-   - Mapear tipo de acción a `Badge` con variante semántica (`Crear` → success, `Editar` → secondary, `Cambiar Estado` → warning, `Eliminar` → destructive, `Login` → info).
+2. **Portal · EmptyState component**:
+   - Reemplazar los bloques manuales de "no encontrado" en `PortalEmbarques.tsx`, `PortalCotizaciones.tsx`, `PortalFacturas.tsx` por `<EmptyState>` con su icono correspondiente y la acción "Limpiar filtros" cuando aplique.
 
-5. **Changelog v8.99.18** documentando los 4 grupos.
+3. **Portal · Formato de fechas**:
+   - `PortalEmbarqueDetalle.tsx` tab Resumen: aplicar `formatDate(embarque.etd)` y `formatDate(embarque.eta)`.
+   - `PortalCotizacionDetalle.tsx`: aplicar `formatDate(cot.fecha_vigencia)`.
+   - `PortalCotizacionHeader`: aplicar `toTitleCase(clienteNombre)`.
+
+4. **Administración**:
+   - Crear (o reutilizar si existe) un mapa `roleLabels` en `src/lib/ui/uiMappings.ts`: `super_admin → "Super Admin"`, `admin → "Admin"`, `operador → "Operador"`, `viewer → "Visor"`, `cliente → "Cliente"`. Aplicar en badges de Admin/Usuarios y admin-org/Usuarios.
+   - `AdminOrganizaciones.tsx`: aplicar `toTitleCase` al nombre de la organización.
+   - `admin-org/Usuarios.tsx`: agregar diálogo de confirmación al cambiar de rol (similar al patrón ya existente con `DoubleConfirmDeleteDialog`, pero un solo paso). Alternativa más simple: usar `confirm()` o un `AlertDialog` ligero que muestre "¿Cambiar rol de X de Operador a Admin?" con Cancelar/Confirmar.
+
+5. **Configuración Org · estado dirty**:
+   - En `useConfiguracionState`, agregar un estado `isDirty` que se active al primer `set(...)` y se resetee al guardar. Deshabilitar botón "Guardar Cambios" cuando `!isDirty`.
+   - Tabs: en mobile (`<sm`), reducir el texto de las labels o esconder el ícono para que quepan en una sola fila si es posible (bajo prioridad).
+
+6. **Changelog v8.99.19** documentando los 5 grupos.
 
 ## Detalles Técnicos
 
-- Para el modo lectura/edición de costos en cotización: usar un estado local `const [editMode, setEditMode] = useState(false)` y condicionar el render de cada input vs `<span>{value}</span>`.
-- La superposición del operador en cotización es un overflow del grid; añadir `overflow-hidden text-ellipsis whitespace-nowrap` en el `<p>` del valor o convertir a `truncate` con `min-w-0` en el contenedor flex.
-- Para Bitácora, exponer un helper `getActionBadgeVariant(accion: string)` en `src/lib/ui/uiMappings.ts`.
+- Para `roleLabels`, exportar como `Record<AppRole, string>` desde `uiMappings.ts` y consumir en ambos paneles de usuarios.
+- Para el confirm de cambio de rol: optar por un `AlertDialog` minimalista con estado local `pendingRoleChange: { userId; from; to } | null`.
+- El estado `isDirty` se puede implementar comparando `JSON.stringify(s)` con `JSON.stringify(initialS)` cargado en `useConfiguracionState`, o con un boolean que se setea en el setter compuesto y se limpia al `handleSave` exitoso.
+- `EmptyState` en portal: confirmar que el componente existente acepta `icon` como prop (ya creado en Fase 5) — si no, extender la API.
 
 ## Archivos a Modificar (estimación)
 
-- `src/pages/cotizaciones/CotizacionDetalle.tsx` (header)
-- `src/components/cotizacion/SeccionDatosGenerales.tsx` (o similar — confirmar al implementar)
-- `src/components/cotizacion/SeccionCostos.tsx` (modo edición)
-- `src/pages/proveedores/Proveedores.tsx` o sus columnas
-- `src/pages/dashboard/Bitacora.tsx` (o componente de fila)
-- `src/lib/ui/uiMappings.ts` (mapper de badges)
+- `src/components/dashboard/ProfitTable.tsx`
+- `src/components/dashboard/EmbarquesActivosTable.tsx`
+- `src/components/operaciones/OperacionesWidgets.tsx`
+- `src/components/operaciones/ClienteExpandible.tsx`
+- `src/pages/portal/PortalEmbarques.tsx`
+- `src/pages/portal/PortalCotizaciones.tsx`
+- `src/pages/portal/PortalFacturas.tsx`
+- `src/pages/portal/PortalEmbarqueDetalle.tsx`
+- `src/pages/portal/PortalCotizacionDetalle.tsx`
+- `src/components/portal/cotizacion/PortalCotizacionHeader.tsx`
+- `src/lib/ui/uiMappings.ts`
+- `src/pages/admin/AdminUsuarios.tsx`
+- `src/pages/admin-org/Usuarios.tsx`
+- `src/pages/admin/AdminOrganizaciones.tsx`
+- `src/hooks/configuracion/useConfiguracionState.ts`
+- `src/pages/admin-org/Configuracion.tsx`
 - `src/content/changelog/v8/chunks/0.ts`

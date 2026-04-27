@@ -11,6 +11,7 @@ import { usePortalCotizacionDetalleController } from "@/hooks/cotizacion/usePort
 import PortalCotizacionHeader from "@/components/portal/cotizacion/PortalCotizacionHeader";
 import PortalCotizacionEstadoBanner from "@/components/portal/cotizacion/PortalCotizacionEstadoBanner";
 import PortalCotizacionConfirmDialog from "@/components/portal/cotizacion/PortalCotizacionConfirmDialog";
+import { formatDate } from "@/lib/formatters";
 import type { Tables } from "@/integrations/supabase/types";
 
 export default function PortalCotizacionDetalle() {
@@ -102,7 +103,7 @@ export default function PortalCotizacionDetalle() {
             </div>
             <div>
               <span className="text-muted-foreground">Vigencia</span>
-              <p className="font-medium">{cot.fecha_vigencia || "—"}</p>
+              <p className="font-medium">{cot.fecha_vigencia ? formatDate(cot.fecha_vigencia) : "—"}</p>
             </div>
             {cot.tiempo_transito_dias != null && (
               <div>
