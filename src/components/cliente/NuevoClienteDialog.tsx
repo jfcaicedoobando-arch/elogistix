@@ -1,4 +1,6 @@
 import { ArrowLeft, ArrowRight, Loader2, Upload, FileText } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { dialogSize, scrollableDialog } from "@/lib/ui/dialogTokens";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";

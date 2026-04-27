@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { dialogSize } from "@/lib/ui/dialogTokens";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
