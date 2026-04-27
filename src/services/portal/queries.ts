@@ -56,7 +56,7 @@ const PORTAL_COTIZACION_ESTADOS_VISIBLES = [
   "Enviada",
   "Aceptada",
   "Rechazada",
-  "Embarcada",
+  "En operación",
 ] as const;
 
 export async function fetchPortalCotizaciones(clienteIds: string[]) {

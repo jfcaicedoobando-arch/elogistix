@@ -144,7 +144,7 @@ export const ESTADO_CONFIG: Record<string, EstadoVisual> = {
   Aceptada: { ...DEFAULT_VISUAL, badge: "bg-warning/15 text-warning border border-warning/30" },
   Confirmada: { ...DEFAULT_VISUAL, badge: "bg-success/15 text-success border border-success/30" },
   Rechazada: { ...DEFAULT_VISUAL, badge: "bg-destructive/15 text-destructive border border-destructive/30" },
-  Embarcada: { ...DEFAULT_VISUAL, badge: "bg-indigo-500/15 text-indigo-600 border border-indigo-500/30" },
+  "En operación": { ...DEFAULT_VISUAL, badge: "bg-indigo-500/15 text-indigo-600 border border-indigo-500/30" },
 };
 
 /** Obtiene la configuración visual de un estado, con fallback seguro. */

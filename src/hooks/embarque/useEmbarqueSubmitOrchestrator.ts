@@ -129,7 +129,7 @@ export function useEmbarqueSubmitOrchestrator() {
         try {
           await updateEstadoCotizacion.mutateAsync({
             id: p.cotizacionVinculada.id,
-            estado: "Embarcada",
+            estado: "En operación",
           });
         } catch (err: unknown) {
           notifyWarning(toast, {

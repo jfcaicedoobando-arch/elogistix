@@ -16,7 +16,7 @@ export const ESTADOS_COTIZACION = [
   "Aceptada",
   "Rechazada",
   "Vencida",
-  "Embarcada",
+  "En operación",
 ];
 
 export type CotizacionListItem = NonNullable<ReturnType<typeof useCotizaciones>["data"]>[number];
@@ -63,7 +63,7 @@ export function useCotizacionesPageController() {
   const kpis = useMemo(() => {
     const total = filtered.length;
     const aceptadas = filtered.filter(
-      (c) => c.estado === "Aceptada" || c.estado === "Embarcada",
+      (c) => c.estado === "Aceptada" || c.estado === "En operación",
     ).length;
     const rechazadas = filtered.filter((c) => c.estado === "Rechazada").length;
     const tasa = total > 0 ? ((aceptadas / total) * 100).toFixed(1) : "0.0";
