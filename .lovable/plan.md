@@ -1,41 +1,37 @@
 ## Objetivo
 
-Hacer que el header del sidebar y el header de la página tengan **exactamente la misma altura (h-16 = 64px)** para lograr simetría visual perfecta en la línea horizontal superior donde se encuentran ambos.
+Agrandar el logo de Libre Carga en el sidebar y mejorar su estética, manteniendo la altura del header en **64px (h-16)** para no romper la simetría con el topbar lograda en v8.99.36.
 
-## Estado actual
+## Diagnóstico
 
-- **Topbar de página** (`Layout.tsx`): `h-16` fijo (64px), con `border-b`.
-- **SidebarHeader** (`AppSidebar.tsx`): altura libre con `p-4` + logo `h-9 w-9` ≈ 68px, lo que rompe la alineación de la línea inferior con el topbar.
+Logo actual: `h-8 w-8` (32px) con `bg-white p-0.5 ring-1`. Se ve pequeño y "perdido" dentro del header de 64px, sobre todo cuando hay 32px de espacio vertical libre para crecer.
 
-Resultado: el borde inferior del SidebarHeader queda ~4px por debajo del borde inferior del topbar, generando un escalón visible.
+## Cambios
 
-## Cambios propuestos
+### 1. `src/components/layout/AppSidebar.tsx` — header del sidebar
 
-### 1. `src/components/layout/AppSidebar.tsx` — `SidebarHeader`
-- Forzar altura fija `h-16` para igualar al topbar.
-- Cambiar `p-4` a padding horizontal solamente (`px-4`) y centrar verticalmente con `flex items-center`, eliminando el padding vertical que descuadra.
-- En modo colapsado mantener `px-2` y centrado.
-- Reducir el logo de `h-9 w-9` a `h-8 w-8` para que respire mejor dentro de los 64px (padding visual ~16px arriba/abajo).
-- Mantener `border-b border-sidebar-border` para que la línea coincida visualmente con la del topbar.
+**Modo expandido:**
+- Logo: `h-8 w-8` → `h-10 w-10` (40px, +25%, mejor presencia sin tocar los 64px del header).
+- Mejorar acabado del recuadro del logo:
+  - Padding interno `p-0.5` → `p-1` (más respiración alrededor del PNG, evita que toque el borde).
+  - Radio `rounded-lg` → `rounded-xl` (más suave, alineado con el sistema de elevación premium del proyecto).
+  - Sombra sutil `shadow-card` (token de marca ya existente) para dar profundidad sobre el fondo del sidebar.
+  - Mantener `bg-white` y `ring-1 ring-sidebar-border dark:ring-0` (necesario porque el PNG tiene fondo claro y se ve mal directo sobre el navy del sidebar).
+- Tipografía:
+  - "Libre Carga" sube de `text-sm` a `text-base` con `tracking-tight` (más impacto y peso visual al lado del logo más grande).
+  - Subtítulo (organización) se mantiene `text-xs text-sidebar-foreground/60 truncate`.
+  - Gap del flex se mantiene en `gap-3`.
 
-```tsx
-<SidebarHeader className="h-16 border-b border-sidebar-border flex items-center px-4 group-data-[collapsible=icon]:px-2 group-data-[collapsible=icon]:justify-center">
-  <div className={cn("flex items-center gap-3 w-full", collapsed && "justify-center gap-0")}>
-    <img ... className="h-8 w-8 rounded-lg ..." />
-    {!collapsed && ( ... )}
-  </div>
-</SidebarHeader>
-```
+**Modo colapsado (icon mode, ancho 3rem):**
+- Logo: `h-8 w-8` → `h-9 w-9` (36px), centrado. No usamos 40px porque en colapsado el ancho disponible es de ~48px y queremos margen visual.
+- Mismo padding y radio para consistencia.
 
-### 2. (Opcional) Verificar `Layout.tsx`
-No requiere cambios; ya está en `h-16`. Solo confirmar que el `border-b` de ambos headers use el mismo tono visual (ya es el caso: `border` del topbar y `border-sidebar-border` del sidebar son consistentes con el tema).
-
-### 3. Changelog
-Agregar entrada **v8.99.36** en `src/content/changelog/v8/chunks/0.ts` y actualizar `src/content/changelogData.ts`:
-- Título: "Simetría header sidebar y topbar"
-- Tipo: `improvement`
-- Descripción: "Se alinea la altura del header del menú lateral (64px) con la barra superior de la página para una línea horizontal continua y simétrica."
+### 2. Changelog
+Entrada **v8.99.37** en `src/content/changelog/v8/chunks/0.ts` y `src/content/changelogData.ts`:
+- Tipo: `patch`
+- Título: "Logo del sidebar más grande y estético"
+- Descripción breve sobre el upscale del logo, padding/radio/shadow refinados y bump tipográfico de "Libre Carga".
 
 ## Resultado esperado
 
-Una línea horizontal inferior **continua y perfectamente alineada** entre el `SidebarHeader` y el topbar de la página, tanto en modo expandido como colapsado, en claro y oscuro.
+Logo claramente visible y con mejor presencia de marca (40px expandido, 36px colapsado), recuadro con esquinas más suaves y sombra sutil que lo hace ver "premium", y la línea horizontal del header sigue alineada perfectamente con el topbar.
