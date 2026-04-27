@@ -56,9 +56,9 @@ export default function CotizacionDetalle() {
         <Button variant="ghost" size="icon" onClick={() => navigate("/cotizaciones")}>
           <ArrowLeft className="h-4 w-4" />
         </Button>
-        <div className="flex-1">
+        <div className="flex-1 min-w-0">
           <h1 className="text-2xl font-bold">{cotizacion.folio}</h1>
-          <p className="text-sm text-muted-foreground">{nombreDestinatario}</p>
+          <p className="text-sm text-muted-foreground truncate">{toTitleCase(nombreDestinatario)}</p>
         </div>
         <Badge className={getEstadoColor(cotizacion.estado)}>{cotizacion.estado}</Badge>
         <Button variant="outline" size="sm" onClick={() => handleExportarPdf(cotizacion, tasaIva)}>
