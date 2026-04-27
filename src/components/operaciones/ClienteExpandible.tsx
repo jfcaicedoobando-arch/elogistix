@@ -2,6 +2,7 @@ import { memo, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { ChevronRight } from "lucide-react";
+import { toTitleCase } from "@/lib/formatters";
 import type { OperadorData } from "@/hooks/operaciones/useOperacionesData";
 import { ESTADOS_KEYS } from "@/hooks/operaciones/useDesempenoChartData";
 import { ESTADO_COLOR, ESTADO_ICON } from "./desempenoVisuals";
@@ -21,7 +22,7 @@ export const ClienteExpandible = memo(function ClienteExpandible({ cliente }: { 
                   open ? "rotate-90" : ""
                 }`}
               />
-              <span className="truncate">{cliente.nombre}</span>
+              <span className="truncate" title={cliente.nombre}>{toTitleCase(cliente.nombre)}</span>
             </span>
             <Badge
               variant="secondary"

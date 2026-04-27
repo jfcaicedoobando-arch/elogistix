@@ -2,7 +2,7 @@ import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { DataTable, type DataTableColumn } from "@/components/shared/DataTable";
-import { formatDate, formatCurrency, getOrigen, getDestino } from "@/lib/formatters";
+import { formatDate, formatCurrency, getOrigen, getDestino, toTitleCase } from "@/lib/formatters";
 import { getModoIcon, getEstadoColor } from "@/lib/ui/uiMappings";
 import type { EmbarqueMesSiguiente, ResumenFacturacion } from "@/hooks/dashboard/useDashboardData";
 
@@ -17,7 +17,7 @@ interface Props {
 
 const columns: DataTableColumn<EmbarqueMesSiguiente>[] = [
   { key: "expediente", header: "Expediente", className: "font-medium", sticky: true, sortable: true, sortValue: (e) => e.expediente, render: (e) => e.expediente },
-  { key: "cliente", header: "Cliente", className: "max-w-[180px] truncate", sortable: true, sortValue: (e) => e.cliente_nombre, render: (e) => e.cliente_nombre },
+  { key: "cliente", header: "Cliente", className: "max-w-[180px] truncate", sortable: true, sortValue: (e) => e.cliente_nombre, render: (e) => <span title={e.cliente_nombre}>{toTitleCase(e.cliente_nombre)}</span> },
   {
     key: "modo", header: "Modo", render: (e) => (
       <span className="flex items-center gap-1.5">

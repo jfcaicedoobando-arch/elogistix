@@ -3,6 +3,7 @@ import { Progress } from "@/components/ui/progress";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { ResponsiveContainer, BarChart, Bar, XAxis, LabelList } from "recharts";
 import { useNavigate } from "react-router-dom";
+import { toTitleCase } from "@/lib/formatters";
 import type { NivelRiesgo, CargaRiesgo } from "@/hooks/operaciones/useOperacionesData";
 
 // ─── Risk indicator chips ────────────────────────────────
@@ -109,7 +110,7 @@ export function RiskDetailTable({ cargas }: { cargas: CargaRiesgo[] }) {
               onClick={() => navigate(`/embarques/${c.id}`)}
             >
               <TableCell className="font-mono text-xs">{c.expediente}</TableCell>
-              <TableCell className="text-xs">{c.cliente_nombre}</TableCell>
+              <TableCell className="text-xs" title={c.cliente_nombre}>{toTitleCase(c.cliente_nombre)}</TableCell>
               <TableCell className="text-xs">{c.estadoReal}</TableCell>
               <TableCell className="text-center text-xs font-medium">{c.diasEnPuerto}</TableCell>
               <TableCell><RiskBadge nivel={c.nivelRiesgo} /></TableCell>
