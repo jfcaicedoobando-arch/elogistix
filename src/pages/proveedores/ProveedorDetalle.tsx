@@ -1,5 +1,8 @@
 import { Link } from "react-router-dom";
-import { ArrowLeft, Truck, Pencil, Trash2, FileX, PackageX } from "lucide-react";
+import { ArrowLeft, Truck, Pencil, Trash2, FileX, PackageX, MoreHorizontal } from "lucide-react";
+import {
+  DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -75,15 +78,28 @@ export default function ProveedorDetalle() {
           </div>
         </div>
         {canEdit && (
-          <div className="flex gap-2">
-            {isAdmin && (
-              <Button variant="destructive" onClick={() => setDeleteOpen(true)} disabled={isDeleting}>
-                <Trash2 className="mr-2 h-4 w-4" /> Eliminar
-              </Button>
-            )}
-            <Button variant="outline" onClick={() => setEditOpen(true)}>
+          <div className="flex gap-2 items-center">
+            <Button size="sm" onClick={() => setEditOpen(true)}>
               <Pencil className="mr-2 h-4 w-4" /> Editar
             </Button>
+            {isAdmin && (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" size="sm" aria-label={`Más acciones del proveedor ${nombreFmt}`}>
+                    <MoreHorizontal className="h-4 w-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-48">
+                  <DropdownMenuItem
+                    onClick={() => setDeleteOpen(true)}
+                    disabled={isDeleting}
+                    className="text-destructive focus:text-destructive focus:bg-destructive/10"
+                  >
+                    <Trash2 className="mr-2 h-4 w-4" /> Eliminar
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            )}
           </div>
         )}
       </div>

@@ -2,6 +2,13 @@ import type { ChangelogEntry } from "../../../changelogData";
 
 export const chunk0: ChangelogEntry[] = [
   {
+    version: "8.99.27",
+    date: "2026-04-27",
+    type: "minor",
+    title: "Auditoría UI/UX Fase B: Jerarquía de acciones en headers de detalle",
+    description: "Segunda fase de la auditoría UI/UX integral, enfocada en la jerarquía de acciones de los headers de detalle. Antes, el header del detalle de embarque exponía hasta 6 botones del mismo peso visual ('Avanzar a X', 'Editar', 'Duplicar', 'Compartir', 'Imprimir', 'Eliminar'), todos lado a lado, con el botón rojo de Eliminar a un click de distancia del workflow primario — un riesgo serio de error operativo. (1) EmbarqueDetalleHeader · patrón 1 primaria + secundarias en menú — la acción primaria es el avance de estado del workflow ('Avanzar a En Tránsito') y, cuando ya no hay siguiente estado, Editar pasa a primaria; Compartir queda como secundaria visible (alta frecuencia, no destructiva); Editar (en wizard avance), Duplicar e Imprimir se agrupan en un menú '…' (DropdownMenu); Eliminar vive en el mismo menú pero separado por DropdownMenuSeparator y con clase text-destructive focus:bg-destructive/10, alineado al patrón de menús destructivos de shadcn/ui. Resultado: la zona del header pasa de 6 botones a 3 elementos visibles (1 primario + Compartir + '…'), reduciendo la carga visual ~50% y eliminando la proximidad peligrosa entre 'Avanzar' y 'Eliminar'. (2) ProveedorDetalle · misma normalización — antes mostraba 'Eliminar' (destructive rojo) a la izquierda de 'Editar' (outline), invirtiendo la jerarquía esperada; ahora Editar es la acción primaria visible y Eliminar se mueve a un menú '…' con estilo destructivo, visible solo para isAdmin. (3) Patrón documentado para reusar — esta fase establece el estándar de header de detalle del sistema: 1 botón primary (workflow / acción más importante) + 0-2 secundarias visibles (alta frecuencia, no destructivas) + DropdownMenu '…' con resto, con destructivas siempre debajo de un Separator. ClienteDetalle y CotizacionDetalle se evalúan pero no requieren cambios (no exponen destructivas en el header). Resultado: 2 archivos modificados (EmbarqueDetalleHeader.tsx, ProveedorDetalle.tsx); tsc --noEmit pasa limpio.",
+  },
+  {
     version: "8.99.26",
     date: "2026-04-27",
     type: "minor",
