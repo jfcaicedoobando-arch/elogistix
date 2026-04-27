@@ -163,7 +163,7 @@ function DataTableInner<T>({
                 onMouseEnter={onRowMouseEnter ? () => onRowMouseEnter(item) : undefined}
               >
                 {columns.map((col) => (
-                  <TableCell key={col.key} className={cn(col.width, col.className, col.sticky && "sticky left-0 z-[5] bg-background")}>
+                  <TableCell key={col.key} className={cn(col.width, col.className, col.sticky && "sticky left-0 z-[5] bg-background", col.stickyRight && "sticky right-0 z-[5] bg-background shadow-[-4px_0_4px_-2px_hsl(var(--border)/0.3)]")}>
                     {col.render(item)}
                   </TableCell>
                 ))}
