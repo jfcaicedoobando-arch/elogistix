@@ -58,8 +58,12 @@ export function TabProformasPendientes() {
       {c.isLoading ? (
         <Card><CardContent className="p-6 text-center text-muted-foreground">Cargando proformas pendientes...</CardContent></Card>
       ) : c.grupos.length === 0 ? (
-        <Card><CardContent className="p-10 text-center text-muted-foreground">
-          No hay proformas pendientes de revisión
+        <Card><CardContent className="p-0">
+          <EmptyState
+            icon={CheckCircle2}
+            title="Todo al día"
+            description="No hay proformas pendientes de revisión."
+          />
         </CardContent></Card>
       ) : (
         <div className="space-y-3">
