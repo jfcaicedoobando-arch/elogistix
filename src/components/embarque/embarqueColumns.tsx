@@ -78,11 +78,11 @@ export function buildEmbarqueColumns({
     { key: "etd", header: "ETD", width: "w-[90px]", className: "text-xs", sortable: true, sortValue: (e) => e.etd || "", render: (e) => formatDate(e.etd || "") },
     { key: "eta", header: "ETA", width: "w-[90px]", className: "text-xs", sortable: true, sortValue: (e) => e.eta || "", render: (e) => formatDate(e.eta || "") },
     {
-      key: "estado", header: "Estado", width: "w-[110px]", sortable: true,
+      key: "estado", header: "Estado", width: "w-[120px]", sortable: true,
       sortValue: (e) => calcularEstadoEmbarque(e.modo, e.tipo, e.etd, e.eta, e.estado),
       render: (e) => {
         const estado = calcularEstadoEmbarque(e.modo, e.tipo, e.etd, e.eta, e.estado);
-        return <Badge variant="secondary" className={`text-xs ${getEstadoColor(estado)}`}>{estado}</Badge>;
+        return <Badge variant="secondary" className={`text-xs whitespace-nowrap ${getEstadoColor(estado)}`}>{estado}</Badge>;
       },
     },
     {
