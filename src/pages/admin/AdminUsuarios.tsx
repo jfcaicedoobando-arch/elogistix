@@ -7,6 +7,7 @@ import { useToast } from "@/hooks/use-toast";
 import { getErrorMessage } from "@/lib/errors";
 import NuevoUsuarioDialog from "@/components/usuario/NuevoUsuarioDialog";
 import DoubleConfirmDeleteDialog from "@/components/shared/DoubleConfirmDeleteDialog";
+import { PageHeader } from "@/components/shared/PageHeader";
 import { useAdminGlobalUsers, type GlobalUserRow } from "@/hooks/admin/useAdminData";
 import { useDeleteUser } from "@/hooks/usuario/useUsuarioMutations";
 import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
