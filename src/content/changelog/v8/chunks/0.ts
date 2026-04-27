@@ -2,6 +2,13 @@ import type { ChangelogEntry } from "../../../changelogData";
 
 export const chunk0: ChangelogEntry[] = [
   {
+    version: "8.99.7",
+    date: "2026-04-27",
+    type: "patch",
+    title: "Fix: cotizaciones con embarque ahora pasan a 'En operación' automáticamente",
+    description: "Corregido un bug donde COT-2026-0007 (y cualquier cotización Aceptada con embarque vinculado) seguía mostrándose como 'Aceptada' en lugar de 'En operación'. Causa raíz: el trigger trg_sync_cotizacion_embarque_link no estaba instalado sobre la tabla embarques, por lo que la promoción automática de estado nunca corría al crear el embarque. Cambios: (1) Backfill SQL: toda cotización con estado 'Aceptada' y embarque_id no nulo se actualizó a 'En operación' (afectó a COT-2026-0007). (2) Reinstalación del trigger AFTER INSERT OR UPDATE OF cotizacion_id sobre public.embarques, que reutiliza la función public.sync_cotizacion_embarque_link() ya existente con la lógica correcta (sincroniza embarque_id y promueve Aceptada → En operación en una sola operación atómica). Resultado: a partir de ahora cualquier embarque creado o vinculado a una cotización aceptada moverá su estado automáticamente sin acción del operador.",
+  },
+  {
     version: "8.99.6",
     date: "2026-04-27",
     type: "minor",
