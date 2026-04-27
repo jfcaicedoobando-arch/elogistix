@@ -36,10 +36,10 @@ export function StepDocumentos({ documentos, onFileChange, errors = {} }: Props)
 
   return (
     <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center justify-between">
+      <CardHeader className="pb-3">
+        <CardTitle className="flex items-center justify-between text-base font-semibold">
           <span>Documentos Requeridos</span>
-          <span className="text-sm font-normal text-muted-foreground">
+          <span className="text-xs font-normal text-muted-foreground">
             {adjuntados} de {total} adjuntos
           </span>
         </CardTitle>
