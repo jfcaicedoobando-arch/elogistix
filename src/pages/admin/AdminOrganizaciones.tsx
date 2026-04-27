@@ -102,7 +102,7 @@ export default function AdminOrganizaciones() {
       </div>
 
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent>
+        <DialogContent className={dialogSize.md}>
           <DialogHeader>
             <DialogTitle>Nueva Organización</DialogTitle>
           </DialogHeader>

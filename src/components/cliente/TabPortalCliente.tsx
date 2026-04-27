@@ -111,7 +111,7 @@ export default function TabPortalCliente({ clienteId, organizationId, canEdit }:
       </Card>
 
       <Dialog open={inviteOpen} onOpenChange={setInviteOpen}>
-        <DialogContent>
+        <DialogContent className={dialogSize.md}>
           <DialogHeader>
             <DialogTitle>Invitar Cliente al Portal</DialogTitle>
           </DialogHeader>
