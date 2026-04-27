@@ -66,8 +66,8 @@ export default function TablaContactos({ contactos, isLoading, canEdit, onAdd, o
                 <TableRow key={contacto.id}>
                   <TableCell className="font-medium">{toTitleCase(contacto.nombre)}</TableCell>
                   <TableCell><Badge variant={tipoBadgeVariant(contacto.tipo)}>{contacto.tipo}</Badge></TableCell>
-                  <TableCell className="text-xs">{contacto.pais}, {contacto.ciudad}</TableCell>
-                  <TableCell className="text-xs">{contacto.contacto}</TableCell>
+                  <TableCell className="text-xs">{correctSpanishPlace(contacto.pais)}, {correctSpanishPlace(contacto.ciudad)}</TableCell>
+                  <TableCell className="text-xs">{toTitleCase(contacto.contacto)}</TableCell>
                   <TableCell className="text-xs">{contacto.email}</TableCell>
                   <TableCell>
                     {canEdit && (
