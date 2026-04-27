@@ -4,6 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Building2, Plus } from "lucide-react";
 import { DataTable, type DataTableColumn } from "@/components/shared/DataTable";
+import { PageHeader } from "@/components/shared/PageHeader";
 import { useToast } from "@/hooks/use-toast";
 import {
   Dialog,
