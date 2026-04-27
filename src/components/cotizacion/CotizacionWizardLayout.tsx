@@ -67,7 +67,7 @@ export default function CotizacionWizardLayout({
         {/* Header fijo */}
         <div className="flex-none border-b bg-background p-4 space-y-3">
           <div className="flex items-center gap-3">
-            <Button variant="ghost" size="icon" onClick={onBack}>
+            <Button variant="ghost" size="icon" onClick={onBack} aria-label="Volver">
               <ArrowLeft className="h-4 w-4" />
             </Button>
             <div>

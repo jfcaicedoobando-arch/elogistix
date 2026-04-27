@@ -17,7 +17,7 @@ export function OrgHeader({ nombre, rfc, plan, activo, toggleActivoPending, onTo
   const navigate = useNavigate();
   return (
     <div className="flex items-center gap-3">
-      <Button variant="ghost" size="icon" onClick={() => navigate("/admin/organizaciones")}>
+      <Button variant="ghost" size="icon" onClick={() => navigate("/admin/organizaciones")} aria-label="Volver a organizaciones">
         <ArrowLeft className="h-5 w-5" />
       </Button>
       <Building2 className="h-6 w-6 text-primary" />
