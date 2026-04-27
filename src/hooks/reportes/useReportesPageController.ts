@@ -3,6 +3,7 @@ import { format, startOfMonth, endOfMonth } from "date-fns";
 
 import { exportToCsv } from "@/generators/exportCsv";
 import { useRentabilidadClientes } from "@/hooks/cliente/useRentabilidadClientes";
+import { toTitleCase } from "@/lib/formatters";
 import type { SortField } from "@/components/reportes/ReportesTablaClientes";
 
 /**
