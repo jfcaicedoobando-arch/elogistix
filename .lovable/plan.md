@@ -1,76 +1,48 @@
-## Objetivo
+## Diagnóstico
 
-Renombrar el estado `Embarcada` → `En operación` en cotizaciones para reflejar con precisión que la cotización fue aceptada Y ya tiene embarque vinculado. La transición de `Aceptada` → `En operación` será automática vía trigger cuando se cree el embarque desde la cotización.
-
-## Estado actual
-
-- Enum `estado_cotizacion` actual: `Borrador, Enviada, Confirmada, Rechazada, Vencida, Aceptada, Embarcada`
-- 4 cotizaciones productivas en estado `Embarcada` que se migrarán
-- El trigger `trg_sync_cotizacion_embarque_link` ya pobla `cotizaciones.embarque_id` automáticamente al crear un embarque, pero **no cambia el estado**
-
-## Cambios
-
-### 1. Base de datos (migración SQL)
-
-Postgres no permite renombrar valores de enum directamente sin perder integridad. Patrón seguro:
+COT-2026-0007 sí tiene embarque vinculado:
 
 ```text
-a) ALTER TYPE estado_cotizacion ADD VALUE 'En operación';
-   (commit intermedio para que el nuevo valor sea usable)
-
-b) UPDATE cotizaciones SET estado = 'En operación' WHERE estado = 'Embarcada';
-
-c) Recrear el enum sin 'Embarcada':
-   - Crear estado_cotizacion_new sin 'Embarcada'
-   - ALTER TABLE cotizaciones ALTER COLUMN estado TYPE estado_cotizacion_new USING estado::text::estado_cotizacion_new
-   - DROP TYPE estado_cotizacion; rename estado_cotizacion_new → estado_cotizacion
-   - Restaurar default 'Borrador'
+Cotización: COT-2026-0007
+Estado actual: Aceptada
+Embarque vinculado: ELGEN00054
+embarque_id: 0808f1c7-1324-467d-9bd3-ae53c09e2888
 ```
 
-### 2. Trigger automático de transición
+Encontré dos puntos importantes:
 
-Modificar (o complementar) `trg_sync_cotizacion_embarque_link` para que, además de poblar `embarque_id`, ejecute:
+1. Solo hay 1 cotización con `embarque_id` y estado `Aceptada`: COT-2026-0007.
+2. La función que promueve `Aceptada → En operación` ya existe, pero el trigger `trg_sync_cotizacion_embarque_link` no está instalado actualmente en la tabla `embarques`. Por eso la automatización no corrió para este caso.
 
-```sql
-UPDATE cotizaciones
-SET estado = 'En operación'
-WHERE id = NEW.cotizacion_id
-  AND estado = 'Aceptada';
-```
+## Plan de corrección
 
-Solo se promueve desde `Aceptada` (no desde `Borrador`, `Rechazada`, etc.) para evitar transiciones inválidas.
+1. **Backfill inmediato de datos**
+   - Actualizar COT-2026-0007 de `Aceptada` a `En operación` porque ya tiene embarque vinculado.
+   - Hacerlo de forma general para cualquier cotización que esté en `Aceptada` y ya tenga `embarque_id`, aunque hoy solo afecta a COT-2026-0007.
 
-### 3. RLS policy
+2. **Reinstalar el trigger de sincronización**
+   - Crear nuevamente `trg_sync_cotizacion_embarque_link` sobre `public.embarques`.
+   - Mantener la función existente `public.sync_cotizacion_embarque_link()` que ya contiene la lógica correcta:
+     - sincroniza `cotizaciones.embarque_id`
+     - cambia `estado` a `En operación` cuando la cotización estaba `Aceptada`
 
-Actualizar `Cliente read own cotizaciones` para reemplazar `'Embarcada'` por `'En operación'` en el array de estados visibles del portal.
+3. **Asegurar casos futuros**
+   - El trigger quedará activo para `AFTER INSERT OR UPDATE OF cotizacion_id` en `embarques`.
+   - Así, cuando se cree o vincule un embarque desde una cotización aceptada, el estado se actualizará automáticamente.
 
-### 4. Código frontend (reemplazos string `"Embarcada"` → `"En operación"`)
+4. **Revisar el selector de cotizaciones aceptadas**
+   - Validar el flujo de creación de embarques para que siga mostrando únicamente cotizaciones realmente pendientes de operar (`Aceptada` sin embarque), evitando que una cotización ya en operación se pueda elegir otra vez accidentalmente.
 
-Archivos afectados:
-- `src/lib/ui/estadoConfig.ts` — badge color índigo
-- `src/services/portal/queries.ts` — array `PORTAL_COTIZACION_ESTADOS_VISIBLES`
-- `src/hooks/cotizacion/useCotizacionesPageController.ts` — filtro y lógica de "tiene embarque"
-- `src/hooks/embarque/useEmbarqueSubmitOrchestrator.ts` — al guardar embarque
-- `src/services/cotizacion/conversiones/embarques.ts` — al convertir cotización
-- `src/components/cotizacion/CotizacionDetalleSecciones.tsx` — render condicional
-- `src/components/portal/cotizacion/PortalCotizacionEstadoBanner.tsx` — comentario JSDoc
-- `src/integrations/supabase/types.ts` — se regenera automáticamente
+5. **Actualizar changelog**
+   - Agregar entrada nueva al inicio de `src/content/changelog/v8/chunks/0.ts` documentando el parche de sincronización.
 
-> Los archivos del changelog histórico (`src/content/changelog/...`) **no se modifican** — son registros históricos.
+## Resultado esperado
 
-### 5. Changelog
-
-Nueva entrada **v8.99.6** explicando: renombramos `Embarcada` → `En operación` para reflejar mejor el flujo (Enviada → Aceptada → En operación), trigger ahora promueve estado automáticamente, datos existentes migrados.
-
-## Resultado
+Después del cambio:
 
 ```text
-Flujo de cotización:
-Borrador → Enviada → Aceptada ──(crea embarque)──► En operación
-                  ↘ Rechazada
-                  ↘ Vencida
+COT-2026-0007 → En operación
+Portal / listado → mostrará el badge de En operación
+Detalle de cotización → conservará el acceso al embarque ELGEN00054
+Nuevas cotizaciones aceptadas → pasarán automáticamente a En operación al generar/vincular embarque
 ```
-
-- El cliente ve "En operación" tanto en el badge del listado como en el banner del detalle (lenguaje consistente).
-- Los operadores pueden filtrar fácilmente "qué está aceptado pero pendiente de operar" vs "qué ya está en operación".
-- Cero acción manual: el estado avanza solo al crear el embarque.
