@@ -27,15 +27,15 @@ export function useTabProformasController() {
 
   const columns: DataTableColumn<ProformaConFactura>[] = useMemo(() => [
     {
-      key: "numero", header: "# Proforma", width: "w-[140px]", className: "font-medium",
+      key: "numero", header: "# Proforma", width: "w-[140px]", className: "font-medium whitespace-nowrap",
       sticky: true, sortable: true, sortValue: (p) => p.numero, render: (p) => p.numero,
     },
     {
-      key: "expediente", header: "Expediente", width: "w-[120px]",
+      key: "expediente", header: "Expediente", width: "w-[120px]", className: "whitespace-nowrap",
       sortable: true, sortValue: (p) => p.expediente, render: (p) => p.expediente,
     },
     {
-      key: "bl_master", header: "BL Master", width: "w-[140px]", className: "text-xs font-mono",
+      key: "bl_master", header: "BL Master", width: "w-[140px]", className: "text-xs font-mono whitespace-nowrap",
       sortable: true, sortValue: (p) => p.bl_master ?? "",
       render: (p) => p.bl_master || <span className="text-muted-foreground">—</span>,
     },
