@@ -2,6 +2,13 @@ import type { ChangelogEntry } from "../../../changelogData";
 
 export const chunk0: ChangelogEntry[] = [
   {
+    version: "8.99.1",
+    date: "2026-04-27",
+    type: "patch",
+    title: "Pulido arquitectónico: sub-agrupación de hooks/cotizacion y limpieza de shims",
+    description: "Auditoría de seguimiento tras v8.99.0. Se identificaron 5 oportunidades de mejora pero solo 2 aportaban valor real: las otras 3 (folderizar 7 servicios de archivo único, extraer estado del wizard de embarque y extraer navegación del wizard de cotización) se descartaron por ser ceremonia sin beneficio (los servicios sueltos son archivos únicos sin módulos hermanos, useNuevoEmbarqueWizard ya delega a 4 sub-hooks especializados, y la navegación del wizard de cotización ya vive en useCotizacionWizardForm, no en el layout). Cambios aplicados: (1) Sub-agrupación de src/hooks/cotizacion/: se crearon las sub-carpetas mutations/ (con useCotizacionMutations, useDuplicarCotizacion, usePortalCotizacionMutations) y wizard/ (con useCotizacionWizardForm, useCotizacionWizardSteps, useConceptosForm) replicando el patrón ya usado en hooks/embarque/. El barrel index.ts mantiene la API pública intacta. (2) Eliminación del shim useEmbarqueMutations.ts (6 LOC de re-export) tras migrar los dos consumidores internos restantes al nuevo barrel mutations/. Build TypeScript verde y 205/205 pruebas pasando.",
+  },
+  {
     version: "8.99.0",
     date: "2026-04-26",
     type: "patch",
