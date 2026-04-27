@@ -30,12 +30,12 @@ export default function Cotizaciones() {
 
   const columns: DataTableColumn<CotizacionListItem>[] = useMemo(() => {
     const cols: DataTableColumn<CotizacionListItem>[] = [
-      { key: "folio", header: "Folio", width: "w-[100px]", className: "font-medium", sticky: true, sortable: true, sortValue: (r) => r.folio, render: (r) => r.folio },
+      { key: "folio", header: "Folio", width: "w-[120px]", className: "font-medium whitespace-nowrap", sticky: true, sortable: true, sortValue: (r) => r.folio, render: (r) => r.folio },
       { key: "cliente", header: "Cliente", width: "min-w-[160px]", className: "max-w-[180px] truncate", sortable: true, sortValue: (r) => r.cliente_nombre, render: (r) => r.cliente_nombre },
-      { key: "modo", header: "Modo", width: "w-[80px]", className: "text-xs", render: (r) => r.modo },
+      { key: "modo", header: "Modo", width: "w-[80px]", className: "text-xs whitespace-nowrap", render: (r) => r.modo },
       { key: "ruta", header: "Origen → Destino", width: "min-w-[160px]", className: "text-xs", render: (r) => `${r.origen || "-"} → ${r.destino || "-"}` },
-      { key: "subtotal", header: "Subtotal", width: "w-[110px]", className: "text-right text-xs", headerClassName: "text-right", sortable: true, sortValue: (r) => r.subtotal, render: (r) => formatCurrency(r.subtotal, r.moneda) },
-      { key: "estado", header: "Estado", width: "w-[100px]", sortable: true, sortValue: (r) => r.estado, render: (r) => <Badge variant="secondary" className={`text-xs ${getEstadoColor(r.estado)}`}>{r.estado}</Badge> },
+      { key: "subtotal", header: "Subtotal", width: "w-[110px]", className: "text-right text-xs whitespace-nowrap", headerClassName: "text-right", sortable: true, sortValue: (r) => r.subtotal, render: (r) => formatCurrency(r.subtotal, r.moneda) },
+      { key: "estado", header: "Estado", width: "w-[110px]", sortable: true, sortValue: (r) => r.estado, render: (r) => <Badge variant="secondary" className={`text-xs whitespace-nowrap ${getEstadoColor(r.estado)}`}>{r.estado}</Badge> },
       { key: "vigencia", header: "Vigencia", width: "w-[100px]", className: "text-xs", render: (r) => r.fecha_vigencia ? formatDate(r.fecha_vigencia) : "-" },
       { key: "fecha", header: "Fecha", width: "w-[130px]", className: "text-xs", sortable: true, sortValue: (r) => r.created_at, render: (r) => new Date(r.created_at).toLocaleString('es-MX', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }) },
     ];
