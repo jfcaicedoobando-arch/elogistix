@@ -2,6 +2,13 @@ import type { ChangelogEntry } from "../../../changelogData";
 
 export const chunk0: ChangelogEntry[] = [
   {
+    version: "8.99.21",
+    date: "2026-04-27",
+    type: "patch",
+    title: "Auditoría visual Fase 10: Detalle de Proveedor (fix design system) y Contactos del cliente",
+    description: "Décima fase de pulido sobre dos vistas que habían quedado fuera de barridos previos. (1) Detalle de Proveedor · BUG DE DESIGN SYSTEM — las cards 'Pagado' y 'Pendiente' usaban colores Tailwind crudos (text-green-600 y text-orange-600) en lugar de los tokens semánticos del proyecto, rompiendo el contraste en dark mode y la consistencia con el resto de la app; ahora usan text-success y text-warning correctamente vinculados a las variables HSL del tema. (2) Detalle de Proveedor · normalización — el h1 con el nombre del proveedor ('COSCO SHIPPING LINES MEXICO') no pasaba por toTitleCase, mostrando MAYÚSCULAS crudas mientras la lista de proveedores ya las normalizaba (Fase 7); el RFC se fuerza a mayúsculas (estándar SAT) y se renderiza en font-mono; el contacto pasa por toTitleCase y el teléfono por formatPhoneMx. La pluralización mostraba '1 operaciones' (incorrecto); ahora cambia entre 'operación' y 'operaciones' según el conteo. (3) Detalle de Proveedor · tabla de operaciones — Cliente y Concepto pasan por toTitleCase con tooltip; la columna Monto recibe text-right + tabular-nums para alineación numérica correcta; la fecha de Vencimiento usaba string ISO crudo, ahora pasa por formatDate. Los KPIs de las cards reciben tabular-nums. (4) Detalle de Proveedor · empty states — 'Proveedor no encontrado' (texto plano + botón) y 'Sin operaciones registradas' (texto plano centrado) se reemplazan por el componente compartido EmptyState con iconos PackageX y FileX respectivamente, alineándose al estándar establecido en fases 5-9. (5) Tabla de Contactos del cliente (TablaContactos.tsx) — el empty state manual ('No hay contactos registrados...') se reemplaza por EmptyState con icono UserX y acción 'Agregar Contacto' (cuando canEdit). La columna Contacto (nombre del responsable) pasa por toTitleCase; las columnas País y Ciudad pasan por correctSpanishPlace para recuperar acentos en catálogos legacy ('Mexico'→'México', 'Queretaro'→'Querétaro').",
+  },
+  {
     version: "8.99.20",
     date: "2026-04-27",
     type: "patch",
