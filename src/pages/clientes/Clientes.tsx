@@ -11,14 +11,17 @@ import PaginationControls from "@/components/shared/PaginationControls";
 import { useDebounce } from "@/hooks/shared/useDebounce";
 import { DataTable, type DataTableColumn } from "@/components/shared/DataTable";
 import { useListPageState } from "@/hooks/shared/useListPageState";
-import { toTitleCase, formatPhoneMx } from "@/lib/formatters";
+import { toTitleCase, formatPhoneMx, correctSpanishPlace } from "@/lib/formatters";
 
 type ClienteRow = { id: string; nombre: string; rfc: string; ciudad: string; estado: string; contacto: string; telefono: string };
 
 const columns: DataTableColumn<ClienteRow>[] = [
-  { key: "nombre", header: "Nombre", width: "min-w-[180px]", className: "font-medium max-w-[200px] truncate", sortable: true, sortValue: (c) => c.nombre, render: (c) => toTitleCase(c.nombre) },
+  { key: "nombre", header: "Nombre", width: "min-w-[180px]", className: "font-medium max-w-[200px] truncate", sortable: true, sortValue: (c) => c.nombre, render: (c) => {
+    const nombre = toTitleCase(c.nombre);
+    return <span title={nombre}>{nombre}</span>;
+  } },
   { key: "rfc", header: "RFC", width: "w-[130px]", className: "text-xs font-mono", sortable: true, sortValue: (c) => c.rfc, render: (c) => (c.rfc || "").toUpperCase() },
-  { key: "ciudad", header: "Ciudad", width: "w-[150px]", className: "text-xs", sortable: true, sortValue: (c) => c.ciudad, render: (c) => `${toTitleCase(c.ciudad)}, ${toTitleCase(c.estado)}` },
+  { key: "ciudad", header: "Ciudad", width: "w-[150px]", className: "text-xs", sortable: true, sortValue: (c) => c.ciudad, render: (c) => `${correctSpanishPlace(c.ciudad)}, ${correctSpanishPlace(c.estado)}` },
   { key: "contacto", header: "Contacto", width: "w-[140px]", className: "text-xs", render: (c) => toTitleCase(c.contacto) },
   { key: "telefono", header: "Teléfono", width: "w-[130px]", className: "text-xs whitespace-nowrap", render: (c) => formatPhoneMx(c.telefono) },
 ];
@@ -44,7 +47,7 @@ export default function Clientes() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <div className="flex items-center gap-3">
             <Users className="h-6 w-6 text-accent" />
@@ -52,7 +55,11 @@ export default function Clientes() {
           </div>
           <p className="text-sm text-muted-foreground mt-1">{totalCount} clientes registrados</p>
         </div>
-        {canEdit && <Button onClick={() => setDialogOpen(true)}><Plus className="h-4 w-4 mr-1" />Nuevo Cliente</Button>}
+        {canEdit && (
+          <Button onClick={() => setDialogOpen(true)} className="w-full sm:w-auto">
+            <Plus className="h-4 w-4 mr-1" />Nuevo Cliente
+          </Button>
+        )}
       </div>
 
       <Card>

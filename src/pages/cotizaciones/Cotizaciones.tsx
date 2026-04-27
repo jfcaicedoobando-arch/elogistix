@@ -89,17 +89,17 @@ export default function Cotizaciones() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-2xl font-bold">Cotizaciones</h1>
           <p className="text-sm text-muted-foreground">{c.filtered.length} cotizaciones encontradas</p>
         </div>
-        <div className="flex gap-2">
-          <Button variant="outline" onClick={c.exportar}>
+        <div className="flex flex-col gap-2 sm:flex-row sm:gap-2">
+          <Button variant="outline" onClick={c.exportar} className="w-full sm:w-auto">
             <Download className="h-4 w-4 mr-2" /> Exportar CSV
           </Button>
           {c.canEdit && (
-            <Button onClick={c.irANueva}>
+            <Button onClick={c.irANueva} className="w-full sm:w-auto">
               <Plus className="h-4 w-4 mr-2" /> Nueva Cotización
             </Button>
           )}
