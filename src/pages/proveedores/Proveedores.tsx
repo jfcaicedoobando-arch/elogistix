@@ -111,20 +111,18 @@ export default function Proveedores() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <div className="flex items-center gap-3">
-            <Truck className="h-6 w-6 text-accent" />
-            <h1 className="text-2xl font-bold">Proveedores</h1>
-          </div>
-          <p className="text-sm text-muted-foreground mt-1">Gestión de proveedores por categoría</p>
-        </div>
-        {canEdit && (
-          <Button onClick={() => setNuevoOpen(true)}>
-            <Plus className="mr-2 h-4 w-4" /> Nuevo Proveedor
-          </Button>
-        )}
-      </div>
+      <PageHeader
+        icon={<Truck className="h-6 w-6 text-accent" />}
+        title="Proveedores"
+        description="Gestión de proveedores por categoría"
+        actions={
+          canEdit ? (
+            <Button onClick={() => setNuevoOpen(true)}>
+              <Plus className="mr-2 h-4 w-4" /> Nuevo Proveedor
+            </Button>
+          ) : null
+        }
+      />
 
       <Card>
         <CardContent className="p-4">
