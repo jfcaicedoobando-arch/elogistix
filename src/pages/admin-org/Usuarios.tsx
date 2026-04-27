@@ -116,19 +116,17 @@ export default function Usuarios() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <ShieldCheck className="h-6 w-6 text-primary" />
-          <div>
-            <h1 className="text-2xl font-bold tracking-tight">Gestión de Usuarios</h1>
-            <p className="text-sm text-muted-foreground">Administra roles y permisos de los usuarios del sistema.</p>
-          </div>
-        </div>
-        <Button onClick={() => setDialogOpen(true)}>
-          <UserPlus className="h-4 w-4" />
-          Nuevo Usuario
-        </Button>
-      </div>
+      <PageHeader
+        icon={<ShieldCheck className="h-6 w-6 text-primary" />}
+        title="Gestión de Usuarios"
+        description="Administra roles y permisos de los usuarios del sistema."
+        actions={
+          <Button onClick={() => setDialogOpen(true)}>
+            <UserPlus className="h-4 w-4" />
+            Nuevo Usuario
+          </Button>
+        }
+      />
 
       <NuevoUsuarioDialog open={dialogOpen} onOpenChange={setDialogOpen} onCreated={() => { /* invalidación automática vía useCreateUser */ }} />
 
