@@ -5,9 +5,10 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { usePortalCotizaciones, usePortalClientUsers } from "@/hooks/portal/usePortalData";
-import { formatCurrency } from "@/lib/formatters";
+import { formatCurrency, formatDate } from "@/lib/formatters";
 import { getEstadoColor } from "@/lib/ui/uiMappings";
 import { Search, FileText, Filter, Ship } from "lucide-react";
+import EmptyState from "@/components/empty/EmptyState";
 import { useState, useMemo } from "react";
 
 export default function PortalCotizaciones() {
@@ -72,11 +73,16 @@ export default function PortalCotizaciones() {
       </div>
 
       {filtered.length === 0 ? (
-        <div className="text-center py-16">
-          <FileText className="h-10 w-10 mx-auto text-muted-foreground/30 mb-3" />
-          <p className="text-muted-foreground font-medium">No se encontraron cotizaciones</p>
-          <p className="text-xs text-muted-foreground mt-1">Ajusta los filtros o busca con otro término.</p>
-        </div>
+        <EmptyState
+          icon={FileText}
+          title="No se encontraron cotizaciones"
+          description="Ajusta los filtros o busca con otro término."
+          primaryAction={search || filtroEstado !== "todos" ? {
+            label: "Limpiar filtros",
+            variant: "outline",
+            onClick: () => { setSearch(""); setFiltroEstado("todos"); },
+          } : undefined}
+        />
       ) : (
         <div className="grid gap-3">
           {filtered.map((c) => {
@@ -95,7 +101,7 @@ export default function PortalCotizaciones() {
                       {c.modo} • {c.tipo} • {c.origen || "—"} → {c.destino || "—"}
                     </p>
                     <p className="text-[10px] text-muted-foreground mt-0.5">
-                      Vigencia: {c.fecha_vigencia || "—"}
+                      Vigencia: {c.fecha_vigencia ? formatDate(c.fecha_vigencia) : "—"}
                     </p>
                     {tieneEmbarque && (
                       <button

@@ -4,9 +4,10 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { usePortalFacturas, usePortalClientUsers } from "@/hooks/portal/usePortalData";
-import { formatCurrency } from "@/lib/formatters";
+import { formatCurrency, formatDate } from "@/lib/formatters";
 import { getEstadoColor } from "@/lib/ui/uiMappings";
 import { Search, Receipt, Filter, AlertTriangle } from "lucide-react";
+import EmptyState from "@/components/empty/EmptyState";
 import { useState, useMemo } from "react";
 
 export default function PortalFacturas() {
@@ -69,11 +70,16 @@ export default function PortalFacturas() {
       </div>
 
       {filtered.length === 0 ? (
-        <div className="text-center py-16">
-          <Receipt className="h-10 w-10 mx-auto text-muted-foreground/30 mb-3" />
-          <p className="text-muted-foreground font-medium">No se encontraron facturas</p>
-          <p className="text-xs text-muted-foreground mt-1">Ajusta los filtros o busca con otro término.</p>
-        </div>
+        <EmptyState
+          icon={Receipt}
+          title="No se encontraron facturas"
+          description="Ajusta los filtros o busca con otro término."
+          primaryAction={search || filtroEstado !== "todos" ? {
+            label: "Limpiar filtros",
+            variant: "outline",
+            onClick: () => { setSearch(""); setFiltroEstado("todos"); },
+          } : undefined}
+        />
       ) : (
         <div className="grid gap-3">
           {facturas.length > 0 && filtered.map((f) => (
@@ -85,10 +91,10 @@ export default function PortalFacturas() {
                     {f.estado === "Vencida" && <AlertTriangle className="h-3.5 w-3.5 text-destructive" />}
                   </div>
                   <p className="text-xs text-muted-foreground truncate">
-                    Exp: {f.expediente} • Emisión: {f.fecha_emision}
+                    Exp: {f.expediente} • Emisión: {f.fecha_emision ? formatDate(f.fecha_emision) : "—"}
                   </p>
                   <p className="text-[10px] text-muted-foreground mt-0.5">
-                    Vence: {f.fecha_vencimiento}
+                    Vence: {f.fecha_vencimiento ? formatDate(f.fecha_vencimiento) : "—"}
                   </p>
                 </div>
                 <div className="text-right space-y-1.5 flex-shrink-0 ml-3 flex flex-col items-end">

@@ -8,6 +8,7 @@ import { getEstadoColor } from "@/lib/ui/uiMappings";
 import { calcularEstadoEmbarque } from "@/lib/domain/embarque";
 import { getOrigen, getDestino } from "@/lib/formatters";
 import EmbarqueCard from "@/components/portal/EmbarqueCard";
+import EmptyState from "@/components/empty/EmptyState";
 import { Search, Ship, Filter, Package, ChevronDown } from "lucide-react";
 import { usePortalEmbarquesController } from "@/hooks/portal/usePortalEmbarquesController";
 
@@ -77,11 +78,16 @@ export default function PortalEmbarques() {
       </div>
 
       {filtered.length === 0 ? (
-        <div className="text-center py-16">
-          <Ship className="h-10 w-10 mx-auto text-muted-foreground/30 mb-3" />
-          <p className="text-muted-foreground font-medium">No se encontraron embarques</p>
-          <p className="text-xs text-muted-foreground mt-1">Ajusta los filtros o busca con otro término.</p>
-        </div>
+        <EmptyState
+          icon={Ship}
+          title="No se encontraron embarques"
+          description="Ajusta los filtros o busca con otro término."
+          primaryAction={search || filtroEstado !== "todos" || filtroModo !== "todos" ? {
+            label: "Limpiar filtros",
+            variant: "outline",
+            onClick: () => { setSearch(""); setFiltroEstado("todos"); setFiltroModo("todos"); },
+          } : undefined}
+        />
       ) : (
         <div className="grid gap-3">
           {grouped.map(([expediente, items]) => {

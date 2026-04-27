@@ -2,6 +2,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, CheckCircle2, XCircle } from "lucide-react";
 import { getEstadoColor } from "@/lib/ui/uiMappings";
+import { toTitleCase } from "@/lib/formatters";
 
 interface PortalCotizacionHeaderProps {
   folio: string;
@@ -31,7 +32,7 @@ export default function PortalCotizacionHeader({
           <h1 className="text-2xl font-bold">{folio}</h1>
           <Badge className={getEstadoColor(estado)}>{estado}</Badge>
         </div>
-        <p className="text-sm text-muted-foreground">{clienteNombre}</p>
+        <p className="text-sm text-muted-foreground" title={clienteNombre}>{toTitleCase(clienteNombre)}</p>
       </div>
 
       {estado === "Enviada" && (
