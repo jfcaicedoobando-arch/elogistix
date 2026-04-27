@@ -2,6 +2,13 @@ import type { ChangelogEntry } from "../../../changelogData";
 
 export const chunk0: ChangelogEntry[] = [
   {
+    version: "8.99.37",
+    date: "2026-04-27",
+    type: "patch",
+    title: "Logo del sidebar más grande y estético",
+    description: "El logo de Libre Carga en el header del sidebar pasa de 32px (h-8) a 40px (h-10) en modo expandido y 36px (h-9) en modo colapsado, ganando presencia de marca sin alterar la altura del header (h-16, simétrico con el topbar). Acabado refinado: padding interno p-1 (más respiración del PNG), esquinas rounded-xl (más suaves) y shadow-card sutil (token de marca) para profundidad sobre el fondo navy del sidebar. El texto 'Libre Carga' sube de text-sm a text-base con tracking-tight y leading-tight para acompañar visualmente el logo más grande.",
+  },
+  {
     version: "8.99.36",
     date: "2026-04-27",
     type: "patch",

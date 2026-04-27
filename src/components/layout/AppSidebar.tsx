@@ -150,11 +150,14 @@ export function AppSidebar() {
           <img
             src={librecargaLogo}
             alt="Libre Carga Logo"
-            className="h-8 w-8 rounded-lg object-contain bg-white p-0.5 ring-1 ring-sidebar-border dark:ring-0 shrink-0"
+            className={cn(
+              "rounded-xl object-contain bg-white p-1 ring-1 ring-sidebar-border dark:ring-0 shadow-card shrink-0",
+              collapsed ? "h-9 w-9" : "h-10 w-10",
+            )}
           />
           {!collapsed && (
             <div className="flex flex-col min-w-0">
-              <span className="text-sm font-bold text-sidebar-foreground">
+              <span className="text-base font-bold tracking-tight text-sidebar-foreground leading-tight">
                 Libre Carga
               </span>
               <span className="text-xs text-sidebar-foreground/60 truncate">
