@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Save, Pencil } from "lucide-react";
 import { usePlanes, useUpdatePlan, type Plan } from "@/hooks/admin/usePlanes";
 import { DataTable, type DataTableColumn } from "@/components/shared/DataTable";
+import { formatCurrency, formatNumber } from "@/lib/formatters";
 
 export default function TabPlanes() {
   const { data: planes = [], isLoading } = usePlanes();
@@ -47,7 +48,7 @@ export default function TabPlanes() {
     {
       key: "max_usuarios",
       header: "Máx. Usuarios",
-      className: "text-right",
+      className: "text-right tabular-nums",
       render: (p) =>
         editingId === p.id ? (
           <Input
@@ -57,13 +58,13 @@ export default function TabPlanes() {
             onChange={(e) => setEditValues({ ...editValues, max_usuarios: Number(e.target.value) })}
           />
         ) : (
-          p.max_usuarios.toLocaleString("es-MX")
+          formatNumber(p.max_usuarios)
         ),
     },
     {
       key: "max_embarques",
       header: "Máx. Embarques/Mes",
-      className: "text-right",
+      className: "text-right tabular-nums",
       render: (p) =>
         editingId === p.id ? (
           <Input
@@ -73,13 +74,13 @@ export default function TabPlanes() {
             onChange={(e) => setEditValues({ ...editValues, max_embarques_mes: Number(e.target.value) })}
           />
         ) : (
-          p.max_embarques_mes.toLocaleString("es-MX")
+          formatNumber(p.max_embarques_mes)
         ),
     },
     {
       key: "almacenamiento",
-      header: "Almacenamiento (MB)",
-      className: "text-right",
+      header: "Almacenamiento",
+      className: "text-right tabular-nums",
       render: (p) =>
         editingId === p.id ? (
           <Input
@@ -89,13 +90,13 @@ export default function TabPlanes() {
             onChange={(e) => setEditValues({ ...editValues, almacenamiento_mb: Number(e.target.value) })}
           />
         ) : (
-          p.almacenamiento_mb.toLocaleString("es-MX")
+          formatNumber(p.almacenamiento_mb, { suffix: "MB" })
         ),
     },
     {
       key: "precio",
       header: "Precio/Mes",
-      className: "text-right",
+      className: "text-right tabular-nums",
       render: (p) =>
         editingId === p.id ? (
           <Input
@@ -105,7 +106,7 @@ export default function TabPlanes() {
             onChange={(e) => setEditValues({ ...editValues, precio_mensual: Number(e.target.value) })}
           />
         ) : (
-          `$${Number(p.precio_mensual).toLocaleString("es-MX")}`
+          formatCurrency(Number(p.precio_mensual), "MXN")
         ),
     },
     {

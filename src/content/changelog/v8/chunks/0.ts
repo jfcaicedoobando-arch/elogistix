@@ -2,6 +2,13 @@ import type { ChangelogEntry } from "../../../changelogData";
 
 export const chunk0: ChangelogEntry[] = [
   {
+    version: "8.99.23",
+    date: "2026-04-27",
+    type: "patch",
+    title: "Auditoría visual Fase 12: Centralización de formato de números y fechas",
+    description: "Décima segunda fase de auditoría — barrido sobre formateo manual de números/fechas que evadía los helpers centralizados de @/lib/formatters. (1) Nuevo helper formatNumber — agregado a src/lib/formatters/index.ts; recibe un número y opciones { decimals, suffix } para renderizar enteros y decimales con separadores de miles mexicanos ('1,234' en vez de '1234'), evitando llamadas dispersas a toLocaleString sin locale o con configuraciones inconsistentes. Devuelve '—' para null/undefined/NaN. (2) Admin · Tabla de Planes (TabPlanes.tsx) — el precio mensual se renderizaba con un '$' hardcoded ('$2,499') sin pasar por formatCurrency, generando ambigüedad USD/MXN; ahora usa formatCurrency con prefijo 'MXN' explícito. Las columnas Máx. Usuarios, Máx. Embarques/Mes, Almacenamiento y Precio reciben tabular-nums para alineación numérica correcta. La columna 'Almacenamiento (MB)' ahora usa el sufijo 'MB' renderizado como parte del valor (formatNumber con suffix), liberando el header para mostrar simplemente 'Almacenamiento'. (3) Detalle de Embarque · Tab Resumen — DetailRow de Peso usaba toLocaleString() sin locale (formato dependiente del navegador); Volumen mostraba el número crudo sin separadores ('1234.56' en vez de '1,234.56'); Piezas usaba .toString() sin formato. Los tres ahora pasan por formatNumber con sus respectivos sufijos ('kg', 'm³', sin sufijo). (4) Lista de Cotizaciones — la columna Fecha usaba new Date().toLocaleString('es-MX', {...}).replace(',', '') con 6 opciones inline, una expresión frágil que duplicaba la lógica del helper formatDate; ahora usa formatDate(r.created_at, 'dd/MM/yyyy HH:mm'), consistente con TabNotas y BitácoraActividad. Resultado: 4 archivos normalizados, 1 helper nuevo, 0 cambios de tipos; tsc --noEmit pasa limpio.",
+  },
+  {
     version: "8.99.22",
     date: "2026-04-27",
     type: "patch",

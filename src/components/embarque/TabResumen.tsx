@@ -1,7 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { formatDate, toTitleCase, nombreDesdeEmail } from "@/lib/formatters";
+import { formatDate, toTitleCase, nombreDesdeEmail, formatNumber } from "@/lib/formatters";
 import { getModoIcon, getEstadoColor } from "@/lib/ui/uiMappings";
 import { ESTADOS_EMBARQUE } from "@/constants/embarqueConstants";
 import { DetailRow } from "./DetailRow";
@@ -52,9 +52,9 @@ export function TabResumen({ embarque }: Props) {
             <DetailRow label="Tipo" value={embarque.tipo} />
             <DetailRow label="Incoterm" value={embarque.incoterm} />
             <DetailRow label="Mercancía" value={toTitleCase(embarque.descripcion_mercancia)} />
-            <DetailRow label="Peso" value={`${Number(embarque.peso_kg).toLocaleString()} kg`} />
-            <DetailRow label="Volumen" value={`${embarque.volumen_m3} m³`} />
-            <DetailRow label="Piezas" value={embarque.piezas.toString()} />
+            <DetailRow label="Peso" value={formatNumber(Number(embarque.peso_kg), { suffix: "kg" })} />
+            <DetailRow label="Volumen" value={formatNumber(Number(embarque.volumen_m3), { decimals: 2, suffix: "m³" })} />
+            <DetailRow label="Piezas" value={formatNumber(embarque.piezas)} />
             <DetailRow label="Operador" value={nombreDesdeEmail(embarque.operador)} />
           </CardContent>
         </Card>
