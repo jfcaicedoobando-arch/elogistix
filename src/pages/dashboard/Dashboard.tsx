@@ -49,17 +49,15 @@ export default function Dashboard() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-1">
-        <div>
-          <h1 className="text-2xl font-bold text-foreground">
-            {saludo} 👋
-          </h1>
-          <p className="text-sm text-muted-foreground">{hoyStr}</p>
-        </div>
-        <Badge variant="secondary" className="text-xs w-fit">
-          {totalActivos} embarques activos
-        </Badge>
-      </div>
+      <PageHeader
+        title={`${saludo} 👋`}
+        description={hoyStr}
+        actions={
+          <Badge variant="secondary" className="text-xs w-fit">
+            {totalActivos} embarques activos
+          </Badge>
+        }
+      />
 
       <DashboardStatusCards
         conteoPorEstado={conteoPorEstado}
