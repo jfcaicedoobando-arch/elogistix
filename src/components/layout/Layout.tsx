@@ -1,9 +1,11 @@
+import { Suspense } from "react";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/layout/AppSidebar";
 import { Outlet } from "react-router-dom";
 import { GlobalSearch } from "@/components/shared/GlobalSearch";
 import { ErrorBoundary } from "@/components/shared/ErrorBoundary";
 import { ThemeToggle } from "@/components/layout/ThemeToggle";
+import RouteLoadingFallback from "@/components/layout/RouteLoadingFallback";
 
 export function Layout() {
   return (
@@ -23,7 +25,9 @@ export function Layout() {
           </header>
           <main className="flex-1 overflow-auto p-6">
             <ErrorBoundary>
-              <Outlet />
+              <Suspense fallback={<RouteLoadingFallback />}>
+                <Outlet />
+              </Suspense>
             </ErrorBoundary>
           </main>
         </div>
