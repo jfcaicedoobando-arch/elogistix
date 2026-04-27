@@ -1,8 +1,7 @@
 import { Users, DollarSign, TrendingUp, Percent } from "lucide-react";
-import { Card, CardContent } from "@/components/ui/card";
-import { Skeleton } from "@/components/ui/skeleton";
+import { KpiCard } from "@/components/operaciones/KpiCard";
 import { formatCurrency } from "@/lib/formatters";
-import { kpiIconChipClasses, type KpiTone } from "@/lib/ui/kpiTones";
+import type { KpiTone } from "@/lib/ui/kpiTones";
 
 interface Kpis {
   totalClientes: number;
@@ -12,25 +11,17 @@ interface Kpis {
 }
 
 export default function ReportesKpiCards({ kpis, isLoading }: { kpis: Kpis; isLoading: boolean }) {
-  const cards: Array<{ label: string; value: number; icon: React.ElementType; tone: KpiTone; fmt: (v: number) => string }> = [
-    { label: "Clientes con operaciones", value: kpis.totalClientes, icon: Users, tone: "info", fmt: (v) => String(v) },
-    { label: "Revenue total USD", value: kpis.revenue, icon: DollarSign, tone: "success", fmt: (v) => formatCurrency(v, "USD") },
-    { label: "Profit total USD", value: kpis.profit, icon: TrendingUp, tone: "accent", fmt: (v) => formatCurrency(v, "USD") },
-    { label: "Margen promedio", value: kpis.margenProm, icon: Percent, tone: "warning", fmt: (v) => v.toFixed(1) + "%" },
+  const cards: Array<{ label: string; value: string; icon: React.ElementType; tone: KpiTone }> = [
+    { label: "Clientes con operaciones", value: String(kpis.totalClientes), icon: Users, tone: "info" },
+    { label: "Revenue total USD", value: formatCurrency(kpis.revenue, "USD"), icon: DollarSign, tone: "success" },
+    { label: "Profit total USD", value: formatCurrency(kpis.profit, "USD"), icon: TrendingUp, tone: "accent" },
+    { label: "Margen promedio", value: kpis.margenProm.toFixed(1) + "%", icon: Percent, tone: "warning" },
   ];
 
   return (
     <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
       {cards.map((k) => (
-        <Card key={k.label} className="rounded-2xl shadow-sm border-0 bg-card">
-          <CardContent className="p-5 flex items-center gap-4">
-            <div className={`rounded-xl p-3 ${kpiIconChipClasses(k.tone)}`}><k.icon className="h-5 w-5" /></div>
-            <div className="min-w-0 flex-1">
-              <p className="text-xs text-muted-foreground truncate">{k.label}</p>
-              {isLoading ? <Skeleton className="h-7 w-20 mt-1" /> : <p className="text-2xl font-bold text-foreground">{k.fmt(k.value)}</p>}
-            </div>
-          </CardContent>
-        </Card>
+        <KpiCard key={k.label} titulo={k.label} valor={k.value} icono={k.icon} color={k.tone} loading={isLoading} />
       ))}
     </div>
   );
