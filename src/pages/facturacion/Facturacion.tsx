@@ -45,14 +45,14 @@ const facturaColumns: DataTableColumn<Factura>[] = [
           {f.factura_pdf_url && (
             <Button asChild variant="outline" size="icon" className="h-7 w-7" title="Descargar PDF">
               <a href={f.factura_pdf_url} target="_blank" rel="noopener noreferrer" download>
-                <FileText className="h-3.5 w-3.5 text-red-600" />
+                <FileText className="h-3.5 w-3.5 text-destructive" />
               </a>
             </Button>
           )}
           {f.factura_xml_url && (
             <Button asChild variant="outline" size="icon" className="h-7 w-7" title="Descargar XML">
               <a href={f.factura_xml_url} target="_blank" rel="noopener noreferrer" download>
-                <FileCode2 className="h-3.5 w-3.5 text-blue-600" />
+                <FileCode2 className="h-3.5 w-3.5 text-info" />
               </a>
             </Button>
           )}

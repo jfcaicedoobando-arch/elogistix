@@ -68,13 +68,13 @@ export function HistorialFacturas({ facturas, proformas }: Props) {
                           {factura.factura_pdf_url && (
                             <a href={factura.factura_pdf_url} target="_blank" rel="noopener noreferrer" download
                               title="Descargar PDF" className="inline-flex">
-                              <FileText className="h-4 w-4 text-red-600 hover:text-red-700" />
+                              <FileText className="h-4 w-4 text-destructive hover:text-destructive/80" />
                             </a>
                           )}
                           {factura.factura_xml_url && (
                             <a href={factura.factura_xml_url} target="_blank" rel="noopener noreferrer" download
                               title="Descargar XML" className="inline-flex">
-                              <FileCode2 className="h-4 w-4 text-blue-600 hover:text-blue-700" />
+                              <FileCode2 className="h-4 w-4 text-info hover:text-info/80" />
                             </a>
                           )}
                         </div>

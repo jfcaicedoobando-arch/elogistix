@@ -42,7 +42,7 @@ export default function ResumenPL({
         </div>
         <div className="flex justify-between text-sm font-semibold">
           <span>Profit</span>
-          <span className={totales.profit >= 0 ? "text-emerald-600" : "text-red-600"}>
+          <span className={totales.profit >= 0 ? "text-success" : "text-destructive"}>
             {formatCurrency(totales.profit, moneda)}
           </span>
         </div>
