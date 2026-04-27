@@ -30,7 +30,7 @@ const columns: DataTableColumn<EmbarqueMesSiguiente>[] = [
     key: "ruta", header: "Origen → Destino", className: "text-xs max-w-[180px] truncate", render: (e) => `${getOrigen(e)} → ${getDestino(e)}`,
   },
   {
-    key: "contenedor", header: "Contenedor", className: "text-xs font-mono", sortable: true,
+    key: "contenedor", header: "Contenedor", className: "text-xs font-mono whitespace-nowrap", sortable: true,
     sortValue: (e) => e.contenedor || "",
     render: (e) => e.contenedor || <span className="text-muted-foreground">-</span>,
   },
@@ -78,9 +78,9 @@ export function EmbarquesActivosTable({ embarques, resumen, isLoading }: Props) 
   return (
     <Card>
       <CardHeader className="pb-3">
-        <CardTitle className="text-base flex items-center gap-2">
-          <CalendarDays className="h-4 w-4 text-primary" />
-          Embarques activos — próximo mes ({nombreMesCap})
+        <CardTitle className="text-base flex items-center gap-2 flex-wrap">
+          <CalendarDays className="h-4 w-4 text-primary shrink-0" />
+          <span>Embarques activos — próximo mes ({nombreMesCap})</span>
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
