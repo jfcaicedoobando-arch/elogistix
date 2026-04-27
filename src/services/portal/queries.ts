@@ -49,12 +49,22 @@ export async function fetchPortalDocumentos(embarqueId: string) {
   return data ?? [];
 }
 
+// Estados visibles para clientes en el portal.
+// Borrador, Vencida y Cancelada se ocultan: son trabajo interno o ruido sin valor para el cliente.
+// Esta lista debe mantenerse alineada con la política RLS "Cliente read own cotizaciones".
+const PORTAL_COTIZACION_ESTADOS_VISIBLES = [
+  "Enviada",
+  "Aceptada",
+  "Rechazada",
+] as const;
+
 export async function fetchPortalCotizaciones(clienteIds: string[]) {
   if (!clienteIds.length) return [];
   const { data, error } = await supabase
     .from("cotizaciones")
     .select(PORTAL_COTIZACION_LIST_COLUMNS)
     .in("cliente_id", clienteIds)
+    .in("estado", PORTAL_COTIZACION_ESTADOS_VISIBLES)
     .order("created_at", { ascending: false });
   if (error) throw error;
   return data ?? [];
