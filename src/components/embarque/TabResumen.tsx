@@ -94,11 +94,11 @@ export function TabResumen({ embarque }: Props) {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <Card>
           <CardHeader className="pb-3"><CardTitle className="text-sm">Shipper</CardTitle></CardHeader>
-          <CardContent className="text-sm text-muted-foreground">{embarque.shipper}</CardContent>
+          <CardContent className="text-sm text-muted-foreground">{toTitleCase(embarque.shipper)}</CardContent>
         </Card>
         <Card>
           <CardHeader className="pb-3"><CardTitle className="text-sm">Consignatario</CardTitle></CardHeader>
-          <CardContent className="text-sm text-muted-foreground">{embarque.consignatario}</CardContent>
+          <CardContent className="text-sm text-muted-foreground">{toTitleCase(embarque.consignatario)}</CardContent>
         </Card>
       </div>
 
