@@ -64,7 +64,7 @@ export default function TabPlanes() {
     {
       key: "max_embarques",
       header: "Máx. Embarques/Mes",
-      className: "text-right",
+      className: "text-right tabular-nums",
       render: (p) =>
         editingId === p.id ? (
           <Input
