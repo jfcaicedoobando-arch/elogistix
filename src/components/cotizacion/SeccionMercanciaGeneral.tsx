@@ -2,7 +2,7 @@ import { useFormContext } from "react-hook-form";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import SeccionMercanciaWrapper from "./SeccionMercanciaWrapper";
-import type { CotizacionFormValues } from "@/hooks/cotizacion/useCotizacionWizardForm";
+import type { CotizacionFormValues } from "@/hooks/cotizacion/wizard/useCotizacionWizardForm";
 
 interface Props {
   msdsFile: File | null;

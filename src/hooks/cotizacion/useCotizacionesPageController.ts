@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { useListPageState } from "@/hooks/shared/useListPageState";
 import { useCotizaciones, useDeleteCotizacion, usePrefetchCotizacion } from "@/hooks/cotizacion/useCotizaciones";
-import { useDuplicarCotizacion } from "@/hooks/cotizacion/useDuplicarCotizacion";
+import { useDuplicarCotizacion } from "@/hooks/cotizacion/mutations/useDuplicarCotizacion";
 import { useClientesForSelect } from "@/hooks/cliente/useClientes";
 import { usePermissions } from "@/hooks/shared/usePermissions";
 import { getErrorMessage } from "@/lib/errors";

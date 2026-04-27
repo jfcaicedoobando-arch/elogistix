@@ -16,7 +16,7 @@ import {
   useClientesForSelect,
   useContactosCliente,
 } from "@/hooks/cliente/useClientes";
-import { useConceptosForm } from "@/hooks/cotizacion/useConceptosForm";
+import { useConceptosForm } from "@/hooks/cotizacion/wizard/useConceptosForm";
 import { useEmbarqueForm } from "@/hooks/embarque/useEmbarqueForm";
 import { useCotizacionHydration } from "@/hooks/embarque/useCotizacionHydration";
 import { useEmbarqueSubmitOrchestrator } from "@/hooks/embarque/useEmbarqueSubmitOrchestrator";

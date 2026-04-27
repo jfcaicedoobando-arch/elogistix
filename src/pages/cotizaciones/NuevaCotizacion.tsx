@@ -5,7 +5,7 @@ import { useCreateCotizacion, useUpdateCotizacion } from "@/hooks/cotizacion/use
 import { useUpsertCotizacionCostos } from "@/hooks/cotizacion/useCotizacionCostos";
 import { useRegistrarActividad } from "@/hooks/shared/useBitacora";
 import { useAuth } from "@/contexts/AuthContext";
-import { useCotizacionWizardForm } from "@/hooks/cotizacion/useCotizacionWizardForm";
+import { useCotizacionWizardForm } from "@/hooks/cotizacion/wizard/useCotizacionWizardForm";
 import CotizacionWizardLayout from "@/components/cotizacion/CotizacionWizardLayout";
 
 export default function NuevaCotizacion() {

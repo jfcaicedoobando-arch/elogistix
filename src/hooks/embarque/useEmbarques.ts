@@ -35,4 +35,4 @@ export {
   useDeleteDocumentoEmbarque,
   useCreateNotaEmbarque,
   useEliminarEmbarque,
-} from './useEmbarqueMutations';
+} from './mutations';

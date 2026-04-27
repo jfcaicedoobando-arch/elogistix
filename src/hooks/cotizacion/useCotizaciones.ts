@@ -27,7 +27,7 @@ export {
   useUpdateCotizacion,
   useDeleteCotizacion,
   useUpdateEstadoCotizacion,
-} from './useCotizacionMutations';
+} from './mutations/useCotizacionMutations';
 
 // Conversions
 export {
