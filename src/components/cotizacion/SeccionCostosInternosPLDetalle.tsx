@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
 import { Button } from "@/components/ui/button";
-import { DollarSign, Banknote, Save } from "lucide-react";
+import { DollarSign, Banknote, Save, Pencil, X } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { getErrorMessage } from "@/lib/errors";
 import { usePermissions } from "@/hooks/shared/usePermissions";
@@ -31,6 +31,7 @@ export default function SeccionCostosInternosPLDetalle({ cotizacionId, conceptos
 
   const [filas, setFilas] = useState<FilaCostoDetalle[]>([]);
   const [initialized, setInitialized] = useState(false);
+  const [editMode, setEditMode] = useState(false);
 
   useEffect(() => {
     if (isLoading || initialized) return;
@@ -107,6 +108,7 @@ export default function SeccionCostosInternosPLDetalle({ cotizacionId, conceptos
     try {
       await upsert.mutateAsync({ cotizacionId, costos });
       notifySuccess(toast, { title: "Costos guardados correctamente" });
+      setEditMode(false);
     } catch (err: unknown) {
       notifyError(toast, { title: "Error al guardar", description: getErrorMessage(err)});
     }
