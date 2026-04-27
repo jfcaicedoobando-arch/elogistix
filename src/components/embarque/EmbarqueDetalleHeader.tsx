@@ -9,8 +9,9 @@ import {
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { getEstadoColor, getModoIcon } from "@/lib/ui/uiMappings";
+import { getEstadoColor } from "@/lib/ui/uiMappings";
 import { toTitleCase } from "@/lib/formatters";
+import { ModoIcon } from "@/components/shared/ModoIcon";
 import { ProformaBadge } from "./ProformaBadge";
 import type { EmbarqueRow } from "@/hooks/embarque/useEmbarques";
 
