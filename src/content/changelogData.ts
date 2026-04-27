@@ -15,6 +15,13 @@ export interface ChangelogEntry {
  */
 export const recentChangelog: ChangelogEntry[] = [
   {
+    version: "8.99.33",
+    date: "2026-04-27",
+    type: "minor",
+    title: "Auditoría UI/UX Fase H: PageHeader unificado en páginas de listado y dashboards",
+    description: "Octava fase de la auditoría UI/UX integral, enfocada en consistencia tipográfica de page headers. El audit detectó que ~25 páginas duplicaban el patrón <div flex><div><h1 text-2xl font-bold/><p text-sm text-muted-foreground/></div><actions/></div> con divergencias: algunas usaban tracking-tight, otras no; algunas text-foreground (redundante porque ya es default), otras no; spacing label↔descripción inconsistente (mt-1 vs sin mt); layouts mezclando flex flex-col gap-3 sm:flex-row con flex items-center justify-between. (1) PageHeader nuevo — src/components/shared/PageHeader.tsx encapsula el patrón con tipografía estándar (text-2xl font-bold tracking-tight), descripción opcional (text-sm text-muted-foreground mt-1), icono opcional a la izquierda del título, slot de acciones a la derecha y layout responsive (apilado en mobile, lado a lado en md+). (2) Migración de 12 páginas — Embarques, Clientes, Proveedores, Cotizaciones, Facturacion (Pre-Facturación), Changelog, Reportes (Rentabilidad), Operaciones, Dashboard, AdminUsuarios, AdminOrganizaciones, admin-org/Usuarios, Bitacora, PortalEmbarques, PortalCotizaciones y PortalFacturas reemplazan sus bloques inline por <PageHeader title=... description=... actions=.../>. Resultado: tipografía 100% consistente entre listados internos, dashboards y portal del cliente; ~150 LOC eliminadas por des-duplicación; tsc -p tsconfig.app.json pasa limpio.",
+  },
+  {
     version: "8.99.32",
     date: "2026-04-27",
     type: "minor",
