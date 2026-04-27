@@ -48,7 +48,7 @@ export default function TabPlanes() {
     {
       key: "max_usuarios",
       header: "Máx. Usuarios",
-      className: "text-right",
+      className: "text-right tabular-nums",
       render: (p) =>
         editingId === p.id ? (
           <Input
