@@ -145,12 +145,12 @@ export function AppSidebar() {
 
   return (
     <Sidebar collapsible="icon">
-      <SidebarHeader className="border-b border-sidebar-border p-4">
-        <div className="flex items-center gap-3">
+      <SidebarHeader className="border-b border-sidebar-border p-4 group-data-[collapsible=icon]:px-2">
+        <div className={cn("flex items-center gap-3", collapsed && "justify-center gap-0")}>
           <img
             src={librecargaLogo}
             alt="Libre Carga Logo"
-            className="h-9 w-9 rounded-lg object-contain bg-white p-0.5 ring-1 ring-sidebar-border dark:ring-0"
+            className="h-9 w-9 rounded-lg object-contain bg-white p-0.5 ring-1 ring-sidebar-border dark:ring-0 shrink-0"
           />
           {!collapsed && (
             <div className="flex flex-col min-w-0">
