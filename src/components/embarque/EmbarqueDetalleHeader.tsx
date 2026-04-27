@@ -1,11 +1,14 @@
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Edit, Printer, ChevronRight, Copy, Trash2, Share2 } from "lucide-react";
+import { ArrowLeft, Edit, Printer, ChevronRight, Copy, Trash2, Share2, MoreHorizontal } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import {
+  DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { getEstadoColor, getModoIcon } from "@/lib/ui/uiMappings";
 import { toTitleCase } from "@/lib/formatters";
 import { ProformaBadge } from "./ProformaBadge";
