@@ -19,7 +19,9 @@ export default function PortalCotizacionEstadoBanner({
 }: PortalCotizacionEstadoBannerProps) {
   const navigate = useNavigate();
 
-  if (estado === "Embarcada" && embarqueId) {
+  // Si la cotización ya tiene un embarque vinculado (independiente del estado),
+  // mostramos el banner de operación con acceso directo al embarque.
+  if (embarqueId) {
     return (
       <Alert className="border-success/50 bg-success/10">
         <Ship className="h-4 w-4 text-success" />
@@ -40,6 +42,12 @@ export default function PortalCotizacionEstadoBanner({
               Ver embarque <ArrowRight className="h-3.5 w-3.5 ml-1" />
             </Button>
           </div>
+          {comentarioCliente && (
+            <p className="mt-2 flex items-start gap-1.5">
+              <MessageSquare className="h-3.5 w-3.5 mt-0.5 shrink-0" />
+              <span className="italic">"{comentarioCliente}"</span>
+            </p>
+          )}
         </AlertDescription>
       </Alert>
     );

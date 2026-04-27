@@ -2,6 +2,13 @@ import type { ChangelogEntry } from "../../../changelogData";
 
 export const chunk0: ChangelogEntry[] = [
   {
+    version: "8.99.5",
+    date: "2026-04-27",
+    type: "patch",
+    title: "Portal: enlace al embarque también en el detalle de la cotización",
+    description: "Antes el badge 'En operación · EXP-XXXX' solo aparecía en el listado /portal/cotizaciones, pero al entrar al detalle de una cotización Aceptada con embarque vinculado el cliente perdía el acceso (el banner solo lo mostraba para el estado 'Embarcada'). Ahora PortalCotizacionEstadoBanner muestra el aviso verde de operación y el botón 'Ver embarque →' siempre que la cotización tenga embarque_id, sin importar si su estado es 'Aceptada' o 'Embarcada'. Si además existe comentario del cliente, se conserva debajo del aviso.",
+  },
+  {
     version: "8.99.4",
     date: "2026-04-27",
     type: "patch",

@@ -1,53 +1,29 @@
-## Respuesta corta
+## Problema
 
-**No.** Hoy el portal del cliente **no muestra** si una cotización aceptada ya se convirtió en embarque. Verifiqué la base de datos:
+En el listado de **Mis cotizaciones**, COT-2026-0007 muestra el badge verde **"En operación · ELGEN00054"** que lleva al embarque. Pero al entrar al detalle de la cotización, ese enlace desaparece.
 
-- La tabla `embarques` tiene la columna `cotizacion_id` (vínculo correcto), pero solo **1 de 206 embarques** la tiene poblada.
-- La columna espejo `cotizaciones.embarque_id` existe pero está vacía en todas las cotizaciones aceptadas (COT-2026-0055, 0054, 0047, 0032, etc.).
-- Ni `PortalCotizaciones.tsx` ni `PortalCotizacionDetalle.tsx` consultan ese vínculo.
+## Causa
 
-Resultado: el cliente acepta una cotización y se queda "a ciegas" — no sabe si su carga ya está en operación ni puede saltar al embarque.
+La cotización está en estado **"Aceptada"** (no "Embarcada"), pero ya tiene `embarque_id` vinculado por el trigger de sincronización.
 
----
+- **Listado** (`PortalCotizaciones.tsx`): muestra el badge siempre que exista `embarque_id` → funciona.
+- **Detalle** (`PortalCotizacionEstadoBanner.tsx`): solo muestra el botón "Ver embarque" si `estado === "Embarcada"` → no aparece para "Aceptada".
 
-## Plan propuesto (v8.99.4)
+El estado "Embarcada" probablemente solo se aplica en transiciones más tardías (o no se usa), por lo que la mayoría de cotizaciones convertidas quedan en "Aceptada" con `embarque_id`. Esto deja al cliente sin acceso desde el detalle.
 
-### 1. Backfill + garantizar el vínculo en backend
+## Solución
 
-Migración SQL que:
-- **Backfill**: para cada cotización con `estado IN ('Aceptada')` que aún no tenga embarque, busca un embarque cuyo `cotizacion_id` la apunte y rellena `cotizaciones.embarque_id` con ese valor.
-- **Trigger** `AFTER INSERT/UPDATE` en `embarques`: cuando se crea/actualiza un embarque con `cotizacion_id` no nulo, sincroniza automáticamente `cotizaciones.embarque_id`. Así nunca más quedan desincronizados.
-- Revisar la función de conversión cotización→embarque (`services/cotizacion/conversiones/embarques.ts`) para que también escriba `cotizaciones.embarque_id` al crear el embarque (defensa en profundidad junto al trigger).
+Unificar el criterio del listado y el detalle: **si hay `embarque_id`, mostrar el aviso de operación con el botón "Ver embarque"**, sin importar si el estado es "Aceptada" o "Embarcada".
 
-### 2. Exponer el dato al portal
+### Cambios
 
-- Ampliar `fetchPortalCotizaciones` y `fetchPortalCotizacionDetalle` para incluir `embarque_id` y, vía join, el `expediente` del embarque relacionado.
-- Como las RLS del portal ya permiten al cliente leer sus propios embarques, no hace falta cambiar políticas.
+1. **`src/components/portal/cotizacion/PortalCotizacionEstadoBanner.tsx`**
+   - Quitar la condición `estado === "Embarcada"` para el bloque del banner verde con "Ver embarque".
+   - Mostrarlo cuando exista `embarqueId` (independiente del estado).
+   - Para "Aceptada" sin embarque, mantener el banner actual ("Te notificaremos cuando inicie la operación").
+   - Para "Aceptada" con embarque, prevalece el banner de operación (mostrar también el comentario del cliente si existe).
 
-### 3. UI en el portal
+2. **Changelog (`src/pages/Changelog.tsx`)**
+   - Nueva entrada patch v8.99.5: "Portal: el detalle de cotización ahora muestra el enlace al embarque vinculado, igual que el listado."
 
-**Listado `/portal/cotizaciones`**:
-- Para cotizaciones `Aceptada` con embarque vinculado: badge verde "Embarque creado · EXP-XXXX" junto al folio.
-- Sin embarque aún: badge ámbar "Pendiente de operación".
-
-**Detalle `/portal/cotizaciones/:id`** (en `PortalCotizacionEstadoBanner`):
-- Si `Aceptada` + tiene embarque: banner verde con texto "Esta cotización ya está en operación" y botón **"Ver embarque EXP-XXXX →"** que navega a `/portal/embarques/:embarqueId`.
-- Si `Aceptada` sin embarque: mensaje informativo "Tu cotización fue aceptada. Te notificaremos cuando inicie la operación."
-
-### 4. Changelog
-
-Entrada **v8.99.4** en `src/content/changelog/v8/chunks/0.ts`:
-> Trazabilidad cotización → embarque en el portal del cliente. Las cotizaciones aceptadas ahora muestran si ya están en operación e incluyen acceso directo al embarque vinculado.
-
----
-
-## Archivos a tocar
-
-- `supabase/migrations/<nuevo>.sql` (backfill + trigger)
-- `src/services/cotizacion/conversiones/embarques.ts` (escribir embarque_id de vuelta)
-- `src/services/portal/queries.ts` + `columns.ts` (incluir vínculo)
-- `src/pages/portal/PortalCotizaciones.tsx` (badge en listado)
-- `src/components/portal/cotizacion/PortalCotizacionEstadoBanner.tsx` (banner + botón)
-- `src/content/changelog/v8/chunks/0.ts`
-
-¿Procedo con esta implementación?
+No se requieren cambios de base de datos ni de servicios — los datos ya están disponibles en `fetchPortalCotizacion`.
