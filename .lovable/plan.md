@@ -1,98 +1,83 @@
-# Auditoría UI/UX — Pendientes detectados (v8.99.16)
+# Auditoría UI/UX Fase 6 — Pendientes en módulos no auditados (v8.99.17)
 
-Tras recorrer Dashboard, Embarques, Cotizaciones, Clientes, Operaciones y la vista mobile (375px), quedaron varios detalles de pulido. Ningún bug bloqueante, todo es polish.
+Recorrido de Pre-Facturación, Rentabilidad y Detalle de Embarque (módulos no cubiertos en fases anteriores). **Sí hay mejoras pendientes**, principalmente por inconsistencia de Title Case en módulos que se quedaron fuera del barrido previo.
 
 ## Hallazgos
 
-### 1. Página 404 en inglés
-`/dashboard` (y cualquier ruta inválida) muestra "Oops! Page not found / Return to Home". Viola la regla de localización mexicana del proyecto.
+### 1. Pre-Facturación · Tab Facturas
+- Cliente `INDIMEX TRADING` en MAYÚSCULAS — falta `toTitleCase`.
+- Columna `# FACTURA` rompe en 2 líneas (header).
+- Folio de proforma `PRO-2026-0003` rompe en 2 líneas — falta `whitespace-nowrap`.
+- Iconos de archivos (PDF rojo / XML azul) sin tooltip.
 
-### 2. Teléfonos con lada de 3 dígitos mal formateados
-`formatPhoneMx` siempre toma 2 dígitos como lada. Resultado visible en Clientes:
-- `+52 4422170696` → muestra `+52 (44) 2170-6966` (incorrecto)
-- Esperado: `+52 (442) 170-6966` para ladas 3-dígitos (Querétaro 442, Puebla 222, Cancún 998, etc.)
+### 2. Pre-Facturación · Tab Liquidación de Gastos
+- Proveedores **mezclados**: `LONGSAIL SUPPLY CHAIN CO.,LTD.`, `COSCO SHIPPING LINES MEXICO S DE RL DE CV`, `EVERGREEN SHIPPING AGENCY MEXICO, S.A. DE C.V.` en mayúsculas vs `Ocean Network Express Pte. Ltd.` en Title Case. Aplicar `toTitleCase`.
+- Columna Monto duplica la moneda: muestra `USD 2,248.00` y luego columna separada `USD`. Eliminar la columna Moneda redundante (la cifra ya la incluye) o quitar el prefijo del monto.
+- Filas en MXN muestran `$57,000.00` (signo $) mientras USD usa prefijo `USD`. Unificar a `MXN 57,000.00` para consistencia (el formatter ya lo soporta vía `formatCurrency`).
 
-México usa lada de 2 dígitos solo en CDMX (55), MTY (81) y GDL (33); el resto son 3 dígitos.
+### 3. Pre-Facturación · Tab Proformas
+- Estado vacío muestra **skeletons indefinidos** en lugar de un EmptyState cuando `count === 0`. Reutilizar `EmptyState` con icono `FileSpreadsheet`.
+- Headers de columna (`# PROFORMA`, `BL MASTER`, `DÍAS CRÉDITO`, `MONTO USD`, `MONTO MXN`) rompen en 2 líneas — agregar `whitespace-nowrap`.
 
-### 3. Conector "Y" no se baja a minúscula en nombres
-Cliente "Entera Salud Animal Y Nutricion S.A. de C.V" debería leer "Entera Salud Animal y Nutrición…". Falta agregar variantes mayúsculas al matcher de conectores (`Y`, `E`, `De`, etc.) — actualmente solo se compara en minúsculas tras `cleaned.toLowerCase()`, pero el guard `idx > 0` se cumple. **Verificar:** el bug real es que el dataset envía "Y" con acentos perdidos, y `processToken` sí lo baja. Validar en código si hace falta extender la lista o si el formatter lo maneja correctamente y es puramente data.
+### 4. Pre-Facturación · Tab Pendientes
+- Botones "Consolidar y aprobar" y "Aprobar individual" se ven activos cuando `0 seleccionadas` — confunde al usuario. Aplicar `disabled` real y el estilo deshabilitado del design system.
+- EmptyState es texto plano — usar el componente `EmptyState` compartido.
 
-### 4. Header de página rebasa en mobile (375px)
-En `/embarques` el botón "+ Nuevo Embarque" se corta por la derecha porque el header se mantiene en una sola fila. Aplica también a Cotizaciones y Clientes. Hay que apilar verticalmente (`flex-col` en `<sm`, `flex-row` en `≥sm`) y dar `w-full` a botones primarios en mobile.
+### 5. Rentabilidad por Cliente
+- Clientes en gráfica `Top 10 por Profit` y tabla `Desglose por Cliente` en MAYÚSCULAS (`INDIMEX TRADING`, `INVERSIONES Y SOLU...`, `FASTCOLD TECH`, `ENTERA SALUD ANIMA...`). Aplicar `toTitleCase`.
+- Etiquetas largas del eje Y consumen ~40% del ancho de la gráfica. Solución: usar `shortName` (primera palabra significativa) o truncar a 18 chars con tooltip.
+- Título "Top 10 por Profit" cuando solo hay 5 — cambiar a "Top {N} por Profit" dinámico.
+- Labels "Desde" y "Hasta" pequeños y mal alineados con sus inputs — apilar como `<Label>` arriba del input, igual que "Modo".
 
-### 5. Cotizaciones: vigencia inconsistente y filas de altura variable
-- Algunas filas muestran badge "3d · 30/04/2026" y otras (mismo estado Borrador) solo "31/05/2026" sin badge. La regla actual marca solo cotizaciones que vencen en ≤3 días, pero se aplica también a Borrador/Aceptada/Rechazada cuando ya no aplica vencer.
-- Columna "Origen → Destino" envuelve a 3 líneas y descompone la altura. Necesita `truncate` con tooltip.
-- Esperado: el badge de vigencia solo debe aparecer en estado **Enviada** (donde la vigencia importa). Para Borrador/Aceptada/Rechazada, mostrar solo la fecha.
+### 6. Detalle de Embarque (Resumen)
+- Subtítulo del cliente en header: `ROLLOS Y ETIQUETAS ROLLE...` en MAYÚSCULAS. Aplicar `toTitleCase`.
+- Mercancía: `PLASTIC BAG` en MAYÚSCULAS. Capitalizar.
+- Operador muestra `magali.reynoso@elogistixshipping.com` (email crudo) en Datos Generales. Aplicar `nombreDesdeEmail`.
+- Shipper: `VIETPAK COMPANY LIMITED — Proveedor (VIETNAM)` — Title Case + el sufijo `(VIETNAM)` debería ser `(Vietnam)`.
+- Consignatario: `ELOGISTIX SHIPPING S DE RL DE CV` — Title Case (el formatter ya soporta `S`, `DE`, `RL`, `CV`).
 
-### 6. Embarques: cliente truncado sin tooltip
-"Rollos y Etiquetas..." se corta sin `title` ni tooltip. Misma columna en Cotizaciones tiene el mismo problema con "Quimcelt Powder Coa...". Agregar `title={cliente}` o `<Tooltip>` al span truncado.
+## Plan de Trabajo (v8.99.17)
 
-### 7. Pantallas de error/empty muy básicas
-"Embarque no encontrado" en `/embarques/:id` inválido muestra solo texto y un botón. Mejorar con icono (`PackageX`), título grande y subtexto explicativo, alineado al estilo del resto de la app.
+1. **TabFacturas / TabProformas / TabLiquidacionGastos** (`src/components/facturacion/`):
+   - Aplicar `toTitleCase` a clientes y proveedores.
+   - Agregar `whitespace-nowrap` a headers y a folios.
+   - Eliminar columna Moneda redundante en Liquidación; usar `formatCurrency(monto, moneda)` para el unique display.
+   - Tooltips nativos (`title=`) en iconos PDF/XML ("Ver PDF", "Ver XML").
 
-### 8. Operadores en Operaciones sin acentos
-"Alan Hernandez", "Magali Reynoso", "Juanluis Martinez", "Valeria Zamora" — derivados de email así que es esperado, pero podemos:
-- Detectar si en `usuarios` hay un `nombre_completo` poblado y usarlo en vez de derivar del email.
+2. **TabPendientes** (`src/components/facturacion/TabPendientes.tsx`):
+   - Pasar `disabled` real a los botones cuando `seleccionadas === 0`.
+   - Reemplazar texto plano "No hay proformas pendientes" por `<EmptyState icon={CheckCircle2} title="Todo al día" description="No hay proformas pendientes de revisión." />`.
 
-### 9. "México" sin acento en Clientes
-Ciudad mostrada "Mexico, CDMX". Probable que venga así del catálogo. Aplicar un mini-diccionario de correcciones comunes (`Mexico → México`, `Queretaro → Querétaro`, `Yucatan → Yucatán`, `Nuevo Leon → Nuevo León`, etc.) dentro del helper de display.
+3. **Tab Proformas EmptyState**: Si `data.length === 0 && !isLoading`, mostrar `EmptyState` en lugar de skeletons.
 
-## Plan de Trabajo (v8.99.16)
+4. **Reportes / Rentabilidad** (`src/pages/dashboard/Rentabilidad.tsx` o `src/pages/Reportes.tsx`):
+   - Aplicar `toTitleCase` a `cliente_nombre` en gráfica (`Bar` con función `tickFormatter`) y tabla.
+   - Limitar etiquetas del eje Y a 18 chars con `...` y `width=140`.
+   - Cambiar título a `Top {top.length} por Profit`.
+   - Reorganizar filtros con `<Label>` arriba en grid `flex-col gap-1`.
 
-1. **NotFound.tsx**: Traducir a español ("404 — Página no encontrada", "Volver al inicio") y mejorar layout con icono.
-2. **`formatPhoneMx`**: Aceptar ladas de 3 dígitos. Lista corta de ladas de 2 dígitos (`55`, `81`, `33`); el resto se formatea como `(NNN) NNN-NNNN`.
-3. **Headers mobile**: Crear helper de layout en `Cotizaciones.tsx`, `Embarques.tsx`, `Clientes.tsx` para apilar título + acciones (`flex-col gap-3 sm:flex-row sm:items-center sm:justify-between`).
-4. **Cotizaciones**:
-   - Restringir badge de vigencia a estado `enviada`.
-   - Truncar "Origen → Destino" con tooltip nativo, max 1 línea.
-   - Agregar `title` al cliente truncado.
-5. **Embarques**: Agregar `title` al span de cliente en `embarqueColumns.tsx`.
-6. **Helper `correctSpanishPlace`** en formatters: aplicar a ciudad/estado en `Clientes.tsx` y `ClienteDetalle.tsx`.
-7. **OperadorCard**: Si llega `nombre_completo`, usarlo; fallback a `nombreDesdeEmail`.
-8. **NoEncontrado genérico**: Componente compartido `EmptyState` con icono + mensaje + acción, reutilizable en detalles vacíos.
-9. **Changelog**: Agregar entrada v8.99.16 documentando cada punto.
+5. **EmbarqueDetalleHeader** (`src/components/embarque/EmbarqueDetalleHeader.tsx`):
+   - Aplicar `toTitleCase(cliente_nombre)` en el subtítulo.
+
+6. **TabResumen** (`src/components/embarque/TabResumen.tsx`):
+   - Aplicar `toTitleCase` a Mercancía, Shipper y Consignatario.
+   - Aplicar `nombreDesdeEmail` a Operador.
+
+7. **Changelog v8.99.17** documentando los 6 grupos.
 
 ## Detalles Técnicos
 
-```ts
-// formatPhoneMx (nuevo)
-const LADAS_2_DIGITOS = new Set(["55", "81", "33"]);
-function splitLada(local: string): [string, string] {
-  if (LADAS_2_DIGITOS.has(local.slice(0, 2))) return [local.slice(0,2), local.slice(2)];
-  return [local.slice(0,3), local.slice(3)];
-}
-// Resultado: (442) 217-0696 / (55) 1234-5678
-```
-
-```ts
-// correctSpanishPlace
-const ACENTOS_LUGARES: Record<string,string> = {
-  "mexico": "México", "queretaro": "Querétaro",
-  "yucatan": "Yucatán", "nuevo leon": "Nuevo León",
-  "michoacan": "Michoacán", "atizapan": "Atizapán",
-  "san andres cholula": "San Andrés Cholula",
-};
-```
-
-```tsx
-// Header responsivo (patrón a aplicar)
-<div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-  <div>{titulo + subtitulo}</div>
-  <div className="flex flex-col gap-2 sm:flex-row sm:gap-3">{botones}</div>
-</div>
-```
+- Reutilizar `EmptyState` ya creado en `src/components/empty/EmptyState.tsx` (Fase 5).
+- Para evitar romper datos legítimos en mayúsculas (códigos como `WANHAI`, `FCL`, `MXESE`), no aplicar Title Case en columnas de códigos UN/LOCODE, navieras de catálogo, ni en BL/Contenedores.
+- Eje Y de Recharts: `<YAxis dataKey="cliente" type="category" tickFormatter={(v) => v.length > 18 ? v.slice(0, 18) + '…' : v} width={140} />`.
 
 ## Archivos a Modificar
 
-- `src/pages/NotFound.tsx`
-- `src/lib/formatters/index.ts`
-- `src/components/empty/EmptyState.tsx` (nuevo)
-- `src/pages/embarques/Embarques.tsx` (header)
-- `src/pages/cotizaciones/Cotizaciones.tsx` (header + vigencia + truncate)
-- `src/pages/clientes/Clientes.tsx` (header + corrección de lugar)
-- `src/pages/clientes/ClienteDetalle.tsx`
-- `src/components/embarque/embarqueColumns.tsx` (tooltip cliente)
-- `src/components/operaciones/OperadorCard.tsx` (preferir nombre_completo)
-- `src/pages/embarques/EmbarqueDetalle.tsx` (usar EmptyState)
+- `src/components/facturacion/TabFacturas.tsx`
+- `src/components/facturacion/TabProformas.tsx`
+- `src/components/facturacion/TabLiquidacionGastos.tsx`
+- `src/components/facturacion/TabPendientes.tsx`
+- `src/pages/Reportes.tsx` (o equivalente Rentabilidad)
+- `src/components/embarque/EmbarqueDetalleHeader.tsx`
+- `src/components/embarque/TabResumen.tsx`
 - `src/content/changelog/v8/chunks/0.ts`
