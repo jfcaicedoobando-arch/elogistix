@@ -1,5 +1,8 @@
 import { Link } from "react-router-dom";
-import { ArrowLeft, Truck, Pencil, Trash2, FileX, PackageX } from "lucide-react";
+import { ArrowLeft, Truck, Pencil, Trash2, FileX, PackageX, MoreHorizontal } from "lucide-react";
+import {
+  DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
