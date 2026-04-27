@@ -106,7 +106,7 @@ export default function TabPlanes() {
             onChange={(e) => setEditValues({ ...editValues, precio_mensual: Number(e.target.value) })}
           />
         ) : (
-          `$${Number(p.precio_mensual).toLocaleString("es-MX")}`
+          formatCurrency(Number(p.precio_mensual), "MXN")
         ),
     },
     {
