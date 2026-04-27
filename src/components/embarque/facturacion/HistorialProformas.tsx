@@ -1,4 +1,4 @@
-import { Download, FileCode2, FileText, Loader2, Trash2 } from "lucide-react";
+import { Download, FileCode2, FileText, Loader2, Receipt, Trash2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -22,8 +22,9 @@ export function HistorialProformas({ proformas, canEdit, isDeleting, onDescargar
       </CardHeader>
       <CardContent className="p-0">
         {proformas.length === 0 ? (
-          <div className="p-6 text-center text-muted-foreground text-sm">
-            No hay proformas generadas para este embarque
+          <div className="p-8 text-center">
+            <Receipt className="h-8 w-8 mx-auto text-muted-foreground/40 mb-2" />
+            <p className="text-sm text-muted-foreground">No hay proformas generadas para este embarque.</p>
           </div>
         ) : (
           <Table>
