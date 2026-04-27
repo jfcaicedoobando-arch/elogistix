@@ -3,6 +3,7 @@ import { format, startOfMonth, endOfMonth } from "date-fns";
 
 import { exportToCsv } from "@/generators/exportCsv";
 import { useRentabilidadClientes } from "@/hooks/cliente/useRentabilidadClientes";
+import { toTitleCase } from "@/lib/formatters";
 import type { SortField } from "@/components/reportes/ReportesTablaClientes";
 
 /**
@@ -43,13 +44,13 @@ export function useReportesPageController() {
       [...clientes]
         .sort((a, b) => b.profit_usd - a.profit_usd)
         .slice(0, 10)
-        .map((c) => ({
-          name:
-            c.cliente_nombre.length > 18
-              ? c.cliente_nombre.slice(0, 18) + "…"
-              : c.cliente_nombre,
-          profit: Math.round(c.profit_usd * 100) / 100,
-        })),
+        .map((c) => {
+          const nombre = toTitleCase(c.cliente_nombre);
+          return {
+            name: nombre.length > 18 ? nombre.slice(0, 18) + "…" : nombre,
+            profit: Math.round(c.profit_usd * 100) / 100,
+          };
+        }),
     [clientes],
   );
 

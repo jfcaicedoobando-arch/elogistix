@@ -1,7 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { formatDate } from "@/lib/formatters";
+import { formatDate, toTitleCase, nombreDesdeEmail } from "@/lib/formatters";
 import { getModoIcon, getEstadoColor } from "@/lib/ui/uiMappings";
 import { ESTADOS_EMBARQUE } from "@/constants/embarqueConstants";
 import { DetailRow } from "./DetailRow";
@@ -51,11 +51,11 @@ export function TabResumen({ embarque }: Props) {
             <DetailRow label="Modo" value={`${getModoIcon(embarque.modo)} ${embarque.modo}`} />
             <DetailRow label="Tipo" value={embarque.tipo} />
             <DetailRow label="Incoterm" value={embarque.incoterm} />
-            <DetailRow label="Mercancía" value={embarque.descripcion_mercancia} />
+            <DetailRow label="Mercancía" value={toTitleCase(embarque.descripcion_mercancia)} />
             <DetailRow label="Peso" value={`${Number(embarque.peso_kg).toLocaleString()} kg`} />
             <DetailRow label="Volumen" value={`${embarque.volumen_m3} m³`} />
             <DetailRow label="Piezas" value={embarque.piezas.toString()} />
-            <DetailRow label="Operador" value={embarque.operador} />
+            <DetailRow label="Operador" value={nombreDesdeEmail(embarque.operador)} />
           </CardContent>
         </Card>
 
@@ -94,11 +94,11 @@ export function TabResumen({ embarque }: Props) {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <Card>
           <CardHeader className="pb-3"><CardTitle className="text-sm">Shipper</CardTitle></CardHeader>
-          <CardContent className="text-sm text-muted-foreground">{embarque.shipper}</CardContent>
+          <CardContent className="text-sm text-muted-foreground">{toTitleCase(embarque.shipper)}</CardContent>
         </Card>
         <Card>
           <CardHeader className="pb-3"><CardTitle className="text-sm">Consignatario</CardTitle></CardHeader>
-          <CardContent className="text-sm text-muted-foreground">{embarque.consignatario}</CardContent>
+          <CardContent className="text-sm text-muted-foreground">{toTitleCase(embarque.consignatario)}</CardContent>
         </Card>
       </div>
 
@@ -126,8 +126,8 @@ export function TabResumen({ embarque }: Props) {
                   <TableRow key={rel.id} className="cursor-pointer" onClick={() => navigate(`/embarques/${rel.id}`)}>
                     <TableCell className="font-medium">{rel.expediente}</TableCell>
                     <TableCell className="text-xs">{rel.bl_house || '-'}</TableCell>
-                    <TableCell className="text-xs">{rel.cliente_nombre}</TableCell>
-                    <TableCell className="text-xs">{rel.shipper}</TableCell>
+                    <TableCell className="text-xs">{toTitleCase(rel.cliente_nombre)}</TableCell>
+                    <TableCell className="text-xs">{toTitleCase(rel.shipper)}</TableCell>
                     <TableCell>
                       <Badge variant="secondary" className={`text-xs ${getEstadoColor(rel.estado)}`}>{rel.estado}</Badge>
                     </TableCell>

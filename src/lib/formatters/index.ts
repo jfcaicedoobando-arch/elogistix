@@ -4,7 +4,13 @@ import type { Locale } from "date-fns";
 
 export const formatCurrency = (amount: number, currency: string = 'MXN'): string => {
   const formatter = new Intl.NumberFormat('es-MX', { style: 'currency', currency, minimumFractionDigits: 2 });
-  return formatter.format(amount);
+  const formatted = formatter.format(amount);
+  // Intl con MXN devuelve "$57,000.00" (sin código). Forzamos el prefijo "MXN " para
+  // mantener consistencia con USD/EUR y evitar ambigüedad entre USD y MXN.
+  if (currency === 'MXN' && !formatted.startsWith('MXN')) {
+    return `MXN ${formatted.replace(/^\$\s?/, '')}`;
+  }
+  return formatted;
 };
 
 /** Extrae la primera parte de un nombre compuesto (antes de coma o guión largo) */

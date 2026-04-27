@@ -4,7 +4,8 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import SearchInput from "@/components/selects/SearchInput";
-import { formatCurrency, formatDate } from "@/lib/formatters";
+import EmptyState from "@/components/empty/EmptyState";
+import { formatCurrency, formatDate, toTitleCase } from "@/lib/formatters";
 import { montoPrincipalProforma } from "@/lib/domain/proforma";
 import { useTabProformasPendientesController } from "@/hooks/facturacion/useTabProformasPendientesController";
 
@@ -57,8 +58,12 @@ export function TabProformasPendientes() {
       {c.isLoading ? (
         <Card><CardContent className="p-6 text-center text-muted-foreground">Cargando proformas pendientes...</CardContent></Card>
       ) : c.grupos.length === 0 ? (
-        <Card><CardContent className="p-10 text-center text-muted-foreground">
-          No hay proformas pendientes de revisión
+        <Card><CardContent className="p-0">
+          <EmptyState
+            icon={CheckCircle2}
+            title="Todo al día"
+            description="No hay proformas pendientes de revisión."
+          />
         </CardContent></Card>
       ) : (
         <div className="space-y-3">
@@ -78,7 +83,7 @@ export function TabProformasPendientes() {
                     {grupo.blMaster && (
                       <span className="text-xs text-muted-foreground">BL: <span className="font-mono">{grupo.blMaster}</span></span>
                     )}
-                    <span className="text-xs text-muted-foreground truncate">Cliente: {grupo.clienteNombre}</span>
+                    <span className="text-xs text-muted-foreground truncate">Cliente: {toTitleCase(grupo.clienteNombre)}</span>
                   </div>
                   <div className="flex items-center gap-2 shrink-0">
                     {seleccionadasGrupo > 0 && (
