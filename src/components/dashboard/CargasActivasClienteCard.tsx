@@ -83,11 +83,16 @@ export const CargasActivasClienteCard = memo(function CargasActivasClienteCard({
               </div>
 
               {/* Proportion bar */}
-              <div className="hidden sm:block w-20 h-2 rounded-full bg-muted overflow-hidden">
-                <div
-                  className="h-full rounded-full bg-primary/40 transition-all"
-                  style={{ width: `${(c.total / maxTotal) * 100}%` }}
-                />
+              <div className="hidden sm:flex items-center gap-2 shrink-0">
+                <div className="w-24 h-2.5 rounded-full bg-secondary border border-border/40 overflow-hidden">
+                  <div
+                    className="h-full rounded-full bg-primary transition-all"
+                    style={{ width: `${Math.max(8, (c.total / maxTotal) * 100)}%` }}
+                  />
+                </div>
+                <span className="text-[11px] text-muted-foreground tabular-nums w-9 text-right">
+                  {Math.round((c.total / maxTotal) * 100)}%
+                </span>
               </div>
             </div>
           ))
