@@ -2,6 +2,13 @@ import type { ChangelogEntry } from "../../../changelogData";
 
 export const chunk0: ChangelogEntry[] = [
   {
+    version: "8.99.36",
+    date: "2026-04-27",
+    type: "patch",
+    title: "Simetría header sidebar y topbar",
+    description: "Se alinea la altura del SidebarHeader (menú lateral) con la barra superior de la página a exactamente 64px (h-16), eliminando el escalón visual de ~4px que generaba el padding p-4 + logo h-9. Ahora la línea horizontal inferior de ambos headers es continua y simétrica, tanto en modo expandido como colapsado. Logo reducido de h-9 a h-8 para respirar correctamente dentro de los 64px.",
+  },
+  {
     version: "8.99.25",
     date: "2026-04-27",
     type: "patch",
