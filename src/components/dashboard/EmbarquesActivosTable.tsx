@@ -30,7 +30,7 @@ const columns: DataTableColumn<EmbarqueMesSiguiente>[] = [
     key: "ruta", header: "Origen → Destino", className: "text-xs max-w-[180px] truncate", render: (e) => `${getOrigen(e)} → ${getDestino(e)}`,
   },
   {
-    key: "contenedor", header: "Contenedor", className: "text-xs font-mono", sortable: true,
+    key: "contenedor", header: "Contenedor", className: "text-xs font-mono whitespace-nowrap", sortable: true,
     sortValue: (e) => e.contenedor || "",
     render: (e) => e.contenedor || <span className="text-muted-foreground">-</span>,
   },
