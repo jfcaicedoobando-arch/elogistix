@@ -4,7 +4,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { FileText, Receipt } from "lucide-react";
 import { formatCurrency, toTitleCase } from "@/lib/formatters";
 import { getEstadoColor } from "@/lib/ui/uiMappings";
-import { EmptyState } from "@/components/empty/EmptyState";
+import EmptyState from "@/components/empty/EmptyState";
 import type { ConceptoVentaRow, ConceptoCostoRow } from "@/hooks/embarque/useEmbarques";
 
 interface Props {
