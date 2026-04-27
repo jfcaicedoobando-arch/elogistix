@@ -5,6 +5,7 @@ import type { OperadorData } from "@/hooks/operaciones/useOperacionesData";
 import { ESTADOS_KEYS } from "@/hooks/operaciones/useDesempenoChartData";
 import { ESTADO_COLOR, ESTADO_ICON } from "./desempenoVisuals";
 import { ClienteExpandible } from "./ClienteExpandible";
+import { nombreDesdeEmail } from "@/lib/formatters";
 
 const TOP_CLIENTES = 5;
 
@@ -27,7 +28,7 @@ export const OperadorCard = memo(function OperadorCard({ operador }: { operador:
             <User className="h-4 w-4" />
           </div>
           <div className="min-w-0">
-            <p className="text-sm font-semibold truncate">{operador.nombre}</p>
+            <p className="text-sm font-semibold truncate">{nombreDesdeEmail(operador.nombre)}</p>
             <p className="text-[11px] text-muted-foreground">
               {operador.cargasActivas} embarques activos
             </p>
