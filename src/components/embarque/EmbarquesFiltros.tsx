@@ -52,35 +52,35 @@ export default function EmbarquesFiltros({
         className="flex-1 min-w-[200px]"
       />
       <Select value={filterModo} onValueChange={onFilterModoChange}>
-        <SelectTrigger className="w-[150px]"><SelectValue placeholder="Modo" /></SelectTrigger>
+        <SelectTrigger className="w-[150px] min-w-[140px]"><SelectValue placeholder="Modo" className="truncate" /></SelectTrigger>
         <SelectContent>
           <SelectItem value="todos">Todos los modos</SelectItem>
           {MODOS_TRANSPORTE.map(m => <SelectItem key={m} value={m}>{getModoIcon(m)} {m}</SelectItem>)}
         </SelectContent>
       </Select>
       <Select value={filterEstado} onValueChange={onFilterEstadoChange}>
-        <SelectTrigger className="w-[160px]"><SelectValue placeholder="Estado" /></SelectTrigger>
+        <SelectTrigger className="w-[170px] min-w-[160px]"><SelectValue placeholder="Estado" className="truncate" /></SelectTrigger>
         <SelectContent>
           <SelectItem value="todos">Todos los estados</SelectItem>
           {ESTADOS_EMBARQUE.map(e => <SelectItem key={e} value={e}>{e}</SelectItem>)}
         </SelectContent>
       </Select>
       <Select value={filterCliente} onValueChange={onFilterClienteChange}>
-        <SelectTrigger className="w-[200px]"><SelectValue placeholder="Cliente" /></SelectTrigger>
+        <SelectTrigger className="w-[220px] min-w-[180px]"><SelectValue placeholder="Cliente" className="truncate" /></SelectTrigger>
         <SelectContent>
           <SelectItem value="todos">Todos los clientes</SelectItem>
           {clientes.map(c => <SelectItem key={c.id} value={c.id}>{c.nombre.split(' ').slice(0, 3).join(' ')}</SelectItem>)}
         </SelectContent>
       </Select>
       <Select value={filterOperador} onValueChange={onFilterOperadorChange}>
-        <SelectTrigger className="w-[180px]"><SelectValue placeholder="Operador" /></SelectTrigger>
+        <SelectTrigger className="w-[200px] min-w-[180px]"><SelectValue placeholder="Operador" className="truncate" /></SelectTrigger>
         <SelectContent>
           <SelectItem value="todos">Todos los operadores</SelectItem>
           {operadores.map(op => <SelectItem key={op} value={op}>{op}</SelectItem>)}
         </SelectContent>
       </Select>
       <Select value={filterProforma} onValueChange={onFilterProformaChange}>
-        <SelectTrigger className="w-[170px]"><SelectValue placeholder="Proforma" /></SelectTrigger>
+        <SelectTrigger className="w-[180px] min-w-[160px]"><SelectValue placeholder="Proforma" className="truncate" /></SelectTrigger>
         <SelectContent>
           <SelectItem value="todos">Todas las proformas</SelectItem>
           <SelectItem value="con">Con proforma</SelectItem>

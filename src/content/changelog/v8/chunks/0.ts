@@ -2,6 +2,13 @@ import type { ChangelogEntry } from "../../../changelogData";
 
 export const chunk0: ChangelogEntry[] = [
   {
+    version: "8.99.13",
+    date: "2026-04-27",
+    type: "patch",
+    title: "Auditoría visual Fase 2: consistencia en filtros, dashboard mobile y header de detalle de embarque",
+    description: "Segunda fase del pase de pulido visual. (1) Filtros de Embarques — todos los SelectTrigger reciben min-w para evitar que el texto seleccionado quede cortado en resoluciones medianas; los placeholders ahora truncan limpio en lugar de empujar el layout. (2) Dashboard mobile — la tarjeta 'Arribos este mes' usaba flex horizontal con 4 métricas + barra de progreso, lo que provocaba overflow y cifras Profit USD apretadas en pantallas <1024px; ahora se reorganiza como grid 2x2 en mobile y 4 columnas en sm+, con el separador y la barra de progreso reubicados (lg:flex-row). El número Profit USD permanece whitespace-nowrap para evitar saltos. (3) Header del detalle de embarque — antes los 6 botones (Avanzar, Editar, Duplicar, Eliminar, Compartir, Imprimir) se desbordaban a la derecha en pantallas medianas; ahora el header se vuelve responsive (flex-col en <lg) con la barra de acciones envolviendo en flex-wrap, expediente y cliente con truncate, y 'Eliminar' relegado al final para evitar clics accidentales. (4) Operadores — confirmado que tras Fase 1 las tarjetas y chart usan el nombre derivado del email; sin cambios adicionales necesarios.",
+  },
+  {
     version: "8.99.12",
     date: "2026-04-27",
     type: "patch",
