@@ -10,7 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
-import { formatDate, formatCurrency } from "@/lib/formatters";
+import { formatDate, formatCurrency, toTitleCase } from "@/lib/formatters";
 import { getEstadoColor } from "@/lib/ui/uiMappings";
 import SearchInput from "@/components/selects/SearchInput";
 import PaginationControls from "@/components/shared/PaginationControls";
@@ -29,15 +29,29 @@ export default function Cotizaciones() {
   const c = useCotizacionesPageController();
 
   const columns: DataTableColumn<CotizacionListItem>[] = useMemo(() => {
+    const renderVigencia = (r: CotizacionListItem) => {
+      if (!r.fecha_vigencia) return <span className="text-muted-foreground">-</span>;
+      const fecha = new Date(r.fecha_vigencia);
+      const hoy = new Date();
+      const diffDias = Math.ceil((fecha.getTime() - hoy.getTime()) / (1000 * 60 * 60 * 24));
+      const fechaStr = formatDate(r.fecha_vigencia);
+      if (diffDias < 0) {
+        return <Badge variant="destructive" className="text-[10px] whitespace-nowrap">Vencida · {fechaStr}</Badge>;
+      }
+      if (diffDias <= 3) {
+        return <Badge variant="warning" className="text-[10px] whitespace-nowrap">{diffDias === 0 ? "Vence hoy" : `${diffDias}d`} · {fechaStr}</Badge>;
+      }
+      return <span className="whitespace-nowrap">{fechaStr}</span>;
+    };
     const cols: DataTableColumn<CotizacionListItem>[] = [
       { key: "folio", header: "Folio", width: "w-[120px]", className: "font-medium whitespace-nowrap", sticky: true, sortable: true, sortValue: (r) => r.folio, render: (r) => r.folio },
-      { key: "cliente", header: "Cliente", width: "min-w-[160px]", className: "max-w-[180px] truncate", sortable: true, sortValue: (r) => r.cliente_nombre, render: (r) => r.cliente_nombre },
+      { key: "cliente", header: "Cliente", width: "min-w-[160px]", className: "max-w-[180px] truncate", sortable: true, sortValue: (r) => r.cliente_nombre, render: (r) => toTitleCase(r.cliente_nombre) },
       { key: "modo", header: "Modo", width: "w-[80px]", className: "text-xs whitespace-nowrap", render: (r) => r.modo },
       { key: "ruta", header: "Origen → Destino", width: "min-w-[160px]", className: "text-xs", render: (r) => `${r.origen || "-"} → ${r.destino || "-"}` },
       { key: "subtotal", header: "Subtotal", width: "w-[110px]", className: "text-right text-xs whitespace-nowrap", headerClassName: "text-right", sortable: true, sortValue: (r) => r.subtotal, render: (r) => formatCurrency(r.subtotal, r.moneda) },
       { key: "estado", header: "Estado", width: "w-[110px]", sortable: true, sortValue: (r) => r.estado, render: (r) => <Badge variant="secondary" className={`text-xs whitespace-nowrap ${getEstadoColor(r.estado)}`}>{r.estado}</Badge> },
-      { key: "vigencia", header: "Vigencia", width: "w-[100px]", className: "text-xs", render: (r) => r.fecha_vigencia ? formatDate(r.fecha_vigencia) : "-" },
-      { key: "fecha", header: "Fecha", width: "w-[130px]", className: "text-xs", sortable: true, sortValue: (r) => r.created_at, render: (r) => new Date(r.created_at).toLocaleString('es-MX', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }) },
+      { key: "vigencia", header: "Vigencia", width: "w-[140px]", className: "text-xs", render: renderVigencia },
+      { key: "fecha", header: "Fecha", width: "w-[130px]", className: "text-xs whitespace-nowrap", sortable: true, sortValue: (r) => r.created_at, render: (r) => new Date(r.created_at).toLocaleString('es-MX', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: false }).replace(',', '') },
     ];
     if (c.canEdit) {
       cols.push({
