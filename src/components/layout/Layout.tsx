@@ -7,6 +7,7 @@ import { ErrorBoundary } from "@/components/shared/ErrorBoundary";
 import { ThemeToggle } from "@/components/layout/ThemeToggle";
 import RouteLoadingFallback from "@/components/layout/RouteLoadingFallback";
 import { Breadcrumbs } from "@/components/layout/Breadcrumbs";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
 export function Layout() {
   // En tablet (<lg = 1024px) el sidebar arranca colapsado para liberar ancho útil.
