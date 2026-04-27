@@ -1,4 +1,4 @@
-import { Pencil, Trash2, Loader2, Plus, Users } from "lucide-react";
+import { Pencil, Trash2, Loader2, Plus, Users, UserX } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -6,7 +6,8 @@ import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
 import type { Tables, Enums } from "@/integrations/supabase/types";
-import { toTitleCase } from "@/lib/formatters";
+import { toTitleCase, correctSpanishPlace } from "@/lib/formatters";
+import EmptyState from "@/components/empty/EmptyState";
 type ContactoCliente = Tables<'contactos_cliente'>;
 type TipoContacto = Enums<'tipo_contacto'>;
 
