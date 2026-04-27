@@ -12,6 +12,7 @@ import { formatCurrency, formatDate, toTitleCase } from "@/lib/formatters";
 import { getEstadoColor } from "@/lib/ui/uiMappings";
 import PaginationControls from "@/components/shared/PaginationControls";
 import { DataTable, type DataTableColumn } from "@/components/shared/DataTable";
+import { PageHeader } from "@/components/shared/PageHeader";
 import type { Database } from "@/integrations/supabase/types";
 import { TabProformas } from "@/components/facturacion/TabProformas";
 import { TabProformasPendientes } from "@/components/facturacion/TabProformasPendientes";
