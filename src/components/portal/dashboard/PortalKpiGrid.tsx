@@ -15,7 +15,7 @@ interface KpiDef {
 
 const KPIS: KpiDef[] = [
   { key: "embarques", label: "Embarques Activos", icon: Ship, href: "/portal/embarques", color: "text-accent", bg: "bg-accent/10" },
-  { key: "cotizaciones", label: "Cotizaciones", icon: FileText, href: "/portal/cotizaciones", color: "text-[hsl(var(--state-en-proceso))]", bg: "bg-[hsl(var(--state-en-proceso)/0.1)]" },
+  { key: "cotizaciones", label: "Cotizaciones Pendientes", icon: FileText, href: "/portal/cotizaciones", color: "text-[hsl(var(--state-en-proceso))]", bg: "bg-[hsl(var(--state-en-proceso)/0.1)]" },
   { key: "facturas", label: "Facturas Pendientes", icon: Receipt, href: "/portal/facturas", color: "text-[hsl(var(--warning))]", bg: "bg-[hsl(var(--warning)/0.1)]" },
 ];
 
