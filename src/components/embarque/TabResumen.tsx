@@ -51,11 +51,11 @@ export function TabResumen({ embarque }: Props) {
             <DetailRow label="Modo" value={`${getModoIcon(embarque.modo)} ${embarque.modo}`} />
             <DetailRow label="Tipo" value={embarque.tipo} />
             <DetailRow label="Incoterm" value={embarque.incoterm} />
-            <DetailRow label="Mercancía" value={embarque.descripcion_mercancia} />
+            <DetailRow label="Mercancía" value={toTitleCase(embarque.descripcion_mercancia)} />
             <DetailRow label="Peso" value={`${Number(embarque.peso_kg).toLocaleString()} kg`} />
             <DetailRow label="Volumen" value={`${embarque.volumen_m3} m³`} />
             <DetailRow label="Piezas" value={embarque.piezas.toString()} />
-            <DetailRow label="Operador" value={embarque.operador} />
+            <DetailRow label="Operador" value={nombreDesdeEmail(embarque.operador)} />
           </CardContent>
         </Card>
 
