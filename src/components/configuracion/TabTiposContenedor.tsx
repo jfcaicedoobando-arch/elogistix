@@ -42,7 +42,7 @@ export default function TabTiposContenedor() {
     {
       key: "eliminar", header: "", headerClassName: "w-12",
       render: (t) => (
-        <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:text-destructive" onClick={() => eliminarTipo.mutate(t.id)} aria-label={`Eliminar tipo ${t.nombre}`}>
+        <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:text-destructive" onClick={() => eliminarTipo.mutate(t.id)} aria-label={`Eliminar tipo ${t.name}`}>
           <Trash2 className="h-4 w-4" />
         </Button>
       ),
