@@ -1,52 +1,51 @@
-## Auditoría v8.99.20 — Fase 9 (Pulido final)
+# Auditoría v8.99.22 — Fase 11 (Colores hardcoded — design system)
 
-Tras la fase 8 (Portal y Admin), una nueva pasada detecta inconsistencias menores en módulos operativos: la pestaña de **Tracking**, la pestaña de **Notas**, la pestaña de **Costos** del embarque, y un par de detalles en dashboards. Son ajustes pequeños, todos enfocados a consistencia con el resto de la app ya pulida.
+## Hallazgo crítico
 
-### Hallazgos
+Un barrido con `grep` sobre todo `src/` detectó **17 ocurrencias de colores Tailwind crudos** (`text-emerald-600`, `text-red-600`, `text-blue-600`, `text-green-600`, `text-emerald-500`) distribuidas en **10 archivos**, todas violando el design system del proyecto que exige el uso de tokens semánticos HSL (`text-success`, `text-destructive`, `text-info`, `text-warning`).
 
-1. **Tracking de embarque (`TabTracking.tsx`)**
-   - El campo "usuario" muestra el email crudo (ej. `juan.perez@empresa.mx`) en lugar del nombre legible.
-   - No hay tooltip con la fecha absoluta ni formato relativo en eventos antiguos.
+Estos colores crudos rompen:
+- **Dark mode**: el verde/rojo crudos se ven sobresaturados frente al tema HSL.
+- **Consistencia**: el mismo concepto (profit positivo) se renderiza con dos verdes distintos en pantallas adyacentes.
+- **White-label**: bloquea cualquier customización futura del tema por organización.
 
-2. **Notas del embarque (`TabNotas.tsx`)**
-   - Mismo problema: `nota.usuario` se muestra como email crudo en cada nota.
-   - La fecha usa `toLocaleString` directo en vez del helper `formatDate` centralizado.
+## Archivos afectados
 
-3. **TabCostos del embarque (`TabCostos.tsx`)**
-   - Tablas sin alineación a la derecha en columnas numéricas (P. Unitario, Total, Monto).
-   - Sin estado vacío cuando no hay conceptos cargados (se ve la tabla vacía sin mensaje).
-   - Nombres de proveedor sin `toTitleCase`.
-   - Falta `tabular-nums` en las celdas monetarias.
+| Módulo | Archivo | Color crudo |
+|---|---|---|
+| Cotizaciones | `PasoResumenCotizacion.tsx` | `text-emerald-600`, `text-red-600` (profit) |
+| Cotizaciones | `ResumenPL.tsx` | `text-emerald-600`, `text-red-600` (profit) |
+| Cotizaciones | `TablaCostosDetalle.tsx` | `text-emerald-600`, `text-red-600` (profit x2) |
+| Cotizaciones | `TablaCostosLocal.tsx` | `text-emerald-600`, `text-red-600` (profit x2) |
+| Facturación | `HistorialFacturas.tsx` | `text-red-600` PDF, `text-blue-600` XML (con hover) |
+| Facturación | `HistorialProformas.tsx` | `text-red-600` PDF, `text-blue-600` XML |
+| Facturación | `DialogMarcarFacturada.tsx` | `text-red-600` PDF, `text-blue-600` XML |
+| Facturación | `Facturacion.tsx` | `text-red-600` PDF, `text-blue-600` XML |
+| Portal | `PortalEmbarqueDocumentos.tsx` | `text-green-600` (estado Validado) |
+| Dashboard | `DashboardStatusCards.tsx` | `text-emerald-500`, `text-emerald-600` (arribos) |
 
-4. **Dashboards (menor)**
-   - `EmbarquesActivosTable`: la columna "Contenedor" no tiene `whitespace-nowrap`, puede romperse en viewport pequeño.
-   - El header truncado de "Embarques activos — próximo mes (Mayo)" puede desbordarse en móvil (no usa `flex-wrap`).
+## Mapeo de reemplazos
 
-### Cambios propuestos
+```
+text-emerald-600  →  text-success
+text-emerald-500  →  text-success
+text-green-600    →  text-success
+text-red-600      →  text-destructive
+text-blue-600     →  text-info
+hover:text-red-700  →  hover:text-destructive/80
+hover:text-blue-700 →  hover:text-info/80
+```
 
-**Normalización de usuario y fechas**
-- En `TabTracking.tsx` y `TabNotas.tsx`: aplicar `nombreDesdeEmail(ev.usuario)` para mostrar nombre legible, con `title={ev.usuario}` como tooltip del email completo.
-- En `TabNotas.tsx`: reemplazar `new Date(...).toLocaleString(...)` por `formatDate(nota.fecha, "dd/MM/yyyy HH:mm")`.
+Tokens ya definidos en `tailwind.config.ts` líneas 33, 63, 67, 71.
 
-**TabCostos**
-- Agregar `className="text-right tabular-nums"` y `headerClassName="text-right"` a columnas P. Unitario, Total y Monto.
-- Aplicar `toTitleCase` al `proveedor_nombre`.
-- Mostrar `EmptyState` cuando `conceptosVenta.length === 0` o `conceptosCosto.length === 0` ("Sin conceptos registrados").
+## Plan de acción
 
-**Dashboard responsive**
-- En `EmbarquesActivosTable.tsx`: `whitespace-nowrap` en columna Contenedor; `flex-wrap` en el `CardTitle` del header.
+1. Aplicar los reemplazos en los 10 archivos (cambio mecánico, sin lógica nueva).
+2. Agregar entrada `v8.99.22` al inicio de `src/content/changelog/v8/chunks/0.ts` documentando el barrido y los archivos normalizados.
+3. Verificar `tsc --noEmit` (sin cambios de tipos esperados — solo strings de className).
 
-**Changelog**
-- Agregar entrada `v8.99.20` en `src/content/changelog/v8/chunks/0.ts` documentando el pulido.
+## Detalles técnicos
 
-### Archivos a editar
-- `src/components/embarque/TabTracking.tsx`
-- `src/components/embarque/TabNotas.tsx`
-- `src/components/embarque/TabCostos.tsx`
-- `src/components/dashboard/EmbarquesActivosTable.tsx`
-- `src/content/changelog/v8/chunks/0.ts`
-
-### Detalles técnicos
-- `nombreDesdeEmail` y `toTitleCase` ya existen en `src/lib/formatters/index.ts`.
-- `EmptyState` ya está disponible en `src/components/empty/`.
-- Sin cambios de DB, sin cambios de lógica de negocio — solo capa de presentación.
+- Solo cambios de presentación. Sin tocar DB, hooks, lógica de negocio ni rutas.
+- `src/components/ui/toast.tsx` se excluye intencionalmente: usa `text-red-300/400` dentro de la variante `destructive` de shadcn — son parte del sistema base de shadcn y no representan datos del dominio.
+- Sin riesgo de regresión visual: los tokens ya se usan exitosamente en `EmbarquesActivosTable`, `ProfitTable` y `TabCostos` (verificados en fases 7-10).
