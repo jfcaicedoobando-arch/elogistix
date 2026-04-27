@@ -9,9 +9,20 @@ import NuevoUsuarioDialog from "@/components/usuario/NuevoUsuarioDialog";
 import { DataTable, type DataTableColumn } from "@/components/shared/DataTable";
 import { useUsuarios, useUpdateUserRole, useDeleteUser, type UserRow } from "@/hooks/usuario/useUsuarios";
 import DoubleConfirmDeleteDialog from "@/components/shared/DoubleConfirmDeleteDialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import type { AppRole } from "@/types/appRole";
 import { useAuth } from "@/contexts/AuthContext";
 import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
+import { getRoleLabel } from "@/lib/ui/uiMappings";
 
 const roleBadge: Record<AppRole, string> = {
   super_admin: "bg-primary text-primary-foreground",
@@ -23,21 +34,30 @@ const roleBadge: Record<AppRole, string> = {
 
 import { formatDate } from "@/lib/formatters";
 
+interface PendingRoleChange {
+  user: UserRow;
+  newRole: AppRole;
+}
+
 export default function Usuarios() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<UserRow | null>(null);
+  const [pendingRole, setPendingRole] = useState<PendingRoleChange | null>(null);
   const { toast } = useToast();
   const { user } = useAuth();
   const { data: users = [], isLoading } = useUsuarios();
   const updateRole = useUpdateUserRole();
   const deleteUser = useDeleteUser();
 
-  const handleRoleChange = async (userId: string, newRole: AppRole) => {
+  const confirmRoleChange = async () => {
+    if (!pendingRole) return;
     try {
-      await updateRole.mutateAsync({ userId, newRole });
-      notifySuccess(toast, { title: "Rol actualizado" });
+      await updateRole.mutateAsync({ userId: pendingRole.user.user_id, newRole: pendingRole.newRole });
+      notifySuccess(toast, { title: "Rol actualizado", description: `${pendingRole.user.email} ahora es ${getRoleLabel(pendingRole.newRole)}.` });
     } catch (err: unknown) {
-      notifyError(toast, { title: "Error al cambiar rol", description: getErrorMessage(err)});
+      notifyError(toast, { title: "Error al cambiar rol", description: getErrorMessage(err) });
+    } finally {
+      setPendingRole(null);
     }
   };
 
@@ -54,15 +74,22 @@ export default function Usuarios() {
   const columns: DataTableColumn<UserRow>[] = [
     { key: "email", header: "Email", width: "min-w-[200px]", className: "font-medium", sortable: true, sortValue: (u) => u.email, render: (u) => u.email },
     { key: "created_at", header: "Fecha de registro", width: "w-[140px]", className: "text-xs text-muted-foreground", sortable: true, sortValue: (u) => u.created_at, render: (u) => formatDate(u.created_at) },
-    { key: "role", header: "Rol actual", width: "w-[100px]", sortable: true, sortValue: (u) => u.role, render: (u) => <Badge className={roleBadge[u.role]}>{u.role}</Badge> },
+    { key: "role", header: "Rol actual", width: "w-[120px]", sortable: true, sortValue: (u) => u.role, render: (u) => <Badge className={roleBadge[u.role]}>{getRoleLabel(u.role)}</Badge> },
     {
       key: "change_role", header: "Cambiar rol", width: "w-[160px]", render: (u) => (
-        <Select value={u.role} onValueChange={(val) => handleRoleChange(u.user_id, val as AppRole)}>
+        <Select
+          value={u.role}
+          onValueChange={(val) => {
+            const newRole = val as AppRole;
+            if (newRole === u.role) return;
+            setPendingRole({ user: u, newRole });
+          }}
+        >
           <SelectTrigger className="w-[140px]"><SelectValue /></SelectTrigger>
           <SelectContent>
             <SelectItem value="admin">Admin</SelectItem>
             <SelectItem value="operador">Operador</SelectItem>
-            <SelectItem value="viewer">Viewer</SelectItem>
+            <SelectItem value="viewer">Visor</SelectItem>
           </SelectContent>
         </Select>
       ),
@@ -112,6 +139,29 @@ export default function Usuarios() {
         onConfirm={handleDelete}
         isPending={deleteUser.isPending}
       />
+
+      <AlertDialog open={!!pendingRole} onOpenChange={(open) => { if (!open) setPendingRole(null); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>¿Cambiar rol del usuario?</AlertDialogTitle>
+            <AlertDialogDescription>
+              {pendingRole && (
+                <>
+                  Vas a cambiar el rol de <strong>{pendingRole.user.email}</strong> de{" "}
+                  <strong>{getRoleLabel(pendingRole.user.role)}</strong> a{" "}
+                  <strong>{getRoleLabel(pendingRole.newRole)}</strong>. Esto modifica los permisos del usuario inmediatamente.
+                </>
+              )}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={updateRole.isPending}>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmRoleChange} disabled={updateRole.isPending}>
+              {updateRole.isPending ? "Cambiando..." : "Confirmar"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       <div className="rounded-md border">
         <DataTable
