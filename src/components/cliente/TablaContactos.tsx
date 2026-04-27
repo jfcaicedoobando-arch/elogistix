@@ -72,10 +72,10 @@ export default function TablaContactos({ contactos, isLoading, canEdit, onAdd, o
                   <TableCell>
                     {canEdit && (
                       <div className="flex gap-1">
-                        <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => onEdit(contacto)}>
+                        <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => onEdit(contacto)} aria-label={`Editar contacto ${contacto.nombre}`}>
                           <Pencil className="h-3.5 w-3.5" />
                         </Button>
-                        <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={() => onDelete(contacto.id)}>
+                        <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={() => onDelete(contacto.id)} aria-label={`Eliminar contacto ${contacto.nombre}`}>
                           <Trash2 className="h-3.5 w-3.5" />
                         </Button>
                       </div>
