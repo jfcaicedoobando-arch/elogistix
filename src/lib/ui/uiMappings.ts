@@ -50,3 +50,14 @@ export const getModoLucideIcon = (modo: string): LucideIcon => {
     default: return Ship;
   }
 };
+
+/** Etiquetas legibles para roles internos del sistema. */
+export const roleLabels: Record<string, string> = {
+  super_admin: "Super Admin",
+  admin: "Admin",
+  operador: "Operador",
+  viewer: "Visor",
+  cliente: "Cliente",
+};
+
+export const getRoleLabel = (role: string): string => roleLabels[role] ?? role;

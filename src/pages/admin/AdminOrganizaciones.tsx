@@ -16,6 +16,7 @@ import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 import { Label } from "@/components/ui/label";
 import { useNavigate } from "react-router-dom";
 import { useAdminOrganizations, useCreateOrganization, type OrgRow } from "@/hooks/admin/useAdminData";
+import { toTitleCase } from "@/lib/formatters";
 
 export default function AdminOrganizaciones() {
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -54,12 +55,13 @@ export default function AdminOrganizaciones() {
         <button
           className="text-primary hover:underline font-medium"
           onClick={() => navigate(`/admin/organizaciones/${o.id}`)}
+          title={o.nombre}
         >
-          {o.nombre}
+          {toTitleCase(o.nombre)}
         </button>
       ),
     },
-    { key: "rfc", header: "RFC", width: "w-[140px]", render: (o) => o.rfc || "—" },
+    { key: "rfc", header: "RFC", width: "w-[140px]", render: (o) => o.rfc?.toUpperCase() || "—" },
     { key: "plan", header: "Plan", width: "w-[100px]", render: (o) => <Badge variant="outline">{o.plan}</Badge> },
     {
       key: "activo",
