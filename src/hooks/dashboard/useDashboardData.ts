@@ -7,6 +7,7 @@ import {
   parseConteoPorEstado,
   parseArribosEsteMes,
   parseResumenMesSiguiente,
+  parseEmbarquesMesSiguiente,
   parseCargasPorCliente,
   combinarActivos,
   type EstadoFiltro,
@@ -80,7 +81,7 @@ export function useDashboardData() {
   const arribosEsteMes = useMemo(() => parseArribosEsteMes(stats), [stats]);
 
   const embarquesMesSiguiente = useMemo<EmbarqueMesSiguiente[]>(
-    () => (stats?.embarquesMesSiguiente as EmbarqueMesSiguiente[]) ?? [],
+    () => parseEmbarquesMesSiguiente(stats),
     [stats],
   );
 

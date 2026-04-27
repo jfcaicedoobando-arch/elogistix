@@ -2,6 +2,13 @@ import type { ChangelogEntry } from "../../../changelogData";
 
 export const chunk0: ChangelogEntry[] = [
   {
+    version: "8.99.11",
+    date: "2026-04-27",
+    type: "patch",
+    title: "Fix: card 'Embarques activos — próximo mes' del dashboard principal",
+    description: "Reparación integral del card del dashboard principal que listaba los embarques con ETA en el próximo mes. Errores corregidos: (1) Resumen de facturación vacío — la RPC dashboard_details() nunca emitía la clave 'resumenMesSiguiente', por lo que las 5 tarjetas (Embarques, Venta USD, Costo USD, Profit, Facturados) mostraban 0/$0 y el título quedaba como 'Embarques —' sin nombre de mes. (2) Profit en NaN — las filas devolvían ventaUSD y costoUSD pero no profit ni margen, por lo que la columna Profit se renderizaba indefinida. (3) Facturado siempre 'No' — la RPC no calculaba el cruce con la tabla facturas. (4) Layout apretado en tablets/móviles — el grid sm:grid-cols-5 truncaba las cifras de moneda. Cambios: dashboard_details() ahora emite resumenMesSiguiente con todos los KPIs sumados, profit/margen por fila y el flag 'facturado' (EXISTS sobre facturas con estado distinto de Cancelada/Borrador). El nombre del mes ahora incluye año (ej. 'Mayo 2026'). Se añadió parseEmbarquesMesSiguiente() en el parser para garantizar profit/margen/facturado siempre presentes (defensa en profundidad). Layout responsive: grid-cols-2 / md:grid-cols-3 / lg:grid-cols-5 con truncate en cifras y la tarjeta Facturados ocupando el ancho completo en mobile.",
+  },
+  {
     version: "8.99.10",
     date: "2026-04-27",
     type: "patch",
