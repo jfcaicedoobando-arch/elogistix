@@ -35,6 +35,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
+import { cn } from "@/lib/utils";
 import { chunk0 } from "@/content/changelog/v8/chunks/0";
 
 const APP_VERSION = chunk0[0]?.version ?? "—";
