@@ -79,8 +79,8 @@ export default function TabPlanes() {
     },
     {
       key: "almacenamiento",
-      header: "Almacenamiento (MB)",
-      className: "text-right",
+      header: "Almacenamiento",
+      className: "text-right tabular-nums",
       render: (p) =>
         editingId === p.id ? (
           <Input
