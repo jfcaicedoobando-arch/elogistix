@@ -11,6 +11,7 @@ import {
 import { MAX_CONTENEDORES, type PeriodoFiltro } from "@/hooks/operaciones/useOperacionesData";
 import { formatCurrency } from "@/lib/formatters";
 import { KpiCard } from "@/components/operaciones/KpiCard";
+import { PageHeader } from "@/components/shared/PageHeader";
 import { DesempenoOperadores } from "@/components/operaciones/DesempenoOperadores";
 import { useOperacionesPageController } from "@/hooks/operaciones/useOperacionesPageController";
 
