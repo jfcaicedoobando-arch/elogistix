@@ -109,7 +109,7 @@ export function ConceptoRowUSD({ concepto: c, index: i, total, actualizar, elimi
       </div>
       <div className="col-span-1">
         {i === 0 && <Label className="text-xs">&nbsp;</Label>}
-        <Button variant="ghost" size="icon" onClick={() => eliminar(i)} disabled={total <= 1}>
+        <Button variant="ghost" size="icon" onClick={() => eliminar(i)} disabled={total <= 1} aria-label="Eliminar concepto">
           <Trash2 className="h-4 w-4 text-destructive" />
         </Button>
       </div>

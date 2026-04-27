@@ -80,11 +80,11 @@ export default function DialogDuplicarEmbarque({ embarque, open, onOpenChange }:
           <div className="flex items-center gap-3">
             <span className="text-sm font-medium">¿Cuántos contenedores adicionales?</span>
             <div className="flex items-center gap-1">
-              <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => ajustarCantidad(-1)} disabled={filaCopias.length <= 1}>
+              <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => ajustarCantidad(-1)} disabled={filaCopias.length <= 1} aria-label="Reducir cantidad de copias">
                 <Minus className="h-4 w-4" />
               </Button>
               <span className="w-8 text-center font-semibold">{filaCopias.length}</span>
-              <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => ajustarCantidad(1)} disabled={filaCopias.length >= 10}>
+              <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => ajustarCantidad(1)} disabled={filaCopias.length >= 10} aria-label="Aumentar cantidad de copias">
                 <Plus className="h-4 w-4" />
               </Button>
             </div>

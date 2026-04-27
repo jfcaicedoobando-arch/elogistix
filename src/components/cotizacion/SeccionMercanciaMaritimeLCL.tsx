@@ -87,7 +87,7 @@ export default function SeccionMercanciaMaritimeLCL({ msdsFile, setMsdsFile }: P
                       <Input value={dim.volumen_m3.toFixed(4)} readOnly className="h-8 bg-muted" />
                     </TableCell>
                     <TableCell>
-                      <Button variant="ghost" size="icon" onClick={() => eliminarFila(i)} disabled={dimensiones.length <= 1} className="h-8 w-8">
+                      <Button variant="ghost" size="icon" onClick={() => eliminarFila(i)} disabled={dimensiones.length <= 1} className="h-8 w-8" aria-label="Eliminar fila">
                         <Trash2 className="h-4 w-4 text-destructive" />
                       </Button>
                     </TableCell>

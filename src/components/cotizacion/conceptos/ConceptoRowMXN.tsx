@@ -89,7 +89,7 @@ export function ConceptoRowMXN({ concepto: c, index: i, total, actualizar, elimi
         <Input value={formatCurrency(c.total, 'MXN')} readOnly className="bg-muted" />
       </div>
       <div className="col-span-1">
-        <Button variant="ghost" size="icon" onClick={() => eliminar(i)} disabled={total <= 1}>
+        <Button variant="ghost" size="icon" onClick={() => eliminar(i)} disabled={total <= 1} aria-label="Eliminar concepto">
           <Trash2 className="h-4 w-4 text-destructive" />
         </Button>
       </div>

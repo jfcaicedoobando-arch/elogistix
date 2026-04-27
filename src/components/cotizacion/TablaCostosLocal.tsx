@@ -132,7 +132,7 @@ export default function TablaCostosLocal({ filas, filasMoneda, moneda, title, ic
                     {formatCurrency(profit, moneda)}
                   </span>
                   <div className="w-[70px] flex justify-center"><ProfitBadge porcentaje={pct} /></div>
-                  <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => onRemove(gi)}>
+                  <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => onRemove(gi)} aria-label="Eliminar grupo">
                     <Trash2 className="h-4 w-4 text-destructive" />
                   </Button>
                 </div>
