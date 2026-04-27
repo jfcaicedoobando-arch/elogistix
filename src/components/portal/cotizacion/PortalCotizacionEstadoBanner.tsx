@@ -1,22 +1,56 @@
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { CheckCircle2, XCircle, Info, MessageSquare } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { CheckCircle2, XCircle, Info, MessageSquare, Ship, ArrowRight } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 interface PortalCotizacionEstadoBannerProps {
   estado: string;
   comentarioCliente?: string | null;
+  embarqueId?: string | null;
+  embarqueExpediente?: string | null;
 }
 
-/** Banner contextual según el estado de la cotización (Aceptada/Rechazada/Enviada). */
+/** Banner contextual según el estado de la cotización (Aceptada/Embarcada/Rechazada/Enviada). */
 export default function PortalCotizacionEstadoBanner({
   estado,
   comentarioCliente,
+  embarqueId,
+  embarqueExpediente,
 }: PortalCotizacionEstadoBannerProps) {
+  const navigate = useNavigate();
+
+  if (estado === "Embarcada" && embarqueId) {
+    return (
+      <Alert className="border-success/50 bg-success/10">
+        <Ship className="h-4 w-4 text-success" />
+        <AlertDescription className="text-success">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+            <p>
+              Esta cotización ya está en operación.
+              {embarqueExpediente && (
+                <span className="ml-1 font-semibold">Embarque {embarqueExpediente}.</span>
+              )}
+            </p>
+            <Button
+              size="sm"
+              variant="outline"
+              className="border-success text-success hover:bg-success/20"
+              onClick={() => navigate(`/portal/embarques/${embarqueId}`)}
+            >
+              Ver embarque <ArrowRight className="h-3.5 w-3.5 ml-1" />
+            </Button>
+          </div>
+        </AlertDescription>
+      </Alert>
+    );
+  }
+
   if (estado === "Aceptada") {
     return (
       <Alert className="border-success/50 bg-success/10">
         <CheckCircle2 className="h-4 w-4 text-success" />
         <AlertDescription className="text-success">
-          <p>Esta cotización fue aceptada. El equipo procederá con la operación.</p>
+          <p>Esta cotización fue aceptada. Te notificaremos cuando inicie la operación.</p>
           {comentarioCliente && (
             <p className="mt-2 flex items-start gap-1.5">
               <MessageSquare className="h-3.5 w-3.5 mt-0.5 shrink-0" />

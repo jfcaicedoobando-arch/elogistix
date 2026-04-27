@@ -2,6 +2,13 @@ import type { ChangelogEntry } from "../../../changelogData";
 
 export const chunk0: ChangelogEntry[] = [
   {
+    version: "8.99.4",
+    date: "2026-04-27",
+    type: "patch",
+    title: "Trazabilidad cotización → embarque en el portal del cliente",
+    description: "Antes el cliente aceptaba una cotización y se quedaba 'a ciegas': no podía saber si su carga ya estaba en operación. Ahora cada cotización aceptada que ya generó embarque muestra el vínculo directo en el portal. Cambios: (1) Migración SQL con backfill de cotizaciones.embarque_id (se rellenó automáticamente para los embarques existentes que ya apuntaban a una cotización vía cotizacion_id) y un trigger AFTER INSERT/UPDATE en embarques que mantiene el vínculo sincronizado de forma automática a futuro. (2) La política RLS 'Cliente read own cotizaciones' ahora también permite el estado 'Embarcada' (que se asigna al convertir cotización en embarque), evitando que la cotización 'desaparezca' del portal tras la conversión. (3) convertirCotizacionAEmbarques ahora escribe explícitamente cotizaciones.embarque_id al primer embarque creado (defensa en profundidad junto al trigger). (4) UI: el listado /portal/cotizaciones muestra un badge verde 'En operación · EXP-XXXX' clickeable que navega al embarque, y el banner de detalle PortalCotizacionEstadoBanner añade un nuevo caso para 'Embarcada' con botón 'Ver embarque →'.",
+  },
+  {
     version: "8.99.3",
     date: "2026-04-27",
     type: "patch",

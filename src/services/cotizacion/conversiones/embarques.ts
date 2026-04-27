@@ -70,9 +70,16 @@ export async function convertirCotizacionAEmbarques(
     embarquesCreados.push(embarque);
   }
 
+  // Marcar cotización como Embarcada y, defensa en profundidad, vincular el primer embarque creado.
+  // (El trigger trg_sync_cotizacion_embarque_link ya lo hace, pero lo escribimos también aquí
+  // para garantizar consistencia inmediata aunque el trigger sea modificado en el futuro.)
+  const primerEmbarqueId = embarquesCreados[0]?.id ?? null;
   const { error: errorUpdate } = await supabase
     .from("cotizaciones")
-    .update({ estado: "Embarcada" as CotizacionInsert["estado"] })
+    .update({
+      estado: "Embarcada" as CotizacionInsert["estado"],
+      embarque_id: primerEmbarqueId,
+    })
     .eq("id", cotizacion.id);
   if (errorUpdate) throw errorUpdate;
 
