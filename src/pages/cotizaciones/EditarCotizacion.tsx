@@ -7,7 +7,7 @@ import { useCotizacionCostos, useUpsertCotizacionCostos } from "@/hooks/cotizaci
 import { useRegistrarActividad } from "@/hooks/shared/useBitacora";
 import { useAuth } from "@/contexts/AuthContext";
 import { usePermissions } from "@/hooks/shared/usePermissions";
-import { useCotizacionWizardForm } from "@/hooks/cotizacion/useCotizacionWizardForm";
+import { useCotizacionWizardForm } from "@/hooks/cotizacion/wizard/useCotizacionWizardForm";
 import CotizacionWizardLayout from "@/components/cotizacion/CotizacionWizardLayout";
 import type { NavigateFunction } from "react-router-dom";
 import type { CotizacionRow } from "@/hooks/cotizacion/useCotizaciones";

@@ -2,7 +2,7 @@ import { useFormContext } from "react-hook-form";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import type { CotizacionFormValues } from "@/hooks/cotizacion/useCotizacionWizardForm";
+import type { CotizacionFormValues } from "@/hooks/cotizacion/wizard/useCotizacionWizardForm";
 
 const MODOS = ['Marítimo', 'Aéreo', 'Terrestre', 'Multimodal'];
 const TIPOS = ['Importación', 'Exportación', 'Nacional', 'Cross Trade', 'Intra USA'];

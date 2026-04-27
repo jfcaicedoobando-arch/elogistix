@@ -14,7 +14,7 @@ import {
 } from "@/lib/mappers/cotizacionForm";
 import { useConceptosVentaCotizacion } from "@/hooks/cotizacion/useConceptosVentaCotizacion";
 import { useCotizacionPL } from "@/hooks/cotizacion/useCotizacionPL";
-import { useCotizacionWizardSteps } from "@/hooks/cotizacion/useCotizacionWizardSteps";
+import { useCotizacionWizardSteps } from "@/hooks/cotizacion/wizard/useCotizacionWizardSteps";
 
 // Re-exports para preservar la API pública existente
 export { COTIZACION_FORM_DEFAULTS } from "@/lib/mappers/cotizacionForm";
