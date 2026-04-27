@@ -1,14 +1,15 @@
 import { useEffect, useRef } from "react";
 import { FormProvider } from "react-hook-form";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import {
   Accordion, AccordionContent, AccordionItem, AccordionTrigger,
 } from "@/components/ui/accordion";
 import { ArrowLeft, Save, ChevronRight, ChevronLeft, Info, Package, StickyNote, Loader2 } from "lucide-react";
+import { WizardSection } from "@/components/shared/WizardSection";
 
 import { StepIndicator } from "@/components/embarque/StepIndicator";
 import SeccionDestinatario from "@/components/cotizacion/SeccionDestinatario";
