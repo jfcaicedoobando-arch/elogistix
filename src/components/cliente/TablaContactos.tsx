@@ -41,8 +41,13 @@ export default function TablaContactos({ contactos, isLoading, canEdit, onAdd, o
             <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
           </div>
         ) : contactos.length === 0 ? (
-          <div className="p-8 text-center text-muted-foreground text-sm">
-            No hay contactos registrados. Agrega proveedores o exportadores para usarlos en embarques.
+          <div className="p-6">
+            <EmptyState
+              icon={UserX}
+              title="Sin contactos registrados"
+              description="Agrega proveedores, exportadores o importadores para usarlos al crear embarques."
+              primaryAction={canEdit ? { label: "Agregar Contacto", onClick: onAdd } : undefined}
+            />
           </div>
         ) : (
           <Table>
