@@ -78,9 +78,9 @@ export function EmbarquesActivosTable({ embarques, resumen, isLoading }: Props) 
   return (
     <Card>
       <CardHeader className="pb-3">
-        <CardTitle className="text-base flex items-center gap-2">
-          <CalendarDays className="h-4 w-4 text-primary" />
-          Embarques activos — próximo mes ({nombreMesCap})
+        <CardTitle className="text-base flex items-center gap-2 flex-wrap">
+          <CalendarDays className="h-4 w-4 text-primary shrink-0" />
+          <span>Embarques activos — próximo mes ({nombreMesCap})</span>
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
