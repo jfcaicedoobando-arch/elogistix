@@ -102,22 +102,22 @@ export default function Cotizaciones() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h1 className="text-2xl font-bold">Cotizaciones</h1>
-          <p className="text-sm text-muted-foreground">{c.filtered.length} cotizaciones encontradas</p>
-        </div>
-        <div className="flex flex-col gap-2 sm:flex-row sm:gap-2">
-          <Button variant="outline" onClick={c.exportar} className="w-full sm:w-auto">
-            <Download className="h-4 w-4 mr-2" /> Exportar CSV
-          </Button>
-          {c.canEdit && (
-            <Button onClick={c.irANueva} className="w-full sm:w-auto">
-              <Plus className="h-4 w-4 mr-2" /> Nueva Cotización
+      <PageHeader
+        title="Cotizaciones"
+        description={`${c.filtered.length} cotizaciones encontradas`}
+        actions={
+          <>
+            <Button variant="outline" onClick={c.exportar} className="w-full sm:w-auto">
+              <Download className="h-4 w-4 mr-2" /> Exportar CSV
             </Button>
-          )}
-        </div>
-      </div>
+            {c.canEdit && (
+              <Button onClick={c.irANueva} className="w-full sm:w-auto">
+                <Plus className="h-4 w-4 mr-2" /> Nueva Cotización
+              </Button>
+            )}
+          </>
+        }
+      />
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <KpiCard titulo="Total cotizaciones" valor={c.kpis.total} icono={BarChart3} color="blue" />
