@@ -7,7 +7,8 @@ import type { DataTableColumn } from "@/components/shared/DataTable";
 import { calcularEstadoEmbarque } from "@/hooks/embarque/useEmbarques";
 import type { EmbarqueRow } from "@/hooks/embarque/useEmbarques";
 import { formatDate, getOrigen, getDestino, shortName, toTitleCase } from "@/lib/formatters";
-import { getEstadoColor, getModoIcon } from "@/lib/ui/uiMappings";
+import { getEstadoColor } from "@/lib/ui/uiMappings";
+import { ModoIcon } from "@/components/shared/ModoIcon";
 import EmbarqueRowActions from "./EmbarqueRowActions";
 import { ProformaBadge } from "./ProformaBadge";
 
