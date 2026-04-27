@@ -105,7 +105,9 @@ export function buildEmbarqueColumns({
     base.push({
       key: "acciones",
       header: "",
-      className: "w-10",
+      width: "w-12",
+      className: "w-12",
+      stickyRight: true,
       render: (e) => (
         <EmbarqueRowActions
           embarque={e}
