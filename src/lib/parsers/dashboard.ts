@@ -133,6 +133,31 @@ export function parseResumenMesSiguiente(stats: DashboardStats): ResumenFacturac
   };
 }
 
+/**
+ * Normaliza la lista de embarques del próximo mes garantizando que `profit`,
+ * `margen` y `facturado` siempre estén presentes (la RPC podría no enviarlos
+ * en versiones legacy del payload).
+ */
+export function parseEmbarquesMesSiguiente(stats: DashboardStats): EmbarqueMesSiguiente[] {
+  const raw = (stats?.embarquesMesSiguiente as Array<Record<string, unknown>>) ?? [];
+  return raw.map((r) => {
+    const ventaUSD = Number(r.ventaUSD ?? 0);
+    const costoUSD = Number(r.costoUSD ?? 0);
+    const profit = r.profit !== undefined && r.profit !== null ? Number(r.profit) : ventaUSD - costoUSD;
+    const margen = r.margen !== undefined && r.margen !== null
+      ? Number(r.margen)
+      : ventaUSD > 0 ? (profit / ventaUSD) * 100 : 0;
+    return {
+      ...(r as unknown as EmbarqueMesSiguiente),
+      ventaUSD,
+      costoUSD,
+      profit,
+      margen,
+      facturado: Boolean(r.facturado ?? false),
+    };
+  });
+}
+
 export function parseCargasPorCliente(stats: DashboardStats): CargaPorCliente[] {
   if (!stats?.cargasPorCliente) return [];
   const raw = stats.cargasPorCliente as Array<Record<string, unknown>>;
