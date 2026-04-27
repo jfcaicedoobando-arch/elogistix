@@ -75,12 +75,10 @@ export default function Changelog() {
 
   return (
     <div className="max-w-3xl mx-auto space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight">Changelog</h1>
-        <p className="text-muted-foreground text-sm mt-1">
-          Historial de cambios y nuevas funcionalidades de la plataforma.
-        </p>
-      </div>
+      <PageHeader
+        title="Changelog"
+        description="Historial de cambios y nuevas funcionalidades de la plataforma."
+      />
 
       <div className="relative border-l-2 border-border ml-4 space-y-6 pl-8">
         {visibleEntries.map((entry) => {
