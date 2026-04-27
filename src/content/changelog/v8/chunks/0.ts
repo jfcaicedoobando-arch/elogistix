@@ -2,6 +2,13 @@ import type { ChangelogEntry } from "../../../changelogData";
 
 export const chunk0: ChangelogEntry[] = [
   {
+    version: "8.99.22",
+    date: "2026-04-27",
+    type: "patch",
+    title: "Auditoría visual Fase 11: Eliminación masiva de colores hardcoded",
+    description: "Décima primera fase de auditoría — barrido sistemático con grep sobre todo el código fuente para eliminar colores Tailwind crudos que violaban el design system del proyecto. Se detectaron 17 ocurrencias de colores hardcoded distribuidas en 10 archivos. (1) Cotizaciones · indicadores de Profit/Loss — PasoResumenCotizacion, ResumenPL, TablaCostosDetalle y TablaCostosLocal usaban text-emerald-600 (verde) para profit positivo y text-red-600 para profit negativo. Estos colores Tailwind directos no respetaban el tema (dark mode mostraba verde/rojo demasiado saturados, no alineados con el resto de la app). Ahora usan text-success y text-destructive, vinculados a las variables HSL del tema y consistentes con cómo se renderizan los profits en Dashboards (EmbarquesActivosTable). (2) Facturación · iconos PDF/XML — HistorialFacturas, HistorialProformas, DialogMarcarFacturada y la página Facturacion usaban text-red-600 para el icono PDF (FileText) y text-blue-600 para el icono XML (FileCode2). Ahora usan text-destructive y text-info, incluyendo los hover states (hover:text-destructive/80, hover:text-info/80). (3) Portal · estado de documentos — PortalEmbarqueDocumentos mapeaba el estado 'Validado' a text-green-600; ahora usa text-success. (4) Dashboard · arribos del mes — DashboardStatusCards usaba text-emerald-500 y text-emerald-600 en el icono CheckCircle2 y el contador de arribos confirmados, mezclándose mal con text-destructive cuando el profit era negativo en la card adyacente; ahora todo usa text-success consistentemente. Esto garantiza que la app respete correctamente cualquier customización futura del tema (dark mode, white-label de organizaciones).",
+  },
+  {
     version: "8.99.21",
     date: "2026-04-27",
     type: "patch",
