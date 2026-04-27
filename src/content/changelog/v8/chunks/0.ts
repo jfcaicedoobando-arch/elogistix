@@ -2,6 +2,13 @@ import type { ChangelogEntry } from "../../../changelogData";
 
 export const chunk0: ChangelogEntry[] = [
   {
+    version: "8.99.9",
+    date: "2026-04-27",
+    type: "patch",
+    title: "Fix: card 'Cargas activas por cliente' mostraba info incompleta",
+    description: "Corregido un bug visual en el dashboard principal donde el card 'Cargas activas por cliente' solo mostraba el número total de embarques por cliente, pero faltaba el nombre del cliente y los chips de desglose por estado (Confirmado, En Tránsito, Arribo, En Aduana, Entregado). Causa raíz: el RPC dashboard_stats() devolvía las llaves en snake_case (cliente_id, cliente_nombre) y sin el campo 'desglose', mientras que el componente CargasActivasClienteCard esperaba camelCase (clienteId, clienteNombre, desglose). Cambios: se actualizó la función SQL dashboard_stats() para emitir las llaves en camelCase y agregar el desglose por estado real (mismo cálculo que el card de KPIs principales). Cero cambios en frontend o RLS.",
+  },
+  {
     version: "8.99.8",
     date: "2026-04-27",
     type: "patch",
