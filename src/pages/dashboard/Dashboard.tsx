@@ -31,15 +31,19 @@ export default function Dashboard() {
     cargasPorCliente,
   } = useDashboardData();
 
-  const { saludo, hoyStr } = useMemo(() => ({
-    saludo: getSaludo(),
-    hoyStr: new Date().toLocaleDateString("es-MX", {
+  const { saludo, hoyStr } = useMemo(() => {
+    const fecha = new Date().toLocaleDateString("es-MX", {
       weekday: "long",
       day: "numeric",
       month: "long",
       year: "numeric",
-    }),
-  }), []);
+    });
+    // Capitalizar solo la primera letra (preservar "de" en minúsculas)
+    return {
+      saludo: getSaludo(),
+      hoyStr: fecha.charAt(0).toUpperCase() + fecha.slice(1),
+    };
+  }, []);
 
   return (
     <div className="space-y-6">
