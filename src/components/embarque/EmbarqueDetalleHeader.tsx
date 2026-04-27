@@ -45,7 +45,7 @@ export function EmbarqueDetalleHeader({
             <span className="text-lg">{getModoIcon(embarque.modo)}</span>
             <ProformaBadge tieneProforma={embarque.tiene_proforma} size="lg" />
           </div>
-          <p className="text-sm text-muted-foreground truncate">{embarque.cliente_nombre}</p>
+          <p className="text-sm text-muted-foreground truncate">{toTitleCase(embarque.cliente_nombre)}</p>
         </div>
       </div>
       <div className="flex gap-2 flex-wrap lg:justify-end">
