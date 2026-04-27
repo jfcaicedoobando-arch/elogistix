@@ -1,4 +1,4 @@
-import { Pencil, Trash2, Loader2, Plus, Users } from "lucide-react";
+import { Pencil, Trash2, Loader2, Plus, Users, UserX } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -6,7 +6,8 @@ import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
 import type { Tables, Enums } from "@/integrations/supabase/types";
-import { toTitleCase } from "@/lib/formatters";
+import { toTitleCase, correctSpanishPlace } from "@/lib/formatters";
+import EmptyState from "@/components/empty/EmptyState";
 type ContactoCliente = Tables<'contactos_cliente'>;
 type TipoContacto = Enums<'tipo_contacto'>;
 
@@ -40,8 +41,13 @@ export default function TablaContactos({ contactos, isLoading, canEdit, onAdd, o
             <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
           </div>
         ) : contactos.length === 0 ? (
-          <div className="p-8 text-center text-muted-foreground text-sm">
-            No hay contactos registrados. Agrega proveedores o exportadores para usarlos en embarques.
+          <div className="p-6">
+            <EmptyState
+              icon={UserX}
+              title="Sin contactos registrados"
+              description="Agrega proveedores, exportadores o importadores para usarlos al crear embarques."
+              primaryAction={canEdit ? { label: "Agregar Contacto", onClick: onAdd } : undefined}
+            />
           </div>
         ) : (
           <Table>
@@ -60,8 +66,8 @@ export default function TablaContactos({ contactos, isLoading, canEdit, onAdd, o
                 <TableRow key={contacto.id}>
                   <TableCell className="font-medium">{toTitleCase(contacto.nombre)}</TableCell>
                   <TableCell><Badge variant={tipoBadgeVariant(contacto.tipo)}>{contacto.tipo}</Badge></TableCell>
-                  <TableCell className="text-xs">{contacto.pais}, {contacto.ciudad}</TableCell>
-                  <TableCell className="text-xs">{contacto.contacto}</TableCell>
+                  <TableCell className="text-xs">{correctSpanishPlace(contacto.pais)}, {correctSpanishPlace(contacto.ciudad)}</TableCell>
+                  <TableCell className="text-xs">{toTitleCase(contacto.contacto)}</TableCell>
                   <TableCell className="text-xs">{contacto.email}</TableCell>
                   <TableCell>
                     {canEdit && (
