@@ -180,9 +180,9 @@ export function AppSidebar() {
         ])}
       </SidebarContent>
 
-      <SidebarFooter className="border-t border-sidebar-border p-4 space-y-2">
+      <SidebarFooter className="border-t border-sidebar-border p-4 space-y-2 group-data-[collapsible=icon]:p-2">
         {!collapsed && user && (
-          <div className="flex flex-col gap-0.5">
+          <div className="flex flex-col gap-0.5 min-w-0">
             <div className="text-xs text-sidebar-foreground/70 truncate">
               {user.email}
             </div>
@@ -203,15 +203,34 @@ export function AppSidebar() {
             )}
           </div>
         )}
-        <Button
-          variant="ghost"
-          size={collapsed ? "icon" : "sm"}
-          className="w-full justify-start text-sidebar-foreground/60 hover:text-sidebar-foreground"
-          onClick={signOut}
-        >
-          <LogOut className="h-4 w-4" />
-          {!collapsed && <span className="ml-2">Cerrar sesión</span>}
-        </Button>
+        {collapsed ? (
+          <Tooltip delayDuration={200}>
+            <TooltipTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="w-full text-sidebar-foreground/60 hover:text-sidebar-foreground"
+                onClick={signOut}
+                aria-label="Cerrar sesión"
+              >
+                <LogOut className="h-4 w-4" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent side="right" className="text-xs">
+              Cerrar sesión
+            </TooltipContent>
+          </Tooltip>
+        ) : (
+          <Button
+            variant="ghost"
+            size="sm"
+            className="w-full justify-start text-sidebar-foreground/60 hover:text-sidebar-foreground"
+            onClick={signOut}
+          >
+            <LogOut className="h-4 w-4" />
+            <span className="ml-2">Cerrar sesión</span>
+          </Button>
+        )}
         {!collapsed && (
           <div className="text-[11px] text-sidebar-foreground/50 tabular-nums">
             v{APP_VERSION} · Libre Carga
