@@ -1,34 +1,54 @@
 ## Diagnóstico
 
-Hoy en el dashboard del portal del cliente (`/portal`), el KPI **"Cotizaciones"** muestra `cotizaciones.length`, es decir, todas las cotizaciones visibles del cliente: **Enviada + Aceptada + Rechazada + En operación**. Eso no representa "pendientes de interacción".
+La tarjeta sí está recibiendo datos, pero el backend que usa actualmente el dashboard principal es `dashboard_details()`, no `dashboard_stats()`.
 
-Las únicas cotizaciones que realmente requieren acción del cliente son las que están en estado **`Enviada`** (esperan ser Aceptadas o Rechazadas). El resto ya tuvo decisión o ya está operada.
+El ajuste anterior se aplicó a `dashboard_stats()`, por eso el problema continúa: `dashboard_details()` todavía devuelve `cargasPorCliente` con campos en formato viejo:
 
-## Respuesta a tu pregunta
+```text
+cliente_id, cliente_nombre, total
+```
 
-Sí. El contador del card **debe contar únicamente las cotizaciones en estado `Enviada`**, porque son las únicas con interacción pendiente del cliente.
+Mientras el componente espera:
 
-- `Aceptada` → ya decidió.
-- `Rechazada` → ya decidió.
-- `En operación` → ya pasó a embarque, no requiere acción.
+```text
+clienteId, clienteNombre, total, desglose
+```
 
-## Plan de cambio
+Resultado visible: solo aparece el número grande, pero falta el nombre del cliente y el desglose por estado.
 
-1. **Renombrar el label del KPI** en `PortalKpiGrid.tsx`:
-   - De **"Cotizaciones"** → **"Cotizaciones Pendientes"**, alineado con el patrón ya usado en "Facturas Pendientes". Refuerza que el número representa acción pendiente, no inventario total.
+## Plan de corrección
 
-2. **Cambiar el cálculo** en `PortalDashboard.tsx`:
-   - Reemplazar `cotizaciones: cotizaciones.length`
-   - Por: `cotizaciones: cotizaciones.filter(c => c.estado === "Enviada").length`
+1. Actualizar la función de backend `dashboard_details()`
+   - Cambiar `cargasPorCliente` para que devuelva:
+     - `clienteId`
+     - `clienteNombre`
+     - `total`
+     - `desglose` por estado: `Confirmado`, `En Tránsito`, `Arribo`, `En Aduana`, `Entregado`
+   - Mantener el límite actual de top 10 clientes y el orden por mayor número de cargas.
 
-3. **Sin cambios** en la página `/portal/cotizaciones`: ahí el cliente sí debe poder ver el listado completo (incluyendo Aceptada, Rechazada, En operación) para consultar histórico. Solo cambia el contador del card del dashboard.
+2. Blindar el frontend para evitar que vuelva a verse incompleto
+   - Mejorar `parseCargasPorCliente()` para aceptar temporalmente tanto el formato viejo como el nuevo.
+   - Si llega `cliente_nombre`, mapearlo a `clienteNombre`.
+   - Si no llega `desglose`, crear un desglose vacío para que el render no quede roto.
 
-4. **Changelog**: agregar entrada nueva al inicio de `src/content/changelog/v8/chunks/0.ts` documentando el ajuste.
+3. Mejorar la tarjeta visualmente para pantallas chicas
+   - Hacer que cada fila tenga altura flexible cuando hay muchos badges.
+   - Mantener el nombre del cliente visible con truncado correcto.
+   - Evitar que la barra proporcional o los chips empujen/oculten información.
+
+4. Actualizar changelog
+   - Agregar una entrada nueva al changelog indicando que se corrigió la fuente real del dashboard (`dashboard_details`) y se reforzó el parser del frontend.
 
 ## Resultado esperado
 
+En el dashboard principal, la tarjeta “Cargas activas por cliente” mostrará correctamente:
+
 ```text
-Card del dashboard del portal:
-  "Cotizaciones Pendientes" → solo cuenta Enviada
-  Click → lleva a /portal/cotizaciones (listado completo sin cambios)
+70  INDIMEX TRADING
+    26 En Tránsito   30 Arribo   ...
+
+10  OTRO CLIENTE
+    6 Confirmado     4 En Tránsito
 ```
+
+Ya no debe quedar una lista de números sin nombres ni desglose.
