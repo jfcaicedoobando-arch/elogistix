@@ -119,8 +119,8 @@ export function DashboardStatusCards({
               <div className="text-center">
                 {isLoading ? <Skeleton className="h-6 w-8 mx-auto" /> : (
                   <div className="flex items-center gap-1 justify-center">
-                    <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" />
-                    <span className="text-xl font-bold text-emerald-600">{arribosEsteMes.yaLlegaron}</span>
+                    <CheckCircle2 className="h-3.5 w-3.5 text-success" />
+                    <span className="text-xl font-bold text-success">{arribosEsteMes.yaLlegaron}</span>
                   </div>
                 )}
                 <p className="text-[10px] text-muted-foreground font-medium">Ya llegaron</p>
@@ -140,8 +140,8 @@ export function DashboardStatusCards({
               <div className="text-center">
                 {isLoading ? <Skeleton className="h-6 w-20 mx-auto" /> : (
                   <div className="flex items-center gap-1 justify-center">
-                    <TrendingUp className={`h-3.5 w-3.5 ${arribosEsteMes.profitUSD >= 0 ? "text-emerald-500" : "text-destructive"}`} />
-                    <span className={`text-base sm:text-xl font-bold whitespace-nowrap ${arribosEsteMes.profitUSD >= 0 ? "text-emerald-600" : "text-destructive"}`}>
+                    <TrendingUp className={`h-3.5 w-3.5 ${arribosEsteMes.profitUSD >= 0 ? "text-success" : "text-destructive"}`} />
+                    <span className={`text-base sm:text-xl font-bold whitespace-nowrap ${arribosEsteMes.profitUSD >= 0 ? "text-success" : "text-destructive"}`}>
                       {formatCurrency(arribosEsteMes.profitUSD, "USD")}
                     </span>
                   </div>
