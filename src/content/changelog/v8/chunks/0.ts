@@ -2,6 +2,13 @@ import type { ChangelogEntry } from "../../../changelogData";
 
 export const chunk0: ChangelogEntry[] = [
   {
+    version: "8.99.20",
+    date: "2026-04-27",
+    type: "patch",
+    title: "Auditoría visual Fase 9: Tracking, Notas y Costos del embarque",
+    description: "Novena fase de pulido sobre módulos operativos del detalle de embarque. (1) Tab Tracking — el campo 'usuario' de cada evento de la línea de tiempo mostraba el email crudo (ej. 'magali.reynoso@elogistixshipping.com'); ahora se aplica nombreDesdeEmail para mostrar 'Magali Reynoso' con el email completo disponible vía tooltip nativo (atributo title). (2) Tab Notas — mismo problema con nota.usuario (email crudo en cada nota); ahora se normaliza con nombreDesdeEmail + tooltip. La fecha que usaba new Date().toLocaleString() inline se reemplaza por el helper centralizado formatDate(fecha, 'dd/MM/yyyy HH:mm') para mantener consistencia con el resto del sistema. (3) Tab Costos — las tablas de Conceptos de Venta y Conceptos de Costo no tenían alineación a la derecha en columnas numéricas (Cantidad, P. Unitario, Total, Monto), generando lecturas desalineadas; ahora todas las celdas monetarias usan text-right + tabular-nums + headers alineados. Los KPIs (Total Venta, Total Costo, Utilidad, Margen) también reciben tabular-nums. Los nombres de proveedor pasan por toTitleCase con tooltip. Cuando no hay conceptos cargados, se muestra el componente EmptyState compartido (icono Receipt para venta, FileText para costo) en lugar de una tabla vacía sin mensaje. (4) Dashboard · Embarques activos próximo mes — la columna Contenedor (números de contenedor tipo 'MSDU1234567') podía romperse en dos líneas en viewports pequeños; recibe whitespace-nowrap. El header largo 'Embarques activos — próximo mes (Mayo)' no usaba flex-wrap y desbordaba en móvil; ahora envuelve correctamente con flex-wrap y el icono CalendarDays recibe shrink-0.",
+  },
+  {
     version: "8.99.19",
     date: "2026-04-27",
     type: "patch",
