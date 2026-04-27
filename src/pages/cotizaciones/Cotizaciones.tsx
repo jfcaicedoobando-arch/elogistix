@@ -31,10 +31,16 @@ export default function Cotizaciones() {
   const columns: DataTableColumn<CotizacionListItem>[] = useMemo(() => {
     const renderVigencia = (r: CotizacionListItem) => {
       if (!r.fecha_vigencia) return <span className="text-muted-foreground">-</span>;
+      const fechaStr = formatDate(r.fecha_vigencia);
+      // Solo cotizaciones en estado "Enviada" muestran el badge de urgencia.
+      // Borradores, aceptadas y rechazadas solo muestran la fecha.
+      const esEnviada = (r.estado || "").toLowerCase() === "enviada";
+      if (!esEnviada) {
+        return <span className="whitespace-nowrap text-muted-foreground">{fechaStr}</span>;
+      }
       const fecha = new Date(r.fecha_vigencia);
       const hoy = new Date();
       const diffDias = Math.ceil((fecha.getTime() - hoy.getTime()) / (1000 * 60 * 60 * 24));
-      const fechaStr = formatDate(r.fecha_vigencia);
       if (diffDias < 0) {
         return <Badge variant="destructive" className="text-[10px] whitespace-nowrap">Vencida · {fechaStr}</Badge>;
       }
@@ -45,9 +51,15 @@ export default function Cotizaciones() {
     };
     const cols: DataTableColumn<CotizacionListItem>[] = [
       { key: "folio", header: "Folio", width: "w-[120px]", className: "font-medium whitespace-nowrap", sticky: true, sortable: true, sortValue: (r) => r.folio, render: (r) => r.folio },
-      { key: "cliente", header: "Cliente", width: "min-w-[160px]", className: "max-w-[180px] truncate", sortable: true, sortValue: (r) => r.cliente_nombre, render: (r) => toTitleCase(r.cliente_nombre) },
+      { key: "cliente", header: "Cliente", width: "min-w-[160px]", className: "max-w-[180px] truncate", sortable: true, sortValue: (r) => r.cliente_nombre, render: (r) => {
+        const nombre = toTitleCase(r.cliente_nombre);
+        return <span title={nombre} className="block truncate">{nombre}</span>;
+      } },
       { key: "modo", header: "Modo", width: "w-[80px]", className: "text-xs whitespace-nowrap", render: (r) => r.modo },
-      { key: "ruta", header: "Origen → Destino", width: "min-w-[160px]", className: "text-xs", render: (r) => `${r.origen || "-"} → ${r.destino || "-"}` },
+      { key: "ruta", header: "Origen → Destino", width: "min-w-[160px]", className: "text-xs max-w-[200px]", render: (r) => {
+        const ruta = `${r.origen || "-"} → ${r.destino || "-"}`;
+        return <span title={ruta} className="block truncate whitespace-nowrap">{ruta}</span>;
+      } },
       { key: "subtotal", header: "Subtotal", width: "w-[110px]", className: "text-right text-xs whitespace-nowrap", headerClassName: "text-right", sortable: true, sortValue: (r) => r.subtotal, render: (r) => formatCurrency(r.subtotal, r.moneda) },
       { key: "estado", header: "Estado", width: "w-[110px]", sortable: true, sortValue: (r) => r.estado, render: (r) => <Badge variant="secondary" className={`text-xs whitespace-nowrap ${getEstadoColor(r.estado)}`}>{r.estado}</Badge> },
       { key: "vigencia", header: "Vigencia", width: "w-[140px]", className: "text-xs", render: renderVigencia },
