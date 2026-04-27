@@ -9,6 +9,7 @@ import { calcularEstadoEmbarque } from "@/lib/domain/embarque";
 import { getOrigen, getDestino } from "@/lib/formatters";
 import EmbarqueCard from "@/components/portal/EmbarqueCard";
 import EmptyState from "@/components/empty/EmptyState";
+import { PageHeader } from "@/components/shared/PageHeader";
 import { Search, Ship, Filter, Package, ChevronDown } from "lucide-react";
 import { usePortalEmbarquesController } from "@/hooks/portal/usePortalEmbarquesController";
 
