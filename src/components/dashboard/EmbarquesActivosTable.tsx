@@ -22,7 +22,7 @@ const columns: DataTableColumn<EmbarqueMesSiguiente>[] = [
   {
     key: "modo", header: "Modo", render: (e) => (
       <span className="flex items-center gap-1.5">
-        <span>{getModoIcon(e.modo)}</span>
+        <ModoIcon modo={e.modo} size={14} />
         <span className="text-xs">{e.modo}</span>
       </span>
     ),
