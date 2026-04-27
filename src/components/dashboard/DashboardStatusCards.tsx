@@ -111,29 +111,29 @@ export function DashboardStatusCards({
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-6 flex-1">
               <div className="text-center">
                 {isLoading ? <Skeleton className="h-6 w-8 mx-auto" /> : (
-                  <span className="text-xl font-bold text-foreground">{arribosEsteMes.total}</span>
+                  <span className="text-xl font-bold text-foreground tabular-nums">{arribosEsteMes.total}</span>
                 )}
-                <p className="text-[10px] text-muted-foreground font-medium">Total</p>
+                <p className="text-[11px] text-muted-foreground font-medium">Total</p>
               </div>
 
               <div className="text-center">
                 {isLoading ? <Skeleton className="h-6 w-8 mx-auto" /> : (
                   <div className="flex items-center gap-1 justify-center">
                     <CheckCircle2 className="h-3.5 w-3.5 text-success" />
-                    <span className="text-xl font-bold text-success">{arribosEsteMes.yaLlegaron}</span>
+                    <span className="text-xl font-bold text-success tabular-nums">{arribosEsteMes.yaLlegaron}</span>
                   </div>
                 )}
-                <p className="text-[10px] text-muted-foreground font-medium">Ya llegaron</p>
+                <p className="text-[11px] text-muted-foreground font-medium">Ya llegaron</p>
               </div>
 
               <div className="text-center">
                 {isLoading ? <Skeleton className="h-6 w-8 mx-auto" /> : (
                   <div className="flex items-center gap-1 justify-center">
                     <Ship className="h-3.5 w-3.5 text-warning" />
-                    <span className="text-xl font-bold text-warning">{arribosEsteMes.enCamino}</span>
+                    <span className="text-xl font-bold text-warning tabular-nums">{arribosEsteMes.enCamino}</span>
                   </div>
                 )}
-                <p className="text-[10px] text-muted-foreground font-medium">En camino</p>
+                <p className="text-[11px] text-muted-foreground font-medium">En camino</p>
               </div>
 
               {/* Profit */}
@@ -141,12 +141,15 @@ export function DashboardStatusCards({
                 {isLoading ? <Skeleton className="h-6 w-20 mx-auto" /> : (
                   <div className="flex items-center gap-1 justify-center">
                     <TrendingUp className={`h-3.5 w-3.5 ${arribosEsteMes.profitUSD >= 0 ? "text-success" : "text-destructive"}`} />
-                    <span className={`text-base sm:text-xl font-bold whitespace-nowrap ${arribosEsteMes.profitUSD >= 0 ? "text-success" : "text-destructive"}`}>
+                    <span
+                      className={`text-base sm:text-xl font-bold tabular-nums whitespace-nowrap ${arribosEsteMes.profitUSD >= 0 ? "text-success" : "text-destructive"}`}
+                      title={formatCurrency(arribosEsteMes.profitUSD, "USD")}
+                    >
                       {formatCurrency(arribosEsteMes.profitUSD, "USD")}
                     </span>
                   </div>
                 )}
-                <p className="text-[10px] text-muted-foreground font-medium">Profit USD proyectado</p>
+                <p className="text-[11px] text-muted-foreground font-medium">Profit USD proyectado</p>
               </div>
             </div>
 
