@@ -80,7 +80,7 @@ export default function ReportesTablaClientes({ data, isLoading, sortField, sort
               ) : (
                 data.map((c) => (
                   <TableRow key={c.cliente_id} className="cursor-pointer" onClick={() => navigate(`/clientes/${c.cliente_id}`)}>
-                    <TableCell className="font-medium max-w-[200px] truncate">{c.cliente_nombre}</TableCell>
+                    <TableCell className="font-medium max-w-[200px] truncate" title={toTitleCase(c.cliente_nombre)}>{toTitleCase(c.cliente_nombre)}</TableCell>
                     <TableCell className="text-center">{c.total_embarques}</TableCell>
                     <TableCell className="text-right tabular-nums">{formatCurrency(c.venta_usd, "USD")}</TableCell>
                     <TableCell className="text-right tabular-nums">{formatCurrency(c.costo_usd, "USD")}</TableCell>
