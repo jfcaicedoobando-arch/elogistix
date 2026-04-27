@@ -20,6 +20,7 @@ export interface DataTableColumn<T> {
   sortable?: boolean;
   sortValue?: (item: T) => string | number | null;
   sticky?: boolean;
+  stickyRight?: boolean;
   render: (item: T) => React.ReactNode;
 }
 
@@ -111,6 +112,7 @@ function DataTableInner<T>({
                 col.headerClassName,
                 col.sortable && "cursor-pointer select-none hover:text-foreground transition-colors",
                 col.sticky && "sticky left-0 z-20 bg-background",
+                col.stickyRight && "sticky right-0 z-20 bg-background shadow-[-4px_0_4px_-2px_hsl(var(--border)/0.3)]",
               )}
               onClick={col.sortable ? () => handleSort(col.key) : undefined}
             >
@@ -161,7 +163,7 @@ function DataTableInner<T>({
                 onMouseEnter={onRowMouseEnter ? () => onRowMouseEnter(item) : undefined}
               >
                 {columns.map((col) => (
-                  <TableCell key={col.key} className={cn(col.width, col.className, col.sticky && "sticky left-0 z-[5] bg-background")}>
+                  <TableCell key={col.key} className={cn(col.width, col.className, col.sticky && "sticky left-0 z-[5] bg-background", col.stickyRight && "sticky right-0 z-[5] bg-background shadow-[-4px_0_4px_-2px_hsl(var(--border)/0.3)]")}>
                     {col.render(item)}
                   </TableCell>
                 ))}

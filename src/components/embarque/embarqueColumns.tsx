@@ -7,7 +7,8 @@ import type { DataTableColumn } from "@/components/shared/DataTable";
 import { calcularEstadoEmbarque } from "@/hooks/embarque/useEmbarques";
 import type { EmbarqueRow } from "@/hooks/embarque/useEmbarques";
 import { formatDate, getOrigen, getDestino, shortName, toTitleCase } from "@/lib/formatters";
-import { getEstadoColor, getModoIcon } from "@/lib/ui/uiMappings";
+import { getEstadoColor } from "@/lib/ui/uiMappings";
+import { ModoIcon } from "@/components/shared/ModoIcon";
 import EmbarqueRowActions from "./EmbarqueRowActions";
 import { ProformaBadge } from "./ProformaBadge";
 
@@ -71,8 +72,8 @@ export function buildEmbarqueColumns({
     } },
     {
       key: "modo", header: "Modo", width: "w-[90px]", render: (e) => (
-        <span className="flex items-center gap-1">
-          {getModoIcon(e.modo)} <span className="text-xs">{e.modo}</span>
+        <span className="flex items-center gap-1.5">
+          <ModoIcon modo={e.modo} size={14} /> <span className="text-xs">{e.modo}</span>
         </span>
       ),
     },
@@ -104,7 +105,9 @@ export function buildEmbarqueColumns({
     base.push({
       key: "acciones",
       header: "",
-      className: "w-10",
+      width: "w-12",
+      className: "w-12",
+      stickyRight: true,
       render: (e) => (
         <EmbarqueRowActions
           embarque={e}

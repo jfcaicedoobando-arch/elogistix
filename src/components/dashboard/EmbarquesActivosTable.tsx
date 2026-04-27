@@ -3,7 +3,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { DataTable, type DataTableColumn } from "@/components/shared/DataTable";
 import { formatDate, formatCurrency, getOrigen, getDestino, toTitleCase } from "@/lib/formatters";
-import { getModoIcon, getEstadoColor } from "@/lib/ui/uiMappings";
+import { getEstadoColor } from "@/lib/ui/uiMappings";
+import { ModoIcon } from "@/components/shared/ModoIcon";
 import type { EmbarqueMesSiguiente, ResumenFacturacion } from "@/hooks/dashboard/useDashboardData";
 
 import { CalendarDays, DollarSign, TrendingUp, FileCheck, Package } from "lucide-react";
@@ -21,7 +22,7 @@ const columns: DataTableColumn<EmbarqueMesSiguiente>[] = [
   {
     key: "modo", header: "Modo", render: (e) => (
       <span className="flex items-center gap-1.5">
-        <span>{getModoIcon(e.modo)}</span>
+        <ModoIcon modo={e.modo} size={14} />
         <span className="text-xs">{e.modo}</span>
       </span>
     ),

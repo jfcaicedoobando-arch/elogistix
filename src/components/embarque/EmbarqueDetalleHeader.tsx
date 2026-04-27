@@ -9,8 +9,9 @@ import {
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { getEstadoColor, getModoIcon } from "@/lib/ui/uiMappings";
+import { getEstadoColor } from "@/lib/ui/uiMappings";
 import { toTitleCase } from "@/lib/formatters";
+import { ModoIcon } from "@/components/shared/ModoIcon";
 import { ProformaBadge } from "./ProformaBadge";
 import type { EmbarqueRow } from "@/hooks/embarque/useEmbarques";
 
@@ -45,7 +46,7 @@ export function EmbarqueDetalleHeader({
           <div className="flex items-center gap-2 flex-wrap">
             <h1 className="text-2xl font-bold truncate">{embarque.expediente}</h1>
             <Badge className={getEstadoColor(estadoVisual)}>{estadoVisual}</Badge>
-            <span className="text-lg">{getModoIcon(embarque.modo)}</span>
+            <ModoIcon modo={embarque.modo} size={18} circle />
             <ProformaBadge tieneProforma={embarque.tiene_proforma} size="lg" />
           </div>
           <p className="text-sm text-muted-foreground truncate">{toTitleCase(embarque.cliente_nombre)}</p>

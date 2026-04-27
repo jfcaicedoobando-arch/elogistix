@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { formatDate, toTitleCase } from "@/lib/formatters";
-import { getModoIcon } from "@/lib/ui/uiMappings";
+import { ModoIcon } from "@/components/shared/ModoIcon";
 import type { ProximoArribo } from "@/hooks/dashboard/useDashboardData";
 
 interface Props {
@@ -59,7 +59,7 @@ export const ProximosArribosCard = memo(function ProximosArribosCard({ arribos, 
                     : `${e.diasRestantes} día${e.diasRestantes > 1 ? "s" : ""}`}
                 </p>
               </div>
-              <span className="text-lg">{getModoIcon(e.modo)}</span>
+              <ModoIcon modo={e.modo} size={18} circle />
             </div>
           ))
         )}

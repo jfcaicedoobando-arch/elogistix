@@ -5,7 +5,8 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
-import { getEstadoColor, getModoIcon } from "@/lib/ui/uiMappings";
+import { getEstadoColor } from "@/lib/ui/uiMappings";
+import { ModoIcon } from "@/components/shared/ModoIcon";
 import { formatDate, getOrigen, getDestino } from "@/lib/formatters";
 import { PortalEmbarqueTimeline } from "@/components/portal/PortalEmbarqueTimeline";
 import { PortalEmbarqueDocumentos } from "@/components/portal/PortalEmbarqueDocumentos";
@@ -52,7 +53,7 @@ export default function PortalEmbarqueDetalle() {
           <div className="flex items-center gap-3 flex-wrap">
             <h1 className="text-2xl font-bold">{embarque.expediente}</h1>
             <Badge className={getEstadoColor(estadoVisual)}>{estadoVisual}</Badge>
-            <span className="text-lg">{getModoIcon(embarque.modo)}</span>
+            <ModoIcon modo={embarque.modo} size={18} circle />
           </div>
           <p className="text-sm text-muted-foreground mt-1">
             {embarque.tipo} • {embarque.modo} • {embarque.incoterm}

@@ -2,6 +2,13 @@ import type { ChangelogEntry } from "../../../changelogData";
 
 export const chunk0: ChangelogEntry[] = [
   {
+    version: "8.99.29",
+    date: "2026-04-27",
+    type: "minor",
+    title: "Auditoría UI/UX Fase D: Iconografía Lucide para modos de transporte y columna de acciones sticky",
+    description: "Cuarta fase de la auditoría UI/UX integral, enfocada en iconografía consistente y ergonomía de tablas anchas. (1) Reemplazo de emojis por iconos Lucide — los modos de transporte (Marítimo, Aéreo, Terrestre, Multimodal) usaban emojis 🚢 ✈️ 🚛 🔄, que renderizan distinto en cada SO/navegador (Apple Color Emoji vs Segoe UI Emoji vs Noto), rompen la armonía visual con el resto de iconos Lucide del sistema y no respetan currentColor para temas. Se crea el componente reutilizable src/components/shared/ModoIcon.tsx que renderiza Anchor/Plane/Truck/Shuffle (fallback Package) con tinte cromático por modo (azul/cielo/ámbar/púrpura) y soporte opcional para modo 'circle' (badge circular para headers de detalle, ej. EmbarqueDetalleHeader, PortalEmbarqueDetalle, ProximosArribosCard, TrackingPublico). (2) Refactor de 9 consumidores — embarqueColumns, EmbarquesFiltros, EmbarqueDetalleHeader, TabResumen, EmbarquesActivosTable, ProximosArribosCard, PortalEmbarqueDetalle, PortalProximosArribosCard, PortalEmbarquesRecientesCard y TrackingPublico ahora importan ModoIcon en lugar de getModoIcon (que devolvía string emoji). DetailRow se extiende para aceptar ReactNode. (3) Columna de acciones sticky-right — en la tabla de Embarques (con 13 columnas) la columna '…' (acciones) quedaba al final y obligaba a hacer scroll horizontal completo para acceder a Editar/Duplicar/Eliminar. DataTable se extiende con la prop stickyRight (símil de sticky-left para Expediente) que ancla la columna a la derecha con sombra sutil, manteniendo siempre visible el menú contextual durante el scroll. La columna se ensancha de w-10 a w-12 para mejor target táctil. Resultado: 11 archivos modificados (1 nuevo componente + 10 refactores), iconografía 100% Lucide en flujos de embarque, tsc --noEmit pasa limpio.",
+  },
+  {
     version: "8.99.28",
     date: "2026-04-27",
     type: "minor",

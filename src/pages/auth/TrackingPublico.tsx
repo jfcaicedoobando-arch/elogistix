@@ -3,7 +3,8 @@ import { useQuery } from "@tanstack/react-query";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { getEstadoColor, getModoIcon } from "@/lib/ui/uiMappings";
+import { getEstadoColor } from "@/lib/ui/uiMappings";
+import { ModoIcon } from "@/components/shared/ModoIcon";
 import { formatDate, getOrigen, getDestino } from "@/lib/formatters";
 import { ICONO_EVENTO } from "@/constants/embarqueConstants";
 import { Clock, MapPin, Ship, AlertTriangle } from "lucide-react";
@@ -70,7 +71,7 @@ export default function TrackingPublico() {
         <div className="flex items-center gap-3 flex-wrap">
           <h1 className="text-2xl font-bold">{e.expediente}</h1>
           <Badge className={getEstadoColor(e.estado)}>{e.estado}</Badge>
-          <span className="text-lg">{getModoIcon(e.modo)}</span>
+          <ModoIcon modo={e.modo} size={18} circle />
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

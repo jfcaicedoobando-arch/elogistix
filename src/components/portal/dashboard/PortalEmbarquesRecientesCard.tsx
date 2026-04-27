@@ -3,7 +3,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
-import { getEstadoColor, getModoIcon } from "@/lib/ui/uiMappings";
+import { getEstadoColor } from "@/lib/ui/uiMappings";
+import { ModoIcon } from "@/components/shared/ModoIcon";
 import { calcularEstadoEmbarque } from "@/lib/domain/embarque";
 import { formatDate, getOrigen, getDestino } from "@/lib/formatters";
 
@@ -61,7 +62,7 @@ export function PortalEmbarquesRecientesCard({ embarques, className }: Props) {
                   className="flex items-center justify-between p-3 rounded-lg border hover:bg-muted/50 transition-colors group"
                 >
                   <div className="flex items-center gap-3 min-w-0">
-                    <span className="text-lg flex-shrink-0">{getModoIcon(e.modo)}</span>
+                    <ModoIcon modo={e.modo} size={16} circle className="flex-shrink-0" />
                     <div className="min-w-0">
                       <p className="font-medium text-sm">{e.expediente}</p>
                       <p className="text-xs text-muted-foreground flex items-center gap-1">
