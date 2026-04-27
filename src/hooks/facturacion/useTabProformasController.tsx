@@ -46,10 +46,10 @@ export function useTabProformasController() {
         if (p.es_consolidada) {
           const n = p.proformas_origen?.length ?? 0;
           return (
-            <Badge variant="info">Consolidada{n > 0 ? ` (${n})` : ""}</Badge>
+            <Badge variant="info" className="whitespace-nowrap">Consolidada{n > 0 ? ` (${n})` : ""}</Badge>
           );
         }
-        return <Badge variant="neutral">Individual</Badge>;
+        return <Badge variant="neutral" className="whitespace-nowrap">Individual</Badge>;
       },
     },
     {
