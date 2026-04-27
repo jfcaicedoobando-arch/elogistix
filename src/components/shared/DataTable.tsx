@@ -20,6 +20,7 @@ export interface DataTableColumn<T> {
   sortable?: boolean;
   sortValue?: (item: T) => string | number | null;
   sticky?: boolean;
+  stickyRight?: boolean;
   render: (item: T) => React.ReactNode;
 }
 
