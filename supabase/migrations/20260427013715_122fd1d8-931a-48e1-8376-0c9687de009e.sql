@@ -1,0 +1,15 @@
+DROP POLICY IF EXISTS "Cliente read own cotizaciones" ON public.cotizaciones;
+
+CREATE POLICY "Cliente read own cotizaciones"
+ON public.cotizaciones
+FOR SELECT
+TO authenticated
+USING (
+  has_role(auth.uid(), 'cliente'::app_role)
+  AND cliente_id IN (SELECT current_user_client_ids())
+  AND estado IN (
+    'Enviada'::estado_cotizacion,
+    'Aceptada'::estado_cotizacion,
+    'Rechazada'::estado_cotizacion
+  )
+);
