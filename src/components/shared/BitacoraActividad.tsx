@@ -4,6 +4,7 @@ import {
   MessageSquare, FileX,
 } from "lucide-react";
 import type { EntradaBitacora } from "@/hooks/shared/useBitacora";
+import { nombreDesdeEmail, formatDate } from "@/lib/formatters";
 
 const ICONOS_ACCION: Record<string, typeof Plus> = {
   crear: Plus,
@@ -92,8 +93,8 @@ export function BitacoraActividad({ actividades, mostrarUsuario = true }: Props)
             <div className="space-y-0.5">
               <div className="flex items-baseline gap-2 flex-wrap">
                 {mostrarUsuario && (
-                  <span className="text-xs font-medium text-foreground">
-                    {entrada.usuario_email.split("@")[0]}
+                  <span className="text-xs font-medium text-foreground" title={entrada.usuario_email}>
+                    {nombreDesdeEmail(entrada.usuario_email)}
                   </span>
                 )}
                 <span className="text-xs text-muted-foreground capitalize">
@@ -119,7 +120,7 @@ export function BitacoraActividad({ actividades, mostrarUsuario = true }: Props)
                   </>
                 )}
               </div>
-              <p className="text-xs text-muted-foreground">{tiempoRelativo(entrada.created_at)}</p>
+              <p className="text-xs text-muted-foreground" title={formatDate(entrada.created_at, 'dd/MM/yyyy HH:mm')}>{tiempoRelativo(entrada.created_at)}</p>
             </div>
           </div>
         );
