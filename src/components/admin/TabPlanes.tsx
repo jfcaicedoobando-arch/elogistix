@@ -90,7 +90,7 @@ export default function TabPlanes() {
             onChange={(e) => setEditValues({ ...editValues, almacenamiento_mb: Number(e.target.value) })}
           />
         ) : (
-          p.almacenamiento_mb.toLocaleString("es-MX")
+          formatNumber(p.almacenamiento_mb, { suffix: "MB" })
         ),
     },
     {
