@@ -76,7 +76,7 @@ export function EmbarqueDetalleHeader({
         <Button variant="outline" size="sm" onClick={onCompartirTracking} disabled={trackingPending}>
           <Share2 className="h-4 w-4 mr-1" /> Compartir
         </Button>
-        <Button variant="outline" size="sm"><Printer className="h-4 w-4 mr-1" /> Imprimir</Button>
+        <Button variant="outline" size="sm" onClick={() => window.print()}><Printer className="h-4 w-4 mr-1" /> Imprimir</Button>
         {canEdit && (
           <Button variant="destructive" size="sm" onClick={onAbrirEliminar}>
             <Trash2 className="h-4 w-4 mr-1" /> Eliminar
