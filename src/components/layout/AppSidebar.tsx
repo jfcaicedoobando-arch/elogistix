@@ -35,6 +35,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
+import { cn } from "@/lib/utils";
 import { chunk0 } from "@/content/changelog/v8/chunks/0";
 
 const APP_VERSION = chunk0[0]?.version ?? "—";
@@ -96,34 +97,45 @@ export function AppSidebar() {
         )}
         <SidebarGroupContent>
           <SidebarMenu>
-            {items.map((item) => (
-              <SidebarMenuItem key={item.title}>
-                <SidebarMenuButton
-                  asChild
-                  isActive={isActive(item.url)}
-                  tooltip={item.title}
-                >
-                  <NavLink
-                    to={item.url}
-                    end={item.url === "/"}
-                    className="hover:bg-sidebar-accent/10 hover:text-sidebar-foreground"
-                    activeClassName="bg-sidebar-accent text-sidebar-accent-foreground font-medium"
-                  >
-                    <item.icon className="h-4 w-4" />
-                    {!collapsed && <span>{item.title}</span>}
-                    {/* Badge de alertas en Principal */}
-                    {item.url === "/" && totalAlertas > 0 && (
-                      <Badge
-                        variant="destructive"
-                        className="ml-auto h-5 min-w-5 px-1 text-[10px] font-bold rounded-full"
-                      >
-                        {totalAlertas}
-                      </Badge>
+            {items.map((item) => {
+              const active = isActive(item.url);
+              return (
+                <SidebarMenuItem key={item.title}>
+                  <SidebarMenuButton
+                    asChild
+                    isActive={active}
+                    tooltip={item.title}
+                    className={cn(
+                      "relative",
+                      // Rail vertical en item activo — visible en expanded y collapsed
+                      active &&
+                        "before:absolute before:left-0 before:top-1.5 before:bottom-1.5 before:w-[3px] before:bg-sidebar-primary before:rounded-r-full",
                     )}
-                  </NavLink>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-            ))}
+                  >
+                    <NavLink
+                      to={item.url}
+                      end={item.url === "/"}
+                      className="hover:bg-sidebar-accent/10 hover:text-sidebar-foreground"
+                      activeClassName="bg-sidebar-accent text-sidebar-accent-foreground font-medium"
+                    >
+                      <item.icon className="h-4 w-4 shrink-0" />
+                      {!collapsed && (
+                        <span className="flex-1 truncate">{item.title}</span>
+                      )}
+                      {/* Badge de alertas en Principal */}
+                      {item.url === "/" && totalAlertas > 0 && !collapsed && (
+                        <Badge
+                          variant="destructive"
+                          className="ml-auto h-5 min-w-5 px-1 text-[10px] font-bold rounded-full shrink-0"
+                        >
+                          {totalAlertas}
+                        </Badge>
+                      )}
+                    </NavLink>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              );
+            })}
           </SidebarMenu>
         </SidebarGroupContent>
       </SidebarGroup>
@@ -133,12 +145,12 @@ export function AppSidebar() {
 
   return (
     <Sidebar collapsible="icon">
-      <SidebarHeader className="border-b border-sidebar-border p-4">
-        <div className="flex items-center gap-3">
+      <SidebarHeader className="border-b border-sidebar-border p-4 group-data-[collapsible=icon]:px-2">
+        <div className={cn("flex items-center gap-3", collapsed && "justify-center gap-0")}>
           <img
             src={librecargaLogo}
             alt="Libre Carga Logo"
-            className="h-9 w-9 rounded-lg object-contain bg-white p-0.5 ring-1 ring-sidebar-border dark:ring-0"
+            className="h-9 w-9 rounded-lg object-contain bg-white p-0.5 ring-1 ring-sidebar-border dark:ring-0 shrink-0"
           />
           {!collapsed && (
             <div className="flex flex-col min-w-0">
@@ -168,9 +180,9 @@ export function AppSidebar() {
         ])}
       </SidebarContent>
 
-      <SidebarFooter className="border-t border-sidebar-border p-4 space-y-2">
+      <SidebarFooter className="border-t border-sidebar-border p-4 space-y-2 group-data-[collapsible=icon]:p-2">
         {!collapsed && user && (
-          <div className="flex flex-col gap-0.5">
+          <div className="flex flex-col gap-0.5 min-w-0">
             <div className="text-xs text-sidebar-foreground/70 truncate">
               {user.email}
             </div>
@@ -191,15 +203,34 @@ export function AppSidebar() {
             )}
           </div>
         )}
-        <Button
-          variant="ghost"
-          size={collapsed ? "icon" : "sm"}
-          className="w-full justify-start text-sidebar-foreground/60 hover:text-sidebar-foreground"
-          onClick={signOut}
-        >
-          <LogOut className="h-4 w-4" />
-          {!collapsed && <span className="ml-2">Cerrar sesión</span>}
-        </Button>
+        {collapsed ? (
+          <Tooltip delayDuration={200}>
+            <TooltipTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="w-full text-sidebar-foreground/60 hover:text-sidebar-foreground"
+                onClick={signOut}
+                aria-label="Cerrar sesión"
+              >
+                <LogOut className="h-4 w-4" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent side="right" className="text-xs">
+              Cerrar sesión
+            </TooltipContent>
+          </Tooltip>
+        ) : (
+          <Button
+            variant="ghost"
+            size="sm"
+            className="w-full justify-start text-sidebar-foreground/60 hover:text-sidebar-foreground"
+            onClick={signOut}
+          >
+            <LogOut className="h-4 w-4" />
+            <span className="ml-2">Cerrar sesión</span>
+          </Button>
+        )}
         {!collapsed && (
           <div className="text-[11px] text-sidebar-foreground/50 tabular-nums">
             v{APP_VERSION} · Libre Carga

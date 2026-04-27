@@ -15,6 +15,13 @@ export interface ChangelogEntry {
  */
 export const recentChangelog: ChangelogEntry[] = [
   {
+    version: "8.99.35",
+    date: "2026-04-27",
+    type: "patch",
+    title: "Sidebar: fix scroll horizontal, indicador 'rail' en item activo y tooltips en collapsed",
+    description: "Mejoras de navegación del menú lateral: (1) Fix scrollbar horizontal — SidebarContent usaba overflow-auto (ambos ejes); cambia a overflow-y-auto overflow-x-hidden para eliminar la barra horizontal indeseada que aparecía cuando algún hijo (org name larga, email del usuario, badge de alertas) generaba mínimo overflow lateral. (2) Rail vertical en item activo — los items del menú activos ahora muestran una pseudobarra vertical de 3px en color sidebar-primary pegada al borde izquierdo (before:absolute), visible tanto en modo expanded como collapsed (ancho 3rem) — mejora drásticamente la escaneabilidad cuando el sidebar está en icon-only y el cambio de fondo del cuadrito de 32px se perdía visualmente. (3) Items con badge — el span del título y el Badge de alertas se separan correctamente con flex-1 truncate + shrink-0, eliminando la causa raíz del overflow en 'Principal'. (4) Tooltip en logout collapsed — el botón 'Cerrar sesión' ahora se envuelve en Tooltip side='right' cuando el sidebar está colapsado, igual que los items de menú, para que el icono LogOut sin etiqueta sea descubrible. (5) SidebarTrigger con atajo visible — tooltip añadido al botón del header indicando 'Colapsar / expandir menú · ⌘B' (el atajo Cmd/Ctrl+B ya estaba implementado pero era invisible para el usuario). (6) Header del sidebar en collapsed — el contenedor del logo cambia a justify-center sin gap, eliminando el padding asimétrico cuando el texto está oculto; padding del header/footer reducido a p-2 en collapsible=icon mode. Resultado: navegación más limpia y profesional, sin scrollbar horizontal molesto, item activo visible de un vistazo en cualquier modo, atajos descubribles. Cero cambios funcionales; tsc -p tsconfig.app.json pasa limpio.",
+  },
+  {
     version: "8.99.34",
     date: "2026-04-27",
     type: "minor",
