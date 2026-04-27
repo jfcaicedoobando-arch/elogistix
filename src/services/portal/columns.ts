@@ -13,7 +13,7 @@ export const PORTAL_DOCUMENTO_COLUMNS =
   'id, embarque_id, nombre, archivo, estado, notas, organization_id, created_at' as const;
 
 export const PORTAL_COTIZACION_LIST_COLUMNS =
-  'id, folio, cliente_nombre, modo, tipo, estado, moneda, subtotal, origen, destino, created_at, fecha_vigencia' as const;
+  'id, folio, cliente_nombre, modo, tipo, estado, moneda, subtotal, origen, destino, created_at, fecha_vigencia, embarque_id, embarques!cotizaciones_embarque_id_fkey(id, expediente)' as const;
 
 export const PORTAL_FACTURA_LIST_COLUMNS =
   'id, numero, expediente, cliente_nombre, estado, moneda, subtotal, iva, total, fecha_emision, fecha_vencimiento' as const;
