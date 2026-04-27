@@ -103,8 +103,15 @@ export const nombreDesdeEmail = (raw: string | null | undefined): string => {
 };
 
 /**
- * Formatea un teléfono mexicano de 10 dígitos como "(55) 1234-5678".
- * Soporta lada país +52 y devuelve el original si no puede normalizar.
+ * Ladas mexicanas de 2 dígitos: solo CDMX, MTY y GDL. Resto son de 3 dígitos.
+ */
+const LADAS_2_DIGITOS = new Set(["55", "56", "33", "81"]);
+
+/**
+ * Formatea un teléfono mexicano de 10 dígitos.
+ * - Ladas 2 dígitos (CDMX 55/56, GDL 33, MTY 81) → "(55) 1234-5678"
+ * - Ladas 3 dígitos (resto del país) → "(442) 217-0696"
+ * Soporta prefijo +52 y devuelve el original si no puede normalizar.
  */
 export const formatPhoneMx = (raw: string | null | undefined): string => {
   if (!raw) return "";
@@ -120,7 +127,49 @@ export const formatPhoneMx = (raw: string | null | undefined): string => {
     local = digits.slice(3);
   }
   if (local.length === 10) {
-    return `${country}(${local.slice(0, 2)}) ${local.slice(2, 6)}-${local.slice(6)}`;
+    if (LADAS_2_DIGITOS.has(local.slice(0, 2))) {
+      return `${country}(${local.slice(0, 2)}) ${local.slice(2, 6)}-${local.slice(6)}`;
+    }
+    return `${country}(${local.slice(0, 3)}) ${local.slice(3, 6)}-${local.slice(6)}`;
   }
   return raw;
+};
+
+/**
+ * Diccionario para corregir acentuación de lugares mexicanos comunes
+ * que vienen sin acento desde catálogos legacy o entrada manual.
+ */
+const LUGARES_ACENTUADOS: Record<string, string> = {
+  "mexico": "México",
+  "ciudad de mexico": "Ciudad de México",
+  "queretaro": "Querétaro",
+  "yucatan": "Yucatán",
+  "michoacan": "Michoacán",
+  "nuevo leon": "Nuevo León",
+  "san luis potosi": "San Luis Potosí",
+  "atizapan": "Atizapán",
+  "atizapan de zaragoza": "Atizapán de Zaragoza",
+  "san andres cholula": "San Andrés Cholula",
+  "merida": "Mérida",
+  "leon": "León",
+  "torreon": "Torreón",
+  "culiacan": "Culiacán",
+  "tlaxcala": "Tlaxcala",
+  "estado de mexico": "Estado de México",
+};
+
+/**
+ * Corrige la acentuación de lugares mexicanos comunes y aplica Title Case.
+ * Si el texto incluye varias partes separadas por coma, se procesa cada una.
+ */
+export const correctSpanishPlace = (raw: string | null | undefined): string => {
+  if (!raw) return "";
+  return raw
+    .split(",")
+    .map((part) => {
+      const titled = toTitleCase(part);
+      const key = titled.trim().toLowerCase();
+      return LUGARES_ACENTUADOS[key] ?? titled;
+    })
+    .join(", ");
 };

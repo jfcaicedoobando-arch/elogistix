@@ -1,5 +1,7 @@
 import { useParams, useNavigate } from "react-router-dom";
-import { Button } from "@/components/ui/button";
+import { PackageX } from "lucide-react";
+
+import EmptyState from "@/components/empty/EmptyState";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
 import { usePermissions } from "@/hooks/shared/usePermissions";
@@ -65,10 +67,12 @@ export default function EmbarqueDetalle() {
 
   if (!embarque) {
     return (
-      <div className="flex flex-col items-center justify-center py-20">
-        <p className="text-muted-foreground">Embarque no encontrado</p>
-        <Button variant="outline" className="mt-4" onClick={() => navigate("/embarques")}>Volver</Button>
-      </div>
+      <EmptyState
+        icon={PackageX}
+        title="Embarque no encontrado"
+        description="El embarque que buscas no existe, fue eliminado o no tienes permiso para verlo."
+        primaryAction={{ label: "Volver a embarques", onClick: () => navigate("/embarques") }}
+      />
     );
   }
 

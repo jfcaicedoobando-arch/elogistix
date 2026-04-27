@@ -38,19 +38,19 @@ export default function Embarques() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-2xl font-bold">Embarques</h1>
           <p className="text-sm text-muted-foreground">{displayCount} embarques encontrados</p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-col gap-2 sm:flex-row sm:gap-2">
           {!isEmptyState && (
-            <Button variant="outline" onClick={exportarCsv}>
+            <Button variant="outline" onClick={exportarCsv} className="w-full sm:w-auto">
               <Download className="h-4 w-4 mr-2" /> Exportar CSV
             </Button>
           )}
           {canEdit && !isEmptyState && (
-            <Button onClick={() => navigate("/embarques/nuevo")}>
+            <Button onClick={() => navigate("/embarques/nuevo")} className="w-full sm:w-auto">
               <Plus className="h-4 w-4 mr-2" /> Nuevo Embarque
             </Button>
           )}
