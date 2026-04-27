@@ -8,6 +8,7 @@ import { useClientesPaginados } from "@/hooks/cliente/useClientes";
 import { usePermissions } from "@/hooks/shared/usePermissions";
 import NuevoClienteDialog from "@/components/cliente/NuevoClienteDialog";
 import PaginationControls from "@/components/shared/PaginationControls";
+import { PageHeader } from "@/components/shared/PageHeader";
 import { useDebounce } from "@/hooks/shared/useDebounce";
 import { DataTable, type DataTableColumn } from "@/components/shared/DataTable";
 import { useListPageState } from "@/hooks/shared/useListPageState";
