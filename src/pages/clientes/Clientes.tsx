@@ -48,7 +48,6 @@ export default function Clientes() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
       <PageHeader
         icon={<Users className="h-6 w-6 text-accent" />}
         title="Clientes"
