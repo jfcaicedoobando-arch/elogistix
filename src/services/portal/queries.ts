@@ -68,7 +68,25 @@ export async function fetchPortalCotizaciones(clienteIds: string[]) {
     .in("estado", PORTAL_COTIZACION_ESTADOS_VISIBLES)
     .order("created_at", { ascending: false });
   if (error) throw error;
-  return data ?? [];
+  const cotizaciones = data ?? [];
+
+  // Resolver expediente del embarque vinculado (cuando exista) en una segunda query batch.
+  const embarqueIds = cotizaciones
+    .map((c) => c.embarque_id)
+    .filter((id): id is string => Boolean(id));
+  if (embarqueIds.length === 0) {
+    return cotizaciones.map((c) => ({ ...c, embarque_expediente: null as string | null }));
+  }
+  const { data: embs, error: errEmb } = await supabase
+    .from("embarques")
+    .select("id, expediente")
+    .in("id", embarqueIds);
+  if (errEmb) throw errEmb;
+  const expById = new Map((embs ?? []).map((e) => [e.id, e.expediente]));
+  return cotizaciones.map((c) => ({
+    ...c,
+    embarque_expediente: c.embarque_id ? expById.get(c.embarque_id) ?? null : null,
+  }));
 }
 
 export async function fetchPortalCotizacion(id: string) {
