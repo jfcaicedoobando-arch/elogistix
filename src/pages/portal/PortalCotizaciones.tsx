@@ -9,6 +9,7 @@ import { formatCurrency, formatDate } from "@/lib/formatters";
 import { getEstadoColor } from "@/lib/ui/uiMappings";
 import { Search, FileText, Filter, Ship } from "lucide-react";
 import EmptyState from "@/components/empty/EmptyState";
+import { PageHeader } from "@/components/shared/PageHeader";
 import { useState, useMemo } from "react";
 
 export default function PortalCotizaciones() {
