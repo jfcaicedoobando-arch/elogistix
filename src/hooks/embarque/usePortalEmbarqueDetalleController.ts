@@ -61,7 +61,10 @@ export function usePortalEmbarqueDetalleController(id: string | undefined) {
   }, [embarque]);
 
   const docsValidados = useMemo(
-    () => documentos.filter((d) => d.estado === "Validado").length,
+    () =>
+      documentos.filter(
+        (d) => d.estado === "Recibido" || d.estado === "Validado",
+      ).length,
     [documentos],
   );
   const docsTotal = documentos.length;

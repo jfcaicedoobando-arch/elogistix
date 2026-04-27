@@ -2,6 +2,13 @@ import type { ChangelogEntry } from "../../../changelogData";
 
 export const chunk0: ChangelogEntry[] = [
   {
+    version: "8.99.2",
+    date: "2026-04-27",
+    type: "patch",
+    title: "Fix: contador de documentos en portal del cliente",
+    description: "Corregido un bug en el portal del cliente donde el contador de documentos del detalle de embarque siempre mostraba 0 (ej. '0/7') aunque el cliente tuviera archivos descargables. La causa era que el filtro en usePortalEmbarqueDetalleController solo contaba documentos en estado 'Validado', ignorando los 'Recibido' (subidos pero pendientes de validación). Ahora se cuentan ambos estados como completados, alineando el comportamiento con TabDocumentos y la lista interna de embarques.",
+  },
+  {
     version: "8.99.1",
     date: "2026-04-27",
     type: "patch",
