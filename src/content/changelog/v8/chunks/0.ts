@@ -2,6 +2,13 @@ import type { ChangelogEntry } from "../../../changelogData";
 
 export const chunk0: ChangelogEntry[] = [
   {
+    version: "8.99.32",
+    date: "2026-04-27",
+    type: "minor",
+    title: "Auditoría UI/UX Fase G: Tokens estandarizados para tamaños de Dialog",
+    description: "Séptima fase de la auditoría UI/UX integral, enfocada en consistencia de modales (DialogContent). El audit detectó tres problemas sistémicos: (a) tamaños de DialogContent diversos sin sistema (sm:max-w-md, max-w-lg, max-w-3xl, max-w-4xl, default sin clase) que generan modales del mismo propósito (CRUD de cliente vs CRUD de proveedor) con anchos visualmente distintos; (b) dos diálogos sin tamaño explícito (AdminOrganizaciones · Nueva Organización, TabPortalCliente · Invitar Cliente) que heredaban el max-w-lg default — demasiado ancho para 2 inputs cortos, generando un modal vacío con mucho espacio; (c) overflow inconsistente: algunos formularios largos tenían max-h-[85vh] overflow-y-auto, otros max-h-[90vh], otros nada (riesgo de modal cortado en viewports pequeños). (1) dialogTokens nuevo — src/lib/ui/dialogTokens.ts centraliza el sistema de tamaños con 7 niveles documentados: sm (~24rem, alerts/notas), md (~28rem, CRUD pocos campos · default recomendado), lg (~32rem, formularios cortos como cliente/contacto), xl (~36rem), 2xl (~42rem, formularios medianos), 3xl (~48rem, previews/proforma), 4xl (~56rem, wizards inline). Cada token mapea a sm:max-w-* con cada uno de los criterios de uso documentado en JSDoc. Constante adicional 'scrollableDialog' aplica max-h-[85vh] overflow-y-auto de forma consistente. (2) Migración de 13 diálogos — NuevoUsuarioDialog, EditarProveedorDialog, NuevoProveedorDialog, DialogMarcarFacturada, AgregarMiembroOrgDialog (md); DialogContacto, DialogEditarCliente, NuevoClienteDialog, DialogConvertirProspecto (lg); DialogGenerarProforma (3xl); DialogDuplicarEmbarque (4xl); AdminOrganizaciones · Nueva Organización (md, antes default lg); TabPortalCliente · Invitar Cliente (md, antes default lg). Los 4 diálogos con scroll (NuevoProveedor, NuevoCliente, DialogGenerarProforma, DialogDuplicarEmbarque) ahora componen el tamaño con scrollableDialog vía cn(). (3) Beneficio sistémico — todos los modales del sistema ahora consumen tokens del mismo módulo, eliminando la deriva de strings literales y permitiendo cambios globales (ej. ajustar el ancho 'lg' a 32.5rem) editando un solo archivo. La documentación inline guía a futuros desarrolladores sobre qué tamaño usar según contenido. Resultado: 1 nuevo módulo de tokens (dialogTokens.ts), 13 diálogos normalizados, 0 cambios funcionales; tsc -p tsconfig.app.json pasa limpio.",
+  },
+  {
     version: "8.99.31",
     date: "2026-04-27",
     type: "minor",
