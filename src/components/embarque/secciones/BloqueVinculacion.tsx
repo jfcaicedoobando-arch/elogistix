@@ -122,6 +122,7 @@ export function BloqueVinculacion({
                     size="icon"
                     className="h-7 w-7"
                     onClick={() => onModoExpedienteChange?.('nuevo')}
+                    aria-label="Quitar expediente vinculado"
                   >
                     <X className="h-4 w-4" />
                   </Button>
