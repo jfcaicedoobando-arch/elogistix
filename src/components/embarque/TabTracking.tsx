@@ -157,8 +157,8 @@ export function TabTracking({ embarqueId }: Props) {
                           </span>
                         )}
                         {ev.usuario && (
-                          <span className="flex items-center gap-1">
-                            <User className="h-3 w-3" /> {ev.usuario}
+                          <span className="flex items-center gap-1" title={ev.usuario}>
+                            <User className="h-3 w-3" /> {nombreDesdeEmail(ev.usuario)}
                           </span>
                         )}
                       </div>
