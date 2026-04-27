@@ -1,29 +1,76 @@
-## Problema
+## Objetivo
 
-En el listado de **Mis cotizaciones**, COT-2026-0007 muestra el badge verde **"En operación · ELGEN00054"** que lleva al embarque. Pero al entrar al detalle de la cotización, ese enlace desaparece.
+Renombrar el estado `Embarcada` → `En operación` en cotizaciones para reflejar con precisión que la cotización fue aceptada Y ya tiene embarque vinculado. La transición de `Aceptada` → `En operación` será automática vía trigger cuando se cree el embarque desde la cotización.
 
-## Causa
+## Estado actual
 
-La cotización está en estado **"Aceptada"** (no "Embarcada"), pero ya tiene `embarque_id` vinculado por el trigger de sincronización.
+- Enum `estado_cotizacion` actual: `Borrador, Enviada, Confirmada, Rechazada, Vencida, Aceptada, Embarcada`
+- 4 cotizaciones productivas en estado `Embarcada` que se migrarán
+- El trigger `trg_sync_cotizacion_embarque_link` ya pobla `cotizaciones.embarque_id` automáticamente al crear un embarque, pero **no cambia el estado**
 
-- **Listado** (`PortalCotizaciones.tsx`): muestra el badge siempre que exista `embarque_id` → funciona.
-- **Detalle** (`PortalCotizacionEstadoBanner.tsx`): solo muestra el botón "Ver embarque" si `estado === "Embarcada"` → no aparece para "Aceptada".
+## Cambios
 
-El estado "Embarcada" probablemente solo se aplica en transiciones más tardías (o no se usa), por lo que la mayoría de cotizaciones convertidas quedan en "Aceptada" con `embarque_id`. Esto deja al cliente sin acceso desde el detalle.
+### 1. Base de datos (migración SQL)
 
-## Solución
+Postgres no permite renombrar valores de enum directamente sin perder integridad. Patrón seguro:
 
-Unificar el criterio del listado y el detalle: **si hay `embarque_id`, mostrar el aviso de operación con el botón "Ver embarque"**, sin importar si el estado es "Aceptada" o "Embarcada".
+```text
+a) ALTER TYPE estado_cotizacion ADD VALUE 'En operación';
+   (commit intermedio para que el nuevo valor sea usable)
 
-### Cambios
+b) UPDATE cotizaciones SET estado = 'En operación' WHERE estado = 'Embarcada';
 
-1. **`src/components/portal/cotizacion/PortalCotizacionEstadoBanner.tsx`**
-   - Quitar la condición `estado === "Embarcada"` para el bloque del banner verde con "Ver embarque".
-   - Mostrarlo cuando exista `embarqueId` (independiente del estado).
-   - Para "Aceptada" sin embarque, mantener el banner actual ("Te notificaremos cuando inicie la operación").
-   - Para "Aceptada" con embarque, prevalece el banner de operación (mostrar también el comentario del cliente si existe).
+c) Recrear el enum sin 'Embarcada':
+   - Crear estado_cotizacion_new sin 'Embarcada'
+   - ALTER TABLE cotizaciones ALTER COLUMN estado TYPE estado_cotizacion_new USING estado::text::estado_cotizacion_new
+   - DROP TYPE estado_cotizacion; rename estado_cotizacion_new → estado_cotizacion
+   - Restaurar default 'Borrador'
+```
 
-2. **Changelog (`src/pages/Changelog.tsx`)**
-   - Nueva entrada patch v8.99.5: "Portal: el detalle de cotización ahora muestra el enlace al embarque vinculado, igual que el listado."
+### 2. Trigger automático de transición
 
-No se requieren cambios de base de datos ni de servicios — los datos ya están disponibles en `fetchPortalCotizacion`.
+Modificar (o complementar) `trg_sync_cotizacion_embarque_link` para que, además de poblar `embarque_id`, ejecute:
+
+```sql
+UPDATE cotizaciones
+SET estado = 'En operación'
+WHERE id = NEW.cotizacion_id
+  AND estado = 'Aceptada';
+```
+
+Solo se promueve desde `Aceptada` (no desde `Borrador`, `Rechazada`, etc.) para evitar transiciones inválidas.
+
+### 3. RLS policy
+
+Actualizar `Cliente read own cotizaciones` para reemplazar `'Embarcada'` por `'En operación'` en el array de estados visibles del portal.
+
+### 4. Código frontend (reemplazos string `"Embarcada"` → `"En operación"`)
+
+Archivos afectados:
+- `src/lib/ui/estadoConfig.ts` — badge color índigo
+- `src/services/portal/queries.ts` — array `PORTAL_COTIZACION_ESTADOS_VISIBLES`
+- `src/hooks/cotizacion/useCotizacionesPageController.ts` — filtro y lógica de "tiene embarque"
+- `src/hooks/embarque/useEmbarqueSubmitOrchestrator.ts` — al guardar embarque
+- `src/services/cotizacion/conversiones/embarques.ts` — al convertir cotización
+- `src/components/cotizacion/CotizacionDetalleSecciones.tsx` — render condicional
+- `src/components/portal/cotizacion/PortalCotizacionEstadoBanner.tsx` — comentario JSDoc
+- `src/integrations/supabase/types.ts` — se regenera automáticamente
+
+> Los archivos del changelog histórico (`src/content/changelog/...`) **no se modifican** — son registros históricos.
+
+### 5. Changelog
+
+Nueva entrada **v8.99.6** explicando: renombramos `Embarcada` → `En operación` para reflejar mejor el flujo (Enviada → Aceptada → En operación), trigger ahora promueve estado automáticamente, datos existentes migrados.
+
+## Resultado
+
+```text
+Flujo de cotización:
+Borrador → Enviada → Aceptada ──(crea embarque)──► En operación
+                  ↘ Rechazada
+                  ↘ Vencida
+```
+
+- El cliente ve "En operación" tanto en el badge del listado como en el banner del detalle (lenguaje consistente).
+- Los operadores pueden filtrar fácilmente "qué está aceptado pero pendiente de operar" vs "qué ya está en operación".
+- Cero acción manual: el estado avanza solo al crear el embarque.
