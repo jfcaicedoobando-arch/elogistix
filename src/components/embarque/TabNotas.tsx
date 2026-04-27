@@ -12,6 +12,7 @@ import { getErrorMessage } from "@/lib/errors";
 import { useToast } from "@/hooks/use-toast";
 import type { NotaEmbarqueRow } from "@/hooks/embarque/useEmbarques";
 import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
+import { formatDate, nombreDesdeEmail } from "@/lib/formatters";
 
 interface Props {
   notas: NotaEmbarqueRow[];
