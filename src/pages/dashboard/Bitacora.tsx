@@ -45,17 +45,15 @@ export default function Bitacora() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
-          <History className="h-6 w-6" />
-          Bitácora de Actividad
-        </h1>
-        <p className="text-sm text-muted-foreground">
-          {isAdmin
+      <PageHeader
+        icon={<History className="h-6 w-6" />}
+        title="Bitácora de Actividad"
+        description={
+          isAdmin
             ? "Registro de todas las acciones realizadas en el sistema."
-            : "Registro de tus acciones en el sistema."}
-        </p>
-      </div>
+            : "Registro de tus acciones en el sistema."
+        }
+      />
 
       {/* Filtros */}
       <div className="flex items-center gap-3 flex-wrap">
