@@ -2,6 +2,13 @@ import type { ChangelogEntry } from "../../../changelogData";
 
 export const chunk0: ChangelogEntry[] = [
   {
+    version: "8.99.26",
+    date: "2026-04-27",
+    type: "minor",
+    title: "Auditoría UI/UX Fase A: Header con breadcrumbs y sidebar tema-aware",
+    description: "Primera fase de la auditoría UI/UX integral, enfocada en navegación global. (1) Breadcrumbs dinámicos — se reemplaza el rótulo estático 'PLATAFORMA DE OPERACIONES' (texto en mayúsculas que no aportaba contexto) por un componente Breadcrumbs (src/components/layout/Breadcrumbs.tsx) que deriva la ruta actual y muestra una jerarquía navegable: 'Embarques › ELIMP00185', 'Clientes › Indimex Trading', etc. Cada segmento es un <Link> excepto el último (página actual), e identifica segmentos dinámicos largos (uuids/expedientes) truncándolos a 14 caracteres. Mejora orientación contextual y permite volver atrás en niveles intermedios sin usar el botón del navegador. (2) Header más esbelto — la altura del header pasó de h-16 a h-14, sin shadow-sm (border-b es suficiente), con un divisor vertical sutil entre el SidebarTrigger y los breadcrumbs para reforzar agrupación visual. (3) Sidebar tema-aware — antes el sidebar era SIEMPRE azul-marino sólido, incluso en modo claro, generando una sensación de 'tema sin terminar' (dos áreas con tono opuesto). Los tokens --sidebar-* del modo claro se recalibran a fondo blanco con borde sutil, foreground oscuro alineado con la marca, y estado activo en azul-marino sólido (--sidebar-accent), respetando la armonía cromática general. En modo oscuro nada cambia. El logo recibe ring-1 ring-sidebar-border en light para destacarse del fondo blanco; en dark se elimina el ring. (4) Versión dinámica — el footer del sidebar mostraba 'v6.4.0 · Libre Carga' hardcodeado mientras el changelog real iba en v8.99.25 (información engañosa). Ahora lee la versión más reciente directamente de chunk0[0].version del changelog (APP_VERSION constante), garantizando sincronía automática con cada release. Tipografía a text-[11px] tabular-nums para alineación numérica. (5) Labels de grupo del sidebar — text-xs/60% → text-[11px]/50% para mayor sutileza visual y jerarquía clara entre encabezado de grupo y items. Resultado: 4 archivos modificados (Layout, AppSidebar, index.css, +1 nuevo Breadcrumbs.tsx); tsc --noEmit pasa limpio.",
+  },
+  {
     version: "8.99.25",
     date: "2026-04-27",
     type: "patch",
