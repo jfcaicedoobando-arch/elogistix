@@ -98,7 +98,7 @@ export function DashboardStatusCards({
       {/* CAMBIO 2 — Indicador de arribos + profit */}
       <Card>
         <CardContent className="p-4">
-          <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+          <div className="flex flex-col lg:flex-row lg:items-center gap-4">
             {/* Título */}
             <div className="flex items-center gap-2 shrink-0">
               <div className="p-2 rounded-lg bg-gradient-to-br from-cyan-500 to-cyan-600">
@@ -108,7 +108,7 @@ export function DashboardStatusCards({
             </div>
 
             {/* Métricas */}
-            <div className="flex items-center gap-6 flex-1">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-6 flex-1">
               <div className="text-center">
                 {isLoading ? <Skeleton className="h-6 w-8 mx-auto" /> : (
                   <span className="text-xl font-bold text-foreground">{arribosEsteMes.total}</span>
@@ -136,15 +136,12 @@ export function DashboardStatusCards({
                 <p className="text-[10px] text-muted-foreground font-medium">En camino</p>
               </div>
 
-              {/* Separador vertical */}
-              <div className="h-8 w-px bg-border hidden sm:block" />
-
               {/* Profit */}
               <div className="text-center">
                 {isLoading ? <Skeleton className="h-6 w-20 mx-auto" /> : (
                   <div className="flex items-center gap-1 justify-center">
                     <TrendingUp className={`h-3.5 w-3.5 ${arribosEsteMes.profitUSD >= 0 ? "text-emerald-500" : "text-destructive"}`} />
-                    <span className={`text-xl font-bold ${arribosEsteMes.profitUSD >= 0 ? "text-emerald-600" : "text-destructive"}`}>
+                    <span className={`text-base sm:text-xl font-bold whitespace-nowrap ${arribosEsteMes.profitUSD >= 0 ? "text-emerald-600" : "text-destructive"}`}>
                       {formatCurrency(arribosEsteMes.profitUSD, "USD")}
                     </span>
                   </div>
@@ -154,7 +151,7 @@ export function DashboardStatusCards({
             </div>
 
             {/* Barra de progreso */}
-            <div className="flex items-center gap-2 sm:w-40 shrink-0">
+            <div className="flex items-center gap-2 lg:w-40 shrink-0">
               <Progress
                 value={arribosEsteMes.total > 0 ? (arribosEsteMes.yaLlegaron / arribosEsteMes.total) * 100 : 0}
                 className="h-2 flex-1 [&>div]:bg-kpi-secondary"
