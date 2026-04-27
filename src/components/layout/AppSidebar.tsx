@@ -35,6 +35,9 @@ import {
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
+import { chunk0 } from "@/content/changelog/v8/chunks/0";
+
+const APP_VERSION = chunk0[0]?.version ?? "—";
 
 const dashboardItems = [
   { title: "Principal", url: "/", icon: LayoutDashboard },
@@ -87,7 +90,7 @@ export function AppSidebar() {
     <>
       <SidebarGroup>
         {!collapsed && (
-          <span className="px-3 py-2 text-xs font-semibold uppercase tracking-wider text-sidebar-foreground/60">
+          <span className="px-3 py-2 text-[11px] font-semibold uppercase tracking-wider text-sidebar-foreground/50">
             {label}
           </span>
         )}
@@ -103,7 +106,7 @@ export function AppSidebar() {
                   <NavLink
                     to={item.url}
                     end={item.url === "/"}
-                    className="hover:bg-sidebar-accent/50"
+                    className="hover:bg-sidebar-accent/10 hover:text-sidebar-foreground"
                     activeClassName="bg-sidebar-accent text-sidebar-accent-foreground font-medium"
                   >
                     <item.icon className="h-4 w-4" />
@@ -132,9 +135,13 @@ export function AppSidebar() {
     <Sidebar collapsible="icon">
       <SidebarHeader className="border-b border-sidebar-border p-4">
         <div className="flex items-center gap-3">
-          <img src={librecargaLogo} alt="Libre Carga Logo" className="h-9 w-9 rounded-lg object-contain bg-white p-0.5" />
+          <img
+            src={librecargaLogo}
+            alt="Libre Carga Logo"
+            className="h-9 w-9 rounded-lg object-contain bg-white p-0.5 ring-1 ring-sidebar-border dark:ring-0"
+          />
           {!collapsed && (
-            <div className="flex flex-col">
+            <div className="flex flex-col min-w-0">
               <span className="text-sm font-bold text-sidebar-foreground">
                 Libre Carga
               </span>
@@ -194,8 +201,8 @@ export function AppSidebar() {
           {!collapsed && <span className="ml-2">Cerrar sesión</span>}
         </Button>
         {!collapsed && (
-          <div className="text-xs text-sidebar-foreground/50">
-            v6.4.0 · Libre Carga
+          <div className="text-[11px] text-sidebar-foreground/50 tabular-nums">
+            v{APP_VERSION} · Libre Carga
           </div>
         )}
       </SidebarFooter>

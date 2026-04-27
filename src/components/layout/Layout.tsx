@@ -6,6 +6,7 @@ import { GlobalSearch } from "@/components/shared/GlobalSearch";
 import { ErrorBoundary } from "@/components/shared/ErrorBoundary";
 import { ThemeToggle } from "@/components/layout/ThemeToggle";
 import RouteLoadingFallback from "@/components/layout/RouteLoadingFallback";
+import { Breadcrumbs } from "@/components/layout/Breadcrumbs";
 
 export function Layout() {
   // En tablet (<lg = 1024px) el sidebar arranca colapsado para liberar ancho útil.
@@ -23,12 +24,11 @@ export function Layout() {
       <div className="min-h-screen flex w-full">
         <AppSidebar />
         <div className="flex-1 flex flex-col min-w-0">
-          <header className="h-16 flex items-center border-b bg-card px-4 shrink-0 shadow-sm">
-            <SidebarTrigger className="mr-4" />
-            <h1 className="text-sm font-semibold tracking-wide text-muted-foreground uppercase">
-              Plataforma de Operaciones
-            </h1>
-            <div className="ml-auto flex items-center gap-2">
+          <header className="h-14 flex items-center gap-3 border-b bg-card px-4 shrink-0">
+            <SidebarTrigger className="shrink-0" />
+            <div className="h-5 w-px bg-border shrink-0" aria-hidden />
+            <Breadcrumbs />
+            <div className="ml-auto flex items-center gap-2 shrink-0">
               <GlobalSearch />
               <ThemeToggle />
             </div>
