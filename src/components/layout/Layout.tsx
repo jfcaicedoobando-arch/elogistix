@@ -26,7 +26,14 @@ export function Layout() {
         <AppSidebar />
         <div className="flex-1 flex flex-col min-w-0">
           <header className="sticky top-0 z-30 h-16 flex items-center gap-3 border-b bg-card/85 px-6 shrink-0 backdrop-blur supports-[backdrop-filter]:bg-card/70">
-            <SidebarTrigger className="shrink-0" />
+            <Tooltip delayDuration={300}>
+              <TooltipTrigger asChild>
+                <SidebarTrigger className="shrink-0" />
+              </TooltipTrigger>
+              <TooltipContent side="bottom" className="text-xs">
+                Colapsar / expandir menú · <kbd className="ml-1 rounded bg-muted px-1 py-0.5 text-[10px] font-mono">⌘B</kbd>
+              </TooltipContent>
+            </Tooltip>
             <div className="h-5 w-px bg-border shrink-0" aria-hidden />
             <Breadcrumbs />
             <div className="ml-auto flex items-center gap-2 shrink-0">
