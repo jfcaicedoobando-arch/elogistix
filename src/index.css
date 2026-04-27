@@ -6,8 +6,8 @@
 
 @layer base {
   :root {
-    --background: 210 33% 98%;
-    --foreground: 220 40% 13%;
+    --background: 210 30% 99%;
+    --foreground: 220 40% 12%;
 
     --card: 0 0% 100%;
     --card-foreground: 220 40% 13%;
@@ -22,7 +22,7 @@
     --secondary-foreground: 216 47% 20%;
 
     --muted: 210 33% 95%;
-    --muted-foreground: 215 16% 47%;
+    --muted-foreground: 215 18% 42%;
 
     --accent: 221 83% 53%;
     --accent-foreground: 0 0% 100%;
@@ -30,8 +30,8 @@
     --destructive: 0 84% 60%;
     --destructive-foreground: 210 40% 98%;
 
-    --border: 214 32% 91%;
-    --input: 214 32% 91%;
+    --border: 214 28% 92%;
+    --input: 214 28% 92%;
     --ring: 221 83% 53%;
 
     --radius: 0.5rem;
@@ -85,7 +85,7 @@
     --background: 220 40% 7%;
     --foreground: 210 33% 96%;
 
-    --card: 220 38% 11%;
+    --card: 220 35% 13%;
     --card-foreground: 210 33% 96%;
 
     --popover: 220 38% 11%;
@@ -107,8 +107,8 @@
     --destructive: 0 72% 51%;
     --destructive-foreground: 210 33% 96%;
 
-    --border: 217 33% 20%;
-    --input: 217 33% 20%;
+    --border: 217 30% 22%;
+    --input: 217 30% 22%;
     --ring: 217 91% 60%;
 
     /* Sidebar: ligeramente más oscuro que el fondo para destacar */
