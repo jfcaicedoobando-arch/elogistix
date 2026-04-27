@@ -1,4 +1,5 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { dialogSize } from "@/lib/ui/dialogTokens";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
@@ -31,7 +32,7 @@ export default function EditarProveedorDialog({ proveedor, open, onOpenChange, o
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className={dialogSize.md}>
         <DialogHeader>
           <DialogTitle>Editar Proveedor</DialogTitle>
         </DialogHeader>

@@ -1,4 +1,6 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
+import { cn } from "@/lib/utils";
+import { dialogSize, scrollableDialog } from "@/lib/ui/dialogTokens";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Loader2, FileText, ArrowLeft, ArrowRight } from "lucide-react";
@@ -24,7 +26,7 @@ export function DialogGenerarProforma({ open, onOpenChange, embarque, conceptosP
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className={cn(dialogSize["3xl"], scrollableDialog)}>
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             {c.paso === 'seleccion' ? (

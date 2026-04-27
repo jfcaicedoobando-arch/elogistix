@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { dialogSize } from "@/lib/ui/dialogTokens";
 import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -51,7 +52,7 @@ export default function DialogContacto({ open, onOpenChange, contacto, onSave, i
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-lg">
+      <DialogContent className={dialogSize.lg}>
         <DialogHeader>
           <DialogTitle>{contacto ? 'Editar Contacto' : 'Nuevo Contacto'}</DialogTitle>
           <DialogDescription>Proveedor, exportador o importador asociado a este cliente.</DialogDescription>

@@ -1,4 +1,6 @@
 import { useState } from "react";
+import { cn } from "@/lib/utils";
+import { dialogSize, scrollableDialog } from "@/lib/ui/dialogTokens";
 import { Plus, Minus, Info } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -70,7 +72,7 @@ export default function DialogDuplicarEmbarque({ embarque, open, onOpenChange }:
 
   return (
     <Dialog open={open} onOpenChange={(v) => { if (!v) setFilaCopias([crearFilaInicial()]); onOpenChange(v); }}>
-      <DialogContent className="max-w-4xl max-h-[85vh] overflow-y-auto">
+      <DialogContent className={cn(dialogSize["4xl"], scrollableDialog)}>
         <DialogHeader>
           <DialogTitle>Duplicar Embarque</DialogTitle>
           <DialogDescription>Desde {embarque.expediente} — BL: {embarque.bl_master || 'N/A'}</DialogDescription>

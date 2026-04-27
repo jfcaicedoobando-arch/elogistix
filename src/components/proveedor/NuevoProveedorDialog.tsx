@@ -1,4 +1,6 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { cn } from "@/lib/utils";
+import { dialogSize, scrollableDialog } from "@/lib/ui/dialogTokens";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
@@ -25,7 +27,7 @@ export default function NuevoProveedorDialog({ open, onOpenChange, onSave }: Pro
 
   return (
     <Dialog open={open} onOpenChange={(abierto) => { if (!abierto) c.resetAndClose(); else onOpenChange(abierto); }}>
-      <DialogContent className="sm:max-w-md max-h-[85vh] overflow-y-auto">
+      <DialogContent className={cn(dialogSize.md, scrollableDialog)}>
         <DialogHeader>
           <DialogTitle>Nuevo Proveedor — Paso {c.step} de 2</DialogTitle>
         </DialogHeader>

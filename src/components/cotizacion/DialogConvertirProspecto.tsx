@@ -1,4 +1,5 @@
 import { Button } from "@/components/ui/button";
+import { dialogSize } from "@/lib/ui/dialogTokens";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -21,7 +22,7 @@ export default function DialogConvertirProspecto({
 }: Props) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-lg">
+      <DialogContent className={dialogSize.lg}>
         <DialogHeader>
           <DialogTitle>Convertir Prospecto a Cliente</DialogTitle>
         </DialogHeader>

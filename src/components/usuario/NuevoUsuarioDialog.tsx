@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { dialogSize } from "@/lib/ui/dialogTokens";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -61,7 +62,7 @@ export default function NuevoUsuarioDialog({ open, onOpenChange, onCreated, show
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className={dialogSize.md}>
         <DialogHeader>
           <DialogTitle>{showOrgSelector ? "Nuevo Usuario Global" : "Nuevo Usuario"}</DialogTitle>
           <DialogDescription>

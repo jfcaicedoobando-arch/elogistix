@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { dialogSize } from "@/lib/ui/dialogTokens";
 import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -41,7 +42,7 @@ export default function DialogEditarCliente({ open, onOpenChange, cliente, onSav
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-lg">
+      <DialogContent className={dialogSize.lg}>
         <DialogHeader>
           <DialogTitle>Editar Cliente</DialogTitle>
           <DialogDescription>Modifica los datos generales del cliente.</DialogDescription>

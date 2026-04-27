@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import { dialogSize } from "@/lib/ui/dialogTokens";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -58,7 +59,7 @@ export function DialogMarcarFacturada({ open, onOpenChange, proforma }: Props) {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className={dialogSize.md}>
         <DialogHeader>
           <DialogTitle>Marcar proforma como facturada</DialogTitle>
           <DialogDescription>
