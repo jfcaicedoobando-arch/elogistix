@@ -32,3 +32,47 @@ export const formatDate = (
     return dateStr;
   }
 };
+
+/**
+ * Convierte un string a Title Case respetando conectores en minúscula
+ * y siglas comunes en mayúsculas (S.A., S.A. de C.V., RFC, etc.).
+ */
+export const toTitleCase = (raw: string | null | undefined): string => {
+  if (!raw) return "";
+  const lowerWords = new Set(["de", "del", "la", "las", "los", "y", "e", "en", "a", "el"]);
+  const acronymRe = /^([A-Z]\.?){2,5}$/;
+  const corpRe = /^(s\.?a\.?|c\.?v\.?|s\.?a\.?p\.?i\.?|s\.?c\.?|s\.?r\.?l\.?|sa|cv|sapi|sc|srl)$/i;
+  const tokens = raw.trim().split(/\s+/);
+  return tokens
+    .map((original, idx) => {
+      const lower = original.toLowerCase();
+      if (acronymRe.test(original)) return original.toUpperCase();
+      if (corpRe.test(lower)) return original.toUpperCase();
+      if (idx > 0 && lowerWords.has(lower)) return lower;
+      return lower.charAt(0).toUpperCase() + lower.slice(1);
+    })
+    .join(" ");
+};
+
+/**
+ * Formatea un teléfono mexicano de 10 dígitos como "(55) 1234-5678".
+ * Soporta lada país +52 y devuelve el original si no puede normalizar.
+ */
+export const formatPhoneMx = (raw: string | null | undefined): string => {
+  if (!raw) return "";
+  const digits = raw.replace(/\D/g, "");
+  if (!digits) return raw;
+  let country = "";
+  let local = digits;
+  if (digits.length === 12 && digits.startsWith("52")) {
+    country = "+52 ";
+    local = digits.slice(2);
+  } else if (digits.length === 13 && digits.startsWith("521")) {
+    country = "+52 ";
+    local = digits.slice(3);
+  }
+  if (local.length === 10) {
+    return `${country}(${local.slice(0, 2)}) ${local.slice(2, 6)}-${local.slice(6)}`;
+  }
+  return raw;
+};
