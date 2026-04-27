@@ -6,6 +6,7 @@ import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
 import type { Tables, Enums } from "@/integrations/supabase/types";
+import { toTitleCase } from "@/lib/formatters";
 type ContactoCliente = Tables<'contactos_cliente'>;
 type TipoContacto = Enums<'tipo_contacto'>;
 
@@ -57,7 +58,7 @@ export default function TablaContactos({ contactos, isLoading, canEdit, onAdd, o
             <TableBody>
               {contactos.map(contacto => (
                 <TableRow key={contacto.id}>
-                  <TableCell className="font-medium">{contacto.nombre}</TableCell>
+                  <TableCell className="font-medium">{toTitleCase(contacto.nombre)}</TableCell>
                   <TableCell><Badge variant={tipoBadgeVariant(contacto.tipo)}>{contacto.tipo}</Badge></TableCell>
                   <TableCell className="text-xs">{contacto.pais}, {contacto.ciudad}</TableCell>
                   <TableCell className="text-xs">{contacto.contacto}</TableCell>
