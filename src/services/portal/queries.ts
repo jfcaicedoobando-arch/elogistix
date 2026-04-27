@@ -96,7 +96,18 @@ export async function fetchPortalCotizacion(id: string) {
     .eq("id", id)
     .single();
   if (error) throw error;
-  return data;
+  if (!data) return data;
+
+  let embarque_expediente: string | null = null;
+  if (data.embarque_id) {
+    const { data: emb } = await supabase
+      .from("embarques")
+      .select("expediente")
+      .eq("id", data.embarque_id)
+      .maybeSingle();
+    embarque_expediente = emb?.expediente ?? null;
+  }
+  return { ...data, embarque_expediente };
 }
 
 export async function fetchPortalFacturas(clienteIds: string[]) {

@@ -65,6 +65,8 @@ export default function PortalCotizacionDetalle() {
       <PortalCotizacionEstadoBanner
         estado={cot.estado}
         comentarioCliente={comentarioCliente}
+        embarqueId={(cot as { embarque_id?: string | null }).embarque_id ?? null}
+        embarqueExpediente={(cot as { embarque_expediente?: string | null }).embarque_expediente ?? null}
       />
 
       {/* Datos generales */}
