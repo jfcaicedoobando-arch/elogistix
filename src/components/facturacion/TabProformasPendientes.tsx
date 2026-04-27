@@ -83,7 +83,7 @@ export function TabProformasPendientes() {
                     {grupo.blMaster && (
                       <span className="text-xs text-muted-foreground">BL: <span className="font-mono">{grupo.blMaster}</span></span>
                     )}
-                    <span className="text-xs text-muted-foreground truncate">Cliente: {grupo.clienteNombre}</span>
+                    <span className="text-xs text-muted-foreground truncate">Cliente: {toTitleCase(grupo.clienteNombre)}</span>
                   </div>
                   <div className="flex items-center gap-2 shrink-0">
                     {seleccionadasGrupo > 0 && (
