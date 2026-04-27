@@ -81,16 +81,14 @@ export function DesempenoOperadores({ operadores, isLoading }: Props) {
           <p className="text-xs font-semibold text-muted-foreground mb-2 uppercase tracking-wide">
             Comparativa de carga de trabajo
           </p>
-          <ResponsiveContainer width="100%" height={300}>
-            <BarChart data={chartData} margin={{ top: 10, right: 20, left: 0, bottom: 40 }}>
+          <ResponsiveContainer width="100%" height={320}>
+            <BarChart data={chartData} margin={{ top: 10, right: 20, left: 0, bottom: 30 }}>
               <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
               <XAxis
                 dataKey="nombre"
                 tick={{ fontSize: 11 }}
-                angle={-25}
-                textAnchor="end"
-                height={60}
                 interval={0}
+                height={40}
               />
               <YAxis allowDecimals={false} tick={{ fontSize: 11 }} />
               <RechartsTooltip
@@ -101,7 +99,11 @@ export function DesempenoOperadores({ operadores, isLoading }: Props) {
                   fontSize: 12,
                 }}
               />
-              <Legend wrapperStyle={{ fontSize: 11, paddingTop: 8 }} />
+              <Legend
+                verticalAlign="top"
+                align="right"
+                wrapperStyle={{ fontSize: 11, paddingBottom: 8 }}
+              />
               {ESTADOS_KEYS.map((estado) => (
                 <Bar
                   key={estado}
