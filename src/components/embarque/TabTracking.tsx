@@ -12,7 +12,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { usePermissions } from '@/hooks/shared/usePermissions';
 import { useToast } from '@/hooks/use-toast';
 import { getErrorMessage } from '@/lib/errors';
-import { formatDate } from '@/lib/formatters';
+import { formatDate, nombreDesdeEmail } from '@/lib/formatters';
 import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 
 interface Props {
