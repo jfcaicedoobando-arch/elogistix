@@ -32,20 +32,22 @@ export function EmbarqueDetalleHeader({
   const navigate = useNavigate();
 
   return (
-    <div className="flex items-center gap-4">
-      <Button variant="ghost" size="icon" onClick={() => navigate("/embarques")}>
-        <ArrowLeft className="h-5 w-5" />
-      </Button>
-      <div className="flex-1">
-        <div className="flex items-center gap-3 flex-wrap">
-          <h1 className="text-2xl font-bold">{embarque.expediente}</h1>
-          <Badge className={getEstadoColor(estadoVisual)}>{estadoVisual}</Badge>
-          <span className="text-lg">{getModoIcon(embarque.modo)}</span>
-          <ProformaBadge tieneProforma={embarque.tiene_proforma} size="lg" />
+    <div className="flex flex-col lg:flex-row lg:items-start gap-4">
+      <div className="flex items-start gap-3 flex-1 min-w-0">
+        <Button variant="ghost" size="icon" onClick={() => navigate("/embarques")} className="shrink-0">
+          <ArrowLeft className="h-5 w-5" />
+        </Button>
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2 flex-wrap">
+            <h1 className="text-2xl font-bold truncate">{embarque.expediente}</h1>
+            <Badge className={getEstadoColor(estadoVisual)}>{estadoVisual}</Badge>
+            <span className="text-lg">{getModoIcon(embarque.modo)}</span>
+            <ProformaBadge tieneProforma={embarque.tiene_proforma} size="lg" />
+          </div>
+          <p className="text-sm text-muted-foreground truncate">{embarque.cliente_nombre}</p>
         </div>
-        <p className="text-sm text-muted-foreground">{embarque.cliente_nombre}</p>
       </div>
-      <div className="flex gap-2">
+      <div className="flex gap-2 flex-wrap lg:justify-end">
         {canEdit && siguienteEstado && (
           <AlertDialog>
             <AlertDialogTrigger asChild>
@@ -70,15 +72,15 @@ export function EmbarqueDetalleHeader({
         )}
         {canEdit && <Button variant="outline" size="sm" onClick={() => navigate(`/embarques/${embarqueId}/editar`)}><Edit className="h-4 w-4 mr-1" /> Editar</Button>}
         {canEdit && <Button variant="outline" size="sm" onClick={onAbrirDuplicar}><Copy className="h-4 w-4 mr-1" /> Duplicar</Button>}
+        <Button variant="outline" size="sm" onClick={onCompartirTracking} disabled={trackingPending}>
+          <Share2 className="h-4 w-4 mr-1" /> Compartir
+        </Button>
+        <Button variant="outline" size="sm"><Printer className="h-4 w-4 mr-1" /> Imprimir</Button>
         {canEdit && (
           <Button variant="destructive" size="sm" onClick={onAbrirEliminar}>
             <Trash2 className="h-4 w-4 mr-1" /> Eliminar
           </Button>
         )}
-        <Button variant="outline" size="sm" onClick={onCompartirTracking} disabled={trackingPending}>
-          <Share2 className="h-4 w-4 mr-1" /> Compartir Tracking
-        </Button>
-        <Button variant="outline" size="sm"><Printer className="h-4 w-4 mr-1" /> Imprimir</Button>
       </div>
     </div>
   );
