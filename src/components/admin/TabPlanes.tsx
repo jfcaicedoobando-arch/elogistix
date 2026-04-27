@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Save, Pencil } from "lucide-react";
 import { usePlanes, useUpdatePlan, type Plan } from "@/hooks/admin/usePlanes";
 import { DataTable, type DataTableColumn } from "@/components/shared/DataTable";
+import { formatCurrency, formatNumber } from "@/lib/formatters";
 
 export default function TabPlanes() {
   const { data: planes = [], isLoading } = usePlanes();
