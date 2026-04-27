@@ -2,6 +2,13 @@ import type { ChangelogEntry } from "../../../changelogData";
 
 export const chunk0: ChangelogEntry[] = [
   {
+    version: "8.99.8",
+    date: "2026-04-27",
+    type: "patch",
+    title: "Portal: card 'Cotizaciones' ahora cuenta solo las pendientes de interacción",
+    description: "Refinamiento del dashboard del portal del cliente. Antes el card 'Cotizaciones' mostraba el total de cotizaciones visibles (Enviada + Aceptada + Rechazada + En operación), lo que confundía al cliente porque ese número incluía decisiones ya tomadas y cotizaciones ya en operación. Ahora el card se renombra a 'Cotizaciones Pendientes' (alineado con 'Facturas Pendientes') y cuenta exclusivamente las cotizaciones en estado 'Enviada', que son las únicas que requieren acción del cliente (Aceptar o Rechazar). El listado completo en /portal/cotizaciones no cambia: el cliente sigue viendo todas sus cotizaciones para consulta histórica.",
+  },
+  {
     version: "8.99.7",
     date: "2026-04-27",
     type: "patch",

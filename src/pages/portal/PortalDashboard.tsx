@@ -59,7 +59,7 @@ export default function PortalDashboard() {
       <PortalKpiGrid
         values={{
           embarques: embarquesActivos.length,
-          cotizaciones: cotizaciones.length,
+          cotizaciones: cotizaciones.filter((c) => c.estado === "Enviada").length,
           facturas: facturasPendientes.length,
         }}
       />
