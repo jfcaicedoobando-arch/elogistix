@@ -9,6 +9,7 @@ export const chunk0: ChangelogEntry[] = [
     description: "Mejora de privacidad y experiencia para clientes en el portal. Antes el portal exponía TODAS las cotizaciones del cliente, incluyendo borradores internos con precios tentativos en construcción. Ahora los clientes solo verán cotizaciones en estado Enviada, Aceptada o Rechazada (decisiones formalmente compartidas o histórico relevante). Borrador, Vencida y Cancelada quedan ocultas. Implementación con doble capa de protección: (1) política RLS endurecida en la tabla cotizaciones que filtra por estado a nivel de base de datos, garantizando que ni siquiera una consulta directa a la API pueda exponer borradores; (2) filtro defensivo en fetchPortalCotizaciones (src/services/portal/queries.ts) para mantener consistencia y evitar tráfico innecesario. El staff interno (admin, operador, super_admin) sigue viendo todas las cotizaciones sin restricción.",
   },
   {
+    version: "8.99.2",
     date: "2026-04-27",
     type: "patch",
     title: "Fix: contador de documentos en portal del cliente",
