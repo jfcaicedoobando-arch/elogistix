@@ -21,7 +21,7 @@ interface Props {
 export function CotizacionDetalleEmbarques({ embarques, cotizacionEstado }: Props) {
   const navigate = useNavigate();
 
-  if (cotizacionEstado !== "Embarcada" && embarques.length === 0) return null;
+  if (cotizacionEstado !== "En operación" && embarques.length === 0) return null;
 
   return (
     <Card>

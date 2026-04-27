@@ -10,7 +10,7 @@ interface PortalCotizacionEstadoBannerProps {
   embarqueExpediente?: string | null;
 }
 
-/** Banner contextual según el estado de la cotización (Aceptada/Embarcada/Rechazada/Enviada). */
+/** Banner contextual según el estado de la cotización (Aceptada/En operación/Rechazada/Enviada). */
 export default function PortalCotizacionEstadoBanner({
   estado,
   comentarioCliente,
