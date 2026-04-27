@@ -96,34 +96,45 @@ export function AppSidebar() {
         )}
         <SidebarGroupContent>
           <SidebarMenu>
-            {items.map((item) => (
-              <SidebarMenuItem key={item.title}>
-                <SidebarMenuButton
-                  asChild
-                  isActive={isActive(item.url)}
-                  tooltip={item.title}
-                >
-                  <NavLink
-                    to={item.url}
-                    end={item.url === "/"}
-                    className="hover:bg-sidebar-accent/10 hover:text-sidebar-foreground"
-                    activeClassName="bg-sidebar-accent text-sidebar-accent-foreground font-medium"
-                  >
-                    <item.icon className="h-4 w-4" />
-                    {!collapsed && <span>{item.title}</span>}
-                    {/* Badge de alertas en Principal */}
-                    {item.url === "/" && totalAlertas > 0 && (
-                      <Badge
-                        variant="destructive"
-                        className="ml-auto h-5 min-w-5 px-1 text-[10px] font-bold rounded-full"
-                      >
-                        {totalAlertas}
-                      </Badge>
+            {items.map((item) => {
+              const active = isActive(item.url);
+              return (
+                <SidebarMenuItem key={item.title}>
+                  <SidebarMenuButton
+                    asChild
+                    isActive={active}
+                    tooltip={item.title}
+                    className={cn(
+                      "relative",
+                      // Rail vertical en item activo — visible en expanded y collapsed
+                      active &&
+                        "before:absolute before:left-0 before:top-1.5 before:bottom-1.5 before:w-[3px] before:bg-sidebar-primary before:rounded-r-full",
                     )}
-                  </NavLink>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-            ))}
+                  >
+                    <NavLink
+                      to={item.url}
+                      end={item.url === "/"}
+                      className="hover:bg-sidebar-accent/10 hover:text-sidebar-foreground"
+                      activeClassName="bg-sidebar-accent text-sidebar-accent-foreground font-medium"
+                    >
+                      <item.icon className="h-4 w-4 shrink-0" />
+                      {!collapsed && (
+                        <span className="flex-1 truncate">{item.title}</span>
+                      )}
+                      {/* Badge de alertas en Principal */}
+                      {item.url === "/" && totalAlertas > 0 && !collapsed && (
+                        <Badge
+                          variant="destructive"
+                          className="ml-auto h-5 min-w-5 px-1 text-[10px] font-bold rounded-full shrink-0"
+                        >
+                          {totalAlertas}
+                        </Badge>
+                      )}
+                    </NavLink>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              );
+            })}
           </SidebarMenu>
         </SidebarGroupContent>
       </SidebarGroup>
