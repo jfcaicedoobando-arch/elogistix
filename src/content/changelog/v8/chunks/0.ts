@@ -2,6 +2,13 @@ import type { ChangelogEntry } from "../../../changelogData";
 
 export const chunk0: ChangelogEntry[] = [
   {
+    version: "8.99.14",
+    date: "2026-04-27",
+    type: "patch",
+    title: "Auditoría visual Fase 3: Title Case en clientes y formato MX de teléfonos",
+    description: "Cierre del pase de pulido visual. (1) Helpers de formato — se añaden toTitleCase() y formatPhoneMx() en src/lib/formatters. toTitleCase normaliza nombres de clientes y contactos preservando conectores en minúscula (de, del, la, los, y) y siglas en mayúscula (S.A. de C.V., RFC, USA). formatPhoneMx convierte 10 dígitos a '(55) 1234-5678' y soporta lada +52. (2) Listado de Clientes — la tabla aplica toTitleCase a Nombre, Ciudad/Estado y Contacto; el RFC se fuerza a mayúsculas; la columna Teléfono se ensancha a 130px con whitespace-nowrap y formato MX. (3) Detalle de cliente — bloque 'Información General' formatea contacto y teléfono. (4) Tabla de contactos del cliente — los nombres se muestran en Title Case. (5) Prefijos USD — verificado que formatCurrency con locale es-MX ya emite 'USD 1,234.50' (formato CLDR oficial), por lo que no se requirieron cambios adicionales para garantizar consistencia.",
+  },
+  {
     version: "8.99.13",
     date: "2026-04-27",
     type: "patch",
