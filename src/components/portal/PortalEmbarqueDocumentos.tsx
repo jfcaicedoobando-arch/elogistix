@@ -23,10 +23,7 @@ export function PortalEmbarqueDocumentos({ documentos }: Props) {
     <Card>
       <CardContent className="p-0">
         {documentos.length === 0 ? (
-          <div className="text-center py-12">
-            <FileCheck className="h-8 w-8 mx-auto text-muted-foreground/30 mb-2" />
-            <p className="text-sm text-muted-foreground">No hay documentos disponibles.</p>
-          </div>
+          <EmptyStateInline icon={FileCheck} message="No hay documentos disponibles." className="py-12" />
         ) : (
           <Table>
             <TableHeader>

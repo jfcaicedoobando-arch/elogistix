@@ -47,10 +47,7 @@ export function PortalEmbarquesRecientesCard({ embarques, className }: Props) {
       </CardHeader>
       <CardContent>
         {embarques.length === 0 ? (
-          <div className="text-center py-8">
-            <Ship className="h-8 w-8 mx-auto text-muted-foreground/40 mb-2" />
-            <p className="text-sm text-muted-foreground">No hay embarques activos.</p>
-          </div>
+          <EmptyStateInline icon={Ship} message="No hay embarques activos." />
         ) : (
           <div className="space-y-2">
             {embarques.slice(0, 5).map((e) => {

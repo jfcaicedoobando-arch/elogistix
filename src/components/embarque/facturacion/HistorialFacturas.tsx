@@ -86,10 +86,7 @@ export function HistorialFacturas({ facturas, proformas }: Props) {
             </TableBody>
           </Table>
         ) : (
-          <div className="p-8 text-center">
-            <Receipt className="h-8 w-8 mx-auto text-muted-foreground/40 mb-2" />
-            <p className="text-sm text-muted-foreground">No hay facturas generadas para este embarque.</p>
-          </div>
+          <EmptyStateInline icon={Receipt} message="No hay facturas generadas para este embarque." />
         )}
       </CardContent>
     </Card>

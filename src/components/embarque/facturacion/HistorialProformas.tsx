@@ -22,10 +22,7 @@ export function HistorialProformas({ proformas, canEdit, isDeleting, onDescargar
       </CardHeader>
       <CardContent className="p-0">
         {proformas.length === 0 ? (
-          <div className="p-8 text-center">
-            <Receipt className="h-8 w-8 mx-auto text-muted-foreground/40 mb-2" />
-            <p className="text-sm text-muted-foreground">No hay proformas generadas para este embarque.</p>
-          </div>
+          <EmptyStateInline icon={Receipt} message="No hay proformas generadas para este embarque." />
         ) : (
           <Table>
             <TableHeader>

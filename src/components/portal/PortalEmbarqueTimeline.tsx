@@ -15,10 +15,7 @@ export function PortalEmbarqueTimeline({ eventos }: Props) {
       <CardHeader className="pb-3"><CardTitle className="text-sm">Línea de Tiempo</CardTitle></CardHeader>
       <CardContent>
         {eventos.length === 0 ? (
-          <div className="text-center py-12">
-            <Clock className="h-8 w-8 mx-auto text-muted-foreground/30 mb-2" />
-            <p className="text-sm text-muted-foreground">No hay eventos registrados aún.</p>
-          </div>
+          <EmptyStateInline icon={Clock} message="No hay eventos registrados aún." className="py-12" />
         ) : (
           <div className="relative">
             <div className="absolute left-4 top-0 bottom-0 w-0.5 bg-border" />
