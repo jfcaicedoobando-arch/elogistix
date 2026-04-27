@@ -126,8 +126,8 @@ export function TabResumen({ embarque }: Props) {
                   <TableRow key={rel.id} className="cursor-pointer" onClick={() => navigate(`/embarques/${rel.id}`)}>
                     <TableCell className="font-medium">{rel.expediente}</TableCell>
                     <TableCell className="text-xs">{rel.bl_house || '-'}</TableCell>
-                    <TableCell className="text-xs">{rel.cliente_nombre}</TableCell>
-                    <TableCell className="text-xs">{rel.shipper}</TableCell>
+                    <TableCell className="text-xs">{toTitleCase(rel.cliente_nombre)}</TableCell>
+                    <TableCell className="text-xs">{toTitleCase(rel.shipper)}</TableCell>
                     <TableCell>
                       <Badge variant="secondary" className={`text-xs ${getEstadoColor(rel.estado)}`}>{rel.estado}</Badge>
                     </TableCell>
