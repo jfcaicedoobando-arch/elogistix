@@ -59,7 +59,7 @@ export const ProximosArribosCard = memo(function ProximosArribosCard({ arribos, 
                     : `${e.diasRestantes} día${e.diasRestantes > 1 ? "s" : ""}`}
                 </p>
               </div>
-              <span className="text-lg">{getModoIcon(e.modo)}</span>
+              <ModoIcon modo={e.modo} size={18} circle />
             </div>
           ))
         )}
