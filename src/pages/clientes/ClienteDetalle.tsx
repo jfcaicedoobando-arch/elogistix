@@ -12,6 +12,7 @@ import TablaContactos from "@/components/cliente/TablaContactos";
 import DoubleConfirmDeleteDialog from "@/components/shared/DoubleConfirmDeleteDialog";
 import ClienteSummaryCards from "@/components/cliente/ClienteSummaryCards";
 import { useClienteDetalleController } from "@/hooks/cliente/useClienteDetalleController";
+import { toTitleCase, formatPhoneMx } from "@/lib/formatters";
 
 export default function ClienteDetalle() {
   const {
