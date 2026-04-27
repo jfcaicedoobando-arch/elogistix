@@ -74,7 +74,7 @@ export default function TabPlanes() {
             onChange={(e) => setEditValues({ ...editValues, max_embarques_mes: Number(e.target.value) })}
           />
         ) : (
-          p.max_embarques_mes.toLocaleString("es-MX")
+          formatNumber(p.max_embarques_mes)
         ),
     },
     {
