@@ -35,6 +35,9 @@ import {
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
+import { chunk0 } from "@/content/changelog/v8/chunks/0";
+
+const APP_VERSION = chunk0[0]?.version ?? "—";
 
 const dashboardItems = [
   { title: "Principal", url: "/", icon: LayoutDashboard },
@@ -194,8 +197,8 @@ export function AppSidebar() {
           {!collapsed && <span className="ml-2">Cerrar sesión</span>}
         </Button>
         {!collapsed && (
-          <div className="text-xs text-sidebar-foreground/50">
-            v6.4.0 · Libre Carga
+          <div className="text-[11px] text-sidebar-foreground/50 tabular-nums">
+            v{APP_VERSION} · Libre Carga
           </div>
         )}
       </SidebarFooter>
