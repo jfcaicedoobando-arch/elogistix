@@ -29,7 +29,10 @@ interface DataTableProps<T> {
   data: T[];
   isLoading?: boolean;
   emptyMessage?: string;
+  emptyHint?: string;
   emptyIcon?: React.ReactNode;
+  /** Slot custom (CTA, etc.) que reemplaza al empty state por defecto */
+  emptyState?: React.ReactNode;
   skeletonRows?: number;
   onRowClick?: (item: T) => void;
   onRowMouseEnter?: (item: T) => void;
@@ -44,14 +47,16 @@ function DataTableInner<T>({
   data,
   isLoading = false,
   emptyMessage = "Sin resultados",
+  emptyHint,
   emptyIcon,
+  emptyState,
   skeletonRows = 5,
   onRowClick,
   onRowMouseEnter,
   rowKey,
   rowClassName,
 }: DataTableProps<T>) {
-  const icon = emptyIcon ?? <Inbox className="h-10 w-10 text-muted-foreground/40" />;
+  const icon = emptyIcon ?? <Inbox className="h-8 w-8 opacity-40" strokeWidth={1.5} />;
 
   const [sortKey, setSortKey] = useState<string | null>(null);
   const [sortDir, setSortDir] = useState<SortDir>("asc");
@@ -143,10 +148,15 @@ function DataTableInner<T>({
           ? (
               <TableRow className="hover:bg-transparent">
                 <TableCell colSpan={columns.length}>
-                  <div className="flex flex-col items-center justify-center gap-2 py-10 text-muted-foreground">
-                    {icon}
-                    <p className="text-sm">{emptyMessage}</p>
-                  </div>
+                  {emptyState ?? (
+                    <div className="flex flex-col items-center justify-center gap-2 py-12 text-muted-foreground">
+                      {icon}
+                      <p className="text-sm font-medium">{emptyMessage}</p>
+                      {emptyHint && (
+                        <p className="text-xs opacity-75 max-w-md text-center">{emptyHint}</p>
+                      )}
+                    </div>
+                  )}
                 </TableCell>
               </TableRow>
             )
