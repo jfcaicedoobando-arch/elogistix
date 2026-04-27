@@ -16,16 +16,15 @@ export function useOperacionesPageController() {
   const [operadorChart, setOperadorChart] = useState<string>("todos");
   const { isLoading, operadores, global } = useOperacionesData(periodo);
 
-  const hoyStr = useMemo(
-    () =>
-      new Date().toLocaleDateString("es-MX", {
-        weekday: "long",
-        day: "numeric",
-        month: "long",
-        year: "numeric",
-      }),
-    [],
-  );
+  const hoyStr = useMemo(() => {
+    const fecha = new Date().toLocaleDateString("es-MX", {
+      weekday: "long",
+      day: "numeric",
+      month: "long",
+      year: "numeric",
+    });
+    return fecha.charAt(0).toUpperCase() + fecha.slice(1);
+  }, []);
 
   const chartData = useMemo(() => {
     if (operadorChart === "todos") return global.historicoCreadosPorMes;

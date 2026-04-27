@@ -2,6 +2,13 @@ import type { ChangelogEntry } from "../../../changelogData";
 
 export const chunk0: ChangelogEntry[] = [
   {
+    version: "8.99.15",
+    date: "2026-04-27",
+    type: "patch",
+    title: "Auditoría visual Fase 4: Title Case correcto, sidebar tablet y badge de vigencia",
+    description: "Cuarta fase del pase de pulido visual basada en una auditoría con capturas en 768px y 1366px. (1) toTitleCase reescrito — la versión anterior detectaba cualquier palabra de 2-5 letras mayúsculas como 'sigla', produciendo errores graves: 'BUENO Alimentos' (Bueno→BUENO), 'SANTA Catarina, NUEVO León', 'Chipilo DE Francisco Javier MINA', 'Equipos DE AGRO DEL SUR'. La nueva implementación es conservadora: solo preserva mayúsculas si el original contiene puntos internos (S.A., C.V., S.A.P.I.) o si el token está en una whitelist explícita corta (RFC, CFDI, IVA, USD, EUR, MXN, USA, EU, UE, LCL, FCL, BL, ETD, ETA, CSF, CDMX, INE, API, CRM, ERP, SAT, DOF), más tokens corporativos sueltos (sa, cv, sapi, sc, srl, sab, sofom). Capitaliza correctamente después de guiones internos ('vistrain-gonzalez' → 'Vistrain-Gonzalez') y elimina dígitos colgantes ('Vargas1' → 'Vargas'). (2) Title Case aplicado en displays donde faltaba — tabla de Embarques (cliente_nombre), tabla de Cotizaciones (cliente_nombre), card 'Alertas de Demora' y card 'Próximos Arribos' del dashboard principal. (3) Header del dashboard de Operaciones — la fecha 'Domingo, 26 De Abril De 2026' se debía a un className='capitalize' global; ahora se normaliza la cadena en el hook useOperacionesPageController y se elimina el modificador CSS, preservando 'de' en minúsculas. (4) Tarjetas de operadores — antes mostraban el email completo ('alan.hernandez@elogis...'); ahora se aplica el helper nombreDesdeEmail() exportado desde formatters para mostrar el nombre derivado ('Alan Hernandez'). (5) Tabla de Embarques — la columna Estado se cortaba en laptops (1366px); se redujo el max-w de Cliente (160px) y Estado se ensancha a 110px. (6) Cotizaciones · Vigencia — la columna ahora muestra badges contextuales: rojo 'Vencida' si la fecha pasó, amarillo con '{N}d' o 'Vence hoy' si quedan ≤3 días, fecha plana en otro caso. (7) Cotizaciones · Fecha — se elimina la coma redundante y se fuerza formato 24h ('23/04/2026 16:06' en lugar de '23/04/2026, 04:06 p.m.'). (8) Sidebar en tablet — el sidebar fijo de 256px en pantallas <1024px reducía el contenido útil a ~510px y cortaba la línea de tiempo del dashboard; ahora el SidebarProvider arranca colapsado por defecto en <lg y reacciona al resize, manteniendo el botón hamburguesa para alternar.",
+  },
+  {
     version: "8.99.14",
     date: "2026-04-27",
     type: "patch",
