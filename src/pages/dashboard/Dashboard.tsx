@@ -53,7 +53,7 @@ export default function Dashboard() {
           <h1 className="text-2xl font-bold text-foreground">
             {saludo} 👋
           </h1>
-          <p className="text-sm text-muted-foreground capitalize">{hoyStr}</p>
+          <p className="text-sm text-muted-foreground">{hoyStr}</p>
         </div>
         <Badge variant="secondary" className="text-xs w-fit">
           {totalActivos} embarques activos
