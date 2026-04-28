@@ -35,6 +35,8 @@ export const formatCurrencyCompact = (amount: number, currency: string = "MXN"):
   }).format(safe);
   return `${currency} ${formatted}`;
 };
+
+/** Formatea un número entero/decimal con separadores de miles mexicanos. */
 export const formatNumber = (
   value: number | null | undefined,
   options: { decimals?: number; suffix?: string } = {}
