@@ -1,5 +1,6 @@
-import { Link } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
 import { ArrowLeft, Truck, Pencil, Trash2, FileX, PackageX, MoreHorizontal } from "lucide-react";
+import { useRegisterBreadcrumbLabel } from "@/contexts/BreadcrumbContext";
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
@@ -18,6 +19,7 @@ import EmptyState from "@/components/empty/EmptyState";
 import { useProveedorDetalleController } from "@/hooks/proveedor/useProveedorDetalleController";
 
 export default function ProveedorDetalle() {
+  const { id } = useParams<{ id: string }>();
   const {
     proveedor,
     isLoading,
