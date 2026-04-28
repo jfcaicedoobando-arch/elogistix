@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, useState, type ReactNode } from "react";
 import {
   Plus, Trash2, MoreHorizontal, Pencil, Download, TrendingUp,
   CheckCircle, XCircle, BarChart3, Copy,
