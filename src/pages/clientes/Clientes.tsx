@@ -13,6 +13,7 @@ import { useDebounce } from "@/hooks/shared/useDebounce";
 import { DataTable, type DataTableColumn } from "@/components/shared/DataTable";
 import { useListPageState } from "@/hooks/shared/useListPageState";
 import { toTitleCase, formatPhoneMx, correctSpanishPlace } from "@/lib/formatters";
+import { FloatingActionButton } from "@/components/shared/FloatingActionButton";
 
 type ClienteRow = { id: string; nombre: string; rfc: string; ciudad: string; estado: string; contacto: string; telefono: string };
 
@@ -54,7 +55,7 @@ export default function Clientes() {
         description={`${totalCount} clientes registrados`}
         actions={
           canEdit ? (
-            <Button onClick={() => setDialogOpen(true)} className="w-full sm:w-auto">
+            <Button onClick={() => setDialogOpen(true)} className="hidden md:inline-flex">
               <Plus className="h-4 w-4 mr-1" />Nuevo Cliente
             </Button>
           ) : null
@@ -88,6 +89,14 @@ export default function Clientes() {
       </Card>
 
       <NuevoClienteDialog open={dialogOpen} onOpenChange={setDialogOpen} />
+
+      {canEdit && (
+        <FloatingActionButton
+          icon={<Plus className="h-6 w-6" />}
+          label="Nuevo cliente"
+          onClick={() => setDialogOpen(true)}
+        />
+      )}
     </div>
   );
 }
