@@ -7,6 +7,7 @@ import { Layout } from "./components/layout/Layout";
 import { ProtectedRoute } from "./components/auth/ProtectedRoute";
 import { PortalProtectedRoute } from "./components/auth/PortalProtectedRoute";
 import RouteLoadingFallback from "./components/layout/RouteLoadingFallback";
+import { BreadcrumbProvider } from "./contexts/BreadcrumbContext";
 
 // Lazy-loaded pages
 const Login = lazy(() => import("./pages/auth/Login"));
@@ -79,6 +80,7 @@ const App = () => (
     <TooltipProvider>
       <Toaster />
       <BrowserRouter>
+        <BreadcrumbProvider>
         <Suspense fallback={<RouteLoadingFallback />}>
           <Routes>
             <Route path="/login" element={<Login />} />
