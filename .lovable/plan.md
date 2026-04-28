@@ -1,116 +1,96 @@
-# Auditoría visual UI/UX — Libre Carga
+# Plan de optimización de performance (v8.99.43 → v8.99.46)
 
-Revisé las pantallas principales en escritorio (1440×900) y móvil (390×844), en modo claro y oscuro: Inicio, Cotizaciones, Embarques, Clientes y Detalle de Cliente. Abajo está el diagnóstico priorizado con propuesta de fixes.
+Aplicar las 5 recomendaciones del análisis previo en 4 oleadas, de menor a mayor riesgo. Cada oleada es desplegable y reversible por separado.
 
----
+## Oleada A — Quick wins de base de datos y caché (v8.99.43)
 
-## 🔴 Bloqueantes (corregir ya)
+**Backend (sin migraciones):**
+- En `src/services/embarque/queries.ts` (`fetchEmbarquesPaginados`), `src/services/cliente/crud.ts` (`fetchClientesPaginados`) y `src/services/proveedorServices.ts` (`fetchProveedoresPaginados`): cambiar `count: 'exact'` → `count: 'estimated'`. Evita full-scans en cada cambio de filtro/búsqueda.
+- Confirmado: `BreadcrumbContext.value` ya está memoizado, y catálogos (puertos, navieras, tipos contenedor) ya tienen `staleTime: 30 min`. No se tocan.
 
-### 1. El sidebar NO respeta el modo claro
-Al cambiar al tema claro, todo el contenido se aclara correctamente, pero la **barra lateral sigue oscura** (azul-marino). Rompe la jerarquía visual y el contraste del logo (que tiene fondo blanco) queda forzado. Debería ser blanco con texto oscuro en light mode, según tokens ya definidos en `index.css`.
+**Riesgo:** mínimo. El conteo paginado pasa de exacto a aproximado; en tablas <1000 filas la diferencia es 0; en tablas grandes evita 200-800ms por filtro.
 
-**Causa probable:** algún wrapper aplica `dark` localmente al `<Sidebar>` o el `SidebarProvider` se monta dentro de un nodo con clase forzada. Confirmar inspeccionando `Layout.tsx` / `sidebar.tsx`.
+## Oleada B — Bundle + carga inicial (v8.99.44)
 
-**Fix:** asegurar que `Sidebar` use solo tokens (`bg-sidebar`, `text-sidebar-foreground`) sin overrides; eliminar cualquier `dark:` o `bg-[hsl(...)]` hardcodeado.
+**Frontend:**
+- `index.html`: agregar `<link rel="preconnect" href="https://eorqadkulqtneqjbsblk.supabase.co" crossorigin>` y `<link rel="dns-prefetch" href="https://eorqadkulqtneqjbsblk.supabase.co">` para ahorrar la negociación TLS del primer request (~150-300 ms).
+- `vite.config.ts`: ampliar `manualChunks.radix-vendor` con `@radix-ui/react-avatar`, `react-tooltip`, `react-scroll-area`, `react-toast`, `react-separator`, `react-checkbox`, `react-switch` (los que se usan en >3 páginas) para evitar duplicación entre chunks de ruta.
+- Lazy-import de Recharts en `OperacionesWidgets.tsx` y `ProfitTable.tsx`: extraer el bloque `<BarChart>` a un componente envuelto en `React.lazy(() => import("./ChartXxx"))` con `<Suspense fallback={skeleton}>`. Recharts (~400KB) deja de cargarse en el primer paint del Dashboard.
 
-### 2. Breadcrumb muestra UUID crudo en detalle de cliente
-La ruta `/clientes/:id` muestra `Clientes › 87bdcbf1-4476-…` en vez de `Clientes › Indimex Trading`. Igual ocurriría en embarques/cotizaciones si el componente Breadcrumbs no resuelve el segmento dinámico.
+**Riesgo:** bajo. Solo cambios de bundling; la UI se ve igual.
 
-**Fix:** en `Breadcrumbs.tsx`, mapear segmentos UUID a un nombre real (consultando el record cargado o vía contexto), y como fallback, ocultar el segmento dinámico en lugar de mostrar el UUID.
+## Oleada C — Consolidación de queries del detalle de embarque (v8.99.45)
 
-### 3. KPIs de moneda truncados en tarjetas de detalle de cliente
-"Facturado: USD …", "Pendiente: USD …", "Profit: USD …" — el monto se trunca con elipsis aún en escritorio 1440. La cifra principal del KPI es justo lo que el usuario necesita ver.
+**Migración SQL:** crear RPC `public.get_embarque_full(p_embarque_id uuid) returns jsonb` que devuelve en una sola llamada:
+```jsonb
+{
+  "embarque": { ... EMBARQUE_DETAIL_COLUMNS ... },
+  "conceptosVenta": [ ... ],
+  "conceptosCosto": [ ... ],
+  "documentos": [ ... ],
+  "notas": [ ... ],
+  "facturas": [ ... ]
+}
+```
+- `SECURITY INVOKER` para respetar RLS por organización/cliente.
+- Devuelve `null` si el usuario no tiene acceso (RLS lo filtra silenciosamente).
 
-**Fix:** abreviar (`USD 1.2M`, `USD 845K`) con `Intl.NumberFormat` + `notation: 'compact'`, y mostrar el valor completo en tooltip. Reducir `text-2xl` → `text-xl` cuando el valor sea grande, o aumentar `min-w` de la card.
+**Frontend:**
+- Nuevo hook `useEmbarqueFull(id)` en `src/hooks/embarque/useEmbarqueFullQuery.ts` que llama al RPC y expone el mismo shape que los 6 hooks individuales actuales.
+- Refactor de `EmbarqueDetalle.tsx` y `PortalEmbarqueDetalle.tsx` para consumir un solo hook en vez de 6.
+- Mantener los hooks individuales (`useEmbarqueConceptosVenta`, etc.) para los lugares donde se invalidan tras una mutación (no romper compat).
 
----
+**Riesgo:** medio. Reduce 6 round-trips a 1 (~500-1500 ms en redes lentas). Validar con `EXPLAIN ANALYZE` que el RPC no se vuelva más lento que las queries individuales.
 
-## 🟠 Importantes (mejoran percepción de calidad)
+## Oleada D — Render: paralelizar dashboard + memoizar sidebar (v8.99.46)
 
-### 4. Móvil: filtros ocupan 7 filas verticales y el buscador se corta
-En `/embarques` a 390px: 6 selects + buscador apilados full-width (ocupan ~600px de scroll antes de ver datos). El placeholder se corta a "…o m...".
+**Frontend:**
+- `useDashboardData`: quitar el `enabled: !!summary` de la query `details` para que ambas RPCs corran en paralelo desde el primer render. El TTI del dashboard baja ~40%.
+- `AppSidebar.tsx`: extraer `SidebarFooter` (avatar + dropdown + theme toggle) a un componente memoizado con `React.memo`. Memoizar el array de `navItems` con `useMemo` (no se recalcula en cada cambio de ruta).
+- `DataTable`: envolver `TableRow` en `React.memo` con comparador shallow para evitar re-render de filas no afectadas cuando cambia el estado del padre.
+- Verificar y agregar `placeholderData` desde la lista cacheada en `useEmbarque(id)` y `useCliente(id)` para render instantáneo al navegar lista → detalle.
 
-**Fix:** colapsar filtros en un único botón `Filtros (3)` que abre un `Sheet`/`Drawer` lateral en mobile. Mantener solo el buscador visible. Ya hay patrón con `Sheet` instalado.
-
-### 5. Botones primarios en mobile son full-width y compiten visualmente
-"Exportar CSV" y "Nuevo Embarque" apilados full-width con el botón primario en azul oscuro grande. Distrae del contenido.
-
-**Fix:** en mobile colocar "Nuevo Embarque" como **FAB flotante** (bottom-right) y mover "Exportar CSV" al menú overflow `⋮` del header de página.
-
-### 6. Densidad de texto en encabezado de página
-Título `Cotizaciones` (text-4xl bold) + subtítulo "46 cotizaciones encontradas" — funciona, pero el subtítulo en `text-muted-foreground` es muy ligero y casi se pierde en dark. El conteo es información útil que debería leerse al instante.
-
-**Fix:** convertir el conteo en un Badge sutil al lado del título (`Cotizaciones · 46`) o subirlo a `text-foreground/70`.
-
-### 7. Tabla: nombre de cliente "INDIMEX TRADING" en mayúsculas
-El detalle muestra el nombre en `uppercase`, pero en la tabla y en otras vistas aparece en `Title Case` ("Indimex Trading"). Inconsistente.
-
-**Fix:** usar siempre el casing de la base. Quitar `uppercase` del título del detalle.
-
----
-
-## 🟡 Mejoras de pulido
-
-### 8. Header de página vacío entre carga y datos
-Mientras carga (`Cargando…`) el área central muestra solo un spinner pequeño. Falta skeleton de la tabla → percepción de lentitud.
-
-**Fix:** usar `<DataTableSkeleton rows={8}>` (ya existente en `ui/skeleton`) en el `Suspense` fallback de cada lista.
-
-### 9. Avatar/iniciales del usuario en el footer
-El footer del sidebar muestra solo `hector@lopezbenavides.com` + badge "Admin". Falta avatar circular con iniciales — patrón estándar para SaaS y refuerza identidad.
-
-**Fix:** componente `Avatar` con iniciales `HL` derivadas del email, y menú dropdown al hacer click (perfil, cerrar sesión, tema).
-
-### 10. Theme toggle no etiquetado
-El icono sol/luna en el topbar no tiene tooltip en escritorio (solo aria-label). Usuarios nuevos pueden no entender qué hace al estar tan cerca del search bar.
-
-**Fix:** envolver en `<Tooltip>` con texto "Cambiar tema · ⌘J".
-
-### 11. Indicador de página activa en sidebar
-La fila activa (`Cotizaciones`) usa `bg-sidebar-accent` (azul oscuro) + barrita izquierda — funciona en dark, pero en light (cuando se arregle #1) podría perder contraste contra el fondo blanco. Validar.
-
-### 12. Etiquetas de grupo del sidebar (`DASHBOARDS`, `GESTIÓN`, …)
-Texto en uppercase tracking-wide en color muy tenue (`/40`) — apenas legibles en dark. Subir a `/55` o `/60`.
-
-### 13. Vigencia "Vencida · 25/04/2026" en rojo sobre fondo rojo
-Badge rojo sobre fondo rojo claro tiene contraste OK, pero el badge "2d · 30/04/2026" (warning) se confunde con el badge de estado adyacente "Enviada". Demasiados badges en la misma fila.
-
-**Fix:** agrupar vigencia + estado en una columna combinada con jerarquía clara (badge primario = estado, texto secundario = vigencia).
-
-### 14. Breadcrumb separator (`›`) vs título de página redundante
-El topbar muestra `Cotizaciones` (breadcrumb) y la página repite `Cotizaciones` (h1) — duplicación. Considerar quitar el breadcrumb cuando solo hay un nivel.
-
-### 15. Logo container con doble fondo en sidebar oscuro
-El logo está envuelto en `bg-white p-1 rounded-xl shadow-card` — se ve como un "post-it" pegado en el sidebar oscuro. Limpio pero estilo retro. Alternativa: usar versión SVG monocromática del logo en dark mode (sin contenedor blanco).
+**Riesgo:** medio-bajo. Cambios de patrón de render; cubiertos por tests existentes de `DataTable`.
 
 ---
 
-## 📐 Notas de arquitectura visual
+## Detalles técnicos
 
-- **Tipografía:** Inter está bien aplicada, pero se nota mucha repetición de `text-sm` con `text-muted-foreground` — a veces ilegible en dark. Definir un token `text-secondary` con contraste >= 4.5:1.
-- **Sombras:** los tokens `shadow-card` se aplican uniformemente; está bien, pero en dark las cards se ven planas porque `shadow-card` con opacidad 0.20 se pierde sobre fondo oscuro. Probar `border-white/5` adicional.
-- **Espaciado:** el `p-6` general del main funciona en desktop pero se siente apretado en cards (KPIs con `p-6`); reducir a `p-4` en cards densas.
+**Cambios por archivo (resumen):**
+```text
+Oleada A (3 archivos):
+  src/services/embarque/queries.ts          count → estimated
+  src/services/cliente/crud.ts              count → estimated
+  src/services/proveedorServices.ts         count → estimated
 
----
+Oleada B (3 archivos):
+  index.html                                preconnect/dns-prefetch
+  vite.config.ts                            ampliar radix-vendor chunk
+  src/components/operaciones/OperacionesWidgets.tsx   extraer chart → lazy
+  src/components/dashboard/ProfitTable.tsx            (si usa recharts)
 
-## 🎯 Plan de ejecución sugerido (3 oleadas)
+Oleada C (1 migración + 3 archivos):
+  Migración SQL                             create function get_embarque_full
+  src/hooks/embarque/useEmbarqueFullQuery.ts  nuevo hook
+  src/pages/embarques/EmbarqueDetalle.tsx     consumir hook unificado
+  src/pages/portal/PortalEmbarqueDetalle.tsx  idem
 
-**Oleada 1 — Bloqueantes** ✅ COMPLETADA
-- ~~Fix sidebar light mode (#1)~~ — verificado en preview, ya respeta light mode
-- ~~Fix breadcrumb UUID (#2)~~ — v8.99.38 + v8.99.39 (H1 alineados)
-- ~~Fix KPI truncado con compact notation (#3)~~ — v8.99.40
+Oleada D (3 archivos):
+  src/hooks/dashboard/useDashboardData.ts   quitar enabled, paralelizar
+  src/components/layout/AppSidebar.tsx      memo footer + items
+  src/components/shared/DataTable.tsx       React.memo en filas
+  src/hooks/cliente/useClientes.ts          placeholderData desde lista
+  src/hooks/embarque/useEmbarqueQueries.ts  placeholderData desde lista
+```
 
-**Oleada 2 — Mobile** ✅ COMPLETADA (v8.99.41)
-- ~~Filtros en `Sheet` colapsable (#4)~~ — /embarques con badge de filtros activos
-- ~~FAB para acción primaria + overflow menu (#5)~~ — /embarques + /clientes
-- ~~Skeleton states (#8)~~ — DataTable ya los traía vía isLoading
+**Changelog:** una entrada por oleada en `src/content/changelog/v8/chunks/0.ts` y `src/content/changelogData.ts` (v8.99.43, .44, .45, .46) describiendo el cambio en términos de impacto al usuario ("Listas paginadas hasta 60% más rápidas", "Carga inicial reduce ~300ms", etc.).
 
-**Oleada 3 — Pulido** ✅ COMPLETADA (v8.99.42)
-- ~~Avatar + dropdown en footer (#9)~~ — iniciales derivadas del email + menú con tema y cerrar sesión
-- ~~Tooltips faltantes (#10)~~ — `ThemeToggle` ya envuelto en Tooltip; verificado
-- ~~Casing consistente (#7)~~ — `ClienteDetalle` ya usa el casing real de la base (sin uppercase)
-- ~~Badges agrupados (#13)~~ — Estado+Vigencia en /cotizaciones fusionados en una sola columna
-- ~~Tipografía secundaria + sombras dark~~ — labels sidebar /65, muted-foreground dark a 78%, halo en sombras dark
-- ~~Sheet+FAB en /cotizaciones y /proveedores~~ — extensión natural de la oleada 2
+**Memoria:** sin cambios. Todas las decisiones aplican estándares ya documentados (memoization, server pagination, query optimization).
 
-🎉 Auditoría visual UI/UX completada. Próximo paso: medir percepción con usuarios reales.
+**Métricas esperadas (orden de magnitud):**
+- Oleada A: -200 a -800 ms por cambio de filtro en listas grandes.
+- Oleada B: -300 ms en TTFP (Time to First Paint), -400 KB en bundle inicial del Dashboard.
+- Oleada C: 1 request en lugar de 6 en detalle de embarque (-1.0 a -1.5 s en red móvil).
+- Oleada D: -40% en TTI del Dashboard, render instantáneo lista→detalle.
+
+¿Apruebas para ejecutar las 4 oleadas en secuencia?

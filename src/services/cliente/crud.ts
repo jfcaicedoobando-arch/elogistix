@@ -29,7 +29,8 @@ export async function fetchClientesPaginados({
 }: FetchClientesPaginadosParams) {
   let query = supabase
     .from("clientes")
-    .select(CLIENTE_LIST_COLUMNS, { count: "exact" })
+    // count: 'estimated' — más rápido en tablas grandes que 'exact'.
+    .select(CLIENTE_LIST_COLUMNS, { count: "estimated" })
     .order("nombre");
 
   if (organizationId) query = query.eq("organization_id", organizationId);

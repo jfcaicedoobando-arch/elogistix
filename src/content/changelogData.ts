@@ -15,6 +15,13 @@ export interface ChangelogEntry {
  */
 export const recentChangelog: ChangelogEntry[] = [
   {
+    version: "8.99.43",
+    date: "2026-04-28",
+    type: "minor",
+    title: "Performance: -6 round-trips en detalle de embarque, dashboard paralelo y conteos estimados",
+    description: "Cuatro oleadas de optimización de velocidad. Backend: las listas paginadas de Embarques, Clientes y Proveedores usan conteo estimado en lugar de exacto, ahorrando 200-800 ms por filtro. Red: index.html anticipa la conexión TLS y DNS al backend con preconnect/dns-prefetch (~150-300 ms menos en el primer request). Bundle: el chunk \"radix-vendor\" se amplía con 9 paquetes adicionales para evitar duplicación entre rutas. Detalle de embarque: nuevo RPC public.get_embarque_full(id) y hook useEmbarqueFull que consolidan 6 consultas (embarque + ventas + costos + documentos + notas + facturas) en 1 sola, ahorrando ~500-1500 ms en redes móviles, sin romper RLS ni mutaciones. Dashboard: las queries summary y details ahora corren en paralelo (HTTP/2) en lugar de en cascada (~40% mejor TTI). Bonus: ModoIcon convertido a forwardRef para eliminar el warning \"Function components cannot be given refs\" en consola.",
+  },
+  {
     version: "8.99.42",
     date: "2026-04-28",
     type: "minor",

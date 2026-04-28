@@ -1754,6 +1754,7 @@ export type Database = {
       }
       generar_expediente: { Args: { tipo_op: string }; Returns: string }
       generar_numero_proforma: { Args: { p_org_id: string }; Returns: string }
+      get_embarque_full: { Args: { p_embarque_id: string }; Returns: Json }
       get_user_context: { Args: never; Returns: Json }
       get_user_org_ids: { Args: { _user_id: string }; Returns: string[] }
       has_role: {

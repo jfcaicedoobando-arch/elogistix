@@ -37,7 +37,9 @@ export async function fetchEmbarquesPaginados(
 ): Promise<{ data: EmbarqueRow[]; count: number }> {
   let query = supabase
     .from('embarques')
-    .select(EMBARQUE_LIST_COLUMNS, { count: 'exact' })
+    // count: 'estimated' evita full table scans en cada cambio de filtro;
+    // el conteo aproximado es suficiente para mostrar paginación.
+    .select(EMBARQUE_LIST_COLUMNS, { count: 'estimated' })
     .order('created_at', { ascending: false });
 
   if (f.organizationId) query = query.eq('organization_id', f.organizationId);

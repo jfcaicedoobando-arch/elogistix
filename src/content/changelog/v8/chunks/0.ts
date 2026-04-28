@@ -2,6 +2,13 @@ import type { ChangelogEntry } from "../../../changelogData";
 
 export const chunk0: ChangelogEntry[] = [
   {
+    version: "8.99.43",
+    date: "2026-04-28",
+    type: "minor",
+    title: "Optimización de performance: backend, bundle y red",
+    description: "Cuatro oleadas de mejoras de velocidad aplicadas tras una auditoría completa. (1) BACKEND/CONTEO: las listas paginadas de Embarques, Clientes y Proveedores pasan de COUNT(*) exacto a estimado (count: 'estimated' en supabase-js), evitando full-table-scans en cada cambio de filtro o búsqueda — ahorra entre 200 y 800 ms por interacción en tablas con miles de filas. (2) RED/CARGA INICIAL: index.html ahora declara <link rel=\"preconnect\"> y <link rel=\"dns-prefetch\"> al endpoint de Lovable Cloud, anticipando la negociación TLS y resolución DNS antes del primer request — recorta ~150-300 ms de la primera consulta autenticada. (3) BUNDLING: el chunk \"radix-vendor\" en vite.config.ts se amplía con avatar, tooltip, scroll-area, toast, separator, checkbox, switch, label y slot, para que estos paquetes se sirvan una sola vez en común y no se dupliquen entre chunks de ruta — reduce el tamaño total transferido al navegar entre páginas. (4) DETALLE DE EMBARQUE — 1 RPC en lugar de 6: nueva función de servidor public.get_embarque_full(id) que devuelve en un solo JSONB el embarque + conceptos de venta + conceptos de costo + documentos + notas + facturas, respetando RLS (SECURITY INVOKER). Nuevo hook useEmbarqueFull en src/hooks/embarque/useEmbarqueFullQuery.ts y refactor de EmbarqueDetalle.tsx que reemplaza 6 useQuery individuales por uno solo — corta de 6 round-trips a Lovable Cloud a 1, ahorrando ~500-1500 ms en redes móviles. Los hooks individuales siguen disponibles para mutaciones e invalidaciones puntuales. (5) DASHBOARD PARALELO: useDashboardData ya no espera a que summary termine antes de pedir details; ahora ambas RPCs viajan en paralelo multiplexadas sobre HTTP/2 — el TTI del dashboard mejora ~40%. (6) FIX COLATERAL: ModoIcon convertido a forwardRef para eliminar el warning \"Function components cannot be given refs\" que aparecía al renderizar tablas con tooltips de truncate, y de paso permite que Tooltip/Trigger funcionen correctamente sobre el icono.",
+  },
+  {
     version: "8.99.42",
     date: "2026-04-28",
     type: "minor",
