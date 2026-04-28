@@ -6,15 +6,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
 import { usePermissions } from "@/hooks/shared/usePermissions";
 import { useState } from "react";
-import {
-  useEmbarque,
-  useEmbarqueConceptosVenta,
-  useEmbarqueConceptosCosto,
-  useEmbarqueDocumentos,
-  useEmbarqueNotas,
-  useEmbarqueFacturas,
-  calcularEstadoEmbarque,
-} from "@/hooks/embarque/useEmbarques";
+import { calcularEstadoEmbarque } from "@/hooks/embarque/useEmbarques";
+import { useEmbarqueFull } from "@/hooks/embarque/useEmbarqueFullQuery";
 import { useEmbarqueFinancials } from "@/hooks/embarque/useEmbarqueFinancials";
 import { useEmbarqueDetalleActions, getSiguienteEstado } from "@/hooks/embarque/useEmbarqueDetalleActions";
 import { TabResumen } from "@/components/embarque/TabResumen";
@@ -34,13 +27,15 @@ export default function EmbarqueDetalle() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { canEdit } = usePermissions();
-  const { data: embarque, isLoading } = useEmbarque(id);
+  // 1 sola llamada al backend en lugar de 6 (RPC get_embarque_full)
+  const { data: full, isLoading } = useEmbarqueFull(id);
+  const embarque = full?.embarque ?? null;
+  const conceptosVenta = full?.conceptosVenta ?? [];
+  const conceptosCosto = full?.conceptosCosto ?? [];
+  const documentos = full?.documentos ?? [];
+  const notas = full?.notas ?? [];
+  const facturas = full?.facturas ?? [];
   useRegisterBreadcrumbLabel(id, embarque?.expediente);
-  const { data: conceptosVenta = [] } = useEmbarqueConceptosVenta(id);
-  const { data: conceptosCosto = [] } = useEmbarqueConceptosCosto(id);
-  const { data: documentos = [] } = useEmbarqueDocumentos(id);
-  const { data: notas = [] } = useEmbarqueNotas(id);
-  const { data: facturas = [] } = useEmbarqueFacturas(id);
 
   const [dialogDuplicarAbierto, setDialogDuplicarAbierto] = useState(false);
   const [dialogEliminarAbierto, setDialogEliminarAbierto] = useState(false);
