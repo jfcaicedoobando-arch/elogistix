@@ -30,25 +30,42 @@ export default function Cotizaciones() {
   const c = useCotizacionesPageController();
 
   const columns: DataTableColumn<CotizacionListItem>[] = useMemo(() => {
-    const renderVigencia = (r: CotizacionListItem) => {
-      if (!r.fecha_vigencia) return <span className="text-muted-foreground">-</span>;
-      const fechaStr = formatDate(r.fecha_vigencia);
-      // Solo cotizaciones en estado "Enviada" muestran el badge de urgencia.
-      // Borradores, aceptadas y rechazadas solo muestran la fecha.
-      const esEnviada = (r.estado || "").toLowerCase() === "enviada";
-      if (!esEnviada) {
-        return <span className="whitespace-nowrap text-muted-foreground">{fechaStr}</span>;
+    /**
+     * Vigencia + Estado agrupados (v8.99.42 — auditoría visual #13).
+     * Estado = badge primario; vigencia = línea secundaria pequeña con tono según urgencia.
+     * Reduce ruido visual: antes había 2 badges adyacentes en cada fila ("Enviada" + "Vencida").
+     */
+    const renderEstadoVigencia = (r: CotizacionListItem) => {
+      const estado = r.estado || "—";
+      let vigenciaNode: React.ReactNode = null;
+      if (r.fecha_vigencia) {
+        const fechaStr = formatDate(r.fecha_vigencia);
+        const esEnviada = (r.estado || "").toLowerCase() === "enviada";
+        if (!esEnviada) {
+          vigenciaNode = <span className="text-muted-foreground">Vence {fechaStr}</span>;
+        } else {
+          const fecha = new Date(r.fecha_vigencia);
+          const hoy = new Date();
+          const diffDias = Math.ceil((fecha.getTime() - hoy.getTime()) / (1000 * 60 * 60 * 24));
+          if (diffDias < 0) {
+            vigenciaNode = <span className="text-destructive font-medium">Vencida · {fechaStr}</span>;
+          } else if (diffDias <= 3) {
+            vigenciaNode = (
+              <span className="text-warning font-medium">
+                {diffDias === 0 ? "Vence hoy" : `Vence en ${diffDias}d`} · {fechaStr}
+              </span>
+            );
+          } else {
+            vigenciaNode = <span className="text-muted-foreground">Vence {fechaStr}</span>;
+          }
+        }
       }
-      const fecha = new Date(r.fecha_vigencia);
-      const hoy = new Date();
-      const diffDias = Math.ceil((fecha.getTime() - hoy.getTime()) / (1000 * 60 * 60 * 24));
-      if (diffDias < 0) {
-        return <Badge variant="destructive" className="text-[10px] whitespace-nowrap">Vencida · {fechaStr}</Badge>;
-      }
-      if (diffDias <= 3) {
-        return <Badge variant="warning" className="text-[10px] whitespace-nowrap">{diffDias === 0 ? "Vence hoy" : `${diffDias}d`} · {fechaStr}</Badge>;
-      }
-      return <span className="whitespace-nowrap">{fechaStr}</span>;
+      return (
+        <div className="flex flex-col gap-0.5 min-w-0">
+          <Badge variant="secondary" className={`w-fit text-xs whitespace-nowrap ${getEstadoColor(estado)}`}>{estado}</Badge>
+          {vigenciaNode && <span className="text-[10px] whitespace-nowrap">{vigenciaNode}</span>}
+        </div>
+      );
     };
     const cols: DataTableColumn<CotizacionListItem>[] = [
       { key: "folio", header: "Folio", width: "w-[120px]", className: "font-medium whitespace-nowrap", sticky: true, sortable: true, sortValue: (r) => r.folio, render: (r) => r.folio },
@@ -62,8 +79,7 @@ export default function Cotizaciones() {
         return <span title={ruta} className="block truncate whitespace-nowrap">{ruta}</span>;
       } },
       { key: "subtotal", header: "Subtotal", width: "w-[110px]", className: "text-right text-xs whitespace-nowrap", headerClassName: "text-right", sortable: true, sortValue: (r) => r.subtotal, render: (r) => formatCurrency(r.subtotal, r.moneda) },
-      { key: "estado", header: "Estado", width: "w-[110px]", sortable: true, sortValue: (r) => r.estado, render: (r) => <Badge variant="secondary" className={`text-xs whitespace-nowrap ${getEstadoColor(r.estado)}`}>{r.estado}</Badge> },
-      { key: "vigencia", header: "Vigencia", width: "w-[140px]", className: "text-xs", render: renderVigencia },
+      { key: "estado_vigencia", header: "Estado", width: "w-[180px]", sortable: true, sortValue: (r) => r.estado, render: renderEstadoVigencia },
       { key: "fecha", header: "Fecha", width: "w-[130px]", className: "text-xs whitespace-nowrap", sortable: true, sortValue: (r) => r.created_at, render: (r) => formatDate(r.created_at, "dd/MM/yyyy HH:mm") },
     ];
     if (c.canEdit) {
