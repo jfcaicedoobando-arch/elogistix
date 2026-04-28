@@ -169,6 +169,15 @@ export default function Embarques() {
         />
       )}
 
+      {/* FAB mobile: acción primaria flotante (oculta en md+ y en empty state, ya que el CTA grande del EmptyState es suficiente). */}
+      {canEdit && !isEmptyState && (
+        <FloatingActionButton
+          icon={<Plus className="h-6 w-6" />}
+          label="Nuevo embarque"
+          onClick={() => navigate("/embarques/nuevo")}
+        />
+      )}
+
     </div>
   );
 }
