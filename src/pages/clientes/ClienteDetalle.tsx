@@ -47,6 +47,7 @@ export default function ClienteDetalle() {
     openNewContact,
     openEditContact,
   } = useClienteDetalleController();
+  useRegisterBreadcrumbLabel(id, cliente?.nombre);
 
   if (loadingCliente) {
     return (
