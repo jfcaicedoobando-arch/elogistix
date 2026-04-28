@@ -1,8 +1,10 @@
 import { useMemo, useState, type ReactNode } from "react";
 import {
   Plus, Trash2, MoreHorizontal, Pencil, Download, TrendingUp,
-  CheckCircle, XCircle, BarChart3, Copy,
+  CheckCircle, XCircle, BarChart3, Copy, Filter, X,
 } from "lucide-react";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger, SheetFooter } from "@/components/ui/sheet";
+import { FloatingActionButton } from "@/components/shared/FloatingActionButton";
 import { KpiCard } from "@/components/operaciones/KpiCard";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
