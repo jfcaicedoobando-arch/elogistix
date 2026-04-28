@@ -15,6 +15,13 @@ export interface ChangelogEntry {
  */
 export const recentChangelog: ChangelogEntry[] = [
   {
+    version: "8.99.38",
+    date: "2026-04-28",
+    type: "patch",
+    title: "Breadcrumbs con nombres legibles en páginas de detalle",
+    description: "Las rutas de detalle (clientes, embarques, cotizaciones, proveedores, organizaciones, portal) ya no muestran el UUID crudo en el breadcrumb del header. Cada página registra su nombre legible (cliente.nombre, embarque.expediente, cotizacion.folio…) en un BreadcrumbContext global, de modo que el breadcrumb muestra 'Clientes › Indimex Trading' en lugar de 'Clientes › 87bdcbf1-4476-…'. Si la página aún está cargando, se conserva el fallback truncado para no romper el layout.",
+  },
+  {
     version: "8.99.37",
     date: "2026-04-27",
     type: "patch",
