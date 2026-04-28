@@ -2,6 +2,13 @@ import type { ChangelogEntry } from "../../../changelogData";
 
 export const chunk0: ChangelogEntry[] = [
   {
+    version: "8.99.41",
+    date: "2026-04-28",
+    type: "minor",
+    title: "Mobile UX en /embarques y /clientes: filtros en Sheet + FAB",
+    description: "Oleada 2 de la auditoría visual UI/UX. Antes, en /embarques a 390px, los 6 selects + 2 fechas + buscador se apilaban full-width ocupando ~600px de scroll vertical antes de ver una sola fila de la tabla, y los botones \"Exportar CSV\" y \"Nuevo Embarque\" también full-width competían visualmente con el contenido. Ahora, en mobile (<md): (1) la barra de filtros es solo SearchInput + botón \"Filtros (N)\" con badge de filtros activos que abre un Sheet lateral derecho con los 6 selects y 2 datepickers etiquetados, footer con \"Limpiar\" (deshabilitado si no hay filtros activos) y \"Aplicar\" — la tabla queda visible inmediatamente bajo el header; (2) la acción primaria \"Nuevo Embarque\" se renderiza como FloatingActionButton circular azul anclado bottom-right (z-40, sombra overlay), y \"Exportar CSV\" se mueve a un overflow menu (⋮) en el header de página; (3) el FAB se oculta automáticamente en md+ y en empty state. Mismo patrón FAB aplicado a /clientes para \"Nuevo Cliente\". Componente nuevo reusable: src/components/shared/FloatingActionButton.tsx (md:hidden por defecto, posición fixed bottom-6 right-4, 56x56 rounded-full, ARIA label obligatorio). Desktop md+ permanece intacto: filtros inline en una fila y botones tradicionales en el header. Como side-effect positivo, los DataTable de listas ya entregaban skeleton via prop isLoading (5 filas placeholder por defecto), por lo que el sub-objetivo \"Skeleton states\" de la oleada queda cubierto sin cambios adicionales.",
+  },
+  {
     version: "8.99.40",
     date: "2026-04-28",
     type: "patch",
