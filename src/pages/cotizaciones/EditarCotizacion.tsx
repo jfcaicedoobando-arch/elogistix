@@ -79,8 +79,8 @@ function EditarCotizacionForm({
     <CotizacionWizardLayout
       w={w}
       clientes={clientes}
-      title="Editar Cotización"
-      subtitle={cotizacion.folio}
+      title={`Editar cotización ${cotizacion.folio}`}
+      subtitle="Modifica los datos generales, ruta y conceptos de la cotización"
       onBack={() => navigate(`/cotizaciones/${cotizacion.id}`)}
       saveLabel="Guardar Cambios"
     />
