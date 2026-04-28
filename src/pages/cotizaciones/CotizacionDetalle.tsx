@@ -17,6 +17,7 @@ import { getEstadoColor } from "@/lib/ui/uiMappings";
 import { formatDate, formatCurrency, toTitleCase, nombreDesdeEmail } from "@/lib/formatters";
 import { ArrowLeft, FileDown } from "lucide-react";
 import { useCotizacionDetalleState } from "@/hooks/cotizacion/useCotizacionDetalleState";
+import { useRegisterBreadcrumbLabel } from "@/contexts/BreadcrumbContext";
 
 // Lazy-loaded PDF generator (jsPDF + autotable are heavy; only load on demand)
 const handleExportarPdf = async (cotizacion: Parameters<typeof import("@/generators/cotizacionPdf").generarPdfCotizacion>[0], tasaIva: number) => {
@@ -38,6 +39,7 @@ export default function CotizacionDetalle() {
     handleCambiarEstado, abrirDialogConvertir, handleConvertir, handleGenerarEmbarques,
     convertirProspecto, convertirAEmbarques, navigate,
   } = useCotizacionDetalleState(id);
+  useRegisterBreadcrumbLabel(id, cotizacion?.folio);
 
   if (isLoading) {
     return <div className="space-y-4"><Skeleton className="h-8 w-64" /><Skeleton className="h-64 w-full" /></div>;
