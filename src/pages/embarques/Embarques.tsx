@@ -48,15 +48,32 @@ export default function Embarques() {
         description={`${displayCount} embarques encontrados`}
         actions={
           <>
+            {/* Desktop md+: botones inline tradicionales */}
             {!isEmptyState && (
-              <Button variant="outline" onClick={exportarCsv} className="w-full sm:w-auto">
+              <Button variant="outline" onClick={exportarCsv} className="hidden md:inline-flex">
                 <Download className="h-4 w-4 mr-2" /> Exportar CSV
               </Button>
             )}
             {canEdit && !isEmptyState && (
-              <Button onClick={() => navigate("/embarques/nuevo")} className="w-full sm:w-auto">
+              <Button onClick={() => navigate("/embarques/nuevo")} className="hidden md:inline-flex">
                 <Plus className="h-4 w-4 mr-2" /> Nuevo Embarque
               </Button>
+            )}
+            {/* Mobile <md: solo overflow menu para acciones secundarias.
+                La acción primaria "Nuevo Embarque" se renderiza como FAB al final del componente. */}
+            {!isEmptyState && (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="icon" className="md:hidden" aria-label="Más acciones">
+                    <MoreVertical className="h-5 w-5" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-48">
+                  <DropdownMenuItem onClick={exportarCsv}>
+                    <Download className="h-4 w-4 mr-2" /> Exportar CSV
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             )}
           </>
         }
