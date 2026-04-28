@@ -1,3 +1,4 @@
+import { forwardRef } from "react";
 import { Anchor, Plane, Truck, Shuffle, Package, type LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -33,27 +34,37 @@ const CIRCLE_BG: Record<string, string> = {
 /**
  * Icono Lucide para el modo de transporte.
  * Reemplaza los emojis 🚢 ✈️ 🚛 🔄 por iconografía consistente.
+ * forwardRef para que DataTable / Tooltip puedan adjuntar refs sin warnings.
  */
-export function ModoIcon({ modo, className, size = 16, circle = false }: ModoIconProps) {
-  const Icon = ICON_MAP[modo] ?? Package;
-  const color = COLOR_MAP[modo] ?? "text-muted-foreground";
+export const ModoIcon = forwardRef<HTMLSpanElement, ModoIconProps>(
+  ({ modo, className, size = 16, circle = false }, ref) => {
+    const Icon = ICON_MAP[modo] ?? Package;
+    const color = COLOR_MAP[modo] ?? "text-muted-foreground";
 
-  if (circle) {
-    const bg = CIRCLE_BG[modo] ?? "bg-muted";
+    if (circle) {
+      const bg = CIRCLE_BG[modo] ?? "bg-muted";
+      return (
+        <span
+          ref={ref}
+          className={cn(
+            "inline-flex items-center justify-center rounded-full",
+            bg,
+            className,
+          )}
+          style={{ width: size + 12, height: size + 12 }}
+          aria-label={modo}
+        >
+          <Icon className={color} size={size} />
+        </span>
+      );
+    }
+
     return (
-      <span
-        className={cn(
-          "inline-flex items-center justify-center rounded-full",
-          bg,
-          className,
-        )}
-        style={{ width: size + 12, height: size + 12 }}
-        aria-label={modo}
-      >
-        <Icon className={color} size={size} />
+      <span ref={ref} className="inline-flex" aria-label={modo}>
+        <Icon className={cn(color, className)} size={size} />
       </span>
     );
-  }
+  },
+);
+ModoIcon.displayName = "ModoIcon";
 
-  return <Icon className={cn(color, className)} size={size} aria-label={modo} />;
-}
