@@ -13,8 +13,11 @@ import DoubleConfirmDeleteDialog from "@/components/shared/DoubleConfirmDeleteDi
 import ClienteSummaryCards from "@/components/cliente/ClienteSummaryCards";
 import { useClienteDetalleController } from "@/hooks/cliente/useClienteDetalleController";
 import { toTitleCase, formatPhoneMx, correctSpanishPlace } from "@/lib/formatters";
+import { useParams } from "react-router-dom";
+import { useRegisterBreadcrumbLabel } from "@/contexts/BreadcrumbContext";
 
 export default function ClienteDetalle() {
+  const { id } = useParams<{ id: string }>();
   const {
     navigate,
     cliente,
@@ -44,6 +47,7 @@ export default function ClienteDetalle() {
     openNewContact,
     openEditContact,
   } = useClienteDetalleController();
+  useRegisterBreadcrumbLabel(id, cliente?.nombre);
 
   if (loadingCliente) {
     return (

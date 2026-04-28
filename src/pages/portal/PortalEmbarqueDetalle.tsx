@@ -11,6 +11,7 @@ import { formatDate, getOrigen, getDestino } from "@/lib/formatters";
 import { PortalEmbarqueTimeline } from "@/components/portal/PortalEmbarqueTimeline";
 import { PortalEmbarqueDocumentos } from "@/components/portal/PortalEmbarqueDocumentos";
 import { usePortalEmbarqueDetalleController } from "@/hooks/embarque/usePortalEmbarqueDetalleController";
+import { useRegisterBreadcrumbLabel } from "@/contexts/BreadcrumbContext";
 
 export default function PortalEmbarqueDetalle() {
   const { id } = useParams();
@@ -27,6 +28,7 @@ export default function PortalEmbarqueDetalle() {
     docsTotal,
     progressSteps,
   } = usePortalEmbarqueDetalleController(id);
+  useRegisterBreadcrumbLabel(id, embarque?.expediente);
 
   if (isLoading) {
     return <div className="space-y-6"><Skeleton className="h-10 w-64" /><Skeleton className="h-20 w-full" /><Skeleton className="h-64 w-full" /></div>;

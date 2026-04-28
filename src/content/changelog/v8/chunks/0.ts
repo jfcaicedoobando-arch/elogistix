@@ -2,6 +2,13 @@ import type { ChangelogEntry } from "../../../changelogData";
 
 export const chunk0: ChangelogEntry[] = [
   {
+    version: "8.99.38",
+    date: "2026-04-28",
+    type: "patch",
+    title: "Breadcrumbs con nombres legibles en páginas de detalle",
+    description: "Antes, las rutas de detalle (ej. /clientes/87bdcbf1-4476-…, /embarques/<uuid>, /cotizaciones/<uuid>) mostraban el UUID crudo truncado en el breadcrumb del header, generando una experiencia confusa (\"Clientes › 87bdcbf1-4476-…\"). Ahora cada página de detalle registra su nombre legible (cliente.nombre, embarque.expediente, cotizacion.folio, proveedor.nombre, org.nombre) en un BreadcrumbContext global mientras está montada, y el componente Breadcrumbs lo consume para resolver segmentos dinámicos. Resultado: \"Clientes › Indimex Trading\", \"Embarques › ELIMP00185\", \"Cotizaciones › COT-2026-0059\". Cubre Clientes, Embarques (detalle + editar), Cotizaciones (detalle + editar), Proveedores, Admin Organizaciones, Portal Embarques y Portal Cotizaciones. Como fallback, si la página aún está cargando o la entidad no existe, se sigue mostrando el segmento truncado para no romper el layout.",
+  },
+  {
     version: "8.99.37",
     date: "2026-04-27",
     type: "patch",

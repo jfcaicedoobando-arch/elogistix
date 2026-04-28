@@ -1,6 +1,7 @@
 import { Link, useLocation } from "react-router-dom";
 import { ChevronRight } from "lucide-react";
 import { Fragment, useMemo } from "react";
+import { useBreadcrumbLabels } from "@/contexts/BreadcrumbContext";
 
 /**
  * Mapa de segmentos de ruta → etiqueta visible.
@@ -48,6 +49,7 @@ interface Crumb {
 
 export function Breadcrumbs() {
   const { pathname } = useLocation();
+  const dynamicLabels = useBreadcrumbLabels();
 
   const crumbs: Crumb[] = useMemo(() => {
     const parts = pathname.split("/").filter(Boolean);
@@ -58,13 +60,14 @@ export function Breadcrumbs() {
     return parts.map((part, i) => {
       acc += `/${part}`;
       const known = SEGMENT_LABELS[part];
+      const dynamic = dynamicLabels[part];
       return {
-        label: known ?? formatDynamicSegment(part),
+        label: known ?? dynamic ?? formatDynamicSegment(part),
         to: acc,
         isLast: i === parts.length - 1,
       };
     });
-  }, [pathname]);
+  }, [pathname, dynamicLabels]);
 
   return (
     <nav aria-label="Migas de pan" className="min-w-0 flex-1">

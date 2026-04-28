@@ -28,11 +28,14 @@ import DialogEliminarEmbarque from "@/components/embarque/DialogEliminarEmbarque
 import { useEmbarqueDetalleTracking } from "@/hooks/embarque/useEmbarqueDetalleTracking";
 import { EmbarqueDetalleHeader } from "@/components/embarque/EmbarqueDetalleHeader";
 
+import { useRegisterBreadcrumbLabel } from "@/contexts/BreadcrumbContext";
+
 export default function EmbarqueDetalle() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { canEdit } = usePermissions();
   const { data: embarque, isLoading } = useEmbarque(id);
+  useRegisterBreadcrumbLabel(id, embarque?.expediente);
   const { data: conceptosVenta = [] } = useEmbarqueConceptosVenta(id);
   const { data: conceptosCosto = [] } = useEmbarqueConceptosCosto(id);
   const { data: documentos = [] } = useEmbarqueDocumentos(id);
