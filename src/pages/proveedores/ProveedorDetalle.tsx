@@ -38,6 +38,7 @@ export default function ProveedorDetalle() {
     handleDelete,
     navigate,
   } = useProveedorDetalleController();
+  useRegisterBreadcrumbLabel(id, proveedor?.nombre);
 
   if (isLoading) {
     return <div className="space-y-4 p-8">{[1,2,3].map(indice => <Skeleton key={indice} className="h-24 w-full" />)}</div>;
