@@ -13,7 +13,21 @@ import {
   History,
   Settings,
   BarChart3,
+  User,
+  ChevronUp,
+  Sun,
+  Moon,
 } from "lucide-react";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { useTheme } from "@/contexts/ThemeContext";
 import { NavLink } from "@/components/layout/NavLink";
 import librecargaLogo from "@/assets/librecarga-logo.png";
 import { useLocation } from "react-router-dom";
@@ -81,6 +95,20 @@ export function AppSidebar() {
   const { user, role, effectiveRole, signOut } = useAuth();
   const { organization } = useOrganization();
   const { totalAlertas } = useSidebarAlerts();
+  const { theme, toggleTheme } = useTheme();
+
+  const userInitials = (user?.email ?? "?")
+    .split("@")[0]
+    .split(/[._-]+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((s) => s[0]?.toUpperCase() ?? "")
+    .join("") || "?";
+  const roleLabel = effectiveRole === "super_admin"
+    ? "Super Admin"
+    : effectiveRole
+      ? effectiveRole.charAt(0).toUpperCase() + effectiveRole.slice(1)
+      : "";
 
   const isActive = (path: string) => {
     if (path === "/") return location.pathname === "/";
@@ -91,7 +119,7 @@ export function AppSidebar() {
     <>
       <SidebarGroup>
         {!collapsed && (
-          <span className="px-3 py-2 text-[11px] font-semibold uppercase tracking-wider text-sidebar-foreground/50">
+          <span className="px-3 py-2 text-[11px] font-semibold uppercase tracking-wider text-sidebar-foreground/65">
             {label}
           </span>
         )}
