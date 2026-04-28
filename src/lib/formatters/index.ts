@@ -13,7 +13,28 @@ export const formatCurrency = (amount: number, currency: string = 'MXN'): string
   return formatted;
 };
 
-/** Formatea un número entero/decimal con separadores de miles mexicanos. */
+/**
+ * Formato de moneda compacto para KPIs/tarjetas estrechas.
+ *
+ * Usa `Intl.NumberFormat` con `notation: "compact"` para evitar truncamiento
+ * tipo "USD 1,234,5…" en columnas angostas. Prefija siempre el código ISO
+ * para consistencia con `formatCurrency` (MXN/USD/EUR).
+ *
+ * Ejemplos: 0 → "USD 0", 845 → "USD 845", 12500 → "USD 12.5K",
+ * 1_234_567 → "USD 1.2M".
+ *
+ * El valor completo (no compacto) debe seguir mostrándose en tooltip
+ * mediante el atributo `title` del componente consumidor.
+ */
+export const formatCurrencyCompact = (amount: number, currency: string = "MXN"): string => {
+  const safe = Number.isFinite(amount) ? amount : 0;
+  const formatted = new Intl.NumberFormat("en-US", {
+    notation: "compact",
+    maximumFractionDigits: 1,
+    minimumFractionDigits: 0,
+  }).format(safe);
+  return `${currency} ${formatted}`;
+};
 export const formatNumber = (
   value: number | null | undefined,
   options: { decimals?: number; suffix?: string } = {}
