@@ -10,10 +10,13 @@ import { kpiIconChipClasses, type KpiTone } from "@/lib/ui/kpiTones";
  * numérica entre cards, subtítulo a text-xs y truncate con tooltip nativo.
  */
 export function KpiCard({
-  titulo, valor, subtitulo, icono: Icono, color, loading, children,
+  titulo, valor, valorTooltip, subtitulo, icono: Icono, color, loading, children,
 }: {
   titulo: string;
   valor: string | number;
+  /** Tooltip opcional sobre el valor — útil cuando `valor` viene formateado en notación compacta
+   *  (p.ej. "USD 1.2M") y se quiere exponer el valor completo (p.ej. "USD 1,234,567.89") al hover. */
+  valorTooltip?: string;
   subtitulo?: string;
   icono: React.ElementType;
   /** Tono categórico del icono. Acepta KpiTone o aliases legacy. */
@@ -53,7 +56,7 @@ export function KpiCard({
             <>
               <p
                 className={`${sizeClass} font-bold text-foreground tabular-nums leading-tight truncate`}
-                title={valorStr}
+                title={valorTooltip ?? valorStr}
               >
                 {valor}
               </p>
