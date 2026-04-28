@@ -1,10 +1,14 @@
-import { Plus, Ship, Download } from "lucide-react";
+import { Plus, Ship, Download, MoreVertical } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import PaginationControls from "@/components/shared/PaginationControls";
 import { DataTable } from "@/components/shared/DataTable";
 import DoubleConfirmDeleteDialog from "@/components/shared/DoubleConfirmDeleteDialog";
 import { PageHeader } from "@/components/shared/PageHeader";
+import { FloatingActionButton } from "@/components/shared/FloatingActionButton";
 import DialogDuplicarEmbarque from "@/components/embarque/DialogDuplicarEmbarque";
 import EmbarquesFiltros from "@/components/embarque/EmbarquesFiltros";
 import { useEmbarquesPageController } from "@/hooks/embarque/useEmbarquesPageController";
@@ -44,15 +48,32 @@ export default function Embarques() {
         description={`${displayCount} embarques encontrados`}
         actions={
           <>
+            {/* Desktop md+: botones inline tradicionales */}
             {!isEmptyState && (
-              <Button variant="outline" onClick={exportarCsv} className="w-full sm:w-auto">
+              <Button variant="outline" onClick={exportarCsv} className="hidden md:inline-flex">
                 <Download className="h-4 w-4 mr-2" /> Exportar CSV
               </Button>
             )}
             {canEdit && !isEmptyState && (
-              <Button onClick={() => navigate("/embarques/nuevo")} className="w-full sm:w-auto">
+              <Button onClick={() => navigate("/embarques/nuevo")} className="hidden md:inline-flex">
                 <Plus className="h-4 w-4 mr-2" /> Nuevo Embarque
               </Button>
+            )}
+            {/* Mobile <md: solo overflow menu para acciones secundarias.
+                La acción primaria "Nuevo Embarque" se renderiza como FAB al final del componente. */}
+            {!isEmptyState && (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="icon" className="md:hidden" aria-label="Más acciones">
+                    <MoreVertical className="h-5 w-5" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-48">
+                  <DropdownMenuItem onClick={exportarCsv}>
+                    <Download className="h-4 w-4 mr-2" /> Exportar CSV
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             )}
           </>
         }
@@ -145,6 +166,15 @@ export default function Embarques() {
           embarque={embarqueADuplicar}
           open
           onOpenChange={(open) => { if (!open) setEmbarqueADuplicar(null); }}
+        />
+      )}
+
+      {/* FAB mobile: acción primaria flotante (oculta en md+ y en empty state, ya que el CTA grande del EmptyState es suficiente). */}
+      {canEdit && !isEmptyState && (
+        <FloatingActionButton
+          icon={<Plus className="h-6 w-6" />}
+          label="Nuevo embarque"
+          onClick={() => navigate("/embarques/nuevo")}
         />
       )}
 

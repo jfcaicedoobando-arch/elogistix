@@ -15,6 +15,13 @@ export interface ChangelogEntry {
  */
 export const recentChangelog: ChangelogEntry[] = [
   {
+    version: "8.99.41",
+    date: "2026-04-28",
+    type: "minor",
+    title: "Mobile UX en /embarques y /clientes: filtros en Sheet + FAB",
+    description: "En mobile (<md), /embarques ya no apila 7 controles full-width antes de la tabla: ahora muestra solo SearchInput + botón \"Filtros (N)\" que abre un Sheet lateral con los 6 selects y 2 datepickers etiquetados, footer con \"Limpiar\" y \"Aplicar\". La acción primaria \"Nuevo Embarque\" se renderiza como FloatingActionButton circular azul flotante bottom-right, y \"Exportar CSV\" se mueve a un overflow menu (⋮) en el header. Mismo patrón FAB aplicado a /clientes. Desktop md+ permanece intacto. Componente nuevo: FloatingActionButton (md:hidden, fixed bottom-6 right-4, 56x56 rounded-full, ARIA label obligatorio).",
+  },
+  {
     version: "8.99.40",
     date: "2026-04-28",
     type: "patch",

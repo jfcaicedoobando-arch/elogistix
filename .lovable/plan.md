@@ -96,14 +96,14 @@ El logo está envuelto en `bg-white p-1 rounded-xl shadow-card` — se ve como u
 ## 🎯 Plan de ejecución sugerido (3 oleadas)
 
 **Oleada 1 — Bloqueantes** ✅ COMPLETADA
-- ~~Fix sidebar light mode (#1)~~ — verificado en preview, ya respeta light mode (v anteriores)
+- ~~Fix sidebar light mode (#1)~~ — verificado en preview, ya respeta light mode
 - ~~Fix breadcrumb UUID (#2)~~ — v8.99.38 + v8.99.39 (H1 alineados)
 - ~~Fix KPI truncado con compact notation (#3)~~ — v8.99.40
 
-**Oleada 2 — Mobile (1 sesión)**
-- Filtros en `Sheet` colapsable (#4)
-- FAB para acción primaria + overflow menu (#5)
-- Skeleton states (#8)
+**Oleada 2 — Mobile** ✅ COMPLETADA (v8.99.41)
+- ~~Filtros en `Sheet` colapsable (#4)~~ — /embarques con badge de filtros activos
+- ~~FAB para acción primaria + overflow menu (#5)~~ — /embarques + /clientes
+- ~~Skeleton states (#8)~~ — DataTable ya los traía vía isLoading
 
 **Oleada 3 — Pulido (1 sesión)**
 - Avatar + dropdown en footer (#9)
@@ -111,5 +111,6 @@ El logo está envuelto en `bg-white p-1 rounded-xl shadow-card` — se ve como u
 - Casing consistente (#7)
 - Badges agrupados (#13)
 - Tipografía secundaria + sombras dark (notas de arquitectura)
+- Aplicar patrón Sheet+FAB también a /cotizaciones y /proveedores (extensión natural de Oleada 2)
 
-¿Empezamos por la **Oleada 2**?
+¿Empezamos por la **Oleada 3**?
