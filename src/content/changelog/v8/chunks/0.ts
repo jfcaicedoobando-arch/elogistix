@@ -2,6 +2,13 @@ import type { ChangelogEntry } from "../../../changelogData";
 
 export const chunk0: ChangelogEntry[] = [
   {
+    version: "8.99.39",
+    date: "2026-04-28",
+    type: "patch",
+    title: "Títulos H1 estandarizados en páginas de edición",
+    description: "Se alinean los títulos H1 de las páginas de edición con los breadcrumbs legibles introducidos en v8.99.38. Antes, las pantallas /embarques/:id/editar y /cotizaciones/:id/editar mostraban un título genérico (\"Editar Embarque\", \"Editar Cotización\") con el identificador relegado a un subtitle pequeño, mientras que el breadcrumb sí mostraba el expediente o folio (\"Embarques › ELIMP00185 › Editar\"). Ahora el H1 promueve el identificador legible al título principal: \"Editar embarque ELIMP00185\" y \"Editar cotización COT-2026-0059\", con un subtitle descriptivo que explica el alcance del wizard (\"Modifica los datos generales, ruta y costos del embarque\" / \"...y conceptos de la cotización\"). Las páginas de detalle (Cliente, Embarque, Cotización, Proveedor, Organización, Portal Embarque, Portal Cotización) ya usaban el mismo identificador en H1 y breadcrumb, por lo que no requirieron cambios. Resultado: jerarquía visual consistente entre header del wizard y breadcrumb, sin información duplicada y con el contexto operativo en el mismo nivel de prominencia.",
+  },
+  {
     version: "8.99.38",
     date: "2026-04-28",
     type: "patch",

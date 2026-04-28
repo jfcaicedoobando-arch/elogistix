@@ -15,6 +15,13 @@ export interface ChangelogEntry {
  */
 export const recentChangelog: ChangelogEntry[] = [
   {
+    version: "8.99.39",
+    date: "2026-04-28",
+    type: "patch",
+    title: "Títulos H1 estandarizados en páginas de edición",
+    description: "Los wizards /embarques/:id/editar y /cotizaciones/:id/editar promueven el identificador legible al H1 (\"Editar embarque ELIMP00185\", \"Editar cotización COT-2026-0059\") en lugar del genérico \"Editar Embarque/Cotización\" con el folio relegado al subtitle. Alinea la jerarquía con los breadcrumbs introducidos en v8.99.38. Las páginas de detalle ya usaban el mismo identificador en H1 y breadcrumb, por lo que no requirieron cambios.",
+  },
+  {
     version: "8.99.38",
     date: "2026-04-28",
     type: "patch",
