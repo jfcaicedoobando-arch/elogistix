@@ -2,6 +2,13 @@ import type { ChangelogEntry } from "../../../changelogData";
 
 export const chunk0: ChangelogEntry[] = [
   {
+    version: "8.99.40",
+    date: "2026-04-28",
+    type: "patch",
+    title: "KPIs monetarios con notación compacta en detalle de cliente",
+    description: "Antes, las tarjetas KPI \"Facturado\", \"Pendiente\" y \"Profit\" en /clientes/:id mostraban el valor formateado completo (ej. \"USD 19,254.57\") y se truncaban con elipsis (\"USD …\", \"U..\") al renderizarse en grids estrechos de 6 columnas en monitores medianos o viewports compactos, perdiendo justo la información clave del KPI. Ahora se usa notación compacta vía Intl.NumberFormat({notation:'compact'}): \"USD 19.3K\", \"USD 1.2M\", \"USD 845\". El valor completo (con separadores de miles y dos decimales) se conserva como tooltip nativo (atributo title) al pasar el cursor sobre la cifra. Implementación: nueva utilidad formatCurrencyCompact en src/lib/formatters/index.ts y nuevo prop opcional valorTooltip en KpiCard que sobreescribe el title por defecto. Los KPIs no monetarios (Embarques, Cotizaciones, Contactos) se mantienen con formato entero plano.",
+  },
+  {
     version: "8.99.39",
     date: "2026-04-28",
     type: "patch",
