@@ -99,7 +99,7 @@
     --secondary-foreground: 210 33% 96%;
 
     --muted: 217 33% 16%;
-    --muted-foreground: 215 20% 70%;
+    --muted-foreground: 215 22% 78%;
 
     --accent: 217 91% 60%;
     --accent-foreground: 0 0% 100%;
@@ -141,10 +141,10 @@
     --kpi-secondary: 199 89% 65%;     --kpi-secondary-soft: 199 35% 20%;
     --kpi-danger: 0 72% 65%;          --kpi-danger-soft: 0 35% 22%;
 
-    /* Sombras en dark — más profundas y con opacidad mayor para contrastar con bg oscuro */
-    --shadow-card: 0 1px 2px 0 hsl(0 0% 0% / 0.20), 0 1px 3px 0 hsl(0 0% 0% / 0.24);
-    --shadow-raised: 0 4px 6px -1px hsl(0 0% 0% / 0.28), 0 2px 4px -2px hsl(0 0% 0% / 0.22);
-    --shadow-overlay: 0 10px 25px -5px hsl(0 0% 0% / 0.40), 0 8px 10px -6px hsl(0 0% 0% / 0.30);
+    /* Sombras en dark — más profundas, con halo sutil para despegar las cards del fondo oscuro */
+    --shadow-card: 0 0 0 1px hsl(217 33% 100% / 0.04), 0 1px 2px 0 hsl(0 0% 0% / 0.30), 0 1px 3px 0 hsl(0 0% 0% / 0.30);
+    --shadow-raised: 0 0 0 1px hsl(217 33% 100% / 0.05), 0 4px 6px -1px hsl(0 0% 0% / 0.34), 0 2px 4px -2px hsl(0 0% 0% / 0.28);
+    --shadow-overlay: 0 0 0 1px hsl(217 33% 100% / 0.05), 0 10px 25px -5px hsl(0 0% 0% / 0.45), 0 8px 10px -6px hsl(0 0% 0% / 0.36);
   }
 }
 

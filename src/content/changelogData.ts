@@ -15,6 +15,13 @@ export interface ChangelogEntry {
  */
 export const recentChangelog: ChangelogEntry[] = [
   {
+    version: "8.99.42",
+    date: "2026-04-28",
+    type: "minor",
+    title: "Pulido visual: avatar con menú, badges agrupados y Sheet+FAB en /cotizaciones y /proveedores",
+    description: "Oleada 3 de la auditoría visual UI/UX. Nuevo footer del sidebar con Avatar de iniciales y DropdownMenu (perfil, cambio de tema, cerrar sesión). En /cotizaciones, las columnas Estado y Vigencia se fusionan en una sola con badge primario y línea secundaria de urgencia (rojo si vencida, ámbar si vence en ≤3 días). Mobile UX extendido a /cotizaciones y /proveedores: filtros en Sheet lateral con badge de filtros activos y FAB circular para acción primaria. Contraste mejorado: labels de grupo del sidebar suben a /65 y el muted-foreground en dark mode pasa a 78% lightness. Sombras dark calibradas con halo sutil para despegar las cards del fondo oscuro.",
+  },
+  {
     version: "8.99.41",
     date: "2026-04-28",
     type: "minor",

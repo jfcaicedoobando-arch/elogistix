@@ -1,4 +1,4 @@
-import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
+
 import {
   LayoutDashboard,
   Ship,
@@ -13,7 +13,21 @@ import {
   History,
   Settings,
   BarChart3,
+  User,
+  ChevronUp,
+  Sun,
+  Moon,
 } from "lucide-react";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { useTheme } from "@/contexts/ThemeContext";
 import { NavLink } from "@/components/layout/NavLink";
 import librecargaLogo from "@/assets/librecarga-logo.png";
 import { useLocation } from "react-router-dom";
@@ -32,7 +46,7 @@ import {
   SidebarFooter,
   useSidebar,
 } from "@/components/ui/sidebar";
-import { Button } from "@/components/ui/button";
+
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
@@ -81,6 +95,20 @@ export function AppSidebar() {
   const { user, role, effectiveRole, signOut } = useAuth();
   const { organization } = useOrganization();
   const { totalAlertas } = useSidebarAlerts();
+  const { theme, toggleTheme } = useTheme();
+
+  const userInitials = (user?.email ?? "?")
+    .split("@")[0]
+    .split(/[._-]+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((s) => s[0]?.toUpperCase() ?? "")
+    .join("") || "?";
+  const roleLabel = effectiveRole === "super_admin"
+    ? "Super Admin"
+    : effectiveRole
+      ? effectiveRole.charAt(0).toUpperCase() + effectiveRole.slice(1)
+      : "";
 
   const isActive = (path: string) => {
     if (path === "/") return location.pathname === "/";
@@ -91,7 +119,7 @@ export function AppSidebar() {
     <>
       <SidebarGroup>
         {!collapsed && (
-          <span className="px-3 py-2 text-[11px] font-semibold uppercase tracking-wider text-sidebar-foreground/50">
+          <span className="px-3 py-2 text-[11px] font-semibold uppercase tracking-wider text-sidebar-foreground/65">
             {label}
           </span>
         )}
@@ -183,59 +211,70 @@ export function AppSidebar() {
         ])}
       </SidebarContent>
 
-      <SidebarFooter className="border-t border-sidebar-border p-4 space-y-2 group-data-[collapsible=icon]:p-2">
-        {!collapsed && user && (
-          <div className="flex flex-col gap-0.5 min-w-0">
-            <div className="text-xs text-sidebar-foreground/70 truncate">
-              {user.email}
-            </div>
-            {effectiveRole && (
-              <Tooltip delayDuration={200}>
-                <TooltipTrigger asChild>
-                  <Badge variant="outline" className="w-fit text-[10px] px-1.5 py-0 capitalize border-sidebar-border text-sidebar-foreground/50 cursor-help">
-                    {effectiveRole === "super_admin" ? "Super Admin" : effectiveRole}
-                  </Badge>
-                </TooltipTrigger>
-                <TooltipContent side="top" className="max-w-[220px] text-xs">
-                  {effectiveRole === "super_admin" && "Acceso total a todas las organizaciones y configuración global de la plataforma."}
-                  {effectiveRole === "admin" && "Gestión completa de su organización: usuarios, configuración, embarques y facturación."}
-                  {effectiveRole === "operador" && "Crear y editar embarques, cotizaciones y documentos operativos."}
-                  {effectiveRole === "viewer" && "Solo lectura: puede consultar información pero no crear ni modificar registros."}
-                </TooltipContent>
-              </Tooltip>
-            )}
-          </div>
-        )}
-        {collapsed ? (
-          <Tooltip delayDuration={200}>
-            <TooltipTrigger asChild>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="w-full text-sidebar-foreground/60 hover:text-sidebar-foreground"
-                onClick={signOut}
-                aria-label="Cerrar sesión"
+      <SidebarFooter className="border-t border-sidebar-border p-3 space-y-2 group-data-[collapsible=icon]:p-2">
+        {user && (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button
+                type="button"
+                className={cn(
+                  "flex items-center gap-2 w-full rounded-md p-2 text-left",
+                  "hover:bg-sidebar-accent/15 transition-colors",
+                  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring",
+                  collapsed && "justify-center p-1.5",
+                )}
+                aria-label="Menú de usuario"
               >
-                <LogOut className="h-4 w-4" />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent side="right" className="text-xs">
-              Cerrar sesión
-            </TooltipContent>
-          </Tooltip>
-        ) : (
-          <Button
-            variant="ghost"
-            size="sm"
-            className="w-full justify-start text-sidebar-foreground/60 hover:text-sidebar-foreground"
-            onClick={signOut}
-          >
-            <LogOut className="h-4 w-4" />
-            <span className="ml-2">Cerrar sesión</span>
-          </Button>
+                <Avatar className="h-8 w-8 shrink-0 ring-1 ring-sidebar-border">
+                  <AvatarFallback className="bg-sidebar-accent text-sidebar-accent-foreground text-[11px] font-semibold">
+                    {userInitials}
+                  </AvatarFallback>
+                </Avatar>
+                {!collapsed && (
+                  <>
+                    <div className="flex-1 min-w-0">
+                      <div className="text-xs font-medium text-sidebar-foreground truncate leading-tight">
+                        {user.email}
+                      </div>
+                      {roleLabel && (
+                        <div className="text-[10px] text-sidebar-foreground/65 truncate">
+                          {roleLabel}
+                        </div>
+                      )}
+                    </div>
+                    <ChevronUp className="h-4 w-4 text-sidebar-foreground/50 shrink-0" />
+                  </>
+                )}
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent
+              side={collapsed ? "right" : "top"}
+              align={collapsed ? "start" : "end"}
+              className="w-56"
+            >
+              <DropdownMenuLabel className="font-normal">
+                <div className="flex flex-col gap-0.5">
+                  <span className="text-xs font-medium truncate">{user.email}</span>
+                  {roleLabel && <span className="text-[10px] text-muted-foreground">{roleLabel}</span>}
+                </div>
+              </DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={toggleTheme}>
+                {theme === "dark" ? <Sun className="mr-2 h-4 w-4" /> : <Moon className="mr-2 h-4 w-4" />}
+                {theme === "dark" ? "Modo claro" : "Modo oscuro"}
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem
+                onClick={signOut}
+                className="text-destructive focus:text-destructive"
+              >
+                <LogOut className="mr-2 h-4 w-4" /> Cerrar sesión
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         )}
         {!collapsed && (
-          <div className="text-[11px] text-sidebar-foreground/50 tabular-nums">
+          <div className="text-[11px] text-sidebar-foreground/55 tabular-nums px-1">
             v{APP_VERSION} · Libre Carga
           </div>
         )}

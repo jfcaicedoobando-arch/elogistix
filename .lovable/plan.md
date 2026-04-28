@@ -105,12 +105,12 @@ El logo está envuelto en `bg-white p-1 rounded-xl shadow-card` — se ve como u
 - ~~FAB para acción primaria + overflow menu (#5)~~ — /embarques + /clientes
 - ~~Skeleton states (#8)~~ — DataTable ya los traía vía isLoading
 
-**Oleada 3 — Pulido (1 sesión)**
-- Avatar + dropdown en footer (#9)
-- Tooltips faltantes (#10)
-- Casing consistente (#7)
-- Badges agrupados (#13)
-- Tipografía secundaria + sombras dark (notas de arquitectura)
-- Aplicar patrón Sheet+FAB también a /cotizaciones y /proveedores (extensión natural de Oleada 2)
+**Oleada 3 — Pulido** ✅ COMPLETADA (v8.99.42)
+- ~~Avatar + dropdown en footer (#9)~~ — iniciales derivadas del email + menú con tema y cerrar sesión
+- ~~Tooltips faltantes (#10)~~ — `ThemeToggle` ya envuelto en Tooltip; verificado
+- ~~Casing consistente (#7)~~ — `ClienteDetalle` ya usa el casing real de la base (sin uppercase)
+- ~~Badges agrupados (#13)~~ — Estado+Vigencia en /cotizaciones fusionados en una sola columna
+- ~~Tipografía secundaria + sombras dark~~ — labels sidebar /65, muted-foreground dark a 78%, halo en sombras dark
+- ~~Sheet+FAB en /cotizaciones y /proveedores~~ — extensión natural de la oleada 2
 
-¿Empezamos por la **Oleada 3**?
+🎉 Auditoría visual UI/UX completada. Próximo paso: medir percepción con usuarios reales.

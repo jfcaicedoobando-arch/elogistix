@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Truck, Plus } from "lucide-react";
+import { FloatingActionButton } from "@/components/shared/FloatingActionButton";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import SearchInput from "@/components/selects/SearchInput";
@@ -117,7 +118,7 @@ export default function Proveedores() {
         description="Gestión de proveedores por categoría"
         actions={
           canEdit ? (
-            <Button onClick={() => setNuevoOpen(true)}>
+            <Button onClick={() => setNuevoOpen(true)} className="hidden sm:inline-flex">
               <Plus className="mr-2 h-4 w-4" /> Nuevo Proveedor
             </Button>
           ) : null
@@ -144,6 +145,14 @@ export default function Proveedores() {
       </Tabs>
 
       <NuevoProveedorDialog open={nuevoOpen} onOpenChange={setNuevoOpen} onSave={handleAdd} />
+
+      {canEdit && (
+        <FloatingActionButton
+          onClick={() => setNuevoOpen(true)}
+          icon={<Plus className="h-6 w-6" />}
+          label="Nuevo proveedor"
+        />
+      )}
     </div>
   );
 }

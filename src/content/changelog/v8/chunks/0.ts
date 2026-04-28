@@ -2,6 +2,13 @@ import type { ChangelogEntry } from "../../../changelogData";
 
 export const chunk0: ChangelogEntry[] = [
   {
+    version: "8.99.42",
+    date: "2026-04-28",
+    type: "minor",
+    title: "Pulido visual: avatar con menú, badges agrupados y Sheet+FAB en /cotizaciones y /proveedores",
+    description: "Oleada 3 de la auditoría visual UI/UX. (1) Sidebar footer rediseñado: el bloque \"email + badge de rol\" se reemplaza por un Avatar circular con iniciales derivadas del email (ej. \"HL\" para hector.lopez@…) que abre un DropdownMenu con label de identidad, toggle de tema (Sol/Luna con etiqueta dinámica \"Modo claro\"/\"Modo oscuro\") y \"Cerrar sesión\". En estado collapsed muestra solo el avatar centrado con el mismo menú. (2) Cotizaciones: las columnas \"Estado\" y \"Vigencia\" — antes dos badges adyacentes que competían visualmente (\"Enviada\" + \"Vencida · 25/04/2026\") — se fusionan en una sola columna con jerarquía clara: badge primario de estado arriba y línea secundaria pequeña con la vigencia (rojo si vencida, ámbar si vence en ≤3 días, gris muted en otros casos). (3) Mobile UX extendido a /cotizaciones y /proveedores con el mismo patrón de la oleada 2: filtros (Estado, Cliente) en Sheet lateral con badge de filtros activos y botón Limpiar/Aplicar, FAB circular para acción primaria (\"Nueva Cotización\"/\"Nuevo Proveedor\"), y overflow menu (⋮) para \"Exportar CSV\" en cotizaciones. (4) Contraste reforzado: labels de grupo del sidebar (\"DASHBOARDS\", \"GESTIÓN\", …) suben de opacidad /50 a /65, y el muted-foreground en dark mode pasa de 70% a 78% lightness para mejorar legibilidad de subtítulos y captions. (5) Sombras dark calibradas: las cards ahora llevan un halo sutil (ring blanco /4-/5%) además de la sombra externa para despegarse del fondo oscuro sin verse planas, alineando con la nota de arquitectura visual.",
+  },
+  {
     version: "8.99.41",
     date: "2026-04-28",
     type: "minor",
