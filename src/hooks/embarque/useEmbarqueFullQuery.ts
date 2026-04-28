@@ -31,7 +31,6 @@ export interface EmbarqueFullData {
 }
 
 async function fetchEmbarqueFull(id: string): Promise<EmbarqueFullData | null> {
-  // @ts-expect-error - función nueva, types regenerados en próximo build
   const { data, error } = await supabase.rpc("get_embarque_full", { p_embarque_id: id });
   if (error) throw error;
   if (!data) return null;
