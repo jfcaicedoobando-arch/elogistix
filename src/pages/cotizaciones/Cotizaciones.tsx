@@ -279,6 +279,14 @@ export default function Cotizaciones() {
         onConfirm={c.confirmarEliminar}
         isPending={c.isDeleting}
       />
+
+      {c.canEdit && (
+        <FloatingActionButton
+          onClick={c.irANueva}
+          icon={<Plus className="h-6 w-6" />}
+          label="Nueva cotización"
+        />
+      )}
     </div>
   );
 }
