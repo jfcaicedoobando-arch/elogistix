@@ -15,6 +15,13 @@ export interface ChangelogEntry {
  */
 export const recentChangelog: ChangelogEntry[] = [
   {
+    version: "8.99.40",
+    date: "2026-04-28",
+    type: "patch",
+    title: "KPIs monetarios con notación compacta en detalle de cliente",
+    description: "Las tarjetas KPI Facturado, Pendiente y Profit en /clientes/:id usan notación compacta (USD 19.3K, USD 1.2M, USD 845) para evitar el truncamiento tipo 'USD …' que aparecía en grids de 6 columnas en monitores medianos. El valor completo con separadores y dos decimales se conserva como tooltip nativo al pasar el cursor. Nueva utilidad formatCurrencyCompact en src/lib/formatters y nuevo prop opcional valorTooltip en KpiCard.",
+  },
+  {
     version: "8.99.39",
     date: "2026-04-28",
     type: "patch",

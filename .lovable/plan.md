@@ -95,10 +95,10 @@ El logo está envuelto en `bg-white p-1 rounded-xl shadow-card` — se ve como u
 
 ## 🎯 Plan de ejecución sugerido (3 oleadas)
 
-**Oleada 1 — Bloqueantes (1 sesión)**
-- Fix sidebar light mode (#1)
-- Fix breadcrumb UUID (#2)
-- Fix KPI truncado con compact notation (#3)
+**Oleada 1 — Bloqueantes** ✅ COMPLETADA
+- ~~Fix sidebar light mode (#1)~~ — verificado en preview, ya respeta light mode (v anteriores)
+- ~~Fix breadcrumb UUID (#2)~~ — v8.99.38 + v8.99.39 (H1 alineados)
+- ~~Fix KPI truncado con compact notation (#3)~~ — v8.99.40
 
 **Oleada 2 — Mobile (1 sesión)**
 - Filtros en `Sheet` colapsable (#4)
@@ -112,4 +112,4 @@ El logo está envuelto en `bg-white p-1 rounded-xl shadow-card` — se ve como u
 - Badges agrupados (#13)
 - Tipografía secundaria + sombras dark (notas de arquitectura)
 
-¿Empezamos por la **Oleada 1** o prefieres priorizar diferente?
+¿Empezamos por la **Oleada 2**?
