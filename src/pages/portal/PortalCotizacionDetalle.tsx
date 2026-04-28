@@ -13,11 +13,13 @@ import PortalCotizacionEstadoBanner from "@/components/portal/cotizacion/PortalC
 import PortalCotizacionConfirmDialog from "@/components/portal/cotizacion/PortalCotizacionConfirmDialog";
 import { formatDate } from "@/lib/formatters";
 import type { Tables } from "@/integrations/supabase/types";
+import { useRegisterBreadcrumbLabel } from "@/contexts/BreadcrumbContext";
 
 export default function PortalCotizacionDetalle() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { data: cot, isLoading } = usePortalCotizacion(id);
+  useRegisterBreadcrumbLabel(id, cot?.folio);
   const totales = usePortalCotizacionDetalle(cot);
   const {
     confirmAction,

@@ -8,6 +8,8 @@ import { OrgMembersCard } from "@/components/admin/org-detalle/OrgMembersCard";
 import { OrgConfigCard } from "@/components/admin/org-detalle/OrgConfigCard";
 import { useAdminOrgDetalle } from "@/hooks/admin/useAdminOrgDetalle";
 
+import { useRegisterBreadcrumbLabel } from "@/contexts/BreadcrumbContext";
+
 export default function AdminOrgDetalle() {
   const { id } = useParams<{ id: string }>();
 
@@ -25,6 +27,7 @@ export default function AdminOrgDetalle() {
     updateRole, removeMember,
     cancelEditing, saveEditing, invalidateMembers,
   } = useAdminOrgDetalle(id);
+  useRegisterBreadcrumbLabel(id, org?.nombre);
 
   if (!org) return null;
   const isActive = org.activo !== false;

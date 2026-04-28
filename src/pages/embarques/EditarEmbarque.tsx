@@ -14,6 +14,8 @@ const steps = [
   { title: 'Costos y Pricing', num: 3 },
 ];
 
+import { useRegisterBreadcrumbLabel } from "@/contexts/BreadcrumbContext";
+
 export default function EditarEmbarque() {
   const { id } = useParams();
   const {
@@ -21,6 +23,7 @@ export default function EditarEmbarque() {
     clientes, proveedoresDb, contactos, selectedCliente,
     handleMsdsUpload, handleSave, isPending, navigate, conceptosForm,
   } = useEditarEmbarqueWizard(id);
+  useRegisterBreadcrumbLabel(id, embarque?.expediente);
 
   const {
     conceptosVenta, conceptosCosto,

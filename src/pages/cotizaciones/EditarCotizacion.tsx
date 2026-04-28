@@ -12,6 +12,7 @@ import CotizacionWizardLayout from "@/components/cotizacion/CotizacionWizardLayo
 import type { NavigateFunction } from "react-router-dom";
 import type { CotizacionRow } from "@/hooks/cotizacion/useCotizaciones";
 import type { CostoCotizacion } from "@/hooks/cotizacion/useCotizacionCostos";
+import { useRegisterBreadcrumbLabel } from "@/contexts/BreadcrumbContext";
 
 export default function EditarCotizacion() {
   const { id } = useParams<{ id: string }>();
@@ -21,6 +22,7 @@ export default function EditarCotizacion() {
   const { canEdit } = usePermissions();
   const { data: clientes = [] } = useClientesForSelect();
   const { data: cotizacion, isLoading } = useCotizacion(id);
+  useRegisterBreadcrumbLabel(id, cotizacion?.folio);
   const { data: costos, isLoading: costosLoading } = useCotizacionCostos(id);
 
   if (isLoading || costosLoading) {

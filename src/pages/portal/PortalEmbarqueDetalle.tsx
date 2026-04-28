@@ -11,6 +11,7 @@ import { formatDate, getOrigen, getDestino } from "@/lib/formatters";
 import { PortalEmbarqueTimeline } from "@/components/portal/PortalEmbarqueTimeline";
 import { PortalEmbarqueDocumentos } from "@/components/portal/PortalEmbarqueDocumentos";
 import { usePortalEmbarqueDetalleController } from "@/hooks/embarque/usePortalEmbarqueDetalleController";
+import { useRegisterBreadcrumbLabel } from "@/contexts/BreadcrumbContext";
 
 export default function PortalEmbarqueDetalle() {
   const { id } = useParams();
