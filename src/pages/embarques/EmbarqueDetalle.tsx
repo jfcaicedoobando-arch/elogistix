@@ -1,4 +1,4 @@
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import { PackageX } from "lucide-react";
 
 import EmptyState from "@/components/empty/EmptyState";
