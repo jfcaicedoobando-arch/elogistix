@@ -15,6 +15,13 @@ export interface ChangelogEntry {
  */
 export const recentChangelog: ChangelogEntry[] = [
   {
+    version: "8.99.48",
+    date: "2026-04-29",
+    type: "minor",
+    title: "Auditoría: tabla paginada con búsqueda y filtros avanzados",
+    description: "Nueva pestaña 'Tabla completa' en /auditoria con búsqueda por expediente, filtros por regla, severidad, cliente y rango de fechas (ETA), paginación 25/50/100 y contador en vivo. La vista 'Por regla' (acordeón) se mantiene como segunda pestaña.",
+  },
+  {
     version: "8.99.47",
     date: "2026-04-29",
     type: "minor",

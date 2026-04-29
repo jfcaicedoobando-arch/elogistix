@@ -18,8 +18,10 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AuditoriaKpis } from "@/components/auditoria/AuditoriaKpis";
 import { HallazgoTabla } from "@/components/auditoria/HallazgoTabla";
+import { HallazgosTablaPaginada } from "@/components/auditoria/HallazgosTablaPaginada";
 import {
   AUDITORIA_QUERY_KEY,
   useAuditoria,
@@ -185,34 +187,47 @@ export default function Auditoria() {
             </div>
           </div>
 
-          <Accordion type="multiple" defaultValue={REGLAS_ORDEN} className="space-y-2">
-            {REGLAS_ORDEN.map((regla) => {
-              const cfg = reglaConfig[regla];
-              const items = porRegla[regla];
-              const Icon = cfg.icon;
-              return (
-                <AccordionItem key={regla} value={regla} className="border rounded-md px-4">
-                  <AccordionTrigger className="hover:no-underline">
-                    <div className="flex items-center gap-3 flex-1 text-left">
-                      <Icon className="h-4 w-4 text-muted-foreground shrink-0" />
-                      <div className="flex-1 min-w-0">
-                        <div className="font-medium text-sm">{cfg.label}</div>
-                        <div className="text-xs text-muted-foreground font-normal">
-                          {cfg.description}
+          <Tabs defaultValue="tabla" className="space-y-3">
+            <TabsList>
+              <TabsTrigger value="tabla">Tabla completa</TabsTrigger>
+              <TabsTrigger value="por_regla">Por regla</TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="tabla" className="mt-0">
+              <HallazgosTablaPaginada hallazgos={hallazgos} />
+            </TabsContent>
+
+            <TabsContent value="por_regla" className="mt-0">
+              <Accordion type="multiple" defaultValue={REGLAS_ORDEN} className="space-y-2">
+                {REGLAS_ORDEN.map((regla) => {
+                  const cfg = reglaConfig[regla];
+                  const items = porRegla[regla];
+                  const Icon = cfg.icon;
+                  return (
+                    <AccordionItem key={regla} value={regla} className="border rounded-md px-4">
+                      <AccordionTrigger className="hover:no-underline">
+                        <div className="flex items-center gap-3 flex-1 text-left">
+                          <Icon className="h-4 w-4 text-muted-foreground shrink-0" />
+                          <div className="flex-1 min-w-0">
+                            <div className="font-medium text-sm">{cfg.label}</div>
+                            <div className="text-xs text-muted-foreground font-normal">
+                              {cfg.description}
+                            </div>
+                          </div>
+                          <Badge variant={items.length > 0 ? "destructive" : "secondary"}>
+                            {items.length}
+                          </Badge>
                         </div>
-                      </div>
-                      <Badge variant={items.length > 0 ? "destructive" : "secondary"}>
-                        {items.length}
-                      </Badge>
-                    </div>
-                  </AccordionTrigger>
-                  <AccordionContent className="pt-2">
-                    <HallazgoTabla hallazgos={items} />
-                  </AccordionContent>
-                </AccordionItem>
-              );
-            })}
-          </Accordion>
+                      </AccordionTrigger>
+                      <AccordionContent className="pt-2">
+                        <HallazgoTabla hallazgos={items} />
+                      </AccordionContent>
+                    </AccordionItem>
+                  );
+                })}
+              </Accordion>
+            </TabsContent>
+          </Tabs>
         </>
       )}
     </div>
