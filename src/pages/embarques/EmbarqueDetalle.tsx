@@ -1,4 +1,4 @@
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import { PackageX } from "lucide-react";
 
 import EmptyState from "@/components/empty/EmptyState";
@@ -26,7 +26,19 @@ import { useRegisterBreadcrumbLabel } from "@/contexts/BreadcrumbContext";
 export default function EmbarqueDetalle() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const { canEdit } = usePermissions();
+  const tabsValidos = ["resumen", "documentos", "costos", "facturacion", "tracking", "notas"] as const;
+  const tabParam = searchParams.get("tab");
+  const tabActivo = (tabsValidos as readonly string[]).includes(tabParam ?? "")
+    ? (tabParam as string)
+    : "resumen";
+  const handleTabChange = (v: string) => {
+    const next = new URLSearchParams(searchParams);
+    if (v === "resumen") next.delete("tab");
+    else next.set("tab", v);
+    setSearchParams(next, { replace: true });
+  };
   // 1 sola llamada al backend en lugar de 6 (RPC get_embarque_full)
   const { data: full, isLoading } = useEmbarqueFull(id);
   const embarque = full?.embarque ?? null;
@@ -96,7 +108,7 @@ export default function EmbarqueDetalle() {
       <DialogDuplicarEmbarque embarque={embarque} open={dialogDuplicarAbierto} onOpenChange={setDialogDuplicarAbierto} />
       <DialogEliminarEmbarque embarque={embarque} open={dialogEliminarAbierto} onOpenChange={setDialogEliminarAbierto} />
 
-      <Tabs defaultValue="resumen">
+      <Tabs value={tabActivo} onValueChange={handleTabChange}>
         <TabsList className="gap-1">
           <TabsTrigger value="resumen">Resumen</TabsTrigger>
           <TabsTrigger value="documentos">Documentos</TabsTrigger>

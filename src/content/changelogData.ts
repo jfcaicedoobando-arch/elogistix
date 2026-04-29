@@ -15,6 +15,13 @@ export interface ChangelogEntry {
  */
 export const recentChangelog: ChangelogEntry[] = [
   {
+    version: "8.99.51",
+    date: "2026-04-29",
+    type: "patch",
+    title: "Auditoría: enlace directo al embarque desde cada hallazgo",
+    description: "Cada hallazgo abre el detalle del embarque con la pestaña relevante: Documentos para 'Docs faltantes/pendientes', Tracking para 'Fechas inconsistentes', Facturación para 'Ventas sin facturar'. Expediente clicable y EmbarqueDetalle ahora soporta ?tab=.",
+  },
+  {
     version: "8.99.50",
     date: "2026-04-29",
     type: "patch",

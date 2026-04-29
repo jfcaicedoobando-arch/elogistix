@@ -10,8 +10,15 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import type { HallazgoAuditoria, SeveridadAuditoria } from "@/hooks/auditoria/useAuditoria";
+import type { HallazgoAuditoria, ReglaAuditoria, SeveridadAuditoria } from "@/hooks/auditoria/useAuditoria";
 import { cn } from "@/lib/utils";
+
+const reglaToTab: Record<ReglaAuditoria, string> = {
+  docs_faltantes: "documentos",
+  docs_pendientes_avanzado: "documentos",
+  fechas: "tracking",
+  ventas_sin_facturar: "facturacion",
+};
 
 interface Props {
   hallazgos: HallazgoAuditoria[];
@@ -61,7 +68,7 @@ export function HallazgoTabla({ hallazgos }: Props) {
             <TableHead className="w-[110px]">Estado</TableHead>
             <TableHead className="w-[110px]">ETA</TableHead>
             <TableHead>Detalle</TableHead>
-            <TableHead className="w-[60px]" />
+            <TableHead className="w-[90px]" />
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -99,12 +106,17 @@ export function HallazgoTabla({ hallazgos }: Props) {
                 </TableCell>
                 <TableCell>
                   <Button
-                    size="icon"
+                    size="sm"
                     variant="ghost"
-                    onClick={() => navigate(`/embarques/${h.embarque_id}`)}
-                    aria-label="Abrir embarque"
+                    className="h-7 gap-1 text-xs"
+                    onClick={() =>
+                      navigate(`/embarques/${h.embarque_id}?tab=${reglaToTab[h.regla]}`)
+                    }
+                    aria-label={`Abrir embarque ${h.expediente}`}
+                    title={`Abrir embarque ${h.expediente}`}
                   >
-                    <ExternalLink className="h-4 w-4" />
+                    <ExternalLink className="h-3.5 w-3.5" />
+                    Abrir
                   </Button>
                 </TableCell>
               </TableRow>

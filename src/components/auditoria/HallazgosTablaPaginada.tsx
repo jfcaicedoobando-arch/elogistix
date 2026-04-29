@@ -50,6 +50,13 @@ const reglaLabel: Record<ReglaAuditoria, string> = {
   ventas_sin_facturar: "Ventas sin facturar",
 };
 
+const reglaToTab: Record<ReglaAuditoria, string> = {
+  docs_faltantes: "documentos",
+  docs_pendientes_avanzado: "documentos",
+  fechas: "tracking",
+  ventas_sin_facturar: "facturacion",
+};
+
 const severidadConfig: Record<SeveridadAuditoria, { label: string; className: string }> = {
   critico: {
     label: "Crítico",
@@ -344,7 +351,16 @@ export function HallazgosTablaPaginada({ hallazgos }: Props) {
                       </Badge>
                     </TableCell>
                     <TableCell className="font-medium tabular-nums text-xs">
-                      {h.expediente}
+                      <button
+                        type="button"
+                        onClick={() =>
+                          navigate(`/embarques/${h.embarque_id}?tab=${reglaToTab[h.regla]}`)
+                        }
+                        className="text-primary hover:underline focus:outline-none focus:underline"
+                        title={`Abrir embarque ${h.expediente}`}
+                      >
+                        {h.expediente}
+                      </button>
                     </TableCell>
                     <TableCell className="text-xs text-muted-foreground">
                       {reglaLabel[h.regla]}
@@ -400,8 +416,11 @@ export function HallazgosTablaPaginada({ hallazgos }: Props) {
                         size="icon"
                         variant="ghost"
                         className="h-7 w-7"
-                        onClick={() => navigate(`/embarques/${h.embarque_id}`)}
+                        onClick={() =>
+                          navigate(`/embarques/${h.embarque_id}?tab=${reglaToTab[h.regla]}`)
+                        }
                         aria-label="Abrir embarque"
+                        title={`Abrir embarque ${h.expediente}`}
                       >
                         <ExternalLink className="h-3.5 w-3.5" />
                       </Button>
