@@ -2,7 +2,12 @@ import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
-import { CalendarIcon, ExternalLink, Search, X } from "lucide-react";
+import { CalendarIcon, CheckCircle2, ExternalLink, Search, X } from "lucide-react";
+import {
+  useAuditoriaRevisiones,
+  revisionKey,
+} from "@/hooks/auditoria/useAuditoriaRevisiones";
+import { MarcarRevisadoDialog } from "@/components/auditoria/MarcarRevisadoDialog";
 import {
   Table,
   TableBody,
@@ -74,10 +79,14 @@ export function HallazgosTablaPaginada({ hallazgos }: Props) {
   const [filtroRegla, setFiltroRegla] = useState<ReglaAuditoria | "todas">("todas");
   const [filtroSev, setFiltroSev] = useState<SeveridadAuditoria | "todas">("todas");
   const [filtroCliente, setFiltroCliente] = useState<string>("todos");
+  const [filtroRevision, setFiltroRevision] = useState<"todos" | "pendientes" | "revisados">("todos");
   const [etaDesde, setEtaDesde] = useState<Date | undefined>();
   const [etaHasta, setEtaHasta] = useState<Date | undefined>();
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(50);
+  const [dialogHallazgo, setDialogHallazgo] = useState<HallazgoAuditoria | null>(null);
+
+  const { data: revisiones } = useAuditoriaRevisiones();
 
   const clientes = useMemo(() => {
     const set = new Set(
