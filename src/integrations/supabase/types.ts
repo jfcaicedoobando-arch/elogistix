@@ -1656,6 +1656,7 @@ export type Database = {
         }
         Returns: undefined
       }
+      auditoria_embarques_org: { Args: never; Returns: Json }
       busqueda_global: {
         Args: { limite?: number; termino: string }
         Returns: {

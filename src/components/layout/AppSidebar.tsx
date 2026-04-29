@@ -17,6 +17,7 @@ import {
   Sun,
   Moon,
   Building2,
+  ShieldAlert,
 } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
@@ -33,6 +34,7 @@ import { useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useOrganization } from "@/contexts/OrganizationContext";
 import { useSidebarAlerts } from "@/hooks/shared/useSidebarAlerts";
+import { useAuditoriaCount } from "@/hooks/auditoria/useAuditoria";
 import {
   Sidebar,
   SidebarContent,
@@ -66,6 +68,7 @@ const directorioItems: SidebarItem[] = [
 ];
 
 const sistemaItems: SidebarItem[] = [
+  { title: "Auditoría", url: "/auditoria", icon: ShieldAlert },
   { title: "Bitácora", url: "/bitacora", icon: History },
   { title: "Changelog", url: "/changelog", icon: ScrollText },
 ];
@@ -86,7 +89,12 @@ const AppSidebarBase = forwardRef<HTMLDivElement>(function AppSidebarBase(_props
   const { user, role, effectiveRole, signOut } = useAuth();
   const { organization } = useOrganization();
   const { totalAlertas } = useSidebarAlerts();
+  const { data: auditoriaCount = 0 } = useAuditoriaCount();
   const { theme, toggleTheme } = useTheme();
+
+  const sistemaItemsConBadge = sistemaItems.map((it) =>
+    it.url === "/auditoria" ? { ...it, badgeCount: auditoriaCount } : it,
+  );
 
   const userInitials = (user?.email ?? "?")
     .split("@")[0]
@@ -134,7 +142,7 @@ const AppSidebarBase = forwardRef<HTMLDivElement>(function AppSidebarBase(_props
         <SidebarGroupBlock label="Gestión" items={gestionItems} collapsed={collapsed} pathname={pathname} totalAlertas={totalAlertas} />
         <SidebarGroupBlock label="Reportes" items={reportesItems} collapsed={collapsed} pathname={pathname} totalAlertas={totalAlertas} />
         <SidebarGroupBlock label="Directorio" items={directorioItems} collapsed={collapsed} pathname={pathname} totalAlertas={totalAlertas} />
-        <SidebarGroupBlock label="Sistema" items={sistemaItems} collapsed={collapsed} pathname={pathname} totalAlertas={totalAlertas} />
+        <SidebarGroupBlock label="Sistema" items={sistemaItemsConBadge} collapsed={collapsed} pathname={pathname} totalAlertas={totalAlertas} />
         {(effectiveRole === "admin" || role === "super_admin") && (
           <SidebarGroupBlock label="Administración" items={adminItems} collapsed={collapsed} pathname={pathname} totalAlertas={totalAlertas} />
         )}

@@ -2,6 +2,13 @@ import type { ChangelogEntry } from "../../../changelogData";
 
 export const chunk0: ChangelogEntry[] = [
   {
+    version: "8.99.47",
+    date: "2026-04-29",
+    type: "minor",
+    title: "Módulo de Auditoría Operativa: detección automática de inconsistencias",
+    description: "Nueva página /auditoria que recalcula en vivo cuatro tipos de hallazgos sobre todos los embarques (excepto Cancelado): (1) DOCUMENTOS FALTANTES SEGÚN ETAPA — matriz por estado del embarque que exige Factura Comercial y Packing List desde Confirmado, agrega BL Master/BL House (marítimo) o AWB (aéreo) en Tránsito, suma Certificado de Origen y Ficha Técnica desde En Aduana/Llegada/Arribo, y EIR para FCL marítimo en Entregado/Cerrado. Falta = sin registro o sin archivo subido. (2) DOCUMENTOS PENDIENTES EN EMBARQUES AVANZADOS — registros con estado 'Pendiente' cuando el embarque ya está En Aduana, Llegada, Entregado o Cerrado (severidad crítica). (3) FECHAS INCONSISTENTES — En Tránsito sin ETD o con ETD futura, Llegada/Arribo sin fecha real, ETA vencida ≥3 días en Confirmado, Entregado/Cerrado sin fecha real. (4) VENTAS SIN FACTURAR — embarques Entregado/Cerrado con conceptos_venta en 'pendiente' (severidad crítica con monto agregado). Toda la lógica vive en una RPC SECURITY INVOKER public.auditoria_embarques_org() que respeta RLS y devuelve un único JSONB con totales por severidad, totales por regla y la lista completa de hallazgos ordenada (críticos primero). Frontend: KPI cards (Críticos/Altos/Medios), filtros por severidad y modo (Marítimo/Aéreo/Terrestre), 4 secciones colapsables con tabla zebra-stripe que muestra severidad, expediente, cliente, estado, ETA, detalle, badges con documentos faltantes y botón de acceso directo al embarque. Sidebar: nueva entrada 'Auditoría' en grupo Sistema con badge rojo dinámico (99+ máximo) que reusa la misma React Query (useAuditoriaCount con select), sin round-trips extra. SidebarGroupBlock extendido con prop opcional badgeCount por item para soportar contadores arbitrarios. Cache 5 min con botón Recalcular que invalida la query.",
+  },
+  {
     version: "8.99.46",
     date: "2026-04-29",
     type: "patch",
