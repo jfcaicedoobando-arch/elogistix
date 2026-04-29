@@ -1,100 +1,60 @@
-## Módulo de Auditoría Operativa
 
-Página `/auditoria` que recalcula en vivo las inconsistencias entre documentos, estados y fechas de los embarques de la organización (todos excepto `Cancelado`). Sin cron ni emails: el reporte se construye al abrir la página y un badge en el sidebar muestra el total de pendientes.
+# Ocultar hallazgos revisados por defecto
 
-### Reglas de detección
+Los hallazgos marcados como revisados desaparecerán de la bandeja de auditoría. Los KPIs y el badge del sidebar contarán solo los pendientes. Un toggle permitirá volver a verlos cuando se necesiten.
 
-**1. Documentos faltantes según estado del embarque**
+## Comportamiento esperado
 
-Matriz de documentos exigidos por etapa (los nombres ya existen en `documentos_embarque.nombre`):
+- Al marcar un hallazgo como **revisado**, sale de la tabla y de los KPIs.
+- El conteo del **sidebar** baja también (badge de "Auditoría").
+- En la barra de filtros, el toggle de revisión cambia su default a **"Pendientes"** (en lugar de "Todos") y muestra cuántos hay ocultos: *"Mostrando 487. 26 revisados ocultos."*
+- Al cambiar el filtro a "Revisados" o "Todos", reaparecen.
+- En la vista **"Por regla"** (acordeón), el conteo del badge de cada regla refleja solo pendientes. Los revisados también se ocultan ahí.
 
-| Estado del embarque | Documentos exigidos |
-|---|---|
-| Confirmado | Factura Comercial, Packing List |
-| En Tránsito | + BL Master, BL House (marítimo) ó AWB (aéreo) |
-| En Aduana / Arribo / Llegada | + Certificado de Origen, Ficha Técnica |
-| En Proceso / Entregado / Cerrado | Todos los anteriores + EIR (marítimo FCL) |
+## Cambios técnicos
 
-Marítimo vs aéreo se decide por `embarques.modo`. Falta = registro inexistente **o** registro con `archivo IS NULL`.
+### 1. `src/pages/Auditoria.tsx`
+- Inyectar `useAuditoriaRevisiones()` para tener el `Map` de revisiones.
+- Calcular `hallazgosPendientes = hallazgos.filter(h => !revisiones.has(revisionKey(h)))`.
+- Pasar **solo pendientes** a:
+  - `AuditoriaKpis` (recalcular `por_severidad` localmente sobre pendientes)
+  - El acordeón "Por regla" (`porRegla` se construye desde pendientes)
+  - El contador "Mostrando X de Y" (Y = pendientes, no total)
+- Mostrar línea informativa: *"N hallazgos revisados están ocultos. [Ver revisados]"* (botón que cambia un estado local `mostrarRevisados`).
 
-**2. Documentos en `Pendiente` con embarque avanzado**
+### 2. `src/components/auditoria/HallazgosTablaPaginada.tsx`
+- Cambiar default de `filtroRevision` de `"todos"` a `"pendientes"`.
+- La pestaña "Tabla completa" sigue recibiendo `hallazgos` completos pero filtra por defecto a pendientes (consistente con el comportamiento actual del select).
+- Agregar una pista visual junto al contador: *"X de Y · Z revisados ocultos"* cuando `filtroRevision === "pendientes"` y haya revisados.
 
-Cualquier `documentos_embarque.estado = 'Pendiente'` cuando el embarque ya está en `En Aduana`, `Llegada`, `Entregado` o `Cerrado` → severidad alta.
+### 3. `src/components/auditoria/HallazgoTabla.tsx` (vista por regla)
+- Recibe ya filtrados desde `Auditoria.tsx`, no requiere cambios internos más allá de aceptar listas vacías con mensaje "Sin hallazgos pendientes".
 
-**3. Estados inconsistentes con fechas**
+### 4. Badge del sidebar — `useAuditoriaCount`
+- Modificar `select` para restar las revisiones del total. Como el hook `useAuditoriaRevisiones` vive en otro query, se hace combinando ambos:
+  - Opción elegida: dentro de `useAuditoriaCount`, también suscribirse al query `["auditoria", "revisiones"]` y devolver `total - revisadosCount`.
+- Invalidar `AUDITORIA_QUERY_KEY` cuando se marca/desmarca una revisión (ya se invalida `REVISIONES_KEY`; agregar también la otra para que el badge reaccione al instante).
 
-- `En Tránsito` sin `etd` o con `etd` futura
-- `Llegada` / `Arribo` sin `fecha_llegada_real`
-- `Confirmado` con `eta` pasada hace ≥3 días
-- `Entregado` / `Cerrado` sin `fecha_llegada_real`
+### 5. Sin migración
+- No se toca el esquema de BD. La tabla `auditoria_revisiones` ya tiene todo lo necesario.
 
-**4. Conceptos de venta sin facturar en embarques cerrados**
+### 6. Versionado y changelog
+- Bump a `v8.99.52` (patch).
+- Entrada en `src/content/changelog/v8/chunks/0.ts` y `changelogData.ts`.
 
-Embarques en `Entregado` o `Cerrado` con al menos un `conceptos_venta.estado_facturacion = 'pendiente'`.
-
-### Severidades
-
-- **Crítico** (rojo): regla 2 y regla 4
-- **Alto** (ámbar): documentos faltantes en estados ≥ "En Tránsito"
-- **Medio** (azul): inconsistencias de fechas y faltantes en "Confirmado"
-
-### Backend — RPC única
-
-Nueva función `public.auditoria_embarques_org()` SECURITY INVOKER que respeta RLS y devuelve un JSONB:
-
-```text
-{
-  generated_at, total_hallazgos,
-  por_severidad: { critico, alto, medio },
-  por_regla:    { docs_faltantes, docs_pendientes_avanzado, fechas, ventas_sin_facturar },
-  hallazgos: [
-    { embarque_id, expediente, cliente_nombre, modo, estado, eta,
-      regla, severidad, detalle, documentos_faltantes[] }
-  ]
-}
-```
-
-Una sola llamada cubre la página completa y el badge del sidebar (lee `total_hallazgos`).
-
-### Frontend
-
-- **Ruta** `/auditoria` lazy-loaded en `App.tsx`, accesible para `admin`, `operador`, `viewer` (no clientes).
-- **Entrada en el sidebar** dentro del grupo "Operación" con icono `ShieldAlert` y `Badge` rojo cuando `total_hallazgos > 0`.
-- **Página** con:
-  - 3 KPI cards arriba: Críticos, Altos, Medios.
-  - 4 secciones colapsables (una por regla) con tabla `DataTable` estándar (zebra striping, densidad media): Expediente, Cliente, Estado, ETA, Detalle, acción "Abrir embarque" → `/embarques/:id`.
-  - Filtros: por severidad y por modo (Marítimo/Aéreo/Terrestre).
-  - Botón "Recalcular" que invalida la query.
-- **Hook** `useAuditoria()` con React Query, `staleTime: 5 min`, key `["auditoria", organization_id]`.
-- **Badge sidebar**: nuevo hook `useAuditoriaCount()` que comparte la misma query (mismo cache key) — cero round-trips extra.
-
-### Arquitectura técnica
+## Diagrama de flujo resultante
 
 ```text
-DB:    auditoria_embarques_org() RPC  →  JSONB
-       ├─ lee embarques + documentos_embarque + conceptos_venta filtrados por current_user_org_id()
-       └─ aplica las 4 reglas en SQL (CTEs)
-
-Hook:  useAuditoria  → supabase.rpc("auditoria_embarques_org")
-Page:  /auditoria → KPIs + secciones colapsables
-Side:  AppSidebar → Badge usa misma query, suma total_hallazgos
+Usuario marca revisado
+        │
+        ▼
+upsert en auditoria_revisiones  ──► invalida [auditoria, revisiones]
+                                 └► invalida [auditoria, embarques]
+        │
+        ▼
+Re-render:
+  • Tabla: el hallazgo desaparece (filtro "Pendientes" por default)
+  • KPIs: bajan (Crítico/Alto/Medio recalculados sin revisados)
+  • Sidebar badge: baja
+  • Línea: "1 revisado oculto · [Ver revisados]"
 ```
-
-### Archivos a crear
-
-- `supabase/migrations/<ts>_auditoria_rpc.sql` — función RPC
-- `src/hooks/auditoria/useAuditoria.ts`
-- `src/pages/Auditoria.tsx`
-- `src/components/auditoria/HallazgoTabla.tsx`
-- `src/components/auditoria/AuditoriaKpis.tsx`
-
-### Archivos a editar
-
-- `src/App.tsx` — registrar ruta lazy
-- `src/components/layout/AppSidebar.tsx` — entrada + badge dinámico
-- `src/content/changelog/v8/chunks/0.ts` y `src/content/changelogData.ts` — entrada v8.99.47 (minor)
-
-### Lo que NO incluye este plan
-
-- Cron diario, snapshots históricos en `auditoria_reportes`, emails al admin (descartado en la pregunta 2).
-- Edición de las reglas desde UI: la matriz de documentos por estado vive en SQL como CTE; cambiarla requiere migración. Si después quieres hacerla editable, se mueve a `configuracion`.
