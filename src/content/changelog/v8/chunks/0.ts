@@ -2,6 +2,13 @@ import type { ChangelogEntry } from "../../../changelogData";
 
 export const chunk0: ChangelogEntry[] = [
   {
+    version: "8.99.54",
+    date: "2026-04-29",
+    type: "patch",
+    title: "Auditoría: marcar revisado ahora respeta el rol por organización",
+    description: "Al hacer click en 'Marcar como revisado' en /auditoria, el upsert era rechazado por RLS con código 42501 cuando el usuario era admin u operador dentro de su organización pero no tenía rol global en user_roles. Se agregó la función has_org_role(user_id, org_id, role) y se reemplazaron las políticas de auditoria_revisiones para permitir CRUD a admin/operador de la organización (o super_admin global) y lectura a todos los miembros. La UI ahora también distingue el error 42501 mostrando 'No tienes permisos para marcar revisado' con descripción clara, y se eliminó el warning de React 'Function components cannot be given refs' envolviendo DialogHeader/DialogFooter con forwardRef.",
+  },
+  {
     version: "8.99.53",
     date: "2026-04-29",
     type: "patch",

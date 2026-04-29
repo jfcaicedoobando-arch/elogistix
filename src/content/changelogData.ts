@@ -15,6 +15,13 @@ export interface ChangelogEntry {
  */
 export const recentChangelog: ChangelogEntry[] = [
   {
+    version: "8.99.54",
+    date: "2026-04-29",
+    type: "patch",
+    title: "Auditoría: marcar revisado ahora respeta el rol por organización",
+    description: "El upsert a auditoria_revisiones era bloqueado por RLS porque las políticas exigían rol global (user_roles) y muchos usuarios sólo tienen rol dentro de su organización (organization_members). Se agregó la función has_org_role(user_id, org_id, role) y se reemplazaron las políticas de auditoria_revisiones para permitir CRUD a admin/operador de la organización (o super_admin global) y lectura a todos los miembros. Además: el toast de error distingue ahora el caso 'sin permisos' (mensaje claro en español) y se eliminó el warning de React 'Function components cannot be given refs' envolviendo DialogHeader/DialogFooter con forwardRef.",
+  },
+  {
     version: "8.99.53",
     date: "2026-04-29",
     type: "patch",

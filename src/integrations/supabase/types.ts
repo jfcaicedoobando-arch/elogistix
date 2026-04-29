@@ -1800,6 +1800,14 @@ export type Database = {
       get_embarque_full: { Args: { p_embarque_id: string }; Returns: Json }
       get_user_context: { Args: never; Returns: Json }
       get_user_org_ids: { Args: { _user_id: string }; Returns: string[] }
+      has_org_role: {
+        Args: {
+          _org_id: string
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
