@@ -2,11 +2,11 @@ import type { ChangelogEntry } from "../../../changelogData";
 
 export const chunk0: ChangelogEntry[] = [
   {
-    version: "8.99.45",
+    version: "8.99.46",
     date: "2026-04-29",
-    type: "minor",
-    title: "Cache persistente de catálogos + índice DB para alertas de facturas",
-    description: "Tercera oleada de la auditoría de performance, complementando v8.99.43 (backend) y v8.99.44 (shell). (1) CACHE PERSISTENTE DE CATÁLOGOS: el QueryClient ahora se monta dentro de PersistQueryClientProvider de @tanstack/react-query-persist-client, usando createSyncStoragePersister contra window.localStorage con clave 'lc-query-cache-v1' y TTL de 24 h. La hidratación es selectiva mediante shouldDehydrateQuery con una whitelist por queryKey raíz: SOLO se persisten catálogos estáticos (puertos, navieras, tipos_contenedor, tasa_iva, exchange-rates, configuracion). Las queries de datos transaccionales (embarques, cotizaciones, clientes, etc.) NUNCA se serializan, evitando datos stale o inconsistencias multi-tenant. Resultado medible: al hacer refresh en una pantalla con selects (NuevoEmbarque, EditarCotizacion, PortSelect en wizards), las opciones aparecen instantáneamente sin esperar el round-trip a Lovable Cloud — recorta 200-400 ms del TTI percibido. (2) ÍNDICE DB PARA ALERTAS: añadido idx_facturas_org_vencimiento (organization_id, fecha_vencimiento) WHERE estado <> 'Pagada' que acelera el conteo de facturas vencidas dentro de sidebar_alert_counts; el WHERE parcial mantiene el índice pequeño y solo cubre los casos relevantes. (3) LIMPIEZA DE ÍNDICES REDUNDANTES: eliminado idx_embarques_org_created por ser duplicado exacto (mismas columnas, mismo orden) de idx_embarques_org_created_at — reduce el costo de mantenimiento en INSERTs/UPDATEs sobre embarques. (4) VERIFICACIÓN: confirmado vía pg_indexes que los índices clave ya estaban presentes y no requieren creación: idx_embarques_org_eta (organization_id, eta) para próximos arribos, idx_facturas_org_estado para filtros de estado, y los índices GIN trigram (idx_embarques_expediente_trgm, _bl_master_trgm, _contenedor_trgm, _cliente_nombre_trgm, _descripcion_trgm) para búsquedas LIKE/ILIKE en SearchInput.",
+    type: "patch",
+    title: "Fix: warning de forwardRef en AppSidebar memoizado",
+    description: "Tras envolver AppSidebar con React.memo en v8.99.44, el componente Sidebar de shadcn intentaba pasar un ref al hijo, generando el warning 'Function components cannot be given refs' en consola. Solución: AppSidebarBase ahora usa React.forwardRef antes de aplicar memo, aceptando el ref aunque no lo use internamente. Sin cambios funcionales — únicamente limpia el warning y permite que la composición memo+ref del shell autenticado sea correcta.",
   },
   {
     version: "8.99.44",
