@@ -15,6 +15,13 @@ export interface ChangelogEntry {
  */
 export const recentChangelog: ChangelogEntry[] = [
   {
+    version: "8.99.49",
+    date: "2026-04-29",
+    type: "minor",
+    title: "Auditoría: marcar hallazgos como revisados con acción tomada",
+    description: "Botón 'Marcar revisado' en cada hallazgo de /auditoria con campo obligatorio 'Acción tomada'. Persiste usuario, email, fecha y acción en auditoria_revisiones (con RLS) y registra en bitácora. Nuevo filtro Pendientes/Revisados.",
+  },
+  {
     version: "8.99.48",
     date: "2026-04-29",
     type: "minor",

@@ -2,7 +2,12 @@ import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
-import { CalendarIcon, ExternalLink, Search, X } from "lucide-react";
+import { CalendarIcon, CheckCircle2, ExternalLink, Search, X } from "lucide-react";
+import {
+  useAuditoriaRevisiones,
+  revisionKey,
+} from "@/hooks/auditoria/useAuditoriaRevisiones";
+import { MarcarRevisadoDialog } from "@/components/auditoria/MarcarRevisadoDialog";
 import {
   Table,
   TableBody,
@@ -74,10 +79,14 @@ export function HallazgosTablaPaginada({ hallazgos }: Props) {
   const [filtroRegla, setFiltroRegla] = useState<ReglaAuditoria | "todas">("todas");
   const [filtroSev, setFiltroSev] = useState<SeveridadAuditoria | "todas">("todas");
   const [filtroCliente, setFiltroCliente] = useState<string>("todos");
+  const [filtroRevision, setFiltroRevision] = useState<"todos" | "pendientes" | "revisados">("todos");
   const [etaDesde, setEtaDesde] = useState<Date | undefined>();
   const [etaHasta, setEtaHasta] = useState<Date | undefined>();
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(50);
+  const [dialogHallazgo, setDialogHallazgo] = useState<HallazgoAuditoria | null>(null);
+
+  const { data: revisiones } = useAuditoriaRevisiones();
 
   const clientes = useMemo(() => {
     const set = new Set(
@@ -97,9 +106,14 @@ export function HallazgosTablaPaginada({ hallazgos }: Props) {
       if (filtroCliente !== "todos" && h.cliente_nombre !== filtroCliente) return false;
       if (desde && (!h.eta || h.eta < desde)) return false;
       if (hasta && (!h.eta || h.eta > hasta)) return false;
+      if (filtroRevision !== "todos") {
+        const revisado = revisiones?.has(revisionKey(h)) ?? false;
+        if (filtroRevision === "revisados" && !revisado) return false;
+        if (filtroRevision === "pendientes" && revisado) return false;
+      }
       return true;
     });
-  }, [hallazgos, search, filtroRegla, filtroSev, filtroCliente, etaDesde, etaHasta]);
+  }, [hallazgos, search, filtroRegla, filtroSev, filtroCliente, etaDesde, etaHasta, filtroRevision, revisiones]);
 
   const totalPages = Math.max(1, Math.ceil(filtrados.length / pageSize));
   const currentPage = Math.min(page, totalPages);
@@ -111,6 +125,7 @@ export function HallazgosTablaPaginada({ hallazgos }: Props) {
     setFiltroRegla("todas");
     setFiltroSev("todas");
     setFiltroCliente("todos");
+    setFiltroRevision("todos");
     setEtaDesde(undefined);
     setEtaHasta(undefined);
     setPage(1);
@@ -121,6 +136,7 @@ export function HallazgosTablaPaginada({ hallazgos }: Props) {
     filtroRegla !== "todas" ||
     filtroSev !== "todas" ||
     filtroCliente !== "todos" ||
+    filtroRevision !== "todos" ||
     etaDesde ||
     etaHasta;
 
@@ -196,6 +212,23 @@ export function HallazgosTablaPaginada({ hallazgos }: Props) {
                 {c}
               </SelectItem>
             ))}
+          </SelectContent>
+        </Select>
+
+        <Select
+          value={filtroRevision}
+          onValueChange={(v) => {
+            setFiltroRevision(v as typeof filtroRevision);
+            setPage(1);
+          }}
+        >
+          <SelectTrigger className="w-[140px] h-8 text-xs">
+            <SelectValue placeholder="Revisión" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="todos">Todos</SelectItem>
+            <SelectItem value="pendientes">Pendientes</SelectItem>
+            <SelectItem value="revisados">Revisados</SelectItem>
           </SelectContent>
         </Select>
 
@@ -282,23 +315,28 @@ export function HallazgosTablaPaginada({ hallazgos }: Props) {
               <TableHead className="w-[110px]">Estado</TableHead>
               <TableHead className="w-[100px]">ETA</TableHead>
               <TableHead>Detalle</TableHead>
+              <TableHead className="w-[150px]">Revisión</TableHead>
               <TableHead className="w-[50px]" />
             </TableRow>
           </TableHeader>
           <TableBody>
             {visibles.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={8} className="text-center text-sm text-muted-foreground py-8">
+                <TableCell colSpan={10} className="text-center text-sm text-muted-foreground py-8">
                   Sin hallazgos que coincidan con los filtros.
                 </TableCell>
               </TableRow>
             ) : (
               visibles.map((h, i) => {
                 const sev = severidadConfig[h.severidad];
+                const revision = revisiones?.get(revisionKey(h)) ?? null;
                 return (
                   <TableRow
                     key={`${h.embarque_id}-${h.regla}-${start + i}`}
-                    className={cn(i % 2 === 1 && "bg-muted/30")}
+                    className={cn(
+                      i % 2 === 1 && "bg-muted/30",
+                      revision && "opacity-70",
+                    )}
                   >
                     <TableCell>
                       <Badge variant="outline" className={cn("text-[10px]", sev.className)}>
@@ -335,6 +373,29 @@ export function HallazgosTablaPaginada({ hallazgos }: Props) {
                       )}
                     </TableCell>
                     <TableCell>
+                      {revision ? (
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          className="h-7 text-[11px] gap-1 text-emerald-600 hover:text-emerald-700 dark:text-emerald-400"
+                          onClick={() => setDialogHallazgo(h)}
+                          title={`Por: ${revision.revisado_por_email}\n${format(new Date(revision.updated_at), "dd/MM/yyyy HH:mm")}\nAcción: ${revision.accion_tomada}`}
+                        >
+                          <CheckCircle2 className="h-3.5 w-3.5" />
+                          Revisado
+                        </Button>
+                      ) : (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="h-7 text-[11px]"
+                          onClick={() => setDialogHallazgo(h)}
+                        >
+                          Marcar revisado
+                        </Button>
+                      )}
+                    </TableCell>
+                    <TableCell>
                       <Button
                         size="icon"
                         variant="ghost"
@@ -352,6 +413,17 @@ export function HallazgosTablaPaginada({ hallazgos }: Props) {
           </TableBody>
         </Table>
       </div>
+
+      <MarcarRevisadoDialog
+        hallazgo={dialogHallazgo}
+        revisionExistente={
+          dialogHallazgo ? revisiones?.get(revisionKey(dialogHallazgo)) ?? null : null
+        }
+        open={!!dialogHallazgo}
+        onOpenChange={(o) => {
+          if (!o) setDialogHallazgo(null);
+        }}
+      />
 
       {/* Paginación */}
       <div className="flex flex-wrap items-center gap-3 text-xs">
