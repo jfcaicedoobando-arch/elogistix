@@ -68,7 +68,7 @@ export function HallazgoTabla({ hallazgos }: Props) {
             <TableHead className="w-[110px]">Estado</TableHead>
             <TableHead className="w-[110px]">ETA</TableHead>
             <TableHead>Detalle</TableHead>
-            <TableHead className="w-[60px]" />
+            <TableHead className="w-[90px]" />
           </TableRow>
         </TableHeader>
         <TableBody>
