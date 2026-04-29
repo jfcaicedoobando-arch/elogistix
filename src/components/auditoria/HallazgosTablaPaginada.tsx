@@ -351,7 +351,16 @@ export function HallazgosTablaPaginada({ hallazgos }: Props) {
                       </Badge>
                     </TableCell>
                     <TableCell className="font-medium tabular-nums text-xs">
-                      {h.expediente}
+                      <button
+                        type="button"
+                        onClick={() =>
+                          navigate(`/embarques/${h.embarque_id}?tab=${reglaToTab[h.regla]}`)
+                        }
+                        className="text-primary hover:underline focus:outline-none focus:underline"
+                        title={`Abrir embarque ${h.expediente}`}
+                      >
+                        {h.expediente}
+                      </button>
                     </TableCell>
                     <TableCell className="text-xs text-muted-foreground">
                       {reglaLabel[h.regla]}
