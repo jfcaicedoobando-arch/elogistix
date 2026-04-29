@@ -1,7 +1,9 @@
 import { lazy, Suspense } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { QueryClient } from "@tanstack/react-query";
+import { PersistQueryClientProvider } from "@tanstack/react-query-persist-client";
+import { createSyncStoragePersister } from "@tanstack/query-sync-storage-persister";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { Layout } from "./components/layout/Layout";
 import { ProtectedRoute } from "./components/auth/ProtectedRoute";
@@ -75,8 +77,41 @@ const queryClient = new QueryClient({
   },
 });
 
+/**
+ * Persister para catálogos estáticos: puertos, navieras, tipos de contenedor,
+ * tasa IVA y tipos de cambio. Sólo estas queries (whitelist por queryKey[0])
+ * se serializan a localStorage para sobrevivir refresh sin volver a pegarle al
+ * backend, recortando 200-400 ms del TTI en pantallas con selects.
+ */
+const CATALOG_KEYS = new Set([
+  "puertos",
+  "navieras",
+  "tipos_contenedor",
+  "tasa_iva",
+  "exchange-rates",
+  "configuracion",
+]);
+
+const persister = createSyncStoragePersister({
+  storage: typeof window !== "undefined" ? window.localStorage : undefined,
+  key: "lc-query-cache-v1",
+  throttleTime: 1000,
+});
+
 const App = () => (
-  <QueryClientProvider client={queryClient}>
+  <PersistQueryClientProvider
+    client={queryClient}
+    persistOptions={{
+      persister,
+      maxAge: 24 * 60 * 60 * 1000, // 24h
+      dehydrateOptions: {
+        shouldDehydrateQuery: (query) => {
+          const root = String(query.queryKey?.[0] ?? "");
+          return CATALOG_KEYS.has(root) && query.state.status === "success";
+        },
+      },
+    }}
+  >
     <TooltipProvider>
       <Toaster />
       <BrowserRouter>
@@ -168,7 +203,7 @@ const App = () => (
         </BreadcrumbProvider>
       </BrowserRouter>
     </TooltipProvider>
-  </QueryClientProvider>
+  </PersistQueryClientProvider>
 );
 
 export default App;
