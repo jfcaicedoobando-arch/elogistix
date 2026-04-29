@@ -43,6 +43,15 @@ export default defineConfig(({ mode }) => ({
           "react-vendor": ["react", "react-dom", "react-router-dom"],
           "query-vendor": ["@tanstack/react-query"],
           "charts-vendor": ["recharts"],
+          "icons-vendor": ["lucide-react"],
+          "forms-vendor": ["react-hook-form", "@hookform/resolvers", "zod"],
+          "utils-vendor": [
+            "date-fns",
+            "clsx",
+            "tailwind-merge",
+            "class-variance-authority",
+          ],
+          "ui-vendor": ["cmdk", "sonner", "next-themes"],
           "radix-vendor": [
             "@radix-ui/react-dialog",
             "@radix-ui/react-dropdown-menu",

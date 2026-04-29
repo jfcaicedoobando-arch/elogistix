@@ -15,6 +15,13 @@ export interface ChangelogEntry {
  */
 export const recentChangelog: ChangelogEntry[] = [
   {
+    version: "8.99.44",
+    date: "2026-04-29",
+    type: "minor",
+    title: "Performance Front: sidebar memoizado, bundle particionado y preload extendido",
+    description: "Segunda auditoría de velocidad enfocada en el shell autenticado. AppSidebar envuelto en React.memo y refactorizado con un sub-componente SidebarGroupBlock memoizado: ahora cambiar de ruta no reconstruye los 6 grupos del menú. Eliminado el import del chunk0 del changelog (~66 KB) en el sidebar, reemplazado por una constante APP_VERSION en src/constants/appVersion.ts. vite.config.ts añade chunks dedicados para icons-vendor (lucide-react), forms-vendor (react-hook-form + zod), utils-vendor (date-fns + clsx + tailwind-merge + cva) y ui-vendor (cmdk + sonner + next-themes), reduciendo la fragmentación de ~99 scripts y mejorando cacheabilidad entre rutas. Breadcrumbs y OrgSwitcher también memoizados. AuthContext extiende el preload idle a Clientes, Proveedores y Pre-Facturación además de Embarques/Cotizaciones/Dashboard. Objetivo: bajar FCP de 8.5 s a <2.5 s en preview.",
+  },
+  {
     version: "8.99.43",
     date: "2026-04-28",
     type: "minor",

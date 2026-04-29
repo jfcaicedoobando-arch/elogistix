@@ -1,4 +1,4 @@
-
+import { memo } from "react";
 import {
   LayoutDashboard,
   Ship,
@@ -13,10 +13,10 @@ import {
   History,
   Settings,
   BarChart3,
-  User,
   ChevronUp,
   Sun,
   Moon,
+  Building2,
 } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
@@ -28,7 +28,6 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useTheme } from "@/contexts/ThemeContext";
-import { NavLink } from "@/components/layout/NavLink";
 import librecargaLogo from "@/assets/librecarga-logo.png";
 import { useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -37,61 +36,53 @@ import { useSidebarAlerts } from "@/hooks/shared/useSidebarAlerts";
 import {
   Sidebar,
   SidebarContent,
-  SidebarGroup,
-  SidebarGroupContent,
-  SidebarMenu,
-  SidebarMenuButton,
-  SidebarMenuItem,
   SidebarHeader,
   SidebarFooter,
   useSidebar,
 } from "@/components/ui/sidebar";
-
-import { Separator } from "@/components/ui/separator";
-import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
-import { chunk0 } from "@/content/changelog/v8/chunks/0";
+import { APP_VERSION } from "@/constants/appVersion";
+import { OrgSwitcher } from "@/components/layout/OrgSwitcher";
+import { SidebarGroupBlock, type SidebarItem } from "@/components/layout/SidebarGroupBlock";
 
-const APP_VERSION = chunk0[0]?.version ?? "—";
-
-const dashboardItems = [
+const dashboardItems: SidebarItem[] = [
   { title: "Principal", url: "/", icon: LayoutDashboard },
   { title: "Operaciones", url: "/operaciones", icon: Activity },
 ];
 
-const gestionItems = [
+const gestionItems: SidebarItem[] = [
   { title: "Cotizaciones", url: "/cotizaciones", icon: ClipboardList },
   { title: "Embarques", url: "/embarques", icon: Ship },
   { title: "Pre-Facturación", url: "/facturacion", icon: FileText },
 ];
 
-const reportesItems = [
+const reportesItems: SidebarItem[] = [
   { title: "Rentabilidad", url: "/reportes/rentabilidad", icon: BarChart3 },
 ];
 
-const directorioItems = [
+const directorioItems: SidebarItem[] = [
   { title: "Clientes", url: "/clientes", icon: UserCheck },
   { title: "Proveedores", url: "/proveedores", icon: Truck },
 ];
 
-const sistemaItems = [
+const sistemaItems: SidebarItem[] = [
   { title: "Bitácora", url: "/bitacora", icon: History },
   { title: "Changelog", url: "/changelog", icon: ScrollText },
 ];
 
-const adminItems = [
+const adminItems: SidebarItem[] = [
   { title: "Usuarios", url: "/usuarios", icon: ShieldCheck },
   { title: "Configuración", url: "/configuracion", icon: Settings },
 ];
 
-// Import Building2 for admin link
-import { Building2 } from "lucide-react";
-import { OrgSwitcher } from "@/components/layout/OrgSwitcher";
+const superAdminItems: SidebarItem[] = [
+  { title: "Panel Admin", url: "/admin", icon: Building2 },
+];
 
-export function AppSidebar() {
+function AppSidebarBase() {
   const { state } = useSidebar();
   const collapsed = state === "collapsed";
-  const location = useLocation();
+  const { pathname } = useLocation();
   const { user, role, effectiveRole, signOut } = useAuth();
   const { organization } = useOrganization();
   const { totalAlertas } = useSidebarAlerts();
@@ -109,67 +100,6 @@ export function AppSidebar() {
     : effectiveRole
       ? effectiveRole.charAt(0).toUpperCase() + effectiveRole.slice(1)
       : "";
-
-  const isActive = (path: string) => {
-    if (path === "/") return location.pathname === "/";
-    return location.pathname.startsWith(path);
-  };
-
-  const renderGroup = (label: string, items: typeof dashboardItems) => (
-    <>
-      <SidebarGroup>
-        {!collapsed && (
-          <span className="px-3 py-2 text-[11px] font-semibold uppercase tracking-wider text-sidebar-foreground/65">
-            {label}
-          </span>
-        )}
-        <SidebarGroupContent>
-          <SidebarMenu>
-            {items.map((item) => {
-              const active = isActive(item.url);
-              return (
-                <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton
-                    asChild
-                    isActive={active}
-                    tooltip={item.title}
-                    className={cn(
-                      "relative",
-                      // Rail vertical en item activo — visible en expanded y collapsed
-                      active &&
-                        "before:absolute before:left-0 before:top-1.5 before:bottom-1.5 before:w-[3px] before:bg-sidebar-primary before:rounded-r-full",
-                    )}
-                  >
-                    <NavLink
-                      to={item.url}
-                      end={item.url === "/"}
-                      className="hover:bg-sidebar-accent/10 hover:text-sidebar-foreground"
-                      activeClassName="bg-sidebar-accent text-sidebar-accent-foreground font-medium"
-                    >
-                      <item.icon className="h-4 w-4 shrink-0" />
-                      {!collapsed && (
-                        <span className="flex-1 truncate">{item.title}</span>
-                      )}
-                      {/* Badge de alertas en Principal */}
-                      {item.url === "/" && totalAlertas > 0 && !collapsed && (
-                        <Badge
-                          variant="destructive"
-                          className="ml-auto h-5 min-w-5 px-1 text-[10px] font-bold rounded-full shrink-0"
-                        >
-                          {totalAlertas}
-                        </Badge>
-                      )}
-                    </NavLink>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              );
-            })}
-          </SidebarMenu>
-        </SidebarGroupContent>
-      </SidebarGroup>
-      <Separator className="my-2 mx-1" />
-    </>
-  );
 
   return (
     <Sidebar collapsible="icon">
@@ -200,15 +130,17 @@ export function AppSidebar() {
         <div className="px-2 mb-2">
           <OrgSwitcher collapsed={collapsed} />
         </div>
-        {renderGroup("Dashboards", dashboardItems)}
-        {renderGroup("Gestión", gestionItems)}
-        {renderGroup("Reportes", reportesItems)}
-        {renderGroup("Directorio", directorioItems)}
-        {renderGroup("Sistema", sistemaItems)}
-        {(effectiveRole === "admin" || role === "super_admin") && renderGroup("Administración", adminItems)}
-        {role === "super_admin" && renderGroup("Super Admin", [
-          { title: "Panel Admin", url: "/admin", icon: Building2 },
-        ])}
+        <SidebarGroupBlock label="Dashboards" items={dashboardItems} collapsed={collapsed} pathname={pathname} totalAlertas={totalAlertas} />
+        <SidebarGroupBlock label="Gestión" items={gestionItems} collapsed={collapsed} pathname={pathname} totalAlertas={totalAlertas} />
+        <SidebarGroupBlock label="Reportes" items={reportesItems} collapsed={collapsed} pathname={pathname} totalAlertas={totalAlertas} />
+        <SidebarGroupBlock label="Directorio" items={directorioItems} collapsed={collapsed} pathname={pathname} totalAlertas={totalAlertas} />
+        <SidebarGroupBlock label="Sistema" items={sistemaItems} collapsed={collapsed} pathname={pathname} totalAlertas={totalAlertas} />
+        {(effectiveRole === "admin" || role === "super_admin") && (
+          <SidebarGroupBlock label="Administración" items={adminItems} collapsed={collapsed} pathname={pathname} totalAlertas={totalAlertas} />
+        )}
+        {role === "super_admin" && (
+          <SidebarGroupBlock label="Super Admin" items={superAdminItems} collapsed={collapsed} pathname={pathname} totalAlertas={totalAlertas} />
+        )}
       </SidebarContent>
 
       <SidebarFooter className="border-t border-sidebar-border p-3 space-y-2 group-data-[collapsible=icon]:p-2">
@@ -282,3 +214,5 @@ export function AppSidebar() {
     </Sidebar>
   );
 }
+
+export const AppSidebar = memo(AppSidebarBase);
