@@ -5,4 +5,4 @@
  * IMPORTANTE: Mantener sincronizada con la entrada más reciente de
  * `src/content/changelog/v8/chunks/0.ts` y `src/content/changelogData.ts`.
  */
-export const APP_VERSION = "8.99.51";
+export const APP_VERSION = "8.99.52";
