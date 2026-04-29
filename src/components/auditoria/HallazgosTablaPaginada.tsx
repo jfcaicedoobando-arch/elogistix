@@ -82,13 +82,15 @@ function formatEta(eta: string | null): string {
   return `${d}/${m}/${y}`;
 }
 
-export function HallazgosTablaPaginada({ hallazgos }: Props) {
+export function HallazgosTablaPaginada({ hallazgos, mostrarRevisadosDefault = false }: Props) {
   const navigate = useNavigate();
   const [search, setSearch] = useState("");
   const [filtroRegla, setFiltroRegla] = useState<ReglaAuditoria | "todas">("todas");
   const [filtroSev, setFiltroSev] = useState<SeveridadAuditoria | "todas">("todas");
   const [filtroCliente, setFiltroCliente] = useState<string>("todos");
-  const [filtroRevision, setFiltroRevision] = useState<"todos" | "pendientes" | "revisados">("todos");
+  const [filtroRevision, setFiltroRevision] = useState<"todos" | "pendientes" | "revisados">(
+    mostrarRevisadosDefault ? "todos" : "pendientes",
+  );
   const [etaDesde, setEtaDesde] = useState<Date | undefined>();
   const [etaHasta, setEtaHasta] = useState<Date | undefined>();
   const [page, setPage] = useState(1);
