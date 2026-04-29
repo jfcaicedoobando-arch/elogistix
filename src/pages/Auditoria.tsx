@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
-import { ShieldAlert, RefreshCw, FileWarning, Clock, Receipt, FileX } from "lucide-react";
+import { ShieldAlert, RefreshCw, FileWarning, Clock, Receipt, FileX, Eye, EyeOff } from "lucide-react";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
