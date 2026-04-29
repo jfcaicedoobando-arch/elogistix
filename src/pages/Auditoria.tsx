@@ -29,6 +29,10 @@ import {
   type ReglaAuditoria,
   type SeveridadAuditoria,
 } from "@/hooks/auditoria/useAuditoria";
+import {
+  useAuditoriaRevisiones,
+  revisionKey,
+} from "@/hooks/auditoria/useAuditoriaRevisiones";
 
 const reglaConfig: Record<
   ReglaAuditoria,
