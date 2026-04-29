@@ -1,4 +1,4 @@
-import { memo } from "react";
+import { memo, forwardRef } from "react";
 import {
   LayoutDashboard,
   Ship,
@@ -79,7 +79,7 @@ const superAdminItems: SidebarItem[] = [
   { title: "Panel Admin", url: "/admin", icon: Building2 },
 ];
 
-function AppSidebarBase() {
+const AppSidebarBase = forwardRef<HTMLDivElement>(function AppSidebarBase(_props, _ref) {
   const { state } = useSidebar();
   const collapsed = state === "collapsed";
   const { pathname } = useLocation();
@@ -213,6 +213,6 @@ function AppSidebarBase() {
       </SidebarFooter>
     </Sidebar>
   );
-}
+});
 
 export const AppSidebar = memo(AppSidebarBase);

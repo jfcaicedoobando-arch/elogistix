@@ -15,6 +15,13 @@ export interface ChangelogEntry {
  */
 export const recentChangelog: ChangelogEntry[] = [
   {
+    version: "8.99.46",
+    date: "2026-04-29",
+    type: "patch",
+    title: "Fix: warning de forwardRef en AppSidebar memoizado",
+    description: "Tras envolver AppSidebar con React.memo en v8.99.44, Sidebar de shadcn intentaba pasar un ref al hijo, generando el warning 'Function components cannot be given refs'. AppSidebarBase ahora usa React.forwardRef antes de memo, eliminando el warning sin cambios funcionales.",
+  },
+  {
     version: "8.99.45",
     date: "2026-04-29",
     type: "minor",
