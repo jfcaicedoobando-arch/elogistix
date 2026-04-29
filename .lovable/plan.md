@@ -1,96 +1,115 @@
-# Plan de optimización de performance (v8.99.43 → v8.99.46)
 
-Aplicar las 5 recomendaciones del análisis previo en 4 oleadas, de menor a mayor riesgo. Cada oleada es desplegable y reversible por separado.
+# Auditoría de Performance — Estado Actual (post v8.99.43)
 
-## Oleada A — Quick wins de base de datos y caché (v8.99.43)
+Métricas reales capturadas del preview en vivo (viewport 675×578, dashboard `/`):
 
-**Backend (sin migraciones):**
-- En `src/services/embarque/queries.ts` (`fetchEmbarquesPaginados`), `src/services/cliente/crud.ts` (`fetchClientesPaginados`) y `src/services/proveedorServices.ts` (`fetchProveedoresPaginados`): cambiar `count: 'exact'` → `count: 'estimated'`. Evita full-scans en cada cambio de filtro/búsqueda.
-- Confirmado: `BreadcrumbContext.value` ya está memoizado, y catálogos (puertos, navieras, tipos contenedor) ya tienen `staleTime: 30 min`. No se tocan.
-
-**Riesgo:** mínimo. El conteo paginado pasa de exacto a aproximado; en tablas <1000 filas la diferencia es 0; en tablas grandes evita 200-800ms por filtro.
-
-## Oleada B — Bundle + carga inicial (v8.99.44)
-
-**Frontend:**
-- `index.html`: agregar `<link rel="preconnect" href="https://eorqadkulqtneqjbsblk.supabase.co" crossorigin>` y `<link rel="dns-prefetch" href="https://eorqadkulqtneqjbsblk.supabase.co">` para ahorrar la negociación TLS del primer request (~150-300 ms).
-- `vite.config.ts`: ampliar `manualChunks.radix-vendor` con `@radix-ui/react-avatar`, `react-tooltip`, `react-scroll-area`, `react-toast`, `react-separator`, `react-checkbox`, `react-switch` (los que se usan en >3 páginas) para evitar duplicación entre chunks de ruta.
-- Lazy-import de Recharts en `OperacionesWidgets.tsx` y `ProfitTable.tsx`: extraer el bloque `<BarChart>` a un componente envuelto en `React.lazy(() => import("./ChartXxx"))` con `<Suspense fallback={skeleton}>`. Recharts (~400KB) deja de cargarse en el primer paint del Dashboard.
-
-**Riesgo:** bajo. Solo cambios de bundling; la UI se ve igual.
-
-## Oleada C — Consolidación de queries del detalle de embarque (v8.99.45)
-
-**Migración SQL:** crear RPC `public.get_embarque_full(p_embarque_id uuid) returns jsonb` que devuelve en una sola llamada:
-```jsonb
-{
-  "embarque": { ... EMBARQUE_DETAIL_COLUMNS ... },
-  "conceptosVenta": [ ... ],
-  "conceptosCosto": [ ... ],
-  "documentos": [ ... ],
-  "notas": [ ... ],
-  "facturas": [ ... ]
-}
+```text
+First Contentful Paint   8,592 ms   ← objetivo <1,800 ms
+DOM Content Loaded       8,516 ms
+Full Page Load           8,608 ms
+Scripts cargados         99 archivos / 942 KB
+Script más pesado        lucide-react.js — 157 KB / 1,671 ms
+Heap usado               16 MB
+DOM nodes                231 (sano)
 ```
-- `SECURITY INVOKER` para respetar RLS por organización/cliente.
-- Devuelve `null` si el usuario no tiene acceso (RLS lo filtra silenciosamente).
 
-**Frontend:**
-- Nuevo hook `useEmbarqueFull(id)` en `src/hooks/embarque/useEmbarqueFullQuery.ts` que llama al RPC y expone el mismo shape que los 6 hooks individuales actuales.
-- Refactor de `EmbarqueDetalle.tsx` y `PortalEmbarqueDetalle.tsx` para consumir un solo hook en vez de 6.
-- Mantener los hooks individuales (`useEmbarqueConceptosVenta`, etc.) para los lugares donde se invalidan tras una mutación (no romper compat).
-
-**Riesgo:** medio. Reduce 6 round-trips a 1 (~500-1500 ms en redes lentas). Validar con `EXPLAIN ANALYZE` que el RPC no se vuelva más lento que las queries individuales.
-
-## Oleada D — Render: paralelizar dashboard + memoizar sidebar (v8.99.46)
-
-**Frontend:**
-- `useDashboardData`: quitar el `enabled: !!summary` de la query `details` para que ambas RPCs corran en paralelo desde el primer render. El TTI del dashboard baja ~40%.
-- `AppSidebar.tsx`: extraer `SidebarFooter` (avatar + dropdown + theme toggle) a un componente memoizado con `React.memo`. Memoizar el array de `navItems` con `useMemo` (no se recalcula en cada cambio de ruta).
-- `DataTable`: envolver `TableRow` en `React.memo` con comparador shallow para evitar re-render de filas no afectadas cuando cambia el estado del padre.
-- Verificar y agregar `placeholderData` desde la lista cacheada en `useEmbarque(id)` y `useCliente(id)` para render instantáneo al navegar lista → detalle.
-
-**Riesgo:** medio-bajo. Cambios de patrón de render; cubiertos por tests existentes de `DataTable`.
+**Diagnóstico:** las optimizaciones de DB de la oleada anterior funcionaron (los RPCs responden bien), pero el cuello de botella se movió al **arranque del front**: bundle, iconos y waterfalls de import.
 
 ---
 
-## Detalles técnicos
+## Hallazgos nuevos (no abordados antes)
 
-**Cambios por archivo (resumen):**
-```text
-Oleada A (3 archivos):
-  src/services/embarque/queries.ts          count → estimated
-  src/services/cliente/crud.ts              count → estimated
-  src/services/proveedorServices.ts         count → estimated
+### A. Bundle inicial — crítico
+1. **`lucide-react` (157 KB, 1.67 s)** se importa como barrel en muchos archivos (`AppSidebar` solo usa 17 iconos pero arrastra el bundle completo en dev). El plugin SWC ya hace tree-shaking en build, pero en dev y en chunks compartidos termina duplicado.
+2. **`AppSidebar` importa `chunk0` del changelog (66 KB)** únicamente para leer `APP_VERSION`. Ese chunk contiene textos largos de release notes y se carga en TODA sesión autenticada, no solo en `/changelog`.
+3. **99 scripts en la primera carga** sugiere fragmentación excesiva de Vite. Falta agrupar `lucide-react`, `date-fns`, `cmdk`, `sonner` en un `ui-vendor` chunk dedicado.
 
-Oleada B (3 archivos):
-  index.html                                preconnect/dns-prefetch
-  vite.config.ts                            ampliar radix-vendor chunk
-  src/components/operaciones/OperacionesWidgets.tsx   extraer chart → lazy
-  src/components/dashboard/ProfitTable.tsx            (si usa recharts)
+### B. Render del shell autenticado
+4. **`AppSidebar` no está memoizado** y se re-renderea en cada cambio de ruta (porque `useLocation()` cambia). Sus 6 `renderGroup(...)` se reconstruyen completos en cada navegación, generando ~50 nodos x 6 grupos.
+5. Los arrays `dashboardItems`, `gestionItems`, etc., están en módulo (bien), pero `renderGroup` se recrea como closure inline en cada render → ningún `React.memo` interno funcionaría.
+6. **`useSidebarAlerts` se invoca en cada render del sidebar** sin compartir cache entre tabs/instancias; verificar `staleTime`.
 
-Oleada C (1 migración + 3 archivos):
-  Migración SQL                             create function get_embarque_full
-  src/hooks/embarque/useEmbarqueFullQuery.ts  nuevo hook
-  src/pages/embarques/EmbarqueDetalle.tsx     consumir hook unificado
-  src/pages/portal/PortalEmbarqueDetalle.tsx  idem
+### C. Waterfalls de auth
+7. Secuencia observada en login: `refresh_token` → `get_user_context` → `sidebar_alert_counts` → `dashboard_summary` + `dashboard_details`. Las dos primeras son **secuenciales obligadas**, pero `sidebar_alert_counts` podría dispararse en paralelo con `dashboard_summary` (hoy espera al perfil).
+8. **`AuthContext` hace `idle preload` de 3 rutas** después del login (Embarques, Cotizaciones, Dashboard). Bien, pero falta agregar `Clientes` y `Proveedores` que también son navegación frecuente.
 
-Oleada D (3 archivos):
-  src/hooks/dashboard/useDashboardData.ts   quitar enabled, paralelizar
-  src/components/layout/AppSidebar.tsx      memo footer + items
-  src/components/shared/DataTable.tsx       React.memo en filas
-  src/hooks/cliente/useClientes.ts          placeholderData desde lista
-  src/hooks/embarque/useEmbarqueQueries.ts  placeholderData desde lista
-```
+### D. Detalles ya optimizados (verificación OK)
+- Counts `estimated` aplicados ✅
+- RPC `get_embarque_full` consolidando 6 calls ✅
+- `preconnect` a Supabase en `index.html` ✅
+- `useDashboardData` paraleliza summary/details ✅
+- `radix-vendor` chunk expandido ✅
 
-**Changelog:** una entrada por oleada en `src/content/changelog/v8/chunks/0.ts` y `src/content/changelogData.ts` (v8.99.43, .44, .45, .46) describiendo el cambio en términos de impacto al usuario ("Listas paginadas hasta 60% más rápidas", "Carga inicial reduce ~300ms", etc.).
+---
 
-**Memoria:** sin cambios. Todas las decisiones aplican estándares ya documentados (memoization, server pagination, query optimization).
+## Plan de optimizaciones — Oleada E (Bundle & Shell)
 
-**Métricas esperadas (orden de magnitud):**
-- Oleada A: -200 a -800 ms por cambio de filtro en listas grandes.
-- Oleada B: -300 ms en TTFP (Time to First Paint), -400 KB en bundle inicial del Dashboard.
-- Oleada C: 1 request en lugar de 6 en detalle de embarque (-1.0 a -1.5 s en red móvil).
-- Oleada D: -40% en TTI del Dashboard, render instantáneo lista→detalle.
+### E1. Aligerar AppSidebar (alto impacto, bajo riesgo)
+- Crear `src/constants/appVersion.ts` que exporte `APP_VERSION` como string literal (actualizado por el mismo script que mantiene el changelog), eliminando el import de `chunk0` del sidebar.
+- Envolver `AppSidebar` con `React.memo` (no recibe props).
+- Extraer `renderGroup` a un sub-componente `<SidebarGroupBlock>` también memoizado, recibiendo `items`, `label`, `collapsed`, `pathname`, `totalAlertas`.
+- **Ahorro estimado:** −66 KB en initial load + evita re-render de 6 grupos por navegación.
 
-¿Apruebas para ejecutar las 4 oleadas en secuencia?
+### E2. Optimizar `manualChunks` en `vite.config.ts`
+- Agregar agrupaciones:
+  - `icons-vendor` → `lucide-react`
+  - `forms-vendor` → `react-hook-form`, `@hookform/resolvers`, `zod`
+  - `utils-vendor` → `date-fns`, `clsx`, `tailwind-merge`, `class-variance-authority`
+  - `ui-vendor` → `cmdk`, `sonner`, `next-themes`
+- Esto consolida ~20 chunks pequeños en 4 más cacheables y mejora HTTP/2 priority.
+
+### E3. Lazy-load del changelog completo
+- `Changelog.tsx` ya carga via `React.lazy` (verificar). Confirmar que `chunk0..chunk5` se cargan dinámicamente sólo en esa ruta y no via barrels desde `changelogData.ts`.
+
+---
+
+## Plan — Oleada F (Render & Auth)
+
+### F1. Disparar alerts en paralelo con auth
+- En `useSidebarAlerts`, no esperar a `effectiveRole`; lanzar el RPC apenas haya `user.id` (la RLS valida org). Reduce TTI de la primera pantalla en ~150-300 ms.
+- Subir `staleTime` de alerts a 60s (hoy probablemente 0).
+
+### F2. Preload extendido
+- En `AuthContext`, agregar al `idle preload`:
+  - `@/pages/clientes/Clientes`
+  - `@/pages/proveedores/Proveedores`
+  - `@/pages/facturacion/Facturacion`
+
+### F3. Memoizar consumidores frecuentes
+- `Breadcrumbs` y `OrgSwitcher` con `React.memo`.
+- `useAuth()` ya retorna objeto memoizado ✅.
+
+---
+
+## Plan — Oleada G (Lecturas frías de catálogos)
+
+### G1. Persistir cache de catálogos
+- Ports, navieras, tipos de contenedor, tasa IVA tienen `staleTime: 30 min` ✅, pero se pierden al refrescar. Implementar `persistQueryClient` de TanStack Query con `localStorage`, limitado a las queries de catálogo (`queryKey[0] === 'catalogos'`).
+- TTI de un refresco caería ~200-400 ms en pantallas que dependen de selects.
+
+### G2. Indices DB faltantes (verificar via migration)
+- Confirmar índices en `embarques(organization_id, eta)`, `embarques(organization_id, estado, eta)` y `facturas(organization_id, fecha_vencimiento)` que sirven a `sidebar_alert_counts` y `dashboard_details`.
+
+---
+
+## Métricas objetivo tras todas las oleadas
+
+| Métrica | Hoy | Objetivo |
+|---|---|---|
+| FCP | 8.5 s | <2.5 s |
+| DCL | 8.5 s | <3 s |
+| Scripts iniciales | 99 | <60 |
+| Bundle vendor inicial | 942 KB | <650 KB |
+| Sidebar re-renders/navegación | 1 completo | 0 (memoizado) |
+
+---
+
+## Orden propuesto
+
+1. **Oleada E** (bundle + sidebar) — máximo impacto visible
+2. **Oleada F** (render + auth) — pulido de TTI
+3. **Oleada G** (cache persistente + índices) — refrescos rápidos
+
+Cada oleada termina con entrada en `Changelog.tsx` (v8.99.44, .45, .46).
+
+¿Apruebas ejecutar las 3 oleadas en secuencia, o prefieres validar después de la E antes de continuar?
