@@ -1,60 +1,46 @@
-## Problema
+Diagnóstico: el botón sí abre el diálogo y envía la solicitud, pero el backend la rechaza con `new row violates row-level security policy for table "auditoria_revisiones"`.
 
-Al hacer click en "Marcar revisado" en la tabla de Auditoría no ocurre nada visible: ni se abre el diálogo, ni aparece toast, ni se actualiza la lista.
+La causa es un desalineamiento entre permisos de la app y permisos de base de datos:
 
-## Diagnóstico
+- La app ve al usuario como `orgRole: admin`, por eso muestra el botón como si pudiera editar.
+- La política RLS actual de `auditoria_revisiones` valida con `has_role(...)`, que revisa el rol global en `user_roles`.
+- En esta sesión el rol global es `viewer`, aunque el rol dentro de la organización es `admin`.
+- Resultado: la UI permite intentar marcar revisado, pero RLS bloquea el insert/upsert.
 
-El flujo es: botón → `setDialogHallazgo(h)` → abre `MarcarRevisadoDialog` → usuario escribe acción → `useMarcarRevisado.mutateAsync` hace `upsert` a `auditoria_revisiones` con `onConflict: "organization_id,embarque_id,regla,detalle_hash"`.
+Plan de corrección:
 
-Hipótesis principal (más probable): el `upsert` falla silenciosamente por una de estas tres razones:
+1. Actualizar permisos RLS de `auditoria_revisiones`
+   - Agregar una función segura para validar rol por organización, por ejemplo `has_org_role(user_id, organization_id, role)`.
+   - Reemplazar la política CRUD de `auditoria_revisiones` para permitir:
+     - `admin` u `operador` dentro de la misma organización.
+     - `super_admin` global.
+   - Mantener lectura para miembros de la organización según el modelo multi-tenant actual.
+   - Esto hará que el `orgRole: admin` que ya muestra la app coincida con lo que permite la base de datos.
 
-1. **Falta la UNIQUE constraint** sobre `(organization_id, embarque_id, regla, detalle_hash)`. Sin ella, Postgres rechaza el `ON CONFLICT` con error *"no unique or exclusion constraint matching"*. El error se muestra como toast pero puede pasar desapercibido si el usuario está viendo la tabla.
-2. **El rol efectivo del usuario es `viewer`** (no admin/operador). La policy `Tenant CRUD auditoria_revisiones` exige admin/operador/super_admin para INSERT, así que el upsert es rechazado por RLS.
-3. **El diálogo no abre** porque algún elemento padre intercepta el click (no parece ser el caso aquí; los botones de la tabla no tienen `stopPropagation` pero tampoco hay `onClick` en el `TableRow`).
+2. Hacer el flujo más claro en la UI
+   - Si vuelve a fallar una operación, mostrar un mensaje más específico en el toast en español mexicano, indicando que puede ser un tema de permisos.
+   - Evitar que parezca que “no pasó nada” cuando el backend rechaza la acción.
 
-## Pasos de implementación
+3. Corregir warning del diálogo
+   - Ajustar `DialogFooter` para aceptar `ref` correctamente o reemplazarlo por un `div` local en `MarcarRevisadoDialog`.
+   - Esto eliminará el warning de React: `Function components cannot be given refs`.
 
-1. **Verificar la base de datos** con `supabase--read_query`:
-   - Listar constraints (`pg_indexes` / `pg_constraint`) de `auditoria_revisiones` para confirmar si existe el índice único.
-   - Revisar el rol efectivo del usuario actual en `organization_members`.
+4. Mantener consistencia del módulo
+   - Confirmar que al guardar exitosamente:
+     - El hallazgo se oculta de la vista de pendientes.
+     - Los KPIs dejan de contarlo.
+     - El badge/sidebar se actualiza.
+     - La revisión queda visible al activar “Ver revisados”.
 
-2. **Corregir el upsert según el hallazgo**:
-   - Si falta la UNIQUE constraint, crear migración:
-     ```sql
-     ALTER TABLE public.auditoria_revisiones
-       ADD CONSTRAINT auditoria_revisiones_unique_finding
-       UNIQUE (organization_id, embarque_id, regla, detalle_hash);
-     ```
-   - Si el problema es RLS (viewer sin permisos), añadir manejo claro: deshabilitar el botón "Marcar revisado" cuando `usePermissions().canEdit === false` y mostrar tooltip "Sin permisos para revisar".
+5. Actualizar versión y changelog
+   - Subir la versión a `8.99.54`.
+   - Agregar entrada nueva al inicio de `recentChangelog` y del chunk v8 correspondiente, describiendo que ahora el botón respeta permisos por organización (`orgRole`) y ya no falla por RLS.
 
-3. **Mejorar visibilidad de errores en `useMarcarRevisado`**:
-   - Loguear `console.error(error)` además del toast para que cualquier fallo silencioso quede en consola.
-   - Asegurar que el toast de error use `description: err.message` (ya lo hace, pero confirmar que el error de Postgres llegue completo).
+Archivos previstos:
 
-4. **Hacer el diálogo más robusto**:
-   - Agregar `aria-describedby` o `DialogDescription` explícita para silenciar los warnings de Radix (ya hay `DialogDescription` pero los warnings sugieren que en algún caso no se renderiza — revisar).
-   - Verificar que `setDialogHallazgo(h)` realmente dispare un re-render (añadir log temporal si es necesario).
-
-5. **Actualizar versión y changelog** (`v8.99.53`):
-   - `src/constants/appVersion.ts`
-   - `src/content/changelog/v8/chunks/0.ts`
-   - `src/content/changelogData.ts`
-   - Entrada: "Fix: el botón 'Marcar como revisado' en Auditoría ahora funciona correctamente. Se agregó constraint única y manejo de permisos."
-
-## Archivos a modificar
-
-- `supabase/migrations/<timestamp>_auditoria_revisiones_unique.sql` (nueva, si falta la constraint)
-- `src/hooks/auditoria/useAuditoriaRevisiones.ts` (mejor logging de errores)
-- `src/components/auditoria/HallazgosTablaPaginada.tsx` (deshabilitar botón si no hay permisos)
-- `src/components/auditoria/MarcarRevisadoDialog.tsx` (asegurar accesibilidad del Dialog)
-- `src/constants/appVersion.ts`
-- `src/content/changelog/v8/chunks/0.ts`
-- `src/content/changelogData.ts`
-
-## Resultado esperado
-
-Al hacer click en "Marcar revisado":
-1. El diálogo abre inmediatamente.
-2. Al guardar, el toast confirma "Hallazgo marcado como revisado".
-3. El hallazgo desaparece de la tabla (al estar oculto por defecto los revisados).
-4. Si el usuario no tiene permisos, el botón aparece deshabilitado con tooltip explicativo.
+- Nueva migración en `supabase/migrations/` para la función/políticas RLS.
+- `src/hooks/auditoria/useAuditoriaRevisiones.ts` para mejorar mensajes de error.
+- `src/components/auditoria/MarcarRevisadoDialog.tsx` o `src/components/ui/dialog.tsx` para resolver el warning del footer.
+- `src/constants/appVersion.ts`.
+- `src/content/changelogData.ts`.
+- `src/content/changelog/v8/chunks/0.ts`.
