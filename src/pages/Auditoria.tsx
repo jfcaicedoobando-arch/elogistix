@@ -69,19 +69,40 @@ const REGLAS_ORDEN: ReglaAuditoria[] = [
 
 export default function Auditoria() {
   const { data, isLoading, isFetching } = useAuditoria();
+  const { data: revisiones } = useAuditoriaRevisiones();
   const queryClient = useQueryClient();
   const [filtroSev, setFiltroSev] = useState<SeveridadAuditoria | "todas">("todas");
   const [filtroModo, setFiltroModo] = useState<string>("todos");
+  const [mostrarRevisados, setMostrarRevisados] = useState(false);
 
   const hallazgos = data?.hallazgos ?? [];
 
+  // Por defecto ocultamos los hallazgos ya revisados. El usuario puede activarlos
+  // con el toggle "Ver revisados". Los KPIs y conteos por regla reflejan SOLO pendientes.
+  const hallazgosVisibles = useMemo(() => {
+    if (mostrarRevisados || !revisiones || revisiones.size === 0) return hallazgos;
+    return hallazgos.filter((h) => !revisiones.has(revisionKey(h)));
+  }, [hallazgos, revisiones, mostrarRevisados]);
+
+  const revisadosCount = useMemo(() => {
+    if (!revisiones || revisiones.size === 0) return 0;
+    return hallazgos.filter((h) => revisiones.has(revisionKey(h))).length;
+  }, [hallazgos, revisiones]);
+
   const hallazgosFiltrados = useMemo(() => {
-    return hallazgos.filter((h) => {
+    return hallazgosVisibles.filter((h) => {
       if (filtroSev !== "todas" && h.severidad !== filtroSev) return false;
       if (filtroModo !== "todos" && h.modo !== filtroModo) return false;
       return true;
     });
-  }, [hallazgos, filtroSev, filtroModo]);
+  }, [hallazgosVisibles, filtroSev, filtroModo]);
+
+  // KPIs recalculados sobre la lista visible (pendientes por defecto).
+  const kpiSeveridad = useMemo(() => {
+    const acc = { critico: 0, alto: 0, medio: 0 };
+    for (const h of hallazgosVisibles) acc[h.severidad]++;
+    return acc;
+  }, [hallazgosVisibles]);
 
   const porRegla = useMemo(() => {
     const map: Record<ReglaAuditoria, HallazgoAuditoria[]> = {
