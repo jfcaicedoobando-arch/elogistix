@@ -15,6 +15,13 @@ export interface ChangelogEntry {
  */
 export const recentChangelog: ChangelogEntry[] = [
   {
+    version: "8.99.50",
+    date: "2026-04-29",
+    type: "patch",
+    title: "Seguridad: revocado acceso anónimo a funciones del backend",
+    description: "Se revoca EXECUTE para anon/public sobre todas las funciones del esquema public (incluida auditoria_embarques_org). Authenticated mantiene acceso. Default privileges ajustados para futuras funciones. Avisos del linter: 64 → 33.",
+  },
+  {
     version: "8.99.49",
     date: "2026-04-29",
     type: "minor",
