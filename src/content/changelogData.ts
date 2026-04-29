@@ -15,6 +15,13 @@ export interface ChangelogEntry {
  */
 export const recentChangelog: ChangelogEntry[] = [
   {
+    version: "8.99.53",
+    date: "2026-04-29",
+    type: "patch",
+    title: "Auditoría: arreglado el botón 'Marcar como revisado'",
+    description: "El upsert a auditoria_revisiones fallaba silenciosamente por falta de la unique constraint requerida por ON CONFLICT. Se agrega la constraint (organization_id, embarque_id, regla, detalle_hash) y se loguean errores en consola.",
+  },
+  {
     version: "8.99.52",
     date: "2026-04-29",
     type: "minor",
