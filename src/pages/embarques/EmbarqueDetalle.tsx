@@ -26,7 +26,19 @@ import { useRegisterBreadcrumbLabel } from "@/contexts/BreadcrumbContext";
 export default function EmbarqueDetalle() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const { canEdit } = usePermissions();
+  const tabsValidos = ["resumen", "documentos", "costos", "facturacion", "tracking", "notas"] as const;
+  const tabParam = searchParams.get("tab");
+  const tabActivo = (tabsValidos as readonly string[]).includes(tabParam ?? "")
+    ? (tabParam as string)
+    : "resumen";
+  const handleTabChange = (v: string) => {
+    const next = new URLSearchParams(searchParams);
+    if (v === "resumen") next.delete("tab");
+    else next.set("tab", v);
+    setSearchParams(next, { replace: true });
+  };
   // 1 sola llamada al backend en lugar de 6 (RPC get_embarque_full)
   const { data: full, isLoading } = useEmbarqueFull(id);
   const embarque = full?.embarque ?? null;
