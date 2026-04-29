@@ -203,7 +203,7 @@ const App = () => (
         </BreadcrumbProvider>
       </BrowserRouter>
     </TooltipProvider>
-  </QueryClientProvider>
+  </PersistQueryClientProvider>
 );
 
 export default App;
