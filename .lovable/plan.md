@@ -1,60 +1,60 @@
+## Problema
 
-# Ocultar hallazgos revisados por defecto
+Al hacer click en "Marcar revisado" en la tabla de Auditoría no ocurre nada visible: ni se abre el diálogo, ni aparece toast, ni se actualiza la lista.
 
-Los hallazgos marcados como revisados desaparecerán de la bandeja de auditoría. Los KPIs y el badge del sidebar contarán solo los pendientes. Un toggle permitirá volver a verlos cuando se necesiten.
+## Diagnóstico
 
-## Comportamiento esperado
+El flujo es: botón → `setDialogHallazgo(h)` → abre `MarcarRevisadoDialog` → usuario escribe acción → `useMarcarRevisado.mutateAsync` hace `upsert` a `auditoria_revisiones` con `onConflict: "organization_id,embarque_id,regla,detalle_hash"`.
 
-- Al marcar un hallazgo como **revisado**, sale de la tabla y de los KPIs.
-- El conteo del **sidebar** baja también (badge de "Auditoría").
-- En la barra de filtros, el toggle de revisión cambia su default a **"Pendientes"** (en lugar de "Todos") y muestra cuántos hay ocultos: *"Mostrando 487. 26 revisados ocultos."*
-- Al cambiar el filtro a "Revisados" o "Todos", reaparecen.
-- En la vista **"Por regla"** (acordeón), el conteo del badge de cada regla refleja solo pendientes. Los revisados también se ocultan ahí.
+Hipótesis principal (más probable): el `upsert` falla silenciosamente por una de estas tres razones:
 
-## Cambios técnicos
+1. **Falta la UNIQUE constraint** sobre `(organization_id, embarque_id, regla, detalle_hash)`. Sin ella, Postgres rechaza el `ON CONFLICT` con error *"no unique or exclusion constraint matching"*. El error se muestra como toast pero puede pasar desapercibido si el usuario está viendo la tabla.
+2. **El rol efectivo del usuario es `viewer`** (no admin/operador). La policy `Tenant CRUD auditoria_revisiones` exige admin/operador/super_admin para INSERT, así que el upsert es rechazado por RLS.
+3. **El diálogo no abre** porque algún elemento padre intercepta el click (no parece ser el caso aquí; los botones de la tabla no tienen `stopPropagation` pero tampoco hay `onClick` en el `TableRow`).
 
-### 1. `src/pages/Auditoria.tsx`
-- Inyectar `useAuditoriaRevisiones()` para tener el `Map` de revisiones.
-- Calcular `hallazgosPendientes = hallazgos.filter(h => !revisiones.has(revisionKey(h)))`.
-- Pasar **solo pendientes** a:
-  - `AuditoriaKpis` (recalcular `por_severidad` localmente sobre pendientes)
-  - El acordeón "Por regla" (`porRegla` se construye desde pendientes)
-  - El contador "Mostrando X de Y" (Y = pendientes, no total)
-- Mostrar línea informativa: *"N hallazgos revisados están ocultos. [Ver revisados]"* (botón que cambia un estado local `mostrarRevisados`).
+## Pasos de implementación
 
-### 2. `src/components/auditoria/HallazgosTablaPaginada.tsx`
-- Cambiar default de `filtroRevision` de `"todos"` a `"pendientes"`.
-- La pestaña "Tabla completa" sigue recibiendo `hallazgos` completos pero filtra por defecto a pendientes (consistente con el comportamiento actual del select).
-- Agregar una pista visual junto al contador: *"X de Y · Z revisados ocultos"* cuando `filtroRevision === "pendientes"` y haya revisados.
+1. **Verificar la base de datos** con `supabase--read_query`:
+   - Listar constraints (`pg_indexes` / `pg_constraint`) de `auditoria_revisiones` para confirmar si existe el índice único.
+   - Revisar el rol efectivo del usuario actual en `organization_members`.
 
-### 3. `src/components/auditoria/HallazgoTabla.tsx` (vista por regla)
-- Recibe ya filtrados desde `Auditoria.tsx`, no requiere cambios internos más allá de aceptar listas vacías con mensaje "Sin hallazgos pendientes".
+2. **Corregir el upsert según el hallazgo**:
+   - Si falta la UNIQUE constraint, crear migración:
+     ```sql
+     ALTER TABLE public.auditoria_revisiones
+       ADD CONSTRAINT auditoria_revisiones_unique_finding
+       UNIQUE (organization_id, embarque_id, regla, detalle_hash);
+     ```
+   - Si el problema es RLS (viewer sin permisos), añadir manejo claro: deshabilitar el botón "Marcar revisado" cuando `usePermissions().canEdit === false` y mostrar tooltip "Sin permisos para revisar".
 
-### 4. Badge del sidebar — `useAuditoriaCount`
-- Modificar `select` para restar las revisiones del total. Como el hook `useAuditoriaRevisiones` vive en otro query, se hace combinando ambos:
-  - Opción elegida: dentro de `useAuditoriaCount`, también suscribirse al query `["auditoria", "revisiones"]` y devolver `total - revisadosCount`.
-- Invalidar `AUDITORIA_QUERY_KEY` cuando se marca/desmarca una revisión (ya se invalida `REVISIONES_KEY`; agregar también la otra para que el badge reaccione al instante).
+3. **Mejorar visibilidad de errores en `useMarcarRevisado`**:
+   - Loguear `console.error(error)` además del toast para que cualquier fallo silencioso quede en consola.
+   - Asegurar que el toast de error use `description: err.message` (ya lo hace, pero confirmar que el error de Postgres llegue completo).
 
-### 5. Sin migración
-- No se toca el esquema de BD. La tabla `auditoria_revisiones` ya tiene todo lo necesario.
+4. **Hacer el diálogo más robusto**:
+   - Agregar `aria-describedby` o `DialogDescription` explícita para silenciar los warnings de Radix (ya hay `DialogDescription` pero los warnings sugieren que en algún caso no se renderiza — revisar).
+   - Verificar que `setDialogHallazgo(h)` realmente dispare un re-render (añadir log temporal si es necesario).
 
-### 6. Versionado y changelog
-- Bump a `v8.99.52` (patch).
-- Entrada en `src/content/changelog/v8/chunks/0.ts` y `changelogData.ts`.
+5. **Actualizar versión y changelog** (`v8.99.53`):
+   - `src/constants/appVersion.ts`
+   - `src/content/changelog/v8/chunks/0.ts`
+   - `src/content/changelogData.ts`
+   - Entrada: "Fix: el botón 'Marcar como revisado' en Auditoría ahora funciona correctamente. Se agregó constraint única y manejo de permisos."
 
-## Diagrama de flujo resultante
+## Archivos a modificar
 
-```text
-Usuario marca revisado
-        │
-        ▼
-upsert en auditoria_revisiones  ──► invalida [auditoria, revisiones]
-                                 └► invalida [auditoria, embarques]
-        │
-        ▼
-Re-render:
-  • Tabla: el hallazgo desaparece (filtro "Pendientes" por default)
-  • KPIs: bajan (Crítico/Alto/Medio recalculados sin revisados)
-  • Sidebar badge: baja
-  • Línea: "1 revisado oculto · [Ver revisados]"
-```
+- `supabase/migrations/<timestamp>_auditoria_revisiones_unique.sql` (nueva, si falta la constraint)
+- `src/hooks/auditoria/useAuditoriaRevisiones.ts` (mejor logging de errores)
+- `src/components/auditoria/HallazgosTablaPaginada.tsx` (deshabilitar botón si no hay permisos)
+- `src/components/auditoria/MarcarRevisadoDialog.tsx` (asegurar accesibilidad del Dialog)
+- `src/constants/appVersion.ts`
+- `src/content/changelog/v8/chunks/0.ts`
+- `src/content/changelogData.ts`
+
+## Resultado esperado
+
+Al hacer click en "Marcar revisado":
+1. El diálogo abre inmediatamente.
+2. Al guardar, el toast confirma "Hallazgo marcado como revisado".
+3. El hallazgo desaparece de la tabla (al estar oculto por defecto los revisados).
+4. Si el usuario no tiene permisos, el botón aparece deshabilitado con tooltip explicativo.
