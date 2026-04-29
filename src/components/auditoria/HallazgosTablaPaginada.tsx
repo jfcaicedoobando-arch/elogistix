@@ -50,6 +50,13 @@ const reglaLabel: Record<ReglaAuditoria, string> = {
   ventas_sin_facturar: "Ventas sin facturar",
 };
 
+const reglaToTab: Record<ReglaAuditoria, string> = {
+  docs_faltantes: "documentos",
+  docs_pendientes_avanzado: "documentos",
+  fechas: "tracking",
+  ventas_sin_facturar: "facturacion",
+};
+
 const severidadConfig: Record<SeveridadAuditoria, { label: string; className: string }> = {
   critico: {
     label: "Crítico",
