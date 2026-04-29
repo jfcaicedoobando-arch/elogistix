@@ -416,8 +416,11 @@ export function HallazgosTablaPaginada({ hallazgos }: Props) {
                         size="icon"
                         variant="ghost"
                         className="h-7 w-7"
-                        onClick={() => navigate(`/embarques/${h.embarque_id}`)}
+                        onClick={() =>
+                          navigate(`/embarques/${h.embarque_id}?tab=${reglaToTab[h.regla]}`)
+                        }
                         aria-label="Abrir embarque"
+                        title={`Abrir embarque ${h.expediente}`}
                       >
                         <ExternalLink className="h-3.5 w-3.5" />
                       </Button>
