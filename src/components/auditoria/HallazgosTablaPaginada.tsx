@@ -41,6 +41,8 @@ import type {
 
 interface Props {
   hallazgos: HallazgoAuditoria[];
+  /** Si es true, default = "todos"; si es false (default), default = "pendientes". */
+  mostrarRevisadosDefault?: boolean;
 }
 
 const reglaLabel: Record<ReglaAuditoria, string> = {
