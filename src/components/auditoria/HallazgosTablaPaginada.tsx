@@ -315,23 +315,28 @@ export function HallazgosTablaPaginada({ hallazgos }: Props) {
               <TableHead className="w-[110px]">Estado</TableHead>
               <TableHead className="w-[100px]">ETA</TableHead>
               <TableHead>Detalle</TableHead>
+              <TableHead className="w-[150px]">Revisión</TableHead>
               <TableHead className="w-[50px]" />
             </TableRow>
           </TableHeader>
           <TableBody>
             {visibles.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={8} className="text-center text-sm text-muted-foreground py-8">
+                <TableCell colSpan={10} className="text-center text-sm text-muted-foreground py-8">
                   Sin hallazgos que coincidan con los filtros.
                 </TableCell>
               </TableRow>
             ) : (
               visibles.map((h, i) => {
                 const sev = severidadConfig[h.severidad];
+                const revision = revisiones?.get(revisionKey(h)) ?? null;
                 return (
                   <TableRow
                     key={`${h.embarque_id}-${h.regla}-${start + i}`}
-                    className={cn(i % 2 === 1 && "bg-muted/30")}
+                    className={cn(
+                      i % 2 === 1 && "bg-muted/30",
+                      revision && "opacity-70",
+                    )}
                   >
                     <TableCell>
                       <Badge variant="outline" className={cn("text-[10px]", sev.className)}>
@@ -368,6 +373,29 @@ export function HallazgosTablaPaginada({ hallazgos }: Props) {
                       )}
                     </TableCell>
                     <TableCell>
+                      {revision ? (
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          className="h-7 text-[11px] gap-1 text-emerald-600 hover:text-emerald-700 dark:text-emerald-400"
+                          onClick={() => setDialogHallazgo(h)}
+                          title={`Por: ${revision.revisado_por_email}\n${format(new Date(revision.updated_at), "dd/MM/yyyy HH:mm")}\nAcción: ${revision.accion_tomada}`}
+                        >
+                          <CheckCircle2 className="h-3.5 w-3.5" />
+                          Revisado
+                        </Button>
+                      ) : (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="h-7 text-[11px]"
+                          onClick={() => setDialogHallazgo(h)}
+                        >
+                          Marcar revisado
+                        </Button>
+                      )}
+                    </TableCell>
+                    <TableCell>
                       <Button
                         size="icon"
                         variant="ghost"
@@ -385,6 +413,17 @@ export function HallazgosTablaPaginada({ hallazgos }: Props) {
           </TableBody>
         </Table>
       </div>
+
+      <MarcarRevisadoDialog
+        hallazgo={dialogHallazgo}
+        revisionExistente={
+          dialogHallazgo ? revisiones?.get(revisionKey(dialogHallazgo)) ?? null : null
+        }
+        open={!!dialogHallazgo}
+        onOpenChange={(o) => {
+          if (!o) setDialogHallazgo(null);
+        }}
+      />
 
       {/* Paginación */}
       <div className="flex flex-wrap items-center gap-3 text-xs">
