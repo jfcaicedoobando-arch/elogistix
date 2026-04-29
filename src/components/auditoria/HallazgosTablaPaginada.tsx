@@ -106,9 +106,14 @@ export function HallazgosTablaPaginada({ hallazgos }: Props) {
       if (filtroCliente !== "todos" && h.cliente_nombre !== filtroCliente) return false;
       if (desde && (!h.eta || h.eta < desde)) return false;
       if (hasta && (!h.eta || h.eta > hasta)) return false;
+      if (filtroRevision !== "todos") {
+        const revisado = revisiones?.has(revisionKey(h)) ?? false;
+        if (filtroRevision === "revisados" && !revisado) return false;
+        if (filtroRevision === "pendientes" && revisado) return false;
+      }
       return true;
     });
-  }, [hallazgos, search, filtroRegla, filtroSev, filtroCliente, etaDesde, etaHasta]);
+  }, [hallazgos, search, filtroRegla, filtroSev, filtroCliente, etaDesde, etaHasta, filtroRevision, revisiones]);
 
   const totalPages = Math.max(1, Math.ceil(filtrados.length / pageSize));
   const currentPage = Math.min(page, totalPages);
@@ -120,6 +125,7 @@ export function HallazgosTablaPaginada({ hallazgos }: Props) {
     setFiltroRegla("todas");
     setFiltroSev("todas");
     setFiltroCliente("todos");
+    setFiltroRevision("todos");
     setEtaDesde(undefined);
     setEtaHasta(undefined);
     setPage(1);
