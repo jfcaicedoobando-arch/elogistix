@@ -2,6 +2,13 @@ import type { ChangelogEntry } from "../../../changelogData";
 
 export const chunk0: ChangelogEntry[] = [
   {
+    version: "8.99.53",
+    date: "2026-04-29",
+    type: "patch",
+    title: "Auditoría: arreglado el botón 'Marcar como revisado'",
+    description: "Se corrige un bug por el que al hacer click en 'Marcar como revisado' en /auditoria no ocurría nada visible. La causa era que la tabla auditoria_revisiones no tenía la restricción única (organization_id, embarque_id, regla, detalle_hash) requerida por el ON CONFLICT del upsert, lo que provocaba que la inserción fallara silenciosamente. Se agregó la constraint vía migración. Además, los hooks useMarcarRevisado y useDesmarcarRevisado ahora loguean los errores en consola para facilitar el diagnóstico futuro.",
+  },
+  {
     version: "8.99.52",
     date: "2026-04-29",
     type: "minor",
