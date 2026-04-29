@@ -15,6 +15,13 @@ export interface ChangelogEntry {
  */
 export const recentChangelog: ChangelogEntry[] = [
   {
+    version: "8.99.47",
+    date: "2026-04-29",
+    type: "minor",
+    title: "Módulo de Auditoría Operativa",
+    description: "Nueva página /auditoria que detecta automáticamente 4 tipos de inconsistencias entre documentos, estados y fechas de embarques: documentos faltantes según etapa (con matriz marítimo/aéreo y FCL), documentos en 'Pendiente' con embarque avanzado (crítico), fechas inconsistentes (ETD/ETA vs estado), y conceptos de venta sin facturar en embarques cerrados (crítico). Una sola RPC SECURITY INVOKER public.auditoria_embarques_org() respeta RLS y devuelve el reporte completo. UI con KPIs por severidad, filtros (severidad/modo), 4 secciones colapsables con tablas y enlace directo al embarque. Badge dinámico en el sidebar (grupo Sistema) que reusa la misma query — cero round-trips extra.",
+  },
+  {
     version: "8.99.46",
     date: "2026-04-29",
     type: "patch",
