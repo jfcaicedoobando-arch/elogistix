@@ -2,6 +2,13 @@ import type { ChangelogEntry } from "../../../changelogData";
 
 export const chunk0: ChangelogEntry[] = [
   {
+    version: "8.99.52",
+    date: "2026-04-29",
+    type: "minor",
+    title: "Auditoría: hallazgos revisados se ocultan automáticamente",
+    description: "Al marcar un hallazgo como revisado en /auditoria ahora desaparece de la bandeja: se quita de la tabla principal, de la vista 'Por regla' y deja de contarse en los KPIs (Críticos/Altos/Medios). El badge rojo del sidebar también baja, mostrando solo los hallazgos pendientes. Una banda informativa avisa cuántos revisados están ocultos con un toggle 'Ver revisados / Ocultar revisados' para alternar. La pestaña 'Tabla completa' arranca con el filtro de revisión en 'Pendientes' por defecto. Las mutaciones de marcar/desmarcar invalidan ambos caches (revisiones y reporte) para reflejar el cambio al instante en toda la UI sin recargar.",
+  },
+  {
     version: "8.99.51",
     date: "2026-04-29",
     type: "patch",
