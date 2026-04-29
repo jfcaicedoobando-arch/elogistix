@@ -170,10 +170,47 @@ export default function Auditoria() {
       ) : (
         <>
           <AuditoriaKpis
-            critico={data.por_severidad.critico}
-            alto={data.por_severidad.alto}
-            medio={data.por_severidad.medio}
+            critico={kpiSeveridad.critico}
+            alto={kpiSeveridad.alto}
+            medio={kpiSeveridad.medio}
           />
+
+          {revisadosCount > 0 && (
+            <div className="flex items-center justify-between gap-3 rounded-md border bg-muted/30 px-3 py-2 text-xs">
+              <span className="text-muted-foreground">
+                {mostrarRevisados ? (
+                  <>
+                    Mostrando también <span className="font-semibold text-foreground">{revisadosCount}</span> hallazgo
+                    {revisadosCount === 1 ? "" : "s"} ya revisado{revisadosCount === 1 ? "" : "s"}.
+                  </>
+                ) : (
+                  <>
+                    <span className="font-semibold text-foreground">{revisadosCount}</span> hallazgo
+                    {revisadosCount === 1 ? "" : "s"} revisado{revisadosCount === 1 ? "" : "s"} oculto
+                    {revisadosCount === 1 ? "" : "s"}.
+                  </>
+                )}
+              </span>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-7 text-xs"
+                onClick={() => setMostrarRevisados((v) => !v)}
+              >
+                {mostrarRevisados ? (
+                  <>
+                    <EyeOff className="mr-1 h-3.5 w-3.5" />
+                    Ocultar revisados
+                  </>
+                ) : (
+                  <>
+                    <Eye className="mr-1 h-3.5 w-3.5" />
+                    Ver revisados
+                  </>
+                )}
+              </Button>
+            </div>
+          )}
 
           <div className="flex flex-wrap items-center gap-3">
             <div className="flex items-center gap-2">
@@ -208,7 +245,10 @@ export default function Auditoria() {
             </div>
             <div className="ml-auto text-xs text-muted-foreground tabular-nums">
               Mostrando <span className="font-semibold text-foreground">{hallazgosFiltrados.length}</span> de{" "}
-              {data.total_hallazgos} hallazgos
+              {hallazgosVisibles.length} hallazgos
+              {!mostrarRevisados && revisadosCount > 0 && (
+                <span className="text-muted-foreground/70"> · {data.total_hallazgos} totales</span>
+              )}
             </div>
           </div>
 
@@ -219,7 +259,7 @@ export default function Auditoria() {
             </TabsList>
 
             <TabsContent value="tabla" className="mt-0">
-              <HallazgosTablaPaginada hallazgos={hallazgos} />
+              <HallazgosTablaPaginada hallazgos={hallazgos} mostrarRevisadosDefault={mostrarRevisados} />
             </TabsContent>
 
             <TabsContent value="por_regla" className="mt-0">
