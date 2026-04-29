@@ -2,6 +2,13 @@ import type { ChangelogEntry } from "../../../changelogData";
 
 export const chunk0: ChangelogEntry[] = [
   {
+    version: "8.99.51",
+    date: "2026-04-29",
+    type: "patch",
+    title: "Auditoría: enlace directo al embarque desde cada hallazgo",
+    description: "Cada hallazgo en /auditoria ahora abre el detalle del embarque correspondiente con la pestaña relevante ya seleccionada, según la regla: 'Docs faltantes' y 'Docs pendientes' abren la pestaña Documentos, 'Fechas inconsistentes' abre Tracking, y 'Ventas sin facturar' abre Facturación. El expediente en la tabla paginada es ahora un enlace clicable, y se mantiene el botón de icono al final de la fila. La vista 'Por regla' también incluye un botón 'Abrir' explícito. EmbarqueDetalle pasa a soportar el query param ?tab= para deep-linking entre módulos.",
+  },
+  {
     version: "8.99.50",
     date: "2026-04-29",
     type: "patch",
