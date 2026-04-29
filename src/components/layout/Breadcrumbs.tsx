@@ -1,6 +1,6 @@
 import { Link, useLocation } from "react-router-dom";
 import { ChevronRight } from "lucide-react";
-import { Fragment, useMemo } from "react";
+import { Fragment, memo, useMemo } from "react";
 import { useBreadcrumbLabels } from "@/contexts/BreadcrumbContext";
 
 /**
@@ -47,7 +47,7 @@ interface Crumb {
   isLast: boolean;
 }
 
-export function Breadcrumbs() {
+function BreadcrumbsBase() {
   const { pathname } = useLocation();
   const dynamicLabels = useBreadcrumbLabels();
 
@@ -103,3 +103,5 @@ export function Breadcrumbs() {
     </nav>
   );
 }
+
+export const Breadcrumbs = memo(BreadcrumbsBase);

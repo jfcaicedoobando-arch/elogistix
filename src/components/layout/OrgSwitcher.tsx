@@ -1,3 +1,4 @@
+import { memo } from "react";
 import { useOrganization } from "@/contexts/OrganizationContext";
 import { Building2, ChevronDown } from "lucide-react";
 import {
@@ -8,7 +9,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
 
-export function OrgSwitcher({ collapsed }: { collapsed?: boolean }) {
+function OrgSwitcherBase({ collapsed }: { collapsed?: boolean }) {
   const { organization, organizations, setActiveOrganization, isSuperAdmin } = useOrganization();
 
   if (!isSuperAdmin || organizations.length <= 1) return null;
@@ -66,3 +67,5 @@ export function OrgSwitcher({ collapsed }: { collapsed?: boolean }) {
     </DropdownMenu>
   );
 }
+
+export const OrgSwitcher = memo(OrgSwitcherBase);
