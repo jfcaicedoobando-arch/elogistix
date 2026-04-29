@@ -2,6 +2,13 @@ import type { ChangelogEntry } from "../../../changelogData";
 
 export const chunk0: ChangelogEntry[] = [
   {
+    version: "8.99.48",
+    date: "2026-04-29",
+    type: "minor",
+    title: "Auditoría: tabla paginada con búsqueda y filtros avanzados",
+    description: "Nueva pestaña 'Tabla completa' en /auditoria que lista los hallazgos en una sola tabla paginada (25/50/100 por página) con: búsqueda por expediente, filtros por regla, severidad, cliente y rango de fechas (ETA desde/hasta) usando date-pickers en español. Incluye contador en vivo de resultados, botón Limpiar filtros y paginación con saltos al inicio/fin. La pestaña 'Por regla' (acordeón anterior) se mantiene para inspección categórica. Todo client-side sobre el cache de useAuditoria — sin round-trips extra.",
+  },
+  {
     version: "8.99.47",
     date: "2026-04-29",
     type: "minor",
