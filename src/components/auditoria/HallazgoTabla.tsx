@@ -106,12 +106,17 @@ export function HallazgoTabla({ hallazgos }: Props) {
                 </TableCell>
                 <TableCell>
                   <Button
-                    size="icon"
+                    size="sm"
                     variant="ghost"
-                    onClick={() => navigate(`/embarques/${h.embarque_id}`)}
-                    aria-label="Abrir embarque"
+                    className="h-7 gap-1 text-xs"
+                    onClick={() =>
+                      navigate(`/embarques/${h.embarque_id}?tab=${reglaToTab[h.regla]}`)
+                    }
+                    aria-label={`Abrir embarque ${h.expediente}`}
+                    title={`Abrir embarque ${h.expediente}`}
                   >
-                    <ExternalLink className="h-4 w-4" />
+                    <ExternalLink className="h-3.5 w-3.5" />
+                    Abrir
                   </Button>
                 </TableCell>
               </TableRow>
