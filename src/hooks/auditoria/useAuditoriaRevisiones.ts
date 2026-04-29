@@ -115,6 +115,7 @@ export function useMarcarRevisado() {
       toast.success("Hallazgo marcado como revisado");
     },
     onError: (err: Error) => {
+      console.error("[useMarcarRevisado] error:", err);
       toast.error("Error al marcar revisado", { description: err.message });
     },
   });
@@ -155,6 +156,7 @@ export function useDesmarcarRevisado() {
       toast.success("Marca de revisión eliminada");
     },
     onError: (err: Error) => {
+      console.error("[useDesmarcarRevisado] error:", err);
       toast.error("Error al eliminar marca", { description: err.message });
     },
   });
