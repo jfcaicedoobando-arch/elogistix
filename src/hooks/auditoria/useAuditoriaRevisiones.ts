@@ -151,6 +151,7 @@ export function useDesmarcarRevisado() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: REVISIONES_KEY });
+      queryClient.invalidateQueries({ queryKey: ["auditoria", "embarques"] });
       toast.success("Marca de revisión eliminada");
     },
     onError: (err: Error) => {
