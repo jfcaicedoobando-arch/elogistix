@@ -15,6 +15,13 @@ export interface ChangelogEntry {
  */
 export const recentChangelog: ChangelogEntry[] = [
   {
+    version: "8.99.45",
+    date: "2026-04-29",
+    type: "minor",
+    title: "Cache persistente de catálogos + índice DB para alertas de facturas",
+    description: "Tercera oleada de la auditoría de performance. CACHE PERSISTENTE: el QueryClient ahora usa PersistQueryClientProvider con localStorage (clave lc-query-cache-v1, TTL 24h) y una whitelist por queryKey raíz: solo se persisten catálogos estáticos (puertos, navieras, tipos_contenedor, tasa_iva, exchange-rates, configuracion). Resultado: en un refresh, los selects (PortSelect, NavieraSelect, etc.) muestran sus opciones instantáneamente sin esperar a Lovable Cloud — ahorra 200-400 ms del TTI. ÍNDICE DB: nuevo idx_facturas_org_vencimiento (organization_id, fecha_vencimiento) WHERE estado <> 'Pagada' que acelera el RPC sidebar_alert_counts en organizaciones con muchas facturas. LIMPIEZA: eliminado idx_embarques_org_created por ser duplicado exacto de idx_embarques_org_created_at. Verificado que ya existían los índices clave: idx_embarques_org_eta, idx_facturas_org_estado y los GIN trigram para búsquedas.",
+  },
+  {
     version: "8.99.44",
     date: "2026-04-29",
     type: "minor",
