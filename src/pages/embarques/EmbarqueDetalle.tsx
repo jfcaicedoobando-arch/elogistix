@@ -108,7 +108,7 @@ export default function EmbarqueDetalle() {
       <DialogDuplicarEmbarque embarque={embarque} open={dialogDuplicarAbierto} onOpenChange={setDialogDuplicarAbierto} />
       <DialogEliminarEmbarque embarque={embarque} open={dialogEliminarAbierto} onOpenChange={setDialogEliminarAbierto} />
 
-      <Tabs defaultValue="resumen">
+      <Tabs value={tabActivo} onValueChange={handleTabChange}>
         <TabsList className="gap-1">
           <TabsTrigger value="resumen">Resumen</TabsTrigger>
           <TabsTrigger value="documentos">Documentos</TabsTrigger>
