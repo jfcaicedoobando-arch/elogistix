@@ -21,6 +21,7 @@ const Operaciones = lazy(() => import("./pages/dashboard/Operaciones"));
 const Reportes = lazy(() => import("./pages/dashboard/Reportes"));
 const Bitacora = lazy(() => import("./pages/dashboard/Bitacora"));
 const Changelog = lazy(() => import("./pages/dashboard/Changelog"));
+const Auditoria = lazy(() => import("./pages/Auditoria"));
 
 const Embarques = lazy(() => import("./pages/embarques/Embarques"));
 const EmbarqueDetalle = lazy(() => import("./pages/embarques/EmbarqueDetalle"));
@@ -180,6 +181,7 @@ const App = () => (
               
               <Route path="/changelog" element={<Changelog />} />
               <Route path="/bitacora" element={<Bitacora />} />
+              <Route path="/auditoria" element={<Auditoria />} />
               <Route
                 path="/usuarios"
                 element={
