@@ -2,6 +2,13 @@ import type { ChangelogEntry } from "../../../changelogData";
 
 export const chunk0: ChangelogEntry[] = [
   {
+    version: "8.99.44",
+    date: "2026-04-29",
+    type: "minor",
+    title: "Performance Front: sidebar memoizado, bundle particionado y preload extendido",
+    description: "Segunda auditoría de performance, esta vez sobre el shell autenticado tras observar FCP=8.5s en el preview pese a las optimizaciones de backend de v8.99.43. (1) SIDEBAR MEMOIZADO: AppSidebar envuelto en React.memo y refactorizado para delegar el renderizado de cada grupo a un nuevo componente SidebarGroupBlock (también memoizado) en src/components/layout/SidebarGroupBlock.tsx. Antes, cada navegación reconstruía 6 closures inline + 6 SidebarGroup completos; ahora React.memo evita re-renders cuando solo cambia el pathname dentro del mismo grupo activo. (2) ELIMINACIÓN DE IMPORT INDEBIDO: AppSidebar importaba chunk0 del changelog (~66 KB de strings de release notes) únicamente para leer la versión visible en el footer. Reemplazado por un módulo dedicado src/constants/appVersion.ts que exporta APP_VERSION como string literal. El changelog completo ahora SOLO se carga al visitar /changelog (que ya es lazy). (3) BUNDLE PARTICIONADO: vite.config.ts añade 4 chunks vendor adicionales para reducir la fragmentación de ~99 scripts observada en la primera carga: icons-vendor (lucide-react, ~157 KB), forms-vendor (react-hook-form + @hookform/resolvers + zod), utils-vendor (date-fns + clsx + tailwind-merge + class-variance-authority) y ui-vendor (cmdk + sonner + next-themes). Cada chunk se cachea independientemente y se sirve UNA sola vez aunque múltiples rutas lo usen, mejorando navegación interna. (4) BREADCRUMBS Y ORGSWITCHER MEMOIZADOS: ambos componentes envueltos en React.memo para no re-renderearse cuando cambia auth state pero no su input directo. (5) PRELOAD EXTENDIDO: AuthContext ya hacía idle preload de Embarques, Cotizaciones y Dashboard tras login; ahora se añaden Clientes, Proveedores y Pre-Facturación, las 6 rutas más frecuentes según uso real. Objetivo medible: bajar FCP de 8.5 s a <2.5 s y scripts iniciales de 99 a <60.",
+  },
+  {
     version: "8.99.43",
     date: "2026-04-28",
     type: "minor",
