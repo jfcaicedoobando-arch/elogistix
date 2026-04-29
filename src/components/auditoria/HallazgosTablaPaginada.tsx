@@ -41,6 +41,8 @@ import type {
 
 interface Props {
   hallazgos: HallazgoAuditoria[];
+  /** Si es true, default = "todos"; si es false (default), default = "pendientes". */
+  mostrarRevisadosDefault?: boolean;
 }
 
 const reglaLabel: Record<ReglaAuditoria, string> = {
@@ -80,13 +82,15 @@ function formatEta(eta: string | null): string {
   return `${d}/${m}/${y}`;
 }
 
-export function HallazgosTablaPaginada({ hallazgos }: Props) {
+export function HallazgosTablaPaginada({ hallazgos, mostrarRevisadosDefault = false }: Props) {
   const navigate = useNavigate();
   const [search, setSearch] = useState("");
   const [filtroRegla, setFiltroRegla] = useState<ReglaAuditoria | "todas">("todas");
   const [filtroSev, setFiltroSev] = useState<SeveridadAuditoria | "todas">("todas");
   const [filtroCliente, setFiltroCliente] = useState<string>("todos");
-  const [filtroRevision, setFiltroRevision] = useState<"todos" | "pendientes" | "revisados">("todos");
+  const [filtroRevision, setFiltroRevision] = useState<"todos" | "pendientes" | "revisados">(
+    mostrarRevisadosDefault ? "todos" : "pendientes",
+  );
   const [etaDesde, setEtaDesde] = useState<Date | undefined>();
   const [etaHasta, setEtaHasta] = useState<Date | undefined>();
   const [page, setPage] = useState(1);
@@ -127,12 +131,14 @@ export function HallazgosTablaPaginada({ hallazgos }: Props) {
   const start = (currentPage - 1) * pageSize;
   const visibles = filtrados.slice(start, start + pageSize);
 
+  const defaultRevision: "todos" | "pendientes" = mostrarRevisadosDefault ? "todos" : "pendientes";
+
   const limpiar = () => {
     setSearch("");
     setFiltroRegla("todas");
     setFiltroSev("todas");
     setFiltroCliente("todos");
-    setFiltroRevision("todos");
+    setFiltroRevision(defaultRevision);
     setEtaDesde(undefined);
     setEtaHasta(undefined);
     setPage(1);
@@ -143,7 +149,7 @@ export function HallazgosTablaPaginada({ hallazgos }: Props) {
     filtroRegla !== "todas" ||
     filtroSev !== "todas" ||
     filtroCliente !== "todos" ||
-    filtroRevision !== "todos" ||
+    filtroRevision !== defaultRevision ||
     etaDesde ||
     etaHasta;
 

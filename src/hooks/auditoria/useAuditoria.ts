@@ -1,5 +1,10 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQueries, useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import {
+  AUDITORIA_REVISIONES_KEY,
+  hallazgoHash,
+  type AuditoriaRevision,
+} from "@/hooks/auditoria/useAuditoriaRevisiones";
 
 export type ReglaAuditoria =
   | "docs_faltantes"
@@ -52,17 +57,52 @@ export function useAuditoria() {
 }
 
 /**
- * Devuelve solo el total de hallazgos. Reusa la misma query, así que si la
- * página /auditoria ya cargó los datos, el badge los lee del cache sin tocar la red.
+ * Devuelve el total de hallazgos PENDIENTES (excluye los ya marcados como
+ * revisados). Reusa la misma query del reporte y la de revisiones, así que si
+ * /auditoria ya cargó los datos, el badge los lee del cache sin tocar la red.
  */
 export function useAuditoriaCount() {
-  return useQuery({
-    queryKey: QUERY_KEY,
-    queryFn: fetchAuditoria,
-    staleTime: 5 * 60_000,
-    gcTime: 10 * 60_000,
-    select: (data) => data.total_hallazgos,
+  const results = useQueries({
+    queries: [
+      {
+        queryKey: QUERY_KEY,
+        queryFn: fetchAuditoria,
+        staleTime: 5 * 60_000,
+        gcTime: 10 * 60_000,
+      },
+      {
+        queryKey: AUDITORIA_REVISIONES_KEY,
+        queryFn: async (): Promise<Map<string, AuditoriaRevision>> => {
+          const { data, error } = await supabase
+            .from("auditoria_revisiones")
+            .select("*")
+            .order("created_at", { ascending: false });
+          if (error) throw error;
+          const map = new Map<string, AuditoriaRevision>();
+          for (const r of (data ?? []) as AuditoriaRevision[]) {
+            map.set(`${r.embarque_id}|${r.regla}|${r.detalle_hash}`, r);
+          }
+          return map;
+        },
+        staleTime: 60_000,
+      },
+    ],
   });
+  const reporte = results[0].data as ReporteAuditoria | undefined;
+  const revisiones = results[1].data as Map<string, AuditoriaRevision> | undefined;
+
+  if (!reporte) return { data: undefined, isLoading: results[0].isLoading };
+
+  if (!revisiones || revisiones.size === 0) {
+    return { data: reporte.total_hallazgos, isLoading: false };
+  }
+
+  let pendientes = 0;
+  for (const h of reporte.hallazgos) {
+    const key = `${h.embarque_id}|${h.regla}|${hallazgoHash(h)}`;
+    if (!revisiones.has(key)) pendientes++;
+  }
+  return { data: pendientes, isLoading: false };
 }
 
 export const AUDITORIA_QUERY_KEY = QUERY_KEY;

@@ -15,6 +15,13 @@ export interface ChangelogEntry {
  */
 export const recentChangelog: ChangelogEntry[] = [
   {
+    version: "8.99.52",
+    date: "2026-04-29",
+    type: "minor",
+    title: "Auditoría: hallazgos revisados se ocultan automáticamente",
+    description: "Al marcar revisado el hallazgo desaparece de la tabla, de la vista por regla y deja de contar en KPIs y badge del sidebar. Banda informativa con toggle 'Ver revisados' para alternar. Filtro 'Pendientes' por default.",
+  },
+  {
     version: "8.99.51",
     date: "2026-04-29",
     type: "patch",
