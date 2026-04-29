@@ -2,6 +2,13 @@ import type { ChangelogEntry } from "../../../changelogData";
 
 export const chunk0: ChangelogEntry[] = [
   {
+    version: "8.99.49",
+    date: "2026-04-29",
+    type: "minor",
+    title: "Auditoría: marcar hallazgos como revisados con acción tomada",
+    description: "Cada hallazgo en /auditoria ahora tiene un botón 'Marcar revisado' que abre un diálogo con un campo obligatorio 'Acción tomada' (hasta 1000 caracteres). Al guardar se persiste en la nueva tabla auditoria_revisiones (con RLS por organización) registrando: usuario que revisó, su email, fecha y la acción tomada. Los hallazgos ya revisados se muestran con badge verde, opacidad reducida y tooltip con el detalle completo (revisor, fecha, acción). Se puede actualizar la acción o quitar la marca. Nuevo filtro 'Revisión' (Todos / Pendientes / Revisados) para enfocarse en lo que falta atender. Toda la actividad (marcar y desmarcar) queda registrada en la bitácora central con módulo 'auditoria' para auditoría histórica.",
+  },
+  {
     version: "8.99.48",
     date: "2026-04-29",
     type: "minor",
