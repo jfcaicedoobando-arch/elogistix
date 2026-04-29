@@ -14,6 +14,48 @@ export type Database = {
   }
   public: {
     Tables: {
+      auditoria_revisiones: {
+        Row: {
+          accion_tomada: string
+          created_at: string
+          detalle: string
+          detalle_hash: string
+          embarque_id: string
+          id: string
+          organization_id: string
+          regla: string
+          revisado_por: string
+          revisado_por_email: string
+          updated_at: string
+        }
+        Insert: {
+          accion_tomada?: string
+          created_at?: string
+          detalle?: string
+          detalle_hash: string
+          embarque_id: string
+          id?: string
+          organization_id?: string
+          regla: string
+          revisado_por?: string
+          revisado_por_email?: string
+          updated_at?: string
+        }
+        Update: {
+          accion_tomada?: string
+          created_at?: string
+          detalle?: string
+          detalle_hash?: string
+          embarque_id?: string
+          id?: string
+          organization_id?: string
+          regla?: string
+          revisado_por?: string
+          revisado_por_email?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       bitacora_actividad: {
         Row: {
           accion: string
