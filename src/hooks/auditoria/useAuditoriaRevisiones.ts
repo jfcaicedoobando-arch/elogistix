@@ -111,6 +111,7 @@ export function useMarcarRevisado() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: REVISIONES_KEY });
+      queryClient.invalidateQueries({ queryKey: ["auditoria", "embarques"] });
       toast.success("Hallazgo marcado como revisado");
     },
     onError: (err: Error) => {
