@@ -131,12 +131,14 @@ export function HallazgosTablaPaginada({ hallazgos, mostrarRevisadosDefault = fa
   const start = (currentPage - 1) * pageSize;
   const visibles = filtrados.slice(start, start + pageSize);
 
+  const defaultRevision: "todos" | "pendientes" = mostrarRevisadosDefault ? "todos" : "pendientes";
+
   const limpiar = () => {
     setSearch("");
     setFiltroRegla("todas");
     setFiltroSev("todas");
     setFiltroCliente("todos");
-    setFiltroRevision("todos");
+    setFiltroRevision(defaultRevision);
     setEtaDesde(undefined);
     setEtaHasta(undefined);
     setPage(1);
@@ -147,7 +149,7 @@ export function HallazgosTablaPaginada({ hallazgos, mostrarRevisadosDefault = fa
     filtroRegla !== "todas" ||
     filtroSev !== "todas" ||
     filtroCliente !== "todos" ||
-    filtroRevision !== "todos" ||
+    filtroRevision !== defaultRevision ||
     etaDesde ||
     etaHasta;
 
