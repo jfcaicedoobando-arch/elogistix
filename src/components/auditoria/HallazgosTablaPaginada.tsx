@@ -136,6 +136,7 @@ export function HallazgosTablaPaginada({ hallazgos }: Props) {
     filtroRegla !== "todas" ||
     filtroSev !== "todas" ||
     filtroCliente !== "todos" ||
+    filtroRevision !== "todos" ||
     etaDesde ||
     etaHasta;
 
@@ -211,6 +212,23 @@ export function HallazgosTablaPaginada({ hallazgos }: Props) {
                 {c}
               </SelectItem>
             ))}
+          </SelectContent>
+        </Select>
+
+        <Select
+          value={filtroRevision}
+          onValueChange={(v) => {
+            setFiltroRevision(v as typeof filtroRevision);
+            setPage(1);
+          }}
+        >
+          <SelectTrigger className="w-[140px] h-8 text-xs">
+            <SelectValue placeholder="Revisión" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="todos">Todos</SelectItem>
+            <SelectItem value="pendientes">Pendientes</SelectItem>
+            <SelectItem value="revisados">Revisados</SelectItem>
           </SelectContent>
         </Select>
 
