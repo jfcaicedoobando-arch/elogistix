@@ -2,6 +2,13 @@ import type { ChangelogEntry } from "../../../changelogData";
 
 export const chunk0: ChangelogEntry[] = [
   {
+    version: "8.99.50",
+    date: "2026-04-29",
+    type: "patch",
+    title: "Seguridad: revocado acceso anónimo a funciones del backend",
+    description: "Se revoca el permiso EXECUTE sobre todas las funciones del esquema public para los roles 'anon' y 'public' (clientes sin sesión iniciada), incluida la nueva auditoria_embarques_org. Los usuarios autenticados conservan acceso normal vía GRANT explícito. Se ajustan los DEFAULT PRIVILEGES del esquema para que cualquier función futura herede esta configuración (sin acceso anon, sí authenticated). Resultado en el security linter: 64 → 33 avisos. Quedan 31 informativos (0029: 'signed-in users can execute SECURITY DEFINER function') que son intencionales — esas RPCs deben ser invocables por usuarios logueados (dashboard, embarques, proformas, roles, etc.). Los otros 2 avisos (extension in public y public bucket listing) son pre-existentes a nivel infraestructura.",
+  },
+  {
     version: "8.99.49",
     date: "2026-04-29",
     type: "minor",
