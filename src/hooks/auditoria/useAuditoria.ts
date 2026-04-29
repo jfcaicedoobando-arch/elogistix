@@ -1,5 +1,10 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQueries, useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import {
+  AUDITORIA_REVISIONES_KEY,
+  hallazgoHash,
+  type AuditoriaRevision,
+} from "@/hooks/auditoria/useAuditoriaRevisiones";
 
 export type ReglaAuditoria =
   | "docs_faltantes"
