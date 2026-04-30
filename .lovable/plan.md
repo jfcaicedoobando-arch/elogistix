@@ -1,46 +1,47 @@
-Diagnóstico: el botón sí abre el diálogo y envía la solicitud, pero el backend la rechaza con `new row violates row-level security policy for table "auditoria_revisiones"`.
+Plan para corregir el sidebar vacío en móvil
 
-La causa es un desalineamiento entre permisos de la app y permisos de base de datos:
+El problema viene de que el sidebar móvil abre el panel completo, pero el contenido se está renderizando como si estuviera colapsado. Por eso se ven los íconos, pero no los nombres de las secciones ni de los componentes.
 
-- La app ve al usuario como `orgRole: admin`, por eso muestra el botón como si pudiera editar.
-- La política RLS actual de `auditoria_revisiones` valida con `has_role(...)`, que revisa el rol global en `user_roles`.
-- En esta sesión el rol global es `viewer`, aunque el rol dentro de la organización es `admin`.
-- Resultado: la UI permite intentar marcar revisado, pero RLS bloquea el insert/upsert.
+Cambios propuestos:
 
-Plan de corrección:
+1. Corregir `AppSidebar`
+   - Usar el estado `isMobile` del sidebar.
+   - En móvil, forzar el contenido a renderizarse como expandido aunque el estado desktop esté colapsado.
+   - Mantener el comportamiento actual en escritorio/tablet: colapsado muestra solo íconos, expandido muestra íconos + textos.
 
-1. Actualizar permisos RLS de `auditoria_revisiones`
-   - Agregar una función segura para validar rol por organización, por ejemplo `has_org_role(user_id, organization_id, role)`.
-   - Reemplazar la política CRUD de `auditoria_revisiones` para permitir:
-     - `admin` u `operador` dentro de la misma organización.
-     - `super_admin` global.
-   - Mantener lectura para miembros de la organización según el modelo multi-tenant actual.
-   - Esto hará que el `orgRole: admin` que ya muestra la app coincida con lo que permite la base de datos.
+2. Ajustar visualmente el drawer móvil
+   - Confirmar que el logo, nombre de organización, grupos, opciones del menú, usuario y versión se muestren dentro del drawer móvil.
+   - Mantener tooltips solo cuando realmente esté colapsado en escritorio.
 
-2. Hacer el flujo más claro en la UI
-   - Si vuelve a fallar una operación, mostrar un mensaje más específico en el toast en español mexicano, indicando que puede ser un tema de permisos.
-   - Evitar que parezca que “no pasó nada” cuando el backend rechaza la acción.
+3. Validar navegación y cierre
+   - Verificar que los links del menú sigan navegando correctamente.
+   - Revisar que el botón de menú siga abriendo/cerrando el sidebar móvil.
 
-3. Corregir warning del diálogo
-   - Ajustar `DialogFooter` para aceptar `ref` correctamente o reemplazarlo por un `div` local en `MarcarRevisadoDialog`.
-   - Esto eliminará el warning de React: `Function components cannot be given refs`.
+4. Actualizar versión y changelog
+   - Subir la versión a `v8.99.55`.
+   - Agregar una entrada nueva al changelog indicando la corrección del sidebar móvil.
 
-4. Mantener consistencia del módulo
-   - Confirmar que al guardar exitosamente:
-     - El hallazgo se oculta de la vista de pendientes.
-     - Los KPIs dejan de contarlo.
-     - El badge/sidebar se actualiza.
-     - La revisión queda visible al activar “Ver revisados”.
+Archivos a modificar:
 
-5. Actualizar versión y changelog
-   - Subir la versión a `8.99.54`.
-   - Agregar entrada nueva al inicio de `recentChangelog` y del chunk v8 correspondiente, describiendo que ahora el botón respeta permisos por organización (`orgRole`) y ya no falla por RLS.
+- `src/components/layout/AppSidebar.tsx`
+- `src/constants/appVersion.ts`
+- `src/content/changelogData.ts`
+- `src/content/changelog/v8/chunks/0.ts`
 
-Archivos previstos:
+Detalle técnico:
 
-- Nueva migración en `supabase/migrations/` para la función/políticas RLS.
-- `src/hooks/auditoria/useAuditoriaRevisiones.ts` para mejorar mensajes de error.
-- `src/components/auditoria/MarcarRevisadoDialog.tsx` o `src/components/ui/dialog.tsx` para resolver el warning del footer.
-- `src/constants/appVersion.ts`.
-- `src/content/changelogData.ts`.
-- `src/content/changelog/v8/chunks/0.ts`.
+Actualmente se calcula así:
+
+```ts
+const { state } = useSidebar();
+const collapsed = state === "collapsed";
+```
+
+La corrección será equivalente a:
+
+```ts
+const { state, isMobile } = useSidebar();
+const collapsed = !isMobile && state === "collapsed";
+```
+
+Así, cuando el usuario abre el menú en celular, el drawer se verá completo con nombres y secciones, aunque el sidebar desktop haya quedado guardado como colapsado.

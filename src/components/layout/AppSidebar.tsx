@@ -83,8 +83,10 @@ const superAdminItems: SidebarItem[] = [
 ];
 
 const AppSidebarBase = forwardRef<HTMLDivElement>(function AppSidebarBase(_props, _ref) {
-  const { state } = useSidebar();
-  const collapsed = state === "collapsed";
+  const { state, isMobile } = useSidebar();
+  // En móvil el sidebar abre como Sheet completo; nunca debe verse "colapsado"
+  // (se mostrarían sólo íconos sin texto). Sólo colapsamos en desktop/tablet.
+  const collapsed = !isMobile && state === "collapsed";
   const { pathname } = useLocation();
   const { user, role, effectiveRole, signOut } = useAuth();
   const { organization } = useOrganization();
