@@ -15,6 +15,13 @@ export interface ChangelogEntry {
  */
 export const recentChangelog: ChangelogEntry[] = [
   {
+    version: "8.99.55",
+    date: "2026-04-30",
+    type: "patch",
+    title: "Sidebar móvil: vuelven a verse los nombres de las secciones",
+    description: "En celular el menú lateral mostraba sólo íconos sin textos porque AppSidebar reusaba el estado 'collapsed' del sidebar de escritorio. Ahora se distingue el modo móvil y el drawer abre siempre expandido con logo, organización, etiquetas de grupos y nombres de cada opción.",
+  },
+  {
     version: "8.99.54",
     date: "2026-04-29",
     type: "patch",
