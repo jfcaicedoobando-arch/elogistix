@@ -2,6 +2,13 @@ import type { ChangelogEntry } from "../../../changelogData";
 
 export const chunk0: ChangelogEntry[] = [
   {
+    version: "8.99.55",
+    date: "2026-04-30",
+    type: "patch",
+    title: "Sidebar móvil: vuelven a verse los nombres de las secciones",
+    description: "En celular el menú lateral abría como un drawer completo pero los textos de los grupos y de cada opción no aparecían (sólo se veían los íconos). La causa era que el AppSidebar usaba el estado 'collapsed' de escritorio sin distinguir el modo móvil, así que si el usuario había dejado el sidebar de la PC en modo icono, al abrir el menú en el celular lo veía colapsado. Ahora el sidebar fuerza el modo expandido cuando se está en móvil, mostrando logo, nombre de organización, etiquetas de grupos (Dashboards, Gestión, Reportes, etc.), nombres de cada opción, badges y datos del usuario.",
+  },
+  {
     version: "8.99.54",
     date: "2026-04-29",
     type: "patch",
