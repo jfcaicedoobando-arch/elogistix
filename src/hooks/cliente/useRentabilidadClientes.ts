@@ -2,7 +2,7 @@ import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/query";
 import { calcularUtilidad, calcularMargen } from "@/lib/financial/financialUtils";
-import { fetchProfitPorCliente } from "@/services/reportesService";
+import { fetchProfitPorCliente } from "@/services/reportes";
 
 interface FiltrosRentabilidad {
   fechaDesde?: string;

@@ -8,7 +8,7 @@ import { ModoIcon } from "@/components/shared/ModoIcon";
 import { formatDate, getOrigen, getDestino } from "@/lib/formatters";
 import { ICONO_EVENTO } from "@/constants/embarqueConstants";
 import { Clock, MapPin, Ship, AlertTriangle } from "lucide-react";
-import { fetchTrackingPublico, type TrackingPublicoData } from "@/services/trackingService";
+import { fetchTrackingPublico, type TrackingPublicoData } from "@/services/tracking";
 
 export default function TrackingPublico() {
   const { token } = useParams<{ token: string }>();

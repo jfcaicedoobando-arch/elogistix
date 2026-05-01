@@ -12,7 +12,7 @@ import {
   type Proveedor,
   type ProveedorListItem,
   type ProveedorOperacion,
-} from "@/services/proveedorServices";
+} from "@/services/proveedor";
 
 type TipoProveedor = Enums<"tipo_proveedor">;
 
