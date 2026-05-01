@@ -16,9 +16,8 @@ import { Badge } from "@/components/ui/badge";
 import {
   useMarcarRevisado,
   useDesmarcarRevisado,
-  type AuditoriaRevision,
 } from "@/hooks/auditoria/useAuditoriaRevisiones";
-import type { HallazgoAuditoria } from "@/hooks/auditoria/useAuditoria";
+import type { AuditoriaRevision, HallazgoAuditoria } from "@/types/auditoria";
 
 interface Props {
   hallazgo: HallazgoAuditoria | null;

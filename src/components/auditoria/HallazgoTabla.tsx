@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import type { HallazgoAuditoria, ReglaAuditoria, SeveridadAuditoria } from "@/hooks/auditoria/useAuditoria";
+import type { HallazgoAuditoria, ReglaAuditoria, SeveridadAuditoria } from "@/types/auditoria";
 import { cn } from "@/lib/utils";
 
 const reglaToTab: Record<ReglaAuditoria, string> = {
