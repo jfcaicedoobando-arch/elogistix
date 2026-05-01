@@ -2,6 +2,13 @@ import type { ChangelogEntry } from "../../../changelogData";
 
 export const chunk0: ChangelogEntry[] = [
   {
+    version: "8.100.0",
+    date: "2026-05-01",
+    type: "minor",
+    title: "Refactor de arquitectura: services en folder-barrel y separación de capas",
+    description: "Se ejecuta el plan de auditoría de arquitectura sin cambios visibles para el usuario. (1) Los 7 services sueltos (clientUserService, clienteFinancialsService, operacionesService, planesService, proveedorServices, reportesService, trackingService) se migran a la convención folder-barrel: ahora viven en services/cliente-usuarios, services/operaciones, services/planes, services/proveedor, services/reportes, services/tracking y services/cliente/financials. (2) Los hooks useAuditoria, useAuditoriaRevisiones y useEmbarqueFullQuery dejan de llamar a Supabase directamente: la I/O se delega al nuevo services/auditoria y a services/embarque (fetchEmbarqueFull), con la bitácora reusando services/bitacora. (3) HallazgosTablaPaginada (527 líneas) se divide en HallazgosFiltros + HallazgosTabla + HallazgosPagination, con un hook useHallazgosTablaState que aísla filtros y paginación; el componente principal queda en ~75 líneas. (4) La página Auditoria.tsx extrae su lógica a useAuditoriaPageController siguiendo el patrón canónico de pages densas. (5) Los tipos HallazgoAuditoria/ReglaAuditoria/SeveridadAuditoria/AuditoriaRevision se mueven a src/types/auditoria.ts. (6) resolveLandingRoute pasa de services/auth a lib/domain/auth (lógica pura sin acceso a datos). Beneficios: separación de capas más estricta, testabilidad mejor en hooks de auditoría, archivo gigante de UI partido en piezas reutilizables y consistencia total con ARCHITECTURE.md.",
+  },
+  {
     version: "8.99.55",
     date: "2026-04-30",
     type: "patch",
