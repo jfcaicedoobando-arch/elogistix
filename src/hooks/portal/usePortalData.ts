@@ -11,7 +11,7 @@ import {
   fetchPortalClientUsers,
   fetchPortalClienteName,
   fetchPortalOrgName,
-} from "@/services/portal/queries";
+} from "@/services/portal";
 
 export function usePortalEmbarques(clienteIds: string[]) {
   return useQuery({

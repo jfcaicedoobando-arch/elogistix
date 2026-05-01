@@ -15,6 +15,13 @@ export interface ChangelogEntry {
  */
 export const recentChangelog: ChangelogEntry[] = [
   {
+    version: "8.100.2",
+    date: "2026-05-01",
+    type: "patch",
+    title: "Cierre de auditoría: barrel de portal y última fuga de Supabase eliminada",
+    description: "services/portal recibe su index.ts y usePortalData importa desde @/services/portal. useAuditoriaRevisiones deja de usar supabase.auth.getUser() y obtiene el usuario desde useAuth(), cerrando la última fuga del client en la capa de hooks.",
+  },
+  {
     version: "8.100.1",
     date: "2026-05-01",
     type: "patch",
