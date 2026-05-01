@@ -2,6 +2,13 @@ import type { ChangelogEntry } from "../../../changelogData";
 
 export const chunk0: ChangelogEntry[] = [
   {
+    version: "8.100.1",
+    date: "2026-05-01",
+    type: "patch",
+    title: "Pulido de arquitectura: columnas extraídas, filtros decompuestos y tipos centralizados",
+    description: "Segunda pasada de la auditoría arquitectónica. (1) Cotizaciones.tsx (292 LOC) ahora delega la definición de columnas a components/cotizacion/cotizacionesColumns.tsx: el render de la celda Estado+Vigencia (con tono según urgencia) y el menú de acciones de fila viven en un builder puro reusable. (2) EmbarquesFiltros.tsx (254 LOC) se divide en EmbarquesFiltrosCampos (todos los selects + fechas, reusable inline o dentro del Sheet móvil) y embarquesFiltrosUtils.countActiveEmbarqueFilters (cálculo del badge de filtros activos); el componente principal queda como un ensamblador delgado. (3) Se eliminan los re-exports de tipos en useAuditoria/useAuditoriaRevisiones y se actualizan los tres consumidores (HallazgoTabla, MarcarRevisadoDialog) a importar HallazgoAuditoria/AuditoriaRevision/ReglaAuditoria/SeveridadAuditoria directamente de @/types/auditoria. Sin cambios funcionales: misma UX, mejor mantenibilidad y separación más estricta entre presentación, estado y dominio.",
+  },
+  {
     version: "8.100.0",
     date: "2026-05-01",
     type: "minor",

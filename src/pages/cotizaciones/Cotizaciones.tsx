@@ -1,9 +1,11 @@
-import { useMemo, useState, type ReactNode } from "react";
+import { useMemo, useState } from "react";
 import {
-  Plus, Trash2, MoreHorizontal, Pencil, Download, TrendingUp,
-  CheckCircle, XCircle, BarChart3, Copy, Filter, X,
+  Plus, MoreHorizontal, Download, TrendingUp,
+  CheckCircle, XCircle, BarChart3, Filter, X,
 } from "lucide-react";
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger, SheetFooter } from "@/components/ui/sheet";
+import {
+  Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger, SheetFooter,
+} from "@/components/ui/sheet";
 import { FloatingActionButton } from "@/components/shared/FloatingActionButton";
 import { KpiCard } from "@/components/operaciones/KpiCard";
 import { Card, CardContent } from "@/components/ui/card";
@@ -12,113 +14,35 @@ import { Badge } from "@/components/ui/badge";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
-import { formatDate, formatCurrency, toTitleCase } from "@/lib/formatters";
-import { getEstadoColor } from "@/lib/ui/uiMappings";
 import SearchInput from "@/components/selects/SearchInput";
 import PaginationControls from "@/components/shared/PaginationControls";
-import { DataTable, type DataTableColumn } from "@/components/shared/DataTable";
+import { DataTable } from "@/components/shared/DataTable";
 import DoubleConfirmDeleteDialog from "@/components/shared/DoubleConfirmDeleteDialog";
 import { PageHeader } from "@/components/shared/PageHeader";
 import {
-  DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger,
+  DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import {
   useCotizacionesPageController,
   ESTADOS_COTIZACION,
-  type CotizacionListItem,
 } from "@/hooks/cotizacion/useCotizacionesPageController";
+import { buildCotizacionesColumns } from "@/components/cotizacion/cotizacionesColumns";
 
 export default function Cotizaciones() {
   const c = useCotizacionesPageController();
 
-  const columns: DataTableColumn<CotizacionListItem>[] = useMemo(() => {
-    /**
-     * Vigencia + Estado agrupados (v8.99.42 — auditoría visual #13).
-     * Estado = badge primario; vigencia = línea secundaria pequeña con tono según urgencia.
-     * Reduce ruido visual: antes había 2 badges adyacentes en cada fila ("Enviada" + "Vencida").
-     */
-    const renderEstadoVigencia = (r: CotizacionListItem) => {
-      const estado = r.estado || "—";
-      let vigenciaNode: React.ReactNode = null;
-      if (r.fecha_vigencia) {
-        const fechaStr = formatDate(r.fecha_vigencia);
-        const esEnviada = (r.estado || "").toLowerCase() === "enviada";
-        if (!esEnviada) {
-          vigenciaNode = <span className="text-muted-foreground">Vence {fechaStr}</span>;
-        } else {
-          const fecha = new Date(r.fecha_vigencia);
-          const hoy = new Date();
-          const diffDias = Math.ceil((fecha.getTime() - hoy.getTime()) / (1000 * 60 * 60 * 24));
-          if (diffDias < 0) {
-            vigenciaNode = <span className="text-destructive font-medium">Vencida · {fechaStr}</span>;
-          } else if (diffDias <= 3) {
-            vigenciaNode = (
-              <span className="text-warning font-medium">
-                {diffDias === 0 ? "Vence hoy" : `Vence en ${diffDias}d`} · {fechaStr}
-              </span>
-            );
-          } else {
-            vigenciaNode = <span className="text-muted-foreground">Vence {fechaStr}</span>;
-          }
-        }
-      }
-      return (
-        <div className="flex flex-col gap-0.5 min-w-0">
-          <Badge variant="secondary" className={`w-fit text-xs whitespace-nowrap ${getEstadoColor(estado)}`}>{estado}</Badge>
-          {vigenciaNode && <span className="text-[10px] whitespace-nowrap">{vigenciaNode}</span>}
-        </div>
-      );
-    };
-    const cols: DataTableColumn<CotizacionListItem>[] = [
-      { key: "folio", header: "Folio", width: "w-[120px]", className: "font-medium whitespace-nowrap", sticky: true, sortable: true, sortValue: (r) => r.folio, render: (r) => r.folio },
-      { key: "cliente", header: "Cliente", width: "min-w-[160px]", className: "max-w-[180px] truncate", sortable: true, sortValue: (r) => r.cliente_nombre, render: (r) => {
-        const nombre = toTitleCase(r.cliente_nombre);
-        return <span title={nombre} className="block truncate">{nombre}</span>;
-      } },
-      { key: "modo", header: "Modo", width: "w-[80px]", className: "text-xs whitespace-nowrap", render: (r) => r.modo },
-      { key: "ruta", header: "Origen → Destino", width: "min-w-[160px]", className: "text-xs max-w-[200px]", render: (r) => {
-        const ruta = `${r.origen || "-"} → ${r.destino || "-"}`;
-        return <span title={ruta} className="block truncate whitespace-nowrap">{ruta}</span>;
-      } },
-      { key: "subtotal", header: "Subtotal", width: "w-[110px]", className: "text-right text-xs whitespace-nowrap", headerClassName: "text-right", sortable: true, sortValue: (r) => r.subtotal, render: (r) => formatCurrency(r.subtotal, r.moneda) },
-      { key: "estado_vigencia", header: "Estado", width: "w-[180px]", sortable: true, sortValue: (r) => r.estado, render: renderEstadoVigencia },
-      { key: "fecha", header: "Fecha", width: "w-[130px]", className: "text-xs whitespace-nowrap", sortable: true, sortValue: (r) => r.created_at, render: (r) => formatDate(r.created_at, "dd/MM/yyyy HH:mm") },
-    ];
-    if (c.canEdit) {
-      cols.push({
-        key: "acciones",
-        header: "",
-        headerClassName: "w-[60px]",
-        render: (r) => (
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
-              <Button variant="ghost" size="icon" className="h-8 w-8" aria-label="Acciones de la cotización">
-                <MoreHorizontal className="h-4 w-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={(e) => { e.stopPropagation(); c.irAEditar(r.id); }}>
-                <Pencil className="mr-2 h-4 w-4" /> Editar
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={(e) => { e.stopPropagation(); c.duplicar(r.id); }}>
-                <Copy className="mr-2 h-4 w-4" /> Duplicar
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem
-                className="text-destructive focus:text-destructive"
-                onClick={(e) => { e.stopPropagation(); c.setCotizacionAEliminar(r.id); }}
-              >
-                <Trash2 className="mr-2 h-4 w-4" /> Eliminar
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        ),
-      });
-    }
-    return cols;
-  }, [c]);
+  const columns = useMemo(
+    () =>
+      buildCotizacionesColumns({
+        canEdit: c.canEdit,
+        onEditar: c.irAEditar,
+        onDuplicar: c.duplicar,
+        onEliminar: c.setCotizacionAEliminar,
+      }),
+    [c.canEdit, c.irAEditar, c.duplicar, c.setCotizacionAEliminar],
+  );
 
-  // v8.99.42 — Filtros mobile en Sheet + FAB para acción primaria.
+  // Filtros mobile en Sheet + FAB para acción primaria.
   const [filtersOpen, setFiltersOpen] = useState(false);
   const activeFilterCount =
     (c.filterEstado && c.filterEstado !== "todos" ? 1 : 0) +
@@ -144,7 +68,7 @@ export default function Cotizaciones() {
         <SelectItem value="todos">Todos los clientes</SelectItem>
         {c.clientes.map((cli) => (
           <SelectItem key={cli.id} value={cli.id}>
-            {cli.nombre.split(' ').slice(0, 3).join(' ')}
+            {cli.nombre.split(" ").slice(0, 3).join(" ")}
           </SelectItem>
         ))}
       </SelectContent>
@@ -158,7 +82,6 @@ export default function Cotizaciones() {
         description={`${c.filtered.length} cotizaciones encontradas`}
         actions={
           <>
-            {/* Desktop: ambas acciones inline. Mobile: secundaria al overflow + primaria al FAB. */}
             <Button variant="outline" onClick={c.exportar} className="hidden sm:inline-flex">
               <Download className="h-4 w-4 mr-2" /> Exportar CSV
             </Button>
@@ -192,7 +115,7 @@ export default function Cotizaciones() {
 
       <Card>
         <CardContent className="p-4">
-          {/* Mobile: search + botón Filtros (N) → Sheet */}
+          {/* Mobile: search + Filtros (N) → Sheet */}
           <div className="flex gap-2 md:hidden">
             <SearchInput
               value={c.search}
