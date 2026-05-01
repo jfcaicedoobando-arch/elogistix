@@ -1,6 +1,8 @@
 import { supabase } from "@/integrations/supabase/client";
+import type { PostLoginRole } from "@/lib/domain/auth";
 
-export type PostLoginRole = "super_admin" | "cliente" | "operador" | "admin" | "viewer" | null;
+export { resolveLandingRoute } from "@/lib/domain/auth";
+export type { PostLoginRole } from "@/lib/domain/auth";
 
 export interface SignInResult {
   userId: string | null;
@@ -26,14 +28,4 @@ export async function signInWithEmail(email: string, password: string): Promise<
     .single();
 
   return { userId, role: (roleData?.role ?? null) as PostLoginRole };
-}
-
-/**
- * Resuelve la ruta a la que debe ser enviado un usuario tras iniciar sesión
- * en función de su rol principal.
- */
-export function resolveLandingRoute(role: PostLoginRole): string {
-  if (role === "super_admin") return "/admin";
-  if (role === "cliente") return "/portal";
-  return "/";
 }

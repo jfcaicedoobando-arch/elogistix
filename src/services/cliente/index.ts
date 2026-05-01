@@ -7,3 +7,4 @@
 export * from "./crud";
 export * from "./contactos";
 export * from "./relacionados";
+export * from "./financials";

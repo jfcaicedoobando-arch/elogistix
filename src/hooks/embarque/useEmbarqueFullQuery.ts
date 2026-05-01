@@ -10,47 +10,10 @@
  * lugares que invalidan/mutan una sola sub-entidad.
  */
 import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
+import { fetchEmbarqueFull, type EmbarqueFullData } from "@/services/embarque";
 import { queryKeys } from "@/lib/query";
-import type { Tables } from "@/integrations/supabase/types";
 
-type EmbarqueRow = Tables<"embarques">;
-type ConceptoVentaRow = Tables<"conceptos_venta">;
-type ConceptoCostoRow = Tables<"conceptos_costo">;
-type DocumentoEmbarqueRow = Tables<"documentos_embarque">;
-type NotaEmbarqueRow = Tables<"notas_embarque">;
-type FacturaRow = Tables<"facturas">;
-
-export interface EmbarqueFullData {
-  embarque: EmbarqueRow | null;
-  conceptosVenta: ConceptoVentaRow[];
-  conceptosCosto: ConceptoCostoRow[];
-  documentos: DocumentoEmbarqueRow[];
-  notas: NotaEmbarqueRow[];
-  facturas: FacturaRow[];
-}
-
-async function fetchEmbarqueFull(id: string): Promise<EmbarqueFullData | null> {
-  const { data, error } = await supabase.rpc("get_embarque_full", { p_embarque_id: id });
-  if (error) throw error;
-  if (!data) return null;
-  const payload = data as {
-    embarque: EmbarqueRow | null;
-    conceptosVenta: ConceptoVentaRow[] | null;
-    conceptosCosto: ConceptoCostoRow[] | null;
-    documentos: DocumentoEmbarqueRow[] | null;
-    notas: NotaEmbarqueRow[] | null;
-    facturas: FacturaRow[] | null;
-  };
-  return {
-    embarque: payload.embarque ?? null,
-    conceptosVenta: payload.conceptosVenta ?? [],
-    conceptosCosto: payload.conceptosCosto ?? [],
-    documentos: payload.documentos ?? [],
-    notas: payload.notas ?? [],
-    facturas: payload.facturas ?? [],
-  };
-}
+export type { EmbarqueFullData } from "@/services/embarque";
 
 export function useEmbarqueFull(id: string | undefined) {
   return useQuery({
@@ -58,5 +21,5 @@ export function useEmbarqueFull(id: string | undefined) {
     queryFn: () => fetchEmbarqueFull(id!),
     enabled: !!id,
     staleTime: 30_000,
-  });
+  }) as ReturnType<typeof useQuery<EmbarqueFullData | null>>;
 }

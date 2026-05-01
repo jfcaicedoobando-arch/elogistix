@@ -46,7 +46,6 @@ export async function fetchProveedoresPaginados(
 
   let query = supabase
     .from("proveedores")
-    // count: 'estimated' — paginación rápida sin full table scan.
     .select(PROVEEDOR_LIST_COLUMNS, { count: "estimated" })
     .eq("tipo", tipo)
     .order("nombre");

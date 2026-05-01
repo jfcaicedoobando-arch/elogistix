@@ -1,7 +1,7 @@
 import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/query";
-import { fetchOperacionesStats } from "@/services/operacionesService";
+import { fetchOperacionesStats } from "@/services/operaciones";
 
 export const MAX_CONTENEDORES = 150;
 

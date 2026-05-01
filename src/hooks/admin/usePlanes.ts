@@ -1,7 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { queryKeys } from "@/lib/query";
-import { fetchPlanes, updatePlan, type Plan } from "@/services/planesService";
+import { fetchPlanes, updatePlan, type Plan } from "@/services/planes";
 import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 
 export type { Plan };

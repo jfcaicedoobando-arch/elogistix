@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { queryKeys } from '@/lib/query';
-import { fetchSidebarAlertCounts } from '@/services/reportesService';
+import { fetchSidebarAlertCounts } from '@/services/reportes';
 
 export function useSidebarAlerts() {
   const { data } = useQuery({

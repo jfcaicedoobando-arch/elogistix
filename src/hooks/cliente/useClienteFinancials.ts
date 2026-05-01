@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/query";
-import { fetchClienteFinancials } from "@/services/clienteFinancialsService";
+import { fetchClienteFinancials } from "@/services/cliente";
 
 export function useClienteFinancials(clienteId: string | undefined) {
   return useQuery({

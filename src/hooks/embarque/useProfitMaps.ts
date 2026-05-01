@@ -1,7 +1,7 @@
 import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/query";
-import { fetchProfitPorEmbarque } from "@/services/reportesService";
+import { fetchProfitPorEmbarque } from "@/services/reportes";
 
 /**
  * Hook compartido que consulta profit agregado por embarque desde una RPC server-side.

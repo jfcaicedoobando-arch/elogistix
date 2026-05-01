@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { fetchTrackingPublico } from "@/services/trackingService";
+import { fetchTrackingPublico } from "@/services/tracking";
 
 // Mock supabase client (el service lo importa solo para asegurar bundling)
 vi.mock("@/integrations/supabase/client", () => ({

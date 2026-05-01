@@ -4,7 +4,7 @@ import {
   fetchTrackingLinks,
   createTrackingLink,
   deleteTrackingLink,
-} from "@/services/trackingService";
+} from "@/services/tracking";
 
 export function useTrackingLinks(embarqueId?: string) {
   return useQuery({

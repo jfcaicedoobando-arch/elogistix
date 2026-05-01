@@ -1,7 +1,12 @@
+/**
+ * Servicio de tracking público y CRUD de `tracking_links`.
+ * El endpoint público se consume vía edge function (`tracking-public`).
+ */
 import { supabase } from "@/integrations/supabase/client";
 import type { Tables } from "@/integrations/supabase/types";
 
 type TrackingLinkRow = Tables<"tracking_links">;
+
 export interface TrackingPublicoData {
   embarque: {
     expediente: string;
@@ -31,16 +36,11 @@ export interface TrackingPublicoData {
 }
 
 /**
- * Recupera el tracking público de un embarque a partir de un token firmado.
- * Encapsula la URL de la edge function `tracking-public` para evitar que la UI
- * la construya manualmente.
- *
- * Nota: usamos `fetch` directo porque la edge function lee el token del
- * query-string y `supabase.functions.invoke` no soporta query params.
+ * Recupera el tracking público a partir de un token firmado.
+ * Usa fetch directo porque la edge function lee el token vía query-string y
+ * `supabase.functions.invoke` no soporta query params.
  */
 export async function fetchTrackingPublico(token: string): Promise<TrackingPublicoData> {
-  // Forzamos el uso del cliente para garantizar la URL correcta del proyecto
-  // (si en el futuro cambiara de host, el cliente seguiría apuntando bien).
   void supabase;
   const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
   const url = `https://${projectId}.supabase.co/functions/v1/tracking-public?token=${encodeURIComponent(token)}`;

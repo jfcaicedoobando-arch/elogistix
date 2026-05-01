@@ -1,47 +1,27 @@
+/**
+ * Auditoría operativa — reporte y conteo de pendientes.
+ * Toda la I/O se delega a `services/auditoria`.
+ */
 import { useQueries, useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
+import {
+  fetchAuditoriaRevisiones,
+  fetchReporteAuditoria,
+} from "@/services/auditoria";
 import {
   AUDITORIA_REVISIONES_KEY,
   hallazgoHash,
-  type AuditoriaRevision,
 } from "@/hooks/auditoria/useAuditoriaRevisiones";
+import type { AuditoriaRevision, ReporteAuditoria } from "@/types/auditoria";
 
-export type ReglaAuditoria =
-  | "docs_faltantes"
-  | "docs_pendientes_avanzado"
-  | "fechas"
-  | "ventas_sin_facturar";
-
-export type SeveridadAuditoria = "critico" | "alto" | "medio";
-
-export interface HallazgoAuditoria {
-  embarque_id: string;
-  expediente: string;
-  cliente_nombre: string;
-  modo: string;
-  estado: string;
-  eta: string | null;
-  regla: ReglaAuditoria;
-  severidad: SeveridadAuditoria;
-  detalle: string;
-  documentos_faltantes: string[];
-}
-
-export interface ReporteAuditoria {
-  generated_at: string;
-  total_hallazgos: number;
-  por_severidad: { critico: number; alto: number; medio: number };
-  por_regla: Record<ReglaAuditoria, number>;
-  hallazgos: HallazgoAuditoria[];
-}
+// Re-export de tipos para mantener compatibilidad con consumidores existentes.
+export type {
+  HallazgoAuditoria,
+  ReglaAuditoria,
+  SeveridadAuditoria,
+  ReporteAuditoria,
+} from "@/types/auditoria";
 
 const QUERY_KEY = ["auditoria", "embarques"] as const;
-
-async function fetchAuditoria(): Promise<ReporteAuditoria> {
-  const { data, error } = await supabase.rpc("auditoria_embarques_org");
-  if (error) throw error;
-  return data as unknown as ReporteAuditoria;
-}
 
 /**
  * Reporte completo de auditoría operativa. Cache 5 min compartida con
@@ -50,7 +30,7 @@ async function fetchAuditoria(): Promise<ReporteAuditoria> {
 export function useAuditoria() {
   return useQuery({
     queryKey: QUERY_KEY,
-    queryFn: fetchAuditoria,
+    queryFn: fetchReporteAuditoria,
     staleTime: 5 * 60_000,
     gcTime: 10 * 60_000,
   });
@@ -66,20 +46,16 @@ export function useAuditoriaCount() {
     queries: [
       {
         queryKey: QUERY_KEY,
-        queryFn: fetchAuditoria,
+        queryFn: fetchReporteAuditoria,
         staleTime: 5 * 60_000,
         gcTime: 10 * 60_000,
       },
       {
         queryKey: AUDITORIA_REVISIONES_KEY,
         queryFn: async (): Promise<Map<string, AuditoriaRevision>> => {
-          const { data, error } = await supabase
-            .from("auditoria_revisiones")
-            .select("*")
-            .order("created_at", { ascending: false });
-          if (error) throw error;
+          const list = await fetchAuditoriaRevisiones();
           const map = new Map<string, AuditoriaRevision>();
-          for (const r of (data ?? []) as AuditoriaRevision[]) {
+          for (const r of list) {
             map.set(`${r.embarque_id}|${r.regla}|${r.detalle_hash}`, r);
           }
           return map;

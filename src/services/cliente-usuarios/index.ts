@@ -1,3 +1,6 @@
+/**
+ * Servicio de usuarios de cliente (portal): listado, invitación y revocación.
+ */
 import { supabase } from "@/integrations/supabase/client";
 import type { Tables } from "@/integrations/supabase/types";
 

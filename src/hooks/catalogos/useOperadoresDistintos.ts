@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/query";
-import { fetchOperadoresDistintos } from "@/services/reportesService";
+import { fetchOperadoresDistintos } from "@/services/reportes";
 
 /**
  * Hook que obtiene los operadores únicos desde una RPC server-side.

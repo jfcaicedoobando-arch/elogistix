@@ -1,5 +1,5 @@
 /**
- * Servicio de finanzas del cliente: facturación acumulada, pendiente y profit.
+ * Finanzas del cliente: facturación acumulada, pendiente y profit.
  * Encapsula consultas a `facturas` y la RPC `profit_por_cliente`.
  */
 import { supabase } from "@/integrations/supabase/client";

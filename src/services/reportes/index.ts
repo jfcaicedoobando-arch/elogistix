@@ -1,3 +1,7 @@
+/**
+ * Servicio de reportes: alertas para sidebar, profit por embarque/cliente y
+ * catálogo de operadores distintos. Todos los cálculos se hacen vía RPC en BD.
+ */
 import { supabase } from "@/integrations/supabase/client";
 
 export interface SidebarAlertCounts {
