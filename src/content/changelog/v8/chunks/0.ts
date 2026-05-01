@@ -2,6 +2,13 @@ import type { ChangelogEntry } from "../../../changelogData";
 
 export const chunk0: ChangelogEntry[] = [
   {
+    version: "8.100.2",
+    date: "2026-05-01",
+    type: "patch",
+    title: "Cierre de auditoría: barrel de portal y última fuga de Supabase eliminada",
+    description: "Tercera pasada de la auditoría arquitectónica, sin cambios visibles. (1) Se crea services/portal/index.ts re-exportando queries y columns para alinear la carpeta con la convención folder-barrel del resto de dominios; usePortalData ahora importa desde @/services/portal en vez de la ruta interna. (2) useAuditoriaRevisiones.ts deja de importar el client de Supabase: las dos llamadas a supabase.auth.getUser() se reemplazan por useAuth() del AuthContext, eliminando la última fuga de la capa de datos en hooks. Resultado: 0 imports directos de @/integrations/supabase/client fuera de src/services, src/contexts/auth y src/integrations. Auditoría arquitectónica cerrada.",
+  },
+  {
     version: "8.100.1",
     date: "2026-05-01",
     type: "patch",
