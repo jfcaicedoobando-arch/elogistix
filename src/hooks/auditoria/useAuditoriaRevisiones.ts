@@ -4,7 +4,7 @@
  */
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 import {
   deleteAuditoriaRevision,
   fetchAuditoriaRevisiones,
@@ -47,6 +47,7 @@ export function useAuditoriaRevisiones() {
 
 export function useMarcarRevisado() {
   const queryClient = useQueryClient();
+  const { user } = useAuth();
 
   return useMutation({
     mutationFn: async (params: {
@@ -56,8 +57,6 @@ export function useMarcarRevisado() {
       const { hallazgo, accionTomada } = params;
       const detalleHash = hallazgoHash(hallazgo);
 
-      const { data: userData } = await supabase.auth.getUser();
-      const user = userData.user;
       if (!user) throw new Error("Sesión no válida");
 
       const data = await upsertAuditoriaRevision({
@@ -120,14 +119,13 @@ export function useMarcarRevisado() {
 
 export function useDesmarcarRevisado() {
   const queryClient = useQueryClient();
+  const { user } = useAuth();
 
   return useMutation({
     mutationFn: async (revisionId: string) => {
       await deleteAuditoriaRevision(revisionId);
 
       try {
-        const { data: userData } = await supabase.auth.getUser();
-        const user = userData.user;
         if (user) {
           await insertBitacora({
             usuarioId: user.id,
