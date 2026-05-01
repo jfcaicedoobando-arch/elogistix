@@ -15,6 +15,13 @@ export interface ChangelogEntry {
  */
 export const recentChangelog: ChangelogEntry[] = [
   {
+    version: "8.100.0",
+    date: "2026-05-01",
+    type: "minor",
+    title: "Refactor de arquitectura: services en folder-barrel y separación de capas",
+    description: "Plan de auditoría ejecutado sin cambios visibles. 7 services sueltos migrados a folder-barrel; hooks de auditoría y embarque dejan de llamar Supabase directo (delegan a services/auditoria, services/embarque y services/bitacora); HallazgosTablaPaginada (527 LOC) dividido en Filtros + Tabla + Paginación + hook de estado; Auditoria.tsx con controller propio; tipos auditoría en src/types; resolveLandingRoute movido a lib/domain.",
+  },
+  {
     version: "8.99.55",
     date: "2026-04-30",
     type: "patch",
