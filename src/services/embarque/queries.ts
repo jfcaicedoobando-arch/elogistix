@@ -212,3 +212,35 @@ export async function fetchEmbarquesListExtras(ids: string[]): Promise<EmbarqueL
   );
   return { liquidacion, docs };
 }
+
+// ── Embarque "full" (RPC get_embarque_full) ─────────────────────────────
+export interface EmbarqueFullData {
+  embarque: EmbarqueRow | null;
+  conceptosVenta: ConceptoVentaRow[];
+  conceptosCosto: ConceptoCostoRow[];
+  documentos: DocumentoEmbarqueRow[];
+  notas: NotaEmbarqueRow[];
+  facturas: Tables<'facturas'>[];
+}
+
+export async function fetchEmbarqueFull(id: string): Promise<EmbarqueFullData | null> {
+  const { data, error } = await supabase.rpc('get_embarque_full', { p_embarque_id: id });
+  if (error) throw error;
+  if (!data) return null;
+  const payload = data as {
+    embarque: EmbarqueRow | null;
+    conceptosVenta: ConceptoVentaRow[] | null;
+    conceptosCosto: ConceptoCostoRow[] | null;
+    documentos: DocumentoEmbarqueRow[] | null;
+    notas: NotaEmbarqueRow[] | null;
+    facturas: Tables<'facturas'>[] | null;
+  };
+  return {
+    embarque: payload.embarque ?? null,
+    conceptosVenta: payload.conceptosVenta ?? [],
+    conceptosCosto: payload.conceptosCosto ?? [],
+    documentos: payload.documentos ?? [],
+    notas: payload.notas ?? [],
+    facturas: payload.facturas ?? [],
+  };
+}

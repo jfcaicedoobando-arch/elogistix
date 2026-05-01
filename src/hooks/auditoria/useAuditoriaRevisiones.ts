@@ -1,20 +1,20 @@
+/**
+ * Hook de revisiones de auditoría: marca/desmarca hallazgos como revisados.
+ * Toda la I/O contra Supabase se delega a `services/auditoria` y `services/bitacora`.
+ */
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import type { HallazgoAuditoria, ReglaAuditoria } from "./useAuditoria";
+import { supabase } from "@/integrations/supabase/client";
+import {
+  deleteAuditoriaRevision,
+  fetchAuditoriaRevisiones,
+  upsertAuditoriaRevision,
+} from "@/services/auditoria";
+import { insertBitacora } from "@/services/bitacora";
+import type { AuditoriaRevision, HallazgoAuditoria } from "@/types/auditoria";
 
-export interface AuditoriaRevision {
-  id: string;
-  embarque_id: string;
-  regla: string;
-  detalle_hash: string;
-  detalle: string;
-  accion_tomada: string;
-  revisado_por: string;
-  revisado_por_email: string;
-  created_at: string;
-  updated_at: string;
-}
+// Re-export para compatibilidad con consumidores actuales.
+export type { AuditoriaRevision } from "@/types/auditoria";
 
 const REVISIONES_KEY = ["auditoria", "revisiones"] as const;
 
@@ -22,7 +22,9 @@ const REVISIONES_KEY = ["auditoria", "revisiones"] as const;
  * Hash determinista (djb2) — debe coincidir embarque_id+regla+detalle entre
  * cliente y backend para detectar duplicados consistentemente.
  */
-export function hallazgoHash(h: Pick<HallazgoAuditoria, "embarque_id" | "regla" | "detalle">): string {
+export function hallazgoHash(
+  h: Pick<HallazgoAuditoria, "embarque_id" | "regla" | "detalle">,
+): string {
   const input = `${h.embarque_id}|${h.regla}|${h.detalle}`;
   let hash = 5381;
   for (let i = 0; i < input.length; i++) {
@@ -35,13 +37,9 @@ export function useAuditoriaRevisiones() {
   return useQuery({
     queryKey: REVISIONES_KEY,
     queryFn: async (): Promise<Map<string, AuditoriaRevision>> => {
-      const { data, error } = await supabase
-        .from("auditoria_revisiones")
-        .select("*")
-        .order("created_at", { ascending: false });
-      if (error) throw error;
+      const list = await fetchAuditoriaRevisiones();
       const map = new Map<string, AuditoriaRevision>();
-      for (const r of (data ?? []) as AuditoriaRevision[]) {
+      for (const r of list) {
         map.set(`${r.embarque_id}|${r.regla}|${r.detalle_hash}`, r);
       }
       return map;
@@ -65,35 +63,25 @@ export function useMarcarRevisado() {
       const user = userData.user;
       if (!user) throw new Error("Sesión no válida");
 
-      const { data, error } = await supabase
-        .from("auditoria_revisiones")
-        .upsert(
-          {
-            embarque_id: hallazgo.embarque_id,
-            regla: hallazgo.regla,
-            detalle_hash: detalleHash,
-            detalle: hallazgo.detalle,
-            accion_tomada: accionTomada,
-            revisado_por: user.id,
-            revisado_por_email: user.email ?? "",
-            updated_at: new Date().toISOString(),
-          },
-          { onConflict: "organization_id,embarque_id,regla,detalle_hash" },
-        )
-        .select()
-        .single();
+      const data = await upsertAuditoriaRevision({
+        embarque_id: hallazgo.embarque_id,
+        regla: hallazgo.regla,
+        detalle_hash: detalleHash,
+        detalle: hallazgo.detalle,
+        accion_tomada: accionTomada,
+        revisado_por: user.id,
+        revisado_por_email: user.email ?? "",
+      });
 
-      if (error) throw error;
-
-      // Bitácora — best effort, no bloquea el éxito
+      // Bitácora — best effort, no bloquea el éxito.
       try {
-        await supabase.from("bitacora_actividad").insert({
-          usuario_id: user.id,
-          usuario_email: user.email ?? "",
+        await insertBitacora({
+          usuarioId: user.id,
+          usuarioEmail: user.email ?? "",
           accion: "marcar_hallazgo_revisado",
           modulo: "auditoria",
-          entidad_nombre: `Hallazgo ${hallazgo.regla} — Embarque ${hallazgo.expediente}`,
-          entidad_id: hallazgo.embarque_id,
+          entidadId: hallazgo.embarque_id,
+          entidadNombre: `Hallazgo ${hallazgo.regla} — Embarque ${hallazgo.expediente}`,
           detalles: {
             regla: hallazgo.regla,
             severidad: hallazgo.severidad,
@@ -117,7 +105,8 @@ export function useMarcarRevisado() {
     onError: (err: unknown) => {
       console.error("[useMarcarRevisado] error:", err);
       const e = err as { code?: string; message?: string };
-      const isPermiso = e?.code === "42501" || /row-level security/i.test(e?.message ?? "");
+      const isPermiso =
+        e?.code === "42501" || /row-level security/i.test(e?.message ?? "");
       toast.error(
         isPermiso
           ? "No tienes permisos para marcar revisado"
@@ -137,23 +126,19 @@ export function useDesmarcarRevisado() {
 
   return useMutation({
     mutationFn: async (revisionId: string) => {
-      const { error } = await supabase
-        .from("auditoria_revisiones")
-        .delete()
-        .eq("id", revisionId);
-      if (error) throw error;
+      await deleteAuditoriaRevision(revisionId);
 
       try {
         const { data: userData } = await supabase.auth.getUser();
         const user = userData.user;
         if (user) {
-          await supabase.from("bitacora_actividad").insert({
-            usuario_id: user.id,
-            usuario_email: user.email ?? "",
+          await insertBitacora({
+            usuarioId: user.id,
+            usuarioEmail: user.email ?? "",
             accion: "desmarcar_hallazgo_revisado",
             modulo: "auditoria",
-            entidad_nombre: `Revisión ${revisionId}`,
-            entidad_id: null,
+            entidadId: null,
+            entidadNombre: `Revisión ${revisionId}`,
             detalles: { revision_id: revisionId },
           });
         }
@@ -173,7 +158,9 @@ export function useDesmarcarRevisado() {
   });
 }
 
-export function revisionKey(h: Pick<HallazgoAuditoria, "embarque_id" | "regla" | "detalle">): string {
+export function revisionKey(
+  h: Pick<HallazgoAuditoria, "embarque_id" | "regla" | "detalle">,
+): string {
   return `${h.embarque_id}|${h.regla}|${hallazgoHash(h)}`;
 }
 
