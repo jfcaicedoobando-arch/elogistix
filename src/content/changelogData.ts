@@ -15,6 +15,13 @@ export interface ChangelogEntry {
  */
 export const recentChangelog: ChangelogEntry[] = [
   {
+    version: "8.100.1",
+    date: "2026-05-01",
+    type: "patch",
+    title: "Pulido de arquitectura: columnas extraídas, filtros decompuestos y tipos centralizados",
+    description: "Cotizaciones.tsx delega columnas a cotizacionesColumns.tsx; EmbarquesFiltros se divide en Campos + utils; los re-exports de tipos en hooks de auditoría se eliminan y los consumidores importan desde @/types/auditoria. Sin cambios funcionales.",
+  },
+  {
     version: "8.100.0",
     date: "2026-05-01",
     type: "minor",
