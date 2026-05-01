@@ -13,9 +13,6 @@ import {
 import { insertBitacora } from "@/services/bitacora";
 import type { AuditoriaRevision, HallazgoAuditoria } from "@/types/auditoria";
 
-// Re-export para compatibilidad con consumidores actuales.
-export type { AuditoriaRevision } from "@/types/auditoria";
-
 const REVISIONES_KEY = ["auditoria", "revisiones"] as const;
 
 /**

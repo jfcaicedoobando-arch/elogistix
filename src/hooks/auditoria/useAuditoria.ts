@@ -13,14 +13,6 @@ import {
 } from "@/hooks/auditoria/useAuditoriaRevisiones";
 import type { AuditoriaRevision, ReporteAuditoria } from "@/types/auditoria";
 
-// Re-export de tipos para mantener compatibilidad con consumidores existentes.
-export type {
-  HallazgoAuditoria,
-  ReglaAuditoria,
-  SeveridadAuditoria,
-  ReporteAuditoria,
-} from "@/types/auditoria";
-
 const QUERY_KEY = ["auditoria", "embarques"] as const;
 
 /**
