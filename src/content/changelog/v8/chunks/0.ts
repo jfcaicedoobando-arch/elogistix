@@ -2,6 +2,13 @@ import type { ChangelogEntry } from "../../../changelogData";
 
 export const chunk0: ChangelogEntry[] = [
   {
+    version: "8.103.0",
+    date: "2026-05-02",
+    type: "minor",
+    title: "Auditoría Fase 3: fugas financieras, MTTR, snooze, comentarios y tendencia 30d",
+    description: "El módulo de auditoría se vuelve una herramienta ejecutiva contra fugas. Reglas nuevas en RPC auditoria_embarques_org: margen_negativo (utilidad MXN<0), margen_bajo (% bajo umbral configurable, default 5%), venta_sin_costo, costo_sin_venta, proforma_vencida (días configurables, default 30) y embarque_huerfano (sin operador o sin movimientos en N días). La RPC entrega monto_mxn por hallazgo financiero y un bloque umbrales con la configuración aplicada. Nuevas tarjetas en la vista ejecutiva: Riesgo financiero pendiente (suma MXN + desglose por regla), MTTR (tiempo medio asignación→revisado), Productividad de operadores (top 5 por resueltos / pendientes / vencidos) y Tendencia 30 días (LineChart con score, críticos y pendientes basado en auditoria_snapshots). El tab por defecto pasa a 'Resumen ejecutivo' para admin/super_admin y queda en 'Detalle operativo' para operador. Diálogo de hallazgo rediseñado con tabs Acción / Comentarios / Snooze: hilo de comentarios persistente por revisión y snooze con fecha objetivo + motivo obligatorio (oculta de la tabla por defecto sin perder trazabilidad). Nuevas tablas: auditoria_comentarios y auditoria_snapshots con RLS tenant; columnas snoozed_until y snooze_motivo en auditoria_revisiones. Snapshot del día se captura idempotentemente al primer load del tab ejecutivo (UNIQUE org+fecha). Nueva pestaña 'Auditoría' en Configuración para definir umbrales de la organización (margen mínimo %, días proforma vencida, días huérfano) que se persisten en public.configuracion categoria='auditoria'. Edge functions: auditoria-snapshot-daily (itera orgs activas y dispara la captura) y auditoria-weekly-digest (genera resumen ejecutivo HTML con top 5 fugas y lo manda a admins via Resend; dry-run si RESEND_API_KEY no está configurado). Nuevos hooks: useAuditoriaComentarios, useAuditoriaSnapshots, useAutoCapturarSnapshot, useSnoozeHallazgo y useQuitarSnooze. Sin breaking changes en el contrato de la RPC: las claves anteriores se preservan, sólo se agregan nuevas reglas y bloques.",
+  },
+  {
     version: "8.102.0",
     date: "2026-05-02",
     type: "minor",
