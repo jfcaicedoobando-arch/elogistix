@@ -35,22 +35,47 @@ Guía de capas, reglas y convenciones del proyecto. **Mantener este contrato evi
 src/
 ├── pages/          → Composición de UI por ruta. NO tocan Supabase ni lógica de dominio.
 ├── components/     → Componentes reutilizables y específicos de feature.
+│   ├── shared/         → Canónicos: KpiCard, PageHeader, PageTabs.
+│   ├── ui/             → shadcn read-only (no editar).
+│   └── <dominio>/      → Componentes por feature (embarque, cotizacion, cliente, …).
 ├── hooks/          → React Query + estado local + side effects (toasts, navegación).
-│   ├── cotizacion/     → Hooks específicos del dominio de cotizaciones.
-│   ├── embarque/       → Hooks específicos del dominio de embarques.
-│   └── *.ts            → Hooks transversales (auth, permisos, dashboard, clientes, etc.).
+│   ├── admin/          → Barrel folder (organizaciones, miembros, planes).
+│   ├── auditoria/      → Barrel folder.
+│   ├── catalogos/      → Barrel folder (puertos, navieras, exchange-rates, …).
+│   ├── cliente/        → Barrel folder.
+│   ├── configuracion/  → Barrel folder.
+│   ├── cotizacion/     → Barrel folder + barrel `useCotizaciones.ts`.
+│   ├── dashboard/      → Barrel folder.
+│   ├── embarque/       → Barrel folder + barrel `useEmbarques.ts` + `mutations/`.
+│   ├── facturacion/    → Barrel folder.
+│   ├── operaciones/    → Barrel folder.
+│   ├── portal/         → Barrel folder.
+│   ├── proveedor/      → Barrel folder.
+│   ├── reportes/       → Barrel folder.
+│   ├── shared/         → Hooks transversales (debounce, listPageState, permissions, sidebarAlerts).
+│   └── usuario/        → Barrel folder.
 ├── services/       → Acceso puro a datos (Supabase, edge functions, fetch). Sin React Query.
 ├── lib/            → Utilidades puras y reutilizables.
 │   ├── domain/         → Reglas de dominio (cálculos de estado, validaciones).
 │   ├── mappers/        → Transformación entre formato DB ↔ UI.
 │   ├── parsers/        → Parsing de payloads (CSF, dashboard).
-│   └── *.ts            → formatters, errorUtils, queryKeys, etc.
+│   ├── financial/      → Cálculos monetarios + IVA dinámico.
+│   ├── formatters/     → Money/date/number en es-MX.
+│   ├── ui/             → appFeedback, dialogTokens, kpiTones, uiMappings.
+│   ├── query/          → Query keys centralizados.
+│   └── *.ts            → utils, errors, storage, contacto.
 ├── content/        → Contenido editorial (changelog, copy de marketing).
-├── constants/      → Constantes de dominio/UI (cotización, embarque, proveedor, wizard).
+├── constants/      → Constantes de dominio/UI (cotización, embarque, proveedor, wizard, appVersion).
 ├── types/          → Tipos compartidos entre módulos.
-├── contexts/       → React Contexts (Auth, Organization).
+├── contexts/       → React Contexts (Auth, Organization, Theme, Breadcrumb).
 ├── generators/     → Generación de archivos (PDF, CSV).
 └── integrations/   → Clientes auto-generados (Supabase). NO editar.
+
+supabase/
+├── functions/      → Edge functions (Deno). Cada carpeta = 1 función desplegada.
+│   └── _shared/        → corsHeaders + handlePreflight + auth/response helpers.
+├── migrations/     → SQL versionado (RPCs, RLS, índices, triggers).
+└── config.toml     → Project-level config (no editar `project_id`; sí bloques `[functions.X]`).
 ```
 
 ## 2. Flujo de datos canónico
