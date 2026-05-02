@@ -218,12 +218,52 @@ Ejemplos canónicos en el repo: `crear_proforma_con_conceptos`, `consolidar_prof
 
 - **`organization_id`** en toda tabla de dominio. Las RLS filtran por `is_org_member(organization_id)` o equivalente.
 - **Roles** viven en `public.user_roles` (enum `app_role`), nunca en `profiles` ni en `auth.users` (anti-escalación de privilegios).
-- **Policies** usan funciones `security definer` (`has_role`, `is_org_member`) para evitar recursión RLS.
+- **Roles por organización**: además de `user_roles` (global) existe `organization_members(role)` y la función `has_org_role(user_id, org_id, role)` para acciones limitadas a una org.
+- **Policies** usan funciones `security definer` (`has_role`, `is_org_member`, `has_org_role`) para evitar recursión RLS.
 - **Operaciones cross-org** (admin, super-admin) pasan por RPC `security definer` que validan rol antes de actuar.
 - **Edge functions**: usan service-role key para acciones administrativas; la UI nunca recibe esa key.
 - **Portal de clientes**: ver `mem://technical/security-patterns` para el patrón de escritura con rol read-only vía RPC.
+- **`OrganizationContext`** (`src/contexts/OrganizationContext.tsx`): expone la org **efectiva**, considerando impersonación de super-admin. Toda query/mutation que filtre por tenant debe consumir esta org efectiva (no `user.organization_id` directo).
+- **Impersonación super-admin**: el `OrgSwitcher` cambia la org efectiva sin cerrar sesión. `effectiveRole` del `AuthContext` refleja el rol del usuario en la org activa; UI sensible (Configuración, Usuarios) se condiciona por `effectiveRole`, no por `role` global.
 
-## 11. Testing
+## 11. Edge Functions
+
+- Carpetas: `supabase/functions/<nombre>/index.ts`. Cada carpeta = una función desplegada. Despliegue automático tras editar (no pedir al usuario que despliegue).
+- **CORS**: importar siempre `corsHeaders` y `handlePreflight` de `supabase/functions/_shared/cors.ts`. Manejar OPTIONS antes de cualquier otra lógica:
+  ```ts
+  const pre = handlePreflight(req); if (pre) return pre;
+  ```
+- **Helpers compartidos**: `_shared/auth.ts` (validación de JWT/rol) y `_shared/response.ts` (respuestas JSON estándar).
+- **`verify_jwt`**: por defecto las funciones internas requieren JWT. Sólo se desactiva en `supabase/config.toml` para funciones públicas (ej. `tracking-public`, `exchange-rates`).
+- **Naming**: kebab-case, verbo + sustantivo. `create-user`, `delete-user`, `invite-client-user`, `parse-csf`, `tracking-public`, `exchange-rates`, `list-users`.
+- **Service-role**: sólo dentro de la función. Nunca devolver tokens al cliente. Validar el caller (rol global o por org) antes de ejecutar acciones administrativas.
+- **Consumo desde UI**: vía `supabase.functions.invoke(name, { body })` desde un service (`@/services/<dominio>`), nunca desde un componente o page.
+
+## 12. Storage
+
+- **Buckets**: `documentos` para archivos de embarques/cotizaciones/clientes; `facturas` para PDFs/XML CFDI emitidos.
+- API centralizada en `src/services/storage/index.ts` (`uploadFile`, `getFileUrl`, `getSignedUrl`, `deleteFile`). No invocar `supabase.storage.from(...)` desde hooks o componentes salvo casos justificados (ver `services/proforma/facturar.ts`).
+- **Convención de paths**: `<dominio>/<organization_id>/<entidad_id>/<nombre_archivo>` (ej. `embarques/<org>/<embarque>/bl_master.pdf`). Mantener `organization_id` en el path facilita políticas y limpieza por tenant.
+- **URL pública vs firmada**: `getSignedUrl` (default 1h) para documentos sensibles; `getPublicUrl` sólo para assets ya públicos.
+- **Subida desde UI**: siempre vía un hook de mutation que invalide la query del listado de documentos del padre.
+
+## 13. Error handling y feedback
+
+- **Catálogo de errores**: `src/lib/domain/errorCatalog.ts` mapea códigos Supabase / Postgrest / RPC a mensajes en es-MX. El toast genérico es mala UX; usar el catálogo.
+- **`appFeedback`** (`src/lib/ui/appFeedback.ts`): wrappers `notifyOk` / `notifyError` / `notifyInfo` que estandarizan duración, ícono y tono. Los hooks de mutación llaman `appFeedback`, nunca `toast()` directo.
+- **Validación de formularios**: Zod (`src/lib/domain/*Schemas.ts`) + React Hook Form. Mensajes en español. `setValue(..., { shouldValidate: true, shouldDirty: true })` + `trigger()` para updates programáticos (Core memory).
+- **Recuperación de chunks**: `RouteLoadingFallback` + auto-reload ante "Failed to fetch dynamically imported module" (`mem://technical/chunk-load-recovery`).
+- **Logs**: `console.error` en services/edge functions con contexto suficiente; nada de `console.log` ruidoso en código de producción.
+
+## 14. Localización (es-MX)
+
+- **Idioma único**: español de México. No introducir copy en inglés en UI ni en mensajes visibles.
+- **Fechas**: `DD/MM/YYYY` (es-MX). Helpers en `src/lib/formatters/`. ISO sólo en BD/payloads.
+- **Moneda**: base operativa **MXN**, vista financiera complementaria en **USD** (Frankfurter, cache 1h). Nunca hardcodear IVA — usar `useTasaIVA` y `lib/financial/financialUtils`.
+- **Números**: separador de miles `,` y decimal `.`. Usar `formatCurrency` / `formatCurrencyCompact`.
+- **Selects de ubicación**: prioridad **Puerto > Aeropuerto > Ciudad** (Core memory).
+
+## 15. Testing
 
 - **Stack**: Vitest + Testing Library. 184 tests vigentes (v8.89.0).
 - **Qué se testea**:
