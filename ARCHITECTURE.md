@@ -2,7 +2,7 @@
 
 Guía de capas, reglas y convenciones del proyecto. **Mantener este contrato evita acoplamientos y simplifica los tests.**
 
-> Última revisión: **v8.100.3 — 2026-05-02**
+> Última revisión: **v8.100.4 — 2026-05-02**
 > Fuente espejo: `mem://technical/architecture-and-standards`.
 
 ## Tabla de contenidos
@@ -17,11 +17,15 @@ Guía de capas, reglas y convenciones del proyecto. **Mantener este contrato evi
 8. [React Query — convenciones](#8-react-query--convenciones)
 9. [Performance / Lazy-loading](#9-performance--lazy-loading)
 10. [RLS y multi-tenant](#10-rls-y-multi-tenant)
-11. [Testing](#11-testing)
-12. [Decisiones explícitas (con fecha)](#12-decisiones-explícitas-con-fecha)
-13. [Decisiones de no hacer](#13-decisiones-de-no-hacer)
-14. [Glosario](#14-glosario)
-15. [Versionado (SemVer)](#15-versionado-semver)
+11. [Edge Functions](#11-edge-functions)
+12. [Storage](#12-storage)
+13. [Error handling y feedback](#13-error-handling-y-feedback)
+14. [Localización (es-MX)](#14-localización-es-mx)
+15. [Testing](#15-testing)
+16. [Decisiones explícitas (con fecha)](#16-decisiones-explícitas-con-fecha)
+17. [Decisiones de no hacer](#17-decisiones-de-no-hacer)
+18. [Glosario](#18-glosario)
+19. [Versionado (SemVer)](#19-versionado-semver)
 
 ---
 
