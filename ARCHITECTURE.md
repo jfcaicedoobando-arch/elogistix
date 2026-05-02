@@ -140,13 +140,18 @@ Las pages densas (>5 hooks o handlers) deben extraer su lógica a `use<Page>Page
 
 ## 4. Hooks de dominio: convención de barrels
 
-Los consumidores externos importan siempre desde los barrels `@/hooks/useCotizaciones` y `@/hooks/useEmbarques`. Los archivos individuales bajo `hooks/cotizacion/` y `hooks/embarque/` son detalle de implementación — solo se importan directamente cuando exponen una API que no pasa por el barrel (ej. `useCotizacionWizardForm`, `useEmbarqueDetalleActions`).
+**Folder + `index.ts` por dominio** (estabilizado en v8.100.4). Cada subcarpeta de `src/hooks/` es un dominio con su `index.ts` que re-exporta los hooks públicos:
+
+- `admin`, `auditoria`, `catalogos`, `cliente`, `configuracion`, `cotizacion`, `dashboard`, `embarque`, `facturacion`, `operaciones`, `portal`, `proveedor`, `reportes`, `shared`, `usuario`.
+- Importar siempre desde el barrel: `@/hooks/cliente`, `@/hooks/embarque`, etc. Importar de submódulos sólo cuando el barrel no expone esa API.
+- Embarques y Cotizaciones conservan además los barrels legacy `@/hooks/embarque/useEmbarques` y `@/hooks/cotizacion/useCotizaciones` por compatibilidad (re-exportan tipos + queries + mutations agrupadas).
+- `hooks/embarque/mutations/` agrupa create/update/delete con su propio `index.ts` por tamaño y rotación de la carpeta.
 
 En `src/services/` la convención (desde v8.86.0) es **folder + `index.ts`**:
 
 - Cada dominio es una carpeta con `index.ts` que re-exporta sus submódulos.
-  Ejemplo: `src/services/cliente/{index,crud,contactos,relacionados}.ts`.
-- Naming sin sufijo: la carpeta se llama por el dominio en singular (`cliente`, `embarque`, `cotizacion`, `proforma`, `admin`). Nada de `xService.ts` o `xServices.ts` sueltos.
+  Ejemplo: `src/services/cliente/{index,crud,contactos,relacionados,financials}.ts`.
+- Naming sin sufijo: la carpeta se llama por el dominio en singular (`cliente`, `embarque`, `cotizacion`, `proforma`, `admin`, `portal`, `auditoria`, `bitacora`, `tracking`, `storage`, `auth`). Nada de `xService.ts` o `xServices.ts` sueltos.
 - Import desde el barrel: `@/services/<dominio>`. Importar de submódulos (`@/services/cliente/crud`) está permitido pero no es lo idiomático.
 
 Misma convención en `src/lib/` (formatters, financial, storage, ui, errors, contacto, query). Excepción: `src/lib/utils.ts` y `src/lib/mappers/*.ts` (mappers no son barrels).
