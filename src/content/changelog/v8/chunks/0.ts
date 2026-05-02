@@ -2,6 +2,13 @@ import type { ChangelogEntry } from "../../../changelogData";
 
 export const chunk0: ChangelogEntry[] = [
   {
+    version: "8.100.4",
+    date: "2026-05-02",
+    type: "patch",
+    title: "ARCHITECTURE.md ampliado: Edge Functions, Storage, Errores e i18n",
+    description: "Auditoría completa del documento de arquitectura sincronizándolo con el estado real del repo en v8.100.3. Cambios: (1) Estructura de carpetas reescrita — la versión anterior listaba sólo cotizacion/ y embarque/ bajo hooks; la nueva enumera los 14 barrels reales (admin, auditoria, catalogos, cliente, configuracion, cotizacion, dashboard, embarque, facturacion, operaciones, portal, proveedor, reportes, shared, usuario), agrupa src/lib/ por sub-módulos (domain, mappers, parsers, financial, formatters, ui, query) y añade el árbol supabase/ (functions/_shared, migrations, config.toml). (2) §4 Hooks: queda formalizada la convención folder + index.ts universal (decisión v8.100.4); los barrels legacy useEmbarques.ts y useCotizaciones.ts se documentan como excepción de compatibilidad; se documenta hooks/embarque/mutations/. (3) §7 Naming: añadido el patrón Dialog<Acción><Entidad> (DialogGenerarProforma, DialogEditarCliente) y <Entidad>Select (PortSelect, NavieraSelect). (4) §8 React Query: corregida la ruta de query keys — viven en src/lib/query/index.ts, no en src/lib/queryKeys.ts. (5) §10 Multi-tenant ampliada: documentado has_org_role(user_id, org_id, role), OrganizationContext, org efectiva considerando impersonación de super-admin y la diferencia role vs effectiveRole. (6) Cuatro secciones nuevas: §11 Edge Functions (corsHeaders/handlePreflight obligatorios, verify_jwt off sólo en públicas, naming kebab-case, invocación vía service no desde componente), §12 Storage (buckets documentos y facturas, paths con organization_id, getSignedUrl 1h vs getPublicUrl), §13 Error handling (errorCatalog para mapear códigos Postgrest a es-MX, appFeedback como wrapper único de toast), §14 Localización es-MX (DD/MM/YYYY, MXN base + USD complementario con cache 1h Frankfurter, IVA dinámico vía useTasaIVA, prioridad Puerto>Aeropuerto>Ciudad). (7) §15 Testing: añadido wrapper canónico QueryClient + AuthContext para tests de hooks. (8) Tabla de contenidos renumerada de 15 a 19 secciones; §11 Testing→§15, §12 Decisiones→§16, §13→§17, §14→§18, §15→§19. (9) Decisión nueva en §16: 'Hooks barrel folder universal (v8.100.4)'. Sin cambios funcionales ni de UI.",
+  },
+  {
     version: "8.100.3",
     date: "2026-05-02",
     type: "patch",
