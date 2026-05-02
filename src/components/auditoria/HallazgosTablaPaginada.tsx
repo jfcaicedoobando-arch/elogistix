@@ -40,6 +40,7 @@ export function HallazgosTablaPaginada({
         filtroSev={state.filtroSev}
         filtroCliente={state.filtroCliente}
         filtroRevision={state.filtroRevision}
+        filtroResponsable={state.filtroResponsable}
         etaDesde={state.etaDesde}
         etaHasta={state.etaHasta}
         clientes={state.clientes}
@@ -51,6 +52,7 @@ export function HallazgosTablaPaginada({
         setFiltroSev={state.setFiltroSev}
         setFiltroCliente={state.setFiltroCliente}
         setFiltroRevision={state.setFiltroRevision}
+        setFiltroResponsable={state.setFiltroResponsable}
         setEtaDesde={state.setEtaDesde}
         setEtaHasta={state.setEtaHasta}
         limpiar={state.limpiar}
