@@ -2,7 +2,7 @@
 
 Guía de capas, reglas y convenciones del proyecto. **Mantener este contrato evita acoplamientos y simplifica los tests.**
 
-> Última revisión: **v8.100.3 — 2026-05-02**
+> Última revisión: **v8.100.4 — 2026-05-02**
 > Fuente espejo: `mem://technical/architecture-and-standards`.
 
 ## Tabla de contenidos
@@ -17,11 +17,15 @@ Guía de capas, reglas y convenciones del proyecto. **Mantener este contrato evi
 8. [React Query — convenciones](#8-react-query--convenciones)
 9. [Performance / Lazy-loading](#9-performance--lazy-loading)
 10. [RLS y multi-tenant](#10-rls-y-multi-tenant)
-11. [Testing](#11-testing)
-12. [Decisiones explícitas (con fecha)](#12-decisiones-explícitas-con-fecha)
-13. [Decisiones de no hacer](#13-decisiones-de-no-hacer)
-14. [Glosario](#14-glosario)
-15. [Versionado (SemVer)](#15-versionado-semver)
+11. [Edge Functions](#11-edge-functions)
+12. [Storage](#12-storage)
+13. [Error handling y feedback](#13-error-handling-y-feedback)
+14. [Localización (es-MX)](#14-localización-es-mx)
+15. [Testing](#15-testing)
+16. [Decisiones explícitas (con fecha)](#16-decisiones-explícitas-con-fecha)
+17. [Decisiones de no hacer](#17-decisiones-de-no-hacer)
+18. [Glosario](#18-glosario)
+19. [Versionado (SemVer)](#19-versionado-semver)
 
 ---
 
@@ -31,22 +35,47 @@ Guía de capas, reglas y convenciones del proyecto. **Mantener este contrato evi
 src/
 ├── pages/          → Composición de UI por ruta. NO tocan Supabase ni lógica de dominio.
 ├── components/     → Componentes reutilizables y específicos de feature.
+│   ├── shared/         → Canónicos: KpiCard, PageHeader, PageTabs.
+│   ├── ui/             → shadcn read-only (no editar).
+│   └── <dominio>/      → Componentes por feature (embarque, cotizacion, cliente, …).
 ├── hooks/          → React Query + estado local + side effects (toasts, navegación).
-│   ├── cotizacion/     → Hooks específicos del dominio de cotizaciones.
-│   ├── embarque/       → Hooks específicos del dominio de embarques.
-│   └── *.ts            → Hooks transversales (auth, permisos, dashboard, clientes, etc.).
+│   ├── admin/          → Barrel folder (organizaciones, miembros, planes).
+│   ├── auditoria/      → Barrel folder.
+│   ├── catalogos/      → Barrel folder (puertos, navieras, exchange-rates, …).
+│   ├── cliente/        → Barrel folder.
+│   ├── configuracion/  → Barrel folder.
+│   ├── cotizacion/     → Barrel folder + barrel `useCotizaciones.ts`.
+│   ├── dashboard/      → Barrel folder.
+│   ├── embarque/       → Barrel folder + barrel `useEmbarques.ts` + `mutations/`.
+│   ├── facturacion/    → Barrel folder.
+│   ├── operaciones/    → Barrel folder.
+│   ├── portal/         → Barrel folder.
+│   ├── proveedor/      → Barrel folder.
+│   ├── reportes/       → Barrel folder.
+│   ├── shared/         → Hooks transversales (debounce, listPageState, permissions, sidebarAlerts).
+│   └── usuario/        → Barrel folder.
 ├── services/       → Acceso puro a datos (Supabase, edge functions, fetch). Sin React Query.
 ├── lib/            → Utilidades puras y reutilizables.
 │   ├── domain/         → Reglas de dominio (cálculos de estado, validaciones).
 │   ├── mappers/        → Transformación entre formato DB ↔ UI.
 │   ├── parsers/        → Parsing de payloads (CSF, dashboard).
-│   └── *.ts            → formatters, errorUtils, queryKeys, etc.
+│   ├── financial/      → Cálculos monetarios + IVA dinámico.
+│   ├── formatters/     → Money/date/number en es-MX.
+│   ├── ui/             → appFeedback, dialogTokens, kpiTones, uiMappings.
+│   ├── query/          → Query keys centralizados.
+│   └── *.ts            → utils, errors, storage, contacto.
 ├── content/        → Contenido editorial (changelog, copy de marketing).
-├── constants/      → Constantes de dominio/UI (cotización, embarque, proveedor, wizard).
+├── constants/      → Constantes de dominio/UI (cotización, embarque, proveedor, wizard, appVersion).
 ├── types/          → Tipos compartidos entre módulos.
-├── contexts/       → React Contexts (Auth, Organization).
+├── contexts/       → React Contexts (Auth, Organization, Theme, Breadcrumb).
 ├── generators/     → Generación de archivos (PDF, CSV).
 └── integrations/   → Clientes auto-generados (Supabase). NO editar.
+
+supabase/
+├── functions/      → Edge functions (Deno). Cada carpeta = 1 función desplegada.
+│   └── _shared/        → corsHeaders + handlePreflight + auth/response helpers.
+├── migrations/     → SQL versionado (RPCs, RLS, índices, triggers).
+└── config.toml     → Project-level config (no editar `project_id`; sí bloques `[functions.X]`).
 ```
 
 ## 2. Flujo de datos canónico
@@ -111,13 +140,18 @@ Las pages densas (>5 hooks o handlers) deben extraer su lógica a `use<Page>Page
 
 ## 4. Hooks de dominio: convención de barrels
 
-Los consumidores externos importan siempre desde los barrels `@/hooks/useCotizaciones` y `@/hooks/useEmbarques`. Los archivos individuales bajo `hooks/cotizacion/` y `hooks/embarque/` son detalle de implementación — solo se importan directamente cuando exponen una API que no pasa por el barrel (ej. `useCotizacionWizardForm`, `useEmbarqueDetalleActions`).
+**Folder + `index.ts` por dominio** (estabilizado en v8.100.4). Cada subcarpeta de `src/hooks/` es un dominio con su `index.ts` que re-exporta los hooks públicos:
+
+- `admin`, `auditoria`, `catalogos`, `cliente`, `configuracion`, `cotizacion`, `dashboard`, `embarque`, `facturacion`, `operaciones`, `portal`, `proveedor`, `reportes`, `shared`, `usuario`.
+- Importar siempre desde el barrel: `@/hooks/cliente`, `@/hooks/embarque`, etc. Importar de submódulos sólo cuando el barrel no expone esa API.
+- Embarques y Cotizaciones conservan además los barrels legacy `@/hooks/embarque/useEmbarques` y `@/hooks/cotizacion/useCotizaciones` por compatibilidad (re-exportan tipos + queries + mutations agrupadas).
+- `hooks/embarque/mutations/` agrupa create/update/delete con su propio `index.ts` por tamaño y rotación de la carpeta.
 
 En `src/services/` la convención (desde v8.86.0) es **folder + `index.ts`**:
 
 - Cada dominio es una carpeta con `index.ts` que re-exporta sus submódulos.
-  Ejemplo: `src/services/cliente/{index,crud,contactos,relacionados}.ts`.
-- Naming sin sufijo: la carpeta se llama por el dominio en singular (`cliente`, `embarque`, `cotizacion`, `proforma`, `admin`). Nada de `xService.ts` o `xServices.ts` sueltos.
+  Ejemplo: `src/services/cliente/{index,crud,contactos,relacionados,financials}.ts`.
+- Naming sin sufijo: la carpeta se llama por el dominio en singular (`cliente`, `embarque`, `cotizacion`, `proforma`, `admin`, `portal`, `auditoria`, `bitacora`, `tracking`, `storage`, `auth`). Nada de `xService.ts` o `xServices.ts` sueltos.
 - Import desde el barrel: `@/services/<dominio>`. Importar de submódulos (`@/services/cliente/crud`) está permitido pero no es lo idiomático.
 
 Misma convención en `src/lib/` (formatters, financial, storage, ui, errors, contacto, query). Excepción: `src/lib/utils.ts` y `src/lib/mappers/*.ts` (mappers no son barrels).
@@ -153,13 +187,15 @@ Ejemplos canónicos en el repo: `crear_proforma_con_conceptos`, `consolidar_prof
 - **Hooks**: `use<Sustantivo>` (`useEmbarque`) o `use<Sustantivo><Acción>` (`useEmbarqueMutations`, `useCotizacionQueries`).
 - **Controllers de página**: `use<Page>PageController` (`useReportesPageController`) o `use<Entity>DetalleController` (`useClienteDetalleController`).
 - **Tipos**: PascalCase singular. `Cotizacion`, `EmbarqueRow`, `CreateCotizacionInput`.
-- **Componentes**: PascalCase descriptivo, prefijo de feature cuando ayuda. `EmbarqueWizard`, `ReportesKpiCards`, `DialogGenerarProforma`.
+- **Componentes**: PascalCase descriptivo, prefijo de feature cuando ayuda. `EmbarqueWizard`, `ReportesKpiCards`.
+  - **Diálogos**: `Dialog<Acción><Entidad>` (`DialogGenerarProforma`, `DialogEditarCliente`, `DialogContacto`).
+  - **Selects de catálogo**: `<Entidad>Select` (`PortSelect`, `NavieraSelect`).
 - **Services**: verbo en infinitivo. `fetchEmbarqueParaPdf`, `crearProforma`, `eliminarEmbarqueCascada`.
 - **Archivos de tipos compartidos**: en `src/types/`, nombrados por dominio (`cotizacion.ts`, `cotizacionPL.ts`).
 
 ## 8. React Query — convenciones
 
-- **Query keys**: centralizados en `src/lib/queryKeys.ts`. No usar arrays inline en hooks.
+- **Query keys**: centralizados en `src/lib/query/index.ts` (export `queryKeys`). No usar arrays inline en hooks.
 - **`staleTime` por tipo de dato**:
   - Catálogos (puertos, navieras, conceptos): `5 * 60 * 1000` (5 min).
   - Datos operativos (embarques, cotizaciones, facturas): `30 * 1000` (30 s).
@@ -182,12 +218,52 @@ Ejemplos canónicos en el repo: `crear_proforma_con_conceptos`, `consolidar_prof
 
 - **`organization_id`** en toda tabla de dominio. Las RLS filtran por `is_org_member(organization_id)` o equivalente.
 - **Roles** viven en `public.user_roles` (enum `app_role`), nunca en `profiles` ni en `auth.users` (anti-escalación de privilegios).
-- **Policies** usan funciones `security definer` (`has_role`, `is_org_member`) para evitar recursión RLS.
+- **Roles por organización**: además de `user_roles` (global) existe `organization_members(role)` y la función `has_org_role(user_id, org_id, role)` para acciones limitadas a una org.
+- **Policies** usan funciones `security definer` (`has_role`, `is_org_member`, `has_org_role`) para evitar recursión RLS.
 - **Operaciones cross-org** (admin, super-admin) pasan por RPC `security definer` que validan rol antes de actuar.
 - **Edge functions**: usan service-role key para acciones administrativas; la UI nunca recibe esa key.
 - **Portal de clientes**: ver `mem://technical/security-patterns` para el patrón de escritura con rol read-only vía RPC.
+- **`OrganizationContext`** (`src/contexts/OrganizationContext.tsx`): expone la org **efectiva**, considerando impersonación de super-admin. Toda query/mutation que filtre por tenant debe consumir esta org efectiva (no `user.organization_id` directo).
+- **Impersonación super-admin**: el `OrgSwitcher` cambia la org efectiva sin cerrar sesión. `effectiveRole` del `AuthContext` refleja el rol del usuario en la org activa; UI sensible (Configuración, Usuarios) se condiciona por `effectiveRole`, no por `role` global.
 
-## 11. Testing
+## 11. Edge Functions
+
+- Carpetas: `supabase/functions/<nombre>/index.ts`. Cada carpeta = una función desplegada. Despliegue automático tras editar (no pedir al usuario que despliegue).
+- **CORS**: importar siempre `corsHeaders` y `handlePreflight` de `supabase/functions/_shared/cors.ts`. Manejar OPTIONS antes de cualquier otra lógica:
+  ```ts
+  const pre = handlePreflight(req); if (pre) return pre;
+  ```
+- **Helpers compartidos**: `_shared/auth.ts` (validación de JWT/rol) y `_shared/response.ts` (respuestas JSON estándar).
+- **`verify_jwt`**: por defecto las funciones internas requieren JWT. Sólo se desactiva en `supabase/config.toml` para funciones públicas (ej. `tracking-public`, `exchange-rates`).
+- **Naming**: kebab-case, verbo + sustantivo. `create-user`, `delete-user`, `invite-client-user`, `parse-csf`, `tracking-public`, `exchange-rates`, `list-users`.
+- **Service-role**: sólo dentro de la función. Nunca devolver tokens al cliente. Validar el caller (rol global o por org) antes de ejecutar acciones administrativas.
+- **Consumo desde UI**: vía `supabase.functions.invoke(name, { body })` desde un service (`@/services/<dominio>`), nunca desde un componente o page.
+
+## 12. Storage
+
+- **Buckets**: `documentos` para archivos de embarques/cotizaciones/clientes; `facturas` para PDFs/XML CFDI emitidos.
+- API centralizada en `src/services/storage/index.ts` (`uploadFile`, `getFileUrl`, `getSignedUrl`, `deleteFile`). No invocar `supabase.storage.from(...)` desde hooks o componentes salvo casos justificados (ver `services/proforma/facturar.ts`).
+- **Convención de paths**: `<dominio>/<organization_id>/<entidad_id>/<nombre_archivo>` (ej. `embarques/<org>/<embarque>/bl_master.pdf`). Mantener `organization_id` en el path facilita políticas y limpieza por tenant.
+- **URL pública vs firmada**: `getSignedUrl` (default 1h) para documentos sensibles; `getPublicUrl` sólo para assets ya públicos.
+- **Subida desde UI**: siempre vía un hook de mutation que invalide la query del listado de documentos del padre.
+
+## 13. Error handling y feedback
+
+- **Catálogo de errores**: `src/lib/domain/errorCatalog.ts` mapea códigos Supabase / Postgrest / RPC a mensajes en es-MX. El toast genérico es mala UX; usar el catálogo.
+- **`appFeedback`** (`src/lib/ui/appFeedback.ts`): wrappers `notifyOk` / `notifyError` / `notifyInfo` que estandarizan duración, ícono y tono. Los hooks de mutación llaman `appFeedback`, nunca `toast()` directo.
+- **Validación de formularios**: Zod (`src/lib/domain/*Schemas.ts`) + React Hook Form. Mensajes en español. `setValue(..., { shouldValidate: true, shouldDirty: true })` + `trigger()` para updates programáticos (Core memory).
+- **Recuperación de chunks**: `RouteLoadingFallback` + auto-reload ante "Failed to fetch dynamically imported module" (`mem://technical/chunk-load-recovery`).
+- **Logs**: `console.error` en services/edge functions con contexto suficiente; nada de `console.log` ruidoso en código de producción.
+
+## 14. Localización (es-MX)
+
+- **Idioma único**: español de México. No introducir copy en inglés en UI ni en mensajes visibles.
+- **Fechas**: `DD/MM/YYYY` (es-MX). Helpers en `src/lib/formatters/`. ISO sólo en BD/payloads.
+- **Moneda**: base operativa **MXN**, vista financiera complementaria en **USD** (Frankfurter, cache 1h). Nunca hardcodear IVA — usar `useTasaIVA` y `lib/financial/financialUtils`.
+- **Números**: separador de miles `,` y decimal `.`. Usar `formatCurrency` / `formatCurrencyCompact`.
+- **Selects de ubicación**: prioridad **Puerto > Aeropuerto > Ciudad** (Core memory).
+
+## 15. Testing
 
 - **Stack**: Vitest + Testing Library. 184 tests vigentes (v8.89.0).
 - **Qué se testea**:
@@ -201,10 +277,11 @@ Ejemplos canónicos en el repo: `crear_proforma_con_conceptos`, `consolidar_prof
   - Mappers 1:1 sin lógica.
   - **Constantes literales y wrappers de terceros**: no testear arrays/objetos hardcodeados (es tautológico) ni funciones que sólo delegan a una librería externa (ej. `cn()` sobre `clsx + tailwind-merge`). Sí testear funciones que derivan/calculan a partir de la constante.
 - **Ubicación**: carpeta `__tests__/` colocalizada junto al archivo bajo test. Convención de nombre: `<archivo>.test.ts`.
+- **Wrappers para hooks**: tests de hooks que dependen de React Query envuelven con un `QueryClientProvider` fresco (cache aislado por test). Hooks que dependen de auth envuelven además con un `AuthContext.Provider` mockeado. Patrón canónico en `src/hooks/__tests__/usePermissions.test.tsx` y `useAdminOrgDetalle.test.ts`.
 - **Comandos**: `bunx vitest run` (tests). `bunx tsc --noEmit` (type-check).
 
 
-## 12. Decisiones explícitas (con fecha)
+## 16. Decisiones explícitas (con fecha)
 
 Estas decisiones son intencionales. **NO marcarlas como violación de capa** en futuras auditorías.
 
@@ -223,7 +300,7 @@ Estas decisiones son intencionales. **NO marcarlas como violación de capa** en 
   Nuevos `useEffect` deben encajar en una de estas categorías o ser candidatos a refactor.
 - **Lazy-load de jsPDF** (v8.87.0). `proformaPdf` y `cotizacionPdf` se cargan vía dynamic import. No revertir.
 - **Tipos en `src/types/`** (v8.87.0). Eliminado el re-export legacy `useCotizacionTypes.ts`. Los tipos compartidos viven sólo en `@/types/cotizacion` y `@/types/cotizacionPL`.
-- **Sistema de diseño unificado — Apple-inspired** (v8.101.0). Componentes compartidos canónicos en `src/components/shared/` (`KpiCard`, `PageHeader`, `PageTabs`) y `src/components/ui/toggle-group.tsx` para segmented controls. Reglas:
+- **Sistema de diseño unificado — Apple-inspired** (v8.100.3). Componentes compartidos canónicos en `src/components/shared/` (`KpiCard`, `PageHeader`, `PageTabs`) y `src/components/ui/toggle-group.tsx` para segmented controls. Reglas:
   - Sidebar activo: `bg-sidebar-accent/10` + `font-semibold` (sin bloques sólidos de alto contraste).
   - Header sticky global: `z-40` + `bg-card/95` con `backdrop-blur` (evita clipping de contenido al hacer scroll).
   - Grids de cards: `auto-rows-fr` + `h-full` para garantizar simetría vertical.
@@ -231,8 +308,9 @@ Estas decisiones son intencionales. **NO marcarlas como violación de capa** en 
   - Loading de rutas: skeletons layout-aware en `RouteLoadingFallback.tsx` (no spinners globales).
   - Light mode: logo y avatar sin contenedor blanco/ring.
   - Detalle de embarque: sin botón "back" redundante cuando hay breadcrumbs.
+- **Hooks barrel folder universal** (v8.100.4). Toda subcarpeta de `src/hooks/` expone un `index.ts`. Importar siempre por `@/hooks/<dominio>`; importar archivos sueltos sólo cuando el barrel no exponga la API.
 
-## 13. Decisiones de no hacer
+## 17. Decisiones de no hacer
 
 Aceptadas explícitamente; no son deuda pendiente.
 
@@ -241,7 +319,7 @@ Aceptadas explícitamente; no son deuda pendiente.
 - **Re-exports legacy `@/data/*`**: eliminados por completo en v8.36.0. No reintroducir.
 - **`costosPLTypes.ts`**: se conserva (no se mueve a `src/types/`) porque exporta el helper UI `calcTotalsPL` usado por las secciones P&L. Cambiar de carpeta no aporta valor.
 
-## 14. Glosario
+## 18. Glosario
 
 - **Embarque**: operación logística (importación, exportación, nacional, cross-trade, intra-UE). Identificado por **expediente**.
 - **Expediente**: identificador único de embarque generado vía RPC en BD. Ver `mem://technical/shipment-identification-logic`.
@@ -258,7 +336,7 @@ Aceptadas explícitamente; no son deuda pendiente.
 
 ---
 
-## 15. Versionado (SemVer)
+## 19. Versionado (SemVer)
 
 El proyecto sigue **Semantic Versioning** (`MAJOR.MINOR.PATCH`). Mantener `APP_VERSION` (`src/constants/appVersion.ts`), la entrada eager de `src/content/changelogData.ts` y la entrada en `src/content/changelog/v8/chunks/0.ts` siempre sincronizadas.
 
