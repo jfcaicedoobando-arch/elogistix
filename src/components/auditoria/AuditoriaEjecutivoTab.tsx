@@ -21,6 +21,10 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import type { ReglaAuditoria } from "@/types/auditoria";
 import type { AuditoriaEjecutivoData } from "@/hooks/auditoria/useAuditoriaEjecutivo";
+import { useAutoCapturarSnapshot } from "@/hooks/auditoria/useAuditoriaSnapshots";
+import { AuditoriaTendenciaChart } from "./AuditoriaTendenciaChart";
+import { AuditoriaOperadoresCard } from "./AuditoriaOperadoresCard";
+import { AuditoriaRiesgoFinancieroCard } from "./AuditoriaRiesgoFinancieroCard";
 
 const reglaLabel: Record<ReglaAuditoria, string> = {
   docs_faltantes: "Docs faltantes según etapa",
@@ -74,6 +78,9 @@ interface Props {
 }
 
 export function AuditoriaEjecutivoTab({ data, onDrillDown }: Props) {
+  // Captura idempotente del snapshot del día (UNIQUE org+fecha en BD).
+  useAutoCapturarSnapshot(!data.isLoading);
+
   if (data.isLoading) {
     return (
       <div className="space-y-4">
