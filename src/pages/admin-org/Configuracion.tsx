@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Save, Building2, DollarSign, FileText, Ship, ClipboardList, Bell, Anchor } from "lucide-react";
+import { Save, Building2, DollarSign, FileText, Ship, ClipboardList, Bell, Anchor, ShieldAlert } from "lucide-react";
 import { useConfiguracionState } from "@/hooks/configuracion/useConfiguracionState";
 import TabEmpresa from "@/components/configuracion/TabEmpresa";
 import TabTiposCambio from "@/components/configuracion/TabTiposCambio";
@@ -10,6 +10,7 @@ import TabFacturacion from "@/components/configuracion/TabFacturacion";
 import TabEmbarques from "@/components/configuracion/TabEmbarques";
 import TabAlertas from "@/components/configuracion/TabAlertas";
 import TabPuertos from "@/components/configuracion/TabPuertos";
+import TabAuditoria from "@/components/configuracion/TabAuditoria";
 
 export default function Configuracion() {
   const { s, set, isLoading, isSaving, isDirty, handleSave } = useConfiguracionState();
@@ -50,6 +51,7 @@ export default function Configuracion() {
           <TabsTrigger value="embarques" className="gap-1.5"><Ship className="h-3.5 w-3.5" /> Embarques</TabsTrigger>
           <TabsTrigger value="alertas" className="gap-1.5"><Bell className="h-3.5 w-3.5" /> Alertas</TabsTrigger>
           <TabsTrigger value="puertos" className="gap-1.5"><Anchor className="h-3.5 w-3.5" /> Puertos</TabsTrigger>
+          <TabsTrigger value="auditoria" className="gap-1.5"><ShieldAlert className="h-3.5 w-3.5" /> Auditoría</TabsTrigger>
         </TabsList>
 
         <TabsContent value="empresa">
@@ -72,6 +74,16 @@ export default function Configuracion() {
         </TabsContent>
         <TabsContent value="puertos">
           <TabPuertos />
+        </TabsContent>
+        <TabsContent value="auditoria">
+          <TabAuditoria
+            margenMinimoPct={s.margenMinimoPct}
+            setMargenMinimoPct={set("margenMinimoPct")}
+            diasProformaVencida={s.diasProformaVencida}
+            setDiasProformaVencida={set("diasProformaVencida")}
+            diasHuerfano={s.diasHuerfano}
+            setDiasHuerfano={set("diasHuerfano")}
+          />
         </TabsContent>
       </Tabs>
     </div>

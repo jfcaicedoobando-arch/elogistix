@@ -4,7 +4,9 @@
  */
 import { supabase } from "@/integrations/supabase/client";
 import type {
+  AuditoriaComentario,
   AuditoriaRevision,
+  AuditoriaSnapshot,
   HallazgoAuditoria,
   ReporteAuditoria,
 } from "@/types/auditoria";
@@ -103,5 +105,100 @@ export async function deleteAuditoriaRevision(id: string): Promise<void> {
     .from("auditoria_revisiones")
     .delete()
     .eq("id", id);
+  if (error) throw error;
+}
+
+/* ───────────────────────── Comentarios ───────────────────────── */
+
+export async function fetchComentariosByRevision(
+  revisionId: string,
+): Promise<AuditoriaComentario[]> {
+  const { data, error } = await supabase
+    .from("auditoria_comentarios")
+    .select("*")
+    .eq("revision_id", revisionId)
+    .order("created_at", { ascending: true });
+  if (error) throw error;
+  return (data ?? []) as AuditoriaComentario[];
+}
+
+export async function insertComentario(input: {
+  revision_id: string;
+  autor_id: string;
+  autor_email: string;
+  contenido: string;
+}): Promise<AuditoriaComentario> {
+  const { data, error } = await supabase
+    .from("auditoria_comentarios")
+    .insert(input)
+    .select()
+    .single();
+  if (error) throw error;
+  return data as AuditoriaComentario;
+}
+
+/* ───────────────────────── Snooze ───────────────────────── */
+
+export interface SnoozeRevisionInput {
+  embarque_id: string;
+  regla: HallazgoAuditoria["regla"];
+  detalle_hash: string;
+  detalle: string;
+  snoozed_until: string; // YYYY-MM-DD
+  snooze_motivo: string;
+}
+
+export async function snoozeRevision(
+  input: SnoozeRevisionInput,
+): Promise<AuditoriaRevision> {
+  const { data, error } = await supabase
+    .from("auditoria_revisiones")
+    .upsert(
+      {
+        embarque_id: input.embarque_id,
+        regla: input.regla,
+        detalle_hash: input.detalle_hash,
+        detalle: input.detalle,
+        snoozed_until: input.snoozed_until,
+        snooze_motivo: input.snooze_motivo,
+        updated_at: new Date().toISOString(),
+      },
+      { onConflict: "organization_id,embarque_id,regla,detalle_hash" },
+    )
+    .select()
+    .single();
+  if (error) throw error;
+  return data as AuditoriaRevision;
+}
+
+export async function clearSnoozeRevision(
+  revisionId: string,
+): Promise<void> {
+  const { error } = await supabase
+    .from("auditoria_revisiones")
+    .update({ snoozed_until: null, snooze_motivo: null })
+    .eq("id", revisionId);
+  if (error) throw error;
+}
+
+/* ───────────────────────── Snapshots ───────────────────────── */
+
+export async function fetchAuditoriaSnapshots(
+  dias = 30,
+): Promise<AuditoriaSnapshot[]> {
+  const desde = new Date();
+  desde.setDate(desde.getDate() - dias);
+  const desdeIso = desde.toISOString().slice(0, 10);
+  const { data, error } = await supabase
+    .from("auditoria_snapshots")
+    .select("*")
+    .gte("fecha", desdeIso)
+    .order("fecha", { ascending: true });
+  if (error) throw error;
+  return (data ?? []) as AuditoriaSnapshot[];
+}
+
+export async function capturarSnapshotAuditoria(): Promise<void> {
+  const { error } = await supabase.rpc("auditoria_capturar_snapshot");
   if (error) throw error;
 }

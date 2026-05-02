@@ -32,6 +32,9 @@ export interface ConfigState {
   diasEta: string;
   diasEtaCritica: string;
   diasFactVencer: string;
+  margenMinimoPct: string;
+  diasProformaVencida: string;
+  diasHuerfano: string;
 }
 
 export function buildStateFromConfig(config: ConfigItem[] | undefined): ConfigState {
@@ -60,6 +63,9 @@ export function buildStateFromConfig(config: ConfigItem[] | undefined): ConfigSt
     diasEta: String(getVal(config, "alertas", "dias_eta_alerta", 7)),
     diasEtaCritica: String(getVal(config, "alertas", "dias_eta_critica", 3)),
     diasFactVencer: String(getVal(config, "alertas", "dias_factura_vencer", 7)),
+    margenMinimoPct: String(getVal(config, "auditoria", "margen_minimo_pct", 5)),
+    diasProformaVencida: String(getVal(config, "auditoria", "dias_proforma_vencida", 30)),
+    diasHuerfano: String(getVal(config, "auditoria", "dias_huerfano", 5)),
   };
 }
 
@@ -110,6 +116,9 @@ export function useConfiguracionState() {
       { categoria: "alertas", clave: "dias_eta_alerta", valor: parseInt(s.diasEta) || 7 },
       { categoria: "alertas", clave: "dias_eta_critica", valor: parseInt(s.diasEtaCritica) || 3 },
       { categoria: "alertas", clave: "dias_factura_vencer", valor: parseInt(s.diasFactVencer) || 7 },
+      { categoria: "auditoria", clave: "margen_minimo_pct", valor: parseFloat(s.margenMinimoPct) || 5 },
+      { categoria: "auditoria", clave: "dias_proforma_vencida", valor: parseInt(s.diasProformaVencida) || 30 },
+      { categoria: "auditoria", clave: "dias_huerfano", valor: parseInt(s.diasHuerfano) || 5 },
     ], {
       onSuccess: () => setBaseline(s),
     });

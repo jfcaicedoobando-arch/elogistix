@@ -21,6 +21,10 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import type { ReglaAuditoria } from "@/types/auditoria";
 import type { AuditoriaEjecutivoData } from "@/hooks/auditoria/useAuditoriaEjecutivo";
+import { useAutoCapturarSnapshot } from "@/hooks/auditoria/useAuditoriaSnapshots";
+import { AuditoriaTendenciaChart } from "./AuditoriaTendenciaChart";
+import { AuditoriaOperadoresCard } from "./AuditoriaOperadoresCard";
+import { AuditoriaRiesgoFinancieroCard } from "./AuditoriaRiesgoFinancieroCard";
 
 const reglaLabel: Record<ReglaAuditoria, string> = {
   docs_faltantes: "Docs faltantes según etapa",
@@ -74,6 +78,9 @@ interface Props {
 }
 
 export function AuditoriaEjecutivoTab({ data, onDrillDown }: Props) {
+  // Captura idempotente del snapshot del día (UNIQUE org+fecha en BD).
+  useAutoCapturarSnapshot(!data.isLoading);
+
   if (data.isLoading) {
     return (
       <div className="space-y-4">
@@ -220,6 +227,21 @@ export function AuditoriaEjecutivoTab({ data, onDrillDown }: Props) {
           )}
         </div>
       )}
+
+      {/* Fila riesgo financiero + tendencia */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <AuditoriaRiesgoFinancieroCard
+          total={data.riesgoFinancieroMxn}
+          porRegla={data.riesgoPorRegla}
+        />
+        <AuditoriaTendenciaChart />
+      </div>
+
+      {/* Productividad de operadores */}
+      <AuditoriaOperadoresCard
+        mttrHoras={data.mttrHoras}
+        ranking={data.rankingOperadores}
+      />
 
       {/* Fila 2: Distribución por etapa + Top clientes */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
