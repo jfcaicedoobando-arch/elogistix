@@ -62,11 +62,47 @@ const reglaConfig: Record<
     description: "Embarques entregados o cerrados con conceptos de venta sin facturar.",
     icon: Receipt,
   },
+  margen_negativo: {
+    label: "Embarques con margen negativo",
+    description: "Embarques cuya utilidad en MXN es menor a cero (pérdida).",
+    icon: Receipt,
+  },
+  margen_bajo: {
+    label: "Embarques con margen bajo",
+    description: "Margen positivo pero por debajo del mínimo configurado para la organización.",
+    icon: Receipt,
+  },
+  venta_sin_costo: {
+    label: "Ventas sin costos cargados",
+    description: "Embarques con conceptos de venta pero sin un solo costo registrado.",
+    icon: Receipt,
+  },
+  costo_sin_venta: {
+    label: "Costos sin venta facturable",
+    description: "Embarques cerrados o entregados con costos cargados pero sin venta.",
+    icon: Receipt,
+  },
+  proforma_vencida: {
+    label: "Proformas vencidas sin factura",
+    description: "Proformas emitidas con más días que el umbral configurado y aún sin factura.",
+    icon: Receipt,
+  },
+  embarque_huerfano: {
+    label: "Embarques huérfanos",
+    description: "Embarques activos sin operador asignado o sin movimientos recientes en bitácora.",
+    icon: Clock,
+  },
 };
 
 const REGLAS_ORDEN: ReglaAuditoria[] = [
   "docs_pendientes_avanzado",
   "ventas_sin_facturar",
+  "margen_negativo",
+  "margen_bajo",
+  "proforma_vencida",
+  "venta_sin_costo",
+  "costo_sin_venta",
+  "embarque_huerfano",
   "docs_faltantes",
   "fechas",
 ];
@@ -76,6 +112,12 @@ const reglaLabel: Record<ReglaAuditoria, string> = {
   docs_pendientes_avanzado: "Documentos pendientes en avanzados",
   fechas: "Inconsistencias de fechas",
   ventas_sin_facturar: "Ventas sin facturar",
+  margen_negativo: "Margen negativo",
+  margen_bajo: "Margen bajo",
+  venta_sin_costo: "Venta sin costo",
+  costo_sin_venta: "Costo sin venta",
+  proforma_vencida: "Proforma vencida",
+  embarque_huerfano: "Embarque huérfano",
 };
 
 export default function Auditoria() {
