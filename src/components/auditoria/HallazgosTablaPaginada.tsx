@@ -5,7 +5,7 @@
  */
 import { useState } from "react";
 import { revisionKey } from "@/hooks/auditoria/useAuditoriaRevisiones";
-import { useHallazgosTablaState } from "@/hooks/auditoria/useHallazgosTablaState";
+import { useHallazgosTablaState, type UseHallazgosTablaStateOptions } from "@/hooks/auditoria/useHallazgosTablaState";
 import { MarcarRevisadoDialog } from "@/components/auditoria/MarcarRevisadoDialog";
 import { HallazgosFiltros } from "./HallazgosFiltros";
 import { HallazgosTabla } from "./HallazgosTabla";
@@ -16,10 +16,16 @@ interface Props {
   hallazgos: HallazgoAuditoria[];
   /** Si es true, default = "todos"; si es false (default), default = "pendientes". */
   mostrarRevisadosDefault?: boolean;
+  /** Filtros iniciales (drill-down desde la vista ejecutiva). */
+  initialFilters?: UseHallazgosTablaStateOptions;
 }
 
-export function HallazgosTablaPaginada({ hallazgos, mostrarRevisadosDefault = false }: Props) {
-  const state = useHallazgosTablaState(hallazgos, mostrarRevisadosDefault);
+export function HallazgosTablaPaginada({
+  hallazgos,
+  mostrarRevisadosDefault = false,
+  initialFilters,
+}: Props) {
+  const state = useHallazgosTablaState(hallazgos, mostrarRevisadosDefault, initialFilters);
   const [dialogHallazgo, setDialogHallazgo] = useState<HallazgoAuditoria | null>(null);
 
   return (
