@@ -319,7 +319,7 @@ Aceptadas explícitamente; no son deuda pendiente.
 - **Re-exports legacy `@/data/*`**: eliminados por completo en v8.36.0. No reintroducir.
 - **`costosPLTypes.ts`**: se conserva (no se mueve a `src/types/`) porque exporta el helper UI `calcTotalsPL` usado por las secciones P&L. Cambiar de carpeta no aporta valor.
 
-## 14. Glosario
+## 18. Glosario
 
 - **Embarque**: operación logística (importación, exportación, nacional, cross-trade, intra-UE). Identificado por **expediente**.
 - **Expediente**: identificador único de embarque generado vía RPC en BD. Ver `mem://technical/shipment-identification-logic`.
