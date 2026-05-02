@@ -75,7 +75,7 @@ export function HallazgosTabla({ visibles, start, revisiones, currentUserId, onM
               return (
                 <TableRow
                   key={`${h.embarque_id}-${h.regla}-${start + i}`}
-                  className={cn(i % 2 === 1 && "bg-muted/30", revision && "opacity-70")}
+                  className={cn(i % 2 === 1 && "bg-muted/30", revision?.estado_revision === "revisado" && "opacity-70")}
                 >
                   <TableCell>
                     <Badge variant="outline" className={cn("text-[10px]", sev.className)}>
