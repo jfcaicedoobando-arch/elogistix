@@ -2,6 +2,13 @@ import type { ChangelogEntry } from "../../../changelogData";
 
 export const chunk0: ChangelogEntry[] = [
   {
+    version: "8.100.5",
+    date: "2026-05-02",
+    type: "patch",
+    title: "Lint guardrail: importes de hooks/services solo desde barrels",
+    description: "Se incorpora a eslint.config.js la regla no-restricted-imports con dos patrones bloqueados: '@/hooks/*/*' y '@/services/*/*'. Cualquier archivo de la app que importe desde una ruta interna (por ejemplo @/hooks/embarque/useEmbarqueQueries en lugar de @/hooks/embarque, o @/services/cotizacion/crud en lugar de @/services/cotizacion) recibe un warning con mensaje accionable que apunta a ARCHITECTURE.md §4 y §5. Se añade un override que exime a src/hooks/**, src/services/** y src/lib/** para permitir composición intra-dominio (sub-barrels, mutations/, helpers privados). Para cerrar la convención se crean los dos barrels que aún faltaban: hooks/auditoria/index.ts y hooks/shared/index.ts. La regla queda en severidad 'warn' (no 'error') para permitir migración progresiva de los importes legacy sin romper builds. Sin cambios funcionales ni de UI.",
+  },
+  {
     version: "8.100.4",
     date: "2026-05-02",
     type: "patch",

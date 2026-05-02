@@ -15,6 +15,13 @@ export interface ChangelogEntry {
  */
 export const recentChangelog: ChangelogEntry[] = [
   {
+    version: "8.100.5",
+    date: "2026-05-02",
+    type: "patch",
+    title: "Lint guardrail: importes de hooks/services solo desde barrels",
+    description: "Se añade la regla ESLint no-restricted-imports que advierte cuando algún archivo importa desde rutas internas de @/hooks/<dominio>/<archivo> o @/services/<dominio>/<archivo>; el patrón obligatorio es el barrel del dominio (@/hooks/<dominio> o @/services/<dominio>), tal como exige ARCHITECTURE.md §4 y §5. Excepciones: src/hooks/**, src/services/** y src/lib/** pueden seguir haciendo importes intra-dominio. Para cerrar los huecos, se crean los dos barrels que faltaban: src/hooks/auditoria/index.ts (useAuditoria, useAuditoriaPageController, useAuditoriaRevisiones, useHallazgosTablaState) y src/hooks/shared/index.ts (useBitacora, useDebounce, useGlobalSearch, useListPageState, useOrgFilter, usePermissions, useSidebarAlerts). Sin cambios funcionales: el lint corre como warn para no romper builds existentes mientras se migran los importes legacy.",
+  },
+  {
     version: "8.100.4",
     date: "2026-05-02",
     type: "patch",
