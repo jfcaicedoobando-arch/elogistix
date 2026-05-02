@@ -65,27 +65,45 @@ function DataTableInner<T>({
   onRowMouseEnter,
   rowKey,
   rowClassName,
+  sortMode = "client",
+  controlledSort,
+  onSortChange,
 }: DataTableProps<T>) {
   const icon = emptyIcon ?? <Inbox className="h-8 w-8 opacity-40" strokeWidth={1.5} />;
 
-  const [sortKey, setSortKey] = useState<string | null>(null);
-  const [sortDir, setSortDir] = useState<SortDir>("asc");
+  const [internalSortKey, setInternalSortKey] = useState<string | null>(null);
+  const [internalSortDir, setInternalSortDir] = useState<SortDir>("asc");
+
+  const isServer = sortMode === "server";
+  const sortKey = isServer ? (controlledSort?.key ?? null) : internalSortKey;
+  const sortDir = isServer ? (controlledSort?.dir ?? "asc") : internalSortDir;
 
   const handleSort = (key: string) => {
+    let nextKey: string | null;
+    let nextDir: SortDir;
     if (sortKey === key) {
       if (sortDir === "asc") {
-        setSortDir("desc");
+        nextKey = key;
+        nextDir = "desc";
       } else {
-        setSortKey(null);
-        setSortDir("asc");
+        nextKey = null;
+        nextDir = "asc";
       }
     } else {
-      setSortKey(key);
-      setSortDir("asc");
+      nextKey = key;
+      nextDir = "asc";
+    }
+    if (isServer) {
+      onSortChange?.(nextKey, nextDir);
+    } else {
+      setInternalSortKey(nextKey);
+      setInternalSortDir(nextDir);
     }
   };
 
   const sortedData = useMemo(() => {
+    // En modo server NO ordenamos en cliente: confiamos en el orden del servidor.
+    if (isServer) return data;
     if (!sortKey) return data;
     const col = columns.find((c) => c.key === sortKey);
     if (!col?.sortable) return data;
@@ -104,7 +122,7 @@ function DataTableInner<T>({
     });
 
     return sortDir === "desc" ? sorted.reverse() : sorted;
-  }, [data, sortKey, sortDir, columns]);
+  }, [data, sortKey, sortDir, columns, isServer]);
 
   const SortIcon = ({ colKey }: { colKey: string }) => {
     if (sortKey === colKey) {
