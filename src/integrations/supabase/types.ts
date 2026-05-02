@@ -14,6 +14,44 @@ export type Database = {
   }
   public: {
     Tables: {
+      auditoria_comentarios: {
+        Row: {
+          autor_email: string
+          autor_id: string
+          contenido: string
+          created_at: string
+          id: string
+          organization_id: string
+          revision_id: string
+        }
+        Insert: {
+          autor_email?: string
+          autor_id: string
+          contenido: string
+          created_at?: string
+          id?: string
+          organization_id?: string
+          revision_id: string
+        }
+        Update: {
+          autor_email?: string
+          autor_id?: string
+          contenido?: string
+          created_at?: string
+          id?: string
+          organization_id?: string
+          revision_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "auditoria_comentarios_revision_id_fkey"
+            columns: ["revision_id"]
+            isOneToOne: false
+            referencedRelation: "auditoria_revisiones"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       auditoria_revisiones: {
         Row: {
           accion_tomada: string | null
@@ -33,6 +71,8 @@ export type Database = {
           responsable_id: string | null
           revisado_por: string | null
           revisado_por_email: string | null
+          snooze_motivo: string | null
+          snoozed_until: string | null
           updated_at: string
         }
         Insert: {
@@ -53,6 +93,8 @@ export type Database = {
           responsable_id?: string | null
           revisado_por?: string | null
           revisado_por_email?: string | null
+          snooze_motivo?: string | null
+          snoozed_until?: string | null
           updated_at?: string
         }
         Update: {
@@ -73,7 +115,51 @@ export type Database = {
           responsable_id?: string | null
           revisado_por?: string | null
           revisado_por_email?: string | null
+          snooze_motivo?: string | null
+          snoozed_until?: string | null
           updated_at?: string
+        }
+        Relationships: []
+      }
+      auditoria_snapshots: {
+        Row: {
+          altos: number
+          created_at: string
+          criticos: number
+          fecha: string
+          id: string
+          medios: number
+          organization_id: string
+          por_regla: Json
+          score: number
+          total_hallazgos: number
+          total_pendientes: number
+        }
+        Insert: {
+          altos?: number
+          created_at?: string
+          criticos?: number
+          fecha?: string
+          id?: string
+          medios?: number
+          organization_id: string
+          por_regla?: Json
+          score?: number
+          total_hallazgos?: number
+          total_pendientes?: number
+        }
+        Update: {
+          altos?: number
+          created_at?: string
+          criticos?: number
+          fecha?: string
+          id?: string
+          medios?: number
+          organization_id?: string
+          por_regla?: Json
+          score?: number
+          total_hallazgos?: number
+          total_pendientes?: number
         }
         Relationships: []
       }
@@ -1718,6 +1804,10 @@ export type Database = {
           p_embarque_id: string
         }
         Returns: undefined
+      }
+      auditoria_capturar_snapshot: {
+        Args: { p_organization_id: string }
+        Returns: string
       }
       auditoria_embarques_org: { Args: never; Returns: Json }
       busqueda_global: {
