@@ -241,7 +241,7 @@ export function MarcarRevisadoDialog({
               </div>
             ) : (
               <>
-                <ScrollArea className="h-48 border rounded-md p-2">
+                <div className="h-48 overflow-y-auto border rounded-md p-2">
                   {loadingComentarios ? (
                     <div className="text-xs text-muted-foreground">Cargando…</div>
                   ) : !comentarios || comentarios.length === 0 ? (
@@ -270,7 +270,7 @@ export function MarcarRevisadoDialog({
                       ))}
                     </div>
                   )}
-                </ScrollArea>
+                </div>
                 <div className="space-y-1.5">
                   <Textarea
                     placeholder="Escribe un comentario para el equipo…"
