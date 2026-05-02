@@ -187,7 +187,9 @@ Ejemplos canónicos en el repo: `crear_proforma_con_conceptos`, `consolidar_prof
 - **Hooks**: `use<Sustantivo>` (`useEmbarque`) o `use<Sustantivo><Acción>` (`useEmbarqueMutations`, `useCotizacionQueries`).
 - **Controllers de página**: `use<Page>PageController` (`useReportesPageController`) o `use<Entity>DetalleController` (`useClienteDetalleController`).
 - **Tipos**: PascalCase singular. `Cotizacion`, `EmbarqueRow`, `CreateCotizacionInput`.
-- **Componentes**: PascalCase descriptivo, prefijo de feature cuando ayuda. `EmbarqueWizard`, `ReportesKpiCards`, `DialogGenerarProforma`.
+- **Componentes**: PascalCase descriptivo, prefijo de feature cuando ayuda. `EmbarqueWizard`, `ReportesKpiCards`.
+  - **Diálogos**: `Dialog<Acción><Entidad>` (`DialogGenerarProforma`, `DialogEditarCliente`, `DialogContacto`).
+  - **Selects de catálogo**: `<Entidad>Select` (`PortSelect`, `NavieraSelect`).
 - **Services**: verbo en infinitivo. `fetchEmbarqueParaPdf`, `crearProforma`, `eliminarEmbarqueCascada`.
 - **Archivos de tipos compartidos**: en `src/types/`, nombrados por dominio (`cotizacion.ts`, `cotizacionPL.ts`).
 
