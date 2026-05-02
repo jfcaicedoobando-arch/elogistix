@@ -32,15 +32,28 @@ export interface ReporteAuditoria {
   hallazgos: HallazgoAuditoria[];
 }
 
+export type EstadoHallazgoRevision = "pendiente" | "en_progreso" | "revisado";
+
 export interface AuditoriaRevision {
   id: string;
   embarque_id: string;
   regla: string;
   detalle_hash: string;
   detalle: string;
-  accion_tomada: string;
-  revisado_por: string;
-  revisado_por_email: string;
+  accion_tomada: string | null;
+  revisado_por: string | null;
+  revisado_por_email: string | null;
+  /** Workflow: pendiente | en_progreso | revisado. */
+  estado_revision: EstadoHallazgoRevision;
+  /** Responsable asignado (operador/encargado). */
+  responsable_id: string | null;
+  responsable_email: string | null;
+  /** Quién hizo la asignación y cuándo. */
+  asignado_por: string | null;
+  asignado_por_email: string | null;
+  asignado_at: string | null;
+  /** Fecha objetivo de resolución. */
+  fecha_limite: string | null;
   created_at: string;
   updated_at: string;
 }
