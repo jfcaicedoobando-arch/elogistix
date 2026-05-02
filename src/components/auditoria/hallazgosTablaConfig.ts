@@ -8,6 +8,12 @@ export const reglaLabel: Record<ReglaAuditoria, string> = {
   docs_pendientes_avanzado: "Docs pendientes (avanzado)",
   fechas: "Fechas inconsistentes",
   ventas_sin_facturar: "Ventas sin facturar",
+  margen_negativo: "Margen negativo",
+  margen_bajo: "Margen bajo",
+  venta_sin_costo: "Venta sin costo",
+  costo_sin_venta: "Costo sin venta",
+  proforma_vencida: "Proforma vencida",
+  embarque_huerfano: "Embarque huérfano",
 };
 
 export const reglaToTab: Record<ReglaAuditoria, string> = {
@@ -15,6 +21,12 @@ export const reglaToTab: Record<ReglaAuditoria, string> = {
   docs_pendientes_avanzado: "documentos",
   fechas: "tracking",
   ventas_sin_facturar: "facturacion",
+  margen_negativo: "financiero",
+  margen_bajo: "financiero",
+  venta_sin_costo: "financiero",
+  costo_sin_venta: "financiero",
+  proforma_vencida: "facturacion",
+  embarque_huerfano: "tracking",
 };
 
 export const severidadConfig: Record<

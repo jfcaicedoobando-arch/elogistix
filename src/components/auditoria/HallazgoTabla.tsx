@@ -18,6 +18,12 @@ const reglaToTab: Record<ReglaAuditoria, string> = {
   docs_pendientes_avanzado: "documentos",
   fechas: "tracking",
   ventas_sin_facturar: "facturacion",
+  margen_negativo: "financiero",
+  margen_bajo: "financiero",
+  venta_sin_costo: "financiero",
+  costo_sin_venta: "financiero",
+  proforma_vencida: "facturacion",
+  embarque_huerfano: "tracking",
 };
 
 interface Props {
