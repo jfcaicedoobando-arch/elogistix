@@ -114,17 +114,63 @@ export function HallazgosTabla({ visibles, start, revisiones, currentUserId, onM
                       </div>
                     )}
                   </TableCell>
+                  <TableCell className="text-xs">
+                    {responsable ? (
+                      <button
+                        type="button"
+                        onClick={() => onAsignarResponsable(h)}
+                        className={cn(
+                          "flex items-center gap-1 hover:underline focus:outline-none focus:underline text-left",
+                          responsable.responsable_id === currentUserId
+                            ? "text-primary font-medium"
+                            : "text-foreground",
+                        )}
+                        title={`Asignado por ${responsable.asignado_por_email || "—"}${
+                          responsable.asignado_at
+                            ? ` el ${format(new Date(responsable.asignado_at), "dd/MM/yyyy HH:mm")}`
+                            : ""
+                        }${responsable.fecha_limite ? `\nFecha límite: ${format(new Date(`${responsable.fecha_limite}T00:00:00`), "dd/MM/yyyy")}` : ""}`}
+                      >
+                        <UserCheck className="h-3.5 w-3.5 shrink-0" />
+                        <span className="truncate max-w-[110px]">
+                          {responsable.responsable_email}
+                        </span>
+                        {vencida && (
+                          <AlertTriangle className="h-3 w-3 text-destructive shrink-0" aria-label="Vencido" />
+                        )}
+                      </button>
+                    ) : (
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="h-7 text-[11px] gap-1 text-muted-foreground hover:text-foreground"
+                        onClick={() => onAsignarResponsable(h)}
+                      >
+                        <UserPlus className="h-3.5 w-3.5" />
+                        Asignar
+                      </Button>
+                    )}
+                  </TableCell>
                   <TableCell>
-                    {revision ? (
+                    {revision?.estado_revision === "revisado" ? (
                       <Button
                         size="sm"
                         variant="ghost"
                         className="h-7 text-[11px] gap-1 text-emerald-600 hover:text-emerald-700 dark:text-emerald-400"
                         onClick={() => onMarcarRevisado(h)}
-                        title={`Por: ${revision.revisado_por_email}\n${format(new Date(revision.updated_at), "dd/MM/yyyy HH:mm")}\nAcción: ${revision.accion_tomada}`}
+                        title={`Por: ${revision.revisado_por_email ?? "—"}\n${format(new Date(revision.updated_at), "dd/MM/yyyy HH:mm")}\nAcción: ${revision.accion_tomada ?? ""}`}
                       >
                         <CheckCircle2 className="h-3.5 w-3.5" />
                         Revisado
+                      </Button>
+                    ) : revision?.estado_revision === "en_progreso" ? (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="h-7 text-[11px] border-amber-500/40 text-amber-700 dark:text-amber-400"
+                        onClick={() => onMarcarRevisado(h)}
+                      >
+                        En progreso
                       </Button>
                     ) : (
                       <Button
