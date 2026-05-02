@@ -7,7 +7,13 @@ export type ReglaAuditoria =
   | "docs_faltantes"
   | "docs_pendientes_avanzado"
   | "fechas"
-  | "ventas_sin_facturar";
+  | "ventas_sin_facturar"
+  | "margen_negativo"
+  | "margen_bajo"
+  | "venta_sin_costo"
+  | "costo_sin_venta"
+  | "proforma_vencida"
+  | "embarque_huerfano";
 
 export type SeveridadAuditoria = "critico" | "alto" | "medio";
 
@@ -22,6 +28,14 @@ export interface HallazgoAuditoria {
   severidad: SeveridadAuditoria;
   detalle: string;
   documentos_faltantes: string[];
+  /** Monto MXN asociado (sólo lo entregan reglas financieras nuevas). */
+  monto_mxn?: number;
+}
+
+export interface AuditoriaUmbrales {
+  margen_minimo_pct: number;
+  dias_proforma_vencida: number;
+  dias_huerfano: number;
 }
 
 export interface ReporteAuditoria {
@@ -29,6 +43,8 @@ export interface ReporteAuditoria {
   total_hallazgos: number;
   por_severidad: { critico: number; alto: number; medio: number };
   por_regla: Record<ReglaAuditoria, number>;
+  /** Umbrales aplicados por la RPC al evaluar reglas configurables. */
+  umbrales?: AuditoriaUmbrales;
   hallazgos: HallazgoAuditoria[];
 }
 
@@ -54,6 +70,32 @@ export interface AuditoriaRevision {
   asignado_at: string | null;
   /** Fecha objetivo de resolución. */
   fecha_limite: string | null;
+  /** Snooze: fecha hasta la que el hallazgo se oculta de pendientes. */
+  snoozed_until: string | null;
+  snooze_motivo: string | null;
   created_at: string;
   updated_at: string;
+}
+
+export interface AuditoriaComentario {
+  id: string;
+  revision_id: string;
+  autor_id: string;
+  autor_email: string;
+  contenido: string;
+  created_at: string;
+}
+
+export interface AuditoriaSnapshot {
+  id: string;
+  organization_id: string;
+  fecha: string;
+  total_hallazgos: number;
+  total_pendientes: number;
+  criticos: number;
+  altos: number;
+  medios: number;
+  score: number;
+  por_regla: Record<string, number>;
+  created_at: string;
 }
