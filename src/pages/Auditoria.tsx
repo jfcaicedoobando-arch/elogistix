@@ -214,7 +214,7 @@ export default function Auditoria() {
       <Tabs value={tab} onValueChange={(v) => setTab(v as typeof tab)} className="space-y-4">
         <TabsList>
           <TabsTrigger value="ejecutivo">Resumen ejecutivo</TabsTrigger>
-          <TabsTrigger value="tabla">Detalle operativo</TabsTrigger>
+          <TabsTrigger value="tabla">Hallazgos</TabsTrigger>
           <TabsTrigger value="por_regla">Por regla</TabsTrigger>
         </TabsList>
 
@@ -223,7 +223,7 @@ export default function Auditoria() {
           <AuditoriaEjecutivoTab data={ejecutivo} onDrillDown={handleDrillDown} />
         </TabsContent>
 
-        {/* ─────── Detalle operativo ─────── */}
+        {/* ─────── Hallazgos ─────── */}
         <TabsContent value="tabla" className="mt-0 space-y-4">
           {c.isLoading ? (
             <div className="space-y-4">
