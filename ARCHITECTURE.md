@@ -2,7 +2,7 @@
 
 Guía de capas, reglas y convenciones del proyecto. **Mantener este contrato evita acoplamientos y simplifica los tests.**
 
-> Última revisión: **v8.88.0 — 2026-04-26**
+> Última revisión: **v8.101.0 — 2026-05-02**
 > Fuente espejo: `mem://technical/architecture-and-standards`.
 
 ## Tabla de contenidos
@@ -222,6 +222,14 @@ Estas decisiones son intencionales. **NO marcarlas como violación de capa** en 
   Nuevos `useEffect` deben encajar en una de estas categorías o ser candidatos a refactor.
 - **Lazy-load de jsPDF** (v8.87.0). `proformaPdf` y `cotizacionPdf` se cargan vía dynamic import. No revertir.
 - **Tipos en `src/types/`** (v8.87.0). Eliminado el re-export legacy `useCotizacionTypes.ts`. Los tipos compartidos viven sólo en `@/types/cotizacion` y `@/types/cotizacionPL`.
+- **Sistema de diseño unificado — Apple-inspired** (v8.101.0). Componentes compartidos canónicos en `src/components/shared/` (`KpiCard`, `PageHeader`, `PageTabs`) y `src/components/ui/toggle-group.tsx` para segmented controls. Reglas:
+  - Sidebar activo: `bg-sidebar-accent/10` + `font-semibold` (sin bloques sólidos de alto contraste).
+  - Header sticky global: `z-40` + `bg-card/95` con `backdrop-blur` (evita clipping de contenido al hacer scroll).
+  - Grids de cards: `auto-rows-fr` + `h-full` para garantizar simetría vertical.
+  - Breadcrumbs: mostrar `…` mientras se resuelven segmentos UUID (no exponer IDs crudos).
+  - Loading de rutas: skeletons layout-aware en `RouteLoadingFallback.tsx` (no spinners globales).
+  - Light mode: logo y avatar sin contenedor blanco/ring.
+  - Detalle de embarque: sin botón "back" redundante cuando hay breadcrumbs.
 
 ## 13. Decisiones de no hacer
 
