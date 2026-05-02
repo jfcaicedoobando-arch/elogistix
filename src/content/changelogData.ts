@@ -15,6 +15,13 @@ export interface ChangelogEntry {
  */
 export const recentChangelog: ChangelogEntry[] = [
   {
+    version: "8.100.4",
+    date: "2026-05-02",
+    type: "patch",
+    title: "ARCHITECTURE.md ampliado: Edge Functions, Storage, Errores e i18n",
+    description: "Documentación de arquitectura sincronizada con el estado real del repo. (1) Estructura de carpetas reescrita: lista los 14 barrels de hooks (admin, auditoria, catalogos, cliente, configuracion, cotizacion, dashboard, embarque, facturacion, operaciones, portal, proveedor, reportes, shared, usuario), agrupa lib/ por sub-módulos y añade el árbol supabase/. (2) §4 Hooks: convención folder+index.ts universal (decisión v8.100.4), barrels legacy de embarques/cotizaciones documentados como excepción de compatibilidad, mutations/ explicado. (3) §7 Naming: añadido patrón Dialog<Acción><Entidad> y <Entidad>Select. (4) §8 React Query: query keys ahora viven en src/lib/query/index.ts (no src/lib/queryKeys.ts). (5) §10 Multi-tenant: documentado has_org_role, OrganizationContext, org efectiva e impersonación super-admin con effectiveRole. (6) Nuevas secciones §11 Edge Functions (corsHeaders/handlePreflight, verify_jwt, naming kebab-case, invoke desde service), §12 Storage (buckets documentos/facturas, paths con organization_id, signed vs public URL), §13 Error handling (errorCatalog + appFeedback notifyOk/Error/Info), §14 Localización es-MX (DD/MM/YYYY, MXN base + USD complementario, IVA dinámico, prioridad Puerto>Aeropuerto>Ciudad). (7) §15 Testing: documentado el wrapper QueryClient+Auth para tests de hooks. (8) Tabla de contenidos renumerada de 15 a 19 secciones. Sin cambios funcionales ni de UI.",
+  },
+  {
     version: "8.100.3",
     date: "2026-05-02",
     type: "patch",
