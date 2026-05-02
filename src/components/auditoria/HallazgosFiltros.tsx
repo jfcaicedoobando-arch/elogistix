@@ -113,13 +113,26 @@ export function HallazgosFiltros(props: Props) {
       </Select>
 
       <Select value={filtroRevision} onValueChange={(v) => setFiltroRevision(v as FiltroRevision)}>
-        <SelectTrigger className="w-[140px] h-8 text-xs">
+        <SelectTrigger className="w-[150px] h-8 text-xs">
           <SelectValue placeholder="Revisión" />
         </SelectTrigger>
         <SelectContent>
           <SelectItem value="todos">Todos</SelectItem>
           <SelectItem value="pendientes">Pendientes</SelectItem>
+          <SelectItem value="en_progreso">En progreso</SelectItem>
           <SelectItem value="revisados">Revisados</SelectItem>
+        </SelectContent>
+      </Select>
+
+      <Select value={filtroResponsable} onValueChange={(v) => setFiltroResponsable(v as FiltroResponsable)}>
+        <SelectTrigger className="w-[150px] h-8 text-xs">
+          <SelectValue placeholder="Responsable" />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="todos">Todos</SelectItem>
+          <SelectItem value="mios">Asignados a mí</SelectItem>
+          <SelectItem value="sin_asignar">Sin asignar</SelectItem>
+          <SelectItem value="vencidos">Vencidos</SelectItem>
         </SelectContent>
       </Select>
 
