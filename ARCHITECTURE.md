@@ -336,7 +336,7 @@ Aceptadas explícitamente; no son deuda pendiente.
 
 ---
 
-## 15. Versionado (SemVer)
+## 19. Versionado (SemVer)
 
 El proyecto sigue **Semantic Versioning** (`MAJOR.MINOR.PATCH`). Mantener `APP_VERSION` (`src/constants/appVersion.ts`), la entrada eager de `src/content/changelogData.ts` y la entrada en `src/content/changelog/v8/chunks/0.ts` siempre sincronizadas.
 
