@@ -27,8 +27,10 @@ export function HallazgosTablaPaginada({
   mostrarRevisadosDefault = false,
   initialFilters,
 }: Props) {
+  const { user } = useAuth();
   const state = useHallazgosTablaState(hallazgos, mostrarRevisadosDefault, initialFilters);
   const [dialogHallazgo, setDialogHallazgo] = useState<HallazgoAuditoria | null>(null);
+  const [asignarHallazgo, setAsignarHallazgo] = useState<HallazgoAuditoria | null>(null);
 
   return (
     <div className="space-y-3">
@@ -58,7 +60,9 @@ export function HallazgosTablaPaginada({
         visibles={state.visibles}
         start={state.start}
         revisiones={state.revisiones}
+        currentUserId={user?.id ?? null}
         onMarcarRevisado={setDialogHallazgo}
+        onAsignarResponsable={setAsignarHallazgo}
       />
 
       <MarcarRevisadoDialog
@@ -69,6 +73,17 @@ export function HallazgosTablaPaginada({
         open={!!dialogHallazgo}
         onOpenChange={(o) => {
           if (!o) setDialogHallazgo(null);
+        }}
+      />
+
+      <AsignarResponsableDialog
+        hallazgo={asignarHallazgo}
+        revisionExistente={
+          asignarHallazgo ? state.revisiones?.get(revisionKey(asignarHallazgo)) ?? null : null
+        }
+        open={!!asignarHallazgo}
+        onOpenChange={(o) => {
+          if (!o) setAsignarHallazgo(null);
         }}
       />
 
