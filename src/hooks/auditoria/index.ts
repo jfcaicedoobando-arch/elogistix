@@ -6,3 +6,4 @@ export * from "./useAuditoriaEjecutivo";
 export * from "./useAuditoriaPageController";
 export * from "./useAuditoriaRevisiones";
 export * from "./useHallazgosTablaState";
+export * from "./useOrgMembersAsignables";
