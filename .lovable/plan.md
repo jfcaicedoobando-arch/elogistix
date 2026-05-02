@@ -1,77 +1,86 @@
+## Objetivo
 
-# Auditoría — Fase 3 completa (v8.103.0)
+Que al hacer click en un header de la tabla de Embarques, el ordenamiento se aplique sobre **todos los registros del servidor** (no solo la página visible). El orden se manda a Supabase vía `.order()` y se recarga la página actual.
 
-Convierte el módulo de Auditoría en una herramienta ejecutiva de fugas financieras y productividad operativa, sobre la base de Fase 1 (dashboard) y Fase 2 (asignación) ya entregadas.
+## Alcance
 
-## Qué obtiene el director general
+Solo la tabla del módulo **Embarques** (`/embarques`). Otras tablas (Cotizaciones, Clientes, Facturación) quedan igual y se migrarán después si funciona bien.
 
-1. Una tarjeta de **fuga financiera** que suma en MXN los embarques con margen negativo, margen bajo y proformas sin facturar.
-2. **MTTR** (tiempo medio de resolución) por operador y ranking "más resuelve" vs "más pendientes".
-3. **Tendencia 30 días** del score, hallazgos críticos y pendientes (línea), apoyado en snapshots diarios.
-4. **Hilo de comentarios** por hallazgo (no sólo una "acción tomada" pisable).
-5. **Snooze** con justificación y fecha de re-aparición (saca ruido temporal sin perder trazabilidad).
-6. **Configuración** de umbrales por organización (% margen mínimo, días para proforma vencida, días sin movimiento).
-7. **Digest semanal por correo** vía Resend con resumen y top fugas.
+## Columnas ordenables (server-side)
 
-## Cambios de base de datos
+| Columna UI | Campo DB | Tipo |
+|---|---|---|
+| Expediente | `expediente` | text |
+| Cliente | `cliente_nombre` | text |
+| Modo | `modo` | enum |
+| Estado | `estado` | enum |
+| ETD | `etd` | date |
+| ETA | `eta` | date |
+| Operador | `operador` | text |
+| Creado | `created_at` | timestamp (default actual) |
 
-Una sola migración que:
+Las columnas calculadas en cliente (ej. "Liquidación", "Docs faltantes") **no** son ordenables server-side — se mantienen sin sort o con sort local sobre la página visible, marcándolas visualmente distinto.
 
-- Extiende `auditoria_revisiones` con `snoozed_until date` y `snooze_motivo text`.
-- Crea `auditoria_comentarios` (revision_id, autor, contenido, timestamp) con RLS por organización (lectura tenant; escritura admin/operador; autor = `auth.uid()`).
-- Crea `auditoria_snapshots` (organization_id, fecha, totales, criticos/altos/medios, score, por_regla jsonb) con `UNIQUE(organization_id, fecha)` y RLS tenant.
-- Reescribe `auditoria_embarques_org()` agregando 6 reglas nuevas, sin romper el contrato actual:
-  - `margen_negativo` (crítico) — utilidad MXN < 0.
-  - `margen_bajo` (alto) — margen % < umbral configurable (default 5%).
-  - `venta_sin_costo` (alto) — embarque con ventas y sin un solo costo cargado.
-  - `costo_sin_venta` (medio) — embarque cerrado/entregado con costos pero sin venta.
-  - `proforma_vencida` (alto) — proforma sin factura > N días (default 30).
-  - `embarque_huerfano` (medio) — sin operador o sin movimientos en bitácora > N días (default 5).
-  - Conversión a MXN usando `tipo_cambio_usd`/`tipo_cambio_eur` del propio embarque.
-  - Lee umbrales desde `public.configuracion` con `categoria='auditoria'`.
-  - Devuelve además bloque `umbrales` para que la UI sepa qué se aplicó.
-- Crea `auditoria_capturar_snapshot(p_organization_id uuid)` (SECURITY DEFINER) para capturar el snapshot del día desde la app o desde una edge function.
+## Cambios técnicos
 
-## Capa de datos (services + hooks)
+### 1. `src/services/embarque/queries.ts`
+- Añadir parámetros `sortBy?: string` y `sortDir?: 'asc' | 'desc'` a `EmbarquesPaginadosFilters`.
+- Reemplazar el `.order('created_at', { ascending: false })` fijo por:
+  ```ts
+  const sortCol = f.sortBy ?? 'created_at';
+  const sortAsc = (f.sortDir ?? 'desc') === 'asc';
+  query = query.order(sortCol, { ascending: sortAsc, nullsFirst: false });
+  ```
+- Whitelist de columnas permitidas para evitar inyección (validar contra una constante `SORTABLE_COLUMNS`).
 
-- `src/types/auditoria.ts`: agrega `EstadoRevision` con `snoozed_until/motivo`, tipos `AuditoriaComentario`, `AuditoriaSnapshot`, `AuditoriaUmbrales`, y nuevas reglas en el union de `RevisionRegla`.
-- `src/services/auditoria/index.ts`: `fetchComentarios(revisionId)`, `insertComentario`, `fetchSnapshots(dias)`, `capturarSnapshot()`, `snoozeRevision(id, hasta, motivo)`.
-- Nuevos hooks (en su carpeta + barrel `index.ts`):
-  - `useAuditoriaComentarios(revisionId)` — lista + mutation insertar.
-  - `useAuditoriaSnapshots(dias=30)` — para tendencia.
-  - `useSnoozeHallazgo()` — mutation con bitácora.
-  - `useCapturarSnapshot()` — mutation manual + invocada por digest.
-- Amplía `useAuditoriaEjecutivo`:
-  - **Riesgo financiero MXN** (suma de detalles parseados de las nuevas reglas) — sin red extra, deriva del payload existente.
-  - **MTTR por operador** desde `auditoria_revisiones` (`asignado_at` → `updated_at` cuando `estado_revision='revisado'`).
-  - **Top 5 operadores** por hallazgos resueltos y por pendientes.
+### 2. `src/hooks/embarque/useEmbarquesPageState.ts`
+- Agregar estado `sortBy` y `sortDir` (default: `created_at` / `desc`).
+- Resetear `page` a 0 cuando cambia el sort.
 
-## Cambios de UI
+### 3. `src/hooks/embarque/useEmbarqueQueries.ts`
+- Pasar `sortBy` y `sortDir` al `queryKey` y al `queryFn` de `useEmbarquesPaginados` para que React Query invalide y refetchee.
 
-- `AuditoriaEjecutivoTab.tsx`: agrega tarjeta "Riesgo financiero MXN", grid de "Productividad de operadores" (MTTR + ranking) y `AuditoriaTendenciaChart` (recharts LineChart 30d, score y críticos).
-- `MarcarRevisadoDialog.tsx`: agrega tabs internas **Acción / Comentarios / Snooze**:
-  - Comentarios: lista cronológica + textarea para agregar.
-  - Snooze: date picker + motivo obligatorio; al guardar, RLS-friendly, hallazgo desaparece de filtros "pendientes" hasta `snoozed_until`.
-- `HallazgosTablaPaginada.tsx` / `useHallazgosTablaState.ts`: filtro por nuevas reglas; ocultar snoozed por defecto (toggle "Mostrar snoozed").
-- `Auditoria.tsx`: tab por defecto pasa a `ejecutivo` cuando el rol es `admin`/`super_admin`; mantiene `tabla` para `operador`.
-- Nuevo `TabAuditoria.tsx` en `src/components/configuracion/` con campos `margen_minimo_pct`, `dias_proforma_vencida`, `dias_huerfano`. Se enchufa en `Configuracion.tsx` y `useConfiguracionState.ts` siguiendo el patrón existente de `categoria='auditoria'`.
+### 4. `src/components/shared/DataTable.tsx`
+- Soportar modo controlado de sort:
+  ```ts
+  sortMode?: 'client' | 'server';
+  controlledSort?: { key: string; dir: 'asc' | 'desc' } | null;
+  onSortChange?: (key: string | null, dir: 'asc' | 'desc') => void;
+  ```
+- Si `sortMode === 'server'`: NO ordena en memoria, solo dispara `onSortChange` con el ciclo asc → desc → null.
+- Default sigue siendo `'client'` para no romper otras tablas.
 
-## Edge functions
+### 5. Página `src/pages/embarques/Embarques.tsx` (o el componente de tabla que use)
+- Pasar `sortMode="server"`, `controlledSort` y `onSortChange` al `DataTable`.
+- Marcar las columnas calculadas con `sortable: false` (o un flag visual de "orden local").
 
-- `supabase/functions/auditoria-snapshot-daily/index.ts`: itera todas las orgs activas (service role), llama `auditoria_capturar_snapshot` por cada una, registra resultado.
-- `supabase/functions/auditoria-weekly-digest/index.ts`: arma el resumen ejecutivo de cada org (score actual, delta semanal, top 5 fugas, asignaciones vencidas) y lo manda a los admins de la org via Resend (gateway Lovable).
-  - Si `RESEND_API_KEY` no está aún, el código no falla: hace dry-run y registra en logs. El usuario puede agregarlo después.
-- Cron via `pg_cron`+`pg_net` se documenta en el changelog; no se programa automáticamente para no inyectar el anon key en una migración.
+### 6. Indicador visual
+- Sutil etiqueta arriba de la tabla cuando hay sort activo: `Ordenado por Expediente ↑ · global`.
+- Esto deja claro al usuario que el orden aplica sobre los 500 (no solo los 50 visibles).
 
-## Versionado y changelog
+## Lo que NO se cambia
 
-- `APP_VERSION` → **8.103.0** (MINOR: features nuevas, sin breaking changes).
-- Entrada nueva en `src/content/changelog/v8/chunks/0.ts` y `src/content/changelogData.ts` con todos los puntos anteriores en español.
+- Paginación, filtros, búsqueda y debounce siguen igual.
+- RLS y permisos no se tocan.
+- Otros módulos con `DataTable` mantienen orden client-side (solo cambia el default behavior cuando se opta-in).
 
-## Detalles técnicos relevantes
+## Changelog y versión
 
-- **Sin red extra para tarjetas ejecutivas nuevas**: riesgo financiero, MTTR y rankings se derivan del payload de `auditoria_embarques_org()` y del cache de `useAuditoriaRevisiones`.
-- **Backfill de snapshots**: la migración no rellena historial; el primer snapshot se captura al primer load del tab ejecutivo (mutation idempotente por `UNIQUE(organization_id, fecha)`), así la línea empieza a poblarse desde el día 1.
-- **Compatibilidad**: el contrato JSON de `auditoria_embarques_org()` mantiene todas las claves anteriores; sólo agrega entradas en `por_regla` y un bloque `umbrales`. Ningún consumidor existente se rompe.
-- **RLS**: comentarios y snapshots heredan el patrón de `auditoria_revisiones` (lectura tenant; escritura admin/operador). Snooze va dentro de `auditoria_revisiones` y reusa sus policies.
-- **Snooze semántica**: un hallazgo "snoozed" sigue siendo `pendiente` para auditoría histórica, sólo se filtra en la vista por defecto (`snoozed_until > today`).
+- Bump `APP_VERSION` a `v8.104.0` (minor: feature visible al usuario).
+- Entrada en `src/content/changelog/v8/chunks/0.ts` y `src/content/changelogData.ts`:
+  > **Ordenamiento global en tabla de Embarques**: Al ordenar por columna ahora se aplica sobre todos los registros del servidor, no solo la página visible. Indicador visual confirma el campo y dirección activos.
+
+## Riesgos y mitigaciones
+
+| Riesgo | Mitigación |
+|---|---|
+| Performance: `.order()` sobre `cliente_nombre` sin índice puede ser lento con miles de registros | Si se nota lentitud, agregar índice `CREATE INDEX ON embarques (organization_id, cliente_nombre)`. No incluido en este plan — se evalúa después. |
+| Cambio de orden recarga toda la página actual | Comportamiento esperado y correcto; el spinner del refetch ya existe. |
+| Romper otras tablas que usan `DataTable` | El flag `sortMode` es opt-in; default sigue siendo client. |
+
+## Validación post-implementación
+
+1. Ordenar por Expediente asc/desc → verificar que los expedientes en la página 1 sean los primeros del dataset completo.
+2. Cambiar de página → el orden persiste.
+3. Aplicar filtro + sort → ambos se aplican en el server.
+4. Click 3 veces en una columna → vuelve al orden default (`created_at desc`).
