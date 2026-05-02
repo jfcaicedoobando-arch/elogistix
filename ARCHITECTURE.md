@@ -300,7 +300,7 @@ Estas decisiones son intencionales. **NO marcarlas como violación de capa** en 
   Nuevos `useEffect` deben encajar en una de estas categorías o ser candidatos a refactor.
 - **Lazy-load de jsPDF** (v8.87.0). `proformaPdf` y `cotizacionPdf` se cargan vía dynamic import. No revertir.
 - **Tipos en `src/types/`** (v8.87.0). Eliminado el re-export legacy `useCotizacionTypes.ts`. Los tipos compartidos viven sólo en `@/types/cotizacion` y `@/types/cotizacionPL`.
-- **Sistema de diseño unificado — Apple-inspired** (v8.101.0). Componentes compartidos canónicos en `src/components/shared/` (`KpiCard`, `PageHeader`, `PageTabs`) y `src/components/ui/toggle-group.tsx` para segmented controls. Reglas:
+- **Sistema de diseño unificado — Apple-inspired** (v8.100.3). Componentes compartidos canónicos en `src/components/shared/` (`KpiCard`, `PageHeader`, `PageTabs`) y `src/components/ui/toggle-group.tsx` para segmented controls. Reglas:
   - Sidebar activo: `bg-sidebar-accent/10` + `font-semibold` (sin bloques sólidos de alto contraste).
   - Header sticky global: `z-40` + `bg-card/95` con `backdrop-blur` (evita clipping de contenido al hacer scroll).
   - Grids de cards: `auto-rows-fr` + `h-full` para garantizar simetría vertical.
@@ -308,8 +308,9 @@ Estas decisiones son intencionales. **NO marcarlas como violación de capa** en 
   - Loading de rutas: skeletons layout-aware en `RouteLoadingFallback.tsx` (no spinners globales).
   - Light mode: logo y avatar sin contenedor blanco/ring.
   - Detalle de embarque: sin botón "back" redundante cuando hay breadcrumbs.
+- **Hooks barrel folder universal** (v8.100.4). Toda subcarpeta de `src/hooks/` expone un `index.ts`. Importar siempre por `@/hooks/<dominio>`; importar archivos sueltos sólo cuando el barrel no exponga la API.
 
-## 13. Decisiones de no hacer
+## 17. Decisiones de no hacer
 
 Aceptadas explícitamente; no son deuda pendiente.
 
