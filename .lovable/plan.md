@@ -1,71 +1,104 @@
 
-# Pulido visual UI/UX (modo escritorio) — v8.101.0
+# Mejoras al Módulo de Auditoría Operativa
 
-Implementación de los 11 hallazgos críticos / altos / pulido fino detectados en la auditoría visual previa. Todos los cambios son quirúrgicos y no tocan lógica de negocio. Resultado: app más consistente, simétrica y "Apple-like".
+## Diagnóstico actual
 
-## Cambios concretos
+El módulo es **sólido como inspector operativo** (detecta hallazgos por 4 reglas, permite filtrar, marcar revisado con bitácora y badge en sidebar). Pero hoy está pensado para el **operador de tráfico**, no para el **director general**. Le faltan tres cosas clave:
 
-### 1. Sidebar item activo más sutil
-`src/components/layout/SidebarGroupBlock.tsx` — el item activo ya no se pinta con el azul-marino sólido (`bg-sidebar-accent`), pasa a `bg-sidebar-accent/10 + text-sidebar-foreground font-semibold`. Conserva el indicador lateral azul (3 px) que ya existe. Resultado: barra de navegación menos pesada en light mode.
+1. **Visión ejecutiva**: solo muestra hallazgos crudos. No hay tendencia, ranking de responsables, ni indicadores de salud operativa.
+2. **Accionabilidad**: marcar "revisado" es un paso, pero no se asigna a nadie, no tiene fecha límite, ni se mide tiempo de resolución (MTTR).
+3. **Cobertura de reglas**: las 4 reglas actuales cubren docs/fechas/facturación, pero no rentabilidad, márgenes, demoras de proveedor, ni cumplimiento financiero.
 
-### 2. Header sticky reforzado
-`src/components/layout/Layout.tsx` — sube `z-30` → `z-40` y aumenta opacidad del fondo (`bg-card/95`) para que el sub-header del detalle no se vea cortado al hacer scroll. Borde inferior con tono fijo (`border-border/60`).
+---
 
-### 3. Quitar botón "← back" redundante en EmbarqueDetalleHeader
-Ya hay breadcrumb en el header global. Se elimina `<Button ArrowLeft>` y se simplifica el contenedor flex.
+## Plan de mejora — 3 fases
 
-### 4. Igualar alturas en TabResumen
-Las cards "Datos Generales" y "Ruta y Transporte" usaban grid sin `auto-rows-fr`. Ahora ambas tienen `h-full` y el grid declara `auto-rows-fr` para alturas idénticas. Mismo fix para Shipper/Consignatario.
+### Fase 1 — Vista Ejecutiva (Director General)
 
-### 5. Reportes: columna Margen ya no se corta
-`src/pages/dashboard/Reportes.tsx` deja de usar `grid lg:grid-cols-5` y pone chart + tabla apilados verticalmente full-width. `ReportesTablaClientes` quita su `lg:col-span-3`. La tabla tiene espacio para las 6 columnas sin scroll horizontal.
+**Nueva pestaña "Resumen ejecutivo"** (default cuando entra el director), enfocada en salud operativa y tendencia, no en hallazgos individuales.
 
-### 6. Pre-Facturación: diferenciar tabs anidados
-En `src/components/facturacion/TabProformas.tsx` el segundo nivel de Tabs (Todas/Pendientes/Facturadas) se reemplaza por un `ToggleGroup` outline (estilo segmented control con borde) — visualmente distinto del Tabs principal de la página, deja claro que es un filtro y no navegación.
+- **Score de salud operativa** (0-100): % de embarques activos sin hallazgos críticos, ponderado por severidad. Big number con flecha vs. semana anterior.
+- **Tendencia 30 días**: línea de hallazgos por severidad/día (recharts) — ¿estamos mejorando o empeorando?
+- **Top 5 clientes con más hallazgos** y **Top 5 operadores responsables** (ranking accionable).
+- **Distribución por etapa del embarque** (barras): ¿dónde se concentran los problemas? (Confirmado / En Tránsito / En Aduana / Entregado).
+- **MTTR — Tiempo medio de resolución**: días promedio entre detección y "marcado revisado", desglosado por severidad.
+- **Hallazgos sin atender > 7 días** (alerta roja con CTA "Asignar responsable").
 
-### 7. Logo del sidebar sin contenedor blanco en light
-`src/components/layout/AppSidebar.tsx` — `bg-white p-1 ring-1` se aplica solo en dark mode. En light el logo se renderiza directo sobre el sidebar.
+### Fase 2 — Accionabilidad y workflow
 
-### 8. Avatar usuario sidebar con fondo neutro
-Mismo archivo — `bg-sidebar-accent` (azul marino sólido) → `bg-muted text-foreground`. Avatar más discreto, alineado con el resto del sidebar light.
+Convertir cada hallazgo en una **tarea con dueño y deadline**:
 
-### 9. Breadcrumb: placeholder mientras se resuelve UUID
-`src/components/layout/Breadcrumbs.tsx` — cuando el segmento es un UUID (36 chars con guiones) y aún no hay label dinámico registrado, mostrar `…` en lugar del UUID truncado. Evita el flash feo de `009ba3b0-ab4b-…`.
+- **Asignar responsable** a un hallazgo (dropdown con miembros de la organización). Email/notificación opcional.
+- **Fecha límite de resolución** (con badge "vencido" en rojo).
+- **Estados**: Pendiente → En proceso → Revisado → (opcional) Reabierto.
+- **Comentarios/historial**: hilo de notas en el dialog de revisión, no solo "acción tomada" único.
+- **Vista "Mis hallazgos asignados"** (filtro rápido en chip).
+- **Reasignar / escalar**: botón para escalar a supervisor si lleva > N días.
+- **Snooze**: posponer hallazgo N días con justificación (útil para esperar respuesta de cliente/agente).
 
-### 10. Skeleton de página completa
-`src/components/layout/RouteLoadingFallback.tsx` — reemplaza el spinner centrado por un skeleton que respeta el layout (header skeleton + grid de cards skeleton). Sensación de carga más rápida y "premium".
+### Fase 3 — Nuevas reglas de auditoría (RPC backend)
 
-### 11. Bump versión + Changelog
-- `src/constants/appVersion.ts` → `8.101.0`
-- Nueva entrada al inicio de `src/content/changelog/v8/chunks/0.ts` y `src/content/changelogData.ts` (versión 8.101.0, tipo `minor`, fecha 2026-05-02) describiendo los 10 ajustes visuales.
+Ampliar `auditoria_embarques_org` con reglas que el director realmente quiere ver:
 
-## Archivos a modificar (10)
+- **`margen_bajo`**: embarques con utilidad < umbral configurable (ej. < 5%) o **margen negativo**. Severidad crítica si pierde dinero.
+- **`venta_sin_costo`**: embarques con ingresos registrados pero sin costos asociados (riesgo de margen falso).
+- **`costo_sin_venta`**: costos cargados sin concepto de venta correspondiente (fugas).
+- **`proforma_vencida`**: proformas emitidas > 30 días sin pago/factura.
+- **`demora_proveedor`**: ETA real vs. ETA estimada > X días, con desglose por naviera.
+- **`embarque_huérfano`**: sin operador asignado, sin tracking actualizado en > 5 días.
+- **`tipo_cambio_desactualizado`**: embarques cerrados con TC distinto al del día.
+- **`cliente_sin_contacto_principal`** o sin documentos onboarding completos.
 
-```text
-src/components/layout/SidebarGroupBlock.tsx        # sidebar activo sutil
-src/components/layout/Layout.tsx                    # header z-40 + bg
-src/components/layout/AppSidebar.tsx                # logo + avatar light
-src/components/layout/Breadcrumbs.tsx               # placeholder UUID
-src/components/layout/RouteLoadingFallback.tsx      # skeleton layout
-src/components/embarque/EmbarqueDetalleHeader.tsx   # quitar back
-src/components/embarque/TabResumen.tsx              # h-full auto-rows-fr
-src/components/facturacion/TabProformas.tsx         # ToggleGroup
-src/pages/dashboard/Reportes.tsx                    # layout vertical
-src/components/reportes/ReportesTablaClientes.tsx   # quitar col-span-3
-```
+Cada regla con su severidad, configurable desde Configuración (umbrales por org).
 
-Y los 3 archivos de versión/changelog:
-```text
-src/constants/appVersion.ts
-src/content/changelog/v8/chunks/0.ts
-src/content/changelogData.ts
-```
+---
 
-## Lo que NO se toca (a propósito)
+## Mejoras transversales (todas las fases)
 
-- **KpiCard, Tabs, PageHeader** — ya son canónicos y se usan consistentemente. Lo que faltaba era aplicarlos bien (ya lo están). Solo el "doble-tab" de Pre-Facturación rompía y se arregla en el paso 6.
-- **Theme toggle** — ya es `variant="ghost"`, no hace falta cambiarlo (el botón azul que vi antes era del avatar de menú, falso positivo).
-- **Dashboard timeline KPI** — es intencional como vista hero del Dashboard y no compite con las KPI cards de las demás páginas (cumplen funciones distintas). Lo dejo.
-- **Iconografía sidebar / tooltip ⚠️ / tabular-nums** — pulido muy fino, quedan para una v8.101.x posterior si quieres priorizarlos.
+- **Exportar a CSV/Excel** (botón en toolbar) — usar `src/generators/exportCsv.ts`. Filtros aplicados se respetan.
+- **Reporte semanal por email** (edge function `auditoria-weekly-digest` con cron): resumen ejecutivo a directores cada lunes.
+- **Snapshot histórico**: nueva tabla `auditoria_snapshots` que guarda el conteo diario por regla/severidad/cliente para alimentar la tendencia 30d sin recalcular.
+- **Drill-down desde KPIs**: clic en "Críticos" filtra automáticamente la tabla.
+- **Permisos por rol**: el director solo ve la pestaña ejecutiva por default; operadores ven la operativa. Rol `auditor` opcional.
+- **Búsqueda extendida**: hoy solo busca por expediente. Agregar cliente, detalle, regla.
 
-Una vez aprobado, ejecuto los 13 archivos en una sola pasada y dejo el changelog actualizado.
+---
+
+## Detalles técnicos
+
+### Backend (Supabase)
+- Ampliar `public.auditoria_embarques_org()` con nuevas reglas (CTEs adicionales).
+- Tabla `public.auditoria_revisiones` — agregar columnas: `responsable_id uuid`, `fecha_limite date`, `estado text`, `prioridad text`.
+- Nueva tabla `public.auditoria_comentarios` (hilo por revisión).
+- Nueva tabla `public.auditoria_snapshots` (rollup diario para tendencia).
+- Nueva tabla `public.auditoria_config_org` (umbrales por organización: margen mínimo, días demora, etc.).
+- Edge function `auditoria-weekly-digest` (Resend o equivalente).
+- pg_cron job nocturno para snapshot.
+
+### Frontend
+- Nueva ruta/tab `/auditoria?tab=ejecutivo` con `AuditoriaEjecutivoTab.tsx`.
+- Componentes nuevos: `AuditoriaScoreCard`, `AuditoriaTendenciaChart`, `TopClientesHallazgos`, `MTTRCard`, `DistribucionPorEtapaChart`.
+- Dialog de revisión evoluciona: agrega selector de responsable, fecha límite, hilo de comentarios.
+- Hooks nuevos en `src/hooks/auditoria/`: `useAuditoriaSnapshots`, `useAuditoriaTendencia`, `useAuditoriaConfig`, `useAsignarHallazgo`.
+- Service `src/services/auditoria/index.ts` ampliado.
+
+### Versionado
+- Bump a **v8.101.0 (MINOR)** — feature significativa, no breaking.
+- Entrada en `Changelog.tsx` y `src/content/changelog/v8/chunks/`.
+
+---
+
+## Recomendación de orden
+
+Sugiero arrancar con **Fase 1 (Vista Ejecutiva)** porque:
+- Es lo que más rápido le da valor al director general.
+- Reusa los datos que ya existen (no requiere cambios pesados de schema).
+- Hace evidente el valor del módulo y motiva la inversión en Fase 2/3.
+
+Después Fase 3 (nuevas reglas) y por último Fase 2 (workflow de asignación), que es la más invasiva en schema.
+
+---
+
+## Pregunta para continuar
+
+¿Quieres que arranque con **Fase 1 completa** (vista ejecutiva con score, tendencia, top clientes, MTTR), o prefieres que haga una versión MVP con solo score + tendencia + top clientes y vamos iterando?
