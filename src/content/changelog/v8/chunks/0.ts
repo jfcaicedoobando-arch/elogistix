@@ -2,6 +2,13 @@ import type { ChangelogEntry } from "../../../changelogData";
 
 export const chunk0: ChangelogEntry[] = [
   {
+    version: "8.104.0",
+    date: "2026-05-02",
+    type: "minor",
+    title: "Embarques: ordenamiento global server-side en la tabla",
+    description: "Al hacer click en el header de una columna ordenable de la tabla de Embarques (Expediente, Cliente, Modo, Estado, ETD, ETA, Operador) el orden ahora se aplica sobre TODOS los registros en el servidor, no sólo sobre la página visible. Implementación: nuevos parámetros sortBy/sortDir en fetchEmbarquesPaginados con whitelist SORTABLE_EMBARQUE_COLUMNS para evitar inyección, mapeo SORT_KEY_TO_COLUMN del key UI al campo DB, .order() dinámico con nullsFirst:false. El hook useEmbarquesPaginados propaga el sort al queryKey para que React Query refetchee al cambiar. useEmbarquesPageState expone sortKey/sortDir y handleSortChange con ciclo null→asc→desc→null que también resetea page a 0. DataTable gana props sortMode ('client' | 'server'), controlledSort y onSortChange: en modo server NO ordena en memoria, sólo notifica al padre. Default sigue siendo 'client' para no afectar otras tablas. Indicador visual sobre la tabla cuando hay sort activo ('Ordenado por X ↑ · global') con botón 'Quitar orden'. La columna Proforma deja de ser ordenable porque no tiene equivalente server-side simple. Beneficio: con datasets grandes el orden ya no es engañoso (antes ordenaba sólo los 20 visibles).",
+  },
+  {
     version: "8.103.1",
     date: "2026-05-02",
     type: "patch",

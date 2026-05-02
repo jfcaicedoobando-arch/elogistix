@@ -95,8 +95,6 @@ export function buildEmbarqueColumns({
     },
     {
       key: "proforma", header: "Proforma", width: "w-[180px]",
-      sortable: true,
-      sortValue: (e) => (e.tiene_proforma ? "1" : "0"),
       render: (e) => <ProformaBadge tieneProforma={e.tiene_proforma} size="sm" />,
     },
   ];

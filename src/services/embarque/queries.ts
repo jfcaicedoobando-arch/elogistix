@@ -19,6 +19,27 @@ export async function fetchEmbarques(organizationId: string | null): Promise<Emb
   return (data ?? []) as EmbarqueRow[];
 }
 
+/**
+ * Whitelist de columnas server-side ordenables. Evita inyección y garantiza
+ * que la columna existe en `embarques`. Las claves del UI se mapean a estos
+ * campos reales de DB en `SORT_KEY_TO_COLUMN`.
+ */
+export const SORTABLE_EMBARQUE_COLUMNS = [
+  'created_at', 'expediente', 'cliente_nombre', 'modo', 'estado', 'etd', 'eta', 'operador',
+] as const;
+export type SortableEmbarqueColumn = typeof SORTABLE_EMBARQUE_COLUMNS[number];
+
+export const SORT_KEY_TO_COLUMN: Record<string, SortableEmbarqueColumn> = {
+  expediente: 'expediente',
+  cliente: 'cliente_nombre',
+  modo: 'modo',
+  estado: 'estado',
+  etd: 'etd',
+  eta: 'eta',
+  operador: 'operador',
+  created_at: 'created_at',
+};
+
 export interface EmbarquesPaginadosFilters {
   organizationId: string | null;
   search: string;
@@ -30,17 +51,24 @@ export interface EmbarquesPaginadosFilters {
   fechaHasta?: string;
   page: number;
   pageSize: number;
+  sortBy?: SortableEmbarqueColumn;
+  sortDir?: 'asc' | 'desc';
 }
 
 export async function fetchEmbarquesPaginados(
   f: EmbarquesPaginadosFilters,
 ): Promise<{ data: EmbarqueRow[]; count: number }> {
+  const sortCol: SortableEmbarqueColumn = SORTABLE_EMBARQUE_COLUMNS.includes(f.sortBy as SortableEmbarqueColumn)
+    ? (f.sortBy as SortableEmbarqueColumn)
+    : 'created_at';
+  const ascending = f.sortDir === 'asc';
+
   let query = supabase
     .from('embarques')
     // count: 'estimated' evita full table scans en cada cambio de filtro;
     // el conteo aproximado es suficiente para mostrar paginación.
     .select(EMBARQUE_LIST_COLUMNS, { count: 'estimated' })
-    .order('created_at', { ascending: false });
+    .order(sortCol, { ascending, nullsFirst: false });
 
   if (f.organizationId) query = query.eq('organization_id', f.organizationId);
 

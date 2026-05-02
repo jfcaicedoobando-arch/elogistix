@@ -35,13 +35,15 @@ interface UseEmbarquesPaginadosParams {
   pageSize: number;
   fechaDesde?: string;
   fechaHasta?: string;
+  sortBy?: import('@/services/embarque/queries').SortableEmbarqueColumn;
+  sortDir?: 'asc' | 'desc';
 }
 
 export function useEmbarquesPaginados({
-  search, filterModo, filterEstado, filterCliente, filterOperador, filterProforma = 'todos', page, pageSize, fechaDesde, fechaHasta,
+  search, filterModo, filterEstado, filterCliente, filterOperador, filterProforma = 'todos', page, pageSize, fechaDesde, fechaHasta, sortBy, sortDir,
 }: UseEmbarquesPaginadosParams) {
   const { organizationId } = useOrgFilter();
-  const filters = { search, filterModo, filterEstado, filterCliente, filterOperador, filterProforma, page, pageSize, fechaDesde, fechaHasta, organizationId };
+  const filters = { search, filterModo, filterEstado, filterCliente, filterOperador, filterProforma, page, pageSize, fechaDesde, fechaHasta, sortBy, sortDir, organizationId };
 
   return useQuery({
     queryKey: queryKeys.embarques.list(filters),
@@ -56,6 +58,8 @@ export function useEmbarquesPaginados({
       fechaHasta,
       page,
       pageSize,
+      sortBy,
+      sortDir,
     }),
     placeholderData: (prev) => prev,
   });

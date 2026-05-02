@@ -36,10 +36,20 @@ export default function Embarques() {
   const {
     search, filterModo, filterEstado, filterCliente, filterOperador, filterProforma,
     fechaDesde, fechaHasta, page, pageSize,
+    sortKey, sortDir, handleSortChange,
     setSearch, setFilterModo, setFilterEstado, setFilterCliente, setFilterOperador, setFilterProforma,
     setFechaDesde, setFechaHasta, setPage, setPageSize,
     filtered, displayCount, totalPages,
   } = state;
+
+  // Etiqueta legible para indicador de "orden global"
+  const sortLabelMap: Record<string, string> = {
+    expediente: "Expediente", cliente: "Cliente", modo: "Modo",
+    estado: "Estado", etd: "ETD", eta: "ETA", operador: "Operador",
+  };
+  const sortIndicator = sortKey
+    ? `Ordenado por ${sortLabelMap[sortKey] ?? sortKey} ${sortDir === "asc" ? "↑" : "↓"} · global`
+    : null;
 
   return (
     <div className="space-y-6">
@@ -130,6 +140,18 @@ export default function Embarques() {
 
           <Card>
             <CardContent className="p-0">
+              {sortIndicator && (
+                <div className="flex items-center justify-between px-3 py-1.5 text-xs text-muted-foreground border-b bg-muted/20">
+                  <span>{sortIndicator}</span>
+                  <button
+                    type="button"
+                    onClick={() => handleSortChange(null, "asc")}
+                    className="text-primary hover:underline"
+                  >
+                    Quitar orden
+                  </button>
+                </div>
+              )}
               <DataTable
                 columns={columns}
                 data={filtered}
@@ -139,6 +161,9 @@ export default function Embarques() {
                 onRowMouseEnter={(e) => prefetchEmbarque(e.id)}
                 rowKey={(e) => e.id}
                 rowClassName={() => "group"}
+                sortMode="server"
+                controlledSort={{ key: sortKey, dir: sortDir }}
+                onSortChange={handleSortChange}
               />
               <PaginationControls
                 page={page}
