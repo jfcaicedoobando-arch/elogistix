@@ -2,7 +2,7 @@
  * Tabla pura de hallazgos de auditoría — render solamente.
  */
 import { format } from "date-fns";
-import { CheckCircle2, ExternalLink } from "lucide-react";
+import { CheckCircle2, ExternalLink, UserPlus, UserCheck, AlertTriangle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import {
   Table,
@@ -28,10 +28,18 @@ interface Props {
   visibles: HallazgoAuditoria[];
   start: number;
   revisiones: Map<string, AuditoriaRevision> | undefined;
+  currentUserId?: string | null;
   onMarcarRevisado: (h: HallazgoAuditoria) => void;
+  onAsignarResponsable: (h: HallazgoAuditoria) => void;
 }
 
-export function HallazgosTabla({ visibles, start, revisiones, onMarcarRevisado }: Props) {
+function isVencida(fechaLimite: string | null): boolean {
+  if (!fechaLimite) return false;
+  const today = new Date().toISOString().slice(0, 10);
+  return fechaLimite < today;
+}
+
+export function HallazgosTabla({ visibles, start, revisiones, currentUserId, onMarcarRevisado, onAsignarResponsable }: Props) {
   const navigate = useNavigate();
 
   return (
