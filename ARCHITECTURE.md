@@ -2,7 +2,7 @@
 
 Guía de capas, reglas y convenciones del proyecto. **Mantener este contrato evita acoplamientos y simplifica los tests.**
 
-> Última revisión: **v8.101.0 — 2026-05-02**
+> Última revisión: **v8.100.3 — 2026-05-02**
 > Fuente espejo: `mem://technical/architecture-and-standards`.
 
 ## Tabla de contenidos
@@ -21,6 +21,7 @@ Guía de capas, reglas y convenciones del proyecto. **Mantener este contrato evi
 12. [Decisiones explícitas (con fecha)](#12-decisiones-explícitas-con-fecha)
 13. [Decisiones de no hacer](#13-decisiones-de-no-hacer)
 14. [Glosario](#14-glosario)
+15. [Versionado (SemVer)](#15-versionado-semver)
 
 ---
 
