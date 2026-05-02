@@ -60,6 +60,12 @@ export function useAuditoriaPageController() {
       docs_pendientes_avanzado: [],
       fechas: [],
       ventas_sin_facturar: [],
+      margen_negativo: [],
+      margen_bajo: [],
+      venta_sin_costo: [],
+      costo_sin_venta: [],
+      proforma_vencida: [],
+      embarque_huerfano: [],
     };
     for (const h of hallazgosFiltrados) map[h.regla].push(h);
     return map;
