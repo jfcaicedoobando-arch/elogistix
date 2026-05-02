@@ -54,6 +54,7 @@ export function HallazgosTabla({ visibles, start, revisiones, currentUserId, onM
             <TableHead className="w-[110px]">Estado</TableHead>
             <TableHead className="w-[100px]">ETA</TableHead>
             <TableHead>Detalle</TableHead>
+            <TableHead className="w-[170px]">Responsable</TableHead>
             <TableHead className="w-[150px]">Revisión</TableHead>
             <TableHead className="w-[50px]" />
           </TableRow>
@@ -61,7 +62,7 @@ export function HallazgosTabla({ visibles, start, revisiones, currentUserId, onM
         <TableBody>
           {visibles.length === 0 ? (
             <TableRow>
-              <TableCell colSpan={10} className="text-center text-sm text-muted-foreground py-8">
+              <TableCell colSpan={11} className="text-center text-sm text-muted-foreground py-8">
                 Sin hallazgos que coincidan con los filtros.
               </TableCell>
             </TableRow>
@@ -69,6 +70,8 @@ export function HallazgosTabla({ visibles, start, revisiones, currentUserId, onM
             visibles.map((h, i) => {
               const sev = severidadConfig[h.severidad];
               const revision = revisiones?.get(revisionKey(h)) ?? null;
+              const responsable = revision?.responsable_id ? revision : null;
+              const vencida = isVencida(revision?.fecha_limite ?? null) && revision?.estado_revision !== "revisado";
               return (
                 <TableRow
                   key={`${h.embarque_id}-${h.regla}-${start + i}`}
