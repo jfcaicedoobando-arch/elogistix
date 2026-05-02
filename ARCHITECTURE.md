@@ -277,10 +277,11 @@ Ejemplos canónicos en el repo: `crear_proforma_con_conceptos`, `consolidar_prof
   - Mappers 1:1 sin lógica.
   - **Constantes literales y wrappers de terceros**: no testear arrays/objetos hardcodeados (es tautológico) ni funciones que sólo delegan a una librería externa (ej. `cn()` sobre `clsx + tailwind-merge`). Sí testear funciones que derivan/calculan a partir de la constante.
 - **Ubicación**: carpeta `__tests__/` colocalizada junto al archivo bajo test. Convención de nombre: `<archivo>.test.ts`.
+- **Wrappers para hooks**: tests de hooks que dependen de React Query envuelven con un `QueryClientProvider` fresco (cache aislado por test). Hooks que dependen de auth envuelven además con un `AuthContext.Provider` mockeado. Patrón canónico en `src/hooks/__tests__/usePermissions.test.tsx` y `useAdminOrgDetalle.test.ts`.
 - **Comandos**: `bunx vitest run` (tests). `bunx tsc --noEmit` (type-check).
 
 
-## 12. Decisiones explícitas (con fecha)
+## 16. Decisiones explícitas (con fecha)
 
 Estas decisiones son intencionales. **NO marcarlas como violación de capa** en futuras auditorías.
 
