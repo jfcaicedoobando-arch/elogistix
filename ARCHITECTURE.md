@@ -2,7 +2,7 @@
 
 Guía de capas, reglas y convenciones del proyecto. **Mantener este contrato evita acoplamientos y simplifica los tests.**
 
-> Última revisión: **v8.88.0 — 2026-04-26**
+> Última revisión: **v8.101.0 — 2026-05-02**
 > Fuente espejo: `mem://technical/architecture-and-standards`.
 
 ## Tabla de contenidos
