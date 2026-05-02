@@ -38,6 +38,16 @@ interface DataTableProps<T> {
   onRowMouseEnter?: (item: T) => void;
   rowKey: (item: T) => string;
   rowClassName?: (item: T) => string;
+  /**
+   * Modo de ordenamiento. 'client' (default) ordena en memoria sobre `data`.
+   * 'server' delega: NO se ordena en memoria, sólo se notifica vía
+   * onSortChange para que el padre re-fetche.
+   */
+  sortMode?: "client" | "server";
+  /** Sólo aplica en sortMode='server'. Estado controlado del header activo. */
+  controlledSort?: { key: string | null; dir: SortDir };
+  /** Sólo aplica en sortMode='server'. Ciclo: null → asc → desc → null. */
+  onSortChange?: (key: string | null, dir: SortDir) => void;
 }
 
 type SortDir = "asc" | "desc";
