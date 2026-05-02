@@ -2,6 +2,13 @@ import type { ChangelogEntry } from "../../../changelogData";
 
 export const chunk0: ChangelogEntry[] = [
   {
+    version: "8.101.0",
+    date: "2026-05-02",
+    type: "minor",
+    title: "Pulido visual UI/UX: 10 ajustes inspirados en Apple para escritorio",
+    description: "Auditoría visual completa con foco en consistencia, simetría y refinamiento. (1) Sidebar: el item activo deja el azul-marino sólido y pasa a un fondo sutil bg-sidebar-accent/10 con texto reforzado y el indicador lateral azul (3 px) que ya existía como única señal fuerte. (2) Header global: z-index 30 → 40 y opacidad de fondo más sólida (bg-card/95) para que el sub-header del detalle de embarque no se vea cortado al hacer scroll bajo el blur. (3) EmbarqueDetalleHeader: se elimina el botón ArrowLeft redundante (ya hay breadcrumb en el header global). (4) TabResumen: las cards 'Datos Generales/Ruta y Transporte' y 'Shipper/Consignatario' ahora usan auto-rows-fr + h-full para alturas idénticas en cada fila. (5) Reportes/Rentabilidad: chart y tabla pasan de grid lg:grid-cols-5 a layout vertical full-width; la columna 'Margen' ya no se corta. (6) Pre-Facturación → Proformas: el filtro anidado Todas/Pendientes/Facturadas se reemplaza por un nuevo ToggleGroup 'segmented control' visualmente distinto del Tabs principal (deja claro que es un filtro, no navegación). (7) Sidebar logo: el contenedor blanco (bg-white p-1 ring-1) se aplica solo en dark mode; en light el logo se renderiza directo sin marco artificial. (8) Avatar de usuario en sidebar: bg-sidebar-accent (azul marino sólido) → bg-muted text-foreground, más discreto y alineado con el resto del light mode. (9) Breadcrumbs: cuando el segmento es un UUID y aún no se registró su label dinámico, se muestra '…' en lugar del UUID truncado, eliminando el flash feo de '009ba3b0-ab4b-…' al entrar al detalle. (10) RouteLoadingFallback: el spinner centrado se reemplaza por un skeleton estructural (header + 4 KPI cards + tabla) que respeta el layout y reduce el salto visual al cargar rutas lazy. Sin cambios funcionales ni de datos.",
+  },
+  {
     version: "8.100.2",
     date: "2026-05-01",
     type: "patch",

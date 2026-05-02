@@ -1,7 +1,7 @@
 import { Download } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import SearchInput from "@/components/selects/SearchInput";
 import PaginationControls from "@/components/shared/PaginationControls";
 import { DataTable } from "@/components/shared/DataTable";
@@ -22,13 +22,15 @@ export function TabProformas() {
             placeholder="Buscar por número, expediente, cliente o folio..."
             className="flex-1 min-w-[240px]"
           />
-          <Tabs value={c.filtroEstado} onValueChange={(v) => c.setFiltroEstado(v as typeof c.filtroEstado)}>
-            <TabsList>
-              <TabsTrigger value="todas">Todas ({c.counts.todas})</TabsTrigger>
-              <TabsTrigger value="pendiente">Pendientes ({c.counts.pendiente})</TabsTrigger>
-              <TabsTrigger value="facturada">Facturadas ({c.counts.facturada})</TabsTrigger>
-            </TabsList>
-          </Tabs>
+          <ToggleGroup
+            type="single"
+            value={c.filtroEstado}
+            onValueChange={(v) => v && c.setFiltroEstado(v as typeof c.filtroEstado)}
+          >
+            <ToggleGroupItem value="todas">Todas ({c.counts.todas})</ToggleGroupItem>
+            <ToggleGroupItem value="pendiente">Pendientes ({c.counts.pendiente})</ToggleGroupItem>
+            <ToggleGroupItem value="facturada">Facturadas ({c.counts.facturada})</ToggleGroupItem>
+          </ToggleGroup>
           <Button
             variant="outline"
             disabled={c.filtered.length === 0}
