@@ -255,3 +255,31 @@ Aceptadas explícitamente; no son deuda pendiente.
 - **Cliente**: empresa receptora del servicio. Vive dentro de una organización.
 - **Operador**: usuario interno de la organización agente de carga.
 - **Portal de clientes**: vista white-label que la organización expone a sus clientes finales.
+
+---
+
+## 15. Versionado (SemVer)
+
+El proyecto sigue **Semantic Versioning** (`MAJOR.MINOR.PATCH`). Mantener `APP_VERSION` (`src/constants/appVersion.ts`), la entrada eager de `src/content/changelogData.ts` y la entrada en `src/content/changelog/v8/chunks/0.ts` siempre sincronizadas.
+
+### Reglas para elegir el bump
+
+| Bump | Cuándo | Ejemplos |
+|------|--------|----------|
+| **MAJOR** (`9.0.0`) | Rediseño global, cambio de modelo de datos que rompe migraciones, lanzamientos públicos hito | Multi-tenant inicial, rediseño completo del wizard, salida del prototipo a producción |
+| **MINOR** (`8.x.0`) | Feature nueva visible para el usuario, módulo nuevo, RPC/edge function nueva, integración externa nueva | Nuevo módulo Auditoría, Portal de clientes, integración Frankfurter, nueva pantalla |
+| **PATCH** (`8.x.y`) | Fixes, ajustes visuales/UX, refactors internos, copy, micro-mejoras sin nueva funcionalidad | Pulido visual, fix de bug, ajuste de etiqueta, decomposición de archivos, performance |
+
+### Heurística práctica
+
+- **Si el usuario no obtiene una capacidad nueva → es PATCH.** Pulido visual, refactor, fix, copy, perf, accesibilidad → siempre `.y`.
+- **Si aparece un módulo, pantalla, endpoint, integración o flujo completo nuevo → es MINOR.** Bumpea `.0` y resetea el patch.
+- **MAJOR se reserva** para hitos planificados (no se hace por una sesión grande de cambios).
+- **Agrupa PATCHes**: 5 fixes el mismo día = un solo `.y` con bullets, no `.y+1..y+5`.
+- **Tipo en cada entry del changelog** (`type: "minor" | "patch" | "major"`) debe corresponder al bump real; si hay desalineación, corregir en el momento (renumerar la entrada) y dejar nota explícita en la `description`.
+
+### Anti-patrones documentados
+
+- ❌ Bumpear MINOR por cada sesión de pulido visual (drift histórico que llevó la rama 8.x más allá de `.100`). Desde v8.100.3 se aplica la regla estricta de arriba.
+- ❌ Crear varios PATCH consecutivos el mismo día por commits separados. Consolidar en uno.
+- ❌ Cambiar `APP_VERSION` sin actualizar las dos entradas del changelog (eager + chunk).
