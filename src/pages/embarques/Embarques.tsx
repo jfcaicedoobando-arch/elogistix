@@ -36,10 +36,20 @@ export default function Embarques() {
   const {
     search, filterModo, filterEstado, filterCliente, filterOperador, filterProforma,
     fechaDesde, fechaHasta, page, pageSize,
+    sortKey, sortDir, handleSortChange,
     setSearch, setFilterModo, setFilterEstado, setFilterCliente, setFilterOperador, setFilterProforma,
     setFechaDesde, setFechaHasta, setPage, setPageSize,
     filtered, displayCount, totalPages,
   } = state;
+
+  // Etiqueta legible para indicador de "orden global"
+  const sortLabelMap: Record<string, string> = {
+    expediente: "Expediente", cliente: "Cliente", modo: "Modo",
+    estado: "Estado", etd: "ETD", eta: "ETA", operador: "Operador",
+  };
+  const sortIndicator = sortKey
+    ? `Ordenado por ${sortLabelMap[sortKey] ?? sortKey} ${sortDir === "asc" ? "↑" : "↓"} · global`
+    : null;
 
   return (
     <div className="space-y-6">
