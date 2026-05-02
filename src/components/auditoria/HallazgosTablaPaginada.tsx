@@ -4,9 +4,11 @@
  * El estado vive en `useHallazgosTablaState`.
  */
 import { useState } from "react";
+import { useAuth } from "@/contexts/AuthContext";
 import { revisionKey } from "@/hooks/auditoria/useAuditoriaRevisiones";
 import { useHallazgosTablaState, type UseHallazgosTablaStateOptions } from "@/hooks/auditoria/useHallazgosTablaState";
 import { MarcarRevisadoDialog } from "@/components/auditoria/MarcarRevisadoDialog";
+import { AsignarResponsableDialog } from "@/components/auditoria/AsignarResponsableDialog";
 import { HallazgosFiltros } from "./HallazgosFiltros";
 import { HallazgosTabla } from "./HallazgosTabla";
 import { HallazgosPagination } from "./HallazgosPagination";
