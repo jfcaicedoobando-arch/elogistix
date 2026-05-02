@@ -15,6 +15,13 @@ export interface ChangelogEntry {
  */
 export const recentChangelog: ChangelogEntry[] = [
   {
+    version: "8.103.1",
+    date: "2026-05-02",
+    type: "patch",
+    title: "Auditoría: pestaña 'Detalle operativo' renombrada a 'Hallazgos'",
+    description: "Renombrada la segunda pestaña del módulo /auditoria de 'Detalle operativo' a 'Hallazgos' para alinear el lenguaje de la UI con cómo el equipo se refiere al contenido (la lista de hallazgos accionables). Sin cambios funcionales ni de datos: el value interno del tab se conserva ('tabla'), por lo que el drill-down desde Resumen ejecutivo y los enlaces preexistentes siguen funcionando.",
+  },
+  {
     version: "8.103.0",
     date: "2026-05-02",
     type: "minor",
