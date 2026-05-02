@@ -1,55 +1,71 @@
-# Auditoría arquitectónica — post v8.100.1
 
-## Resumen ejecutivo
+# Pulido visual UI/UX (modo escritorio) — v8.101.0
 
-La base de código está **en muy buen estado** tras los refactors v8.100.0 y v8.100.1. La separación de capas (UI → hooks → services → Supabase) se respeta de forma casi total, los archivos están dimensionados (ningún componente/página supera 250 LOC excepto el `sidebar.tsx` de shadcn que es código vendor), y la convención de barrels en `src/services/*/index.ts` se aplica de forma consistente.
+Implementación de los 11 hallazgos críticos / altos / pulido fino detectados en la auditoría visual previa. Todos los cambios son quirúrgicos y no tocan lógica de negocio. Resultado: app más consistente, simétrica y "Apple-like".
 
-**No hay deuda crítica pendiente.** Solo se detectaron 3 mejoras menores opcionales.
+## Cambios concretos
 
-## Hallazgos
+### 1. Sidebar item activo más sutil
+`src/components/layout/SidebarGroupBlock.tsx` — el item activo ya no se pinta con el azul-marino sólido (`bg-sidebar-accent`), pasa a `bg-sidebar-accent/10 + text-sidebar-foreground font-semibold`. Conserva el indicador lateral azul (3 px) que ya existe. Resultado: barra de navegación menos pesada en light mode.
 
-### Lo que está bien
+### 2. Header sticky reforzado
+`src/components/layout/Layout.tsx` — sube `z-30` → `z-40` y aumenta opacidad del fondo (`bg-card/95`) para que el sub-header del detalle no se vea cortado al hacer scroll. Borde inferior con tono fijo (`border-border/60`).
 
-- **0 fugas** de `@/integrations/supabase/client` en `src/components/**` y `src/pages/**`.
-- Solo **1 archivo de hook** importa el client de Supabase directamente (`useAuditoriaRevisiones.ts`) y es para `auth.getUser()`, no para queries de datos.
-- **22 dominios de servicios** organizados con barrel `index.ts` (cliente, cotizacion, embarque, proforma, auditoria, etc.).
-- Tipos centralizados en `src/types/*` sin duplicación.
-- Lógica pura aislada en `src/lib/domain/*` con tests dedicados.
-- Páginas delgadas: la más pesada es `Auditoria.tsx` (229 LOC) y delega todo a `useAuditoriaPageController`.
-- El wizard de embarque (`useNuevoEmbarqueWizard`, 260 LOC) ya está descompuesto en sub-hooks (`useEmbarqueForm`, `useConceptosForm`, `useCotizacionHydration`, `useEmbarqueSubmitOrchestrator`) — no hay margen claro para reducirlo más sin perder cohesión.
+### 3. Quitar botón "← back" redundante en EmbarqueDetalleHeader
+Ya hay breadcrumb en el header global. Se elimina `<Button ArrowLeft>` y se simplifica el contenedor flex.
 
-### Mejoras menores detectadas
+### 4. Igualar alturas en TabResumen
+Las cards "Datos Generales" y "Ruta y Transporte" usaban grid sin `auto-rows-fr`. Ahora ambas tienen `h-full` y el grid declara `auto-rows-fr` para alturas idénticas. Mismo fix para Shipper/Consignatario.
 
-1. **`src/services/portal/` sin barrel `index.ts`**
-   - Tiene `columns.ts` y `queries.ts` sueltos. Es la única carpeta de servicios sin barrel.
-   - Impacto: bajo (los consumidores importan rutas específicas hoy), pero rompe consistencia.
+### 5. Reportes: columna Margen ya no se corta
+`src/pages/dashboard/Reportes.tsx` deja de usar `grid lg:grid-cols-5` y pone chart + tabla apilados verticalmente full-width. `ReportesTablaClientes` quita su `lg:col-span-3`. La tabla tiene espacio para las 6 columnas sin scroll horizontal.
 
-2. **`useAuditoriaRevisiones.ts` accede a `supabase.auth.getUser()` directamente**
-   - Dos llamadas (líneas 59 y 129) para obtener el usuario actual antes de upsert/delete + bitácora.
-   - Idealmente debería usar el `AuthContext` (que ya tiene `user`) o un helper `getCurrentUserOrThrow()` en `src/services/auth`.
-   - Impacto: bajo, pero es la única fuga restante de Supabase client en hooks.
+### 6. Pre-Facturación: diferenciar tabs anidados
+En `src/components/facturacion/TabProformas.tsx` el segundo nivel de Tabs (Todas/Pendientes/Facturadas) se reemplaza por un `ToggleGroup` outline (estilo segmented control con borde) — visualmente distinto del Tabs principal de la página, deja claro que es un filtro y no navegación.
 
-3. **`src/services/embarque/queries.ts` (246 LOC)** y **`src/lib/domain/embarqueWizardSchemas.ts` (298 LOC)** rondando el umbral
-   - Ninguno lo cruza, pero son los siguientes candidatos si crecen.
-   - `queries.ts` podría partirse por entidad relacionada (conceptos / documentos / notas / facturas) si se añade más superficie.
-   - `embarqueWizardSchemas.ts` ya está bien agrupado por paso; mejor dejarlo.
+### 7. Logo del sidebar sin contenedor blanco en light
+`src/components/layout/AppSidebar.tsx` — `bg-white p-1 ring-1` se aplica solo en dark mode. En light el logo se renderiza directo sobre el sidebar.
 
-## Plan recomendado (orden de prioridad)
+### 8. Avatar usuario sidebar con fondo neutro
+Mismo archivo — `bg-sidebar-accent` (azul marino sólido) → `bg-muted text-foreground`. Avatar más discreto, alineado con el resto del sidebar light.
 
-### Críticos
-*Ninguno.*
+### 9. Breadcrumb: placeholder mientras se resuelve UUID
+`src/components/layout/Breadcrumbs.tsx` — cuando el segmento es un UUID (36 chars con guiones) y aún no hay label dinámico registrado, mostrar `…` en lugar del UUID truncado. Evita el flash feo de `009ba3b0-ab4b-…`.
 
-### Mejoras opcionales (rápidas y seguras)
+### 10. Skeleton de página completa
+`src/components/layout/RouteLoadingFallback.tsx` — reemplaza el spinner centrado por un skeleton que respeta el layout (header skeleton + grid de cards skeleton). Sensación de carga más rápida y "premium".
 
-1. **Crear `src/services/portal/index.ts`** que re-exporte `columns` y `queries`. Actualizar consumidores para importar desde `@/services/portal`.
-2. **Eliminar uso directo de `supabase.auth.getUser()` en `useAuditoriaRevisiones.ts`**: usar `useAuth()` del contexto para obtener `user.id` y `user.email`, y pasar esos datos al servicio. Resultado: 0 imports de `@/integrations/supabase/client` fuera de `src/services`, `src/contexts/auth` y `src/integrations`.
-3. **Bump de versión** a `v8.100.2` y entrada en `Changelog.tsx` documentando ambos puntos.
+### 11. Bump versión + Changelog
+- `src/constants/appVersion.ts` → `8.101.0`
+- Nueva entrada al inicio de `src/content/changelog/v8/chunks/0.ts` y `src/content/changelogData.ts` (versión 8.101.0, tipo `minor`, fecha 2026-05-02) describiendo los 10 ajustes visuales.
 
-### A futuro (no actuar ahora)
-- Vigilar `src/services/embarque/queries.ts`. Si supera 300 LOC al añadir nuevas relaciones, partir en sub-archivos (`queries/conceptos.ts`, `queries/documentos.ts`, `queries/notas.ts`) bajo el barrel.
+## Archivos a modificar (10)
 
-## Conclusión
+```text
+src/components/layout/SidebarGroupBlock.tsx        # sidebar activo sutil
+src/components/layout/Layout.tsx                    # header z-40 + bg
+src/components/layout/AppSidebar.tsx                # logo + avatar light
+src/components/layout/Breadcrumbs.tsx               # placeholder UUID
+src/components/layout/RouteLoadingFallback.tsx      # skeleton layout
+src/components/embarque/EmbarqueDetalleHeader.tsx   # quitar back
+src/components/embarque/TabResumen.tsx              # h-full auto-rows-fr
+src/components/facturacion/TabProformas.tsx         # ToggleGroup
+src/pages/dashboard/Reportes.tsx                    # layout vertical
+src/components/reportes/ReportesTablaClientes.tsx   # quitar col-span-3
+```
 
-La arquitectura cumple los estándares fijados en memoria del proyecto. Las 2 acciones opcionales toman ~10 minutos y cierran la última fuga arquitectónica. Si prefieres dejarlo aquí, **el código no requiere cambios**.
+Y los 3 archivos de versión/changelog:
+```text
+src/constants/appVersion.ts
+src/content/changelog/v8/chunks/0.ts
+src/content/changelogData.ts
+```
 
-¿Ejecuto las 2 mejoras opcionales como v8.100.2, o lo dejamos como está?
+## Lo que NO se toca (a propósito)
+
+- **KpiCard, Tabs, PageHeader** — ya son canónicos y se usan consistentemente. Lo que faltaba era aplicarlos bien (ya lo están). Solo el "doble-tab" de Pre-Facturación rompía y se arregla en el paso 6.
+- **Theme toggle** — ya es `variant="ghost"`, no hace falta cambiarlo (el botón azul que vi antes era del avatar de menú, falso positivo).
+- **Dashboard timeline KPI** — es intencional como vista hero del Dashboard y no compite con las KPI cards de las demás páginas (cumplen funciones distintas). Lo dejo.
+- **Iconografía sidebar / tooltip ⚠️ / tabular-nums** — pulido muy fino, quedan para una v8.101.x posterior si quieres priorizarlos.
+
+Una vez aprobado, ejecuto los 13 archivos en una sola pasada y dejo el changelog actualizado.
