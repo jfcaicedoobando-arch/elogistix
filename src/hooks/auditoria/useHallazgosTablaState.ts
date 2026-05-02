@@ -113,6 +113,7 @@ export function useHallazgosTablaState(
     setFiltroSev("todas");
     setFiltroCliente("todos");
     setFiltroRevision(defaultRevision);
+    setFiltroResponsable("todos");
     setEtaDesde(undefined);
     setEtaHasta(undefined);
     setPage(1);
@@ -124,6 +125,7 @@ export function useHallazgosTablaState(
       filtroSev !== "todas" ||
       filtroCliente !== "todos" ||
       filtroRevision !== defaultRevision ||
+      filtroResponsable !== "todos" ||
       etaDesde ||
       etaHasta,
   );
@@ -141,6 +143,7 @@ export function useHallazgosTablaState(
     filtroSev,
     filtroCliente,
     filtroRevision,
+    filtroResponsable,
     etaDesde,
     etaHasta,
     pageSize,
@@ -160,6 +163,7 @@ export function useHallazgosTablaState(
     setFiltroSev: wrap(setFiltroSev),
     setFiltroCliente: wrap(setFiltroCliente),
     setFiltroRevision: wrap(setFiltroRevision),
+    setFiltroResponsable: wrap(setFiltroResponsable),
     setEtaDesde: wrap(setEtaDesde),
     setEtaHasta: wrap(setEtaHasta),
     setPageSize: wrap(setPageSize),
