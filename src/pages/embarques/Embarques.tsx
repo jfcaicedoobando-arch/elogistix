@@ -140,6 +140,18 @@ export default function Embarques() {
 
           <Card>
             <CardContent className="p-0">
+              {sortIndicator && (
+                <div className="flex items-center justify-between px-3 py-1.5 text-xs text-muted-foreground border-b bg-muted/20">
+                  <span>{sortIndicator}</span>
+                  <button
+                    type="button"
+                    onClick={() => handleSortChange(null, "asc")}
+                    className="text-primary hover:underline"
+                  >
+                    Quitar orden
+                  </button>
+                </div>
+              )}
               <DataTable
                 columns={columns}
                 data={filtered}
@@ -149,6 +161,9 @@ export default function Embarques() {
                 onRowMouseEnter={(e) => prefetchEmbarque(e.id)}
                 rowKey={(e) => e.id}
                 rowClassName={() => "group"}
+                sortMode="server"
+                controlledSort={{ key: sortKey, dir: sortDir }}
+                onSortChange={handleSortChange}
               />
               <PaginationControls
                 page={page}
