@@ -91,14 +91,14 @@ export default function Auditoria() {
     cliente?: string;
     etapa?: string;
     soloVencidos?: boolean;
+    responsable?: "todos" | "mios" | "sin_asignar" | "vencidos";
   }) => {
     setDrillFilters({
       initialSeveridad: filtro.severidad,
       initialCliente: filtro.cliente,
-      // Estado del embarque no es un filtro propio de la tabla, lo exponemos
-      // como búsqueda para que el operador lo refine.
       initialSearch: filtro.etapa,
       soloVencidos: filtro.soloVencidos,
+      initialResponsable: filtro.responsable,
     });
     setTablaKey((k) => k + 1);
     setTab("tabla");

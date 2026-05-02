@@ -2,6 +2,13 @@ import type { ChangelogEntry } from "../../../changelogData";
 
 export const chunk0: ChangelogEntry[] = [
   {
+    version: "8.102.0",
+    date: "2026-05-02",
+    type: "minor",
+    title: "Auditoría Fase 2: asignación de responsable, fecha límite y workflow de hallazgos",
+    description: "Cada hallazgo ahora puede asignarse a un responsable (admin/operador de la organización) con fecha límite opcional, y mantiene un workflow propio de tres estados: pendiente → en_progreso → revisado. Cambios en BD: nueva enum estado_hallazgo_revision; auditoria_revisiones gana columnas responsable_id, responsable_email, asignado_por, asignado_por_email, asignado_at, fecha_limite y estado_revision; accion_tomada/revisado_por se vuelven opcionales para soportar pre-asignación sin cierre; índice por (organization_id, responsable_id); trigger touch para updated_at. RLS sin cambios. Nuevo servicio asignarResponsableHallazgo y hook useAsignarResponsable que registra en bitácora la acción tomar_hallazgo o asignar_hallazgo. Nuevo hook useOrgMembersAsignables que reutiliza fetchOrgMembers y filtra a admins/operadores activos. Nuevo AsignarResponsableDialog con selector de responsable, calendario para fecha límite, botón 'Tomarlo yo' (auto-asigna y mueve a en_progreso), badges de estado y metadatos completos de auditoría (quién asignó, cuándo, fecha límite). HallazgosTabla agrega columna 'Responsable' con email del asignado, ícono de alerta cuando la fecha límite está vencida y botón 'Asignar' cuando no hay responsable; la celda 'Revisión' ahora distingue visualmente el estado en_progreso (badge ámbar). Nuevos filtros en el panel: 'Responsable' (todos / asignados a mí / sin asignar / vencidos) y opción 'En progreso' en el filtro de revisión. El drill-down ejecutivo acepta initialResponsable para futuras métricas tipo 'mis pendientes'. Sin cambios visibles para clientes ni viewers.",
+  },
+  {
     version: "8.101.0",
     date: "2026-05-02",
     type: "minor",
