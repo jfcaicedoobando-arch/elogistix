@@ -7,6 +7,7 @@ import {
   useAuditoriaRevisiones,
   revisionKey,
 } from "@/hooks/auditoria/useAuditoriaRevisiones";
+import { useAuth } from "@/contexts/AuthContext";
 import type {
   HallazgoAuditoria,
   ReglaAuditoria,
