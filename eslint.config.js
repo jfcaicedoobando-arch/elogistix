@@ -28,6 +28,23 @@ export default tseslint.config(
       "complexity": ["warn", { max: 15 }],
       "max-depth": ["warn", 4],
       "max-params": ["warn", 5],
+      // Architectural guardrail — barrel imports for hooks/services
+      // Enforces ARCHITECTURE.md §4-§5: importar siempre desde el barrel
+      // del dominio (`@/hooks/<dominio>` o `@/services/<dominio>`), no desde
+      // archivos internos. Las importaciones internas dentro del propio
+      // dominio están exentas (ver bloque siguiente).
+      "no-restricted-imports": ["warn", {
+        patterns: [
+          {
+            group: ["@/hooks/*/*"],
+            message: "Importa desde el barrel del dominio: '@/hooks/<dominio>' en lugar de archivos internos. Ver ARCHITECTURE.md §4.",
+          },
+          {
+            group: ["@/services/*/*"],
+            message: "Importa desde el barrel del dominio: '@/services/<dominio>' en lugar de archivos internos. Ver ARCHITECTURE.md §5.",
+          },
+        ],
+      }],
     },
   },
   {
@@ -44,6 +61,14 @@ export default tseslint.config(
       "max-lines": "off",
       "max-lines-per-function": "off",
       "complexity": "off",
+    },
+  },
+  {
+    // Hooks y services pueden hacer imports internos a su propio árbol
+    // (composición intra-dominio, sub-barrels, helpers privados).
+    files: ["src/hooks/**", "src/services/**", "src/lib/**"],
+    rules: {
+      "no-restricted-imports": "off",
     },
   },
 );
