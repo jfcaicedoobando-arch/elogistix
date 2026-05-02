@@ -119,7 +119,7 @@ const AppSidebarBase = forwardRef<HTMLDivElement>(function AppSidebarBase(_props
             src={librecargaLogo}
             alt="Libre Carga Logo"
             className={cn(
-              "rounded-xl object-contain bg-white p-1 ring-1 ring-sidebar-border dark:ring-0 shadow-card shrink-0",
+              "rounded-xl object-contain shrink-0 dark:bg-white dark:p-1 dark:ring-1 dark:ring-sidebar-border dark:shadow-card",
               collapsed ? "h-9 w-9" : "h-10 w-10",
             )}
           />
@@ -168,7 +168,7 @@ const AppSidebarBase = forwardRef<HTMLDivElement>(function AppSidebarBase(_props
                 aria-label="Menú de usuario"
               >
                 <Avatar className="h-8 w-8 shrink-0 ring-1 ring-sidebar-border">
-                  <AvatarFallback className="bg-sidebar-accent text-sidebar-accent-foreground text-[11px] font-semibold">
+                  <AvatarFallback className="bg-muted text-foreground text-[11px] font-semibold">
                     {userInitials}
                   </AvatarFallback>
                 </Avatar>

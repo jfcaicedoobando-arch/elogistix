@@ -32,6 +32,8 @@ const SEGMENT_LABELS: Record<string, string> = {
   editar: "Editar",
 };
 
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 /**
  * Trunca segmentos largos (uuids, expedientes) para que el breadcrumb
  * no rompa el layout. Mantiene los primeros 14 caracteres.
@@ -61,8 +63,11 @@ function BreadcrumbsBase() {
       acc += `/${part}`;
       const known = SEGMENT_LABELS[part];
       const dynamic = dynamicLabels[part];
+      // Para UUIDs aún no resueltos, mostrar "…" en vez del UUID truncado
+      // (evita el flash visual de "009ba3b0-ab4b-…" mientras carga el detalle).
+      const fallback = UUID_RE.test(part) ? "…" : formatDynamicSegment(part);
       return {
-        label: known ?? dynamic ?? formatDynamicSegment(part),
+        label: known ?? dynamic ?? fallback,
         to: acc,
         isLast: i === parts.length - 1,
       };

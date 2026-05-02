@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Edit, Printer, ChevronRight, Copy, Trash2, Share2, MoreHorizontal } from "lucide-react";
+import { Edit, Printer, ChevronRight, Copy, Trash2, Share2, MoreHorizontal } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -38,19 +38,14 @@ export function EmbarqueDetalleHeader({
 
   return (
     <div className="flex flex-col lg:flex-row lg:items-start gap-4">
-      <div className="flex items-start gap-3 flex-1 min-w-0">
-        <Button variant="ghost" size="icon" onClick={() => navigate("/embarques")} className="shrink-0" aria-label="Volver a la lista de embarques">
-          <ArrowLeft className="h-5 w-5" />
-        </Button>
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2 flex-wrap">
-            <h1 className="text-2xl font-bold truncate">{embarque.expediente}</h1>
-            <Badge className={getEstadoColor(estadoVisual)}>{estadoVisual}</Badge>
-            <ModoIcon modo={embarque.modo} size={18} circle />
-            <ProformaBadge tieneProforma={embarque.tiene_proforma} size="lg" />
-          </div>
-          <p className="text-sm text-muted-foreground truncate">{toTitleCase(embarque.cliente_nombre)}</p>
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center gap-2 flex-wrap">
+          <h1 className="text-2xl font-bold truncate">{embarque.expediente}</h1>
+          <Badge className={getEstadoColor(estadoVisual)}>{estadoVisual}</Badge>
+          <ModoIcon modo={embarque.modo} size={18} circle />
+          <ProformaBadge tieneProforma={embarque.tiene_proforma} size="lg" />
         </div>
+        <p className="text-sm text-muted-foreground truncate mt-1">{toTitleCase(embarque.cliente_nombre)}</p>
       </div>
       <div className="flex gap-2 flex-wrap lg:justify-end items-center">
         {/* Acción primaria: avanzar estado (workflow). Si no aplica, Editar pasa a primaria. */}
