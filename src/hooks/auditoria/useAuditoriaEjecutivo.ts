@@ -96,6 +96,12 @@ export function useAuditoriaEjecutivo(): AuditoriaEjecutivoData {
       docs_pendientes_avanzado: 0,
       fechas: 0,
       ventas_sin_facturar: 0,
+      margen_negativo: 0,
+      margen_bajo: 0,
+      venta_sin_costo: 0,
+      costo_sin_venta: 0,
+      proforma_vencida: 0,
+      embarque_huerfano: 0,
     };
     for (const h of pendientes) {
       suma += PESOS[h.severidad];
