@@ -72,7 +72,7 @@ function SidebarGroupBlockBase({ label, items, collapsed, pathname, totalAlertas
                       to={item.url}
                       end={item.url === "/"}
                       className="hover:bg-sidebar-accent/10 hover:text-sidebar-foreground"
-                      activeClassName="bg-sidebar-accent text-sidebar-accent-foreground font-medium"
+                      activeClassName="bg-sidebar-accent/10 text-sidebar-foreground font-semibold"
                     >
                       <item.icon className="h-4 w-4 shrink-0" />
                       {!collapsed && <span className="flex-1 truncate">{item.title}</span>}

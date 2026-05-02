@@ -50,16 +50,14 @@ export default function Reportes() {
 
       <ReportesKpiCards kpis={kpis} isLoading={isLoading} />
 
-      <div className="grid lg:grid-cols-5 gap-6">
-        <ReportesTopChart data={top10} isLoading={isLoading} />
-        <ReportesTablaClientes
-          data={sorted}
-          isLoading={isLoading}
-          sortField={sortField}
-          sortDir={sortDir}
-          onSort={handleSort}
-        />
-      </div>
+      <ReportesTopChart data={top10} isLoading={isLoading} />
+      <ReportesTablaClientes
+        data={sorted}
+        isLoading={isLoading}
+        sortField={sortField}
+        sortDir={sortDir}
+        onSort={handleSort}
+      />
     </div>
   );
 }

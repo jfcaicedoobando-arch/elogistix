@@ -45,8 +45,8 @@ export function TabResumen({ embarque }: Props) {
         </CardContent>
       </Card>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <Card>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 auto-rows-fr">
+        <Card className="h-full">
           <CardHeader className="pb-3"><CardTitle className="text-sm">Datos Generales</CardTitle></CardHeader>
           <CardContent className="space-y-2 text-sm">
             <DetailRow label="Modo" value={<><ModoIcon modo={embarque.modo} size={14} /> {embarque.modo}</>} />
@@ -60,7 +60,7 @@ export function TabResumen({ embarque }: Props) {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="h-full">
           <CardHeader className="pb-3"><CardTitle className="text-sm">Ruta y Transporte</CardTitle></CardHeader>
           <CardContent className="space-y-2 text-sm">
             {embarque.modo === 'Marítimo' && (<>
@@ -92,12 +92,12 @@ export function TabResumen({ embarque }: Props) {
         </Card>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <Card>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 auto-rows-fr">
+        <Card className="h-full">
           <CardHeader className="pb-3"><CardTitle className="text-sm">Shipper</CardTitle></CardHeader>
           <CardContent className="text-sm text-muted-foreground">{toTitleCase(embarque.shipper)}</CardContent>
         </Card>
-        <Card>
+        <Card className="h-full">
           <CardHeader className="pb-3"><CardTitle className="text-sm">Consignatario</CardTitle></CardHeader>
           <CardContent className="text-sm text-muted-foreground">{toTitleCase(embarque.consignatario)}</CardContent>
         </Card>

@@ -37,7 +37,7 @@ export default function ReportesTablaClientes({ data, isLoading, sortField, sort
   const navigate = useNavigate();
 
   return (
-    <Card className="lg:col-span-3 rounded-2xl shadow-sm border-0 bg-card">
+    <Card className="rounded-2xl shadow-sm border-0 bg-card">
       <CardHeader className="pb-2">
         <CardTitle className="text-base font-semibold">Desglose por Cliente</CardTitle>
       </CardHeader>

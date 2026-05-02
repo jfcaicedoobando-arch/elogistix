@@ -15,6 +15,13 @@ export interface ChangelogEntry {
  */
 export const recentChangelog: ChangelogEntry[] = [
   {
+    version: "8.101.0",
+    date: "2026-05-02",
+    type: "minor",
+    title: "Pulido visual UI/UX: 10 ajustes inspirados en Apple para escritorio",
+    description: "Sidebar item activo más sutil (bg /10 + indicador lateral); header sticky z-40 con fondo más opaco; se elimina el botón back redundante en EmbarqueDetalleHeader; cards de TabResumen igualan alturas (auto-rows-fr + h-full); Reportes deja layout 5-col por vertical full y la columna Margen ya no se corta; el filtro anidado de Proformas pasa de Tabs a ToggleGroup 'segmented control'; logo del sidebar sin contenedor blanco en light; avatar de usuario con fondo neutro; breadcrumb muestra '…' mientras carga el UUID; RouteLoadingFallback es ahora un skeleton estructural en vez de spinner.",
+  },
+  {
     version: "8.100.2",
     date: "2026-05-01",
     type: "patch",
