@@ -195,7 +195,7 @@ Ejemplos canónicos en el repo: `crear_proforma_con_conceptos`, `consolidar_prof
 
 ## 8. React Query — convenciones
 
-- **Query keys**: centralizados en `src/lib/queryKeys.ts`. No usar arrays inline en hooks.
+- **Query keys**: centralizados en `src/lib/query/index.ts` (export `queryKeys`). No usar arrays inline en hooks.
 - **`staleTime` por tipo de dato**:
   - Catálogos (puertos, navieras, conceptos): `5 * 60 * 1000` (5 min).
   - Datos operativos (embarques, cotizaciones, facturas): `30 * 1000` (30 s).
