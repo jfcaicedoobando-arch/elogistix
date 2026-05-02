@@ -228,6 +228,21 @@ export function AuditoriaEjecutivoTab({ data, onDrillDown }: Props) {
         </div>
       )}
 
+      {/* Fila riesgo financiero + tendencia */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <AuditoriaRiesgoFinancieroCard
+          total={data.riesgoFinancieroMxn}
+          porRegla={data.riesgoPorRegla}
+        />
+        <AuditoriaTendenciaChart />
+      </div>
+
+      {/* Productividad de operadores */}
+      <AuditoriaOperadoresCard
+        mttrHoras={data.mttrHoras}
+        ranking={data.rankingOperadores}
+      />
+
       {/* Fila 2: Distribución por etapa + Top clientes */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <Card>

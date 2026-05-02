@@ -34,6 +34,7 @@ import { HallazgoTabla } from "@/components/auditoria/HallazgoTabla";
 import { HallazgosTablaPaginada } from "@/components/auditoria/HallazgosTablaPaginada";
 import { useAuditoriaPageController } from "@/hooks/auditoria/useAuditoriaPageController";
 import { useAuditoriaEjecutivo } from "@/hooks/auditoria/useAuditoriaEjecutivo";
+import { usePermissions } from "@/hooks/shared/usePermissions";
 import type { UseHallazgosTablaStateOptions } from "@/hooks/auditoria/useHallazgosTablaState";
 import { exportToCsv } from "@/generators/exportCsv";
 import type { ReglaAuditoria, SeveridadAuditoria } from "@/types/auditoria";
@@ -123,9 +124,11 @@ const reglaLabel: Record<ReglaAuditoria, string> = {
 export default function Auditoria() {
   const c = useAuditoriaPageController();
   const ejecutivo = useAuditoriaEjecutivo();
-  const [tab, setTab] = useState<"ejecutivo" | "tabla" | "por_regla">("ejecutivo");
+  const { isAdmin } = usePermissions();
+  const [tab, setTab] = useState<"ejecutivo" | "tabla" | "por_regla">(
+    isAdmin ? "ejecutivo" : "tabla",
+  );
   const [drillFilters, setDrillFilters] = useState<UseHallazgosTablaStateOptions>({});
-  // Key para forzar remontaje del state de la tabla cuando cambian filtros de drill-down.
   const [tablaKey, setTablaKey] = useState(0);
 
   const handleDrillDown = (filtro: {
