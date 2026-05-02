@@ -26,7 +26,7 @@ import type {
   SeveridadAuditoria,
 } from "@/types/auditoria";
 import { reglaLabel } from "./hallazgosTablaConfig";
-import type { FiltroRevision } from "@/hooks/auditoria/useHallazgosTablaState";
+import type { FiltroRevision, FiltroResponsable } from "@/hooks/auditoria/useHallazgosTablaState";
 
 interface Props {
   search: string;
@@ -34,6 +34,7 @@ interface Props {
   filtroSev: SeveridadAuditoria | "todas";
   filtroCliente: string;
   filtroRevision: FiltroRevision;
+  filtroResponsable: FiltroResponsable;
   etaDesde: Date | undefined;
   etaHasta: Date | undefined;
   clientes: string[];
@@ -45,6 +46,7 @@ interface Props {
   setFiltroSev: (v: SeveridadAuditoria | "todas") => void;
   setFiltroCliente: (v: string) => void;
   setFiltroRevision: (v: FiltroRevision) => void;
+  setFiltroResponsable: (v: FiltroResponsable) => void;
   setEtaDesde: (d: Date | undefined) => void;
   setEtaHasta: (d: Date | undefined) => void;
   limpiar: () => void;
@@ -52,9 +54,9 @@ interface Props {
 
 export function HallazgosFiltros(props: Props) {
   const {
-    search, filtroRegla, filtroSev, filtroCliente, filtroRevision,
+    search, filtroRegla, filtroSev, filtroCliente, filtroRevision, filtroResponsable,
     etaDesde, etaHasta, clientes, hayFiltros, filtrados, total,
-    setSearch, setFiltroRegla, setFiltroSev, setFiltroCliente, setFiltroRevision,
+    setSearch, setFiltroRegla, setFiltroSev, setFiltroCliente, setFiltroRevision, setFiltroResponsable,
     setEtaDesde, setEtaHasta, limpiar,
   } = props;
 
