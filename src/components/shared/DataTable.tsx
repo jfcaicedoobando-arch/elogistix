@@ -24,6 +24,8 @@ export interface DataTableColumn<T> {
   render: (item: T) => React.ReactNode;
 }
 
+type SortDir = "asc" | "desc";
+
 interface DataTableProps<T> {
   columns: DataTableColumn<T>[];
   data: T[];
@@ -49,8 +51,6 @@ interface DataTableProps<T> {
   /** Sólo aplica en sortMode='server'. Ciclo: null → asc → desc → null. */
   onSortChange?: (key: string | null, dir: SortDir) => void;
 }
-
-type SortDir = "asc" | "desc";
 
 function DataTableInner<T>({
   columns,
