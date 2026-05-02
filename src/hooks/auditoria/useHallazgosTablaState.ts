@@ -46,6 +46,9 @@ export function useHallazgosTablaState(
   );
   const [filtroCliente, setFiltroCliente] = useState<string>(opts.initialCliente ?? "todos");
   const [filtroRevision, setFiltroRevision] = useState<FiltroRevision>(defaultRevision);
+  const [filtroResponsable, setFiltroResponsable] = useState<FiltroResponsable>(
+    opts.initialResponsable ?? "todos",
+  );
   const [etaDesde, setEtaDesde] = useState<Date | undefined>();
   const [etaHasta, setEtaHasta] = useState<Date | undefined>(
     opts.soloVencidos ? new Date() : undefined,
@@ -53,6 +56,7 @@ export function useHallazgosTablaState(
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(50);
 
+  const { user } = useAuth();
   const { data: revisiones } = useAuditoriaRevisiones();
 
   const clientes = useMemo(() => {
