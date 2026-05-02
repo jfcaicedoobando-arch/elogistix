@@ -15,21 +15,37 @@ import type {
 
 export type FiltroRevision = "todos" | "pendientes" | "revisados";
 
+export interface UseHallazgosTablaStateOptions {
+  /** Severidad inicial (drill-down desde KPIs ejecutivos). */
+  initialSeveridad?: SeveridadAuditoria | "todas";
+  /** Cliente inicial (drill-down). */
+  initialCliente?: string;
+  /** Texto inicial de búsqueda (drill-down por estado/etapa, etc.). */
+  initialSearch?: string;
+  /** Si es true, sólo muestra hallazgos cuya ETA ya pasó (drill-down "vencidos"). */
+  soloVencidos?: boolean;
+}
+
 export function useHallazgosTablaState(
   hallazgos: HallazgoAuditoria[],
   mostrarRevisadosDefault = false,
+  opts: UseHallazgosTablaStateOptions = {},
 ) {
   const defaultRevision: FiltroRevision = mostrarRevisadosDefault
     ? "todos"
     : "pendientes";
 
-  const [search, setSearch] = useState("");
+  const [search, setSearch] = useState(opts.initialSearch ?? "");
   const [filtroRegla, setFiltroRegla] = useState<ReglaAuditoria | "todas">("todas");
-  const [filtroSev, setFiltroSev] = useState<SeveridadAuditoria | "todas">("todas");
-  const [filtroCliente, setFiltroCliente] = useState<string>("todos");
+  const [filtroSev, setFiltroSev] = useState<SeveridadAuditoria | "todas">(
+    opts.initialSeveridad ?? "todas",
+  );
+  const [filtroCliente, setFiltroCliente] = useState<string>(opts.initialCliente ?? "todos");
   const [filtroRevision, setFiltroRevision] = useState<FiltroRevision>(defaultRevision);
   const [etaDesde, setEtaDesde] = useState<Date | undefined>();
-  const [etaHasta, setEtaHasta] = useState<Date | undefined>();
+  const [etaHasta, setEtaHasta] = useState<Date | undefined>(
+    opts.soloVencidos ? new Date() : undefined,
+  );
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(50);
 
