@@ -1,13 +1,8 @@
 /**
  * Vista ejecutiva de auditoría operativa — derivaciones agregadas para el
  * director general. Reusa la query del reporte y de revisiones (no agrega
- * round-trips) y produce indicadores de salud, distribución y rankings.
- *
- * NOTA: Mientras no exista una tabla `auditoria_snapshots` con histórico
- * diario, la "tendencia 30d" no es calculable de forma exacta. Aquí se
- * exponen métricas que sí se pueden derivar del estado actual sin inventar
- * datos: score de salud, % atendidos, edad promedio de pendientes, top
- * clientes, distribución por etapa y por regla.
+ * round-trips) y produce indicadores de salud, distribución, fugas
+ * financieras y productividad de operadores.
  */
 import { useMemo } from "react";
 import { useAuditoria } from "@/hooks/auditoria/useAuditoria";
@@ -16,16 +11,22 @@ import {
   useAuditoriaRevisiones,
 } from "@/hooks/auditoria/useAuditoriaRevisiones";
 import type {
+  AuditoriaRevision,
   HallazgoAuditoria,
   ReglaAuditoria,
   SeveridadAuditoria,
 } from "@/types/auditoria";
 
+export interface OperadorRanking {
+  email: string;
+  resueltos: number;
+  pendientes: number;
+  vencidos: number;
+}
+
 export interface AuditoriaEjecutivoData {
   isLoading: boolean;
-  /** Total bruto de hallazgos detectados por la RPC. */
   totalHallazgos: number;
-  /** Hallazgos pendientes (no marcados como revisados). */
   pendientes: HallazgoAuditoria[];
   totalPendientes: number;
   totalRevisados: number;
@@ -33,28 +34,25 @@ export interface AuditoriaEjecutivoData {
    * Score 0-100 de salud operativa basado en pendientes ponderados por severidad.
    *  - 100 = sin pendientes
    *  - <60 = atención inmediata
-   * Fórmula: 100 - min(100, suma_ponderada * 2), donde
-   * crítico=5, alto=2, medio=1.
+   * Pesos: crítico=5, alto=2, medio=1.
    */
   score: number;
   scoreEstado: "excelente" | "bueno" | "regular" | "malo";
-  /** % de hallazgos ya atendidos (revisados/total). */
   porcentajeAtendidos: number;
-  /** Conteo de pendientes por severidad. */
   porSeveridad: Record<SeveridadAuditoria, number>;
-  /** Conteo de pendientes por regla. */
   porRegla: Record<ReglaAuditoria, number>;
-  /** Conteo de pendientes por estado del embarque (etapa del ciclo). */
   porEtapa: Array<{ etapa: string; total: number; criticos: number }>;
-  /** Top clientes con más pendientes (máx N). */
   topClientes: Array<{ cliente: string; total: number; criticos: number }>;
-  /** Hallazgos pendientes con ETA vencida o muy próxima (≤ 3 días). */
   pendientesUrgentesPorEta: number;
-  /** Hallazgos pendientes con ETA ya pasada (vencidos). */
   pendientesVencidos: number;
-  /** Edad promedio en días de los hallazgos pendientes con ETA conocida. */
   edadPromediaPendientesDias: number | null;
-  /** Última generación del reporte. */
+  /** Suma MXN de hallazgos financieros pendientes (margen negativo + bajo + proforma vencida). */
+  riesgoFinancieroMxn: number;
+  riesgoPorRegla: Partial<Record<ReglaAuditoria, number>>;
+  /** Mean Time To Resolution en horas (revisado.updated_at - asignado_at). */
+  mttrHoras: number | null;
+  /** Top operadores ordenados por hallazgos resueltos. */
+  rankingOperadores: OperadorRanking[];
   generadoEn: string | null;
 }
 
@@ -64,7 +62,17 @@ const PESOS: Record<SeveridadAuditoria, number> = {
   medio: 1,
 };
 
+const REGLAS_FINANCIERAS: ReglaAuditoria[] = [
+  "margen_negativo",
+  "margen_bajo",
+  "proforma_vencida",
+];
+
 const TOP_N = 5;
+
+function diffHoras(desde: string, hasta: string): number {
+  return (Date.parse(hasta) - Date.parse(desde)) / (1000 * 60 * 60);
+}
 
 export function useAuditoriaEjecutivo(): AuditoriaEjecutivoData {
   const { data, isLoading } = useAuditoria();
@@ -84,29 +92,27 @@ export function useAuditoriaEjecutivo(): AuditoriaEjecutivoData {
       ? 100
       : Math.round((totalRevisados / totalHallazgos) * 100);
 
-    // Score ponderado.
     let suma = 0;
     const porSeveridad: Record<SeveridadAuditoria, number> = {
-      critico: 0,
-      alto: 0,
-      medio: 0,
+      critico: 0, alto: 0, medio: 0,
     };
     const porRegla: Record<ReglaAuditoria, number> = {
-      docs_faltantes: 0,
-      docs_pendientes_avanzado: 0,
-      fechas: 0,
-      ventas_sin_facturar: 0,
-      margen_negativo: 0,
-      margen_bajo: 0,
-      venta_sin_costo: 0,
-      costo_sin_venta: 0,
-      proforma_vencida: 0,
+      docs_faltantes: 0, docs_pendientes_avanzado: 0, fechas: 0,
+      ventas_sin_facturar: 0, margen_negativo: 0, margen_bajo: 0,
+      venta_sin_costo: 0, costo_sin_venta: 0, proforma_vencida: 0,
       embarque_huerfano: 0,
     };
+    const riesgoPorRegla: Partial<Record<ReglaAuditoria, number>> = {};
+    let riesgoFinancieroMxn = 0;
     for (const h of pendientes) {
       suma += PESOS[h.severidad];
       porSeveridad[h.severidad]++;
       porRegla[h.regla]++;
+      if (REGLAS_FINANCIERAS.includes(h.regla) && typeof h.monto_mxn === "number") {
+        const monto = Math.max(0, h.monto_mxn);
+        riesgoFinancieroMxn += monto;
+        riesgoPorRegla[h.regla] = (riesgoPorRegla[h.regla] ?? 0) + monto;
+      }
     }
     const penalizacion = Math.min(100, suma * 2);
     const score = totalPendientes === 0 ? 100 : Math.max(0, Math.round(100 - penalizacion));
@@ -116,7 +122,6 @@ export function useAuditoriaEjecutivo(): AuditoriaEjecutivoData {
       : score >= 60 ? "regular"
       : "malo";
 
-    // Por etapa: agrupar por estado del embarque.
     const etapaMap = new Map<string, { total: number; criticos: number }>();
     for (const h of pendientes) {
       const e = h.estado || "—";
@@ -129,7 +134,6 @@ export function useAuditoriaEjecutivo(): AuditoriaEjecutivoData {
       .map(([etapa, v]) => ({ etapa, total: v.total, criticos: v.criticos }))
       .sort((a, b) => b.total - a.total);
 
-    // Top clientes.
     const cliMap = new Map<string, { total: number; criticos: number }>();
     for (const h of pendientes) {
       const c = h.cliente_nombre || "Sin cliente";
@@ -143,7 +147,6 @@ export function useAuditoriaEjecutivo(): AuditoriaEjecutivoData {
       .sort((a, b) => b.criticos - a.criticos || b.total - a.total)
       .slice(0, TOP_N);
 
-    // Urgencia por ETA.
     const hoyIso = new Date().toISOString().slice(0, 10);
     const en3dias = new Date();
     en3dias.setDate(en3dias.getDate() + 3);
@@ -157,7 +160,6 @@ export function useAuditoriaEjecutivo(): AuditoriaEjecutivoData {
       if (!h.eta) continue;
       if (h.eta < hoyIso) {
         pendientesVencidos++;
-        // Edad = días desde ETA pasada hasta hoy.
         const dias = Math.floor(
           (Date.parse(hoyIso) - Date.parse(h.eta)) / (1000 * 60 * 60 * 24),
         );
@@ -170,6 +172,45 @@ export function useAuditoriaEjecutivo(): AuditoriaEjecutivoData {
     const edadPromediaPendientesDias = countDias > 0
       ? Math.round(sumaDias / countDias)
       : null;
+
+    /* ───────────────── MTTR + ranking de operadores ───────────────── */
+    const opMap = new Map<string, OperadorRanking>();
+    let mttrSuma = 0;
+    let mttrCount = 0;
+    if (revisiones) {
+      for (const r of revisiones.values() as IterableIterator<AuditoriaRevision>) {
+        const email = r.responsable_email || r.revisado_por_email || "Sin asignar";
+        const cur = opMap.get(email) ?? {
+          email,
+          resueltos: 0,
+          pendientes: 0,
+          vencidos: 0,
+        };
+        if (r.estado_revision === "revisado") {
+          cur.resueltos++;
+          if (r.asignado_at) {
+            const horas = diffHoras(r.asignado_at, r.updated_at);
+            if (horas >= 0 && horas < 24 * 90) {
+              mttrSuma += horas;
+              mttrCount++;
+            }
+          }
+        } else {
+          cur.pendientes++;
+          if (r.fecha_limite && r.fecha_limite < hoyIso) cur.vencidos++;
+        }
+        opMap.set(email, cur);
+      }
+    }
+    const mttrHoras = mttrCount > 0 ? Math.round(mttrSuma / mttrCount) : null;
+    const rankingOperadores = Array.from(opMap.values())
+      .filter((o) => o.email !== "Sin asignar" || o.pendientes > 0)
+      .sort(
+        (a, b) =>
+          b.resueltos - a.resueltos ||
+          b.pendientes - a.pendientes,
+      )
+      .slice(0, TOP_N);
 
     const generadoEn = data?.generated_at
       ? new Date(data.generated_at).toLocaleString("es-MX", {
@@ -194,6 +235,10 @@ export function useAuditoriaEjecutivo(): AuditoriaEjecutivoData {
       pendientesUrgentesPorEta,
       pendientesVencidos,
       edadPromediaPendientesDias,
+      riesgoFinancieroMxn,
+      riesgoPorRegla,
+      mttrHoras,
+      rankingOperadores,
       generadoEn,
     };
   }, [data, revisiones, isLoading]);
