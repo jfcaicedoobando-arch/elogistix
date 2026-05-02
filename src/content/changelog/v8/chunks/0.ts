@@ -2,6 +2,13 @@ import type { ChangelogEntry } from "../../../changelogData";
 
 export const chunk0: ChangelogEntry[] = [
   {
+    version: "8.101.0",
+    date: "2026-05-02",
+    type: "minor",
+    title: "Auditoría: vista ejecutiva con score de salud, drill-down y export CSV",
+    description: "Se rediseña /auditoria para que sea útil tanto al operador de tráfico como al director general. Se introduce un sistema de pestañas: (1) 'Resumen ejecutivo' (default) — nueva pestaña pensada para dirección. Muestra un Score de salud operativa 0-100 calculado como 100 - min(100, suma_ponderada * 2) con pesos crítico=5, alto=2, medio=1; con etiqueta cualitativa Excelente/Bueno/Regular/Atención y una progress bar. KPI compacto de 'Atención de hallazgos' con porcentaje de hallazgos ya revisados (revisados / total), edad promedio en días de los hallazgos vencidos por ETA. Alertas destacadas para hallazgos en embarques con ETA vencida (rojo) y con ETA en ≤ 3 días (ámbar). Distribución por etapa del embarque (Confirmado, En Tránsito, En Aduana, etc.) y Top 5 clientes con más pendientes — ambos como barras horizontales con franja roja para la porción de críticos. Resumen por las 4 reglas (docs faltantes, docs pendientes en avanzados, fechas, ventas sin facturar) en grid 2x2. Toda la vista es interactiva: clic en cualquier KPI/cliente/etapa hace drill-down a la pestaña 'Detalle operativo' con el filtro pre-aplicado. (2) 'Detalle operativo' — la tabla paginada existente (sin cambios de UX, sólo movida a su propio tab) acepta nuevos initialFilters opcionales (severidad, cliente, búsqueda inicial, soloVencidos) usados por el drill-down. (3) 'Por regla' — el accordion existente queda en su propio tab. Se añade botón 'Exportar CSV' en el header que descarga la lista filtrada (severidad, expediente, regla, cliente, modo, estado, ETA, detalle, documentos faltantes) usando exportToCsv. Nuevo hook useAuditoriaEjecutivo en src/hooks/auditoria/ que reusa la cache existente de useAuditoria y useAuditoriaRevisiones (cero round-trips extra) y deriva todas las métricas en cliente. Nuevo componente AuditoriaEjecutivoTab. Sin cambios de schema ni nuevas RPCs. Pendiente para futuras fases: tendencia 30d (requiere snapshot histórico), asignación de responsable y nuevas reglas (margen bajo, demora proveedor, proforma vencida).",
+  },
+  {
     version: "8.100.5",
     date: "2026-05-02",
     type: "patch",

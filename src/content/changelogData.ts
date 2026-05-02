@@ -15,6 +15,13 @@ export interface ChangelogEntry {
  */
 export const recentChangelog: ChangelogEntry[] = [
   {
+    version: "8.101.0",
+    date: "2026-05-02",
+    type: "minor",
+    title: "Auditoría: vista ejecutiva con score de salud, drill-down y export CSV",
+    description: "El módulo /auditoria pasa a tener tres pestañas. La nueva 'Resumen ejecutivo' (default) está pensada para dirección general: Score de salud operativa 0-100 ponderado por severidad (crítico=5, alto=2, medio=1), porcentaje de hallazgos ya atendidos, edad promedio de los pendientes con ETA vencida, alertas para hallazgos en embarques con ETA vencida o próxima (≤ 3 días), distribución por etapa del embarque y Top 5 clientes con más pendientes (ambos como barras con franja roja para la porción de críticos), y resumen por las 4 reglas. Cualquier KPI/cliente/etapa es clickable y hace drill-down a la pestaña 'Detalle operativo' con el filtro pre-aplicado. Las dos pestañas restantes (Detalle operativo y Por regla) conservan la UX existente. Se añade botón 'Exportar CSV' en el header que respeta los filtros aplicados. Implementación 100% derivada de los datos existentes (sin cambios de schema ni nuevas RPCs): nuevo hook useAuditoriaEjecutivo reusa la cache de useAuditoria y useAuditoriaRevisiones sin tocar la red. Pendiente para futuras fases: tendencia 30d (requiere snapshot histórico diario), asignación de responsable a hallazgo y nuevas reglas financieras (margen bajo, proforma vencida, demora de proveedor).",
+  },
+  {
     version: "8.100.5",
     date: "2026-05-02",
     type: "patch",
