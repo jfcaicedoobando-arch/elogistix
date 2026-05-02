@@ -13,7 +13,8 @@ import type {
   SeveridadAuditoria,
 } from "@/types/auditoria";
 
-export type FiltroRevision = "todos" | "pendientes" | "revisados";
+export type FiltroRevision = "todos" | "pendientes" | "revisados" | "en_progreso";
+export type FiltroResponsable = "todos" | "mios" | "sin_asignar" | "vencidos";
 
 export interface UseHallazgosTablaStateOptions {
   /** Severidad inicial (drill-down desde KPIs ejecutivos). */
@@ -24,6 +25,8 @@ export interface UseHallazgosTablaStateOptions {
   initialSearch?: string;
   /** Si es true, sólo muestra hallazgos cuya ETA ya pasó (drill-down "vencidos"). */
   soloVencidos?: boolean;
+  /** Filtro inicial por responsable (drill-down "mis pendientes"). */
+  initialResponsable?: FiltroResponsable;
 }
 
 export function useHallazgosTablaState(
