@@ -16,42 +16,63 @@ export type Database = {
     Tables: {
       auditoria_revisiones: {
         Row: {
-          accion_tomada: string
+          accion_tomada: string | null
+          asignado_at: string | null
+          asignado_por: string | null
+          asignado_por_email: string
           created_at: string
           detalle: string
           detalle_hash: string
           embarque_id: string
+          estado_revision: Database["public"]["Enums"]["estado_hallazgo_revision"]
+          fecha_limite: string | null
           id: string
           organization_id: string
           regla: string
-          revisado_por: string
-          revisado_por_email: string
+          responsable_email: string
+          responsable_id: string | null
+          revisado_por: string | null
+          revisado_por_email: string | null
           updated_at: string
         }
         Insert: {
-          accion_tomada?: string
+          accion_tomada?: string | null
+          asignado_at?: string | null
+          asignado_por?: string | null
+          asignado_por_email?: string
           created_at?: string
           detalle?: string
           detalle_hash: string
           embarque_id: string
+          estado_revision?: Database["public"]["Enums"]["estado_hallazgo_revision"]
+          fecha_limite?: string | null
           id?: string
           organization_id?: string
           regla: string
-          revisado_por?: string
-          revisado_por_email?: string
+          responsable_email?: string
+          responsable_id?: string | null
+          revisado_por?: string | null
+          revisado_por_email?: string | null
           updated_at?: string
         }
         Update: {
-          accion_tomada?: string
+          accion_tomada?: string | null
+          asignado_at?: string | null
+          asignado_por?: string | null
+          asignado_por_email?: string
           created_at?: string
           detalle?: string
           detalle_hash?: string
           embarque_id?: string
+          estado_revision?: Database["public"]["Enums"]["estado_hallazgo_revision"]
+          fecha_limite?: string | null
           id?: string
           organization_id?: string
           regla?: string
-          revisado_por?: string
-          revisado_por_email?: string
+          responsable_email?: string
+          responsable_id?: string | null
+          revisado_por?: string | null
+          revisado_por_email?: string | null
           updated_at?: string
         }
         Relationships: []
@@ -1904,6 +1925,7 @@ export type Database = {
         | "Pagada"
         | "Vencida"
         | "Cancelada"
+      estado_hallazgo_revision: "pendiente" | "en_progreso" | "revisado"
       estado_liquidacion: "Pendiente" | "Pagado"
       estado_proforma: "Pendiente" | "Facturada" | "Cancelada"
       incoterm:
@@ -2105,6 +2127,7 @@ export const Constants = {
         "EIR",
       ],
       estado_factura: ["Borrador", "Emitida", "Pagada", "Vencida", "Cancelada"],
+      estado_hallazgo_revision: ["pendiente", "en_progreso", "revisado"],
       estado_liquidacion: ["Pendiente", "Pagado"],
       estado_proforma: ["Pendiente", "Facturada", "Cancelada"],
       incoterm: [
