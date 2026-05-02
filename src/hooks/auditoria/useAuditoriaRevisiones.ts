@@ -154,6 +154,85 @@ export function useDesmarcarRevisado() {
   });
 }
 
+
+/**
+ * Asigna o reasigna un responsable (operador/encargado) a un hallazgo.
+ * Si el responsable es el propio usuario y `tomar=true`, registra
+ * la acción como "tomar hallazgo" (estado=en_progreso).
+ */
+export function useAsignarResponsable() {
+  const queryClient = useQueryClient();
+  const { user } = useAuth();
+
+  return useMutation({
+    mutationFn: async (params: {
+      hallazgo: HallazgoAuditoria;
+      responsableId: string | null;
+      responsableEmail: string;
+      fechaLimite: string | null;
+      tomar?: boolean;
+    }) => {
+      if (!user) throw new Error("Sesión no válida");
+      const { hallazgo, responsableId, responsableEmail, fechaLimite, tomar } = params;
+      const detalleHash = hallazgoHash(hallazgo);
+
+      const data = await asignarResponsableHallazgo({
+        embarque_id: hallazgo.embarque_id,
+        regla: hallazgo.regla,
+        detalle_hash: detalleHash,
+        detalle: hallazgo.detalle,
+        responsable_id: responsableId,
+        responsable_email: responsableEmail,
+        asignado_por: user.id,
+        asignado_por_email: user.email ?? "",
+        fecha_limite: fechaLimite,
+        estado_revision: tomar ? "en_progreso" : "pendiente",
+      });
+
+      try {
+        await insertBitacora({
+          usuarioId: user.id,
+          usuarioEmail: user.email ?? "",
+          accion: tomar ? "tomar_hallazgo" : "asignar_hallazgo",
+          modulo: "auditoria",
+          entidadId: hallazgo.embarque_id,
+          entidadNombre: `Hallazgo ${hallazgo.regla} — Embarque ${hallazgo.expediente}`,
+          detalles: {
+            regla: hallazgo.regla,
+            severidad: hallazgo.severidad,
+            responsable_id: responsableId,
+            responsable_email: responsableEmail,
+            fecha_limite: fechaLimite,
+            expediente: hallazgo.expediente,
+            cliente_nombre: hallazgo.cliente_nombre,
+          },
+        });
+      } catch (e) {
+        console.warn("No se pudo registrar en bitácora:", e);
+      }
+
+      return data;
+    },
+    onSuccess: (_data, vars) => {
+      queryClient.invalidateQueries({ queryKey: REVISIONES_KEY });
+      queryClient.invalidateQueries({ queryKey: ["auditoria", "embarques"] });
+      toast.success(
+        vars.tomar ? "Hallazgo tomado" : vars.responsableId ? "Responsable asignado" : "Asignación removida",
+      );
+    },
+    onError: (err: unknown) => {
+      console.error("[useAsignarResponsable] error:", err);
+      const e = err as { code?: string; message?: string };
+      const isPermiso =
+        e?.code === "42501" || /row-level security/i.test(e?.message ?? "");
+      toast.error(
+        isPermiso ? "No tienes permisos para asignar" : "Error al asignar responsable",
+        { description: e?.message ?? "Error desconocido" },
+      );
+    },
+  });
+}
+
 export function revisionKey(
   h: Pick<HallazgoAuditoria, "embarque_id" | "regla" | "detalle">,
 ): string {
