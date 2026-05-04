@@ -172,11 +172,12 @@ export default function Changelog() {
             }
           }}
           className="justify-start"
+          size="sm"
         >
-          <ToggleGroupItem value="all" size="sm">Todos</ToggleGroupItem>
-          <ToggleGroupItem value="major" size="sm">Major</ToggleGroupItem>
-          <ToggleGroupItem value="minor" size="sm">Minor</ToggleGroupItem>
-          <ToggleGroupItem value="patch" size="sm">Patch</ToggleGroupItem>
+          <ToggleGroupItem value="all">Todos</ToggleGroupItem>
+          <ToggleGroupItem value="major">Major</ToggleGroupItem>
+          <ToggleGroupItem value="minor">Minor</ToggleGroupItem>
+          <ToggleGroupItem value="patch">Patch</ToggleGroupItem>
         </ToggleGroup>
       </div>
 
