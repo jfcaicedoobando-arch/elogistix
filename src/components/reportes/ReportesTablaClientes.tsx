@@ -64,6 +64,7 @@ export default function ReportesTablaClientes({ data, isLoading, sortField, sort
               if (key && SORT_KEYS.includes(key as SortField)) onSort(key as SortField);
             }}
             emptyMessage="Sin datos en el periodo seleccionado"
+            density="compact"
           />
         </div>
       </CardContent>

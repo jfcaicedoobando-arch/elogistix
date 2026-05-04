@@ -3,7 +3,6 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import SearchInput from "@/components/selects/SearchInput";
-import PaginationControls from "@/components/shared/PaginationControls";
 import { DataTable } from "@/components/shared/DataTable";
 import { exportToCsv } from "@/generators/exportCsv";
 import { useTabProformasController } from "@/hooks/facturacion/useTabProformasController";
@@ -53,13 +52,14 @@ export function TabProformas() {
             isLoading={c.isLoading}
             emptyMessage="No hay proformas generadas"
             rowKey={(p) => p.id}
-          />
-          <PaginationControls
-            page={c.page}
-            totalPages={c.totalPages}
-            onPageChange={c.setPage}
-            pageSize={c.pageSize}
-            onPageSizeChange={c.setPageSize}
+            density="comfortable"
+            pagination={{
+              page: c.page,
+              totalPages: c.totalPages,
+              onPageChange: c.setPage,
+              pageSize: c.pageSize,
+              onPageSizeChange: (s) => { c.setPageSize(s); c.setPage(0); },
+            }}
           />
         </CardContent>
       </Card>

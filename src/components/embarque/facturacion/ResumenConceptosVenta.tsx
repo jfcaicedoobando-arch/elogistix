@@ -84,9 +84,9 @@ export function ResumenConceptosVenta({ conceptos, tasaIva, canEdit, onGenerarPr
                     </>
                   ),
                 },
-                { key: "cant", header: "Cantidad", align: "right", render: (c) => c.cantidad },
-                { key: "pu", header: "P. Unitario", align: "right", render: (c) => formatCurrency(Number(c.precio_unitario), c.moneda) },
-                { key: "total", header: "Total", align: "right", className: "font-semibold",
+                { key: "cant", header: "Cantidad", align: "right", className: "tabular-nums", render: (c) => c.cantidad },
+                { key: "pu", header: "P. Unitario", align: "right", className: "tabular-nums", render: (c) => formatCurrency(Number(c.precio_unitario), c.moneda) },
+                { key: "total", header: "Total", align: "right", className: "font-semibold tabular-nums",
                   render: (c) => formatCurrency(Number(c.cantidad) * Number(c.precio_unitario), c.moneda) },
                 { key: "moneda", header: "Moneda", render: (c) => c.moneda },
                 {

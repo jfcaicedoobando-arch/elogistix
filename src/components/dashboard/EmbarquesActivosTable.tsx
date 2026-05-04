@@ -141,6 +141,7 @@ export function EmbarquesActivosTable({ embarques, resumen, isLoading }: Props) 
           emptyMessage={`Sin embarques con ETA en ${nombreMesCap}`}
           onRowClick={(e) => navigate(`/embarques/${e.id}`)}
           rowKey={(e) => e.id}
+          density="compact"
         />
       </CardContent>
     </Card>

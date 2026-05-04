@@ -9,7 +9,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useProveedoresPaginados, useProveedorMutations } from "@/hooks/proveedor/useProveedores";
 import type { ProveedorListItem } from "@/hooks/proveedor/useProveedores";
 import NuevoProveedorDialog from "@/components/proveedor/NuevoProveedorDialog";
-import PaginationControls from "@/components/shared/PaginationControls";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { useToast } from "@/hooks/use-toast";
 import { usePermissions } from "@/hooks/shared/usePermissions";
@@ -73,13 +72,14 @@ function ProveedorTable({ tipo, search, onSelect }: { tipo: TipoProveedor; searc
           emptyMessage="Sin proveedores registrados"
           onRowClick={(p) => onSelect(p.id)}
           rowKey={(p) => p.id}
-        />
-        <PaginationControls
-          page={page}
-          totalPages={totalPages}
-          onPageChange={setPage}
-          pageSize={pageSize}
-          onPageSizeChange={(s) => { setPageSize(s); setPage(0); }}
+          density="comfortable"
+          pagination={{
+            page,
+            totalPages,
+            onPageChange: setPage,
+            pageSize,
+            onPageSizeChange: (s) => { setPageSize(s); setPage(0); },
+          }}
         />
       </CardContent>
     </Card>

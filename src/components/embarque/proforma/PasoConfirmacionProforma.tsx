@@ -35,9 +35,9 @@ export function PasoConfirmacionProforma({
         <DataTable<ConceptoVenta>
           columns={[
             { key: "desc", header: "Descripción", className: "font-medium", render: (c) => c.descripcion },
-            { key: "cant", header: "Cant.", align: "right", render: (c) => c.cantidad },
-            { key: "pu", header: "P. Unit.", align: "right", render: (c) => formatCurrency(Number(c.precio_unitario), c.moneda) },
-            { key: "sub", header: "Subtotal", align: "right", className: "font-semibold",
+            { key: "cant", header: "Cant.", align: "right", className: "tabular-nums", render: (c) => c.cantidad },
+            { key: "pu", header: "P. Unit.", align: "right", className: "tabular-nums", render: (c) => formatCurrency(Number(c.precio_unitario), c.moneda) },
+            { key: "sub", header: "Subtotal", align: "right", className: "font-semibold tabular-nums",
               render: (c) => formatCurrency(Number(c.cantidad) * Number(c.precio_unitario), c.moneda) },
             { key: "moneda", header: "Moneda", render: (c) => c.moneda },
             { key: "iva", header: "IVA", align: "center",

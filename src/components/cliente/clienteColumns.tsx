@@ -43,7 +43,7 @@ export const cotizacionColumns: DataTableColumn<CotizacionCliente>[] = [
   { key: "folio", header: "Folio", width: "w-[100px]", className: "font-medium", render: (c) => c.folio },
   { key: "modo", header: "Modo", width: "w-[80px]", className: "text-xs", render: (c) => c.modo },
   { key: "ruta", header: "Origen → Destino", width: "min-w-[160px]", className: "text-xs", render: (c) => `${c.origen || "-"} → ${c.destino || "-"}` },
-  { key: "subtotal", header: "Subtotal", width: "w-[110px]", className: "text-right text-xs", headerClassName: "text-right", render: (c) => formatCurrency(c.subtotal, c.moneda) },
+  { key: "subtotal", header: "Subtotal", width: "w-[110px]", align: "right", className: "text-xs tabular-nums", render: (c) => formatCurrency(c.subtotal, c.moneda) },
   { key: "estado", header: "Estado", width: "w-[100px]", render: (c) => <Badge variant="secondary" className={`text-xs ${getEstadoColor(c.estado)}`}>{c.estado}</Badge> },
   { key: "fecha", header: "Fecha", width: "w-[100px]", className: "text-xs", render: (c) => formatDate(c.created_at) },
 ];

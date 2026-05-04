@@ -82,7 +82,7 @@ export default function AdminUsuarios() {
       />
 
       <div className="rounded-md border">
-        <DataTable columns={columns} data={users} isLoading={isLoading} emptyMessage="No hay usuarios." rowKey={(u) => u.user_id + u.org_nombre} />
+        <DataTable columns={columns} data={users} isLoading={isLoading} emptyMessage="No hay usuarios." rowKey={(u) => u.user_id + u.org_nombre} density="comfortable" />
       </div>
     </div>
   );

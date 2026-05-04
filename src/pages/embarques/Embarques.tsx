@@ -4,7 +4,6 @@ import { Button } from "@/components/ui/button";
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import PaginationControls from "@/components/shared/PaginationControls";
 import { DataTable } from "@/components/shared/DataTable";
 import DoubleConfirmDeleteDialog from "@/components/shared/DoubleConfirmDeleteDialog";
 import { PageHeader } from "@/components/shared/PageHeader";
@@ -164,13 +163,14 @@ export default function Embarques() {
                 sortMode="server"
                 controlledSort={{ key: sortKey, dir: sortDir }}
                 onSortChange={handleSortChange}
-              />
-              <PaginationControls
-                page={page}
-                totalPages={totalPages}
-                onPageChange={setPage}
-                pageSize={pageSize}
-                onPageSizeChange={setPageSize}
+                density="comfortable"
+                pagination={{
+                  page,
+                  totalPages,
+                  onPageChange: setPage,
+                  pageSize,
+                  onPageSizeChange: (s) => { setPageSize(s); setPage(0); },
+                }}
               />
             </CardContent>
           </Card>

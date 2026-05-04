@@ -22,6 +22,14 @@ export interface ChangelogEntry {
  */
 export const recentChangelog: ChangelogEntry[] = [
   {
+    version: "8.109.0",
+    date: "2026-05-04",
+    type: "minor",
+    title: "Estandarización de tablas (Fase 2): paginación integrada, density y alineación numérica",
+    summary: "Listados principales adoptan la prop pagination del DataTable; density explícita en todas las tablas y tabular-nums en columnas monetarias.",
+    description: "Continuación del plan de tablas. (1) Paginación: Cotizaciones, Embarques, Clientes, Proveedores, Facturación (facturas) y TabProformas migrados a la prop integrada `pagination`; eliminado markup duplicado de PaginationControls externos y normalizado el reset de página a 0 al cambiar pageSize en TabProformas y Embarques. (2) Densidad: convención aplicada — listados principales = 'comfortable', sub-tablas/dashboards/configuración = 'compact'. Se añadió density explícita a 14 tablas que dependían del default implícito (ProfitTable, EmbarquesActivosTable, ClienteDetalle ×2, TabPlanes, OrgMembersCard, TabPuertos, TabNavieras, TabTiposContenedor, TablaContactos, TabPortalCliente, AdminUsuarios, AdminOrganizaciones, AdminOrg/Usuarios, ReportesTablaClientes). (3) Alineación numérica: añadido `align: 'right'` + `tabular-nums` a columnas monetarias en facturaColumns, gastoColumns, cotizacionColumns (centralizado y portal cliente), ResumenConceptosVenta y PasoConfirmacionProforma. Sin cambios funcionales — sólo consistencia visual.",
+  },
+  {
     version: "8.108.0",
     date: "2026-05-04",
     type: "minor",

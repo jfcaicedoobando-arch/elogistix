@@ -138,6 +138,7 @@ export default function ClienteDetalle() {
                 emptyMessage="Sin embarques registrados"
                 onRowClick={(e) => navigate(`/embarques/${e.id}`)}
                 rowKey={(e) => e.id}
+                density="compact"
               />
             </CardContent>
           </Card>
@@ -153,6 +154,7 @@ export default function ClienteDetalle() {
                 emptyMessage="Sin cotizaciones registradas"
                 onRowClick={(c) => navigate(`/cotizaciones/${c.id}`)}
                 rowKey={(c) => c.id}
+                density="compact"
               />
             </CardContent>
           </Card>

@@ -80,6 +80,7 @@ export default function TabNavieras() {
             emptyMessage="No se encontraron navieras"
             rowKey={(n) => n.id}
             rowClassName={(n) => !n.activo ? "opacity-50" : ""}
+            density="compact"
           />
         </div>
         <p className="text-xs text-muted-foreground">{navieras.length} navieras en total · {navieras.filter(n => n.activo).length} activas</p>

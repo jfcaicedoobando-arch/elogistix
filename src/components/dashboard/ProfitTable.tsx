@@ -62,6 +62,7 @@ export const ProfitTable = memo(function ProfitTable({ embarques, isLoading }: P
             onRowClick={(e) => navigate(`/embarques/${e.id}`)}
             rowKey={(e) => e.id}
             skeletonRows={4}
+            density="compact"
           />
         </div>
       </CardContent>

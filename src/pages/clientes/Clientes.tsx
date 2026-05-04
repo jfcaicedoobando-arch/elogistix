@@ -7,7 +7,6 @@ import SearchInput from "@/components/selects/SearchInput";
 import { useClientesPaginados } from "@/hooks/cliente/useClientes";
 import { usePermissions } from "@/hooks/shared/usePermissions";
 import NuevoClienteDialog from "@/components/cliente/NuevoClienteDialog";
-import PaginationControls from "@/components/shared/PaginationControls";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { useDebounce } from "@/hooks/shared/useDebounce";
 import { DataTable, type DataTableColumn } from "@/components/shared/DataTable";
@@ -77,13 +76,14 @@ export default function Clientes() {
             emptyMessage={search ? "No se encontraron clientes" : "No hay clientes registrados"}
             onRowClick={(c) => navigate(`/clientes/${c.id}`)}
             rowKey={(c) => c.id}
-          />
-          <PaginationControls
-            page={page}
-            totalPages={totalPages}
-            onPageChange={setPage}
-            pageSize={pageSize}
-            onPageSizeChange={(s) => { setPageSize(s); setPage(0); }}
+            density="comfortable"
+            pagination={{
+              page,
+              totalPages,
+              onPageChange: setPage,
+              pageSize,
+              onPageSizeChange: (s) => { setPageSize(s); setPage(0); },
+            }}
           />
         </CardContent>
       </Card>

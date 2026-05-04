@@ -86,6 +86,7 @@ export default function TabPuertos() {
             emptyMessage="No se encontraron puertos"
             rowKey={(p) => p.id}
             rowClassName={(p) => !p.activo ? "opacity-50" : ""}
+            density="compact"
           />
         </div>
         <p className="text-xs text-muted-foreground">{puertos.length} puertos en total · {puertos.filter(p => p.activo).length} activos</p>

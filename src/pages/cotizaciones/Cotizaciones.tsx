@@ -15,7 +15,6 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import SearchInput from "@/components/selects/SearchInput";
-import PaginationControls from "@/components/shared/PaginationControls";
 import { DataTable } from "@/components/shared/DataTable";
 import DoubleConfirmDeleteDialog from "@/components/shared/DoubleConfirmDeleteDialog";
 import { PageHeader } from "@/components/shared/PageHeader";
@@ -183,13 +182,14 @@ export default function Cotizaciones() {
             onRowClick={(r) => c.irADetalle(r.id)}
             onRowMouseEnter={(r) => c.prefetchCotizacion(r.id)}
             rowKey={(r) => r.id}
-          />
-          <PaginationControls
-            page={c.page}
-            totalPages={c.totalPages}
-            onPageChange={c.setPage}
-            pageSize={c.pageSize}
-            onPageSizeChange={(s) => { c.setPageSize(s); c.setPage(0); }}
+            density="comfortable"
+            pagination={{
+              page: c.page,
+              totalPages: c.totalPages,
+              onPageChange: c.setPage,
+              pageSize: c.pageSize,
+              onPageSizeChange: (s) => { c.setPageSize(s); c.setPage(0); },
+            }}
           />
         </CardContent>
       </Card>

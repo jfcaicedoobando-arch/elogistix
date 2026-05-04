@@ -156,6 +156,7 @@ export default function TabPlanes() {
           isLoading={isLoading}
           emptyMessage="No hay planes configurados"
           rowKey={(p) => p.id}
+          density="comfortable"
         />
       </CardContent>
     </Card>
