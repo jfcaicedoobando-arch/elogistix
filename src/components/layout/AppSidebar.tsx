@@ -89,7 +89,7 @@ const AppSidebarBase = forwardRef<HTMLDivElement>(function AppSidebarBase(_props
   const collapsed = !isMobile && state === "collapsed";
   const { pathname } = useLocation();
   const { user, role, effectiveRole, signOut } = useAuth();
-  const { organization } = useOrganization();
+  // organization name shown via OrgSwitcher (single source of truth)
   const { totalAlertas } = useSidebarAlerts();
   const { data: auditoriaCount = 0 } = useAuditoriaCount();
   const { theme, toggleTheme } = useTheme();
