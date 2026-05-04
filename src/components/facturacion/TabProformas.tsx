@@ -3,7 +3,6 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import SearchInput from "@/components/selects/SearchInput";
-import PaginationControls from "@/components/shared/PaginationControls";
 import { DataTable } from "@/components/shared/DataTable";
 import { exportToCsv } from "@/generators/exportCsv";
 import { useTabProformasController } from "@/hooks/facturacion/useTabProformasController";

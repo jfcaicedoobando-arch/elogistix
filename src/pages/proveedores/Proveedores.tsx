@@ -9,7 +9,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useProveedoresPaginados, useProveedorMutations } from "@/hooks/proveedor/useProveedores";
 import type { ProveedorListItem } from "@/hooks/proveedor/useProveedores";
 import NuevoProveedorDialog from "@/components/proveedor/NuevoProveedorDialog";
-import PaginationControls from "@/components/shared/PaginationControls";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { useToast } from "@/hooks/use-toast";
 import { usePermissions } from "@/hooks/shared/usePermissions";
