@@ -61,14 +61,6 @@ export const recentChangelog: ChangelogEntry[] = [
     summary: "Cambio de etiqueta para alinear la UI con el lenguaje del equipo.",
     description: "Renombrada la segunda pestaña del módulo /auditoria de 'Detalle operativo' a 'Hallazgos' para alinear el lenguaje de la UI con cómo el equipo se refiere al contenido (la lista de hallazgos accionables). Sin cambios funcionales ni de datos: el value interno del tab se conserva ('tabla'), por lo que el drill-down desde Resumen ejecutivo y los enlaces preexistentes siguen funcionando.",
   },
-  {
-    version: "8.103.0",
-    date: "2026-05-02",
-    type: "minor",
-    title: "Auditoría Fase 3: fugas financieras, MTTR, snooze, comentarios y tendencia 30d",
-    summary: "Nuevas reglas financieras, MTTR, snooze de hallazgos, comentarios y tendencia 30 días en /auditoria.",
-    description: "Nuevas reglas financieras (margen negativo, margen bajo, venta sin costo, costo sin venta, proforma vencida, embarque huérfano) con umbrales configurables por organización en la nueva pestaña 'Auditoría' de Configuración. La vista ejecutiva suma tarjetas de Riesgo financiero pendiente en MXN, MTTR (tiempo medio de resolución), top de operadores y una gráfica de tendencia 30 días basada en snapshots diarios. El diálogo de hallazgo se reorganiza en tabs Acción / Comentarios / Snooze: hilo de discusión persistente y snooze con fecha y motivo obligatorios para silenciar ruido temporal sin perder trazabilidad. El tab por defecto pasa a 'Resumen ejecutivo' para administradores. Edge functions nuevas: captura diaria de snapshots y digest semanal por correo a los admins (vía Resend). Nuevas tablas auditoria_comentarios y auditoria_snapshots con RLS tenant; columnas snoozed_until/snooze_motivo en auditoria_revisiones.",
-  },
 ];
 
 /** Deduplica por version conservando la primera ocurrencia (recentChangelog gana). */
