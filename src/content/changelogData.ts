@@ -22,6 +22,14 @@ export interface ChangelogEntry {
  */
 export const recentChangelog: ChangelogEntry[] = [
   {
+    version: "8.117.0",
+    date: "2026-05-04",
+    type: "minor",
+    title: "Pre-Facturación: nueva tab 'Proyección' para cierre mensual por ETA",
+    summary: "Vista mensual con KPIs de venta proyectada vs facturada, profit, avance %, tabla agrupada por expediente, filtros por cliente/operador/estado y export CSV.",
+    description: "Nueva primera tab 'Proyección' en /facturacion: selector de mes (◀/▶ + Select, default mes actual, URL ?mes=YYYY-MM), 4 KPIs (expedientes, facturación facturada vs proyectada, profit con margen, avance % con barra), tabla agrupada por expediente con suma de venta/costo/profit y conteo de contenedores, filtros por cliente/operador/estado, export CSV. Estado 'Facturado' = tiene_proforma=true Y factura con factura_pdf_url; el grupo está Facturado solo si TODOS sus embarques cumplen. Montos convertidos a MXN con TC del embarque. 4 queries en paralelo, cache 60s, sin cambios de DB.",
+  },
+  {
     version: "8.116.0",
     date: "2026-05-04",
     type: "minor",

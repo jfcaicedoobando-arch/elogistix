@@ -15,6 +15,7 @@ import { PageHeader } from "@/components/shared/PageHeader";
 import type { Database } from "@/integrations/supabase/types";
 import { TabProformas } from "@/components/facturacion/TabProformas";
 import { TabProformasPendientes } from "@/components/facturacion/TabProformasPendientes";
+import { TabProyeccion } from "@/components/facturacion/TabProyeccion";
 import { useFacturacionPageController } from "@/hooks/facturacion/useFacturacionPageController";
 
 type EstadoFactura = Database["public"]["Enums"]["estado_factura"];
@@ -99,8 +100,9 @@ export default function Facturacion() {
         description="Control de proformas, facturas emitidas y gastos por liquidar"
       />
 
-      <Tabs defaultValue={proformasPendientes.length > 0 ? "pendientes" : "proformas"}>
+      <Tabs defaultValue="proyeccion">
         <TabsList>
+          <TabsTrigger value="proyeccion">Proyección</TabsTrigger>
           <TabsTrigger value="pendientes">
             Pendientes{proformasPendientes.length > 0 ? ` (${proformasPendientes.length})` : ''}
           </TabsTrigger>
@@ -108,6 +110,10 @@ export default function Facturacion() {
           <TabsTrigger value="facturas">Facturas</TabsTrigger>
           <TabsTrigger value="liquidacion">Liquidación de Gastos</TabsTrigger>
         </TabsList>
+
+        <TabsContent value="proyeccion">
+          <TabProyeccion />
+        </TabsContent>
 
         <TabsContent value="pendientes">
           <TabProformasPendientes />
