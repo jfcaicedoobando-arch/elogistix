@@ -23,14 +23,14 @@ export default function PortalCotizacionEstadoBanner({
   // mostramos el banner de operación con acceso directo al embarque.
   if (embarqueId) {
     return (
-      <Alert className="border-success/50 bg-success/10">
+      <Alert className="border-success/40 bg-success/15">
         <Ship className="h-4 w-4 text-success" />
-        <AlertDescription className="text-success">
+        <AlertDescription className="text-foreground">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
             <p>
               Esta cotización ya está en operación.
               {embarqueExpediente && (
-                <span className="ml-1 font-semibold">Embarque {embarqueExpediente}.</span>
+                <span className="ml-1 font-semibold font-mono">Embarque {embarqueExpediente}.</span>
               )}
             </p>
             <Button
@@ -43,7 +43,7 @@ export default function PortalCotizacionEstadoBanner({
             </Button>
           </div>
           {comentarioCliente && (
-            <p className="mt-2 flex items-start gap-1.5">
+            <p className="mt-2 flex items-start gap-1.5 text-muted-foreground">
               <MessageSquare className="h-3.5 w-3.5 mt-0.5 shrink-0" />
               <span className="italic">"{comentarioCliente}"</span>
             </p>
@@ -55,12 +55,12 @@ export default function PortalCotizacionEstadoBanner({
 
   if (estado === "Aceptada") {
     return (
-      <Alert className="border-success/50 bg-success/10">
+      <Alert className="border-success/40 bg-success/15">
         <CheckCircle2 className="h-4 w-4 text-success" />
-        <AlertDescription className="text-success">
+        <AlertDescription className="text-foreground">
           <p>Esta cotización fue aceptada. Te notificaremos cuando inicie la operación.</p>
           {comentarioCliente && (
-            <p className="mt-2 flex items-start gap-1.5">
+            <p className="mt-2 flex items-start gap-1.5 text-muted-foreground">
               <MessageSquare className="h-3.5 w-3.5 mt-0.5 shrink-0" />
               <span className="italic">"{comentarioCliente}"</span>
             </p>
