@@ -100,8 +100,9 @@ export default function Facturacion() {
         description="Control de proformas, facturas emitidas y gastos por liquidar"
       />
 
-      <Tabs defaultValue={proformasPendientes.length > 0 ? "pendientes" : "proformas"}>
+      <Tabs defaultValue="proyeccion">
         <TabsList>
+          <TabsTrigger value="proyeccion">Proyección</TabsTrigger>
           <TabsTrigger value="pendientes">
             Pendientes{proformasPendientes.length > 0 ? ` (${proformasPendientes.length})` : ''}
           </TabsTrigger>
@@ -109,6 +110,10 @@ export default function Facturacion() {
           <TabsTrigger value="facturas">Facturas</TabsTrigger>
           <TabsTrigger value="liquidacion">Liquidación de Gastos</TabsTrigger>
         </TabsList>
+
+        <TabsContent value="proyeccion">
+          <TabProyeccion />
+        </TabsContent>
 
         <TabsContent value="pendientes">
           <TabProformasPendientes />
