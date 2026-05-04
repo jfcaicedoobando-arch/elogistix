@@ -5,11 +5,16 @@ import {
   Table,
   TableBody,
   TableCell,
+  TableFooter,
   TableHead,
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
 import { cn } from "@/lib/utils";
+import PaginationControls from "@/components/shared/PaginationControls";
+
+export type ColumnAlign = "left" | "right" | "center";
+export type TableDensity = "compact" | "comfortable" | "spacious";
 
 export interface DataTableColumn<T> {
   key: string;
@@ -17,6 +22,7 @@ export interface DataTableColumn<T> {
   className?: string;
   headerClassName?: string;
   width?: string;
+  align?: ColumnAlign;
   sortable?: boolean;
   sortValue?: (item: T) => string | number | null;
   sticky?: boolean;
@@ -25,6 +31,15 @@ export interface DataTableColumn<T> {
 }
 
 type SortDir = "asc" | "desc";
+
+export interface DataTablePagination {
+  page: number;
+  totalPages: number;
+  onPageChange: (page: number) => void;
+  pageSize?: number;
+  onPageSizeChange?: (size: number) => void;
+  pageSizeOptions?: number[];
+}
 
 interface DataTableProps<T> {
   columns: DataTableColumn<T>[];
@@ -50,7 +65,35 @@ interface DataTableProps<T> {
   controlledSort?: { key: string | null; dir: SortDir };
   /** Sólo aplica en sortMode='server'. Ciclo: null → asc → desc → null. */
   onSortChange?: (key: string | null, dir: SortDir) => void;
+
+  // ===== Fase 1: estandarización visual =====
+  /** Densidad de filas. Default 'comfortable'. */
+  density?: TableDensity;
+  /** Filas alternadas (zebra). Default true. */
+  striped?: boolean;
+  /** Hover en filas. Default true. */
+  hoverable?: boolean;
+  /** Bordes verticales entre celdas. Default false. */
+  bordered?: boolean;
+  /** Footer opcional (ReactNode o función con data filtrada). */
+  footer?: React.ReactNode | ((data: T[]) => React.ReactNode);
+  /** Paginación integrada opcional (renderiza PaginationControls debajo). */
+  pagination?: DataTablePagination;
+  /** className raíz del wrapper. */
+  className?: string;
 }
+
+const DENSITY_CELL: Record<TableDensity, string> = {
+  compact: "py-1 text-xs",
+  comfortable: "py-2",
+  spacious: "py-3",
+};
+
+const ALIGN_CLASS: Record<ColumnAlign, string> = {
+  left: "text-left",
+  right: "text-right",
+  center: "text-center",
+};
 
 function DataTableInner<T>({
   columns,
@@ -68,6 +111,13 @@ function DataTableInner<T>({
   sortMode = "client",
   controlledSort,
   onSortChange,
+  density = "comfortable",
+  striped = true,
+  hoverable = true,
+  bordered = false,
+  footer,
+  pagination,
+  className,
 }: DataTableProps<T>) {
   const icon = emptyIcon ?? <Inbox className="h-8 w-8 opacity-40" strokeWidth={1.5} />;
 
@@ -102,7 +152,6 @@ function DataTableInner<T>({
   };
 
   const sortedData = useMemo(() => {
-    // En modo server NO ordenamos en cliente: confiamos en el orden del servidor.
     if (isServer) return data;
     if (!sortKey) return data;
     const col = columns.find((c) => c.key === sortKey);
@@ -133,92 +182,152 @@ function DataTableInner<T>({
     return <ArrowUpDown className="h-3 w-3 opacity-30" />;
   };
 
+  const cellPad = DENSITY_CELL[density];
+  const borderCell = bordered ? "border-r last:border-r-0" : "";
+
+  const renderedFooter =
+    typeof footer === "function" ? (footer as (d: T[]) => React.ReactNode)(sortedData) : footer;
+
   return (
-    <Table>
-      <TableHeader>
-        <TableRow className="hover:bg-transparent">
-          {columns.map((col) => (
-            <TableHead
-              key={col.key}
-              className={cn(
-                col.width,
-                col.headerClassName,
-                col.sortable && "cursor-pointer select-none hover:text-foreground transition-colors",
-                col.sticky && "sticky left-0 z-20 bg-background",
-                col.stickyRight && "sticky right-0 z-20 bg-background shadow-[-4px_0_4px_-2px_hsl(var(--border)/0.3)]",
-              )}
-              onClick={col.sortable ? () => handleSort(col.key) : undefined}
-            >
-              {col.sortable ? (
-                <span className="inline-flex items-center gap-1">
-                  {col.header}
-                  <SortIcon colKey={col.key} />
-                </span>
-              ) : (
-                col.header
-              )}
-            </TableHead>
-          ))}
-        </TableRow>
-      </TableHeader>
-      <TableBody>
-        {isLoading
-          ? Array.from({ length: skeletonRows }).map((_, i) => (
-              <TableRow key={`skeleton-${i}`} className="hover:bg-transparent">
-                {columns.map((col) => (
-                  <TableCell key={col.key} className={col.width}>
-                    <Skeleton className="h-4 w-full" />
-                  </TableCell>
-                ))}
-              </TableRow>
-            ))
-          : sortedData.length === 0
-          ? (
-              <TableRow className="hover:bg-transparent">
-                <TableCell colSpan={columns.length}>
-                  {emptyState ?? (
-                    <div className="flex flex-col items-center justify-center gap-2 py-12 text-muted-foreground">
-                      {icon}
-                      <p className="text-sm font-medium">{emptyMessage}</p>
-                      {emptyHint && (
-                        <p className="text-xs opacity-75 max-w-md text-center">{emptyHint}</p>
-                      )}
-                    </div>
+    <div className={className}>
+      <Table>
+        <TableHeader>
+          <TableRow
+            className={cn(
+              "hover:bg-transparent",
+              !striped && "even:bg-transparent",
+            )}
+          >
+            {columns.map((col) => {
+              const align = col.align ?? "left";
+              return (
+                <TableHead
+                  key={col.key}
+                  className={cn(
+                    col.width,
+                    ALIGN_CLASS[align],
+                    borderCell,
+                    col.headerClassName,
+                    col.sortable && "cursor-pointer select-none hover:text-foreground transition-colors",
+                    col.sticky && "sticky left-0 z-20 bg-background",
+                    col.stickyRight && "sticky right-0 z-20 bg-background shadow-[-4px_0_4px_-2px_hsl(var(--border)/0.3)]",
                   )}
-                </TableCell>
-              </TableRow>
-            )
-          : sortedData.map((item) => (
-              <TableRow
-                key={rowKey(item)}
-                className={[
-                  onRowClick ? "cursor-pointer" : "",
-                  rowClassName?.(item) ?? "",
-                ]
-                  .filter(Boolean)
-                  .join(" ")}
-                onClick={onRowClick ? () => onRowClick(item) : undefined}
-                onMouseEnter={onRowMouseEnter ? () => onRowMouseEnter(item) : undefined}
-              >
-                {columns.map((col) => (
-                  <TableCell key={col.key} className={cn(col.width, col.className, col.sticky && "sticky left-0 z-[5] bg-background", col.stickyRight && "sticky right-0 z-[5] bg-background shadow-[-4px_0_4px_-2px_hsl(var(--border)/0.3)]")}>
-                    {col.render(item)}
+                  onClick={col.sortable ? () => handleSort(col.key) : undefined}
+                >
+                  {col.sortable ? (
+                    <span
+                      className={cn(
+                        "inline-flex items-center gap-1",
+                        align === "right" && "flex-row-reverse",
+                        align === "center" && "justify-center w-full",
+                      )}
+                    >
+                      {col.header}
+                      <SortIcon colKey={col.key} />
+                    </span>
+                  ) : (
+                    col.header
+                  )}
+                </TableHead>
+              );
+            })}
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {isLoading
+            ? Array.from({ length: skeletonRows }).map((_, i) => (
+                <TableRow
+                  key={`skeleton-${i}`}
+                  className={cn(
+                    "hover:bg-transparent",
+                    !striped && "even:bg-transparent",
+                  )}
+                >
+                  {columns.map((col) => (
+                    <TableCell key={col.key} className={cn(col.width, cellPad, borderCell)}>
+                      <Skeleton className="h-4 w-full" />
+                    </TableCell>
+                  ))}
+                </TableRow>
+              ))
+            : sortedData.length === 0
+            ? (
+                <TableRow className="hover:bg-transparent even:bg-transparent">
+                  <TableCell colSpan={columns.length}>
+                    {emptyState ?? (
+                      <div className="flex flex-col items-center justify-center gap-2 py-12 text-muted-foreground">
+                        {icon}
+                        <p className="text-sm font-medium">{emptyMessage}</p>
+                        {emptyHint && (
+                          <p className="text-xs opacity-75 max-w-md text-center">{emptyHint}</p>
+                        )}
+                      </div>
+                    )}
                   </TableCell>
-                ))}
-              </TableRow>
-            ))}
-      </TableBody>
-    </Table>
+                </TableRow>
+              )
+            : sortedData.map((item) => (
+                <TableRow
+                  key={rowKey(item)}
+                  className={cn(
+                    onRowClick && "cursor-pointer",
+                    !striped && "even:bg-transparent",
+                    !hoverable && "hover:bg-transparent",
+                    rowClassName?.(item),
+                  )}
+                  onClick={onRowClick ? () => onRowClick(item) : undefined}
+                  onMouseEnter={onRowMouseEnter ? () => onRowMouseEnter(item) : undefined}
+                >
+                  {columns.map((col) => {
+                    const align = col.align ?? "left";
+                    return (
+                      <TableCell
+                        key={col.key}
+                        className={cn(
+                          col.width,
+                          cellPad,
+                          ALIGN_CLASS[align],
+                          borderCell,
+                          col.className,
+                          col.sticky && "sticky left-0 z-[5] bg-background",
+                          col.stickyRight && "sticky right-0 z-[5] bg-background shadow-[-4px_0_4px_-2px_hsl(var(--border)/0.3)]",
+                        )}
+                      >
+                        {col.render(item)}
+                      </TableCell>
+                    );
+                  })}
+                </TableRow>
+              ))}
+        </TableBody>
+        {renderedFooter && !isLoading && sortedData.length > 0 && (
+          <TableFooter>{renderedFooter}</TableFooter>
+        )}
+      </Table>
+      {pagination && (
+        <PaginationControls
+          page={pagination.page}
+          totalPages={pagination.totalPages}
+          onPageChange={pagination.onPageChange}
+          pageSize={pagination.pageSize}
+          onPageSizeChange={pagination.onPageSizeChange}
+          pageSizeOptions={pagination.pageSizeOptions}
+        />
+      )}
+    </div>
   );
 }
 
 /**
  * DataTable — componente genérico de tabla.
  *
+ * Fase 1 estandarización: añade props opcionales `density`, `striped`,
+ * `hoverable`, `bordered`, `align` por columna, `footer`, y `pagination`
+ * integrada. Todo retro-compatible.
+ *
  * Nota: previamente envolvíamos esto con `memo()`, pero al ser un componente
- * genérico React emitía el warning "Function components cannot be given refs"
- * cuando algún hijo (ej. Badge con Slot) recibía un ref desde una row con
- * onClick. Eso rompía la memoización silenciosamente. La memoización efectiva
- * se logra ahora memoizando `columns` y `data` en los padres (useMemo).
+ * genérico React emitía el warning "Function components cannot be given refs".
+ * La memoización efectiva se logra ahora memoizando `columns` y `data` en los
+ * padres (useMemo).
  */
 export const DataTable = DataTableInner;

@@ -44,6 +44,12 @@ export default tseslint.config(
             message: "Importa desde el barrel del dominio: '@/services/<dominio>' en lugar de archivos internos. Ver ARCHITECTURE.md §5.",
           },
         ],
+        paths: [
+          {
+            name: "@/components/ui/table",
+            message: "Usa <DataTable /> de '@/components/shared/DataTable' para estandarizar tablas. Solo casos editables/excepcionales pueden importar las primitivas; documenta y agrega allowlist en eslint.config.js.",
+          },
+        ],
       }],
     },
   },
@@ -67,6 +73,21 @@ export default tseslint.config(
     // Hooks y services pueden hacer imports internos a su propio árbol
     // (composición intra-dominio, sub-barrels, helpers privados).
     files: ["src/hooks/**", "src/services/**", "src/lib/**"],
+    rules: {
+      "no-restricted-imports": "off",
+    },
+  },
+  {
+    // Allowlist de tablas: el propio DataTable y tablas editables/excepcionales
+    // que aún no migran a DataTable. Documentar caso a caso.
+    files: [
+      "src/components/shared/DataTable.tsx",
+      // Casos editables (formularios tipo tabla) — pendientes de evaluación:
+      "src/components/cotizacion/SeccionMercanciaAerea.tsx",
+      "src/components/cotizacion/SeccionMercanciaMaritimeLCL.tsx",
+      "src/components/cotizacion/SeccionMercanciaCotizacionDetalle.tsx",
+      "src/components/cotizacion/TablaConceptosGenerico.tsx",
+    ],
     rules: {
       "no-restricted-imports": "off",
     },

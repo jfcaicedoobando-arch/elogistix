@@ -22,12 +22,20 @@ export interface ChangelogEntry {
  */
 export const recentChangelog: ChangelogEntry[] = [
   {
+    version: "8.106.0",
+    date: "2026-05-04",
+    type: "minor",
+    title: "Estandarización de tablas (Fase 1): DataTable extendido + lint",
+    summary: "DataTable gana density, striped, hoverable, bordered, align por columna, footer y paginación integrada; lint prohíbe usar @/components/ui/table fuera de la allowlist.",
+    description: "Fase 1 del plan de estandarización de tablas. DataTable acepta density, striped, hoverable, bordered, align por columna, footer y paginación integrada. Nueva regla ESLint que bloquea importar @/components/ui/table directamente, con allowlist para grids editables de cotización. Guía nueva en docs/tables.md. Cambios retro-compatibles.",
+  },
+  {
     version: "8.105.0",
     date: "2026-05-04",
     type: "minor",
     title: "Refactor del sistema de Changelog: dedupe, validación y UX",
     summary: "Eliminada la duplicación entre recentChangelog y chunk0; nuevo script CLI, tests de integridad, filtros, búsqueda y anclas profundas en /changelog.",
-    description: "Refactor integral del sistema de changelog basado en auditoría. (1) Fuente única de verdad: chunk0 mantiene todas las entradas v8; recentChangelog conserva sólo las 5 más recientes para bundle inicial mínimo y los loaders deduplican por version. (2) Nuevo script `npm run changelog:add` (scripts/add-changelog.ts) que valida semver, fecha ISO, type, prepende la entrada en chunk0 y recentChangelog, bumpea APP_VERSION atómicamente y rota recentChangelog a 5 elementos. (3) Tests de integridad (src/content/__tests__/changelog.test.ts): orden descendente, semver válido, versiones únicas, APP_VERSION sincronizado con la última entrada, sin duplicados visibles tras dedupe. (4) UI mejorada en /changelog: filtros por tipo (Major/Minor/Patch), búsqueda en título+descripción, anclas profundas con id={`v${version}`} y soporte de location.hash con scroll automático, summary/details opcional con expand. (5) Loader genérico `loadChangelogMajor(n)` reemplaza loadChangelogV8 (que queda como shim). (6) Generador `npm run changelog:json` que produce public/changelog.json en build para consumo externo (RSS, Slack webhooks, etc.). Sin breaking changes para los consumidores existentes.",
+    description: "Refactor integral del sistema de changelog basado en auditoría. (1) Fuente única de verdad: chunk0 mantiene todas las entradas v8; recentChangelog conserva sólo las 5 más recientes para bundle inicial mínimo y los loaders deduplican por version. (2) Nuevo script `npm run changelog:add` (scripts/add-changelog.ts). (3) Tests de integridad. (4) UI mejorada en /changelog: filtros, búsqueda y anclas. (5) Loader genérico. (6) Generador de public/changelog.json. Sin breaking changes.",
   },
   {
     version: "8.104.0",
@@ -52,14 +60,6 @@ export const recentChangelog: ChangelogEntry[] = [
     title: "Auditoría Fase 3: fugas financieras, MTTR, snooze, comentarios y tendencia 30d",
     summary: "Nuevas reglas financieras, MTTR, snooze de hallazgos, comentarios y tendencia 30 días en /auditoria.",
     description: "Nuevas reglas financieras (margen negativo, margen bajo, venta sin costo, costo sin venta, proforma vencida, embarque huérfano) con umbrales configurables por organización en la nueva pestaña 'Auditoría' de Configuración. La vista ejecutiva suma tarjetas de Riesgo financiero pendiente en MXN, MTTR (tiempo medio de resolución), top de operadores y una gráfica de tendencia 30 días basada en snapshots diarios. El diálogo de hallazgo se reorganiza en tabs Acción / Comentarios / Snooze: hilo de discusión persistente y snooze con fecha y motivo obligatorios para silenciar ruido temporal sin perder trazabilidad. El tab por defecto pasa a 'Resumen ejecutivo' para administradores. Edge functions nuevas: captura diaria de snapshots y digest semanal por correo a los admins (vía Resend). Nuevas tablas auditoria_comentarios y auditoria_snapshots con RLS tenant; columnas snoozed_until/snooze_motivo en auditoria_revisiones.",
-  },
-  {
-    version: "8.102.0",
-    date: "2026-05-02",
-    type: "minor",
-    title: "Auditoría Fase 2: asignación de responsable y workflow de hallazgos",
-    summary: "Hallazgos pueden asignarse a un responsable con fecha límite y workflow pendiente → en progreso → revisado.",
-    description: "Cada hallazgo ahora puede asignarse a un responsable (admin u operador de la organización) con fecha límite opcional. Se incorpora un workflow de tres estados (pendiente → en progreso → revisado) y se registra siempre quién hizo la asignación y cuándo. Nuevo diálogo 'Asignar responsable' con selector de usuario, calendario de fecha límite y botón 'Tomarlo yo' que auto-asigna y mueve el hallazgo a 'En progreso'. La tabla de hallazgos suma una columna 'Responsable' con email del asignado e ícono de alerta cuando la fecha límite está vencida; la celda de revisión distingue ahora visualmente el estado 'En progreso' (badge ámbar). Nuevos filtros: 'Responsable' (todos / asignados a mí / sin asignar / vencidos) y opción 'En progreso' en el filtro de revisión. Toda asignación o toma queda en bitácora (acciones asignar_hallazgo y tomar_hallazgo). Migración: estado_hallazgo_revision enum nuevo y columnas responsable_id, responsable_email, asignado_por, asignado_por_email, asignado_at, fecha_limite y estado_revision en auditoria_revisiones; accion_tomada y revisado_por se vuelven opcionales. RLS sin cambios.",
   },
 ];
 

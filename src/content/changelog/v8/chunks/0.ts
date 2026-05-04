@@ -2,6 +2,14 @@ import type { ChangelogEntry } from "../../../changelogData";
 
 export const chunk0: ChangelogEntry[] = [
   {
+    version: "8.106.0",
+    date: "2026-05-04",
+    type: "minor",
+    title: "Estandarización de tablas (Fase 1): DataTable extendido + lint",
+    summary: "DataTable gana density, striped, hoverable, bordered, align por columna, footer y paginación integrada; lint prohíbe usar @/components/ui/table fuera de la allowlist.",
+    description: "Fase 1 del plan de estandarización de tablas. Se extendió `src/components/shared/DataTable.tsx` con props opcionales y retro-compatibles: density ('compact' | 'comfortable' | 'spacious'), striped, hoverable, bordered, align por columna ('left' | 'right' | 'center') con icono de sort respetando el alineamiento, footer (ReactNode o función con data filtrada) y paginación integrada vía prop `pagination` que renderiza PaginationControls debajo de la tabla. Las clases de padding por densidad se aplican en cuerpo y skeleton para mantener consistencia. Se agregó regla ESLint `no-restricted-imports` que bloquea importar directamente `@/components/ui/table` con mensaje guía hacia DataTable. Allowlist explícita en eslint.config.js: el propio DataTable y los grids editables de cotización (SeccionMercanciaAerea, SeccionMercanciaMaritimeLCL, SeccionMercanciaCotizacionDetalle, TablaConceptosGenerico) que requieren inputs por celda. Nueva guía `docs/tables.md` con API, convenciones de columnas, sort cliente vs servidor, paginación y proceso para añadir excepciones. Sin cambios de comportamiento en tablas existentes — todas las props nuevas son opcionales con defaults equivalentes al render anterior. Próximos bloques (B-E) migrarán las ~22 tablas crudas a DataTable de forma incremental.",
+  },
+  {
     version: "8.105.0",
     date: "2026-05-04",
     type: "minor",
