@@ -1,6 +1,6 @@
 import { AlertTriangle, Anchor, Ship } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { DataTable, type DataTableColumn } from "@/components/shared/DataTable";
 import { ResponsiveContainer, BarChart, Bar, XAxis, LabelList } from "recharts";
 import { useNavigate } from "react-router-dom";
 import { toTitleCase } from "@/lib/formatters";
@@ -90,34 +90,24 @@ export function MiniBarChart({ data }: { data: { mes: string; valor: number }[] 
 export function RiskDetailTable({ cargas }: { cargas: CargaRiesgo[] }) {
   const navigate = useNavigate();
   if (cargas.length === 0) return <p className="text-xs text-muted-foreground">Sin cargas en riesgo</p>;
+
+  const cols: DataTableColumn<CargaRiesgo>[] = [
+    { key: "exp", header: "Expediente", className: "font-mono text-xs", render: (c) => c.expediente },
+    { key: "cliente", header: "Cliente", className: "text-xs", render: (c) => <span title={c.cliente_nombre}>{toTitleCase(c.cliente_nombre)}</span> },
+    { key: "estado", header: "Estado", className: "text-xs", render: (c) => c.estadoReal },
+    { key: "dias", header: "Días", align: "center", className: "text-xs font-medium", render: (c) => c.diasEnPuerto },
+    { key: "nivel", header: "Nivel", render: (c) => <RiskBadge nivel={c.nivelRiesgo} /> },
+  ];
+
   return (
     <div className="rounded-lg border overflow-hidden">
-      <Table>
-        <TableHeader>
-          <TableRow className="bg-muted/40">
-            <TableHead>Expediente</TableHead>
-            <TableHead>Cliente</TableHead>
-            <TableHead>Estado</TableHead>
-            <TableHead className="text-center">Días</TableHead>
-            <TableHead>Nivel</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {cargas.map((c) => (
-            <TableRow
-              key={c.id}
-              className="cursor-pointer hover:bg-muted/30"
-              onClick={() => navigate(`/embarques/${c.id}`)}
-            >
-              <TableCell className="font-mono text-xs">{c.expediente}</TableCell>
-              <TableCell className="text-xs" title={c.cliente_nombre}>{toTitleCase(c.cliente_nombre)}</TableCell>
-              <TableCell className="text-xs">{c.estadoReal}</TableCell>
-              <TableCell className="text-center text-xs font-medium">{c.diasEnPuerto}</TableCell>
-              <TableCell><RiskBadge nivel={c.nivelRiesgo} /></TableCell>
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
+      <DataTable
+        columns={cols}
+        data={cargas}
+        rowKey={(c) => c.id}
+        density="compact"
+        onRowClick={(c) => navigate(`/embarques/${c.id}`)}
+      />
     </div>
   );
 }

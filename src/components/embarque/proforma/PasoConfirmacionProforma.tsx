@@ -1,5 +1,5 @@
 import { Badge } from "@/components/ui/badge";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { DataTable, type DataTableColumn } from "@/components/shared/DataTable";
 import { CheckCircle2 } from "lucide-react";
 import { formatCurrency } from "@/lib/formatters";
 import type { Tables } from "@/integrations/supabase/types";
@@ -32,42 +32,26 @@ export function PasoConfirmacionProforma({
         <div className="bg-muted/50 px-3 py-2 border-b">
           <h4 className="text-sm font-semibold">Conceptos incluidos ({conceptosSeleccionados.length})</h4>
         </div>
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Descripción</TableHead>
-              <TableHead className="text-right">Cant.</TableHead>
-              <TableHead className="text-right">P. Unit.</TableHead>
-              <TableHead className="text-right">Subtotal</TableHead>
-              <TableHead>Moneda</TableHead>
-              <TableHead className="text-center">IVA</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {conceptosSeleccionados.map(c => {
-              const sub = Number(c.cantidad) * Number(c.precio_unitario);
-              const aplicaIva = c.moneda === "MXN" ? true : !!ivaPorConcepto[c.id];
-              return (
-                <TableRow key={c.id}>
-                  <TableCell className="font-medium">{c.descripcion}</TableCell>
-                  <TableCell className="text-right">{c.cantidad}</TableCell>
-                  <TableCell className="text-right">{formatCurrency(Number(c.precio_unitario), c.moneda)}</TableCell>
-                  <TableCell className="text-right font-semibold">{formatCurrency(sub, c.moneda)}</TableCell>
-                  <TableCell>{c.moneda}</TableCell>
-                  <TableCell className="text-center">
-                    {aplicaIva ? (
-                      <Badge variant="success" className="text-xs">
-                        <CheckCircle2 className="h-3 w-3 mr-0.5" /> Sí
-                      </Badge>
-                    ) : (
-                      <Badge variant="secondary" className="text-xs">No</Badge>
-                    )}
-                  </TableCell>
-                </TableRow>
-              );
-            })}
-          </TableBody>
-        </Table>
+        <DataTable<ConceptoVenta>
+          columns={[
+            { key: "desc", header: "Descripción", className: "font-medium", render: (c) => c.descripcion },
+            { key: "cant", header: "Cant.", align: "right", render: (c) => c.cantidad },
+            { key: "pu", header: "P. Unit.", align: "right", render: (c) => formatCurrency(Number(c.precio_unitario), c.moneda) },
+            { key: "sub", header: "Subtotal", align: "right", className: "font-semibold",
+              render: (c) => formatCurrency(Number(c.cantidad) * Number(c.precio_unitario), c.moneda) },
+            { key: "moneda", header: "Moneda", render: (c) => c.moneda },
+            { key: "iva", header: "IVA", align: "center",
+              render: (c) => {
+                const aplica = c.moneda === "MXN" ? true : !!ivaPorConcepto[c.id];
+                return aplica
+                  ? <Badge variant="success" className="text-xs"><CheckCircle2 className="h-3 w-3 mr-0.5" /> Sí</Badge>
+                  : <Badge variant="secondary" className="text-xs">No</Badge>;
+              } },
+          ]}
+          data={conceptosSeleccionados}
+          rowKey={(c) => c.id}
+          density="compact"
+        />
       </div>
 
       <div className="grid grid-cols-2 gap-3 text-sm">

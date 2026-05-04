@@ -22,6 +22,14 @@ export interface ChangelogEntry {
  */
 export const recentChangelog: ChangelogEntry[] = [
   {
+    version: "8.108.0",
+    date: "2026-05-04",
+    type: "minor",
+    title: "Estandarización de tablas (Bloques B-E)",
+    summary: "9 componentes adicionales migrados a DataTable: cliente, proveedor, portal, auditoría, reportes y operaciones.",
+    description: "Migración de TablaContactos, TabPortalCliente, ProveedorDetalle, PortalEmbarqueDocumentos, ReportesTablaClientes (sort server-side), OperacionesWidgets, HallazgoTabla, HallazgosTabla y PasoConfirmacionProforma al DataTable estandarizado. Quedan en allowlist sólo los grids con inputs por celda (cotizaciones editables, DialogDuplicarEmbarque, TablaCostosDetalle).",
+  },
+  {
     version: "8.107.0",
     date: "2026-05-04",
     type: "minor",
@@ -52,14 +60,6 @@ export const recentChangelog: ChangelogEntry[] = [
     title: "Embarques: ordenamiento global server-side en la tabla",
     summary: "El sort por columna en Embarques ahora aplica sobre todos los registros del servidor, no sólo la página visible.",
     description: "El ordenamiento por columna en la tabla de Embarques (Expediente, Cliente, Modo, Estado, ETD, ETA, Operador) ahora se aplica sobre todos los registros en el servidor, no sólo sobre la página visible. Antes, hacer click en un header sólo reordenaba los 20 registros cargados, lo cual era engañoso con datasets grandes. Ahora la consulta a la base de datos incluye el sort solicitado y la página se recalcula desde el primer resultado global. Aparece un indicador 'Ordenado por X ↑ · global' arriba de la tabla con un atajo para quitar el orden y volver al default (created_at desc). Otras tablas del sistema mantienen su comportamiento client-side existente — esto fue un opt-in sólo para Embarques.",
-  },
-  {
-    version: "8.103.1",
-    date: "2026-05-02",
-    type: "patch",
-    title: "Auditoría: pestaña 'Detalle operativo' renombrada a 'Hallazgos'",
-    summary: "Cambio de etiqueta para alinear la UI con el lenguaje del equipo.",
-    description: "Renombrada la segunda pestaña del módulo /auditoria de 'Detalle operativo' a 'Hallazgos' para alinear el lenguaje de la UI con cómo el equipo se refiere al contenido (la lista de hallazgos accionables). Sin cambios funcionales ni de datos: el value interno del tab se conserva ('tabla'), por lo que el drill-down desde Resumen ejecutivo y los enlaces preexistentes siguen funcionando.",
   },
 ];
 

@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { DataTable, type DataTableColumn } from "@/components/shared/DataTable";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { dialogSize } from "@/lib/ui/dialogTokens";
 import { UserPlus, Trash2, Globe, Loader2 } from "lucide-react";
@@ -74,40 +74,30 @@ export default function TabPortalCliente({ clienteId, organizationId, canEdit }:
           )}
         </CardHeader>
         <CardContent>
-          {isLoading ? (
-            <p className="text-sm text-muted-foreground">Cargando...</p>
-          ) : clientUsers.length === 0 ? (
-            <p className="text-sm text-muted-foreground text-center py-6">
-              No hay usuarios con acceso al portal para este cliente.
-            </p>
-          ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Usuario ID</TableHead>
-                  <TableHead>Desde</TableHead>
-                  <TableHead className="w-20"></TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {clientUsers.map((cu) => (
-                  <TableRow key={cu.id}>
-                    <TableCell className="font-mono text-xs">{cu.user_id.slice(0, 8)}...</TableCell>
-                    <TableCell className="text-sm">
-                      {cu.created_at ? formatDate(cu.created_at, "dd MMM yyyy") : "—"}
-                    </TableCell>
-                    <TableCell>
-                      {canEdit && (
-                        <Button variant="ghost" size="sm" onClick={() => handleRevoke(cu.id)} disabled={revokeMutation.isPending}>
-                          <Trash2 className="h-4 w-4 text-destructive" />
-                        </Button>
-                      )}
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          )}
+          {(() => {
+            type CU = typeof clientUsers[number];
+            const cols: DataTableColumn<CU>[] = [
+              { key: "uid", header: "Usuario ID", className: "font-mono text-xs", render: (cu) => `${cu.user_id.slice(0, 8)}...` },
+              { key: "desde", header: "Desde", className: "text-sm", render: (cu) => cu.created_at ? formatDate(cu.created_at, "dd MMM yyyy") : "—" },
+              { key: "acc", header: "", width: "w-20",
+                render: (cu) => canEdit ? (
+                  <Button variant="ghost" size="sm" onClick={(e) => { e.stopPropagation(); handleRevoke(cu.id); }} disabled={revokeMutation.isPending}>
+                    <Trash2 className="h-4 w-4 text-destructive" />
+                  </Button>
+                ) : null },
+            ];
+            if (isLoading) {
+              return <p className="text-sm text-muted-foreground">Cargando...</p>;
+            }
+            return (
+              <DataTable
+                columns={cols}
+                data={clientUsers}
+                rowKey={(cu) => cu.id}
+                emptyMessage="No hay usuarios con acceso al portal para este cliente."
+              />
+            );
+          })()}
         </CardContent>
       </Card>
 

@@ -2,6 +2,14 @@ import type { ChangelogEntry } from "../../../changelogData";
 
 export const chunk0: ChangelogEntry[] = [
   {
+    version: "8.108.0",
+    date: "2026-05-04",
+    type: "minor",
+    title: "Estandarización de tablas (Bloques B-E): cliente, proveedor, portal, auditoría, reportes y operaciones",
+    summary: "TablaContactos, TabPortalCliente, ProveedorDetalle, PortalEmbarqueDocumentos, ReportesTablaClientes, OperacionesWidgets, HallazgoTabla, HallazgosTabla y PasoConfirmacionProforma migrados a DataTable.",
+    description: "Continuación del plan de estandarización. Se migraron 9 componentes adicionales al DataTable estandarizado: TablaContactos (cliente), TabPortalCliente (cliente), ProveedorDetalle (historial de operaciones), PortalEmbarqueDocumentos (portal), ReportesTablaClientes (con sortMode='server' integrado al sort externo del controller de reportes), OperacionesWidgets/RiskDetailTable, HallazgoTabla, HallazgosTabla (auditoría, con rowClassName para opacidad de revisados) y PasoConfirmacionProforma. Todos los botones de acción dentro de filas con onRowClick agregan e.stopPropagation() para evitar disparos accidentales. Quedan en allowlist de eslint sólo los grids editables (SeccionMercanciaAerea, SeccionMercanciaMaritimeLCL, SeccionMercanciaCotizacionDetalle, TablaConceptosGenerico, TablaCostosDetalle) y DialogDuplicarEmbarque, donde cada celda contiene Inputs/Selects con estado y la abstracción de DataTable no aporta valor.",
+  },
+  {
     version: "8.107.0",
     date: "2026-05-04",
     type: "minor",
