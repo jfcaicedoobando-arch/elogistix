@@ -5,6 +5,21 @@ import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { ModoIcon } from "@/components/shared/ModoIcon";
 import { formatDate } from "@/lib/formatters";
+import { differenceInCalendarDays, parseISO } from "date-fns";
+import { cn } from "@/lib/utils";
+
+function etaProximityClass(eta: string | null | undefined): string {
+  if (!eta) return "text-muted-foreground";
+  try {
+    const days = differenceInCalendarDays(parseISO(eta), new Date());
+    if (days < 0) return "text-muted-foreground";
+    if (days < 3) return "text-destructive";
+    if (days < 7) return "text-[hsl(var(--warning))]";
+    return "text-accent";
+  } catch {
+    return "text-accent";
+  }
+}
 
 interface ArriboItem {
   id: string;
