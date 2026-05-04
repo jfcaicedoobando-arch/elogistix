@@ -98,6 +98,7 @@ export default function AdminOrganizaciones() {
           isLoading={isLoading}
           emptyMessage="No hay organizaciones registradas."
           rowKey={(o) => o.id}
+          density="comfortable"
         />
       </div>
 

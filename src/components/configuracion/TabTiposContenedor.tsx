@@ -80,6 +80,7 @@ export default function TabTiposContenedor() {
             emptyMessage="No se encontraron tipos de contenedor"
             rowKey={(t) => t.id}
             rowClassName={(t) => !t.activo ? "opacity-50" : ""}
+            density="compact"
           />
         </div>
         <p className="text-xs text-muted-foreground">{tipos.length} tipos en total · {tipos.filter(t => t.activo).length} activos</p>

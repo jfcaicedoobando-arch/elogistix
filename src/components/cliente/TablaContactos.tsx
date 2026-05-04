@@ -64,6 +64,7 @@ export default function TablaContactos({ contactos, isLoading, canEdit, onAdd, o
             columns={columns}
             data={contactos}
             rowKey={(c) => c.id}
+            density="compact"
             emptyState={
               <div className="p-6">
                 <EmptyState

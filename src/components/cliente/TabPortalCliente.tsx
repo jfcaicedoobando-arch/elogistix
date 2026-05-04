@@ -95,6 +95,7 @@ export default function TabPortalCliente({ clienteId, organizationId, canEdit }:
                 data={clientUsers}
                 rowKey={(cu) => cu.id}
                 emptyMessage="No hay usuarios con acceso al portal para este cliente."
+                density="compact"
               />
             );
           })()}

@@ -170,6 +170,7 @@ export default function Usuarios() {
           isLoading={isLoading}
           emptyMessage="No hay usuarios registrados."
           rowKey={(u) => u.user_id}
+          density="comfortable"
         />
       </div>
     </div>
