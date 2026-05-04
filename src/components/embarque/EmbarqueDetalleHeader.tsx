@@ -43,7 +43,7 @@ export function EmbarqueDetalleHeader({
           <h1 className="text-2xl font-bold truncate">{embarque.expediente}</h1>
           <Badge className={getEstadoColor(estadoVisual)}>{estadoVisual}</Badge>
           <ModoIcon modo={embarque.modo} size={18} circle />
-          <ProformaBadge tieneProforma={embarque.tiene_proforma} size="lg" />
+          <ProformaBadge tieneProforma={embarque.tiene_proforma} size="sm" />
         </div>
         <p className="text-sm text-muted-foreground truncate mt-1">{toTitleCase(embarque.cliente_nombre)}</p>
       </div>
