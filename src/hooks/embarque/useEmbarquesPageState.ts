@@ -49,15 +49,38 @@ export function useEmbarquesPageState() {
   const embarques: EmbarqueRow[] = resultado?.data ?? [];
   const totalCount = resultado?.count ?? 0;
 
+  // Conteo de contenedores por expediente (un embarque por contenedor en BD).
+  const contenedoresPorExpediente = useMemo(() => {
+    const map: Record<string, number> = {};
+    for (const e of embarques) {
+      if (!e.expediente) continue;
+      map[e.expediente] = (map[e.expediente] ?? 0) + 1;
+    }
+    return map;
+  }, [embarques]);
+
+  // Dedupe presentacional: una fila por expediente (mantiene primer registro).
+  const dedupedEmbarques = useMemo(() => {
+    const seen = new Set<string>();
+    const out: EmbarqueRow[] = [];
+    for (const e of embarques) {
+      const key = e.expediente ?? e.id;
+      if (seen.has(key)) continue;
+      seen.add(key);
+      out.push(e);
+    }
+    return out;
+  }, [embarques]);
+
   const filtered = useMemo(() => {
-    if (filterEstado === "todos") return embarques;
-    return embarques.filter((e) => {
+    if (filterEstado === "todos") return dedupedEmbarques;
+    return dedupedEmbarques.filter((e) => {
       const estadoCalculado = calcularEstadoEmbarque(e.modo, e.tipo, e.etd, e.eta, e.estado);
       return estadoCalculado === filterEstado;
     });
-  }, [embarques, filterEstado]);
+  }, [dedupedEmbarques, filterEstado]);
 
-  const displayCount = filterEstado !== "todos" ? filtered.length : totalCount;
+  const displayCount = filterEstado !== "todos" ? filtered.length : Object.keys(contenedoresPorExpediente).length || totalCount;
   const totalPages = filterEstado !== "todos" ? 1 : Math.ceil(totalCount / pageSize);
 
   const isEmptyState =
