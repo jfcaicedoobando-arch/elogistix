@@ -154,7 +154,7 @@ export function DashboardStatusCards({
             </div>
 
             {/* Barra de progreso */}
-            <div className="flex items-center gap-2 lg:w-40 shrink-0">
+            <div className="flex items-center gap-2 xl:w-40 shrink-0">
               <Progress
                 value={arribosEsteMes.total > 0 ? (arribosEsteMes.yaLlegaron / arribosEsteMes.total) * 100 : 0}
                 className="h-2 flex-1 [&>div]:bg-kpi-secondary"
