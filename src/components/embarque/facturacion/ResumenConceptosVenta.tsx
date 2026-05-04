@@ -3,7 +3,7 @@ import { CheckCircle2, Clock, FileText, Receipt } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { DataTable, type DataTableColumn } from "@/components/shared/DataTable";
 import { formatCurrency } from "@/lib/formatters";
 import { calcularIVA } from "@/lib/financial/financialUtils";
 import type { Tables } from "@/integrations/supabase/types";
@@ -71,49 +71,37 @@ export function ResumenConceptosVenta({ conceptos, tasaIva, canEdit, onGenerarPr
           </div>
         ) : (
           <>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Descripción</TableHead>
-                  <TableHead className="text-right">Cantidad</TableHead>
-                  <TableHead className="text-right">P. Unitario</TableHead>
-                  <TableHead className="text-right">Total</TableHead>
-                  <TableHead>Moneda</TableHead>
-                  <TableHead>Estado</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {conceptos.map(c => {
-                  const enProforma = c.estado_facturacion === "en_proforma";
-                  const total = Number(c.cantidad) * Number(c.precio_unitario);
-                  return (
-                    <TableRow key={c.id}>
-                      <TableCell className="font-medium">
-                        {c.descripcion}
-                        {c.moneda === "USD" && c.aplica_iva && (
-                          <Badge variant="warning" className="ml-2 text-xs">+IVA</Badge>
-                        )}
-                      </TableCell>
-                      <TableCell className="text-right">{c.cantidad}</TableCell>
-                      <TableCell className="text-right">{formatCurrency(Number(c.precio_unitario), c.moneda)}</TableCell>
-                      <TableCell className="text-right font-semibold">{formatCurrency(total, c.moneda)}</TableCell>
-                      <TableCell>{c.moneda}</TableCell>
-                      <TableCell>
-                        {enProforma ? (
-                          <Badge variant="success">
-                            <CheckCircle2 className="h-3 w-3 mr-1" /> En proforma
-                          </Badge>
-                        ) : (
-                          <Badge variant="neutral">
-                            <Clock className="h-3 w-3 mr-1" /> Pendiente
-                          </Badge>
-                        )}
-                      </TableCell>
-                    </TableRow>
-                  );
-                })}
-              </TableBody>
-            </Table>
+            <DataTable<ConceptoVenta>
+              columns={[
+                {
+                  key: "descripcion", header: "Descripción", className: "font-medium",
+                  render: (c) => (
+                    <>
+                      {c.descripcion}
+                      {c.moneda === "USD" && c.aplica_iva && (
+                        <Badge variant="warning" className="ml-2 text-xs">+IVA</Badge>
+                      )}
+                    </>
+                  ),
+                },
+                { key: "cant", header: "Cantidad", align: "right", render: (c) => c.cantidad },
+                { key: "pu", header: "P. Unitario", align: "right", render: (c) => formatCurrency(Number(c.precio_unitario), c.moneda) },
+                { key: "total", header: "Total", align: "right", className: "font-semibold",
+                  render: (c) => formatCurrency(Number(c.cantidad) * Number(c.precio_unitario), c.moneda) },
+                { key: "moneda", header: "Moneda", render: (c) => c.moneda },
+                {
+                  key: "estado", header: "Estado",
+                  render: (c) => c.estado_facturacion === "en_proforma" ? (
+                    <Badge variant="success"><CheckCircle2 className="h-3 w-3 mr-1" /> En proforma</Badge>
+                  ) : (
+                    <Badge variant="neutral"><Clock className="h-3 w-3 mr-1" /> Pendiente</Badge>
+                  ),
+                },
+              ]}
+              data={conceptos}
+              rowKey={(c) => c.id}
+              density="compact"
+            />
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3 p-4 border-t bg-muted/30">
               <div className="rounded-md border bg-background p-3">
