@@ -49,6 +49,7 @@ export interface KpisProyeccion {
   pendientes: number;
   ventaProyMxn: number;
   ventaFacturadaMxn: number;
+  ventaPendienteMxn: number;
   costoTotalMxn: number;
   profitProyMxn: number;
   profitFacturadoMxn: number;
@@ -124,6 +125,7 @@ export function calcularKpisProyeccion(grupos: GrupoProyeccion[]): KpisProyeccio
   const pendientes = total - facturados;
   const ventaProy = grupos.reduce((s, g) => s + g.ventaMxn, 0);
   const ventaFact = grupos.filter((g) => g.estado === "Facturado").reduce((s, g) => s + g.ventaMxn, 0);
+  const ventaPend = grupos.filter((g) => g.estado === "Pendiente").reduce((s, g) => s + g.ventaMxn, 0);
   const costoTotal = grupos.reduce((s, g) => s + g.costoMxn, 0);
   const profitProy = ventaProy - costoTotal;
   const profitFact = grupos
@@ -135,6 +137,7 @@ export function calcularKpisProyeccion(grupos: GrupoProyeccion[]): KpisProyeccio
     pendientes,
     ventaProyMxn: ventaProy,
     ventaFacturadaMxn: ventaFact,
+    ventaPendienteMxn: ventaPend,
     costoTotalMxn: costoTotal,
     profitProyMxn: profitProy,
     profitFacturadoMxn: profitFact,

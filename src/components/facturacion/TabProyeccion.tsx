@@ -1,4 +1,4 @@
-import { ChevronLeft, ChevronRight, Download, Package, Wallet, TrendingUp, CheckCircle2, Calendar, Info, Clock } from "lucide-react";
+import { ChevronLeft, ChevronRight, Download, Package, TrendingUp, CheckCircle2, Calendar, Info, Clock } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
