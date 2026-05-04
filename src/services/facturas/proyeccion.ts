@@ -40,8 +40,11 @@ export async function fetchProyeccionMes({
   if (embarquesArr.length === 0) return [];
 
   const ids = embarquesArr.map((e) => e.id);
+  const expedientesUnicos = Array.from(
+    new Set(embarquesArr.map((e) => e.expediente).filter((x): x is string => !!x)),
+  );
 
-  // 2-4) En paralelo: conceptos_venta, conceptos_costo, facturas con PDF.
+  // 2-4) En paralelo: conceptos_venta, conceptos_costo, facturas con PDF (por expediente).
   const [ventasRes, costosRes, facturasRes] = await Promise.all([
     supabase
       .from("conceptos_venta")
@@ -51,11 +54,13 @@ export async function fetchProyeccionMes({
       .from("conceptos_costo")
       .select("embarque_id, monto, moneda")
       .in("embarque_id", ids),
-    supabase
-      .from("facturas")
-      .select("embarque_id, factura_pdf_url")
-      .in("embarque_id", ids)
-      .not("factura_pdf_url", "is", null),
+    expedientesUnicos.length > 0
+      ? supabase
+          .from("facturas")
+          .select("expediente, factura_pdf_url")
+          .in("expediente", expedientesUnicos)
+          .not("factura_pdf_url", "is", null)
+      : Promise.resolve({ data: [], error: null } as { data: { expediente: string | null; factura_pdf_url: string | null }[]; error: null }),
   ]);
   if (ventasRes.error) throw ventasRes.error;
   if (costosRes.error) throw costosRes.error;
@@ -75,7 +80,7 @@ export async function fetchProyeccionMes({
     costosMap.set(c.embarque_id, arr);
   }
   const facturadosSet = new Set<string>(
-    (facturasRes.data ?? []).map((f) => f.embarque_id).filter(Boolean) as string[],
+    (facturasRes.data ?? []).map((f) => f.expediente).filter((x): x is string => !!x),
   );
 
   // Construir filas planas.
@@ -94,7 +99,7 @@ export async function fetchProyeccionMes({
       tipo_cambio_usd: tcUsd,
       tipo_cambio_eur: tcEur,
       tiene_proforma: !!e.tiene_proforma,
-      tiene_factura_pdf: facturadosSet.has(e.id),
+      tiene_factura_pdf: !!e.expediente && facturadosSet.has(e.expediente),
       venta_mxn: sumarConceptosEnMxn(ventas, tcUsd, tcEur),
       costo_mxn: sumarConceptosEnMxn(costos, tcUsd, tcEur),
     };
