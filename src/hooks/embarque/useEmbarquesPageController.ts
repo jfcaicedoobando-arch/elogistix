@@ -29,7 +29,7 @@ export function useEmbarquesPageController() {
   const prefetchEmbarque = usePrefetchEmbarque();
 
   const state = useEmbarquesPageState();
-  const { embarques, filtered, isLoading, isEmptyState } = state;
+  const { embarques, filtered, isLoading, isEmptyState, contenedoresPorExpediente } = state;
 
   const [embarqueAEliminar, setEmbarqueAEliminar] = useState<EmbarqueRow | null>(null);
   const [embarqueADuplicar, setEmbarqueADuplicar] = useState<EmbarqueRow | null>(null);
@@ -63,11 +63,12 @@ export function useEmbarquesPageController() {
       canEdit,
       docsMap,
       liquidacionMap,
+      contenedoresPorExpediente,
       onEditar: (e) => navigate(`/embarques/${e.id}/editar`),
       onDuplicar: setEmbarqueADuplicar,
       onEliminar: setEmbarqueAEliminar,
     }),
-    [canEdit, liquidacionMap, docsMap, navigate],
+    [canEdit, liquidacionMap, docsMap, contenedoresPorExpediente, navigate],
   );
 
   const exportarCsv = useCallback(() => {

@@ -14,7 +14,7 @@ interface Props {
 
 const columns: DataTableColumn<EmbarqueConProfit>[] = [
   { key: "expediente", header: "Expediente", className: "font-medium", render: (e) => e.expediente },
-  { key: "cliente", header: "Cliente", className: "max-w-[180px] truncate", render: (e) => <span title={e.cliente_nombre}>{toTitleCase(e.cliente_nombre)}</span> },
+  { key: "cliente", header: "Cliente", className: "max-w-[240px] truncate", render: (e) => <span title={e.cliente_nombre}>{toTitleCase(e.cliente_nombre)}</span> },
   { key: "venta", header: "Venta USD", className: "text-right tabular-nums", headerClassName: "text-right", render: (e) => formatCurrency(e.ventaUSD, "USD") },
   { key: "costo", header: "Costo USD", className: "text-right tabular-nums", headerClassName: "text-right", render: (e) => formatCurrency(e.costoUSD, "USD") },
   {

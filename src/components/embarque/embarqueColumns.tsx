@@ -19,6 +19,7 @@ export interface BuildColumnsParams {
   canEdit: boolean;
   docsMap: Record<string, DocsInfo>;
   liquidacionMap: Record<string, LiquidacionInfo>;
+  contenedoresPorExpediente?: Record<string, number>;
   onEditar: (e: EmbarqueRow) => void;
   onDuplicar: (e: EmbarqueRow) => void;
   onEliminar: (e: EmbarqueRow) => void;
@@ -36,7 +37,7 @@ function LiquidacionBadge({ info }: { info?: LiquidacionInfo }) {
 }
 
 export function buildEmbarqueColumns({
-  canEdit, docsMap, liquidacionMap, onEditar, onDuplicar, onEliminar,
+  canEdit, docsMap, liquidacionMap, contenedoresPorExpediente = {}, onEditar, onDuplicar, onEliminar,
 }: BuildColumnsParams): DataTableColumn<EmbarqueRow>[] {
   const base: DataTableColumn<EmbarqueRow>[] = [
     {
@@ -65,7 +66,18 @@ export function buildEmbarqueColumns({
       },
     },
     { key: "bl", header: "BL Master", width: "w-[120px]", className: "text-xs", render: (e) => e.bl_master || "-" },
-    { key: "contenedor", header: "Contenedor", width: "w-[130px]", className: "text-xs font-mono", render: (e) => e.contenedor || <span className="text-muted-foreground">-</span> },
+    { key: "contenedor", header: "Contenedores", width: "w-[140px]", className: "text-xs font-mono", render: (e) => {
+      const count = contenedoresPorExpediente[e.expediente] ?? 1;
+      if (count > 1) {
+        return (
+          <span className="inline-flex items-center gap-1.5">
+            <span className="truncate max-w-[80px]" title={e.contenedor || ""}>{e.contenedor || "-"}</span>
+            <Badge variant="secondary" className="text-[10px] px-1.5 py-0 h-4" title={`${count} contenedores agrupados`}>+{count - 1}</Badge>
+          </span>
+        );
+      }
+      return e.contenedor || <span className="text-muted-foreground">-</span>;
+    } },
     { key: "cliente", header: "Cliente", width: "min-w-[140px]", className: "max-w-[160px] truncate", sortable: true, sortValue: (e) => e.cliente_nombre, render: (e) => {
       const nombre = toTitleCase(e.cliente_nombre);
       return <span title={nombre} className="block truncate">{nombre}</span>;

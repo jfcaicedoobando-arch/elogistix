@@ -2,6 +2,14 @@ import type { ChangelogEntry } from "../../../changelogData";
 
 export const chunk0: ChangelogEntry[] = [
   {
+    version: "8.112.0",
+    date: "2026-05-04",
+    type: "minor",
+    title: "Auditoría visual tenant: agrupado de embarques por expediente, KPIs sin truncar y banner de proforma sutil",
+    summary: "Cuatro ajustes UI/UX derivados de la auditoría en /embarques, /clientes y detalle de embarque.",
+    description: "(1) Embarques: la lista deduplica filas por expediente (un embarque por contenedor en BD se mostraba como filas duplicadas). La columna 'Contenedor' pasa a 'Contenedores' y muestra un badge '+N' cuando un expediente agrupa varios contenedores. (2) KpiCard: tipografía adaptativa extendida (text-lg para valores ≥19 chars como 'USD 1,234,567.89') y padding responsive (p-4 en mobile, p-5 en desktop) para evitar overflow visible en viewports estrechos. (3) ProformaBadge: el detalle de embarque pasa de tamaño 'lg' a 'sm' para reducir peso visual del banner SIN PROFORMA en el header. (4) ProfitTable (Top profit del dashboard): columna 'Cliente' aumenta su max-w de 180px a 240px para no recortar nombres de organizaciones largos.",
+  },
+  {
     version: "8.111.0",
     date: "2026-05-04",
     type: "minor",
