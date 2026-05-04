@@ -22,6 +22,14 @@ export interface ChangelogEntry {
  */
 export const recentChangelog: ChangelogEntry[] = [
   {
+    version: "8.115.0",
+    date: "2026-05-04",
+    type: "minor",
+    title: "Fase H — Identidad de marca unificada (BrandLockup)",
+    summary: "Nuevo componente BrandLockup unifica logo + wordmark 'Libre Carga' en login, sidebar, portal y admin; tagline consistente y tokens en lib/ui/brand.ts.",
+    description: "BrandLockup (icon/horizontal/stacked × sm/md/lg) centraliza el tratamiento del isotipo con fondo blanco constante en light/dark. Login reemplaza el bloque 176×176 por stacked + tagline. Sidebar deja de duplicar el nombre de la org (OrgSwitcher como única fuente). Portal muestra co-branding 'Portal de Cliente · {org}'. AdminSidebar adopta el mismo lockup. Tokens BRAND.* en src/lib/ui/brand.ts.",
+  },
+  {
     version: "8.114.0",
     date: "2026-05-04",
     type: "minor",

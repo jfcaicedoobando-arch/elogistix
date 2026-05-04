@@ -7,7 +7,8 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import librecargaLogo from "@/assets/librecarga-logo.png";
+import { BrandLockup } from "@/components/layout/BrandLockup";
+import { BRAND } from "@/lib/ui/brand";
 import { notifyError } from "@/lib/ui/appFeedback";
 
 export default function Login() {
@@ -35,14 +36,9 @@ export default function Login() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-background to-muted px-4">
       <Card className="w-full max-w-sm shadow-lg">
-        <CardHeader className="text-center space-y-3 pb-2">
-          <div className="mx-auto flex h-44 w-44 items-center justify-center rounded-xl bg-white shadow-sm border">
-            <img src={librecargaLogo} alt="Libre Carga Logo" className="h-42 w-42 rounded-lg object-contain" />
-          </div>
-          
-          <p className="text-sm text-muted-foreground">
-            Inicia sesión para continuar
-          </p>
+        <CardHeader className="text-center space-y-4 pb-4">
+          <BrandLockup variant="stacked" size="md" subtitle={BRAND.tagline} />
+          <p className="text-sm text-muted-foreground">Inicia sesión para continuar</p>
         </CardHeader>
         <CardContent className="pt-2">
           <form onSubmit={handleSubmit} className="space-y-4">

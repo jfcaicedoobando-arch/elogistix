@@ -2,6 +2,14 @@ import type { ChangelogEntry } from "../../../changelogData";
 
 export const chunk0: ChangelogEntry[] = [
   {
+    version: "8.115.0",
+    date: "2026-05-04",
+    type: "minor",
+    title: "Fase H — Identidad de marca unificada (BrandLockup)",
+    summary: "Nuevo componente BrandLockup centraliza el lockup logo + wordmark 'Libre Carga' en login, sidebar, portal y admin; tagline consistente y tokens de marca en src/lib/ui/brand.ts.",
+    description: "(1) Nuevo componente src/components/layout/BrandLockup.tsx con tres variantes (icon, horizontal, stacked) y tres tamaños (sm/md/lg). Centraliza el tratamiento del isotipo en un contenedor blanco constante (light + dark) con ring + shadow sutil, eliminando divergencias entre pantallas. (2) src/lib/ui/brand.ts: tokens BRAND.name, BRAND.tagline ('Plataforma de gestión para agentes de carga') y BRAND.taglineShort. (3) Login (/login): se reemplaza el bloque blanco gigante de 176×176 px por BrandLockup variant='stacked' con isotipo 56×56, wordmark 'Libre Carga' y tagline debajo — jerarquía clara y card más equilibrada. (4) AppSidebar: header usa BrandLockup horizontal con subtítulo 'Plataforma de Forwarders'; el nombre de la organización deja de duplicarse en el header (queda como única fuente de verdad el OrgSwitcher justo debajo). Footer simplificado a 'v8.115.0' (se elimina el sufijo redundante '· Libre Carga'). (5) PortalLayout: header desktop y sheet móvil usan BrandLockup horizontal con co-branding 'Portal de Cliente · {orgName}'. (6) AdminSidebar: reemplaza icono Building2 + texto suelto por BrandLockup horizontal con subtítulo 'Super Admin'. (7) Nuevo public/librecarga-icon.svg simplificado (sin líneas divisorias internas) reservado para usos pequeños futuros. Versión 8.115.0.",
+  },
+  {
     version: "8.114.0",
     date: "2026-05-04",
     type: "minor",

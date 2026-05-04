@@ -5,7 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
-import librecargaLogo from "@/assets/librecarga-logo.png";
+import { BrandLockup } from "@/components/layout/BrandLockup";
+import { BRAND } from "@/lib/ui/brand";
 import { usePortalClienteName, usePortalOrgName } from "@/hooks/portal/usePortalData";
 import { useState, useMemo } from "react";
 import { ThemeToggle } from "@/components/layout/ThemeToggle";
@@ -81,12 +82,12 @@ export default function PortalLayout() {
                 </Button>
               </SheetTrigger>
               <SheetContent side="left" className="w-72 p-0">
-                <div className="flex items-center gap-3 p-4 border-b">
-                  <img src={librecargaLogo} alt="Logo" className="h-10 w-10 rounded object-contain" />
-                  <div className="flex flex-col leading-tight">
-                    <span className="font-semibold text-foreground text-sm">{orgName || "Portal"}</span>
-                    <span className="text-[10px] text-muted-foreground">Portal de Cliente</span>
-                  </div>
+                <div className="p-4 border-b">
+                  <BrandLockup
+                    variant="horizontal"
+                    size="sm"
+                    subtitle={orgName ? `Portal de Cliente · ${orgName}` : "Portal de Cliente"}
+                  />
                 </div>
                 <nav className="flex flex-col p-2 gap-1">
                   {navItems.map((item) => {
@@ -120,12 +121,12 @@ export default function PortalLayout() {
               </SheetContent>
             </Sheet>
 
-            <Link to="/portal" className="flex items-center gap-3">
-              <img src={librecargaLogo} alt="Logo" className="h-10 w-10 rounded object-contain" />
-              <div className="hidden sm:flex flex-col leading-tight">
-                <span className="font-semibold text-foreground text-sm">{orgName || "Portal de Cliente"}</span>
-                {orgName && <span className="text-[10px] text-muted-foreground">Portal de Cliente</span>}
-              </div>
+            <Link to="/portal" className="flex items-center">
+              <BrandLockup
+                variant="horizontal"
+                size="sm"
+                subtitle={orgName ? `Portal de Cliente · ${orgName}` : "Portal de Cliente"}
+              />
             </Link>
           </div>
 

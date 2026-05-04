@@ -29,10 +29,10 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useTheme } from "@/contexts/ThemeContext";
-import librecargaLogo from "@/assets/librecarga-logo.png";
+import { BrandLockup } from "@/components/layout/BrandLockup";
 import { useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
-import { useOrganization } from "@/contexts/OrganizationContext";
+
 import { useSidebarAlerts } from "@/hooks/shared/useSidebarAlerts";
 import { useAuditoriaCount } from "@/hooks/auditoria/useAuditoria";
 import {
@@ -89,7 +89,7 @@ const AppSidebarBase = forwardRef<HTMLDivElement>(function AppSidebarBase(_props
   const collapsed = !isMobile && state === "collapsed";
   const { pathname } = useLocation();
   const { user, role, effectiveRole, signOut } = useAuth();
-  const { organization } = useOrganization();
+  // organization name shown via OrgSwitcher (single source of truth)
   const { totalAlertas } = useSidebarAlerts();
   const { data: auditoriaCount = 0 } = useAuditoriaCount();
   const { theme, toggleTheme } = useTheme();
@@ -114,25 +114,12 @@ const AppSidebarBase = forwardRef<HTMLDivElement>(function AppSidebarBase(_props
   return (
     <Sidebar collapsible="icon">
       <SidebarHeader className="h-16 border-b border-sidebar-border flex items-center px-4 py-0 group-data-[collapsible=icon]:px-2">
-        <div className={cn("flex items-center gap-3 w-full", collapsed && "justify-center gap-0")}>
-          <img
-            src={librecargaLogo}
-            alt="Libre Carga Logo"
-            className={cn(
-              "rounded-xl object-contain shrink-0 dark:bg-white dark:p-1 dark:ring-1 dark:ring-sidebar-border dark:shadow-card",
-              collapsed ? "h-9 w-9" : "h-10 w-10",
-            )}
+        <div className={cn("flex items-center w-full", collapsed && "justify-center")}>
+          <BrandLockup
+            variant={collapsed ? "icon" : "horizontal"}
+            size="sm"
+            subtitle={collapsed ? undefined : "Plataforma de Forwarders"}
           />
-          {!collapsed && (
-            <div className="flex flex-col min-w-0">
-              <span className="text-base font-bold tracking-tight text-sidebar-foreground leading-tight">
-                Libre Carga
-              </span>
-              <span className="text-xs text-sidebar-foreground/60 truncate">
-                {organization?.nombre ?? "Agente de Carga"}
-              </span>
-            </div>
-          )}
         </div>
       </SidebarHeader>
 
@@ -217,7 +204,7 @@ const AppSidebarBase = forwardRef<HTMLDivElement>(function AppSidebarBase(_props
         )}
         {!collapsed && (
           <div className="text-[11px] text-sidebar-foreground/55 tabular-nums px-1">
-            v{APP_VERSION} · Libre Carga
+            v{APP_VERSION}
           </div>
         )}
       </SidebarFooter>
