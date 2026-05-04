@@ -29,7 +29,7 @@ export default function PortalCotizacionHeader({
       </Button>
       <div className="flex-1">
         <div className="flex items-center gap-3">
-          <h1 className="text-2xl font-bold">{folio}</h1>
+          <h1 className="text-2xl font-bold font-mono tabular-nums">{folio}</h1>
           <Badge className={getEstadoColor(estado)}>{estado}</Badge>
         </div>
         <p className="text-sm text-muted-foreground" title={clienteNombre}>{toTitleCase(clienteNombre)}</p>
