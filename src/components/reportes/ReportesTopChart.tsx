@@ -37,9 +37,15 @@ export default function ReportesTopChart({ data, isLoading }: Props) {
           <p className="text-sm text-muted-foreground pt-10 text-center">Sin datos en el periodo seleccionado</p>
         ) : (
           <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={data} layout="vertical" margin={{ left: 10, right: 20, top: 5, bottom: 5 }}>
+            <BarChart data={data} layout="vertical" margin={{ left: 10, right: 24, top: 5, bottom: 5 }}>
               <XAxis type="number" tickFormatter={(v) => `$${(v / 1000).toFixed(0)}k`} tick={{ fontSize: 11 }} />
-              <YAxis type="category" dataKey="name" width={110} tick={{ fontSize: 11 }} />
+              <YAxis
+                type="category"
+                dataKey="name"
+                width={170}
+                tick={{ fontSize: 11 }}
+                tickFormatter={(v: string) => (v && v.length > 22 ? v.slice(0, 21) + "…" : v)}
+              />
               <Tooltip formatter={(v: number) => formatCurrency(v, "USD")} />
               <Bar dataKey="profit" radius={[0, 4, 4, 0]}>
                 {data.map((_, i) => (

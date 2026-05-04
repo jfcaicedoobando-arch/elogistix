@@ -190,7 +190,8 @@ function DataTableInner<T>({
 
   return (
     <div className={className}>
-      <Table>
+      <div className="relative w-full overflow-x-auto rounded-md [scrollbar-width:thin]">
+        <Table>
         <TableHeader>
           <TableRow
             className={cn(
@@ -303,7 +304,8 @@ function DataTableInner<T>({
         {renderedFooter && !isLoading && sortedData.length > 0 && (
           <TableFooter>{renderedFooter}</TableFooter>
         )}
-      </Table>
+        </Table>
+      </div>
       {pagination && (
         <PaginationControls
           page={pagination.page}

@@ -25,7 +25,7 @@ export function Layout() {
       <div className="min-h-screen flex w-full">
         <AppSidebar />
         <div className="flex-1 flex flex-col min-w-0">
-          <header className="sticky top-0 z-40 h-16 flex items-center gap-3 border-b border-border/60 bg-card/95 px-6 shrink-0 backdrop-blur supports-[backdrop-filter]:bg-card/80">
+          <header className="sticky top-0 z-40 h-12 flex items-center gap-3 border-b border-border/60 bg-card/95 px-4 sm:px-6 shrink-0 backdrop-blur supports-[backdrop-filter]:bg-card/80">
             <Tooltip delayDuration={300}>
               <TooltipTrigger asChild>
                 <SidebarTrigger className="shrink-0" />
@@ -36,7 +36,7 @@ export function Layout() {
             </Tooltip>
             <div className="h-5 w-px bg-border shrink-0" aria-hidden />
             <Breadcrumbs />
-            <div className="ml-auto flex items-center gap-2 shrink-0">
+            <div className="ml-auto flex items-center gap-1 sm:gap-2 shrink-0">
               <GlobalSearch />
               <ThemeToggle />
             </div>

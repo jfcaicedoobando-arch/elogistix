@@ -2,6 +2,14 @@ import type { ChangelogEntry } from "../../../changelogData";
 
 export const chunk0: ChangelogEntry[] = [
   {
+    version: "8.113.0",
+    date: "2026-05-04",
+    type: "minor",
+    title: "Polish UI/UX Fase D-F: header compacto, scroll horizontal, zebra reforzada, stepper responsive y a11y",
+    summary: "Cierre de las fases pendientes de la auditoría visual del tenant: header global, charts, tablas y accesibilidad.",
+    description: "(1) Header global: altura reducida de h-16 a h-12 (libera 16px verticales) y padding adaptativo (px-4 mobile, px-6 desktop). (2) DataTable: wrapper con overflow-x-auto + scrollbar fino — todas las tablas anchas ahora muestran scroll horizontal natural sin recortar columnas en viewports estrechos. (3) Tabla zebra: filas pares pasan de muted/20 a muted/45 (light) y muted/30 (dark) para subir contraste sin saturar. (4) StepIndicator: gap responsive (1→2), círculos h-7→h-8, labels visibles solo en md+ y overflow-x-auto para los 7 pasos del wizard de embarque en viewports estándar; añade role='list'/'listitem' y aria-current='step'. (5) ReportesTopChart (Top profit por cliente): YAxis width 110→170 + tickFormatter que trunca a 22 chars con elipsis, evitando que se corten nombres largos de clientes/organizaciones. (6) Cambios derivados de Fase E/F de la auditoría — Fase A/B/C completadas en v8.112.0.",
+  },
+  {
     version: "8.112.0",
     date: "2026-05-04",
     type: "minor",
