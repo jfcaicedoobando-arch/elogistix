@@ -22,6 +22,14 @@ export interface ChangelogEntry {
  */
 export const recentChangelog: ChangelogEntry[] = [
   {
+    version: "8.107.0",
+    date: "2026-05-04",
+    type: "minor",
+    title: "Estandarización de tablas (Bloque A): detalle de Embarque",
+    summary: "TabCostos, TabDocumentos, TabResumen, ResumenConceptosVenta, HistorialProformas e HistorialFacturas migrados a DataTable.",
+    description: "Seis componentes del detalle de embarque ahora usan el DataTable estandarizado en vez de tablas crudas. Misma UX visual con consistencia de densidad, alineación, empty state y sticky headers; los botones de acción usan e.stopPropagation() para no disparar row clicks accidentalmente.",
+  },
+  {
     version: "8.106.0",
     date: "2026-05-04",
     type: "minor",
