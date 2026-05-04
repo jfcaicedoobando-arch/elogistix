@@ -4,13 +4,17 @@ import {
   fetchAdminDashboardStats,
   fetchAdminGlobalUsers,
   fetchAdminOrganizations,
+  fetchAdminOrgActivity,
+  fetchAdminRecentOrgs,
   createOrganization,
   type AdminOrgStats,
+  type AdminOrgActivity,
+  type AdminRecentOrg,
   type GlobalUserRow,
   type OrgRow,
 } from '@/services/admin';
 
-export type { AdminOrgStats, GlobalUserRow, OrgRow };
+export type { AdminOrgStats, AdminOrgActivity, AdminRecentOrg, GlobalUserRow, OrgRow };
 
 // ─── Dashboard Stats ─────────────────────────────────────
 export function useAdminDashboardStats() {
