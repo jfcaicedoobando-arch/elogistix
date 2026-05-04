@@ -32,7 +32,7 @@ const facturaColumns: DataTableColumn<Factura>[] = [
       : <span className="text-muted-foreground">—</span>,
   },
   { key: "cliente", header: "Cliente", width: "min-w-[160px]", className: "max-w-[200px] truncate", render: (f) => <span title={toTitleCase(f.cliente_nombre)}>{toTitleCase(f.cliente_nombre)}</span> },
-  { key: "monto", header: "Monto", width: "w-[130px]", className: "font-medium whitespace-nowrap", sortable: true, sortValue: (f) => f.total, render: (f) => formatCurrency(f.total, f.moneda) },
+  { key: "monto", header: "Monto", width: "w-[130px]", align: "right", className: "font-medium whitespace-nowrap tabular-nums", sortable: true, sortValue: (f) => f.total, render: (f) => formatCurrency(f.total, f.moneda) },
   { key: "emision", header: "Emisión", width: "w-[100px]", className: "text-xs whitespace-nowrap", sortable: true, sortValue: (f) => f.fecha_emision, render: (f) => formatDate(f.fecha_emision) },
   { key: "vencimiento", header: "Vencimiento", width: "w-[100px]", className: "text-xs whitespace-nowrap", sortable: true, sortValue: (f) => f.fecha_vencimiento, render: (f) => formatDate(f.fecha_vencimiento) },
   { key: "estado", header: "Estado", width: "w-[100px]", sortable: true, sortValue: (f) => f.estado, render: (f) => <Badge className={getEstadoColor(f.estado)}>{f.estado}</Badge> },
@@ -80,7 +80,7 @@ export default function Facturacion() {
     { key: "proveedor", header: "Proveedor", width: "min-w-[180px]", className: "max-w-[220px] truncate", sortable: true, sortValue: (g) => g.proveedor_nombre, render: (g) => <span title={toTitleCase(g.proveedor_nombre)}>{toTitleCase(g.proveedor_nombre)}</span> },
     { key: "expediente", header: "Expediente", width: "w-[110px]", className: "font-medium whitespace-nowrap", render: (g) => (g.embarques as { expediente: string } | null)?.expediente || "-" },
     { key: "concepto", header: "Concepto", width: "min-w-[140px]", render: (g) => g.concepto },
-    { key: "monto", header: "Monto", width: "w-[140px]", className: "font-medium whitespace-nowrap", sortable: true, sortValue: (g) => g.monto, render: (g) => formatCurrency(g.monto, g.moneda) },
+    { key: "monto", header: "Monto", width: "w-[140px]", align: "right", className: "font-medium whitespace-nowrap tabular-nums", sortable: true, sortValue: (g) => g.monto, render: (g) => formatCurrency(g.monto, g.moneda) },
     { key: "vencimiento", header: "Vencimiento", width: "w-[100px]", className: "text-xs whitespace-nowrap", sortable: true, sortValue: (g) => g.fecha_vencimiento || "", render: (g) => g.fecha_vencimiento ? formatDate(g.fecha_vencimiento) : "-" },
     { key: "estado", header: "Estado", width: "w-[100px]", render: () => <Badge className={getEstadoColor("Pendiente")}>Pendiente</Badge> },
     {
