@@ -62,7 +62,7 @@ export default function PortalCotizaciones() {
           />
         </div>
         <Select value={filtroEstado} onValueChange={setFiltroEstado}>
-          <SelectTrigger className="w-full sm:w-44">
+          <SelectTrigger className="w-full sm:w-[200px]" aria-label="Filtrar por estado" title="Estado">
             <Filter className="h-3.5 w-3.5 mr-1.5 text-muted-foreground" />
             <SelectValue placeholder="Estado" />
           </SelectTrigger>
@@ -92,38 +92,40 @@ export default function PortalCotizaciones() {
             return (
               <Card
                 key={c.id}
-                className="cursor-pointer transition-all hover:shadow-md hover:border-accent/30 group"
+                className="cursor-pointer transition-all hover:shadow-sm hover:border-accent/30 group"
                 onClick={() => navigate(`/portal/cotizaciones/${c.id}`)}
               >
-                <CardContent className="flex items-center justify-between p-4">
-                  <div className="min-w-0">
-                    <p className="font-semibold text-sm">{c.folio}</p>
-                    <p className="text-xs text-muted-foreground truncate">
-                      {c.modo} • {c.tipo} • {c.origen || "—"} → {c.destino || "—"}
-                    </p>
-                    <p className="text-[10px] text-muted-foreground mt-0.5">
-                      Vigencia: {c.fecha_vigencia ? formatDate(c.fecha_vigencia) : "—"}
-                    </p>
-                    {tieneEmbarque && (
-                      <button
-                        type="button"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          navigate(`/portal/embarques/${c.embarque_id}`);
-                        }}
-                        className="mt-1.5 inline-flex items-center gap-1 text-[11px] font-medium text-success hover:underline"
-                      >
-                        <Ship className="h-3 w-3" />
-                        En operación · {expediente}
-                      </button>
-                    )}
-                  </div>
-                  <div className="text-right space-y-1.5 flex-shrink-0 ml-3 flex flex-col items-end">
-                    <Badge className={`${getEstadoColor(c.estado)} text-xs`}>
+                <CardContent className="flex items-center justify-between gap-3 px-4 py-3">
+                  <div className="flex items-center gap-3 min-w-0 flex-1">
+                    <Badge className={`${getEstadoColor(c.estado)} text-[11px] shrink-0`}>
                       {c.estado}
                     </Badge>
-                    <p className="text-sm font-bold">{formatCurrency(c.subtotal, c.moneda)}</p>
+                    <div className="min-w-0">
+                      <p className="font-semibold text-sm font-mono tabular-nums">{c.folio}</p>
+                      <p className="text-xs text-muted-foreground truncate">
+                        {c.modo} • {c.tipo} • {c.origen || "—"} → {c.destino || "—"}
+                      </p>
+                      <p className="text-[10px] text-muted-foreground mt-0.5">
+                        Vigencia: {c.fecha_vigencia ? formatDate(c.fecha_vigencia) : "—"}
+                      </p>
+                      {tieneEmbarque && (
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            navigate(`/portal/embarques/${c.embarque_id}`);
+                          }}
+                          className="mt-1 inline-flex items-center gap-1 text-[11px] font-medium text-success hover:underline"
+                        >
+                          <Ship className="h-3 w-3" />
+                          En operación · {expediente}
+                        </button>
+                      )}
+                    </div>
                   </div>
+                  <p className="text-sm font-bold tabular-nums shrink-0 text-right min-w-[110px]">
+                    {formatCurrency(c.subtotal, c.moneda)}
+                  </p>
                 </CardContent>
               </Card>
             );

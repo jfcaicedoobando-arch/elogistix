@@ -59,7 +59,7 @@ export default function PortalFacturas() {
           />
         </div>
         <Select value={filtroEstado} onValueChange={setFiltroEstado}>
-          <SelectTrigger className="w-full sm:w-44">
+          <SelectTrigger className="w-full sm:w-[200px]" aria-label="Filtrar por estado" title="Estado">
             <Filter className="h-3.5 w-3.5 mr-1.5 text-muted-foreground" />
             <SelectValue placeholder="Estado" />
           </SelectTrigger>
@@ -85,25 +85,27 @@ export default function PortalFacturas() {
         <div className="grid gap-3">
           {facturas.length > 0 && filtered.map((f) => (
             <Card key={f.id} className="transition-all hover:shadow-sm">
-              <CardContent className="flex items-center justify-between p-4">
-                <div className="min-w-0">
-                  <div className="flex items-center gap-2">
-                    <p className="font-semibold text-sm">{f.numero}</p>
-                    {f.estado === "Vencida" && <AlertTriangle className="h-3.5 w-3.5 text-destructive" />}
-                  </div>
-                  <p className="text-xs text-muted-foreground truncate">
-                    Exp: {f.expediente} • Emisión: {f.fecha_emision ? formatDate(f.fecha_emision) : "—"}
-                  </p>
-                  <p className="text-[10px] text-muted-foreground mt-0.5">
-                    Vence: {f.fecha_vencimiento ? formatDate(f.fecha_vencimiento) : "—"}
-                  </p>
-                </div>
-                <div className="text-right space-y-1.5 flex-shrink-0 ml-3 flex flex-col items-end">
-                  <Badge className={`${getEstadoColor(f.estado)} text-xs`}>
+              <CardContent className="flex items-center justify-between gap-3 px-4 py-3">
+                <div className="flex items-center gap-3 min-w-0 flex-1">
+                  <Badge className={`${getEstadoColor(f.estado)} text-[11px] shrink-0`}>
                     {f.estado}
                   </Badge>
-                  <p className="text-sm font-bold">{formatCurrency(f.total, f.moneda)}</p>
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-2">
+                      <p className="font-semibold text-sm font-mono tabular-nums">{f.numero}</p>
+                      {f.estado === "Vencida" && <AlertTriangle className="h-3.5 w-3.5 text-destructive" />}
+                    </div>
+                    <p className="text-xs text-muted-foreground truncate">
+                      Exp: <span className="font-mono">{f.expediente}</span> • Emisión: {f.fecha_emision ? formatDate(f.fecha_emision) : "—"}
+                    </p>
+                    <p className="text-[10px] text-muted-foreground mt-0.5">
+                      Vence: {f.fecha_vencimiento ? formatDate(f.fecha_vencimiento) : "—"}
+                    </p>
+                  </div>
                 </div>
+                <p className="text-sm font-bold tabular-nums shrink-0 text-right min-w-[110px]">
+                  {formatCurrency(f.total, f.moneda)}
+                </p>
               </CardContent>
             </Card>
           ))}

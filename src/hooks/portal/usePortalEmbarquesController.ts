@@ -1,21 +1,41 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { usePortalEmbarques, usePortalClientUsers } from "@/hooks/portal/usePortalData";
 import { calcularEstadoEmbarque } from "@/lib/domain/embarque";
 
 /**
  * Controller de la página /portal/embarques.
  * Centraliza queries (clientes vinculados + embarques), filtros (search, estado, modo)
- * y el agrupamiento por expediente. La page consume datos derivados ya listos para
- * pintar.
+ * y el agrupamiento por expediente. Soporta ?estado=XXX como filtro inicial vía
+ * deep-link desde el dashboard.
  */
 export function usePortalEmbarquesController() {
   const { data: clientUsers = [] } = usePortalClientUsers();
   const clienteIds = useMemo(() => clientUsers.map((cu) => cu.cliente_id), [clientUsers]);
   const { data: embarques = [], isLoading } = usePortalEmbarques(clienteIds);
 
+  const [searchParams, setSearchParams] = useSearchParams();
+  const initialEstado = searchParams.get("estado") || "todos";
+
   const [search, setSearch] = useState("");
-  const [filtroEstado, setFiltroEstado] = useState("todos");
+  const [filtroEstado, setFiltroEstadoState] = useState(initialEstado);
   const [filtroModo, setFiltroModo] = useState("todos");
+
+  // Mantener URL en sync con el filtro de estado (limpio cuando vuelve a "todos").
+  const setFiltroEstado = (val: string) => {
+    setFiltroEstadoState(val);
+    const next = new URLSearchParams(searchParams);
+    if (val === "todos") next.delete("estado");
+    else next.set("estado", val);
+    setSearchParams(next, { replace: true });
+  };
+
+  // Si llega un nuevo deep-link mientras la página está montada, sincroniza.
+  useEffect(() => {
+    const fromUrl = searchParams.get("estado") || "todos";
+    if (fromUrl !== filtroEstado) setFiltroEstadoState(fromUrl);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams]);
 
   const { estados, modos } = useMemo(() => {
     const estadoSet = new Set<string>();
