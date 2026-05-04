@@ -30,6 +30,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { BrandLockup } from "@/components/layout/BrandLockup";
 
 const adminItems = [
   { title: "Dashboard", url: "/admin", icon: LayoutDashboard },
