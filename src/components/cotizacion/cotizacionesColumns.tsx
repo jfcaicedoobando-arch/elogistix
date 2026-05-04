@@ -15,6 +15,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import type { DataTableColumn } from "@/components/shared/DataTable";
 import { formatDate, formatCurrency, toTitleCase } from "@/lib/formatters";
 import { getEstadoColor } from "@/lib/ui/uiMappings";
