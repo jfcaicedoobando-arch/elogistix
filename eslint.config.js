@@ -77,4 +77,19 @@ export default tseslint.config(
       "no-restricted-imports": "off",
     },
   },
+  {
+    // Allowlist de tablas: el propio DataTable y tablas editables/excepcionales
+    // que aún no migran a DataTable. Documentar caso a caso.
+    files: [
+      "src/components/shared/DataTable.tsx",
+      // Casos editables (formularios tipo tabla) — pendientes de evaluación:
+      "src/components/cotizacion/SeccionMercanciaAerea.tsx",
+      "src/components/cotizacion/SeccionMercanciaMaritimeLCL.tsx",
+      "src/components/cotizacion/SeccionMercanciaCotizacionDetalle.tsx",
+      "src/components/cotizacion/TablaConceptosGenerico.tsx",
+    ],
+    rules: {
+      "no-restricted-imports": "off",
+    },
+  },
 );
