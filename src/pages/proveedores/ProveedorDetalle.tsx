@@ -145,7 +145,8 @@ export default function ProveedorDetalle() {
         <CardHeader><CardTitle className="text-sm">Historial de Operaciones</CardTitle></CardHeader>
         <CardContent className="p-0">
           {(() => {
-            type Op = typeof operaciones[number];
+            type Op = typeof operaciones[number] & { __idx?: number };
+            const opsConId: Op[] = operaciones.map((o, i) => ({ ...o, __idx: i }));
             const opCols: DataTableColumn<Op>[] = [
               { key: "exp", header: "Expediente", render: (o) => (
                 <Link to={`/embarques/${o.embarqueId}`} className="text-primary hover:underline font-medium text-xs" onClick={(e) => e.stopPropagation()}>{o.expediente}</Link>
@@ -159,8 +160,8 @@ export default function ProveedorDetalle() {
             return (
               <DataTable
                 columns={opCols}
-                data={operaciones}
-                rowKey={(_, i = 0) => `${(_ as Op).embarqueId}-${(_ as Op).concepto}-${i}`}
+                data={opsConId}
+                rowKey={(o) => `${o.embarqueId}-${o.__idx}`}
                 density="compact"
                 emptyState={
                   <div className="p-6">
