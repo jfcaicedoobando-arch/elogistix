@@ -8,9 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import {
-  Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
-} from "@/components/ui/table";
+import { DataTable, type DataTableColumn } from "@/components/shared/DataTable";
 import { formatCurrency, toTitleCase, formatPhoneMx, formatDate } from "@/lib/formatters";
 import { getEstadoColor } from "@/lib/ui/uiMappings";
 import EditarProveedorDialog from "@/components/proveedor/EditarProveedorDialog";
@@ -146,44 +144,36 @@ export default function ProveedorDetalle() {
       <Card>
         <CardHeader><CardTitle className="text-sm">Historial de Operaciones</CardTitle></CardHeader>
         <CardContent className="p-0">
-          {operaciones.length > 0 ? (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Expediente</TableHead>
-                  <TableHead>Cliente</TableHead>
-                  <TableHead>Concepto</TableHead>
-                  <TableHead className="text-right">Monto</TableHead>
-                  <TableHead>Estado</TableHead>
-                  <TableHead>Vencimiento</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {operaciones.map((operacion, indice) => (
-                  <TableRow key={indice}>
-                    <TableCell>
-                      <Link to={`/embarques/${operacion.embarqueId}`} className="text-primary hover:underline font-medium text-xs">
-                        {operacion.expediente}
-                      </Link>
-                    </TableCell>
-                    <TableCell className="text-xs" title={operacion.clienteNombre}>{toTitleCase(operacion.clienteNombre)}</TableCell>
-                    <TableCell className="text-xs">{toTitleCase(operacion.concepto)}</TableCell>
-                    <TableCell className="text-xs font-medium text-right tabular-nums">{formatCurrency(operacion.monto, operacion.moneda)}</TableCell>
-                    <TableCell><Badge className={`text-xs ${getEstadoColor(operacion.estadoLiquidacion)}`}>{operacion.estadoLiquidacion}</Badge></TableCell>
-                    <TableCell className="text-xs">{operacion.fechaVencimiento ? formatDate(operacion.fechaVencimiento) : '—'}</TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          ) : (
-            <div className="p-6">
-              <EmptyState
-                icon={FileX}
-                title="Sin operaciones registradas"
-                description="Cuando este proveedor aparezca en costos de embarques, las operaciones se mostrarán aquí."
+          {(() => {
+            type Op = typeof operaciones[number];
+            const opCols: DataTableColumn<Op>[] = [
+              { key: "exp", header: "Expediente", render: (o) => (
+                <Link to={`/embarques/${o.embarqueId}`} className="text-primary hover:underline font-medium text-xs" onClick={(e) => e.stopPropagation()}>{o.expediente}</Link>
+              ) },
+              { key: "cliente", header: "Cliente", className: "text-xs", render: (o) => <span title={o.clienteNombre}>{toTitleCase(o.clienteNombre)}</span> },
+              { key: "concepto", header: "Concepto", className: "text-xs", render: (o) => toTitleCase(o.concepto) },
+              { key: "monto", header: "Monto", align: "right", className: "text-xs font-medium tabular-nums", render: (o) => formatCurrency(o.monto, o.moneda) },
+              { key: "estado", header: "Estado", render: (o) => <Badge className={`text-xs ${getEstadoColor(o.estadoLiquidacion)}`}>{o.estadoLiquidacion}</Badge> },
+              { key: "venc", header: "Vencimiento", className: "text-xs", render: (o) => o.fechaVencimiento ? formatDate(o.fechaVencimiento) : '—' },
+            ];
+            return (
+              <DataTable
+                columns={opCols}
+                data={operaciones}
+                rowKey={(_, i = 0) => `${(_ as Op).embarqueId}-${(_ as Op).concepto}-${i}`}
+                density="compact"
+                emptyState={
+                  <div className="p-6">
+                    <EmptyState
+                      icon={FileX}
+                      title="Sin operaciones registradas"
+                      description="Cuando este proveedor aparezca en costos de embarques, las operaciones se mostrarán aquí."
+                    />
+                  </div>
+                }
               />
-            </div>
-          )}
+            );
+          })()}
         </CardContent>
       </Card>
 
