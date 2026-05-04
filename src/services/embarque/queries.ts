@@ -96,6 +96,53 @@ export async function fetchEmbarquesPaginados(
   return { data: (data ?? []) as EmbarqueRow[], count: count ?? 0 };
 }
 
+/**
+ * Trae TODOS los embarques que cumplen los filtros (sin paginar).
+ * Usa paginación interna en chunks de 1000 para superar el límite default de Supabase.
+ * Pensado para exportar a CSV el resultado completo del filtro actual.
+ */
+export type EmbarquesParaExportFilters = Omit<EmbarquesPaginadosFilters, 'page' | 'pageSize' | 'sortBy' | 'sortDir'>;
+
+export async function fetchEmbarquesParaExport(
+  f: EmbarquesParaExportFilters,
+): Promise<EmbarqueRow[]> {
+  const PAGE = 1000;
+  const all: EmbarqueRow[] = [];
+  let from = 0;
+
+  while (true) {
+    let query = supabase
+      .from('embarques')
+      .select(EMBARQUE_LIST_COLUMNS)
+      .order('created_at', { ascending: false })
+      .range(from, from + PAGE - 1);
+
+    if (f.organizationId) query = query.eq('organization_id', f.organizationId);
+    if (f.search) {
+      query = query.or(
+        `expediente.ilike.%${f.search}%,cliente_nombre.ilike.%${f.search}%,descripcion_mercancia.ilike.%${f.search}%,bl_master.ilike.%${f.search}%`,
+      );
+    }
+    if (f.filterModo !== 'todos') {
+      query = query.eq('modo', f.filterModo as TablesInsert<'embarques'>['modo']);
+    }
+    if (f.filterCliente !== 'todos') query = query.eq('cliente_id', f.filterCliente);
+    if (f.filterOperador !== 'todos') query = query.eq('operador', f.filterOperador);
+    if (f.filterProforma === 'con') query = query.eq('tiene_proforma', true);
+    else if (f.filterProforma === 'sin') query = query.eq('tiene_proforma', false);
+    if (f.fechaDesde) query = query.gte('etd', f.fechaDesde);
+    if (f.fechaHasta) query = query.lte('eta', f.fechaHasta);
+
+    const { data, error } = await query;
+    if (error) throw error;
+    const batch = (data ?? []) as EmbarqueRow[];
+    all.push(...batch);
+    if (batch.length < PAGE) break;
+    from += PAGE;
+  }
+  return all;
+}
+
 export async function fetchEmbarqueById(id: string): Promise<EmbarqueRow> {
   const { data, error } = await supabase
     .from('embarques')
