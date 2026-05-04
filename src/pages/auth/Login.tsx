@@ -7,7 +7,8 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import librecargaLogo from "@/assets/librecarga-logo.png";
+import { BrandLockup } from "@/components/layout/BrandLockup";
+import { BRAND } from "@/lib/ui/brand";
 import { notifyError } from "@/lib/ui/appFeedback";
 
 export default function Login() {
