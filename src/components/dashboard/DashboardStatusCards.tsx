@@ -50,19 +50,24 @@ export function DashboardStatusCards({
                   <div key={estado} className="flex flex-col items-center relative z-10">
                     {/* Nodo */}
                     <button
+                      type="button"
                       onClick={() => onFiltroChange(selected ? null : estado)}
+                      aria-pressed={selected}
+                      aria-label={`Filtrar embarques por estado ${estado} (${count})`}
+                      title={`${estado}: ${count} embarques`}
                       className={`
                         relative flex items-center justify-center w-12 h-12 rounded-full
                         bg-gradient-to-br ${cfg.gradient}
                         transition-all duration-300 ease-out
                         hover:scale-110 hover:shadow-lg
+                        focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background
                         ${selected
                           ? `ring-3 ring-offset-2 ring-offset-background ${cfg.border} scale-110 ${cfg.glow}`
                           : "ring-1 ring-border/20"
                         }
                       `}
                     >
-                      <Icon className="h-5 w-5 text-white" />
+                      <Icon className="h-5 w-5 text-white" aria-hidden="true" />
                     </button>
 
                     {/* Conteo */}

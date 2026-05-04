@@ -38,7 +38,19 @@ export default function ReportesTopChart({ data, isLoading }: Props) {
         ) : (
           <ResponsiveContainer width="100%" height="100%">
             <BarChart data={data} layout="vertical" margin={{ left: 10, right: 24, top: 5, bottom: 5 }}>
-              <XAxis type="number" tickFormatter={(v) => `$${(v / 1000).toFixed(0)}k`} tick={{ fontSize: 11 }} />
+              <XAxis
+                type="number"
+                tickCount={5}
+                domain={[0, "dataMax"]}
+                allowDecimals={false}
+                tickFormatter={(v) => {
+                  const n = Number(v) || 0;
+                  if (n >= 1_000_000) return `$${(n / 1_000_000).toFixed(1)}M`;
+                  if (n >= 1_000) return `$${(n / 1_000).toFixed(1)}k`;
+                  return `$${n}`;
+                }}
+                tick={{ fontSize: 11 }}
+              />
               <YAxis
                 type="category"
                 dataKey="name"

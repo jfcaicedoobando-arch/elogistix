@@ -45,8 +45,11 @@ export function KpiCard({
 
   return (
     <Card className="rounded-2xl shadow-sm border-0 bg-card">
-      <CardContent className="p-4 sm:p-5 flex items-center gap-3 sm:gap-4">
-        <div className={`rounded-xl p-2.5 sm:p-3 shrink-0 ${kpiIconChipClasses(tone)}`}>
+      <CardContent className="p-3 sm:p-5 flex items-center gap-2 sm:gap-4">
+        <div
+          aria-hidden="true"
+          className={`hidden sm:flex rounded-xl p-2.5 sm:p-3 shrink-0 ${kpiIconChipClasses(tone)}`}
+        >
           <Icono className="h-5 w-5" />
         </div>
         <div className="min-w-0 flex-1">

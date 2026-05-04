@@ -55,7 +55,7 @@ export function EmbarquesFiltrosCampos(props: EmbarquesFiltrosCamposProps) {
 
   const ModoSelect = (
     <Select value={filterModo} onValueChange={onFilterModoChange}>
-      <SelectTrigger className="w-full md:w-[150px] md:min-w-[140px]">
+      <SelectTrigger className="w-full md:w-[160px] md:min-w-[160px]" title="Filtrar por modo de transporte" aria-label="Modo de transporte">
         <SelectValue placeholder="Modo" className="truncate" />
       </SelectTrigger>
       <SelectContent>
@@ -73,7 +73,7 @@ export function EmbarquesFiltrosCampos(props: EmbarquesFiltrosCamposProps) {
 
   const EstadoSelect = (
     <Select value={filterEstado} onValueChange={onFilterEstadoChange}>
-      <SelectTrigger className="w-full md:w-[170px] md:min-w-[160px]">
+      <SelectTrigger className="w-full md:w-[180px] md:min-w-[180px]" title="Filtrar por estado del embarque" aria-label="Estado del embarque">
         <SelectValue placeholder="Estado" className="truncate" />
       </SelectTrigger>
       <SelectContent>
@@ -85,7 +85,7 @@ export function EmbarquesFiltrosCampos(props: EmbarquesFiltrosCamposProps) {
 
   const ClienteSelect = (
     <Select value={filterCliente} onValueChange={onFilterClienteChange}>
-      <SelectTrigger className="w-full md:w-[220px] md:min-w-[180px]">
+      <SelectTrigger className="w-full md:w-[220px] md:min-w-[200px]" title="Filtrar por cliente" aria-label="Cliente">
         <SelectValue placeholder="Cliente" className="truncate" />
       </SelectTrigger>
       <SelectContent>
@@ -101,7 +101,7 @@ export function EmbarquesFiltrosCampos(props: EmbarquesFiltrosCamposProps) {
 
   const OperadorSelect = (
     <Select value={filterOperador} onValueChange={onFilterOperadorChange}>
-      <SelectTrigger className="w-full md:w-[200px] md:min-w-[180px]">
+      <SelectTrigger className="w-full md:w-[210px] md:min-w-[200px]" title="Filtrar por operador" aria-label="Operador">
         <SelectValue placeholder="Operador" className="truncate" />
       </SelectTrigger>
       <SelectContent>
@@ -113,7 +113,7 @@ export function EmbarquesFiltrosCampos(props: EmbarquesFiltrosCamposProps) {
 
   const ProformaSelect = (
     <Select value={filterProforma} onValueChange={onFilterProformaChange}>
-      <SelectTrigger className="w-full md:w-[180px] md:min-w-[160px]">
+      <SelectTrigger className="w-full md:w-[190px] md:min-w-[180px]" title="Filtrar por estado de proforma" aria-label="Proforma">
         <SelectValue placeholder="Proforma" className="truncate" />
       </SelectTrigger>
       <SelectContent>
