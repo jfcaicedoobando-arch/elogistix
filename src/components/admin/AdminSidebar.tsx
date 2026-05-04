@@ -54,19 +54,11 @@ export function AdminSidebar() {
   return (
     <Sidebar collapsible="icon">
       <SidebarHeader className="border-b border-sidebar-border p-4">
-        <div className="flex items-center gap-3">
-          <Building2 className="h-8 w-8 text-primary shrink-0" />
-          {!collapsed && (
-            <div className="flex flex-col min-w-0">
-              <span className="text-sm font-bold text-sidebar-foreground truncate">
-                Libre Carga
-              </span>
-              <span className="text-xs text-sidebar-foreground/60">
-                Super Admin
-              </span>
-            </div>
-          )}
-        </div>
+        {collapsed ? (
+          <BrandLockup variant="icon" size="sm" />
+        ) : (
+          <BrandLockup variant="horizontal" size="sm" subtitle="Super Admin" />
+        )}
       </SidebarHeader>
 
       <SidebarContent className="px-2 py-4">
