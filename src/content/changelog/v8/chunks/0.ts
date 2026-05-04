@@ -2,6 +2,14 @@ import type { ChangelogEntry } from "../../../changelogData";
 
 export const chunk0: ChangelogEntry[] = [
   {
+    version: "8.117.3",
+    date: "2026-05-04",
+    type: "patch",
+    title: "Embarques: exportar CSV ahora trae el 100% de los registros filtrados",
+    summary: "El export CSV en /embarques ya no se limita a la página visible: descarga todos los embarques que cumplen los filtros actuales (operador, cliente, modo, fechas, etc.).",
+    description: "Bugfix en /embarques. Antes, 'Exportar CSV' solo exportaba la página actual (20 filas) y además aplicaba el dedupe por expediente, así que filtrar por un operador (ej. Valeria) y exportar devolvía solo lo visible. Ahora se hace una nueva fetch server-side sin paginar (fetchEmbarquesParaExport en src/services/embarque/queries.ts) que reaplica organizationId, search, modo, cliente, operador, proforma, fechaDesde y fechaHasta, paginando internamente en chunks de 1000 para superar el límite default de Supabase. Después se filtra por estado client-side (igual que la tabla) y se traen los estados de costos vía embarques_list_extras también en chunks de 1000 IDs. El botón muestra 'Exportando...' mientras corre y se notifica con toast cuántos embarques se exportaron. Se exportan TODOS los contenedores (sin dedupe por expediente) para reflejar 100% de las operaciones del operador filtrado. Versión 8.117.3.",
+  },
+  {
     version: "8.117.2",
     date: "2026-05-04",
     type: "patch",
