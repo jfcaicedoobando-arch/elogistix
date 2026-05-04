@@ -190,7 +190,8 @@ function DataTableInner<T>({
 
   return (
     <div className={className}>
-      <Table>
+      <div className="relative w-full overflow-x-auto rounded-md [scrollbar-width:thin]">
+        <Table>
         <TableHeader>
           <TableRow
             className={cn(
