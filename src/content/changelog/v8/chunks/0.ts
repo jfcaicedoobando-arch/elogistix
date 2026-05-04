@@ -2,6 +2,14 @@ import type { ChangelogEntry } from "../../../changelogData";
 
 export const chunk0: ChangelogEntry[] = [
   {
+    version: "8.111.0",
+    date: "2026-05-04",
+    type: "minor",
+    title: "Panel Super Admin: dashboard enriquecido, filtros, breadcrumbs y polish UI/UX integral",
+    summary: "Auditoría visual del panel admin: 20+ mejoras de afford­ance, navegación, accesibilidad y densidad informativa.",
+    description: "(1) AdminLayout: reemplaza el header 'PANEL DE ADMINISTRACIÓN' por breadcrumbs dinámicos (Home → ruta), aplica max-w-screen-2xl al contenido y reduce ruido visual. (2) AdminSidebar: item activo con bg-primary/10 + border-l-2 border-primary (en vez de gris plano), footer con dropdown de usuario (avatar con iniciales, email, cerrar sesión destructivo) en lugar del email + botón sueltos. (3) AdminDashboard: KPIs ahora son botones con hover (shadow + translate + 'Ver detalle') que navegan a su listado correspondiente; agrega gráfica de barras (recharts) con embarques + cotizaciones por organización y panel de 'Últimas organizaciones' clickable. (4) AdminUsuarios: buscador por email, filtros por organización y rol, contador 'X de Y', avatar con iniciales en cada fila, badge 'Admin' migrado de rojo (destructive) a accent + border primary (rojo se reserva para destructivo), columna de acciones convertida a menú ⋯ con 'Cambiar rol' (placeholder) y 'Eliminar' destructivo. (5) AdminOrganizaciones: buscador por nombre/RFC, filtros por plan y estado (activas/inactivas), contador, menú ⋯ por fila con 'Ver detalle' y placeholder de activar/desactivar. (6) AdminConfiguracion: usa PageHeader unificado y tabs con underline (border-b-2 border-primary) en lugar del bloque gris difuso, mejora contraste y jerarquía. (7) A11y: aria-labels en triggers, focus-visible:ring-2 ring-ring en botones e inputs, tooltip en ThemeToggle ya existente. Backend extendido con fetchAdminOrgActivity y fetchAdminRecentOrgs (services/admin/stats.ts).",
+  },
+  {
     version: "8.110.0",
     date: "2026-05-04",
     type: "minor",
