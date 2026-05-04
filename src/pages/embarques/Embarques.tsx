@@ -79,8 +79,8 @@ export default function Embarques() {
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-48">
-                  <DropdownMenuItem onClick={exportarCsv}>
-                    <Download className="h-4 w-4 mr-2" /> Exportar CSV
+                  <DropdownMenuItem onClick={exportarCsv} disabled={exportandoCsv}>
+                    <Download className="h-4 w-4 mr-2" /> {exportandoCsv ? "Exportando..." : "Exportar CSV"}
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
