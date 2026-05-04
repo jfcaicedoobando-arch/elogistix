@@ -80,7 +80,7 @@ export async function fetchProyeccionMes({
     costosMap.set(c.embarque_id, arr);
   }
   const facturadosSet = new Set<string>(
-    (facturasRes.data ?? []).map((f) => f.embarque_id).filter(Boolean) as string[],
+    (facturasRes.data ?? []).map((f) => f.expediente).filter((x): x is string => !!x),
   );
 
   // Construir filas planas.
