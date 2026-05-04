@@ -22,6 +22,14 @@ export interface ChangelogEntry {
  */
 export const recentChangelog: ChangelogEntry[] = [
   {
+    version: "8.111.0",
+    date: "2026-05-04",
+    type: "minor",
+    title: "Panel Super Admin: dashboard enriquecido, filtros, breadcrumbs y polish UI/UX integral",
+    summary: "Auditoría visual del panel admin: 20+ mejoras de afford­ance, navegación, accesibilidad y densidad informativa.",
+    description: "AdminLayout con breadcrumbs y max-width; sidebar con activo accent + dropdown de usuario; dashboard con KPIs clickables, gráfica por organización (recharts) y panel de últimas orgs; tablas Usuarios/Organizaciones con buscador, filtros, contadores y menú ⋯ por fila; badge Admin reasignado a accent (rojo solo destructivo); tabs de Configuración con underline; a11y mejorada con aria-labels y focus-visible.",
+  },
+  {
     version: "8.110.0",
     date: "2026-05-04",
     type: "minor",
