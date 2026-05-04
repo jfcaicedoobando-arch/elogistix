@@ -4,13 +4,17 @@ import {
   fetchAdminDashboardStats,
   fetchAdminGlobalUsers,
   fetchAdminOrganizations,
+  fetchAdminOrgActivity,
+  fetchAdminRecentOrgs,
   createOrganization,
   type AdminOrgStats,
+  type AdminOrgActivity,
+  type AdminRecentOrg,
   type GlobalUserRow,
   type OrgRow,
 } from '@/services/admin';
 
-export type { AdminOrgStats, GlobalUserRow, OrgRow };
+export type { AdminOrgStats, AdminOrgActivity, AdminRecentOrg, GlobalUserRow, OrgRow };
 
 // ─── Dashboard Stats ─────────────────────────────────────
 export function useAdminDashboardStats() {
@@ -33,6 +37,22 @@ export function useAdminOrganizations() {
   return useQuery({
     queryKey: queryKeys.admin.organizations,
     queryFn: fetchAdminOrganizations,
+  });
+}
+
+// ─── Org Activity (embarques + cotizaciones por org) ────
+export function useAdminOrgActivity() {
+  return useQuery({
+    queryKey: queryKeys.admin.orgActivity,
+    queryFn: fetchAdminOrgActivity,
+  });
+}
+
+// ─── Últimas organizaciones creadas ──────────────────────
+export function useAdminRecentOrgs(limit = 5) {
+  return useQuery({
+    queryKey: [...queryKeys.admin.recentOrgs, limit],
+    queryFn: () => fetchAdminRecentOrgs(limit),
   });
 }
 
