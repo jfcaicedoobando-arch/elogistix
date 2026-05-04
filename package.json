@@ -10,7 +10,9 @@
     "lint": "eslint .",
     "preview": "vite preview",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "changelog:add": "tsx scripts/add-changelog.ts",
+    "changelog:json": "tsx scripts/generate-changelog-json.ts"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",
