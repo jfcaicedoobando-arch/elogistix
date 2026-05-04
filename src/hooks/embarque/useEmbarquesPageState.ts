@@ -124,5 +124,6 @@ export function useEmbarquesPageState() {
     handleSortChange,
     // data
     embarques, filtered, totalCount, displayCount, totalPages, isLoading, isEmptyState,
+    contenedoresPorExpediente,
   };
 }
