@@ -140,5 +140,7 @@ export const queryKeys = {
     orgCountClientes: (id: string) => ['admin-org-count-clientes', id] as const,
     orgCountCotizaciones: (id: string) => ['admin-org-count-cotizaciones', id] as const,
     organizationsList: ['admin', 'organizations-list'] as const,
+    orgActivity: ['admin', 'org-activity'] as const,
+    recentOrgs: ['admin', 'recent-orgs'] as const,
   },
 } as const;
