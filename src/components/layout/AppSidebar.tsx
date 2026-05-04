@@ -204,7 +204,7 @@ const AppSidebarBase = forwardRef<HTMLDivElement>(function AppSidebarBase(_props
         )}
         {!collapsed && (
           <div className="text-[11px] text-sidebar-foreground/55 tabular-nums px-1">
-            v{APP_VERSION} · Libre Carga
+            v{APP_VERSION}
           </div>
         )}
       </SidebarFooter>
