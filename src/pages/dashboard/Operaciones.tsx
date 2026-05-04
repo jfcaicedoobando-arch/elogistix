@@ -9,7 +9,7 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import { MAX_CONTENEDORES, type PeriodoFiltro } from "@/hooks/operaciones/useOperacionesData";
-import { formatCurrency } from "@/lib/formatters";
+import { formatCurrency, formatCurrencyCompact } from "@/lib/formatters";
 import { KpiCard } from "@/components/operaciones/KpiCard";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { DesempenoOperadores } from "@/components/operaciones/DesempenoOperadores";
@@ -44,11 +44,11 @@ export default function Operaciones() {
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <KpiCard titulo="Cargas activas" valor={global.totalActivas} icono={Package} color="info" loading={isLoading} />
-        <KpiCard titulo="Contenedores" valor={`${global.totalContenedores} / ${MAX_CONTENEDORES}`} icono={Container} color="accent" loading={isLoading}>
+        <KpiCard titulo="Contenedores (TEU)" valor={`${global.totalContenedores} / ${MAX_CONTENEDORES}`} icono={Container} color="accent" loading={isLoading}>
           {!isLoading && <Progress value={contPct} className="h-1.5 mt-1.5 [&>div]:bg-kpi-accent" />}
         </KpiCard>
-        <KpiCard titulo="Profit total USD" valor={formatCurrency(global.totalProfit, "USD")} icono={TrendingUp} color="success" loading={isLoading} />
-        <KpiCard titulo="Alertas de riesgo" valor={totalAlertas} subtitulo={totalAlertas > 0 ? `${global.totalCriticos} críticos · ${global.totalEnPuerto} en puerto` : "Sin alertas"} icono={AlertTriangle} color="danger" loading={isLoading} />
+        <KpiCard titulo="Profit USD" valor={formatCurrencyCompact(global.totalProfit, "USD")} valorTooltip={formatCurrency(global.totalProfit, "USD")} icono={TrendingUp} color="success" loading={isLoading} />
+        <KpiCard titulo="Alertas" valor={totalAlertas} subtitulo={totalAlertas > 0 ? `${global.totalCriticos} críticos · ${global.totalEnPuerto} en puerto` : "Sin alertas"} icono={AlertTriangle} color="danger" loading={isLoading} />
       </div>
 
       <DesempenoOperadores operadores={operadores} isLoading={isLoading} />

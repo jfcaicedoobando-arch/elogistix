@@ -178,6 +178,8 @@ const App = () => (
               <Route path="/cotizaciones/:id" element={<CotizacionDetalle />} />
               <Route path="/cotizaciones/:id/editar" element={<EditarCotizacion />} />
               <Route path="/reportes/rentabilidad" element={<Reportes />} />
+              <Route path="/reportes" element={<Navigate to="/reportes/rentabilidad" replace />} />
+              <Route path="/rentabilidad" element={<Navigate to="/reportes/rentabilidad" replace />} />
               
               <Route path="/changelog" element={<Changelog />} />
               <Route path="/bitacora" element={<Bitacora />} />

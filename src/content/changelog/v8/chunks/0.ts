@@ -2,6 +2,14 @@ import type { ChangelogEntry } from "../../../changelogData";
 
 export const chunk0: ChangelogEntry[] = [
   {
+    version: "8.110.0",
+    date: "2026-05-04",
+    type: "minor",
+    title: "QA visual completa: KPIs sin truncar, detalle de embarque por folio, redirects de Reportes y tooltips en sidebar",
+    summary: "Cinco arreglos derivados de la auditoría visual en viewport 1000px.",
+    description: "(1) Operaciones: KPIs con etiquetas cortas ('Cargas activas', 'Contenedores (TEU)', 'Profit USD', 'Alertas') y formatCurrencyCompact en Profit con tooltip del valor completo. (2) Dashboard 'Arribos este mes': el bloque pasa de lg:flex-row a xl:flex-row para que métricas y barra no se aplasten a 1000px (resuelve solapamiento '29' / 'USD 20,808.49'); Profit con notación compacta. (3) Detalle de embarque: fetchEmbarqueFull acepta UUID o expediente (folio tipo 'ELIMP00190'), resolviendo contra la tabla embarques. (4) Router: redirects /reportes y /rentabilidad → /reportes/rentabilidad. (5) Sidebar: badge numérico envuelto en Tooltip Radix con aria-label.",
+  },
+  {
     version: "8.109.1",
     date: "2026-05-04",
     type: "patch",

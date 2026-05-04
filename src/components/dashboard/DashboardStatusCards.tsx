@@ -4,7 +4,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { ESTADOS_FILTRO, type EstadoFiltro } from "@/hooks/dashboard/useDashboardData";
 import { ESTADO_CONFIG } from "@/lib/ui/estadoConfig";
 import { CalendarDays, TrendingUp, Ship, CheckCircle2 } from "lucide-react";
-import { formatCurrency } from "@/lib/formatters";
+import { formatCurrency, formatCurrencyCompact } from "@/lib/formatters";
 
 interface ArribosEsteMes {
   total: number;
@@ -98,7 +98,7 @@ export function DashboardStatusCards({
       {/* CAMBIO 2 — Indicador de arribos + profit */}
       <Card>
         <CardContent className="p-4">
-          <div className="flex flex-col lg:flex-row lg:items-center gap-4">
+          <div className="flex flex-col xl:flex-row xl:items-center gap-4">
             {/* Título */}
             <div className="flex items-center gap-2 shrink-0">
               <div className="p-2 rounded-lg bg-gradient-to-br from-cyan-500 to-cyan-600">
@@ -145,7 +145,7 @@ export function DashboardStatusCards({
                       className={`text-base sm:text-xl font-bold tabular-nums whitespace-nowrap ${arribosEsteMes.profitUSD >= 0 ? "text-success" : "text-destructive"}`}
                       title={formatCurrency(arribosEsteMes.profitUSD, "USD")}
                     >
-                      {formatCurrency(arribosEsteMes.profitUSD, "USD")}
+                      {formatCurrencyCompact(arribosEsteMes.profitUSD, "USD")}
                     </span>
                   </div>
                 )}
@@ -154,7 +154,7 @@ export function DashboardStatusCards({
             </div>
 
             {/* Barra de progreso */}
-            <div className="flex items-center gap-2 lg:w-40 shrink-0">
+            <div className="flex items-center gap-2 xl:w-40 shrink-0">
               <Progress
                 value={arribosEsteMes.total > 0 ? (arribosEsteMes.yaLlegaron / arribosEsteMes.total) * 100 : 0}
                 className="h-2 flex-1 [&>div]:bg-kpi-secondary"

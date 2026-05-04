@@ -251,7 +251,21 @@ export interface EmbarqueFullData {
   facturas: Tables<'facturas'>[];
 }
 
-export async function fetchEmbarqueFull(id: string): Promise<EmbarqueFullData | null> {
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+export async function fetchEmbarqueFull(idOrExpediente: string): Promise<EmbarqueFullData | null> {
+  let id = idOrExpediente;
+  // Si no es UUID, asumimos que es expediente (folio human-readable). Resolvemos a id.
+  if (!UUID_RE.test(idOrExpediente)) {
+    const { data: row, error: lookupErr } = await supabase
+      .from('embarques')
+      .select('id')
+      .eq('expediente', idOrExpediente)
+      .maybeSingle();
+    if (lookupErr) throw lookupErr;
+    if (!row) return null;
+    id = row.id;
+  }
   const { data, error } = await supabase.rpc('get_embarque_full', { p_embarque_id: id });
   if (error) throw error;
   if (!data) return null;
