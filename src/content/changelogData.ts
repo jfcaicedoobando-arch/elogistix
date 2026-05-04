@@ -22,6 +22,14 @@ export interface ChangelogEntry {
  */
 export const recentChangelog: ChangelogEntry[] = [
   {
+    version: "8.113.0",
+    date: "2026-05-04",
+    type: "minor",
+    title: "Polish UI/UX Fase D-F: header compacto, scroll horizontal, zebra reforzada, stepper responsive y a11y",
+    summary: "Cierre de las fases pendientes de la auditoría visual: header global, charts, tablas y accesibilidad.",
+    description: "Header h-16→h-12 con padding adaptativo; DataTable con overflow-x-auto y scrollbar fino; zebra reforzada (muted/45 light, /30 dark); StepIndicator responsive con role/listitem y aria-current; ReportesTopChart YAxis 110→170 + ticks truncados a 22 chars; complementa Fase A/B/C de v8.112.0.",
+  },
+  {
     version: "8.111.0",
     date: "2026-05-04",
     type: "minor",
