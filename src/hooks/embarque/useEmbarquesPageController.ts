@@ -75,55 +75,99 @@ export function useEmbarquesPageController() {
     [canEdit, liquidacionMap, docsMap, contenedoresPorExpediente, navigate],
   );
 
-  const exportarCsv = useCallback(() => {
-    exportToCsv(
-      `embarques_${new Date().toISOString().slice(0, 10)}.csv`,
-      [
-        { key: "expediente", label: "Expediente" },
-        { key: "bl_master", label: "BL Master" },
-        { key: "cliente_nombre", label: "Cliente" },
-        { key: "modo", label: "Modo" },
-        { key: "tipo", label: "Tipo Operación" },
-        { key: "origen", label: "Origen" },
-        { key: "destino", label: "Destino" },
-        { key: "estado", label: "Estado" },
-        { key: "etd", label: "ETD" },
-        { key: "eta", label: "ETA" },
-        { key: "operador", label: "Operador" },
-        { key: "contenedor", label: "Contenedor" },
-        { key: "tipo_contenedor", label: "Tipo Contenedor" },
-        { key: "descripcion_mercancia", label: "Descripción Mercancía" },
-        { key: "tipo_cambio_usd", label: "T/C USD" },
-        { key: "tipo_cambio_eur", label: "T/C EUR" },
-        { key: "liquidacion", label: "Estado Costos" },
-        { key: "created_at", label: "Fecha Creación" },
-      ],
-      filtered.map(e => {
-        const liq = liquidacionMap[e.id];
-        const estadoLiq = !liq || liq.total === 0 ? "—" : liq.pagados === liq.total ? "Pagado" : liq.pagados > 0 ? "Parcial" : "Pendiente";
-        return {
-          expediente: e.expediente,
-          bl_master: e.bl_master || "",
-          cliente_nombre: e.cliente_nombre,
-          modo: e.modo,
-          tipo: e.tipo,
-          origen: getOrigen(e),
-          destino: getDestino(e),
-          estado: calcularEstadoEmbarque(e.modo, e.tipo, e.etd, e.eta, e.estado),
-          etd: e.etd || "",
-          eta: e.eta || "",
-          operador: e.operador || "",
-          contenedor: e.contenedor || "",
-          tipo_contenedor: e.tipo_contenedor || "",
-          descripcion_mercancia: e.descripcion_mercancia || "",
-          tipo_cambio_usd: e.tipo_cambio_usd ?? "",
-          tipo_cambio_eur: e.tipo_cambio_eur ?? "",
-          liquidacion: estadoLiq,
-          created_at: e.created_at ? new Date(e.created_at).toLocaleDateString("es-MX") : "",
-        };
-      }),
-    );
-  }, [filtered, liquidacionMap]);
+  const exportarCsv = useCallback(async () => {
+    setExportandoCsv(true);
+    try {
+      // Trae TODOS los embarques que cumplen los filtros actuales (sin paginar).
+      const todos = await fetchEmbarquesParaExport({
+        organizationId,
+        search: state.debouncedSearch,
+        filterModo: state.filterModo,
+        filterCliente: state.filterCliente,
+        filterOperador: state.filterOperador,
+        filterProforma: state.filterProforma,
+        fechaDesde: state.fechaDesde || undefined,
+        fechaHasta: state.fechaHasta || undefined,
+      });
+
+      // Filtro de estado se calcula client-side (no es columna directa de DB).
+      const filtradosPorEstado = state.filterEstado === "todos"
+        ? todos
+        : todos.filter((e) => calcularEstadoEmbarque(e.modo, e.tipo, e.etd, e.eta, e.estado) === state.filterEstado);
+
+      if (filtradosPorEstado.length === 0) {
+        notifyError(toast, { title: "Sin datos para exportar", description: "Los filtros actuales no devuelven embarques." });
+        return;
+      }
+
+      // Trae estados de costos (liquidación) en chunks de 1000 IDs.
+      const ids = filtradosPorEstado.map((e) => e.id);
+      const liqMap: Record<string, { total: number; pagados: number }> = {};
+      const CHUNK = 1000;
+      for (let i = 0; i < ids.length; i += CHUNK) {
+        const slice = ids.slice(i, i + CHUNK);
+        const extras = await fetchEmbarquesListExtras(slice);
+        Object.assign(liqMap, extras.liquidacion);
+      }
+
+      exportToCsv(
+        `embarques_${new Date().toISOString().slice(0, 10)}.csv`,
+        [
+          { key: "expediente", label: "Expediente" },
+          { key: "bl_master", label: "BL Master" },
+          { key: "cliente_nombre", label: "Cliente" },
+          { key: "modo", label: "Modo" },
+          { key: "tipo", label: "Tipo Operación" },
+          { key: "origen", label: "Origen" },
+          { key: "destino", label: "Destino" },
+          { key: "estado", label: "Estado" },
+          { key: "etd", label: "ETD" },
+          { key: "eta", label: "ETA" },
+          { key: "operador", label: "Operador" },
+          { key: "contenedor", label: "Contenedor" },
+          { key: "tipo_contenedor", label: "Tipo Contenedor" },
+          { key: "descripcion_mercancia", label: "Descripción Mercancía" },
+          { key: "tipo_cambio_usd", label: "T/C USD" },
+          { key: "tipo_cambio_eur", label: "T/C EUR" },
+          { key: "liquidacion", label: "Estado Costos" },
+          { key: "created_at", label: "Fecha Creación" },
+        ],
+        filtradosPorEstado.map((e) => {
+          const liq = liqMap[e.id];
+          const estadoLiq = !liq || liq.total === 0 ? "—" : liq.pagados === liq.total ? "Pagado" : liq.pagados > 0 ? "Parcial" : "Pendiente";
+          return {
+            expediente: e.expediente,
+            bl_master: e.bl_master || "",
+            cliente_nombre: e.cliente_nombre,
+            modo: e.modo,
+            tipo: e.tipo,
+            origen: getOrigen(e),
+            destino: getDestino(e),
+            estado: calcularEstadoEmbarque(e.modo, e.tipo, e.etd, e.eta, e.estado),
+            etd: e.etd || "",
+            eta: e.eta || "",
+            operador: e.operador || "",
+            contenedor: e.contenedor || "",
+            tipo_contenedor: e.tipo_contenedor || "",
+            descripcion_mercancia: e.descripcion_mercancia || "",
+            tipo_cambio_usd: e.tipo_cambio_usd ?? "",
+            tipo_cambio_eur: e.tipo_cambio_eur ?? "",
+            liquidacion: estadoLiq,
+            created_at: e.created_at ? new Date(e.created_at).toLocaleDateString("es-MX") : "",
+          };
+        }),
+      );
+
+      notifySuccess(toast, {
+        title: "CSV exportado",
+        description: `${filtradosPorEstado.length} embarques exportados con los filtros actuales.`,
+      });
+    } catch (err: unknown) {
+      notifyError(toast, { title: "Error al exportar", description: getErrorMessage(err) });
+    } finally {
+      setExportandoCsv(false);
+    }
+  }, [organizationId, state.debouncedSearch, state.filterModo, state.filterCliente, state.filterOperador, state.filterProforma, state.filterEstado, state.fechaDesde, state.fechaHasta, toast]);
 
   return {
     // estado de filtros y paginación
