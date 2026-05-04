@@ -2,6 +2,14 @@ import type { ChangelogEntry } from "../../../changelogData";
 
 export const chunk0: ChangelogEntry[] = [
   {
+    version: "8.107.0",
+    date: "2026-05-04",
+    type: "minor",
+    title: "Estandarización de tablas (Bloque A): detalle de Embarque",
+    summary: "TabCostos, TabDocumentos, TabResumen, ResumenConceptosVenta, HistorialProformas e HistorialFacturas migrados a DataTable.",
+    description: "Migración del primer bloque del plan de estandarización de tablas. Se reemplazaron las tablas crudas (Table/TableHead/TableRow de @/components/ui/table) por <DataTable /> en seis componentes del detalle de embarque: TabCostos (conceptos de venta y costo), TabDocumentos (con confirmación de eliminación intacta), TabResumen (embarques relacionados por BL Master), facturacion/ResumenConceptosVenta, facturacion/HistorialProformas y facturacion/HistorialFacturas. Beneficios: empty state estándar, alineación numérica con prop `align: 'right'`, densidad `compact` consistente, sticky headers vía DataTable y `e.stopPropagation()` aplicado a los botones de acción para no disparar el row click. Sin cambios funcionales ni de UX visible — sólo unificación del componente subyacente.",
+  },
+  {
     version: "8.106.0",
     date: "2026-05-04",
     type: "minor",

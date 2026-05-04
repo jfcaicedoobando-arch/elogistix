@@ -1,6 +1,5 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { formatDate, toTitleCase, nombreDesdeEmail, formatNumber } from "@/lib/formatters";
 import { getEstadoColor } from "@/lib/ui/uiMappings";
 import { ModoIcon } from "@/components/shared/ModoIcon";
@@ -8,9 +7,12 @@ import { ESTADOS_EMBARQUE } from "@/constants/embarqueConstants";
 import { DetailRow } from "./DetailRow";
 import { useNavigate } from "react-router-dom";
 import { Link } from "lucide-react";
+import { DataTable, type DataTableColumn } from "@/components/shared/DataTable";
 import type { EmbarqueRow } from "@/hooks/embarque/useEmbarques";
 import { calcularEstadoEmbarque } from "@/lib/domain/embarque";
 import { useEmbarquesRelacionados } from "@/hooks/embarque/useEmbarquesRelacionados";
+
+type RelacionadoRow = ReturnType<typeof useEmbarquesRelacionados>["data"] extends (infer U)[] | undefined ? U : never;
 
 interface Props {
   embarque: EmbarqueRow;
@@ -112,30 +114,21 @@ export function TabResumen({ embarque }: Props) {
             </CardTitle>
           </CardHeader>
           <CardContent className="p-0">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Expediente</TableHead>
-                  <TableHead>BL House</TableHead>
-                  <TableHead>Cliente</TableHead>
-                  <TableHead>Shipper</TableHead>
-                  <TableHead>Estado</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {relacionados.map((rel) => (
-                  <TableRow key={rel.id} className="cursor-pointer" onClick={() => navigate(`/embarques/${rel.id}`)}>
-                    <TableCell className="font-medium">{rel.expediente}</TableCell>
-                    <TableCell className="text-xs">{rel.bl_house || '-'}</TableCell>
-                    <TableCell className="text-xs">{toTitleCase(rel.cliente_nombre)}</TableCell>
-                    <TableCell className="text-xs">{toTitleCase(rel.shipper)}</TableCell>
-                    <TableCell>
-                      <Badge variant="secondary" className={`text-xs ${getEstadoColor(rel.estado)}`}>{rel.estado}</Badge>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+            <DataTable
+              columns={[
+                { key: "expediente", header: "Expediente", className: "font-medium", render: (r: RelacionadoRow) => r.expediente },
+                { key: "bl_house", header: "BL House", className: "text-xs", render: (r: RelacionadoRow) => r.bl_house || '-' },
+                { key: "cliente", header: "Cliente", className: "text-xs", render: (r: RelacionadoRow) => toTitleCase(r.cliente_nombre) },
+                { key: "shipper", header: "Shipper", className: "text-xs", render: (r: RelacionadoRow) => toTitleCase(r.shipper) },
+                { key: "estado", header: "Estado", render: (r: RelacionadoRow) => (
+                  <Badge variant="secondary" className={`text-xs ${getEstadoColor(r.estado)}`}>{r.estado}</Badge>
+                ) },
+              ]}
+              data={relacionados}
+              rowKey={(r) => r.id}
+              density="compact"
+              onRowClick={(r) => navigate(`/embarques/${r.id}`)}
+            />
           </CardContent>
         </Card>
       )}
