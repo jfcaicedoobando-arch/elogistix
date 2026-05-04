@@ -27,6 +27,7 @@ export default function Embarques() {
     setEmbarqueADuplicar,
     handleEliminar,
     exportarCsv,
+    exportandoCsv,
     eliminarEmbarquePending,
     navigate,
     prefetchEmbarque,
