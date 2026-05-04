@@ -35,6 +35,8 @@ export function useEmbarquesPageController() {
 
   const [embarqueAEliminar, setEmbarqueAEliminar] = useState<EmbarqueRow | null>(null);
   const [embarqueADuplicar, setEmbarqueADuplicar] = useState<EmbarqueRow | null>(null);
+  const [exportandoCsv, setExportandoCsv] = useState(false);
+  const { organizationId } = useOrgFilter();
 
   const { data: operadoresUnicos = [] } = useOperadoresDistintos();
 
