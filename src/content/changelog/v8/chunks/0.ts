@@ -2,6 +2,14 @@ import type { ChangelogEntry } from "../../../changelogData";
 
 export const chunk0: ChangelogEntry[] = [
   {
+    version: "8.117.0",
+    date: "2026-05-04",
+    type: "minor",
+    title: "Pre-Facturación: nueva tab 'Proyección' para cierre mensual por ETA",
+    summary: "Vista mensual con KPIs de venta proyectada vs facturada, profit, avance %, tabla agrupada por expediente, filtros por cliente/operador/estado y export CSV.",
+    description: "Nueva primera tab 'Proyección' en /facturacion que permite ver en tiempo real cómo va la facturación de cada mes basándose en los embarques con ETA en el mes seleccionado. (1) Selector de mes: navegación con ◀/▶ + Select desde Abril 2026 hasta hoy+12, default mes actual, sincronizado con URL ?mes=YYYY-MM. (2) 4 KPIs: Expedientes (total + facturados/pendientes), Facturación (facturado vs proyectado en compact format con tooltip de monto completo), Profit proyectado (con margen %, tono warning si <10%), Avance % con barra Progress. (3) Tabla agrupada por expediente: si un BL Master tiene varios contenedores, se suman venta/costo/profit y se cuenta el total de contenedores; click en fila navega al detalle del primer embarque. Columnas: expediente (font-mono), cliente, operador, ETA, contenedores, venta/costo/profit/% (tabular-nums, profit en verde/rojo según signo), estado con badge Facturado (success) o Pendiente (warning). (4) Filtros: cliente, operador, estado (todos/Facturado/Pendiente). (5) Export CSV con todas las columnas y montos en MXN. Lógica: 'Facturado' = embarque con tiene_proforma=true Y existe factura con factura_pdf_url no nulo; estado del grupo es Facturado solo si TODOS los embarques cumplen. Conversión a MXN usa tipo_cambio_usd/eur del propio embarque vía convertirAMXN. Backend: 4 queries en paralelo (embarques con ETA en rango + conceptos_venta + conceptos_costo + facturas con PDF), cache 60s, sin cambios de DB ni RLS. Archivos nuevos: src/lib/domain/proyeccionFacturacion.ts (lógica pura agruparPorExpediente/calcularKpisProyeccion), src/services/facturas/proyeccion.ts (fetchProyeccionMes), src/hooks/facturacion/useTabProyeccionController.ts, src/components/facturacion/TabProyeccion.tsx. Versión 8.117.0.",
+  },
+  {
     version: "8.116.0",
     date: "2026-05-04",
     type: "minor",
