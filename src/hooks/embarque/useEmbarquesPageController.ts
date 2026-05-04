@@ -188,6 +188,7 @@ export function useEmbarquesPageController() {
     // handlers
     handleEliminar,
     exportarCsv,
+    exportandoCsv,
     eliminarEmbarquePending: eliminarEmbarque.isPending,
     // navegación
     navigate,
