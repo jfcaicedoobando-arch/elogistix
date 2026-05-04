@@ -57,7 +57,7 @@ export default function PortalEmbarques() {
           />
         </div>
         <Select value={filtroEstado} onValueChange={setFiltroEstado}>
-          <SelectTrigger className="w-full sm:w-44">
+          <SelectTrigger className="w-full sm:w-[200px]" aria-label="Filtrar por estado" title="Estado">
             <Filter className="h-3.5 w-3.5 mr-1.5 text-muted-foreground" />
             <SelectValue placeholder="Estado" />
           </SelectTrigger>
@@ -67,7 +67,7 @@ export default function PortalEmbarques() {
           </SelectContent>
         </Select>
         <Select value={filtroModo} onValueChange={setFiltroModo}>
-          <SelectTrigger className="w-full sm:w-40">
+          <SelectTrigger className="w-full sm:w-[180px]" aria-label="Filtrar por modo" title="Modo">
             <Ship className="h-3.5 w-3.5 mr-1.5 text-muted-foreground" />
             <SelectValue placeholder="Modo" />
           </SelectTrigger>
