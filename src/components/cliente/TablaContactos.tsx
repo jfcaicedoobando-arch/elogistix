@@ -2,9 +2,7 @@ import { Pencil, Trash2, Loader2, Plus, Users, UserX } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-  Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
-} from "@/components/ui/table";
+import { DataTable, type DataTableColumn } from "@/components/shared/DataTable";
 import type { Tables, Enums } from "@/integrations/supabase/types";
 import { toTitleCase, correctSpanishPlace } from "@/lib/formatters";
 import EmptyState from "@/components/empty/EmptyState";
@@ -29,6 +27,27 @@ interface Props {
 }
 
 export default function TablaContactos({ contactos, isLoading, canEdit, onAdd, onEdit, onDelete }: Props) {
+  const columns: DataTableColumn<ContactoCliente>[] = [
+    { key: "nombre", header: "Nombre", className: "font-medium", render: (c) => toTitleCase(c.nombre) },
+    { key: "tipo", header: "Tipo", render: (c) => <Badge variant={tipoBadgeVariant(c.tipo)}>{c.tipo}</Badge> },
+    { key: "lugar", header: "País / Ciudad", className: "text-xs", render: (c) => `${correctSpanishPlace(c.pais)}, ${correctSpanishPlace(c.ciudad)}` },
+    { key: "contacto", header: "Contacto", className: "text-xs", render: (c) => toTitleCase(c.contacto) },
+    { key: "email", header: "Email", className: "text-xs", render: (c) => c.email },
+    {
+      key: "acciones", header: "Acciones", width: "w-[80px]",
+      render: (c) => canEdit ? (
+        <div className="flex gap-1">
+          <Button variant="ghost" size="icon" className="h-7 w-7" onClick={(e) => { e.stopPropagation(); onEdit(c); }} aria-label={`Editar contacto ${c.nombre}`}>
+            <Pencil className="h-3.5 w-3.5" />
+          </Button>
+          <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={(e) => { e.stopPropagation(); onDelete(c.id); }} aria-label={`Eliminar contacto ${c.nombre}`}>
+            <Trash2 className="h-3.5 w-3.5" />
+          </Button>
+        </div>
+      ) : null,
+    },
+  ];
+
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between pb-3">
@@ -40,51 +59,22 @@ export default function TablaContactos({ contactos, isLoading, canEdit, onAdd, o
           <div className="flex items-center justify-center py-8">
             <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
           </div>
-        ) : contactos.length === 0 ? (
-          <div className="p-6">
-            <EmptyState
-              icon={UserX}
-              title="Sin contactos registrados"
-              description="Agrega proveedores, exportadores o importadores para usarlos al crear embarques."
-              primaryAction={canEdit ? { label: "Agregar Contacto", onClick: onAdd } : undefined}
-            />
-          </div>
         ) : (
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Nombre</TableHead>
-                <TableHead>Tipo</TableHead>
-                <TableHead>País / Ciudad</TableHead>
-                <TableHead>Contacto</TableHead>
-                <TableHead>Email</TableHead>
-                <TableHead className="w-[80px]">Acciones</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {contactos.map(contacto => (
-                <TableRow key={contacto.id}>
-                  <TableCell className="font-medium">{toTitleCase(contacto.nombre)}</TableCell>
-                  <TableCell><Badge variant={tipoBadgeVariant(contacto.tipo)}>{contacto.tipo}</Badge></TableCell>
-                  <TableCell className="text-xs">{correctSpanishPlace(contacto.pais)}, {correctSpanishPlace(contacto.ciudad)}</TableCell>
-                  <TableCell className="text-xs">{toTitleCase(contacto.contacto)}</TableCell>
-                  <TableCell className="text-xs">{contacto.email}</TableCell>
-                  <TableCell>
-                    {canEdit && (
-                      <div className="flex gap-1">
-                        <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => onEdit(contacto)} aria-label={`Editar contacto ${contacto.nombre}`}>
-                          <Pencil className="h-3.5 w-3.5" />
-                        </Button>
-                        <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={() => onDelete(contacto.id)} aria-label={`Eliminar contacto ${contacto.nombre}`}>
-                          <Trash2 className="h-3.5 w-3.5" />
-                        </Button>
-                      </div>
-                    )}
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+          <DataTable
+            columns={columns}
+            data={contactos}
+            rowKey={(c) => c.id}
+            emptyState={
+              <div className="p-6">
+                <EmptyState
+                  icon={UserX}
+                  title="Sin contactos registrados"
+                  description="Agrega proveedores, exportadores o importadores para usarlos al crear embarques."
+                  primaryAction={canEdit ? { label: "Agregar Contacto", onClick: onAdd } : undefined}
+                />
+              </div>
+            }
+          />
         )}
       </CardContent>
     </Card>
