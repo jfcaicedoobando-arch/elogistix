@@ -114,25 +114,12 @@ const AppSidebarBase = forwardRef<HTMLDivElement>(function AppSidebarBase(_props
   return (
     <Sidebar collapsible="icon">
       <SidebarHeader className="h-16 border-b border-sidebar-border flex items-center px-4 py-0 group-data-[collapsible=icon]:px-2">
-        <div className={cn("flex items-center gap-3 w-full", collapsed && "justify-center gap-0")}>
-          <img
-            src={librecargaLogo}
-            alt="Libre Carga Logo"
-            className={cn(
-              "rounded-xl object-contain shrink-0 dark:bg-white dark:p-1 dark:ring-1 dark:ring-sidebar-border dark:shadow-card",
-              collapsed ? "h-9 w-9" : "h-10 w-10",
-            )}
+        <div className={cn("flex items-center w-full", collapsed && "justify-center")}>
+          <BrandLockup
+            variant={collapsed ? "icon" : "horizontal"}
+            size="sm"
+            subtitle={collapsed ? undefined : "Plataforma de Forwarders"}
           />
-          {!collapsed && (
-            <div className="flex flex-col min-w-0">
-              <span className="text-base font-bold tracking-tight text-sidebar-foreground leading-tight">
-                Libre Carga
-              </span>
-              <span className="text-xs text-sidebar-foreground/60 truncate">
-                {organization?.nombre ?? "Agente de Carga"}
-              </span>
-            </div>
-          )}
         </div>
       </SidebarHeader>
 
