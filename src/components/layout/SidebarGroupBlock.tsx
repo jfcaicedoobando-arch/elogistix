@@ -78,12 +78,18 @@ function SidebarGroupBlockBase({ label, items, collapsed, pathname, totalAlertas
                       <item.icon className="h-4 w-4 shrink-0" />
                       {!collapsed && <span className="flex-1 truncate">{item.title}</span>}
                       {badge > 0 && !collapsed && (
-                        <Badge
-                          variant="destructive"
-                          className="ml-auto h-5 min-w-5 px-1 text-[10px] font-bold rounded-full shrink-0"
-                        >
-                          {badge > 99 ? "99+" : badge}
-                        </Badge>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Badge
+                              variant="destructive"
+                              aria-label={`${badge} alertas`}
+                              className="ml-auto h-5 min-w-5 px-1 text-[10px] font-bold rounded-full shrink-0"
+                            >
+                              {badge > 99 ? "99+" : badge}
+                            </Badge>
+                          </TooltipTrigger>
+                          <TooltipContent side="right">{badge} alerta{badge === 1 ? "" : "s"} activa{badge === 1 ? "" : "s"}</TooltipContent>
+                        </Tooltip>
                       )}
                     </NavLink>
                   </SidebarMenuButton>
