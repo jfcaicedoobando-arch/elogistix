@@ -22,6 +22,14 @@ export interface ChangelogEntry {
  */
 export const recentChangelog: ChangelogEntry[] = [
   {
+    version: "8.110.0",
+    date: "2026-05-04",
+    type: "minor",
+    title: "QA visual completa: KPIs sin truncar, detalle de embarque por folio, redirects de Reportes y tooltips en sidebar",
+    summary: "Cinco arreglos derivados de la auditoría visual en viewport 1000px.",
+    description: "(1) Operaciones: KPIs con etiquetas cortas ('Cargas activas', 'Contenedores (TEU)', 'Profit USD', 'Alertas') y formatCurrencyCompact en Profit con tooltip del valor completo, eliminando 'Profit tota… US…' a <1100px. (2) Dashboard 'Arribos este mes': el bloque pasa de lg:flex-row a xl:flex-row para que las métricas y la barra de progreso no se aplasten contra el título a 1000px (resuelve solapamiento '29' / 'USD 20,808.49'). Profit ahora usa notación compacta. (3) Detalle de embarque: fetchEmbarqueFull acepta tanto UUID como expediente (folio human-readable tipo 'ELIMP00190'), resolviendo el folio contra la tabla embarques antes de invocar el RPC; deja de devolver 'Embarque no encontrado' al navegar por URL con folio. (4) Router: añadidos redirects /reportes y /rentabilidad → /reportes/rentabilidad para que las rutas naturales funcionen al teclear directo. (5) Sidebar: el badge numérico de Principal envuelve en Tooltip Radix con texto 'N alertas activas' y aria-label, dando contexto al rojo '26'.",
+  },
+  {
     version: "8.109.1",
     date: "2026-05-04",
     type: "patch",
