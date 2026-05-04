@@ -32,7 +32,7 @@ import { useTheme } from "@/contexts/ThemeContext";
 import { BrandLockup } from "@/components/layout/BrandLockup";
 import { useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
-import { useOrganization } from "@/contexts/OrganizationContext";
+
 import { useSidebarAlerts } from "@/hooks/shared/useSidebarAlerts";
 import { useAuditoriaCount } from "@/hooks/auditoria/useAuditoria";
 import {
