@@ -15,6 +15,7 @@ import { PageHeader } from "@/components/shared/PageHeader";
 import type { Database } from "@/integrations/supabase/types";
 import { TabProformas } from "@/components/facturacion/TabProformas";
 import { TabProformasPendientes } from "@/components/facturacion/TabProformasPendientes";
+import { TabProyeccion } from "@/components/facturacion/TabProyeccion";
 import { useFacturacionPageController } from "@/hooks/facturacion/useFacturacionPageController";
 
 type EstadoFactura = Database["public"]["Enums"]["estado_factura"];
