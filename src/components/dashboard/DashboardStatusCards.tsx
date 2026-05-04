@@ -4,7 +4,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { ESTADOS_FILTRO, type EstadoFiltro } from "@/hooks/dashboard/useDashboardData";
 import { ESTADO_CONFIG } from "@/lib/ui/estadoConfig";
 import { CalendarDays, TrendingUp, Ship, CheckCircle2 } from "lucide-react";
-import { formatCurrency } from "@/lib/formatters";
+import { formatCurrency, formatCurrencyCompact } from "@/lib/formatters";
 
 interface ArribosEsteMes {
   total: number;
