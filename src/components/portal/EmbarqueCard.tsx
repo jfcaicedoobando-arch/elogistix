@@ -6,6 +6,8 @@ import { getEstadoColor, getEstadoBorderColor, getModoCircleStyle, getModoLucide
 import { calcularEstadoEmbarque } from "@/lib/domain/embarque";
 import { formatDate, getOrigen, getDestino } from "@/lib/formatters";
 import { MapPin, Anchor, Plane, Truck, CalendarClock } from "lucide-react";
+import { differenceInCalendarDays, parseISO } from "date-fns";
+import { cn } from "@/lib/utils";
 
 export interface EmbarqueCardData {
   id: string;
@@ -29,6 +31,20 @@ export interface EmbarqueCardData {
   tipo_servicio: string | null;
 }
 
+/** Color del ETA según proximidad: <3 días destructive, <7 warning, resto muted. */
+function etaProximityClass(eta: string | null | undefined): string {
+  if (!eta) return "text-muted-foreground";
+  try {
+    const days = differenceInCalendarDays(parseISO(eta), new Date());
+    if (days < 0) return "text-muted-foreground";
+    if (days < 3) return "text-destructive font-semibold";
+    if (days < 7) return "text-[hsl(var(--warning))] font-semibold";
+    return "text-muted-foreground";
+  } catch {
+    return "text-muted-foreground";
+  }
+}
+
 function EmbarqueCardInner({ e }: { e: EmbarqueCardData }) {
   const estadoVisual = calcularEstadoEmbarque(e.modo, e.tipo, e.etd, e.eta, e.estado);
   const origen = getOrigen(e);
@@ -37,18 +53,18 @@ function EmbarqueCardInner({ e }: { e: EmbarqueCardData }) {
   const tipoLabel = e.tipo_servicio
     ? `${e.tipo_servicio}${e.tipo_contenedor ? ` ${e.tipo_contenedor}` : ""}`
     : e.modo === "Aéreo" ? "Aéreo" : null;
+  const etaCls = etaProximityClass(e.eta);
 
   return (
     <Link to={`/portal/embarques/${e.id}`}>
-      <Card className={`border-l-4 ${getEstadoBorderColor(estadoVisual)} hover:shadow-lg hover:scale-[1.01] transition-all duration-200 group`}>
-        <CardContent className="p-4 space-y-2.5">
-          {/* Row 1: Expediente + Estado */}
+      <Card className={`border-l-4 ${getEstadoBorderColor(estadoVisual)} hover:shadow-md hover:scale-[1.005] transition-all duration-200 group`}>
+        <CardContent className="p-3 space-y-2">
           <div className="flex items-center justify-between gap-2">
             <div className="flex items-center gap-3 min-w-0">
               <div className={`rounded-full p-2 flex-shrink-0 ${getModoCircleStyle(e.modo)}`}>
                 {(() => { const Icon = getModoLucideIcon(e.modo); return <Icon className="h-5 w-5" />; })()}
               </div>
-              <p className="font-semibold text-sm truncate">
+              <p className="font-semibold text-sm truncate font-mono tabular-nums">
                 {e.expediente}{e.contenedor ? ` — ${e.contenedor}` : ""}
               </p>
             </div>
@@ -57,7 +73,6 @@ function EmbarqueCardInner({ e }: { e: EmbarqueCardData }) {
             </Badge>
           </div>
 
-          {/* Row 2: Ruta + Tipo */}
           <div className="flex items-center justify-between gap-2 pl-[52px]">
             <span className="text-xs text-muted-foreground flex items-center gap-1 truncate">
               <MapPin className="h-3 w-3 flex-shrink-0" />
@@ -70,7 +85,6 @@ function EmbarqueCardInner({ e }: { e: EmbarqueCardData }) {
             )}
           </div>
 
-          {/* Row 3: Carrier + Dates */}
           <div className="flex items-center justify-between gap-4 pl-[52px] flex-wrap">
             <div className="flex items-center gap-4">
               {carrier && (
@@ -81,11 +95,11 @@ function EmbarqueCardInner({ e }: { e: EmbarqueCardData }) {
               )}
             </div>
             <div className="flex items-center gap-4">
-              <span className="text-xs text-muted-foreground flex items-center gap-1">
+              <span className="text-xs text-muted-foreground flex items-center gap-1 tabular-nums">
                 <CalendarClock className="h-3 w-3 flex-shrink-0" />
                 ETD: {formatDate(e.etd || "", "dd/MM/yy")}
               </span>
-              <span className="text-xs text-muted-foreground flex items-center gap-1">
+              <span className={cn("text-xs flex items-center gap-1 tabular-nums", etaCls)}>
                 <CalendarClock className="h-3 w-3 flex-shrink-0" />
                 ETA: {formatDate(e.eta || "", "dd/MM/yy")}
               </span>
