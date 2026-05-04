@@ -2,6 +2,14 @@ import type { ChangelogEntry } from "../../../changelogData";
 
 export const chunk0: ChangelogEntry[] = [
   {
+    version: "8.114.0",
+    date: "2026-05-04",
+    type: "minor",
+    title: "Fase G — Polish UI/UX en Reportes, Dashboard, filtros, KPIs y a11y",
+    summary: "Siete mejoras integrales: KPIs sin truncar a 1024px, filtros de embarques con min-width, deduplicación de clientes por RFC, ejes del chart Top Profit con escala nice y a11y reforzada en timeline y sidebar.",
+    description: "(1) KpiCard: icono se oculta en mobile (<sm) y padding/gap se reducen para liberar espacio horizontal en viewports estrechos (1024px y menos), evitando truncado tipo 'Cargas ac…' o 'US…' en /operaciones y /reportes. (2) EmbarquesFiltrosCampos: min-width incrementado en todos los selects (Modo 140→160, Estado 160→180, Cliente 180→200, Operador 180→200, Proforma 160→180) + title/aria-label nativos para tooltip y accesibilidad. (3) services/cliente/crud.ts: fetchClientesPaginados y fetchClientes deduplican por RFC normalizado (uppercase + trim) antes de retornar — mitiga duplicados históricos en /clientes sin requerir migración destructiva. (4) ReportesTopChart: XAxis con tickCount=5, domain=[0,'dataMax'], allowDecimals=false y formateador inteligente ($X k / $X.X M) para escala 'nice' en lugar de pasos arbitrarios. (5) DashboardStatusCards: botones de la línea de tiempo ahora exponen aria-pressed, aria-label descriptivo ('Filtrar embarques por estado X (N)'), title nativo y focus-visible ring para teclado. (6) Sidebar badges: tooltip explicativo ya implementado en SidebarGroupBlock con conteo y aria-label ('N alertas activas'). (7) Versión 8.114.0.",
+  },
+  {
     version: "8.113.0",
     date: "2026-05-04",
     type: "minor",

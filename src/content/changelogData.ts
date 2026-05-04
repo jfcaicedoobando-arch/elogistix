@@ -22,6 +22,14 @@ export interface ChangelogEntry {
  */
 export const recentChangelog: ChangelogEntry[] = [
   {
+    version: "8.114.0",
+    date: "2026-05-04",
+    type: "minor",
+    title: "Fase G — Polish UI/UX en Reportes, Dashboard, filtros, KPIs y a11y",
+    summary: "KPIs sin truncar a 1024px, filtros con min-width, deduplicación de clientes por RFC, chart Top Profit con escala nice y a11y reforzada.",
+    description: "KpiCard oculta icono en mobile y reduce padding/gap; EmbarquesFiltrosCampos sube min-width y agrega title/aria-label; fetchClientes(Paginados) deduplica por RFC; ReportesTopChart con tickCount=5 + formateador $k/$M; DashboardStatusCards con aria-pressed/aria-label/focus-visible en timeline; sidebar badges con tooltip de conteo.",
+  },
+  {
     version: "8.113.0",
     date: "2026-05-04",
     type: "minor",

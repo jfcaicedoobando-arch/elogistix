@@ -44,7 +44,16 @@ export async function fetchClientesPaginados({
 
   const { data, error, count } = await query;
   if (error) throw error;
-  return { data: data ?? [], count: count ?? 0 };
+  // Fase G — deduplicar por RFC en el render para mitigar duplicados históricos en BD.
+  // Si el RFC está vacío, conservamos por id (no agrupar clientes sin RFC).
+  const seen = new Set<string>();
+  const deduped = (data ?? []).filter((c: any) => {
+    const key = (c?.rfc ?? "").trim().toUpperCase() || `__id:${c?.id}`;
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+  return { data: deduped, count: count ?? 0 };
 }
 
 export async function fetchClientes(organizationId: string | null) {
@@ -55,7 +64,13 @@ export async function fetchClientes(organizationId: string | null) {
   if (organizationId) query = query.eq("organization_id", organizationId);
   const { data, error } = await query;
   if (error) throw error;
-  return data ?? [];
+  const seen = new Set<string>();
+  return (data ?? []).filter((c: any) => {
+    const key = (c?.rfc ?? "").trim().toUpperCase() || `__id:${c?.id}`;
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
 }
 
 export async function fetchClientesForSelect(organizationId: string | null) {
