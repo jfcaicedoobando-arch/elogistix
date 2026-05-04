@@ -60,8 +60,8 @@ export default function Embarques() {
           <>
             {/* Desktop md+: botones inline tradicionales */}
             {!isEmptyState && (
-              <Button variant="outline" onClick={exportarCsv} className="hidden md:inline-flex">
-                <Download className="h-4 w-4 mr-2" /> Exportar CSV
+              <Button variant="outline" onClick={exportarCsv} disabled={exportandoCsv} className="hidden md:inline-flex">
+                <Download className="h-4 w-4 mr-2" /> {exportandoCsv ? "Exportando..." : "Exportar CSV"}
               </Button>
             )}
             {canEdit && !isEmptyState && (
