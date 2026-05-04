@@ -1,86 +1,105 @@
-## Objetivo
+# Auditoría Visual Fase H — Identidad de marca
 
-Que al hacer click en un header de la tabla de Embarques, el ordenamiento se aplique sobre **todos los registros del servidor** (no solo la página visible). El orden se manda a Supabase vía `.order()` y se recarga la página actual.
+## Hallazgos (revisión en `https://elogistix.lovable.app` @ 1366px)
 
-## Alcance
+### 1. Pantalla de login (`/login`)
+- El contenedor blanco del logo es enorme (176×176 px) con bordes y sombra propios; se ve como un "post-it" pegado sobre la card oscura.
+- El logo en sí queda chico dentro de ese cuadro; hay aire muerto arriba y abajo.
+- No hay título textual de la app — solo el logotipo. El usuario nuevo no ve "Libre Carga" como wordmark independiente.
+- El subtítulo "Inicia sesión para continuar" queda flotando, sin jerarquía clara con la marca.
+- Falta nombre de la empresa / tenant antes de iniciar sesión (en login multi-tenant es útil al menos un tagline).
 
-Solo la tabla del módulo **Embarques** (`/embarques`). Otras tablas (Cotizaciones, Clientes, Facturación) quedan igual y se migrarán después si funciona bien.
+### 2. Sidebar interno (`AppSidebar.tsx`)
+- Header (h-16) muestra logo 40×40 + "Libre Carga" + `organization.nombre` debajo. El nombre de la org se trunca a 1 línea con `text-xs` opaco al 60% — difícil de leer en orgs con nombre largo.
+- En modo claro el logo no tiene fondo blanco (solo en dark via `dark:bg-white`), por lo que en light theme el SVG azul-marino se mezcla con el sidebar también claro.
+- "Libre Carga" como wordmark del producto + nombre de org juntos crean ambigüedad: ¿qué es la app y qué es el tenant?
+- El footer repite "v8.x · Libre Carga", redundante con el header.
 
-## Columnas ordenables (server-side)
+### 3. Portal cliente (`PortalLayout.tsx`)
+- Header muestra logo + `orgName` como título principal + "Portal de Cliente" como subtítulo. La marca del producto ("Libre Carga") desaparece — no hay co-branding.
+- Logo a 40×40 sin contenedor blanco: en dark theme el SVG azul oscuro se pierde contra el fondo `bg-card`.
 
-| Columna UI | Campo DB | Tipo |
-|---|---|---|
-| Expediente | `expediente` | text |
-| Cliente | `cliente_nombre` | text |
-| Modo | `modo` | enum |
-| Estado | `estado` | enum |
-| ETD | `etd` | date |
-| ETA | `eta` | date |
-| Operador | `operador` | text |
-| Creado | `created_at` | timestamp (default actual) |
+### 4. Logo SVG (`public/librecarga-logo.svg` y `assets/librecarga-logo.png`)
+- El SVG es un contenedor con flecha — funciona, pero al renderizarlo en cuadros pequeños (32–40 px) los detalles internos (líneas divisorias, círculo, curva) se vuelven ruido.
+- No existe versión "wordmark horizontal" (logo + texto "Libre Carga" combinados) ni versión "icono solo" para colapsados.
 
-Las columnas calculadas en cliente (ej. "Liquidación", "Docs faltantes") **no** son ordenables server-side — se mantienen sin sort o con sort local sobre la página visible, marcándolas visualmente distinto.
+---
 
-## Cambios técnicos
+## Plan de mejoras
 
-### 1. `src/services/embarque/queries.ts`
-- Añadir parámetros `sortBy?: string` y `sortDir?: 'asc' | 'desc'` a `EmbarquesPaginadosFilters`.
-- Reemplazar el `.order('created_at', { ascending: false })` fijo por:
-  ```ts
-  const sortCol = f.sortBy ?? 'created_at';
-  const sortAsc = (f.sortDir ?? 'desc') === 'asc';
-  query = query.order(sortCol, { ascending: sortAsc, nullsFirst: false });
-  ```
-- Whitelist de columnas permitidas para evitar inyección (validar contra una constante `SORTABLE_COLUMNS`).
+### A. Componente reutilizable `<BrandLockup>`
+Crear `src/components/layout/BrandLockup.tsx` con tres variantes:
+- `variant="icon"` — solo isotipo, contenedor adaptativo (fondo blanco con ring sutil en dark, sin fondo en light), tamaños sm/md/lg.
+- `variant="horizontal"` — isotipo + wordmark "Libre Carga" + tagline opcional ("Plataforma de Forwarders") al costado.
+- `variant="stacked"` — isotipo arriba, wordmark abajo (para login).
 
-### 2. `src/hooks/embarque/useEmbarquesPageState.ts`
-- Agregar estado `sortBy` y `sortDir` (default: `created_at` / `desc`).
-- Resetear `page` a 0 cuando cambia el sort.
+Props: `size`, `tagline?`, `subtitle?` (org name), `className`.
 
-### 3. `src/hooks/embarque/useEmbarqueQueries.ts`
-- Pasar `sortBy` y `sortDir` al `queryKey` y al `queryFn` de `useEmbarquesPaginados` para que React Query invalide y refetchee.
+Esto centraliza el tratamiento del logo y elimina divergencias entre login / sidebar / portal.
 
-### 4. `src/components/shared/DataTable.tsx`
-- Soportar modo controlado de sort:
-  ```ts
-  sortMode?: 'client' | 'server';
-  controlledSort?: { key: string; dir: 'asc' | 'desc' } | null;
-  onSortChange?: (key: string | null, dir: 'asc' | 'desc') => void;
-  ```
-- Si `sortMode === 'server'`: NO ordena en memoria, solo dispara `onSortChange` con el ciclo asc → desc → null.
-- Default sigue siendo `'client'` para no romper otras tablas.
+### B. Login (`src/pages/auth/Login.tsx`)
+- Reemplazar el bloque blanco gigante por `<BrandLockup variant="stacked" size="md" />` (icono ~64×64 dentro de un círculo `bg-primary/5` con ring fino, no card blanca completa).
+- Agregar wordmark **"Libre Carga"** debajo del isotipo (font-bold, `text-xl`, tracking-tight).
+- Agregar tagline pequeño: **"Plataforma de gestión para agentes de carga"** (`text-xs text-muted-foreground`).
+- Reducir card a `max-w-sm`, padding más equilibrado; "Inicia sesión para continuar" pasa a ser label superior del form, no subtítulo del logo.
 
-### 5. Página `src/pages/embarques/Embarques.tsx` (o el componente de tabla que use)
-- Pasar `sortMode="server"`, `controlledSort` y `onSortChange` al `DataTable`.
-- Marcar las columnas calculadas con `sortable: false` (o un flag visual de "orden local").
+### C. Sidebar (`AppSidebar.tsx`)
+- Header: usar `<BrandLockup variant="horizontal" size="sm" />` mostrando icono 36×36 + "Libre Carga" como wordmark.
+- Mover `organization.nombre` fuera del header: ya existe `OrgSwitcher` justo abajo — eliminar la línea duplicada del header y dejar que el switcher sea la única fuente del nombre de tenant (con prominencia visual mejorada: `text-sm font-medium`).
+- En modo colapsado: solo isotipo en cuadro 36×36 con fondo blanco constante (light + dark) para legibilidad uniforme.
+- Footer: simplificar a `v{APP_VERSION}` (quitar "· Libre Carga", ya está en el header).
 
-### 6. Indicador visual
-- Sutil etiqueta arriba de la tabla cuando hay sort activo: `Ordenado por Expediente ↑ · global`.
-- Esto deja claro al usuario que el orden aplica sobre los 500 (no solo los 50 visibles).
+### D. Portal (`PortalLayout.tsx`)
+- Header: `<BrandLockup variant="horizontal" size="sm" />` con wordmark "Libre Carga" + subtítulo "Portal de Cliente · {orgName}".
+- Mantiene co-branding: el cliente ve la plataforma + su forwarder.
+- Mismo tratamiento del icono con fondo blanco constante.
+- En sheet móvil aplicar el mismo lockup.
 
-## Lo que NO se cambia
+### E. Refresco del logo
+Crear `public/librecarga-icon.svg` simplificado (solo contenedor + flecha, sin líneas divisorias internas) optimizado para 24–48 px. Mantener `librecarga-logo.svg` actual para usos grandes (>96 px).
 
-- Paginación, filtros, búsqueda y debounce siguen igual.
-- RLS y permisos no se tocan.
-- Otros módulos con `DataTable` mantienen orden client-side (solo cambia el default behavior cuando se opta-in).
+`BrandLockup` elige automáticamente: tamaños sm/md → icon.svg; lg → logo.svg.
 
-## Changelog y versión
+### F. Tokens de marca
+Agregar a `src/lib/ui/` un módulo `brand.ts` con:
+```ts
+export const BRAND = {
+  name: "Libre Carga",
+  tagline: "Plataforma de gestión para agentes de carga",
+  taglineShort: "Agente de Carga Digital",
+} as const;
+```
+Reemplazar literales hardcoded ("Libre Carga", "Agente de Carga") en sidebar, login, portal, AdminSidebar y PortalWelcomeCard con `BRAND.*`.
 
-- Bump `APP_VERSION` a `v8.104.0` (minor: feature visible al usuario).
-- Entrada en `src/content/changelog/v8/chunks/0.ts` y `src/content/changelogData.ts`:
-  > **Ordenamiento global en tabla de Embarques**: Al ordenar por columna ahora se aplica sobre todos los registros del servidor, no solo la página visible. Indicador visual confirma el campo y dirección activos.
+### G. AdminSidebar (`src/components/admin/AdminSidebar.tsx`)
+- Hoy usa ícono `Building2` y texto "Libre Carga" / "Super Admin". Reemplazar por `<BrandLockup variant="horizontal" size="sm" subtitle="Super Admin" />` para consistencia.
 
-## Riesgos y mitigaciones
+### H. Changelog + versión
+- Bump `APP_VERSION` a `8.115.0`.
+- Entrada nueva en `Changelog.tsx` y `src/content/changelog/v8/chunks/0.ts`: "Refinamiento de identidad de marca: nuevo lockup unificado (`BrandLockup`), wordmark consistente en login/sidebar/portal/admin, isotipo simplificado para tamaños chicos."
 
-| Riesgo | Mitigación |
-|---|---|
-| Performance: `.order()` sobre `cliente_nombre` sin índice puede ser lento con miles de registros | Si se nota lentitud, agregar índice `CREATE INDEX ON embarques (organization_id, cliente_nombre)`. No incluido en este plan — se evalúa después. |
-| Cambio de orden recarga toda la página actual | Comportamiento esperado y correcto; el spinner del refetch ya existe. |
-| Romper otras tablas que usan `DataTable` | El flag `sortMode` es opt-in; default sigue siendo client. |
+---
+
+## Archivos a crear / editar
+
+**Nuevos**
+- `src/components/layout/BrandLockup.tsx`
+- `src/lib/ui/brand.ts`
+- `public/librecarga-icon.svg` (versión simplificada del isotipo)
+
+**Editados**
+- `src/pages/auth/Login.tsx`
+- `src/components/layout/AppSidebar.tsx`
+- `src/components/portal/PortalLayout.tsx`
+- `src/components/portal/dashboard/PortalWelcomeCard.tsx` (usar `BRAND.name`)
+- `src/components/admin/AdminSidebar.tsx`
+- `src/constants/appVersion.ts`
+- `src/pages/dashboard/Changelog.tsx`
+- `src/content/changelog/v8/chunks/0.ts`
+- `src/content/changelogData.ts`
 
 ## Validación post-implementación
-
-1. Ordenar por Expediente asc/desc → verificar que los expedientes en la página 1 sean los primeros del dataset completo.
-2. Cambiar de página → el orden persiste.
-3. Aplicar filtro + sort → ambos se aplican en el server.
-4. Click 3 veces en una columna → vuelve al orden default (`created_at desc`).
+- Visual en `/login`, `/`, `/portal`, `/admin` a 1366px y 1024px.
+- Light + dark mode (verificar contraste del isotipo en ambos).
+- Sidebar colapsado: isotipo legible.
+- Org con nombre largo (>30 chars): truncado limpio en switcher.
