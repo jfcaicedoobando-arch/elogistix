@@ -183,13 +183,14 @@ export default function Cotizaciones() {
             onRowClick={(r) => c.irADetalle(r.id)}
             onRowMouseEnter={(r) => c.prefetchCotizacion(r.id)}
             rowKey={(r) => r.id}
-          />
-          <PaginationControls
-            page={c.page}
-            totalPages={c.totalPages}
-            onPageChange={c.setPage}
-            pageSize={c.pageSize}
-            onPageSizeChange={(s) => { c.setPageSize(s); c.setPage(0); }}
+            density="comfortable"
+            pagination={{
+              page: c.page,
+              totalPages: c.totalPages,
+              onPageChange: c.setPage,
+              pageSize: c.pageSize,
+              onPageSizeChange: (s) => { c.setPageSize(s); c.setPage(0); },
+            }}
           />
         </CardContent>
       </Card>

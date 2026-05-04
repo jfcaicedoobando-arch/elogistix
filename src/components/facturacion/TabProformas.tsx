@@ -53,13 +53,14 @@ export function TabProformas() {
             isLoading={c.isLoading}
             emptyMessage="No hay proformas generadas"
             rowKey={(p) => p.id}
-          />
-          <PaginationControls
-            page={c.page}
-            totalPages={c.totalPages}
-            onPageChange={c.setPage}
-            pageSize={c.pageSize}
-            onPageSizeChange={c.setPageSize}
+            density="comfortable"
+            pagination={{
+              page: c.page,
+              totalPages: c.totalPages,
+              onPageChange: c.setPage,
+              pageSize: c.pageSize,
+              onPageSizeChange: (s) => { c.setPageSize(s); c.setPage(0); },
+            }}
           />
         </CardContent>
       </Card>

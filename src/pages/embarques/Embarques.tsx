@@ -164,13 +164,14 @@ export default function Embarques() {
                 sortMode="server"
                 controlledSort={{ key: sortKey, dir: sortDir }}
                 onSortChange={handleSortChange}
-              />
-              <PaginationControls
-                page={page}
-                totalPages={totalPages}
-                onPageChange={setPage}
-                pageSize={pageSize}
-                onPageSizeChange={setPageSize}
+                density="comfortable"
+                pagination={{
+                  page,
+                  totalPages,
+                  onPageChange: setPage,
+                  pageSize,
+                  onPageSizeChange: (s) => { setPageSize(s); setPage(0); },
+                }}
               />
             </CardContent>
           </Card>

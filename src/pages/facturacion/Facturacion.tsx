@@ -143,13 +143,14 @@ export default function Facturacion() {
                 isLoading={loadingFacturas}
                 emptyMessage="No se encontraron facturas"
                 rowKey={(f) => f.id}
-              />
-              <PaginationControls
-                page={page}
-                totalPages={totalPages}
-                onPageChange={setPage}
-                pageSize={pageSize}
-                onPageSizeChange={(s) => { setPageSize(s); setPage(0); }}
+                density="comfortable"
+                pagination={{
+                  page,
+                  totalPages,
+                  onPageChange: setPage,
+                  pageSize,
+                  onPageSizeChange: (s) => { setPageSize(s); setPage(0); },
+                }}
               />
             </CardContent>
           </Card>
@@ -164,6 +165,7 @@ export default function Facturacion() {
                 isLoading={loadingGastos}
                 emptyMessage="No hay gastos pendientes"
                 rowKey={(g) => g.id}
+                density="comfortable"
               />
             </CardContent>
           </Card>

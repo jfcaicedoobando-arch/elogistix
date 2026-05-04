@@ -73,13 +73,14 @@ function ProveedorTable({ tipo, search, onSelect }: { tipo: TipoProveedor; searc
           emptyMessage="Sin proveedores registrados"
           onRowClick={(p) => onSelect(p.id)}
           rowKey={(p) => p.id}
-        />
-        <PaginationControls
-          page={page}
-          totalPages={totalPages}
-          onPageChange={setPage}
-          pageSize={pageSize}
-          onPageSizeChange={(s) => { setPageSize(s); setPage(0); }}
+          density="comfortable"
+          pagination={{
+            page,
+            totalPages,
+            onPageChange: setPage,
+            pageSize,
+            onPageSizeChange: (s) => { setPageSize(s); setPage(0); },
+          }}
         />
       </CardContent>
     </Card>

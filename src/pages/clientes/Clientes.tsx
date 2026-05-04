@@ -77,13 +77,14 @@ export default function Clientes() {
             emptyMessage={search ? "No se encontraron clientes" : "No hay clientes registrados"}
             onRowClick={(c) => navigate(`/clientes/${c.id}`)}
             rowKey={(c) => c.id}
-          />
-          <PaginationControls
-            page={page}
-            totalPages={totalPages}
-            onPageChange={setPage}
-            pageSize={pageSize}
-            onPageSizeChange={(s) => { setPageSize(s); setPage(0); }}
+            density="comfortable"
+            pagination={{
+              page,
+              totalPages,
+              onPageChange: setPage,
+              pageSize,
+              onPageSizeChange: (s) => { setPageSize(s); setPage(0); },
+            }}
           />
         </CardContent>
       </Card>
