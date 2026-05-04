@@ -1,4 +1,4 @@
-import { ChevronLeft, ChevronRight, Download, Package, Wallet, TrendingUp, CheckCircle2, Calendar } from "lucide-react";
+import { ChevronLeft, ChevronRight, Download, Package, TrendingUp, CheckCircle2, Calendar, Info, Clock } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -51,19 +51,19 @@ export function TabProyeccion() {
       ),
     },
     {
-      key: "venta", header: "Venta", width: "w-[130px]", align: "right",
+      key: "venta", header: "Venta (MXN)", width: "w-[140px]", align: "right",
       className: "tabular-nums whitespace-nowrap",
       sortable: true, sortValue: (g) => g.ventaMxn,
       render: (g) => formatCurrency(g.ventaMxn, "MXN"),
     },
     {
-      key: "costo", header: "Costo", width: "w-[130px]", align: "right",
+      key: "costo", header: "Costo (MXN)", width: "w-[140px]", align: "right",
       className: "tabular-nums whitespace-nowrap text-muted-foreground",
       sortable: true, sortValue: (g) => g.costoMxn,
       render: (g) => formatCurrency(g.costoMxn, "MXN"),
     },
     {
-      key: "profit", header: "Profit", width: "w-[140px]", align: "right",
+      key: "profit", header: "Profit (MXN)", width: "w-[150px]", align: "right",
       className: "tabular-nums font-medium whitespace-nowrap",
       sortable: true, sortValue: (g) => g.profitMxn,
       render: (g) => (
@@ -151,44 +151,51 @@ export function TabProyeccion() {
       {/* KPIs */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
         <KpiCard
-          titulo="Expedientes del mes"
-          valor={c.kpis.totalExpedientes}
-          subtitulo={`${c.kpis.facturados} facturados · ${c.kpis.pendientes} pendientes`}
+          titulo="Embarques del mes"
+          valor={`${c.kpis.facturados} de ${c.kpis.totalExpedientes} facturados`}
+          subtitulo={`${c.kpis.pendientes} pendientes de facturar`}
           icono={Package}
           color="info"
-          loading={c.isLoading}
-        />
-        <KpiCard
-          titulo="Facturación"
-          valor={formatCurrencyCompact(c.kpis.ventaFacturadaMxn, "MXN")}
-          valorTooltip={`${formatCurrency(c.kpis.ventaFacturadaMxn, "MXN")} facturado de ${formatCurrency(c.kpis.ventaProyMxn, "MXN")} proyectado`}
-          subtitulo={`Proy: ${formatCurrencyCompact(c.kpis.ventaProyMxn, "MXN")}`}
-          icono={Wallet}
-          color="accent"
-          loading={c.isLoading}
-        />
-        <KpiCard
-          titulo="Profit proyectado"
-          valor={formatCurrencyCompact(c.kpis.profitProyMxn, "MXN")}
-          valorTooltip={formatCurrency(c.kpis.profitProyMxn, "MXN")}
-          subtitulo={`Margen ${c.kpis.margenProyPct.toFixed(1)}% · Costo ${formatCurrencyCompact(c.kpis.costoTotalMxn, "MXN")}`}
-          icono={TrendingUp}
-          color={c.kpis.margenProyPct < 10 ? "warning" : "success"}
-          loading={c.isLoading}
-        />
-        <KpiCard
-          titulo="Avance facturación"
-          valor={`${c.kpis.avancePct.toFixed(0)}%`}
-          subtitulo={`${c.kpis.facturados} de ${c.kpis.totalExpedientes}`}
-          icono={CheckCircle2}
-          color="success"
           loading={c.isLoading}
         >
           <div className="mt-2">
             <Progress value={c.kpis.avancePct} className="h-1.5" />
           </div>
         </KpiCard>
+        <KpiCard
+          titulo="Pendiente de facturar"
+          valor={formatCurrencyCompact(c.kpis.ventaPendienteMxn, "MXN")}
+          valorTooltip={`${formatCurrency(c.kpis.ventaPendienteMxn, "MXN")} pendiente de facturar (${c.kpis.pendientes} embarques)`}
+          subtitulo={`${c.kpis.pendientes} embarques · MXN`}
+          icono={Clock}
+          color="warning"
+          loading={c.isLoading}
+        />
+        <KpiCard
+          titulo="Ya facturado"
+          valor={formatCurrencyCompact(c.kpis.ventaFacturadaMxn, "MXN")}
+          valorTooltip={`${formatCurrency(c.kpis.ventaFacturadaMxn, "MXN")} facturado (${c.kpis.facturados} embarques)`}
+          subtitulo={`${c.kpis.facturados} embarques · MXN`}
+          icono={CheckCircle2}
+          color="success"
+          loading={c.isLoading}
+        />
+        <KpiCard
+          titulo="Profit proyectado (MXN)"
+          valor={formatCurrencyCompact(c.kpis.profitProyMxn, "MXN")}
+          valorTooltip={`Venta ${formatCurrency(c.kpis.ventaProyMxn, "MXN")} − Costo ${formatCurrency(c.kpis.costoTotalMxn, "MXN")} = ${formatCurrency(c.kpis.profitProyMxn, "MXN")}`}
+          subtitulo={`Margen ${c.kpis.margenProyPct.toFixed(1)}% · Venta total ${formatCurrencyCompact(c.kpis.ventaProyMxn, "MXN")}`}
+          icono={TrendingUp}
+          color={c.kpis.margenProyPct < 10 ? "warning" : "accent"}
+          loading={c.isLoading}
+        />
       </div>
+
+      {/* Nota de moneda */}
+      <p className="text-xs text-muted-foreground flex items-center gap-1.5 px-1">
+        <Info className="h-3 w-3" />
+        Todos los montos se muestran en MXN. Los conceptos en USD/EUR se convierten al tipo de cambio del propio embarque.
+      </p>
 
       {/* Filtros */}
       <Card>
@@ -224,7 +231,7 @@ export function TabProyeccion() {
             <SelectContent>
               <SelectItem value="todos">Todos los estados</SelectItem>
               <SelectItem value="Facturado">Facturado</SelectItem>
-              <SelectItem value="Pendiente">Pendiente</SelectItem>
+              <SelectItem value="Pendiente">Pendiente de facturar</SelectItem>
             </SelectContent>
           </Select>
         </CardContent>
