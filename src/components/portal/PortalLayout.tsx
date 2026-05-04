@@ -121,12 +121,12 @@ export default function PortalLayout() {
               </SheetContent>
             </Sheet>
 
-            <Link to="/portal" className="flex items-center gap-3">
-              <img src={librecargaLogo} alt="Logo" className="h-10 w-10 rounded object-contain" />
-              <div className="hidden sm:flex flex-col leading-tight">
-                <span className="font-semibold text-foreground text-sm">{orgName || "Portal de Cliente"}</span>
-                {orgName && <span className="text-[10px] text-muted-foreground">Portal de Cliente</span>}
-              </div>
+            <Link to="/portal" className="flex items-center">
+              <BrandLockup
+                variant="horizontal"
+                size="sm"
+                subtitle={orgName ? `Portal de Cliente · ${orgName}` : "Portal de Cliente"}
+              />
             </Link>
           </div>
 
