@@ -22,6 +22,14 @@ export interface ChangelogEntry {
  */
 export const recentChangelog: ChangelogEntry[] = [
   {
+    version: "8.109.1",
+    date: "2026-05-04",
+    type: "patch",
+    title: "QA visual: KPIs Reportes compactos, tabs Proveedores responsivas, tooltip ruta Cotizaciones",
+    summary: "Tres ajustes derivados de la QA visual en viewports estrechos.",
+    description: "(1) ReportesKpiCards usa formatCurrencyCompact con tooltip del valor completo. (2) TabsList de Proveedores ahora hace scroll horizontal/wrap en lugar de grid 5/10 cols. (3) Columna 'Origen → Destino' en Cotizaciones usa Tooltip de Radix.",
+  },
+  {
     version: "8.109.0",
     date: "2026-05-04",
     type: "minor",
