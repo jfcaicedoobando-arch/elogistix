@@ -2,6 +2,14 @@ import type { ChangelogEntry } from "../../../changelogData";
 
 export const chunk0: ChangelogEntry[] = [
   {
+    version: "8.117.1",
+    date: "2026-05-04",
+    type: "patch",
+    title: "Proyección: corrige estado 'Facturado' para proformas consolidadas",
+    summary: "Cuando una proforma consolidada genera una sola factura para varios contenedores del mismo expediente, todos los embarques del expediente se marcan como Facturado.",
+    description: "Bugfix en src/services/facturas/proyeccion.ts: la query de facturas ahora busca por 'expediente' (con factura_pdf_url no nulo) en lugar de por embarque_id. Antes, en proformas consolidadas la factura quedaba ligada a un solo embarque_id y los demás contenedores del mismo expediente aparecían como 'Pendiente' aunque ya estuvieran facturados. Ahora se construye un Set de expedientes con factura+PDF y tiene_factura_pdf=true se asigna a cualquier embarque cuyo expediente esté en ese set, alineando la regla con cómo se factura realmente. Versión 8.117.1.",
+  },
+  {
     version: "8.117.0",
     date: "2026-05-04",
     type: "minor",
