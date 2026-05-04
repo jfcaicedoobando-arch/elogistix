@@ -61,14 +61,6 @@ export const recentChangelog: ChangelogEntry[] = [
     summary: "Nuevas reglas financieras, MTTR, snooze de hallazgos, comentarios y tendencia 30 días en /auditoria.",
     description: "Nuevas reglas financieras (margen negativo, margen bajo, venta sin costo, costo sin venta, proforma vencida, embarque huérfano) con umbrales configurables por organización en la nueva pestaña 'Auditoría' de Configuración. La vista ejecutiva suma tarjetas de Riesgo financiero pendiente en MXN, MTTR (tiempo medio de resolución), top de operadores y una gráfica de tendencia 30 días basada en snapshots diarios. El diálogo de hallazgo se reorganiza en tabs Acción / Comentarios / Snooze: hilo de discusión persistente y snooze con fecha y motivo obligatorios para silenciar ruido temporal sin perder trazabilidad. El tab por defecto pasa a 'Resumen ejecutivo' para administradores. Edge functions nuevas: captura diaria de snapshots y digest semanal por correo a los admins (vía Resend). Nuevas tablas auditoria_comentarios y auditoria_snapshots con RLS tenant; columnas snoozed_until/snooze_motivo en auditoria_revisiones.",
   },
-  {
-    version: "8.102.0",
-    date: "2026-05-02",
-    type: "minor",
-    title: "Auditoría Fase 2: asignación de responsable y workflow de hallazgos",
-    summary: "Hallazgos pueden asignarse a un responsable con fecha límite y workflow pendiente → en progreso → revisado.",
-    description: "Cada hallazgo ahora puede asignarse a un responsable (admin u operador de la organización) con fecha límite opcional. Se incorpora un workflow de tres estados (pendiente → en progreso → revisado) y se registra siempre quién hizo la asignación y cuándo. Nuevo diálogo 'Asignar responsable' con selector de usuario, calendario de fecha límite y botón 'Tomarlo yo' que auto-asigna y mueve el hallazgo a 'En progreso'. La tabla de hallazgos suma una columna 'Responsable' con email del asignado e ícono de alerta cuando la fecha límite está vencida; la celda de revisión distingue ahora visualmente el estado 'En progreso' (badge ámbar). Nuevos filtros: 'Responsable' (todos / asignados a mí / sin asignar / vencidos) y opción 'En progreso' en el filtro de revisión. Toda asignación o toma queda en bitácora (acciones asignar_hallazgo y tomar_hallazgo). Migración: estado_hallazgo_revision enum nuevo y columnas responsable_id, responsable_email, asignado_por, asignado_por_email, asignado_at, fecha_limite y estado_revision en auditoria_revisiones; accion_tomada y revisado_por se vuelven opcionales. RLS sin cambios.",
-  },
 ];
 
 /** Deduplica por version conservando la primera ocurrencia (recentChangelog gana). */
