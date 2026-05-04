@@ -22,6 +22,14 @@ export interface ChangelogEntry {
  */
 export const recentChangelog: ChangelogEntry[] = [
   {
+    version: "8.117.2",
+    date: "2026-05-04",
+    type: "patch",
+    title: "Proyección: claridad de moneda MXN y foco en pendiente de facturar",
+    summary: "Las tarjetas de resumen ahora muestran 'X de Y facturados', monto pendiente vs facturado y aclaran que todo está en MXN.",
+    description: "Refactor de KPIs de la tab Proyección en /facturacion: (1) Tarjeta 1 'Embarques del mes' muestra 'X de Y facturados' con subtítulo 'Z pendientes de facturar' y barra de progreso. (2) Tarjeta 2 'Pendiente de facturar' enfocada en el monto que falta cobrar (tono warning, icono Clock). (3) Tarjeta 3 'Ya facturado' enfocada en lo cobrado (tono success). (4) Tarjeta 4 'Profit proyectado (MXN)' con tooltip Venta − Costo = Profit. (5) Columnas de la tabla renombradas a 'Venta (MXN)', 'Costo (MXN)', 'Profit (MXN)'. (6) Nota informativa debajo de los KPIs: 'Todos los montos se muestran en MXN. Los conceptos en USD/EUR se convierten al tipo de cambio del propio embarque'. (7) Filtro de estado: 'Pendiente de facturar' en lugar de 'Pendiente'. Se añadió ventaPendienteMxn a calcularKpisProyeccion. Versión 8.117.2.",
+  },
+  {
     version: "8.117.1",
     date: "2026-05-04",
     type: "patch",
