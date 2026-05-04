@@ -304,7 +304,8 @@ function DataTableInner<T>({
         {renderedFooter && !isLoading && sortedData.length > 0 && (
           <TableFooter>{renderedFooter}</TableFooter>
         )}
-      </Table>
+        </Table>
+      </div>
       {pagination && (
         <PaginationControls
           page={pagination.page}
