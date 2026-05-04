@@ -172,7 +172,6 @@ export default function Changelog() {
             }
           }}
           className="justify-start"
-          size="sm"
         >
           <ToggleGroupItem value="all">Todos</ToggleGroupItem>
           <ToggleGroupItem value="major">Major</ToggleGroupItem>
