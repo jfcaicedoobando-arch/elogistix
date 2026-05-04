@@ -40,6 +40,22 @@ export function useAdminOrganizations() {
   });
 }
 
+// ─── Org Activity (embarques + cotizaciones por org) ────
+export function useAdminOrgActivity() {
+  return useQuery({
+    queryKey: queryKeys.admin.orgActivity,
+    queryFn: fetchAdminOrgActivity,
+  });
+}
+
+// ─── Últimas organizaciones creadas ──────────────────────
+export function useAdminRecentOrgs(limit = 5) {
+  return useQuery({
+    queryKey: [...queryKeys.admin.recentOrgs, limit],
+    queryFn: () => fetchAdminRecentOrgs(limit),
+  });
+}
+
 // ─── Create Organization ─────────────────────────────────
 export function useCreateOrganization() {
   const queryClient = useQueryClient();
