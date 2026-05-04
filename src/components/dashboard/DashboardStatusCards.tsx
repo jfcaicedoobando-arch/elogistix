@@ -145,7 +145,7 @@ export function DashboardStatusCards({
                       className={`text-base sm:text-xl font-bold tabular-nums whitespace-nowrap ${arribosEsteMes.profitUSD >= 0 ? "text-success" : "text-destructive"}`}
                       title={formatCurrency(arribosEsteMes.profitUSD, "USD")}
                     >
-                      {formatCurrency(arribosEsteMes.profitUSD, "USD")}
+                      {formatCurrencyCompact(arribosEsteMes.profitUSD, "USD")}
                     </span>
                   </div>
                 )}
