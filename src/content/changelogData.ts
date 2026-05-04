@@ -22,6 +22,14 @@ export interface ChangelogEntry {
  */
 export const recentChangelog: ChangelogEntry[] = [
   {
+    version: "8.116.0",
+    date: "2026-05-04",
+    type: "minor",
+    title: "Fase I — Pulido integral del Portal de Cliente",
+    summary: "Header con menú de usuario, listas densas con folios monoespaciados, ETA por proximidad, drill-down desde dashboard y banners con mejor contraste.",
+    description: "PortalLayout: DropdownMenu anclado al avatar (Mi perfil + Cerrar sesión), avatar bg-primary, sección activa en mobile junto al burger, footer con versión. Listas: badge a la izquierda, folio font-mono, monto en columna fija con tabular-nums, padding compacto, filtros con min-w 180-200. Dashboard: chips y barra de estado son Link a /portal/embarques?estado=X (controller sincroniza query param). Banners aceptada/operación con bg-success/15 + text-foreground (AA dark). ETA con color por proximidad (<3d destructive, <7d warning).",
+  },
+  {
     version: "8.115.0",
     date: "2026-05-04",
     type: "minor",

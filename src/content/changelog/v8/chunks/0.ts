@@ -2,6 +2,14 @@ import type { ChangelogEntry } from "../../../changelogData";
 
 export const chunk0: ChangelogEntry[] = [
   {
+    version: "8.116.0",
+    date: "2026-05-04",
+    type: "minor",
+    title: "Fase I — Pulido integral del Portal de Cliente (header, listas, drill-down y a11y)",
+    summary: "Header con menú de usuario, listas más densas con folios monoespaciados, ETA con color por proximidad, drill-down desde el dashboard al listado por estado y banners con mejor contraste.",
+    description: "(I.1) PortalLayout: el bloque suelto 'cliente / email / Salir' se reemplaza por un DropdownMenu anclado al avatar (Mi perfil + Cerrar sesión); avatar pasa a bg-primary para diferenciarlo del isotipo blanco; en mobile se muestra solo el icono de marca + el nombre de la sección activa al lado del burger. Co-branding más corto ('Portal · {org}') y nuevo footer con copyright + versión. (I.2) PortalCotizaciones, PortalFacturas y EmbarqueCard: badge de estado a la izquierda, folio en font-mono tabular-nums, monto en columna fija a la derecha (min-w 110px) con tabular-nums; padding vertical reducido (py-3). Filtros 'Estado/Modo' suben a min-w 180-200px con title/aria-label. (I.3) Dashboard: PortalEstadoEmbarquesCard convierte cada chip y cada segmento de la barra apilada en Link a /portal/embarques?estado=X; usePortalEmbarquesController lee y sincroniza el query param. (I.4) PortalCotizacionEstadoBanner sube contraste (bg-success/15 + text-foreground) para pasar AA en dark; ETA en arribos próximos y EmbarqueCard usa color por proximidad (destructive <3d, warning <7d, accent/muted resto). PortalWelcomeCard simplificada (sin duplicar 'Portal de Elogistix', título text-xl). Versión 8.116.0.",
+  },
+  {
     version: "8.115.0",
     date: "2026-05-04",
     type: "minor",
