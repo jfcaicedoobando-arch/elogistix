@@ -2,6 +2,14 @@ import type { ChangelogEntry } from "../../../changelogData";
 
 export const chunk0: ChangelogEntry[] = [
   {
+    version: "8.105.0",
+    date: "2026-05-04",
+    type: "minor",
+    title: "Refactor del sistema de Changelog: dedupe, validación y UX",
+    summary: "Eliminada la duplicación entre recentChangelog y chunk0; nuevo script CLI, tests de integridad, filtros, búsqueda y anclas profundas en /changelog.",
+    description: "Refactor integral del sistema de changelog basado en auditoría. (1) Fuente única de verdad: chunk0 mantiene todas las entradas v8; recentChangelog conserva sólo las 5 más recientes para bundle inicial mínimo y los loaders deduplican por version. (2) Nuevo script `npm run changelog:add` (scripts/add-changelog.ts) que valida semver, fecha ISO, type, prepende la entrada en chunk0 y recentChangelog, bumpea APP_VERSION atómicamente y rota recentChangelog a 5 elementos. (3) Tests de integridad (src/content/__tests__/changelog.test.ts): orden descendente, semver válido, versiones únicas, APP_VERSION sincronizado con la última entrada, sin duplicados visibles tras dedupe. (4) UI mejorada en /changelog: filtros por tipo (Major/Minor/Patch), búsqueda en título+descripción, anclas profundas con id={`v${version}`} y soporte de location.hash con scroll automático, summary/details opcional con expand. (5) Loader genérico `loadChangelogMajor(n)` reemplaza loadChangelogV8 (que queda como shim). (6) Generador `npm run changelog:json` que produce public/changelog.json en build para consumo externo (RSS, Slack webhooks, etc.). Sin breaking changes para los consumidores existentes.",
+  },
+  {
     version: "8.104.0",
     date: "2026-05-02",
     type: "minor",

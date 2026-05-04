@@ -4,5 +4,6 @@
  *
  * IMPORTANTE: Mantener sincronizada con la entrada más reciente de
  * `src/content/changelog/v8/chunks/0.ts` y `src/content/changelogData.ts`.
+ * El script `npm run changelog:add` lo actualiza automáticamente.
  */
-export const APP_VERSION = "8.104.0";
+export const APP_VERSION = "8.105.0";
