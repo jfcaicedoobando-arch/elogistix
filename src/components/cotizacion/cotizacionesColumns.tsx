@@ -151,7 +151,14 @@ export function buildCotizacionesColumns(params: BuildParams): DataTableColumn<C
       className: "text-xs max-w-[200px]",
       render: (r) => {
         const ruta = `${r.origen || "-"} → ${r.destino || "-"}`;
-        return <span title={ruta} className="block truncate whitespace-nowrap">{ruta}</span>;
+        return (
+          <Tooltip delayDuration={300}>
+            <TooltipTrigger asChild>
+              <span className="block truncate whitespace-nowrap">{ruta}</span>
+            </TooltipTrigger>
+            <TooltipContent side="top" className="text-xs max-w-[320px] break-words">{ruta}</TooltipContent>
+          </Tooltip>
+        );
       },
     },
     {
