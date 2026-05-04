@@ -22,6 +22,14 @@ export interface ChangelogEntry {
  */
 export const recentChangelog: ChangelogEntry[] = [
   {
+    version: "8.108.0",
+    date: "2026-05-04",
+    type: "minor",
+    title: "Estandarización de tablas (Bloques B-E)",
+    summary: "9 componentes adicionales migrados a DataTable: cliente, proveedor, portal, auditoría, reportes y operaciones.",
+    description: "Migración de TablaContactos, TabPortalCliente, ProveedorDetalle, PortalEmbarqueDocumentos, ReportesTablaClientes (sort server-side), OperacionesWidgets, HallazgoTabla, HallazgosTabla y PasoConfirmacionProforma al DataTable estandarizado. Quedan en allowlist sólo los grids con inputs por celda (cotizaciones editables, DialogDuplicarEmbarque, TablaCostosDetalle).",
+  },
+  {
     version: "8.107.0",
     date: "2026-05-04",
     type: "minor",

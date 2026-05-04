@@ -82,11 +82,13 @@ export default tseslint.config(
     // que aún no migran a DataTable. Documentar caso a caso.
     files: [
       "src/components/shared/DataTable.tsx",
-      // Casos editables (formularios tipo tabla) — pendientes de evaluación:
+      // Casos editables / con render row complejo — quedan fuera de la migración:
       "src/components/cotizacion/SeccionMercanciaAerea.tsx",
       "src/components/cotizacion/SeccionMercanciaMaritimeLCL.tsx",
       "src/components/cotizacion/SeccionMercanciaCotizacionDetalle.tsx",
       "src/components/cotizacion/TablaConceptosGenerico.tsx",
+      "src/components/cotizacion/TablaCostosDetalle.tsx",
+      "src/components/embarque/DialogDuplicarEmbarque.tsx",
     ],
     rules: {
       "no-restricted-imports": "off",
