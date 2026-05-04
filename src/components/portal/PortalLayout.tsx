@@ -1,15 +1,24 @@
 import { Outlet, Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
-import { Ship, FileText, Receipt, LayoutDashboard, LogOut, Menu, ChevronRight } from "lucide-react";
+import { Ship, FileText, Receipt, LayoutDashboard, LogOut, Menu, ChevronRight, User as UserIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { BrandLockup } from "@/components/layout/BrandLockup";
-import { BRAND } from "@/lib/ui/brand";
 import { usePortalClienteName, usePortalOrgName } from "@/hooks/portal/usePortalData";
 import { useState, useMemo } from "react";
 import { ThemeToggle } from "@/components/layout/ThemeToggle";
+import { useBreadcrumbLabels } from "@/contexts/BreadcrumbContext";
+import { APP_VERSION } from "@/constants/appVersion";
 
 const navItems = [
   { label: "Inicio", href: "/portal", icon: LayoutDashboard },
@@ -25,7 +34,7 @@ const breadcrumbMap: Record<string, string> = {
   "/portal/facturas": "Facturas",
 };
 
-function useBreadcrumbs(pathname: string) {
+function useBreadcrumbs(pathname: string, labels: Record<string, string>) {
   return useMemo(() => {
     const parts = pathname.split("/").filter(Boolean);
     const crumbs: { label: string; href: string }[] = [];
@@ -42,12 +51,21 @@ function useBreadcrumbs(pathname: string) {
       }
 
       if (parts.length >= 3) {
-        crumbs.push({ label: "Detalle", href: pathname });
+        const idSeg = parts[2];
+        crumbs.push({ label: labels[idSeg] ?? "Detalle", href: pathname });
       }
     }
 
     return crumbs;
-  }, [pathname]);
+  }, [pathname, labels]);
+}
+
+function getActiveSectionLabel(pathname: string): string | null {
+  if (pathname === "/portal") return "Inicio";
+  for (const item of navItems) {
+    if (item.href !== "/portal" && pathname.startsWith(item.href)) return item.label;
+  }
+  return null;
 }
 
 export default function PortalLayout() {
@@ -57,7 +75,9 @@ export default function PortalLayout() {
   const { data: clienteName } = usePortalClienteName();
   const { data: orgName } = usePortalOrgName();
   const [mobileOpen, setMobileOpen] = useState(false);
-  const breadcrumbs = useBreadcrumbs(location.pathname);
+  const labels = useBreadcrumbLabels();
+  const breadcrumbs = useBreadcrumbs(location.pathname, labels);
+  const activeSection = getActiveSectionLabel(location.pathname);
 
   const handleSignOut = async () => {
     await signOut();
@@ -69,15 +89,15 @@ export default function PortalLayout() {
     : user?.email?.slice(0, 2).toUpperCase() ?? "?";
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background flex flex-col">
       {/* Header */}
       <header className="border-b bg-card sticky top-0 z-50 shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between h-16">
-          <div className="flex items-center gap-3">
+        <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 flex items-center justify-between h-14 sm:h-16 gap-2">
+          <div className="flex items-center gap-2 min-w-0">
             {/* Mobile menu trigger */}
             <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
               <SheetTrigger asChild>
-                <Button variant="ghost" size="icon" className="md:hidden" aria-label="Abrir menú">
+                <Button variant="ghost" size="icon" className="md:hidden shrink-0" aria-label="Abrir menú">
                   <Menu className="h-5 w-5" />
                 </Button>
               </SheetTrigger>
@@ -86,7 +106,7 @@ export default function PortalLayout() {
                   <BrandLockup
                     variant="horizontal"
                     size="sm"
-                    subtitle={orgName ? `Portal de Cliente · ${orgName}` : "Portal de Cliente"}
+                    subtitle={orgName ? `Portal · ${orgName}` : "Portal de Cliente"}
                   />
                 </div>
                 <nav className="flex flex-col p-2 gap-1">
@@ -121,13 +141,24 @@ export default function PortalLayout() {
               </SheetContent>
             </Sheet>
 
-            <Link to="/portal" className="flex items-center">
-              <BrandLockup
-                variant="horizontal"
-                size="sm"
-                subtitle={orgName ? `Portal de Cliente · ${orgName}` : "Portal de Cliente"}
-              />
+            {/* Desktop: brand lockup. Mobile: brand compacta + sección activa */}
+            <Link to="/portal" className="flex items-center min-w-0">
+              <span className="hidden md:flex">
+                <BrandLockup
+                  variant="horizontal"
+                  size="sm"
+                  subtitle={orgName ? `Portal · ${orgName}` : "Portal de Cliente"}
+                />
+              </span>
+              <span className="md:hidden">
+                <BrandLockup variant="icon" size="sm" />
+              </span>
             </Link>
+            {activeSection && (
+              <span className="md:hidden text-sm font-semibold text-foreground truncate ml-1">
+                {activeSection}
+              </span>
+            )}
           </div>
 
           {/* Desktop nav */}
@@ -154,18 +185,45 @@ export default function PortalLayout() {
             })}
           </nav>
 
-          <div className="flex items-center gap-3">
-            <div className="hidden sm:flex flex-col items-end text-sm leading-tight">
-              {clienteName && <span className="font-medium text-foreground text-xs">{clienteName}</span>}
-              <span className="text-[10px] text-muted-foreground">{user?.email}</span>
-            </div>
-            <Avatar className="h-8 w-8">
-              <AvatarFallback className="bg-accent/10 text-accent text-xs font-semibold">{initials}</AvatarFallback>
-            </Avatar>
+          <div className="flex items-center gap-1 sm:gap-2 shrink-0">
             <ThemeToggle />
-            <Button variant="ghost" size="sm" onClick={handleSignOut} className="hidden sm:flex">
-              <LogOut className="h-4 w-4 mr-1" /> Salir
-            </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="px-1.5 sm:px-2 gap-2"
+                  aria-label="Menú de usuario"
+                >
+                  <Avatar className="h-7 w-7">
+                    <AvatarFallback className="bg-primary text-primary-foreground text-[11px] font-semibold">
+                      {initials}
+                    </AvatarFallback>
+                  </Avatar>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-60">
+                <DropdownMenuLabel className="flex flex-col gap-0.5">
+                  {clienteName && (
+                    <span className="text-sm font-semibold leading-tight">{clienteName}</span>
+                  )}
+                  <span className="text-[11px] font-normal text-muted-foreground truncate">
+                    {user?.email}
+                  </span>
+                </DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem disabled className="opacity-60">
+                  <UserIcon className="h-4 w-4 mr-2" /> Mi perfil
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  onClick={handleSignOut}
+                  className="text-destructive focus:text-destructive focus:bg-destructive/10"
+                >
+                  <LogOut className="h-4 w-4 mr-2" /> Cerrar sesión
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </div>
       </header>
@@ -189,9 +247,19 @@ export default function PortalLayout() {
       )}
 
       {/* Content */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
         <Outlet />
       </main>
+
+      {/* Footer */}
+      <footer className="border-t bg-card/40 mt-auto">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex flex-col sm:flex-row items-center justify-between gap-1 text-[11px] text-muted-foreground">
+          <span>
+            © {new Date().getFullYear()} {orgName ?? "Libre Carga"} · Portal de Cliente
+          </span>
+          <span className="tabular-nums">v{APP_VERSION}</span>
+        </div>
+      </footer>
     </div>
   );
 }
