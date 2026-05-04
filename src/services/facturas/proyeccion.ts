@@ -99,7 +99,7 @@ export async function fetchProyeccionMes({
       tipo_cambio_usd: tcUsd,
       tipo_cambio_eur: tcEur,
       tiene_proforma: !!e.tiene_proforma,
-      tiene_factura_pdf: facturadosSet.has(e.id),
+      tiene_factura_pdf: !!e.expediente && facturadosSet.has(e.expediente),
       venta_mxn: sumarConceptosEnMxn(ventas, tcUsd, tcEur),
       costo_mxn: sumarConceptosEnMxn(costos, tcUsd, tcEur),
     };
