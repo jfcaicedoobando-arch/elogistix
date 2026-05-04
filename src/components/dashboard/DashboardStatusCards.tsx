@@ -98,7 +98,7 @@ export function DashboardStatusCards({
       {/* CAMBIO 2 — Indicador de arribos + profit */}
       <Card>
         <CardContent className="p-4">
-          <div className="flex flex-col lg:flex-row lg:items-center gap-4">
+          <div className="flex flex-col xl:flex-row xl:items-center gap-4">
             {/* Título */}
             <div className="flex items-center gap-2 shrink-0">
               <div className="p-2 rounded-lg bg-gradient-to-br from-cyan-500 to-cyan-600">
