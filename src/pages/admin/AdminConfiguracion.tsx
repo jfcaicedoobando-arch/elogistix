@@ -5,42 +5,48 @@ import TabPlanes from "@/components/admin/TabPlanes";
 import TabSeguridadGlobal from "@/components/admin/TabSeguridadGlobal";
 import TabCatalogosGlobales from "@/components/admin/TabCatalogosGlobales";
 import ConfigOrganizacion from "@/components/admin/ConfigOrganizacion";
+import { PageHeader } from "@/components/shared/PageHeader";
 
 export default function AdminConfiguracion() {
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold flex items-center gap-2">
-          <Settings className="h-6 w-6" />
-          Configuración Global
-        </h1>
-        <p className="text-muted-foreground mt-1">
-          Parámetros globales de la plataforma que aplican a todas las organizaciones.
-        </p>
-      </div>
+      <PageHeader
+        icon={<Settings className="h-6 w-6 text-primary" />}
+        title="Configuración Global"
+        description="Parámetros globales de la plataforma que aplican a todas las organizaciones."
+      />
 
       <Tabs defaultValue="seguridad">
-        <TabsList>
-          <TabsTrigger value="seguridad" className="gap-1.5">
+        <TabsList className="h-auto bg-transparent p-0 border-b border-border rounded-none w-full justify-start gap-1">
+          <TabsTrigger
+            value="seguridad"
+            className="gap-1.5 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:text-primary data-[state=active]:shadow-none px-4 py-2.5"
+          >
             <Shield className="h-3.5 w-3.5" /> Seguridad
           </TabsTrigger>
-          <TabsTrigger value="planes" className="gap-1.5">
+          <TabsTrigger
+            value="planes"
+            className="gap-1.5 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:text-primary data-[state=active]:shadow-none px-4 py-2.5"
+          >
             <CreditCard className="h-3.5 w-3.5" /> Planes
           </TabsTrigger>
-          <TabsTrigger value="catalogos" className="gap-1.5">
+          <TabsTrigger
+            value="catalogos"
+            className="gap-1.5 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:text-primary data-[state=active]:shadow-none px-4 py-2.5"
+          >
             <BookOpen className="h-3.5 w-3.5" /> Catálogos
           </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="seguridad">
+        <TabsContent value="seguridad" className="mt-6">
           <TabSeguridadGlobal />
         </TabsContent>
 
-        <TabsContent value="planes">
+        <TabsContent value="planes" className="mt-6">
           <TabPlanes />
         </TabsContent>
 
-        <TabsContent value="catalogos">
+        <TabsContent value="catalogos" className="mt-6">
           <TabCatalogosGlobales />
         </TabsContent>
       </Tabs>
