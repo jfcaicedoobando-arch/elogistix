@@ -132,11 +132,13 @@ export default function Proveedores() {
       </Card>
 
       <Tabs defaultValue="Naviera">
-        <TabsList className="w-full grid grid-cols-5 lg:grid-cols-10 h-auto gap-1">
-          {TABS.map(tabConfig => (
-            <TabsTrigger key={tabConfig.tipo} value={tabConfig.tipo} className="text-xs">{tabConfig.label}</TabsTrigger>
-          ))}
-        </TabsList>
+        <div className="w-full overflow-x-auto">
+          <TabsList className="inline-flex w-max min-w-full h-auto flex-wrap gap-1 lg:flex-nowrap">
+            {TABS.map(tabConfig => (
+              <TabsTrigger key={tabConfig.tipo} value={tabConfig.tipo} className="text-xs whitespace-nowrap">{tabConfig.label}</TabsTrigger>
+            ))}
+          </TabsList>
+        </div>
         {TABS.map(tabConfig => (
           <TabsContent key={tabConfig.tipo} value={tabConfig.tipo}>
             <ProveedorTable tipo={tabConfig.tipo} search={search} onSelect={(id) => navigate(`/proveedores/${id}`)} />
