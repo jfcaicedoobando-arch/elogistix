@@ -1,6 +1,9 @@
 /**
  * Lógica pura para la proyección de facturación mensual basada en ETA de embarques.
  * Agrupa filas por expediente, suma venta/costo/profit y consolida estado Facturado/Pendiente.
+ *
+ * v8.117.4: además de MXN se mantiene la suma equivalente en USD usando
+ * convertirAUSD con el TC del propio embarque (para tarjetas estilo "Cierre mensual").
  */
 import { convertirAMXN, type Moneda } from "@/lib/financial/financialUtils";
 
@@ -21,8 +24,12 @@ export interface FilaProyeccion {
   tiene_factura_pdf: boolean;
   /** Suma en MXN de conceptos_venta del embarque (ya convertidos). */
   venta_mxn: number;
+  /** Suma en USD equivalente de conceptos_venta del embarque. */
+  venta_usd: number;
   /** Suma en MXN de conceptos_costo del embarque (ya convertidos). */
   costo_mxn: number;
+  /** Suma en USD equivalente de conceptos_costo del embarque. */
+  costo_usd: number;
 }
 
 /** Grupo consolidado por expediente. */
@@ -35,8 +42,11 @@ export interface GrupoProyeccion {
   contenedores: string[];
   totalContenedores: number;
   ventaMxn: number;
+  ventaUsd: number;
   costoMxn: number;
+  costoUsd: number;
   profitMxn: number;
+  profitUsd: number;
   margenPct: number;
   estado: EstadoProyeccion;
   /** Embarques que componen el grupo (para drilldown). */
@@ -47,12 +57,20 @@ export interface KpisProyeccion {
   totalExpedientes: number;
   facturados: number;
   pendientes: number;
+  // MXN
   ventaProyMxn: number;
   ventaFacturadaMxn: number;
   ventaPendienteMxn: number;
   costoTotalMxn: number;
   profitProyMxn: number;
   profitFacturadoMxn: number;
+  // USD
+  ventaProyUsd: number;
+  ventaFacturadaUsd: number;
+  ventaPendienteUsd: number;
+  costoTotalUsd: number;
+  profitProyUsd: number;
+  // Derivados
   margenProyPct: number;
   avancePct: number;
 }
@@ -69,6 +87,22 @@ export function sumarConceptosEnMxn(
   }, 0);
 }
 
+/** Suma una colección de conceptos convirtiendo a USD según moneda y TC del embarque.
+ *  MXN → /tcUsd · EUR → *tcEur/tcUsd · USD → tal cual. */
+export function sumarConceptosEnUsd(
+  conceptos: { monto: number; moneda: string }[],
+  tcUsd: number,
+  tcEur: number,
+): number {
+  if (!tcUsd || tcUsd <= 0) return 0;
+  return conceptos.reduce((acc, c) => {
+    const moneda = (c.moneda?.toUpperCase() ?? "MXN") as Moneda;
+    if (moneda === "USD") return acc + c.monto;
+    if (moneda === "EUR") return acc + (c.monto * tcEur) / tcUsd;
+    return acc + c.monto / tcUsd; // MXN
+  }, 0);
+}
+
 /** Agrupa filas planas por expediente y consolida totales/estado. */
 export function agruparPorExpediente(filas: FilaProyeccion[]): GrupoProyeccion[] {
   const map = new Map<string, GrupoProyeccion>();
@@ -76,7 +110,8 @@ export function agruparPorExpediente(filas: FilaProyeccion[]): GrupoProyeccion[]
     const key = f.expediente || `_sin_exp_${f.embarque_id}`;
     const prev = map.get(key);
     if (!prev) {
-      const profit = f.venta_mxn - f.costo_mxn;
+      const profitMxn = f.venta_mxn - f.costo_mxn;
+      const profitUsd = f.venta_usd - f.costo_usd;
       map.set(key, {
         expediente: f.expediente || "—",
         cliente_nombre: f.cliente_nombre,
@@ -85,9 +120,12 @@ export function agruparPorExpediente(filas: FilaProyeccion[]): GrupoProyeccion[]
         contenedores: f.contenedor ? [f.contenedor] : [],
         totalContenedores: f.contenedor ? 1 : 0,
         ventaMxn: f.venta_mxn,
+        ventaUsd: f.venta_usd,
         costoMxn: f.costo_mxn,
-        profitMxn: profit,
-        margenPct: f.venta_mxn > 0 ? (profit / f.venta_mxn) * 100 : 0,
+        costoUsd: f.costo_usd,
+        profitMxn,
+        profitUsd,
+        margenPct: f.venta_mxn > 0 ? (profitMxn / f.venta_mxn) * 100 : 0,
         // Estado consolidado: arranca como facturado del embarque actual.
         estado: f.tiene_proforma && f.tiene_factura_pdf ? "Facturado" : "Pendiente",
         embarqueIds: [f.embarque_id],
@@ -98,8 +136,11 @@ export function agruparPorExpediente(filas: FilaProyeccion[]): GrupoProyeccion[]
       }
       prev.totalContenedores = prev.contenedores.length || prev.totalContenedores + 1;
       prev.ventaMxn += f.venta_mxn;
+      prev.ventaUsd += f.venta_usd;
       prev.costoMxn += f.costo_mxn;
+      prev.costoUsd += f.costo_usd;
       prev.profitMxn = prev.ventaMxn - prev.costoMxn;
+      prev.profitUsd = prev.ventaUsd - prev.costoUsd;
       prev.margenPct = prev.ventaMxn > 0 ? (prev.profitMxn / prev.ventaMxn) * 100 : 0;
       prev.embarqueIds.push(f.embarque_id);
       // ETA mínima del grupo
@@ -121,27 +162,39 @@ export function agruparPorExpediente(filas: FilaProyeccion[]): GrupoProyeccion[]
 /** Calcula KPIs agregados sobre los grupos de proyección. */
 export function calcularKpisProyeccion(grupos: GrupoProyeccion[]): KpisProyeccion {
   const total = grupos.length;
-  const facturados = grupos.filter((g) => g.estado === "Facturado").length;
-  const pendientes = total - facturados;
-  const ventaProy = grupos.reduce((s, g) => s + g.ventaMxn, 0);
-  const ventaFact = grupos.filter((g) => g.estado === "Facturado").reduce((s, g) => s + g.ventaMxn, 0);
-  const ventaPend = grupos.filter((g) => g.estado === "Pendiente").reduce((s, g) => s + g.ventaMxn, 0);
-  const costoTotal = grupos.reduce((s, g) => s + g.costoMxn, 0);
-  const profitProy = ventaProy - costoTotal;
-  const profitFact = grupos
-    .filter((g) => g.estado === "Facturado")
-    .reduce((s, g) => s + g.profitMxn, 0);
+  const facturadosArr = grupos.filter((g) => g.estado === "Facturado");
+  const pendientesArr = grupos.filter((g) => g.estado === "Pendiente");
+  const facturados = facturadosArr.length;
+  const pendientes = pendientesArr.length;
+
+  const ventaProyMxn = grupos.reduce((s, g) => s + g.ventaMxn, 0);
+  const ventaProyUsd = grupos.reduce((s, g) => s + g.ventaUsd, 0);
+  const ventaFactMxn = facturadosArr.reduce((s, g) => s + g.ventaMxn, 0);
+  const ventaFactUsd = facturadosArr.reduce((s, g) => s + g.ventaUsd, 0);
+  const ventaPendMxn = pendientesArr.reduce((s, g) => s + g.ventaMxn, 0);
+  const ventaPendUsd = pendientesArr.reduce((s, g) => s + g.ventaUsd, 0);
+  const costoTotalMxn = grupos.reduce((s, g) => s + g.costoMxn, 0);
+  const costoTotalUsd = grupos.reduce((s, g) => s + g.costoUsd, 0);
+  const profitProyMxn = ventaProyMxn - costoTotalMxn;
+  const profitProyUsd = ventaProyUsd - costoTotalUsd;
+  const profitFactMxn = facturadosArr.reduce((s, g) => s + g.profitMxn, 0);
+
   return {
     totalExpedientes: total,
     facturados,
     pendientes,
-    ventaProyMxn: ventaProy,
-    ventaFacturadaMxn: ventaFact,
-    ventaPendienteMxn: ventaPend,
-    costoTotalMxn: costoTotal,
-    profitProyMxn: profitProy,
-    profitFacturadoMxn: profitFact,
-    margenProyPct: ventaProy > 0 ? (profitProy / ventaProy) * 100 : 0,
+    ventaProyMxn,
+    ventaFacturadaMxn: ventaFactMxn,
+    ventaPendienteMxn: ventaPendMxn,
+    costoTotalMxn,
+    profitProyMxn,
+    profitFacturadoMxn: profitFactMxn,
+    ventaProyUsd,
+    ventaFacturadaUsd: ventaFactUsd,
+    ventaPendienteUsd: ventaPendUsd,
+    costoTotalUsd,
+    profitProyUsd,
+    margenProyPct: ventaProyMxn > 0 ? (profitProyMxn / ventaProyMxn) * 100 : 0,
     avancePct: total > 0 ? (facturados / total) * 100 : 0,
   };
 }
