@@ -13,6 +13,7 @@ import { formatCurrency, formatDate, toTitleCase } from "@/lib/formatters";
 import { useTabProyeccionController } from "@/hooks/facturacion/useTabProyeccionController";
 import type { GrupoProyeccion } from "@/lib/domain/proyeccionFacturacion";
 import { cn } from "@/lib/utils";
+import { HuecoFacturacionCard } from "./HuecoFacturacionCard";
 
 /** Tarjeta interna del bloque "Cierre [Mes]". */
 function CierreCard({
@@ -161,6 +162,9 @@ export function TabProyeccion() {
 
   return (
     <div className="space-y-4">
+      {/* Hueco de Facturación: tarjeta fija, independiente del mes */}
+      <HuecoFacturacionCard />
+
       {/* Header: Selector de mes + Export */}
       <Card>
         <CardContent className="p-4 flex flex-wrap items-center gap-3">
