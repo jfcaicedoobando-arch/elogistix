@@ -2,6 +2,14 @@ import type { ChangelogEntry } from "../../../changelogData";
 
 export const chunk0: ChangelogEntry[] = [
   {
+    version: "8.117.6",
+    date: "2026-05-05",
+    type: "minor",
+    title: "Proyección: tarjeta fija de 'Hueco de Facturación' (ETD > 5 días sin factura)",
+    summary: "Nueva tarjeta destacada arriba de la tab Proyección que muestra los embarques con ETD hace más de 5 días que aún no han sido facturados al cliente, con totales en USD y MXN y detalle clickeable.",
+    description: "Nueva tarjeta 'Hueco de Facturación' fija en la parte superior de la tab Proyección de /facturacion. Es independiente del selector de mes: muestra TODOS los embarques de la organización donde (1) ETD ya pasó hace más de 5 días y (2) no existe factura con factura_pdf_url para su expediente. Diseño con borde destructivo y fondo rojizo cuando hay hueco, success cuando está en cero. Muestra cantidad de embarques, total USD sin facturar y total MXN sin facturar (calculados con el tipo de cambio del propio embarque vía sumarConceptosEnUsd/Mxn). Botón 'Ver detalle' abre un dialog con la lista ordenada por días desde ETD descendentes, con badge de urgencia (gris ≤15d, ámbar 16-30d, rojo >30d), expediente, cliente, operador, ETD, días, venta USD y MXN; al hacer click en una fila se navega al detalle del embarque. Backend: nuevo servicio src/services/facturas/huecoFacturacion.ts que combina embarques (ETD ≤ hoy-5d) + conceptos_venta + facturas (con factura_pdf_url not null) en una sola pasada. Versión 8.117.6.",
+  },
+  {
     version: "8.117.5",
     date: "2026-05-05",
     type: "minor",
