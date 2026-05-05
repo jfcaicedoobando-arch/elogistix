@@ -12,7 +12,6 @@ import { Badge } from "@/components/ui/badge";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription,
 } from "@/components/ui/dialog";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { useOrgFilter } from "@/hooks/shared/useOrgFilter";
 import { fetchHuecoFacturacion } from "@/services/facturas/huecoFacturacion";
 import { formatCurrency, formatDate, toTitleCase } from "@/lib/formatters";
@@ -118,7 +117,7 @@ export function HuecoFacturacionCard() {
             </DialogDescription>
           </DialogHeader>
 
-          <ScrollArea className="max-h-[60vh] pr-3">
+          <div className="max-h-[60vh] overflow-y-auto pr-3">
             <table className="w-full text-sm">
               <thead className="sticky top-0 bg-card z-10">
                 <tr className="border-b text-xs text-muted-foreground">
@@ -181,7 +180,7 @@ export function HuecoFacturacionCard() {
                 )}
               </tbody>
             </table>
-          </ScrollArea>
+          </div>
         </DialogContent>
       </Dialog>
     </>
