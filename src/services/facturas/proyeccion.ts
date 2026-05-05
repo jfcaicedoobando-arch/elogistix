@@ -28,7 +28,7 @@ export async function fetchProyeccionMes({
   let q = supabase
     .from("embarques")
     .select(
-      "id, expediente, cliente_nombre, operador, etd, eta, contenedor, tipo_cambio_usd, tipo_cambio_eur, tiene_proforma",
+      "id, expediente, cliente_nombre, operador, eta, contenedor, tipo_cambio_usd, tipo_cambio_eur, tiene_proforma",
     )
     .gte("eta", desde)
     .lte("eta", hasta)
@@ -95,7 +95,6 @@ export async function fetchProyeccionMes({
       expediente: e.expediente ?? "",
       cliente_nombre: e.cliente_nombre ?? "",
       operador: e.operador ?? "",
-      etd: e.etd,
       eta: e.eta,
       contenedor: e.contenedor,
       tipo_cambio_usd: tcUsd,

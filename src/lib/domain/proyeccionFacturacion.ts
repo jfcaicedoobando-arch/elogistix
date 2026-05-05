@@ -1,15 +1,13 @@
 /**
  * Lógica pura para la proyección de facturación mensual basada en ETA de embarques.
- * Agrupa filas por expediente, suma venta/costo/profit y consolida estado
- * Facturado / Pendiente / Hueco (ETD+5 ya pasó y no se ha facturado).
+ * Agrupa filas por expediente, suma venta/costo/profit y consolida estado Facturado/Pendiente.
+ *
+ * v8.117.4: además de MXN se mantiene la suma equivalente en USD usando
+ * convertirAUSD con el TC del propio embarque (para tarjetas estilo "Cierre mensual").
  */
 import { convertirAMXN, type Moneda } from "@/lib/financial/financialUtils";
 
-/** Estados consolidados a nivel grupo (expediente). */
-export type EstadoProyeccion = "Facturado" | "Pendiente" | "Hueco";
-
-/** Días después del ETD a partir de los cuales un embarque sin factura se considera "Hueco". */
-export const DIAS_HUECO = 5;
+export type EstadoProyeccion = "Facturado" | "Pendiente";
 
 /** Fila plana traída del backend para un embarque del mes seleccionado. */
 export interface FilaProyeccion {
@@ -17,7 +15,6 @@ export interface FilaProyeccion {
   expediente: string;
   cliente_nombre: string;
   operador: string;
-  etd: string | null;
   eta: string | null;
   contenedor: string | null;
   tipo_cambio_usd: number;
@@ -25,9 +22,13 @@ export interface FilaProyeccion {
   tiene_proforma: boolean;
   /** ¿Existe al menos una factura con factura_pdf_url para este embarque? */
   tiene_factura_pdf: boolean;
+  /** Suma en MXN de conceptos_venta del embarque (ya convertidos). */
   venta_mxn: number;
+  /** Suma en USD equivalente de conceptos_venta del embarque. */
   venta_usd: number;
+  /** Suma en MXN de conceptos_costo del embarque (ya convertidos). */
   costo_mxn: number;
+  /** Suma en USD equivalente de conceptos_costo del embarque. */
   costo_usd: number;
 }
 
@@ -36,8 +37,6 @@ export interface GrupoProyeccion {
   expediente: string;
   cliente_nombre: string;
   operador: string;
-  /** ETD representativa (mínima del grupo). */
-  etd: string | null;
   /** ETA representativa (mínima del grupo). */
   eta: string | null;
   contenedores: string[];
@@ -49,10 +48,8 @@ export interface GrupoProyeccion {
   profitMxn: number;
   profitUsd: number;
   margenPct: number;
-  /** Estado consolidado: Facturado | Pendiente | Hueco. */
   estado: EstadoProyeccion;
-  /** Días transcurridos desde ETD (sólo si está sin facturar y ETD ya pasó). */
-  diasDesdeEtd: number | null;
+  /** Embarques que componen el grupo (para drilldown). */
   embarqueIds: string[];
 }
 
@@ -60,12 +57,10 @@ export interface KpisProyeccion {
   totalExpedientes: number;
   facturados: number;
   pendientes: number;
-  huecos: number;
   // MXN
   ventaProyMxn: number;
   ventaFacturadaMxn: number;
   ventaPendienteMxn: number;
-  ventaHuecoMxn: number;
   costoTotalMxn: number;
   profitProyMxn: number;
   profitFacturadoMxn: number;
@@ -73,7 +68,6 @@ export interface KpisProyeccion {
   ventaProyUsd: number;
   ventaFacturadaUsd: number;
   ventaPendienteUsd: number;
-  ventaHuecoUsd: number;
   costoTotalUsd: number;
   profitProyUsd: number;
   // Derivados
@@ -93,7 +87,8 @@ export function sumarConceptosEnMxn(
   }, 0);
 }
 
-/** Suma una colección de conceptos convirtiendo a USD según moneda y TC del embarque. */
+/** Suma una colección de conceptos convirtiendo a USD según moneda y TC del embarque.
+ *  MXN → /tcUsd · EUR → *tcEur/tcUsd · USD → tal cual. */
 export function sumarConceptosEnUsd(
   conceptos: { monto: number; moneda: string }[],
   tcUsd: number,
@@ -108,20 +103,8 @@ export function sumarConceptosEnUsd(
   }, 0);
 }
 
-/** Calcula días enteros transcurridos desde una fecha YYYY-MM-DD hasta `hoy`. */
-function diasDesde(fecha: string | null, hoy: Date): number | null {
-  if (!fecha) return null;
-  const d = new Date(`${fecha}T00:00:00`);
-  if (isNaN(d.getTime())) return null;
-  const ms = hoy.getTime() - d.getTime();
-  return Math.floor(ms / (1000 * 60 * 60 * 24));
-}
-
 /** Agrupa filas planas por expediente y consolida totales/estado. */
-export function agruparPorExpediente(
-  filas: FilaProyeccion[],
-  hoy: Date = new Date(),
-): GrupoProyeccion[] {
+export function agruparPorExpediente(filas: FilaProyeccion[]): GrupoProyeccion[] {
   const map = new Map<string, GrupoProyeccion>();
   for (const f of filas) {
     const key = f.expediente || `_sin_exp_${f.embarque_id}`;
@@ -133,7 +116,6 @@ export function agruparPorExpediente(
         expediente: f.expediente || "—",
         cliente_nombre: f.cliente_nombre,
         operador: f.operador,
-        etd: f.etd,
         eta: f.eta,
         contenedores: f.contenedor ? [f.contenedor] : [],
         totalContenedores: f.contenedor ? 1 : 0,
@@ -144,8 +126,8 @@ export function agruparPorExpediente(
         profitMxn,
         profitUsd,
         margenPct: f.venta_mxn > 0 ? (profitMxn / f.venta_mxn) * 100 : 0,
+        // Estado consolidado: arranca como facturado del embarque actual.
         estado: f.tiene_proforma && f.tiene_factura_pdf ? "Facturado" : "Pendiente",
-        diasDesdeEtd: null,
         embarqueIds: [f.embarque_id],
       });
     } else {
@@ -161,24 +143,15 @@ export function agruparPorExpediente(
       prev.profitUsd = prev.ventaUsd - prev.costoUsd;
       prev.margenPct = prev.ventaMxn > 0 ? (prev.profitMxn / prev.ventaMxn) * 100 : 0;
       prev.embarqueIds.push(f.embarque_id);
-      if (f.etd && (!prev.etd || f.etd < prev.etd)) prev.etd = f.etd;
+      // ETA mínima del grupo
       if (f.eta && (!prev.eta || f.eta < prev.eta)) prev.eta = f.eta;
+      // Estado: solo "Facturado" si TODOS los embarques cumplen.
       const facturadoEste = f.tiene_proforma && f.tiene_factura_pdf;
       if (!facturadoEste) prev.estado = "Pendiente";
     }
   }
-  // Pasada final: marcar "Hueco" si pendiente y ETD+DIAS_HUECO ya pasó.
-  const grupos = Array.from(map.values());
-  for (const g of grupos) {
-    if (g.estado === "Pendiente") {
-      const dias = diasDesde(g.etd, hoy);
-      g.diasDesdeEtd = dias;
-      if (dias !== null && dias > DIAS_HUECO) {
-        g.estado = "Hueco";
-      }
-    }
-  }
-  return grupos.sort((a, b) => {
+  // Orden por ETA ascendente, luego por expediente.
+  return Array.from(map.values()).sort((a, b) => {
     const ea = a.eta ?? "9999-12-31";
     const eb = b.eta ?? "9999-12-31";
     if (ea !== eb) return ea.localeCompare(eb);
@@ -191,16 +164,15 @@ export function calcularKpisProyeccion(grupos: GrupoProyeccion[]): KpisProyeccio
   const total = grupos.length;
   const facturadosArr = grupos.filter((g) => g.estado === "Facturado");
   const pendientesArr = grupos.filter((g) => g.estado === "Pendiente");
-  const huecosArr = grupos.filter((g) => g.estado === "Hueco");
+  const facturados = facturadosArr.length;
+  const pendientes = pendientesArr.length;
 
-  // Para KPIs MXN/USD "pendiente" agrupamos pendiente + hueco (ambos sin facturar).
-  const sinFacturarArr = [...pendientesArr, ...huecosArr];
-
-  const sumMxn = (arr: GrupoProyeccion[]) => arr.reduce((s, g) => s + g.ventaMxn, 0);
-  const sumUsd = (arr: GrupoProyeccion[]) => arr.reduce((s, g) => s + g.ventaUsd, 0);
-
-  const ventaProyMxn = sumMxn(grupos);
-  const ventaProyUsd = sumUsd(grupos);
+  const ventaProyMxn = grupos.reduce((s, g) => s + g.ventaMxn, 0);
+  const ventaProyUsd = grupos.reduce((s, g) => s + g.ventaUsd, 0);
+  const ventaFactMxn = facturadosArr.reduce((s, g) => s + g.ventaMxn, 0);
+  const ventaFactUsd = facturadosArr.reduce((s, g) => s + g.ventaUsd, 0);
+  const ventaPendMxn = pendientesArr.reduce((s, g) => s + g.ventaMxn, 0);
+  const ventaPendUsd = pendientesArr.reduce((s, g) => s + g.ventaUsd, 0);
   const costoTotalMxn = grupos.reduce((s, g) => s + g.costoMxn, 0);
   const costoTotalUsd = grupos.reduce((s, g) => s + g.costoUsd, 0);
   const profitProyMxn = ventaProyMxn - costoTotalMxn;
@@ -209,24 +181,21 @@ export function calcularKpisProyeccion(grupos: GrupoProyeccion[]): KpisProyeccio
 
   return {
     totalExpedientes: total,
-    facturados: facturadosArr.length,
-    pendientes: pendientesArr.length,
-    huecos: huecosArr.length,
+    facturados,
+    pendientes,
     ventaProyMxn,
-    ventaFacturadaMxn: sumMxn(facturadosArr),
-    ventaPendienteMxn: sumMxn(sinFacturarArr),
-    ventaHuecoMxn: sumMxn(huecosArr),
+    ventaFacturadaMxn: ventaFactMxn,
+    ventaPendienteMxn: ventaPendMxn,
     costoTotalMxn,
     profitProyMxn,
     profitFacturadoMxn: profitFactMxn,
     ventaProyUsd,
-    ventaFacturadaUsd: sumUsd(facturadosArr),
-    ventaPendienteUsd: sumUsd(sinFacturarArr),
-    ventaHuecoUsd: sumUsd(huecosArr),
+    ventaFacturadaUsd: ventaFactUsd,
+    ventaPendienteUsd: ventaPendUsd,
     costoTotalUsd,
     profitProyUsd,
     margenProyPct: ventaProyMxn > 0 ? (profitProyMxn / ventaProyMxn) * 100 : 0,
-    avancePct: total > 0 ? (facturadosArr.length / total) * 100 : 0,
+    avancePct: total > 0 ? (facturados / total) * 100 : 0,
   };
 }
 
@@ -246,7 +215,7 @@ export function generarMesesDisponibles(hoy = new Date()): {
   year: number;
   month: number;
 }[] {
-  const inicio = new Date(2026, 3, 1);
+  const inicio = new Date(2026, 3, 1); // Abril 2026 (mes index 3)
   const fin = new Date(hoy.getFullYear(), hoy.getMonth() + 12, 1);
   const fmt = new Intl.DateTimeFormat("es-MX", { month: "long", year: "numeric" });
   const out: { key: string; label: string; year: number; month: number }[] = [];
