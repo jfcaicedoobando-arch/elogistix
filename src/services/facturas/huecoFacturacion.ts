@@ -18,6 +18,8 @@ export interface FilaHueco {
   operador: string;
   etd: string;
   eta: string | null;
+  bl_master: string | null;
+  bl_house: string | null;
   diasDesdeEtd: number;
   ventaMxn: number;
   ventaUsd: number;
