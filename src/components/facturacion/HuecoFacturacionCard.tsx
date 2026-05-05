@@ -57,6 +57,21 @@ export function HuecoFacturacionCard() {
       render: (f) => formatDate(f.etd),
     },
     {
+      key: "bl", header: "BL", width: "w-[160px]", className: "font-mono text-xs whitespace-nowrap",
+      sortable: true, sortValue: (f) => f.bl_master ?? f.bl_house ?? "",
+      render: (f) => {
+        const m = f.bl_master?.trim();
+        const h = f.bl_house?.trim();
+        if (!m && !h) return <span className="text-muted-foreground">—</span>;
+        return (
+          <div className="flex flex-col leading-tight">
+            {m && <span title={`Master: ${m}`}>{m}</span>}
+            {h && <span className="text-muted-foreground" title={`House: ${h}`}>H: {h}</span>}
+          </div>
+        );
+      },
+    },
+    {
       key: "dias", header: "Días sin facturar", width: "w-[140px]", align: "center",
       sortable: true, sortValue: (f) => f.diasDesdeEtd,
       render: (f) => {
