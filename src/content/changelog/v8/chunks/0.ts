@@ -2,6 +2,14 @@ import type { ChangelogEntry } from "../../../changelogData";
 
 export const chunk0: ChangelogEntry[] = [
   {
+    version: "8.117.5",
+    date: "2026-05-05",
+    type: "minor",
+    title: "Operaciones: drill-down de embarques por estado en cada operador",
+    summary: "En cada tarjeta de operador del dashboard de Operaciones, los conteos por estado (Confirmado, En Tránsito, Llegada, En Proceso, Cerrado) ahora son clickeables y abren la lista detallada de embarques en ese estado.",
+    description: "Mejora de detalle en /operaciones. Antes los conteos por estado dentro de cada tarjeta de operador eran solo informativos; ahora cada renglón es un botón clickeable que abre un dialog con la lista completa de embarques del operador en ese estado, mostrando expediente, cliente, modo/tipo, ruta (origen → destino con prioridad Puerto > Aeropuerto > Ciudad), ETD, ETA y un indicador contextual: días en puerto para 'Llegada' (ámbar/rojo según demora), días para ETA en 'En Tránsito' (ámbar si ≤3, info si llega hoy, destructivo si vencido). Cada renglón enlaza al detalle del embarque y el dialog incluye búsqueda local por expediente o cliente, además de un botón 'Ver todos en Embarques' que lleva a /embarques con el operador y estado pre-aplicados (vía query string ?operador=&estado=). Los estados con count = 0 no son interactivos. Backend: se actualizó la RPC operaciones_stats() para incluir un nuevo campo embarquesPorEstado por operador con buckets {total, truncated, items[]}, limitado a 200 embarques por estado y 50 para Cerrado para mantener el payload acotado, ordenado por ETA asc (o fecha_llegada_real desc para Cerrado). Sin nuevas llamadas: el detalle viaja en la misma RPC. Frontend: nuevo componente EmbarquesEstadoDialog, OperadorCard ahora maneja estado local del estado abierto y useEmbarquesPageState lee operador/estado desde useSearchParams al montar. Versión 8.117.5.",
+  },
+  {
     version: "8.117.4",
     date: "2026-05-05",
     type: "minor",
