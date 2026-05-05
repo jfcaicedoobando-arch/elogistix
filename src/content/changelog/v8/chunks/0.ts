@@ -2,6 +2,13 @@ import type { ChangelogEntry } from "../../../changelogData";
 
 export const chunk0: ChangelogEntry[] = [
   {
+    version: "8.117.6",
+    date: "2026-05-05",
+    type: "minor",
+    title: "Proyección: rediseño 'Cierre mensual' con 4 tarjetas + alerta de Hueco de facturación",
+    summary: "Nueva tarjeta 'Hueco' detecta embarques donde el proveedor ya facturó (ETD+5d) pero al cliente no, además de Facturado, Pendiente y Proyectado. Tabla con ETD/ETA y badge ⚠️ Hueco.",
+    description: "Rediseño de la tab Proyección en /facturacion para presentar el cierre mensual a socios con foco en flujo de caja. (1) Bloque 'Cierre [Mes Año]' ahora con 4 tarjetas en grid (md: 2 col, xl: 4 col): ✓ Facturado (success, embarques + USD + MXN), ⏳ Pendiente de facturar (warning, embarques + USD + MXN, incluye huecos), ⚠️ Hueco ETD+5d (destructive, ring resaltado cuando hay > 0, footer 'Proveedor ya facturó, cliente sin factura. Urgente.'), 📈 Proyectado total (info, Venta USD/MXN + Costo + Profit con margen %). (2) Badge superior con 'X huecos urgentes' cuando aplica. (3) Lógica de dominio: nuevo estado consolidado 'Hueco' que se asigna a un grupo cuando estaba 'Pendiente' y han pasado más de DIAS_HUECO=5 días desde el ETD. FilaProyeccion gana etd, GrupoProyeccion gana etd + diasDesdeEtd, KpisProyeccion gana huecos/ventaHuecoMxn/ventaHuecoUsd. ventaPendiente* incluye pendientes + huecos (todo lo no facturado). agruparPorExpediente acepta hoy opcional para testing. (4) Tabla simplificada para evitar scroll horizontal: Expediente, Cliente, ETD, ETA, Cont., Venta USD, Venta MXN, Estado. El badge de estado 'Hueco' muestra ⚠️ + días desde ETD. (5) Filtro de estado añade '⚠️ Hueco (urgente)'. (6) CSV exporta ETD y 'Días desde ETD'. (7) Servicio fetchProyeccionMes ahora trae el campo etd del embarque. Versión 8.117.6.",
+  },
     version: "8.117.5",
     date: "2026-05-05",
     type: "minor",
