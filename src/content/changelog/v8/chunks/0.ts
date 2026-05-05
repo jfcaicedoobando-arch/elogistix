@@ -2,6 +2,14 @@ import type { ChangelogEntry } from "../../../changelogData";
 
 export const chunk0: ChangelogEntry[] = [
   {
+    version: "8.118.0",
+    date: "2026-05-05",
+    type: "minor",
+    title: "Proyección: nueva tarjeta 'Hueco de Facturación' (alerta global)",
+    summary: "Tarjeta fija arriba de Pre-Facturación que muestra embarques con ETD > 5 días sin factura emitida, con totales en USD y MXN y dialog de detalle.",
+    description: "Nueva tarjeta de alerta en la tab Proyección de /facturacion. Muestra el 'hueco' de facturación: embarques cuyo ETD es ≥ 1/abr/2026 y han pasado más de 5 días desde el ETD (es decir, el proveedor ya nos facturó) pero todavía no tienen factura con factura_pdf_url emitida al cliente. La tarjeta es FIJA arriba del selector de mes — NO depende del mes seleccionado, es un indicador global. Visualmente: borde lateral destructivo, ícono de alerta, conteo grande de embarques, total sin facturar en USD y MXN, y botón 'Ver detalle' que abre un dialog con la lista completa (expediente, cliente, operador, ETD, badge de 'días sin facturar' coloreado por antigüedad: rojo > 30 días, ámbar > 15, neutro ≤ 15, Venta USD y Venta MXN). Click en cualquier renglón navega al detalle del embarque. Cuando no hay hueco, se muestra una versión 'success' compacta confirmando que todo está al día. Backend: nuevo servicio fetchHuecoFacturacion en src/services/facturas/huecoFacturacion.ts que filtra embarques por etd >= 2026-04-01 y etd <= hoy-6, cruza con conceptos_venta y facturas (por expediente con factura_pdf_url) para excluir los ya facturados, suma venta convertida a USD y MXN con el tipo de cambio del propio embarque. Versión 8.118.0.",
+  },
+  {
     version: "8.117.5",
     date: "2026-05-05",
     type: "minor",
