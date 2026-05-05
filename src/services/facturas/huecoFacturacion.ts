@@ -56,7 +56,7 @@ export async function fetchHuecoFacturacion({
   let q = supabase
     .from("embarques")
     .select(
-      "id, expediente, cliente_nombre, operador, etd, eta, tipo_cambio_usd, tipo_cambio_eur",
+      "id, expediente, cliente_nombre, operador, etd, eta, bl_master, bl_house, tipo_cambio_usd, tipo_cambio_eur",
     )
     .gte("etd", FECHA_INICIO_HUECO)
     .lte("etd", limiteIso)
