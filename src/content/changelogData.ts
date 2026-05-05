@@ -22,14 +22,6 @@ export interface ChangelogEntry {
  */
 export const recentChangelog: ChangelogEntry[] = [
   {
-    version: "8.117.6",
-    date: "2026-05-05",
-    type: "minor",
-    title: "Proyección: tarjeta fija de 'Hueco de Facturación' (ETD > 5 días sin factura)",
-    summary: "Nueva tarjeta destacada arriba de la tab Proyección que muestra los embarques con ETD hace más de 5 días que aún no han sido facturados al cliente, con totales en USD y MXN.",
-    description: "Tarjeta fija arriba de la tab Proyección de /facturacion, independiente del selector de mes. Lista todos los embarques con ETD hace más de 5 días que aún no tienen factura con PDF adjunto, mostrando cantidad, total USD y total MXN sin facturar (calculados con el TC del propio embarque). Botón 'Ver detalle' abre un dialog con la lista ordenada por urgencia (días desde ETD), con badges de color y enlace al detalle del embarque.",
-  },
-  {
     version: "8.117.5",
     date: "2026-05-05",
     type: "minor",
