@@ -162,6 +162,9 @@ export function TabProyeccion() {
 
   return (
     <div className="space-y-4">
+      {/* Hueco de facturación — fijo arriba, indicador global */}
+      <HuecoFacturacionCard />
+
       {/* Header: Selector de mes + Export */}
       <Card>
         <CardContent className="p-4 flex flex-wrap items-center gap-3">
