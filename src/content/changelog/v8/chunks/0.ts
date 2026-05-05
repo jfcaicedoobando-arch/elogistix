@@ -2,6 +2,14 @@ import type { ChangelogEntry } from "../../../changelogData";
 
 export const chunk0: ChangelogEntry[] = [
   {
+    version: "8.117.4",
+    date: "2026-05-05",
+    type: "minor",
+    title: "Proyección: rediseño 'Cierre mensual' con USD + MXN en 3 tarjetas",
+    summary: "El resumen del mes ahora se presenta como un bloque 'CIERRE [Mes Año]' con tarjetas Facturado, Pendiente y Proyectado mostrando embarques + USD + MXN. La tabla añade columna Venta USD y el CSV exporta también los totales en USD.",
+    description: "Rediseño visual de la tab Proyección en /facturacion para presentar el cierre mensual a socios. (1) Nuevo bloque 'CIERRE [Mes Año]' con 3 tarjetas grandes con borde lateral de color: ✓ Facturado (success, embarques + USD + MXN), ⏳ Pendiente de facturar (warning, embarques + USD + MXN) y 📈 Proyectado (info, embarques + Venta USD + Venta MXN + Costo MXN + Profit con margen %). Profit colorea verde/ámbar/rojo según margen. Barra de progreso de avance debajo. Badge superior con 'X/Y facturados · Z%'. (2) Tabla de detalle: nueva columna 'Venta USD' antes de 'Venta MXN'. (3) Lógica de dominio: FilaProyeccion gana venta_usd/costo_usd, GrupoProyeccion gana ventaUsd/costoUsd/profitUsd, KpisProyeccion gana ventaProyUsd/ventaFacturadaUsd/ventaPendienteUsd/costoTotalUsd/profitProyUsd. Nueva helper sumarConceptosEnUsd: USD tal cual, MXN/tcUsd, EUR*tcEur/tcUsd. Sin nuevas queries: USD se deriva del mismo dataset usando el TC del propio embarque. (4) Export CSV ampliado con Venta USD, Costo USD y Profit USD junto a las columnas MXN existentes. (5) Nota informativa actualizada: 'Montos en USD y MXN calculados con el tipo de cambio del propio embarque'. Versión 8.117.4.",
+  },
+  {
     version: "8.117.3",
     date: "2026-05-04",
     type: "patch",

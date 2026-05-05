@@ -8,12 +8,65 @@ import {
 } from "@/components/ui/select";
 import { useNavigate } from "react-router-dom";
 import { DataTable, type DataTableColumn } from "@/components/shared/DataTable";
-import { KpiCard } from "@/components/operaciones/KpiCard";
 import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
-import { formatCurrency, formatCurrencyCompact, formatDate, toTitleCase } from "@/lib/formatters";
+import { formatCurrency, formatDate, toTitleCase } from "@/lib/formatters";
 import { useTabProyeccionController } from "@/hooks/facturacion/useTabProyeccionController";
 import type { GrupoProyeccion } from "@/lib/domain/proyeccionFacturacion";
 import { cn } from "@/lib/utils";
+
+/** Tarjeta interna del bloque "Cierre [Mes]". */
+function CierreCard({
+  tone, icon: Icon, titulo, embarques, lineas, footer,
+}: {
+  tone: "success" | "warning" | "info";
+  icon: React.ElementType;
+  titulo: string;
+  embarques: number;
+  lineas: { label: string; value: string; emphasis?: boolean; className?: string }[];
+  footer?: React.ReactNode;
+}) {
+  const toneStyles: Record<typeof tone, { bar: string; chip: string; text: string }> = {
+    success: { bar: "bg-success", chip: "bg-success/10 text-success", text: "text-success" },
+    warning: { bar: "bg-warning", chip: "bg-warning/10 text-warning", text: "text-warning" },
+    info: { bar: "bg-primary", chip: "bg-primary/10 text-primary", text: "text-primary" },
+  };
+  const s = toneStyles[tone];
+  return (
+    <div className="relative rounded-xl border bg-card overflow-hidden">
+      <div className={cn("absolute left-0 top-0 bottom-0 w-1.5", s.bar)} />
+      <div className="p-5 pl-6">
+        <div className="flex items-center gap-2 mb-3">
+          <div className={cn("rounded-lg p-1.5", s.chip)}>
+            <Icon className="h-4 w-4" />
+          </div>
+          <h4 className={cn("text-xs font-semibold tracking-wide uppercase", s.text)}>{titulo}</h4>
+        </div>
+        <div className="space-y-1">
+          <div className="flex items-baseline justify-between">
+            <span className="text-xs text-muted-foreground">Embarques</span>
+            <span className="text-2xl font-bold tabular-nums">{embarques}</span>
+          </div>
+          {lineas.map((l) => (
+            <div key={l.label} className="flex items-baseline justify-between gap-3">
+              <span className="text-xs text-muted-foreground whitespace-nowrap">{l.label}</span>
+              <span
+                className={cn(
+                  "tabular-nums whitespace-nowrap",
+                  l.emphasis ? "text-lg font-semibold" : "text-sm font-medium",
+                  l.className,
+                )}
+                title={l.value}
+              >
+                {l.value}
+              </span>
+            </div>
+          ))}
+        </div>
+        {footer && <div className="mt-3 pt-3 border-t">{footer}</div>}
+      </div>
+    </div>
+  );
+}
 
 export function TabProyeccion() {
   const c = useTabProyeccionController();
@@ -51,19 +104,25 @@ export function TabProyeccion() {
       ),
     },
     {
-      key: "venta", header: "Venta (MXN)", width: "w-[140px]", align: "right",
+      key: "venta_usd", header: "Venta USD", width: "w-[130px]", align: "right",
+      className: "tabular-nums whitespace-nowrap",
+      sortable: true, sortValue: (g) => g.ventaUsd,
+      render: (g) => formatCurrency(g.ventaUsd, "USD"),
+    },
+    {
+      key: "venta", header: "Venta MXN", width: "w-[140px]", align: "right",
       className: "tabular-nums whitespace-nowrap",
       sortable: true, sortValue: (g) => g.ventaMxn,
       render: (g) => formatCurrency(g.ventaMxn, "MXN"),
     },
     {
-      key: "costo", header: "Costo (MXN)", width: "w-[140px]", align: "right",
+      key: "costo", header: "Costo MXN", width: "w-[140px]", align: "right",
       className: "tabular-nums whitespace-nowrap text-muted-foreground",
       sortable: true, sortValue: (g) => g.costoMxn,
       render: (g) => formatCurrency(g.costoMxn, "MXN"),
     },
     {
-      key: "profit", header: "Profit (MXN)", width: "w-[150px]", align: "right",
+      key: "profit", header: "Profit MXN", width: "w-[150px]", align: "right",
       className: "tabular-nums font-medium whitespace-nowrap",
       sortable: true, sortValue: (g) => g.profitMxn,
       render: (g) => (
@@ -96,6 +155,9 @@ export function TabProyeccion() {
       ),
     },
   ];
+
+  const k = c.kpis;
+  const profitTone = k.margenProyPct < 0 ? "text-destructive" : k.margenProyPct < 10 ? "text-warning" : "text-success";
 
   return (
     <div className="space-y-4">
@@ -148,53 +210,73 @@ export function TabProyeccion() {
         </CardContent>
       </Card>
 
-      {/* KPIs */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-        <KpiCard
-          titulo="Embarques del mes"
-          valor={`${c.kpis.facturados} de ${c.kpis.totalExpedientes} facturados`}
-          subtitulo={`${c.kpis.pendientes} pendientes de facturar`}
-          icono={Package}
-          color="info"
-          loading={c.isLoading}
-        >
-          <div className="mt-2">
-            <Progress value={c.kpis.avancePct} className="h-1.5" />
+      {/* Bloque "Cierre [Mes Año]" */}
+      <Card>
+        <CardContent className="p-5">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-sm font-bold tracking-widest uppercase text-muted-foreground">
+              Cierre {c.mesActual.label}
+            </h3>
+            <Badge variant="outline" className="font-mono text-xs">
+              {k.facturados}/{k.totalExpedientes} facturados · {k.avancePct.toFixed(0)}%
+            </Badge>
           </div>
-        </KpiCard>
-        <KpiCard
-          titulo="Pendiente de facturar"
-          valor={formatCurrencyCompact(c.kpis.ventaPendienteMxn, "MXN")}
-          valorTooltip={`${formatCurrency(c.kpis.ventaPendienteMxn, "MXN")} pendiente de facturar (${c.kpis.pendientes} embarques)`}
-          subtitulo={`${c.kpis.pendientes} embarques · MXN`}
-          icono={Clock}
-          color="warning"
-          loading={c.isLoading}
-        />
-        <KpiCard
-          titulo="Ya facturado"
-          valor={formatCurrencyCompact(c.kpis.ventaFacturadaMxn, "MXN")}
-          valorTooltip={`${formatCurrency(c.kpis.ventaFacturadaMxn, "MXN")} facturado (${c.kpis.facturados} embarques)`}
-          subtitulo={`${c.kpis.facturados} embarques · MXN`}
-          icono={CheckCircle2}
-          color="success"
-          loading={c.isLoading}
-        />
-        <KpiCard
-          titulo="Profit proyectado (MXN)"
-          valor={formatCurrencyCompact(c.kpis.profitProyMxn, "MXN")}
-          valorTooltip={`Venta ${formatCurrency(c.kpis.ventaProyMxn, "MXN")} − Costo ${formatCurrency(c.kpis.costoTotalMxn, "MXN")} = ${formatCurrency(c.kpis.profitProyMxn, "MXN")}`}
-          subtitulo={`Margen ${c.kpis.margenProyPct.toFixed(1)}% · Venta total ${formatCurrencyCompact(c.kpis.ventaProyMxn, "MXN")}`}
-          icono={TrendingUp}
-          color={c.kpis.margenProyPct < 10 ? "warning" : "accent"}
-          loading={c.isLoading}
-        />
-      </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
+            <CierreCard
+              tone="success"
+              icon={CheckCircle2}
+              titulo="✓ Facturado"
+              embarques={k.facturados}
+              lineas={[
+                { label: "USD", value: formatCurrency(k.ventaFacturadaUsd, "USD"), emphasis: true },
+                { label: "MXN", value: formatCurrency(k.ventaFacturadaMxn, "MXN"), emphasis: true },
+              ]}
+            />
+            <CierreCard
+              tone="warning"
+              icon={Clock}
+              titulo="⏳ Pendiente de facturar"
+              embarques={k.pendientes}
+              lineas={[
+                { label: "USD", value: formatCurrency(k.ventaPendienteUsd, "USD"), emphasis: true },
+                { label: "MXN", value: formatCurrency(k.ventaPendienteMxn, "MXN"), emphasis: true },
+              ]}
+            />
+            <CierreCard
+              tone="info"
+              icon={TrendingUp}
+              titulo="📈 Proyectado (total del mes)"
+              embarques={k.totalExpedientes}
+              lineas={[
+                { label: "Venta USD", value: formatCurrency(k.ventaProyUsd, "USD") },
+                { label: "Venta MXN", value: formatCurrency(k.ventaProyMxn, "MXN") },
+                { label: "Costo MXN", value: formatCurrency(k.costoTotalMxn, "MXN"), className: "text-muted-foreground" },
+                {
+                  label: `Profit (${k.margenProyPct.toFixed(1)}%)`,
+                  value: formatCurrency(k.profitProyMxn, "MXN"),
+                  emphasis: true,
+                  className: profitTone,
+                },
+              ]}
+            />
+          </div>
+
+          {/* Barra de avance */}
+          <div className="mt-4">
+            <div className="flex items-center justify-between text-xs text-muted-foreground mb-1.5">
+              <span>Avance de facturación</span>
+              <span className="tabular-nums font-medium">{k.avancePct.toFixed(0)}%</span>
+            </div>
+            <Progress value={k.avancePct} className="h-2" />
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Nota de moneda */}
       <p className="text-xs text-muted-foreground flex items-center gap-1.5 px-1">
         <Info className="h-3 w-3" />
-        Todos los montos se muestran en MXN. Los conceptos en USD/EUR se convierten al tipo de cambio del propio embarque.
+        Montos en USD y MXN calculados con el tipo de cambio del propio embarque. Los conceptos en otra moneda se convierten automáticamente.
       </p>
 
       {/* Filtros */}
