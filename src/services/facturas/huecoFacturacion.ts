@@ -18,6 +18,8 @@ export interface FilaHueco {
   operador: string;
   etd: string;
   eta: string | null;
+  bl_master: string | null;
+  bl_house: string | null;
   diasDesdeEtd: number;
   ventaMxn: number;
   ventaUsd: number;
@@ -54,7 +56,7 @@ export async function fetchHuecoFacturacion({
   let q = supabase
     .from("embarques")
     .select(
-      "id, expediente, cliente_nombre, operador, etd, eta, tipo_cambio_usd, tipo_cambio_eur",
+      "id, expediente, cliente_nombre, operador, etd, eta, bl_master, bl_house, tipo_cambio_usd, tipo_cambio_eur",
     )
     .gte("etd", FECHA_INICIO_HUECO)
     .lte("etd", limiteIso)
@@ -121,6 +123,8 @@ export async function fetchHuecoFacturacion({
       operador: e.operador ?? "",
       etd: e.etd,
       eta: e.eta,
+      bl_master: e.bl_master ?? null,
+      bl_house: e.bl_house ?? null,
       diasDesdeEtd: diasDesde(e.etd, hoy),
       ventaMxn,
       ventaUsd,

@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
-import { AlertTriangle, Eye, Calendar, ArrowRight } from "lucide-react";
+import { AlertTriangle, Eye, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -10,6 +10,7 @@ import {
 import { DataTable, type DataTableColumn } from "@/components/shared/DataTable";
 import { useOrgFilter } from "@/hooks/shared/useOrgFilter";
 import { fetchHuecoFacturacion, type FilaHueco } from "@/services/facturas/huecoFacturacion";
+import { exportToCsv } from "@/generators/exportCsv";
 import { formatCurrency, formatDate, toTitleCase } from "@/lib/formatters";
 import { cn } from "@/lib/utils";
 
@@ -56,6 +57,21 @@ export function HuecoFacturacionCard() {
       render: (f) => formatDate(f.etd),
     },
     {
+      key: "bl", header: "BL", width: "w-[160px]", className: "font-mono text-xs whitespace-nowrap",
+      sortable: true, sortValue: (f) => f.bl_master ?? f.bl_house ?? "",
+      render: (f) => {
+        const m = f.bl_master?.trim();
+        const h = f.bl_house?.trim();
+        if (!m && !h) return <span className="text-muted-foreground">—</span>;
+        return (
+          <div className="flex flex-col leading-tight">
+            {m && <span title={`Master: ${m}`}>{m}</span>}
+            {h && <span className="text-muted-foreground" title={`House: ${h}`}>H: {h}</span>}
+          </div>
+        );
+      },
+    },
+    {
       key: "dias", header: "Días sin facturar", width: "w-[140px]", align: "center",
       sortable: true, sortValue: (f) => f.diasDesdeEtd,
       render: (f) => {
@@ -89,6 +105,39 @@ export function HuecoFacturacionCard() {
       render: (f) => formatCurrency(f.ventaMxn, "MXN"),
     },
   ], []);
+
+  const exportarCsv = () => {
+    const filas = data?.filas ?? [];
+    if (filas.length === 0) return;
+    const hoy = new Date().toISOString().slice(0, 10);
+    exportToCsv(
+      `hueco_facturacion_${hoy}.csv`,
+      [
+        { key: "expediente", label: "Expediente" },
+        { key: "cliente", label: "Cliente" },
+        { key: "operador", label: "Operador" },
+        { key: "etd", label: "ETD" },
+        { key: "eta", label: "ETA" },
+        { key: "bl_master", label: "BL Master" },
+        { key: "bl_house", label: "BL House" },
+        { key: "dias_sin_facturar", label: "Días sin facturar" },
+        { key: "venta_usd", label: "Venta USD" },
+        { key: "venta_mxn", label: "Venta MXN" },
+      ],
+      filas.map((f) => ({
+        expediente: f.expediente,
+        cliente: f.cliente_nombre,
+        operador: f.operador,
+        etd: f.etd ? formatDate(f.etd) : "",
+        eta: f.eta ? formatDate(f.eta) : "",
+        bl_master: f.bl_master ?? "",
+        bl_house: f.bl_house ?? "",
+        dias_sin_facturar: f.diasDesdeEtd,
+        venta_usd: f.ventaUsd.toFixed(2),
+        venta_mxn: f.ventaMxn.toFixed(2),
+      })),
+    );
+  };
 
   // Si está cargando o no hay hueco, no mostramos la alerta (silenciar cuando todo OK).
   if (!isLoading && totalEmbarques === 0) {
@@ -194,6 +243,14 @@ export function HuecoFacturacionCard() {
           </div>
 
           <DialogFooter className="gap-2 sm:gap-0">
+            <Button
+              variant="outline"
+              onClick={exportarCsv}
+              disabled={(data?.filas.length ?? 0) === 0}
+            >
+              <Download className="h-4 w-4 mr-1.5" />
+              Descargar CSV
+            </Button>
             <Button variant="outline" onClick={() => setOpen(false)}>Cerrar</Button>
           </DialogFooter>
         </DialogContent>

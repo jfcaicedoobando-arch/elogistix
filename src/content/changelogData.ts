@@ -22,6 +22,14 @@ export interface ChangelogEntry {
  */
 export const recentChangelog: ChangelogEntry[] = [
   {
+    version: "8.118.1",
+    date: "2026-05-05",
+    type: "patch",
+    title: "Hueco de Facturación: descarga CSV con BL Master y House",
+    summary: "El dialog de detalle del Hueco de Facturación ahora permite descargar un CSV con los embarques pendientes, incluyendo BL Master y BL House.",
+    description: "El dialog 'Ver detalle' del Hueco de Facturación añade una columna BL (Master + House) y un botón 'Descargar CSV' en el footer. El CSV exporta Expediente, Cliente, Operador, ETD, ETA, BL Master, BL House, Días sin facturar, Venta USD y Venta MXN.",
+  },
+  {
     version: "8.118.0",
     date: "2026-05-05",
     type: "minor",
