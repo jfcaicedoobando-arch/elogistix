@@ -1,98 +1,75 @@
-# Tab "Proyección" en Pre-Facturación (v8.117.0)
+## Rediseño tab "Proyección" estilo Cierre Mensual
 
-Nueva pestaña como **PRIMERA tab** (antes de "Pendientes") para cierre mensual de facturación basado en ETA de embarques.
+Transformar el resumen actual de 4 tarjetas en un **bloque visual tipo "CIERRE [MES]"** con 3 tarjetas grandes (Facturado, Pendiente, Proyectado), cada una mostrando embarques + USD + MXN. La tabla de detalle gana columnas de Venta USD + Venta MXN.
 
-## Objetivo
-Visualizar en tiempo real el avance de facturación de cada mes: cuánto se proyecta facturar (por ETA), cuánto ya está facturado, profit estimado, y desglose por expediente. Pensado para presentar a socios.
+### 1. Lógica de dominio (`src/lib/domain/proyeccionFacturacion.ts`)
 
-## Estructura de la UI
+Agregar tracking de USD en paralelo al MXN existente:
+
+- `FilaProyeccion`: añadir `venta_usd: number` y `costo_usd: number`.
+- `GrupoProyeccion`: añadir `ventaUsd`, `costoUsd`, `profitUsd`.
+- `KpisProyeccion`: añadir `ventaProyUsd`, `ventaFacturadaUsd`, `ventaPendienteUsd`, `costoTotalUsd`, `profitProyUsd`.
+- `agruparPorExpediente` y `calcularKpisProyeccion`: sumar también las versiones USD.
+
+### 2. Servicio (`src/services/facturas/proyeccion.ts`)
+
+- Calcular `venta_usd` y `costo_usd` usando `convertirAUSD` con el TC del embarque, en paralelo a la conversión MXN existente. Sin nuevas queries.
+
+### 3. UI (`src/components/facturacion/TabProyeccion.tsx`)
+
+**Header (sin cambios):** selector de mes + botón Exportar CSV.
+
+**Bloque "Cierre [Mes Año]"** — reemplaza la grid de 4 KPIs por 3 tarjetas grandes:
 
 ```text
-[Pre-Facturación]
-┌─ Tabs: [Proyección] [Pendientes] [Proformas] [Facturas] [Liquidación]
-│
-├─ Selector de mes  [◀ Noviembre 2026 ▶]   [Exportar CSV]
-│
-├─ KPIs (4 tarjetas tipo KpiCard)
-│   ┌──────────────┬──────────────┬──────────────┬──────────────┐
-│   │ Embarques    │ Facturación  │ Profit       │ Avance       │
-│   │ 24 totales   │ $1.2M / 2.1M │ $380K (18%)  │ 11/24 (46%)  │
-│   │ 11 fact·13 p │ proy: $2.1M  │ Proy: $520K  │ Barra prog.  │
-│   └──────────────┴──────────────┴──────────────┴──────────────┘
-│
-├─ Filtros: [Cliente ▼] [Operador ▼] [Estado ▼: todos/facturado/pendiente]
-│
-└─ Tabla detalle agrupada por expediente:
-    Expediente · Cliente · Operador · ETA · Contenedores ·
-    Venta · Costo · Profit · % · Estado [Facturado | Pendiente]
+┌─ CIERRE ABRIL 2026 ────────────────────────────────────────┐
+│                                                            │
+│ ┌──────────────┐ ┌──────────────┐ ┌──────────────────────┐ │
+│ │ ✅ FACTURADO │ │ ⏳ PENDIENTE │ │ 📈 PROYECTADO (mes)  │ │
+│ │              │ │              │ │                      │ │
+│ │ Embarques: 7 │ │ Embarques: 5 │ │ Embarques: 12        │ │
+│ │ USD $12,500  │ │ USD $8,700   │ │ Venta USD $21,200    │ │
+│ │ MXN $85,000  │ │ MXN $39,500  │ │ Venta MXN $124,500   │ │
+│ │              │ │              │ │ Costo MXN $XXX       │ │
+│ │              │ │              │ │ Profit $XXX (XX%)    │ │
+│ └──────────────┘ └──────────────┘ └──────────────────────┘ │
+│                                                            │
+│  Progreso facturación: ████████░░  58% (7/12)              │
+└────────────────────────────────────────────────────────────┘
 ```
 
-## Lógica de negocio
+Detalles visuales:
+- Card contenedora con título "Cierre [Mes Año]" en mayúsculas.
+- 3 tarjetas internas con borde lateral de color (verde / ámbar / azul) e ícono grande superior.
+- Tipografía amplia para los números (text-2xl, tabular-nums).
+- Barra de progreso `Progress` debajo mostrando avance (facturados/total).
+- Tarjeta Profit incluye margen en %, color rojo si negativo / ámbar si <10% / verde si ≥10%.
+- Mantener nota informativa: *"Montos en MXN convertidos al TC del embarque. USD muestra los conceptos en su moneda original sumados (sin convertir)."* — aclaración: en realidad convertimos a USD usando TC del embarque para totales mixtos; ajustar texto a lo que hacemos: *"USD y MXN calculados con el TC propio de cada embarque."*
 
-**Universo del mes seleccionado:** `embarques` con `eta` dentro del mes (rango `[primerDía, últimoDía]`) en la org actual.
+**Filtros:** sin cambios (cliente, operador, estado).
 
-**Agrupación por expediente:** si un expediente tiene múltiples filas (BL Master con varios contenedores), se suman venta/costo/profit y se cuentan contenedores. Estado consolidado: `Facturado` solo si TODOS los embarques del expediente cumplen la regla.
+**Tabla de detalle** — nuevas columnas según el formato pedido:
+- Expediente · Cliente · Operador · ETA · Cont. · **Venta USD** · **Venta MXN** · Costo (MXN) · Profit (MXN) · % · Estado
+- Mantener orden por ETA, click → embarque.
 
-**Regla "Facturado":**
-```
-embarque.tiene_proforma === true
-AND existe factura en `facturas` con embarque_id = X
-    Y `factura_pdf_url` IS NOT NULL
-```
+### 4. Export CSV
 
-**Cálculos:**
-- `Venta` = SUM(`conceptos_venta.total`) del embarque (en MXN, convirtiendo USD/EUR con `tipo_cambio_usd/eur` del embarque vía `convertirAMXN`).
-- `Costo` = SUM(`conceptos_costo.monto`) del embarque (misma conversión).
-- `Profit` = Venta − Costo · `%` = profit / venta.
-- **Proyectado vs Facturado** en KPIs: Proyectado = total de TODOS los embarques del mes; Facturado = solo embarques con estado `Facturado`.
+Añadir columnas `Venta USD`, `Costo USD`, `Profit USD` junto a las MXN existentes.
 
-**Selector de mes:** desde Abril 2026 hasta el mes actual + 12. Default: mes actual. Navegación con botones ◀/▶ y un `Select` con la lista. Estado en URL via `?mes=YYYY-MM` para compartir vistas.
+### 5. Cambios menores
 
-## Archivos nuevos
+- Importar `Tooltip` y un `Badge` de moneda si hace falta resaltar USD vs MXN.
+- Bump de versión a `v8.117.4` y entrada en changelog (`v8/chunks/0.ts` y `changelogData.ts`).
 
-1. **`src/services/facturas/proyeccion.ts`** — `fetchProyeccionMes(orgId, year, month)`:
-   - Query embarques con `eta` en rango, select de `id, expediente, cliente_nombre, operador, eta, tipo_cambio_usd, tipo_cambio_eur, tiene_proforma, contenedor`.
-   - Query paralela `conceptos_venta` y `conceptos_costo` por `embarque_id IN (...)`.
-   - Query paralela `facturas` (`embarque_id, factura_pdf_url`) para flag de facturado real.
-   - Devuelve filas planas + función helper para agrupar por expediente.
+### Archivos a editar
 
-2. **`src/lib/domain/proyeccionFacturacion.ts`** (puro, testeable):
-   - `agruparPorExpediente(filas) → GrupoProyeccion[]`
-   - `calcularKpisProyeccion(grupos) → { totalEmbarques, facturados, pendientes, ventaProy, ventaFacturada, costoTotal, profitProy, avancePct }`
-   - Tipos `FilaProyeccion`, `GrupoProyeccion`, `KpisProyeccion`.
+- `src/lib/domain/proyeccionFacturacion.ts` — campos USD en interfaces, agrupación y KPIs.
+- `src/services/facturas/proyeccion.ts` — calcular `venta_usd` / `costo_usd`.
+- `src/components/facturacion/TabProyeccion.tsx` — nuevo bloque "Cierre", columnas USD en tabla, export CSV ampliado.
+- `src/constants/appVersion.ts`, `src/content/changelog/v8/chunks/0.ts`, `src/content/changelogData.ts`.
 
-3. **`src/hooks/facturacion/useTabProyeccionController.ts`** — controlador:
-   - Estado: `mes` (sincronizado con URL `?mes=YYYY-MM`), filtros (`cliente`, `operador`, `estado`).
-   - `useQuery` con `queryKey: ['facturacion','proyeccion', orgId, mes]`, `staleTime: 60_000`.
-   - `useMemo` para `gruposFiltrados`, `kpis`, `clientesDisponibles`, `operadoresDisponibles`.
-   - `exportarCsv()` usando `exportToCsv` con columnas: expediente, cliente, operador, ETA, contenedores, venta, costo, profit, %, estado.
+### Notas
 
-4. **`src/components/facturacion/TabProyeccion.tsx`** — UI:
-   - Header: `MesSelector` (◀ Mes Año ▶ + Select con meses desde Abril 2026), botón Exportar.
-   - Grid 4 `KpiCard` (reutiliza `src/components/operaciones/KpiCard.tsx`) con tonos: total (neutral), facturación (info), profit (success/warning según margen), avance (con `Progress`).
-   - Card filtros (3 `Select` + `SearchInput` por expediente/cliente).
-   - `DataTable` con columnas alineadas a la derecha (`tabular-nums`) para montos, `font-mono` para expediente. Badge "Facturado" verde / "Pendiente" amarillo. Render expandible si un expediente tiene >1 contenedor (mostrar fila resumen + chevron para ver contenedores).
-   - Empty state con `EmptyStateInline` cuando el mes no tiene embarques.
-
-5. **Tests** `src/lib/domain/__tests__/proyeccionFacturacion.test.ts`:
-   - Agrupación correcta por expediente, suma de totales, conversión de monedas, regla "Facturado" (todos/algunos/ninguno con PDF).
-
-## Archivos editados
-
-- **`src/pages/facturacion/Facturacion.tsx`**: agregar `<TabsTrigger value="proyeccion">Proyección</TabsTrigger>` como primer trigger, `<TabsContent value="proyeccion">` con `<TabProyeccion />`. Cambiar `defaultValue` a `"proyeccion"`.
-- **`src/lib/query/index.ts`**: agregar `queryKeys.facturacion.proyeccion`.
-- **`src/constants/appVersion.ts`**: `8.117.0`.
-- **`src/content/changelog/v8/chunks/0.ts`** y **`src/content/changelogData.ts`**: nueva entrada en español MX.
-
-## Notas técnicas
-
-- **Multi-tenant:** filtrar por `organization_id` vía `useOrgFilter` en el hook (RLS ya lo cubre, pero explicito mejora cache).
-- **Performance:** una sola pasada al backend (3 queries en paralelo con `Promise.all`); cache de 60s. No requiere RPC nueva.
-- **Localización:** mes formateado con `Intl.DateTimeFormat('es-MX', { month: 'long', year: 'numeric' })`. Montos con `formatCurrency`. Fechas DD/MM/YYYY con `formatDate`.
-- **Sin cambios de DB ni RLS.**
-- **Reutiliza:** `KpiCard`, `DataTable`, `SearchInput`, `EmptyStateInline`, `exportToCsv`, `convertirAMXN`, `formatCurrency`.
-
-## Cambios fuera de alcance (no incluidos)
-- Edición de proformas/facturas desde esta tab (read-only).
-- Comparativos vs mes anterior o YoY (se puede agregar en v8.118 si lo piden).
-- Drilldown a `EmbarqueDetalle` (sí incluido: click en fila → `/embarques/:id`).
+- Sin cambios de DB ni RLS.
+- Sin nuevas queries: USD se deriva del mismo `conceptos_venta`/`conceptos_costo` ya cargados, usando `convertirAUSD` con `tipo_cambio_usd` / `tipo_cambio_eur` del embarque.
+- La tab "Proyección" sigue siendo la primera tab de Pre-Facturación.
