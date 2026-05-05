@@ -29,6 +29,7 @@ export const recentChangelog: ChangelogEntry[] = [
     summary: "Nueva tarjeta 'Hueco' detecta embarques donde el proveedor ya facturó (ETD+5d) pero al cliente no, además de Facturado, Pendiente y Proyectado.",
     description: "Rediseño de la tab Proyección en /facturacion: 4 tarjetas (Facturado, Pendiente, Hueco ETD+5d, Proyectado) cada una con embarques + USD + MXN. Nuevo estado 'Hueco' marca grupos sin facturar con más de 5 días desde ETD (proveedor ya cobró pero cliente sin factura). Tabla simplificada con ETD/ETA, badge ⚠️ Hueco con días, filtro de estado actualizado y CSV con ETD + días desde ETD.",
   },
+  {
     version: "8.117.5",
     date: "2026-05-05",
     type: "minor",
