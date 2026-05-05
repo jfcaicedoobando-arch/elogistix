@@ -123,6 +123,8 @@ export async function fetchHuecoFacturacion({
       operador: e.operador ?? "",
       etd: e.etd,
       eta: e.eta,
+      bl_master: e.bl_master ?? null,
+      bl_house: e.bl_house ?? null,
       diasDesdeEtd: diasDesde(e.etd, hoy),
       ventaMxn,
       ventaUsd,
