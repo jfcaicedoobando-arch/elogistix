@@ -106,6 +106,39 @@ export function HuecoFacturacionCard() {
     },
   ], []);
 
+  const exportarCsv = () => {
+    const filas = data?.filas ?? [];
+    if (filas.length === 0) return;
+    const hoy = new Date().toISOString().slice(0, 10);
+    exportToCsv(
+      `hueco_facturacion_${hoy}.csv`,
+      [
+        { key: "expediente", label: "Expediente" },
+        { key: "cliente", label: "Cliente" },
+        { key: "operador", label: "Operador" },
+        { key: "etd", label: "ETD" },
+        { key: "eta", label: "ETA" },
+        { key: "bl_master", label: "BL Master" },
+        { key: "bl_house", label: "BL House" },
+        { key: "dias_sin_facturar", label: "Días sin facturar" },
+        { key: "venta_usd", label: "Venta USD" },
+        { key: "venta_mxn", label: "Venta MXN" },
+      ],
+      filas.map((f) => ({
+        expediente: f.expediente,
+        cliente: f.cliente_nombre,
+        operador: f.operador,
+        etd: f.etd ? formatDate(f.etd) : "",
+        eta: f.eta ? formatDate(f.eta) : "",
+        bl_master: f.bl_master ?? "",
+        bl_house: f.bl_house ?? "",
+        dias_sin_facturar: f.diasDesdeEtd,
+        venta_usd: f.ventaUsd.toFixed(2),
+        venta_mxn: f.ventaMxn.toFixed(2),
+      })),
+    );
+  };
+
   // Si está cargando o no hay hueco, no mostramos la alerta (silenciar cuando todo OK).
   if (!isLoading && totalEmbarques === 0) {
     return (
