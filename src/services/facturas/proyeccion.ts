@@ -7,6 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import {
   rangoMes,
   sumarConceptosEnMxn,
+  sumarConceptosEnUsd,
   type FilaProyeccion,
 } from "@/lib/domain/proyeccionFacturacion";
 
@@ -101,7 +102,9 @@ export async function fetchProyeccionMes({
       tiene_proforma: !!e.tiene_proforma,
       tiene_factura_pdf: !!e.expediente && facturadosSet.has(e.expediente),
       venta_mxn: sumarConceptosEnMxn(ventas, tcUsd, tcEur),
+      venta_usd: sumarConceptosEnUsd(ventas, tcUsd, tcEur),
       costo_mxn: sumarConceptosEnMxn(costos, tcUsd, tcEur),
+      costo_usd: sumarConceptosEnUsd(costos, tcUsd, tcEur),
     };
   });
 }
