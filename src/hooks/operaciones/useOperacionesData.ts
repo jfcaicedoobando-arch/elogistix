@@ -146,6 +146,7 @@ export function useOperacionesData(_periodo: PeriodoFiltro = "mes") {
       cargasEnRiesgo: op.cargasEnRiesgo ?? [],
       historicoCreadosPorMes: (op.historico ?? []).map((h) => ({ mes: h.mes, valor: h.creados })),
       historicoLlegadosPorMes: (op.historico ?? []).map((h) => ({ mes: h.mes, valor: h.llegados })),
+      embarquesPorEstado: (op as ServerOperador & { embarquesPorEstado?: EmbarquesPorEstado }).embarquesPorEstado ?? {},
     }));
   }, [stats]);
 
