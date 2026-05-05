@@ -243,6 +243,14 @@ export function HuecoFacturacionCard() {
           </div>
 
           <DialogFooter className="gap-2 sm:gap-0">
+            <Button
+              variant="outline"
+              onClick={exportarCsv}
+              disabled={(data?.filas.length ?? 0) === 0}
+            >
+              <Download className="h-4 w-4 mr-1.5" />
+              Descargar CSV
+            </Button>
             <Button variant="outline" onClick={() => setOpen(false)}>Cerrar</Button>
           </DialogFooter>
         </DialogContent>
