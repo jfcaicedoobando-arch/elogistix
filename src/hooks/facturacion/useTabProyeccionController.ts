@@ -102,6 +102,7 @@ export function useTabProyeccionController() {
         { key: "expediente", label: "Expediente" },
         { key: "cliente", label: "Cliente" },
         { key: "operador", label: "Operador" },
+        { key: "etd", label: "ETD" },
         { key: "eta", label: "ETA" },
         { key: "contenedores", label: "Contenedores" },
         { key: "venta_usd", label: "Venta USD" },
@@ -112,11 +113,13 @@ export function useTabProyeccionController() {
         { key: "profit_mxn", label: "Profit MXN" },
         { key: "margen", label: "Margen %" },
         { key: "estado", label: "Estado" },
+        { key: "dias_desde_etd", label: "Días desde ETD" },
       ],
       gruposFiltrados.map((g: GrupoProyeccion) => ({
         expediente: g.expediente,
         cliente: g.cliente_nombre,
         operador: g.operador,
+        etd: g.etd ? formatDate(g.etd) : "",
         eta: g.eta ? formatDate(g.eta) : "",
         contenedores: g.totalContenedores,
         venta_usd: g.ventaUsd.toFixed(2),
@@ -127,6 +130,7 @@ export function useTabProyeccionController() {
         profit_mxn: g.profitMxn.toFixed(2),
         margen: g.margenPct.toFixed(1),
         estado: g.estado,
+        dias_desde_etd: g.diasDesdeEtd ?? "",
       })),
     );
   }, [gruposFiltrados, mesActual.key]);
