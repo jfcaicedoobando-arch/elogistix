@@ -33,6 +33,31 @@ export interface ClienteCarga {
   desgloseEstados: DesgloseEstados;
 }
 
+export type EstadoUiKey = keyof DesgloseEstados;
+
+export interface EmbarqueResumen {
+  id: string;
+  expediente: string;
+  clienteNombre: string;
+  modo: string;
+  tipo: string;
+  origen: string;
+  destino: string;
+  etd: string | null;
+  eta: string | null;
+  estadoReal: string;
+  diasEnPuerto: number;
+  diasParaEta: number | null;
+}
+
+export interface EmbarquesPorEstadoBucket {
+  total: number;
+  truncated: boolean;
+  items: EmbarqueResumen[];
+}
+
+export type EmbarquesPorEstado = Partial<Record<EstadoUiKey, EmbarquesPorEstadoBucket>>;
+
 export interface ServerOperador {
   nombre: string;
   cargasActivas: number;
@@ -47,6 +72,7 @@ export interface ServerOperador {
   clientesDesglose: ClienteCarga[];
   cargasEnRiesgo: CargaRiesgo[];
   historico: { mes: string; creados: number; llegados: number }[];
+  embarquesPorEstado?: EmbarquesPorEstado;
 }
 
 export interface ServerStats {

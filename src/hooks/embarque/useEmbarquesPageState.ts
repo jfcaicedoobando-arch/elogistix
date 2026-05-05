@@ -3,6 +3,7 @@
  * Extraído de src/pages/Embarques.tsx para separar UI de orquestación.
  */
 import { useState, useMemo } from "react";
+import { useSearchParams } from "react-router-dom";
 import { useDebounce } from "@/hooks/shared/useDebounce";
 import { useEmbarquesPaginados, calcularEstadoEmbarque } from "@/hooks/embarque/useEmbarques";
 import type { EmbarqueRow } from "@/hooks/embarque/useEmbarques";
@@ -13,11 +14,18 @@ const DEFAULT_PAGE_SIZE = 20;
 export type SortDir = "asc" | "desc";
 
 export function useEmbarquesPageState() {
+  // Inicializa filtros desde query params (?operador=&estado=) al montar.
+  // Permite que páginas como /operaciones lleven al usuario directamente al
+  // listado pre-filtrado.
+  const [searchParams] = useSearchParams();
+  const initOperador = searchParams.get("operador") || "todos";
+  const initEstado = searchParams.get("estado") || "todos";
+
   const [search, setSearch] = useState("");
   const [filterModo, setFilterModo] = useState<string>("todos");
-  const [filterEstado, setFilterEstado] = useState<string>("todos");
+  const [filterEstado, setFilterEstado] = useState<string>(initEstado);
   const [filterCliente, setFilterCliente] = useState<string>("todos");
-  const [filterOperador, setFilterOperador] = useState<string>("todos");
+  const [filterOperador, setFilterOperador] = useState<string>(initOperador);
   const [filterProforma, setFilterProforma] = useState<string>("todos");
   const [fechaDesde, setFechaDesde] = useState("");
   const [fechaHasta, setFechaHasta] = useState("");

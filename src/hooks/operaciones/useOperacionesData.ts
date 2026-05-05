@@ -2,6 +2,9 @@ import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/query";
 import { fetchOperacionesStats } from "@/services/operaciones";
+import type { EmbarquesPorEstado } from "@/services/operaciones";
+
+export type { EmbarqueResumen, EmbarquesPorEstadoBucket, EmbarquesPorEstado, EstadoUiKey } from "@/services/operaciones";
 
 export const MAX_CONTENEDORES = 150;
 
@@ -50,6 +53,7 @@ export interface OperadorData {
   cargasEnRiesgo: CargaRiesgo[];
   historicoCreadosPorMes: { mes: string; valor: number }[];
   historicoLlegadosPorMes: { mes: string; valor: number }[];
+  embarquesPorEstado: EmbarquesPorEstado;
 }
 
 export interface HistoricoMes {
@@ -142,6 +146,7 @@ export function useOperacionesData(_periodo: PeriodoFiltro = "mes") {
       cargasEnRiesgo: op.cargasEnRiesgo ?? [],
       historicoCreadosPorMes: (op.historico ?? []).map((h) => ({ mes: h.mes, valor: h.creados })),
       historicoLlegadosPorMes: (op.historico ?? []).map((h) => ({ mes: h.mes, valor: h.llegados })),
+      embarquesPorEstado: (op as ServerOperador & { embarquesPorEstado?: EmbarquesPorEstado }).embarquesPorEstado ?? {},
     }));
   }, [stats]);
 
