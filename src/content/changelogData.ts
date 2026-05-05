@@ -22,6 +22,14 @@ export interface ChangelogEntry {
  */
 export const recentChangelog: ChangelogEntry[] = [
   {
+    version: "8.118.0",
+    date: "2026-05-05",
+    type: "minor",
+    title: "Proyección: nueva tarjeta 'Hueco de Facturación' (alerta global)",
+    summary: "Tarjeta fija arriba de Pre-Facturación que muestra embarques con ETD > 5 días sin factura emitida, con totales en USD y MXN y dialog de detalle.",
+    description: "Nueva tarjeta de alerta en la tab Proyección de /facturacion. Muestra embarques con ETD ≥ 1/abr/2026 y > 5 días desde ETD que todavía no tienen factura emitida al cliente (factura_pdf_url). Es FIJA arriba del selector de mes — indicador global. Muestra conteo de embarques, total sin facturar en USD y MXN, y botón 'Ver detalle' con dialog (expediente, cliente, operador, ETD, días sin facturar coloreados, Venta USD/MXN, click navega al embarque). Cuando no hay hueco, muestra versión success compacta.",
+  },
+  {
     version: "8.117.5",
     date: "2026-05-05",
     type: "minor",
