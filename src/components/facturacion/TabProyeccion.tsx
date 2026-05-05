@@ -12,6 +12,7 @@ import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
 import { formatCurrency, formatDate, toTitleCase } from "@/lib/formatters";
 import { useTabProyeccionController } from "@/hooks/facturacion/useTabProyeccionController";
 import type { GrupoProyeccion } from "@/lib/domain/proyeccionFacturacion";
+import { HuecoFacturacionCard } from "./HuecoFacturacionCard";
 import { cn } from "@/lib/utils";
 
 /** Tarjeta interna del bloque "Cierre [Mes]". */
