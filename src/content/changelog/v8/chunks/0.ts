@@ -2,6 +2,14 @@ import type { ChangelogEntry } from "../../../changelogData";
 
 export const chunk0: ChangelogEntry[] = [
   {
+    version: "8.118.3",
+    date: "2026-05-06",
+    type: "patch",
+    title: "Refactor Sprint 2: config de auditoría centralizada y subcomponentes de Proyección extraídos",
+    summary: "Se centralizó la configuración de reglas de auditoría en lib/ui/auditoriaConfig.ts y se extrajeron CierreCard y las columnas de la tabla de Proyección.",
+    description: "Limpieza arquitectónica del Sprint 2 de la auditoría. (1) Nuevo módulo src/lib/ui/auditoriaConfig.ts que centraliza REGLA_INFO (label corto, label extendido, descripción e icono) y REGLAS_ORDEN. Antes esta info estaba duplicada entre pages/Auditoria.tsx y components/auditoria/AuditoriaEjecutivoTab.tsx con drift entre versiones; ahora ambos consumen la misma fuente. Pages/Auditoria.tsx pasó de 375 a 284 LOC. (2) Subcomponente CierreCard extraído de TabProyeccion.tsx a src/components/facturacion/CierreCard.tsx (tarjetas de Facturado/Pendiente/Proyectado del bloque Cierre [Mes]). (3) Definición de columnas del DataTable de Proyección movida a src/components/facturacion/proyeccionColumns.tsx. TabProyeccion.tsx pasó de 352 a 215 LOC. Comportamiento de UI idéntico. Versión 8.118.3.",
+  },
+  {
     version: "8.118.2",
     date: "2026-05-06",
     type: "patch",
