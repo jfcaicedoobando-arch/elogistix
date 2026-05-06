@@ -2,6 +2,14 @@ import type { ChangelogEntry } from "../../../changelogData";
 
 export const chunk0: ChangelogEntry[] = [
   {
+    version: "8.118.5",
+    date: "2026-05-06",
+    type: "patch",
+    title: "Documentación: arquitectura y flujo de datos del módulo Auditoría",
+    summary: "Nuevo docs/auditoria.md que documenta el desglose de componentes ejecutivos, los hooks del dominio y el flujo de datos end-to-end.",
+    description: "Se agrega docs/auditoria.md como guía de mantenimiento del módulo de Auditoría tras los Sprints 1-3 del refactor. Incluye: (1) mapa de capas services → hooks → components → page; (2) tabla con cada hook del dominio (useAuditoria, useAuditoriaEjecutivo, useAuditoriaPageController, snapshots, revisiones, etc.) y su responsabilidad/cache; (3) árbol de subcomponentes de la vista ejecutiva (EjecutivoScoreCard, EjecutivoAtencionCard, EjecutivoAlertasUrgencia, EjecutivoDistribucionRow, EjecutivoPorReglaGrid) con descripción de cada uno; (4) descripción de los helpers compartidos (DrillKpi, DistribucionBarras, EmptyMsg, scoreEstadoConfig); (5) explicación del drill-down y de la fuente única lib/ui/auditoriaConfig.ts; (6) diagrama del flujo de datos end-to-end; (7) convenciones para extender (nueva regla, nuevo KPI, nueva acción de drill-down). Cambio sólo de documentación, sin impacto en runtime. Versión 8.118.5.",
+  },
+  {
     version: "8.118.4",
     date: "2026-05-06",
     type: "patch",

@@ -22,6 +22,14 @@ export interface ChangelogEntry {
  */
 export const recentChangelog: ChangelogEntry[] = [
   {
+    version: "8.118.5",
+    date: "2026-05-06",
+    type: "patch",
+    title: "Documentación: arquitectura y flujo de datos del módulo Auditoría",
+    summary: "Nuevo docs/auditoria.md con el desglose de componentes ejecutivos, hooks del dominio y flujo de datos end-to-end.",
+    description: "Guía de mantenimiento tras los Sprints 1-3 del refactor: mapa de capas, tabla de hooks, árbol de subcomponentes, helpers compartidos, fuente única de configuración de reglas y convenciones para extender el módulo. Sólo documentación.",
+  },
+  {
     version: "8.118.4",
     date: "2026-05-06",
     type: "patch",
