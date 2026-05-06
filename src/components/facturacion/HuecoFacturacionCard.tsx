@@ -1,18 +1,9 @@
-import { useMemo, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { useNavigate } from "react-router-dom";
-import { AlertTriangle, Eye, Download } from "lucide-react";
+import { useState } from "react";
+import { AlertTriangle, Eye } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import {
-  Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter,
-} from "@/components/ui/dialog";
-import { DataTable, type DataTableColumn } from "@/components/shared/DataTable";
-import { useOrgFilter } from "@/hooks/shared/useOrgFilter";
-import { fetchHuecoFacturacion, type FilaHueco } from "@/services/facturas/huecoFacturacion";
-import { exportToCsv } from "@/generators/exportCsv";
-import { formatCurrency, formatDate, toTitleCase } from "@/lib/formatters";
-import { cn } from "@/lib/utils";
+import { useHuecoFacturacion } from "@/hooks/facturacion/useHuecoFacturacion";
+import { formatCurrency } from "@/lib/formatters";
+import { HuecoFacturacionDetalleDialog } from "./HuecoFacturacionDetalleDialog";
 
 /**
  * Tarjeta fija "Hueco de Facturación":
@@ -20,126 +11,11 @@ import { cn } from "@/lib/utils";
  * Indicador global, NO depende del selector de mes.
  */
 export function HuecoFacturacionCard() {
-  const { organizationId } = useOrgFilter();
-  const navigate = useNavigate();
   const [open, setOpen] = useState(false);
+  const { isLoading, filas, totalEmbarques, totalUsd, totalMxn, exportarCsv } =
+    useHuecoFacturacion();
 
-  const { data, isLoading } = useQuery({
-    queryKey: ["facturacion", "hueco", organizationId],
-    queryFn: () => fetchHuecoFacturacion({ organizationId: organizationId ?? null }),
-    staleTime: 60_000,
-  });
-
-  const totalEmbarques = data?.totalEmbarques ?? 0;
-  const totalUsd = data?.totalUsd ?? 0;
-  const totalMxn = data?.totalMxn ?? 0;
-
-  const columns: DataTableColumn<FilaHueco>[] = useMemo(() => [
-    {
-      key: "expediente", header: "Expediente", width: "w-[120px]", sticky: true,
-      className: "font-mono font-medium whitespace-nowrap",
-      sortable: true, sortValue: (f) => f.expediente,
-      render: (f) => f.expediente || "—",
-    },
-    {
-      key: "cliente", header: "Cliente", width: "min-w-[180px]", className: "max-w-[260px] truncate",
-      sortable: true, sortValue: (f) => f.cliente_nombre,
-      render: (f) => <span title={toTitleCase(f.cliente_nombre)}>{toTitleCase(f.cliente_nombre)}</span>,
-    },
-    {
-      key: "operador", header: "Operador", width: "w-[140px]", className: "truncate text-sm",
-      sortable: true, sortValue: (f) => f.operador,
-      render: (f) => f.operador || <span className="text-muted-foreground">—</span>,
-    },
-    {
-      key: "etd", header: "ETD", width: "w-[100px]", className: "text-xs whitespace-nowrap",
-      sortable: true, sortValue: (f) => f.etd,
-      render: (f) => formatDate(f.etd),
-    },
-    {
-      key: "bl", header: "BL", width: "w-[160px]", className: "font-mono text-xs whitespace-nowrap",
-      sortable: true, sortValue: (f) => f.bl_master ?? f.bl_house ?? "",
-      render: (f) => {
-        const m = f.bl_master?.trim();
-        const h = f.bl_house?.trim();
-        if (!m && !h) return <span className="text-muted-foreground">—</span>;
-        return (
-          <div className="flex flex-col leading-tight">
-            {m && <span title={`Master: ${m}`}>{m}</span>}
-            {h && <span className="text-muted-foreground" title={`House: ${h}`}>H: {h}</span>}
-          </div>
-        );
-      },
-    },
-    {
-      key: "dias", header: "Días sin facturar", width: "w-[140px]", align: "center",
-      sortable: true, sortValue: (f) => f.diasDesdeEtd,
-      render: (f) => {
-        const d = f.diasDesdeEtd;
-        const tone = d > 30 ? "destructive" : d > 15 ? "warning" : "default";
-        return (
-          <Badge
-            variant={tone === "default" ? "outline" : "outline"}
-            className={cn(
-              "tabular-nums font-semibold",
-              tone === "destructive" && "bg-destructive/10 text-destructive border-destructive/30",
-              tone === "warning" && "bg-warning/10 text-warning border-warning/30",
-              tone === "default" && "bg-muted text-foreground",
-            )}
-          >
-            {d} días
-          </Badge>
-        );
-      },
-    },
-    {
-      key: "venta_usd", header: "Venta USD", width: "w-[130px]", align: "right",
-      className: "tabular-nums whitespace-nowrap",
-      sortable: true, sortValue: (f) => f.ventaUsd,
-      render: (f) => formatCurrency(f.ventaUsd, "USD"),
-    },
-    {
-      key: "venta_mxn", header: "Venta MXN", width: "w-[140px]", align: "right",
-      className: "tabular-nums whitespace-nowrap font-medium",
-      sortable: true, sortValue: (f) => f.ventaMxn,
-      render: (f) => formatCurrency(f.ventaMxn, "MXN"),
-    },
-  ], []);
-
-  const exportarCsv = () => {
-    const filas = data?.filas ?? [];
-    if (filas.length === 0) return;
-    const hoy = new Date().toISOString().slice(0, 10);
-    exportToCsv(
-      `hueco_facturacion_${hoy}.csv`,
-      [
-        { key: "expediente", label: "Expediente" },
-        { key: "cliente", label: "Cliente" },
-        { key: "operador", label: "Operador" },
-        { key: "etd", label: "ETD" },
-        { key: "eta", label: "ETA" },
-        { key: "bl_master", label: "BL Master" },
-        { key: "bl_house", label: "BL House" },
-        { key: "dias_sin_facturar", label: "Días sin facturar" },
-        { key: "venta_usd", label: "Venta USD" },
-        { key: "venta_mxn", label: "Venta MXN" },
-      ],
-      filas.map((f) => ({
-        expediente: f.expediente,
-        cliente: f.cliente_nombre,
-        operador: f.operador,
-        etd: f.etd ? formatDate(f.etd) : "",
-        eta: f.eta ? formatDate(f.eta) : "",
-        bl_master: f.bl_master ?? "",
-        bl_house: f.bl_house ?? "",
-        dias_sin_facturar: f.diasDesdeEtd,
-        venta_usd: f.ventaUsd.toFixed(2),
-        venta_mxn: f.ventaMxn.toFixed(2),
-      })),
-    );
-  };
-
-  // Si está cargando o no hay hueco, no mostramos la alerta (silenciar cuando todo OK).
+  // Si está cargando o no hay hueco, mostramos un estado compacto positivo.
   if (!isLoading && totalEmbarques === 0) {
     return (
       <div className="rounded-xl border border-success/30 bg-success/5 p-4 flex items-center gap-3">
@@ -171,7 +47,8 @@ export function HuecoFacturacionCard() {
                 ⚠ Hueco de Facturación
               </h3>
               <p className="text-xs text-muted-foreground mt-0.5">
-                Embarques con ETD &gt; 5 días (proveedor ya facturó) y sin factura emitida al cliente.
+                Embarques con ETD &gt; 5 días (proveedor ya facturó) y sin factura emitida al
+                cliente.
                 <span className="ml-1 italic">Indicador global, no depende del mes seleccionado.</span>
               </p>
             </div>
@@ -213,48 +90,16 @@ export function HuecoFacturacionCard() {
         </div>
       </div>
 
-      <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="max-w-5xl max-h-[85vh] flex flex-col">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <AlertTriangle className="h-5 w-5 text-destructive" />
-              Hueco de Facturación — {totalEmbarques} embarques
-            </DialogTitle>
-            <DialogDescription>
-              ETD desde 1/abr/2026, más de 5 días sin emitir factura al cliente.
-              Total pendiente: <strong>{formatCurrency(totalUsd, "USD")}</strong> ·{" "}
-              <strong>{formatCurrency(totalMxn, "MXN")}</strong>
-            </DialogDescription>
-          </DialogHeader>
-
-          <div className="flex-1 overflow-auto -mx-6 px-6">
-            <DataTable
-              columns={columns}
-              data={data?.filas ?? []}
-              isLoading={isLoading}
-              rowKey={(f) => f.embarque_id}
-              density="comfortable"
-              emptyMessage="Sin embarques en hueco de facturación"
-              onRowClick={(f) => {
-                setOpen(false);
-                navigate(`/embarques/${f.embarque_id}`);
-              }}
-            />
-          </div>
-
-          <DialogFooter className="gap-2 sm:gap-0">
-            <Button
-              variant="outline"
-              onClick={exportarCsv}
-              disabled={(data?.filas.length ?? 0) === 0}
-            >
-              <Download className="h-4 w-4 mr-1.5" />
-              Descargar CSV
-            </Button>
-            <Button variant="outline" onClick={() => setOpen(false)}>Cerrar</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <HuecoFacturacionDetalleDialog
+        open={open}
+        onOpenChange={setOpen}
+        filas={filas}
+        totalEmbarques={totalEmbarques}
+        totalUsd={totalUsd}
+        totalMxn={totalMxn}
+        isLoading={isLoading}
+        onExportCsv={exportarCsv}
+      />
     </>
   );
 }

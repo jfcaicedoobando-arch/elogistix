@@ -6,3 +6,4 @@ export * from "./useFacturas";
 export * from "./useTabProformasController";
 export * from "./useTabProformasPendientesController";
 export * from "./useTabProformasState";
+export * from "./useHuecoFacturacion";
