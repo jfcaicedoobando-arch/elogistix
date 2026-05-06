@@ -22,6 +22,14 @@ export interface ChangelogEntry {
  */
 export const recentChangelog: ChangelogEntry[] = [
   {
+    version: "8.118.3",
+    date: "2026-05-06",
+    type: "patch",
+    title: "Refactor Sprint 2: config de auditoría centralizada y subcomponentes de Proyección extraídos",
+    summary: "Se centralizó la configuración de reglas de auditoría y se extrajeron CierreCard y las columnas de Proyección.",
+    description: "Nuevo módulo lib/ui/auditoriaConfig.ts (REGLA_INFO + REGLAS_ORDEN) consumido por Auditoria.tsx y AuditoriaEjecutivoTab.tsx, eliminando duplicación. CierreCard y proyeccionColumns extraídos de TabProyeccion.tsx. Sin cambios visuales.",
+  },
+  {
     version: "8.118.2",
     date: "2026-05-06",
     type: "patch",
