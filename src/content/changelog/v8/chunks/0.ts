@@ -2,6 +2,14 @@ import type { ChangelogEntry } from "../../../changelogData";
 
 export const chunk0: ChangelogEntry[] = [
   {
+    version: "8.118.8",
+    date: "2026-05-06",
+    type: "patch",
+    title: "Auditoría de tests: arreglo de test obsoleto en parsers/dashboard",
+    summary: "Revisión completa de la suite (278 tests). Se actualiza el test desactualizado de parseCargasPorCliente para reflejar la normalización del desglose.",
+    description: "Revisión de la suite de tests del proyecto: 30 archivos / 278 tests, 277 verdes y 1 rojo (test desactualizado tras refactor del parser). Arreglo: src/lib/parsers/__tests__/dashboard.test.ts → 'parseCargasPorCliente' ahora valida correctamente que el parser normaliza desglose con las 5 llaves de estado (Confirmado, En Tránsito, Arribo, En Aduana, Entregado) inicializadas en 0 cuando vienen vacías, y agrega un segundo caso que confirma que conserva los conteos cuando vienen poblados (2 tests reemplazan al anterior). No se borra ningún test: la cobertura existente (Auditoría 30, Financial 43, Domain/Embarque/Cotización ~75, Hooks/UI ~60, parsers/services/storage el resto) está sana y sin duplicados materiales. Resultado: 14/14 en dashboard.test.ts. Versión 8.118.8.",
+  },
+  {
     version: "8.118.7",
     date: "2026-05-06",
     type: "patch",
