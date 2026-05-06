@@ -22,6 +22,14 @@ export interface ChangelogEntry {
  */
 export const recentChangelog: ChangelogEntry[] = [
   {
+    version: "8.118.2",
+    date: "2026-05-06",
+    type: "patch",
+    title: "Refactor Sprint 1: Hueco de Facturación modularizado",
+    summary: "Se separó el componente HuecoFacturacionCard en hook, columnas y dialog para alinearlo al patrón del resto del proyecto.",
+    description: "Limpieza arquitectónica: nuevo hook useHuecoFacturacion (encapsula useQuery + CSV), columnas en huecoFacturacionColumns.tsx y dialog en HuecoFacturacionDetalleDialog.tsx. El card pasó de 260 a ~110 LOC sin cambios de UX.",
+  },
+  {
     version: "8.118.1",
     date: "2026-05-05",
     type: "patch",
