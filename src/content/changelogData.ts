@@ -22,6 +22,14 @@ export interface ChangelogEntry {
  */
 export const recentChangelog: ChangelogEntry[] = [
   {
+    version: "8.118.6",
+    date: "2026-05-06",
+    type: "patch",
+    title: "Tests del módulo Auditoría: 23 casos para hooks y derivaciones",
+    summary: "Nuevas suites para useAuditoriaEjecutivo, useAuditoriaPageController, useHallazgosTablaState y hallazgoHash. 23 tests verdes.",
+    description: "Cobertura end-to-end de los hooks de Auditoría con I/O mockeado: score, penalización por severidad, exclusión de revisados, riesgo financiero, ETA (vencidos/urgentes/edad), MTTR + ranking, drill-down (severidad/cliente/búsqueda/soloVencidos/responsable), paginación, modos y hash determinista.",
+  },
+  {
     version: "8.118.5",
     date: "2026-05-06",
     type: "patch",
