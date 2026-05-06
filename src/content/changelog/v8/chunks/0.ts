@@ -2,6 +2,14 @@ import type { ChangelogEntry } from "../../../changelogData";
 
 export const chunk0: ChangelogEntry[] = [
   {
+    version: "8.118.4",
+    date: "2026-05-06",
+    type: "patch",
+    title: "Refactor Sprint 3: Auditoría ejecutiva troceada y tests de proyección",
+    summary: "El componente AuditoriaEjecutivoTab pasa de 418 a 94 LOC al extraer Score, Atención, Alertas, Distribución y PorRegla a subcomponentes; se añaden 15 tests para la lógica de proyección de facturación.",
+    description: "Sprint 3 de la auditoría arquitectónica. (1) AuditoriaEjecutivoTab.tsx se redujo de 418 a 94 LOC y queda como compositor delgado. Los subcomponentes se movieron a src/components/auditoria/ejecutivo/: EjecutivoScoreCard (salud operativa + drill por severidad), EjecutivoAtencionCard (% atendidos, edad promedio), EjecutivoAlertasUrgencia (vencidos + ETA ≤ 3 días), EjecutivoDistribucionRow (barras por etapa y top clientes), EjecutivoPorReglaGrid (conteo por regla). Helpers visuales (DrillKpi, DistribucionBarras, EmptyMsg) y la configuración SCORE_ESTADO_CONFIG también vivien en su propio archivo. (2) Nuevo archivo de tests src/lib/domain/__tests__/proyeccionFacturacion.test.ts con 15 casos que cubren conversiones MXN/USD/EUR, agrupación por expediente, consolidación de estado Facturado/Pendiente, ordenamiento por ETA, KPIs de cierre mensual y generación de meses disponibles. Sin cambios visuales para el usuario. Versión 8.118.4.",
+  },
+  {
     version: "8.118.3",
     date: "2026-05-06",
     type: "patch",
