@@ -22,22 +22,10 @@ import { cn } from "@/lib/utils";
 import type { ReglaAuditoria } from "@/types/auditoria";
 import type { AuditoriaEjecutivoData } from "@/hooks/auditoria/useAuditoriaEjecutivo";
 import { useAutoCapturarSnapshot } from "@/hooks/auditoria/useAuditoriaSnapshots";
+import { reglaShortLabel } from "@/lib/ui/auditoriaConfig";
 import { AuditoriaTendenciaChart } from "./AuditoriaTendenciaChart";
 import { AuditoriaOperadoresCard } from "./AuditoriaOperadoresCard";
 import { AuditoriaRiesgoFinancieroCard } from "./AuditoriaRiesgoFinancieroCard";
-
-const reglaLabel: Record<ReglaAuditoria, string> = {
-  docs_faltantes: "Docs faltantes según etapa",
-  docs_pendientes_avanzado: "Docs pendientes en avanzados",
-  fechas: "Inconsistencias de fechas",
-  ventas_sin_facturar: "Ventas sin facturar",
-  margen_negativo: "Margen negativo",
-  margen_bajo: "Margen bajo",
-  venta_sin_costo: "Venta sin costo cargado",
-  costo_sin_venta: "Costo sin venta facturable",
-  proforma_vencida: "Proforma vencida sin factura",
-  embarque_huerfano: "Embarque huérfano",
-};
 
 const scoreEstadoConfig = {
   excelente: {
