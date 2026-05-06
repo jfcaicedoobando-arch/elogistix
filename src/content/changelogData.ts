@@ -22,6 +22,14 @@ export interface ChangelogEntry {
  */
 export const recentChangelog: ChangelogEntry[] = [
   {
+    version: "8.118.8",
+    date: "2026-05-06",
+    type: "patch",
+    title: "Auditoría de tests: arreglo de test obsoleto en parsers/dashboard",
+    summary: "Revisión de la suite (278 tests). Se actualiza el test desactualizado de parseCargasPorCliente para reflejar la normalización del desglose.",
+    description: "30 archivos / 278 tests revisados. Test rojo: parseCargasPorCliente esperaba desglose vacío pero el parser ya normaliza con las 5 llaves de estado en 0. Reemplazado por 2 casos: uno valida la normalización con desglose vacío y otro confirma que se conservan los conteos cuando vienen poblados. Sin tests redundantes detectados; sin borrar nada. 14/14 verdes en dashboard.test.ts.",
+  },
+  {
     version: "8.118.7",
     date: "2026-05-06",
     type: "patch",
@@ -92,14 +100,6 @@ export const recentChangelog: ChangelogEntry[] = [
     title: "Operaciones: drill-down de embarques por estado en cada operador",
     summary: "En cada tarjeta de operador, los conteos por estado ahora son clickeables y abren la lista detallada de embarques en ese estado.",
     description: "En /operaciones, cada renglón de estado dentro de la tarjeta de operador es ahora clickeable y abre un dialog con la lista de embarques (expediente, cliente, modo, ruta, ETD/ETA, días en puerto o días para ETA), búsqueda local y enlace al detalle. Botón 'Ver todos en Embarques' lleva al listado pre-filtrado por operador + estado. Backend: la RPC operaciones_stats incluye un nuevo campo embarquesPorEstado por operador, limitado a 200 ítems por estado (50 para Cerrado).",
-  },
-  {
-    version: "8.117.4",
-    date: "2026-05-05",
-    type: "minor",
-    title: "Proyección: rediseño 'Cierre mensual' con USD + MXN en 3 tarjetas",
-    summary: "El resumen del mes ahora se presenta como un bloque 'CIERRE [Mes Año]' con tarjetas Facturado, Pendiente y Proyectado mostrando embarques + USD + MXN. La tabla añade columna Venta USD y el CSV exporta también los totales en USD.",
-    description: "Rediseño visual de la tab Proyección en /facturacion para presentar el cierre mensual a socios. Nuevo bloque 'CIERRE [Mes Año]' con 3 tarjetas (Facturado, Pendiente, Proyectado) cada una con embarques + USD + MXN; Profit colorea verde/ámbar/rojo según margen y barra de progreso debajo. Tabla de detalle con nueva columna 'Venta USD'. CSV ampliado con Venta/Costo/Profit USD. Lógica de dominio extendida con sumarConceptosEnUsd; sin nuevas queries (USD se deriva con el TC propio de cada embarque). Versión 8.117.4.",
   },
 ];
 

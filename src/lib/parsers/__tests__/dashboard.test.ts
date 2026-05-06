@@ -95,9 +95,34 @@ describe("dashboardParsers", () => {
       expect(parseCargasPorCliente({})).toEqual([]);
     });
 
-    it("retorna el array tal cual cuando existe", () => {
+    it("normaliza desglose con las 5 llaves de estado en 0 cuando vienen vacías", () => {
       const cargas = [{ clienteId: "1", clienteNombre: "X", total: 5, desglose: {} as never }];
-      expect(parseCargasPorCliente({ cargasPorCliente: cargas })).toEqual(cargas);
+      expect(parseCargasPorCliente({ cargasPorCliente: cargas })).toEqual([
+        {
+          clienteId: "1",
+          clienteNombre: "X",
+          total: 5,
+          desglose: {
+            Confirmado: 0,
+            "En Tránsito": 0,
+            Arribo: 0,
+            "En Aduana": 0,
+            Entregado: 0,
+          },
+        },
+      ]);
+    });
+
+    it("preserva los conteos del desglose cuando vienen poblados", () => {
+      const cargas = [
+        {
+          clienteId: "2",
+          clienteNombre: "Y",
+          total: 7,
+          desglose: { Confirmado: 2, "En Tránsito": 3, Arribo: 1, "En Aduana": 1, Entregado: 0 },
+        },
+      ];
+      expect(parseCargasPorCliente({ cargasPorCliente: cargas as never })).toEqual(cargas);
     });
   });
 
