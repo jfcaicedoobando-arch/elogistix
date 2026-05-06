@@ -197,7 +197,7 @@ export function TabProyeccion() {
             />
           ) : (
             <DataTable
-              columns={columns}
+              columns={proyeccionColumns}
               data={c.grupos}
               isLoading={c.isLoading}
               rowKey={(g) => g.expediente}
