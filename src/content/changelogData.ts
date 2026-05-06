@@ -101,6 +101,7 @@ export const recentChangelog: ChangelogEntry[] = [
     summary: "El resumen del mes ahora se presenta como un bloque 'CIERRE [Mes Año]' con tarjetas Facturado, Pendiente y Proyectado mostrando embarques + USD + MXN. La tabla añade columna Venta USD y el CSV exporta también los totales en USD.",
     description: "Rediseño visual de la tab Proyección en /facturacion para presentar el cierre mensual a socios. Nuevo bloque 'CIERRE [Mes Año]' con 3 tarjetas (Facturado, Pendiente, Proyectado) cada una con embarques + USD + MXN; Profit colorea verde/ámbar/rojo según margen y barra de progreso debajo. Tabla de detalle con nueva columna 'Venta USD'. CSV ampliado con Venta/Costo/Profit USD. Lógica de dominio extendida con sumarConceptosEnUsd; sin nuevas queries (USD se deriva con el TC propio de cada embarque). Versión 8.117.4.",
   },
+];
 
 /** Deduplica por version conservando la primera ocurrencia (recentChangelog gana). */
 export function dedupeByVersion(entries: ChangelogEntry[]): ChangelogEntry[] {
