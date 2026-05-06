@@ -1,4 +1,4 @@
-import { ChevronLeft, ChevronRight, Download, Package, TrendingUp, CheckCircle2, Calendar, Info, Clock } from "lucide-react";
+import { ChevronLeft, ChevronRight, Download, TrendingUp, CheckCircle2, Calendar, Info, Clock } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -7,155 +7,18 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { useNavigate } from "react-router-dom";
-import { DataTable, type DataTableColumn } from "@/components/shared/DataTable";
+import { DataTable } from "@/components/shared/DataTable";
 import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
-import { formatCurrency, formatDate, toTitleCase } from "@/lib/formatters";
+import { formatCurrency, toTitleCase } from "@/lib/formatters";
 import { useTabProyeccionController } from "@/hooks/facturacion/useTabProyeccionController";
-import type { GrupoProyeccion } from "@/lib/domain/proyeccionFacturacion";
 import { HuecoFacturacionCard } from "./HuecoFacturacionCard";
-import { cn } from "@/lib/utils";
-
-/** Tarjeta interna del bloque "Cierre [Mes]". */
-function CierreCard({
-  tone, icon: Icon, titulo, embarques, lineas, footer,
-}: {
-  tone: "success" | "warning" | "info";
-  icon: React.ElementType;
-  titulo: string;
-  embarques: number;
-  lineas: { label: string; value: string; emphasis?: boolean; className?: string }[];
-  footer?: React.ReactNode;
-}) {
-  const toneStyles: Record<typeof tone, { bar: string; chip: string; text: string }> = {
-    success: { bar: "bg-success", chip: "bg-success/10 text-success", text: "text-success" },
-    warning: { bar: "bg-warning", chip: "bg-warning/10 text-warning", text: "text-warning" },
-    info: { bar: "bg-primary", chip: "bg-primary/10 text-primary", text: "text-primary" },
-  };
-  const s = toneStyles[tone];
-  return (
-    <div className="relative rounded-xl border bg-card overflow-hidden">
-      <div className={cn("absolute left-0 top-0 bottom-0 w-1.5", s.bar)} />
-      <div className="p-5 pl-6">
-        <div className="flex items-center gap-2 mb-3">
-          <div className={cn("rounded-lg p-1.5", s.chip)}>
-            <Icon className="h-4 w-4" />
-          </div>
-          <h4 className={cn("text-xs font-semibold tracking-wide uppercase", s.text)}>{titulo}</h4>
-        </div>
-        <div className="space-y-1">
-          <div className="flex items-baseline justify-between">
-            <span className="text-xs text-muted-foreground">Embarques</span>
-            <span className="text-2xl font-bold tabular-nums">{embarques}</span>
-          </div>
-          {lineas.map((l) => (
-            <div key={l.label} className="flex items-baseline justify-between gap-3">
-              <span className="text-xs text-muted-foreground whitespace-nowrap">{l.label}</span>
-              <span
-                className={cn(
-                  "tabular-nums whitespace-nowrap",
-                  l.emphasis ? "text-lg font-semibold" : "text-sm font-medium",
-                  l.className,
-                )}
-                title={l.value}
-              >
-                {l.value}
-              </span>
-            </div>
-          ))}
-        </div>
-        {footer && <div className="mt-3 pt-3 border-t">{footer}</div>}
-      </div>
-    </div>
-  );
-}
+import { CierreCard } from "./CierreCard";
+import { proyeccionColumns } from "./proyeccionColumns";
 
 export function TabProyeccion() {
   const c = useTabProyeccionController();
   const navigate = useNavigate();
 
-  const columns: DataTableColumn<GrupoProyeccion>[] = [
-    {
-      key: "expediente", header: "Expediente", width: "w-[120px]", sticky: true,
-      className: "font-mono font-medium whitespace-nowrap",
-      sortable: true, sortValue: (g) => g.expediente,
-      render: (g) => g.expediente,
-    },
-    {
-      key: "cliente", header: "Cliente", width: "min-w-[180px]", className: "max-w-[240px] truncate",
-      sortable: true, sortValue: (g) => g.cliente_nombre,
-      render: (g) => <span title={toTitleCase(g.cliente_nombre)}>{toTitleCase(g.cliente_nombre)}</span>,
-    },
-    {
-      key: "operador", header: "Operador", width: "w-[140px]", className: "truncate text-sm",
-      sortable: true, sortValue: (g) => g.operador,
-      render: (g) => g.operador || <span className="text-muted-foreground">—</span>,
-    },
-    {
-      key: "eta", header: "ETA", width: "w-[100px]", className: "text-xs whitespace-nowrap",
-      sortable: true, sortValue: (g) => g.eta ?? "",
-      render: (g) => g.eta ? formatDate(g.eta) : "—",
-    },
-    {
-      key: "contenedores", header: "Cont.", width: "w-[70px]", align: "center",
-      render: (g) => (
-        <span className="inline-flex items-center gap-1 text-xs" title={g.contenedores.join(", ")}>
-          <Package className="h-3 w-3 opacity-60" />
-          <span className="tabular-nums font-medium">{g.totalContenedores || 0}</span>
-        </span>
-      ),
-    },
-    {
-      key: "venta_usd", header: "Venta USD", width: "w-[130px]", align: "right",
-      className: "tabular-nums whitespace-nowrap",
-      sortable: true, sortValue: (g) => g.ventaUsd,
-      render: (g) => formatCurrency(g.ventaUsd, "USD"),
-    },
-    {
-      key: "venta", header: "Venta MXN", width: "w-[140px]", align: "right",
-      className: "tabular-nums whitespace-nowrap",
-      sortable: true, sortValue: (g) => g.ventaMxn,
-      render: (g) => formatCurrency(g.ventaMxn, "MXN"),
-    },
-    {
-      key: "costo", header: "Costo MXN", width: "w-[140px]", align: "right",
-      className: "tabular-nums whitespace-nowrap text-muted-foreground",
-      sortable: true, sortValue: (g) => g.costoMxn,
-      render: (g) => formatCurrency(g.costoMxn, "MXN"),
-    },
-    {
-      key: "profit", header: "Profit MXN", width: "w-[150px]", align: "right",
-      className: "tabular-nums font-medium whitespace-nowrap",
-      sortable: true, sortValue: (g) => g.profitMxn,
-      render: (g) => (
-        <span className={cn(g.profitMxn < 0 ? "text-destructive" : "text-success")}>
-          {formatCurrency(g.profitMxn, "MXN")}
-        </span>
-      ),
-    },
-    {
-      key: "margen", header: "%", width: "w-[70px]", align: "right",
-      className: "tabular-nums text-xs",
-      sortable: true, sortValue: (g) => g.margenPct,
-      render: (g) => (
-        <span className={cn(g.margenPct < 0 ? "text-destructive" : g.margenPct < 10 ? "text-warning" : "text-foreground")}>
-          {g.margenPct.toFixed(1)}%
-        </span>
-      ),
-    },
-    {
-      key: "estado", header: "Estado", width: "w-[110px]",
-      sortable: true, sortValue: (g) => g.estado,
-      render: (g) => g.estado === "Facturado" ? (
-        <Badge className="bg-success/15 text-success border border-success/30 hover:bg-success/20">
-          Facturado
-        </Badge>
-      ) : (
-        <Badge variant="outline" className="bg-warning/10 text-warning border-warning/30">
-          Pendiente
-        </Badge>
-      ),
-    },
-  ];
 
   const k = c.kpis;
   const profitTone = k.margenProyPct < 0 ? "text-destructive" : k.margenProyPct < 10 ? "text-warning" : "text-success";
