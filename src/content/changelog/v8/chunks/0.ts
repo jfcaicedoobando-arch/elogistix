@@ -2,6 +2,14 @@ import type { ChangelogEntry } from "../../../changelogData";
 
 export const chunk0: ChangelogEntry[] = [
   {
+    version: "8.118.6",
+    date: "2026-05-06",
+    type: "patch",
+    title: "Tests del módulo Auditoría: 23 casos para hooks y derivaciones",
+    summary: "Nuevas suites de tests para useAuditoriaEjecutivo, useAuditoriaPageController, useHallazgosTablaState y hallazgoHash, con 23 casos verdes.",
+    description: "Cobertura end-to-end de la lógica del módulo Auditoría sin tocar Supabase (hooks de I/O mockeados). Suites añadidas en src/hooks/auditoria/__tests__/: (1) useAuditoriaEjecutivo (8 tests): score 100 sin pendientes, penalización por severidad (crítico=5, alto=2, medio=1), exclusión de revisados, riesgo financiero MXN sólo en reglas financieras (clamp negativos a 0), clasificación ETA (vencidos / urgentes ≤3d / edad promedio), agrupación por etapa y top clientes ordenados por críticos, MTTR en horas + ranking de operadores, formateo es-MX de generadoEn. (2) useAuditoriaPageController (5 tests): oculta revisados por defecto, alterna mostrarRevisados, filtros por severidad/modo, agrupación por regla con arrays vacíos, kpiSeveridad sobre visibles, lista de modos única ordenada. (3) useHallazgosTablaState (6 tests): drill-down (initialSeveridad+initialCliente, initialSearch case-insensitive sobre expediente, soloVencidos pre-establece etaHasta=hoy, initialResponsable='mios' filtra por user.id), paginación 75/50→2 páginas, clientes únicos ordenados es-MX. (4) useAuditoriaRevisiones (4 tests): hallazgoHash determinista, distinto por cualquier campo, base36; revisionKey con formato embarque|regla|hash. 23/23 tests pasan. Versión 8.118.6.",
+  },
+  {
     version: "8.118.5",
     date: "2026-05-06",
     type: "patch",
