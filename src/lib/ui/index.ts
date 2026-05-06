@@ -5,3 +5,4 @@
 export * from "./uiMappings";
 export * from "./estadoConfig";
 export * from "./kpiTones";
+export * from "./auditoriaConfig";
