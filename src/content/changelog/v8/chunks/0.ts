@@ -2,6 +2,14 @@ import type { ChangelogEntry } from "../../../changelogData";
 
 export const chunk0: ChangelogEntry[] = [
   {
+    version: "8.118.7",
+    date: "2026-05-06",
+    type: "patch",
+    title: "Tests de borde: helpers financieros y reglas de Auditoría",
+    summary: "23 nuevos tests cubren conversiones MXN/USD/EUR, montos negativos, tasas extremas, NaN, ETAs nulas, datos ausentes y score saturado.",
+    description: "Ampliación de cobertura sin cambios de comportamiento. (1) src/lib/financial/__tests__/financialUtils.edge.test.ts (16 tests): round-trip USD↔MXN preserva el monto, EUR→USD pasa por base MXN, defaults sin tasas, montos negativos, tcUSD=1, tasa IVA 0, calcularMargen(0,0)=0 sin NaN, utilidad con devolución; sumarEnUSD multi-moneda, lista vacía=0, moneda desconocida (passthrough); calcularTotalesPL con lista vacía, profit positivo/negativo, sin NaN cuando ventas=0. (2) src/hooks/auditoria/__tests__/useAuditoriaEjecutivo.edge.test.tsx (7 tests): data undefined + isLoading, ETAs nulas no cuentan como vencidas/urgentes y edad=null, monto_mxn ausente no contamina riesgo, cliente vacío→'Sin cliente', estado vacío→'—', sin revisiones todos pendientes y MTTR=null, score saturado a 0 con 30 críticos. (3) Mantenimiento: trim de recentChangelog a 10 entradas (chunk0 sigue como fuente de verdad) para satisfacer el test de integridad y mantener bundle inicial pequeño. Tests pasan 23/23 nuevos. Versión 8.118.7.",
+  },
+  {
     version: "8.118.6",
     date: "2026-05-06",
     type: "patch",
