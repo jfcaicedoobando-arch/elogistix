@@ -62,7 +62,7 @@ export default function Auditoria() {
     const rows = c.hallazgosFiltrados.map((h) => ({
       severidad: h.severidad,
       expediente: h.expediente,
-      regla: reglaLabel[h.regla],
+      regla: reglaShortLabel(h.regla),
       cliente: h.cliente_nombre || "",
       modo: h.modo,
       estado: h.estado,
@@ -250,7 +250,7 @@ export default function Auditoria() {
           ) : (
             <Accordion type="multiple" defaultValue={REGLAS_ORDEN} className="space-y-2">
               {REGLAS_ORDEN.map((regla) => {
-                const cfg = reglaConfig[regla];
+                const cfg = REGLA_INFO[regla];
                 const items = c.porRegla[regla];
                 const Icon = cfg.icon;
                 return (
