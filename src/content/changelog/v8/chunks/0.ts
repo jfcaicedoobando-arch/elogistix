@@ -2,6 +2,14 @@ import type { ChangelogEntry } from "../../../changelogData";
 
 export const chunk0: ChangelogEntry[] = [
   {
+    version: "8.118.2",
+    date: "2026-05-06",
+    type: "patch",
+    title: "Refactor Sprint 1: Hueco de Facturación modularizado",
+    summary: "Se separó el componente HuecoFacturacionCard en hook (useHuecoFacturacion), columnas (huecoFacturacionColumns) y dialog (HuecoFacturacionDetalleDialog).",
+    description: "Limpieza arquitectónica del Sprint 1 de la auditoría. (1) Nuevo hook useHuecoFacturacion en src/hooks/facturacion/ que encapsula la useQuery y la generación del CSV — el card ya no toca @tanstack/react-query directamente. (2) Definición de columnas extraída a src/components/facturacion/huecoFacturacionColumns.tsx. (3) Diálogo de detalle extraído a src/components/facturacion/HuecoFacturacionDetalleDialog.tsx. El comportamiento es idéntico para el usuario; el componente principal pasó de 260 LOC a ~110 y queda alineado al patrón services → hooks → components del resto del proyecto. Versión 8.118.2.",
+  },
+  {
     version: "8.118.1",
     date: "2026-05-05",
     type: "patch",
