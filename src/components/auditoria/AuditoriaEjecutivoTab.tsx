@@ -295,7 +295,7 @@ export function AuditoriaEjecutivoTab({ data, onDrillDown }: Props) {
                   {data.porRegla[r]}
                 </div>
                 <div className="text-xs text-muted-foreground mt-0.5">
-                  {reglaLabel[r]}
+                  {reglaShortLabel(r)}
                 </div>
               </div>
             ))}
