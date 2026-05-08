@@ -22,6 +22,14 @@ export interface ChangelogEntry {
  */
 export const recentChangelog: ChangelogEntry[] = [
   {
+    version: "8.128.0",
+    date: "2026-05-08",
+    type: "minor",
+    title: "Fase D audit casts: strictNullChecks activado",
+    summary: "`strictNullChecks: true` activado en tsconfig. Solo 14 errores reales reparados (vs ~800 estimados antes de Fases A-C). Suite 285/285 verde.",
+    description: "Cierre de Fase D del strict-mode roadmap. tsconfig.json y tsconfig.app.json: strictNullChecks=true. Errores reparados: BloqueVinculacion (narrowing inválido en rama else), DialogMarcarFacturada (guard de embarque_id null), PortalEmbarquesRecientesCard (acepta null en puertos/aeropuertos), useDialogGenerarProformaController (notas null en vez de undefined), CostoCotizacion del wizard (proveedor/moneda nullable), EmbarqueDetalleActions (null→undefined), PortalEmbarqueDetalle (estadoVisual fallback), consolidar_proformas (defaults para campos requeridos por RPC), profit_por_cliente (?? undefined). Las Fases A-C bajaron la deuda de ~800 a 14 errores.",
+  },
+  {
     version: "8.127.0",
     date: "2026-05-08",
     type: "minor",
@@ -100,14 +108,6 @@ export const recentChangelog: ChangelogEntry[] = [
     title: "Auditoría de tests: arreglo de test obsoleto en parsers/dashboard",
     summary: "Revisión de la suite (278 tests). Se actualiza el test desactualizado de parseCargasPorCliente para reflejar la normalización del desglose.",
     description: "30 archivos / 278 tests revisados. Test rojo: parseCargasPorCliente esperaba desglose vacío pero el parser ya normaliza con las 5 llaves de estado en 0. Reemplazado por 2 casos: uno valida la normalización con desglose vacío y otro confirma que se conservan los conteos cuando vienen poblados. Sin tests redundantes detectados; sin borrar nada. 14/14 verdes en dashboard.test.ts.",
-  },
-  {
-    version: "8.118.7",
-    date: "2026-05-06",
-    type: "patch",
-    title: "Tests de borde: helpers financieros y reglas de Auditoría",
-    summary: "23 nuevos tests cubren conversiones MXN/USD/EUR, montos negativos, tasas extremas, NaN, ETAs nulas, datos ausentes y score saturado.",
-    description: "financialUtils.edge.test.ts (16) cubre round-trip de monedas, EUR vía MXN, defaults, negativos, IVA 0, calcularMargen(0,0), sumarEnUSD multi-moneda y calcularTotalesPL sin NaN. useAuditoriaEjecutivo.edge.test.tsx (7) cubre data undefined, ETAs nulas, monto_mxn ausente, cliente/estado vacíos, ausencia de revisiones (MTTR=null) y score saturado a 0.",
   },
 ];
 
