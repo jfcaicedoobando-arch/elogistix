@@ -22,12 +22,12 @@ export interface ChangelogEntry {
  */
 export const recentChangelog: ChangelogEntry[] = [
   {
-    version: "8.128.0",
+    version: "8.129.0",
     date: "2026-05-08",
     type: "minor",
-    title: "Fase D audit casts: strictNullChecks activado",
-    summary: "`strictNullChecks: true` activado en tsconfig. Solo 14 errores reales reparados (vs ~800 estimados antes de Fases A-C). Suite 285/285 verde.",
-    description: "Cierre de Fase D del strict-mode roadmap. tsconfig.json y tsconfig.app.json: strictNullChecks=true. Errores reparados: BloqueVinculacion (narrowing inválido en rama else), DialogMarcarFacturada (guard de embarque_id null), PortalEmbarquesRecientesCard (acepta null en puertos/aeropuertos), useDialogGenerarProformaController (notas null en vez de undefined), CostoCotizacion del wizard (proveedor/moneda nullable), EmbarqueDetalleActions (null→undefined), PortalEmbarqueDetalle (estadoVisual fallback), consolidar_proformas (defaults para campos requeridos por RPC), profit_por_cliente (?? undefined). Las Fases A-C bajaron la deuda de ~800 a 14 errores.",
+    title: "Fase E (parcial): noImplicitAny activado, strict completo evaluado",
+    summary: "`noImplicitAny: true` activado: 0 errores. Strict completo evaluado: solo 3 errores de strictFunctionTypes en wrappers de RQ/RHF; pospuesto para no agregar boilerplate innecesario.",
+    description: "tsconfig.json y tsconfig.app.json: noImplicitAny=true (0 errores, ningún `any` implícito en el proyecto). Probado strict=true: solo 3 errores reales (EditarCotizacion, NuevaCotizacion y Proveedores), todos por strictFunctionTypes en props que envuelven mutations/handlers de React Query y RHF; el costo de refactorizar firmas para satisfacer contravariancia no compensa el beneficio. Quedan strict=false con strictNullChecks+noImplicitAny=true como configuración estable. Suite 285/285 verde.",
   },
   {
     version: "8.127.0",
