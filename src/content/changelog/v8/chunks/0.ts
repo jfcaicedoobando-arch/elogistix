@@ -2,6 +2,14 @@ import type { ChangelogEntry } from "../../../changelogData";
 
 export const chunk0: ChangelogEntry[] = [
   {
+    version: "8.130.0",
+    date: "2026-05-08",
+    type: "minor",
+    title: "Integración Terminal49: tracking marítimo automático",
+    summary: "Nueva integración con Terminal49 para sincronizar ETA, milestones y eventos de contenedores marítimos directo de la naviera. Activación opt-in por embarque.",
+    description: "Fase 1 de la integración con Terminal49. (1) Migración: tabla tracking_externo (1:1 con embarque, RLS por org + lectura del cliente dueño) y tracking_webhook_log (auditoría, solo super_admin). (2) Edge functions: terminal49-create-tracking (POST /v2/tracking_requests con BL Master + SCAC, maneja duplicados) y terminal49-sync (refresca tracking_request + shipment + transport_events e inserta milestones nuevos en eventos_embarque, idempotente por descripción+fecha; sobrescribe ETA, fecha_llegada_real y estado). (3) UI: nueva tarjeta TerminalAutomaticoCard en TabTracking del detalle del embarque, solo visible para modo Marítimo. Permite Activar / Sincronizar ahora / Desactivar. Muestra estado (pending/succeeded/failed), SCAC, número rastreado, última sincronización y último evento. (4) Servicios y hooks: src/services/tracking/terminal49.ts y src/hooks/embarque/useTrackingTerminal49.ts (React Query con invalidación de eventos del embarque al sincronizar). (5) SCAC se resuelve desde navieras.code (UN-LOCODE de 4 letras). Pendiente Fase 2: webhooks (requiere registrar URL en Terminal49 + WEBHOOK_SECRET). Versión 8.130.0.",
+  },
+  {
     version: "8.129.0",
     date: "2026-05-08",
     type: "minor",

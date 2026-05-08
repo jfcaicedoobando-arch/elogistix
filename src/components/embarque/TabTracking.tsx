@@ -15,13 +15,17 @@ import { useToast } from '@/hooks/use-toast';
 import { getErrorMessage } from '@/lib/errors';
 import { formatDate, nombreDesdeEmail } from '@/lib/formatters';
 import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
+import { TerminalAutomaticoCard } from "./TerminalAutomaticoCard";
 
 interface Props {
   embarqueId: string;
+  modo?: string | null;
+  blMaster?: string | null;
+  naviera?: string | null;
 }
 
 
-export function TabTracking({ embarqueId }: Props) {
+export function TabTracking({ embarqueId, modo, blMaster, naviera }: Props) {
   const { data: eventos = [], isLoading } = useEventosEmbarque(embarqueId);
   const crearEvento = useCreateEventoEmbarque();
   const { user } = useAuth();
@@ -59,6 +63,13 @@ export function TabTracking({ embarqueId }: Props) {
 
   return (
     <div className="space-y-6">
+      <TerminalAutomaticoCard
+        embarqueId={embarqueId}
+        modo={modo ?? null}
+        blMaster={blMaster ?? null}
+        naviera={naviera ?? null}
+      />
+
       {canEdit && (
         <div className="flex justify-end">
           <Button size="sm" onClick={() => setFormAbierto(!formAbierto)}>
