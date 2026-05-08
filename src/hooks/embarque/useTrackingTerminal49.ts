@@ -7,6 +7,7 @@ import {
   activarTrackingTerminal49,
   sincronizarTrackingTerminal49,
   eliminarTrackingTerminal49,
+  vincularShipmentManualTerminal49,
   type TrackingExterno,
 } from "@/services/tracking/terminal49";
 
