@@ -6,10 +6,11 @@ import { fromDb, toDbJson } from "@/lib/supabase/cast";
 // Schemas para validar los payloads de retorno de las RPCs.
 // Si la RPC cambia de shape o devuelve null inesperado, fallamos rápido y
 // fuerte en el boundary, en vez de propagar `undefined.id` aguas abajo.
-// Nota: tipamos explícitamente con `z.ZodType<T>` porque `strictNullChecks`
-// está apagado y `z.infer` haría todos los campos opcionales.
-const rpcIdSchema: z.ZodType<{ id: string }> = z.object({ id: z.string().uuid() });
-const rpcIdExpedienteArraySchema: z.ZodType<{ id: string; expediente: string }[]> = z.array(
+// Nota: con `strictNullChecks` apagado, `z.infer` marca los campos como
+// opcionales aunque Zod los valide como requeridos. Por eso re-tipamos en
+// el call site con `fromDb<T>` (segunda sobrecarga sin schema) tras validar.
+const rpcIdSchema = z.object({ id: z.string().uuid() });
+const rpcIdExpedienteArraySchema = z.array(
   z.object({ id: z.string().uuid(), expediente: z.string() }),
 );
 
@@ -30,7 +31,8 @@ export async function crearEmbarqueRpc(input: CrearEmbarqueRpcInput): Promise<{ 
     p_documentos: toDbJson(input.documentos),
   });
   if (error) throw error;
-  return fromDb(data, rpcIdSchema);
+  rpcIdSchema.parse(data); // valida en runtime; lanza ZodError si shape inválido
+  return fromDb<{ id: string }>(data);
 }
 
 export interface ActualizarEmbarqueRpcInput {
@@ -65,7 +67,8 @@ export async function duplicarEmbarqueRpc(
     p_copias: toDbJson(copias),
   });
   if (error) throw error;
-  return fromDb(data, rpcIdExpedienteArraySchema);
+  rpcIdExpedienteArraySchema.parse(data); // valida shape; lanza ZodError si inválido
+  return fromDb<{ id: string; expediente: string }[]>(data);
 }
 
 export async function eliminarEmbarqueRpc(embarqueId: string): Promise<void> {

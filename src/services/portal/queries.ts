@@ -1,9 +1,6 @@
 import { z } from "zod";
 import { supabase } from "@/integrations/supabase/client";
 import { fromDb } from "@/lib/supabase/cast";
-
-// Schema reutilizable para joins anidados que devuelven { nombre } o null.
-const nombreNullableSchema = z.object({ nombre: z.string() }).nullable();
 import {
   PORTAL_EMBARQUE_LIST_COLUMNS,
   PORTAL_EMBARQUE_DETAIL_COLUMNS,
@@ -12,6 +9,10 @@ import {
   PORTAL_COTIZACION_LIST_COLUMNS,
   PORTAL_FACTURA_LIST_COLUMNS,
 } from "./columns";
+
+// Schema reutilizable para joins anidados que devuelven { nombre } o null.
+// Validamos en runtime para detectar drift de schema en boundaries.
+const nombreNullableSchema = z.object({ nombre: z.string() }).nullable();
 
 export async function fetchPortalEmbarques(clienteIds: string[]) {
   if (!clienteIds.length) return [];
@@ -142,7 +143,8 @@ export async function fetchPortalClienteName(): Promise<string | null> {
     .limit(1)
     .maybeSingle();
   if (error) throw error;
-  const clientes = fromDb(data?.clientes ?? null, nombreNullableSchema);
+  nombreNullableSchema.parse(data?.clientes ?? null); // valida shape en runtime
+  const clientes = fromDb<{ nombre: string } | null>(data?.clientes);
   return clientes?.nombre ?? null;
 }
 
@@ -156,6 +158,7 @@ export async function fetchPortalOrgName(): Promise<string | null> {
     .limit(1)
     .maybeSingle();
   if (error) throw error;
-  const org = fromDb(data?.organizations ?? null, nombreNullableSchema);
+  nombreNullableSchema.parse(data?.organizations ?? null); // valida shape en runtime
+  const org = fromDb<{ nombre: string } | null>(data?.organizations);
   return org?.nombre ?? null;
 }
