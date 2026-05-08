@@ -160,7 +160,6 @@ Deno.serve(async (req) => {
         }
       }
     }
-    }
 
     if (!t49Res.ok && !t49Json?.data) {
       console.error("Terminal49 error", t49Res.status, t49Json);
