@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ArrowLeft, ArrowRight } from "lucide-react";
-import type { TablesInsert } from "@/integrations/supabase/types";
+import type { TablesInsert } from "@/types/db";
 import {
   TIPOS_PROVEEDOR as TIPOS,
   MONEDAS_PROVEEDOR as MONEDAS,
@@ -14,7 +14,7 @@ import {
 } from "@/constants/proveedorConstants";
 import DocumentChecklist from "@/components/shared/DocumentChecklist";
 import { useNuevoProveedorController } from "@/hooks/proveedor/useNuevoProveedorController";
-import type { Enums } from "@/integrations/supabase/types";
+import type { Enums } from "@/types/db";
 
 interface Props {
   open: boolean;

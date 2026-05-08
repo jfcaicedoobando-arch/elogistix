@@ -12,7 +12,7 @@ import { formatCurrency, formatDate, toTitleCase } from "@/lib/formatters";
 import { getEstadoColor } from "@/lib/ui/uiMappings";
 import { DataTable, type DataTableColumn } from "@/components/shared/DataTable";
 import { PageHeader } from "@/components/shared/PageHeader";
-import type { Database } from "@/integrations/supabase/types";
+import type { Database } from "@/types/db";
 import { TabProformas } from "@/components/facturacion/TabProformas";
 import { TabProformasPendientes } from "@/components/facturacion/TabProformasPendientes";
 import { TabProyeccion } from "@/components/facturacion/TabProyeccion";

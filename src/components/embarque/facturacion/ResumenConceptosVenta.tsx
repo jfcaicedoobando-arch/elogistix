@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { DataTable, type DataTableColumn } from "@/components/shared/DataTable";
 import { formatCurrency } from "@/lib/formatters";
 import { calcularIVA } from "@/lib/financial/financialUtils";
-import type { Tables } from "@/integrations/supabase/types";
+import type { Tables } from "@/types/db";
 
 type ConceptoVenta = Tables<"conceptos_venta">;
 
