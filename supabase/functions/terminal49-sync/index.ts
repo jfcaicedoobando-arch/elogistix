@@ -225,6 +225,8 @@ Deno.serve(async (req) => {
       containers: containers.length,
       eventos_nuevos: nuevosEventos,
       embarque_actualizado: embUpdate,
+      fallback_bl_usado: fallbackUsed,
+      shipment_id: trackedObjectId,
     });
   } catch (err) {
     console.error("sync exception", err);
