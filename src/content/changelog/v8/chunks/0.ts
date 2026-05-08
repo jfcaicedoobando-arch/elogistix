@@ -2,6 +2,14 @@ import type { ChangelogEntry } from "../../../changelogData";
 
 export const chunk0: ChangelogEntry[] = [
   {
+    version: "8.120.0",
+    date: "2026-05-08",
+    type: "minor",
+    title: "PR-1 audit calidad: shim de tipos DB, barrel de use-toast y constante APP_ROLES",
+    summary: "Componentes y pages dejan de importar de integrations/. Nuevo shim @/types/db, barrel re-export de use-toast en hooks/shared, y constante APP_ROLES en types/appRole.",
+    description: "Primer PR sobre el audit de arquitectura de Greg the Great. (1) Layer violations: 14 archivos en components/ y pages/ que importaban tipos directamente de '@/integrations/supabase/types' migrados al nuevo shim '@/types/db' (re-exporta Database, Tables, TablesInsert, TablesUpdate, Enums). Pages/components ya no tocan la capa de infraestructura. Archivos migrados: cliente/DialogContacto, cliente/TablaContactos, embarque/DialogGenerarProforma, embarque/TabFacturacion, embarque/facturacion/ResumenConceptosVenta, embarque/proforma/PasoConfirmacionProforma, embarque/proforma/PasoSeleccionConceptos, portal/PortalEmbarqueDocumentos, portal/PortalEmbarqueTimeline, proveedor/EditarProveedorDialog, proveedor/NuevoProveedorDialog, facturacion/Facturacion, portal/PortalCotizacionDetalle, proveedores/Proveedores. (2) src/hooks/use-toast.ts ya no queda fuera del barrel: nuevo src/hooks/shared/use-toast.ts re-exporta useToast/toast (compatibilidad total con los 48 imports legados de '@/hooks/use-toast'; ahora también consumible vía '@/hooks/shared'). (3) src/types/appRole.ts: nueva constante APP_ROLES (SUPER_ADMIN/ADMIN/OPERADOR/VIEWER/CLIENTE) tipada con `satisfies Record<string, AppRole>`, lista para reemplazar literales de roles en futuras iteraciones (App.tsx, Login, AppSidebar, usePermissions, NuevoUsuarioDialog, admin-org/Usuarios). Hallazgos NO accionados con justificación: types.ts en .gitignore (lo gestiona Lovable Cloud), strict:true global (cambio masivo, plan por dominio en futura iteración), 511 `as` casts (helpers puntuales en próximos PRs), services con crud.ts (no es inconsistencia: todos los services tienen index.ts como barrel y crud.ts es submódulo). Versión 8.120.0.",
+  },
+  {
     version: "8.119.0",
     date: "2026-05-08",
     type: "minor",
