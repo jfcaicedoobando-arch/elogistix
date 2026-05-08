@@ -49,6 +49,15 @@ export async function sincronizarTrackingTerminal49(embarqueId: string) {
   return data;
 }
 
+export async function vincularShipmentManualTerminal49(embarqueId: string, shipmentId: string) {
+  const { data, error } = await supabase.functions.invoke("terminal49-link-shipment", {
+    body: { embarque_id: embarqueId, shipment_id: shipmentId },
+  });
+  if (error) throw error;
+  if (data?.error) throw new Error(data.error);
+  return data;
+}
+
 export async function eliminarTrackingTerminal49(embarqueId: string) {
   const { error } = await supabase
     .from("tracking_externo")

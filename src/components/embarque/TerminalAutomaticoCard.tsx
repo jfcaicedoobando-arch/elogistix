@@ -1,13 +1,16 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Satellite, RefreshCw, Trash2, AlertCircle, CheckCircle2 } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Satellite, RefreshCw, Trash2, AlertCircle, CheckCircle2, Link2 } from "lucide-react";
 import { formatDate } from "@/lib/formatters";
 import {
   useTrackingTerminal49,
   useActivarTracking,
   useSincronizarTracking,
   useEliminarTracking,
+  useVincularShipmentManual,
 } from "@/hooks/embarque/useTrackingTerminal49";
 import { usePermissions } from "@/hooks/shared/usePermissions";
 import { useState } from "react";
@@ -22,6 +25,15 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 
 interface Props {
   embarqueId: string;
@@ -45,7 +57,10 @@ export function TerminalAutomaticoCard({ embarqueId, modo, blMaster, naviera }: 
   const activar = useActivarTracking(embarqueId);
   const sincronizar = useSincronizarTracking(embarqueId);
   const eliminar = useEliminarTracking(embarqueId);
+  const vincularManual = useVincularShipmentManual(embarqueId);
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [linkOpen, setLinkOpen] = useState(false);
+  const [shipmentIdInput, setShipmentIdInput] = useState("");
 
   if (modo !== "Marítimo") return null;
 
@@ -128,6 +143,56 @@ export function TerminalAutomaticoCard({ embarqueId, modo, blMaster, naviera }: 
                   <RefreshCw className={`h-4 w-4 mr-1 ${sincronizar.isPending ? "animate-spin" : ""}`} />
                   {sincronizar.isPending ? "Sincronizando…" : "Sincronizar ahora"}
                 </Button>
+
+                {!tracking.shipment_id && (
+                  <Dialog open={linkOpen} onOpenChange={setLinkOpen}>
+                    <DialogTrigger asChild>
+                      <Button size="sm" variant="outline">
+                        <Link2 className="h-4 w-4 mr-1" />
+                        Vincular shipment manualmente
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent>
+                      <DialogHeader>
+                        <DialogTitle>Vincular shipment de Terminal49</DialogTitle>
+                        <DialogDescription>
+                          Pega el ID del shipment que ves en Terminal49. Lo encuentras en la URL:{" "}
+                          <span className="font-mono text-xs">
+                            app.terminal49.com/shipments/<strong>[ESTE-ID]</strong>
+                          </span>
+                        </DialogDescription>
+                      </DialogHeader>
+                      <div className="space-y-2">
+                        <Label htmlFor="shipment-id">Shipment ID (UUID)</Label>
+                        <Input
+                          id="shipment-id"
+                          placeholder="bfb7cb2d-3546-4bd7-bde2-3c6120778de9"
+                          value={shipmentIdInput}
+                          onChange={(e) => setShipmentIdInput(e.target.value)}
+                          className="font-mono text-sm"
+                        />
+                      </div>
+                      <DialogFooter>
+                        <Button variant="ghost" onClick={() => setLinkOpen(false)}>
+                          Cancelar
+                        </Button>
+                        <Button
+                          onClick={() => {
+                            vincularManual.mutate(shipmentIdInput.trim(), {
+                              onSuccess: () => {
+                                setLinkOpen(false);
+                                setShipmentIdInput("");
+                              },
+                            });
+                          }}
+                          disabled={!shipmentIdInput.trim() || vincularManual.isPending}
+                        >
+                          {vincularManual.isPending ? "Vinculando…" : "Vincular"}
+                        </Button>
+                      </DialogFooter>
+                    </DialogContent>
+                  </Dialog>
+                )}
 
                 <AlertDialog open={confirmDelete} onOpenChange={setConfirmDelete}>
                   <AlertDialogTrigger asChild>

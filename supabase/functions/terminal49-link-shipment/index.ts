@@ -1,5 +1,5 @@
-// Edge function: re-sincroniza un tracking existente con Terminal49.
-// Trae el tracking_request actualizado y, si ya hay shipment, su detalle con eventos.
+// Edge function: vincula manualmente un shipment de Terminal49 al embarque
+// cuando el flujo automático no logra resolver el tracked_object.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 
 const corsHeaders = {
@@ -17,7 +17,6 @@ function json(body: unknown, status = 200) {
   });
 }
 
-// Mapeo de events de Terminal49 → enum tipo_evento_tracking
 function mapEventTypeToEnum(t49Event: string): string {
   if (t49Event.includes("vessel_loaded") || t49Event.includes("vessel_departed")) return "Zarpe";
   if (t49Event.includes("transshipment")) return "Transbordo";
@@ -32,7 +31,6 @@ function mapEventTypeToEnum(t49Event: string): string {
   return "Otro";
 }
 
-// Mapeo de estado de shipment → enum estado_embarque
 function mapStatusToEstado(currentStatus: string): string | null {
   const s = currentStatus.toLowerCase();
   if (s.includes("scheduled") || s.includes("planned")) return "Confirmado";
@@ -66,7 +64,16 @@ Deno.serve(async (req) => {
 
     const body = await req.json().catch(() => null);
     const embarqueId = body?.embarque_id as string | undefined;
+    const shipmentIdRaw = (body?.shipment_id as string | undefined)?.trim();
     if (!embarqueId) return json({ error: "embarque_id requerido" }, 400);
+    if (!shipmentIdRaw) return json({ error: "shipment_id requerido" }, 400);
+
+    // Validación básica de formato UUID
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    if (!uuidRegex.test(shipmentIdRaw)) {
+      return json({ error: "El shipment ID debe ser un UUID válido (cópialo de la URL de Terminal49)" }, 400);
+    }
+    const shipmentId = shipmentIdRaw.toLowerCase();
 
     const { data: tracking, error: trErr } = await supabase
       .from("tracking_externo")
@@ -74,88 +81,32 @@ Deno.serve(async (req) => {
       .eq("embarque_id", embarqueId)
       .eq("provider", "terminal49")
       .maybeSingle();
-    if (trErr || !tracking) return json({ error: "No hay tracking activo" }, 404);
+    if (trErr || !tracking) return json({ error: "No hay tracking activo para este embarque" }, 404);
 
     const t49Headers = {
       Authorization: `Token ${apiKey}`,
       Accept: "application/vnd.api+json",
     };
 
-    // 1. Refrescar el tracking_request
-    let trackingRequestData: any = null;
-    if (tracking.tracking_request_id) {
-      const r = await fetch(
-        `${T49_BASE}/tracking_requests/${tracking.tracking_request_id}?include=tracked_object`,
-        { headers: t49Headers },
-      );
-      const j = await r.json().catch(() => ({}));
-      if (r.ok) trackingRequestData = j;
+    // Confirmar que el shipment existe y traer detalles + eventos
+    const r = await fetch(
+      `${T49_BASE}/shipments/${shipmentId}?include=containers,containers.transport_events,pod_terminal,destination_port`,
+      { headers: t49Headers },
+    );
+    const shipmentJson: any = await r.json().catch(() => ({}));
+    if (!r.ok || !shipmentJson?.data?.id) {
+      const detail = shipmentJson?.errors?.[0]?.detail ?? `HTTP ${r.status}`;
+      return json({ error: `Terminal49 no encontró el shipment: ${detail}`, status: r.status }, 404);
     }
 
-    const newStatus: string =
-      trackingRequestData?.data?.attributes?.status ?? tracking.status;
-    const newFailed: string | null =
-      trackingRequestData?.data?.attributes?.failed_reason ?? null;
-    let trackedObjectId: string | null =
-      trackingRequestData?.data?.relationships?.tracked_object?.data?.id ?? tracking.shipment_id;
+    const containers = Array.isArray(shipmentJson?.included)
+      ? shipmentJson.included.filter((i: any) => i.type === "container")
+      : [];
+    const transportEvents = Array.isArray(shipmentJson?.included)
+      ? shipmentJson.included.filter((i: any) => i.type === "transport_event")
+      : [];
 
-    // Fallback: si Terminal49 aún no asocia el tracked_object, buscamos el shipment por BL
-    // probando varias variantes (con/sin prefijo SCAC, distintos nombres de filtro).
-    const fallbackIntentos: Array<{ url: string; count: number }> = [];
-    if (!trackedObjectId) {
-      const blRaw: string =
-        (tracking as any).request_number ||
-        trackingRequestData?.data?.attributes?.request_number ||
-        "";
-      const scac: string = ((tracking as any).scac || trackingRequestData?.data?.attributes?.scac || "").toUpperCase();
-      const blStripped =
-        scac && blRaw.toUpperCase().startsWith(scac) ? blRaw.slice(scac.length) : blRaw;
-
-      const candidatos: string[] = [];
-      if (blRaw) candidatos.push(blRaw);
-      if (blStripped && blStripped !== blRaw) candidatos.push(blStripped);
-
-      const variantes: Array<(bl: string) => string> = [
-        (bl) => `${T49_BASE}/shipments?filter[bill_of_lading_number]=${encodeURIComponent(bl)}`,
-        (bl) => `${T49_BASE}/shipments?filter[number]=${encodeURIComponent(bl)}`,
-      ];
-
-      outer: for (const bl of candidatos) {
-        for (const buildUrl of variantes) {
-          const url = buildUrl(bl);
-          const r = await fetch(url, { headers: t49Headers });
-          const j = await r.json().catch(() => ({}));
-          const arr = Array.isArray(j?.data) ? j.data : [];
-          fallbackIntentos.push({ url, count: arr.length });
-          console.log(`Fallback intento ${url} → ${arr.length} resultados`);
-          if (arr[0]?.id) {
-            trackedObjectId = arr[0].id;
-            console.log(`Fallback OK → shipment ${trackedObjectId}`);
-            break outer;
-          }
-        }
-      }
-    }
-
-    let shipmentJson: any = null;
-    let containers: any[] = [];
-    let transportEvents: any[] = [];
-
-    if (trackedObjectId) {
-      const r = await fetch(
-        `${T49_BASE}/shipments/${trackedObjectId}?include=containers,containers.transport_events,pod_terminal,destination_port`,
-        { headers: t49Headers },
-      );
-      shipmentJson = await r.json().catch(() => ({}));
-      if (Array.isArray(shipmentJson?.included)) {
-        containers = shipmentJson.included.filter((i: any) => i.type === "container");
-        transportEvents = shipmentJson.included.filter(
-          (i: any) => i.type === "transport_event",
-        );
-      }
-    }
-
-    // Actualizar embarques.eta / fecha_llegada_real / estado si shipment expone fechas
+    // Actualizar embarque con ETA / fecha llegada / estado
     const shipmentAttrs = shipmentJson?.data?.attributes ?? {};
     const newEta: string | null =
       shipmentAttrs?.pod_eta_at ?? shipmentAttrs?.destination_eta_at ?? null;
@@ -172,26 +123,24 @@ Deno.serve(async (req) => {
       await supabase.from("embarques").update(embUpdate).eq("id", embarqueId);
     }
 
-    // Insertar transport_events nuevos en eventos_embarque (idempotente por descripción + fecha)
+    // Insertar transport events nuevos
     let nuevosEventos = 0;
-    if (transportEvents.length > 0) {
-      const { data: orgRow } = await supabase
-        .from("embarques")
-        .select("organization_id")
-        .eq("id", embarqueId)
-        .maybeSingle();
+    const { data: orgRow } = await supabase
+      .from("embarques")
+      .select("organization_id")
+      .eq("id", embarqueId)
+      .maybeSingle();
 
+    if (transportEvents.length > 0) {
       const { data: existentes } = await supabase
         .from("eventos_embarque")
         .select("descripcion, fecha")
         .eq("embarque_id", embarqueId);
-
       const yaExiste = new Set(
         (existentes ?? []).map(
           (e: any) => `${e.descripcion}::${new Date(e.fecha).toISOString().slice(0, 16)}`,
         ),
       );
-
       const inserts: any[] = [];
       for (const ev of transportEvents) {
         const attrs = ev.attributes ?? {};
@@ -218,30 +167,53 @@ Deno.serve(async (req) => {
       }
     }
 
-    // Actualizar tracking_externo
+    const newStatus =
+      shipmentAttrs?.normalized_state ??
+      shipmentAttrs?.current_state ??
+      tracking.status ??
+      "linked";
+
+    // Actualizar tracking_externo con el shipment vinculado
     await supabase
       .from("tracking_externo")
       .update({
-        shipment_id: trackedObjectId,
+        shipment_id: shipmentId,
         status: newStatus,
-        failed_reason: newFailed,
+        failed_reason: null,
         last_synced_at: new Date().toISOString(),
         last_event_at: transportEvents[0]?.attributes?.timestamp ?? tracking.last_event_at,
-        raw_payload: shipmentJson ?? trackingRequestData ?? tracking.raw_payload,
+        raw_payload: shipmentJson,
       })
       .eq("id", tracking.id);
 
+    // Registrar intento manual
+    await supabase.from("tracking_intentos").insert({
+      embarque_id: embarqueId,
+      organization_id: orgRow?.organization_id,
+      provider: "terminal49",
+      accion: "link_manual",
+      request_type: tracking.request_type,
+      request_number: tracking.request_number,
+      scac: tracking.scac,
+      resultado: "exito",
+      http_status: 200,
+      tracking_request_id: tracking.tracking_request_id,
+      mensaje: `Shipment vinculado manualmente: ${shipmentId}`,
+      detalle: { shipment_id: shipmentId, eventos_nuevos: nuevosEventos, containers: containers.length },
+      usuario_id: userData.user.id,
+      usuario_email: userData.user.email ?? "",
+    });
+
     return json({
       ok: true,
+      shipment_id: shipmentId,
       status: newStatus,
       containers: containers.length,
       eventos_nuevos: nuevosEventos,
       embarque_actualizado: embUpdate,
-      fallback_intentos: fallbackIntentos,
-      shipment_id: trackedObjectId,
     });
   } catch (err) {
-    console.error("sync exception", err);
+    console.error("link-shipment exception", err);
     return json({ error: err instanceof Error ? err.message : String(err) }, 500);
   }
 });
