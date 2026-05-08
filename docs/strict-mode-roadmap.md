@@ -75,18 +75,25 @@ usa en boundaries (services), no en componentes.
       - `services/cotizacion/conversiones/embarques.ts`: canalizado por `fromDb<>`.
 - [ ] (Pendiente, opcional) Lint rule custom para enforcement automático.
 
-### Fase D — Activar `strictNullChecks` (1 PR grande)
+### Fase D — Activar `strictNullChecks` ✅ COMPLETADA (8.128.0)
 
-- [ ] Flip del flag en `tsconfig.app.json`.
-- [ ] Ejecutar `tsc --noEmit` y triagear errores por archivo.
-- [ ] Patrones de fix preferidos:
-  - `x?.foo` para acceso opcional
-  - `x ?? defaultValue` para fallback
-  - `if (!x) throw new Error(...)` (assertion narrativa) cuando el null
-    sería un bug real
-  - `invariant(x, "msg")` helper en `lib/errors`
-- [ ] Estimación post-Fases A-C: 100-300 errores (vs. ~800 hoy).
-- [ ] Después: activar `noImplicitAny`, finalmente `strict: true`.
+- [x] Flip del flag en `tsconfig.json` y `tsconfig.app.json`.
+- [x] `tsc --noEmit` reportó **14 errores reales** (vs ~800 estimados antes
+      de Fases A-C). Triados y reparados uno por uno.
+- [x] Patrones aplicados:
+  - Narrowing correcto en ramas `else` (BloqueVinculacion: el binding ya
+    era null en la rama, removido el check redundante que confundía a TS).
+  - Guards explícitos antes de mutaciones (DialogMarcarFacturada).
+  - Defaults `?? ""` / `?? 0` en parámetros de RPC que el dominio modela
+    como nullable pero la firma SQL exige non-null (consolidar_proformas).
+  - Conversiones `?? undefined` cuando la firma generada por Supabase usa
+    `T | undefined` en vez de `T | null` (profit_por_cliente).
+  - Interfaces de domain types relajadas para aceptar `null` proveniente
+    de joins de Supabase (CostoCotizacion del wizard).
+- [ ] Pendiente opcional: activar `noImplicitAny`, finalmente `strict: true`.
+
+**Resultado:** suite 285/285 verde, `tsc --noEmit` limpio. Las Fases A-C
+pagaron la deuda con anticipación: la activación final fue casi trivial.
 
 ## Política para nuevos casts (vigente desde este PR)
 
