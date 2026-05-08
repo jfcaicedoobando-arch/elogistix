@@ -3,7 +3,7 @@ import { CheckCircle2, Clock, FileText, Receipt } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { DataTable, type DataTableColumn } from "@/components/shared/DataTable";
+import { DataTable } from "@/components/shared/DataTable";
 import { formatCurrency } from "@/lib/formatters";
 import { calcularIVA } from "@/lib/financial/financialUtils";
 import type { Tables } from "@/types/db";

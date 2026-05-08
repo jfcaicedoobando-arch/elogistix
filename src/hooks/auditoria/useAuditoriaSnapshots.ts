@@ -10,7 +10,6 @@ import {
 } from "@/services/auditoria";
 import type { AuditoriaSnapshot } from "@/types/auditoria";
 
-const SNAPSHOTS_KEY = ["auditoria", "snapshots", 30] as const;
 
 export function useAuditoriaSnapshots(dias = 30) {
   return useQuery({

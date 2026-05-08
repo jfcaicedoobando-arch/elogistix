@@ -2,7 +2,7 @@
  * Mappers puros entre el formulario de cotización (RHF) y la BD.
  * Tipos del formulario viven en `@/data/cotizacionFormTypes` (capa neutra).
  */
-import type { ConceptoVentaCotizacion, DimensionLCL, DimensionAerea } from "@/types/cotizacion";
+import type { DimensionLCL, DimensionAerea } from "@/types/cotizacion";
 import type { FilaCostoLocal } from "@/types/cotizacionPL";
 import {
   type CotizacionFormValues,

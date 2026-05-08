@@ -105,18 +105,6 @@ interface ServerOperador {
   historico: { mes: string; creados: number; llegados: number }[];
 }
 
-interface ServerStats {
-  operadores: ServerOperador[];
-  global: {
-    totalActivas: number; totalContenedores: number; totalEsteMes: number;
-    totalProfit: number; totalDemoras: number; totalCriticos: number;
-    totalEnPuerto: number; totalPorArribar: number; activasHoy: number;
-    maxContenedores: number;
-  };
-  historicoGlobal: { mes: string; creadas: number; llegadas: number }[];
-  mesesLabels: string[];
-}
-
 /**
  * Operaciones data — powered by server-side RPC `operaciones_stats()`.
  * Replaces previous approach of downloading ALL embarques and aggregating client-side.

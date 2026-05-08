@@ -11,7 +11,6 @@ export default function ConfigOrganizacion() {
   const [selectedOrgId, setSelectedOrgId] = useState<string>("");
   const { data: configItems = [], isLoading } = useConfiguracionByOrg(selectedOrgId || null);
 
-  const selectedOrg = organizations.find((o) => o.id === selectedOrgId);
 
   const grouped = configItems.reduce<Record<string, typeof configItems>>((acc, item) => {
     if (!acc[item.categoria]) acc[item.categoria] = [];

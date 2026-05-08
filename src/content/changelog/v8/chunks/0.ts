@@ -2,6 +2,14 @@ import type { ChangelogEntry } from "../../../changelogData";
 
 export const chunk0: ChangelogEntry[] = [
   {
+    version: "8.122.0",
+    date: "2026-05-08",
+    type: "minor",
+    title: "PR-3 audit calidad: tsconfig endurecido (lints sin uso)",
+    summary: "Activados noUnusedLocals, noUnusedParameters y noFallthroughCasesInSwitch en tsconfig.app.json y tsconfig.json. Limpieza de imports/parámetros muertos en 16 archivos.",
+    description: "Tercer y último PR del audit de arquitectura. (1) tsconfig.app.json y tsconfig.json: noUnusedLocals=true, noUnusedParameters=true, noFallthroughCasesInSwitch=true. strictNullChecks/strict siguen en false (deuda documentada en ARCHITECTURE.md para futura iteración: ~511 `as` casts requieren plan dedicado). (2) Limpieza de código muerto detectado por los nuevos lints: removed unused imports/vars en ConfigOrganizacion, TabPlanes, SeccionMercanciaCotizacionDetalle, DashboardStatusCards, StepCostosPrecios, TabResumen, TabTracking, ResumenConceptosVenta, PasoConfirmacionProforma, calendar (shadcn), proformaPdf, useAuditoriaSnapshots, useEmbarquesPageController, useOperacionesData, financialUtils.test, cotizacionForm mapper, ProveedorDetalle. Suite 279/279 verde. Versión 8.122.0.",
+  },
+  {
     version: "8.121.0",
     date: "2026-05-08",
     type: "minor",

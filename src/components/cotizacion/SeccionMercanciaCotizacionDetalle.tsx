@@ -4,7 +4,7 @@ import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
 import { AlertTriangle, FileDown } from "lucide-react";
-import { formatCurrency } from "@/lib/formatters";
+
 import { getSignedUrl } from "@/services/storage/index";
 import type { DimensionLCL, DimensionAerea } from "@/hooks/cotizacion/useCotizaciones";
 

@@ -7,7 +7,7 @@ import { ESTADOS_EMBARQUE } from "@/constants/embarqueConstants";
 import { DetailRow } from "./DetailRow";
 import { useNavigate } from "react-router-dom";
 import { Link } from "lucide-react";
-import { DataTable, type DataTableColumn } from "@/components/shared/DataTable";
+import { DataTable } from "@/components/shared/DataTable";
 import type { EmbarqueRow } from "@/hooks/embarque/useEmbarques";
 import { calcularEstadoEmbarque } from "@/lib/domain/embarque";
 import { useEmbarquesRelacionados } from "@/hooks/embarque/useEmbarquesRelacionados";
