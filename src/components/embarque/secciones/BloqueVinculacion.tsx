@@ -66,21 +66,24 @@ export function BloqueVinculacion({
                 <CommandList>
                   <CommandEmpty>Sin cotizaciones aceptadas</CommandEmpty>
                   <CommandGroup>
-                    {cotizacionesAceptadas.map(cot => (
-                      <CommandItem
-                        key={cot.id}
-                        value={`${cot.folio} ${cot.cliente_nombre}`}
-                        onSelect={() => {
-                          onVincularCotizacion?.(cot);
-                          setComboboxOpen(false);
-                        }}
-                      >
-                        <Check className={cn("mr-2 h-4 w-4", cotizacionVinculada && cotizacionVinculada.id === cot.id ? "opacity-100" : "opacity-0")} />
-                        <span className="truncate">
-                          {cot.folio} — {cot.cliente_nombre} ({cot.origen} → {cot.destino})
-                        </span>
-                      </CommandItem>
-                    ))}
+                    {cotizacionesAceptadas.map((cot) => {
+                      const isSelected = !!cotizacionVinculada && cotizacionVinculada.id === cot.id;
+                      return (
+                        <CommandItem
+                          key={cot.id}
+                          value={`${cot.folio} ${cot.cliente_nombre}`}
+                          onSelect={() => {
+                            onVincularCotizacion?.(cot);
+                            setComboboxOpen(false);
+                          }}
+                        >
+                          <Check className={cn("mr-2 h-4 w-4", isSelected ? "opacity-100" : "opacity-0")} />
+                          <span className="truncate">
+                            {cot.folio} — {cot.cliente_nombre} ({cot.origen} → {cot.destino})
+                          </span>
+                        </CommandItem>
+                      );
+                    })}
                   </CommandGroup>
                 </CommandList>
               </Command>
