@@ -51,9 +51,11 @@ export function useBreadcrumbLabels(): LabelMap {
  */
 export function useRegisterBreadcrumbLabel(segment: string | undefined, label: string | undefined | null) {
   const ctx = useContext(BreadcrumbContext);
+  const setLabel = ctx?.setLabel;
+  const clearLabel = ctx?.clearLabel;
   useEffect(() => {
-    if (!ctx || !segment || !label) return;
-    ctx.setLabel(segment, label);
-    return () => ctx.clearLabel(segment);
-  }, [ctx, segment, label]);
+    if (!setLabel || !clearLabel || !segment || !label) return;
+    setLabel(segment, label);
+    return () => clearLabel(segment);
+  }, [setLabel, clearLabel, segment, label]);
 }
