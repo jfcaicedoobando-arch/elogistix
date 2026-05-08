@@ -99,28 +99,40 @@ Deno.serve(async (req) => {
     let trackedObjectId: string | null =
       trackingRequestData?.data?.relationships?.tracked_object?.data?.id ?? tracking.shipment_id;
 
-    // Fallback: si Terminal49 aún no asocia el tracked_object, buscamos el shipment por BL.
-    // Esto resuelve el desfase donde el shipment ya existe en T49 pero el tracking_request
-    // permanece "pending" sin tracked_object.
-    let fallbackUsed = false;
+    // Fallback: si Terminal49 aún no asocia el tracked_object, buscamos el shipment por BL
+    // probando varias variantes (con/sin prefijo SCAC, distintos nombres de filtro).
+    const fallbackIntentos: Array<{ url: string; count: number }> = [];
     if (!trackedObjectId) {
-      const bl =
+      const blRaw: string =
         (tracking as any).request_number ||
         trackingRequestData?.data?.attributes?.request_number ||
-        null;
-      if (bl) {
-        const r = await fetch(
-          `${T49_BASE}/shipments?filter[bill_of_lading_number]=${encodeURIComponent(bl)}`,
-          { headers: t49Headers },
-        );
-        const j = await r.json().catch(() => ({}));
-        const found = Array.isArray(j?.data) ? j.data[0] : null;
-        if (found?.id) {
-          trackedObjectId = found.id;
-          fallbackUsed = true;
-          console.log(`Fallback BL lookup OK: ${bl} → shipment ${found.id}`);
-        } else {
-          console.log(`Fallback BL lookup vacío para ${bl}`);
+        "";
+      const scac: string = ((tracking as any).scac || trackingRequestData?.data?.attributes?.scac || "").toUpperCase();
+      const blStripped =
+        scac && blRaw.toUpperCase().startsWith(scac) ? blRaw.slice(scac.length) : blRaw;
+
+      const candidatos: string[] = [];
+      if (blRaw) candidatos.push(blRaw);
+      if (blStripped && blStripped !== blRaw) candidatos.push(blStripped);
+
+      const variantes: Array<(bl: string) => string> = [
+        (bl) => `${T49_BASE}/shipments?filter[bill_of_lading_number]=${encodeURIComponent(bl)}`,
+        (bl) => `${T49_BASE}/shipments?filter[number]=${encodeURIComponent(bl)}`,
+      ];
+
+      outer: for (const bl of candidatos) {
+        for (const buildUrl of variantes) {
+          const url = buildUrl(bl);
+          const r = await fetch(url, { headers: t49Headers });
+          const j = await r.json().catch(() => ({}));
+          const arr = Array.isArray(j?.data) ? j.data : [];
+          fallbackIntentos.push({ url, count: arr.length });
+          console.log(`Fallback intento ${url} → ${arr.length} resultados`);
+          if (arr[0]?.id) {
+            trackedObjectId = arr[0].id;
+            console.log(`Fallback OK → shipment ${trackedObjectId}`);
+            break outer;
+          }
         }
       }
     }
