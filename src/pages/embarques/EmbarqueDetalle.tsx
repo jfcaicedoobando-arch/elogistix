@@ -151,7 +151,12 @@ export default function EmbarqueDetalle() {
         </TabsContent>
 
         <TabsContent value="tracking">
-          <TabTracking embarqueId={id!} />
+          <TabTracking
+            embarqueId={id!}
+            modo={embarque.modo}
+            blMaster={embarque.bl_master}
+            naviera={embarque.naviera}
+          />
         </TabsContent>
 
         <TabsContent value="notas">
