@@ -101,14 +101,6 @@ export const recentChangelog: ChangelogEntry[] = [
     summary: "AuditoriaEjecutivoTab pasa de 418 a 94 LOC al extraer 5 subcomponentes; se añaden 15 tests a la lógica de proyección de facturación.",
     description: "Subcomponentes EjecutivoScoreCard, EjecutivoAtencionCard, EjecutivoAlertasUrgencia, EjecutivoDistribucionRow y EjecutivoPorReglaGrid extraídos a components/auditoria/ejecutivo/. Helpers visuales y SCORE_ESTADO_CONFIG aislados. Nuevo test suite cubre conversiones de moneda, agrupación, KPIs y meses disponibles.",
   },
-  {
-    version: "8.118.3",
-    date: "2026-05-06",
-    type: "patch",
-    title: "Refactor Sprint 2: config de auditoría centralizada y subcomponentes de Proyección extraídos",
-    summary: "Se centralizó la configuración de reglas de auditoría y se extrajeron CierreCard y las columnas de Proyección.",
-    description: "Nuevo módulo lib/ui/auditoriaConfig.ts (REGLA_INFO + REGLAS_ORDEN) consumido por Auditoria.tsx y AuditoriaEjecutivoTab.tsx, eliminando duplicación. CierreCard y proyeccionColumns extraídos de TabProyeccion.tsx. Sin cambios visuales.",
-  },
 ];
 
 /** Deduplica por version conservando la primera ocurrencia (recentChangelog gana). */
