@@ -22,6 +22,14 @@ export interface ChangelogEntry {
  */
 export const recentChangelog: ChangelogEntry[] = [
   {
+    version: "8.126.0",
+    date: "2026-05-08",
+    type: "patch",
+    title: "Fase C audit casts: 0 `as Tables<>` fuera de mappers/queries",
+    summary: "Eliminados los 2 únicos `as Tables<>` fuera de zona permitida. Política Phase C cumplida.",
+    description: "PortalCotizacionDetalle: narrowing local en lugar de cast a tabla. conversiones/embarques: boundary canalizado por fromDb. Audit: 457 casts, 0 CRITICAL, HIGH solo en mocks de tests.",
+  },
+  {
     version: "8.125.0",
     date: "2026-05-08",
     type: "minor",
