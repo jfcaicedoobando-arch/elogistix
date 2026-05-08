@@ -75,16 +75,32 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Resolver SCAC: navieras.code
-    const { data: naviera } = await supabase
-      .from("navieras")
-      .select("code")
-      .eq("name", embarque.naviera ?? "")
-      .maybeSingle();
+    // Resolver SCAC: match exacto, luego ILIKE (nombre embarque puede ser corto/parcial)
+    const navieraNombre = (embarque.naviera ?? "").trim();
+    let naviera: { code: string | null } | null = null;
+    if (navieraNombre) {
+      const exact = await supabase
+        .from("navieras")
+        .select("code")
+        .ilike("name", navieraNombre)
+        .maybeSingle();
+      naviera = exact.data ?? null;
+      if (!naviera) {
+        const fuzzy = await supabase
+          .from("navieras")
+          .select("code")
+          .or(`name.ilike.${navieraNombre}%,name.ilike.%${navieraNombre}%,code.ilike.${navieraNombre}%`)
+          .limit(1)
+          .maybeSingle();
+        naviera = fuzzy.data ?? null;
+      }
+    }
     const scac = (naviera?.code ?? "").toUpperCase();
     if (!scac || scac.length !== 4) {
       return json(
-        { error: "La naviera no tiene un SCAC válido de 4 letras. Revisa el catálogo de navieras." },
+        {
+          error: `No se encontró un SCAC válido de 4 letras para la naviera "${navieraNombre}". Revisa el catálogo de navieras (el código actual es "${naviera?.code ?? "—"}").`,
+        },
         400,
       );
     }
