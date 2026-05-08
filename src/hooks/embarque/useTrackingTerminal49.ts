@@ -32,8 +32,15 @@ export function useActivarTracking(embarqueId: string | undefined) {
     onSuccess: () => {
       notifySuccess(toast, { title: "Tracking activado en Terminal49" });
       qc.invalidateQueries({ queryKey: keyTracking(embarqueId ?? "") });
+      qc.invalidateQueries({ queryKey: ["tracking_intentos", embarqueId ?? ""] });
     },
     onError: (err) => {
+      notifyError(toast, {
+        title: "No se pudo activar el tracking",
+        description: getErrorMessage(err),
+      });
+      qc.invalidateQueries({ queryKey: ["tracking_intentos", embarqueId ?? ""] });
+    },
       notifyError(toast, {
         title: "No se pudo activar el tracking",
         description: getErrorMessage(err),
