@@ -237,7 +237,7 @@ Deno.serve(async (req) => {
       containers: containers.length,
       eventos_nuevos: nuevosEventos,
       embarque_actualizado: embUpdate,
-      fallback_bl_usado: fallbackUsed,
+      fallback_intentos: fallbackIntentos,
       shipment_id: trackedObjectId,
     });
   } catch (err) {
