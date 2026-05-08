@@ -320,7 +320,23 @@ Aceptadas explícitamente; no son deuda pendiente.
 - **Re-exports legacy `@/data/*`**: eliminados por completo en v8.36.0. No reintroducir.
 - **`costosPLTypes.ts`**: se conserva (no se mueve a `src/types/`) porque exporta el helper UI `calcTotalsPL` usado por las secciones P&L. Cambiar de carpeta no aporta valor.
 
-## 18. Glosario
+## 17.b Type assertions policy (`as X`)
+
+Política vigente desde v8.123.0. Compañera de
+[`docs/cast-audit.md`](./docs/cast-audit.md) y
+[`docs/strict-mode-roadmap.md`](./docs/strict-mode-roadmap.md).
+
+| Categoría | ¿Permitido? | Comentario obligatorio |
+|-----------|-------------|------------------------|
+| **SAFE** — `as const`, `as React.*`, `as ReturnType<typeof X>` | Sí | No |
+| **LOW** — `as Json`, `as unknown` aislado | Sí | Sí (`// cast: razón`) |
+| **MEDIUM** — `as Tables<X>`, `as TablesInsert<X>`, `as TablesUpdate<X>` | Solo en `lib/mappers/*` y `services/*/queries.ts` | Sí |
+| **HIGH** — `as unknown as X`, `as X[]` sobre respuesta sin validar | No (excepto tests con justificación escrita) | Obligatorio + revisor senior |
+| **CRITICAL** — `as any`, `JSON.parse(...) as X`, casts entre tipos no relacionados | **No** | Bloquea el merge |
+
+Para auditar el estado actual: `npm run audit:casts` (genera
+`docs/cast-audit.md`). Baseline 2026-05-08: 559 casts, 73 HIGH+CRITICAL (~13 %).
+
 
 - **Embarque**: operación logística (importación, exportación, nacional, cross-trade, intra-UE). Identificado por **expediente**.
 - **Expediente**: identificador único de embarque generado vía RPC en BD. Ver `mem://technical/shipment-identification-logic`.
