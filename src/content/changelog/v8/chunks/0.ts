@@ -2,6 +2,14 @@ import type { ChangelogEntry } from "../../../changelogData";
 
 export const chunk0: ChangelogEntry[] = [
   {
+    version: "8.131.2",
+    date: "2026-05-08",
+    type: "patch",
+    title: "Fallback BL multi-variante + vínculo manual de shipment Terminal49",
+    summary: "Cuando Terminal49 no asocia el tracked_object, el sync ahora prueba 4 variantes (BL completo / sin SCAC × filter[bill_of_lading_number] / filter[number]). Además, nuevo botón 'Vincular shipment manualmente' para pegar el shipment ID directo de la URL de Terminal49.",
+    description: "Resuelve el caso donde el shipment ya existe en Terminal49 pero su API list devuelve vacío con el filtro original. (1) Edge function terminal49-sync: prueba en orden BL completo (ZIMUSHH32085770) y BL sin prefijo SCAC (SHH32085770) contra filter[bill_of_lading_number] y filter[number]. Loggea cada intento (URL + count) y devuelve fallback_intentos[] en la respuesta para diagnóstico. (2) Nueva edge function terminal49-link-shipment: recibe embarque_id + shipment_id (UUID), valida con GET /v2/shipments/{id}, actualiza tracking_externo.shipment_id, importa containers y transport_events nuevos a eventos_embarque (idempotente), refresca ETA/fecha_llegada_real/estado del embarque y registra un tracking_intento con accion='link_manual'. (3) UI: en TerminalAutomaticoCard se agregó botón 'Vincular shipment manualmente' (visible solo cuando shipment_id es null) que abre un Dialog con input para pegar el UUID del shipment, con texto guía mostrando el patrón de URL de Terminal49. (4) Hook useVincularShipmentManual con invalidación de tracking_externo, embarque-full, eventos_embarque y tracking_intentos. Versión 8.131.2.",
+  },
+  {
     version: "8.131.1",
     date: "2026-05-08",
     type: "patch",
