@@ -71,7 +71,7 @@ export function TabTracking({ embarqueId, modo, blMaster, naviera }: Props) {
         naviera={naviera ?? null}
       />
 
-      {modo === "Marítimo" && <TrackingIntentosHistorial embarqueId={embarqueId} />
+      {modo === "Marítimo" && <TrackingIntentosHistorial embarqueId={embarqueId} />}
 
       {canEdit && (
         <div className="flex justify-end">
