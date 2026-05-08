@@ -13,7 +13,7 @@ export function usePortalCotizacionDetalle(cot: CotizacionLike | null | undefine
 
   return useMemo(() => {
     const conceptos: ConceptoVentaCotizacion[] = Array.isArray(cot?.conceptos_venta)
-      ? (cot!.fromDb<ConceptoVentaCotizacion[]>(conceptos_venta))
+      ? fromDb<ConceptoVentaCotizacion[]>(cot!.conceptos_venta)
       : [];
 
     const conceptosUSD = conceptos.filter((c) => c.moneda === "USD");
