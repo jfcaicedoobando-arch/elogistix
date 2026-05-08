@@ -266,11 +266,11 @@ Ejemplos canónicos en el repo: `crear_proforma_con_conceptos`, `consolidar_prof
 
 ## 15. Testing
 
-- **Stack**: Vitest + Testing Library. 184 tests vigentes (v8.89.0).
+- **Stack**: Vitest + Testing Library. 279 tests vigentes (v8.118.8).
 - **Qué se testea**:
-  - `src/lib/` (financial, domain, storage, ui, mappers complejos): puro, alta cobertura.
+  - `src/lib/` (financial, domain, storage, ui, mappers complejos, parsers): puro, alta cobertura. Incluye `*.edge.test.ts` para casos borde (montos cero/negativos, fechas nulas, conversiones round-trip).
   - `src/services/` puros con lógica no trivial (csfService, trackingService).
-  - Hooks con orquestación compleja (`useEmbarquesListData`, `useConfiguracionState`, `useAdminOrgDetalle`, `usePermissions`).
+  - Hooks con orquestación compleja (`useEmbarquesListData`, `useConfiguracionState`, `useAdminOrgDetalle`, `usePermissions`, y la suite completa de `hooks/auditoria/__tests__/` — controller, ejecutivo, revisiones, tabla).
   - Funciones derivadas en constantes (`getDocsForMode`).
 - **Qué NO se testea**:
   - Componentes shadcn ni wrappers triviales.
