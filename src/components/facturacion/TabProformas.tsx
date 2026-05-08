@@ -57,7 +57,7 @@ export function TabProformas() {
       <Card>
         <CardContent className="p-0">
           <DataTable
-            columns={c.columns}
+            columns={columns}
             data={c.paginated}
             isLoading={c.isLoading}
             emptyMessage="No hay proformas generadas"
