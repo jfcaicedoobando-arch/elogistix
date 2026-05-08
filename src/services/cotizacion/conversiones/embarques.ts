@@ -61,7 +61,7 @@ export async function convertirCotizacionAEmbarques(
         const rows = mapCostosACostosEmbarque(
           conceptosParaInsertar,
           embarque.id,
-        ) as TablesInsert<"conceptos_costo">[];
+        );
         const { error: errorConceptos } = await supabase.from("conceptos_costo").insert(rows);
         if (errorConceptos) throw errorConceptos;
       }
