@@ -85,4 +85,29 @@ export function useEliminarTracking(embarqueId: string | undefined) {
       });
     },
   });
+
+export function useVincularShipmentManual(embarqueId: string | undefined) {
+  const qc = useQueryClient();
+  const { toast } = useToast();
+  return useMutation({
+    mutationFn: (shipmentId: string) =>
+      vincularShipmentManualTerminal49(embarqueId!, shipmentId),
+    onSuccess: (data) => {
+      const eventos = data?.eventos_nuevos ?? 0;
+      notifySuccess(toast, {
+        title: "Shipment vinculado",
+        description: eventos > 0 ? `${eventos} evento(s) importado(s)` : "Vínculo creado, sin eventos nuevos",
+      });
+      qc.invalidateQueries({ queryKey: keyTracking(embarqueId ?? "") });
+      qc.invalidateQueries({ queryKey: ["embarque-full", embarqueId] });
+      qc.invalidateQueries({ queryKey: ["eventos_embarque", embarqueId] });
+      qc.invalidateQueries({ queryKey: ["tracking_intentos", embarqueId ?? ""] });
+    },
+    onError: (err) => {
+      notifyError(toast, {
+        title: "No se pudo vincular el shipment",
+        description: getErrorMessage(err),
+      });
+    },
+  });
 }
