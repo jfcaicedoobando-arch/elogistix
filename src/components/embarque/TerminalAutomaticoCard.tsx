@@ -57,7 +57,10 @@ export function TerminalAutomaticoCard({ embarqueId, modo, blMaster, naviera }: 
   const activar = useActivarTracking(embarqueId);
   const sincronizar = useSincronizarTracking(embarqueId);
   const eliminar = useEliminarTracking(embarqueId);
+  const vincularManual = useVincularShipmentManual(embarqueId);
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [linkOpen, setLinkOpen] = useState(false);
+  const [shipmentIdInput, setShipmentIdInput] = useState("");
 
   if (modo !== "Marítimo") return null;
 
