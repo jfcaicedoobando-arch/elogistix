@@ -1,6 +1,6 @@
 import { supabase } from '@/integrations/supabase/client';
-import type { Json, TablesInsert } from '@/integrations/supabase/types';
-import { toDbJson } from "@/lib/supabase/cast";
+import type { TablesInsert } from '@/integrations/supabase/types';
+import { fromDb, toDbJson } from "@/lib/supabase/cast";
 
 type EmbarqueInsert = TablesInsert<'embarques'>;
 

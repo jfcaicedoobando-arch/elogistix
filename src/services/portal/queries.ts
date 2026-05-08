@@ -1,4 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
+import { fromDb } from "@/lib/supabase/cast";
 import {
   PORTAL_EMBARQUE_LIST_COLUMNS,
   PORTAL_EMBARQUE_DETAIL_COLUMNS,

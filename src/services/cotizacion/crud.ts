@@ -2,7 +2,7 @@
  * Cotizaciones — CRUD y lecturas básicas (cotizaciones, queries de listado y detalle).
  */
 import { supabase } from "@/integrations/supabase/client";
-import type { Json, TablesInsert } from "@/integrations/supabase/types";
+import type { TablesInsert } from "@/integrations/supabase/types";
 import type { CotizacionRow, CreateCotizacionInput } from "@/types/cotizacion";
 import { fromDb, toDbJson } from "@/lib/supabase/cast";
 

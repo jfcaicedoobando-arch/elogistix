@@ -5,6 +5,7 @@ import type { AppRole } from "@/types/appRole";
 import { useAuthSession } from "./auth/useAuthSession";
 import { useAuthProfile, type CachedOrganization } from "./auth/useAuthProfile";
 import { useLoginAudit } from "./auth/useLoginAudit";
+import { fromDb } from "@/lib/supabase/cast";
 
 export type { CachedOrganization } from "./auth/useAuthProfile";
 

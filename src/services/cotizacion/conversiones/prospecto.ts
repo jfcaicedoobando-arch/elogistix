@@ -2,7 +2,7 @@
  * Cotizaciones — Conversión: Prospecto → Cliente.
  */
 import { supabase } from "@/integrations/supabase/client";
-import type { Json } from "@/integrations/supabase/types";
+import { toDbJson } from "@/lib/supabase/cast";
 
 export interface ProspectoAClienteInput {
   cotizacionId: string;
