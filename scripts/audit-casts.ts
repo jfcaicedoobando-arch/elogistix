@@ -67,12 +67,19 @@ function scan(): CastHit[] {
   const re = /\bas\s+([A-Za-z_][A-Za-z0-9_<>\[\],.\s|&?]*)/g;
   for (const file of walk(SRC)) {
     const rel = relative(ROOT, file);
-    // Excluir tests, types generados, integrations
+    // Excluir tests, types generados, integrations, y contenido de changelog
+    // (los changelogs contienen 'as any' dentro de strings de descripción
+    // — falsos positivos que no son código ejecutable).
     if (rel.includes("integrations/supabase")) continue;
+    if (rel.includes("content/changelog")) continue;
     const lines = readFileSync(file, "utf8").split("\n");
     lines.forEach((rawLine, i) => {
-      // Quitar comentarios de línea para evitar falsos positivos
-      const line = rawLine.replace(/\/\/.*$/, "");
+      // Quitar comentarios de línea y strings para evitar falsos positivos
+      const line = rawLine
+        .replace(/\/\/.*$/, "")
+        .replace(/"(?:[^"\\]|\\.)*"/g, '""')
+        .replace(/'(?:[^'\\]|\\.)*'/g, "''")
+        .replace(/`(?:[^`\\]|\\.)*`/g, "``");
       let m: RegExpExecArray | null;
       const lineRe = new RegExp(re.source, "g");
       while ((m = lineRe.exec(line)) !== null) {
