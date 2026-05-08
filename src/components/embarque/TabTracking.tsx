@@ -24,7 +24,7 @@ interface Props {
 }
 
 
-export function TabTracking({ embarqueId }: Props) {
+export function TabTracking({ embarqueId, modo, blMaster, naviera }: Props) {
   const { data: eventos = [], isLoading } = useEventosEmbarque(embarqueId);
   const crearEvento = useCreateEventoEmbarque();
   const { user } = useAuth();
