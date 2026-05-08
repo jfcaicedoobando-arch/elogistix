@@ -16,6 +16,7 @@ import { getErrorMessage } from '@/lib/errors';
 import { formatDate, nombreDesdeEmail } from '@/lib/formatters';
 import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 import { TerminalAutomaticoCard } from "./TerminalAutomaticoCard";
+import { TrackingIntentosHistorial } from "./TrackingIntentosHistorial";
 
 interface Props {
   embarqueId: string;
@@ -69,6 +70,8 @@ export function TabTracking({ embarqueId, modo, blMaster, naviera }: Props) {
         blMaster={blMaster ?? null}
         naviera={naviera ?? null}
       />
+
+      {modo === "Marítimo" && <TrackingIntentosHistorial embarqueId={embarqueId} />}
 
       {canEdit && (
         <div className="flex justify-end">
