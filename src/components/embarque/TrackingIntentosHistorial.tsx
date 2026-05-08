@@ -37,7 +37,7 @@ export function TrackingIntentosHistorial({ embarqueId }: Props) {
             Aún no hay intentos registrados. Activa el tracking para ver el historial aquí.
           </p>
         ) : (
-          <ScrollArea className="h-[320px] pr-3">
+          <div className="max-h-[320px] overflow-y-auto pr-3">
             <ul className="space-y-2">
               {intentos.map((it) => {
                 const meta = RESULTADO_BADGE[it.resultado] ?? RESULTADO_BADGE.error;
