@@ -22,6 +22,14 @@ export interface ChangelogEntry {
  */
 export const recentChangelog: ChangelogEntry[] = [
   {
+    version: "8.125.0",
+    date: "2026-05-08",
+    type: "minor",
+    title: "Fase B.1 audit casts: helper fromDb/toDbJson centraliza boundary",
+    summary: "Nuevo src/lib/supabase/cast.ts con fromDb<T>() y toDbJson() reemplaza ~50 `as unknown as X` en services/contexts.",
+    description: "Helper centralizado para boundary Supabase↔dominio. Migración en 17 archivos. HIGH casts: 64→~15 (resto son mocks de tests). Listo para reemplazar por Zod en Fase B.2 cambiando un solo archivo.",
+  },
+  {
     version: "8.124.0",
     date: "2026-05-08",
     type: "patch",
