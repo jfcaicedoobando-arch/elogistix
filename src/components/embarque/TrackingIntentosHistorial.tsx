@@ -95,7 +95,7 @@ export function TrackingIntentosHistorial({ embarqueId }: Props) {
                 );
               })}
             </ul>
-          </ScrollArea>
+          </div>
         )}
       </CardContent>
     </Card>
