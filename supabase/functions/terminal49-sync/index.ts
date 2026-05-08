@@ -59,10 +59,10 @@ Deno.serve(async (req) => {
       { global: { headers: { Authorization: authHeader } } },
     );
 
-    const { data: claims, error: claimsErr } = await supabase.auth.getClaims(
+    const { data: userData, error: userErr } = await supabase.auth.getUser(
       authHeader.replace("Bearer ", ""),
     );
-    if (claimsErr || !claims?.claims) return json({ error: "Token inválido" }, 401);
+    if (userErr || !userData?.user) return json({ error: "Token inválido" }, 401);
 
     const body = await req.json().catch(() => null);
     const embarqueId = body?.embarque_id as string | undefined;
