@@ -1,6 +1,15 @@
+import { z } from "zod";
 import { supabase } from '@/integrations/supabase/client';
 import type { TablesInsert } from '@/integrations/supabase/types';
 import { fromDb, toDbJson } from "@/lib/supabase/cast";
+
+// Schemas para validar los payloads de retorno de las RPCs.
+// Si la RPC cambia de shape o devuelve null inesperado, fallamos rápido y
+// fuerte en el boundary, en vez de propagar `undefined.id` aguas abajo.
+const rpcIdSchema = z.object({ id: z.string().uuid() });
+const rpcIdExpedienteArraySchema = z.array(
+  z.object({ id: z.string().uuid(), expediente: z.string() }),
+);
 
 type EmbarqueInsert = TablesInsert<'embarques'>;
 
@@ -19,7 +28,7 @@ export async function crearEmbarqueRpc(input: CrearEmbarqueRpcInput): Promise<{ 
     p_documentos: toDbJson(input.documentos),
   });
   if (error) throw error;
-  return fromDb<{ id: string }>(data);
+  return fromDb(data, rpcIdSchema);
 }
 
 export interface ActualizarEmbarqueRpcInput {
@@ -54,7 +63,7 @@ export async function duplicarEmbarqueRpc(
     p_copias: toDbJson(copias),
   });
   if (error) throw error;
-  return fromDb<{ id: string; expediente: string }[]>(data);
+  return fromDb(data, rpcIdExpedienteArraySchema);
 }
 
 export async function eliminarEmbarqueRpc(embarqueId: string): Promise<void> {

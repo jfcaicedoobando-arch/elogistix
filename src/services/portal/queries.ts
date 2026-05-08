@@ -1,5 +1,9 @@
+import { z } from "zod";
 import { supabase } from "@/integrations/supabase/client";
 import { fromDb } from "@/lib/supabase/cast";
+
+// Schema reutilizable para joins anidados que devuelven { nombre } o null.
+const nombreNullableSchema = z.object({ nombre: z.string() }).nullable();
 import {
   PORTAL_EMBARQUE_LIST_COLUMNS,
   PORTAL_EMBARQUE_DETAIL_COLUMNS,
@@ -138,7 +142,7 @@ export async function fetchPortalClienteName(): Promise<string | null> {
     .limit(1)
     .maybeSingle();
   if (error) throw error;
-  const clientes = fromDb<{ nombre: string } | null>(data?.clientes);
+  const clientes = fromDb(data?.clientes ?? null, nombreNullableSchema);
   return clientes?.nombre ?? null;
 }
 
@@ -152,6 +156,6 @@ export async function fetchPortalOrgName(): Promise<string | null> {
     .limit(1)
     .maybeSingle();
   if (error) throw error;
-  const org = fromDb<{ nombre: string } | null>(data?.organizations);
+  const org = fromDb(data?.organizations ?? null, nombreNullableSchema);
   return org?.nombre ?? null;
 }
