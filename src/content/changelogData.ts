@@ -22,6 +22,14 @@ export interface ChangelogEntry {
  */
 export const recentChangelog: ChangelogEntry[] = [
   {
+    version: "8.123.0",
+    date: "2026-05-08",
+    type: "minor",
+    title: "Audit de type assertions: script + roadmap a strictNullChecks",
+    summary: "Nuevo `npm run audit:casts` clasifica los 559 `as` casts en 5 niveles. Solo 73 (~13%) requieren acción. Roadmap de 4 fases para llegar a strictNullChecks.",
+    description: "Script de auditoría (scripts/audit-casts.ts), reporte generado (docs/cast-audit.md), roadmap (docs/strict-mode-roadmap.md) y política en ARCHITECTURE.md §17.b. Baseline: SAFE 163, LOW 7, MEDIUM 316, HIGH 64, CRITICAL 9.",
+  },
+  {
     version: "8.122.0",
     date: "2026-05-08",
     type: "minor",
@@ -92,14 +100,6 @@ export const recentChangelog: ChangelogEntry[] = [
     title: "Refactor Sprint 3: Auditoría ejecutiva troceada y tests de proyección",
     summary: "AuditoriaEjecutivoTab pasa de 418 a 94 LOC al extraer 5 subcomponentes; se añaden 15 tests a la lógica de proyección de facturación.",
     description: "Subcomponentes EjecutivoScoreCard, EjecutivoAtencionCard, EjecutivoAlertasUrgencia, EjecutivoDistribucionRow y EjecutivoPorReglaGrid extraídos a components/auditoria/ejecutivo/. Helpers visuales y SCORE_ESTADO_CONFIG aislados. Nuevo test suite cubre conversiones de moneda, agrupación, KPIs y meses disponibles.",
-  },
-  {
-    version: "8.118.3",
-    date: "2026-05-06",
-    type: "patch",
-    title: "Refactor Sprint 2: config de auditoría centralizada y subcomponentes de Proyección extraídos",
-    summary: "Se centralizó la configuración de reglas de auditoría y se extrajeron CierreCard y las columnas de Proyección.",
-    description: "Nuevo módulo lib/ui/auditoriaConfig.ts (REGLA_INFO + REGLAS_ORDEN) consumido por Auditoria.tsx y AuditoriaEjecutivoTab.tsx, eliminando duplicación. CierreCard y proyeccionColumns extraídos de TabProyeccion.tsx. Sin cambios visuales.",
   },
 ];
 

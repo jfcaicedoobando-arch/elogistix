@@ -12,7 +12,8 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "changelog:add": "tsx scripts/add-changelog.ts",
-    "changelog:json": "tsx scripts/generate-changelog-json.ts"
+    "changelog:json": "tsx scripts/generate-changelog-json.ts",
+    "audit:casts": "tsx scripts/audit-casts.ts"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",

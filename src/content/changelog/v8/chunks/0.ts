@@ -2,6 +2,14 @@ import type { ChangelogEntry } from "../../../changelogData";
 
 export const chunk0: ChangelogEntry[] = [
   {
+    version: "8.123.0",
+    date: "2026-05-08",
+    type: "minor",
+    title: "Audit de type assertions: script + roadmap a strictNullChecks",
+    summary: "Nuevo `npm run audit:casts` clasifica los 559 `as` casts en SAFE/LOW/MEDIUM/HIGH/CRITICAL. Solo 73 (~13%) requieren acción.",
+    description: "Auditoría completa de type assertions del proyecto. (1) scripts/audit-casts.ts: recorre src/, clasifica cada `as X` en 5 categorías por riesgo (SAFE 163, LOW 7, MEDIUM 316, HIGH 64, CRITICAL 9). (2) docs/cast-audit.md: tabla resumen, top-15 archivos por peso, top-30 hits HIGH/CRITICAL con file:line y snippet. Hotspots reales: services/cotizacion/crud.ts (peso 51), services/embarque/mutations.ts (32). (3) docs/strict-mode-roadmap.md: plan de 4 fases (A: eliminar 9 `as any`; B: validación con Zod en boundaries; C: refuerzo de mappers DB↔dominio; D: activar strictNullChecks con ~100-300 errores reales tras A-C, vs ~800 hoy). (4) ARCHITECTURE.md §17.b: política escrita de cuándo se permite cada categoría (CRITICAL bloquea merge). (5) package.json: nuevo script `audit:casts`. Sin cambios funcionales — solo visibilidad y guardrails. Versión 8.123.0.",
+  },
+  {
     version: "8.122.0",
     date: "2026-05-08",
     type: "minor",
