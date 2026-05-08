@@ -56,6 +56,7 @@ const STATIC: Record<string, string> = {
   "2.puertoOrigen.required": formatValidationMessage(FIELD_LABELS.puertoOrigen, "selecciona uno del catálogo"),
   "2.puertoDestino.required": formatValidationMessage(FIELD_LABELS.puertoDestino, "selecciona uno del catálogo"),
   "2.naviera.required": formatValidationMessage(FIELD_LABELS.naviera, "selecciona una opción"),
+  "2.naviera.scac": formatValidationMessage(FIELD_LABELS.naviera, "selecciona una naviera del catálogo (SCAC de 4 letras)"),
   "2.tipoServicio.required": formatValidationMessage(FIELD_LABELS.tipoServicio, "selecciona FCL o LCL"),
   "2.contenedor.required": formatValidationMessage(FIELD_LABELS.contenedor, "campo obligatorio"),
   "2.tipoContenedor.required": formatValidationMessage(FIELD_LABELS.tipoContenedor, "selecciona una opción"),

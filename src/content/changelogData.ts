@@ -22,6 +22,14 @@ export interface ChangelogEntry {
  */
 export const recentChangelog: ChangelogEntry[] = [
   {
+    version: "8.130.1",
+    date: "2026-05-08",
+    type: "patch",
+    title: "Validación SCAC en navieras y embarques",
+    summary: "Catálogo de Navieras exige SCAC de 4 letras; el wizard de embarques marca naviera inválida; edge function de Terminal49 busca primero por código SCAC.",
+    description: "CHECK constraint navieras.code regex ^[A-Z]{4}$ (NOT VALID). Tab catálogo con maxLength 4, autoupper, mensaje inline. Schema zod paso 2 marítimo: regex SCAC. NavieraSelect marca valor sin match con borde destructivo y AlertTriangle. Tooltip permanente debajo. Edge function resuelve SCAC primero por code, fallback por name. Datos: ZIM corregido a ZIMU.",
+  },
+  {
     version: "8.130.0",
     date: "2026-05-08",
     type: "minor",

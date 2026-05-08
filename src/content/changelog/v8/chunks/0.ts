@@ -2,6 +2,14 @@ import type { ChangelogEntry } from "../../../changelogData";
 
 export const chunk0: ChangelogEntry[] = [
   {
+    version: "8.130.1",
+    date: "2026-05-08",
+    type: "patch",
+    title: "Validación SCAC en navieras y embarques",
+    summary: "El catálogo de Navieras ahora exige SCAC de 4 letras (A–Z). El wizard de embarques marítimos valida que la naviera seleccionada tenga SCAC válido. Edge function de Terminal49 busca primero por código.",
+    description: "Endurecimiento del flujo de tracking automático. (1) Migración: CHECK constraint navieras_code_scac_format en navieras.code (regex ^[A-Z]{4}$, NOT VALID para no romper históricos). (2) Catálogo (Configuración → Navieras): input SCAC con maxLength 4, autoupper, filtro de caracteres no A–Z, mensaje de error inline y disabled del botón Agregar si no cumple. Texto de ayuda explicando qué es el SCAC. (3) Schema zod del wizard (paso 2 marítimo): naviera ahora requiere regex ^[A-Z]{4}$ con mensaje '2.naviera.scac' en errorCatalog. (4) NavieraSelect: detecta valor sin match en catálogo y lo marca con borde destructivo + ícono AlertTriangle + texto 'SCAC inválido: \"X\"'. Tooltip de ayuda permanente debajo del select. (5) Edge function terminal49-create-tracking: ahora resuelve SCAC primero por navieras.code (que es lo que el formulario guarda), fallback por name. Mensaje de error sugiere editar el embarque. (6) Datos: corregido el SCAC de ZIM Integrated Shipping de 'ZIM' (3 letras, inválido) a 'ZIMU' (oficial). Versión 8.130.1.",
+  },
+  {
     version: "8.130.0",
     date: "2026-05-08",
     type: "minor",
