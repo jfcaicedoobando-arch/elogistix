@@ -3,7 +3,7 @@ import { Badge } from "@/components/ui/badge";
 import { History, CheckCircle2, AlertCircle, Copy } from "lucide-react";
 import { formatDate } from "@/lib/formatters";
 import { useTrackingIntentos } from "@/hooks/embarque/useTrackingIntentos";
-import { ScrollArea } from "@/components/ui/scroll-area";
+
 
 interface Props {
   embarqueId: string;
