@@ -123,7 +123,7 @@ function openPdfWindow(html: string) {
 
 /** PDF para proforma consolidada: agrupa conceptos por contenedor. */
 function generarPdfConsolidada(params: GenerarPdfProformaParams) {
-  const { proforma, embarque, cliente, tasaIva = TASA_IVA, conceptosConsolidados = [] } = params;
+  const { proforma, embarque, cliente, conceptosConsolidados = [] } = params;
 
   // Agrupar por contenedor
   type Grupo = { contenedor: string; tipo: string | null; items: ConceptoConsolidado[] };

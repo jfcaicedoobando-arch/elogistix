@@ -7,7 +7,6 @@ import {
   calcularUtilidad,
   convertirAMXN,
   convertirAUSD,
-  TASA_IVA,
 } from "@/lib/financial/financialUtils";
 
 describe("calcularIVA", () => {

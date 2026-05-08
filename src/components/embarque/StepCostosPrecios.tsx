@@ -37,13 +37,13 @@ interface Props {
 export function StepCostosPrecios(props: Props) {
   const {
     conceptosVenta, conceptosCosto, proveedoresDb,
-    subtotalVenta, totalCosto, utilidadEstimada,
+    utilidadEstimada,
     updateConceptoVenta, addConceptoVenta, removeConceptoVenta,
     updateConceptoCosto, addConceptoCosto, removeConceptoCosto,
     errors = {},
   } = props;
 
-  const { watch, register, setValue } = useFormContext<EmbarqueFormValues>();
+  const { watch, register } = useFormContext<EmbarqueFormValues>();
   const tipoCambioUSD = watch('tipoCambioUSD');
   const tipoCambioEUR = watch('tipoCambioEUR');
 

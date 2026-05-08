@@ -24,7 +24,6 @@ interface Props {
 
 export function DashboardStatusCards({
   conteoPorEstado,
-  totalActivos,
   filtroEstado,
   onFiltroChange,
   isLoading,
