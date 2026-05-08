@@ -1800,6 +1800,63 @@ export type Database = {
           },
         ]
       }
+      tracking_intentos: {
+        Row: {
+          accion: string
+          created_at: string
+          detalle: Json | null
+          embarque_id: string
+          http_status: number | null
+          id: string
+          mensaje: string | null
+          organization_id: string
+          provider: string
+          request_number: string | null
+          request_type: string | null
+          resultado: string
+          scac: string | null
+          tracking_request_id: string | null
+          usuario_email: string | null
+          usuario_id: string | null
+        }
+        Insert: {
+          accion?: string
+          created_at?: string
+          detalle?: Json | null
+          embarque_id: string
+          http_status?: number | null
+          id?: string
+          mensaje?: string | null
+          organization_id: string
+          provider?: string
+          request_number?: string | null
+          request_type?: string | null
+          resultado: string
+          scac?: string | null
+          tracking_request_id?: string | null
+          usuario_email?: string | null
+          usuario_id?: string | null
+        }
+        Update: {
+          accion?: string
+          created_at?: string
+          detalle?: Json | null
+          embarque_id?: string
+          http_status?: number | null
+          id?: string
+          mensaje?: string | null
+          organization_id?: string
+          provider?: string
+          request_number?: string | null
+          request_type?: string | null
+          resultado?: string
+          scac?: string | null
+          tracking_request_id?: string | null
+          usuario_email?: string | null
+          usuario_id?: string | null
+        }
+        Relationships: []
+      }
       tracking_links: {
         Row: {
           created_at: string | null
