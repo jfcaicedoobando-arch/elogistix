@@ -19,17 +19,17 @@ una sopa de errores que invitan a más casts.
 
 ## Roadmap (4 fases)
 
-### Fase A — Quick wins (1 PR, ~1 día)
+### Fase A — Quick wins ✅ COMPLETADA (8.124.0)
 
-- [ ] Eliminar los **9 `as any`** (categoría CRITICAL del audit).
-  - Reemplazar por `unknown` + type guard, o por el tipo correcto.
-  - Lugares listados en `docs/cast-audit.md` § Top-30.
-- [ ] Confirmar que los `as any` que quedan en `src/content/changelog/v*.ts`
-      son **strings literales dentro de descripciones de changelog** (falsos
-      positivos del audit). Si lo son, el script puede excluirlos.
-- [ ] Documentar política en `ARCHITECTURE.md` (ya hecho en este PR).
+- [x] Confirmado que los 9 `as any` reportados eran **falsos positivos**:
+      strings literales dentro de descripciones de changelog en
+      `src/content/changelog/v*.ts`. El proyecto **no tiene `as any`** en
+      código ejecutable.
+- [x] `scripts/audit-casts.ts` actualizado: elimina strings (`"`, `'`, `` ` ``)
+      y excluye `src/content/changelog/**` antes del scan.
+- [x] Política documentada en `ARCHITECTURE.md` §17.b.
 
-**Salida esperada:** `bun scripts/audit-casts.ts` reporta 0 CRITICAL.
+**Salida actual:** `bun scripts/audit-casts.ts` → 0 CRITICAL, 64 HIGH, 316 MEDIUM, 7 LOW, 120 SAFE (total 507).
 
 ### Fase B — Validación de boundaries (2-3 PRs)
 
