@@ -6,10 +6,20 @@ import SearchInput from "@/components/selects/SearchInput";
 import { DataTable } from "@/components/shared/DataTable";
 import { exportToCsv } from "@/generators/exportCsv";
 import { useTabProformasController } from "@/hooks/facturacion/useTabProformasController";
+import { buildProformasColumns } from "./proformasColumns";
 import { DialogMarcarFacturada } from "./DialogMarcarFacturada";
+import { useMemo } from "react";
 
 export function TabProformas() {
   const c = useTabProformasController();
+  const columns = useMemo(
+    () => buildProformasColumns({
+      descargar: c.descargar,
+      downloadingId: c.downloadingId,
+      onMarcarFacturada: c.setProformaAFacturar,
+    }),
+    [c.descargar, c.downloadingId, c.setProformaAFacturar],
+  );
 
   return (
     <div className="space-y-4">
@@ -47,7 +57,7 @@ export function TabProformas() {
       <Card>
         <CardContent className="p-0">
           <DataTable
-            columns={c.columns}
+            columns={columns}
             data={c.paginated}
             isLoading={c.isLoading}
             emptyMessage="No hay proformas generadas"

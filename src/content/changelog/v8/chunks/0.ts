@@ -2,6 +2,14 @@ import type { ChangelogEntry } from "../../../changelogData";
 
 export const chunk0: ChangelogEntry[] = [
   {
+    version: "8.121.0",
+    date: "2026-05-08",
+    type: "minor",
+    title: "PR-2 audit calidad: separación lógica/presentación en TabProformas",
+    summary: "useTabProformasController deja de devolver JSX. Las columnas viven en components/facturacion/proformasColumns.tsx; el hook expone solo datos y handlers.",
+    description: "Segundo PR del audit de arquitectura. Refactor de useTabProformasController (~200 LOC, antes .tsx) para respetar la separación lógica/presentación. Cambios: (1) nuevo src/components/facturacion/proformasColumns.tsx con buildProformasColumns({descargar, downloadingId, onMarcarFacturada}) que retorna DataTableColumn<ProformaConFactura>[] (toda la JSX de Badge/Button/iconos vive ahí). (2) src/hooks/facturacion/useTabProformasController renombrado de .tsx a .ts: ahora expone search/filtro/paginación, datos (proformas/filtered/paginated/counts/totalPages), handlers (descargar, downloadingId, setProformaAFacturar) y CSV (csvColumns/csvRows). Sin JSX. (3) src/components/facturacion/TabProformas.tsx compone las columnas vía useMemo(buildProformasColumns(...)) usando los handlers del controller. Beneficios: hook testeable sin renderer, columnas reutilizables/mockeables, archivo de hook deja de ser .tsx (correcto). Versión 8.121.0.",
+  },
+  {
     version: "8.120.0",
     date: "2026-05-08",
     type: "minor",

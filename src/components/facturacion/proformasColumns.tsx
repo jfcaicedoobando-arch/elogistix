@@ -1,31 +1,27 @@
 /**
- * Controller del componente <TabProformas/>: orquesta el estado UI (delegado a
- * `useTabProformasState`), las columnas de tabla y la integración con
- * descarga de PDF + dialog de facturación.
+ * Definición de columnas JSX del tab de Proformas. Se mantiene fuera del hook
+ * controller para respetar la separación lógica/presentación: el hook expone
+ * datos + handlers, este builder los compone con celdas visuales.
  */
-import { useState, useMemo } from "react";
 import { Download, FileCheck2, FileText, FileCode2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { type DataTableColumn } from "@/components/shared/DataTable";
 import { formatCurrency, formatDate, toTitleCase, nombreDesdeEmail } from "@/lib/formatters";
-import { useProformas, type ProformaRow, type ProformaConFactura } from "@/hooks/embarque/useProformas";
-import { useDescargarProformaPdf } from "@/hooks/embarque/useDescargarProformaPdf";
-import { useTabProformasState, type FiltroEstadoProforma } from "./useTabProformasState";
+import type { ProformaConFactura, ProformaRow } from "@/hooks/embarque/useProformas";
 
-export type { FiltroEstadoProforma };
+interface BuildArgs {
+  descargar: (p: ProformaConFactura) => void;
+  downloadingId: string | null;
+  onMarcarFacturada: (p: ProformaRow) => void;
+}
 
-export function useTabProformasController() {
-  const [proformaAFacturar, setProformaAFacturar] = useState<ProformaRow | null>(null);
-
-  const { data: proformas = [], isLoading } = useProformas();
-  const { descargar, downloadingId } = useDescargarProformaPdf();
-
-  const state = useTabProformasState(proformas);
-  const { filtered, paginated, counts, totalPages, search, filtroEstado, page, pageSize } = state;
-
-
-  const columns: DataTableColumn<ProformaConFactura>[] = useMemo(() => [
+export function buildProformasColumns({
+  descargar,
+  downloadingId,
+  onMarcarFacturada,
+}: BuildArgs): DataTableColumn<ProformaConFactura>[] {
+  return [
     {
       key: "numero", header: "# Proforma", width: "w-[140px]", className: "font-medium whitespace-nowrap",
       sticky: true, sortable: true, sortValue: (p) => p.numero, render: (p) => p.numero,
@@ -133,7 +129,7 @@ export function useTabProformasController() {
             {!facturada && (
               <Button
                 variant="default" size="sm"
-                onClick={(e) => { e.stopPropagation(); setProformaAFacturar(p); }}
+                onClick={(e) => { e.stopPropagation(); onMarcarFacturada(p); }}
               >
                 <FileCheck2 className="h-3.5 w-3.5 mr-1" /> Facturada
               </Button>
@@ -142,46 +138,5 @@ export function useTabProformasController() {
         );
       },
     },
-  ], [descargar, downloadingId]);
-
-  const csvColumns = [
-    { key: "numero", label: "# Proforma" },
-    { key: "expediente", label: "Expediente" },
-    { key: "cliente", label: "Cliente" },
-    { key: "operador", label: "Operador" },
-    { key: "dias_credito", label: "Días Crédito" },
-    { key: "subtotal_usd", label: "Subtotal USD" },
-    { key: "iva_usd", label: "IVA USD" },
-    { key: "total_usd", label: "Total USD" },
-    { key: "subtotal_mxn", label: "Subtotal MXN" },
-    { key: "iva_mxn", label: "IVA MXN" },
-    { key: "total_mxn", label: "Total MXN" },
-    { key: "fecha", label: "Fecha" },
-    { key: "estado", label: "Estado" },
-    { key: "folio_factura", label: "Folio Factura" },
-    { key: "fecha_facturacion", label: "Fecha Facturación" },
   ];
-
-  const csvRows = () => filtered.map((p) => ({
-    numero: p.numero, expediente: p.expediente, cliente: p.cliente_nombre,
-    operador: p.operador ?? "", dias_credito: p.dias_credito ?? "",
-    subtotal_usd: Number(p.subtotal_usd), iva_usd: Number(p.iva_usd), total_usd: Number(p.total_usd),
-    subtotal_mxn: Number(p.subtotal_mxn), iva_mxn: Number(p.iva_mxn), total_mxn: Number(p.total_mxn),
-    fecha: p.fecha_emision, estado: p.estado_proforma ?? "pendiente",
-    folio_factura: p.folio_factura_externa ?? "", fecha_facturacion: p.fecha_facturacion ?? "",
-  }));
-
-  return {
-    // estado (delegado a useTabProformasState)
-    search, filtroEstado, page, pageSize,
-    setSearch: state.setSearch,
-    setFiltroEstado: state.setFiltroEstado,
-    setPage: state.setPage,
-    setPageSize: state.setPageSize,
-    // datos derivados
-    isLoading, proformas, filtered, paginated, counts, totalPages, columns,
-    csvColumns, csvRows,
-    // dialog facturación
-    proformaAFacturar, setProformaAFacturar,
-  };
 }

@@ -22,6 +22,14 @@ export interface ChangelogEntry {
  */
 export const recentChangelog: ChangelogEntry[] = [
   {
+    version: "8.121.0",
+    date: "2026-05-08",
+    type: "minor",
+    title: "PR-2 audit calidad: separación lógica/presentación en TabProformas",
+    summary: "useTabProformasController deja de devolver JSX. Las columnas viven en components/facturacion/proformasColumns.tsx; el hook expone solo datos y handlers.",
+    description: "Segundo PR del audit de arquitectura. Refactor de useTabProformasController para respetar separación lógica/presentación. Nuevo proformasColumns.tsx con buildProformasColumns(). Hook renombrado de .tsx a .ts; expone datos + handlers (descargar, downloadingId, setProformaAFacturar). TabProformas compone columnas vía useMemo. Versión 8.121.0.",
+  },
+  {
     version: "8.120.0",
     date: "2026-05-08",
     type: "minor",
@@ -92,22 +100,6 @@ export const recentChangelog: ChangelogEntry[] = [
     title: "Refactor Sprint 1: Hueco de Facturación modularizado",
     summary: "Se separó el componente HuecoFacturacionCard en hook, columnas y dialog para alinearlo al patrón del resto del proyecto.",
     description: "Limpieza arquitectónica: nuevo hook useHuecoFacturacion (encapsula useQuery + CSV), columnas en huecoFacturacionColumns.tsx y dialog en HuecoFacturacionDetalleDialog.tsx. El card pasó de 260 a ~110 LOC sin cambios de UX.",
-  },
-  {
-    version: "8.118.1",
-    date: "2026-05-05",
-    type: "patch",
-    title: "Hueco de Facturación: descarga CSV con BL Master y House",
-    summary: "El dialog de detalle del Hueco de Facturación ahora permite descargar un CSV con los embarques pendientes, incluyendo BL Master y BL House.",
-    description: "El dialog 'Ver detalle' del Hueco de Facturación añade una columna BL (Master + House) y un botón 'Descargar CSV' en el footer. El CSV exporta Expediente, Cliente, Operador, ETD, ETA, BL Master, BL House, Días sin facturar, Venta USD y Venta MXN.",
-  },
-  {
-    version: "8.118.0",
-    date: "2026-05-05",
-    type: "minor",
-    title: "Proyección: nueva tarjeta 'Hueco de Facturación' (alerta global)",
-    summary: "Tarjeta fija arriba de Pre-Facturación que muestra embarques con ETD > 5 días sin factura emitida, con totales en USD y MXN y dialog de detalle.",
-    description: "Nueva tarjeta de alerta en la tab Proyección de /facturacion. Muestra embarques con ETD ≥ 1/abr/2026 y > 5 días desde ETD que todavía no tienen factura emitida al cliente (factura_pdf_url). Es FIJA arriba del selector de mes — indicador global. Muestra conteo de embarques, total sin facturar en USD y MXN, y botón 'Ver detalle' con dialog (expediente, cliente, operador, ETD, días sin facturar coloreados, Venta USD/MXN, click navega al embarque). Cuando no hay hueco, muestra versión success compacta.",
   },
 ];
 
