@@ -76,7 +76,11 @@ const baseRutaFields = z.object({
 const maritimoRuta = z.object({
   puertoOrigen: z.string().trim().min(1, msg("2.puertoOrigen.required")),
   puertoDestino: z.string().trim().min(1, msg("2.puertoDestino.required")),
-  naviera: z.string().trim().min(1, msg("2.naviera.required")),
+  naviera: z
+    .string()
+    .trim()
+    .min(1, msg("2.naviera.required"))
+    .regex(/^[A-Z]{4}$/, msg("2.naviera.scac")),
   tipoServicio: z.string().min(1, msg("2.tipoServicio.required")),
   contenedor: z.string().trim().min(1, msg("2.contenedor.required")),
   tipoContenedor: z.string().trim().min(1, msg("2.tipoContenedor.required")),

@@ -75,31 +75,30 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Resolver SCAC: match exacto, luego ILIKE (nombre embarque puede ser corto/parcial)
-    const navieraNombre = (embarque.naviera ?? "").trim();
+    // Resolver SCAC: el formulario guarda navieras.code; fallback por name si fue capturado a mano
+    const navieraValor = (embarque.naviera ?? "").trim();
     let naviera: { code: string | null } | null = null;
-    if (navieraNombre) {
-      const exact = await supabase
+    if (navieraValor) {
+      const byCode = await supabase
         .from("navieras")
         .select("code")
-        .ilike("name", navieraNombre)
+        .ilike("code", navieraValor)
         .maybeSingle();
-      naviera = exact.data ?? null;
+      naviera = byCode.data ?? null;
       if (!naviera) {
-        const fuzzy = await supabase
+        const byName = await supabase
           .from("navieras")
           .select("code")
-          .or(`name.ilike.${navieraNombre}%,name.ilike.%${navieraNombre}%,code.ilike.${navieraNombre}%`)
-          .limit(1)
+          .ilike("name", navieraValor)
           .maybeSingle();
-        naviera = fuzzy.data ?? null;
+        naviera = byName.data ?? null;
       }
     }
-    const scac = (naviera?.code ?? "").toUpperCase();
-    if (!scac || scac.length !== 4) {
+    const scac = (naviera?.code ?? navieraValor).toUpperCase();
+    if (!/^[A-Z]{4}$/.test(scac)) {
       return json(
         {
-          error: `No se encontró un SCAC válido de 4 letras para la naviera "${navieraNombre}". Revisa el catálogo de navieras (el código actual es "${naviera?.code ?? "—"}").`,
+          error: `No se encontró un SCAC válido de 4 letras para la naviera "${navieraValor}". Edita el embarque y selecciona una naviera del catálogo.`,
         },
         400,
       );
