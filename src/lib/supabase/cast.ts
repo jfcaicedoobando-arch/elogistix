@@ -28,13 +28,7 @@
  * - [ ] Adoptar Zod en los services hotspot (cotizacion/crud, embarque/mutations)
  *       y eliminar el cast crudo allí.
  */
-import type { Database } from "@/integrations/supabase/types";
-
-type Json = Database["public"]["Tables"] extends never
-  ? unknown
-  : Database extends { public: { CompositeTypes: infer _ } }
-    ? unknown
-    : unknown;
+import type { Json } from "@/integrations/supabase/types";
 
 /**
  * Convierte una respuesta cruda de Supabase al tipo de dominio esperado.
