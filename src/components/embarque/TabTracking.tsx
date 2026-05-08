@@ -18,6 +18,9 @@ import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 
 interface Props {
   embarqueId: string;
+  modo?: string | null;
+  blMaster?: string | null;
+  naviera?: string | null;
 }
 
 
