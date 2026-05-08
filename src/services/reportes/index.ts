@@ -49,9 +49,9 @@ export async function fetchProfitPorCliente(
   filtros: RentabilidadFiltros,
 ): Promise<ProfitPorClienteRow[]> {
   const { data, error } = await supabase.rpc("profit_por_cliente", {
-    _fecha_desde: filtros.fechaDesde ?? null,
-    _fecha_hasta: filtros.fechaHasta ?? null,
-    _modo: filtros.modo ?? null,
+    _fecha_desde: filtros.fechaDesde ?? undefined,
+    _fecha_hasta: filtros.fechaHasta ?? undefined,
+    _modo: filtros.modo ?? undefined,
   });
   if (error) throw error;
   return (data ?? []) as ProfitPorClienteRow[];
