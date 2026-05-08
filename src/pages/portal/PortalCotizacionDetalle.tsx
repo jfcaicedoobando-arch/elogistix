@@ -12,7 +12,7 @@ import PortalCotizacionHeader from "@/components/portal/cotizacion/PortalCotizac
 import PortalCotizacionEstadoBanner from "@/components/portal/cotizacion/PortalCotizacionEstadoBanner";
 import PortalCotizacionConfirmDialog from "@/components/portal/cotizacion/PortalCotizacionConfirmDialog";
 import { formatDate } from "@/lib/formatters";
-import type { Tables } from "@/types/db";
+
 import { useRegisterBreadcrumbLabel } from "@/contexts/BreadcrumbContext";
 
 export default function PortalCotizacionDetalle() {
