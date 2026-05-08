@@ -34,9 +34,9 @@ export async function consolidarProformas(params: ConsolidarProformasParams): Pr
     p_cliente_id: params.clienteId,
     p_cliente_nombre: params.clienteNombre,
     p_expediente: params.expediente,
-    p_bl_master: params.blMaster,
-    p_operador: params.operador,
-    p_dias_credito: params.diasCredito,
+    p_bl_master: params.blMaster ?? "",
+    p_operador: params.operador ?? "",
+    p_dias_credito: params.diasCredito ?? 0,
     p_tasa_iva: params.tasaIva,
   });
   if (error) throw error;

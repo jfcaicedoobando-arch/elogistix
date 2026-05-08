@@ -22,6 +22,14 @@ export interface ChangelogEntry {
  */
 export const recentChangelog: ChangelogEntry[] = [
   {
+    version: "8.128.0",
+    date: "2026-05-08",
+    type: "minor",
+    title: "Fase D audit casts: strictNullChecks activado",
+    summary: "`strictNullChecks: true` activado en tsconfig. Solo 14 errores reales reparados (vs ~800 estimados antes de Fases A-C). Suite 285/285 verde.",
+    description: "Cierre de Fase D del strict-mode roadmap. tsconfig.json y tsconfig.app.json: strictNullChecks=true. Errores reparados: BloqueVinculacion (narrowing inválido en rama else), DialogMarcarFacturada (guard de embarque_id null), PortalEmbarquesRecientesCard (acepta null en puertos/aeropuertos), useDialogGenerarProformaController (notas null en vez de undefined), CostoCotizacion del wizard (proveedor/moneda nullable), EmbarqueDetalleActions (null→undefined), PortalEmbarqueDetalle (estadoVisual fallback), consolidar_proformas (defaults para campos requeridos por RPC), profit_por_cliente (?? undefined). Las Fases A-C bajaron la deuda de ~800 a 14 errores.",
+  },
+  {
     version: "8.127.0",
     date: "2026-05-08",
     type: "minor",
@@ -92,22 +100,6 @@ export const recentChangelog: ChangelogEntry[] = [
     title: "Hardening tras code audit externo",
     summary: "Tipado estricto en services/cliente, timeout + fallback en exchange-rates, helpers de CORS con whitelist, doc de seguridad y checklist RLS.",
     description: "Respuesta al audit externo de Greg the Great. (1) src/services/cliente/crud.ts: removidos los 2 `any` (helper genérico dedupeByRfc tipado con Pick<Cliente,'id'|'rfc'>). (2) supabase/functions/exchange-rates: AbortController con timeout 5s + fallback explícito a tipos de cambio default; logs de fallback para diagnóstico. (3) supabase/functions/_shared/cors.ts: nuevo buildCors(req) con whitelist (*.lovable.app, *.lovableproject.com, localhost) y handlePreflightStrict; jsonResponse/errorResponse aceptan override de cors. Wildcard se mantiene como default (endpoints públicos por diseño + auth real vía JWT en authenticate()). (4) supabase/functions/parse-csf: documentado en cabecera que NO parsea XML (descarta superficie XXE). (5) docs/security-checklist.md: nuevo documento operativo con queries para verificar cobertura RLS, search_path en SECURITY DEFINER, fuerza del token de tracking_links, mapa de edge functions y política Lovable (no rate limiting backend, anon key es pública por diseño). Hallazgos del audit descartados con justificación: rotar anon key (es pública), .env en .gitignore (Lovable lo gestiona), rate limiting backend (no soportado), GitHub Actions CI (Lovable corre el pipeline). Versión 8.119.0.",
-  },
-  {
-    version: "8.118.8",
-    date: "2026-05-06",
-    type: "patch",
-    title: "Auditoría de tests: arreglo de test obsoleto en parsers/dashboard",
-    summary: "Revisión de la suite (278 tests). Se actualiza el test desactualizado de parseCargasPorCliente para reflejar la normalización del desglose.",
-    description: "30 archivos / 278 tests revisados. Test rojo: parseCargasPorCliente esperaba desglose vacío pero el parser ya normaliza con las 5 llaves de estado en 0. Reemplazado por 2 casos: uno valida la normalización con desglose vacío y otro confirma que se conservan los conteos cuando vienen poblados. Sin tests redundantes detectados; sin borrar nada. 14/14 verdes en dashboard.test.ts.",
-  },
-  {
-    version: "8.118.7",
-    date: "2026-05-06",
-    type: "patch",
-    title: "Tests de borde: helpers financieros y reglas de Auditoría",
-    summary: "23 nuevos tests cubren conversiones MXN/USD/EUR, montos negativos, tasas extremas, NaN, ETAs nulas, datos ausentes y score saturado.",
-    description: "financialUtils.edge.test.ts (16) cubre round-trip de monedas, EUR vía MXN, defaults, negativos, IVA 0, calcularMargen(0,0), sumarEnUSD multi-moneda y calcularTotalesPL sin NaN. useAuditoriaEjecutivo.edge.test.tsx (7) cubre data undefined, ETAs nulas, monto_mxn ausente, cliente/estado vacíos, ausencia de revisiones (MTTR=null) y score saturado a 0.",
   },
 ];
 

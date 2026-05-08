@@ -53,6 +53,14 @@ export interface CotizacionCostoLookup {
   proveedor: string | null;
 }
 
+/** Versión del lookup ya saneada (sin nulls) lista para hidratación. */
+export interface CotizacionCostoLookupSanitizado {
+  concepto: string;
+  costo_unitario: number | string;
+  moneda: string;
+  proveedor: string;
+}
+
 export async function fetchCotizacionCostosForEmbarque(
   cotizacionId: string,
 ): Promise<CotizacionCostoLookup[]> {

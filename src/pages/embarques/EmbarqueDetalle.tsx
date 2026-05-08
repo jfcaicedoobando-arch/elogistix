@@ -56,7 +56,7 @@ export default function EmbarqueDetalle() {
   const {
     handleUpload, handleDeleteDoc, handleDownload, handleAvanzarEstado,
     downloadingDocId, avanzarEstado, uploadDoc, deleteDoc,
-  } = useEmbarqueDetalleActions(embarque, id);
+  } = useEmbarqueDetalleActions(embarque ?? undefined, id);
 
   const tipoCambioUSD = embarque ? (Number(embarque.tipo_cambio_usd) || 1) : 1;
   const tipoCambioEUR = embarque ? (Number(embarque.tipo_cambio_eur) || 1) : 1;

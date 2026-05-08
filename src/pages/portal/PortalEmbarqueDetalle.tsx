@@ -54,7 +54,7 @@ export default function PortalEmbarqueDetalle() {
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-3 flex-wrap">
             <h1 className="text-2xl font-bold">{embarque.expediente}</h1>
-            <Badge className={getEstadoColor(estadoVisual)}>{estadoVisual}</Badge>
+            <Badge className={getEstadoColor(estadoVisual ?? "")}>{estadoVisual}</Badge>
             <ModoIcon modo={embarque.modo} size={18} circle />
           </div>
           <p className="text-sm text-muted-foreground mt-1">

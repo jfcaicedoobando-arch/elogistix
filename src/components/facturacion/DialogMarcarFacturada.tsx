@@ -32,7 +32,7 @@ export function DialogMarcarFacturada({ open, onOpenChange, proforma }: Props) {
   }, [open]);
 
   const handleConfirm = async () => {
-    if (!proforma || !folio.trim()) return;
+    if (!proforma || !folio.trim() || !proforma.embarque_id) return;
     try {
       await marcar.mutateAsync({
         proformaId: proforma.id,

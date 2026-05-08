@@ -2,6 +2,14 @@ import type { ChangelogEntry } from "../../../changelogData";
 
 export const chunk0: ChangelogEntry[] = [
   {
+    version: "8.128.0",
+    date: "2026-05-08",
+    type: "minor",
+    title: "Fase D audit casts: strictNullChecks activado",
+    summary: "`strictNullChecks: true` activado en tsconfig. Solo 14 errores reales reparados (vs ~800 estimados antes de Fases A-C). Suite 285/285 verde.",
+    description: "Cierre de Fase D del strict-mode roadmap. (1) tsconfig.json y tsconfig.app.json ahora con strictNullChecks=true. (2) Sin las Fases A-C habrían sido ~800 errores; quedaron 14 por la deuda ya pagada. Patrones aplicados: narrowing correcto, guards de null, defaults explícitos para parámetros de RPC y conversiones null↔undefined controladas. (3) Cambios concretos: src/components/embarque/secciones/BloqueVinculacion.tsx (narrowing inválido en rama else: cotizacionVinculada es null aquí, removido check redundante); src/components/facturacion/DialogMarcarFacturada.tsx (guard de proforma.embarque_id null antes de mutateAsync); src/components/portal/dashboard/PortalEmbarquesRecientesCard.tsx (interface acepta null en puertos/aeropuertos); src/hooks/embarque/useDialogGenerarProformaController.ts (notas: null en vez de undefined para alinear con tipo del servicio); src/lib/domain/embarqueWizard.ts (CostoCotizacion: proveedor/costo_unitario nullable para aceptar el shape del lookup de Supabase); src/pages/embarques/EmbarqueDetalle.tsx (embarque ?? undefined para useEmbarqueDetalleActions); src/pages/portal/PortalEmbarqueDetalle.tsx (estadoVisual ?? \"\" en getEstadoColor); src/services/proforma/consolidar.ts (?? \"\"/?? 0 para campos requeridos por RPC consolidar_proformas que vienen como nullable en el dominio); src/services/reportes/index.ts (filtros opcionales con ?? undefined para profit_por_cliente). (4) Suite 285/285 verde, tsc --noEmit limpio. Próximo opcional: noImplicitAny y luego strict: true. Versión 8.128.0.",
+  },
+  {
     version: "8.127.0",
     date: "2026-05-08",
     type: "minor",
