@@ -127,25 +127,39 @@ Deno.serve(async (req) => {
 
     // Manejar duplicado: buscar el tracking existente
     if (t49Res.status === 422) {
-      const isDuplicate =
-        Array.isArray(t49Json?.errors) &&
-        t49Json.errors.some((e: any) => e?.code === "duplicate");
-      if (isDuplicate) {
-        const listRes = await fetch(
-          `${T49_BASE}/tracking_requests?filter[request_number]=${encodeURIComponent(
-            String(requestNumber).trim(),
-          )}`,
-          { headers: t49Headers },
-        );
-        const listJson = await listRes.json().catch(() => ({}));
-        const existing = Array.isArray(listJson?.data)
-          ? listJson.data.find((r: any) => r?.attributes?.scac === scac)
-          : null;
-        if (existing) {
-          t49Res = listRes;
-          t49Json = { data: existing };
+      const dupErr = Array.isArray(t49Json?.errors)
+        ? t49Json.errors.find((e: any) => e?.code === "duplicate")
+        : null;
+      if (dupErr) {
+        const existingId: string | undefined = dupErr?.meta?.tracking_request_id;
+        if (existingId) {
+          const getRes = await fetch(`${T49_BASE}/tracking_requests/${existingId}`, {
+            headers: t49Headers,
+          });
+          const getJson = await getRes.json().catch(() => ({}));
+          if (getJson?.data) {
+            t49Res = getRes;
+            t49Json = { data: getJson.data };
+          }
+        }
+        if (!t49Json?.data) {
+          const listRes = await fetch(
+            `${T49_BASE}/tracking_requests?filter[request_number]=${encodeURIComponent(
+              String(requestNumber).trim(),
+            )}`,
+            { headers: t49Headers },
+          );
+          const listJson = await listRes.json().catch(() => ({}));
+          const existing = Array.isArray(listJson?.data)
+            ? listJson.data.find((r: any) => r?.attributes?.scac === scac)
+            : null;
+          if (existing) {
+            t49Res = listRes;
+            t49Json = { data: existing };
+          }
         }
       }
+    }
     }
 
     if (!t49Res.ok && !t49Json?.data) {
