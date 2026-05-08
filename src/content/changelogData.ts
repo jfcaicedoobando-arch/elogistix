@@ -101,14 +101,6 @@ export const recentChangelog: ChangelogEntry[] = [
     summary: "Tarjeta fija arriba de Pre-Facturación que muestra embarques con ETD > 5 días sin factura emitida, con totales en USD y MXN y dialog de detalle.",
     description: "Nueva tarjeta de alerta en la tab Proyección de /facturacion. Muestra embarques con ETD ≥ 1/abr/2026 y > 5 días desde ETD que todavía no tienen factura emitida al cliente (factura_pdf_url). Es FIJA arriba del selector de mes — indicador global. Muestra conteo de embarques, total sin facturar en USD y MXN, y botón 'Ver detalle' con dialog (expediente, cliente, operador, ETD, días sin facturar coloreados, Venta USD/MXN, click navega al embarque). Cuando no hay hueco, muestra versión success compacta.",
   },
-  {
-    version: "8.117.5",
-    date: "2026-05-05",
-    type: "minor",
-    title: "Operaciones: drill-down de embarques por estado en cada operador",
-    summary: "En cada tarjeta de operador, los conteos por estado ahora son clickeables y abren la lista detallada de embarques en ese estado.",
-    description: "En /operaciones, cada renglón de estado dentro de la tarjeta de operador es ahora clickeable y abre un dialog con la lista de embarques (expediente, cliente, modo, ruta, ETD/ETA, días en puerto o días para ETA), búsqueda local y enlace al detalle. Botón 'Ver todos en Embarques' lleva al listado pre-filtrado por operador + estado. Backend: la RPC operaciones_stats incluye un nuevo campo embarquesPorEstado por operador, limitado a 200 ítems por estado (50 para Cerrado).",
-  },
 ];
 
 /** Deduplica por version conservando la primera ocurrencia (recentChangelog gana). */
