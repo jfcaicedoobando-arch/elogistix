@@ -2,6 +2,14 @@ import type { ChangelogEntry } from "../../../changelogData";
 
 export const chunk0: ChangelogEntry[] = [
   {
+    version: "8.131.0",
+    date: "2026-05-08",
+    type: "minor",
+    title: "Historial de intentos de tracking por embarque",
+    summary: "Nueva tabla tracking_intentos y tarjeta de auditoría en el tab de Tracking que registra cada intento de activación con fecha, resultado, código HTTP, SCAC, BL, mensaje y tracking_request_id.",
+    description: "Auditoría de la integración con Terminal49. (1) Migración: nueva tabla tracking_intentos (embarque_id, organization_id, provider, accion, request_type, request_number, scac, resultado [exito/error/duplicado], http_status, tracking_request_id, mensaje, detalle jsonb, usuario_id, usuario_email, created_at) con índices por embarque y RLS por org (lectura/inserción del tenant + super_admin). (2) Edge function terminal49-create-tracking: ahora registra un intento en cada caso — éxito, duplicado vinculado, validaciones (modo, BL faltante, SCAC inválido), rechazo de Terminal49 con HTTP status y detalle, error al guardar en tracking_externo y excepciones. (3) UI: nuevo componente TrackingIntentosHistorial bajo TerminalAutomaticoCard en TabTracking (solo Marítimo) que muestra los últimos 50 intentos con badge de resultado, HTTP status, fecha, usuario, SCAC, BL y botón para copiar el tracking_request_id. (4) Hook useTrackingIntentos con React Query e invalidación automática al activar tracking (éxito o error). Versión 8.131.0.",
+  },
+  {
     version: "8.130.1",
     date: "2026-05-08",
     type: "patch",
