@@ -85,6 +85,7 @@ export function useEliminarTracking(embarqueId: string | undefined) {
       });
     },
   });
+}
 
 export function useVincularShipmentManual(embarqueId: string | undefined) {
   const qc = useQueryClient();
