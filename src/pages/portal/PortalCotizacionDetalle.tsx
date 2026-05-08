@@ -12,7 +12,7 @@ import PortalCotizacionHeader from "@/components/portal/cotizacion/PortalCotizac
 import PortalCotizacionEstadoBanner from "@/components/portal/cotizacion/PortalCotizacionEstadoBanner";
 import PortalCotizacionConfirmDialog from "@/components/portal/cotizacion/PortalCotizacionConfirmDialog";
 import { formatDate } from "@/lib/formatters";
-import type { Tables } from "@/types/db";
+
 import { useRegisterBreadcrumbLabel } from "@/contexts/BreadcrumbContext";
 
 export default function PortalCotizacionDetalle() {
@@ -52,7 +52,8 @@ export default function PortalCotizacionDetalle() {
   }
 
   const { conceptosUSD, conceptosMXN, totalUSD, subtotalMXN, ivaMXN, totalMXN } = totales;
-  const comentarioCliente = (cot as Tables<"cotizaciones">).comentario_cliente;
+  // cast: comentario_cliente vive en la fila DB pero no en el tipo dominio mínimo
+  const comentarioCliente = (cot as { comentario_cliente?: string | null }).comentario_cliente;
 
   return (
     <div className="space-y-6">

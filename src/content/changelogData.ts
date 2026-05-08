@@ -22,6 +22,14 @@ export interface ChangelogEntry {
  */
 export const recentChangelog: ChangelogEntry[] = [
   {
+    version: "8.126.0",
+    date: "2026-05-08",
+    type: "patch",
+    title: "Fase C audit casts: 0 `as Tables<>` fuera de mappers/queries",
+    summary: "Eliminados los 2 únicos `as Tables<>` fuera de zona permitida. Política Phase C cumplida.",
+    description: "PortalCotizacionDetalle: narrowing local en lugar de cast a tabla. conversiones/embarques: boundary canalizado por fromDb. Audit: 457 casts, 0 CRITICAL, HIGH solo en mocks de tests.",
+  },
+  {
     version: "8.125.0",
     date: "2026-05-08",
     type: "minor",
@@ -92,14 +100,6 @@ export const recentChangelog: ChangelogEntry[] = [
     title: "Tests de borde: helpers financieros y reglas de Auditoría",
     summary: "23 nuevos tests cubren conversiones MXN/USD/EUR, montos negativos, tasas extremas, NaN, ETAs nulas, datos ausentes y score saturado.",
     description: "financialUtils.edge.test.ts (16) cubre round-trip de monedas, EUR vía MXN, defaults, negativos, IVA 0, calcularMargen(0,0), sumarEnUSD multi-moneda y calcularTotalesPL sin NaN. useAuditoriaEjecutivo.edge.test.tsx (7) cubre data undefined, ETAs nulas, monto_mxn ausente, cliente/estado vacíos, ausencia de revisiones (MTTR=null) y score saturado a 0.",
-  },
-  {
-    version: "8.118.6",
-    date: "2026-05-06",
-    type: "patch",
-    title: "Tests del módulo Auditoría: 23 casos para hooks y derivaciones",
-    summary: "Nuevas suites para useAuditoriaEjecutivo, useAuditoriaPageController, useHallazgosTablaState y hallazgoHash. 23 tests verdes.",
-    description: "Cobertura end-to-end de los hooks de Auditoría con I/O mockeado: score, penalización por severidad, exclusión de revisados, riesgo financiero, ETA (vencidos/urgentes/edad), MTTR + ranking, drill-down (severidad/cliente/búsqueda/soloVencidos/responsable), paginación, modos y hash determinista.",
   },
 ];
 

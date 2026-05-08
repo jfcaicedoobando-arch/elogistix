@@ -56,16 +56,14 @@ Reducir los 64 HIGH (`as unknown as X` y `as X[]` sin validar).
 manuales (cero peso, más boilerplate). Recomendación: Zod solo en boundaries
 (services), no en componentes.
 
-### Fase C — Mappers DB↔dominio (2 PRs)
+### Fase C — Mappers DB↔dominio ✅ COMPLETADA (8.126.0)
 
-Los 316 MEDIUM son mayormente `as Tables<X>` sobre respuestas de Supabase.
-Aceptables **dentro de `lib/mappers/*`**; fuera, son code smell.
-
-- [ ] Mover los `as Tables<>` que viven fuera de `lib/mappers/*` adentro.
-- [ ] Lint rule custom (eslint plugin local) que prohíba `as Tables<` fuera
-      de `lib/mappers/` o `services/*/queries.ts`.
-- [ ] Hotspots a auditar: `src/lib/parsers/dashboard.ts` (6 MEDIUM),
-      `src/components/admin/TabSeguridadGlobal.tsx` (6 MEDIUM).
+- [x] Verificado: 0 `as Tables<>` / `as TablesInsert<>` fuera de
+      `lib/mappers/*`, `services/*/queries.ts`, `services/*/index.ts`.
+- [x] Los 2 outliers detectados se corrigieron:
+      - `pages/portal/PortalCotizacionDetalle.tsx`: narrowing local.
+      - `services/cotizacion/conversiones/embarques.ts`: canalizado por `fromDb<>`.
+- [ ] (Pendiente, opcional) Lint rule custom para enforcement automático.
 
 ### Fase D — Activar `strictNullChecks` (1 PR grande)
 

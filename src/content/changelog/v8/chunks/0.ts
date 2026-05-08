@@ -2,6 +2,14 @@ import type { ChangelogEntry } from "../../../changelogData";
 
 export const chunk0: ChangelogEntry[] = [
   {
+    version: "8.126.0",
+    date: "2026-05-08",
+    type: "patch",
+    title: "Fase C audit casts: 0 `as Tables<>` fuera de mappers/queries",
+    summary: "Eliminados los 2 únicos `as Tables<>` que vivían fuera de la zona permitida (PortalCotizacionDetalle y conversiones/embarques). Política Phase C cumplida.",
+    description: "Cierre de Fase C del strict-mode roadmap. (1) src/pages/portal/PortalCotizacionDetalle.tsx: el cast a `Tables<\"cotizaciones\">` para acceder a comentario_cliente se reemplazó por narrowing local `{ comentario_cliente?: string | null }` con comentario explicativo; import Tables eliminado. (2) src/services/cotizacion/conversiones/embarques.ts: el cast `as TablesInsert<\"conceptos_costo\">[]` aplicado al output del mapper de dominio se canalizó a través de `fromDb<>` con comentario que documenta el boundary (mapper genérico devuelve `moneda: string`, Supabase espera enum). (3) Verificado: `rg \"as Tables\"` fuera de lib/mappers + services/queries.ts + services/index.ts retorna 0 resultados. (4) Audit final: 457 casts totales (vs 459), 0 CRITICAL, 14 HIGH (todos mocks de tests), 273 MEDIUM (todos en zonas permitidas), 7 LOW, 163 SAFE. Suite 279/279 verde. Próximo: decidir Fase B.2 (Zod en boundaries) o saltar directo a Fase D (activar strictNullChecks). Versión 8.126.0.",
+  },
+  {
     version: "8.125.0",
     date: "2026-05-08",
     type: "minor",

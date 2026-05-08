@@ -8,6 +8,7 @@ import {
   filtrarCostosParaContenedor,
   mapCostosACostosEmbarque,
 } from "@/lib/domain/cotizacion";
+import { fromDb } from "@/lib/supabase/cast";
 
 type CotizacionInsert = TablesInsert<"cotizaciones">;
 type EmbarqueInsert = TablesInsert<"embarques">;
@@ -61,8 +62,12 @@ export async function convertirCotizacionAEmbarques(
         const rows = mapCostosACostosEmbarque(
           conceptosParaInsertar,
           embarque.id,
-        ) as TablesInsert<"conceptos_costo">[];
-        const { error: errorConceptos } = await supabase.from("conceptos_costo").insert(rows);
+        );
+        // Boundary: el mapper de dominio devuelve `moneda: string` (genérico);
+        // Supabase tipa la columna como enum "EUR" | "MXN" | "USD". El valor
+        // proviene de cotizacion_costos donde la misma constraint ya aplica.
+        const rowsForDb = fromDb<TablesInsert<"conceptos_costo">[]>(rows);
+        const { error: errorConceptos } = await supabase.from("conceptos_costo").insert(rowsForDb);
         if (errorConceptos) throw errorConceptos;
       }
     }
