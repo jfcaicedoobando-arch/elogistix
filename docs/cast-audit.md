@@ -5,17 +5,17 @@ Auditoría automática de los `as` casts en `src/`. Generado por
 
 ## Resumen
 
-Total de `as` casts detectados: **562**
+Total de `as` casts detectados: **507**
 
 | Categoría | Peso | Cantidad | % |
 |-----------|------|----------|---|
-| SAFE      | 0 | 163     | 29.0% |
-| LOW       | 1 | 7      | 1.2% |
-| MEDIUM    | 2 | 316   | 56.2% |
-| HIGH      | 3 | 64     | 11.4% |
-| CRITICAL  | 4 | 12 | 2.1% |
+| SAFE      | 0 | 163     | 32.1% |
+| LOW       | 1 | 7      | 1.4% |
+| MEDIUM    | 2 | 273   | 53.8% |
+| HIGH      | 3 | 64     | 12.6% |
+| CRITICAL  | 4 | 0 | 0.0% |
 
-**Lectura clave:** los casts a accionar son los **HIGH + CRITICAL** = 76 (~13.5%). El resto es seguro o aceptable bajo política.
+**Lectura clave:** los casts a accionar son los **HIGH + CRITICAL** = 64 (~12.6%). El resto es seguro o aceptable bajo política.
 
 ## Definición de categorías
 
@@ -30,201 +30,201 @@ Total de `as` casts detectados: **562**
 | # | Archivo | Total | Peso | SAFE | LOW | MED | HIGH | CRIT |
 |---|---------|------:|-----:|-----:|----:|----:|-----:|-----:|
 | 1 | `src/services/cotizacion/crud.ts` | 22 | 51 | 2 | 0 | 9 | 11 | 0 |
-| 2 | `src/content/changelog/v8/chunks/0.ts` | 17 | 40 | 0 | 0 | 14 | 0 | 3 |
-| 3 | `src/services/embarque/mutations.ts` | 13 | 32 | 2 | 0 | 1 | 10 | 0 |
-| 4 | `src/services/embarque/queries.ts` | 13 | 24 | 1 | 0 | 12 | 0 | 0 |
-| 5 | `src/services/auditoria/index.ts` | 8 | 17 | 0 | 0 | 7 | 1 | 0 |
-| 6 | `src/content/changelog/v5.ts` | 4 | 16 | 0 | 0 | 0 | 0 | 4 |
-| 7 | `src/lib/parsers/dashboard.ts` | 7 | 15 | 0 | 0 | 6 | 1 | 0 |
-| 8 | `src/content/changelog/v3.ts` | 6 | 14 | 0 | 0 | 5 | 0 | 1 |
-| 9 | `src/components/admin/TabSeguridadGlobal.tsx` | 6 | 12 | 0 | 0 | 6 | 0 | 0 |
-| 10 | `src/content/changelog/v8/chunks/4.ts` | 3 | 12 | 0 | 0 | 0 | 0 | 3 |
-| 11 | `src/lib/mappers/embarqueToDb.ts` | 6 | 12 | 0 | 0 | 6 | 0 | 0 |
-| 12 | `src/services/__tests__/tracking.test.ts` | 4 | 12 | 0 | 0 | 0 | 4 | 0 |
-| 13 | `src/services/configuracion/index.ts` | 5 | 11 | 0 | 2 | 0 | 3 | 0 |
-| 14 | `src/components/admin/TabPlataforma.tsx` | 5 | 10 | 0 | 0 | 5 | 0 | 0 |
-| 15 | `src/components/auditoria/HallazgosFiltros.tsx` | 5 | 10 | 0 | 0 | 5 | 0 | 0 |
+| 2 | `src/services/embarque/mutations.ts` | 13 | 32 | 2 | 0 | 1 | 10 | 0 |
+| 3 | `src/services/embarque/queries.ts` | 13 | 24 | 1 | 0 | 12 | 0 | 0 |
+| 4 | `src/services/auditoria/index.ts` | 8 | 17 | 0 | 0 | 7 | 1 | 0 |
+| 5 | `src/lib/parsers/dashboard.ts` | 7 | 15 | 0 | 0 | 6 | 1 | 0 |
+| 6 | `src/components/admin/TabSeguridadGlobal.tsx` | 6 | 12 | 0 | 0 | 6 | 0 | 0 |
+| 7 | `src/lib/mappers/embarqueToDb.ts` | 6 | 12 | 0 | 0 | 6 | 0 | 0 |
+| 8 | `src/services/__tests__/tracking.test.ts` | 4 | 12 | 0 | 0 | 0 | 4 | 0 |
+| 9 | `src/services/configuracion/index.ts` | 5 | 11 | 0 | 2 | 0 | 3 | 0 |
+| 10 | `src/components/admin/TabPlataforma.tsx` | 5 | 10 | 0 | 0 | 5 | 0 | 0 |
+| 11 | `src/components/auditoria/HallazgosFiltros.tsx` | 5 | 10 | 0 | 0 | 5 | 0 | 0 |
+| 12 | `src/components/cotizacion/conceptos/ConceptoRowUSD.tsx` | 5 | 10 | 0 | 0 | 5 | 0 | 0 |
+| 13 | `src/hooks/embarque/useProformas.ts` | 5 | 10 | 0 | 0 | 5 | 0 | 0 |
+| 14 | `src/services/__tests__/csfService.test.ts` | 3 | 9 | 0 | 0 | 0 | 3 | 0 |
+| 15 | `src/services/catalogos/index.ts` | 3 | 9 | 0 | 0 | 0 | 3 | 0 |
 
 ## Top-30 casts más riesgosos (HIGH + CRITICAL)
 
-### 1. [CRITICAL] `src/content/changelog/v3.ts:72`
-
-```ts
-description: "Consolidación de utilidades duplicadas: getEstadoColor unificado para todos los estados (embarque, cotización, factura), resolverContacto centralizado, interfaces ConceptoVentaLocal/Conc
-```
-
-### 2. [CRITICAL] `src/content/changelog/v5.ts:156`
-
-```ts
-description: "Eliminados imports directos de supabase en CotizacionDetalle (useEmbarquesVinculados), ProveedorDetalle (useProveedorOperaciones) y NuevoClienteDialog (parseCsf service). Nuevas query ke
-```
-
-### 3. [CRITICAL] `src/content/changelog/v5.ts:163`
-
-```ts
-description: "El diálogo de alta de clientes (wizard 2 pasos, CSF upload, document checklist) fue extraído a src/components/cliente/NuevoClienteDialog.tsx con estado independiente. Clientes.tsx reduci
-```
-
-### 4. [CRITICAL] `src/content/changelog/v5.ts:176`
-
-```ts
-title: "Eliminación masiva de casts 'as any' — tipado estricto con Supabase",
-```
-
-### 5. [CRITICAL] `src/content/changelog/v5.ts:177`
-
-```ts
-description: "Reducción de ~188 a ~6 ocurrencias de 'as any' en 17 archivos. Reemplazados casts de enums por TablesInsert<T>['campo'], CotizacionRow ahora extiende Tables<'cotizaciones'> (eliminando 8
-```
-
-### 6. [CRITICAL] `src/content/changelog/v8/chunks/0.ts:10`
-
-```ts
-description: "Auditoría completa de type assertions del proyecto. (1) scripts/audit-casts.ts: recorre src/, clasifica cada `as X` en 5 categorías por riesgo (SAFE 163, LOW 7, MEDIUM 316, HIGH 64, CRIT
-```
-
-### 7. [CRITICAL] `src/content/changelog/v8/chunks/0.ts:10`
-
-```ts
-description: "Auditoría completa de type assertions del proyecto. (1) scripts/audit-casts.ts: recorre src/, clasifica cada `as X` en 5 categorías por riesgo (SAFE 163, LOW 7, MEDIUM 316, HIGH 64, CRIT
-```
-
-### 8. [CRITICAL] `src/content/changelog/v8/chunks/0.ts:10`
-
-```ts
-description: "Auditoría completa de type assertions del proyecto. (1) scripts/audit-casts.ts: recorre src/, clasifica cada `as X` en 5 categorías por riesgo (SAFE 163, LOW 7, MEDIUM 316, HIGH 64, CRIT
-```
-
-### 9. [CRITICAL] `src/content/changelog/v8/chunks/1.ts:107`
-
-```ts
-description: "Refactor interno (sin cambios funcionales para el usuario) que limpia la deuda técnica detectada en la auditoría del módulo de proformas. (1) Nueva capa de dominio (lib/domain/proforma.t
-```
-
-### 10. [CRITICAL] `src/content/changelog/v8/chunks/4.ts:100`
-
-```ts
-description: "1) NuevoClienteDialog migrado a getErrorMessage centralizado (2 catch blocks). 2) as any eliminado en usePermissions.test.tsx con tipado Partial<ReturnType>.",
-```
-
-### 11. [CRITICAL] `src/content/changelog/v8/chunks/4.ts:114`
-
-```ts
-description: "1) as any eliminado en CotizacionDetalle (comentario_cliente tipado). 2) Query keys centralizados: client_users, organizations-list, embarques-relacionados registrados en queryKeys.ts. 3
-```
-
-### 12. [CRITICAL] `src/content/changelog/v8/chunks/4.ts:128`
-
-```ts
-description: "1) Mapas estadoColor duplicados en 3 páginas del portal unificados con getEstadoColor de uiMappings.ts. 2) 17 consumidores migrados de helpers.ts a imports directos (formatters.ts/uiMapp
-```
-
-### 13. [HIGH] `src/contexts/AuthContext.tsx:54`
+### 1. [HIGH] `src/contexts/AuthContext.tsx:54`
 
 ```ts
 const w = window as unknown as {
 ```
 
-### 14. [HIGH] `src/contexts/OrganizationContext.tsx:54`
+### 2. [HIGH] `src/contexts/OrganizationContext.tsx:54`
 
 ```ts
 const orgList = (orgs ?? []) as unknown as Organization[];
 ```
 
-### 15. [HIGH] `src/hooks/auditoria/__tests__/useAuditoriaEjecutivo.edge.test.tsx:57`
+### 3. [HIGH] `src/hooks/auditoria/__tests__/useAuditoriaEjecutivo.edge.test.tsx:57`
 
 ```ts
 mockUseAud.mockReturnValue({ data, isLoading } as unknown as ReturnType<typeof useAuditoria>);
 ```
 
-### 16. [HIGH] `src/hooks/auditoria/__tests__/useAuditoriaEjecutivo.edge.test.tsx:58`
+### 4. [HIGH] `src/hooks/auditoria/__tests__/useAuditoriaEjecutivo.edge.test.tsx:58`
 
 ```ts
 mockUseRev.mockReturnValue({ data: undefined } as unknown as ReturnType<typeof useAuditoriaRevisiones>);
 ```
 
-### 17. [HIGH] `src/hooks/auditoria/__tests__/useAuditoriaEjecutivo.test.tsx:77`
+### 5. [HIGH] `src/hooks/auditoria/__tests__/useAuditoriaEjecutivo.test.tsx:77`
 
 ```ts
 } as unknown as ReturnType<typeof useAuditoria>);
 ```
 
-### 18. [HIGH] `src/hooks/auditoria/__tests__/useAuditoriaEjecutivo.test.tsx:80`
+### 6. [HIGH] `src/hooks/auditoria/__tests__/useAuditoriaEjecutivo.test.tsx:80`
 
 ```ts
 } as unknown as ReturnType<typeof useAuditoriaRevisiones>);
 ```
 
-### 19. [HIGH] `src/hooks/auditoria/__tests__/useAuditoriaPageController.test.tsx:74`
+### 7. [HIGH] `src/hooks/auditoria/__tests__/useAuditoriaPageController.test.tsx:74`
 
 ```ts
 } as unknown as ReturnType<typeof useAuditoria>);
 ```
 
-### 20. [HIGH] `src/hooks/auditoria/__tests__/useAuditoriaPageController.test.tsx:77`
+### 8. [HIGH] `src/hooks/auditoria/__tests__/useAuditoriaPageController.test.tsx:77`
 
 ```ts
 } as unknown as ReturnType<typeof useAuditoriaRevisiones>);
 ```
 
-### 21. [HIGH] `src/hooks/auditoria/__tests__/useHallazgosTablaState.test.tsx:49`
+### 9. [HIGH] `src/hooks/auditoria/__tests__/useHallazgosTablaState.test.tsx:49`
 
 ```ts
 mockUseRev.mockReturnValue({ data: undefined } as unknown as ReturnType<typeof useAuditoriaRevisiones>);
 ```
 
-### 22. [HIGH] `src/hooks/auditoria/__tests__/useHallazgosTablaState.test.tsx:119`
+### 10. [HIGH] `src/hooks/auditoria/__tests__/useHallazgosTablaState.test.tsx:119`
 
 ```ts
 mockUseRev.mockReturnValue({ data: map } as unknown as ReturnType<typeof useAuditoriaRevisiones>);
 ```
 
-### 23. [HIGH] `src/hooks/cotizacion/usePortalCotizacionDetalle.ts:15`
+### 11. [HIGH] `src/hooks/cotizacion/usePortalCotizacionDetalle.ts:15`
 
 ```ts
 ? (cot!.conceptos_venta as unknown as ConceptoVentaCotizacion[])
 ```
 
-### 24. [HIGH] `src/hooks/cotizacion/wizard/useCotizacionWizardSteps.ts:110`
+### 12. [HIGH] `src/hooks/cotizacion/wizard/useCotizacionWizardSteps.ts:110`
 
 ```ts
 conceptosVenta: [...conceptosUSDValidos, ...conceptosMXNValidos] as unknown as Record<string, unknown>[],
 ```
 
-### 25. [HIGH] `src/hooks/embarque/mutations/useCreateEmbarque.ts:23`
+### 13. [HIGH] `src/hooks/embarque/mutations/useCreateEmbarque.ts:23`
 
 ```ts
 return { id: result.id } as unknown as EmbarqueRow;
 ```
 
-### 26. [HIGH] `src/lib/parsers/dashboard.ts:151`
+### 14. [HIGH] `src/lib/parsers/dashboard.ts:151`
 
 ```ts
 ...(r as unknown as EmbarqueMesSiguiente),
 ```
 
-### 27. [HIGH] `src/services/__tests__/csfService.test.ts:32`
+### 15. [HIGH] `src/services/__tests__/csfService.test.ts:32`
 
 ```ts
 }) as unknown as typeof fetch;
 ```
 
-### 28. [HIGH] `src/services/__tests__/csfService.test.ts:53`
+### 16. [HIGH] `src/services/__tests__/csfService.test.ts:53`
 
 ```ts
 }) as unknown as typeof fetch;
 ```
 
-### 29. [HIGH] `src/services/__tests__/csfService.test.ts:63`
+### 17. [HIGH] `src/services/__tests__/csfService.test.ts:63`
 
 ```ts
 }) as unknown as typeof fetch;
 ```
 
-### 30. [HIGH] `src/services/__tests__/tracking.test.ts:30`
+### 18. [HIGH] `src/services/__tests__/tracking.test.ts:30`
 
 ```ts
 }) as unknown as typeof fetch;
+```
+
+### 19. [HIGH] `src/services/__tests__/tracking.test.ts:43`
+
+```ts
+}) as unknown as typeof fetch;
+```
+
+### 20. [HIGH] `src/services/__tests__/tracking.test.ts:55`
+
+```ts
+}) as unknown as typeof fetch;
+```
+
+### 21. [HIGH] `src/services/__tests__/tracking.test.ts:64`
+
+```ts
+}) as unknown as typeof fetch;
+```
+
+### 22. [HIGH] `src/services/admin/organizations.ts:21`
+
+```ts
+return data as unknown as OrgRow[];
+```
+
+### 23. [HIGH] `src/services/auditoria/index.ts:17`
+
+```ts
+return data as unknown as ReporteAuditoria;
+```
+
+### 24. [HIGH] `src/services/catalogos/index.ts:47`
+
+```ts
+return (data ?? []) as unknown as Naviera[];
+```
+
+### 25. [HIGH] `src/services/catalogos/index.ts:72`
+
+```ts
+return (data ?? []) as unknown as Puerto[];
+```
+
+### 26. [HIGH] `src/services/catalogos/index.ts:97`
+
+```ts
+return (data ?? []) as unknown as TipoContenedor[];
+```
+
+### 27. [HIGH] `src/services/configuracion/index.ts:26`
+
+```ts
+return (data ?? []) as unknown as ConfigItem[];
+```
+
+### 28. [HIGH] `src/services/configuracion/index.ts:49`
+
+```ts
+return (data ?? []) as unknown as ConfigItem[];
+```
+
+### 29. [HIGH] `src/services/configuracion/index.ts:84`
+
+```ts
+return (data ?? []) as unknown as ConfigGlobalItem[];
+```
+
+### 30. [HIGH] `src/services/cotizacion/conversiones/prospecto.ts:60`
+
+```ts
+detalles: { cliente_id: clienteCreado.id } as unknown as Json,
 ```
 
 
