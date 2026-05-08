@@ -1,4 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
+import { fromDb } from "@/lib/supabase/cast";
 import {
   PORTAL_EMBARQUE_LIST_COLUMNS,
   PORTAL_EMBARQUE_DETAIL_COLUMNS,
@@ -137,7 +138,7 @@ export async function fetchPortalClienteName(): Promise<string | null> {
     .limit(1)
     .maybeSingle();
   if (error) throw error;
-  const clientes = data?.clientes as unknown as { nombre: string } | null;
+  const clientes = fromDb<{ nombre: string } | null>(data?.clientes);
   return clientes?.nombre ?? null;
 }
 
@@ -151,6 +152,6 @@ export async function fetchPortalOrgName(): Promise<string | null> {
     .limit(1)
     .maybeSingle();
   if (error) throw error;
-  const org = data?.organizations as unknown as { nombre: string } | null;
+  const org = fromDb<{ nombre: string } | null>(data?.organizations);
   return org?.nombre ?? null;
 }

@@ -2,6 +2,7 @@ import { useMemo } from "react";
 import { useTasaIVA } from "@/hooks/catalogos/useTasaIVA";
 import type { ConceptoVentaCotizacion } from "@/types/cotizacion";
 import { calcularSubtotal, calcularIVA } from "@/lib/financial/financialUtils";
+import { fromDb } from "@/lib/supabase/cast";
 
 interface CotizacionLike {
   conceptos_venta?: unknown;
@@ -12,7 +13,7 @@ export function usePortalCotizacionDetalle(cot: CotizacionLike | null | undefine
 
   return useMemo(() => {
     const conceptos: ConceptoVentaCotizacion[] = Array.isArray(cot?.conceptos_venta)
-      ? (cot!.conceptos_venta as unknown as ConceptoVentaCotizacion[])
+      ? fromDb<ConceptoVentaCotizacion[]>(cot!.conceptos_venta)
       : [];
 
     const conceptosUSD = conceptos.filter((c) => c.moneda === "USD");

@@ -3,6 +3,7 @@
  * de planes de suscripción del sistema).
  */
 import { supabase } from "@/integrations/supabase/client";
+import { fromDb } from "@/lib/supabase/cast";
 
 export interface Plan {
   id: string;
@@ -21,7 +22,7 @@ export async function fetchPlanes(): Promise<Plan[]> {
     .select("*")
     .order("precio_mensual");
   if (error) throw error;
-  return (data ?? []) as unknown as Plan[];
+  return fromDb<Plan[]>(data ?? []);
 }
 
 export async function updatePlan(plan: Partial<Plan> & { id: string }): Promise<void> {

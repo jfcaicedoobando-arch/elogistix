@@ -10,6 +10,7 @@ import type { CotizacionFormValues } from "@/types/cotizacionForm";
 import type { CreateCotizacionInput } from "@/types/cotizacion";
 import type { CostoCotizacion } from "@/types/cotizacionCosto";
 import type { FilaCostoLocal } from "@/types/cotizacionPL";
+import { fromDb } from "@/lib/supabase/cast";
 
 interface Mutations {
   crearCotizacion: { mutateAsync: (d: CreateCotizacionInput) => Promise<{ id: string }> };
@@ -42,7 +43,7 @@ export async function savePaso1(opts: {
     await mutations.updateCotizacion.mutateAsync({ id: cotizacionId, data });
     return cotizacionId;
   } else {
-    const cotizacion = await mutations.crearCotizacion.mutateAsync(data as unknown as CreateCotizacionInput);
+    const cotizacion = await mutations.crearCotizacion.mutateAsync(fromDb<CreateCotizacionInput>(data));
     return cotizacion.id;
   }
 }

@@ -4,6 +4,7 @@
  */
 import { supabase } from "@/integrations/supabase/client";
 import type { Json } from "@/integrations/supabase/types";
+import { fromDb } from "@/lib/supabase/cast";
 
 export interface ConfigItem {
   id: string;
@@ -23,7 +24,7 @@ export async function fetchConfiguracionByOrg(orgId: string): Promise<ConfigItem
     .order("categoria")
     .order("clave");
   if (error) throw error;
-  return (data ?? []) as unknown as ConfigItem[];
+  return fromDb<ConfigItem[]>(data ?? []);
 }
 
 export async function updateConfiguracionItems(
@@ -46,7 +47,7 @@ export async function fetchConfiguracion(): Promise<ConfigItem[]> {
     .order("categoria")
     .order("clave");
   if (error) throw error;
-  return (data ?? []) as unknown as ConfigItem[];
+  return fromDb<ConfigItem[]>(data ?? []);
 }
 
 export async function updateConfiguracionByCategoriaClave(
@@ -81,7 +82,7 @@ export async function fetchConfiguracionGlobal(): Promise<ConfigGlobalItem[]> {
     .order("categoria")
     .order("clave");
   if (error) throw error;
-  return (data ?? []) as unknown as ConfigGlobalItem[];
+  return fromDb<ConfigGlobalItem[]>(data ?? []);
 }
 
 export async function updateConfiguracionGlobalItems(

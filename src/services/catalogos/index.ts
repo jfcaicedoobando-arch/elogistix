@@ -4,6 +4,7 @@
  * solo manejen estado de React Query.
  */
 import { supabase } from "@/integrations/supabase/client";
+import { fromDb } from "@/lib/supabase/cast";
 
 // ─── Tipos ────────────────────────────────────────────────────────────────────
 
@@ -44,7 +45,7 @@ export async function fetchNavieras(includeInactive = false): Promise<Naviera[]>
   if (!includeInactive) query = query.eq("activo", true);
   const { data, error } = await query;
   if (error) throw error;
-  return (data ?? []) as unknown as Naviera[];
+  return fromDb<Naviera[]>(data ?? []);
 }
 
 export async function insertNaviera(input: { code: string; name: string }): Promise<void> {
@@ -69,7 +70,7 @@ export async function fetchPuertos(includeInactive = false): Promise<Puerto[]> {
   if (!includeInactive) query = query.eq("activo", true);
   const { data, error } = await query;
   if (error) throw error;
-  return (data ?? []) as unknown as Puerto[];
+  return fromDb<Puerto[]>(data ?? []);
 }
 
 export async function insertPuerto(input: { code: string; name: string; country: string }): Promise<void> {
@@ -94,7 +95,7 @@ export async function fetchTiposContenedor(includeInactive = false): Promise<Tip
   if (!includeInactive) query = query.eq("activo", true);
   const { data, error } = await query;
   if (error) throw error;
-  return (data ?? []) as unknown as TipoContenedor[];
+  return fromDb<TipoContenedor[]>(data ?? []);
 }
 
 export async function insertTipoContenedor(input: { code: string; name: string }): Promise<void> {

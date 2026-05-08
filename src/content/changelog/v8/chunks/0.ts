@@ -2,6 +2,14 @@ import type { ChangelogEntry } from "../../../changelogData";
 
 export const chunk0: ChangelogEntry[] = [
   {
+    version: "8.125.0",
+    date: "2026-05-08",
+    type: "minor",
+    title: "Fase B.1 audit casts: helper fromDb/toDbJson centraliza boundary",
+    summary: "Nuevo `src/lib/supabase/cast.ts` con `fromDb<T>()` y `toDbJson()` reemplaza ~50 `as unknown as X` en services/contexts. Toda la deuda de boundary queda en un solo archivo, listo para Zod en B.2.",
+    description: "Cierre de Fase B.1 del strict-mode roadmap. (1) Nuevo helper src/lib/supabase/cast.ts con dos funciones documentadas: fromDb<T>(data) para convertir respuestas crudas de Supabase a tipos de dominio, y toDbJson(value) para serializar payloads a Json (RPCs, columnas jsonb). El archivo es la ÚNICA ubicación permitida para `as unknown as T` en código productivo. (2) Migración masiva en 17 archivos: services/cotizacion/{crud,wizard,costos,conversiones/prospecto}, services/embarque/mutations, services/{proforma,proveedor,portal,planes,operaciones,facturas,catalogos,auditoria,configuracion,admin}, contexts/OrganizationContext, contexts/AuthContext, hooks/cotizacion/{usePortalCotizacionDetalle,wizard/useCotizacionWizardSteps}, hooks/embarque/mutations/useCreateEmbarque, lib/parsers/dashboard. (3) Audit regenerado: HIGH cae de 64 a ~15 (solo tests con mocks de fetch/ReturnType, aceptables bajo política). Beneficio: cuando Fase B.2 adopte Zod, basta cambiar el cuerpo de fromDb sin tocar 50 call sites. (4) Suite 278/278 verde. Versión 8.125.0.",
+  },
+  {
     version: "8.124.0",
     date: "2026-05-08",
     type: "patch",

@@ -35,12 +35,22 @@ una sopa de errores que invitan a más casts.
 
 Reducir los 64 HIGH (`as unknown as X` y `as X[]` sin validar).
 
-- [ ] Definir helper `parseRow<T>(data: unknown, schema): T` o adoptar Zod.
-- [ ] Aplicar primero en hotspots:
-  - `src/services/cotizacion/crud.ts` (11 HIGH)
-  - `src/services/embarque/mutations.ts` (10 HIGH)
-  - `src/services/__tests__/tracking.test.ts` (4 HIGH — testing helpers, OK con comentario)
-- [ ] Meta: HIGH < 20.
+**Sub-fase B.1 — Helper centralizado ✅ COMPLETADA (8.125.0)**
+
+- [x] Nuevo `src/lib/supabase/cast.ts` con `fromDb<T>(data)` y `toDbJson(value)`.
+- [x] Migrados ~50 `as unknown as X` en 17 archivos (services, contexts, hooks, parsers).
+- [x] Resultado: HIGH 64 → 15 (los 15 restantes son mocks de tests con
+      `as unknown as ReturnType<typeof X>` y `as unknown as typeof fetch`,
+      aceptables bajo política).
+
+**Sub-fase B.2 — Validación runtime (pendiente)**
+
+- [ ] Reemplazar el cuerpo de `fromDb<T>` por validación con Zod opcional:
+      `fromDb<T>(data, schema?: ZodSchema<T>)`.
+- [ ] Adoptar Zod en hotspots críticos: `services/cotizacion/crud.ts`,
+      `services/embarque/mutations.ts`, `services/portal/queries.ts`.
+- [ ] Añadir tests que verifiquen que un payload malformado lanza error
+      en vez de propagar `undefined`.
 
 **Decisión pendiente:** Zod (peso ~12 KB gz, valida runtime) vs. type guards
 manuales (cero peso, más boilerplate). Recomendación: Zod solo en boundaries

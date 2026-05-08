@@ -3,6 +3,7 @@
  * Los hooks (`useAuditoria`, `useAuditoriaRevisiones`) solo orquestan cache.
  */
 import { supabase } from "@/integrations/supabase/client";
+import { fromDb } from "@/lib/supabase/cast";
 import type {
   AuditoriaComentario,
   AuditoriaRevision,
@@ -14,7 +15,7 @@ import type {
 export async function fetchReporteAuditoria(): Promise<ReporteAuditoria> {
   const { data, error } = await supabase.rpc("auditoria_embarques_org");
   if (error) throw error;
-  return data as unknown as ReporteAuditoria;
+  return fromDb<ReporteAuditoria>(data);
 }
 
 export async function fetchAuditoriaRevisiones(): Promise<AuditoriaRevision[]> {

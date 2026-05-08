@@ -5,6 +5,7 @@
  */
 import { supabase } from "@/integrations/supabase/client";
 import type { Tables, TablesInsert, TablesUpdate, Enums } from "@/integrations/supabase/types";
+import { fromDb } from "@/lib/supabase/cast";
 
 type TipoProveedor = Enums<"tipo_proveedor">;
 
@@ -69,7 +70,7 @@ export async function fetchProveedor(id: string): Promise<Proveedor | null> {
     .eq("id", id)
     .maybeSingle();
   if (error) throw error;
-  return data as unknown as Proveedor | null;
+  return fromDb<Proveedor | null>(data);
 }
 
 export async function insertProveedor(prov: TablesInsert<"proveedores">): Promise<Proveedor> {
@@ -101,9 +102,8 @@ export async function fetchProveedorOperaciones(
   if (error) throw error;
 
   return (data ?? []).map((row) => {
-    const embarque = row.embarques as unknown as
-      | { expediente: string; id: string; cliente_nombre: string }
-      | null;
+    type EmbarqueJoin = { expediente: string; id: string; cliente_nombre: string } | null;
+    const embarque = fromDb<EmbarqueJoin>(row.embarques);
     return {
       concepto: row.concepto,
       monto: Number(row.monto),

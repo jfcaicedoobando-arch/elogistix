@@ -4,6 +4,7 @@
  */
 import { supabase } from "@/integrations/supabase/client";
 import type { Tables } from "@/integrations/supabase/types";
+import { fromDb } from "@/lib/supabase/cast";
 
 export type FacturaRow = Tables<"facturas">;
 
@@ -27,7 +28,7 @@ export async function fetchFacturas(organizationId: string | null): Promise<Fact
   if (organizationId) query = query.eq("organization_id", organizationId);
   const { data, error } = await query;
   if (error) throw error;
-  return (data ?? []) as unknown as FacturaListItem[];
+  return fromDb<FacturaListItem[]>(data ?? []);
 }
 
 export async function marcarCostoPagado(input: { id: string; referenciaPago?: string }): Promise<void> {
