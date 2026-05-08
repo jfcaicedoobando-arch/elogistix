@@ -2,6 +2,14 @@ import type { ChangelogEntry } from "../../../changelogData";
 
 export const chunk0: ChangelogEntry[] = [
   {
+    version: "8.131.1",
+    date: "2026-05-08",
+    type: "patch",
+    title: "Fallback por BL en sincronización Terminal49",
+    summary: "Si Terminal49 mantiene el tracking_request en 'pending' sin tracked_object pero el shipment ya existe, ahora lo buscamos por BL (GET /v2/shipments?filter[bill_of_lading_number]) y vinculamos el shipment_id automáticamente para traer contenedores y eventos.",
+    description: "Resuelve el desfase entre el panel web de Terminal49 (donde el shipment ya está creado) y nuestra base (donde tracking_externo seguía con shipment_id null y 0 contenedores). (1) Edge function terminal49-sync: tras refrescar el tracking_request, si tracked_object viene null se hace fallback a GET /v2/shipments?filter[bill_of_lading_number]={request_number} usando el BL guardado en tracking_externo. Si encuentra el shipment, usa su id para traer containers + transport_events y actualiza tracking_externo.shipment_id. (2) Respuesta del endpoint ahora incluye fallback_bl_usado y shipment_id para diagnóstico. (3) Logs en consola del fallback (éxito/vacío). Versión 8.131.1.",
+  },
+  {
     version: "8.131.0",
     date: "2026-05-08",
     type: "minor",
