@@ -66,8 +66,8 @@ export function BloqueVinculacion({
                 <CommandList>
                   <CommandEmpty>Sin cotizaciones aceptadas</CommandEmpty>
                   <CommandGroup>
-                    {cotizacionesAceptadas.map((cot) => {
-                      const isSelected = !!cotizacionVinculada && cotizacionVinculada.id === cot.id;
+                    {cotizacionesAceptadas.map((cot: CotizacionRow) => {
+                      const isSelected = cotizacionVinculada != null && cotizacionVinculada.id === cot.id;
                       return (
                         <CommandItem
                           key={cot.id}
