@@ -2,8 +2,9 @@
 
 Guía de capas, reglas y convenciones del proyecto. **Mantener este contrato evita acoplamientos y simplifica los tests.**
 
-> Última revisión: **v8.100.4 — 2026-05-02**
+> Última revisión: **v8.118.8 — 2026-05-08**
 > Fuente espejo: `mem://technical/architecture-and-standards`.
+> Documentación de dominio complementaria: [`docs/auditoria.md`](./docs/auditoria.md) (desglose de componentes y flujo de datos del módulo Auditoría), [`docs/tables.md`](./docs/tables.md) (estandarización de tablas y densidades).
 
 ## Tabla de contenidos
 
