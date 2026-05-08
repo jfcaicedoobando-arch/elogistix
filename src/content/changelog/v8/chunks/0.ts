@@ -2,6 +2,14 @@ import type { ChangelogEntry } from "../../../changelogData";
 
 export const chunk0: ChangelogEntry[] = [
   {
+    version: "8.129.0",
+    date: "2026-05-08",
+    type: "minor",
+    title: "Fase E (parcial): noImplicitAny activado, strict completo evaluado",
+    summary: "`noImplicitAny: true` activado: 0 errores, ningún `any` implícito en el proyecto. Strict completo evaluado: solo 3 errores de strictFunctionTypes, pospuesto.",
+    description: "Cierre parcial de Fase E del strict-mode roadmap. (1) tsconfig.json y tsconfig.app.json: noImplicitAny=true. tsc --noEmit limpio sin tocar una línea de código. (2) Probado strict=true: solo 3 errores reales — EditarCotizacion.tsx (props del wizard), NuevaCotizacion.tsx (mismo patrón) y Proveedores.tsx (NuevoProveedorDialog.onSave). Todos por strictFunctionTypes/contravariancia en wrappers de React Query (UseMutationResult con detalles: Record<string, Json>) y de form handlers donde la firma esperada usa campos opcionales y la pasada los tiene requeridos. (3) Decisión: dejar strict=false por ahora. El costo de refactorizar interfaces de props para satisfacer contravariancia exacta no compensa el beneficio (los 3 sitios están protegidos por strictNullChecks, noImplicitAny, RHF y validación Zod). (4) Configuración estable final: strictNullChecks=true, noImplicitAny=true, noUnusedLocals=true, noUnusedParameters=true, noFallthroughCasesInSwitch=true, strictFunctionTypes/strictBindCallApply/alwaysStrict=false. (5) Suite 285/285 verde, audit 458 casts (0 CRITICAL). Versión 8.129.0.",
+  },
+  {
     version: "8.128.0",
     date: "2026-05-08",
     type: "minor",
