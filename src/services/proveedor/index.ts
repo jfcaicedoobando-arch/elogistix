@@ -102,9 +102,8 @@ export async function fetchProveedorOperaciones(
   if (error) throw error;
 
   return (data ?? []).map((row) => {
-    const embarque = row.embarques as unknown as
-      | { expediente: string; id: string; cliente_nombre: string }
-      | null;
+    type EmbarqueJoin = { expediente: string; id: string; cliente_nombre: string } | null;
+    const embarque = fromDb<EmbarqueJoin>(row.embarques);
     return {
       concepto: row.concepto,
       monto: Number(row.monto),

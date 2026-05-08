@@ -107,7 +107,7 @@ export function useCotizacionWizardSteps({
         if (cotizacionId) {
           await savePaso3({
             cotizacionId,
-            conceptosVenta: [...conceptosUSDValidos, ...conceptosMXNValidos] as unknown as Record<string, unknown>[],
+            conceptosVenta: fromDb<Record<string, unknown>[]>([...conceptosUSDValidos, ...conceptosMXNValidos]),
             totalUSD,
             mutations: { updateCotizacion },
           });

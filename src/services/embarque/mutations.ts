@@ -19,7 +19,7 @@ export async function crearEmbarqueRpc(input: CrearEmbarqueRpcInput): Promise<{ 
     p_documentos: toDbJson(input.documentos),
   });
   if (error) throw error;
-  return data as unknown as { id: string };
+  return fromDb<{ id: string }>(data);
 }
 
 export interface ActualizarEmbarqueRpcInput {
@@ -54,7 +54,7 @@ export async function duplicarEmbarqueRpc(
     p_copias: toDbJson(copias),
   });
   if (error) throw error;
-  return data as unknown as { id: string; expediente: string }[];
+  return fromDb<{ id: string; expediente: string }[]>(data);
 }
 
 export async function eliminarEmbarqueRpc(embarqueId: string): Promise<void> {

@@ -145,7 +145,7 @@ export async function updateCotizacion(
   id: string,
   data: Partial<CreateCotizacionInput>,
 ): Promise<void> {
-  const updatePayload = { ...data } as unknown as CotizacionUpdate;
+  const updatePayload = fromDb<CotizacionUpdate>({ ...data });
   if (data.conceptos_venta) updatePayload.conceptos_venta = toDbJson(data.conceptos_venta);
   if (data.dimensiones_lcl) updatePayload.dimensiones_lcl = toDbJson(data.dimensiones_lcl);
   if (data.dimensiones_aereas)

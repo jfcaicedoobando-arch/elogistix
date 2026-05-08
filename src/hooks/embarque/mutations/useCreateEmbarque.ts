@@ -20,7 +20,7 @@ export function useCreateEmbarque() {
   return useMutation({
     mutationFn: async (input: CreateEmbarqueInput) => {
       const result = await crearEmbarqueRpc(input);
-      return { id: result.id } as unknown as EmbarqueRow;
+      return fromDb<EmbarqueRow>({ id: result.id });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.embarques.all });

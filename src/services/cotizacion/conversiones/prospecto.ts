@@ -57,7 +57,7 @@ export async function convertirProspectoACliente(input: ProspectoAClienteInput) 
       modulo: "Cotizaciones",
       entidad_id: cotizacionId,
       entidad_nombre: clienteCreado.nombre,
-      detalles: { cliente_id: clienteCreado.id } as unknown as Json,
+      detalles: toDbJson({ cliente_id: clienteCreado.id }),
     });
   }
 

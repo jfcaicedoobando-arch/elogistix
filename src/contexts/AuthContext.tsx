@@ -50,10 +50,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // Preload de rutas frecuentes en idle tras login → mejora TTI percibido al navegar
   useEffect(() => {
     if (!user || loading) return;
+    type IdleWindow = { requestIdleCallback?: (cb: () => void) => number };
     const idle = (cb: () => void) => {
-      const w = window as unknown as {
-        requestIdleCallback?: (cb: () => void) => number;
-      };
+      const w = fromDb<IdleWindow>(window);
       if (typeof w.requestIdleCallback === "function") w.requestIdleCallback(cb);
       else setTimeout(cb, 1500);
     };
