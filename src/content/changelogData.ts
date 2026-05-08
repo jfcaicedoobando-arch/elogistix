@@ -101,14 +101,6 @@ export const recentChangelog: ChangelogEntry[] = [
     summary: "Nuevo docs/auditoria.md con el desglose de componentes ejecutivos, hooks del dominio y flujo de datos end-to-end.",
     description: "Guía de mantenimiento tras los Sprints 1-3 del refactor: mapa de capas, tabla de hooks, árbol de subcomponentes, helpers compartidos, fuente única de configuración de reglas y convenciones para extender el módulo. Sólo documentación.",
   },
-  {
-    version: "8.118.4",
-    date: "2026-05-06",
-    type: "patch",
-    title: "Refactor Sprint 3: Auditoría ejecutiva troceada y tests de proyección",
-    summary: "AuditoriaEjecutivoTab pasa de 418 a 94 LOC al extraer 5 subcomponentes; se añaden 15 tests a la lógica de proyección de facturación.",
-    description: "Subcomponentes EjecutivoScoreCard, EjecutivoAtencionCard, EjecutivoAlertasUrgencia, EjecutivoDistribucionRow y EjecutivoPorReglaGrid extraídos a components/auditoria/ejecutivo/. Helpers visuales y SCORE_ESTADO_CONFIG aislados. Nuevo test suite cubre conversiones de moneda, agrupación, KPIs y meses disponibles.",
-  },
 ];
 
 /** Deduplica por version conservando la primera ocurrencia (recentChangelog gana). */
