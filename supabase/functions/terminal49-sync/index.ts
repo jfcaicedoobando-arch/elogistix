@@ -96,8 +96,34 @@ Deno.serve(async (req) => {
       trackingRequestData?.data?.attributes?.status ?? tracking.status;
     const newFailed: string | null =
       trackingRequestData?.data?.attributes?.failed_reason ?? null;
-    const trackedObjectId: string | null =
+    let trackedObjectId: string | null =
       trackingRequestData?.data?.relationships?.tracked_object?.data?.id ?? tracking.shipment_id;
+
+    // Fallback: si Terminal49 aún no asocia el tracked_object, buscamos el shipment por BL.
+    // Esto resuelve el desfase donde el shipment ya existe en T49 pero el tracking_request
+    // permanece "pending" sin tracked_object.
+    let fallbackUsed = false;
+    if (!trackedObjectId) {
+      const bl =
+        (tracking as any).request_number ||
+        trackingRequestData?.data?.attributes?.request_number ||
+        null;
+      if (bl) {
+        const r = await fetch(
+          `${T49_BASE}/shipments?filter[bill_of_lading_number]=${encodeURIComponent(bl)}`,
+          { headers: t49Headers },
+        );
+        const j = await r.json().catch(() => ({}));
+        const found = Array.isArray(j?.data) ? j.data[0] : null;
+        if (found?.id) {
+          trackedObjectId = found.id;
+          fallbackUsed = true;
+          console.log(`Fallback BL lookup OK: ${bl} → shipment ${found.id}`);
+        } else {
+          console.log(`Fallback BL lookup vacío para ${bl}`);
+        }
+      }
+    }
 
     let shipmentJson: any = null;
     let containers: any[] = [];
@@ -199,6 +225,8 @@ Deno.serve(async (req) => {
       containers: containers.length,
       eventos_nuevos: nuevosEventos,
       embarque_actualizado: embUpdate,
+      fallback_bl_usado: fallbackUsed,
+      shipment_id: trackedObjectId,
     });
   } catch (err) {
     console.error("sync exception", err);
