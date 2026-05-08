@@ -63,6 +63,13 @@ export function TabTracking({ embarqueId, modo, blMaster, naviera }: Props) {
 
   return (
     <div className="space-y-6">
+      <TerminalAutomaticoCard
+        embarqueId={embarqueId}
+        modo={modo ?? null}
+        blMaster={blMaster ?? null}
+        naviera={naviera ?? null}
+      />
+
       {canEdit && (
         <div className="flex justify-end">
           <Button size="sm" onClick={() => setFormAbierto(!formAbierto)}>
