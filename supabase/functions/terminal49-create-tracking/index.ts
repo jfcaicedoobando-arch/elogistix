@@ -165,8 +165,12 @@ Deno.serve(async (req) => {
     const status: string = tr?.attributes?.status ?? "pending";
     const failedReason: string | null = tr?.attributes?.failed_reason ?? null;
 
-    // Upsert en tracking_externo
-    const { data: upserted, error: upErr } = await supabase
+    // Upsert en tracking_externo (service role para bypass RLS; ya validamos al usuario y el embarque)
+    const supabaseAdmin = createClient(
+      Deno.env.get("SUPABASE_URL")!,
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
+    );
+    const { data: upserted, error: upErr } = await supabaseAdmin
       .from("tracking_externo")
       .upsert(
         {
