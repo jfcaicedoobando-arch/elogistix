@@ -5,17 +5,17 @@ Auditoría automática de los `as` casts en `src/`. Generado por
 
 ## Resumen
 
-Total de `as` casts detectados: **507**
+Total de `as` casts detectados: **459**
 
 | Categoría | Peso | Cantidad | % |
 |-----------|------|----------|---|
-| SAFE      | 0 | 163     | 32.1% |
-| LOW       | 1 | 7      | 1.4% |
-| MEDIUM    | 2 | 273   | 53.8% |
-| HIGH      | 3 | 64     | 12.6% |
+| SAFE      | 0 | 163     | 35.5% |
+| LOW       | 1 | 7      | 1.5% |
+| MEDIUM    | 2 | 274   | 59.7% |
+| HIGH      | 3 | 15     | 3.3% |
 | CRITICAL  | 4 | 0 | 0.0% |
 
-**Lectura clave:** los casts a accionar son los **HIGH + CRITICAL** = 64 (~12.6%). El resto es seguro o aceptable bajo política.
+**Lectura clave:** los casts a accionar son los **HIGH + CRITICAL** = 15 (~3.3%). El resto es seguro o aceptable bajo política.
 
 ## Definición de categorías
 
@@ -29,202 +29,112 @@ Total de `as` casts detectados: **507**
 
 | # | Archivo | Total | Peso | SAFE | LOW | MED | HIGH | CRIT |
 |---|---------|------:|-----:|-----:|----:|----:|-----:|-----:|
-| 1 | `src/services/cotizacion/crud.ts` | 22 | 51 | 2 | 0 | 9 | 11 | 0 |
-| 2 | `src/services/embarque/mutations.ts` | 13 | 32 | 2 | 0 | 1 | 10 | 0 |
-| 3 | `src/services/embarque/queries.ts` | 13 | 24 | 1 | 0 | 12 | 0 | 0 |
-| 4 | `src/services/auditoria/index.ts` | 8 | 17 | 0 | 0 | 7 | 1 | 0 |
-| 5 | `src/lib/parsers/dashboard.ts` | 7 | 15 | 0 | 0 | 6 | 1 | 0 |
-| 6 | `src/components/admin/TabSeguridadGlobal.tsx` | 6 | 12 | 0 | 0 | 6 | 0 | 0 |
-| 7 | `src/lib/mappers/embarqueToDb.ts` | 6 | 12 | 0 | 0 | 6 | 0 | 0 |
-| 8 | `src/services/__tests__/tracking.test.ts` | 4 | 12 | 0 | 0 | 0 | 4 | 0 |
-| 9 | `src/services/configuracion/index.ts` | 5 | 11 | 0 | 2 | 0 | 3 | 0 |
-| 10 | `src/components/admin/TabPlataforma.tsx` | 5 | 10 | 0 | 0 | 5 | 0 | 0 |
-| 11 | `src/components/auditoria/HallazgosFiltros.tsx` | 5 | 10 | 0 | 0 | 5 | 0 | 0 |
-| 12 | `src/components/cotizacion/conceptos/ConceptoRowUSD.tsx` | 5 | 10 | 0 | 0 | 5 | 0 | 0 |
-| 13 | `src/hooks/embarque/useProformas.ts` | 5 | 10 | 0 | 0 | 5 | 0 | 0 |
-| 14 | `src/services/__tests__/csfService.test.ts` | 3 | 9 | 0 | 0 | 0 | 3 | 0 |
-| 15 | `src/services/catalogos/index.ts` | 3 | 9 | 0 | 0 | 0 | 3 | 0 |
+| 1 | `src/services/embarque/queries.ts` | 13 | 24 | 1 | 0 | 12 | 0 | 0 |
+| 2 | `src/services/cotizacion/crud.ts` | 11 | 18 | 2 | 0 | 9 | 0 | 0 |
+| 3 | `src/services/auditoria/index.ts` | 7 | 14 | 0 | 0 | 7 | 0 | 0 |
+| 4 | `src/components/admin/TabSeguridadGlobal.tsx` | 6 | 12 | 0 | 0 | 6 | 0 | 0 |
+| 5 | `src/lib/mappers/embarqueToDb.ts` | 6 | 12 | 0 | 0 | 6 | 0 | 0 |
+| 6 | `src/lib/parsers/dashboard.ts` | 6 | 12 | 0 | 0 | 6 | 0 | 0 |
+| 7 | `src/services/__tests__/tracking.test.ts` | 4 | 12 | 0 | 0 | 0 | 4 | 0 |
+| 8 | `src/components/admin/TabPlataforma.tsx` | 5 | 10 | 0 | 0 | 5 | 0 | 0 |
+| 9 | `src/components/auditoria/HallazgosFiltros.tsx` | 5 | 10 | 0 | 0 | 5 | 0 | 0 |
+| 10 | `src/components/cotizacion/conceptos/ConceptoRowUSD.tsx` | 5 | 10 | 0 | 0 | 5 | 0 | 0 |
+| 11 | `src/hooks/embarque/useProformas.ts` | 5 | 10 | 0 | 0 | 5 | 0 | 0 |
+| 12 | `src/services/__tests__/csfService.test.ts` | 3 | 9 | 0 | 0 | 0 | 3 | 0 |
+| 13 | `src/components/proveedor/EditarProveedorDialog.tsx` | 4 | 8 | 0 | 0 | 4 | 0 | 0 |
+| 14 | `src/components/proveedor/NuevoProveedorDialog.tsx` | 4 | 8 | 0 | 0 | 4 | 0 | 0 |
+| 15 | `src/hooks/cotizacion/mutations/useCotizacionMutations.ts` | 4 | 8 | 0 | 0 | 4 | 0 | 0 |
 
 ## Top-30 casts más riesgosos (HIGH + CRITICAL)
 
-### 1. [HIGH] `src/contexts/AuthContext.tsx:54`
-
-```ts
-const w = window as unknown as {
-```
-
-### 2. [HIGH] `src/contexts/OrganizationContext.tsx:54`
-
-```ts
-const orgList = (orgs ?? []) as unknown as Organization[];
-```
-
-### 3. [HIGH] `src/hooks/auditoria/__tests__/useAuditoriaEjecutivo.edge.test.tsx:57`
+### 1. [HIGH] `src/hooks/auditoria/__tests__/useAuditoriaEjecutivo.edge.test.tsx:57`
 
 ```ts
 mockUseAud.mockReturnValue({ data, isLoading } as unknown as ReturnType<typeof useAuditoria>);
 ```
 
-### 4. [HIGH] `src/hooks/auditoria/__tests__/useAuditoriaEjecutivo.edge.test.tsx:58`
+### 2. [HIGH] `src/hooks/auditoria/__tests__/useAuditoriaEjecutivo.edge.test.tsx:58`
 
 ```ts
 mockUseRev.mockReturnValue({ data: undefined } as unknown as ReturnType<typeof useAuditoriaRevisiones>);
 ```
 
-### 5. [HIGH] `src/hooks/auditoria/__tests__/useAuditoriaEjecutivo.test.tsx:77`
+### 3. [HIGH] `src/hooks/auditoria/__tests__/useAuditoriaEjecutivo.test.tsx:77`
 
 ```ts
 } as unknown as ReturnType<typeof useAuditoria>);
 ```
 
-### 6. [HIGH] `src/hooks/auditoria/__tests__/useAuditoriaEjecutivo.test.tsx:80`
+### 4. [HIGH] `src/hooks/auditoria/__tests__/useAuditoriaEjecutivo.test.tsx:80`
 
 ```ts
 } as unknown as ReturnType<typeof useAuditoriaRevisiones>);
 ```
 
-### 7. [HIGH] `src/hooks/auditoria/__tests__/useAuditoriaPageController.test.tsx:74`
+### 5. [HIGH] `src/hooks/auditoria/__tests__/useAuditoriaPageController.test.tsx:74`
 
 ```ts
 } as unknown as ReturnType<typeof useAuditoria>);
 ```
 
-### 8. [HIGH] `src/hooks/auditoria/__tests__/useAuditoriaPageController.test.tsx:77`
+### 6. [HIGH] `src/hooks/auditoria/__tests__/useAuditoriaPageController.test.tsx:77`
 
 ```ts
 } as unknown as ReturnType<typeof useAuditoriaRevisiones>);
 ```
 
-### 9. [HIGH] `src/hooks/auditoria/__tests__/useHallazgosTablaState.test.tsx:49`
+### 7. [HIGH] `src/hooks/auditoria/__tests__/useHallazgosTablaState.test.tsx:49`
 
 ```ts
 mockUseRev.mockReturnValue({ data: undefined } as unknown as ReturnType<typeof useAuditoriaRevisiones>);
 ```
 
-### 10. [HIGH] `src/hooks/auditoria/__tests__/useHallazgosTablaState.test.tsx:119`
+### 8. [HIGH] `src/hooks/auditoria/__tests__/useHallazgosTablaState.test.tsx:119`
 
 ```ts
 mockUseRev.mockReturnValue({ data: map } as unknown as ReturnType<typeof useAuditoriaRevisiones>);
 ```
 
-### 11. [HIGH] `src/hooks/cotizacion/usePortalCotizacionDetalle.ts:15`
-
-```ts
-? (cot!.conceptos_venta as unknown as ConceptoVentaCotizacion[])
-```
-
-### 12. [HIGH] `src/hooks/cotizacion/wizard/useCotizacionWizardSteps.ts:110`
-
-```ts
-conceptosVenta: [...conceptosUSDValidos, ...conceptosMXNValidos] as unknown as Record<string, unknown>[],
-```
-
-### 13. [HIGH] `src/hooks/embarque/mutations/useCreateEmbarque.ts:23`
-
-```ts
-return { id: result.id } as unknown as EmbarqueRow;
-```
-
-### 14. [HIGH] `src/lib/parsers/dashboard.ts:151`
-
-```ts
-...(r as unknown as EmbarqueMesSiguiente),
-```
-
-### 15. [HIGH] `src/services/__tests__/csfService.test.ts:32`
+### 9. [HIGH] `src/services/__tests__/csfService.test.ts:32`
 
 ```ts
 }) as unknown as typeof fetch;
 ```
 
-### 16. [HIGH] `src/services/__tests__/csfService.test.ts:53`
+### 10. [HIGH] `src/services/__tests__/csfService.test.ts:53`
 
 ```ts
 }) as unknown as typeof fetch;
 ```
 
-### 17. [HIGH] `src/services/__tests__/csfService.test.ts:63`
+### 11. [HIGH] `src/services/__tests__/csfService.test.ts:63`
 
 ```ts
 }) as unknown as typeof fetch;
 ```
 
-### 18. [HIGH] `src/services/__tests__/tracking.test.ts:30`
+### 12. [HIGH] `src/services/__tests__/tracking.test.ts:30`
 
 ```ts
 }) as unknown as typeof fetch;
 ```
 
-### 19. [HIGH] `src/services/__tests__/tracking.test.ts:43`
+### 13. [HIGH] `src/services/__tests__/tracking.test.ts:43`
 
 ```ts
 }) as unknown as typeof fetch;
 ```
 
-### 20. [HIGH] `src/services/__tests__/tracking.test.ts:55`
+### 14. [HIGH] `src/services/__tests__/tracking.test.ts:55`
 
 ```ts
 }) as unknown as typeof fetch;
 ```
 
-### 21. [HIGH] `src/services/__tests__/tracking.test.ts:64`
+### 15. [HIGH] `src/services/__tests__/tracking.test.ts:64`
 
 ```ts
 }) as unknown as typeof fetch;
-```
-
-### 22. [HIGH] `src/services/admin/organizations.ts:21`
-
-```ts
-return data as unknown as OrgRow[];
-```
-
-### 23. [HIGH] `src/services/auditoria/index.ts:17`
-
-```ts
-return data as unknown as ReporteAuditoria;
-```
-
-### 24. [HIGH] `src/services/catalogos/index.ts:47`
-
-```ts
-return (data ?? []) as unknown as Naviera[];
-```
-
-### 25. [HIGH] `src/services/catalogos/index.ts:72`
-
-```ts
-return (data ?? []) as unknown as Puerto[];
-```
-
-### 26. [HIGH] `src/services/catalogos/index.ts:97`
-
-```ts
-return (data ?? []) as unknown as TipoContenedor[];
-```
-
-### 27. [HIGH] `src/services/configuracion/index.ts:26`
-
-```ts
-return (data ?? []) as unknown as ConfigItem[];
-```
-
-### 28. [HIGH] `src/services/configuracion/index.ts:49`
-
-```ts
-return (data ?? []) as unknown as ConfigItem[];
-```
-
-### 29. [HIGH] `src/services/configuracion/index.ts:84`
-
-```ts
-return (data ?? []) as unknown as ConfigGlobalItem[];
-```
-
-### 30. [HIGH] `src/services/cotizacion/conversiones/prospecto.ts:60`
-
-```ts
-detalles: { cliente_id: clienteCreado.id } as unknown as Json,
 ```
 
 
