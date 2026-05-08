@@ -1,5 +1,6 @@
 import { supabase } from "@/integrations/supabase/client";
 import type { ProformaRow } from "./types";
+import { fromDb } from "@/lib/supabase/cast";
 
 export interface ConsolidarProformasParams {
   organizationId: string;
@@ -40,5 +41,5 @@ export async function consolidarProformas(params: ConsolidarProformasParams): Pr
   });
   if (error) throw error;
   if (!data) throw new Error("La consolidación no devolvió la proforma resultante");
-  return data as unknown as ProformaRow;
+  return fromDb<ProformaRow>(data);
 }

@@ -5,6 +5,7 @@
  */
 import { supabase } from "@/integrations/supabase/client";
 import type { Tables, TablesInsert, TablesUpdate, Enums } from "@/integrations/supabase/types";
+import { fromDb } from "@/lib/supabase/cast";
 
 type TipoProveedor = Enums<"tipo_proveedor">;
 
@@ -69,7 +70,7 @@ export async function fetchProveedor(id: string): Promise<Proveedor | null> {
     .eq("id", id)
     .maybeSingle();
   if (error) throw error;
-  return data as unknown as Proveedor | null;
+  return fromDb<Proveedor | null>(data);
 }
 
 export async function insertProveedor(prov: TablesInsert<"proveedores">): Promise<Proveedor> {

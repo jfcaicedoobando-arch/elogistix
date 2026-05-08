@@ -4,6 +4,7 @@
  * dashboard de operaciones.
  */
 import { supabase } from "@/integrations/supabase/client";
+import { fromDb } from "@/lib/supabase/cast";
 
 export type NivelRiesgo = "critico" | "en_puerto" | "por_arribar" | "ok";
 
@@ -90,5 +91,5 @@ export interface ServerStats {
 export async function fetchOperacionesStats(): Promise<ServerStats> {
   const { data, error } = await supabase.rpc("operaciones_stats");
   if (error) throw error;
-  return data as unknown as ServerStats;
+  return fromDb<ServerStats>(data);
 }

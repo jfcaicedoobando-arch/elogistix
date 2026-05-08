@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useState, ReactNode, useCallback, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { fromDb } from "@/lib/supabase/cast";
 
 export interface Organization {
   id: string;
@@ -51,7 +52,7 @@ export function OrganizationProvider({ children }: { children: ReactNode }) {
         .eq("activo", true)
         .order("nombre");
       if (cancelled) return;
-      const orgList = (orgs ?? []) as unknown as Organization[];
+      const orgList = fromDb<Organization[]>(orgs ?? []);
       setSuperAdminOrgs(orgList);
       const stored = localStorage.getItem("sa_active_org");
       const activeId = stored && orgList.find(o => o.id === stored)

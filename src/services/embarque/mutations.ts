@@ -1,5 +1,6 @@
 import { supabase } from '@/integrations/supabase/client';
 import type { Json, TablesInsert } from '@/integrations/supabase/types';
+import { toDbJson } from "@/lib/supabase/cast";
 
 type EmbarqueInsert = TablesInsert<'embarques'>;
 
@@ -12,10 +13,10 @@ export interface CrearEmbarqueRpcInput {
 
 export async function crearEmbarqueRpc(input: CrearEmbarqueRpcInput): Promise<{ id: string }> {
   const { data, error } = await supabase.rpc('crear_embarque_completo', {
-    p_embarque: input.embarque as unknown as Json,
-    p_conceptos_venta: input.conceptosVenta as unknown as Json,
-    p_conceptos_costo: input.conceptosCosto as unknown as Json,
-    p_documentos: input.documentos as unknown as Json,
+    p_embarque: toDbJson(input.embarque),
+    p_conceptos_venta: toDbJson(input.conceptosVenta),
+    p_conceptos_costo: toDbJson(input.conceptosCosto),
+    p_documentos: toDbJson(input.documentos),
   });
   if (error) throw error;
   return data as unknown as { id: string };
@@ -31,9 +32,9 @@ export interface ActualizarEmbarqueRpcInput {
 export async function actualizarEmbarqueRpc(input: ActualizarEmbarqueRpcInput): Promise<void> {
   const { error } = await supabase.rpc('actualizar_embarque_completo', {
     p_embarque_id: input.id,
-    p_embarque: input.embarque as unknown as Json,
-    p_conceptos_venta: input.conceptosVenta as unknown as Json,
-    p_conceptos_costo: input.conceptosCosto as unknown as Json,
+    p_embarque: toDbJson(input.embarque),
+    p_conceptos_venta: toDbJson(input.conceptosVenta),
+    p_conceptos_costo: toDbJson(input.conceptosCosto),
   });
   if (error) throw error;
 }
@@ -50,7 +51,7 @@ export async function duplicarEmbarqueRpc(
 ): Promise<{ id: string; expediente: string }[]> {
   const { data, error } = await supabase.rpc('duplicar_embarque_completo', {
     p_embarque_origen_id: embarqueOrigenId,
-    p_copias: copias as unknown as Json,
+    p_copias: toDbJson(copias),
   });
   if (error) throw error;
   return data as unknown as { id: string; expediente: string }[];

@@ -3,6 +3,7 @@
  */
 import { supabase } from "@/integrations/supabase/client";
 import type { CostoCotizacion } from "@/types/cotizacionCosto";
+import { fromDb } from "@/lib/supabase/cast";
 
 export async function fetchCotizacionCostos(
   cotizacionId: string,
@@ -12,7 +13,7 @@ export async function fetchCotizacionCostos(
     .select("*")
     .eq("cotizacion_id", cotizacionId);
   if (error) throw error;
-  return (data ?? []) as unknown as CostoCotizacion[];
+  return fromDb<CostoCotizacion[]>(data ?? []);
 }
 
 export async function upsertCotizacionCostos(
@@ -41,7 +42,7 @@ export async function upsertCotizacionCostos(
 
   const { data, error } = await supabase.from("cotizacion_costos").insert(rows).select();
   if (error) throw error;
-  return (data ?? []) as unknown as CostoCotizacion[];
+  return fromDb<CostoCotizacion[]>(data ?? []);
 }
 
 // ─── Lookups para hidratación de embarque vinculado ─────────────────────────

@@ -2,6 +2,7 @@
  * CRUD y consultas de organizaciones para la consola super admin.
  */
 import { supabase } from "@/integrations/supabase/client";
+import { fromDb } from "@/lib/supabase/cast";
 
 export interface OrgRow {
   id: string;
@@ -18,7 +19,7 @@ export async function fetchAdminOrganizations(): Promise<OrgRow[]> {
     .select("*")
     .order("nombre");
   if (error) throw error;
-  return data as unknown as OrgRow[];
+  return fromDb<OrgRow[]>(data);
 }
 
 export async function fetchOrganizationsList() {

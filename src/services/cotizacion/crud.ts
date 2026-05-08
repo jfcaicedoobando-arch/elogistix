@@ -4,6 +4,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import type { Json, TablesInsert } from "@/integrations/supabase/types";
 import type { CotizacionRow, CreateCotizacionInput } from "@/types/cotizacion";
+import { fromDb, toDbJson } from "@/lib/supabase/cast";
 
 type CotizacionInsert = TablesInsert<"cotizaciones">;
 type CotizacionUpdate = Partial<CotizacionInsert>;
@@ -43,7 +44,7 @@ export async function fetchCotizaciones(organizationId: string | null) {
   if (organizationId) query = query.eq("organization_id", organizationId);
   const { data, error } = await query;
   if (error) throw error;
-  return data as unknown as CotizacionRow[];
+  return fromDb<CotizacionRow[]>(data);
 }
 
 export async function fetchCotizacionesAceptadas(organizationId: string | null) {
@@ -55,7 +56,7 @@ export async function fetchCotizacionesAceptadas(organizationId: string | null) 
   if (organizationId) query = query.eq("organization_id", organizationId);
   const { data, error } = await query;
   if (error) throw error;
-  return data as unknown as CotizacionRow[];
+  return fromDb<CotizacionRow[]>(data);
 }
 
 export async function fetchCotizacionById(id: string): Promise<CotizacionRow> {
@@ -65,7 +66,7 @@ export async function fetchCotizacionById(id: string): Promise<CotizacionRow> {
     .eq("id", id)
     .single();
   if (error) throw error;
-  return data as unknown as CotizacionRow;
+  return fromDb<CotizacionRow>(data);
 }
 
 export async function fetchEmbarquesVinculados(cotizacionId: string) {
@@ -102,7 +103,7 @@ export async function crearCotizacion(input: CreateCotizacionInput): Promise<Cot
     piezas: input.piezas,
     origen: input.origen,
     destino: input.destino,
-    conceptos_venta: input.conceptos_venta as unknown as Json,
+    conceptos_venta: toDbJson(input.conceptos_venta),
     subtotal: input.subtotal,
     moneda: input.moneda as CotizacionInsert["moneda"],
     vigencia_dias: input.vigencia_dias,
@@ -116,8 +117,8 @@ export async function crearCotizacion(input: CreateCotizacionInput): Promise<Cot
     tipo_peso: input.tipo_peso || "Peso Normal",
     descripcion_adicional: input.descripcion_adicional || "",
     sector_economico: input.sector_economico || "",
-    dimensiones_lcl: (input.dimensiones_lcl || []) as unknown as Json,
-    dimensiones_aereas: (input.dimensiones_aereas || []) as unknown as Json,
+    dimensiones_lcl: toDbJson(input.dimensiones_lcl || []),
+    dimensiones_aereas: toDbJson(input.dimensiones_aereas || []),
     dias_libres_destino: input.dias_libres_destino ?? 0,
     dias_almacenaje: input.dias_almacenaje ?? 0,
     tiempo_transito_dias: input.tiempo_transito_dias ?? null,
@@ -137,7 +138,7 @@ export async function crearCotizacion(input: CreateCotizacionInput): Promise<Cot
     .select()
     .single();
   if (error) throw error;
-  return data as unknown as CotizacionRow;
+  return fromDb<CotizacionRow>(data);
 }
 
 export async function updateCotizacion(
@@ -145,10 +146,10 @@ export async function updateCotizacion(
   data: Partial<CreateCotizacionInput>,
 ): Promise<void> {
   const updatePayload = { ...data } as unknown as CotizacionUpdate;
-  if (data.conceptos_venta) updatePayload.conceptos_venta = data.conceptos_venta as unknown as Json;
-  if (data.dimensiones_lcl) updatePayload.dimensiones_lcl = data.dimensiones_lcl as unknown as Json;
+  if (data.conceptos_venta) updatePayload.conceptos_venta = toDbJson(data.conceptos_venta);
+  if (data.dimensiones_lcl) updatePayload.dimensiones_lcl = toDbJson(data.dimensiones_lcl);
   if (data.dimensiones_aereas)
-    updatePayload.dimensiones_aereas = data.dimensiones_aereas as unknown as Json;
+    updatePayload.dimensiones_aereas = toDbJson(data.dimensiones_aereas);
   if (data.modo) updatePayload.modo = data.modo as CotizacionInsert["modo"];
   if (data.tipo) updatePayload.tipo = data.tipo as CotizacionInsert["tipo"];
   if (data.incoterm) updatePayload.incoterm = data.incoterm as CotizacionInsert["incoterm"];

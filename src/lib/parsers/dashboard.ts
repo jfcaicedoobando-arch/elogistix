@@ -3,6 +3,7 @@
  * Extracted from useDashboardData to keep the hook focused on query+state.
  */
 import { ESTADOS_ACTIVOS } from "@/constants/embarqueConstants";
+import { fromDb } from "@/lib/supabase/cast";
 
 export interface EmbarqueConEstado {
   id: string;
@@ -148,7 +149,7 @@ export function parseEmbarquesMesSiguiente(stats: DashboardStats): EmbarqueMesSi
       ? Number(r.margen)
       : ventaUSD > 0 ? (profit / ventaUSD) * 100 : 0;
     return {
-      ...(r as unknown as EmbarqueMesSiguiente),
+      ...(fromDb<EmbarqueMesSiguiente>(r)),
       ventaUSD,
       costoUSD,
       profit,

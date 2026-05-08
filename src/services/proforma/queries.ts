@@ -1,4 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
+import { fromDb } from "@/lib/supabase/cast";
 import type {
   ConceptoVentaRow,
   ProformaConFactura,
@@ -13,7 +14,7 @@ export async function fetchProformasEmbarque(embarqueId: string): Promise<Profor
     .eq("embarque_id", embarqueId)
     .order("created_at", { ascending: false });
   if (error) throw error;
-  return (data ?? []) as unknown as ProformaConFactura[];
+  return fromDb<ProformaConFactura[]>(data ?? []);
 }
 
 export async function fetchProformasAprobadas(organizationId: string): Promise<ProformaConFactura[]> {
@@ -24,7 +25,7 @@ export async function fetchProformasAprobadas(organizationId: string): Promise<P
     .eq("estado_revision", "aprobada")
     .order("created_at", { ascending: false });
   if (error) throw error;
-  return (data ?? []) as unknown as ProformaConFactura[];
+  return fromDb<ProformaConFactura[]>(data ?? []);
 }
 
 export async function fetchProformasPendientes(
@@ -39,7 +40,7 @@ export async function fetchProformasPendientes(
     .eq("estado_revision", "pendiente")
     .order("created_at", { ascending: false });
   if (error) throw error;
-  return (data ?? []) as unknown as ProformaPendienteConEmbarque[];
+  return fromDb<ProformaPendienteConEmbarque[]>(data ?? []);
 }
 
 export async function fetchClienteParaPdf(clienteId: string) {
