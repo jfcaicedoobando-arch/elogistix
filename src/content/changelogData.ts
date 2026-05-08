@@ -22,6 +22,14 @@ export interface ChangelogEntry {
  */
 export const recentChangelog: ChangelogEntry[] = [
   {
+    version: "8.122.0",
+    date: "2026-05-08",
+    type: "minor",
+    title: "PR-3 audit calidad: tsconfig endurecido (lints sin uso)",
+    summary: "noUnusedLocals/Parameters/noFallthroughCasesInSwitch activados. Limpieza de imports y parámetros muertos en 16 archivos.",
+    description: "Tercer PR del audit. Lints de TS endurecidos en tsconfig.app.json y tsconfig.json. strict/strictNullChecks quedan pendientes (ARCHITECTURE.md). Limpieza de unused vars/imports en 16 archivos. Suite 279/279 verde.",
+  },
+  {
     version: "8.121.0",
     date: "2026-05-08",
     type: "minor",
