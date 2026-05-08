@@ -1,92 +1,106 @@
-## Objetivo
+## Integración Terminal49 — Sincronización automática de tracking marítimo
 
-Auditar y clasificar los ~495 `as` casts del proyecto, identificar los más peligrosos, y entregar un roadmap accionable para activar `strictNullChecks` en el futuro.
+### Resumen de la API (de la documentación oficial)
 
-## Distribución actual (medida)
+Terminal49 es una API **event-driven** especializada en tracking de carga marítima:
+
+- **Auth**: Bearer token simple → header `Authorization: Token TU_API_KEY`
+- **Base URL**: `https://api.terminal49.com/v2`
+- **Formato**: JSON:API (`Content-Type: application/vnd.api+json`)
+- **Identificadores soportados**: Master BL (recomendado), Booking number, o Container number + SCAC del carrier (4 letras: MAEU, MSCU, CMDU, etc.). Hay endpoint `auto-detect-carrier` si no conocemos el SCAC.
+- **Flujo recomendado**:
+  1. `POST /tracking_requests` con BL/Booking + SCAC → respuesta inmediata `pending`.
+  2. Terminal49 valida con la naviera y emite eventos: `tracking_request.succeeded` / `failed` → al confirmarse crea un **Shipment** con sus **Containers**.
+  3. Cada cambio (ETA, milestones, LFD, holds, terminal availability, descarga, vacío) dispara un webhook.
+- **Catálogo de eventos** (>30): `shipment.created`, `shipment.estimated.arrival.changed`, `container.transport.vessel_loaded`, `container.transport.vessel_departed`, `container.transport.vessel_arrived`, `container.transport.discharged`, `container.transport.full_out`, `container.transport.empty_in`, `container.updated` (LFD, holds), etc.
+- **Polling desaconsejado**: consume rate limit (100 req/min) y pierde el contexto del campo cambiado. Webhooks son la vía oficial.
+- **Pricing**: típicamente por shipment activo. La key de prueba usualmente da créditos limitados — perfecto para validación.
+
+### Mapeo a nuestro modelo
+
+Ya tenemos:
+
+- `embarques` con `bl_master`, `bl_house`, `naviera`, `contenedor`, `etd`, `eta`, `fecha_llegada_real`, `estado`.
+- `eventos_embarque` (timeline con `tipo`, `descripcion`, `ubicacion`, `fecha`) — calza 1:1 con milestones de Terminal49.
+- Modo `Marítimo` ya existe en el wizard.
+
+Lo que falta:
+
+- Vincular cada embarque marítimo con un `tracking_request_id` y `shipment_id` de Terminal49.
+- Guardar SCAC normalizado de la naviera.
+- Recibir webhooks y actualizar `embarques.eta`, `fecha_llegada_real`, `estado` + insertar en `eventos_embarque` automáticamente.
+- UI para forzar alta manual / re-sync / ver estado del tracking.
+
+### Plan de implementación (3 fases)
+
+#### Fase 1 — Infraestructura backend
+
+1. **Secret**: registrar `TERMINAL49_API_KEY` y `TERMINAL49_WEBHOOK_SECRET` (este último lo elegimos nosotros para validar firma HMAC del webhook).
+2. **Migración**:
+  - Nueva tabla `tracking_externo` (1:1 con embarque): `embarque_id`, `provider` ('terminal49'), `tracking_request_id`, `shipment_id`, `request_number`, `request_type` (bol/booking/container), `scac`, `status` (pending/created/succeeded/failed/tracking/inactive), `failed_reason`, `last_event_at`, `raw_payload jsonb`. RLS por `organization_id`.
+  - Nueva tabla `tracking_webhook_log` (auditoría): `event_type`, `payload jsonb`, `processed boolean`, `error`, `received_at`. RLS sólo super_admin.
+  - Agregar columna `naviera_scac` a tabla `navieras` (catálogo) si no existe, para mapear naviera elegida → SCAC.
+3. **Edge function `terminal49-create-tracking**` (verify_jwt = true, auth interna):
+  - Input: `{ embarque_id }`. Lee BL/SCAC del embarque, llama `POST /tracking_requests`, persiste resultado en `tracking_externo`.
+  - Maneja 422 "duplicate" reusando el tracking existente (`GET /tracking_requests?filter[number]=...`).
+4. **Edge function `terminal49-webhook**` (verify_jwt = false, pública):
+  - Valida firma del webhook (Terminal49 firma con HMAC-SHA256).
+  - Persiste payload en `tracking_webhook_log`.
+  - Despacha por `event` type: actualiza `embarques.eta`, `fecha_llegada_real`, `estado`, e inserta en `eventos_embarque`.
+  - Devuelve 2xx siempre que se haya guardado (idempotente por `event.id`).
+5. **Edge function `terminal49-sync**` (manual):
+  - Re-fetch del shipment y containers para refrescar todo (`GET /shipments/{id}?include=containers,transport_events`).
+
+#### Fase 2 — Integración en el flujo de embarque
+
+1. **Trigger automático**: al crear/editar un embarque marítimo con BL Master + naviera con SCAC válido, mostrar toggle "Activar tracking automático con Terminal49". Al activarlo invoca `terminal49-create-tracking`.
+2. **UI en `EmbarqueDetalle.tsx**`:
+  - Tarjeta "Tracking automático" con: estado actual del tracking, último evento sincronizado, botones **Re-sync ahora**, **Pausar**, **Eliminar**.
+  - Indicar fuente de cada evento en el timeline (badge "Terminal49" vs "Manual").
+3. **Listado de embarques**: badge sutil cuando el embarque tiene tracking automático activo.
+4. **Configuración global**: toggle "Activar Terminal49 por defecto en embarques marítimos" + campo para registrar la URL del webhook (auto-generada).
+
+#### Fase 3 — Robustez y QA
+
+1. **Test con números de prueba** (Terminal49 ofrece test tracking numbers documentados).
+2. **Reintentos**: webhook idempotente por `event.id`; si falla un update marcamos `processed=false` y mostramos en `Auditoría`.
+3. **Bitácora**: cada alta/baja/sync queda en la bitácora de actividad.
+4. **Changelog + bump de versión**.
+
+### Detalles técnicos
 
 ```text
-as const               153   ✅ 100% seguro (literal narrowing)
-as unknown              65   ⚠️  intermedio de `as unknown as X` — code smell
-as Json                 21   ✅ wrapper de Supabase, seguro
-as Tables/Insert/Update 10   ⚠️  casts DB → mejor con mappers
-as any                   9   ❌ crítico
-as React.*               3   ✅ usualmente OK
-otros (~234)             —   mezcla (ReturnType<typeof...>, narrow DOM, etc.)
+[Wizard Embarque] --crea/edita-→ [embarques]
+                                     │
+                          (BL+SCAC) ─┴→ POST tracking_requests
+                                                   │
+                       Terminal49 ──webhook──→ [edge:terminal49-webhook]
+                                                   │
+                                        ┌──────────┴──────────┐
+                                  upsert eventos_embarque   update embarques (eta/estado)
 ```
 
-**Hotspots por archivo:**
-- `src/lib/query/index.ts` — 91 (todos `as const`, claves de React Query — seguros)
-- `src/services/cotizacion/crud.ts` — 22 (mezcla Json + unknown + Insert)
-- `src/services/embarque/{queries,mutations}.ts` — 26 (Json + unknown + EmbarqueRow[])
-- `src/services/auditoria/index.ts` — 8
+**Endpoint del webhook a registrar en el dashboard de Terminal49**:
+`https://eorqadkulqtneqjbsblk.supabase.co/functions/v1/terminal49-webhook`
 
-## Entregables
+**Eventos a suscribir inicialmente** (para no saturar):
 
-### 1. Script de auditoría (`scripts/audit-casts.ts`)
+- `tracking_request.succeeded`, `tracking_request.failed`
+- `shipment.estimated.arrival.changed`
+- `container.transport.vessel_departed`
+- `container.transport.vessel_arrived`
+- `container.transport.discharged`
+- `container.transport.full_out` (recogido por cliente / transportista)
+- `container.updated` (para LFD y holds)
 
-Recorre `src/`, parsea cada `as X` con regex y lo clasifica en un CSV/Markdown:
+**Mapeo de eventos → `eventos_embarque.tipo**` (usaremos los valores ya existentes del enum `tipo_evento_tracking`; si falta alguno lo agregamos en migración separada).
 
-| Categoría | Peso | Descripción |
-|-----------|------|-------------|
-| **SAFE** | 0 | `as const`, `as React.*`, `as ReturnType<typeof X>` en tests |
-| **LOW** | 1 | `as Json` (wrapper Supabase), DOM narrowing tras chequeo |
-| **MEDIUM** | 2 | `as Tables<X>`, `as TablesInsert<X>` en mappers |
-| **HIGH** | 3 | `as unknown as X` (doble cast), `as X[]` sobre respuesta de Supabase sin validar |
-| **CRITICAL** | 4 | `as any`, `as X` sobre `JSON.parse`, casts entre tipos no relacionados |
+### Confirmaciones antes de codificar
 
-Output: `docs/cast-audit.md` con:
-- Tabla resumen por categoría
-- Top-20 casts más riesgosos con file:line y snippet
-- Lista por archivo ordenada por peso descendente
+Antes de arrancar la Fase 1 quiero confirmar contigo:
 
-### 2. Documento de roadmap (`docs/strict-mode-roadmap.md`)
+1. ¿Activamos tracking **siempre** en embarques marítimos con BL Master + SCAC, o **opt-in** manual desde el detalle?  Opt-in
+2. ¿Quieres que los webhooks sobrescriban `eta`/`estado` del embarque, o sólo agreguen al timeline y dejen los campos principales bajo control manual? Si
+3. ¿Limitamos a Marítimo, o también probamos los pocos carriers aéreos que Terminal49 soporta (muy pocos)? Recomendación: sólo marítimo en v1. Solo Maritimo
 
-Plan de 4 fases para llegar a `strict: true`:
-
-**Fase A — Quick wins (1 PR)**
-- Eliminar los 9 `as any` (reemplazar por `unknown` + type guard, o por tipo correcto).
-- Agregar comentario `// eslint-disable-next-line @typescript-eslint/consistent-type-assertions -- razón` a los casts `LOW` que se mantienen.
-
-**Fase B — Validación de boundaries (2-3 PRs)**
-- Introducir Zod (o helpers manuales) para parsear respuestas de Supabase en los services hotspot (`cotizacion/crud.ts`, `embarque/queries.ts`).
-- Eliminar `as unknown as X` en favor de `parseX(data)` que retorna el tipo real.
-- Meta: bajar `as unknown` de 65 → <20.
-
-**Fase C — Mappers DB↔dominio (2 PRs)**
-- Reforzar `lib/mappers/*` para que sean la única frontera con `Tables<>`. Resto del código consume tipos de dominio sin castear.
-- Eliminar los 10 `as Tables/Insert/Update` fuera de mappers.
-
-**Fase D — Activar `strictNullChecks` (1 PR grande)**
-- Activar flag, dejar que TS reporte errores reales.
-- Estimación: 100-300 errores tras Fases A-C (vs. ~800 hoy).
-- Resolver con `?.`, `??`, type guards y assertions narrativas (`if (!x) throw…`).
-
-### 3. Cambios mínimos en código en este PR
-
-Solo:
-- `scripts/audit-casts.ts` (nuevo)
-- `package.json`: script `"audit:casts": "tsx scripts/audit-casts.ts"`
-- `docs/cast-audit.md` (generado, commiteado)
-- `docs/strict-mode-roadmap.md` (nuevo)
-- `ARCHITECTURE.md`: sección "Type assertions policy" con las 5 categorías y cuándo se permite cada una.
-- Bump `APP_VERSION` a **8.123.0** + entrada en changelog.
-
-## Lo que NO se hace en este PR
-
-- **NO** se reescriben los 495 casts (sería un PR de cientos de archivos).
-- **NO** se activa `strictNullChecks` todavía (Fase D, después de A-C).
-- **NO** se introduce Zod ni nueva dependencia (el roadmap lo propone, no lo implementa).
-- **NO** se tocan los 153 `as const` ni los `as Json` (son seguros).
-
-## Resultado esperado
-
-Tras este PR el equipo tiene:
-1. **Visibilidad** total: cuántos casts hay, dónde, y de qué tipo.
-2. **Top-20 priorizado** para arreglar primero (el ROI real está en ~30-50 casts críticos, no en 511).
-3. **Plan claro** para activar `strictNullChecks` sin romper el build.
-4. **Política escrita** en ARCHITECTURE.md para que nuevos casts pasen el code review.
-
-## ¿Querés ajustar algo antes de implementar?
-
-- ¿Te alcanza con el script + docs, o querés que en el mismo PR ya elimine los **9 `as any`** (Fase A)?
-- ¿Preferís Zod o type guards manuales para Fase B (afecta el roadmap)?
+Con tus respuestas avanzo con la migración + edge functions + UI.
