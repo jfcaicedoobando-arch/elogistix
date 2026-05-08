@@ -10,7 +10,7 @@ import {
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription,
 } from "@/components/ui/dialog";
-import type { Tables, Enums } from "@/integrations/supabase/types";
+import type { Tables, Enums } from "@/types/db";
 type ContactoCliente = Tables<'contactos_cliente'>;
 type TipoContacto = Enums<'tipo_contacto'>;
 

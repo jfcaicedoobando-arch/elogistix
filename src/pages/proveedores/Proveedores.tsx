@@ -16,7 +16,7 @@ import { useRegistrarActividad } from "@/hooks/shared/useBitacora";
 import { useDebounce } from "@/hooks/shared/useDebounce";
 import { DataTable, type DataTableColumn } from "@/components/shared/DataTable";
 import { useListPageState } from "@/hooks/shared/useListPageState";
-import type { Tables, Enums } from "@/integrations/supabase/types";
+import type { Tables, Enums } from "@/types/db";
 import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 import { toTitleCase } from "@/lib/formatters";
 type TipoProveedor = Enums<'tipo_proveedor'>;

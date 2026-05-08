@@ -7,7 +7,7 @@ import { Loader2, FileText, ArrowLeft, ArrowRight } from "lucide-react";
 import { useDialogGenerarProformaController } from "@/hooks/embarque/useDialogGenerarProformaController";
 import { PasoSeleccionConceptos } from "./proforma/PasoSeleccionConceptos";
 import { PasoConfirmacionProforma } from "./proforma/PasoConfirmacionProforma";
-import type { Tables } from "@/integrations/supabase/types";
+import type { Tables } from "@/types/db";
 
 type ConceptoVenta = Tables<'conceptos_venta'>;
 type EmbarqueRow = Tables<'embarques'>;

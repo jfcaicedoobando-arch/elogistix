@@ -4,7 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { formatDate } from "@/lib/formatters";
 import { ICONO_EVENTO } from "@/constants/embarqueConstants";
-import type { Tables } from "@/integrations/supabase/types";
+import type { Tables } from "@/types/db";
 
 interface Props {
   eventos: Tables<"eventos_embarque">[];

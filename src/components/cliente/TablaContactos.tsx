@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { DataTable, type DataTableColumn } from "@/components/shared/DataTable";
-import type { Tables, Enums } from "@/integrations/supabase/types";
+import type { Tables, Enums } from "@/types/db";
 import { toTitleCase, correctSpanishPlace } from "@/lib/formatters";
 import EmptyState from "@/components/empty/EmptyState";
 type ContactoCliente = Tables<'contactos_cliente'>;

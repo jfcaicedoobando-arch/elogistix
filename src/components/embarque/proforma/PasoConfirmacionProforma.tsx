@@ -2,7 +2,7 @@ import { Badge } from "@/components/ui/badge";
 import { DataTable, type DataTableColumn } from "@/components/shared/DataTable";
 import { CheckCircle2 } from "lucide-react";
 import { formatCurrency } from "@/lib/formatters";
-import type { Tables } from "@/integrations/supabase/types";
+import type { Tables } from "@/types/db";
 import type { TotalesProforma } from "./PasoSeleccionConceptos";
 
 type ConceptoVenta = Tables<"conceptos_venta">;

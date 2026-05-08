@@ -5,7 +5,7 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { formatCurrency } from "@/lib/formatters";
-import type { Tables } from "@/integrations/supabase/types";
+import type { Tables } from "@/types/db";
 
 type ConceptoVenta = Tables<"conceptos_venta">;
 

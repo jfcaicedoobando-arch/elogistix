@@ -18,7 +18,7 @@ import { DialogGenerarProforma } from "./DialogGenerarProforma";
 import { ResumenConceptosVenta } from "./facturacion/ResumenConceptosVenta";
 import { HistorialProformas } from "./facturacion/HistorialProformas";
 import { HistorialFacturas } from "./facturacion/HistorialFacturas";
-import type { Tables } from "@/integrations/supabase/types";
+import type { Tables } from "@/types/db";
 
 type EmbarqueRow = Tables<'embarques'>;
 
