@@ -95,6 +95,19 @@ usa en boundaries (services), no en componentes.
 **Resultado:** suite 285/285 verde, `tsc --noEmit` limpio. Las Fases A-C
 pagaron la deuda con anticipación: la activación final fue casi trivial.
 
+### Fase E — `noImplicitAny` y evaluación de `strict` ✅ COMPLETADA (8.129.0)
+
+- [x] `noImplicitAny: true` en ambos tsconfig → 0 errores. El proyecto ya
+      no tiene `any` implícitos.
+- [x] Probado `strict: true` (incluye strictFunctionTypes, strictBindCall,
+      etc.): solo 3 errores reales en wrappers de RQ/RHF
+      (EditarCotizacion, NuevaCotizacion, Proveedores). Pospuesto: el
+      costo de refactorizar firmas para satisfacer contravariancia
+      exacta no compensa el beneficio en estos 3 sitios.
+- **Configuración estable final**: strictNullChecks ✅, noImplicitAny ✅,
+  noUnusedLocals ✅, noUnusedParameters ✅, noFallthroughCasesInSwitch ✅,
+  strict ❌ (strictFunctionTypes/strictBindCallApply/alwaysStrict off).
+
 ## Política para nuevos casts (vigente desde este PR)
 
 Ver `ARCHITECTURE.md § Type assertions policy`. Resumen:
