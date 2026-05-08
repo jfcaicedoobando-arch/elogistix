@@ -337,6 +337,7 @@ Política vigente desde v8.123.0. Compañera de
 Para auditar el estado actual: `npm run audit:casts` (genera
 `docs/cast-audit.md`). Baseline 2026-05-08: 559 casts, 73 HIGH+CRITICAL (~13 %).
 
+## 18. Glosario
 
 - **Embarque**: operación logística (importación, exportación, nacional, cross-trade, intra-UE). Identificado por **expediente**.
 - **Expediente**: identificador único de embarque generado vía RPC en BD. Ver `mem://technical/shipment-identification-logic`.
