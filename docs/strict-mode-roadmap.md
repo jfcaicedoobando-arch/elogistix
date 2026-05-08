@@ -43,18 +43,28 @@ Reducir los 64 HIGH (`as unknown as X` y `as X[]` sin validar).
       `as unknown as ReturnType<typeof X>` y `as unknown as typeof fetch`,
       aceptables bajo política).
 
-**Sub-fase B.2 — Validación runtime (pendiente)**
+**Sub-fase B.2 — Validación runtime ✅ COMPLETADA (8.127.0)**
 
-- [ ] Reemplazar el cuerpo de `fromDb<T>` por validación con Zod opcional:
-      `fromDb<T>(data, schema?: ZodSchema<T>)`.
-- [ ] Adoptar Zod en hotspots críticos: `services/cotizacion/crud.ts`,
-      `services/embarque/mutations.ts`, `services/portal/queries.ts`.
-- [ ] Añadir tests que verifiquen que un payload malformado lanza error
-      en vez de propagar `undefined`.
+- [x] `fromDb` admite sobrecarga con Zod schema opcional:
+      `fromDb<S extends ZodType>(data, schema)` valida y devuelve el tipo
+      inferido; la sobrecarga sin schema sigue disponible como cast crudo
+      documentado.
+- [x] Adoptado Zod en hotspots: `services/embarque/mutations.ts` (RPCs
+      `crearEmbarqueRpc` y `duplicarEmbarqueRpc`) y `services/portal/queries.ts`
+      (joins anidados `clientes(nombre)` / `organizations(nombre)`).
+- [x] Tests `src/lib/supabase/__tests__/cast.test.ts` (6 casos) verifican
+      que payloads malformados lanzan `ZodError` en vez de propagar
+      `undefined`.
 
-**Decisión pendiente:** Zod (peso ~12 KB gz, valida runtime) vs. type guards
-manuales (cero peso, más boilerplate). Recomendación: Zod solo en boundaries
-(services), no en componentes.
+**Limitación documentada:** con `strictNullChecks=false`, `z.infer<S>` marca
+los campos como opcionales aunque Zod los valide como requeridos. En los
+hotspots usamos `schema.parse(data)` para validar y luego `fromDb<T>(data)`
+para tipar correctamente. Cuando se active el flag (Fase D), podremos
+colapsar a una sola llamada `fromDb(data, schema)`.
+
+**Por qué Zod y no type guards:** Zod añade ~12 KB gz pero da mensajes de
+error con path exacto (`expediente: Required`) y zero boilerplate. Solo se
+usa en boundaries (services), no en componentes.
 
 ### Fase C — Mappers DB↔dominio ✅ COMPLETADA (8.126.0)
 

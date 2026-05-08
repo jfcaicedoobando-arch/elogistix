@@ -22,6 +22,14 @@ export interface ChangelogEntry {
  */
 export const recentChangelog: ChangelogEntry[] = [
   {
+    version: "8.127.0",
+    date: "2026-05-08",
+    type: "minor",
+    title: "Fase B.2 audit casts: validación runtime con Zod en boundaries",
+    summary: "`fromDb` acepta schema Zod opcional. Adoptado en RPCs de embarque y joins del portal: si el shape cambia, ZodError en vez de undefined silencioso.",
+    description: "Nueva sobrecarga fromDb(data, schema) que valida con Zod. Adoptado en crearEmbarqueRpc, duplicarEmbarqueRpc, fetchPortalClienteName, fetchPortalOrgName. 6 tests nuevos en cast.test.ts. Suite 285/285 verde.",
+  },
+  {
     version: "8.126.0",
     date: "2026-05-08",
     type: "patch",

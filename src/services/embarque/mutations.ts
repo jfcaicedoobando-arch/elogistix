@@ -1,6 +1,18 @@
+import { z } from "zod";
 import { supabase } from '@/integrations/supabase/client';
 import type { TablesInsert } from '@/integrations/supabase/types';
 import { fromDb, toDbJson } from "@/lib/supabase/cast";
+
+// Schemas para validar los payloads de retorno de las RPCs.
+// Si la RPC cambia de shape o devuelve null inesperado, fallamos rápido y
+// fuerte en el boundary, en vez de propagar `undefined.id` aguas abajo.
+// Nota: con `strictNullChecks` apagado, `z.infer` marca los campos como
+// opcionales aunque Zod los valide como requeridos. Por eso re-tipamos en
+// el call site con `fromDb<T>` (segunda sobrecarga sin schema) tras validar.
+const rpcIdSchema = z.object({ id: z.string().uuid() });
+const rpcIdExpedienteArraySchema = z.array(
+  z.object({ id: z.string().uuid(), expediente: z.string() }),
+);
 
 type EmbarqueInsert = TablesInsert<'embarques'>;
 
@@ -19,6 +31,7 @@ export async function crearEmbarqueRpc(input: CrearEmbarqueRpcInput): Promise<{ 
     p_documentos: toDbJson(input.documentos),
   });
   if (error) throw error;
+  rpcIdSchema.parse(data); // valida en runtime; lanza ZodError si shape inválido
   return fromDb<{ id: string }>(data);
 }
 
@@ -54,6 +67,7 @@ export async function duplicarEmbarqueRpc(
     p_copias: toDbJson(copias),
   });
   if (error) throw error;
+  rpcIdExpedienteArraySchema.parse(data); // valida shape; lanza ZodError si inválido
   return fromDb<{ id: string; expediente: string }[]>(data);
 }
 
