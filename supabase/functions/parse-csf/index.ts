@@ -1,3 +1,14 @@
+/**
+ * parse-csf — Extrae datos fiscales de una Constancia de Situación Fiscal (PDF).
+ *
+ * Seguridad:
+ *  - El archivo se reenvía como base64 al Lovable AI Gateway (Gemini) y se
+ *    recibe JSON estructurado vía tool-calling. **No se parsea XML ni se
+ *    deserializa contenido del PDF localmente**, por lo tanto NO hay
+ *    superficie para XXE/XEE.
+ *  - Endpoint público (verify_jwt = false) por compatibilidad con el wizard
+ *    de alta de cliente; no escribe en BD ni expone datos de otros tenants.
+ */
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { handlePreflight } from "../_shared/cors.ts";
 import { jsonResponse, errorResponse } from "../_shared/response.ts";

@@ -22,6 +22,14 @@ export interface ChangelogEntry {
  */
 export const recentChangelog: ChangelogEntry[] = [
   {
+    version: "8.119.0",
+    date: "2026-05-08",
+    type: "minor",
+    title: "Hardening tras code audit externo",
+    summary: "Tipado estricto en services/cliente, timeout + fallback en exchange-rates, helpers de CORS con whitelist, doc de seguridad y checklist RLS.",
+    description: "Respuesta al audit externo de Greg the Great. (1) src/services/cliente/crud.ts: removidos los 2 `any` (helper genérico dedupeByRfc tipado con Pick<Cliente,'id'|'rfc'>). (2) supabase/functions/exchange-rates: AbortController con timeout 5s + fallback explícito a tipos de cambio default; logs de fallback para diagnóstico. (3) supabase/functions/_shared/cors.ts: nuevo buildCors(req) con whitelist (*.lovable.app, *.lovableproject.com, localhost) y handlePreflightStrict; jsonResponse/errorResponse aceptan override de cors. Wildcard se mantiene como default (endpoints públicos por diseño + auth real vía JWT en authenticate()). (4) supabase/functions/parse-csf: documentado en cabecera que NO parsea XML (descarta superficie XXE). (5) docs/security-checklist.md: nuevo documento operativo con queries para verificar cobertura RLS, search_path en SECURITY DEFINER, fuerza del token de tracking_links, mapa de edge functions y política Lovable (no rate limiting backend, anon key es pública por diseño). Hallazgos del audit descartados con justificación: rotar anon key (es pública), .env en .gitignore (Lovable lo gestiona), rate limiting backend (no soportado), GitHub Actions CI (Lovable corre el pipeline). Versión 8.119.0.",
+  },
+  {
     version: "8.118.8",
     date: "2026-05-06",
     type: "patch",
@@ -92,14 +100,6 @@ export const recentChangelog: ChangelogEntry[] = [
     title: "Proyección: nueva tarjeta 'Hueco de Facturación' (alerta global)",
     summary: "Tarjeta fija arriba de Pre-Facturación que muestra embarques con ETD > 5 días sin factura emitida, con totales en USD y MXN y dialog de detalle.",
     description: "Nueva tarjeta de alerta en la tab Proyección de /facturacion. Muestra embarques con ETD ≥ 1/abr/2026 y > 5 días desde ETD que todavía no tienen factura emitida al cliente (factura_pdf_url). Es FIJA arriba del selector de mes — indicador global. Muestra conteo de embarques, total sin facturar en USD y MXN, y botón 'Ver detalle' con dialog (expediente, cliente, operador, ETD, días sin facturar coloreados, Venta USD/MXN, click navega al embarque). Cuando no hay hueco, muestra versión success compacta.",
-  },
-  {
-    version: "8.117.5",
-    date: "2026-05-05",
-    type: "minor",
-    title: "Operaciones: drill-down de embarques por estado en cada operador",
-    summary: "En cada tarjeta de operador, los conteos por estado ahora son clickeables y abren la lista detallada de embarques en ese estado.",
-    description: "En /operaciones, cada renglón de estado dentro de la tarjeta de operador es ahora clickeable y abre un dialog con la lista de embarques (expediente, cliente, modo, ruta, ETD/ETA, días en puerto o días para ETA), búsqueda local y enlace al detalle. Botón 'Ver todos en Embarques' lleva al listado pre-filtrado por operador + estado. Backend: la RPC operaciones_stats incluye un nuevo campo embarquesPorEstado por operador, limitado a 200 ítems por estado (50 para Cerrado).",
   },
 ];
 

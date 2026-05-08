@@ -46,14 +46,18 @@ export async function fetchClientesPaginados({
   if (error) throw error;
   // Fase G — deduplicar por RFC en el render para mitigar duplicados históricos en BD.
   // Si el RFC está vacío, conservamos por id (no agrupar clientes sin RFC).
+  return { data: dedupeByRfc(data ?? []), count: count ?? 0 };
+}
+
+
+function dedupeByRfc<T extends Pick<Cliente, "id" | "rfc">>(rows: T[]): T[] {
   const seen = new Set<string>();
-  const deduped = (data ?? []).filter((c: any) => {
-    const key = (c?.rfc ?? "").trim().toUpperCase() || `__id:${c?.id}`;
+  return rows.filter((c) => {
+    const key = (c.rfc ?? "").trim().toUpperCase() || `__id:${c.id}`;
     if (seen.has(key)) return false;
     seen.add(key);
     return true;
   });
-  return { data: deduped, count: count ?? 0 };
 }
 
 export async function fetchClientes(organizationId: string | null) {
@@ -64,13 +68,7 @@ export async function fetchClientes(organizationId: string | null) {
   if (organizationId) query = query.eq("organization_id", organizationId);
   const { data, error } = await query;
   if (error) throw error;
-  const seen = new Set<string>();
-  return (data ?? []).filter((c: any) => {
-    const key = (c?.rfc ?? "").trim().toUpperCase() || `__id:${c?.id}`;
-    if (seen.has(key)) return false;
-    seen.add(key);
-    return true;
-  });
+  return dedupeByRfc(data ?? []);
 }
 
 export async function fetchClientesForSelect(organizationId: string | null) {
