@@ -49,10 +49,6 @@ export async function fetchClientesPaginados({
   return { data: dedupeByRfc(data ?? []), count: count ?? 0 };
 }
 
-type ClienteListRow = Pick<
-  Cliente,
-  "id" | "nombre" | "rfc" | "ciudad" | "estado" | "contacto" | "telefono"
->;
 
 function dedupeByRfc<T extends Pick<Cliente, "id" | "rfc">>(rows: T[]): T[] {
   const seen = new Set<string>();
