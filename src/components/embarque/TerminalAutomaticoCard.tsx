@@ -144,6 +144,56 @@ export function TerminalAutomaticoCard({ embarqueId, modo, blMaster, naviera }: 
                   {sincronizar.isPending ? "Sincronizando…" : "Sincronizar ahora"}
                 </Button>
 
+                {!tracking.shipment_id && (
+                  <Dialog open={linkOpen} onOpenChange={setLinkOpen}>
+                    <DialogTrigger asChild>
+                      <Button size="sm" variant="outline">
+                        <Link2 className="h-4 w-4 mr-1" />
+                        Vincular shipment manualmente
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent>
+                      <DialogHeader>
+                        <DialogTitle>Vincular shipment de Terminal49</DialogTitle>
+                        <DialogDescription>
+                          Pega el ID del shipment que ves en Terminal49. Lo encuentras en la URL:{" "}
+                          <span className="font-mono text-xs">
+                            app.terminal49.com/shipments/<strong>[ESTE-ID]</strong>
+                          </span>
+                        </DialogDescription>
+                      </DialogHeader>
+                      <div className="space-y-2">
+                        <Label htmlFor="shipment-id">Shipment ID (UUID)</Label>
+                        <Input
+                          id="shipment-id"
+                          placeholder="bfb7cb2d-3546-4bd7-bde2-3c6120778de9"
+                          value={shipmentIdInput}
+                          onChange={(e) => setShipmentIdInput(e.target.value)}
+                          className="font-mono text-sm"
+                        />
+                      </div>
+                      <DialogFooter>
+                        <Button variant="ghost" onClick={() => setLinkOpen(false)}>
+                          Cancelar
+                        </Button>
+                        <Button
+                          onClick={() => {
+                            vincularManual.mutate(shipmentIdInput.trim(), {
+                              onSuccess: () => {
+                                setLinkOpen(false);
+                                setShipmentIdInput("");
+                              },
+                            });
+                          }}
+                          disabled={!shipmentIdInput.trim() || vincularManual.isPending}
+                        >
+                          {vincularManual.isPending ? "Vinculando…" : "Vincular"}
+                        </Button>
+                      </DialogFooter>
+                    </DialogContent>
+                  </Dialog>
+                )}
+
                 <AlertDialog open={confirmDelete} onOpenChange={setConfirmDelete}>
                   <AlertDialogTrigger asChild>
                     <Button size="sm" variant="ghost" className="text-destructive hover:text-destructive">
