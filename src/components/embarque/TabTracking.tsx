@@ -16,6 +16,7 @@ import { getErrorMessage } from '@/lib/errors';
 import { formatDate, nombreDesdeEmail } from '@/lib/formatters';
 import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 import { TerminalAutomaticoCard } from "./TerminalAutomaticoCard";
+import { TrackingIntentosHistorial } from "./TrackingIntentosHistorial";
 
 interface Props {
   embarqueId: string;
