@@ -27,9 +27,9 @@ export interface ConceptoCostoWizard {
 }
 
 export interface CostoCotizacion {
-  proveedor: string;
+  proveedor: string | null;
   concepto: string;
-  costo_unitario: number | string;
+  costo_unitario: number | string | null;
   moneda: string | null;
 }
 
