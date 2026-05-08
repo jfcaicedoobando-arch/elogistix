@@ -6,8 +6,10 @@ import { fromDb, toDbJson } from "@/lib/supabase/cast";
 // Schemas para validar los payloads de retorno de las RPCs.
 // Si la RPC cambia de shape o devuelve null inesperado, fallamos rápido y
 // fuerte en el boundary, en vez de propagar `undefined.id` aguas abajo.
-const rpcIdSchema = z.object({ id: z.string().uuid() });
-const rpcIdExpedienteArraySchema = z.array(
+// Nota: tipamos explícitamente con `z.ZodType<T>` porque `strictNullChecks`
+// está apagado y `z.infer` haría todos los campos opcionales.
+const rpcIdSchema: z.ZodType<{ id: string }> = z.object({ id: z.string().uuid() });
+const rpcIdExpedienteArraySchema: z.ZodType<{ id: string; expediente: string }[]> = z.array(
   z.object({ id: z.string().uuid(), expediente: z.string() }),
 );
 
