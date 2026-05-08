@@ -2,6 +2,14 @@ import type { ChangelogEntry } from "../../../changelogData";
 
 export const chunk0: ChangelogEntry[] = [
   {
+    version: "8.127.0",
+    date: "2026-05-08",
+    type: "minor",
+    title: "Fase B.2 audit casts: validación runtime con Zod en boundaries",
+    summary: "`fromDb` ahora acepta un schema Zod opcional y valida en runtime. Adoptado en RPCs de embarque y joins anidados del portal: si el shape cambia, falla rápido con ZodError en vez de propagar undefined.",
+    description: "Cierre de Fase B.2 del strict-mode roadmap. (1) src/lib/supabase/cast.ts: nueva sobrecarga `fromDb<S extends ZodType>(data, schema)` que valida con Zod y devuelve el tipo inferido; la sobrecarga sin schema (cast crudo) se mantiene como deuda documentada. Documentado en JSDoc el patrón recomendado y la limitación de inferencia bajo strictNullChecks=false. (2) src/services/embarque/mutations.ts: crearEmbarqueRpc y duplicarEmbarqueRpc ahora validan el payload de retorno con `rpcIdSchema` (uuid) y `rpcIdExpedienteArraySchema`. Si la RPC cambia de shape o devuelve null inesperado, lanzamos ZodError en el boundary en vez de propagar `undefined.id` aguas abajo. (3) src/services/portal/queries.ts: fetchPortalClienteName y fetchPortalOrgName validan el join anidado `clientes(nombre)` y `organizations(nombre)` con `nombreNullableSchema`. (4) Nuevo test src/lib/supabase/__tests__/cast.test.ts (6 casos): cubre cast crudo, validación con schema válido, ZodError en payload malformado, campo faltante y arrays. (5) Audit regenerado: 458 casts totales, 0 CRITICAL, HIGH solo en mocks de tests, MEDIUM en zonas permitidas (mappers/queries). Suite 285/285 verde (+6 tests). Nota técnica: con `strictNullChecks=false`, `z.infer<S>` marca campos como opcionales aunque Zod los valide como requeridos; en RPCs usamos `schema.parse(data)` para validar y luego `fromDb<T>(data)` para tipar correctamente. Cuando se active strictNullChecks (Fase D), podremos colapsar a una sola llamada `fromDb(data, schema)`. Versión 8.127.0.",
+  },
+  {
     version: "8.126.0",
     date: "2026-05-08",
     type: "patch",
