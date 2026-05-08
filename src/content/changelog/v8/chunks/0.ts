@@ -2,6 +2,14 @@ import type { ChangelogEntry } from "../../../changelogData";
 
 export const chunk0: ChangelogEntry[] = [
   {
+    version: "8.124.0",
+    date: "2026-05-08",
+    type: "patch",
+    title: "Fase A audit casts: 0 CRITICAL reales (falsos positivos eliminados)",
+    summary: "El audit de casts ahora ignora strings y descripciones de changelog. Resultado: 0 `as any` en código ejecutable (los 9 reportados eran texto dentro de descriptions).",
+    description: "Cierre de Fase A del roadmap a strictNullChecks. (1) scripts/audit-casts.ts: el scanner ahora elimina strings (\", ', `) y excluye src/content/changelog/** antes de buscar `as X`, eliminando falsos positivos donde 'as any' aparece dentro de descripciones de changelog. (2) Resultado regenerado en docs/cast-audit.md: 507 casts totales (vs 559 previo), 0 CRITICAL (vs 9), 64 HIGH, 316 MEDIUM, 7 LOW, 120 SAFE. Confirma que el proyecto no tiene `as any` ni `JSON.parse() as X` en código ejecutable. (3) Próximo paso: Fase B (reducir los 64 HIGH `as unknown as X` con type guards o Zod en boundaries de services). Sin cambios funcionales. Versión 8.124.0.",
+  },
+  {
     version: "8.123.0",
     date: "2026-05-08",
     type: "minor",
