@@ -41,11 +41,6 @@ export function useActivarTracking(embarqueId: string | undefined) {
       });
       qc.invalidateQueries({ queryKey: ["tracking_intentos", embarqueId ?? ""] });
     },
-      notifyError(toast, {
-        title: "No se pudo activar el tracking",
-        description: getErrorMessage(err),
-      });
-    },
   });
 }
 
