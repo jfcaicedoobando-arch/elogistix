@@ -1,73 +1,92 @@
-# Welcome to your Lovable project
+# Libre Carga
 
-## Project info
+Plataforma SaaS multi-tenant para agentes de carga (freight forwarders) en México. Centraliza cotizaciones, embarques, facturación, portal de clientes, auditoría operativa y reportes.
 
-**URL**: https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID
+> **Versión actual**: ver `src/constants/appVersion.ts` y el [Changelog](./src/pages/dashboard/Changelog.tsx).
+> **Arquitectura y convenciones**: [`ARCHITECTURE.md`](./ARCHITECTURE.md).
+> **Documentación de dominio**: [`docs/auditoria.md`](./docs/auditoria.md), [`docs/tables.md`](./docs/tables.md).
 
-## How can I edit this code?
+---
 
-There are several ways of editing your application.
+## Stack
 
-**Use Lovable**
+- **Frontend**: React 18 + Vite 5 + TypeScript 5
+- **UI**: Tailwind CSS v3 + shadcn/ui (read-only) + tokens HSL semánticos
+- **Estado server**: TanStack Query v5
+- **Forms**: React Hook Form + Zod
+- **Backend**: Lovable Cloud (Supabase) — Postgres + RLS + Storage + Edge Functions (Deno)
+- **AI**: Lovable AI Gateway (Gemini para parsing de CSF, etc.)
+- **Tests**: Vitest + Testing Library
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and start prompting.
+## Módulos principales
 
-Changes made via Lovable will be committed automatically to this repo.
+- **Embarques**: ciclo de vida en 7 estados, wizard de alta/edición, tracking automatizado, documentos, P&L.
+- **Cotizaciones**: wizard, conversión a embarques, P&L USD/MXN, generación de PDF.
+- **Clientes / Proveedores**: alta con CSF parseado por IA, contactos, documentos onboarding.
+- **Facturación**: proformas (regulares y consolidadas), proyección, conceptos venta/costo.
+- **Auditoría operativa**: hallazgos por reglas (docs faltantes, márgenes, fechas), revisiones, asignación de responsables, snapshots diarios.
+- **Operaciones / Reportes / Dashboard**: KPIs en vivo, distribución por cliente/estado, alertas de demora.
+- **Portal de clientes**: vista white-label con embarques, cotizaciones y facturas del cliente final.
+- **Admin (super-admin)**: gestión de organizaciones, planes, miembros e impersonación.
 
-**Use your preferred IDE**
+## Convenciones rápidas
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+- **Localización**: es-MX, fechas `DD/MM/YYYY`, moneda base **MXN** + vista USD (Frankfurter, cache 1h).
+- **IVA**: nunca hardcodear — usar `useTasaIVA` y `lib/financial/financialUtils.ts`.
+- **Multi-tenant**: toda fila de dominio lleva `organization_id`; RLS + `OrganizationContext` (org efectiva considera impersonación).
+- **Roles**: en `public.user_roles` (global) y `organization_members` (por org). Nunca en `profiles` ni `auth.users`.
+- **Hooks**: importar siempre desde el barrel del dominio (`@/hooks/embarque`, `@/services/cliente`, …).
+- **Pages no tocan Supabase**: toda I/O pasa por hook → service → cliente Supabase.
+- **Changelog**: cada cambio se registra en `src/content/changelog/v8/chunks/0.ts` + entrada eager en `src/content/changelogData.ts` + bump de `APP_VERSION` (SemVer; ver §19 de ARCHITECTURE.md).
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+## Desarrollo local
 
-Follow these steps:
+Requisitos: Node.js 20+ y `npm` o `bun`.
 
 ```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
+git clone <repo-url>
+cd librecarga
+npm install
 npm run dev
 ```
 
-**Edit a file directly in GitHub**
+La app se sirve en `http://localhost:8080`. Las variables de entorno (`VITE_SUPABASE_URL`, `VITE_SUPABASE_PUBLISHABLE_KEY`, `VITE_SUPABASE_PROJECT_ID`) son provistas automáticamente por Lovable Cloud y viven en `.env` (no editar a mano).
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+### Comandos útiles
 
-**Use GitHub Codespaces**
+```sh
+npm run dev              # Servidor Vite
+bunx vitest run          # Correr tests (279 tests)
+bunx tsc --noEmit        # Type-check
+npm run changelog:add    # Asistente para agregar entrada al changelog
+```
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+## Estructura
 
-## What technologies are used for this project?
+```text
+src/
+├── pages/           Composición de UI por ruta (no tocan Supabase)
+├── components/      Componentes por feature + shared/ + ui/ (shadcn read-only)
+├── hooks/           React Query + estado local, organizado por dominio (barrels)
+├── services/        Acceso puro a datos (Supabase, edge functions)
+├── lib/             domain, mappers, parsers, financial, formatters, ui, query
+├── contexts/        Auth, Organization, Theme, Breadcrumb
+├── generators/      PDF / CSV
+├── content/         Changelog y copy editorial
+├── constants/       Constantes de dominio y appVersion
+├── types/           Tipos compartidos
+└── integrations/    Supabase client + types (auto-generados, NO editar)
 
-This project is built with:
+supabase/
+├── functions/       Edge Functions (Deno)
+├── migrations/      SQL versionado (RLS, RPCs, triggers)
+└── config.toml
+```
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+Detalle completo y reglas de capa en [`ARCHITECTURE.md`](./ARCHITECTURE.md).
 
-## How can I deploy this project?
+## Edición desde Lovable
 
-Simply open [Lovable](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and click on Share -> Publish.
+Este proyecto se desarrolla principalmente en [Lovable](https://lovable.dev). Los cambios hechos en el editor se commitean automáticamente al repo, y los pushes externos se reflejan en Lovable.
 
-## Can I connect a custom domain to my Lovable project?
-
-Yes, you can!
-
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+Para publicar: en Lovable → **Share → Publish**. Para conectar dominio propio: **Project → Settings → Domains → Connect Domain**.
