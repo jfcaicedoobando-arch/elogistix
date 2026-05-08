@@ -117,7 +117,7 @@ export function useDialogGenerarProformaController(
         blMaster: embarque.bl_master,
         conceptoIds: Array.from(seleccionados),
         totales,
-        notas: notas.trim() || undefined,
+        notas: notas.trim() || null,
         operador: embarque.operador || null,
         diasCredito: Number.isFinite(diasCreditoNum as number) ? (diasCreditoNum as number) : null,
         tasaIva,
