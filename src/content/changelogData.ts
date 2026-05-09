@@ -22,6 +22,14 @@ export interface ChangelogEntry {
  */
 export const recentChangelog: ChangelogEntry[] = [
   {
+    version: "8.134.0",
+    date: "2026-05-09",
+    type: "minor",
+    title: "Embarques: ETD/ETA original (cotizado) vs actual",
+    summary: "El resumen del embarque conserva y muestra el ETD/ETA cotizado al cliente junto al actual, con la variación en días.",
+    description: "Nuevas columnas etd_original/eta_original en embarques (backfill desde etd/eta y trigger de auto-relleno en INSERT). TabResumen muestra la fecha vigente con un badge 'Original: dd MMM yyyy (±Nd)' cuando difiere, manteniendo intacto el dato cotizado aún cuando se actualiza ETD/ETA desde JSONCargo o manualmente.",
+  },
+  {
     version: "8.133.1",
     date: "2026-05-09",
     type: "patch",

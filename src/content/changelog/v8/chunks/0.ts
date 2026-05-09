@@ -2,6 +2,14 @@ import type { ChangelogEntry } from "../../../changelogData";
 
 export const chunk0: ChangelogEntry[] = [
   {
+    version: "8.134.0",
+    date: "2026-05-09",
+    type: "minor",
+    title: "Embarques: ETD/ETA original (cotizado) vs actual",
+    summary: "El resumen del embarque ahora muestra el ETD/ETA original (con el que se cotizó al cliente) junto al actual, indicando la diferencia en días cuando han cambiado.",
+    description: "Se agregan columnas etd_original y eta_original a embarques con backfill desde los valores actuales y un trigger BEFORE INSERT que copia automáticamente etd/eta al original cuando no se especifican, manteniéndolos inmutables ante actualizaciones posteriores (manuales o desde JSONCargo). En TabResumen, ETD y ETA muestran la fecha vigente y un badge 'Original: dd MMM yyyy (+/-Nd)' cuando difieren, con tooltip explicativo. Permite comparar fácilmente el plan cotizado contra la realidad operativa del embarque.",
+  },
+  {
     version: "8.133.1",
     date: "2026-05-09",
     type: "patch",

@@ -1,72 +1,72 @@
-# Fallback de ETD desde `last_movement_timestamp` cuando `atd_origin` viene null
+# ETD/ETA original (cotizado) vs actual
 
-## Diagnóstico
+## Objetivo
 
-Para el contenedor BEAU6309761 (EVERGREEN) JSONCargo está devolviendo:
+Conservar el ETD/ETA con el que se cotizó al cliente al momento de crear el embarque, para poder compararlo contra el ETD/ETA vigente (que se va ajustando con JSONCargo o manualmente). Hoy solo existen `embarques.etd` / `embarques.eta` y cuando se actualizan se pierde la referencia original.
 
+## Cambios
+
+### 1. Base de datos (migración)
+
+En `public.embarques`:
+
+- Agregar columnas `etd_original date` y `eta_original date` (nullable).
+- Backfill: `update embarques set etd_original = etd, eta_original = eta where etd_original is null;`
+- Trigger `BEFORE INSERT`: si `etd_original` viene null, copiar `etd`; igual para `eta_original`. Así, embarques creados desde cotización o desde el wizard quedan con el original automáticamente.
+- No se agrega trigger de UPDATE: el original es inmutable salvo edición explícita por admin (fuera de alcance).
+
+### 2. Tipos / mappers
+
+- `src/integrations/supabase/types.ts` se regenera solo.
+- `src/lib/mappers/embarqueFromDb.ts`: incluir `etd_original` y `eta_original` en `EmbarqueFormValues` (string, opcional) y en el mapper, solo lectura.
+- `src/lib/mappers/embarqueToDb.ts`: **no** mandar `etd_original`/`eta_original` en updates; en inserts dejar que el trigger los rellene (no enviarlos desde el form).
+- `useEmbarqueFull` / RPC `get_embarque_full`: si selecciona `*` ya quedan; si lista columnas explícitas, agregar las dos.
+
+### 3. UI — `src/components/embarque/TabResumen.tsx`
+
+En la tarjeta "Ruta y Transporte", reemplazar las líneas actuales de ETD / ETA por un bloque que muestra:
+
+- **ETD**: fecha actual + (si difiere de original) badge gris "Original: dd MMM yyyy" y sufijo `+Nd` / `−Nd`.
+- **ETA**: idem.
+- Si `etd_original` y `etd` coinciden, mostrar solo la fecha sin badge.
+
+Helper local `renderFechaConOriginal(actual, original)` que formatea con `formatDate` y calcula la diferencia en días con `differenceInCalendarDays` de date-fns (ya usado en el proyecto).
+
+### 4. Otras vistas (alcance mínimo)
+
+- `EmbarqueDetalleHeader`: no se toca, ya muestra ETA principal.
+- Lista de embarques (`Embarques.tsx`): fuera de alcance — solo se ajusta el resumen (lo pidió el usuario).
+- Portal cliente: fuera de alcance.
+
+### 5. Versionado y changelog
+
+- `APP_VERSION` → `8.134.0` (minor: nuevo campo persistido + UI).
+- Entrada nueva en `src/content/changelog/v8/chunks/0.ts` y `src/content/changelogData.ts`.
+
+## Detalle técnico — trigger
+
+```sql
+create or replace function public.set_embarque_fechas_originales()
+returns trigger language plpgsql as $$
+begin
+  if new.etd_original is null then new.etd_original := new.etd; end if;
+  if new.eta_original is null then new.eta_original := new.eta; end if;
+  return new;
+end $$;
+
+create trigger embarques_set_fechas_originales
+before insert on public.embarques
+for each row execute function public.set_embarque_fechas_originales();
 ```
-atd_origin: null
-last_movement_timestamp: "2026-04-28 00:00"
-timestamp_of_last_location: "2026-04-28 00:00"
-container_status: "Loaded (FCL) on vessel"
-last_location: "SHANGHAI (CN)"
-last_vessel_name: "SHANGHAI", last_voyage_number: "119E"
-```
-
-`deriveEventsFromContainer` genera correctamente un evento (clasificado como "Transbordo" porque `discharging_port` es null) con la fecha 2026-04-28. Por eso la **línea de tiempo sí muestra esa fecha** como movimiento de carga en Shanghai.
-
-Pero `TrackingLiveCard` y el cálculo de `etd_propuesta` en la edge function leen únicamente `summary.atd_origin`, que viene null → el panel "ETD origen (JSONCargo)" muestra `—` y nunca aparece propuesta de actualizar la ETD del embarque.
-
-## Solución
-
-Agregar un fallback: cuando `atd_origin` sea null pero el contenedor ya esté cargado en el buque (status tipo "Loaded ... on vessel" o "Departed ..."), usar `last_movement_timestamp` (con fallback a `timestamp_of_last_location`) como ETD efectivo.
-
-### 1. `supabase/functions/jsoncargo-track/index.ts`
-Reemplazar el cálculo de `etdPropuesta` por un helper compartido:
-
-```ts
-const etdEffective = pickEffectiveEtd(result.data); // string | null en formato JSONCargo
-const newEtdIso = parseJsonCargoDate(etdEffective);
-```
-
-`pickEffectiveEtd` (a colocar en `supabase/functions/_shared/jsoncargo.ts` y exportar):
-
-```ts
-export function pickEffectiveEtd(d: JsonCargoContainerData): string | null {
-  if (d.atd_origin) return d.atd_origin;
-  const status = (d.container_status ?? "").toLowerCase();
-  const looksDeparted = /loaded.*vessel|on vessel|departed|in transit|sail/.test(status);
-  if (looksDeparted) {
-    return d.last_movement_timestamp ?? d.timestamp_of_last_location ?? null;
-  }
-  return null;
-}
-```
-
-Incluir en `summary` un nuevo campo `etd_origin_effective` (la cadena ya elegida) y mantener `atd_origin` tal cual viene de JSONCargo, para no confundir el dato crudo.
-
-### 2. `src/hooks/embarque/useJsonCargoTracking.ts`
-- Extender `JsonCargoSummary` con `etd_origin_effective?: string`.
-- En `extractSummary`, calcular el mismo fallback en frontend (usando `last_movement_timestamp`/`timestamp_of_last_location`/`container_status`) para que tras un refresh la card siga mostrando la propuesta sin necesidad de re-sincronizar. Reusar la misma heurística regex.
-
-### 3. `src/components/embarque/TrackingLiveCard.tsx`
-- En el bloque de propuesta de fechas y en el campo "ETD origen (JSONCargo)" del grid, usar `summary.etd_origin_effective ?? summary.atd_origin`.
-- Si la fecha proviene del fallback (no de `atd_origin`), agregar un sufijo discreto "(estimado)" o un tooltip explicando que se infirió de la última carga en buque.
 
 ## Verificación
 
-Para el embarque actual (ETD embarque = 2026-04-28, JSONCargo `atd_origin` null):
-- Antes del fix: ETD origen aparece "—" y no hay propuesta de actualización.
-- Después del fix: ETD origen aparece "28 abr 2026 (estimado)" y, como coincide con la ETD del embarque, **no** se muestra la tarjeta de propuesta — correcto.
-
-Para un embarque cuya ETD del embarque fuera distinta a `last_movement_timestamp`, la tarjeta de propuesta debería ofrecer actualizar.
-
-## Versionado
-
-- `APP_VERSION` → `8.133.1`
-- Nueva entrada en `chunk0.ts` y `recentChangelog`.
+1. Embarques existentes muestran `Original` igual al ETD/ETA actuales (sin badge de diferencia).
+2. Al aceptar la propuesta de JSONCargo (`useApplyJsonCargoFechas`) que solo actualiza `etd`/`eta`, el resumen muestra el original intacto y un badge `+Nd` o `−Nd`.
+3. Crear un embarque nuevo desde el wizard: `etd_original`/`eta_original` quedan iguales al ETD/ETA capturado.
 
 ## Fuera de alcance
 
-- No se modifica `deriveEventsFromContainer` (los eventos siguen igual).
-- El warning de "Maximum update depth exceeded" en `EmbarqueDetalle` viene de `useRegisterBreadcrumbLabel` y es preexistente — no se aborda aquí.
+- Edición manual del original (sería una acción de admin con bitácora aparte).
+- Mostrar el original en lista de embarques, dashboard u operaciones.
+- Tracking público / portal cliente.

@@ -946,7 +946,9 @@ export type Database = {
           descripcion_mercancia: string
           estado: Database["public"]["Enums"]["estado_embarque"]
           eta: string | null
+          eta_original: string | null
           etd: string | null
+          etd_original: string | null
           expediente: string
           fecha_creacion: string
           fecha_llegada_real: string | null
@@ -996,7 +998,9 @@ export type Database = {
           descripcion_mercancia?: string
           estado?: Database["public"]["Enums"]["estado_embarque"]
           eta?: string | null
+          eta_original?: string | null
           etd?: string | null
+          etd_original?: string | null
           expediente: string
           fecha_creacion?: string
           fecha_llegada_real?: string | null
@@ -1046,7 +1050,9 @@ export type Database = {
           descripcion_mercancia?: string
           estado?: Database["public"]["Enums"]["estado_embarque"]
           eta?: string | null
+          eta_original?: string | null
           etd?: string | null
+          etd_original?: string | null
           expediente?: string
           fecha_creacion?: string
           fecha_llegada_real?: string | null
