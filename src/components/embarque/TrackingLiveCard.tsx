@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { RefreshCw, Ship, MapPin, Anchor, AlertCircle, Info, CheckCircle2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { notifySuccess, notifyError, notifyInfo } from "@/lib/ui/appFeedback";
+import { notifySuccess, notifyError } from "@/lib/ui/appFeedback";
 import { formatDate } from "@/lib/formatters";
 import { mapNavieraToJsonCargo, listNavierasSoportadas } from "@/lib/jsoncargo/navieras";
 import {
@@ -38,7 +38,7 @@ export function TrackingLiveCard({ embarqueId, modo, naviera, contenedor, readOn
     try {
       const res = await sync.mutateAsync(embarqueId);
       if (res.throttled) {
-        notifyInfo(toast, { title: "Sincronización reciente", description: res.message ?? "Espera unos minutos." });
+        toast({ title: "Sincronización reciente", description: res.message ?? "Espera unos minutos." });
       } else if (res.ok) {
         notifySuccess(toast, {
           title: "Tracking actualizado",
