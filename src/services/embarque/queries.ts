@@ -254,7 +254,7 @@ export async function fetchEmbarquesRelacionados(_embarqueId: string, blMaster: 
     .from('embarques')
     .select('id, expediente, bl_house, contenedor, tipo_contenedor, peso_kg, volumen_m3, piezas, estado')
     .eq('bl_master', blMaster)
-    .order('expediente', { ascending: true });
+    .order('contenedor', { ascending: true, nullsFirst: false });
   if (error) throw error;
   return data ?? [];
 }
