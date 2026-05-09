@@ -22,6 +22,14 @@ export interface ChangelogEntry {
  */
 export const recentChangelog: ChangelogEntry[] = [
   {
+    version: "8.129.1",
+    date: "2026-05-09",
+    type: "patch",
+    title: "Embarques: orden por defecto por número de expediente",
+    summary: "El listado ahora muestra primero el embarque más nuevo (expediente desc) con la flecha visible en el header.",
+    description: "Estado inicial sortKey='expediente', sortDir='desc' en useEmbarquesPageState. Tiebreaker secundario por created_at desc en fetchEmbarquesPaginados para orden estable cuando hay expedientes duplicados (LCL).",
+  },
+  {
     version: "8.129.0",
     date: "2026-05-08",
     type: "minor",

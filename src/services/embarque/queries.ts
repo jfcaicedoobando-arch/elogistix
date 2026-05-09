@@ -65,10 +65,14 @@ export async function fetchEmbarquesPaginados(
 
   let query = supabase
     .from('embarques')
-    // count: 'estimated' evita full table scans en cada cambio de filtro;
-    // el conteo aproximado es suficiente para mostrar paginación.
     .select(EMBARQUE_LIST_COLUMNS, { count: 'estimated' })
     .order(sortCol, { ascending, nullsFirst: false });
+
+  // Tiebreaker estable cuando el orden principal puede repetirse
+  // (p.ej. expediente duplicado en LCL: un registro por contenedor).
+  if (sortCol !== 'created_at') {
+    query = query.order('created_at', { ascending: false });
+  }
 
   if (f.organizationId) query = query.eq('organization_id', f.organizationId);
 
