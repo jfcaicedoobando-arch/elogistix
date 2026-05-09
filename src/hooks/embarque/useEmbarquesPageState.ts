@@ -31,9 +31,9 @@ export function useEmbarquesPageState() {
   const [fechaHasta, setFechaHasta] = useState("");
   const [page, setPage] = useState(0);
   const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
-  // Sort server-side. null = orden default (created_at desc).
-  const [sortKey, setSortKey] = useState<string | null>(null);
-  const [sortDir, setSortDir] = useState<SortDir>("asc");
+  // Sort server-side. Default: expediente desc (embarque más nuevo primero).
+  const [sortKey, setSortKey] = useState<string | null>("expediente");
+  const [sortDir, setSortDir] = useState<SortDir>("desc");
 
   const debouncedSearch = useDebounce(search, 300);
 
