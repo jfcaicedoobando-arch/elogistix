@@ -8,6 +8,7 @@ import { DetailRow } from "./DetailRow";
 import { useNavigate } from "react-router-dom";
 import { Link } from "lucide-react";
 import { DataTable } from "@/components/shared/DataTable";
+import { TableRow, TableCell } from "@/components/ui/table";
 import type { EmbarqueRow } from "@/hooks/embarque/useEmbarques";
 import { calcularEstadoEmbarque } from "@/lib/domain/embarque";
 import { useEmbarquesRelacionados } from "@/hooks/embarque/useEmbarquesRelacionados";
