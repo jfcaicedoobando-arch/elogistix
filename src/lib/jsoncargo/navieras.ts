@@ -53,7 +53,7 @@ export function mapNavieraToJsonCargo(naviera: string | null | undefined): JsonC
   if (n.includes("evergreen")) return "EVERGREEN";
   if (n.includes("msc") || n.includes("mediterranean")) return "MSC";
   if (n.includes("cmacgm") || n.includes("cma")) return "CMA_CGM";
-  if (n.includes("cosco")) return "COSCO";
+  if (n.includes("cosco") || n === "oocl" || n === "oolu" || n === "oocu" || n.includes("orientoverseas")) return "COSCO";
   if (n.includes("zim")) return "ZIM";
   if (n.includes("yangming") || n.includes("yang")) return "YANG_MING";
   if (n.includes("pil") || n.includes("pacificinternational")) return "PIL";
