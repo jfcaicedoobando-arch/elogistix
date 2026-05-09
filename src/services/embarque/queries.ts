@@ -252,7 +252,7 @@ export async function fetchProveedoresForSelect(organizationId: string | null) {
 export async function fetchEmbarquesRelacionados(embarqueId: string, blMaster: string) {
   const { data, error } = await supabase
     .from('embarques')
-    .select('id, expediente, bl_house, cliente_nombre, shipper, estado')
+    .select('id, expediente, bl_house, contenedor, tipo_contenedor, shipper, estado')
     .eq('bl_master', blMaster)
     .neq('id', embarqueId);
   if (error) throw error;

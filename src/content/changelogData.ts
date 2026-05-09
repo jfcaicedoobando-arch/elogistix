@@ -22,6 +22,14 @@ export interface ChangelogEntry {
  */
 export const recentChangelog: ChangelogEntry[] = [
   {
+    version: "8.129.2",
+    date: "2026-05-09",
+    type: "patch",
+    title: "Embarques Relacionados: columna Contenedor en lugar de Cliente",
+    summary: "Se reemplazó la columna Cliente por Contenedor (con tipo entre paréntesis) en la tarjeta de embarques relacionados.",
+    description: "fetchEmbarquesRelacionados selecciona contenedor/tipo_contenedor; TabResumen muestra `contenedor (tipo)` en la columna nueva.",
+  },
+  {
     version: "8.129.1",
     date: "2026-05-09",
     type: "patch",

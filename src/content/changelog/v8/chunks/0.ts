@@ -2,6 +2,14 @@ import type { ChangelogEntry } from "../../../changelogData";
 
 export const chunk0: ChangelogEntry[] = [
   {
+    version: "8.129.2",
+    date: "2026-05-09",
+    type: "patch",
+    title: "Embarques Relacionados: columna Contenedor en lugar de Cliente",
+    summary: "En la tarjeta 'Embarques Relacionados' del detalle, se reemplazó la columna Cliente por Contenedor (con tipo entre paréntesis).",
+    description: "src/services/embarque/queries.ts: fetchEmbarquesRelacionados ahora selecciona contenedor y tipo_contenedor en vez de cliente_nombre. src/components/embarque/TabResumen.tsx: nueva columna 'Contenedor' que muestra `contenedor (tipo)` o '-'. Útil para agrupaciones por BL Master donde el cliente se repite y lo relevante es distinguir por contenedor (LCL).",
+  },
+  {
     version: "8.129.1",
     date: "2026-05-09",
     type: "patch",
