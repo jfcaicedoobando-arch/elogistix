@@ -34,9 +34,16 @@ export interface JsonCargoSummary {
   current_vessel?: string;
   current_voyage?: string;
   eta_final_destination?: string;
+  atd_origin?: string;
   shipped_from?: string;
   shipped_to?: string;
   last_updated?: string;
+  eta_propuesta?: string | null;
+  etd_propuesta?: string | null;
+  eta_actual?: string | null;
+  etd_actual?: string | null;
+  eta_difiere?: boolean;
+  etd_difiere?: boolean;
 }
 
 export function useJsonCargoTracking(embarqueId: string | undefined) {
