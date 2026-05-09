@@ -96,6 +96,19 @@ Deno.serve(async (req) => {
     const shipmentJson: any = await r.json().catch(() => ({}));
     if (!r.ok || !shipmentJson?.data?.id) {
       const detail = shipmentJson?.errors?.[0]?.detail ?? `HTTP ${r.status}`;
+      // 401/403: nuestra API key de Terminal49 no tiene permiso de lectura de shipments
+      if (r.status === 401 || r.status === 403 || /permissions/i.test(detail)) {
+        return json(
+          {
+            error:
+              "Tu API key de Terminal49 solo permite crear tracking_requests, no leer shipments. " +
+              "Para usar el vínculo manual necesitas habilitar webhooks o solicitar permisos de lectura a Terminal49.",
+            status: r.status,
+            detail,
+          },
+          403,
+        );
+      }
       return json({ error: `Terminal49 no encontró el shipment: ${detail}`, status: r.status }, 404);
     }
 

@@ -121,6 +121,18 @@ export function TerminalAutomaticoCard({ embarqueId, modo, blMaster, naviera }: 
               </div>
             )}
 
+            {!tracking.shipment_id && status === "pending" && !tracking.failed_reason && (
+              <div className="flex items-start gap-2 text-xs text-amber-700 bg-amber-50 dark:bg-amber-950/30 dark:text-amber-300 p-2 rounded-md">
+                <AlertCircle className="h-3.5 w-3.5 mt-0.5 shrink-0" />
+                <span>
+                  Terminal49 aceptó la solicitud pero la naviera aún no devuelve los datos del shipment.
+                  Si tu plan no incluye lectura de shipments vía API, los eventos llegarán solo por
+                  webhook (Fase 2 pendiente) o cuando Terminal49 transicione el estado a{" "}
+                  <span className="font-mono">succeeded</span>.
+                </span>
+              </div>
+            )}
+
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs text-muted-foreground">
               <div>
                 <span className="font-medium text-foreground">Última sincronización:</span>{" "}

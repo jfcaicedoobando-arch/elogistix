@@ -2,6 +2,14 @@ import type { ChangelogEntry } from "../../../changelogData";
 
 export const chunk0: ChangelogEntry[] = [
   {
+    version: "8.131.3",
+    date: "2026-05-08",
+    type: "patch",
+    title: "Mensaje claro cuando Terminal49 bloquea lectura de shipments",
+    summary: "Detección del 401 'You do not have permissions...' en terminal49-link-shipment con mensaje explicativo, y aviso amber en la tarjeta cuando el tracking_request lleva tiempo en pending sin shipment_id.",
+    description: "Mejora de UX para el caso donde la API key de Terminal49 solo permite crear tracking_requests, no leer shipments. (1) Edge function terminal49-link-shipment: cuando GET /v2/shipments/{id} devuelve 401/403 o el detail menciona 'permissions', responde con HTTP 403 y un mensaje claro explicando que se necesita habilitar webhooks o solicitar permisos de lectura. (2) UI TerminalAutomaticoCard: aviso amber visible cuando status='pending' sin shipment_id, explicando que la naviera aún no responde y que los eventos llegarán por webhook o cuando Terminal49 transicione a 'succeeded'. Versión 8.131.3.",
+  },
+  {
     version: "8.131.2",
     date: "2026-05-08",
     type: "patch",
