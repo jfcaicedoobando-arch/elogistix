@@ -2,6 +2,14 @@ import type { ChangelogEntry } from "../../../changelogData";
 
 export const chunk0: ChangelogEntry[] = [
   {
+    version: "8.131.0",
+    date: "2026-05-09",
+    type: "minor",
+    title: "JSONCargo: validación local de prefix vs naviera",
+    summary: "Antes de consultar JSONCargo se valida que el prefix BIC del contenedor (ej. TEMU, MSCU) corresponda a la naviera registrada; si no coincide se muestra error claro con sugerencias de naviera y se evita consumir cuota del API.",
+    description: "Nuevo catálogo local src/lib/jsoncargo/containerPrefixes.ts con prefixes BIC conocidos por naviera (incluye leasing pools como TEMU, TCLU, BEAU). Frontend: useSyncJsonCargo ahora acepta { embarqueId, contenedor, naviera } y lanza PrefixMismatchError si el prefix no coincide; TrackingLiveCard muestra alert destructivo con el prefix detectado, naviera registrada y badges con sugerencias de la naviera real (o instrucciones para contactar support@jsoncargo.com si el prefix es desconocido). Botón Sincronizar se oculta cuando hay mismatch. Backend: edge function jsoncargo-track valida prefix antes de llamar al API y devuelve 422 con error_code='PREFIX_MISMATCH'; persiste status='failed' en tracking_externo para que el batch no reintente. Edge function jsoncargo-track-batch salta embarques con prefix mismatch y registra en bitacora_actividad (acción 'tracking_skip_prefix_mismatch'). El TabTracking reconoce el error backend ('Prefix not found') y muestra la misma UI de sugerencias.",
+  },
+  {
     version: "8.130.0",
     date: "2026-05-09",
     type: "minor",
