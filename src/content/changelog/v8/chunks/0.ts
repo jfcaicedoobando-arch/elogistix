@@ -2,6 +2,14 @@ import type { ChangelogEntry } from "../../../changelogData";
 
 export const chunk0: ChangelogEntry[] = [
   {
+    version: "8.131.2",
+    date: "2026-05-09",
+    type: "patch",
+    title: "Compatibilidad Terminal49: liberación remota y webhooks de ciclo de vida",
+    summary: "Al desactivar el tracking ahora también se libera en Terminal49 (DELETE remoto) para no consumir cuota. El webhook actualiza estado y ETA del embarque ante eventos tracking_request.succeeded/failed y shipment.estimated.arrival.",
+    description: "Mejoras de compatibilidad con la API v2 de Terminal49 detectadas tras revisar la documentación oficial. (1) Edge function terminal49-delete-tracking: además de borrar la fila local en tracking_externo, ahora llama DELETE /v2/tracking_requests/{id} con Authorization Token para liberar el tracking del lado de Terminal49 y evitar consumo innecesario. Tolera 404 como éxito (ya no existía). Si T49 falla con otro código se borra localmente igual (el usuario pidió desactivar) y se registra el detalle en tracking_intentos con http_status y mensaje. (2) Edge function terminal49-webhook: handlers específicos para eventos de ciclo de vida — tracking_request.succeeded marca status='succeeded' y limpia failed_reason; tracking_request.failed guarda attributes.failed_reason; tracking_request.tracking_started y awaiting_manifest actualizan el status correspondiente; shipment.estimated.arrival (o shipment.estimated_arrival) actualiza embarques.eta con pod_eta_at. Los eventos tracking_request.* ya no se registran en la timeline para evitar ruido (sí se reflejan en el badge de la tarjeta). Los eventos de transporte (vessel_loaded, vessel_departed, vessel_arrived, discharged, etc.) siguen insertándose en eventos_embarque como antes. Versión 8.131.2.",
+  },
+  {
     version: "8.131.1",
     date: "2026-05-08",
     type: "patch",
