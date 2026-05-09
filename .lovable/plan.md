@@ -1,56 +1,72 @@
-# Auto-sync de ETA/ETD desde JSONCargo (con confirmación)
+# Fallback de ETD desde `last_movement_timestamp` cuando `atd_origin` viene null
 
-Hoy `jsoncargo-track` actualiza la **ETA** del embarque silenciosamente cuando difiere de `eta_final_destination`. La ETD (`atd_origin`) no se sincroniza. Queremos:
+## Diagnóstico
 
-1. **No** modificar fechas del embarque sin avisar.
-2. Detectar diferencias en ETA y ETD, y preguntar al usuario si quiere aplicarlas.
+Para el contenedor BEAU6309761 (EVERGREEN) JSONCargo está devolviendo:
 
-## Cambios
+```
+atd_origin: null
+last_movement_timestamp: "2026-04-28 00:00"
+timestamp_of_last_location: "2026-04-28 00:00"
+container_status: "Loaded (FCL) on vessel"
+last_location: "SHANGHAI (CN)"
+last_vessel_name: "SHANGHAI", last_voyage_number: "119E"
+```
 
-### 1. Edge function `supabase/functions/jsoncargo-track/index.ts`
-- Eliminar la actualización silenciosa de ETA (líneas 192–200).
-- En el `summary` de respuesta, agregar:
-  - `eta_propuesta` (string YYYY-MM-DD) derivada de `eta_final_destination`.
-  - `etd_propuesta` (string YYYY-MM-DD) derivada de `atd_origin`.
-  - `eta_actual`, `etd_actual` del embarque.
-  - Flags `eta_difiere`, `etd_difiere`.
-- Leer también `etd` del embarque al inicio.
+`deriveEventsFromContainer` genera correctamente un evento (clasificado como "Transbordo" porque `discharging_port` es null) con la fecha 2026-04-28. Por eso la **línea de tiempo sí muestra esa fecha** como movimiento de carga en Shanghai.
 
-### 2. Nueva edge function ligera o reusar RPC: aplicar fechas
-Opción más simple: **no crear edge function nueva**. Aplicar el cambio directamente desde el cliente con `supabase.from('embarques').update({ eta, etd })` (RLS ya cubre admin/operador).
+Pero `TrackingLiveCard` y el cálculo de `etd_propuesta` en la edge function leen únicamente `summary.atd_origin`, que viene null → el panel "ETD origen (JSONCargo)" muestra `—` y nunca aparece propuesta de actualizar la ETD del embarque.
 
-### 3. Hook `src/hooks/embarque/useJsonCargoTracking.ts`
-- Extender `JsonCargoSummary` con `eta_propuesta`, `etd_propuesta`, `eta_actual`, `etd_actual`, `eta_difiere`, `etd_difiere`.
-- Extender `extractSummary` para leer `atd_origin` del raw payload (para que la UI también pueda recalcular tras refresh).
-- Agregar mutación `useApplyJsonCargoFechas({ embarqueId, eta?, etd? })` que actualiza `embarques` e invalida `queryKeys.embarques.detail`.
+## Solución
 
-### 4. UI `src/components/embarque/TrackingLiveCard.tsx`
-- Tras un sync exitoso, si `summary.eta_difiere || summary.etd_difiere`, mostrar un bloque de propuesta:
-  - "JSONCargo reporta nuevas fechas: ETD `dd MMM yyyy` (actual: …), ETA `dd MMM yyyy` (actual: …)."
-  - Botones: **Actualizar embarque** / **Ignorar**.
-- Al confirmar, llamar `useApplyJsonCargoFechas` con los campos que difieran y mostrar toast.
-- También mostrar el bloque cuando exista `tracking.raw_payload` con diferencias respecto al embarque actual (persistente entre recargas hasta que se aplique o se cierre).
+Agregar un fallback: cuando `atd_origin` sea null pero el contenedor ya esté cargado en el buque (status tipo "Loaded ... on vessel" o "Departed ..."), usar `last_movement_timestamp` (con fallback a `timestamp_of_last_location`) como ETD efectivo.
 
-### 5. `supabase/functions/jsoncargo-track-batch/index.ts` (cron)
-- Quitar la actualización silenciosa de ETA. El batch solo sincroniza eventos y `tracking_externo`. La ETA/ETD se quedan como propuesta visible en la UI.
-- Alternativa: dejar opcional vía un flag `auto_apply_dates` en `configuracion`, **fuera del alcance** de esta tarea — no se incluye.
+### 1. `supabase/functions/jsoncargo-track/index.ts`
+Reemplazar el cálculo de `etdPropuesta` por un helper compartido:
 
-### 6. Cambios cosméticos
-- En el card de tracking, mostrar también `ETD origen (atd_origin)` junto al `ETA destino final` que ya existe.
+```ts
+const etdEffective = pickEffectiveEtd(result.data); // string | null en formato JSONCargo
+const newEtdIso = parseJsonCargoDate(etdEffective);
+```
 
-## Detalles técnicos
+`pickEffectiveEtd` (a colocar en `supabase/functions/_shared/jsoncargo.ts` y exportar):
 
-- `atd_origin` y `eta_final_destination` vienen de JSONCargo en formato no ISO; ya hay `parseJsonCargoDate` en `_shared/jsoncargo.ts`. Reutilizarlo.
-- Comparación: tomar solo `slice(0,10)` para comparar contra `embarques.eta` / `embarques.etd` (date).
-- Si `embarque.etd` es null y hay `atd_origin`, también proponer establecerla.
-- Mutación cliente: invalidar `queryKeys.embarques.detail(id)` y `all`.
+```ts
+export function pickEffectiveEtd(d: JsonCargoContainerData): string | null {
+  if (d.atd_origin) return d.atd_origin;
+  const status = (d.container_status ?? "").toLowerCase();
+  const looksDeparted = /loaded.*vessel|on vessel|departed|in transit|sail/.test(status);
+  if (looksDeparted) {
+    return d.last_movement_timestamp ?? d.timestamp_of_last_location ?? null;
+  }
+  return null;
+}
+```
 
-## Versionado
-- Bump `APP_VERSION` a `8.132.6`.
-- Entrada en `src/content/changelog/v8/chunks/0.ts` y `src/content/changelogData.ts`.
+Incluir en `summary` un nuevo campo `etd_origin_effective` (la cadena ya elegida) y mantener `atd_origin` tal cual viene de JSONCargo, para no confundir el dato crudo.
+
+### 2. `src/hooks/embarque/useJsonCargoTracking.ts`
+- Extender `JsonCargoSummary` con `etd_origin_effective?: string`.
+- En `extractSummary`, calcular el mismo fallback en frontend (usando `last_movement_timestamp`/`timestamp_of_last_location`/`container_status`) para que tras un refresh la card siga mostrando la propuesta sin necesidad de re-sincronizar. Reusar la misma heurística regex.
+
+### 3. `src/components/embarque/TrackingLiveCard.tsx`
+- En el bloque de propuesta de fechas y en el campo "ETD origen (JSONCargo)" del grid, usar `summary.etd_origin_effective ?? summary.atd_origin`.
+- Si la fecha proviene del fallback (no de `atd_origin`), agregar un sufijo discreto "(estimado)" o un tooltip explicando que se infirió de la última carga en buque.
 
 ## Verificación
-- En `/embarques/{id}?tab=tracking`, sincronizar un embarque con ETA distinta → debe aparecer el bloque de propuesta con botones.
-- Confirmar → ETA/ETD se actualizan, el bloque desaparece, toast de éxito.
-- Ignorar → bloque se cierra (estado local) hasta el próximo sync.
-- Embarques sin diferencia → no aparece el bloque.
+
+Para el embarque actual (ETD embarque = 2026-04-28, JSONCargo `atd_origin` null):
+- Antes del fix: ETD origen aparece "—" y no hay propuesta de actualización.
+- Después del fix: ETD origen aparece "28 abr 2026 (estimado)" y, como coincide con la ETD del embarque, **no** se muestra la tarjeta de propuesta — correcto.
+
+Para un embarque cuya ETD del embarque fuera distinta a `last_movement_timestamp`, la tarjeta de propuesta debería ofrecer actualizar.
+
+## Versionado
+
+- `APP_VERSION` → `8.133.1`
+- Nueva entrada en `chunk0.ts` y `recentChangelog`.
+
+## Fuera de alcance
+
+- No se modifica `deriveEventsFromContainer` (los eventos siguen igual).
+- El warning de "Maximum update depth exceeded" en `EmbarqueDetalle` viene de `useRegisterBreadcrumbLabel` y es preexistente — no se aborda aquí.

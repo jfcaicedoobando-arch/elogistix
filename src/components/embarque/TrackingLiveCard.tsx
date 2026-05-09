@@ -227,7 +227,7 @@ export function TrackingLiveCard({ embarqueId, modo, naviera, contenedor, blMast
         {(() => {
           if (readOnly || !summary || tracking?.status !== "ok" || fechasDismissed) return null;
           const etaPropuesta = jsoncargoDateToYmd(summary.eta_final_destination);
-          const etdPropuesta = jsoncargoDateToYmd(summary.atd_origin);
+          const etdPropuesta = jsoncargoDateToYmd(summary.etd_origin_effective ?? summary.atd_origin);
           const etaDifiere = !!etaPropuesta && etaPropuesta !== (eta ?? null);
           const etdDifiere = !!etdPropuesta && etdPropuesta !== (etd ?? null);
           if (!etaDifiere && !etdDifiere) return null;
@@ -297,7 +297,25 @@ export function TrackingLiveCard({ embarqueId, modo, naviera, contenedor, blMast
                 : "—"}
             </Field>
             <Field icon={<Anchor className="h-3.5 w-3.5" />} label="ETD origen (JSONCargo)">
-              {summary.atd_origin ? formatDate(summary.atd_origin, "dd MMM yyyy") : "—"}
+              {(() => {
+                const etdShown = summary.etd_origin_effective ?? summary.atd_origin;
+                if (!etdShown) return "—";
+                const label = formatDate(etdShown, "dd MMM yyyy");
+                return summary.etd_origin_is_estimated ? (
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <span className="cursor-help">
+                          {label} <span className="text-xs text-muted-foreground">(estimado)</span>
+                        </span>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        JSONCargo no reporta zarpe explícito; estimado desde el último movimiento "Loaded on vessel".
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                ) : label;
+              })()}
             </Field>
             <Field icon={<Anchor className="h-3.5 w-3.5" />} label="ETA destino final (JSONCargo)">
               {summary.eta_final_destination ? formatDate(summary.eta_final_destination, "dd MMM yyyy") : "—"}
