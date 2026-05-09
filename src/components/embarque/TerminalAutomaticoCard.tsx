@@ -87,13 +87,24 @@ export function TerminalAutomaticoCard({ embarqueId, modo, blMaster, naviera }: 
   const activar = useActivarTracking(embarqueId);
   const sincronizar = useSincronizarTracking(embarqueId);
   const eliminar = useEliminarTracking(embarqueId);
+  const { toast } = useToast();
   const [confirmDelete, setConfirmDelete] = useState(false);
 
   if (modo !== "Marítimo") return null;
 
   const puedeActivar = !!blMaster && !!naviera;
-  const status = tracking?.status ?? "";
-  const statusBadge = STATUS_LABEL[status] ?? { label: status || "—", variant: "outline" as const };
+  const status = (tracking?.status ?? "").toLowerCase();
+  const statusBadge =
+    STATUS_LABEL[status] ?? { label: tracking?.status || "—", variant: "outline" as const, hint: "" };
+  const esperandoNaviera =
+    !!tracking && !tracking.shipment_id && (status === "pending" || status === "created" || status === "awaiting_manifest");
+
+  const copiarId = (id: string) => {
+    navigator.clipboard.writeText(id).then(
+      () => toast({ title: "ID copiado", description: id }),
+      () => toast({ title: "No se pudo copiar", variant: "destructive" }),
+    );
+  };
 
   return (
     <Card className="border-accent/40">
@@ -139,7 +150,25 @@ export function TerminalAutomaticoCard({ embarqueId, modo, blMaster, naviera }: 
                 <span className="font-mono">{tracking.request_number}</span>
               </span>
               <span className="text-xs text-muted-foreground">SCAC: {tracking.scac}</span>
+              <Badge variant="outline" className="text-[10px]">
+                Shipment: {tracking.shipment_id ? "✓ vinculado" : "pendiente"}
+              </Badge>
             </div>
+
+            {statusBadge.hint && (
+              <div
+                className={`flex items-start gap-2 text-xs p-2 rounded-md ${
+                  status === "failed"
+                    ? "text-destructive bg-destructive/10"
+                    : esperandoNaviera
+                      ? "text-amber-700 bg-amber-50 dark:bg-amber-950/30 dark:text-amber-300"
+                      : "text-muted-foreground bg-muted/40"
+                }`}
+              >
+                <Clock className="h-3.5 w-3.5 mt-0.5 shrink-0" />
+                <span>{statusBadge.hint}</span>
+              </div>
+            )}
 
             {tracking.failed_reason && (
               <div className="flex items-start gap-2 text-xs text-destructive bg-destructive/10 p-2 rounded-md">
@@ -157,6 +186,28 @@ export function TerminalAutomaticoCard({ embarqueId, modo, blMaster, naviera }: 
                 <span className="font-medium text-foreground">Último evento:</span>{" "}
                 {tracking.last_event_at ? formatDate(tracking.last_event_at, "dd MMM yyyy HH:mm") : "—"}
               </div>
+              {tracking.tracking_request_id && (
+                <div className="sm:col-span-2 flex items-center gap-1 flex-wrap">
+                  <span className="font-medium text-foreground">Request ID:</span>{" "}
+                  <span className="font-mono text-[11px]">{tracking.tracking_request_id}</span>
+                  <button
+                    type="button"
+                    onClick={() => copiarId(tracking.tracking_request_id!)}
+                    className="inline-flex items-center text-muted-foreground hover:text-foreground"
+                    title="Copiar ID"
+                  >
+                    <Copy className="h-3 w-3" />
+                  </button>
+                  <a
+                    href={`https://app.terminal49.com/dashboard/tracking_requests/${tracking.tracking_request_id}`}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="inline-flex items-center gap-0.5 text-accent hover:underline ml-1"
+                  >
+                    Abrir en Terminal49 <ExternalLink className="h-3 w-3" />
+                  </a>
+                </div>
+              )}
             </div>
 
             {canEdit && (
@@ -202,7 +253,7 @@ export function TerminalAutomaticoCard({ embarqueId, modo, blMaster, naviera }: 
               </div>
             )}
 
-            {status === "succeeded" && !tracking.failed_reason && (
+            {(status === "succeeded" || status === "tracking") && !tracking.failed_reason && (
               <div className="flex items-center gap-1.5 text-xs text-green-700 dark:text-green-400">
                 <CheckCircle2 className="h-3.5 w-3.5" />
                 Tracking confirmado por la naviera
