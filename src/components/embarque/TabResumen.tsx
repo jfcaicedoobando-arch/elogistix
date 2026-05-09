@@ -118,7 +118,7 @@ export function TabResumen({ embarque }: Props) {
               columns={[
                 { key: "expediente", header: "Expediente", className: "font-medium", render: (r: RelacionadoRow) => r.expediente },
                 { key: "bl_house", header: "BL House", className: "text-xs", render: (r: RelacionadoRow) => r.bl_house || '-' },
-                { key: "cliente", header: "Cliente", className: "text-xs", render: (r: RelacionadoRow) => toTitleCase(r.cliente_nombre) },
+                { key: "contenedor", header: "Contenedor", className: "text-xs", render: (r: RelacionadoRow) => r.contenedor ? `${r.contenedor}${r.tipo_contenedor ? ` (${r.tipo_contenedor})` : ''}` : '-' },
                 { key: "shipper", header: "Shipper", className: "text-xs", render: (r: RelacionadoRow) => toTitleCase(r.shipper) },
                 { key: "estado", header: "Estado", render: (r: RelacionadoRow) => (
                   <Badge variant="secondary" className={`text-xs ${getEstadoColor(r.estado)}`}>{r.estado}</Badge>
