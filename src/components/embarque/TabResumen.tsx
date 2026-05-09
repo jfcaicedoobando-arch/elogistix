@@ -110,6 +110,9 @@ export function TabResumen({ embarque }: Props) {
         const totalPeso = relacionados.reduce((s, r) => s + (Number(r.peso_kg) || 0), 0);
         const totalVol = relacionados.reduce((s, r) => s + (Number(r.volumen_m3) || 0), 0);
         const totalPiezas = relacionados.reduce((s, r) => s + (Number(r.piezas) || 0), 0);
+        const relacionadosOrdenados = [...relacionados].sort((a, b) =>
+          a.id === embarque.id ? -1 : b.id === embarque.id ? 1 : 0,
+        );
         return (
         <Card>
           <CardHeader className="pb-3">
@@ -139,7 +142,7 @@ export function TabResumen({ embarque }: Props) {
                   <Badge variant="secondary" className={`text-xs ${getEstadoColor(r.estado)}`}>{r.estado}</Badge>
                 ) },
               ]}
-              data={relacionados}
+              data={relacionadosOrdenados}
               rowKey={(r) => r.id}
               density="compact"
               rowClassName={(r) => r.id === embarque.id ? 'bg-accent/10 font-medium' : ''}

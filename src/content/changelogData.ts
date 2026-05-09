@@ -22,6 +22,14 @@ export interface ChangelogEntry {
  */
 export const recentChangelog: ChangelogEntry[] = [
   {
+    version: "8.129.4",
+    date: "2026-05-09",
+    type: "patch",
+    title: "Embarques Relacionados: embarque actual primero, resto por contenedor",
+    summary: "El embarque actual aparece como primera fila; el resto se ordena por número de contenedor.",
+    description: "fetchEmbarquesRelacionados ordena por contenedor; TabResumen aplica sort estable que pone al embarque actual al inicio.",
+  },
+  {
     version: "8.129.3",
     date: "2026-05-09",
     type: "patch",

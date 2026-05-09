@@ -2,6 +2,14 @@ import type { ChangelogEntry } from "../../../changelogData";
 
 export const chunk0: ChangelogEntry[] = [
   {
+    version: "8.129.4",
+    date: "2026-05-09",
+    type: "patch",
+    title: "Embarques Relacionados: embarque actual primero, resto por contenedor",
+    summary: "El embarque actual aparece como primera fila y el resto se ordena ascendente por número de contenedor.",
+    description: "src/services/embarque/queries.ts: fetchEmbarquesRelacionados ahora ordena por contenedor asc (nullsFirst:false). src/components/embarque/TabResumen.tsx: sort estable en cliente que coloca el embarque actual al inicio conservando el orden por contenedor para los demás. Totales no cambian.",
+  },
+  {
     version: "8.129.3",
     date: "2026-05-09",
     type: "patch",
