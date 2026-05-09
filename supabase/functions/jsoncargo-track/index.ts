@@ -192,7 +192,8 @@ Deno.serve(async (req) => {
 
   // Propone (sin aplicar) cambios de ETA/ETD: la UI pide confirmación al usuario.
   const newEtaIso = parseJsonCargoDate(result.data.eta_final_destination);
-  const newEtdIso = parseJsonCargoDate(result.data.atd_origin);
+  const etdEffectiveRaw = pickEffectiveEtd(result.data);
+  const newEtdIso = parseJsonCargoDate(etdEffectiveRaw);
   const etaPropuesta = newEtaIso ? newEtaIso.slice(0, 10) : null;
   const etdPropuesta = newEtdIso ? newEtdIso.slice(0, 10) : null;
   const etaActual = embarque.eta ?? null;
@@ -210,6 +211,8 @@ Deno.serve(async (req) => {
       current_voyage: result.data.current_voyage_number,
       eta_final_destination: result.data.eta_final_destination,
       atd_origin: result.data.atd_origin,
+      etd_origin_effective: etdEffectiveRaw,
+      etd_origin_is_estimated: !!etdEffectiveRaw && !result.data.atd_origin,
       shipped_from: result.data.shipped_from,
       shipped_to: result.data.shipped_to,
       last_updated: result.data.last_updated,
