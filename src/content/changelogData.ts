@@ -22,6 +22,14 @@ export interface ChangelogEntry {
  */
 export const recentChangelog: ChangelogEntry[] = [
   {
+    version: "8.133.1",
+    date: "2026-05-09",
+    type: "patch",
+    title: "Tracking: ETD estimado cuando JSONCargo no reporta atd_origin",
+    summary: "Si el contenedor ya está cargado en el buque y JSONCargo no devuelve atd_origin, se infiere el ETD desde el último movimiento y se etiqueta como '(estimado)'.",
+    description: "pickEffectiveEtd en _shared/jsoncargo.ts y extractSummary del hook aplican la misma heurística (last_movement_timestamp / timestamp_of_last_location) cuando container_status indica zarpe. TrackingLiveCard muestra el ETD efectivo con tooltip y la propuesta de actualizar embarques.etd usa este valor.",
+  },
+  {
     version: "8.133.0",
     date: "2026-05-09",
     type: "minor",
