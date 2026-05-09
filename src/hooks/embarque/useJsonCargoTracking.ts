@@ -117,8 +117,34 @@ export function extractSummary(raw: unknown): JsonCargoSummary | null {
     current_vessel: d.current_vessel_name as string | undefined,
     current_voyage: d.current_voyage_number as string | undefined,
     eta_final_destination: d.eta_final_destination as string | undefined,
+    atd_origin: d.atd_origin as string | undefined,
     shipped_from: d.shipped_from as string | undefined,
     shipped_to: d.shipped_to as string | undefined,
     last_updated: d.last_updated as string | undefined,
   };
+}
+
+interface ApplyFechasArgs {
+  embarqueId: string;
+  eta?: string | null;
+  etd?: string | null;
+}
+
+export function useApplyJsonCargoFechas() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ embarqueId, eta, etd }: ApplyFechasArgs) => {
+      const update: { eta?: string; etd?: string } = {};
+      if (eta) update.eta = eta;
+      if (etd) update.etd = etd;
+      if (Object.keys(update).length === 0) return { applied: false };
+      const { error } = await supabase.from("embarques").update(update).eq("id", embarqueId);
+      if (error) throw error;
+      return { applied: true };
+    },
+    onSuccess: (_r, args) => {
+      qc.invalidateQueries({ queryKey: queryKeys.embarques.detail(args.embarqueId) });
+      qc.invalidateQueries({ queryKey: queryKeys.embarques.all });
+    },
+  });
 }
