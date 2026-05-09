@@ -2,6 +2,14 @@ import type { ChangelogEntry } from "../../../changelogData";
 
 export const chunk0: ChangelogEntry[] = [
   {
+    version: "8.131.1",
+    date: "2026-05-08",
+    type: "patch",
+    title: "Diagnóstico visible del tracking de Terminal49",
+    summary: "El tab Tracking ahora explica por qué 'Sincronizar ahora' a veces dice 'Sin cambios': muestra estado del tracking request, si ya hay shipment vinculado, hint contextual, request_id copiable, link a Terminal49 y polling automático cada 60 s mientras se espera a la naviera.",
+    description: "Mejoras de visibilidad sobre la integración Terminal49 sin cambiar la lógica de sincronización. (1) TerminalAutomaticoCard: nuevo badge 'Shipment: vinculado/pendiente', hint contextual por estado (pending/created/awaiting_manifest/tracking/succeeded/failed) explicando qué significa y qué esperar, tracking_request_id mostrado con botón copiar y link directo a app.terminal49.com. (2) Hook useTrackingTerminal49: refetchInterval condicional de 60 s solo cuando el status está en pending/created/awaiting_manifest, se detiene al pasar a tracking/succeeded. Combinado con el webhook ya configurado, el usuario ve actualizaciones casi en tiempo real sin presionar nada. (3) useSincronizarTracking: toast contextual — si no hay shipment vinculado y status sigue pending/created, mensaje explica que la naviera aún no publica datos y que puede tardar 24-48 h, en lugar del genérico 'Sin cambios'. (4) Edge function terminal49-sync: respuesta enriquecida con shipment_id, is_retrying, retry_count y failed_reason para que el frontend pueda diagnosticar. Versión 8.131.1.",
+  },
+  {
     version: "8.131.0",
     date: "2026-05-08",
     type: "minor",

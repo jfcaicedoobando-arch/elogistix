@@ -193,9 +193,14 @@ Deno.serve(async (req) => {
       })
       .eq("id", tracking.id);
 
+    const trAttrs = trackingRequestData?.data?.attributes ?? {};
     return json({
       ok: true,
       status: newStatus,
+      shipment_id: trackedObjectId,
+      is_retrying: trAttrs?.is_retrying ?? null,
+      retry_count: trAttrs?.retry_count ?? null,
+      failed_reason: newFailed,
       containers: containers.length,
       eventos_nuevos: nuevosEventos,
       embarque_actualizado: embUpdate,
