@@ -222,6 +222,16 @@ export function TrackingLiveCard({ embarqueId, modo, naviera, contenedor, blMast
           </div>
         )}
       </CardContent>
+      {!readOnly && (
+        <DialogBolContainers
+          open={bolDialogOpen}
+          onOpenChange={setBolDialogOpen}
+          embarqueId={embarqueId}
+          blMaster={blMaster ?? null}
+          naviera={naviera}
+          contenedorActual={contenedor}
+        />
+      )}
     </Card>
   );
 }
