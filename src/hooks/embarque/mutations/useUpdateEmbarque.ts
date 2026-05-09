@@ -4,6 +4,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import type { Tables, TablesInsert } from '@/integrations/supabase/types';
 import { queryKeys } from '@/lib/query';
+import { supabase } from '@/integrations/supabase/client';
 import {
   actualizarEmbarqueRpc,
   actualizarEstadoEmbarque,
@@ -17,6 +18,7 @@ import {
   tipoEventoParaEstado,
   descripcionEventoCambioEstado,
 } from '@/lib/domain/embarque';
+import { mapNavieraToJsonCargo } from '@/lib/jsoncargo/navieras';
 
 type EmbarqueRow = Tables<'embarques'>;
 
@@ -32,6 +34,12 @@ export function useUpdateEmbarque() {
   return useMutation({
     mutationFn: async (input: UpdateEmbarqueInput) => {
       await actualizarEmbarqueRpc(input);
+      // Auto-sync JSONCargo si aplica (fire-and-forget)
+      const e = input.embarque;
+      if (e.modo === 'Marítimo' && e.contenedor && mapNavieraToJsonCargo(e.naviera ?? null)) {
+        supabase.functions.invoke('jsoncargo-track', { body: { embarqueId: input.id } })
+          .catch((err) => console.warn('jsoncargo-track auto-sync:', err));
+      }
       return { id: input.id } as EmbarqueRow;
     },
     onSuccess: (embarqueActualizado) => {
@@ -39,6 +47,7 @@ export function useUpdateEmbarque() {
       queryClient.invalidateQueries({ queryKey: queryKeys.embarques.detail(embarqueActualizado.id) });
       queryClient.invalidateQueries({ queryKey: queryKeys.embarques.conceptosVenta(embarqueActualizado.id) });
       queryClient.invalidateQueries({ queryKey: queryKeys.embarques.conceptosCosto(embarqueActualizado.id) });
+      queryClient.invalidateQueries({ queryKey: queryKeys.jsonCargo.byEmbarque(embarqueActualizado.id) });
     },
   });
 }

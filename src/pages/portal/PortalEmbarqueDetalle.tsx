@@ -10,6 +10,7 @@ import { ModoIcon } from "@/components/shared/ModoIcon";
 import { formatDate, getOrigen, getDestino } from "@/lib/formatters";
 import { PortalEmbarqueTimeline } from "@/components/portal/PortalEmbarqueTimeline";
 import { PortalEmbarqueDocumentos } from "@/components/portal/PortalEmbarqueDocumentos";
+import { TrackingLiveCard } from "@/components/embarque/TrackingLiveCard";
 import { usePortalEmbarqueDetalleController } from "@/hooks/embarque/usePortalEmbarqueDetalleController";
 import { useRegisterBreadcrumbLabel } from "@/contexts/BreadcrumbContext";
 
@@ -217,7 +218,14 @@ export default function PortalEmbarqueDetalle() {
           </div>
         </TabsContent>
 
-        <TabsContent value="tracking">
+        <TabsContent value="tracking" className="space-y-4">
+          <TrackingLiveCard
+            embarqueId={embarque.id}
+            modo={embarque.modo}
+            naviera={embarque.naviera}
+            contenedor={embarque.contenedor}
+            readOnly
+          />
           <PortalEmbarqueTimeline eventos={eventos} />
         </TabsContent>
 

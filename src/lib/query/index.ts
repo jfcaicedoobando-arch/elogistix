@@ -58,6 +58,9 @@ export const queryKeys = {
     all: ['tracking_links'] as const,
     byEmbarque: (embarqueId?: string) => ['tracking_links', embarqueId] as const,
   },
+  jsonCargo: {
+    byEmbarque: (embarqueId?: string) => ['tracking_externo', 'jsoncargo', embarqueId] as const,
+  },
   clienteFinancials: {
     byCliente: (clienteId?: string) => ['cliente-financials', clienteId] as const,
   },
