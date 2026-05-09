@@ -16,9 +16,11 @@ import {
 import {
   useJsonCargoTracking,
   useSyncJsonCargo,
+  useApplyJsonCargoFechas,
   extractSummary,
   PrefixMismatchError,
 } from "@/hooks/embarque/useJsonCargoTracking";
+import { parseJsonCargoDate } from "@/lib/jsoncargo/dateUtils";
 import { DialogBolContainers } from "./DialogBolContainers";
 
 interface Props {
