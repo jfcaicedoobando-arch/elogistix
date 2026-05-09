@@ -2,6 +2,14 @@ import type { ChangelogEntry } from "../../../changelogData";
 
 export const chunk0: ChangelogEntry[] = [
   {
+    version: "8.129.1",
+    date: "2026-05-09",
+    type: "patch",
+    title: "Embarques: orden por defecto por número de expediente",
+    summary: "El listado de Embarques ahora ordena por expediente descendente desde la carga inicial, mostrando primero el más nuevo, con la flecha visible en el header.",
+    description: "Cambio en src/hooks/embarque/useEmbarquesPageState.ts: estado inicial sortKey='expediente', sortDir='desc'. En src/services/embarque/queries.ts se agregó tiebreaker secundario por created_at desc cuando el sort principal no es created_at, para garantizar orden estable cuando el expediente se repite (caso LCL con un registro por contenedor). El indicador 'Ordenado por Expediente ↓ · global' aparece por defecto y puede limpiarse con 'Quitar orden'. Versión 8.129.1.",
+  },
+  {
     version: "8.129.0",
     date: "2026-05-08",
     type: "minor",
