@@ -1,7 +1,9 @@
+import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { RefreshCw, Ship, MapPin, Anchor, AlertCircle, Info, CheckCircle2 } from "lucide-react";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { RefreshCw, Ship, MapPin, Anchor, AlertCircle, Info, CheckCircle2, Search } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { notifySuccess, notifyError } from "@/lib/ui/appFeedback";
 import { formatDate } from "@/lib/formatters";
@@ -16,20 +18,23 @@ import {
   extractSummary,
   PrefixMismatchError,
 } from "@/hooks/embarque/useJsonCargoTracking";
+import { DialogBolContainers } from "./DialogBolContainers";
 
 interface Props {
   embarqueId: string;
   modo: string | null;
   naviera: string | null;
   contenedor: string | null;
+  blMaster?: string | null;
   /** Si true, no muestra botón de sincronizar (portal cliente). */
   readOnly?: boolean;
 }
 
-export function TrackingLiveCard({ embarqueId, modo, naviera, contenedor, readOnly }: Props) {
+export function TrackingLiveCard({ embarqueId, modo, naviera, contenedor, blMaster, readOnly }: Props) {
   const { toast } = useToast();
   const { data: tracking, isLoading } = useJsonCargoTracking(embarqueId);
   const sync = useSyncJsonCargo();
+  const [bolDialogOpen, setBolDialogOpen] = useState(false);
 
   // Solo aplica a marítimo
   if (modo !== "Marítimo") return null;
