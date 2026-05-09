@@ -2,6 +2,14 @@ import type { ChangelogEntry } from "../../../changelogData";
 
 export const chunk0: ChangelogEntry[] = [
   {
+    version: "8.132.5",
+    date: "2026-05-09",
+    type: "patch",
+    title: "JSONCargo: prefixes de leasing pool no bloquean tracking",
+    summary: "Contenedores con prefix de pool de leasing (BEAU, TEMU, TCLU, TRHU, GLDU, etc.) ya no son bloqueados por mismatch con la naviera; se permite cualquier naviera soportada por JSONCargo.",
+    description: "src/lib/jsoncargo/containerPrefixes.ts y supabase/functions/_shared/jsoncargo.ts: los prefixes de pools de leasing (Beacon BEAU/BMOU, Triton TEMU/TCLU/TCNU/TRHU/TRIU, Genstar GLDU/GESU/SEGU, TGBU, TGCU, UESU) ahora aceptan MAERSK, MSC, EVERGREEN, ONE, CMA_CGM y HAPAG_LLOYD en lugar de listas restringidas. Antes un contenedor BEAU6309761 con naviera EGLV (Evergreen) era bloqueado por el validador local aunque la API de JSONCargo sí lo encuentra bajo EVERGREEN. Los prefixes propietarios (MAEU, MSCU, COSU, EGHU, ZIMU, etc.) siguen validándose estrictamente.",
+  },
+  {
     version: "8.132.4",
     date: "2026-05-09",
     type: "patch",
