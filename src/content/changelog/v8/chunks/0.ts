@@ -2,6 +2,14 @@ import type { ChangelogEntry } from "../../../changelogData";
 
 export const chunk0: ChangelogEntry[] = [
   {
+    version: "8.132.4",
+    date: "2026-05-09",
+    type: "patch",
+    title: "JSONCargo: reconocer SCAC EGLV como Evergreen",
+    summary: "Embarques con naviera 'EGLV' ahora se mapean correctamente a Evergreen en JSONCargo y permiten sincronización de tracking.",
+    description: "mapNavieraToJsonCargo (frontend) y NAVIERA_MAP (_shared/jsoncargo.ts) reconocen 'eglv' (SCAC de Evergreen Marine) y lo mapean a EVERGREEN. Antes embarques capturados con naviera='EGLV' caían como 'naviera no soportada' aunque sí lo está vía Evergreen.",
+  },
+  {
     version: "8.132.3",
     date: "2026-05-09",
     type: "patch",
