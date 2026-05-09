@@ -50,10 +50,10 @@ export async function sincronizarTrackingTerminal49(embarqueId: string) {
 }
 
 export async function eliminarTrackingTerminal49(embarqueId: string) {
-  const { error } = await supabase
-    .from("tracking_externo")
-    .delete()
-    .eq("embarque_id", embarqueId)
-    .eq("provider", "terminal49");
+  const { data, error } = await supabase.functions.invoke("terminal49-delete-tracking", {
+    body: { embarque_id: embarqueId },
+  });
   if (error) throw error;
+  if (data?.error) throw new Error(data.error);
+  return data;
 }
