@@ -1,5 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { differenceInCalendarDays } from "date-fns";
 import { formatDate, toTitleCase, nombreDesdeEmail, formatNumber } from "@/lib/formatters";
 import { getEstadoColor } from "@/lib/ui/uiMappings";
 import { ModoIcon } from "@/components/shared/ModoIcon";
