@@ -35,6 +35,10 @@ export interface JsonCargoSummary {
   current_voyage?: string;
   eta_final_destination?: string;
   atd_origin?: string;
+  /** ETD efectivo: usa atd_origin o, si null y el contenedor ya zarpó, last_movement_timestamp. */
+  etd_origin_effective?: string;
+  /** True si etd_origin_effective viene del fallback (no del campo atd_origin de JSONCargo). */
+  etd_origin_is_estimated?: boolean;
   shipped_from?: string;
   shipped_to?: string;
   last_updated?: string;
