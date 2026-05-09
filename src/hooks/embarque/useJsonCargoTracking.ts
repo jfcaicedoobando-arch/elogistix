@@ -1,6 +1,19 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { queryKeys } from "@/lib/query";
+import { mapNavieraToJsonCargo, type JsonCargoShippingLine } from "@/lib/jsoncargo/navieras";
+import { validatePrefixMatchesNaviera } from "@/lib/jsoncargo/containerPrefixes";
+
+export class PrefixMismatchError extends Error {
+  code = "PREFIX_MISMATCH" as const;
+  constructor(
+    public prefix: string,
+    public naviera: string | null,
+    public suggestions: JsonCargoShippingLine[],
+  ) {
+    super(`Prefix ${prefix} no coincide con naviera ${naviera ?? "—"}`);
+  }
+}
 
 export interface TrackingExternoRow {
   id: string;
