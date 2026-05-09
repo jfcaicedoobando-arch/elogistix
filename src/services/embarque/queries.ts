@@ -249,12 +249,12 @@ export async function fetchProveedoresForSelect(organizationId: string | null) {
   return data ?? [];
 }
 
-export async function fetchEmbarquesRelacionados(embarqueId: string, blMaster: string) {
+export async function fetchEmbarquesRelacionados(_embarqueId: string, blMaster: string) {
   const { data, error } = await supabase
     .from('embarques')
-    .select('id, expediente, bl_house, contenedor, tipo_contenedor, shipper, estado')
+    .select('id, expediente, bl_house, contenedor, tipo_contenedor, peso_kg, volumen_m3, piezas, estado')
     .eq('bl_master', blMaster)
-    .neq('id', embarqueId);
+    .order('expediente', { ascending: true });
   if (error) throw error;
   return data ?? [];
 }
