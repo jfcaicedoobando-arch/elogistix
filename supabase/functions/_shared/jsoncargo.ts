@@ -13,6 +13,7 @@ const NAVIERA_MAP: Record<string, string> = {
   one: "ONE",
   oceannetwork: "ONE",
   evergreen: "EVERGREEN",
+  eglv: "EVERGREEN",
   msc: "MSC",
   mediterranean: "MSC",
   cmacgm: "CMA_CGM",
