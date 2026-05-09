@@ -22,6 +22,14 @@ export interface ChangelogEntry {
  */
 export const recentChangelog: ChangelogEntry[] = [
   {
+    version: "8.130.0",
+    date: "2026-05-09",
+    type: "minor",
+    title: "Tracking automático de contenedores con JSONCargo",
+    summary: "Sincronización en vivo del tracking marítimo (estado, vessel, ETA) con autopoblado del timeline.",
+    description: "Edge functions jsoncargo-track (manual) y jsoncargo-track-batch (cron diario) consultan la API JSONCargo, guardan en tracking_externo y derivan eventos en el timeline. Card 'Tracking en vivo' en TabTracking y portal del cliente. Auto-sync al editar embarque marítimo. 11 navieras soportadas.",
+  },
+  {
     version: "8.129.4",
     date: "2026-05-09",
     type: "patch",

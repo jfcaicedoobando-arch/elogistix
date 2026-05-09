@@ -2,6 +2,14 @@ import type { ChangelogEntry } from "../../../changelogData";
 
 export const chunk0: ChangelogEntry[] = [
   {
+    version: "8.130.0",
+    date: "2026-05-09",
+    type: "minor",
+    title: "Tracking automático de contenedores con JSONCargo",
+    summary: "Integración con la API de JSONCargo para sincronizar tracking marítimo en tiempo real (estado, vessel, ETA) y autopoblar el timeline.",
+    description: "Nueva integración con JSONCargo (https://jsoncargo.com) que sincroniza el tracking de contenedores marítimos. Backend: edge function `jsoncargo-track` (JWT) consulta la API y hace upsert en tracking_externo (provider='jsoncargo') con throttle de 10 min; deriva eventos en eventos_embarque (Zarpe, Transbordo, Arribo a Puerto, Despacho Aduanal) marcados como usuario='jsoncargo' (idempotentes por tipo+fecha al minuto); actualiza embarques.eta si difiere. Edge function `jsoncargo-track-batch` (cron diario, header X-Cron-Secret) recorre todos los embarques marítimos activos con naviera soportada. Frontend: nuevo TrackingLiveCard en TabTracking del detalle y en el portal del cliente (read-only) muestra estado, última ubicación, vessel/voyage, ETA destino, origen→destino y última sincronización; botón Sincronizar manual; mensajes claros si la naviera no es soportada o falta contenedor. Auto-sync al actualizar embarque marítimo. Navieras soportadas: MAERSK, HAPAG_LLOYD, HMM, ONE, EVERGREEN, MSC, CMA_CGM, COSCO, ZIM, YANG_MING, PIL. Secret JSONCARGO_API_KEY.",
+  },
+  {
     version: "8.129.4",
     date: "2026-05-09",
     type: "patch",
