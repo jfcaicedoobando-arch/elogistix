@@ -22,6 +22,14 @@ export interface ChangelogEntry {
  */
 export const recentChangelog: ChangelogEntry[] = [
   {
+    version: "8.132.2",
+    date: "2026-05-09",
+    type: "patch",
+    title: "Tracking externo para navieras no soportadas por JSONCargo",
+    summary: "WHLC/Wan Hai, ANL, SITC, Heung-A y otras: el tab Tracking ahora ofrece un link directo al sitio oficial del transportista.",
+    description: "Nuevo catálogo externalTracking.ts y botón 'Abrir tracking en {Naviera}' en TrackingLiveCard cuando JSONCargo no soporta la naviera. Fallback a Track-Trace si no hay match conocido.",
+  },
+  {
     version: "8.132.1",
     date: "2026-05-09",
     type: "patch",

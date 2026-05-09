@@ -3,11 +3,12 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { RefreshCw, Ship, MapPin, Anchor, AlertCircle, Info, CheckCircle2, Search } from "lucide-react";
+import { RefreshCw, Ship, MapPin, Anchor, AlertCircle, Info, CheckCircle2, Search, ExternalLink } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { notifySuccess, notifyError } from "@/lib/ui/appFeedback";
 import { formatDate } from "@/lib/formatters";
 import { mapNavieraToJsonCargo, listNavierasSoportadas } from "@/lib/jsoncargo/navieras";
+import { getExternalTracking } from "@/lib/jsoncargo/externalTracking";
 import {
   validatePrefixMatchesNaviera,
   carrierLabel,
@@ -142,11 +143,21 @@ export function TrackingLiveCard({ embarqueId, modo, naviera, contenedor, blMast
         {!sinContenedor && noSoportada && (
           <div className="flex items-start gap-2 text-xs text-muted-foreground p-3 rounded bg-muted/30">
             <AlertCircle className="h-4 w-4 mt-0.5 shrink-0" />
-            <div>
-              <p className="font-medium">Naviera "{naviera ?? "—"}" no soportada por JSONCargo.</p>
-              <p className="mt-1">
-                Soportadas: {listNavierasSoportadas().map((n) => n.label).join(", ")}.
-              </p>
+            <div className="space-y-2 flex-1">
+              <p className="font-medium">JSONCargo no soporta la naviera "{naviera ?? "—"}".</p>
+              <p>Consulta el tracking directamente en el sitio del transportista. Soportadas por JSONCargo: {listNavierasSoportadas().map((n) => n.label).join(", ")}.</p>
+              {(() => {
+                const ext = getExternalTracking(naviera, contenedor, blMaster);
+                if (!ext) return null;
+                return (
+                  <Button asChild size="sm" variant="outline" className="mt-1">
+                    <a href={ext.url} target="_blank" rel="noopener noreferrer">
+                      <ExternalLink className="h-3.5 w-3.5 mr-1" />
+                      {ext.label}
+                    </a>
+                  </Button>
+                );
+              })()}
             </div>
           </div>
         )}
