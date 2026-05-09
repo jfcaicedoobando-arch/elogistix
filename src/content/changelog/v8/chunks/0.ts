@@ -2,6 +2,14 @@ import type { ChangelogEntry } from "../../../changelogData";
 
 export const chunk0: ChangelogEntry[] = [
   {
+    version: "8.132.1",
+    date: "2026-05-09",
+    type: "patch",
+    title: "JSONCargo: rutear OOCL/OOLU como COSCO",
+    summary: "Embarques con naviera OOCL/OOLU ahora se trackean correctamente en JSONCargo bajo COSCO (su matriz desde 2018).",
+    description: "mapNavieraToJsonCargo (frontend) y NAVIERA_MAP (_shared/jsoncargo.ts) reconocen oocl/oolu/oocu/orient overseas y los mapean a COSCO. JSONCargo no tiene OOCL como naviera independiente, pero procesa sus contenedores (prefixes OOLU/OOCU) bajo COSCO. Antes el TrackingLiveCard marcaba 'naviera no soportada' y ocultaba los botones Sincronizar y Buscar por BL Master en estos embarques.",
+  },
+  {
     version: "8.132.0",
     date: "2026-05-09",
     type: "minor",

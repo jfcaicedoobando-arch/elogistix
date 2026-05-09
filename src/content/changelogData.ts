@@ -22,6 +22,14 @@ export interface ChangelogEntry {
  */
 export const recentChangelog: ChangelogEntry[] = [
   {
+    version: "8.132.1",
+    date: "2026-05-09",
+    type: "patch",
+    title: "JSONCargo: rutear OOCL/OOLU como COSCO",
+    summary: "Embarques OOCL/OOLU se trackean en JSONCargo bajo COSCO (su matriz). Reaparecen los botones Sincronizar y Buscar por BL Master.",
+    description: "mapNavieraToJsonCargo y NAVIERA_MAP reconocen oocl/oolu/oocu/orient overseas y los mapean a COSCO.",
+  },
+  {
     version: "8.132.0",
     date: "2026-05-09",
     type: "minor",
