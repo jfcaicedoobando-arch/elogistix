@@ -22,6 +22,14 @@ export interface ChangelogEntry {
  */
 export const recentChangelog: ChangelogEntry[] = [
   {
+    version: "8.129.3",
+    date: "2026-05-09",
+    type: "patch",
+    title: "Embarques Relacionados: tabla mejorada con totales y fila destacada",
+    summary: "Se quitó Shipper; se agregaron Peso/Volumen/Piezas, totales y resaltado del embarque actual.",
+    description: "fetchEmbarquesRelacionados incluye peso/volumen/piezas y al embarque actual; TabResumen consolida BL Master con resumen y footer de totales.",
+  },
+  {
     version: "8.129.2",
     date: "2026-05-09",
     type: "patch",

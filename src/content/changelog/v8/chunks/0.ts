@@ -2,6 +2,14 @@ import type { ChangelogEntry } from "../../../changelogData";
 
 export const chunk0: ChangelogEntry[] = [
   {
+    version: "8.129.3",
+    date: "2026-05-09",
+    type: "patch",
+    title: "Embarques Relacionados: tabla mejorada con totales y fila destacada",
+    summary: "Se quitó la columna Shipper, se agregaron Peso/Volumen/Piezas, fila de totales y se resalta el embarque actual con badge.",
+    description: "src/services/embarque/queries.ts: fetchEmbarquesRelacionados ahora trae peso_kg/volumen_m3/piezas y NO excluye el embarque actual (necesario para totales y resaltado). src/components/embarque/TabResumen.tsx: encabezado consolidado 'Embarques del BL Master: X' con resumen agregado (N contenedores · peso · volumen · piezas), nuevas columnas numéricas alineadas a la derecha (Peso, Volumen, Piezas), fila del embarque actual resaltada con bg-accent/10 y badge 'Actual', click deshabilitado en la fila actual, footer con sumas. Se oculta la tarjeta cuando solo hay 1 embarque (no hay relacionados).",
+  },
+  {
     version: "8.129.2",
     date: "2026-05-09",
     type: "patch",
