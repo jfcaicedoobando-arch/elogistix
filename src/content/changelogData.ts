@@ -22,6 +22,14 @@ export interface ChangelogEntry {
  */
 export const recentChangelog: ChangelogEntry[] = [
   {
+    version: "8.132.0",
+    date: "2026-05-09",
+    type: "minor",
+    title: "JSONCargo: búsqueda de contenedores por BL Master",
+    summary: "Nuevo botón en Tracking para consultar JSONCargo por BL Master, elegir un contenedor de la lista y sincronizar tracking en un solo paso.",
+    description: "Edge function jsoncargo-bol-lookup que devuelve los contenedores asociados a un BL. DialogBolContainers en el tab Tracking deja seleccionar uno y lo guarda en el embarque + dispara sync. Solo embarques marítimos con naviera soportada.",
+  },
+  {
     version: "8.131.0",
     date: "2026-05-09",
     type: "minor",

@@ -121,6 +121,42 @@ export interface JsonCargoCallResult {
   raw?: unknown;
 }
 
+export interface JsonCargoBolData {
+  bill_of_lading: string;
+  shipping_line_name: string;
+  shipping_line_id: string;
+  associated_containers: number;
+  associated_container_numbers: string[];
+  last_updated: string;
+}
+
+export interface JsonCargoBolResult {
+  ok: boolean;
+  status: number;
+  data?: JsonCargoBolData;
+  errorTitle?: string;
+  raw?: unknown;
+}
+
+export async function fetchBolContainers(
+  apiKey: string,
+  blNumber: string,
+  shippingLine: string,
+): Promise<JsonCargoBolResult> {
+  const url = `${JSONCARGO_BASE}/containers/bol/${encodeURIComponent(blNumber)}?shipping_line=${shippingLine}`;
+  const res = await fetch(url, { headers: { "x-api-key": apiKey } });
+  let body: { data?: JsonCargoBolData; error?: { title?: string } } = {};
+  try {
+    body = await res.json();
+  } catch {
+    return { ok: false, status: res.status, errorTitle: `HTTP ${res.status}` };
+  }
+  if (!res.ok || !body?.data) {
+    return { ok: false, status: res.status, errorTitle: body?.error?.title ?? `HTTP ${res.status}`, raw: body };
+  }
+  return { ok: true, status: 200, data: body.data, raw: body };
+}
+
 export async function fetchContainerDetails(
   apiKey: string,
   containerNumber: string,

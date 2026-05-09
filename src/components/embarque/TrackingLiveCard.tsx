@@ -1,7 +1,9 @@
+import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { RefreshCw, Ship, MapPin, Anchor, AlertCircle, Info, CheckCircle2 } from "lucide-react";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { RefreshCw, Ship, MapPin, Anchor, AlertCircle, Info, CheckCircle2, Search } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { notifySuccess, notifyError } from "@/lib/ui/appFeedback";
 import { formatDate } from "@/lib/formatters";
@@ -16,20 +18,23 @@ import {
   extractSummary,
   PrefixMismatchError,
 } from "@/hooks/embarque/useJsonCargoTracking";
+import { DialogBolContainers } from "./DialogBolContainers";
 
 interface Props {
   embarqueId: string;
   modo: string | null;
   naviera: string | null;
   contenedor: string | null;
+  blMaster?: string | null;
   /** Si true, no muestra botón de sincronizar (portal cliente). */
   readOnly?: boolean;
 }
 
-export function TrackingLiveCard({ embarqueId, modo, naviera, contenedor, readOnly }: Props) {
+export function TrackingLiveCard({ embarqueId, modo, naviera, contenedor, blMaster, readOnly }: Props) {
   const { toast } = useToast();
   const { data: tracking, isLoading } = useJsonCargoTracking(embarqueId);
   const sync = useSyncJsonCargo();
+  const [bolDialogOpen, setBolDialogOpen] = useState(false);
 
   // Solo aplica a marítimo
   if (modo !== "Marítimo") return null;
@@ -91,11 +96,39 @@ export function TrackingLiveCard({ embarqueId, modo, naviera, contenedor, readOn
           {tracking?.status === "ok" && <Badge variant="secondary" className="text-[10px]">Conectado</Badge>}
           {tracking?.status === "failed" && <Badge variant="destructive" className="text-[10px]">Error</Badge>}
         </CardTitle>
-        {!readOnly && !noSoportada && !sinContenedor && !prefixMismatch && (
-          <Button size="sm" variant="outline" onClick={handleSync} disabled={sync.isPending}>
-            <RefreshCw className={`h-3.5 w-3.5 mr-1 ${sync.isPending ? "animate-spin" : ""}`} />
-            {tracking ? "Actualizar" : "Sincronizar"}
-          </Button>
+        {!readOnly && (
+          <div className="flex items-center gap-2">
+            {!noSoportada && (
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <span tabIndex={0}>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => setBolDialogOpen(true)}
+                        disabled={!blMaster}
+                      >
+                        <Search className="h-3.5 w-3.5 mr-1" />
+                        Buscar por BL Master
+                      </Button>
+                    </span>
+                  </TooltipTrigger>
+                  {!blMaster && (
+                    <TooltipContent>
+                      Captura el BL Master en Datos / Ruta para usar esta búsqueda.
+                    </TooltipContent>
+                  )}
+                </Tooltip>
+              </TooltipProvider>
+            )}
+            {!noSoportada && !sinContenedor && !prefixMismatch && (
+              <Button size="sm" variant="outline" onClick={handleSync} disabled={sync.isPending}>
+                <RefreshCw className={`h-3.5 w-3.5 mr-1 ${sync.isPending ? "animate-spin" : ""}`} />
+                {tracking ? "Actualizar" : "Sincronizar"}
+              </Button>
+            )}
+          </div>
         )}
       </CardHeader>
       <CardContent className="space-y-3">
@@ -189,6 +222,16 @@ export function TrackingLiveCard({ embarqueId, modo, naviera, contenedor, readOn
           </div>
         )}
       </CardContent>
+      {!readOnly && (
+        <DialogBolContainers
+          open={bolDialogOpen}
+          onOpenChange={setBolDialogOpen}
+          embarqueId={embarqueId}
+          blMaster={blMaster ?? null}
+          naviera={naviera}
+          contenedorActual={contenedor}
+        />
+      )}
     </Card>
   );
 }

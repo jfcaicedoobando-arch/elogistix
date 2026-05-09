@@ -20,7 +20,7 @@ import type { Tables } from '@/integrations/supabase/types';
 
 interface Props {
   embarqueId: string;
-  embarque?: Pick<Tables<'embarques'>, 'modo' | 'naviera' | 'contenedor'> | null;
+  embarque?: Pick<Tables<'embarques'>, 'modo' | 'naviera' | 'contenedor' | 'bl_master'> | null;
 }
 
 
@@ -68,6 +68,7 @@ export function TabTracking({ embarqueId, embarque }: Props) {
           modo={embarque.modo}
           naviera={embarque.naviera}
           contenedor={embarque.contenedor}
+          blMaster={embarque.bl_master}
         />
       )}
       {canEdit && (
