@@ -1,0 +1,93 @@
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { queryKeys } from "@/lib/query";
+
+export interface TrackingExternoRow {
+  id: string;
+  embarque_id: string;
+  provider: string;
+  status: string;
+  failed_reason: string | null;
+  last_synced_at: string | null;
+  last_event_at: string | null;
+  raw_payload: unknown;
+  scac: string | null;
+  request_number: string | null;
+}
+
+export interface JsonCargoSummary {
+  container_status?: string;
+  last_location?: string;
+  current_vessel?: string;
+  current_voyage?: string;
+  eta_final_destination?: string;
+  shipped_from?: string;
+  shipped_to?: string;
+  last_updated?: string;
+}
+
+export function useJsonCargoTracking(embarqueId: string | undefined) {
+  return useQuery({
+    queryKey: queryKeys.jsonCargo?.byEmbarque(embarqueId) ?? ["tracking_externo", "jsoncargo", embarqueId],
+    queryFn: async (): Promise<TrackingExternoRow | null> => {
+      if (!embarqueId) return null;
+      const { data, error } = await supabase
+        .from("tracking_externo")
+        .select("id, embarque_id, provider, status, failed_reason, last_synced_at, last_event_at, raw_payload, scac, request_number")
+        .eq("embarque_id", embarqueId)
+        .eq("provider", "jsoncargo")
+        .maybeSingle();
+      if (error) throw error;
+      return (data as TrackingExternoRow | null) ?? null;
+    },
+    enabled: !!embarqueId,
+    staleTime: 30_000,
+  });
+}
+
+interface SyncResponse {
+  ok: boolean;
+  throttled?: boolean;
+  message?: string;
+  eventos_creados?: number;
+  summary?: JsonCargoSummary;
+  error?: string;
+}
+
+export function useSyncJsonCargo() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (embarqueId: string): Promise<SyncResponse> => {
+      const { data, error } = await supabase.functions.invoke<SyncResponse>("jsoncargo-track", {
+        body: { embarqueId },
+      });
+      if (error) throw error;
+      return data!;
+    },
+    onSuccess: (_r, embarqueId) => {
+      qc.invalidateQueries({ queryKey: ["tracking_externo", "jsoncargo", embarqueId] });
+      qc.invalidateQueries({ queryKey: queryKeys.embarques.eventos(embarqueId) });
+      qc.invalidateQueries({ queryKey: queryKeys.embarques.detail(embarqueId) });
+    },
+  });
+}
+
+/**
+ * Helper para extraer el summary actual del raw_payload guardado.
+ * El edge function guarda { data: {...} } directamente desde JSONCargo.
+ */
+export function extractSummary(raw: unknown): JsonCargoSummary | null {
+  if (!raw || typeof raw !== "object") return null;
+  const d = (raw as { data?: Record<string, unknown> }).data;
+  if (!d) return null;
+  return {
+    container_status: d.container_status as string | undefined,
+    last_location: d.last_location as string | undefined,
+    current_vessel: d.current_vessel_name as string | undefined,
+    current_voyage: d.current_voyage_number as string | undefined,
+    eta_final_destination: d.eta_final_destination as string | undefined,
+    shipped_from: d.shipped_from as string | undefined,
+    shipped_to: d.shipped_to as string | undefined,
+    last_updated: d.last_updated as string | undefined,
+  };
+}
