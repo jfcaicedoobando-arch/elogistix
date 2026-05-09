@@ -2,6 +2,14 @@ import type { ChangelogEntry } from "../../../changelogData";
 
 export const chunk0: ChangelogEntry[] = [
   {
+    version: "8.132.0",
+    date: "2026-05-09",
+    type: "minor",
+    title: "JSONCargo: búsqueda de contenedores por BL Master",
+    summary: "Nuevo botón en el tab Tracking para consultar JSONCargo por BL Master, listar los contenedores asociados, elegir uno, guardarlo en el embarque y sincronizar tracking inmediatamente.",
+    description: "Nueva edge function jsoncargo-bol-lookup (JWT) que consulta GET /containers/bol/{bl}?shipping_line=X de JSONCargo y devuelve la lista de contenedores asociados, registrando la consulta en bitacora_actividad. Frontend: hook useJsonCargoBolLookup y nuevo DialogBolContainers con RadioGroup para elegir contenedor (preselecciona el actual si está en la lista, badge 'actual'). TrackingLiveCard muestra el botón 'Buscar por BL Master' (deshabilitado con tooltip si no hay BL Master capturado), y al confirmar la selección actualiza embarques.contenedor y dispara useSyncJsonCargo en una sola operación. _shared/jsoncargo.ts expone fetchBolContainers reutilizable. Solo aplica a embarques marítimos con naviera soportada.",
+  },
+  {
     version: "8.131.0",
     date: "2026-05-09",
     type: "minor",
