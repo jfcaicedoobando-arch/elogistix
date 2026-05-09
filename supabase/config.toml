@@ -2,3 +2,6 @@ project_id = "eorqadkulqtneqjbsblk"
 
 [functions.parse-csf]
 verify_jwt = false
+
+[functions.terminal49-webhook]
+verify_jwt = false
