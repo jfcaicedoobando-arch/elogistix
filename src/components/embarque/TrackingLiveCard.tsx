@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { RefreshCw, Ship, MapPin, Anchor, AlertCircle, Info, CheckCircle2, Search } from "lucide-react";
+import { RefreshCw, Ship, MapPin, Anchor, AlertCircle, Info, CheckCircle2, Search, ExternalLink } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { notifySuccess, notifyError } from "@/lib/ui/appFeedback";
 import { formatDate } from "@/lib/formatters";
