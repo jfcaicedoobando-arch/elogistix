@@ -1,70 +1,43 @@
-## Problema
+# Mejoras de compatibilidad con Terminal49
 
-Cuando el usuario presiona "Sincronizar ahora", la respuesta es `Sin cambios` y no se genera información. Esto **no es un bug**: el `tracking_request` en Terminal49 está en estado `created` y aún no tiene un `shipment` vinculado (la naviera ZIM todavía no ha respondido con los datos del BL `ZIMUSHH32085770`).
+Aplicar las 2 mejoras detectadas en la verificación contra la API v2 de Terminal49.
 
-El usuario no tiene forma de ver esto en la UI — solo ve "Sin cambios" y asume que algo está roto.
+## 1. `terminal49-delete-tracking`: liberar el tracking en Terminal49
 
-## Objetivo
+Hoy solo borra la fila local. Vamos a llamar también `DELETE /v2/tracking_requests/{tracking_request_id}` para liberar el tracking en T49 y evitar consumo innecesario.
 
-Hacer visible el ciclo de vida del tracking request y dar feedback claro de qué está pasando con la naviera, sin cambiar la lógica de sincronización.
+- Antes de borrar la fila local, leer `tracking_request_id` y `scac` de `tracking_externo`.
+- Si existe `tracking_request_id`, hacer `DELETE` a Terminal49 con el header `Authorization: Token <TERMINAL49_API_KEY>`.
+- Tolerar 404 (ya no existe en T49) como éxito.
+- Si T49 responde con error distinto a 404, registrar el error en `tracking_intentos` pero **continuar** con el borrado local (el usuario ya pidió desactivar).
+- Registrar el resultado del DELETE remoto en `tracking_intentos` (acción `delete`, campo `mensaje` y `http_status`).
 
-## Cambios propuestos
+## 2. `terminal49-webhook`: handlers explícitos para eventos de ciclo de vida
 
-### 1. Panel de estado en `TabTracking.tsx`
+Hoy el `mapEventTypeToEnum` cubre los eventos de transporte por substring. Vamos a añadir handlers específicos para los 3 eventos que afectan estado del embarque:
 
-Mostrar una tarjeta con:
-- **Estado del tracking request** con badge de color:
-  - `pending` / `created` → amarillo · "Esperando respuesta de la naviera"
-  - `tracking` → azul · "Naviera respondió, recibiendo eventos"
-  - `succeeded` → verde · "Sincronizado correctamente"
-  - `failed` → rojo · mostrar `failed_reason`
-- **Última sincronización** (`last_synced_at` formateado en es-MX).
-- **Shipment vinculado**: ✓ si `shipment_id` existe, ✗ con texto "La naviera aún no ha respondido" si es null.
-- **Tracking Request ID** (copiable, útil para soporte de Terminal49).
-- **SCAC + BL** que se enviaron.
+- **`tracking_request.succeeded`** → actualizar `tracking_externo.status = 'succeeded'`, limpiar `failed_reason`.
+- **`tracking_request.failed`** → actualizar `tracking_externo.status = 'failed'` y guardar `attributes.failed_reason` en `failed_reason`.
+- **`shipment.estimated.arrival`** (cambio de ETA) → actualizar `embarques.eta` con `attributes.pod_eta_at` (o el campo que venga en el payload).
 
-### 2. Mensaje contextual en el botón "Sincronizar ahora"
+Estos handlers son adicionales: el flujo actual de inserción en `eventos_embarque` para eventos de transporte (`vessel_loaded`, `vessel_departed`, etc.) sigue funcionando igual.
 
-Cuando la respuesta del sync sea `eventos_nuevos: 0` y el `status` siga en `created`/`pending`, en lugar de un toast genérico "Sin cambios", mostrar:
+Además: si el evento es `tracking_request.*` y el payload trae `relationships.tracking_request.data.id`, usar ese ID para localizar la fila (ya lo hace, solo verificar).
 
-> "La naviera aún no ha publicado información para este BL. Terminal49 reintentará automáticamente. Esto puede tardar de minutos a 24-48h dependiendo de la naviera."
+## 3. Changelog y versión
 
-### 3. Mejora en `terminal49-sync` (edge function)
+- Bump de versión patch en `src/constants/appVersion.ts` a `8.131.2`.
+- Nueva entrada al inicio de `src/content/changelog/v8/chunks/0.ts` describiendo: "Compatibilidad Terminal49: liberación remota al desactivar tracking + actualización de ETA y estado vía webhooks".
 
-Devolver más detalle en la respuesta:
-```json
-{
-  "ok": true,
-  "status": "created",
-  "shipment_id": null,
-  "is_retrying": true,
-  "retry_count": 3,
-  "failed_reason": null,
-  "containers": 0,
-  "eventos_nuevos": 0
-}
-```
+## Archivos a modificar
 
-Esto permite al frontend mostrar "Terminal49 reintentando (intento 3)" cuando aplica.
+- `supabase/functions/terminal49-delete-tracking/index.ts`
+- `supabase/functions/terminal49-webhook/index.ts`
+- `src/constants/appVersion.ts`
+- `src/content/changelog/v8/chunks/0.ts`
 
-### 4. Auto-refresh suave
+## Sin cambios en
 
-Cuando el `status` esté en `pending` o `created`, hacer que el query de `tracking_externo` haga `refetchInterval: 60_000` (cada minuto) — solo mientras la pestaña Tracking esté abierta. Cuando llegue a `tracking` o `succeeded`, detener el polling.
-
-Esto, combinado con el webhook que ya está configurado, garantiza que el usuario vea actualizaciones casi en tiempo real sin presionar nada.
-
-### 5. (Opcional) Botón "Verificar en Terminal49"
-
-Un link directo al request en Terminal49: `https://app.terminal49.com/tracking_requests/{tracking_request_id}` para que el usuario pueda revisar el estado original ahí mismo si quiere.
-
-## Archivos a tocar
-
-- `src/components/embarque/TabTracking.tsx` — panel de estado + mensaje contextual
-- `src/hooks/embarque/useTrackingTerminal49.ts` — `refetchInterval` condicional
-- `supabase/functions/terminal49-sync/index.ts` — devolver más campos de diagnóstico
-- `src/pages/Changelog.tsx` — entrada nueva
-
-## Lo que NO se cambia
-
-- La lógica de sincronización en sí (T49 manda info cuando la manda; no podemos forzarla).
-- El webhook ya configurado seguirá empujando eventos cuando ZIM responda.
+- Esquema de base de datos (no requiere migración).
+- UI (`TabTracking.tsx`, `TerminalAutomaticoCard.tsx`, hooks).
+- `terminal49-create-tracking` ni `terminal49-sync` (ya compatibles).
