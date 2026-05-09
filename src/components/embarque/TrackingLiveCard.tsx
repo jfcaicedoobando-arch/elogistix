@@ -8,6 +8,7 @@ import { useToast } from "@/hooks/use-toast";
 import { notifySuccess, notifyError } from "@/lib/ui/appFeedback";
 import { formatDate } from "@/lib/formatters";
 import { mapNavieraToJsonCargo, listNavierasSoportadas } from "@/lib/jsoncargo/navieras";
+import { getExternalTracking } from "@/lib/jsoncargo/externalTracking";
 import {
   validatePrefixMatchesNaviera,
   carrierLabel,
