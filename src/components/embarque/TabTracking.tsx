@@ -69,6 +69,8 @@ export function TabTracking({ embarqueId, embarque }: Props) {
           naviera={embarque.naviera}
           contenedor={embarque.contenedor}
           blMaster={embarque.bl_master}
+          etd={embarque.etd}
+          eta={embarque.eta}
         />
       )}
       {canEdit && (
