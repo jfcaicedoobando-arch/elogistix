@@ -20,7 +20,7 @@ import type { Tables } from '@/integrations/supabase/types';
 
 interface Props {
   embarqueId: string;
-  embarque?: Pick<Tables<'embarques'>, 'modo' | 'naviera' | 'contenedor'> | null;
+  embarque?: Pick<Tables<'embarques'>, 'modo' | 'naviera' | 'contenedor' | 'bl_master'> | null;
 }
 
 
