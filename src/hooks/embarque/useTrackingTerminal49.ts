@@ -19,7 +19,17 @@ export function useTrackingTerminal49(embarqueId: string | undefined) {
     queryKey: keyTracking(embarqueId ?? ""),
     queryFn: () => fetchTrackingExterno(embarqueId!),
     enabled: !!embarqueId,
-    staleTime: 60 * 1000,
+    staleTime: 30 * 1000,
+    // Polling suave mientras T49 espera respuesta de la naviera.
+    // Cuando llega a "tracking" o "succeeded", paramos.
+    refetchInterval: (query) => {
+      const data = query.state.data as TrackingExterno | null | undefined;
+      if (!data) return false;
+      const s = (data.status ?? "").toLowerCase();
+      const esperando = s === "pending" || s === "created" || s === "awaiting_manifest";
+      return esperando ? 60_000 : false;
+    },
+    refetchIntervalInBackground: false,
   });
 }
 
