@@ -62,6 +62,14 @@ export function TabTracking({ embarqueId, embarque }: Props) {
 
   return (
     <div className="space-y-6">
+      {embarque && (
+        <TrackingLiveCard
+          embarqueId={embarqueId}
+          modo={embarque.modo}
+          naviera={embarque.naviera}
+          contenedor={embarque.contenedor}
+        />
+      )}
       {canEdit && (
         <div className="flex justify-end">
           <Button size="sm" onClick={() => setFormAbierto(!formAbierto)}>
