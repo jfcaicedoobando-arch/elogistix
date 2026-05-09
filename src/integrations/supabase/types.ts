@@ -1735,6 +1735,128 @@ export type Database = {
         }
         Relationships: []
       }
+      tracking_externo: {
+        Row: {
+          created_at: string
+          embarque_id: string
+          failed_reason: string | null
+          id: string
+          last_event_at: string | null
+          last_synced_at: string | null
+          organization_id: string
+          provider: string
+          raw_payload: Json | null
+          request_number: string
+          request_type: string
+          scac: string
+          shipment_id: string | null
+          status: string
+          tracking_request_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          embarque_id: string
+          failed_reason?: string | null
+          id?: string
+          last_event_at?: string | null
+          last_synced_at?: string | null
+          organization_id?: string
+          provider?: string
+          raw_payload?: Json | null
+          request_number: string
+          request_type: string
+          scac: string
+          shipment_id?: string | null
+          status?: string
+          tracking_request_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          embarque_id?: string
+          failed_reason?: string | null
+          id?: string
+          last_event_at?: string | null
+          last_synced_at?: string | null
+          organization_id?: string
+          provider?: string
+          raw_payload?: Json | null
+          request_number?: string
+          request_type?: string
+          scac?: string
+          shipment_id?: string | null
+          status?: string
+          tracking_request_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tracking_externo_embarque_id_fkey"
+            columns: ["embarque_id"]
+            isOneToOne: false
+            referencedRelation: "embarques"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tracking_intentos: {
+        Row: {
+          accion: string
+          created_at: string
+          detalle: Json | null
+          embarque_id: string
+          http_status: number | null
+          id: string
+          mensaje: string | null
+          organization_id: string
+          provider: string
+          request_number: string | null
+          request_type: string | null
+          resultado: string
+          scac: string | null
+          tracking_request_id: string | null
+          usuario_email: string | null
+          usuario_id: string | null
+        }
+        Insert: {
+          accion?: string
+          created_at?: string
+          detalle?: Json | null
+          embarque_id: string
+          http_status?: number | null
+          id?: string
+          mensaje?: string | null
+          organization_id: string
+          provider?: string
+          request_number?: string | null
+          request_type?: string | null
+          resultado: string
+          scac?: string | null
+          tracking_request_id?: string | null
+          usuario_email?: string | null
+          usuario_id?: string | null
+        }
+        Update: {
+          accion?: string
+          created_at?: string
+          detalle?: Json | null
+          embarque_id?: string
+          http_status?: number | null
+          id?: string
+          mensaje?: string | null
+          organization_id?: string
+          provider?: string
+          request_number?: string | null
+          request_type?: string | null
+          resultado?: string
+          scac?: string | null
+          tracking_request_id?: string | null
+          usuario_email?: string | null
+          usuario_id?: string | null
+        }
+        Relationships: []
+      }
       tracking_links: {
         Row: {
           created_at: string | null
@@ -1772,6 +1894,48 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      tracking_webhook_log: {
+        Row: {
+          error: string | null
+          event_id: string | null
+          event_type: string
+          id: string
+          payload: Json
+          processed: boolean
+          processed_at: string | null
+          provider: string
+          received_at: string
+          shipment_id: string | null
+          tracking_request_id: string | null
+        }
+        Insert: {
+          error?: string | null
+          event_id?: string | null
+          event_type: string
+          id?: string
+          payload: Json
+          processed?: boolean
+          processed_at?: string | null
+          provider?: string
+          received_at?: string
+          shipment_id?: string | null
+          tracking_request_id?: string | null
+        }
+        Update: {
+          error?: string | null
+          event_id?: string | null
+          event_type?: string
+          id?: string
+          payload?: Json
+          processed?: boolean
+          processed_at?: string | null
+          provider?: string
+          received_at?: string
+          shipment_id?: string | null
+          tracking_request_id?: string | null
+        }
+        Relationships: []
       }
       user_roles: {
         Row: {
