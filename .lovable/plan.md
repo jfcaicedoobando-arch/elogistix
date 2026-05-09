@@ -1,50 +1,56 @@
-## Problema
+# Auto-sync de ETA/ETD desde JSONCargo (con confirmación)
 
-El embarque tiene contenedor `BEAU6309761` con naviera `EGLV` (Evergreen). La API de JSONCargo **sí encuentra** ese contenedor bajo EVERGREEN (probado: HTTP 200 con datos de SHANGHAI 119E, ETA 13/05/2026).
+Hoy `jsoncargo-track` actualiza la **ETA** del embarque silenciosamente cuando difiere de `eta_final_destination`. La ETD (`atd_origin`) no se sincroniza. Queremos:
 
-Sin embargo el validador local `validatePrefixMatchesNaviera` bloquea la llamada antes de salir a la API porque en `src/lib/jsoncargo/containerPrefixes.ts` el prefix `BEAU` está mapeado solo a `["MAERSK", "MSC"]`. En realidad BEAU = Beacon Intermodal, un pool de leasing que se asigna a prácticamente todas las navieras grandes (Maersk, MSC, **Evergreen**, ONE, CMA CGM, Hapag-Lloyd…).
+1. **No** modificar fechas del embarque sin avisar.
+2. Detectar diferencias en ETA y ETD, y preguntar al usuario si quiere aplicarlas.
 
-El catálogo local fue diseñado para "ahorrar cuota" pero está produciendo **falsos negativos** que impiden trackear contenedores reales y válidos.
+## Cambios
 
-## Solución (scope mínimo)
+### 1. Edge function `supabase/functions/jsoncargo-track/index.ts`
+- Eliminar la actualización silenciosa de ETA (líneas 192–200).
+- En el `summary` de respuesta, agregar:
+  - `eta_propuesta` (string YYYY-MM-DD) derivada de `eta_final_destination`.
+  - `etd_propuesta` (string YYYY-MM-DD) derivada de `atd_origin`.
+  - `eta_actual`, `etd_actual` del embarque.
+  - Flags `eta_difiere`, `etd_difiere`.
+- Leer también `etd` del embarque al inicio.
 
-Ampliar las entradas de prefixes de **leasing pools** (no propietarios de naviera) para incluir todas las navieras soportadas por JSONCargo. Estos pools no deberían bloquear nunca por mismatch.
+### 2. Nueva edge function ligera o reusar RPC: aplicar fechas
+Opción más simple: **no crear edge function nueva**. Aplicar el cambio directamente desde el cliente con `supabase.from('embarques').update({ eta, etd })` (RLS ya cubre admin/operador).
 
-### Cambios en `src/lib/jsoncargo/containerPrefixes.ts`
+### 3. Hook `src/hooks/embarque/useJsonCargoTracking.ts`
+- Extender `JsonCargoSummary` con `eta_propuesta`, `etd_propuesta`, `eta_actual`, `etd_actual`, `eta_difiere`, `etd_difiere`.
+- Extender `extractSummary` para leer `atd_origin` del raw payload (para que la UI también pueda recalcular tras refresh).
+- Agregar mutación `useApplyJsonCargoFechas({ embarqueId, eta?, etd? })` que actualiza `embarques` e invalida `queryKeys.embarques.detail`.
 
-Actualizar las entradas de leasing a algo cercano a "any-major":
+### 4. UI `src/components/embarque/TrackingLiveCard.tsx`
+- Tras un sync exitoso, si `summary.eta_difiere || summary.etd_difiere`, mostrar un bloque de propuesta:
+  - "JSONCargo reporta nuevas fechas: ETD `dd MMM yyyy` (actual: …), ETA `dd MMM yyyy` (actual: …)."
+  - Botones: **Actualizar embarque** / **Ignorar**.
+- Al confirmar, llamar `useApplyJsonCargoFechas` con los campos que difieran y mostrar toast.
+- También mostrar el bloque cuando exista `tracking.raw_payload` con diferencias respecto al embarque actual (persistente entre recargas hasta que se aplique o se cierre).
 
-```text
-BEAU: [MAERSK, MSC, EVERGREEN, ONE, CMA_CGM, HAPAG_LLOYD]
-BMOU: [MSC, MAERSK, EVERGREEN, ONE, CMA_CGM, HAPAG_LLOYD]
-TEMU: [EVERGREEN, MSC, ONE, MAERSK, CMA_CGM, HAPAG_LLOYD]
-TCLU: [MSC, MAERSK, EVERGREEN, ONE, CMA_CGM, HAPAG_LLOYD]
-TCNU: [MSC, MAERSK, EVERGREEN, ONE, CMA_CGM, HAPAG_LLOYD]
-TGBU: [HAPAG_LLOYD, ONE, MAERSK, MSC, EVERGREEN, CMA_CGM]
-GLDU: [MAERSK, EVERGREEN, MSC, ONE, CMA_CGM, HAPAG_LLOYD]
-GESU: [MAERSK, MSC, EVERGREEN, ONE, CMA_CGM, HAPAG_LLOYD]
-TRHU: [EVERGREEN, MAERSK, MSC, ONE, CMA_CGM, HAPAG_LLOYD]
-TRIU: [EVERGREEN, MAERSK, MSC, ONE, CMA_CGM, HAPAG_LLOYD]
-SEGU: [MAERSK, MSC, EVERGREEN, ONE, CMA_CGM, HAPAG_LLOYD]
-TGCU: [EVERGREEN, MAERSK, MSC, ONE, CMA_CGM, HAPAG_LLOYD]
-UESU: [EVERGREEN, MAERSK, MSC, ONE, CMA_CGM, HAPAG_LLOYD]
-```
+### 5. `supabase/functions/jsoncargo-track-batch/index.ts` (cron)
+- Quitar la actualización silenciosa de ETA. El batch solo sincroniza eventos y `tracking_externo`. La ETA/ETD se quedan como propuesta visible en la UI.
+- Alternativa: dejar opcional vía un flag `auto_apply_dates` en `configuracion`, **fuera del alcance** de esta tarea — no se incluye.
 
-Los prefixes propietarios (MAEU, MSCU, HLXU, COSU, EGHU, ZIMU, YMLU, ONEU, HMMU, PCIU, OOLU, OOCU, etc.) **no se tocan** — esos sí deben validar estrictamente.
+### 6. Cambios cosméticos
+- En el card de tracking, mostrar también `ETD origen (atd_origin)` junto al `ETA destino final` que ya existe.
 
-### Mismo cambio en `supabase/functions/_shared/jsoncargo.ts`
+## Detalles técnicos
 
-`PREFIX_TO_CARRIERS` (constante espejo en el edge function) recibe la misma actualización para mantener consistencia del lado servidor (cron `jsoncargo-track-batch` y validación dentro de `jsoncargo-track`).
+- `atd_origin` y `eta_final_destination` vienen de JSONCargo en formato no ISO; ya hay `parseJsonCargoDate` en `_shared/jsoncargo.ts`. Reutilizarlo.
+- Comparación: tomar solo `slice(0,10)` para comparar contra `embarques.eta` / `embarques.etd` (date).
+- Si `embarque.etd` es null y hay `atd_origin`, también proponer establecerla.
+- Mutación cliente: invalidar `queryKeys.embarques.detail(id)` y `all`.
 
-### Changelog
-
-Nueva entrada `8.132.5` (patch) en `src/content/changelog/v8/chunks/0.ts`, `src/content/changelogData.ts` y bump de `src/constants/appVersion.ts`.
+## Versionado
+- Bump `APP_VERSION` a `8.132.6`.
+- Entrada en `src/content/changelog/v8/chunks/0.ts` y `src/content/changelogData.ts`.
 
 ## Verificación
-
-1. Recargar `/embarques/4e8b16c5-…?tab=tracking` y hacer click en **Sincronizar tracking** → ya no debe aparecer el toast de "Prefix BEAU no coincide con EGLV"; debe llegar a la API y traer datos (SHANGHAI, ETA 13/05/2026).
-2. Sigue bloqueando casos reales inválidos (ej. `MAEU1234567` con naviera `EGLV` → MAEU es propietario Maersk, no toca).
-
-## Alternativa descartada
-
-Convertir el validador en *warning* y nunca bloquear (deferir a la API). Es la solución "correcta" a largo plazo, pero cambia comportamiento en más superficies (UI del wizard de embarques, mensajes, e-mails) y excede el scope del fix puntual reportado.
+- En `/embarques/{id}?tab=tracking`, sincronizar un embarque con ETA distinta → debe aparecer el bloque de propuesta con botones.
+- Confirmar → ETA/ETD se actualizan, el bloque desaparece, toast de éxito.
+- Ignorar → bloque se cierra (estado local) hasta el próximo sync.
+- Embarques sin diferencia → no aparece el bloque.
