@@ -28,7 +28,7 @@ export interface JsonCargoSummary {
 
 export function useJsonCargoTracking(embarqueId: string | undefined) {
   return useQuery({
-    queryKey: queryKeys.jsonCargo?.byEmbarque(embarqueId) ?? ["tracking_externo", "jsoncargo", embarqueId],
+    queryKey: queryKeys.jsonCargo.byEmbarque(embarqueId),
     queryFn: async (): Promise<TrackingExternoRow | null> => {
       if (!embarqueId) return null;
       const { data, error } = await supabase
