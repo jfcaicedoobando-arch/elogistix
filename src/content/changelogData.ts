@@ -22,6 +22,14 @@ export interface ChangelogEntry {
  */
 export const recentChangelog: ChangelogEntry[] = [
   {
+    version: "8.132.3",
+    date: "2026-05-09",
+    type: "patch",
+    title: "WHLC: actualizar URL de tracking externo",
+    summary: "El link de Wan Hai Lines ahora apunta a la página oficial tracking_query.xhtml.",
+    description: "externalTracking.ts: WHLC abre https://www.wanhai.com/views/cargo_track_v2/tracking_query.xhtml.",
+  },
+  {
     version: "8.132.2",
     date: "2026-05-09",
     type: "patch",
