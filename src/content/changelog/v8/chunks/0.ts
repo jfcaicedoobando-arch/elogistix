@@ -2,6 +2,14 @@ import type { ChangelogEntry } from "../../../changelogData";
 
 export const chunk0: ChangelogEntry[] = [
   {
+    version: "8.132.3",
+    date: "2026-05-09",
+    type: "patch",
+    title: "WHLC: actualizar URL de tracking externo",
+    summary: "El link 'Abrir tracking en Wan Hai Lines' ahora apunta a la página oficial de consulta tracking_query.xhtml.",
+    description: "src/lib/jsoncargo/externalTracking.ts: WHLC/Wan Hai ahora abre https://www.wanhai.com/views/cargo_track_v2/tracking_query.xhtml en lugar de la URL anterior con file_num.",
+  },
+  {
     version: "8.132.2",
     date: "2026-05-09",
     type: "patch",

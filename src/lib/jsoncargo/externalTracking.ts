@@ -24,13 +24,11 @@ interface Carrier {
 const CARRIERS: Record<string, Carrier> = {
   whlc: {
     label: "Wan Hai Lines",
-    build: (c, b) =>
-      `https://www.wanhai.com/views/cargoTrack/CargoTrack.xhtml?file_num=${encodeURIComponent(c ?? b ?? "")}`,
+    build: () => `https://www.wanhai.com/views/cargo_track_v2/tracking_query.xhtml`,
   },
   wanhai: {
     label: "Wan Hai Lines",
-    build: (c, b) =>
-      `https://www.wanhai.com/views/cargoTrack/CargoTrack.xhtml?file_num=${encodeURIComponent(c ?? b ?? "")}`,
+    build: () => `https://www.wanhai.com/views/cargo_track_v2/tracking_query.xhtml`,
   },
   anl: {
     label: "ANL (CMA CGM)",
