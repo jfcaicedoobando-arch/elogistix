@@ -125,10 +125,8 @@ Deno.serve(async (req) => {
             })));
           }
         }
-        const newEta = parseJsonCargoDate(result.data.eta_final_destination);
-        if (newEta && newEta.slice(0, 10) !== emb.eta) {
-          await admin.from("embarques").update({ eta: newEta.slice(0, 10) }).eq("id", emb.id);
-        }
+        // No se actualizan ETA/ETD del embarque desde el cron: queda como propuesta
+        // visible en la UI para que el usuario confirme manualmente.
         okCount++;
       } else {
         failCount++;
