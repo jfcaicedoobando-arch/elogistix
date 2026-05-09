@@ -1,7 +1,16 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Satellite, RefreshCw, Trash2, AlertCircle, CheckCircle2 } from "lucide-react";
+import {
+  Satellite,
+  RefreshCw,
+  Trash2,
+  AlertCircle,
+  CheckCircle2,
+  Clock,
+  Copy,
+  ExternalLink,
+} from "lucide-react";
 import { formatDate } from "@/lib/formatters";
 import {
   useTrackingTerminal49,
@@ -11,6 +20,7 @@ import {
 } from "@/hooks/embarque/useTrackingTerminal49";
 import { usePermissions } from "@/hooks/shared/usePermissions";
 import { useState } from "react";
+import { useToast } from "@/hooks/use-toast";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -30,13 +40,45 @@ interface Props {
   naviera: string | null;
 }
 
-const STATUS_LABEL: Record<string, { label: string; variant: "default" | "secondary" | "destructive" | "outline" }> = {
-  pending: { label: "Pendiente", variant: "secondary" },
-  created: { label: "Creado", variant: "secondary" },
-  succeeded: { label: "Activo", variant: "default" },
-  tracking: { label: "Rastreando", variant: "default" },
-  failed: { label: "Falló", variant: "destructive" },
-  inactive: { label: "Inactivo", variant: "outline" },
+const STATUS_LABEL: Record<
+  string,
+  {
+    label: string;
+    variant: "default" | "secondary" | "destructive" | "outline";
+    hint: string;
+  }
+> = {
+  pending: {
+    label: "Pendiente",
+    variant: "secondary",
+    hint: "En cola en Terminal49 — aún no se envía a la naviera.",
+  },
+  created: {
+    label: "Esperando naviera",
+    variant: "secondary",
+    hint: "Terminal49 ya consultó a la naviera. Esperando respuesta (puede tardar de minutos a 24-48 h).",
+  },
+  awaiting_manifest: {
+    label: "Esperando manifiesto",
+    variant: "secondary",
+    hint: "La naviera aún no publica el manifiesto del BL. Reintentamos automáticamente.",
+  },
+  tracking: {
+    label: "Rastreando",
+    variant: "default",
+    hint: "La naviera respondió y estamos recibiendo eventos.",
+  },
+  succeeded: {
+    label: "Activo",
+    variant: "default",
+    hint: "Tracking confirmado por la naviera.",
+  },
+  failed: {
+    label: "Falló",
+    variant: "destructive",
+    hint: "Terminal49 no pudo rastrear este BL. Revisa el motivo.",
+  },
+  inactive: { label: "Inactivo", variant: "outline", hint: "" },
 };
 
 export function TerminalAutomaticoCard({ embarqueId, modo, blMaster, naviera }: Props) {
