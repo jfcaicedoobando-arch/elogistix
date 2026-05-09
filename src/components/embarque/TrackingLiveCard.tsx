@@ -20,8 +20,18 @@ import {
   extractSummary,
   PrefixMismatchError,
 } from "@/hooks/embarque/useJsonCargoTracking";
-import { parseJsonCargoDate } from "@/lib/jsoncargo/dateUtils";
 import { DialogBolContainers } from "./DialogBolContainers";
+
+/** Parse "YYYY-MM-DD HH:MM" o ISO desde JSONCargo y devuelve "YYYY-MM-DD". */
+function jsoncargoDateToYmd(value: string | null | undefined): string | null {
+  if (!value) return null;
+  const s = value.trim();
+  if (!s) return null;
+  const iso = s.includes("T") ? s : s.replace(" ", "T") + ":00Z";
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return null;
+  return d.toISOString().slice(0, 10);
+}
 
 interface Props {
   embarqueId: string;
