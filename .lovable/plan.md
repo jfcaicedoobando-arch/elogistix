@@ -1,47 +1,50 @@
-## Tracking externo para navieras no soportadas por JSONCargo
+## Problema
 
-Cuando la naviera del embarque no está soportada por JSONCargo (caso WHLC / Wan Hai, y otras como ANL, HEUNG-A, SITC, etc.), hoy solo mostramos un mensaje informativo sin acción posible. Vamos a ofrecer un link al sitio de tracking oficial de la naviera para que el usuario consulte manualmente con el contenedor o el BL.
+El embarque tiene contenedor `BEAU6309761` con naviera `EGLV` (Evergreen). La API de JSONCargo **sí encuentra** ese contenedor bajo EVERGREEN (probado: HTTP 200 con datos de SHANGHAI 119E, ETA 13/05/2026).
 
-### Cambios
+Sin embargo el validador local `validatePrefixMatchesNaviera` bloquea la llamada antes de salir a la API porque en `src/lib/jsoncargo/containerPrefixes.ts` el prefix `BEAU` está mapeado solo a `["MAERSK", "MSC"]`. En realidad BEAU = Beacon Intermodal, un pool de leasing que se asigna a prácticamente todas las navieras grandes (Maersk, MSC, **Evergreen**, ONE, CMA CGM, Hapag-Lloyd…).
 
-1. **Nuevo catálogo `src/lib/jsoncargo/externalTracking.ts`**
-   - Mapa de naviera (string libre normalizado) → `{ label, url(container, bl) }` que devuelve la URL de tracking pública.
-   - Cubrir como mínimo:
-     - `WHLC` / `WANHAI` → `https://www.wanhai.com/...`
-     - `ANL` → CMA CGM tracking
-     - `SITC` → `https://www.sitcline.com/...`
-     - `HEUNG-A` / `HEUNGA` → `https://ekmtc.com/...` o sitio oficial
-     - `PAN OCEAN`, `SINOKOR`, `TS LINES`, `KMTC`
-   - Función `getExternalTracking(naviera, contenedor, blMaster)` que:
-     - Normaliza el nombre (lowercase, sin separadores).
-     - Si encuentra match, devuelve `{ label, url }` priorizando contenedor sobre BL.
-     - Si no hay match pero existe contenedor, ofrece fallback genérico a track-trace.com (`https://www.track-trace.com/container`).
-     - Devuelve `null` si no hay nada útil que enlazar.
+El catálogo local fue diseñado para "ahorrar cuota" pero está produciendo **falsos negativos** que impiden trackear contenedores reales y válidos.
 
-2. **`src/components/embarque/TrackingLiveCard.tsx`**
-   - Cuando `noSoportada` es `true`, además del mensaje actual, renderizar un botón/link `Abrir tracking en {Naviera}` que abre la URL externa en nueva pestaña (`target="_blank" rel="noopener noreferrer"`).
-   - Si solo hay fallback genérico, etiquetarlo como `Buscar en Track-Trace`.
-   - Mantener el mensaje actual de "naviera no soportada" pero suavizar el tono ("JSONCargo no soporta esta naviera; consulta el tracking en el sitio del transportista").
-   - No tocar el flujo cuando sí está soportada.
+## Solución (scope mínimo)
 
-3. **Versionado y changelog**
-   - Bump a `8.132.2` (patch).
-   - Entrada en `src/content/changelog/v8/chunks/0.ts` y `src/content/changelogData.ts`: "Tracking externo para navieras no soportadas por JSONCargo (WHLC/Wan Hai y otras)".
-   - Actualizar `src/pages/dashboard/Changelog.tsx` si aplica al patrón actual.
+Ampliar las entradas de prefixes de **leasing pools** (no propietarios de naviera) para incluir todas las navieras soportadas por JSONCargo. Estos pools no deberían bloquear nunca por mismatch.
 
-### Archivos
+### Cambios en `src/lib/jsoncargo/containerPrefixes.ts`
 
-Crear:
-- `src/lib/jsoncargo/externalTracking.ts`
+Actualizar las entradas de leasing a algo cercano a "any-major":
 
-Modificar:
-- `src/components/embarque/TrackingLiveCard.tsx`
-- `src/constants/appVersion.ts`
-- `src/content/changelog/v8/chunks/0.ts`
-- `src/content/changelogData.ts`
+```text
+BEAU: [MAERSK, MSC, EVERGREEN, ONE, CMA_CGM, HAPAG_LLOYD]
+BMOU: [MSC, MAERSK, EVERGREEN, ONE, CMA_CGM, HAPAG_LLOYD]
+TEMU: [EVERGREEN, MSC, ONE, MAERSK, CMA_CGM, HAPAG_LLOYD]
+TCLU: [MSC, MAERSK, EVERGREEN, ONE, CMA_CGM, HAPAG_LLOYD]
+TCNU: [MSC, MAERSK, EVERGREEN, ONE, CMA_CGM, HAPAG_LLOYD]
+TGBU: [HAPAG_LLOYD, ONE, MAERSK, MSC, EVERGREEN, CMA_CGM]
+GLDU: [MAERSK, EVERGREEN, MSC, ONE, CMA_CGM, HAPAG_LLOYD]
+GESU: [MAERSK, MSC, EVERGREEN, ONE, CMA_CGM, HAPAG_LLOYD]
+TRHU: [EVERGREEN, MAERSK, MSC, ONE, CMA_CGM, HAPAG_LLOYD]
+TRIU: [EVERGREEN, MAERSK, MSC, ONE, CMA_CGM, HAPAG_LLOYD]
+SEGU: [MAERSK, MSC, EVERGREEN, ONE, CMA_CGM, HAPAG_LLOYD]
+TGCU: [EVERGREEN, MAERSK, MSC, ONE, CMA_CGM, HAPAG_LLOYD]
+UESU: [EVERGREEN, MAERSK, MSC, ONE, CMA_CGM, HAPAG_LLOYD]
+```
 
-### Notas
+Los prefixes propietarios (MAEU, MSCU, HLXU, COSU, EGHU, ZIMU, YMLU, ONEU, HMMU, PCIU, OOLU, OOCU, etc.) **no se tocan** — esos sí deben validar estrictamente.
 
-- No requiere cambios en backend ni en el edge function.
-- No se modifica `mapNavieraToJsonCargo`: WHLC sigue devolviendo `null` (correcto).
-- El link externo es solo informativo; no se sincroniza nada en la BD desde ahí.
+### Mismo cambio en `supabase/functions/_shared/jsoncargo.ts`
+
+`PREFIX_TO_CARRIERS` (constante espejo en el edge function) recibe la misma actualización para mantener consistencia del lado servidor (cron `jsoncargo-track-batch` y validación dentro de `jsoncargo-track`).
+
+### Changelog
+
+Nueva entrada `8.132.5` (patch) en `src/content/changelog/v8/chunks/0.ts`, `src/content/changelogData.ts` y bump de `src/constants/appVersion.ts`.
+
+## Verificación
+
+1. Recargar `/embarques/4e8b16c5-…?tab=tracking` y hacer click en **Sincronizar tracking** → ya no debe aparecer el toast de "Prefix BEAU no coincide con EGLV"; debe llegar a la API y traer datos (SHANGHAI, ETA 13/05/2026).
+2. Sigue bloqueando casos reales inválidos (ej. `MAEU1234567` con naviera `EGLV` → MAEU es propietario Maersk, no toca).
+
+## Alternativa descartada
+
+Convertir el validador en *warning* y nunca bloquear (deferir a la API). Es la solución "correcta" a largo plazo, pero cambia comportamiento en más superficies (UI del wizard de embarques, mensajes, e-mails) y excede el scope del fix puntual reportado.

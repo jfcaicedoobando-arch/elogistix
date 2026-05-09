@@ -22,6 +22,14 @@ export interface ChangelogEntry {
  */
 export const recentChangelog: ChangelogEntry[] = [
   {
+    version: "8.132.5",
+    date: "2026-05-09",
+    type: "patch",
+    title: "JSONCargo: prefixes de leasing pool no bloquean tracking",
+    summary: "Pools BEAU/TEMU/TCLU/TRHU/GLDU ahora permiten cualquier naviera soportada.",
+    description: "containerPrefixes.ts: prefixes de leasing aceptan MAERSK/MSC/EVERGREEN/ONE/CMA_CGM/HAPAG_LLOYD para no bloquear contenedores reales que sí están en JSONCargo.",
+  },
+  {
     version: "8.132.4",
     date: "2026-05-09",
     type: "patch",

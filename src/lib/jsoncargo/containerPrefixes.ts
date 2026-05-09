@@ -55,23 +55,25 @@ export const PREFIX_TO_CARRIERS: Record<string, JsonCargoShippingLine[]> = {
   HMMU: ["HMM"], HDMU: ["HMM"],
   // PIL
   PCIU: ["PIL"], PILU: ["PIL"],
-  // Leasing pools (frecuentemente asignados a varias navieras; sugiere las más comunes)
-  TEMU: ["EVERGREEN", "MSC", "ONE"], // Triton — Evergreen muy frecuente
-  TCLU: ["MSC", "MAERSK"],            // Triton
-  TCNU: ["MSC", "MAERSK"],
-  TGBU: ["HAPAG_LLOYD", "ONE"],
-  BEAU: ["MAERSK", "MSC"],            // Beacon
-  BMOU: ["MSC"],                       // Beacon → MSC habitualmente
+  // Leasing pools (Beacon, Triton, Genstar, etc.) — se asignan a múltiples
+  // navieras grandes; permitimos cualquiera de las soportadas para no bloquear
+  // contenedores reales que sí existen en JSONCargo bajo otra naviera.
+  TEMU: ["EVERGREEN", "MSC", "ONE", "MAERSK", "CMA_CGM", "HAPAG_LLOYD"],
+  TCLU: ["MSC", "MAERSK", "EVERGREEN", "ONE", "CMA_CGM", "HAPAG_LLOYD"],
+  TCNU: ["MSC", "MAERSK", "EVERGREEN", "ONE", "CMA_CGM", "HAPAG_LLOYD"],
+  TGBU: ["HAPAG_LLOYD", "ONE", "MAERSK", "MSC", "EVERGREEN", "CMA_CGM"],
+  BEAU: ["MAERSK", "MSC", "EVERGREEN", "ONE", "CMA_CGM", "HAPAG_LLOYD"],
+  BMOU: ["MSC", "MAERSK", "EVERGREEN", "ONE", "CMA_CGM", "HAPAG_LLOYD"],
   CAXU: ["CMA_CGM"],
   CRXU: ["CMA_CGM"],
-  GLDU: ["MAERSK", "EVERGREEN"],      // Genstar/Glory
-  GESU: ["MAERSK"],
-  TRHU: ["EVERGREEN"],
-  TRIU: ["EVERGREEN"],
+  GLDU: ["MAERSK", "EVERGREEN", "MSC", "ONE", "CMA_CGM", "HAPAG_LLOYD"],
+  GESU: ["MAERSK", "MSC", "EVERGREEN", "ONE", "CMA_CGM", "HAPAG_LLOYD"],
+  TRHU: ["EVERGREEN", "MAERSK", "MSC", "ONE", "CMA_CGM", "HAPAG_LLOYD"],
+  TRIU: ["EVERGREEN", "MAERSK", "MSC", "ONE", "CMA_CGM", "HAPAG_LLOYD"],
   TLLU2: ["ONE"],
-  SEGU: ["MAERSK"],
-  TGCU: ["EVERGREEN"],
-  UESU: ["EVERGREEN"],
+  SEGU: ["MAERSK", "MSC", "EVERGREEN", "ONE", "CMA_CGM", "HAPAG_LLOYD"],
+  TGCU: ["EVERGREEN", "MAERSK", "MSC", "ONE", "CMA_CGM", "HAPAG_LLOYD"],
+  UESU: ["EVERGREEN", "MAERSK", "MSC", "ONE", "CMA_CGM", "HAPAG_LLOYD"],
   WHLU: ["EVERGREEN"],
 };
 
