@@ -96,46 +96,8 @@ Deno.serve(async (req) => {
       trackingRequestData?.data?.attributes?.status ?? tracking.status;
     const newFailed: string | null =
       trackingRequestData?.data?.attributes?.failed_reason ?? null;
-    let trackedObjectId: string | null =
+    const trackedObjectId: string | null =
       trackingRequestData?.data?.relationships?.tracked_object?.data?.id ?? tracking.shipment_id;
-
-    // Fallback: si Terminal49 aún no asocia el tracked_object, buscamos el shipment por BL
-    // probando varias variantes (con/sin prefijo SCAC, distintos nombres de filtro).
-    const fallbackIntentos: Array<{ url: string; count: number }> = [];
-    if (!trackedObjectId) {
-      const blRaw: string =
-        (tracking as any).request_number ||
-        trackingRequestData?.data?.attributes?.request_number ||
-        "";
-      const scac: string = ((tracking as any).scac || trackingRequestData?.data?.attributes?.scac || "").toUpperCase();
-      const blStripped =
-        scac && blRaw.toUpperCase().startsWith(scac) ? blRaw.slice(scac.length) : blRaw;
-
-      const candidatos: string[] = [];
-      if (blRaw) candidatos.push(blRaw);
-      if (blStripped && blStripped !== blRaw) candidatos.push(blStripped);
-
-      const variantes: Array<(bl: string) => string> = [
-        (bl) => `${T49_BASE}/shipments?filter[bill_of_lading_number]=${encodeURIComponent(bl)}`,
-        (bl) => `${T49_BASE}/shipments?filter[number]=${encodeURIComponent(bl)}`,
-      ];
-
-      outer: for (const bl of candidatos) {
-        for (const buildUrl of variantes) {
-          const url = buildUrl(bl);
-          const r = await fetch(url, { headers: t49Headers });
-          const j = await r.json().catch(() => ({}));
-          const arr = Array.isArray(j?.data) ? j.data : [];
-          fallbackIntentos.push({ url, count: arr.length });
-          console.log(`Fallback intento ${url} → ${arr.length} resultados`);
-          if (arr[0]?.id) {
-            trackedObjectId = arr[0].id;
-            console.log(`Fallback OK → shipment ${trackedObjectId}`);
-            break outer;
-          }
-        }
-      }
-    }
 
     let shipmentJson: any = null;
     let containers: any[] = [];
@@ -237,8 +199,6 @@ Deno.serve(async (req) => {
       containers: containers.length,
       eventos_nuevos: nuevosEventos,
       embarque_actualizado: embUpdate,
-      fallback_intentos: fallbackIntentos,
-      shipment_id: trackedObjectId,
     });
   } catch (err) {
     console.error("sync exception", err);

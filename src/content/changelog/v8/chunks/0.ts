@@ -2,30 +2,6 @@ import type { ChangelogEntry } from "../../../changelogData";
 
 export const chunk0: ChangelogEntry[] = [
   {
-    version: "8.131.3",
-    date: "2026-05-08",
-    type: "patch",
-    title: "Mensaje claro cuando Terminal49 bloquea lectura de shipments",
-    summary: "Detección del 401 'You do not have permissions...' en terminal49-link-shipment con mensaje explicativo, y aviso amber en la tarjeta cuando el tracking_request lleva tiempo en pending sin shipment_id.",
-    description: "Mejora de UX para el caso donde la API key de Terminal49 solo permite crear tracking_requests, no leer shipments. (1) Edge function terminal49-link-shipment: cuando GET /v2/shipments/{id} devuelve 401/403 o el detail menciona 'permissions', responde con HTTP 403 y un mensaje claro explicando que se necesita habilitar webhooks o solicitar permisos de lectura. (2) UI TerminalAutomaticoCard: aviso amber visible cuando status='pending' sin shipment_id, explicando que la naviera aún no responde y que los eventos llegarán por webhook o cuando Terminal49 transicione a 'succeeded'. Versión 8.131.3.",
-  },
-  {
-    version: "8.131.2",
-    date: "2026-05-08",
-    type: "patch",
-    title: "Fallback BL multi-variante + vínculo manual de shipment Terminal49",
-    summary: "Cuando Terminal49 no asocia el tracked_object, el sync ahora prueba 4 variantes (BL completo / sin SCAC × filter[bill_of_lading_number] / filter[number]). Además, nuevo botón 'Vincular shipment manualmente' para pegar el shipment ID directo de la URL de Terminal49.",
-    description: "Resuelve el caso donde el shipment ya existe en Terminal49 pero su API list devuelve vacío con el filtro original. (1) Edge function terminal49-sync: prueba en orden BL completo (ZIMUSHH32085770) y BL sin prefijo SCAC (SHH32085770) contra filter[bill_of_lading_number] y filter[number]. Loggea cada intento (URL + count) y devuelve fallback_intentos[] en la respuesta para diagnóstico. (2) Nueva edge function terminal49-link-shipment: recibe embarque_id + shipment_id (UUID), valida con GET /v2/shipments/{id}, actualiza tracking_externo.shipment_id, importa containers y transport_events nuevos a eventos_embarque (idempotente), refresca ETA/fecha_llegada_real/estado del embarque y registra un tracking_intento con accion='link_manual'. (3) UI: en TerminalAutomaticoCard se agregó botón 'Vincular shipment manualmente' (visible solo cuando shipment_id es null) que abre un Dialog con input para pegar el UUID del shipment, con texto guía mostrando el patrón de URL de Terminal49. (4) Hook useVincularShipmentManual con invalidación de tracking_externo, embarque-full, eventos_embarque y tracking_intentos. Versión 8.131.2.",
-  },
-  {
-    version: "8.131.1",
-    date: "2026-05-08",
-    type: "patch",
-    title: "Fallback por BL en sincronización Terminal49",
-    summary: "Si Terminal49 mantiene el tracking_request en 'pending' sin tracked_object pero el shipment ya existe, ahora lo buscamos por BL (GET /v2/shipments?filter[bill_of_lading_number]) y vinculamos el shipment_id automáticamente para traer contenedores y eventos.",
-    description: "Resuelve el desfase entre el panel web de Terminal49 (donde el shipment ya está creado) y nuestra base (donde tracking_externo seguía con shipment_id null y 0 contenedores). (1) Edge function terminal49-sync: tras refrescar el tracking_request, si tracked_object viene null se hace fallback a GET /v2/shipments?filter[bill_of_lading_number]={request_number} usando el BL guardado en tracking_externo. Si encuentra el shipment, usa su id para traer containers + transport_events y actualiza tracking_externo.shipment_id. (2) Respuesta del endpoint ahora incluye fallback_bl_usado y shipment_id para diagnóstico. (3) Logs en consola del fallback (éxito/vacío). Versión 8.131.1.",
-  },
-  {
     version: "8.131.0",
     date: "2026-05-08",
     type: "minor",

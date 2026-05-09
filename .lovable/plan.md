@@ -1,68 +1,53 @@
-## Objetivo
+# Validar naviera desde catálogo con SCAC en el formulario de embarques
 
-Resolver el caso donde Terminal49 ya creó el shipment en su sistema pero nuestro `tracking_request` sigue en `pending` sin `tracked_object`, y el fallback simple por BL devuelve vacío (probablemente porque el BL en el shipment no incluye el prefijo SCAC).
+## Diagnóstico
 
-## Cambios
+- `NavieraSelect` ya guarda el **código SCAC** (no el nombre), pero no impide que llegue un valor manual/heredado.
+- El embarque legado tenía `naviera = "ZIM"` porque en el catálogo el SCAC estaba mal capturado (3 letras). Ya se corrigió a `ZIMU`, pero faltan defensas para que esto no vuelva a pasar.
+- El edge function `terminal49-create-tracking` actualmente busca en `navieras.name`, cuando el formulario guarda `navieras.code`. Eso también hay que alinearlo.
 
-### 1. Edge function `terminal49-sync` — variantes automáticas de búsqueda
+## Pasos
 
-Cuando `tracked_object` es `null`, intentar en orden hasta encontrar un shipment:
+1. **Validación en el catálogo (capturar SCAC correcto)**
+   - En el formulario de gestión de navieras (Configuración → Catálogos): exigir que `code` sea exactamente 4 letras A–Z (regex `^[A-Z]{4}$`), uppercase automático, mensaje claro "El SCAC debe tener 4 letras".
+   - Mismo check en migración: trigger de validación o `CHECK (code ~ '^[A-Z]{4}$')` en `navieras`.
 
-```text
-1. GET /v2/shipments?filter[bill_of_lading_number]={BL_completo}      (ej. ZIMUSHH32085770)
-2. GET /v2/shipments?filter[bill_of_lading_number]={BL_sin_SCAC}      (ej. SHH32085770)
-3. GET /v2/shipments?filter[number]={BL_completo}
-4. GET /v2/shipments?filter[number]={BL_sin_SCAC}
-```
+2. **Validación en el wizard de embarque (StepDatosRuta)**
+   - Reforzar el zod `embarqueWizardSchemas`:
+     - Para modo Marítimo, `naviera` debe cumplir `^[A-Z]{4}$` (forma SCAC).
+     - Mensaje: "Selecciona una naviera del catálogo (SCAC válido)".
+   - En `NavieraSelect`: detectar valor que no exista en el catálogo y mostrar badge rojo "SCAC no válido" debajo, con CTA "Corregir en catálogo de navieras".
+   - Pequeña ayuda visual: mostrar el SCAC con tooltip "Standard Carrier Alpha Code (4 letras) usado para tracking automático".
 
-- Detección "sin SCAC": si `request_number` empieza con `scac` (4 letras), quitar ese prefijo.
-- Loggear cada intento (URL + count) para diagnóstico.
-- El primero con `data[0].id` gana → se usa como `trackedObjectId`.
-- Respuesta del endpoint: agregar `fallback_intentos` (array de `{url, count}`) para visibilidad.
+3. **Alinear el edge function con el dato real**
+   - `terminal49-create-tracking`: buscar primero por `navieras.code = embarque.naviera`, luego fallback por `name ILIKE`.
+   - Mensaje de error más útil cuando no exista: incluir el valor recibido y enlace a "Configuración → Navieras".
 
-### 2. Vínculo manual por shipment ID
+4. **Sanear datos existentes (one-shot)**
+   - Detectar embarques con `naviera` que no matchee ningún `code` del catálogo y proponer corrección. Por ahora solo emitir un reporte read-only en consola/log; no autocambiar datos sin revisión.
 
-**a) Edge function nueva `terminal49-link-shipment`**
-- Body: `{ embarque_id: uuid, shipment_id: string }`
-- Valida JWT + que el embarque pertenece a la org del usuario.
-- Hace `GET /v2/shipments/{shipment_id}?include=containers,...` para confirmar que existe.
-- Actualiza `tracking_externo.shipment_id` y dispara la misma lógica de inserción de eventos/ETA/estado que `sync`.
-- Registra un `tracking_intento` con `accion='link_manual'`.
-
-**b) UI en `TerminalAutomaticoCard`**
-- Botón secundario **"Vincular shipment manualmente"** visible solo cuando `status='pending'` y `shipment_id` es `null`.
-- Abre un `Dialog` con:
-  - Input para pegar el shipment ID (UUID).
-  - Texto de ayuda: *"Cópialo de la URL de Terminal49: app.terminal49.com/shipments/**[ESTE-ID]**"*.
-  - Botón **Vincular** que llama a la nueva edge function.
-- Al éxito: toast + invalida queries de tracking y eventos del embarque.
-
-### 3. Hook + servicio
-
-- `src/services/tracking/terminal49.ts`: agregar `linkShipmentManual(embarqueId, shipmentId)`.
-- `src/hooks/embarque/useTrackingTerminal49.ts`: agregar mutation `useLinkShipmentManual` con invalidación de `tracking_externo`, `eventos_embarque` y `tracking_intentos`.
-
-### 4. Changelog y versión
-
-- Bump a **8.131.2** (patch).
-- Entrada en `src/content/changelog/v8/chunks/0.ts` describiendo: variantes automáticas de BL, vínculo manual por shipment ID, nuevo botón en UI, edge function `terminal49-link-shipment`.
-- Actualizar `src/constants/appVersion.ts`.
+5. **Changelog + versión patch**
 
 ## Detalles técnicos
 
-- No se requieren migraciones de DB: `tracking_externo.shipment_id` ya existe; `tracking_intentos` ya soporta acciones libres.
-- La nueva edge function reusa el mismo patrón de auth/CORS de las dos existentes.
-- El campo manual no reemplaza el flujo automático: el operador lo usa solo cuando todas las variantes fallan.
-- En `supabase/config.toml` no se requieren bloques nuevos (sigue el default).
-
-## Archivos afectados
-
-```text
-supabase/functions/terminal49-sync/index.ts            (variantes BL)
-supabase/functions/terminal49-link-shipment/index.ts   (NUEVO)
-src/services/tracking/terminal49.ts                    (linkShipmentManual)
-src/hooks/embarque/useTrackingTerminal49.ts            (useLinkShipmentManual)
-src/components/embarque/TerminalAutomaticoCard.tsx     (botón + dialog)
-src/constants/appVersion.ts                            (8.131.2)
-src/content/changelog/v8/chunks/0.ts                   (entrada nueva)
+```ts
+// embarqueWizardSchemas.ts (modo Marítimo)
+naviera: z.string().trim().regex(/^[A-Z]{4}$/, "Selecciona una naviera del catálogo (SCAC de 4 letras)")
 ```
+
+```ts
+// NavieraSelect: marcar invalid si value no está en data
+const isInvalid = !!value && !navieras.some(n => n.code === value);
+```
+
+```sql
+-- Migración (validación a nivel DB)
+ALTER TABLE public.navieras
+  ADD CONSTRAINT navieras_code_scac_format CHECK (code ~ '^[A-Z]{4}$') NOT VALID;
+-- NOT VALID para no romper filas históricas; nuevas inserts/updates sí se validan.
+```
+
+## Fuera de alcance
+
+- Migrar masivamente embarques históricos con naviera mal capturada (se hace caso por caso).
+- Rediseño visual del select.
