@@ -7,9 +7,14 @@ import { notifySuccess, notifyError } from "@/lib/ui/appFeedback";
 import { formatDate } from "@/lib/formatters";
 import { mapNavieraToJsonCargo, listNavierasSoportadas } from "@/lib/jsoncargo/navieras";
 import {
+  validatePrefixMatchesNaviera,
+  carrierLabel,
+} from "@/lib/jsoncargo/containerPrefixes";
+import {
   useJsonCargoTracking,
   useSyncJsonCargo,
   extractSummary,
+  PrefixMismatchError,
 } from "@/hooks/embarque/useJsonCargoTracking";
 
 interface Props {
@@ -34,9 +39,22 @@ export function TrackingLiveCard({ embarqueId, modo, naviera, contenedor, readOn
   const sinContenedor = !contenedor;
   const summary = tracking?.raw_payload ? extractSummary(tracking.raw_payload) : null;
 
+  // Validación de prefix vs naviera (local, no consume cuota)
+  const prefixCheck = validatePrefixMatchesNaviera(contenedor, sl);
+  const prefixMismatch = !sinContenedor && !noSoportada && !prefixCheck.valid;
+
+  // Detecta también si el backend ya guardó un fallo por prefix
+  const backendPrefixError = tracking?.status === "failed" &&
+    /prefix not found/i.test(tracking.failed_reason ?? "");
+
+  // Estado de error tras una mutación del cliente
+  const mutationPrefixError = sync.error instanceof PrefixMismatchError
+    ? (sync.error as PrefixMismatchError)
+    : null;
+
   const handleSync = async () => {
     try {
-      const res = await sync.mutateAsync(embarqueId);
+      const res = await sync.mutateAsync({ embarqueId, contenedor, naviera });
       if (res.throttled) {
         toast({ title: "Sincronización reciente", description: res.message ?? "Espera unos minutos." });
       } else if (res.ok) {
@@ -48,9 +66,21 @@ export function TrackingLiveCard({ embarqueId, modo, naviera, contenedor, readOn
         notifyError(toast, { title: "No se pudo sincronizar", description: res.error ?? "Error desconocido" });
       }
     } catch (err) {
+      if (err instanceof PrefixMismatchError) {
+        notifyError(toast, {
+          title: "Prefix no coincide con la naviera",
+          description: `El prefix ${err.prefix} no corresponde a ${naviera ?? "—"}. Verifica la naviera.`,
+        });
+        return;
+      }
       notifyError(toast, { title: "Error de tracking", description: err instanceof Error ? err.message : "Error" });
     }
   };
+
+  // Sugerencias finales (UI consolidada)
+  const suggestions = mutationPrefixError?.suggestions ?? prefixCheck.suggestions;
+  const detectedPrefix = mutationPrefixError?.prefix ?? prefixCheck.prefix;
+  const showPrefixWarning = prefixMismatch || mutationPrefixError != null || backendPrefixError;
 
   return (
     <Card>
@@ -61,7 +91,7 @@ export function TrackingLiveCard({ embarqueId, modo, naviera, contenedor, readOn
           {tracking?.status === "ok" && <Badge variant="secondary" className="text-[10px]">Conectado</Badge>}
           {tracking?.status === "failed" && <Badge variant="destructive" className="text-[10px]">Error</Badge>}
         </CardTitle>
-        {!readOnly && !noSoportada && !sinContenedor && (
+        {!readOnly && !noSoportada && !sinContenedor && !prefixMismatch && (
           <Button size="sm" variant="outline" onClick={handleSync} disabled={sync.isPending}>
             <RefreshCw className={`h-3.5 w-3.5 mr-1 ${sync.isPending ? "animate-spin" : ""}`} />
             {tracking ? "Actualizar" : "Sincronizar"}
@@ -88,7 +118,35 @@ export function TrackingLiveCard({ embarqueId, modo, naviera, contenedor, readOn
           </div>
         )}
 
-        {!sinContenedor && !noSoportada && !tracking && !isLoading && (
+        {showPrefixWarning && (
+          <div className="flex items-start gap-2 text-xs text-destructive p-3 rounded bg-destructive/5 border border-destructive/20">
+            <AlertCircle className="h-4 w-4 mt-0.5 shrink-0" />
+            <div className="space-y-1.5">
+              <p className="font-medium">
+                El prefix <span className="font-mono">{detectedPrefix ?? "—"}</span> del contenedor no coincide con la naviera <span className="font-semibold">{naviera ?? "—"}</span>.
+              </p>
+              {suggestions.length > 0 ? (
+                <div className="flex flex-wrap items-center gap-1.5">
+                  <span className="text-muted-foreground">Suele pertenecer a:</span>
+                  {suggestions.map((c) => (
+                    <Badge key={c} variant="outline" className="text-[10px]">{carrierLabel(c)}</Badge>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-muted-foreground">
+                  Prefix no registrado. Si crees que es válido, contacta a <span className="font-mono">support@jsoncargo.com</span> para registrar el prefix con la naviera correcta.
+                </p>
+              )}
+              {!readOnly && (
+                <p className="text-muted-foreground pt-1">
+                  Edita el embarque para corregir la naviera y vuelve a sincronizar.
+                </p>
+              )}
+            </div>
+          </div>
+        )}
+
+        {!sinContenedor && !noSoportada && !prefixMismatch && !tracking && !isLoading && (
           <p className="text-xs text-muted-foreground">
             {readOnly
               ? "Aún no hay datos de tracking en vivo."
@@ -96,7 +154,7 @@ export function TrackingLiveCard({ embarqueId, modo, naviera, contenedor, readOn
           </p>
         )}
 
-        {tracking?.status === "failed" && (
+        {tracking?.status === "failed" && !backendPrefixError && (
           <div className="flex items-start gap-2 text-xs text-destructive p-3 rounded bg-destructive/5">
             <AlertCircle className="h-4 w-4 mt-0.5 shrink-0" />
             <div>
