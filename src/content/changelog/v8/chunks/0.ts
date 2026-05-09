@@ -2,6 +2,14 @@ import type { ChangelogEntry } from "../../../changelogData";
 
 export const chunk0: ChangelogEntry[] = [
   {
+    version: "8.132.2",
+    date: "2026-05-09",
+    type: "patch",
+    title: "Tracking externo para navieras no soportadas por JSONCargo",
+    summary: "Cuando la naviera no es compatible con JSONCargo (WHLC/Wan Hai, ANL, SITC, Heung-A, Pan Ocean, Sinokor, T.S. Lines, KMTC), el tab Tracking ofrece un link directo al sitio oficial del transportista o un fallback a Track-Trace.",
+    description: "Nuevo catálogo src/lib/jsoncargo/externalTracking.ts con URLs de tracking público por naviera (Wan Hai, ANL→CMA CGM, SITC, Heung-A, Pan Ocean, Sinokor, T.S. Lines, KMTC). TrackingLiveCard ahora, en el bloque 'naviera no soportada', muestra un botón 'Abrir tracking en {Naviera}' que abre el sitio oficial en nueva pestaña priorizando contenedor sobre BL. Si no hay match conocido pero existe contenedor, ofrece fallback genérico a track-trace.com. No se modifica la lógica de mapeo a JSONCargo.",
+  },
+  {
     version: "8.132.1",
     date: "2026-05-09",
     type: "patch",
