@@ -33,6 +33,60 @@ export function mapNaviera(naviera: string | null | undefined): string | null {
   return null;
 }
 
+/**
+ * Catálogo de prefixes BIC conocidos por naviera (subset usado en validación
+ * server-side antes de gastar cuota de la API). Mantener sincronizado con
+ * src/lib/jsoncargo/containerPrefixes.ts.
+ */
+const PREFIX_TO_CARRIERS: Record<string, string[]> = {
+  MAEU: ["MAERSK"], MRKU: ["MAERSK"], MSKU: ["MAERSK"], MRSU: ["MAERSK"],
+  MIEU: ["MAERSK"], MNBU: ["MAERSK"], PONU: ["MAERSK"], SEAU: ["MAERSK"],
+  MSCU: ["MSC"], MEDU: ["MSC"], MSDU: ["MSC"], MSWU: ["MSC"], FCIU: ["MSC"],
+  HLXU: ["HAPAG_LLOYD"], HLBU: ["HAPAG_LLOYD"], HLCU: ["HAPAG_LLOYD"],
+  UACU: ["HAPAG_LLOYD"], CAIU: ["HAPAG_LLOYD"], TGHU: ["HAPAG_LLOYD"],
+  CMAU: ["CMA_CGM"], CGMU: ["CMA_CGM"], CXDU: ["CMA_CGM"], ECMU: ["CMA_CGM"],
+  APHU: ["CMA_CGM"], APZU: ["CMA_CGM"], CXRU: ["CMA_CGM"],
+  COSU: ["COSCO"], CCLU: ["COSCO"], CBHU: ["COSCO"], CSNU: ["COSCO"],
+  CSLU: ["COSCO"], OOLU: ["COSCO"], OOCU: ["COSCO"],
+  EGHU: ["EVERGREEN"], EISU: ["EVERGREEN"], EITU: ["EVERGREEN"],
+  EMCU: ["EVERGREEN"], HMCU: ["EVERGREEN"], EGSU: ["EVERGREEN"],
+  ZIMU: ["ZIM"], ZCSU: ["ZIM"],
+  YMLU: ["YANG_MING"], YMMU: ["YANG_MING"], YMUU: ["YANG_MING"],
+  ONEU: ["ONE"], TLLU: ["ONE"], KKFU: ["ONE"], KKTU: ["ONE"],
+  HMMU: ["HMM"], HDMU: ["HMM"],
+  PCIU: ["PIL"], PILU: ["PIL"],
+  TEMU: ["EVERGREEN", "MSC", "ONE"],
+  TCLU: ["MSC", "MAERSK"], TCNU: ["MSC", "MAERSK"],
+  TGBU: ["HAPAG_LLOYD", "ONE"],
+  BEAU: ["MAERSK", "MSC"], BMOU: ["MSC"],
+  CAXU: ["CMA_CGM"], CRXU: ["CMA_CGM"],
+  GLDU: ["MAERSK", "EVERGREEN"], GESU: ["MAERSK"],
+  TRHU: ["EVERGREEN"], TRIU: ["EVERGREEN"],
+  SEGU: ["MAERSK"], TGCU: ["EVERGREEN"], UESU: ["EVERGREEN"], WHLU: ["EVERGREEN"],
+};
+
+export function extractPrefix(container: string | null | undefined): string | null {
+  if (!container) return null;
+  const m = container.trim().toUpperCase().match(/^[A-Z]{4}/);
+  return m ? m[0] : null;
+}
+
+export interface PrefixCheck {
+  valid: boolean;
+  prefix: string | null;
+  suggestions: string[];
+  known: boolean;
+}
+
+export function checkPrefixVsCarrier(container: string | null | undefined, shippingLine: string | null): PrefixCheck {
+  const prefix = extractPrefix(container);
+  if (!prefix) return { valid: true, prefix: null, suggestions: [], known: false };
+  const carriers = PREFIX_TO_CARRIERS[prefix];
+  if (!carriers || carriers.length === 0) return { valid: true, prefix, suggestions: [], known: false };
+  if (shippingLine && carriers.includes(shippingLine)) return { valid: true, prefix, suggestions: [], known: true };
+  return { valid: false, prefix, suggestions: carriers, known: true };
+}
+
 export interface JsonCargoContainerData {
   container_id: string;
   container_status: string;
