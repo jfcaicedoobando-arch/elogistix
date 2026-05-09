@@ -227,7 +227,7 @@ export function TrackingLiveCard({ embarqueId, modo, naviera, contenedor, blMast
         {(() => {
           if (readOnly || !summary || tracking?.status !== "ok" || fechasDismissed) return null;
           const etaPropuesta = jsoncargoDateToYmd(summary.eta_final_destination);
-          const etdPropuesta = jsoncargoDateToYmd(summary.atd_origin);
+          const etdPropuesta = jsoncargoDateToYmd(summary.etd_origin_effective ?? summary.atd_origin);
           const etaDifiere = !!etaPropuesta && etaPropuesta !== (eta ?? null);
           const etdDifiere = !!etdPropuesta && etdPropuesta !== (etd ?? null);
           if (!etaDifiere && !etdDifiere) return null;
