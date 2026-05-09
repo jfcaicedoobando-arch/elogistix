@@ -76,6 +76,7 @@ export function useEliminarTracking(embarqueId: string | undefined) {
     onSuccess: () => {
       notifySuccess(toast, { title: "Tracking desactivado" });
       qc.invalidateQueries({ queryKey: keyTracking(embarqueId ?? "") });
+      qc.invalidateQueries({ queryKey: ["tracking_intentos", embarqueId ?? ""] });
     },
     onError: (err) => {
       notifyError(toast, {
