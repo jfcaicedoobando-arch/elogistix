@@ -2,46 +2,6 @@ import type { ChangelogEntry } from "../../../changelogData";
 
 export const chunk0: ChangelogEntry[] = [
   {
-    version: "8.131.2",
-    date: "2026-05-09",
-    type: "patch",
-    title: "Compatibilidad Terminal49: liberación remota y webhooks de ciclo de vida",
-    summary: "Al desactivar el tracking ahora también se libera en Terminal49 (DELETE remoto) para no consumir cuota. El webhook actualiza estado y ETA del embarque ante eventos tracking_request.succeeded/failed y shipment.estimated.arrival.",
-    description: "Mejoras de compatibilidad con la API v2 de Terminal49 detectadas tras revisar la documentación oficial. (1) Edge function terminal49-delete-tracking: además de borrar la fila local en tracking_externo, ahora llama DELETE /v2/tracking_requests/{id} con Authorization Token para liberar el tracking del lado de Terminal49 y evitar consumo innecesario. Tolera 404 como éxito (ya no existía). Si T49 falla con otro código se borra localmente igual (el usuario pidió desactivar) y se registra el detalle en tracking_intentos con http_status y mensaje. (2) Edge function terminal49-webhook: handlers específicos para eventos de ciclo de vida — tracking_request.succeeded marca status='succeeded' y limpia failed_reason; tracking_request.failed guarda attributes.failed_reason; tracking_request.tracking_started y awaiting_manifest actualizan el status correspondiente; shipment.estimated.arrival (o shipment.estimated_arrival) actualiza embarques.eta con pod_eta_at. Los eventos tracking_request.* ya no se registran en la timeline para evitar ruido (sí se reflejan en el badge de la tarjeta). Los eventos de transporte (vessel_loaded, vessel_departed, vessel_arrived, discharged, etc.) siguen insertándose en eventos_embarque como antes. Versión 8.131.2.",
-  },
-  {
-    version: "8.131.1",
-    date: "2026-05-08",
-    type: "patch",
-    title: "Diagnóstico visible del tracking de Terminal49",
-    summary: "El tab Tracking ahora explica por qué 'Sincronizar ahora' a veces dice 'Sin cambios': muestra estado del tracking request, si ya hay shipment vinculado, hint contextual, request_id copiable, link a Terminal49 y polling automático cada 60 s mientras se espera a la naviera.",
-    description: "Mejoras de visibilidad sobre la integración Terminal49 sin cambiar la lógica de sincronización. (1) TerminalAutomaticoCard: nuevo badge 'Shipment: vinculado/pendiente', hint contextual por estado (pending/created/awaiting_manifest/tracking/succeeded/failed) explicando qué significa y qué esperar, tracking_request_id mostrado con botón copiar y link directo a app.terminal49.com. (2) Hook useTrackingTerminal49: refetchInterval condicional de 60 s solo cuando el status está en pending/created/awaiting_manifest, se detiene al pasar a tracking/succeeded. Combinado con el webhook ya configurado, el usuario ve actualizaciones casi en tiempo real sin presionar nada. (3) useSincronizarTracking: toast contextual — si no hay shipment vinculado y status sigue pending/created, mensaje explica que la naviera aún no publica datos y que puede tardar 24-48 h, en lugar del genérico 'Sin cambios'. (4) Edge function terminal49-sync: respuesta enriquecida con shipment_id, is_retrying, retry_count y failed_reason para que el frontend pueda diagnosticar. Versión 8.131.1.",
-  },
-  {
-    version: "8.131.0",
-    date: "2026-05-08",
-    type: "minor",
-    title: "Historial de intentos de tracking por embarque",
-    summary: "Nueva tabla tracking_intentos y tarjeta de auditoría en el tab de Tracking que registra cada intento de activación con fecha, resultado, código HTTP, SCAC, BL, mensaje y tracking_request_id.",
-    description: "Auditoría de la integración con Terminal49. (1) Migración: nueva tabla tracking_intentos (embarque_id, organization_id, provider, accion, request_type, request_number, scac, resultado [exito/error/duplicado], http_status, tracking_request_id, mensaje, detalle jsonb, usuario_id, usuario_email, created_at) con índices por embarque y RLS por org (lectura/inserción del tenant + super_admin). (2) Edge function terminal49-create-tracking: ahora registra un intento en cada caso — éxito, duplicado vinculado, validaciones (modo, BL faltante, SCAC inválido), rechazo de Terminal49 con HTTP status y detalle, error al guardar en tracking_externo y excepciones. (3) UI: nuevo componente TrackingIntentosHistorial bajo TerminalAutomaticoCard en TabTracking (solo Marítimo) que muestra los últimos 50 intentos con badge de resultado, HTTP status, fecha, usuario, SCAC, BL y botón para copiar el tracking_request_id. (4) Hook useTrackingIntentos con React Query e invalidación automática al activar tracking (éxito o error). Versión 8.131.0.",
-  },
-  {
-    version: "8.130.1",
-    date: "2026-05-08",
-    type: "patch",
-    title: "Validación SCAC en navieras y embarques",
-    summary: "El catálogo de Navieras ahora exige SCAC de 4 letras (A–Z). El wizard de embarques marítimos valida que la naviera seleccionada tenga SCAC válido. Edge function de Terminal49 busca primero por código.",
-    description: "Endurecimiento del flujo de tracking automático. (1) Migración: CHECK constraint navieras_code_scac_format en navieras.code (regex ^[A-Z]{4}$, NOT VALID para no romper históricos). (2) Catálogo (Configuración → Navieras): input SCAC con maxLength 4, autoupper, filtro de caracteres no A–Z, mensaje de error inline y disabled del botón Agregar si no cumple. Texto de ayuda explicando qué es el SCAC. (3) Schema zod del wizard (paso 2 marítimo): naviera ahora requiere regex ^[A-Z]{4}$ con mensaje '2.naviera.scac' en errorCatalog. (4) NavieraSelect: detecta valor sin match en catálogo y lo marca con borde destructivo + ícono AlertTriangle + texto 'SCAC inválido: \"X\"'. Tooltip de ayuda permanente debajo del select. (5) Edge function terminal49-create-tracking: ahora resuelve SCAC primero por navieras.code (que es lo que el formulario guarda), fallback por name. Mensaje de error sugiere editar el embarque. (6) Datos: corregido el SCAC de ZIM Integrated Shipping de 'ZIM' (3 letras, inválido) a 'ZIMU' (oficial). Versión 8.130.1.",
-  },
-  {
-    version: "8.130.0",
-    date: "2026-05-08",
-    type: "minor",
-    title: "Integración Terminal49: tracking marítimo automático",
-    summary: "Nueva integración con Terminal49 para sincronizar ETA, milestones y eventos de contenedores marítimos directo de la naviera. Activación opt-in por embarque.",
-    description: "Fase 1 de la integración con Terminal49. (1) Migración: tabla tracking_externo (1:1 con embarque, RLS por org + lectura del cliente dueño) y tracking_webhook_log (auditoría, solo super_admin). (2) Edge functions: terminal49-create-tracking (POST /v2/tracking_requests con BL Master + SCAC, maneja duplicados) y terminal49-sync (refresca tracking_request + shipment + transport_events e inserta milestones nuevos en eventos_embarque, idempotente por descripción+fecha; sobrescribe ETA, fecha_llegada_real y estado). (3) UI: nueva tarjeta TerminalAutomaticoCard en TabTracking del detalle del embarque, solo visible para modo Marítimo. Permite Activar / Sincronizar ahora / Desactivar. Muestra estado (pending/succeeded/failed), SCAC, número rastreado, última sincronización y último evento. (4) Servicios y hooks: src/services/tracking/terminal49.ts y src/hooks/embarque/useTrackingTerminal49.ts (React Query con invalidación de eventos del embarque al sincronizar). (5) SCAC se resuelve desde navieras.code (UN-LOCODE de 4 letras). Pendiente Fase 2: webhooks (requiere registrar URL en Terminal49 + WEBHOOK_SECRET). Versión 8.130.0.",
-  },
-  {
     version: "8.129.0",
     date: "2026-05-08",
     type: "minor",

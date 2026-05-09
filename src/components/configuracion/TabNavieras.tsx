@@ -18,16 +18,10 @@ export default function TabNavieras() {
   const [nuevoCode, setNuevoCode] = useState("");
   const [nuevoName, setNuevoName] = useState("");
 
-  const codeNormalizado = nuevoCode.trim().toUpperCase();
-  const codeValido = /^[A-Z]{4}$/.test(codeNormalizado);
-  const codeError = nuevoCode.length > 0 && !codeValido
-    ? "El SCAC debe tener exactamente 4 letras (A–Z)."
-    : null;
-
   const handleAgregar = () => {
-    if (!codeValido || !nuevoName.trim()) return;
+    if (!nuevoCode.trim() || !nuevoName.trim()) return;
     agregarNaviera.mutate(
-      { code: codeNormalizado, name: nuevoName.trim() },
+      { code: nuevoCode.trim().toUpperCase(), name: nuevoName.trim() },
       { onSuccess: () => { setNuevoCode(""); setNuevoName(""); } }
     );
   };
@@ -64,27 +58,17 @@ export default function TabNavieras() {
       <CardContent className="space-y-4">
         <div className="flex flex-wrap gap-2 items-end">
           <div className="space-y-1">
-            <Label className="text-xs">SCAC (4 letras)</Label>
-            <Input
-              className="w-28 uppercase"
-              placeholder="MAEU"
-              maxLength={4}
-              value={nuevoCode}
-              onChange={(e) => setNuevoCode(e.target.value.toUpperCase().replace(/[^A-Z]/g, ""))}
-            />
-            {codeError && <p className="text-[11px] text-destructive">{codeError}</p>}
+            <Label className="text-xs">Código</Label>
+            <Input className="w-28" placeholder="MAERSK" value={nuevoCode} onChange={(e) => setNuevoCode(e.target.value)} />
           </div>
           <div className="space-y-1">
             <Label className="text-xs">Nombre</Label>
             <Input className="w-64" placeholder="Maersk Line" value={nuevoName} onChange={(e) => setNuevoName(e.target.value)} />
           </div>
-          <Button size="sm" onClick={handleAgregar} disabled={agregarNaviera.isPending || !codeValido || !nuevoName.trim()}>
+          <Button size="sm" onClick={handleAgregar} disabled={agregarNaviera.isPending}>
             <Plus className="h-4 w-4 mr-1" /> Agregar
           </Button>
         </div>
-        <p className="text-[11px] text-muted-foreground">
-          El SCAC (Standard Carrier Alpha Code) es un código oficial de 4 letras requerido para el tracking automático.
-        </p>
 
         <SearchInput value={busqueda} onChange={setBusqueda} placeholder="Buscar por código o nombre..." />
 

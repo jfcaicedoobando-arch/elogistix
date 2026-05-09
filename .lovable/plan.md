@@ -1,43 +1,106 @@
-# Mejoras de compatibilidad con Terminal49
+## Integración Terminal49 — Sincronización automática de tracking marítimo
 
-Aplicar las 2 mejoras detectadas en la verificación contra la API v2 de Terminal49.
+### Resumen de la API (de la documentación oficial)
 
-## 1. `terminal49-delete-tracking`: liberar el tracking en Terminal49
+Terminal49 es una API **event-driven** especializada en tracking de carga marítima:
 
-Hoy solo borra la fila local. Vamos a llamar también `DELETE /v2/tracking_requests/{tracking_request_id}` para liberar el tracking en T49 y evitar consumo innecesario.
+- **Auth**: Bearer token simple → header `Authorization: Token TU_API_KEY`
+- **Base URL**: `https://api.terminal49.com/v2`
+- **Formato**: JSON:API (`Content-Type: application/vnd.api+json`)
+- **Identificadores soportados**: Master BL (recomendado), Booking number, o Container number + SCAC del carrier (4 letras: MAEU, MSCU, CMDU, etc.). Hay endpoint `auto-detect-carrier` si no conocemos el SCAC.
+- **Flujo recomendado**:
+  1. `POST /tracking_requests` con BL/Booking + SCAC → respuesta inmediata `pending`.
+  2. Terminal49 valida con la naviera y emite eventos: `tracking_request.succeeded` / `failed` → al confirmarse crea un **Shipment** con sus **Containers**.
+  3. Cada cambio (ETA, milestones, LFD, holds, terminal availability, descarga, vacío) dispara un webhook.
+- **Catálogo de eventos** (>30): `shipment.created`, `shipment.estimated.arrival.changed`, `container.transport.vessel_loaded`, `container.transport.vessel_departed`, `container.transport.vessel_arrived`, `container.transport.discharged`, `container.transport.full_out`, `container.transport.empty_in`, `container.updated` (LFD, holds), etc.
+- **Polling desaconsejado**: consume rate limit (100 req/min) y pierde el contexto del campo cambiado. Webhooks son la vía oficial.
+- **Pricing**: típicamente por shipment activo. La key de prueba usualmente da créditos limitados — perfecto para validación.
 
-- Antes de borrar la fila local, leer `tracking_request_id` y `scac` de `tracking_externo`.
-- Si existe `tracking_request_id`, hacer `DELETE` a Terminal49 con el header `Authorization: Token <TERMINAL49_API_KEY>`.
-- Tolerar 404 (ya no existe en T49) como éxito.
-- Si T49 responde con error distinto a 404, registrar el error en `tracking_intentos` pero **continuar** con el borrado local (el usuario ya pidió desactivar).
-- Registrar el resultado del DELETE remoto en `tracking_intentos` (acción `delete`, campo `mensaje` y `http_status`).
+### Mapeo a nuestro modelo
 
-## 2. `terminal49-webhook`: handlers explícitos para eventos de ciclo de vida
+Ya tenemos:
 
-Hoy el `mapEventTypeToEnum` cubre los eventos de transporte por substring. Vamos a añadir handlers específicos para los 3 eventos que afectan estado del embarque:
+- `embarques` con `bl_master`, `bl_house`, `naviera`, `contenedor`, `etd`, `eta`, `fecha_llegada_real`, `estado`.
+- `eventos_embarque` (timeline con `tipo`, `descripcion`, `ubicacion`, `fecha`) — calza 1:1 con milestones de Terminal49.
+- Modo `Marítimo` ya existe en el wizard.
 
-- **`tracking_request.succeeded`** → actualizar `tracking_externo.status = 'succeeded'`, limpiar `failed_reason`.
-- **`tracking_request.failed`** → actualizar `tracking_externo.status = 'failed'` y guardar `attributes.failed_reason` en `failed_reason`.
-- **`shipment.estimated.arrival`** (cambio de ETA) → actualizar `embarques.eta` con `attributes.pod_eta_at` (o el campo que venga en el payload).
+Lo que falta:
 
-Estos handlers son adicionales: el flujo actual de inserción en `eventos_embarque` para eventos de transporte (`vessel_loaded`, `vessel_departed`, etc.) sigue funcionando igual.
+- Vincular cada embarque marítimo con un `tracking_request_id` y `shipment_id` de Terminal49.
+- Guardar SCAC normalizado de la naviera.
+- Recibir webhooks y actualizar `embarques.eta`, `fecha_llegada_real`, `estado` + insertar en `eventos_embarque` automáticamente.
+- UI para forzar alta manual / re-sync / ver estado del tracking.
 
-Además: si el evento es `tracking_request.*` y el payload trae `relationships.tracking_request.data.id`, usar ese ID para localizar la fila (ya lo hace, solo verificar).
+### Plan de implementación (3 fases)
 
-## 3. Changelog y versión
+#### Fase 1 — Infraestructura backend
 
-- Bump de versión patch en `src/constants/appVersion.ts` a `8.131.2`.
-- Nueva entrada al inicio de `src/content/changelog/v8/chunks/0.ts` describiendo: "Compatibilidad Terminal49: liberación remota al desactivar tracking + actualización de ETA y estado vía webhooks".
+1. **Secret**: registrar `TERMINAL49_API_KEY` y `TERMINAL49_WEBHOOK_SECRET` (este último lo elegimos nosotros para validar firma HMAC del webhook).
+2. **Migración**:
+  - Nueva tabla `tracking_externo` (1:1 con embarque): `embarque_id`, `provider` ('terminal49'), `tracking_request_id`, `shipment_id`, `request_number`, `request_type` (bol/booking/container), `scac`, `status` (pending/created/succeeded/failed/tracking/inactive), `failed_reason`, `last_event_at`, `raw_payload jsonb`. RLS por `organization_id`.
+  - Nueva tabla `tracking_webhook_log` (auditoría): `event_type`, `payload jsonb`, `processed boolean`, `error`, `received_at`. RLS sólo super_admin.
+  - Agregar columna `naviera_scac` a tabla `navieras` (catálogo) si no existe, para mapear naviera elegida → SCAC.
+3. **Edge function `terminal49-create-tracking**` (verify_jwt = true, auth interna):
+  - Input: `{ embarque_id }`. Lee BL/SCAC del embarque, llama `POST /tracking_requests`, persiste resultado en `tracking_externo`.
+  - Maneja 422 "duplicate" reusando el tracking existente (`GET /tracking_requests?filter[number]=...`).
+4. **Edge function `terminal49-webhook**` (verify_jwt = false, pública):
+  - Valida firma del webhook (Terminal49 firma con HMAC-SHA256).
+  - Persiste payload en `tracking_webhook_log`.
+  - Despacha por `event` type: actualiza `embarques.eta`, `fecha_llegada_real`, `estado`, e inserta en `eventos_embarque`.
+  - Devuelve 2xx siempre que se haya guardado (idempotente por `event.id`).
+5. **Edge function `terminal49-sync**` (manual):
+  - Re-fetch del shipment y containers para refrescar todo (`GET /shipments/{id}?include=containers,transport_events`).
 
-## Archivos a modificar
+#### Fase 2 — Integración en el flujo de embarque
 
-- `supabase/functions/terminal49-delete-tracking/index.ts`
-- `supabase/functions/terminal49-webhook/index.ts`
-- `src/constants/appVersion.ts`
-- `src/content/changelog/v8/chunks/0.ts`
+1. **Trigger automático**: al crear/editar un embarque marítimo con BL Master + naviera con SCAC válido, mostrar toggle "Activar tracking automático con Terminal49". Al activarlo invoca `terminal49-create-tracking`.
+2. **UI en `EmbarqueDetalle.tsx**`:
+  - Tarjeta "Tracking automático" con: estado actual del tracking, último evento sincronizado, botones **Re-sync ahora**, **Pausar**, **Eliminar**.
+  - Indicar fuente de cada evento en el timeline (badge "Terminal49" vs "Manual").
+3. **Listado de embarques**: badge sutil cuando el embarque tiene tracking automático activo.
+4. **Configuración global**: toggle "Activar Terminal49 por defecto en embarques marítimos" + campo para registrar la URL del webhook (auto-generada).
 
-## Sin cambios en
+#### Fase 3 — Robustez y QA
 
-- Esquema de base de datos (no requiere migración).
-- UI (`TabTracking.tsx`, `TerminalAutomaticoCard.tsx`, hooks).
-- `terminal49-create-tracking` ni `terminal49-sync` (ya compatibles).
+1. **Test con números de prueba** (Terminal49 ofrece test tracking numbers documentados).
+2. **Reintentos**: webhook idempotente por `event.id`; si falla un update marcamos `processed=false` y mostramos en `Auditoría`.
+3. **Bitácora**: cada alta/baja/sync queda en la bitácora de actividad.
+4. **Changelog + bump de versión**.
+
+### Detalles técnicos
+
+```text
+[Wizard Embarque] --crea/edita-→ [embarques]
+                                     │
+                          (BL+SCAC) ─┴→ POST tracking_requests
+                                                   │
+                       Terminal49 ──webhook──→ [edge:terminal49-webhook]
+                                                   │
+                                        ┌──────────┴──────────┐
+                                  upsert eventos_embarque   update embarques (eta/estado)
+```
+
+**Endpoint del webhook a registrar en el dashboard de Terminal49**:
+`https://eorqadkulqtneqjbsblk.supabase.co/functions/v1/terminal49-webhook`
+
+**Eventos a suscribir inicialmente** (para no saturar):
+
+- `tracking_request.succeeded`, `tracking_request.failed`
+- `shipment.estimated.arrival.changed`
+- `container.transport.vessel_departed`
+- `container.transport.vessel_arrived`
+- `container.transport.discharged`
+- `container.transport.full_out` (recogido por cliente / transportista)
+- `container.updated` (para LFD y holds)
+
+**Mapeo de eventos → `eventos_embarque.tipo**` (usaremos los valores ya existentes del enum `tipo_evento_tracking`; si falta alguno lo agregamos en migración separada).
+
+### Confirmaciones antes de codificar
+
+Antes de arrancar la Fase 1 quiero confirmar contigo:
+
+1. ¿Activamos tracking **siempre** en embarques marítimos con BL Master + SCAC, o **opt-in** manual desde el detalle?  Opt-in
+2. ¿Quieres que los webhooks sobrescriban `eta`/`estado` del embarque, o sólo agreguen al timeline y dejen los campos principales bajo control manual? Si
+3. ¿Limitamos a Marítimo, o también probamos los pocos carriers aéreos que Terminal49 soporta (muy pocos)? Recomendación: sólo marítimo en v1. Solo Maritimo
+
+Con tus respuestas avanzo con la migración + edge functions + UI.

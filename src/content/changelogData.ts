@@ -22,22 +22,6 @@ export interface ChangelogEntry {
  */
 export const recentChangelog: ChangelogEntry[] = [
   {
-    version: "8.130.1",
-    date: "2026-05-08",
-    type: "patch",
-    title: "Validación SCAC en navieras y embarques",
-    summary: "Catálogo de Navieras exige SCAC de 4 letras; el wizard de embarques marca naviera inválida; edge function de Terminal49 busca primero por código SCAC.",
-    description: "CHECK constraint navieras.code regex ^[A-Z]{4}$ (NOT VALID). Tab catálogo con maxLength 4, autoupper, mensaje inline. Schema zod paso 2 marítimo: regex SCAC. NavieraSelect marca valor sin match con borde destructivo y AlertTriangle. Tooltip permanente debajo. Edge function resuelve SCAC primero por code, fallback por name. Datos: ZIM corregido a ZIMU.",
-  },
-  {
-    version: "8.130.0",
-    date: "2026-05-08",
-    type: "minor",
-    title: "Integración Terminal49: tracking marítimo automático",
-    summary: "Nueva integración con Terminal49 para sincronizar ETA y milestones de contenedores marítimos directo de la naviera. Activación opt-in en el detalle del embarque.",
-    description: "Fase 1: tabla tracking_externo + tracking_webhook_log con RLS, edge functions terminal49-create-tracking y terminal49-sync, tarjeta UI en TabTracking que permite Activar / Sincronizar / Desactivar. SCAC tomado de navieras.code, sobrescribe ETA, fecha_llegada_real y estado del embarque, e inserta milestones nuevos en eventos_embarque (idempotente). Pendiente registrar webhook en Terminal49 para recibir updates en tiempo real.",
-  },
-  {
     version: "8.129.0",
     date: "2026-05-08",
     type: "minor",
