@@ -2,6 +2,14 @@ import type { ChangelogEntry } from "../../../changelogData";
 
 export const chunk0: ChangelogEntry[] = [
   {
+    version: "8.133.1",
+    date: "2026-05-09",
+    type: "patch",
+    title: "Tracking: ETD estimado cuando JSONCargo no reporta atd_origin",
+    summary: "Si JSONCargo no devuelve atd_origin pero el contenedor ya está cargado en el buque, se infiere el ETD desde el último movimiento y se muestra como '(estimado)' en el panel de tracking en vivo.",
+    description: "Se agrega pickEffectiveEtd en supabase/functions/_shared/jsoncargo.ts que toma atd_origin o, como fallback, last_movement_timestamp/timestamp_of_last_location cuando container_status indica 'Loaded on vessel', 'On vessel', 'Departed', 'In transit' o 'Sail'. jsoncargo-track devuelve además etd_origin_effective y etd_origin_is_estimated en el summary. extractSummary del hook useJsonCargoTracking aplica la misma heurística sobre raw_payload para que el panel persista la propuesta tras refresh. TrackingLiveCard muestra el ETD efectivo en el campo 'ETD origen (JSONCargo)' con un sufijo '(estimado)' y tooltip explicativo, y la propuesta de actualizar embarques.etd usa este valor.",
+  },
+  {
     version: "8.133.0",
     date: "2026-05-09",
     type: "minor",
