@@ -77,10 +77,18 @@ Deno.serve(async (req) => {
   } catch { /* ignore */ }
 
   if (!result.ok || !result.data) {
+    let friendly = result.errorTitle ?? "Error JSONCargo";
+    if (result.status === 404) {
+      friendly = `JSONCargo no encontró el BL "${embarque.bl_master}" bajo ${shippingLine}. Verifica el número de BL Master o intenta sincronizar por contenedor.`;
+    } else if (result.status === 429) {
+      friendly = "Límite de consultas JSONCargo alcanzado. Intenta más tarde.";
+    } else if (result.status >= 500) {
+      friendly = "JSONCargo no disponible temporalmente. Intenta más tarde.";
+    }
     return jsonResponse({
       ok: false,
       status: result.status,
-      error: result.errorTitle ?? "Error JSONCargo",
+      error: friendly,
     }, 200, cors);
   }
 
