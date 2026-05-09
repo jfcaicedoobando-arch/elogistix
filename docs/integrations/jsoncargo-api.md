@@ -1,5 +1,32 @@
 # Content from https://jsoncargo.com/documentation-api/
 
+<!--
+JSONCargo API — referencia interna
+Fuente: https://jsoncargo.com/documentation-api/
+Capturado: 2026-05-09
+API version: v1 (base: https://api.jsoncargo.com/api/v1)
+Auth: header `x-api-key` con secret `JSONCARGO_API_KEY`.
+
+Snapshot — verificar contra docs oficiales antes de cambios mayores.
+
+Archivos del repo que usan esta API:
+- supabase/functions/_shared/jsoncargo.ts
+- supabase/functions/jsoncargo-track/index.ts
+- supabase/functions/jsoncargo-track-batch/index.ts
+- src/lib/jsoncargo/navieras.ts
+- src/lib/jsoncargo/containerPrefixes.ts
+- src/hooks/embarque/useJsonCargoTracking.ts
+- src/components/embarque/TrackingLiveCard.tsx
+
+Navieras soportadas: MAERSK, HAPAG_LLOYD, HMM, ONE, EVERGREEN, MSC,
+CMA_CGM, COSCO, ZIM, YANG_MING, PIL.
+
+Errores comunes:
+- "Prefix not found for tracking number XXXX. Please contact support@jsoncargo.com
+  to request adding this prefix XXXX to YYY shipping line."
+  → Validar prefix BIC vs naviera ANTES de llamar (ver containerPrefixes.ts).
+-->
+
 #### Documentation
 
 - [Shipping Line Compatibility](https://jsoncargo.com/documentation-api/#shipping-line-compatibility)
