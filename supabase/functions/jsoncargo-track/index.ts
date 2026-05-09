@@ -65,6 +65,43 @@ Deno.serve(async (req) => {
     return errorResponse(`Naviera "${embarque.naviera ?? "—"}" no soportada por JSONCargo`, 422, cors);
   }
 
+  // Validación de prefix vs naviera (evita consumir cuota)
+  const prefixCheck = checkPrefixVsCarrier(embarque.contenedor, shippingLine);
+  if (!prefixCheck.valid) {
+    // Persistir el estado para que el batch no reintente
+    const { data: existingPm } = await auth.adminClient
+      .from("tracking_externo")
+      .select("id")
+      .eq("embarque_id", embarqueId)
+      .eq("provider", "jsoncargo")
+      .maybeSingle();
+    const reason = `Prefix ${prefixCheck.prefix} no coincide con naviera ${shippingLine}. Sugerencias: ${prefixCheck.suggestions.join(", ") || "—"}`;
+    const payload = {
+      embarque_id: embarqueId,
+      organization_id: embarque.organization_id,
+      provider: "jsoncargo",
+      request_number: embarque.contenedor,
+      request_type: "container",
+      scac: shippingLine,
+      status: "failed",
+      failed_reason: reason,
+      last_synced_at: new Date().toISOString(),
+      raw_payload: { error_code: "PREFIX_MISMATCH", prefix: prefixCheck.prefix, suggestions: prefixCheck.suggestions },
+    };
+    if (existingPm) {
+      await auth.adminClient.from("tracking_externo").update(payload).eq("id", existingPm.id);
+    } else {
+      await auth.adminClient.from("tracking_externo").insert(payload);
+    }
+    return jsonResponse({
+      ok: false,
+      error_code: "PREFIX_MISMATCH",
+      prefix: prefixCheck.prefix,
+      suggestions: prefixCheck.suggestions,
+      error: reason,
+    }, 422, cors);
+  }
+
   // Throttle por last_synced_at
   const { data: existing } = await auth.adminClient
     .from("tracking_externo")
