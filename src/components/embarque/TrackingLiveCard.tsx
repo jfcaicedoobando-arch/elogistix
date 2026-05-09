@@ -96,11 +96,39 @@ export function TrackingLiveCard({ embarqueId, modo, naviera, contenedor, blMast
           {tracking?.status === "ok" && <Badge variant="secondary" className="text-[10px]">Conectado</Badge>}
           {tracking?.status === "failed" && <Badge variant="destructive" className="text-[10px]">Error</Badge>}
         </CardTitle>
-        {!readOnly && !noSoportada && !sinContenedor && !prefixMismatch && (
-          <Button size="sm" variant="outline" onClick={handleSync} disabled={sync.isPending}>
-            <RefreshCw className={`h-3.5 w-3.5 mr-1 ${sync.isPending ? "animate-spin" : ""}`} />
-            {tracking ? "Actualizar" : "Sincronizar"}
-          </Button>
+        {!readOnly && (
+          <div className="flex items-center gap-2">
+            {!noSoportada && (
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <span tabIndex={0}>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => setBolDialogOpen(true)}
+                        disabled={!blMaster}
+                      >
+                        <Search className="h-3.5 w-3.5 mr-1" />
+                        Buscar por BL Master
+                      </Button>
+                    </span>
+                  </TooltipTrigger>
+                  {!blMaster && (
+                    <TooltipContent>
+                      Captura el BL Master en Datos / Ruta para usar esta búsqueda.
+                    </TooltipContent>
+                  )}
+                </Tooltip>
+              </TooltipProvider>
+            )}
+            {!noSoportada && !sinContenedor && !prefixMismatch && (
+              <Button size="sm" variant="outline" onClick={handleSync} disabled={sync.isPending}>
+                <RefreshCw className={`h-3.5 w-3.5 mr-1 ${sync.isPending ? "animate-spin" : ""}`} />
+                {tracking ? "Actualizar" : "Sincronizar"}
+              </Button>
+            )}
+          </div>
         )}
       </CardHeader>
       <CardContent className="space-y-3">
