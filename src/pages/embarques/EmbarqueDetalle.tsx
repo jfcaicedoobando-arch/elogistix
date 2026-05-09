@@ -151,7 +151,7 @@ export default function EmbarqueDetalle() {
         </TabsContent>
 
         <TabsContent value="tracking">
-          <TabTracking embarqueId={id!} />
+          <TabTracking embarqueId={id!} embarque={embarque} />
         </TabsContent>
 
         <TabsContent value="notas">

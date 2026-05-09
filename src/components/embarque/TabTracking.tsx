@@ -15,13 +15,16 @@ import { useToast } from '@/hooks/use-toast';
 import { getErrorMessage } from '@/lib/errors';
 import { formatDate, nombreDesdeEmail } from '@/lib/formatters';
 import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
+import { TrackingLiveCard } from './TrackingLiveCard';
+import type { Tables } from '@/integrations/supabase/types';
 
 interface Props {
   embarqueId: string;
+  embarque?: Pick<Tables<'embarques'>, 'modo' | 'naviera' | 'contenedor'> | null;
 }
 
 
-export function TabTracking({ embarqueId }: Props) {
+export function TabTracking({ embarqueId, embarque }: Props) {
   const { data: eventos = [], isLoading } = useEventosEmbarque(embarqueId);
   const crearEvento = useCreateEventoEmbarque();
   const { user } = useAuth();
