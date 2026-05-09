@@ -77,12 +77,11 @@ Deno.serve(async (req) => {
   } catch { /* ignore */ }
 
   if (!result.ok || !result.data) {
-    const status = result.status === 404 ? 404 : (result.status === 429 ? 429 : 200);
     return jsonResponse({
       ok: false,
       status: result.status,
       error: result.errorTitle ?? "Error JSONCargo",
-    }, status, cors);
+    }, 200, cors);
   }
 
   return jsonResponse({
