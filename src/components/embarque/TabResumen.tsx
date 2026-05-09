@@ -90,8 +90,8 @@ export function TabResumen({ embarque }: Props) {
               <DetailRow label="Transportista" value={embarque.transportista || '-'} />
               <DetailRow label="Carta Porte" value={embarque.carta_porte || '-'} />
             </>)}
-            <DetailRow label="ETD" value={formatDate(embarque.etd || '')} />
-            <DetailRow label="ETA" value={formatDate(embarque.eta || '')} />
+            <DetailRow label="ETD" value={<FechaConOriginal actual={embarque.etd} original={(embarque as any).etd_original} />} />
+            <DetailRow label="ETA" value={<FechaConOriginal actual={embarque.eta} original={(embarque as any).eta_original} />} />
             {embarque.fecha_llegada_real && <DetailRow label="Llegada Real" value={formatDate(embarque.fecha_llegada_real)} />}
           </CardContent>
         </Card>
