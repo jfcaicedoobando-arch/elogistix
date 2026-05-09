@@ -61,10 +61,33 @@ export function useSincronizarTracking(embarqueId: string | undefined) {
     mutationFn: () => sincronizarTrackingTerminal49(embarqueId!),
     onSuccess: (data) => {
       const eventos = data?.eventos_nuevos ?? 0;
-      notifySuccess(toast, {
-        title: "Tracking sincronizado",
-        description: eventos > 0 ? `${eventos} evento(s) nuevo(s)` : "Sin cambios",
-      });
+      const status = String(data?.status ?? "").toLowerCase();
+      const shipmentId = data?.shipment_id ?? null;
+      const failedReason = data?.failed_reason ?? null;
+
+      if (failedReason) {
+        notifyError(toast, {
+          title: "Terminal49 reportó un error",
+          description: failedReason,
+        });
+      } else if (eventos > 0) {
+        notifySuccess(toast, {
+          title: "Tracking sincronizado",
+          description: `${eventos} evento(s) nuevo(s)`,
+        });
+      } else if (!shipmentId && (status === "pending" || status === "created")) {
+        notifySuccess(toast, {
+          title: "Esperando respuesta de la naviera",
+          description:
+            "Terminal49 aceptó el BL pero la naviera aún no publica datos. Puede tardar de minutos a 24-48 h. Reintentamos automáticamente.",
+        });
+      } else {
+        notifySuccess(toast, {
+          title: "Tracking sincronizado",
+          description: "Sin cambios desde la última sincronización",
+        });
+      }
+
       qc.invalidateQueries({ queryKey: keyTracking(embarqueId ?? "") });
       qc.invalidateQueries({ queryKey: ["embarque-full", embarqueId] });
       qc.invalidateQueries({ queryKey: ["eventos_embarque", embarqueId] });
