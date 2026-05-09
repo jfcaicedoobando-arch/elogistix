@@ -22,6 +22,14 @@ export interface ChangelogEntry {
  */
 export const recentChangelog: ChangelogEntry[] = [
   {
+    version: "8.133.0",
+    date: "2026-05-09",
+    type: "minor",
+    title: "JSONCargo: sincronización de ETA/ETD con confirmación",
+    summary: "Tracking propone actualizar ETD/ETA del embarque cuando JSONCargo reporta fechas distintas; ya no se sobreescriben automáticamente.",
+    description: "jsoncargo-track devuelve etd_propuesta/eta_propuesta y flags de diferencia. TrackingLiveCard muestra una tarjeta de propuesta con botones 'Actualizar embarque' / 'Ignorar' que escribe embarques.etd/eta vía useApplyJsonCargoFechas. Cron batch deja de pisar ETA en silencio.",
+  },
+  {
     version: "8.132.5",
     date: "2026-05-09",
     type: "patch",

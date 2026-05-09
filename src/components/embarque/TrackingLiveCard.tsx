@@ -16,10 +16,22 @@ import {
 import {
   useJsonCargoTracking,
   useSyncJsonCargo,
+  useApplyJsonCargoFechas,
   extractSummary,
   PrefixMismatchError,
 } from "@/hooks/embarque/useJsonCargoTracking";
 import { DialogBolContainers } from "./DialogBolContainers";
+
+/** Parse "YYYY-MM-DD HH:MM" o ISO desde JSONCargo y devuelve "YYYY-MM-DD". */
+function jsoncargoDateToYmd(value: string | null | undefined): string | null {
+  if (!value) return null;
+  const s = value.trim();
+  if (!s) return null;
+  const iso = s.includes("T") ? s : s.replace(" ", "T") + ":00Z";
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return null;
+  return d.toISOString().slice(0, 10);
+}
 
 interface Props {
   embarqueId: string;
@@ -27,15 +39,19 @@ interface Props {
   naviera: string | null;
   contenedor: string | null;
   blMaster?: string | null;
+  etd?: string | null;
+  eta?: string | null;
   /** Si true, no muestra botón de sincronizar (portal cliente). */
   readOnly?: boolean;
 }
 
-export function TrackingLiveCard({ embarqueId, modo, naviera, contenedor, blMaster, readOnly }: Props) {
+export function TrackingLiveCard({ embarqueId, modo, naviera, contenedor, blMaster, etd, eta, readOnly }: Props) {
   const { toast } = useToast();
   const { data: tracking, isLoading } = useJsonCargoTracking(embarqueId);
   const sync = useSyncJsonCargo();
+  const applyFechas = useApplyJsonCargoFechas();
   const [bolDialogOpen, setBolDialogOpen] = useState(false);
+  const [fechasDismissed, setFechasDismissed] = useState(false);
 
   // Solo aplica a marítimo
   if (modo !== "Marítimo") return null;
@@ -208,6 +224,65 @@ export function TrackingLiveCard({ embarqueId, modo, naviera, contenedor, blMast
           </div>
         )}
 
+        {(() => {
+          if (readOnly || !summary || tracking?.status !== "ok" || fechasDismissed) return null;
+          const etaPropuesta = jsoncargoDateToYmd(summary.eta_final_destination);
+          const etdPropuesta = jsoncargoDateToYmd(summary.atd_origin);
+          const etaDifiere = !!etaPropuesta && etaPropuesta !== (eta ?? null);
+          const etdDifiere = !!etdPropuesta && etdPropuesta !== (etd ?? null);
+          if (!etaDifiere && !etdDifiere) return null;
+          const handleApply = async () => {
+            try {
+              await applyFechas.mutateAsync({
+                embarqueId,
+                eta: etaDifiere ? etaPropuesta! : undefined,
+                etd: etdDifiere ? etdPropuesta! : undefined,
+              });
+              notifySuccess(toast, { title: "Fechas actualizadas en el embarque" });
+              setFechasDismissed(true);
+            } catch (err) {
+              notifyError(toast, {
+                title: "No se pudieron actualizar las fechas",
+                description: err instanceof Error ? err.message : "Error",
+              });
+            }
+          };
+          return (
+            <div className="flex items-start gap-2 text-xs p-3 rounded bg-accent/5 border border-accent/30">
+              <Info className="h-4 w-4 mt-0.5 shrink-0 text-accent" />
+              <div className="space-y-2 flex-1">
+                <p className="font-medium">JSONCargo reporta fechas distintas a las del embarque.</p>
+                <ul className="space-y-0.5">
+                  {etdDifiere && (
+                    <li>
+                      <span className="text-muted-foreground">ETD origen:</span>{" "}
+                      <span className="font-mono">{etd ? formatDate(etd, "dd MMM yyyy") : "—"}</span>
+                      {" → "}
+                      <span className="font-mono font-semibold">{formatDate(etdPropuesta!, "dd MMM yyyy")}</span>
+                    </li>
+                  )}
+                  {etaDifiere && (
+                    <li>
+                      <span className="text-muted-foreground">ETA destino:</span>{" "}
+                      <span className="font-mono">{eta ? formatDate(eta, "dd MMM yyyy") : "—"}</span>
+                      {" → "}
+                      <span className="font-mono font-semibold">{formatDate(etaPropuesta!, "dd MMM yyyy")}</span>
+                    </li>
+                  )}
+                </ul>
+                <div className="flex gap-2 pt-1">
+                  <Button size="sm" onClick={handleApply} disabled={applyFechas.isPending}>
+                    {applyFechas.isPending ? "Aplicando..." : "Actualizar embarque"}
+                  </Button>
+                  <Button size="sm" variant="outline" onClick={() => setFechasDismissed(true)}>
+                    Ignorar
+                  </Button>
+                </div>
+              </div>
+            </div>
+          );
+        })()}
+
         {summary && tracking?.status === "ok" && (
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
             <Field icon={<CheckCircle2 className="h-3.5 w-3.5" />} label="Estado">
@@ -221,7 +296,10 @@ export function TrackingLiveCard({ embarqueId, modo, naviera, contenedor, blMast
                 ? `${summary.current_vessel}${summary.current_voyage ? ` · ${summary.current_voyage}` : ""}`
                 : "—"}
             </Field>
-            <Field icon={<Anchor className="h-3.5 w-3.5" />} label="ETA destino final">
+            <Field icon={<Anchor className="h-3.5 w-3.5" />} label="ETD origen (JSONCargo)">
+              {summary.atd_origin ? formatDate(summary.atd_origin, "dd MMM yyyy") : "—"}
+            </Field>
+            <Field icon={<Anchor className="h-3.5 w-3.5" />} label="ETA destino final (JSONCargo)">
               {summary.eta_final_destination ? formatDate(summary.eta_final_destination, "dd MMM yyyy") : "—"}
             </Field>
             <Field icon={<MapPin className="h-3.5 w-3.5" />} label="Origen → Destino">
