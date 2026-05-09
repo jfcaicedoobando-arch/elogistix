@@ -146,6 +146,7 @@ Deno.serve(async (req) => {
     procesados: elegibles.length,
     exitosos: okCount,
     fallidos: failCount,
+    saltados_prefix: saltadosPrefix,
     errores: errores.slice(0, 20),
   });
 });
