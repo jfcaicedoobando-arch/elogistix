@@ -189,15 +189,15 @@ Deno.serve(async (req) => {
     }
   }
 
-  // Actualiza ETA si difiere
-  const newEta = parseJsonCargoDate(result.data.eta_final_destination);
-  if (newEta) {
-    const newEtaDate = newEta.slice(0, 10);
-    if (newEtaDate !== embarque.eta) {
-      await auth.adminClient.from("embarques")
-        .update({ eta: newEtaDate }).eq("id", embarqueId);
-    }
-  }
+  // Propone (sin aplicar) cambios de ETA/ETD: la UI pide confirmación al usuario.
+  const newEtaIso = parseJsonCargoDate(result.data.eta_final_destination);
+  const newEtdIso = parseJsonCargoDate(result.data.atd_origin);
+  const etaPropuesta = newEtaIso ? newEtaIso.slice(0, 10) : null;
+  const etdPropuesta = newEtdIso ? newEtdIso.slice(0, 10) : null;
+  const etaActual = embarque.eta ?? null;
+  const etdActual = embarque.etd ?? null;
+  const etaDifiere = !!etaPropuesta && etaPropuesta !== etaActual;
+  const etdDifiere = !!etdPropuesta && etdPropuesta !== etdActual;
 
   return jsonResponse({
     ok: true,
@@ -208,9 +208,16 @@ Deno.serve(async (req) => {
       current_vessel: result.data.current_vessel_name,
       current_voyage: result.data.current_voyage_number,
       eta_final_destination: result.data.eta_final_destination,
+      atd_origin: result.data.atd_origin,
       shipped_from: result.data.shipped_from,
       shipped_to: result.data.shipped_to,
       last_updated: result.data.last_updated,
+      eta_propuesta: etaPropuesta,
+      etd_propuesta: etdPropuesta,
+      eta_actual: etaActual,
+      etd_actual: etdActual,
+      eta_difiere: etaDifiere,
+      etd_difiere: etdDifiere,
     },
   }, 200, cors);
 });
