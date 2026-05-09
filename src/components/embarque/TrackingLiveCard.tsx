@@ -39,15 +39,19 @@ interface Props {
   naviera: string | null;
   contenedor: string | null;
   blMaster?: string | null;
+  etd?: string | null;
+  eta?: string | null;
   /** Si true, no muestra botón de sincronizar (portal cliente). */
   readOnly?: boolean;
 }
 
-export function TrackingLiveCard({ embarqueId, modo, naviera, contenedor, blMaster, readOnly }: Props) {
+export function TrackingLiveCard({ embarqueId, modo, naviera, contenedor, blMaster, etd, eta, readOnly }: Props) {
   const { toast } = useToast();
   const { data: tracking, isLoading } = useJsonCargoTracking(embarqueId);
   const sync = useSyncJsonCargo();
+  const applyFechas = useApplyJsonCargoFechas();
   const [bolDialogOpen, setBolDialogOpen] = useState(false);
+  const [fechasDismissed, setFechasDismissed] = useState(false);
 
   // Solo aplica a marítimo
   if (modo !== "Marítimo") return null;
