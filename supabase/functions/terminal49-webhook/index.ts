@@ -120,19 +120,55 @@ Deno.serve(async (req) => {
       usuario_email: "terminal49@webhook",
     });
 
-    // Actualizar last_synced_at y raw_payload
+    const evtAttrs = data?.attributes ?? {};
+
+    // Update base de tracking_externo + handlers específicos por tipo de evento
+    const trackingUpdate: Record<string, unknown> = {
+      last_synced_at: new Date().toISOString(),
+      raw_payload: payload,
+    };
+
+    // tracking_request.succeeded → status succeeded, limpiar failed_reason
+    if (eventType === "tracking_request.succeeded") {
+      trackingUpdate.status = "succeeded";
+      trackingUpdate.failed_reason = null;
+    }
+    // tracking_request.failed → guardar failed_reason
+    if (eventType === "tracking_request.failed") {
+      trackingUpdate.status = "failed";
+      trackingUpdate.failed_reason =
+        evtAttrs?.failed_reason ?? evtAttrs?.reason ?? "Tracking failed (sin detalle)";
+    }
+    // tracking_request.tracking_started / awaiting_manifest
+    if (eventType === "tracking_request.tracking_started") {
+      trackingUpdate.status = "tracking";
+    }
+    if (eventType === "tracking_request.awaiting_manifest") {
+      trackingUpdate.status = "awaiting_manifest";
+    }
+
     await supabaseAdmin
       .from("tracking_externo")
-      .update({
-        last_synced_at: new Date().toISOString(),
-        raw_payload: payload,
-      })
+      .update(trackingUpdate)
       .eq("id", trackingRow.id);
 
+    // shipment.estimated.arrival → actualizar embarques.eta
+    if (eventType === "shipment.estimated.arrival" || eventType === "shipment.estimated_arrival") {
+      const newEta: string | null =
+        evtAttrs?.pod_eta_at ?? evtAttrs?.estimated_arrival_at ?? evtAttrs?.eta ?? null;
+      if (newEta) {
+        await supabaseAdmin
+          .from("embarques")
+          .update({ eta: newEta.slice(0, 10) })
+          .eq("id", trackingRow.embarque_id);
+      }
+    }
+
     // Si el evento trae timestamp/voyage info, registrar evento en línea de tiempo
-    const evtAttrs = data?.attributes ?? {};
     const occurredAt = evtAttrs?.timestamp ?? evtAttrs?.occurred_at ?? evtAttrs?.created_at ?? null;
-    if (eventType && eventType !== "unknown" && occurredAt) {
+    // No registrar eventos de ciclo de vida del tracking_request en la timeline (ruido)
+    const esCicloTracking = eventType.startsWith("tracking_request.");
+    if (eventType && eventType !== "unknown" && occurredAt && !esCicloTracking) {
       await supabaseAdmin.from("eventos_embarque").insert({
         embarque_id: trackingRow.embarque_id,
         organization_id: trackingRow.organization_id,
