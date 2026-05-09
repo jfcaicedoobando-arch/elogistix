@@ -50,7 +50,7 @@ export function mapNavieraToJsonCargo(naviera: string | null | undefined): JsonC
   if (n.includes("hapag") || n.includes("lloyd")) return "HAPAG_LLOYD";
   if (n.includes("hyundai") || n === "hmm") return "HMM";
   if (n === "one" || n.includes("oceannetwork")) return "ONE";
-  if (n.includes("evergreen")) return "EVERGREEN";
+  if (n.includes("evergreen") || n === "eglv") return "EVERGREEN";
   if (n.includes("msc") || n.includes("mediterranean")) return "MSC";
   if (n.includes("cmacgm") || n.includes("cma")) return "CMA_CGM";
   if (n.includes("cosco") || n === "oocl" || n === "oolu" || n === "oocu" || n.includes("orientoverseas")) return "COSCO";
