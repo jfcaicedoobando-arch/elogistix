@@ -115,13 +115,23 @@ export function extractSummary(raw: unknown): JsonCargoSummary | null {
   if (!raw || typeof raw !== "object") return null;
   const d = (raw as { data?: Record<string, unknown> }).data;
   if (!d) return null;
+  const atdOrigin = d.atd_origin as string | undefined | null;
+  const status = ((d.container_status as string | undefined) ?? "").toLowerCase();
+  const looksDeparted = /loaded.*vessel|on vessel|departed|in transit|sail/.test(status);
+  const fallbackEtd = looksDeparted
+    ? ((d.last_movement_timestamp as string | undefined | null)
+      ?? (d.timestamp_of_last_location as string | undefined | null))
+    : null;
+  const etdEffective = atdOrigin || fallbackEtd || undefined;
   return {
     container_status: d.container_status as string | undefined,
     last_location: d.last_location as string | undefined,
     current_vessel: d.current_vessel_name as string | undefined,
     current_voyage: d.current_voyage_number as string | undefined,
     eta_final_destination: d.eta_final_destination as string | undefined,
-    atd_origin: d.atd_origin as string | undefined,
+    atd_origin: atdOrigin ?? undefined,
+    etd_origin_effective: etdEffective ?? undefined,
+    etd_origin_is_estimated: !!etdEffective && !atdOrigin,
     shipped_from: d.shipped_from as string | undefined,
     shipped_to: d.shipped_to as string | undefined,
     last_updated: d.last_updated as string | undefined,
