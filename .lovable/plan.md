@@ -1,104 +1,58 @@
-## Integración JSONCargo — Tracking automático de contenedores
+## Objetivo
 
-Endpoint a usar: **Endpoint 1 — Get Container Details** (`GET /api/v1/containers/{tracking_number}?shipping_line={NAME}`, header `x-api-key`).
+Evitar llamadas fallidas a JSONCargo cuando el prefix del contenedor (4 letras iniciales) no pertenece a la naviera registrada, y guiar al usuario a corregir la naviera mostrando sugerencias.
 
-Navieras compatibles: MAERSK, HAPAG_LLOYD, HMM, ONE, EVERGREEN, MSC, CMA_CGM, COSCO, ZIM, YANG_MING, PIL.
+## Cambios
 
----
+### 1. Catálogo local de prefixes → navieras
+**Nuevo archivo:** `src/lib/jsoncargo/containerPrefixes.ts`
+- Mapa estático de prefixes BIC conocidos a las 11 navieras soportadas por JSONCargo (MAERSK, MSC, CMA_CGM, COSCO, HAPAG_LLOYD, HMM, ONE, EVERGREEN, ZIM, YANG_MING, PIL).
+- Helpers:
+  - `extractPrefix(container: string): string | null` — extrae primeras 4 letras alfabéticas.
+  - `getCarriersForPrefix(prefix: string): JsonCargoShippingLine[]` — devuelve navieras que usan ese prefix.
+  - `validatePrefixMatchesNaviera(container, naviera): { valid, suggestions }` — valida coincidencia y devuelve sugerencias si no coincide.
+- Notas: TEMU típicamente pertenece a Evergreen / contenedores leasing; el catálogo cubrirá los prefixes más comunes (MAEU, MSKU, MSCU, CMAU, COSU, HLXU, HLBU, HMMU, ONEU, EGHU, EISU, EITU, TEMU, ZIMU, YMLU, YMMU, PCIU, etc.).
 
-### 1. Backend (Lovable Cloud)
+### 2. Validación previa en hook
+**Edita:** `src/hooks/embarque/useJsonCargoTracking.ts`
+- Antes de invocar la edge function `jsoncargo-track`, ejecutar `validatePrefixMatchesNaviera`.
+- Si no coincide: NO llamar al API. Devolver un error estructurado `{ code: 'PREFIX_MISMATCH', prefix, naviera, suggestions }`.
+- El `useMutation` propaga ese error a la UI sin consumir cuota.
 
-**Secret**: `JSONCARGO_API_KEY` (se solicita al inicio).
+### 3. UI mejorada en la tarjeta de tracking
+**Edita:** `src/components/embarque/TrackingLiveCard.tsx`
+- Cuando el error sea `PREFIX_MISMATCH` (o el backend devuelva el texto "Prefix not found"):
+  - Mostrar Alert (variant destructive) con copy claro:
+    > "El prefix **TEMU** del contenedor no coincide con la naviera **ZIM** registrada. Verifica que la naviera sea correcta."
+  - Listar sugerencias: "Este prefix suele pertenecer a: **Evergreen**" como badges.
+  - CTA secundario: link "Editar embarque" que navega al detalle en modo edición (tab General) para corregir naviera.
+  - Si no hay sugerencias en el catálogo local, mostrar mensaje genérico + indicación de contactar `support@jsoncargo.com` para registrar el prefix.
+- En modo portal cliente: mostrar solo el mensaje informativo, sin CTA de edición.
 
-**Tabla existente reutilizada**: `tracking_externo` (ya tiene `provider`, `raw_payload`, `last_synced_at`, `last_event_at`, RLS por org y portal cliente).
-- Nuevo `provider = 'jsoncargo'`. Sin migración de esquema, solo nuevo valor.
+### 4. Manejo del error del backend (defensa en profundidad)
+**Edita:** `supabase/functions/_shared/jsoncargo.ts` y `supabase/functions/jsoncargo-track/index.ts`
+- Detectar respuestas con texto `Prefix not found` y devolver `{ error_code: 'PREFIX_MISMATCH', prefix, naviera, message }` con HTTP 422 en vez de 500.
+- Registrar `status='prefix_mismatch'` en `tracking_externo` para evitar reintentos automáticos del job batch.
 
-**Migración mínima** — agregar tabla `tracking_navieras_supportadas` no es necesario; usaremos una constante TS con el mapeo `naviera (texto libre del embarque) → shipping_line API name`. Si la naviera del embarque no mapea, se omite el call y se marca un mensaje "naviera no soportada".
+### 5. Skip en batch diario
+**Edita:** `supabase/functions/jsoncargo-track-batch/index.ts`
+- Antes de llamar `jsoncargo-track` por cada embarque, validar prefix contra naviera usando un mini-catálogo embebido (mismo dataset).
+- Si no coincide: saltar embarque y registrar en `bitacora_actividad` con motivo, sin consumir cuota del API.
 
-**Edge function `jsoncargo-track`** (verify_jwt = false, valida JWT en código; admin/operador requeridos):
-- Input: `{ embarqueId: string }`
-- Lee `embarques` (contenedor, naviera, organization_id, modo='Marítimo').
-- Mapea naviera → shipping line code. Si no mapea → 422 con mensaje claro.
-- Llama `https://api.jsoncargo.com/api/v1/containers/{contenedor}?shipping_line={code}` con `x-api-key`.
-- Upsert en `tracking_externo` (unique por embarque_id+provider): guarda `raw_payload`, `status='ok'|'failed'`, `last_synced_at=now()`, `last_event_at = data.last_movement_timestamp`, `request_number=contenedor`, `request_type='container'`, `scac=code`.
-- Sincroniza `eventos_embarque`: para cada milestone con timestamp (atd_origin, atd_last_location, eta_next_destination, customs_clearance, last_movement_timestamp), inserta evento si no existe ya uno con misma fecha+tipo (idempotente). Tipos mapeados a `tipo_evento_tracking` enum.
-- Si `eta_final_destination` ≠ `embarques.eta`, actualiza `embarques.eta` y deja un evento "ETA actualizada por tracking".
-- Devuelve `{ ok, summary: { last_location, current_vessel, eta_final_destination, last_updated, eventos_creados } }`.
+### 6. Changelog y versión
+**Edita:** `src/constants/appVersion.ts` → `8.131.0`
+**Edita:** `src/content/changelog/v8/chunks/0.ts` y `src/content/changelogData.ts` con entrada describiendo: validación previa de prefix, mensajes de error con sugerencias y skip automático en sincronización batch.
 
-**Edge function `jsoncargo-track-batch`** (cron, sin JWT, autenticada por header secreto):
-- Recorre embarques con `modo='Marítimo'`, `estado NOT IN ('Cerrado','Entregado')`, `contenedor IS NOT NULL`, naviera mapeable.
-- Llama internamente la lógica de `jsoncargo-track` por embarque, con backoff entre llamadas para no rebasar rate limit.
-- Logs por embarque a `bitacora_actividad`.
+## Archivos tocados
+- Nuevo: `src/lib/jsoncargo/containerPrefixes.ts`
+- Edita: `src/hooks/embarque/useJsonCargoTracking.ts`
+- Edita: `src/components/embarque/TrackingLiveCard.tsx`
+- Edita: `supabase/functions/_shared/jsoncargo.ts`
+- Edita: `supabase/functions/jsoncargo-track/index.ts`
+- Edita: `supabase/functions/jsoncargo-track-batch/index.ts`
+- Edita: `src/constants/appVersion.ts`, `src/content/changelog/v8/chunks/0.ts`, `src/content/changelogData.ts`
 
-**Cron**: `pg_cron` diario 06:00 UTC con `net.http_post` al edge function `jsoncargo-track-batch` (insert directo, no migración pública — incluye anon key).
-
----
-
-### 2. Frontend
-
-**`src/lib/jsoncargo/navieras.ts`** (nuevo) — `mapNavieraToJsonCargo(naviera: string | null): string | null` con fuzzy match.
-
-**`src/hooks/embarque/useJsonCargoTracking.ts`** (nuevo):
-- `useJsonCargoStatus(embarqueId)` → query `tracking_externo` filtrado por provider='jsoncargo'.
-- `useSyncJsonCargo()` → mutation que llama edge function y refresca cache de `tracking_externo` + `eventos_embarque` + `embarques`.
-
-**`src/components/embarque/TabTracking.tsx`** (editar):
-- Card nueva en la parte superior "Tracking en vivo (JSONCargo)" con:
-  - Si naviera no soportada → aviso gris.
-  - Si no hay sync previo → botón "Sincronizar ahora".
-  - Si hay sync → panel con: estado contenedor, last_location, current_vessel + voyage, ETA destino final, last_updated, botón "Actualizar".
-- El timeline existente se conserva; los eventos auto-generados se identifican con badge "Auto" (usuario = `jsoncargo`).
-
-**`src/pages/portal/PortalEmbarqueDetalle.tsx`** (editar):
-- Misma card en modo solo lectura (sin botón sincronizar). RLS de `tracking_externo` ya permite cliente leer.
-
-**Auto-trigger al crear/editar embarque marítimo**:
-- En `useUpdateEmbarque` y el flujo de creación, después de guardar, si `modo='Marítimo'` + `contenedor` + naviera mapeable, dispara `supabase.functions.invoke('jsoncargo-track', { body: { embarqueId } })` en background (sin await bloqueante, errores silenciados pero logueados).
-
----
-
-### 3. Cambios en archivos
-
-```text
-NUEVOS
-  supabase/functions/jsoncargo-track/index.ts
-  supabase/functions/jsoncargo-track-batch/index.ts
-  src/lib/jsoncargo/navieras.ts
-  src/lib/jsoncargo/eventMapping.ts        (data → tipo_evento_tracking[])
-  src/hooks/embarque/useJsonCargoTracking.ts
-  src/components/embarque/TrackingLiveCard.tsx
-
-EDITADOS
-  src/components/embarque/TabTracking.tsx        (insertar TrackingLiveCard)
-  src/pages/portal/PortalEmbarqueDetalle.tsx     (insertar TrackingLiveCard read-only)
-  src/hooks/embarque/mutations/useUpdateEmbarque.ts (auto-invoke)
-  src/pages/embarques/NuevoEmbarque.tsx          (auto-invoke al final del wizard)
-  src/lib/query/index.ts                         (queryKey trackingExterno)
-  src/constants/appVersion.ts                    (8.130.0 — minor)
-  src/content/changelog/v8/chunks/0.ts
-  src/content/changelogData.ts
-
-INSERT (no migración):
-  pg_cron schedule diario → jsoncargo-track-batch
-```
-
----
-
-### 4. Notas técnicas
-
-- **Idempotencia de eventos**: clave compuesta lógica `(embarque_id, tipo, fecha truncada al minuto)` para evitar duplicados al sincronizar repetidamente.
-- **Rate limit**: 1 call por embarque por sync; el batch espera 250ms entre llamadas. Mensajes claros si JSONCargo devuelve 429.
-- **Multi-tenant**: el edge function valida que el JWT del usuario tenga rol admin/operador y que el embarque pertenezca a su org (vía RLS al leerlo con cliente con-token).
-- **Costo**: cada sync cuenta 1 API call. La auto-sincronización al editar puede dispararse muchas veces; se agrega un throttle de 10 minutos por embarque (consultando `last_synced_at`).
-- **Errores**: 404 (contenedor no encontrado) → `status='failed'`, `failed_reason` con título del error. Se muestra en la card sin spammear toasts.
-- **Naviera unsupported**: card explica al usuario y sugiere navieras compatibles.
-
----
-
-### 5. Pasos de ejecución
-
-1. Solicitar `JSONCARGO_API_KEY` (secret).
-2. Crear edge functions y librerías frontend.
-3. Insertar cron job (pg_cron + pg_net) por separado (no migración).
-4. Bump versión a `8.130.0` y entrada de changelog.
-5. Probar manualmente en `/embarques/{id}` con un contenedor MSC/Maersk real.
+## Fuera de alcance
+- Auto-corrección de naviera (descartado por el usuario).
+- Reintentos automáticos con todas las navieras (descartado).
+- Migración de BD (no se requiere; el catálogo es estático en código).

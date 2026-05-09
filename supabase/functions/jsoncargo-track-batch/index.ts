@@ -11,6 +11,7 @@ import {
   mapNaviera,
   deriveEventsFromContainer,
   parseJsonCargoDate,
+  checkPrefixVsCarrier,
 } from "../_shared/jsoncargo.ts";
 
 const SLEEP_BETWEEN_CALLS_MS = 250;
@@ -53,9 +54,28 @@ Deno.serve(async (req) => {
   let okCount = 0;
   let failCount = 0;
   const errores: string[] = [];
+  let saltadosPrefix = 0;
 
   for (const emb of elegibles) {
     const sl = mapNaviera(emb.naviera)!;
+    // Skip si el prefix no coincide con la naviera (no consume cuota)
+    const pc = checkPrefixVsCarrier(emb.contenedor, sl);
+    if (!pc.valid) {
+      saltadosPrefix++;
+      try {
+        await admin.from("bitacora_actividad").insert({
+          accion: "tracking_skip_prefix_mismatch",
+          modulo: "tracking",
+          entidad_id: emb.id,
+          entidad_nombre: emb.expediente ?? "",
+          organization_id: emb.organization_id,
+          usuario_id: "00000000-0000-0000-0000-000000000000",
+          usuario_email: "system@cron",
+          detalles: { prefix: pc.prefix, naviera: sl, suggestions: pc.suggestions },
+        });
+      } catch { /* ignore */ }
+      continue;
+    }
     try {
       const result = await fetchContainerDetails(apiKey, emb.contenedor, sl);
       const trackingPayload = {
@@ -126,6 +146,7 @@ Deno.serve(async (req) => {
     procesados: elegibles.length,
     exitosos: okCount,
     fallidos: failCount,
+    saltados_prefix: saltadosPrefix,
     errores: errores.slice(0, 20),
   });
 });

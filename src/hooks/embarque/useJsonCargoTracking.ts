@@ -1,6 +1,19 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { queryKeys } from "@/lib/query";
+import { mapNavieraToJsonCargo, type JsonCargoShippingLine } from "@/lib/jsoncargo/navieras";
+import { validatePrefixMatchesNaviera } from "@/lib/jsoncargo/containerPrefixes";
+
+export class PrefixMismatchError extends Error {
+  code = "PREFIX_MISMATCH" as const;
+  constructor(
+    public prefix: string,
+    public naviera: string | null,
+    public suggestions: JsonCargoShippingLine[],
+  ) {
+    super(`Prefix ${prefix} no coincide con naviera ${naviera ?? "—"}`);
+  }
+}
 
 export interface TrackingExternoRow {
   id: string;
@@ -54,20 +67,31 @@ interface SyncResponse {
   error?: string;
 }
 
+export interface SyncArgs {
+  embarqueId: string;
+  contenedor?: string | null;
+  naviera?: string | null;
+}
+
 export function useSyncJsonCargo() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async (embarqueId: string): Promise<SyncResponse> => {
+    mutationFn: async (args: SyncArgs): Promise<SyncResponse> => {
+      const sl = mapNavieraToJsonCargo(args.naviera);
+      const validation = validatePrefixMatchesNaviera(args.contenedor, sl);
+      if (!validation.valid && validation.prefix) {
+        throw new PrefixMismatchError(validation.prefix, args.naviera ?? null, validation.suggestions);
+      }
       const { data, error } = await supabase.functions.invoke<SyncResponse>("jsoncargo-track", {
-        body: { embarqueId },
+        body: { embarqueId: args.embarqueId },
       });
       if (error) throw error;
       return data!;
     },
-    onSuccess: (_r, embarqueId) => {
-      qc.invalidateQueries({ queryKey: ["tracking_externo", "jsoncargo", embarqueId] });
-      qc.invalidateQueries({ queryKey: queryKeys.embarques.eventos(embarqueId) });
-      qc.invalidateQueries({ queryKey: queryKeys.embarques.detail(embarqueId) });
+    onSuccess: (_r, args) => {
+      qc.invalidateQueries({ queryKey: ["tracking_externo", "jsoncargo", args.embarqueId] });
+      qc.invalidateQueries({ queryKey: queryKeys.embarques.eventos(args.embarqueId) });
+      qc.invalidateQueries({ queryKey: queryKeys.embarques.detail(args.embarqueId) });
     },
   });
 }

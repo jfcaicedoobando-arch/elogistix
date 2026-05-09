@@ -22,6 +22,14 @@ export interface ChangelogEntry {
  */
 export const recentChangelog: ChangelogEntry[] = [
   {
+    version: "8.131.0",
+    date: "2026-05-09",
+    type: "minor",
+    title: "JSONCargo: validación local de prefix vs naviera",
+    summary: "Validación previa del prefix BIC del contenedor antes de llamar a JSONCargo, con sugerencias de naviera cuando no coincide.",
+    description: "Catálogo local de prefixes (TEMU, MSCU, MAEU, etc.) → naviera. Si el prefix no coincide con la naviera registrada, NO se consume cuota del API: se muestra error claro con badges de la naviera real sugerida. Edge function devuelve 422 con error_code='PREFIX_MISMATCH'. El cron diario (jsoncargo-track-batch) salta esos embarques y los registra en bitácora.",
+  },
+  {
     version: "8.130.0",
     date: "2026-05-09",
     type: "minor",
