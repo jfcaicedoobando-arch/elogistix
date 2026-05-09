@@ -203,6 +203,21 @@ export function parseJsonCargoDate(value: string | null | undefined): string | n
   return d.toISOString();
 }
 
+/**
+ * Devuelve la mejor fecha disponible para el ETD/zarpe.
+ * Si `atd_origin` viene null pero el contenedor ya está cargado/zarpado,
+ * usa `last_movement_timestamp` (o `timestamp_of_last_location`) como fallback.
+ */
+export function pickEffectiveEtd(d: JsonCargoContainerData): string | null {
+  if (d.atd_origin) return d.atd_origin;
+  const status = (d.container_status ?? "").toLowerCase();
+  const looksDeparted = /loaded.*vessel|on vessel|departed|in transit|sail/.test(status);
+  if (looksDeparted) {
+    return d.last_movement_timestamp ?? d.timestamp_of_last_location ?? null;
+  }
+  return null;
+}
+
 export interface ComputedEvent {
   tipo: string; // tipo_evento_tracking enum value
   descripcion: string;
