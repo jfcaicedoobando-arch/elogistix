@@ -12,6 +12,7 @@ import {
   parseJsonCargoDate,
   checkPrefixVsCarrier,
   pickEffectiveEtd,
+  pickEffectiveAta,
   type ComputedEvent,
 } from "../_shared/jsoncargo.ts";
 
