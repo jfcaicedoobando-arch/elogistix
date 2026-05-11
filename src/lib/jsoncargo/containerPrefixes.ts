@@ -22,6 +22,12 @@ const NAVIERA_LABELS: Record<JsonCargoShippingLine, string> = {
   PIL: "PIL",
 };
 
+/** Todas las navieras soportadas por JSONCargo. Útil para prefixes de leasing pool. */
+const ALL_SUPPORTED: JsonCargoShippingLine[] = [
+  "MAERSK", "HAPAG_LLOYD", "HMM", "ONE", "EVERGREEN", "MSC",
+  "CMA_CGM", "COSCO", "ZIM", "YANG_MING", "PIL",
+];
+
 /**
  * Mapa prefix → navieras conocidas que lo usan.
  * Algunos prefixes (ej. TEMU = Triton leasing usado por Evergreen) pueden mapear
@@ -35,7 +41,7 @@ export const PREFIX_TO_CARRIERS: Record<string, JsonCargoShippingLine[]> = {
   MSCU: ["MSC"], MEDU: ["MSC"], MSDU: ["MSC"], MSWU: ["MSC"], FCIU: ["MSC"],
   // Hapag-Lloyd
   HLXU: ["HAPAG_LLOYD"], HLBU: ["HAPAG_LLOYD"], HLCU: ["HAPAG_LLOYD"],
-  UACU: ["HAPAG_LLOYD"], CAIU: ["HAPAG_LLOYD"], TGHU: ["HAPAG_LLOYD"],
+  UACU: ["HAPAG_LLOYD"], CAIU: ["HAPAG_LLOYD"],
   // CMA CGM
   CMAU: ["CMA_CGM"], CGMU: ["CMA_CGM"], CXDU: ["CMA_CGM"], ECMU: ["CMA_CGM"],
   APHU: ["CMA_CGM"], APZU: ["CMA_CGM"], CXRU: ["CMA_CGM"],
@@ -50,31 +56,33 @@ export const PREFIX_TO_CARRIERS: Record<string, JsonCargoShippingLine[]> = {
   // Yang Ming
   YMLU: ["YANG_MING"], YMMU: ["YANG_MING"], YMUU: ["YANG_MING"],
   // ONE
-  ONEU: ["ONE"], TLLU: ["ONE"], KKFU: ["ONE"], KKTU: ["ONE"],
+  ONEU: ["ONE"], KKFU: ["ONE"], KKTU: ["ONE"],
   // HMM (Hyundai Merchant Marine)
   HMMU: ["HMM"], HDMU: ["HMM"],
   // PIL
   PCIU: ["PIL"], PILU: ["PIL"],
-  // Leasing pools (Beacon, Triton, Genstar, etc.) — se asignan a múltiples
-  // navieras grandes; permitimos cualquiera de las soportadas para no bloquear
-  // contenedores reales que sí existen en JSONCargo bajo otra naviera.
-  TEMU: ["EVERGREEN", "MSC", "ONE", "MAERSK", "CMA_CGM", "HAPAG_LLOYD"],
-  TCLU: ["MSC", "MAERSK", "EVERGREEN", "ONE", "CMA_CGM", "HAPAG_LLOYD"],
-  TCNU: ["MSC", "MAERSK", "EVERGREEN", "ONE", "CMA_CGM", "HAPAG_LLOYD"],
-  TGBU: ["HAPAG_LLOYD", "ONE", "MAERSK", "MSC", "EVERGREEN", "CMA_CGM"],
-  BEAU: ["MAERSK", "MSC", "EVERGREEN", "ONE", "CMA_CGM", "HAPAG_LLOYD"],
-  BMOU: ["MSC", "MAERSK", "EVERGREEN", "ONE", "CMA_CGM", "HAPAG_LLOYD"],
-  CAXU: ["CMA_CGM"],
-  CRXU: ["CMA_CGM"],
-  GLDU: ["MAERSK", "EVERGREEN", "MSC", "ONE", "CMA_CGM", "HAPAG_LLOYD"],
-  GESU: ["MAERSK", "MSC", "EVERGREEN", "ONE", "CMA_CGM", "HAPAG_LLOYD"],
-  TRHU: ["EVERGREEN", "MAERSK", "MSC", "ONE", "CMA_CGM", "HAPAG_LLOYD"],
-  TRIU: ["EVERGREEN", "MAERSK", "MSC", "ONE", "CMA_CGM", "HAPAG_LLOYD"],
-  TLLU2: ["ONE"],
-  SEGU: ["MAERSK", "MSC", "EVERGREEN", "ONE", "CMA_CGM", "HAPAG_LLOYD"],
-  TGCU: ["EVERGREEN", "MAERSK", "MSC", "ONE", "CMA_CGM", "HAPAG_LLOYD"],
-  UESU: ["EVERGREEN", "MAERSK", "MSC", "ONE", "CMA_CGM", "HAPAG_LLOYD"],
-  WHLU: ["EVERGREEN"],
+  // Leasing pools (Triton, Beacon, Textainer, SeaCo, Genstar, Florens, etc.)
+  // Estos contenedores los arrienda cualquier naviera grande, así que mapeamos a
+  // TODAS las navieras soportadas por JSONCargo para no bloquear sincronizaciones
+  // legítimas. La validación final la hace el API.
+  TEMU: ALL_SUPPORTED, // Triton
+  TCLU: ALL_SUPPORTED, // Textainer
+  TCNU: ALL_SUPPORTED, // Textainer
+  TGBU: ALL_SUPPORTED, // Triton
+  TGCU: ALL_SUPPORTED, // Triton
+  TGHU: ALL_SUPPORTED, // Triton (también Hapag dedicated arriba)
+  TRHU: ALL_SUPPORTED, // Triton
+  TRIU: ALL_SUPPORTED, // Triton
+  TLLU: ALL_SUPPORTED, // Triton/ONE
+  BEAU: ALL_SUPPORTED, // Beacon
+  BMOU: ALL_SUPPORTED, // Beacon
+  GLDU: ALL_SUPPORTED, // Genstar
+  GESU: ALL_SUPPORTED, // Genstar
+  SEGU: ALL_SUPPORTED, // SeaCo/SeaCastle
+  UESU: ALL_SUPPORTED, // UES
+  CAXU: ALL_SUPPORTED, // Florens
+  CRXU: ALL_SUPPORTED, // Florens/CMA pool
+  WHLU: ALL_SUPPORTED, // Wan Hai-leased pool, también usado en intercambio
 };
 
 /** Extrae las primeras 4 letras alfabéticas en mayúsculas. Devuelve null si no hay. */
