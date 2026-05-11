@@ -39,15 +39,22 @@ export interface JsonCargoSummary {
   etd_origin_effective?: string;
   /** True si etd_origin_effective viene del fallback (no del campo atd_origin de JSONCargo). */
   etd_origin_is_estimated?: boolean;
+  /** ATA efectiva inferida desde último movimiento si el contenedor ya está en puerto destino. */
+  ata_effective?: string;
+  /** True si la ATA viene inferida del último movimiento. */
+  ata_is_inferred?: boolean;
   shipped_from?: string;
   shipped_to?: string;
   last_updated?: string;
   eta_propuesta?: string | null;
   etd_propuesta?: string | null;
+  ata_propuesta?: string | null;
   eta_actual?: string | null;
   etd_actual?: string | null;
+  ata_actual?: string | null;
   eta_difiere?: boolean;
   etd_difiere?: boolean;
+  ata_difiere?: boolean;
 }
 
 export function useJsonCargoTracking(embarqueId: string | undefined) {
