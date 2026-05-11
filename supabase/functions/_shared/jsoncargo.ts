@@ -216,6 +216,31 @@ export function pickEffectiveEtd(d: JsonCargoContainerData): string | null {
   return null;
 }
 
+/**
+ * Devuelve la mejor fecha disponible para el ATA (arribo a puerto destino).
+ * JSONCargo no entrega un campo ATA explícito. Si la última ubicación coincide
+ * con el puerto de descarga y el estado del contenedor indica que ya fue
+ * descargado / disponible / entregado / liberado, se infiere desde
+ * `timestamp_of_last_location` (preferido) o `last_movement_timestamp`.
+ *
+ * Si solo está "on vessel" en el puerto destino (buque atracado pero contenedor
+ * aún a bordo) NO se infiere, para evitar adelantar la fecha real de descarga.
+ */
+export function pickEffectiveAta(d: JsonCargoContainerData): { iso: string | null; isInferred: boolean } {
+  const lastLoc = (d.last_location ?? "").toLowerCase();
+  const dischPort = (d.discharging_port ?? "").toLowerCase();
+  if (!lastLoc || !dischPort || !lastLoc.includes(dischPort)) {
+    return { iso: null, isInferred: false };
+  }
+  const status = (d.container_status ?? "").toLowerCase();
+  const looksDischarged = /discharg|unload|available|gate.?out|delivered|at yard|empty.*return|released|on rail|departed.*terminal/.test(status);
+  if (!looksDischarged) {
+    return { iso: null, isInferred: false };
+  }
+  const iso = d.timestamp_of_last_location ?? d.last_movement_timestamp ?? null;
+  return { iso, isInferred: true };
+}
+
 export interface ComputedEvent {
   tipo: string; // tipo_evento_tracking enum value
   descripcion: string;

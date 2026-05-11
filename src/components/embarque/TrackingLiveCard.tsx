@@ -41,11 +41,12 @@ interface Props {
   blMaster?: string | null;
   etd?: string | null;
   eta?: string | null;
+  fechaLlegadaReal?: string | null;
   /** Si true, no muestra botón de sincronizar (portal cliente). */
   readOnly?: boolean;
 }
 
-export function TrackingLiveCard({ embarqueId, modo, naviera, contenedor, blMaster, etd, eta, readOnly }: Props) {
+export function TrackingLiveCard({ embarqueId, modo, naviera, contenedor, blMaster, etd, eta, fechaLlegadaReal, readOnly }: Props) {
   const { toast } = useToast();
   const { data: tracking, isLoading } = useJsonCargoTracking(embarqueId);
   const sync = useSyncJsonCargo();
@@ -228,15 +229,18 @@ export function TrackingLiveCard({ embarqueId, modo, naviera, contenedor, blMast
           if (readOnly || !summary || tracking?.status !== "ok" || fechasDismissed) return null;
           const etaPropuesta = jsoncargoDateToYmd(summary.eta_final_destination);
           const etdPropuesta = jsoncargoDateToYmd(summary.etd_origin_effective ?? summary.atd_origin);
+          const ataPropuesta = jsoncargoDateToYmd(summary.ata_effective);
           const etaDifiere = !!etaPropuesta && etaPropuesta !== (eta ?? null);
           const etdDifiere = !!etdPropuesta && etdPropuesta !== (etd ?? null);
-          if (!etaDifiere && !etdDifiere) return null;
+          const ataDifiere = !!ataPropuesta && ataPropuesta !== (fechaLlegadaReal ?? null);
+          if (!etaDifiere && !etdDifiere && !ataDifiere) return null;
           const handleApply = async () => {
             try {
               await applyFechas.mutateAsync({
                 embarqueId,
                 eta: etaDifiere ? etaPropuesta! : undefined,
                 etd: etdDifiere ? etdPropuesta! : undefined,
+                ata: ataDifiere ? ataPropuesta! : undefined,
               });
               notifySuccess(toast, { title: "Fechas actualizadas en el embarque" });
               setFechasDismissed(true);
@@ -267,6 +271,17 @@ export function TrackingLiveCard({ embarqueId, modo, naviera, contenedor, blMast
                       <span className="font-mono">{eta ? formatDate(eta, "dd MMM yyyy") : "—"}</span>
                       {" → "}
                       <span className="font-mono font-semibold">{formatDate(etaPropuesta!, "dd MMM yyyy")}</span>
+                    </li>
+                  )}
+                  {ataDifiere && (
+                    <li>
+                      <span className="text-muted-foreground">ATA (arribo real):</span>{" "}
+                      <span className="font-mono">{fechaLlegadaReal ? formatDate(fechaLlegadaReal, "dd MMM yyyy") : "—"}</span>
+                      {" → "}
+                      <span className="font-mono font-semibold">{formatDate(ataPropuesta!, "dd MMM yyyy")}</span>
+                      {summary.ata_is_inferred && (
+                        <Badge variant="outline" className="ml-2 text-[10px]">Inferida del último movimiento</Badge>
+                      )}
                     </li>
                   )}
                 </ul>

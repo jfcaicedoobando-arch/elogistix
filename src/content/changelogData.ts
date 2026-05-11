@@ -22,6 +22,14 @@ export interface ChangelogEntry {
  */
 export const recentChangelog: ChangelogEntry[] = [
   {
+    version: "8.135.0",
+    date: "2026-05-11",
+    type: "minor",
+    title: "Tracking: ATA inferida cuando la naviera no la reporta",
+    summary: "Si el contenedor ya está descargado/disponible en el puerto destino y la naviera no entrega ATA explícito, se propone la fecha del último movimiento como fecha de arribo real del embarque.",
+    description: "pickEffectiveAta infiere ATA cuando last_location coincide con discharging_port y el estado indica descargado/disponible/entregado/liberado. jsoncargo-track devuelve ata_propuesta y ata_is_inferred; useApplyJsonCargoFechas escribe embarques.fecha_llegada_real. TrackingLiveCard muestra la propuesta con badge 'Inferida del último movimiento'.",
+  },
+  {
     version: "8.134.1",
     date: "2026-05-11",
     type: "patch",

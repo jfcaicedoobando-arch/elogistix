@@ -39,15 +39,22 @@ export interface JsonCargoSummary {
   etd_origin_effective?: string;
   /** True si etd_origin_effective viene del fallback (no del campo atd_origin de JSONCargo). */
   etd_origin_is_estimated?: boolean;
+  /** ATA efectiva inferida desde último movimiento si el contenedor ya está en puerto destino. */
+  ata_effective?: string;
+  /** True si la ATA viene inferida del último movimiento. */
+  ata_is_inferred?: boolean;
   shipped_from?: string;
   shipped_to?: string;
   last_updated?: string;
   eta_propuesta?: string | null;
   etd_propuesta?: string | null;
+  ata_propuesta?: string | null;
   eta_actual?: string | null;
   etd_actual?: string | null;
+  ata_actual?: string | null;
   eta_difiere?: boolean;
   etd_difiere?: boolean;
+  ata_difiere?: boolean;
 }
 
 export function useJsonCargoTracking(embarqueId: string | undefined) {
@@ -123,6 +130,17 @@ export function extractSummary(raw: unknown): JsonCargoSummary | null {
       ?? (d.timestamp_of_last_location as string | undefined | null))
     : null;
   const etdEffective = atdOrigin || fallbackEtd || undefined;
+
+  // Heurística ATA: contenedor ya descargado/disponible en puerto destino.
+  const lastLoc = ((d.last_location as string | undefined) ?? "").toLowerCase();
+  const dischPort = ((d.discharging_port as string | undefined) ?? "").toLowerCase();
+  const atDestination = !!lastLoc && !!dischPort && lastLoc.includes(dischPort);
+  const looksDischarged = /discharg|unload|available|gate.?out|delivered|at yard|empty.*return|released|on rail|departed.*terminal/.test(status);
+  const ataEffective = atDestination && looksDischarged
+    ? ((d.timestamp_of_last_location as string | undefined | null)
+      ?? (d.last_movement_timestamp as string | undefined | null))
+    : null;
+
   return {
     container_status: d.container_status as string | undefined,
     last_location: d.last_location as string | undefined,
@@ -132,6 +150,8 @@ export function extractSummary(raw: unknown): JsonCargoSummary | null {
     atd_origin: atdOrigin ?? undefined,
     etd_origin_effective: etdEffective ?? undefined,
     etd_origin_is_estimated: !!etdEffective && !atdOrigin,
+    ata_effective: ataEffective ?? undefined,
+    ata_is_inferred: !!ataEffective,
     shipped_from: d.shipped_from as string | undefined,
     shipped_to: d.shipped_to as string | undefined,
     last_updated: d.last_updated as string | undefined,
@@ -142,15 +162,17 @@ interface ApplyFechasArgs {
   embarqueId: string;
   eta?: string | null;
   etd?: string | null;
+  ata?: string | null;
 }
 
 export function useApplyJsonCargoFechas() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async ({ embarqueId, eta, etd }: ApplyFechasArgs) => {
-      const update: { eta?: string; etd?: string } = {};
+    mutationFn: async ({ embarqueId, eta, etd, ata }: ApplyFechasArgs) => {
+      const update: { eta?: string; etd?: string; fecha_llegada_real?: string } = {};
       if (eta) update.eta = eta;
       if (etd) update.etd = etd;
+      if (ata) update.fecha_llegada_real = ata;
       if (Object.keys(update).length === 0) return { applied: false };
       const { error } = await supabase.from("embarques").update(update).eq("id", embarqueId);
       if (error) throw error;
