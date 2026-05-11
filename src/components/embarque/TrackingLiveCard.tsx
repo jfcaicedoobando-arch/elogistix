@@ -41,11 +41,12 @@ interface Props {
   blMaster?: string | null;
   etd?: string | null;
   eta?: string | null;
+  fechaLlegadaReal?: string | null;
   /** Si true, no muestra botón de sincronizar (portal cliente). */
   readOnly?: boolean;
 }
 
-export function TrackingLiveCard({ embarqueId, modo, naviera, contenedor, blMaster, etd, eta, readOnly }: Props) {
+export function TrackingLiveCard({ embarqueId, modo, naviera, contenedor, blMaster, etd, eta, fechaLlegadaReal, readOnly }: Props) {
   const { toast } = useToast();
   const { data: tracking, isLoading } = useJsonCargoTracking(embarqueId);
   const sync = useSyncJsonCargo();
