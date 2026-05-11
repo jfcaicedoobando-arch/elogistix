@@ -43,12 +43,17 @@ export function mapNaviera(naviera: string | null | undefined): string | null {
  * server-side antes de gastar cuota de la API). Mantener sincronizado con
  * src/lib/jsoncargo/containerPrefixes.ts.
  */
+const ALL_SUPPORTED = [
+  "MAERSK", "HAPAG_LLOYD", "HMM", "ONE", "EVERGREEN", "MSC",
+  "CMA_CGM", "COSCO", "ZIM", "YANG_MING", "PIL",
+];
+
 const PREFIX_TO_CARRIERS: Record<string, string[]> = {
   MAEU: ["MAERSK"], MRKU: ["MAERSK"], MSKU: ["MAERSK"], MRSU: ["MAERSK"],
   MIEU: ["MAERSK"], MNBU: ["MAERSK"], PONU: ["MAERSK"], SEAU: ["MAERSK"],
   MSCU: ["MSC"], MEDU: ["MSC"], MSDU: ["MSC"], MSWU: ["MSC"], FCIU: ["MSC"],
   HLXU: ["HAPAG_LLOYD"], HLBU: ["HAPAG_LLOYD"], HLCU: ["HAPAG_LLOYD"],
-  UACU: ["HAPAG_LLOYD"], CAIU: ["HAPAG_LLOYD"], TGHU: ["HAPAG_LLOYD"],
+  UACU: ["HAPAG_LLOYD"], CAIU: ["HAPAG_LLOYD"],
   CMAU: ["CMA_CGM"], CGMU: ["CMA_CGM"], CXDU: ["CMA_CGM"], ECMU: ["CMA_CGM"],
   APHU: ["CMA_CGM"], APZU: ["CMA_CGM"], CXRU: ["CMA_CGM"],
   COSU: ["COSCO"], CCLU: ["COSCO"], CBHU: ["COSCO"], CSNU: ["COSCO"],
@@ -57,24 +62,17 @@ const PREFIX_TO_CARRIERS: Record<string, string[]> = {
   EMCU: ["EVERGREEN"], HMCU: ["EVERGREEN"], EGSU: ["EVERGREEN"],
   ZIMU: ["ZIM"], ZCSU: ["ZIM"],
   YMLU: ["YANG_MING"], YMMU: ["YANG_MING"], YMUU: ["YANG_MING"],
-  ONEU: ["ONE"], TLLU: ["ONE"], KKFU: ["ONE"], KKTU: ["ONE"],
+  ONEU: ["ONE"], KKFU: ["ONE"], KKTU: ["ONE"],
   HMMU: ["HMM"], HDMU: ["HMM"],
   PCIU: ["PIL"], PILU: ["PIL"],
-  TEMU: ["EVERGREEN", "MSC", "ONE", "MAERSK", "CMA_CGM", "HAPAG_LLOYD"],
-  TCLU: ["MSC", "MAERSK", "EVERGREEN", "ONE", "CMA_CGM", "HAPAG_LLOYD"],
-  TCNU: ["MSC", "MAERSK", "EVERGREEN", "ONE", "CMA_CGM", "HAPAG_LLOYD"],
-  TGBU: ["HAPAG_LLOYD", "ONE", "MAERSK", "MSC", "EVERGREEN", "CMA_CGM"],
-  BEAU: ["MAERSK", "MSC", "EVERGREEN", "ONE", "CMA_CGM", "HAPAG_LLOYD"],
-  BMOU: ["MSC", "MAERSK", "EVERGREEN", "ONE", "CMA_CGM", "HAPAG_LLOYD"],
-  CAXU: ["CMA_CGM"], CRXU: ["CMA_CGM"],
-  GLDU: ["MAERSK", "EVERGREEN", "MSC", "ONE", "CMA_CGM", "HAPAG_LLOYD"],
-  GESU: ["MAERSK", "MSC", "EVERGREEN", "ONE", "CMA_CGM", "HAPAG_LLOYD"],
-  TRHU: ["EVERGREEN", "MAERSK", "MSC", "ONE", "CMA_CGM", "HAPAG_LLOYD"],
-  TRIU: ["EVERGREEN", "MAERSK", "MSC", "ONE", "CMA_CGM", "HAPAG_LLOYD"],
-  SEGU: ["MAERSK", "MSC", "EVERGREEN", "ONE", "CMA_CGM", "HAPAG_LLOYD"],
-  TGCU: ["EVERGREEN", "MAERSK", "MSC", "ONE", "CMA_CGM", "HAPAG_LLOYD"],
-  UESU: ["EVERGREEN", "MAERSK", "MSC", "ONE", "CMA_CGM", "HAPAG_LLOYD"],
-  WHLU: ["EVERGREEN"],
+  // Leasing pools — cualquier naviera grande puede usar estos contenedores
+  TEMU: ALL_SUPPORTED, TCLU: ALL_SUPPORTED, TCNU: ALL_SUPPORTED,
+  TGBU: ALL_SUPPORTED, TGCU: ALL_SUPPORTED, TGHU: ALL_SUPPORTED,
+  TRHU: ALL_SUPPORTED, TRIU: ALL_SUPPORTED, TLLU: ALL_SUPPORTED,
+  BEAU: ALL_SUPPORTED, BMOU: ALL_SUPPORTED,
+  GLDU: ALL_SUPPORTED, GESU: ALL_SUPPORTED,
+  SEGU: ALL_SUPPORTED, UESU: ALL_SUPPORTED,
+  CAXU: ALL_SUPPORTED, CRXU: ALL_SUPPORTED, WHLU: ALL_SUPPORTED,
 };
 
 export function extractPrefix(container: string | null | undefined): string | null {
