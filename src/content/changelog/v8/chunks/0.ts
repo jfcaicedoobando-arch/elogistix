@@ -2,6 +2,14 @@ import type { ChangelogEntry } from "../../../changelogData";
 
 export const chunk0: ChangelogEntry[] = [
   {
+    version: "8.134.1",
+    date: "2026-05-11",
+    type: "patch",
+    title: "JSONCargo: prefixes de leasing pool aceptan todas las navieras",
+    summary: "Contenedores con prefix de leasing pool (TEMU, TCLU, TGBU, BEAU, etc.) ya no se bloquean al sincronizar con navieras como ZIM, COSCO, HMM, Yang Ming o PIL.",
+    description: "El catálogo local de prefixes en src/lib/jsoncargo/containerPrefixes.ts y supabase/functions/_shared/jsoncargo.ts limitaba los prefixes de leasing pool (Triton TEMU/TGBU/TGCU/TGHU/TRHU/TRIU, Textainer TCLU/TCNU, Beacon BEAU/BMOU, Genstar GLDU/GESU, SeaCo SEGU, UES UESU, Florens CAXU/CRXU, Wan Hai WHLU, ONE TLLU) a un subset de 6 navieras (Maersk, MSC, Hapag, ONE, Evergreen, CMA CGM). Esto provocaba que embarques reales con contenedor TEMU bajo ZIM (caso ELIMP00203) mostraran 'El prefix TEMU no coincide con la naviera ZIMU' y bloqueaba el botón Sincronizar antes de llamar al API. Ahora estos prefixes mapean a las 11 navieras soportadas por JSONCargo y la validación final la hace el API. Se elimina el estado fallido cacheado en tracking_externo del embarque afectado.",
+  },
+  {
     version: "8.134.0",
     date: "2026-05-09",
     type: "minor",
