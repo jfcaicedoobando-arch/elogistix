@@ -22,6 +22,12 @@ const NAVIERA_LABELS: Record<JsonCargoShippingLine, string> = {
   PIL: "PIL",
 };
 
+/** Todas las navieras soportadas por JSONCargo. Útil para prefixes de leasing pool. */
+const ALL_SUPPORTED: JsonCargoShippingLine[] = [
+  "MAERSK", "HAPAG_LLOYD", "HMM", "ONE", "EVERGREEN", "MSC",
+  "CMA_CGM", "COSCO", "ZIM", "YANG_MING", "PIL",
+];
+
 /**
  * Mapa prefix → navieras conocidas que lo usan.
  * Algunos prefixes (ej. TEMU = Triton leasing usado por Evergreen) pueden mapear
