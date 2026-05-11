@@ -41,7 +41,7 @@ export const PREFIX_TO_CARRIERS: Record<string, JsonCargoShippingLine[]> = {
   MSCU: ["MSC"], MEDU: ["MSC"], MSDU: ["MSC"], MSWU: ["MSC"], FCIU: ["MSC"],
   // Hapag-Lloyd
   HLXU: ["HAPAG_LLOYD"], HLBU: ["HAPAG_LLOYD"], HLCU: ["HAPAG_LLOYD"],
-  UACU: ["HAPAG_LLOYD"], CAIU: ["HAPAG_LLOYD"], TGHU: ["HAPAG_LLOYD"],
+  UACU: ["HAPAG_LLOYD"], CAIU: ["HAPAG_LLOYD"],
   // CMA CGM
   CMAU: ["CMA_CGM"], CGMU: ["CMA_CGM"], CXDU: ["CMA_CGM"], ECMU: ["CMA_CGM"],
   APHU: ["CMA_CGM"], APZU: ["CMA_CGM"], CXRU: ["CMA_CGM"],
@@ -56,7 +56,7 @@ export const PREFIX_TO_CARRIERS: Record<string, JsonCargoShippingLine[]> = {
   // Yang Ming
   YMLU: ["YANG_MING"], YMMU: ["YANG_MING"], YMUU: ["YANG_MING"],
   // ONE
-  ONEU: ["ONE"], TLLU: ["ONE"], KKFU: ["ONE"], KKTU: ["ONE"],
+  ONEU: ["ONE"], KKFU: ["ONE"], KKTU: ["ONE"],
   // HMM (Hyundai Merchant Marine)
   HMMU: ["HMM"], HDMU: ["HMM"],
   // PIL
