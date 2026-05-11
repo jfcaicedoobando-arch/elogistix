@@ -191,16 +191,21 @@ Deno.serve(async (req) => {
     }
   }
 
-  // Propone (sin aplicar) cambios de ETA/ETD: la UI pide confirmación al usuario.
+  // Propone (sin aplicar) cambios de ETA/ETD/ATA: la UI pide confirmación al usuario.
   const newEtaIso = parseJsonCargoDate(result.data.eta_final_destination);
   const etdEffectiveRaw = pickEffectiveEtd(result.data);
   const newEtdIso = parseJsonCargoDate(etdEffectiveRaw);
+  const ataEffective = pickEffectiveAta(result.data);
+  const newAtaIso = parseJsonCargoDate(ataEffective.iso);
   const etaPropuesta = newEtaIso ? newEtaIso.slice(0, 10) : null;
   const etdPropuesta = newEtdIso ? newEtdIso.slice(0, 10) : null;
+  const ataPropuesta = newAtaIso ? newAtaIso.slice(0, 10) : null;
   const etaActual = embarque.eta ?? null;
   const etdActual = embarque.etd ?? null;
+  const ataActual = embarque.fecha_llegada_real ?? null;
   const etaDifiere = !!etaPropuesta && etaPropuesta !== etaActual;
   const etdDifiere = !!etdPropuesta && etdPropuesta !== etdActual;
+  const ataDifiere = !!ataPropuesta && ataPropuesta !== ataActual;
 
   return jsonResponse({
     ok: true,
@@ -219,10 +224,14 @@ Deno.serve(async (req) => {
       last_updated: result.data.last_updated,
       eta_propuesta: etaPropuesta,
       etd_propuesta: etdPropuesta,
+      ata_propuesta: ataPropuesta,
       eta_actual: etaActual,
       etd_actual: etdActual,
+      ata_actual: ataActual,
       eta_difiere: etaDifiere,
       etd_difiere: etdDifiere,
+      ata_difiere: ataDifiere,
+      ata_is_inferred: ataEffective.isInferred,
     },
   }, 200, cors);
 });
