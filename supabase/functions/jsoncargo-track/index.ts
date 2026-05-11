@@ -51,7 +51,7 @@ Deno.serve(async (req) => {
   // Lee embarque con anonClient (RLS valida acceso del usuario)
   const { data: embarque, error: embErr } = await auth.anonClient
     .from("embarques")
-    .select("id, contenedor, naviera, modo, organization_id, eta, etd, expediente")
+    .select("id, contenedor, naviera, modo, organization_id, eta, etd, expediente, fecha_llegada_real")
     .eq("id", embarqueId)
     .maybeSingle();
   if (embErr || !embarque) return errorResponse("Embarque no encontrado o sin acceso", 404, cors);
