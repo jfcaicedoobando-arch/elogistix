@@ -71,6 +71,7 @@ export function TabTracking({ embarqueId, embarque }: Props) {
           blMaster={embarque.bl_master}
           etd={embarque.etd}
           eta={embarque.eta}
+          fechaLlegadaReal={embarque.fecha_llegada_real}
         />
       )}
       {canEdit && (
