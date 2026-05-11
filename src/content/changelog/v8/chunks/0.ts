@@ -2,6 +2,14 @@ import type { ChangelogEntry } from "../../../changelogData";
 
 export const chunk0: ChangelogEntry[] = [
   {
+    version: "8.135.0",
+    date: "2026-05-11",
+    type: "minor",
+    title: "Tracking: ATA inferida cuando la naviera no la reporta",
+    summary: "Si JSONCargo no entrega un ATA explícito pero el contenedor ya está descargado/disponible en el puerto destino, se propone la fecha del último movimiento como ATA del embarque (fecha_llegada_real).",
+    description: "Se agrega pickEffectiveAta en supabase/functions/_shared/jsoncargo.ts: cuando last_location coincide con discharging_port y container_status indica discharged/unloaded/available/gate out/delivered/at yard/empty returned/released/on rail, toma timestamp_of_last_location (preferido) o last_movement_timestamp como ATA. Si solo está 'on vessel' en el puerto destino no se propone, para no adelantar la fecha real de descarga. jsoncargo-track devuelve ata_propuesta, ata_actual, ata_difiere y ata_is_inferred en el summary. extractSummary del hook aplica la misma heurística sobre raw_payload. useApplyJsonCargoFechas acepta ata y escribe embarques.fecha_llegada_real. TrackingLiveCard muestra la propuesta de ATA junto a ETD/ETA con un badge 'Inferida del último movimiento' cuando aplica, y la acción Actualizar embarque sincroniza las tres fechas con un clic. La misma forma de summary será reutilizada por los adaptadores de tracking AI a futuro.",
+  },
+  {
     version: "8.134.1",
     date: "2026-05-11",
     type: "patch",
