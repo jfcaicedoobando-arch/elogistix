@@ -22,6 +22,14 @@ export interface ChangelogEntry {
  */
 export const recentChangelog: ChangelogEntry[] = [
   {
+    version: "8.134.1",
+    date: "2026-05-11",
+    type: "patch",
+    title: "JSONCargo: prefixes de leasing pool aceptan todas las navieras",
+    summary: "Contenedores con prefix de leasing pool (TEMU, TCLU, TGBU, BEAU, etc.) ya no se bloquean al sincronizar con ZIM, COSCO, HMM, Yang Ming o PIL.",
+    description: "El catálogo local de prefixes limitaba los pools de leasing (Triton, Textainer, Beacon, Genstar, SeaCo, Florens) a 6 navieras y bloqueaba el botón Sincronizar para casos válidos como TEMU+ZIM. Ahora estos prefixes mapean a las 11 navieras soportadas por JSONCargo y la validación final la hace el API.",
+  },
+  {
     version: "8.134.0",
     date: "2026-05-09",
     type: "minor",
