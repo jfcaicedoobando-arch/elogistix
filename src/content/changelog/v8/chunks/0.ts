@@ -2,6 +2,14 @@ import type { ChangelogEntry } from "../../../changelogData";
 
 export const chunk0: ChangelogEntry[] = [
   {
+    version: "8.135.1",
+    date: "2026-05-12",
+    type: "patch",
+    title: "Tracking: Actualizar embarque ahora valida que el cambio persista e infiere ATA aún sin discharging_port",
+    summary: "El botón 'Actualizar embarque' del panel JSONCargo verifica que el UPDATE realmente se aplicó y la heurística de ATA cubre el caso en que JSONCargo no reporta discharging_port pero el estado indica descarga en puerto.",
+    description: "useApplyJsonCargoFechas ahora ejecuta supabase.from('embarques').update(...).eq('id', ...).select('id') y lanza error si data.length === 0, evitando falsos éxitos cuando RLS bloquea el UPDATE o el registro no existe — el toast pasa a mostrar error en vez de 'Fechas actualizadas'. Adicionalmente, extractSummary (frontend) y pickEffectiveAta (edge) amplían la inferencia de ATA: además de la regla original (last_location coincide con discharging_port + estado descargado), si discharging_port viene vacío pero el container_status menciona 'Port of Discharge', 'from vessel', 'at port' o 'at terminal' junto a un patrón de descarga, también se toma timestamp_of_last_location como ATA. Caso real: TEMU7687933 / ZIM en ELIMP00203, status 'Import Gate-Out from Port of Discharge to Customer' con discharging_port nulo — ahora se propone ATA = 2026-05-03 y se aplica al embarque.",
+  },
+  {
     version: "8.135.0",
     date: "2026-05-11",
     type: "minor",
