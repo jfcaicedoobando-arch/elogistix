@@ -291,6 +291,15 @@ export function TrackingLiveCard({ embarqueId, modo, naviera, contenedor, blMast
                       )}
                     </li>
                   )}
+                  {etaDesalineadaPorAta && (
+                    <li>
+                      <span className="text-muted-foreground">ETA destino:</span>{" "}
+                      <span className="font-mono">{eta ? formatDate(eta, "dd MMM yyyy") : "—"}</span>
+                      {" → "}
+                      <span className="font-mono font-semibold">{formatDate(fechaLlegadaReal!, "dd MMM yyyy")}</span>
+                      <span className="ml-2 text-[10px] text-muted-foreground">(se alineará al arribo real)</span>
+                    </li>
+                  )}
                 </ul>
                 <div className="flex gap-2 pt-1">
                   <Button size="sm" onClick={handleApply} disabled={applyFechas.isPending}>
