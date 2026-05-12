@@ -174,7 +174,7 @@ export function useApplyJsonCargoFechas() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async ({ embarqueId, eta, etd, ata }: ApplyFechasArgs) => {
-      const update: { eta?: string; etd?: string; fecha_llegada_real?: string; estado?: string } = {};
+      const update: { eta?: string; etd?: string; fecha_llegada_real?: string; estado?: "Arribo" } = {};
       if (eta) update.eta = eta;
       if (etd) update.etd = etd;
       if (ata) {
