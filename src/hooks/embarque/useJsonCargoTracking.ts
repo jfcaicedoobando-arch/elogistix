@@ -179,8 +179,15 @@ export function useApplyJsonCargoFechas() {
       if (etd) update.etd = etd;
       if (ata) update.fecha_llegada_real = ata;
       if (Object.keys(update).length === 0) return { applied: false };
-      const { error } = await supabase.from("embarques").update(update).eq("id", embarqueId);
+      const { data, error } = await supabase
+        .from("embarques")
+        .update(update)
+        .eq("id", embarqueId)
+        .select("id");
       if (error) throw error;
+      if (!data || data.length === 0) {
+        throw new Error("No se pudo actualizar el embarque. Verifica permisos o que el registro exista.");
+      }
       return { applied: true };
     },
     onSuccess: (_r, args) => {
