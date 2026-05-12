@@ -29,6 +29,7 @@ export interface EmbarqueCardData {
   contenedor: string | null;
   tipo_contenedor: string | null;
   tipo_servicio: string | null;
+  fecha_llegada_real?: string | null;
 }
 
 /** Color del ETA según proximidad: <3 días destructive, <7 warning, resto muted. */
