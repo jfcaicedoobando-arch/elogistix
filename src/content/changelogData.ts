@@ -22,6 +22,14 @@ export interface ChangelogEntry {
  */
 export const recentChangelog: ChangelogEntry[] = [
   {
+    version: "8.135.2",
+    date: "2026-05-12",
+    type: "patch",
+    title: "Tracking: ATA inferida también actualiza el ETA del embarque",
+    summary: "Al aplicar la ATA inferida desde JSONCargo, el ETA del embarque se alinea a esa fecha cuando no hay un ETA nuevo explícito, para que el tab Resumen refleje la realidad.",
+    description: "useApplyJsonCargoFechas escribe eta = ata cuando se aplica ATA sin un eta explícito, e invalida la caché ['embarques','full', id] para refrescar el Resumen. TrackingLiveCard indica '(también se aplicará como ETA)' en el preview cuando aplica.",
+  },
+  {
     version: "8.135.1",
     date: "2026-05-12",
     type: "patch",

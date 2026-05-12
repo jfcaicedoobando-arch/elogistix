@@ -2,6 +2,14 @@ import type { ChangelogEntry } from "../../../changelogData";
 
 export const chunk0: ChangelogEntry[] = [
   {
+    version: "8.135.2",
+    date: "2026-05-12",
+    type: "patch",
+    title: "Tracking: ATA inferida también actualiza el ETA del embarque",
+    summary: "Cuando JSONCargo infiere la fecha real de llegada (ATA) y no hay un ETA nuevo explícito, la acción 'Actualizar embarque' ahora alinea también el ETA a esa fecha para que el tab Resumen refleje la realidad operativa.",
+    description: "useApplyJsonCargoFechas: si se aplica ata sin un eta explícito, también se escribe embarques.eta = ata. Esto resuelve el caso en que el contenedor ya fue descargado en puerto destino y JSONCargo no expone un nuevo eta_final_destination — antes el resumen mostraba un ETA viejo (p.ej. 2026-05-17) mientras 'Llegada Real' ya tenía la fecha correcta (2026-05-03). Además se invalida la caché unificada del detalle (['embarques','full', id]) tras actualizar fechas, para que TabResumen se refresque sin recargar la página. TrackingLiveCard indica en el preview '(también se aplicará como ETA)' junto a la propuesta de ATA cuando no hay un cambio de ETA por separado.",
+  },
+  {
     version: "8.135.1",
     date: "2026-05-12",
     type: "patch",
