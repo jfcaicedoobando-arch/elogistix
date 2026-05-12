@@ -22,6 +22,14 @@ export interface ChangelogEntry {
  */
 export const recentChangelog: ChangelogEntry[] = [
   {
+    version: "8.135.1",
+    date: "2026-05-12",
+    type: "patch",
+    title: "Tracking: Actualizar embarque valida persistencia e infiere ATA sin discharging_port",
+    summary: "El botón 'Actualizar embarque' del panel JSONCargo confirma que el UPDATE realmente se aplicó (evita falsos éxitos por RLS) y la heurística de ATA cubre casos en que JSONCargo no reporta discharging_port pero el estado dice descarga en puerto.",
+    description: "useApplyJsonCargoFechas usa .select('id') y lanza error si no se actualizó ninguna fila. extractSummary y pickEffectiveAta amplían la inferencia: si discharging_port viene vacío pero container_status menciona 'Port of Discharge', 'from vessel', 'at port' o 'at terminal' junto a un patrón de descarga, se toma timestamp_of_last_location como ATA. Caso real ELIMP00203 / TEMU7687933 (ZIM).",
+  },
+  {
     version: "8.135.0",
     date: "2026-05-11",
     type: "minor",

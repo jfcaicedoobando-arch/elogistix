@@ -1,43 +1,48 @@
-## Objetivo
+## Diagnóstico
 
-Cuando JSONCargo (y a futuro otros adaptadores) no entreguen un campo explícito de ATA pero el último movimiento del contenedor ya esté en el puerto de descarga (descargado / disponible / en patio), tomar la fecha de ese último movimiento como **ATA propuesta** y permitir aplicarla a `embarques.fecha_llegada_real`.
+Al revisar el embarque ELIMP00203 en la base de datos:
 
-## Lógica de inferencia (edge function `jsoncargo-track`)
+- `etd = 2026-04-20`, `eta = 2026-05-17`, `fecha_llegada_real = NULL`, `updated_at = 2026-05-09` (anterior al click).
+- Aunque el toast dijo "Fechas actualizadas en el embarque", **no se persistió ningún cambio** en `embarques`.
+- El payload de JSONCargo trae:
+  - `atd_origin = 2026-04-07 01:51` → ETD propuesto (distinto del actual).
+  - `eta_final_destination = NULL` → no propone ETA.
+  - `container_status = "Import Gate-Out from Port of Discharge to Customer"` (claramente ya descargado).
+  - `discharging_port = NULL` y `last_location = "MANZANILLO, MEXICO"`.
+  - `timestamp_of_last_location = 2026-05-03 05:50` (ATA inferible).
 
-En `_shared/jsoncargo.ts` añadir `pickEffectiveAta(data)`:
+Dos problemas:
 
-1. Si existe un campo explícito de ATA (no lo hay hoy en JSONCargo) → usarlo.
-2. Si `last_location` coincide con `discharging_port` (ya hay heurística `isAtDestination`) **Y** `container_status` indica arribo/descarga/disponible:
-   - Patrones: `discharged`, `unloaded`, `available`, `gate out`, `delivered`, `at yard`, `empty returned`, `released`.
-3. Tomar `timestamp_of_last_location` (preferido) o `last_movement_timestamp` como ATA.
-4. Devolver `null` si nada aplica.
+1. **Mutación silenciosa**: `supabase.from("embarques").update(...).eq("id", ...)` no agrega `.select()`. Si RLS u otro motivo devuelve 0 filas, no lanza error — la UI muestra éxito y nada cambia. No tenemos forma de detectarlo hoy.
+2. **ATA no se infiere** cuando `discharging_port` viene nulo: la heurística exige `last_location.includes(discharging_port)`. Pero el `container_status` ya indica "Gate-Out from Port of Discharge" → suficiente para inferir ATA aunque `discharging_port` esté vacío.
 
-En el evento derivado existente (`Arribo a Puerto`) ya se genera la fila — no se duplica nada, solo se propone la fecha al embarque.
+Adicionalmente, la invalidación de queries ya está correcta (`['embarques']` cubre `['embarques','full',id]`), por lo que en cuanto el UPDATE persista, el Resumen sí debe refrescar.
 
 ## Cambios
 
-**`supabase/functions/_shared/jsoncargo.ts`**
-- Nueva función `pickEffectiveAta(data): { iso: string | null, isInferred: boolean }`.
+### 1. `src/hooks/embarque/useJsonCargoTracking.ts`
 
-**`supabase/functions/jsoncargo-track/index.ts`**
-- Calcular `ataPropuesta` (date YYYY-MM-DD).
-- Agregar al `summary`: `ata_propuesta`, `ata_actual` (= `embarque.fecha_llegada_real`), `ata_difiere`, `ata_is_inferred`.
+**`useApplyJsonCargoFechas`**
+- Cambiar a `.update(update).eq("id", embarqueId).select("id")`.
+- Si `data.length === 0`, lanzar error `No se pudo actualizar el embarque (sin permisos o registro no encontrado)`.
 
-**`src/hooks/embarque/useJsonCargoTracking.ts`**
-- Extender `JsonCargoSummary` con los 4 campos nuevos.
-- Reflejar la misma heurística en `extractSummary()` (para el payload cacheado).
-- Extender `useApplyJsonCargoFechas` para aceptar `ata?: string | null` y escribir `fecha_llegada_real`.
+**`extractSummary` – heurística ATA más robusta**
+- Mantener la regla actual (last_location coincide con discharging_port + status descargado).
+- Añadir fallback: si `discharging_port` es nulo/empty pero `container_status` contiene patrones inequívocos de descarga en puerto destino (`gate.?out.*port.*discharge`, `discharged at port`, `discharged from vessel`, `unloaded at port`, `available for (pick|release)`, `released`, `delivered`), tomar `timestamp_of_last_location` (o `last_movement_timestamp`) como `ata_effective` y marcar `ata_is_inferred = true`.
+- No inferir si solo dice "on rail", "in transit to" sin contexto de puerto.
 
-**`src/components/embarque/TrackingLiveCard.tsx`**
-- Mostrar bloque "ATA propuesta" cuando `ata_propuesta && ata_difiere`, con badge "Inferida del último movimiento" si `ata_is_inferred`.
-- Botón "Aplicar fecha de arribo" → llama al hook con `ata`.
-- Si ya se desea aplicar todo junto, incluir ATA en la acción "Aplicar todas".
+### 2. `supabase/functions/_shared/jsoncargo.ts`
 
-**Changelog y versión**
-- `APP_VERSION` → `8.135.0` (feature menor).
-- Entrada en `Changelog.tsx` y `src/content/changelog/v8/chunks/0.ts`.
+Replicar el mismo fallback en `pickEffectiveAta(d)` para que el `summary` del edge function también devuelva la ATA cuando `discharging_port` venga nulo y el `container_status` indique descarga clara en puerto.
 
-## Notas
+### 3. Changelog y versión
 
-- No se hardcodea ATA si el estado no es claramente "ya descargado/disponible" — si solo dice "on vessel" en el puerto destino (buque atracado pero contenedor aún a bordo), no se propone, para evitar adelantar la fecha real de descarga.
-- Cuando se implemente el adaptador AI (Wan Hai etc.), se reutiliza la misma forma de `summary` y la UI ya soportará ATA inferida.
+- `APP_VERSION` → `8.135.1` (patch).
+- Entrada en `src/content/changelog/v8/chunks/0.ts` y `src/pages/Changelog.tsx`:
+  - "Tracking: la acción Actualizar embarque ahora valida que el UPDATE se haya aplicado y muestra error si RLS o un registro inexistente lo bloquea."
+  - "Tracking: la ATA se infiere también cuando JSONCargo no reporta discharging_port pero el estado indica descarga en puerto (p. ej. 'Gate-Out from Port of Discharge')."
+
+## Resultado esperado para ELIMP00203 / TEMU7687933
+
+- Al pulsar **Actualizar embarque**: se aplican ETD = 2026-04-07 y ATA = 2026-05-03 al embarque, el Resumen se refresca automáticamente y se muestra "Llegada Real".
+- Si por cualquier razón el UPDATE no persiste, ahora se mostrará un toast de error en vez de un falso éxito.
