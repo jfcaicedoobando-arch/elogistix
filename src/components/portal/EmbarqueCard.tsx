@@ -47,7 +47,7 @@ function etaProximityClass(eta: string | null | undefined): string {
 }
 
 function EmbarqueCardInner({ e }: { e: EmbarqueCardData }) {
-  const estadoVisual = calcularEstadoEmbarque(e.modo, e.tipo, e.etd, e.eta, e.estado);
+  const estadoVisual = calcularEstadoEmbarque(e.modo, e.tipo, e.etd, e.eta, e.estado, e.fecha_llegada_real);
   const origen = getOrigen(e);
   const destino = getDestino(e);
   const carrier = e.naviera || e.aerolinea || e.transportista;
