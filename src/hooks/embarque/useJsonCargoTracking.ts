@@ -177,7 +177,13 @@ export function useApplyJsonCargoFechas() {
       const update: { eta?: string; etd?: string; fecha_llegada_real?: string } = {};
       if (eta) update.eta = eta;
       if (etd) update.etd = etd;
-      if (ata) update.fecha_llegada_real = ata;
+      if (ata) {
+        update.fecha_llegada_real = ata;
+        // Si el contenedor ya arribó (ATA conocida) y no recibimos un ETA
+        // distinto explícito, alineamos el ETA a la fecha real de llegada
+        // para que el resumen refleje la realidad operativa.
+        if (!eta) update.eta = ata;
+      }
       if (Object.keys(update).length === 0) return { applied: false };
       const { data, error } = await supabase
         .from("embarques")
@@ -193,6 +199,9 @@ export function useApplyJsonCargoFechas() {
     onSuccess: (_r, args) => {
       qc.invalidateQueries({ queryKey: queryKeys.embarques.detail(args.embarqueId) });
       qc.invalidateQueries({ queryKey: queryKeys.embarques.all });
+      // Invalida la caché unificada del detalle (RPC get_embarque_full)
+      // para que el tab Resumen se refresque sin recargar la página.
+      qc.invalidateQueries({ queryKey: [...queryKeys.embarques.all, "full", args.embarqueId] });
     },
   });
 }
