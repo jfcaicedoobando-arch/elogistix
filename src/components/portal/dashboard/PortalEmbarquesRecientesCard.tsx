@@ -23,6 +23,7 @@ interface EmbarqueItem {
   puerto_destino?: string | null;
   aeropuerto_destino?: string | null;
   ciudad_destino?: string | null;
+  fecha_llegada_real?: string | null;
 }
 
 interface Props {
