@@ -143,7 +143,7 @@ export function useEmbarquesPageController() {
             tipo: e.tipo,
             origen: getOrigen(e),
             destino: getDestino(e),
-            estado: calcularEstadoEmbarque(e.modo, e.tipo, e.etd, e.eta, e.estado),
+            estado: calcularEstadoEmbarque(e.modo, e.tipo, e.etd, e.eta, e.estado, e.fecha_llegada_real),
             etd: e.etd || "",
             eta: e.eta || "",
             operador: e.operador || "",
