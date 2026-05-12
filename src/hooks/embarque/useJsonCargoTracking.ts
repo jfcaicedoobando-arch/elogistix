@@ -134,9 +134,14 @@ export function extractSummary(raw: unknown): JsonCargoSummary | null {
   // Heurística ATA: contenedor ya descargado/disponible en puerto destino.
   const lastLoc = ((d.last_location as string | undefined) ?? "").toLowerCase();
   const dischPort = ((d.discharging_port as string | undefined) ?? "").toLowerCase();
-  const atDestination = !!lastLoc && !!dischPort && lastLoc.includes(dischPort);
+  const atDestinationByPort = !!lastLoc && !!dischPort && lastLoc.includes(dischPort);
   const looksDischarged = /discharg|unload|available|gate.?out|delivered|at yard|empty.*return|released|on rail|departed.*terminal/.test(status);
-  const ataEffective = atDestination && looksDischarged
+  // Fallback: si discharging_port viene vacío pero el container_status
+  // menciona explícitamente "port of discharge" / "from vessel" / "at port",
+  // también se infiere ATA desde el último movimiento.
+  const statusImpliesPortDischarge = /port of discharge|from vessel|at port|at terminal/.test(status);
+  const ataEligible = (atDestinationByPort && looksDischarged) || (looksDischarged && statusImpliesPortDischarge);
+  const ataEffective = ataEligible
     ? ((d.timestamp_of_last_location as string | undefined | null)
       ?? (d.last_movement_timestamp as string | undefined | null))
     : null;
