@@ -22,6 +22,14 @@ export interface ChangelogEntry {
  */
 export const recentChangelog: ChangelogEntry[] = [
   {
+    version: "8.135.3",
+    date: "2026-05-12",
+    type: "patch",
+    title: "Embarques: avance automático a 'Arribo' al registrar la fecha real de llegada",
+    summary: "Aplicar una ATA al embarque mueve el estado a 'Arribo' automáticamente si estaba en 'Confirmado' o 'En Tránsito', y registra el evento 'Arribo a Puerto' en la línea de tiempo.",
+    description: "useApplyJsonCargoFechas lee el estado actual y, al aplicar ATA, incluye estado='Arribo' en el mismo UPDATE solo si el estado previo es 'Confirmado' o 'En Tránsito' — nunca retrocede ni sobreescribe estados posteriores. Inserta evento 'Arribo a Puerto' con la fecha ATA, evitando duplicados. Invalida cachés de eventos, detalle y RPC unificado del embarque.",
+  },
+  {
     version: "8.135.2",
     date: "2026-05-12",
     type: "patch",
