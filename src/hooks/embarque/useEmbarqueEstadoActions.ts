@@ -33,13 +33,13 @@ export function useEmbarqueEstadoActions(embarque: EmbarqueRow | undefined, id: 
   useEffect(() => {
     if (!embarque) return;
     const estadoCalculado = calcularEstadoEmbarque(
-      embarque.modo, embarque.tipo, embarque.etd, embarque.eta, embarque.estado,
+      embarque.modo, embarque.tipo, embarque.etd, embarque.eta, embarque.estado, embarque.fecha_llegada_real,
     );
     if (estadoCalculado !== embarque.estado) {
       syncEstado.mutate({ embarqueId: embarque.id, nuevoEstado: estadoCalculado });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [embarque?.id, embarque?.etd, embarque?.eta]);
+  }, [embarque?.id, embarque?.etd, embarque?.eta, embarque?.fecha_llegada_real]);
 
   const handleAvanzarEstado = async () => {
     if (!embarque || !id) return;
