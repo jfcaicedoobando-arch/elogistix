@@ -282,6 +282,9 @@ export function TrackingLiveCard({ embarqueId, modo, naviera, contenedor, blMast
                       {summary.ata_is_inferred && (
                         <Badge variant="outline" className="ml-2 text-[10px]">Inferida del último movimiento</Badge>
                       )}
+                      {!etaDifiere && (
+                        <span className="ml-2 text-[10px] text-muted-foreground">(también se aplicará como ETA)</span>
+                      )}
                     </li>
                   )}
                 </ul>
