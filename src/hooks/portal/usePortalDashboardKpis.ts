@@ -14,6 +14,7 @@ interface EmbarqueLike {
   etd: string | null;
   eta: string | null;
   estado: string;
+  fecha_llegada_real?: string | null;
 }
 
 interface FacturaLike {
