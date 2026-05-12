@@ -53,7 +53,7 @@ export function usePortalDashboardKpis<E extends EmbarqueLike, F extends Factura
   const estadoDistribucion = useMemo(() => {
     const counts: Record<string, number> = {};
     embarquesActivos.forEach((e) => {
-      const est = calcularEstadoEmbarque(e.modo, e.tipo, e.etd, e.eta, e.estado);
+      const est = calcularEstadoEmbarque(e.modo, e.tipo, e.etd, e.eta, e.estado, e.fecha_llegada_real);
       counts[est] = (counts[est] || 0) + 1;
     });
     return Object.entries(counts).sort((a, b) => {
