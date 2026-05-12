@@ -1,11 +1,13 @@
-Diagnóstico:
-- El request de actualización sí guardó `etd: 2026-04-07` y `fecha_llegada_real: 2026-05-03`.
-- No envió `eta` en el PATCH, por eso el ETA del resumen quedó en `2026-05-17`.
-- La causa probable es que el código trata ATA como `fecha_llegada_real` separada, pero no actualiza `eta` cuando JSONCargo solo permite inferir la fecha real de llegada desde el último movimiento descargado/en puerto.
+Objetivo: cuando un embarque obtiene una fecha de arribo real (`fecha_llegada_real`), su estado debe pasar automáticamente a "Arribo".
 
-Plan de implementación:
-1. Ajustar la acción “Actualizar embarque” para que, cuando exista ATA inferida y no exista un ETA nuevo explícito de JSONCargo, use esa ATA como ETA operativo del embarque.
-2. Mantener también la escritura de `fecha_llegada_real`, para que el resumen muestre “Llegada Real” y el ETA quede alineado con la fecha real cuando el contenedor ya fue descargado.
-3. Mejorar el texto visual en la tarjeta de tracking para que quede claro que esa fecha se aplicará como ETA/ATA cuando proviene del último movimiento.
-4. Invalidar correctamente la caché del detalle completo del embarque (`get_embarque_full`) después de aplicar fechas, para que el tab Resumen se refresque sin depender de recargar la página.
-5. Agregar entrada al changelog con la versión nueva, siguiendo la regla del proyecto.
+Comportamiento:
+- Aplica al guardar la ATA desde el panel de tracking JSONCargo ("Actualizar embarque") y también a cualquier escritura manual futura de `fecha_llegada_real`.
+- Solo cambia el estado si el embarque está en una etapa previa: `Confirmado` o `En Tránsito`.
+- Nunca retrocede ni sobreescribe estados posteriores (`En Aduana`, `Entregado`, `EIR`, `Cerrado`) ni ciclos cancelados.
+- Registra el cambio como evento de tracking "Arribo a Puerto" en la línea de tiempo, igual que cuando se avanza el estado manualmente, para mantener la trazabilidad.
+
+Implementación:
+1. En `useApplyJsonCargoFechas`, cuando se aplique ATA y el estado actual sea `Confirmado` o `En Tránsito`, incluir `estado = 'Arribo'` en el mismo UPDATE.
+2. Insertar un registro en `eventos_embarque` con tipo "Arribo a Puerto" usando la fecha ATA y descripción estándar (`descripcionEventoCambioEstado('Arribo')`), evitando duplicados si ya existe uno para ese embarque/fecha.
+3. Invalidar las cachés de detalle, lista y eventos del embarque.
+4. Agregar entrada al changelog (patch).
