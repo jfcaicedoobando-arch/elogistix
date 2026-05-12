@@ -233,12 +233,16 @@ export function TrackingLiveCard({ embarqueId, modo, naviera, contenedor, blMast
           const etaDifiere = !!etaPropuesta && etaPropuesta !== (eta ?? null);
           const etdDifiere = !!etdPropuesta && etdPropuesta !== (etd ?? null);
           const ataDifiere = !!ataPropuesta && ataPropuesta !== (fechaLlegadaReal ?? null);
-          if (!etaDifiere && !etdDifiere && !ataDifiere) return null;
+          // Caso adicional: el ATA ya está guardado pero el ETA quedó desfasado
+          // respecto al arribo real (no hay diferencia nueva de ATA que aplicar).
+          const etaDesalineadaPorAta = !etaDifiere && !ataDifiere && !!fechaLlegadaReal && fechaLlegadaReal !== (eta ?? null);
+          if (!etaDifiere && !etdDifiere && !ataDifiere && !etaDesalineadaPorAta) return null;
+          const etaTarget = etaDifiere ? etaPropuesta! : (etaDesalineadaPorAta ? fechaLlegadaReal! : undefined);
           const handleApply = async () => {
             try {
               await applyFechas.mutateAsync({
                 embarqueId,
-                eta: etaDifiere ? etaPropuesta! : undefined,
+                eta: etaTarget,
                 etd: etdDifiere ? etdPropuesta! : undefined,
                 ata: ataDifiere ? ataPropuesta! : undefined,
               });
