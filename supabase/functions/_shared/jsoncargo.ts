@@ -229,12 +229,17 @@ export function pickEffectiveEtd(d: JsonCargoContainerData): string | null {
 export function pickEffectiveAta(d: JsonCargoContainerData): { iso: string | null; isInferred: boolean } {
   const lastLoc = (d.last_location ?? "").toLowerCase();
   const dischPort = (d.discharging_port ?? "").toLowerCase();
-  if (!lastLoc || !dischPort || !lastLoc.includes(dischPort)) {
-    return { iso: null, isInferred: false };
-  }
   const status = (d.container_status ?? "").toLowerCase();
+  const atDestinationByPort = !!lastLoc && !!dischPort && lastLoc.includes(dischPort);
   const looksDischarged = /discharg|unload|available|gate.?out|delivered|at yard|empty.*return|released|on rail|departed.*terminal/.test(status);
-  if (!looksDischarged) {
+  // Fallback robusto: cuando JSONCargo no reporta discharging_port, el propio
+  // container_status puede indicar de forma inequívoca que el contenedor ya
+  // fue descargado en el puerto destino (p. ej. "Import Gate-Out from Port
+  // of Discharge to Customer"). En ese caso también se infiere ATA.
+  const statusImpliesPortDischarge = /port of discharge|from vessel|at port|at terminal/.test(status);
+
+  const eligible = (atDestinationByPort && looksDischarged) || (looksDischarged && statusImpliesPortDischarge);
+  if (!eligible) {
     return { iso: null, isInferred: false };
   }
   const iso = d.timestamp_of_last_location ?? d.last_movement_timestamp ?? null;
