@@ -22,6 +22,14 @@ export interface ChangelogEntry {
  */
 export const recentChangelog: ChangelogEntry[] = [
   {
+    version: "8.135.4",
+    date: "2026-05-12",
+    type: "patch",
+    title: "Embarques: 'Arribo' automático cuando ya existe fecha de llegada real y opción para alinear ETA",
+    summary: "Cualquier embarque con fecha_llegada_real pasa a 'Arribo' automáticamente (desde 'Confirmado' o 'En Tránsito'), incluso si la ATA se capturó antes. El panel de tracking ofrece alinear el ETA al arribo real cuando quedó desfasado.",
+    description: "calcularEstadoEmbarque acepta fecha_llegada_real y devuelve 'Arribo' si está presente y el estado actual es previo. useEmbarqueEstadoActions reacciona a cambios de fecha_llegada_real disparando el sync de estado + evento 'Arribo a Puerto'. PORTAL_EMBARQUE_LIST_COLUMNS expone fecha_llegada_real al portal. TrackingLiveCard suma el caso 'ETA desalineada por ATA' para corregir manualmente embarques desfasados.",
+  },
+  {
     version: "8.135.3",
     date: "2026-05-12",
     type: "patch",
