@@ -14,15 +14,9 @@ export function calcularEstadoEmbarque(
   etd: string | null,
   eta: string | null,
   estadoActual: string,
-  fechaLlegadaReal?: string | null,
 ): string {
   const ESTADOS_MANUALES = ["Arribo", "En Aduana", "Entregado", "EIR", "Cerrado"];
   if (ESTADOS_MANUALES.includes(estadoActual)) return estadoActual;
-
-  // Si ya hay arribo real registrado, avanzar a "Arribo" aunque la ETA esté en el futuro.
-  if (fechaLlegadaReal && (estadoActual === "Confirmado" || estadoActual === "En Tránsito")) {
-    return "Arribo";
-  }
 
   // Solo calcula automático para importaciones marítimas
   if (modo !== "Marítimo" || tipo !== "Importación") return estadoActual;

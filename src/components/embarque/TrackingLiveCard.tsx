@@ -233,16 +233,12 @@ export function TrackingLiveCard({ embarqueId, modo, naviera, contenedor, blMast
           const etaDifiere = !!etaPropuesta && etaPropuesta !== (eta ?? null);
           const etdDifiere = !!etdPropuesta && etdPropuesta !== (etd ?? null);
           const ataDifiere = !!ataPropuesta && ataPropuesta !== (fechaLlegadaReal ?? null);
-          // Caso adicional: el ATA ya está guardado pero el ETA quedó desfasado
-          // respecto al arribo real (no hay diferencia nueva de ATA que aplicar).
-          const etaDesalineadaPorAta = !etaDifiere && !ataDifiere && !!fechaLlegadaReal && fechaLlegadaReal !== (eta ?? null);
-          if (!etaDifiere && !etdDifiere && !ataDifiere && !etaDesalineadaPorAta) return null;
-          const etaTarget = etaDifiere ? etaPropuesta! : (etaDesalineadaPorAta ? fechaLlegadaReal! : undefined);
+          if (!etaDifiere && !etdDifiere && !ataDifiere) return null;
           const handleApply = async () => {
             try {
               await applyFechas.mutateAsync({
                 embarqueId,
-                eta: etaTarget,
+                eta: etaDifiere ? etaPropuesta! : undefined,
                 etd: etdDifiere ? etdPropuesta! : undefined,
                 ata: ataDifiere ? ataPropuesta! : undefined,
               });
@@ -289,15 +285,6 @@ export function TrackingLiveCard({ embarqueId, modo, naviera, contenedor, blMast
                       {!etaDifiere && (
                         <span className="ml-2 text-[10px] text-muted-foreground">(también se aplicará como ETA)</span>
                       )}
-                    </li>
-                  )}
-                  {etaDesalineadaPorAta && (
-                    <li>
-                      <span className="text-muted-foreground">ETA destino:</span>{" "}
-                      <span className="font-mono">{eta ? formatDate(eta, "dd MMM yyyy") : "—"}</span>
-                      {" → "}
-                      <span className="font-mono font-semibold">{formatDate(fechaLlegadaReal!, "dd MMM yyyy")}</span>
-                      <span className="ml-2 text-[10px] text-muted-foreground">(se alineará al arribo real)</span>
                     </li>
                   )}
                 </ul>

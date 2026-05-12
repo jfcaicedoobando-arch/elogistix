@@ -39,7 +39,6 @@ export function usePortalEmbarqueDetalleController(id: string | undefined) {
       embarque.etd,
       embarque.eta,
       embarque.estado,
-      embarque.fecha_llegada_real,
     );
   }, [embarque]);
 

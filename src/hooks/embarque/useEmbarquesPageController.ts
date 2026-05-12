@@ -93,7 +93,7 @@ export function useEmbarquesPageController() {
       // Filtro de estado se calcula client-side (no es columna directa de DB).
       const filtradosPorEstado = state.filterEstado === "todos"
         ? todos
-        : todos.filter((e) => calcularEstadoEmbarque(e.modo, e.tipo, e.etd, e.eta, e.estado, e.fecha_llegada_real) === state.filterEstado);
+        : todos.filter((e) => calcularEstadoEmbarque(e.modo, e.tipo, e.etd, e.eta, e.estado) === state.filterEstado);
 
       if (filtradosPorEstado.length === 0) {
         notifyError(toast, { title: "Sin datos para exportar", description: "Los filtros actuales no devuelven embarques." });
@@ -143,7 +143,7 @@ export function useEmbarquesPageController() {
             tipo: e.tipo,
             origen: getOrigen(e),
             destino: getDestino(e),
-            estado: calcularEstadoEmbarque(e.modo, e.tipo, e.etd, e.eta, e.estado, e.fecha_llegada_real),
+            estado: calcularEstadoEmbarque(e.modo, e.tipo, e.etd, e.eta, e.estado),
             etd: e.etd || "",
             eta: e.eta || "",
             operador: e.operador || "",

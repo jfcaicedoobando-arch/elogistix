@@ -97,7 +97,7 @@ export default function PortalEmbarques() {
               return <EmbarqueCard key={e.id} e={e} />;
             }
             const statusCounts = items.reduce((acc, item) => {
-              const st = calcularEstadoEmbarque(item.modo, item.tipo, item.etd, item.eta, item.estado, item.fecha_llegada_real);
+              const st = calcularEstadoEmbarque(item.modo, item.tipo, item.etd, item.eta, item.estado);
               acc[st] = (acc[st] || 0) + 1;
               return acc;
             }, {} as Record<string, number>);

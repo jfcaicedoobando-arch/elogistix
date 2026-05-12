@@ -41,7 +41,7 @@ export function usePortalEmbarquesController() {
     const estadoSet = new Set<string>();
     const modoSet = new Set<string>();
     embarques.forEach((e) => {
-      estadoSet.add(calcularEstadoEmbarque(e.modo, e.tipo, e.etd, e.eta, e.estado, e.fecha_llegada_real));
+      estadoSet.add(calcularEstadoEmbarque(e.modo, e.tipo, e.etd, e.eta, e.estado));
       modoSet.add(e.modo);
     });
     return { estados: Array.from(estadoSet).sort(), modos: Array.from(modoSet).sort() };
@@ -49,7 +49,7 @@ export function usePortalEmbarquesController() {
 
   const filtered = useMemo(() => {
     return embarques.filter((e) => {
-      const estadoVisual = calcularEstadoEmbarque(e.modo, e.tipo, e.etd, e.eta, e.estado, e.fecha_llegada_real);
+      const estadoVisual = calcularEstadoEmbarque(e.modo, e.tipo, e.etd, e.eta, e.estado);
       if (filtroEstado !== "todos" && estadoVisual !== filtroEstado) return false;
       if (filtroModo !== "todos" && e.modo !== filtroModo) return false;
       if (search) {

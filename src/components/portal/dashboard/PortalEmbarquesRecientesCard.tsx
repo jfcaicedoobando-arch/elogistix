@@ -23,7 +23,6 @@ interface EmbarqueItem {
   puerto_destino?: string | null;
   aeropuerto_destino?: string | null;
   ciudad_destino?: string | null;
-  fecha_llegada_real?: string | null;
 }
 
 interface Props {
@@ -53,7 +52,7 @@ export function PortalEmbarquesRecientesCard({ embarques, className }: Props) {
         ) : (
           <div className="space-y-2">
             {embarques.slice(0, 5).map((e) => {
-              const estadoVisual = calcularEstadoEmbarque(e.modo, e.tipo ?? "", e.etd ?? null, e.eta ?? null, e.estado ?? "", e.fecha_llegada_real ?? null);
+              const estadoVisual = calcularEstadoEmbarque(e.modo, e.tipo ?? "", e.etd ?? null, e.eta ?? null, e.estado ?? "");
               return (
                 <Link
                   key={e.id}

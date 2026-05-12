@@ -83,7 +83,7 @@ export function useEmbarquesPageState() {
   const filtered = useMemo(() => {
     if (filterEstado === "todos") return dedupedEmbarques;
     return dedupedEmbarques.filter((e) => {
-      const estadoCalculado = calcularEstadoEmbarque(e.modo, e.tipo, e.etd, e.eta, e.estado, e.fecha_llegada_real);
+      const estadoCalculado = calcularEstadoEmbarque(e.modo, e.tipo, e.etd, e.eta, e.estado);
       return estadoCalculado === filterEstado;
     });
   }, [dedupedEmbarques, filterEstado]);
