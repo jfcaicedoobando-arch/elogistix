@@ -2,6 +2,14 @@ import type { ChangelogEntry } from "../../../changelogData";
 
 export const chunk0: ChangelogEntry[] = [
   {
+    version: "8.135.5",
+    date: "2026-05-14",
+    type: "patch",
+    title: "Refactor UI: ternarios anidados reemplazados por helpers nombrados",
+    summary: "18 puntos en componentes y páginas dejan de usar ternarios encadenados; ahora usan helpers reutilizables (pluralS, formatDiasCredito, getModoLucideIcon, etc.) o funciones locales con if/else claro.",
+    description: "Se agregaron pluralS y formatDiasCredito a src/lib/formatters y getNotaTipoColorClass, getDocEstadoColorClass, getStepIndicatorCircleClass, getDiasVencidosTone, getProfitToneClass a src/lib/ui/uiMappings. Refactorizados PortalEstadoEmbarquesCard, SidebarGroupBlock, Auditoria.tsx, PasoConfirmacionProforma, HistorialProformas, proformasColumns, PortalCotizacionConfirmDialog, EmbarqueCard (carrier icon), TabNotas, TabDocumentos, StepIndicator, DialogDuplicarEmbarque, huecoFacturacionColumns, TabProyeccion, ConceptoRowUSD/MXN, TablaCostosLocal y admin-org/Configuracion. Sin cambios visuales ni de comportamiento.",
+  },
+  {
     version: "8.135.4",
     date: "2026-05-14",
     type: "patch",
