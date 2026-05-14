@@ -100,15 +100,14 @@ export function useEmbarquesPageController() {
         return;
       }
 
-      // Trae estados de costos (liquidación) en chunks de 1000 IDs.
+      // Trae estados de costos (liquidación) en chunks de 1000 IDs en paralelo.
       const ids = filtradosPorEstado.map((e) => e.id);
       const liqMap: Record<string, { total: number; pagados: number }> = {};
       const CHUNK = 1000;
-      for (let i = 0; i < ids.length; i += CHUNK) {
-        const slice = ids.slice(i, i + CHUNK);
-        const extras = await fetchEmbarquesListExtras(slice);
-        Object.assign(liqMap, extras.liquidacion);
-      }
+      const slices: string[][] = [];
+      for (let i = 0; i < ids.length; i += CHUNK) slices.push(ids.slice(i, i + CHUNK));
+      const extrasList = await Promise.all(slices.map((s) => fetchEmbarquesListExtras(s)));
+      for (const extras of extrasList) Object.assign(liqMap, extras.liquidacion);
 
       exportToCsv(
         `embarques_${new Date().toISOString().slice(0, 10)}.csv`,
