@@ -100,15 +100,6 @@ export const recentChangelog: ChangelogEntry[] = [
     title: "Optimización: queries de DB lineales y en paralelo",
     summary: "Las exportaciones de embarques, las actualizaciones de configuración y el detalle de cotización del portal ahora hacen sus consultas en paralelo, sin loops secuenciales.",
     description: "fetchEmbarquesParaExport: conteo exacto + Promise.all de páginas. useEmbarquesPageController: chunks de fetchEmbarquesListExtras en paralelo. updateConfiguracionItems / updateConfiguracionGlobalItems: Promise.all en lugar de await en for. fetchPortalCotizacion: join embebido en una sola query. Sin cambios funcionales.",
-  },
-  {
-    version: "8.135.3",
-    date: "2026-05-12",
-    type: "patch",
-    title: "Embarques: avance automático a 'Arribo' al registrar la fecha real de llegada",
-    summary: "Aplicar una ATA al embarque mueve el estado a 'Arribo' automáticamente si estaba en 'Confirmado' o 'En Tránsito', y registra el evento 'Arribo a Puerto' en la línea de tiempo.",
-    description: "useApplyJsonCargoFechas lee el estado actual y, al aplicar ATA, incluye estado='Arribo' en el mismo UPDATE solo si el estado previo es 'Confirmado' o 'En Tránsito' — nunca retrocede ni sobreescribe estados posteriores. Inserta evento 'Arribo a Puerto' con la fecha ATA, evitando duplicados. Invalida cachés de eventos, detalle y RPC unificado del embarque.",
-  },
 ];
 
 /** Deduplica por version conservando la primera ocurrencia (recentChangelog gana). */
