@@ -90,9 +90,18 @@ export const CargasActivasClienteCard = memo(function CargasActivasClienteCard({
                 </span>
               </div>
             </div>
-          ))
-        )}
-      </CardContent>
+    ));
+  }
+
+  return (
+    <Card>
+      <CardHeader className="pb-3">
+        <CardTitle className="text-base flex items-center gap-2">
+          <Package className="h-4 w-4 text-muted-foreground" />
+          Cargas activas por cliente
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-1 pt-0">{renderBody()}</CardContent>
     </Card>
   );
 });
