@@ -2,6 +2,13 @@ import type { ChangelogEntry } from "../../../changelogData";
 
 export const chunk0: ChangelogEntry[] = [
   {
+    version: "8.149.0",
+    date: "2026-05-14",
+    type: "minor",
+    title: "Power of 10 — Fase 4: refactor AdminUsuarios, AsignarResponsableDialog, CotizacionWizardLayout, Embarques y Cotizaciones",
+    summary: "Cinco componentes >200 líneas reducidos a shells: AdminUsuarios (221→72), AsignarResponsableDialog (218→146), CotizacionWizardLayout (228→133), Embarques (208→157), Cotizaciones (215→176). Componentes >200 líneas: 10 → 5.",
+    description: "Quinta iteración de la Fase 4 (ARCHITECTURE.md §20.4). (1) src/pages/admin/AdminUsuarios.tsx pasa de 221 a 72 líneas: nuevos componentes AdminUsuariosFilters.tsx (search + selects), adminUsuariosColumns.tsx (build con ROLE_BADGE) y hooks/admin/useAdminUsuariosController.ts (filtros + delete). (2) src/components/auditoria/AsignarResponsableDialog.tsx pasa de 218 a 146 líneas: subcomponentes AsignacionExistenteInfo.tsx (panel de meta del responsable actual) y FechaLimitePicker.tsx (Popover + Calendar) en components/auditoria/asignarResponsable/. (3) src/components/cotizacion/CotizacionWizardLayout.tsx pasa de 228 a 133 líneas: PasoDatosGenerales.tsx (Paso 1 con destinatario, mercancía FCL/LCL/Aérea/General y accordion) y CotizacionWizardFooter.tsx (botones Cancelar/Anterior + Siguiente/Guardar) en components/cotizacion/wizard/. (4) src/pages/embarques/Embarques.tsx pasa de 208 a 157 líneas: EmbarquesEmptyState.tsx (CTA de primer embarque) y EmbarquesSortIndicator.tsx (banner de orden global). (5) src/pages/cotizaciones/Cotizaciones.tsx pasa de 215 a 176 líneas: CotizacionesMobileFilters.tsx (Sheet móvil con search + filtros + clear). Tests: 314 verdes. Sin cambios de UI ni de comportamiento. Quedan 5 componentes >200 líneas.",
+  },
     version: "8.148.0",
     date: "2026-05-14",
     type: "minor",
