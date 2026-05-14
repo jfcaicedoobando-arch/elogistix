@@ -48,36 +48,41 @@ export default function TablaContactos({ contactos, isLoading, canEdit, onAdd, o
     },
   ];
 
+  function renderBody() {
+    if (isLoading) {
+      return (
+        <div className="flex items-center justify-center py-8">
+          <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+        </div>
+      );
+    }
+    return (
+      <DataTable
+        columns={columns}
+        data={contactos}
+        rowKey={(c) => c.id}
+        density="compact"
+        emptyState={
+          <div className="p-6">
+            <EmptyState
+              icon={UserX}
+              title="Sin contactos registrados"
+              description="Agrega proveedores, exportadores o importadores para usarlos al crear embarques."
+              primaryAction={canEdit ? { label: "Agregar Contacto", onClick: onAdd } : undefined}
+            />
+          </div>
+        }
+      />
+    );
+  }
+
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between pb-3">
         <CardTitle className="text-base flex items-center gap-2"><Users className="h-4 w-4" />Proveedores / Exportadores</CardTitle>
         {canEdit && <Button size="sm" onClick={onAdd}><Plus className="h-4 w-4 mr-1" />Agregar Contacto</Button>}
       </CardHeader>
-      <CardContent className="p-0">
-        {isLoading ? (
-          <div className="flex items-center justify-center py-8">
-            <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
-          </div>
-        ) : (
-          <DataTable
-            columns={columns}
-            data={contactos}
-            rowKey={(c) => c.id}
-            density="compact"
-            emptyState={
-              <div className="p-6">
-                <EmptyState
-                  icon={UserX}
-                  title="Sin contactos registrados"
-                  description="Agrega proveedores, exportadores o importadores para usarlos al crear embarques."
-                  primaryAction={canEdit ? { label: "Agregar Contacto", onClick: onAdd } : undefined}
-                />
-              </div>
-            }
-          />
-        )}
-      </CardContent>
+      <CardContent className="p-0">{renderBody()}</CardContent>
     </Card>
   );
 }

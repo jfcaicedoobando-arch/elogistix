@@ -25,6 +25,22 @@ export default function Operaciones() {
     balancePct, contPct, totalAlertas,
   } = useOperacionesPageController();
 
+  function renderTendenciaChart() {
+    if (isLoading) return <Skeleton className="h-[260px] w-full" />;
+    return (
+      <ResponsiveContainer width="100%" height={260}>
+        <LineChart data={chartData} margin={{ top: 20, right: 20, left: 0, bottom: 0 }}>
+          <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+          <XAxis dataKey="mes" tick={{ fontSize: 12 }} />
+          <YAxis allowDecimals={false} tick={{ fontSize: 12 }} />
+          <RechartsTooltip />
+          <Line type="monotone" dataKey="creadas" name="Por ETD" stroke="hsl(var(--kpi-info))" strokeWidth={2} dot={{ r: 4, fill: "hsl(var(--kpi-info))" }} />
+          <Line type="monotone" dataKey="llegadas" name="Llegadas" stroke="hsl(var(--kpi-success))" strokeWidth={2} dot={{ r: 4, fill: "hsl(var(--kpi-success))" }} />
+        </LineChart>
+      </ResponsiveContainer>
+    );
+  }
+
   return (
     <div className="space-y-6">
       <PageHeader
@@ -85,20 +101,7 @@ export default function Operaciones() {
             </div>
           </div>
 
-          {isLoading ? (
-            <Skeleton className="h-[260px] w-full" />
-          ) : (
-            <ResponsiveContainer width="100%" height={260}>
-              <LineChart data={chartData} margin={{ top: 20, right: 20, left: 0, bottom: 0 }}>
-                <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
-                <XAxis dataKey="mes" tick={{ fontSize: 12 }} />
-                <YAxis allowDecimals={false} tick={{ fontSize: 12 }} />
-                <RechartsTooltip />
-                <Line type="monotone" dataKey="creadas" name="Por ETD" stroke="hsl(var(--kpi-info))" strokeWidth={2} dot={{ r: 4, fill: "hsl(var(--kpi-info))" }} />
-                <Line type="monotone" dataKey="llegadas" name="Llegadas" stroke="hsl(var(--kpi-success))" strokeWidth={2} dot={{ r: 4, fill: "hsl(var(--kpi-success))" }} />
-              </LineChart>
-            </ResponsiveContainer>
-          )}
+          {renderTendenciaChart()}
 
           <Separator className="my-4" />
           <div className="flex items-center gap-3">

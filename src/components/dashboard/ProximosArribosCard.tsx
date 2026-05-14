@@ -13,8 +13,48 @@ interface Props {
   isLoading: boolean;
 }
 
+function formatDiasRestantes(dias: number): string {
+  if (dias === 0) return "Hoy";
+  return `${dias} día${dias > 1 ? "s" : ""}`;
+}
+
 export const ProximosArribosCard = memo(function ProximosArribosCard({ arribos, isLoading }: Props) {
   const navigate = useNavigate();
+
+  function renderBody() {
+    if (isLoading) {
+      return Array.from({ length: 3 }).map((_, i) => (
+        <Skeleton key={i} className="h-14 w-full" />
+      ));
+    }
+    if (arribos.length === 0) {
+      return (
+        <p className="text-sm text-muted-foreground text-center py-6">
+          Sin arribos próximos
+        </p>
+      );
+    }
+    return arribos.map((e) => (
+      <div
+        key={e.id}
+        onClick={() => navigate(`/embarques/${e.id}`)}
+        className="flex items-center gap-3 rounded-lg border p-3 cursor-pointer hover:bg-muted/50 transition-colors"
+      >
+        <div className="shrink-0 h-9 w-9 rounded-full bg-warning/15 flex items-center justify-center">
+          <Clock className="h-4 w-4 text-warning" />
+        </div>
+        <div className="min-w-0 flex-1">
+          <p className="text-sm font-medium truncate">
+            {e.expediente} — {toTitleCase(e.cliente_nombre)}
+          </p>
+          <p className="text-xs text-muted-foreground">
+            ETA: {formatDate(e.eta!)} · {formatDiasRestantes(e.diasRestantes)}
+          </p>
+        </div>
+        <ModoIcon modo={e.modo} size={18} circle />
+      </div>
+    ));
+  }
 
   return (
     <Card>
@@ -30,39 +70,7 @@ export const ProximosArribosCard = memo(function ProximosArribosCard({ arribos, 
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-2 max-h-[280px] overflow-y-auto">
-        {isLoading ? (
-          Array.from({ length: 3 }).map((_, i) => (
-            <Skeleton key={i} className="h-14 w-full" />
-          ))
-        ) : arribos.length === 0 ? (
-          <p className="text-sm text-muted-foreground text-center py-6">
-            Sin arribos próximos
-          </p>
-        ) : (
-          arribos.map((e) => (
-            <div
-              key={e.id}
-              onClick={() => navigate(`/embarques/${e.id}`)}
-              className="flex items-center gap-3 rounded-lg border p-3 cursor-pointer hover:bg-muted/50 transition-colors"
-            >
-              <div className="shrink-0 h-9 w-9 rounded-full bg-warning/15 flex items-center justify-center">
-                <Clock className="h-4 w-4 text-warning" />
-              </div>
-              <div className="min-w-0 flex-1">
-                <p className="text-sm font-medium truncate">
-                  {e.expediente} — {toTitleCase(e.cliente_nombre)}
-                </p>
-                <p className="text-xs text-muted-foreground">
-                  ETA: {formatDate(e.eta!)} ·{" "}
-                  {e.diasRestantes === 0
-                    ? "Hoy"
-                    : `${e.diasRestantes} día${e.diasRestantes > 1 ? "s" : ""}`}
-                </p>
-              </div>
-              <ModoIcon modo={e.modo} size={18} circle />
-            </div>
-          ))
-        )}
+        {renderBody()}
       </CardContent>
     </Card>
   );
