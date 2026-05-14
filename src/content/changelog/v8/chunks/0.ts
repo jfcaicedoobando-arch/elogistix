@@ -2,6 +2,14 @@ import type { ChangelogEntry } from "../../../changelogData";
 
 export const chunk0: ChangelogEntry[] = [
   {
+    version: "8.142.0",
+    date: "2026-05-14",
+    type: "minor",
+    title: "lib/domain/auditoria — reglas puras testables + ARCHITECTURE actualizado",
+    summary: "Se extraen las reglas puras de auditoría (snooze, conteo por severidad, agrupación por regla, filtros) a src/lib/domain/auditoria.ts con tests, y ARCHITECTURE.md documenta la convención queries + mutations + subdominios.",
+    description: "Cierre de los pasos 2 y 3 opcionales de la auditoría arquitectónica. (1) Nuevo módulo src/lib/domain/auditoria.ts expone funciones puras sin dependencias de React/Supabase: isoDate, minSnoozeDate (día siguiente al `from`), isSnoozeActivo (snoozedUntil >= today, tolera null/undefined), contarPorSeveridad (siempre devuelve {critico,alto,medio}), agruparPorRegla (garantiza un array por cada ReglaAuditoria) y filtrarHallazgos ('todas'/'todos' no filtran). Se acompaña de src/lib/domain/__tests__/auditoria.test.ts con 15 casos cubriendo fin de mes, snooze nulo y combinación de filtros. (2) useAuditoriaPageController y useMarcarRevisadoController consumen las funciones puras eliminando la lógica inline. (3) ARCHITECTURE.md gana la subsección 5.1 documentando que un dominio crecido se parte en queries.ts + mutations.ts + subdominios, con el barrel re-exportando todo. APP_VERSION 8.142.0. Tests: 45 verdes en hooks/auditoria + lib/domain/auditoria.",
+  },
+  {
     version: "8.141.0",
     date: "2026-05-14",
     type: "minor",
