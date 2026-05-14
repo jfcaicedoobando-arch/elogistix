@@ -14,7 +14,6 @@ import { Label } from "@/components/ui/label";
 import { Loader2, Search, AlertCircle, RefreshCw } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
-import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/query";
 import { formatDate } from "@/lib/formatters";
@@ -23,6 +22,7 @@ import {
   type BolLookupResponse,
 } from "@/hooks/embarque/useJsonCargoBolLookup";
 import { useSyncJsonCargo, PrefixMismatchError } from "@/hooks/embarque/useJsonCargoTracking";
+import { useActualizarContenedorEmbarque } from "@/hooks/embarque/mutations/useActualizarContenedorEmbarque";
 
 interface Props {
   open: boolean;
@@ -45,6 +45,7 @@ export function DialogBolContainers({
   const qc = useQueryClient();
   const lookup = useJsonCargoBolLookup();
   const sync = useSyncJsonCargo();
+  const actualizarContenedor = useActualizarContenedorEmbarque();
   const [result, setResult] = useState<BolLookupResponse | null>(null);
   const [selected, setSelected] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
@@ -87,11 +88,7 @@ export function DialogBolContainers({
     setSaving(true);
     try {
       // 1. Actualizar contenedor del embarque
-      const { error: updErr } = await supabase
-        .from("embarques")
-        .update({ contenedor: selected })
-        .eq("id", embarqueId);
-      if (updErr) throw updErr;
+      await actualizarContenedor.mutateAsync({ embarqueId, contenedor: selected });
 
       // 2. Sincronizar tracking del contenedor elegido
       try {
