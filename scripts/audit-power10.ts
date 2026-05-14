@@ -89,12 +89,17 @@ function checkLongComponents(files: string[], out: Finding[]) {
 function checkAny(files: string[], out: Finding[]) {
   const re = /(:\s*any\b|\bas\s+any\b|<any>)/;
   for (const f of files) {
+    // Excluir changelog: las descripciones son strings, no `any` reales.
+    if (f.includes(`${sep}content${sep}changelog${sep}`)) continue;
     const content = readFileSync(f, "utf8");
     const lines = content.split("\n");
     lines.forEach((ln, i) => {
       // Saltar comentarios obvios
       const trimmed = ln.trim();
       if (trimmed.startsWith("//") || trimmed.startsWith("*")) return;
+      // Saltar si la línea anterior tiene un eslint-disable explícito
+      const prev = (lines[i - 1] ?? "").trim();
+      if (prev.includes("eslint-disable") && prev.includes("no-explicit-any")) return;
       if (re.test(ln)) {
         out.push({ file: rel(f), line: i + 1, detail: ln.trim().slice(0, 120) });
       }
