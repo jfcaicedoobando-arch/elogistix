@@ -22,6 +22,14 @@ export interface ChangelogEntry {
  */
 export const recentChangelog: ChangelogEntry[] = [
   {
+    version: "8.140.0",
+    date: "2026-05-14",
+    type: "minor",
+    title: "Auditoría: controllers de diálogos de auditoría y RHF en TabTracking",
+    summary: "MarcarRevisadoDialog y AsignarResponsableDialog ahora usan hooks controller dedicados; el form de TabTracking migra a react-hook-form + zod.",
+    description: "Pasos 6 y 7 de la auditoría arquitectónica. Nuevos useMarcarRevisadoController y useAsignarResponsableController encapsulan estado local, efectos de sincronización con la revisión existente y handlers (guardar, eliminar, snooze, quitarSnooze, agregar comentario, tomarlo yo). Los diálogos quedan como pura presentación. TabTracking migra su formulario inline (4 useState) a react-hook-form + zodResolver con eventoSchema (tipo requerido, fecha requerida, ubicación ≤120, descripción ≤500), errores inline y reset al guardar. Pendientes: rotar chunk0 → chunk6 (1078 líneas) y documentar convenciones en ARCHITECTURE.md.",
+  },
+  {
     version: "8.139.0",
     date: "2026-05-14",
     type: "minor",
