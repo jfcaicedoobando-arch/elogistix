@@ -4,7 +4,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import type { Json, TablesInsert } from "@/integrations/supabase/types";
 import { calcularFechaVigencia } from "@/lib/domain/cotizacion";
-import { generarFolioCotizacion } from "../crud";
+import { generarFolioCotizacion } from "../queries";
 
 type CotizacionInsert = TablesInsert<"cotizaciones">;
 
