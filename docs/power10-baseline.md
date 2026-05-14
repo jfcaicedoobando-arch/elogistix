@@ -1,6 +1,6 @@
 # Power of 10 — Baseline
 
-_Generado por `scripts/audit-power10.ts` sobre 507 archivos de `src/`._
+_Generado por `scripts/audit-power10.ts` sobre 519 archivos de `src/`._
 
 Las heurísticas son conservadoras (prefieren falsos positivos). Validar manualmente antes de refactorizar. Ver ARCHITECTURE.md §20.
 
@@ -8,28 +8,25 @@ Las heurísticas son conservadoras (prefieren falsos positivos). Validar manualm
 
 | Regla | Hallazgos |
 |---|---:|
-| #4 Componentes >200 líneas | 17 |
+| #4 Componentes >200 líneas | 13 |
 | #5/#10 `any` explícito | 0 |
 | #3 `useEffect` sin cleanup | 1 |
 | #2 Queries de lista sin paginar | 68 |
 
-## Regla #4 — Componentes >200 líneas (17)
+## Regla #4 — Componentes >200 líneas (13)
 
 Componentes y páginas que superan el umbral. Refactor: extraer `use<X>Controller` + subcomponentes.
 
 | Dominio | Hallazgos |
 |---|---:|
 | `components/cotizacion` | 2 |
-| `components/embarque` | 2 |
 | `pages/admin` | 2 |
 | `pages/cotizaciones` | 2 |
 | `components/auditoria` | 1 |
 | `components/facturacion` | 1 |
 | `components/layout` | 1 |
-| `components/portal` | 1 |
 | `components/shared` | 1 |
 | `pages/clientes` | 1 |
-| `pages/dashboard` | 1 |
 | `pages/embarques` | 1 |
 | `pages/portal` | 1 |
 
@@ -38,18 +35,14 @@ Componentes y páginas que superan el umbral. Refactor: extraer `use<X>Controlle
 - `src/components/auditoria/AsignarResponsableDialog.tsx` — 219 líneas
 - `src/components/cotizacion/CotizacionWizardLayout.tsx` — 229 líneas
 - `src/components/cotizacion/cotizacionesColumns.tsx` — 209 líneas
-- `src/components/embarque/DialogBolContainers.tsx` — 246 líneas
-- `src/components/embarque/TabTracking.tsx` — 252 líneas
 - `src/components/facturacion/TabProyeccion.tsx` — 217 líneas
 - `src/components/layout/AppSidebar.tsx` — 216 líneas
-- `src/components/portal/PortalLayout.tsx` — 266 líneas
 - `src/components/shared/DataTable.tsx` — 336 líneas
 - `src/pages/admin/AdminOrganizaciones.tsx` — 225 líneas
 - `src/pages/admin/AdminUsuarios.tsx` — 222 líneas
 - `src/pages/clientes/ClienteDetalle.tsx` — 206 líneas
 - `src/pages/cotizaciones/CotizacionDetalle.tsx` — 219 líneas
 - `src/pages/cotizaciones/Cotizaciones.tsx` — 216 líneas
-- `src/pages/dashboard/Changelog.tsx` — 261 líneas
 - `src/pages/embarques/Embarques.tsx` — 210 líneas
 - `src/pages/portal/PortalEmbarqueDetalle.tsx` — 239 líneas
 
