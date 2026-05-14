@@ -25,6 +25,17 @@ function getGlobalIndex(filas: { moneda: string }[], moneda: string, localIdx: n
   return -1;
 }
 
+/** Valor a mostrar en el input de cantidad: edición en curso, vacío si 0, o el número formateado. */
+function getCantidadInputValue(
+  editing: { idx: number; raw: string } | null,
+  rowIdx: number,
+  cantidad: number,
+): string {
+  if (editing?.idx === rowIdx) return editing.raw;
+  if (cantidad === 0) return "";
+  return String(cantidad);
+}
+
 interface Props {
   filas: FilaCostoLocal[];
   filasMoneda: FilaCostoLocal[];
@@ -93,7 +104,7 @@ export default function TablaCostosLocal({ filas, filasMoneda, moneda, title, ic
                     <span className="text-xs text-muted-foreground">Cant.</span>
                     <Input
                       type="text" inputMode="decimal"
-                      value={editingQty?.idx === gi ? editingQty.raw : (fila.cantidad === 0 ? '' : String(fila.cantidad))}
+                      value={getCantidadInputValue(editingQty, gi, fila.cantidad)}
                       onFocus={e => {
                         const val = fila.cantidad === 0 ? '' : String(fila.cantidad);
                         setEditingQty({ idx: gi, raw: val });
