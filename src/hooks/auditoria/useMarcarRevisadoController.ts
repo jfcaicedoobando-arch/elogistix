@@ -56,7 +56,7 @@ export function useMarcarRevisadoController({
     setSnoozeMotivo(revisionExistente?.snooze_motivo ?? "");
   }, [open, revisionExistente]);
 
-  const minSnoozeDateValue = useMemo(() => minSnoozeDate(), []);
+  const minSnoozeDate = useMemo(() => computeMinSnoozeDate(), []);
 
   const yaRevisado =
     !!revisionExistente && revisionExistente.estado_revision === "revisado";
