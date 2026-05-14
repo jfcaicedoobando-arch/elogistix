@@ -2,6 +2,14 @@ import type { ChangelogEntry } from "../../../changelogData";
 
 export const chunk0: ChangelogEntry[] = [
   {
+    version: "8.144.0",
+    date: "2026-05-14",
+    type: "minor",
+    title: "Power of 10 — Fase 3: ESLint endurecido (no-explicit-any error)",
+    summary: "`@typescript-eslint/no-explicit-any` pasa a `error`, `max-lines-per-function` sube a 200 para alinear con §20.4. TabResumen elimina su `any` casteando a tipo Partial; quedan 0 `any` reales en src/.",
+    description: "Cierre de la Fase 3 del plan The Power of 10 (ARCHITECTURE.md §20). (1) eslint.config.js: `@typescript-eslint/no-explicit-any` elevado a `error` con override puntual mediante `// eslint-disable-next-line` en los 2 únicos casos legítimos (src/lib/ui/appFeedback.ts línea 19 — adaptador genérico de toasts; src/services/embarque/queries/listado.ts línea 118 — applyFilters interno). `max-lines-per-function` sube de 150 a 200 para alinear con regla §20.4 (componentes ≤200 líneas). Se agrega exempción para `src/content/changelog/**` (los chunks contienen entradas largas por diseño). (2) src/components/embarque/TabResumen.tsx: los dos `(embarque as any).etd_original/eta_original` se reemplazan por un IIFE local que castea a `Partial<{ etd_original: string | null; eta_original: string | null }>` — el tipo de dominio Embarque no expone esos campos pero la fila de Supabase sí los trae. (3) scripts/audit-power10.ts: el detector de `any` ahora ignora `src/content/changelog/**` (descripciones son strings, no `any` de TS) y respeta `// eslint-disable-next-line @typescript-eslint/no-explicit-any` en la línea anterior. Resultado del baseline: pasa de 17 hallazgos de `any` a **0** en código ejecutable. (4) APP_VERSION 8.144.0. Próxima fase (4): refactors por dominio — extraer controllers + subcomponentes en los 20 archivos >200 líneas y agregar paginación explícita a queries de listas.",
+  },
+  {
     version: "8.143.0",
     date: "2026-05-14",
     type: "minor",
