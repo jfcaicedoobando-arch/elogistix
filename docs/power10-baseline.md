@@ -1,6 +1,6 @@
 # Power of 10 — Baseline
 
-_Generado por `scripts/audit-power10.ts` sobre 539 archivos de `src/`._
+_Generado por `scripts/audit-power10.ts` sobre 545 archivos de `src/`._
 
 Las heurísticas son conservadoras (prefieren falsos positivos). Validar manualmente antes de refactorizar. Ver ARCHITECTURE.md §20.
 
@@ -8,32 +8,16 @@ Las heurísticas son conservadoras (prefieren falsos positivos). Validar manualm
 
 | Regla | Hallazgos |
 |---|---:|
-| #4 Componentes >200 líneas | 5 |
+| #4 Componentes >200 líneas | 0 |
 | #5/#10 `any` explícito | 0 |
 | #3 `useEffect` sin cleanup | 1 |
 | #2 Queries de lista sin paginar | 68 |
 
-## Regla #4 — Componentes >200 líneas (5)
+## Regla #4 — Componentes >200 líneas (0)
 
 Componentes y páginas que superan el umbral. Refactor: extraer `use<X>Controller` + subcomponentes.
 
-| Dominio | Hallazgos |
-|---|---:|
-| `components/cotizacion` | 1 |
-| `components/facturacion` | 1 |
-| `pages/clientes` | 1 |
-| `pages/cotizaciones` | 1 |
-| `pages/portal` | 1 |
-
-<details><summary>Detalle</summary>
-
-- `src/components/cotizacion/cotizacionesColumns.tsx` — 209 líneas
-- `src/components/facturacion/TabProyeccion.tsx` — 217 líneas
-- `src/pages/clientes/ClienteDetalle.tsx` — 206 líneas
-- `src/pages/cotizaciones/CotizacionDetalle.tsx` — 219 líneas
-- `src/pages/portal/PortalEmbarqueDetalle.tsx` — 239 líneas
-
-</details>
+_Sin hallazgos._
 
 ## Regla #5/#10 — `any` explícito (0)
 
@@ -95,13 +79,13 @@ Aplicable sólo a queries que alimentan listas visibles. Las queries agregadas (
 - `src/services/catalogos/index.ts:44` — .from().select() sin .range/.limit/.single
 - `src/services/catalogos/index.ts:69` — .from().select() sin .range/.limit/.single
 - `src/services/catalogos/index.ts:94` — .from().select() sin .range/.limit/.single
-- `src/services/cliente-usuarios/index.ts:11` — .from().select() sin .range/.limit/.single
 - `src/services/cliente/contactos.ts:11` — .from().select() sin .range/.limit/.single
 - `src/services/cliente/crud.ts:65` — .from().select() sin .range/.limit/.single
 - `src/services/cliente/crud.ts:76` — .from().select() sin .range/.limit/.single
 - `src/services/cliente/financials.ts:21` — .from().select() sin .range/.limit/.single
 - `src/services/cliente/relacionados.ts:5` — .from().select() sin .range/.limit/.single
 - `src/services/cliente/relacionados.ts:17` — .from().select() sin .range/.limit/.single
+- `src/services/cliente-usuarios/index.ts:11` — .from().select() sin .range/.limit/.single
 - `src/services/configuracion/index.ts:21` — .from().select() sin .range/.limit/.single
 - `src/services/configuracion/index.ts:48` — .from().select() sin .range/.limit/.single
 - `src/services/configuracion/index.ts:83` — .from().select() sin .range/.limit/.single
