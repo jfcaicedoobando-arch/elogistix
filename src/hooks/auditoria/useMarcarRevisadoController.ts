@@ -15,7 +15,10 @@ import {
   useQuitarSnooze,
   useSnoozeHallazgo,
 } from "@/hooks/auditoria/useSnoozeHallazgo";
-import { isSnoozeActivo, minSnoozeDate } from "@/lib/domain/auditoria";
+import {
+  isSnoozeActivo,
+  minSnoozeDate as computeMinSnoozeDate,
+} from "@/lib/domain/auditoria";
 import type { AuditoriaRevision, HallazgoAuditoria } from "@/types/auditoria";
 
 interface Args {
