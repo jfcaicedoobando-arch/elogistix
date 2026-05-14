@@ -389,3 +389,45 @@ El proyecto sigue **Semantic Versioning** (`MAJOR.MINOR.PATCH`). Mantener `APP_V
 - ❌ Bumpear MINOR por cada sesión de pulido visual (drift histórico que llevó la rama 8.x más allá de `.100`). Desde v8.100.3 se aplica la regla estricta de arriba.
 - ❌ Crear varios PATCH consecutivos el mismo día por commits separados. Consolidar en uno.
 - ❌ Cambiar `APP_VERSION` sin actualizar las dos entradas del changelog (eager + chunk).
+
+## 20. The Power of 10 (estándar de generación)
+
+Adoptado en v8.143.0. Inspirado en las "Power of 10 Rules" de la NASA, adaptado para React + Supabase + TypeScript. Aplica a **todo código nuevo y refactors**; el legacy se atiende por dominio según `docs/power10-baseline.md`. Versión condensada vive en `mem://principles/power-of-10` para que la IA generadora la cargue por defecto.
+
+### 20.1 Reglas
+
+1. **Flujo de control simple.** Early returns para `loading`/`error`. Sin ternarios anidados >1 nivel en JSX.
+   ```tsx
+   // ✅
+   if (isLoading) return <Skeleton />;
+   if (!data) return <Empty />;
+   return <Tabla rows={data} />;
+
+   // ❌
+   return isLoading ? <Skeleton /> : data ? (data.length ? <Tabla/> : <Empty/>) : <Error/>;
+   ```
+
+2. **Límites de paginación en UI.** Toda query que alimente una **lista visible** debe paginar (`.range()` o `.limit()` explícito). Queries agregadas, exports y RPCs hacen su propia paginación interna documentada; **no** se aplica `.limit(20)` ciego a queries de KPIs.
+
+3. **Cleanup obligatorio en `useEffect`.** Para `subscribe`, `setInterval`, `setTimeout`, `addEventListener` o canal Supabase Realtime. Para canales: `supabase.removeChannel(channel)` explícito. Ya es regla core.
+
+4. **Componentes ≤200 líneas.** Si crece, extraer a `use<X>Controller` (lógica) y subcomponentes (UI). Wizards y diálogos complejos pueden llegar a 250 con justificación en comentario de cabecera. Tests, shadcn vendored (`src/components/ui/**`) y migraciones SQL exentos.
+
+5. **Programación defensiva.** Tipos generados de Supabase, validación de existencia (`if (!data) return …`) y Error Boundaries por ruta principal. Prohibido `any` salvo override documentado en `§17.b`.
+
+6. **Estado local primero.** `useState` por defecto; elevar a Context/store sólo si dos hermanos lo comparten realmente. Ya es regla core.
+
+7. **Manejar errores de red.** Toda llamada Supabase verifica `error` y notifica vía `useToast` + `errorCatalog.ts`. Nunca asumir éxito.
+
+8. **Stack estándar.** Vite + Tailwind + shadcn + React Query, sin macros ni scripts inyectados. Sin postprocesadores ad-hoc.
+
+9. **Prop-drilling controlado.** A partir de **3 niveles** revisar composición o `useContext`. No es prohibición dura, es señal de refactor.
+
+10. **Compilación limpia.** Cero warnings de TS/ESLint en build, cero `any`. Warnings residuales (chunk size, devtools) se resuelven antes de activar el bar como gate.
+
+### 20.2 Aplicación
+
+- **Fase 1 (v8.143.0):** Documentación + memoria — referencia obligatoria para la IA generadora.
+- **Fase 2:** Baseline read-only en `docs/power10-baseline.md` con conteos por dominio (script `scripts/audit-power10.ts`).
+- **Fase 3:** Endurecimiento de `eslint.config.js` (`no-explicit-any`, `exhaustive-deps`, `max-lines-per-function: 200` con overrides). Violaciones legacy se silencian con `// eslint-disable-next-line` + TODO; PRs nuevos no pueden agregar.
+- **Fase 4:** Limpieza por dominio (auditoría → embarque → cotización → cliente → resto), un PR por dominio.
