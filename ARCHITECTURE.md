@@ -27,6 +27,7 @@ Guía de capas, reglas y convenciones del proyecto. **Mantener este contrato evi
 17. [Decisiones de no hacer](#17-decisiones-de-no-hacer)
 18. [Glosario](#18-glosario)
 19. [Versionado (SemVer)](#19-versionado-semver)
+20. [The Power of 10](#20-the-power-of-10-estándar-de-generación)
 
 ---
 
