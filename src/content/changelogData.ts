@@ -22,6 +22,14 @@ export interface ChangelogEntry {
  */
 export const recentChangelog: ChangelogEntry[] = [
   {
+    version: "8.143.0",
+    date: "2026-05-14",
+    type: "minor",
+    title: "Adopción de The Power of 10 — Fases 1 y 2",
+    summary: "10 reglas obligatorias para generar código (componentes ≤200, sin `any`, paginación en listas, cleanup en effects, manejar `error` de Supabase). Documentadas en ARCHITECTURE.md §20 y memorizadas. Baseline read-only en docs/power10-baseline.md.",
+    description: "ARCHITECTURE.md §20 + mem://principles/power-of-10 + scripts/audit-power10.ts (genera docs/power10-baseline.md). Sin cambios de código de aplicación. Fases 3 (ESLint) y 4 (limpieza por dominio) pendientes.",
+  },
+  {
     version: "8.142.0",
     date: "2026-05-14",
     type: "minor",

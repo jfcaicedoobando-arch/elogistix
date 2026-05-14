@@ -2,6 +2,14 @@ import type { ChangelogEntry } from "../../../changelogData";
 
 export const chunk0: ChangelogEntry[] = [
   {
+    version: "8.143.0",
+    date: "2026-05-14",
+    type: "minor",
+    title: "Adopción de The Power of 10 (estándar de generación) — Fases 1 y 2",
+    summary: "Se incorporan 10 reglas inspiradas en NASA Power of 10, adaptadas a React + Supabase + TS, como estándar obligatorio para todo código nuevo. Documentadas en ARCHITECTURE.md §20 y memorizadas en mem://principles/power-of-10. Baseline read-only generado por scripts/audit-power10.ts en docs/power10-baseline.md.",
+    description: "Fase 1 (documentación + memoria): nueva sección §20 en ARCHITECTURE.md con las 10 reglas adaptadas (early returns y sin ternario anidado en JSX; paginación obligatoria en listas visibles pero no `.limit(20)` ciego en KPIs/exports; cleanup en useEffect con suscripciones/timers/listeners; componentes ≤200 líneas con extracción a use<X>Controller + subcomponentes, exentos shadcn vendored, tests y migraciones; tipos generados de Supabase y prohibición de `any`; estado local primero; manejo explícito de `error` de Supabase con useToast + errorCatalog; stack fija Vite+Tailwind+shadcn+React Query; prop-drilling ≥3 niveles dispara revisión; cero warnings TS/ESLint en build). Memoria mem://principles/power-of-10 condensa las reglas y se referencia desde mem://index.md (Core) para que la IA generadora la aplique por defecto. Fase 2 (baseline read-only): scripts/audit-power10.ts (TS, dependency-free, ejecutable con bunx tsx) recorre src/ con heurísticas conservadoras y genera docs/power10-baseline.md agrupado por dominio. Hallazgos iniciales: 20 componentes >200 líneas, 17 usos de `any`, 1 useEffect potencialmente sin cleanup, 68 queries de listado sin paginar (algunas falsos positivos por queries agregadas). No se modifica código de aplicación. Fases 3 (endurecer eslint.config.js) y 4 (limpieza por dominio) quedan pendientes para iteraciones siguientes para no bloquear desarrollo. APP_VERSION 8.143.0.",
+  },
+  {
     version: "8.142.0",
     date: "2026-05-14",
     type: "minor",
