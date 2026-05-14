@@ -43,6 +43,19 @@ export default function Bitacora() {
   const total = data?.total ?? 0;
   const totalPaginas = Math.ceil(total / LIMITE_POR_PAGINA);
 
+  function renderActividad() {
+    if (isLoading) {
+      return (
+        <div className="space-y-4">
+          {Array.from({ length: 8 }).map((_, indice) => (
+            <Skeleton key={indice} className="h-8 w-full" />
+          ))}
+        </div>
+      );
+    }
+    return <BitacoraActividad actividades={actividades} mostrarUsuario={isAdmin} />;
+  }
+
   return (
     <div className="space-y-6">
       <PageHeader
@@ -99,17 +112,7 @@ export default function Bitacora() {
         <CardHeader className="pb-2">
           <CardTitle className="text-base">Actividad</CardTitle>
         </CardHeader>
-        <CardContent>
-          {isLoading ? (
-            <div className="space-y-4">
-              {Array.from({ length: 8 }).map((_, indice) => (
-                <Skeleton key={indice} className="h-8 w-full" />
-              ))}
-            </div>
-          ) : (
-            <BitacoraActividad actividades={actividades} mostrarUsuario={isAdmin} />
-          )}
-        </CardContent>
+        <CardContent>{renderActividad()}</CardContent>
       </Card>
 
       <PaginationControls
