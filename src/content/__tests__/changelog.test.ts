@@ -6,6 +6,7 @@ import { chunk2 } from "../changelog/v8/chunks/2";
 import { chunk3 } from "../changelog/v8/chunks/3";
 import { chunk4 } from "../changelog/v8/chunks/4";
 import { chunk5 } from "../changelog/v8/chunks/5";
+import { chunk6 } from "../changelog/v8/chunks/6";
 import { APP_VERSION } from "@/constants/appVersion";
 
 const SEMVER_RE = /^\d+\.\d+\.\d+(-[\w.]+)?$/;
@@ -22,7 +23,7 @@ function cmpSemver(a: string, b: string): number {
   return a1 !== b1 ? b1 - a1 : a2 !== b2 ? b2 - a2 : b3 - a3;
 }
 
-const v8All: ChangelogEntry[] = [...chunk0, ...chunk1, ...chunk2, ...chunk3, ...chunk4, ...chunk5];
+const v8All: ChangelogEntry[] = [...chunk0, ...chunk1, ...chunk2, ...chunk3, ...chunk4, ...chunk5, ...chunk6];
 
 describe("changelog integrity", () => {
   it("recentChangelog tiene como máximo 10 entradas (mantener bundle pequeño)", () => {
