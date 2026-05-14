@@ -2,6 +2,14 @@ import type { ChangelogEntry } from "../../../changelogData";
 
 export const chunk0: ChangelogEntry[] = [
   {
+    version: "8.150.0",
+    date: "2026-05-14",
+    type: "minor",
+    title: "Power of 10 — Fase 4: cierre de Regla #4 (0 componentes >200 líneas)",
+    summary: "Últimos 5 componentes >200 líneas reducidos: PortalEmbarqueDetalle (239→184), CotizacionDetalle (219→181), TabProyeccion (216→150), cotizacionesColumns (208→117), ClienteDetalle (206→194). Baseline Regla #4: 5 → 0.",
+    description: "Sexta iteración de la Fase 4 (ARCHITECTURE.md §20.4). (1) PortalEmbarqueDetalle: extraído PortalEmbarqueResumenTab (cards Datos de Ruta + Datos Generales) en components/portal/embarqueDetalle/. (2) CotizacionDetalle: nuevo CotizacionDatosGeneralesCard en components/cotizacion/detalle/. (3) TabProyeccion: bloque 'Cierre [Mes Año]' (3 CierreCard + Progress + KPIs) movido a components/facturacion/proyeccion/ProyeccionCierreSection. (4) cotizacionesColumns: helpers renderEstadoVigencia y renderAcciones movidos a components/cotizacion/columnsParts/. (5) ClienteDetalle: tres diálogos (DialogContacto + DialogEditarCliente + DoubleConfirmDeleteDialog) agrupados en components/cliente/detalle/ClienteDetalleDialogs. Tests: 314 verdes. Auditoría power-of-10: 0 hallazgos en Regla #4. Sin cambios de UI ni de comportamiento.",
+  },
+  {
     version: "8.149.0",
     date: "2026-05-14",
     type: "minor",
