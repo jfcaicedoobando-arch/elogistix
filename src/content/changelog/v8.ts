@@ -5,6 +5,7 @@ import { chunk2 } from "./v8/chunks/2";
 import { chunk3 } from "./v8/chunks/3";
 import { chunk4 } from "./v8/chunks/4";
 import { chunk5 } from "./v8/chunks/5";
+import { chunk6 } from "./v8/chunks/6";
 
 /**
  * V8 changelog: split into chunks of 20 entries
@@ -17,4 +18,5 @@ export const changelogV8: ChangelogEntry[] = [
   ...chunk3,
   ...chunk4,
   ...chunk5,
+  ...chunk6,
 ];
