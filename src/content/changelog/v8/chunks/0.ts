@@ -2,6 +2,14 @@ import type { ChangelogEntry } from "../../../changelogData";
 
 export const chunk0: ChangelogEntry[] = [
   {
+    version: "8.148.0",
+    date: "2026-05-14",
+    type: "minor",
+    title: "Power of 10 — Fase 4: refactor DataTable, AppSidebar y AdminOrganizaciones",
+    summary: "Tres componentes >200 líneas reducidos a shells delgados: DataTable (336 → 130), AppSidebar (216 → 107), AdminOrganizaciones (225 → 64). Componentes >200 líneas: 13 → 10.",
+    description: "Cuarta iteración de la Fase 4 (ARCHITECTURE.md §20.4). (1) src/components/shared/DataTable.tsx pasa de 336 a 130 líneas: nuevos módulos en src/components/shared/dataTable/ — types.ts (DataTableColumn, DataTablePagination, ColumnAlign, TableDensity, SortDir, ALIGN_CLASS, DENSITY_CELL), useDataTableSort.ts (estado interno o externo del sort + ordenamiento client), DataTableHeaderRow.tsx (headers con sort indicators) y DataTableBody.tsx (skeletons, empty state y filas). API pública 100% retro-compatible (tipos re-exportados desde el barrel). (2) src/components/layout/AppSidebar.tsx pasa de 216 a 107 líneas: configuración de items movida a sidebarItems.ts (SIDEBAR_DASHBOARD/GESTION/REPORTES/DIRECTORIO/SISTEMA/ADMIN/SUPER_ADMIN_ITEMS); el footer con avatar + dropdown de usuario extraído a SidebarUserMenu.tsx. (3) src/pages/admin/AdminOrganizaciones.tsx pasa de 225 a 64 líneas: lógica de filtros/creación a hooks/admin/useAdminOrganizacionesController.ts; UI partida en AdminOrganizacionesFilters.tsx, NuevaOrganizacionDialog.tsx y adminOrganizacionesColumns.tsx. Tests: 314 verdes. Sin cambios de UI ni de comportamiento. Quedan 10 componentes >200 líneas (próximos: AdminUsuarios 222, CotizacionWizardLayout 229, PortalEmbarqueDetalle 239, AsignarResponsableDialog 219, etc.).",
+  },
+  {
     version: "8.147.0",
     date: "2026-05-14",
     type: "minor",

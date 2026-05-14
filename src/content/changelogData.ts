@@ -22,6 +22,14 @@ export interface ChangelogEntry {
  */
 export const recentChangelog: ChangelogEntry[] = [
   {
+    version: "8.148.0",
+    date: "2026-05-14",
+    type: "minor",
+    title: "Power of 10 — Fase 4: refactor DataTable, AppSidebar y AdminOrganizaciones",
+    summary: "Tres componentes >200 líneas reducidos a shells delgados: DataTable (336 → 130), AppSidebar (216 → 107), AdminOrganizaciones (225 → 64). Componentes >200 líneas: 13 → 10.",
+    description: "Cuarta iteración de la Fase 4 (ARCHITECTURE.md §20.4). (1) DataTable: nuevos módulos en components/shared/dataTable/ — types.ts, useDataTableSort.ts, DataTableHeaderRow.tsx y DataTableBody.tsx. API pública retro-compatible (tipos re-exportados). (2) AppSidebar: configuración de items a sidebarItems.ts; el footer con avatar y dropdown extraído a SidebarUserMenu.tsx. (3) AdminOrganizaciones: lógica a hooks/admin/useAdminOrganizacionesController.ts; UI partida en AdminOrganizacionesFilters, NuevaOrganizacionDialog y adminOrganizacionesColumns. Tests: 314 verdes. Sin cambios de UI ni de comportamiento.",
+  },
+  {
     version: "8.147.0",
     date: "2026-05-14",
     type: "minor",
