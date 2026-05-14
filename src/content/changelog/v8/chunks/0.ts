@@ -2,6 +2,14 @@ import type { ChangelogEntry } from "../../../changelogData";
 
 export const chunk0: ChangelogEntry[] = [
   {
+    version: "8.136.0",
+    date: "2026-05-14",
+    type: "minor",
+    title: "Tracking: línea de tiempo de fases del embarque",
+    summary: "El tab Tracking ahora muestra un stepper visual con las 5 fases canónicas del ciclo (Cotización → Confirmado → En Tránsito → Llegada → Cerrado) y las notas del embarque en la misma vista.",
+    description: "Nuevo componente TrackingFasesTimeline que renderiza un stepper horizontal en desktop y vertical en móvil, indicando para cada fase su estado (completada / actual / pendiente) y la fecha asociada (cotizacion_id, fecha_creacion, etd, fecha_llegada_real ?? eta, updated_at en Cerrado). La fase actual se calcula reutilizando calcularEstadoEmbarque del dominio. Toda la lógica vive en src/lib/domain/embarqueFases.ts (con tests unitarios) sin tocar Supabase. Adicionalmente, TabTracking ahora muestra TabNotas al final para tener actividad y notas a un click del avance del embarque.",
+  },
+  {
     version: "8.135.6",
     date: "2026-05-14",
     type: "patch",

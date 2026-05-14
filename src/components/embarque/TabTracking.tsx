@@ -16,15 +16,24 @@ import { getErrorMessage } from '@/lib/errors';
 import { formatDate, nombreDesdeEmail } from '@/lib/formatters';
 import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 import { TrackingLiveCard } from './TrackingLiveCard';
+import { TrackingFasesTimeline } from './TrackingFasesTimeline';
+import { TabNotas } from './TabNotas';
 import type { Tables } from '@/integrations/supabase/types';
+import type { NotaEmbarqueRow } from '@/hooks/embarque/useEmbarques';
+
+type EmbarqueTrackingProps = Pick<
+  Tables<'embarques'>,
+  'modo' | 'tipo' | 'estado' | 'naviera' | 'contenedor' | 'bl_master' | 'etd' | 'eta' | 'fecha_llegada_real' | 'fecha_creacion' | 'cotizacion_id' | 'updated_at'
+>;
 
 interface Props {
   embarqueId: string;
-  embarque?: Pick<Tables<'embarques'>, 'modo' | 'naviera' | 'contenedor' | 'bl_master' | 'etd' | 'eta' | 'fecha_llegada_real'> | null;
+  embarque?: EmbarqueTrackingProps | null;
+  notas?: NotaEmbarqueRow[];
 }
 
 
-export function TabTracking({ embarqueId, embarque }: Props) {
+export function TabTracking({ embarqueId, embarque, notas = [] }: Props) {
   const { data: eventos = [], isLoading } = useEventosEmbarque(embarqueId);
   const crearEvento = useCreateEventoEmbarque();
   const { user } = useAuth();
@@ -115,6 +124,21 @@ export function TabTracking({ embarqueId, embarque }: Props) {
   return (
     <div className="space-y-6">
       {embarque && (
+        <TrackingFasesTimeline
+          embarque={{
+            modo: embarque.modo,
+            tipo: embarque.tipo,
+            estado: embarque.estado,
+            etd: embarque.etd,
+            eta: embarque.eta,
+            fecha_creacion: embarque.fecha_creacion,
+            fecha_llegada_real: embarque.fecha_llegada_real,
+            cotizacion_id: embarque.cotizacion_id,
+            updated_at: embarque.updated_at,
+          }}
+        />
+      )}
+      {embarque && (
         <TrackingLiveCard
           embarqueId={embarqueId}
           modo={embarque.modo}
@@ -186,6 +210,8 @@ export function TabTracking({ embarqueId, embarque }: Props) {
         </CardHeader>
         <CardContent>{renderTimeline()}</CardContent>
       </Card>
+
+      <TabNotas notas={notas} embarqueId={embarqueId} />
     </div>
   );
 }
