@@ -1,6 +1,6 @@
 # Power of 10 — Baseline
 
-_Generado por `scripts/audit-power10.ts` sobre 503 archivos de `src/`._
+_Generado por `scripts/audit-power10.ts` sobre 507 archivos de `src/`._
 
 Las heurísticas son conservadoras (prefieren falsos positivos). Validar manualmente antes de refactorizar. Ver ARCHITECTURE.md §20.
 
@@ -8,19 +8,19 @@ Las heurísticas son conservadoras (prefieren falsos positivos). Validar manualm
 
 | Regla | Hallazgos |
 |---|---:|
-| #4 Componentes >200 líneas | 18 |
+| #4 Componentes >200 líneas | 17 |
 | #5/#10 `any` explícito | 0 |
 | #3 `useEffect` sin cleanup | 1 |
 | #2 Queries de lista sin paginar | 68 |
 
-## Regla #4 — Componentes >200 líneas (18)
+## Regla #4 — Componentes >200 líneas (17)
 
 Componentes y páginas que superan el umbral. Refactor: extraer `use<X>Controller` + subcomponentes.
 
 | Dominio | Hallazgos |
 |---|---:|
-| `components/embarque` | 3 |
 | `components/cotizacion` | 2 |
+| `components/embarque` | 2 |
 | `pages/admin` | 2 |
 | `pages/cotizaciones` | 2 |
 | `components/auditoria` | 1 |
@@ -40,7 +40,6 @@ Componentes y páginas que superan el umbral. Refactor: extraer `use<X>Controlle
 - `src/components/cotizacion/cotizacionesColumns.tsx` — 209 líneas
 - `src/components/embarque/DialogBolContainers.tsx` — 246 líneas
 - `src/components/embarque/TabTracking.tsx` — 252 líneas
-- `src/components/embarque/TrackingLiveCard.tsx` — 281 líneas
 - `src/components/facturacion/TabProyeccion.tsx` — 217 líneas
 - `src/components/layout/AppSidebar.tsx` — 216 líneas
 - `src/components/portal/PortalLayout.tsx` — 266 líneas
