@@ -10,6 +10,13 @@ import { CONCEPTOS_COSTO_MXN } from "@/constants/cotizacionConstants";
 import { UnidadMedidaSelect } from "./UnidadMedidaSelect";
 import type { ConceptoRowProps } from "./ConceptoRowUSD";
 
+/** Resuelve el value del Select de concepto: catálogo, vacío o "Otro". */
+function getConceptoSelectValue(descripcion: string, catalogo: readonly string[]): string {
+  if (catalogo.includes(descripcion)) return descripcion;
+  if (descripcion === "") return "";
+  return "Otro";
+}
+
 export function ConceptoRowMXN({ concepto: c, index: i, total, actualizar, eliminar, tasaIva }: ConceptoRowProps & { tasaIva: number }) {
   const subtotal = c.cantidad * c.precio_unitario;
   const iva = calcularIVA(subtotal, tasaIva);
@@ -25,7 +32,7 @@ export function ConceptoRowMXN({ concepto: c, index: i, total, actualizar, elimi
           />
         ) : (
           <Select
-            value={(CONCEPTOS_COSTO_MXN as readonly string[]).includes(c.descripcion) ? c.descripcion : c.descripcion === '' ? '' : 'Otro'}
+            value={getConceptoSelectValue(c.descripcion, CONCEPTOS_COSTO_MXN as readonly string[])}
             onValueChange={val => {
               if (val === 'Otro') {
                 actualizar(i, 'descripcion', '');
