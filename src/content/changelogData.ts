@@ -22,12 +22,12 @@ export interface ChangelogEntry {
  */
 export const recentChangelog: ChangelogEntry[] = [
   {
-    version: "8.137.0",
+    version: "8.138.0",
     date: "2026-05-14",
     type: "minor",
-    title: "Bitácora más descriptiva con filtros",
-    summary: "Cada entrada describe en lenguaje natural lo ocurrido (estado anterior → nuevo, cliente, modo, documento) y hay filtros por acción y rango de fechas.",
-    description: "Helper puro bitacoraDescripcion.ts genera títulos descriptivos a partir del JSONB de detalles. BitacoraActividad muestra badges de estado en cambios. Filtros nuevos: acción (Crear/Editar/Cambio de estado/Documentos/Notas/Facturas) y rango (Hoy/7d/30d/Todo).",
+    title: "Auditoría arquitectónica: limpieza de capas",
+    summary: "Unificado useToast (eliminado duplicado), DialogBolContainers ya no llama Supabase directo, tipos de fila de embarque migrados a types/embarque.ts.",
+    description: "Resultado de la auditoría de arquitectura: (1) eliminado src/hooks/shared/use-toast.ts (re-export huérfano que duplicaba el singleton de toasts); (2) DialogBolContainers ya no importa @/integrations/supabase/client — la actualización del contenedor pasa por el nuevo services/embarque/contenedor.ts y el hook useActualizarContenedorEmbarque; (3) los aliases EmbarqueRow/ConceptoVentaRow/ConceptoCostoRow/DocumentoEmbarqueRow/NotaEmbarqueRow se centralizaron en src/types/embarque.ts y el barrel hooks/embarque/useEmbarques.ts los re-exporta para compatibilidad. Pendientes de la auditoría (próximas iteraciones): partir services/embarque/queries.ts, extraer hooks controller en TrackingLiveCard y dialogs de Auditoría, migrar TabTracking a RHF, y rotar v8/chunks/0.ts.",
   },
   {
     version: "8.136.0",
