@@ -1,10 +1,12 @@
 import { Link } from "react-router-dom";
 import {
   Plus, Edit, Trash2, RefreshCw, Upload, LogIn, FileText, Activity,
-  MessageSquare, FileX,
+  MessageSquare, FileX, ArrowRight,
 } from "lucide-react";
 import type { EntradaBitacora } from "@/hooks/shared/useBitacora";
 import { nombreDesdeEmail, formatDate } from "@/lib/formatters";
+import { describirEntrada } from "@/lib/domain/bitacoraDescripcion";
+import { getEstadoVisual } from "@/lib/ui/estadoConfig";
 
 const ICONOS_ACCION: Record<string, typeof Plus> = {
   crear: Plus,
@@ -56,6 +58,17 @@ function tiempoRelativo(fecha: string): string {
   return new Date(fecha).toLocaleDateString("es-MX", { day: "2-digit", month: "short" });
 }
 
+function EstadoBadge({ estado, atenuado = false }: { estado: string; atenuado?: boolean }) {
+  const visual = getEstadoVisual(estado);
+  return (
+    <span
+      className={`inline-flex items-center rounded px-1.5 py-0.5 text-[10px] font-medium ${visual.badge} ${atenuado ? "opacity-60" : ""}`}
+    >
+      {estado}
+    </span>
+  );
+}
+
 interface Props {
   actividades: EntradaBitacora[];
   mostrarUsuario?: boolean;
@@ -71,7 +84,7 @@ export function BitacoraActividad({ actividades, mostrarUsuario = true }: Props)
   }
 
   return (
-    <div className="relative border-l-2 border-border ml-3 space-y-4 pl-6">
+    <div className="relative border-l-2 border-border ml-3 space-y-5 pl-6">
       {actividades.map((entrada) => {
         const Icono = ICONOS_ACCION[entrada.accion] ?? Activity;
         const colorClase = COLORES_ACCION[entrada.accion] ?? "bg-muted text-muted-foreground";
@@ -80,47 +93,69 @@ export function BitacoraActividad({ actividades, mostrarUsuario = true }: Props)
           rutaModulo && entrada.entidad_id
             ? `${rutaModulo}/${entrada.entidad_id}`
             : undefined;
+        const descripcion = describirEntrada(entrada);
+        const esCambioEstado = !!(descripcion.estadoAnterior && descripcion.estadoNuevo);
 
         return (
           <div key={entrada.id} className="relative">
-            {/* Dot */}
             <div
               className={`absolute -left-[calc(1.5rem+5px)] top-1 flex h-5 w-5 items-center justify-center rounded-full ${colorClase}`}
             >
               <Icono className="h-3 w-3" />
             </div>
 
-            <div className="space-y-0.5">
+            <div className="space-y-1">
+              {/* Línea 1: usuario · tiempo */}
               <div className="flex items-baseline gap-2 flex-wrap">
                 {mostrarUsuario && (
                   <span className="text-xs font-medium text-foreground" title={entrada.usuario_email}>
                     {nombreDesdeEmail(entrada.usuario_email)}
                   </span>
                 )}
-                <span className="text-xs text-muted-foreground capitalize">
-                  {entrada.accion.replace(/_/g, " ")}
+                <span
+                  className="text-xs text-muted-foreground"
+                  title={formatDate(entrada.created_at, "dd/MM/yyyy HH:mm")}
+                >
+                  {tiempoRelativo(entrada.created_at)}
                 </span>
-                <span className="text-xs text-muted-foreground">en</span>
-                <span className="text-xs font-medium text-foreground capitalize">
-                  {entrada.modulo}
-                </span>
+              </div>
+
+              {/* Línea 2: título descriptivo */}
+              {esCambioEstado ? (
+                <div className="flex items-center gap-1.5 flex-wrap text-sm text-foreground">
+                  <span>Cambió estado de</span>
+                  <EstadoBadge estado={descripcion.estadoAnterior!} atenuado />
+                  <ArrowRight className="h-3 w-3 text-muted-foreground" />
+                  <EstadoBadge estado={descripcion.estadoNuevo!} />
+                </div>
+              ) : (
+                <p className="text-sm text-foreground">{descripcion.titulo}</p>
+              )}
+
+              {descripcion.contexto && (
+                <p className="text-xs text-muted-foreground">{descripcion.contexto}</p>
+              )}
+
+              {/* Línea 3: módulo + link a entidad */}
+              <div className="flex items-baseline gap-1.5 flex-wrap text-xs text-muted-foreground">
+                <span>en</span>
+                <span className="capitalize">{entrada.modulo}</span>
                 {entrada.entidad_nombre && (
                   <>
-                    <span className="text-xs text-muted-foreground">—</span>
+                    <span>—</span>
                     {linkEntidad ? (
                       <Link
                         to={linkEntidad}
-                        className="text-xs font-medium text-accent hover:underline"
+                        className="font-medium text-accent hover:underline"
                       >
                         {entrada.entidad_nombre}
                       </Link>
                     ) : (
-                      <span className="text-xs font-medium">{entrada.entidad_nombre}</span>
+                      <span className="font-medium text-foreground">{entrada.entidad_nombre}</span>
                     )}
                   </>
                 )}
               </div>
-              <p className="text-xs text-muted-foreground" title={formatDate(entrada.created_at, 'dd/MM/yyyy HH:mm')}>{tiempoRelativo(entrada.created_at)}</p>
             </div>
           </div>
         );

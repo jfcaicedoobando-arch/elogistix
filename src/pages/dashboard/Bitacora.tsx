@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { History } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -10,6 +10,7 @@ import { PageHeader } from "@/components/shared/PageHeader";
 import { BitacoraActividad } from "@/components/shared/BitacoraActividad";
 import { useBitacora } from "@/hooks/shared/useBitacora";
 import { usePermissions } from "@/hooks/shared/usePermissions";
+import { GRUPOS_ACCION } from "@/lib/domain/bitacoraDescripcion";
 
 const MODULOS = [
   { valor: "todos", etiqueta: "Todos los módulos" },
@@ -22,18 +23,48 @@ const MODULOS = [
   { valor: "auth", etiqueta: "Autenticación" },
 ];
 
+const RANGOS = [
+  { valor: "todo", etiqueta: "Todo el tiempo", dias: null as number | null },
+  { valor: "hoy", etiqueta: "Hoy", dias: 0 },
+  { valor: "7d", etiqueta: "Últimos 7 días", dias: 7 },
+  { valor: "30d", etiqueta: "Últimos 30 días", dias: 30 },
+];
+
 const LIMITE_POR_PAGINA = 30;
+
+function calcularFechaDesde(valor: string): string | undefined {
+  const rango = RANGOS.find((r) => r.valor === valor);
+  if (!rango || rango.dias === null) return undefined;
+  const ahora = new Date();
+  if (rango.dias === 0) {
+    ahora.setHours(0, 0, 0, 0);
+    return ahora.toISOString();
+  }
+  ahora.setDate(ahora.getDate() - rango.dias);
+  return ahora.toISOString();
+}
 
 export default function Bitacora() {
   const { isAdmin } = usePermissions();
   const [moduloFiltro, setModuloFiltro] = useState("todos");
+  const [accionFiltro, setAccionFiltro] = useState("todas");
+  const [rangoFiltro, setRangoFiltro] = useState("todo");
   const [pagina, setPagina] = useState(0);
   const [mostrarLogins, setMostrarLogins] = useState(false);
 
   const esAuth = moduloFiltro === "auth";
 
+  const acciones = useMemo(() => {
+    const grupo = GRUPOS_ACCION.find((g) => g.valor === accionFiltro);
+    return grupo && grupo.acciones.length > 0 ? [...grupo.acciones] : undefined;
+  }, [accionFiltro]);
+
+  const fechaDesde = useMemo(() => calcularFechaDesde(rangoFiltro), [rangoFiltro]);
+
   const { data, isLoading } = useBitacora({
     modulo: moduloFiltro === "todos" ? undefined : moduloFiltro,
+    acciones,
+    fechaDesde,
     limite: LIMITE_POR_PAGINA,
     pagina,
     excluirLogin: esAuth ? false : !mostrarLogins,
@@ -42,6 +73,13 @@ export default function Bitacora() {
   const actividades = data?.datos ?? [];
   const total = data?.total ?? 0;
   const totalPaginas = Math.ceil(total / LIMITE_POR_PAGINA);
+
+  function resetPagina<T>(setter: (v: T) => void) {
+    return (v: T) => {
+      setter(v);
+      setPagina(0);
+    };
+  }
 
   function renderActividad() {
     if (isLoading) {
@@ -70,20 +108,40 @@ export default function Bitacora() {
 
       {/* Filtros */}
       <div className="flex items-center gap-3 flex-wrap">
-        <Select
-          value={moduloFiltro}
-          onValueChange={(valorSeleccionado) => {
-            setModuloFiltro(valorSeleccionado);
-            setPagina(0);
-          }}
-        >
-          <SelectTrigger className="w-[200px]">
-            <SelectValue placeholder="Filtrar por módulo" />
+        <Select value={moduloFiltro} onValueChange={resetPagina(setModuloFiltro)}>
+          <SelectTrigger className="w-[180px]">
+            <SelectValue placeholder="Módulo" />
           </SelectTrigger>
           <SelectContent>
             {MODULOS.map((modulo) => (
               <SelectItem key={modulo.valor} value={modulo.valor}>
                 {modulo.etiqueta}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+
+        <Select value={accionFiltro} onValueChange={resetPagina(setAccionFiltro)}>
+          <SelectTrigger className="w-[180px]">
+            <SelectValue placeholder="Acción" />
+          </SelectTrigger>
+          <SelectContent>
+            {GRUPOS_ACCION.map((grupo) => (
+              <SelectItem key={grupo.valor} value={grupo.valor}>
+                {grupo.etiqueta}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+
+        <Select value={rangoFiltro} onValueChange={resetPagina(setRangoFiltro)}>
+          <SelectTrigger className="w-[180px]">
+            <SelectValue placeholder="Rango" />
+          </SelectTrigger>
+          <SelectContent>
+            {RANGOS.map((rango) => (
+              <SelectItem key={rango.valor} value={rango.valor}>
+                {rango.etiqueta}
               </SelectItem>
             ))}
           </SelectContent>
