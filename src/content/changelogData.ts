@@ -22,6 +22,14 @@ export interface ChangelogEntry {
  */
 export const recentChangelog: ChangelogEntry[] = [
   {
+    version: "8.142.0",
+    date: "2026-05-14",
+    type: "minor",
+    title: "lib/domain/auditoria — reglas puras testables",
+    summary: "Reglas puras de auditoría (snooze, severidad, agrupación, filtros) extraídas a src/lib/domain/auditoria.ts con 15 tests; ARCHITECTURE.md documenta queries + mutations + subdominios.",
+    description: "Cierre de los pasos 2 y 3 opcionales de la auditoría arquitectónica. Nuevas funciones puras (isoDate, minSnoozeDate, isSnoozeActivo, contarPorSeveridad, agruparPorRegla, filtrarHallazgos) consumidas por useAuditoriaPageController y useMarcarRevisadoController; ARCHITECTURE.md gana la subsección 5.1.",
+  },
+  {
     version: "8.141.0",
     date: "2026-05-14",
     type: "minor",
