@@ -2,6 +2,14 @@ import type { ChangelogEntry } from "../../../changelogData";
 
 export const chunk0: ChangelogEntry[] = [
   {
+    version: "8.140.1",
+    date: "2026-05-14",
+    type: "patch",
+    title: "Rotación del chunk0 del changelog v8",
+    summary: "v8/chunks/0.ts (1086 líneas, 145 entradas) se redujo a 20 entradas; las 125 entradas anteriores se trasladaron a v8/chunks/6.ts y se registraron en v8.ts.",
+    description: "Cierre del paso 3 de la auditoría arquitectónica. v8/chunks/0.ts crecía sin límite y empezaba a impactar el lazy-chunk de Changelog. Se extrajeron las entradas 21-145 (desde 8.132.1 hasta 8.64.0) al nuevo archivo v8/chunks/6.ts y se incorporó al barrel src/content/changelog/v8.ts. El orden cronológico descendente se preserva al concatenar chunk0 → … → chunk6. APP_VERSION 8.140.1.",
+  },
+  {
     version: "8.140.0",
     date: "2026-05-14",
     type: "minor",

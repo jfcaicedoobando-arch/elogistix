@@ -22,6 +22,14 @@ export interface ChangelogEntry {
  */
 export const recentChangelog: ChangelogEntry[] = [
   {
+    version: "8.140.1",
+    date: "2026-05-14",
+    type: "patch",
+    title: "Rotación del chunk0 del changelog v8",
+    summary: "v8/chunks/0.ts (1086 líneas, 145 entradas) se redujo a 20 entradas; las 125 entradas anteriores se trasladaron a v8/chunks/6.ts.",
+    description: "Cierre del paso 3 de la auditoría arquitectónica. v8/chunks/0.ts crecía sin límite. Se extrajeron las entradas 21-145 (8.132.1 → 8.64.0) al nuevo v8/chunks/6.ts y se registró en v8.ts. El orden cronológico descendente se preserva al concatenar chunk0 → … → chunk6.",
+  },
+  {
     version: "8.140.0",
     date: "2026-05-14",
     type: "minor",
