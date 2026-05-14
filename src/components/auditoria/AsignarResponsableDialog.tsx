@@ -2,9 +2,7 @@
  * Diálogo de asignación de responsable a un hallazgo de auditoría.
  * Pura presentación: la lógica vive en `useAsignarResponsableController`.
  */
-import { format } from "date-fns";
-import { es } from "date-fns/locale";
-import { CalendarIcon, Hand, Loader2, UserPlus } from "lucide-react";
+import { Hand, Loader2, UserPlus } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -15,7 +13,6 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { Badge } from "@/components/ui/badge";
 import {
   Select,
   SelectContent,
@@ -23,14 +20,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Calendar } from "@/components/ui/calendar";
-import { cn } from "@/lib/utils";
 import {
   SIN_RESPONSABLE,
   useAsignarResponsableController,
 } from "@/hooks/auditoria/useAsignarResponsableController";
 import type { AuditoriaRevision, HallazgoAuditoria } from "@/types/auditoria";
+import { AsignacionExistenteInfo } from "@/components/auditoria/asignarResponsable/AsignacionExistenteInfo";
+import { FechaLimitePicker } from "@/components/auditoria/asignarResponsable/FechaLimitePicker";
 
 interface Props {
   hallazgo: HallazgoAuditoria | null;
@@ -100,81 +96,13 @@ export function AsignarResponsableDialog({
             </Select>
           </div>
 
-          <div className="space-y-1.5">
-            <Label className="text-xs">Fecha límite (opcional)</Label>
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className={cn(
-                    "w-full justify-start text-xs h-9",
-                    !ctrl.fechaLimite && "text-muted-foreground",
-                  )}
-                >
-                  <CalendarIcon className="mr-2 h-3.5 w-3.5" />
-                  {ctrl.fechaLimite
-                    ? format(ctrl.fechaLimite, "dd/MM/yyyy", { locale: es })
-                    : "Sin fecha límite"}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0" align="start">
-                <Calendar
-                  mode="single"
-                  selected={ctrl.fechaLimite}
-                  onSelect={ctrl.setFechaLimite}
-                  initialFocus
-                  locale={es}
-                />
-                {ctrl.fechaLimite && (
-                  <div className="p-2 border-t">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="w-full text-xs"
-                      onClick={() => ctrl.setFechaLimite(undefined)}
-                    >
-                      Quitar fecha
-                    </Button>
-                  </div>
-                )}
-              </PopoverContent>
-            </Popover>
-          </div>
+          <FechaLimitePicker
+            fechaLimite={ctrl.fechaLimite}
+            onChange={ctrl.setFechaLimite}
+          />
 
           {ctrl.yaAsignado && revisionExistente && (
-            <div className="rounded-md border bg-muted/40 p-2 text-[11px] space-y-0.5">
-              <div className="flex items-center gap-1.5">
-                <span className="text-muted-foreground">Estado actual:</span>{" "}
-                <Badge variant="outline" className="text-[10px] capitalize">
-                  {revisionExistente.estado_revision.replace("_", " ")}
-                </Badge>
-              </div>
-              <div>
-                <span className="text-muted-foreground">Responsable:</span>{" "}
-                <span className="font-medium">{revisionExistente.responsable_email}</span>
-              </div>
-              {revisionExistente.asignado_por_email && (
-                <div>
-                  <span className="text-muted-foreground">Asignado por:</span>{" "}
-                  <span>{revisionExistente.asignado_por_email}</span>
-                  {revisionExistente.asignado_at && (
-                    <span className="text-muted-foreground tabular-nums">
-                      {" "}
-                      · {format(new Date(revisionExistente.asignado_at), "dd/MM/yyyy HH:mm")}
-                    </span>
-                  )}
-                </div>
-              )}
-              {revisionExistente.fecha_limite && (
-                <div>
-                  <span className="text-muted-foreground">Fecha límite:</span>{" "}
-                  <span className="tabular-nums">
-                    {format(new Date(`${revisionExistente.fecha_limite}T00:00:00`), "dd/MM/yyyy")}
-                  </span>
-                </div>
-              )}
-            </div>
+            <AsignacionExistenteInfo revisionExistente={revisionExistente} />
           )}
         </div>
 

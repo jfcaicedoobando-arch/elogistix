@@ -1,27 +1,13 @@
 import { useEffect, useRef } from "react";
 import { FormProvider } from "react-hook-form";
 import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import {
-  Accordion, AccordionContent, AccordionItem, AccordionTrigger,
-} from "@/components/ui/accordion";
-import { ArrowLeft, Save, ChevronRight, ChevronLeft, Info, Package, StickyNote, Loader2 } from "lucide-react";
-import { WizardSection } from "@/components/shared/WizardSection";
-
+import { ArrowLeft, Info } from "lucide-react";
 import { StepIndicator } from "@/components/embarque/StepIndicator";
-import SeccionDestinatario from "@/components/cotizacion/SeccionDestinatario";
-import SeccionDatosGeneralesCotizacion from "@/components/cotizacion/SeccionDatosGeneralesCotizacion";
-import SeccionRutaCotizacion from "@/components/cotizacion/SeccionRutaCotizacion";
 import SeccionConceptosVentaCotizacion from "@/components/cotizacion/SeccionConceptosVentaCotizacion";
-import SeccionMercanciaMaritimaFCL from "@/components/cotizacion/SeccionMercanciaMaritimaFCL";
-import SeccionMercanciaMaritimeLCL from "@/components/cotizacion/SeccionMercanciaMaritimeLCL";
-import SeccionMercanciaGeneral from "@/components/cotizacion/SeccionMercanciaGeneral";
-import SeccionMercanciaAerea from "@/components/cotizacion/SeccionMercanciaAerea";
 import SeccionCostosInternosPLUnificado from "@/components/cotizacion/SeccionCostosInternosPLUnificado";
 import PasoResumenCotizacion from "@/components/cotizacion/PasoResumenCotizacion";
+import PasoDatosGenerales from "@/components/cotizacion/wizard/PasoDatosGenerales";
+import { CotizacionWizardFooter } from "@/components/cotizacion/wizard/CotizacionWizardFooter";
 
 const WIZARD_STEPS = [
   { num: 1, title: "Datos Generales" },
@@ -48,14 +34,12 @@ export default function CotizacionWizardLayout({
   saveLabel,
 }: CotizacionWizardLayoutProps) {
   const { form } = w;
-  const tipoEmbarque = form.watch("tipoEmbarque");
   const contentRef = useRef<HTMLDivElement>(null);
 
-  // Auto-focus first input on step change
   useEffect(() => {
     const timer = setTimeout(() => {
       const el = contentRef.current?.querySelector<HTMLElement>(
-        'input:not([type="hidden"]):not([readonly]), select, textarea, [role="combobox"]'
+        'input:not([type="hidden"]):not([readonly]), select, textarea, [role="combobox"]',
       );
       el?.focus();
     }, 100);
@@ -65,7 +49,6 @@ export default function CotizacionWizardLayout({
   return (
     <FormProvider {...form}>
       <div className="flex flex-col h-[calc(100vh-4rem)] -m-6">
-        {/* Header fijo */}
         <div className="flex-none border-b bg-background p-4 space-y-3">
           <div className="flex items-center gap-3">
             <Button variant="ghost" size="icon" onClick={onBack} aria-label="Volver">
@@ -79,90 +62,18 @@ export default function CotizacionWizardLayout({
           <StepIndicator steps={WIZARD_STEPS} currentStep={w.currentStep} />
         </div>
 
-        {/* Contenido scrolleable */}
         <div className="flex-1 overflow-y-auto p-4" ref={contentRef}>
           <div className="max-w-4xl mx-auto space-y-6">
-            {/* PASO 1 — Datos Generales */}
-            {w.currentStep === 1 && (
-              <>
-                <SeccionDestinatario clientes={clientes} />
-                <SeccionDatosGeneralesCotizacion />
-                <WizardSection title="Mercancía">
-                  {w.esMaritimo ? (
-                    <div className="space-y-4">
-                      <RadioGroup
-                        value={tipoEmbarque}
-                        onValueChange={(v) => w.handleCambiarTipoEmbarque(v as "FCL" | "LCL")}
-                        className="flex gap-6"
-                      >
-                        <div className="flex items-center gap-2">
-                          <RadioGroupItem value="FCL" id="tipo-fcl" />
-                          <Label htmlFor="tipo-fcl" className="cursor-pointer text-sm font-medium">
-                            FCL (Contenedor completo)
-                          </Label>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <RadioGroupItem value="LCL" id="tipo-lcl" />
-                          <Label htmlFor="tipo-lcl" className="cursor-pointer text-sm font-medium">
-                            LCL (Carga consolidada)
-                          </Label>
-                        </div>
-                      </RadioGroup>
-                      {tipoEmbarque === "FCL" ? (
-                        <SeccionMercanciaMaritimaFCL msdsFile={w.msdsFile} setMsdsFile={w.setMsdsFile} />
-                      ) : (
-                        <SeccionMercanciaMaritimeLCL msdsFile={w.msdsFile} setMsdsFile={w.setMsdsFile} />
-                      )}
-                    </div>
-                  ) : w.esAereo ? (
-                    <SeccionMercanciaAerea msdsFile={w.msdsFile} setMsdsFile={w.setMsdsFile} />
-                  ) : (
-                    <SeccionMercanciaGeneral msdsFile={w.msdsFile} setMsdsFile={w.setMsdsFile} />
-                  )}
-                </WizardSection>
-                <SeccionRutaCotizacion />
+            {w.currentStep === 1 && <PasoDatosGenerales w={w} clientes={clientes} />}
 
-                {/* Campos opcionales colapsados */}
-                <Accordion type="multiple" className="w-full">
-                  <AccordionItem value="num-embarques">
-                    <AccordionTrigger className="text-base font-semibold hover:no-underline">
-                      <span className="flex items-center gap-2">
-                        <Package className="h-5 w-5 text-primary" />
-                        Número de Embarques
-                      </span>
-                    </AccordionTrigger>
-                    <AccordionContent className="pt-2">
-                      <Label>Número de contenedores</Label>
-                      <Input
-                        type="number" min={1}
-                        value={form.watch("numContenedores")}
-                        onChange={e => form.setValue("numContenedores", Math.max(1, parseInt(e.target.value) || 1))}
-                        className="w-32 mt-1"
-                      />
-                    </AccordionContent>
-                  </AccordionItem>
-                  <AccordionItem value="notas">
-                    <AccordionTrigger className="text-base font-semibold hover:no-underline">
-                      <span className="flex items-center gap-2">
-                        <StickyNote className="h-5 w-5 text-primary" />
-                        Notas Adicionales
-                      </span>
-                    </AccordionTrigger>
-                    <AccordionContent className="pt-2">
-                      <Label>Notas</Label>
-                      <Textarea value={form.watch("notas")} onChange={e => form.setValue("notas", e.target.value)} placeholder="Observaciones o condiciones..." rows={3} />
-                    </AccordionContent>
-                  </AccordionItem>
-                </Accordion>
-              </>
-            )}
-
-            {/* PASO 2 — Costos & P&L */}
             {w.currentStep === 2 && (
-              <SeccionCostosInternosPLUnificado tipo="local" filas={w.costosInternos} setFilas={w.setCostosInternos} />
+              <SeccionCostosInternosPLUnificado
+                tipo="local"
+                filas={w.costosInternos}
+                setFilas={w.setCostosInternos}
+              />
             )}
 
-            {/* PASO 3 — Cotización Cliente */}
             {w.currentStep === 3 && (
               <>
                 {w.costosPreLlenados && (
@@ -188,41 +99,34 @@ export default function CotizacionWizardLayout({
               </>
             )}
 
-            {/* PASO 4 — Resumen */}
             {w.currentStep === 4 && (
               <PasoResumenCotizacion
-                plUSD={w.plUSD} plMXN={w.plMXN}
+                plUSD={w.plUSD}
+                plMXN={w.plMXN}
                 tieneCostosUSD={w.costosUSD.length > 0}
                 tieneCostosMXN={w.costosMXN.length > 0}
                 nombreCliente={form.watch("esProspecto") ? form.watch("prospectoEmpresa") : (w.clienteSeleccionado?.nombre || "—")}
-                origen={form.watch("origen")} destino={form.watch("destino")}
-                numContenedores={form.watch("numContenedores")} modo={form.watch("modo")}
-                incoterm={form.watch("incoterm")} tipo={form.watch("tipo")}
-                totalUSD={w.totalUSD} totalMXN={w.totalMXN}
+                origen={form.watch("origen")}
+                destino={form.watch("destino")}
+                numContenedores={form.watch("numContenedores")}
+                modo={form.watch("modo")}
+                incoterm={form.watch("incoterm")}
+                tipo={form.watch("tipo")}
+                totalUSD={w.totalUSD}
+                totalMXN={w.totalMXN}
               />
             )}
           </div>
         </div>
 
-        {/* Footer fijo */}
-        <div className="flex-none border-t bg-background p-4">
-          <div className="max-w-4xl mx-auto flex justify-between">
-            <Button variant="outline" onClick={w.handleBack}>
-              {w.currentStep === 1 ? "Cancelar" : <><ChevronLeft className="h-4 w-4 mr-1" /> Anterior</>}
-            </Button>
-            <Button
-              disabled={w.isPending}
-              onClick={() => { if (w.currentStep < 4) w.handleSiguiente(); else w.handleGuardar(); }}
-            >
-              {w.isPending
-                ? <><Loader2 className="h-4 w-4 mr-1 animate-spin" /> Guardando...</>
-                : w.currentStep === 4
-                  ? <><Save className="h-4 w-4 mr-1" /> {saveLabel}</>
-                  : <>Siguiente <ChevronRight className="h-4 w-4 ml-1" /></>
-              }
-            </Button>
-          </div>
-        </div>
+        <CotizacionWizardFooter
+          currentStep={w.currentStep}
+          isPending={w.isPending}
+          saveLabel={saveLabel}
+          onBack={w.handleBack}
+          onNext={w.handleSiguiente}
+          onSave={w.handleGuardar}
+        />
       </div>
     </FormProvider>
   );

@@ -22,6 +22,13 @@ export interface ChangelogEntry {
  */
 export const recentChangelog: ChangelogEntry[] = [
   {
+    version: "8.149.0",
+    date: "2026-05-14",
+    type: "minor",
+    title: "Power of 10 — Fase 4: refactor AdminUsuarios, AsignarResponsableDialog, CotizacionWizardLayout, Embarques y Cotizaciones",
+    summary: "Cinco componentes >200 líneas reducidos a shells: AdminUsuarios (221→72), AsignarResponsableDialog (218→146), CotizacionWizardLayout (228→133), Embarques (208→157), Cotizaciones (215→176). Componentes >200 líneas: 10 → 5.",
+    description: "Quinta iteración de la Fase 4 (ARCHITECTURE.md §20.4). (1) AdminUsuarios: nuevos AdminUsuariosFilters, adminUsuariosColumns y useAdminUsuariosController. (2) AsignarResponsableDialog: subcomponentes AsignacionExistenteInfo y FechaLimitePicker en components/auditoria/asignarResponsable/. (3) CotizacionWizardLayout: PasoDatosGenerales y CotizacionWizardFooter en components/cotizacion/wizard/. (4) Embarques: EmbarquesEmptyState y EmbarquesSortIndicator. (5) Cotizaciones: CotizacionesMobileFilters. Tests: 314 verdes. Sin cambios de UI ni de comportamiento.",
+  },
     version: "8.148.0",
     date: "2026-05-14",
     type: "minor",

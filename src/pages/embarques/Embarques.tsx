@@ -1,4 +1,4 @@
-import { Plus, Ship, Download, MoreVertical } from "lucide-react";
+import { Plus, Download, MoreVertical } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
@@ -10,27 +10,16 @@ import { PageHeader } from "@/components/shared/PageHeader";
 import { FloatingActionButton } from "@/components/shared/FloatingActionButton";
 import DialogDuplicarEmbarque from "@/components/embarque/DialogDuplicarEmbarque";
 import EmbarquesFiltros from "@/components/embarque/EmbarquesFiltros";
+import { EmbarquesEmptyState } from "@/components/embarque/EmbarquesEmptyState";
+import { EmbarquesSortIndicator } from "@/components/embarque/EmbarquesSortIndicator";
 import { useEmbarquesPageController } from "@/hooks/embarque/useEmbarquesPageController";
 
 export default function Embarques() {
   const {
-    state,
-    clientes,
-    operadoresUnicos,
-    columns,
-    isLoading,
-    isEmptyState,
-    canEdit,
-    embarqueAEliminar,
-    setEmbarqueAEliminar,
-    embarqueADuplicar,
-    setEmbarqueADuplicar,
-    handleEliminar,
-    exportarCsv,
-    exportandoCsv,
-    eliminarEmbarquePending,
-    navigate,
-    prefetchEmbarque,
+    state, clientes, operadoresUnicos, columns, isLoading, isEmptyState, canEdit,
+    embarqueAEliminar, setEmbarqueAEliminar, embarqueADuplicar, setEmbarqueADuplicar,
+    handleEliminar, exportarCsv, exportandoCsv, eliminarEmbarquePending,
+    navigate, prefetchEmbarque,
   } = useEmbarquesPageController();
 
   const {
@@ -42,15 +31,6 @@ export default function Embarques() {
     filtered, displayCount, totalPages,
   } = state;
 
-  // Etiqueta legible para indicador de "orden global"
-  const sortLabelMap: Record<string, string> = {
-    expediente: "Expediente", cliente: "Cliente", modo: "Modo",
-    estado: "Estado", etd: "ETD", eta: "ETA", operador: "Operador",
-  };
-  const sortIndicator = sortKey
-    ? `Ordenado por ${sortLabelMap[sortKey] ?? sortKey} ${sortDir === "asc" ? "↑" : "↓"} · global`
-    : null;
-
   return (
     <div className="space-y-6">
       <PageHeader
@@ -58,7 +38,6 @@ export default function Embarques() {
         description={`${displayCount} embarques encontrados`}
         actions={
           <>
-            {/* Desktop md+: botones inline tradicionales */}
             {!isEmptyState && (
               <Button variant="outline" onClick={exportarCsv} disabled={exportandoCsv} className="hidden md:inline-flex">
                 <Download className="h-4 w-4 mr-2" /> {exportandoCsv ? "Exportando..." : "Exportar CSV"}
@@ -69,8 +48,6 @@ export default function Embarques() {
                 <Plus className="h-4 w-4 mr-2" /> Nuevo Embarque
               </Button>
             )}
-            {/* Mobile <md: solo overflow menu para acciones secundarias.
-                La acción primaria "Nuevo Embarque" se renderiza como FAB al final del componente. */}
             {!isEmptyState && (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
@@ -90,27 +67,7 @@ export default function Embarques() {
       />
 
       {isEmptyState ? (
-        <Card className="shadow-md">
-          <CardContent className="flex flex-col items-center justify-center py-16 px-6 text-center">
-            <img
-              src="/placeholder.svg"
-              alt="Sin embarques"
-              className="h-40 w-40 opacity-80 mb-6"
-            />
-            <div className="flex items-center gap-2 mb-2">
-              <Ship className="h-5 w-5 text-primary" />
-              <h2 className="text-xl font-semibold text-foreground">Aún no tienes embarques</h2>
-            </div>
-            <p className="text-sm text-muted-foreground max-w-md mb-6">
-              Comienza registrando tu primer embarque para dar seguimiento a tus operaciones de importación, exportación y más.
-            </p>
-            {canEdit && (
-              <Button size="lg" onClick={() => navigate("/embarques/nuevo")}>
-                <Plus className="h-5 w-5 mr-2" /> Crear mi primer embarque
-              </Button>
-            )}
-          </CardContent>
-        </Card>
+        <EmbarquesEmptyState canEdit={canEdit} onCreate={() => navigate("/embarques/nuevo")} />
       ) : (
         <>
           <Card>
@@ -140,18 +97,11 @@ export default function Embarques() {
 
           <Card>
             <CardContent className="p-0">
-              {sortIndicator && (
-                <div className="flex items-center justify-between px-3 py-1.5 text-xs text-muted-foreground border-b bg-muted/20">
-                  <span>{sortIndicator}</span>
-                  <button
-                    type="button"
-                    onClick={() => handleSortChange(null, "asc")}
-                    className="text-primary hover:underline"
-                  >
-                    Quitar orden
-                  </button>
-                </div>
-              )}
+              <EmbarquesSortIndicator
+                sortKey={sortKey}
+                sortDir={sortDir}
+                onClear={() => handleSortChange(null, "asc")}
+              />
               <DataTable
                 columns={columns}
                 data={filtered}
@@ -195,7 +145,6 @@ export default function Embarques() {
         />
       )}
 
-      {/* FAB mobile: acción primaria flotante (oculta en md+ y en empty state, ya que el CTA grande del EmptyState es suficiente). */}
       {canEdit && !isEmptyState && (
         <FloatingActionButton
           icon={<Plus className="h-6 w-6" />}
@@ -203,7 +152,6 @@ export default function Embarques() {
           onClick={() => navigate("/embarques/nuevo")}
         />
       )}
-
     </div>
   );
 }
