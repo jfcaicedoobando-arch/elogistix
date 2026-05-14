@@ -15,30 +15,20 @@ interface Props {
 export const AlertasDemoraCard = memo(function AlertasDemoraCard({ alertas, isLoading }: Props) {
   const navigate = useNavigate();
 
-  return (
-    <Card>
-      <CardHeader className="pb-3">
-        <CardTitle className="text-base flex items-center gap-2">
-          <AlertTriangle className="h-4 w-4 text-destructive" />
-          Alertas de Demora
-          {alertas.length > 0 && (
-            <Badge variant="destructive" className="ml-auto text-[10px]">
-              {alertas.length}
-            </Badge>
-          )}
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-2 max-h-[280px] overflow-y-auto">
-        {isLoading ? (
-          Array.from({ length: 3 }).map((_, i) => (
-            <Skeleton key={i} className="h-14 w-full" />
-          ))
-        ) : alertas.length === 0 ? (
-          <p className="text-sm text-muted-foreground text-center py-6">
-            Sin alertas de demora
-          </p>
-        ) : (
-          alertas.map((e) => (
+  function renderBody() {
+    if (isLoading) {
+      return Array.from({ length: 3 }).map((_, i) => (
+        <Skeleton key={i} className="h-14 w-full" />
+      ));
+    }
+    if (alertas.length === 0) {
+      return (
+        <p className="text-sm text-muted-foreground text-center py-6">
+          Sin alertas de demora
+        </p>
+      );
+    }
+    return alertas.map((e) => (
             <div
               key={e.id}
               onClick={() => navigate(`/embarques/${e.id}`)}
@@ -57,10 +47,26 @@ export const AlertasDemoraCard = memo(function AlertasDemoraCard({ alertas, isLo
                   {toTitleCase(e.cliente_nombre)}
                 </p>
               </div>
-              <ArrowRight className="h-4 w-4 text-muted-foreground shrink-0" />
-            </div>
-          ))
-        )}
+        <ArrowRight className="h-4 w-4 text-muted-foreground shrink-0" />
+      </div>
+    ));
+  }
+
+  return (
+    <Card>
+      <CardHeader className="pb-3">
+        <CardTitle className="text-base flex items-center gap-2">
+          <AlertTriangle className="h-4 w-4 text-destructive" />
+          Alertas de Demora
+          {alertas.length > 0 && (
+            <Badge variant="destructive" className="ml-auto text-[10px]">
+              {alertas.length}
+            </Badge>
+          )}
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-2 max-h-[280px] overflow-y-auto">
+        {renderBody()}
       </CardContent>
     </Card>
   );

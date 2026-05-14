@@ -19,24 +19,18 @@ import { useAuditoriaSnapshots } from "@/hooks/auditoria/useAuditoriaSnapshots";
 export function AuditoriaTendenciaChart() {
   const { data, isLoading } = useAuditoriaSnapshots(30);
 
-  return (
-    <Card>
-      <CardHeader className="pb-2">
-        <CardTitle className="text-sm flex items-center gap-2">
-          <TrendingUp className="h-4 w-4" />
-          Tendencia 30 días
-        </CardTitle>
-      </CardHeader>
-      <CardContent>
-        {isLoading ? (
-          <Skeleton className="h-48 w-full" />
-        ) : !data || data.length === 0 ? (
-          <div className="text-xs text-muted-foreground py-12 text-center">
-            Aún no hay snapshots históricos. Vuelve mañana para ver la primera
-            tendencia (se captura un snapshot por día automáticamente).
-          </div>
-        ) : (
-          <ResponsiveContainer width="100%" height={200}>
+  function renderBody() {
+    if (isLoading) return <Skeleton className="h-48 w-full" />;
+    if (!data || data.length === 0) {
+      return (
+        <div className="text-xs text-muted-foreground py-12 text-center">
+          Aún no hay snapshots históricos. Vuelve mañana para ver la primera
+          tendencia (se captura un snapshot por día automáticamente).
+        </div>
+      );
+    }
+    return (
+      <ResponsiveContainer width="100%" height={200}>
             <LineChart
               data={data.map((s) => ({
                 fecha: s.fecha.slice(5), // MM-DD
@@ -90,10 +84,20 @@ export function AuditoriaTendenciaChart() {
                 dot={false}
                 strokeDasharray="4 2"
               />
-            </LineChart>
-          </ResponsiveContainer>
-        )}
-      </CardContent>
+          </LineChart>
+        </ResponsiveContainer>
+    );
+  }
+
+  return (
+    <Card>
+      <CardHeader className="pb-2">
+        <CardTitle className="text-sm flex items-center gap-2">
+          <TrendingUp className="h-4 w-4" />
+          Tendencia 30 días
+        </CardTitle>
+      </CardHeader>
+      <CardContent>{renderBody()}</CardContent>
     </Card>
   );
 }

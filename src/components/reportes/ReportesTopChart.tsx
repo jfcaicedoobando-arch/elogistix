@@ -23,20 +23,13 @@ interface Props {
 }
 
 export default function ReportesTopChart({ data, isLoading }: Props) {
-  return (
-    <Card className="lg:col-span-2 rounded-2xl shadow-sm border-0 bg-card">
-      <CardHeader className="pb-2">
-        <CardTitle className="text-base font-semibold flex items-center gap-2">
-          <BarChart3 className="h-4 w-4 text-muted-foreground" /> Top {Math.min(data.length, 10)} por Profit
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="h-[350px]">
-        {isLoading ? (
-          <Skeleton className="h-full w-full" />
-        ) : data.length === 0 ? (
-          <p className="text-sm text-muted-foreground pt-10 text-center">Sin datos en el periodo seleccionado</p>
-        ) : (
-          <ResponsiveContainer width="100%" height="100%">
+  function renderBody() {
+    if (isLoading) return <Skeleton className="h-full w-full" />;
+    if (data.length === 0) {
+      return <p className="text-sm text-muted-foreground pt-10 text-center">Sin datos en el periodo seleccionado</p>;
+    }
+    return (
+      <ResponsiveContainer width="100%" height="100%">
             <BarChart data={data} layout="vertical" margin={{ left: 10, right: 24, top: 5, bottom: 5 }}>
               <XAxis
                 type="number"
@@ -64,10 +57,19 @@ export default function ReportesTopChart({ data, isLoading }: Props) {
                   <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />
                 ))}
               </Bar>
-            </BarChart>
-          </ResponsiveContainer>
-        )}
-      </CardContent>
+        </BarChart>
+      </ResponsiveContainer>
+    );
+  }
+
+  return (
+    <Card className="lg:col-span-2 rounded-2xl shadow-sm border-0 bg-card">
+      <CardHeader className="pb-2">
+        <CardTitle className="text-base font-semibold flex items-center gap-2">
+          <BarChart3 className="h-4 w-4 text-muted-foreground" /> Top {Math.min(data.length, 10)} por Profit
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="h-[350px]">{renderBody()}</CardContent>
     </Card>
   );
 }
