@@ -1,10 +1,11 @@
 /**
  * Barrel del dominio Cotizaciones (folder-style).
- * La implementación vive en `./crud`, `./costos`, `./conversiones`, `./wizard`,
- * y la lógica pura en `@/lib/domain/cotizacion`.
+ * Convención: `queries` (lecturas) + `mutations` (escrituras) + subdominios
+ * (`costos`, `conversiones`, `wizard`). La lógica pura vive en
+ * `@/lib/domain/cotizacion`.
  */
 
-// CRUD + queries
+// Queries (lecturas)
 export {
   COTIZACION_LIST_COLUMNS,
   COTIZACION_ACEPTADA_COLUMNS,
@@ -13,13 +14,17 @@ export {
   fetchCotizacionesAceptadas,
   fetchCotizacionById,
   fetchEmbarquesVinculados,
+} from "./queries";
+
+// Mutations (escrituras)
+export {
   crearCotizacion,
   updateCotizacion,
   deleteCotizacion,
   updateEstadoCotizacion,
-} from "./crud";
+} from "./mutations";
 
-// Costos
+// Costos (subdominio)
 export {
   fetchCotizacionCostos,
   upsertCotizacionCostos,
