@@ -1,9 +1,9 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { formatDate, getOrigen, getDestino } from "@/lib/formatters";
-import type { Embarque } from "@/types/embarque";
+import type { EmbarqueRow } from "@/types/embarque";
 
 interface Props {
-  embarque: Embarque;
+  embarque: EmbarqueRow;
 }
 
 export function PortalEmbarqueResumenTab({ embarque }: Props) {
