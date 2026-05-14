@@ -27,10 +27,6 @@ import {
   SIDEBAR_ADMIN_ITEMS,
   SIDEBAR_SUPER_ADMIN_ITEMS,
 } from "@/components/layout/sidebarItems";
-
-// Avatar import kept only for tree-shaking parity; not directly used here.
-void Avatar;
-
 const AppSidebarBase = forwardRef<HTMLDivElement>(function AppSidebarBase(_props, _ref) {
   const { state, isMobile } = useSidebar();
   const collapsed = !isMobile && state === "collapsed";
