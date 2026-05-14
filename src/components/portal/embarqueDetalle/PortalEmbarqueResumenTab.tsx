@@ -1,9 +1,21 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { formatDate, getOrigen, getDestino } from "@/lib/formatters";
-import type { EmbarqueRow } from "@/types/embarque";
 
 interface Props {
-  embarque: EmbarqueRow;
+  embarque: Parameters<typeof getOrigen>[0] & {
+    etd?: string | null;
+    eta?: string | null;
+    naviera?: string | null;
+    aerolinea?: string | null;
+    transportista?: string | null;
+    modo: string;
+    tipo: string;
+    incoterm: string;
+    descripcion_mercancia?: string | null;
+    contenedor?: string | null;
+    bl_master?: string | null;
+    bl_house?: string | null;
+  };
 }
 
 export function PortalEmbarqueResumenTab({ embarque }: Props) {
