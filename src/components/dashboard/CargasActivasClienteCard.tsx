@@ -31,25 +31,20 @@ export const CargasActivasClienteCard = memo(function CargasActivasClienteCard({
   const navigate = useNavigate();
   const maxTotal = data.length > 0 ? data[0].total : 1;
 
-  return (
-    <Card>
-      <CardHeader className="pb-3">
-        <CardTitle className="text-base flex items-center gap-2">
-          <Package className="h-4 w-4 text-muted-foreground" />
-          Cargas activas por cliente
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-1 pt-0">
-        {isLoading ? (
-          Array.from({ length: 4 }).map((_, i) => (
-            <Skeleton key={i} className="h-12 w-full" />
-          ))
-        ) : data.length === 0 ? (
-          <p className="text-sm text-muted-foreground text-center py-6">
-            Sin embarques activos
-          </p>
-        ) : (
-          data.map((c) => (
+  function renderBody() {
+    if (isLoading) {
+      return Array.from({ length: 4 }).map((_, i) => (
+        <Skeleton key={i} className="h-12 w-full" />
+      ));
+    }
+    if (data.length === 0) {
+      return (
+        <p className="text-sm text-muted-foreground text-center py-6">
+          Sin embarques activos
+        </p>
+      );
+    }
+    return data.map((c) => (
             <div
               key={c.clienteId}
               onClick={() => navigate(`/clientes/${c.clienteId}`)}
