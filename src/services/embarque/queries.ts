@@ -111,40 +111,58 @@ export async function fetchEmbarquesParaExport(
   f: EmbarquesParaExportFilters,
 ): Promise<EmbarqueRow[]> {
   const PAGE = 1000;
-  const all: EmbarqueRow[] = [];
-  let from = 0;
 
-  while (true) {
-    let query = supabase
-      .from('embarques')
-      .select(EMBARQUE_LIST_COLUMNS)
-      .order('created_at', { ascending: false })
-      .range(from, from + PAGE - 1);
-
-    if (f.organizationId) query = query.eq('organization_id', f.organizationId);
+  // Aplica los filtros comunes a un query base. Permite reutilizar el armado
+  // tanto para el conteo (head:true) como para cada página.
+  const applyFilters = <T extends ReturnType<typeof supabase.from<'embarques'>>['select']>(
+    q: ReturnType<T>,
+  ) => {
+    let query = q as ReturnType<T>;
+    if (f.organizationId) query = (query as any).eq('organization_id', f.organizationId);
     if (f.search) {
-      query = query.or(
+      query = (query as any).or(
         `expediente.ilike.%${f.search}%,cliente_nombre.ilike.%${f.search}%,descripcion_mercancia.ilike.%${f.search}%,bl_master.ilike.%${f.search}%`,
       );
     }
     if (f.filterModo !== 'todos') {
-      query = query.eq('modo', f.filterModo as TablesInsert<'embarques'>['modo']);
+      query = (query as any).eq('modo', f.filterModo as TablesInsert<'embarques'>['modo']);
     }
-    if (f.filterCliente !== 'todos') query = query.eq('cliente_id', f.filterCliente);
-    if (f.filterOperador !== 'todos') query = query.eq('operador', f.filterOperador);
-    if (f.filterProforma === 'con') query = query.eq('tiene_proforma', true);
-    else if (f.filterProforma === 'sin') query = query.eq('tiene_proforma', false);
-    if (f.fechaDesde) query = query.gte('etd', f.fechaDesde);
-    if (f.fechaHasta) query = query.lte('eta', f.fechaHasta);
+    if (f.filterCliente !== 'todos') query = (query as any).eq('cliente_id', f.filterCliente);
+    if (f.filterOperador !== 'todos') query = (query as any).eq('operador', f.filterOperador);
+    if (f.filterProforma === 'con') query = (query as any).eq('tiene_proforma', true);
+    else if (f.filterProforma === 'sin') query = (query as any).eq('tiene_proforma', false);
+    if (f.fechaDesde) query = (query as any).gte('etd', f.fechaDesde);
+    if (f.fechaHasta) query = (query as any).lte('eta', f.fechaHasta);
+    return query;
+  };
 
-    const { data, error } = await query;
-    if (error) throw error;
-    const batch = (data ?? []) as EmbarqueRow[];
-    all.push(...batch);
-    if (batch.length < PAGE) break;
-    from += PAGE;
-  }
-  return all;
+  // 1) Conteo exacto en una sola llamada (sin traer filas).
+  const countQueryBase = supabase
+    .from('embarques')
+    .select(EMBARQUE_LIST_COLUMNS, { count: 'exact', head: true });
+  const { count, error: countErr } = await applyFilters(countQueryBase as any);
+  if (countErr) throw countErr;
+  const total = count ?? 0;
+  if (total === 0) return [];
+
+  // 2) Disparar todas las páginas en paralelo (lineal, sin loop secuencial con await).
+  const pageCount = Math.ceil(total / PAGE);
+  const pages = await Promise.all(
+    Array.from({ length: pageCount }, (_, i) => {
+      const from = i * PAGE;
+      const to = Math.min(from + PAGE - 1, total - 1);
+      const base = supabase
+        .from('embarques')
+        .select(EMBARQUE_LIST_COLUMNS)
+        .order('created_at', { ascending: false })
+        .range(from, to);
+      return (applyFilters(base as any) as any).then((res: { data: unknown; error: unknown }) => {
+        if (res.error) throw res.error;
+        return (res.data ?? []) as EmbarqueRow[];
+      });
+    }),
+  );
+  return pages.flat();
 }
 
 export async function fetchEmbarqueById(id: string): Promise<EmbarqueRow> {
