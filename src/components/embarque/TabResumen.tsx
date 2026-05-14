@@ -114,8 +114,15 @@ export function TabResumen({ embarque }: Props) {
               <DetailRow label="Transportista" value={embarque.transportista || '-'} />
               <DetailRow label="Carta Porte" value={embarque.carta_porte || '-'} />
             </>)}
-            <DetailRow label="ETD" value={<FechaConOriginal actual={embarque.etd} original={(embarque as any).etd_original} />} />
-            <DetailRow label="ETA" value={<FechaConOriginal actual={embarque.eta} original={(embarque as any).eta_original} />} />
+            {(() => {
+              const orig = embarque as Partial<{ etd_original: string | null; eta_original: string | null }>;
+              return (
+                <>
+                  <DetailRow label="ETD" value={<FechaConOriginal actual={embarque.etd} original={orig.etd_original} />} />
+                  <DetailRow label="ETA" value={<FechaConOriginal actual={embarque.eta} original={orig.eta_original} />} />
+                </>
+              );
+            })()}
             {embarque.fecha_llegada_real && <DetailRow label="Llegada Real" value={formatDate(embarque.fecha_llegada_real)} />}
           </CardContent>
         </Card>
