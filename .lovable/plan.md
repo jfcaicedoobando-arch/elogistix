@@ -1,89 +1,78 @@
-# Eliminar ternarios anidados en la UI
+# Aplanar JSX con early returns para estados loading/error
 
-Regla: en `src/components/` y `src/pages/` (código que renderiza UI), reemplazar ternarios anidados por helpers nombrados. Los componentes quedan con un solo ternario simple o una llamada a una función con `if/else` claro.
+## Contexto
 
-## Inventario detectado
+Auditoría completa de componentes que consumen datos de Supabase (vía React Query). Muchas páginas ya usan `if (isLoading) return ...` (ej. `ProveedorDetalle`, `PortalEmbarques`, `PortalCotizaciones`, `EditarCotizacion`, `CotizacionDetalle`, `EmbarqueDetalle`, `ClienteDetalle`, `Configuracion`, `TrackingPublico`, `AuditoriaEjecutivoTab`). Quedan oportunidades donde el ternario `isLoading ? ... : empty ? ... : (...)` vive **anidado dentro del JSX** y oculta la rama principal.
 
-Archivos con ternarios anidados que se van a refactorizar:
+No se cambia lógica de negocio ni queries — sólo estructura de render.
 
-| # | Archivo | Patrón |
-|---|---------|--------|
-| 1 | `components/portal/dashboard/PortalEstadoEmbarquesCard.tsx:52` | `n !== 1 ? "s" : ""` repetido |
-| 2 | `components/layout/SidebarGroupBlock.tsx:91` | `badge === 1 ? "" : "s"` repetido |
-| 3 | `pages/Auditoria.tsx:162,167` | misma pluralización |
-| 4 | `components/embarque/proforma/PasoConfirmacionProforma.tsx:65` | días de crédito (3 ramas) |
-| 5 | `components/embarque/facturacion/HistorialProformas.tsx:50` | mismo formato días de crédito |
-| 6 | `components/facturacion/proformasColumns.tsx:65` | mismo formato días de crédito |
-| 7 | `components/portal/cotizacion/PortalCotizacionConfirmDialog.tsx:64` | label CTA con 3 estados |
-| 8 | `components/portal/EmbarqueCard.tsx:92` | ícono por `modo` (Marítimo/Aéreo/Terrestre) |
-| 9 | `components/embarque/TabNotas.tsx:75` | color por `tipo` de nota |
-| 10 | `components/embarque/TabDocumentos.tsx:32` | color por `estado` de documento |
-| 11 | `components/embarque/StepIndicator.tsx:25-26` | clases por estado del paso |
-| 12 | `components/embarque/DialogDuplicarEmbarque.tsx:138` | label de botón pending + plural |
-| 13 | `components/facturacion/huecoFacturacionColumns.tsx:83` | tono por días vencidos |
-| 14 | `components/facturacion/TabProyeccion.tsx:24` | tono por margen % |
-| 15 | `components/cotizacion/conceptos/ConceptoRowUSD.tsx:35` | valor de Select según catálogo |
-| 16 | `components/cotizacion/conceptos/ConceptoRowMXN.tsx:28` | igual al anterior |
-| 17 | `components/cotizacion/TablaCostosLocal.tsx:96` | valor de input según edición |
-| 18 | `pages/admin-org/Configuracion.tsx:41` | label de botón Guardar (3 estados) |
+## Cambios propuestos
 
-Fuera de alcance (no son UI): `src/lib/`, `src/hooks/`, `src/services/`, `src/generators/` y comparadores de `Array.sort`. La regla del usuario aplica a renderizado.
+### A) Páginas con loading anidado dentro del JSX principal
 
-## Helpers nuevos (compartidos)
+En estos casos, hay chrome (PageHeader, Card, Tabs) que envuelve la rama de carga. Solución: extraer el contenido del tab/card a un subcomponente o helper `renderXxx()` con early returns internos, dejando el JSX principal plano.
 
-Se agregan en módulos existentes para no crear archivos sueltos:
+1. **`src/pages/Auditoria.tsx`** (líneas 138, 249)
+   - Extraer `<TabsContent value="tabla">` body a `<AuditoriaHallazgosTab data={c} ... />` con early returns para `isLoading` y `!data`.
+   - Extraer `<TabsContent value="por_regla">` body a `<AuditoriaPorReglaTab data={c} />` con early return para `isLoading`.
 
-- `src/lib/formatters/index.ts`
-  - `pluralS(n: number): string` → `n === 1 ? "" : "s"`. Usado en #1, #2, #3.
-  - `formatDiasCredito(d: number | string | null | undefined): string` → `"—" | "Contado" | "N días"`. Usado en #4, #5, #6.
-- `src/lib/ui/uiMappings.ts`
-  - `getModoIcon(modo: string): LucideIcon` → `Anchor | Plane | Truck`. Usado en #8.
-  - `getDocEstadoColorClass(estado: string): string`. Usado en #10.
-  - `getNotaTipoColorClass(tipo: string): string`. Usado en #9.
-  - `getStepIndicatorClass(currentStep, stepNum): string`. Usado en #11.
-  - `getDiasVencidosTone(d: number): "destructive" | "warning" | "default"`. Usado en #13.
-  - `getProfitTone(margenPct: number): string`. Usado en #14.
+2. **`src/pages/dashboard/Bitacora.tsx`** (línea 103)
+   - Extraer body del `<CardContent>` a helper `renderBitacoraBody()` con early returns para `isLoading` y lista vacía.
 
-## Helpers locales (alcance de un solo archivo)
+3. **`src/pages/dashboard/Operaciones.tsx`** (línea 88)
+   - Extraer chart body a helper `renderChart()` con early return para `isLoading`.
 
-Para los casos que no se reutilizan se declara una función local arriba del componente (no `useMemo`, son puras y baratas):
+### B) Tarjetas dashboard con multi-rama loading/empty
 
-- `PortalCotizacionConfirmDialog.tsx`: `getCtaLabel(isPending, isAceptar)`.
-- `DialogDuplicarEmbarque.tsx`: `getCrearBtnLabel(pending, copias)`.
-- `ConceptoRowUSD.tsx` / `ConceptoRowMXN.tsx`: `getSelectValue(descripcion, catalogo)`.
-- `TablaCostosLocal.tsx`: `getCantidadInputValue(editingQty, gi, cantidad)`.
-- `Configuracion.tsx` (admin-org): `getSaveButtonLabel(isSaving, isDirty)`.
+Mismo patrón: helper `renderBody()` local con early returns.
 
-## Patrón de refactor
+4. **`src/components/auditoria/AuditoriaTendenciaChart.tsx`** (línea 31, ternario anidado loading → empty → chart)
+5. **`src/components/reportes/ReportesTopChart.tsx`** (línea 34, mismo patrón)
+6. **`src/components/facturacion/TabProformasPendientes.tsx`** (línea 58, loading → empty → contenido)
+7. **`src/components/embarque/TabTracking.tsx`** (línea 136, loading → empty → lista)
+8. **`src/components/dashboard/ProximosArribosCard.tsx`** (línea 33)
+9. **`src/components/dashboard/AlertasDemoraCard.tsx`** (línea 32)
+10. **`src/components/dashboard/CargasActivasClienteCard.tsx`** (línea 43)
+11. **`src/components/cliente/TablaContactos.tsx`** (línea 58)
 
-Antes:
+### C) No tocar
+
+- Componentes que ya usan early returns top-level (ClienteDetalle, EmbarqueDetalle, EditarCotizacion, etc.).
+- Skeletons inline de una sola expresión simple (`isLoading ? <Skeleton/> : valor` en `DashboardStatusCards`, `AdminDashboard`, `HuecoFacturacionCard`) — son legibles y reemplazarlos añade ruido sin beneficio.
+- Botones con `isPending ? "Guardando..." : "Guardar"` — caso trivial de label, no justifica helper.
+
+## Patrón estándar a aplicar
+
 ```tsx
-className={a === 1 ? "x" : a === 2 ? "y" : "z"}
-```
-Después:
-```tsx
-function getCls(a: number) {
-  if (a === 1) return "x";
-  if (a === 2) return "y";
-  return "z";
+// Antes
+<CardContent>
+  {isLoading ? (
+    <Skeleton className="h-48" />
+  ) : !data || data.length === 0 ? (
+    <Empty />
+  ) : (
+    <Chart data={data} />
+  )}
+</CardContent>
+
+// Después
+function renderBody() {
+  if (isLoading) return <Skeleton className="h-48" />;
+  if (!data || data.length === 0) return <Empty />;
+  return <Chart data={data} />;
 }
 // ...
-className={getCls(a)}
+<CardContent>{renderBody()}</CardContent>
 ```
 
-## Verificación
+Para tabs/secciones grandes (caso A), extraer a un componente hermano en el mismo archivo o nuevo archivo si supera ~40 líneas, con `if (isLoading) return <Skeleton/>;` al inicio.
 
-- `bunx vitest run` para tests existentes (formatters, uiMappings ya tienen suite).
-- Snapshot manual: días de crédito en proformas, ícono de modo en EmbarqueCard, StepIndicator del wizard.
+## Versionado y changelog
 
-## Changelog y versión
+- `APP_VERSION` → `8.135.6` (patch, sin cambios funcionales).
+- Entrada en `src/content/changelog/v8/chunks/0.ts` y `src/content/changelogData.ts`: "Refactor UI: early returns para estados de carga/error, JSX más plano y legible".
 
-- `APP_VERSION` → `8.135.5` (patch).
-- Entrada en `src/content/changelog/v8/chunks/0.ts` y `src/content/changelogData.ts`: "Refactor UI: ternarios anidados reemplazados por helpers nombrados".
+## Validación
 
-## No se cambia
-
-- Lógica de negocio.
-- Hooks/servicios.
-- Estilos visuales (mismas clases finales).
-- Comparadores de orden (`a.id === x ? -1 : ...`) — son lógica, no render.
+- Build TypeScript debe pasar sin cambios de tipos.
+- Verificación visual rápida en `/auditoria`, `/dashboard/bitacora`, `/dashboard/operaciones`, `/reportes` y un detalle de cliente para confirmar que loading/empty/contenido siguen renderizando igual.
