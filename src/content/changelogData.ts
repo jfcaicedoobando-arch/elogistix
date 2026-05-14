@@ -22,6 +22,14 @@ export interface ChangelogEntry {
  */
 export const recentChangelog: ChangelogEntry[] = [
   {
+    version: "8.135.6",
+    date: "2026-05-14",
+    type: "patch",
+    title: "Refactor UI: early returns para estados de carga",
+    summary: "Tarjetas y páginas con loading/empty/contenido usan ahora helpers renderBody() con early returns; el JSX principal queda plano y legible.",
+    description: "Refactorizados AuditoriaTendenciaChart, ReportesTopChart, ProximosArribosCard, AlertasDemoraCard, CargasActivasClienteCard, TablaContactos, TabTracking, TabProformasPendientes, Bitacora, Operaciones y Auditoria. Sin cambios visuales.",
+  },
+  {
     version: "8.135.5",
     date: "2026-05-14",
     type: "patch",

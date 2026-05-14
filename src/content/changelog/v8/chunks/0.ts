@@ -2,6 +2,14 @@ import type { ChangelogEntry } from "../../../changelogData";
 
 export const chunk0: ChangelogEntry[] = [
   {
+    version: "8.135.6",
+    date: "2026-05-14",
+    type: "patch",
+    title: "Refactor UI: early returns para estados de carga",
+    summary: "Tarjetas y páginas con loading/empty/contenido extraen un helper renderBody() con early returns; el JSX principal queda plano y legible.",
+    description: "Refactorizados AuditoriaTendenciaChart, ReportesTopChart, ProximosArribosCard, AlertasDemoraCard, CargasActivasClienteCard, TablaContactos, TabTracking (timeline), TabProformasPendientes, Bitacora, Operaciones (chart de tendencia) y Auditoria (tabs Hallazgos y Por regla). Se eliminó el patrón ternario anidado isLoading ? ... : empty ? ... : (...) reemplazándolo por funciones renderXxx() con if/return. Sin cambios visuales ni de comportamiento.",
+  },
+  {
     version: "8.135.5",
     date: "2026-05-14",
     type: "patch",
