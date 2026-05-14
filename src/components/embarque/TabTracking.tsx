@@ -210,6 +210,8 @@ export function TabTracking({ embarqueId, embarque, notas = [] }: Props) {
         </CardHeader>
         <CardContent>{renderTimeline()}</CardContent>
       </Card>
+
+      <TabNotas notas={notas} embarqueId={embarqueId} />
     </div>
   );
 }
