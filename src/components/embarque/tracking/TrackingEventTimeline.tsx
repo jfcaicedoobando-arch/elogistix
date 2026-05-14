@@ -3,12 +3,10 @@ import { Badge } from "@/components/ui/badge";
 import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
 import { ICONO_EVENTO } from "@/constants/embarqueConstants";
 import { formatDate, nombreDesdeEmail } from "@/lib/formatters";
-import type { Tables } from "@/integrations/supabase/types";
-
-type Evento = Tables<"eventos_embarque">;
+import type { EventoEmbarque } from "@/hooks/embarque/useEventosEmbarque";
 
 interface Props {
-  eventos: Evento[];
+  eventos: EventoEmbarque[];
   isLoading: boolean;
 }
 
