@@ -1,4 +1,7 @@
 import { useState } from 'react';
+import { useForm, Controller } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
 import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -31,6 +34,22 @@ interface Props {
   embarque?: EmbarqueTrackingProps | null;
   notas?: NotaEmbarqueRow[];
 }
+
+const eventoSchema = z.object({
+  tipo: z.string().min(1, 'Selecciona un tipo de evento'),
+  fecha: z.string().min(1, 'Fecha requerida'),
+  ubicacion: z.string().max(120, 'Máximo 120 caracteres').optional().default(''),
+  descripcion: z.string().max(500, 'Máximo 500 caracteres').optional().default(''),
+});
+
+type EventoFormValues = z.infer<typeof eventoSchema>;
+
+const defaultEventoValues = (): EventoFormValues => ({
+  tipo: '',
+  fecha: new Date().toISOString().slice(0, 16),
+  ubicacion: '',
+  descripcion: '',
+});
 
 
 export function TabTracking({ embarqueId, embarque, notas = [] }: Props) {
