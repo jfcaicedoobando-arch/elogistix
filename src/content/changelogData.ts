@@ -22,6 +22,14 @@ export interface ChangelogEntry {
  */
 export const recentChangelog: ChangelogEntry[] = [
   {
+    version: "8.141.0",
+    date: "2026-05-14",
+    type: "minor",
+    title: "services/cotizacion estandarizado a queries + mutations",
+    summary: "El service de cotizaciones adopta la convención `queries.ts` (lecturas) + `mutations.ts` (escrituras); el archivo legacy `crud.ts` desaparece.",
+    description: "Paso 4 de la auditoría arquitectónica. services/cotizacion/crud.ts (172 líneas) se partió en queries.ts (folio + lecturas) y mutations.ts (crear/update/delete/cambiar estado). El barrel index.ts conserva la API pública e introduce la convención `queries + mutations + subdominios (costos, conversiones, wizard)`. conversiones/duplicar.ts importa generarFolioCotizacion desde ../queries.",
+  },
+  {
     version: "8.140.1",
     date: "2026-05-14",
     type: "patch",
