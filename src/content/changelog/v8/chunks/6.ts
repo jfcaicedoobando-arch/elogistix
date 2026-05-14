@@ -1,6 +1,7 @@
 import type { ChangelogEntry } from "../../../changelogData";
 
 export const chunk6: ChangelogEntry[] = [
+  {
     version: "8.132.1",
     date: "2026-05-09",
     type: "patch",
@@ -920,4 +921,5 @@ export const chunk6: ChangelogEntry[] = [
     date: "2026-04-25",
     type: "minor",
     title: "NuevoEmbarque migrado a controller hook (282→79 líneas)",
+  },
 ];
