@@ -186,37 +186,49 @@ export function TabTracking({ embarqueId, embarque, notas = [] }: Props) {
             <CardTitle className="text-sm">Nuevo Evento de Tracking</CardTitle>
           </CardHeader>
           <CardContent>
-            <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <form onSubmit={onSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <label className="text-sm font-medium">Tipo de evento *</label>
-                <Select value={tipo} onValueChange={setTipo}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Seleccionar tipo..." />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {TIPOS_EVENTO_TRACKING.map((t) => (
-                      <SelectItem key={t} value={t}>
-                        {ICONO_EVENTO[t]} {t}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <Controller
+                  control={control}
+                  name="tipo"
+                  render={({ field }) => (
+                    <Select value={field.value} onValueChange={field.onChange}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Seleccionar tipo..." />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {TIPOS_EVENTO_TRACKING.map((t) => (
+                          <SelectItem key={t} value={t}>
+                            {ICONO_EVENTO[t]} {t}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  )}
+                />
+                {errors.tipo && (
+                  <p className="text-xs text-destructive">{errors.tipo.message}</p>
+                )}
               </div>
               <div className="space-y-2">
                 <label className="text-sm font-medium">Fecha y hora *</label>
-                <Input type="datetime-local" value={fecha} onChange={(e) => setFecha(e.target.value)} required />
+                <Input type="datetime-local" {...register('fecha')} required />
+                {errors.fecha && (
+                  <p className="text-xs text-destructive">{errors.fecha.message}</p>
+                )}
               </div>
               <div className="space-y-2">
                 <label className="text-sm font-medium">Ubicación</label>
-                <Input value={ubicacion} onChange={(e) => setUbicacion(e.target.value)} placeholder="Puerto, ciudad, terminal..." />
+                <Input {...register('ubicacion')} placeholder="Puerto, ciudad, terminal..." />
               </div>
               <div className="space-y-2 md:col-span-2">
                 <label className="text-sm font-medium">Descripción</label>
-                <Textarea value={descripcion} onChange={(e) => setDescripcion(e.target.value)} placeholder="Detalles del evento..." rows={2} />
+                <Textarea {...register('descripcion')} placeholder="Detalles del evento..." rows={2} />
               </div>
               <div className="md:col-span-2 flex gap-2 justify-end">
                 <Button type="button" variant="outline" size="sm" onClick={() => setFormAbierto(false)}>Cancelar</Button>
-                <Button type="submit" size="sm" disabled={!tipo || crearEvento.isPending}>
+                <Button type="submit" size="sm" disabled={!isValid || crearEvento.isPending}>
                   {crearEvento.isPending ? 'Guardando...' : 'Guardar Evento'}
                 </Button>
               </div>
