@@ -96,24 +96,16 @@ export async function fetchPortalCotizaciones(clienteIds: string[]) {
 }
 
 export async function fetchPortalCotizacion(id: string) {
+  // Una sola query con join embebido a embarques para traer expediente.
   const { data, error } = await supabase
     .from("cotizaciones")
-    .select("*")
+    .select("*, embarque:embarques(expediente)")
     .eq("id", id)
     .single();
   if (error) throw error;
   if (!data) return data;
-
-  let embarque_expediente: string | null = null;
-  if (data.embarque_id) {
-    const { data: emb } = await supabase
-      .from("embarques")
-      .select("expediente")
-      .eq("id", data.embarque_id)
-      .maybeSingle();
-    embarque_expediente = emb?.expediente ?? null;
-  }
-  return { ...data, embarque_expediente };
+  const { embarque, ...rest } = data as typeof data & { embarque: { expediente: string } | null };
+  return { ...rest, embarque_expediente: embarque?.expediente ?? null };
 }
 
 export async function fetchPortalFacturas(clienteIds: string[]) {
