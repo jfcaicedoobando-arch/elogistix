@@ -41,36 +41,24 @@ export function useAuditoriaPageController() {
     return hallazgos.filter((h) => revisiones.has(revisionKey(h))).length;
   }, [hallazgos, revisiones]);
 
-  const hallazgosFiltrados = useMemo(() => {
-    return hallazgosVisibles.filter((h) => {
-      if (filtroSev !== "todas" && h.severidad !== filtroSev) return false;
-      if (filtroModo !== "todos" && h.modo !== filtroModo) return false;
-      return true;
-    });
-  }, [hallazgosVisibles, filtroSev, filtroModo]);
+  const hallazgosFiltrados = useMemo(
+    () =>
+      filtrarHallazgos(hallazgosVisibles, {
+        severidad: filtroSev,
+        modo: filtroModo,
+      }),
+    [hallazgosVisibles, filtroSev, filtroModo],
+  );
 
-  const kpiSeveridad = useMemo(() => {
-    const acc = { critico: 0, alto: 0, medio: 0 };
-    for (const h of hallazgosVisibles) acc[h.severidad]++;
-    return acc;
-  }, [hallazgosVisibles]);
+  const kpiSeveridad = useMemo(
+    () => contarPorSeveridad(hallazgosVisibles),
+    [hallazgosVisibles],
+  );
 
-  const porRegla = useMemo(() => {
-    const map: Record<ReglaAuditoria, HallazgoAuditoria[]> = {
-      docs_faltantes: [],
-      docs_pendientes_avanzado: [],
-      fechas: [],
-      ventas_sin_facturar: [],
-      margen_negativo: [],
-      margen_bajo: [],
-      venta_sin_costo: [],
-      costo_sin_venta: [],
-      proforma_vencida: [],
-      embarque_huerfano: [],
-    };
-    for (const h of hallazgosFiltrados) map[h.regla].push(h);
-    return map;
-  }, [hallazgosFiltrados]);
+  const porRegla = useMemo(
+    () => agruparPorRegla(hallazgosFiltrados),
+    [hallazgosFiltrados],
+  );
 
   const modos = useMemo(() => {
     const set = new Set(hallazgos.map((h) => h.modo).filter(Boolean));
