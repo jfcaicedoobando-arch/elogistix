@@ -80,7 +80,7 @@ export const huecoFacturacionColumns: DataTableColumn<FilaHueco>[] = [
     sortValue: (f) => f.diasDesdeEtd,
     render: (f) => {
       const d = f.diasDesdeEtd;
-      const tone = d > 30 ? "destructive" : d > 15 ? "warning" : "default";
+      const tone = getDiasVencidosTone(d);
       return (
         <Badge
           variant="outline"

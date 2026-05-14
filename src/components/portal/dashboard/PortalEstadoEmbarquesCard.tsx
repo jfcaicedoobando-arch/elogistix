@@ -49,7 +49,7 @@ export function PortalEstadoEmbarquesCard({ total, distribucion }: Props) {
           })}
         </div>
         <p className="text-xs text-muted-foreground text-center tabular-nums">
-          {total} embarque{total !== 1 ? "s" : ""} activo{total !== 1 ? "s" : ""}
+          {total} embarque{pluralS(total)} activo{pluralS(total)}
         </p>
       </CardContent>
     </Card>

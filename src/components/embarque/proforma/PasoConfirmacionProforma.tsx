@@ -62,7 +62,7 @@ export function PasoConfirmacionProforma({
         <div className="rounded-md border p-3 bg-muted/20">
           <p className="text-xs text-muted-foreground">Días de crédito</p>
           <p className="font-semibold mt-0.5">
-            {diasCredito.trim() === "" ? "—" : Number(diasCredito) === 0 ? "Contado" : `${diasCredito} días`}
+            {formatDiasCredito(diasCredito)}
           </p>
         </div>
       </div>

@@ -135,7 +135,7 @@ export default function DialogDuplicarEmbarque({ embarque, open, onOpenChange }:
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>
           <Button onClick={handleDuplicar} disabled={duplicarEmbarque.isPending}>
-            {duplicarEmbarque.isPending ? 'Creando...' : `Crear ${filaCopias.length} Embarque${filaCopias.length > 1 ? 's' : ''}`}
+            {getCrearBtnLabel(duplicarEmbarque.isPending, filaCopias.length)}
           </Button>
         </DialogFooter>
       </DialogContent>

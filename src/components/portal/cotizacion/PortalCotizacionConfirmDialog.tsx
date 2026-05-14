@@ -12,6 +12,11 @@ import { Textarea } from "@/components/ui/textarea";
 
 type ConfirmAction = "Aceptada" | "Rechazada" | null;
 
+function getCtaLabel(isPending: boolean, isAceptar: boolean): string {
+  if (isPending) return "Procesando...";
+  return isAceptar ? "Sí, aceptar" : "Sí, rechazar";
+}
+
 interface PortalCotizacionConfirmDialogProps {
   confirmAction: ConfirmAction;
   comentario: string;
@@ -61,7 +66,7 @@ export default function PortalCotizacionConfirmDialog({
                 : ""
             }
           >
-            {isPending ? "Procesando..." : isAceptar ? "Sí, aceptar" : "Sí, rechazar"}
+            {getCtaLabel(isPending, isAceptar)}
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>

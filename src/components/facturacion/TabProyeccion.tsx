@@ -21,7 +21,7 @@ export function TabProyeccion() {
 
 
   const k = c.kpis;
-  const profitTone = k.margenProyPct < 0 ? "text-destructive" : k.margenProyPct < 10 ? "text-warning" : "text-success";
+  const profitTone = getProfitToneClass(k.margenProyPct);
 
   return (
     <div className="space-y-4">

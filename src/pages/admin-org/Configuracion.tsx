@@ -38,7 +38,7 @@ export default function Configuracion() {
         </div>
         <Button onClick={handleSave} disabled={isSaving || !isDirty} title={!isDirty ? "No hay cambios pendientes" : undefined}>
           <Save className="h-4 w-4 mr-2" />
-          {isSaving ? "Guardando..." : isDirty ? "Guardar Cambios" : "Sin Cambios"}
+          {getSaveButtonLabel(isSaving, isDirty)}
         </Button>
       </div>
 

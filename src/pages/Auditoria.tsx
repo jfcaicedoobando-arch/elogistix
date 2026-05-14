@@ -159,13 +159,13 @@ export default function Auditoria() {
                     {c.mostrarRevisados ? (
                       <>
                         Mostrando también <span className="font-semibold text-foreground">{c.revisadosCount}</span> hallazgo
-                        {c.revisadosCount === 1 ? "" : "s"} ya revisado{c.revisadosCount === 1 ? "" : "s"}.
+                        {pluralS(c.revisadosCount)} ya revisado{pluralS(c.revisadosCount)}.
                       </>
                     ) : (
                       <>
                         <span className="font-semibold text-foreground">{c.revisadosCount}</span> hallazgo
-                        {c.revisadosCount === 1 ? "" : "s"} revisado{c.revisadosCount === 1 ? "" : "s"} oculto
-                        {c.revisadosCount === 1 ? "" : "s"}.
+                        {pluralS(c.revisadosCount)} revisado{pluralS(c.revisadosCount)} oculto
+                        {pluralS(c.revisadosCount)}.
                       </>
                     )}
                   </span>

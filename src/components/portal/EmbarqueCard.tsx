@@ -5,7 +5,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { getEstadoColor, getEstadoBorderColor, getModoCircleStyle, getModoLucideIcon } from "@/lib/ui/uiMappings";
 import { calcularEstadoEmbarque } from "@/lib/domain/embarque";
 import { formatDate, getOrigen, getDestino } from "@/lib/formatters";
-import { MapPin, Anchor, Plane, Truck, CalendarClock } from "lucide-react";
+import { MapPin, CalendarClock } from "lucide-react";
 import { differenceInCalendarDays, parseISO } from "date-fns";
 import { cn } from "@/lib/utils";
 
@@ -87,12 +87,15 @@ function EmbarqueCardInner({ e }: { e: EmbarqueCardData }) {
 
           <div className="flex items-center justify-between gap-4 pl-[52px] flex-wrap">
             <div className="flex items-center gap-4">
-              {carrier && (
-                <span className="text-xs text-muted-foreground flex items-center gap-1">
-                  {e.modo === "Marítimo" ? <Anchor className="h-3 w-3" /> : e.modo === "Aéreo" ? <Plane className="h-3 w-3" /> : <Truck className="h-3 w-3" />}
-                  {carrier}
-                </span>
-              )}
+              {carrier && (() => {
+                const CarrierIcon = getModoLucideIcon(e.modo);
+                return (
+                  <span className="text-xs text-muted-foreground flex items-center gap-1">
+                    <CarrierIcon className="h-3 w-3" />
+                    {carrier}
+                  </span>
+                );
+              })()}
             </div>
             <div className="flex items-center gap-4">
               <span className="text-xs text-muted-foreground flex items-center gap-1 tabular-nums">

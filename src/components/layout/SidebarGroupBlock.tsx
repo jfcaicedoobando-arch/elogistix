@@ -88,7 +88,7 @@ function SidebarGroupBlockBase({ label, items, collapsed, pathname, totalAlertas
                               {badge > 99 ? "99+" : badge}
                             </Badge>
                           </TooltipTrigger>
-                          <TooltipContent side="right">{badge} alerta{badge === 1 ? "" : "s"} activa{badge === 1 ? "" : "s"}</TooltipContent>
+                          <TooltipContent side="right">{badge} alerta{pluralS(badge)} activa{pluralS(badge)}</TooltipContent>
                         </Tooltip>
                       )}
                     </NavLink>
