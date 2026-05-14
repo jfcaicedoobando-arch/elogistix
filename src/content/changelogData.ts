@@ -22,6 +22,14 @@ export interface ChangelogEntry {
  */
 export const recentChangelog: ChangelogEntry[] = [
   {
+    version: "8.150.0",
+    date: "2026-05-14",
+    type: "minor",
+    title: "Power of 10 — Fase 4: cierre de Regla #4 (0 componentes >200 líneas)",
+    summary: "Últimos 5 componentes >200 líneas reducidos: PortalEmbarqueDetalle (239→184), CotizacionDetalle (219→181), TabProyeccion (216→150), cotizacionesColumns (208→117), ClienteDetalle (206→194). Baseline Regla #4: 5 → 0.",
+    description: "Sexta iteración de la Fase 4 (ARCHITECTURE.md §20.4). (1) PortalEmbarqueDetalle: extraído PortalEmbarqueResumenTab. (2) CotizacionDetalle: nuevo CotizacionDatosGeneralesCard. (3) TabProyeccion: bloque 'Cierre' movido a ProyeccionCierreSection. (4) cotizacionesColumns: helpers renderEstadoVigencia y renderAcciones movidos a columnsParts/. (5) ClienteDetalle: tres diálogos agrupados en ClienteDetalleDialogs. Tests: 314 verdes. Auditoría power-of-10: 0 hallazgos en Regla #4.",
+  },
+  {
     version: "8.149.0",
     date: "2026-05-14",
     type: "minor",
@@ -92,22 +100,6 @@ export const recentChangelog: ChangelogEntry[] = [
     title: "services/cotizacion estandarizado a queries + mutations",
     summary: "El service de cotizaciones adopta la convención `queries.ts` (lecturas) + `mutations.ts` (escrituras); el archivo legacy `crud.ts` desaparece.",
     description: "Paso 4 de la auditoría arquitectónica. services/cotizacion/crud.ts (172 líneas) se partió en queries.ts (folio + lecturas) y mutations.ts (crear/update/delete/cambiar estado). El barrel index.ts conserva la API pública e introduce la convención `queries + mutations + subdominios (costos, conversiones, wizard)`. conversiones/duplicar.ts importa generarFolioCotizacion desde ../queries.",
-  },
-  {
-    version: "8.140.1",
-    date: "2026-05-14",
-    type: "patch",
-    title: "Rotación del chunk0 del changelog v8",
-    summary: "v8/chunks/0.ts (1086 líneas, 145 entradas) se redujo a 20 entradas; las 125 entradas anteriores se trasladaron a v8/chunks/6.ts.",
-    description: "Cierre del paso 3 de la auditoría arquitectónica. v8/chunks/0.ts crecía sin límite. Se extrajeron las entradas 21-145 (8.132.1 → 8.64.0) al nuevo v8/chunks/6.ts y se registró en v8.ts. El orden cronológico descendente se preserva al concatenar chunk0 → … → chunk6.",
-  },
-  {
-    version: "8.140.0",
-    date: "2026-05-14",
-    type: "minor",
-    title: "Auditoría: controllers de diálogos de auditoría y RHF en TabTracking",
-    summary: "MarcarRevisadoDialog y AsignarResponsableDialog ahora usan hooks controller dedicados; el form de TabTracking migra a react-hook-form + zod.",
-    description: "Pasos 6 y 7 de la auditoría arquitectónica. Nuevos useMarcarRevisadoController y useAsignarResponsableController encapsulan estado local, efectos de sincronización con la revisión existente y handlers (guardar, eliminar, snooze, quitarSnooze, agregar comentario, tomarlo yo). Los diálogos quedan como pura presentación. TabTracking migra su formulario inline (4 useState) a react-hook-form + zodResolver con eventoSchema (tipo requerido, fecha requerida, ubicación ≤120, descripción ≤500), errores inline y reset al guardar. Pendientes: rotar chunk0 → chunk6 (1078 líneas) y documentar convenciones en ARCHITECTURE.md.",
   },
 ];
 

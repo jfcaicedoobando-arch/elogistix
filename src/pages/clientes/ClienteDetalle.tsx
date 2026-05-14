@@ -6,11 +6,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import TabPortalCliente from "@/components/cliente/TabPortalCliente";
 import { DataTable } from "@/components/shared/DataTable";
 import { embarqueColumns, cotizacionColumns } from "@/components/cliente/clienteColumns";
-import DialogContacto from "@/components/cliente/DialogContacto";
-import DialogEditarCliente from "@/components/cliente/DialogEditarCliente";
 import TablaContactos from "@/components/cliente/TablaContactos";
-import DoubleConfirmDeleteDialog from "@/components/shared/DoubleConfirmDeleteDialog";
 import ClienteSummaryCards from "@/components/cliente/ClienteSummaryCards";
+import { ClienteDetalleDialogs } from "@/components/cliente/detalle/ClienteDetalleDialogs";
 import { useClienteDetalleController } from "@/hooks/cliente/useClienteDetalleController";
 import { toTitleCase, formatPhoneMx, correctSpanishPlace } from "@/lib/formatters";
 import { useParams } from "react-router-dom";
@@ -165,17 +163,7 @@ export default function ClienteDetalle() {
         </TabsContent>
       </Tabs>
 
-      <DialogContacto
-        open={contactDialogOpen}
-        onOpenChange={setContactDialogOpen}
-        contacto={editingContacto}
-        onSave={handleSaveContacto}
-        isSaving={isContactSaving}
-      />
-
-      <DialogEditarCliente
-        open={editClienteOpen}
-        onOpenChange={setEditClienteOpen}
+      <ClienteDetalleDialogs
         cliente={{
           nombre: cliente.nombre,
           rfc: cliente.rfc,
@@ -187,18 +175,19 @@ export default function ClienteDetalle() {
           email: cliente.email,
           telefono: cliente.telefono,
         }}
-        onSave={handleSaveCliente}
-        isSaving={isClientSaving}
-      />
-
-      <DoubleConfirmDeleteDialog
-        open={deleteDialogOpen}
-        onOpenChange={closeDeleteDialog}
-        entityName="este contacto"
-        description="Estás a punto de eliminar este contacto del cliente. ¿Deseas continuar?"
-        finalDescription="Esta acción no se puede deshacer. El contacto será eliminado permanentemente. ¿Confirmas la eliminación?"
-        onConfirm={confirmDelete}
-        isPending={isContactDeleting}
+        contactDialogOpen={contactDialogOpen}
+        setContactDialogOpen={setContactDialogOpen}
+        editingContacto={editingContacto}
+        handleSaveContacto={handleSaveContacto}
+        isContactSaving={isContactSaving}
+        editClienteOpen={editClienteOpen}
+        setEditClienteOpen={setEditClienteOpen}
+        handleSaveCliente={handleSaveCliente}
+        isClientSaving={isClientSaving}
+        deleteDialogOpen={deleteDialogOpen}
+        closeDeleteDialog={closeDeleteDialog}
+        confirmDelete={confirmDelete}
+        isContactDeleting={isContactDeleting}
       />
     </div>
   );

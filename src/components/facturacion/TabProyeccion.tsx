@@ -1,28 +1,22 @@
-import { ChevronLeft, ChevronRight, Download, TrendingUp, CheckCircle2, Calendar, Info, Clock } from "lucide-react";
+import { ChevronLeft, ChevronRight, Download, Calendar, Info } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Progress } from "@/components/ui/progress";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { useNavigate } from "react-router-dom";
 import { DataTable } from "@/components/shared/DataTable";
 import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
-import { formatCurrency, toTitleCase } from "@/lib/formatters";
-import { getProfitToneClass } from "@/lib/ui/uiMappings";
+import { toTitleCase } from "@/lib/formatters";
 import { useTabProyeccionController } from "@/hooks/facturacion/useTabProyeccionController";
 import { HuecoFacturacionCard } from "./HuecoFacturacionCard";
-import { CierreCard } from "./CierreCard";
+import { ProyeccionCierreSection } from "./proyeccion/ProyeccionCierreSection";
 import { proyeccionColumns } from "./proyeccionColumns";
 
 export function TabProyeccion() {
   const c = useTabProyeccionController();
   const navigate = useNavigate();
-
-
   const k = c.kpis;
-  const profitTone = getProfitToneClass(k.margenProyPct);
 
   return (
     <div className="space-y-4">
@@ -79,67 +73,7 @@ export function TabProyeccion() {
       </Card>
 
       {/* Bloque "Cierre [Mes Año]" */}
-      <Card>
-        <CardContent className="p-5">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-sm font-bold tracking-widest uppercase text-muted-foreground">
-              Cierre {c.mesActual.label}
-            </h3>
-            <Badge variant="outline" className="font-mono text-xs">
-              {k.facturados}/{k.totalExpedientes} facturados · {k.avancePct.toFixed(0)}%
-            </Badge>
-          </div>
-
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
-            <CierreCard
-              tone="success"
-              icon={CheckCircle2}
-              titulo="✓ Facturado"
-              embarques={k.facturados}
-              lineas={[
-                { label: "USD", value: formatCurrency(k.ventaFacturadaUsd, "USD"), emphasis: true },
-                { label: "MXN", value: formatCurrency(k.ventaFacturadaMxn, "MXN"), emphasis: true },
-              ]}
-            />
-            <CierreCard
-              tone="warning"
-              icon={Clock}
-              titulo="⏳ Pendiente de facturar"
-              embarques={k.pendientes}
-              lineas={[
-                { label: "USD", value: formatCurrency(k.ventaPendienteUsd, "USD"), emphasis: true },
-                { label: "MXN", value: formatCurrency(k.ventaPendienteMxn, "MXN"), emphasis: true },
-              ]}
-            />
-            <CierreCard
-              tone="info"
-              icon={TrendingUp}
-              titulo="📈 Proyectado (total del mes)"
-              embarques={k.totalExpedientes}
-              lineas={[
-                { label: "Venta USD", value: formatCurrency(k.ventaProyUsd, "USD") },
-                { label: "Venta MXN", value: formatCurrency(k.ventaProyMxn, "MXN") },
-                { label: "Costo MXN", value: formatCurrency(k.costoTotalMxn, "MXN"), className: "text-muted-foreground" },
-                {
-                  label: `Profit (${k.margenProyPct.toFixed(1)}%)`,
-                  value: formatCurrency(k.profitProyMxn, "MXN"),
-                  emphasis: true,
-                  className: profitTone,
-                },
-              ]}
-            />
-          </div>
-
-          {/* Barra de avance */}
-          <div className="mt-4">
-            <div className="flex items-center justify-between text-xs text-muted-foreground mb-1.5">
-              <span>Avance de facturación</span>
-              <span className="tabular-nums font-medium">{k.avancePct.toFixed(0)}%</span>
-            </div>
-            <Progress value={k.avancePct} className="h-2" />
-          </div>
-        </CardContent>
-      </Card>
+      <ProyeccionCierreSection k={k} mesLabel={c.mesActual.label} />
 
       {/* Nota de moneda */}
       <p className="text-xs text-muted-foreground flex items-center gap-1.5 px-1">
