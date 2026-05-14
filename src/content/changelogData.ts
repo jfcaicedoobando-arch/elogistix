@@ -100,6 +100,7 @@ export const recentChangelog: ChangelogEntry[] = [
     title: "Optimización: queries de DB lineales y en paralelo",
     summary: "Las exportaciones de embarques, las actualizaciones de configuración y el detalle de cotización del portal ahora hacen sus consultas en paralelo, sin loops secuenciales.",
     description: "fetchEmbarquesParaExport: conteo exacto + Promise.all de páginas. useEmbarquesPageController: chunks de fetchEmbarquesListExtras en paralelo. updateConfiguracionItems / updateConfiguracionGlobalItems: Promise.all en lugar de await en for. fetchPortalCotizacion: join embebido en una sola query. Sin cambios funcionales.",
+  },
 ];
 
 /** Deduplica por version conservando la primera ocurrencia (recentChangelog gana). */
