@@ -2,6 +2,14 @@ import type { ChangelogEntry } from "../../../changelogData";
 
 export const chunk0: ChangelogEntry[] = [
   {
+    version: "8.147.0",
+    date: "2026-05-14",
+    type: "minor",
+    title: "Power of 10 — Fase 4: refactor PortalLayout, Changelog, TabTracking y DialogBolContainers",
+    summary: "Cuatro componentes >200 líneas reducidos a shells: PortalLayout (266 → 60), Changelog page (261 → 76), TabTracking (252 → 88), DialogBolContainers (246 → 95). Componentes >200 líneas: 17 → 13.",
+    description: "Tercera iteración de la Fase 4 (ARCHITECTURE.md §20.4). (1) src/components/portal/PortalLayout.tsx pasa de 266 a 60 líneas: nuevos módulos en src/components/portal/layout/ — portalNav.ts (constantes y helpers PORTAL_NAV_ITEMS, breadcrumbMap, getActiveSectionLabel, isPortalNavItemActive), PortalMobileNav.tsx (Sheet + nav móvil + signOut), PortalUserMenu.tsx (Avatar + DropdownMenu de usuario), PortalHeader.tsx (header completo con brand, nav desktop, theme toggle), PortalBreadcrumbsBar.tsx (barra de migas) y usePortalBreadcrumbs.ts (memo de migas a partir del pathname). (2) src/pages/dashboard/Changelog.tsx pasa de 261 a 76 líneas: lógica de paginación/filtros/anclas/expand movida a hooks/dashboard/useChangelogController.ts; cada tarjeta vive en components/dashboard/ChangelogEntryCard.tsx. (3) src/components/embarque/TabTracking.tsx pasa de 252 a 88 líneas: nuevos subcomponentes en components/embarque/tracking/ — TrackingEventTimeline.tsx (línea de tiempo con íconos por tipo) y TrackingNuevoEventoForm.tsx (Card + react-hook-form + zod + mutación). (4) src/components/embarque/DialogBolContainers.tsx pasa de 246 a 95 líneas: lógica BL + sync + persistencia movida a hooks/embarque/useDialogBolContainers.ts; render del resultado en components/embarque/dialogBol/BolContainersResult.tsx. Tests: 314 verdes. Sin cambios de UI ni de comportamiento. Quedan 13 componentes >200 líneas (próximos: DataTable 336, AppSidebar 216, AdminOrganizaciones 225, etc.).",
+  },
+  {
     version: "8.146.0",
     date: "2026-05-14",
     type: "minor",
