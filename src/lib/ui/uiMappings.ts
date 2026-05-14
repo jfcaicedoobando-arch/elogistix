@@ -61,3 +61,41 @@ export const roleLabels: Record<string, string> = {
 };
 
 export const getRoleLabel = (role: string): string => roleLabels[role] ?? role;
+
+/** Color del bullet de timeline para una nota según su tipo. */
+export const getNotaTipoColorClass = (tipo: string): string => {
+  if (tipo === "cambio_estado") return "bg-accent";
+  if (tipo === "nota") return "bg-warning";
+  return "bg-muted-foreground";
+};
+
+/** Color del indicador de estado de un documento de embarque. */
+export const getDocEstadoColorClass = (estado: string): string => {
+  if (estado === "Validado" || estado === "Recibido") return "bg-success";
+  return "bg-destructive";
+};
+
+/** Clases del círculo numerado del StepIndicator del wizard. */
+export const getStepIndicatorCircleClass = (
+  currentStep: number,
+  stepNum: number,
+): string => {
+  if (currentStep > stepNum) return "bg-success text-success-foreground";
+  if (currentStep === stepNum) return "bg-accent text-accent-foreground";
+  return "bg-muted text-muted-foreground";
+};
+
+/** Tono semántico para días vencidos (umbral 30/15). */
+export type SemanticTone = "destructive" | "warning" | "default";
+export const getDiasVencidosTone = (dias: number): SemanticTone => {
+  if (dias > 30) return "destructive";
+  if (dias > 15) return "warning";
+  return "default";
+};
+
+/** Color de texto para % de margen de profit (negativo, bajo, sano). */
+export const getProfitToneClass = (margenPct: number): string => {
+  if (margenPct < 0) return "text-destructive";
+  if (margenPct < 10) return "text-warning";
+  return "text-success";
+};
