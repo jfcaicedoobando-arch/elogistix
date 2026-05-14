@@ -2,6 +2,14 @@ import type { ChangelogEntry } from "../../../changelogData";
 
 export const chunk0: ChangelogEntry[] = [
   {
+    version: "8.135.4",
+    date: "2026-05-14",
+    type: "patch",
+    title: "Optimización: queries de DB lineales y en paralelo",
+    summary: "Se eliminaron loops secuenciales con await en exportación de embarques, configuración y portal — ahora las páginas y actualizaciones se piden en una sola ola paralela.",
+    description: "fetchEmbarquesParaExport reemplaza el while(true) con await secuencial por un conteo exacto + Promise.all sobre todas las páginas necesarias. useEmbarquesPageController paraleliza los chunks de fetchEmbarquesListExtras al exportar CSV. updateConfiguracionItems y updateConfiguracionGlobalItems pasan a Promise.all (mismo patrón que updateConfiguracionByCategoriaClave). fetchPortalCotizacion usa join embebido (embarques(expediente)) para traer el expediente en la misma query, eliminando un round-trip condicional. Sin cambios funcionales ni de UI.",
+  },
+  {
     version: "8.135.3",
     date: "2026-05-12",
     type: "patch",
