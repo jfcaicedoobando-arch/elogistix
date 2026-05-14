@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import type { DataTableColumn } from "@/components/shared/DataTable";
 import type { FilaHueco } from "@/services/facturas/huecoFacturacion";
 import { formatCurrency, formatDate, toTitleCase } from "@/lib/formatters";
+import { getDiasVencidosTone } from "@/lib/ui/uiMappings";
 import { cn } from "@/lib/utils";
 
 export const huecoFacturacionColumns: DataTableColumn<FilaHueco>[] = [

@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Link } from "react-router-dom";
 import { getEstadoColor, getEstadoBarColor } from "@/lib/ui/uiMappings";
+import { pluralS } from "@/lib/formatters";
 
 interface Props {
   total: number;

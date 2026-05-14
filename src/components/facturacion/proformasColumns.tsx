@@ -7,7 +7,7 @@ import { Download, FileCheck2, FileText, FileCode2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { type DataTableColumn } from "@/components/shared/DataTable";
-import { formatCurrency, formatDate, toTitleCase, nombreDesdeEmail } from "@/lib/formatters";
+import { formatCurrency, formatDate, toTitleCase, nombreDesdeEmail, formatDiasCredito } from "@/lib/formatters";
 import type { ProformaConFactura, ProformaRow } from "@/hooks/embarque/useProformas";
 
 interface BuildArgs {

@@ -10,6 +10,7 @@ import { useNavigate } from "react-router-dom";
 import { DataTable } from "@/components/shared/DataTable";
 import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
 import { formatCurrency, toTitleCase } from "@/lib/formatters";
+import { getProfitToneClass } from "@/lib/ui/uiMappings";
 import { useTabProyeccionController } from "@/hooks/facturacion/useTabProyeccionController";
 import { HuecoFacturacionCard } from "./HuecoFacturacionCard";
 import { CierreCard } from "./CierreCard";
