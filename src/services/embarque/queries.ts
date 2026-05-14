@@ -114,25 +114,24 @@ export async function fetchEmbarquesParaExport(
 
   // Aplica los filtros comunes a un query base. Permite reutilizar el armado
   // tanto para el conteo (head:true) como para cada página.
-  const applyFilters = <T extends ReturnType<typeof supabase.from<'embarques'>>['select']>(
-    q: ReturnType<T>,
-  ) => {
-    let query = q as ReturnType<T>;
-    if (f.organizationId) query = (query as any).eq('organization_id', f.organizationId);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const applyFilters = (q: any): any => {
+    let query = q;
+    if (f.organizationId) query = query.eq('organization_id', f.organizationId);
     if (f.search) {
-      query = (query as any).or(
+      query = query.or(
         `expediente.ilike.%${f.search}%,cliente_nombre.ilike.%${f.search}%,descripcion_mercancia.ilike.%${f.search}%,bl_master.ilike.%${f.search}%`,
       );
     }
     if (f.filterModo !== 'todos') {
-      query = (query as any).eq('modo', f.filterModo as TablesInsert<'embarques'>['modo']);
+      query = query.eq('modo', f.filterModo as TablesInsert<'embarques'>['modo']);
     }
-    if (f.filterCliente !== 'todos') query = (query as any).eq('cliente_id', f.filterCliente);
-    if (f.filterOperador !== 'todos') query = (query as any).eq('operador', f.filterOperador);
-    if (f.filterProforma === 'con') query = (query as any).eq('tiene_proforma', true);
-    else if (f.filterProforma === 'sin') query = (query as any).eq('tiene_proforma', false);
-    if (f.fechaDesde) query = (query as any).gte('etd', f.fechaDesde);
-    if (f.fechaHasta) query = (query as any).lte('eta', f.fechaHasta);
+    if (f.filterCliente !== 'todos') query = query.eq('cliente_id', f.filterCliente);
+    if (f.filterOperador !== 'todos') query = query.eq('operador', f.filterOperador);
+    if (f.filterProforma === 'con') query = query.eq('tiene_proforma', true);
+    else if (f.filterProforma === 'sin') query = query.eq('tiene_proforma', false);
+    if (f.fechaDesde) query = query.gte('etd', f.fechaDesde);
+    if (f.fechaHasta) query = query.lte('eta', f.fechaHasta);
     return query;
   };
 
