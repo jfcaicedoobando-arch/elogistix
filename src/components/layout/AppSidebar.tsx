@@ -1,5 +1,4 @@
 import { memo, forwardRef } from "react";
-import { Avatar } from "@/components/ui/avatar";
 import { useTheme } from "@/contexts/ThemeContext";
 import { BrandLockup } from "@/components/layout/BrandLockup";
 import { useLocation } from "react-router-dom";
