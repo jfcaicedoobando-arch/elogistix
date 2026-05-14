@@ -93,22 +93,6 @@ export const recentChangelog: ChangelogEntry[] = [
     summary: "El tab Tracking muestra ahora un stepper con las 5 fases canónicas (Cotización → Confirmado → En Tránsito → Llegada → Cerrado) y notas en la misma vista.",
     description: "Nuevo TrackingFasesTimeline (stepper horizontal en desktop, vertical en móvil) con estado completada/actual/pendiente y fecha por fase. Lógica pura en lib/domain/embarqueFases.ts con tests. TabTracking incluye TabNotas al final.",
   },
-  {
-    version: "8.135.6",
-    date: "2026-05-14",
-    type: "patch",
-    title: "Refactor UI: early returns para estados de carga",
-    summary: "Tarjetas y páginas con loading/empty/contenido usan ahora helpers renderBody() con early returns; el JSX principal queda plano y legible.",
-    description: "Refactorizados AuditoriaTendenciaChart, ReportesTopChart, ProximosArribosCard, AlertasDemoraCard, CargasActivasClienteCard, TablaContactos, TabTracking, TabProformasPendientes, Bitacora, Operaciones y Auditoria. Sin cambios visuales.",
-  },
-  {
-    version: "8.135.5",
-    date: "2026-05-14",
-    type: "patch",
-    title: "Refactor UI: ternarios anidados reemplazados por helpers nombrados",
-    summary: "18 archivos en components/pages dejan de usar ternarios encadenados; ahora usan helpers reutilizables o funciones locales con if/else.",
-    description: "Helpers nuevos en lib/formatters (pluralS, formatDiasCredito) y lib/ui/uiMappings (getNotaTipoColorClass, getDocEstadoColorClass, getStepIndicatorCircleClass, getDiasVencidosTone, getProfitToneClass). Sin cambios visuales.",
-  },
 ];
 
 /** Deduplica por version conservando la primera ocurrencia (recentChangelog gana). */
