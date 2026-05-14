@@ -2,6 +2,14 @@ import type { ChangelogEntry } from "../../../changelogData";
 
 export const chunk0: ChangelogEntry[] = [
   {
+    version: "8.140.0",
+    date: "2026-05-14",
+    type: "minor",
+    title: "Auditoría arquitectónica: controllers de auditoría + RHF en TabTracking",
+    summary: "MarcarRevisadoDialog y AsignarResponsableDialog quedan como UI pura sobre nuevos hooks controller, y TabTracking migra su formulario a react-hook-form + zod.",
+    description: "Pasos 6 y 7 de la auditoría. (1) Nuevos hooks hooks/auditoria/useMarcarRevisadoController y useAsignarResponsableController concentran estado local, sincronización con la revisión existente y handlers (guardar/eliminar/snooze/quitarSnooze/comentario en el primero; submit con 'tomarlo yo' en el segundo). Los diálogos respectivos quedaron como componentes de presentación que sólo orquestan ctrl.* sin tocar mutations directamente. (2) src/components/embarque/TabTracking.tsx migra el formulario inline (4 useState ad-hoc) a react-hook-form + zodResolver con eventoSchema (tipo requerido, fecha requerida, ubicación ≤120, descripción ≤500). Errores se muestran inline; el botón 'Guardar Evento' se deshabilita por isValid en lugar de chequeo manual. Pendientes: rotar v8/chunks/0.ts a v8/chunks/6.ts (~1078 líneas), documentar convenciones en ARCHITECTURE.md y considerar lib/domain/auditoria.ts con reglas puras testables.",
+  },
+  {
     version: "8.139.0",
     date: "2026-05-14",
     type: "minor",

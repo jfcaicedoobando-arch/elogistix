@@ -10,3 +10,5 @@ export * from "./useAuditoriaSnapshots";
 export * from "./useHallazgosTablaState";
 export * from "./useOrgMembersAsignables";
 export * from "./useSnoozeHallazgo";
+export * from "./useAsignarResponsableController";
+export * from "./useMarcarRevisadoController";
