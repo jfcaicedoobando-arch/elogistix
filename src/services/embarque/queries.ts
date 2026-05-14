@@ -139,15 +139,15 @@ export async function fetchEmbarquesParaExport(
   const countQueryBase = supabase
     .from('embarques')
     .select(EMBARQUE_LIST_COLUMNS, { count: 'exact', head: true });
-  const { count, error: countErr } = await applyFilters(countQueryBase as any);
+  const { count, error: countErr } = await applyFilters(countQueryBase);
   if (countErr) throw countErr;
-  const total = count ?? 0;
+  const total = (count as number | null) ?? 0;
   if (total === 0) return [];
 
   // 2) Disparar todas las páginas en paralelo (lineal, sin loop secuencial con await).
   const pageCount = Math.ceil(total / PAGE);
   const pages = await Promise.all(
-    Array.from({ length: pageCount }, (_, i) => {
+    Array.from({ length: pageCount }, async (_, i) => {
       const from = i * PAGE;
       const to = Math.min(from + PAGE - 1, total - 1);
       const base = supabase
@@ -155,10 +155,9 @@ export async function fetchEmbarquesParaExport(
         .select(EMBARQUE_LIST_COLUMNS)
         .order('created_at', { ascending: false })
         .range(from, to);
-      return (applyFilters(base as any) as any).then((res: { data: unknown; error: unknown }) => {
-        if (res.error) throw res.error;
-        return (res.data ?? []) as EmbarqueRow[];
-      });
+      const { data, error } = await applyFilters(base);
+      if (error) throw error;
+      return (data ?? []) as EmbarqueRow[];
     }),
   );
   return pages.flat();
