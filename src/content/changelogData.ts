@@ -22,6 +22,14 @@ export interface ChangelogEntry {
  */
 export const recentChangelog: ChangelogEntry[] = [
   {
+    version: "8.146.0",
+    date: "2026-05-14",
+    type: "minor",
+    title: "Power of 10 — Fase 4: refactor MarcarRevisadoDialog y TrackingLiveCard",
+    summary: "MarcarRevisadoDialog (306 → 100) y TrackingLiveCard (281 → 56) se parten en subcomponentes por sección. Componentes >200 líneas: 19 → 17.",
+    description: "Segunda iteración de la Fase 4. (1) MarcarRevisadoDialog se reduce a shell que orquesta tabs y footer; los tres tabs viven en src/components/auditoria/marcarRevisado/ (AccionTab + AccionButton, ComentariosTab, SnoozeTab) y el resumen del hallazgo en HallazgoSummary. (2) TrackingLiveCard se reduce a un Card con Header + delegación; nuevos subcomponentes en src/components/embarque/trackingLive/ (TrackingActions, TrackingWarnings, TrackingFechasPropuestas, TrackingSummaryGrid). El hook controller useTrackingLiveCard sigue siendo el único punto de lógica. Tests: 314 verdes. Sin cambios visibles ni de comportamiento. Quedan 17 componentes >200 líneas (próximos: PortalLayout 266, Changelog page 261, TabTracking 252, DialogBolContainers 246).",
+  },
+  {
     version: "8.145.0",
     date: "2026-05-14",
     type: "minor",
@@ -84,14 +92,6 @@ export const recentChangelog: ChangelogEntry[] = [
     title: "Auditoría arquitectónica: split de queries y controller de tracking",
     summary: "services/embarque/queries.ts (355 líneas) se partió en 6 submódulos por subdominio y TrackingLiveCard ahora consume un hook controller dedicado.",
     description: "Continuación de la auditoría arquitectónica. (1) services/embarque/queries.ts pasó a ser una carpeta queries/ con archivos por subdominio: listado.ts (lista, paginada, export, relacionados, list extras RPC), detalle.ts (byId + get_embarque_full), conceptos.ts (venta + costo), colaterales.ts (documentos, notas, facturas), expedientes.ts (agrupación por folio) y proveedores.ts. El barrel queries/index.ts re-exporta todo, así no cambian imports en consumidores. (2) Toda la lógica de TrackingLiveCard se movió a hooks/embarque/useTrackingLiveCard.ts: queries/mutations de JSONCargo, estado del diálogo BL, dismiss de fechas, derivados de prefix mismatch / naviera no soportada, handlers onSync y onAplicarFechas con feedback de toasts. El componente queda como render puro consumiendo el hook, mucho más fácil de testear y reusar. Pendientes restantes (próxima iteración): crear lib/domain/auditoria.ts con tests y reducir MarcarRevisadoDialog (409 líneas) y AsignarResponsableDialog (242) a UI + controller; migrar TabTracking a react-hook-form. Tests: 298 verdes (pre-existente changelog ≤10 sigue rojo).",
-  },
-  {
-    version: "8.138.0",
-    date: "2026-05-14",
-    type: "minor",
-    title: "Auditoría arquitectónica: limpieza de capas",
-    summary: "Unificado useToast (eliminado duplicado), DialogBolContainers ya no llama Supabase directo, tipos de fila de embarque migrados a types/embarque.ts.",
-    description: "Resultado de la auditoría de arquitectura: (1) eliminado src/hooks/shared/use-toast.ts (re-export huérfano que duplicaba el singleton de toasts); (2) DialogBolContainers ya no importa @/integrations/supabase/client — la actualización del contenedor pasa por el nuevo services/embarque/contenedor.ts y el hook useActualizarContenedorEmbarque; (3) los aliases EmbarqueRow/ConceptoVentaRow/ConceptoCostoRow/DocumentoEmbarqueRow/NotaEmbarqueRow se centralizaron en src/types/embarque.ts y el barrel hooks/embarque/useEmbarques.ts los re-exporta para compatibilidad. Pendientes de la auditoría (próximas iteraciones): partir services/embarque/queries.ts, extraer hooks controller en TrackingLiveCard y dialogs de Auditoría, migrar TabTracking a RHF, y rotar v8/chunks/0.ts.",
   },
 ];
 
