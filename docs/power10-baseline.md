@@ -115,13 +115,13 @@ Aplicable sólo a queries que alimentan listas visibles. Las queries agregadas (
 - `src/services/catalogos/index.ts:44` — .from().select() sin .range/.limit/.single
 - `src/services/catalogos/index.ts:69` — .from().select() sin .range/.limit/.single
 - `src/services/catalogos/index.ts:94` — .from().select() sin .range/.limit/.single
+- `src/services/cliente-usuarios/index.ts:11` — .from().select() sin .range/.limit/.single
 - `src/services/cliente/contactos.ts:11` — .from().select() sin .range/.limit/.single
 - `src/services/cliente/crud.ts:65` — .from().select() sin .range/.limit/.single
 - `src/services/cliente/crud.ts:76` — .from().select() sin .range/.limit/.single
 - `src/services/cliente/financials.ts:21` — .from().select() sin .range/.limit/.single
 - `src/services/cliente/relacionados.ts:5` — .from().select() sin .range/.limit/.single
 - `src/services/cliente/relacionados.ts:17` — .from().select() sin .range/.limit/.single
-- `src/services/cliente-usuarios/index.ts:11` — .from().select() sin .range/.limit/.single
 - `src/services/configuracion/index.ts:21` — .from().select() sin .range/.limit/.single
 - `src/services/configuracion/index.ts:48` — .from().select() sin .range/.limit/.single
 - `src/services/configuracion/index.ts:83` — .from().select() sin .range/.limit/.single
