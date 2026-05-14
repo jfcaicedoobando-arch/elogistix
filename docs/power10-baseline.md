@@ -1,6 +1,6 @@
 # Power of 10 — Baseline
 
-_Generado por `scripts/audit-power10.ts` sobre 529 archivos de `src/`._
+_Generado por `scripts/audit-power10.ts` sobre 539 archivos de `src/`._
 
 Las heurísticas son conservadoras (prefieren falsos positivos). Validar manualmente antes de refactorizar. Ver ARCHITECTURE.md §20.
 
@@ -8,37 +8,29 @@ Las heurísticas son conservadoras (prefieren falsos positivos). Validar manualm
 
 | Regla | Hallazgos |
 |---|---:|
-| #4 Componentes >200 líneas | 10 |
+| #4 Componentes >200 líneas | 5 |
 | #5/#10 `any` explícito | 0 |
 | #3 `useEffect` sin cleanup | 1 |
 | #2 Queries de lista sin paginar | 68 |
 
-## Regla #4 — Componentes >200 líneas (10)
+## Regla #4 — Componentes >200 líneas (5)
 
 Componentes y páginas que superan el umbral. Refactor: extraer `use<X>Controller` + subcomponentes.
 
 | Dominio | Hallazgos |
 |---|---:|
-| `components/cotizacion` | 2 |
-| `pages/cotizaciones` | 2 |
-| `components/auditoria` | 1 |
+| `components/cotizacion` | 1 |
 | `components/facturacion` | 1 |
-| `pages/admin` | 1 |
 | `pages/clientes` | 1 |
-| `pages/embarques` | 1 |
+| `pages/cotizaciones` | 1 |
 | `pages/portal` | 1 |
 
 <details><summary>Detalle</summary>
 
-- `src/components/auditoria/AsignarResponsableDialog.tsx` — 219 líneas
-- `src/components/cotizacion/CotizacionWizardLayout.tsx` — 229 líneas
 - `src/components/cotizacion/cotizacionesColumns.tsx` — 209 líneas
 - `src/components/facturacion/TabProyeccion.tsx` — 217 líneas
-- `src/pages/admin/AdminUsuarios.tsx` — 222 líneas
 - `src/pages/clientes/ClienteDetalle.tsx` — 206 líneas
 - `src/pages/cotizaciones/CotizacionDetalle.tsx` — 219 líneas
-- `src/pages/cotizaciones/Cotizaciones.tsx` — 216 líneas
-- `src/pages/embarques/Embarques.tsx` — 210 líneas
 - `src/pages/portal/PortalEmbarqueDetalle.tsx` — 239 líneas
 
 </details>
