@@ -9,7 +9,7 @@ Las heurísticas son conservadoras (prefieren falsos positivos). Validar manualm
 | Regla | Hallazgos |
 |---|---:|
 | #4 Componentes >200 líneas | 19 |
-| #5/#10 `any` explícito | 1 |
+| #5/#10 `any` explícito | 0 |
 | #3 `useEffect` sin cleanup | 1 |
 | #2 Queries de lista sin paginar | 68 |
 
@@ -57,19 +57,11 @@ Componentes y páginas que superan el umbral. Refactor: extraer `use<X>Controlle
 
 </details>
 
-## Regla #5/#10 — `any` explícito (1)
+## Regla #5/#10 — `any` explícito (0)
 
 Reemplazar por tipos generados de Supabase, `unknown` + narrowing, o documentar override según §17.b.
 
-| Dominio | Hallazgos |
-|---|---:|
-| `content/changelogData.ts` | 1 |
-
-<details><summary>Detalle</summary>
-
-- `src/content/changelogData.ts:30` — description: "Cierre de la Fase 3 del plan The Power of 10. (1) eslint.config.js: `@typescript-eslint/no-explicit-any: e
-
-</details>
+_Sin hallazgos._
 
 ## Regla #3 — `useEffect` sin cleanup (heurística) (1)
 
