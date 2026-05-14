@@ -1,6 +1,6 @@
 # Power of 10 — Baseline
 
-_Generado por `scripts/audit-power10.ts` sobre 496 archivos de `src/`._
+_Generado por `scripts/audit-power10.ts` sobre 499 archivos de `src/`._
 
 Las heurísticas son conservadoras (prefieren falsos positivos). Validar manualmente antes de refactorizar. Ver ARCHITECTURE.md §20.
 
@@ -8,12 +8,12 @@ Las heurísticas son conservadoras (prefieren falsos positivos). Validar manualm
 
 | Regla | Hallazgos |
 |---|---:|
-| #4 Componentes >200 líneas | 20 |
+| #4 Componentes >200 líneas | 19 |
 | #5/#10 `any` explícito | 0 |
 | #3 `useEffect` sin cleanup | 1 |
 | #2 Queries de lista sin paginar | 68 |
 
-## Regla #4 — Componentes >200 líneas (20)
+## Regla #4 — Componentes >200 líneas (19)
 
 Componentes y páginas que superan el umbral. Refactor: extraer `use<X>Controller` + subcomponentes.
 
@@ -28,7 +28,6 @@ Componentes y páginas que superan el umbral. Refactor: extraer `use<X>Controlle
 | `components/layout` | 1 |
 | `components/portal` | 1 |
 | `components/shared` | 1 |
-| `pages/Auditoria.tsx` | 1 |
 | `pages/clientes` | 1 |
 | `pages/dashboard` | 1 |
 | `pages/embarques` | 1 |
@@ -47,7 +46,6 @@ Componentes y páginas que superan el umbral. Refactor: extraer `use<X>Controlle
 - `src/components/layout/AppSidebar.tsx` — 216 líneas
 - `src/components/portal/PortalLayout.tsx` — 266 líneas
 - `src/components/shared/DataTable.tsx` — 336 líneas
-- `src/pages/Auditoria.tsx` — 297 líneas
 - `src/pages/admin/AdminOrganizaciones.tsx` — 225 líneas
 - `src/pages/admin/AdminUsuarios.tsx` — 222 líneas
 - `src/pages/clientes/ClienteDetalle.tsx` — 206 líneas

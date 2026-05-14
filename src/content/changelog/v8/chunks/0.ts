@@ -2,6 +2,14 @@ import type { ChangelogEntry } from "../../../changelogData";
 
 export const chunk0: ChangelogEntry[] = [
   {
+    version: "8.145.0",
+    date: "2026-05-14",
+    type: "minor",
+    title: "Power of 10 — Fase 4: refactor Auditoria.tsx (297 → 87 líneas)",
+    summary: "La página Auditoria queda como shell delgado: extraídos AuditoriaHallazgosTab, AuditoriaPorReglaTab y helper puro lib/domain/auditoriaCsv. Componentes >200 líneas: 20 → 19.",
+    description: "Primer dominio de la Fase 4 del plan The Power of 10 (ARCHITECTURE.md §20.4 — componentes ≤200 líneas). (1) src/pages/Auditoria.tsx pasa de 297 a 87 líneas: se elimina la lógica de renderHallazgosTab/renderPorReglaTab y la construcción de filas para CSV; queda solo el shell con PageHeader, Tabs, drill-down y delegación a subcomponentes. (2) Nuevo src/components/auditoria/AuditoriaHallazgosTab.tsx (118 líneas): KPIs por severidad, banner de revisados con toggle Ver/Ocultar, filtros de severidad/modo, contador y HallazgosTablaPaginada. (3) Nuevo src/components/auditoria/AuditoriaPorReglaTab.tsx (47 líneas): Accordion por regla con badge de conteo y HallazgoTabla embebida. (4) Nuevo src/lib/domain/auditoriaCsv.ts (37 líneas): función pura exportHallazgosCsv() sin dependencias de React, con la constante COLUMNS y el mapeo de filas — testable y reutilizable. (5) scripts/audit-power10.ts también ignora src/content/changelogData.ts (las descripciones del changelog contienen literales como 'as any' que son strings, no `any` de TypeScript). Tests: 314 verdes. Sin cambios visibles ni de comportamiento; sólo reorganización interna. Pendientes Fase 4 (próxima iteración): MarcarRevisadoDialog (306), TrackingLiveCard (281), PortalLayout (266), Changelog page (261), TabTracking (252), DialogBolContainers (246).",
+  },
+  {
     version: "8.144.0",
     date: "2026-05-14",
     type: "minor",

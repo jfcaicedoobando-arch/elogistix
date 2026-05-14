@@ -22,6 +22,14 @@ export interface ChangelogEntry {
  */
 export const recentChangelog: ChangelogEntry[] = [
   {
+    version: "8.145.0",
+    date: "2026-05-14",
+    type: "minor",
+    title: "Power of 10 — Fase 4: refactor Auditoria.tsx (297 → 87 líneas)",
+    summary: "La página Auditoria queda como shell delgado: extraídos AuditoriaHallazgosTab, AuditoriaPorReglaTab y helper puro lib/domain/auditoriaCsv. Componentes >200 líneas: 20 → 19.",
+    description: "Primer dominio de la Fase 4 del plan The Power of 10. (1) src/pages/Auditoria.tsx pasa de 297 a 87 líneas eliminando renderHallazgosTab/renderPorReglaTab inline y la lógica de exportCsv. (2) Nuevo src/components/auditoria/AuditoriaHallazgosTab.tsx (KPIs + filtros + toggle revisados + HallazgosTablaPaginada). (3) Nuevo src/components/auditoria/AuditoriaPorReglaTab.tsx (accordion por regla con HallazgoTabla). (4) Nuevo src/lib/domain/auditoriaCsv.ts con exportHallazgosCsv() — función pura sin dependencias de React, mapeo de filas y constante de columnas. (5) scripts/audit-power10.ts también ignora src/content/changelogData.ts (descripciones contienen 'as any' como texto). Tests: 314 verdes. Sin cambios de UI ni de comportamiento.",
+  },
+  {
     version: "8.144.0",
     date: "2026-05-14",
     type: "minor",
@@ -84,14 +92,6 @@ export const recentChangelog: ChangelogEntry[] = [
     title: "Auditoría arquitectónica: limpieza de capas",
     summary: "Unificado useToast (eliminado duplicado), DialogBolContainers ya no llama Supabase directo, tipos de fila de embarque migrados a types/embarque.ts.",
     description: "Resultado de la auditoría de arquitectura: (1) eliminado src/hooks/shared/use-toast.ts (re-export huérfano que duplicaba el singleton de toasts); (2) DialogBolContainers ya no importa @/integrations/supabase/client — la actualización del contenedor pasa por el nuevo services/embarque/contenedor.ts y el hook useActualizarContenedorEmbarque; (3) los aliases EmbarqueRow/ConceptoVentaRow/ConceptoCostoRow/DocumentoEmbarqueRow/NotaEmbarqueRow se centralizaron en src/types/embarque.ts y el barrel hooks/embarque/useEmbarques.ts los re-exporta para compatibilidad. Pendientes de la auditoría (próximas iteraciones): partir services/embarque/queries.ts, extraer hooks controller en TrackingLiveCard y dialogs de Auditoría, migrar TabTracking a RHF, y rotar v8/chunks/0.ts.",
-  },
-  {
-    version: "8.136.0",
-    date: "2026-05-14",
-    type: "minor",
-    title: "Tracking: línea de tiempo de fases del embarque",
-    summary: "El tab Tracking muestra ahora un stepper con las 5 fases canónicas (Cotización → Confirmado → En Tránsito → Llegada → Cerrado) y notas en la misma vista.",
-    description: "Nuevo TrackingFasesTimeline (stepper horizontal en desktop, vertical en móvil) con estado completada/actual/pendiente y fecha por fase. Lógica pura en lib/domain/embarqueFases.ts con tests. TabTracking incluye TabNotas al final.",
   },
 ];
 
