@@ -1,8 +1,7 @@
 /**
  * Diálogo de asignación de responsable a un hallazgo de auditoría.
- * Soporta: asignar a otro usuario, "tomarlo" uno mismo, fijar fecha límite y quitar asignación.
+ * Pura presentación: la lógica vive en `useAsignarResponsableController`.
  */
-import { useEffect, useState } from "react";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import { CalendarIcon, Hand, Loader2, UserPlus } from "lucide-react";
@@ -27,8 +26,10 @@ import {
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { cn } from "@/lib/utils";
-import { useAuth } from "@/contexts/AuthContext";
-import { useAsignarResponsable, useOrgMembersAsignables } from "@/hooks/auditoria";
+import {
+  SIN_RESPONSABLE,
+  useAsignarResponsableController,
+} from "@/hooks/auditoria/useAsignarResponsableController";
 import type { AuditoriaRevision, HallazgoAuditoria } from "@/types/auditoria";
 
 interface Props {
@@ -38,56 +39,20 @@ interface Props {
   onOpenChange: (open: boolean) => void;
 }
 
-const SIN_RESPONSABLE = "__sin__";
-
 export function AsignarResponsableDialog({
   hallazgo,
   revisionExistente,
   open,
   onOpenChange,
 }: Props) {
-  const { user } = useAuth();
-  const { data: asignables = [], isLoading: loadingUsers } = useOrgMembersAsignables();
-  const asignar = useAsignarResponsable();
-
-  const [responsableId, setResponsableId] = useState<string>(SIN_RESPONSABLE);
-  const [fechaLimite, setFechaLimite] = useState<Date | undefined>();
-
-  useEffect(() => {
-    if (!open) return;
-    setResponsableId(revisionExistente?.responsable_id ?? SIN_RESPONSABLE);
-    setFechaLimite(
-      revisionExistente?.fecha_limite
-        ? new Date(`${revisionExistente.fecha_limite}T00:00:00`)
-        : undefined,
-    );
-  }, [open, revisionExistente]);
+  const ctrl = useAsignarResponsableController({
+    hallazgo,
+    revisionExistente,
+    open,
+    onClose: () => onOpenChange(false),
+  });
 
   if (!hallazgo) return null;
-
-  const optEmail = (id: string) =>
-    asignables.find((a) => a.id === id)?.email ?? "";
-
-  const submit = async (tomar = false) => {
-    const id = tomar ? user?.id ?? null : responsableId === SIN_RESPONSABLE ? null : responsableId;
-    const email = tomar
-      ? user?.email ?? ""
-      : id
-        ? optEmail(id) || revisionExistente?.responsable_email || ""
-        : "";
-    await asignar.mutateAsync({
-      hallazgo,
-      responsableId: id,
-      responsableEmail: email,
-      fechaLimite: fechaLimite ? format(fechaLimite, "yyyy-MM-dd") : null,
-      tomar,
-    });
-    onOpenChange(false);
-  };
-
-  const yaAsignado = !!revisionExistente?.responsable_id;
-  const cargando = asignar.isPending;
-  const yoSoyResponsable = revisionExistente?.responsable_id === user?.id;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -95,7 +60,7 @@ export function AsignarResponsableDialog({
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <UserPlus className="h-5 w-5 text-primary" />
-            {yaAsignado ? "Reasignar responsable" : "Asignar responsable"}
+            {ctrl.yaAsignado ? "Reasignar responsable" : "Asignar responsable"}
           </DialogTitle>
           <DialogDescription className="text-xs space-y-1 pt-1">
             <div>
@@ -113,13 +78,19 @@ export function AsignarResponsableDialog({
         <div className="space-y-3">
           <div className="space-y-1.5">
             <Label className="text-xs">Responsable</Label>
-            <Select value={responsableId} onValueChange={setResponsableId} disabled={loadingUsers}>
+            <Select
+              value={ctrl.responsableId}
+              onValueChange={ctrl.setResponsableId}
+              disabled={ctrl.loadingUsers}
+            >
               <SelectTrigger className="h-9 text-sm">
-                <SelectValue placeholder={loadingUsers ? "Cargando..." : "Selecciona un responsable"} />
+                <SelectValue
+                  placeholder={ctrl.loadingUsers ? "Cargando..." : "Selecciona un responsable"}
+                />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value={SIN_RESPONSABLE}>— Sin responsable —</SelectItem>
-                {asignables.map((u) => (
+                {ctrl.asignables.map((u) => (
                   <SelectItem key={u.id} value={u.id}>
                     {u.email}{" "}
                     <span className="text-muted-foreground text-[10px] ml-1">({u.role})</span>
@@ -138,30 +109,30 @@ export function AsignarResponsableDialog({
                   size="sm"
                   className={cn(
                     "w-full justify-start text-xs h-9",
-                    !fechaLimite && "text-muted-foreground",
+                    !ctrl.fechaLimite && "text-muted-foreground",
                   )}
                 >
                   <CalendarIcon className="mr-2 h-3.5 w-3.5" />
-                  {fechaLimite
-                    ? format(fechaLimite, "dd/MM/yyyy", { locale: es })
+                  {ctrl.fechaLimite
+                    ? format(ctrl.fechaLimite, "dd/MM/yyyy", { locale: es })
                     : "Sin fecha límite"}
                 </Button>
               </PopoverTrigger>
               <PopoverContent className="w-auto p-0" align="start">
                 <Calendar
                   mode="single"
-                  selected={fechaLimite}
-                  onSelect={setFechaLimite}
+                  selected={ctrl.fechaLimite}
+                  onSelect={ctrl.setFechaLimite}
                   initialFocus
                   locale={es}
                 />
-                {fechaLimite && (
+                {ctrl.fechaLimite && (
                   <div className="p-2 border-t">
                     <Button
                       variant="ghost"
                       size="sm"
                       className="w-full text-xs"
-                      onClick={() => setFechaLimite(undefined)}
+                      onClick={() => ctrl.setFechaLimite(undefined)}
                     >
                       Quitar fecha
                     </Button>
@@ -171,7 +142,7 @@ export function AsignarResponsableDialog({
             </Popover>
           </div>
 
-          {yaAsignado && revisionExistente && (
+          {ctrl.yaAsignado && revisionExistente && (
             <div className="rounded-md border bg-muted/40 p-2 text-[11px] space-y-0.5">
               <div className="flex items-center gap-1.5">
                 <span className="text-muted-foreground">Estado actual:</span>{" "}
@@ -208,28 +179,33 @@ export function AsignarResponsableDialog({
         </div>
 
         <DialogFooter className="gap-2 sm:gap-2">
-          {!yoSoyResponsable && (
+          {!ctrl.yoSoyResponsable && (
             <Button
               variant="outline"
               size="sm"
-              onClick={() => submit(true)}
-              disabled={cargando}
+              onClick={() => ctrl.submit(true)}
+              disabled={ctrl.cargando}
               className="mr-auto gap-1.5"
             >
               <Hand className="h-3.5 w-3.5" />
               Tomarlo yo
             </Button>
           )}
-          <Button variant="outline" size="sm" onClick={() => onOpenChange(false)} disabled={cargando}>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => onOpenChange(false)}
+            disabled={ctrl.cargando}
+          >
             Cancelar
           </Button>
-          <Button size="sm" onClick={() => submit(false)} disabled={cargando}>
-            {cargando ? (
+          <Button size="sm" onClick={() => ctrl.submit(false)} disabled={ctrl.cargando}>
+            {ctrl.cargando ? (
               <>
                 <Loader2 className="h-3.5 w-3.5 animate-spin mr-1.5" />
                 Guardando...
               </>
-            ) : yaAsignado ? (
+            ) : ctrl.yaAsignado ? (
               "Actualizar"
             ) : (
               "Asignar"
