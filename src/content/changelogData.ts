@@ -22,6 +22,14 @@ export interface ChangelogEntry {
  */
 export const recentChangelog: ChangelogEntry[] = [
   {
+    version: "8.143.0",
+    date: "2026-05-14",
+    type: "minor",
+    title: "Adopción de The Power of 10 — Fases 1 y 2",
+    summary: "10 reglas obligatorias para generar código (componentes ≤200, sin `any`, paginación en listas, cleanup en effects, manejar `error` de Supabase). Documentadas en ARCHITECTURE.md §20 y memorizadas. Baseline read-only en docs/power10-baseline.md.",
+    description: "ARCHITECTURE.md §20 + mem://principles/power-of-10 + scripts/audit-power10.ts (genera docs/power10-baseline.md). Sin cambios de código de aplicación. Fases 3 (ESLint) y 4 (limpieza por dominio) pendientes.",
+  },
+  {
     version: "8.142.0",
     date: "2026-05-14",
     type: "minor",
@@ -92,14 +100,6 @@ export const recentChangelog: ChangelogEntry[] = [
     title: "Refactor UI: ternarios anidados reemplazados por helpers nombrados",
     summary: "18 archivos en components/pages dejan de usar ternarios encadenados; ahora usan helpers reutilizables o funciones locales con if/else.",
     description: "Helpers nuevos en lib/formatters (pluralS, formatDiasCredito) y lib/ui/uiMappings (getNotaTipoColorClass, getDocEstadoColorClass, getStepIndicatorCircleClass, getDiasVencidosTone, getProfitToneClass). Sin cambios visuales.",
-  },
-  {
-    version: "8.135.4",
-    date: "2026-05-14",
-    type: "patch",
-    title: "Optimización: queries de DB lineales y en paralelo",
-    summary: "Las exportaciones de embarques, las actualizaciones de configuración y el detalle de cotización del portal ahora hacen sus consultas en paralelo, sin loops secuenciales.",
-    description: "fetchEmbarquesParaExport: conteo exacto + Promise.all de páginas. useEmbarquesPageController: chunks de fetchEmbarquesListExtras en paralelo. updateConfiguracionItems / updateConfiguracionGlobalItems: Promise.all en lugar de await en for. fetchPortalCotizacion: join embebido en una sola query. Sin cambios funcionales.",
   },
 ];
 
