@@ -60,10 +60,18 @@ export function TabTracking({ embarqueId, embarque, notas = [] }: Props) {
   const { toast } = useToast();
 
   const [formAbierto, setFormAbierto] = useState(false);
-  const [tipo, setTipo] = useState<string>('');
-  const [descripcion, setDescripcion] = useState('');
-  const [ubicacion, setUbicacion] = useState('');
-  const [fecha, setFecha] = useState(() => new Date().toISOString().slice(0, 16));
+
+  const form = useForm<EventoFormValues>({
+    resolver: zodResolver(eventoSchema),
+    defaultValues: defaultEventoValues(),
+  });
+  const {
+    control,
+    register,
+    handleSubmit,
+    reset,
+    formState: { errors, isValid },
+  } = form;
 
   function renderTimeline() {
     if (isLoading) return <EmptyStateInline loading message="Cargando eventos..." />;
@@ -117,28 +125,23 @@ export function TabTracking({ embarqueId, embarque, notas = [] }: Props) {
     );
   }
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!tipo) return;
+  const onSubmit = handleSubmit(async (values) => {
     try {
       await crearEvento.mutateAsync({
         embarqueId,
-        tipo,
-        descripcion,
-        ubicacion,
-        fecha: new Date(fecha).toISOString(),
+        tipo: values.tipo,
+        descripcion: values.descripcion ?? '',
+        ubicacion: values.ubicacion ?? '',
+        fecha: new Date(values.fecha).toISOString(),
         usuario: user?.email ?? '',
       });
       notifySuccess(toast, { title: 'Evento registrado' });
       setFormAbierto(false);
-      setTipo('');
-      setDescripcion('');
-      setUbicacion('');
-      setFecha(new Date().toISOString().slice(0, 16));
+      reset(defaultEventoValues());
     } catch (err: unknown) {
-      notifyError(toast, { title: 'Error al registrar evento', description: getErrorMessage(err)});
+      notifyError(toast, { title: 'Error al registrar evento', description: getErrorMessage(err) });
     }
-  };
+  });
 
   return (
     <div className="space-y-6">
