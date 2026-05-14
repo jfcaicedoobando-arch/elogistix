@@ -1,8 +1,8 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { formatDate, getOrigen, getDestino } from "@/lib/formatters";
 
-interface Props {
-  embarque: Parameters<typeof getOrigen>[0] & {
+type EmbarqueResumen = Parameters<typeof getOrigen>[0] &
+  Parameters<typeof getDestino>[0] & {
     etd?: string | null;
     eta?: string | null;
     naviera?: string | null;
@@ -16,6 +16,9 @@ interface Props {
     bl_master?: string | null;
     bl_house?: string | null;
   };
+
+interface Props {
+  embarque: EmbarqueResumen;
 }
 
 export function PortalEmbarqueResumenTab({ embarque }: Props) {
