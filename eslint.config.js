@@ -21,10 +21,13 @@ export default tseslint.config(
       ...reactHooks.configs.recommended.rules,
       "react-refresh/only-export-components": ["warn", { allowConstantExport: true }],
       "@typescript-eslint/no-unused-vars": "off",
+      // Power of 10 §5/§10 — Tipado estricto: prohibido `any` sin override documentado.
+      // Para casos legítimos puntuales usar `// eslint-disable-next-line @typescript-eslint/no-explicit-any`.
+      "@typescript-eslint/no-explicit-any": "error",
       // Architectural guardrails — prevent drift back into oversized files
       // Hard cap at 300 LOC; soft warning at 250 to encourage early splitting.
       "max-lines": ["warn", { max: 250, skipBlankLines: true, skipComments: true }],
-      "max-lines-per-function": ["warn", { max: 150, skipBlankLines: true, skipComments: true, IIFEs: true }],
+      "max-lines-per-function": ["warn", { max: 200, skipBlankLines: true, skipComments: true, IIFEs: true }],
       "complexity": ["warn", { max: 15 }],
       "max-depth": ["warn", 4],
       "max-params": ["warn", 5],
@@ -60,6 +63,7 @@ export default tseslint.config(
       "src/integrations/supabase/**",
       "src/data/changelogData.ts",
       "src/data/ports.ts",
+      "src/content/changelog/**",
       "**/*.test.ts",
       "**/*.test.tsx",
     ],

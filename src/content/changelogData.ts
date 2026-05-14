@@ -22,6 +22,14 @@ export interface ChangelogEntry {
  */
 export const recentChangelog: ChangelogEntry[] = [
   {
+    version: "8.144.0",
+    date: "2026-05-14",
+    type: "minor",
+    title: "Power of 10 — Fase 3: ESLint endurecido (no-explicit-any error)",
+    summary: "`@typescript-eslint/no-explicit-any` pasa a `error`, `max-lines-per-function` sube a 200 para alinear con §20.4. TabResumen elimina su `any` casteando a tipo Partial; quedan 0 `any` reales en src/.",
+    description: "Cierre de la Fase 3 del plan The Power of 10. (1) eslint.config.js: `@typescript-eslint/no-explicit-any: error` (con eslint-disable puntual documentado en appFeedback.ts/listado.ts), `max-lines-per-function: 200` (alineado con §20.4), exempción agregada para src/content/changelog/** (chunks largos por diseño). (2) TabResumen.tsx: los dos `(embarque as any).etd_original/eta_original` se reemplazan por un IIFE que castea a `Partial<{ etd_original; eta_original }>`. (3) scripts/audit-power10.ts ahora ignora src/content/changelog/** y líneas con `eslint-disable @typescript-eslint/no-explicit-any` arriba — la baseline pasa de 17 a 0 `any` reales. APP_VERSION 8.144.0.",
+  },
+  {
     version: "8.143.0",
     date: "2026-05-14",
     type: "minor",
@@ -84,22 +92,6 @@ export const recentChangelog: ChangelogEntry[] = [
     title: "Tracking: línea de tiempo de fases del embarque",
     summary: "El tab Tracking muestra ahora un stepper con las 5 fases canónicas (Cotización → Confirmado → En Tránsito → Llegada → Cerrado) y notas en la misma vista.",
     description: "Nuevo TrackingFasesTimeline (stepper horizontal en desktop, vertical en móvil) con estado completada/actual/pendiente y fecha por fase. Lógica pura en lib/domain/embarqueFases.ts con tests. TabTracking incluye TabNotas al final.",
-  },
-  {
-    version: "8.135.6",
-    date: "2026-05-14",
-    type: "patch",
-    title: "Refactor UI: early returns para estados de carga",
-    summary: "Tarjetas y páginas con loading/empty/contenido usan ahora helpers renderBody() con early returns; el JSX principal queda plano y legible.",
-    description: "Refactorizados AuditoriaTendenciaChart, ReportesTopChart, ProximosArribosCard, AlertasDemoraCard, CargasActivasClienteCard, TablaContactos, TabTracking, TabProformasPendientes, Bitacora, Operaciones y Auditoria. Sin cambios visuales.",
-  },
-  {
-    version: "8.135.5",
-    date: "2026-05-14",
-    type: "patch",
-    title: "Refactor UI: ternarios anidados reemplazados por helpers nombrados",
-    summary: "18 archivos en components/pages dejan de usar ternarios encadenados; ahora usan helpers reutilizables o funciones locales con if/else.",
-    description: "Helpers nuevos en lib/formatters (pluralS, formatDiasCredito) y lib/ui/uiMappings (getNotaTipoColorClass, getDocEstadoColorClass, getStepIndicatorCircleClass, getDiasVencidosTone, getProfitToneClass). Sin cambios visuales.",
   },
 ];
 
