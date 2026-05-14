@@ -93,14 +93,6 @@ export const recentChangelog: ChangelogEntry[] = [
     summary: "MarcarRevisadoDialog y AsignarResponsableDialog ahora usan hooks controller dedicados; el form de TabTracking migra a react-hook-form + zod.",
     description: "Pasos 6 y 7 de la auditoría arquitectónica. Nuevos useMarcarRevisadoController y useAsignarResponsableController encapsulan estado local, efectos de sincronización con la revisión existente y handlers (guardar, eliminar, snooze, quitarSnooze, agregar comentario, tomarlo yo). Los diálogos quedan como pura presentación. TabTracking migra su formulario inline (4 useState) a react-hook-form + zodResolver con eventoSchema (tipo requerido, fecha requerida, ubicación ≤120, descripción ≤500), errores inline y reset al guardar. Pendientes: rotar chunk0 → chunk6 (1078 líneas) y documentar convenciones en ARCHITECTURE.md.",
   },
-  {
-    version: "8.139.0",
-    date: "2026-05-14",
-    type: "minor",
-    title: "Auditoría arquitectónica: split de queries y controller de tracking",
-    summary: "services/embarque/queries.ts (355 líneas) se partió en 6 submódulos por subdominio y TrackingLiveCard ahora consume un hook controller dedicado.",
-    description: "Continuación de la auditoría arquitectónica. (1) services/embarque/queries.ts pasó a ser carpeta queries/ con archivos por subdominio. (2) Toda la lógica de TrackingLiveCard se movió a hooks/embarque/useTrackingLiveCard.ts.",
-  },
 ];
 
 /** Deduplica por version conservando la primera ocurrencia (recentChangelog gana). */
