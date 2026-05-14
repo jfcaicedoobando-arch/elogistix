@@ -15,6 +15,10 @@ import {
   useQuitarSnooze,
   useSnoozeHallazgo,
 } from "@/hooks/auditoria/useSnoozeHallazgo";
+import {
+  isSnoozeActivo,
+  minSnoozeDate as computeMinSnoozeDate,
+} from "@/lib/domain/auditoria";
 import type { AuditoriaRevision, HallazgoAuditoria } from "@/types/auditoria";
 
 interface Args {
@@ -52,11 +56,7 @@ export function useMarcarRevisadoController({
     setSnoozeMotivo(revisionExistente?.snooze_motivo ?? "");
   }, [open, revisionExistente]);
 
-  const minSnoozeDate = useMemo(() => {
-    const t = new Date();
-    t.setDate(t.getDate() + 1);
-    return t.toISOString().slice(0, 10);
-  }, []);
+  const minSnoozeDate = useMemo(() => computeMinSnoozeDate(), []);
 
   const yaRevisado =
     !!revisionExistente && revisionExistente.estado_revision === "revisado";
@@ -65,9 +65,7 @@ export function useMarcarRevisadoController({
     desmarcar.isPending ||
     snooze.isPending ||
     quitarSnooze.isPending;
-  const snoozeActivo =
-    !!revisionExistente?.snoozed_until &&
-    revisionExistente.snoozed_until >= new Date().toISOString().slice(0, 10);
+  const snoozeActivo = isSnoozeActivo(revisionExistente?.snoozed_until);
 
   const handleGuardar = async () => {
     if (!hallazgo) return;
