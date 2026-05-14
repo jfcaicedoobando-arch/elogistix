@@ -2,6 +2,14 @@ import type { ChangelogEntry } from "../../../changelogData";
 
 export const chunk0: ChangelogEntry[] = [
   {
+    version: "8.146.0",
+    date: "2026-05-14",
+    type: "minor",
+    title: "Power of 10 — Fase 4: refactor MarcarRevisadoDialog y TrackingLiveCard",
+    summary: "MarcarRevisadoDialog (306 → 100 líneas) y TrackingLiveCard (281 → 56 líneas) se parten en subcomponentes por sección. Componentes >200 líneas: 19 → 17.",
+    description: "Segunda iteración de la Fase 4 del plan The Power of 10 (ARCHITECTURE.md §20.4). (1) src/components/auditoria/MarcarRevisadoDialog.tsx pasa de 306 a 100 líneas: queda como shell que orquesta tabs y footer. Nuevos subcomponentes en src/components/auditoria/marcarRevisado/: AccionTab.tsx (acción tomada + meta de revisado, exporta también AccionButton para el footer), ComentariosTab.tsx (lista scrollable + composer), SnoozeTab.tsx (fecha + motivo + botones), HallazgoSummary.tsx (encabezado con expediente, cliente, detalle, badges de docs faltantes y banner de snooze activo). El controller useMarcarRevisadoController sigue siendo único punto de lógica. (2) src/components/embarque/TrackingLiveCard.tsx pasa de 281 a 56 líneas: shell de Card + delegación. Nuevos subcomponentes en src/components/embarque/trackingLive/: TrackingActions.tsx (botones Buscar BL Master + Sincronizar con tooltip de blMaster), TrackingWarnings.tsx (sinContenedor, naviera no soportada con CTA externo, prefix mismatch con sugerencias, sin sync previo, error JSONCargo), TrackingFechasPropuestas.tsx (banner de diff ETD/ETA/ATA con CTA Aplicar/Ignorar) y TrackingSummaryGrid.tsx (grid 2 columnas con Field interno). El hook useTrackingLiveCard mantiene toda la lógica. Tests: 314 verdes. Sin cambios visibles ni de comportamiento. Quedan 17 componentes >200 líneas; próximos objetivos: PortalLayout (266), Changelog page (261), TabTracking (252), DialogBolContainers (246).",
+  },
+  {
     version: "8.145.0",
     date: "2026-05-14",
     type: "minor",
