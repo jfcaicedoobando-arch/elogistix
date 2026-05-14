@@ -1,68 +1,79 @@
-## Objetivo
+# Plan: Bitácora más descriptiva
 
-Construir una vista de tracking por embarque que muestre una **línea de tiempo de fases canónicas** del ciclo de vida (Cotización → Confirmado → En Tránsito → Llegada → Cerrado) además de las notas existentes. Hoy el tab "Tracking" muestra eventos libres y notas, pero no un resumen visual del avance por fases.
+## Problema actual
 
-## Alcance
+`BitacoraActividad` muestra entradas genéricas tipo:
 
-Solo cambios de presentación en el tab Tracking del detalle de embarque (`/embarques/:id?tab=tracking`). No se modifica la base de datos, ni los hooks, ni la lógica de negocio.
+> *Juan — cambiar estado en Embarques — EXP-001 · hace 2h*
 
-## Diseño de la línea de tiempo
+Pero en la BD ya guardamos contexto rico en `detalles` (JSONB) que no se está aprovechando:
 
-Stepper horizontal en desktop / vertical en móvil, con 5 hitos:
+- `cambiar_estado` → `{ estado_anterior, estado_nuevo }`
+- `crear/editar` (embarques) → `{ modo, tipo, cliente, cotizacion_folio }`
+- `subir_documento` / `eliminar_documento` → nombre del documento
+- `factura` → folio, monto
+- `agregar_nota` → preview de la nota
+
+## Cambios propuestos
+
+### 1. Nuevo helper `src/lib/domain/bitacoraDescripcion.ts`
+
+Función pura `describirEntrada(entrada: EntradaBitacora): { titulo: string; contexto?: string }` con un switch por `accion + modulo`:
+
+| Acción | Salida ejemplo |
+|---|---|
+| `cambiar_estado` en `embarques` | **"Cambió estado de Arribo → En Aduana"** |
+| `crear` en `embarques` | **"Creó embarque marítimo de importación"** · contexto: cliente |
+| `editar` en `embarques` | **"Editó embarque"** · contexto: cliente + modo |
+| `subir_documento` | **"Subió {tipo_doc}"** |
+| `eliminar_documento` | **"Eliminó {tipo_doc}"** |
+| `agregar_nota` | **"Agregó nota:"** + preview 80 chars |
+| `factura` | **"Generó factura {folio}"** + monto formateado |
+| `crear` en `clientes/proveedores/cotizaciones` | **"Creó {entidad}"** |
+| `login` | **"Inició sesión"** |
+| fallback | comportamiento actual (acción + módulo capitalizado) |
+
+Pruebas unitarias en `__tests__/bitacoraDescripcion.test.ts` cubriendo cada rama.
+
+### 2. Rediseño de `BitacoraActividad.tsx`
+
+Layout por entrada:
 
 ```text
-●────●────●────●────○
-Cot. Conf. Trán. Lleg. Cerr.
+[icono]  Juan · hace 2h
+         Cambió estado de Arribo → En Aduana
+         en Embarques — EXP-001
 ```
 
-Para cada hito se muestra:
-- Ícono y nombre de la fase
-- Fecha asociada (cuando se conozca)
-- Estado visual: completado (accent), actual (accent + ring), pendiente (muted)
+- Línea 1: usuario + tiempo relativo (timestamp en tooltip).
+- Línea 2: `titulo` descriptivo (texto principal, foreground).
+- Línea 3: módulo + link a entidad (más sutil, muted).
+- Para `cambiar_estado`, renderizar los dos estados como badges con colores de `estadoConfig` (estado_anterior con opacity baja + flecha + estado_nuevo).
+- Mantener iconos y colores actuales (`ICONOS_ACCION`, `COLORES_ACCION`).
+- Conservar `mostrarUsuario` y el comportamiento de link a entidad por módulo.
 
-### Mapeo de fases a datos existentes
+### 3. Filtros adicionales en `pages/dashboard/Bitacora.tsx`
 
-| Fase | Fuente de fecha | Considerada completada cuando |
-|---|---|---|
-| Cotización | `cotizaciones.created_at` vía `embarques.cotizacion_id` (si existe) | Hay `cotizacion_id` |
-| Confirmado | `embarques.fecha_creacion` | Siempre (el embarque existe) |
-| En Tránsito | `embarques.etd` | `hoy >= etd` o estado ∈ {En Tránsito, Arribo, En Aduana, Entregado, EIR, Cerrado} |
-| Llegada | `embarques.fecha_llegada_real ?? embarques.eta` | Hay `fecha_llegada_real` o estado ∈ {Arribo, En Aduana, Entregado, EIR, Cerrado} |
-| Cerrado | `embarques.updated_at` cuando estado = Cerrado | Estado = Cerrado |
+- **Filtro por acción** (nuevo Select): Todas / Crear / Editar / Eliminar / Cambio de estado / Documentos / Notas.
+- **Filtro por usuario** (solo admin): Select poblado con `usuario_email` distintos de la página actual.
+- **Filtro por rango de fechas** ya soportado en `fetchBitacora` (`fechaDesde/fechaHasta`) — agregar `DateRangePicker` simple con presets: Hoy / 7 días / 30 días / Todo.
+- Reset paginación al cambiar cualquier filtro (patrón existente).
 
-La fase "actual" se calcula reusando `calcularEstadoEmbarque` de `src/lib/domain/embarque.ts`.
+Extender `FiltrosBitacora` con `accion?: string` y aplicar `.eq("accion", accion)` en `services/bitacora`.
 
-## Cambios de código
+### 4. Reutilización
 
-1. **Nuevo componente** `src/components/embarque/TrackingFasesTimeline.tsx`
-   - Recibe el `embarque` (subset de campos) como prop.
-   - Función pura `calcularFasesEmbarque(embarque)` que devuelve `Array<{ id, label, icon, fecha, estado: 'completada' | 'actual' | 'pendiente' }>`.
-   - Render con stepper responsive usando tokens semánticos (`bg-accent`, `bg-muted`, `text-muted-foreground`, `border-border`). Sin colores hardcoded.
-   - Helper `renderHito(fase)` para evitar ternarios anidados.
-
-2. **Lógica de fases** `src/lib/domain/embarqueFases.ts`
-   - Exporta `calcularFasesEmbarque(embarque, cotizacionCreatedAt?)`.
-   - Tests unitarios en `__tests__/embarqueFases.test.ts` cubriendo: solo confirmado, en tránsito, con llegada real, cerrado, sin cotización.
-
-3. **Integración** en `src/components/embarque/TabTracking.tsx`
-   - Insertar `<TrackingFasesTimeline embarque={embarque} cotizacionCreatedAt={...} />` arriba del `TrackingLiveCard`.
-   - Si se necesita la fecha de la cotización, exponerla desde `useEmbarqueFull` (ya trae el embarque; agregar un `select` mínimo `cotizaciones(created_at)` si está accesible por RLS — alternativa: usar solo `fecha_creacion` para Cotización si no hay `cotizacion_id`).
-
-4. **Sección de notas en el tab Tracking**
-   - Agregar `<TabNotas notas={notas} embarqueId={embarqueId} />` debajo del timeline de eventos para tener notas accesibles desde el mismo tab (sin duplicar — el tab "Notas y Actividad" sigue existiendo). Pasar `notas` desde `EmbarqueDetalle.tsx` como prop adicional a `TabTracking`.
-
-5. **Changelog**
-   - Bump de versión patch en `src/constants/appVersion.ts` y entrada nueva en `src/content/changelog/v8/chunks/0.ts` y `src/content/changelogData.ts`.
-
-## Detalles técnicos
-
-- Reusar `ICONO_EVENTO` y tokens existentes (no nuevos colores).
-- Sin nested ternaries: usar helpers `getEstadoFase()` y `renderHito()`.
-- Layout: `flex-col md:flex-row` con conector (`div` con `bg-border`) entre hitos.
-- Sin cambios a Supabase, sin migraciones.
+`BitacoraActividad` se usa también en otras vistas (detalle de embarque/cliente). El nuevo render es retrocompatible — la prop sigue siendo `actividades: EntradaBitacora[]`.
 
 ## Fuera de alcance
 
-- Edición manual de fechas de fases.
-- Notificaciones automáticas al cambiar de fase.
-- Tracking público (`TrackingPublico.tsx`) — se podría aplicar el mismo componente después si se desea.
+- Cambios al esquema de `bitacora_actividad` o a cómo se escriben los `detalles` (ya están bien estructurados).
+- Export CSV de la bitácora.
+- Diff visual completo de campos editados (solo mostramos los detalles ya guardados).
+
+## Detalle técnico
+
+- Archivos nuevos: `src/lib/domain/bitacoraDescripcion.ts` + test.
+- Editados: `src/components/shared/BitacoraActividad.tsx`, `src/pages/dashboard/Bitacora.tsx`, `src/services/bitacora/index.ts`, `src/hooks/shared/useBitacora.ts` (pasar `accion` por el filtro).
+- Versión: **8.137.0** (minor — feature visible). Entrada nueva en `Changelog.tsx` + `changelog/v8/chunks/0.ts` + `changelogData.ts`.
+- Sin migraciones, sin cambios a RLS, sin cambios a hooks de negocio.

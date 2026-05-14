@@ -22,6 +22,14 @@ export interface ChangelogEntry {
  */
 export const recentChangelog: ChangelogEntry[] = [
   {
+    version: "8.137.0",
+    date: "2026-05-14",
+    type: "minor",
+    title: "Bitácora más descriptiva con filtros",
+    summary: "Cada entrada describe en lenguaje natural lo ocurrido (estado anterior → nuevo, cliente, modo, documento) y hay filtros por acción y rango de fechas.",
+    description: "Helper puro bitacoraDescripcion.ts genera títulos descriptivos a partir del JSONB de detalles. BitacoraActividad muestra badges de estado en cambios. Filtros nuevos: acción (Crear/Editar/Cambio de estado/Documentos/Notas/Facturas) y rango (Hoy/7d/30d/Todo).",
+  },
+  {
     version: "8.136.0",
     date: "2026-05-14",
     type: "minor",

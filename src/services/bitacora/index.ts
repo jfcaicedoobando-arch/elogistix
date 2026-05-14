@@ -25,6 +25,8 @@ export interface FiltrosBitacora {
   limite?: number;
   pagina?: number;
   excluirLogin?: boolean;
+  /** Filtra por una o varias acciones (OR). */
+  acciones?: string[];
 }
 
 const BITACORA_COLUMNS =
@@ -50,11 +52,13 @@ export async function fetchBitacora(filtros: FiltrosBitacora = {}): Promise<{
     .order("created_at", { ascending: false })
     .range(pagina * limite, (pagina + 1) * limite - 1);
 
+  const { acciones } = filtros;
   if (excluirLogin) query = query.neq("accion", "login");
   if (modulo) query = query.eq("modulo", modulo);
   if (usuarioId) query = query.eq("usuario_id", usuarioId);
   if (fechaDesde) query = query.gte("created_at", fechaDesde);
   if (fechaHasta) query = query.lte("created_at", fechaHasta);
+  if (acciones && acciones.length > 0) query = query.in("accion", acciones);
 
   const { data, error, count } = await query;
   if (error) throw error;

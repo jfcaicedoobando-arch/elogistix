@@ -2,6 +2,14 @@ import type { ChangelogEntry } from "../../../changelogData";
 
 export const chunk0: ChangelogEntry[] = [
   {
+    version: "8.137.0",
+    date: "2026-05-14",
+    type: "minor",
+    title: "Bitácora más descriptiva con filtros",
+    summary: "Cada entrada describe en lenguaje natural lo que sucedió (estado anterior → nuevo, cliente, modo, documento, etc.) y se agregaron filtros por acción y rango de fechas.",
+    description: "Nuevo helper puro src/lib/domain/bitacoraDescripcion.ts que aprovecha el JSONB de detalles ya guardado para generar títulos descriptivos por accion+modulo (cambio de estado con badges Arribo → En Aduana, creación/edición de embarques con modo/tipo/cliente, subida/eliminación de documentos con tipo_documento, notas con preview de 80 caracteres, facturas con folio y monto). BitacoraActividad rediseñado: usuario · tiempo arriba, título descriptivo en foreground, módulo + link a entidad debajo. Página de Bitácora agrega filtros por acción (Crear/Editar/Eliminar/Cambio de estado/Documentos/Notas/Facturas) y rango (Hoy / 7 días / 30 días / Todo). El servicio fetchBitacora acepta el filtro acciones (in) sin tocar RLS. Tests unitarios cubren cada rama de describirEntrada.",
+  },
+  {
     version: "8.136.0",
     date: "2026-05-14",
     type: "minor",
