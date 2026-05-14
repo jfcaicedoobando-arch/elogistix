@@ -30,13 +30,16 @@ export async function fetchConfiguracionByOrg(orgId: string): Promise<ConfigItem
 export async function updateConfiguracionItems(
   items: { id: string; valor: unknown }[],
 ): Promise<void> {
-  for (const item of items) {
-    const { error } = await supabase
-      .from("configuracion")
-      .update({ valor: item.valor as Json })
-      .eq("id", item.id);
-    if (error) throw error;
-  }
+  const results = await Promise.all(
+    items.map((item) =>
+      supabase
+        .from("configuracion")
+        .update({ valor: item.valor as Json })
+        .eq("id", item.id),
+    ),
+  );
+  const firstError = results.find((r) => r.error);
+  if (firstError?.error) throw firstError.error;
 }
 
 // ── Configuración (todas las orgs según RLS — usada por hook useConfiguracion) ─
@@ -88,12 +91,15 @@ export async function fetchConfiguracionGlobal(): Promise<ConfigGlobalItem[]> {
 export async function updateConfiguracionGlobalItems(
   items: { categoria: string; clave: string; valor: unknown }[],
 ): Promise<void> {
-  for (const item of items) {
-    const { error } = await supabase
-      .from("configuracion_global")
-      .update({ valor: JSON.parse(JSON.stringify(item.valor)) })
-      .eq("categoria", item.categoria)
-      .eq("clave", item.clave);
-    if (error) throw error;
-  }
+  const results = await Promise.all(
+    items.map((item) =>
+      supabase
+        .from("configuracion_global")
+        .update({ valor: JSON.parse(JSON.stringify(item.valor)) })
+        .eq("categoria", item.categoria)
+        .eq("clave", item.clave),
+    ),
+  );
+  const firstError = results.find((r) => r.error);
+  if (firstError?.error) throw firstError.error;
 }

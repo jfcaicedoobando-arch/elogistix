@@ -111,16 +111,12 @@ export async function fetchEmbarquesParaExport(
   f: EmbarquesParaExportFilters,
 ): Promise<EmbarqueRow[]> {
   const PAGE = 1000;
-  const all: EmbarqueRow[] = [];
-  let from = 0;
 
-  while (true) {
-    let query = supabase
-      .from('embarques')
-      .select(EMBARQUE_LIST_COLUMNS)
-      .order('created_at', { ascending: false })
-      .range(from, from + PAGE - 1);
-
+  // Aplica los filtros comunes a un query base. Permite reutilizar el armado
+  // tanto para el conteo (head:true) como para cada página.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const applyFilters = (q: any): any => {
+    let query = q;
     if (f.organizationId) query = query.eq('organization_id', f.organizationId);
     if (f.search) {
       query = query.or(
@@ -136,15 +132,35 @@ export async function fetchEmbarquesParaExport(
     else if (f.filterProforma === 'sin') query = query.eq('tiene_proforma', false);
     if (f.fechaDesde) query = query.gte('etd', f.fechaDesde);
     if (f.fechaHasta) query = query.lte('eta', f.fechaHasta);
+    return query;
+  };
 
-    const { data, error } = await query;
-    if (error) throw error;
-    const batch = (data ?? []) as EmbarqueRow[];
-    all.push(...batch);
-    if (batch.length < PAGE) break;
-    from += PAGE;
-  }
-  return all;
+  // 1) Conteo exacto en una sola llamada (sin traer filas).
+  const countQueryBase = supabase
+    .from('embarques')
+    .select(EMBARQUE_LIST_COLUMNS, { count: 'exact', head: true });
+  const { count, error: countErr } = await applyFilters(countQueryBase);
+  if (countErr) throw countErr;
+  const total = (count as number | null) ?? 0;
+  if (total === 0) return [];
+
+  // 2) Disparar todas las páginas en paralelo (lineal, sin loop secuencial con await).
+  const pageCount = Math.ceil(total / PAGE);
+  const pages = await Promise.all(
+    Array.from({ length: pageCount }, async (_, i) => {
+      const from = i * PAGE;
+      const to = Math.min(from + PAGE - 1, total - 1);
+      const base = supabase
+        .from('embarques')
+        .select(EMBARQUE_LIST_COLUMNS)
+        .order('created_at', { ascending: false })
+        .range(from, to);
+      const { data, error } = await applyFilters(base);
+      if (error) throw error;
+      return (data ?? []) as EmbarqueRow[];
+    }),
+  );
+  return pages.flat();
 }
 
 export async function fetchEmbarqueById(id: string): Promise<EmbarqueRow> {
