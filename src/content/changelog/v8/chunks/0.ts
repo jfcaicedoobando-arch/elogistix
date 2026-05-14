@@ -2,6 +2,14 @@ import type { ChangelogEntry } from "../../../changelogData";
 
 export const chunk0: ChangelogEntry[] = [
   {
+    version: "8.138.0",
+    date: "2026-05-14",
+    type: "minor",
+    title: "Auditoría arquitectónica: limpieza de capas (paso 1)",
+    summary: "Unificado useToast (eliminado duplicado), DialogBolContainers ya no llama Supabase directamente, y los tipos de fila de embarque viven en types/embarque.ts.",
+    description: "Resultado de la auditoría de arquitectura solicitada. (1) Se eliminó src/hooks/shared/use-toast.ts, un re-export huérfano que abría la puerta a duplicar el singleton de toasts. Todos los imports usan ahora @/hooks/use-toast (convención shadcn). (2) DialogBolContainers ya no importa @/integrations/supabase/client: se creó services/embarque/contenedor.ts con actualizarContenedorEmbarque y el hook hooks/embarque/mutations/useActualizarContenedorEmbarque que invalida queryKeys.embarques.detail. Los componentes recuperan así la regla 'no tocar Supabase desde la capa de UI'. (3) Los aliases EmbarqueRow, ConceptoVentaRow, ConceptoCostoRow, DocumentoEmbarqueRow y NotaEmbarqueRow se centralizaron en src/types/embarque.ts; el barrel hooks/embarque/useEmbarques.ts los re-exporta para conservar la API pública sin tocar 13+ consumidores. Pasos restantes de la auditoría (próximas iteraciones): partir services/embarque/queries.ts en submódulos por subdominio, extraer hooks controller en TrackingLiveCard, MarcarRevisadoDialog y AsignarResponsableDialog, crear lib/domain/auditoria.ts con tests, migrar TabTracking de useState ad-hoc a react-hook-form y rotar el chunk obeso v8/chunks/0.ts a un nuevo v8/chunks/6.ts. Tests: 298 verdes (la falla pre-existente de 'recentChangelog ≤10 entradas' no es regresión).",
+  },
+  {
     version: "8.137.0",
     date: "2026-05-14",
     type: "minor",
