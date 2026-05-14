@@ -12,6 +12,11 @@ import TabAlertas from "@/components/configuracion/TabAlertas";
 import TabPuertos from "@/components/configuracion/TabPuertos";
 import TabAuditoria from "@/components/configuracion/TabAuditoria";
 
+function getSaveButtonLabel(isSaving: boolean, isDirty: boolean): string {
+  if (isSaving) return "Guardando...";
+  return isDirty ? "Guardar Cambios" : "Sin Cambios";
+}
+
 export default function Configuracion() {
   const { s, set, isLoading, isSaving, isDirty, handleSave } = useConfiguracionState();
 

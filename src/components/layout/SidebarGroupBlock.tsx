@@ -12,6 +12,7 @@ import { Badge } from "@/components/ui/badge";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { NavLink } from "@/components/layout/NavLink";
 import { cn } from "@/lib/utils";
+import { pluralS } from "@/lib/formatters";
 
 export interface SidebarItem {
   title: string;

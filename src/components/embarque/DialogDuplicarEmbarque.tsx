@@ -15,6 +15,13 @@ import { getErrorMessage } from "@/lib/errors";
 import { useToast } from "@/hooks/use-toast";
 import { useDuplicarEmbarque, type EmbarqueRow } from "@/hooks/embarque/useEmbarques";
 
+import { pluralS } from "@/lib/formatters";
+
+function getCrearBtnLabel(isPending: boolean, copias: number): string {
+  if (isPending) return "Creando...";
+  return `Crear ${copias} Embarque${pluralS(copias)}`;
+}
+
 interface FilaCopia {
   num_contenedor: string;
   tipo_contenedor: string;

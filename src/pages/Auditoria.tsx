@@ -18,6 +18,7 @@ import {
 } from "@/components/ui/accordion";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { pluralS } from "@/lib/formatters";
 import { AuditoriaKpis } from "@/components/auditoria/AuditoriaKpis";
 import { AuditoriaEjecutivoTab } from "@/components/auditoria/AuditoriaEjecutivoTab";
 import { HallazgoTabla } from "@/components/auditoria/HallazgoTabla";

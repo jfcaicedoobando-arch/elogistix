@@ -8,6 +8,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { DataTable, type DataTableColumn } from "@/components/shared/DataTable";
 import type { DocumentoEmbarqueRow } from "@/hooks/embarque/useEmbarques";
+import { getDocEstadoColorClass } from "@/lib/ui/uiMappings";
 
 interface Props {
   documentos: DocumentoEmbarqueRow[];
