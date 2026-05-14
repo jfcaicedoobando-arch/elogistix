@@ -168,6 +168,16 @@ Misma convención en `src/lib/` (formatters, financial, storage, ui, errors, con
 - El acceso es trivial (`.from('x').select(...)` directo) y vive en un solo hook.
 - Sería un wrapper 1:1 sin valor.
 
+### 5.1 Convención `queries + mutations + subdominios`
+
+Estabilizada en v8.139.0 (`services/embarque/queries/`) y v8.141.0 (`services/cotizacion/{queries,mutations}.ts`). Aplica cuando un dominio crece más allá de un único `crud.ts`:
+
+- `queries.ts` (o `queries/` con sub-archivos por agregado) — sólo lecturas y constantes de columnas reutilizables (`<DOMINIO>_LIST_COLUMNS`).
+- `mutations.ts` — inserts/updates/deletes y orquestación de RPCs.
+- Subcarpetas por subdominio cuando hay flujos especializados (`costos/`, `conversiones/`, `wizard/`, `colaterales/`, `expedientes/`).
+- El `index.ts` del dominio re-exporta todo; los hooks importan SIEMPRE desde el barrel `@/services/<dominio>`.
+- No mezclar lecturas y escrituras en el mismo archivo; eso bloquea el split por tamaño y dificulta razonar sobre cache/invalidaciones.
+
 ## 6. Transacciones complejas → RPC
 
 Cuando una operación implica **múltiples escrituras dependientes** (insertar cabecera + N detalles, snapshots consolidados, encadenar facturación con conceptos), debe implementarse como una **función RPC** en `supabase/migrations/` y consumirse vía `supabase.rpc('nombre_funcion', { ... })` desde el service.
