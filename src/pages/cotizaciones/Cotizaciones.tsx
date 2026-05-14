@@ -1,16 +1,12 @@
 import { useMemo, useState } from "react";
 import {
   Plus, MoreHorizontal, Download, TrendingUp,
-  CheckCircle, XCircle, BarChart3, Filter, X,
+  CheckCircle, XCircle, BarChart3,
 } from "lucide-react";
-import {
-  Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger, SheetFooter,
-} from "@/components/ui/sheet";
 import { FloatingActionButton } from "@/components/shared/FloatingActionButton";
 import { KpiCard } from "@/components/operaciones/KpiCard";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
@@ -26,6 +22,7 @@ import {
   ESTADOS_COTIZACION,
 } from "@/hooks/cotizacion/useCotizacionesPageController";
 import { buildCotizacionesColumns } from "@/components/cotizacion/cotizacionesColumns";
+import { CotizacionesMobileFilters } from "@/components/cotizacion/CotizacionesMobileFilters";
 
 export default function Cotizaciones() {
   const c = useCotizacionesPageController();
@@ -41,7 +38,6 @@ export default function Cotizaciones() {
     [c.canEdit, c.irAEditar, c.duplicar, c.setCotizacionAEliminar],
   );
 
-  // Filtros mobile en Sheet + FAB para acción primaria.
   const [filtersOpen, setFiltersOpen] = useState(false);
   const activeFilterCount =
     (c.filterEstado && c.filterEstado !== "todos" ? 1 : 0) +
@@ -114,51 +110,16 @@ export default function Cotizaciones() {
 
       <Card>
         <CardContent className="p-4">
-          {/* Mobile: search + Filtros (N) → Sheet */}
-          <div className="flex gap-2 md:hidden">
-            <SearchInput
-              value={c.search}
-              onChange={c.setSearch}
-              placeholder="Buscar..."
-              className="flex-1 min-w-0"
-            />
-            <Sheet open={filtersOpen} onOpenChange={setFiltersOpen}>
-              <SheetTrigger asChild>
-                <Button variant="outline" className="shrink-0 gap-2">
-                  <Filter className="h-4 w-4" />
-                  <span>Filtros</span>
-                  {activeFilterCount > 0 && (
-                    <Badge variant="secondary" className="h-5 min-w-5 px-1.5 text-[11px]">
-                      {activeFilterCount}
-                    </Badge>
-                  )}
-                </Button>
-              </SheetTrigger>
-              <SheetContent side="right" className="w-full max-w-sm flex flex-col gap-0 p-0">
-                <SheetHeader className="p-4 border-b">
-                  <SheetTitle>Filtros de cotizaciones</SheetTitle>
-                </SheetHeader>
-                <div className="flex-1 overflow-y-auto p-4 space-y-4">
-                  <div className="space-y-1.5">
-                    <label className="text-xs font-medium text-muted-foreground">Estado</label>
-                    {EstadoSelect}
-                  </div>
-                  <div className="space-y-1.5">
-                    <label className="text-xs font-medium text-muted-foreground">Cliente</label>
-                    {ClienteSelect}
-                  </div>
-                </div>
-                <SheetFooter className="p-4 border-t flex-row gap-2 sm:flex-row sm:justify-between">
-                  <Button variant="ghost" onClick={clearAllFilters} disabled={activeFilterCount === 0} className="gap-2">
-                    <X className="h-4 w-4" /> Limpiar
-                  </Button>
-                  <Button onClick={() => setFiltersOpen(false)}>Aplicar</Button>
-                </SheetFooter>
-              </SheetContent>
-            </Sheet>
-          </div>
-
-          {/* Desktop md+: layout inline */}
+          <CotizacionesMobileFilters
+            open={filtersOpen}
+            onOpenChange={setFiltersOpen}
+            search={c.search}
+            onSearchChange={c.setSearch}
+            activeFilterCount={activeFilterCount}
+            onClearAll={clearAllFilters}
+            estadoSelect={EstadoSelect}
+            clienteSelect={ClienteSelect}
+          />
           <div className="hidden md:flex md:flex-wrap gap-4">
             <SearchInput
               value={c.search}
