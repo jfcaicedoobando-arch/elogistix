@@ -9,7 +9,7 @@ Las heurísticas son conservadoras (prefieren falsos positivos). Validar manualm
 | Regla | Hallazgos |
 |---|---:|
 | #4 Componentes >200 líneas | 20 |
-| #5/#10 `any` explícito | 17 |
+| #5/#10 `any` explícito | 0 |
 | #3 `useEffect` sin cleanup | 1 |
 | #2 Queries de lista sin paginar | 68 |
 
@@ -59,37 +59,11 @@ Componentes y páginas que superan el umbral. Refactor: extraer `use<X>Controlle
 
 </details>
 
-## Regla #5/#10 — `any` explícito (17)
+## Regla #5/#10 — `any` explícito (0)
 
 Reemplazar por tipos generados de Supabase, `unknown` + narrowing, o documentar override según §17.b.
 
-| Dominio | Hallazgos |
-|---|---:|
-| `content/changelog` | 14 |
-| `components/embarque` | 2 |
-| `services/embarque` | 1 |
-
-<details><summary>Detalle</summary>
-
-- `src/components/embarque/TabResumen.tsx:117` — <DetailRow label="ETD" value={<FechaConOriginal actual={embarque.etd} original={(embarque as any).etd_original} />} />
-- `src/components/embarque/TabResumen.tsx:118` — <DetailRow label="ETA" value={<FechaConOriginal actual={embarque.eta} original={(embarque as any).eta_original} />} />
-- `src/content/changelog/v3.ts:72` — description: "Consolidación de utilidades duplicadas: getEstadoColor unificado para todos los estados (embarque, cotizac
-- `src/content/changelog/v5.ts:100` — description: "Creadas 4 funciones RPC (crear_embarque_completo, actualizar_embarque_completo, duplicar_embarque_completo
-- `src/content/changelog/v5.ts:114` — description: "EmbarqueWizardLayout compartido elimina duplicación entre NuevoEmbarque y EditarEmbarque. Mutations tipada
-- `src/content/changelog/v5.ts:156` — description: "Eliminados imports directos de supabase en CotizacionDetalle (useEmbarquesVinculados), ProveedorDetalle (u
-- `src/content/changelog/v5.ts:163` — description: "El diálogo de alta de clientes (wizard 2 pasos, CSF upload, document checklist) fue extraído a src/compone
-- `src/content/changelog/v5.ts:176` — title: "Eliminación masiva de casts 'as any' — tipado estricto con Supabase",
-- `src/content/changelog/v5.ts:177` — description: "Reducción de ~188 a ~6 ocurrencias de 'as any' en 17 archivos. Reemplazados casts de enums por TablesInser
-- `src/content/changelog/v8/chunks/1.ts:107` — description: "Refactor interno (sin cambios funcionales para el usuario) que limpia la deuda técnica detectada en la aud
-- `src/content/changelog/v8/chunks/4.ts:100` — description: "1) NuevoClienteDialog migrado a getErrorMessage centralizado (2 catch blocks). 2) as any eliminado en useP
-- `src/content/changelog/v8/chunks/4.ts:114` — description: "1) as any eliminado en CotizacionDetalle (comentario_cliente tipado). 2) Query keys centralizados: client_
-- `src/content/changelog/v8/chunks/4.ts:128` — description: "1) Mapas estadoColor duplicados en 3 páginas del portal unificados con getEstadoColor de uiMappings.ts. 2)
-- `src/content/changelog/v8/chunks/6.ts:113` — summary: "El audit de casts ahora ignora strings y descripciones de changelog. Resultado: 0 `as any` en código ejecutabl
-- `src/content/changelog/v8/chunks/6.ts:114` — description: "Cierre de Fase A del roadmap a strictNullChecks. (1) scripts/audit-casts.ts: el scanner ahora elimina stri
-- `src/content/changelog/v8/chunks/6.ts:122` — description: "Auditoría completa de type assertions del proyecto. (1) scripts/audit-casts.ts: recorre src/, clasifica ca
-- `src/services/embarque/queries/listado.ts:119` — const applyFilters = (q: any): any => {
-
-</details>
+_Sin hallazgos._
 
 ## Regla #3 — `useEffect` sin cleanup (heurística) (1)
 
