@@ -91,6 +91,7 @@ function checkAny(files: string[], out: Finding[]) {
   for (const f of files) {
     // Excluir changelog: las descripciones son strings, no `any` reales.
     if (f.includes(`${sep}content${sep}changelog${sep}`)) continue;
+    if (f.endsWith(`${sep}content${sep}changelogData.ts`)) continue;
     const content = readFileSync(f, "utf8");
     const lines = content.split("\n");
     lines.forEach((ln, i) => {
