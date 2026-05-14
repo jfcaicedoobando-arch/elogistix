@@ -1,32 +1,20 @@
-import { useState } from 'react';
-import { useForm, Controller } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
-import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Badge } from '@/components/ui/badge';
-import { Plus, MapPin, Clock, User } from 'lucide-react';
-import { useEventosEmbarque, useCreateEventoEmbarque, TIPOS_EVENTO_TRACKING } from '@/hooks/embarque/useEventosEmbarque';
-import { ICONO_EVENTO } from "@/constants/embarqueConstants";
-import { useAuth } from '@/contexts/AuthContext';
-import { usePermissions } from '@/hooks/shared/usePermissions';
-import { useToast } from '@/hooks/use-toast';
-import { getErrorMessage } from '@/lib/errors';
-import { formatDate, nombreDesdeEmail } from '@/lib/formatters';
-import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
-import { TrackingLiveCard } from './TrackingLiveCard';
-import { TrackingFasesTimeline } from './TrackingFasesTimeline';
-import { TabNotas } from './TabNotas';
-import type { Tables } from '@/integrations/supabase/types';
-import type { NotaEmbarqueRow } from '@/hooks/embarque/useEmbarques';
+import { useState } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Plus } from "lucide-react";
+import { useEventosEmbarque } from "@/hooks/embarque/useEventosEmbarque";
+import { usePermissions } from "@/hooks/shared/usePermissions";
+import { TrackingLiveCard } from "./TrackingLiveCard";
+import { TrackingFasesTimeline } from "./TrackingFasesTimeline";
+import { TabNotas } from "./TabNotas";
+import { TrackingEventTimeline } from "./tracking/TrackingEventTimeline";
+import { TrackingNuevoEventoForm } from "./tracking/TrackingNuevoEventoForm";
+import type { Tables } from "@/integrations/supabase/types";
+import type { NotaEmbarqueRow } from "@/hooks/embarque/useEmbarques";
 
 type EmbarqueTrackingProps = Pick<
-  Tables<'embarques'>,
-  'modo' | 'tipo' | 'estado' | 'naviera' | 'contenedor' | 'bl_master' | 'etd' | 'eta' | 'fecha_llegada_real' | 'fecha_creacion' | 'cotizacion_id' | 'updated_at'
+  Tables<"embarques">,
+  "modo" | "tipo" | "estado" | "naviera" | "contenedor" | "bl_master" | "etd" | "eta" | "fecha_llegada_real" | "fecha_creacion" | "cotizacion_id" | "updated_at"
 >;
 
 interface Props {
@@ -35,113 +23,10 @@ interface Props {
   notas?: NotaEmbarqueRow[];
 }
 
-const eventoSchema = z.object({
-  tipo: z.string().min(1, 'Selecciona un tipo de evento'),
-  fecha: z.string().min(1, 'Fecha requerida'),
-  ubicacion: z.string().max(120, 'Máximo 120 caracteres').optional().default(''),
-  descripcion: z.string().max(500, 'Máximo 500 caracteres').optional().default(''),
-});
-
-type EventoFormValues = z.infer<typeof eventoSchema>;
-
-const defaultEventoValues = (): EventoFormValues => ({
-  tipo: '',
-  fecha: new Date().toISOString().slice(0, 16),
-  ubicacion: '',
-  descripcion: '',
-});
-
-
 export function TabTracking({ embarqueId, embarque, notas = [] }: Props) {
   const { data: eventos = [], isLoading } = useEventosEmbarque(embarqueId);
-  const crearEvento = useCreateEventoEmbarque();
-  const { user } = useAuth();
   const { canEdit } = usePermissions();
-  const { toast } = useToast();
-
   const [formAbierto, setFormAbierto] = useState(false);
-
-  const form = useForm<EventoFormValues>({
-    resolver: zodResolver(eventoSchema),
-    defaultValues: defaultEventoValues(),
-  });
-  const {
-    control,
-    register,
-    handleSubmit,
-    reset,
-    formState: { errors, isValid },
-  } = form;
-
-  function renderTimeline() {
-    if (isLoading) return <EmptyStateInline loading message="Cargando eventos..." />;
-    if (eventos.length === 0) {
-      return <EmptyStateInline icon={Clock} message="No hay eventos de tracking registrados." />;
-    }
-    return (
-      <div className="relative">
-        {/* Línea vertical */}
-        <div className="absolute left-4 top-0 bottom-0 w-0.5 bg-border" />
-
-        <div className="space-y-6">
-          {eventos.map((ev, i) => (
-            <div key={ev.id} className="relative pl-10">
-              {/* Punto en la línea */}
-              <div className={`absolute left-2.5 top-1 h-3.5 w-3.5 rounded-full border-2 border-background ${
-                i === 0 ? 'bg-accent' : 'bg-muted-foreground/40'
-              }`} />
-
-              <div className="space-y-1">
-                <div className="flex items-center gap-2 flex-wrap">
-                  <span className="text-base">{ICONO_EVENTO[ev.tipo] ?? '📝'}</span>
-                  <Badge variant="secondary" className="text-xs">{ev.tipo}</Badge>
-                  <span className="text-xs text-muted-foreground flex items-center gap-1">
-                    <Clock className="h-3 w-3" />
-                    {formatDate(ev.fecha, "dd MMM yyyy, HH:mm")}
-                  </span>
-                </div>
-
-                {ev.descripcion && (
-                  <p className="text-sm text-foreground">{ev.descripcion}</p>
-                )}
-
-                <div className="flex items-center gap-3 text-xs text-muted-foreground">
-                  {ev.ubicacion && (
-                    <span className="flex items-center gap-1">
-                      <MapPin className="h-3 w-3" /> {ev.ubicacion}
-                    </span>
-                  )}
-                  {ev.usuario && (
-                    <span className="flex items-center gap-1" title={ev.usuario}>
-                      <User className="h-3 w-3" /> {nombreDesdeEmail(ev.usuario)}
-                    </span>
-                  )}
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-    );
-  }
-
-  const onSubmit = handleSubmit(async (values) => {
-    try {
-      await crearEvento.mutateAsync({
-        embarqueId,
-        tipo: values.tipo,
-        descripcion: values.descripcion ?? '',
-        ubicacion: values.ubicacion ?? '',
-        fecha: new Date(values.fecha).toISOString(),
-        usuario: user?.email ?? '',
-      });
-      notifySuccess(toast, { title: 'Evento registrado' });
-      setFormAbierto(false);
-      reset(defaultEventoValues());
-    } catch (err: unknown) {
-      notifyError(toast, { title: 'Error al registrar evento', description: getErrorMessage(err) });
-    }
-  });
 
   return (
     <div className="space-y-6">
@@ -181,68 +66,16 @@ export function TabTracking({ embarqueId, embarque, notas = [] }: Props) {
       )}
 
       {formAbierto && (
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm">Nuevo Evento de Tracking</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={onSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Tipo de evento *</label>
-                <Controller
-                  control={control}
-                  name="tipo"
-                  render={({ field }) => (
-                    <Select value={field.value} onValueChange={field.onChange}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Seleccionar tipo..." />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {TIPOS_EVENTO_TRACKING.map((t) => (
-                          <SelectItem key={t} value={t}>
-                            {ICONO_EVENTO[t]} {t}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  )}
-                />
-                {errors.tipo && (
-                  <p className="text-xs text-destructive">{errors.tipo.message}</p>
-                )}
-              </div>
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Fecha y hora *</label>
-                <Input type="datetime-local" {...register('fecha')} required />
-                {errors.fecha && (
-                  <p className="text-xs text-destructive">{errors.fecha.message}</p>
-                )}
-              </div>
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Ubicación</label>
-                <Input {...register('ubicacion')} placeholder="Puerto, ciudad, terminal..." />
-              </div>
-              <div className="space-y-2 md:col-span-2">
-                <label className="text-sm font-medium">Descripción</label>
-                <Textarea {...register('descripcion')} placeholder="Detalles del evento..." rows={2} />
-              </div>
-              <div className="md:col-span-2 flex gap-2 justify-end">
-                <Button type="button" variant="outline" size="sm" onClick={() => setFormAbierto(false)}>Cancelar</Button>
-                <Button type="submit" size="sm" disabled={!isValid || crearEvento.isPending}>
-                  {crearEvento.isPending ? 'Guardando...' : 'Guardar Evento'}
-                </Button>
-              </div>
-            </form>
-          </CardContent>
-        </Card>
+        <TrackingNuevoEventoForm embarqueId={embarqueId} onClose={() => setFormAbierto(false)} />
       )}
 
-      {/* Timeline */}
       <Card>
         <CardHeader className="pb-3">
           <CardTitle className="text-sm">Línea de Tiempo</CardTitle>
         </CardHeader>
-        <CardContent>{renderTimeline()}</CardContent>
+        <CardContent>
+          <TrackingEventTimeline eventos={eventos} isLoading={isLoading} />
+        </CardContent>
       </Card>
 
       <TabNotas notas={notas} embarqueId={embarqueId} />
