@@ -63,6 +63,7 @@ export default tseslint.config(
       "src/integrations/supabase/**",
       "src/data/changelogData.ts",
       "src/data/ports.ts",
+      "src/content/changelog/**",
       "**/*.test.ts",
       "**/*.test.tsx",
     ],
