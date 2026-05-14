@@ -101,14 +101,6 @@ export const recentChangelog: ChangelogEntry[] = [
     summary: "18 archivos en components/pages dejan de usar ternarios encadenados; ahora usan helpers reutilizables o funciones locales con if/else.",
     description: "Helpers nuevos en lib/formatters (pluralS, formatDiasCredito) y lib/ui/uiMappings (getNotaTipoColorClass, getDocEstadoColorClass, getStepIndicatorCircleClass, getDiasVencidosTone, getProfitToneClass). Sin cambios visuales.",
   },
-  {
-    version: "8.135.4",
-    date: "2026-05-14",
-    type: "patch",
-    title: "Optimización: queries de DB lineales y en paralelo",
-    summary: "Las exportaciones de embarques, las actualizaciones de configuración y el detalle de cotización del portal ahora hacen sus consultas en paralelo, sin loops secuenciales.",
-    description: "fetchEmbarquesParaExport: conteo exacto + Promise.all de páginas. useEmbarquesPageController: chunks de fetchEmbarquesListExtras en paralelo. updateConfiguracionItems / updateConfiguracionGlobalItems: Promise.all en lugar de await en for. fetchPortalCotizacion: join embebido en una sola query. Sin cambios funcionales.",
-  },
 ];
 
 /** Deduplica por version conservando la primera ocurrencia (recentChangelog gana). */
