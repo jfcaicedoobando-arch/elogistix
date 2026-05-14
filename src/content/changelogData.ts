@@ -22,6 +22,14 @@ export interface ChangelogEntry {
  */
 export const recentChangelog: ChangelogEntry[] = [
   {
+    version: "8.146.0",
+    date: "2026-05-14",
+    type: "minor",
+    title: "Power of 10 — Fase 4: refactor MarcarRevisadoDialog y TrackingLiveCard",
+    summary: "MarcarRevisadoDialog (306 → 100) y TrackingLiveCard (281 → 56) se parten en subcomponentes por sección. Componentes >200 líneas: 19 → 17.",
+    description: "Segunda iteración de la Fase 4. (1) MarcarRevisadoDialog se reduce a shell que orquesta tabs y footer; los tres tabs viven en src/components/auditoria/marcarRevisado/ (AccionTab + AccionButton, ComentariosTab, SnoozeTab) y el resumen del hallazgo en HallazgoSummary. (2) TrackingLiveCard se reduce a un Card con Header + delegación; nuevos subcomponentes en src/components/embarque/trackingLive/ (TrackingActions, TrackingWarnings, TrackingFechasPropuestas, TrackingSummaryGrid). El hook controller useTrackingLiveCard sigue siendo el único punto de lógica. Tests: 314 verdes. Sin cambios visibles ni de comportamiento. Quedan 17 componentes >200 líneas (próximos: PortalLayout 266, Changelog page 261, TabTracking 252, DialogBolContainers 246).",
+  },
+  {
     version: "8.145.0",
     date: "2026-05-14",
     type: "minor",
