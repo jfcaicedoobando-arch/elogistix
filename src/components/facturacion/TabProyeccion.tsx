@@ -1,19 +1,16 @@
-import { ChevronLeft, ChevronRight, Download, TrendingUp, CheckCircle2, Calendar, Info, Clock } from "lucide-react";
+import { ChevronLeft, ChevronRight, Download, Calendar, Info } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Progress } from "@/components/ui/progress";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { useNavigate } from "react-router-dom";
 import { DataTable } from "@/components/shared/DataTable";
 import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
-import { formatCurrency, toTitleCase } from "@/lib/formatters";
-import { getProfitToneClass } from "@/lib/ui/uiMappings";
+import { toTitleCase } from "@/lib/formatters";
 import { useTabProyeccionController } from "@/hooks/facturacion/useTabProyeccionController";
 import { HuecoFacturacionCard } from "./HuecoFacturacionCard";
-import { CierreCard } from "./CierreCard";
+import { ProyeccionCierreSection } from "./proyeccion/ProyeccionCierreSection";
 import { proyeccionColumns } from "./proyeccionColumns";
 
 export function TabProyeccion() {
