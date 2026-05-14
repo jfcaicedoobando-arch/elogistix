@@ -2,6 +2,14 @@ import type { ChangelogEntry } from "../../../changelogData";
 
 export const chunk0: ChangelogEntry[] = [
   {
+    version: "8.139.0",
+    date: "2026-05-14",
+    type: "minor",
+    title: "Auditoría arquitectónica: split queries + controller TrackingLiveCard",
+    summary: "services/embarque/queries.ts (355 líneas) partido en 6 submódulos por subdominio y TrackingLiveCard consume hook controller.",
+    description: "Pasos 4 y 5 de la auditoría arquitectónica. (1) services/embarque/queries.ts ahora es una carpeta queries/ con archivos por subdominio: listado.ts (fetchEmbarques, fetchEmbarquesPaginados con SORTABLE_EMBARQUE_COLUMNS y filtros, fetchEmbarquesParaExport con paginación interna, fetchEmbarquesRelacionados, fetchEmbarquesListExtras vía RPC), detalle.ts (fetchEmbarqueById + fetchEmbarqueFull con resolución por UUID o expediente), conceptos.ts (venta + costo), colaterales.ts (documentos + notas + facturas), expedientes.ts (agrupación por folio) y proveedores.ts. El barrel queries/index.ts re-exporta todo el API público, por lo que los 13+ consumidores que importan vía services/embarque no requieren cambios. (2) Componente TrackingLiveCard reducido a render puro: nuevo hook hooks/embarque/useTrackingLiveCard encapsula queries/mutations de JSONCargo (useJsonCargoTracking, useSyncJsonCargo, useApplyJsonCargoFechas), estado local (bolDialogOpen, fechasDismissed), reglas derivadas (mapNavieraToJsonCargo, validatePrefixMatchesNaviera, summary, fechasPropuestas, showPrefixWarning, suggestions) y handlers onSync / onAplicarFechas con feedback de toasts. La función pura jsoncargoDateToYmd queda exportada del hook. Pendientes (próxima iteración): crear lib/domain/auditoria.ts con tests y extraer controllers desde MarcarRevisadoDialog (409) y AsignarResponsableDialog (242); migrar el form de TabTracking a react-hook-form. Tests: 298 verdes.",
+  },
+  {
     version: "8.138.0",
     date: "2026-05-14",
     type: "minor",

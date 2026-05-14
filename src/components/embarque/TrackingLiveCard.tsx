@@ -1,37 +1,14 @@
-import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { RefreshCw, Ship, MapPin, Anchor, AlertCircle, Info, CheckCircle2, Search, ExternalLink } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
-import { notifySuccess, notifyError } from "@/lib/ui/appFeedback";
 import { formatDate } from "@/lib/formatters";
-import { mapNavieraToJsonCargo, listNavierasSoportadas } from "@/lib/jsoncargo/navieras";
+import { listNavierasSoportadas } from "@/lib/jsoncargo/navieras";
 import { getExternalTracking } from "@/lib/jsoncargo/externalTracking";
-import {
-  validatePrefixMatchesNaviera,
-  carrierLabel,
-} from "@/lib/jsoncargo/containerPrefixes";
-import {
-  useJsonCargoTracking,
-  useSyncJsonCargo,
-  useApplyJsonCargoFechas,
-  extractSummary,
-  PrefixMismatchError,
-} from "@/hooks/embarque/useJsonCargoTracking";
+import { carrierLabel } from "@/lib/jsoncargo/containerPrefixes";
+import { useTrackingLiveCard } from "@/hooks/embarque/useTrackingLiveCard";
 import { DialogBolContainers } from "./DialogBolContainers";
-
-/** Parse "YYYY-MM-DD HH:MM" o ISO desde JSONCargo y devuelve "YYYY-MM-DD". */
-function jsoncargoDateToYmd(value: string | null | undefined): string | null {
-  if (!value) return null;
-  const s = value.trim();
-  if (!s) return null;
-  const iso = s.includes("T") ? s : s.replace(" ", "T") + ":00Z";
-  const d = new Date(iso);
-  if (Number.isNaN(d.getTime())) return null;
-  return d.toISOString().slice(0, 10);
-}
 
 interface Props {
   embarqueId: string;
@@ -47,63 +24,20 @@ interface Props {
 }
 
 export function TrackingLiveCard({ embarqueId, modo, naviera, contenedor, blMaster, etd, eta, fechaLlegadaReal, readOnly }: Props) {
-  const { toast } = useToast();
-  const { data: tracking, isLoading } = useJsonCargoTracking(embarqueId);
-  const sync = useSyncJsonCargo();
-  const applyFechas = useApplyJsonCargoFechas();
-  const [bolDialogOpen, setBolDialogOpen] = useState(false);
-  const [fechasDismissed, setFechasDismissed] = useState(false);
+  // Solo aplica a marítimo. Hook se llama siempre arriba para respetar reglas de hooks.
+  const ctrl = useTrackingLiveCard({ embarqueId, naviera, contenedor, etd, eta, fechaLlegadaReal, readOnly });
 
-  // Solo aplica a marítimo
   if (modo !== "Marítimo") return null;
 
-  const sl = mapNavieraToJsonCargo(naviera);
-  const noSoportada = !sl;
-  const sinContenedor = !contenedor;
-  const summary = tracking?.raw_payload ? extractSummary(tracking.raw_payload) : null;
+  const {
+    tracking, isLoading, summary, sync, applyFechas,
+    bolDialogOpen, setBolDialogOpen, setFechasDismissed,
+    noSoportada, sinContenedor, prefixMismatch, showPrefixWarning,
+    suggestions, detectedPrefix, fechasPropuestas, onSync, onAplicarFechas,
+  } = ctrl;
 
-  // Validación de prefix vs naviera (local, no consume cuota)
-  const prefixCheck = validatePrefixMatchesNaviera(contenedor, sl);
-  const prefixMismatch = !sinContenedor && !noSoportada && !prefixCheck.valid;
-
-  // Detecta también si el backend ya guardó un fallo por prefix
-  const backendPrefixError = tracking?.status === "failed" &&
-    /prefix not found/i.test(tracking.failed_reason ?? "");
-
-  // Estado de error tras una mutación del cliente
-  const mutationPrefixError = sync.error instanceof PrefixMismatchError
-    ? (sync.error as PrefixMismatchError)
-    : null;
-
-  const handleSync = async () => {
-    try {
-      const res = await sync.mutateAsync({ embarqueId, contenedor, naviera });
-      if (res.throttled) {
-        toast({ title: "Sincronización reciente", description: res.message ?? "Espera unos minutos." });
-      } else if (res.ok) {
-        notifySuccess(toast, {
-          title: "Tracking actualizado",
-          description: res.eventos_creados ? `${res.eventos_creados} evento(s) nuevo(s).` : "Sin cambios desde la última sincronización.",
-        });
-      } else {
-        notifyError(toast, { title: "No se pudo sincronizar", description: res.error ?? "Error desconocido" });
-      }
-    } catch (err) {
-      if (err instanceof PrefixMismatchError) {
-        notifyError(toast, {
-          title: "Prefix no coincide con la naviera",
-          description: `El prefix ${err.prefix} no corresponde a ${naviera ?? "—"}. Verifica la naviera.`,
-        });
-        return;
-      }
-      notifyError(toast, { title: "Error de tracking", description: err instanceof Error ? err.message : "Error" });
-    }
-  };
-
-  // Sugerencias finales (UI consolidada)
-  const suggestions = mutationPrefixError?.suggestions ?? prefixCheck.suggestions;
-  const detectedPrefix = mutationPrefixError?.prefix ?? prefixCheck.prefix;
-  const showPrefixWarning = prefixMismatch || mutationPrefixError != null || backendPrefixError;
+  const backendPrefixError =
+    tracking?.status === "failed" && /prefix not found/i.test(tracking.failed_reason ?? "");
 
   return (
     <Card>
@@ -141,7 +75,7 @@ export function TrackingLiveCard({ embarqueId, modo, naviera, contenedor, blMast
               </TooltipProvider>
             )}
             {!noSoportada && !sinContenedor && !prefixMismatch && (
-              <Button size="sm" variant="outline" onClick={handleSync} disabled={sync.isPending}>
+              <Button size="sm" variant="outline" onClick={onSync} disabled={sync.isPending}>
                 <RefreshCw className={`h-3.5 w-3.5 mr-1 ${sync.isPending ? "animate-spin" : ""}`} />
                 {tracking ? "Actualizar" : "Sincronizar"}
               </Button>
@@ -225,81 +159,54 @@ export function TrackingLiveCard({ embarqueId, modo, naviera, contenedor, blMast
           </div>
         )}
 
-        {(() => {
-          if (readOnly || !summary || tracking?.status !== "ok" || fechasDismissed) return null;
-          const etaPropuesta = jsoncargoDateToYmd(summary.eta_final_destination);
-          const etdPropuesta = jsoncargoDateToYmd(summary.etd_origin_effective ?? summary.atd_origin);
-          const ataPropuesta = jsoncargoDateToYmd(summary.ata_effective);
-          const etaDifiere = !!etaPropuesta && etaPropuesta !== (eta ?? null);
-          const etdDifiere = !!etdPropuesta && etdPropuesta !== (etd ?? null);
-          const ataDifiere = !!ataPropuesta && ataPropuesta !== (fechaLlegadaReal ?? null);
-          if (!etaDifiere && !etdDifiere && !ataDifiere) return null;
-          const handleApply = async () => {
-            try {
-              await applyFechas.mutateAsync({
-                embarqueId,
-                eta: etaDifiere ? etaPropuesta! : undefined,
-                etd: etdDifiere ? etdPropuesta! : undefined,
-                ata: ataDifiere ? ataPropuesta! : undefined,
-              });
-              notifySuccess(toast, { title: "Fechas actualizadas en el embarque" });
-              setFechasDismissed(true);
-            } catch (err) {
-              notifyError(toast, {
-                title: "No se pudieron actualizar las fechas",
-                description: err instanceof Error ? err.message : "Error",
-              });
-            }
-          };
-          return (
-            <div className="flex items-start gap-2 text-xs p-3 rounded bg-accent/5 border border-accent/30">
-              <Info className="h-4 w-4 mt-0.5 shrink-0 text-accent" />
-              <div className="space-y-2 flex-1">
-                <p className="font-medium">JSONCargo reporta fechas distintas a las del embarque.</p>
-                <ul className="space-y-0.5">
-                  {etdDifiere && (
-                    <li>
-                      <span className="text-muted-foreground">ETD origen:</span>{" "}
-                      <span className="font-mono">{etd ? formatDate(etd, "dd MMM yyyy") : "—"}</span>
-                      {" → "}
-                      <span className="font-mono font-semibold">{formatDate(etdPropuesta!, "dd MMM yyyy")}</span>
-                    </li>
-                  )}
-                  {etaDifiere && (
-                    <li>
-                      <span className="text-muted-foreground">ETA destino:</span>{" "}
-                      <span className="font-mono">{eta ? formatDate(eta, "dd MMM yyyy") : "—"}</span>
-                      {" → "}
-                      <span className="font-mono font-semibold">{formatDate(etaPropuesta!, "dd MMM yyyy")}</span>
-                    </li>
-                  )}
-                  {ataDifiere && (
-                    <li>
-                      <span className="text-muted-foreground">ATA (arribo real):</span>{" "}
-                      <span className="font-mono">{fechaLlegadaReal ? formatDate(fechaLlegadaReal, "dd MMM yyyy") : "—"}</span>
-                      {" → "}
-                      <span className="font-mono font-semibold">{formatDate(ataPropuesta!, "dd MMM yyyy")}</span>
-                      {summary.ata_is_inferred && (
-                        <Badge variant="outline" className="ml-2 text-[10px]">Inferida del último movimiento</Badge>
-                      )}
-                      {!etaDifiere && (
-                        <span className="ml-2 text-[10px] text-muted-foreground">(también se aplicará como ETA)</span>
-                      )}
-                    </li>
-                  )}
-                </ul>
-                <div className="flex gap-2 pt-1">
-                  <Button size="sm" onClick={handleApply} disabled={applyFechas.isPending}>
-                    {applyFechas.isPending ? "Aplicando..." : "Actualizar embarque"}
-                  </Button>
-                  <Button size="sm" variant="outline" onClick={() => setFechasDismissed(true)}>
-                    Ignorar
-                  </Button>
-                </div>
+        {fechasPropuestas && summary && (
+          <div className="flex items-start gap-2 text-xs p-3 rounded bg-accent/5 border border-accent/30">
+            <Info className="h-4 w-4 mt-0.5 shrink-0 text-accent" />
+            <div className="space-y-2 flex-1">
+              <p className="font-medium">JSONCargo reporta fechas distintas a las del embarque.</p>
+              <ul className="space-y-0.5">
+                {fechasPropuestas.etdDifiere && (
+                  <li>
+                    <span className="text-muted-foreground">ETD origen:</span>{" "}
+                    <span className="font-mono">{etd ? formatDate(etd, "dd MMM yyyy") : "—"}</span>
+                    {" → "}
+                    <span className="font-mono font-semibold">{formatDate(fechasPropuestas.etdPropuesta!, "dd MMM yyyy")}</span>
+                  </li>
+                )}
+                {fechasPropuestas.etaDifiere && (
+                  <li>
+                    <span className="text-muted-foreground">ETA destino:</span>{" "}
+                    <span className="font-mono">{eta ? formatDate(eta, "dd MMM yyyy") : "—"}</span>
+                    {" → "}
+                    <span className="font-mono font-semibold">{formatDate(fechasPropuestas.etaPropuesta!, "dd MMM yyyy")}</span>
+                  </li>
+                )}
+                {fechasPropuestas.ataDifiere && (
+                  <li>
+                    <span className="text-muted-foreground">ATA (arribo real):</span>{" "}
+                    <span className="font-mono">{fechaLlegadaReal ? formatDate(fechaLlegadaReal, "dd MMM yyyy") : "—"}</span>
+                    {" → "}
+                    <span className="font-mono font-semibold">{formatDate(fechasPropuestas.ataPropuesta!, "dd MMM yyyy")}</span>
+                    {summary.ata_is_inferred && (
+                      <Badge variant="outline" className="ml-2 text-[10px]">Inferida del último movimiento</Badge>
+                    )}
+                    {!fechasPropuestas.etaDifiere && (
+                      <span className="ml-2 text-[10px] text-muted-foreground">(también se aplicará como ETA)</span>
+                    )}
+                  </li>
+                )}
+              </ul>
+              <div className="flex gap-2 pt-1">
+                <Button size="sm" onClick={onAplicarFechas} disabled={applyFechas.isPending}>
+                  {applyFechas.isPending ? "Aplicando..." : "Actualizar embarque"}
+                </Button>
+                <Button size="sm" variant="outline" onClick={() => setFechasDismissed(true)}>
+                  Ignorar
+                </Button>
               </div>
             </div>
-          );
-        })()}
+          </div>
+        )}
 
         {summary && tracking?.status === "ok" && (
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">

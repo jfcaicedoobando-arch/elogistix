@@ -22,6 +22,14 @@ export interface ChangelogEntry {
  */
 export const recentChangelog: ChangelogEntry[] = [
   {
+    version: "8.139.0",
+    date: "2026-05-14",
+    type: "minor",
+    title: "Auditoría arquitectónica: split de queries y controller de tracking",
+    summary: "services/embarque/queries.ts (355 líneas) se partió en 6 submódulos por subdominio y TrackingLiveCard ahora consume un hook controller dedicado.",
+    description: "Continuación de la auditoría arquitectónica. (1) services/embarque/queries.ts pasó a ser una carpeta queries/ con archivos por subdominio: listado.ts (lista, paginada, export, relacionados, list extras RPC), detalle.ts (byId + get_embarque_full), conceptos.ts (venta + costo), colaterales.ts (documentos, notas, facturas), expedientes.ts (agrupación por folio) y proveedores.ts. El barrel queries/index.ts re-exporta todo, así no cambian imports en consumidores. (2) Toda la lógica de TrackingLiveCard se movió a hooks/embarque/useTrackingLiveCard.ts: queries/mutations de JSONCargo, estado del diálogo BL, dismiss de fechas, derivados de prefix mismatch / naviera no soportada, handlers onSync y onAplicarFechas con feedback de toasts. El componente queda como render puro consumiendo el hook, mucho más fácil de testear y reusar. Pendientes restantes (próxima iteración): crear lib/domain/auditoria.ts con tests y reducir MarcarRevisadoDialog (409 líneas) y AsignarResponsableDialog (242) a UI + controller; migrar TabTracking a react-hook-form. Tests: 298 verdes (pre-existente changelog ≤10 sigue rojo).",
+  },
+  {
     version: "8.138.0",
     date: "2026-05-14",
     type: "minor",
