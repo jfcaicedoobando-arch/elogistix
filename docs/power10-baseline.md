@@ -1,6 +1,6 @@
 # Power of 10 — Baseline
 
-_Generado por `scripts/audit-power10.ts` sobre 499 archivos de `src/`._
+_Generado por `scripts/audit-power10.ts` sobre 503 archivos de `src/`._
 
 Las heurísticas son conservadoras (prefieren falsos positivos). Validar manualmente antes de refactorizar. Ver ARCHITECTURE.md §20.
 
@@ -8,22 +8,22 @@ Las heurísticas son conservadoras (prefieren falsos positivos). Validar manualm
 
 | Regla | Hallazgos |
 |---|---:|
-| #4 Componentes >200 líneas | 19 |
+| #4 Componentes >200 líneas | 18 |
 | #5/#10 `any` explícito | 0 |
 | #3 `useEffect` sin cleanup | 1 |
 | #2 Queries de lista sin paginar | 68 |
 
-## Regla #4 — Componentes >200 líneas (19)
+## Regla #4 — Componentes >200 líneas (18)
 
 Componentes y páginas que superan el umbral. Refactor: extraer `use<X>Controller` + subcomponentes.
 
 | Dominio | Hallazgos |
 |---|---:|
 | `components/embarque` | 3 |
-| `components/auditoria` | 2 |
 | `components/cotizacion` | 2 |
 | `pages/admin` | 2 |
 | `pages/cotizaciones` | 2 |
+| `components/auditoria` | 1 |
 | `components/facturacion` | 1 |
 | `components/layout` | 1 |
 | `components/portal` | 1 |
@@ -36,7 +36,6 @@ Componentes y páginas que superan el umbral. Refactor: extraer `use<X>Controlle
 <details><summary>Detalle</summary>
 
 - `src/components/auditoria/AsignarResponsableDialog.tsx` — 219 líneas
-- `src/components/auditoria/MarcarRevisadoDialog.tsx` — 306 líneas
 - `src/components/cotizacion/CotizacionWizardLayout.tsx` — 229 líneas
 - `src/components/cotizacion/cotizacionesColumns.tsx` — 209 líneas
 - `src/components/embarque/DialogBolContainers.tsx` — 246 líneas
