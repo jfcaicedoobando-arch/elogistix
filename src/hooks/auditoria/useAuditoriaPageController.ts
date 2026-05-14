@@ -13,11 +13,12 @@ import {
   useAuditoriaRevisiones,
   revisionKey,
 } from "@/hooks/auditoria/useAuditoriaRevisiones";
-import type {
-  HallazgoAuditoria,
-  ReglaAuditoria,
-  SeveridadAuditoria,
-} from "@/types/auditoria";
+import type { SeveridadAuditoria } from "@/types/auditoria";
+import {
+  agruparPorRegla,
+  contarPorSeveridad,
+  filtrarHallazgos,
+} from "@/lib/domain/auditoria";
 
 export function useAuditoriaPageController() {
   const { data, isLoading, isFetching } = useAuditoria();
