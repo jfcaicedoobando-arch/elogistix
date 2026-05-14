@@ -18,6 +18,7 @@ import {
 } from "@/components/ui/accordion";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { pluralS } from "@/lib/formatters";
 import { AuditoriaKpis } from "@/components/auditoria/AuditoriaKpis";
 import { AuditoriaEjecutivoTab } from "@/components/auditoria/AuditoriaEjecutivoTab";
 import { HallazgoTabla } from "@/components/auditoria/HallazgoTabla";
@@ -159,13 +160,13 @@ export default function Auditoria() {
                     {c.mostrarRevisados ? (
                       <>
                         Mostrando también <span className="font-semibold text-foreground">{c.revisadosCount}</span> hallazgo
-                        {c.revisadosCount === 1 ? "" : "s"} ya revisado{c.revisadosCount === 1 ? "" : "s"}.
+                        {pluralS(c.revisadosCount)} ya revisado{pluralS(c.revisadosCount)}.
                       </>
                     ) : (
                       <>
                         <span className="font-semibold text-foreground">{c.revisadosCount}</span> hallazgo
-                        {c.revisadosCount === 1 ? "" : "s"} revisado{c.revisadosCount === 1 ? "" : "s"} oculto
-                        {c.revisadosCount === 1 ? "" : "s"}.
+                        {pluralS(c.revisadosCount)} revisado{pluralS(c.revisadosCount)} oculto
+                        {pluralS(c.revisadosCount)}.
                       </>
                     )}
                   </span>

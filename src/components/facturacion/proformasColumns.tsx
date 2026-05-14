@@ -7,7 +7,7 @@ import { Download, FileCheck2, FileText, FileCode2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { type DataTableColumn } from "@/components/shared/DataTable";
-import { formatCurrency, formatDate, toTitleCase, nombreDesdeEmail } from "@/lib/formatters";
+import { formatCurrency, formatDate, toTitleCase, nombreDesdeEmail, formatDiasCredito } from "@/lib/formatters";
 import type { ProformaConFactura, ProformaRow } from "@/hooks/embarque/useProformas";
 
 interface BuildArgs {
@@ -61,8 +61,7 @@ export function buildProformasColumns({
     {
       key: "dias_credito", header: "Días Crédito", width: "w-[110px]", className: "text-right text-xs whitespace-nowrap",
       sortable: true, sortValue: (p) => p.dias_credito ?? -1,
-      render: (p) =>
-        p.dias_credito == null ? "—" : Number(p.dias_credito) === 0 ? "Contado" : `${p.dias_credito} días`,
+      render: (p) => formatDiasCredito(p.dias_credito),
     },
     {
       key: "monto_usd", header: "Monto USD", width: "w-[130px]", className: "text-right whitespace-nowrap",

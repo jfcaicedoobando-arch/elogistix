@@ -15,6 +15,13 @@ import { getErrorMessage } from "@/lib/errors";
 import { useToast } from "@/hooks/use-toast";
 import { useDuplicarEmbarque, type EmbarqueRow } from "@/hooks/embarque/useEmbarques";
 
+import { pluralS } from "@/lib/formatters";
+
+function getCrearBtnLabel(isPending: boolean, copias: number): string {
+  if (isPending) return "Creando...";
+  return `Crear ${copias} Embarque${pluralS(copias)}`;
+}
+
 interface FilaCopia {
   num_contenedor: string;
   tipo_contenedor: string;
@@ -135,7 +142,7 @@ export default function DialogDuplicarEmbarque({ embarque, open, onOpenChange }:
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>
           <Button onClick={handleDuplicar} disabled={duplicarEmbarque.isPending}>
-            {duplicarEmbarque.isPending ? 'Creando...' : `Crear ${filaCopias.length} Embarque${filaCopias.length > 1 ? 's' : ''}`}
+            {getCrearBtnLabel(duplicarEmbarque.isPending, filaCopias.length)}
           </Button>
         </DialogFooter>
       </DialogContent>

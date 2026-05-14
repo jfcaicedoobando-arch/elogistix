@@ -4,7 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { DataTable, type DataTableColumn } from "@/components/shared/DataTable";
-import { formatCurrency, formatDate } from "@/lib/formatters";
+import { formatCurrency, formatDate, formatDiasCredito } from "@/lib/formatters";
 import type { ProformaConFactura } from "@/services/proforma";
 
 interface Props {
@@ -47,7 +47,7 @@ export function HistorialProformas({ proformas, canEdit, isDeleting, onDescargar
     { key: "fecha", header: "Fecha", render: (p) => formatDate(p.fecha_emision) },
     { key: "operador", header: "Operador", className: "text-sm", render: (p) => p.operador || <span className="text-muted-foreground">—</span> },
     { key: "credito", header: "Días Crédito", align: "right", className: "text-sm",
-      render: (p) => p.dias_credito == null ? "—" : Number(p.dias_credito) === 0 ? "Contado" : `${p.dias_credito} días` },
+      render: (p) => formatDiasCredito(p.dias_credito) },
     { key: "usd", header: "Total USD", align: "right",
       render: (p) => Number(p.total_usd) > 0 ? formatCurrency(Number(p.total_usd), "USD") : "—" },
     { key: "mxn", header: "Total MXN", align: "right",

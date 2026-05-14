@@ -10,6 +10,7 @@ import { useNavigate } from "react-router-dom";
 import { DataTable } from "@/components/shared/DataTable";
 import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
 import { formatCurrency, toTitleCase } from "@/lib/formatters";
+import { getProfitToneClass } from "@/lib/ui/uiMappings";
 import { useTabProyeccionController } from "@/hooks/facturacion/useTabProyeccionController";
 import { HuecoFacturacionCard } from "./HuecoFacturacionCard";
 import { CierreCard } from "./CierreCard";
@@ -21,7 +22,7 @@ export function TabProyeccion() {
 
 
   const k = c.kpis;
-  const profitTone = k.margenProyPct < 0 ? "text-destructive" : k.margenProyPct < 10 ? "text-warning" : "text-success";
+  const profitTone = getProfitToneClass(k.margenProyPct);
 
   return (
     <div className="space-y-4">

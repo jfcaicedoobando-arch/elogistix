@@ -12,6 +12,7 @@ import { Badge } from "@/components/ui/badge";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { NavLink } from "@/components/layout/NavLink";
 import { cn } from "@/lib/utils";
+import { pluralS } from "@/lib/formatters";
 
 export interface SidebarItem {
   title: string;
@@ -88,7 +89,7 @@ function SidebarGroupBlockBase({ label, items, collapsed, pathname, totalAlertas
                               {badge > 99 ? "99+" : badge}
                             </Badge>
                           </TooltipTrigger>
-                          <TooltipContent side="right">{badge} alerta{badge === 1 ? "" : "s"} activa{badge === 1 ? "" : "s"}</TooltipContent>
+                          <TooltipContent side="right">{badge} alerta{pluralS(badge)} activa{pluralS(badge)}</TooltipContent>
                         </Tooltip>
                       )}
                     </NavLink>

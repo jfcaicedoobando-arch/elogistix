@@ -12,6 +12,11 @@ import TabAlertas from "@/components/configuracion/TabAlertas";
 import TabPuertos from "@/components/configuracion/TabPuertos";
 import TabAuditoria from "@/components/configuracion/TabAuditoria";
 
+function getSaveButtonLabel(isSaving: boolean, isDirty: boolean): string {
+  if (isSaving) return "Guardando...";
+  return isDirty ? "Guardar Cambios" : "Sin Cambios";
+}
+
 export default function Configuracion() {
   const { s, set, isLoading, isSaving, isDirty, handleSave } = useConfiguracionState();
 
@@ -38,7 +43,7 @@ export default function Configuracion() {
         </div>
         <Button onClick={handleSave} disabled={isSaving || !isDirty} title={!isDirty ? "No hay cambios pendientes" : undefined}>
           <Save className="h-4 w-4 mr-2" />
-          {isSaving ? "Guardando..." : isDirty ? "Guardar Cambios" : "Sin Cambios"}
+          {getSaveButtonLabel(isSaving, isDirty)}
         </Button>
       </div>
 

@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Link } from "react-router-dom";
 import { getEstadoColor, getEstadoBarColor } from "@/lib/ui/uiMappings";
+import { pluralS } from "@/lib/formatters";
 
 interface Props {
   total: number;
@@ -49,7 +50,7 @@ export function PortalEstadoEmbarquesCard({ total, distribucion }: Props) {
           })}
         </div>
         <p className="text-xs text-muted-foreground text-center tabular-nums">
-          {total} embarque{total !== 1 ? "s" : ""} activo{total !== 1 ? "s" : ""}
+          {total} embarque{pluralS(total)} activo{pluralS(total)}
         </p>
       </CardContent>
     </Card>

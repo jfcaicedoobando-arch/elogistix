@@ -18,6 +18,13 @@ export interface ConceptoRowProps {
   eliminar: (index: number) => void;
 }
 
+/** Resuelve el value del Select de concepto: catálogo, vacío o "Otro". */
+function getConceptoSelectValue(descripcion: string, catalogo: readonly string[]): string {
+  if (catalogo.includes(descripcion)) return descripcion;
+  if (descripcion === "") return "";
+  return "Otro";
+}
+
 export function ConceptoRowUSD({ concepto: c, index: i, total, actualizar, eliminar }: ConceptoRowProps) {
   const puedeIva = (CONCEPTOS_CON_IVA_USD as readonly string[]).includes(c.descripcion);
   return (
@@ -32,7 +39,7 @@ export function ConceptoRowUSD({ concepto: c, index: i, total, actualizar, elimi
           />
         ) : (
           <Select
-            value={(CONCEPTOS_COSTO_USD as readonly string[]).includes(c.descripcion) ? c.descripcion : c.descripcion === '' ? '' : 'Otro'}
+            value={getConceptoSelectValue(c.descripcion, CONCEPTOS_COSTO_USD as readonly string[])}
             onValueChange={val => {
               if (val === 'Otro') {
                 actualizar(i, 'descripcion', '');

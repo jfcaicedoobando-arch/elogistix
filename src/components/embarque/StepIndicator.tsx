@@ -1,4 +1,5 @@
 import { Check } from "lucide-react";
+import { getStepIndicatorCircleClass } from "@/lib/ui/uiMappings";
 
 interface Step {
   title: string;
@@ -21,10 +22,7 @@ export function StepIndicator({ steps, currentStep }: Props) {
         <div key={step.num} className="flex items-center flex-1 min-w-fit" role="listitem">
           <div className="flex items-center gap-2">
             <div
-              className={`h-7 w-7 sm:h-8 sm:w-8 rounded-full flex items-center justify-center text-xs font-bold shrink-0 ${
-                currentStep > step.num ? 'bg-success text-success-foreground' :
-                currentStep === step.num ? 'bg-accent text-accent-foreground' : 'bg-muted text-muted-foreground'
-              }`}
+              className={`h-7 w-7 sm:h-8 sm:w-8 rounded-full flex items-center justify-center text-xs font-bold shrink-0 ${getStepIndicatorCircleClass(currentStep, step.num)}`}
               aria-current={currentStep === step.num ? 'step' : undefined}
             >
               {currentStep > step.num ? <Check className="h-4 w-4" aria-hidden /> : step.num}

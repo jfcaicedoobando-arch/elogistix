@@ -8,6 +8,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { DataTable, type DataTableColumn } from "@/components/shared/DataTable";
 import type { DocumentoEmbarqueRow } from "@/hooks/embarque/useEmbarques";
+import { getDocEstadoColorClass } from "@/lib/ui/uiMappings";
 
 interface Props {
   documentos: DocumentoEmbarqueRow[];
@@ -28,9 +29,7 @@ export function TabDocumentos({ documentos, canEdit, uploadingDocId, downloading
     {
       key: "estado", header: "Estado", render: (d) => (
         <div className="flex items-center gap-2">
-          <div className={`h-3 w-3 rounded-full ${
-            d.estado === 'Validado' ? 'bg-success' : d.estado === 'Recibido' ? 'bg-success' : 'bg-destructive'
-          }`} />
+          <div className={`h-3 w-3 rounded-full ${getDocEstadoColorClass(d.estado)}`} />
           <span className="text-sm">{d.estado}</span>
         </div>
       ),

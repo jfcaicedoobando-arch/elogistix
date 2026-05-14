@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import type { DataTableColumn } from "@/components/shared/DataTable";
 import type { FilaHueco } from "@/services/facturas/huecoFacturacion";
 import { formatCurrency, formatDate, toTitleCase } from "@/lib/formatters";
+import { getDiasVencidosTone } from "@/lib/ui/uiMappings";
 import { cn } from "@/lib/utils";
 
 export const huecoFacturacionColumns: DataTableColumn<FilaHueco>[] = [
@@ -80,7 +81,7 @@ export const huecoFacturacionColumns: DataTableColumn<FilaHueco>[] = [
     sortValue: (f) => f.diasDesdeEtd,
     render: (f) => {
       const d = f.diasDesdeEtd;
-      const tone = d > 30 ? "destructive" : d > 15 ? "warning" : "default";
+      const tone = getDiasVencidosTone(d);
       return (
         <Badge
           variant="outline"

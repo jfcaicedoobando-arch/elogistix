@@ -50,6 +50,26 @@ export const formatNumber = (
   return suffix ? `${formatted} ${suffix}` : formatted;
 };
 
+/** Sufijo de pluralización mexicana ("" para 1, "s" para cualquier otro). */
+export const pluralS = (n: number): string => (n === 1 ? "" : "s");
+
+/**
+ * Formatea el campo "días de crédito" de proformas/facturas.
+ * - null/undefined/"" → "—"
+ * - 0 → "Contado"
+ * - N → "N días"
+ */
+export const formatDiasCredito = (
+  d: number | string | null | undefined,
+): string => {
+  if (d === null || d === undefined) return "—";
+  if (typeof d === "string" && d.trim() === "") return "—";
+  const n = Number(d);
+  if (!Number.isFinite(n)) return "—";
+  if (n === 0) return "Contado";
+  return `${n} días`;
+};
+
 /** Extrae la primera parte de un nombre compuesto (antes de coma o guión largo) */
 export const shortName = (raw: string | null): string =>
   raw?.split(/[,—]/)[0].trim() || "-";

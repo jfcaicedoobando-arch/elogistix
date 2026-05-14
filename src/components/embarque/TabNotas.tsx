@@ -13,6 +13,7 @@ import { useToast } from "@/hooks/use-toast";
 import type { NotaEmbarqueRow } from "@/hooks/embarque/useEmbarques";
 import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 import { formatDate, nombreDesdeEmail } from "@/lib/formatters";
+import { getNotaTipoColorClass } from "@/lib/ui/uiMappings";
 
 interface Props {
   notas: NotaEmbarqueRow[];
@@ -71,9 +72,7 @@ export function TabNotas({ notas, embarqueId }: Props) {
             {notas.map(nota => (
               <div key={nota.id} className="flex gap-3 text-sm">
                 <div className="flex flex-col items-center">
-                  <div className={`h-2.5 w-2.5 rounded-full mt-1.5 ${
-                    nota.tipo === 'cambio_estado' ? 'bg-accent' : nota.tipo === 'nota' ? 'bg-warning' : 'bg-muted-foreground'
-                  }`} />
+                  <div className={`h-2.5 w-2.5 rounded-full mt-1.5 ${getNotaTipoColorClass(nota.tipo)}`} />
                   <div className="flex-1 w-px bg-border mt-1" />
                 </div>
                 <div className="pb-4">
