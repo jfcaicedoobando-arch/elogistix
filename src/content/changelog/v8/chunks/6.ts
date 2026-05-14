@@ -921,5 +921,6 @@ export const chunk6: ChangelogEntry[] = [
     date: "2026-04-25",
     type: "minor",
     title: "NuevoEmbarque migrado a controller hook (282→79 líneas)",
+    description: "Paso 7 de la auditoría arquitectónica. Se extrajo todo el estado y lógica del wizard de creación de embarques al nuevo controller hook hooks/embarque/useNuevoEmbarqueWizard.ts: estado local del paso actual, errores de validación, vinculación/desvinculación de cotización, hidratación de conceptos desde una cotización aceptada, manejo de modo expediente (nuevo vs existente), reset por cambio de cliente, validación del paso 1 y la orquestación completa del submit (resolverExpediente → subirDocumentosEmbarque → createEmbarque → updateEstadoCotizacion → registrarActividad). La página NuevoEmbarque.tsx pasó de 282 líneas a 79 líneas (-72%) y queda como un componente puramente presentacional que consume el hook y renderiza los 4 pasos del wizard.",
   },
 ];
