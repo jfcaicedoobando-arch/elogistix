@@ -9,6 +9,7 @@ import {
   parseResumenMesSiguiente,
   parseEmbarquesMesSiguiente,
   parseCargasPorCliente,
+  parseCargasActivasTotal,
   combinarActivos,
   type EstadoFiltro,
   type AlertaDemora,
