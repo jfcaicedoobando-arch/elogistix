@@ -22,6 +22,14 @@ export interface ChangelogEntry {
  */
 export const recentChangelog: ChangelogEntry[] = [
   {
+    version: "8.152.0",
+    date: "2026-05-15",
+    type: "minor",
+    title: "Filtros y paginación sincronizados a la URL — adopción de nuqs + libphonenumber-js",
+    summary: "Los listados (Embarques, Cotizaciones, Pre-Facturación, Clientes, Proveedores) ahora reflejan search/filtros/página/orden en la URL, lo que los hace compartibles y persistentes al refresh. Teléfonos formateados con libphonenumber-js.",
+    description: "nuqs (NuqsAdapter en App.tsx) sustituye useState en useListPageState y useEmbarquesPageState, manteniendo la API pública. Los listados de Embarques, Cotizaciones, Pre-Facturación, Clientes y Proveedores ganan filtros compartibles y persistentes al refresh. libphonenumber-js/min reemplaza el set hardcodeado de ladas MX en formatPhoneMx, preservando el formato visual '(LADA) NNNN-NNNN'. Tests adaptados con withNuqsTestingAdapter. PDFs siguen via window.print() y CSV se difiere a Google Sheets por decisión del usuario.",
+  },
+  {
     version: "8.151.0",
     date: "2026-05-15",
     type: "patch",
