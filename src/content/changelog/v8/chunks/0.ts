@@ -2,6 +2,14 @@ import type { ChangelogEntry } from "../../../changelogData";
 
 export const chunk0: ChangelogEntry[] = [
   {
+    version: "8.152.3",
+    date: "2026-05-15",
+    type: "patch",
+    title: "Dashboard — fix posición tooltip 'Cargas activas por cliente'",
+    summary: "El tooltip se desplegaba en `side='left'` y quedaba truncado contra el borde izquierdo del viewport (sobre el sidebar). Ahora se muestra arriba de la fila con `align='end'` y `collisionPadding=16`.",
+    description: "TooltipContent en CargasActivasClienteCard cambia de side='left' a side='top' align='end' collisionPadding={16}, evitando que el contenido se corte cuando el contenedor del card está cerca del borde izquierdo. Sin cambios funcionales.",
+  },
+  {
     version: "8.152.2",
     date: "2026-05-15",
     type: "patch",
