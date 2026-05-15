@@ -57,7 +57,7 @@ export async function fetchHuecoFacturacion({
     .select(
       "id, expediente, cliente_nombre, operador, etd, eta, bl_master, bl_house, tipo_cambio_usd, tipo_cambio_eur",
     )
-    .gte("etd", FECHA_INICIO_HUECO)
+    .not("etd", "is", null)
     .lte("etd", limiteIso)
     .order("etd", { ascending: true });
 
