@@ -17,36 +17,36 @@ describe("useListPageState", () => {
     expect(result.current.pageSize).toBe(20);
   });
 
-  it("setSearch resetea la página a 0", () => {
+  it("setSearch resetea la página a 0", async () => {
     const { result } = renderHook(
       () => useListPageState({ estado: "todos" }),
       { wrapper },
     );
-    act(() => result.current.setPage(3));
+    await act(async () => { await result.current.setPage(3); });
     expect(result.current.page).toBe(3);
-    act(() => result.current.setSearch("foo"));
+    await act(async () => { await result.current.setSearch("foo"); });
     expect(result.current.search).toBe("foo");
     expect(result.current.page).toBe(0);
   });
 
-  it("setFilter actualiza solo la clave especificada y resetea página", () => {
+  it("setFilter actualiza solo la clave especificada y resetea página", async () => {
     const { result } = renderHook(
       () => useListPageState({ estado: "todos", cliente: "todos" }),
       { wrapper },
     );
-    act(() => result.current.setPage(2));
-    act(() => result.current.setFilter("estado", "Aceptada"));
+    await act(async () => { await result.current.setPage(2); });
+    await act(async () => { await result.current.setFilter("estado", "Aceptada"); });
     expect(result.current.filters).toEqual({ estado: "Aceptada", cliente: "todos" });
     expect(result.current.page).toBe(0);
   });
 
-  it("paginate corta el array y calcula totalPages", () => {
+  it("paginate corta el array y calcula totalPages", async () => {
     const { result } = renderHook(() => useListPageState({}, 5), { wrapper });
     const items = Array.from({ length: 12 }, (_, i) => i);
     const p1 = result.current.paginate(items);
     expect(p1.items).toEqual([0, 1, 2, 3, 4]);
     expect(p1.totalPages).toBe(3);
-    act(() => result.current.setPage(2));
+    await act(async () => { await result.current.setPage(2); });
     const p3 = result.current.paginate(items);
     expect(p3.items).toEqual([10, 11]);
   });
