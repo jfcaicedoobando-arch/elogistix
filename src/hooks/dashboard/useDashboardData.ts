@@ -110,5 +110,6 @@ export function useDashboardData() {
     resumenMesSiguiente,
     arribosEsteMes,
     cargasPorCliente,
+    cargasActivasTotal,
   };
 }
