@@ -22,6 +22,14 @@ export interface ChangelogEntry {
  */
 export const recentChangelog: ChangelogEntry[] = [
   {
+    version: "8.152.2",
+    date: "2026-05-15",
+    type: "patch",
+    title: "Dashboard — tooltip y subtítulo explícitos en 'Cargas activas por cliente'",
+    summary: "El header explica qué estados se cuentan; tooltip enriquecido con desglose y nota '% del total de tu organización'.",
+    description: "Subtítulo en el header listando los 5 estados incluidos. Tooltip nativo reemplazado por shadcn Tooltip con nombre, totales, % y línea 'Incluye embarques en: ...'. Etiqueta de barra cambia a '45% del total' en ≥md. Cuando el total global es 0, se muestra '—' en lugar de 0%. Aria-label por fila.",
+  },
+  {
     version: "8.152.1",
     date: "2026-05-15",
     type: "patch",
@@ -92,14 +100,6 @@ export const recentChangelog: ChangelogEntry[] = [
     title: "Power of 10 — Fase 4: refactor Auditoria.tsx (297 → 87 líneas)",
     summary: "La página Auditoria queda como shell delgado: extraídos AuditoriaHallazgosTab, AuditoriaPorReglaTab y helper puro lib/domain/auditoriaCsv. Componentes >200 líneas: 20 → 19.",
     description: "Primer dominio de la Fase 4 del plan The Power of 10. (1) src/pages/Auditoria.tsx pasa de 297 a 87 líneas eliminando renderHallazgosTab/renderPorReglaTab inline y la lógica de exportCsv. (2) Nuevo src/components/auditoria/AuditoriaHallazgosTab.tsx (KPIs + filtros + toggle revisados + HallazgosTablaPaginada). (3) Nuevo src/components/auditoria/AuditoriaPorReglaTab.tsx (accordion por regla con HallazgoTabla). (4) Nuevo src/lib/domain/auditoriaCsv.ts con exportHallazgosCsv() — función pura sin dependencias de React, mapeo de filas y constante de columnas. (5) scripts/audit-power10.ts también ignora src/content/changelogData.ts (descripciones contienen 'as any' como texto). Tests: 314 verdes. Sin cambios de UI ni de comportamiento.",
-  },
-  {
-    version: "8.144.0",
-    date: "2026-05-14",
-    type: "minor",
-    title: "Power of 10 — Fase 3: ESLint endurecido (no-explicit-any error)",
-    summary: "`@typescript-eslint/no-explicit-any` pasa a `error`, `max-lines-per-function` sube a 200 para alinear con §20.4. TabResumen elimina su `any` casteando a tipo Partial; quedan 0 `any` reales en src/.",
-    description: "Cierre de la Fase 3 del plan The Power of 10. (1) eslint.config.js: `@typescript-eslint/no-explicit-any: error` (con eslint-disable puntual documentado en appFeedback.ts/listado.ts), `max-lines-per-function: 200` (alineado con §20.4), exempción agregada para src/content/changelog/** (chunks largos por diseño). (2) TabResumen.tsx: los dos `(embarque as any).etd_original/eta_original` se reemplazan por un IIFE que castea a `Partial<{ etd_original; eta_original }>`. (3) scripts/audit-power10.ts ahora ignora src/content/changelog/** y líneas con `eslint-disable @typescript-eslint/no-explicit-any` arriba — la baseline pasa de 17 a 0 `any` reales. APP_VERSION 8.144.0.",
   },
 ];
 

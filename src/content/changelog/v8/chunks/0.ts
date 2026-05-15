@@ -2,6 +2,14 @@ import type { ChangelogEntry } from "../../../changelogData";
 
 export const chunk0: ChangelogEntry[] = [
   {
+    version: "8.152.2",
+    date: "2026-05-15",
+    type: "patch",
+    title: "Dashboard — tooltip y subtítulo explícitos en 'Cargas activas por cliente'",
+    summary: "El header ahora explica qué estados se cuentan y cómo se calcula el %. Tooltip enriquecido por fila con desglose y nota '% del total de tu organización'.",
+    description: "(1) Subtítulo en el header: 'Suma de embarques en En Tránsito · Confirmado · Arribo · En Aduana · Entregado. El % de cada fila indica qué porción del total activo de tu organización representa ese cliente.' (2) Tooltip nativo (`title=`) reemplazado por shadcn Tooltip con nombre del cliente, totales, % entre paréntesis y línea 'Incluye embarques en: ...'. (3) Etiqueta de la barra cambia de '45%' a '45% del total' en viewports ≥md (en sm se mantiene '45%' por espacio). (4) Cuando totalActivosGlobal=0 la barra queda vacía y la etiqueta muestra '—' en lugar de 0% para evitar confusión. (5) Aria-label por fila para lectores de pantalla. Sin cambios en RPC, parsers ni hooks.",
+  },
+  {
     version: "8.152.1",
     date: "2026-05-15",
     type: "patch",
