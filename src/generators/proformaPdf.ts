@@ -152,9 +152,9 @@ function generarPdfConsolidada(params: GenerarPdfProformaParams) {
     const rows = items.map(i => {
       const sub = Number(i.total);
       if (hayIva) {
-        return `<tr><td>${formatearDescripcionConcepto(i.descripcion)}</td><td class="right">${i.cantidad}</td><td class="right">${formatCurrency(Number(i.precio_unitario), moneda)}</td><td class="right">${formatCurrency(sub, moneda)}</td><td class="right">${i.aplica_iva ? formatCurrency(Number(i.iva), moneda) : '—'}</td></tr>`;
+        return `<tr><td>${esc(formatearDescripcionConcepto(i.descripcion))}</td><td class="right">${i.cantidad}</td><td class="right">${formatCurrency(Number(i.precio_unitario), moneda)}</td><td class="right">${formatCurrency(sub, moneda)}</td><td class="right">${i.aplica_iva ? formatCurrency(Number(i.iva), moneda) : '—'}</td></tr>`;
       }
-      return `<tr><td>${formatearDescripcionConcepto(i.descripcion)}</td><td class="right">${i.cantidad}</td><td class="right">${formatCurrency(Number(i.precio_unitario), moneda)}</td><td class="right">${formatCurrency(sub, moneda)}</td></tr>`;
+      return `<tr><td>${esc(formatearDescripcionConcepto(i.descripcion))}</td><td class="right">${i.cantidad}</td><td class="right">${formatCurrency(Number(i.precio_unitario), moneda)}</td><td class="right">${formatCurrency(sub, moneda)}</td></tr>`;
     }).join('');
     const subContenedor = items.reduce((s, i) => s + Number(i.total), 0);
     return `
@@ -177,7 +177,7 @@ function generarPdfConsolidada(params: GenerarPdfProformaParams) {
     return `
       <h4>Conceptos en ${moneda}</h4>
       ${grupos.map(g => `
-        <div class="container-block">📦 Contenedor: ${g.contenedor}${g.tipo ? ` (${g.tipo})` : ''}</div>
+        <div class="container-block">📦 Contenedor: ${esc(g.contenedor)}${g.tipo ? ` (${esc(g.tipo)})` : ''}</div>
         ${buildGrupoTabla(g, moneda)}
       `).join('')}
       <div class="subtotal-block">
@@ -187,7 +187,7 @@ function generarPdfConsolidada(params: GenerarPdfProformaParams) {
       </div>`;
   };
 
-  const html = `<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><title>${proforma.numero} - Proforma Consolidada</title>
+  const html = `<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><title>${esc(proforma.numero)} - Proforma Consolidada</title>
 ${buildBaseStyles()}</head><body>
   ${buildHeaderHtml(proforma, cliente, embarque, true)}
 
@@ -197,7 +197,7 @@ ${buildBaseStyles()}</head><body>
     ${seccionMoneda('MXN')}
   </section>
 
-  ${proforma.notas ? `<section><h3>Notas</h3><p>${proforma.notas}</p></section>` : ''}
+  ${proforma.notas ? `<section><h3>Notas</h3><p>${esc(proforma.notas)}</p></section>` : ''}
 
   <div class="footer-aviso">
     ⚠ Este documento es una proforma consolidada y no tiene validez fiscal
@@ -229,9 +229,9 @@ export function generarPdfProforma(params: GenerarPdfProformaParams) {
         const sub = Number(c.cantidad) * Number(c.precio_unitario);
         if (hayIva) {
           const iva = c.aplica_iva ? calcularIVA(sub, tasaIva) : 0;
-          return `<tr><td>${formatearDescripcionConcepto(c.descripcion)}</td><td class="right">${c.cantidad}</td><td class="right">${formatCurrency(Number(c.precio_unitario), 'USD')}</td><td class="right">${formatCurrency(sub, 'USD')}</td><td class="right">${c.aplica_iva ? formatCurrency(iva, 'USD') : '—'}</td></tr>`;
+          return `<tr><td>${esc(formatearDescripcionConcepto(c.descripcion))}</td><td class="right">${c.cantidad}</td><td class="right">${formatCurrency(Number(c.precio_unitario), 'USD')}</td><td class="right">${formatCurrency(sub, 'USD')}</td><td class="right">${c.aplica_iva ? formatCurrency(iva, 'USD') : '—'}</td></tr>`;
         }
-        return `<tr><td>${formatearDescripcionConcepto(c.descripcion)}</td><td class="right">${c.cantidad}</td><td class="right">${formatCurrency(Number(c.precio_unitario), 'USD')}</td><td class="right">${formatCurrency(sub, 'USD')}</td></tr>`;
+        return `<tr><td>${esc(formatearDescripcionConcepto(c.descripcion))}</td><td class="right">${c.cantidad}</td><td class="right">${formatCurrency(Number(c.precio_unitario), 'USD')}</td><td class="right">${formatCurrency(sub, 'USD')}</td></tr>`;
       }).join('');
     return `
       <h4>Conceptos en USD</h4>
@@ -250,7 +250,7 @@ export function generarPdfProforma(params: GenerarPdfProformaParams) {
     if (conceptosMXN.length === 0) return '';
     const rows = conceptosMXN.map(c => {
       const sub = Number(c.cantidad) * Number(c.precio_unitario);
-      return `<tr><td>${formatearDescripcionConcepto(c.descripcion)}</td><td class="right">${c.cantidad}</td><td class="right">${formatCurrency(Number(c.precio_unitario), 'MXN')}</td><td class="right">${formatCurrency(sub, 'MXN')}</td></tr>`;
+      return `<tr><td>${esc(formatearDescripcionConcepto(c.descripcion))}</td><td class="right">${c.cantidad}</td><td class="right">${formatCurrency(Number(c.precio_unitario), 'MXN')}</td><td class="right">${formatCurrency(sub, 'MXN')}</td></tr>`;
     }).join('');
     return `
       <h4>Conceptos en MXN</h4>
@@ -265,7 +265,7 @@ export function generarPdfProforma(params: GenerarPdfProformaParams) {
       </div>`;
   };
 
-  const html = `<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><title>${proforma.numero} - Proforma</title>
+  const html = `<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><title>${esc(proforma.numero)} - Proforma</title>
 ${buildBaseStyles()}</head><body>
   ${buildHeaderHtml(proforma, cliente, embarque, false)}
 
@@ -275,7 +275,7 @@ ${buildBaseStyles()}</head><body>
     ${buildMxnTable()}
   </section>
 
-  ${proforma.notas ? `<section><h3>Notas</h3><p>${proforma.notas}</p></section>` : ''}
+  ${proforma.notas ? `<section><h3>Notas</h3><p>${esc(proforma.notas)}</p></section>` : ''}
 
   <div class="footer-aviso">
     ⚠ Este documento es una proforma y no tiene validez fiscal
