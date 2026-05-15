@@ -5,6 +5,7 @@ import { QueryClient } from "@tanstack/react-query";
 import { PersistQueryClientProvider } from "@tanstack/react-query-persist-client";
 import { createSyncStoragePersister } from "@tanstack/query-sync-storage-persister";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { NuqsAdapter } from "nuqs/adapters/react-router/v6";
 import { Layout } from "./components/layout/Layout";
 import { ProtectedRoute } from "./components/auth/ProtectedRoute";
 import { PortalProtectedRoute } from "./components/auth/PortalProtectedRoute";
@@ -116,6 +117,7 @@ const App = () => (
     <TooltipProvider>
       <Toaster />
       <BrowserRouter>
+        <NuqsAdapter>
         <BreadcrumbProvider>
         <Suspense fallback={<RouteLoadingFallback />}>
           <Routes>
@@ -205,6 +207,7 @@ const App = () => (
           </Routes>
         </Suspense>
         </BreadcrumbProvider>
+        </NuqsAdapter>
       </BrowserRouter>
     </TooltipProvider>
   </PersistQueryClientProvider>
