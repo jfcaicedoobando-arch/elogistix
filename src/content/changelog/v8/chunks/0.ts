@@ -2,6 +2,14 @@ import type { ChangelogEntry } from "../../../changelogData";
 
 export const chunk0: ChangelogEntry[] = [
   {
+    version: "8.152.0",
+    date: "2026-05-15",
+    type: "minor",
+    title: "Filtros y paginación sincronizados a la URL — adopción de nuqs + libphonenumber-js",
+    summary: "Los listados (Embarques, Cotizaciones, Pre-Facturación, Clientes, Proveedores) ahora reflejan search/filtros/página/orden en la URL, lo que los hace compartibles y persistentes al refresh. Teléfonos se formatean con libphonenumber-js para soportar todas las ladas MX correctamente.",
+    description: "Migración de código custom a dependencias maduras según plan de auditoría. (1) `nuqs@2.8.9` integrado vía NuqsAdapter en App.tsx (adapter react-router/v6). useListPageState reescrito sobre useQueryState/useQueryStates manteniendo la misma API pública (search, filters, page, pageSize, setters, paginate) — los 4 consumidores (Clientes, Proveedores, useCotizacionesPageController, useFacturacionPageController) heredan el sync URL sin cambios. Los valores en su default no se serializan, manteniendo la URL limpia (`/clientes` en vez de `/clientes?q=&page=0`). (2) useEmbarquesPageState reescrito para que los 7 filtros + fechas + sort + page se reflejen en query params (reemplaza el patrón anterior de useState + useSearchParams unidireccional). Beneficio inmediato: comparte links pre-filtrados entre operadores ('mis embarques en Confirmado en CDMX para Q1 2026') y el botón Atrás del navegador funciona correctamente. (3) `libphonenumber-js@1.13.2` (build /min, ~35KB gzip) reemplaza el set hardcodeado LADAS_2_DIGITOS de formatPhoneMx — ahora la longitud de lada (2 vs 3 dígitos) se determina contra la metadata oficial mexicana, corrigiendo edge cases en ciudades fuera de CDMX/MTY/GDL/Tijuana. Se preserva el estilo visual histórico '(LADA) NNNN-NNNN' y se soporta correctamente prefijo +52 e internacional (devuelve formato canónico para no-MX). (4) Tests de useListPageState envueltos en withNuqsTestingAdapter. (5) Quedan fuera del alcance (decisión del usuario): PDFs siguen vía window.print() del navegador, exportar CSV/Excel se hará en Google Sheets, y @tanstack/react-table se difiere hasta requerir column resize/virtualización.",
+  },
+  {
     version: "8.151.0",
     date: "2026-05-15",
     type: "patch",

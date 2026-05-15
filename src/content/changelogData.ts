@@ -22,6 +22,14 @@ export interface ChangelogEntry {
  */
 export const recentChangelog: ChangelogEntry[] = [
   {
+    version: "8.152.0",
+    date: "2026-05-15",
+    type: "minor",
+    title: "Filtros y paginación sincronizados a la URL — adopción de nuqs + libphonenumber-js",
+    summary: "Los listados (Embarques, Cotizaciones, Pre-Facturación, Clientes, Proveedores) ahora reflejan search/filtros/página/orden en la URL, lo que los hace compartibles y persistentes al refresh. Teléfonos formateados con libphonenumber-js.",
+    description: "nuqs (NuqsAdapter en App.tsx) sustituye useState en useListPageState y useEmbarquesPageState, manteniendo la API pública. Los listados de Embarques, Cotizaciones, Pre-Facturación, Clientes y Proveedores ganan filtros compartibles y persistentes al refresh. libphonenumber-js/min reemplaza el set hardcodeado de ladas MX en formatPhoneMx, preservando el formato visual '(LADA) NNNN-NNNN'. Tests adaptados con withNuqsTestingAdapter. PDFs siguen via window.print() y CSV se difiere a Google Sheets por decisión del usuario.",
+  },
+  {
     version: "8.151.0",
     date: "2026-05-15",
     type: "patch",
@@ -92,22 +100,6 @@ export const recentChangelog: ChangelogEntry[] = [
     title: "Adopción de The Power of 10 — Fases 1 y 2",
     summary: "10 reglas obligatorias para generar código (componentes ≤200, sin `any`, paginación en listas, cleanup en effects, manejar `error` de Supabase). Documentadas en ARCHITECTURE.md §20 y memorizadas. Baseline read-only en docs/power10-baseline.md.",
     description: "ARCHITECTURE.md §20 + mem://principles/power-of-10 + scripts/audit-power10.ts (genera docs/power10-baseline.md). Sin cambios de código de aplicación. Fases 3 (ESLint) y 4 (limpieza por dominio) pendientes.",
-  },
-  {
-    version: "8.142.0",
-    date: "2026-05-14",
-    type: "minor",
-    title: "lib/domain/auditoria — reglas puras testables",
-    summary: "Reglas puras de auditoría (snooze, severidad, agrupación, filtros) extraídas a src/lib/domain/auditoria.ts con 15 tests; ARCHITECTURE.md documenta queries + mutations + subdominios.",
-    description: "Cierre de los pasos 2 y 3 opcionales de la auditoría arquitectónica. Nuevas funciones puras (isoDate, minSnoozeDate, isSnoozeActivo, contarPorSeveridad, agruparPorRegla, filtrarHallazgos) consumidas por useAuditoriaPageController y useMarcarRevisadoController; ARCHITECTURE.md gana la subsección 5.1.",
-  },
-  {
-    version: "8.141.0",
-    date: "2026-05-14",
-    type: "minor",
-    title: "services/cotizacion estandarizado a queries + mutations",
-    summary: "El service de cotizaciones adopta la convención `queries.ts` (lecturas) + `mutations.ts` (escrituras); el archivo legacy `crud.ts` desaparece.",
-    description: "Paso 4 de la auditoría arquitectónica. services/cotizacion/crud.ts (172 líneas) se partió en queries.ts (folio + lecturas) y mutations.ts (crear/update/delete/cambiar estado). El barrel index.ts conserva la API pública e introduce la convención `queries + mutations + subdominios (costos, conversiones, wizard)`. conversiones/duplicar.ts importa generarFolioCotizacion desde ../queries.",
   },
 ];
 

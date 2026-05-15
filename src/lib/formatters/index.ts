@@ -1,6 +1,7 @@
 import { format, parseISO } from "date-fns";
 import { es } from "date-fns/locale";
 import type { Locale } from "date-fns";
+import { parsePhoneNumberFromString } from "libphonenumber-js/min";
 
 export const formatCurrency = (amount: number, currency: string = 'MXN'): string => {
   const formatter = new Intl.NumberFormat('es-MX', { style: 'currency', currency, minimumFractionDigits: 2 });
@@ -166,36 +167,40 @@ export const nombreDesdeEmail = (raw: string | null | undefined): string => {
 };
 
 /**
- * Ladas mexicanas de 2 dígitos: solo CDMX, MTY y GDL. Resto son de 3 dígitos.
- */
-const LADAS_2_DIGITOS = new Set(["55", "56", "33", "81"]);
-
-/**
- * Formatea un teléfono mexicano de 10 dígitos.
- * - Ladas 2 dígitos (CDMX 55/56, GDL 33, MTY 81) → "(55) 1234-5678"
- * - Ladas 3 dígitos (resto del país) → "(442) 217-0696"
- * Soporta prefijo +52 y devuelve el original si no puede normalizar.
+ * Formatea un teléfono mexicano (o internacional) usando la base de metadatos
+ * de `libphonenumber-js/min`. Para MX preserva el estilo visual histórico
+ * "(LADA) NNNN-NNNN" pero deja que la librería decida si la lada es de 2 o 3
+ * dígitos (en vez de mantener un set hardcodeado de "metros").
+ *
+ * Comportamiento:
+ *   "5512345678"        → "(55) 1234-5678"   (CDMX, 2 dígitos)
+ *   "4422170696"        → "(442) 217-0696"   (Querétaro, 3 dígitos)
+ *   "+5215512345678"    → "+52 (55) 1234-5678"
+ *   números no-MX       → formato internacional canónico
+ *   inválido            → string original (no destruimos input)
  */
 export const formatPhoneMx = (raw: string | null | undefined): string => {
   if (!raw) return "";
-  const digits = raw.replace(/\D/g, "");
-  if (!digits) return raw;
-  let country = "";
-  let local = digits;
-  if (digits.length === 12 && digits.startsWith("52")) {
-    country = "+52 ";
-    local = digits.slice(2);
-  } else if (digits.length === 13 && digits.startsWith("521")) {
-    country = "+52 ";
-    local = digits.slice(3);
+  let phone;
+  try {
+    phone = parsePhoneNumberFromString(raw, "MX");
+  } catch {
+    return raw;
   }
-  if (local.length === 10) {
-    if (LADAS_2_DIGITOS.has(local.slice(0, 2))) {
-      return `${country}(${local.slice(0, 2)}) ${local.slice(2, 6)}-${local.slice(6)}`;
+  if (!phone || !phone.isValid()) return raw;
+
+  if (phone.country === "MX") {
+    // formatNational devuelve "55 1234 5678" o "442 217 0696" — la librería
+    // ya conoce la longitud de cada lada de la AGENCIA reguladora MX.
+    const parts = phone.formatNational().split(" ").filter(Boolean);
+    if (parts.length >= 2) {
+      const area = parts[0];
+      const rest = parts.slice(1).join("-");
+      const prefix = raw.trim().startsWith("+") ? "+52 " : "";
+      return `${prefix}(${area}) ${rest}`;
     }
-    return `${country}(${local.slice(0, 3)}) ${local.slice(3, 6)}-${local.slice(6)}`;
   }
-  return raw;
+  return phone.formatInternational();
 };
 
 /**
