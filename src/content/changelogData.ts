@@ -22,6 +22,14 @@ export interface ChangelogEntry {
  */
 export const recentChangelog: ChangelogEntry[] = [
   {
+    version: "8.152.2",
+    date: "2026-05-15",
+    type: "patch",
+    title: "Dashboard — tooltip y subtítulo explícitos en 'Cargas activas por cliente'",
+    summary: "El header explica qué estados se cuentan; tooltip enriquecido con desglose y nota '% del total de tu organización'.",
+    description: "Subtítulo en el header listando los 5 estados incluidos. Tooltip nativo reemplazado por shadcn Tooltip con nombre, totales, % y línea 'Incluye embarques en: ...'. Etiqueta de barra cambia a '45% del total' en ≥md. Cuando el total global es 0, se muestra '—' en lugar de 0%. Aria-label por fila.",
+  },
+  {
     version: "8.152.1",
     date: "2026-05-15",
     type: "patch",
