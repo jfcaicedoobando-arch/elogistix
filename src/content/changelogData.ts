@@ -22,6 +22,14 @@ export interface ChangelogEntry {
  */
 export const recentChangelog: ChangelogEntry[] = [
   {
+    version: "8.152.1",
+    date: "2026-05-15",
+    type: "patch",
+    title: "Dashboard — corrección de totales y barra de proporción en 'Cargas activas por cliente'",
+    summary: "El número grande ahora coincide siempre con la suma de los chips visibles, y la barra/porcentaje representa la concentración real del cliente sobre el total activo de TODOS los clientes.",
+    description: "RPC dashboard_details() agrega cargasActivasTotal (conteo global de embarques en los 5 estados visibles). CargasActivasClienteCard recalcula el total a partir del desglose y omite filas con suma 0. La barra ahora se dimensiona contra el total global (no contra el #1 del top), con mínimo visual de 4px y tooltip 'N de M cargas activas'.",
+  },
+  {
     version: "8.152.0",
     date: "2026-05-15",
     type: "minor",
