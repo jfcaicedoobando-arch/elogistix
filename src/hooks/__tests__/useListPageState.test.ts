@@ -3,7 +3,7 @@ import { renderHook, act } from "@testing-library/react";
 import { withNuqsTestingAdapter } from "nuqs/adapters/testing";
 import { useListPageState } from "@/hooks/shared/useListPageState";
 
-const wrapper = withNuqsTestingAdapter();
+const wrapper = withNuqsTestingAdapter({ hasMemory: true });
 
 describe("useListPageState", () => {
   it("inicializa con defaults", () => {
