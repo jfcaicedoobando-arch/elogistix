@@ -30,6 +30,7 @@ export default function Dashboard() {
     resumenMesSiguiente,
     arribosEsteMes,
     cargasPorCliente,
+    cargasActivasTotal,
   } = useDashboardData();
 
   const { saludo, hoyStr } = useMemo(() => {
