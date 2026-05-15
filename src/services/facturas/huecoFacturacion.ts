@@ -32,7 +32,6 @@ export interface HuecoFacturacionResult {
   totalMxn: number;
 }
 
-const FECHA_INICIO_HUECO = "2026-04-01";
 const DIAS_UMBRAL = 5;
 
 function diasDesde(fechaIso: string, hoy = new Date()): number {
