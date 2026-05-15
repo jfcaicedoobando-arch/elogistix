@@ -1,6 +1,7 @@
 import { format, parseISO } from "date-fns";
 import { es } from "date-fns/locale";
 import type { Locale } from "date-fns";
+import { parsePhoneNumberFromString } from "libphonenumber-js/min";
 
 export const formatCurrency = (amount: number, currency: string = 'MXN'): string => {
   const formatter = new Intl.NumberFormat('es-MX', { style: 'currency', currency, minimumFractionDigits: 2 });
@@ -180,12 +181,6 @@ export const nombreDesdeEmail = (raw: string | null | undefined): string => {
  */
 export const formatPhoneMx = (raw: string | null | undefined): string => {
   if (!raw) return "";
-  // Importamos perezosamente para evitar costo en pantallas que no formatean
-  // teléfonos (la metadata "min" pesa ~35KB gzip pero no se requiere en
-  // primer paint del shell). Usar require sincrónico por compatibilidad SSR.
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
-  const { parsePhoneNumberFromString } = require("libphonenumber-js/min") as
-    typeof import("libphonenumber-js/min");
   let phone;
   try {
     phone = parsePhoneNumberFromString(raw, "MX");
