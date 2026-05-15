@@ -22,6 +22,14 @@ export interface ChangelogEntry {
  */
 export const recentChangelog: ChangelogEntry[] = [
   {
+    version: "8.151.0",
+    date: "2026-05-15",
+    type: "patch",
+    title: "Seguridad — RPCs de embarque, user_roles y storage de documentos",
+    summary: "Cierre de 3 hallazgos del scanner: ownership check en RPCs de embarque, user_roles solo super_admin, y bucket 'documentos' con scope por organización.",
+    description: "RPCs actualizar/duplicar_embarque_completo validan organization_id del embarque vs caller; crear_embarque_completo ignora payload.organization_id y usa current_user_org_id(). Eliminada policy 'Admins manage non-super-admin roles' en user_roles (solo super_admin). Storage 'documentos' SELECT ahora requiere documentos_embarque.organization_id = current_user_org_id() (con fallback para clientes del portal).",
+  },
+  {
     version: "8.150.0",
     date: "2026-05-14",
     type: "minor",
