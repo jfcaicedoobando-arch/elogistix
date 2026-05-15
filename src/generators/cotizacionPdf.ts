@@ -2,6 +2,7 @@ import type { CotizacionRow, DimensionLCL, DimensionAerea } from '@/types/cotiza
 import { calcularIVA, TASA_IVA } from '@/lib/financial/financialUtils';
 import { formatCurrency } from '@/lib/formatters';
 import { formatDate } from '@/lib/formatters';
+import { escapeHtml as esc } from '@/lib/utils/htmlEscape';
 
 const formatCurrencyPdf = formatCurrency;
 const formatDatePdf = formatDate;
@@ -70,7 +71,7 @@ export function generarPdfCotizacion(cotizacion: CotizacionRow, tasaIva: number 
   }
 
   const gridCells = (items: [string, string][]) => items.map(
-    ([label, value]) => `<div class="cell"><span class="label">${label}</span><span class="value">${value}</span></div>`
+    ([label, value]) => `<div class="cell"><span class="label">${esc(label)}</span><span class="value">${esc(value)}</span></div>`
   ).join('');
 
   // Dimensions table
@@ -100,14 +101,14 @@ export function generarPdfCotizacion(cotizacion: CotizacionRow, tasaIva: number 
     const rows = conceptosUSD.map(c => {
       const unidad = c.unidad_medida || '—';
       const sub = c.cantidad * c.precio_unitario;
-      const notaHtml = c.notas ? `<tr><td colspan="${hayIvaUSD ? 7 : 5}" style="border-top:none;padding-top:0;font-size:11px;color:#888;font-style:italic">↳ ${c.notas}</td></tr>` : '';
+      const notaHtml = c.notas ? `<tr><td colspan="${hayIvaUSD ? 7 : 5}" style="border-top:none;padding-top:0;font-size:11px;color:#888;font-style:italic">↳ ${esc(c.notas)}</td></tr>` : '';
       if (hayIvaUSD) {
         const iva = c.aplica_iva ? calcularIVA(sub, tasaIva) : 0;
         const total = sub + iva;
-        const desc = c.aplica_iva ? `${c.descripcion} <span style='color:#999;font-size:11px'>(+IVA ${tasaIva * 100}%)</span>` : c.descripcion;
-        return `<tr><td>${desc}</td><td>${unidad}</td><td class="right">${c.cantidad}</td><td class="right">${formatCurrencyPdf(c.precio_unitario, 'USD')}</td><td class="right">${formatCurrencyPdf(sub, 'USD')}</td><td class="right">${c.aplica_iva ? formatCurrencyPdf(iva, 'USD') : '—'}</td><td class="right">${formatCurrencyPdf(total, 'USD')}</td></tr>${notaHtml}`;
+        const desc = c.aplica_iva ? `${esc(c.descripcion)} <span style='color:#999;font-size:11px'>(+IVA ${tasaIva * 100}%)</span>` : esc(c.descripcion);
+        return `<tr><td>${desc}</td><td>${esc(unidad)}</td><td class="right">${c.cantidad}</td><td class="right">${formatCurrencyPdf(c.precio_unitario, 'USD')}</td><td class="right">${formatCurrencyPdf(sub, 'USD')}</td><td class="right">${c.aplica_iva ? formatCurrencyPdf(iva, 'USD') : '—'}</td><td class="right">${formatCurrencyPdf(total, 'USD')}</td></tr>${notaHtml}`;
       }
-      return `<tr><td>${c.descripcion}</td><td>${unidad}</td><td class="right">${c.cantidad}</td><td class="right">${formatCurrencyPdf(c.precio_unitario, 'USD')}</td><td class="right">${formatCurrencyPdf(sub, 'USD')}</td></tr>${notaHtml}`;
+      return `<tr><td>${esc(c.descripcion)}</td><td>${esc(unidad)}</td><td class="right">${c.cantidad}</td><td class="right">${formatCurrencyPdf(c.precio_unitario, 'USD')}</td><td class="right">${formatCurrencyPdf(sub, 'USD')}</td></tr>${notaHtml}`;
     }).join('');
     return `
       <h4>Conceptos en USD</h4>
@@ -124,8 +125,8 @@ export function generarPdfCotizacion(cotizacion: CotizacionRow, tasaIva: number 
       const sub = c.cantidad * c.precio_unitario;
       const iva = calcularIVA(sub, tasaIva);
       const unidad = c.unidad_medida || '—';
-      const notaHtml = c.notas ? `<tr><td colspan="7" style="border-top:none;padding-top:0;font-size:11px;color:#888;font-style:italic">↳ ${c.notas}</td></tr>` : '';
-      return `<tr><td>${c.descripcion}</td><td>${unidad}</td><td class="right">${c.cantidad}</td><td class="right">${formatCurrencyPdf(c.precio_unitario, 'MXN')}</td><td class="right">${formatCurrencyPdf(sub, 'MXN')}</td><td class="right">${formatCurrencyPdf(iva, 'MXN')}</td><td class="right">${formatCurrencyPdf(sub + iva, 'MXN')}</td></tr>${notaHtml}`;
+      const notaHtml = c.notas ? `<tr><td colspan="7" style="border-top:none;padding-top:0;font-size:11px;color:#888;font-style:italic">↳ ${esc(c.notas)}</td></tr>` : '';
+      return `<tr><td>${esc(c.descripcion)}</td><td>${esc(unidad)}</td><td class="right">${c.cantidad}</td><td class="right">${formatCurrencyPdf(c.precio_unitario, 'MXN')}</td><td class="right">${formatCurrencyPdf(sub, 'MXN')}</td><td class="right">${formatCurrencyPdf(iva, 'MXN')}</td><td class="right">${formatCurrencyPdf(sub + iva, 'MXN')}</td></tr>${notaHtml}`;
     }).join('');
     return `
       <h4>Conceptos en MXN + IVA</h4>
@@ -137,7 +138,7 @@ export function generarPdfCotizacion(cotizacion: CotizacionRow, tasaIva: number 
       <p class="subtotal">Total MXN: ${formatCurrencyPdf(totalMXN, 'MXN')}</p>`;
   };
 
-  const html = `<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><title>${cotizacion.folio} - Cotización</title>
+  const html = `<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><title>${esc(cotizacion.folio)} - Cotización</title>
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
   body { font-family: 'Segoe UI', Arial, sans-serif; color: #1a1a2e; padding: 32px; font-size: 13px; line-height: 1.5; }
@@ -167,11 +168,11 @@ export function generarPdfCotizacion(cotizacion: CotizacionRow, tasaIva: number 
 </style></head><body>
   <div class="header">
     <div>
-      <h1>${cotizacion.folio}</h1>
-      <p style="margin-top:4px">${nombreDestinatario}</p>
+      <h1>${esc(cotizacion.folio)}</h1>
+      <p style="margin-top:4px">${esc(nombreDestinatario)}</p>
     </div>
     <div class="meta">
-      <span class="badge">${cotizacion.estado}</span>
+      <span class="badge">${esc(cotizacion.estado)}</span>
       <p style="margin-top:6px">Fecha: ${formatDatePdf(cotizacion.created_at.substring(0, 10))}</p>
     </div>
   </div>
@@ -179,10 +180,10 @@ export function generarPdfCotizacion(cotizacion: CotizacionRow, tasaIva: number 
   ${cotizacion.es_prospecto ? `<section>
     <h3>Datos del Prospecto</h3>
     <div class="grid">
-      <div class="cell"><span class="label">Empresa</span><span class="value">${cotizacion.prospecto_empresa}</span></div>
-      <div class="cell"><span class="label">Contacto</span><span class="value">${cotizacion.prospecto_contacto}</span></div>
-      <div class="cell"><span class="label">Email</span><span class="value">${cotizacion.prospecto_email || '-'}</span></div>
-      <div class="cell"><span class="label">Teléfono</span><span class="value">${cotizacion.prospecto_telefono || '-'}</span></div>
+      <div class="cell"><span class="label">Empresa</span><span class="value">${esc(cotizacion.prospecto_empresa)}</span></div>
+      <div class="cell"><span class="label">Contacto</span><span class="value">${esc(cotizacion.prospecto_contacto)}</span></div>
+      <div class="cell"><span class="label">Email</span><span class="value">${esc(cotizacion.prospecto_email || '-')}</span></div>
+      <div class="cell"><span class="label">Teléfono</span><span class="value">${esc(cotizacion.prospecto_telefono || '-')}</span></div>
     </div>
   </section>` : ''}
 
@@ -194,7 +195,7 @@ export function generarPdfCotizacion(cotizacion: CotizacionRow, tasaIva: number 
   <section>
     <h3>Mercancía</h3>
     <div class="grid">${gridCells(mercancia)}</div>
-    ${cotizacion.descripcion_adicional ? `<p style="margin-top:8px"><span class="label">Descripción Adicional:</span> ${cotizacion.descripcion_adicional}</p>` : ''}
+    ${cotizacion.descripcion_adicional ? `<p style="margin-top:8px"><span class="label">Descripción Adicional:</span> ${esc(cotizacion.descripcion_adicional)}</p>` : ''}
     ${dimensionesHtml}
   </section>
 
@@ -216,7 +217,7 @@ export function generarPdfCotizacion(cotizacion: CotizacionRow, tasaIva: number 
     </div>
   </section>
 
-  ${cotizacion.notas ? `<section><h3>Notas</h3><p>${cotizacion.notas}</p></section>` : ''}
+  ${cotizacion.notas ? `<section><h3>Notas</h3><p>${esc(cotizacion.notas)}</p></section>` : ''}
 
   <div class="footer">Documento generado el ${new Date().toLocaleDateString('es-MX', { day: '2-digit', month: 'long', year: 'numeric' })} — Libre Carga</div>
 </body></html>`;
