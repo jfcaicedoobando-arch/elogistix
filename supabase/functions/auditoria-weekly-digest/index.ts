@@ -6,7 +6,7 @@
  * en logs sin fallar.
  */
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
-import { corsHeaders, handlePreflight } from "../_shared/cors.ts";
+import { buildCors, handlePreflightStrict } from "../_shared/cors.ts";
 
 const GATEWAY_URL = "https://connector-gateway.lovable.dev/resend";
 
@@ -70,8 +70,22 @@ function buildHtml(orgNombre: string, reporte: ReporteRow): string {
 }
 
 Deno.serve(async (req) => {
-  const preflight = handlePreflight(req);
+  const preflight = handlePreflightStrict(req);
   if (preflight) return preflight;
+  const corsHeaders = buildCors(req);
+
+  // Cron-only: require X-Cron-Secret header
+  const cronSecret = Deno.env.get("CRON_SECRET");
+  const headerSecret = req.headers.get("X-Cron-Secret");
+  if (!cronSecret || headerSecret !== cronSecret) {
+    return new Response(
+      JSON.stringify({ ok: false, error: "Unauthorized" }),
+      {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 401,
+      },
+    );
+  }
 
   try {
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
