@@ -74,7 +74,7 @@ export default function Dashboard() {
         <ProximosArribosCard arribos={proximosArribos} isLoading={isLoading} />
       </div>
 
-      <CargasActivasClienteCard data={cargasPorCliente} isLoading={isLoading} />
+      <CargasActivasClienteCard data={cargasPorCliente} isLoading={isLoading} totalActivosGlobal={cargasActivasTotal} />
 
       <ProfitTable embarques={profitArribosEsteMes} isLoading={isLoading} />
 
