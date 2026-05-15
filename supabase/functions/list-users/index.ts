@@ -16,11 +16,21 @@ Deno.serve(async (req) => {
     const { data: { users }, error } = await adminClient.auth.admin.listUsers();
     if (error) throw error;
 
-    const result = users.map((u) => ({
+    let result = users.map((u) => ({
       id: u.id,
       email: u.email ?? "",
       created_at: u.created_at,
     }));
+
+    // Org admins (non super_admin) can only see users in their organization
+    if (!isGlobalAdmin && orgId) {
+      const { data: members } = await adminClient
+        .from("organization_members")
+        .select("user_id")
+        .eq("organization_id", orgId);
+      const allowed = new Set((members ?? []).map((m) => m.user_id));
+      result = result.filter((u) => allowed.has(u.id));
+    }
 
     return jsonResponse(result);
   } catch (err) {

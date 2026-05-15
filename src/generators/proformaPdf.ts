@@ -1,5 +1,6 @@
 import { calcularIVA, TASA_IVA } from '@/lib/financial/financialUtils';
 import { formatCurrency, formatDate } from '@/lib/formatters';
+import { escapeHtml as esc } from '@/lib/utils/htmlEscape';
 import type { Tables } from '@/integrations/supabase/types';
 
 type ProformaRow = Tables<'proformas'>;
@@ -36,23 +37,23 @@ function buildHeaderHtml(proforma: ProformaRow, cliente: GenerarPdfProformaParam
   <div class="header">
     <div>
       <h1>PROFORMA${esConsolidada ? ' CONSOLIDADA' : ''}</h1>
-      <p class="numero">${proforma.numero}</p>
+      <p class="numero">${esc(proforma.numero)}</p>
     </div>
     <div class="meta">
       <span class="badge">SIN VALIDEZ FISCAL</span>
       ${esConsolidada ? '<span class="badge badge-blue" style="margin-left:6px">CONSOLIDADA</span>' : ''}
       <p style="margin-top:6px"><strong>Fecha de emisión:</strong> ${formatDate(proforma.fecha_emision)}</p>
-      <p><strong>Expediente:</strong> ${proforma.expediente}</p>
-      ${proforma.bl_master ? `<p><strong>BL/MAWB:</strong> ${proforma.bl_master}</p>` : ''}
+      <p><strong>Expediente:</strong> ${esc(proforma.expediente)}</p>
+      ${proforma.bl_master ? `<p><strong>BL/MAWB:</strong> ${esc(proforma.bl_master)}</p>` : ''}
     </div>
   </div>
 
   <section>
     <h3>Datos del Cliente</h3>
     <div class="grid">
-      <div class="cell"><span class="label">Razón Social</span><span class="value">${cliente?.nombre || proforma.cliente_nombre}</span></div>
-      <div class="cell"><span class="label">RFC</span><span class="value">${cliente?.rfc || '-'}</span></div>
-      <div class="cell" style="grid-column: 1 / -1"><span class="label">Dirección</span><span class="value">${direccionCompleta || '-'}</span></div>
+      <div class="cell"><span class="label">Razón Social</span><span class="value">${esc(cliente?.nombre || proforma.cliente_nombre)}</span></div>
+      <div class="cell"><span class="label">RFC</span><span class="value">${esc(cliente?.rfc || '-')}</span></div>
+      <div class="cell" style="grid-column: 1 / -1"><span class="label">Dirección</span><span class="value">${esc(direccionCompleta || '-')}</span></div>
     </div>
   </section>
 
@@ -60,20 +61,20 @@ function buildHeaderHtml(proforma: ProformaRow, cliente: GenerarPdfProformaParam
   <section>
     <h3>Datos del Embarque</h3>
     <div class="grid-3">
-      <div class="cell"><span class="label">Modo</span><span class="value">${embarque.modo}</span></div>
-      <div class="cell"><span class="label">Tipo</span><span class="value">${embarque.tipo}</span></div>
-      <div class="cell"><span class="label">Incoterm</span><span class="value">${embarque.incoterm}</span></div>
-      <div class="cell"><span class="label">Origen</span><span class="value">${origen}</span></div>
-      <div class="cell"><span class="label">Destino</span><span class="value">${destino}</span></div>
-      <div class="cell"><span class="label">Ruta</span><span class="value">${origen} → ${destino}</span></div>
+      <div class="cell"><span class="label">Modo</span><span class="value">${esc(embarque.modo)}</span></div>
+      <div class="cell"><span class="label">Tipo</span><span class="value">${esc(embarque.tipo)}</span></div>
+      <div class="cell"><span class="label">Incoterm</span><span class="value">${esc(embarque.incoterm)}</span></div>
+      <div class="cell"><span class="label">Origen</span><span class="value">${esc(origen)}</span></div>
+      <div class="cell"><span class="label">Destino</span><span class="value">${esc(destino)}</span></div>
+      <div class="cell"><span class="label">Ruta</span><span class="value">${esc(origen)} → ${esc(destino)}</span></div>
     </div>
-    ${embarque.descripcion_mercancia ? `<p style="margin-top:8px"><span class="label">Descripción de la mercancía:</span> <strong>${embarque.descripcion_mercancia}</strong></p>` : ''}
+    ${embarque.descripcion_mercancia ? `<p style="margin-top:8px"><span class="label">Descripción de la mercancía:</span> <strong>${esc(embarque.descripcion_mercancia)}</strong></p>` : ''}
   </section>`}
 
   <section>
     <h3>Condiciones Comerciales</h3>
     <div class="grid">
-      <div class="cell"><span class="label">Ejecutivo de Operaciones</span><span class="value">${proforma.operador || '—'}</span></div>
+      <div class="cell"><span class="label">Ejecutivo de Operaciones</span><span class="value">${esc(proforma.operador || '—')}</span></div>
       <div class="cell"><span class="label">Días de crédito</span><span class="value">${proforma.dias_credito == null ? '—' : (Number(proforma.dias_credito) === 0 ? 'Contado' : `${proforma.dias_credito} días`)}</span></div>
     </div>
   </section>`;
@@ -151,9 +152,9 @@ function generarPdfConsolidada(params: GenerarPdfProformaParams) {
     const rows = items.map(i => {
       const sub = Number(i.total);
       if (hayIva) {
-        return `<tr><td>${formatearDescripcionConcepto(i.descripcion)}</td><td class="right">${i.cantidad}</td><td class="right">${formatCurrency(Number(i.precio_unitario), moneda)}</td><td class="right">${formatCurrency(sub, moneda)}</td><td class="right">${i.aplica_iva ? formatCurrency(Number(i.iva), moneda) : '—'}</td></tr>`;
+        return `<tr><td>${esc(formatearDescripcionConcepto(i.descripcion))}</td><td class="right">${i.cantidad}</td><td class="right">${formatCurrency(Number(i.precio_unitario), moneda)}</td><td class="right">${formatCurrency(sub, moneda)}</td><td class="right">${i.aplica_iva ? formatCurrency(Number(i.iva), moneda) : '—'}</td></tr>`;
       }
-      return `<tr><td>${formatearDescripcionConcepto(i.descripcion)}</td><td class="right">${i.cantidad}</td><td class="right">${formatCurrency(Number(i.precio_unitario), moneda)}</td><td class="right">${formatCurrency(sub, moneda)}</td></tr>`;
+      return `<tr><td>${esc(formatearDescripcionConcepto(i.descripcion))}</td><td class="right">${i.cantidad}</td><td class="right">${formatCurrency(Number(i.precio_unitario), moneda)}</td><td class="right">${formatCurrency(sub, moneda)}</td></tr>`;
     }).join('');
     const subContenedor = items.reduce((s, i) => s + Number(i.total), 0);
     return `
@@ -176,7 +177,7 @@ function generarPdfConsolidada(params: GenerarPdfProformaParams) {
     return `
       <h4>Conceptos en ${moneda}</h4>
       ${grupos.map(g => `
-        <div class="container-block">📦 Contenedor: ${g.contenedor}${g.tipo ? ` (${g.tipo})` : ''}</div>
+        <div class="container-block">📦 Contenedor: ${esc(g.contenedor)}${g.tipo ? ` (${esc(g.tipo)})` : ''}</div>
         ${buildGrupoTabla(g, moneda)}
       `).join('')}
       <div class="subtotal-block">
@@ -186,7 +187,7 @@ function generarPdfConsolidada(params: GenerarPdfProformaParams) {
       </div>`;
   };
 
-  const html = `<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><title>${proforma.numero} - Proforma Consolidada</title>
+  const html = `<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><title>${esc(proforma.numero)} - Proforma Consolidada</title>
 ${buildBaseStyles()}</head><body>
   ${buildHeaderHtml(proforma, cliente, embarque, true)}
 
@@ -196,7 +197,7 @@ ${buildBaseStyles()}</head><body>
     ${seccionMoneda('MXN')}
   </section>
 
-  ${proforma.notas ? `<section><h3>Notas</h3><p>${proforma.notas}</p></section>` : ''}
+  ${proforma.notas ? `<section><h3>Notas</h3><p>${esc(proforma.notas)}</p></section>` : ''}
 
   <div class="footer-aviso">
     ⚠ Este documento es una proforma consolidada y no tiene validez fiscal
@@ -228,9 +229,9 @@ export function generarPdfProforma(params: GenerarPdfProformaParams) {
         const sub = Number(c.cantidad) * Number(c.precio_unitario);
         if (hayIva) {
           const iva = c.aplica_iva ? calcularIVA(sub, tasaIva) : 0;
-          return `<tr><td>${formatearDescripcionConcepto(c.descripcion)}</td><td class="right">${c.cantidad}</td><td class="right">${formatCurrency(Number(c.precio_unitario), 'USD')}</td><td class="right">${formatCurrency(sub, 'USD')}</td><td class="right">${c.aplica_iva ? formatCurrency(iva, 'USD') : '—'}</td></tr>`;
+          return `<tr><td>${esc(formatearDescripcionConcepto(c.descripcion))}</td><td class="right">${c.cantidad}</td><td class="right">${formatCurrency(Number(c.precio_unitario), 'USD')}</td><td class="right">${formatCurrency(sub, 'USD')}</td><td class="right">${c.aplica_iva ? formatCurrency(iva, 'USD') : '—'}</td></tr>`;
         }
-        return `<tr><td>${formatearDescripcionConcepto(c.descripcion)}</td><td class="right">${c.cantidad}</td><td class="right">${formatCurrency(Number(c.precio_unitario), 'USD')}</td><td class="right">${formatCurrency(sub, 'USD')}</td></tr>`;
+        return `<tr><td>${esc(formatearDescripcionConcepto(c.descripcion))}</td><td class="right">${c.cantidad}</td><td class="right">${formatCurrency(Number(c.precio_unitario), 'USD')}</td><td class="right">${formatCurrency(sub, 'USD')}</td></tr>`;
       }).join('');
     return `
       <h4>Conceptos en USD</h4>
@@ -249,7 +250,7 @@ export function generarPdfProforma(params: GenerarPdfProformaParams) {
     if (conceptosMXN.length === 0) return '';
     const rows = conceptosMXN.map(c => {
       const sub = Number(c.cantidad) * Number(c.precio_unitario);
-      return `<tr><td>${formatearDescripcionConcepto(c.descripcion)}</td><td class="right">${c.cantidad}</td><td class="right">${formatCurrency(Number(c.precio_unitario), 'MXN')}</td><td class="right">${formatCurrency(sub, 'MXN')}</td></tr>`;
+      return `<tr><td>${esc(formatearDescripcionConcepto(c.descripcion))}</td><td class="right">${c.cantidad}</td><td class="right">${formatCurrency(Number(c.precio_unitario), 'MXN')}</td><td class="right">${formatCurrency(sub, 'MXN')}</td></tr>`;
     }).join('');
     return `
       <h4>Conceptos en MXN</h4>
@@ -264,7 +265,7 @@ export function generarPdfProforma(params: GenerarPdfProformaParams) {
       </div>`;
   };
 
-  const html = `<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><title>${proforma.numero} - Proforma</title>
+  const html = `<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><title>${esc(proforma.numero)} - Proforma</title>
 ${buildBaseStyles()}</head><body>
   ${buildHeaderHtml(proforma, cliente, embarque, false)}
 
@@ -274,7 +275,7 @@ ${buildBaseStyles()}</head><body>
     ${buildMxnTable()}
   </section>
 
-  ${proforma.notas ? `<section><h3>Notas</h3><p>${proforma.notas}</p></section>` : ''}
+  ${proforma.notas ? `<section><h3>Notas</h3><p>${esc(proforma.notas)}</p></section>` : ''}
 
   <div class="footer-aviso">
     ⚠ Este documento es una proforma y no tiene validez fiscal
