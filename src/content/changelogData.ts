@@ -22,6 +22,14 @@ export interface ChangelogEntry {
  */
 export const recentChangelog: ChangelogEntry[] = [
   {
+    version: "8.152.1",
+    date: "2026-05-15",
+    type: "patch",
+    title: "Dashboard — corrección de totales y barra de proporción en 'Cargas activas por cliente'",
+    summary: "El número grande ahora coincide siempre con la suma de los chips visibles, y la barra/porcentaje representa la concentración real del cliente sobre el total activo de TODOS los clientes.",
+    description: "RPC dashboard_details() agrega cargasActivasTotal (conteo global de embarques en los 5 estados visibles). CargasActivasClienteCard recalcula el total a partir del desglose y omite filas con suma 0. La barra ahora se dimensiona contra el total global (no contra el #1 del top), con mínimo visual de 4px y tooltip 'N de M cargas activas'.",
+  },
+  {
     version: "8.152.0",
     date: "2026-05-15",
     type: "minor",
@@ -92,14 +100,6 @@ export const recentChangelog: ChangelogEntry[] = [
     title: "Power of 10 — Fase 3: ESLint endurecido (no-explicit-any error)",
     summary: "`@typescript-eslint/no-explicit-any` pasa a `error`, `max-lines-per-function` sube a 200 para alinear con §20.4. TabResumen elimina su `any` casteando a tipo Partial; quedan 0 `any` reales en src/.",
     description: "Cierre de la Fase 3 del plan The Power of 10. (1) eslint.config.js: `@typescript-eslint/no-explicit-any: error` (con eslint-disable puntual documentado en appFeedback.ts/listado.ts), `max-lines-per-function: 200` (alineado con §20.4), exempción agregada para src/content/changelog/** (chunks largos por diseño). (2) TabResumen.tsx: los dos `(embarque as any).etd_original/eta_original` se reemplazan por un IIFE que castea a `Partial<{ etd_original; eta_original }>`. (3) scripts/audit-power10.ts ahora ignora src/content/changelog/** y líneas con `eslint-disable @typescript-eslint/no-explicit-any` arriba — la baseline pasa de 17 a 0 `any` reales. APP_VERSION 8.144.0.",
-  },
-  {
-    version: "8.143.0",
-    date: "2026-05-14",
-    type: "minor",
-    title: "Adopción de The Power of 10 — Fases 1 y 2",
-    summary: "10 reglas obligatorias para generar código (componentes ≤200, sin `any`, paginación en listas, cleanup en effects, manejar `error` de Supabase). Documentadas en ARCHITECTURE.md §20 y memorizadas. Baseline read-only en docs/power10-baseline.md.",
-    description: "ARCHITECTURE.md §20 + mem://principles/power-of-10 + scripts/audit-power10.ts (genera docs/power10-baseline.md). Sin cambios de código de aplicación. Fases 3 (ESLint) y 4 (limpieza por dominio) pendientes.",
   },
 ];
 

@@ -9,6 +9,7 @@ import {
   parseResumenMesSiguiente,
   parseEmbarquesMesSiguiente,
   parseCargasPorCliente,
+  parseCargasActivasTotal,
   combinarActivos,
   type EstadoFiltro,
   type AlertaDemora,
@@ -86,6 +87,7 @@ export function useDashboardData() {
   );
 
   const cargasPorCliente = useMemo(() => parseCargasPorCliente(stats), [stats]);
+  const cargasActivasTotal = useMemo(() => parseCargasActivasTotal(stats), [stats]);
 
   const resumenMesSiguiente = useMemo(() => parseResumenMesSiguiente(stats), [stats]);
 
@@ -108,5 +110,6 @@ export function useDashboardData() {
     resumenMesSiguiente,
     arribosEsteMes,
     cargasPorCliente,
+    cargasActivasTotal,
   };
 }
