@@ -37,23 +37,23 @@ function buildHeaderHtml(proforma: ProformaRow, cliente: GenerarPdfProformaParam
   <div class="header">
     <div>
       <h1>PROFORMA${esConsolidada ? ' CONSOLIDADA' : ''}</h1>
-      <p class="numero">${proforma.numero}</p>
+      <p class="numero">${esc(proforma.numero)}</p>
     </div>
     <div class="meta">
       <span class="badge">SIN VALIDEZ FISCAL</span>
       ${esConsolidada ? '<span class="badge badge-blue" style="margin-left:6px">CONSOLIDADA</span>' : ''}
       <p style="margin-top:6px"><strong>Fecha de emisión:</strong> ${formatDate(proforma.fecha_emision)}</p>
-      <p><strong>Expediente:</strong> ${proforma.expediente}</p>
-      ${proforma.bl_master ? `<p><strong>BL/MAWB:</strong> ${proforma.bl_master}</p>` : ''}
+      <p><strong>Expediente:</strong> ${esc(proforma.expediente)}</p>
+      ${proforma.bl_master ? `<p><strong>BL/MAWB:</strong> ${esc(proforma.bl_master)}</p>` : ''}
     </div>
   </div>
 
   <section>
     <h3>Datos del Cliente</h3>
     <div class="grid">
-      <div class="cell"><span class="label">Razón Social</span><span class="value">${cliente?.nombre || proforma.cliente_nombre}</span></div>
-      <div class="cell"><span class="label">RFC</span><span class="value">${cliente?.rfc || '-'}</span></div>
-      <div class="cell" style="grid-column: 1 / -1"><span class="label">Dirección</span><span class="value">${direccionCompleta || '-'}</span></div>
+      <div class="cell"><span class="label">Razón Social</span><span class="value">${esc(cliente?.nombre || proforma.cliente_nombre)}</span></div>
+      <div class="cell"><span class="label">RFC</span><span class="value">${esc(cliente?.rfc || '-')}</span></div>
+      <div class="cell" style="grid-column: 1 / -1"><span class="label">Dirección</span><span class="value">${esc(direccionCompleta || '-')}</span></div>
     </div>
   </section>
 
@@ -61,20 +61,20 @@ function buildHeaderHtml(proforma: ProformaRow, cliente: GenerarPdfProformaParam
   <section>
     <h3>Datos del Embarque</h3>
     <div class="grid-3">
-      <div class="cell"><span class="label">Modo</span><span class="value">${embarque.modo}</span></div>
-      <div class="cell"><span class="label">Tipo</span><span class="value">${embarque.tipo}</span></div>
-      <div class="cell"><span class="label">Incoterm</span><span class="value">${embarque.incoterm}</span></div>
-      <div class="cell"><span class="label">Origen</span><span class="value">${origen}</span></div>
-      <div class="cell"><span class="label">Destino</span><span class="value">${destino}</span></div>
-      <div class="cell"><span class="label">Ruta</span><span class="value">${origen} → ${destino}</span></div>
+      <div class="cell"><span class="label">Modo</span><span class="value">${esc(embarque.modo)}</span></div>
+      <div class="cell"><span class="label">Tipo</span><span class="value">${esc(embarque.tipo)}</span></div>
+      <div class="cell"><span class="label">Incoterm</span><span class="value">${esc(embarque.incoterm)}</span></div>
+      <div class="cell"><span class="label">Origen</span><span class="value">${esc(origen)}</span></div>
+      <div class="cell"><span class="label">Destino</span><span class="value">${esc(destino)}</span></div>
+      <div class="cell"><span class="label">Ruta</span><span class="value">${esc(origen)} → ${esc(destino)}</span></div>
     </div>
-    ${embarque.descripcion_mercancia ? `<p style="margin-top:8px"><span class="label">Descripción de la mercancía:</span> <strong>${embarque.descripcion_mercancia}</strong></p>` : ''}
+    ${embarque.descripcion_mercancia ? `<p style="margin-top:8px"><span class="label">Descripción de la mercancía:</span> <strong>${esc(embarque.descripcion_mercancia)}</strong></p>` : ''}
   </section>`}
 
   <section>
     <h3>Condiciones Comerciales</h3>
     <div class="grid">
-      <div class="cell"><span class="label">Ejecutivo de Operaciones</span><span class="value">${proforma.operador || '—'}</span></div>
+      <div class="cell"><span class="label">Ejecutivo de Operaciones</span><span class="value">${esc(proforma.operador || '—')}</span></div>
       <div class="cell"><span class="label">Días de crédito</span><span class="value">${proforma.dias_credito == null ? '—' : (Number(proforma.dias_credito) === 0 ? 'Contado' : `${proforma.dias_credito} días`)}</span></div>
     </div>
   </section>`;
