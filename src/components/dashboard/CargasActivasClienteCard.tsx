@@ -17,6 +17,7 @@ export interface CargaCliente {
 interface Props {
   data: CargaCliente[];
   isLoading: boolean;
+  totalActivosGlobal: number;
 }
 
 const ESTADOS_ORDEN: EstadoFiltro[] = [
@@ -27,9 +28,17 @@ const ESTADOS_ORDEN: EstadoFiltro[] = [
   "Entregado",
 ];
 
-export const CargasActivasClienteCard = memo(function CargasActivasClienteCard({ data, isLoading }: Props) {
+function sumDesglose(desglose: CargaCliente["desglose"]): number {
+  return ESTADOS_ORDEN.reduce((acc, est) => acc + (desglose?.[est] ?? 0), 0);
+}
+
+export const CargasActivasClienteCard = memo(function CargasActivasClienteCard({ data, isLoading, totalActivosGlobal }: Props) {
   const navigate = useNavigate();
-  const maxTotal = data.length > 0 ? data[0].total : 1;
+
+  // Filtramos clientes cuya suma de chips visibles sea > 0 (evita filas con número grande sin chips).
+  const filas = data
+    .map((c) => ({ ...c, totalVisible: sumDesglose(c.desglose) }))
+    .filter((c) => c.totalVisible > 0);
 
   function renderBody() {
     if (isLoading) {
@@ -37,22 +46,25 @@ export const CargasActivasClienteCard = memo(function CargasActivasClienteCard({
         <Skeleton key={i} className="h-12 w-full" />
       ));
     }
-    if (data.length === 0) {
+    if (filas.length === 0) {
       return (
         <p className="text-sm text-muted-foreground text-center py-6">
           Sin embarques activos
         </p>
       );
     }
-    return data.map((c) => (
+    return filas.map((c) => {
+      const pct = totalActivosGlobal > 0 ? (c.totalVisible / totalActivosGlobal) * 100 : 0;
+      return (
             <div
               key={c.clienteId}
               onClick={() => navigate(`/clientes/${c.clienteId}`)}
               className="flex items-center gap-3 px-3 py-2.5 rounded-md cursor-pointer hover:bg-primary/5 transition-colors group"
+              title={`${c.totalVisible} de ${totalActivosGlobal} cargas activas`}
             >
-              {/* Total — big number */}
+              {/* Total — big number (suma exacta de los chips) */}
               <span className="text-2xl font-bold tabular-nums min-w-[2.5rem] text-right text-foreground">
-                {c.total}
+                {c.totalVisible}
               </span>
 
               {/* Client name + chips */}
@@ -77,20 +89,21 @@ export const CargasActivasClienteCard = memo(function CargasActivasClienteCard({
                 </div>
               </div>
 
-              {/* Proportion bar */}
+              {/* Proportion bar — % sobre el total activo de TODOS los clientes */}
               <div className="hidden sm:flex items-center gap-2 shrink-0">
                 <div className="w-24 h-2.5 rounded-full bg-secondary border border-border/40 overflow-hidden">
                   <div
-                    className="h-full rounded-full bg-primary transition-all"
-                    style={{ width: `${Math.max(8, (c.total / maxTotal) * 100)}%` }}
+                    className="h-full rounded-full bg-primary transition-all min-w-[4px]"
+                    style={{ width: `${pct}%` }}
                   />
                 </div>
                 <span className="text-[11px] text-muted-foreground tabular-nums w-9 text-right">
-                  {Math.round((c.total / maxTotal) * 100)}%
+                  {Math.round(pct)}%
                 </span>
               </div>
             </div>
-    ));
+      );
+    });
   }
 
   return (
