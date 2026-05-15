@@ -159,6 +159,11 @@ export function parseEmbarquesMesSiguiente(stats: DashboardStats): EmbarqueMesSi
   });
 }
 
+export function parseCargasActivasTotal(stats: DashboardStats): number {
+  const v = stats?.cargasActivasTotal;
+  return typeof v === "number" ? v : Number(v ?? 0);
+}
+
 export function parseCargasPorCliente(stats: DashboardStats): CargaPorCliente[] {
   if (!stats?.cargasPorCliente) return [];
   const raw = stats.cargasPorCliente as Array<Record<string, unknown>>;
