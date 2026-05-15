@@ -25,7 +25,7 @@ export function HuecoFacturacionCard() {
         <div className="flex-1">
           <p className="text-sm font-semibold text-success">Sin hueco de facturación</p>
           <p className="text-xs text-muted-foreground">
-            Todos los embarques con ETD &gt; 5 días desde el 1/abr/2026 están facturados.
+            Todos los embarques con ETD &gt; 5 días están facturados.
           </p>
         </div>
       </div>
