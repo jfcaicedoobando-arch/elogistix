@@ -106,7 +106,7 @@ function FilaCliente({ cliente: c, totalActivosGlobal, onClick }: FilaProps) {
           </div>
         </div>
       </TooltipTrigger>
-      <TooltipContent side="left" className="max-w-xs">
+      <TooltipContent side="top" align="end" collisionPadding={16} className="max-w-xs">
         <p className="font-semibold mb-1">{c.clienteNombre}</p>
         {hasGlobal ? (
           <p className="text-xs">
