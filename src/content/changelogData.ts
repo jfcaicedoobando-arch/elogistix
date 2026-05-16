@@ -22,6 +22,14 @@ export interface ChangelogEntry {
  */
 export const recentChangelog: ChangelogEntry[] = [
   {
+    version: "8.152.3",
+    date: "2026-05-15",
+    type: "patch",
+    title: "Dashboard — fix posición tooltip 'Cargas activas por cliente'",
+    summary: "Tooltip ya no se trunca contra el borde izquierdo; ahora se muestra arriba de la fila.",
+    description: "TooltipContent cambia de side='left' a side='top' align='end' collisionPadding={16} en CargasActivasClienteCard para evitar el clipping contra el sidebar.",
+  },
+  {
     version: "8.152.2",
     date: "2026-05-15",
     type: "patch",
