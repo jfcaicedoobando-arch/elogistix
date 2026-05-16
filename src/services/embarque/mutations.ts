@@ -31,7 +31,7 @@ export async function crearEmbarqueRpc(input: CrearEmbarqueRpcInput): Promise<{ 
     p_conceptos_venta: toDbJson(input.conceptosVenta),
     p_conceptos_costo: toDbJson(input.conceptosCosto),
     p_documentos: toDbJson(input.documentos),
-    p_request_id: input.requestId ?? null,
+    p_request_id: input.requestId,
   });
   if (error) throw error;
   rpcIdSchema.parse(data); // valida en runtime; lanza ZodError si shape inválido
@@ -69,7 +69,7 @@ export async function duplicarEmbarqueRpc(
   const { data, error } = await supabase.rpc('duplicar_embarque_completo', {
     p_embarque_origen_id: embarqueOrigenId,
     p_copias: toDbJson(copias),
-    p_request_id: requestId ?? null,
+    p_request_id: requestId,
   });
   if (error) throw error;
   rpcIdExpedienteArraySchema.parse(data); // valida shape; lanza ZodError si inválido

@@ -40,7 +40,7 @@ export async function consolidarProformas(params: ConsolidarProformasParams): Pr
     p_operador: params.operador ?? "",
     p_dias_credito: params.diasCredito ?? 0,
     p_tasa_iva: params.tasaIva,
-    p_request_id: params.requestId ?? null,
+    p_request_id: params.requestId,
   });
   if (error) throw error;
   if (!data) throw new Error("La consolidación no devolvió la proforma resultante");
