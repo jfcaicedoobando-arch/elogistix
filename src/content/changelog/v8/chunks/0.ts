@@ -2,6 +2,14 @@ import type { ChangelogEntry } from "../../../changelogData";
 
 export const chunk0: ChangelogEntry[] = [
   {
+    version: "8.165.0",
+    date: "2026-05-16",
+    type: "minor",
+    title: "Ola A.3 (cont.) — Idempotencia en mutaciones de actualización",
+    summary: "Editar embarque, avanzar estado y editar costos de cotización ahora aceptan p_request_id: reintentos no reescriben conceptos ni duplican notas/eventos.",
+    description: "actualizar_embarque_completo reescrito con p_request_id uuid opcional + idempotency_claim/store (evita doble delete/re-insert de conceptos_venta y conceptos_costo). Nueva RPC avanzar_estado_embarque(p_embarque_id, p_nuevo_estado, p_usuario_email, p_tipo_evento, p_descripcion_evento, p_request_id) que ejecuta atómicamente UPDATE estado + INSERT nota cambio_estado + INSERT evento_embarque; reemplaza la cadena de 3 awaits del cliente en useAvanzarEstadoEmbarque (eliminadas notas/eventos duplicados ante reintentos). Nueva RPC actualizar_cotizacion_costos(p_cotizacion_id, p_costos, p_request_id) que sustituye el delete+insert client-side de upsertCotizacionCostos. Servicios actualizados: actualizarEmbarqueRpc, avanzarEstadoEmbarqueRpc, upsertCotizacionCostos. Hooks que generan automáticamente requestId (newRequestId) si el caller no lo provee: useUpdateEmbarque, useAvanzarEstadoEmbarque, useUpsertCotizacionCostos. Vista /idempotencia ampliada con filtros para las nuevas operaciones (Editar embarque, Avanzar estado, Editar costos cotización). APP_VERSION 8.165.0."
+  },
+  {
     version: "8.164.0",
     date: "2026-05-16",
     type: "minor",
