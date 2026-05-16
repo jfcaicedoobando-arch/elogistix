@@ -2,6 +2,14 @@ import type { ChangelogEntry } from "../../../changelogData";
 
 export const chunk0: ChangelogEntry[] = [
   {
+    version: "8.166.0",
+    date: "2026-05-16",
+    type: "minor",
+    title: "Ola A.3 (cont.) — Idempotencia en upload de documentos",
+    summary: "Re-subir el mismo archivo a un documento no duplica filas ni reescribe el registro: el path incluye el hash SHA-256 del contenido.",
+    description: "uploadDocumentoEmbarque (src/services/embarque/documentos.ts) reescrito como idempotente por contenido: 1) calcula SHA-256 del File con crypto.subtle, 2) construye un path determinístico embarques/{embarqueId}/{docId}/{hash12}-{filename}, 3) si documentos_embarque.archivo ya apunta al mismo path devuelve {cached:true} sin tocar storage ni DB, 4) reclama idempotency_claim con clave UUID derivada del hash y fn='upload_documento_embarque' para registrar el intento en /idempotencia (cuenta reintentos vía columna hits), 5) hace upload (upsert) + update de la fila sólo si el contenido cambió, 6) llama idempotency_store con {path, fileName} para que un reintento concurrente desde otra pestaña obtenga la respuesta cacheada. Resultado: nunca se duplican registros de documentos_embarque ni se hacen updates redundantes ante reintentos del mismo archivo. Vista /idempotencia ampliada con filtro 'Subir documento'. APP_VERSION 8.166.0."
+  },
+  {
     version: "8.165.0",
     date: "2026-05-16",
     type: "minor",
