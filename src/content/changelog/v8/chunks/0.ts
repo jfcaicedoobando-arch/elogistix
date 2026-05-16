@@ -2,6 +2,14 @@ import type { ChangelogEntry } from "../../../changelogData";
 
 export const chunk0: ChangelogEntry[] = [
   {
+    version: "8.167.0",
+    date: "2026-05-16",
+    type: "patch",
+    title: "Ola A.3 (cont.) — Tests de integración para idempotencia",
+    summary: "5 tests verifican que doble-click y reintentos de red no duplican embarques ni proformas consolidadas.",
+    description: "Nuevo archivo src/services/__tests__/idempotency.integration.test.ts (5 tests, todos pasan). Mock de supabase.rpc que emula server-side idempotency_claim/store con un Map keyed por p_request_id y contadores de hits {created, cached}. Escenarios cubiertos: (1) doble-click en crearEmbarqueRpc con el mismo requestId → 1 sola creación + 1 hit cacheado; (2) doble-click en consolidarProformas → 1 sola proforma; (3) control negativo: requestIds distintos sí producen 2 embarques (asegura que el mock no es trivialmente idempotente); (4) reintento tras error de red en crearEmbarqueRpc: primer intento rechaza, useStableRequestId mantiene el mismo id, segundo intento crea y reset() genera id nuevo; (5) consolidarProformas con 2 fallos + 1 éxito = 1 sola proforma. Usa renderHook para verificar el contrato de useStableRequestId.get()/reset(). APP_VERSION 8.167.0."
+  },
+  {
     version: "8.166.0",
     date: "2026-05-16",
     type: "minor",

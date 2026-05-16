@@ -22,6 +22,14 @@ export interface ChangelogEntry {
  */
 export const recentChangelog: ChangelogEntry[] = [
   {
+    version: "8.167.0",
+    date: "2026-05-16",
+    type: "patch",
+    title: "Ola A.3 (cont.) — Tests de integración para idempotencia",
+    summary: "5 tests cubren doble-click y reintentos de red sobre crearEmbarqueRpc y consolidarProformas, verificando que no se duplican registros.",
+    description: "Mock de supabase.rpc que simula idempotency_claim/store. Escenarios: doble-click, reintento tras error, control negativo. APP_VERSION 8.167.0."
+  },
+  {
     version: "8.166.0",
     date: "2026-05-16",
     type: "minor",
