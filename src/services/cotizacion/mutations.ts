@@ -89,7 +89,11 @@ export async function updateCotizacion(
 }
 
 export async function deleteCotizacion(id: string): Promise<void> {
-  const { error } = await supabase.from("cotizaciones").delete().eq("id", id);
+  // Soft delete vía RPC (A.2.2). El registro queda en papelera y deja de listarse.
+  const { error } = await supabase.rpc("soft_delete_record", {
+    _table: "cotizaciones",
+    _id: id,
+  });
   if (error) throw error;
 }
 

@@ -67,7 +67,10 @@ export async function uploadDocumentoEmbarque(
 }
 
 export async function deleteDocumentoEmbarque(docId: string, archivoPath: string): Promise<void> {
-  await deleteFile(archivoPath);
-  const { error } = await supabase.from('documentos_embarque').delete().eq('id', docId);
+  // Soft delete (A.2.2): mantenemos el archivo en storage por si se restaura desde papelera.
+  const { error } = await supabase.rpc('soft_delete_record', {
+    _table: 'documentos_embarque',
+    _id: docId,
+  });
   if (error) throw error;
 }

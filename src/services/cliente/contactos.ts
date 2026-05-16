@@ -40,9 +40,10 @@ export async function updateContacto(
 }
 
 export async function deleteContacto(id: string) {
-  const { error } = await supabase
-    .from("contactos_cliente")
-    .delete()
-    .eq("id", id);
+  // Soft delete vía RPC (A.2.2).
+  const { error } = await supabase.rpc("soft_delete_record", {
+    _table: "contactos_cliente",
+    _id: id,
+  });
   if (error) throw error;
 }
