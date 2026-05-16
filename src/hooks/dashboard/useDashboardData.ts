@@ -11,7 +11,6 @@ import {
   parseCargasPorCliente,
   parseCargasActivasTotal,
   combinarActivos,
-  type EstadoFiltro,
   type AlertaDemora,
   type ProximoArribo,
   type EmbarqueConProfit,
