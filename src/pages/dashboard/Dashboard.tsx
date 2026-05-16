@@ -19,8 +19,6 @@ function getSaludo() {
 export default function Dashboard() {
   const {
     isLoading,
-    filtroEstado,
-    setFiltroEstado,
     conteoPorEstado,
     totalActivos,
     alertasDemora,
