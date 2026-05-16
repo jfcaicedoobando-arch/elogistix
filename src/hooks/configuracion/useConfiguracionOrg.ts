@@ -1,12 +1,9 @@
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useToast } from "@/hooks/use-toast";
+import { useQuery } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/query";
 import {
   fetchConfiguracionByOrg,
-  updateConfiguracionItems,
   type ConfigItem,
 } from "@/services/configuracion";
-import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 
 export type { ConfigItem };
 
