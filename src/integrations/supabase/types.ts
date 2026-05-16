@@ -2251,7 +2251,9 @@ export type Database = {
         Returns: {
           deleted_at: string
           deleted_by: string
+          deleted_by_email: string
           id: string
+          label: string
           organization_id: string
         }[]
       }
