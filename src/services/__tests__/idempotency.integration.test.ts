@@ -24,11 +24,10 @@ vi.mock("@/integrations/supabase/client", () => ({
 
 import { crearEmbarqueRpc } from "@/services/embarque/mutations";
 import { consolidarProformas } from "@/services/proforma/consolidar";
-import { useStableRequestId, newRequestId } from "@/lib/idempotency";
+import { useStableRequestId } from "@/lib/idempotency";
 
 const UUID_A = "11111111-1111-4111-8111-111111111111";
 const UUID_B = "22222222-2222-4222-8222-222222222222";
-const UUID_C = "33333333-3333-4333-8333-333333333333";
 
 /** Estado server-side simulado: requestId → respuesta cacheada. */
 type Cache = Map<string, unknown>;
