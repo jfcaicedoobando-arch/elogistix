@@ -18,13 +18,6 @@ export function useConfiguracionGlobal() {
   });
 }
 
-export function useConfigGlobalValue<T>(categoria: string, clave: string, fallback: T): T {
-  const { data } = useConfiguracionGlobal();
-  if (!data) return fallback;
-  const item = data.find((c) => c.categoria === categoria && c.clave === clave);
-  if (!item) return fallback;
-  return item.valor as T;
-}
 
 export function useConfigGlobalCategoria(categoria: string): Record<string, unknown> {
   const { data } = useConfiguracionGlobal();
