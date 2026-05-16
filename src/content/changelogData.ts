@@ -101,14 +101,6 @@ export const recentChangelog: ChangelogEntry[] = [
     summary: "MarcarRevisadoDialog (306 → 100) y TrackingLiveCard (281 → 56) se parten en subcomponentes por sección. Componentes >200 líneas: 19 → 17.",
     description: "Segunda iteración de la Fase 4. (1) MarcarRevisadoDialog se reduce a shell que orquesta tabs y footer; los tres tabs viven en src/components/auditoria/marcarRevisado/ (AccionTab + AccionButton, ComentariosTab, SnoozeTab) y el resumen del hallazgo en HallazgoSummary. (2) TrackingLiveCard se reduce a un Card con Header + delegación; nuevos subcomponentes en src/components/embarque/trackingLive/ (TrackingActions, TrackingWarnings, TrackingFechasPropuestas, TrackingSummaryGrid). El hook controller useTrackingLiveCard sigue siendo el único punto de lógica. Tests: 314 verdes. Sin cambios visibles ni de comportamiento. Quedan 17 componentes >200 líneas.",
   },
-  {
-    version: "8.145.0",
-    date: "2026-05-14",
-    type: "minor",
-    title: "Power of 10 — Fase 4: refactor Auditoria.tsx (297 → 87 líneas)",
-    summary: "La página Auditoria queda como shell delgado: extraídos AuditoriaHallazgosTab, AuditoriaPorReglaTab y helper puro lib/domain/auditoriaCsv. Componentes >200 líneas: 20 → 19.",
-    description: "Primer dominio de la Fase 4 del plan The Power of 10. (1) src/pages/Auditoria.tsx pasa de 297 a 87 líneas eliminando renderHallazgosTab/renderPorReglaTab inline y la lógica de exportCsv. (2) Nuevo src/components/auditoria/AuditoriaHallazgosTab.tsx (KPIs + filtros + toggle revisados + HallazgosTablaPaginada). (3) Nuevo src/components/auditoria/AuditoriaPorReglaTab.tsx (accordion por regla con HallazgoTabla). (4) Nuevo src/lib/domain/auditoriaCsv.ts con exportHallazgosCsv() — función pura sin dependencias de React, mapeo de filas y constante de columnas. (5) scripts/audit-power10.ts también ignora src/content/changelogData.ts (descripciones contienen 'as any' como texto). Tests: 314 verdes. Sin cambios de UI ni de comportamiento.",
-  },
 ];
 
 /** Deduplica por version conservando la primera ocurrencia (recentChangelog gana). */
