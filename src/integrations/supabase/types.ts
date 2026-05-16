@@ -1364,6 +1364,33 @@ export type Database = {
           },
         ]
       }
+      idempotency_keys: {
+        Row: {
+          created_at: string
+          fn: string
+          key: string
+          organization_id: string
+          response: Json | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          fn: string
+          key: string
+          organization_id: string
+          response?: Json | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          fn?: string
+          key?: string
+          organization_id?: string
+          response?: Json | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       navieras: {
         Row: {
           activo: boolean
@@ -2144,6 +2171,7 @@ export type Database = {
           p_operador: string
           p_organization_id: string
           p_proforma_ids: string[]
+          p_request_id?: string
           p_tasa_iva: number
         }
         Returns: {
@@ -2195,6 +2223,7 @@ export type Database = {
           p_conceptos_venta?: Json
           p_documentos?: Json
           p_embarque: Json
+          p_request_id?: string
         }
         Returns: Json
       }
@@ -2204,7 +2233,11 @@ export type Database = {
       dashboard_stats: { Args: never; Returns: Json }
       dashboard_summary: { Args: never; Returns: Json }
       duplicar_embarque_completo: {
-        Args: { p_copias: Json; p_embarque_origen_id: string }
+        Args: {
+          p_copias: Json
+          p_embarque_origen_id: string
+          p_request_id?: string
+        }
         Returns: Json
       }
       eliminar_embarque_completo: {
@@ -2241,6 +2274,11 @@ export type Database = {
         }
         Returns: boolean
       }
+      idempotency_claim: { Args: { _fn: string; _key: string }; Returns: Json }
+      idempotency_store: {
+        Args: { _key: string; _response: Json }
+        Returns: undefined
+      }
       is_org_admin: {
         Args: { _org_id: string; _user_id: string }
         Returns: boolean
@@ -2258,7 +2296,12 @@ export type Database = {
         }[]
       }
       marcar_proforma_facturada: {
-        Args: { p_fecha: string; p_folio: string; p_id: string }
+        Args: {
+          p_fecha: string
+          p_folio: string
+          p_id: string
+          p_request_id?: string
+        }
         Returns: undefined
       }
       operaciones_stats: { Args: never; Returns: Json }

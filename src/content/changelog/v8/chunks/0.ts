@@ -2,6 +2,14 @@ import type { ChangelogEntry } from "../../../changelogData";
 
 export const chunk0: ChangelogEntry[] = [
   {
+    version: "8.161.0",
+    date: "2026-05-16",
+    type: "minor",
+    title: "Ola A.3 — Idempotencia en mutaciones críticas",
+    summary: "Crear/duplicar embarques, consolidar proformas y marcar proforma facturada ya no se duplican por doble-click o reintentos de red.",
+    description: "Nueva tabla idempotency_keys (key uuid PK, organization_id, user_id, fn, response jsonb) con RLS (cada usuario ve y registra sólo sus propias claves; super_admin ve todo). Helpers SECURITY DEFINER idempotency_claim(_key,_fn) (insert ON CONFLICT DO NOTHING; devuelve respuesta cacheada si ya existía) y idempotency_store(_key,_response). Las 4 RPCs críticas se re-crearon con parámetro opcional p_request_id uuid: crear_embarque_completo, duplicar_embarque_completo, consolidar_proformas y marcar_proforma_facturada. Si llega el mismo request_id dos veces, la RPC devuelve la respuesta original (jsonb cacheado, o el registro re-leído en consolidar_proformas) sin re-ejecutar inserts. Helper frontend src/lib/idempotency.ts newRequestId() (crypto.randomUUID con fallback). Servicios actualizados a aceptar requestId opcional: crearEmbarqueRpc, duplicarEmbarqueRpc y consolidarProformas. APP_VERSION 8.161.0."
+  },
+  {
     version: "8.160.0",
     date: "2026-05-16",
     type: "minor",
