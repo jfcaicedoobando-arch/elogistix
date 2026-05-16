@@ -1,0 +1,48 @@
+name: CI
+
+on:
+  pull_request:
+    branches: ["**"]
+  push:
+    branches: [main]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  quality:
+    name: Lint, unused code & tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: ESLint
+        run: bun run lint
+
+      - name: Unused code check (knip)
+        # Falla en archivos huérfanos, dependencias sin uso, dependencias no listadas
+        # y exports duplicados. Exports/types sin uso se reportan como warning.
+        # Para gating estricto (incluyendo exports/types) usar `lint:unused:strict`.
+        run: bun run lint:unused
+
+      - name: Strict unused exports & types (informational)
+        if: always()
+        continue-on-error: true
+        run: bun run lint:unused:strict
+
+      - name: Tests
+        run: bun run test
+
+      - name: Build
+        run: bun run build

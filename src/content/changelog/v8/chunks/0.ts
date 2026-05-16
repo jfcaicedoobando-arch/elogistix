@@ -2,6 +2,14 @@ import type { ChangelogEntry } from "../../../changelogData";
 
 export const chunk0: ChangelogEntry[] = [
   {
+    version: "8.156.0",
+    date: "2026-05-16",
+    type: "minor",
+    title: "CI — chequeo automático de código no utilizado con knip",
+    summary: "Nuevo workflow .github/workflows/ci.yml corre ESLint, knip, tests y build en cada PR. Falla si hay archivos huérfanos, dependencias sin uso, deps no listadas o exports duplicados.",
+    description: "Agregado knip 6.14 como devDependency con configuración en knip.json (entries: main.tsx, configs y scripts; ignore: integrations/supabase, components/ui, supabase/, docs/). Scripts nuevos en package.json: 'lint:unused' (gating de PR, falla en files/dependencies/unlisted/duplicates) y 'lint:unused:strict' (incluye exports/types, hoy informational hasta cerrar la Ola 3 de limpieza). Workflow CI: setup-bun + bun install --frozen-lockfile, luego lint → lint:unused (bloqueante) → lint:unused:strict (continue-on-error) → test → build. Concurrency cancela jobs viejos del mismo branch. APP_VERSION 8.156.0.",
+  },
+  {
     version: "8.155.2",
     date: "2026-05-16",
     type: "patch",

@@ -22,6 +22,14 @@ export interface ChangelogEntry {
  */
 export const recentChangelog: ChangelogEntry[] = [
   {
+    version: "8.156.0",
+    date: "2026-05-16",
+    type: "minor",
+    title: "CI — chequeo automático de código no utilizado con knip",
+    summary: "Workflow GitHub Actions corre ESLint + knip + tests + build en cada PR y falla si hay archivos huérfanos, deps sin uso o exports duplicados.",
+    description: "knip 6.14 + knip.json + scripts lint:unused (bloqueante) y lint:unused:strict (informational, incluye exports/types). Workflow .github/workflows/ci.yml con setup-bun, install --frozen-lockfile y concurrency cancel.",
+  },
+  {
     version: "8.155.2",
     date: "2026-05-16",
     type: "patch",
