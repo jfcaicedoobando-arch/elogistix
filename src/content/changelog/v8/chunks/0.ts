@@ -2,6 +2,14 @@ import type { ChangelogEntry } from "../../../changelogData";
 
 export const chunk0: ChangelogEntry[] = [
   {
+    version: "8.153.1",
+    date: "2026-05-16",
+    type: "patch",
+    title: "Embarques — encabezado muestra contenedores y expedientes",
+    summary: "El header del listado ahora muestra 'N contenedores en M expedientes' para alinear el conteo con el dashboard (que cuenta contenedores).",
+    description: "Antes el header decía 'N embarques encontrados' usando expedientes deduplicados, lo que contradecía al dashboard que cuenta contenedores (una fila por contenedor en BD). Ahora useEmbarquesPageState expone `expedientesCount` y `contenedoresCount` (suma de contenedoresPorExpediente para los expedientes filtrados, o totalCount cuando no hay filtro de estado) y Embarques.tsx los usa en el PageHeader. Sin cambios en RPC.",
+  },
+  {
     version: "8.153.0",
     date: "2026-05-16",
     type: "minor",
