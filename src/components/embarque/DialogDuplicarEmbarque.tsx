@@ -71,7 +71,8 @@ export default function DialogDuplicarEmbarque({ embarque, open, onOpenChange }:
 
   const handleDuplicar = async () => {
     try {
-      const creados = await duplicarEmbarque.mutateAsync({ embarqueOrigen: embarque, copias: filaCopias });
+      const creados = await duplicarEmbarque.mutateAsync({ embarqueOrigen: embarque, copias: filaCopias, requestId: reqId.get() });
+      reqId.reset();
       notifySuccess(toast, { title: `Se crearon ${creados.length} embarque(s)`, description: creados.map(c => c.expediente).join(', ') });
       onOpenChange(false);
     } catch (err: unknown) {
