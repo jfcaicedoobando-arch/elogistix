@@ -10,6 +10,7 @@ import {
   type ProformaPendienteConEmbarque,
 } from "@/hooks/embarque/useProformas";
 import { useTasaIVA } from "@/hooks/catalogos/useTasaIVA";
+import { useStableRequestId } from "@/lib/idempotency";
 import {
   agruparProformasPendientes,
   totalesProformasSeleccionadas,
