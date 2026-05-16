@@ -22,6 +22,14 @@ export interface ChangelogEntry {
  */
 export const recentChangelog: ChangelogEntry[] = [
   {
+    version: "8.158.0",
+    date: "2026-05-16",
+    type: "minor",
+    title: "Ola A.2.1 — Preparación de soft delete (esquema)",
+    summary: "Nuevas columnas deleted_at/deleted_by + índices parciales en 14 tablas operativas. Sin impacto funcional aún.",
+    description: "Base esquemática para la papelera. La aplicación sigue comportándose como antes; A.2.2 conectará servicios y UI. APP_VERSION 8.158.0."
+  },
+  {
     version: "8.157.0",
     date: "2026-05-16",
     type: "minor",

@@ -2,6 +2,14 @@ import type { ChangelogEntry } from "../../../changelogData";
 
 export const chunk0: ChangelogEntry[] = [
   {
+    version: "8.158.0",
+    date: "2026-05-16",
+    type: "minor",
+    title: "Ola A.2.1 — Preparación de soft delete (esquema)",
+    summary: "Nuevas columnas deleted_at/deleted_by + índices parciales en 14 tablas operativas. Sin impacto funcional: la app sigue comportándose igual hasta que A.2.2 conecte la papelera.",
+    description: "Agregadas columnas deleted_at (timestamptz) y deleted_by (uuid) en clientes, contactos_cliente, embarques, documentos_embarque, eventos_embarque, notas_embarque, cotizaciones, cotizacion_costos, facturas, conceptos_factura, proformas, proforma_conceptos_consolidados, conceptos_costo y conceptos_venta. Índices parciales idx_<tabla>_deleted_at sólo sobre registros marcados, para que las consultas a la papelera sean rápidas sin penalizar listados normales. Ajustes en PORTAL_EVENTO_COLUMNS, PORTAL_DOCUMENTO_COLUMNS y CONTACTO_COLUMNS para incluir las nuevas columnas y mantener la compatibilidad de tipos en el portal y el detalle de cliente. APP_VERSION 8.158.0."
+  },
+  {
     version: "8.157.0",
     date: "2026-05-16",
     type: "minor",

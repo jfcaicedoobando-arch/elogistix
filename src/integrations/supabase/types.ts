@@ -277,6 +277,8 @@ export type Database = {
           contacto: string
           cp: string
           created_at: string
+          deleted_at: string | null
+          deleted_by: string | null
           dias_credito: number | null
           direccion: string
           email: string
@@ -293,6 +295,8 @@ export type Database = {
           contacto?: string
           cp?: string
           created_at?: string
+          deleted_at?: string | null
+          deleted_by?: string | null
           dias_credito?: number | null
           direccion?: string
           email?: string
@@ -309,6 +313,8 @@ export type Database = {
           contacto?: string
           cp?: string
           created_at?: string
+          deleted_at?: string | null
+          deleted_by?: string | null
           dias_credito?: number | null
           direccion?: string
           email?: string
@@ -334,6 +340,8 @@ export type Database = {
         Row: {
           concepto: string
           created_at: string
+          deleted_at: string | null
+          deleted_by: string | null
           embarque_id: string
           estado_liquidacion: Database["public"]["Enums"]["estado_liquidacion"]
           fecha_pago: string | null
@@ -349,6 +357,8 @@ export type Database = {
         Insert: {
           concepto: string
           created_at?: string
+          deleted_at?: string | null
+          deleted_by?: string | null
           embarque_id: string
           estado_liquidacion?: Database["public"]["Enums"]["estado_liquidacion"]
           fecha_pago?: string | null
@@ -364,6 +374,8 @@ export type Database = {
         Update: {
           concepto?: string
           created_at?: string
+          deleted_at?: string | null
+          deleted_by?: string | null
           embarque_id?: string
           estado_liquidacion?: Database["public"]["Enums"]["estado_liquidacion"]
           fecha_pago?: string | null
@@ -404,6 +416,8 @@ export type Database = {
         Row: {
           cantidad: number
           created_at: string
+          deleted_at: string | null
+          deleted_by: string | null
           descripcion: string
           factura_id: string
           id: string
@@ -415,6 +429,8 @@ export type Database = {
         Insert: {
           cantidad?: number
           created_at?: string
+          deleted_at?: string | null
+          deleted_by?: string | null
           descripcion: string
           factura_id: string
           id?: string
@@ -426,6 +442,8 @@ export type Database = {
         Update: {
           cantidad?: number
           created_at?: string
+          deleted_at?: string | null
+          deleted_by?: string | null
           descripcion?: string
           factura_id?: string
           id?: string
@@ -456,6 +474,8 @@ export type Database = {
           aplica_iva: boolean
           cantidad: number
           created_at: string
+          deleted_at: string | null
+          deleted_by: string | null
           descripcion: string
           embarque_id: string
           estado_facturacion: string
@@ -470,6 +490,8 @@ export type Database = {
           aplica_iva?: boolean
           cantidad?: number
           created_at?: string
+          deleted_at?: string | null
+          deleted_by?: string | null
           descripcion: string
           embarque_id: string
           estado_facturacion?: string
@@ -484,6 +506,8 @@ export type Database = {
           aplica_iva?: boolean
           cantidad?: number
           created_at?: string
+          deleted_at?: string | null
+          deleted_by?: string | null
           descripcion?: string
           embarque_id?: string
           estado_facturacion?: string
@@ -595,6 +619,8 @@ export type Database = {
           cliente_id: string
           contacto: string
           created_at: string
+          deleted_at: string | null
+          deleted_by: string | null
           direccion: string
           email: string
           id: string
@@ -610,6 +636,8 @@ export type Database = {
           cliente_id: string
           contacto?: string
           created_at?: string
+          deleted_at?: string | null
+          deleted_by?: string | null
           direccion?: string
           email?: string
           id?: string
@@ -625,6 +653,8 @@ export type Database = {
           cliente_id?: string
           contacto?: string
           created_at?: string
+          deleted_at?: string | null
+          deleted_by?: string | null
           direccion?: string
           email?: string
           id?: string
@@ -660,6 +690,8 @@ export type Database = {
           costo_unitario: number
           cotizacion_id: string
           created_at: string | null
+          deleted_at: string | null
+          deleted_by: string | null
           id: string
           moneda: string
           notas: string
@@ -679,6 +711,8 @@ export type Database = {
           costo_unitario?: number
           cotizacion_id: string
           created_at?: string | null
+          deleted_at?: string | null
+          deleted_by?: string | null
           id?: string
           moneda: string
           notas?: string
@@ -698,6 +732,8 @@ export type Database = {
           costo_unitario?: number
           cotizacion_id?: string
           created_at?: string | null
+          deleted_at?: string | null
+          deleted_by?: string | null
           id?: string
           moneda?: string
           notas?: string
@@ -735,6 +771,8 @@ export type Database = {
           comentario_cliente: string | null
           conceptos_venta: Json
           created_at: string
+          deleted_at: string | null
+          deleted_by: string | null
           descripcion_adicional: string
           descripcion_mercancia: string
           destino: string
@@ -789,6 +827,8 @@ export type Database = {
           comentario_cliente?: string | null
           conceptos_venta?: Json
           created_at?: string
+          deleted_at?: string | null
+          deleted_by?: string | null
           descripcion_adicional?: string
           descripcion_mercancia?: string
           destino?: string
@@ -843,6 +883,8 @@ export type Database = {
           comentario_cliente?: string | null
           conceptos_venta?: Json
           created_at?: string
+          deleted_at?: string | null
+          deleted_by?: string | null
           descripcion_adicional?: string
           descripcion_mercancia?: string
           destino?: string
@@ -918,6 +960,8 @@ export type Database = {
         Row: {
           archivo: string | null
           created_at: string
+          deleted_at: string | null
+          deleted_by: string | null
           embarque_id: string
           estado: Database["public"]["Enums"]["estado_documento"]
           id: string
@@ -928,6 +972,8 @@ export type Database = {
         Insert: {
           archivo?: string | null
           created_at?: string
+          deleted_at?: string | null
+          deleted_by?: string | null
           embarque_id: string
           estado?: Database["public"]["Enums"]["estado_documento"]
           id?: string
@@ -938,6 +984,8 @@ export type Database = {
         Update: {
           archivo?: string | null
           created_at?: string
+          deleted_at?: string | null
+          deleted_by?: string | null
           embarque_id?: string
           estado?: Database["public"]["Enums"]["estado_documento"]
           id?: string
@@ -979,6 +1027,8 @@ export type Database = {
           contenedor: string | null
           cotizacion_id: string | null
           created_at: string
+          deleted_at: string | null
+          deleted_by: string | null
           descripcion_mercancia: string
           estado: Database["public"]["Enums"]["estado_embarque"]
           eta: string | null
@@ -1031,6 +1081,8 @@ export type Database = {
           contenedor?: string | null
           cotizacion_id?: string | null
           created_at?: string
+          deleted_at?: string | null
+          deleted_by?: string | null
           descripcion_mercancia?: string
           estado?: Database["public"]["Enums"]["estado_embarque"]
           eta?: string | null
@@ -1083,6 +1135,8 @@ export type Database = {
           contenedor?: string | null
           cotizacion_id?: string | null
           created_at?: string
+          deleted_at?: string | null
+          deleted_by?: string | null
           descripcion_mercancia?: string
           estado?: Database["public"]["Enums"]["estado_embarque"]
           eta?: string | null
@@ -1146,6 +1200,8 @@ export type Database = {
       eventos_embarque: {
         Row: {
           created_at: string
+          deleted_at: string | null
+          deleted_by: string | null
           descripcion: string
           embarque_id: string
           fecha: string
@@ -1157,6 +1213,8 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          deleted_at?: string | null
+          deleted_by?: string | null
           descripcion?: string
           embarque_id: string
           fecha?: string
@@ -1168,6 +1226,8 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          deleted_at?: string | null
+          deleted_by?: string | null
           descripcion?: string
           embarque_id?: string
           fecha?: string
@@ -1199,6 +1259,8 @@ export type Database = {
           cliente_id: string
           cliente_nombre: string
           created_at: string
+          deleted_at: string | null
+          deleted_by: string | null
           embarque_id: string
           estado: Database["public"]["Enums"]["estado_factura"]
           expediente: string
@@ -1223,6 +1285,8 @@ export type Database = {
           cliente_id: string
           cliente_nombre?: string
           created_at?: string
+          deleted_at?: string | null
+          deleted_by?: string | null
           embarque_id: string
           estado?: Database["public"]["Enums"]["estado_factura"]
           expediente?: string
@@ -1247,6 +1311,8 @@ export type Database = {
           cliente_id?: string
           cliente_nombre?: string
           created_at?: string
+          deleted_at?: string | null
+          deleted_by?: string | null
           embarque_id?: string
           estado?: Database["public"]["Enums"]["estado_factura"]
           expediente?: string
@@ -1326,6 +1392,8 @@ export type Database = {
         Row: {
           contenido: string
           created_at: string
+          deleted_at: string | null
+          deleted_by: string | null
           embarque_id: string
           fecha: string
           id: string
@@ -1336,6 +1404,8 @@ export type Database = {
         Insert: {
           contenido: string
           created_at?: string
+          deleted_at?: string | null
+          deleted_by?: string | null
           embarque_id: string
           fecha?: string
           id?: string
@@ -1346,6 +1416,8 @@ export type Database = {
         Update: {
           contenido?: string
           created_at?: string
+          deleted_at?: string | null
+          deleted_by?: string | null
           embarque_id?: string
           fecha?: string
           id?: string
@@ -1474,6 +1546,8 @@ export type Database = {
           cantidad: number
           contenedor: string | null
           created_at: string
+          deleted_at: string | null
+          deleted_by: string | null
           descripcion: string
           embarque_id: string | null
           id: string
@@ -1491,6 +1565,8 @@ export type Database = {
           cantidad?: number
           contenedor?: string | null
           created_at?: string
+          deleted_at?: string | null
+          deleted_by?: string | null
           descripcion: string
           embarque_id?: string | null
           id?: string
@@ -1508,6 +1584,8 @@ export type Database = {
           cantidad?: number
           contenedor?: string | null
           created_at?: string
+          deleted_at?: string | null
+          deleted_by?: string | null
           descripcion?: string
           embarque_id?: string | null
           id?: string
@@ -1552,6 +1630,8 @@ export type Database = {
           consolidada_en: string | null
           created_at: string
           created_by: string | null
+          deleted_at: string | null
+          deleted_by: string | null
           dias_credito: number | null
           embarque_id: string | null
           embarques_ids: string[] | null
@@ -1586,6 +1666,8 @@ export type Database = {
           consolidada_en?: string | null
           created_at?: string
           created_by?: string | null
+          deleted_at?: string | null
+          deleted_by?: string | null
           dias_credito?: number | null
           embarque_id?: string | null
           embarques_ids?: string[] | null
@@ -1620,6 +1702,8 @@ export type Database = {
           consolidada_en?: string | null
           created_at?: string
           created_by?: string | null
+          deleted_at?: string | null
+          deleted_by?: string | null
           dias_credito?: number | null
           embarque_id?: string | null
           embarques_ids?: string[] | null
@@ -2069,6 +2153,8 @@ export type Database = {
           consolidada_en: string | null
           created_at: string
           created_by: string | null
+          deleted_at: string | null
+          deleted_by: string | null
           dias_credito: number | null
           embarque_id: string | null
           embarques_ids: string[] | null
