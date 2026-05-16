@@ -1,84 +1,91 @@
-# Limpieza de código no utilizado
+# Plan — Endurecer Libre Carga para operación diaria
 
-Auditoría realizada con `knip` + verificación manual con `rg`. Propongo retirarlo en 3 olas, de menor a mayor riesgo, para mantener cada commit revisable y sin romper la app.
+El proyecto ya tiene cimientos sólidos (RLS multi-tenant, capa hooks/services/lib, CI con knip + tests, controllers de página, auditoría arquitectónica, scan de seguridad limpio). Lo que sigue ahora **no es seguir refactorizando**, sino cerrar los huecos típicos cuando un MVP empieza a soportar dinero y operación real.
 
-## Resumen ejecutivo
-
-- **37** archivos marcados sin uso (la mayoría son falsos positivos: edge functions y barriles).
-- **2** edge functions realmente huérfanas.
-- **1** dependencia npm sin uso real (`next-themes`) + varias Radix UI sin uso.
-- **~50** exports nombrados y **~90** tipos exportados que ya no se importan.
-- **1** export duplicado (`changelog` en `changelogData.ts`).
+Lo agrupo en 6 frentes, en orden de impacto. Cada frente se puede ejecutar como una mini-ola independiente.
 
 ---
 
-## Ola 1 — Bajo riesgo (recomendado aplicar siempre)
+## 1. Resiliencia de datos (lo más urgente)
 
-Archivos y assets claramente muertos:
+Si mañana alguien borra un embarque por error o se corrompe una factura, hoy no hay forma limpia de recuperar sin abrir Supabase a mano.
 
-- `src/App.css` — no se importa en ningún componente (se usa Tailwind).
-- `scripts/audit-power10.ts` — script suelto sin uso (si se quiere conservar, dejarlo en `/scripts` con README; confirmar).
-- `src/components/admin/TabPlataforma.tsx` — cero referencias.
-- `src/components/operaciones/OperacionesWidgets.tsx` — cero referencias.
-- `src/hooks/embarque/useProfitMaps.ts` — cero referencias.
-- `src/hooks/embarque/useEmbarqueQueries.ts` — duplica `useEmbarques.ts` y no se importa.
+- **Backups verificados**: dejar documentado en `docs/operations.md` cómo restaurar un punto en el tiempo desde Lovable Cloud, y cada mes correr un *restore drill* en una org de staging.
+- **Soft delete + bitácora de borrados**: hoy `eliminar_embarque_cascada` borra duro. Cambiar a `deleted_at timestamptz` en `embarques`, `cotizaciones`, `proformas`, `facturas`, `clientes`, con RLS que oculte filas con `deleted_at is not null` salvo a `admin/super_admin`. Pantalla "Papelera" con restore.
+- **Idempotencia en mutaciones críticas**: facturación y consolidación de proformas deben ser idempotentes (cliente envía `request_id` UUID; la RPC lo guarda y rechaza duplicados). Evita doble factura por doble-click o reintento de red.
+- **Constraints duros que faltan**: FKs reales hacia `clientes`, `embarques`, `cotizaciones`, `organizations` con `ON DELETE RESTRICT` en lugar de orfandad silenciosa; `CHECK` o trigger para `eta >= etd`, `total = subtotal + iva`, monedas válidas.
+- **Snapshots financieros inmutables**: cuando una factura se emite, congelar tipo de cambio, IVA y conceptos en un JSONB `snapshot_emision`. Hoy si cambia la tasa o el catálogo, una factura ya emitida puede recalcularse incorrectamente al releerla.
 
-Edge functions huérfanas (ningún cliente las invoca):
-- `supabase/functions/jsoncargo-bol-lookup/`
-- `supabase/functions/jsoncargo-track-batch/`
+## 2. Observabilidad y operación
 
-Dependencias npm sin uso:
-- `next-themes` (no usamos un ThemeProvider de next-themes).
-- `@tailwindcss/typography` (devDep no referenciada en `tailwind.config.ts`).
-- Radix sin uso real: `@radix-ui/react-aspect-ratio`, `react-context-menu`, `react-hover-card`, `react-menubar`, `react-navigation-menu`, `react-scroll-area`, `react-slider`, `react-toggle`.
-  - Antes de borrar cada paquete verifico que no quede usado por un componente shadcn vivo.
+Hoy si algo truena en producción te enteras porque te avisa el operador.
 
-Duplicado:
-- `src/content/changelogData.ts`: `changelog` se exporta dos veces — consolidar a un único export.
+- **Error tracking real**: integrar Sentry (free tier) en `main.tsx` y en todas las edge functions. Captura stack + breadcrumbs + `organization_id` + `user_id`.
+- **Logs estructurados en edge functions**: helper en `_shared/log.ts` que emita JSON con `level`, `fn`, `org_id`, `latency_ms`. Reemplazar `console.log` libres.
+- **Health/status interno**: página `/admin/sistema` para super-admin con: última corrida del cron de auditoría, último snapshot, último tipo de cambio refrescado, conteo de errores Sentry últimas 24h, espacio usado en Storage por org.
+- **Métricas de negocio expuestas**: KPIs operativos (embarques abiertos por estado, edad promedio de demoras, % proformas sin facturar > 7 días) ya existen — agregar alertas: si la métrica cruza umbral, mandar correo desde una edge function diaria.
+- **Auditoría de cambios sensibles**: trigger genérico `log_table_change()` que grabe `before/after` en `bitacora_actividad` para `facturas`, `proformas`, `conceptos_costo`, `embarques.estado`. Hoy la bitácora captura acciones de UI; faltan los UPDATE directos.
 
-## Ola 2 — Riesgo medio (barriles `index.ts` sin consumidores)
+## 3. Seguridad endurecida
 
-Archivos barril que no se importan en ningún lado (cada módulo importa rutas profundas directas):
+El scan está limpio, pero quedan capas que aún no se aprietan.
 
-```
-src/hooks/admin/index.ts
-src/hooks/catalogos/index.ts
-src/hooks/cliente/index.ts
-src/hooks/configuracion/index.ts
-src/hooks/cotizacion/index.ts
-src/hooks/dashboard/index.ts
-src/hooks/embarque/index.ts
-src/hooks/facturacion/index.ts
-src/hooks/operaciones/index.ts
-src/hooks/portal/index.ts
-src/hooks/proveedor/index.ts
-src/hooks/reportes/index.ts
-src/hooks/shared/index.ts
-src/hooks/usuario/index.ts
-src/lib/financial/index.ts
-src/lib/ui/index.ts
-```
+- **Activar Password HIBP** en Auth (Lovable Cloud → Users → Auth Settings).
+- **MFA obligatorio para `admin` y `super_admin**`: enrolamiento TOTP en pantalla de perfil; bloquear acciones sensibles si el rol es admin y no tiene MFA.
+- **Política de contraseñas + expiración de sesiones**: min 12 chars, 12h de sesión activa, refresh 7 días.
+- **Storage policies por path**: hoy se asume convención `<dominio>/<org_id>/...`. Agregar policies que **exijan** que el primer segmento del path coincida con una org del usuario; sin eso, un cliente con upload de portal podría escribir en otra org si el path es manipulable.
+- **Edge functions admin → rate-limit suave**: tabla `rate_limit(user_id, fn, bucket_ts)` + check en `create-user`, `delete-user`, `invite-client-user` (máx 30/min por usuario). Previene abuso si una cookie se filtra.
+- **Rotación de la llave service-role** documentada en `docs/security-checklist.md` (paso anual).
+- **CSP + headers**: si publican en custom domain, añadir `Content-Security-Policy`, `X-Frame-Options: DENY`, `Referrer-Policy: strict-origin-when-cross-origin` vía Lovable publish settings o meta-tags.
 
-Acción: eliminarlos. Riesgo: bajo; quedó verificado con `rg`. Si en algún caso se prefiere mantener barril como convención, lo dejamos y queda solo como recordatorio.
+## 4. Calidad de datos en captura
 
-## Ola 3 — Limpieza fina de exports y tipos (opcional)
+La operación diaria genera basura si la UI no fuerza el dato correcto.
 
-- Retirar exports nombrados sin consumidores en archivos vivos (no borrar archivos, solo el `export` sobrante o convertir a no-exportado). Ejemplos representativos:
-  - UI shadcn: `AlertDialogPortal`, `AvatarImage`, `badgeVariants`, `CardFooter`, `DialogPortal`, `DialogOverlay`, `DialogClose`, `DialogTrigger`, `DropdownMenu*` (Radio/Sub/Shortcut/Portal/Group), `Select*` (Group/Label/Separator/Scroll), `Sheet*` (Close/Description/Overlay/Portal), `Sidebar*` (Action/Label/Input/Inset/Menu*Sub/Rail/Separator), `TableCaption`, `ToastAction`, `CommandShortcut`, `CommandSeparator`.
-    - **Nota:** muchos de estos vienen del scaffolding shadcn estándar; si se prefiere conservar para futuras pantallas, omitimos esta sección.
-  - Dominio: `ESTADOS_INACTIVOS`, `TIPOS_CARGA` (wizardConstants y SeccionMercanciaWrapper), `DOCS_OBLIGATORIOS`, `DOCS_NACIONAL`, `DOCS_EXTRANJERO`, `EMPTY_PROVEEDOR_FORM`, `COTIZACION_FORM_DEFAULTS` (duplicado), `PAGE_SIZE` (useChangelogController), `PORTAL_EMBARQUE_PROGRESS_STEPS`, `useClientes` (cliente/useClientes.ts), `useEmbarques/useEmbarqueDocumentos/useEmbarqueNotas/useEmbarqueFacturas` (duplicados en useEmbarques.ts y useEmbarqueQueries.ts), `useTrackingLinks`, `useDeleteTrackingLink`, `useCapturarSnapshotAuditoria`, `useConfiguracionGlobal/useConfigGlobalValue`, `useConfigCategoria`, `useUpdateConfiguracionOrg`, `useActividadReciente`, `DEFAULT_PAGE_SIZE`, `reducer` (use-toast), `Constants` (types.ts auto-gen — no tocar), `FIELD_LABELS`, `roleLabels`, `kpiSolidClasses`, `reglaLabel`, `formatValidationMessage`, `ALLOWED_MIME_TYPES`, `stepDatosGeneralesSchema`, `extractFacturaPath`, `getFacturaSignedUrl`, `getFileUrl`, `APP_ROLES`, `CONTACTO_COLUMNS`, `CLIENTE_LIST_COLUMNS`, `CLIENTE_DETAIL_COLUMNS`, `COTIZACION_LIST_COLUMNS`, `COTIZACION_ACEPTADA_COLUMNS`, `generarFolioCotizacion`, `fetchDiasCreditoCliente`, `fetchProfitPorEmbarque`, `loadChangelogV8`, `extractPrefix`, `getCarriersForPrefix`, `PREFIX_TO_CARRIERS`, `jsoncargoDateToYmd`.
-  - Tipos exportados (~92) que ya nadie importa: revisión por archivo y conversión a tipo local (sin `export`). Mantener tipos que sean parte de la API pública aunque no se importen aún si forman parte de un contrato claro (criterio caso por caso).
+- **Zod en TODAS las mutaciones**: hoy hay validación en el wizard de embarque y cotización; falta endurecer Clientes (RFC con regex SAT), Proveedores, Contactos, Conceptos. Una `domain/validators.ts` con `rfcSchema`, `phoneSchema` (libphonenumber), `emailSchema`.
+- **Catálogo único de incoterms, modos, monedas, tipos de carga**: ya existe parcial — auditar que ningún `<input>` libre permita un valor fuera del enum cuando el backend tiene el enum.
+- **Deduplicación de clientes y proveedores en captura**: el `NuevoClienteDialog` debe consultar por RFC antes de crear y avisar "Ya existe un cliente con este RFC en tu organización".
+- **Validación de coherencia**: triggers SQL que rechacen `factura.total <> subtotal + iva` o `embarque.eta < embarque.etd`.
 
-Esta ola es muy mecánica pero amplia; se puede ejecutar en una sola pasada o saltarse si se considera ruido para el git history.
+## 5. Procesos y permisos de equipo
 
-## Detalles técnicos
+Con un equipo real entran y salen personas.
 
-- Validaciones que correré tras cada ola: `bunx tsc --noEmit` + arrancar dev server + smoke en `/`, `/embarques`, `/cotizaciones`, `/facturacion`, `/clientes`, `/admin`.
-- Conservar `src/integrations/supabase/types.ts` intacto (auto-generado).
-- Conservar `src/integrations/supabase/client.ts` intacto.
-- No tocar `supabase/config.toml` salvo para retirar bloques específicos de las edge functions eliminadas (si los tienen).
-- Tras la limpieza: bumpear `APP_VERSION` a **8.155.2** (patch — solo limpieza, sin cambio funcional) y agregar entrada en `Changelog.tsx` + `changelogData.ts` + `v8/chunks/0.ts`.
+- **Onboarding/offboarding de usuarios**: checklist en `docs/operations.md`. UI: al desactivar un usuario, reasignar embarques abiertos a otro operador (modal con dropdown).
+- **Roles más finos por módulo**: hoy `admin/operador/viewer/cliente`. Agregar `facturador` (sólo facturación + lectura del resto) y `comercial` (cotizaciones + clientes, sin operación ni facturación). Implementable como nuevos miembros del enum `app_role` + ajuste de policies con `has_role(...)`.
+- **Aprobaciones de doble llave**: emisión de factura > $X o cancelación de proforma consolidada requiere segundo `admin` que confirme (tabla `aprobaciones_pendientes`, RPC `solicitar_aprobacion` + `aprobar`).
+- **Notificaciones in-app**: campana en sidebar (tabla `notificaciones(user_id, tipo, payload, leido_at)`) — hoy las alertas viven en badges pero no hay historial.
 
-## ¿Qué olas quieres que ejecute?
+## 6. Continuidad técnica
 
-Sugerencia: **Ola 1 + Ola 2** (impacto alto, riesgo bajo) y dejar **Ola 3** como follow-up si te interesa el detalle fino. Confírmame antes de borrar deps Radix por si planeas usar alguna (p. ej. `react-scroll-area`).
+Para que esto siga vivo 2 años, no 2 meses.
+
+- **CI más estricto**: subir `lint:unused:strict` a bloqueante (ya pasa sin findings). Agregar `tsc --noEmit` como job separado y coverage threshold mínimo 60% en `lib/` y `services/`.
+- **Migraciones revisables**: convención de nombre `YYYYMMDD_HHMMSS_<verbo>_<tabla>.sql` (ya implícita) + un `docs/migrations-log.md` con racional de cada migración no trivial.
+- **Versionado SemVer real**: hoy se bumpea con cada cambio en `appVersion.ts`. Mantenerlo, pero etiquetar releases (`v8.x.y` → tag git por la integración) y publicar `CHANGELOG.md` derivado de `changelogData.ts` para auditoría externa.
+- **Documentación viva**: `docs/operations.md` (runbooks: cómo restaurar, cómo crear org, cómo desactivar usuario, cómo emitir factura manual si la RPC falla), `docs/onboarding.md` para nuevos devs.
+- **Plan de carga**: probar con un dataset de 10k embarques + 100k conceptos en una org de staging. Hoy hay paginación servidor en listados, pero queda confirmar que reportes y operaciones siguen <2s con esa escala.
+
+---
+
+## Sugerencia de secuencia (4–6 olas)
+
+1. **Ola A — Resiliencia** (frente 1 entero): soft-delete + snapshots inmutables + FKs/CHECKs + idempotencia. Es lo que más duele si pasa y lo que menos visible está hoy.
+2. **Ola B — Observabilidad** (Sentry + logs estructurados + `/admin/sistema` + auditoría de UPDATE).
+3. **Ola C — Seguridad de capa Auth** (HIBP, MFA admins, storage policies por path, rate-limit).
+4. **Ola D — Calidad de captura** (Zod global + deduplicación + triggers de coherencia).
+5. **Ola E — Procesos** (roles finos, aprobaciones, notificaciones, runbooks).
+6. **Ola F — Continuidad** (CI estricto, prueba de carga, docs operativos).
+
+---
+
+## Notas técnicas
+
+- Cambios de schema van por `supabase--migration`; muchos requieren ventana de mantenimiento corta (soft-delete migra datos existentes con `deleted_at = null` por default → sin downtime).
+- Sentry y MFA son configurables sin riesgo de regresión; se pueden empezar mañana.
+- Los frentes 1 y 4 introducen migraciones que deben probarse en staging antes de prod.
+- Todo respeta las reglas Power of 10 y el flujo hooks → services → Supabase ya establecido.
+
+¿Quieres que arranque por la **Ola A (resiliencia)**, o prefieres priorizar otro frente primero? También puedo desglosar cualquier ola en tareas atómicas listas para implementar.
+
+haz un plan detallado solo para la OLA A
