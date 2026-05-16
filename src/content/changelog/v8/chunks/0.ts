@@ -2,6 +2,14 @@ import type { ChangelogEntry } from "../../../changelogData";
 
 export const chunk0: ChangelogEntry[] = [
   {
+    version: "8.172.0",
+    date: "2026-05-16",
+    type: "minor",
+    title: "Ola B.2 — Página /admin/diagnostico",
+    summary: "Nueva vista para super_admin y admin de organización que lista y filtra los registros de app_logs.",
+    description: "Nueva ruta /admin/diagnostico con tabla paginada server-side (page/range sobre app_logs). Filtros: rango de fechas, función (lista dinámica desde app_logs), nivel (info/warn/error) y búsqueda parcial en mensaje (ilike). Cada fila muestra timestamp es-MX, badge de nivel, fn, status_code, latencia y request_id abreviado; el payload jsonb se despliega bajo demanda con <details>. Hook useAppLogs (React Query, placeholderData=keepPreviousData, staleTime 15s) y useAppLogsFnList alimentan la página; cualquier cambio de filtro resetea a página 1. Entrada Diagnóstico añadida al AdminSidebar (icono Activity). Las políticas RLS de app_logs ya delimitan: super_admin ve todo, admin de organización sólo sus propios logs. APP_VERSION 8.172.0."
+  },
+  {
     version: "8.171.0",
     date: "2026-05-16",
     type: "minor",
