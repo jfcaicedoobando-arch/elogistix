@@ -41,6 +41,7 @@ export default function DialogDuplicarEmbarque({ embarque, open, onOpenChange }:
   const { toast } = useToast();
   const duplicarEmbarque = useDuplicarEmbarque();
   const { data: tiposContenedor = [] } = useTiposContenedor();
+  const reqId = useStableRequestId();
 
   const crearFilaInicial = (): FilaCopia => ({
     num_contenedor: '',
