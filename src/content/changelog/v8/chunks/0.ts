@@ -2,6 +2,14 @@ import type { ChangelogEntry } from "../../../changelogData";
 
 export const chunk0: ChangelogEntry[] = [
   {
+    version: "8.155.2",
+    date: "2026-05-16",
+    type: "patch",
+    title: "Limpieza — código y dependencias no utilizadas",
+    summary: "Eliminados archivos huérfanos, edge functions sin uso, deps Radix/next-themes y barriles muertos detectados con knip + verificación manual.",
+    description: "Auditoría con knip y verificación con rg. Archivos eliminados: src/App.css, scripts/audit-power10.ts, src/components/admin/TabPlataforma.tsx, src/components/operaciones/OperacionesWidgets.tsx, src/hooks/embarque/useProfitMaps.ts. Edge functions huérfanas removidas: supabase/functions/jsoncargo-bol-lookup y jsoncargo-track-batch (ningún cliente las invocaba). Barriles index.ts eliminados (no se importaban): hooks/{admin,catalogos,cliente,configuracion,cotizacion,dashboard,embarque,facturacion,operaciones,portal,proveedor,reportes,shared,usuario}, lib/{financial,ui}. Dependencias removidas: next-themes, @tailwindcss/typography, @radix-ui/{react-aspect-ratio,react-context-menu,react-hover-card,react-menubar,react-navigation-menu,react-scroll-area,react-slider,react-toggle} (toggle-group sigue funcionando vía @radix-ui/react-toggle-group). Duplicado eliminado: export 'changelog' alias en changelogData.ts (los consumidores usan recentChangelog / loadChangelogMajor). APP_VERSION 8.155.2.",
+  },
+  {
     version: "8.155.1",
     date: "2026-05-16",
     type: "patch",
