@@ -1,3 +1,4 @@
+import { useNavigate } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -16,19 +17,17 @@ interface ArribosEsteMes {
 interface Props {
   conteoPorEstado: Record<EstadoFiltro, number>;
   totalActivos: number;
-  filtroEstado: EstadoFiltro | null;
-  onFiltroChange: (estado: EstadoFiltro | null) => void;
   isLoading: boolean;
   arribosEsteMes: ArribosEsteMes;
 }
 
 export function DashboardStatusCards({
   conteoPorEstado,
-  filtroEstado,
-  onFiltroChange,
   isLoading,
   arribosEsteMes,
 }: Props) {
+  const navigate = useNavigate();
+
   return (
     <div className="space-y-4">
       {/* CAMBIO 1 — Línea de tiempo horizontal */}
