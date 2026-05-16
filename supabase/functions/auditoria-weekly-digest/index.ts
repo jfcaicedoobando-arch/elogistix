@@ -108,11 +108,12 @@ Deno.serve(async (req) => {
     }> = [];
 
     for (const org of orgs ?? []) {
-      // Reporte de la org (se ejecuta como service role, requiere variante con param o saltar).
-      // Para mantener el contrato existente, llamamos a la RPC sin parámetros y se filtra
-      // automáticamente por current_user_org_id (que será NULL en service role). Si no
-      // soporta llamada por org_id, esta función queda en dry-run informativo.
-      const { data: reporte } = await admin.rpc("auditoria_embarques_org");
+      // Llamamos a la variante con filtro explícito por organización para
+      // evitar fugas multi-tenant (la versión sin parámetros depende de RLS,
+      // que el service role bypassa).
+      const { data: reporte } = await admin.rpc("auditoria_embarques_org", {
+        p_organization_id: org.id,
+      });
 
       // Destinatarios: admins de la org.
       const { data: members } = await admin

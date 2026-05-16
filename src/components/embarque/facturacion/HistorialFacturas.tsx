@@ -1,4 +1,5 @@
-import { FileCode2, FileText, Receipt } from "lucide-react";
+import { Receipt } from "lucide-react";
+import { FacturaDownloadButton } from "@/components/facturacion/FacturaDownloadButton";
 import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -44,16 +45,8 @@ export function HistorialFacturas({ facturas, proformas }: Props) {
         <span className="text-muted-foreground text-xs">—</span>
       ) : (
         <div className="flex items-center gap-1">
-          {f.factura_pdf_url && (
-            <a href={f.factura_pdf_url} target="_blank" rel="noopener noreferrer" download title="Descargar PDF" className="inline-flex" onClick={(e) => e.stopPropagation()}>
-              <FileText className="h-4 w-4 text-destructive hover:text-destructive/80" />
-            </a>
-          )}
-          {f.factura_xml_url && (
-            <a href={f.factura_xml_url} target="_blank" rel="noopener noreferrer" download title="Descargar XML" className="inline-flex" onClick={(e) => e.stopPropagation()}>
-              <FileCode2 className="h-4 w-4 text-info hover:text-info/80" />
-            </a>
-          )}
+          {f.factura_pdf_url && <FacturaDownloadButton stored={f.factura_pdf_url} kind="pdf" />}
+          {f.factura_xml_url && <FacturaDownloadButton stored={f.factura_xml_url} kind="xml" />}
         </div>
       ),
     },

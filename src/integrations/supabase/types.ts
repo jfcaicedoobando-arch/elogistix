@@ -1979,7 +1979,9 @@ export type Database = {
         Args: { p_organization_id: string }
         Returns: string
       }
-      auditoria_embarques_org: { Args: never; Returns: Json }
+      auditoria_embarques_org:
+        | { Args: never; Returns: Json }
+        | { Args: { p_organization_id: string }; Returns: Json }
       busqueda_global: {
         Args: { limite?: number; termino: string }
         Returns: {

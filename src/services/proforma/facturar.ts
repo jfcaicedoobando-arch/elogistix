@@ -32,7 +32,8 @@ export async function marcarProformaFacturada(params: MarcarFacturadaParams): Pr
       .from("facturas")
       .upload(path, params.pdfFile, { upsert: true, contentType: "application/pdf" });
     if (errUp) throw new Error(`Error al subir PDF: ${errUp.message}`);
-    pdfUrl = supabase.storage.from("facturas").getPublicUrl(path).data.publicUrl;
+    // Bucket privado: guardamos el path; la UI genera signed URLs on-demand.
+    pdfUrl = path;
   }
   if (params.xmlFile) {
     const path = `${basePath}/factura.xml`;
@@ -40,7 +41,7 @@ export async function marcarProformaFacturada(params: MarcarFacturadaParams): Pr
       .from("facturas")
       .upload(path, params.xmlFile, { upsert: true, contentType: "application/xml" });
     if (errUp) throw new Error(`Error al subir XML: ${errUp.message}`);
-    xmlUrl = supabase.storage.from("facturas").getPublicUrl(path).data.publicUrl;
+    xmlUrl = path;
   }
 
   const dias = proforma.dias_credito ?? 0;
