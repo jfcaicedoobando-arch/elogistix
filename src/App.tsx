@@ -195,6 +195,14 @@ const App = () => (
                   </ProtectedRoute>
                 }
               />
+              <Route
+                path="/idempotencia"
+                element={
+                  <ProtectedRoute allowedRoles={["admin", "super_admin"]}>
+                    <Idempotencia />
+                  </ProtectedRoute>
+                }
+              />
               <Route path="/auditoria" element={<Auditoria />} />
               <Route
                 path="/usuarios"
