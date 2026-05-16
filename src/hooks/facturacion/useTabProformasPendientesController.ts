@@ -25,6 +25,7 @@ export function useTabProformasPendientesController() {
   const aprobar = useAprobarProformas();
   const consolidar = useConsolidarProformas();
   const tasaIva = useTasaIVA();
+  const reqId = useStableRequestId();
 
   const filtradas = useMemo(() => {
     const q = search.trim().toLowerCase();
