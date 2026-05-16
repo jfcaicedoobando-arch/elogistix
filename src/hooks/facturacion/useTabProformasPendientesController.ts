@@ -95,8 +95,9 @@ export function useTabProformasPendientesController() {
         operador: grupo.operador,
         diasCredito: grupo.diasCredito,
         tasaIva,
+        requestId: reqId.get(),
       },
-      { onSuccess: () => setSelectedIds(new Set()) },
+      { onSuccess: () => { reqId.reset(); setSelectedIds(new Set()); } },
     );
   };
 
