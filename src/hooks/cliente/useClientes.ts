@@ -4,7 +4,6 @@ import { queryKeys } from "@/lib/query";
 import { useOrgFilter } from "@/hooks/shared/useOrgFilter";
 import {
   fetchClientesPaginados,
-  fetchClientes,
   fetchClientesForSelect,
   fetchCliente,
   createCliente,
