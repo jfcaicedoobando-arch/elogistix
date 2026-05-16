@@ -8,6 +8,9 @@ import { fromDb } from "@/lib/supabase/cast";
 
 export type FacturaRow = Tables<"facturas">;
 
+export { fetchFacturaSnapshot, fetchProformaSnapshot } from "./snapshots";
+export type { FacturaSnapshot, ProformaSnapshot } from "./snapshots";
+
 export type FacturaListItem = Pick<
   FacturaRow,
   | "id" | "numero" | "cliente_nombre" | "expediente" | "total" | "moneda"

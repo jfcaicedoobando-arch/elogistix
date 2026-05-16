@@ -22,6 +22,14 @@ export interface ChangelogEntry {
  */
 export const recentChangelog: ChangelogEntry[] = [
   {
+    version: "8.168.0",
+    date: "2026-05-16",
+    type: "minor",
+    title: "Ola A.4 — Snapshots financieros inmutables",
+    summary: "Facturas y proformas congelan tasa IVA, tipo de cambio y datos del cliente al emitirse; ya no se pueden modificar después.",
+    description: "Triggers en facturas/proformas capturan snapshot_emision al pasar a Emitida/Pagada o aprobada/facturada. Modificar campos fiscales de una factura emitida lanza 'factura_inmutable' (UI muestra mensaje pidiendo nota de crédito). Helpers fetchFacturaSnapshot/fetchProformaSnapshot listos para reimpresión de PDFs. APP_VERSION 8.168.0."
+  },
+  {
     version: "8.167.0",
     date: "2026-05-16",
     type: "patch",

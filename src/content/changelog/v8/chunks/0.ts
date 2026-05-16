@@ -2,6 +2,14 @@ import type { ChangelogEntry } from "../../../changelogData";
 
 export const chunk0: ChangelogEntry[] = [
   {
+    version: "8.168.0",
+    date: "2026-05-16",
+    type: "minor",
+    title: "Ola A.4 — Snapshots financieros inmutables",
+    summary: "Facturas y proformas congelan datos fiscales al emitirse: PDFs y reimpresiones siempre reflejan tasa IVA, tipo de cambio y datos del cliente del momento original.",
+    description: "Nueva columna jsonb snapshot_emision en facturas y proformas. Trigger BEFORE INSERT/UPDATE congelar_factura_al_emitir captura automáticamente {numero, moneda, subtotal, iva, total, tasa_iva derivada de iva/subtotal, tipo_cambio, fecha_emision, expediente, cliente_snapshot (nombre/RFC/dirección), organizacion_snapshot, conceptos_factura} al pasar a Emitida o Pagada. Trigger congelar_proforma_al_aprobar hace lo equivalente al pasar la proforma a aprobada o facturada (incluye totales USD/MXN, tasa_iva_aplicada y conceptos_venta). Trigger bloquear_modificacion_factura_emitida prohíbe alterar numero/subtotal/iva/total/moneda/tipo_cambio/fecha_emision/cliente_id/embarque_id/proforma_id una vez emitida; sólo permite editar notas, URLs de PDF/XML, cancelación y soft-delete. Cualquier intento lanza error 'factura_inmutable' que se traduce en UI a 'Esta factura ya fue emitida y no puede modificarse. Para corregirla, emite una nota de crédito.' Nuevos helpers fetchFacturaSnapshot/fetchProformaSnapshot en src/services/facturas/snapshots.ts para consumir snapshots en futuros generadores de PDF. APP_VERSION 8.168.0."
+  },
+  {
     version: "8.167.0",
     date: "2026-05-16",
     type: "patch",
