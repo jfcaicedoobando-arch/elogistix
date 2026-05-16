@@ -61,8 +61,6 @@ export default function Dashboard() {
       <DashboardStatusCards
         conteoPorEstado={conteoPorEstado}
         totalActivos={totalActivos}
-        filtroEstado={filtroEstado}
-        onFiltroChange={setFiltroEstado}
         isLoading={isLoading}
         arribosEsteMes={arribosEsteMes}
       />
