@@ -1,35 +1,32 @@
 ## Problema
 
-Cuando el sidebar está colapsado, los tooltips de los items (Embarques, Cotizaciones, etc.) se renderizan justo encima del contenido de la página (cards del dashboard). El tooltip usa `bg-popover` blanco sobre cards también blancas, sin sombra fuerte, y al ser angosto, el texto de la card que queda a su derecha (ej. "Confirmado") parece "atravesarlo", dando la sensación de texto ilegible/encimado.
+El dashboard cuenta **contenedores** (una fila por contenedor en `embarques`), mientras que la lista `/embarques` deduplica por expediente. Resultado: el dashboard dice "4 en Arribo" pero la lista muestra "1 embarques encontrados".
 
-## Solución (solo UI)
+## Solución
 
-Reforzar visualmente el tooltip del sidebar colapsado para que quede claramente por encima del contenido:
+Unificar la comunicación mostrando ambas unidades en la lista, sin cambiar la lógica del dashboard ni del RPC.
 
-1. **`src/components/layout/SidebarGroupBlock.tsx`** — al pasar la prop `tooltip` al `SidebarMenuButton`, en lugar de un string usar un objeto:
-   ```ts
-   tooltip={{
-     children: item.title,
-     className: "bg-sidebar text-sidebar-foreground border-sidebar-border shadow-xl font-medium",
-     sideOffset: 8,
-   }}
-   ```
-   - Fondo oscuro (token `--sidebar`) que contrasta contra el contenido claro de las páginas.
-   - Borde con `--sidebar-border` y `shadow-xl` para separación visual clara.
-   - `sideOffset: 8` para alejarlo un poco más del icono.
+### Cambios
 
-2. **Verificar** con screenshot del preview con el sidebar colapsado, hoveando "Embarques" y "Cotizaciones", que el tooltip se lea sin mezclarse con el contenido de fondo.
+**1. `src/hooks/embarques/useEmbarquesPageState.ts`**
+- Exponer dos contadores derivados:
+  - `expedientesCount`: número de expedientes únicos visibles (= `filtered.length` actual)
+  - `contenedoresCount`: suma de `contenedoresPorExpediente[exp]` para los expedientes filtrados; si no hay filtros activos, usar `totalCount` del servidor
 
-## Versionado
+**2. `src/pages/Embarques.tsx`**
+- Cambiar la descripción del `PageHeader` a:
+  `"{contenedoresCount} contenedor(es) en {expedientesCount} expediente(s)"`
+- Usar el helper de pluralización existente
 
-- `APP_VERSION` → **8.152.4** (patch, fix visual).
-- Entrada en `src/content/changelog/v8/chunks/0.ts` y `src/content/changelogData.ts`.
+**3. Versionado**
+- `APP_VERSION` → **8.153.1**
+- Nueva entrada en `src/content/changelog/v8/chunks/0.ts` y `src/content/changelogData.ts` explicando la corrección de consistencia dashboard ↔ lista
 
-## Archivos a tocar
-
-- `src/components/layout/SidebarGroupBlock.tsx`
+### Archivos a tocar
+- `src/hooks/embarques/useEmbarquesPageState.ts`
+- `src/pages/Embarques.tsx`
 - `src/constants/appVersion.ts`
 - `src/content/changelog/v8/chunks/0.ts`
 - `src/content/changelogData.ts`
 
-Sin cambios en lógica, RPC, ni en el componente shadcn `sidebar.tsx` (que sigue aceptando el objeto tal cual).
+Sin cambios en RPC, esquema ni en el dashboard.
