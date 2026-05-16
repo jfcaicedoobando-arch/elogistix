@@ -164,7 +164,7 @@ export function useEmbarqueSubmitOrchestrator() {
       navigate("/embarques");
       return true;
     },
-    [createEmbarque, updateEstadoCotizacion, registrarActividad, toast, navigate, user?.email],
+    [createEmbarque, updateEstadoCotizacion, registrarActividad, toast, navigate, user?.email, reqId],
   );
 
   return {
