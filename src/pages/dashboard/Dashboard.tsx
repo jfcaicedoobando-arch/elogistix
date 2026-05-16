@@ -19,8 +19,6 @@ function getSaludo() {
 export default function Dashboard() {
   const {
     isLoading,
-    filtroEstado,
-    setFiltroEstado,
     conteoPorEstado,
     totalActivos,
     alertasDemora,
@@ -63,8 +61,6 @@ export default function Dashboard() {
       <DashboardStatusCards
         conteoPorEstado={conteoPorEstado}
         totalActivos={totalActivos}
-        filtroEstado={filtroEstado}
-        onFiltroChange={setFiltroEstado}
         isLoading={isLoading}
         arribosEsteMes={arribosEsteMes}
       />

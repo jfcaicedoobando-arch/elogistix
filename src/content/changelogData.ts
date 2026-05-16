@@ -22,6 +22,14 @@ export interface ChangelogEntry {
  */
 export const recentChangelog: ChangelogEntry[] = [
   {
+    version: "8.153.0",
+    date: "2026-05-16",
+    type: "minor",
+    title: "Dashboard — los círculos de estado ahora navegan a Embarques filtrado",
+    summary: "Clic en Confirmado / En Tránsito / Arribo / En Aduana / Entregado lleva a /embarques?estado=<Estado>.",
+    description: "DashboardStatusCards llama navigate(`/embarques?estado=${estado}`) en lugar del toggle visual previo. Eliminado el useState huérfano filtroEstado en useDashboardData y las props correspondientes.",
+  },
+  {
     version: "8.152.4",
     date: "2026-05-16",
     type: "patch",

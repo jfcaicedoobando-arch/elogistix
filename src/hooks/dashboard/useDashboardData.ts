@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/query";
 import { fetchDashboardSummary, fetchDashboardDetails } from "@/services/dashboard";
@@ -11,7 +11,6 @@ import {
   parseCargasPorCliente,
   parseCargasActivasTotal,
   combinarActivos,
-  type EstadoFiltro,
   type AlertaDemora,
   type ProximoArribo,
   type EmbarqueConProfit,
@@ -59,8 +58,6 @@ export function useDashboardData() {
     [summary, details],
   );
 
-  const [filtroEstado, setFiltroEstado] = useState<EstadoFiltro | null>(null);
-
   const conteoPorEstado = useMemo(() => parseConteoPorEstado(stats), [stats]);
   const totalActivos = Number(stats?.totalActivos ?? 0);
 
@@ -98,8 +95,6 @@ export function useDashboardData() {
 
   return {
     isLoading,
-    filtroEstado,
-    setFiltroEstado,
     activos,
     conteoPorEstado,
     totalActivos,
