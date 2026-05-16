@@ -120,7 +120,9 @@ export function useEmbarqueSubmitOrchestrator() {
           conceptosVenta: p.buildConceptosVentaPayload(p.conceptosVenta),
           conceptosCosto: p.buildConceptosCostoPayload(p.conceptosCosto, p.proveedoresDb),
           documentos: docPayload,
+          requestId: reqId.get(),
         });
+        reqId.reset();
       } catch (err: unknown) {
         notifyError(toast, { phase: "guardado del embarque", message: getErrorMessage(err) });
         return false;
