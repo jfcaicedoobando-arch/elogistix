@@ -26,10 +26,3 @@ export function kpiIconChipClasses(tone: KpiTone): string {
   return `bg-kpi-${tone}-soft text-kpi-${tone}`;
 }
 
-/**
- * Variante "solid" (fondo saturado + foreground claro) — para tarjetas
- * destacadas como "Activas hoy".
- */
-export function kpiSolidClasses(tone: KpiTone): string {
-  return `bg-kpi-${tone} text-white`;
-}

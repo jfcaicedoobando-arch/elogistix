@@ -1,5 +1,5 @@
 import { useEffect, useCallback, useState } from "react";
-import { useForm, type UseFormReturn } from "react-hook-form";
+import { useForm } from "react-hook-form";
 import { useToast } from "@/hooks/use-toast";
 import { uploadFile } from "@/services/storage/index";
 import { useExchangeRates } from "@/hooks/catalogos/useExchangeRates";
@@ -22,8 +22,6 @@ import type { ConceptoVentaLocal, ConceptoCostoLocal } from "@/types/concepto";
 
 // Re-exports para compatibilidad con consumidores existentes
 export type { EmbarqueFormValues } from "@/lib/mappers/embarque";
-export type EmbarqueFormState = EmbarqueFormValues;
-export type EmbarqueFormMethods = UseFormReturn<EmbarqueFormValues>;
 
 type EmbarqueRow = Tables<"embarques">;
 type ContactoRow = Pick<Tables<"contactos_cliente">, "id" | "nombre" | "tipo" | "pais">;

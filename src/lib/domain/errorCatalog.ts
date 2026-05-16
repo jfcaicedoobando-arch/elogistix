@@ -99,7 +99,6 @@ const DYNAMIC = {
 } as const;
 
 export type DynamicErrorKey = keyof typeof DYNAMIC;
-export type StaticErrorKey = keyof typeof STATIC;
 
 /** Devuelve el mensaje estático para una clave; si no existe, devuelve la clave como fallback. */
 export function msg(key: string): string {

@@ -92,10 +92,6 @@ export function extractPrefix(container: string | null | undefined): string | nu
   return m ? m[0] : null;
 }
 
-export function getCarriersForPrefix(prefix: string | null): JsonCargoShippingLine[] {
-  if (!prefix) return [];
-  return PREFIX_TO_CARRIERS[prefix] ?? [];
-}
 
 export function carrierLabel(c: JsonCargoShippingLine): string {
   return NAVIERA_LABELS[c];

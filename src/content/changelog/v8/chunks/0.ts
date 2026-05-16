@@ -2,6 +2,14 @@ import type { ChangelogEntry } from "../../../changelogData";
 
 export const chunk0: ChangelogEntry[] = [
   {
+    version: "8.156.1",
+    date: "2026-05-16",
+    type: "patch",
+    title: "Limpieza Ola 3 — exports y tipos sin uso eliminados",
+    summary: "Retirados 19 exports y 4 tipos confirmados muertos por knip strict (constantes, hooks y helpers sin consumidores).",
+    description: "Eliminados: APP_ROLES, ESTADOS_INACTIVOS, TIPOS_CARGA, fetchProfitPorEmbarque (+ tipo ProfitPorEmbarqueRow), getCarriersForPrefix, getFileUrl, kpiSolidClasses, reglaLabel, useActividadReciente, useClientes, useConfigCategoria, useConfigGlobalValue, useUpdateConfiguracionOrg, useTrackingLinks, useDeleteTrackingLink, y los 4 hooks dead-letter de useEmbarqueQueries (useEmbarques, useEmbarqueDocumentos, useEmbarqueNotas, useEmbarqueFacturas) más sus re-exports en el barrel useEmbarques.ts. Tipos: EmbarqueFormState, EmbarqueFormMethods, StaticErrorKey, CotizacionCostoLookupSanitizado. Imports huérfanos limpiados en cada archivo. knip --strict ahora pasa sin findings. APP_VERSION 8.156.1.",
+  },
+  {
     version: "8.156.0",
     date: "2026-05-16",
     type: "minor",

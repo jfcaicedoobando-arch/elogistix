@@ -110,6 +110,3 @@ export function reglaShortLabel(regla: ReglaAuditoria): string {
   return REGLA_INFO[regla].shortLabel;
 }
 
-export function reglaLabel(regla: ReglaAuditoria): string {
-  return REGLA_INFO[regla].label;
-}

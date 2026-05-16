@@ -1,12 +1,9 @@
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useToast } from "@/hooks/use-toast";
+import { useQuery } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/query";
 import {
   fetchConfiguracionByOrg,
-  updateConfiguracionItems,
   type ConfigItem,
 } from "@/services/configuracion";
-import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 
 export type { ConfigItem };
 
@@ -20,18 +17,3 @@ export function useConfiguracionByOrg(orgId: string | null) {
   });
 }
 
-export function useUpdateConfiguracionOrg() {
-  const queryClient = useQueryClient();
-  const { toast } = useToast();
-
-  return useMutation({
-    mutationFn: (items: { id: string; valor: unknown }[]) => updateConfiguracionItems(items),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.configuracion.all });
-      notifySuccess(toast, { title: "Configuración de organización guardada" });
-    },
-    onError: (error: Error) => {
-      notifyError(toast, { title: "Error al guardar", description: error.message});
-    },
-  });
-}

@@ -19,17 +19,6 @@ export async function fetchSidebarAlertCounts(): Promise<SidebarAlertCounts> {
   };
 }
 
-export interface ProfitPorEmbarqueRow {
-  embarque_id: string;
-  venta_usd: number;
-  costo_usd: number;
-}
-
-export async function fetchProfitPorEmbarque(): Promise<ProfitPorEmbarqueRow[]> {
-  const { data, error } = await supabase.rpc("profit_por_embarque");
-  if (error) throw error;
-  return (data ?? []) as ProfitPorEmbarqueRow[];
-}
 
 export interface RentabilidadFiltros {
   fechaDesde?: string;

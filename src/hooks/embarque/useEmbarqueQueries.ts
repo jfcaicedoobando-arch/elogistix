@@ -2,27 +2,14 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { queryKeys } from '@/lib/query';
 import { useOrgFilter } from '@/hooks/shared/useOrgFilter';
 import {
-  fetchEmbarques,
   fetchEmbarquesPaginados,
   fetchEmbarqueById,
   fetchEmbarqueConceptosVenta,
   fetchEmbarqueConceptosCosto,
-  fetchEmbarqueDocumentos,
-  fetchEmbarqueNotas,
-  fetchEmbarqueFacturas,
   fetchExpedientesCliente,
   fetchProveedoresForSelect,
 } from '@/services/embarque';
 
-/** Hook original: descarga TODOS los embarques. Usar solo para Dashboard/Operaciones. */
-export function useEmbarques() {
-  const { organizationId } = useOrgFilter();
-  return useQuery({
-    queryKey: [...queryKeys.embarques.all, organizationId],
-    queryFn: () => fetchEmbarques(organizationId),
-    staleTime: 60_000,
-  });
-}
 
 interface UseEmbarquesPaginadosParams {
   search: string;
@@ -104,32 +91,6 @@ export function useEmbarqueConceptosCosto(embarqueId: string | undefined) {
   });
 }
 
-export function useEmbarqueDocumentos(embarqueId: string | undefined) {
-  return useQuery({
-    queryKey: queryKeys.embarques.documentos(embarqueId!),
-    queryFn: () => fetchEmbarqueDocumentos(embarqueId!),
-    enabled: !!embarqueId,
-    staleTime: 30_000,
-  });
-}
-
-export function useEmbarqueNotas(embarqueId: string | undefined) {
-  return useQuery({
-    queryKey: queryKeys.embarques.notas(embarqueId!),
-    queryFn: () => fetchEmbarqueNotas(embarqueId!),
-    enabled: !!embarqueId,
-    staleTime: 30_000,
-  });
-}
-
-export function useEmbarqueFacturas(embarqueId: string | undefined) {
-  return useQuery({
-    queryKey: queryKeys.embarques.facturas(embarqueId!),
-    queryFn: () => fetchEmbarqueFacturas(embarqueId!),
-    enabled: !!embarqueId,
-    staleTime: 30_000,
-  });
-}
 
 export type { ExpedienteCliente } from '@/services/embarque';
 

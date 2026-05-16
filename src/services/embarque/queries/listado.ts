@@ -9,16 +9,6 @@ import { EMBARQUE_LIST_COLUMNS } from "../columns";
 
 type EmbarqueRow = Tables<"embarques">;
 
-export async function fetchEmbarques(organizationId: string | null): Promise<EmbarqueRow[]> {
-  let query = supabase
-    .from("embarques")
-    .select(EMBARQUE_LIST_COLUMNS)
-    .order("created_at", { ascending: false });
-  if (organizationId) query = query.eq("organization_id", organizationId);
-  const { data, error } = await query;
-  if (error) throw error;
-  return (data ?? []) as EmbarqueRow[];
-}
 
 /**
  * Whitelist de columnas server-side ordenables. Evita inyección y garantiza

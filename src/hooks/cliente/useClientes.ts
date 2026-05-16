@@ -4,7 +4,6 @@ import { queryKeys } from "@/lib/query";
 import { useOrgFilter } from "@/hooks/shared/useOrgFilter";
 import {
   fetchClientesPaginados,
-  fetchClientes,
   fetchClientesForSelect,
   fetchCliente,
   createCliente,
@@ -39,15 +38,6 @@ export function useClientesPaginados({ search, page, pageSize }: UseClientesPagi
   });
 }
 
-// --- Hook original (todos los registros) para Reportes ---
-
-export function useClientes() {
-  const { organizationId } = useOrgFilter();
-  return useQuery({
-    queryKey: [...queryKeys.clientes.all, organizationId],
-    queryFn: () => fetchClientes(organizationId),
-  });
-}
 
 export function useCliente(id: string | undefined) {
   return useQuery({

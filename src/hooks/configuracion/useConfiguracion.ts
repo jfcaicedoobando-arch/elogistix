@@ -27,16 +27,6 @@ export function useConfigValue<T>(categoria: string, clave: string, fallback: T)
   return item.valor as T;
 }
 
-/** Get all config items for a category */
-export function useConfigCategoria(categoria: string): Record<string, unknown> {
-  const { data } = useConfiguracion();
-  if (!data) return {};
-  const result: Record<string, unknown> = {};
-  data.filter((c) => c.categoria === categoria).forEach((c) => {
-    result[c.clave] = c.valor;
-  });
-  return result;
-}
 
 export function useUpdateConfiguracion() {
   const queryClient = useQueryClient();

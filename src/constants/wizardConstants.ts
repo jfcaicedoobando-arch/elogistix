@@ -23,4 +23,4 @@ export const UNIDADES_MEDIDA = [
   "Caja",
 ] as const;
 
-export const TIPOS_CARGA = ["Carga General", "Mercancía Peligrosa"] as const;
+

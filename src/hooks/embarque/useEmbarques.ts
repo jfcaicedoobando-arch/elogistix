@@ -12,15 +12,11 @@ export type {
 export { calcularEstadoEmbarque } from '@/lib/domain/embarque';
 
 export {
-  useEmbarques,
   useEmbarquesPaginados,
   useEmbarque,
   usePrefetchEmbarque,
   useEmbarqueConceptosVenta,
   useEmbarqueConceptosCosto,
-  useEmbarqueDocumentos,
-  useEmbarqueNotas,
-  useEmbarqueFacturas,
   useProveedoresForSelect,
   useExpedientesCliente,
 } from './useEmbarqueQueries';

@@ -12,7 +12,7 @@ export const ESTADOS_EMBARQUE = ['Confirmado', 'En Tránsito', 'Arribo', 'En Adu
 
 export const ESTADOS_ACTIVOS = ['Confirmado', 'En Tránsito', 'Arribo', 'En Aduana', 'Entregado'] as const;
 
-export const ESTADOS_INACTIVOS = ['EIR', 'Cerrado'] as const;
+
 
 export const MODOS_TRANSPORTE = ['Marítimo', 'Aéreo', 'Terrestre', 'Multimodal'] as const;
 

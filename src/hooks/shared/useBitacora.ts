@@ -3,7 +3,6 @@ import { useAuth } from "@/contexts/AuthContext";
 import { queryKeys } from "@/lib/query";
 import {
   fetchBitacora,
-  fetchActividadReciente,
   insertBitacora,
   type EntradaBitacora,
   type FiltrosBitacora,
@@ -20,12 +19,6 @@ export function useBitacora(filtros: FiltrosBitacora = {}) {
   });
 }
 
-export function useActividadReciente(limite = 10) {
-  return useQuery({
-    queryKey: queryKeys.bitacora.reciente(limite),
-    queryFn: () => fetchActividadReciente(limite),
-  });
-}
 
 export function useRegistrarActividad() {
   const { user } = useAuth();
