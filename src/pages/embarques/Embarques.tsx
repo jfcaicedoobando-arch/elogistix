@@ -28,7 +28,7 @@ export default function Embarques() {
     sortKey, sortDir, handleSortChange,
     setSearch, setFilterModo, setFilterEstado, setFilterCliente, setFilterOperador, setFilterProforma,
     setFechaDesde, setFechaHasta, setPage, setPageSize,
-    filtered, displayCount, expedientesCount, contenedoresCount, totalPages,
+    filtered, expedientesCount, contenedoresCount, totalPages,
   } = state;
 
   const headerDescription = `${contenedoresCount} ${contenedoresCount === 1 ? "contenedor" : "contenedores"} en ${expedientesCount} ${expedientesCount === 1 ? "expediente" : "expedientes"}`;
