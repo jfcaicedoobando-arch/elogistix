@@ -92,7 +92,7 @@ beforeEach(() => {
 
 describe("Idempotencia A.3 — doble-click", () => {
   it("crearEmbarqueRpc: dos clicks concurrentes con el mismo requestId crean UN solo embarque", async () => {
-    const handler = installRpcHandler({ factory: () => ({ id: "emb-nuevo" }) });
+    const handler = installRpcHandler({ factory: () => ({ id: UUID_A }) });
     const { result } = renderHook(() => useStableRequestId());
     const reqId = result.current.get();
 
@@ -102,15 +102,15 @@ describe("Idempotencia A.3 — doble-click", () => {
       crearEmbarqueRpc({ ...baseEmbarque, requestId: reqId }),
     ]);
 
-    expect(r1.id).toBe("emb-nuevo");
-    expect(r2.id).toBe("emb-nuevo"); // misma respuesta
+    expect(r1.id).toBe(UUID_A);
+    expect(r2.id).toBe(UUID_A); // misma respuesta
     expect(handler.hits.created).toBe(1);
     expect(handler.hits.cached).toBe(1); // segundo intento bloqueado
     expect(handler.cache.size).toBe(1);
   });
 
   it("consolidarProformas: dos clicks producen UNA sola proforma consolidada", async () => {
-    const handler = installRpcHandler({ factory: () => ({ id: "prof-new", folio: "PRO-1" }) });
+    const handler = installRpcHandler({ factory: () => ({ id: UUID_A, folio: "PRO-1" }) });
     const { result } = renderHook(() => useStableRequestId());
     const reqId = result.current.get();
 
@@ -119,21 +119,21 @@ describe("Idempotencia A.3 — doble-click", () => {
       consolidarProformas({ ...baseProformas, requestId: reqId }),
     ]);
 
-    expect(a.id).toBe("prof-new");
-    expect(b.id).toBe("prof-new");
+    expect(a.id).toBe(UUID_A);
+    expect(b.id).toBe(UUID_A);
     expect(handler.hits.created).toBe(1);
     expect(handler.hits.cached).toBe(1);
   });
 
   it("requestIds DISTINTOS sí producen dos embarques (control negativo)", async () => {
-    const ids = ["emb-A", "emb-B"];
+    const ids = [UUID_A, UUID_B];
     const handler = installRpcHandler({ factory: () => ({ id: ids.shift() }) });
 
     const r1 = await crearEmbarqueRpc({ ...baseEmbarque, requestId: "id-uno" });
     const r2 = await crearEmbarqueRpc({ ...baseEmbarque, requestId: "id-dos" });
 
-    expect(r1.id).toBe("emb-A");
-    expect(r2.id).toBe("emb-B");
+    expect(r1.id).toBe(UUID_A);
+    expect(r2.id).toBe(UUID_B);
     expect(handler.hits.created).toBe(2);
     expect(handler.hits.cached).toBe(0);
   });
@@ -142,7 +142,7 @@ describe("Idempotencia A.3 — doble-click", () => {
 describe("Idempotencia A.3 — reintento tras error de red", () => {
   it("crearEmbarqueRpc: primer intento falla, reintento con mismo id no duplica", async () => {
     const handler = installRpcHandler({
-      factory: () => ({ id: "emb-retry" }),
+      factory: () => ({ id: UUID_A }),
       failOn: [0], // primer intento rechaza
     });
     const { result } = renderHook(() => useStableRequestId());
@@ -158,7 +158,7 @@ describe("Idempotencia A.3 — reintento tras error de red", () => {
     expect(reqIdReintento).toBe(reqId);
 
     const ok = await crearEmbarqueRpc({ ...baseEmbarque, requestId: reqIdReintento });
-    expect(ok.id).toBe("emb-retry");
+    expect(ok.id).toBe(UUID_A);
 
     // Tras éxito, la UI resetea el id; el próximo submit usaría uno nuevo.
     act(() => result.current.reset());
@@ -171,7 +171,7 @@ describe("Idempotencia A.3 — reintento tras error de red", () => {
 
   it("consolidarProformas: 3 intentos (2 fallos + 1 éxito) crean UNA sola proforma", async () => {
     const handler = installRpcHandler({
-      factory: () => ({ id: "prof-retry" }),
+      factory: () => ({ id: UUID_A }),
       failOn: [0, 1],
     });
     const { result } = renderHook(() => useStableRequestId());
@@ -181,7 +181,7 @@ describe("Idempotencia A.3 — reintento tras error de red", () => {
     await expect(consolidarProformas({ ...baseProformas, requestId: reqId })).rejects.toBeTruthy();
     const ok = await consolidarProformas({ ...baseProformas, requestId: reqId });
 
-    expect(ok.id).toBe("prof-retry");
+    expect(ok.id).toBe(UUID_A);
     expect(handler.hits.created).toBe(1);
     expect(handler.getAttempts()).toBe(3);
   });
