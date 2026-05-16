@@ -22,10 +22,14 @@ export function calcularEstadoEmbarque(
   if (modo !== "Marítimo" || tipo !== "Importación") return estadoActual;
   if (!etd || !eta) return estadoActual;
 
-  const hoy = new Date();
-  hoy.setHours(0, 0, 0, 0);
-  const fechaETD = new Date(etd + "T00:00:00");
-  const fechaETA = new Date(eta + "T00:00:00");
+  // Comparar fechas en UTC para coincidir con `current_date` del backend
+  // (Postgres en UTC). Evita desfases por zona horaria del navegador donde
+  // hoy local = ayer UTC y un embarque con ETA "hoy UTC" se contaría como
+  // En Tránsito en el frontend pero como Arribo en el dashboard server-side.
+  const now = new Date();
+  const hoy = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
+  const fechaETD = new Date(etd + "T00:00:00Z");
+  const fechaETA = new Date(eta + "T00:00:00Z");
 
   if (hoy < fechaETD) return "Confirmado";
   if (hoy >= fechaETD && hoy < fechaETA) return "En Tránsito";

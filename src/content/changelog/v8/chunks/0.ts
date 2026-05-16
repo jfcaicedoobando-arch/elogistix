@@ -2,6 +2,14 @@ import type { ChangelogEntry } from "../../../changelogData";
 
 export const chunk0: ChangelogEntry[] = [
   {
+    version: "8.153.3",
+    date: "2026-05-16",
+    type: "patch",
+    title: "Embarques — estado por UTC para cuadrar con el dashboard",
+    summary: "calcularEstadoEmbarque ahora compara fechas en UTC, igual que el backend. Resuelve el desfase en zonas UTC-N donde Arribo del dashboard mostraba 4 y el listado solo 2.",
+    description: "El backend (dashboard_details / dashboard_summary) calcula el estado real con current_date de Postgres, que corre en UTC. El frontend usaba new Date() en hora local del navegador, por lo que en México (UTC-6) un embarque con ETA = hoy-UTC quedaba como 'En Tránsito' aunque el servidor ya lo contaba como 'Arribo'. Resultado visible: dashboard mostraba 4 contenedores en Arribo y /embarques?estado=Arribo solo 2 contenedores en 2 expedientes (ELIMP00097 y ELIMP00194), perdiendo ELIMP00111 y ELIMP00112. Fix: calcularEstadoEmbarque en src/lib/domain/embarque.ts construye 'hoy' como medianoche UTC y parsea etd/eta con sufijo 'T00:00:00Z'. Sin cambios de schema ni de RPC. Los estados manuales (Arribo, En Aduana, Entregado, EIR, Cerrado) siguen ganando sobre el cálculo automático.",
+  },
+  {
     version: "8.153.2",
     date: "2026-05-16",
     type: "patch",
