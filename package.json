@@ -15,7 +15,8 @@
     "test:watch": "vitest",
     "changelog:add": "tsx scripts/add-changelog.ts",
     "changelog:json": "tsx scripts/generate-changelog-json.ts",
-    "audit:casts": "tsx scripts/audit-casts.ts"
+    "audit:casts": "tsx scripts/audit-casts.ts",
+    "ci:local": "bun run lint && bun run lint:unused && bun run test && bun run build"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",
