@@ -150,7 +150,11 @@ export function useConsolidarProformas() {
   return useMutation({
     mutationFn: (params: Omit<ConsolidarProformasParams, "organizationId">) => {
       if (!organizationId) throw new Error("Organización no disponible");
-      return svcConsolidar({ ...params, organizationId });
+      return svcConsolidar({
+        ...params,
+        organizationId,
+        requestId: params.requestId ?? newRequestId(),
+      });
     },
     onSuccess: (nueva) => {
       notifySuccess(toast, { title: `Proformas consolidadas en ${nueva.numero}` });
