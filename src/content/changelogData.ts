@@ -22,6 +22,14 @@ export interface ChangelogEntry {
  */
 export const recentChangelog: ChangelogEntry[] = [
   {
+    version: "8.156.2",
+    date: "2026-05-16",
+    type: "patch",
+    title: "Limpieza Ola 3 final — 6 huérfanos en cascada eliminados",
+    summary: "Removidas 6 funciones de servicio sin consumidores. knip strict ya no reporta findings.",
+    description: "fetchActividadReciente, fetchClientes, updateConfiguracionItems, fetchEmbarqueDocumentos, fetchEmbarqueNotas y fetchEmbarqueFacturas eliminadas. colaterales.ts borrado y desregistrado del barrel. Typecheck + build verdes.",
+  },
+  {
     version: "8.156.1",
     date: "2026-05-16",
     type: "patch",

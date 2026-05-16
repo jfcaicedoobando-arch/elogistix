@@ -60,17 +60,6 @@ function dedupeByRfc<T extends Pick<Cliente, "id" | "rfc">>(rows: T[]): T[] {
   });
 }
 
-export async function fetchClientes(organizationId: string | null) {
-  let query = supabase
-    .from("clientes")
-    .select(CLIENTE_LIST_COLUMNS)
-    .order("nombre");
-  if (organizationId) query = query.eq("organization_id", organizationId);
-  const { data, error } = await query;
-  if (error) throw error;
-  return dedupeByRfc(data ?? []);
-}
-
 export async function fetchClientesForSelect(organizationId: string | null) {
   let query = supabase
     .from("clientes")

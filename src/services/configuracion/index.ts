@@ -27,21 +27,6 @@ export async function fetchConfiguracionByOrg(orgId: string): Promise<ConfigItem
   return fromDb<ConfigItem[]>(data ?? []);
 }
 
-export async function updateConfiguracionItems(
-  items: { id: string; valor: unknown }[],
-): Promise<void> {
-  const results = await Promise.all(
-    items.map((item) =>
-      supabase
-        .from("configuracion")
-        .update({ valor: item.valor as Json })
-        .eq("id", item.id),
-    ),
-  );
-  const firstError = results.find((r) => r.error);
-  if (firstError?.error) throw firstError.error;
-}
-
 // ── Configuración (todas las orgs según RLS — usada por hook useConfiguracion) ─
 export async function fetchConfiguracion(): Promise<ConfigItem[]> {
   const { data, error } = await supabase

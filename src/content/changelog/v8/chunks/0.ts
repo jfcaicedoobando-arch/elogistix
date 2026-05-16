@@ -2,6 +2,14 @@ import type { ChangelogEntry } from "../../../changelogData";
 
 export const chunk0: ChangelogEntry[] = [
   {
+    version: "8.156.2",
+    date: "2026-05-16",
+    type: "patch",
+    title: "Limpieza Ola 3 final — 6 huérfanos en cascada eliminados",
+    summary: "Removidas las 6 funciones de servicio sin consumidores detectadas por knip strict. Cero findings.",
+    description: "Eliminadas: fetchActividadReciente (services/bitacora), fetchClientes (services/cliente/crud — el listado paginado fetchClientesPaginados sigue vigente), updateConfiguracionItems (services/configuracion), y las 3 queries colaterales fetchEmbarqueDocumentos/fetchEmbarqueNotas/fetchEmbarqueFacturas. Archivo services/embarque/queries/colaterales.ts borrado y desregistrado del barrel queries/index.ts. Typecheck + build verdes, knip --strict sin findings de exports/types/files. APP_VERSION 8.156.2.",
+  },
+  {
     version: "8.156.1",
     date: "2026-05-16",
     type: "patch",
