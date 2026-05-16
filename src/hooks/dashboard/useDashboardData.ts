@@ -95,8 +95,6 @@ export function useDashboardData() {
 
   return {
     isLoading,
-    filtroEstado,
-    setFiltroEstado,
     activos,
     conteoPorEstado,
     totalActivos,
