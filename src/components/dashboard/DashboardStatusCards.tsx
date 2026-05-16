@@ -42,27 +42,22 @@ export function DashboardStatusCards({
                 const cfg = ESTADO_CONFIG[estado];
                 const Icon = cfg.icon;
                 const count = conteoPorEstado[estado];
-                const selected = filtroEstado === estado;
 
                 return (
                   <div key={estado} className="flex flex-col items-center relative z-10">
-                    {/* Nodo */}
+                    {/* Nodo — clic lleva a /embarques con filtro de estado preaplicado */}
                     <button
                       type="button"
-                      onClick={() => onFiltroChange(selected ? null : estado)}
-                      aria-pressed={selected}
-                      aria-label={`Filtrar embarques por estado ${estado} (${count})`}
-                      title={`${estado}: ${count} embarques`}
+                      onClick={() => navigate(`/embarques?estado=${encodeURIComponent(estado)}`)}
+                      aria-label={`Ver embarques en estado ${estado} (${count})`}
+                      title={`Ver embarques en estado ${estado} (${count})`}
                       className={`
                         relative flex items-center justify-center w-12 h-12 rounded-full
                         bg-gradient-to-br ${cfg.gradient}
                         transition-all duration-300 ease-out
-                        hover:scale-110 hover:shadow-lg
+                        hover:scale-110 hover:shadow-lg cursor-pointer
                         focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background
-                        ${selected
-                          ? `ring-3 ring-offset-2 ring-offset-background ${cfg.border} scale-110 ${cfg.glow}`
-                          : "ring-1 ring-border/20"
-                        }
+                        ring-1 ring-border/20
                       `}
                     >
                       <Icon className="h-5 w-5 text-white" aria-hidden="true" />
@@ -73,14 +68,14 @@ export function DashboardStatusCards({
                       {isLoading ? (
                         <Skeleton className="h-7 w-8" />
                       ) : (
-                        <span className={`text-2xl font-extrabold tracking-tight ${selected ? cfg.text : "text-foreground"}`}>
+                        <span className="text-2xl font-extrabold tracking-tight text-foreground">
                           {count}
                         </span>
                       )}
                     </div>
 
                     {/* Label */}
-                    <span className={`text-[11px] font-medium mt-0.5 ${selected ? cfg.text : "text-muted-foreground"}`}>
+                    <span className="text-[11px] font-medium mt-0.5 text-muted-foreground">
                       {estado}
                     </span>
 
