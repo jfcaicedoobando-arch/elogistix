@@ -109,7 +109,11 @@ export function useEmbarquesPageState() {
     });
   }, [dedupedEmbarques, filterEstado]);
 
-  const displayCount = filterEstado !== "todos" ? filtered.length : Object.keys(contenedoresPorExpediente).length || totalCount;
+  const expedientesCount = filterEstado !== "todos" ? filtered.length : Object.keys(contenedoresPorExpediente).length || totalCount;
+  const contenedoresCount = filterEstado !== "todos"
+    ? filtered.reduce((sum, e) => sum + (contenedoresPorExpediente[e.expediente ?? ""] ?? 1), 0)
+    : totalCount;
+  const displayCount = expedientesCount;
   const totalPages = filterEstado !== "todos" ? 1 : Math.ceil(totalCount / pageSize);
 
   const isEmptyState =
@@ -157,7 +161,7 @@ export function useEmbarquesPageState() {
       setPageRaw(null);
     },
     // data
-    embarques, filtered, totalCount, displayCount, totalPages, isLoading, isEmptyState,
+    embarques, filtered, totalCount, displayCount, expedientesCount, contenedoresCount, totalPages, isLoading, isEmptyState,
     contenedoresPorExpediente,
   };
 }

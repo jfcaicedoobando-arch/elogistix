@@ -22,6 +22,14 @@ export interface ChangelogEntry {
  */
 export const recentChangelog: ChangelogEntry[] = [
   {
+    version: "8.153.1",
+    date: "2026-05-16",
+    type: "patch",
+    title: "Embarques — encabezado muestra contenedores y expedientes",
+    summary: "El header del listado ahora dice 'N contenedores en M expedientes' para alinearse con el dashboard.",
+    description: "useEmbarquesPageState expone expedientesCount y contenedoresCount; Embarques.tsx los usa en PageHeader. Resuelve la inconsistencia visual donde el dashboard mostraba 4 en Arribo pero el listado decía '1 embarques encontrados'.",
+  },
+  {
     version: "8.153.0",
     date: "2026-05-16",
     type: "minor",
