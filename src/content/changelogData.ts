@@ -22,6 +22,14 @@ export interface ChangelogEntry {
  */
 export const recentChangelog: ChangelogEntry[] = [
   {
+    version: "8.154.0",
+    date: "2026-05-16",
+    type: "minor",
+    title: "Seguridad — aislamiento multi-tenant en facturas, documentos y digest",
+    summary: "Bucket facturas privado con políticas por org, lectura de documentos exige join a embarques del mismo tenant, y digest semanal filtra por organización.",
+    description: "facturas: bucket privado + políticas SELECT/INSERT/UPDATE/DELETE por organization_id en el path; frontend usa URLs firmadas vía FacturaDownloadButton. documentos: política de lectura ahora hace JOIN a embarques y valida organization_id en ambos lados. auditoria_embarques_org: nuevo overload con p_organization_id obligatorio y el digest semanal lo invoca por tenant, eliminando la fuga cross-tenant. RPCs de embarques ya tenían guardas de org.",
+  },
+  {
     version: "8.153.3",
     date: "2026-05-16",
     type: "patch",
