@@ -14,6 +14,8 @@ interface CreateEmbarqueInput {
   conceptosVenta: Omit<TablesInsert<'conceptos_venta'>, 'embarque_id'>[];
   conceptosCosto: Omit<TablesInsert<'conceptos_costo'>, 'embarque_id'>[];
   documentos: Omit<TablesInsert<'documentos_embarque'>, 'embarque_id'>[];
+  /** Idempotency key (A.3). Si se omite, se genera uno automáticamente. */
+  requestId?: string;
 }
 
 export function useCreateEmbarque() {
