@@ -8,7 +8,7 @@ import { supabase } from '@/integrations/supabase/client';
 import {
   actualizarEmbarqueRpc,
   actualizarEstadoEmbarque,
-  insertarNotaCambioEstado,
+  avanzarEstadoEmbarqueRpc,
   insertarNotaEmbarque,
   insertEventoEmbarque,
   uploadDocumentoEmbarque,
@@ -19,6 +19,7 @@ import {
   descripcionEventoCambioEstado,
 } from '@/lib/domain/embarque';
 import { mapNavieraToJsonCargo } from '@/lib/jsoncargo/navieras';
+import { newRequestId } from '@/lib/idempotency';
 
 type EmbarqueRow = Tables<'embarques'>;
 
