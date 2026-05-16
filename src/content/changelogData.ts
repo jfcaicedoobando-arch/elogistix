@@ -22,6 +22,14 @@ export interface ChangelogEntry {
  */
 export const recentChangelog: ChangelogEntry[] = [
   {
+    version: "8.161.0",
+    date: "2026-05-16",
+    type: "minor",
+    title: "Ola A.3 — Idempotencia en mutaciones críticas",
+    summary: "Crear/duplicar embarques, consolidar proformas y marcar facturada ya no se duplican por doble-click o reintento.",
+    description: "Nueva tabla idempotency_keys + helpers idempotency_claim/store. RPCs crear_embarque_completo, duplicar_embarque_completo, consolidar_proformas y marcar_proforma_facturada aceptan p_request_id opcional; si llega el mismo id dos veces devuelven la respuesta cacheada. Helper frontend src/lib/idempotency.ts newRequestId(). APP_VERSION 8.161.0."
+  },
+  {
     version: "8.160.0",
     date: "2026-05-16",
     type: "minor",
