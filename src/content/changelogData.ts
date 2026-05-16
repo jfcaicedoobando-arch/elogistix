@@ -22,6 +22,14 @@ export interface ChangelogEntry {
  */
 export const recentChangelog: ChangelogEntry[] = [
   {
+    version: "8.172.0",
+    date: "2026-05-16",
+    type: "minor",
+    title: "Ola B.2 — Página /admin/diagnostico",
+    summary: "Nueva vista para super_admin y admin de organización que lista y filtra los registros de app_logs.",
+    description: "Tabla paginada server-side con filtros por rango de fechas, función, nivel y búsqueda parcial en mensaje. Cada fila muestra timestamp, nivel, fn, status, latencia y request_id; el payload jsonb se despliega bajo demanda. Entrada Diagnóstico añadida al AdminSidebar. RLS de app_logs delimita el alcance automáticamente. APP_VERSION 8.172.0."
+  },
+  {
     version: "8.171.0",
     date: "2026-05-16",
     type: "minor",
