@@ -1,40 +1,29 @@
+## Hallazgo visual confirmado
+
+- En el dashboard, el chip **Arribo** muestra **4**.
+- Al hacer clic, la app navega a `/embarques?estado=Arribo`.
+- En Embarques se muestran **2 contenedores en 2 expedientes**, también al cambiar paginación a **10 / 20 / 50**.
+- La base confirma que deberían aparecer **4 contenedores en 4 expedientes**: `ELIMP00097`, `ELIMP00111`, `ELIMP00112`, `ELIMP00194`.
+
+## Causa probable
+
+El dashboard calcula `Arribo` con la fecha del servidor (`current_date`). En Embarques, el filtro por estado recalcula el estado en frontend con `new Date()`. Por zona horaria/fecha efectiva, los embarques con ETA **16/05/2026** todavía no están cayendo como `Arribo` en la vista del navegador, aunque el backend ya los cuenta como `Arribo`.
+
 ## Plan de corrección
 
-El problema no es sólo el texto del encabezado: la lista de `/embarques` está aplicando el filtro de estado después de pedir una página al backend. Por eso el dashboard puede contar 4 contenedores en Arribo, pero la tabla sólo revisa los primeros 10/20 registros recibidos y termina mostrando 1 o incluso 0 al cambiar a `10 / pág`.
+1. **Unificar el cálculo de “hoy” para filtros visuales de embarques**
+   - Ajustar `src/lib/domain/embarque.ts` para que `calcularEstadoEmbarque` compare fechas por calendario UTC/ISO de forma estable, no por la zona horaria local del navegador.
+   - Mantener intactas las reglas existentes: estados manuales siguen ganando (`Arribo`, `En Aduana`, `Entregado`, `EIR`, `Cerrado`).
 
-### Cambios propuestos
+2. **Blindar el listado de Embarques**
+   - Confirmar que `useEmbarquesPageState.ts` siga filtrando el set completo antes de paginar cuando hay `estado=Arribo`.
+   - Dejar el conteo como: contenedores reales filtrados + expedientes únicos.
 
-1. **Corregir la fuente de datos del listado cuando hay filtro de estado**
-   - Hacer que el filtro `estado=Arribo` se aplique sobre el conjunto completo de embarques que cumplen los demás filtros, no sólo sobre la página actual.
-   - Usar la misma regla de estado calculado que el dashboard: `Confirmado`, `En Tránsito`, `Arribo`, etc.
-   - Después de filtrar por estado, agrupar por expediente para que la tabla siga mostrando una fila por expediente.
+3. **Verificación visual obligatoria**
+   - Repetir el flujo en preview: dashboard → clic en Arribo → Embarques.
+   - Verificar que el header diga **4 contenedores en 4 expedientes**.
+   - Cambiar paginación a **10 / 20 / 50** y confirmar que no desaparecen filas.
 
-2. **Separar correctamente conteos de contenedores y expedientes**
-   - `contenedoresCount`: total real de contenedores en ese estado.
-   - `expedientesCount`: total real de expedientes agrupados.
-   - Para tu caso esperado: si el dashboard dice 4 contenedores en Arribo y todos pertenecen al mismo expediente, `/embarques?estado=Arribo` debe decir: `4 contenedores en 1 expediente`.
-
-3. **Arreglar el bug de `10 / pág`**
-   - La paginación debe ocurrir después de filtrar y agrupar, no antes.
-   - Cambiar de `20 / pág` a `10 / pág` no debe hacer desaparecer el expediente.
-   - `totalPages` debe calcularse con los expedientes filtrados, no con registros sin filtrar.
-
-4. **Mantener navegación del dashboard**
-   - Los iconos del dashboard seguirán navegando a `/embarques?estado=<estado>`.
-   - No cambiaré los cálculos del dashboard; el dashboard ya está contando contenedores correctamente.
-
-5. **Actualizar versión y changelog**
+4. **Changelog y versión**
    - Subir versión patch.
-   - Registrar el cambio al inicio del changelog según la convención del proyecto.
-
-### Archivos a tocar
-
-- `src/hooks/embarque/useEmbarquesPageState.ts`
-- `src/hooks/embarque/useEmbarqueQueries.ts`
-- `src/services/embarque/queries/listado.ts`
-- `src/pages/embarques/Embarques.tsx` si hace falta ajustar el texto final
-- Archivos de versión/changelog del proyecto
-
-### Resultado esperado
-
-Con la URL `/embarques?estado=Arribo&ps=10`, la tabla debe seguir mostrando el expediente correspondiente y el encabezado debe cuadrar con el dashboard: `4 contenedores en 1 expediente`.
+   - Agregar entrada al inicio de `src/pages/Changelog.tsx` / changelog vigente del proyecto, documentando el ajuste de conteos Dashboard vs Embarques.
