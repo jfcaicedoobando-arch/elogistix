@@ -20,18 +20,3 @@ export function useConfiguracionByOrg(orgId: string | null) {
   });
 }
 
-export function useUpdateConfiguracionOrg() {
-  const queryClient = useQueryClient();
-  const { toast } = useToast();
-
-  return useMutation({
-    mutationFn: (items: { id: string; valor: unknown }[]) => updateConfiguracionItems(items),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.configuracion.all });
-      notifySuccess(toast, { title: "Configuración de organización guardada" });
-    },
-    onError: (error: Error) => {
-      notifyError(toast, { title: "Error al guardar", description: error.message});
-    },
-  });
-}
