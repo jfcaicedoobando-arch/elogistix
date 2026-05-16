@@ -14,15 +14,6 @@ import {
   fetchProveedoresForSelect,
 } from '@/services/embarque';
 
-/** Hook original: descarga TODOS los embarques. Usar solo para Dashboard/Operaciones. */
-export function useEmbarques() {
-  const { organizationId } = useOrgFilter();
-  return useQuery({
-    queryKey: [...queryKeys.embarques.all, organizationId],
-    queryFn: () => fetchEmbarques(organizationId),
-    staleTime: 60_000,
-  });
-}
 
 interface UseEmbarquesPaginadosParams {
   search: string;
