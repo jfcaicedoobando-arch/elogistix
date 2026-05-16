@@ -2,6 +2,14 @@ import type { ChangelogEntry } from "../../../changelogData";
 
 export const chunk0: ChangelogEntry[] = [
   {
+    version: "8.157.0",
+    date: "2026-05-16",
+    type: "minor",
+    title: "Ola A.1 — Integridad referencial, reglas de dominio e índices",
+    summary: "FKs faltantes, CHECKs anti-captura inválida e índices de apoyo en tablas operativas. Previamente se corrigieron 5 embarques con datos negativos/ETD inválida y 1 cotización huérfana.",
+    description: "Pre-migración: se corrigieron 5 registros en embarques (ELIMP00163 piezas -15→15, ELIMP00154 volumen -1→1, ELIMP00140 peso -17→17, ELIMP00114 peso -11→11, ELIMP00077 etd 20226→2026) y 1 cotización COT-2026-0007 con embarque_id huérfano (set NULL), todos registrados en bitácora con acciones correccion_datos_auditoria_a1 / limpieza_huerfano_a1. Migración: FKs nuevas en proformas.organization_id, proforma_conceptos_consolidados (embarque_id SET NULL, organization_id RESTRICT), cotizaciones (cliente_id RESTRICT, embarque_id SET NULL), auditoria_revisiones (embarque_id CASCADE, organization_id RESTRICT) y auditoria_comentarios.organization_id. CHECKs de dominio: embarques (peso/volumen/piezas ≥0, eta≥etd, tipos de cambio >0), conceptos_costo (monto≥0), conceptos_venta/factura (precio≥0, cantidad≥1, total≥0), facturas (subtotal/iva/total≥0, tipo_cambio>0, vencimiento≥emision), proformas (totales USD/MXN ≥0), cotizaciones (peso/volumen/piezas/subtotal≥0), cotizacion_costos (cantidad≥1, costo_unitario/precio_venta≥0). Índices nuevos en columnas FK más usadas (cliente_id, embarque_id, organization_id, estado, etd/eta, bitacora_org_created_at). APP_VERSION 8.157.0."
+  },
+  {
     version: "8.156.2",
     date: "2026-05-16",
     type: "patch",
