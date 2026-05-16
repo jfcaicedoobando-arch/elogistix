@@ -1,5 +1,5 @@
 import { supabase } from '@/integrations/supabase/client';
-import { uploadFile, deleteFile } from '@/services/storage/index';
+import { uploadFile } from '@/services/storage/index';
 import {
   buildEmbarqueDocPath,
   sanitizeFileName,
@@ -66,8 +66,11 @@ export async function uploadDocumentoEmbarque(
   return { path, fileName: file.name };
 }
 
-export async function deleteDocumentoEmbarque(docId: string, archivoPath: string): Promise<void> {
-  await deleteFile(archivoPath);
-  const { error } = await supabase.from('documentos_embarque').delete().eq('id', docId);
+export async function deleteDocumentoEmbarque(docId: string, _archivoPath?: string): Promise<void> {
+  // Soft delete (A.2.2): mantenemos el archivo en storage por si se restaura desde papelera.
+  const { error } = await supabase.rpc('soft_delete_record', {
+    _table: 'documentos_embarque',
+    _id: docId,
+  });
   if (error) throw error;
 }

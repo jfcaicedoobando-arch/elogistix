@@ -2245,6 +2245,16 @@ export type Database = {
         Args: { _org_id: string; _user_id: string }
         Returns: boolean
       }
+      is_soft_delete_table: { Args: { _table: string }; Returns: boolean }
+      list_trash: {
+        Args: { _limit?: number; _offset?: number; _table: string }
+        Returns: {
+          deleted_at: string
+          deleted_by: string
+          id: string
+          organization_id: string
+        }[]
+      }
       marcar_proforma_facturada: {
         Args: { p_fecha: string; p_folio: string; p_id: string }
         Returns: undefined
@@ -2287,9 +2297,17 @@ export type Database = {
           venta_usd: number
         }[]
       }
+      purge_record: {
+        Args: { _id: string; _table: string }
+        Returns: undefined
+      }
       resolver_expediente_por_bl: {
         Args: { _bl_master: string; _tipo_op: string }
         Returns: string
+      }
+      restore_record: {
+        Args: { _id: string; _table: string }
+        Returns: undefined
       }
       show_limit: { Args: never; Returns: number }
       show_trgm: { Args: { "": string }; Returns: string[] }
@@ -2299,6 +2317,10 @@ export type Database = {
           embarques_demora: number
           facturas_vencidas: number
         }[]
+      }
+      soft_delete_record: {
+        Args: { _id: string; _table: string }
+        Returns: undefined
       }
     }
     Enums: {

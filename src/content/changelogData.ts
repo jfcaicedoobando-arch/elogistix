@@ -22,6 +22,14 @@ export interface ChangelogEntry {
  */
 export const recentChangelog: ChangelogEntry[] = [
   {
+    version: "8.159.0",
+    date: "2026-05-16",
+    type: "minor",
+    title: "Ola A.2.2 — Soft delete activo (papelera)",
+    summary: "Eliminar cotizaciones, contactos y documentos de embarque ahora envía a papelera. Restauración y purga vía RPCs admin.",
+    description: "Política RESTRICTIVE deleted_at IS NULL en 14 tablas + RPCs soft_delete_record/restore_record/purge_record/list_trash. APP_VERSION 8.159.0."
+  },
+  {
     version: "8.158.0",
     date: "2026-05-16",
     type: "minor",
