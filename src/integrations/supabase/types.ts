@@ -1368,6 +1368,7 @@ export type Database = {
         Row: {
           created_at: string
           fn: string
+          hits: number
           key: string
           organization_id: string
           response: Json | null
@@ -1376,6 +1377,7 @@ export type Database = {
         Insert: {
           created_at?: string
           fn: string
+          hits?: number
           key: string
           organization_id: string
           response?: Json | null
@@ -1384,6 +1386,7 @@ export type Database = {
         Update: {
           created_at?: string
           fn?: string
+          hits?: number
           key?: string
           organization_id?: string
           response?: Json | null
@@ -2284,6 +2287,19 @@ export type Database = {
         Returns: boolean
       }
       is_soft_delete_table: { Args: { _table: string }; Returns: boolean }
+      list_idempotency_log: {
+        Args: { _limit?: number; _offset?: number }
+        Returns: {
+          created_at: string
+          fn: string
+          has_response: boolean
+          hits: number
+          key: string
+          pending: boolean
+          user_email: string
+          user_id: string
+        }[]
+      }
       list_trash: {
         Args: { _limit?: number; _offset?: number; _table: string }
         Returns: {
