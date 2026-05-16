@@ -33,7 +33,7 @@ export async function fetchUsuariosOrganizacion(): Promise<UserRow[]> {
   if (membersError) throw membersError;
   const members = (membersData ?? []) as OrgMemberRow[];
 
-  let emailMap: Record<string, { email: string; created_at: string }> = {};
+  const emailMap: Record<string, { email: string; created_at: string }> = {};
   try {
     const { data: usersData, error: fnError } = await supabase.functions.invoke("list-users");
     if (!fnError && Array.isArray(usersData)) {

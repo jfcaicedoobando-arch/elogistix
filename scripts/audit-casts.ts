@@ -64,7 +64,7 @@ function classify(line: string, target: string): Severity {
 
 function scan(): CastHit[] {
   const hits: CastHit[] = [];
-  const re = /\bas\s+([A-Za-z_][A-Za-z0-9_<>\[\],.\s|&?]*)/g;
+  const re = /\bas\s+([A-Za-z_][A-Za-z0-9_<>[\],.\s|&?]*)/g;
   for (const file of walk(SRC)) {
     const rel = relative(ROOT, file);
     // Excluir tests, types generados, integrations, y contenido de changelog

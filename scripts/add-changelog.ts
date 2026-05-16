@@ -99,7 +99,7 @@ ${summary ? `    summary: "${escapeStr(summary)}",\n` : ""}    description: "${e
   const tail = src.slice(closeIdx);
   // Parsear bloques: cada entrada empieza con "  {" y termina con "  },"
   const blocks: string[] = [];
-  const blockRe = /  \{\n[\s\S]*?\n  \},\n/g;
+  const blockRe = / {2}\{\n[\s\S]*?\n {2}\},\n/g;
   let m: RegExpExecArray | null;
   while ((m = blockRe.exec(body)) !== null) blocks.push(m[0]);
   const newBlocks = [entryBlock, ...blocks].slice(0, 5);
