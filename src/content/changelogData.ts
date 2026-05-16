@@ -22,6 +22,14 @@ export interface ChangelogEntry {
  */
 export const recentChangelog: ChangelogEntry[] = [
   {
+    version: "8.163.0",
+    date: "2026-05-16",
+    type: "patch",
+    title: "Ola A.3 (cont.) — Retry explícito reusa requestId",
+    summary: "Reintentar tras un error reusa el mismo requestId hasta que la operación tenga éxito, evitando duplicados.",
+    description: "useStableRequestId mantiene el UUID por intento y sólo lo regenera tras éxito. Cableado en duplicar embarque, crear embarque y consolidar proformas. APP_VERSION 8.163.0."
+  },
+  {
     version: "8.162.0",
     date: "2026-05-16",
     type: "patch",

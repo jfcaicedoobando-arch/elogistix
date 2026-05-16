@@ -10,6 +10,7 @@ import {
   type ProformaPendienteConEmbarque,
 } from "@/hooks/embarque/useProformas";
 import { useTasaIVA } from "@/hooks/catalogos/useTasaIVA";
+import { useStableRequestId } from "@/lib/idempotency";
 import {
   agruparProformasPendientes,
   totalesProformasSeleccionadas,
@@ -24,6 +25,7 @@ export function useTabProformasPendientesController() {
   const aprobar = useAprobarProformas();
   const consolidar = useConsolidarProformas();
   const tasaIva = useTasaIVA();
+  const reqId = useStableRequestId();
 
   const filtradas = useMemo(() => {
     const q = search.trim().toLowerCase();
@@ -93,8 +95,9 @@ export function useTabProformasPendientesController() {
         operador: grupo.operador,
         diasCredito: grupo.diasCredito,
         tasaIva,
+        requestId: reqId.get(),
       },
-      { onSuccess: () => setSelectedIds(new Set()) },
+      { onSuccess: () => { reqId.reset(); setSelectedIds(new Set()); } },
     );
   };
 

@@ -14,6 +14,7 @@ import { useTiposContenedor } from "@/hooks/catalogos/useTiposContenedor";
 import { getErrorMessage } from "@/lib/errors";
 import { useToast } from "@/hooks/use-toast";
 import { useDuplicarEmbarque, type EmbarqueRow } from "@/hooks/embarque/useEmbarques";
+import { useStableRequestId } from "@/lib/idempotency";
 
 import { pluralS } from "@/lib/formatters";
 
@@ -40,6 +41,7 @@ export default function DialogDuplicarEmbarque({ embarque, open, onOpenChange }:
   const { toast } = useToast();
   const duplicarEmbarque = useDuplicarEmbarque();
   const { data: tiposContenedor = [] } = useTiposContenedor();
+  const reqId = useStableRequestId();
 
   const crearFilaInicial = (): FilaCopia => ({
     num_contenedor: '',
@@ -69,7 +71,8 @@ export default function DialogDuplicarEmbarque({ embarque, open, onOpenChange }:
 
   const handleDuplicar = async () => {
     try {
-      const creados = await duplicarEmbarque.mutateAsync({ embarqueOrigen: embarque, copias: filaCopias });
+      const creados = await duplicarEmbarque.mutateAsync({ embarqueOrigen: embarque, copias: filaCopias, requestId: reqId.get() });
+      reqId.reset();
       notifySuccess(toast, { title: `Se crearon ${creados.length} embarque(s)`, description: creados.map(c => c.expediente).join(', ') });
       onOpenChange(false);
     } catch (err: unknown) {

@@ -31,6 +31,7 @@ import {
   buildBitacoraDetalles,
 } from "@/lib/domain/embarqueWizard";
 import { getErrorMessage } from "@/lib/errors";
+import { useStableRequestId } from "@/lib/idempotency";
 import type { Tables } from "@/integrations/supabase/types";
 import type { DocumentoChecklist } from "@/types/documentoChecklist";
 import type { ConceptoVentaLocal, ConceptoCostoLocal } from "@/types/concepto";
@@ -68,6 +69,7 @@ export function useEmbarqueSubmitOrchestrator() {
   const createEmbarque = useCreateEmbarque();
   const updateEstadoCotizacion = useUpdateEstadoCotizacion();
   const registrarActividad = useRegistrarActividad();
+  const reqId = useStableRequestId();
 
   const submit = useCallback(
     async (p: SubmitOrchestratorParams): Promise<boolean> => {
@@ -118,7 +120,9 @@ export function useEmbarqueSubmitOrchestrator() {
           conceptosVenta: p.buildConceptosVentaPayload(p.conceptosVenta),
           conceptosCosto: p.buildConceptosCostoPayload(p.conceptosCosto, p.proveedoresDb),
           documentos: docPayload,
+          requestId: reqId.get(),
         });
+        reqId.reset();
       } catch (err: unknown) {
         notifyError(toast, { phase: "guardado del embarque", message: getErrorMessage(err) });
         return false;
@@ -160,7 +164,7 @@ export function useEmbarqueSubmitOrchestrator() {
       navigate("/embarques");
       return true;
     },
-    [createEmbarque, updateEstadoCotizacion, registrarActividad, toast, navigate, user?.email],
+    [createEmbarque, updateEstadoCotizacion, registrarActividad, toast, navigate, user?.email, reqId],
   );
 
   return {
