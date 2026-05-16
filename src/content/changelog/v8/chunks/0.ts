@@ -2,6 +2,14 @@ import type { ChangelogEntry } from "../../../changelogData";
 
 export const chunk0: ChangelogEntry[] = [
   {
+    version: "8.155.1",
+    date: "2026-05-16",
+    type: "patch",
+    title: "Seguridad — guard org en proformas y lectura de auditoría restringida a staff",
+    summary: "generar_numero_proforma valida que la organización solicitada coincida con la del usuario; las políticas SELECT de auditoria_comentarios y auditoria_revisiones quedan restringidas a admin/operador/super_admin.",
+    description: "1) public.generar_numero_proforma(p_org_id) ahora lanza 'Forbidden: organization mismatch' si p_org_id es NULL o difiere de current_user_org_id() y el caller no es super_admin. Cierra la fuga donde cualquier autenticado podía deducir el conteo anual de proformas de otra organización vía PRO-YYYY-NNNN. 2) Reemplazadas 'Tenant read auditoria_comentarios' y 'Tenant read auditoria_revisiones' por nuevas políticas 'Staff read …' que exigen has_role admin/operador/super_admin además del match de organization_id. Los viewers ya no ven comentarios internos ni emails de staff (responsable_email, asignado_por_email, revisado_por_email). APP_VERSION 8.155.1.",
+  },
+  {
     version: "8.155.0",
     date: "2026-05-16",
     type: "minor",

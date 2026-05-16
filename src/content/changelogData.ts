@@ -22,6 +22,14 @@ export interface ChangelogEntry {
  */
 export const recentChangelog: ChangelogEntry[] = [
   {
+    version: "8.155.1",
+    date: "2026-05-16",
+    type: "patch",
+    title: "Seguridad — guard org en proformas y lectura de auditoría restringida a staff",
+    summary: "generar_numero_proforma rechaza orgs ajenas; auditoria_comentarios y auditoria_revisiones sólo se leen por admin/operador/super_admin.",
+    description: "RPC generar_numero_proforma valida que la organización coincida con el caller (o super_admin) antes de devolver el siguiente folio, cerrando la fuga del conteo anual de proformas. Las políticas SELECT de auditoria_comentarios y auditoria_revisiones añaden el check de rol admin/operador/super_admin para que viewers no lean comentarios internos ni emails de staff.",
+  },
+  {
     version: "8.155.0",
     date: "2026-05-16",
     type: "minor",
