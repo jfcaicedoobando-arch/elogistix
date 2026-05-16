@@ -14,6 +14,7 @@ import { useTiposContenedor } from "@/hooks/catalogos/useTiposContenedor";
 import { getErrorMessage } from "@/lib/errors";
 import { useToast } from "@/hooks/use-toast";
 import { useDuplicarEmbarque, type EmbarqueRow } from "@/hooks/embarque/useEmbarques";
+import { useStableRequestId } from "@/lib/idempotency";
 
 import { pluralS } from "@/lib/formatters";
 
