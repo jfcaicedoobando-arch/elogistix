@@ -23,7 +23,8 @@ export function useCreateEmbarque() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (input: CreateEmbarqueInput) => {
-      const result = await crearEmbarqueRpc(input);
+      const requestId = input.requestId ?? newRequestId();
+      const result = await crearEmbarqueRpc({ ...input, requestId });
       return fromDb<EmbarqueRow>({ id: result.id });
     },
     onSuccess: () => {
@@ -42,13 +43,15 @@ interface DuplicarEmbarqueInput {
     volumen_m3: number;
     piezas: number;
   }>;
+  /** Idempotency key (A.3). Si se omite, se genera uno automáticamente. */
+  requestId?: string;
 }
 
 export function useDuplicarEmbarque() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({ embarqueOrigen, copias }: DuplicarEmbarqueInput) =>
-      duplicarEmbarqueRpc(embarqueOrigen.id, copias),
+    mutationFn: ({ embarqueOrigen, copias, requestId }: DuplicarEmbarqueInput) =>
+      duplicarEmbarqueRpc(embarqueOrigen.id, copias, requestId ?? newRequestId()),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.embarques.all });
     },
