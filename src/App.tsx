@@ -54,6 +54,7 @@ const AdminOrganizaciones = lazy(() => import("./pages/admin/AdminOrganizaciones
 const AdminOrgDetalle = lazy(() => import("./pages/admin/AdminOrgDetalle"));
 const AdminUsuarios = lazy(() => import("./pages/admin/AdminUsuarios"));
 const AdminConfiguracion = lazy(() => import("./pages/admin/AdminConfiguracion"));
+const AdminDiagnostico = lazy(() => import("./pages/admin/Diagnostico"));
 
 // Portal pages
 
