@@ -8,6 +8,8 @@
     "build": "vite build",
     "build:dev": "vite build --mode development",
     "lint": "eslint .",
+    "lint:unused": "knip --no-progress",
+    "lint:unused:strict": "knip --no-progress --include files,dependencies,unlisted,duplicates,exports,types",
     "preview": "vite preview",
     "test": "vitest run",
     "test:watch": "vitest",
