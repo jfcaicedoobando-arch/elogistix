@@ -20,12 +20,6 @@ export function useBitacora(filtros: FiltrosBitacora = {}) {
   });
 }
 
-export function useActividadReciente(limite = 10) {
-  return useQuery({
-    queryKey: queryKeys.bitacora.reciente(limite),
-    queryFn: () => fetchActividadReciente(limite),
-  });
-}
 
 export function useRegistrarActividad() {
   const { user } = useAuth();
