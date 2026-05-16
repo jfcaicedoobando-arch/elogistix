@@ -22,6 +22,14 @@ export interface ChangelogEntry {
  */
 export const recentChangelog: ChangelogEntry[] = [
   {
+    version: "8.155.2",
+    date: "2026-05-16",
+    type: "patch",
+    title: "Limpieza — código y dependencias no utilizadas",
+    summary: "Eliminados archivos huérfanos, 2 edge functions sin uso, deps Radix/next-themes y 16 barriles index.ts muertos detectados con knip.",
+    description: "Auditoría con knip + rg. Quitados: App.css, scripts/audit-power10.ts, TabPlataforma, OperacionesWidgets, useProfitMaps, edge functions jsoncargo-bol-lookup/jsoncargo-track-batch, 16 barriles index.ts (hooks/* y lib/*), deps next-themes + @tailwindcss/typography + 8 Radix sin uso. Sin cambios funcionales.",
+  },
+  {
     version: "8.155.1",
     date: "2026-05-16",
     type: "patch",
