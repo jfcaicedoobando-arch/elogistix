@@ -109,7 +109,11 @@ export function useEmbarquesPageState() {
     });
   }, [dedupedEmbarques, filterEstado]);
 
-  const displayCount = filterEstado !== "todos" ? filtered.length : Object.keys(contenedoresPorExpediente).length || totalCount;
+  const expedientesCount = filterEstado !== "todos" ? filtered.length : Object.keys(contenedoresPorExpediente).length || totalCount;
+  const contenedoresCount = filterEstado !== "todos"
+    ? filtered.reduce((sum, e) => sum + (contenedoresPorExpediente[e.expediente ?? ""] ?? 1), 0)
+    : totalCount;
+  const displayCount = expedientesCount;
   const totalPages = filterEstado !== "todos" ? 1 : Math.ceil(totalCount / pageSize);
 
   const isEmptyState =
