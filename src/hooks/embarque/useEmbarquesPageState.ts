@@ -161,7 +161,7 @@ export function useEmbarquesPageState() {
       setPageRaw(null);
     },
     // data
-    embarques, filtered, totalCount, displayCount, totalPages, isLoading, isEmptyState,
+    embarques, filtered, totalCount, displayCount, expedientesCount, contenedoresCount, totalPages, isLoading, isEmptyState,
     contenedoresPorExpediente,
   };
 }
