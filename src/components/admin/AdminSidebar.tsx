@@ -37,6 +37,7 @@ const adminItems = [
   { title: "Dashboard", url: "/admin", icon: LayoutDashboard },
   { title: "Organizaciones", url: "/admin/organizaciones", icon: Building2 },
   { title: "Usuarios", url: "/admin/usuarios", icon: Users },
+  { title: "Diagnóstico", url: "/admin/diagnostico", icon: Activity },
   { title: "Configuración Global", url: "/admin/configuracion", icon: Settings },
 ];
 
