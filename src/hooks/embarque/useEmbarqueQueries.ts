@@ -95,32 +95,6 @@ export function useEmbarqueConceptosCosto(embarqueId: string | undefined) {
   });
 }
 
-export function useEmbarqueDocumentos(embarqueId: string | undefined) {
-  return useQuery({
-    queryKey: queryKeys.embarques.documentos(embarqueId!),
-    queryFn: () => fetchEmbarqueDocumentos(embarqueId!),
-    enabled: !!embarqueId,
-    staleTime: 30_000,
-  });
-}
-
-export function useEmbarqueNotas(embarqueId: string | undefined) {
-  return useQuery({
-    queryKey: queryKeys.embarques.notas(embarqueId!),
-    queryFn: () => fetchEmbarqueNotas(embarqueId!),
-    enabled: !!embarqueId,
-    staleTime: 30_000,
-  });
-}
-
-export function useEmbarqueFacturas(embarqueId: string | undefined) {
-  return useQuery({
-    queryKey: queryKeys.embarques.facturas(embarqueId!),
-    queryFn: () => fetchEmbarqueFacturas(embarqueId!),
-    enabled: !!embarqueId,
-    staleTime: 30_000,
-  });
-}
 
 export type { ExpedienteCliente } from '@/services/embarque';
 
