@@ -59,8 +59,6 @@ export function useDashboardData() {
     [summary, details],
   );
 
-  const [filtroEstado, setFiltroEstado] = useState<EstadoFiltro | null>(null);
-
   const conteoPorEstado = useMemo(() => parseConteoPorEstado(stats), [stats]);
   const totalActivos = Number(stats?.totalActivos ?? 0);
 
