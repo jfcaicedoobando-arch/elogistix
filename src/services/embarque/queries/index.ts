@@ -5,6 +5,5 @@
 export * from "./listado";
 export * from "./detalle";
 export * from "./conceptos";
-export * from "./colaterales";
 export * from "./expedientes";
 export * from "./proveedores";
