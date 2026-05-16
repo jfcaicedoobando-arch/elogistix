@@ -22,6 +22,14 @@ export interface ChangelogEntry {
  */
 export const recentChangelog: ChangelogEntry[] = [
   {
+    version: "8.152.3",
+    date: "2026-05-15",
+    type: "patch",
+    title: "Dashboard — fix posición tooltip 'Cargas activas por cliente'",
+    summary: "Tooltip ya no se trunca contra el borde izquierdo; ahora se muestra arriba de la fila.",
+    description: "TooltipContent cambia de side='left' a side='top' align='end' collisionPadding={16} en CargasActivasClienteCard para evitar el clipping contra el sidebar.",
+  },
+  {
     version: "8.152.2",
     date: "2026-05-15",
     type: "patch",
@@ -84,22 +92,6 @@ export const recentChangelog: ChangelogEntry[] = [
     title: "Power of 10 — Fase 4: refactor PortalLayout, Changelog, TabTracking y DialogBolContainers",
     summary: "Cuatro componentes >200 líneas reducidos a shells delgados con controllers y subcomponentes. Componentes >200 líneas: 17 → 13.",
     description: "Tercera iteración de la Fase 4 (ARCHITECTURE.md §20.4). (1) PortalLayout (266 → 60): nuevos módulos en components/portal/layout/ — portalNav.ts (constantes/helpers), PortalMobileNav, PortalUserMenu, PortalHeader, PortalBreadcrumbsBar y usePortalBreadcrumbs. (2) Changelog page (261 → 76): lógica de paginación/filtros/anclas/expand movida a hooks/dashboard/useChangelogController.ts; cada tarjeta en components/dashboard/ChangelogEntryCard.tsx. (3) TabTracking (252 → 88): nuevos subcomponentes en components/embarque/tracking/ — TrackingEventTimeline y TrackingNuevoEventoForm (Card + RHF + zod). (4) DialogBolContainers (246 → 95): lógica BL/sync/persistencia movida a hooks/embarque/useDialogBolContainers.ts; render del resultado en components/embarque/dialogBol/BolContainersResult.tsx. Tests: 314 verdes. Sin cambios de UI ni de comportamiento.",
-  },
-  {
-    version: "8.146.0",
-    date: "2026-05-14",
-    type: "minor",
-    title: "Power of 10 — Fase 4: refactor MarcarRevisadoDialog y TrackingLiveCard",
-    summary: "MarcarRevisadoDialog (306 → 100) y TrackingLiveCard (281 → 56) se parten en subcomponentes por sección. Componentes >200 líneas: 19 → 17.",
-    description: "Segunda iteración de la Fase 4. (1) MarcarRevisadoDialog se reduce a shell que orquesta tabs y footer; los tres tabs viven en src/components/auditoria/marcarRevisado/ (AccionTab + AccionButton, ComentariosTab, SnoozeTab) y el resumen del hallazgo en HallazgoSummary. (2) TrackingLiveCard se reduce a un Card con Header + delegación; nuevos subcomponentes en src/components/embarque/trackingLive/ (TrackingActions, TrackingWarnings, TrackingFechasPropuestas, TrackingSummaryGrid). El hook controller useTrackingLiveCard sigue siendo el único punto de lógica. Tests: 314 verdes. Sin cambios visibles ni de comportamiento. Quedan 17 componentes >200 líneas.",
-  },
-  {
-    version: "8.145.0",
-    date: "2026-05-14",
-    type: "minor",
-    title: "Power of 10 — Fase 4: refactor Auditoria.tsx (297 → 87 líneas)",
-    summary: "La página Auditoria queda como shell delgado: extraídos AuditoriaHallazgosTab, AuditoriaPorReglaTab y helper puro lib/domain/auditoriaCsv. Componentes >200 líneas: 20 → 19.",
-    description: "Primer dominio de la Fase 4 del plan The Power of 10. (1) src/pages/Auditoria.tsx pasa de 297 a 87 líneas eliminando renderHallazgosTab/renderPorReglaTab inline y la lógica de exportCsv. (2) Nuevo src/components/auditoria/AuditoriaHallazgosTab.tsx (KPIs + filtros + toggle revisados + HallazgosTablaPaginada). (3) Nuevo src/components/auditoria/AuditoriaPorReglaTab.tsx (accordion por regla con HallazgoTabla). (4) Nuevo src/lib/domain/auditoriaCsv.ts con exportHallazgosCsv() — función pura sin dependencias de React, mapeo de filas y constante de columnas. (5) scripts/audit-power10.ts también ignora src/content/changelogData.ts (descripciones contienen 'as any' como texto). Tests: 314 verdes. Sin cambios de UI ni de comportamiento.",
   },
 ];
 
