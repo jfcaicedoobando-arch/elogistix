@@ -2,6 +2,14 @@ import type { ChangelogEntry } from "../../../changelogData";
 
 export const chunk0: ChangelogEntry[] = [
   {
+    version: "8.154.0",
+    date: "2026-05-16",
+    type: "minor",
+    title: "Seguridad — aislamiento multi-tenant en facturas, documentos y digest",
+    summary: "Bucket facturas pasa a privado con políticas por organization_id, lectura de documentos exige join a embarques del mismo tenant, y el digest semanal de auditoría filtra por organización para evitar fugas cross-tenant.",
+    description: "1) storage.buckets.facturas: public=false. Nuevas políticas SELECT/INSERT/UPDATE/DELETE en storage.objects que validan que el primer segmento del path coincida con current_user_org_id() y exigen rol admin/operador/super_admin para escritura. Front: nuevo helper src/services/storage/facturas.ts genera URLs firmadas on-demand (1h) con compatibilidad hacia atrás para URLs públicas heredadas; nuevo componente FacturaDownloadButton sustituye los <a target='_blank'> en Facturacion.tsx, HistorialFacturas.tsx, HistorialProformas.tsx y proformasColumns.tsx. facturar.ts guarda paths relativos en factura_pdf/factura_xml. 2) storage.objects policy 'Tenant scoped read documentos' ahora hace EXISTS con JOIN a embarques y verifica que tanto documentos_embarque.organization_id como embarques.organization_id coincidan con el tenant del caller (defensa en profundidad ante colisiones de nombre). 3) auditoria_embarques_org(p_organization_id uuid): nuevo overload SECURITY DEFINER con filtro WHERE organization_id = p_organization_id en todas las CTEs; GRANT EXECUTE solo a service_role. supabase/functions/auditoria-weekly-digest invoca el RPC con { p_organization_id: org.id } por iteración, eliminando la fuga donde cada admin recibía datos financieros de todos los tenants. 4) RPCs actualizar/duplicar/crear_embarque_completo: confirmado que ya tienen guardas current_user_org_id() vs organization_id del embarque; sin cambios. APP_VERSION 8.154.0.",
+  },
+  {
     version: "8.153.3",
     date: "2026-05-16",
     type: "patch",
