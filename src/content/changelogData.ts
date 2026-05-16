@@ -183,16 +183,8 @@ export async function loadChangelogMajor(major: number): Promise<ChangelogEntry[
   throw new Error(`Major ${major} no disponible vía loadChangelogMajor; usa loadLegacyChangelog`);
 }
 
-/** Compat: alias histórico de loadChangelogMajor(8). */
-export async function loadChangelogV8(): Promise<ChangelogEntry[]> {
-  return loadChangelogMajor(8);
-}
-
 /** Carga perezosa del changelog histórico (v7.x y anteriores). */
 export async function loadLegacyChangelog(): Promise<ChangelogEntry[]> {
   const mod = await import("./changelog/legacy");
   return mod.legacyChangelog;
 }
-
-/** Compat: array completo solo si se necesita explícitamente (no recomendado). */
-export const changelog = recentChangelog;
