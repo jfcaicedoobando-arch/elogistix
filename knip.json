@@ -1,0 +1,48 @@
+{
+  "$schema": "https://unpkg.com/knip@6/schema.json",
+  "entry": [
+    "src/main.tsx",
+    "index.html",
+    "vite.config.ts",
+    "vitest.config.ts",
+    "tailwind.config.ts",
+    "postcss.config.js",
+    "eslint.config.js",
+    "scripts/**/*.ts",
+    "src/**/*.test.{ts,tsx}",
+    "src/**/__tests__/**/*.{ts,tsx}"
+  ],
+  "project": [
+    "src/**/*.{ts,tsx}",
+    "scripts/**/*.ts"
+  ],
+  "ignore": [
+    "src/integrations/supabase/types.ts",
+    "src/integrations/supabase/client.ts",
+    "src/components/ui/**",
+    "supabase/**",
+    "docs/**"
+  ],
+  "ignoreDependencies": [
+    "tailwindcss-animate",
+    "@tailwindcss/typography"
+  ],
+  "ignoreExportsUsedInFile": true,
+  "ignoreBinaries": [
+    "lovable-exec"
+  ],
+  "rules": {
+    "files": "error",
+    "dependencies": "error",
+    "unlisted": "error",
+    "exports": "error",
+    "types": "error",
+    "nsExports": "off",
+    "nsTypes": "off",
+    "duplicates": "error",
+    "enumMembers": "off",
+    "classMembers": "off",
+    "binaries": "off",
+    "unresolved": "off"
+  }
+}
