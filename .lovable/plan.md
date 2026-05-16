@@ -1,32 +1,40 @@
-## Problema
+## Plan de corrección
 
-El dashboard cuenta **contenedores** (una fila por contenedor en `embarques`), mientras que la lista `/embarques` deduplica por expediente. Resultado: el dashboard dice "4 en Arribo" pero la lista muestra "1 embarques encontrados".
+El problema no es sólo el texto del encabezado: la lista de `/embarques` está aplicando el filtro de estado después de pedir una página al backend. Por eso el dashboard puede contar 4 contenedores en Arribo, pero la tabla sólo revisa los primeros 10/20 registros recibidos y termina mostrando 1 o incluso 0 al cambiar a `10 / pág`.
 
-## Solución
+### Cambios propuestos
 
-Unificar la comunicación mostrando ambas unidades en la lista, sin cambiar la lógica del dashboard ni del RPC.
+1. **Corregir la fuente de datos del listado cuando hay filtro de estado**
+   - Hacer que el filtro `estado=Arribo` se aplique sobre el conjunto completo de embarques que cumplen los demás filtros, no sólo sobre la página actual.
+   - Usar la misma regla de estado calculado que el dashboard: `Confirmado`, `En Tránsito`, `Arribo`, etc.
+   - Después de filtrar por estado, agrupar por expediente para que la tabla siga mostrando una fila por expediente.
 
-### Cambios
+2. **Separar correctamente conteos de contenedores y expedientes**
+   - `contenedoresCount`: total real de contenedores en ese estado.
+   - `expedientesCount`: total real de expedientes agrupados.
+   - Para tu caso esperado: si el dashboard dice 4 contenedores en Arribo y todos pertenecen al mismo expediente, `/embarques?estado=Arribo` debe decir: `4 contenedores en 1 expediente`.
 
-**1. `src/hooks/embarques/useEmbarquesPageState.ts`**
-- Exponer dos contadores derivados:
-  - `expedientesCount`: número de expedientes únicos visibles (= `filtered.length` actual)
-  - `contenedoresCount`: suma de `contenedoresPorExpediente[exp]` para los expedientes filtrados; si no hay filtros activos, usar `totalCount` del servidor
+3. **Arreglar el bug de `10 / pág`**
+   - La paginación debe ocurrir después de filtrar y agrupar, no antes.
+   - Cambiar de `20 / pág` a `10 / pág` no debe hacer desaparecer el expediente.
+   - `totalPages` debe calcularse con los expedientes filtrados, no con registros sin filtrar.
 
-**2. `src/pages/Embarques.tsx`**
-- Cambiar la descripción del `PageHeader` a:
-  `"{contenedoresCount} contenedor(es) en {expedientesCount} expediente(s)"`
-- Usar el helper de pluralización existente
+4. **Mantener navegación del dashboard**
+   - Los iconos del dashboard seguirán navegando a `/embarques?estado=<estado>`.
+   - No cambiaré los cálculos del dashboard; el dashboard ya está contando contenedores correctamente.
 
-**3. Versionado**
-- `APP_VERSION` → **8.153.1**
-- Nueva entrada en `src/content/changelog/v8/chunks/0.ts` y `src/content/changelogData.ts` explicando la corrección de consistencia dashboard ↔ lista
+5. **Actualizar versión y changelog**
+   - Subir versión patch.
+   - Registrar el cambio al inicio del changelog según la convención del proyecto.
 
 ### Archivos a tocar
-- `src/hooks/embarques/useEmbarquesPageState.ts`
-- `src/pages/Embarques.tsx`
-- `src/constants/appVersion.ts`
-- `src/content/changelog/v8/chunks/0.ts`
-- `src/content/changelogData.ts`
 
-Sin cambios en RPC, esquema ni en el dashboard.
+- `src/hooks/embarque/useEmbarquesPageState.ts`
+- `src/hooks/embarque/useEmbarqueQueries.ts`
+- `src/services/embarque/queries/listado.ts`
+- `src/pages/embarques/Embarques.tsx` si hace falta ajustar el texto final
+- Archivos de versión/changelog del proyecto
+
+### Resultado esperado
+
+Con la URL `/embarques?estado=Arribo&ps=10`, la tabla debe seguir mostrando el expediente correspondiente y el encabezado debe cuadrar con el dashboard: `4 contenedores en 1 expediente`.
