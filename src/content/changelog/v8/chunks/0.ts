@@ -2,6 +2,14 @@ import type { ChangelogEntry } from "../../../changelogData";
 
 export const chunk0: ChangelogEntry[] = [
   {
+    version: "8.171.0",
+    date: "2026-05-16",
+    type: "minor",
+    title: "Ola B.1 — Logging estructurado en edge functions",
+    summary: "Nueva tabla app_logs y logger compartido capturan request_id, latencia, user/org y status_code de cada edge function.",
+    description: "Migración crea public.app_logs (level, fn, request_id, user_id, organization_id, msg, payload jsonb, latency_ms, status_code) con índices por org+ts, level+ts, fn+ts y request_id; RLS permite leer a super_admin y a admin de la organización propia, insert abierto para que cualquier handler escriba; función purge_app_logs_old() limpia >30 días. Nuevo supabase/functions/_shared/logger.ts expone createLogger(req, fn) que decodifica user_id del JWT, genera request_id, expone info/warn/error/finish y escribe en paralelo a console y a la tabla sin romper el handler si la BD falla. parse-csf migrado como smoke test: cada salida (200/422/429/402/500) deja un registro con latencia. Base para B.2 (página /admin/diagnostico) y B.3 (alertas). APP_VERSION 8.171.0."
+  },
+  {
     version: "8.170.0",
     date: "2026-05-16",
     type: "patch",

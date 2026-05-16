@@ -22,6 +22,14 @@ export interface ChangelogEntry {
  */
 export const recentChangelog: ChangelogEntry[] = [
   {
+    version: "8.171.0",
+    date: "2026-05-16",
+    type: "minor",
+    title: "Ola B.1 — Logging estructurado en edge functions",
+    summary: "Nueva tabla app_logs y logger compartido capturan request_id, latencia, user/org y status_code de cada edge function.",
+    description: "Migración crea public.app_logs con RLS (super_admin lee todo, admin lee su org) y función purge_app_logs_old() para retención de 30 días. Nuevo logger compartido escribe en paralelo a console y a la tabla; parse-csf migrado como smoke test. Base para /admin/diagnostico y alertas. APP_VERSION 8.171.0."
+  },
+  {
     version: "8.170.0",
     date: "2026-05-16",
     type: "patch",
