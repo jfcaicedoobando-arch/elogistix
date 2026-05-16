@@ -31,6 +31,7 @@ import {
   buildBitacoraDetalles,
 } from "@/lib/domain/embarqueWizard";
 import { getErrorMessage } from "@/lib/errors";
+import { useStableRequestId } from "@/lib/idempotency";
 import type { Tables } from "@/integrations/supabase/types";
 import type { DocumentoChecklist } from "@/types/documentoChecklist";
 import type { ConceptoVentaLocal, ConceptoCostoLocal } from "@/types/concepto";
