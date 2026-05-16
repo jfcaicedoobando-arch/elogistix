@@ -1,18 +1,6 @@
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/query";
-import {
-  fetchTrackingLinks,
-  createTrackingLink,
-  deleteTrackingLink,
-} from "@/services/tracking";
-
-export function useTrackingLinks(embarqueId?: string) {
-  return useQuery({
-    queryKey: queryKeys.trackingLinks.byEmbarque(embarqueId),
-    queryFn: () => fetchTrackingLinks(embarqueId!),
-    enabled: !!embarqueId,
-  });
-}
+import { createTrackingLink } from "@/services/tracking";
 
 export function useCreateTrackingLink() {
   const qc = useQueryClient();
@@ -21,19 +9,6 @@ export function useCreateTrackingLink() {
       createTrackingLink(params),
     onSuccess: (data) => {
       qc.invalidateQueries({ queryKey: queryKeys.trackingLinks.byEmbarque(data.embarque_id) });
-    },
-  });
-}
-
-export function useDeleteTrackingLink() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: async ({ id, embarqueId }: { id: string; embarqueId: string }) => {
-      await deleteTrackingLink(id);
-      return embarqueId;
-    },
-    onSuccess: (embarqueId) => {
-      qc.invalidateQueries({ queryKey: queryKeys.trackingLinks.byEmbarque(embarqueId) });
     },
   });
 }
