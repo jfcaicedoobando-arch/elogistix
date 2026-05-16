@@ -22,6 +22,14 @@ export interface ChangelogEntry {
  */
 export const recentChangelog: ChangelogEntry[] = [
   {
+    version: "8.156.1",
+    date: "2026-05-16",
+    type: "patch",
+    title: "Limpieza Ola 3 — exports y tipos sin uso eliminados",
+    summary: "Retirados 19 exports y 4 tipos muertos detectados por knip strict. knip ahora pasa sin findings.",
+    description: "Eliminados constantes (APP_ROLES, ESTADOS_INACTIVOS, TIPOS_CARGA), helpers (getFileUrl, kpiSolidClasses, reglaLabel, getCarriersForPrefix, fetchProfitPorEmbarque) y hooks sin consumidores en useBitacora/useClientes/useConfiguracion*/useTrackingLinks/useEmbarqueQueries, más 4 tipos (EmbarqueFormState/Methods, StaticErrorKey, CotizacionCostoLookupSanitizado).",
+  },
+  {
     version: "8.156.0",
     date: "2026-05-16",
     type: "minor",
