@@ -2137,14 +2137,19 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      actualizar_cotizacion_costos: {
+        Args: { p_costos: Json; p_cotizacion_id: string; p_request_id?: string }
+        Returns: Json
+      }
       actualizar_embarque_completo: {
         Args: {
           p_conceptos_costo?: Json
           p_conceptos_venta?: Json
           p_embarque: Json
           p_embarque_id: string
+          p_request_id?: string
         }
-        Returns: undefined
+        Returns: Json
       }
       auditoria_capturar_snapshot: {
         Args: { p_organization_id: string }
@@ -2153,6 +2158,17 @@ export type Database = {
       auditoria_embarques_org:
         | { Args: never; Returns: Json }
         | { Args: { p_organization_id: string }; Returns: Json }
+      avanzar_estado_embarque: {
+        Args: {
+          p_descripcion_evento: string
+          p_embarque_id: string
+          p_nuevo_estado: string
+          p_request_id?: string
+          p_tipo_evento: string
+          p_usuario_email: string
+        }
+        Returns: Json
+      }
       busqueda_global: {
         Args: { limite?: number; termino: string }
         Returns: {

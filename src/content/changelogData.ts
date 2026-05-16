@@ -22,6 +22,14 @@ export interface ChangelogEntry {
  */
 export const recentChangelog: ChangelogEntry[] = [
   {
+    version: "8.165.0",
+    date: "2026-05-16",
+    type: "minor",
+    title: "Ola A.3 (cont.) — Idempotencia en mutaciones de actualización",
+    summary: "Editar embarque, avanzar estado y editar costos de cotización aceptan p_request_id: reintentos no duplican notas/eventos ni reescriben conceptos.",
+    description: "actualizar_embarque_completo + nuevas RPCs avanzar_estado_embarque y actualizar_cotizacion_costos con idempotency_claim/store. Hooks generan requestId automáticamente. APP_VERSION 8.165.0."
+  },
+  {
     version: "8.164.0",
     date: "2026-05-16",
     type: "minor",

@@ -8,7 +8,7 @@ import { supabase } from '@/integrations/supabase/client';
 import {
   actualizarEmbarqueRpc,
   actualizarEstadoEmbarque,
-  insertarNotaCambioEstado,
+  avanzarEstadoEmbarqueRpc,
   insertarNotaEmbarque,
   insertEventoEmbarque,
   uploadDocumentoEmbarque,
@@ -19,6 +19,7 @@ import {
   descripcionEventoCambioEstado,
 } from '@/lib/domain/embarque';
 import { mapNavieraToJsonCargo } from '@/lib/jsoncargo/navieras';
+import { newRequestId } from '@/lib/idempotency';
 
 type EmbarqueRow = Tables<'embarques'>;
 
@@ -27,13 +28,15 @@ interface UpdateEmbarqueInput {
   embarque: Partial<TablesInsert<'embarques'>>;
   conceptosVenta: Omit<TablesInsert<'conceptos_venta'>, 'embarque_id'>[];
   conceptosCosto: Omit<TablesInsert<'conceptos_costo'>, 'embarque_id'>[];
+  /** Idempotency key (A.3). */
+  requestId?: string;
 }
 
 export function useUpdateEmbarque() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (input: UpdateEmbarqueInput) => {
-      await actualizarEmbarqueRpc(input);
+      await actualizarEmbarqueRpc({ ...input, requestId: input.requestId ?? newRequestId() });
       // Auto-sync JSONCargo si aplica (fire-and-forget)
       const e = input.embarque;
       if (e.modo === 'Marítimo' && e.contenedor && mapNavieraToJsonCargo(e.naviera ?? null)) {
@@ -66,10 +69,15 @@ async function insertarEventoTracking(embarqueId: string, nuevoEstado: string, u
 export function useAvanzarEstadoEmbarque() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async ({ embarqueId, nuevoEstado, usuarioEmail }: { embarqueId: string; nuevoEstado: string; usuarioEmail: string }) => {
-      await actualizarEstadoEmbarque(embarqueId, nuevoEstado);
-      await insertarNotaCambioEstado(embarqueId, `Estado cambiado a "${nuevoEstado}"`, usuarioEmail);
-      await insertarEventoTracking(embarqueId, nuevoEstado, usuarioEmail);
+    mutationFn: async ({ embarqueId, nuevoEstado, usuarioEmail, requestId }: { embarqueId: string; nuevoEstado: string; usuarioEmail: string; requestId?: string }) => {
+      await avanzarEstadoEmbarqueRpc({
+        embarqueId,
+        nuevoEstado,
+        usuarioEmail,
+        tipoEvento: tipoEventoParaEstado(nuevoEstado),
+        descripcionEvento: descripcionEventoCambioEstado(nuevoEstado),
+        requestId: requestId ?? newRequestId(),
+      });
     },
     onSuccess: (_resultado, vars) => {
       queryClient.invalidateQueries({ queryKey: queryKeys.embarques.all });

@@ -19,30 +19,25 @@ export async function fetchCotizacionCostos(
 export async function upsertCotizacionCostos(
   cotizacionId: string,
   costos: CostoCotizacion[],
+  requestId?: string,
 ): Promise<CostoCotizacion[]> {
-  const { error: delError } = await supabase
-    .from("cotizacion_costos")
-    .delete()
-    .eq("cotizacion_id", cotizacionId);
-  if (delError) throw delError;
-
-  if (costos.length === 0) return [];
-
-  const rows = costos.map((c) => ({
-    cotizacion_id: cotizacionId,
-    concepto: c.concepto,
-    moneda: c.moneda,
-    proveedor: c.proveedor,
-    cantidad: c.cantidad,
-    costo_unitario: c.costo_unitario,
-    precio_venta: c.precio_venta ?? 0,
-    unidad_medida: c.unidad_medida ?? "",
-    notas: c.notas ?? "",
-  }));
-
-  const { data, error } = await supabase.from("cotizacion_costos").insert(rows).select();
+  const { error } = await supabase.rpc("actualizar_cotizacion_costos", {
+    p_cotizacion_id: cotizacionId,
+    p_costos: costos.map((c) => ({
+      concepto: c.concepto,
+      moneda: c.moneda,
+      proveedor: c.proveedor,
+      cantidad: c.cantidad,
+      costo_unitario: c.costo_unitario,
+      precio_venta: c.precio_venta ?? 0,
+      unidad_medida: c.unidad_medida ?? "",
+      notas: c.notas ?? "",
+    })),
+    p_request_id: requestId,
+  });
   if (error) throw error;
-  return fromDb<CostoCotizacion[]>(data ?? []);
+  // Re-leemos para devolver los registros canónicos (con id/timestamps/totales calculados).
+  return fetchCotizacionCostos(cotizacionId);
 }
 
 // ─── Lookups para hidratación de embarque vinculado ─────────────────────────

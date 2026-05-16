@@ -23,19 +23,25 @@ interface IdemRow {
   pending: boolean;
 }
 
-type FnFilter = "todos" | "crear_embarque_completo" | "duplicar_embarque_completo" | "consolidar_proformas" | "marcar_proforma_facturada";
+type FnFilter = "todos" | "crear_embarque_completo" | "duplicar_embarque_completo" | "consolidar_proformas" | "marcar_proforma_facturada" | "actualizar_embarque_completo" | "avanzar_estado_embarque" | "actualizar_cotizacion_costos";
 
 const FN_LABEL: Record<string, string> = {
   crear_embarque_completo: "Crear embarque",
   duplicar_embarque_completo: "Duplicar embarque",
   consolidar_proformas: "Consolidar proformas",
   marcar_proforma_facturada: "Marcar facturada",
+  actualizar_embarque_completo: "Editar embarque",
+  avanzar_estado_embarque: "Avanzar estado",
+  actualizar_cotizacion_costos: "Editar costos cotización",
 };
 
 const FN_OPTIONS: { value: FnFilter; label: string }[] = [
   { value: "todos", label: "Todas las operaciones" },
   { value: "crear_embarque_completo", label: FN_LABEL.crear_embarque_completo },
   { value: "duplicar_embarque_completo", label: FN_LABEL.duplicar_embarque_completo },
+  { value: "actualizar_embarque_completo", label: FN_LABEL.actualizar_embarque_completo },
+  { value: "avanzar_estado_embarque", label: FN_LABEL.avanzar_estado_embarque },
+  { value: "actualizar_cotizacion_costos", label: FN_LABEL.actualizar_cotizacion_costos },
   { value: "consolidar_proformas", label: FN_LABEL.consolidar_proformas },
   { value: "marcar_proforma_facturada", label: FN_LABEL.marcar_proforma_facturada },
 ];

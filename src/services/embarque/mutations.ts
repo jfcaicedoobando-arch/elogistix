@@ -43,6 +43,8 @@ export interface ActualizarEmbarqueRpcInput {
   embarque: Partial<TablesInsert<'embarques'>>;
   conceptosVenta: Omit<TablesInsert<'conceptos_venta'>, 'embarque_id'>[];
   conceptosCosto: Omit<TablesInsert<'conceptos_costo'>, 'embarque_id'>[];
+  /** Idempotency key (A.3): si llega el mismo id dos veces, no se reescriben los conceptos. */
+  requestId?: string;
 }
 
 export async function actualizarEmbarqueRpc(input: ActualizarEmbarqueRpcInput): Promise<void> {
@@ -51,6 +53,28 @@ export async function actualizarEmbarqueRpc(input: ActualizarEmbarqueRpcInput): 
     p_embarque: toDbJson(input.embarque),
     p_conceptos_venta: toDbJson(input.conceptosVenta),
     p_conceptos_costo: toDbJson(input.conceptosCosto),
+    p_request_id: input.requestId,
+  });
+  if (error) throw error;
+}
+
+export interface AvanzarEstadoEmbarqueInput {
+  embarqueId: string;
+  nuevoEstado: string;
+  usuarioEmail: string;
+  tipoEvento: string;
+  descripcionEvento: string;
+  requestId?: string;
+}
+
+export async function avanzarEstadoEmbarqueRpc(input: AvanzarEstadoEmbarqueInput): Promise<void> {
+  const { error } = await supabase.rpc('avanzar_estado_embarque', {
+    p_embarque_id: input.embarqueId,
+    p_nuevo_estado: input.nuevoEstado,
+    p_usuario_email: input.usuarioEmail,
+    p_tipo_evento: input.tipoEvento,
+    p_descripcion_evento: input.descripcionEvento,
+    p_request_id: input.requestId,
   });
   if (error) throw error;
 }
