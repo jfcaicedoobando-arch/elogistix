@@ -2,6 +2,14 @@ import type { ChangelogEntry } from "../../../changelogData";
 
 export const chunk0: ChangelogEntry[] = [
   {
+    version: "8.159.0",
+    date: "2026-05-16",
+    type: "minor",
+    title: "Ola A.2.2 — Soft delete activo (papelera)",
+    summary: "Eliminar cotizaciones, contactos y documentos de embarque ahora envía a papelera en vez de borrar definitivamente. Listados y RLS ocultan los registros borrados.",
+    description: "Política RESTRICTIVE deleted_at IS NULL aplicada a las 14 tablas operativas: los registros marcados quedan invisibles para SELECT/UPDATE/DELETE normales. Nuevas funciones RPC SECURITY DEFINER con whitelist de tablas: soft_delete_record(tabla,id) (admin/operador, marca deleted_at/deleted_by), restore_record(tabla,id) (restaura), purge_record(tabla,id) (borrado definitivo, sólo admin/super_admin) y list_trash(tabla,limit,offset) para papelera por organización. Servicios refactoreados a RPC: deleteCotizacion, deleteDocumentoEmbarque y deleteContacto. Mantenidos como hard delete los borrados internos del patrón delete/re-insert (proformas y cotizacion_costos durante edición) y las tablas fuera del scope (proveedores, navieras, puertos, etc.). APP_VERSION 8.159.0."
+  },
+  {
     version: "8.158.0",
     date: "2026-05-16",
     type: "minor",
