@@ -14,6 +14,48 @@ export type Database = {
   }
   public: {
     Tables: {
+      app_logs: {
+        Row: {
+          fn: string
+          id: string
+          latency_ms: number | null
+          level: string
+          msg: string
+          organization_id: string | null
+          payload: Json | null
+          request_id: string | null
+          status_code: number | null
+          ts: string
+          user_id: string | null
+        }
+        Insert: {
+          fn: string
+          id?: string
+          latency_ms?: number | null
+          level: string
+          msg: string
+          organization_id?: string | null
+          payload?: Json | null
+          request_id?: string | null
+          status_code?: number | null
+          ts?: string
+          user_id?: string | null
+        }
+        Update: {
+          fn?: string
+          id?: string
+          latency_ms?: number | null
+          level?: string
+          msg?: string
+          organization_id?: string | null
+          payload?: Json | null
+          request_id?: string | null
+          status_code?: number | null
+          ts?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       auditoria_comentarios: {
         Row: {
           autor_email: string
@@ -2381,6 +2423,7 @@ export type Database = {
           venta_usd: number
         }[]
       }
+      purge_app_logs_old: { Args: never; Returns: number }
       purge_record: {
         Args: { _id: string; _table: string }
         Returns: undefined
