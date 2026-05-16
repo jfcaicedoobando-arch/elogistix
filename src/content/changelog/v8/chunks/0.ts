@@ -2,6 +2,14 @@ import type { ChangelogEntry } from "../../../changelogData";
 
 export const chunk0: ChangelogEntry[] = [
   {
+    version: "8.163.0",
+    date: "2026-05-16",
+    type: "patch",
+    title: "Ola A.3 (cont.) — Retry explícito reusa requestId",
+    summary: "Reintentar desde la UI tras un error reusa el mismo requestId hasta que la operación tenga éxito, evitando duplicados.",
+    description: "Nuevo helper useStableRequestId() en src/lib/idempotency.ts: mantiene un UUID por intento del usuario (get()) y sólo lo regenera tras éxito (reset()). Cableado en los 3 puntos críticos de UI: DialogDuplicarEmbarque (handleDuplicar), useEmbarqueSubmitOrchestrator (submit, fase 3 crear embarque) y useTabProformasPendientesController (handleConsolidar). Si una mutación falla por red, validación o RPC, el siguiente click reutiliza el mismo p_request_id y la RPC devuelve la respuesta cacheada por idempotency_claim/store en vez de crear un registro nuevo. Sólo se descarta el id cuando la operación retorna OK. APP_VERSION 8.163.0."
+  },
+  {
     version: "8.162.0",
     date: "2026-05-16",
     type: "patch",
