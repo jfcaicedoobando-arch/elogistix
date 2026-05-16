@@ -23,6 +23,7 @@ import {
   type ProformaPendienteConEmbarque,
   type ProformaRow,
 } from "@/services/proforma";
+import { newRequestId } from "@/lib/idempotency";
 import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 
 // Re-export tipos para que componentes/pages no tengan que importar del service.
