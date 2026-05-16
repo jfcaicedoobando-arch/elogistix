@@ -2,6 +2,14 @@ import type { ChangelogEntry } from "../../../changelogData";
 
 export const chunk0: ChangelogEntry[] = [
   {
+    version: "8.153.0",
+    date: "2026-05-16",
+    type: "minor",
+    title: "Dashboard — los círculos de estado ahora navegan a Embarques filtrado",
+    summary: "Hacer clic en un nodo de la línea de tiempo (Confirmado, En Tránsito, Arribo, En Aduana, Entregado) lleva a /embarques?estado=<Estado>, aprovechando el sync con la URL del listado.",
+    description: "Antes los círculos eran un toggle visual que solo cambiaba `filtroEstado` interno sin consumidor — confundían al usuario porque parecían accionables sin efecto. Ahora cada botón hace navigate(`/embarques?estado=${encodeURIComponent(estado)}`) y muestra `cursor-pointer` + tooltip 'Ver embarques en estado X (N)'. Se eliminó la prop `filtroEstado/onFiltroChange` de DashboardStatusCards y el useState huérfano de useDashboardData. Sin cambios en RPC ni schema; el listado lee `?estado` vía useEmbarquesPageState (nuqs).",
+  },
+  {
     version: "8.152.4",
     date: "2026-05-16",
     type: "patch",
