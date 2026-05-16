@@ -2,6 +2,14 @@ import type { ChangelogEntry } from "../../../changelogData";
 
 export const chunk0: ChangelogEntry[] = [
   {
+    version: "8.153.2",
+    date: "2026-05-16",
+    type: "patch",
+    title: "Embarques — filtro por estado: conteos correctos y fix de paginación",
+    summary: "Al filtrar por estado, ahora se trae el set completo y se filtra/agrupa/pagina client-side. Resuelve el bug donde cambiar a 10/pág hacía desaparecer el expediente y los conteos no cuadraban con el dashboard.",
+    description: "useEmbarquesPageState ahora detecta cuando filterEstado !== 'todos' y dispara fetchEmbarquesParaExport (todos los embarques que cumplen los demás filtros, sin paginar). Sobre ese set se aplica calcularEstadoEmbarque, se deduplica por expediente, se ordena y se pagina en memoria. Con filterEstado='todos' se mantiene la paginación server-side original. contenedoresCount y expedientesCount ahora reflejan el conteo real del set filtrado, por lo que '4 en Arribo' en el dashboard cuadra con '4 contenedores en 1 expediente' en /embarques?estado=Arribo. Fix adicional: la paginación ya no descarta el expediente al cambiar pageSize porque las páginas se calculan después de filtrar.",
+  },
+  {
     version: "8.153.1",
     date: "2026-05-16",
     type: "patch",

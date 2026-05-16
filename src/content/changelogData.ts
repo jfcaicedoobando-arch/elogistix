@@ -22,6 +22,14 @@ export interface ChangelogEntry {
  */
 export const recentChangelog: ChangelogEntry[] = [
   {
+    version: "8.153.2",
+    date: "2026-05-16",
+    type: "patch",
+    title: "Embarques — filtro por estado: conteos y paginación correctos",
+    summary: "Filtrar por estado ahora trae todo el set y filtra/pagina client-side. Cuadra con el dashboard y arregla el bug de '10/pág'.",
+    description: "useEmbarquesPageState usa fetchEmbarquesParaExport cuando hay filtro de estado, aplica calcularEstadoEmbarque sobre el set completo, deduplica por expediente y pagina en memoria. contenedoresCount/expedientesCount reflejan el set real.",
+  },
+  {
     version: "8.153.1",
     date: "2026-05-16",
     type: "patch",
