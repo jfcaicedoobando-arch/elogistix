@@ -2,14 +2,10 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { queryKeys } from '@/lib/query';
 import { useOrgFilter } from '@/hooks/shared/useOrgFilter';
 import {
-  fetchEmbarques,
   fetchEmbarquesPaginados,
   fetchEmbarqueById,
   fetchEmbarqueConceptosVenta,
   fetchEmbarqueConceptosCosto,
-  fetchEmbarqueDocumentos,
-  fetchEmbarqueNotas,
-  fetchEmbarqueFacturas,
   fetchExpedientesCliente,
   fetchProveedoresForSelect,
 } from '@/services/embarque';
