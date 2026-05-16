@@ -1276,6 +1276,7 @@ export type Database = {
           organization_id: string
           proforma_id: string | null
           referencia_bl: string | null
+          snapshot_emision: Json | null
           subtotal: number
           tipo_cambio: number
           total: number
@@ -1302,6 +1303,7 @@ export type Database = {
           organization_id?: string
           proforma_id?: string | null
           referencia_bl?: string | null
+          snapshot_emision?: Json | null
           subtotal?: number
           tipo_cambio?: number
           total?: number
@@ -1328,6 +1330,7 @@ export type Database = {
           organization_id?: string
           proforma_id?: string | null
           referencia_bl?: string | null
+          snapshot_emision?: Json | null
           subtotal?: number
           tipo_cambio?: number
           total?: number
@@ -1682,6 +1685,7 @@ export type Database = {
           operador: string | null
           organization_id: string
           proformas_origen: string[] | null
+          snapshot_emision: Json | null
           subtotal_mxn: number
           subtotal_usd: number
           tasa_iva_aplicada: number
@@ -1718,6 +1722,7 @@ export type Database = {
           operador?: string | null
           organization_id?: string
           proformas_origen?: string[] | null
+          snapshot_emision?: Json | null
           subtotal_mxn?: number
           subtotal_usd?: number
           tasa_iva_aplicada?: number
@@ -1754,6 +1759,7 @@ export type Database = {
           operador?: string | null
           organization_id?: string
           proformas_origen?: string[] | null
+          snapshot_emision?: Json | null
           subtotal_mxn?: number
           subtotal_usd?: number
           tasa_iva_aplicada?: number
@@ -2222,6 +2228,7 @@ export type Database = {
           operador: string | null
           organization_id: string
           proformas_origen: string[] | null
+          snapshot_emision: Json | null
           subtotal_mxn: number
           subtotal_usd: number
           tasa_iva_aplicada: number
