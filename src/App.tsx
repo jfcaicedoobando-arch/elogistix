@@ -22,6 +22,7 @@ const Operaciones = lazy(() => import("./pages/dashboard/Operaciones"));
 const Reportes = lazy(() => import("./pages/dashboard/Reportes"));
 const Bitacora = lazy(() => import("./pages/dashboard/Bitacora"));
 const Changelog = lazy(() => import("./pages/dashboard/Changelog"));
+const Papelera = lazy(() => import("./pages/dashboard/Papelera"));
 const Auditoria = lazy(() => import("./pages/Auditoria"));
 
 const Embarques = lazy(() => import("./pages/embarques/Embarques"));
@@ -185,6 +186,14 @@ const App = () => (
               
               <Route path="/changelog" element={<Changelog />} />
               <Route path="/bitacora" element={<Bitacora />} />
+              <Route
+                path="/papelera"
+                element={
+                  <ProtectedRoute allowedRoles={["admin", "super_admin"]}>
+                    <Papelera />
+                  </ProtectedRoute>
+                }
+              />
               <Route path="/auditoria" element={<Auditoria />} />
               <Route
                 path="/usuarios"
