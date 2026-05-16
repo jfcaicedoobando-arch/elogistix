@@ -22,6 +22,14 @@ export interface ChangelogEntry {
  */
 export const recentChangelog: ChangelogEntry[] = [
   {
+    version: "8.166.0",
+    date: "2026-05-16",
+    type: "minor",
+    title: "Ola A.3 (cont.) — Idempotencia en upload de documentos",
+    summary: "Re-subir el mismo archivo no duplica registros: el path incluye el SHA-256 y la fila sólo se actualiza si cambia el contenido.",
+    description: "uploadDocumentoEmbarque calcula hash del contenido, usa path determinístico y reclama idempotency_claim/store con fn='upload_documento_embarque'. APP_VERSION 8.166.0."
+  },
+  {
     version: "8.165.0",
     date: "2026-05-16",
     type: "minor",
