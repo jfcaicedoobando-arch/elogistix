@@ -65,16 +65,6 @@ export async function fetchBitacora(filtros: FiltrosBitacora = {}): Promise<{
   return { datos: (data ?? []) as EntradaBitacora[], total: count ?? 0 };
 }
 
-export async function fetchActividadReciente(limite = 10): Promise<EntradaBitacora[]> {
-  const { data, error } = await supabase
-    .from("bitacora_actividad")
-    .select(BITACORA_COLUMNS)
-    .order("created_at", { ascending: false })
-    .limit(limite);
-  if (error) throw error;
-  return (data ?? []) as EntradaBitacora[];
-}
-
 export async function insertBitacora(entrada: {
   usuarioId: string;
   usuarioEmail: string;
