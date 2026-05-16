@@ -22,6 +22,14 @@ export interface ChangelogEntry {
  */
 export const recentChangelog: ChangelogEntry[] = [
   {
+    version: "8.160.0",
+    date: "2026-05-16",
+    type: "minor",
+    title: "Ola A.2.3 — Página de Papelera",
+    summary: "Nueva sección /papelera (admin) para ver, restaurar o purgar registros borrados, con etiqueta, fecha y usuario.",
+    description: "Página Papelera con selector de tabla y acciones Restaurar/Purgar. list_trash ampliada para devolver label legible y email del usuario. APP_VERSION 8.160.0."
+  },
+  {
     version: "8.159.0",
     date: "2026-05-16",
     type: "minor",
