@@ -2,6 +2,14 @@ import type { ChangelogEntry } from "../../../changelogData";
 
 export const chunk0: ChangelogEntry[] = [
   {
+    version: "8.152.4",
+    date: "2026-05-16",
+    type: "patch",
+    title: "Sidebar — tooltips legibles cuando está colapsado",
+    summary: "Los tooltips de los items del sidebar colapsado (Embarques, Cotizaciones, etc.) ahora usan fondo oscuro del sidebar, borde y sombra fuerte para no mezclarse con las cards del dashboard que quedan detrás.",
+    description: "SidebarGroupBlock pasa la prop `tooltip` como objeto al SidebarMenuButton con className 'bg-sidebar text-sidebar-foreground border-sidebar-border shadow-xl font-medium' y sideOffset=8. Antes el tooltip usaba bg-popover blanco sin sombra fuerte y se solapaba visualmente con el texto de las cards del contenido principal. Sin cambios en el componente shadcn sidebar.tsx ni en la lógica.",
+  },
+  {
     version: "8.152.3",
     date: "2026-05-15",
     type: "patch",
