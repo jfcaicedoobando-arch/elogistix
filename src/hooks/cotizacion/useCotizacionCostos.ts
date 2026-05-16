@@ -4,6 +4,7 @@ import {
   fetchCotizacionCostos,
   upsertCotizacionCostos,
 } from '@/services/cotizacion';
+import { newRequestId } from '@/lib/idempotency';
 
 export type { CostoCotizacion } from '@/types/cotizacionCosto';
 import type { CostoCotizacion } from '@/types/cotizacionCosto';
@@ -19,10 +20,11 @@ export function useCotizacionCostos(cotizacionId: string | undefined) {
 export function useUpsertCotizacionCostos() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({ cotizacionId, costos }: { cotizacionId: string; costos: CostoCotizacion[] }) =>
-      upsertCotizacionCostos(cotizacionId, costos),
+    mutationFn: ({ cotizacionId, costos, requestId }: { cotizacionId: string; costos: CostoCotizacion[]; requestId?: string }) =>
+      upsertCotizacionCostos(cotizacionId, costos, requestId ?? newRequestId()),
     onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({ queryKey: queryKeys.cotizaciones.costos(variables.cotizacionId) });
     },
   });
 }
+
