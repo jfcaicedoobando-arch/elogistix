@@ -22,6 +22,14 @@ export interface ChangelogEntry {
  */
 export const recentChangelog: ChangelogEntry[] = [
   {
+    version: "8.157.0",
+    date: "2026-05-16",
+    type: "minor",
+    title: "Ola A.1 — Integridad referencial, reglas de dominio e índices",
+    summary: "FKs faltantes, CHECKs anti-captura inválida e índices de apoyo. 5 embarques con datos negativos/ETD inválida y 1 cotización huérfana corregidos y bitacorados antes de la migración.",
+    description: "Migración A.1 de la Ola de Resiliencia. FKs nuevas (proformas, conceptos consolidados, cotizaciones y auditoría) hacia embarques/clientes/organizaciones con ON DELETE RESTRICT/CASCADE/SET NULL según el caso. CHECKs nuevas: embarques (peso/volumen/piezas ≥0, eta≥etd, tipos cambio >0), conceptos (precio ≥0, cantidad ≥1), facturas (totales ≥0, vencimiento ≥emision), proformas (totales USD/MXN ≥0), cotizaciones y cotizacion_costos. Índices en cliente_id, embarque_id, organization_id, estado, etd/eta y bitacora_org_created_at. Cero impacto de UI. APP_VERSION 8.157.0."
+  },
+  {
     version: "8.156.2",
     date: "2026-05-16",
     type: "patch",
