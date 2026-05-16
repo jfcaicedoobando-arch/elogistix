@@ -3,7 +3,8 @@
  * controller para respetar la separación lógica/presentación: el hook expone
  * datos + handlers, este builder los compone con celdas visuales.
  */
-import { Download, FileCheck2, FileText, FileCode2 } from "lucide-react";
+import { Download, FileCheck2 } from "lucide-react";
+import { FacturaDownloadButton } from "@/components/facturacion/FacturaDownloadButton";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { type DataTableColumn } from "@/components/shared/DataTable";
@@ -97,18 +98,8 @@ export function buildProformasColumns({
         return (
           <div className="flex items-center gap-1">
             <span className="font-mono">{p.folio_factura_externa}</span>
-            {pdfUrl && (
-              <a href={pdfUrl} target="_blank" rel="noopener noreferrer" download
-                title="Descargar PDF" onClick={(e) => e.stopPropagation()}>
-                <FileText className="h-3.5 w-3.5 text-destructive hover:opacity-80" />
-              </a>
-            )}
-            {xmlUrl && (
-              <a href={xmlUrl} target="_blank" rel="noopener noreferrer" download
-                title="Descargar XML" onClick={(e) => e.stopPropagation()}>
-                <FileCode2 className="h-3.5 w-3.5 text-info hover:opacity-80" />
-              </a>
-            )}
+            {pdfUrl && <FacturaDownloadButton stored={pdfUrl} kind="pdf" size="sm" />}
+            {xmlUrl && <FacturaDownloadButton stored={xmlUrl} kind="xml" size="sm" />}
           </div>
         );
       },

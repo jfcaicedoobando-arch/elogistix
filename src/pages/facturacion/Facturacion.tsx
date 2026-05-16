@@ -1,4 +1,5 @@
-import { Download, FileText, FileCode2 } from "lucide-react";
+import { Download } from "lucide-react";
+import { FacturaDownloadButton } from "@/components/facturacion/FacturaDownloadButton";
 import SearchInput from "@/components/selects/SearchInput";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -43,20 +44,8 @@ const facturaColumns: DataTableColumn<Factura>[] = [
       if (!f.factura_pdf_url && !f.factura_xml_url) return <span className="text-muted-foreground text-xs">—</span>;
       return (
         <div className="flex items-center gap-1">
-          {f.factura_pdf_url && (
-            <Button asChild variant="outline" size="icon" className="h-7 w-7" title="Descargar PDF" aria-label="Descargar PDF">
-              <a href={f.factura_pdf_url} target="_blank" rel="noopener noreferrer" download>
-                <FileText className="h-3.5 w-3.5 text-destructive" />
-              </a>
-            </Button>
-          )}
-          {f.factura_xml_url && (
-            <Button asChild variant="outline" size="icon" className="h-7 w-7" title="Descargar XML" aria-label="Descargar XML">
-              <a href={f.factura_xml_url} target="_blank" rel="noopener noreferrer" download>
-                <FileCode2 className="h-3.5 w-3.5 text-info" />
-              </a>
-            </Button>
-          )}
+          {f.factura_pdf_url && <FacturaDownloadButton stored={f.factura_pdf_url} kind="pdf" />}
+          {f.factura_xml_url && <FacturaDownloadButton stored={f.factura_xml_url} kind="xml" />}
         </div>
       );
     },

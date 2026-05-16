@@ -1,4 +1,5 @@
-import { Download, FileCode2, FileText, Loader2, Receipt, Trash2 } from "lucide-react";
+import { Download, Loader2, Receipt, Trash2 } from "lucide-react";
+import { FacturaDownloadButton } from "@/components/facturacion/FacturaDownloadButton";
 import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -65,18 +66,10 @@ export function HistorialProformas({ proformas, canEdit, isDeleting, onDescargar
               <Download className="h-3.5 w-3.5 mr-1" /> Descargar
             </Button>
             {p.facturas?.factura_pdf_url && (
-              <Button asChild variant="outline" size="icon" className="h-8 w-8" title="Descargar factura PDF" aria-label="Descargar factura PDF">
-                <a href={p.facturas.factura_pdf_url} target="_blank" rel="noopener noreferrer" download onClick={(e) => e.stopPropagation()}>
-                  <FileText className="h-3.5 w-3.5 text-destructive" />
-                </a>
-              </Button>
+              <FacturaDownloadButton stored={p.facturas.factura_pdf_url} kind="pdf" className="h-8 w-8" />
             )}
             {p.facturas?.factura_xml_url && (
-              <Button asChild variant="outline" size="icon" className="h-8 w-8" title="Descargar factura XML" aria-label="Descargar factura XML">
-                <a href={p.facturas.factura_xml_url} target="_blank" rel="noopener noreferrer" download onClick={(e) => e.stopPropagation()}>
-                  <FileCode2 className="h-3.5 w-3.5 text-info" />
-                </a>
-              </Button>
+              <FacturaDownloadButton stored={p.facturas.factura_xml_url} kind="xml" className="h-8 w-8" />
             )}
             {canEdit && !facturada && (
               <Button
