@@ -6,6 +6,7 @@ import {
   Settings,
   ChevronUp,
   User,
+  Activity,
 } from "lucide-react";
 import { NavLink } from "@/components/layout/NavLink";
 import { useLocation } from "react-router-dom";
