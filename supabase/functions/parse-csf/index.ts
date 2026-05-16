@@ -102,25 +102,33 @@ Si no encuentras un campo, devuelve cadena vacía. No inventes datos.`;
     });
 
     if (!response.ok) {
-      if (response.status === 429) return errorResponse("Límite de solicitudes excedido, intenta en unos momentos.", 429, cors);
-      if (response.status === 402) return errorResponse("Créditos insuficientes para procesamiento AI.", 402, cors);
+      if (response.status === 429) {
+        log.warn("rate limited por gateway", { status_code: 429 });
+        return errorResponse("Límite de solicitudes excedido, intenta en unos momentos.", 429, cors);
+      }
+      if (response.status === 402) {
+        log.warn("sin créditos AI", { status_code: 402 });
+        return errorResponse("Créditos insuficientes para procesamiento AI.", 402, cors);
+      }
       const errorText = await response.text();
-      console.error("AI gateway error:", response.status, errorText);
+      log.error("AI gateway error", { status_code: response.status, payload: { detail: errorText.slice(0, 500) } });
       return errorResponse("Error al procesar el documento", 500, cors);
     }
 
     const aiResult = await response.json();
     const toolCall = aiResult.choices?.[0]?.message?.tool_calls?.[0];
     if (!toolCall?.function?.arguments) {
+      log.warn("respuesta sin tool_call", { status_code: 422 });
       return errorResponse("No se pudieron extraer los datos del documento", 422, cors);
     }
 
+    log.finish(200, "csf parseado");
     return jsonResponse(JSON.parse(toolCall.function.arguments), 200, cors);
   } catch (error) {
-    console.error("parse-csf error:", error);
     const message = error instanceof Error ? error.message : "Error desconocido";
     const [code, ...rest] = message.split(":");
     const status = /^\d+$/.test(code) ? parseInt(code) : 500;
+    log.error("parse-csf falló", { status_code: status, payload: { error: message } });
     return errorResponse(rest.join(":") || message, status, cors);
   }
 });
