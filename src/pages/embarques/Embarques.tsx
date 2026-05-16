@@ -28,14 +28,16 @@ export default function Embarques() {
     sortKey, sortDir, handleSortChange,
     setSearch, setFilterModo, setFilterEstado, setFilterCliente, setFilterOperador, setFilterProforma,
     setFechaDesde, setFechaHasta, setPage, setPageSize,
-    filtered, displayCount, totalPages,
+    filtered, displayCount, expedientesCount, contenedoresCount, totalPages,
   } = state;
+
+  const headerDescription = `${contenedoresCount} ${contenedoresCount === 1 ? "contenedor" : "contenedores"} en ${expedientesCount} ${expedientesCount === 1 ? "expediente" : "expedientes"}`;
 
   return (
     <div className="space-y-6">
       <PageHeader
         title="Embarques"
-        description={`${displayCount} embarques encontrados`}
+        description={headerDescription}
         actions={
           <>
             {!isEmptyState && (
