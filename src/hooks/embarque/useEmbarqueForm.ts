@@ -1,5 +1,5 @@
 import { useEffect, useCallback, useState } from "react";
-import { useForm, type UseFormReturn } from "react-hook-form";
+import { useForm } from "react-hook-form";
 import { useToast } from "@/hooks/use-toast";
 import { uploadFile } from "@/services/storage/index";
 import { useExchangeRates } from "@/hooks/catalogos/useExchangeRates";
