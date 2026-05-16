@@ -13,6 +13,7 @@ import {
   Building2,
   ShieldAlert,
   Trash2,
+  Repeat2,
 } from "lucide-react";
 import type { SidebarItem } from "@/components/layout/SidebarGroupBlock";
 
