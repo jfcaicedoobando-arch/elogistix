@@ -157,6 +157,7 @@ const App = () => (
               <Route path="/admin/organizaciones/:id" element={<AdminOrgDetalle />} />
               <Route path="/admin/usuarios" element={<AdminUsuarios />} />
               <Route path="/admin/configuracion" element={<AdminConfiguracion />} />
+              <Route path="/admin/diagnostico" element={<AdminDiagnostico />} />
             </Route>
 
             {/* Regular app routes */}
