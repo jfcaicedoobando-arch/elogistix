@@ -2,6 +2,14 @@ import type { ChangelogEntry } from "../../../changelogData";
 
 export const chunk0: ChangelogEntry[] = [
   {
+    version: "8.160.0",
+    date: "2026-05-16",
+    type: "minor",
+    title: "Ola A.2.3 — Página de Papelera",
+    summary: "Nueva sección /papelera (solo admin/super_admin) para ver, restaurar o purgar registros borrados de las 14 tablas con soft delete. Muestra etiqueta legible, fecha/hora de eliminación y correo del usuario que borró.",
+    description: "Nueva página src/pages/dashboard/Papelera.tsx con selector de tabla (Embarques, Cotizaciones, Clientes, Contactos, Documentos/Eventos/Notas de embarque, Facturas, Conceptos de factura/costo/venta, Cotización costos, Proformas y conceptos de proforma) que consume list_trash(_table,_limit,_offset). RPC list_trash ampliada (DROP + CREATE) para devolver una etiqueta legible por tabla (folio para cotizaciones, expediente para embarques, nombre para clientes/contactos/documentos, número para facturas/proformas, descripción/concepto/contenido en el resto) y el correo del usuario que eliminó vía join SECURITY DEFINER a auth.users. Acciones por fila: Restaurar (restore_record) y Purgar (purge_record, con confirm window). Acceso protegido por ProtectedRoute allowedRoles=admin/super_admin y enlace en SIDEBAR_ADMIN_ITEMS. APP_VERSION 8.160.0."
+  },
+  {
     version: "8.159.0",
     date: "2026-05-16",
     type: "minor",
