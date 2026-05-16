@@ -23,6 +23,7 @@ const Reportes = lazy(() => import("./pages/dashboard/Reportes"));
 const Bitacora = lazy(() => import("./pages/dashboard/Bitacora"));
 const Changelog = lazy(() => import("./pages/dashboard/Changelog"));
 const Papelera = lazy(() => import("./pages/dashboard/Papelera"));
+const Idempotencia = lazy(() => import("./pages/dashboard/Idempotencia"));
 const Auditoria = lazy(() => import("./pages/Auditoria"));
 
 const Embarques = lazy(() => import("./pages/embarques/Embarques"));
@@ -191,6 +192,14 @@ const App = () => (
                 element={
                   <ProtectedRoute allowedRoles={["admin", "super_admin"]}>
                     <Papelera />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/idempotencia"
+                element={
+                  <ProtectedRoute allowedRoles={["admin", "super_admin"]}>
+                    <Idempotencia />
                   </ProtectedRoute>
                 }
               />

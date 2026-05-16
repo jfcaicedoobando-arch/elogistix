@@ -22,6 +22,14 @@ export interface ChangelogEntry {
  */
 export const recentChangelog: ChangelogEntry[] = [
   {
+    version: "8.164.0",
+    date: "2026-05-16",
+    type: "minor",
+    title: "Ola A.3 (cont.) — Vista de auditoría de idempotencia",
+    summary: "Nueva página /idempotencia (admin) con requestId, operación, reintentos y badge de Creado vs Respuesta cacheada.",
+    description: "Columna hits en idempotency_keys + RPC list_idempotency_log + página Idempotencia con KPIs y tabla filtrable por operación. APP_VERSION 8.164.0."
+  },
+  {
     version: "8.163.0",
     date: "2026-05-16",
     type: "patch",

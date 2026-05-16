@@ -13,6 +13,7 @@ import {
   Building2,
   ShieldAlert,
   Trash2,
+  Repeat2,
 } from "lucide-react";
 import type { SidebarItem } from "@/components/layout/SidebarGroupBlock";
 
@@ -45,6 +46,7 @@ export const SIDEBAR_SISTEMA_ITEMS: SidebarItem[] = [
 export const SIDEBAR_ADMIN_ITEMS: SidebarItem[] = [
   { title: "Usuarios", url: "/usuarios", icon: ShieldCheck },
   { title: "Papelera", url: "/papelera", icon: Trash2 },
+  { title: "Idempotencia", url: "/idempotencia", icon: Repeat2 },
   { title: "Configuración", url: "/configuracion", icon: Settings },
 ];
 
