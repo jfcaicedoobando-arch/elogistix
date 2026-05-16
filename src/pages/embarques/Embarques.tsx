@@ -31,7 +31,10 @@ export default function Embarques() {
     filtered, expedientesCount, contenedoresCount, totalPages,
   } = state;
 
-  const headerDescription = `${contenedoresCount} ${contenedoresCount === 1 ? "contenedor" : "contenedores"} en ${expedientesCount} ${expedientesCount === 1 ? "expediente" : "expedientes"}`;
+  const estadoActivo = filterEstado !== "todos";
+  const headerDescription = estadoActivo
+    ? `${contenedoresCount} ${contenedoresCount === 1 ? "contenedor" : "contenedores"} en ${expedientesCount} ${expedientesCount === 1 ? "expediente" : "expedientes"}`
+    : `${contenedoresCount} ${contenedoresCount === 1 ? "contenedor" : "contenedores"}`;
 
   return (
     <div className="space-y-6">
