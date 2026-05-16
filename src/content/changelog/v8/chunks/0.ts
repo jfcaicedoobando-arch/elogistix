@@ -2,6 +2,14 @@ import type { ChangelogEntry } from "../../../changelogData";
 
 export const chunk0: ChangelogEntry[] = [
   {
+    version: "8.162.0",
+    date: "2026-05-16",
+    type: "patch",
+    title: "Ola A.3 (cont.) — requestId conectado end-to-end",
+    summary: "useCreateEmbarque, useDuplicarEmbarque y useConsolidarProformas generan automáticamente un requestId UUID por intento y lo envían al backend.",
+    description: "Cierre de A.3: los tres hooks de mutación (useCreateEmbarque, useDuplicarEmbarque, useConsolidarProformas) ahora invocan newRequestId() cuando el caller no provee uno explícito y propagan el valor al servicio (crearEmbarqueRpc, duplicarEmbarqueRpc, consolidarProformas) y por tanto a p_request_id en las RPCs. Resultado: doble-click en 'Crear Embarque', 'Crear N Embarque(s)' del diálogo de duplicación y 'Consolidar' en proformas pendientes ya NO produce registros duplicados; el segundo intento recibe la respuesta cacheada. Interfaz de los hooks extendida con requestId?: string opcional para casos donde el caller quiera controlar la clave (por ejemplo, persistirla en estado para retries explícitos). APP_VERSION 8.162.0."
+  },
+  {
     version: "8.161.0",
     date: "2026-05-16",
     type: "minor",

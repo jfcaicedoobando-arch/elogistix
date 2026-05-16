@@ -22,6 +22,14 @@ export interface ChangelogEntry {
  */
 export const recentChangelog: ChangelogEntry[] = [
   {
+    version: "8.162.0",
+    date: "2026-05-16",
+    type: "patch",
+    title: "Ola A.3 (cont.) — requestId conectado end-to-end",
+    summary: "Hooks de crear/duplicar embarque y consolidar proformas generan requestId automático: doble-click ya no duplica.",
+    description: "useCreateEmbarque, useDuplicarEmbarque y useConsolidarProformas invocan newRequestId() y lo propagan a p_request_id de las RPCs. APP_VERSION 8.162.0."
+  },
+  {
     version: "8.161.0",
     date: "2026-05-16",
     type: "minor",
