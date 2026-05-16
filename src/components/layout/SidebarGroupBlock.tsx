@@ -63,7 +63,12 @@ function SidebarGroupBlockBase({ label, items, collapsed, pathname, totalAlertas
                   <SidebarMenuButton
                     asChild
                     isActive={active}
-                    tooltip={item.title}
+                    tooltip={{
+                      children: item.title,
+                      className:
+                        "bg-sidebar text-sidebar-foreground border-sidebar-border shadow-xl font-medium",
+                      sideOffset: 8,
+                    }}
                     className={cn(
                       "relative",
                       active &&

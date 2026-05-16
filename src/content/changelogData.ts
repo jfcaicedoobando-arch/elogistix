@@ -22,6 +22,14 @@ export interface ChangelogEntry {
  */
 export const recentChangelog: ChangelogEntry[] = [
   {
+    version: "8.152.4",
+    date: "2026-05-16",
+    type: "patch",
+    title: "Sidebar — tooltips legibles cuando está colapsado",
+    summary: "Tooltips del sidebar colapsado ahora usan fondo oscuro, borde y sombra para no mezclarse con las cards del contenido principal.",
+    description: "SidebarGroupBlock pasa la prop `tooltip` como objeto al SidebarMenuButton con className 'bg-sidebar text-sidebar-foreground border-sidebar-border shadow-xl font-medium' y sideOffset=8.",
+  },
+  {
     version: "8.152.3",
     date: "2026-05-15",
     type: "patch",
