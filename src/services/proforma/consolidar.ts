@@ -14,6 +14,8 @@ export interface ConsolidarProformasParams {
   diasCredito: number | null;
   /** Tasa de IVA vigente (no hard-codear). */
   tasaIva: number;
+  /** Idempotency key (A.3): impide consolidaciones duplicadas por reintento. */
+  requestId?: string;
 }
 
 /**
@@ -38,6 +40,7 @@ export async function consolidarProformas(params: ConsolidarProformasParams): Pr
     p_operador: params.operador ?? "",
     p_dias_credito: params.diasCredito ?? 0,
     p_tasa_iva: params.tasaIva,
+    p_request_id: params.requestId ?? null,
   });
   if (error) throw error;
   if (!data) throw new Error("La consolidación no devolvió la proforma resultante");

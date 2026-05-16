@@ -21,6 +21,8 @@ export interface CrearEmbarqueRpcInput {
   conceptosVenta: Omit<TablesInsert<'conceptos_venta'>, 'embarque_id'>[];
   conceptosCosto: Omit<TablesInsert<'conceptos_costo'>, 'embarque_id'>[];
   documentos: Omit<TablesInsert<'documentos_embarque'>, 'embarque_id'>[];
+  /** Idempotency key (A.3): si llega el mismo id dos veces, no se duplica. */
+  requestId?: string;
 }
 
 export async function crearEmbarqueRpc(input: CrearEmbarqueRpcInput): Promise<{ id: string }> {
@@ -29,6 +31,7 @@ export async function crearEmbarqueRpc(input: CrearEmbarqueRpcInput): Promise<{ 
     p_conceptos_venta: toDbJson(input.conceptosVenta),
     p_conceptos_costo: toDbJson(input.conceptosCosto),
     p_documentos: toDbJson(input.documentos),
+    p_request_id: input.requestId ?? null,
   });
   if (error) throw error;
   rpcIdSchema.parse(data); // valida en runtime; lanza ZodError si shape inválido
@@ -61,10 +64,12 @@ export async function duplicarEmbarqueRpc(
     volumen_m3: number;
     piezas: number;
   }>,
+  requestId?: string,
 ): Promise<{ id: string; expediente: string }[]> {
   const { data, error } = await supabase.rpc('duplicar_embarque_completo', {
     p_embarque_origen_id: embarqueOrigenId,
     p_copias: toDbJson(copias),
+    p_request_id: requestId ?? null,
   });
   if (error) throw error;
   rpcIdExpedienteArraySchema.parse(data); // valida shape; lanza ZodError si inválido
