@@ -2,6 +2,14 @@ import type { ChangelogEntry } from "../../../changelogData";
 
 export const chunk0: ChangelogEntry[] = [
   {
+    version: "8.164.0",
+    date: "2026-05-16",
+    type: "minor",
+    title: "Ola A.3 (cont.) — Vista de auditoría de idempotencia",
+    summary: "Nueva página /idempotencia (admin) que muestra requestId, operación y si la respuesta fue creada o cacheada.",
+    description: "Migración: columna hits int default 0 en idempotency_keys + rewrite de idempotency_claim que incrementa hits en cada reintento usando el truco xmax=0 para distinguir insert nuevo de update por conflicto. Nueva RPC SECURITY DEFINER list_idempotency_log(_limit,_offset) restringida a admin/super_admin: devuelve key, fn, hits, created_at, user_id, user_email (join a auth.users), has_response y pending. Nueva página src/pages/dashboard/Idempotencia.tsx con filtro por operación (crear/duplicar/consolidar/facturar), 3 KPIs (creados / cacheados / duplicados bloqueados) y tabla con columnas Fecha, Operación, requestId (con copy-to-clipboard), Usuario, Reintentos y Resultado (badge: Creado = hits=0, Respuesta cacheada = hits>=1, Pendiente). Ruta /idempotencia protegida por ProtectedRoute admin/super_admin y enlace en SIDEBAR_ADMIN_ITEMS. APP_VERSION 8.164.0."
+  },
+  {
     version: "8.163.0",
     date: "2026-05-16",
     type: "patch",
