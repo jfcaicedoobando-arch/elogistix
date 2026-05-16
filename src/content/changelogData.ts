@@ -22,6 +22,14 @@ export interface ChangelogEntry {
  */
 export const recentChangelog: ChangelogEntry[] = [
   {
+    version: "8.153.3",
+    date: "2026-05-16",
+    type: "patch",
+    title: "Embarques — estado por UTC para cuadrar con el dashboard",
+    summary: "calcularEstadoEmbarque ahora compara fechas en UTC igual que el backend. Cuadra el conteo de Arribo entre dashboard y listado.",
+    description: "El cálculo client-side usaba hora local del navegador; en UTC-6 (México) un embarque con ETA = hoy-UTC quedaba como En Tránsito mientras el dashboard lo contaba como Arribo. Ahora hoy/etd/eta se comparan en UTC, igual que current_date de Postgres.",
+  },
+  {
     version: "8.153.2",
     date: "2026-05-16",
     type: "patch",
