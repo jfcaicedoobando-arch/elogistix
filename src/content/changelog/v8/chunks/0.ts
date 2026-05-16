@@ -2,6 +2,13 @@ import type { ChangelogEntry } from "../../../changelogData";
 
 export const chunk0: ChangelogEntry[] = [
   {
+    version: "8.170.0",
+    date: "2026-05-16",
+    type: "patch",
+    title: "Script ci:local para validar antes de pushear",
+    description: "Nuevo comando 'bun run ci:local' que ejecuta lint, knip, tests y build en secuencia, replicando el pipeline de GitHub Actions para detectar fallos de CI antes del push.",
+  },
+  {
     version: "8.169.0",
     date: "2026-05-16",
     type: "minor",

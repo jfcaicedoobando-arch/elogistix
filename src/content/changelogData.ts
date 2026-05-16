@@ -22,6 +22,13 @@ export interface ChangelogEntry {
  */
 export const recentChangelog: ChangelogEntry[] = [
   {
+    version: "8.170.0",
+    date: "2026-05-16",
+    type: "patch",
+    title: "Script ci:local para validar antes de pushear",
+    description: "Nuevo comando 'bun run ci:local' que ejecuta lint, knip, tests y build en secuencia, replicando el pipeline de GitHub Actions para detectar fallos de CI antes del push.",
+  },
+  {
     version: "8.169.0",
     date: "2026-05-16",
     type: "minor",
@@ -53,54 +60,7 @@ export const recentChangelog: ChangelogEntry[] = [
     summary: "Re-subir el mismo archivo no duplica registros: el path incluye el SHA-256 y la fila sólo se actualiza si cambia el contenido.",
     description: "uploadDocumentoEmbarque calcula hash del contenido, usa path determinístico y reclama idempotency_claim/store con fn='upload_documento_embarque'. APP_VERSION 8.166.0."
   },
-  {
-    version: "8.165.0",
-    date: "2026-05-16",
-    type: "minor",
-    title: "Ola A.3 (cont.) — Idempotencia en mutaciones de actualización",
-    summary: "Editar embarque, avanzar estado y editar costos de cotización aceptan p_request_id: reintentos no duplican notas/eventos ni reescriben conceptos.",
-    description: "actualizar_embarque_completo + nuevas RPCs avanzar_estado_embarque y actualizar_cotizacion_costos con idempotency_claim/store. Hooks generan requestId automáticamente. APP_VERSION 8.165.0."
-  },
-  {
-    version: "8.164.0",
-    date: "2026-05-16",
-    type: "minor",
-    title: "Ola A.3 (cont.) — Vista de auditoría de idempotencia",
-    summary: "Nueva página /idempotencia (admin) con requestId, operación, reintentos y badge de Creado vs Respuesta cacheada.",
-    description: "Columna hits en idempotency_keys + RPC list_idempotency_log + página Idempotencia con KPIs y tabla filtrable por operación. APP_VERSION 8.164.0."
-  },
-  {
-    version: "8.163.0",
-    date: "2026-05-16",
-    type: "patch",
-    title: "Ola A.3 (cont.) — Retry explícito reusa requestId",
-    summary: "Reintentar tras un error reusa el mismo requestId hasta que la operación tenga éxito, evitando duplicados.",
-    description: "useStableRequestId mantiene el UUID por intento y sólo lo regenera tras éxito. Cableado en duplicar embarque, crear embarque y consolidar proformas. APP_VERSION 8.163.0."
-  },
-  {
-    version: "8.162.0",
-    date: "2026-05-16",
-    type: "patch",
-    title: "Ola A.3 (cont.) — requestId conectado end-to-end",
-    summary: "Hooks de crear/duplicar embarque y consolidar proformas generan requestId automático: doble-click ya no duplica.",
-    description: "useCreateEmbarque, useDuplicarEmbarque y useConsolidarProformas invocan newRequestId() y lo propagan a p_request_id de las RPCs. APP_VERSION 8.162.0."
-  },
-  {
-    version: "8.161.0",
-    date: "2026-05-16",
-    type: "minor",
-    title: "Ola A.3 — Idempotencia en mutaciones críticas",
-    summary: "Crear/duplicar embarques, consolidar proformas y marcar facturada ya no se duplican por doble-click o reintento.",
-    description: "Nueva tabla idempotency_keys + helpers idempotency_claim/store. RPCs crear_embarque_completo, duplicar_embarque_completo, consolidar_proformas y marcar_proforma_facturada aceptan p_request_id opcional; si llega el mismo id dos veces devuelven la respuesta cacheada. Helper frontend src/lib/idempotency.ts newRequestId(). APP_VERSION 8.161.0."
-  },
-  {
-    version: "8.160.0",
-    date: "2026-05-16",
-    type: "minor",
-    title: "Ola A.2.3 — Página de Papelera",
-    summary: "Nueva sección /papelera (admin) para ver, restaurar o purgar registros borrados, con etiqueta, fecha y usuario.",
-    description: "Página Papelera con selector de tabla y acciones Restaurar/Purgar. list_trash ampliada para devolver label legible y email del usuario. APP_VERSION 8.160.0."
-  },
+
 ];
 
 /** Deduplica por version conservando la primera ocurrencia (recentChangelog gana). */
