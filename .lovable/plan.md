@@ -1,91 +1,201 @@
-# Plan — Endurecer Libre Carga para operación diaria
+# Plan detallado — Ola A: Resiliencia de datos
 
-El proyecto ya tiene cimientos sólidos (RLS multi-tenant, capa hooks/services/lib, CI con knip + tests, controllers de página, auditoría arquitectónica, scan de seguridad limpio). Lo que sigue ahora **no es seguir refactorizando**, sino cerrar los huecos típicos cuando un MVP empieza a soportar dinero y operación real.
-
-Lo agrupo en 6 frentes, en orden de impacto. Cada frente se puede ejecutar como una mini-ola independiente.
+Objetivo: que ningún error humano, doble-click o cambio de catálogo pueda corromper o perder datos operativos/financieros. Cinco entregables independientes, en orden de menor a mayor riesgo de regresión. Cada entregable es una mini-versión `8.x.y` con su migración, su código y sus tests.
 
 ---
 
-## 1. Resiliencia de datos (lo más urgente)
+## A.1 — Constraints duros y FKs faltantes (versión 8.157.0)
 
-Si mañana alguien borra un embarque por error o se corrompe una factura, hoy no hay forma limpia de recuperar sin abrir Supabase a mano.
+**Por qué primero:** es el cambio más barato, sin UI, y descubre datos inconsistentes que las siguientes etapas darían por buenos.
 
-- **Backups verificados**: dejar documentado en `docs/operations.md` cómo restaurar un punto en el tiempo desde Lovable Cloud, y cada mes correr un *restore drill* en una org de staging.
-- **Soft delete + bitácora de borrados**: hoy `eliminar_embarque_cascada` borra duro. Cambiar a `deleted_at timestamptz` en `embarques`, `cotizaciones`, `proformas`, `facturas`, `clientes`, con RLS que oculte filas con `deleted_at is not null` salvo a `admin/super_admin`. Pantalla "Papelera" con restore.
-- **Idempotencia en mutaciones críticas**: facturación y consolidación de proformas deben ser idempotentes (cliente envía `request_id` UUID; la RPC lo guarda y rechaza duplicados). Evita doble factura por doble-click o reintento de red.
-- **Constraints duros que faltan**: FKs reales hacia `clientes`, `embarques`, `cotizaciones`, `organizations` con `ON DELETE RESTRICT` en lugar de orfandad silenciosa; `CHECK` o trigger para `eta >= etd`, `total = subtotal + iva`, monedas válidas.
-- **Snapshots financieros inmutables**: cuando una factura se emite, congelar tipo de cambio, IVA y conceptos en un JSONB `snapshot_emision`. Hoy si cambia la tasa o el catálogo, una factura ya emitida puede recalcularse incorrectamente al releerla.
+**Migración SQL:**
 
-## 2. Observabilidad y operación
+1. Auditoría previa (sólo lectura, antes de migrar):
+   ```sql
+   -- huérfanos por dominio
+   select 'embarques sin cliente' as tipo, count(*) from embarques e
+     left join clientes c on c.id = e.cliente_id where c.id is null;
+   select 'conceptos_costo sin embarque', count(*) from conceptos_costo cc
+     left join embarques e on e.id = cc.embarque_id where e.id is null;
+   -- coherencia financiera
+   select count(*) from facturas where round(subtotal + iva, 2) <> round(total, 2);
+   select count(*) from embarques where eta is not null and etd is not null and eta < etd;
+   ```
+   Si aparecen filas, se corrigen con `supabase--insert` antes de añadir el constraint (no se descartan).
 
-Hoy si algo truena en producción te enteras porque te avisa el operador.
+2. FKs con `ON DELETE RESTRICT` donde hoy hay UUID suelto:
+   - `embarques.cliente_id` → `clientes.id`
+   - `embarques.cotizacion_id` → `cotizaciones.id` (`ON DELETE SET NULL`)
+   - `conceptos_costo.embarque_id` → `embarques.id`
+   - `conceptos_costo.proveedor_id` → `proveedores.id` (`ON DELETE SET NULL`)
+   - `conceptos_venta.embarque_id` → `embarques.id`
+   - `conceptos_venta.proforma_id` → `proformas.id` (`ON DELETE SET NULL`)
+   - `documentos_embarque.embarque_id`, `notas_embarque.embarque_id`, `eventos_embarque.embarque_id` → `embarques.id` (`ON DELETE CASCADE`)
+   - `facturas.embarque_id` → `embarques.id` (`RESTRICT`), `facturas.cliente_id` → `clientes.id` (`RESTRICT`), `facturas.proforma_id` → `proformas.id` (`SET NULL`)
+   - `proformas.cliente_id`, `proformas.embarque_id`
+   - `contactos_cliente.cliente_id` → `clientes.id` (`CASCADE`)
+   - `client_users.cliente_id` → `clientes.id` (`CASCADE`)
+   - `organization_members.organization_id` → `organizations.id` (`CASCADE`)
+   - `cotizacion_costos.cotizacion_id` → `cotizaciones.id` (`CASCADE`)
+   - `auditoria_revisiones.embarque_id` → `embarques.id` (`CASCADE`); `auditoria_comentarios.revision_id` → `auditoria_revisiones.id` (`CASCADE`)
 
-- **Error tracking real**: integrar Sentry (free tier) en `main.tsx` y en todas las edge functions. Captura stack + breadcrumbs + `organization_id` + `user_id`.
-- **Logs estructurados en edge functions**: helper en `_shared/log.ts` que emita JSON con `level`, `fn`, `org_id`, `latency_ms`. Reemplazar `console.log` libres.
-- **Health/status interno**: página `/admin/sistema` para super-admin con: última corrida del cron de auditoría, último snapshot, último tipo de cambio refrescado, conteo de errores Sentry últimas 24h, espacio usado en Storage por org.
-- **Métricas de negocio expuestas**: KPIs operativos (embarques abiertos por estado, edad promedio de demoras, % proformas sin facturar > 7 días) ya existen — agregar alertas: si la métrica cruza umbral, mandar correo desde una edge function diaria.
-- **Auditoría de cambios sensibles**: trigger genérico `log_table_change()` que grabe `before/after` en `bitacora_actividad` para `facturas`, `proformas`, `conceptos_costo`, `embarques.estado`. Hoy la bitácora captura acciones de UI; faltan los UPDATE directos.
+3. CHECKs de dominio (cuando no rompen históricos):
+   - `embarques`: `check (eta is null or etd is null or eta >= etd)`
+   - `embarques`: `check (peso_kg >= 0 and volumen_m3 >= 0 and piezas >= 0)`
+   - `facturas`: `check (subtotal >= 0 and iva >= 0 and total >= 0)`
+   - `conceptos_costo`: `check (monto >= 0)`
+   - `conceptos_venta`: `check (precio_unitario >= 0 and cantidad > 0)`
+   - `clientes`: `check (dias_credito is null or dias_credito >= 0)`
 
-## 3. Seguridad endurecida
+4. Índices que faltan y duelen en producción:
+   - `idx_embarques_org_estado_etd (organization_id, estado, etd desc)`
+   - `idx_embarques_cliente_etd (cliente_id, etd desc)`
+   - `idx_facturas_org_estado_fecha (organization_id, estado, fecha_emision desc)`
+   - `idx_proformas_org_estado_emision (organization_id, estado_proforma, fecha_emision desc)`
+   - `idx_conceptos_costo_embarque (embarque_id)` y `_venta (embarque_id)`
+   - `idx_bitacora_org_created (organization_id, created_at desc)`
 
-El scan está limpio, pero quedan capas que aún no se aprietan.
+**Código:** ninguno (sólo schema). Verificar con `tsc --noEmit` y `bun run test` por si algún test inserta filas que violan los nuevos checks.
 
-- **Activar Password HIBP** en Auth (Lovable Cloud → Users → Auth Settings).
-- **MFA obligatorio para `admin` y `super_admin**`: enrolamiento TOTP en pantalla de perfil; bloquear acciones sensibles si el rol es admin y no tiene MFA.
-- **Política de contraseñas + expiración de sesiones**: min 12 chars, 12h de sesión activa, refresh 7 días.
-- **Storage policies por path**: hoy se asume convención `<dominio>/<org_id>/...`. Agregar policies que **exijan** que el primer segmento del path coincida con una org del usuario; sin eso, un cliente con upload de portal podría escribir en otra org si el path es manipulable.
-- **Edge functions admin → rate-limit suave**: tabla `rate_limit(user_id, fn, bucket_ts)` + check en `create-user`, `delete-user`, `invite-client-user` (máx 30/min por usuario). Previene abuso si una cookie se filtra.
-- **Rotación de la llave service-role** documentada en `docs/security-checklist.md` (paso anual).
-- **CSP + headers**: si publican en custom domain, añadir `Content-Security-Policy`, `X-Frame-Options: DENY`, `Referrer-Policy: strict-origin-when-cross-origin` vía Lovable publish settings o meta-tags.
-
-## 4. Calidad de datos en captura
-
-La operación diaria genera basura si la UI no fuerza el dato correcto.
-
-- **Zod en TODAS las mutaciones**: hoy hay validación en el wizard de embarque y cotización; falta endurecer Clientes (RFC con regex SAT), Proveedores, Contactos, Conceptos. Una `domain/validators.ts` con `rfcSchema`, `phoneSchema` (libphonenumber), `emailSchema`.
-- **Catálogo único de incoterms, modos, monedas, tipos de carga**: ya existe parcial — auditar que ningún `<input>` libre permita un valor fuera del enum cuando el backend tiene el enum.
-- **Deduplicación de clientes y proveedores en captura**: el `NuevoClienteDialog` debe consultar por RFC antes de crear y avisar "Ya existe un cliente con este RFC en tu organización".
-- **Validación de coherencia**: triggers SQL que rechacen `factura.total <> subtotal + iva` o `embarque.eta < embarque.etd`.
-
-## 5. Procesos y permisos de equipo
-
-Con un equipo real entran y salen personas.
-
-- **Onboarding/offboarding de usuarios**: checklist en `docs/operations.md`. UI: al desactivar un usuario, reasignar embarques abiertos a otro operador (modal con dropdown).
-- **Roles más finos por módulo**: hoy `admin/operador/viewer/cliente`. Agregar `facturador` (sólo facturación + lectura del resto) y `comercial` (cotizaciones + clientes, sin operación ni facturación). Implementable como nuevos miembros del enum `app_role` + ajuste de policies con `has_role(...)`.
-- **Aprobaciones de doble llave**: emisión de factura > $X o cancelación de proforma consolidada requiere segundo `admin` que confirme (tabla `aprobaciones_pendientes`, RPC `solicitar_aprobacion` + `aprobar`).
-- **Notificaciones in-app**: campana en sidebar (tabla `notificaciones(user_id, tipo, payload, leido_at)`) — hoy las alertas viven en badges pero no hay historial.
-
-## 6. Continuidad técnica
-
-Para que esto siga vivo 2 años, no 2 meses.
-
-- **CI más estricto**: subir `lint:unused:strict` a bloqueante (ya pasa sin findings). Agregar `tsc --noEmit` como job separado y coverage threshold mínimo 60% en `lib/` y `services/`.
-- **Migraciones revisables**: convención de nombre `YYYYMMDD_HHMMSS_<verbo>_<tabla>.sql` (ya implícita) + un `docs/migrations-log.md` con racional de cada migración no trivial.
-- **Versionado SemVer real**: hoy se bumpea con cada cambio en `appVersion.ts`. Mantenerlo, pero etiquetar releases (`v8.x.y` → tag git por la integración) y publicar `CHANGELOG.md` derivado de `changelogData.ts` para auditoría externa.
-- **Documentación viva**: `docs/operations.md` (runbooks: cómo restaurar, cómo crear org, cómo desactivar usuario, cómo emitir factura manual si la RPC falla), `docs/onboarding.md` para nuevos devs.
-- **Plan de carga**: probar con un dataset de 10k embarques + 100k conceptos en una org de staging. Hoy hay paginación servidor en listados, pero queda confirmar que reportes y operaciones siguen <2s con esa escala.
+**Tests:** snapshot de los `pg_indexes` y `pg_constraint` nuevos en `docs/migrations-log.md`.
 
 ---
 
-## Sugerencia de secuencia (4–6 olas)
+## A.2 — Soft delete con papelera (versión 8.158.0)
 
-1. **Ola A — Resiliencia** (frente 1 entero): soft-delete + snapshots inmutables + FKs/CHECKs + idempotencia. Es lo que más duele si pasa y lo que menos visible está hoy.
-2. **Ola B — Observabilidad** (Sentry + logs estructurados + `/admin/sistema` + auditoría de UPDATE).
-3. **Ola C — Seguridad de capa Auth** (HIBP, MFA admins, storage policies por path, rate-limit).
-4. **Ola D — Calidad de captura** (Zod global + deduplicación + triggers de coherencia).
-5. **Ola E — Procesos** (roles finos, aprobaciones, notificaciones, runbooks).
-6. **Ola F — Continuidad** (CI estricto, prueba de carga, docs operativos).
+**Tablas con `deleted_at`:** `embarques`, `cotizaciones`, `proformas`, `facturas`, `clientes`, `proveedores`, `contactos_cliente`, `conceptos_costo`, `conceptos_venta`, `documentos_embarque`.
+
+**Migración:**
+
+1. `alter table <t> add column deleted_at timestamptz null;`
+2. `alter table <t> add column deleted_by uuid null;`
+3. Índice parcial: `create index idx_<t>_alive on <t>(organization_id) where deleted_at is null;`
+4. Reescribir las policies `SELECT` de cada tabla para excluir filas borradas salvo `super_admin` o `admin` en modo papelera (parámetro `?papelera=true`):
+   ```sql
+   using (
+     ((organization_id = current_user_org_id()) or has_role(auth.uid(), 'super_admin'))
+     and (deleted_at is null or has_role(auth.uid(), 'admin') or has_role(auth.uid(), 'super_admin'))
+   )
+   ```
+5. RPCs nuevas (atómicas, `security definer`):
+   - `soft_delete_<entidad>(_id uuid, _motivo text)` → set `deleted_at = now(), deleted_by = auth.uid()`, registra en `bitacora_actividad` (módulo `papelera`, acción `borrar_<entidad>`).
+   - `restaurar_<entidad>(_id uuid)` → set `deleted_at = null`, registra `restaurar_<entidad>`.
+   - `purgar_<entidad>(_id uuid)` → hard delete real, sólo `super_admin`, registra `purgar_<entidad>`.
+6. Reemplazar `eliminar_embarque_cascada` por `soft_delete_embarque` que también marca documentos/notas/eventos/conceptos hijos.
+
+**Código frontend:**
+
+- `src/services/papelera/index.ts` (nuevo): `softDelete`, `restaurar`, `purgar`, `listarPapelera(entidad, page, pageSize)`.
+- `src/hooks/papelera/index.ts` con `usePapelera`, `useRestaurar`, `usePurgar` (invalida la lista del dominio).
+- Hooks de mutación existentes (`useEmbarques.useDeleteEmbarque`, `useDeleteCliente`, `useDeleteCotizacion`, `useDeleteFactura`, `useDeleteProforma`, `useDeleteProveedor`) cambian a llamar `softDelete`. El doble-confirm "ELIMINAR" se mantiene (mem `data-safety-confirmations`).
+- Página nueva `src/pages/admin/Papelera.tsx` con tabs por entidad, columnas `nombre`, `eliminado_por`, `eliminado_at`, acciones "Restaurar" y "Purgar definitivo" (sólo super_admin, doble confirmación con typing "PURGAR").
+- Item de sidebar para admin: "Papelera" bajo Administración.
+- Filtros de listados: por defecto excluyen borrados. Las queries existentes ya no traen `deleted_at not null` porque la RLS lo filtra; no se requiere cambio en services salvo añadir la columna a los `SELECT` cuando se navegue desde papelera.
+
+**Tests:** unitarios en `papelera.service.test.ts` mockeando supabase; integración en una org de staging con embarque + factura asociada (debe bloquear borrado si tiene factura emitida, regla negocio).
 
 ---
 
-## Notas técnicas
+## A.3 — Idempotencia en mutaciones críticas (versión 8.159.0)
 
-- Cambios de schema van por `supabase--migration`; muchos requieren ventana de mantenimiento corta (soft-delete migra datos existentes con `deleted_at = null` por default → sin downtime).
-- Sentry y MFA son configurables sin riesgo de regresión; se pueden empezar mañana.
-- Los frentes 1 y 4 introducen migraciones que deben probarse en staging antes de prod.
-- Todo respeta las reglas Power of 10 y el flujo hooks → services → Supabase ya establecido.
+**Alcance:** RPCs `crear_proforma_con_conceptos`, `consolidar_proformas`, `crear_factura_desde_proforma`, `crear_embarque_con_conceptos`, `actualizar_estado_embarque`.
 
-¿Quieres que arranque por la **Ola A (resiliencia)**, o prefieres priorizar otro frente primero? También puedo desglosar cualquier ola en tareas atómicas listas para implementar.
+**Migración:**
 
-haz un plan detallado solo para la OLA A
+1. Tabla nueva:
+   ```sql
+   create table public.idempotency_keys (
+     key uuid primary key,
+     organization_id uuid not null,
+     user_id uuid not null,
+     fn text not null,
+     response_id uuid,
+     created_at timestamptz default now()
+   );
+   create index idx_idem_user_created on idempotency_keys(user_id, created_at desc);
+   -- TTL: trigger o cron que purge >7 días
+   ```
+2. Cada RPC crítica recibe parámetro `_request_id uuid` y al inicio:
+   ```sql
+   insert into idempotency_keys(key, organization_id, user_id, fn)
+   values (_request_id, current_user_org_id(), auth.uid(), '<fn>')
+   on conflict (key) do nothing
+   returning 1;
+   if not found then
+     return (select response_id from idempotency_keys where key = _request_id);
+   end if;
+   ```
+3. Al terminar, `update idempotency_keys set response_id = <id_nuevo> where key = _request_id`.
+4. Cron `purge_idempotency_keys_daily` borra >7 días.
+
+**Código frontend:**
+
+- `src/lib/idempotency.ts` (nuevo): `newRequestId(): string` (crypto.randomUUID).
+- Hooks de mutación generan `requestId` con `useRef` al montar el formulario y lo reusan en reintentos; lo resetean tras `onSuccess`.
+- Services correspondientes incluyen el `_request_id` en cada `.rpc(...)`.
+
+**Tests:** unit tests del hook simulan doble dispatch consecutivo y verifican una sola creación (mock de RPC que registra calls).
+
+---
+
+## A.4 — Snapshots financieros inmutables (versión 8.160.0)
+
+**Tablas afectadas:** `facturas`, `proformas`, `proforma_conceptos_consolidados`, `conceptos_venta` (los que tributen).
+
+**Migración:**
+
+1. `alter table facturas add column snapshot_emision jsonb null;`
+2. `alter table proformas add column snapshot_emision jsonb null;`
+3. Trigger `congelar_factura_al_emitir` antes de pasar a estado `Emitida` o `Pagada`:
+   ```sql
+   new.snapshot_emision := jsonb_build_object(
+     'tasa_iva', new.iva / nullif(new.subtotal, 0),
+     'tipo_cambio', new.tipo_cambio,
+     'conceptos', (select jsonb_agg(row_to_json(cf)) from conceptos_factura cf where cf.factura_id = new.id),
+     'cliente_snapshot', (select jsonb_build_object('nombre', nombre, 'rfc', rfc, 'direccion', direccion) from clientes where id = new.cliente_id),
+     'organizacion_snapshot', (select jsonb_build_object('nombre', nombre, 'rfc', rfc) from organizations where id = new.organization_id),
+     'congelado_at', now()
+   );
+   ```
+4. Trigger equivalente en `proformas` cuando `estado_proforma` pasa a `aprobada` o `facturada`.
+5. Trigger `bloquear_modificacion_factura_emitida`: si `OLD.snapshot_emision is not null` y cambia algo distinto a `factura_pdf_url`, `factura_xml_url`, `notas`, lanza `RAISE EXCEPTION 'factura_inmutable'`.
+
+**Código frontend:**
+
+- `services/facturacion/queries.ts`: nueva función `fetchFacturaSnapshot(id)` para PDF y reimpresión.
+- `generators/facturaPdf.ts` (o `proformaPdf.ts`): cuando `snapshot_emision` existe, generar el PDF desde el snapshot — nunca desde la fila viva. Así el PDF del 2024 sigue saliendo con la tasa del 2024 aunque cambie IVA hoy.
+- Mensajes de error: añadir `factura_inmutable` al `errorCatalog` con texto "Esta factura está emitida y no puede modificarse. Para corregir, emite una nota de crédito.".
+
+**Tests:** `lib/financial/__tests__/snapshot.test.ts` verifica que dado un snapshot, el cálculo de re-render produce los mismos totales aunque la tasa global cambie.
+
+---
+
+## A.5 — Runbook de backup/restore y restore drill (versión 8.161.0)
+
+Documentación operacional, no código.
+
+**Entregables:**
+
+1. `docs/operations.md` con secciones:
+   - **Restore point-in-time** desde Lovable Cloud paso a paso (con screenshots por ahora descritos en texto).
+   - **Restore drill mensual** (script SQL de verificación que cuenta filas por tabla post-restore y las compara con `auditoria_snapshots`).
+   - **Emisión de factura manual** si la RPC falla (insertar fila + concepto + congelar snapshot a mano, con SQL listo).
+   - **Desactivar usuario y reasignar embarques** (modal en UI + query SQL de respaldo).
+   - **Crear nueva organización** (UI super-admin + verificación de seed mínimo).
+2. `scripts/db/health-check.sql`: query única que devuelve por tabla `n_filas`, `n_huérfanas`, `n_borradas_logicas`, `tamaño_mb`. Útil tras un restore.
+3. Item en `Audit Pendings` (memoria) marcando lo que queda fuera de esta ola.
+
+---
+
+## Cómo se entrega
+
+- Una versión por sub-entregable (A.1 → 8.157.0, A.2 → 8.158.0, …) con su entrada en `Changelog.tsx`, `chunk0.ts`, `changelogData.ts` y bump en `appVersion.ts`.
+- Cada migración va sola por `supabase--migration`, sin combinarse con código de UI en el mismo paso (regla del sistema sobre migraciones + tipos).
+- Verificación obligatoria en cada paso: `bunx tsc --noEmit`, `bun run test`, `bun run build`, `bun run lint:unused`. Sólo cierro la sub-versión si los cuatro pasan.
+- Tras A.2 y A.4 se actualizan las memorias correspondientes (`mem://features/data-safety-confirmations` añade soft-delete, nueva `mem://features/snapshots-financieros`).
+
+## Orden de implementación inmediato
+
+Arranco con **A.1** porque es 100% schema, no toca UI y desbloquea ver datos inconsistentes ya existentes antes de meter soft-delete. Si en la auditoría previa aparecen huérfanos, los reporto y pido criterio antes de borrar/reasignar.
+
+¿Procedo con A.1 ahora mismo o quieres revisar/ajustar algo del alcance?
