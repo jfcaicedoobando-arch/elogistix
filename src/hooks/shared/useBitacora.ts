@@ -3,7 +3,6 @@ import { useAuth } from "@/contexts/AuthContext";
 import { queryKeys } from "@/lib/query";
 import {
   fetchBitacora,
-  fetchActividadReciente,
   insertBitacora,
   type EntradaBitacora,
   type FiltrosBitacora,
