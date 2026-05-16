@@ -2,6 +2,14 @@ import type { ChangelogEntry } from "../../../changelogData";
 
 export const chunk0: ChangelogEntry[] = [
   {
+    version: "8.169.0",
+    date: "2026-05-16",
+    type: "minor",
+    title: "Ola A.5 — Runbook de backup/restore y health-check",
+    summary: "Documentación operativa para PITR, export lógico, simulacro mensual, procedimientos manuales (factura, reasignación, nueva org) y script SQL de verificación diaria.",
+    description: "Nuevo docs/operations.md con: (§1) modelo de respaldos (snapshot diario 7d, WAL continuo PITR ≤5min RPO, snapshot lógico auditoria-snapshot-daily 90d, export manual pre-migración); (§2) rutina diaria de verificación con scripts/db/health-check.sql + checklist de auditoria_snapshots; (§3) procedimiento Point-In-Time Restore paso a paso (congelar escrituras → snapshot defensivo → PITR Cloud → esperar ACTIVE_HEALTHY → health-check → reabrir → bitácora); (§4) export lógico con pg_dump + restore selectivo a staging; (§5) restore drill mensual obligatorio en Test con RTO objetivo 30min; (§6) procedimientos manuales SQL para emisión de factura manual respetando snapshot inmutable de A.4, desactivar usuario reasignando embarques, crear nueva organización con seed mínimo; (§7) tabla de escalamiento por síntoma; (§8) política de mantenimiento del runbook. Nuevo scripts/db/health-check.sql que devuelve por tabla operativa (embarques, cotizaciones, proformas, facturas, conceptos_*, documentos_embarque, clientes, proveedores, bitacora) n_filas, n_borradas_logicas, n_huerfanas, tamano_mb y un semáforo de estado; además verifica que cada organización activa tenga snapshot de auditoría del día. APP_VERSION 8.169.0."
+  },
+  {
     version: "8.168.0",
     date: "2026-05-16",
     type: "minor",

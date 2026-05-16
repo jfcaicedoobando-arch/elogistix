@@ -22,6 +22,14 @@ export interface ChangelogEntry {
  */
 export const recentChangelog: ChangelogEntry[] = [
   {
+    version: "8.169.0",
+    date: "2026-05-16",
+    type: "minor",
+    title: "Ola A.5 — Runbook de backup/restore y health-check",
+    summary: "Documentación operativa para PITR, simulacro mensual y script SQL de verificación diaria de la base.",
+    description: "Nuevo docs/operations.md con modelo de respaldos (PITR ≤5min RPO, snapshot diario 7d, snapshot lógico 90d), procedimiento paso a paso de Point-In-Time Restore, restore drill mensual obligatorio, y procedimientos manuales SQL (factura manual respetando snapshot A.4, reasignación de operador, alta de organización). Nuevo scripts/db/health-check.sql con conteos, huérfanas, soft-deleted y semáforo por tabla + verificación de auditoria_snapshots del día. APP_VERSION 8.169.0."
+  },
+  {
     version: "8.168.0",
     date: "2026-05-16",
     type: "minor",
