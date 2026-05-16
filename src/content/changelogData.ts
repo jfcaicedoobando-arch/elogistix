@@ -22,6 +22,14 @@ export interface ChangelogEntry {
  */
 export const recentChangelog: ChangelogEntry[] = [
   {
+    version: "8.155.0",
+    date: "2026-05-16",
+    type: "minor",
+    title: "Seguridad — endurecimiento multi-tenant en storage, user_roles y edge functions",
+    summary: "Bucket documentos exige path con organization_id, user_roles deja de filtrar roles cross-tenant a admins, parse-csf requiere JWT y valida tipo/tamaño, y create/list/delete-user usan CORS con whitelist.",
+    description: "documentos: políticas de upload/update/delete ahora exigen que la primera carpeta del path sea el organization_id del usuario. user_roles: la rama de admin en SELECT se restringe a usuarios que comparten organización con el caller; super_admin sigue viendo todo. parse-csf: ahora requiere JWT (authenticate), valida application/pdf y tope de 5 MB, y usa CORS con whitelist; el cliente bloquea la llamada si no hay sesión. create-user / list-users / delete-user: handlePreflightStrict + buildCors propagado en todas las respuestas.",
+  },
+  {
     version: "8.154.0",
     date: "2026-05-16",
     type: "minor",

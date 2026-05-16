@@ -17,13 +17,16 @@ export async function parseCsf(file: File): Promise<CsfParsedData> {
   formData.append("file", file);
 
   const { data: { session } } = await supabase.auth.getSession();
+  if (!session?.access_token) {
+    throw new Error("Debes iniciar sesión para procesar la Constancia de Situación Fiscal");
+  }
 
   const res = await fetch(
     `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/parse-csf`,
     {
       method: "POST",
       headers: {
-        Authorization: `Bearer ${session?.access_token ?? import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+        Authorization: `Bearer ${session.access_token}`,
       },
       body: formData,
     }

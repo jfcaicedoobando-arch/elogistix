@@ -1,23 +1,23 @@
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import { handlePreflight } from "../_shared/cors.ts";
+import { handlePreflightStrict, buildCors } from "../_shared/cors.ts";
 import { jsonResponse, errorResponse } from "../_shared/response.ts";
 import { authenticate, checkAdminAccess } from "../_shared/auth.ts";
 
 Deno.serve(async (req) => {
-  const preflight = handlePreflight(req);
+  const preflight = handlePreflightStrict(req);
   if (preflight) return preflight;
+  const cors = buildCors(req);
 
   try {
     const { userId: callerId, adminClient } = await authenticate(req);
     const { isGlobalAdmin, orgId: callerOrgId } = await checkAdminAccess(adminClient, callerId);
 
     if (!isGlobalAdmin && !callerOrgId) {
-      return errorResponse("Solo administradores pueden crear usuarios", 403);
+      return errorResponse("Solo administradores pueden crear usuarios", 403, cors);
     }
 
     const { email, password, role } = await req.json();
-    if (!email || !password) return errorResponse("Email y contraseña son requeridos", 400);
-    if (password.length < 6) return errorResponse("La contraseña debe tener al menos 6 caracteres", 400);
+    if (!email || !password) return errorResponse("Email y contraseña son requeridos", 400, cors);
+    if (password.length < 6) return errorResponse("La contraseña debe tener al menos 6 caracteres", 400, cors);
 
     const validRoles = ["admin", "operador", "viewer"];
     const selectedRole = validRoles.includes(role) ? role : "viewer";
@@ -27,7 +27,7 @@ Deno.serve(async (req) => {
       password,
       email_confirm: true,
     });
-    if (createError) return errorResponse(createError.message, 400);
+    if (createError) return errorResponse(createError.message, 400, cors);
 
     if (selectedRole !== "viewer") {
       await adminClient.from("user_roles").update({ role: selectedRole }).eq("user_id", newUser.user.id);
@@ -41,11 +41,11 @@ Deno.serve(async (req) => {
       });
     }
 
-    return jsonResponse({ user: { id: newUser.user.id, email: newUser.user.email } });
+    return jsonResponse({ user: { id: newUser.user.id, email: newUser.user.email } }, 200, cors);
   } catch (err) {
     const msg = err instanceof Error ? err.message : "Error desconocido";
     const [code, ...rest] = msg.split(":");
     const status = /^\d+$/.test(code) ? parseInt(code) : 500;
-    return errorResponse(rest.join(":") || msg, status);
+    return errorResponse(rest.join(":") || msg, status, cors);
   }
 });

@@ -2,28 +2,45 @@
  * parse-csf — Extrae datos fiscales de una Constancia de Situación Fiscal (PDF).
  *
  * Seguridad:
+ *  - Requiere JWT válido (`authenticate`) para evitar abuso de créditos AI por
+ *    usuarios anónimos.
+ *  - Valida `file.type === 'application/pdf'` y un tamaño máximo de 5 MB antes
+ *    de reenviar al gateway.
  *  - El archivo se reenvía como base64 al Lovable AI Gateway (Gemini) y se
  *    recibe JSON estructurado vía tool-calling. **No se parsea XML ni se
  *    deserializa contenido del PDF localmente**, por lo tanto NO hay
  *    superficie para XXE/XEE.
- *  - Endpoint público (verify_jwt = false) por compatibilidad con el wizard
- *    de alta de cliente; no escribe en BD ni expone datos de otros tenants.
  */
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { handlePreflight } from "../_shared/cors.ts";
+import { handlePreflightStrict, buildCors } from "../_shared/cors.ts";
 import { jsonResponse, errorResponse } from "../_shared/response.ts";
+import { authenticate } from "../_shared/auth.ts";
+
+const MAX_BYTES = 5 * 1024 * 1024; // 5 MB
 
 serve(async (req) => {
-  const preflight = handlePreflight(req);
+  const preflight = handlePreflightStrict(req);
   if (preflight) return preflight;
+  const cors = buildCors(req);
 
   try {
+    // Require authenticated user — protege créditos del AI Gateway.
+    await authenticate(req);
+
+    // @ts-expect-error Deno global
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
 
     const formData = await req.formData();
     const file = formData.get("file") as File | null;
-    if (!file) return errorResponse("No se envió archivo PDF", 400);
+    if (!file) return errorResponse("No se envió archivo PDF", 400, cors);
+
+    if (file.type !== "application/pdf") {
+      return errorResponse("Solo se aceptan archivos PDF", 400, cors);
+    }
+    if (file.size > MAX_BYTES) {
+      return errorResponse("El archivo excede el límite de 5 MB", 413, cors);
+    }
 
     const arrayBuffer = await file.arrayBuffer();
     const base64 = btoa(String.fromCharCode(...new Uint8Array(arrayBuffer)));
@@ -83,23 +100,25 @@ Si no encuentras un campo, devuelve cadena vacía. No inventes datos.`;
     });
 
     if (!response.ok) {
-      if (response.status === 429) return errorResponse("Límite de solicitudes excedido, intenta en unos momentos.", 429);
-      if (response.status === 402) return errorResponse("Créditos insuficientes para procesamiento AI.", 402);
+      if (response.status === 429) return errorResponse("Límite de solicitudes excedido, intenta en unos momentos.", 429, cors);
+      if (response.status === 402) return errorResponse("Créditos insuficientes para procesamiento AI.", 402, cors);
       const errorText = await response.text();
       console.error("AI gateway error:", response.status, errorText);
-      return errorResponse("Error al procesar el documento", 500);
+      return errorResponse("Error al procesar el documento", 500, cors);
     }
 
     const aiResult = await response.json();
     const toolCall = aiResult.choices?.[0]?.message?.tool_calls?.[0];
     if (!toolCall?.function?.arguments) {
-      return errorResponse("No se pudieron extraer los datos del documento", 422);
+      return errorResponse("No se pudieron extraer los datos del documento", 422, cors);
     }
 
-    return jsonResponse(JSON.parse(toolCall.function.arguments));
+    return jsonResponse(JSON.parse(toolCall.function.arguments), 200, cors);
   } catch (error) {
     console.error("parse-csf error:", error);
     const message = error instanceof Error ? error.message : "Error desconocido";
-    return errorResponse(message, 500);
+    const [code, ...rest] = message.split(":");
+    const status = /^\d+$/.test(code) ? parseInt(code) : 500;
+    return errorResponse(rest.join(":") || message, status, cors);
   }
 });

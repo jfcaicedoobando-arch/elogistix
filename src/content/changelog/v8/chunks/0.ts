@@ -2,6 +2,14 @@ import type { ChangelogEntry } from "../../../changelogData";
 
 export const chunk0: ChangelogEntry[] = [
   {
+    version: "8.155.0",
+    date: "2026-05-16",
+    type: "minor",
+    title: "Seguridad — endurecimiento multi-tenant en storage, user_roles y edge functions",
+    summary: "Bucket documentos exige path con organization_id, user_roles deja de filtrar roles cross-tenant a admins, parse-csf requiere JWT y valida tipo/tamaño, y create/list/delete-user usan CORS con whitelist.",
+    description: "1) storage.objects: políticas Admin/operador upload/update/delete documentos ahora exigen (storage.foldername(name))[1] = current_user_org_id()::text, igual que el bucket facturas. 2) public.user_roles: política SELECT 'Users can view own roles' restringe la rama de admin a usuarios que comparten organization_member con el caller (vía organization_members JOIN); super_admin mantiene acceso global, viewers/operadores siguen viendo solo el propio. 3) supabase/functions/parse-csf: añadido authenticate(req) (JWT obligatorio), validación file.type === 'application/pdf' y MAX_BYTES = 5 MB, con respuestas envueltas en buildCors. Eliminado bloque [functions.parse-csf] verify_jwt = false (la validación vive en código). src/services/csf bloquea la llamada si no hay sesión activa. 4) supabase/functions/create-user, delete-user, list-users: handlePreflight wildcard reemplazado por handlePreflightStrict + buildCors(req); todos los jsonResponse/errorResponse propagan el header con whitelist (mismo patrón que invite-client-user). APP_VERSION 8.155.0.",
+  },
+  {
     version: "8.154.0",
     date: "2026-05-16",
     type: "minor",
