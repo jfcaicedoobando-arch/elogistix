@@ -22,6 +22,14 @@ export interface ChangelogEntry {
  */
 export const recentChangelog: ChangelogEntry[] = [
   {
+    version: "8.182.0",
+    date: "2026-05-17",
+    type: "minor",
+    title: "Bloque 2.2 — Validación zod en mutaciones",
+    summary: "Nuevos schemas zod en cliente, cotización, embarque y notas validan los payloads antes de tocar la base; parseOrThrow surface errores legibles.",
+    description: "src/lib/validation/mutationSchemas.ts centraliza la última red de seguridad antes de los inserts/updates: createCliente, updateCliente, crearCotizacion, crearEmbarqueRpc, insertarNotaEmbarque e insertarNotaCambioEstado pasan por parseOrThrow. 15 tests nuevos verdes. APP_VERSION 8.182.0."
+  },
+  {
     version: "8.181.0",
     date: "2026-05-17",
     type: "minor",
@@ -93,54 +101,6 @@ export const recentChangelog: ChangelogEntry[] = [
     summary: "Nuevas RPCs embarques_listado, facturas_listado y reportes_resumen consolidan filas + conteos + KPIs en una sola llamada.",
     description: "embarques_listado devuelve filas paginadas + costos/docs agregados + total_count en un solo round-trip. facturas_listado pagina server-side con proforma_numero embebido. reportes_resumen calcula rentabilidad y KPIs en BD. Hooks migrados (useEmbarquesPageState/Controller, useRentabilidadClientes, useFacturas) eliminan la llamada secundaria a embarques_list_extras y la agregación client-side. APP_VERSION 8.173.0."
   },
-  {
-    version: "8.172.0",
-    date: "2026-05-16",
-    type: "minor",
-    title: "Ola B.2 — Página /admin/diagnostico",
-    summary: "Nueva vista para super_admin y admin de organización que lista y filtra los registros de app_logs.",
-    description: "Tabla paginada server-side con filtros por rango de fechas, función, nivel y búsqueda parcial en mensaje. Cada fila muestra timestamp, nivel, fn, status, latencia y request_id; el payload jsonb se despliega bajo demanda. Entrada Diagnóstico añadida al AdminSidebar. RLS de app_logs delimita el alcance automáticamente. APP_VERSION 8.172.0."
-  },
-  {
-    version: "8.170.0",
-    date: "2026-05-16",
-    type: "patch",
-    title: "Script ci:local para validar antes de pushear",
-    description: "Nuevo comando 'bun run ci:local' que ejecuta lint, knip, tests y build en secuencia, replicando el pipeline de GitHub Actions para detectar fallos de CI antes del push.",
-  },
-  {
-    version: "8.169.0",
-    date: "2026-05-16",
-    type: "minor",
-    title: "Ola A.5 — Runbook de backup/restore y health-check",
-    summary: "Documentación operativa para PITR, simulacro mensual y script SQL de verificación diaria de la base.",
-    description: "Nuevo docs/operations.md con modelo de respaldos (PITR ≤5min RPO, snapshot diario 7d, snapshot lógico 90d), procedimiento paso a paso de Point-In-Time Restore, restore drill mensual obligatorio, y procedimientos manuales SQL (factura manual respetando snapshot A.4, reasignación de operador, alta de organización). Nuevo scripts/db/health-check.sql con conteos, huérfanas, soft-deleted y semáforo por tabla + verificación de auditoria_snapshots del día. APP_VERSION 8.169.0."
-  },
-  {
-    version: "8.168.0",
-    date: "2026-05-16",
-    type: "minor",
-    title: "Ola A.4 — Snapshots financieros inmutables",
-    summary: "Facturas y proformas congelan tasa IVA, tipo de cambio y datos del cliente al emitirse; ya no se pueden modificar después.",
-    description: "Triggers en facturas/proformas capturan snapshot_emision al pasar a Emitida/Pagada o aprobada/facturada. Modificar campos fiscales de una factura emitida lanza 'factura_inmutable' (UI muestra mensaje pidiendo nota de crédito). Helpers fetchFacturaSnapshot/fetchProformaSnapshot listos para reimpresión de PDFs. APP_VERSION 8.168.0."
-  },
-  {
-    version: "8.167.0",
-    date: "2026-05-16",
-    type: "patch",
-    title: "Ola A.3 (cont.) — Tests de integración para idempotencia",
-    summary: "5 tests cubren doble-click y reintentos de red sobre crearEmbarqueRpc y consolidarProformas, verificando que no se duplican registros.",
-    description: "Mock de supabase.rpc que simula idempotency_claim/store. Escenarios: doble-click, reintento tras error, control negativo. APP_VERSION 8.167.0."
-  },
-  {
-    version: "8.166.0",
-    date: "2026-05-16",
-    type: "minor",
-    title: "Ola A.3 (cont.) — Idempotencia en upload de documentos",
-    summary: "Re-subir el mismo archivo no duplica registros: el path incluye el SHA-256 y la fila sólo se actualiza si cambia el contenido.",
-    description: "uploadDocumentoEmbarque calcula hash del contenido, usa path determinístico y reclama idempotency_claim/store con fn='upload_documento_embarque'. APP_VERSION 8.166.0."
-  },
-
 ];
 
 /** Deduplica por version conservando la primera ocurrencia (recentChangelog gana). */
