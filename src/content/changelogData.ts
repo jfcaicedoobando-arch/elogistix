@@ -22,6 +22,14 @@ export interface ChangelogEntry {
  */
 export const recentChangelog: ChangelogEntry[] = [
   {
+    version: "8.173.0",
+    date: "2026-05-17",
+    type: "minor",
+    title: "Ola B.4 — Reducción de N+1 vía RPCs *_listado",
+    summary: "Nuevas RPCs embarques_listado, facturas_listado y reportes_resumen consolidan filas + conteos + KPIs en una sola llamada.",
+    description: "embarques_listado devuelve filas paginadas + costos/docs agregados + total_count en un solo round-trip. facturas_listado pagina server-side con proforma_numero embebido. reportes_resumen calcula rentabilidad y KPIs en BD. Hooks migrados (useEmbarquesPageState/Controller, useRentabilidadClientes, useFacturas) eliminan la llamada secundaria a embarques_list_extras y la agregación client-side. APP_VERSION 8.173.0."
+  },
+  {
     version: "8.172.0",
     date: "2026-05-16",
     type: "minor",
