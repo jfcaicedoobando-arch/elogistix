@@ -94,7 +94,13 @@ export default function Bitacora() {
         </div>
       );
     }
-    return <BitacoraActividad actividades={actividades} mostrarUsuario={isAdmin} />;
+    return (
+      <BitacoraActividad
+        actividades={actividades}
+        mostrarUsuario={isAdmin}
+        virtualize={actividades.length >= UMBRAL_VIRTUALIZAR}
+      />
+    );
   }
 
   return (
@@ -180,6 +186,9 @@ export default function Bitacora() {
         page={pagina}
         totalPages={totalPaginas}
         onPageChange={setPagina}
+        pageSize={limitePagina}
+        onPageSizeChange={(s) => { setLimitePagina(s); setPagina(0); }}
+        pageSizeOptions={[...OPCIONES_PAGINA]}
       />
     </div>
   );
