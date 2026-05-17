@@ -3,6 +3,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.98.0";
 import { handlePreflightStrict, buildCors } from "../_shared/cors.ts";
 import { jsonResponse, errorResponse } from "../_shared/response.ts";
 import { authenticate, checkAdminAccess } from "../_shared/auth.ts";
+import { createLogger } from "../_shared/logger.ts";
 
 Deno.serve(async (req) => {
   const preflight = handlePreflightStrict(req);
