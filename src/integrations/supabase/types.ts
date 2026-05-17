@@ -14,6 +14,42 @@ export type Database = {
   }
   public: {
     Tables: {
+      alertas_sistema: {
+        Row: {
+          acknowledged_at: string | null
+          acknowledged_by: string | null
+          created_at: string
+          dedupe_key: string | null
+          id: string
+          message: string
+          payload: Json | null
+          severity: string
+          source: string
+        }
+        Insert: {
+          acknowledged_at?: string | null
+          acknowledged_by?: string | null
+          created_at?: string
+          dedupe_key?: string | null
+          id?: string
+          message: string
+          payload?: Json | null
+          severity?: string
+          source: string
+        }
+        Update: {
+          acknowledged_at?: string | null
+          acknowledged_by?: string | null
+          created_at?: string
+          dedupe_key?: string | null
+          id?: string
+          message?: string
+          payload?: Json | null
+          severity?: string
+          source?: string
+        }
+        Relationships: []
+      }
       app_logs: {
         Row: {
           fn: string
@@ -2199,6 +2235,7 @@ export type Database = {
         }
         Returns: Json
       }
+      alertas_sistema_pending_count: { Args: never; Returns: number }
       app_logs_health_summary: {
         Args: { p_hours?: number }
         Returns: {
@@ -2322,6 +2359,7 @@ export type Database = {
       dashboard_details: { Args: never; Returns: Json }
       dashboard_stats: { Args: never; Returns: Json }
       dashboard_summary: { Args: never; Returns: Json }
+      detectar_alertas_app_logs: { Args: never; Returns: number }
       duplicar_embarque_completo: {
         Args: {
           p_copias: Json
