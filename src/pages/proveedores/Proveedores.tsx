@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Truck, Plus } from "lucide-react";
+import { Truck, Plus, Upload } from "lucide-react";
 import { FloatingActionButton } from "@/components/shared/FloatingActionButton";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -19,6 +19,12 @@ import { useListPageState } from "@/hooks/shared/useListPageState";
 import type { Tables, Enums } from "@/types/db";
 import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 import { toTitleCase } from "@/lib/formatters";
+import { BulkImportDialog } from "@/components/shared/BulkImportDialog";
+import { PROVEEDOR_TEMPLATE_HEADERS, mapProveedorRows } from "@/lib/csv/importSchemas";
+import { useOrgFilter } from "@/hooks/shared/useOrgFilter";
+import { insertProveedor } from "@/services/proveedor";
+import { useQueryClient } from "@tanstack/react-query";
+import { queryKeys } from "@/lib/query";
 type TipoProveedor = Enums<'tipo_proveedor'>;
 type Proveedor = Tables<'proveedores'>;
 
