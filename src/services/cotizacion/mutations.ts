@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import type { TablesInsert } from "@/integrations/supabase/types";
 import type { CotizacionRow, CreateCotizacionInput } from "@/types/cotizacion";
 import { fromDb, toDbJson } from "@/lib/supabase/cast";
+import { cotizacionInputSchema, parseOrThrow } from "@/lib/validation/mutationSchemas";
 import { generarFolioCotizacion } from "./queries";
 
 type CotizacionInsert = TablesInsert<"cotizaciones">;
