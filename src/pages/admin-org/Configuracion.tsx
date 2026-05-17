@@ -11,6 +11,7 @@ import TabEmbarques from "@/components/configuracion/TabEmbarques";
 import TabAlertas from "@/components/configuracion/TabAlertas";
 import TabPuertos from "@/components/configuracion/TabPuertos";
 import TabAuditoria from "@/components/configuracion/TabAuditoria";
+import TabExportar from "@/components/configuracion/TabExportar";
 
 function getSaveButtonLabel(isSaving: boolean, isDirty: boolean): string {
   if (isSaving) return "Guardando...";
