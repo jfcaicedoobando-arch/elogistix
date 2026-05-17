@@ -1,6 +1,6 @@
 # Roadmap a producción — Libre Carga ERP
 
-Estado: 8.188.0. **Bloque 1, Bloque 2 y Bloque 3 parcial cerrados**: 3.1 CSV clientes/proveedores ✅, 3.4 PDFs estado de cuenta + rentabilidad ✅, 3.6 Diff cliente/proveedor ✅, 3.6 ext Diff embarque + conceptos costo/venta ✅. Pendiente: **3.2 CFDI 4.0 XML, 3.3 Notificaciones a cliente, 3.5 Roles granulares**.
+Estado: 8.189.0. **Bloque 1, Bloque 2 y Bloque 3 mayormente cerrados**: 3.1 CSV ✅, 3.3 Notificaciones portal ✅, 3.4 PDFs ✅, 3.6 Diff cliente/proveedor/embarque ✅. Pendiente con dependencia externa: **3.2 CFDI 4.0 XML (requiere PAC + sellos SAT)** y **3.5 Roles granulares (requiere definir matriz operaciones vs facturación antes de tocar RLS)**.
 
 
 ## 1. Lo que YA está implementado

@@ -1553,6 +1553,48 @@ export type Database = {
           },
         ]
       }
+      notificaciones_cliente: {
+        Row: {
+          cliente_id: string
+          created_at: string
+          embarque_id: string | null
+          factura_id: string | null
+          id: string
+          leida_at: string | null
+          mensaje: string
+          organization_id: string
+          tipo: string
+          titulo: string
+          url: string | null
+        }
+        Insert: {
+          cliente_id: string
+          created_at?: string
+          embarque_id?: string | null
+          factura_id?: string | null
+          id?: string
+          leida_at?: string | null
+          mensaje?: string
+          organization_id?: string
+          tipo: string
+          titulo: string
+          url?: string | null
+        }
+        Update: {
+          cliente_id?: string
+          created_at?: string
+          embarque_id?: string | null
+          factura_id?: string | null
+          id?: string
+          leida_at?: string | null
+          mensaje?: string
+          organization_id?: string
+          tipo?: string
+          titulo?: string
+          url?: string | null
+        }
+        Relationships: []
+      }
       organization_members: {
         Row: {
           created_at: string | null
@@ -2571,6 +2613,14 @@ export type Database = {
           p_request_id?: string
         }
         Returns: undefined
+      }
+      notificacion_cliente_marcar_leida: {
+        Args: { p_id: string }
+        Returns: undefined
+      }
+      notificaciones_cliente_marcar_todas_leidas: {
+        Args: never
+        Returns: number
       }
       operaciones_stats: { Args: never; Returns: Json }
       operadores_distintos: {
