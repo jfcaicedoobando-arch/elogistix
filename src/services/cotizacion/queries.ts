@@ -74,3 +74,72 @@ export async function fetchEmbarquesVinculados(cotizacionId: string) {
   if (error) throw error;
   return data ?? [];
 }
+
+// ─── Listado paginado (RPC `cotizaciones_listado`) ────────────────────────────
+// Bloque 2.4 — agregados embarques_vinculados + paginación server-side.
+export interface CotizacionListadoItem {
+  id: string;
+  folio: string;
+  cliente_id: string | null;
+  cliente_nombre: string;
+  modo: string;
+  origen: string;
+  destino: string;
+  subtotal: number;
+  moneda: string;
+  estado: string;
+  fecha_vigencia: string | null;
+  created_at: string;
+  descripcion_mercancia: string;
+  embarques_vinculados: number;
+}
+
+export interface FetchCotizacionesListadoParams {
+  organizationId: string | null;
+  search?: string;
+  estado?: string;
+  modo?: string;
+  clienteId?: string;
+  fechaDesde?: string;
+  fechaHasta?: string;
+  page: number;
+  pageSize: number;
+}
+
+export async function fetchCotizacionesListado(
+  params: FetchCotizacionesListadoParams,
+): Promise<{ data: CotizacionListadoItem[]; count: number }> {
+  const offset = params.page * params.pageSize;
+  const { data, error } = await supabase.rpc("cotizaciones_listado", {
+    p_organization_id: params.organizationId ?? undefined,
+    p_search: params.search || undefined,
+    p_estado: params.estado && params.estado !== "todos" ? params.estado : undefined,
+    p_modo: params.modo && params.modo !== "todos" ? params.modo : undefined,
+    p_cliente_id: params.clienteId && params.clienteId !== "todos" ? params.clienteId : undefined,
+    p_fecha_desde: params.fechaDesde || undefined,
+    p_fecha_hasta: params.fechaHasta || undefined,
+    p_offset: offset,
+    p_limit: params.pageSize,
+  });
+  if (error) throw error;
+
+  const rows = (data ?? []) as Array<CotizacionListadoItem & { total_count: number | string }>;
+  const count = rows.length > 0 ? Number(rows[0].total_count) : 0;
+  const mapped: CotizacionListadoItem[] = rows.map((r) => ({
+    id: r.id,
+    folio: r.folio,
+    cliente_id: r.cliente_id,
+    cliente_nombre: r.cliente_nombre,
+    modo: r.modo,
+    origen: r.origen,
+    destino: r.destino,
+    subtotal: Number(r.subtotal),
+    moneda: r.moneda,
+    estado: r.estado,
+    fecha_vigencia: r.fecha_vigencia,
+    created_at: r.created_at,
+    descripcion_mercancia: r.descripcion_mercancia,
+    embarques_vinculados: Number(r.embarques_vinculados),
+  }));
+  return { data: mapped, count };
+}
