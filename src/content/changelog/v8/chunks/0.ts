@@ -2,6 +2,14 @@ import type { ChangelogEntry } from "../../../changelogData";
 
 export const chunk0: ChangelogEntry[] = [
   {
+    version: "8.179.0",
+    date: "2026-05-17",
+    type: "patch",
+    title: "Bloque 1.5 — Hallazgos del linter resueltos y documentados",
+    summary: "Cierre del Bloque 1 (estabilidad operativa): se fijó search_path en is_soft_delete_table y se endureció la política INSERT de app_logs. Los warnings restantes quedan documentados como aceptados.",
+    description: "Fix de los dos warnings accionables: (1) is_soft_delete_table ahora corre con SET search_path = public para resolver el lint 0011; (2) la política 'insertar logs' sobre app_logs se reemplazó por 'app_logs insert authenticated' que exige rol authenticated y user_id = auth.uid() (o nulo), eliminando el lint 0024 (USING/WITH CHECK = true). El rol service_role usado por crons sigue funcionando porque ignora RLS. Los 67 warnings restantes son intencionales y quedan justificados en docs/linter-warnings.md: 1 'Extension in Public' (pg_trgm, mover requiere reindex masivo) y 66 'SECURITY DEFINER ejecutable' (patrón has_role + RPCs *_listado + funciones del portal cliente, todas con search_path fijo y filtros internos por auth.uid). APP_VERSION 8.179.0. Cierra Bloque 1 del roadmap a producción."
+  },
+  {
     version: "8.178.0",
     date: "2026-05-17",
     type: "minor",

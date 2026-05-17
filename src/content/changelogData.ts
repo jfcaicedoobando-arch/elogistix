@@ -22,6 +22,14 @@ export interface ChangelogEntry {
  */
 export const recentChangelog: ChangelogEntry[] = [
   {
+    version: "8.179.0",
+    date: "2026-05-17",
+    type: "patch",
+    title: "Bloque 1.5 — Linter resuelto y documentado",
+    summary: "search_path fijo en is_soft_delete_table y app_logs INSERT endurecido. Warnings restantes justificados en docs/linter-warnings.md. Cierra Bloque 1.",
+    description: "Fix de los dos warnings accionables del linter: is_soft_delete_table con SET search_path = public (lint 0011) y nueva política 'app_logs insert authenticated' (authenticated + user_id = auth.uid() o nulo) que elimina el WITH CHECK = true (lint 0024). Los 67 warnings restantes (pg_trgm en public + 66 SECURITY DEFINER intencionales) quedan documentados como aceptados. APP_VERSION 8.179.0."
+  },
+  {
     version: "8.178.0",
     date: "2026-05-17",
     type: "minor",
