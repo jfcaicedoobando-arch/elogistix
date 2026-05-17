@@ -191,6 +191,20 @@ export function useEmbarquesPageState() {
     ? filtered // ya paginado
     : (resultadoServer?.data ?? []);
 
+  // ---------- Extras (liquidación + docs) ----------
+  // Rama A: vienen embebidos en el RPC `embarques_listado` (cero round-trips extra).
+  // Rama B: como `fetchEmbarquesParaExport` no los trae, los pedimos para la página visible.
+  const visibleIds = useMemo(() => embarques.map((e) => e.id), [embarques]);
+  const { data: extrasBranchB } = useQuery({
+    queryKey: [...queryKeys.embarques.all, "extras-branch-b", visibleIds],
+    queryFn: () => fetchEmbarquesListExtras(visibleIds),
+    enabled: estadoFilterActivo && visibleIds.length > 0,
+    staleTime: 30_000,
+  });
+  const extras: EmbarqueListExtras = estadoFilterActivo
+    ? (extrasBranchB ?? { liquidacion: {}, docs: {} })
+    : (resultadoServer?.extras ?? { liquidacion: {}, docs: {} });
+
   const displayCount = expedientesCount;
 
   const isEmptyState =
@@ -239,5 +253,6 @@ export function useEmbarquesPageState() {
     embarques, filtered, totalCount: totalCountServer, displayCount,
     expedientesCount, contenedoresCount, totalPages, isLoading, isEmptyState,
     contenedoresPorExpediente,
+    extras,
   };
 }
