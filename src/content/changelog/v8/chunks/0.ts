@@ -2,6 +2,14 @@ import type { ChangelogEntry } from "../../../changelogData";
 
 export const chunk0: ChangelogEntry[] = [
   {
+    version: "8.176.0",
+    date: "2026-05-17",
+    type: "minor",
+    title: "Ola C.1 — Logger en todas las edge functions",
+    summary: "Las 9 edge functions restantes ahora escriben a app_logs vía createLogger + log.finish() en cada salida.",
+    description: "exchange-rates, create-user, delete-user, list-users, tracking-public, auditoria-snapshot-daily, auditoria-weekly-digest, invite-client-user y jsoncargo-track quedaron instrumentadas. Cada handler crea un logger al inicio, captura request_id y user_id automáticamente, y llama log.finish(status_code, msg, ctx) antes de cada return — éxitos, errores controlados (400/401/403/404/422), unauthorized de cron y unhandled errors. Esto cierra B.1: /admin/diagnostico ahora muestra tráfico real de todas las funciones, no sólo parse-csf. Base para C.2 (dashboard de salud). APP_VERSION 8.176.0."
+  },
+  {
     version: "8.175.0",
     date: "2026-05-17",
     type: "minor",
