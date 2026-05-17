@@ -71,3 +71,47 @@ Resumen ejecutivo para super_admin. Para detalle exhaustivo de cada procedimient
 - **Desarrollo:** prepara migraciones inversas y rollbacks de código.
 
 Contactos del equipo viven fuera del repo (canal interno).
+
+## Simulacro de restore (Sprint A.3 — go-live)
+
+**Frecuencia mínima:** una vez antes del go-live y luego trimestral.
+
+### Checklist del simulacro
+
+1. **Preparación**
+   - [ ] Identificar snapshot a restaurar (idealmente <24h de antigüedad).
+   - [ ] Crear proyecto sandbox aislado en Lovable Cloud (NO restaurar sobre producción).
+   - [ ] Notificar al equipo: "simulacro en curso, ignorar alertas".
+
+2. **Restore**
+   - [ ] Ejecutar restore del snapshot al sandbox. Anotar `T0` (inicio) y `T1` (fin).
+   - [ ] Verificar conteo de filas en tablas críticas: `embarques`, `facturas`, `conceptos_venta`,
+     `conceptos_costo`, `clientes`, `proveedores`, `user_roles`.
+
+3. **Validación de integridad**
+   - [ ] `SELECT count(*) FROM embarques WHERE deleted_at IS NULL` coincide con producción ± margen del lag.
+   - [ ] Encender la app contra el sandbox, login admin, abrir 5 embarques al azar — todo carga.
+   - [ ] Probar 1 RPC crítico: `crear_embarque_completo` (transacción completa).
+   - [ ] Validar que las facturas mantienen `snapshot_emision` consistente con `total`.
+
+4. **Métricas**
+   - [ ] **RTO real** (T1 - T0): tiempo total de restore. Objetivo < 30 min.
+   - [ ] **RPO efectivo**: minutos de datos perdidos = (T_snapshot - T_failure). Objetivo < 60 min.
+   - [ ] Registrar resultados en este documento, sección "Histórico de simulacros".
+
+5. **Limpieza**
+   - [ ] Eliminar sandbox para no consumir recursos.
+   - [ ] Notificar al equipo: "simulacro finalizado, RTO=X, RPO=Y".
+
+### Histórico de simulacros
+
+| Fecha       | RTO  | RPO  | Notas                        | Responsable |
+|-------------|------|------|------------------------------|-------------|
+| _Pendiente_ | —    | —    | Primer simulacro pre go-live | —           |
+
+### Plan de comunicación durante incidente real
+
+1. Detección → super_admin declara incidente en canal interno.
+2. Decisión rollback código vs restore DB (la mayoría son rollback código).
+3. Si restore: avisar 15 min antes a usuarios activos vía banner en `/admin/diagnostico`.
+4. Post-mortem dentro de las 48h siguientes.
