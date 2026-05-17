@@ -74,11 +74,13 @@ Deno.serve(async (req) => {
   const preflight = handlePreflightStrict(req);
   if (preflight) return preflight;
   const corsHeaders = buildCors(req);
+  const log = createLogger(req, "auditoria-weekly-digest");
 
   // Cron-only: require X-Cron-Secret header
   const cronSecret = Deno.env.get("CRON_SECRET");
   const headerSecret = req.headers.get("X-Cron-Secret");
   if (!cronSecret || headerSecret !== cronSecret) {
+    log.finish(401, "unauthorized_cron");
     return new Response(
       JSON.stringify({ ok: false, error: "Unauthorized" }),
       {
