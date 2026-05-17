@@ -1,6 +1,6 @@
 # Roadmap a producción — Libre Carga ERP
 
-Estado: 8.184.0. **Bloque 1 y Bloque 2 cerrados**: 2.1 Error boundaries ✅, 2.2 zod en mutaciones ✅, 2.3 E2E Playwright scaffolding + 5 smoke specs ✅, 2.4 N+1 fase 2 ✅, 2.5 VirtualDataTable en Bitácora ✅. Pendiente opcional: virtualizar Embarques con sort server. Siguiente: **Bloque 3** (importación masiva CSV / CFDI / notificaciones / PDFs / roles granulares / auditoría de cambios).
+Estado: 8.185.0. **Bloque 1, Bloque 2 y Bloque 3.1 cerrados**: 2.1 Error boundaries ✅, 2.2 zod en mutaciones ✅, 2.3 E2E Playwright ✅, 2.4 N+1 fase 2 ✅, 2.5 VirtualDataTable Bitácora ✅, 3.1 Importación CSV clientes/proveedores ✅. Siguiente: **3.2 CFDI 4.0 XML / 3.4 PDFs / 3.6 Auditoría de cambios sensibles** (según prioridad operativa).
 
 
 ## 1. Lo que YA está implementado
