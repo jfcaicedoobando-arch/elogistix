@@ -189,6 +189,7 @@ const App = () => (
               <Route path="/rentabilidad" element={<Navigate to="/reportes/rentabilidad" replace />} />
               
               <Route path="/changelog" element={<Changelog />} />
+              <Route path="/ayuda" element={<Ayuda />} />
               <Route path="/bitacora" element={<Bitacora />} />
               <Route
                 path="/papelera"
