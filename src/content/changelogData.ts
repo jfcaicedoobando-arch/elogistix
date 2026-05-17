@@ -22,6 +22,14 @@ export interface ChangelogEntry {
  */
 export const recentChangelog: ChangelogEntry[] = [
   {
+    version: "8.176.0",
+    date: "2026-05-17",
+    type: "minor",
+    title: "Ola C.1 — Logger en todas las edge functions",
+    summary: "Las 9 edge functions restantes escriben a app_logs vía createLogger + log.finish().",
+    description: "exchange-rates, create-user, delete-user, list-users, tracking-public, auditoria-snapshot-daily, auditoria-weekly-digest, invite-client-user y jsoncargo-track instrumentadas. Cada return llama log.finish(status, msg, ctx). /admin/diagnostico ahora muestra tráfico real de todas las funciones. APP_VERSION 8.176.0."
+  },
+  {
     version: "8.175.0",
     date: "2026-05-17",
     type: "minor",
