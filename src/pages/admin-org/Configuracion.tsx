@@ -58,6 +58,7 @@ export default function Configuracion() {
           <TabsTrigger value="alertas" className="gap-1.5"><Bell className="h-3.5 w-3.5" /> Alertas</TabsTrigger>
           <TabsTrigger value="puertos" className="gap-1.5"><Anchor className="h-3.5 w-3.5" /> Puertos</TabsTrigger>
           <TabsTrigger value="auditoria" className="gap-1.5"><ShieldAlert className="h-3.5 w-3.5" /> Auditoría</TabsTrigger>
+          <TabsTrigger value="exportar" className="gap-1.5"><Download className="h-3.5 w-3.5" /> Exportar</TabsTrigger>
         </TabsList>
 
         <TabsContent value="empresa">
