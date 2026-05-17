@@ -26,7 +26,7 @@ export function parseOrThrow<T>(schema: z.ZodType<T>, value: unknown, contexto: 
   const detalle = path ? `${path}: ${first.message}` : first?.message ?? "Datos inválidos.";
   const err = new Error(`${contexto} — ${detalle}`);
   (err as Error & { cause?: unknown }).cause = result.error;
-  return err as never; // unreachable, contenta TS
+  throw err;
 }
 
 const nonEmpty = (label: string, max = 200) =>
