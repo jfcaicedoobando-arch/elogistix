@@ -4,7 +4,9 @@ import { useProveedor, useProveedorMutations, useProveedorOperaciones } from "@/
 import { useToast } from "@/hooks/use-toast";
 import { usePermissions } from "@/hooks/shared/usePermissions";
 import { useRegistrarActividad } from "@/hooks/shared/useBitacora";
+import { diffFields, SENSITIVE_FIELDS } from "@/lib/audit/diffFields";
 import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
+import type { Json } from "@/integrations/supabase/types";
 
 /**
  * Controller para la página de detalle de proveedor.
@@ -31,12 +33,26 @@ export function useProveedorDetalleController() {
 
   const handleUpdate = useCallback(async (provId: string, data: Record<string, unknown>) => {
     try {
+      const cambios = proveedor
+        ? diffFields(
+            proveedor as unknown as Record<string, unknown>,
+            data,
+            SENSITIVE_FIELDS.proveedor as unknown as ReadonlyArray<string>,
+          )
+        : [];
       await updateProveedor(provId, data);
+      registrarActividad.mutate({
+        accion: "editar",
+        modulo: "proveedores",
+        entidad_id: provId,
+        entidad_nombre: (data.nombre as string) ?? proveedor?.nombre ?? "",
+        detalles: cambios.length > 0 ? { cambios: cambios as unknown as Json } : undefined,
+      });
       notifySuccess(toast, { title: "Proveedor actualizado" });
     } catch {
       notifyError(toast, { title: "Error al actualizar"});
     }
-  }, [updateProveedor, toast]);
+  }, [updateProveedor, toast, proveedor, registrarActividad]);
 
   const handleDelete = useCallback(async () => {
     if (!proveedor) return;

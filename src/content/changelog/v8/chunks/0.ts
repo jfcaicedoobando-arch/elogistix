@@ -2,6 +2,22 @@ import type { ChangelogEntry } from "../../../changelogData";
 
 export const chunk0: ChangelogEntry[] = [
   {
+    version: "8.187.0",
+    date: "2026-05-17",
+    type: "minor",
+    title: "Bloque 3.4 — PDFs de estado de cuenta y rentabilidad",
+    summary: "Nuevos botones de PDF imprimible: estado de cuenta por cliente (con aging 0-30/31-60/61-90/+90 por moneda) y rentabilidad por cliente del periodo activo en /reportes.",
+    description: "Se agrega src/generators/estadoCuentaPdf.ts (consulta facturas 'Emitida'/'Vencida' del cliente, calcula días vencidos por factura, agrupa por moneda y genera tabla + bloque de aging por bucket). En ClienteDetalle hay un nuevo botón 'Estado de cuenta' junto a 'Editar' que abre la vista imprimible. Se agrega src/generators/rentabilidadPdf.ts y handleExportPdf en useReportesPageController para imprimir el P&L del periodo (KPIs venta/costo/profit/margen + tabla ordenada por profit desc). Ambos generadores reusan el patrón window.open+print de cotizacionPdf y no agregan dependencias. APP_VERSION 8.187.0.",
+  },
+  {
+    version: "8.186.0",
+    date: "2026-05-17",
+    type: "minor",
+    title: "Bloque 3.6 — Diff de campos sensibles en bitácora",
+    summary: "Cada edición de cliente o proveedor ahora registra en bitácora la lista exacta de campos cambiados (antes → después), no sólo el evento.",
+    description: "Se agrega src/lib/audit/diffFields.ts con diffFields(before, after, fields[]) que normaliza null/undefined/'' como equivalentes, recorta strings antes de comparar y soporta números/booleans, y SENSITIVE_FIELDS con listas curadas por entidad (cliente, proveedor, embarque_costo, embarque_venta). useClienteDetalleController.handleSaveCliente y useProveedorDetalleController.handleUpdate calculan el diff contra el registro original y lo envían en detalles.cambios al insertar la entrada de bitácora; si no hay cambios reales no se contamina el log. 7 tests nuevos cubren los casos de igualdad por trim, whitelist, null vs vacío y números/booleans. APP_VERSION 8.186.0.",
+  },
+  {
     version: "8.185.0",
     date: "2026-05-17",
     type: "minor",

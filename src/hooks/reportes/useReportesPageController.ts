@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import { format, startOfMonth, endOfMonth } from "date-fns";
 
 import { exportToCsv } from "@/generators/exportCsv";
+import { generarRentabilidadPdf } from "@/generators/rentabilidadPdf";
 import { useRentabilidadClientes } from "@/hooks/cliente/useRentabilidadClientes";
 import { toTitleCase } from "@/lib/formatters";
 import type { SortField } from "@/components/reportes/ReportesTablaClientes";
@@ -78,6 +79,21 @@ export function useReportesPageController() {
     );
   };
 
+  const handleExportPdf = () => {
+    generarRentabilidadPdf({
+      fechaDesde: filtros.fechaDesde,
+      fechaHasta: filtros.fechaHasta,
+      modo: filtros.modo,
+      kpis: {
+        total_venta_usd: kpis.revenue,
+        total_costo_usd: kpis.revenue - kpis.profit,
+        total_profit_usd: kpis.profit,
+        margen_promedio: kpis.margenProm,
+      },
+      clientes: sorted,
+    });
+  };
+
   return {
     // filtros
     fechaDesde,
@@ -97,6 +113,7 @@ export function useReportesPageController() {
     handleSort,
     // acciones
     handleExport,
+    handleExportPdf,
     canExport: sorted.length > 0,
   };
 }

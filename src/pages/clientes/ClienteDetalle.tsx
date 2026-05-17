@@ -1,5 +1,9 @@
-import { ArrowLeft, Pencil, Building2, Loader2 } from "lucide-react";
+import { ArrowLeft, Pencil, Building2, Loader2, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { generarEstadoCuentaPdf } from "@/generators/estadoCuentaPdf";
+import { useToast } from "@/hooks/use-toast";
+import { notifyError } from "@/lib/ui/appFeedback";
+import { getErrorMessage } from "@/lib/errors";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
@@ -16,6 +20,7 @@ import { useRegisterBreadcrumbLabel } from "@/contexts/BreadcrumbContext";
 
 export default function ClienteDetalle() {
   const { id } = useParams<{ id: string }>();
+  const { toast } = useToast();
   const {
     navigate,
     cliente,
@@ -74,6 +79,26 @@ export default function ClienteDetalle() {
           <h1 className="text-2xl font-bold">{cliente.nombre}</h1>
           <p className="text-sm text-muted-foreground">{cliente.rfc}</p>
         </div>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={async () => {
+            try {
+              await generarEstadoCuentaPdf({
+                id: cliente.id,
+                nombre: cliente.nombre,
+                rfc: cliente.rfc,
+                direccion: cliente.direccion,
+                ciudad: cliente.ciudad,
+                estado: cliente.estado,
+              });
+            } catch (err) {
+              notifyError(toast, { title: "No se pudo generar el estado de cuenta", description: getErrorMessage(err) });
+            }
+          }}
+        >
+          <FileText className="h-4 w-4 mr-1" /> Estado de cuenta
+        </Button>
         {canEdit && (
           <Button variant="outline" size="sm" onClick={() => setEditClienteOpen(true)}>
             <Pencil className="h-4 w-4 mr-1" /> Editar
