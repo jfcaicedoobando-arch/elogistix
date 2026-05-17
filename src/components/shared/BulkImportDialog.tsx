@@ -25,7 +25,6 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { dialogSize, scrollableDialog } from "@/lib/ui/dialogTokens";
 import { cn } from "@/lib/utils";
 import { parseCsv, toCsv } from "@/lib/csv/parseCsv";
