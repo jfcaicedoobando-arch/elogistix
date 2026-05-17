@@ -1,6 +1,6 @@
 # Roadmap a producción — Libre Carga ERP
 
-Estado: 8.189.0. **Bloque 1, Bloque 2 y Bloque 3 mayormente cerrados**: 3.1 CSV ✅, 3.3 Notificaciones portal ✅, 3.4 PDFs ✅, 3.6 Diff cliente/proveedor/embarque ✅. Pendiente con dependencia externa: **3.2 CFDI 4.0 XML (requiere PAC + sellos SAT)** y **3.5 Roles granulares (requiere definir matriz operaciones vs facturación antes de tocar RLS)**.
+Estado: **8.190.0 — plan cerrado para esta iteración**. Bloques 1, 2 y 3 completos salvo dos pendientes con dependencia externa que se posponen explícitamente: **3.2 CFDI 4.0 XML timbrado** (requiere contratar PAC y sellos SAT — entregamos 3.2 como *layout contable CSV* en 8.190.0 para que el contador timbre por su lado) y **3.5 Roles granulares** (pospuesto por decisión: requiere definir matriz operaciones vs facturación a nivel organizacional antes de tocar RLS; hoy todos los usuarios internos siguen siendo `admin`).
 
 
 ## 1. Lo que YA está implementado
