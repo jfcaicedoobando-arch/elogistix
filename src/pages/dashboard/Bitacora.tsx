@@ -30,7 +30,9 @@ const RANGOS = [
   { valor: "30d", etiqueta: "Últimos 30 días", dias: 30 },
 ];
 
-const LIMITE_POR_PAGINA = 30;
+const OPCIONES_PAGINA = [30, 60, 120, 300] as const;
+const LIMITE_DEFAULT = 30;
+const UMBRAL_VIRTUALIZAR = 60;
 
 function calcularFechaDesde(valor: string): string | undefined {
   const rango = RANGOS.find((r) => r.valor === valor);
