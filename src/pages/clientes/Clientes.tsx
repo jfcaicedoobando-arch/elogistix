@@ -42,9 +42,14 @@ const columns: DataTableColumn<ClienteRow>[] = [
 export default function Clientes() {
   const navigate = useNavigate();
   const { canEdit } = usePermissions();
+  const { organizationId } = useOrgFilter();
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+  const registrarActividad = useRegistrarActividad();
 
   const { search, setSearch, page, setPage, pageSize, setPageSize } = useListPageState({});
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [importOpen, setImportOpen] = useState(false);
 
   const debouncedSearch = useDebounce(search, 300);
 
@@ -66,9 +71,14 @@ export default function Clientes() {
         description={`${totalCount} clientes registrados`}
         actions={
           canEdit ? (
-            <Button onClick={() => setDialogOpen(true)} className="hidden md:inline-flex">
-              <Plus className="h-4 w-4 mr-1" />Nuevo Cliente
-            </Button>
+            <div className="hidden md:flex gap-2">
+              <Button variant="outline" onClick={() => setImportOpen(true)}>
+                <Upload className="h-4 w-4 mr-1" />Importar CSV
+              </Button>
+              <Button onClick={() => setDialogOpen(true)}>
+                <Plus className="h-4 w-4 mr-1" />Nuevo Cliente
+              </Button>
+            </div>
           ) : null
         }
       />
@@ -101,6 +111,45 @@ export default function Clientes() {
       </Card>
 
       <NuevoClienteDialog open={dialogOpen} onOpenChange={setDialogOpen} />
+
+      <BulkImportDialog
+        open={importOpen}
+        onOpenChange={setImportOpen}
+        title="Importar clientes desde CSV"
+        description="Carga un archivo CSV con clientes. Sólo se insertarán las filas válidas."
+        templateHeaders={CLIENTE_TEMPLATE_HEADERS}
+        templateExampleRow={[
+          "Acme S.A. de C.V.",
+          "ACM010101AAA",
+          "contacto@acme.mx",
+          "55 1234 5678",
+          "Juan Pérez",
+          "Av. Reforma 123",
+          "Ciudad de México",
+          "CDMX",
+          "06600",
+          "30",
+        ]}
+        templateFileName="plantilla-clientes.csv"
+        mapRows={(rows) => mapClienteRows(rows, organizationId)}
+        onCommit={async (payloads) => {
+          for (const p of payloads) {
+            // Inserción secuencial para no exceder rate-limit y conservar
+            // mensajes de error por fila si alguna RFC duplica.
+            // eslint-disable-next-line no-await-in-loop
+            await createCliente(p);
+          }
+          registrarActividad.mutate({
+            accion: "crear",
+            modulo: "clientes",
+            entidad_nombre: `Importación CSV (${payloads.length})`,
+          });
+        }}
+        onSuccess={(n) => {
+          queryClient.invalidateQueries({ queryKey: queryKeys.clientes.all });
+          notifySuccess(toast, { title: `Importados ${n} clientes` });
+        }}
+      />
 
       {canEdit && (
         <FloatingActionButton
