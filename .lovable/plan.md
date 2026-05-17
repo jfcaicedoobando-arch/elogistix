@@ -1,90 +1,109 @@
+# Roadmap a producción — Libre Carga ERP
 
-# Ola B — Mezcla recomendada: "Ver, aguantar y blindar lo mínimo"
+Estás en 8.176.0. Ola A (arquitectura) y Ola B (observabilidad + performance) ya cerradas. Para uso operativo diario lo que falta se agrupa en tres bloques: **estabilidad operativa**, **continuidad del negocio** y **completitud funcional**.
 
-Después de la Ola A (datos blindados) el siguiente cuello es **no saber qué pasa en producción** y tener **dos o tres listados que ya pesan**. La seguridad está mayormente cubierta por la A, así que sólo tomamos el sub-entregable de seguridad que tapa el hueco más grande (tests de RLS automatizados). Total: 6 sub-versiones, ~2 semanas de trabajo.
+## 1. Lo que YA está implementado
 
-## Mezcla seleccionada
+**Arquitectura y calidad (Ola A, 8.138–8.142)**
+- Hooks/controllers separados de UI, services por subdominio (`queries/` + `mutations/`), `lib/domain/auditoria.ts` con tests puros, ARCHITECTURE.md §5.1.
+- Power of 10 aplicado: componentes ≤200 líneas, sin `any`, paginación server-side, cleanup en effects.
+- Tipos centralizados, `useToast` unificado, rotación de chunks del changelog.
 
-| # | Origen | Sub-entregable | Versión |
-|---|--------|---------------|---------|
-| B.1 | Opción 1 · Observabilidad | Logging estructurado en edge functions + tabla `app_logs` | **8.171.0** |
-| B.2 | Opción 1 · Observabilidad | Página `/admin/diagnostico` con últimos errores | **8.172.0** |
-| B.3 | Opción 1 · Observabilidad | Alertas críticas (factura inmutable, RPC fallida, snapshot diario caído) | **8.173.0** |
-| B.4 | Opción 2 · Performance | Reducción de N+1 en `useEmbarquesListData`, `useFacturas`, `useReportes` vía RPCs `*_listado` | **8.174.0** |
-| B.5 | Opción 2 · Performance | Virtualización de tablas largas (embarques, facturas, bitácora) | **8.175.0** |
-| B.6 | Opción 3 · Seguridad | Suite automática de tests de RLS por tabla × rol × org | **8.176.0** |
+**Observabilidad y rendimiento (Ola B, 8.171–8.176)**
+- B.1 Tabla `app_logs` + `_shared/logger.ts` (request_id, latencia, user/org, status). RLS multi-tenant. Purga 30 días.
+- B.2 `/admin/diagnostico` con filtros + paginación server-side + payload expandible.
+- B.4 RPCs `embarques_listado`, `facturas_listado`, `reportes_resumen` (elimina N+1).
+- B.5 `VirtualDataTable` (@tanstack/react-virtual) aplicado en diagnóstico.
+- B.6 `test_rls_isolation.sql` con 8 escenarios multi-tenant.
+- C.1 Las 9 edge functions restantes instrumentadas con `createLogger` + `logger.finish()`.
 
-## Por qué este orden
+## 2. Lo que falta — priorizado para uso productivo
 
-1. **B.1 primero** porque los logs estructurados se vuelven la base de medición para todo lo demás. Sin esto, B.3 (alertas) no tiene fuente, y B.4 (perf) optimiza a ciegas.
-2. **B.2 inmediatamente después** porque entrega valor visible (página de diagnóstico) sin esperar a que tengamos alertas.
-3. **B.3** cierra el ciclo de observabilidad: detecta + alerta. Útil tanto para producción como para validar las optimizaciones de B.4/B.5.
-4. **B.4 antes que B.5** porque arreglar el N+1 reduce el dataset antes de virtualizar; si virtualizamos primero, virtualizamos consultas ineficientes.
-5. **B.6 al final** porque los tests de RLS son una red de seguridad permanente; conviene escribirlos cuando ya tengamos logs/alertas para detectar regresiones reales.
+### Bloque 1 — Estabilidad operativa (CRÍTICO, antes de go-live)
 
-## Lo que NO entra y por qué
+**1.1 Dashboard de salud `/admin/diagnostico`** (Ola C.2, ~2h)
+KPIs sobre `app_logs`: errores última hora/24h, p95 latencia por función, top 5 funciones con más fallos, timeline. Ya tienes los datos gracias a C.1; sin esto el log es ruido.
 
-- **Materialized views del dashboard (Op.2 B.1):** la mejora real está en N+1; las MV agregan complejidad operativa que no compensa con el volumen actual.
-- **Prefetch agresivo de catálogos (Op.2 B.3):** `useTasaIVA` y `usePuertos` ya tienen `staleTime` razonable; revisamos métricas en B.1 antes de tocar.
-- **Lazy-load de rutas + bundle visualizer (Op.2 B.5):** las rutas ya están en `React.lazy`; el bundle se revisa en una Ola C de UX/perf si las métricas lo justifican.
-- **Rate limiting, rotación de secretos, 2FA (Op.3 B.2/B.3/B.5):** críticos cuando abramos a clientes externos. Hoy somos demo interno; mejor en Ola D pre-launch.
-- **Tracing con correlation_id (Op.1 B.5):** suma complejidad; el `request_id` que ya existe en idempotencia cubre el caso 80/20.
+**1.2 Alertas por error sostenido** (B.3, ~2h + setup)
+Edge function cron cada 5 min sobre `app_logs`: si N errores/min de la misma función → notificación. **Recomiendo empezar por canal interno (tabla `alertas_sistema` + badge en sidebar para super_admin)** en lugar de Resend, así evitas configurar dominio email ahora. Email queda como fase 2.
 
-## Detalle técnico por sub-versión
+**1.3 Backups verificados y plan de restauración** (~1h documentación)
+Lovable Cloud hace snapshots automáticos, pero hay que documentar: cadencia, retención, procedimiento de restore, responsable. Sin esto no se puede operar en producción.
 
-### B.1 — Logging estructurado (8.171.0)
+**1.4 Hardening de auth**
+- Activar **Leaked Password Protection** (HIBP) — switch en Cloud → Users.
+- Política de contraseña mínima.
+- Revisar timeouts de sesión.
+- Confirmar que demo readonly no puede escalar.
 
-- Migración: tabla `public.app_logs(id, ts, level, fn, request_id, user_id, organization_id, msg, payload jsonb, latency_ms)` con índice `(organization_id, ts desc)` y retención 30 días vía cron.
-- `supabase/functions/_shared/logger.ts` con `logInfo/logWarn/logError(req, payload)` que escribe en `app_logs` y a `console.log` (Supabase logs).
-- Cada edge function existente se envuelve: timestamp inicio/fin, status code, latencia.
-- Tests: unit del logger más smoke test en `parse-csf`.
+**1.5 Correr `supabase--linter`** y resolver hallazgos críticos antes de go-live.
 
-### B.2 — Página /admin/diagnostico (8.172.0)
+### Bloque 2 — Continuidad y confianza (importante, primeras 2 semanas)
 
-- Hook `useAppLogs` con paginación server-side y filtros (org, level, fn, rango fechas, búsqueda en `msg`).
-- `src/pages/admin/Diagnostico.tsx` con DataTable estándar, tabs por severidad, deduplicación por (fn, msg) en columna "ocurrencias".
-- Sólo `super_admin` y `admin` de la organización ven sus propios logs (RLS sobre `app_logs`).
-- Item en sidebar admin "Diagnóstico" bajo Administración.
+**2.1 Manejo de errores en UI** (~3h)
+Error boundaries por ruta principal con fallback amigable + reporte automático a `app_logs` desde frontend (extender logger para client). Hoy un crash deja pantalla en blanco.
 
-### B.3 — Alertas (8.173.0)
+**2.2 Validación masiva con zod en mutaciones** (~4h)
+Auditar formularios de embarques/facturas/clientes: que TODOS pasen por zodResolver. Hay rincones donde aún se confía en validación HTML.
 
-- Tabla `alert_rules` (event_type, threshold, window_minutes, channel, enabled).
-- Edge function `alerts-evaluate` corre cada 5 min vía cron: cuenta eventos en `app_logs` y `bitacora_actividad`, si supera threshold envía email vía Resend (o Slack webhook si está configurado).
-- Reglas seed: factura_inmutable >0/h, RPC crítica fallida >3/min, `auditoria_snapshot_daily` sin correr en 26h.
-- UI mínima en `/admin/diagnostico` para ver/silenciar reglas.
-- Requiere secreto `RESEND_API_KEY` (preguntar al usuario al iniciar B.3).
+**2.3 Tests E2E críticos** (~6h)
+Playwright para 5 flujos: login, crear embarque, generar factura, conciliación, portal cliente. Hoy tienes 319 unit tests pero cero E2E.
 
-### B.4 — Reducción de N+1 (8.174.0)
+**2.4 N+1 fase 2** (Ola C.3, ~3h)
+RPCs `cotizaciones_listado`, `clientes_listado`, `proveedores_listado` con el patrón de B.4.
 
-- RPCs nuevas: `embarques_listado(p_org, p_filtros, p_offset, p_limit)`, `facturas_listado(...)`, `reportes_resumen(...)`. Cada una devuelve la fila + columnas calculadas (cliente_nombre, ruta, total_pagado, etc.) en una sola query.
-- Hooks `useEmbarquesListData`, `useFacturas`, `useReportesPageController` migran a las RPCs.
-- Benchmarks antes/después capturados en `app_logs.latency_ms` (gracias a B.1).
-- Mantener compatibilidad de tipos en `src/integrations/supabase/types.ts` post-migración.
+**2.5 Aplicar `VirtualDataTable` a Bitácora y embarques largos** (~1h)
 
-### B.5 — Virtualización (8.175.0)
+### Bloque 3 — Completitud funcional (semanas 3-4, según uso real)
 
-- `bun add @tanstack/react-virtual`.
-- Componente `VirtualDataTable` (variante de DataTable existente) para listas >200 filas.
-- Aplicar en embarques, facturas, bitácora, idempotencia.
-- Mantener densidad y striping (mem `ui-table-standardization`).
+Aquí el orden depende de qué huecos detectes en operación. Candidatos típicos en un forwarder:
 
-### B.6 — Tests de RLS (8.176.0)
+**3.1 Importación masiva** — CSV de clientes, proveedores, tarifas. Lo más pedido cuando arranca operación real.
 
-- `src/services/__tests__/rls.integration.test.ts` con cliente Supabase de prueba que firma como 3 roles ficticios × 2 orgs.
-- Cobertura: cada tabla con RLS debe rechazar lectura/escritura cross-org y permitir same-org según rol.
-- Documentar matriz en `docs/security-checklist.md` (ya existe el archivo).
-- Suite integrada en `bun run ci:local`.
+**3.2 Exportación contable** — XML CFDI 4.0 / layout para el contador (factura, complemento de pago).
 
-## Verificación obligatoria por sub-versión
+**3.3 Notificaciones a cliente** — al crear/actualizar embarque, vía portal + email opcional.
 
-Igual que en Ola A: `bunx tsc --noEmit`, `bun run lint`, `bun run test`, `bun run build`, `bun run lint:unused`. Sólo cierro la sub-versión si los cinco pasan. Cada cierre actualiza `Changelog.tsx`, `chunk0.ts`, `changelogData.ts` y `APP_VERSION`.
+**3.4 Reportes PDF** — estados de cuenta, conciliación, rentabilidad mensual por cliente.
 
-## Memorias a actualizar
+**3.5 Roles más granulares** — separar "operaciones" de "facturación" si hoy todos son admin.
 
-- Nueva `mem://features/observabilidad` tras B.3 (logger, app_logs, alertas).
-- Actualizar `mem://technical/optimizacion-consultas` tras B.4 (patrón `*_listado` RPC).
-- Actualizar `mem://audit/pendings` al cerrar B.6.
+**3.6 Auditoría de cambios sensibles** — quién editó costos/precios/contactos (la bitácora actual cubre login y CRUD básico, no diff de campos).
 
-## Arranque
+## 3. Orden recomendado
 
-Empiezo con **B.1 (8.171.0)**: migración de `app_logs` + logger compartido. ¿Procedo o quieres ajustar la mezcla antes?
+```
+Semana 1 (go-live):
+  Día 1-2:  1.1 Dashboard salud  +  1.5 Linter
+  Día 3:    1.4 Hardening auth
+  Día 4:    1.2 Alertas internas
+  Día 5:    1.3 Documentar backups + plan rollback
+
+Semana 2 (estabilización):
+  2.1 Error boundaries
+  2.2 Auditar validaciones zod
+  2.4 N+1 fase 2
+
+Semana 3 (confianza):
+  2.3 Tests E2E críticos
+  2.5 VirtualDataTable extendido
+
+Semana 4+ (según operación):
+  Bloque 3 priorizado por feedback real de usuarios
+```
+
+## 4. Detalles técnicos
+
+- **Dashboard salud**: nuevo componente `DiagnosticoHealthPanel.tsx`, RPC `app_logs_health_summary(p_hours int)` que devuelve `{function_name, total, errors, p95_ms, last_error_at}`. Recharts para timeline.
+- **Alertas internas**: tabla `alertas_sistema(id, severity, source, message, created_at, acknowledged_at, acknowledged_by)` + RLS super_admin/admin. Cron `pg_cron` cada 5 min ejecuta función SQL que inserta alertas. Badge en sidebar.
+- **Error boundary**: wrapper en `App.tsx` y por ruta lazy. Reporta a edge function `client-error-log` que escribe en `app_logs` con `source='client'`.
+- **E2E**: Playwright config con seed determinístico contra ambiente staging.
+
+## 5. Lo que NO recomiendo hacer ahora
+
+- Mover `use-mobile.tsx` (rompe sidebar shadcn vendored — esperar refactor).
+- CI job para `test_rls_isolation.sql` (correr manual mensualmente es suficiente).
+- Email Resend (canal interno cubre 90% del valor; Resend cuando haya dominio verificado y caso de uso externo).
+- Migrar a otro stack o reescribir módulos que ya funcionan.
+
+¿Arranco con **1.1 Dashboard de salud** como primer paso del bloque crítico, o prefieres que ataque **1.5 Linter + 1.4 Hardening auth** primero para descubrir riesgos antes de invertir en el dashboard?
