@@ -126,6 +126,7 @@ export async function insertarNotaCambioEstado(
   contenido: string,
   usuarioEmail: string,
 ): Promise<void> {
+  parseOrThrow(notaSchema, { contenido, usuario: usuarioEmail }, "Nota");
   const { error } = await supabase.from('notas_embarque').insert({
     embarque_id: embarqueId,
     contenido,
@@ -140,6 +141,7 @@ export async function insertarNotaEmbarque(
   contenido: string,
   usuario: string,
 ): Promise<void> {
+  parseOrThrow(notaSchema, { contenido, usuario }, "Nota");
   const { error } = await supabase.from('notas_embarque').insert({
     embarque_id: embarqueId,
     contenido,
