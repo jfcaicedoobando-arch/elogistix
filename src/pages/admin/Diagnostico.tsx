@@ -11,6 +11,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAppLogs, useAppLogsFnList, type AppLogLevel } from "@/hooks/admin/useAppLogs";
 import { DiagnosticoFilters } from "@/components/admin/DiagnosticoFilters";
 import { DiagnosticoHealthPanel } from "@/components/admin/DiagnosticoHealthPanel";
+import AlertasSistemaPanel from "@/components/admin/AlertasSistemaPanel";
 import { diagnosticoColumns } from "@/components/admin/diagnosticoColumns";
 import { useDebounce } from "@/hooks/shared/useDebounce";
 
@@ -73,11 +74,16 @@ export default function Diagnostico() {
       <Tabs defaultValue="salud" className="space-y-4">
         <TabsList>
           <TabsTrigger value="salud">Salud</TabsTrigger>
+          <TabsTrigger value="alertas">Alertas</TabsTrigger>
           <TabsTrigger value="bitacora">Bitácora</TabsTrigger>
         </TabsList>
 
         <TabsContent value="salud" className="space-y-4">
           <DiagnosticoHealthPanel />
+        </TabsContent>
+
+        <TabsContent value="alertas" className="space-y-4">
+          <AlertasSistemaPanel />
         </TabsContent>
 
         <TabsContent value="bitacora" className="space-y-4">

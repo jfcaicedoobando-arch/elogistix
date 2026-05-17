@@ -6,6 +6,7 @@ import { useAuth } from "@/contexts/AuthContext";
 
 import { useSidebarAlerts } from "@/hooks/shared/useSidebarAlerts";
 import { useAuditoriaCount } from "@/hooks/auditoria/useAuditoria";
+import { useAlertasPendingCount } from "@/hooks/admin/useAlertasSistema";
 import {
   Sidebar,
   SidebarContent,
@@ -34,10 +35,15 @@ const AppSidebarBase = forwardRef<HTMLDivElement>(function AppSidebarBase(_props
   const { user, role, effectiveRole, signOut } = useAuth();
   const { totalAlertas } = useSidebarAlerts();
   const { data: auditoriaCount = 0 } = useAuditoriaCount();
+  const { count: alertasSistemaCount } = useAlertasPendingCount();
   const { theme, toggleTheme } = useTheme();
 
   const sistemaItemsConBadge = SIDEBAR_SISTEMA_ITEMS.map((it) =>
     it.url === "/auditoria" ? { ...it, badgeCount: auditoriaCount } : it,
+  );
+
+  const superAdminItemsConBadge = SIDEBAR_SUPER_ADMIN_ITEMS.map((it) =>
+    it.url === "/admin" ? { ...it, badgeCount: alertasSistemaCount } : it,
   );
 
   const userInitials = (user?.email ?? "?")
@@ -78,7 +84,7 @@ const AppSidebarBase = forwardRef<HTMLDivElement>(function AppSidebarBase(_props
           <SidebarGroupBlock label="Administración" items={SIDEBAR_ADMIN_ITEMS} collapsed={collapsed} pathname={pathname} totalAlertas={totalAlertas} />
         )}
         {role === "super_admin" && (
-          <SidebarGroupBlock label="Super Admin" items={SIDEBAR_SUPER_ADMIN_ITEMS} collapsed={collapsed} pathname={pathname} totalAlertas={totalAlertas} />
+          <SidebarGroupBlock label="Super Admin" items={superAdminItemsConBadge} collapsed={collapsed} pathname={pathname} totalAlertas={totalAlertas} />
         )}
       </SidebarContent>
 
