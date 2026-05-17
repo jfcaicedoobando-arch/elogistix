@@ -61,7 +61,7 @@ export default function Facturacion() {
     gastosPendientes, proformasPendientes,
     loadingFacturas, loadingGastos,
     canEdit, marcarPagadoPending,
-    handleMarcarPagado, exportarFacturasCsv,
+    handleMarcarPagado, exportarFacturasCsv, exportarLayoutContable,
   } = useFacturacionPageController();
 
   type GastoPendiente = (typeof gastosPendientes)[number];
