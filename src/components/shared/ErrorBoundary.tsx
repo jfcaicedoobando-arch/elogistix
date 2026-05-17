@@ -2,6 +2,8 @@ import React from "react";
 import { AlertTriangle, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { supabase } from "@/integrations/supabase/client";
+import { APP_VERSION } from "@/constants/appVersion";
 
 const CHUNK_ERROR_RELOAD_KEY = "chunk-error-auto-reload";
 
