@@ -1,6 +1,7 @@
 import { useMemo, useCallback } from "react";
 import { useListPageState } from "@/hooks/shared/useListPageState";
 import { exportToCsv } from "@/generators/exportCsv";
+import { exportarLayoutContable } from "@/generators/layoutContable";
 import { useFacturas, useGastosPendientes, useMarcarCostoPagado } from "@/hooks/facturacion/useFacturas";
 import { useRegistrarActividad } from "@/hooks/shared/useBitacora";
 import { useToast } from "@/hooks/use-toast";
@@ -81,6 +82,21 @@ export function useFacturacionPageController() {
     );
   }, [filtered]);
 
+  const exportarLayoutContableHandler = useCallback(async () => {
+    try {
+      await exportarLayoutContable(filtered);
+      registrarActividad.mutate({
+        accion: 'exportar',
+        modulo: 'facturas',
+        entidad_id: 'layout_contable',
+        entidad_nombre: `Layout contable (${filtered.length} facturas)`,
+      });
+      notifySuccess(toast, { title: "Layout contable generado" });
+    } catch {
+      notifyError(toast, { title: "Error al generar layout contable" });
+    }
+  }, [filtered, registrarActividad, toast]);
+
   return {
     // estado
     search, setSearch,
@@ -100,5 +116,6 @@ export function useFacturacionPageController() {
     marcarPagadoPending: marcarPagado.isPending,
     handleMarcarPagado,
     exportarFacturasCsv,
+    exportarLayoutContable: exportarLayoutContableHandler,
   };
 }

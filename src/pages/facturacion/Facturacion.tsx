@@ -61,7 +61,7 @@ export default function Facturacion() {
     gastosPendientes, proformasPendientes,
     loadingFacturas, loadingGastos,
     canEdit, marcarPagadoPending,
-    handleMarcarPagado, exportarFacturasCsv,
+    handleMarcarPagado, exportarFacturasCsv, exportarLayoutContable,
   } = useFacturacionPageController();
 
   type GastoPendiente = (typeof gastosPendientes)[number];
@@ -118,6 +118,9 @@ export default function Facturacion() {
               <SearchInput value={search} onChange={setSearch} placeholder="Buscar factura o cliente..." className="flex-1 min-w-[200px]" />
               <Button variant="outline" onClick={exportarFacturasCsv}>
                 <Download className="h-4 w-4 mr-2" /> Exportar CSV
+              </Button>
+              <Button variant="outline" onClick={exportarLayoutContable} title="Layout contable con RFC, subtotal, IVA y total — para el contador">
+                <Download className="h-4 w-4 mr-2" /> Layout contable
               </Button>
               <Select value={filterEstado} onValueChange={(v) => setFilter("estado", v)}>
                 <SelectTrigger className="w-[160px]"><SelectValue /></SelectTrigger>
