@@ -176,6 +176,11 @@ Deno.serve(async (req) => {
       });
     }
 
+    const enviados = resultados.filter((r) => r.enviado).length;
+    const dryRun = resultados.filter((r) => r.dryRun).length;
+    log.finish(200, "digest_run", {
+      payload: { total: resultados.length, enviados, dryRun },
+    });
     return new Response(
       JSON.stringify({ ok: true, total: resultados.length, resultados }),
       {
@@ -184,9 +189,11 @@ Deno.serve(async (req) => {
       },
     );
   } catch (err) {
+    const msg = (err as Error).message;
     console.error("[auditoria-weekly-digest] error:", err);
+    log.finish(500, "unhandled_error", { payload: { error: msg } });
     return new Response(
-      JSON.stringify({ ok: false, error: (err as Error).message }),
+      JSON.stringify({ ok: false, error: msg }),
       {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
         status: 500,
