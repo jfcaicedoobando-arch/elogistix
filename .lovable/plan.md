@@ -1,6 +1,7 @@
 # Roadmap a producción — Libre Carga ERP
 
-Estás en 8.176.0. Ola A (arquitectura) y Ola B (observabilidad + performance) ya cerradas. Para uso operativo diario lo que falta se agrupa en tres bloques: **estabilidad operativa**, **continuidad del negocio** y **completitud funcional**.
+Estado: 8.178.0. Ola A, Ola B y Ola C cerradas. Bloque 1 (estabilidad operativa) en curso: 1.1 Dashboard salud ✅, 1.4 Hardening HIBP ✅, 1.2 Alertas internas ✅. Faltan: 1.3 Backups documentados, 1.5 Linter (67 warnings informativos, sin ERROR críticos).
+
 
 ## 1. Lo que YA está implementado
 
