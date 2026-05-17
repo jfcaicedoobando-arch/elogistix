@@ -2322,6 +2322,80 @@ export type Database = {
           embarque_id: string
         }[]
       }
+      embarques_listado: {
+        Args: {
+          p_cliente_id?: string
+          p_fecha_desde?: string
+          p_fecha_hasta?: string
+          p_limit?: number
+          p_modo?: string
+          p_offset?: number
+          p_operador?: string
+          p_organization_id?: string
+          p_proforma?: string
+          p_search?: string
+          p_sort_by?: string
+          p_sort_dir?: string
+        }
+        Returns: {
+          aeropuerto_destino: string
+          aeropuerto_origen: string
+          bl_master: string
+          ciudad_destino: string
+          ciudad_origen: string
+          cliente_id: string
+          cliente_nombre: string
+          contenedor: string
+          costos_pagados: number
+          costos_total: number
+          created_at: string
+          descripcion_mercancia: string
+          docs_pendientes: number
+          docs_total: number
+          estado: Database["public"]["Enums"]["estado_embarque"]
+          eta: string
+          etd: string
+          expediente: string
+          id: string
+          modo: Database["public"]["Enums"]["modo_transporte"]
+          operador: string
+          puerto_destino: string
+          puerto_origen: string
+          tiene_proforma: boolean
+          tipo: Database["public"]["Enums"]["tipo_operacion"]
+          tipo_cambio_eur: number
+          tipo_cambio_usd: number
+          tipo_contenedor: string
+          total_count: number
+        }[]
+      }
+      facturas_listado: {
+        Args: {
+          p_estado?: string
+          p_fecha_desde?: string
+          p_fecha_hasta?: string
+          p_limit?: number
+          p_offset?: number
+          p_organization_id?: string
+          p_search?: string
+        }
+        Returns: {
+          cliente_nombre: string
+          estado: Database["public"]["Enums"]["estado_factura"]
+          expediente: string
+          factura_pdf_url: string
+          factura_xml_url: string
+          fecha_emision: string
+          fecha_vencimiento: string
+          id: string
+          moneda: Database["public"]["Enums"]["moneda"]
+          numero: string
+          proforma_id: string
+          proforma_numero: string
+          total: number
+          total_count: number
+        }[]
+      }
       generar_expediente: { Args: { tipo_op: string }; Returns: string }
       generar_numero_proforma: { Args: { p_org_id: string }; Returns: string }
       get_embarque_full: { Args: { p_embarque_id: string }; Returns: Json }
@@ -2427,6 +2501,14 @@ export type Database = {
       purge_record: {
         Args: { _id: string; _table: string }
         Returns: undefined
+      }
+      reportes_resumen: {
+        Args: {
+          p_fecha_desde?: string
+          p_fecha_hasta?: string
+          p_modo?: string
+        }
+        Returns: Json
       }
       resolver_expediente_por_bl: {
         Args: { _bl_master: string; _tipo_op: string }
