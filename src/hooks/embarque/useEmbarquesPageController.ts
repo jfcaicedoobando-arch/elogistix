@@ -10,7 +10,6 @@ import { useRegistrarActividad } from "@/hooks/shared/useBitacora";
 import { useToast } from "@/hooks/use-toast";
 import { getErrorMessage } from "@/lib/errors";
 import { getOrigen, getDestino } from "@/lib/formatters";
-import { useEmbarquesListExtras } from "@/hooks/embarque/useEmbarquesListData";
 import { useEmbarquesPageState } from "@/hooks/embarque/useEmbarquesPageState";
 import { buildEmbarqueColumns } from "@/components/embarque/embarqueColumns";
 import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
@@ -20,6 +19,10 @@ import { useOrgFilter } from "@/hooks/shared/useOrgFilter";
 /**
  * Controller que centraliza estado, queries y handlers de la página de Embarques.
  * Mantiene la página enfocada únicamente en JSX/composición.
+ *
+ * v8.173.0 (Ola B.4): extras (liquidación + docs) vienen embebidos en el RPC
+ * `embarques_listado`, exposed via `state.extras`. Se eliminó la llamada
+ * independiente a `useEmbarquesListExtras` para reducir round-trips.
  */
 export function useEmbarquesPageController() {
   const navigate = useNavigate();
@@ -31,7 +34,7 @@ export function useEmbarquesPageController() {
   const prefetchEmbarque = usePrefetchEmbarque();
 
   const state = useEmbarquesPageState();
-  const { embarques, isLoading, isEmptyState, contenedoresPorExpediente } = state;
+  const { embarques, isLoading, isEmptyState, contenedoresPorExpediente, extras } = state;
 
   const [embarqueAEliminar, setEmbarqueAEliminar] = useState<EmbarqueRow | null>(null);
   const [embarqueADuplicar, setEmbarqueADuplicar] = useState<EmbarqueRow | null>(null);
@@ -40,10 +43,8 @@ export function useEmbarquesPageController() {
 
   const { data: operadoresUnicos = [] } = useOperadoresDistintos();
 
-  const embarqueIds = useMemo(() => embarques.map(e => e.id), [embarques]);
-  const { data: extrasData } = useEmbarquesListExtras(embarqueIds);
-  const liquidacionMap = extrasData?.liquidacion ?? {};
-  const docsMap = extrasData?.docs ?? {};
+  const liquidacionMap = extras.liquidacion;
+  const docsMap = extras.docs;
 
   const handleEliminar = useCallback(async () => {
     if (!embarqueAEliminar) return;
