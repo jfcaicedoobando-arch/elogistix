@@ -6,7 +6,7 @@
 import { useState, useMemo } from "react";
 import { Activity, AlertCircle } from "lucide-react";
 import { PageHeader } from "@/components/shared/PageHeader";
-import { DataTable } from "@/components/shared/DataTable";
+import { VirtualDataTable } from "@/components/shared/VirtualDataTable";
 import { useAppLogs, useAppLogsFnList, type AppLogLevel } from "@/hooks/admin/useAppLogs";
 import { DiagnosticoFilters } from "@/components/admin/DiagnosticoFilters";
 import { diagnosticoColumns } from "@/components/admin/diagnosticoColumns";
@@ -93,24 +93,25 @@ export default function Diagnostico() {
         </div>
       )}
 
-      <div className="rounded-md border">
-        <DataTable
-          columns={diagnosticoColumns}
-          data={rows}
-          isLoading={isLoading}
-          density="compact"
-          emptyMessage="Sin registros para los filtros aplicados."
-          rowKey={(r) => r.id}
-          pagination={{
-            page,
-            totalPages,
-            onPageChange: setPage,
-            pageSize,
-            onPageSizeChange: (s) => { setPageSize(s); setPage(1); },
-            pageSizeOptions: [25, 50, 100, 200],
-          }}
-        />
-      </div>
+      <VirtualDataTable
+        columns={diagnosticoColumns}
+        data={rows}
+        isLoading={isLoading}
+        density="compact"
+        emptyMessage="Sin registros para los filtros aplicados."
+        rowKey={(r) => r.id}
+        estimateRowHeight={56}
+        maxHeight={640}
+        overscan={12}
+        pagination={{
+          page,
+          totalPages,
+          onPageChange: setPage,
+          pageSize,
+          onPageSizeChange: (s) => { setPageSize(s); setPage(1); },
+          pageSizeOptions: [25, 50, 100, 200, 500],
+        }}
+      />
     </div>
   );
 }

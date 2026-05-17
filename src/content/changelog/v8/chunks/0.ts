@@ -2,6 +2,22 @@ import type { ChangelogEntry } from "../../../changelogData";
 
 export const chunk0: ChangelogEntry[] = [
   {
+    version: "8.175.0",
+    date: "2026-05-17",
+    type: "minor",
+    title: "Ola B.6 — Suite de tests de RLS multi-tenant",
+    summary: "Nuevo script SQL supabase/tests/rls/test_rls_isolation.sql verifica el aislamiento entre organizaciones para 8 escenarios críticos.",
+    description: "Script reproducible con psql que siembra dos organizaciones, dos admins y un cliente del portal dentro de una transacción, fija request.jwt.claims.sub para simular cada usuario y ejecuta aserciones con RAISE EXCEPTION al primer fallo. Cubre: lectura aislada de clientes y embarques entre Org A/B, intento de UPDATE cruzado bloqueado, alcance del rol cliente al portal, app_logs filtrados por organización para admin de tenant, y rechazo de inserts en bitacora_actividad con usuario_id falso por WITH CHECK. README describe cobertura, ejecución y cómo añadir nuevos casos. ROLLBACK final para no dejar residuos. APP_VERSION 8.175.0."
+  },
+  {
+    version: "8.174.0",
+    date: "2026-05-17",
+    type: "minor",
+    title: "Ola B.5 — Virtualización de listas largas",
+    summary: "Nuevo componente VirtualDataTable basado en @tanstack/react-virtual; aplicado a /admin/diagnostico para soportar 500 filas con payload expansible sin caída de FPS.",
+    description: "VirtualDataTable replica el contrato DataTableColumn<T> pero renderiza con grid + filas absolutas y measureElement para alturas variables (necesario porque cada log puede desplegar <details> con payload jsonb). Header sticky con backdrop-blur, zebra opcional, hover, pagination embebida y skeleton/empty states. La página de Diagnóstico ahora muestra hasta 500 registros por página con overscan 12 y maxHeight 640px, eliminando jank al desplazarse por logs masivos. El DataTable estándar se conserva para tablas paginadas a ≤50 filas con sort/footer. APP_VERSION 8.174.0."
+  },
+  {
     version: "8.173.0",
     date: "2026-05-17",
     type: "minor",
