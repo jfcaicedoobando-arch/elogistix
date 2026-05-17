@@ -2,6 +2,14 @@ import type { ChangelogEntry } from "../../../changelogData";
 
 export const chunk0: ChangelogEntry[] = [
   {
+    version: "8.185.0",
+    date: "2026-05-17",
+    type: "minor",
+    title: "Bloque 3.1 — Importación masiva CSV de clientes y proveedores",
+    summary: "Nuevo botón 'Importar CSV' en /clientes y /proveedores: descarga plantilla, valida por fila con zod y commitea sólo los registros correctos.",
+    description: "Se agrega src/lib/csv/parseCsv.ts (parser RFC-4180 sin dependencias: autodetecta ',' o ';', soporta comillas escapadas y saltos de línea internos, normaliza encabezados con acentos a snake_case) y src/lib/csv/importSchemas.ts con mapClienteRows/mapProveedorRows que devuelven { valid, invalid } usando schemas zod específicos por entidad (email, dias_credito entero 0-365, enum tipo_proveedor, moneda MXN/USD/EUR). Nuevo BulkImportDialog genérico (upload → preview con conteo verdes/rojos y primeros 50 errores → commit secuencial → done) reutilizado en Clientes.tsx y Proveedores.tsx. En proveedores, si la fila no trae 'tipo' se asigna automáticamente el de la pestaña activa. Cada importación queda en bitácora con el conteo del lote y la plantilla descargable incluye BOM y fila de ejemplo. 13 tests nuevos (9 parser + 4 schemas). APP_VERSION 8.185.0."
+  },
+  {
     version: "8.184.0",
     date: "2026-05-17",
     type: "minor",
