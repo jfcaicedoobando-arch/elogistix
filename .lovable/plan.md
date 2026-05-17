@@ -1,110 +1,152 @@
-# Roadmap a producción — Libre Carga ERP
+# Roadmap producción — Libre Carga (post 8.190.0)
 
-Estado: **8.190.0 — plan cerrado para esta iteración**. Bloques 1, 2 y 3 completos salvo dos pendientes con dependencia externa que se posponen explícitamente: **3.2 CFDI 4.0 XML timbrado** (requiere contratar PAC y sellos SAT — entregamos 3.2 como *layout contable CSV* en 8.190.0 para que el contador timbre por su lado) y **3.5 Roles granulares** (pospuesto por decisión: requiere definir matriz operaciones vs facturación a nivel organizacional antes de tocar RLS; hoy todos los usuarios internos siguen siendo `admin`).
+## Estado actual
+
+El ERP **ya cubre el flujo end-to-end**: cotización → embarque (FCL/LCL, tracking automático JSONCargo, documentos, timeline) → proforma → factura → liquidación → estado de cuenta → portal cliente con notificaciones. Tienes multi-tenant con RLS, bitácora con diff de campos sensibles, dashboard dinámico, reportes y exports.
+
+**Lo que YA está implementado** (no se vuelve a tocar):
 
 
-## 1. Lo que YA está implementado
+| Área                                                                                                                              | Estado |
+| --------------------------------------------------------------------------------------------------------------------------------- | ------ |
+| Arquitectura Power of 10 (componentes ≤200, sin `any`, paginación server-side, cleanup en effects)                                | ✅      |
+| Multi-tenant con `organizations`, `organization_members`, `user_roles`, RLS verificada en 8 escenarios                            | ✅      |
+| Observabilidad: `app_logs`, `/admin/diagnostico`, dashboard de salud, alertas internas, error boundaries con reporte a `app_logs` | ✅      |
+| N+1 eliminado: RPCs `*_listado` para embarques, facturas, cotizaciones, clientes, proveedores                                     | ✅      |
+| 359 unit tests + 5 specs E2E Playwright (login, embarque, factura, conciliación, portal)                                          | ✅      |
+| Importación CSV de clientes y proveedores con validación Zod                                                                      | ✅      |
+| PDFs: cotización, proforma, estado de cuenta, rentabilidad                                                                        | ✅      |
+| Layout contable CSV para el contador (pre-CFDI)                                                                                   | ✅      |
+| Notificaciones al portal del cliente al cambiar estado del embarque                                                               | ✅      |
+| Diff de campos sensibles en bitácora (cliente, proveedor, embarque, costos, ventas)                                               | ✅      |
+| Tipo de cambio Frankfurter con cache 1h                                                                                           | ✅      |
 
-**Arquitectura y calidad (Ola A, 8.138–8.142)**
-- Hooks/controllers separados de UI, services por subdominio (`queries/` + `mutations/`), `lib/domain/auditoria.ts` con tests puros, ARCHITECTURE.md §5.1.
-- Power of 10 aplicado: componentes ≤200 líneas, sin `any`, paginación server-side, cleanup en effects.
-- Tipos centralizados, `useToast` unificado, rotación de chunks del changelog.
 
-**Observabilidad y rendimiento (Ola B, 8.171–8.176)**
-- B.1 Tabla `app_logs` + `_shared/logger.ts` (request_id, latencia, user/org, status). RLS multi-tenant. Purga 30 días.
-- B.2 `/admin/diagnostico` con filtros + paginación server-side + payload expandible.
-- B.4 RPCs `embarques_listado`, `facturas_listado`, `reportes_resumen` (elimina N+1).
-- B.5 `VirtualDataTable` (@tanstack/react-virtual) aplicado en diagnóstico.
-- B.6 `test_rls_isolation.sql` con 8 escenarios multi-tenant.
-- C.1 Las 9 edge functions restantes instrumentadas con `createLogger` + `logger.finish()`.
+**Lo que NO está implementado todavía** (insumo de los sprints):
 
-## 2. Lo que falta — priorizado para uso productivo
+- 71 warnings de `supabase--linter` sin resolver (SECURITY DEFINER expuestos, extensiones en `public`).
+- Leaked Password Protection (HIBP) y política de contraseña mínima — no activadas.
+- Backups y plan de restauración sin documentar formalmente; sin simulacro de restore.
+- CFDI 4.0 XML timbrado (requiere PAC externo — Facturama, SW, FormaPago, etc.).
+- Roles granulares (todos los internos son `admin`; falta separar operaciones / facturación / lectura).
+- Recordatorios automáticos al cliente (vencimiento factura, ETA próxima, documentos faltantes).
+- Conciliación bancaria (subir estado de cuenta del banco y match contra facturas pagadas).
+- Reportes ejecutivos: P&L mensual consolidado, aging de cartera, días promedio de cobro.
+- Onboarding/entrenamiento: video tour, tooltips contextuales, glosario, página de ayuda interna.
+- Métricas de producto: qué pantallas se usan, cuántos embarques crea cada operador, tiempo a primer guardado.
+- Backup manual exportable (snapshot zip de toda la org en CSV/JSON) — útil para sandbox del contador.
+- App móvil / PWA instalable con shortcut para tracking rápido en bodega.
+- Webhooks salientes (notificar a otros sistemas cuando cambia embarque).
+- Plantillas guardadas de embarque/cotización (one-click "duplicar template Asia-MX").
 
-### Bloque 1 — Estabilidad operativa (CRÍTICO, antes de go-live)
+---
 
-**1.1 Dashboard de salud `/admin/diagnostico`** (Ola C.2, ~2h)
-KPIs sobre `app_logs`: errores última hora/24h, p95 latencia por función, top 5 funciones con más fallos, timeline. Ya tienes los datos gracias a C.1; sin esto el log es ruido.
+## Sprints propuestos (2 semanas cada uno, ~40h dev)
 
-**1.2 Alertas por error sostenido** (B.3, ~2h + setup)
-Edge function cron cada 5 min sobre `app_logs`: si N errores/min de la misma función → notificación. **Recomiendo empezar por canal interno (tabla `alertas_sistema` + badge en sidebar para super_admin)** en lugar de Resend, así evitas configurar dominio email ahora. Email queda como fase 2.
+### Sprint A — Pre go-live (bloqueante para producción)
 
-**1.3 Backups verificados y plan de restauración** (~1h documentación)
-Lovable Cloud hace snapshots automáticos, pero hay que documentar: cadencia, retención, procedimiento de restore, responsable. Sin esto no se puede operar en producción.
+Objetivo: dejar la plataforma lista para que entren usuarios reales sin riesgo de fuga de datos ni pérdida.
 
-**1.4 Hardening de auth**
-- Activar **Leaked Password Protection** (HIBP) — switch en Cloud → Users.
-- Política de contraseña mínima.
-- Revisar timeouts de sesión.
-- Confirmar que demo readonly no puede escalar.
+**A.1 Resolver linter Supabase** — 71 warnings (mayoría `SECURITY DEFINER` con EXECUTE público y extensiones en `public`). Revocar EXECUTE de funciones que no deben ser RPC, mover extensiones fuera de `public`. Riesgo real: hoy un anónimo podría llamar funciones que no debería.
 
-**1.5 Correr `supabase--linter`** y resolver hallazgos críticos antes de go-live.
+**A.2 Hardening de autenticación**
 
-### Bloque 2 — Continuidad y confianza (importante, primeras 2 semanas)
+- Activar HIBP Check (Lovable Cloud → Users → Auth Settings).
+- Política contraseña mínima 8 caracteres + 1 número + 1 mayúscula.
+- Reducir session timeout a 12h con refresh.
+- Verificar que demo readonly no puede escalar (test E2E negativo).
 
-**2.1 Manejo de errores en UI** (~3h)
-Error boundaries por ruta principal con fallback amigable + reporte automático a `app_logs` desde frontend (extender logger para client). Hoy un crash deja pantalla en blanco.
+**A.3 Backups y restore** — documento `docs/backups-rollback.md` ya existe pero sin probar. Hacer 1 simulacro real: restaurar snapshot a sandbox, verificar integridad de `embarques` + `facturas`. Documentar tiempo de recuperación (RTO) y datos perdidos máximos (RPO).
 
-**2.2 Validación masiva con zod en mutaciones** (~4h)
-Auditar formularios de embarques/facturas/clientes: que TODOS pasen por zodResolver. Hay rincones donde aún se confía en validación HTML.
+**A.4 Página de ayuda interna + onboarding** — `/ayuda` con accordions por módulo + glosario (BL, ETA, demoras, expediente, proforma). Video loom de 5 min embebido. Tooltips contextuales `(?)` en los 10 campos más confusos (modo, incoterm, tipo embarque, BL master vs house).
 
-**2.3 Tests E2E críticos** (~6h)
-Playwright para 5 flujos: login, crear embarque, generar factura, conciliación, portal cliente. Hoy tienes 319 unit tests pero cero E2E.
+**A.5 Export manual completo por organización** — botón en `/admin/configuracion` que descarga ZIP con CSV de embarques, facturas, conceptos, clientes, proveedores, bitácora. Seguro contable independiente; el contador puede tener su copia mensual.
 
-**2.4 N+1 fase 2** (Ola C.3, ~3h)
-RPCs `cotizaciones_listado`, `clientes_listado`, `proveedores_listado` con el patrón de B.4.
+---
 
-**2.5 Aplicar `VirtualDataTable` a Bitácora y embarques largos** (~1h)
+### Sprint B — Operación real (semanas 3-4)
 
-### Bloque 3 — Completitud funcional (semanas 3-4, según uso real)
+Objetivo: cubrir los huecos que aparecen cuando un equipo de operaciones usa el ERP 8 horas al día.
 
-Aquí el orden depende de qué huecos detectes en operación. Candidatos típicos en un forwarder:
+**B.1 Recordatorios automáticos cliente**
 
-**3.1 Importación masiva** — CSV de clientes, proveedores, tarifas. Lo más pedido cuando arranca operación real.
+- Cron diario: factura vencida → notificación portal + email opcional.
+- Cron diario: ETA en próximas 48h → notificación portal.
+- Cron diario: documentos faltantes a 7 días del ETA → alerta al cliente y al operador.
 
-**3.2 Exportación contable** — XML CFDI 4.0 / layout para el contador (factura, complemento de pago).
+**B.2 Plantillas de embarque** — botón "Duplicar como plantilla" en embarque. Guarda en `plantillas_embarque(nombre, cliente_id, modo, ruta, conceptos_venta_template, conceptos_costo_template)`. Al crear embarque nuevo: dropdown "Usar plantilla" precarga todo.
 
-**3.3 Notificaciones a cliente** — al crear/actualizar embarque, vía portal + email opcional.
+**B.3 Roles granulares** (3.5 pendiente) — agregar enum `operaciones` y `facturacion`. Matriz: operaciones CRUD embarques + lectura facturas; facturación CRUD facturas + lectura embarques; admin todo. RLS sobre `conceptos_costo`, `facturas`, `proformas`. Requiere decisión organizacional confirmada antes de tocar RLS.
 
-**3.4 Reportes PDF** — estados de cuenta, conciliación, rentabilidad mensual por cliente.
+**B.4 Métricas de uso interno** — tabla `eventos_uso(user_id, evento, props jsonb, created_at)`. Hook `useTrackEvent` en pantallas clave (crear embarque, guardar factura, generar proforma). Panel `/admin/analytics` con: usuarios activos día/semana, embarques creados por operador, tiempo promedio cotización→embarque.
 
-**3.5 Roles más granulares** — separar "operaciones" de "facturación" si hoy todos son admin.
+**B.5 Aging de cartera** — vista `aging_cartera` que clasifica facturas pendientes en 0-30 / 31-60 / 61-90 / 90+ días, por cliente y moneda. Reporte PDF mensual descargable. Badge rojo en sidebar si hay facturas >60 días.
 
-**3.6 Auditoría de cambios sensibles** — quién editó costos/precios/contactos (la bitácora actual cubre login y CRUD básico, no diff de campos).
+---
 
-## 3. Orden recomendado
+### Sprint C — Completitud financiera
 
+Objetivo: cerrar el ciclo contable y la conciliación bancaria, que hoy son manuales.
+
+**C.1 CFDI 4.0 timbrado** (3.2 pendiente) — integrar PAC (recomiendo Facturama por API simple). Edge function `timbrar-factura` que recibe `factura_id`, llama al PAC, guarda XML+PDF en bucket y actualiza `facturas.factura_xml_url`. Manejar cancelaciones. Requiere alta como contribuyente + sellos SAT del cliente.
+
+**C.2 Complemento de pago** — al marcar factura como pagada, generar complemento de pago (REP) y timbrarlo. Tabla `complementos_pago` ligada a factura.
+
+**C.3 Conciliación bancaria** — subir estado de cuenta BBVA/Banamex/Santander (CSV o OFX). Algoritmo: match por referencia + monto + fecha tolerancia ±3 días. UI con tres columnas (banco / sin match / facturas pendientes) y drag-and-drop para conciliar manualmente.
+
+**C.4 P&L mensual consolidado** — reporte por mes con: ventas por moneda, costos por moneda, utilidad bruta, margen %, top 5 clientes, top 5 proveedores. Export PDF + Excel.
+
+**C.5 Notas de crédito** — flujo para cancelar parcial o totalmente una factura emitida, con timbrado y actualización de saldo.
+
+---
+
+### Sprint D — Escalamiento y experiencia
+
+Objetivo: que la plataforma escale a más usuarios y se sienta de clase mundial.
+
+**D.1 PWA + shortcut tracking** — manifiesto, service worker, instalable en móvil. Ruta `/m/tracking/:expediente` ultra-ligera para que en bodega escaneen QR del expediente y vean estado en 1 click.
+
+**D.2 Búsqueda global mejorada** — Ctrl+K ya existe, agregar: filtros (embarques cerrados, sólo facturas, sólo clientes), historial reciente, atajos rápidos ("crear embarque", "ir a hueco facturación").
+
+**D.3 Webhooks salientes** — tabla `webhooks_org(url, eventos[], secret)`. Cuando cambia estado embarque o se emite factura, edge function envía POST firmado. Útil para integrar con CRM/ERP del cliente.
+
+**D.4 Notificaciones email transaccionales** (Lovable Email) — extender notificaciones portal a email opcional. Plantillas por evento. Requiere dominio verificado.
+
+**D.5 App logs retention configurable + export** — hoy se purgan a 30 días sin export. Agregar botón "Descargar últimos 90 días" en `/admin/diagnostico` para compliance.
+
+**D.6 Test E2E ampliado** — agregar 10 escenarios más (impersonación, multi-tenant isolation, portal cliente, recordatorios, conciliación). Correr en CI.
+
+---
+
+## Matriz de decisión sugerida
+
+```text
+                         Urgencia      Esfuerzo    Dependencia externa
+Sprint A (pre go-live)   ALTA          BAJO        Ninguna
+Sprint B (operación)     ALTA          MEDIO       Decisión roles
+Sprint C (financiero)    MEDIA-ALTA    ALTO        PAC + sellos SAT
+Sprint D (escalamiento)  MEDIA         MEDIO       Dominio email (D.4)
 ```
-Semana 1 (go-live):
-  Día 1-2:  1.1 Dashboard salud  +  1.5 Linter
-  Día 3:    1.4 Hardening auth
-  Día 4:    1.2 Alertas internas
-  Día 5:    1.3 Documentar backups + plan rollback
 
-Semana 2 (estabilización):
-  2.1 Error boundaries
-  2.2 Auditar validaciones zod
-  2.4 N+1 fase 2
+**Recomendación**: arrancar por **Sprint A completo** (no negociable antes de go-live), luego elegir entre B y C según prioridad del negocio. Si el contador interno ya factura por su lado con el layout actual, B antes que C. Si la presión es cerrar el ciclo contable, C antes que B.
 
-Semana 3 (confianza):
-  2.3 Tests E2E críticos
-  2.5 VirtualDataTable extendido
+## Detalles técnicos (resumen)
 
-Semana 4+ (según operación):
-  Bloque 3 priorizado por feedback real de usuarios
-```
+- **A.1**: revisar las 23 funciones `SECURITY DEFINER` con `REVOKE EXECUTE FROM PUBLIC; GRANT EXECUTE TO authenticated;` selectivo. Mover `pg_trgm` y otras extensiones a schema `extensions`.
+- **A.5**: edge function `export-org-snapshot` con auth admin, genera ZIP en memoria, sube a bucket `exports/{org_id}/{timestamp}.zip` con TTL 7 días.
+- **B.1**: extender cron `auditoria-snapshot-daily` o crear `notificaciones-cron-diario` que ejecute 3 queries y use el trigger existente.
+- **B.4**: `eventos_uso` con índice por `(organization_id, evento, created_at)`, particionable a futuro.
+- **C.1**: secret `FACTURAMA_API_KEY`, edge function con retry exponencial. Snapshot factura en `snapshot_emision` ya existe — listo para timbrado.
+- **C.3**: parser OFX en `src/lib/banco/parseOFX.ts` (paquete `ofx-data-extractor`), CSV parser ya existe (`parseCsv.ts`).
+- **D.3**: secret HMAC por org, retry con backoff, log a `app_logs`.
 
-## 4. Detalles técnicos
+## Lo que NO recomiendo abordar todavía
 
-- **Dashboard salud**: nuevo componente `DiagnosticoHealthPanel.tsx`, RPC `app_logs_health_summary(p_hours int)` que devuelve `{function_name, total, errors, p95_ms, last_error_at}`. Recharts para timeline.
-- **Alertas internas**: tabla `alertas_sistema(id, severity, source, message, created_at, acknowledged_at, acknowledged_by)` + RLS super_admin/admin. Cron `pg_cron` cada 5 min ejecuta función SQL que inserta alertas. Badge en sidebar.
-- **Error boundary**: wrapper en `App.tsx` y por ruta lazy. Reporta a edge function `client-error-log` que escribe en `app_logs` con `source='client'`.
-- **E2E**: Playwright config con seed determinístico contra ambiente staging.
+- App móvil nativa (PWA cubre 90% del caso).
+- Multi-idioma (es-MX es la única región).
+- IA generativa para sugerir conceptos (esperar 6 meses de datos reales).
+- Integración con SAT directa (el PAC ya lo resuelve).
 
-## 5. Lo que NO recomiendo hacer ahora
+---
 
-- Mover `use-mobile.tsx` (rompe sidebar shadcn vendored — esperar refactor).
-- CI job para `test_rls_isolation.sql` (correr manual mensualmente es suficiente).
-- Email Resend (canal interno cubre 90% del valor; Resend cuando haya dominio verificado y caso de uso externo).
-- Migrar a otro stack o reescribir módulos que ya funcionan.
-
-¿Arranco con **1.1 Dashboard de salud** como primer paso del bloque crítico, o prefieres que ataque **1.5 Linter + 1.4 Hardening auth** primero para descubrir riesgos antes de invertir en el dashboard?
+¿Por cuál sprint arrancamos? Mi recomendación es **Sprint A completo**
