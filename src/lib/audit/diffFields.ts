@@ -94,4 +94,96 @@ export const SENSITIVE_FIELDS = {
     "moneda",
     "estado_facturacion",
   ] as const,
+  embarque: [
+    "cliente_id",
+    "modo",
+    "tipo",
+    "incoterm",
+    "naviera",
+    "contenedor",
+    "bl_master",
+    "bl_house",
+    "puerto_origen",
+    "puerto_destino",
+    "etd",
+    "eta",
+    "estado",
+    "consignatario_id",
+    "notificar_id",
+  ] as const,
 } as const;
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Diff de arreglos de conceptos (costos/ventas de embarque).
+// ─────────────────────────────────────────────────────────────────────────────
+
+export interface ConceptoLike {
+  concepto?: string | null;
+  descripcion?: string | null;
+  monto?: number | string | null;
+  precio_unitario?: number | string | null;
+  cantidad?: number | string | null;
+  moneda?: string | null;
+  proveedor_id?: string | null;
+}
+
+export interface ConceptosDiff {
+  agregados: number;
+  eliminados: number;
+  modificados: number;
+  detalle: Array<{ tipo: "agregado" | "eliminado" | "modificado"; concepto: string; antes?: string; despues?: string }>;
+}
+
+function keyOf(c: ConceptoLike): string {
+  const nombre = (c.concepto ?? c.descripcion ?? "").trim().toLowerCase();
+  const prov = c.proveedor_id ?? "";
+  return `${nombre}|${prov}`;
+}
+
+function montoTotal(c: ConceptoLike): number {
+  if (c.monto != null) return Number(c.monto) || 0;
+  const pu = Number(c.precio_unitario ?? 0) || 0;
+  const qty = Number(c.cantidad ?? 1) || 1;
+  return pu * qty;
+}
+
+function resumen(c: ConceptoLike): string {
+  return `${montoTotal(c).toFixed(2)} ${c.moneda ?? ""}`.trim();
+}
+
+/**
+ * Compara dos listas de conceptos (venta o costo) y devuelve un resumen
+ * cuantitativo + detalle de cambios. Empareja por (concepto, proveedor_id).
+ */
+export function diffConceptos(
+  before: ConceptoLike[] | null | undefined,
+  after: ConceptoLike[] | null | undefined,
+): ConceptosDiff {
+  const b = before ?? [];
+  const a = after ?? [];
+  const mapBefore = new Map(b.map((c) => [keyOf(c), c]));
+  const mapAfter = new Map(a.map((c) => [keyOf(c), c]));
+  const out: ConceptosDiff = { agregados: 0, eliminados: 0, modificados: 0, detalle: [] };
+
+  for (const [k, ca] of mapAfter) {
+    const cb = mapBefore.get(k);
+    if (!cb) {
+      out.agregados += 1;
+      out.detalle.push({ tipo: "agregado", concepto: (ca.concepto ?? ca.descripcion ?? "").trim(), despues: resumen(ca) });
+    } else {
+      const rb = resumen(cb);
+      const ra = resumen(ca);
+      if (rb !== ra || (cb.moneda ?? "") !== (ca.moneda ?? "")) {
+        out.modificados += 1;
+        out.detalle.push({ tipo: "modificado", concepto: (ca.concepto ?? ca.descripcion ?? "").trim(), antes: rb, despues: ra });
+      }
+    }
+  }
+  for (const [k, cb] of mapBefore) {
+    if (!mapAfter.has(k)) {
+      out.eliminados += 1;
+      out.detalle.push({ tipo: "eliminado", concepto: (cb.concepto ?? cb.descripcion ?? "").trim(), antes: resumen(cb) });
+    }
+  }
+  return out;
+}
