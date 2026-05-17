@@ -121,11 +121,11 @@ export function useEditarEmbarqueWizard(id: string | undefined) {
           modo: v.modo,
           tipo: v.tipo,
           ...(tuvoCambios && {
-            cambios: {
+            cambios: JSON.parse(JSON.stringify({
               embarque: cambiosEmbarque,
               ventas: cambiosVenta,
               costos: cambiosCosto,
-            },
+            })),
           }),
         },
       });
