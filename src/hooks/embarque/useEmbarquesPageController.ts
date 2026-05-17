@@ -34,7 +34,7 @@ export function useEmbarquesPageController() {
   const prefetchEmbarque = usePrefetchEmbarque();
 
   const state = useEmbarquesPageState();
-  const { embarques, isLoading, isEmptyState, contenedoresPorExpediente, extras } = state;
+  const { isLoading, isEmptyState, contenedoresPorExpediente, extras } = state;
 
   const [embarqueAEliminar, setEmbarqueAEliminar] = useState<EmbarqueRow | null>(null);
   const [embarqueADuplicar, setEmbarqueADuplicar] = useState<EmbarqueRow | null>(null);
