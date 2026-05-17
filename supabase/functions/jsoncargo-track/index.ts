@@ -64,16 +64,34 @@ Deno.serve(async (req) => {
     .select("id, contenedor, naviera, modo, organization_id, eta, etd, expediente, fecha_llegada_real")
     .eq("id", embarqueId)
     .maybeSingle();
-  if (embErr || !embarque) return errorResponse("Embarque no encontrado o sin acceso", 404, cors);
+  if (embErr || !embarque) {
+    log.finish(404, "embarque_not_found", { user_id: auth.userId, payload: { embarqueId } });
+    return errorResponse("Embarque no encontrado o sin acceso", 404, cors);
+  }
 
   if (embarque.modo !== "Marítimo") {
+    log.finish(422, "not_maritimo", {
+      user_id: auth.userId,
+      organization_id: embarque.organization_id,
+      payload: { embarqueId, modo: embarque.modo },
+    });
     return errorResponse("Solo embarques marítimos", 422, cors);
   }
   if (!embarque.contenedor) {
+    log.finish(422, "missing_contenedor", {
+      user_id: auth.userId,
+      organization_id: embarque.organization_id,
+      payload: { embarqueId },
+    });
     return errorResponse("Embarque sin número de contenedor", 422, cors);
   }
   const shippingLine = mapNaviera(embarque.naviera);
   if (!shippingLine) {
+    log.finish(422, "naviera_no_soportada", {
+      user_id: auth.userId,
+      organization_id: embarque.organization_id,
+      payload: { embarqueId, naviera: embarque.naviera },
+    });
     return errorResponse(`Naviera "${embarque.naviera ?? "—"}" no soportada por JSONCargo`, 422, cors);
   }
 
