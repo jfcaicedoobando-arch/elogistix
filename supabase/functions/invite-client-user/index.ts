@@ -97,6 +97,10 @@ Deno.serve(async (req) => {
         });
       if (inviteError || !inviteData.user) {
         console.error("Error inviting user:", inviteError);
+        log.finish(500, "invite_email_failed", {
+          organization_id,
+          payload: { error: inviteError?.message },
+        });
         return errorResponse(
           `Error al invitar usuario: ${inviteError?.message}`,
           500,
@@ -128,6 +132,10 @@ Deno.serve(async (req) => {
       );
     if (linkError) {
       console.error("Error linking user:", linkError);
+      log.finish(500, "link_failed", {
+        organization_id,
+        payload: { user_id: userIdToLink, error: linkError.message },
+      });
       return errorResponse(
         `Error al vincular usuario: ${linkError.message}`,
         500,
@@ -135,6 +143,10 @@ Deno.serve(async (req) => {
       );
     }
 
+    log.finish(200, "client_user_invited", {
+      organization_id,
+      payload: { user_id: userIdToLink, is_new: !existingUser, cliente_id },
+    });
     return jsonResponse(
       { success: true, user_id: userIdToLink, is_new: !existingUser },
       200,
@@ -145,6 +157,7 @@ Deno.serve(async (req) => {
     const [code, ...rest] = msg.split(":");
     const status = /^\d+$/.test(code) ? parseInt(code) : 500;
     console.error("invite-client-user error:", msg);
+    log.finish(status, "unhandled_error", { payload: { error: msg } });
     return errorResponse(rest.join(":") || msg, status, cors);
   }
 });
