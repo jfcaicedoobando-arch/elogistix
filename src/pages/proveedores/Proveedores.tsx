@@ -95,11 +95,15 @@ function ProveedorTable({ tipo, search, onSelect }: { tipo: TipoProveedor; searc
 export default function Proveedores() {
   const [search, setSearch] = useState("");
   const [nuevoOpen, setNuevoOpen] = useState(false);
+  const [importOpen, setImportOpen] = useState(false);
+  const [activeTipo, setActiveTipo] = useState<TipoProveedor>("Naviera");
   const navigate = useNavigate();
   const { addProveedor } = useProveedorMutations();
   const { canEdit } = usePermissions();
   const registrarActividad = useRegistrarActividad();
   const { toast } = useToast();
+  const { organizationId } = useOrgFilter();
+  const queryClient = useQueryClient();
 
   const handleAdd = async (data: Omit<Proveedor, 'id'>) => {
     try {
@@ -124,9 +128,14 @@ export default function Proveedores() {
         description="Gestión de proveedores por categoría"
         actions={
           canEdit ? (
-            <Button onClick={() => setNuevoOpen(true)} className="hidden sm:inline-flex">
-              <Plus className="mr-2 h-4 w-4" /> Nuevo Proveedor
-            </Button>
+            <div className="hidden sm:flex gap-2">
+              <Button variant="outline" onClick={() => setImportOpen(true)}>
+                <Upload className="mr-2 h-4 w-4" /> Importar CSV
+              </Button>
+              <Button onClick={() => setNuevoOpen(true)}>
+                <Plus className="mr-2 h-4 w-4" /> Nuevo Proveedor
+              </Button>
+            </div>
           ) : null
         }
       />
@@ -137,7 +146,7 @@ export default function Proveedores() {
         </CardContent>
       </Card>
 
-      <Tabs defaultValue="Naviera">
+      <Tabs value={activeTipo} onValueChange={(v) => setActiveTipo(v as TipoProveedor)}>
         <div className="w-full overflow-x-auto">
           <TabsList className="inline-flex w-max min-w-full h-auto flex-wrap gap-1 lg:flex-nowrap">
             {TABS.map(tabConfig => (
@@ -153,6 +162,41 @@ export default function Proveedores() {
       </Tabs>
 
       <NuevoProveedorDialog open={nuevoOpen} onOpenChange={setNuevoOpen} onSave={handleAdd} />
+
+      <BulkImportDialog
+        open={importOpen}
+        onOpenChange={setImportOpen}
+        title={`Importar proveedores (${activeTipo}) desde CSV`}
+        description="Carga un CSV con proveedores. Si omites la columna 'tipo', se asignará el tipo de la pestaña activa."
+        templateHeaders={PROVEEDOR_TEMPLATE_HEADERS}
+        templateExampleRow={[
+          "Maersk Line",
+          activeTipo,
+          "MLI010101AAA",
+          "Sandra López",
+          "55 1111 2222",
+          "contacto@maersk.com",
+          "USD",
+          "Dinamarca",
+        ]}
+        templateFileName={`plantilla-proveedores-${activeTipo.toLowerCase().replace(/\s+/g, "-")}.csv`}
+        mapRows={(rows) => mapProveedorRows(rows, organizationId, activeTipo)}
+        onCommit={async (payloads) => {
+          for (const p of payloads) {
+            // eslint-disable-next-line no-await-in-loop
+            await insertProveedor(p);
+          }
+          registrarActividad.mutate({
+            accion: "crear",
+            modulo: "proveedores",
+            entidad_nombre: `Importación CSV ${activeTipo} (${payloads.length})`,
+          });
+        }}
+        onSuccess={(n) => {
+          queryClient.invalidateQueries({ queryKey: queryKeys.proveedores.all });
+          notifySuccess(toast, { title: `Importados ${n} proveedores` });
+        }}
+      />
 
       {canEdit && (
         <FloatingActionButton
