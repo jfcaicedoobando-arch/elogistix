@@ -14,7 +14,9 @@ export {
   fetchCotizacionesAceptadas,
   fetchCotizacionById,
   fetchEmbarquesVinculados,
+  fetchCotizacionesListado,
 } from "./queries";
+export type { CotizacionListadoItem, FetchCotizacionesListadoParams } from "./queries";
 
 // Mutations (escrituras)
 export {
