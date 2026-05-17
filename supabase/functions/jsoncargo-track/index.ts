@@ -250,6 +250,11 @@ Deno.serve(async (req) => {
   const etdDifiere = !!etdPropuesta && etdPropuesta !== etdActual;
   const ataDifiere = !!ataPropuesta && ataPropuesta !== ataActual;
 
+  log.finish(200, "sync_ok", {
+    user_id: auth.userId,
+    organization_id: embarque.organization_id,
+    payload: { embarqueId, eventos_creados: eventosCreados, eta_difiere: etaDifiere, etd_difiere: etdDifiere, ata_difiere: ataDifiere },
+  });
   return jsonResponse({
     ok: true,
     eventos_creados: eventosCreados,
