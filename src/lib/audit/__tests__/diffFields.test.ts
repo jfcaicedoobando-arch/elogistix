@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { diffFields } from "../diffFields";
+import { diffFields, diffConceptos } from "../diffFields";
 
 describe("diffFields", () => {
   it("returns empty when before is null", () => {
