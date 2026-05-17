@@ -22,6 +22,14 @@ export interface ChangelogEntry {
  */
 export const recentChangelog: ChangelogEntry[] = [
   {
+    version: "8.191.0",
+    date: "2026-05-17",
+    type: "minor",
+    title: "Sprint A — Hardening pre go-live (A.1, A.2, A.3, A.4)",
+    summary: "Cierre de 20 warnings críticos del linter (anon ejecución de RPCs), HIBP activado, signups deshabilitados, nueva página /ayuda con glosario y FAQ, checklist de simulacro de restore.",
+    description: "A.1 Linter: REVOKE EXECUTE FROM PUBLIC en 23 funciones SECURITY DEFINER (anon ya no puede invocarlas); GRANT a authenticated sólo en RPCs legítimos; revocación total en triggers (congelar_factura_al_emitir, notif_cli_on_embarque_estado, sync_*). Pasamos de 71 a 51 warnings; los restantes son advisory para 'authenticated SECURITY DEFINER' necesarios para bypassear RLS (has_role, RPCs transaccionales). A.2 Auth: configure_auth con password_hibp_enabled=true, disable_signup=true, external_anonymous_users_enabled=false, auto_confirm_email=false. A.3 Backups: docs/backups-rollback.md extendido con checklist de simulacro (5 pasos: preparación, restore, validación, métricas RTO/RPO, limpieza) + plan de comunicación incidente. A.4 Ayuda: nueva ruta /ayuda + sidebar item con HelpCircle. src/content/ayudaContent.ts (16 términos glosario + 18 FAQs en 4 módulos: embarques, facturación, clientes, operación diaria). Búsqueda en vivo, tabs Glosario/FAQ, accordions. A.5 (export ZIP org) diferido a próxima iteración por dependencia jszip. APP_VERSION 8.191.0.",
+  },
+  {
     version: "8.190.0",
     date: "2026-05-17",
     type: "minor",
@@ -92,14 +100,6 @@ export const recentChangelog: ChangelogEntry[] = [
     title: "Bloque 2.2 — Validación zod en mutaciones",
     summary: "Nuevos schemas zod en cliente, cotización, embarque y notas validan los payloads antes de tocar la base; parseOrThrow surface errores legibles.",
     description: "src/lib/validation/mutationSchemas.ts centraliza la última red de seguridad antes de los inserts/updates: createCliente, updateCliente, crearCotizacion, crearEmbarqueRpc, insertarNotaEmbarque e insertarNotaCambioEstado pasan por parseOrThrow. 15 tests nuevos verdes. APP_VERSION 8.182.0."
-  },
-  {
-    version: "8.181.0",
-    date: "2026-05-17",
-    type: "minor",
-    title: "Bloque 2.4 — N+1 fase 2 en cotizaciones, clientes y proveedores",
-    summary: "RPCs *_listado con agregados (embarques, cotizaciones, deuda, operaciones, pendiente) eliminan llamadas extra desde la UI.",
-    description: "cotizaciones_listado, clientes_listado y proveedores_listado siguen el patrón de B.4 con SECURITY INVOKER. fetchClientesPaginados y fetchProveedoresPaginados ahora consumen las RPCs y devuelven ítems enriquecidos sin romper consumidores. fetchCotizacionesListado se expone para futuras pantallas paginadas. APP_VERSION 8.181.0."
   },
 
 ];

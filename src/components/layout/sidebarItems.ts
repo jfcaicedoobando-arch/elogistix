@@ -14,6 +14,7 @@ import {
   ShieldAlert,
   Trash2,
   Repeat2,
+  HelpCircle,
 } from "lucide-react";
 import type { SidebarItem } from "@/components/layout/SidebarGroupBlock";
 
@@ -41,6 +42,7 @@ export const SIDEBAR_SISTEMA_ITEMS: SidebarItem[] = [
   { title: "Auditoría", url: "/auditoria", icon: ShieldAlert },
   { title: "Bitácora", url: "/bitacora", icon: ScrollText },
   { title: "Changelog", url: "/changelog", icon: ScrollText },
+  { title: "Ayuda", url: "/ayuda", icon: HelpCircle },
 ];
 
 export const SIDEBAR_ADMIN_ITEMS: SidebarItem[] = [

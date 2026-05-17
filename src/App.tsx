@@ -25,6 +25,7 @@ const Changelog = lazy(() => import("./pages/dashboard/Changelog"));
 const Papelera = lazy(() => import("./pages/dashboard/Papelera"));
 const Idempotencia = lazy(() => import("./pages/dashboard/Idempotencia"));
 const Auditoria = lazy(() => import("./pages/Auditoria"));
+const Ayuda = lazy(() => import("./pages/dashboard/Ayuda"));
 
 const Embarques = lazy(() => import("./pages/embarques/Embarques"));
 const EmbarqueDetalle = lazy(() => import("./pages/embarques/EmbarqueDetalle"));
@@ -188,6 +189,7 @@ const App = () => (
               <Route path="/rentabilidad" element={<Navigate to="/reportes/rentabilidad" replace />} />
               
               <Route path="/changelog" element={<Changelog />} />
+              <Route path="/ayuda" element={<Ayuda />} />
               <Route path="/bitacora" element={<Bitacora />} />
               <Route
                 path="/papelera"

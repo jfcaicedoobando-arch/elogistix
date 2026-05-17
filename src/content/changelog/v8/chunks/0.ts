@@ -2,6 +2,14 @@ import type { ChangelogEntry } from "../../../changelogData";
 
 export const chunk0: ChangelogEntry[] = [
   {
+    version: "8.191.0",
+    date: "2026-05-17",
+    type: "minor",
+    title: "Sprint A — Hardening pre go-live (A.1, A.2, A.3, A.4)",
+    summary: "Cierre de 20 warnings críticos del linter (anon ejecución de RPCs), HIBP activado, signups deshabilitados, nueva página /ayuda con glosario y FAQ, checklist de simulacro de restore.",
+    description: "A.1 Linter: REVOKE EXECUTE FROM PUBLIC en 23 funciones SECURITY DEFINER; GRANT a authenticated sólo en RPCs legítimos; revocación total en triggers. Pasamos de 71 a 51 warnings. A.2 Auth: configure_auth con password_hibp_enabled=true, disable_signup=true. A.3 Backups: docs/backups-rollback.md extendido con checklist de simulacro. A.4 Ayuda: nueva ruta /ayuda + sidebar item con 16 términos glosario y 18 FAQs en 4 módulos. APP_VERSION 8.191.0.",
+  },
+  {
     version: "8.190.0",
     date: "2026-05-17",
     type: "minor",
