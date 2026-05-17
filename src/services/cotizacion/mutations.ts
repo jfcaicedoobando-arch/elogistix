@@ -5,12 +5,14 @@ import { supabase } from "@/integrations/supabase/client";
 import type { TablesInsert } from "@/integrations/supabase/types";
 import type { CotizacionRow, CreateCotizacionInput } from "@/types/cotizacion";
 import { fromDb, toDbJson } from "@/lib/supabase/cast";
+import { cotizacionInputSchema, parseOrThrow } from "@/lib/validation/mutationSchemas";
 import { generarFolioCotizacion } from "./queries";
 
 type CotizacionInsert = TablesInsert<"cotizaciones">;
 type CotizacionUpdate = Partial<CotizacionInsert>;
 
 export async function crearCotizacion(input: CreateCotizacionInput): Promise<CotizacionRow> {
+  parseOrThrow(cotizacionInputSchema, input, "Cotización");
   const folio = await generarFolioCotizacion();
   const fechaVigencia = new Date();
   fechaVigencia.setDate(fechaVigencia.getDate() + input.vigencia_dias);

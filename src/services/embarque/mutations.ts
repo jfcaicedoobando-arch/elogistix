@@ -2,6 +2,11 @@ import { z } from "zod";
 import { supabase } from '@/integrations/supabase/client';
 import type { TablesInsert } from '@/integrations/supabase/types';
 import { fromDb, toDbJson } from "@/lib/supabase/cast";
+import {
+  embarqueInsertSchema,
+  notaSchema,
+  parseOrThrow,
+} from "@/lib/validation/mutationSchemas";
 
 // Schemas para validar los payloads de retorno de las RPCs.
 // Si la RPC cambia de shape o devuelve null inesperado, fallamos rápido y
@@ -26,6 +31,7 @@ export interface CrearEmbarqueRpcInput {
 }
 
 export async function crearEmbarqueRpc(input: CrearEmbarqueRpcInput): Promise<{ id: string }> {
+  parseOrThrow(embarqueInsertSchema, input.embarque, "Embarque");
   const { data, error } = await supabase.rpc('crear_embarque_completo', {
     p_embarque: toDbJson(input.embarque),
     p_conceptos_venta: toDbJson(input.conceptosVenta),
@@ -120,6 +126,7 @@ export async function insertarNotaCambioEstado(
   contenido: string,
   usuarioEmail: string,
 ): Promise<void> {
+  parseOrThrow(notaSchema, { contenido, usuario: usuarioEmail }, "Nota");
   const { error } = await supabase.from('notas_embarque').insert({
     embarque_id: embarqueId,
     contenido,
@@ -134,6 +141,7 @@ export async function insertarNotaEmbarque(
   contenido: string,
   usuario: string,
 ): Promise<void> {
+  parseOrThrow(notaSchema, { contenido, usuario }, "Nota");
   const { error } = await supabase.from('notas_embarque').insert({
     embarque_id: embarqueId,
     contenido,

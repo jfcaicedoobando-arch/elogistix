@@ -2,6 +2,14 @@ import type { ChangelogEntry } from "../../../changelogData";
 
 export const chunk0: ChangelogEntry[] = [
   {
+    version: "8.182.0",
+    date: "2026-05-17",
+    type: "minor",
+    title: "Bloque 2.2 — Validación zod en el boundary de mutaciones",
+    summary: "Nuevo lib/validation/mutationSchemas con schemas zod para cliente, cotización, embarque y notas: los services validan antes de tocar la base, evitando inserts con campos vacíos o tipos incorrectos.",
+    description: "Se crea src/lib/validation/mutationSchemas.ts con schemas estrictos: clienteInsertSchema/clienteUpdateSchema (nombre obligatorio, email RFC longitudes y dias_credito 0-365), cotizacionInputSchema (cliente, modo, tipo, incoterm, origen/destino, vigencia 1-365, subtotal ≥0 y al menos un concepto válido), embarqueInsertSchema (cliente_nombre, modo, operador) y notaSchema (contenido y usuario no vacíos). parseOrThrow lanza Error legible 'Contexto — campo: razón' con el ZodError original como cause, listo para toasts. Se conectan en createCliente/updateCliente, crearCotizacion, crearEmbarqueRpc, insertarNotaEmbarque/insertarNotaCambioEstado. 15 tests nuevos en src/lib/validation/__tests__/mutationSchemas.test.ts. Suite completa verde. APP_VERSION 8.182.0."
+  },
+  {
     version: "8.181.0",
     date: "2026-05-17",
     type: "minor",

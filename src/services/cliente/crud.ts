@@ -1,5 +1,10 @@
 import { supabase } from "@/integrations/supabase/client";
 import type { Tables, TablesInsert } from "@/integrations/supabase/types";
+import {
+  clienteInsertSchema,
+  clienteUpdateSchema,
+  parseOrThrow,
+} from "@/lib/validation/mutationSchemas";
 
 export type Cliente = Tables<"clientes">;
 
@@ -143,6 +148,7 @@ export async function fetchDiasCreditoCliente(
 // ============================================================
 
 export async function createCliente(cliente: TablesInsert<"clientes">) {
+  parseOrThrow(clienteInsertSchema, cliente, "Cliente");
   const { data, error } = await supabase
     .from("clientes")
     .insert(cliente)
@@ -156,6 +162,7 @@ export async function updateCliente(
   id: string,
   updates: Partial<Cliente>,
 ): Promise<Cliente> {
+  parseOrThrow(clienteUpdateSchema, updates, "Cliente");
   const { data, error } = await supabase
     .from("clientes")
     .update(updates)
