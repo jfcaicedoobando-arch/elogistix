@@ -22,6 +22,14 @@ export interface ChangelogEntry {
  */
 export const recentChangelog: ChangelogEntry[] = [
   {
+    version: "8.177.0",
+    date: "2026-05-17",
+    type: "minor",
+    title: "Ola C.2 — Dashboard de salud en /admin/diagnostico",
+    summary: "Nueva pestaña Salud con KPIs, línea de tiempo, top funciones con errores y top más lentas (p95) sobre app_logs.",
+    description: "RPCs app_logs_health_summary y app_logs_health_timeline (SECURITY INVOKER, respetan RLS multi-tenant). Hook useAppLogsHealth con auto-refresh 60s y rangos 1h/6h/24h/7d. DiagnosticoHealthPanel renderiza Recharts (LineChart timeline + BarChart top errores) y tabla de p95. /admin/diagnostico dividido en pestañas Salud / Bitácora. APP_VERSION 8.177.0."
+  },
+  {
     version: "8.176.0",
     date: "2026-05-17",
     type: "minor",
@@ -60,14 +68,6 @@ export const recentChangelog: ChangelogEntry[] = [
     title: "Ola B.2 — Página /admin/diagnostico",
     summary: "Nueva vista para super_admin y admin de organización que lista y filtra los registros de app_logs.",
     description: "Tabla paginada server-side con filtros por rango de fechas, función, nivel y búsqueda parcial en mensaje. Cada fila muestra timestamp, nivel, fn, status, latencia y request_id; el payload jsonb se despliega bajo demanda. Entrada Diagnóstico añadida al AdminSidebar. RLS de app_logs delimita el alcance automáticamente. APP_VERSION 8.172.0."
-  },
-  {
-    version: "8.171.0",
-    date: "2026-05-16",
-    type: "minor",
-    title: "Ola B.1 — Logging estructurado en edge functions",
-    summary: "Nueva tabla app_logs y logger compartido capturan request_id, latencia, user/org y status_code de cada edge function.",
-    description: "Migración crea public.app_logs con RLS (super_admin lee todo, admin lee su org) y función purge_app_logs_old() para retención de 30 días. Nuevo logger compartido escribe en paralelo a console y a la tabla; parse-csf migrado como smoke test. Base para /admin/diagnostico y alertas. APP_VERSION 8.171.0."
   },
   {
     version: "8.170.0",

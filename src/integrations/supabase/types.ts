@@ -2199,6 +2199,28 @@ export type Database = {
         }
         Returns: Json
       }
+      app_logs_health_summary: {
+        Args: { p_hours?: number }
+        Returns: {
+          errors: number
+          fn: string
+          last_error_ts: string
+          last_ts: string
+          p50_ms: number
+          p95_ms: number
+          total: number
+          warns: number
+        }[]
+      }
+      app_logs_health_timeline: {
+        Args: { p_buckets?: number; p_hours?: number }
+        Returns: {
+          bucket: string
+          errors: number
+          total: number
+          warns: number
+        }[]
+      }
       auditoria_capturar_snapshot: {
         Args: { p_organization_id: string }
         Returns: string

@@ -2,6 +2,14 @@ import type { ChangelogEntry } from "../../../changelogData";
 
 export const chunk0: ChangelogEntry[] = [
   {
+    version: "8.177.0",
+    date: "2026-05-17",
+    type: "minor",
+    title: "Ola C.2 — Dashboard de salud en /admin/diagnostico",
+    summary: "Nueva pestaña Salud con KPIs (eventos, errores, advertencias, funciones con error), línea de tiempo, top 5 funciones con errores y top 5 más lentas por p95.",
+    description: "Se agregaron los RPCs app_logs_health_summary(p_hours) y app_logs_health_timeline(p_hours, p_buckets) — ambos SECURITY INVOKER, respetan la RLS multi-tenant existente sobre app_logs (super_admin ve todo, admin de organización sólo la suya). Nuevo hook useAppLogsHealth con auto-refresh cada 60 s y selector de rango (1h, 6h, 24h, 7d). DiagnosticoHealthPanel usa Recharts para timeline y bar chart de errores; tabla para p95. La página /admin/diagnostico ahora se divide en pestañas Salud / Bitácora; el visor anterior queda intacto. Cierra la Ola C (datos reales gracias a C.1 + visualización ejecutable). APP_VERSION 8.177.0."
+  },
+  {
     version: "8.176.0",
     date: "2026-05-17",
     type: "minor",
