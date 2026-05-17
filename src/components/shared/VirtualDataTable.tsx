@@ -13,7 +13,7 @@
  * Para tablas comunes (≤50 filas, paginadas, con sort/footer) sigue usando
  * `DataTable`.
  */
-import React, { useRef } from "react";
+import { useRef } from "react";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { cn } from "@/lib/utils";
 import { Skeleton } from "@/components/ui/skeleton";
