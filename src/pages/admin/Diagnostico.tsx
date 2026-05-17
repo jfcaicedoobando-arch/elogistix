@@ -6,7 +6,7 @@
 import { useState, useMemo } from "react";
 import { Activity, AlertCircle } from "lucide-react";
 import { PageHeader } from "@/components/shared/PageHeader";
-import { DataTable } from "@/components/shared/DataTable";
+import { VirtualDataTable } from "@/components/shared/VirtualDataTable";
 import { useAppLogs, useAppLogsFnList, type AppLogLevel } from "@/hooks/admin/useAppLogs";
 import { DiagnosticoFilters } from "@/components/admin/DiagnosticoFilters";
 import { diagnosticoColumns } from "@/components/admin/diagnosticoColumns";
