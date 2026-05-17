@@ -2,6 +2,14 @@ import type { ChangelogEntry } from "../../../changelogData";
 
 export const chunk0: ChangelogEntry[] = [
   {
+    version: "8.180.0",
+    date: "2026-05-17",
+    type: "minor",
+    title: "Bloque 2.1 — Reporte de crashes de UI a app_logs",
+    summary: "Nueva edge function client-error-log y ErrorBoundary instrumentado: cualquier excepción no atrapada en la UI queda registrada como error en app_logs y dispara las alertas internas.",
+    description: "Edge function client-error-log (verify_jwt=false) acepta POST con {message, stack, component_stack, route, user_agent, app_version}, captura request_id y user_id desde JWT cuando existe, y persiste en app_logs con fn='client', level='error', status_code=500. Trunca message a 1000, stack a 8000, component_stack a 4000 para evitar payloads enormes. ErrorBoundary ahora invoca supabase.functions.invoke('client-error-log', {...}) en componentDidCatch (fire-and-forget; nunca rompe la UI), excepto cuando es ChunkLoadError donde sigue intentando recargar. Como el cron detectar_alertas_app_logs() agrupa por function_name, ≥5 crashes de UI en 5 min generan automáticamente una alerta en /admin/diagnostico → Alertas. APP_VERSION 8.180.0."
+  },
+  {
     version: "8.179.0",
     date: "2026-05-17",
     type: "patch",
