@@ -12,6 +12,7 @@ type CotizacionInsert = TablesInsert<"cotizaciones">;
 type CotizacionUpdate = Partial<CotizacionInsert>;
 
 export async function crearCotizacion(input: CreateCotizacionInput): Promise<CotizacionRow> {
+  parseOrThrow(cotizacionInputSchema, input, "Cotización");
   const folio = await generarFolioCotizacion();
   const fechaVigencia = new Date();
   fechaVigencia.setDate(fechaVigencia.getDate() + input.vigencia_dias);
