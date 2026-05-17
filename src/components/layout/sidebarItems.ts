@@ -14,6 +14,7 @@ import {
   ShieldAlert,
   Trash2,
   Repeat2,
+  HelpCircle,
 } from "lucide-react";
 import type { SidebarItem } from "@/components/layout/SidebarGroupBlock";
 
