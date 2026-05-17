@@ -22,6 +22,14 @@ export interface ChangelogEntry {
  */
 export const recentChangelog: ChangelogEntry[] = [
   {
+    version: "8.178.0",
+    date: "2026-05-17",
+    type: "minor",
+    title: "Hardening + Alertas internas del sistema",
+    summary: "HIBP activado; nueva tabla alertas_sistema con detección automática cada 5 min y panel en /admin/diagnostico.",
+    description: "Bloque 1: 1.4 Hardening auth (password_hibp_enabled=true bloquea contraseñas filtradas) + 1.2 Alertas internas. Tabla alertas_sistema (RLS super_admin), función detectar_alertas_app_logs() agrupa errores por function_name en ventanas de 5 min (≥5 = alerta, ≥20 = critical), cron pg_cron */5 min, dedupe_key por hora. Hook useAlertasSistema, AlertasSistemaPanel (lista, severity, reconocer), pestaña Alertas en Diagnóstico y badge rojo en 'Panel Admin'. APP_VERSION 8.178.0."
+  },
+  {
     version: "8.177.0",
     date: "2026-05-17",
     type: "minor",
