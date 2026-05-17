@@ -67,7 +67,7 @@ function installRpcHandler(opts: {
 }
 
 const baseEmbarque = {
-  embarque: { tipo: "Maritimo", modo: "FCL", cliente_id: "c1", expediente: "EXP-1" } as never,
+  embarque: { tipo: "Maritimo", modo: "FCL", cliente_id: "c1", cliente_nombre: "Acme", operador: "Op Test", expediente: "EXP-1" } as never,
   conceptosVenta: [],
   conceptosCosto: [],
   documentos: [],
