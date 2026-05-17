@@ -1,6 +1,6 @@
 # Roadmap a producción — Libre Carga ERP
 
-Estado: 8.185.0. **Bloque 1, Bloque 2 y Bloque 3.1 cerrados**: 2.1 Error boundaries ✅, 2.2 zod en mutaciones ✅, 2.3 E2E Playwright ✅, 2.4 N+1 fase 2 ✅, 2.5 VirtualDataTable Bitácora ✅, 3.1 Importación CSV clientes/proveedores ✅. Siguiente: **3.2 CFDI 4.0 XML / 3.4 PDFs / 3.6 Auditoría de cambios sensibles** (según prioridad operativa).
+Estado: 8.187.0. **Bloque 1, Bloque 2 y Bloque 3 parcial cerrados**: 3.1 CSV clientes/proveedores ✅, 3.4 PDFs estado de cuenta + rentabilidad ✅, 3.6 Diff campos sensibles (cliente/proveedor) ✅. Pendiente: **3.2 CFDI 4.0 XML, 3.3 Notificaciones a cliente, 3.5 Roles granulares, 3.6 (ext) Diff en costos/ventas de embarque**.
 
 
 ## 1. Lo que YA está implementado
