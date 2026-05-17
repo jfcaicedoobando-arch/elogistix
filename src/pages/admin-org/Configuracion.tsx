@@ -92,6 +92,9 @@ export default function Configuracion() {
             setDiasHuerfano={set("diasHuerfano")}
           />
         </TabsContent>
+        <TabsContent value="exportar">
+          <TabExportar />
+        </TabsContent>
       </Tabs>
     </div>
   );
