@@ -2,6 +2,11 @@ import { z } from "zod";
 import { supabase } from '@/integrations/supabase/client';
 import type { TablesInsert } from '@/integrations/supabase/types';
 import { fromDb, toDbJson } from "@/lib/supabase/cast";
+import {
+  embarqueInsertSchema,
+  notaSchema,
+  parseOrThrow,
+} from "@/lib/validation/mutationSchemas";
 
 // Schemas para validar los payloads de retorno de las RPCs.
 // Si la RPC cambia de shape o devuelve null inesperado, fallamos rápido y
