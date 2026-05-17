@@ -101,14 +101,6 @@ export const recentChangelog: ChangelogEntry[] = [
     summary: "Nuevo selector de 30/60/120/300 en /bitacora; al pasar de 60 filas se activa @tanstack/react-virtual para mantener el scroll fluido.",
     description: "BitacoraActividad expone virtualize+maxHeight (default 600px) y la página /bitacora alterna automáticamente entre render lineal y virtualizado según el tamaño cargado. APP_VERSION 8.183.0."
   },
-  {
-    version: "8.182.0",
-    date: "2026-05-17",
-    type: "minor",
-    title: "Bloque 2.2 — Validación zod en mutaciones",
-    summary: "Nuevos schemas zod en cliente, cotización, embarque y notas validan los payloads antes de tocar la base; parseOrThrow surface errores legibles.",
-    description: "src/lib/validation/mutationSchemas.ts centraliza la última red de seguridad antes de los inserts/updates: createCliente, updateCliente, crearCotizacion, crearEmbarqueRpc, insertarNotaEmbarque e insertarNotaCambioEstado pasan por parseOrThrow. 15 tests nuevos verdes. APP_VERSION 8.182.0."
-  },
 
 ];
 
