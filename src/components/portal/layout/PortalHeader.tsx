@@ -4,6 +4,7 @@ import { ThemeToggle } from "@/components/layout/ThemeToggle";
 import { PORTAL_NAV_ITEMS, isPortalNavItemActive } from "./portalNav";
 import { PortalMobileNav } from "./PortalMobileNav";
 import { PortalUserMenu } from "./PortalUserMenu";
+import { PortalNotificationsBell } from "./PortalNotificationsBell";
 
 interface Props {
   pathname: string;
