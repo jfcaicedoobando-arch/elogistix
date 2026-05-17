@@ -22,6 +22,14 @@ export interface ChangelogEntry {
  */
 export const recentChangelog: ChangelogEntry[] = [
   {
+    version: "8.185.0",
+    date: "2026-05-17",
+    type: "minor",
+    title: "Bloque 3.1 — Importación masiva CSV de clientes y proveedores",
+    summary: "Nuevo botón 'Importar CSV' en clientes y proveedores con plantilla descargable, validación zod por fila y preview de errores antes de commitear.",
+    description: "src/lib/csv/parseCsv.ts (RFC-4180, autodetecta separador y normaliza encabezados) + importSchemas.ts (mapClienteRows/mapProveedorRows con zod) alimentan al nuevo BulkImportDialog genérico, montado en /clientes y /proveedores. Soporta tipo por defecto desde la tab activa, registra cada importación en bitácora y mantiene los 334+13 tests verdes. APP_VERSION 8.185.0."
+  },
+  {
     version: "8.184.0",
     date: "2026-05-17",
     type: "minor",
