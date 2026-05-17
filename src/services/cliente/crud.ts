@@ -21,32 +21,72 @@ export interface FetchClientesPaginadosParams {
   organizationId: string | null;
 }
 
+export interface ClienteListItem {
+  id: string;
+  nombre: string;
+  rfc: string;
+  ciudad: string;
+  estado: string;
+  contacto: string;
+  telefono: string;
+  email: string;
+  dias_credito: number | null;
+  total_embarques: number;
+  total_cotizaciones: number;
+  deuda_pendiente: number;
+}
+
 export async function fetchClientesPaginados({
   search,
   page,
   pageSize,
   organizationId,
-}: FetchClientesPaginadosParams) {
-  let query = supabase
-    .from("clientes")
-    // count: 'estimated' — más rápido en tablas grandes que 'exact'.
-    .select(CLIENTE_LIST_COLUMNS, { count: "estimated" })
-    .order("nombre");
-
-  if (organizationId) query = query.eq("organization_id", organizationId);
-  if (search) {
-    query = query.or(`nombre.ilike.%${search}%,rfc.ilike.%${search}%`);
-  }
-
-  const from = page * pageSize;
-  const to = from + pageSize - 1;
-  query = query.range(from, to);
-
-  const { data, error, count } = await query;
+}: FetchClientesPaginadosParams): Promise<{ data: ClienteListItem[]; count: number }> {
+  // Bloque 2.4 — RPC `clientes_listado` con agregados (embarques, cotizaciones, deuda)
+  // para eliminar N+1 desde la UI.
+  const offset = page * pageSize;
+  const { data, error } = await supabase.rpc("clientes_listado", {
+    p_organization_id: organizationId,
+    p_search: search || null,
+    p_offset: offset,
+    p_limit: pageSize,
+  });
   if (error) throw error;
-  // Fase G — deduplicar por RFC en el render para mitigar duplicados históricos en BD.
-  // Si el RFC está vacío, conservamos por id (no agrupar clientes sin RFC).
-  return { data: dedupeByRfc(data ?? []), count: count ?? 0 };
+
+  const rows = (data ?? []) as Array<{
+    id: string;
+    nombre: string;
+    rfc: string | null;
+    ciudad: string | null;
+    estado: string | null;
+    contacto: string | null;
+    telefono: string | null;
+    email: string | null;
+    dias_credito: number | null;
+    total_embarques: number | string;
+    total_cotizaciones: number | string;
+    deuda_pendiente: number | string;
+    total_count: number | string;
+  }>;
+
+  const count = rows.length > 0 ? Number(rows[0].total_count) : 0;
+  const mapped: ClienteListItem[] = rows.map((r) => ({
+    id: r.id,
+    nombre: r.nombre,
+    rfc: r.rfc ?? "",
+    ciudad: r.ciudad ?? "",
+    estado: r.estado ?? "",
+    contacto: r.contacto ?? "",
+    telefono: r.telefono ?? "",
+    email: r.email ?? "",
+    dias_credito: r.dias_credito,
+    total_embarques: Number(r.total_embarques),
+    total_cotizaciones: Number(r.total_cotizaciones),
+    deuda_pendiente: Number(r.deuda_pendiente),
+  }));
+
+  // Deduplicar por RFC (compat histórica con duplicados en BD).
+  return { data: dedupeByRfc(mapped), count };
 }
 
 
