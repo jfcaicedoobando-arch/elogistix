@@ -1,7 +1,13 @@
 /**
- * Queries de listado de embarques: lista completa (dashboard), paginada,
- * para export, embarques relacionados (mismo BL Master) y extras agregados
- * (liquidación + docs) vía RPC.
+ * Queries de listado de embarques.
+ *
+ * v8.173.0 (Ola B.4): `fetchEmbarquesPaginados` consume el RPC consolidado
+ * `embarques_listado` que devuelve filas + conteos de costos/documentos +
+ * total_count en una sola llamada (antes eran 2 round-trips:
+ * select paginado + RPC `embarques_list_extras`).
+ *
+ * `fetchEmbarquesListExtras` se conserva para el flujo de export CSV y para
+ * la rama con filtro de estado que sigue usando `fetchEmbarquesParaExport`.
  */
 import { supabase } from "@/integrations/supabase/client";
 import type { Tables, TablesInsert } from "@/integrations/supabase/types";
@@ -46,49 +52,68 @@ export interface EmbarquesPaginadosFilters {
   sortDir?: "asc" | "desc";
 }
 
+export interface EmbarquesPaginadosResult {
+  data: EmbarqueRow[];
+  count: number;
+  extras: EmbarqueListExtras;
+}
+
 export async function fetchEmbarquesPaginados(
   f: EmbarquesPaginadosFilters,
-): Promise<{ data: EmbarqueRow[]; count: number }> {
-  const sortCol: SortableEmbarqueColumn = SORTABLE_EMBARQUE_COLUMNS.includes(f.sortBy as SortableEmbarqueColumn)
+): Promise<EmbarquesPaginadosResult> {
+  const sortBy: SortableEmbarqueColumn = SORTABLE_EMBARQUE_COLUMNS.includes(f.sortBy as SortableEmbarqueColumn)
     ? (f.sortBy as SortableEmbarqueColumn)
     : "created_at";
-  const ascending = f.sortDir === "asc";
-
-  let query = supabase
-    .from("embarques")
-    .select(EMBARQUE_LIST_COLUMNS, { count: "estimated" })
-    .order(sortCol, { ascending, nullsFirst: false });
-
-  // Tiebreaker estable cuando el orden principal puede repetirse
-  // (p.ej. expediente duplicado en LCL: un registro por contenedor).
-  if (sortCol !== "created_at") {
-    query = query.order("created_at", { ascending: false });
-  }
-
-  if (f.organizationId) query = query.eq("organization_id", f.organizationId);
-
-  if (f.search) {
-    query = query.or(
-      `expediente.ilike.%${f.search}%,cliente_nombre.ilike.%${f.search}%,descripcion_mercancia.ilike.%${f.search}%,bl_master.ilike.%${f.search}%`,
-    );
-  }
-  if (f.filterModo !== "todos") {
-    query = query.eq("modo", f.filterModo as TablesInsert<"embarques">["modo"]);
-  }
-  if (f.filterCliente !== "todos") query = query.eq("cliente_id", f.filterCliente);
-  if (f.filterOperador !== "todos") query = query.eq("operador", f.filterOperador);
-  if (f.filterProforma === "con") query = query.eq("tiene_proforma", true);
-  else if (f.filterProforma === "sin") query = query.eq("tiene_proforma", false);
-  if (f.fechaDesde) query = query.gte("etd", f.fechaDesde);
-  if (f.fechaHasta) query = query.lte("eta", f.fechaHasta);
-
   const from = f.page * f.pageSize;
-  const to = from + f.pageSize - 1;
-  query = query.range(from, to);
 
-  const { data, error, count } = await query;
+  const { data, error } = await supabase.rpc("embarques_listado", {
+    p_organization_id: f.organizationId ?? undefined,
+    p_search: f.search || undefined,
+    p_modo: f.filterModo !== "todos" ? f.filterModo : undefined,
+    p_cliente_id: f.filterCliente !== "todos" ? f.filterCliente : undefined,
+    p_operador: f.filterOperador !== "todos" ? f.filterOperador : undefined,
+    p_proforma:
+      f.filterProforma === "con" ? "con" : f.filterProforma === "sin" ? "sin" : undefined,
+    p_fecha_desde: f.fechaDesde || undefined,
+    p_fecha_hasta: f.fechaHasta || undefined,
+    p_sort_by: sortBy,
+    p_sort_dir: f.sortDir ?? "desc",
+    p_offset: from,
+    p_limit: f.pageSize,
+  });
   if (error) throw error;
-  return { data: (data ?? []) as EmbarqueRow[], count: count ?? 0 };
+
+  const rows = (data ?? []) as Array<EmbarqueRow & {
+    costos_total: number | string;
+    costos_pagados: number | string;
+    docs_total: number | string;
+    docs_pendientes: number | string;
+    total_count: number | string;
+  }>;
+
+  const count = rows.length > 0 ? Number(rows[0].total_count) : 0;
+  const liquidacion: EmbarqueListExtras["liquidacion"] = {};
+  const docs: EmbarqueListExtras["docs"] = {};
+  const data_clean: EmbarqueRow[] = rows.map((r) => {
+    liquidacion[r.id] = {
+      total: Number(r.costos_total),
+      pagados: Number(r.costos_pagados),
+    };
+    docs[r.id] = {
+      total: Number(r.docs_total),
+      pendientes: Number(r.docs_pendientes),
+    };
+    // Limpia los campos agregados del row antes de devolverlo.
+    const {
+      costos_total: _ct, costos_pagados: _cp,
+      docs_total: _dt, docs_pendientes: _dp,
+      total_count: _tc,
+      ...clean
+    } = r;
+    return clean as EmbarqueRow;
+  });
+
+  return { data: data_clean, count, extras: { liquidacion, docs } };
 }
 
 /**
