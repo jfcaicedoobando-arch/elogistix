@@ -2,6 +2,14 @@ import type { ChangelogEntry } from "../../../changelogData";
 
 export const chunk0: ChangelogEntry[] = [
   {
+    version: "8.181.0",
+    date: "2026-05-17",
+    type: "minor",
+    title: "Bloque 2.4 — N+1 fase 2 (cotizaciones, clientes, proveedores)",
+    summary: "Nuevos RPCs cotizaciones_listado, clientes_listado y proveedores_listado con agregados server-side: clientes y proveedores listados ya no disparan consultas adicionales por fila.",
+    description: "Se aplica el patrón de B.4 (embarques_listado/facturas_listado) a los tres listados restantes. clientes_listado devuelve total_embarques, total_cotizaciones y deuda_pendiente (facturas en estado Emitida/Vencida) en una sola llamada — el servicio fetchClientesPaginados ahora consume la RPC y entrega ClienteListItem enriquecido sin tocar la UI existente. proveedores_listado agrega total_operaciones y monto_pendiente (sum de conceptos_costo no pagados) y fetchProveedoresPaginados se reescribe contra la RPC. cotizaciones_listado expone embarques_vinculados y soporta filtros search/estado/modo/cliente/fecha + paginación con total_count; se exporta como fetchCotizacionesListado para uso futuro sin romper el listado actual. Todas las RPCs son SECURITY INVOKER y respetan RLS multi-tenant. APP_VERSION 8.181.0."
+  },
+  {
     version: "8.180.0",
     date: "2026-05-17",
     type: "minor",
