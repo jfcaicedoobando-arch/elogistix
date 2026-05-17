@@ -187,6 +187,11 @@ Deno.serve(async (req) => {
   }
 
   if (!result.ok || !result.data) {
+    log.finish(200, "provider_failed", {
+      user_id: auth.userId,
+      organization_id: embarque.organization_id,
+      payload: { embarqueId, provider_status: result.status, error: result.errorTitle },
+    });
     return jsonResponse({
       ok: false,
       status: result.status,
