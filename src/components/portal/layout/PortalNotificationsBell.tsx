@@ -73,7 +73,7 @@ export function PortalNotificationsBell() {
             </Button>
           )}
         </div>
-        <ScrollArea className="max-h-80">
+        <div className="max-h-80 overflow-y-auto">
           {items.length === 0 ? (
             <p className="text-xs text-muted-foreground px-3 py-8 text-center">
               Sin notificaciones por ahora.
@@ -108,7 +108,7 @@ export function PortalNotificationsBell() {
               ))}
             </ul>
           )}
-        </ScrollArea>
+        </div>
       </DropdownMenuContent>
     </DropdownMenu>
   );
