@@ -22,6 +22,22 @@ export interface ChangelogEntry {
  */
 export const recentChangelog: ChangelogEntry[] = [
   {
+    version: "8.175.0",
+    date: "2026-05-17",
+    type: "minor",
+    title: "Ola B.6 — Suite de tests de RLS multi-tenant",
+    summary: "Script SQL verifica aislamiento entre organizaciones para 8 escenarios críticos (clientes, embarques, app_logs, bitácora).",
+    description: "supabase/tests/rls/test_rls_isolation.sql siembra dos organizaciones y simula cada usuario vía request.jwt.claims; cubre lectura aislada, updates cruzados bloqueados, alcance del portal cliente, app_logs por tenant e insert con usuario_id falso rechazado. Ejecutar con psql -f sobre staging. APP_VERSION 8.175.0."
+  },
+  {
+    version: "8.174.0",
+    date: "2026-05-17",
+    type: "minor",
+    title: "Ola B.5 — Virtualización de listas largas",
+    summary: "Nuevo VirtualDataTable basado en @tanstack/react-virtual; /admin/diagnostico soporta 500 filas con payload expansible sin caída de FPS.",
+    description: "VirtualDataTable comparte contrato de columnas con DataTable pero renderiza con grid + filas absolutas y measureElement para alturas variables. Header sticky, zebra, hover, pagination embebida. Diagnóstico ahora admite page size 500 con overscan 12 y maxHeight 640px. APP_VERSION 8.174.0."
+  },
+  {
     version: "8.173.0",
     date: "2026-05-17",
     type: "minor",
