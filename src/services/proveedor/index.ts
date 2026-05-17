@@ -9,9 +9,6 @@ import { fromDb } from "@/lib/supabase/cast";
 
 type TipoProveedor = Enums<"tipo_proveedor">;
 
-const PROVEEDOR_LIST_COLUMNS =
-  "id, nombre, tipo, rfc, contacto, moneda_preferida" as const;
-
 const PROVEEDOR_DETAIL_COLUMNS =
   "id, nombre, tipo, rfc, contacto, telefono, email, moneda_preferida, origen_proveedor, pais, organization_id, created_at, updated_at" as const;
 
@@ -23,6 +20,17 @@ export type ProveedorListItem = Pick<
   total_operaciones: number;
   monto_pendiente: number;
 };
+
+export interface ProveedorOperacion {
+  concepto: string;
+  monto: number;
+  moneda: string;
+  estadoLiquidacion: string;
+  fechaVencimiento: string | null;
+  expediente: string;
+  embarqueId: string;
+  clienteNombre: string;
+}
 
 export interface FetchProveedoresParams {
   tipo: TipoProveedor;
