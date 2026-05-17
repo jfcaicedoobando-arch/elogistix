@@ -5,6 +5,7 @@
 import { handlePreflightStrict, buildCors } from "../_shared/cors.ts";
 import { jsonResponse, errorResponse } from "../_shared/response.ts";
 import { authenticate } from "../_shared/auth.ts";
+import { createLogger } from "../_shared/logger.ts";
 import {
   fetchContainerDetails,
   mapNaviera,
@@ -26,18 +27,26 @@ Deno.serve(async (req) => {
   const preflight = handlePreflightStrict(req);
   if (preflight) return preflight;
   const cors = buildCors(req);
+  const log = createLogger(req, "jsoncargo-track");
 
-  if (req.method !== "POST") return errorResponse("Method not allowed", 405, cors);
+  if (req.method !== "POST") {
+    log.finish(405, "method_not_allowed");
+    return errorResponse("Method not allowed", 405, cors);
+  }
 
   // @ts-expect-error Deno global
   const apiKey = Deno.env.get("JSONCARGO_API_KEY");
-  if (!apiKey) return errorResponse("JSONCARGO_API_KEY no configurada", 500, cors);
+  if (!apiKey) {
+    log.finish(500, "missing_api_key");
+    return errorResponse("JSONCARGO_API_KEY no configurada", 500, cors);
+  }
 
   let auth;
   try {
     auth = await authenticate(req);
   } catch (e) {
     const msg = e instanceof Error ? e.message : "auth error";
+    log.finish(401, "auth_failed", { payload: { error: msg } });
     return errorResponse(msg.replace(/^401:/, ""), 401, cors);
   }
 
@@ -45,6 +54,7 @@ Deno.serve(async (req) => {
   try { body = await req.json(); } catch { /* */ }
   const embarqueId = body.embarqueId;
   if (!embarqueId || typeof embarqueId !== "string") {
+    log.finish(400, "missing_embarque_id", { user_id: auth.userId });
     return errorResponse("embarqueId requerido", 400, cors);
   }
 
@@ -54,16 +64,34 @@ Deno.serve(async (req) => {
     .select("id, contenedor, naviera, modo, organization_id, eta, etd, expediente, fecha_llegada_real")
     .eq("id", embarqueId)
     .maybeSingle();
-  if (embErr || !embarque) return errorResponse("Embarque no encontrado o sin acceso", 404, cors);
+  if (embErr || !embarque) {
+    log.finish(404, "embarque_not_found", { user_id: auth.userId, payload: { embarqueId } });
+    return errorResponse("Embarque no encontrado o sin acceso", 404, cors);
+  }
 
   if (embarque.modo !== "Marítimo") {
+    log.finish(422, "not_maritimo", {
+      user_id: auth.userId,
+      organization_id: embarque.organization_id,
+      payload: { embarqueId, modo: embarque.modo },
+    });
     return errorResponse("Solo embarques marítimos", 422, cors);
   }
   if (!embarque.contenedor) {
+    log.finish(422, "missing_contenedor", {
+      user_id: auth.userId,
+      organization_id: embarque.organization_id,
+      payload: { embarqueId },
+    });
     return errorResponse("Embarque sin número de contenedor", 422, cors);
   }
   const shippingLine = mapNaviera(embarque.naviera);
   if (!shippingLine) {
+    log.finish(422, "naviera_no_soportada", {
+      user_id: auth.userId,
+      organization_id: embarque.organization_id,
+      payload: { embarqueId, naviera: embarque.naviera },
+    });
     return errorResponse(`Naviera "${embarque.naviera ?? "—"}" no soportada por JSONCargo`, 422, cors);
   }
 
@@ -95,6 +123,11 @@ Deno.serve(async (req) => {
     } else {
       await auth.adminClient.from("tracking_externo").insert(payload);
     }
+    log.finish(422, "prefix_mismatch", {
+      user_id: auth.userId,
+      organization_id: embarque.organization_id,
+      payload: { embarqueId, prefix: prefixCheck.prefix, naviera: shippingLine },
+    });
     return jsonResponse({
       ok: false,
       error_code: "PREFIX_MISMATCH",
@@ -115,6 +148,11 @@ Deno.serve(async (req) => {
   if (existing?.last_synced_at) {
     const lastSync = new Date(existing.last_synced_at).getTime();
     if (Date.now() - lastSync < THROTTLE_MS) {
+      log.finish(200, "throttled", {
+        user_id: auth.userId,
+        organization_id: embarque.organization_id,
+        payload: { embarqueId, last_synced_at: existing.last_synced_at },
+      });
       return jsonResponse({
         ok: true,
         throttled: true,
@@ -149,6 +187,11 @@ Deno.serve(async (req) => {
   }
 
   if (!result.ok || !result.data) {
+    log.finish(200, "provider_failed", {
+      user_id: auth.userId,
+      organization_id: embarque.organization_id,
+      payload: { embarqueId, provider_status: result.status, error: result.errorTitle },
+    });
     return jsonResponse({
       ok: false,
       status: result.status,
@@ -207,6 +250,11 @@ Deno.serve(async (req) => {
   const etdDifiere = !!etdPropuesta && etdPropuesta !== etdActual;
   const ataDifiere = !!ataPropuesta && ataPropuesta !== ataActual;
 
+  log.finish(200, "sync_ok", {
+    user_id: auth.userId,
+    organization_id: embarque.organization_id,
+    payload: { embarqueId, eventos_creados: eventosCreados, eta_difiere: etaDifiere, etd_difiere: etdDifiere, ata_difiere: ataDifiere },
+  });
   return jsonResponse({
     ok: true,
     eventos_creados: eventosCreados,

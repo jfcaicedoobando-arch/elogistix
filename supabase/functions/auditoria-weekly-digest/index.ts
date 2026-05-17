@@ -7,6 +7,7 @@
  */
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 import { buildCors, handlePreflightStrict } from "../_shared/cors.ts";
+import { createLogger } from "../_shared/logger.ts";
 
 const GATEWAY_URL = "https://connector-gateway.lovable.dev/resend";
 
@@ -73,11 +74,13 @@ Deno.serve(async (req) => {
   const preflight = handlePreflightStrict(req);
   if (preflight) return preflight;
   const corsHeaders = buildCors(req);
+  const log = createLogger(req, "auditoria-weekly-digest");
 
   // Cron-only: require X-Cron-Secret header
   const cronSecret = Deno.env.get("CRON_SECRET");
   const headerSecret = req.headers.get("X-Cron-Secret");
   if (!cronSecret || headerSecret !== cronSecret) {
+    log.finish(401, "unauthorized_cron");
     return new Response(
       JSON.stringify({ ok: false, error: "Unauthorized" }),
       {
@@ -173,6 +176,11 @@ Deno.serve(async (req) => {
       });
     }
 
+    const enviados = resultados.filter((r) => r.enviado).length;
+    const dryRun = resultados.filter((r) => r.dryRun).length;
+    log.finish(200, "digest_run", {
+      payload: { total: resultados.length, enviados, dryRun },
+    });
     return new Response(
       JSON.stringify({ ok: true, total: resultados.length, resultados }),
       {
@@ -181,9 +189,11 @@ Deno.serve(async (req) => {
       },
     );
   } catch (err) {
+    const msg = (err as Error).message;
     console.error("[auditoria-weekly-digest] error:", err);
+    log.finish(500, "unhandled_error", { payload: { error: msg } });
     return new Response(
-      JSON.stringify({ ok: false, error: (err as Error).message }),
+      JSON.stringify({ ok: false, error: msg }),
       {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
         status: 500,

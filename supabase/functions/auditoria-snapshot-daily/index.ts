@@ -7,15 +7,19 @@
 // @ts-expect-error Deno remote import
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 import { corsHeaders, handlePreflight } from "../_shared/cors.ts";
+import { createLogger } from "../_shared/logger.ts";
 
 Deno.serve(async (req) => {
   const preflight = handlePreflight(req);
   if (preflight) return preflight;
 
+  const log = createLogger(req, "auditoria-snapshot-daily");
+
   // @ts-expect-error Deno global
   const cronSecret = Deno.env.get("CRON_SECRET");
   const headerSecret = req.headers.get("X-Cron-Secret");
   if (!cronSecret || headerSecret !== cronSecret) {
+    log.finish(401, "unauthorized_cron");
     return new Response(
       JSON.stringify({ ok: false, error: "Unauthorized" }),
       {
@@ -50,6 +54,10 @@ Deno.serve(async (req) => {
       });
     }
 
+    const fallos = resultados.filter((r) => !r.ok).length;
+    log.finish(200, "snapshot_run", {
+      payload: { total: resultados.length, fallos },
+    });
     return new Response(
       JSON.stringify({ ok: true, total: resultados.length, resultados }),
       {
@@ -58,9 +66,11 @@ Deno.serve(async (req) => {
       },
     );
   } catch (err) {
+    const msg = (err as Error).message;
     console.error("[auditoria-snapshot-daily] error:", err);
+    log.finish(500, "unhandled_error", { payload: { error: msg } });
     return new Response(
-      JSON.stringify({ ok: false, error: (err as Error).message }),
+      JSON.stringify({ ok: false, error: msg }),
       {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
         status: 500,
