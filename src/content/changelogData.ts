@@ -101,14 +101,6 @@ export const recentChangelog: ChangelogEntry[] = [
     summary: "RPCs *_listado con agregados (embarques, cotizaciones, deuda, operaciones, pendiente) eliminan llamadas extra desde la UI.",
     description: "cotizaciones_listado, clientes_listado y proveedores_listado siguen el patrón de B.4 con SECURITY INVOKER. fetchClientesPaginados y fetchProveedoresPaginados ahora consumen las RPCs y devuelven ítems enriquecidos sin romper consumidores. fetchCotizacionesListado se expone para futuras pantallas paginadas. APP_VERSION 8.181.0."
   },
-  {
-    version: "8.180.0",
-    date: "2026-05-17",
-    type: "minor",
-    title: "Bloque 2.1 — Crashes de UI reportados a app_logs",
-    summary: "Edge function client-error-log + ErrorBoundary: cualquier excepción en la UI se persiste con fn='client' y dispara alertas internas si se repite.",
-    description: "client-error-log (verify_jwt=false) recibe {message, stack, component_stack, route, user_agent, app_version}, captura user_id desde JWT cuando existe e inserta en app_logs como error status 500. ErrorBoundary lo invoca fire-and-forget en componentDidCatch (excepto en ChunkLoadError, que sigue recargando). ≥5 crashes en 5 min disparan alerta automática vía el cron existente. APP_VERSION 8.180.0."
-  },
 
 ];
 
