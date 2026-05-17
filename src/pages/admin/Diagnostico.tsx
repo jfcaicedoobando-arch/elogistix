@@ -70,50 +70,63 @@ export default function Diagnostico() {
         description={description}
       />
 
-      <DiagnosticoFilters
-        level={level}
-        onLevelChange={handleSetLevel}
-        fn={fn}
-        onFnChange={handleSetFn}
-        fnOptions={fnOptions}
-        search={searchInput}
-        onSearchChange={handleSetSearch}
-        from={from}
-        to={to}
-        onFromChange={handleSetFrom}
-        onToChange={handleSetTo}
-        onReset={resetFilters}
-      />
+      <Tabs defaultValue="salud" className="space-y-4">
+        <TabsList>
+          <TabsTrigger value="salud">Salud</TabsTrigger>
+          <TabsTrigger value="bitacora">Bitácora</TabsTrigger>
+        </TabsList>
 
-      {error && (
-        <div className="flex items-start gap-2 rounded-md border border-destructive/40 bg-destructive/5 p-3 text-sm text-destructive">
-          <AlertCircle className="h-4 w-4 mt-0.5" />
-          <div>
-            <p className="font-medium">No se pudieron cargar los registros</p>
-            <p className="text-xs opacity-80">{error.message}</p>
-          </div>
-        </div>
-      )}
+        <TabsContent value="salud" className="space-y-4">
+          <DiagnosticoHealthPanel />
+        </TabsContent>
 
-      <VirtualDataTable
-        columns={diagnosticoColumns}
-        data={rows}
-        isLoading={isLoading}
-        density="compact"
-        emptyMessage="Sin registros para los filtros aplicados."
-        rowKey={(r) => r.id}
-        estimateRowHeight={56}
-        maxHeight={640}
-        overscan={12}
-        pagination={{
-          page,
-          totalPages,
-          onPageChange: setPage,
-          pageSize,
-          onPageSizeChange: (s) => { setPageSize(s); setPage(1); },
-          pageSizeOptions: [25, 50, 100, 200, 500],
-        }}
-      />
+        <TabsContent value="bitacora" className="space-y-4">
+          <DiagnosticoFilters
+            level={level}
+            onLevelChange={handleSetLevel}
+            fn={fn}
+            onFnChange={handleSetFn}
+            fnOptions={fnOptions}
+            search={searchInput}
+            onSearchChange={handleSetSearch}
+            from={from}
+            to={to}
+            onFromChange={handleSetFrom}
+            onToChange={handleSetTo}
+            onReset={resetFilters}
+          />
+
+          {error && (
+            <div className="flex items-start gap-2 rounded-md border border-destructive/40 bg-destructive/5 p-3 text-sm text-destructive">
+              <AlertCircle className="h-4 w-4 mt-0.5" />
+              <div>
+                <p className="font-medium">No se pudieron cargar los registros</p>
+                <p className="text-xs opacity-80">{error.message}</p>
+              </div>
+            </div>
+          )}
+
+          <VirtualDataTable
+            columns={diagnosticoColumns}
+            data={rows}
+            isLoading={isLoading}
+            density="compact"
+            emptyMessage="Sin registros para los filtros aplicados."
+            rowKey={(r) => r.id}
+            estimateRowHeight={56}
+            maxHeight={640}
+            overscan={12}
+            pagination={{
+              page,
+              totalPages,
+              onPageChange: setPage,
+              pageSize,
+              onPageSizeChange: (s) => { setPageSize(s); setPage(1); },
+              pageSizeOptions: [25, 50, 100, 200, 500],
+            }}
+          />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }
