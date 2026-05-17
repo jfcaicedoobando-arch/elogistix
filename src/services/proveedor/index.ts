@@ -19,18 +19,10 @@ export type Proveedor = Tables<"proveedores">;
 export type ProveedorListItem = Pick<
   Proveedor,
   "id" | "nombre" | "tipo" | "rfc" | "contacto" | "moneda_preferida"
->;
-
-export interface ProveedorOperacion {
-  concepto: string;
-  monto: number;
-  moneda: string;
-  estadoLiquidacion: string;
-  fechaVencimiento: string | null;
-  expediente: string;
-  embarqueId: string;
-  clienteNombre: string;
-}
+> & {
+  total_operaciones: number;
+  monto_pendiente: number;
+};
 
 export interface FetchProveedoresParams {
   tipo: TipoProveedor;
@@ -44,23 +36,42 @@ export async function fetchProveedoresPaginados(
   params: FetchProveedoresParams,
 ): Promise<{ data: ProveedorListItem[]; count: number }> {
   const { tipo, search, page, pageSize, organizationId } = params;
-
-  let query = supabase
-    .from("proveedores")
-    .select(PROVEEDOR_LIST_COLUMNS, { count: "estimated" })
-    .eq("tipo", tipo)
-    .order("nombre");
-
-  if (organizationId) query = query.eq("organization_id", organizationId);
-  if (search) query = query.ilike("nombre", `%${search}%`);
-
-  const from = page * pageSize;
-  const to = from + pageSize - 1;
-  query = query.range(from, to);
-
-  const { data, error, count } = await query;
+  // Bloque 2.4 — RPC `proveedores_listado` con agregados (operaciones, pendiente).
+  const offset = page * pageSize;
+  const { data, error } = await supabase.rpc("proveedores_listado", {
+    p_organization_id: organizationId ?? undefined,
+    p_tipo: tipo,
+    p_search: search || undefined,
+    p_offset: offset,
+    p_limit: pageSize,
+  });
   if (error) throw error;
-  return { data: (data ?? []) as ProveedorListItem[], count: count ?? 0 };
+
+  const rows = (data ?? []) as Array<{
+    id: string;
+    nombre: string;
+    tipo: TipoProveedor;
+    rfc: string | null;
+    contacto: string | null;
+    moneda_preferida: Proveedor["moneda_preferida"];
+    pais: string | null;
+    total_operaciones: number | string;
+    monto_pendiente: number | string;
+    total_count: number | string;
+  }>;
+
+  const count = rows.length > 0 ? Number(rows[0].total_count) : 0;
+  const mapped: ProveedorListItem[] = rows.map((r) => ({
+    id: r.id,
+    nombre: r.nombre,
+    tipo: r.tipo,
+    rfc: r.rfc ?? "",
+    contacto: r.contacto ?? "",
+    moneda_preferida: r.moneda_preferida,
+    total_operaciones: Number(r.total_operaciones),
+    monto_pendiente: Number(r.monto_pendiente),
+  }));
+  return { data: mapped, count };
 }
 
 export async function fetchProveedor(id: string): Promise<Proveedor | null> {
