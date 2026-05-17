@@ -1,4 +1,4 @@
-import { Download } from "lucide-react";
+import { Download, FileText } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { PageHeader } from "@/components/shared/PageHeader";
@@ -24,6 +24,7 @@ export default function Reportes() {
     sortDir,
     handleSort,
     handleExport,
+    handleExportPdf,
     canExport,
   } = useReportesPageController();
 
@@ -33,9 +34,14 @@ export default function Reportes() {
         title="Rentabilidad por Cliente"
         description="P&L agrupado por cuenta con filtros de periodo y modo"
         actions={
-          <Button variant="outline" size="sm" onClick={handleExport} disabled={!canExport}>
-            <Download className="h-4 w-4 mr-2" /> Exportar CSV
-          </Button>
+          <div className="flex gap-2">
+            <Button variant="outline" size="sm" onClick={handleExportPdf} disabled={!canExport}>
+              <FileText className="h-4 w-4 mr-2" /> PDF
+            </Button>
+            <Button variant="outline" size="sm" onClick={handleExport} disabled={!canExport}>
+              <Download className="h-4 w-4 mr-2" /> Exportar CSV
+            </Button>
+          </div>
         }
       />
 
