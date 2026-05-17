@@ -7,8 +7,10 @@ import { useState, useMemo } from "react";
 import { Activity, AlertCircle } from "lucide-react";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { VirtualDataTable } from "@/components/shared/VirtualDataTable";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAppLogs, useAppLogsFnList, type AppLogLevel } from "@/hooks/admin/useAppLogs";
 import { DiagnosticoFilters } from "@/components/admin/DiagnosticoFilters";
+import { DiagnosticoHealthPanel } from "@/components/admin/DiagnosticoHealthPanel";
 import { diagnosticoColumns } from "@/components/admin/diagnosticoColumns";
 import { useDebounce } from "@/hooks/shared/useDebounce";
 
