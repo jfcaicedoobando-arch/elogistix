@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Save, Building2, DollarSign, FileText, Ship, ClipboardList, Bell, Anchor, ShieldAlert } from "lucide-react";
+import { Save, Building2, DollarSign, FileText, Ship, ClipboardList, Bell, Anchor, ShieldAlert, Download } from "lucide-react";
 import { useConfiguracionState } from "@/hooks/configuracion/useConfiguracionState";
 import TabEmpresa from "@/components/configuracion/TabEmpresa";
 import TabTiposCambio from "@/components/configuracion/TabTiposCambio";
@@ -11,6 +11,7 @@ import TabEmbarques from "@/components/configuracion/TabEmbarques";
 import TabAlertas from "@/components/configuracion/TabAlertas";
 import TabPuertos from "@/components/configuracion/TabPuertos";
 import TabAuditoria from "@/components/configuracion/TabAuditoria";
+import TabExportar from "@/components/configuracion/TabExportar";
 
 function getSaveButtonLabel(isSaving: boolean, isDirty: boolean): string {
   if (isSaving) return "Guardando...";
@@ -57,6 +58,7 @@ export default function Configuracion() {
           <TabsTrigger value="alertas" className="gap-1.5"><Bell className="h-3.5 w-3.5" /> Alertas</TabsTrigger>
           <TabsTrigger value="puertos" className="gap-1.5"><Anchor className="h-3.5 w-3.5" /> Puertos</TabsTrigger>
           <TabsTrigger value="auditoria" className="gap-1.5"><ShieldAlert className="h-3.5 w-3.5" /> Auditoría</TabsTrigger>
+          <TabsTrigger value="exportar" className="gap-1.5"><Download className="h-3.5 w-3.5" /> Exportar</TabsTrigger>
         </TabsList>
 
         <TabsContent value="empresa">
@@ -89,6 +91,9 @@ export default function Configuracion() {
             diasHuerfano={s.diasHuerfano}
             setDiasHuerfano={set("diasHuerfano")}
           />
+        </TabsContent>
+        <TabsContent value="exportar">
+          <TabExportar />
         </TabsContent>
       </Tabs>
     </div>

@@ -2,6 +2,14 @@ import type { ChangelogEntry } from "../../../changelogData";
 
 export const chunk0: ChangelogEntry[] = [
   {
+    version: "8.192.0",
+    date: "2026-05-17",
+    type: "minor",
+    title: "Sprint A.5 — Export ZIP por organización",
+    summary: "Nueva pestaña 'Exportar' en Configuración que descarga un ZIP con CSVs de las 18 tablas operativas de la organización, con barra de progreso y procesamiento 100% en el navegador.",
+    description: "Se agregan jszip y file-saver. src/utils/orgExportZip.ts pagina cada tabla en bloques de 1000 filas (límite Supabase), serializa a CSV (RFC 4180 simplificado, escape de comillas y newlines), incluye manifest.json y comprime con DEFLATE nivel 6. Nueva pestaña /configuracion → Exportar (TabExportar) con botón 'Descargar ZIP', barra de progreso (Progress de shadcn) que muestra tabla actual y filas acumuladas, y toast de éxito/error. Tablas incluidas: clientes, proveedores, contactos, embarques, conceptos costo/venta, documentos, eventos, notas, cotizaciones y costos, facturas y conceptos, proformas, bitácora, configuración, notificaciones cliente. RLS garantiza aislamiento por organización + filtro explícito eq('organization_id'). APP_VERSION 8.192.0.",
+  },
+  {
     version: "8.191.0",
     date: "2026-05-17",
     type: "minor",
