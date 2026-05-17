@@ -1,4 +1,6 @@
+import { useRef } from "react";
 import { Link } from "react-router-dom";
+import { useVirtualizer } from "@tanstack/react-virtual";
 import {
   Plus, Edit, Trash2, RefreshCw, Upload, LogIn, FileText, Activity,
   MessageSquare, FileX, ArrowRight,
@@ -69,12 +71,99 @@ function EstadoBadge({ estado, atenuado = false }: { estado: string; atenuado?: 
   );
 }
 
+function FilaEntrada({
+  entrada,
+  mostrarUsuario,
+}: {
+  entrada: EntradaBitacora;
+  mostrarUsuario: boolean;
+}) {
+  const Icono = ICONOS_ACCION[entrada.accion] ?? Activity;
+  const colorClase = COLORES_ACCION[entrada.accion] ?? "bg-muted text-muted-foreground";
+  const rutaModulo = RUTAS_MODULO[entrada.modulo];
+  const linkEntidad =
+    rutaModulo && entrada.entidad_id ? `${rutaModulo}/${entrada.entidad_id}` : undefined;
+  const descripcion = describirEntrada(entrada);
+  const esCambioEstado = !!(descripcion.estadoAnterior && descripcion.estadoNuevo);
+
+  return (
+    <div className="relative">
+      <div
+        className={`absolute -left-[calc(1.5rem+5px)] top-1 flex h-5 w-5 items-center justify-center rounded-full ${colorClase}`}
+      >
+        <Icono className="h-3 w-3" />
+      </div>
+
+      <div className="space-y-1">
+        <div className="flex items-baseline gap-2 flex-wrap">
+          {mostrarUsuario && (
+            <span className="text-xs font-medium text-foreground" title={entrada.usuario_email}>
+              {nombreDesdeEmail(entrada.usuario_email)}
+            </span>
+          )}
+          <span
+            className="text-xs text-muted-foreground"
+            title={formatDate(entrada.created_at, "dd/MM/yyyy HH:mm")}
+          >
+            {tiempoRelativo(entrada.created_at)}
+          </span>
+        </div>
+
+        {esCambioEstado ? (
+          <div className="flex items-center gap-1.5 flex-wrap text-sm text-foreground">
+            <span>Cambió estado de</span>
+            <EstadoBadge estado={descripcion.estadoAnterior!} atenuado />
+            <ArrowRight className="h-3 w-3 text-muted-foreground" />
+            <EstadoBadge estado={descripcion.estadoNuevo!} />
+          </div>
+        ) : (
+          <p className="text-sm text-foreground">{descripcion.titulo}</p>
+        )}
+
+        {descripcion.contexto && (
+          <p className="text-xs text-muted-foreground">{descripcion.contexto}</p>
+        )}
+
+        <div className="flex items-baseline gap-1.5 flex-wrap text-xs text-muted-foreground">
+          <span>en</span>
+          <span className="capitalize">{entrada.modulo}</span>
+          {entrada.entidad_nombre && (
+            <>
+              <span>—</span>
+              {linkEntidad ? (
+                <Link
+                  to={linkEntidad}
+                  className="font-medium text-accent hover:underline"
+                >
+                  {entrada.entidad_nombre}
+                </Link>
+              ) : (
+                <span className="font-medium text-foreground">{entrada.entidad_nombre}</span>
+              )}
+            </>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 interface Props {
   actividades: EntradaBitacora[];
   mostrarUsuario?: boolean;
+  /** Activa virtualización con @tanstack/react-virtual. Útil cuando hay
+   *  cientos de filas y el usuario sube `pageSize` por encima del default. */
+  virtualize?: boolean;
+  /** Altura máxima del viewport virtualizado en px (default 600). */
+  maxHeight?: number;
 }
 
-export function BitacoraActividad({ actividades, mostrarUsuario = true }: Props) {
+export function BitacoraActividad({
+  actividades,
+  mostrarUsuario = true,
+  virtualize = false,
+  maxHeight = 600,
+}: Props) {
   if (actividades.length === 0) {
     return (
       <p className="text-sm text-muted-foreground text-center py-6">
@@ -83,83 +172,82 @@ export function BitacoraActividad({ actividades, mostrarUsuario = true }: Props)
     );
   }
 
+  if (!virtualize) {
+    return (
+      <div className="relative border-l-2 border-border ml-3 space-y-5 pl-6">
+        {actividades.map((entrada) => (
+          <FilaEntrada
+            key={entrada.id}
+            entrada={entrada}
+            mostrarUsuario={mostrarUsuario}
+          />
+        ))}
+      </div>
+    );
+  }
+
   return (
-    <div className="relative border-l-2 border-border ml-3 space-y-5 pl-6">
-      {actividades.map((entrada) => {
-        const Icono = ICONOS_ACCION[entrada.accion] ?? Activity;
-        const colorClase = COLORES_ACCION[entrada.accion] ?? "bg-muted text-muted-foreground";
-        const rutaModulo = RUTAS_MODULO[entrada.modulo];
-        const linkEntidad =
-          rutaModulo && entrada.entidad_id
-            ? `${rutaModulo}/${entrada.entidad_id}`
-            : undefined;
-        const descripcion = describirEntrada(entrada);
-        const esCambioEstado = !!(descripcion.estadoAnterior && descripcion.estadoNuevo);
+    <VirtualTimeline
+      actividades={actividades}
+      mostrarUsuario={mostrarUsuario}
+      maxHeight={maxHeight}
+    />
+  );
+}
 
-        return (
-          <div key={entrada.id} className="relative">
+function VirtualTimeline({
+  actividades,
+  mostrarUsuario,
+  maxHeight,
+}: {
+  actividades: EntradaBitacora[];
+  mostrarUsuario: boolean;
+  maxHeight: number;
+}) {
+  const parentRef = useRef<HTMLDivElement | null>(null);
+  const virtualizer = useVirtualizer({
+    count: actividades.length,
+    getScrollElement: () => parentRef.current,
+    estimateSize: () => 110,
+    overscan: 8,
+    measureElement:
+      typeof window !== "undefined" && navigator.userAgent.indexOf("Firefox") === -1
+        ? (el) => el?.getBoundingClientRect().height ?? 110
+        : undefined,
+  });
+  const items = virtualizer.getVirtualItems();
+
+  return (
+    <div
+      ref={parentRef}
+      className="overflow-auto [scrollbar-width:thin] pr-2"
+      style={{ maxHeight }}
+    >
+      <div
+        className="relative border-l-2 border-border ml-3 pl-6"
+        style={{ height: virtualizer.getTotalSize(), position: "relative" }}
+      >
+        {items.map((vi) => {
+          const entrada = actividades[vi.index];
+          return (
             <div
-              className={`absolute -left-[calc(1.5rem+5px)] top-1 flex h-5 w-5 items-center justify-center rounded-full ${colorClase}`}
+              key={entrada.id}
+              ref={virtualizer.measureElement}
+              data-index={vi.index}
+              style={{
+                position: "absolute",
+                top: 0,
+                left: 24, // compensa pl-6 que se aplica al contenedor
+                right: 0,
+                transform: `translateY(${vi.start}px)`,
+                paddingBottom: 20, // espacio entre entradas (equiv a space-y-5)
+              }}
             >
-              <Icono className="h-3 w-3" />
+              <FilaEntrada entrada={entrada} mostrarUsuario={mostrarUsuario} />
             </div>
-
-            <div className="space-y-1">
-              {/* Línea 1: usuario · tiempo */}
-              <div className="flex items-baseline gap-2 flex-wrap">
-                {mostrarUsuario && (
-                  <span className="text-xs font-medium text-foreground" title={entrada.usuario_email}>
-                    {nombreDesdeEmail(entrada.usuario_email)}
-                  </span>
-                )}
-                <span
-                  className="text-xs text-muted-foreground"
-                  title={formatDate(entrada.created_at, "dd/MM/yyyy HH:mm")}
-                >
-                  {tiempoRelativo(entrada.created_at)}
-                </span>
-              </div>
-
-              {/* Línea 2: título descriptivo */}
-              {esCambioEstado ? (
-                <div className="flex items-center gap-1.5 flex-wrap text-sm text-foreground">
-                  <span>Cambió estado de</span>
-                  <EstadoBadge estado={descripcion.estadoAnterior!} atenuado />
-                  <ArrowRight className="h-3 w-3 text-muted-foreground" />
-                  <EstadoBadge estado={descripcion.estadoNuevo!} />
-                </div>
-              ) : (
-                <p className="text-sm text-foreground">{descripcion.titulo}</p>
-              )}
-
-              {descripcion.contexto && (
-                <p className="text-xs text-muted-foreground">{descripcion.contexto}</p>
-              )}
-
-              {/* Línea 3: módulo + link a entidad */}
-              <div className="flex items-baseline gap-1.5 flex-wrap text-xs text-muted-foreground">
-                <span>en</span>
-                <span className="capitalize">{entrada.modulo}</span>
-                {entrada.entidad_nombre && (
-                  <>
-                    <span>—</span>
-                    {linkEntidad ? (
-                      <Link
-                        to={linkEntidad}
-                        className="font-medium text-accent hover:underline"
-                      >
-                        {entrada.entidad_nombre}
-                      </Link>
-                    ) : (
-                      <span className="font-medium text-foreground">{entrada.entidad_nombre}</span>
-                    )}
-                  </>
-                )}
-              </div>
-            </div>
-          </div>
-        );
-      })}
+          );
+        })}
+      </div>
     </div>
   );
 }

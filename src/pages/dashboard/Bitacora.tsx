@@ -30,7 +30,9 @@ const RANGOS = [
   { valor: "30d", etiqueta: "Últimos 30 días", dias: 30 },
 ];
 
-const LIMITE_POR_PAGINA = 30;
+const OPCIONES_PAGINA = [30, 60, 120, 300] as const;
+const LIMITE_DEFAULT = 30;
+const UMBRAL_VIRTUALIZAR = 60;
 
 function calcularFechaDesde(valor: string): string | undefined {
   const rango = RANGOS.find((r) => r.valor === valor);
@@ -51,6 +53,7 @@ export default function Bitacora() {
   const [rangoFiltro, setRangoFiltro] = useState("todo");
   const [pagina, setPagina] = useState(0);
   const [mostrarLogins, setMostrarLogins] = useState(false);
+  const [limitePagina, setLimitePagina] = useState<number>(LIMITE_DEFAULT);
 
   const esAuth = moduloFiltro === "auth";
 
@@ -65,14 +68,14 @@ export default function Bitacora() {
     modulo: moduloFiltro === "todos" ? undefined : moduloFiltro,
     acciones,
     fechaDesde,
-    limite: LIMITE_POR_PAGINA,
+    limite: limitePagina,
     pagina,
     excluirLogin: esAuth ? false : !mostrarLogins,
   });
 
   const actividades = data?.datos ?? [];
   const total = data?.total ?? 0;
-  const totalPaginas = Math.ceil(total / LIMITE_POR_PAGINA);
+  const totalPaginas = Math.ceil(total / limitePagina);
 
   function resetPagina<T>(setter: (v: T) => void) {
     return (v: T) => {
@@ -91,7 +94,13 @@ export default function Bitacora() {
         </div>
       );
     }
-    return <BitacoraActividad actividades={actividades} mostrarUsuario={isAdmin} />;
+    return (
+      <BitacoraActividad
+        actividades={actividades}
+        mostrarUsuario={isAdmin}
+        virtualize={actividades.length >= UMBRAL_VIRTUALIZAR}
+      />
+    );
   }
 
   return (
@@ -177,6 +186,9 @@ export default function Bitacora() {
         page={pagina}
         totalPages={totalPaginas}
         onPageChange={setPagina}
+        pageSize={limitePagina}
+        onPageSizeChange={(s) => { setLimitePagina(s); setPagina(0); }}
+        pageSizeOptions={[...OPCIONES_PAGINA]}
       />
     </div>
   );

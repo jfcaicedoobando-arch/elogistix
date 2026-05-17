@@ -22,6 +22,14 @@ export interface ChangelogEntry {
  */
 export const recentChangelog: ChangelogEntry[] = [
   {
+    version: "8.183.0",
+    date: "2026-05-17",
+    type: "minor",
+    title: "Bloque 2.5 — Bitácora virtualizada con tamaño de página",
+    summary: "Nuevo selector de 30/60/120/300 en /bitacora; al pasar de 60 filas se activa @tanstack/react-virtual para mantener el scroll fluido.",
+    description: "BitacoraActividad expone virtualize+maxHeight (default 600px) y la página /bitacora alterna automáticamente entre render lineal y virtualizado según el tamaño cargado. APP_VERSION 8.183.0."
+  },
+  {
     version: "8.182.0",
     date: "2026-05-17",
     type: "minor",
@@ -92,14 +100,6 @@ export const recentChangelog: ChangelogEntry[] = [
     title: "Ola B.5 — Virtualización de listas largas",
     summary: "Nuevo VirtualDataTable basado en @tanstack/react-virtual; /admin/diagnostico soporta 500 filas con payload expansible sin caída de FPS.",
     description: "VirtualDataTable comparte contrato de columnas con DataTable pero renderiza con grid + filas absolutas y measureElement para alturas variables. Header sticky, zebra, hover, pagination embebida. Diagnóstico ahora admite page size 500 con overscan 12 y maxHeight 640px. APP_VERSION 8.174.0."
-  },
-  {
-    version: "8.173.0",
-    date: "2026-05-17",
-    type: "minor",
-    title: "Ola B.4 — Reducción de N+1 vía RPCs *_listado",
-    summary: "Nuevas RPCs embarques_listado, facturas_listado y reportes_resumen consolidan filas + conteos + KPIs en una sola llamada.",
-    description: "embarques_listado devuelve filas paginadas + costos/docs agregados + total_count en un solo round-trip. facturas_listado pagina server-side con proforma_numero embebido. reportes_resumen calcula rentabilidad y KPIs en BD. Hooks migrados (useEmbarquesPageState/Controller, useRentabilidadClientes, useFacturas) eliminan la llamada secundaria a embarques_list_extras y la agregación client-side. APP_VERSION 8.173.0."
   },
 ];
 
