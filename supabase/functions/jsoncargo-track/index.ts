@@ -123,6 +123,11 @@ Deno.serve(async (req) => {
     } else {
       await auth.adminClient.from("tracking_externo").insert(payload);
     }
+    log.finish(422, "prefix_mismatch", {
+      user_id: auth.userId,
+      organization_id: embarque.organization_id,
+      payload: { embarqueId, prefix: prefixCheck.prefix, naviera: shippingLine },
+    });
     return jsonResponse({
       ok: false,
       error_code: "PREFIX_MISMATCH",
@@ -143,6 +148,11 @@ Deno.serve(async (req) => {
   if (existing?.last_synced_at) {
     const lastSync = new Date(existing.last_synced_at).getTime();
     if (Date.now() - lastSync < THROTTLE_MS) {
+      log.finish(200, "throttled", {
+        user_id: auth.userId,
+        organization_id: embarque.organization_id,
+        payload: { embarqueId, last_synced_at: existing.last_synced_at },
+      });
       return jsonResponse({
         ok: true,
         throttled: true,
