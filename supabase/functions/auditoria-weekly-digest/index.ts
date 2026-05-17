@@ -7,6 +7,7 @@
  */
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 import { buildCors, handlePreflightStrict } from "../_shared/cors.ts";
+import { createLogger } from "../_shared/logger.ts";
 
 const GATEWAY_URL = "https://connector-gateway.lovable.dev/resend";
 
