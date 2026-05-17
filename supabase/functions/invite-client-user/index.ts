@@ -9,6 +9,7 @@ Deno.serve(async (req) => {
   const preflight = handlePreflightStrict(req);
   if (preflight) return preflight;
   const cors = buildCors(req);
+  const log = createLogger(req, "invite-client-user");
 
   try {
     // Validate JWT and admin access
