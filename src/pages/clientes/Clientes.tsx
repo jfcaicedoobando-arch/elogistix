@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Users, Plus } from "lucide-react";
+import { Users, Plus, Upload } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import SearchInput from "@/components/selects/SearchInput";
@@ -13,6 +13,18 @@ import { DataTable, type DataTableColumn } from "@/components/shared/DataTable";
 import { useListPageState } from "@/hooks/shared/useListPageState";
 import { toTitleCase, formatPhoneMx, correctSpanishPlace } from "@/lib/formatters";
 import { FloatingActionButton } from "@/components/shared/FloatingActionButton";
+import { BulkImportDialog } from "@/components/shared/BulkImportDialog";
+import {
+  CLIENTE_TEMPLATE_HEADERS,
+  mapClienteRows,
+} from "@/lib/csv/importSchemas";
+import { useOrgFilter } from "@/hooks/shared/useOrgFilter";
+import { useQueryClient } from "@tanstack/react-query";
+import { queryKeys } from "@/lib/query";
+import { createCliente } from "@/services/cliente";
+import { useToast } from "@/hooks/use-toast";
+import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
+import { useRegistrarActividad } from "@/hooks/shared/useBitacora";
 
 type ClienteRow = { id: string; nombre: string; rfc: string; ciudad: string; estado: string; contacto: string; telefono: string };
 
