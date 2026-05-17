@@ -2286,6 +2286,29 @@ export type Database = {
           url: string
         }[]
       }
+      clientes_listado: {
+        Args: {
+          p_limit?: number
+          p_offset?: number
+          p_organization_id?: string
+          p_search?: string
+        }
+        Returns: {
+          ciudad: string
+          contacto: string
+          deuda_pendiente: number
+          dias_credito: number
+          email: string
+          estado: string
+          id: string
+          nombre: string
+          rfc: string
+          telefono: string
+          total_cotizaciones: number
+          total_count: number
+          total_embarques: number
+        }[]
+      }
       consolidar_proformas: {
         Args: {
           p_bl_master: string
@@ -2343,6 +2366,36 @@ export type Database = {
           isOneToOne: true
           isSetofReturn: false
         }
+      }
+      cotizaciones_listado: {
+        Args: {
+          p_cliente_id?: string
+          p_estado?: string
+          p_fecha_desde?: string
+          p_fecha_hasta?: string
+          p_limit?: number
+          p_modo?: string
+          p_offset?: number
+          p_organization_id?: string
+          p_search?: string
+        }
+        Returns: {
+          cliente_id: string
+          cliente_nombre: string
+          created_at: string
+          descripcion_mercancia: string
+          destino: string
+          embarques_vinculados: number
+          estado: Database["public"]["Enums"]["estado_cotizacion"]
+          fecha_vigencia: string
+          folio: string
+          id: string
+          modo: Database["public"]["Enums"]["modo_transporte"]
+          moneda: Database["public"]["Enums"]["moneda"]
+          origen: string
+          subtotal: number
+          total_count: number
+        }[]
       }
       crear_embarque_completo: {
         Args: {
@@ -2555,6 +2608,27 @@ export type Database = {
           costo_usd: number
           embarque_id: string
           venta_usd: number
+        }[]
+      }
+      proveedores_listado: {
+        Args: {
+          p_limit?: number
+          p_offset?: number
+          p_organization_id?: string
+          p_search?: string
+          p_tipo?: string
+        }
+        Returns: {
+          contacto: string
+          id: string
+          moneda_preferida: Database["public"]["Enums"]["moneda"]
+          monto_pendiente: number
+          nombre: string
+          pais: string
+          rfc: string
+          tipo: Database["public"]["Enums"]["tipo_proveedor"]
+          total_count: number
+          total_operaciones: number
         }[]
       }
       purge_app_logs_old: { Args: never; Returns: number }
