@@ -15,6 +15,7 @@ import { useRegistrarActividad } from "@/hooks/shared/useBitacora";
 import { useConceptosForm } from "@/hooks/cotizacion/wizard/useConceptosForm";
 import { useEmbarqueForm } from "@/hooks/embarque/useEmbarqueForm";
 import { getErrorMessage } from "@/lib/errors";
+import { diffFields, diffConceptos, SENSITIVE_FIELDS } from "@/lib/audit/diffFields";
 
 /**
  * Controller hook para la página EditarEmbarque.
