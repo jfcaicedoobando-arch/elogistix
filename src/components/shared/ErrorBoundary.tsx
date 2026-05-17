@@ -53,6 +53,23 @@ export class ErrorBoundary extends React.Component<Props, State> {
 
     if (isDynamicImportError(error)) {
       tryReloadForChunkError();
+      return;
+    }
+
+    // Reporte a app_logs vía edge function. Fire-and-forget; nunca debe romper la UI.
+    try {
+      void supabase.functions.invoke("client-error-log", {
+        body: {
+          message: error.message,
+          stack: error.stack,
+          component_stack: errorInfo.componentStack,
+          route: typeof window !== "undefined" ? window.location.pathname + window.location.search : null,
+          user_agent: typeof navigator !== "undefined" ? navigator.userAgent : null,
+          app_version: APP_VERSION,
+        },
+      });
+    } catch {
+      // ignorar — no queremos cascadas de error
     }
   }
 
