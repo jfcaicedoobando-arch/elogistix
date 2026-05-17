@@ -1,6 +1,6 @@
 # Roadmap a producción — Libre Carga ERP
 
-Estado: 8.179.0. **Bloque 1 CERRADO** (1.1 Dashboard ✅, 1.2 Alertas ✅, 1.3 Backups ✅, 1.4 HIBP ✅, 1.5 Linter ✅ — 2 accionables resueltos, 67 warnings restantes documentados en docs/linter-warnings.md). Siguiente: Bloque 2 — 2.1 Error boundaries + client-error-log, 2.2 Auditoría de validaciones zod, 2.4 N+1 fase 2.
+Estado: 8.180.0. Bloque 1 cerrado. **Bloque 2 en curso**: 2.1 Error boundaries + client-error-log ✅. Pendiente: 2.2 Auditoría validaciones zod, 2.3 Tests E2E críticos, 2.4 N+1 fase 2 (RPCs cotizaciones/clientes/proveedores), 2.5 VirtualDataTable en Bitácora y embarques.
 
 
 ## 1. Lo que YA está implementado
