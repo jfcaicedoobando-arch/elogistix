@@ -15,6 +15,7 @@ import { useRegistrarActividad } from "@/hooks/shared/useBitacora";
 import { useConceptosForm } from "@/hooks/cotizacion/wizard/useConceptosForm";
 import { useEmbarqueForm } from "@/hooks/embarque/useEmbarqueForm";
 import { getErrorMessage } from "@/lib/errors";
+import { diffFields, diffConceptos, SENSITIVE_FIELDS } from "@/lib/audit/diffFields";
 
 /**
  * Controller hook para la página EditarEmbarque.
@@ -86,20 +87,47 @@ export function useEditarEmbarqueWizard(id: string | undefined) {
   const handleSave = async () => {
     if (!id || !embarque) return;
     try {
+      const nuevoEmbarquePayload = buildEmbarquePayload(contactos, selectedCliente?.nombre || '', user?.email || '');
+      const nuevosVenta = buildConceptosVentaPayload(conceptosVenta);
+      const nuevosCosto = buildConceptosCostoPayload(conceptosCosto, proveedoresDb);
+
+      // Diff de campos sensibles ANTES de mutar (Bloque 3.6 ext).
+      const cambiosEmbarque = diffFields(
+        embarque as unknown as Record<string, unknown>,
+        nuevoEmbarquePayload as unknown as Record<string, unknown>,
+        SENSITIVE_FIELDS.embarque as unknown as ReadonlyArray<string>,
+      );
+      const cambiosVenta = diffConceptos(conceptosVentaDb, nuevosVenta);
+      const cambiosCosto = diffConceptos(conceptosCostoDb, nuevosCosto);
+
       await updateEmbarque.mutateAsync({
         id,
-        embarque: buildEmbarquePayload(contactos, selectedCliente?.nombre || '', user?.email || ''),
-        conceptosVenta: buildConceptosVentaPayload(conceptosVenta),
-        conceptosCosto: buildConceptosCostoPayload(conceptosCosto, proveedoresDb),
+        embarque: nuevoEmbarquePayload,
+        conceptosVenta: nuevosVenta,
+        conceptosCosto: nuevosCosto,
       });
 
       const v = methods.getValues();
+      const tuvoCambios = cambiosEmbarque.length > 0
+        || cambiosVenta.agregados + cambiosVenta.eliminados + cambiosVenta.modificados > 0
+        || cambiosCosto.agregados + cambiosCosto.eliminados + cambiosCosto.modificados > 0;
       registrarActividad.mutate({
         accion: 'editar',
         modulo: 'embarques',
         entidad_id: id,
         entidad_nombre: embarque.expediente,
-        detalles: { cliente: selectedCliente?.nombre ?? '', modo: v.modo, tipo: v.tipo },
+        detalles: {
+          cliente: selectedCliente?.nombre ?? '',
+          modo: v.modo,
+          tipo: v.tipo,
+          ...(tuvoCambios && {
+            cambios: JSON.parse(JSON.stringify({
+              embarque: cambiosEmbarque,
+              ventas: cambiosVenta,
+              costos: cambiosCosto,
+            })),
+          }),
+        },
       });
 
       notifySuccess(toast, { title: "Embarque actualizado", description: `${embarque.expediente} guardado correctamente.` });

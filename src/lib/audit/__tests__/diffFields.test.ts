@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { diffFields } from "../diffFields";
+import { diffFields, diffConceptos } from "../diffFields";
 
 describe("diffFields", () => {
   it("returns empty when before is null", () => {
@@ -46,5 +46,47 @@ describe("diffFields", () => {
       { campo: "dias_credito", antes: 30, despues: 45 },
       { campo: "activo", antes: false, despues: true },
     ]);
+  });
+});
+
+describe("diffConceptos", () => {
+  it("returns zero counts for identical lists", () => {
+    const a = [{ concepto: "Flete", monto: 100, moneda: "USD", proveedor_id: "p1" }];
+    const out = diffConceptos(a, a);
+    expect(out.agregados).toBe(0);
+    expect(out.eliminados).toBe(0);
+    expect(out.modificados).toBe(0);
+  });
+
+  it("detects additions and removals", () => {
+    const before = [{ concepto: "Flete", monto: 100, moneda: "USD", proveedor_id: "p1" }];
+    const after = [{ concepto: "Maniobras", monto: 50, moneda: "MXN", proveedor_id: "p2" }];
+    const out = diffConceptos(before, after);
+    expect(out.agregados).toBe(1);
+    expect(out.eliminados).toBe(1);
+    expect(out.modificados).toBe(0);
+  });
+
+  it("detects amount modifications on matched concepts", () => {
+    const before = [{ concepto: "Flete", monto: 100, moneda: "USD", proveedor_id: "p1" }];
+    const after = [{ concepto: "Flete", monto: 150, moneda: "USD", proveedor_id: "p1" }];
+    const out = diffConceptos(before, after);
+    expect(out.modificados).toBe(1);
+    expect(out.detalle[0]).toMatchObject({ tipo: "modificado", antes: "100.00 USD", despues: "150.00 USD" });
+  });
+
+  it("uses precio_unitario * cantidad when monto is absent", () => {
+    const before = [{ descripcion: "Flete", cantidad: 2, precio_unitario: 50, moneda: "USD" }];
+    const after = [{ descripcion: "Flete", cantidad: 3, precio_unitario: 50, moneda: "USD" }];
+    const out = diffConceptos(before, after);
+    expect(out.modificados).toBe(1);
+    expect(out.detalle[0].despues).toBe("150.00 USD");
+  });
+
+  it("matches case-insensitively and trims concept name", () => {
+    const before = [{ concepto: "  Flete ", monto: 100, moneda: "USD", proveedor_id: "p1" }];
+    const after = [{ concepto: "flete", monto: 100, moneda: "USD", proveedor_id: "p1" }];
+    const out = diffConceptos(before, after);
+    expect(out.agregados + out.eliminados + out.modificados).toBe(0);
   });
 });

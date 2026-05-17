@@ -22,6 +22,14 @@ export interface ChangelogEntry {
  */
 export const recentChangelog: ChangelogEntry[] = [
   {
+    version: "8.188.0",
+    date: "2026-05-17",
+    type: "minor",
+    title: "Bloque 3.6 ext — Diff de costos/ventas al editar embarque",
+    summary: "Editar un embarque ahora registra en bitácora qué campos cambiaron y cuántos conceptos de costo/venta se agregaron, eliminaron o modificaron.",
+    description: "Se extiende src/lib/audit/diffFields.ts con SENSITIVE_FIELDS.embarque (cliente, modo, tipo, incoterm, naviera, contenedor, BL master/house, puertos, ETD/ETA, estado, consignatario, notificar) y diffConceptos(before, after) que empareja por (nombre+proveedor_id), calcula monto total (monto o precio×cantidad) y devuelve { agregados, eliminados, modificados, detalle[] }. useEditarEmbarqueWizard.handleSave calcula los tres diffs antes del mutateAsync y los persiste en detalles.cambios; si no hubo cambios reales no contamina el log. APP_VERSION 8.188.0.",
+  },
+  {
     version: "8.187.0",
     date: "2026-05-17",
     type: "minor",
