@@ -119,6 +119,9 @@ export default function Facturacion() {
               <Button variant="outline" onClick={exportarFacturasCsv}>
                 <Download className="h-4 w-4 mr-2" /> Exportar CSV
               </Button>
+              <Button variant="outline" onClick={exportarLayoutContable} title="Layout contable con RFC, subtotal, IVA y total — para el contador">
+                <Download className="h-4 w-4 mr-2" /> Layout contable
+              </Button>
               <Select value={filterEstado} onValueChange={(v) => setFilter("estado", v)}>
                 <SelectTrigger className="w-[160px]"><SelectValue /></SelectTrigger>
                 <SelectContent>
