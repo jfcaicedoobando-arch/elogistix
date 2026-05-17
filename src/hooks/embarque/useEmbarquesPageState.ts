@@ -22,9 +22,9 @@ import {
 import { useDebounce } from "@/hooks/shared/useDebounce";
 import { useEmbarquesPaginados, calcularEstadoEmbarque } from "@/hooks/embarque/useEmbarques";
 import type { EmbarqueRow } from "@/hooks/embarque/useEmbarques";
-import type { SortableEmbarqueColumn } from "@/services/embarque/queries";
+import type { SortableEmbarqueColumn, EmbarqueListExtras } from "@/services/embarque/queries";
 import { SORT_KEY_TO_COLUMN } from "@/services/embarque/queries";
-import { fetchEmbarquesParaExport } from "@/services/embarque";
+import { fetchEmbarquesParaExport, fetchEmbarquesListExtras } from "@/services/embarque";
 import { useOrgFilter } from "@/hooks/shared/useOrgFilter";
 import { queryKeys } from "@/lib/query";
 
@@ -191,6 +191,20 @@ export function useEmbarquesPageState() {
     ? filtered // ya paginado
     : (resultadoServer?.data ?? []);
 
+  // ---------- Extras (liquidación + docs) ----------
+  // Rama A: vienen embebidos en el RPC `embarques_listado` (cero round-trips extra).
+  // Rama B: como `fetchEmbarquesParaExport` no los trae, los pedimos para la página visible.
+  const visibleIds = useMemo(() => embarques.map((e) => e.id), [embarques]);
+  const { data: extrasBranchB } = useQuery({
+    queryKey: [...queryKeys.embarques.all, "extras-branch-b", visibleIds],
+    queryFn: () => fetchEmbarquesListExtras(visibleIds),
+    enabled: estadoFilterActivo && visibleIds.length > 0,
+    staleTime: 30_000,
+  });
+  const extras: EmbarqueListExtras = estadoFilterActivo
+    ? (extrasBranchB ?? { liquidacion: {}, docs: {} })
+    : (resultadoServer?.extras ?? { liquidacion: {}, docs: {} });
+
   const displayCount = expedientesCount;
 
   const isEmptyState =
@@ -239,5 +253,6 @@ export function useEmbarquesPageState() {
     embarques, filtered, totalCount: totalCountServer, displayCount,
     expedientesCount, contenedoresCount, totalPages, isLoading, isEmptyState,
     contenedoresPorExpediente,
+    extras,
   };
 }

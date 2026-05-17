@@ -1,8 +1,7 @@
 import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/query";
-import { calcularUtilidad, calcularMargen } from "@/lib/financial/financialUtils";
-import { fetchProfitPorCliente } from "@/services/reportes";
+import { fetchReportesResumen } from "@/services/reportes";
 
 interface FiltrosRentabilidad {
   fechaDesde?: string;
@@ -20,37 +19,26 @@ export interface RentabilidadCliente {
   margen: number;
 }
 
+/**
+ * v8.173.0 (Ola B.4): consume el RPC `reportes_resumen` que devuelve filas +
+ * KPIs agregados en una sola llamada. Antes la agregación se hacía
+ * client-side a partir de `profit_por_cliente`.
+ */
 export function useRentabilidadClientes(filtros: FiltrosRentabilidad) {
-  const { data: raw = [], isLoading } = useQuery({
+  const { data, isLoading } = useQuery({
     queryKey: queryKeys.reportes.rentabilidadClientes(filtros),
-    queryFn: () => fetchProfitPorCliente(filtros),
+    queryFn: () => fetchReportesResumen(filtros),
   });
 
   const clientes: RentabilidadCliente[] = useMemo(
-    () =>
-      raw.map((r) => {
-        const venta = Number(r.venta_usd);
-        const costo = Number(r.costo_usd);
-        return {
-          cliente_id: r.cliente_id,
-          cliente_nombre: r.cliente_nombre,
-          total_embarques: Number(r.total_embarques),
-          venta_usd: venta,
-          costo_usd: costo,
-          profit_usd: calcularUtilidad(venta, costo),
-          margen: calcularMargen(venta, costo),
-        };
-      }),
-    [raw],
+    () => data?.clientes ?? [],
+    [data],
   );
 
-  const kpis = useMemo(() => {
-    const totalClientes = clientes.length;
-    const revenue = clientes.reduce((s, c) => s + c.venta_usd, 0);
-    const profit = clientes.reduce((s, c) => s + c.profit_usd, 0);
-    const margenProm = revenue > 0 ? ((revenue - clientes.reduce((s, c) => s + c.costo_usd, 0)) / revenue) * 100 : 0;
-    return { totalClientes, revenue, profit, margenProm };
-  }, [clientes]);
+  const kpis = useMemo(
+    () => data?.kpis ?? { totalClientes: 0, revenue: 0, profit: 0, margenProm: 0 },
+    [data],
+  );
 
   return { clientes, kpis, isLoading };
 }

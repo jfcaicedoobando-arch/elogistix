@@ -2,6 +2,14 @@ import type { ChangelogEntry } from "../../../changelogData";
 
 export const chunk0: ChangelogEntry[] = [
   {
+    version: "8.173.0",
+    date: "2026-05-17",
+    type: "minor",
+    title: "Ola B.4 — Reducción de N+1 vía RPCs *_listado",
+    summary: "Nuevas RPCs embarques_listado, facturas_listado y reportes_resumen consolidan filas + conteos + KPIs en una sola llamada.",
+    description: "embarques_listado devuelve filas paginadas + costos_total/pagados + docs_total/pendientes + total_count vía window function en un solo round-trip (antes: select paginado + RPC embarques_list_extras). facturas_listado pagina server-side y trae proforma_numero embebido reemplazando el JOIN-as-embed. reportes_resumen calcula rentabilidad por cliente + KPIs (revenue, profit, margenProm, totalClientes) en BD eliminando la agregación client-side. Hooks migrados: useEmbarquesPaginados/useEmbarquesPageState exponen extras embebidos; useEmbarquesPageController dropea useEmbarquesListExtras; useRentabilidadClientes consume el resumen directo. APP_VERSION 8.173.0."
+  },
+  {
     version: "8.172.0",
     date: "2026-05-16",
     type: "minor",
