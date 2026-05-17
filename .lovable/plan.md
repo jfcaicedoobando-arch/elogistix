@@ -1,6 +1,6 @@
 # Roadmap a producción — Libre Carga ERP
 
-Estado: 8.181.0. Bloque 1 cerrado. **Bloque 2 en curso**: 2.1 Error boundaries ✅, 2.4 N+1 fase 2 (RPCs cotizaciones/clientes/proveedores) ✅. Pendiente: 2.2 Auditoría validaciones zod, 2.3 Tests E2E críticos, 2.5 VirtualDataTable en Bitácora y embarques.
+Estado: 8.182.0. Bloque 1 cerrado. **Bloque 2 en curso**: 2.1 Error boundaries ✅, 2.2 zod en mutaciones ✅, 2.4 N+1 fase 2 ✅. Pendiente: 2.3 Tests E2E críticos, 2.5 VirtualDataTable en Bitácora y embarques.
 
 
 ## 1. Lo que YA está implementado
