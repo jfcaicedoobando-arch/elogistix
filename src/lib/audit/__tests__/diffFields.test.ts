@@ -11,8 +11,8 @@ describe("diffFields", () => {
   });
 
   it("treats null, undefined and empty string as equivalent", () => {
-    expect(diffFields({ rfc: "" }, { rfc: null })).toEqual([]);
-    expect(diffFields({ rfc: undefined }, { rfc: "" })).toEqual([]);
+    expect(diffFields({ rfc: "" } as Record<string, unknown>, { rfc: null })).toEqual([]);
+    expect(diffFields({ rfc: undefined } as Record<string, unknown>, { rfc: "" })).toEqual([]);
   });
 
   it("captures real changes", () => {
