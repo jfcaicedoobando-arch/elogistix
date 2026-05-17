@@ -2,6 +2,14 @@ import type { ChangelogEntry } from "../../../changelogData";
 
 export const chunk0: ChangelogEntry[] = [
   {
+    version: "8.178.0",
+    date: "2026-05-17",
+    type: "minor",
+    title: "Hardening + Alertas internas del sistema",
+    summary: "Se activó Leaked Password Protection (HIBP). Nueva tabla alertas_sistema con detección automática cada 5 min y panel en /admin/diagnostico para super_admin.",
+    description: "Bloque 1 del roadmap a producción: 1.4 Hardening — supabase auth con password_hibp_enabled=true; las contraseñas filtradas en HIBP quedan bloqueadas al registrarse o cambiar password. 1.2 Alertas internas — tabla alertas_sistema (severity, source, message, payload, dedupe_key) con RLS estricta a super_admin; función SQL detectar_alertas_app_logs() agrupa app_logs por function_name en los últimos 5 min y registra una alerta cuando hay ≥5 errores (≥20 escala a 'critical'); dedupe_key con date_trunc('hour') evita ruido por la misma falla recurrente. Cron pg_cron 'detectar-alertas-app-logs' cada */5 min. RPC alertas_sistema_pending_count() SECURITY INVOKER para sidebar. Nuevo hook useAlertasSistema con auto-refresh 60s, panel AlertasSistemaPanel (lista, severity badge, toggle reconocidas/activas, botón Reconocer), nueva pestaña Alertas en /admin/diagnostico y badge rojo en 'Panel Admin' del sidebar cuando hay alertas activas. APP_VERSION 8.178.0."
+  },
+  {
     version: "8.177.0",
     date: "2026-05-17",
     type: "minor",
