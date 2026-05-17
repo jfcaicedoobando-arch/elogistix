@@ -19,11 +19,13 @@ Deno.serve(async (req) => {
       userId,
     );
     if (!isGlobalAdmin && !callerOrgId) {
+      log.finish(403, "not_admin", { user_id: userId });
       return errorResponse("Solo administradores", 403, cors);
     }
 
     const { email, cliente_id, organization_id } = await req.json();
     if (!email || !cliente_id || !organization_id) {
+      log.finish(400, "missing_fields", { user_id: userId });
       return errorResponse(
         "Faltan campos requeridos: email, cliente_id, organization_id",
         400,
@@ -33,6 +35,11 @@ Deno.serve(async (req) => {
 
     // Org admins can only invite for their own org
     if (!isGlobalAdmin && callerOrgId !== organization_id) {
+      log.finish(403, "cross_org_invite_blocked", {
+        user_id: userId,
+        organization_id: callerOrgId,
+        payload: { target_org: organization_id },
+      });
       return errorResponse(
         "No autorizado para invitar usuarios a esa organización",
         403,
@@ -47,6 +54,11 @@ Deno.serve(async (req) => {
       .eq("id", cliente_id)
       .maybeSingle();
     if (clienteErr || !cliente || cliente.organization_id !== organization_id) {
+      log.finish(400, "invalid_cliente", {
+        user_id: userId,
+        organization_id,
+        payload: { cliente_id },
+      });
       return errorResponse("Cliente inválido para esa organización", 400, cors);
     }
 
