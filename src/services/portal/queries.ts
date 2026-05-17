@@ -96,16 +96,28 @@ export async function fetchPortalCotizaciones(clienteIds: string[]) {
 }
 
 export async function fetchPortalCotizacion(id: string) {
-  // Una sola query con join embebido a embarques para traer expediente.
+  // Fetch principal sin join embebido — un join a embarques con RLS distinta
+  // puede hacer que PostgREST devuelva 0 filas y .single() lance PGRST116,
+  // mostrando "Cotización no encontrada" aunque el cliente sí tenga acceso.
   const { data, error } = await supabase
     .from("cotizaciones")
-    .select("*, embarque:embarques(expediente)")
+    .select("*")
     .eq("id", id)
-    .single();
+    .maybeSingle();
   if (error) throw error;
-  if (!data) return data;
-  const { embarque, ...rest } = data as typeof data & { embarque: { expediente: string } | null };
-  return { ...rest, embarque_expediente: embarque?.expediente ?? null };
+  if (!data) return null;
+
+  // Expediente del embarque vinculado (opcional, tolera fallo de RLS).
+  let embarque_expediente: string | null = null;
+  if (data.embarque_id) {
+    const { data: emb } = await supabase
+      .from("embarques")
+      .select("expediente")
+      .eq("id", data.embarque_id)
+      .maybeSingle();
+    embarque_expediente = emb?.expediente ?? null;
+  }
+  return { ...data, embarque_expediente };
 }
 
 export async function fetchPortalFacturas(clienteIds: string[]) {
