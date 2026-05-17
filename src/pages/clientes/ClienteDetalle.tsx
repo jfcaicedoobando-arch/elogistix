@@ -1,5 +1,9 @@
-import { ArrowLeft, Pencil, Building2, Loader2 } from "lucide-react";
+import { ArrowLeft, Pencil, Building2, Loader2, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { generarEstadoCuentaPdf } from "@/generators/estadoCuentaPdf";
+import { useToast } from "@/hooks/use-toast";
+import { notifyError } from "@/lib/ui/appFeedback";
+import { getErrorMessage } from "@/lib/errors";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
@@ -16,6 +20,7 @@ import { useRegisterBreadcrumbLabel } from "@/contexts/BreadcrumbContext";
 
 export default function ClienteDetalle() {
   const { id } = useParams<{ id: string }>();
+  const { toast } = useToast();
   const {
     navigate,
     cliente,
