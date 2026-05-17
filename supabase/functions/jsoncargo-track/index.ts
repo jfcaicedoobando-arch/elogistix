@@ -27,18 +27,26 @@ Deno.serve(async (req) => {
   const preflight = handlePreflightStrict(req);
   if (preflight) return preflight;
   const cors = buildCors(req);
+  const log = createLogger(req, "jsoncargo-track");
 
-  if (req.method !== "POST") return errorResponse("Method not allowed", 405, cors);
+  if (req.method !== "POST") {
+    log.finish(405, "method_not_allowed");
+    return errorResponse("Method not allowed", 405, cors);
+  }
 
   // @ts-expect-error Deno global
   const apiKey = Deno.env.get("JSONCARGO_API_KEY");
-  if (!apiKey) return errorResponse("JSONCARGO_API_KEY no configurada", 500, cors);
+  if (!apiKey) {
+    log.finish(500, "missing_api_key");
+    return errorResponse("JSONCARGO_API_KEY no configurada", 500, cors);
+  }
 
   let auth;
   try {
     auth = await authenticate(req);
   } catch (e) {
     const msg = e instanceof Error ? e.message : "auth error";
+    log.finish(401, "auth_failed", { payload: { error: msg } });
     return errorResponse(msg.replace(/^401:/, ""), 401, cors);
   }
 
@@ -46,6 +54,7 @@ Deno.serve(async (req) => {
   try { body = await req.json(); } catch { /* */ }
   const embarqueId = body.embarqueId;
   if (!embarqueId || typeof embarqueId !== "string") {
+    log.finish(400, "missing_embarque_id", { user_id: auth.userId });
     return errorResponse("embarqueId requerido", 400, cors);
   }
 
