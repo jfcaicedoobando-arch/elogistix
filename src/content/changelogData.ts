@@ -22,6 +22,14 @@ export interface ChangelogEntry {
  */
 export const recentChangelog: ChangelogEntry[] = [
   {
+    version: "8.181.0",
+    date: "2026-05-17",
+    type: "minor",
+    title: "Bloque 2.4 — N+1 fase 2 en cotizaciones, clientes y proveedores",
+    summary: "RPCs *_listado con agregados (embarques, cotizaciones, deuda, operaciones, pendiente) eliminan llamadas extra desde la UI.",
+    description: "cotizaciones_listado, clientes_listado y proveedores_listado siguen el patrón de B.4 con SECURITY INVOKER. fetchClientesPaginados y fetchProveedoresPaginados ahora consumen las RPCs y devuelven ítems enriquecidos sin romper consumidores. fetchCotizacionesListado se expone para futuras pantallas paginadas. APP_VERSION 8.181.0."
+  },
+  {
     version: "8.180.0",
     date: "2026-05-17",
     type: "minor",
