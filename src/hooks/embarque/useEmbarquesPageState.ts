@@ -22,9 +22,9 @@ import {
 import { useDebounce } from "@/hooks/shared/useDebounce";
 import { useEmbarquesPaginados, calcularEstadoEmbarque } from "@/hooks/embarque/useEmbarques";
 import type { EmbarqueRow } from "@/hooks/embarque/useEmbarques";
-import type { SortableEmbarqueColumn } from "@/services/embarque/queries";
+import type { SortableEmbarqueColumn, EmbarqueListExtras } from "@/services/embarque/queries";
 import { SORT_KEY_TO_COLUMN } from "@/services/embarque/queries";
-import { fetchEmbarquesParaExport } from "@/services/embarque";
+import { fetchEmbarquesParaExport, fetchEmbarquesListExtras } from "@/services/embarque";
 import { useOrgFilter } from "@/hooks/shared/useOrgFilter";
 import { queryKeys } from "@/lib/query";
 
