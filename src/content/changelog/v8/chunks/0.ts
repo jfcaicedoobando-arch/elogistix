@@ -2,6 +2,14 @@ import type { ChangelogEntry } from "../../../changelogData";
 
 export const chunk0: ChangelogEntry[] = [
   {
+    version: "8.183.0",
+    date: "2026-05-17",
+    type: "minor",
+    title: "Bloque 2.5 — Bitácora virtualizada y tamaño de página configurable",
+    summary: "El timeline de la bitácora ahora puede mostrar 60/120/300 entradas por página usando @tanstack/react-virtual cuando hay más de 60 filas; el scroll se mantiene fluido sin importar el volumen.",
+    description: "BitacoraActividad acepta dos nuevas props (virtualize, maxHeight). Cuando virtualize=true se renderiza dentro de un contenedor con altura máxima 600px y filas absolutamente posicionadas medidas con measureElement de @tanstack/react-virtual; cuando es false conserva el render lineal original (los tests existentes siguen verdes). La página /bitacora añade un selector de tamaño de página (30/60/120/300) reutilizando PaginationControls.onPageSizeChange y activa virtualize automáticamente cuando la página tiene 60+ filas. APP_VERSION 8.183.0."
+  },
+  {
     version: "8.182.0",
     date: "2026-05-17",
     type: "minor",
