@@ -2,6 +2,14 @@ import type { ChangelogEntry } from "../../../changelogData";
 
 export const chunk0: ChangelogEntry[] = [
   {
+    version: "8.184.0",
+    date: "2026-05-17",
+    type: "minor",
+    title: "E2E Playwright (Bloque 2.3): scaffolding + 5 flujos críticos",
+    summary: "Smoke tests E2E listos para go-live: login, embarques, facturación, conciliación y portal cliente.",
+    description: "Bloque 2.3 cerrado. Se agrega 'playwright.config.ts' (es-MX, America/Mexico_City, retries en CI, traces/screenshots on failure) y carpeta 'e2e/' con fixtures de auth y 5 specs smoke (01 login interno + error, 02 embarques listado/detalle, 03 facturación tabs, 04 proformas/conciliación, 05 portal cliente). La carpeta queda fuera del bundle y de 'tsconfig.app.json' para no exigir '@playwright/test' al build; se instala on-demand con 'npm i -D @playwright/test && npx playwright install chromium'. Variables E2E_BASE_URL/E2E_EMAIL/E2E_PASSWORD/E2E_PORTAL_* documentadas en 'e2e/README.md'. Cero impacto en runtime y en los 334 unit tests existentes.",
+  },
+  {
     version: "8.183.0",
     date: "2026-05-17",
     type: "minor",
