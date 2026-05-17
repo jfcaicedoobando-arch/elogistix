@@ -2,6 +2,14 @@ import type { ChangelogEntry } from "../../../changelogData";
 
 export const chunk0: ChangelogEntry[] = [
   {
+    version: "8.189.0",
+    date: "2026-05-17",
+    type: "minor",
+    title: "Bloque 3.3 — Notificaciones al cliente en el portal",
+    summary: "El portal del cliente ahora tiene campanita con contador de no leídas; cada cambio de estado de un embarque del cliente genera automáticamente una notificación.",
+    description: "Nueva tabla public.notificaciones_cliente con RLS que sólo deja al cliente leer/marcar las suyas y al staff de la organización crearlas y verlas. Trigger trg_notif_cli_embarque_estado en public.embarques inserta automáticamente una notificación cuando cambia el campo estado, con título legible, mensaje 'antes → después' y URL de portal al detalle. RPCs notificacion_cliente_marcar_leida(p_id) y notificaciones_cliente_marcar_todas_leidas() (SECURITY DEFINER + REVOKE PUBLIC) marcan como leídas sólo registros del propio cliente. Nuevo hook src/hooks/portal/useNotificacionesCliente.ts (react-query, refetchInterval 60s, staleTime 30s) + componente PortalNotificationsBell con badge rojo de no leídas, dropdown de 50 últimas, marcar todas y navegación al recurso. Montado en PortalHeader entre ThemeToggle y el menú de usuario. APP_VERSION 8.189.0.",
+  },
+  {
     version: "8.188.0",
     date: "2026-05-17",
     type: "minor",
