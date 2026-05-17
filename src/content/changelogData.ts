@@ -22,6 +22,14 @@ export interface ChangelogEntry {
  */
 export const recentChangelog: ChangelogEntry[] = [
   {
+    version: "8.184.0",
+    date: "2026-05-17",
+    type: "minor",
+    title: "E2E Playwright (Bloque 2.3): scaffolding + 5 flujos críticos",
+    summary: "Smoke tests E2E listos para go-live: login, embarques, facturación, conciliación y portal cliente.",
+    description: "Bloque 2.3 cerrado. Se agrega 'playwright.config.ts' (es-MX, America/Mexico_City, retries en CI, traces/screenshots on failure) y carpeta 'e2e/' con fixtures de auth y 5 specs smoke (01 login interno + error, 02 embarques listado/detalle, 03 facturación tabs, 04 proformas/conciliación, 05 portal cliente). La carpeta queda fuera del bundle y de 'tsconfig.app.json' para no exigir '@playwright/test' al build; se instala on-demand con 'npm i -D @playwright/test && npx playwright install chromium'. Variables E2E_BASE_URL/E2E_EMAIL/E2E_PASSWORD/E2E_PORTAL_* documentadas en 'e2e/README.md'. Cero impacto en runtime y en los 334 unit tests existentes.",
+  },
+  {
     version: "8.183.0",
     date: "2026-05-17",
     type: "minor",
@@ -53,54 +61,7 @@ export const recentChangelog: ChangelogEntry[] = [
     summary: "Edge function client-error-log + ErrorBoundary: cualquier excepción en la UI se persiste con fn='client' y dispara alertas internas si se repite.",
     description: "client-error-log (verify_jwt=false) recibe {message, stack, component_stack, route, user_agent, app_version}, captura user_id desde JWT cuando existe e inserta en app_logs como error status 500. ErrorBoundary lo invoca fire-and-forget en componentDidCatch (excepto en ChunkLoadError, que sigue recargando). ≥5 crashes en 5 min disparan alerta automática vía el cron existente. APP_VERSION 8.180.0."
   },
-  {
-    version: "8.179.0",
-    date: "2026-05-17",
-    type: "patch",
-    title: "Bloque 1.5 — Linter resuelto y documentado",
-    summary: "search_path fijo en is_soft_delete_table y app_logs INSERT endurecido. Warnings restantes justificados en docs/linter-warnings.md. Cierra Bloque 1.",
-    description: "Fix de los dos warnings accionables del linter: is_soft_delete_table con SET search_path = public (lint 0011) y nueva política 'app_logs insert authenticated' (authenticated + user_id = auth.uid() o nulo) que elimina el WITH CHECK = true (lint 0024). Los 67 warnings restantes (pg_trgm en public + 66 SECURITY DEFINER intencionales) quedan documentados como aceptados. APP_VERSION 8.179.0."
-  },
-  {
-    version: "8.178.0",
-    date: "2026-05-17",
-    type: "minor",
-    title: "Hardening + Alertas internas del sistema",
-    summary: "HIBP activado; nueva tabla alertas_sistema con detección automática cada 5 min y panel en /admin/diagnostico.",
-    description: "Bloque 1: 1.4 Hardening auth (password_hibp_enabled=true bloquea contraseñas filtradas) + 1.2 Alertas internas. Tabla alertas_sistema (RLS super_admin), función detectar_alertas_app_logs() agrupa errores por function_name en ventanas de 5 min (≥5 = alerta, ≥20 = critical), cron pg_cron */5 min, dedupe_key por hora. Hook useAlertasSistema, AlertasSistemaPanel (lista, severity, reconocer), pestaña Alertas en Diagnóstico y badge rojo en 'Panel Admin'. APP_VERSION 8.178.0."
-  },
-  {
-    version: "8.177.0",
-    date: "2026-05-17",
-    type: "minor",
-    title: "Ola C.2 — Dashboard de salud en /admin/diagnostico",
-    summary: "Nueva pestaña Salud con KPIs, línea de tiempo, top funciones con errores y top más lentas (p95) sobre app_logs.",
-    description: "RPCs app_logs_health_summary y app_logs_health_timeline (SECURITY INVOKER, respetan RLS multi-tenant). Hook useAppLogsHealth con auto-refresh 60s y rangos 1h/6h/24h/7d. DiagnosticoHealthPanel renderiza Recharts (LineChart timeline + BarChart top errores) y tabla de p95. /admin/diagnostico dividido en pestañas Salud / Bitácora. APP_VERSION 8.177.0."
-  },
-  {
-    version: "8.176.0",
-    date: "2026-05-17",
-    type: "minor",
-    title: "Ola C.1 — Logger en todas las edge functions",
-    summary: "Las 9 edge functions restantes escriben a app_logs vía createLogger + log.finish().",
-    description: "exchange-rates, create-user, delete-user, list-users, tracking-public, auditoria-snapshot-daily, auditoria-weekly-digest, invite-client-user y jsoncargo-track instrumentadas. Cada return llama log.finish(status, msg, ctx). /admin/diagnostico ahora muestra tráfico real de todas las funciones. APP_VERSION 8.176.0."
-  },
-  {
-    version: "8.175.0",
-    date: "2026-05-17",
-    type: "minor",
-    title: "Ola B.6 — Suite de tests de RLS multi-tenant",
-    summary: "Script SQL verifica aislamiento entre organizaciones para 8 escenarios críticos (clientes, embarques, app_logs, bitácora).",
-    description: "supabase/tests/rls/test_rls_isolation.sql siembra dos organizaciones y simula cada usuario vía request.jwt.claims; cubre lectura aislada, updates cruzados bloqueados, alcance del portal cliente, app_logs por tenant e insert con usuario_id falso rechazado. Ejecutar con psql -f sobre staging. APP_VERSION 8.175.0."
-  },
-  {
-    version: "8.174.0",
-    date: "2026-05-17",
-    type: "minor",
-    title: "Ola B.5 — Virtualización de listas largas",
-    summary: "Nuevo VirtualDataTable basado en @tanstack/react-virtual; /admin/diagnostico soporta 500 filas con payload expansible sin caída de FPS.",
-    description: "VirtualDataTable comparte contrato de columnas con DataTable pero renderiza con grid + filas absolutas y measureElement para alturas variables. Header sticky, zebra, hover, pagination embebida. Diagnóstico ahora admite page size 500 con overscan 12 y maxHeight 640px. APP_VERSION 8.174.0."
-  },
+
 ];
 
 /** Deduplica por version conservando la primera ocurrencia (recentChangelog gana). */
