@@ -281,7 +281,7 @@ function PreviewStep<T>({ fileName, preview, error }: PreviewStepProps<T>) {
             <p className="font-medium mb-2">
               Se omitirán {invalid.length} filas con errores:
             </p>
-            <ScrollArea className="max-h-40">
+            <div className="max-h-40 overflow-y-auto">
               <ul className="text-xs space-y-1 pr-3">
                 {invalid.slice(0, 50).map((e: ImportRowError) => (
                   <li key={e.rowNumber}>
@@ -295,7 +295,7 @@ function PreviewStep<T>({ fileName, preview, error }: PreviewStepProps<T>) {
                   </li>
                 )}
               </ul>
-            </ScrollArea>
+            </div>
           </AlertDescription>
         </Alert>
       )}
