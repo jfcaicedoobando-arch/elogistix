@@ -4,7 +4,9 @@ import { useProveedor, useProveedorMutations, useProveedorOperaciones } from "@/
 import { useToast } from "@/hooks/use-toast";
 import { usePermissions } from "@/hooks/shared/usePermissions";
 import { useRegistrarActividad } from "@/hooks/shared/useBitacora";
+import { diffFields, SENSITIVE_FIELDS } from "@/lib/audit/diffFields";
 import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
+import type { Json } from "@/integrations/supabase/types";
 
 /**
  * Controller para la página de detalle de proveedor.
