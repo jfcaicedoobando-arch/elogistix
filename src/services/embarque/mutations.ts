@@ -31,6 +31,7 @@ export interface CrearEmbarqueRpcInput {
 }
 
 export async function crearEmbarqueRpc(input: CrearEmbarqueRpcInput): Promise<{ id: string }> {
+  parseOrThrow(embarqueInsertSchema, input.embarque, "Embarque");
   const { data, error } = await supabase.rpc('crear_embarque_completo', {
     p_embarque: toDbJson(input.embarque),
     p_conceptos_venta: toDbJson(input.conceptosVenta),
