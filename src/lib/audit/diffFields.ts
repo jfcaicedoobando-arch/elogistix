@@ -155,35 +155,39 @@ function resumen(c: ConceptoLike): string {
  * Compara dos listas de conceptos (venta o costo) y devuelve un resumen
  * cuantitativo + detalle de cambios. Empareja por (concepto, proveedor_id).
  */
+function nombreOf(c: ConceptoLike): string {
+  return (c.concepto ?? c.descripcion ?? "").trim();
+}
+
+function compararConcepto(cb: ConceptoLike, ca: ConceptoLike, out: ConceptosDiff): void {
+  const rb = resumen(cb);
+  const ra = resumen(ca);
+  if (rb === ra && (cb.moneda ?? "") === (ca.moneda ?? "")) return;
+  out.modificados += 1;
+  out.detalle.push({ tipo: "modificado", concepto: nombreOf(ca), antes: rb, despues: ra });
+}
+
 export function diffConceptos(
   before: ConceptoLike[] | null | undefined,
   after: ConceptoLike[] | null | undefined,
 ): ConceptosDiff {
-  const b = before ?? [];
-  const a = after ?? [];
-  const mapBefore = new Map(b.map((c) => [keyOf(c), c]));
-  const mapAfter = new Map(a.map((c) => [keyOf(c), c]));
+  const mapBefore = new Map((before ?? []).map((c) => [keyOf(c), c]));
+  const mapAfter = new Map((after ?? []).map((c) => [keyOf(c), c]));
   const out: ConceptosDiff = { agregados: 0, eliminados: 0, modificados: 0, detalle: [] };
 
   for (const [k, ca] of mapAfter) {
     const cb = mapBefore.get(k);
     if (!cb) {
       out.agregados += 1;
-      out.detalle.push({ tipo: "agregado", concepto: (ca.concepto ?? ca.descripcion ?? "").trim(), despues: resumen(ca) });
+      out.detalle.push({ tipo: "agregado", concepto: nombreOf(ca), despues: resumen(ca) });
     } else {
-      const rb = resumen(cb);
-      const ra = resumen(ca);
-      if (rb !== ra || (cb.moneda ?? "") !== (ca.moneda ?? "")) {
-        out.modificados += 1;
-        out.detalle.push({ tipo: "modificado", concepto: (ca.concepto ?? ca.descripcion ?? "").trim(), antes: rb, despues: ra });
-      }
+      compararConcepto(cb, ca, out);
     }
   }
   for (const [k, cb] of mapBefore) {
-    if (!mapAfter.has(k)) {
-      out.eliminados += 1;
-      out.detalle.push({ tipo: "eliminado", concepto: (cb.concepto ?? cb.descripcion ?? "").trim(), antes: resumen(cb) });
-    }
+    if (mapAfter.has(k)) continue;
+    out.eliminados += 1;
+    out.detalle.push({ tipo: "eliminado", concepto: nombreOf(cb), antes: resumen(cb) });
   }
   return out;
 }
