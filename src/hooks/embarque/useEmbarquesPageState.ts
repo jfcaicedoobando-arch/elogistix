@@ -73,8 +73,8 @@ function resolveExtras(
 }
 
 function buildFullSetFilters(i: {
-  organizationId: string | undefined;
-  search: string;
+  organizationId: string | null | undefined;
+  search: string | null;
   filterModo: string; filterCliente: string; filterOperador: string; filterProforma: string;
   fechaDesde: string; fechaHasta: string;
 }) {
