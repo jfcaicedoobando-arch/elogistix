@@ -3,7 +3,7 @@ import { useToast } from "@/hooks/use-toast";
 import { getErrorMessage } from "@/lib/errors";
 import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 import { useAdminGlobalUsers, type GlobalUserRow } from "@/hooks/admin/useAdminData";
-import { useDeleteUser } from "@/hooks/usuario/useUsuarioMutations";
+import { useDeleteUserAuth as useDeleteUser } from "@/hooks/usuario";
 
 export function useAdminUsuariosController() {
   const [dialogOpen, setDialogOpen] = useState(false);
