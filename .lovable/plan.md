@@ -1,6 +1,9 @@
-# Auditoría arquitectónica — Libre Carga ERP v8.192.0
+# Auditoría arquitectónica — Libre Carga ERP v8.195.0
 
-Análisis read-only de **637 archivos TS/TSX**, **40 suites de tests**, **265 warnings de ESLint** (0 errores). Sin cambios al código.
+Sprints P0.1–P0.4, P1.5, P1.6, P2.9, P2.11 cerrados (8.193.0 → 8.195.0).
+Estado: **35 warnings ESLint** (de 265 iniciales). Pendientes documentados abajo.
+
+> Análisis inicial sobre **637 archivos TS/TSX**, **40 suites de tests**, **265 warnings** (0 errores).
 
 ## 1. Estado general
 

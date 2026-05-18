@@ -22,12 +22,12 @@ export interface ChangelogEntry {
  */
 export const recentChangelog: ChangelogEntry[] = [
   {
-    version: "8.194.0",
+    version: "8.195.0",
     date: "2026-05-18",
     type: "minor",
-    title: "Auditoría arquitectónica — P0.1, P0.4, P1.5, P2.9 cerrados",
-    summary: "265 warnings ESLint → 40. Cero violaciones de barrel, cero exhaustive-deps abiertos, react-refresh limpio, utils consolidados.",
-    description: "P0.1 Barrel violations: 14 barrels generados en hooks/<dominio> + codemod que reemplazó 195 imports profundos (203 → 0). P0.4 Exhaustive-deps: 4 hooks corregidos con useMemo y 3 inicializadores documentados (9 → 0). P2.9 React-refresh: exenciones para ui/** y contexts/**, constantes extraídas a constants/cotizacionMercancia.ts (11 → 0). P1.5 Utilidades: lib/io/{csv,zipDownload} + services/admin/exportOrg; utils/orgExportZip queda como wrapper delgado. 40 warnings residuales (complexity + max-lines) pendientes para Sprint P0.3. 359/359 tests verdes. APP_VERSION 8.194.0.",
+    title: "Auditoría arquitectónica — P0.3, P1.5, P1.6, P2.11 cerrados",
+    summary: "51 → 35 warnings ESLint. Mappers y servicios partidos en sub-helpers por sección, utils unificados, mapa de arquitectura documentado.",
+    description: "P0.3 Mappers refactor: embarqueFromDb/ToDb, cotizacion y cotizacionForm divididos en helpers por sección con nuevo `lib/mappers/_helpers.ts` (str/num/bool/emptyToNull). jsoncargo/navieras usa tabla iterable en lugar de cadena de if. P1.6 Servicios: facturas/proyeccion, facturas/huecoFacturacion y cotizacion/mutations partidos en sub-funciones fetch/index/construir. P1.5 Utils: lib/utils.ts plano eliminado, todo bajo lib/utils/ con barrel. P2.11 Nuevo docs/architecture-map.md con mapa dominio → capas. 359/359 tests verdes. APP_VERSION 8.195.0.",
   },
   {
     version: "8.193.0",

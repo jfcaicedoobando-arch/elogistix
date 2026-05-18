@@ -39,24 +39,39 @@ export function listNavierasSoportadas(): { value: JsonCargoShippingLine; label:
 }
 
 /**
+ * Tabla de reglas: cada entrada es `[línea, predicados...]`. Predicados pueden
+ * ser strings (substring) o funciones para comparaciones exactas. Se evalúan
+ * en orden — la primera coincidencia gana.
+ */
+type MatchRule = string | ((n: string) => boolean);
+
+const NAVIERA_RULES: ReadonlyArray<readonly [JsonCargoShippingLine, ReadonlyArray<MatchRule>]> = [
+  ["MAERSK", ["maersk"]],
+  ["HAPAG_LLOYD", ["hapag", "lloyd"]],
+  ["HMM", ["hyundai", (n) => n === "hmm"]],
+  ["ONE", [(n) => n === "one", "oceannetwork"]],
+  ["EVERGREEN", ["evergreen", (n) => n === "eglv"]],
+  ["MSC", ["msc", "mediterranean"]],
+  ["CMA_CGM", ["cmacgm", "cma"]],
+  ["COSCO", ["cosco", (n) => n === "oocl", (n) => n === "oolu", (n) => n === "oocu", "orientoverseas"]],
+  ["ZIM", ["zim"]],
+  ["YANG_MING", ["yangming", "yang"]],
+  ["PIL", ["pil", "pacificinternational"]],
+];
+
+function matches(normalized: string, rule: MatchRule): boolean {
+  return typeof rule === "string" ? normalized.includes(rule) : rule(normalized);
+}
+
+/**
  * Mapea un string libre de naviera a uno de los shipping_line de JSONCargo.
  * Devuelve null si no hay match razonable.
  */
 export function mapNavieraToJsonCargo(naviera: string | null | undefined): JsonCargoShippingLine | null {
   if (!naviera) return null;
   const n = naviera.toLowerCase().replace(/[^a-z0-9]/g, "");
-
-  if (n.includes("maersk")) return "MAERSK";
-  if (n.includes("hapag") || n.includes("lloyd")) return "HAPAG_LLOYD";
-  if (n.includes("hyundai") || n === "hmm") return "HMM";
-  if (n === "one" || n.includes("oceannetwork")) return "ONE";
-  if (n.includes("evergreen") || n === "eglv") return "EVERGREEN";
-  if (n.includes("msc") || n.includes("mediterranean")) return "MSC";
-  if (n.includes("cmacgm") || n.includes("cma")) return "CMA_CGM";
-  if (n.includes("cosco") || n === "oocl" || n === "oolu" || n === "oocu" || n.includes("orientoverseas")) return "COSCO";
-  if (n.includes("zim")) return "ZIM";
-  if (n.includes("yangming") || n.includes("yang")) return "YANG_MING";
-  if (n.includes("pil") || n.includes("pacificinternational")) return "PIL";
-
+  for (const [line, rules] of NAVIERA_RULES) {
+    if (rules.some((r) => matches(n, r))) return line;
+  }
   return null;
 }
