@@ -101,14 +101,6 @@ export const recentChangelog: ChangelogEntry[] = [
     summary: "El portal del cliente ahora tiene campanita con contador de no leídas; cada cambio de estado de un embarque del cliente genera automáticamente una notificación.",
     description: "Nueva tabla public.notificaciones_cliente con RLS que sólo deja al cliente leer/marcar las suyas y al staff de la organización crearlas y verlas. Trigger trg_notif_cli_embarque_estado en public.embarques inserta automáticamente una notificación cuando cambia el campo estado, con título legible, mensaje 'antes → después' y URL de portal al detalle. RPCs notificacion_cliente_marcar_leida(p_id) y notificaciones_cliente_marcar_todas_leidas() (SECURITY DEFINER + REVOKE PUBLIC) marcan como leídas sólo registros del propio cliente. Nuevo hook src/hooks/portal/useNotificacionesCliente.ts (react-query, refetchInterval 60s, staleTime 30s) + componente PortalNotificationsBell con badge rojo de no leídas, dropdown de 50 últimas, marcar todas y navegación al recurso. Montado en PortalHeader entre ThemeToggle y el menú de usuario. APP_VERSION 8.189.0.",
   },
-  {
-    version: "8.188.0",
-    date: "2026-05-17",
-    type: "minor",
-    title: "Bloque 3.6 ext — Diff de costos/ventas al editar embarque",
-    summary: "Editar un embarque ahora registra en bitácora qué campos cambiaron y cuántos conceptos de costo/venta se agregaron, eliminaron o modificaron.",
-    description: "Se extiende src/lib/audit/diffFields.ts con SENSITIVE_FIELDS.embarque (cliente, modo, tipo, incoterm, naviera, contenedor, BL master/house, puertos, ETD/ETA, estado, consignatario, notificar) y diffConceptos(before, after) que empareja por (nombre+proveedor_id), calcula monto total (monto o precio×cantidad) y devuelve { agregados, eliminados, modificados, detalle[] }. useEditarEmbarqueWizard.handleSave calcula los tres diffs antes del mutateAsync y los persiste en detalles.cambios; si no hubo cambios reales no contamina el log. APP_VERSION 8.188.0.",
-  },
 ];
 
 /** Deduplica por version conservando la primera ocurrencia (recentChangelog gana). */
