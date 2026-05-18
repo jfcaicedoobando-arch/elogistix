@@ -22,11 +22,19 @@ export interface ChangelogEntry {
  */
 export const recentChangelog: ChangelogEntry[] = [
   {
+    version: "8.199.0",
+    date: "2026-05-18",
+    type: "patch",
+    title: "Auditoría — P2.12 lote 2 (hooks de auditoría y JSONCargo)",
+    summary: "26 → 23 warnings ESLint. extractSummary, useApplyJsonCargoFechas, useAuditoriaEjecutivo y useHallazgosTablaState refactorizados con helpers puros.",
+    description: "Refactors puros, sin cambios funcionales: hooks/embarque/useJsonCargoTracking.ts — extractSummary (22→0) extrae computeEtd/computeAta y helpers str/lower; useApplyJsonCargoFechas.mutationFn (22→0) extrae buildFechasUpdate, shouldAvanzarArribo y registrarEventoArribo. hooks/auditoria/useAuditoriaEjecutivo.ts (41→0) modulariza en agregarPendientes, calcularScore, agruparPorEtapaYCliente, calcularVencimientos, procesarRevisionEnOperador y calcularRanking. hooks/auditoria/useHallazgosTablaState.ts (41→0) extrae matchBase/matchRevision/matchResponsable/matchHallazgo con MatchCtx tipado. 369/369 tests verdes. APP_VERSION 8.199.0.",
+  },
+  {
     version: "8.198.0",
     date: "2026-05-18",
     type: "patch",
     title: "Auditoría — P2.12 endurecimiento de complejidad",
-    summary: "30 → 23 warnings ESLint. validateStepRuta/Costos, diffConceptos, agruparPorExpediente y useEmbarqueDetalleData refactorizados con helpers extraídos.",
+    summary: "30 → 26 warnings ESLint. validateStepRuta/Costos, diffConceptos, agruparPorExpediente y useEmbarqueDetalleData refactorizados con helpers extraídos.",
     description: "P2.12 Endurecimiento de complejidad ciclomática (post P2.10). Refactors puros, sin cambios funcionales: lib/domain/embarqueWizardSchemas.ts — validateStepRuta (28→0) extrae validateMaritimoRuta/Aereo/Terrestre y validateRutaModo; validateStepCostos (16→0) extrae parseTC, validarConceptosVenta y validarConceptosCosto. lib/audit/diffFields.ts — diffConceptos (17→0) extrae nombreOf y compararConcepto. lib/domain/proyeccionFacturacion.ts — agruparPorExpediente (19→0) extrae initGrupo y mergeFila. hooks/embarque/useEmbarqueDetalleData.ts (17→0) usa helpers tc() y pick() para tipos de cambio y defaults `?? []`. 369/369 tests verdes. APP_VERSION 8.198.0.",
   },
   {
@@ -92,14 +100,6 @@ export const recentChangelog: ChangelogEntry[] = [
     title: "Bloque 3.3 — Notificaciones al cliente en el portal",
     summary: "El portal del cliente ahora tiene campanita con contador de no leídas; cada cambio de estado de un embarque del cliente genera automáticamente una notificación.",
     description: "Nueva tabla public.notificaciones_cliente con RLS que sólo deja al cliente leer/marcar las suyas y al staff de la organización crearlas y verlas. Trigger trg_notif_cli_embarque_estado en public.embarques inserta automáticamente una notificación cuando cambia el campo estado, con título legible, mensaje 'antes → después' y URL de portal al detalle. RPCs notificacion_cliente_marcar_leida(p_id) y notificaciones_cliente_marcar_todas_leidas() (SECURITY DEFINER + REVOKE PUBLIC) marcan como leídas sólo registros del propio cliente. Nuevo hook src/hooks/portal/useNotificacionesCliente.ts (react-query, refetchInterval 60s, staleTime 30s) + componente PortalNotificationsBell con badge rojo de no leídas, dropdown de 50 últimas, marcar todas y navegación al recurso. Montado en PortalHeader entre ThemeToggle y el menú de usuario. APP_VERSION 8.189.0.",
-  },
-  {
-    version: "8.188.0",
-    date: "2026-05-17",
-    type: "minor",
-    title: "Bloque 3.6 ext — Diff de costos/ventas al editar embarque",
-    summary: "Editar un embarque ahora registra en bitácora qué campos cambiaron y cuántos conceptos de costo/venta se agregaron, eliminaron o modificaron.",
-    description: "Se extiende src/lib/audit/diffFields.ts con SENSITIVE_FIELDS.embarque (cliente, modo, tipo, incoterm, naviera, contenedor, BL master/house, puertos, ETD/ETA, estado, consignatario, notificar) y diffConceptos(before, after) que empareja por (nombre+proveedor_id), calcula monto total (monto o precio×cantidad) y devuelve { agregados, eliminados, modificados, detalle[] }. useEditarEmbarqueWizard.handleSave calcula los tres diffs antes del mutateAsync y los persiste en detalles.cambios; si no hubo cambios reales no contamina el log. APP_VERSION 8.188.0.",
   },
 ];
 

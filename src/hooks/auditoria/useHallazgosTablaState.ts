@@ -30,6 +30,66 @@ export interface UseHallazgosTablaStateOptions {
   initialResponsable?: FiltroResponsable;
 }
 
+interface MatchCtx {
+  q: string;
+  desde: string | null;
+  hasta: string | null;
+  today: string;
+  filtroRegla: ReglaAuditoria | "todas";
+  filtroSev: SeveridadAuditoria | "todas";
+  filtroCliente: string;
+  filtroRevision: FiltroRevision;
+  filtroResponsable: FiltroResponsable;
+  userId: string | undefined;
+  revisiones: Map<string, { estado_revision?: string; responsable_id?: string | null; fecha_limite?: string | null }> | undefined;
+}
+
+function matchBase(h: HallazgoAuditoria, c: MatchCtx): boolean {
+  if (c.q && !h.expediente?.toLowerCase().includes(c.q)) return false;
+  if (c.filtroRegla !== "todas" && h.regla !== c.filtroRegla) return false;
+  if (c.filtroSev !== "todas" && h.severidad !== c.filtroSev) return false;
+  if (c.filtroCliente !== "todos" && h.cliente_nombre !== c.filtroCliente) return false;
+  if (c.desde && (!h.eta || h.eta < c.desde)) return false;
+  if (c.hasta && (!h.eta || h.eta > c.hasta)) return false;
+  return true;
+}
+
+function matchRevision(estado: string, tieneRev: boolean, filtro: FiltroRevision): boolean {
+  if (filtro === "todos") return true;
+  if (filtro === "revisados") return estado === "revisado";
+  if (filtro === "en_progreso") return estado === "en_progreso";
+  if (filtro === "pendientes") return !(tieneRev && estado === "revisado");
+  return true;
+}
+
+function matchResponsable(
+  rev: { responsable_id?: string | null; fecha_limite?: string | null } | null,
+  estado: string,
+  filtro: FiltroResponsable,
+  userId: string | undefined,
+  today: string,
+): boolean {
+  if (filtro === "todos") return true;
+  if (filtro === "mios") return rev?.responsable_id === userId;
+  if (filtro === "sin_asignar") return !rev?.responsable_id;
+  if (filtro === "vencidos") {
+    if (!rev?.fecha_limite) return false;
+    if (rev.fecha_limite >= today) return false;
+    if (estado === "revisado") return false;
+    return true;
+  }
+  return true;
+}
+
+function matchHallazgo(h: HallazgoAuditoria, c: MatchCtx): boolean {
+  if (!matchBase(h, c)) return false;
+  const rev = c.revisiones?.get(revisionKey(h)) ?? null;
+  const estado = rev?.estado_revision ?? "pendiente";
+  if (!matchRevision(estado, !!rev, c.filtroRevision)) return false;
+  if (!matchResponsable(rev, estado, c.filtroResponsable, c.userId, c.today)) return false;
+  return true;
+}
+
 export function useHallazgosTablaState(
   hallazgos: HallazgoAuditoria[],
   mostrarRevisadosDefault = false,
@@ -67,39 +127,16 @@ export function useHallazgosTablaState(
   }, [hallazgos]);
 
   const filtrados = useMemo(() => {
-    const q = search.trim().toLowerCase();
-    const desde = etaDesde ? etaDesde.toISOString().slice(0, 10) : null;
-    const hasta = etaHasta ? etaHasta.toISOString().slice(0, 10) : null;
-    const today = new Date().toISOString().slice(0, 10);
-    return hallazgos.filter((h) => {
-      if (q && !h.expediente?.toLowerCase().includes(q)) return false;
-      if (filtroRegla !== "todas" && h.regla !== filtroRegla) return false;
-      if (filtroSev !== "todas" && h.severidad !== filtroSev) return false;
-      if (filtroCliente !== "todos" && h.cliente_nombre !== filtroCliente) return false;
-      if (desde && (!h.eta || h.eta < desde)) return false;
-      if (hasta && (!h.eta || h.eta > hasta)) return false;
-
-      const rev = revisiones?.get(revisionKey(h)) ?? null;
-      const estado = rev?.estado_revision ?? "pendiente";
-      const tieneRev = !!rev;
-
-      if (filtroRevision !== "todos") {
-        if (filtroRevision === "revisados" && estado !== "revisado") return false;
-        if (filtroRevision === "en_progreso" && estado !== "en_progreso") return false;
-        if (filtroRevision === "pendientes" && tieneRev && estado === "revisado") return false;
-      }
-
-      if (filtroResponsable !== "todos") {
-        if (filtroResponsable === "mios" && rev?.responsable_id !== user?.id) return false;
-        if (filtroResponsable === "sin_asignar" && rev?.responsable_id) return false;
-        if (filtroResponsable === "vencidos") {
-          if (!rev?.fecha_limite) return false;
-          if (rev.fecha_limite >= today) return false;
-          if (estado === "revisado") return false;
-        }
-      }
-      return true;
-    });
+    const ctx = {
+      q: search.trim().toLowerCase(),
+      desde: etaDesde ? etaDesde.toISOString().slice(0, 10) : null,
+      hasta: etaHasta ? etaHasta.toISOString().slice(0, 10) : null,
+      today: new Date().toISOString().slice(0, 10),
+      filtroRegla, filtroSev, filtroCliente, filtroRevision, filtroResponsable,
+      userId: user?.id,
+      revisiones,
+    };
+    return hallazgos.filter((h) => matchHallazgo(h, ctx));
   }, [hallazgos, search, filtroRegla, filtroSev, filtroCliente, etaDesde, etaHasta, filtroRevision, filtroResponsable, revisiones, user?.id]);
 
   const totalPages = Math.max(1, Math.ceil(filtrados.length / pageSize));

@@ -118,48 +118,55 @@ export function useSyncJsonCargo() {
  * Helper para extraer el summary actual del raw_payload guardado.
  * El edge function guarda { data: {...} } directamente desde JSONCargo.
  */
-export function extractSummary(raw: unknown): JsonCargoSummary | null {
-  if (!raw || typeof raw !== "object") return null;
-  const d = (raw as { data?: Record<string, unknown> }).data;
-  if (!d) return null;
-  const atdOrigin = d.atd_origin as string | undefined | null;
-  const status = ((d.container_status as string | undefined) ?? "").toLowerCase();
-  const looksDeparted = /loaded.*vessel|on vessel|departed|in transit|sail/.test(status);
-  const fallbackEtd = looksDeparted
-    ? ((d.last_movement_timestamp as string | undefined | null)
-      ?? (d.timestamp_of_last_location as string | undefined | null))
-    : null;
-  const etdEffective = atdOrigin || fallbackEtd || undefined;
+type Raw = Record<string, unknown>;
+const str = (d: Raw, k: string) => (d[k] as string | undefined | null) ?? undefined;
+const lower = (s: string | undefined | null) => (s ?? "").toLowerCase();
 
-  // Heurística ATA: contenedor ya descargado/disponible en puerto destino.
-  const lastLoc = ((d.last_location as string | undefined) ?? "").toLowerCase();
-  const dischPort = ((d.discharging_port as string | undefined) ?? "").toLowerCase();
+function computeEtd(d: Raw): { effective?: string; estimated: boolean; atd?: string } {
+  const atd = str(d, "atd_origin");
+  const status = lower(str(d, "container_status"));
+  const looksDeparted = /loaded.*vessel|on vessel|departed|in transit|sail/.test(status);
+  const fallback = looksDeparted
+    ? (str(d, "last_movement_timestamp") ?? str(d, "timestamp_of_last_location"))
+    : undefined;
+  const effective = atd || fallback || undefined;
+  return { effective, estimated: !!effective && !atd, atd };
+}
+
+function computeAta(d: Raw): { effective?: string; inferred: boolean } {
+  const status = lower(str(d, "container_status"));
+  const lastLoc = lower(str(d, "last_location"));
+  const dischPort = lower(str(d, "discharging_port"));
   const atDestinationByPort = !!lastLoc && !!dischPort && lastLoc.includes(dischPort);
   const looksDischarged = /discharg|unload|available|gate.?out|delivered|at yard|empty.*return|released|on rail|departed.*terminal/.test(status);
-  // Fallback: si discharging_port viene vacío pero el container_status
-  // menciona explícitamente "port of discharge" / "from vessel" / "at port",
-  // también se infiere ATA desde el último movimiento.
   const statusImpliesPortDischarge = /port of discharge|from vessel|at port|at terminal/.test(status);
-  const ataEligible = (atDestinationByPort && looksDischarged) || (looksDischarged && statusImpliesPortDischarge);
-  const ataEffective = ataEligible
-    ? ((d.timestamp_of_last_location as string | undefined | null)
-      ?? (d.last_movement_timestamp as string | undefined | null))
-    : null;
+  const eligible = (atDestinationByPort && looksDischarged) || (looksDischarged && statusImpliesPortDischarge);
+  const effective = eligible
+    ? (str(d, "timestamp_of_last_location") ?? str(d, "last_movement_timestamp"))
+    : undefined;
+  return { effective, inferred: !!effective };
+}
 
+export function extractSummary(raw: unknown): JsonCargoSummary | null {
+  if (!raw || typeof raw !== "object") return null;
+  const d = (raw as { data?: Raw }).data;
+  if (!d) return null;
+  const etd = computeEtd(d);
+  const ata = computeAta(d);
   return {
-    container_status: d.container_status as string | undefined,
-    last_location: d.last_location as string | undefined,
-    current_vessel: d.current_vessel_name as string | undefined,
-    current_voyage: d.current_voyage_number as string | undefined,
-    eta_final_destination: d.eta_final_destination as string | undefined,
-    atd_origin: atdOrigin ?? undefined,
-    etd_origin_effective: etdEffective ?? undefined,
-    etd_origin_is_estimated: !!etdEffective && !atdOrigin,
-    ata_effective: ataEffective ?? undefined,
-    ata_is_inferred: !!ataEffective,
-    shipped_from: d.shipped_from as string | undefined,
-    shipped_to: d.shipped_to as string | undefined,
-    last_updated: d.last_updated as string | undefined,
+    container_status: str(d, "container_status"),
+    last_location: str(d, "last_location"),
+    current_vessel: str(d, "current_vessel_name"),
+    current_voyage: str(d, "current_voyage_number"),
+    eta_final_destination: str(d, "eta_final_destination"),
+    atd_origin: etd.atd ?? undefined,
+    etd_origin_effective: etd.effective,
+    etd_origin_is_estimated: etd.estimated,
+    ata_effective: ata.effective,
+    ata_is_inferred: ata.inferred,
+    shipped_from: str(d, "shipped_from"),
+    shipped_to: str(d, "shipped_to"),
+    last_updated: str(d, "last_updated"),
   };
 }
 
@@ -170,83 +177,74 @@ interface ApplyFechasArgs {
   ata?: string | null;
 }
 
+type FechasUpdate = { eta?: string; etd?: string; fecha_llegada_real?: string; estado?: "Arribo" };
+
+function buildFechasUpdate({ eta, etd, ata }: Omit<ApplyFechasArgs, "embarqueId">): FechasUpdate {
+  const update: FechasUpdate = {};
+  if (eta) update.eta = eta;
+  if (etd) update.etd = etd;
+  if (ata) {
+    update.fecha_llegada_real = ata;
+    if (!eta) update.eta = ata;
+  }
+  return update;
+}
+
+async function shouldAvanzarArribo(embarqueId: string, ata: string | null | undefined): Promise<boolean> {
+  if (!ata) return false;
+  const { data, error } = await supabase
+    .from("embarques").select("estado").eq("id", embarqueId).maybeSingle();
+  if (error) throw error;
+  const estado = (data?.estado as string | undefined) ?? "";
+  return estado === "Confirmado" || estado === "En Tránsito";
+}
+
+async function registrarEventoArribo(embarqueId: string, ata: string) {
+  const { data: existentes } = await supabase
+    .from("eventos_embarque").select("id, fecha")
+    .eq("embarque_id", embarqueId).eq("tipo", "Arribo a Puerto");
+  const yaExiste = (existentes ?? []).some((e: { fecha: string }) =>
+    (e.fecha ?? "").slice(0, 10) === ata,
+  );
+  if (yaExiste) return;
+  const { data: userData } = await supabase.auth.getUser();
+  const usuario = userData?.user?.email ?? "Sistema";
+  await supabase.from("eventos_embarque").insert({
+    embarque_id: embarqueId,
+    tipo: "Arribo a Puerto",
+    descripcion: 'Estado cambiado a "Arribo" (arribo real registrado)',
+    ubicacion: "",
+    fecha: `${ata}T00:00:00Z`,
+    usuario,
+  });
+}
+
 export function useApplyJsonCargoFechas() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async ({ embarqueId, eta, etd, ata }: ApplyFechasArgs) => {
-      const update: { eta?: string; etd?: string; fecha_llegada_real?: string; estado?: "Arribo" } = {};
-      if (eta) update.eta = eta;
-      if (etd) update.etd = etd;
-      if (ata) {
-        update.fecha_llegada_real = ata;
-        // Si el contenedor ya arribó (ATA conocida) y no recibimos un ETA
-        // distinto explícito, alineamos el ETA a la fecha real de llegada
-        // para que el resumen refleje la realidad operativa.
-        if (!eta) update.eta = ata;
-      }
+      const update = buildFechasUpdate({ eta, etd, ata });
       if (Object.keys(update).length === 0) return { applied: false };
 
-      // Si se está aplicando ATA, avanzar el estado a "Arribo" automáticamente
-      // siempre que el embarque siga en una etapa previa (no retroceder).
-      let avanzaArribo = false;
-      if (ata) {
-        const { data: emb, error: errEmb } = await supabase
-          .from("embarques")
-          .select("estado")
-          .eq("id", embarqueId)
-          .maybeSingle();
-        if (errEmb) throw errEmb;
-        const estadoActual = (emb?.estado as string | undefined) ?? "";
-        if (estadoActual === "Confirmado" || estadoActual === "En Tránsito") {
-          update.estado = "Arribo";
-          avanzaArribo = true;
-        }
-      }
+      const avanzaArribo = await shouldAvanzarArribo(embarqueId, ata);
+      if (avanzaArribo) update.estado = "Arribo";
 
       const { data, error } = await supabase
-        .from("embarques")
-        .update(update)
-        .eq("id", embarqueId)
-        .select("id");
+        .from("embarques").update(update).eq("id", embarqueId).select("id");
       if (error) throw error;
       if (!data || data.length === 0) {
         throw new Error("No se pudo actualizar el embarque. Verifica permisos o que el registro exista.");
       }
 
-      // Registrar evento de tracking "Arribo a Puerto" si avanzamos el estado,
-      // evitando duplicados para la misma fecha.
-      if (avanzaArribo && ata) {
-        const { data: existentes } = await supabase
-          .from("eventos_embarque")
-          .select("id, fecha")
-          .eq("embarque_id", embarqueId)
-          .eq("tipo", "Arribo a Puerto");
-        const yaExiste = (existentes ?? []).some((e: { fecha: string }) =>
-          (e.fecha ?? "").slice(0, 10) === ata,
-        );
-        if (!yaExiste) {
-          const { data: userData } = await supabase.auth.getUser();
-          const usuario = userData?.user?.email ?? "Sistema";
-          await supabase.from("eventos_embarque").insert({
-            embarque_id: embarqueId,
-            tipo: "Arribo a Puerto",
-            descripcion: 'Estado cambiado a "Arribo" (arribo real registrado)',
-            ubicacion: "",
-            fecha: `${ata}T00:00:00Z`,
-            usuario,
-          });
-        }
-      }
-
+      if (avanzaArribo && ata) await registrarEventoArribo(embarqueId, ata);
       return { applied: true, avanzaArribo };
     },
     onSuccess: (_r, args) => {
       qc.invalidateQueries({ queryKey: queryKeys.embarques.detail(args.embarqueId) });
       qc.invalidateQueries({ queryKey: queryKeys.embarques.all });
       qc.invalidateQueries({ queryKey: queryKeys.embarques.eventos(args.embarqueId) });
-      // Invalida la caché unificada del detalle (RPC get_embarque_full)
-      // para que el tab Resumen se refresque sin recargar la página.
       qc.invalidateQueries({ queryKey: [...queryKeys.embarques.all, "full", args.embarqueId] });
     },
   });
 }
+

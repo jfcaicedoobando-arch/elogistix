@@ -2,6 +2,14 @@ import type { ChangelogEntry } from "../../../changelogData";
 
 export const chunk0: ChangelogEntry[] = [
   {
+    version: "8.199.0",
+    date: "2026-05-18",
+    type: "patch",
+    title: "Auditoría — P2.12 lote 2 (hooks de auditoría y JSONCargo)",
+    summary: "26 → 23 warnings ESLint. extractSummary, useApplyJsonCargoFechas, useAuditoriaEjecutivo y useHallazgosTablaState refactorizados con helpers puros, sin cambios funcionales.",
+    description: "Refactors puros, sin cambios funcionales: hooks/embarque/useJsonCargoTracking.ts — extractSummary (22→0) extrae computeEtd/computeAta y helpers str/lower; useApplyJsonCargoFechas.mutationFn (22→0) extrae buildFechasUpdate, shouldAvanzarArribo y registrarEventoArribo. hooks/auditoria/useAuditoriaEjecutivo.ts (41→0) modulariza en agregarPendientes, calcularScore, agruparPorEtapaYCliente, calcularVencimientos, procesarRevisionEnOperador y calcularRanking. hooks/auditoria/useHallazgosTablaState.ts (41→0) extrae matchBase/matchRevision/matchResponsable/matchHallazgo con MatchCtx tipado. 369/369 tests verdes. APP_VERSION 8.199.0.",
+  },
+  {
     version: "8.198.0",
     date: "2026-05-18",
     type: "patch",
