@@ -1105,6 +1105,8 @@ export type Database = {
           contenedor: string | null
           cotizacion_id: string | null
           created_at: string
+          created_by: string | null
+          created_by_email: string | null
           deleted_at: string | null
           deleted_by: string | null
           descripcion_mercancia: string
@@ -1159,6 +1161,8 @@ export type Database = {
           contenedor?: string | null
           cotizacion_id?: string | null
           created_at?: string
+          created_by?: string | null
+          created_by_email?: string | null
           deleted_at?: string | null
           deleted_by?: string | null
           descripcion_mercancia?: string
@@ -1213,6 +1217,8 @@ export type Database = {
           contenedor?: string | null
           cotizacion_id?: string | null
           created_at?: string
+          created_by?: string | null
+          created_by_email?: string | null
           deleted_at?: string | null
           deleted_by?: string | null
           descripcion_mercancia?: string
