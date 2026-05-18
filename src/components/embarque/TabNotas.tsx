@@ -22,7 +22,7 @@ interface Props {
   creadoEn?: string | null;
 }
 
-export function TabNotas({ notas, embarqueId }: Props) {
+export function TabNotas({ notas, embarqueId, creadoPor, creadoEn }: Props) {
   const [texto, setTexto] = useState("");
   const { user } = useAuth();
   const { canEdit } = usePermissions();
