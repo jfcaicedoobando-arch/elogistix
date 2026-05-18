@@ -22,6 +22,14 @@ export interface ChangelogEntry {
  */
 export const recentChangelog: ChangelogEntry[] = [
   {
+    version: "8.193.0",
+    date: "2026-05-18",
+    type: "patch",
+    title: "Auditoría arquitectónica — P0.2 (Supabase fuera de pages/components)",
+    summary: "Plan completo de auditoría documentado y primer paso implementado: 3 archivos UI que llamaban a Supabase directamente ahora pasan por servicios dedicados.",
+    description: "Auditoría read-only del repo (637 archivos, 265 warnings ESLint, 0 errores) plasmada en .lovable/plan.md con plan priorizado de 4 sprints. Implementado P0.2: extraídas las llamadas Supabase directas de pages/components a la capa de servicio. Nuevos archivos: services/admin/papelera.ts (listTrash, restoreRecord, purgeRecord), services/admin/idempotencia.ts (listIdempotencyLog) y services/observability/{index,logClientError}.ts. Actualizados: pages/dashboard/Papelera.tsx, pages/dashboard/Idempotencia.tsx y components/shared/ErrorBoundary.tsx. Reducidas a 0 las llamadas directas a @/integrations/supabase/client desde components/pages (eran 3). 359/359 tests verdes. APP_VERSION 8.193.0.",
+  },
+  {
     version: "8.192.0",
     date: "2026-05-17",
     type: "minor",
