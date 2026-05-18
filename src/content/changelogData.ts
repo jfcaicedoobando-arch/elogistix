@@ -22,6 +22,14 @@ export interface ChangelogEntry {
  */
 export const recentChangelog: ChangelogEntry[] = [
   {
+    version: "8.210.0",
+    date: "2026-05-18",
+    type: "patch",
+    title: "Documentos de embarque — fix RLS para rutas con ID de documento",
+    summary: "Corrige el error al subir documentos cuando la ruta usa embarqueId/docId en el bucket de documentos.",
+    description: "La subida desde el detalle del embarque guarda archivos bajo 'embarques/<embarqueId>/<docId>/...'. La política anterior no comprobaba el documento específico en esa estructura. Se recrearon las políticas del bucket 'documentos' para aceptar la combinación embarqueId + documentoId validada contra documentos_embarque y embarques de la misma organización. APP_VERSION 8.210.0.",
+  },
+  {
     version: "8.209.0",
     date: "2026-05-18",
     type: "minor",
@@ -100,14 +108,6 @@ export const recentChangelog: ChangelogEntry[] = [
     title: "Auditoría — P2.12 lote 4 (cotizacionPdf, StepDatosRuta, TabResumen, EmbarquesEstadoDialog)",
     summary: "23 → 20 warnings ESLint. generarPdfCotizacion (46→0), StepDatosRuta (25→0), TabResumen (24→0) y EmbarquesEstadoDialog (26→0) partidos en sub-helpers y sub-componentes.",
     description: "P2.12 Lote 4 — Refactors puros sin cambios funcionales. generators/cotizacionPdf.ts: extraído a generators/cotizacion/{datosGenerales,dimensiones,conceptosTables,pdfShell}.ts (orquestador queda <50 LOC; rowsMaritimo/rowsOpcionales aíslan ramas; buildUsdTable usa rowUsdConIva/rowUsdSinIva). components/embarque/StepDatosRuta.tsx: dispatcher delgado + sub-componentes por modalidad (StepDatosRutaMaritimo/Aereo/Terrestre/Fechas). components/embarque/TabResumen.tsx: extrae EstadoProgresoCard, DatosGeneralesCard, RutaTransporteCard, EmbarquesRelacionadosCard, FechaConOriginal a tabResumen/. components/operaciones/EmbarquesEstadoDialog.tsx: extrae EmbarqueEstadoListItem + helpers calcularExtra/toneClass/subtituloPartes/rutaTexto. 369/369 tests verdes. APP_VERSION 8.200.0.",
-  },
-  {
-    version: "8.198.0",
-    date: "2026-05-18",
-    type: "patch",
-    title: "Auditoría — P2.12 endurecimiento de complejidad",
-    summary: "30 → 26 warnings ESLint. validateStepRuta/Costos, diffConceptos, agruparPorExpediente y useEmbarqueDetalleData refactorizados con helpers extraídos.",
-    description: "P2.12 Endurecimiento de complejidad ciclomática (post P2.10). Refactors puros, sin cambios funcionales: lib/domain/embarqueWizardSchemas.ts — validateStepRuta (28→0) extrae validateMaritimoRuta/Aereo/Terrestre y validateRutaModo; validateStepCostos (16→0) extrae parseTC, validarConceptosVenta y validarConceptosCosto. lib/audit/diffFields.ts — diffConceptos (17→0) extrae nombreOf y compararConcepto. lib/domain/proyeccionFacturacion.ts — agruparPorExpediente (19→0) extrae initGrupo y mergeFila. hooks/embarque/useEmbarqueDetalleData.ts (17→0) usa helpers tc() y pick() para tipos de cambio y defaults `?? []`. 369/369 tests verdes. APP_VERSION 8.198.0.",
   },
 ];
 
