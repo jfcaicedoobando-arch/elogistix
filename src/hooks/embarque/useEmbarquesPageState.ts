@@ -79,8 +79,8 @@ function buildFullSetFilters(i: {
   fechaDesde: string; fechaHasta: string;
 }) {
   return {
-    organizationId: i.organizationId,
-    search: i.search,
+    organizationId: i.organizationId ?? null,
+    search: i.search ?? "",
     filterModo: i.filterModo,
     filterCliente: i.filterCliente,
     filterOperador: i.filterOperador,
