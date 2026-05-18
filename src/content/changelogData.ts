@@ -22,12 +22,12 @@ export interface ChangelogEntry {
  */
 export const recentChangelog: ChangelogEntry[] = [
   {
-    version: "8.199.0",
+    version: "8.200.0",
     date: "2026-05-18",
     type: "patch",
-    title: "Auditoría — P2.12 lote 2 (hooks de auditoría y JSONCargo)",
-    summary: "26 → 23 warnings ESLint. extractSummary, useApplyJsonCargoFechas, useAuditoriaEjecutivo y useHallazgosTablaState refactorizados con helpers puros.",
-    description: "Refactors puros, sin cambios funcionales: hooks/embarque/useJsonCargoTracking.ts — extractSummary (22→0) extrae computeEtd/computeAta y helpers str/lower; useApplyJsonCargoFechas.mutationFn (22→0) extrae buildFechasUpdate, shouldAvanzarArribo y registrarEventoArribo. hooks/auditoria/useAuditoriaEjecutivo.ts (41→0) modulariza en agregarPendientes, calcularScore, agruparPorEtapaYCliente, calcularVencimientos, procesarRevisionEnOperador y calcularRanking. hooks/auditoria/useHallazgosTablaState.ts (41→0) extrae matchBase/matchRevision/matchResponsable/matchHallazgo con MatchCtx tipado. 369/369 tests verdes. APP_VERSION 8.199.0.",
+    title: "Auditoría — P2.12 lote 4 (cotizacionPdf, StepDatosRuta, TabResumen, EmbarquesEstadoDialog)",
+    summary: "23 → 20 warnings ESLint. generarPdfCotizacion (46→0), StepDatosRuta (25→0), TabResumen (24→0) y EmbarquesEstadoDialog (26→0) partidos en sub-helpers y sub-componentes.",
+    description: "P2.12 Lote 4 — Refactors puros sin cambios funcionales. generators/cotizacionPdf.ts: extraído a generators/cotizacion/{datosGenerales,dimensiones,conceptosTables,pdfShell}.ts (orquestador queda <50 LOC; rowsMaritimo/rowsOpcionales aíslan ramas; buildUsdTable usa rowUsdConIva/rowUsdSinIva). components/embarque/StepDatosRuta.tsx: dispatcher delgado + sub-componentes por modalidad (StepDatosRutaMaritimo/Aereo/Terrestre/Fechas). components/embarque/TabResumen.tsx: extrae EstadoProgresoCard, DatosGeneralesCard, RutaTransporteCard, EmbarquesRelacionadosCard, FechaConOriginal a tabResumen/. components/operaciones/EmbarquesEstadoDialog.tsx: extrae EmbarqueEstadoListItem + helpers calcularExtra/toneClass/subtituloPartes/rutaTexto. 369/369 tests verdes. APP_VERSION 8.200.0.",
   },
   {
     version: "8.198.0",
@@ -92,14 +92,6 @@ export const recentChangelog: ChangelogEntry[] = [
     title: "Bloque 3.2 — Layout contable para el contador",
     summary: "Nuevo botón 'Layout contable' en Pre-Facturación → Facturas que descarga un CSV con RFC del cliente, subtotal, IVA, total, moneda, tipo de cambio y campos pre-CFDI 4.0 (uso CFDI, forma/método de pago).",
     description: "Se agrega src/generators/layoutContable.ts que toma las facturas filtradas, consulta en una sola llamada los campos completos (subtotal, iva, tipo_cambio, referencia_bl) y los RFC de los clientes, y descarga un CSV con encabezados pensados para que el contador timbre con su PAC o lo importe a su sistema contable: Folio, Fecha emisión, Periodo (YYYY-MM), Tipo comprobante (I), RFC receptor, Razón social, Subtotal, IVA, Total, Moneda, Tipo de cambio, Forma de pago, Método de pago (PUE), Uso CFDI (G03), Expediente, Referencia BL, Estado. No timbra ni genera XML CFDI 4.0 (requiere PAC externo). Integrado en useFacturacionPageController + Facturacion.tsx (tab Facturas) con registro en bitácora (accion=exportar). APP_VERSION 8.190.0.",
-  },
-  {
-    version: "8.189.0",
-    date: "2026-05-17",
-    type: "minor",
-    title: "Bloque 3.3 — Notificaciones al cliente en el portal",
-    summary: "El portal del cliente ahora tiene campanita con contador de no leídas; cada cambio de estado de un embarque del cliente genera automáticamente una notificación.",
-    description: "Nueva tabla public.notificaciones_cliente con RLS que sólo deja al cliente leer/marcar las suyas y al staff de la organización crearlas y verlas. Trigger trg_notif_cli_embarque_estado en public.embarques inserta automáticamente una notificación cuando cambia el campo estado, con título legible, mensaje 'antes → después' y URL de portal al detalle. RPCs notificacion_cliente_marcar_leida(p_id) y notificaciones_cliente_marcar_todas_leidas() (SECURITY DEFINER + REVOKE PUBLIC) marcan como leídas sólo registros del propio cliente. Nuevo hook src/hooks/portal/useNotificacionesCliente.ts (react-query, refetchInterval 60s, staleTime 30s) + componente PortalNotificationsBell con badge rojo de no leídas, dropdown de 50 últimas, marcar todas y navegación al recurso. Montado en PortalHeader entre ThemeToggle y el menú de usuario. APP_VERSION 8.189.0.",
   },
 ];
 
