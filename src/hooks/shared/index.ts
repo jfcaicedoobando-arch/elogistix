@@ -6,3 +6,4 @@ export * from './useListPageState';
 export * from './useOrgFilter';
 export * from './usePermissions';
 export * from './useSidebarAlerts';
+export * from './useTabsParam';

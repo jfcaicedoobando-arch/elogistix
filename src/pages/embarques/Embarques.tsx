@@ -1,9 +1,5 @@
-import { Plus, Download, MoreVertical } from "lucide-react";
+import { Plus } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import { DataTable } from "@/components/shared/DataTable";
 import DoubleConfirmDeleteDialog from "@/components/shared/DoubleConfirmDeleteDialog";
 import { PageHeader } from "@/components/shared/PageHeader";
@@ -12,7 +8,15 @@ import DialogDuplicarEmbarque from "@/components/embarque/DialogDuplicarEmbarque
 import EmbarquesFiltros from "@/components/embarque/EmbarquesFiltros";
 import { EmbarquesEmptyState } from "@/components/embarque/EmbarquesEmptyState";
 import { EmbarquesSortIndicator } from "@/components/embarque/EmbarquesSortIndicator";
+import { EmbarquesHeaderActions } from "@/components/embarque/EmbarquesHeaderActions";
 import { useEmbarquesPageController } from "@/hooks/embarque";
+
+function buildDescription(contenedoresCount: number, expedientesCount: number, estadoActivo: boolean): string {
+  const cont = `${contenedoresCount} ${contenedoresCount === 1 ? "contenedor" : "contenedores"}`;
+  if (!estadoActivo) return cont;
+  const exp = `${expedientesCount} ${expedientesCount === 1 ? "expediente" : "expedientes"}`;
+  return `${cont} en ${exp}`;
+}
 
 export default function Embarques() {
   const {
@@ -31,10 +35,8 @@ export default function Embarques() {
     filtered, expedientesCount, contenedoresCount, totalPages,
   } = state;
 
-  const estadoActivo = filterEstado !== "todos";
-  const headerDescription = estadoActivo
-    ? `${contenedoresCount} ${contenedoresCount === 1 ? "contenedor" : "contenedores"} en ${expedientesCount} ${expedientesCount === 1 ? "expediente" : "expedientes"}`
-    : `${contenedoresCount} ${contenedoresCount === 1 ? "contenedor" : "contenedores"}`;
+  const goNuevo = () => navigate("/embarques/nuevo");
+  const headerDescription = buildDescription(contenedoresCount, expedientesCount, filterEstado !== "todos");
 
   return (
     <div className="space-y-6">
@@ -42,37 +44,19 @@ export default function Embarques() {
         title="Embarques"
         description={headerDescription}
         actions={
-          <>
-            {!isEmptyState && (
-              <Button variant="outline" onClick={exportarCsv} disabled={exportandoCsv} className="hidden md:inline-flex">
-                <Download className="h-4 w-4 mr-2" /> {exportandoCsv ? "Exportando..." : "Exportar CSV"}
-              </Button>
-            )}
-            {canEdit && !isEmptyState && (
-              <Button onClick={() => navigate("/embarques/nuevo")} className="hidden md:inline-flex">
-                <Plus className="h-4 w-4 mr-2" /> Nuevo Embarque
-              </Button>
-            )}
-            {!isEmptyState && (
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="icon" className="md:hidden" aria-label="Más acciones">
-                    <MoreVertical className="h-5 w-5" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-48">
-                  <DropdownMenuItem onClick={exportarCsv} disabled={exportandoCsv}>
-                    <Download className="h-4 w-4 mr-2" /> {exportandoCsv ? "Exportando..." : "Exportar CSV"}
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            )}
-          </>
+          isEmptyState ? null : (
+            <EmbarquesHeaderActions
+              canEdit={canEdit}
+              exportandoCsv={exportandoCsv}
+              onExport={exportarCsv}
+              onNuevo={goNuevo}
+            />
+          )
         }
       />
 
       {isEmptyState ? (
-        <EmbarquesEmptyState canEdit={canEdit} onCreate={() => navigate("/embarques/nuevo")} />
+        <EmbarquesEmptyState canEdit={canEdit} onCreate={goNuevo} />
       ) : (
         <>
           <Card>
@@ -142,21 +126,21 @@ export default function Embarques() {
         onConfirm={handleEliminar}
         isPending={eliminarEmbarquePending}
       />
-      {embarqueADuplicar && (
+      {embarqueADuplicar ? (
         <DialogDuplicarEmbarque
           embarque={embarqueADuplicar}
           open
           onOpenChange={(open) => { if (!open) setEmbarqueADuplicar(null); }}
         />
-      )}
+      ) : null}
 
-      {canEdit && !isEmptyState && (
+      {canEdit && !isEmptyState ? (
         <FloatingActionButton
           icon={<Plus className="h-6 w-6" />}
           label="Nuevo embarque"
-          onClick={() => navigate("/embarques/nuevo")}
+          onClick={goNuevo}
         />
-      )}
+      ) : null}
     </div>
   );
 }
