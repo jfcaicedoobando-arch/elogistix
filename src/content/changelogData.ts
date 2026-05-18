@@ -22,6 +22,14 @@ export interface ChangelogEntry {
  */
 export const recentChangelog: ChangelogEntry[] = [
   {
+    version: "8.213.0",
+    date: "2026-05-18",
+    type: "patch",
+    title: "Embarque detalle — corrección de pantalla en blanco por breadcrumbs",
+    summary: "Se corrigió el loop que dejaba en blanco el detalle del embarque e impedía usar la pestaña Documentos.",
+    description: "useRegisterBreadcrumbLabel ya no depende del objeto completo del contexto de breadcrumbs, evitando el cleanup/setState repetido que causaba 'Maximum update depth exceeded' al abrir el detalle. La pestaña Documentos vuelve a renderizarse para poder subir archivos. APP_VERSION 8.213.0.",
+  },
+  {
     version: "8.212.0",
     date: "2026-05-18",
     type: "minor",
