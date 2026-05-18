@@ -29,7 +29,7 @@ export function useAuditoriaPageController() {
   const [filtroModo, setFiltroModo] = useState<string>("todos");
   const [mostrarRevisados, setMostrarRevisados] = useState(false);
 
-  const hallazgos = data?.hallazgos ?? [];
+  const hallazgos = useMemo(() => data?.hallazgos ?? [], [data?.hallazgos]);
 
   const hallazgosVisibles = useMemo(() => {
     if (mostrarRevisados || !revisiones || revisiones.size === 0) return hallazgos;
