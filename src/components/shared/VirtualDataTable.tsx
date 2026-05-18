@@ -97,53 +97,11 @@ export function VirtualDataTable<T>({
         className="relative w-full overflow-auto rounded-md border [scrollbar-width:thin]"
         style={{ maxHeight }}
       >
-        {/* Header sticky */}
-        <div
-          className="sticky top-0 z-10 grid bg-muted/60 backdrop-blur-sm text-xs font-medium text-muted-foreground border-b"
-          style={{ gridTemplateColumns: gridTemplate }}
-          role="row"
-        >
-          {columns.map((c) => (
-            <div
-              key={c.key}
-              className={cn(
-                "px-3 py-2 truncate",
-                ALIGN_CLASS[c.align ?? "left"],
-                c.headerClassName,
-              )}
-              role="columnheader"
-            >
-              {c.header}
-            </div>
-          ))}
-        </div>
-
-        {/* Loading state */}
+        <VirtualHeaderRow columns={columns} gridTemplate={gridTemplate} />
         {isLoading && (
-          <div>
-            {Array.from({ length: skeletonRows }).map((_, i) => (
-              <div
-                key={`sk-${i}`}
-                className="grid border-b"
-                style={{ gridTemplateColumns: gridTemplate }}
-              >
-                {columns.map((c) => (
-                  <div key={c.key} className={cn("px-3", cellPad)}>
-                    <Skeleton className="h-4 w-full" />
-                  </div>
-                ))}
-              </div>
-            ))}
-          </div>
+          <SkeletonRows count={skeletonRows} columns={columns} gridTemplate={gridTemplate} cellPad={cellPad} />
         )}
-
-        {/* Empty state */}
-        {!isLoading && data.length === 0 && (
-          <div className="flex flex-col items-center justify-center gap-2 py-10 text-sm text-muted-foreground">
-            <Inbox className="h-8 w-8 opacity-40" strokeWidth={1.5} />
-            <span>{emptyMessage}</span>
-          </div>
-        )}
+        {!isLoading && data.length === 0 && <EmptyState message={emptyMessage} />}
 
         {/* Filas virtualizadas */}
         {!isLoading && data.length > 0 && (
