@@ -37,10 +37,21 @@ export function useEmbarqueDocumentosActions(embarque: EmbarqueRow | undefined, 
       const raw = getErrorMessage(err);
       const isInvalidKey = /invalid key/i.test(raw);
       notifyError(toast, {
+        phase: "subida de documentos",
         title: "Error al subir archivo",
         description: isInvalidKey
           ? "El nombre del archivo contiene caracteres no permitidos. Renombra el archivo (sin acentos, espacios ni caracteres especiales) y vuelve a intentar."
-          : raw
+          : raw,
+        error: err,
+        context: {
+          embarqueId: id,
+          embarqueExpediente: embarque?.expediente ?? null,
+          documentoId: docId,
+          fileName: file.name,
+          fileSize: file.size,
+          fileType: file.type,
+          bucket: "documentos",
+        },
       });
     }
   };
@@ -56,7 +67,13 @@ export function useEmbarqueDocumentosActions(embarque: EmbarqueRow | undefined, 
       });
       notifySuccess(toast, { title: "Documento eliminado correctamente" });
     } catch (err: unknown) {
-      notifyError(toast, { title: "Error al eliminar documento", description: getErrorMessage(err)});
+      notifyError(toast, {
+        phase: "eliminación de documento",
+        title: "Error al eliminar documento",
+        description: getErrorMessage(err),
+        error: err,
+        context: { embarqueId: id, documentoId: doc.id, archivoPath: doc.archivo, documentoNombre: doc.nombre },
+      });
     }
   };
 
