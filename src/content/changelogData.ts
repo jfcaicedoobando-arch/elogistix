@@ -22,11 +22,19 @@ export interface ChangelogEntry {
  */
 export const recentChangelog: ChangelogEntry[] = [
   {
+    version: "8.199.0",
+    date: "2026-05-18",
+    type: "patch",
+    title: "Auditoría — P2.12 lote 2 (hooks de auditoría y JSONCargo)",
+    summary: "26 → 23 warnings ESLint. extractSummary, useApplyJsonCargoFechas, useAuditoriaEjecutivo y useHallazgosTablaState refactorizados con helpers puros.",
+    description: "Refactors puros, sin cambios funcionales: hooks/embarque/useJsonCargoTracking.ts — extractSummary (22→0) extrae computeEtd/computeAta y helpers str/lower; useApplyJsonCargoFechas.mutationFn (22→0) extrae buildFechasUpdate, shouldAvanzarArribo y registrarEventoArribo. hooks/auditoria/useAuditoriaEjecutivo.ts (41→0) modulariza en agregarPendientes, calcularScore, agruparPorEtapaYCliente, calcularVencimientos, procesarRevisionEnOperador y calcularRanking. hooks/auditoria/useHallazgosTablaState.ts (41→0) extrae matchBase/matchRevision/matchResponsable/matchHallazgo con MatchCtx tipado. 369/369 tests verdes. APP_VERSION 8.199.0.",
+  },
+  {
     version: "8.198.0",
     date: "2026-05-18",
     type: "patch",
     title: "Auditoría — P2.12 endurecimiento de complejidad",
-    summary: "30 → 23 warnings ESLint. validateStepRuta/Costos, diffConceptos, agruparPorExpediente y useEmbarqueDetalleData refactorizados con helpers extraídos.",
+    summary: "30 → 26 warnings ESLint. validateStepRuta/Costos, diffConceptos, agruparPorExpediente y useEmbarqueDetalleData refactorizados con helpers extraídos.",
     description: "P2.12 Endurecimiento de complejidad ciclomática (post P2.10). Refactors puros, sin cambios funcionales: lib/domain/embarqueWizardSchemas.ts — validateStepRuta (28→0) extrae validateMaritimoRuta/Aereo/Terrestre y validateRutaModo; validateStepCostos (16→0) extrae parseTC, validarConceptosVenta y validarConceptosCosto. lib/audit/diffFields.ts — diffConceptos (17→0) extrae nombreOf y compararConcepto. lib/domain/proyeccionFacturacion.ts — agruparPorExpediente (19→0) extrae initGrupo y mergeFila. hooks/embarque/useEmbarqueDetalleData.ts (17→0) usa helpers tc() y pick() para tipos de cambio y defaults `?? []`. 369/369 tests verdes. APP_VERSION 8.198.0.",
   },
   {
