@@ -177,83 +177,74 @@ interface ApplyFechasArgs {
   ata?: string | null;
 }
 
+type FechasUpdate = { eta?: string; etd?: string; fecha_llegada_real?: string; estado?: "Arribo" };
+
+function buildFechasUpdate({ eta, etd, ata }: Omit<ApplyFechasArgs, "embarqueId">): FechasUpdate {
+  const update: FechasUpdate = {};
+  if (eta) update.eta = eta;
+  if (etd) update.etd = etd;
+  if (ata) {
+    update.fecha_llegada_real = ata;
+    if (!eta) update.eta = ata;
+  }
+  return update;
+}
+
+async function shouldAvanzarArribo(embarqueId: string, ata: string | null | undefined): Promise<boolean> {
+  if (!ata) return false;
+  const { data, error } = await supabase
+    .from("embarques").select("estado").eq("id", embarqueId).maybeSingle();
+  if (error) throw error;
+  const estado = (data?.estado as string | undefined) ?? "";
+  return estado === "Confirmado" || estado === "En Tránsito";
+}
+
+async function registrarEventoArribo(embarqueId: string, ata: string) {
+  const { data: existentes } = await supabase
+    .from("eventos_embarque").select("id, fecha")
+    .eq("embarque_id", embarqueId).eq("tipo", "Arribo a Puerto");
+  const yaExiste = (existentes ?? []).some((e: { fecha: string }) =>
+    (e.fecha ?? "").slice(0, 10) === ata,
+  );
+  if (yaExiste) return;
+  const { data: userData } = await supabase.auth.getUser();
+  const usuario = userData?.user?.email ?? "Sistema";
+  await supabase.from("eventos_embarque").insert({
+    embarque_id: embarqueId,
+    tipo: "Arribo a Puerto",
+    descripcion: 'Estado cambiado a "Arribo" (arribo real registrado)',
+    ubicacion: "",
+    fecha: `${ata}T00:00:00Z`,
+    usuario,
+  });
+}
+
 export function useApplyJsonCargoFechas() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async ({ embarqueId, eta, etd, ata }: ApplyFechasArgs) => {
-      const update: { eta?: string; etd?: string; fecha_llegada_real?: string; estado?: "Arribo" } = {};
-      if (eta) update.eta = eta;
-      if (etd) update.etd = etd;
-      if (ata) {
-        update.fecha_llegada_real = ata;
-        // Si el contenedor ya arribó (ATA conocida) y no recibimos un ETA
-        // distinto explícito, alineamos el ETA a la fecha real de llegada
-        // para que el resumen refleje la realidad operativa.
-        if (!eta) update.eta = ata;
-      }
+      const update = buildFechasUpdate({ eta, etd, ata });
       if (Object.keys(update).length === 0) return { applied: false };
 
-      // Si se está aplicando ATA, avanzar el estado a "Arribo" automáticamente
-      // siempre que el embarque siga en una etapa previa (no retroceder).
-      let avanzaArribo = false;
-      if (ata) {
-        const { data: emb, error: errEmb } = await supabase
-          .from("embarques")
-          .select("estado")
-          .eq("id", embarqueId)
-          .maybeSingle();
-        if (errEmb) throw errEmb;
-        const estadoActual = (emb?.estado as string | undefined) ?? "";
-        if (estadoActual === "Confirmado" || estadoActual === "En Tránsito") {
-          update.estado = "Arribo";
-          avanzaArribo = true;
-        }
-      }
+      const avanzaArribo = await shouldAvanzarArribo(embarqueId, ata);
+      if (avanzaArribo) update.estado = "Arribo";
 
       const { data, error } = await supabase
-        .from("embarques")
-        .update(update)
-        .eq("id", embarqueId)
-        .select("id");
+        .from("embarques").update(update).eq("id", embarqueId).select("id");
       if (error) throw error;
       if (!data || data.length === 0) {
         throw new Error("No se pudo actualizar el embarque. Verifica permisos o que el registro exista.");
       }
 
-      // Registrar evento de tracking "Arribo a Puerto" si avanzamos el estado,
-      // evitando duplicados para la misma fecha.
-      if (avanzaArribo && ata) {
-        const { data: existentes } = await supabase
-          .from("eventos_embarque")
-          .select("id, fecha")
-          .eq("embarque_id", embarqueId)
-          .eq("tipo", "Arribo a Puerto");
-        const yaExiste = (existentes ?? []).some((e: { fecha: string }) =>
-          (e.fecha ?? "").slice(0, 10) === ata,
-        );
-        if (!yaExiste) {
-          const { data: userData } = await supabase.auth.getUser();
-          const usuario = userData?.user?.email ?? "Sistema";
-          await supabase.from("eventos_embarque").insert({
-            embarque_id: embarqueId,
-            tipo: "Arribo a Puerto",
-            descripcion: 'Estado cambiado a "Arribo" (arribo real registrado)',
-            ubicacion: "",
-            fecha: `${ata}T00:00:00Z`,
-            usuario,
-          });
-        }
-      }
-
+      if (avanzaArribo && ata) await registrarEventoArribo(embarqueId, ata);
       return { applied: true, avanzaArribo };
     },
     onSuccess: (_r, args) => {
       qc.invalidateQueries({ queryKey: queryKeys.embarques.detail(args.embarqueId) });
       qc.invalidateQueries({ queryKey: queryKeys.embarques.all });
       qc.invalidateQueries({ queryKey: queryKeys.embarques.eventos(args.embarqueId) });
-      // Invalida la caché unificada del detalle (RPC get_embarque_full)
-      // para que el tab Resumen se refresque sin recargar la página.
       qc.invalidateQueries({ queryKey: [...queryKeys.embarques.all, "full", args.embarqueId] });
     },
   });
 }
+
