@@ -22,6 +22,14 @@ export interface ChangelogEntry {
  */
 export const recentChangelog: ChangelogEntry[] = [
   {
+    version: "8.202.0",
+    date: "2026-05-18",
+    type: "patch",
+    title: "Auditoría — P2.12 lote 6 (jsoncargo-track, invite-client-user, TrackingWarnings, proformaPdf)",
+    summary: "21 → 14 warnings ESLint. jsoncargo-track, invite-client-user, deriveEventsFromContainer, TrackingWarnings, CotizacionDatosGeneralesCard, buildHeaderHtml y VirtualDataTable refactorizados.",
+    description: "Refactors puros sin cambios funcionales ni de BD. jsoncargo-track extrae helpers a _shared/jsoncargoSync.ts (loadEmbarque, persistPrefixMismatch, syncEventos, upsertTrackingExterno, buildSummary) y runSync interno. invite-client-user (26→0) extrae parseBody, verifyClienteOrg, resolveUserId, ensureClienteRole. _shared/jsoncargo.ts deriveEventsFromContainer (22→0) dividido en buildZarpe/Movimiento/AduanaEvent. TrackingWarnings.tsx (23→0) extrae 4 sub-componentes de alerta. CotizacionDatosGeneralesCard.tsx (24→0) usa array declarativo de filas. proformaPdf buildHeaderHtml (21→0) extrae sub-secciones. VirtualDataTable extrae VirtualRow, VirtualHeaderRow, SkeletonRows, EmptyState. BulkImportDialog extrae hook useBulkImport. APP_VERSION 8.202.0.",
+  },
+  {
     version: "8.201.0",
     date: "2026-05-18",
     type: "patch",
