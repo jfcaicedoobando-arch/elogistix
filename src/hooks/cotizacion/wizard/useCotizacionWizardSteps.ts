@@ -57,32 +57,28 @@ export function useCotizacionWizardSteps({
 }: Deps) {
   const { crearCotizacion, updateCotizacion, upsertCostos, registrarActividad } = mutations;
 
+  const validatePaso1 = (v: CotizacionFormValues): string | null => {
+    if (!v.esProspecto && !v.clienteId) return "Selecciona un cliente";
+    if (v.esProspecto && !v.prospectoEmpresa.trim()) return "Ingresa el nombre de la empresa del prospecto";
+    if (v.esProspecto && !v.prospectoContacto.trim()) return "Ingresa el nombre del contacto del prospecto";
+    return null;
+  };
+
   const handleSiguiente = useCallback(async () => {
-    const v = form.getValues();
     if (currentStep === 1) {
-      if (!v.esProspecto && !v.clienteId) {
-        notifyError(toast, { title: "Selecciona un cliente"});
-        return;
-      }
-      if (v.esProspecto && !v.prospectoEmpresa.trim()) {
-        notifyError(toast, { title: "Ingresa el nombre de la empresa del prospecto"});
-        return;
-      }
-      if (v.esProspecto && !v.prospectoContacto.trim()) {
-        notifyError(toast, { title: "Ingresa el nombre del contacto del prospecto"});
-        return;
-      }
+      const v = form.getValues();
+      const err = validatePaso1(v);
+      if (err) { notifyError(toast, { title: err }); return; }
       try {
-        const id = await savePaso1({
-          form, msdsFile, cotizacionId, buildPaso1Data,
-          mutations: { crearCotizacion, updateCotizacion },
-        });
+        const id = await savePaso1({ form, msdsFile, cotizacionId, buildPaso1Data, mutations: { crearCotizacion, updateCotizacion } });
         if (!cotizacionId) setCotizacionId(id);
         setCurrentStep(2);
-      } catch (err: unknown) {
-        notifyError(toast, { title: "Error al guardar datos generales", description: getErrorMessage(err)});
+      } catch (e: unknown) {
+        notifyError(toast, { title: "Error al guardar datos generales", description: getErrorMessage(e)});
       }
-    } else if (currentStep === 2) {
+      return;
+    }
+    if (currentStep === 2) {
       try {
         if (costosInternos.length > 0 && cotizacionId) {
           await savePaso2({ cotizacionId, costosInternos, mutations: { upsertCostos } });
@@ -94,10 +90,12 @@ export function useCotizacionWizardSteps({
           setCostosPreLlenados(true);
         }
         setCurrentStep(3);
-      } catch (err: unknown) {
-        notifyError(toast, { title: "Error al guardar costos", description: getErrorMessage(err)});
+      } catch (e: unknown) {
+        notifyError(toast, { title: "Error al guardar costos", description: getErrorMessage(e)});
       }
-    } else if (currentStep === 3) {
+      return;
+    }
+    if (currentStep === 3) {
       const conceptosUSDValidos = conceptosUSD.filter(c => c.descripcion?.trim());
       const conceptosMXNValidos = conceptosMXN.filter(c => c.descripcion?.trim());
       if (conceptosUSDValidos.length === 0 && conceptosMXNValidos.length === 0) {
@@ -106,16 +104,11 @@ export function useCotizacionWizardSteps({
       }
       try {
         if (cotizacionId) {
-          await savePaso3({
-            cotizacionId,
-            conceptosVenta: fromDb<Record<string, unknown>[]>([...conceptosUSDValidos, ...conceptosMXNValidos]),
-            totalUSD,
-            mutations: { updateCotizacion },
-          });
+          await savePaso3({ cotizacionId, conceptosVenta: fromDb<Record<string, unknown>[]>([...conceptosUSDValidos, ...conceptosMXNValidos]), totalUSD, mutations: { updateCotizacion } });
         }
         setCurrentStep(4);
-      } catch (err: unknown) {
-        notifyError(toast, { title: "Error al guardar conceptos de venta", description: getErrorMessage(err)});
+      } catch (e: unknown) {
+        notifyError(toast, { title: "Error al guardar conceptos de venta", description: getErrorMessage(e)});
       }
     }
   }, [

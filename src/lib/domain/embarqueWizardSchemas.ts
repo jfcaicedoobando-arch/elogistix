@@ -9,24 +9,18 @@
  *   - Cualquier ajuste de tono/idioma se hace en `errorCatalog.ts` (única fuente).
  */
 import { z } from "zod";
-import { msg, getMessage } from "@/lib/domain/errorCatalog";
+import { msg } from "@/lib/domain/errorCatalog";
 
 // Re-export del helper neutro para compatibilidad con imports existentes
 export { formatValidationMessage } from "./validationFormat";
-
-// ── Constantes de validación ──────────────────────────────────────────
-export const MAX_FILE_SIZE_MB = 10;
-export const MAX_FILE_SIZE_BYTES = MAX_FILE_SIZE_MB * 1024 * 1024;
-export const ALLOWED_MIME_TYPES = [
-  "application/pdf",
-  "image/jpeg",
-  "image/jpg",
-  "image/png",
-  "application/vnd.ms-excel",
-  "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-  "application/msword",
-  "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-] as const;
+export { MAX_FILE_SIZE_MB, MAX_FILE_SIZE_BYTES, ALLOWED_MIME_TYPES } from "./embarqueWizardConstants";
+export { validateArchivo, validateStepDocumentos, type DocumentoArchivoValidacion } from "./embarqueWizardDocumentos";
+export {
+  validateStepCostos,
+  type StepCostosInput,
+  type ConceptoVentaValidacion,
+  type ConceptoCostoValidacion,
+} from "./embarqueWizardCostos";
 
 // ── Tipo plano de errores por campo ───────────────────────────────────
 export type StepValidationErrors = Record<string, string>;
@@ -169,119 +163,6 @@ export function validateStepRuta(input: StepRutaInput): StepValidationErrors {
   ) {
     errors.eta = msg("2.eta.afterEtd");
   }
-
-  return errors;
-}
-
-// ── Paso 3: Documentos ────────────────────────────────────────────────
-export interface DocumentoArchivoValidacion {
-  nombre: string;
-  size: number;
-  type: string;
-}
-
-export function validateArchivo(
-  file: DocumentoArchivoValidacion,
-): string | null {
-  if (file.size > MAX_FILE_SIZE_BYTES) {
-    const sizeMb = (file.size / 1024 / 1024).toFixed(1);
-    return getMessage("3.documento.tooLarge", {
-      nombre: file.nombre,
-      sizeMb,
-      maxMb: MAX_FILE_SIZE_MB,
-    });
-  }
-  if (file.type && !ALLOWED_MIME_TYPES.includes(file.type as never)) {
-    return getMessage("3.documento.badFormat", { nombre: file.nombre });
-  }
-  return null;
-}
-
-export function validateStepDocumentos(
-  archivos: Record<string, { size: number; type: string }>,
-): StepValidationErrors {
-  const errors: StepValidationErrors = {};
-  for (const [nombre, file] of Object.entries(archivos)) {
-    const err = validateArchivo({ nombre, size: file.size, type: file.type });
-    if (err) errors[nombre] = err;
-  }
-  return errors;
-}
-
-// ── Paso 4: Costos y Pricing ──────────────────────────────────────────
-export interface ConceptoVentaValidacion {
-  id: number;
-  concepto: string;
-  cantidad: number;
-  precioUnitario: number;
-  moneda: string;
-}
-
-export interface ConceptoCostoValidacion {
-  id: number;
-  proveedorId: string;
-  concepto: string;
-  monto: number;
-  moneda: string;
-}
-
-export interface StepCostosInput {
-  conceptosVenta: ConceptoVentaValidacion[];
-  conceptosCosto: ConceptoCostoValidacion[];
-  tipoCambioUSD: string | number;
-  tipoCambioEUR: string | number;
-}
-
-function parseTC(v: string | number): number {
-  return typeof v === "string" ? parseFloat(v) : v;
-}
-
-function validarConceptosVenta(
-  ventas: ConceptoVentaValidacion[],
-  errors: StepValidationErrors,
-): void {
-  const validos = ventas.filter(
-    (v) => v.concepto.trim() && v.precioUnitario > 0 && v.cantidad >= 1,
-  );
-  if (validos.length === 0) {
-    errors.conceptosVenta = msg("4.ventas.minOne");
-    return;
-  }
-  for (const v of ventas) {
-    if (v.concepto.trim() && (v.cantidad < 1 || v.precioUnitario < 0)) {
-      errors[`venta_${v.id}`] = getMessage("4.venta.invalid", { id: v.id });
-    }
-  }
-}
-
-function validarConceptosCosto(
-  costos: ConceptoCostoValidacion[],
-  errors: StepValidationErrors,
-): void {
-  const validos = costos.filter(
-    (c) => c.concepto.trim() && c.proveedorId && c.monto >= 0,
-  );
-  if (validos.length === 0) {
-    errors.conceptosCosto = msg("4.costos.minOne");
-    return;
-  }
-  for (const c of costos) {
-    if (c.concepto.trim() && c.monto < 0) {
-      errors[`costo_${c.id}`] = getMessage("4.costo.invalid", { id: c.id });
-    }
-  }
-}
-
-export function validateStepCostos(input: StepCostosInput): StepValidationErrors {
-  const errors: StepValidationErrors = {};
-
-  const tcUSD = parseTC(input.tipoCambioUSD);
-  const tcEUR = parseTC(input.tipoCambioEUR);
-  if (!isFinite(tcUSD) || tcUSD <= 0) errors.tipoCambioUSD = msg("4.tcUSD.positive");
-  if (!isFinite(tcEUR) || tcEUR <= 0) errors.tipoCambioEUR = msg("4.tcEUR.positive");
-
-  validarConceptosVenta(input.conceptosVenta, errors);
-  validarConceptosCosto(input.conceptosCosto, errors);
 
   return errors;
 }

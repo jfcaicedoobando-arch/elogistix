@@ -87,23 +87,41 @@ function FailedAlert({ reason }: { reason: string | null | undefined }) {
   );
 }
 
-export function TrackingWarnings({ ctrl, naviera, contenedor, blMaster, readOnly }: Props) {
-  const { tracking, isLoading, sinContenedor, noSoportada, prefixMismatch, showPrefixWarning, suggestions, detectedPrefix } = ctrl;
+interface AlertFlags {
+  showSinContenedor: boolean;
+  showNoSoportada: boolean;
+  showPrefixWarning: boolean;
+  showIdle: boolean;
+  showFailed: boolean;
+}
+
+function computeAlertFlags(ctrl: Props["ctrl"]): AlertFlags {
+  const { tracking, isLoading, sinContenedor, noSoportada, prefixMismatch, showPrefixWarning } = ctrl;
   const backendPrefixError = tracking?.status === "failed" && /prefix not found/i.test(tracking.failed_reason ?? "");
-  const showIdle = !sinContenedor && !noSoportada && !prefixMismatch && !tracking && !isLoading;
-  const showFailed = tracking?.status === "failed" && !backendPrefixError;
+  return {
+    showSinContenedor: sinContenedor,
+    showNoSoportada: !sinContenedor && noSoportada,
+    showPrefixWarning,
+    showIdle: !sinContenedor && !noSoportada && !prefixMismatch && !tracking && !isLoading,
+    showFailed: tracking?.status === "failed" && !backendPrefixError,
+  };
+}
+
+export function TrackingWarnings({ ctrl, naviera, contenedor, blMaster, readOnly }: Props) {
+  const flags = computeAlertFlags(ctrl);
+  const { tracking, suggestions, detectedPrefix } = ctrl;
 
   return (
     <>
-      {sinContenedor && <SinContenedorAlert />}
-      {!sinContenedor && noSoportada && <NoSoportadaAlert naviera={naviera} contenedor={contenedor} blMaster={blMaster} />}
-      {showPrefixWarning && <PrefixMismatchAlert naviera={naviera} detectedPrefix={detectedPrefix} suggestions={suggestions} readOnly={readOnly} />}
-      {showIdle && (
+      {flags.showSinContenedor && <SinContenedorAlert />}
+      {flags.showNoSoportada && <NoSoportadaAlert naviera={naviera} contenedor={contenedor} blMaster={blMaster} />}
+      {flags.showPrefixWarning && <PrefixMismatchAlert naviera={naviera} detectedPrefix={detectedPrefix} suggestions={suggestions} readOnly={readOnly} />}
+      {flags.showIdle && (
         <p className="text-xs text-muted-foreground">
           {readOnly ? "Aún no hay datos de tracking en vivo." : "Sin sincronización previa. Pulsa Sincronizar para consultar JSONCargo."}
         </p>
       )}
-      {showFailed && <FailedAlert reason={tracking?.failed_reason} />}
+      {flags.showFailed && <FailedAlert reason={tracking?.failed_reason} />}
     </>
   );
 }

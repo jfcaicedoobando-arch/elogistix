@@ -92,39 +92,17 @@ export function BulkImportDialog<T>({
           {description && <DialogDescription>{description}</DialogDescription>}
         </DialogHeader>
 
-        {step === "upload" && (
-          <UploadStep
-            templateHeaders={templateHeaders}
-            onDownloadTemplate={downloadTemplate}
-            onPick={() => inputRef.current?.click()}
-            error={error}
-          />
-        )}
-
-        {step === "preview" && preview && (
-          <PreviewStep
-            fileName={fileName}
-            preview={preview}
-            error={error}
-            onReset={reset}
-          />
-        )}
-
-        {step === "committing" && (
-          <div className="py-12 text-center text-sm text-muted-foreground flex flex-col items-center gap-3">
-            <Loader2 className="h-8 w-8 animate-spin text-accent" />
-            Importando registros...
-          </div>
-        )}
-
-        {step === "done" && (
-          <div className="py-10 text-center flex flex-col items-center gap-3">
-            <CheckCircle2 className="h-10 w-10 text-green-600" />
-            <p className="text-base font-medium">
-              {insertedCount} registro{insertedCount === 1 ? "" : "s"} importado{insertedCount === 1 ? "" : "s"} correctamente.
-            </p>
-          </div>
-        )}
+        <BulkImportBody
+          step={step}
+          preview={preview}
+          fileName={fileName}
+          error={error}
+          insertedCount={insertedCount}
+          templateHeaders={templateHeaders}
+          onDownloadTemplate={downloadTemplate}
+          onPick={() => inputRef.current?.click()}
+          onReset={reset}
+        />
 
         <input
           ref={inputRef}
@@ -137,29 +115,87 @@ export function BulkImportDialog<T>({
           }}
         />
 
-        <DialogFooter className="gap-2 sm:gap-0">
-          {step === "preview" && (
-            <>
-              <Button variant="outline" onClick={reset}>
-                Cambiar archivo
-              </Button>
-              <Button
-                onClick={handleCommit}
-                disabled={!preview || preview.valid.length === 0}
-              >
-                Importar {preview?.valid.length ?? 0} válidos
-              </Button>
-            </>
-          )}
-          {(step === "upload" || step === "done") && (
-            <Button variant="outline" onClick={() => handleOpenChange(false)}>
-              {step === "done" ? "Cerrar" : "Cancelar"}
-            </Button>
-          )}
-        </DialogFooter>
+        <BulkImportFooter
+          step={step}
+          preview={preview}
+          onReset={reset}
+          onCommit={handleCommit}
+          onClose={() => handleOpenChange(false)}
+        />
       </DialogContent>
     </Dialog>
   );
+}
+
+interface BulkImportBodyProps<T> {
+  step: "upload" | "preview" | "committing" | "done";
+  preview: ImportPreview<T> | null;
+  fileName: string | null;
+  error: string | null;
+  insertedCount: number;
+  templateHeaders: readonly string[];
+  onDownloadTemplate: () => void;
+  onPick: () => void;
+  onReset: () => void;
+}
+
+function BulkImportBody<T>({ step, preview, fileName, error, insertedCount, templateHeaders, onDownloadTemplate, onPick, onReset }: BulkImportBodyProps<T>) {
+  if (step === "upload") {
+    return <UploadStep templateHeaders={templateHeaders} onDownloadTemplate={onDownloadTemplate} onPick={onPick} error={error} />;
+  }
+  if (step === "preview" && preview) {
+    return <PreviewStep fileName={fileName} preview={preview} error={error} onReset={onReset} />;
+  }
+  if (step === "committing") {
+    return (
+      <div className="py-12 text-center text-sm text-muted-foreground flex flex-col items-center gap-3">
+        <Loader2 className="h-8 w-8 animate-spin text-accent" />
+        Importando registros...
+      </div>
+    );
+  }
+  if (step === "done") {
+    return (
+      <div className="py-10 text-center flex flex-col items-center gap-3">
+        <CheckCircle2 className="h-10 w-10 text-green-600" />
+        <p className="text-base font-medium">
+          {insertedCount} registro{insertedCount === 1 ? "" : "s"} importado{insertedCount === 1 ? "" : "s"} correctamente.
+        </p>
+      </div>
+    );
+  }
+  return null;
+}
+
+interface BulkImportFooterProps<T> {
+  step: "upload" | "preview" | "committing" | "done";
+  preview: ImportPreview<T> | null;
+  onReset: () => void;
+  onCommit: () => void;
+  onClose: () => void;
+}
+
+function BulkImportFooter<T>({ step, preview, onReset, onCommit, onClose }: BulkImportFooterProps<T>) {
+  if (step === "preview") {
+    return (
+      <DialogFooter className="gap-2 sm:gap-0">
+        <Button variant="outline" onClick={onReset}>Cambiar archivo</Button>
+        <Button onClick={onCommit} disabled={!preview || preview.valid.length === 0}>
+          Importar {preview?.valid.length ?? 0} válidos
+        </Button>
+      </DialogFooter>
+    );
+  }
+  if (step === "upload" || step === "done") {
+    return (
+      <DialogFooter className="gap-2 sm:gap-0">
+        <Button variant="outline" onClick={onClose}>
+          {step === "done" ? "Cerrar" : "Cancelar"}
+        </Button>
+      </DialogFooter>
+    );
+  }
+  return null;
 }
 
 interface UploadStepProps {
