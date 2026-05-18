@@ -2,6 +2,15 @@ import type { ChangelogEntry } from "../../../changelogData";
 
 export const chunk0: ChangelogEntry[] = [
   {
+    version: "8.212.0",
+    date: "2026-05-18",
+    type: "minor",
+    title: "Dashboard — Profit homologado a MXN con desglose por moneda",
+    summary: "El Dashboard principal ahora muestra el Profit proyectado en pesos mexicanos (en lugar de USD), homologando venta y costo de todas las monedas con el tipo de cambio guardado en cada embarque. Incluye tooltip con desglose por moneda origen (USD, EUR, MXN nativo).",
+    description: "Se corrigió profit_por_embarque() que solo consideraba conceptos en USD e ignoraba MXN y EUR, dejando el profit sub-reportado en todo el Dashboard. La función ahora suma conceptos_venta y conceptos_costo en las tres monedas, convirtiendo USD y EUR a MXN con e.tipo_cambio_usd / tipo_cambio_eur. Las RPC dashboard_summary() y dashboard_details() devuelven ahora ventaMXN/costoMXN/profitMXN tanto a nivel agregado (arribos del mes, resumen mes siguiente) como por embarque, más el desglose por moneda origen. UI: tarjeta 'Arribos este mes' ahora muestra 'Profit MXN proyectado' con tooltip de desglose; tabla ProfitTable usa Venta/Costo/Profit/Margen en MXN con tooltip por fila incluyendo TC usado; tabla 'Embarques mes siguiente' y su resumen migran a MXN. Parsers en src/lib/parsers/dashboard.ts extendidos con los nuevos campos. APP_VERSION 8.212.0.",
+  },
+
+  {
     version: "8.211.0",
     date: "2026-05-18",
     type: "patch",
