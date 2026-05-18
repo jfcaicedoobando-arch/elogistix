@@ -38,28 +38,36 @@ function walk(dir: string, acc: string[] = []): string[] {
   return acc;
 }
 
-function classify(line: string, target: string): Severity {
-  // CRITICAL
+function classifyCritical(line: string): Severity | null {
   if (/\bas\s+any\b/.test(line)) return "CRITICAL";
   if (/JSON\.parse\([^)]*\)\s*as\s+/.test(line)) return "CRITICAL";
-  // SAFE
+  return null;
+}
+
+function classifySafe(line: string, target: string): Severity | null {
   if (target === "const") return "SAFE";
   if (/^React\./.test(target)) return "SAFE";
-  if (/^ReturnType<typeof/.test(line.match(/\bas\s+(.+)$/)?.[1] ?? "")) return "SAFE";
-  if (/^Partial<ReturnType<typeof/.test(line.match(/\bas\s+(.+)$/)?.[1] ?? "")) return "SAFE";
+  const tail = line.match(/\bas\s+(.+)$/)?.[1] ?? "";
+  if (/^ReturnType<typeof/.test(tail)) return "SAFE";
+  if (/^Partial<ReturnType<typeof/.test(tail)) return "SAFE";
   if (/^typeof\b/.test(target)) return "SAFE";
-  // HIGH: doble cast as unknown as X
-  if (/\bas\s+unknown\s+as\s+/.test(line)) return "HIGH";
-  // LOW: Json wrapper
+  return null;
+}
+
+function classifyByTarget(target: string): Severity {
   if (target === "Json") return "LOW";
-  // MEDIUM: tipos de Supabase
   if (/^(Tables|TablesInsert|TablesUpdate|Database)\b/.test(target)) return "MEDIUM";
-  // HIGH: as X[] con probable origen Supabase
   if (/^[A-Z][A-Za-z0-9_]*\[\]/.test(target)) return "HIGH";
-  // unknown solo (intermedio) — code smell pero no crítico
   if (target === "unknown") return "LOW";
-  // Default: MEDIUM (cast a tipo nominal sin validar)
   return "MEDIUM";
+}
+
+function classify(line: string, target: string): Severity {
+  return (
+    classifyCritical(line) ??
+    classifySafe(line, target) ??
+    (/\bas\s+unknown\s+as\s+/.test(line) ? "HIGH" : classifyByTarget(target))
+  );
 }
 
 function scan(): CastHit[] {
