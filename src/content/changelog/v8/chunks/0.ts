@@ -2,6 +2,14 @@ import type { ChangelogEntry } from "../../../changelogData";
 
 export const chunk0: ChangelogEntry[] = [
   {
+    version: "8.220.0",
+    date: "2026-05-18",
+    type: "patch",
+    title: "Documentos de embarque — idempotencia por slot y verificación de UPDATE",
+    summary: "Subir el mismo archivo en otro documento ya no devuelve éxito sin actualizar la fila.",
+    description: "uploadDocumentoEmbarque (src/services/embarque/documentos.ts) calculaba la clave de idempotencia sólo a partir del hash del archivo, así que reusar el mismo PDF en otro slot (por ejemplo BL House después de Certificado de Origen) devolvía la respuesta cacheada del docId anterior, marcaba toast en verde y dejaba la fila en Pendiente. Ahora la clave combina embarqueId+docId+hash, por lo que cada combinación tiene su propio registro de idempotencia. Adicionalmente, el UPDATE de documentos_embarque usa .select() y lanza error si afecta 0 filas, evitando éxitos silenciosos cuando RLS o un id inexistente bloquean el cambio. Se limpió la entrada huérfana de idempotency_keys y se restableció el documento 'Certificado de Origen' del embarque ELIMP00216 a Pendiente. APP_VERSION 8.220.0.",
+  },
+  {
     version: "8.219.0",
     date: "2026-05-18",
     type: "patch",
