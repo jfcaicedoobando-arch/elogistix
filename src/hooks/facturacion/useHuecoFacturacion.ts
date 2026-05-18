@@ -24,7 +24,7 @@ export function useHuecoFacturacion() {
     staleTime: 60_000,
   });
 
-  const filas = data?.filas ?? [];
+  const filas = useMemo(() => data?.filas ?? [], [data?.filas]);
   const totalEmbarques = data?.totalEmbarques ?? 0;
   const totalUsd = data?.totalUsd ?? 0;
   const totalMxn = data?.totalMxn ?? 0;
