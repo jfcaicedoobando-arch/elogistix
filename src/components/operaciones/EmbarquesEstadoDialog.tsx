@@ -1,13 +1,14 @@
 import { useMemo, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Search, ExternalLink, AlertTriangle } from "lucide-react";
-import { formatDate, toTitleCase, nombreDesdeEmail } from "@/lib/formatters";
+import { Search, AlertTriangle } from "lucide-react";
+import { nombreDesdeEmail } from "@/lib/formatters";
 import type { EmbarquesPorEstadoBucket, EstadoUiKey } from "@/hooks/operaciones";
 import { ESTADO_COLOR, ESTADO_ICON } from "./desempenoVisuals";
+import { EmbarqueEstadoListItem } from "./embarquesEstadoDialog/EmbarqueEstadoListItem";
 
 interface Props {
   open: boolean;
@@ -86,79 +87,14 @@ export function EmbarquesEstadoDialog({ open, onOpenChange, operador, estado, bu
             </p>
           ) : (
             <ul className="divide-y divide-border">
-              {filtered.map((e) => {
-                const subtitulo: string[] = [];
-                if (e.modo) subtitulo.push(e.modo);
-                if (e.tipo) subtitulo.push(e.tipo);
-                const ruta =
-                  e.origen || e.destino
-                    ? `${e.origen || "—"} → ${e.destino || "—"}`
-                    : null;
-
-                let extra: { label: string; tone: "warning" | "danger" | "info" | "muted" } | null = null;
-                if (estado === "Llegada" && e.diasEnPuerto > 0) {
-                  extra = {
-                    label: `${e.diasEnPuerto} ${e.diasEnPuerto === 1 ? "día" : "días"} en puerto`,
-                    tone: e.diasEnPuerto > 7 ? "danger" : "warning",
-                  };
-                } else if (estado === "En Tránsito" && e.diasParaEta !== null) {
-                  if (e.diasParaEta < 0) {
-                    extra = { label: `ETA vencido (${Math.abs(e.diasParaEta)} d)`, tone: "danger" };
-                  } else if (e.diasParaEta === 0) {
-                    extra = { label: "Llega hoy", tone: "info" };
-                  } else {
-                    extra = {
-                      label: `${e.diasParaEta} ${e.diasParaEta === 1 ? "día" : "días"} para ETA`,
-                      tone: e.diasParaEta <= 3 ? "warning" : "muted",
-                    };
-                  }
-                }
-
-                return (
-                  <li key={e.id}>
-                    <Link
-                      to={`/embarques/${e.id}`}
-                      onClick={() => onOpenChange(false)}
-                      className="flex items-center gap-3 py-2.5 px-2 -mx-2 rounded-md hover:bg-muted/60 transition-colors group"
-                    >
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 flex-wrap">
-                          <span className="font-semibold text-sm">{e.expediente}</span>
-                          <span className="text-xs text-muted-foreground truncate">
-                            {toTitleCase(e.clienteNombre || "Sin cliente")}
-                          </span>
-                          {subtitulo.length > 0 && (
-                            <Badge variant="outline" className="text-[10px] h-4 px-1.5">
-                              {subtitulo.join(" · ")}
-                            </Badge>
-                          )}
-                        </div>
-                        <div className="flex items-center gap-3 text-[11px] text-muted-foreground mt-0.5 flex-wrap">
-                          {ruta && <span className="truncate">{ruta}</span>}
-                          {e.etd && <span>ETD {formatDate(e.etd)}</span>}
-                          {e.eta && <span>ETA {formatDate(e.eta)}</span>}
-                          {extra && (
-                            <span
-                              className={
-                                extra.tone === "danger"
-                                  ? "text-destructive font-medium"
-                                  : extra.tone === "warning"
-                                  ? "text-warning font-medium"
-                                  : extra.tone === "info"
-                                  ? "text-info font-medium"
-                                  : ""
-                              }
-                            >
-                              · {extra.label}
-                            </span>
-                          )}
-                        </div>
-                      </div>
-                      <ExternalLink className="h-4 w-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity shrink-0" />
-                    </Link>
-                  </li>
-                );
-              })}
+              {filtered.map((e) => (
+                <EmbarqueEstadoListItem
+                  key={e.id}
+                  e={e}
+                  estado={estado}
+                  onNavigate={() => onOpenChange(false)}
+                />
+              ))}
             </ul>
           )}
         </div>
