@@ -112,24 +112,7 @@ export interface StepRutaInput {
   transportista?: string | null;
 }
 
-function validateRutaModo(input: StepRutaInput): StepValidationErrors {
-  if (input.modo === "Aéreo") {
-    const r = aereoRuta.safeParse({
-      aeropuertoOrigen: input.aeropuertoOrigen ?? "",
-      aeropuertoDestino: input.aeropuertoDestino ?? "",
-      mawb: input.mawb ?? "",
-    });
-    return r.success ? {} : flattenZodErrors(r.error);
-  }
-  if (input.modo === "Terrestre") {
-    const r = terrestreRuta.safeParse({
-      ciudadOrigen: input.ciudadOrigen ?? "",
-      ciudadDestino: input.ciudadDestino ?? "",
-      transportista: input.transportista ?? "",
-    });
-    return r.success ? {} : flattenZodErrors(r.error);
-  }
-  // Marítimo o sin modo definido
+function validateMaritimoRuta(input: StepRutaInput): StepValidationErrors {
   const tipoContenedor = input.tipoServicio === "LCL"
     ? input.tipoContenedor || "LCL"
     : input.tipoContenedor ?? "";
@@ -142,6 +125,30 @@ function validateRutaModo(input: StepRutaInput): StepValidationErrors {
     tipoContenedor,
   });
   return r.success ? {} : flattenZodErrors(r.error);
+}
+
+function validateAereoRuta(input: StepRutaInput): StepValidationErrors {
+  const r = aereoRuta.safeParse({
+    aeropuertoOrigen: input.aeropuertoOrigen ?? "",
+    aeropuertoDestino: input.aeropuertoDestino ?? "",
+    mawb: input.mawb ?? "",
+  });
+  return r.success ? {} : flattenZodErrors(r.error);
+}
+
+function validateTerrestreRuta(input: StepRutaInput): StepValidationErrors {
+  const r = terrestreRuta.safeParse({
+    ciudadOrigen: input.ciudadOrigen ?? "",
+    ciudadDestino: input.ciudadDestino ?? "",
+    transportista: input.transportista ?? "",
+  });
+  return r.success ? {} : flattenZodErrors(r.error);
+}
+
+function validateRutaModo(input: StepRutaInput): StepValidationErrors {
+  if (input.modo === "Aéreo") return validateAereoRuta(input);
+  if (input.modo === "Terrestre") return validateTerrestreRuta(input);
+  return validateMaritimoRuta(input);
 }
 
 export function validateStepRuta(input: StepRutaInput): StepValidationErrors {
