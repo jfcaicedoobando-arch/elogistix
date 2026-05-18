@@ -68,24 +68,14 @@ export function VirtualDataTable<T>({
 }: VirtualDataTableProps<T>) {
   const parentRef = useRef<HTMLDivElement | null>(null);
   const cellPad = DENSITY_CELL[density];
-
-  // Layout en grid con anchos fijos cuando se proveen; columnas sin width
-  // toman 1fr.
-  const gridTemplate = columns
-    .map((c) => (c.width ? c.width : "minmax(0,1fr)"))
-    .join(" ");
-
+  const gridTemplate = buildGridTemplate(columns);
   const virtualizer = useVirtualizer({
     count: data.length,
     getScrollElement: () => parentRef.current,
     estimateSize: () => estimateRowHeight,
     overscan,
-    measureElement:
-      typeof window !== "undefined" && navigator.userAgent.indexOf("Firefox") === -1
-        ? (el) => el?.getBoundingClientRect().height ?? estimateRowHeight
-        : undefined,
+    measureElement: pickMeasureElement(estimateRowHeight),
   });
-
   const items = virtualizer.getVirtualItems();
 
   return (
