@@ -101,22 +101,6 @@ export const recentChangelog: ChangelogEntry[] = [
     summary: "Botón 'Estado de cuenta' en ficha de cliente (con aging por moneda) y exportador PDF del reporte de rentabilidad por cliente del periodo.",
     description: "src/generators/estadoCuentaPdf.ts genera estado de cuenta imprimible con aging 0-30/31-60/61-90/+90 por moneda; src/generators/rentabilidadPdf.ts hace lo propio con el P&L del filtro activo en /reportes. Sin dependencias nuevas: reusan el patrón window.open+print. APP_VERSION 8.187.0.",
   },
-  {
-    version: "8.186.0",
-    date: "2026-05-17",
-    type: "minor",
-    title: "Bloque 3.6 — Diff de campos sensibles en bitácora",
-    summary: "Cada edición de cliente o proveedor registra ahora la lista exacta de campos cambiados (antes → después) en la bitácora.",
-    description: "src/lib/audit/diffFields.ts + SENSITIVE_FIELDS (cliente, proveedor, embarque_costo, embarque_venta). Los controllers de detalle de cliente y proveedor adjuntan detalles.cambios al evento de bitácora sólo si hubo diferencias reales (null/''/undefined se tratan como equivalentes). 7 tests cubren los casos límite. APP_VERSION 8.186.0.",
-  },
-  {
-    version: "8.185.0",
-    date: "2026-05-17",
-    type: "minor",
-    title: "Bloque 3.1 — Importación masiva CSV de clientes y proveedores",
-    summary: "Nuevo botón 'Importar CSV' en clientes y proveedores con plantilla descargable, validación zod por fila y preview de errores antes de commitear.",
-    description: "src/lib/csv/parseCsv.ts (RFC-4180, autodetecta separador y normaliza encabezados) + importSchemas.ts (mapClienteRows/mapProveedorRows con zod) alimentan al nuevo BulkImportDialog genérico, montado en /clientes y /proveedores. Soporta tipo por defecto desde la tab activa, registra cada importación en bitácora y mantiene los 334+13 tests verdes. APP_VERSION 8.185.0."
-  },
 ];
 
 /** Deduplica por version conservando la primera ocurrencia (recentChangelog gana). */
