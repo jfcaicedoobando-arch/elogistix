@@ -11,13 +11,8 @@ import { generarFolioCotizacion } from "./queries";
 type CotizacionInsert = TablesInsert<"cotizaciones">;
 type CotizacionUpdate = Partial<CotizacionInsert>;
 
-function buildCotizacionInsertPayload(
-  input: CreateCotizacionInput,
-  folio: string,
-  fechaVigenciaIso: string,
-): CotizacionInsert {
+function partesClienteInsert(input: CreateCotizacionInput) {
   return {
-    folio,
     cliente_id: input.es_prospecto ? null : input.cliente_id,
     cliente_nombre: input.cliente_nombre,
     es_prospecto: input.es_prospecto,
@@ -25,6 +20,11 @@ function buildCotizacionInsertPayload(
     prospecto_contacto: input.prospecto_contacto || "",
     prospecto_email: input.prospecto_email || "",
     prospecto_telefono: input.prospecto_telefono || "",
+  };
+}
+
+function partesMercanciaInsert(input: CreateCotizacionInput) {
+  return {
     modo: input.modo as CotizacionInsert["modo"],
     tipo: input.tipo as CotizacionInsert["tipo"],
     incoterm: input.incoterm as CotizacionInsert["incoterm"],
@@ -34,13 +34,6 @@ function buildCotizacionInsertPayload(
     piezas: input.piezas,
     origen: input.origen,
     destino: input.destino,
-    conceptos_venta: toDbJson(input.conceptos_venta),
-    subtotal: input.subtotal,
-    moneda: input.moneda as CotizacionInsert["moneda"],
-    vigencia_dias: input.vigencia_dias,
-    fecha_vigencia: fechaVigenciaIso,
-    notas: input.notas || null,
-    operador: input.operador,
     tipo_carga: input.tipo_carga || "Carga General",
     msds_archivo: input.msds_archivo || null,
     tipo_embarque: input.tipo_embarque || "FCL",
@@ -50,6 +43,18 @@ function buildCotizacionInsertPayload(
     sector_economico: input.sector_economico || "",
     dimensiones_lcl: toDbJson(input.dimensiones_lcl || []),
     dimensiones_aereas: toDbJson(input.dimensiones_aereas || []),
+    num_contenedores: input.num_contenedores ?? 1,
+  };
+}
+
+function partesComercialInsert(input: CreateCotizacionInput) {
+  return {
+    conceptos_venta: toDbJson(input.conceptos_venta),
+    subtotal: input.subtotal,
+    moneda: input.moneda as CotizacionInsert["moneda"],
+    vigencia_dias: input.vigencia_dias,
+    notas: input.notas || null,
+    operador: input.operador,
     dias_libres_destino: input.dias_libres_destino ?? 0,
     dias_almacenaje: input.dias_almacenaje ?? 0,
     tiempo_transito_dias: input.tiempo_transito_dias ?? null,
@@ -60,7 +65,20 @@ function buildCotizacionInsertPayload(
     seguro: input.seguro ?? false,
     valor_seguro_usd: input.valor_seguro_usd ?? 0,
     carta_garantia: input.carta_garantia ?? false,
-    num_contenedores: input.num_contenedores ?? 1,
+  };
+}
+
+function buildCotizacionInsertPayload(
+  input: CreateCotizacionInput,
+  folio: string,
+  fechaVigenciaIso: string,
+): CotizacionInsert {
+  return {
+    folio,
+    fecha_vigencia: fechaVigenciaIso,
+    ...partesClienteInsert(input),
+    ...partesMercanciaInsert(input),
+    ...partesComercialInsert(input),
   };
 }
 
