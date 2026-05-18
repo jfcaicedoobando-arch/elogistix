@@ -30,11 +30,8 @@ interface Row {
   colSpan2?: boolean;
 }
 
-function buildRows(c: Cotizacion): Row[] {
-  const esMaritimo = c.modo === "Marítimo";
-  const isFCL = esMaritimo && c.tipo_embarque === "FCL";
-  const isLCL = esMaritimo && c.tipo_embarque === "LCL";
-  const rows: (Row | null)[] = [
+function baseRows(c: Cotizacion): Row[] {
+  return [
     { label: "Modo", value: c.modo, title: c.modo },
     { label: "Tipo", value: c.tipo, title: c.tipo },
     { label: "Incoterm", value: c.incoterm, title: c.incoterm },
@@ -42,17 +39,36 @@ function buildRows(c: Cotizacion): Row[] {
     { label: "Destino", value: c.destino || "-", title: c.destino || "" },
     { label: "Vigencia", value: `${c.vigencia_dias} días (${c.fecha_vigencia ? formatDate(c.fecha_vigencia) : "-"})` },
     { label: "Operador", value: c.operador ? nombreDesdeEmail(c.operador) : "-", title: c.operador || "" },
-    c.tiempo_transito_dias != null ? { label: "Tiempo de tránsito", value: `${c.tiempo_transito_dias} días` } : null,
-    isFCL && c.dias_libres_destino > 0 ? { label: "Días libres en destino", value: `${c.dias_libres_destino} días` } : null,
-    isFCL ? { label: "Carta garantía", value: c.carta_garantia ? "Sí" : "No" } : null,
-    isLCL && c.dias_almacenaje > 0 ? { label: "Días libres de almacenaje", value: `${c.dias_almacenaje} días` } : null,
-    c.frecuencia ? { label: "Frecuencia", value: c.frecuencia } : null,
-    c.ruta_texto ? { label: "Ruta", value: c.ruta_texto, title: c.ruta_texto, colSpan2: true } : null,
-    c.validez_propuesta ? { label: "Validez propuesta", value: formatDate(c.validez_propuesta) } : null,
-    c.tipo_movimiento ? { label: "Tipo de movimiento", value: c.tipo_movimiento } : null,
-    { label: "Seguro", value: c.seguro ? `Sí — ${formatCurrency(Number(c.valor_seguro_usd || 0), "USD")}` : "No" },
   ];
-  return rows.filter((r): r is Row => r !== null);
+}
+
+function maritimeRows(c: Cotizacion): Row[] {
+  if (c.modo !== "Marítimo") return [];
+  const rows: Row[] = [];
+  const isFCL = c.tipo_embarque === "FCL";
+  const isLCL = c.tipo_embarque === "LCL";
+  if (isFCL && c.dias_libres_destino > 0) rows.push({ label: "Días libres en destino", value: `${c.dias_libres_destino} días` });
+  if (isFCL) rows.push({ label: "Carta garantía", value: c.carta_garantia ? "Sí" : "No" });
+  if (isLCL && c.dias_almacenaje > 0) rows.push({ label: "Días libres de almacenaje", value: `${c.dias_almacenaje} días` });
+  return rows;
+}
+
+function optionalRows(c: Cotizacion): Row[] {
+  const rows: Row[] = [];
+  if (c.tiempo_transito_dias != null) rows.push({ label: "Tiempo de tránsito", value: `${c.tiempo_transito_dias} días` });
+  if (c.frecuencia) rows.push({ label: "Frecuencia", value: c.frecuencia });
+  if (c.ruta_texto) rows.push({ label: "Ruta", value: c.ruta_texto, title: c.ruta_texto, colSpan2: true });
+  if (c.validez_propuesta) rows.push({ label: "Validez propuesta", value: formatDate(c.validez_propuesta) });
+  if (c.tipo_movimiento) rows.push({ label: "Tipo de movimiento", value: c.tipo_movimiento });
+  return rows;
+}
+
+function seguroRow(c: Cotizacion): Row {
+  return { label: "Seguro", value: c.seguro ? `Sí — ${formatCurrency(Number(c.valor_seguro_usd || 0), "USD")}` : "No" };
+}
+
+function buildRows(c: Cotizacion): Row[] {
+  return [...baseRows(c), ...optionalRows(c), ...maritimeRows(c), seguroRow(c)];
 }
 
 interface Props {
