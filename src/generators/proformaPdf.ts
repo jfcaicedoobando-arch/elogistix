@@ -26,28 +26,22 @@ function formatearDescripcionConcepto(descripcion: string): string {
   return descripcion;
 }
 
-function buildHeaderHtml(proforma: ProformaRow, cliente: GenerarPdfProformaParams['cliente'], embarque: GenerarPdfProformaParams['embarque'], esConsolidada: boolean) {
-  const origen = embarque.puerto_origen || embarque.aeropuerto_origen || embarque.ciudad_origen || '-';
-  const destino = embarque.puerto_destino || embarque.aeropuerto_destino || embarque.ciudad_destino || '-';
-  const direccionCompleta = cliente
-    ? [cliente.direccion, cliente.ciudad, cliente.estado, cliente.cp].filter(Boolean).join(', ')
-    : '';
-
+function buildHeaderMeta(proforma: ProformaRow, esConsolidada: boolean) {
   return `
-  <div class="header">
-    <div>
-      <h1>PROFORMA${esConsolidada ? ' CONSOLIDADA' : ''}</h1>
-      <p class="numero">${esc(proforma.numero)}</p>
-    </div>
     <div class="meta">
       <span class="badge">SIN VALIDEZ FISCAL</span>
       ${esConsolidada ? '<span class="badge badge-blue" style="margin-left:6px">CONSOLIDADA</span>' : ''}
       <p style="margin-top:6px"><strong>Fecha de emisión:</strong> ${formatDate(proforma.fecha_emision)}</p>
       <p><strong>Expediente:</strong> ${esc(proforma.expediente)}</p>
       ${proforma.bl_master ? `<p><strong>BL/MAWB:</strong> ${esc(proforma.bl_master)}</p>` : ''}
-    </div>
-  </div>
+    </div>`;
+}
 
+function buildClienteSection(proforma: ProformaRow, cliente: GenerarPdfProformaParams['cliente']) {
+  const direccionCompleta = cliente
+    ? [cliente.direccion, cliente.ciudad, cliente.estado, cliente.cp].filter(Boolean).join(', ')
+    : '';
+  return `
   <section>
     <h3>Datos del Cliente</h3>
     <div class="grid">
@@ -55,9 +49,13 @@ function buildHeaderHtml(proforma: ProformaRow, cliente: GenerarPdfProformaParam
       <div class="cell"><span class="label">RFC</span><span class="value">${esc(cliente?.rfc || '-')}</span></div>
       <div class="cell" style="grid-column: 1 / -1"><span class="label">Dirección</span><span class="value">${esc(direccionCompleta || '-')}</span></div>
     </div>
-  </section>
+  </section>`;
+}
 
-  ${esConsolidada ? '' : `
+function buildEmbarqueSection(embarque: GenerarPdfProformaParams['embarque']) {
+  const origen = embarque.puerto_origen || embarque.aeropuerto_origen || embarque.ciudad_origen || '-';
+  const destino = embarque.puerto_destino || embarque.aeropuerto_destino || embarque.ciudad_destino || '-';
+  return `
   <section>
     <h3>Datos del Embarque</h3>
     <div class="grid-3">
@@ -69,15 +67,36 @@ function buildHeaderHtml(proforma: ProformaRow, cliente: GenerarPdfProformaParam
       <div class="cell"><span class="label">Ruta</span><span class="value">${esc(origen)} → ${esc(destino)}</span></div>
     </div>
     ${embarque.descripcion_mercancia ? `<p style="margin-top:8px"><span class="label">Descripción de la mercancía:</span> <strong>${esc(embarque.descripcion_mercancia)}</strong></p>` : ''}
-  </section>`}
+  </section>`;
+}
 
+function buildCondicionesSection(proforma: ProformaRow) {
+  const credito = proforma.dias_credito == null
+    ? '—'
+    : (Number(proforma.dias_credito) === 0 ? 'Contado' : `${proforma.dias_credito} días`);
+  return `
   <section>
     <h3>Condiciones Comerciales</h3>
     <div class="grid">
       <div class="cell"><span class="label">Ejecutivo de Operaciones</span><span class="value">${esc(proforma.operador || '—')}</span></div>
-      <div class="cell"><span class="label">Días de crédito</span><span class="value">${proforma.dias_credito == null ? '—' : (Number(proforma.dias_credito) === 0 ? 'Contado' : `${proforma.dias_credito} días`)}</span></div>
+      <div class="cell"><span class="label">Días de crédito</span><span class="value">${credito}</span></div>
     </div>
   </section>`;
+}
+
+function buildHeaderHtml(proforma: ProformaRow, cliente: GenerarPdfProformaParams['cliente'], embarque: GenerarPdfProformaParams['embarque'], esConsolidada: boolean) {
+  return `
+  <div class="header">
+    <div>
+      <h1>PROFORMA${esConsolidada ? ' CONSOLIDADA' : ''}</h1>
+      <p class="numero">${esc(proforma.numero)}</p>
+    </div>
+    ${buildHeaderMeta(proforma, esConsolidada)}
+  </div>
+
+  ${buildClienteSection(proforma, cliente)}
+  ${esConsolidada ? '' : buildEmbarqueSection(embarque)}
+  ${buildCondicionesSection(proforma)}`;
 }
 
 function buildBaseStyles() {
