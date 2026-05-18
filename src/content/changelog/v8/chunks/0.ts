@@ -2,6 +2,14 @@ import type { ChangelogEntry } from "../../../changelogData";
 
 export const chunk0: ChangelogEntry[] = [
   {
+    version: "8.201.0",
+    date: "2026-05-18",
+    type: "patch",
+    title: "Auditoría — P2.12 lote 5 (filtros embarques, hallazgos, edge functions)",
+    summary: "30 → 21 warnings ESLint. useEmbarquesPageState, useHallazgosTablaState/matchBase, create-user, tracking-public y parse-csf refactorizados con helpers puros y subcomponentes.",
+    description: "P2.12 Lote 5 — Refactors puros sin cambios funcionales: hooks/embarque/useEmbarquesPageState.ts (26→0) extrae useEmbarquesFilters (estado nuqs + debounce), computeCounts, resolveExtras y buildFullSetFilters; compareBy usa lookup SORT_GETTERS en lugar de switch. hooks/auditoria/useHallazgosTablaState.ts (17/16→0) reemplaza matchBase por BASE_PREDICATES tabulares y simplifica hayFiltros. scripts/audit-casts.ts (17→0, +unused-disable) divide classify en classifyCritical/Safe/ByTarget. supabase/functions/create-user (17→0) extrae validatePayload + provisionRoleAndMembership; tracking-public (18→0) extrae loadLink/loadEmbarqueData; parse-csf (20→0) extrae validateFile, handleGatewayError, callAiGateway y processCsf. 369/369 tests verdes. APP_VERSION 8.201.0.",
+  },
+  {
     version: "8.200.0",
     date: "2026-05-18",
     type: "patch",

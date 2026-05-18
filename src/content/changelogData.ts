@@ -22,6 +22,14 @@ export interface ChangelogEntry {
  */
 export const recentChangelog: ChangelogEntry[] = [
   {
+    version: "8.201.0",
+    date: "2026-05-18",
+    type: "patch",
+    title: "Auditoría — P2.12 lote 5 (filtros embarques, hallazgos, edge functions)",
+    summary: "30 → 21 warnings ESLint. useEmbarquesPageState, matchBase, create-user, tracking-public y parse-csf refactorizados con helpers puros.",
+    description: "P2.12 Lote 5 — Refactors puros sin cambios funcionales: hooks/embarque/useEmbarquesPageState.ts (26→0) extrae useEmbarquesFilters (estado nuqs + debounce), computeCounts, resolveExtras y buildFullSetFilters; compareBy usa lookup SORT_GETTERS. hooks/auditoria/useHallazgosTablaState.ts (17/16→0) reemplaza matchBase por BASE_PREDICATES tabulares. scripts/audit-casts.ts (17→0, +unused-disable) divide classify. supabase/functions/create-user (17→0), tracking-public (18→0) y parse-csf (20→0) extraen validatePayload, loadLink/loadEmbarqueData, validateFile/handleGatewayError/callAiGateway/processCsf. 369/369 tests verdes. APP_VERSION 8.201.0.",
+  },
+  {
     version: "8.200.0",
     date: "2026-05-18",
     type: "patch",
@@ -84,14 +92,6 @@ export const recentChangelog: ChangelogEntry[] = [
     title: "Sprint A — Hardening pre go-live (A.1, A.2, A.3, A.4)",
     summary: "Cierre de 20 warnings críticos del linter (anon ejecución de RPCs), HIBP activado, signups deshabilitados, nueva página /ayuda con glosario y FAQ, checklist de simulacro de restore.",
     description: "A.1 Linter: REVOKE EXECUTE FROM PUBLIC en 23 funciones SECURITY DEFINER (anon ya no puede invocarlas); GRANT a authenticated sólo en RPCs legítimos; revocación total en triggers (congelar_factura_al_emitir, notif_cli_on_embarque_estado, sync_*). Pasamos de 71 a 51 warnings; los restantes son advisory para 'authenticated SECURITY DEFINER' necesarios para bypassear RLS (has_role, RPCs transaccionales). A.2 Auth: configure_auth con password_hibp_enabled=true, disable_signup=true, external_anonymous_users_enabled=false, auto_confirm_email=false. A.3 Backups: docs/backups-rollback.md extendido con checklist de simulacro (5 pasos: preparación, restore, validación, métricas RTO/RPO, limpieza) + plan de comunicación incidente. A.4 Ayuda: nueva ruta /ayuda + sidebar item con HelpCircle. src/content/ayudaContent.ts (16 términos glosario + 18 FAQs en 4 módulos: embarques, facturación, clientes, operación diaria). Búsqueda en vivo, tabs Glosario/FAQ, accordions. A.5 (export ZIP org) diferido a próxima iteración por dependencia jszip. APP_VERSION 8.191.0.",
-  },
-  {
-    version: "8.190.0",
-    date: "2026-05-17",
-    type: "minor",
-    title: "Bloque 3.2 — Layout contable para el contador",
-    summary: "Nuevo botón 'Layout contable' en Pre-Facturación → Facturas que descarga un CSV con RFC del cliente, subtotal, IVA, total, moneda, tipo de cambio y campos pre-CFDI 4.0 (uso CFDI, forma/método de pago).",
-    description: "Se agrega src/generators/layoutContable.ts que toma las facturas filtradas, consulta en una sola llamada los campos completos (subtotal, iva, tipo_cambio, referencia_bl) y los RFC de los clientes, y descarga un CSV con encabezados pensados para que el contador timbre con su PAC o lo importe a su sistema contable: Folio, Fecha emisión, Periodo (YYYY-MM), Tipo comprobante (I), RFC receptor, Razón social, Subtotal, IVA, Total, Moneda, Tipo de cambio, Forma de pago, Método de pago (PUE), Uso CFDI (G03), Expediente, Referencia BL, Estado. No timbra ni genera XML CFDI 4.0 (requiere PAC externo). Integrado en useFacturacionPageController + Facturacion.tsx (tab Facturas) con registro en bitácora (accion=exportar). APP_VERSION 8.190.0.",
   },
 ];
 
