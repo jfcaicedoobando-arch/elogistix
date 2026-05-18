@@ -115,6 +115,7 @@ export function useCotizacionWizardSteps({
     if (currentStep === 1) return handlePaso1();
     if (currentStep === 2) return handlePaso2();
     if (currentStep === 3) return handlePaso3();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     currentStep, form, msdsFile, buildPaso1Data, cotizacionId, setCotizacionId, setCurrentStep,
     updateCotizacion, crearCotizacion, costosInternos, upsertCostos, costosPreLlenados,
