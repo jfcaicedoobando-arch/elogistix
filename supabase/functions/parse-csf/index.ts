@@ -119,17 +119,8 @@ Si no encuentras un campo, devuelve cadena vacía. No inventes datos.`;
     });
 
     if (!response.ok) {
-      if (response.status === 429) {
-        log.warn("rate limited por gateway", { status_code: 429 });
-        return errorResponse("Límite de solicitudes excedido, intenta en unos momentos.", 429, cors);
-      }
-      if (response.status === 402) {
-        log.warn("sin créditos AI", { status_code: 402 });
-        return errorResponse("Créditos insuficientes para procesamiento AI.", 402, cors);
-      }
-      const errorText = await response.text();
-      log.error("AI gateway error", { status_code: response.status, payload: { detail: errorText.slice(0, 500) } });
-      return errorResponse("Error al procesar el documento", 500, cors);
+      const detail = await response.text().catch(() => "");
+      return handleGatewayError(response.status, log, cors, detail);
     }
 
     const aiResult = await response.json();
