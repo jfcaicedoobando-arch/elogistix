@@ -11,13 +11,12 @@ import { generarFolioCotizacion } from "./queries";
 type CotizacionInsert = TablesInsert<"cotizaciones">;
 type CotizacionUpdate = Partial<CotizacionInsert>;
 
-export async function crearCotizacion(input: CreateCotizacionInput): Promise<CotizacionRow> {
-  parseOrThrow(cotizacionInputSchema, input, "Cotización");
-  const folio = await generarFolioCotizacion();
-  const fechaVigencia = new Date();
-  fechaVigencia.setDate(fechaVigencia.getDate() + input.vigencia_dias);
-
-  const insertPayload: CotizacionInsert = {
+function buildCotizacionInsertPayload(
+  input: CreateCotizacionInput,
+  folio: string,
+  fechaVigenciaIso: string,
+): CotizacionInsert {
+  return {
     folio,
     cliente_id: input.es_prospecto ? null : input.cliente_id,
     cliente_nombre: input.cliente_nombre,
@@ -39,7 +38,7 @@ export async function crearCotizacion(input: CreateCotizacionInput): Promise<Cot
     subtotal: input.subtotal,
     moneda: input.moneda as CotizacionInsert["moneda"],
     vigencia_dias: input.vigencia_dias,
-    fecha_vigencia: fechaVigencia.toISOString().split("T")[0],
+    fecha_vigencia: fechaVigenciaIso,
     notas: input.notas || null,
     operador: input.operador,
     tipo_carga: input.tipo_carga || "Carga General",
@@ -63,10 +62,22 @@ export async function crearCotizacion(input: CreateCotizacionInput): Promise<Cot
     carta_garantia: input.carta_garantia ?? false,
     num_contenedores: input.num_contenedores ?? 1,
   };
+}
+
+export async function crearCotizacion(input: CreateCotizacionInput): Promise<CotizacionRow> {
+  parseOrThrow(cotizacionInputSchema, input, "Cotización");
+  const folio = await generarFolioCotizacion();
+  const fechaVigencia = new Date();
+  fechaVigencia.setDate(fechaVigencia.getDate() + input.vigencia_dias);
+  const payload = buildCotizacionInsertPayload(
+    input,
+    folio,
+    fechaVigencia.toISOString().split("T")[0],
+  );
 
   const { data, error } = await supabase
     .from("cotizaciones")
-    .insert(insertPayload)
+    .insert(payload)
     .select()
     .single();
   if (error) throw error;

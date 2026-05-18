@@ -17,14 +17,9 @@ export interface ProyeccionMesParams {
   month: number;
 }
 
-export async function fetchProyeccionMes({
-  organizationId,
-  year,
-  month,
-}: ProyeccionMesParams): Promise<FilaProyeccion[]> {
-  const { desde, hasta } = rangoMes(year, month);
+interface ConceptoAgg { monto: number; moneda: string }
 
-  // 1) Embarques cuya ETA cae en el rango del mes.
+async function fetchEmbarquesMes(organizationId: string | null, desde: string, hasta: string) {
   let q = supabase
     .from("embarques")
     .select(
@@ -33,11 +28,50 @@ export async function fetchProyeccionMes({
     .gte("eta", desde)
     .lte("eta", hasta)
     .order("eta", { ascending: true });
-
   if (organizationId) q = q.eq("organization_id", organizationId);
-  const { data: embarques, error } = await q;
+  const { data, error } = await q;
   if (error) throw error;
-  const embarquesArr = embarques ?? [];
+  return data ?? [];
+}
+
+async function fetchConceptosYFacturas(ids: string[], expedientes: string[]) {
+  const [ventasRes, costosRes, facturasRes] = await Promise.all([
+    supabase.from("conceptos_venta").select("embarque_id, total, moneda").in("embarque_id", ids),
+    supabase.from("conceptos_costo").select("embarque_id, monto, moneda").in("embarque_id", ids),
+    expedientes.length > 0
+      ? supabase
+          .from("facturas")
+          .select("expediente, factura_pdf_url")
+          .in("expediente", expedientes)
+          .not("factura_pdf_url", "is", null)
+      : Promise.resolve({ data: [] as { expediente: string | null; factura_pdf_url: string | null }[], error: null }),
+  ]);
+  if (ventasRes.error) throw ventasRes.error;
+  if (costosRes.error) throw costosRes.error;
+  if (facturasRes.error) throw facturasRes.error;
+  return { ventas: ventasRes.data ?? [], costos: costosRes.data ?? [], facturas: facturasRes.data ?? [] };
+}
+
+function indexarPorEmbarque(
+  rows: { embarque_id: string; total?: number | null; monto?: number | null; moneda: string | null }[],
+  key: "total" | "monto",
+): Map<string, ConceptoAgg[]> {
+  const map = new Map<string, ConceptoAgg[]>();
+  for (const r of rows) {
+    const arr = map.get(r.embarque_id) ?? [];
+    arr.push({ monto: Number(r[key] ?? 0), moneda: String(r.moneda ?? "MXN") });
+    map.set(r.embarque_id, arr);
+  }
+  return map;
+}
+
+export async function fetchProyeccionMes({
+  organizationId,
+  year,
+  month,
+}: ProyeccionMesParams): Promise<FilaProyeccion[]> {
+  const { desde, hasta } = rangoMes(year, month);
+  const embarquesArr = await fetchEmbarquesMes(organizationId, desde, hasta);
   if (embarquesArr.length === 0) return [];
 
   const ids = embarquesArr.map((e) => e.id);
@@ -45,51 +79,18 @@ export async function fetchProyeccionMes({
     new Set(embarquesArr.map((e) => e.expediente).filter((x): x is string => !!x)),
   );
 
-  // 2-4) En paralelo: conceptos_venta, conceptos_costo, facturas con PDF (por expediente).
-  const [ventasRes, costosRes, facturasRes] = await Promise.all([
-    supabase
-      .from("conceptos_venta")
-      .select("embarque_id, total, moneda")
-      .in("embarque_id", ids),
-    supabase
-      .from("conceptos_costo")
-      .select("embarque_id, monto, moneda")
-      .in("embarque_id", ids),
-    expedientesUnicos.length > 0
-      ? supabase
-          .from("facturas")
-          .select("expediente, factura_pdf_url")
-          .in("expediente", expedientesUnicos)
-          .not("factura_pdf_url", "is", null)
-      : Promise.resolve({ data: [], error: null } as { data: { expediente: string | null; factura_pdf_url: string | null }[]; error: null }),
-  ]);
-  if (ventasRes.error) throw ventasRes.error;
-  if (costosRes.error) throw costosRes.error;
-  if (facturasRes.error) throw facturasRes.error;
-
-  // Indexar por embarque_id.
-  const ventasMap = new Map<string, { monto: number; moneda: string }[]>();
-  for (const v of ventasRes.data ?? []) {
-    const arr = ventasMap.get(v.embarque_id) ?? [];
-    arr.push({ monto: Number(v.total ?? 0), moneda: String(v.moneda ?? "MXN") });
-    ventasMap.set(v.embarque_id, arr);
-  }
-  const costosMap = new Map<string, { monto: number; moneda: string }[]>();
-  for (const c of costosRes.data ?? []) {
-    const arr = costosMap.get(c.embarque_id) ?? [];
-    arr.push({ monto: Number(c.monto ?? 0), moneda: String(c.moneda ?? "MXN") });
-    costosMap.set(c.embarque_id, arr);
-  }
+  const { ventas, costos, facturas } = await fetchConceptosYFacturas(ids, expedientesUnicos);
+  const ventasMap = indexarPorEmbarque(ventas, "total");
+  const costosMap = indexarPorEmbarque(costos, "monto");
   const facturadosSet = new Set<string>(
-    (facturasRes.data ?? []).map((f) => f.expediente).filter((x): x is string => !!x),
+    facturas.map((f) => f.expediente).filter((x): x is string => !!x),
   );
 
-  // Construir filas planas.
   return embarquesArr.map<FilaProyeccion>((e) => {
     const tcUsd = Number(e.tipo_cambio_usd ?? 1);
     const tcEur = Number(e.tipo_cambio_eur ?? 1);
-    const ventas = ventasMap.get(e.id) ?? [];
-    const costos = costosMap.get(e.id) ?? [];
+    const v = ventasMap.get(e.id) ?? [];
+    const c = costosMap.get(e.id) ?? [];
     return {
       embarque_id: e.id,
       expediente: e.expediente ?? "",
@@ -101,10 +102,10 @@ export async function fetchProyeccionMes({
       tipo_cambio_eur: tcEur,
       tiene_proforma: !!e.tiene_proforma,
       tiene_factura_pdf: !!e.expediente && facturadosSet.has(e.expediente),
-      venta_mxn: sumarConceptosEnMxn(ventas, tcUsd, tcEur),
-      venta_usd: sumarConceptosEnUsd(ventas, tcUsd, tcEur),
-      costo_mxn: sumarConceptosEnMxn(costos, tcUsd, tcEur),
-      costo_usd: sumarConceptosEnUsd(costos, tcUsd, tcEur),
+      venta_mxn: sumarConceptosEnMxn(v, tcUsd, tcEur),
+      venta_usd: sumarConceptosEnUsd(v, tcUsd, tcEur),
+      costo_mxn: sumarConceptosEnMxn(c, tcUsd, tcEur),
+      costo_usd: sumarConceptosEnUsd(c, tcUsd, tcEur),
     };
   });
 }
