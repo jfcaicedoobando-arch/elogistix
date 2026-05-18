@@ -64,65 +64,53 @@ export function useCotizacionWizardSteps({
     return null;
   };
 
-  const runPaso1 = async () => {
-    const v = form.getValues();
-    const err = validatePaso1(v);
-    if (err) { notifyError(toast, { title: err }); return; }
-    try {
-      const id = await savePaso1({
-        form, msdsFile, cotizacionId, buildPaso1Data,
-        mutations: { crearCotizacion, updateCotizacion },
-      });
-      if (!cotizacionId) setCotizacionId(id);
-      setCurrentStep(2);
-    } catch (e: unknown) {
-      notifyError(toast, { title: "Error al guardar datos generales", description: getErrorMessage(e)});
-    }
-  };
-
-  const runPaso2 = async () => {
-    try {
-      if (costosInternos.length > 0 && cotizacionId) {
-        await savePaso2({ cotizacionId, costosInternos, mutations: { upsertCostos } });
+  const handleSiguiente = useCallback(async () => {
+    if (currentStep === 1) {
+      const v = form.getValues();
+      const err = validatePaso1(v);
+      if (err) { notifyError(toast, { title: err }); return; }
+      try {
+        const id = await savePaso1({ form, msdsFile, cotizacionId, buildPaso1Data, mutations: { crearCotizacion, updateCotizacion } });
+        if (!cotizacionId) setCotizacionId(id);
+        setCurrentStep(2);
+      } catch (e: unknown) {
+        notifyError(toast, { title: "Error al guardar datos generales", description: getErrorMessage(e)});
       }
-      if (!costosPreLlenados && costosInternos.length > 0) {
-        const { usd, mxn } = buildConceptosFromCostos(costosInternos, tasaIva);
-        if (usd.length > 0) setConceptosUSD(usd);
-        if (mxn.length > 0) setConceptosMXN(mxn);
-        setCostosPreLlenados(true);
-      }
-      setCurrentStep(3);
-    } catch (e: unknown) {
-      notifyError(toast, { title: "Error al guardar costos", description: getErrorMessage(e)});
-    }
-  };
-
-  const runPaso3 = async () => {
-    const conceptosUSDValidos = conceptosUSD.filter(c => c.descripcion?.trim());
-    const conceptosMXNValidos = conceptosMXN.filter(c => c.descripcion?.trim());
-    if (conceptosUSDValidos.length === 0 && conceptosMXNValidos.length === 0) {
-      notifyError(toast, { title: "Agrega al menos un concepto de venta"});
       return;
     }
-    try {
-      if (cotizacionId) {
-        await savePaso3({
-          cotizacionId,
-          conceptosVenta: fromDb<Record<string, unknown>[]>([...conceptosUSDValidos, ...conceptosMXNValidos]),
-          totalUSD,
-          mutations: { updateCotizacion },
-        });
+    if (currentStep === 2) {
+      try {
+        if (costosInternos.length > 0 && cotizacionId) {
+          await savePaso2({ cotizacionId, costosInternos, mutations: { upsertCostos } });
+        }
+        if (!costosPreLlenados && costosInternos.length > 0) {
+          const { usd, mxn } = buildConceptosFromCostos(costosInternos, tasaIva);
+          if (usd.length > 0) setConceptosUSD(usd);
+          if (mxn.length > 0) setConceptosMXN(mxn);
+          setCostosPreLlenados(true);
+        }
+        setCurrentStep(3);
+      } catch (e: unknown) {
+        notifyError(toast, { title: "Error al guardar costos", description: getErrorMessage(e)});
       }
-      setCurrentStep(4);
-    } catch (e: unknown) {
-      notifyError(toast, { title: "Error al guardar conceptos de venta", description: getErrorMessage(e)});
+      return;
     }
-  };
-
-  const handleSiguiente = useCallback(async () => {
-    if (currentStep === 1) return runPaso1();
-    if (currentStep === 2) return runPaso2();
-    if (currentStep === 3) return runPaso3();
+    if (currentStep === 3) {
+      const conceptosUSDValidos = conceptosUSD.filter(c => c.descripcion?.trim());
+      const conceptosMXNValidos = conceptosMXN.filter(c => c.descripcion?.trim());
+      if (conceptosUSDValidos.length === 0 && conceptosMXNValidos.length === 0) {
+        notifyError(toast, { title: "Agrega al menos un concepto de venta"});
+        return;
+      }
+      try {
+        if (cotizacionId) {
+          await savePaso3({ cotizacionId, conceptosVenta: fromDb<Record<string, unknown>[]>([...conceptosUSDValidos, ...conceptosMXNValidos]), totalUSD, mutations: { updateCotizacion } });
+        }
+        setCurrentStep(4);
+      } catch (e: unknown) {
+        notifyError(toast, { title: "Error al guardar conceptos de venta", description: getErrorMessage(e)});
+      }
+    }
   }, [
     currentStep, form, msdsFile, buildPaso1Data, cotizacionId, setCotizacionId, setCurrentStep,
     updateCotizacion, crearCotizacion, costosInternos, upsertCostos, costosPreLlenados,
