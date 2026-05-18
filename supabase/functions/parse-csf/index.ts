@@ -19,6 +19,26 @@ import { createLogger } from "../_shared/logger.ts";
 
 const MAX_BYTES = 5 * 1024 * 1024; // 5 MB
 
+function validateFile(file: File | null): string | null {
+  if (!file) return "No se envió archivo PDF";
+  if (file.type !== "application/pdf") return "Solo se aceptan archivos PDF";
+  if (file.size > MAX_BYTES) return "El archivo excede el límite de 5 MB";
+  return null;
+}
+
+function handleGatewayError(status: number, log: ReturnType<typeof createLogger>, cors: HeadersInit, detail?: string) {
+  if (status === 429) {
+    log.warn("rate limited por gateway", { status_code: 429 });
+    return errorResponse("Límite de solicitudes excedido, intenta en unos momentos.", 429, cors);
+  }
+  if (status === 402) {
+    log.warn("sin créditos AI", { status_code: 402 });
+    return errorResponse("Créditos insuficientes para procesamiento AI.", 402, cors);
+  }
+  log.error("AI gateway error", { status_code: status, payload: { detail: detail?.slice(0, 500) } });
+  return errorResponse("Error al procesar el documento", 500, cors);
+}
+
 serve(async (req) => {
   const preflight = handlePreflightStrict(req);
   if (preflight) return preflight;
