@@ -1,5 +1,5 @@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import type { DimensionAerea } from "@/hooks/cotizacion/useCotizaciones";
+import type { DimensionAerea } from "@/hooks/cotizacion";
 
 interface Props {
   dimensiones: DimensionAerea[];
