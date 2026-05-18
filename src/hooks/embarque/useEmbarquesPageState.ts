@@ -206,17 +206,14 @@ export function useEmbarquesPageState() {
 
   const displayCount = expedientesCount;
 
-  const isEmptyState =
-    !isLoading &&
-    containersForView.length === 0 &&
+  const sinFiltros =
     !debouncedSearch &&
-    filterModo === "todos" &&
-    filterEstado === "todos" &&
-    filterCliente === "todos" &&
-    filterOperador === "todos" &&
-    filterProforma === "todos" &&
+    [filterModo, filterEstado, filterCliente, filterOperador, filterProforma].every(
+      (v) => v === "todos",
+    ) &&
     !fechaDesde &&
     !fechaHasta;
+  const isEmptyState = !isLoading && containersForView.length === 0 && sinFiltros;
 
   const setFilter = (key: keyof typeof filters, value: string, defaultValue: string) => {
     setFilters({ [key]: value === defaultValue ? null : value });
