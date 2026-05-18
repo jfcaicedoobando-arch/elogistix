@@ -2,10 +2,18 @@ import { supabase } from "@/integrations/supabase/client";
 
 const BUCKET = "documentos";
 
-export async function uploadFile(path: string, file: File) {
+interface UploadFileOptions {
+  upsert?: boolean;
+  contentType?: string;
+}
+
+export async function uploadFile(path: string, file: File, options: UploadFileOptions = {}) {
   const { data, error } = await supabase.storage
     .from(BUCKET)
-    .upload(path, file, { upsert: true });
+    .upload(path, file, {
+      upsert: options.upsert ?? false,
+      contentType: options.contentType,
+    });
   if (error) throw error;
   return data;
 }

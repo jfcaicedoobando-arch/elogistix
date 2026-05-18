@@ -22,6 +22,14 @@ export interface ChangelogEntry {
  */
 export const recentChangelog: ChangelogEntry[] = [
   {
+    version: "8.219.0",
+    date: "2026-05-18",
+    type: "patch",
+    title: "Documentos de embarque — subida sin upsert para evitar falso RLS",
+    summary: "Corrige el fallo real de Valeria: Storage aceptaba INSERT pero rechazaba la ruta de upsert como RLS.",
+    description: "Se reprodujo el flujo con la sesión de Valeria y un PDF mínimo: la misma ruta funcionaba con upload normal y fallaba con upsert: true. La utilidad uploadFile ahora usa upsert false por defecto; los paths de documentos ya son únicos por hash/nombre sanitizado y la idempotencia se conserva con la validación previa de documentos_embarque. Esto evita que Storage evalúe la operación como UPDATE y bloquee cargas válidas. APP_VERSION 8.219.0.",
+  },
+  {
     version: "8.218.0",
     date: "2026-05-18",
     type: "patch",
