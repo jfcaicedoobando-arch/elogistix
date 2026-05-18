@@ -6,6 +6,7 @@ export * from './useDialogBolContainers';
 export * from './useDialogGenerarProformaController';
 export * from './useEditarEmbarqueWizard';
 export * from './useEmbarqueDetalleActions';
+export * from './useEmbarqueDetalleData';
 export * from './useEmbarqueDetalleTracking';
 export * from './useEmbarqueDocumentosActions';
 export * from './useEmbarqueEstadoActions';

@@ -1,15 +1,19 @@
-import { useParams, useNavigate, useSearchParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import { PackageX } from "lucide-react";
+import { useState } from "react";
 
 import EmptyState from "@/components/empty/EmptyState";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
-import { usePermissions } from "@/hooks/shared";
-import { useState } from "react";
-import { calcularEstadoEmbarque } from "@/hooks/embarque";
-import { useEmbarqueFull } from "@/hooks/embarque";
-import { useEmbarqueFinancials } from "@/hooks/embarque";
-import { useEmbarqueDetalleActions, getSiguienteEstado } from "@/hooks/embarque";
+import { usePermissions, useTabsParam } from "@/hooks/shared";
+import {
+  calcularEstadoEmbarque,
+  getSiguienteEstado,
+  useEmbarqueDetalleData,
+  useEmbarqueFinancials,
+  useEmbarqueDetalleActions,
+  useEmbarqueDetalleTracking,
+} from "@/hooks/embarque";
 import { TabResumen } from "@/components/embarque/TabResumen";
 import { TabDocumentos } from "@/components/embarque/TabDocumentos";
 import { TabCostos } from "@/components/embarque/TabCostos";
@@ -18,35 +22,43 @@ import { TabNotas } from "@/components/embarque/TabNotas";
 import { TabTracking } from "@/components/embarque/TabTracking";
 import DialogDuplicarEmbarque from "@/components/embarque/DialogDuplicarEmbarque";
 import DialogEliminarEmbarque from "@/components/embarque/DialogEliminarEmbarque";
-import { useEmbarqueDetalleTracking } from "@/hooks/embarque";
 import { EmbarqueDetalleHeader } from "@/components/embarque/EmbarqueDetalleHeader";
 
 import { useRegisterBreadcrumbLabel } from "@/contexts/BreadcrumbContext";
 
+const TABS_VALIDOS = ["resumen", "documentos", "costos", "facturacion", "tracking", "notas"] as const;
+
+function LoadingState() {
+  return (
+    <div className="space-y-6">
+      <Skeleton className="h-10 w-64" />
+      <Skeleton className="h-20 w-full" />
+      <Skeleton className="h-64 w-full" />
+    </div>
+  );
+}
+
+function NotFoundState({ onBack }: { onBack: () => void }) {
+  return (
+    <EmptyState
+      icon={PackageX}
+      title="Embarque no encontrado"
+      description="El embarque que buscas no existe, fue eliminado o no tienes permiso para verlo."
+      primaryAction={{ label: "Volver a embarques", onClick: onBack }}
+    />
+  );
+}
+
 export default function EmbarqueDetalle() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const [searchParams, setSearchParams] = useSearchParams();
   const { canEdit } = usePermissions();
-  const tabsValidos = ["resumen", "documentos", "costos", "facturacion", "tracking", "notas"] as const;
-  const tabParam = searchParams.get("tab");
-  const tabActivo = (tabsValidos as readonly string[]).includes(tabParam ?? "")
-    ? (tabParam as string)
-    : "resumen";
-  const handleTabChange = (v: string) => {
-    const next = new URLSearchParams(searchParams);
-    if (v === "resumen") next.delete("tab");
-    else next.set("tab", v);
-    setSearchParams(next, { replace: true });
-  };
-  // 1 sola llamada al backend en lugar de 6 (RPC get_embarque_full)
-  const { data: full, isLoading } = useEmbarqueFull(id);
-  const embarque = full?.embarque ?? null;
-  const conceptosVenta = full?.conceptosVenta ?? [];
-  const conceptosCosto = full?.conceptosCosto ?? [];
-  const documentos = full?.documentos ?? [];
-  const notas = full?.notas ?? [];
-  const facturas = full?.facturas ?? [];
+  const { activeTab, setActiveTab } = useTabsParam(TABS_VALIDOS, "resumen");
+
+  const {
+    embarque, conceptosVenta, conceptosCosto, documentos, notas, facturas,
+    tipoCambioUSD, tipoCambioEUR, isLoading,
+  } = useEmbarqueDetalleData(id);
   useRegisterBreadcrumbLabel(id, embarque?.expediente);
 
   const [dialogDuplicarAbierto, setDialogDuplicarAbierto] = useState(false);
@@ -58,36 +70,17 @@ export default function EmbarqueDetalle() {
     downloadingDocId, avanzarEstado, uploadDoc, deleteDoc,
   } = useEmbarqueDetalleActions(embarque ?? undefined, id);
 
-  const tipoCambioUSD = embarque ? (Number(embarque.tipo_cambio_usd) || 1) : 1;
-  const tipoCambioEUR = embarque ? (Number(embarque.tipo_cambio_eur) || 1) : 1;
-
   const { totalVenta, totalCosto, utilidad, margen } = useEmbarqueFinancials({
     conceptosVenta, conceptosCosto, tipoCambioUSD, tipoCambioEUR,
   });
 
-  if (isLoading) {
-    return (
-      <div className="space-y-6">
-        <Skeleton className="h-10 w-64" />
-        <Skeleton className="h-20 w-full" />
-        <Skeleton className="h-64 w-full" />
-      </div>
-    );
-  }
-
-  if (!embarque) {
-    return (
-      <EmptyState
-        icon={PackageX}
-        title="Embarque no encontrado"
-        description="El embarque que buscas no existe, fue eliminado o no tienes permiso para verlo."
-        primaryAction={{ label: "Volver a embarques", onClick: () => navigate("/embarques") }}
-      />
-    );
-  }
+  if (isLoading) return <LoadingState />;
+  if (!embarque) return <NotFoundState onBack={() => navigate("/embarques")} />;
 
   const estadoVisual = calcularEstadoEmbarque(embarque.modo, embarque.tipo, embarque.etd, embarque.eta, embarque.estado);
   const siguienteEstado = getSiguienteEstado(estadoVisual);
+  const uploadingDocId = uploadDoc.isPending ? (uploadDoc.variables?.docId ?? null) : null;
+  const deletingDocId = deleteDoc.isPending ? (deleteDoc.variables?.docId ?? null) : null;
 
   return (
     <div className="space-y-6">
@@ -108,7 +101,7 @@ export default function EmbarqueDetalle() {
       <DialogDuplicarEmbarque embarque={embarque} open={dialogDuplicarAbierto} onOpenChange={setDialogDuplicarAbierto} />
       <DialogEliminarEmbarque embarque={embarque} open={dialogEliminarAbierto} onOpenChange={setDialogEliminarAbierto} />
 
-      <Tabs value={tabActivo} onValueChange={handleTabChange}>
+      <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList className="gap-1">
           <TabsTrigger value="resumen">Resumen</TabsTrigger>
           <TabsTrigger value="documentos">Documentos</TabsTrigger>
@@ -126,9 +119,9 @@ export default function EmbarqueDetalle() {
           <TabDocumentos
             documentos={documentos}
             canEdit={canEdit}
-            uploadingDocId={uploadDoc.isPending ? (uploadDoc.variables?.docId ?? null) : null}
+            uploadingDocId={uploadingDocId}
             downloadingDocId={downloadingDocId}
-            deletingDocId={deleteDoc.isPending ? (deleteDoc.variables?.docId ?? null) : null}
+            deletingDocId={deletingDocId}
             onUpload={handleUpload}
             onDownload={handleDownload}
             onDelete={handleDeleteDoc}
