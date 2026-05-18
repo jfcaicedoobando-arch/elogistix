@@ -2,12 +2,12 @@ import type { ChangelogEntry } from "../../../changelogData";
 
 export const chunk0: ChangelogEntry[] = [
   {
-    version: "8.202.0",
+    version: "8.203.0",
     date: "2026-05-18",
     type: "patch",
-    title: "Auditoría — P2.12 lote 6 (jsoncargo-track, invite-client-user, VirtualDataTable, proformaPdf)",
-    summary: "21 → 14 warnings ESLint. jsoncargo-track (46→<15), invite-client-user (26→0), TrackingWarnings (23→0), CotizacionDatosGeneralesCard (24→0), buildHeaderHtml (21→0) y deriveEventsFromContainer (22→0) refactorizados.",
-    description: "Refactors puros sin cambios funcionales ni de BD. supabase/functions/jsoncargo-track: extrae helpers a _shared/jsoncargoSync.ts (loadEmbarque, persistPrefixMismatch, syncEventos, upsertTrackingExterno, buildSummary) y un runSync interno; handler queda <50 LOC. supabase/functions/invite-client-user (26→0) extrae parseBody, verifyClienteOrg, resolveUserId, ensureClienteRole. supabase/functions/_shared/jsoncargo.ts: deriveEventsFromContainer (22→0) dividido en buildZarpe/Movimiento/AduanaEvent. components/embarque/trackingLive/TrackingWarnings.tsx (23→0) extrae SinContenedorAlert, NoSoportadaAlert, PrefixMismatchAlert, FailedAlert. components/cotizacion/detalle/CotizacionDatosGeneralesCard.tsx (24→0) usa array de rows declarativo. generators/proformaPdf.ts buildHeaderHtml (21→0) extrae buildHeaderMeta/Cliente/Embarque/CondicionesSection. components/shared/VirtualDataTable.tsx (18→16) extrae VirtualRow, VirtualHeaderRow, SkeletonRows, EmptyState, buildGridTemplate y pickMeasureElement. components/shared/BulkImportDialog.tsx (16) extrae hook useBulkImport y helper downloadCsvTemplate. APP_VERSION 8.202.0.",
+    title: "Auditoría — P2.12 lote 7 (DatosGenerales, Mercancía, Sidebar, BulkImport, proformaPdf)",
+    summary: "14 → ~7 warnings ESLint. CotizacionDatosGeneralesCard/buildRows (23→0), SeccionMercanciaCotizacionDetalle (20→0), AppSidebarBase (17→0), BulkImportDialog (16→0), VirtualDataTable (16→0), TrackingWarnings (18→0), useCotizacionWizardSteps (23→0) y embarqueWizardSchemas/proformaPdf partidos.",
+    description: "Refactors puros sin cambios funcionales ni de BD. CotizacionDatosGeneralesCard divide buildRows en baseRows/optionalRows/maritimeRows/seguroRow. SeccionMercanciaCotizacionDetalle extrae MercanciaInfoGrid, DimensionesLCLTable y DimensionesAereasTable a seccionMercancia/. ConceptoRowUSD extrae ConceptoDescripcionSelector. TrackingWarnings usa computeAlertFlags. AppSidebar usa useAppSidebarSections (+ hooks/layout barrel) y helpers computeUserInitials/computeRoleLabel. BulkImportDialog extrae BulkImportBody y BulkImportFooter. VirtualDataTable extrae VirtualBody. proformaPdf dividido en proforma/{styles,header,consolidada}.ts (271→<150 LOC). embarqueWizardSchemas dividido en embarqueWizardConstants/Documentos/Costos (257→<200 LOC). useCotizacionWizardSteps simplifica handleSiguiente con validatePaso1 puro. 369/369 tests verdes. APP_VERSION 8.203.0.",
   },
   {
     version: "8.201.0",
