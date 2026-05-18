@@ -2,6 +2,14 @@ import type { ChangelogEntry } from "../../../changelogData";
 
 export const chunk0: ChangelogEntry[] = [
   {
+    version: "8.195.0",
+    date: "2026-05-18",
+    type: "minor",
+    title: "Auditoría arquitectónica — P0.3, P1.5, P1.6, P2.11 cerrados",
+    summary: "51 → 35 warnings ESLint. Mappers y servicios partidos en sub-helpers por sección, utils unificados bajo lib/utils/, mapa de arquitectura documentado.",
+    description: "P0.3 Mappers: embarqueFromDb (23→0), embarqueToDb (23→0), cotizacion buildPaso1Data (33→0), cotizacionForm (35→0) refactorizados con helpers por sección (datos generales, marítimo, aéreo, terrestre, financiero, ruta, etc.). Nuevo módulo lib/mappers/_helpers.ts con `str`, `num`, `numStr`, `bool`, `emptyToNull` para externalizar defaults y bajar complejidad ciclomática. lib/jsoncargo/navieras (25→0) ahora usa tabla NAVIERA_RULES iterable en lugar de cadena de if. P1.6 Servicios: services/facturas/proyeccion (20→0) extrae `fetchEmbarquesMes`, `fetchConceptosYFacturas`, `indexarPorEmbarque`. services/facturas/huecoFacturacion (27→0) extrae `fetchEmbarquesParaHueco`, `fetchVentasYFacturas`, `indexarVentas`, `construirFila`. services/cotizacion/mutations crearCotizacion (28→0) con `buildCotizacionInsertPayload` partido en `partesClienteInsert`, `partesMercanciaInsert`, `partesComercialInsert`. P1.5 Utils: consolidación final — `src/lib/utils.ts` eliminado; nuevo `src/lib/utils/{cn,htmlEscape,index}.ts` como única ubicación. 4 generadores de PDF migrados a `@/lib/utils`. P2.11 Documentación: nuevo docs/architecture-map.md con tabla dominio → pages/hooks/services/lib, convenciones de nombres y patrones obligatorios. Pendientes: 9 warnings en supabase/functions (separar en sprint dedicado), 3 pages (TrackingPublico, Embarques, EmbarqueDetalle) requieren split view/controller. 359/359 tests verdes. APP_VERSION 8.195.0.",
+  },
+  {
     version: "8.194.0",
     date: "2026-05-18",
     type: "minor",
