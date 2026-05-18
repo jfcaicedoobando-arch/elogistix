@@ -2,6 +2,15 @@ import type { ChangelogEntry } from "../../../changelogData";
 
 export const chunk0: ChangelogEntry[] = [
   {
+    version: "8.213.0",
+    date: "2026-05-18",
+    type: "patch",
+    title: "Embarque detalle — corrección de pantalla en blanco por breadcrumbs",
+    summary: "Se corrigió un loop de render al abrir el detalle del embarque que dejaba la pantalla en blanco e impedía usar Documentos.",
+    description: "useRegisterBreadcrumbLabel ya no depende del objeto completo del contexto de breadcrumbs, que cambiaba en cada actualización de labels y provocaba cleanup/setState repetido (Maximum update depth exceeded) al entrar al detalle del embarque. Ahora depende sólo de las funciones estables setLabel/clearLabel, eliminando el loop y permitiendo visualizar la pestaña Documentos para subir archivos. APP_VERSION 8.213.0.",
+  },
+
+  {
     version: "8.212.0",
     date: "2026-05-18",
     type: "minor",
