@@ -58,24 +58,58 @@ interface VirtualDataTableProps<T> {
   className?: string;
 }
 
-export function VirtualDataTable<T>({
-  columns,
-  data,
-  isLoading = false,
-  emptyMessage = "Sin resultados",
-  skeletonRows = 8,
-  rowKey,
-  rowClassName,
-  onRowClick,
-  density = "comfortable",
-  striped = true,
-  hoverable = true,
-  estimateRowHeight = 44,
-  maxHeight = 600,
-  overscan = 8,
-  pagination,
-  className,
-}: VirtualDataTableProps<T>) {
+interface VirtualBodyProps<T> {
+  data: T[];
+  isLoading: boolean;
+  emptyMessage: string;
+  skeletonRows: number;
+  columns: DataTableColumn<T>[];
+  gridTemplate: string;
+  cellPad: string;
+  virtualizer: ReturnType<typeof useVirtualizer>;
+  striped: boolean;
+  hoverable: boolean;
+  rowKey: (item: T) => string;
+  rowClassName?: (item: T) => string;
+  onRowClick?: (item: T) => void;
+}
+
+function VirtualBody<T>({ data, isLoading, emptyMessage, skeletonRows, columns, gridTemplate, cellPad, virtualizer, striped, hoverable, rowKey, rowClassName, onRowClick }: VirtualBodyProps<T>) {
+  if (isLoading) {
+    return <SkeletonRows count={skeletonRows} columns={columns} gridTemplate={gridTemplate} cellPad={cellPad} />;
+  }
+  if (data.length === 0) {
+    return <EmptyState message={emptyMessage} />;
+  }
+  const items = virtualizer.getVirtualItems();
+  return (
+    <div style={{ height: virtualizer.getTotalSize(), width: "100%", position: "relative" }}>
+      {items.map((vi) => (
+        <VirtualRow
+          key={rowKey(data[vi.index])}
+          item={data[vi.index]}
+          index={vi.index}
+          start={vi.start}
+          columns={columns}
+          cellPad={cellPad}
+          gridTemplate={gridTemplate}
+          striped={striped}
+          hoverable={hoverable}
+          onRowClick={onRowClick}
+          rowClassName={rowClassName}
+          measureRef={virtualizer.measureElement}
+        />
+      ))}
+    </div>
+  );
+}
+
+export function VirtualDataTable<T>(props: VirtualDataTableProps<T>) {
+  const {
+    columns, data, isLoading = false, emptyMessage = "Sin resultados", skeletonRows = 8,
+    rowKey, rowClassName, onRowClick, density = "comfortable", striped = true, hoverable = true,
+    estimateRowHeight = 44, maxHeight = 600, overscan = 8, pagination, className,
+  } = props;
   const parentRef = useRef<HTMLDivElement | null>(null);
   const cellPad = DENSITY_CELL[density];
   const gridTemplate = buildGridTemplate(columns);
@@ -86,7 +120,6 @@ export function VirtualDataTable<T>({
     overscan,
     measureElement: pickMeasureElement(estimateRowHeight),
   });
-  const items = virtualizer.getVirtualItems();
 
   return (
     <div className={cn("flex flex-col", className)}>
@@ -96,38 +129,21 @@ export function VirtualDataTable<T>({
         style={{ maxHeight }}
       >
         <VirtualHeaderRow columns={columns} gridTemplate={gridTemplate} />
-        {isLoading && (
-          <SkeletonRows count={skeletonRows} columns={columns} gridTemplate={gridTemplate} cellPad={cellPad} />
-        )}
-        {!isLoading && data.length === 0 && <EmptyState message={emptyMessage} />}
-
-        {/* Filas virtualizadas */}
-        {!isLoading && data.length > 0 && (
-          <div
-            style={{
-              height: virtualizer.getTotalSize(),
-              width: "100%",
-              position: "relative",
-            }}
-          >
-            {items.map((vi) => (
-              <VirtualRow
-                key={rowKey(data[vi.index])}
-                item={data[vi.index]}
-                index={vi.index}
-                start={vi.start}
-                columns={columns}
-                cellPad={cellPad}
-                gridTemplate={gridTemplate}
-                striped={striped}
-                hoverable={hoverable}
-                onRowClick={onRowClick}
-                rowClassName={rowClassName}
-                measureRef={virtualizer.measureElement}
-              />
-            ))}
-          </div>
-        )}
+        <VirtualBody
+          data={data}
+          isLoading={isLoading}
+          emptyMessage={emptyMessage}
+          skeletonRows={skeletonRows}
+          columns={columns}
+          gridTemplate={gridTemplate}
+          cellPad={cellPad}
+          virtualizer={virtualizer}
+          striped={striped}
+          hoverable={hoverable}
+          rowKey={rowKey}
+          rowClassName={rowClassName}
+          onRowClick={onRowClick}
+        />
       </div>
 
       {pagination && (
