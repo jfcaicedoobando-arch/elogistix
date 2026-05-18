@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { AlertTriangle, FileDown } from "lucide-react";
-import { getSignedUrl } from "@/services/storage/index";
+import { getSignedUrl } from "@/services/storage";
 
 interface Cot {
   modo: string;
