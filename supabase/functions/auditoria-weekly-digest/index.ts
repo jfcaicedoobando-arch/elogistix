@@ -73,8 +73,7 @@ function buildHtml(orgNombre: string, reporte: ReporteRow): string {
 interface OrgRow { id: string; nombre: string; }
 interface ProcessResult { org: string; destinatarios: number; enviado: boolean; dryRun?: boolean; error?: string; }
 
-// deno-lint-ignore no-explicit-any
-async function resolveAdminEmails(admin: any, orgId: string): Promise<string[]> {
+async function resolveAdminEmails(admin: SupabaseClient, orgId: string): Promise<string[]> {
   const { data: members } = await admin
     .from("organization_members")
     .select("user_id, role")
@@ -120,8 +119,7 @@ async function sendDigest({ org, emails, html, lovableKey, resendKey }: SendDige
   };
 }
 
-// deno-lint-ignore no-explicit-any
-async function processOrg(admin: any, org: OrgRow, lovableKey: string | undefined, resendKey: string | undefined): Promise<ProcessResult> {
+async function processOrg(admin: SupabaseClient, org: OrgRow, lovableKey: string | undefined, resendKey: string | undefined): Promise<ProcessResult> {
   const { data: reporte } = await admin.rpc("auditoria_embarques_org", { p_organization_id: org.id });
   const emails = await resolveAdminEmails(admin, org.id);
   if (emails.length === 0) return { org: org.nombre, destinatarios: 0, enviado: false };
