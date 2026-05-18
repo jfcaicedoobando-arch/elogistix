@@ -2,9 +2,10 @@ import { useNavigate } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { ESTADOS_FILTRO, type EstadoFiltro } from "@/hooks/dashboard";
 import { ESTADO_CONFIG } from "@/lib/ui/estadoConfig";
-import { CalendarDays, TrendingUp, Ship, CheckCircle2 } from "lucide-react";
+import { CalendarDays, TrendingUp, Ship, CheckCircle2, Info } from "lucide-react";
 import { formatCurrency, formatCurrencyCompact } from "@/lib/formatters";
 
 interface ArribosEsteMes {
@@ -12,6 +13,15 @@ interface ArribosEsteMes {
   yaLlegaron: number;
   enCamino: number;
   profitUSD: number;
+  ventaMXN: number;
+  costoMXN: number;
+  profitMXN: number;
+  ventaMxnFromUsd: number;
+  costoMxnFromUsd: number;
+  ventaMxnFromEur: number;
+  costoMxnFromEur: number;
+  ventaMxnNative: number;
+  costoMxnNative: number;
 }
 
 interface Props {
