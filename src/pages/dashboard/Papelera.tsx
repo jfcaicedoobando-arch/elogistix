@@ -47,23 +47,12 @@ export default function Papelera() {
 
   const { data, isLoading } = useQuery({
     queryKey: ["papelera", tabla],
-    queryFn: async (): Promise<TrashRow[]> => {
-      const { data, error } = await supabase.rpc("list_trash", {
-        _table: tabla,
-        _limit: 200,
-        _offset: 0,
-      });
-      if (error) throw error;
-      return (data ?? []) as TrashRow[];
-    },
+    queryFn: () => listTrash(tabla, 200, 0),
     enabled: isAdmin,
   });
 
   const restore = useMutation({
-    mutationFn: async (id: string) => {
-      const { error } = await supabase.rpc("restore_record", { _table: tabla, _id: id });
-      if (error) throw error;
-    },
+    mutationFn: (id: string) => restoreRecord(tabla, id),
     onSuccess: () => {
       toast({ title: "Registro restaurado" });
       qc.invalidateQueries({ queryKey: ["papelera", tabla] });
@@ -72,10 +61,7 @@ export default function Papelera() {
   });
 
   const purge = useMutation({
-    mutationFn: async (id: string) => {
-      const { error } = await supabase.rpc("purge_record", { _table: tabla, _id: id });
-      if (error) throw error;
-    },
+    mutationFn: (id: string) => purgeRecord(tabla, id),
     onSuccess: () => {
       toast({ title: "Registro eliminado definitivamente" });
       qc.invalidateQueries({ queryKey: ["papelera", tabla] });
