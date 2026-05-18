@@ -34,9 +34,7 @@ function partesCliente(d: CotizacionInitialData) {
   };
 }
 
-function partesMercancia(d: CotizacionInitialData) {
-  const dimsLcl = (d.dimensiones_lcl as DimensionLCL[]) ?? [];
-  const dimsAer = (d.dimensiones_aereas as DimensionAerea[]) ?? [];
+function partesMercanciaBase(d: CotizacionInitialData) {
   return {
     modo: d.modo,
     tipo: d.tipo,
@@ -47,6 +45,13 @@ function partesMercancia(d: CotizacionInitialData) {
     tipoEmbarque: (d.tipo_embarque as "FCL" | "LCL") ?? "FCL",
     tipoContenedor: d.tipo_contenedor ?? "",
     tipoPeso: d.tipo_peso ?? "Peso Normal",
+  };
+}
+
+function partesMercanciaMedidas(d: CotizacionInitialData) {
+  const dimsLcl = (d.dimensiones_lcl as DimensionLCL[]) ?? [];
+  const dimsAer = (d.dimensiones_aereas as DimensionAerea[]) ?? [];
+  return {
     dimensionesLCL: dimsLcl.length ? dimsLcl : [DEFAULT_DIM_LCL],
     dimensionesAereas: dimsAer.length ? dimsAer : [DEFAULT_DIM_AEREA],
     pesoKg: d.peso_kg ?? 0,
@@ -54,6 +59,10 @@ function partesMercancia(d: CotizacionInitialData) {
     piezas: d.piezas ?? 0,
     tipoUnidad: d.tipo_unidad ?? "",
   };
+}
+
+function partesMercancia(d: CotizacionInitialData) {
+  return { ...partesMercanciaBase(d), ...partesMercanciaMedidas(d) };
 }
 
 function partesRuta(d: CotizacionInitialData) {
