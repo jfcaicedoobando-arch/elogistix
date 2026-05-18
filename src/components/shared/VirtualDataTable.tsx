@@ -153,50 +153,22 @@ export function VirtualDataTable<T>({
               position: "relative",
             }}
           >
-            {items.map((vi) => {
-              const item = data[vi.index];
-              const key = rowKey(item);
-              const zebra = striped && vi.index % 2 === 1 ? "bg-muted/30" : "";
-              return (
-                <div
-                  key={key}
-                  ref={virtualizer.measureElement}
-                  data-index={vi.index}
-                  role="row"
-                  className={cn(
-                    "grid border-b last:border-b-0",
-                    zebra,
-                    hoverable && "hover:bg-accent/40",
-                    onRowClick && "cursor-pointer",
-                    rowClassName?.(item),
-                  )}
-                  style={{
-                    position: "absolute",
-                    top: 0,
-                    left: 0,
-                    width: "100%",
-                    transform: `translateY(${vi.start}px)`,
-                    gridTemplateColumns: gridTemplate,
-                  }}
-                  onClick={onRowClick ? () => onRowClick(item) : undefined}
-                >
-                  {columns.map((c) => (
-                    <div
-                      key={c.key}
-                      className={cn(
-                        "px-3 min-w-0",
-                        cellPad,
-                        ALIGN_CLASS[c.align ?? "left"],
-                        c.className,
-                      )}
-                      role="cell"
-                    >
-                      {c.render(item)}
-                    </div>
-                  ))}
-                </div>
-              );
-            })}
+            {items.map((vi) => (
+              <VirtualRow
+                key={rowKey(data[vi.index])}
+                item={data[vi.index]}
+                index={vi.index}
+                start={vi.start}
+                columns={columns}
+                cellPad={cellPad}
+                gridTemplate={gridTemplate}
+                striped={striped}
+                hoverable={hoverable}
+                onRowClick={onRowClick}
+                rowClassName={rowClassName}
+                measureRef={virtualizer.measureElement}
+              />
+            ))}
           </div>
         )}
       </div>
