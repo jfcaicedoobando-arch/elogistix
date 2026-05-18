@@ -159,16 +159,16 @@ export function useHallazgosTablaState(
     setPage(1);
   };
 
-  const hayFiltros = Boolean(
-    search ||
-      filtroRegla !== "todas" ||
-      filtroSev !== "todas" ||
-      filtroCliente !== "todos" ||
-      filtroRevision !== defaultRevision ||
-      filtroResponsable !== "todos" ||
-      etaDesde ||
-      etaHasta,
-  );
+  const hayFiltros = [
+    !!search,
+    filtroRegla !== "todas",
+    filtroSev !== "todas",
+    filtroCliente !== "todos",
+    filtroRevision !== defaultRevision,
+    filtroResponsable !== "todos",
+    !!etaDesde,
+    !!etaHasta,
+  ].some(Boolean);
 
   // setter wrappers que resetean la paginación al cambiar filtro
   const wrap = <T,>(setter: (v: T) => void) => (v: T) => {
