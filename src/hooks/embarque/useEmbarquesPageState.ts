@@ -14,7 +14,7 @@ import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useEmbarquesPaginados, calcularEstadoEmbarque } from "@/hooks/embarque/useEmbarques";
 import type { EmbarqueRow } from "@/hooks/embarque/useEmbarques";
-import type { SortableEmbarqueColumn, EmbarqueListExtras } from "@/services/embarque/queries";
+import type { SortableEmbarqueColumn } from "@/services/embarque/queries";
 import { SORT_KEY_TO_COLUMN } from "@/services/embarque/queries";
 import { fetchEmbarquesParaExport, fetchEmbarquesListExtras } from "@/services/embarque";
 import { useOrgFilter } from "@/hooks/shared/useOrgFilter";
