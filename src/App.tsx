@@ -1,5 +1,6 @@
 import { lazy, Suspense } from "react";
 import { Toaster } from "@/components/ui/toaster";
+import { ErrorDetailsDialog } from "@/components/ui/ErrorDetailsDialog";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient } from "@tanstack/react-query";
 import { PersistQueryClientProvider } from "@tanstack/react-query-persist-client";
