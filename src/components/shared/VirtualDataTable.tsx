@@ -16,12 +16,10 @@
 import { useRef } from "react";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { cn } from "@/lib/utils";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Inbox } from "lucide-react";
 import PaginationControls from "@/components/shared/PaginationControls";
 import { VirtualRow } from "@/components/shared/VirtualRow";
+import { VirtualHeaderRow, SkeletonRows, EmptyState } from "@/components/shared/VirtualTableParts";
 import {
-  ALIGN_CLASS,
   DENSITY_CELL,
   type DataTableColumn,
   type DataTablePagination,
