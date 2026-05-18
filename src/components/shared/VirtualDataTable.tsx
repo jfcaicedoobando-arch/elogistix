@@ -19,6 +19,7 @@ import { cn } from "@/lib/utils";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Inbox } from "lucide-react";
 import PaginationControls from "@/components/shared/PaginationControls";
+import { VirtualRow } from "@/components/shared/VirtualRow";
 import {
   ALIGN_CLASS,
   DENSITY_CELL,
