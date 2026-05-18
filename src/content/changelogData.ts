@@ -22,6 +22,14 @@ export interface ChangelogEntry {
  */
 export const recentChangelog: ChangelogEntry[] = [
   {
+    version: "8.220.0",
+    date: "2026-05-18",
+    type: "patch",
+    title: "Documentos de embarque — idempotencia por slot y verificación de UPDATE",
+    summary: "Subir el mismo archivo en otro documento ya no devuelve éxito sin actualizar la fila.",
+    description: "uploadDocumentoEmbarque calculaba la clave de idempotencia sólo a partir del hash del archivo, así que reusar el mismo PDF en otro slot devolvía la respuesta cacheada del docId anterior, marcaba toast en verde y dejaba la fila en Pendiente. Ahora la clave combina embarqueId+docId+hash y el UPDATE de documentos_embarque usa .select() lanzando error si afecta 0 filas. Se limpió la entrada huérfana de idempotency_keys y se restableció el documento afectado a Pendiente. APP_VERSION 8.220.0.",
+  },
+  {
     version: "8.219.0",
     date: "2026-05-18",
     type: "patch",
