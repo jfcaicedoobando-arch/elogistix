@@ -105,27 +105,23 @@ export function useTrackingLiveCard({
   const onSync = async () => {
     try {
       const res = await sync.mutateAsync({ embarqueId, contenedor, naviera });
-      if (res.throttled) {
-        toast({ title: "Sincronización reciente", description: res.message ?? "Espera unos minutos." });
-      } else if (res.ok) {
-        notifySuccess(toast, {
-          title: "Tracking actualizado",
-          description: res.eventos_creados
-            ? `${res.eventos_creados} evento(s) nuevo(s).`
-            : "Sin cambios desde la última sincronización.",
-        });
-      } else {
-        notifyError(toast, { title: "No se pudo sincronizar", description: res.error ?? "Error desconocido" });
-      }
+      handleSyncResult(res, toast);
     } catch (err) {
-      if (err instanceof PrefixMismatchError) {
-        notifyError(toast, {
-          title: "Prefix no coincide con la naviera",
-          description: `El prefix ${err.prefix} no corresponde a ${naviera ?? "—"}. Verifica la naviera.`,
-        });
-        return;
-      }
-      notifyError(toast, { title: "Error de tracking", description: err instanceof Error ? err.message : "Error" });
+      handleSyncError(err, toast, naviera);
+    }
+  };
+
+  const onAplicarFechas = async () => {
+    if (!fechasPropuestas) return;
+    try {
+      await applyFechas.mutateAsync(buildApplyFechasArgs(embarqueId, fechasPropuestas));
+      notifySuccess(toast, { title: "Fechas actualizadas en el embarque" });
+      setFechasDismissed(true);
+    } catch (err) {
+      notifyError(toast, {
+        title: "No se pudieron actualizar las fechas",
+        description: err instanceof Error ? err.message : "Error",
+      });
     }
   };
 
