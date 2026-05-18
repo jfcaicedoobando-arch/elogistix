@@ -9,7 +9,7 @@ import { usePermissions, useTabsParam } from "@/hooks/shared";
 import {
   calcularEstadoEmbarque,
   getSiguienteEstado,
-  useEmbarqueFull,
+  useEmbarqueDetalleData,
   useEmbarqueFinancials,
   useEmbarqueDetalleActions,
   useEmbarqueDetalleTracking,
@@ -55,13 +55,10 @@ export default function EmbarqueDetalle() {
   const { canEdit } = usePermissions();
   const { activeTab, setActiveTab } = useTabsParam(TABS_VALIDOS, "resumen");
 
-  const { data: full, isLoading } = useEmbarqueFull(id);
-  const embarque = full?.embarque ?? null;
-  const conceptosVenta = full?.conceptosVenta ?? [];
-  const conceptosCosto = full?.conceptosCosto ?? [];
-  const documentos = full?.documentos ?? [];
-  const notas = full?.notas ?? [];
-  const facturas = full?.facturas ?? [];
+  const {
+    embarque, conceptosVenta, conceptosCosto, documentos, notas, facturas,
+    tipoCambioUSD, tipoCambioEUR, isLoading,
+  } = useEmbarqueDetalleData(id);
   useRegisterBreadcrumbLabel(id, embarque?.expediente);
 
   const [dialogDuplicarAbierto, setDialogDuplicarAbierto] = useState(false);
@@ -72,9 +69,6 @@ export default function EmbarqueDetalle() {
     handleUpload, handleDeleteDoc, handleDownload, handleAvanzarEstado,
     downloadingDocId, avanzarEstado, uploadDoc, deleteDoc,
   } = useEmbarqueDetalleActions(embarque ?? undefined, id);
-
-  const tipoCambioUSD = Number(embarque?.tipo_cambio_usd) || 1;
-  const tipoCambioEUR = Number(embarque?.tipo_cambio_eur) || 1;
 
   const { totalVenta, totalCosto, utilidad, margen } = useEmbarqueFinancials({
     conceptosVenta, conceptosCosto, tipoCambioUSD, tipoCambioEUR,

@@ -1,4 +1,4 @@
-import { useEmbarqueFull } from "./useEmbarqueFull";
+import { useEmbarqueFull } from "./useEmbarqueFullQuery";
 
 /**
  * Hook fachada para la pantalla de detalle de embarque.
