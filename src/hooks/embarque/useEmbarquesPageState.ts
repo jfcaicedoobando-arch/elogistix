@@ -12,14 +12,6 @@
  */
 import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
-import {
-  useQueryState,
-  useQueryStates,
-  parseAsInteger,
-  parseAsString,
-  parseAsStringLiteral,
-} from "nuqs";
-import { useDebounce } from "@/hooks/shared/useDebounce";
 import { useEmbarquesPaginados, calcularEstadoEmbarque } from "@/hooks/embarque/useEmbarques";
 import type { EmbarqueRow } from "@/hooks/embarque/useEmbarques";
 import type { SortableEmbarqueColumn, EmbarqueListExtras } from "@/services/embarque/queries";
@@ -27,11 +19,9 @@ import { SORT_KEY_TO_COLUMN } from "@/services/embarque/queries";
 import { fetchEmbarquesParaExport, fetchEmbarquesListExtras } from "@/services/embarque";
 import { useOrgFilter } from "@/hooks/shared/useOrgFilter";
 import { queryKeys } from "@/lib/query";
+import { useEmbarquesFilters, type SortDir } from "@/hooks/embarque/useEmbarquesFilters";
 
-const DEFAULT_PAGE_SIZE = 20;
-export type SortDir = "asc" | "desc";
-
-const SORT_DIR_PARSER = parseAsStringLiteral(["asc", "desc"] as const).withDefault("desc");
+export type { SortDir };
 
 const SORT_GETTERS: Record<string, (e: EmbarqueRow) => string> = {
   expediente: (e) => e.expediente ?? "",
