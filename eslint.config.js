@@ -86,6 +86,7 @@ export default tseslint.config(
     // que aún no migran a DataTable. Documentar caso a caso.
     files: [
       "src/components/shared/DataTable.tsx",
+      "src/components/shared/dataTable/**",
       // Casos editables / con render row complejo — quedan fuera de la migración:
       "src/components/cotizacion/SeccionMercanciaAerea.tsx",
       "src/components/cotizacion/SeccionMercanciaMaritimeLCL.tsx",
