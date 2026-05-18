@@ -22,12 +22,12 @@ export interface ChangelogEntry {
  */
 export const recentChangelog: ChangelogEntry[] = [
   {
-    version: "8.199.0",
+    version: "8.200.0",
     date: "2026-05-18",
     type: "patch",
-    title: "Auditoría — P2.12 lote 2 (hooks de auditoría y JSONCargo)",
-    summary: "26 → 23 warnings ESLint. extractSummary, useApplyJsonCargoFechas, useAuditoriaEjecutivo y useHallazgosTablaState refactorizados con helpers puros.",
-    description: "Refactors puros, sin cambios funcionales: hooks/embarque/useJsonCargoTracking.ts — extractSummary (22→0) extrae computeEtd/computeAta y helpers str/lower; useApplyJsonCargoFechas.mutationFn (22→0) extrae buildFechasUpdate, shouldAvanzarArribo y registrarEventoArribo. hooks/auditoria/useAuditoriaEjecutivo.ts (41→0) modulariza en agregarPendientes, calcularScore, agruparPorEtapaYCliente, calcularVencimientos, procesarRevisionEnOperador y calcularRanking. hooks/auditoria/useHallazgosTablaState.ts (41→0) extrae matchBase/matchRevision/matchResponsable/matchHallazgo con MatchCtx tipado. 369/369 tests verdes. APP_VERSION 8.199.0.",
+    title: "Auditoría — P2.12 lote 4 (cotizacionPdf, StepDatosRuta, TabResumen, EmbarquesEstadoDialog)",
+    summary: "23 → 20 warnings ESLint. generarPdfCotizacion (46→0), StepDatosRuta (25→0), TabResumen (24→0) y EmbarquesEstadoDialog (26→0) partidos en sub-helpers y sub-componentes.",
+    description: "P2.12 Lote 4 — Refactors puros sin cambios funcionales. generators/cotizacionPdf.ts: extraído a generators/cotizacion/{datosGenerales,dimensiones,conceptosTables,pdfShell}.ts (orquestador queda <50 LOC; rowsMaritimo/rowsOpcionales aíslan ramas; buildUsdTable usa rowUsdConIva/rowUsdSinIva). components/embarque/StepDatosRuta.tsx: dispatcher delgado + sub-componentes por modalidad (StepDatosRutaMaritimo/Aereo/Terrestre/Fechas). components/embarque/TabResumen.tsx: extrae EstadoProgresoCard, DatosGeneralesCard, RutaTransporteCard, EmbarquesRelacionadosCard, FechaConOriginal a tabResumen/. components/operaciones/EmbarquesEstadoDialog.tsx: extrae EmbarqueEstadoListItem + helpers calcularExtra/toneClass/subtituloPartes/rutaTexto. 369/369 tests verdes. APP_VERSION 8.200.0.",
   },
   {
     version: "8.198.0",
