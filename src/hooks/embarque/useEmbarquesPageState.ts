@@ -72,6 +72,24 @@ function resolveExtras(
   return (estadoActivo ? branchB : branchA) ?? empty;
 }
 
+function buildFullSetFilters(i: {
+  organizationId: string | undefined;
+  search: string;
+  filterModo: string; filterCliente: string; filterOperador: string; filterProforma: string;
+  fechaDesde: string; fechaHasta: string;
+}) {
+  return {
+    organizationId: i.organizationId,
+    search: i.search,
+    filterModo: i.filterModo,
+    filterCliente: i.filterCliente,
+    filterOperador: i.filterOperador,
+    filterProforma: i.filterProforma,
+    fechaDesde: i.fechaDesde || undefined,
+    fechaHasta: i.fechaHasta || undefined,
+  };
+}
+
 export function useEmbarquesPageState() {
   const { organizationId } = useOrgFilter();
   const {
