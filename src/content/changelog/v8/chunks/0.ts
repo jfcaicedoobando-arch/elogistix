@@ -2,6 +2,14 @@ import type { ChangelogEntry } from "../../../changelogData";
 
 export const chunk0: ChangelogEntry[] = [
   {
+    version: "8.196.0",
+    date: "2026-05-18",
+    type: "minor",
+    title: "Auditoría — P0.3 (pages) + P1.8 (tests de servicios)",
+    summary: "43 → 41 warnings ESLint, 359 → 369 tests. TrackingPublico, Embarques y EmbarqueDetalle partidos en sub-componentes; nuevo hook useTabsParam y useEmbarqueDetalleData.",
+    description: "P0.3 Pages: TrackingPublico (16→0) extraída en TrackingPublicoLoading, TrackingPublicoErrorCard y TrackingPublicoTimeline + EventoItem. Embarques (17→0) usa nuevo EmbarquesHeaderActions y helper buildDescription. EmbarqueDetalle (29→0) usa nuevo useEmbarqueDetalleData (centraliza defaults `?? []`) + sub-componentes LoadingState/NotFoundState. Nuevo hook genérico useTabsParam<T>() en hooks/shared para persistir tab activo en query param. P1.8 Tests: nuevas suites lib/jsoncargo/__tests__/navieras.test.ts (5 tests), lib/mappers/__tests__/embarqueRoundtrip.test.ts (3 tests) y lib/mappers/__tests__/cotizacionPaso1.test.ts (3 tests). 369/369 tests verdes (10 nuevos). Pendientes: 9 warnings de edge functions (sprint dedicado), restantes en hooks internos y componentes legacy. APP_VERSION 8.196.0.",
+  },
+  {
     version: "8.195.0",
     date: "2026-05-18",
     type: "minor",
