@@ -46,36 +46,16 @@ function compareBy(a: EmbarqueRow, b: EmbarqueRow, sortKey: string | null, dir: 
 
 export function useEmbarquesPageState() {
   const { organizationId } = useOrgFilter();
-  const [search, setSearchRaw] = useQueryState("q", parseAsString.withDefault(""));
-  const [filters, setFilters] = useQueryStates({
-    modo: parseAsString.withDefault("todos"),
-    estado: parseAsString.withDefault("todos"),
-    cliente: parseAsString.withDefault("todos"),
-    operador: parseAsString.withDefault("todos"),
-    proforma: parseAsString.withDefault("todos"),
-    fechaDesde: parseAsString.withDefault(""),
-    fechaHasta: parseAsString.withDefault(""),
-  });
-  const [page, setPageRaw] = useQueryState("page", parseAsInteger.withDefault(0));
-  const [pageSize, setPageSizeRaw] = useQueryState(
-    "ps",
-    parseAsInteger.withDefault(DEFAULT_PAGE_SIZE),
-  );
-  const [sortKey, setSortKeyRaw] = useQueryState(
-    "sort",
-    parseAsString.withDefault("expediente"),
-  );
-  const [sortDir, setSortDirRaw] = useQueryState("dir", SORT_DIR_PARSER);
+  const {
+    search, debouncedSearch, filters, page, pageSize, sortKey, sortDir,
+    DEFAULT_PAGE_SIZE, setSearch, setFilter,
+    setPageRaw, setPageSizeRaw, setSortKeyRaw, setSortDirRaw,
+  } = useEmbarquesFilters();
 
-  const filterModo = filters.modo;
-  const filterEstado = filters.estado;
-  const filterCliente = filters.cliente;
-  const filterOperador = filters.operador;
-  const filterProforma = filters.proforma;
-  const fechaDesde = filters.fechaDesde;
-  const fechaHasta = filters.fechaHasta;
+  const { modo: filterModo, estado: filterEstado, cliente: filterCliente,
+    operador: filterOperador, proforma: filterProforma,
+    fechaDesde, fechaHasta } = filters;
 
-  const debouncedSearch = useDebounce(search, 300);
   const estadoFilterActivo = filterEstado !== "todos";
 
   const sortBy: SortableEmbarqueColumn | undefined = sortKey ? SORT_KEY_TO_COLUMN[sortKey] : undefined;
