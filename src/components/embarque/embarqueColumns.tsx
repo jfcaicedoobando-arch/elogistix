@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components -- archivo de definición de columnas: mezcla helpers de UI + builder; HMR aceptable. */
 import { AlertTriangle } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import {
