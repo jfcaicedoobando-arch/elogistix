@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { listNavierasSoportadas } from "@/lib/jsoncargo/navieras";
 import { getExternalTracking } from "@/lib/jsoncargo/externalTracking";
 import { carrierLabel } from "@/lib/jsoncargo/containerPrefixes";
+import type { JsonCargoShippingLine } from "@/lib/jsoncargo/navieras";
 import type { useTrackingLiveCard } from "@/hooks/embarque";
 
 interface Props {
