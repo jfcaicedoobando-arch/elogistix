@@ -109,14 +109,6 @@ export const recentChangelog: ChangelogEntry[] = [
     summary: "21 → 14 warnings ESLint. jsoncargo-track, invite-client-user, deriveEventsFromContainer, TrackingWarnings, CotizacionDatosGeneralesCard, buildHeaderHtml y VirtualDataTable refactorizados.",
     description: "Refactors puros sin cambios funcionales ni de BD. jsoncargo-track extrae helpers a _shared/jsoncargoSync.ts. invite-client-user (26→0) extrae parseBody, verifyClienteOrg, resolveUserId, ensureClienteRole. _shared/jsoncargo.ts deriveEventsFromContainer (22→0) dividido en buildZarpe/Movimiento/AduanaEvent. TrackingWarnings.tsx (23→0) extrae 4 sub-componentes de alerta. CotizacionDatosGeneralesCard.tsx (24→0) usa array declarativo. proformaPdf buildHeaderHtml (21→0) extrae sub-secciones. VirtualDataTable extrae VirtualRow, VirtualHeaderRow, SkeletonRows, EmptyState. BulkImportDialog extrae hook useBulkImport. APP_VERSION 8.202.0.",
   },
-  {
-    version: "8.201.0",
-    date: "2026-05-18",
-    type: "patch",
-    title: "Auditoría — P2.12 lote 5 (filtros embarques, hallazgos, edge functions)",
-    summary: "30 → 21 warnings ESLint. useEmbarquesPageState, matchBase, create-user, tracking-public y parse-csf refactorizados con helpers puros.",
-    description: "P2.12 Lote 5 — Refactors puros sin cambios funcionales: hooks/embarque/useEmbarquesPageState.ts (26→0) extrae useEmbarquesFilters (estado nuqs + debounce), computeCounts, resolveExtras y buildFullSetFilters; compareBy usa lookup SORT_GETTERS. hooks/auditoria/useHallazgosTablaState.ts (17/16→0) reemplaza matchBase por BASE_PREDICATES tabulares. scripts/audit-casts.ts (17→0, +unused-disable) divide classify. supabase/functions/create-user (17→0), tracking-public (18→0) y parse-csf (20→0) extraen validatePayload, loadLink/loadEmbarqueData, validateFile/handleGatewayError/callAiGateway/processCsf. 369/369 tests verdes. APP_VERSION 8.201.0.",
-  },
 ];
 
 /** Deduplica por version conservando la primera ocurrencia (recentChangelog gana). */
