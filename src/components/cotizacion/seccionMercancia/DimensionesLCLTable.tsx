@@ -1,5 +1,5 @@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import type { DimensionLCL } from "@/hooks/cotizacion/useCotizaciones";
+import type { DimensionLCL } from "@/hooks/cotizacion";
 
 interface Props {
   dimensiones: DimensionLCL[];
