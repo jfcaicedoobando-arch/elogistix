@@ -8,7 +8,7 @@ import {
   EXPORT_TABLES,
   type ExportProgress,
   type ProgressCallback,
-} from "@/services/admin/exportOrg";
+} from "@/services/admin";
 import { toCSV, downloadZip } from "@/lib/io";
 
 export { EXPORT_TABLES };

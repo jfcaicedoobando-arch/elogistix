@@ -62,7 +62,6 @@ export async function fetchOrganizationExport(
     onProgress?.({ step: i + 1, total, current: table, rows: 0 });
     const allRows: Record<string, unknown>[] = [];
     let from = 0;
-    // eslint-disable-next-line no-constant-condition
     while (true) {
       const { data, error } = await supabase
         .from(table)
