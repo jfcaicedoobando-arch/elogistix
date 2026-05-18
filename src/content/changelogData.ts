@@ -93,14 +93,6 @@ export const recentChangelog: ChangelogEntry[] = [
     summary: "Cierre de 20 warnings críticos del linter (anon ejecución de RPCs), HIBP activado, signups deshabilitados, nueva página /ayuda con glosario y FAQ, checklist de simulacro de restore.",
     description: "A.1 Linter: REVOKE EXECUTE FROM PUBLIC en 23 funciones SECURITY DEFINER (anon ya no puede invocarlas); GRANT a authenticated sólo en RPCs legítimos; revocación total en triggers (congelar_factura_al_emitir, notif_cli_on_embarque_estado, sync_*). Pasamos de 71 a 51 warnings; los restantes son advisory para 'authenticated SECURITY DEFINER' necesarios para bypassear RLS (has_role, RPCs transaccionales). A.2 Auth: configure_auth con password_hibp_enabled=true, disable_signup=true, external_anonymous_users_enabled=false, auto_confirm_email=false. A.3 Backups: docs/backups-rollback.md extendido con checklist de simulacro (5 pasos: preparación, restore, validación, métricas RTO/RPO, limpieza) + plan de comunicación incidente. A.4 Ayuda: nueva ruta /ayuda + sidebar item con HelpCircle. src/content/ayudaContent.ts (16 términos glosario + 18 FAQs en 4 módulos: embarques, facturación, clientes, operación diaria). Búsqueda en vivo, tabs Glosario/FAQ, accordions. A.5 (export ZIP org) diferido a próxima iteración por dependencia jszip. APP_VERSION 8.191.0.",
   },
-  {
-    version: "8.190.0",
-    date: "2026-05-17",
-    type: "minor",
-    title: "Bloque 3.2 — Layout contable para el contador",
-    summary: "Nuevo botón 'Layout contable' en Pre-Facturación → Facturas que descarga un CSV con RFC del cliente, subtotal, IVA, total, moneda, tipo de cambio y campos pre-CFDI 4.0 (uso CFDI, forma/método de pago).",
-    description: "Se agrega src/generators/layoutContable.ts que toma las facturas filtradas, consulta en una sola llamada los campos completos (subtotal, iva, tipo_cambio, referencia_bl) y los RFC de los clientes, y descarga un CSV con encabezados pensados para que el contador timbre con su PAC o lo importe a su sistema contable: Folio, Fecha emisión, Periodo (YYYY-MM), Tipo comprobante (I), RFC receptor, Razón social, Subtotal, IVA, Total, Moneda, Tipo de cambio, Forma de pago, Método de pago (PUE), Uso CFDI (G03), Expediente, Referencia BL, Estado. No timbra ni genera XML CFDI 4.0 (requiere PAC externo). Integrado en useFacturacionPageController + Facturacion.tsx (tab Facturas) con registro en bitácora (accion=exportar). APP_VERSION 8.190.0.",
-  },
 ];
 
 /** Deduplica por version conservando la primera ocurrencia (recentChangelog gana). */
