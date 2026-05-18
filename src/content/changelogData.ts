@@ -28,6 +28,7 @@ export const recentChangelog: ChangelogEntry[] = [
     title: "Auditoría — P0.3 (pages) + P1.8 (tests de servicios)",
     summary: "43 → 41 warnings, 359 → 369 tests. TrackingPublico/Embarques/EmbarqueDetalle partidos en sub-componentes; nuevos hooks useTabsParam y useEmbarqueDetalleData.",
     description: "P0.3 Pages: TrackingPublico, Embarques y EmbarqueDetalle bajan a 0 warnings de complejidad extrayendo sub-componentes (TrackingPublicoTimeline, EmbarquesHeaderActions, LoadingState/NotFoundState) y hooks (useTabsParam genérico para query param, useEmbarqueDetalleData que centraliza defaults). P1.8 Tests: nuevas suites para navieras mapper (5), embarqueRoundtrip (3) y cotizacionPaso1 (3). 369/369 verdes. APP_VERSION 8.196.0.",
+  },
   {
     version: "8.195.0",
     date: "2026-05-18",
