@@ -135,12 +135,15 @@ export function useEmbarquesPageState() {
     return [...dedupedAll].sort((a, b) => compareBy(a, b, sortKey, sortDir));
   }, [estadoFilterActivo, dedupedAll, sortKey, sortDir]);
 
-  const totalCountServer = resultadoServer?.count ?? 0;
-  const branchBCount = estadoFilterActivo ? dedupedAll.length : null;
-  const expedientesCount = branchBCount ?? totalCountServer;
-  const contenedoresCount = estadoFilterActivo ? containersForView.length : totalCountServer;
-  const sourceCountForPages = estadoFilterActivo ? sortedAll.length : totalCountServer;
-  const totalPages = Math.max(1, Math.ceil(sourceCountForPages / pageSize));
+  const counts = computeCounts({
+    estadoFilterActivo,
+    dedupedAll,
+    containersForView,
+    sortedAll,
+    pageSize,
+    totalCountServer: resultadoServer?.count ?? 0,
+  });
+  const { expedientesCount, contenedoresCount, totalPages, totalCountServer } = counts;
 
   // Filas visibles en la página actual.
   const filtered = useMemo(() => {
@@ -162,10 +165,7 @@ export function useEmbarquesPageState() {
     enabled: estadoFilterActivo && visibleIds.length > 0,
     staleTime: 30_000,
   });
-  const emptyExtras: EmbarqueListExtras = { liquidacion: {}, docs: {} };
-  const extras: EmbarqueListExtras = estadoFilterActivo
-    ? (extrasBranchB ?? emptyExtras)
-    : (resultadoServer?.extras ?? emptyExtras);
+  const extras = resolveExtras(estadoFilterActivo, extrasBranchB, resultadoServer?.extras);
 
   const displayCount = expedientesCount;
 
