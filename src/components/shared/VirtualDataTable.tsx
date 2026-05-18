@@ -26,6 +26,16 @@ import {
   type TableDensity,
 } from "@/components/shared/dataTable/types";
 
+function buildGridTemplate<T>(columns: DataTableColumn<T>[]): string {
+  return columns.map((c) => c.width ?? "minmax(0,1fr)").join(" ");
+}
+
+function pickMeasureElement(estimateRowHeight: number): ((el: HTMLElement) => number) | undefined {
+  if (typeof window === "undefined") return undefined;
+  if (navigator.userAgent.indexOf("Firefox") !== -1) return undefined;
+  return (el) => el?.getBoundingClientRect().height ?? estimateRowHeight;
+}
+
 interface VirtualDataTableProps<T> {
   columns: DataTableColumn<T>[];
   data: T[];
