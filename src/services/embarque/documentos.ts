@@ -115,8 +115,9 @@ export async function uploadDocumentoEmbarque(
     }
   }
 
-  // 3) Upload (upsert) y update de la fila. Si falla, el siguiente reintento
-  //    encontrará el claim pendiente y procederá normalmente.
+  // 3) Upload y update de la fila. El path hash+archivo es estable; si ya existe,
+  //    la fila arriba habría hecho no-op. Evitamos upsert porque Storage evalúa RLS
+  //    como UPDATE y puede bloquear uploads válidos.
   await uploadFile(path, file);
   const { error } = await supabase
     .from('documentos_embarque')
