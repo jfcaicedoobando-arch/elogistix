@@ -185,11 +185,6 @@ export function useEmbarquesPageState() {
     !fechaHasta;
   const isEmptyState = !isLoading && containersForView.length === 0 && sinFiltros;
 
-  const setFilter = (key: keyof typeof filters, value: string, defaultValue: string) => {
-    setFilters({ [key]: value === defaultValue ? null : value });
-    setPageRaw(null);
-  };
-
   return {
     // values
     search,
@@ -197,7 +192,7 @@ export function useEmbarquesPageState() {
     fechaDesde, fechaHasta, page, pageSize, debouncedSearch,
     sortKey, sortDir,
     // setters
-    setSearch: (v: string) => { setSearchRaw(v || null); setPageRaw(null); },
+    setSearch,
     setFilterModo: (v: string) => setFilter("modo", v, "todos"),
     setFilterEstado: (v: string) => setFilter("estado", v, "todos"),
     setFilterCliente: (v: string) => setFilter("cliente", v, "todos"),
