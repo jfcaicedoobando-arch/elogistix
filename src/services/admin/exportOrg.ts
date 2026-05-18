@@ -6,6 +6,7 @@
  * bloques de 1000 filas (límite Supabase).
  */
 import { supabase } from "@/integrations/supabase/client";
+import { toCSV, downloadZip } from "@/lib/io";
 
 export const EXPORT_TABLES = [
   "clientes",
