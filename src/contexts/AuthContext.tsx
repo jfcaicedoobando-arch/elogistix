@@ -68,6 +68,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     });
   }, [user, loading]);
 
+  // Snapshot global de la sesión para consumirla fuera del árbol React (errorReport).
+  useEffect(() => {
+    setAuthSnapshot({
+      userId: user?.id ?? null,
+      email: user?.email ?? null,
+      organizationId: profile.organizationId ?? null,
+      organizationName: profile.organization?.nombre ?? null,
+      role: profile.role ?? null,
+      effectiveRole: effectiveRole ?? null,
+    });
+  }, [user, profile.organizationId, profile.organization, profile.role, effectiveRole]);
+
   const signOut = async () => {
     clearLoginAudit(user?.id);
     await supabase.auth.signOut();
