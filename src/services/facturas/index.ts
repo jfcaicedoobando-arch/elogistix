@@ -110,3 +110,5 @@ export async function fetchGastosPendientes() {
   if (error) throw error;
   return data;
 }
+export type { FilaHueco, HuecoFacturacionResult } from './huecoFacturacion';
+export { detectarHuecosFacturacion } from './huecoFacturacion';

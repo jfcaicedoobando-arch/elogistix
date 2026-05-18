@@ -23,3 +23,4 @@ export async function deleteFile(path: string) {
   const { error } = await supabase.storage.from(BUCKET).remove([path]);
   if (error) throw error;
 }
+export * from './facturas';
