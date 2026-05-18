@@ -2,11 +2,30 @@ import type { CotizacionRow } from '@/types/cotizacion';
 import { formatCurrency, formatDate } from '@/lib/formatters';
 import { escapeHtml as esc } from '@/lib/utils';
 
-export function buildDatosGenerales(c: CotizacionRow): [string, string][] {
-  const esMaritimoFcl = c.modo === 'Marítimo' && c.tipo_embarque === 'FCL';
-  const esMaritimoLcl = c.modo === 'Marítimo' && c.tipo_embarque === 'LCL';
+function rowsMaritimo(c: CotizacionRow): [string, string][] {
+  if (c.modo !== 'Marítimo') return [];
+  const out: [string, string][] = [];
+  if (c.tipo_embarque === 'FCL') {
+    if (c.dias_libres_destino > 0) out.push(['Días libres en destino', `${c.dias_libres_destino} días`]);
+    out.push(['Carta garantía', c.carta_garantia ? 'Sí' : 'No']);
+  }
+  if (c.tipo_embarque === 'LCL' && c.dias_almacenaje > 0) {
+    out.push(['Días libres de almacenaje', `${c.dias_almacenaje} días`]);
+  }
+  return out;
+}
 
-  const rows: [string, string][] = [
+function rowsOpcionales(c: CotizacionRow): [string, string][] {
+  const out: [string, string][] = [];
+  if (c.tiempo_transito_dias != null) out.push(['Tiempo de tránsito', `${c.tiempo_transito_dias} días`]);
+  if (c.frecuencia) out.push(['Frecuencia', c.frecuencia]);
+  if (c.ruta_texto) out.push(['Ruta', c.ruta_texto]);
+  if (c.tipo_movimiento) out.push(['Tipo de movimiento', c.tipo_movimiento]);
+  return out;
+}
+
+export function buildDatosGenerales(c: CotizacionRow): [string, string][] {
+  const base: [string, string][] = [
     ['Modo', c.modo],
     ['Tipo', c.tipo],
     ['Incoterm', c.incoterm],
@@ -15,16 +34,11 @@ export function buildDatosGenerales(c: CotizacionRow): [string, string][] {
     ['Vigencia', `${c.vigencia_dias} días${c.fecha_vigencia ? ` (${formatDate(c.fecha_vigencia)})` : ''}`],
     ['Operador', c.operador || '-'],
   ];
-
-  if (c.tiempo_transito_dias != null) rows.push(['Tiempo de tránsito', `${c.tiempo_transito_dias} días`]);
-  if (esMaritimoFcl && c.dias_libres_destino > 0) rows.push(['Días libres en destino', `${c.dias_libres_destino} días`]);
-  if (esMaritimoFcl) rows.push(['Carta garantía', c.carta_garantia ? 'Sí' : 'No']);
-  if (esMaritimoLcl && c.dias_almacenaje > 0) rows.push(['Días libres de almacenaje', `${c.dias_almacenaje} días`]);
-  if (c.frecuencia) rows.push(['Frecuencia', c.frecuencia]);
-  if (c.ruta_texto) rows.push(['Ruta', c.ruta_texto]);
-  if (c.tipo_movimiento) rows.push(['Tipo de movimiento', c.tipo_movimiento]);
-  rows.push(['Seguro', c.seguro ? `Sí — ${formatCurrency(Number(c.valor_seguro_usd || 0), 'USD')}` : 'No']);
-  return rows;
+  const seguro: [string, string] = [
+    'Seguro',
+    c.seguro ? `Sí — ${formatCurrency(Number(c.valor_seguro_usd || 0), 'USD')}` : 'No',
+  ];
+  return [...base, ...rowsOpcionales(c), ...rowsMaritimo(c), seguro];
 }
 
 export function buildMercancia(c: CotizacionRow): [string, string][] {
