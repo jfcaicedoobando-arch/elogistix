@@ -11,12 +11,9 @@ import {
 } from "@/components/ui/accordion";
 import { Upload } from "lucide-react";
 import type { CotizacionFormValues } from "@/hooks/cotizacion";
+import { TIPOS_CARGA, SECTORES } from "@/constants/cotizacionMercancia";
 
-export const TIPOS_CARGA = ['Carga General', 'Mercancía Peligrosa'];
-export const SECTORES = [
-  'Automotriz', 'Médica', 'Alimentos', 'Carga Proyecto',
-  'Construcción', 'Industrial', 'General', 'Tecnología', 'Arte y Moda',
-];
+export { TIPOS_CARGA, SECTORES };
 
 interface Props {
   msdsFile: File | null;
