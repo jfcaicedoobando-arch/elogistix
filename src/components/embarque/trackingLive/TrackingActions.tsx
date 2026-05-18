@@ -1,7 +1,7 @@
 import { Search, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import type { useTrackingLiveCard } from "@/hooks/embarque/useTrackingLiveCard";
+import type { useTrackingLiveCard } from "@/hooks/embarque";
 
 interface Props {
   ctrl: ReturnType<typeof useTrackingLiveCard>;

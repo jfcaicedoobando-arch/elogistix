@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import type { EmbarqueRow } from "@/hooks/embarque/useEmbarques";
+import type { EmbarqueRow } from "@/hooks/embarque";
 
 interface Props {
   embarque: EmbarqueRow;

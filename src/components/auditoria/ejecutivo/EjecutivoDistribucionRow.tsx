@@ -1,7 +1,7 @@
 import { TrendingUp } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { DistribucionBarras, EmptyMsg } from "./_helpers";
-import type { AuditoriaEjecutivoData } from "@/hooks/auditoria/useAuditoriaEjecutivo";
+import type { AuditoriaEjecutivoData } from "@/hooks/auditoria";
 
 interface Props {
   porEtapa: AuditoriaEjecutivoData["porEtapa"];

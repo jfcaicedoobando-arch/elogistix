@@ -3,7 +3,7 @@ import { Input } from "@/components/ui/input";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { ChangelogEntryCard } from "@/components/dashboard/ChangelogEntryCard";
-import { useChangelogController } from "@/hooks/dashboard/useChangelogController";
+import { useChangelogController } from "@/hooks/dashboard";
 
 export default function Changelog() {
   const {

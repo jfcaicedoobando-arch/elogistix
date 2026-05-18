@@ -9,7 +9,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import type { DataTableColumn } from "@/components/shared/DataTable";
-import type { GlobalUserRow } from "@/hooks/admin/useAdminData";
+import type { GlobalUserRow } from "@/hooks/admin";
 import { getRoleLabel } from "@/lib/ui/uiMappings";
 
 const ROLE_BADGE: Record<string, string> = {

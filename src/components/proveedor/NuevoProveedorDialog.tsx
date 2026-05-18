@@ -13,7 +13,7 @@ import {
   PAISES_PROVEEDOR as PAISES,
 } from "@/constants/proveedorConstants";
 import DocumentChecklist from "@/components/shared/DocumentChecklist";
-import { useNuevoProveedorController } from "@/hooks/proveedor/useNuevoProveedorController";
+import { useNuevoProveedorController } from "@/hooks/proveedor";
 import type { Enums } from "@/types/db";
 
 interface Props {

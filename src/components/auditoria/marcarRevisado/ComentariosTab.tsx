@@ -3,7 +3,7 @@ import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { TabsContent } from "@/components/ui/tabs";
-import type { useMarcarRevisadoController } from "@/hooks/auditoria/useMarcarRevisadoController";
+import type { useMarcarRevisadoController } from "@/hooks/auditoria";
 import type { AuditoriaRevision } from "@/types/auditoria";
 
 interface Props {

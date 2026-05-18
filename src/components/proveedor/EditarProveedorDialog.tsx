@@ -10,7 +10,7 @@ import {
   MONEDAS_PROVEEDOR as MONEDAS,
   PAISES_PROVEEDOR as PAISES,
 } from "@/constants/proveedorConstants";
-import { useEditarProveedorController } from "@/hooks/proveedor/useEditarProveedorController";
+import { useEditarProveedorController } from "@/hooks/proveedor";
 
 type Proveedor = Tables<"proveedores">;
 type Moneda = Enums<"moneda">;

@@ -3,7 +3,7 @@ import { Badge } from "@/components/ui/badge";
 import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
 import { ICONO_EVENTO } from "@/constants/embarqueConstants";
 import { formatDate, nombreDesdeEmail } from "@/lib/formatters";
-import type { EventoEmbarque } from "@/hooks/embarque/useEventosEmbarque";
+import type { EventoEmbarque } from "@/hooks/embarque";
 
 interface Props {
   eventos: EventoEmbarque[];

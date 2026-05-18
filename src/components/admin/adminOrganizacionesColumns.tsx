@@ -8,7 +8,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import type { DataTableColumn } from "@/components/shared/DataTable";
-import type { OrgRow } from "@/hooks/admin/useAdminData";
+import type { OrgRow } from "@/hooks/admin";
 import { toTitleCase } from "@/lib/formatters";
 
 export function buildAdminOrganizacionesColumns(

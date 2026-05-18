@@ -5,7 +5,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { WizardSection } from "@/components/shared/WizardSection";
 import { FormField } from "@/components/shared/FormField";
-import type { CotizacionFormValues } from "@/hooks/cotizacion/wizard/useCotizacionWizardForm";
+import type { CotizacionFormValues } from "@/hooks/cotizacion";
 
 interface ClienteOption {
   id: string;

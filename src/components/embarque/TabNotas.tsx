@@ -5,12 +5,12 @@ import { Textarea } from "@/components/ui/textarea";
 import { Loader2, Send } from "lucide-react";
 
 import { useAuth } from "@/contexts/AuthContext";
-import { usePermissions } from "@/hooks/shared/usePermissions";
-import { useCreateNotaEmbarque } from "@/hooks/embarque/useEmbarques";
-import { useRegistrarActividad } from "@/hooks/shared/useBitacora";
+import { usePermissions } from "@/hooks/shared";
+import { useCreateNotaEmbarque } from "@/hooks/embarque";
+import { useRegistrarActividad } from "@/hooks/shared";
 import { getErrorMessage } from "@/lib/errors";
 import { useToast } from "@/hooks/use-toast";
-import type { NotaEmbarqueRow } from "@/hooks/embarque/useEmbarques";
+import type { NotaEmbarqueRow } from "@/hooks/embarque";
 import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 import { formatDate, nombreDesdeEmail } from "@/lib/formatters";
 import { getNotaTipoColorClass } from "@/lib/ui/uiMappings";

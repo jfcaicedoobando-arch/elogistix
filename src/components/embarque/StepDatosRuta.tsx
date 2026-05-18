@@ -4,12 +4,12 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useTiposContenedor } from "@/hooks/catalogos/useTiposContenedor";
+import { useTiposContenedor } from "@/hooks/catalogos";
 import PortSelect from "@/components/selects/PortSelect";
 import NavieraSelect from "@/components/selects/NavieraSelect";
 import { sugerirETA, type StepValidationErrors } from "@/lib/domain/embarqueWizardSchemas";
 import { ValidationAlert } from "@/components/feedback/ValidationAlert";
-import type { EmbarqueFormValues } from "@/hooks/embarque/useEmbarqueForm";
+import type { EmbarqueFormValues } from "@/hooks/embarque";
 
 interface Props {
   errors?: StepValidationErrors;

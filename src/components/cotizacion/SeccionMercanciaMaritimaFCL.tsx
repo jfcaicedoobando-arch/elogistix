@@ -4,7 +4,7 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import SeccionMercanciaWrapper from "./SeccionMercanciaWrapper";
-import type { CotizacionFormValues } from "@/hooks/cotizacion/wizard/useCotizacionWizardForm";
+import type { CotizacionFormValues } from "@/hooks/cotizacion";
 
 const CONTENEDORES_FCL = [
   "20' GP", "20' Dry", "40' Dry", "40' High Cube", "45' High Cube",

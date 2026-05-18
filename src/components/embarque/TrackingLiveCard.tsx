@@ -1,7 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Ship } from "lucide-react";
-import { useTrackingLiveCard } from "@/hooks/embarque/useTrackingLiveCard";
+import { useTrackingLiveCard } from "@/hooks/embarque";
 import { DialogBolContainers } from "./DialogBolContainers";
 import { TrackingActions } from "./trackingLive/TrackingActions";
 import { TrackingWarnings } from "./trackingLive/TrackingWarnings";

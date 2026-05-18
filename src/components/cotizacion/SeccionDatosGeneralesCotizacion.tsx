@@ -3,7 +3,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { WizardSection } from "@/components/shared/WizardSection";
 import { FormField } from "@/components/shared/FormField";
 import { MODOS, TIPOS, INCOTERMS } from "@/constants/wizardConstants";
-import type { CotizacionFormValues } from "@/hooks/cotizacion/wizard/useCotizacionWizardForm";
+import type { CotizacionFormValues } from "@/hooks/cotizacion";
 
 export default function SeccionDatosGeneralesCotizacion() {
   const { watch, setValue } = useFormContext<CotizacionFormValues>();

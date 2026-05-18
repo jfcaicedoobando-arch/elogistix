@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Building2, Plus } from "lucide-react";
 import { DataTable } from "@/components/shared/DataTable";
 import { PageHeader } from "@/components/shared/PageHeader";
-import { useAdminOrganizacionesController } from "@/hooks/admin/useAdminOrganizacionesController";
+import { useAdminOrganizacionesController } from "@/hooks/admin";
 import { AdminOrganizacionesFilters } from "@/components/admin/AdminOrganizacionesFilters";
 import { NuevaOrganizacionDialog } from "@/components/admin/NuevaOrganizacionDialog";
 import { buildAdminOrganizacionesColumns } from "@/components/admin/adminOrganizacionesColumns";

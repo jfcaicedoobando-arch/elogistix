@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { Save, Pencil } from "lucide-react";
-import { usePlanes, useUpdatePlan, type Plan } from "@/hooks/admin/usePlanes";
+import { usePlanes, useUpdatePlan, type Plan } from "@/hooks/admin";
 import { DataTable, type DataTableColumn } from "@/components/shared/DataTable";
 import { formatCurrency, formatNumber } from "@/lib/formatters";
 

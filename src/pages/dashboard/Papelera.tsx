@@ -6,7 +6,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { DataTable, type DataTableColumn } from "@/components/shared/DataTable";
-import { usePermissions } from "@/hooks/shared/usePermissions";
+import { usePermissions } from "@/hooks/shared";
 import { useToast } from "@/hooks/use-toast";
 import { Navigate } from "react-router-dom";
 import { listTrash, restoreRecord, purgeRecord, type SoftTable as SoftTableSvc, type TrashRow as TrashRowSvc } from "@/services/admin";

@@ -16,7 +16,7 @@ import {
 import { DataTable } from "@/components/shared/DataTable";
 import { formatCurrency } from "@/lib/formatters";
 import { huecoFacturacionColumns } from "./huecoFacturacionColumns";
-import type { FilaHueco } from "@/services/facturas/huecoFacturacion";
+import type { FilaHueco } from "@/services/facturas";
 
 interface Props {
   open: boolean;

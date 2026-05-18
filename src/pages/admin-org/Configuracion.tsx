@@ -2,7 +2,7 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Save, Building2, DollarSign, FileText, Ship, ClipboardList, Bell, Anchor, ShieldAlert, Download } from "lucide-react";
-import { useConfiguracionState } from "@/hooks/configuracion/useConfiguracionState";
+import { useConfiguracionState } from "@/hooks/configuracion";
 import TabEmpresa from "@/components/configuracion/TabEmpresa";
 import TabTiposCambio from "@/components/configuracion/TabTiposCambio";
 import TabCotizaciones from "@/components/configuracion/TabCotizaciones";

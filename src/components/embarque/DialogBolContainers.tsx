@@ -9,7 +9,7 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Loader2, Search } from "lucide-react";
-import { useDialogBolContainers } from "@/hooks/embarque/useDialogBolContainers";
+import { useDialogBolContainers } from "@/hooks/embarque";
 import { BolContainersResult } from "./dialogBol/BolContainersResult";
 
 interface Props {

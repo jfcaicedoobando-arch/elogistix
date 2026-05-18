@@ -6,7 +6,7 @@ import ReportesFiltros from "@/components/reportes/ReportesFiltros";
 import ReportesKpiCards from "@/components/reportes/ReportesKpiCards";
 import ReportesTopChart from "@/components/reportes/ReportesTopChart";
 import ReportesTablaClientes from "@/components/reportes/ReportesTablaClientes";
-import { useReportesPageController } from "@/hooks/reportes/useReportesPageController";
+import { useReportesPageController } from "@/hooks/reportes";
 
 export default function Reportes() {
   const {

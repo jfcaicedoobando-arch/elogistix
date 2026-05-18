@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
 import { Save } from "lucide-react";
-import { useConfigGlobalCategoria, useUpdateConfiguracionGlobal } from "@/hooks/configuracion/useConfiguracionGlobal";
+import { useConfigGlobalCategoria, useUpdateConfiguracionGlobal } from "@/hooks/configuracion";
 
 export default function TabSeguridadGlobal() {
   const config = useConfigGlobalCategoria("seguridad");

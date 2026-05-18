@@ -2,7 +2,7 @@ import { useFormContext, Controller } from "react-hook-form";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import type { EmbarqueFormValues } from "@/hooks/embarque/useEmbarqueForm";
+import type { EmbarqueFormValues } from "@/hooks/embarque";
 import { MODOS, TIPOS, INCOTERMS } from "@/constants/wizardConstants";
 import type { EmbarqueValidationErrors } from "../StepDatosGenerales";
 

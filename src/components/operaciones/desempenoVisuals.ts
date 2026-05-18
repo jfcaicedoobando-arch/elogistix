@@ -1,5 +1,5 @@
 import { Anchor, Ship, Container, Warehouse, PackageCheck } from "lucide-react";
-import type { DesgloseEstados } from "@/hooks/operaciones/useOperacionesData";
+import type { DesgloseEstados } from "@/hooks/operaciones";
 
 // Tokens semánticos: usamos colores del design system mediante variables CSS
 export const ESTADO_COLOR: Record<keyof DesgloseEstados, string> = {

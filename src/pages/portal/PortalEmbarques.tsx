@@ -11,7 +11,7 @@ import EmbarqueCard from "@/components/portal/EmbarqueCard";
 import EmptyState from "@/components/empty/EmptyState";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { Search, Ship, Filter, Package, ChevronDown } from "lucide-react";
-import { usePortalEmbarquesController } from "@/hooks/portal/usePortalEmbarquesController";
+import { usePortalEmbarquesController } from "@/hooks/portal";
 
 export default function PortalEmbarques() {
   const {

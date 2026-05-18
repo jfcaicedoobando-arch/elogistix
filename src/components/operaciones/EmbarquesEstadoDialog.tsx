@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Search, ExternalLink, AlertTriangle } from "lucide-react";
 import { formatDate, toTitleCase, nombreDesdeEmail } from "@/lib/formatters";
-import type { EmbarquesPorEstadoBucket, EstadoUiKey } from "@/hooks/operaciones/useOperacionesData";
+import type { EmbarquesPorEstadoBucket, EstadoUiKey } from "@/hooks/operaciones";
 import { ESTADO_COLOR, ESTADO_ICON } from "./desempenoVisuals";
 
 interface Props {

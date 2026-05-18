@@ -13,7 +13,7 @@ import { embarqueColumns, cotizacionColumns } from "@/components/cliente/cliente
 import TablaContactos from "@/components/cliente/TablaContactos";
 import ClienteSummaryCards from "@/components/cliente/ClienteSummaryCards";
 import { ClienteDetalleDialogs } from "@/components/cliente/detalle/ClienteDetalleDialogs";
-import { useClienteDetalleController } from "@/hooks/cliente/useClienteDetalleController";
+import { useClienteDetalleController } from "@/hooks/cliente";
 import { toTitleCase, formatPhoneMx, correctSpanishPlace } from "@/lib/formatters";
 import { useParams } from "react-router-dom";
 import { useRegisterBreadcrumbLabel } from "@/contexts/BreadcrumbContext";

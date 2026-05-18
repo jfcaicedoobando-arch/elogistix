@@ -7,7 +7,7 @@ import SearchInput from "@/components/selects/SearchInput";
 import EmptyState from "@/components/empty/EmptyState";
 import { formatCurrency, formatDate, toTitleCase } from "@/lib/formatters";
 import { montoPrincipalProforma } from "@/lib/domain/proforma";
-import { useTabProformasPendientesController } from "@/hooks/facturacion/useTabProformasPendientesController";
+import { useTabProformasPendientesController } from "@/hooks/facturacion";
 
 export function TabProformasPendientes() {
   const c = useTabProformasPendientesController();

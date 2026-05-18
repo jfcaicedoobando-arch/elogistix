@@ -15,7 +15,7 @@ import SeccionMercanciaMaritimeLCL from "@/components/cotizacion/SeccionMercanci
 import SeccionMercanciaGeneral from "@/components/cotizacion/SeccionMercanciaGeneral";
 import SeccionMercanciaAerea from "@/components/cotizacion/SeccionMercanciaAerea";
 
-import type { useCotizacionWizardForm } from "@/hooks/cotizacion/wizard/useCotizacionWizardForm";
+import type { useCotizacionWizardForm } from "@/hooks/cotizacion";
 
 interface Props {
   w: ReturnType<typeof useCotizacionWizardForm>;

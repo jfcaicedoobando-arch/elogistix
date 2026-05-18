@@ -26,7 +26,7 @@ import type {
   SeveridadAuditoria,
 } from "@/types/auditoria";
 import { reglaLabel } from "./hallazgosTablaConfig";
-import type { FiltroRevision, FiltroResponsable } from "@/hooks/auditoria/useHallazgosTablaState";
+import type { FiltroRevision, FiltroResponsable } from "@/hooks/auditoria";
 
 interface Props {
   search: string;

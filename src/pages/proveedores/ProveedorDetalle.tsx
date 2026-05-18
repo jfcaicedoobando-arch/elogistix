@@ -14,7 +14,7 @@ import { getEstadoColor } from "@/lib/ui/uiMappings";
 import EditarProveedorDialog from "@/components/proveedor/EditarProveedorDialog";
 import DoubleConfirmDeleteDialog from "@/components/shared/DoubleConfirmDeleteDialog";
 import EmptyState from "@/components/empty/EmptyState";
-import { useProveedorDetalleController } from "@/hooks/proveedor/useProveedorDetalleController";
+import { useProveedorDetalleController } from "@/hooks/proveedor";
 
 export default function ProveedorDetalle() {
   const { id } = useParams<{ id: string }>();

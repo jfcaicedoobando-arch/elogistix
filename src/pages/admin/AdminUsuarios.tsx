@@ -5,7 +5,7 @@ import { DataTable } from "@/components/shared/DataTable";
 import NuevoUsuarioDialog from "@/components/usuario/NuevoUsuarioDialog";
 import DoubleConfirmDeleteDialog from "@/components/shared/DoubleConfirmDeleteDialog";
 import { PageHeader } from "@/components/shared/PageHeader";
-import { useAdminUsuariosController } from "@/hooks/admin/useAdminUsuariosController";
+import { useAdminUsuariosController } from "@/hooks/admin";
 import { AdminUsuariosFilters } from "@/components/admin/AdminUsuariosFilters";
 import { buildAdminUsuariosColumns } from "@/components/admin/adminUsuariosColumns";
 

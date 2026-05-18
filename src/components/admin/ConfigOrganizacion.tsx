@@ -4,7 +4,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { Building2 } from "lucide-react";
 import { useOrganization } from "@/contexts/OrganizationContext";
-import { useConfiguracionByOrg } from "@/hooks/configuracion/useConfiguracionOrg";
+import { useConfiguracionByOrg } from "@/hooks/configuracion";
 
 export default function ConfigOrganizacion() {
   const { organizations } = useOrganization();

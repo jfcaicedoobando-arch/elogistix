@@ -5,7 +5,7 @@ import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import SearchInput from "@/components/selects/SearchInput";
 import { DataTable } from "@/components/shared/DataTable";
 import { exportToCsv } from "@/generators/exportCsv";
-import { useTabProformasController } from "@/hooks/facturacion/useTabProformasController";
+import { useTabProformasController } from "@/hooks/facturacion";
 import { buildProformasColumns } from "./proformasColumns";
 import { DialogMarcarFacturada } from "./DialogMarcarFacturada";
 import { useMemo } from "react";

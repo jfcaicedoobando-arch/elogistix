@@ -5,7 +5,7 @@ import {
   Plus, Edit, Trash2, RefreshCw, Upload, LogIn, FileText, Activity,
   MessageSquare, FileX, ArrowRight,
 } from "lucide-react";
-import type { EntradaBitacora } from "@/hooks/shared/useBitacora";
+import type { EntradaBitacora } from "@/hooks/shared";
 import { nombreDesdeEmail, formatDate } from "@/lib/formatters";
 import { describirEntrada } from "@/lib/domain/bitacoraDescripcion";
 import { getEstadoVisual } from "@/lib/ui/estadoConfig";

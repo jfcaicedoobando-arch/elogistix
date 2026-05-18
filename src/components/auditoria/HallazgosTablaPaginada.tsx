@@ -5,8 +5,8 @@
  */
 import { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
-import { revisionKey } from "@/hooks/auditoria/useAuditoriaRevisiones";
-import { useHallazgosTablaState, type UseHallazgosTablaStateOptions } from "@/hooks/auditoria/useHallazgosTablaState";
+import { revisionKey } from "@/hooks/auditoria";
+import { useHallazgosTablaState, type UseHallazgosTablaStateOptions } from "@/hooks/auditoria";
 import { MarcarRevisadoDialog } from "@/components/auditoria/MarcarRevisadoDialog";
 import { AsignarResponsableDialog } from "@/components/auditoria/AsignarResponsableDialog";
 import { HallazgosFiltros } from "./HallazgosFiltros";

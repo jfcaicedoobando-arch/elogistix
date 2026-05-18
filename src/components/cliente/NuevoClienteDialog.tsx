@@ -11,7 +11,7 @@ import DocumentChecklist from "@/components/shared/DocumentChecklist";
 import {
   useNuevoClienteController,
   type ClienteForm,
-} from "@/hooks/cliente/useNuevoClienteController";
+} from "@/hooks/cliente";
 
 const FORM_FIELDS: { label: string; field: keyof ClienteForm; full?: boolean; required?: boolean }[] = [
   { label: "Nombre / Razón Social", field: "nombre", full: true, required: true },
