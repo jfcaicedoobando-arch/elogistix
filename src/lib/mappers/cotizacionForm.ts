@@ -11,12 +11,19 @@ import {
   COTIZACION_FORM_DEFAULTS,
 } from "@/types/cotizacionForm";
 
-// Re-exports para preservar la API pública usada por consumidores existentes.
 export type { CotizacionFormValues, CotizacionInitialData, CotizacionInitialCosto };
 export { COTIZACION_FORM_DEFAULTS };
 
-export function buildCotizacionDefaultValues(d?: CotizacionInitialData): CotizacionFormValues {
-  if (!d) return COTIZACION_FORM_DEFAULTS;
+const DEFAULT_DIM_LCL: DimensionLCL = {
+  piezas: 0, alto_cm: 0, largo_cm: 0, ancho_cm: 0, volumen_m3: 0,
+};
+const DEFAULT_DIM_AEREA: DimensionAerea = {
+  piezas: 0, alto_cm: 0, largo_cm: 0, ancho_cm: 0, peso_volumetrico_kg: 0,
+};
+
+// Helpers de sección — extraen las cadenas de `?? ""` fuera del mapper principal.
+
+function partesCliente(d: CotizacionInitialData) {
   return {
     esProspecto: d.es_prospecto,
     clienteId: d.cliente_id ?? "",
@@ -24,6 +31,13 @@ export function buildCotizacionDefaultValues(d?: CotizacionInitialData): Cotizac
     prospectoContacto: d.prospecto_contacto ?? "",
     prospectoEmail: d.prospecto_email ?? "",
     prospectoTelefono: d.prospecto_telefono ?? "",
+  };
+}
+
+function partesMercancia(d: CotizacionInitialData) {
+  const dimsLcl = (d.dimensiones_lcl as DimensionLCL[]) ?? [];
+  const dimsAer = (d.dimensiones_aereas as DimensionAerea[]) ?? [];
+  return {
     modo: d.modo,
     tipo: d.tipo,
     incoterm: d.incoterm,
@@ -33,16 +47,17 @@ export function buildCotizacionDefaultValues(d?: CotizacionInitialData): Cotizac
     tipoEmbarque: (d.tipo_embarque as "FCL" | "LCL") ?? "FCL",
     tipoContenedor: d.tipo_contenedor ?? "",
     tipoPeso: d.tipo_peso ?? "Peso Normal",
-    dimensionesLCL: (d.dimensiones_lcl as DimensionLCL[])?.length
-      ? (d.dimensiones_lcl as DimensionLCL[])
-      : [{ piezas: 0, alto_cm: 0, largo_cm: 0, ancho_cm: 0, volumen_m3: 0 }],
-    dimensionesAereas: (d.dimensiones_aereas as DimensionAerea[])?.length
-      ? (d.dimensiones_aereas as DimensionAerea[])
-      : [{ piezas: 0, alto_cm: 0, largo_cm: 0, ancho_cm: 0, peso_volumetrico_kg: 0 }],
+    dimensionesLCL: dimsLcl.length ? dimsLcl : [DEFAULT_DIM_LCL],
+    dimensionesAereas: dimsAer.length ? dimsAer : [DEFAULT_DIM_AEREA],
     pesoKg: d.peso_kg ?? 0,
     volumenM3: d.volumen_m3 ?? 0,
     piezas: d.piezas ?? 0,
     tipoUnidad: d.tipo_unidad ?? "",
+  };
+}
+
+function partesRuta(d: CotizacionInitialData) {
+  return {
     origen: d.origen ?? "",
     destino: d.destino ?? "",
     tiempoTransitoDias: d.tiempo_transito_dias ?? undefined,
@@ -50,6 +65,11 @@ export function buildCotizacionDefaultValues(d?: CotizacionInitialData): Cotizac
     rutaTexto: d.ruta_texto ?? "",
     validezPropuesta: d.validez_propuesta ? new Date(d.validez_propuesta) : undefined,
     tipoMovimiento: d.tipo_movimiento ?? "",
+  };
+}
+
+function partesExtras(d: CotizacionInitialData) {
+  return {
     seguro: d.seguro ?? false,
     valorSeguroUsd: d.valor_seguro_usd ?? 0,
     diasLibresDestino: d.dias_libres_destino ?? 0,
@@ -57,6 +77,16 @@ export function buildCotizacionDefaultValues(d?: CotizacionInitialData): Cotizac
     cartaGarantia: d.carta_garantia ?? false,
     notas: d.notas ?? "",
     numContenedores: d.num_contenedores ?? 1,
+  };
+}
+
+export function buildCotizacionDefaultValues(d?: CotizacionInitialData): CotizacionFormValues {
+  if (!d) return COTIZACION_FORM_DEFAULTS;
+  return {
+    ...partesCliente(d),
+    ...partesMercancia(d),
+    ...partesRuta(d),
+    ...partesExtras(d),
   };
 }
 

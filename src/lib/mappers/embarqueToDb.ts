@@ -6,8 +6,73 @@ import { resolverContacto } from "@/lib/contacto";
 import type { Tables, TablesInsert } from "@/integrations/supabase/types";
 import type { ConceptoVentaLocal, ConceptoCostoLocal } from "@/types/concepto";
 import type { EmbarqueFormValues } from "./embarqueFromDb";
+import { emptyToNull } from "./_helpers";
 
 type ContactoRow = Pick<Tables<"contactos_cliente">, "id" | "nombre" | "tipo" | "pais">;
+type EmbarqueInsert = Omit<TablesInsert<"embarques">, "expediente">;
+
+function partesBase(v: EmbarqueFormValues, contactos: ContactoRow[], clienteNombre: string) {
+  return {
+    cliente_id: v.clienteId || null!,
+    cliente_nombre: clienteNombre,
+    modo: v.modo as EmbarqueInsert["modo"],
+    tipo: v.tipo as EmbarqueInsert["tipo"],
+    shipper: resolverContacto(contactos, v.shipper, v.shipperManual),
+    consignatario:
+      v.consignatario === "__cliente__"
+        ? clienteNombre
+        : resolverContacto(contactos, v.consignatario, v.consignatarioManual),
+    incoterm: v.incoterm as EmbarqueInsert["incoterm"],
+    descripcion_mercancia: v.descripcionMercancia,
+    peso_kg: Number(v.pesoKg),
+    volumen_m3: Number(v.volumenM3),
+    piezas: Number(v.piezas),
+    tipo_carga: v.tipoCarga,
+    msds_archivo: v.msdsArchivo,
+  };
+}
+
+function partesMaritimo(v: EmbarqueFormValues) {
+  return {
+    puerto_origen: emptyToNull(v.puertoOrigen),
+    puerto_destino: emptyToNull(v.puertoDestino),
+    naviera: emptyToNull(v.naviera),
+    agente: emptyToNull(v.agente),
+    bl_master: emptyToNull(v.blMaster),
+    bl_house: emptyToNull(v.blHouse),
+    tipo_servicio: (emptyToNull(v.tipoServicio) as EmbarqueInsert["tipo_servicio"]) ?? null,
+    contenedor: emptyToNull(v.contenedor),
+    tipo_contenedor: emptyToNull(v.tipoContenedor),
+  };
+}
+
+function partesAereo(v: EmbarqueFormValues) {
+  return {
+    aeropuerto_origen: emptyToNull(v.aeropuertoOrigen),
+    aeropuerto_destino: emptyToNull(v.aeropuertoDestino),
+    aerolinea: emptyToNull(v.aerolinea),
+    mawb: emptyToNull(v.mawb),
+    hawb: emptyToNull(v.hawb),
+  };
+}
+
+function partesTerrestre(v: EmbarqueFormValues) {
+  return {
+    ciudad_origen: emptyToNull(v.ciudadOrigen),
+    ciudad_destino: emptyToNull(v.ciudadDestino),
+    transportista: emptyToNull(v.transportista),
+    carta_porte: emptyToNull(v.cartaPorte),
+  };
+}
+
+function partesFinancieras(v: EmbarqueFormValues) {
+  return {
+    etd: emptyToNull(v.etd),
+    eta: emptyToNull(v.eta),
+    tipo_cambio_usd: Number(v.tipoCambioUSD),
+    tipo_cambio_eur: Number(v.tipoCambioEUR),
+  };
+}
 
 /** Mapea valores del formulario al payload de inserción en BD. */
 export function buildEmbarquePayload(
@@ -15,47 +80,13 @@ export function buildEmbarquePayload(
   contactos: ContactoRow[],
   clienteNombre: string,
   operador: string,
-): Omit<TablesInsert<"embarques">, "expediente"> {
-  const v = values;
+): EmbarqueInsert {
   return {
-    cliente_id: v.clienteId || null!,
-    cliente_nombre: clienteNombre,
-    modo: v.modo as TablesInsert<"embarques">["modo"],
-    tipo: v.tipo as TablesInsert<"embarques">["tipo"],
-    shipper: resolverContacto(contactos, v.shipper, v.shipperManual),
-    consignatario:
-      v.consignatario === "__cliente__"
-        ? clienteNombre
-        : resolverContacto(contactos, v.consignatario, v.consignatarioManual),
-    incoterm: v.incoterm as TablesInsert<"embarques">["incoterm"],
-    descripcion_mercancia: v.descripcionMercancia,
-    peso_kg: Number(v.pesoKg),
-    volumen_m3: Number(v.volumenM3),
-    piezas: Number(v.piezas),
-    puerto_origen: v.puertoOrigen || null,
-    puerto_destino: v.puertoDestino || null,
-    naviera: v.naviera || null,
-    agente: v.agente || null,
-    bl_master: v.blMaster || null,
-    bl_house: v.blHouse || null,
-    tipo_servicio: (v.tipoServicio as TablesInsert<"embarques">["tipo_servicio"]) || null,
-    contenedor: v.contenedor || null,
-    tipo_contenedor: v.tipoContenedor || null,
-    aeropuerto_origen: v.aeropuertoOrigen || null,
-    aeropuerto_destino: v.aeropuertoDestino || null,
-    aerolinea: v.aerolinea || null,
-    mawb: v.mawb || null,
-    hawb: v.hawb || null,
-    ciudad_origen: v.ciudadOrigen || null,
-    ciudad_destino: v.ciudadDestino || null,
-    transportista: v.transportista || null,
-    carta_porte: v.cartaPorte || null,
-    etd: v.etd || null,
-    eta: v.eta || null,
-    tipo_cambio_usd: Number(v.tipoCambioUSD),
-    tipo_cambio_eur: Number(v.tipoCambioEUR),
-    tipo_carga: v.tipoCarga,
-    msds_archivo: v.msdsArchivo,
+    ...partesBase(values, contactos, clienteNombre),
+    ...partesMaritimo(values),
+    ...partesAereo(values),
+    ...partesTerrestre(values),
+    ...partesFinancieras(values),
     operador,
   };
 }

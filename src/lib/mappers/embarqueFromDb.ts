@@ -4,6 +4,7 @@
  */
 
 import type { Tables } from "@/integrations/supabase/types";
+import { str, numStr } from "./_helpers";
 
 type EmbarqueRow = Tables<"embarques">;
 
@@ -60,45 +61,78 @@ export const DEFAULT_EMBARQUE_VALUES: EmbarqueFormValues = {
   etd: "", eta: "", tipoCambioUSD: "17.25", tipoCambioEUR: "18.50",
 };
 
+// Sub-mappers por sección — extraen los `?? ""` fuera del mapper principal
+// para mantener la complejidad ciclomática <15.
+
+function mapDatosGenerales(e: EmbarqueRow) {
+  return {
+    modo: e.modo,
+    tipo: e.tipo,
+    clienteId: e.cliente_id,
+    shipper: e.shipper,
+    shipperManual: "",
+    consignatario: e.consignatario,
+    consignatarioManual: "",
+    incoterm: e.incoterm,
+    descripcionMercancia: e.descripcion_mercancia,
+    pesoKg: String(e.peso_kg),
+    volumenM3: String(e.volumen_m3),
+    piezas: String(e.piezas),
+    tipoCarga: str(e.tipo_carga, "Carga General"),
+    msdsArchivo: e.msds_archivo ?? null,
+    subiendoMsds: false,
+  };
+}
+
+function mapMaritimo(e: EmbarqueRow) {
+  return {
+    puertoOrigen: str(e.puerto_origen),
+    puertoDestino: str(e.puerto_destino),
+    naviera: str(e.naviera),
+    agente: str(e.agente),
+    tipoServicio: str(e.tipo_servicio),
+    contenedor: str(e.contenedor),
+    tipoContenedor: str(e.tipo_contenedor),
+    blMaster: str(e.bl_master),
+    blHouse: str(e.bl_house),
+  };
+}
+
+function mapAereo(e: EmbarqueRow) {
+  return {
+    aeropuertoOrigen: str(e.aeropuerto_origen),
+    aeropuertoDestino: str(e.aeropuerto_destino),
+    aerolinea: str(e.aerolinea),
+    mawb: str(e.mawb),
+    hawb: str(e.hawb),
+  };
+}
+
+function mapTerrestre(e: EmbarqueRow) {
+  return {
+    ciudadOrigen: str(e.ciudad_origen),
+    ciudadDestino: str(e.ciudad_destino),
+    transportista: str(e.transportista),
+    cartaPorte: str(e.carta_porte),
+  };
+}
+
+function mapFechasFinancieras(e: EmbarqueRow) {
+  return {
+    etd: str(e.etd),
+    eta: str(e.eta),
+    tipoCambioUSD: numStr(e.tipo_cambio_usd),
+    tipoCambioEUR: numStr(e.tipo_cambio_eur),
+  };
+}
+
 /** Mapea una fila de la BD al formato del formulario (para edición). */
 export function mapEmbarqueRowToFormValues(embarque: EmbarqueRow): EmbarqueFormValues {
   return {
-    modo: embarque.modo,
-    tipo: embarque.tipo,
-    clienteId: embarque.cliente_id,
-    shipper: embarque.shipper,
-    shipperManual: "",
-    consignatario: embarque.consignatario,
-    consignatarioManual: "",
-    incoterm: embarque.incoterm,
-    descripcionMercancia: embarque.descripcion_mercancia,
-    pesoKg: String(embarque.peso_kg),
-    volumenM3: String(embarque.volumen_m3),
-    piezas: String(embarque.piezas),
-    tipoCarga: embarque.tipo_carga ?? "Carga General",
-    msdsArchivo: embarque.msds_archivo ?? null,
-    subiendoMsds: false,
-    puertoOrigen: embarque.puerto_origen ?? "",
-    puertoDestino: embarque.puerto_destino ?? "",
-    naviera: embarque.naviera ?? "",
-    agente: embarque.agente ?? "",
-    tipoServicio: embarque.tipo_servicio ?? "",
-    contenedor: embarque.contenedor ?? "",
-    tipoContenedor: embarque.tipo_contenedor ?? "",
-    blMaster: embarque.bl_master ?? "",
-    blHouse: embarque.bl_house ?? "",
-    aeropuertoOrigen: embarque.aeropuerto_origen ?? "",
-    aeropuertoDestino: embarque.aeropuerto_destino ?? "",
-    aerolinea: embarque.aerolinea ?? "",
-    mawb: embarque.mawb ?? "",
-    hawb: embarque.hawb ?? "",
-    ciudadOrigen: embarque.ciudad_origen ?? "",
-    ciudadDestino: embarque.ciudad_destino ?? "",
-    transportista: embarque.transportista ?? "",
-    cartaPorte: embarque.carta_porte ?? "",
-    etd: embarque.etd ?? "",
-    eta: embarque.eta ?? "",
-    tipoCambioUSD: String(embarque.tipo_cambio_usd),
-    tipoCambioEUR: String(embarque.tipo_cambio_eur),
+    ...mapDatosGenerales(embarque),
+    ...mapMaritimo(embarque),
+    ...mapAereo(embarque),
+    ...mapTerrestre(embarque),
+    ...mapFechasFinancieras(embarque),
   };
 }
