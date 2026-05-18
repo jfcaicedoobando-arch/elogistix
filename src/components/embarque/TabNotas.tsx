@@ -69,7 +69,7 @@ export function TabNotas({ notas, embarqueId, creadoPor, creadoEn }: Props) {
           </div>
         )}
 
-        {notas.length > 0 ? (
+        {notas.length > 0 || creadoEn ? (
           <div className="space-y-4">
             {notas.map(nota => (
               <div key={nota.id} className="flex gap-3 text-sm">
@@ -87,6 +87,22 @@ export function TabNotas({ notas, embarqueId, creadoPor, creadoEn }: Props) {
                 </div>
               </div>
             ))}
+            {creadoEn && (
+              <div className="flex gap-3 text-sm">
+                <div className="flex flex-col items-center">
+                  <div className="h-2.5 w-2.5 rounded-full mt-1.5 bg-muted-foreground/40" />
+                </div>
+                <div className="pb-4">
+                  <p className="font-medium">Embarque creado</p>
+                  <p className="text-xs text-muted-foreground">
+                    {creadoPor ? (
+                      <><span title={creadoPor}>{nombreDesdeEmail(creadoPor)}</span>{" · "}</>
+                    ) : null}
+                    {formatDate(creadoEn, "dd/MM/yyyy HH:mm")}
+                  </p>
+                </div>
+              </div>
+            )}
           </div>
         ) : (
           <p className="text-sm text-muted-foreground text-center py-8">Sin actividad registrada</p>
