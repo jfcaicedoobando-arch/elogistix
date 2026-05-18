@@ -2,6 +2,14 @@ import type { ChangelogEntry } from "../../../changelogData";
 
 export const chunk0: ChangelogEntry[] = [
   {
+    version: "8.197.0",
+    date: "2026-05-18",
+    type: "patch",
+    title: "Auditoría — P2.10 (hooks compartidos) + cierre Sprint 3",
+    summary: "useToast/useIsMobile re-exportados desde hooks/shared para uniformidad de imports. recentChangelog trimmed a 10 entradas para reducir bundle del chunk lazy.",
+    description: "P2.10 Hooks compartidos: nuevos wrappers `src/hooks/shared/useToast.ts` y `src/hooks/shared/useIsMobile.ts` re-exportan los hooks canónicos shadcn (`@/hooks/use-toast`, `@/hooks/use-mobile`) bajo el barrel `hooks/shared`. Se conservan los módulos raíz por convención shadcn — los nuevos consumidores pueden importarlos desde el barrel sin migrar el resto. Mantenimiento: `recentChangelog` recortado de 11 a 10 entradas (drop 8.186.0 y 8.185.0, que permanecen en chunk0 que es la fuente de verdad) para que pase el test `recentChangelog.length <= 10` y se mantenga pequeño el chunk lazy de Changelog. 369/369 tests verdes. APP_VERSION 8.197.0.",
+  },
+  {
     version: "8.196.0",
     date: "2026-05-18",
     type: "minor",
