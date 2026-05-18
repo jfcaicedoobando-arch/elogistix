@@ -2,7 +2,7 @@
  * Hook: datos + acciones de "Hueco de Facturación".
  * Aísla `useQuery` y la generación de CSV de la capa de UI.
  */
-import { useCallback } from "react";
+import { useCallback, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useOrgFilter } from "@/hooks/shared/useOrgFilter";
 import {
