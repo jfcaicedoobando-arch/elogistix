@@ -44,6 +44,34 @@ function compareBy(a: EmbarqueRow, b: EmbarqueRow, sortKey: string | null, dir: 
   return 0;
 }
 
+interface CountsInput {
+  estadoFilterActivo: boolean;
+  dedupedAll: EmbarqueRow[];
+  containersForView: EmbarqueRow[];
+  sortedAll: EmbarqueRow[];
+  pageSize: number;
+  totalCountServer: number;
+}
+function computeCounts(i: CountsInput) {
+  const sourceForPages = i.estadoFilterActivo ? i.sortedAll.length : i.totalCountServer;
+  return {
+    totalCountServer: i.totalCountServer,
+    expedientesCount: i.estadoFilterActivo ? i.dedupedAll.length : i.totalCountServer,
+    contenedoresCount: i.estadoFilterActivo ? i.containersForView.length : i.totalCountServer,
+    totalPages: Math.max(1, Math.ceil(sourceForPages / i.pageSize)),
+  };
+}
+
+import type { EmbarqueListExtras } from "@/services/embarque/queries";
+function resolveExtras(
+  estadoActivo: boolean,
+  branchB: EmbarqueListExtras | undefined,
+  branchA: EmbarqueListExtras | undefined,
+): EmbarqueListExtras {
+  const empty: EmbarqueListExtras = { liquidacion: {}, docs: {} };
+  return (estadoActivo ? branchB : branchA) ?? empty;
+}
+
 export function useEmbarquesPageState() {
   const { organizationId } = useOrgFilter();
   const {
