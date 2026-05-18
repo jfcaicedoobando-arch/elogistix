@@ -101,14 +101,6 @@ export const recentChangelog: ChangelogEntry[] = [
     summary: "useToast/useIsMobile re-exportados desde hooks/shared para uniformidad. recentChangelog trimmed a 10 entradas (bundle).",
     description: "P2.10 Hooks compartidos: nuevos wrappers `hooks/shared/useToast.ts` y `hooks/shared/useIsMobile.ts` re-exportan los hooks canónicos shadcn (`@/hooks/use-toast`, `@/hooks/use-mobile`) bajo el barrel `hooks/shared`. Se conservan los módulos raíz por convención shadcn — los nuevos consumidores pueden importarlos desde el barrel. Mantenimiento: `recentChangelog` recortado de 11 a 10 entradas para mantener pequeño el chunk lazy (test `<= 10` pasa). 369/369 tests verdes. APP_VERSION 8.197.0.",
   },
-  {
-    version: "8.196.0",
-    date: "2026-05-18",
-    type: "minor",
-    title: "Auditoría — P0.3 (pages) + P1.8 (tests de servicios)",
-    summary: "43 → 41 warnings, 359 → 369 tests. TrackingPublico/Embarques/EmbarqueDetalle partidos en sub-componentes; nuevos hooks useTabsParam y useEmbarqueDetalleData.",
-    description: "P0.3 Pages: TrackingPublico, Embarques y EmbarqueDetalle bajan a 0 warnings de complejidad extrayendo sub-componentes (TrackingPublicoTimeline, EmbarquesHeaderActions, LoadingState/NotFoundState) y hooks (useTabsParam genérico para query param, useEmbarqueDetalleData que centraliza defaults). P1.8 Tests: nuevas suites para navieras mapper (5), embarqueRoundtrip (3) y cotizacionPaso1 (3). 369/369 verdes. APP_VERSION 8.196.0.",
-  },
 ];
 
 /** Deduplica por version conservando la primera ocurrencia (recentChangelog gana). */
