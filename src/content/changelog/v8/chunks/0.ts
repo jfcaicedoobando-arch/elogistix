@@ -2,6 +2,14 @@ import type { ChangelogEntry } from "../../../changelogData";
 
 export const chunk0: ChangelogEntry[] = [
   {
+    version: "8.211.0",
+    date: "2026-05-18",
+    type: "patch",
+    title: "Errores de Supabase — mensaje legible en toasts (RPC y mutaciones)",
+    summary: "Los errores devueltos por Supabase (PostgrestError) ya no se muestran como 'Error desconocido'. Ahora se exhibe el mensaje real (message + details + hint o code) para diagnosticar fallos al avanzar estado, subir documentos u otras operaciones.",
+    description: "getErrorMessage() en src/lib/errors/index.ts ahora detecta objetos tipo PostgrestError (que no heredan de Error) y compone el mensaje con message, details y hint, o el code si no hay texto. Esto soluciona los toasts opacos del estilo 'Error al cambiar estado — Error desconocido' que aparecían cuando avanzar_estado_embarque o cualquier RPC fallaba. No cambia ninguna lógica de negocio. APP_VERSION 8.211.0.",
+  },
+  {
     version: "8.210.0",
     date: "2026-05-18",
     type: "patch",
