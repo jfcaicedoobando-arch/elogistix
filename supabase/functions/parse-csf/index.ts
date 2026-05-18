@@ -119,59 +119,7 @@ serve(async (req) => {
     const arrayBuffer = await file!.arrayBuffer();
     const base64 = btoa(String.fromCharCode(...new Uint8Array(arrayBuffer)));
 
-    const systemPrompt = `Eres un extractor de datos fiscales mexicanos. Se te proporcionará una Constancia de Situación Fiscal (CSF) del SAT en formato PDF.
-
-Extrae los siguientes campos y devuélvelos en el tool call:
-- nombre: Denominación o Razón Social del contribuyente
-- rfc: RFC del contribuyente (13 caracteres para personas morales, 12 para físicas)
-- cp: Código Postal del domicilio fiscal
-- direccion: Dirección completa (concatena: Tipo Vialidad + Nombre Vialidad + Número Exterior + Número Interior + Colonia)
-- ciudad: Nombre del Municipio o Demarcación Territorial
-- estado: Nombre de la Entidad Federativa
-
-Si no encuentras un campo, devuelve cadena vacía. No inventes datos.`;
-
-    const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${LOVABLE_API_KEY}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: "google/gemini-2.5-flash",
-        messages: [
-          { role: "system", content: systemPrompt },
-          {
-            role: "user",
-            content: [
-              { type: "file", file: { filename: file.name, file_data: `data:application/pdf;base64,${base64}` } },
-              { type: "text", text: "Extrae los datos fiscales de esta Constancia de Situación Fiscal." },
-            ],
-          },
-        ],
-        tools: [{
-          type: "function",
-          function: {
-            name: "extraer_datos_csf",
-            description: "Retorna los datos fiscales extraídos de la CSF",
-            parameters: {
-              type: "object",
-              properties: {
-                nombre: { type: "string", description: "Denominación o Razón Social" },
-                rfc: { type: "string", description: "RFC del contribuyente" },
-                cp: { type: "string", description: "Código Postal" },
-                direccion: { type: "string", description: "Dirección completa" },
-                ciudad: { type: "string", description: "Municipio o Demarcación" },
-                estado: { type: "string", description: "Entidad Federativa" },
-              },
-              required: ["nombre", "rfc", "cp", "direccion", "ciudad", "estado"],
-              additionalProperties: false,
-            },
-          },
-        }],
-        tool_choice: { type: "function", function: { name: "extraer_datos_csf" } },
-      }),
-    });
+    const response = await callAiGateway(LOVABLE_API_KEY, file!.name, base64);
 
     if (!response.ok) {
       const detail = await response.text().catch(() => "");
