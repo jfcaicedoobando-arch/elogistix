@@ -93,14 +93,6 @@ export const recentChangelog: ChangelogEntry[] = [
     summary: "Nuevo botón 'Layout contable' en Pre-Facturación → Facturas que descarga un CSV con RFC del cliente, subtotal, IVA, total, moneda, tipo de cambio y campos pre-CFDI 4.0 (uso CFDI, forma/método de pago).",
     description: "Se agrega src/generators/layoutContable.ts que toma las facturas filtradas, consulta en una sola llamada los campos completos (subtotal, iva, tipo_cambio, referencia_bl) y los RFC de los clientes, y descarga un CSV con encabezados pensados para que el contador timbre con su PAC o lo importe a su sistema contable: Folio, Fecha emisión, Periodo (YYYY-MM), Tipo comprobante (I), RFC receptor, Razón social, Subtotal, IVA, Total, Moneda, Tipo de cambio, Forma de pago, Método de pago (PUE), Uso CFDI (G03), Expediente, Referencia BL, Estado. No timbra ni genera XML CFDI 4.0 (requiere PAC externo). Integrado en useFacturacionPageController + Facturacion.tsx (tab Facturas) con registro en bitácora (accion=exportar). APP_VERSION 8.190.0.",
   },
-  {
-    version: "8.189.0",
-    date: "2026-05-17",
-    type: "minor",
-    title: "Bloque 3.3 — Notificaciones al cliente en el portal",
-    summary: "El portal del cliente ahora tiene campanita con contador de no leídas; cada cambio de estado de un embarque del cliente genera automáticamente una notificación.",
-    description: "Nueva tabla public.notificaciones_cliente con RLS que sólo deja al cliente leer/marcar las suyas y al staff de la organización crearlas y verlas. Trigger trg_notif_cli_embarque_estado en public.embarques inserta automáticamente una notificación cuando cambia el campo estado, con título legible, mensaje 'antes → después' y URL de portal al detalle. RPCs notificacion_cliente_marcar_leida(p_id) y notificaciones_cliente_marcar_todas_leidas() (SECURITY DEFINER + REVOKE PUBLIC) marcan como leídas sólo registros del propio cliente. Nuevo hook src/hooks/portal/useNotificacionesCliente.ts (react-query, refetchInterval 60s, staleTime 30s) + componente PortalNotificationsBell con badge rojo de no leídas, dropdown de 50 últimas, marcar todas y navegación al recurso. Montado en PortalHeader entre ThemeToggle y el menú de usuario. APP_VERSION 8.189.0.",
-  },
 ];
 
 /** Deduplica por version conservando la primera ocurrencia (recentChangelog gana). */
