@@ -22,6 +22,14 @@ export interface ChangelogEntry {
  */
 export const recentChangelog: ChangelogEntry[] = [
   {
+    version: "8.202.0",
+    date: "2026-05-18",
+    type: "patch",
+    title: "Auditoría — P2.12 lote 6 (jsoncargo-track, invite-client-user, TrackingWarnings, proformaPdf)",
+    summary: "21 → 14 warnings ESLint. jsoncargo-track, invite-client-user, deriveEventsFromContainer, TrackingWarnings, CotizacionDatosGeneralesCard, buildHeaderHtml y VirtualDataTable refactorizados.",
+    description: "Refactors puros sin cambios funcionales ni de BD. jsoncargo-track extrae helpers a _shared/jsoncargoSync.ts (loadEmbarque, persistPrefixMismatch, syncEventos, upsertTrackingExterno, buildSummary) y runSync interno. invite-client-user (26→0) extrae parseBody, verifyClienteOrg, resolveUserId, ensureClienteRole. _shared/jsoncargo.ts deriveEventsFromContainer (22→0) dividido en buildZarpe/Movimiento/AduanaEvent. TrackingWarnings.tsx (23→0) extrae 4 sub-componentes de alerta. CotizacionDatosGeneralesCard.tsx (24→0) usa array declarativo de filas. proformaPdf buildHeaderHtml (21→0) extrae sub-secciones. VirtualDataTable extrae VirtualRow, VirtualHeaderRow, SkeletonRows, EmptyState. BulkImportDialog extrae hook useBulkImport. APP_VERSION 8.202.0.",
+  },
+  {
     version: "8.201.0",
     date: "2026-05-18",
     type: "patch",
@@ -84,14 +92,6 @@ export const recentChangelog: ChangelogEntry[] = [
     title: "Sprint A.5 — Export ZIP por organización",
     summary: "Nueva pestaña 'Exportar' en Configuración que descarga un ZIP con CSVs de las 18 tablas operativas de la organización, con barra de progreso y procesamiento 100% en el navegador.",
     description: "Se agregan jszip y file-saver. src/utils/orgExportZip.ts pagina cada tabla en bloques de 1000 filas (límite Supabase), serializa a CSV (RFC 4180 simplificado, escape de comillas y newlines), incluye manifest.json y comprime con DEFLATE nivel 6. Nueva pestaña /configuracion → Exportar (TabExportar) con botón 'Descargar ZIP', barra de progreso (Progress de shadcn) que muestra tabla actual y filas acumuladas, y toast de éxito/error. Tablas incluidas: clientes, proveedores, contactos, embarques, conceptos costo/venta, documentos, eventos, notas, cotizaciones y costos, facturas y conceptos, proformas, bitácora, configuración, notificaciones cliente. RLS garantiza aislamiento por organización + filtro explícito eq('organization_id'). APP_VERSION 8.192.0.",
-  },
-  {
-    version: "8.191.0",
-    date: "2026-05-17",
-    type: "minor",
-    title: "Sprint A — Hardening pre go-live (A.1, A.2, A.3, A.4)",
-    summary: "Cierre de 20 warnings críticos del linter (anon ejecución de RPCs), HIBP activado, signups deshabilitados, nueva página /ayuda con glosario y FAQ, checklist de simulacro de restore.",
-    description: "A.1 Linter: REVOKE EXECUTE FROM PUBLIC en 23 funciones SECURITY DEFINER (anon ya no puede invocarlas); GRANT a authenticated sólo en RPCs legítimos; revocación total en triggers (congelar_factura_al_emitir, notif_cli_on_embarque_estado, sync_*). Pasamos de 71 a 51 warnings; los restantes son advisory para 'authenticated SECURITY DEFINER' necesarios para bypassear RLS (has_role, RPCs transaccionales). A.2 Auth: configure_auth con password_hibp_enabled=true, disable_signup=true, external_anonymous_users_enabled=false, auto_confirm_email=false. A.3 Backups: docs/backups-rollback.md extendido con checklist de simulacro (5 pasos: preparación, restore, validación, métricas RTO/RPO, limpieza) + plan de comunicación incidente. A.4 Ayuda: nueva ruta /ayuda + sidebar item con HelpCircle. src/content/ayudaContent.ts (16 términos glosario + 18 FAQs en 4 módulos: embarques, facturación, clientes, operación diaria). Búsqueda en vivo, tabs Glosario/FAQ, accordions. A.5 (export ZIP org) diferido a próxima iteración por dependencia jszip. APP_VERSION 8.191.0.",
   },
 ];
 

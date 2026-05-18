@@ -23,49 +23,55 @@ interface Cotizacion {
   valor_seguro_usd?: number | string | null;
 }
 
+interface Row {
+  label: string;
+  value: string;
+  title?: string;
+  colSpan2?: boolean;
+}
+
+function buildRows(c: Cotizacion): Row[] {
+  const esMaritimo = c.modo === "Marítimo";
+  const isFCL = esMaritimo && c.tipo_embarque === "FCL";
+  const isLCL = esMaritimo && c.tipo_embarque === "LCL";
+  const rows: (Row | null)[] = [
+    { label: "Modo", value: c.modo, title: c.modo },
+    { label: "Tipo", value: c.tipo, title: c.tipo },
+    { label: "Incoterm", value: c.incoterm, title: c.incoterm },
+    { label: "Origen", value: c.origen || "-", title: c.origen || "" },
+    { label: "Destino", value: c.destino || "-", title: c.destino || "" },
+    { label: "Vigencia", value: `${c.vigencia_dias} días (${c.fecha_vigencia ? formatDate(c.fecha_vigencia) : "-"})` },
+    { label: "Operador", value: c.operador ? nombreDesdeEmail(c.operador) : "-", title: c.operador || "" },
+    c.tiempo_transito_dias != null ? { label: "Tiempo de tránsito", value: `${c.tiempo_transito_dias} días` } : null,
+    isFCL && c.dias_libres_destino > 0 ? { label: "Días libres en destino", value: `${c.dias_libres_destino} días` } : null,
+    isFCL ? { label: "Carta garantía", value: c.carta_garantia ? "Sí" : "No" } : null,
+    isLCL && c.dias_almacenaje > 0 ? { label: "Días libres de almacenaje", value: `${c.dias_almacenaje} días` } : null,
+    c.frecuencia ? { label: "Frecuencia", value: c.frecuencia } : null,
+    c.ruta_texto ? { label: "Ruta", value: c.ruta_texto, title: c.ruta_texto, colSpan2: true } : null,
+    c.validez_propuesta ? { label: "Validez propuesta", value: formatDate(c.validez_propuesta) } : null,
+    c.tipo_movimiento ? { label: "Tipo de movimiento", value: c.tipo_movimiento } : null,
+    { label: "Seguro", value: c.seguro ? `Sí — ${formatCurrency(Number(c.valor_seguro_usd || 0), "USD")}` : "No" },
+  ];
+  return rows.filter((r): r is Row => r !== null);
+}
+
 interface Props {
   cotizacion: Cotizacion;
 }
 
 export function CotizacionDatosGeneralesCard({ cotizacion }: Props) {
-  const esMaritimo = cotizacion.modo === "Marítimo";
+  const rows = buildRows(cotizacion);
   return (
     <Card>
       <CardHeader><CardTitle className="text-lg">Datos Generales</CardTitle></CardHeader>
       <CardContent>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm [&>div]:min-w-0 [&>div>p]:truncate">
-          <div><span className="text-muted-foreground">Modo</span><p className="font-medium" title={cotizacion.modo}>{cotizacion.modo}</p></div>
-          <div><span className="text-muted-foreground">Tipo</span><p className="font-medium" title={cotizacion.tipo}>{cotizacion.tipo}</p></div>
-          <div><span className="text-muted-foreground">Incoterm</span><p className="font-medium" title={cotizacion.incoterm}>{cotizacion.incoterm}</p></div>
-          <div><span className="text-muted-foreground">Origen</span><p className="font-medium" title={cotizacion.origen || ''}>{cotizacion.origen || '-'}</p></div>
-          <div><span className="text-muted-foreground">Destino</span><p className="font-medium" title={cotizacion.destino || ''}>{cotizacion.destino || '-'}</p></div>
-          <div><span className="text-muted-foreground">Vigencia</span><p className="font-medium">{cotizacion.vigencia_dias} días ({cotizacion.fecha_vigencia ? formatDate(cotizacion.fecha_vigencia) : '-'})</p></div>
-          <div><span className="text-muted-foreground">Operador</span><p className="font-medium" title={cotizacion.operador || ''}>{cotizacion.operador ? nombreDesdeEmail(cotizacion.operador) : '-'}</p></div>
-          {cotizacion.tiempo_transito_dias != null && (
-            <div><span className="text-muted-foreground">Tiempo de tránsito</span><p className="font-medium">{cotizacion.tiempo_transito_dias} días</p></div>
-          )}
-          {esMaritimo && cotizacion.tipo_embarque === 'FCL' && cotizacion.dias_libres_destino > 0 && (
-            <div><span className="text-muted-foreground">Días libres en destino</span><p className="font-medium">{cotizacion.dias_libres_destino} días</p></div>
-          )}
-          {esMaritimo && cotizacion.tipo_embarque === 'FCL' && (
-            <div><span className="text-muted-foreground">Carta garantía</span><p className="font-medium">{cotizacion.carta_garantia ? 'Sí' : 'No'}</p></div>
-          )}
-          {esMaritimo && cotizacion.tipo_embarque === 'LCL' && cotizacion.dias_almacenaje > 0 && (
-            <div><span className="text-muted-foreground">Días libres de almacenaje</span><p className="font-medium">{cotizacion.dias_almacenaje} días</p></div>
-          )}
-          {cotizacion.frecuencia && (
-            <div><span className="text-muted-foreground">Frecuencia</span><p className="font-medium">{cotizacion.frecuencia}</p></div>
-          )}
-          {cotizacion.ruta_texto && (
-            <div className="col-span-2"><span className="text-muted-foreground">Ruta</span><p className="font-medium" title={cotizacion.ruta_texto}>{cotizacion.ruta_texto}</p></div>
-          )}
-          {cotizacion.validez_propuesta && (
-            <div><span className="text-muted-foreground">Validez propuesta</span><p className="font-medium">{formatDate(cotizacion.validez_propuesta)}</p></div>
-          )}
-          {cotizacion.tipo_movimiento && (
-            <div><span className="text-muted-foreground">Tipo de movimiento</span><p className="font-medium">{cotizacion.tipo_movimiento}</p></div>
-          )}
-          <div><span className="text-muted-foreground">Seguro</span><p className="font-medium">{cotizacion.seguro ? `Sí — ${formatCurrency(Number(cotizacion.valor_seguro_usd || 0), 'USD')}` : 'No'}</p></div>
+          {rows.map((r) => (
+            <div key={r.label} className={r.colSpan2 ? "col-span-2" : undefined}>
+              <span className="text-muted-foreground">{r.label}</span>
+              <p className="font-medium" title={r.title}>{r.value}</p>
+            </div>
+          ))}
         </div>
       </CardContent>
     </Card>

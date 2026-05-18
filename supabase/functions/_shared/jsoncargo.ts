@@ -257,39 +257,53 @@ export interface ComputedEvent {
  * Deriva los eventos clave de tracking desde la respuesta JSONCargo.
  * Evita generar eventos sin fecha.
  */
-export function deriveEventsFromContainer(data: JsonCargoContainerData): ComputedEvent[] {
-  const out: ComputedEvent[] = [];
-  const zarpe = parseJsonCargoDate(data.atd_origin);
-  if (zarpe) {
-    out.push({
-      tipo: "Zarpe",
-      descripcion: `Zarpe desde ${data.shipped_from || data.loading_port || "origen"}${data.last_vessel_name ? ` en ${data.last_vessel_name} ${data.last_voyage_number ?? ""}`.trim() : ""}`,
-      ubicacion: data.shipped_from || data.loading_port || "",
-      fecha: zarpe,
-    });
-  }
+function buildZarpeEvent(data: JsonCargoContainerData): ComputedEvent | null {
+  const fecha = parseJsonCargoDate(data.atd_origin);
+  if (!fecha) return null;
+  const origen = data.shipped_from || data.loading_port || "origen";
+  const vessel = data.last_vessel_name
+    ? ` en ${data.last_vessel_name} ${data.last_voyage_number ?? ""}`.trim()
+    : "";
+  return {
+    tipo: "Zarpe",
+    descripcion: `Zarpe desde ${origen}${vessel}`,
+    ubicacion: data.shipped_from || data.loading_port || "",
+    fecha,
+  };
+}
 
-  const ultimaUbic = parseJsonCargoDate(data.timestamp_of_last_location);
+function buildMovimientoEvent(data: JsonCargoContainerData): ComputedEvent | null {
+  const fecha = parseJsonCargoDate(data.timestamp_of_last_location);
   const lastLoc = data.last_location || "";
-  const isAtDestination = lastLoc && data.discharging_port && lastLoc.toLowerCase().includes(data.discharging_port.toLowerCase());
-  if (ultimaUbic && lastLoc) {
-    out.push({
-      tipo: isAtDestination ? "Arribo a Puerto" : "Transbordo",
-      descripcion: `${isAtDestination ? "Arribo" : "Movimiento"} en ${lastLoc}${data.current_vessel_name ? ` (${data.current_vessel_name})` : ""}. Estado: ${data.container_status || "—"}`,
-      ubicacion: lastLoc,
-      fecha: ultimaUbic,
-    });
-  }
+  if (!fecha || !lastLoc) return null;
+  const isAtDestination = !!data.discharging_port && lastLoc.toLowerCase().includes(data.discharging_port.toLowerCase());
+  const vessel = data.current_vessel_name ? ` (${data.current_vessel_name})` : "";
+  const verbo = isAtDestination ? "Arribo" : "Movimiento";
+  return {
+    tipo: isAtDestination ? "Arribo a Puerto" : "Transbordo",
+    descripcion: `${verbo} en ${lastLoc}${vessel}. Estado: ${data.container_status || "—"}`,
+    ubicacion: lastLoc,
+    fecha,
+  };
+}
 
-  const aduana = parseJsonCargoDate(data.customs_clearance);
-  if (aduana) {
-    out.push({
-      tipo: "Despacho Aduanal",
-      descripcion: `Despacho aduanal completado en ${data.discharging_port || data.last_location || "destino"}`,
-      ubicacion: data.discharging_port || data.last_location || "",
-      fecha: aduana,
-    });
-  }
+function buildAduanaEvent(data: JsonCargoContainerData): ComputedEvent | null {
+  const fecha = parseJsonCargoDate(data.customs_clearance);
+  if (!fecha) return null;
+  const lugar = data.discharging_port || data.last_location || "destino";
+  return {
+    tipo: "Despacho Aduanal",
+    descripcion: `Despacho aduanal completado en ${lugar}`,
+    ubicacion: data.discharging_port || data.last_location || "",
+    fecha,
+  };
+}
 
-  return out;
+/**
+ * Deriva los eventos clave de tracking desde la respuesta JSONCargo.
+ * Evita generar eventos sin fecha.
+ */
+export function deriveEventsFromContainer(data: JsonCargoContainerData): ComputedEvent[] {
+  return [buildZarpeEvent(data), buildMovimientoEvent(data), buildAduanaEvent(data)]
+    .filter((e): e is ComputedEvent => e !== null);
 }

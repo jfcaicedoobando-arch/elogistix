@@ -16,16 +16,25 @@
 import { useRef } from "react";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { cn } from "@/lib/utils";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Inbox } from "lucide-react";
 import PaginationControls from "@/components/shared/PaginationControls";
+import { VirtualRow } from "@/components/shared/VirtualRow";
+import { VirtualHeaderRow, SkeletonRows, EmptyState } from "@/components/shared/VirtualTableParts";
 import {
-  ALIGN_CLASS,
   DENSITY_CELL,
   type DataTableColumn,
   type DataTablePagination,
   type TableDensity,
 } from "@/components/shared/dataTable/types";
+
+function buildGridTemplate<T>(columns: DataTableColumn<T>[]): string {
+  return columns.map((c) => c.width ?? "minmax(0,1fr)").join(" ");
+}
+
+function pickMeasureElement(estimateRowHeight: number): ((el: HTMLElement) => number) | undefined {
+  if (typeof window === "undefined") return undefined;
+  if (navigator.userAgent.indexOf("Firefox") !== -1) return undefined;
+  return (el) => el?.getBoundingClientRect().height ?? estimateRowHeight;
+}
 
 interface VirtualDataTableProps<T> {
   columns: DataTableColumn<T>[];
@@ -69,24 +78,14 @@ export function VirtualDataTable<T>({
 }: VirtualDataTableProps<T>) {
   const parentRef = useRef<HTMLDivElement | null>(null);
   const cellPad = DENSITY_CELL[density];
-
-  // Layout en grid con anchos fijos cuando se proveen; columnas sin width
-  // toman 1fr.
-  const gridTemplate = columns
-    .map((c) => (c.width ? c.width : "minmax(0,1fr)"))
-    .join(" ");
-
+  const gridTemplate = buildGridTemplate(columns);
   const virtualizer = useVirtualizer({
     count: data.length,
     getScrollElement: () => parentRef.current,
     estimateSize: () => estimateRowHeight,
     overscan,
-    measureElement:
-      typeof window !== "undefined" && navigator.userAgent.indexOf("Firefox") === -1
-        ? (el) => el?.getBoundingClientRect().height ?? estimateRowHeight
-        : undefined,
+    measureElement: pickMeasureElement(estimateRowHeight),
   });
-
   const items = virtualizer.getVirtualItems();
 
   return (
@@ -96,53 +95,11 @@ export function VirtualDataTable<T>({
         className="relative w-full overflow-auto rounded-md border [scrollbar-width:thin]"
         style={{ maxHeight }}
       >
-        {/* Header sticky */}
-        <div
-          className="sticky top-0 z-10 grid bg-muted/60 backdrop-blur-sm text-xs font-medium text-muted-foreground border-b"
-          style={{ gridTemplateColumns: gridTemplate }}
-          role="row"
-        >
-          {columns.map((c) => (
-            <div
-              key={c.key}
-              className={cn(
-                "px-3 py-2 truncate",
-                ALIGN_CLASS[c.align ?? "left"],
-                c.headerClassName,
-              )}
-              role="columnheader"
-            >
-              {c.header}
-            </div>
-          ))}
-        </div>
-
-        {/* Loading state */}
+        <VirtualHeaderRow columns={columns} gridTemplate={gridTemplate} />
         {isLoading && (
-          <div>
-            {Array.from({ length: skeletonRows }).map((_, i) => (
-              <div
-                key={`sk-${i}`}
-                className="grid border-b"
-                style={{ gridTemplateColumns: gridTemplate }}
-              >
-                {columns.map((c) => (
-                  <div key={c.key} className={cn("px-3", cellPad)}>
-                    <Skeleton className="h-4 w-full" />
-                  </div>
-                ))}
-              </div>
-            ))}
-          </div>
+          <SkeletonRows count={skeletonRows} columns={columns} gridTemplate={gridTemplate} cellPad={cellPad} />
         )}
-
-        {/* Empty state */}
-        {!isLoading && data.length === 0 && (
-          <div className="flex flex-col items-center justify-center gap-2 py-10 text-sm text-muted-foreground">
-            <Inbox className="h-8 w-8 opacity-40" strokeWidth={1.5} />
-            <span>{emptyMessage}</span>
-          </div>
-        )}
+        {!isLoading && data.length === 0 && <EmptyState message={emptyMessage} />}
 
         {/* Filas virtualizadas */}
         {!isLoading && data.length > 0 && (
@@ -153,50 +110,22 @@ export function VirtualDataTable<T>({
               position: "relative",
             }}
           >
-            {items.map((vi) => {
-              const item = data[vi.index];
-              const key = rowKey(item);
-              const zebra = striped && vi.index % 2 === 1 ? "bg-muted/30" : "";
-              return (
-                <div
-                  key={key}
-                  ref={virtualizer.measureElement}
-                  data-index={vi.index}
-                  role="row"
-                  className={cn(
-                    "grid border-b last:border-b-0",
-                    zebra,
-                    hoverable && "hover:bg-accent/40",
-                    onRowClick && "cursor-pointer",
-                    rowClassName?.(item),
-                  )}
-                  style={{
-                    position: "absolute",
-                    top: 0,
-                    left: 0,
-                    width: "100%",
-                    transform: `translateY(${vi.start}px)`,
-                    gridTemplateColumns: gridTemplate,
-                  }}
-                  onClick={onRowClick ? () => onRowClick(item) : undefined}
-                >
-                  {columns.map((c) => (
-                    <div
-                      key={c.key}
-                      className={cn(
-                        "px-3 min-w-0",
-                        cellPad,
-                        ALIGN_CLASS[c.align ?? "left"],
-                        c.className,
-                      )}
-                      role="cell"
-                    >
-                      {c.render(item)}
-                    </div>
-                  ))}
-                </div>
-              );
-            })}
+            {items.map((vi) => (
+              <VirtualRow
+                key={rowKey(data[vi.index])}
+                item={data[vi.index]}
+                index={vi.index}
+                start={vi.start}
+                columns={columns}
+                cellPad={cellPad}
+                gridTemplate={gridTemplate}
+                striped={striped}
+                hoverable={hoverable}
+                onRowClick={onRowClick}
+                rowClassName={rowClassName}
+                measureRef={virtualizer.measureElement}
+              />
+            ))}
           </div>
         )}
       </div>

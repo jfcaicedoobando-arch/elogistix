@@ -13,8 +13,8 @@
  * El diálogo es agnóstico de la entidad: clientes y proveedores lo consumen
  * pasando su mapper y su acción de inserción.
  */
-import { useRef, useState } from "react";
 import { Download, Upload, Loader2, FileWarning, CheckCircle2 } from "lucide-react";
+import { useBulkImport } from "@/components/shared/useBulkImport";
 import {
   Dialog,
   DialogContent,
@@ -27,7 +27,7 @@ import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { dialogSize, scrollableDialog } from "@/lib/ui/dialogTokens";
 import { cn } from "@/lib/utils";
-import { parseCsv, toCsv } from "@/lib/csv/parseCsv";
+import { toCsv } from "@/lib/csv/parseCsv";
 import type { ImportPreview, ImportRowError } from "@/lib/csv/importSchemas";
 
 export interface BulkImportDialogProps<T> {
@@ -44,7 +44,19 @@ export interface BulkImportDialogProps<T> {
   onSuccess?: (insertedCount: number) => void;
 }
 
-type Step = "upload" | "preview" | "committing" | "done";
+function downloadCsvTemplate(headers: readonly string[], exampleRow: string[] | undefined, fileName: string): void {
+  const rows = exampleRow ? [exampleRow] : [];
+  const csv = toCsv([...headers], rows);
+  const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = fileName;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
 
 export function BulkImportDialog<T>({
   open,
@@ -58,21 +70,10 @@ export function BulkImportDialog<T>({
   onCommit,
   onSuccess,
 }: BulkImportDialogProps<T>) {
-  const [step, setStep] = useState<Step>("upload");
-  const [fileName, setFileName] = useState<string | null>(null);
-  const [preview, setPreview] = useState<ImportPreview<T> | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [insertedCount, setInsertedCount] = useState(0);
-  const inputRef = useRef<HTMLInputElement>(null);
-
-  const reset = (): void => {
-    setStep("upload");
-    setFileName(null);
-    setPreview(null);
-    setError(null);
-    setInsertedCount(0);
-    if (inputRef.current) inputRef.current.value = "";
-  };
+  const {
+    step, fileName, preview, error, insertedCount, inputRef,
+    reset, handleFile, handleCommit,
+  } = useBulkImport<T>({ mapRows, onCommit, onSuccess });
 
   const handleOpenChange = (next: boolean): void => {
     if (!next) reset();
@@ -80,52 +81,7 @@ export function BulkImportDialog<T>({
   };
 
   const downloadTemplate = (): void => {
-    const headers = [...templateHeaders];
-    const rows = templateExampleRow ? [templateExampleRow] : [];
-    const csv = toCsv(headers, rows);
-    const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = templateFileName;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-  };
-
-  const handleFile = async (file: File): Promise<void> => {
-    setError(null);
-    setFileName(file.name);
-    try {
-      const text = await file.text();
-      const parsed = parseCsv(text);
-      if (parsed.rows.length === 0) {
-        setError("El archivo no contiene filas de datos.");
-        return;
-      }
-      const result = mapRows(parsed.rows);
-      setPreview(result);
-      setStep("preview");
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "No se pudo leer el archivo.");
-    }
-  };
-
-  const handleCommit = async (): Promise<void> => {
-    if (!preview || preview.valid.length === 0) return;
-    setStep("committing");
-    setError(null);
-    try {
-      const payloads = preview.valid.map((v) => v.payload);
-      await onCommit(payloads);
-      setInsertedCount(payloads.length);
-      setStep("done");
-      onSuccess?.(payloads.length);
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "Error al importar.");
-      setStep("preview");
-    }
+    downloadCsvTemplate(templateHeaders, templateExampleRow, templateFileName);
   };
 
   return (

@@ -1,9 +1,68 @@
 // @ts-expect-error Deno remote import
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.98.0";
+import { createClient, SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2.98.0";
 import { handlePreflightStrict, buildCors } from "../_shared/cors.ts";
 import { jsonResponse, errorResponse } from "../_shared/response.ts";
 import { authenticate, checkAdminAccess } from "../_shared/auth.ts";
 import { createLogger } from "../_shared/logger.ts";
+
+interface InviteBody { email: string; cliente_id: string; organization_id: string; }
+
+function parseBody(raw: unknown): InviteBody | null {
+  if (!raw || typeof raw !== "object") return null;
+  const r = raw as Record<string, unknown>;
+  if (typeof r.email !== "string" || typeof r.cliente_id !== "string" || typeof r.organization_id !== "string") {
+    return null;
+  }
+  return { email: r.email, cliente_id: r.cliente_id, organization_id: r.organization_id };
+}
+
+async function verifyClienteOrg(adminClient: SupabaseClient, cliente_id: string, organization_id: string) {
+  const { data: cliente, error } = await adminClient
+    .from("clientes")
+    .select("id, organization_id")
+    .eq("id", cliente_id)
+    .maybeSingle();
+  return !error && cliente && cliente.organization_id === organization_id;
+}
+
+async function findExistingUser(adminClient: SupabaseClient, email: string) {
+  const { data } = await adminClient.auth.admin.listUsers();
+  return data?.users?.find(
+    (u: { email?: string | null }) => u.email?.toLowerCase() === email.toLowerCase(),
+  );
+}
+
+async function resolveUserId(
+  adminClient: SupabaseClient,
+  email: string,
+  redirectTo: string,
+): Promise<{ userId: string; isNew: boolean } | { error: string }> {
+  const existing = await findExistingUser(adminClient, email);
+  if (existing) {
+    await adminClient.auth.admin.generateLink({ type: "magiclink", email, options: { redirectTo } });
+    const anon = createClient(
+      // @ts-expect-error Deno global
+      Deno.env.get("SUPABASE_URL")!,
+      // @ts-expect-error Deno global
+      Deno.env.get("SUPABASE_ANON_KEY")!,
+    );
+    await anon.auth.resetPasswordForEmail(email, { redirectTo });
+    return { userId: existing.id, isNew: false };
+  }
+  const { data, error } = await adminClient.auth.admin.inviteUserByEmail(email, {
+    redirectTo,
+    data: { role: "cliente" },
+  });
+  if (error || !data.user) return { error: error?.message ?? "Error desconocido al invitar" };
+  return { userId: data.user.id, isNew: true };
+}
+
+async function ensureClienteRole(adminClient: SupabaseClient, userId: string) {
+  const { data } = await adminClient.from("user_roles").select("id").eq("user_id", userId).maybeSingle();
+  if (!data) {
+    await adminClient.from("user_roles").insert({ user_id: userId, role: "cliente" });
+  }
+}
 
 Deno.serve(async (req) => {
   const preflight = handlePreflightStrict(req);
@@ -12,146 +71,60 @@ Deno.serve(async (req) => {
   const log = createLogger(req, "invite-client-user");
 
   try {
-    // Validate JWT and admin access
     const { userId, adminClient } = await authenticate(req);
-    const { isGlobalAdmin, orgId: callerOrgId } = await checkAdminAccess(
-      adminClient,
-      userId,
-    );
+    const { isGlobalAdmin, orgId: callerOrgId } = await checkAdminAccess(adminClient, userId);
     if (!isGlobalAdmin && !callerOrgId) {
       log.finish(403, "not_admin", { user_id: userId });
       return errorResponse("Solo administradores", 403, cors);
     }
 
-    const { email, cliente_id, organization_id } = await req.json();
-    if (!email || !cliente_id || !organization_id) {
+    const body = parseBody(await req.json().catch(() => null));
+    if (!body) {
       log.finish(400, "missing_fields", { user_id: userId });
-      return errorResponse(
-        "Faltan campos requeridos: email, cliente_id, organization_id",
-        400,
-        cors,
-      );
+      return errorResponse("Faltan campos requeridos: email, cliente_id, organization_id", 400, cors);
     }
+    const { email, cliente_id, organization_id } = body;
 
-    // Org admins can only invite for their own org
     if (!isGlobalAdmin && callerOrgId !== organization_id) {
       log.finish(403, "cross_org_invite_blocked", {
-        user_id: userId,
-        organization_id: callerOrgId,
-        payload: { target_org: organization_id },
+        user_id: userId, organization_id: callerOrgId, payload: { target_org: organization_id },
       });
-      return errorResponse(
-        "No autorizado para invitar usuarios a esa organización",
-        403,
-        cors,
-      );
+      return errorResponse("No autorizado para invitar usuarios a esa organización", 403, cors);
     }
 
-    // Verify cliente_id belongs to the target organization
-    const { data: cliente, error: clienteErr } = await adminClient
-      .from("clientes")
-      .select("id, organization_id")
-      .eq("id", cliente_id)
-      .maybeSingle();
-    if (clienteErr || !cliente || cliente.organization_id !== organization_id) {
-      log.finish(400, "invalid_cliente", {
-        user_id: userId,
-        organization_id,
-        payload: { cliente_id },
-      });
+    const valido = await verifyClienteOrg(adminClient, cliente_id, organization_id);
+    if (!valido) {
+      log.finish(400, "invalid_cliente", { user_id: userId, organization_id, payload: { cliente_id } });
       return errorResponse("Cliente inválido para esa organización", 400, cors);
     }
 
-    const supabaseAdmin = adminClient;
-
-    const { data: existingUsers } = await supabaseAdmin.auth.admin.listUsers();
-    const existingUser = existingUsers?.users?.find(
-      (u: { email?: string | null }) =>
-        u.email?.toLowerCase() === email.toLowerCase(),
-    );
-
-    const redirectTo = `${
-      req.headers.get("origin") || "https://elogistix.lovable.app"
-    }/portal/login`;
-    let userIdToLink: string;
-
-    if (existingUser) {
-      userIdToLink = existingUser.id;
-      await supabaseAdmin.auth.admin.generateLink({
-        type: "magiclink",
-        email,
-        options: { redirectTo },
-      });
-      const supabaseAnon = createClient(
-        // @ts-expect-error Deno global
-        Deno.env.get("SUPABASE_URL")!,
-        // @ts-expect-error Deno global
-        Deno.env.get("SUPABASE_ANON_KEY")!,
-      );
-      await supabaseAnon.auth.resetPasswordForEmail(email, { redirectTo });
-    } else {
-      const { data: inviteData, error: inviteError } = await supabaseAdmin
-        .auth.admin.inviteUserByEmail(email, {
-          redirectTo,
-          data: { role: "cliente" },
-        });
-      if (inviteError || !inviteData.user) {
-        console.error("Error inviting user:", inviteError);
-        log.finish(500, "invite_email_failed", {
-          organization_id,
-          payload: { error: inviteError?.message },
-        });
-        return errorResponse(
-          `Error al invitar usuario: ${inviteError?.message}`,
-          500,
-          cors,
-        );
-      }
-      userIdToLink = inviteData.user.id;
+    const redirectTo = `${req.headers.get("origin") || "https://elogistix.lovable.app"}/portal/login`;
+    const resolved = await resolveUserId(adminClient, email, redirectTo);
+    if ("error" in resolved) {
+      console.error("Error inviting user:", resolved.error);
+      log.finish(500, "invite_email_failed", { organization_id, payload: { error: resolved.error } });
+      return errorResponse(`Error al invitar usuario: ${resolved.error}`, 500, cors);
     }
 
-    // Only assign 'cliente' role if the user has NO role yet — never downgrade
-    // an existing privileged user (admin/super_admin/operador) to cliente.
-    const { data: existingRole } = await supabaseAdmin
-      .from("user_roles")
-      .select("id, role")
-      .eq("user_id", userIdToLink)
-      .maybeSingle();
+    await ensureClienteRole(adminClient, resolved.userId);
 
-    if (!existingRole) {
-      await supabaseAdmin
-        .from("user_roles")
-        .insert({ user_id: userIdToLink, role: "cliente" });
-    }
-
-    const { error: linkError } = await supabaseAdmin
+    const { error: linkError } = await adminClient
       .from("client_users")
       .upsert(
-        { user_id: userIdToLink, cliente_id, organization_id },
+        { user_id: resolved.userId, cliente_id, organization_id },
         { onConflict: "user_id,cliente_id" },
       );
     if (linkError) {
       console.error("Error linking user:", linkError);
-      log.finish(500, "link_failed", {
-        organization_id,
-        payload: { user_id: userIdToLink, error: linkError.message },
-      });
-      return errorResponse(
-        `Error al vincular usuario: ${linkError.message}`,
-        500,
-        cors,
-      );
+      log.finish(500, "link_failed", { organization_id, payload: { user_id: resolved.userId, error: linkError.message } });
+      return errorResponse(`Error al vincular usuario: ${linkError.message}`, 500, cors);
     }
 
     log.finish(200, "client_user_invited", {
       organization_id,
-      payload: { user_id: userIdToLink, is_new: !existingUser, cliente_id },
+      payload: { user_id: resolved.userId, is_new: resolved.isNew, cliente_id },
     });
-    return jsonResponse(
-      { success: true, user_id: userIdToLink, is_new: !existingUser },
-      200,
-      cors,
-    );
+    return jsonResponse({ success: true, user_id: resolved.userId, is_new: resolved.isNew }, 200, cors);
   } catch (err) {
     const msg = err instanceof Error ? err.message : "Error interno";
     const [code, ...rest] = msg.split(":");
