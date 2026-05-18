@@ -17,7 +17,7 @@ import { APP_VERSION } from "@/constants/appVersion";
 import { OrgSwitcher } from "@/components/layout/OrgSwitcher";
 import { SidebarGroupBlock } from "@/components/layout/SidebarGroupBlock";
 import { SidebarUserMenu } from "@/components/layout/SidebarUserMenu";
-import { useAppSidebarSections } from "@/hooks/layout/useAppSidebarSections";
+import { useAppSidebarSections } from "@/hooks/layout";
 
 function computeUserInitials(email: string | undefined): string {
   return (email ?? "?")
