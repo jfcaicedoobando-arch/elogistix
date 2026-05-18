@@ -8,6 +8,7 @@ import {
   parseArribosEsteMes,
   parseResumenMesSiguiente,
   parseEmbarquesMesSiguiente,
+  parseProfitArribosEsteMes,
   parseCargasPorCliente,
   parseCargasActivasTotal,
   combinarActivos,
