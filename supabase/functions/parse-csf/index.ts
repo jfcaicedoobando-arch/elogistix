@@ -94,6 +94,40 @@ async function callAiGateway(apiKey: string, fileName: string, base64: string) {
   });
 }
 
+async function processCsf(req: Request, cors: HeadersInit, log: ReturnType<typeof createLogger>) {
+  await authenticate(req);
+  // @ts-expect-error Deno global
+  const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
+  if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
+
+  const formData = await req.formData();
+  const file = formData.get("file") as File | null;
+  const fileError = validateFile(file);
+  if (fileError) {
+    const status = fileError.includes("excede") ? 413 : 400;
+    return errorResponse(fileError, status, cors);
+  }
+
+  const arrayBuffer = await file!.arrayBuffer();
+  const base64 = btoa(String.fromCharCode(...new Uint8Array(arrayBuffer)));
+
+  const response = await callAiGateway(LOVABLE_API_KEY, file!.name, base64);
+  if (!response.ok) {
+    const detail = await response.text().catch(() => "");
+    return handleGatewayError(response.status, log, cors, detail);
+  }
+
+  const aiResult = await response.json();
+  const toolCall = aiResult.choices?.[0]?.message?.tool_calls?.[0];
+  if (!toolCall?.function?.arguments) {
+    log.warn("respuesta sin tool_call", { status_code: 422 });
+    return errorResponse("No se pudieron extraer los datos del documento", 422, cors);
+  }
+
+  log.finish(200, "csf parseado");
+  return jsonResponse(JSON.parse(toolCall.function.arguments), 200, cors);
+}
+
 serve(async (req) => {
   const preflight = handlePreflightStrict(req);
   if (preflight) return preflight;
@@ -101,40 +135,7 @@ serve(async (req) => {
   const log = createLogger(req, "parse-csf");
 
   try {
-    // Require authenticated user — protege créditos del AI Gateway.
-    await authenticate(req);
-
-    // @ts-expect-error Deno global
-    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-    if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
-
-    const formData = await req.formData();
-    const file = formData.get("file") as File | null;
-    const fileError = validateFile(file);
-    if (fileError) {
-      const status = fileError.includes("excede") ? 413 : 400;
-      return errorResponse(fileError, status, cors);
-    }
-
-    const arrayBuffer = await file!.arrayBuffer();
-    const base64 = btoa(String.fromCharCode(...new Uint8Array(arrayBuffer)));
-
-    const response = await callAiGateway(LOVABLE_API_KEY, file!.name, base64);
-
-    if (!response.ok) {
-      const detail = await response.text().catch(() => "");
-      return handleGatewayError(response.status, log, cors, detail);
-    }
-
-    const aiResult = await response.json();
-    const toolCall = aiResult.choices?.[0]?.message?.tool_calls?.[0];
-    if (!toolCall?.function?.arguments) {
-      log.warn("respuesta sin tool_call", { status_code: 422 });
-      return errorResponse("No se pudieron extraer los datos del documento", 422, cors);
-    }
-
-    log.finish(200, "csf parseado");
-    return jsonResponse(JSON.parse(toolCall.function.arguments), 200, cors);
+    return await processCsf(req, cors, log);
   } catch (error) {
     const message = error instanceof Error ? error.message : "Error desconocido";
     const [code, ...rest] = message.split(":");
