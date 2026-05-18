@@ -15,6 +15,7 @@
  * incluyen warning/success) como el de sonner u otros wrappers.
  */
 import { STEP_LABELS } from "@/lib/domain/embarqueWizardSchemas";
+import { buildErrorReport } from "@/lib/ui/errorReport";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type AnyToastFn = (props: any) => unknown;
@@ -32,11 +33,15 @@ export interface ErrorNotifyOptions {
   description?: string;
   /** Override de título. */
   title?: string;
+  /** Error original (Error, PostgrestError, string...) — habilita panel de detalles. */
+  error?: unknown;
+  /** Datos arbitrarios que ayudan a reproducir (embarqueId, bucket, path, etc.). */
+  context?: Record<string, unknown>;
 }
 
-/** Emite un toast bloqueante (variant destructive). */
+/** Emite un toast bloqueante (variant destructive) con payload de debug copiable. */
 export function notifyError(toast: AnyToastFn, opts: ErrorNotifyOptions) {
-  const { step, phase, errors, message, description: descOpt, title } = opts;
+  const { step, phase, errors, message, description: descOpt, title, error, context } = opts;
   const description = descOpt ?? message ?? (errors ? Object.values(errors)[0] : undefined);
 
   let computedTitle = title;
@@ -51,7 +56,16 @@ export function notifyError(toast: AnyToastFn, opts: ErrorNotifyOptions) {
     }
   }
 
-  toast({ title: computedTitle, description, variant: "destructive" });
+  const debug = buildErrorReport({
+    title: computedTitle,
+    description,
+    phase,
+    step,
+    error,
+    context,
+  });
+
+  toast({ title: computedTitle, description, variant: "destructive", debug });
 }
 
 /** Emite un toast de advertencia (no bloquea). */

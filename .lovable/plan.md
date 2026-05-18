@@ -1,68 +1,97 @@
-# Profit homologado a MXN en el Dashboard
+# Toast de error con panel de detalles copiables
 
-## Problema actual
+## Objetivo
 
-Hoy el dashboard muestra "Profit USD proyectado" en la tarjeta de "Arribos este mes" y números en USD en las tablas de Profit y de Mes siguiente. Al revisar la base de datos encontramos algo más grave que el problema reportado:
+Convertir los toasts de error en una herramienta de debug real: al hacer click en el toast (o en un botón "Ver detalles") se abre un panel con TODO el contexto técnico del error y un botón "Copiar" para pegarle el reporte completo al administrador o a Lovable.
 
-La función `profit_por_embarque()` **solo suma conceptos en USD** e ignora por completo los conceptos en MXN y EUR. Eso significa que cualquier embarque cuya venta o costo se haya capturado en pesos hoy aparece con profit incorrecto (sub-reportado) en todo el Dashboard.
+## Comportamiento UX
 
-Hay que (a) homologar los cálculos a MXN usando el TC guardado en cada embarque, y (b) reemplazar la métrica visible por "Profit MXN proyectado" con un tooltip de desglose.
+- El toast destructive se ve igual que hoy (título + descripción corta).
+- Aparece un botón discreto **"Ver detalles"** dentro del toast (ToastAction). El toast completo también es clickeable.
+- Al hacer click se abre un `Dialog` global "Detalles del error" con:
+  - Reporte formateado en bloque de código mono.
+  - Botón **"Copiar reporte"** (copia markdown listo para Slack/Lovable).
+  - Botón **"Copiar JSON"** (mismo payload en JSON crudo).
+  - Botón "Cerrar".
+- El toast NO se cierra solo cuando hay payload de debug (queda hasta que el usuario lo descarte), para no perder el contexto.
 
-## Alcance acordado
+## Reporte (qué incluye)
 
-- **Solo MXN** como cifra visible, con tooltip que muestre el desglose (venta MXN, costo MXN, y cuánto vino convertido desde USD/EUR).
-- **TC del embarque** ya guardado (`tipo_cambio_usd`, `tipo_cambio_eur`) — no recalculamos con TC de mercado.
-- **Todo el Dashboard principal** (`/`): tarjeta "Arribos este mes", tabla "Profit de arribos", tabla "Embarques mes siguiente" y su resumen. *No* tocamos Operaciones, Facturación, Reportes ni Portal.
+Auto-capturado en cada error:
+- App version (`APP_VERSION`)
+- Timestamp ISO + zona horaria local
+- Ruta actual (`window.location.pathname + search`)
+- Usuario: `id`, `email`, organización activa, rol efectivo (vía `useAuth` / contexto existente)
+- User agent + viewport
+- Título y descripción del toast
+- `phase` / `step` (si se pasaron)
+- Mensaje del error original, `name`, `code` (Supabase: `code`, `details`, `hint`, `status`)
+- Stack trace (si existe)
+- Contexto adicional libre (`context: Record<string, unknown>`) que cada call site puede pasar (ej. `embarqueId`, `documentoId`, `fileName`, `bucket`, `path`).
 
-## Cambios
-
-### 1. Base de datos — RPC `profit_por_embarque()`
-
-Reemplazar para que devuelva totales en MXN homologados usando el TC del embarque, y exponga desglose:
+Formato markdown ejemplo:
 
 ```text
-TABLE(
-  embarque_id uuid,
-  venta_mxn numeric,        -- venta total homologada
-  costo_mxn numeric,        -- costo total homologado
-  venta_mxn_from_usd numeric, costo_mxn_from_usd numeric,
-  venta_mxn_from_eur numeric, costo_mxn_from_eur numeric,
-  venta_mxn_native  numeric, costo_mxn_native  numeric,
-  tipo_cambio_usd numeric, tipo_cambio_eur numeric
-)
+**Error en Libre Carga**
+- Versión: 8.215.0
+- Fecha: 2026-05-18 16:42:11 (America/Mexico_City)
+- Ruta: /embarques/18d1.../?tab=documentos
+- Usuario: valeria@... (id 4f2a...) — org "ACME" — rol operador
+- Fase: subida de documentos
+
+**Mensaje**
+new row violates row-level security policy
+
+**Detalles técnicos**
+code: 42501
+status: 403
+context: { embarqueId: "18d1...", documentoId: "...", bucket: "documentos", path: "embarques/.../..." }
+
+**Stack**
+...
 ```
 
-Filtra `deleted_at IS NULL` en `conceptos_venta` y `conceptos_costo`, y respeta el filtro por organización ya existente.
+## Cambios técnicos
 
-### 2. RPC `dashboard_summary()` y `dashboard_details()`
+1. **`src/lib/ui/errorReport.ts` (nuevo)**
+   - `buildErrorReport(input): ErrorReport` que arma el objeto debug, leyendo `APP_VERSION`, ruta, UA, etc.
+   - `formatReportMarkdown(report)` y `formatReportJson(report)`.
 
-- En `arribosEsteMes`: agregar `profitMXN`, `ventaMXN`, `costoMXN`, y desglose `venta_from_usd`, `venta_from_eur`, `venta_native`, idem costos. Conservar `profitUSD` temporalmente para no romper otros consumidores hasta que el front migre (luego se elimina).
-- En `profitArribosEsteMes` y `embarquesMesSiguiente`: agregar `ventaMXN`, `costoMXN`, `profitMXN`, `margenMXN` por embarque.
-- En `resumenMesSiguiente`: agregar `ventaMXN`, `costoMXN`, `profitMXN`.
+2. **`src/lib/ui/appFeedback.ts`**
+   - Extender `ErrorNotifyOptions` con:
+     - `error?: unknown` (Error | PostgrestError | string)
+     - `context?: Record<string, unknown>`
+   - `notifyError` construye el reporte y lo adjunta en `toast({..., debug: report})`.
 
-### 3. Parsers (`src/lib/parsers/dashboard.ts`)
+3. **Store global `src/lib/ui/errorDetailsStore.ts` (nuevo)**
+   - Pequeño store (`useSyncExternalStore` estilo `use-toast`) con `openReport(report)` / `close()` / `useErrorReport()`. Evita acoplar el dialog al árbol de toasts.
 
-- Extender `ArribosEsteMes`, `EmbarqueConProfit`, `EmbarqueMesSiguiente`, `ResumenFacturacion` con los campos MXN y el desglose.
-- Mantener compatibilidad si el payload trae solo USD (defaults a 0).
+4. **`src/hooks/use-toast.ts`**
+   - Aceptar campo opcional `debug?: ErrorReport` en `ToasterToast`.
+   - Cuando hay `debug`, no auto-cerrar (`duration: Infinity`) y exponerlo al `Toaster`.
 
-### 4. UI — `src/components/dashboard/`
+5. **`src/components/ui/toaster.tsx`**
+   - Si `debug` existe:
+     - Render `<ToastAction onClick={() => openReport(debug)}>Ver detalles</ToastAction>`.
+     - Hacer el `Toast` clickeable (onClick en el root) que también abre el reporte.
 
-- **`DashboardStatusCards.tsx`** (tarjeta "Arribos este mes"): cambiar la métrica a `profitMXN`, label "Profit MXN proyectado", envolver en `Tooltip` con el desglose (venta MXN total, costo MXN total, y "de los cuales X vienen de USD a TC Y", etc.). Formato `formatCurrencyCompact(..., "MXN")`.
-- **`ProfitTable.tsx`**: columnas Venta / Costo / Profit / Margen en MXN. Tooltip por fila con TC usado y desglose por moneda.
-- **`EmbarquesActivosTable.tsx`** y su resumen del mes siguiente: idem, MXN visible + tooltip con desglose.
+6. **`src/components/ui/ErrorDetailsDialog.tsx` (nuevo)**
+   - Suscrito a `useErrorReport()`.
+   - Render `<Dialog>` con `<pre>` del markdown, botones "Copiar reporte" / "Copiar JSON" usando `navigator.clipboard.writeText` + `toast.success("Copiado")`.
+   - Montar una sola vez en `src/App.tsx` (junto al `<Toaster />`).
 
-### 5. Tests y cleanup
+7. **Call sites priorizados** (los demás siguen funcionando, sólo no incluirán `error`/`context` hasta que se actualicen)
+   - Subida de documentos del embarque (donde Valeria vio el error de RLS): pasar `error`, `phase: "subida de documentos"`, `context: { embarqueId, documentoId, bucket, path, fileName, fileSize }`.
+   - Cualquier hook que ya use `notifyError` queda compatible (campos nuevos son opcionales).
 
-- Actualizar `src/lib/parsers/__tests__/dashboard.test.ts` para los nuevos campos.
-- Verificar que `Operaciones.tsx`, `useTabProyeccionController` y `useRentabilidadClientes` (que también importan `profit_por_embarque`) sigan funcionando — esos módulos usan otra ruta de cálculo (`financialUtils`) y el cambio del RPC no los rompe, pero hay que probar.
+8. **Changelog + versión**
+   - Bump a **8.216.0**.
+   - Entrada en `src/content/changelog/v8/chunks/0.ts` + `changelogData.ts` + `src/pages/Changelog.tsx`.
 
-### 6. Versión y changelog
+## Fuera de alcance
 
-- Bump `APP_VERSION` a **8.212.0**.
-- Entrada en `src/content/changelog/v8/chunks/0.ts` y `src/content/changelogData.ts` describiendo: corrección de profit homologado a MXN en Dashboard, fix de `profit_por_embarque()` que ignoraba MXN/EUR, tooltip con desglose.
+- No se cambia el estilo visual de los toasts existentes.
+- No se migra masivamente todos los `notifyError` a pasar `error`/`context`: sólo el de subida de documentos en esta iteración. El resto se irá enriqueciendo en próximas mejoras.
+- No se envían reportes automáticamente a un backend; sólo copy/paste manual.
 
-## Notas técnicas
-
-- Conservamos `profitUSD` en los payloads una versión más para no romper consumidores externos; queda marcado como deprecado en el código.
-- No se cambia ningún cálculo financiero fuera del Dashboard — `financialUtils.convertirAMXN` ya es la fuente de verdad en el resto de la app y la lógica SQL nueva sigue exactamente esa misma fórmula (`monto * tc_moneda`).
-- El tooltip usa `formatCurrency(..., "MXN")` para los desgloses (no compacto), para que se vea el monto exacto.
+¿Procedo con esta implementación?

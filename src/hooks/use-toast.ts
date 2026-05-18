@@ -1,6 +1,7 @@
 import * as React from "react";
 
 import type { ToastActionElement, ToastProps } from "@/components/ui/toast";
+import type { ErrorReport } from "@/lib/ui/errorReport";
 
 const TOAST_LIMIT = 1;
 const TOAST_REMOVE_DELAY = 1000000;
@@ -10,6 +11,8 @@ type ToasterToast = ToastProps & {
   title?: React.ReactNode;
   description?: React.ReactNode;
   action?: ToastActionElement;
+  /** Payload de debug — si está presente el Toaster muestra "Ver detalles". */
+  debug?: ErrorReport;
 };
 
 const actionTypes = {

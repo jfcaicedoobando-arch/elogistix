@@ -22,6 +22,14 @@ export interface ChangelogEntry {
  */
 export const recentChangelog: ChangelogEntry[] = [
   {
+    version: "8.216.0",
+    date: "2026-05-18",
+    type: "minor",
+    title: "Toasts de error con panel de detalles copiables",
+    summary: "Los toasts destructive ahora muestran 'Ver detalles' con reporte completo copiable para soporte/Lovable.",
+    description: "notifyError() arma automáticamente un reporte (versión, ruta, usuario+org+rol, viewport, UA, mensaje + code/status/details/hint, stack y contexto del call site) y lo expone en un Dialog global vía botón 'Ver detalles' o click sobre el toast destructive. Incluye 'Copiar reporte' (markdown) y 'Copiar JSON'. Subida/eliminación de documentos del embarque ahora envían el error original y context (embarqueId, documentoId, fileName, bucket). APP_VERSION 8.216.0.",
+  },
+  {
     version: "8.215.0",
     date: "2026-05-18",
     type: "patch",
