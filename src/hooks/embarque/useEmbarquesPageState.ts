@@ -105,16 +105,12 @@ export function useEmbarquesPageState() {
   });
 
   // ---------- Rama B: con filtro de estado → fetch completo + filtrado client ----------
-  const fullSetFilters = {
+  const fullSetFilters = buildFullSetFilters({
     organizationId,
     search: debouncedSearch,
-    filterModo,
-    filterCliente,
-    filterOperador,
-    filterProforma,
-    fechaDesde: fechaDesde || undefined,
-    fechaHasta: fechaHasta || undefined,
-  };
+    filterModo, filterCliente, filterOperador, filterProforma,
+    fechaDesde, fechaHasta,
+  });
   const { data: resultadoFull, isLoading: loadingFull } = useQuery({
     queryKey: [...queryKeys.embarques.all, "full-for-estado-filter", fullSetFilters],
     queryFn: () => fetchEmbarquesParaExport(fullSetFilters),
