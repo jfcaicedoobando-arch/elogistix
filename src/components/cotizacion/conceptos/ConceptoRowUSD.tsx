@@ -7,8 +7,9 @@ import { Switch } from "@/components/ui/switch";
 import { Trash2 } from "lucide-react";
 import type { ConceptoVentaCotizacion } from "@/hooks/cotizacion";
 import { formatCurrency } from "@/lib/formatters";
-import { CONCEPTOS_COSTO_USD, CONCEPTOS_CON_IVA_USD } from "@/constants/cotizacionConstants";
+import { CONCEPTOS_CON_IVA_USD } from "@/constants/cotizacionConstants";
 import { UnidadMedidaSelect } from "./UnidadMedidaSelect";
+import { ConceptoDescripcionSelector } from "./ConceptoDescripcionSelector";
 
 export interface ConceptoRowProps {
   concepto: ConceptoVentaCotizacion;
@@ -18,49 +19,13 @@ export interface ConceptoRowProps {
   eliminar: (index: number) => void;
 }
 
-/** Resuelve el value del Select de concepto: catálogo, vacío o "Otro". */
-function getConceptoSelectValue(descripcion: string, catalogo: readonly string[]): string {
-  if (catalogo.includes(descripcion)) return descripcion;
-  if (descripcion === "") return "";
-  return "Otro";
-}
-
 export function ConceptoRowUSD({ concepto: c, index: i, total, actualizar, eliminar }: ConceptoRowProps) {
   const puedeIva = (CONCEPTOS_CON_IVA_USD as readonly string[]).includes(c.descripcion);
   return (
     <div className={`grid grid-cols-12 gap-2 items-end rounded-md px-1 py-1 ${c.aplica_iva ? 'bg-warning/5' : ''}`}>
       <div className="col-span-3">
         {i === 0 && <Label className="text-xs">Concepto</Label>}
-        {c.descripcion !== '' && !(CONCEPTOS_COSTO_USD as readonly string[]).includes(c.descripcion) && c.descripcion !== 'Otro' ? (
-          <Input
-            value={c.descripcion}
-            onChange={e => actualizar(i, 'descripcion', e.target.value)}
-            placeholder="Descripción libre"
-          />
-        ) : (
-          <Select
-            value={getConceptoSelectValue(c.descripcion, CONCEPTOS_COSTO_USD as readonly string[])}
-            onValueChange={val => {
-              if (val === 'Otro') {
-                actualizar(i, 'descripcion', '');
-                actualizar(i, 'aplica_iva', false);
-                setTimeout(() => actualizar(i, '_esOtro', true), 0);
-              } else {
-                actualizar(i, 'descripcion', val);
-                actualizar(i, 'aplica_iva', (CONCEPTOS_CON_IVA_USD as readonly string[]).includes(val));
-              }
-            }}
-          >
-            <SelectTrigger><SelectValue placeholder="Selecciona concepto" /></SelectTrigger>
-            <SelectContent>
-              {[...CONCEPTOS_COSTO_USD].map(opt => (
-                <SelectItem key={opt} value={opt}>
-                  {(CONCEPTOS_CON_IVA_USD as readonly string[]).includes(opt) ? `${opt} *` : opt}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        )}
+        <ConceptoDescripcionSelector descripcion={c.descripcion} index={i} actualizar={actualizar} />
       </div>
       <div className="col-span-1">
         {i === 0 && <Label className="text-xs">Unidad</Label>}
