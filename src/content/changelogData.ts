@@ -22,6 +22,14 @@ export interface ChangelogEntry {
  */
 export const recentChangelog: ChangelogEntry[] = [
   {
+    version: "8.211.0",
+    date: "2026-05-18",
+    type: "patch",
+    title: "Errores de Supabase — mensaje legible en toasts",
+    summary: "Los errores de RPC/Supabase (PostgrestError) ya no aparecen como 'Error desconocido'; ahora se muestra el mensaje real para diagnosticar fallos al avanzar estado o subir documentos.",
+    description: "getErrorMessage() ahora detecta objetos tipo PostgrestError (que no heredan de Error) y compone el mensaje con message + details + hint, o el code si no hay texto. Soluciona los toasts opacos al avanzar_estado_embarque y otras mutaciones. Sin cambios de lógica de negocio. APP_VERSION 8.211.0.",
+  },
+  {
     version: "8.210.0",
     date: "2026-05-18",
     type: "patch",
@@ -100,14 +108,6 @@ export const recentChangelog: ChangelogEntry[] = [
     title: "Auditoría — P2.12 lote 5 (filtros embarques, hallazgos, edge functions)",
     summary: "30 → 21 warnings ESLint. useEmbarquesPageState, matchBase, create-user, tracking-public y parse-csf refactorizados con helpers puros.",
     description: "P2.12 Lote 5 — Refactors puros sin cambios funcionales: hooks/embarque/useEmbarquesPageState.ts (26→0) extrae useEmbarquesFilters (estado nuqs + debounce), computeCounts, resolveExtras y buildFullSetFilters; compareBy usa lookup SORT_GETTERS. hooks/auditoria/useHallazgosTablaState.ts (17/16→0) reemplaza matchBase por BASE_PREDICATES tabulares. scripts/audit-casts.ts (17→0, +unused-disable) divide classify. supabase/functions/create-user (17→0), tracking-public (18→0) y parse-csf (20→0) extraen validatePayload, loadLink/loadEmbarqueData, validateFile/handleGatewayError/callAiGateway/processCsf. 369/369 tests verdes. APP_VERSION 8.201.0.",
-  },
-  {
-    version: "8.200.0",
-    date: "2026-05-18",
-    type: "patch",
-    title: "Auditoría — P2.12 lote 4 (cotizacionPdf, StepDatosRuta, TabResumen, EmbarquesEstadoDialog)",
-    summary: "23 → 20 warnings ESLint. generarPdfCotizacion (46→0), StepDatosRuta (25→0), TabResumen (24→0) y EmbarquesEstadoDialog (26→0) partidos en sub-helpers y sub-componentes.",
-    description: "P2.12 Lote 4 — Refactors puros sin cambios funcionales. generators/cotizacionPdf.ts: extraído a generators/cotizacion/{datosGenerales,dimensiones,conceptosTables,pdfShell}.ts (orquestador queda <50 LOC; rowsMaritimo/rowsOpcionales aíslan ramas; buildUsdTable usa rowUsdConIva/rowUsdSinIva). components/embarque/StepDatosRuta.tsx: dispatcher delgado + sub-componentes por modalidad (StepDatosRutaMaritimo/Aereo/Terrestre/Fechas). components/embarque/TabResumen.tsx: extrae EstadoProgresoCard, DatosGeneralesCard, RutaTransporteCard, EmbarquesRelacionadosCard, FechaConOriginal a tabResumen/. components/operaciones/EmbarquesEstadoDialog.tsx: extrae EmbarqueEstadoListItem + helpers calcularExtra/toneClass/subtituloPartes/rutaTexto. 369/369 tests verdes. APP_VERSION 8.200.0.",
   },
 ];
 
