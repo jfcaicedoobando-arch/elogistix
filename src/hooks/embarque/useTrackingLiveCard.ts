@@ -10,7 +10,7 @@
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
-import { mapNavieraToJsonCargo } from "@/lib/jsoncargo/navieras";
+import { mapNavieraToJsonCargo, type JsonCargoShippingLine } from "@/lib/jsoncargo/navieras";
 import { validatePrefixMatchesNaviera } from "@/lib/jsoncargo/containerPrefixes";
 import {
   useJsonCargoTracking,
@@ -97,7 +97,7 @@ function buildApplyFechasArgs(embarqueId: string, f: FechasArgs) {
 
 interface DerivePrefixInput {
   contenedor: string | null;
-  sl: string | null | undefined;
+  sl: JsonCargoShippingLine | null;
   tracking: { status?: string; failed_reason?: string | null } | null | undefined;
   syncError: unknown;
 }
@@ -105,7 +105,7 @@ interface DerivePrefixInput {
 function derivePrefixState({ contenedor, sl, tracking, syncError }: DerivePrefixInput) {
   const noSoportada = !sl;
   const sinContenedor = !contenedor;
-  const prefixCheck = validatePrefixMatchesNaviera(contenedor, sl ?? null);
+  const prefixCheck = validatePrefixMatchesNaviera(contenedor, sl);
   const prefixMismatch = !sinContenedor && !noSoportada && !prefixCheck.valid;
   const backendPrefixError =
     tracking?.status === "failed" && /prefix not found/i.test(tracking.failed_reason ?? "");
