@@ -22,6 +22,14 @@ export interface ChangelogEntry {
  */
 export const recentChangelog: ChangelogEntry[] = [
   {
+    version: "8.209.0",
+    date: "2026-05-18",
+    type: "minor",
+    title: "Documentos de embarque — agregar entradas desde el detalle",
+    summary: "Nuevo botón 'Agregar documento' en la pestaña Documentos del embarque para crear filas del checklist desde el detalle (estándar por modo o nombre libre).",
+    description: "TabDocumentos ahora recibe embarqueId y modo. El header expone 'Agregar documento' (solo canEdit) que abre un diálogo con Select de docs estándar según modo + opción 'Otro' con nombre libre y notas. Nueva mutación useCreateDocumentoEmbarque inserta en documentos_embarque con estado 'Pendiente'. Reseed manual del checklist faltante en ELIMP00216 tras el reintento del bug RLS de v8.207.0. APP_VERSION 8.209.0.",
+  },
+  {
     version: "8.208.0",
     date: "2026-05-18",
     type: "patch",

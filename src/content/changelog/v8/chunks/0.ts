@@ -2,6 +2,14 @@ import type { ChangelogEntry } from "../../../changelogData";
 
 export const chunk0: ChangelogEntry[] = [
   {
+    version: "8.209.0",
+    date: "2026-05-18",
+    type: "minor",
+    title: "Documentos de embarque — agregar entradas desde el detalle",
+    summary: "Nuevo botón 'Agregar documento' en la pestaña Documentos del embarque. Permite crear filas del checklist incluso cuando el embarque se creó sin documentos (o cuando hace falta un documento fuera del estándar) para luego subir el archivo.",
+    description: "TabDocumentos ahora recibe embarqueId y modo. El header expone un botón 'Agregar documento' (solo para canEdit) que abre un diálogo con Select de documentos estándar según el modo (Marítimo/Aéreo/Terrestre) más opción 'Otro' con nombre libre y notas. Nueva mutación useCreateDocumentoEmbarque que inserta en documentos_embarque con estado 'Pendiente' (RLS Tenant CRUD aplica). Reseed manual del checklist para el embarque ELIMP00216 (18d1590b) que había quedado sin filas tras el reintento del bug RLS de v8.207.0. Mensaje del empty state actualizado. APP_VERSION 8.209.0.",
+  },
+  {
     version: "8.208.0",
     date: "2026-05-18",
     type: "patch",

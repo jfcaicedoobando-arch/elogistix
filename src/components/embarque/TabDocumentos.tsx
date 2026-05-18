@@ -1,16 +1,32 @@
 import { useState, useMemo } from "react";
-import { Upload, Download, Loader2, Trash2 } from "lucide-react";
+import { Upload, Download, Loader2, Trash2, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import {
+  Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+} from "@/components/ui/select";
 import { DataTable, type DataTableColumn } from "@/components/shared/DataTable";
 import type { DocumentoEmbarqueRow } from "@/hooks/embarque";
+import { useCreateDocumentoEmbarque } from "@/hooks/embarque";
+import { getDocsForMode } from "@/constants/embarqueConstants";
 import { getDocEstadoColorClass } from "@/lib/ui/uiMappings";
+import { useToast } from "@/hooks/use-toast";
+import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
+import { getErrorMessage } from "@/lib/errors";
 
 interface Props {
+  embarqueId: string;
+  modo?: string;
   documentos: DocumentoEmbarqueRow[];
   canEdit: boolean;
   uploadingDocId: string | null;
@@ -21,8 +37,46 @@ interface Props {
   onDelete?: (doc: DocumentoEmbarqueRow) => void;
 }
 
-export function TabDocumentos({ documentos, canEdit, uploadingDocId, downloadingDocId, deletingDocId, onUpload, onDownload, onDelete }: Props) {
+const OTRO_VALUE = "__otro__";
+
+export function TabDocumentos({
+  embarqueId, modo, documentos, canEdit, uploadingDocId, downloadingDocId, deletingDocId,
+  onUpload, onDownload, onDelete,
+}: Props) {
+  const { toast } = useToast();
   const [docToDelete, setDocToDelete] = useState<DocumentoEmbarqueRow | null>(null);
+  const [addOpen, setAddOpen] = useState(false);
+  const [nombreSel, setNombreSel] = useState<string>("");
+  const [nombreLibre, setNombreLibre] = useState("");
+  const [notasNuevo, setNotasNuevo] = useState("");
+  const createDoc = useCreateDocumentoEmbarque();
+
+  const sugerencias = useMemo(() => {
+    const ya = new Set(documentos.map((d) => d.nombre));
+    return getDocsForMode(modo ?? "").filter((n) => !ya.has(n));
+  }, [documentos, modo]);
+
+  const resetForm = () => {
+    setNombreSel("");
+    setNombreLibre("");
+    setNotasNuevo("");
+  };
+
+  const handleCrear = async () => {
+    const nombreFinal = nombreSel === OTRO_VALUE ? nombreLibre.trim() : nombreSel.trim();
+    if (!nombreFinal) {
+      notifyError(toast, { title: "Nombre requerido", description: "Selecciona o escribe el nombre del documento." });
+      return;
+    }
+    try {
+      await createDoc.mutateAsync({ embarqueId, nombre: nombreFinal, notas: notasNuevo.trim() || undefined });
+      notifySuccess(toast, { title: "Documento agregado" });
+      resetForm();
+      setAddOpen(false);
+    } catch (err) {
+      notifyError(toast, { title: "No se pudo agregar el documento", description: getErrorMessage(err) });
+    }
+  };
 
   const columns = useMemo<DataTableColumn<DocumentoEmbarqueRow>[]>(() => [
     { key: "nombre", header: "Documento", className: "font-medium", render: (d) => d.nombre },
@@ -91,15 +145,83 @@ export function TabDocumentos({ documentos, canEdit, uploadingDocId, downloading
   return (
     <>
       <Card>
+        <CardHeader className="flex flex-row items-center justify-between gap-2 pb-3">
+          <CardTitle className="text-base font-semibold">Documentos del embarque</CardTitle>
+          {canEdit && (
+            <Button size="sm" variant="outline" onClick={() => setAddOpen(true)}>
+              <Plus className="h-3.5 w-3.5 mr-1" /> Agregar documento
+            </Button>
+          )}
+        </CardHeader>
         <CardContent className="p-0">
           <DataTable
             columns={columns}
             data={documentos}
             rowKey={(d) => d.id}
-            emptyMessage="Sin documentos registrados"
+            emptyMessage={canEdit
+              ? 'Sin documentos registrados. Usa "Agregar documento" para crear el primero.'
+              : 'Sin documentos registrados'}
           />
         </CardContent>
       </Card>
+
+      <Dialog open={addOpen} onOpenChange={(o) => { setAddOpen(o); if (!o) resetForm(); }}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Agregar documento</DialogTitle>
+            <DialogDescription>
+              Crea una nueva entrada en el checklist para luego adjuntar el archivo.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <div className="space-y-1.5">
+              <Label htmlFor="doc-nombre">Tipo de documento</Label>
+              <Select value={nombreSel} onValueChange={setNombreSel}>
+                <SelectTrigger id="doc-nombre">
+                  <SelectValue placeholder="Selecciona un documento estándar" />
+                </SelectTrigger>
+                <SelectContent>
+                  {sugerencias.map((n) => (
+                    <SelectItem key={n} value={n}>{n}</SelectItem>
+                  ))}
+                  <SelectItem value={OTRO_VALUE}>Otro (nombre personalizado)…</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            {nombreSel === OTRO_VALUE && (
+              <div className="space-y-1.5">
+                <Label htmlFor="doc-nombre-libre">Nombre personalizado</Label>
+                <Input
+                  id="doc-nombre-libre"
+                  value={nombreLibre}
+                  onChange={(e) => setNombreLibre(e.target.value)}
+                  placeholder="Ej. Pedimento, Certificado fitosanitario…"
+                  maxLength={120}
+                />
+              </div>
+            )}
+            <div className="space-y-1.5">
+              <Label htmlFor="doc-notas">Notas (opcional)</Label>
+              <Textarea
+                id="doc-notas"
+                value={notasNuevo}
+                onChange={(e) => setNotasNuevo(e.target.value)}
+                placeholder="Referencias, instrucciones, etc."
+                rows={3}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setAddOpen(false)} disabled={createDoc.isPending}>
+              Cancelar
+            </Button>
+            <Button onClick={handleCrear} disabled={createDoc.isPending}>
+              {createDoc.isPending && <Loader2 className="h-3.5 w-3.5 animate-spin mr-1" />}
+              Agregar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <AlertDialog open={!!docToDelete} onOpenChange={(open) => { if (!open) setDocToDelete(null); }}>
         <AlertDialogContent>

@@ -31,6 +31,7 @@ export {
   useSyncEstadoEmbarque,
   useUploadDocumentoEmbarque,
   useDeleteDocumentoEmbarque,
+  useCreateDocumentoEmbarque,
   useCreateNotaEmbarque,
   useEliminarEmbarque,
 } from './mutations';
