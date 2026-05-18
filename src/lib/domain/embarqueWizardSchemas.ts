@@ -112,6 +112,38 @@ export interface StepRutaInput {
   transportista?: string | null;
 }
 
+function validateRutaModo(input: StepRutaInput): StepValidationErrors {
+  if (input.modo === "Aéreo") {
+    const r = aereoRuta.safeParse({
+      aeropuertoOrigen: input.aeropuertoOrigen ?? "",
+      aeropuertoDestino: input.aeropuertoDestino ?? "",
+      mawb: input.mawb ?? "",
+    });
+    return r.success ? {} : flattenZodErrors(r.error);
+  }
+  if (input.modo === "Terrestre") {
+    const r = terrestreRuta.safeParse({
+      ciudadOrigen: input.ciudadOrigen ?? "",
+      ciudadDestino: input.ciudadDestino ?? "",
+      transportista: input.transportista ?? "",
+    });
+    return r.success ? {} : flattenZodErrors(r.error);
+  }
+  // Marítimo o sin modo definido
+  const tipoContenedor = input.tipoServicio === "LCL"
+    ? input.tipoContenedor || "LCL"
+    : input.tipoContenedor ?? "";
+  const r = maritimoRuta.safeParse({
+    puertoOrigen: input.puertoOrigen ?? "",
+    puertoDestino: input.puertoDestino ?? "",
+    naviera: input.naviera ?? "",
+    tipoServicio: input.tipoServicio ?? "",
+    contenedor: input.contenedor ?? "",
+    tipoContenedor,
+  });
+  return r.success ? {} : flattenZodErrors(r.error);
+}
+
 export function validateStepRuta(input: StepRutaInput): StepValidationErrors {
   const errors: StepValidationErrors = {};
 
@@ -121,34 +153,7 @@ export function validateStepRuta(input: StepRutaInput): StepValidationErrors {
   });
   if (!baseRes.success) Object.assign(errors, flattenZodErrors(baseRes.error));
 
-  if (input.modo === "Marítimo" || !input.modo) {
-    const r = maritimoRuta.safeParse({
-      puertoOrigen: input.puertoOrigen ?? "",
-      puertoDestino: input.puertoDestino ?? "",
-      naviera: input.naviera ?? "",
-      tipoServicio: input.tipoServicio ?? "",
-      contenedor: input.contenedor ?? "",
-      tipoContenedor:
-        input.tipoServicio === "LCL"
-          ? input.tipoContenedor || "LCL"
-          : input.tipoContenedor ?? "",
-    });
-    if (!r.success) Object.assign(errors, flattenZodErrors(r.error));
-  } else if (input.modo === "Aéreo") {
-    const r = aereoRuta.safeParse({
-      aeropuertoOrigen: input.aeropuertoOrigen ?? "",
-      aeropuertoDestino: input.aeropuertoDestino ?? "",
-      mawb: input.mawb ?? "",
-    });
-    if (!r.success) Object.assign(errors, flattenZodErrors(r.error));
-  } else if (input.modo === "Terrestre") {
-    const r = terrestreRuta.safeParse({
-      ciudadOrigen: input.ciudadOrigen ?? "",
-      ciudadDestino: input.ciudadDestino ?? "",
-      transportista: input.transportista ?? "",
-    });
-    if (!r.success) Object.assign(errors, flattenZodErrors(r.error));
-  }
+  Object.assign(errors, validateRutaModo(input));
 
   if (
     isValidDateStr(input.etd) &&
