@@ -22,6 +22,14 @@ export interface ChangelogEntry {
  */
 export const recentChangelog: ChangelogEntry[] = [
   {
+    version: "8.205.0",
+    date: "2026-05-18",
+    type: "patch",
+    title: "Auditoría P0.4 — Supabase fuera de generators/",
+    summary: "Generadores PDF/CSV ahora reciben DTOs hidratados desde services/facturas/exports.ts. layoutContable y estadoCuentaPdf pierden dependencia directa a Supabase.",
+    description: "Auditoría arquitectónica P0.4 (plan en .lovable/plan.md): generators/ no debe hacer I/O. Creado services/facturas/exports.ts con fetchLayoutContableData (facturas + RFC) y fetchEstadoCuentaFacturas. generators/layoutContable.ts y generators/estadoCuentaPdf.ts quedan como capa pura de presentación. Sin cambios funcionales ni de BD. APP_VERSION 8.205.0.",
+  },
+  {
     version: "8.204.0",
     date: "2026-05-18",
     type: "patch",
