@@ -2,9 +2,10 @@ import { useNavigate } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { ESTADOS_FILTRO, type EstadoFiltro } from "@/hooks/dashboard";
 import { ESTADO_CONFIG } from "@/lib/ui/estadoConfig";
-import { CalendarDays, TrendingUp, Ship, CheckCircle2 } from "lucide-react";
+import { CalendarDays, TrendingUp, Ship, CheckCircle2, Info } from "lucide-react";
 import { formatCurrency, formatCurrencyCompact } from "@/lib/formatters";
 
 interface ArribosEsteMes {
@@ -12,6 +13,15 @@ interface ArribosEsteMes {
   yaLlegaron: number;
   enCamino: number;
   profitUSD: number;
+  ventaMXN: number;
+  costoMXN: number;
+  profitMXN: number;
+  ventaMxnFromUsd: number;
+  costoMxnFromUsd: number;
+  ventaMxnFromEur: number;
+  costoMxnFromEur: number;
+  ventaMxnNative: number;
+  costoMxnNative: number;
 }
 
 interface Props {
@@ -134,21 +144,70 @@ export function DashboardStatusCards({
                 <p className="text-[11px] text-muted-foreground font-medium">En camino</p>
               </div>
 
-              {/* Profit */}
+              {/* Profit MXN homologado */}
               <div className="text-center">
                 {isLoading ? <Skeleton className="h-6 w-20 mx-auto" /> : (
-                  <div className="flex items-center gap-1 justify-center">
-                    <TrendingUp className={`h-3.5 w-3.5 ${arribosEsteMes.profitUSD >= 0 ? "text-success" : "text-destructive"}`} />
-                    <span
-                      className={`text-base sm:text-xl font-bold tabular-nums whitespace-nowrap ${arribosEsteMes.profitUSD >= 0 ? "text-success" : "text-destructive"}`}
-                      title={formatCurrency(arribosEsteMes.profitUSD, "USD")}
-                    >
-                      {formatCurrencyCompact(arribosEsteMes.profitUSD, "USD")}
-                    </span>
-                  </div>
+                  <TooltipProvider delayDuration={150}>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <button
+                          type="button"
+                          className="flex items-center gap-1 justify-center w-full cursor-help"
+                        >
+                          <TrendingUp className={`h-3.5 w-3.5 ${arribosEsteMes.profitMXN >= 0 ? "text-success" : "text-destructive"}`} />
+                          <span
+                            className={`text-base sm:text-xl font-bold tabular-nums whitespace-nowrap ${arribosEsteMes.profitMXN >= 0 ? "text-success" : "text-destructive"}`}
+                          >
+                            {formatCurrencyCompact(arribosEsteMes.profitMXN, "MXN")}
+                          </span>
+                          <Info className="h-3 w-3 text-muted-foreground/70" />
+                        </button>
+                      </TooltipTrigger>
+                      <TooltipContent side="bottom" className="max-w-xs">
+                        <div className="space-y-1.5 text-xs">
+                          <div className="font-semibold border-b pb-1 mb-1">
+                            Profit homologado a MXN
+                          </div>
+                          <div className="flex justify-between gap-3">
+                            <span className="text-muted-foreground">Venta total:</span>
+                            <span className="tabular-nums font-medium">{formatCurrency(arribosEsteMes.ventaMXN, "MXN")}</span>
+                          </div>
+                          <div className="flex justify-between gap-3">
+                            <span className="text-muted-foreground">Costo total:</span>
+                            <span className="tabular-nums font-medium">{formatCurrency(arribosEsteMes.costoMXN, "MXN")}</span>
+                          </div>
+                          <div className="flex justify-between gap-3 border-t pt-1 mt-1">
+                            <span className="font-medium">Profit:</span>
+                            <span className={`tabular-nums font-bold ${arribosEsteMes.profitMXN >= 0 ? "text-success" : "text-destructive"}`}>
+                              {formatCurrency(arribosEsteMes.profitMXN, "MXN")}
+                            </span>
+                          </div>
+                          <div className="border-t pt-1.5 mt-1.5 space-y-0.5 text-[11px] text-muted-foreground">
+                            <div className="font-medium text-foreground/80 mb-0.5">Desglose por moneda origen:</div>
+                            <div className="flex justify-between gap-3">
+                              <span>Desde USD:</span>
+                              <span className="tabular-nums">V {formatCurrency(arribosEsteMes.ventaMxnFromUsd, "MXN")} · C {formatCurrency(arribosEsteMes.costoMxnFromUsd, "MXN")}</span>
+                            </div>
+                            <div className="flex justify-between gap-3">
+                              <span>Desde EUR:</span>
+                              <span className="tabular-nums">V {formatCurrency(arribosEsteMes.ventaMxnFromEur, "MXN")} · C {formatCurrency(arribosEsteMes.costoMxnFromEur, "MXN")}</span>
+                            </div>
+                            <div className="flex justify-between gap-3">
+                              <span>Nativo MXN:</span>
+                              <span className="tabular-nums">V {formatCurrency(arribosEsteMes.ventaMxnNative, "MXN")} · C {formatCurrency(arribosEsteMes.costoMxnNative, "MXN")}</span>
+                            </div>
+                          </div>
+                          <div className="text-[10px] text-muted-foreground italic pt-1 border-t mt-1">
+                            Conversión con TC guardado en cada embarque.
+                          </div>
+                        </div>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
                 )}
-                <p className="text-[11px] text-muted-foreground font-medium">Profit USD proyectado</p>
+                <p className="text-[11px] text-muted-foreground font-medium">Profit MXN proyectado</p>
               </div>
+
             </div>
 
             {/* Barra de progreso */}

@@ -44,11 +44,14 @@ const columns: DataTableColumn<EmbarqueMesSiguiente>[] = [
     ),
   },
   {
-    key: "profit", header: "Profit", className: "text-right tabular-nums", headerClassName: "text-right",
-    sortable: true, sortValue: (e) => e.profit,
+    key: "profit", header: "Profit MXN", className: "text-right tabular-nums", headerClassName: "text-right",
+    sortable: true, sortValue: (e) => e.profitMXN,
     render: (e) => (
-      <span className={`text-xs font-medium ${e.profit >= 0 ? "text-success" : "text-destructive"}`}>
-        {formatCurrency(e.profit, "USD")}
+      <span
+        className={`text-xs font-medium ${e.profitMXN >= 0 ? "text-success" : "text-destructive"}`}
+        title={`Venta ${formatCurrency(e.ventaMXN, "MXN")} · Costo ${formatCurrency(e.costoMXN, "MXN")} (TC USD ${e.tipoCambioUSD.toFixed(2)})`}
+      >
+        {formatCurrency(e.profitMXN, "MXN")}
       </span>
     ),
   },
@@ -97,24 +100,24 @@ export function EmbarquesActivosTable({ embarques, resumen, isLoading }: Props) 
           <div className="flex items-center gap-2 rounded-lg border bg-muted/30 p-3">
             <DollarSign className="h-4 w-4 text-info shrink-0" />
             <div className="min-w-0">
-              <p className="text-sm font-bold text-foreground truncate">{formatCurrency(resumen.ventaUSD, "USD")}</p>
-              <p className="text-[10px] text-muted-foreground">Venta USD</p>
+              <p className="text-sm font-bold text-foreground truncate">{formatCurrency(resumen.ventaMXN, "MXN")}</p>
+              <p className="text-[10px] text-muted-foreground">Venta MXN</p>
             </div>
           </div>
           <div className="flex items-center gap-2 rounded-lg border bg-muted/30 p-3">
             <DollarSign className="h-4 w-4 text-warning shrink-0" />
             <div className="min-w-0">
-              <p className="text-sm font-bold text-foreground truncate">{formatCurrency(resumen.costoUSD, "USD")}</p>
-              <p className="text-[10px] text-muted-foreground">Costo USD</p>
+              <p className="text-sm font-bold text-foreground truncate">{formatCurrency(resumen.costoMXN, "MXN")}</p>
+              <p className="text-[10px] text-muted-foreground">Costo MXN</p>
             </div>
           </div>
           <div className="flex items-center gap-2 rounded-lg border bg-muted/30 p-3">
-            <TrendingUp className={`h-4 w-4 shrink-0 ${resumen.profitUSD >= 0 ? "text-success" : "text-destructive"}`} />
+            <TrendingUp className={`h-4 w-4 shrink-0 ${resumen.profitMXN >= 0 ? "text-success" : "text-destructive"}`} />
             <div className="min-w-0">
-              <p className={`text-sm font-bold truncate ${resumen.profitUSD >= 0 ? "text-success" : "text-destructive"}`}>
-                {formatCurrency(resumen.profitUSD, "USD")}
+              <p className={`text-sm font-bold truncate ${resumen.profitMXN >= 0 ? "text-success" : "text-destructive"}`}>
+                {formatCurrency(resumen.profitMXN, "MXN")}
               </p>
-              <p className="text-[10px] text-muted-foreground">Profit</p>
+              <p className="text-[10px] text-muted-foreground">Profit MXN</p>
             </div>
           </div>
           <div className="col-span-2 md:col-span-3 lg:col-span-1 flex flex-col gap-1.5 rounded-lg border bg-muted/30 p-3">

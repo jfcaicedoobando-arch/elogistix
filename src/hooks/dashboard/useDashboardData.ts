@@ -8,6 +8,7 @@ import {
   parseArribosEsteMes,
   parseResumenMesSiguiente,
   parseEmbarquesMesSiguiente,
+  parseProfitArribosEsteMes,
   parseCargasPorCliente,
   parseCargasActivasTotal,
   combinarActivos,
@@ -72,7 +73,7 @@ export function useDashboardData() {
   );
 
   const profitArribosEsteMes = useMemo<EmbarqueConProfit[]>(
-    () => (stats?.profitArribosEsteMes as EmbarqueConProfit[]) ?? [],
+    () => parseProfitArribosEsteMes(stats),
     [stats],
   );
 
