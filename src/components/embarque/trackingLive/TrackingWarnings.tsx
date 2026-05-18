@@ -45,7 +45,7 @@ function NoSoportadaAlert({ naviera, contenedor, blMaster }: { naviera: string |
   );
 }
 
-function PrefixMismatchAlert({ naviera, detectedPrefix, suggestions, readOnly }: { naviera: string | null; detectedPrefix: string | null; suggestions: string[]; readOnly?: boolean }) {
+function PrefixMismatchAlert({ naviera, detectedPrefix, suggestions, readOnly }: { naviera: string | null; detectedPrefix: string | null; suggestions: JsonCargoShippingLine[]; readOnly?: boolean }) {
   return (
     <div className="flex items-start gap-2 text-xs text-destructive p-3 rounded bg-destructive/5 border border-destructive/20">
       <AlertCircle className="h-4 w-4 mt-0.5 shrink-0" />
