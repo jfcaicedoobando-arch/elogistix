@@ -22,6 +22,14 @@ export interface ChangelogEntry {
  */
 export const recentChangelog: ChangelogEntry[] = [
   {
+    version: "8.214.0",
+    date: "2026-05-18",
+    type: "patch",
+    title: "Subida de documentos — fix RLS por referencia calificada",
+    summary: "Corrige 'new row violates row-level security policy' al subir documentos del embarque.",
+    description: "Las políticas del bucket 'documentos' usaban storage.objects.name (referencia calificada) que no se resolvía en WITH CHECK al INSERTar, rechazando toda subida. Se recrearon usando simplemente name. Sin cambios de permisos. APP_VERSION 8.214.0.",
+  },
+  {
     version: "8.213.0",
     date: "2026-05-18",
     type: "patch",
