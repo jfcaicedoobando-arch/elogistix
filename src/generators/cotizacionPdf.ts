@@ -2,7 +2,7 @@ import type { CotizacionRow, DimensionLCL, DimensionAerea } from '@/types/cotiza
 import { calcularIVA, TASA_IVA } from '@/lib/financial/financialUtils';
 import { formatCurrency } from '@/lib/formatters';
 import { formatDate } from '@/lib/formatters';
-import { escapeHtml as esc } from '@/lib/utils/htmlEscape';
+import { escapeHtml as esc } from '@/lib/utils';
 
 const formatCurrencyPdf = formatCurrency;
 const formatDatePdf = formatDate;

@@ -5,7 +5,7 @@
  * genera un PDF imprimible con KPIs y tabla. No introduce dependencias.
  */
 import { formatCurrency } from "@/lib/formatters";
-import { escapeHtml as esc } from "@/lib/utils/htmlEscape";
+import { escapeHtml as esc } from "@/lib/utils";
 
 export interface RentabilidadClienteRow {
   cliente_nombre: string;

@@ -7,7 +7,7 @@
  */
 import { supabase } from "@/integrations/supabase/client";
 import { formatCurrency, formatDate } from "@/lib/formatters";
-import { escapeHtml as esc } from "@/lib/utils/htmlEscape";
+import { escapeHtml as esc } from "@/lib/utils";
 
 interface FacturaCte {
   numero: string;
