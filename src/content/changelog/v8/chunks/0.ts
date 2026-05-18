@@ -2,6 +2,14 @@ import type { ChangelogEntry } from "../../../changelogData";
 
 export const chunk0: ChangelogEntry[] = [
   {
+    version: "8.208.0",
+    date: "2026-05-18",
+    type: "patch",
+    title: "Documentos de embarque — fix RLS de upload para admin y operador",
+    summary: "Los usuarios con rol admin/operador no podían subir documentos a embarques ('new row violates row-level security policy'). La política del bucket exigía que el path empezara con el ID de la organización, pero el código guarda bajo 'embarques/<expediente>/...'.",
+    description: "Migración 20260518: drop & recreate de las políticas INSERT/UPDATE/DELETE del bucket 'documentos'. Ahora la pertenencia a la organización se valida vía EXISTS contra public.embarques (comparando foldername[2] contra expediente o id::text), no contra foldername[1]. Se mantiene el aislamiento multi-tenant y no se migran archivos. APP_VERSION 8.208.0.",
+  },
+  {
     version: "8.207.0",
     date: "2026-05-18",
     type: "minor",
