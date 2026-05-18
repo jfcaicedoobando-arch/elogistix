@@ -2,6 +2,22 @@ import type { ChangelogEntry } from "../../../changelogData";
 
 export const chunk0: ChangelogEntry[] = [
   {
+    version: "8.204.0",
+    date: "2026-05-18",
+    type: "patch",
+    title: "Auditoría — P2.12 lote 8 (cierre: 0 warnings ESLint)",
+    summary: "8 → 0 warnings ESLint. useTrackingLiveCard, useOperacionesData/buildGlobal, useCotizacionWizardSteps, usePortalEmbarquesController, BulkImportDialog, dimensiones tables y auditoria-weekly-digest cerrados.",
+    description: "Refactors puros sin cambios funcionales ni de BD. useTrackingLiveCard (19→0) extrae derivePrefixState, handleSyncResult, handleSyncError y buildApplyFechasArgs. useOperacionesData buildGlobal (17→0) usa helper n() y queda extraído fuera del hook. useCotizacionWizardSteps handleSiguiente (18→0) divide en handlePaso1/2/3. usePortalEmbarquesController filtered (17→0) extrae embarqueMatchesSearch. BulkImportDialog (273 LOC→<200) extrae UploadStep/PreviewStep a BulkImportSteps.tsx. DimensionesAereasTable/LCLTable agregan allowlist documentada para Table primitivo (read-only sin sort/paginación). auditoria-weekly-digest (17→0) extrae resolveAdminEmails, sendDigest, processOrg y unauthorized; tipado con SupabaseClient. Restaurada entrada 8.202.0 en chunk0. 369/369 tests verdes. APP_VERSION 8.204.0.",
+  },
+  {
+    version: "8.202.0",
+    date: "2026-05-18",
+    type: "patch",
+    title: "Auditoría — P2.12 lote 6 (jsoncargo-track, invite-client-user, TrackingWarnings, proformaPdf)",
+    summary: "21 → 14 warnings ESLint. jsoncargo-track, invite-client-user, deriveEventsFromContainer, TrackingWarnings, CotizacionDatosGeneralesCard, buildHeaderHtml y VirtualDataTable refactorizados.",
+    description: "Refactors puros sin cambios funcionales ni de BD. jsoncargo-track extrae helpers a _shared/jsoncargoSync.ts. invite-client-user (26→0) extrae parseBody, verifyClienteOrg, resolveUserId, ensureClienteRole. _shared/jsoncargo.ts deriveEventsFromContainer (22→0) dividido en buildZarpe/Movimiento/AduanaEvent. TrackingWarnings.tsx (23→0) extrae 4 sub-componentes de alerta. CotizacionDatosGeneralesCard.tsx (24→0) usa array declarativo. proformaPdf buildHeaderHtml (21→0) extrae sub-secciones. VirtualDataTable extrae VirtualRow, VirtualHeaderRow, SkeletonRows, EmptyState. BulkImportDialog extrae hook useBulkImport. APP_VERSION 8.202.0.",
+  },
+  {
     version: "8.203.0",
     date: "2026-05-18",
     type: "patch",

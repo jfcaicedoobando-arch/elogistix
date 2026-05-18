@@ -22,6 +22,14 @@ export interface ChangelogEntry {
  */
 export const recentChangelog: ChangelogEntry[] = [
   {
+    version: "8.204.0",
+    date: "2026-05-18",
+    type: "patch",
+    title: "Auditoría — P2.12 lote 8 (cierre: 0 warnings ESLint)",
+    summary: "8 → 0 warnings ESLint. useTrackingLiveCard, buildGlobal, useCotizacionWizardSteps, usePortalEmbarquesController, BulkImportDialog y auditoria-weekly-digest cerrados.",
+    description: "Refactors puros sin cambios funcionales ni de BD. useTrackingLiveCard (19→0) extrae derivePrefixState, handleSyncResult, handleSyncError, buildApplyFechasArgs. useOperacionesData buildGlobal (17→0) extraída del hook con helper n(). useCotizacionWizardSteps handleSiguiente (18→0) divide en handlePaso1/2/3. usePortalEmbarquesController filtered (17→0) extrae embarqueMatchesSearch. BulkImportDialog (273→<200 LOC) mueve UploadStep/PreviewStep a BulkImportSteps.tsx. DimensionesAereasTable/LCLTable: allowlist documentada para Table primitivo (read-only). auditoria-weekly-digest (17→0) extrae resolveAdminEmails/sendDigest/processOrg/unauthorized y tipa con SupabaseClient. 369/369 tests verdes. APP_VERSION 8.204.0.",
+  },
+  {
     version: "8.203.0",
     date: "2026-05-18",
     type: "patch",
