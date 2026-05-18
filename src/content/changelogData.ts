@@ -93,23 +93,6 @@ export const recentChangelog: ChangelogEntry[] = [
     summary: "Nuevo botón 'Importar CSV' en clientes y proveedores con plantilla descargable, validación zod por fila y preview de errores antes de commitear.",
     description: "src/lib/csv/parseCsv.ts (RFC-4180, autodetecta separador y normaliza encabezados) + importSchemas.ts (mapClienteRows/mapProveedorRows con zod) alimentan al nuevo BulkImportDialog genérico, montado en /clientes y /proveedores. Soporta tipo por defecto desde la tab activa, registra cada importación en bitácora y mantiene los 334+13 tests verdes. APP_VERSION 8.185.0."
   },
-  {
-    version: "8.184.0",
-    date: "2026-05-17",
-    type: "minor",
-    title: "E2E Playwright (Bloque 2.3): scaffolding + 5 flujos críticos",
-    summary: "Smoke tests E2E listos para go-live: login, embarques, facturación, conciliación y portal cliente.",
-    description: "Bloque 2.3 cerrado. Se agrega 'playwright.config.ts' (es-MX, America/Mexico_City, retries en CI, traces/screenshots on failure) y carpeta 'e2e/' con fixtures de auth y 5 specs smoke (01 login interno + error, 02 embarques listado/detalle, 03 facturación tabs, 04 proformas/conciliación, 05 portal cliente). La carpeta queda fuera del bundle y de 'tsconfig.app.json' para no exigir '@playwright/test' al build; se instala on-demand con 'npm i -D @playwright/test && npx playwright install chromium'. Variables E2E_BASE_URL/E2E_EMAIL/E2E_PASSWORD/E2E_PORTAL_* documentadas en 'e2e/README.md'. Cero impacto en runtime y en los 334 unit tests existentes.",
-  },
-  {
-    version: "8.183.0",
-    date: "2026-05-17",
-    type: "minor",
-    title: "Bloque 2.5 — Bitácora virtualizada con tamaño de página",
-    summary: "Nuevo selector de 30/60/120/300 en /bitacora; al pasar de 60 filas se activa @tanstack/react-virtual para mantener el scroll fluido.",
-    description: "BitacoraActividad expone virtualize+maxHeight (default 600px) y la página /bitacora alterna automáticamente entre render lineal y virtualizado según el tamaño cargado. APP_VERSION 8.183.0."
-  },
-
 ];
 
 /** Deduplica por version conservando la primera ocurrencia (recentChangelog gana). */
