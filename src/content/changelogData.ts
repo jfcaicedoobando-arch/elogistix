@@ -22,6 +22,14 @@ export interface ChangelogEntry {
  */
 export const recentChangelog: ChangelogEntry[] = [
   {
+    version: "8.205.0",
+    date: "2026-05-18",
+    type: "patch",
+    title: "Auditoría P0.4 — Supabase fuera de generators/",
+    summary: "Generadores PDF/CSV ahora reciben DTOs hidratados desde services/facturas/exports.ts. layoutContable y estadoCuentaPdf pierden dependencia directa a Supabase.",
+    description: "Auditoría arquitectónica P0.4 (plan en .lovable/plan.md): generators/ no debe hacer I/O. Creado services/facturas/exports.ts con fetchLayoutContableData (facturas + RFC) y fetchEstadoCuentaFacturas. generators/layoutContable.ts y generators/estadoCuentaPdf.ts quedan como capa pura de presentación. Sin cambios funcionales ni de BD. APP_VERSION 8.205.0.",
+  },
+  {
     version: "8.204.0",
     date: "2026-05-18",
     type: "patch",
@@ -92,14 +100,6 @@ export const recentChangelog: ChangelogEntry[] = [
     title: "Auditoría arquitectónica — P0.3, P1.5, P1.6, P2.11 cerrados",
     summary: "51 → 35 warnings ESLint. Mappers y servicios partidos en sub-helpers por sección, utils unificados, mapa de arquitectura documentado.",
     description: "P0.3 Mappers refactor: embarqueFromDb/ToDb, cotizacion y cotizacionForm divididos en helpers por sección con nuevo `lib/mappers/_helpers.ts` (str/num/bool/emptyToNull). jsoncargo/navieras usa tabla iterable en lugar de cadena de if. P1.6 Servicios: facturas/proyeccion, facturas/huecoFacturacion y cotizacion/mutations partidos en sub-funciones fetch/index/construir. P1.5 Utils: lib/utils.ts plano eliminado, todo bajo lib/utils/ con barrel. P2.11 Nuevo docs/architecture-map.md con mapa dominio → capas. 359/359 tests verdes. APP_VERSION 8.195.0.",
-  },
-  {
-    version: "8.193.0",
-    date: "2026-05-18",
-    type: "patch",
-    title: "Auditoría arquitectónica — P0.2 (Supabase fuera de pages/components)",
-    summary: "Plan completo de auditoría documentado y primer paso implementado: 3 archivos UI que llamaban a Supabase directamente ahora pasan por servicios dedicados.",
-    description: "Auditoría read-only del repo (637 archivos, 265 warnings ESLint, 0 errores) plasmada en .lovable/plan.md con plan priorizado de 4 sprints. Implementado P0.2: extraídas las llamadas Supabase directas de pages/components a la capa de servicio. Nuevos archivos: services/admin/papelera.ts (listTrash, restoreRecord, purgeRecord), services/admin/idempotencia.ts (listIdempotencyLog) y services/observability/{index,logClientError}.ts. Actualizados: pages/dashboard/Papelera.tsx, pages/dashboard/Idempotencia.tsx y components/shared/ErrorBoundary.tsx. Reducidas a 0 las llamadas directas a @/integrations/supabase/client desde components/pages (eran 3). 359/359 tests verdes. APP_VERSION 8.193.0.",
   },
 ];
 

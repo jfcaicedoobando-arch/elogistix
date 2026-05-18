@@ -5,19 +5,11 @@
  * y totales por moneda. Reusa el patrón print-to-PDF (`window.open` + `print`)
  * de cotizacionPdf.ts para no introducir dependencias nuevas.
  */
-import { supabase } from "@/integrations/supabase/client";
+import { fetchEstadoCuentaFacturas, type EstadoCuentaFactura } from "@/services/facturas";
 import { formatCurrency, formatDate } from "@/lib/formatters";
 import { escapeHtml as esc } from "@/lib/utils";
 
-interface FacturaCte {
-  numero: string;
-  fecha_emision: string;
-  fecha_vencimiento: string;
-  total: number;
-  moneda: string;
-  estado: string;
-  expediente: string;
-}
+type FacturaCte = EstadoCuentaFactura;
 
 interface ClienteHeader {
   nombre: string;
@@ -48,15 +40,7 @@ function bucketFor(diasVencido: number): string {
 export async function generarEstadoCuentaPdf(
   cliente: ClienteHeader & { id: string },
 ): Promise<void> {
-  const { data, error } = await supabase
-    .from("facturas")
-    .select("numero, fecha_emision, fecha_vencimiento, total, moneda, estado, expediente")
-    .eq("cliente_id", cliente.id)
-    .in("estado", ["Emitida", "Vencida"])
-    .order("fecha_emision", { ascending: true });
-  if (error) throw error;
-
-  const facturas: FacturaCte[] = (data ?? []) as FacturaCte[];
+  const facturas: FacturaCte[] = await fetchEstadoCuentaFacturas(cliente.id);
   const hoy = new Date();
   hoy.setHours(0, 0, 0, 0);
 
