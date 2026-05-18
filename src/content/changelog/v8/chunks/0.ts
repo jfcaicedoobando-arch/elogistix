@@ -2,6 +2,14 @@ import type { ChangelogEntry } from "../../../changelogData";
 
 export const chunk0: ChangelogEntry[] = [
   {
+    version: "8.202.0",
+    date: "2026-05-18",
+    type: "patch",
+    title: "Auditoría — P2.12 lote 6 (jsoncargo-track, invite-client-user, VirtualDataTable, proformaPdf)",
+    summary: "21 → 14 warnings ESLint. jsoncargo-track (46→<15), invite-client-user (26→0), TrackingWarnings (23→0), CotizacionDatosGeneralesCard (24→0), buildHeaderHtml (21→0) y deriveEventsFromContainer (22→0) refactorizados.",
+    description: "Refactors puros sin cambios funcionales ni de BD. supabase/functions/jsoncargo-track: extrae helpers a _shared/jsoncargoSync.ts (loadEmbarque, persistPrefixMismatch, syncEventos, upsertTrackingExterno, buildSummary) y un runSync interno; handler queda <50 LOC. supabase/functions/invite-client-user (26→0) extrae parseBody, verifyClienteOrg, resolveUserId, ensureClienteRole. supabase/functions/_shared/jsoncargo.ts: deriveEventsFromContainer (22→0) dividido en buildZarpe/Movimiento/AduanaEvent. components/embarque/trackingLive/TrackingWarnings.tsx (23→0) extrae SinContenedorAlert, NoSoportadaAlert, PrefixMismatchAlert, FailedAlert. components/cotizacion/detalle/CotizacionDatosGeneralesCard.tsx (24→0) usa array de rows declarativo. generators/proformaPdf.ts buildHeaderHtml (21→0) extrae buildHeaderMeta/Cliente/Embarque/CondicionesSection. components/shared/VirtualDataTable.tsx (18→16) extrae VirtualRow, VirtualHeaderRow, SkeletonRows, EmptyState, buildGridTemplate y pickMeasureElement. components/shared/BulkImportDialog.tsx (16) extrae hook useBulkImport y helper downloadCsvTemplate. APP_VERSION 8.202.0.",
+  },
+  {
     version: "8.201.0",
     date: "2026-05-18",
     type: "patch",
