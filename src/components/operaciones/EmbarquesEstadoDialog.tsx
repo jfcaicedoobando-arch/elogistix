@@ -22,7 +22,7 @@ export function EmbarquesEstadoDialog({ open, onOpenChange, operador, estado, bu
   const [search, setSearch] = useState("");
   const Icon = ESTADO_ICON[estado];
 
-  const items = bucket?.items ?? [];
+  const items = useMemo(() => bucket?.items ?? [], [bucket?.items]);
   const total = bucket?.total ?? items.length;
   const truncated = bucket?.truncated ?? false;
 
