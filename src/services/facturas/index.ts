@@ -14,6 +14,15 @@ export type FacturaRow = Tables<"facturas">;
 
 export { fetchFacturaSnapshot, fetchProformaSnapshot } from "./snapshots";
 export type { FacturaSnapshot, ProformaSnapshot } from "./snapshots";
+export {
+  fetchLayoutContableData,
+  fetchEstadoCuentaFacturas,
+} from "./exports";
+export type {
+  LayoutContableData,
+  LayoutContableRow,
+  EstadoCuentaFactura,
+} from "./exports";
 
 export type FacturaListItem = Pick<
   FacturaRow,
