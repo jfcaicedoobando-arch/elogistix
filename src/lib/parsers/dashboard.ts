@@ -230,6 +230,11 @@ export function parseEmbarquesMesSiguiente(stats: DashboardStats): EmbarqueMesSi
   }));
 }
 
+export function parseProfitArribosEsteMes(stats: DashboardStats): EmbarqueConProfit[] {
+  const raw = (stats?.profitArribosEsteMes as Array<Record<string, unknown>>) ?? [];
+  return raw.map(parseEmbarqueConProfitRaw);
+}
+
 export function parseCargasActivasTotal(stats: DashboardStats): number {
   const v = stats?.cargasActivasTotal;
   return typeof v === "number" ? v : Number(v ?? 0);
