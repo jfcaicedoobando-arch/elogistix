@@ -33,22 +33,20 @@ export type SortDir = "asc" | "desc";
 
 const SORT_DIR_PARSER = parseAsStringLiteral(["asc", "desc"] as const).withDefault("desc");
 
+const SORT_GETTERS: Record<string, (e: EmbarqueRow) => string> = {
+  expediente: (e) => e.expediente ?? "",
+  cliente: (e) => e.cliente_nombre ?? "",
+  modo: (e) => e.modo ?? "",
+  estado: (e) => e.estado ?? "",
+  etd: (e) => e.etd ?? "",
+  eta: (e) => e.eta ?? "",
+  operador: (e) => e.operador ?? "",
+  created_at: (e) => e.created_at ?? "",
+};
+
 function compareBy(a: EmbarqueRow, b: EmbarqueRow, sortKey: string | null, dir: SortDir): number {
   const mult = dir === "asc" ? 1 : -1;
-  const key = sortKey ?? "expediente";
-  const getVal = (e: EmbarqueRow): string | number => {
-    switch (key) {
-      case "expediente": return e.expediente ?? "";
-      case "cliente": return e.cliente_nombre ?? "";
-      case "modo": return e.modo ?? "";
-      case "estado": return e.estado ?? "";
-      case "etd": return e.etd ?? "";
-      case "eta": return e.eta ?? "";
-      case "operador": return e.operador ?? "";
-      case "created_at": return e.created_at ?? "";
-      default: return e.expediente ?? "";
-    }
-  };
+  const getVal = SORT_GETTERS[sortKey ?? "expediente"] ?? SORT_GETTERS.expediente;
   const va = getVal(a);
   const vb = getVal(b);
   if (va < vb) return -1 * mult;
