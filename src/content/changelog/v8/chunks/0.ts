@@ -2,6 +2,14 @@ import type { ChangelogEntry } from "../../../changelogData";
 
 export const chunk0: ChangelogEntry[] = [
   {
+    version: "8.206.0",
+    date: "2026-05-18",
+    type: "patch",
+    title: "Auditoría P1.6 + P0.2 — utils/ eliminado y cotizacionForm cx15→0",
+    summary: "Movido exportOrganizationZip a services/admin/exportOrg.ts y eliminada la carpeta src/utils/. partesMercancia dividido (cx 15→0). 0 warnings ESLint.",
+    description: "P1.6: borrado shim deprecado src/utils/orgExportZip.ts; exportOrganizationZip vive ahora junto a fetchOrganizationExport en services/admin/exportOrg.ts. TabExportar importa desde @/services/admin. P0.2: partesMercancia (cotizacionForm.ts) dividido en partesMercanciaBase + partesMercanciaMedidas, eliminando el último warning de complejidad en mappers. Sin cambios funcionales ni de BD. APP_VERSION 8.206.0.",
+  },
+  {
     version: "8.205.0",
     date: "2026-05-18",
     type: "patch",

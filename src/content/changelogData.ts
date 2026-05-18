@@ -22,6 +22,14 @@ export interface ChangelogEntry {
  */
 export const recentChangelog: ChangelogEntry[] = [
   {
+    version: "8.206.0",
+    date: "2026-05-18",
+    type: "patch",
+    title: "Auditoría P1.6 + P0.2 — utils/ eliminado y cotizacionForm cx15→0",
+    summary: "exportOrganizationZip movido a services/admin/exportOrg.ts y carpeta src/utils/ eliminada. partesMercancia dividido (cx 15→0). 0 warnings ESLint.",
+    description: "P1.6: borrado shim deprecado src/utils/orgExportZip.ts; exportOrganizationZip vive ahora en services/admin/exportOrg.ts junto a fetchOrganizationExport. TabExportar importa desde @/services/admin. P0.2: partesMercancia (cotizacionForm) dividido en partesMercanciaBase + partesMercanciaMedidas, eliminando el último warning de complejidad en mappers. Sin cambios funcionales. APP_VERSION 8.206.0.",
+  },
+  {
     version: "8.205.0",
     date: "2026-05-18",
     type: "patch",
@@ -92,14 +100,6 @@ export const recentChangelog: ChangelogEntry[] = [
     title: "Auditoría — P0.3 (pages) + P1.8 (tests de servicios)",
     summary: "43 → 41 warnings, 359 → 369 tests. TrackingPublico/Embarques/EmbarqueDetalle partidos en sub-componentes; nuevos hooks useTabsParam y useEmbarqueDetalleData.",
     description: "P0.3 Pages: TrackingPublico, Embarques y EmbarqueDetalle bajan a 0 warnings de complejidad extrayendo sub-componentes (TrackingPublicoTimeline, EmbarquesHeaderActions, LoadingState/NotFoundState) y hooks (useTabsParam genérico para query param, useEmbarqueDetalleData que centraliza defaults). P1.8 Tests: nuevas suites para navieras mapper (5), embarqueRoundtrip (3) y cotizacionPaso1 (3). 369/369 verdes. APP_VERSION 8.196.0.",
-  },
-  {
-    version: "8.195.0",
-    date: "2026-05-18",
-    type: "minor",
-    title: "Auditoría arquitectónica — P0.3, P1.5, P1.6, P2.11 cerrados",
-    summary: "51 → 35 warnings ESLint. Mappers y servicios partidos en sub-helpers por sección, utils unificados, mapa de arquitectura documentado.",
-    description: "P0.3 Mappers refactor: embarqueFromDb/ToDb, cotizacion y cotizacionForm divididos en helpers por sección con nuevo `lib/mappers/_helpers.ts` (str/num/bool/emptyToNull). jsoncargo/navieras usa tabla iterable en lugar de cadena de if. P1.6 Servicios: facturas/proyeccion, facturas/huecoFacturacion y cotizacion/mutations partidos en sub-funciones fetch/index/construir. P1.5 Utils: lib/utils.ts plano eliminado, todo bajo lib/utils/ con barrel. P2.11 Nuevo docs/architecture-map.md con mapa dominio → capas. 359/359 tests verdes. APP_VERSION 8.195.0.",
   },
 ];
 
