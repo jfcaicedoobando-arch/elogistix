@@ -5,7 +5,7 @@
  * Si RESEND_API_KEY no está configurado todavía, hace dry-run y registra
  * en logs sin fallar.
  */
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import { createClient, type SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 import { buildCors, handlePreflightStrict } from "../_shared/cors.ts";
 import { createLogger } from "../_shared/logger.ts";
 
@@ -70,24 +70,85 @@ function buildHtml(orgNombre: string, reporte: ReporteRow): string {
   `;
 }
 
+interface OrgRow { id: string; nombre: string; }
+interface ProcessResult { org: string; destinatarios: number; enviado: boolean; dryRun?: boolean; error?: string; }
+
+async function resolveAdminEmails(admin: SupabaseClient, orgId: string): Promise<string[]> {
+  const { data: members } = await admin
+    .from("organization_members")
+    .select("user_id, role")
+    .eq("organization_id", orgId)
+    .eq("role", "admin");
+  const userIds = (members ?? []).map((m: { user_id: string }) => m.user_id);
+  const emails: string[] = [];
+  for (const uid of userIds) {
+    const { data: u } = await admin.auth.admin.getUserById(uid);
+    if (u?.user?.email) emails.push(u.user.email);
+  }
+  return emails;
+}
+
+interface SendDigestArgs {
+  org: OrgRow;
+  emails: string[];
+  html: string;
+  lovableKey: string;
+  resendKey: string;
+}
+
+async function sendDigest({ org, emails, html, lovableKey, resendKey }: SendDigestArgs): Promise<ProcessResult> {
+  const res = await fetch(`${GATEWAY_URL}/emails`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${lovableKey}`,
+      "X-Connection-Api-Key": resendKey,
+    },
+    body: JSON.stringify({
+      from: "Libre Carga <onboarding@resend.dev>",
+      to: emails,
+      subject: `Resumen semanal de auditoría — ${org.nombre}`,
+      html,
+    }),
+  });
+  return {
+    org: org.nombre,
+    destinatarios: emails.length,
+    enviado: res.ok,
+    error: res.ok ? undefined : await res.text(),
+  };
+}
+
+async function processOrg(admin: SupabaseClient, org: OrgRow, lovableKey: string | undefined, resendKey: string | undefined): Promise<ProcessResult> {
+  const { data: reporte } = await admin.rpc("auditoria_embarques_org", { p_organization_id: org.id });
+  const emails = await resolveAdminEmails(admin, org.id);
+  if (emails.length === 0) return { org: org.nombre, destinatarios: 0, enviado: false };
+  const html = buildHtml(org.nombre, (reporte ?? {}) as ReporteRow);
+  if (!lovableKey || !resendKey) {
+    console.log(`[auditoria-weekly-digest] DRY-RUN para ${org.nombre} (${emails.length} destinatarios)`);
+    return { org: org.nombre, destinatarios: emails.length, enviado: false, dryRun: true };
+  }
+  return sendDigest({ org, emails, html, lovableKey, resendKey });
+}
+
+function unauthorized(corsHeaders: Record<string, string>): Response {
+  return new Response(JSON.stringify({ ok: false, error: "Unauthorized" }), {
+    headers: { ...corsHeaders, "Content-Type": "application/json" },
+    status: 401,
+  });
+}
+
 Deno.serve(async (req) => {
   const preflight = handlePreflightStrict(req);
   if (preflight) return preflight;
   const corsHeaders = buildCors(req);
   const log = createLogger(req, "auditoria-weekly-digest");
 
-  // Cron-only: require X-Cron-Secret header
   const cronSecret = Deno.env.get("CRON_SECRET");
   const headerSecret = req.headers.get("X-Cron-Secret");
   if (!cronSecret || headerSecret !== cronSecret) {
     log.finish(401, "unauthorized_cron");
-    return new Response(
-      JSON.stringify({ ok: false, error: "Unauthorized" }),
-      {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-        status: 401,
-      },
-    );
+    return unauthorized(corsHeaders);
   }
 
   try {
@@ -97,107 +158,26 @@ Deno.serve(async (req) => {
     const resendKey = Deno.env.get("RESEND_API_KEY");
     const admin = createClient(supabaseUrl, serviceKey);
 
-    const { data: orgs } = await admin
-      .from("organizations")
-      .select("id, nombre")
-      .eq("activo", true);
-
-    const resultados: Array<{
-      org: string;
-      destinatarios: number;
-      enviado: boolean;
-      dryRun?: boolean;
-      error?: string;
-    }> = [];
-
-    for (const org of orgs ?? []) {
-      // Llamamos a la variante con filtro explícito por organización para
-      // evitar fugas multi-tenant (la versión sin parámetros depende de RLS,
-      // que el service role bypassa).
-      const { data: reporte } = await admin.rpc("auditoria_embarques_org", {
-        p_organization_id: org.id,
-      });
-
-      // Destinatarios: admins de la org.
-      const { data: members } = await admin
-        .from("organization_members")
-        .select("user_id, role")
-        .eq("organization_id", org.id)
-        .eq("role", "admin");
-
-      const userIds = (members ?? []).map((m) => m.user_id);
-      if (userIds.length === 0) {
-        resultados.push({ org: org.nombre, destinatarios: 0, enviado: false });
-        continue;
-      }
-
-      // Resolver emails desde auth.users via admin API.
-      const emails: string[] = [];
-      for (const uid of userIds) {
-        const { data: u } = await admin.auth.admin.getUserById(uid);
-        if (u?.user?.email) emails.push(u.user.email);
-      }
-
-      const html = buildHtml(org.nombre, (reporte ?? {}) as ReporteRow);
-
-      if (!lovableKey || !resendKey) {
-        console.log(
-          `[auditoria-weekly-digest] DRY-RUN para ${org.nombre} (${emails.length} destinatarios)`,
-        );
-        resultados.push({
-          org: org.nombre,
-          destinatarios: emails.length,
-          enviado: false,
-          dryRun: true,
-        });
-        continue;
-      }
-
-      const res = await fetch(`${GATEWAY_URL}/emails`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${lovableKey}`,
-          "X-Connection-Api-Key": resendKey,
-        },
-        body: JSON.stringify({
-          from: "Libre Carga <onboarding@resend.dev>",
-          to: emails,
-          subject: `Resumen semanal de auditoría — ${org.nombre}`,
-          html,
-        }),
-      });
-      const ok = res.ok;
-      resultados.push({
-        org: org.nombre,
-        destinatarios: emails.length,
-        enviado: ok,
-        error: ok ? undefined : await res.text(),
-      });
+    const { data: orgs } = await admin.from("organizations").select("id, nombre").eq("activo", true);
+    const resultados: ProcessResult[] = [];
+    for (const org of (orgs ?? []) as OrgRow[]) {
+      resultados.push(await processOrg(admin, org, lovableKey, resendKey));
     }
 
     const enviados = resultados.filter((r) => r.enviado).length;
     const dryRun = resultados.filter((r) => r.dryRun).length;
-    log.finish(200, "digest_run", {
-      payload: { total: resultados.length, enviados, dryRun },
+    log.finish(200, "digest_run", { payload: { total: resultados.length, enviados, dryRun } });
+    return new Response(JSON.stringify({ ok: true, total: resultados.length, resultados }), {
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+      status: 200,
     });
-    return new Response(
-      JSON.stringify({ ok: true, total: resultados.length, resultados }),
-      {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-        status: 200,
-      },
-    );
   } catch (err) {
     const msg = (err as Error).message;
     console.error("[auditoria-weekly-digest] error:", err);
     log.finish(500, "unhandled_error", { payload: { error: msg } });
-    return new Response(
-      JSON.stringify({ ok: false, error: msg }),
-      {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-        status: 500,
-      },
-    );
+    return new Response(JSON.stringify({ ok: false, error: msg }), {
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+      status: 500,
+    });
   }
 });

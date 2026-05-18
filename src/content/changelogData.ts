@@ -22,6 +22,14 @@ export interface ChangelogEntry {
  */
 export const recentChangelog: ChangelogEntry[] = [
   {
+    version: "8.204.0",
+    date: "2026-05-18",
+    type: "patch",
+    title: "Auditoría — P2.12 lote 8 (cierre: 0 warnings ESLint)",
+    summary: "8 → 0 warnings ESLint. useTrackingLiveCard, buildGlobal, useCotizacionWizardSteps, usePortalEmbarquesController, BulkImportDialog y auditoria-weekly-digest cerrados.",
+    description: "Refactors puros sin cambios funcionales ni de BD. useTrackingLiveCard (19→0) extrae derivePrefixState, handleSyncResult, handleSyncError, buildApplyFechasArgs. useOperacionesData buildGlobal (17→0) extraída del hook con helper n(). useCotizacionWizardSteps handleSiguiente (18→0) divide en handlePaso1/2/3. usePortalEmbarquesController filtered (17→0) extrae embarqueMatchesSearch. BulkImportDialog (273→<200 LOC) mueve UploadStep/PreviewStep a BulkImportSteps.tsx. DimensionesAereasTable/LCLTable: allowlist documentada para Table primitivo (read-only). auditoria-weekly-digest (17→0) extrae resolveAdminEmails/sendDigest/processOrg/unauthorized y tipa con SupabaseClient. 369/369 tests verdes. APP_VERSION 8.204.0.",
+  },
+  {
     version: "8.203.0",
     date: "2026-05-18",
     type: "patch",
@@ -92,14 +100,6 @@ export const recentChangelog: ChangelogEntry[] = [
     title: "Auditoría arquitectónica — P0.2 (Supabase fuera de pages/components)",
     summary: "Plan completo de auditoría documentado y primer paso implementado: 3 archivos UI que llamaban a Supabase directamente ahora pasan por servicios dedicados.",
     description: "Auditoría read-only del repo (637 archivos, 265 warnings ESLint, 0 errores) plasmada en .lovable/plan.md con plan priorizado de 4 sprints. Implementado P0.2: extraídas las llamadas Supabase directas de pages/components a la capa de servicio. Nuevos archivos: services/admin/papelera.ts (listTrash, restoreRecord, purgeRecord), services/admin/idempotencia.ts (listIdempotencyLog) y services/observability/{index,logClientError}.ts. Actualizados: pages/dashboard/Papelera.tsx, pages/dashboard/Idempotencia.tsx y components/shared/ErrorBoundary.tsx. Reducidas a 0 las llamadas directas a @/integrations/supabase/client desde components/pages (eran 3). 359/359 tests verdes. APP_VERSION 8.193.0.",
-  },
-  {
-    version: "8.192.0",
-    date: "2026-05-17",
-    type: "minor",
-    title: "Sprint A.5 — Export ZIP por organización",
-    summary: "Nueva pestaña 'Exportar' en Configuración que descarga un ZIP con CSVs de las 18 tablas operativas de la organización, con barra de progreso y procesamiento 100% en el navegador.",
-    description: "Se agregan jszip y file-saver. src/utils/orgExportZip.ts pagina cada tabla en bloques de 1000 filas (límite Supabase), serializa a CSV (RFC 4180 simplificado, escape de comillas y newlines), incluye manifest.json y comprime con DEFLATE nivel 6. Nueva pestaña /configuracion → Exportar (TabExportar) con botón 'Descargar ZIP', barra de progreso (Progress de shadcn) que muestra tabla actual y filas acumuladas, y toast de éxito/error. Tablas incluidas: clientes, proveedores, contactos, embarques, conceptos costo/venta, documentos, eventos, notas, cotizaciones y costos, facturas y conceptos, proformas, bitácora, configuración, notificaciones cliente. RLS garantiza aislamiento por organización + filtro explícito eq('organization_id'). APP_VERSION 8.192.0.",
   },
 ];
 

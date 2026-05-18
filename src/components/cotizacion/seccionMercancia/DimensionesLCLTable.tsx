@@ -1,3 +1,5 @@
+// Tabla estática de detalle de mercancía (read-only, sin sort/paginación). No requiere DataTable.
+// eslint-disable-next-line no-restricted-imports
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import type { DimensionLCL } from "@/hooks/cotizacion";
 

@@ -105,6 +105,31 @@ interface ServerOperador {
   historico: { mes: string; creados: number; llegados: number }[];
 }
 
+type StatsShape = Awaited<ReturnType<typeof fetchOperacionesStats>>;
+
+function buildGlobal(stats: StatsShape | undefined, operadores: OperadorData[]): OperacionesGlobal {
+  if (!stats?.global) return EMPTY_GLOBAL;
+  const g = stats.global;
+  const n = (v: unknown) => Number(v ?? 0);
+  const historicoGlobal = stats.historicoGlobal ?? [];
+  const ultimo = historicoGlobal[historicoGlobal.length - 1];
+  return {
+    totalActivas: n(g.totalActivas),
+    totalContenedores: n(g.totalContenedores),
+    totalEsteMes: n(g.totalEsteMes),
+    totalProfit: n(g.totalProfit),
+    totalDemoras: n(g.totalDemoras),
+    totalCriticos: n(g.totalCriticos),
+    totalEnPuerto: n(g.totalEnPuerto),
+    totalPorArribar: n(g.totalPorArribar),
+    activasHoy: n(g.activasHoy),
+    historicoCreadosPorMes: historicoGlobal,
+    creadasEsteMes: ultimo?.creadas ?? 0,
+    llegadasEsteMes: ultimo?.llegadas ?? 0,
+    cargasEnRiesgo: operadores.flatMap((o) => o.cargasEnRiesgo),
+  };
+}
+
 /**
  * Operaciones data — powered by server-side RPC `operaciones_stats()`.
  * Replaces previous approach of downloading ALL embarques and aggregating client-side.
@@ -138,28 +163,7 @@ export function useOperacionesData(_periodo: PeriodoFiltro = "mes") {
     }));
   }, [stats]);
 
-  const global = useMemo<OperacionesGlobal>(() => {
-    if (!stats?.global) return EMPTY_GLOBAL;
-    const g = stats.global;
-    const historicoGlobal = stats.historicoGlobal ?? [];
-    const ultimo = historicoGlobal[historicoGlobal.length - 1];
-    const cargasEnRiesgo = operadores.flatMap((o) => o.cargasEnRiesgo);
-    return {
-      totalActivas: Number(g.totalActivas ?? 0),
-      totalContenedores: Number(g.totalContenedores ?? 0),
-      totalEsteMes: Number(g.totalEsteMes ?? 0),
-      totalProfit: Number(g.totalProfit ?? 0),
-      totalDemoras: Number(g.totalDemoras ?? 0),
-      totalCriticos: Number(g.totalCriticos ?? 0),
-      totalEnPuerto: Number(g.totalEnPuerto ?? 0),
-      totalPorArribar: Number(g.totalPorArribar ?? 0),
-      activasHoy: Number(g.activasHoy ?? 0),
-      historicoCreadosPorMes: historicoGlobal,
-      creadasEsteMes: ultimo?.creadas ?? 0,
-      llegadasEsteMes: ultimo?.llegadas ?? 0,
-      cargasEnRiesgo,
-    };
-  }, [stats, operadores]);
+  const global = useMemo<OperacionesGlobal>(() => buildGlobal(stats, operadores), [stats, operadores]);
 
   return {
     isLoading,

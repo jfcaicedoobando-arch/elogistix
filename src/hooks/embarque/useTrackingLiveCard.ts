@@ -10,7 +10,7 @@
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
-import { mapNavieraToJsonCargo } from "@/lib/jsoncargo/navieras";
+import { mapNavieraToJsonCargo, type JsonCargoShippingLine } from "@/lib/jsoncargo/navieras";
 import { validatePrefixMatchesNaviera } from "@/lib/jsoncargo/containerPrefixes";
 import {
   useJsonCargoTracking,
@@ -29,6 +29,96 @@ export function jsoncargoDateToYmd(value: string | null | undefined): string | n
   const d = new Date(iso);
   if (Number.isNaN(d.getTime())) return null;
   return d.toISOString().slice(0, 10);
+}
+
+interface ComputeFechasInput {
+  readOnly: boolean | undefined;
+  summary: ReturnType<typeof extractSummary> | null | undefined;
+  trackingStatus: string | undefined;
+  fechasDismissed: boolean;
+  eta: string | null;
+  etd: string | null;
+  ata: string | null;
+}
+
+function computeFechasPropuestas(input: ComputeFechasInput) {
+  const { readOnly, summary, trackingStatus, fechasDismissed, eta, etd, ata } = input;
+  if (readOnly || !summary || trackingStatus !== "ok" || fechasDismissed) return null;
+  const etaPropuesta = jsoncargoDateToYmd(summary.eta_final_destination);
+  const etdPropuesta = jsoncargoDateToYmd(summary.etd_origin_effective ?? summary.atd_origin);
+  const ataPropuesta = jsoncargoDateToYmd(summary.ata_effective);
+  const etaDifiere = !!etaPropuesta && etaPropuesta !== eta;
+  const etdDifiere = !!etdPropuesta && etdPropuesta !== etd;
+  const ataDifiere = !!ataPropuesta && ataPropuesta !== ata;
+  if (!etaDifiere && !etdDifiere && !ataDifiere) return null;
+  return { etaPropuesta, etdPropuesta, ataPropuesta, etaDifiere, etdDifiere, ataDifiere };
+}
+
+type ToastFn = ReturnType<typeof useToast>["toast"];
+type SyncResult = { throttled?: boolean; message?: string; ok?: boolean; eventos_creados?: number; error?: string };
+
+function handleSyncResult(res: SyncResult, toast: ToastFn): void {
+  if (res.throttled) {
+    toast({ title: "Sincronización reciente", description: res.message ?? "Espera unos minutos." });
+    return;
+  }
+  if (res.ok) {
+    notifySuccess(toast, {
+      title: "Tracking actualizado",
+      description: res.eventos_creados
+        ? `${res.eventos_creados} evento(s) nuevo(s).`
+        : "Sin cambios desde la última sincronización.",
+    });
+    return;
+  }
+  notifyError(toast, { title: "No se pudo sincronizar", description: res.error ?? "Error desconocido" });
+}
+
+function handleSyncError(err: unknown, toast: ToastFn, naviera: string | null): void {
+  if (err instanceof PrefixMismatchError) {
+    notifyError(toast, {
+      title: "Prefix no coincide con la naviera",
+      description: `El prefix ${err.prefix} no corresponde a ${naviera ?? "—"}. Verifica la naviera.`,
+    });
+    return;
+  }
+  notifyError(toast, { title: "Error de tracking", description: err instanceof Error ? err.message : "Error" });
+}
+
+interface FechasArgs { etaPropuesta: string | null; etdPropuesta: string | null; ataPropuesta: string | null; etaDifiere: boolean; etdDifiere: boolean; ataDifiere: boolean; }
+function buildApplyFechasArgs(embarqueId: string, f: FechasArgs) {
+  return {
+    embarqueId,
+    eta: f.etaDifiere ? f.etaPropuesta! : undefined,
+    etd: f.etdDifiere ? f.etdPropuesta! : undefined,
+    ata: f.ataDifiere ? f.ataPropuesta! : undefined,
+  };
+}
+
+interface DerivePrefixInput {
+  contenedor: string | null;
+  sl: JsonCargoShippingLine | null;
+  tracking: { status?: string; failed_reason?: string | null } | null | undefined;
+  syncError: unknown;
+}
+
+function derivePrefixState({ contenedor, sl, tracking, syncError }: DerivePrefixInput) {
+  const noSoportada = !sl;
+  const sinContenedor = !contenedor;
+  const prefixCheck = validatePrefixMatchesNaviera(contenedor, sl);
+  const prefixMismatch = !sinContenedor && !noSoportada && !prefixCheck.valid;
+  const backendPrefixError =
+    tracking?.status === "failed" && /prefix not found/i.test(tracking.failed_reason ?? "");
+  const mutationPrefixError =
+    syncError instanceof PrefixMismatchError ? syncError : null;
+  return {
+    noSoportada,
+    sinContenedor,
+    prefixMismatch,
+    suggestions: mutationPrefixError?.suggestions ?? prefixCheck.suggestions,
+    detectedPrefix: mutationPrefixError?.prefix ?? prefixCheck.prefix,
+    showPrefixWarning: prefixMismatch || mutationPrefixError != null || backendPrefixError,
+  };
 }
 
 interface UseTrackingLiveCardInput {
@@ -59,76 +149,29 @@ export function useTrackingLiveCard({
   const [fechasDismissed, setFechasDismissed] = useState(false);
 
   const sl = mapNavieraToJsonCargo(naviera);
-  const noSoportada = !sl;
-  const sinContenedor = !contenedor;
   const summary = tracking?.raw_payload ? extractSummary(tracking.raw_payload) : null;
+  const prefixState = derivePrefixState({ contenedor, sl, tracking, syncError: sync.error });
+  const { noSoportada, sinContenedor, prefixMismatch, suggestions, detectedPrefix, showPrefixWarning } = prefixState;
 
-  // Validación de prefix vs naviera (local, no consume cuota)
-  const prefixCheck = validatePrefixMatchesNaviera(contenedor, sl);
-  const prefixMismatch = !sinContenedor && !noSoportada && !prefixCheck.valid;
-
-  // Detecta también si el backend ya guardó un fallo por prefix
-  const backendPrefixError =
-    tracking?.status === "failed" && /prefix not found/i.test(tracking.failed_reason ?? "");
-
-  // Estado de error tras una mutación del cliente
-  const mutationPrefixError =
-    sync.error instanceof PrefixMismatchError ? (sync.error as PrefixMismatchError) : null;
-
-  const suggestions = mutationPrefixError?.suggestions ?? prefixCheck.suggestions;
-  const detectedPrefix = mutationPrefixError?.prefix ?? prefixCheck.prefix;
-  const showPrefixWarning = prefixMismatch || mutationPrefixError != null || backendPrefixError;
+  // Sugerencia de fechas (sólo cuando hay summary y no estamos en readOnly).
+  const fechasPropuestas = computeFechasPropuestas({
+    readOnly, summary, trackingStatus: tracking?.status, fechasDismissed,
+    eta: eta ?? null, etd: etd ?? null, ata: fechaLlegadaReal ?? null,
+  });
 
   const onSync = async () => {
     try {
       const res = await sync.mutateAsync({ embarqueId, contenedor, naviera });
-      if (res.throttled) {
-        toast({ title: "Sincronización reciente", description: res.message ?? "Espera unos minutos." });
-      } else if (res.ok) {
-        notifySuccess(toast, {
-          title: "Tracking actualizado",
-          description: res.eventos_creados
-            ? `${res.eventos_creados} evento(s) nuevo(s).`
-            : "Sin cambios desde la última sincronización.",
-        });
-      } else {
-        notifyError(toast, { title: "No se pudo sincronizar", description: res.error ?? "Error desconocido" });
-      }
+      handleSyncResult(res, toast);
     } catch (err) {
-      if (err instanceof PrefixMismatchError) {
-        notifyError(toast, {
-          title: "Prefix no coincide con la naviera",
-          description: `El prefix ${err.prefix} no corresponde a ${naviera ?? "—"}. Verifica la naviera.`,
-        });
-        return;
-      }
-      notifyError(toast, { title: "Error de tracking", description: err instanceof Error ? err.message : "Error" });
+      handleSyncError(err, toast, naviera);
     }
   };
 
-  // Sugerencia de fechas (sólo cuando hay summary y no estamos en readOnly).
-  const fechasPropuestas = (() => {
-    if (readOnly || !summary || tracking?.status !== "ok" || fechasDismissed) return null;
-    const etaPropuesta = jsoncargoDateToYmd(summary.eta_final_destination);
-    const etdPropuesta = jsoncargoDateToYmd(summary.etd_origin_effective ?? summary.atd_origin);
-    const ataPropuesta = jsoncargoDateToYmd(summary.ata_effective);
-    const etaDifiere = !!etaPropuesta && etaPropuesta !== (eta ?? null);
-    const etdDifiere = !!etdPropuesta && etdPropuesta !== (etd ?? null);
-    const ataDifiere = !!ataPropuesta && ataPropuesta !== (fechaLlegadaReal ?? null);
-    if (!etaDifiere && !etdDifiere && !ataDifiere) return null;
-    return { etaPropuesta, etdPropuesta, ataPropuesta, etaDifiere, etdDifiere, ataDifiere };
-  })();
-
   const onAplicarFechas = async () => {
     if (!fechasPropuestas) return;
-    const { etaPropuesta, etdPropuesta, ataPropuesta, etaDifiere, etdDifiere, ataDifiere } = fechasPropuestas;
     try {
-      await applyFechas.mutateAsync({
-        embarqueId,
-        eta: etaDifiere ? etaPropuesta! : undefined,
-        etd: etdDifiere ? etdPropuesta! : undefined,
-        ata: ataDifiere ? ataPropuesta! : undefined,
-      });
+      await applyFechas.mutateAsync(buildApplyFechasArgs(embarqueId, fechasPropuestas));
       notifySuccess(toast, { title: "Fechas actualizadas en el embarque" });
       setFechasDismissed(true);
     } catch (err) {
