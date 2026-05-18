@@ -2661,8 +2661,18 @@ export type Database = {
       profit_por_embarque: {
         Args: never
         Returns: {
+          costo_mxn: number
+          costo_mxn_from_eur: number
+          costo_mxn_from_usd: number
+          costo_mxn_native: number
           costo_usd: number
           embarque_id: string
+          tipo_cambio_eur: number
+          tipo_cambio_usd: number
+          venta_mxn: number
+          venta_mxn_from_eur: number
+          venta_mxn_from_usd: number
+          venta_mxn_native: number
           venta_usd: number
         }[]
       }
