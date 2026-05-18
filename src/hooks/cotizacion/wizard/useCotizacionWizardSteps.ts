@@ -57,7 +57,7 @@ export function useCotizacionWizardSteps({
 }: Deps) {
   const { crearCotizacion, updateCotizacion, upsertCostos, registrarActividad } = mutations;
 
-  const validatePaso1 = (v: ReturnType<typeof form.getValues>): string | null => {
+  const validatePaso1 = (v: CotizacionFormValues): string | null => {
     if (!v.esProspecto && !v.clienteId) return "Selecciona un cliente";
     if (v.esProspecto && !v.prospectoEmpresa.trim()) return "Ingresa el nombre de la empresa del prospecto";
     if (v.esProspecto && !v.prospectoContacto.trim()) return "Ingresa el nombre del contacto del prospecto";
