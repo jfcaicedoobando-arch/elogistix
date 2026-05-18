@@ -2,7 +2,7 @@
 
 Guía de capas, reglas y convenciones del proyecto. **Mantener este contrato evita acoplamientos y simplifica los tests.**
 
-> Última revisión: **v8.118.8 — 2026-05-08**
+> Última revisión: **v8.206.0 — 2026-05-18**
 > Fuente espejo: `mem://technical/architecture-and-standards`.
 > Documentación de dominio complementaria: [`docs/auditoria.md`](./docs/auditoria.md) (desglose de componentes y flujo de datos del módulo Auditoría), [`docs/tables.md`](./docs/tables.md) (estandarización de tablas y densidades).
 
@@ -50,11 +50,12 @@ src/
 │   ├── dashboard/      → Barrel folder.
 │   ├── embarque/       → Barrel folder + barrel `useEmbarques.ts` + `mutations/`.
 │   ├── facturacion/    → Barrel folder.
+│   ├── layout/         → Barrel folder (`useAppSidebarSections`).
 │   ├── operaciones/    → Barrel folder.
 │   ├── portal/         → Barrel folder.
 │   ├── proveedor/      → Barrel folder.
 │   ├── reportes/       → Barrel folder.
-│   ├── shared/         → Hooks transversales (debounce, listPageState, permissions, sidebarAlerts).
+│   ├── shared/         → Hooks transversales (debounce, listPageState, permissions, sidebarAlerts, tabsParam, useToast/useIsMobile wrappers).
 │   └── usuario/        → Barrel folder.
 ├── services/       → Acceso puro a datos (Supabase, edge functions, fetch). Sin React Query.
 ├── lib/            → Utilidades puras y reutilizables.
@@ -70,8 +71,10 @@ src/
 ├── constants/      → Constantes de dominio/UI (cotización, embarque, proveedor, wizard, appVersion).
 ├── types/          → Tipos compartidos entre módulos.
 ├── contexts/       → React Contexts (Auth, Organization, Theme, Breadcrumb).
-├── generators/     → Generación de archivos (PDF, CSV).
+├── generators/     → Generación pura de archivos (PDF, CSV). Sin Supabase ni I/O — reciben DTOs hidratados desde `services/`.
 └── integrations/   → Clientes auto-generados (Supabase). NO editar.
+
+> Nota: `src/utils/` fue eliminado en v8.206.0. Las utilidades viven en `src/lib/` (puras) o `src/services/` (con I/O).
 
 supabase/
 ├── functions/      → Edge functions (Deno). Cada carpeta = 1 función desplegada.
@@ -144,7 +147,7 @@ Las pages densas (>5 hooks o handlers) deben extraer su lógica a `use<Page>Page
 
 **Folder + `index.ts` por dominio** (estabilizado en v8.100.4). Cada subcarpeta de `src/hooks/` es un dominio con su `index.ts` que re-exporta los hooks públicos:
 
-- `admin`, `auditoria`, `catalogos`, `cliente`, `configuracion`, `cotizacion`, `dashboard`, `embarque`, `facturacion`, `operaciones`, `portal`, `proveedor`, `reportes`, `shared`, `usuario`.
+- `admin`, `auditoria`, `catalogos`, `cliente`, `configuracion`, `cotizacion`, `dashboard`, `embarque`, `facturacion`, `layout`, `operaciones`, `portal`, `proveedor`, `reportes`, `shared`, `usuario`.
 - Importar siempre desde el barrel: `@/hooks/cliente`, `@/hooks/embarque`, etc. Importar de submódulos sólo cuando el barrel no expone esa API.
 - Embarques y Cotizaciones conservan además los barrels legacy `@/hooks/embarque/useEmbarques` y `@/hooks/cotizacion/useCotizaciones` por compatibilidad (re-exportan tipos + queries + mutations agrupadas).
 - `hooks/embarque/mutations/` agrupa create/update/delete con su propio `index.ts` por tamaño y rotación de la carpeta.
@@ -277,7 +280,7 @@ Ejemplos canónicos en el repo: `crear_proforma_con_conceptos`, `consolidar_prof
 
 ## 15. Testing
 
-- **Stack**: Vitest + Testing Library. 279 tests vigentes (v8.118.8).
+- **Stack**: Vitest + Testing Library. 369 tests vigentes (v8.206.0).
 - **Qué se testea**:
   - `src/lib/` (financial, domain, storage, ui, mappers complejos, parsers): puro, alta cobertura. Incluye `*.edge.test.ts` para casos borde (montos cero/negativos, fechas nulas, conversiones round-trip).
   - `src/services/` puros con lógica no trivial (csfService, trackingService).
@@ -321,6 +324,9 @@ Estas decisiones son intencionales. **NO marcarlas como violación de capa** en 
   - Light mode: logo y avatar sin contenedor blanco/ring.
   - Detalle de embarque: sin botón "back" redundante cuando hay breadcrumbs.
 - **Hooks barrel folder universal** (v8.100.4). Toda subcarpeta de `src/hooks/` expone un `index.ts`. Importar siempre por `@/hooks/<dominio>`; importar archivos sueltos sólo cuando el barrel no exponga la API.
+- **Generators sin Supabase** (v8.205.0). `src/generators/**` es capa pura de presentación: reciben DTOs hidratados y devuelven Blob/string. Toda lectura vive en `services/<dominio>/exports.ts` (p. ej. `services/facturas/exports.ts` con `fetchLayoutContableData` y `fetchEstadoCuentaFacturas`). No reintroducir `supabase.*` runtime en `generators/`.
+- **`src/utils/` eliminado** (v8.206.0). No recrear esa carpeta. Utilidades puras → `src/lib/`; utilidades con I/O (Supabase, descargas) → `src/services/<dominio>/`. `exportOrganizationZip` vive en `services/admin/exportOrg.ts`.
+- **Auditoría arquitectónica P0–P3** (v8.196.0–v8.206.0). Plan vivo en `.lovable/plan.md`. Cierre actual: 0 warnings ESLint, 0 violaciones de barrel, 0 llamadas Supabase en `components/`, `pages/` o `generators/`. Mappers complejos partidos (`partesMercancia` → base + medidas).
 
 ## 17. Decisiones de no hacer
 
