@@ -9,3 +9,4 @@ export * from "./organizations";
 export * from "./members";
 export * from "./papelera";
 export * from "./idempotencia";
+export * from "./exportOrg";
