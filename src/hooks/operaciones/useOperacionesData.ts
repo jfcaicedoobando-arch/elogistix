@@ -138,28 +138,7 @@ export function useOperacionesData(_periodo: PeriodoFiltro = "mes") {
     }));
   }, [stats]);
 
-  const global = useMemo<OperacionesGlobal>(() => {
-    if (!stats?.global) return EMPTY_GLOBAL;
-    const g = stats.global;
-    const historicoGlobal = stats.historicoGlobal ?? [];
-    const ultimo = historicoGlobal[historicoGlobal.length - 1];
-    const cargasEnRiesgo = operadores.flatMap((o) => o.cargasEnRiesgo);
-    return {
-      totalActivas: Number(g.totalActivas ?? 0),
-      totalContenedores: Number(g.totalContenedores ?? 0),
-      totalEsteMes: Number(g.totalEsteMes ?? 0),
-      totalProfit: Number(g.totalProfit ?? 0),
-      totalDemoras: Number(g.totalDemoras ?? 0),
-      totalCriticos: Number(g.totalCriticos ?? 0),
-      totalEnPuerto: Number(g.totalEnPuerto ?? 0),
-      totalPorArribar: Number(g.totalPorArribar ?? 0),
-      activasHoy: Number(g.activasHoy ?? 0),
-      historicoCreadosPorMes: historicoGlobal,
-      creadasEsteMes: ultimo?.creadas ?? 0,
-      llegadasEsteMes: ultimo?.llegadas ?? 0,
-      cargasEnRiesgo,
-    };
-  }, [stats, operadores]);
+  const global = useMemo<OperacionesGlobal>(() => buildGlobal(stats, operadores), [stats, operadores]);
 
   return {
     isLoading,

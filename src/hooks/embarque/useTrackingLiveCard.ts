@@ -31,6 +31,29 @@ export function jsoncargoDateToYmd(value: string | null | undefined): string | n
   return d.toISOString().slice(0, 10);
 }
 
+interface ComputeFechasInput {
+  readOnly: boolean | undefined;
+  summary: ReturnType<typeof extractSummary> | null | undefined;
+  trackingStatus: string | undefined;
+  fechasDismissed: boolean;
+  eta: string | null;
+  etd: string | null;
+  ata: string | null;
+}
+
+function computeFechasPropuestas(input: ComputeFechasInput) {
+  const { readOnly, summary, trackingStatus, fechasDismissed, eta, etd, ata } = input;
+  if (readOnly || !summary || trackingStatus !== "ok" || fechasDismissed) return null;
+  const etaPropuesta = jsoncargoDateToYmd(summary.eta_final_destination);
+  const etdPropuesta = jsoncargoDateToYmd(summary.etd_origin_effective ?? summary.atd_origin);
+  const ataPropuesta = jsoncargoDateToYmd(summary.ata_effective);
+  const etaDifiere = !!etaPropuesta && etaPropuesta !== eta;
+  const etdDifiere = !!etdPropuesta && etdPropuesta !== etd;
+  const ataDifiere = !!ataPropuesta && ataPropuesta !== ata;
+  if (!etaDifiere && !etdDifiere && !ataDifiere) return null;
+  return { etaPropuesta, etdPropuesta, ataPropuesta, etaDifiere, etdDifiere, ataDifiere };
+}
+
 interface UseTrackingLiveCardInput {
   embarqueId: string;
   naviera: string | null;
