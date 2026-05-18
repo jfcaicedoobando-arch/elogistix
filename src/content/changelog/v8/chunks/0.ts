@@ -2,6 +2,14 @@ import type { ChangelogEntry } from "../../../changelogData";
 
 export const chunk0: ChangelogEntry[] = [
   {
+    version: "8.214.0",
+    date: "2026-05-18",
+    type: "patch",
+    title: "Subida de documentos — fix RLS por referencia calificada (storage.objects.name)",
+    summary: "Corrige el error 'new row violates row-level security policy' al subir documentos desde el detalle del embarque.",
+    description: "Las políticas INSERT/UPDATE/DELETE del bucket 'documentos' usaban storage.foldername(storage.objects.name), referencia calificada que no se resolvía correctamente durante WITH CHECK al insertar un objeto nuevo, provocando que toda subida fuera rechazada por RLS. Se recrearon las tres políticas usando simplemente storage.foldername(name), igual que las políticas de facturas que sí funcionan. Sin cambios de permisos: solo admin/operador de la organización dueña del embarque (o super_admin) pueden subir/editar/borrar. APP_VERSION 8.214.0.",
+  },
+  {
     version: "8.213.0",
     date: "2026-05-18",
     type: "patch",
