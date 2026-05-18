@@ -105,6 +105,30 @@ interface ServerOperador {
   historico: { mes: string; creados: number; llegados: number }[];
 }
 
+type StatsShape = Awaited<ReturnType<typeof fetchOperacionesStats>>;
+
+function buildGlobal(stats: StatsShape | undefined, operadores: OperadorData[]): OperacionesGlobal {
+  if (!stats?.global) return EMPTY_GLOBAL;
+  const g = stats.global;
+  const historicoGlobal = stats.historicoGlobal ?? [];
+  const ultimo = historicoGlobal[historicoGlobal.length - 1];
+  return {
+    totalActivas: Number(g.totalActivas ?? 0),
+    totalContenedores: Number(g.totalContenedores ?? 0),
+    totalEsteMes: Number(g.totalEsteMes ?? 0),
+    totalProfit: Number(g.totalProfit ?? 0),
+    totalDemoras: Number(g.totalDemoras ?? 0),
+    totalCriticos: Number(g.totalCriticos ?? 0),
+    totalEnPuerto: Number(g.totalEnPuerto ?? 0),
+    totalPorArribar: Number(g.totalPorArribar ?? 0),
+    activasHoy: Number(g.activasHoy ?? 0),
+    historicoCreadosPorMes: historicoGlobal,
+    creadasEsteMes: ultimo?.creadas ?? 0,
+    llegadasEsteMes: ultimo?.llegadas ?? 0,
+    cargasEnRiesgo: operadores.flatMap((o) => o.cargasEnRiesgo),
+  };
+}
+
 /**
  * Operaciones data — powered by server-side RPC `operaciones_stats()`.
  * Replaces previous approach of downloading ALL embarques and aggregating client-side.

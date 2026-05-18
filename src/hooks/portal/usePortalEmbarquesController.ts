@@ -3,6 +3,19 @@ import { useSearchParams } from "react-router-dom";
 import { usePortalEmbarques, usePortalClientUsers } from "@/hooks/portal/usePortalData";
 import { calcularEstadoEmbarque } from "@/lib/domain/embarque";
 
+type EmbarqueRow = ReturnType<typeof usePortalEmbarques>["data"] extends ReadonlyArray<infer U> | undefined ? U : never;
+
+function embarqueMatchesSearch(e: EmbarqueRow, estadoVisual: string, q: string): boolean {
+  const ruta = `${e.puerto_origen || ""} ${e.puerto_destino || ""} ${e.aeropuerto_origen || ""} ${e.aeropuerto_destino || ""} ${e.ciudad_origen || ""} ${e.ciudad_destino || ""}`.toLowerCase();
+  return (
+    e.expediente.toLowerCase().includes(q) ||
+    e.cliente_nombre.toLowerCase().includes(q) ||
+    ruta.includes(q) ||
+    estadoVisual.toLowerCase().includes(q) ||
+    (!!e.contenedor && e.contenedor.toLowerCase().includes(q))
+  );
+}
+
 /**
  * Controller de la página /portal/embarques.
  * Centraliza queries (clientes vinculados + embarques), filtros (search, estado, modo)
