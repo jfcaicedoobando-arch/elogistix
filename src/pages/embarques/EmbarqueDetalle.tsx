@@ -148,7 +148,12 @@ export default function EmbarqueDetalle() {
         </TabsContent>
 
         <TabsContent value="notas">
-          <TabNotas notas={notas} embarqueId={id} />
+          <TabNotas
+            notas={notas}
+            embarqueId={id}
+            creadoPor={embarque.created_by_email ?? null}
+            creadoEn={embarque.created_at}
+          />
         </TabsContent>
       </Tabs>
     </div>

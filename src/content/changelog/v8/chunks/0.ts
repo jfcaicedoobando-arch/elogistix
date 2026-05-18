@@ -2,6 +2,14 @@ import type { ChangelogEntry } from "../../../changelogData";
 
 export const chunk0: ChangelogEntry[] = [
   {
+    version: "8.207.0",
+    date: "2026-05-18",
+    type: "minor",
+    title: "Embarques — creador visible en Notas y Actividad",
+    summary: "Se registra qué usuario creó cada embarque y se muestra en el timeline de la pestaña Notas y Actividad.",
+    description: "Nuevas columnas embarques.created_by y created_by_email rellenadas automáticamente por trigger BEFORE INSERT (auth.uid() + email). Backfill desde bitacora_actividad (accion='crear', modulo='embarques'). TabNotas muestra entrada 'Embarque creado' con usuario y fecha al final del timeline. APP_VERSION 8.207.0.",
+  },
+  {
     version: "8.206.0",
     date: "2026-05-18",
     type: "patch",
