@@ -2,6 +2,14 @@ import type { ChangelogEntry } from "../../../changelogData";
 
 export const chunk0: ChangelogEntry[] = [
   {
+    version: "8.218.0",
+    date: "2026-05-18",
+    type: "patch",
+    title: "Documentos de embarque — permiso interno de validación RLS",
+    summary: "Corrige el bloqueo de subida de archivos que seguía apareciendo como 'new row violates row-level security policy'.",
+    description: "Se restauró el permiso EXECUTE necesario sobre public.can_manage_document_object(text) para el rol usado internamente por Storage durante la inserción de objetos. La regla de negocio no cambia: sólo admin/operador de la organización del embarque o super_admin pueden subir, reemplazar o eliminar documentos. APP_VERSION 8.218.0.",
+  },
+  {
     version: "8.216.0",
     date: "2026-05-18",
     type: "minor",
