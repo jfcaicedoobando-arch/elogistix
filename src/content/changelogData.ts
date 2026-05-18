@@ -22,6 +22,14 @@ export interface ChangelogEntry {
  */
 export const recentChangelog: ChangelogEntry[] = [
   {
+    version: "8.211.0",
+    date: "2026-05-18",
+    type: "patch",
+    title: "Errores de Supabase — mensaje legible en toasts",
+    summary: "Los errores de RPC/Supabase (PostgrestError) ya no aparecen como 'Error desconocido'; ahora se muestra el mensaje real para diagnosticar fallos al avanzar estado o subir documentos.",
+    description: "getErrorMessage() ahora detecta objetos tipo PostgrestError (que no heredan de Error) y compone el mensaje con message + details + hint, o el code si no hay texto. Soluciona los toasts opacos al avanzar_estado_embarque y otras mutaciones. Sin cambios de lógica de negocio. APP_VERSION 8.211.0.",
+  },
+  {
     version: "8.210.0",
     date: "2026-05-18",
     type: "patch",
