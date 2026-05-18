@@ -18,6 +18,8 @@ import { getNotaTipoColorClass } from "@/lib/ui/uiMappings";
 interface Props {
   notas: NotaEmbarqueRow[];
   embarqueId?: string;
+  creadoPor?: string | null;
+  creadoEn?: string | null;
 }
 
 export function TabNotas({ notas, embarqueId }: Props) {
