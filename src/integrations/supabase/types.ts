@@ -2334,6 +2334,10 @@ export type Database = {
           url: string
         }[]
       }
+      can_manage_document_object: {
+        Args: { _object_name: string }
+        Returns: boolean
+      }
       clientes_listado: {
         Args: {
           p_limit?: number
