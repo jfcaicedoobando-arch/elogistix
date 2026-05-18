@@ -136,7 +136,6 @@ export default function Clientes() {
           for (const p of payloads) {
             // Inserción secuencial para no exceder rate-limit y conservar
             // mensajes de error por fila si alguna RFC duplica.
-            // eslint-disable-next-line no-await-in-loop
             await createCliente(p);
           }
           registrarActividad.mutate({

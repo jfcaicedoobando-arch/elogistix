@@ -183,7 +183,6 @@ export default function Proveedores() {
         mapRows={(rows) => mapProveedorRows(rows, organizationId, activeTipo)}
         onCommit={async (payloads) => {
           for (const p of payloads) {
-            // eslint-disable-next-line no-await-in-loop
             await insertProveedor(p);
           }
           registrarActividad.mutate({
