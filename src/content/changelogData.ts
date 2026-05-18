@@ -22,6 +22,22 @@ export interface ChangelogEntry {
  */
 export const recentChangelog: ChangelogEntry[] = [
   {
+    version: "8.218.0",
+    date: "2026-05-18",
+    type: "patch",
+    title: "Documentos de embarque — permiso interno de validación RLS",
+    summary: "Corrige el bloqueo de subida de archivos que seguía apareciendo como 'new row violates row-level security policy'.",
+    description: "Se restauró el permiso EXECUTE necesario sobre public.can_manage_document_object(text) para el rol usado internamente por Storage durante la inserción de objetos. La regla de negocio no cambia: sólo admin/operador de la organización del embarque o super_admin pueden subir, reemplazar o eliminar documentos. APP_VERSION 8.218.0.",
+  },
+  {
+    version: "8.217.0",
+    date: "2026-05-18",
+    type: "patch",
+    title: "Documentos de embarque — validación RLS con path normalizado",
+    summary: "Refuerza la validación de rutas de documentos para aceptar keys con o sin slash inicial durante la evaluación de Storage.",
+    description: "Se ajustó public.can_manage_document_object(text) para normalizar la ruta con ltrim(name, '/') y se reaplicaron las políticas del bucket 'documentos' contra la función centralizada. También se concedió ejecución al rol interno de Storage para permitir evaluar la política durante la operación. APP_VERSION 8.217.0.",
+  },
+  {
     version: "8.216.0",
     date: "2026-05-18",
     type: "minor",
