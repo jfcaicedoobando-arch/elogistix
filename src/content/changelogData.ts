@@ -22,6 +22,14 @@ export interface ChangelogEntry {
  */
 export const recentChangelog: ChangelogEntry[] = [
   {
+    version: "8.208.0",
+    date: "2026-05-18",
+    type: "patch",
+    title: "Documentos de embarque — fix RLS de upload para admin y operador",
+    summary: "Admin y operador no podían subir documentos a embarques ('new row violates row-level security policy'). Política del bucket re-alineada con la estructura real de paths.",
+    description: "Migración 20260518: drop & recreate de las políticas INSERT/UPDATE/DELETE del bucket 'documentos'. La política anterior exigía foldername[1] = organization_id, pero los archivos se guardan bajo 'embarques/<expediente>/...'. Ahora la pertenencia se valida vía EXISTS contra public.embarques (foldername[2] = expediente o id::text) manteniendo el aislamiento multi-tenant. No requiere migrar archivos existentes. APP_VERSION 8.208.0.",
+  },
+  {
     version: "8.207.0",
     date: "2026-05-18",
     type: "minor",
