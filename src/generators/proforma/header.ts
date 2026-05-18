@@ -1,4 +1,4 @@
-import { formatCurrency, formatDate } from '@/lib/formatters';
+import { formatDate } from '@/lib/formatters';
 import { escapeHtml as esc } from '@/lib/utils';
 import type { Tables } from '@/integrations/supabase/types';
 
