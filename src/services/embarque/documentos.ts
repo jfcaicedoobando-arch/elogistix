@@ -101,9 +101,18 @@ export async function uploadDocumentoEmbarque(
     return { path, fileName: file.name, cached: true };
   }
 
-  // 2) Reclamar idempotencia (clave determinística por docId+hash) para que
-  //    reintentos concurrentes desde otra pestaña queden registrados.
-  const requestId = hexToUuid(hash);
+  // 2) Reclamar idempotencia. La clave DEBE incluir embarqueId+docId+hash; si
+  //    sólo dependiera del hash, subir el mismo archivo a otro slot devolvería
+  //    la respuesta cacheada del docId anterior y nunca actualizaríamos la
+  //    fila correcta (bug detectado en 8.220.0).
+  const scopedHashBuf = await crypto.subtle.digest(
+    'SHA-256',
+    new TextEncoder().encode(`${embarqueId}:${docId}:${hash}`),
+  );
+  const scopedHex = Array.from(new Uint8Array(scopedHashBuf))
+    .map((b) => b.toString(16).padStart(2, '0'))
+    .join('');
+  const requestId = hexToUuid(scopedHex);
   const { data: claim } = await supabase.rpc('idempotency_claim', {
     _key: requestId,
     _fn: 'upload_documento_embarque',
@@ -115,15 +124,19 @@ export async function uploadDocumentoEmbarque(
     }
   }
 
-  // 3) Upload y update de la fila. El path hash+archivo es estable; si ya existe,
-  //    la fila arriba habría hecho no-op. Evitamos upsert porque Storage evalúa RLS
-  //    como UPDATE y puede bloquear uploads válidos.
+  // 3) Upload y update de la fila. Usamos .select() para detectar si el UPDATE
+  //    afectó 0 filas (RLS, docId borrado, etc.) y fallar explícitamente en
+  //    vez de devolver éxito silencioso con el toast verde.
   await uploadFile(path, file);
-  const { error } = await supabase
+  const { data: updated, error } = await supabase
     .from('documentos_embarque')
     .update({ archivo: path, estado: 'Recibido' as DocumentoEstado })
-    .eq('id', docId);
+    .eq('id', docId)
+    .select('id');
   if (error) throw error;
+  if (!updated || updated.length === 0) {
+    throw new Error('No se pudo actualizar el documento (sin permisos o el documento ya no existe).');
+  }
 
   await supabase.rpc('idempotency_store', {
     _key: requestId,
