@@ -52,18 +52,8 @@ export function usePortalEmbarquesController() {
       const estadoVisual = calcularEstadoEmbarque(e.modo, e.tipo, e.etd, e.eta, e.estado);
       if (filtroEstado !== "todos" && estadoVisual !== filtroEstado) return false;
       if (filtroModo !== "todos" && e.modo !== filtroModo) return false;
-      if (search) {
-        const q = search.toLowerCase();
-        const ruta = `${e.puerto_origen || ""} ${e.puerto_destino || ""} ${e.aeropuerto_origen || ""} ${e.aeropuerto_destino || ""} ${e.ciudad_origen || ""} ${e.ciudad_destino || ""}`.toLowerCase();
-        return (
-          e.expediente.toLowerCase().includes(q) ||
-          e.cliente_nombre.toLowerCase().includes(q) ||
-          ruta.includes(q) ||
-          estadoVisual.toLowerCase().includes(q) ||
-          (e.contenedor && e.contenedor.toLowerCase().includes(q))
-        );
-      }
-      return true;
+      if (!search) return true;
+      return embarqueMatchesSearch(e, estadoVisual, search.toLowerCase());
     });
   }, [embarques, search, filtroEstado, filtroModo]);
 
