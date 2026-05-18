@@ -135,3 +135,23 @@ export function useCreateNotaEmbarque() {
     },
   });
 }
+
+/**
+ * Inserta una nueva fila vacía en `documentos_embarque` para que el operador
+ * pueda adjuntar un archivo desde el detalle aunque el checklist inicial esté
+ * incompleto. RLS de la tabla aplica tenancy automáticamente.
+ */
+export function useCreateDocumentoEmbarque() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ embarqueId, nombre, notas }: { embarqueId: string; nombre: string; notas?: string }) => {
+      const { error } = await supabase
+        .from('documentos_embarque')
+        .insert({ embarque_id: embarqueId, nombre, estado: 'Pendiente', notas: notas ?? null });
+      if (error) throw error;
+    },
+    onSuccess: (_r, vars) => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.embarques.documentos(vars.embarqueId) });
+    },
+  });
+}
