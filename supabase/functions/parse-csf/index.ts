@@ -39,6 +39,61 @@ function handleGatewayError(status: number, log: ReturnType<typeof createLogger>
   return errorResponse("Error al procesar el documento", 500, cors);
 }
 
+const SYSTEM_PROMPT = `Eres un extractor de datos fiscales mexicanos. Se te proporcionará una Constancia de Situación Fiscal (CSF) del SAT en formato PDF.
+
+Extrae los siguientes campos y devuélvelos en el tool call:
+- nombre: Denominación o Razón Social del contribuyente
+- rfc: RFC del contribuyente (13 caracteres para personas morales, 12 para físicas)
+- cp: Código Postal del domicilio fiscal
+- direccion: Dirección completa (concatena: Tipo Vialidad + Nombre Vialidad + Número Exterior + Número Interior + Colonia)
+- ciudad: Nombre del Municipio o Demarcación Territorial
+- estado: Nombre de la Entidad Federativa
+
+Si no encuentras un campo, devuelve cadena vacía. No inventes datos.`;
+
+const TOOL_SCHEMA = {
+  type: "function",
+  function: {
+    name: "extraer_datos_csf",
+    description: "Retorna los datos fiscales extraídos de la CSF",
+    parameters: {
+      type: "object",
+      properties: {
+        nombre: { type: "string", description: "Denominación o Razón Social" },
+        rfc: { type: "string", description: "RFC del contribuyente" },
+        cp: { type: "string", description: "Código Postal" },
+        direccion: { type: "string", description: "Dirección completa" },
+        ciudad: { type: "string", description: "Municipio o Demarcación" },
+        estado: { type: "string", description: "Entidad Federativa" },
+      },
+      required: ["nombre", "rfc", "cp", "direccion", "ciudad", "estado"],
+      additionalProperties: false,
+    },
+  },
+};
+
+async function callAiGateway(apiKey: string, fileName: string, base64: string) {
+  return await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+    method: "POST",
+    headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
+    body: JSON.stringify({
+      model: "google/gemini-2.5-flash",
+      messages: [
+        { role: "system", content: SYSTEM_PROMPT },
+        {
+          role: "user",
+          content: [
+            { type: "file", file: { filename: fileName, file_data: `data:application/pdf;base64,${base64}` } },
+            { type: "text", text: "Extrae los datos fiscales de esta Constancia de Situación Fiscal." },
+          ],
+        },
+      ],
+      tools: [TOOL_SCHEMA],
+      tool_choice: { type: "function", function: { name: "extraer_datos_csf" } },
+    }),
+  });
+}
+
 serve(async (req) => {
   const preflight = handlePreflightStrict(req);
   if (preflight) return preflight;
