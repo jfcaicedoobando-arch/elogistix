@@ -23,7 +23,7 @@ import {
   useAppLogsHealthSummary,
   useAppLogsHealthTimeline,
   type HealthSummaryRow,
-} from "@/hooks/admin/useAppLogsHealth";
+} from "@/hooks/admin";
 
 const RANGE_OPTIONS: Array<{ label: string; hours: number; buckets: number }> = [
   { label: "Última hora", hours: 1, buckets: 12 },

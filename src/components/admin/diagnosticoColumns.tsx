@@ -3,7 +3,7 @@
  */
 import { Badge } from "@/components/ui/badge";
 import type { DataTableColumn } from "@/components/shared/DataTable";
-import type { AppLogRow } from "@/hooks/admin/useAppLogs";
+import type { AppLogRow } from "@/hooks/admin";
 
 const levelVariant: Record<string, "default" | "secondary" | "destructive" | "outline"> = {
   info: "secondary",

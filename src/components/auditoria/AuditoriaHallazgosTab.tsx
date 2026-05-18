@@ -11,8 +11,8 @@ import {
 import { pluralS } from "@/lib/formatters";
 import { AuditoriaKpis } from "@/components/auditoria/AuditoriaKpis";
 import { HallazgosTablaPaginada } from "@/components/auditoria/HallazgosTablaPaginada";
-import type { useAuditoriaPageController } from "@/hooks/auditoria/useAuditoriaPageController";
-import type { UseHallazgosTablaStateOptions } from "@/hooks/auditoria/useHallazgosTablaState";
+import type { useAuditoriaPageController } from "@/hooks/auditoria";
+import type { UseHallazgosTablaStateOptions } from "@/hooks/auditoria";
 import type { SeveridadAuditoria } from "@/types/auditoria";
 
 interface Props {

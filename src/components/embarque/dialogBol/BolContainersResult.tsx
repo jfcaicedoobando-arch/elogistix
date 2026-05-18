@@ -4,7 +4,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { AlertCircle, RefreshCw } from "lucide-react";
 import { formatDate } from "@/lib/formatters";
-import type { BolLookupResponse } from "@/hooks/embarque/useJsonCargoBolLookup";
+import type { BolLookupResponse } from "@/hooks/embarque";
 
 interface Props {
   result: BolLookupResponse;

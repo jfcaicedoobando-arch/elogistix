@@ -1,11 +1,11 @@
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
-import { useClientesForSelect } from "@/hooks/cliente/useClientes";
-import { useCreateCotizacion, useUpdateCotizacion } from "@/hooks/cotizacion/useCotizaciones";
-import { useUpsertCotizacionCostos } from "@/hooks/cotizacion/useCotizacionCostos";
-import { useRegistrarActividad } from "@/hooks/shared/useBitacora";
+import { useClientesForSelect } from "@/hooks/cliente";
+import { useCreateCotizacion, useUpdateCotizacion } from "@/hooks/cotizacion";
+import { useUpsertCotizacionCostos } from "@/hooks/cotizacion";
+import { useRegistrarActividad } from "@/hooks/shared";
 import { useAuth } from "@/contexts/AuthContext";
-import { useCotizacionWizardForm } from "@/hooks/cotizacion/wizard/useCotizacionWizardForm";
+import { useCotizacionWizardForm } from "@/hooks/cotizacion";
 import CotizacionWizardLayout from "@/components/cotizacion/CotizacionWizardLayout";
 
 export default function NuevaCotizacion() {

@@ -17,7 +17,7 @@ import { CotizacionDatosGeneralesCard } from "@/components/cotizacion/detalle/Co
 import { getEstadoColor } from "@/lib/ui/uiMappings";
 import { toTitleCase } from "@/lib/formatters";
 import { ArrowLeft, FileDown } from "lucide-react";
-import { useCotizacionDetalleState } from "@/hooks/cotizacion/useCotizacionDetalleState";
+import { useCotizacionDetalleState } from "@/hooks/cotizacion";
 import { useRegisterBreadcrumbLabel } from "@/contexts/BreadcrumbContext";
 
 // Lazy-loaded PDF generator (jsPDF + autotable are heavy; only load on demand)

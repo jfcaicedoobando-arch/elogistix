@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { RotateCcw } from "lucide-react";
-import type { AppLogLevel } from "@/hooks/admin/useAppLogs";
+import type { AppLogLevel } from "@/hooks/admin";
 
 interface Props {
   level: AppLogLevel | "todos";

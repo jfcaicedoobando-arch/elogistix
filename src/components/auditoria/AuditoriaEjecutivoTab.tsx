@@ -7,8 +7,8 @@
  * tradicional para los operadores.
  */
 import { Skeleton } from "@/components/ui/skeleton";
-import type { AuditoriaEjecutivoData } from "@/hooks/auditoria/useAuditoriaEjecutivo";
-import { useAutoCapturarSnapshot } from "@/hooks/auditoria/useAuditoriaSnapshots";
+import type { AuditoriaEjecutivoData } from "@/hooks/auditoria";
+import { useAutoCapturarSnapshot } from "@/hooks/auditoria";
 import { AuditoriaTendenciaChart } from "./AuditoriaTendenciaChart";
 import { AuditoriaOperadoresCard } from "./AuditoriaOperadoresCard";
 import { AuditoriaRiesgoFinancieroCard } from "./AuditoriaRiesgoFinancieroCard";

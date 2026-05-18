@@ -2,7 +2,7 @@ import { useParams } from "react-router-dom";
 import { FormProvider } from "react-hook-form";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
-import { useEditarEmbarqueWizard } from "@/hooks/embarque/useEditarEmbarqueWizard";
+import { useEditarEmbarqueWizard } from "@/hooks/embarque";
 import { EmbarqueWizardLayout } from "@/components/embarque/EmbarqueWizardLayout";
 import { StepDatosGenerales } from "@/components/embarque/StepDatosGenerales";
 import { StepDatosRuta } from "@/components/embarque/StepDatosRuta";

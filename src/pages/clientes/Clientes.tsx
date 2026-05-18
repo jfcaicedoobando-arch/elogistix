@@ -4,13 +4,13 @@ import { Users, Plus, Upload } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import SearchInput from "@/components/selects/SearchInput";
-import { useClientesPaginados } from "@/hooks/cliente/useClientes";
-import { usePermissions } from "@/hooks/shared/usePermissions";
+import { useClientesPaginados } from "@/hooks/cliente";
+import { usePermissions } from "@/hooks/shared";
 import NuevoClienteDialog from "@/components/cliente/NuevoClienteDialog";
 import { PageHeader } from "@/components/shared/PageHeader";
-import { useDebounce } from "@/hooks/shared/useDebounce";
+import { useDebounce } from "@/hooks/shared";
 import { DataTable, type DataTableColumn } from "@/components/shared/DataTable";
-import { useListPageState } from "@/hooks/shared/useListPageState";
+import { useListPageState } from "@/hooks/shared";
 import { toTitleCase, formatPhoneMx, correctSpanishPlace } from "@/lib/formatters";
 import { FloatingActionButton } from "@/components/shared/FloatingActionButton";
 import { BulkImportDialog } from "@/components/shared/BulkImportDialog";
@@ -18,13 +18,13 @@ import {
   CLIENTE_TEMPLATE_HEADERS,
   mapClienteRows,
 } from "@/lib/csv/importSchemas";
-import { useOrgFilter } from "@/hooks/shared/useOrgFilter";
+import { useOrgFilter } from "@/hooks/shared";
 import { useQueryClient } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/query";
 import { createCliente } from "@/services/cliente";
 import { useToast } from "@/hooks/use-toast";
 import { notifySuccess } from "@/lib/ui/appFeedback";
-import { useRegistrarActividad } from "@/hooks/shared/useBitacora";
+import { useRegistrarActividad } from "@/hooks/shared";
 
 type ClienteRow = { id: string; nombre: string; rfc: string; ciudad: string; estado: string; contacto: string; telefono: string };
 
@@ -136,7 +136,6 @@ export default function Clientes() {
           for (const p of payloads) {
             // Inserción secuencial para no exceder rate-limit y conservar
             // mensajes de error por fila si alguna RFC duplica.
-            // eslint-disable-next-line no-await-in-loop
             await createCliente(p);
           }
           registrarActividad.mutate({

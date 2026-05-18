@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { listNavierasSoportadas } from "@/lib/jsoncargo/navieras";
 import { getExternalTracking } from "@/lib/jsoncargo/externalTracking";
 import { carrierLabel } from "@/lib/jsoncargo/containerPrefixes";
-import type { useTrackingLiveCard } from "@/hooks/embarque/useTrackingLiveCard";
+import type { useTrackingLiveCard } from "@/hooks/embarque";
 
 interface Props {
   ctrl: ReturnType<typeof useTrackingLiveCard>;

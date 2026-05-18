@@ -5,7 +5,7 @@ import { DataTable, type DataTableColumn } from "@/components/shared/DataTable";
 import { formatDate, formatCurrency, getOrigen, getDestino, toTitleCase } from "@/lib/formatters";
 import { getEstadoColor } from "@/lib/ui/uiMappings";
 import { ModoIcon } from "@/components/shared/ModoIcon";
-import type { EmbarqueMesSiguiente, ResumenFacturacion } from "@/hooks/dashboard/useDashboardData";
+import type { EmbarqueMesSiguiente, ResumenFacturacion } from "@/hooks/dashboard";
 
 import { CalendarDays, DollarSign, TrendingUp, FileCheck, Package } from "lucide-react";
 import { Progress } from "@/components/ui/progress";

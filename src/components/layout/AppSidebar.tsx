@@ -4,9 +4,9 @@ import { BrandLockup } from "@/components/layout/BrandLockup";
 import { useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 
-import { useSidebarAlerts } from "@/hooks/shared/useSidebarAlerts";
-import { useAuditoriaCount } from "@/hooks/auditoria/useAuditoria";
-import { useAlertasPendingCount } from "@/hooks/admin/useAlertasSistema";
+import { useSidebarAlerts } from "@/hooks/shared";
+import { useAuditoriaCount } from "@/hooks/auditoria";
+import { useAlertasPendingCount } from "@/hooks/admin";
 import {
   Sidebar,
   SidebarContent,

@@ -110,3 +110,7 @@ export async function fetchGastosPendientes() {
   if (error) throw error;
   return data;
 }
+export type { FilaHueco, HuecoFacturacionResult } from './huecoFacturacion';
+export { fetchHuecoFacturacion } from "./huecoFacturacion";
+export { fetchProyeccionMes } from "./proyeccion";
+export type { ProyeccionMesParams } from "./proyeccion";

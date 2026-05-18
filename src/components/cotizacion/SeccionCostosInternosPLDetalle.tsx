@@ -3,12 +3,12 @@ import { Button } from "@/components/ui/button";
 import { DollarSign, Banknote, Save, Pencil, X } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { getErrorMessage } from "@/lib/errors";
-import { usePermissions } from "@/hooks/shared/usePermissions";
+import { usePermissions } from "@/hooks/shared";
 import {
   useCotizacionCostos, useUpsertCotizacionCostos, type CostoCotizacion,
-} from "@/hooks/cotizacion/useCotizacionCostos";
+} from "@/hooks/cotizacion";
 import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
-import type { ConceptoVentaCotizacion } from "@/hooks/cotizacion/useCotizaciones";
+import type { ConceptoVentaCotizacion } from "@/hooks/cotizacion";
 import ResumenPL from "./ResumenPL";
 import TablaCostosDetalle from "./TablaCostosDetalle";
 import { calcTotalsPL, type FilaCostoDetalle } from "./costosPLTypes";

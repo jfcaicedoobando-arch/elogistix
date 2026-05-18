@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { DataTable, type DataTableColumn } from "@/components/shared/DataTable";
 import { cn } from "@/lib/utils";
-import { revisionKey } from "@/hooks/auditoria/useAuditoriaRevisiones";
+import { revisionKey } from "@/hooks/auditoria";
 import type { AuditoriaRevision, HallazgoAuditoria } from "@/types/auditoria";
 import {
   formatEta,

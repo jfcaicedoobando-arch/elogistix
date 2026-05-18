@@ -2,15 +2,15 @@ import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
-import { useEventosEmbarque } from "@/hooks/embarque/useEventosEmbarque";
-import { usePermissions } from "@/hooks/shared/usePermissions";
+import { useEventosEmbarque } from "@/hooks/embarque";
+import { usePermissions } from "@/hooks/shared";
 import { TrackingLiveCard } from "./TrackingLiveCard";
 import { TrackingFasesTimeline } from "./TrackingFasesTimeline";
 import { TabNotas } from "./TabNotas";
 import { TrackingEventTimeline } from "./tracking/TrackingEventTimeline";
 import { TrackingNuevoEventoForm } from "./tracking/TrackingNuevoEventoForm";
 import type { Tables } from "@/integrations/supabase/types";
-import type { NotaEmbarqueRow } from "@/hooks/embarque/useEmbarques";
+import type { NotaEmbarqueRow } from "@/hooks/embarque";
 
 type EmbarqueTrackingProps = Pick<
   Tables<"embarques">,

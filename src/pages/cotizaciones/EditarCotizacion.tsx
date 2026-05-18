@@ -1,17 +1,17 @@
 import { useParams, useNavigate, Navigate } from "react-router-dom";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
-import { useClientesForSelect } from "@/hooks/cliente/useClientes";
-import { useCotizacion, useUpdateCotizacion, useCreateCotizacion } from "@/hooks/cotizacion/useCotizaciones";
-import { useCotizacionCostos, useUpsertCotizacionCostos } from "@/hooks/cotizacion/useCotizacionCostos";
-import { useRegistrarActividad } from "@/hooks/shared/useBitacora";
+import { useClientesForSelect } from "@/hooks/cliente";
+import { useCotizacion, useUpdateCotizacion, useCreateCotizacion } from "@/hooks/cotizacion";
+import { useCotizacionCostos, useUpsertCotizacionCostos } from "@/hooks/cotizacion";
+import { useRegistrarActividad } from "@/hooks/shared";
 import { useAuth } from "@/contexts/AuthContext";
-import { usePermissions } from "@/hooks/shared/usePermissions";
-import { useCotizacionWizardForm } from "@/hooks/cotizacion/wizard/useCotizacionWizardForm";
+import { usePermissions } from "@/hooks/shared";
+import { useCotizacionWizardForm } from "@/hooks/cotizacion";
 import CotizacionWizardLayout from "@/components/cotizacion/CotizacionWizardLayout";
 import type { NavigateFunction } from "react-router-dom";
-import type { CotizacionRow } from "@/hooks/cotizacion/useCotizaciones";
-import type { CostoCotizacion } from "@/hooks/cotizacion/useCotizacionCostos";
+import type { CotizacionRow } from "@/hooks/cotizacion";
+import type { CostoCotizacion } from "@/hooks/cotizacion";
 import { useRegisterBreadcrumbLabel } from "@/contexts/BreadcrumbContext";
 
 export default function EditarCotizacion() {

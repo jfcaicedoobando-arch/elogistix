@@ -10,13 +10,8 @@ import {
   Accordion, AccordionContent, AccordionItem, AccordionTrigger,
 } from "@/components/ui/accordion";
 import { Upload } from "lucide-react";
-import type { CotizacionFormValues } from "@/hooks/cotizacion/wizard/useCotizacionWizardForm";
-
-export const TIPOS_CARGA = ['Carga General', 'Mercancía Peligrosa'];
-export const SECTORES = [
-  'Automotriz', 'Médica', 'Alimentos', 'Carga Proyecto',
-  'Construcción', 'Industrial', 'General', 'Tecnología', 'Arte y Moda',
-];
+import type { CotizacionFormValues } from "@/hooks/cotizacion";
+import { TIPOS_CARGA, SECTORES } from "@/constants/cotizacionMercancia";
 
 interface Props {
   msdsFile: File | null;

@@ -23,7 +23,7 @@ import {
 import {
   SIN_RESPONSABLE,
   useAsignarResponsableController,
-} from "@/hooks/auditoria/useAsignarResponsableController";
+} from "@/hooks/auditoria";
 import type { AuditoriaRevision, HallazgoAuditoria } from "@/types/auditoria";
 import { AsignacionExistenteInfo } from "@/components/auditoria/asignarResponsable/AsignacionExistenteInfo";
 import { FechaLimitePicker } from "@/components/auditoria/asignarResponsable/FechaLimitePicker";

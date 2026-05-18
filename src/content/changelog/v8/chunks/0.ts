@@ -2,6 +2,14 @@ import type { ChangelogEntry } from "../../../changelogData";
 
 export const chunk0: ChangelogEntry[] = [
   {
+    version: "8.194.0",
+    date: "2026-05-18",
+    type: "minor",
+    title: "Auditoría arquitectónica — P0.1, P0.4, P1.5, P2.9 cerrados",
+    summary: "265 warnings ESLint → 40. Cero violaciones de barrel, cero exhaustive-deps abiertos, react-refresh limpio, utils consolidados.",
+    description: "P0.1 Barrel violations: generados 14 nuevos archivos hooks/<dominio>/index.ts y aplicado codemod que reemplazó 195 imports profundos por imports del barrel (203 → 0 warnings). Resuelta colisión `useDeleteUser` re-exportando como `useDeleteUserAuth`. Allowlisted internals de components/shared/dataTable. P0.4 Exhaustive-deps: corregidos useAuditoriaPageController, EmbarquesEstadoDialog, useEmbarquesPageState y useHuecoFacturacion envolviendo defaults `?? []` en useMemo. Documentados con comentario los 3 inicializadores once-per-mount de useEditarEmbarqueWizard (9 → 0 warnings). P2.9 React-refresh: exenciones para src/components/ui/** y src/contexts/** (patrón estándar shadcn + provider+hooks). Constantes TIPOS_CARGA/SECTORES movidas a constants/cotizacionMercancia.ts. embarqueColumns.tsx con disable documentado. P1.5 Utilidades: nuevos lib/io/csv.ts + lib/io/zipDownload.ts + services/admin/exportOrg.ts. utils/orgExportZip.ts queda como wrapper de compatibilidad delgado consumiendo los nuevos módulos. Cleanup: 3 directivas eslint-disable obsoletas eliminadas. Resultado: 40 warnings residuales (38 complexity + 2 max-lines), pendientes para Sprint P0.3 (refactor de mappers). 359/359 tests verdes. APP_VERSION 8.194.0.",
+  },
+  {
     version: "8.193.0",
     date: "2026-05-18",
     type: "patch",

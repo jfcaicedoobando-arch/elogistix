@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useCreateEventoEmbarque, TIPOS_EVENTO_TRACKING } from "@/hooks/embarque/useEventosEmbarque";
+import { useCreateEventoEmbarque, TIPOS_EVENTO_TRACKING } from "@/hooks/embarque";
 import { ICONO_EVENTO } from "@/constants/embarqueConstants";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";

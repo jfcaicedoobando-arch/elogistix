@@ -6,7 +6,7 @@ import { OrgHeader } from "@/components/admin/org-detalle/OrgHeader";
 import { OrgInfoCard } from "@/components/admin/org-detalle/OrgInfoCard";
 import { OrgMembersCard } from "@/components/admin/org-detalle/OrgMembersCard";
 import { OrgConfigCard } from "@/components/admin/org-detalle/OrgConfigCard";
-import { useAdminOrgDetalle } from "@/hooks/admin/useAdminOrgDetalle";
+import { useAdminOrgDetalle } from "@/hooks/admin";
 
 import { useRegisterBreadcrumbLabel } from "@/contexts/BreadcrumbContext";
 

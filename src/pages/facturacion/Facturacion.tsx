@@ -8,7 +8,7 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useFacturas } from "@/hooks/facturacion/useFacturas";
+import { useFacturas } from "@/hooks/facturacion";
 import { formatCurrency, formatDate, toTitleCase } from "@/lib/formatters";
 import { getEstadoColor } from "@/lib/ui/uiMappings";
 import { DataTable, type DataTableColumn } from "@/components/shared/DataTable";
@@ -17,7 +17,7 @@ import type { Database } from "@/types/db";
 import { TabProformas } from "@/components/facturacion/TabProformas";
 import { TabProformasPendientes } from "@/components/facturacion/TabProformasPendientes";
 import { TabProyeccion } from "@/components/facturacion/TabProyeccion";
-import { useFacturacionPageController } from "@/hooks/facturacion/useFacturacionPageController";
+import { useFacturacionPageController } from "@/hooks/facturacion";
 
 type EstadoFactura = Database["public"]["Enums"]["estado_factura"];
 const ESTADOS_FACTURA: EstadoFactura[] = ['Borrador', 'Emitida', 'Pagada', 'Vencida', 'Cancelada'];

@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { getEstadoColor } from "@/lib/ui/uiMappings";
-import type { EstadoFiltro } from "@/hooks/dashboard/useDashboardData";
+import type { EstadoFiltro } from "@/hooks/dashboard";
 
 export interface CargaCliente {
   clienteId: string;

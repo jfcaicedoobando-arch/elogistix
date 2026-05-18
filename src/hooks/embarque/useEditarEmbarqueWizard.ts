@@ -58,6 +58,9 @@ export function useEditarEmbarqueWizard(id: string | undefined) {
     if (!embarque || initialized) return;
     inicializarDesdeEmbarque(embarque);
     setInitialized(true);
+    // Inicialización idempotente: corre una sola vez por embarque. Los
+    // inicializadores son setters estables del propio hook.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [embarque, initialized]);
 
   useEffect(() => {
@@ -69,6 +72,7 @@ export function useEditarEmbarqueWizard(id: string | undefined) {
       precioUnitario: Number(v.precio_unitario),
       moneda: v.moneda,
     })));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [conceptosVentaDb, initialized]);
 
   useEffect(() => {
@@ -80,6 +84,7 @@ export function useEditarEmbarqueWizard(id: string | undefined) {
       monto: Number(c.monto),
       moneda: c.moneda,
     })));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [conceptosCostoDb, initialized]);
 
   const selectedCliente = clientes.find(c => c.id === clienteId);

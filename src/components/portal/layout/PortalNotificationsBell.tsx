@@ -18,7 +18,7 @@ import {
   useMarcarNotificacionLeida,
   useMarcarTodasLeidas,
   type NotificacionCliente,
-} from "@/hooks/portal/useNotificacionesCliente";
+} from "@/hooks/portal";
 
 function formatDate(iso: string): string {
   const d = new Date(iso);

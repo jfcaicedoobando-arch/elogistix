@@ -1,9 +1,9 @@
 import { useFormContext } from "react-hook-form";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ValidationAlert } from "@/components/feedback/ValidationAlert";
-import type { EmbarqueFormValues } from "@/hooks/embarque/useEmbarqueForm";
-import type { CotizacionRow } from "@/hooks/cotizacion/useCotizaciones";
-import { useExpedientesCliente, type ExpedienteCliente } from "@/hooks/embarque/useEmbarques";
+import type { EmbarqueFormValues } from "@/hooks/embarque";
+import type { CotizacionRow } from "@/hooks/cotizacion";
+import { useExpedientesCliente, type ExpedienteCliente } from "@/hooks/embarque";
 import { BloqueClienteContactos } from "./secciones/BloqueClienteContactos";
 import { BloqueMercancia } from "./secciones/BloqueMercancia";
 import { BloqueVinculacion } from "./secciones/BloqueVinculacion";

@@ -1,8 +1,8 @@
 import { memo, useMemo, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { User, ChevronRight } from "lucide-react";
-import type { OperadorData, EstadoUiKey } from "@/hooks/operaciones/useOperacionesData";
-import { ESTADOS_KEYS } from "@/hooks/operaciones/useDesempenoChartData";
+import type { OperadorData, EstadoUiKey } from "@/hooks/operaciones";
+import { ESTADOS_KEYS } from "@/hooks/operaciones";
 import { ESTADO_COLOR, ESTADO_ICON } from "./desempenoVisuals";
 import { ClienteExpandible } from "./ClienteExpandible";
 import { EmbarquesEstadoDialog } from "./EmbarquesEstadoDialog";

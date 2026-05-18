@@ -2,7 +2,7 @@ import { Info } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { formatDate } from "@/lib/formatters";
-import type { useTrackingLiveCard } from "@/hooks/embarque/useTrackingLiveCard";
+import type { useTrackingLiveCard } from "@/hooks/embarque";
 
 interface Props {
   ctrl: ReturnType<typeof useTrackingLiveCard>;

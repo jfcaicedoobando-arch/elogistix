@@ -4,7 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import type { EmbarqueFormValues } from "@/hooks/embarque/useEmbarqueForm";
+import type { EmbarqueFormValues } from "@/hooks/embarque";
 import type { EmbarqueValidationErrors } from "../StepDatosGenerales";
 
 interface Props {

@@ -10,10 +10,10 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { useTasaIVA } from "@/hooks/catalogos/useTasaIVA";
-import { useEmbarqueConceptosVenta } from "@/hooks/embarque/useEmbarques";
-import { useProformasEmbarque, useEliminarProforma } from "@/hooks/embarque/useProformas";
-import { useDescargarProformaPdf } from "@/hooks/embarque/useDescargarProformaPdf";
+import { useTasaIVA } from "@/hooks/catalogos";
+import { useEmbarqueConceptosVenta } from "@/hooks/embarque";
+import { useProformasEmbarque, useEliminarProforma } from "@/hooks/embarque";
+import { useDescargarProformaPdf } from "@/hooks/embarque";
 import { DialogGenerarProforma } from "./DialogGenerarProforma";
 import { ResumenConceptosVenta } from "./facturacion/ResumenConceptosVenta";
 import { HistorialProformas } from "./facturacion/HistorialProformas";

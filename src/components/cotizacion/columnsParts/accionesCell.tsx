@@ -7,7 +7,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import type { CotizacionListItem } from "@/hooks/cotizacion/useCotizacionesPageController";
+import type { CotizacionListItem } from "@/hooks/cotizacion";
 
 export interface AccionesParams {
   onEditar: (id: string) => void;

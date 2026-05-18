@@ -16,7 +16,7 @@ import {
   useAdminDashboardStats,
   useAdminOrgActivity,
   useAdminRecentOrgs,
-} from "@/hooks/admin/useAdminData";
+} from "@/hooks/admin";
 import { formatDate } from "@/lib/formatters";
 
 export default function AdminDashboard() {

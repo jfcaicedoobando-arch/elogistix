@@ -14,7 +14,7 @@ import {
   useClientUsers,
   useInviteClientUser,
   useRevokeClientUser,
-} from "@/hooks/cliente/useClientUsersMutations";
+} from "@/hooks/cliente";
 import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 
 interface Props {

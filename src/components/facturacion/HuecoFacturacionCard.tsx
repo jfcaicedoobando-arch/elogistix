@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { AlertTriangle, Eye } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useHuecoFacturacion } from "@/hooks/facturacion/useHuecoFacturacion";
+import { useHuecoFacturacion } from "@/hooks/facturacion";
 import { formatCurrency } from "@/lib/formatters";
 import { HuecoFacturacionDetalleDialog } from "./HuecoFacturacionDetalleDialog";
 

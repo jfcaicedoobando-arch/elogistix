@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import type { AlertaDemora } from "@/hooks/dashboard/useDashboardData";
+import type { AlertaDemora } from "@/hooks/dashboard";
 import { toTitleCase } from "@/lib/formatters";
 
 interface Props {

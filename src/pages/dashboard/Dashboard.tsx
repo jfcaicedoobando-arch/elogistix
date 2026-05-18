@@ -1,7 +1,7 @@
 import { useMemo } from "react";
 import { Badge } from "@/components/ui/badge";
 import { PageHeader } from "@/components/shared/PageHeader";
-import { useDashboardData } from "@/hooks/dashboard/useDashboardData";
+import { useDashboardData } from "@/hooks/dashboard";
 import { DashboardStatusCards } from "@/components/dashboard/DashboardStatusCards";
 import { AlertasDemoraCard } from "@/components/dashboard/AlertasDemoraCard";
 import { ProximosArribosCard } from "@/components/dashboard/ProximosArribosCard";

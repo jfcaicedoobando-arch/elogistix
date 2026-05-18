@@ -6,7 +6,7 @@ import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import { AlertTriangle, Check, BellOff } from "lucide-react";
-import { useAlertasSistemaList, useAcknowledgeAlerta } from "@/hooks/admin/useAlertasSistema";
+import { useAlertasSistemaList, useAcknowledgeAlerta } from "@/hooks/admin";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 

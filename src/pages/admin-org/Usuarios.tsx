@@ -7,7 +7,7 @@ import { ShieldCheck, UserPlus, Trash2 } from "lucide-react";
 import { getErrorMessage } from "@/lib/errors";
 import NuevoUsuarioDialog from "@/components/usuario/NuevoUsuarioDialog";
 import { DataTable, type DataTableColumn } from "@/components/shared/DataTable";
-import { useUsuarios, useUpdateUserRole, useDeleteUser, type UserRow } from "@/hooks/usuario/useUsuarios";
+import { useUsuarios, useUpdateUserRole, useDeleteUser, type UserRow } from "@/hooks/usuario";
 import DoubleConfirmDeleteDialog from "@/components/shared/DoubleConfirmDeleteDialog";
 import { PageHeader } from "@/components/shared/PageHeader";
 import {

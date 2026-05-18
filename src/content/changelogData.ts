@@ -22,6 +22,14 @@ export interface ChangelogEntry {
  */
 export const recentChangelog: ChangelogEntry[] = [
   {
+    version: "8.194.0",
+    date: "2026-05-18",
+    type: "minor",
+    title: "Auditoría arquitectónica — P0.1, P0.4, P1.5, P2.9 cerrados",
+    summary: "265 warnings ESLint → 40. Cero violaciones de barrel, cero exhaustive-deps abiertos, react-refresh limpio, utils consolidados.",
+    description: "P0.1 Barrel violations: 14 barrels generados en hooks/<dominio> + codemod que reemplazó 195 imports profundos (203 → 0). P0.4 Exhaustive-deps: 4 hooks corregidos con useMemo y 3 inicializadores documentados (9 → 0). P2.9 React-refresh: exenciones para ui/** y contexts/**, constantes extraídas a constants/cotizacionMercancia.ts (11 → 0). P1.5 Utilidades: lib/io/{csv,zipDownload} + services/admin/exportOrg; utils/orgExportZip queda como wrapper delgado. 40 warnings residuales (complexity + max-lines) pendientes para Sprint P0.3. 359/359 tests verdes. APP_VERSION 8.194.0.",
+  },
+  {
     version: "8.193.0",
     date: "2026-05-18",
     type: "patch",

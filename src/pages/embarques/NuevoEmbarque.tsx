@@ -5,7 +5,7 @@ import { StepDatosGenerales } from "@/components/embarque/StepDatosGenerales";
 import { StepDatosRuta } from "@/components/embarque/StepDatosRuta";
 import { StepDocumentos } from "@/components/embarque/StepDocumentos";
 import { StepCostosPrecios } from "@/components/embarque/StepCostosPrecios";
-import { useNuevoEmbarqueWizard } from "@/hooks/embarque/useNuevoEmbarqueWizard";
+import { useNuevoEmbarqueWizard } from "@/hooks/embarque";
 
 const steps = [
   { title: "Datos Generales", num: 1 },

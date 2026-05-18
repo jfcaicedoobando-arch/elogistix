@@ -71,6 +71,18 @@ export default tseslint.config(
       "max-lines": "off",
       "max-lines-per-function": "off",
       "complexity": "off",
+      // Shadcn primitives y catálogos exportan variantes/constantes
+      // junto al componente — patrón estándar, no impacta a HMR de pantallas.
+      "react-refresh/only-export-components": "off",
+    },
+  },
+  {
+    // Contexts y barrels: re-exportan helpers/hooks junto al Provider.
+    // El componente raíz de cada contexto rara vez se edita; el warning
+    // de Fast Refresh es ruido para esta convención del proyecto.
+    files: ["src/contexts/**"],
+    rules: {
+      "react-refresh/only-export-components": "off",
     },
   },
   {
@@ -86,6 +98,7 @@ export default tseslint.config(
     // que aún no migran a DataTable. Documentar caso a caso.
     files: [
       "src/components/shared/DataTable.tsx",
+      "src/components/shared/dataTable/**",
       // Casos editables / con render row complejo — quedan fuera de la migración:
       "src/components/cotizacion/SeccionMercanciaAerea.tsx",
       "src/components/cotizacion/SeccionMercanciaMaritimeLCL.tsx",

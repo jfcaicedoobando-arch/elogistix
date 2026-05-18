@@ -1,7 +1,7 @@
 import { Anchor, CheckCircle2, MapPin, RefreshCw, Ship } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { formatDate } from "@/lib/formatters";
-import type { useTrackingLiveCard } from "@/hooks/embarque/useTrackingLiveCard";
+import type { useTrackingLiveCard } from "@/hooks/embarque";
 
 function Field({ icon, label, children }: { icon: React.ReactNode; label: string; children: React.ReactNode }) {
   return (

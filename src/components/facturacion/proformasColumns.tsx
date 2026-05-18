@@ -9,7 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { type DataTableColumn } from "@/components/shared/DataTable";
 import { formatCurrency, formatDate, toTitleCase, nombreDesdeEmail, formatDiasCredito } from "@/lib/formatters";
-import type { ProformaConFactura, ProformaRow } from "@/hooks/embarque/useProformas";
+import type { ProformaConFactura, ProformaRow } from "@/hooks/embarque";
 
 interface BuildArgs {
   descargar: (p: ProformaConFactura) => void;

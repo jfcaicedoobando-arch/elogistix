@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { DataTable, type DataTableColumn } from "@/components/shared/DataTable";
-import { usePortalDocumentDownload } from "@/hooks/portal/usePortalDocumentDownload";
+import { usePortalDocumentDownload } from "@/hooks/portal";
 import type { Tables } from "@/types/db";
 
 type Doc = Tables<"documentos_embarque">;

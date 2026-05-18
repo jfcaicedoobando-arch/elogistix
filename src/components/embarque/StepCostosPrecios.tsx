@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { CATALOGO_CONCEPTOS } from "@/constants/embarqueConstants";
 import { ValidationAlert } from "@/components/feedback/ValidationAlert";
 import type { StepValidationErrors } from "@/lib/domain/embarqueWizardSchemas";
-import type { EmbarqueFormValues } from "@/hooks/embarque/useEmbarqueForm";
+import type { EmbarqueFormValues } from "@/hooks/embarque";
 import type { ConceptoVentaLocal as ConceptoVentaRow, ConceptoCostoLocal as ConceptoCostoRow } from "@/types/concepto";
 
 interface Proveedor {

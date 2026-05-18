@@ -20,7 +20,7 @@ import {
 import {
   useCotizacionesPageController,
   ESTADOS_COTIZACION,
-} from "@/hooks/cotizacion/useCotizacionesPageController";
+} from "@/hooks/cotizacion";
 import { buildCotizacionesColumns } from "@/components/cotizacion/cotizacionesColumns";
 import { CotizacionesMobileFilters } from "@/components/cotizacion/CotizacionesMobileFilters";
 

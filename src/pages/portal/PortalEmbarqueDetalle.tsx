@@ -12,7 +12,7 @@ import { PortalEmbarqueTimeline } from "@/components/portal/PortalEmbarqueTimeli
 import { PortalEmbarqueDocumentos } from "@/components/portal/PortalEmbarqueDocumentos";
 import { PortalEmbarqueResumenTab } from "@/components/portal/embarqueDetalle/PortalEmbarqueResumenTab";
 import { TrackingLiveCard } from "@/components/embarque/TrackingLiveCard";
-import { usePortalEmbarqueDetalleController } from "@/hooks/embarque/usePortalEmbarqueDetalleController";
+import { usePortalEmbarqueDetalleController } from "@/hooks/embarque";
 import { useRegisterBreadcrumbLabel } from "@/contexts/BreadcrumbContext";
 
 export default function PortalEmbarqueDetalle() {

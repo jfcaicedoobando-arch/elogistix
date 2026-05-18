@@ -6,8 +6,8 @@ import {
 import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
-import { useEliminarEmbarque, type EmbarqueRow } from "@/hooks/embarque/useEmbarques";
-import { useRegistrarActividad } from "@/hooks/shared/useBitacora";
+import { useEliminarEmbarque, type EmbarqueRow } from "@/hooks/embarque";
+import { useRegistrarActividad } from "@/hooks/shared";
 import { getErrorMessage } from "@/lib/errors";
 
 interface Props {

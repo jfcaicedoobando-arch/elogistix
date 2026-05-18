@@ -6,22 +6,22 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import SearchInput from "@/components/selects/SearchInput";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useProveedoresPaginados, useProveedorMutations } from "@/hooks/proveedor/useProveedores";
-import type { ProveedorListItem } from "@/hooks/proveedor/useProveedores";
+import { useProveedoresPaginados, useProveedorMutations } from "@/hooks/proveedor";
+import type { ProveedorListItem } from "@/hooks/proveedor";
 import NuevoProveedorDialog from "@/components/proveedor/NuevoProveedorDialog";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { useToast } from "@/hooks/use-toast";
-import { usePermissions } from "@/hooks/shared/usePermissions";
-import { useRegistrarActividad } from "@/hooks/shared/useBitacora";
-import { useDebounce } from "@/hooks/shared/useDebounce";
+import { usePermissions } from "@/hooks/shared";
+import { useRegistrarActividad } from "@/hooks/shared";
+import { useDebounce } from "@/hooks/shared";
 import { DataTable, type DataTableColumn } from "@/components/shared/DataTable";
-import { useListPageState } from "@/hooks/shared/useListPageState";
+import { useListPageState } from "@/hooks/shared";
 import type { Tables, Enums } from "@/types/db";
 import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 import { toTitleCase } from "@/lib/formatters";
 import { BulkImportDialog } from "@/components/shared/BulkImportDialog";
 import { PROVEEDOR_TEMPLATE_HEADERS, mapProveedorRows } from "@/lib/csv/importSchemas";
-import { useOrgFilter } from "@/hooks/shared/useOrgFilter";
+import { useOrgFilter } from "@/hooks/shared";
 import { insertProveedor } from "@/services/proveedor";
 import { useQueryClient } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/query";
@@ -183,7 +183,6 @@ export default function Proveedores() {
         mapRows={(rows) => mapProveedorRows(rows, organizationId, activeTipo)}
         onCommit={async (payloads) => {
           for (const p of payloads) {
-            // eslint-disable-next-line no-await-in-loop
             await insertProveedor(p);
           }
           registrarActividad.mutate({

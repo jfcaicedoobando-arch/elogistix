@@ -7,7 +7,7 @@ import {
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { DataTable, type DataTableColumn } from "@/components/shared/DataTable";
-import type { DocumentoEmbarqueRow } from "@/hooks/embarque/useEmbarques";
+import type { DocumentoEmbarqueRow } from "@/hooks/embarque";
 import { getDocEstadoColorClass } from "@/lib/ui/uiMappings";
 
 interface Props {

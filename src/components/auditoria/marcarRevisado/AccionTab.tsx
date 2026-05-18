@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { TabsContent } from "@/components/ui/tabs";
-import type { useMarcarRevisadoController } from "@/hooks/auditoria/useMarcarRevisadoController";
+import type { useMarcarRevisadoController } from "@/hooks/auditoria";
 import type { AuditoriaRevision } from "@/types/auditoria";
 
 interface Props {

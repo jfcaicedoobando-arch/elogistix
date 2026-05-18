@@ -2,7 +2,7 @@
  * Hook: datos + acciones de "Hueco de Facturación".
  * Aísla `useQuery` y la generación de CSV de la capa de UI.
  */
-import { useCallback } from "react";
+import { useCallback, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useOrgFilter } from "@/hooks/shared/useOrgFilter";
 import {
@@ -24,7 +24,7 @@ export function useHuecoFacturacion() {
     staleTime: 60_000,
   });
 
-  const filas = data?.filas ?? [];
+  const filas = useMemo(() => data?.filas ?? [], [data?.filas]);
   const totalEmbarques = data?.totalEmbarques ?? 0;
   const totalUsd = data?.totalUsd ?? 0;
   const totalMxn = data?.totalMxn ?? 0;

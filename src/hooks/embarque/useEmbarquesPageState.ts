@@ -187,9 +187,10 @@ export function useEmbarquesPageState() {
     return sortedAll.slice(from, from + pageSize);
   }, [estadoFilterActivo, dedupedAll, sortedAll, page, pageSize]);
 
-  const embarques: EmbarqueRow[] = estadoFilterActivo
-    ? filtered // ya paginado
-    : (resultadoServer?.data ?? []);
+  const embarques: EmbarqueRow[] = useMemo(
+    () => (estadoFilterActivo ? filtered : (resultadoServer?.data ?? [])),
+    [estadoFilterActivo, filtered, resultadoServer?.data],
+  );
 
   // ---------- Extras (liquidación + docs) ----------
   // Rama A: vienen embebidos en el RPC `embarques_listado` (cero round-trips extra).

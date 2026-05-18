@@ -12,7 +12,7 @@ import DialogDuplicarEmbarque from "@/components/embarque/DialogDuplicarEmbarque
 import EmbarquesFiltros from "@/components/embarque/EmbarquesFiltros";
 import { EmbarquesEmptyState } from "@/components/embarque/EmbarquesEmptyState";
 import { EmbarquesSortIndicator } from "@/components/embarque/EmbarquesSortIndicator";
-import { useEmbarquesPageController } from "@/hooks/embarque/useEmbarquesPageController";
+import { useEmbarquesPageController } from "@/hooks/embarque";
 
 export default function Embarques() {
   const {

@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { DataTable, type DataTableColumn } from "@/components/shared/DataTable";
 import { formatCurrency, toTitleCase } from "@/lib/formatters";
-import type { EmbarqueConProfit } from "@/hooks/dashboard/useDashboardData";
+import type { EmbarqueConProfit } from "@/hooks/dashboard";
 
 interface Props {
   embarques: EmbarqueConProfit[];

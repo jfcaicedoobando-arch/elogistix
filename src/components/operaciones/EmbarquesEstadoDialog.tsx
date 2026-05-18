@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Search, ExternalLink, AlertTriangle } from "lucide-react";
 import { formatDate, toTitleCase, nombreDesdeEmail } from "@/lib/formatters";
-import type { EmbarquesPorEstadoBucket, EstadoUiKey } from "@/hooks/operaciones/useOperacionesData";
+import type { EmbarquesPorEstadoBucket, EstadoUiKey } from "@/hooks/operaciones";
 import { ESTADO_COLOR, ESTADO_ICON } from "./desempenoVisuals";
 
 interface Props {
@@ -22,7 +22,7 @@ export function EmbarquesEstadoDialog({ open, onOpenChange, operador, estado, bu
   const [search, setSearch] = useState("");
   const Icon = ESTADO_ICON[estado];
 
-  const items = bucket?.items ?? [];
+  const items = useMemo(() => bucket?.items ?? [], [bucket?.items]);
   const total = bucket?.total ?? items.length;
   const truncated = bucket?.truncated ?? false;
 

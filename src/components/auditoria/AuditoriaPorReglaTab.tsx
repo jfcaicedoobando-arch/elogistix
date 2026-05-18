@@ -8,7 +8,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { HallazgoTabla } from "@/components/auditoria/HallazgoTabla";
 import { REGLA_INFO, REGLAS_ORDEN } from "@/lib/ui/auditoriaConfig";
-import type { useAuditoriaPageController } from "@/hooks/auditoria/useAuditoriaPageController";
+import type { useAuditoriaPageController } from "@/hooks/auditoria";
 
 interface Props {
   c: ReturnType<typeof useAuditoriaPageController>;

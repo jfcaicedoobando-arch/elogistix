@@ -13,7 +13,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useMarcarRevisadoController } from "@/hooks/auditoria/useMarcarRevisadoController";
+import { useMarcarRevisadoController } from "@/hooks/auditoria";
 import { HallazgoSummary } from "@/components/auditoria/marcarRevisado/HallazgoSummary";
 import { AccionTab, AccionButton } from "@/components/auditoria/marcarRevisado/AccionTab";
 import { ComentariosTab } from "@/components/auditoria/marcarRevisado/ComentariosTab";
