@@ -196,5 +196,4 @@ Ver [\`docs/strict-mode-roadmap.md\`](./strict-mode-roadmap.md) para el plan de 
 const hits = scan();
 mkdirSync(join(ROOT, "docs"), { recursive: true });
 writeFileSync(OUT, render(hits), "utf8");
-// eslint-disable-next-line no-console
 console.log(`✔ ${hits.length} casts analizados → ${relative(ROOT, OUT)}`);
