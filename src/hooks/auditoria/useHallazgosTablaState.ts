@@ -44,14 +44,17 @@ interface MatchCtx {
   revisiones: Map<string, { estado_revision?: string; responsable_id?: string | null; fecha_limite?: string | null }> | undefined;
 }
 
+const BASE_PREDICATES: Array<(h: HallazgoAuditoria, c: MatchCtx) => boolean> = [
+  (h, c) => !c.q || !!h.expediente?.toLowerCase().includes(c.q),
+  (h, c) => c.filtroRegla === "todas" || h.regla === c.filtroRegla,
+  (h, c) => c.filtroSev === "todas" || h.severidad === c.filtroSev,
+  (h, c) => c.filtroCliente === "todos" || h.cliente_nombre === c.filtroCliente,
+  (h, c) => !c.desde || (!!h.eta && h.eta >= c.desde),
+  (h, c) => !c.hasta || (!!h.eta && h.eta <= c.hasta),
+];
+
 function matchBase(h: HallazgoAuditoria, c: MatchCtx): boolean {
-  if (c.q && !h.expediente?.toLowerCase().includes(c.q)) return false;
-  if (c.filtroRegla !== "todas" && h.regla !== c.filtroRegla) return false;
-  if (c.filtroSev !== "todas" && h.severidad !== c.filtroSev) return false;
-  if (c.filtroCliente !== "todos" && h.cliente_nombre !== c.filtroCliente) return false;
-  if (c.desde && (!h.eta || h.eta < c.desde)) return false;
-  if (c.hasta && (!h.eta || h.eta > c.hasta)) return false;
-  return true;
+  return BASE_PREDICATES.every((p) => p(h, c));
 }
 
 function matchRevision(estado: string, tieneRev: boolean, filtro: FiltroRevision): boolean {
