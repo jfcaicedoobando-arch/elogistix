@@ -136,17 +136,11 @@ export function useEmbarquesPageState() {
   }, [estadoFilterActivo, dedupedAll, sortKey, sortDir]);
 
   const totalCountServer = resultadoServer?.count ?? 0;
-
-  const expedientesCount = estadoFilterActivo
-    ? dedupedAll.length
-    : totalCountServer; // sin filtro no tenemos dedupe global; mostramos contenedores como aprox.
-  const contenedoresCount = estadoFilterActivo
-    ? containersForView.length
-    : totalCountServer;
-
-  const totalPages = estadoFilterActivo
-    ? Math.max(1, Math.ceil(sortedAll.length / pageSize))
-    : Math.max(1, Math.ceil(totalCountServer / pageSize));
+  const branchBCount = estadoFilterActivo ? dedupedAll.length : null;
+  const expedientesCount = branchBCount ?? totalCountServer;
+  const contenedoresCount = estadoFilterActivo ? containersForView.length : totalCountServer;
+  const sourceCountForPages = estadoFilterActivo ? sortedAll.length : totalCountServer;
+  const totalPages = Math.max(1, Math.ceil(sourceCountForPages / pageSize));
 
   // Filas visibles en la página actual.
   const filtered = useMemo(() => {
@@ -161,8 +155,6 @@ export function useEmbarquesPageState() {
   );
 
   // ---------- Extras (liquidación + docs) ----------
-  // Rama A: vienen embebidos en el RPC `embarques_listado` (cero round-trips extra).
-  // Rama B: como `fetchEmbarquesParaExport` no los trae, los pedimos para la página visible.
   const visibleIds = useMemo(() => embarques.map((e) => e.id), [embarques]);
   const { data: extrasBranchB } = useQuery({
     queryKey: [...queryKeys.embarques.all, "extras-branch-b", visibleIds],
@@ -170,9 +162,10 @@ export function useEmbarquesPageState() {
     enabled: estadoFilterActivo && visibleIds.length > 0,
     staleTime: 30_000,
   });
+  const emptyExtras: EmbarqueListExtras = { liquidacion: {}, docs: {} };
   const extras: EmbarqueListExtras = estadoFilterActivo
-    ? (extrasBranchB ?? { liquidacion: {}, docs: {} })
-    : (resultadoServer?.extras ?? { liquidacion: {}, docs: {} });
+    ? (extrasBranchB ?? emptyExtras)
+    : (resultadoServer?.extras ?? emptyExtras);
 
   const displayCount = expedientesCount;
 
