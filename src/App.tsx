@@ -121,6 +121,7 @@ const App = () => (
   >
     <TooltipProvider>
       <Toaster />
+      <ErrorDetailsDialog />
       <BrowserRouter>
         <NuqsAdapter>
         <BreadcrumbProvider>
