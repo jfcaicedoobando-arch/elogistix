@@ -22,6 +22,14 @@ export interface ChangelogEntry {
  */
 export const recentChangelog: ChangelogEntry[] = [
   {
+    version: "8.198.0",
+    date: "2026-05-18",
+    type: "patch",
+    title: "Auditoría — P2.12 endurecimiento de complejidad",
+    summary: "30 → 23 warnings ESLint. validateStepRuta/Costos, diffConceptos, agruparPorExpediente y useEmbarqueDetalleData refactorizados con helpers extraídos.",
+    description: "P2.12 Endurecimiento de complejidad ciclomática (post P2.10). Refactors puros, sin cambios funcionales: lib/domain/embarqueWizardSchemas.ts — validateStepRuta (28→0) extrae validateMaritimoRuta/Aereo/Terrestre y validateRutaModo; validateStepCostos (16→0) extrae parseTC, validarConceptosVenta y validarConceptosCosto. lib/audit/diffFields.ts — diffConceptos (17→0) extrae nombreOf y compararConcepto. lib/domain/proyeccionFacturacion.ts — agruparPorExpediente (19→0) extrae initGrupo y mergeFila. hooks/embarque/useEmbarqueDetalleData.ts (17→0) usa helpers tc() y pick() para tipos de cambio y defaults `?? []`. 369/369 tests verdes. APP_VERSION 8.198.0.",
+  },
+  {
     version: "8.197.0",
     date: "2026-05-18",
     type: "patch",
@@ -92,14 +100,6 @@ export const recentChangelog: ChangelogEntry[] = [
     title: "Bloque 3.6 ext — Diff de costos/ventas al editar embarque",
     summary: "Editar un embarque ahora registra en bitácora qué campos cambiaron y cuántos conceptos de costo/venta se agregaron, eliminaron o modificaron.",
     description: "Se extiende src/lib/audit/diffFields.ts con SENSITIVE_FIELDS.embarque (cliente, modo, tipo, incoterm, naviera, contenedor, BL master/house, puertos, ETD/ETA, estado, consignatario, notificar) y diffConceptos(before, after) que empareja por (nombre+proveedor_id), calcula monto total (monto o precio×cantidad) y devuelve { agregados, eliminados, modificados, detalle[] }. useEditarEmbarqueWizard.handleSave calcula los tres diffs antes del mutateAsync y los persiste en detalles.cambios; si no hubo cambios reales no contamina el log. APP_VERSION 8.188.0.",
-  },
-  {
-    version: "8.187.0",
-    date: "2026-05-17",
-    type: "minor",
-    title: "Bloque 3.4 — PDFs de estado de cuenta y rentabilidad",
-    summary: "Botón 'Estado de cuenta' en ficha de cliente (con aging por moneda) y exportador PDF del reporte de rentabilidad por cliente del periodo.",
-    description: "src/generators/estadoCuentaPdf.ts genera estado de cuenta imprimible con aging 0-30/31-60/61-90/+90 por moneda; src/generators/rentabilidadPdf.ts hace lo propio con el P&L del filtro activo en /reportes. Sin dependencias nuevas: reusan el patrón window.open+print. APP_VERSION 8.187.0.",
   },
 ];
 
