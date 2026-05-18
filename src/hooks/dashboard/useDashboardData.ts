@@ -72,7 +72,7 @@ export function useDashboardData() {
   );
 
   const profitArribosEsteMes = useMemo<EmbarqueConProfit[]>(
-    () => (stats?.profitArribosEsteMes as EmbarqueConProfit[]) ?? [],
+    () => parseProfitArribosEsteMes(stats),
     [stats],
   );
 
