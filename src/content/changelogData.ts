@@ -22,12 +22,20 @@ export interface ChangelogEntry {
  */
 export const recentChangelog: ChangelogEntry[] = [
   {
+    version: "8.203.0",
+    date: "2026-05-18",
+    type: "patch",
+    title: "Auditoría — P2.12 lote 7 (DatosGenerales, Mercancía, Sidebar, BulkImport, proformaPdf)",
+    summary: "14 → ~7 warnings ESLint. buildRows, SeccionMercanciaCotizacionDetalle, AppSidebarBase, BulkImportDialog, VirtualDataTable, TrackingWarnings y useCotizacionWizardSteps refactorizados.",
+    description: "Refactors puros sin cambios funcionales ni de BD. CotizacionDatosGeneralesCard divide buildRows en baseRows/optionalRows/maritimeRows/seguroRow. SeccionMercanciaCotizacionDetalle extrae MercanciaInfoGrid + DimensionesLCL/AereasTable. ConceptoRowUSD extrae ConceptoDescripcionSelector. TrackingWarnings usa computeAlertFlags. AppSidebar usa useAppSidebarSections + barrel hooks/layout. BulkImportDialog y VirtualDataTable extraen body/footer sub-componentes. proformaPdf dividido en proforma/{styles,header,consolidada}.ts (271→<150 LOC). embarqueWizardSchemas dividido en Constants/Documentos/Costos (257→<200 LOC). useCotizacionWizardSteps simplifica handleSiguiente con validatePaso1 puro. 369/369 tests verdes. APP_VERSION 8.203.0.",
+  },
+  {
     version: "8.202.0",
     date: "2026-05-18",
     type: "patch",
     title: "Auditoría — P2.12 lote 6 (jsoncargo-track, invite-client-user, TrackingWarnings, proformaPdf)",
     summary: "21 → 14 warnings ESLint. jsoncargo-track, invite-client-user, deriveEventsFromContainer, TrackingWarnings, CotizacionDatosGeneralesCard, buildHeaderHtml y VirtualDataTable refactorizados.",
-    description: "Refactors puros sin cambios funcionales ni de BD. jsoncargo-track extrae helpers a _shared/jsoncargoSync.ts (loadEmbarque, persistPrefixMismatch, syncEventos, upsertTrackingExterno, buildSummary) y runSync interno. invite-client-user (26→0) extrae parseBody, verifyClienteOrg, resolveUserId, ensureClienteRole. _shared/jsoncargo.ts deriveEventsFromContainer (22→0) dividido en buildZarpe/Movimiento/AduanaEvent. TrackingWarnings.tsx (23→0) extrae 4 sub-componentes de alerta. CotizacionDatosGeneralesCard.tsx (24→0) usa array declarativo de filas. proformaPdf buildHeaderHtml (21→0) extrae sub-secciones. VirtualDataTable extrae VirtualRow, VirtualHeaderRow, SkeletonRows, EmptyState. BulkImportDialog extrae hook useBulkImport. APP_VERSION 8.202.0.",
+    description: "Refactors puros sin cambios funcionales ni de BD. jsoncargo-track extrae helpers a _shared/jsoncargoSync.ts. invite-client-user (26→0) extrae parseBody, verifyClienteOrg, resolveUserId, ensureClienteRole. _shared/jsoncargo.ts deriveEventsFromContainer (22→0) dividido en buildZarpe/Movimiento/AduanaEvent. TrackingWarnings.tsx (23→0) extrae 4 sub-componentes de alerta. CotizacionDatosGeneralesCard.tsx (24→0) usa array declarativo. proformaPdf buildHeaderHtml (21→0) extrae sub-secciones. VirtualDataTable extrae VirtualRow, VirtualHeaderRow, SkeletonRows, EmptyState. BulkImportDialog extrae hook useBulkImport. APP_VERSION 8.202.0.",
   },
   {
     version: "8.201.0",
