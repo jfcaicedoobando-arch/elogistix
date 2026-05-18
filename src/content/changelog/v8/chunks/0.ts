@@ -2,6 +2,14 @@ import type { ChangelogEntry } from "../../../changelogData";
 
 export const chunk0: ChangelogEntry[] = [
   {
+    version: "8.210.0",
+    date: "2026-05-18",
+    type: "patch",
+    title: "Documentos de embarque — fix RLS para rutas con ID de documento",
+    summary: "Corrige el error al subir documentos cuando la ruta usa embarqueId/docId en el bucket de documentos.",
+    description: "La subida desde el detalle del embarque guarda archivos bajo 'embarques/<embarqueId>/<docId>/...'. La política anterior sólo validaba contra expediente o id de embarque en el segundo segmento, pero no comprobaba el documento específico. Se recrearon las políticas INSERT/UPDATE/DELETE del bucket 'documentos' para aceptar también la combinación embarqueId + documentoId validada contra documentos_embarque y embarques de la misma organización. APP_VERSION 8.210.0.",
+  },
+  {
     version: "8.209.0",
     date: "2026-05-18",
     type: "minor",
