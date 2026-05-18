@@ -95,6 +95,32 @@ function buildApplyFechasArgs(embarqueId: string, f: FechasArgs) {
   };
 }
 
+interface DerivePrefixInput {
+  contenedor: string | null;
+  sl: string | null | undefined;
+  tracking: { status?: string; failed_reason?: string | null } | null | undefined;
+  syncError: unknown;
+}
+
+function derivePrefixState({ contenedor, sl, tracking, syncError }: DerivePrefixInput) {
+  const noSoportada = !sl;
+  const sinContenedor = !contenedor;
+  const prefixCheck = validatePrefixMatchesNaviera(contenedor, sl ?? null);
+  const prefixMismatch = !sinContenedor && !noSoportada && !prefixCheck.valid;
+  const backendPrefixError =
+    tracking?.status === "failed" && /prefix not found/i.test(tracking.failed_reason ?? "");
+  const mutationPrefixError =
+    syncError instanceof PrefixMismatchError ? syncError : null;
+  return {
+    noSoportada,
+    sinContenedor,
+    prefixMismatch,
+    suggestions: mutationPrefixError?.suggestions ?? prefixCheck.suggestions,
+    detectedPrefix: mutationPrefixError?.prefix ?? prefixCheck.prefix,
+    showPrefixWarning: prefixMismatch || mutationPrefixError != null || backendPrefixError,
+  };
+}
+
 interface UseTrackingLiveCardInput {
   embarqueId: string;
   naviera: string | null;
@@ -123,25 +149,9 @@ export function useTrackingLiveCard({
   const [fechasDismissed, setFechasDismissed] = useState(false);
 
   const sl = mapNavieraToJsonCargo(naviera);
-  const noSoportada = !sl;
-  const sinContenedor = !contenedor;
   const summary = tracking?.raw_payload ? extractSummary(tracking.raw_payload) : null;
-
-  // Validación de prefix vs naviera (local, no consume cuota)
-  const prefixCheck = validatePrefixMatchesNaviera(contenedor, sl);
-  const prefixMismatch = !sinContenedor && !noSoportada && !prefixCheck.valid;
-
-  // Detecta también si el backend ya guardó un fallo por prefix
-  const backendPrefixError =
-    tracking?.status === "failed" && /prefix not found/i.test(tracking.failed_reason ?? "");
-
-  // Estado de error tras una mutación del cliente
-  const mutationPrefixError =
-    sync.error instanceof PrefixMismatchError ? (sync.error as PrefixMismatchError) : null;
-
-  const suggestions = mutationPrefixError?.suggestions ?? prefixCheck.suggestions;
-  const detectedPrefix = mutationPrefixError?.prefix ?? prefixCheck.prefix;
-  const showPrefixWarning = prefixMismatch || mutationPrefixError != null || backendPrefixError;
+  const prefixState = derivePrefixState({ contenedor, sl, tracking, syncError: sync.error });
+  const { noSoportada, sinContenedor, prefixMismatch, suggestions, detectedPrefix, showPrefixWarning } = prefixState;
 
   // Sugerencia de fechas (sólo cuando hay summary y no estamos en readOnly).
   const fechasPropuestas = computeFechasPropuestas({
