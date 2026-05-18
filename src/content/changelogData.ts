@@ -101,14 +101,6 @@ export const recentChangelog: ChangelogEntry[] = [
     summary: "30 → 26 warnings ESLint. validateStepRuta/Costos, diffConceptos, agruparPorExpediente y useEmbarqueDetalleData refactorizados con helpers extraídos.",
     description: "P2.12 Endurecimiento de complejidad ciclomática (post P2.10). Refactors puros, sin cambios funcionales: lib/domain/embarqueWizardSchemas.ts — validateStepRuta (28→0) extrae validateMaritimoRuta/Aereo/Terrestre y validateRutaModo; validateStepCostos (16→0) extrae parseTC, validarConceptosVenta y validarConceptosCosto. lib/audit/diffFields.ts — diffConceptos (17→0) extrae nombreOf y compararConcepto. lib/domain/proyeccionFacturacion.ts — agruparPorExpediente (19→0) extrae initGrupo y mergeFila. hooks/embarque/useEmbarqueDetalleData.ts (17→0) usa helpers tc() y pick() para tipos de cambio y defaults `?? []`. 369/369 tests verdes. APP_VERSION 8.198.0.",
   },
-  {
-    version: "8.197.0",
-    date: "2026-05-18",
-    type: "patch",
-    title: "Auditoría — P2.10 + cierre Sprint 3",
-    summary: "useToast/useIsMobile re-exportados desde hooks/shared para uniformidad. recentChangelog trimmed a 10 entradas (bundle).",
-    description: "P2.10 Hooks compartidos: nuevos wrappers `hooks/shared/useToast.ts` y `hooks/shared/useIsMobile.ts` re-exportan los hooks canónicos shadcn (`@/hooks/use-toast`, `@/hooks/use-mobile`) bajo el barrel `hooks/shared`. Se conservan los módulos raíz por convención shadcn — los nuevos consumidores pueden importarlos desde el barrel. Mantenimiento: `recentChangelog` recortado de 11 a 10 entradas para mantener pequeño el chunk lazy (test `<= 10` pasa). 369/369 tests verdes. APP_VERSION 8.197.0.",
-  },
 ];
 
 /** Deduplica por version conservando la primera ocurrencia (recentChangelog gana). */
