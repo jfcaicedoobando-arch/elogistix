@@ -118,48 +118,55 @@ export function useSyncJsonCargo() {
  * Helper para extraer el summary actual del raw_payload guardado.
  * El edge function guarda { data: {...} } directamente desde JSONCargo.
  */
-export function extractSummary(raw: unknown): JsonCargoSummary | null {
-  if (!raw || typeof raw !== "object") return null;
-  const d = (raw as { data?: Record<string, unknown> }).data;
-  if (!d) return null;
-  const atdOrigin = d.atd_origin as string | undefined | null;
-  const status = ((d.container_status as string | undefined) ?? "").toLowerCase();
-  const looksDeparted = /loaded.*vessel|on vessel|departed|in transit|sail/.test(status);
-  const fallbackEtd = looksDeparted
-    ? ((d.last_movement_timestamp as string | undefined | null)
-      ?? (d.timestamp_of_last_location as string | undefined | null))
-    : null;
-  const etdEffective = atdOrigin || fallbackEtd || undefined;
+type Raw = Record<string, unknown>;
+const str = (d: Raw, k: string) => (d[k] as string | undefined | null) ?? undefined;
+const lower = (s: string | undefined | null) => (s ?? "").toLowerCase();
 
-  // Heurística ATA: contenedor ya descargado/disponible en puerto destino.
-  const lastLoc = ((d.last_location as string | undefined) ?? "").toLowerCase();
-  const dischPort = ((d.discharging_port as string | undefined) ?? "").toLowerCase();
+function computeEtd(d: Raw): { effective?: string; estimated: boolean; atd?: string } {
+  const atd = str(d, "atd_origin");
+  const status = lower(str(d, "container_status"));
+  const looksDeparted = /loaded.*vessel|on vessel|departed|in transit|sail/.test(status);
+  const fallback = looksDeparted
+    ? (str(d, "last_movement_timestamp") ?? str(d, "timestamp_of_last_location"))
+    : undefined;
+  const effective = atd || fallback || undefined;
+  return { effective, estimated: !!effective && !atd, atd };
+}
+
+function computeAta(d: Raw): { effective?: string; inferred: boolean } {
+  const status = lower(str(d, "container_status"));
+  const lastLoc = lower(str(d, "last_location"));
+  const dischPort = lower(str(d, "discharging_port"));
   const atDestinationByPort = !!lastLoc && !!dischPort && lastLoc.includes(dischPort);
   const looksDischarged = /discharg|unload|available|gate.?out|delivered|at yard|empty.*return|released|on rail|departed.*terminal/.test(status);
-  // Fallback: si discharging_port viene vacío pero el container_status
-  // menciona explícitamente "port of discharge" / "from vessel" / "at port",
-  // también se infiere ATA desde el último movimiento.
   const statusImpliesPortDischarge = /port of discharge|from vessel|at port|at terminal/.test(status);
-  const ataEligible = (atDestinationByPort && looksDischarged) || (looksDischarged && statusImpliesPortDischarge);
-  const ataEffective = ataEligible
-    ? ((d.timestamp_of_last_location as string | undefined | null)
-      ?? (d.last_movement_timestamp as string | undefined | null))
-    : null;
+  const eligible = (atDestinationByPort && looksDischarged) || (looksDischarged && statusImpliesPortDischarge);
+  const effective = eligible
+    ? (str(d, "timestamp_of_last_location") ?? str(d, "last_movement_timestamp"))
+    : undefined;
+  return { effective, inferred: !!effective };
+}
 
+export function extractSummary(raw: unknown): JsonCargoSummary | null {
+  if (!raw || typeof raw !== "object") return null;
+  const d = (raw as { data?: Raw }).data;
+  if (!d) return null;
+  const etd = computeEtd(d);
+  const ata = computeAta(d);
   return {
-    container_status: d.container_status as string | undefined,
-    last_location: d.last_location as string | undefined,
-    current_vessel: d.current_vessel_name as string | undefined,
-    current_voyage: d.current_voyage_number as string | undefined,
-    eta_final_destination: d.eta_final_destination as string | undefined,
-    atd_origin: atdOrigin ?? undefined,
-    etd_origin_effective: etdEffective ?? undefined,
-    etd_origin_is_estimated: !!etdEffective && !atdOrigin,
-    ata_effective: ataEffective ?? undefined,
-    ata_is_inferred: !!ataEffective,
-    shipped_from: d.shipped_from as string | undefined,
-    shipped_to: d.shipped_to as string | undefined,
-    last_updated: d.last_updated as string | undefined,
+    container_status: str(d, "container_status"),
+    last_location: str(d, "last_location"),
+    current_vessel: str(d, "current_vessel_name"),
+    current_voyage: str(d, "current_voyage_number"),
+    eta_final_destination: str(d, "eta_final_destination"),
+    atd_origin: etd.atd ?? undefined,
+    etd_origin_effective: etd.effective,
+    etd_origin_is_estimated: etd.estimated,
+    ata_effective: ata.effective,
+    ata_is_inferred: ata.inferred,
+    shipped_from: str(d, "shipped_from"),
+    shipped_to: str(d, "shipped_to"),
+    last_updated: str(d, "last_updated"),
   };
 }
 
