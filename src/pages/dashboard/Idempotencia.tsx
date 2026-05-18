@@ -2,7 +2,6 @@ import { useState } from "react";
 import { Repeat2, RefreshCw, Copy } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { Navigate } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -11,17 +10,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { DataTable, type DataTableColumn } from "@/components/shared/DataTable";
 import { usePermissions } from "@/hooks/shared/usePermissions";
 import { useToast } from "@/hooks/use-toast";
+import { listIdempotencyLog, type IdempotenciaRow } from "@/services/admin";
 
-interface IdemRow {
-  key: string;
-  fn: string;
-  hits: number;
-  created_at: string;
-  user_id: string | null;
-  user_email: string | null;
-  has_response: boolean;
-  pending: boolean;
-}
+type IdemRow = IdempotenciaRow;
 
 type FnFilter = "todos" | "crear_embarque_completo" | "duplicar_embarque_completo" | "consolidar_proformas" | "marcar_proforma_facturada" | "actualizar_embarque_completo" | "avanzar_estado_embarque" | "actualizar_cotizacion_costos" | "upload_documento_embarque";
 
@@ -60,11 +51,7 @@ export default function Idempotencia() {
 
   const { data, isLoading, isFetching, refetch } = useQuery({
     queryKey: ["idempotencia-log"],
-    queryFn: async (): Promise<IdemRow[]> => {
-      const { data, error } = await supabase.rpc("list_idempotency_log", { _limit: 200, _offset: 0 });
-      if (error) throw error;
-      return (data ?? []) as IdemRow[];
-    },
+    queryFn: () => listIdempotencyLog(200, 0),
     enabled: isAdmin,
   });
 
