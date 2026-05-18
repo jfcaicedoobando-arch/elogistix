@@ -22,6 +22,14 @@ export interface ChangelogEntry {
  */
 export const recentChangelog: ChangelogEntry[] = [
   {
+    version: "8.215.0",
+    date: "2026-05-18",
+    type: "patch",
+    title: "Subida de documentos — validación RLS centralizada",
+    summary: "Corrige el bloqueo persistente al subir documentos con rutas embarqueId/docId para operadores.",
+    description: "Se centralizó la validación del bucket 'documentos' en public.can_manage_document_object(name), revisando rol, membresía organizacional y pertenencia real de la ruta al embarque/documento activo. Mantiene aislamiento multi-tenant y permite a operadores como Valeria subir archivos del embarque correcto. APP_VERSION 8.215.0.",
+  },
+  {
     version: "8.214.0",
     date: "2026-05-18",
     type: "patch",

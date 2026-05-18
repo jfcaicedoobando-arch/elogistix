@@ -2,6 +2,14 @@ import type { ChangelogEntry } from "../../../changelogData";
 
 export const chunk0: ChangelogEntry[] = [
   {
+    version: "8.215.0",
+    date: "2026-05-18",
+    type: "patch",
+    title: "Subida de documentos — validación RLS centralizada por embarque/documento",
+    summary: "Corrige el bloqueo persistente al subir documentos con rutas embarqueId/docId para operadores como Valeria.",
+    description: "Se reemplazó la lógica inline de las políticas del bucket 'documentos' por una función SECURITY DEFINER public.can_manage_document_object(name), que valida rol staff, membresía organizacional y pertenencia real de la ruta al embarque/documento activo. Esto evita fallos de evaluación en RLS de storage.objects durante INSERT/UPDATE y mantiene el aislamiento multi-tenant: sólo admin/operador de la organización del embarque o super_admin pueden subir, reemplazar o borrar archivos. APP_VERSION 8.215.0.",
+  },
+  {
     version: "8.214.0",
     date: "2026-05-18",
     type: "patch",
