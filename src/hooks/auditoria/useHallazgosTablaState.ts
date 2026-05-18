@@ -67,39 +67,16 @@ export function useHallazgosTablaState(
   }, [hallazgos]);
 
   const filtrados = useMemo(() => {
-    const q = search.trim().toLowerCase();
-    const desde = etaDesde ? etaDesde.toISOString().slice(0, 10) : null;
-    const hasta = etaHasta ? etaHasta.toISOString().slice(0, 10) : null;
-    const today = new Date().toISOString().slice(0, 10);
-    return hallazgos.filter((h) => {
-      if (q && !h.expediente?.toLowerCase().includes(q)) return false;
-      if (filtroRegla !== "todas" && h.regla !== filtroRegla) return false;
-      if (filtroSev !== "todas" && h.severidad !== filtroSev) return false;
-      if (filtroCliente !== "todos" && h.cliente_nombre !== filtroCliente) return false;
-      if (desde && (!h.eta || h.eta < desde)) return false;
-      if (hasta && (!h.eta || h.eta > hasta)) return false;
-
-      const rev = revisiones?.get(revisionKey(h)) ?? null;
-      const estado = rev?.estado_revision ?? "pendiente";
-      const tieneRev = !!rev;
-
-      if (filtroRevision !== "todos") {
-        if (filtroRevision === "revisados" && estado !== "revisado") return false;
-        if (filtroRevision === "en_progreso" && estado !== "en_progreso") return false;
-        if (filtroRevision === "pendientes" && tieneRev && estado === "revisado") return false;
-      }
-
-      if (filtroResponsable !== "todos") {
-        if (filtroResponsable === "mios" && rev?.responsable_id !== user?.id) return false;
-        if (filtroResponsable === "sin_asignar" && rev?.responsable_id) return false;
-        if (filtroResponsable === "vencidos") {
-          if (!rev?.fecha_limite) return false;
-          if (rev.fecha_limite >= today) return false;
-          if (estado === "revisado") return false;
-        }
-      }
-      return true;
-    });
+    const ctx = {
+      q: search.trim().toLowerCase(),
+      desde: etaDesde ? etaDesde.toISOString().slice(0, 10) : null,
+      hasta: etaHasta ? etaHasta.toISOString().slice(0, 10) : null,
+      today: new Date().toISOString().slice(0, 10),
+      filtroRegla, filtroSev, filtroCliente, filtroRevision, filtroResponsable,
+      userId: user?.id,
+      revisiones,
+    };
+    return hallazgos.filter((h) => matchHallazgo(h, ctx));
   }, [hallazgos, search, filtroRegla, filtroSev, filtroCliente, etaDesde, etaHasta, filtroRevision, filtroResponsable, revisiones, user?.id]);
 
   const totalPages = Math.max(1, Math.ceil(filtrados.length / pageSize));
