@@ -2,6 +2,14 @@ import type { ChangelogEntry } from "../../../changelogData";
 
 export const chunk0: ChangelogEntry[] = [
   {
+    version: "8.216.0",
+    date: "2026-05-18",
+    type: "minor",
+    title: "Toasts de error con panel de detalles copiables para debug",
+    summary: "Los toasts destructive ahora muestran 'Ver detalles' que abre un reporte completo del error listo para copiar y pegar a soporte/Lovable.",
+    description: "Se agregó un sistema de reportes de error global: notifyError() captura automáticamente APP_VERSION, fecha+zona, ruta actual, usuario+organización+rol, viewport, user agent y, si el call site lo provee, el Error original (mensaje, name, code/status/details/hint de Postgrest, stack) y un objeto context arbitrario. El toast destructive es ahora clickeable y muestra un botón 'Ver detalles' que abre un Dialog global con el reporte en markdown y botones 'Copiar reporte' / 'Copiar JSON'. Los toasts con debug ya no se auto-cierran. La subida y eliminación de documentos del embarque pasan el error y contexto (embarqueId, documentoId, fileName, bucket, path) para reproducir bugs como el de Valeria sin pedir capturas. APP_VERSION 8.216.0.",
+  },
+  {
     version: "8.215.0",
     date: "2026-05-18",
     type: "patch",
