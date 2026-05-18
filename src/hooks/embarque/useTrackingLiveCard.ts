@@ -107,17 +107,10 @@ export function useTrackingLiveCard({
   };
 
   // Sugerencia de fechas (sólo cuando hay summary y no estamos en readOnly).
-  const fechasPropuestas = (() => {
-    if (readOnly || !summary || tracking?.status !== "ok" || fechasDismissed) return null;
-    const etaPropuesta = jsoncargoDateToYmd(summary.eta_final_destination);
-    const etdPropuesta = jsoncargoDateToYmd(summary.etd_origin_effective ?? summary.atd_origin);
-    const ataPropuesta = jsoncargoDateToYmd(summary.ata_effective);
-    const etaDifiere = !!etaPropuesta && etaPropuesta !== (eta ?? null);
-    const etdDifiere = !!etdPropuesta && etdPropuesta !== (etd ?? null);
-    const ataDifiere = !!ataPropuesta && ataPropuesta !== (fechaLlegadaReal ?? null);
-    if (!etaDifiere && !etdDifiere && !ataDifiere) return null;
-    return { etaPropuesta, etdPropuesta, ataPropuesta, etaDifiere, etdDifiere, ataDifiere };
-  })();
+  const fechasPropuestas = computeFechasPropuestas({
+    readOnly, summary, trackingStatus: tracking?.status, fechasDismissed,
+    eta: eta ?? null, etd: etd ?? null, ata: fechaLlegadaReal ?? null,
+  });
 
   const onAplicarFechas = async () => {
     if (!fechasPropuestas) return;
