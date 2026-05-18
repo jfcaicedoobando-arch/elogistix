@@ -44,11 +44,14 @@ const columns: DataTableColumn<EmbarqueMesSiguiente>[] = [
     ),
   },
   {
-    key: "profit", header: "Profit", className: "text-right tabular-nums", headerClassName: "text-right",
-    sortable: true, sortValue: (e) => e.profit,
+    key: "profit", header: "Profit MXN", className: "text-right tabular-nums", headerClassName: "text-right",
+    sortable: true, sortValue: (e) => e.profitMXN,
     render: (e) => (
-      <span className={`text-xs font-medium ${e.profit >= 0 ? "text-success" : "text-destructive"}`}>
-        {formatCurrency(e.profit, "USD")}
+      <span
+        className={`text-xs font-medium ${e.profitMXN >= 0 ? "text-success" : "text-destructive"}`}
+        title={`Venta ${formatCurrency(e.ventaMXN, "MXN")} · Costo ${formatCurrency(e.costoMXN, "MXN")} (TC USD ${e.tipoCambioUSD.toFixed(2)})`}
+      >
+        {formatCurrency(e.profitMXN, "MXN")}
       </span>
     ),
   },
