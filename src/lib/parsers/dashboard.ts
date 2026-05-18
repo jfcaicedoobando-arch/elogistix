@@ -40,6 +40,19 @@ export interface EmbarqueConProfit extends EmbarqueConEstado {
   costoUSD: number;
   profit: number;
   margen: number;
+  // MXN homologado (usando TC del embarque)
+  ventaMXN: number;
+  costoMXN: number;
+  profitMXN: number;
+  margenMXN: number;
+  tipoCambioUSD: number;
+  tipoCambioEUR: number;
+  ventaMxnFromUsd: number;
+  costoMxnFromUsd: number;
+  ventaMxnFromEur: number;
+  costoMxnFromEur: number;
+  ventaMxnNative: number;
+  costoMxnNative: number;
 }
 
 export interface EmbarqueMesSiguiente extends EmbarqueConProfit {
@@ -51,6 +64,9 @@ export interface ResumenFacturacion {
   ventaUSD: number;
   costoUSD: number;
   profitUSD: number;
+  ventaMXN: number;
+  costoMXN: number;
+  profitMXN: number;
   facturados: number;
   nombreMes: string;
 }
@@ -67,6 +83,15 @@ export interface ArribosEsteMes {
   yaLlegaron: number;
   enCamino: number;
   profitUSD: number;
+  ventaMXN: number;
+  costoMXN: number;
+  profitMXN: number;
+  ventaMxnFromUsd: number;
+  costoMxnFromUsd: number;
+  ventaMxnFromEur: number;
+  costoMxnFromEur: number;
+  ventaMxnNative: number;
+  costoMxnNative: number;
 }
 
 export const ESTADOS_FILTRO = ESTADOS_ACTIVOS;
@@ -85,6 +110,15 @@ export const EMPTY_ARRIBOS: ArribosEsteMes = {
   yaLlegaron: 0,
   enCamino: 0,
   profitUSD: 0,
+  ventaMXN: 0,
+  costoMXN: 0,
+  profitMXN: 0,
+  ventaMxnFromUsd: 0,
+  costoMxnFromUsd: 0,
+  ventaMxnFromEur: 0,
+  costoMxnFromEur: 0,
+  ventaMxnNative: 0,
+  costoMxnNative: 0,
 };
 
 export const EMPTY_RESUMEN: ResumenFacturacion = {
@@ -92,6 +126,9 @@ export const EMPTY_RESUMEN: ResumenFacturacion = {
   ventaUSD: 0,
   costoUSD: 0,
   profitUSD: 0,
+  ventaMXN: 0,
+  costoMXN: 0,
+  profitMXN: 0,
   facturados: 0,
   nombreMes: "",
 };
@@ -118,6 +155,15 @@ export function parseArribosEsteMes(stats: DashboardStats): ArribosEsteMes {
     yaLlegaron: Number(raw.yaLlegaron ?? 0),
     enCamino: Number(raw.enCamino ?? 0),
     profitUSD: Number(raw.profitUSD ?? 0),
+    ventaMXN: Number(raw.ventaMXN ?? 0),
+    costoMXN: Number(raw.costoMXN ?? 0),
+    profitMXN: Number(raw.profitMXN ?? 0),
+    ventaMxnFromUsd: Number(raw.ventaMxnFromUsd ?? 0),
+    costoMxnFromUsd: Number(raw.costoMxnFromUsd ?? 0),
+    ventaMxnFromEur: Number(raw.ventaMxnFromEur ?? 0),
+    costoMxnFromEur: Number(raw.costoMxnFromEur ?? 0),
+    ventaMxnNative: Number(raw.ventaMxnNative ?? 0),
+    costoMxnNative: Number(raw.costoMxnNative ?? 0),
   };
 }
 
@@ -129,34 +175,59 @@ export function parseResumenMesSiguiente(stats: DashboardStats): ResumenFacturac
     ventaUSD: Number(raw.ventaUSD ?? 0),
     costoUSD: Number(raw.costoUSD ?? 0),
     profitUSD: Number(raw.profitUSD ?? 0),
+    ventaMXN: Number(raw.ventaMXN ?? 0),
+    costoMXN: Number(raw.costoMXN ?? 0),
+    profitMXN: Number(raw.profitMXN ?? 0),
     facturados: Number(raw.facturados ?? 0),
     nombreMes: String(raw.nombreMes ?? ""),
   };
 }
 
 /**
- * Normaliza la lista de embarques del próximo mes garantizando que `profit`,
- * `margen` y `facturado` siempre estén presentes (la RPC podría no enviarlos
- * en versiones legacy del payload).
+ * Normaliza un embarque con datos de profit (USD legacy + MXN homologado).
  */
+function parseEmbarqueConProfitRaw(r: Record<string, unknown>): EmbarqueConProfit {
+  const ventaUSD = Number(r.ventaUSD ?? 0);
+  const costoUSD = Number(r.costoUSD ?? 0);
+  const profit = r.profit !== undefined && r.profit !== null ? Number(r.profit) : ventaUSD - costoUSD;
+  const margen = r.margen !== undefined && r.margen !== null
+    ? Number(r.margen)
+    : ventaUSD > 0 ? (profit / ventaUSD) * 100 : 0;
+  const ventaMXN = Number(r.ventaMXN ?? 0);
+  const costoMXN = Number(r.costoMXN ?? 0);
+  const profitMXN = r.profitMXN !== undefined && r.profitMXN !== null
+    ? Number(r.profitMXN)
+    : ventaMXN - costoMXN;
+  const margenMXN = r.margenMXN !== undefined && r.margenMXN !== null
+    ? Number(r.margenMXN)
+    : ventaMXN > 0 ? (profitMXN / ventaMXN) * 100 : 0;
+  return {
+    ...(fromDb<EmbarqueConProfit>(r)),
+    ventaUSD,
+    costoUSD,
+    profit,
+    margen,
+    ventaMXN,
+    costoMXN,
+    profitMXN,
+    margenMXN,
+    tipoCambioUSD: Number(r.tipoCambioUSD ?? 0),
+    tipoCambioEUR: Number(r.tipoCambioEUR ?? 0),
+    ventaMxnFromUsd: Number(r.ventaMxnFromUsd ?? 0),
+    costoMxnFromUsd: Number(r.costoMxnFromUsd ?? 0),
+    ventaMxnFromEur: Number(r.ventaMxnFromEur ?? 0),
+    costoMxnFromEur: Number(r.costoMxnFromEur ?? 0),
+    ventaMxnNative: Number(r.ventaMxnNative ?? 0),
+    costoMxnNative: Number(r.costoMxnNative ?? 0),
+  };
+}
+
 export function parseEmbarquesMesSiguiente(stats: DashboardStats): EmbarqueMesSiguiente[] {
   const raw = (stats?.embarquesMesSiguiente as Array<Record<string, unknown>>) ?? [];
-  return raw.map((r) => {
-    const ventaUSD = Number(r.ventaUSD ?? 0);
-    const costoUSD = Number(r.costoUSD ?? 0);
-    const profit = r.profit !== undefined && r.profit !== null ? Number(r.profit) : ventaUSD - costoUSD;
-    const margen = r.margen !== undefined && r.margen !== null
-      ? Number(r.margen)
-      : ventaUSD > 0 ? (profit / ventaUSD) * 100 : 0;
-    return {
-      ...(fromDb<EmbarqueMesSiguiente>(r)),
-      ventaUSD,
-      costoUSD,
-      profit,
-      margen,
-      facturado: Boolean(r.facturado ?? false),
-    };
-  });
+  return raw.map((r) => ({
+    ...parseEmbarqueConProfitRaw(r),
+    facturado: Boolean(r.facturado ?? false),
+  }));
 }
 
 export function parseCargasActivasTotal(stats: DashboardStats): number {
