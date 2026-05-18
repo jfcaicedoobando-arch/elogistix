@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { Trash2, RotateCcw, X } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -10,22 +9,10 @@ import { DataTable, type DataTableColumn } from "@/components/shared/DataTable";
 import { usePermissions } from "@/hooks/shared/usePermissions";
 import { useToast } from "@/hooks/use-toast";
 import { Navigate } from "react-router-dom";
+import { listTrash, restoreRecord, purgeRecord, type SoftTable as SoftTableSvc, type TrashRow as TrashRowSvc } from "@/services/admin";
 
-type SoftTable =
-  | "clientes"
-  | "contactos_cliente"
-  | "embarques"
-  | "documentos_embarque"
-  | "eventos_embarque"
-  | "notas_embarque"
-  | "cotizaciones"
-  | "cotizacion_costos"
-  | "facturas"
-  | "conceptos_factura"
-  | "proformas"
-  | "proforma_conceptos_consolidados"
-  | "conceptos_costo"
-  | "conceptos_venta";
+type SoftTable = SoftTableSvc;
+type TrashRow = TrashRowSvc;
 
 const TABLAS: { value: SoftTable; label: string }[] = [
   { value: "embarques", label: "Embarques" },
@@ -44,15 +31,6 @@ const TABLAS: { value: SoftTable; label: string }[] = [
   { value: "conceptos_venta", label: "Conceptos de venta" },
 ];
 
-interface TrashRow {
-  id: string;
-  organization_id: string;
-  deleted_at: string;
-  deleted_by: string | null;
-  deleted_by_email: string | null;
-  label: string;
-}
-
 const dtf = new Intl.DateTimeFormat("es-MX", {
   day: "2-digit",
   month: "2-digit",
@@ -69,23 +47,12 @@ export default function Papelera() {
 
   const { data, isLoading } = useQuery({
     queryKey: ["papelera", tabla],
-    queryFn: async (): Promise<TrashRow[]> => {
-      const { data, error } = await supabase.rpc("list_trash", {
-        _table: tabla,
-        _limit: 200,
-        _offset: 0,
-      });
-      if (error) throw error;
-      return (data ?? []) as TrashRow[];
-    },
+    queryFn: () => listTrash(tabla, 200, 0),
     enabled: isAdmin,
   });
 
   const restore = useMutation({
-    mutationFn: async (id: string) => {
-      const { error } = await supabase.rpc("restore_record", { _table: tabla, _id: id });
-      if (error) throw error;
-    },
+    mutationFn: (id: string) => restoreRecord(tabla, id),
     onSuccess: () => {
       toast({ title: "Registro restaurado" });
       qc.invalidateQueries({ queryKey: ["papelera", tabla] });
@@ -94,10 +61,7 @@ export default function Papelera() {
   });
 
   const purge = useMutation({
-    mutationFn: async (id: string) => {
-      const { error } = await supabase.rpc("purge_record", { _table: tabla, _id: id });
-      if (error) throw error;
-    },
+    mutationFn: (id: string) => purgeRecord(tabla, id),
     onSuccess: () => {
       toast({ title: "Registro eliminado definitivamente" });
       qc.invalidateQueries({ queryKey: ["papelera", tabla] });
