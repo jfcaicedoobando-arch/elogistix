@@ -13,8 +13,8 @@
  * El diálogo es agnóstico de la entidad: clientes y proveedores lo consumen
  * pasando su mapper y su acción de inserción.
  */
-import { useRef, useState } from "react";
 import { Download, Upload, Loader2, FileWarning, CheckCircle2 } from "lucide-react";
+import { useBulkImport } from "@/components/shared/useBulkImport";
 import {
   Dialog,
   DialogContent,
