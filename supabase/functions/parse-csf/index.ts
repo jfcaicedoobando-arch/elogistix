@@ -55,16 +55,13 @@ serve(async (req) => {
 
     const formData = await req.formData();
     const file = formData.get("file") as File | null;
-    if (!file) return errorResponse("No se envió archivo PDF", 400, cors);
-
-    if (file.type !== "application/pdf") {
-      return errorResponse("Solo se aceptan archivos PDF", 400, cors);
-    }
-    if (file.size > MAX_BYTES) {
-      return errorResponse("El archivo excede el límite de 5 MB", 413, cors);
+    const fileError = validateFile(file);
+    if (fileError) {
+      const status = fileError.includes("excede") ? 413 : 400;
+      return errorResponse(fileError, status, cors);
     }
 
-    const arrayBuffer = await file.arrayBuffer();
+    const arrayBuffer = await file!.arrayBuffer();
     const base64 = btoa(String.fromCharCode(...new Uint8Array(arrayBuffer)));
 
     const systemPrompt = `Eres un extractor de datos fiscales mexicanos. Se te proporcionará una Constancia de Situación Fiscal (CSF) del SAT en formato PDF.
