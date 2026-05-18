@@ -117,6 +117,8 @@ export default function EmbarqueDetalle() {
 
         <TabsContent value="documentos">
           <TabDocumentos
+            embarqueId={id!}
+            modo={embarque.modo}
             documentos={documentos}
             canEdit={canEdit}
             uploadingDocId={uploadingDocId}
