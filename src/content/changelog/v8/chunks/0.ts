@@ -2,6 +2,14 @@ import type { ChangelogEntry } from "../../../changelogData";
 
 export const chunk0: ChangelogEntry[] = [
   {
+    version: "10.2.2",
+    date: "2026-05-19",
+    type: "patch",
+    title: "Auditoría — 'Marcar revisado' deja de fallar con 'Sesión no válida'",
+    summary: "Se cerró la carrera de hidratación en useAuthSession (INITIAL_SESSION ahora hidrata user+session) y las mutaciones de auditoría caen a supabase.auth.getUser() como fuente de verdad antes de abortar.",
+    description: "Fix doble. (1) src/contexts/auth/useAuthSession.ts: INITIAL_SESSION ya no se trataba como refresh silencioso — antes sólo actualizaba session y dejaba user=null durante la ventana en que el listener llega antes que getSession(); ahora hidrata user, session y loading=false igual que SIGNED_IN. Sólo TOKEN_REFRESHED sigue siendo silencioso para no invalidar React Query cada ~60s. El fallback getSession() ahora respeta el estado ya hidratado (no pisa user si INITIAL_SESSION llegó primero). (2) src/hooks/auditoria/useAuditoriaRevisiones.ts: nuevo helper resolveAuthUser(ctxUser) que devuelve el user del contexto o, si está null, consulta supabase.auth.getUser(). useMarcarRevisado, useDesmarcarRevisado y useAsignarResponsable lo usan en lugar del guard estricto if(!user). Así, aunque el contexto aún no haya rerenderado tras el evento, la mutación funciona contra la sesión real de Supabase. 406/406 tests verdes. APP_VERSION 10.2.2.",
+  },
+  {
     version: "10.2.1",
     date: "2026-05-19",
     type: "patch",
