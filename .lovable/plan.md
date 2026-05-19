@@ -1,34 +1,25 @@
-## Objetivo
+## Cambios en el listado de embarques
 
-Quitar la columna **Costos** (estado de liquidación) del listado de embarques porque hoy no refleja la realidad operativa — los `conceptos_costo` se quedan en `Pendiente` indefinidamente — y limpiar los datos históricos para que cuando reintroduzcamos un flujo real de conciliación, la base esté consistente.
+1. **`src/components/embarque/embarqueColumns.tsx`**
+   - Eliminar la columna `proforma` (header "Proforma") y su import de `ProformaBadge`.
+   - Eliminar la columna `acciones` (botón Editar/Eliminar) y los imports `EmbarqueRowActions`.
+   - Quitar de `BuildColumnsParams` los campos `canEdit`, `onEditar` y `onEliminar`.
 
-## Cambios en UI (frontend)
+2. **`src/hooks/embarque/useEmbarquesPageController.ts`**
+   - Eliminar el estado `embarqueAEliminar`, el handler `handleEliminar`, la mutación `useEliminarEmbarque` y la llamada a `registrarActividad` asociada al borrado.
+   - Quitar `canEdit/onEditar/onEliminar` del `buildEmbarqueColumns`.
+   - Dejar de exponer `embarqueAEliminar`, `setEmbarqueAEliminar`, `handleEliminar`, `eliminarEmbarquePending`.
+   - Mantener `canEdit` solo si sigue siendo necesario para el botón "Nuevo embarque" del header y el FAB.
 
-1. `src/components/embarque/embarqueColumns.tsx`
-   - Eliminar `LiquidacionBadge`, la columna `liquidacion` (header "Costos") y los tipos `LiquidacionInfo` / `liquidacionMap` del `BuildColumnsParams`.
-2. `src/hooks/embarque/useEmbarquesPageController.ts`
-   - Dejar de leer y pasar `liquidacionMap` a `buildEmbarqueColumns`. Quitar también la columna sintética `liquidacion` que se inyecta para el export CSV.
-3. `src/generators/exportCsv.ts` (si hace falta) — verificar que ninguna columna exportada dependa de liquidación; si la había, removerla.
-4. Revisar consumidores del campo en `useEmbarquesListData` / `useEmbarquesLiquidacion` y mantener el hook solo si lo usa el detalle de embarque (Tab Costos). En el listado dejamos de consumirlo.
+3. **`src/pages/embarques/Embarques.tsx`**
+   - Quitar el `DoubleConfirmDeleteDialog` y su import.
+   - Quitar las props relacionadas (`embarqueAEliminar`, `setEmbarqueAEliminar`, `handleEliminar`, `eliminarEmbarquePending`).
 
-> Nota: el RPC `embarques_listado` seguirá devolviendo `costos_total` / `costos_pagados`. No tocamos la firma para no romper otros consumidores; simplemente se ignoran en el listado.
+4. **Acceso a Editar**: La ruta `/embarques/:id/editar` se sigue alcanzando desde el **detalle** del embarque (no se toca). Solo se retira el acceso desde la tabla.
 
-## Backfill de datos históricos
-
-Reglas acordadas para marcar `conceptos_costo.estado_liquidacion = 'Pagado'`:
-
-- El concepto tiene `fecha_pago IS NOT NULL` **o** `referencia_pago` no vacía, **o**
-- El embarque asociado está en estado `Cerrado` (operación terminada → se asume liquidada).
-
-Sólo afecta filas con `deleted_at IS NULL` y `estado_liquidacion = 'Pendiente'`. Se ejecuta como UPDATE puntual (no migración de esquema) usando el tool de inserción/datos.
-
-Previo a ejecutar mostraré conteos de cuántas filas se actualizarían por cada criterio para validar contigo antes de aplicar.
-
-## Changelog
-
-Entrada nueva en `src/pages/Changelog.tsx` (patch, e.g. `9.0.1`): "Se retira la columna Estado Costos del listado de embarques mientras se rediseña el flujo de conciliación; se normalizan conceptos históricos."
+5. **Changelog** (`src/content/changelog/v8/chunks/0.ts`): nueva entrada patch `9.0.2` describiendo la simplificación del listado (sin acciones por fila y sin columna Proforma). Actualizar `APP_VERSION`.
 
 ## Fuera de alcance
 
-- No tocamos el detalle del embarque (Tab Costos) ni el RPC.
-- No introducimos una nueva fuente de verdad todavía; eso se planeará cuando se defina el flujo real de conciliación con facturas de proveedor.
+- No se borra el componente `EmbarqueRowActions` ni `ProformaBadge` (siguen usándose en otras vistas si aplica; si quedan huérfanos se limpian en una pasada futura).
+- No se cambia la lógica de permisos ni los endpoints de eliminación.

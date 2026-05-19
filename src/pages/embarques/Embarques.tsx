@@ -1,7 +1,6 @@
 import { Plus } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { DataTable } from "@/components/shared/DataTable";
-import DoubleConfirmDeleteDialog from "@/components/shared/DoubleConfirmDeleteDialog";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { FloatingActionButton } from "@/components/shared/FloatingActionButton";
 
@@ -21,8 +20,7 @@ function buildDescription(contenedoresCount: number, expedientesCount: number, e
 export default function Embarques() {
   const {
     state, clientes, operadoresUnicos, columns, isLoading, isEmptyState, canEdit,
-    embarqueAEliminar, setEmbarqueAEliminar,
-    handleEliminar, exportarCsv, exportandoCsv, eliminarEmbarquePending,
+    exportarCsv, exportandoCsv,
     navigate, prefetchEmbarque,
   } = useEmbarquesPageController();
 
@@ -117,16 +115,6 @@ export default function Embarques() {
           </Card>
         </>
       )}
-
-      <DoubleConfirmDeleteDialog
-        open={!!embarqueAEliminar}
-        onOpenChange={(open) => { if (!open) setEmbarqueAEliminar(null); }}
-        entityName="embarque"
-        description={`El embarque ${embarqueAEliminar?.expediente} será eliminado permanentemente.`}
-        finalDescription={`Esta acción no se puede deshacer. Se eliminarán todos los datos, documentos y costos asociados al embarque ${embarqueAEliminar?.expediente}.`}
-        onConfirm={handleEliminar}
-        isPending={eliminarEmbarquePending}
-      />
 
       {canEdit && !isEmptyState ? (
         <FloatingActionButton

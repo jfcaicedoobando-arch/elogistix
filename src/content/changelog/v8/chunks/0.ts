@@ -2,6 +2,14 @@ import type { ChangelogEntry } from "../../../changelogData";
 
 export const chunk0: ChangelogEntry[] = [
   {
+    version: "9.0.2",
+    date: "2026-05-19",
+    type: "patch",
+    title: "Listado de embarques — sin acciones por fila ni columna Proforma",
+    summary: "Se retiraron las acciones inline de editar/eliminar y la columna 'Proforma' del listado de embarques para simplificar la tabla. La edición sigue disponible desde el detalle del embarque.",
+    description: "En buildEmbarqueColumns se eliminó la columna 'proforma' (ProformaBadge) y la columna 'acciones' (EmbarqueRowActions). useEmbarquesPageController dejó de manejar el estado embarqueAEliminar, el handler handleEliminar, la mutación useEliminarEmbarque y la bitácora asociada. Embarques.tsx ya no monta DoubleConfirmDeleteDialog. La ruta /embarques/:id/editar sigue accesible desde el detalle. APP_VERSION 9.0.2.",
+  },
+  {
     version: "9.0.1",
     date: "2026-05-19",
     type: "patch",
