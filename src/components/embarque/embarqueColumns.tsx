@@ -14,31 +14,17 @@ import EmbarqueRowActions from "./EmbarqueRowActions";
 import { ProformaBadge } from "./ProformaBadge";
 
 export interface DocsInfo { pendientes: number; total: number }
-export interface LiquidacionInfo { pagados: number; total: number }
 
 export interface BuildColumnsParams {
   canEdit: boolean;
   docsMap: Record<string, DocsInfo>;
-  liquidacionMap: Record<string, LiquidacionInfo>;
   contenedoresPorExpediente?: Record<string, number>;
   onEditar: (e: EmbarqueRow) => void;
   onEliminar: (e: EmbarqueRow) => void;
 }
 
-
-function LiquidacionBadge({ info }: { info?: LiquidacionInfo }) {
-  if (!info || info.total === 0) return <span className="text-xs text-muted-foreground">—</span>;
-  if (info.pagados === info.total) {
-    return <Badge variant="success" className="text-xs">Pagado</Badge>;
-  }
-  if (info.pagados > 0) {
-    return <Badge variant="warning" className="text-xs">Parcial</Badge>;
-  }
-  return <Badge variant="destructive" className="text-xs">Pendiente</Badge>;
-}
-
 export function buildEmbarqueColumns({
-  canEdit, docsMap, liquidacionMap, contenedoresPorExpediente = {}, onEditar, onEliminar,
+  canEdit, docsMap, contenedoresPorExpediente = {}, onEditar, onEliminar,
 }: BuildColumnsParams): DataTableColumn<EmbarqueRow>[] {
 
   const base: DataTableColumn<EmbarqueRow>[] = [
@@ -102,10 +88,6 @@ export function buildEmbarqueColumns({
         const estado = calcularEstadoEmbarque(e.modo, e.tipo, e.etd, e.eta, e.estado);
         return <Badge variant="secondary" className={`text-xs whitespace-nowrap ${getEstadoColor(estado)}`}>{estado}</Badge>;
       },
-    },
-    {
-      key: "liquidacion", header: "Costos", width: "w-[90px]",
-      render: (e) => <LiquidacionBadge info={liquidacionMap[e.id]} />,
     },
     {
       key: "proforma", header: "Proforma", width: "w-[180px]",
