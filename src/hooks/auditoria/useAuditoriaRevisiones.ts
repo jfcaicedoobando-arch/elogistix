@@ -4,7 +4,9 @@
  */
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
+import type { User } from "@supabase/supabase-js";
 import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
 import {
   asignarResponsableHallazgo,
   deleteAuditoriaRevision,
@@ -13,6 +15,19 @@ import {
 } from "@/services/auditoria";
 import { insertBitacora } from "@/services/bitacora";
 import type { AuditoriaRevision, HallazgoAuditoria } from "@/types/auditoria";
+
+/**
+ * Resuelve el usuario autenticado tolerando ventanas de carrera en el
+ * hidratado del AuthContext: si `ctxUser` aún no llegó del React state,
+ * cae a `supabase.auth.getUser()` (fuente de verdad). Sólo si ambos fallan
+ * lanza "Sesión no válida".
+ */
+async function resolveAuthUser(ctxUser: User | null): Promise<User> {
+  if (ctxUser) return ctxUser;
+  const { data, error } = await supabase.auth.getUser();
+  if (error || !data.user) throw new Error("Sesión no válida");
+  return data.user;
+}
 
 const REVISIONES_KEY = ["auditoria", "revisiones"] as const;
 
@@ -58,7 +73,7 @@ export function useMarcarRevisado() {
       const { hallazgo, accionTomada } = params;
       const detalleHash = hallazgoHash(hallazgo);
 
-      if (!user) throw new Error("Sesión no válida");
+      const u = await resolveAuthUser(user);
 
       const data = await upsertAuditoriaRevision({
         embarque_id: hallazgo.embarque_id,
@@ -66,15 +81,15 @@ export function useMarcarRevisado() {
         detalle_hash: detalleHash,
         detalle: hallazgo.detalle,
         accion_tomada: accionTomada,
-        revisado_por: user.id,
-        revisado_por_email: user.email ?? "",
+        revisado_por: u.id,
+        revisado_por_email: u.email ?? "",
       });
 
       // Bitácora — best effort, no bloquea el éxito.
       try {
         await insertBitacora({
-          usuarioId: user.id,
-          usuarioEmail: user.email ?? "",
+          usuarioId: u.id,
+          usuarioEmail: u.email ?? "",
           accion: "marcar_hallazgo_revisado",
           modulo: "auditoria",
           entidadId: hallazgo.embarque_id,
@@ -127,10 +142,11 @@ export function useDesmarcarRevisado() {
       await deleteAuditoriaRevision(revisionId);
 
       try {
-        if (user) {
+        const u = await resolveAuthUser(user).catch(() => null);
+        if (u) {
           await insertBitacora({
-            usuarioId: user.id,
-            usuarioEmail: user.email ?? "",
+            usuarioId: u.id,
+            usuarioEmail: u.email ?? "",
             accion: "desmarcar_hallazgo_revisado",
             modulo: "auditoria",
             entidadId: null,
@@ -172,7 +188,7 @@ export function useAsignarResponsable() {
       fechaLimite: string | null;
       tomar?: boolean;
     }) => {
-      if (!user) throw new Error("Sesión no válida");
+      const u = await resolveAuthUser(user);
       const { hallazgo, responsableId, responsableEmail, fechaLimite, tomar } = params;
       const detalleHash = hallazgoHash(hallazgo);
 
@@ -183,16 +199,16 @@ export function useAsignarResponsable() {
         detalle: hallazgo.detalle,
         responsable_id: responsableId,
         responsable_email: responsableEmail,
-        asignado_por: user.id,
-        asignado_por_email: user.email ?? "",
+        asignado_por: u.id,
+        asignado_por_email: u.email ?? "",
         fecha_limite: fechaLimite,
         estado_revision: tomar ? "en_progreso" : "pendiente",
       });
 
       try {
         await insertBitacora({
-          usuarioId: user.id,
-          usuarioEmail: user.email ?? "",
+          usuarioId: u.id,
+          usuarioEmail: u.email ?? "",
           accion: tomar ? "tomar_hallazgo" : "asignar_hallazgo",
           modulo: "auditoria",
           entidadId: hallazgo.embarque_id,
