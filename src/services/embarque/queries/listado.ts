@@ -43,7 +43,7 @@ export interface EmbarquesPaginadosFilters {
   filterModo: string;
   filterCliente: string;
   filterOperador: string;
-  filterProforma: string;
+  filterProforma?: string;
   fechaDesde?: string;
   fechaHasta?: string;
   page: number;
