@@ -63,7 +63,7 @@ describe("dashboardParsers", () => {
       const result = parseArribosEsteMes({
         arribosEsteMes: { total: 10, yaLlegaron: 3, enCamino: 7, profitUSD: 12500.5 },
       });
-      expect(result).toEqual({ total: 10, yaLlegaron: 3, enCamino: 7, profitUSD: 12500.5 });
+      expect(result).toMatchObject({ total: 10, yaLlegaron: 3, enCamino: 7, profitUSD: 12500.5 });
     });
   });
 

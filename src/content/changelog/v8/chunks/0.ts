@@ -2,6 +2,14 @@ import type { ChangelogEntry } from "../../../changelogData";
 
 export const chunk0: ChangelogEntry[] = [
   {
+    version: "10.2.1",
+    date: "2026-05-19",
+    type: "patch",
+    title: "Tests heredados verdes — fixtures de toast/dashboard y recentChangelog ≤10",
+    summary: "Se cerraron los 4 fallos preexistentes: tests de notifyError aceptan el campo debug del toast, parseArribosEsteMes usa toMatchObject y recentChangelog quedó recortado al top 10 esperado por el integrity check.",
+    description: "Fix de la suite Vitest sin tocar runtime. (1) src/lib/ui/__tests__/appFeedback.test.ts ahora usa expect.objectContaining para los toasts destructive — notifyError adjunta un payload `debug` (buildErrorReport) desde 8.216.0 que el assert estricto rechazaba. (2) src/lib/parsers/__tests__/dashboard.test.ts > parseArribosEsteMes pasa de toEqual a toMatchObject para tolerar los campos MXN agregados en 8.212.0. (3) src/content/changelogData.ts: recentChangelog recortado de 30+ entradas a 10 (el integrity test exige ≤10 para mantener el bundle del shell autenticado pequeño); chunk0 sigue siendo la fuente de verdad histórica. 406/406 tests verdes. APP_VERSION 10.2.1.",
+  },
+  {
     version: "10.2.0",
     date: "2026-05-19",
     type: "minor",
