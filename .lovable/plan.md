@@ -1,87 +1,85 @@
-## Objetivo
+# Fase 2 — Migración de columnas a ColumnDef nativo (tablas core)
 
-Eliminar la lógica custom de sort y virtualización (`useDataTableSort`, el `useMemo` que ordena arreglos, el bucle manual sobre `virtualizer.getVirtualItems()` desconectado del modelo de filas) y dejar que `@tanstack/react-table` sea la única fuente de verdad del estado de la tabla. `@tanstack/react-virtual` se mantiene pero conectado al `rowModel` de TanStack.
+## Alcance acordado
 
-Filtros server-side (Supabase RPC) **no se tocan** — viven en los controllers de página y seguirán igual.
+**Migrar ahora** (tablas core de operación):
 
-## Estrategia híbrida en 2 fases
+1. `src/components/embarque/embarqueColumns.tsx` → `EmbarqueRow`
+2. `src/components/cotizacion/cotizacionesColumns.tsx` → `Cotizacion`
+3. `src/components/cliente/clienteColumns.tsx` + `TablaContactos.tsx` + `TabPortalCliente.tsx`
+4. `src/pages/proveedores/Proveedores.tsx` (columnas inline) + `ProveedorDetalle.tsx`
+5. `src/components/facturacion/proformasColumns.tsx`
+6. `src/components/facturacion/proyeccionColumns.tsx`
+7. `src/components/facturacion/huecoFacturacionColumns.tsx`
+8. `src/components/embarque/facturacion/HistorialProformas.tsx`
+9. `src/components/embarque/facturacion/HistorialFacturas.tsx`
+10. `src/components/embarque/TabCostos.tsx`
+11. `src/components/embarque/TabDocumentos.tsx`
+12. `src/pages/clientes/Clientes.tsx` (columnas inline)
+13. `src/pages/facturacion/Facturacion.tsx` (columnas inline)
 
-**Fase 1 (este plan):** instalar TanStack Table, reescribir el motor interno de `DataTable` y `VirtualDataTable` manteniendo el contrato público `DataTableColumn<T>` como adapter. Migrar `Embarques` y `Cotizaciones` a un nuevo helper `defineColumns` que produce `ColumnDef<T>` nativo, sin pasar por el adapter — así sirven de referencia para la Fase 2.
+**Diferir al ticket** (`docs/migracion-tabla-fase2.md`): dashboard, configuración, admin, portal, auditoría, papelera, reportes, idempotencia.
 
-**Fase 2 (futura, otro ticket):** migrar los ~38 archivos restantes de columnas a `ColumnDef<T>` nativo y borrar el adapter.
+## Patrón de migración
 
-## Cambios Fase 1
-
-### 1. Dependencia
-
-Instalar `@tanstack/react-table` (v8). `@tanstack/react-virtual` ya está.
-
-### 2. Nuevo módulo `src/components/shared/dataTable/`
+Cada archivo cambia de:
 
 ```text
-dataTable/
-  types.ts                  ← se conserva DataTableColumn<T> público (adapter)
-  columnAdapter.ts          ← NUEVO: DataTableColumn<T> → ColumnDef<T>
-  useTableInstance.ts       ← NUEVO: useReactTable con sort controlado/uncontrolado
-  defineColumns.ts          ← NUEVO: helper tipado para callers que ya quieran ColumnDef nativo
-  DataTableHeaderRow.tsx    ← se reescribe sobre headerGroups de TanStack
-  DataTableBody.tsx         ← se reescribe sobre table.getRowModel().rows
-  (se ELIMINA) useDataTableSort.ts
+DataTableColumn<T>[] con { key, header, render, sortable, sortValue, width, align, sticky, className }
 ```
 
-### 3. `DataTable.tsx` — motor TanStack, API pública intacta
-
-- Internamente convierte `DataTableColumn<T>[]` → `ColumnDef<T>[]` vía `columnAdapter`.
-- Crea la instancia con `useReactTable({ data, columns, getCoreRowModel, getSortedRowModel, manualSorting: sortMode === "server", state: { sorting }, onSortingChange })`.
-- `sortingState` ↔ `controlledSort` se sincroniza bidireccionalmente: cuando `sortMode === "server"` el estado viene de props (`controlledSort`) y se propaga vía `onSortChange`; cuando es "client" vive dentro de la instancia (sin `useState` paralelo, sin `useMemo` de ordenamiento, sin `useEffect`).
-- Renderizado a través de `table.getHeaderGroups()` y `table.getRowModel().rows`, conservando densidad, striping, sticky, footer, paginación externa y skeletons.
-
-### 4. `VirtualDataTable.tsx` — TanStack Table + react-virtual conectados
-
-- Misma instancia `useReactTable` (sin `getSortedRowModel` si no se necesita; opcional según props).
-- `rowVirtualizer = useVirtualizer({ count: table.getRowModel().rows.length, getScrollElement, estimateSize, measureElement })`.
-- El render itera `rowVirtualizer.getVirtualItems()` y obtiene cada fila de `table.getRowModel().rows[virtualRow.index]`, no del array `data` crudo. Esto deja a TanStack como única fuente de orden/filtrado futuro.
-- `VirtualRow.tsx` se simplifica para recibir una `Row<T>` de TanStack (flexRender por celda) en lugar de iterar columnas manualmente.
-
-### 5. Migración nativa de Embarques y Cotizaciones
-
-Para `src/components/embarque/embarqueColumns.tsx` y `src/components/cotizacion/cotizacionColumns.tsx` (el que aplique) crear columnas con `defineColumns<EmbarqueRow>()` que devuelve `ColumnDef<EmbarqueRow>[]` directo:
+a:
 
 ```text
-defineColumns<EmbarqueRow>([
-  { id: "expediente", header: "Expediente",
-    accessorFn: r => r.expediente,
-    cell: ({ row }) => <ExpedienteCell embarque={row.original} />,
-    enableSorting: true },
-  ...
+defineColumns<T>([
+  { id, header, accessorFn?, cell: ({ row }) => ...,
+    enableSorting?, sortingFn?, sortDescFirst?,
+    meta: { width, align, sticky, stickyRight, className, headerClassName } }
 ])
 ```
 
-Estas dos páginas ya usan `sortMode="server"` con `controlledSort`/`onSortChange` desde sus controllers (Supabase RPC). El refactor mapea esos handlers al `OnChangeFn<SortingState>` esperado por TanStack — sin cambiar el RPC ni los hooks de paginación server-side existentes.
+Equivalencias mecánicas (ya documentadas en `docs/tables.md`):
 
-`DataTable` aceptará tanto `DataTableColumn<T>[]` (legacy/adapter) como `ColumnDef<T>[]` (nativo) detectando la forma (`'render' in col` vs `'cell' in col`).
+- `key` → `id`
+- `sortValue: r => r.x` → `accessorFn: r => r.x` (+ `sortingFn` automático del adapter; se replica con `localeCompare("es-MX", { sensitivity: "base" })` para strings)
+- `render` → `cell: ({ row }) => ...(row.original)`
+- estilos visuales → `meta`
 
-### 6. Limpieza
+## Pasos
 
-- Borrar `useDataTableSort.ts`.
-- Quitar el `useMemo` de orden y cualquier ordenamiento manual en `DataTableBody`.
-- Mantener `PaginationControls` tal cual (paginación externa controlada por el caller).
+1. **Crear helpers compartidos** en `src/components/shared/dataTable/`:
+   - `sortingFns.ts` — `esCollator` (locale "es-MX", sensitivity "base") + `sortByString<T>()`, `sortByDate<T>()`, `sortByNumber<T>()` reutilizables. Replican el comportamiento del adapter para que cada call-site no escriba comparadores ad-hoc.
+2. **Migrar `embarqueColumns.tsx`** (referencia para el resto). Validar contra `Embarques.tsx` con su `sortMode="server"` + `controlledSort`.
+3. **Migrar `cotizacionesColumns.tsx`** y verificar `Cotizaciones.tsx` (también server-side).
+4. **Migrar bloques de cliente** (3 archivos). Estos son sort cliente.
+5. **Migrar Proveedores** (`Proveedores.tsx` + `ProveedorDetalle.tsx`). Mover columnas inline a archivos dedicados `proveedoresColumns.tsx` y `proveedorDetalleColumns.tsx` para mantener el patrón.
+6. **Migrar facturación**: `proformasColumns`, `proyeccionColumns`, `huecoFacturacionColumns`, `HistorialProformas`, `HistorialFacturas`, columnas inline de `Facturacion.tsx`.
+7. **Migrar `TabCostos.tsx` y `TabDocumentos.tsx`** del detalle de embarque.
+8. **Migrar columnas inline de `Clientes.tsx`** a `clienteColumns.tsx` (ya existente).
+9. **Ampliar pruebas de regresión** en `src/components/shared/dataTable/__tests__/DataTable.regression.test.tsx`:
+   - Caso usando un arreglo `ColumnDef<T>[]` nativo (no legacy) para confirmar que la rama `isLegacyColumns=false` funciona.
+   - Caso de sort client-side con `accessorFn` + `sortingFn` para validar que el sort por defecto del adapter sigue ordenando igual que la ruta nativa.
+10. **Crear `docs/migracion-tabla-fase2.md`** con:
+    - Resumen del refactor 9.1.0–9.1.x.
+    - Tabla de equivalencias `DataTableColumn` ↔ `ColumnDef`.
+    - Lista de archivos **migrados** (cerrados) y **pendientes** (con prioridad: P1 admin/configuración, P2 dashboard/reportes, P3 portal/papelera/auditoría/idempotencia).
+    - Criterio de cierre: cuando la lista esté vacía, eliminar `columnAdapter.ts`, `isLegacyColumns`, `legacyToColumnDef`, el tipo `DataTableColumn<T>`, y la rama `toColumnDefs` que decide entre legacy/nativo. Mantener únicamente `ColumnDef<T>[]` + `defineColumns`.
+11. **Versionar**: `APP_VERSION` → `9.2.0` (cambio minor: migración masiva de columnas, sin breaking change público porque el adapter sigue activo).
+12. **Changelog**: nueva entrada `9.2.0` describiendo qué archivos se migraron, helpers nuevos, doc creado y la promesa de eliminar el adapter al cerrar el ticket.
 
-### 7. Changelog y versión
+## Lo que NO entra
 
-- `APP_VERSION` → `9.1.0` (minor: cambio arquitectónico de motor de tablas, API pública estable).
-- Entrada en `src/content/changelog/v8/chunks/0.ts` describiendo el refactor, la Fase 2 pendiente y que Embarques/Cotizaciones ya corren con `ColumnDef` nativo.
+- Eliminar el adapter / `DataTableColumn<T>` (se hace cuando el ticket cierre).
+- Tocar RPCs, filtros server-side, paginación o el motor de virtualización.
+- Migrar archivos diferidos al ticket (admin, configuración, dashboard, reportes, portal, auditoría, papelera, idempotencia).
+- Cambios visuales — el render debe quedar pixel-equivalente.
 
-## Verificación
+## Riesgos y mitigación
 
-- `tsc` limpio (lo corre el harness).
-- Smoke manual en `/embarques` y `/cotizaciones`: ordenar columnas (server), paginar, cambiar density, hover, click de fila, sticky.
-- `/admin/diagnostico` (único consumidor de `VirtualDataTable`): scroll virtual con cientos de filas y alturas variables.
-- Tres páginas que usen el DataTable legacy (Clientes, Proveedores, Facturación) para confirmar que el adapter no rompe nada.
+- **Sort divergente entre legacy y nativo**: mitigado con helpers `sortByString/Date/Number` que replican exactamente el `localeCompare("es-MX")` del adapter, más un test de regresión que compara ambos caminos.
+- **Identidad de columnas memoizadas**: cada `defineColumns(...)` debe vivir fuera del render o dentro de `useMemo` con deps explícitas (igual que hoy). Sin cambios de patrón.
+- **`accessorFn` vs `cell`**: cuando el render NO depende del valor crudo (badges, componentes complejos), igual usar `accessorFn` para que el sort cliente funcione; el `cell` ignora el valor y usa `row.original`.
 
-## Fuera de alcance
+## Tamaño estimado
 
-- Migrar los ~38 archivos de columnas restantes a `ColumnDef` nativo (Fase 2).
-- Agregar filtrado client-side (`getFilteredRowModel`) — los filtros siguen en Supabase RPC.
-- Agrupado, expansión de filas, row selection, column visibility / resizing.
-- Cambios en RPCs, `useEmbarquesPageState`, `useCotizacionesPageState` o cualquier hook de paginación server-side.
+13 archivos migrados + 1 doc nuevo + 1 archivo de helpers + 2 tests nuevos + versionado. Sin cambios en hooks, controllers ni servicios.

@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { DataTable, type DataTableColumn } from "@/components/shared/DataTable";
+import { DataTable, defineColumns, type ColumnDef } from "@/components/shared/DataTable";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { dialogSize } from "@/lib/ui/dialogTokens";
 import { UserPlus, Trash2, Globe, Loader2 } from "lucide-react";
@@ -76,16 +76,20 @@ export default function TabPortalCliente({ clienteId, organizationId, canEdit }:
         <CardContent>
           {(() => {
             type CU = typeof clientUsers[number];
-            const cols: DataTableColumn<CU>[] = [
-              { key: "uid", header: "Usuario ID", className: "font-mono text-xs", render: (cu) => `${cu.user_id.slice(0, 8)}...` },
-              { key: "desde", header: "Desde", className: "text-sm", render: (cu) => cu.created_at ? formatDate(cu.created_at, "dd MMM yyyy") : "—" },
-              { key: "acc", header: "", width: "w-20",
-                render: (cu) => canEdit ? (
-                  <Button variant="ghost" size="sm" onClick={(e) => { e.stopPropagation(); handleRevoke(cu.id); }} disabled={revokeMutation.isPending}>
+            const cols: ColumnDef<CU, unknown>[] = defineColumns<CU>([
+              { id: "uid", header: "Usuario ID", meta: { className: "font-mono text-xs" }, cell: ({ row }) => `${row.original.user_id.slice(0, 8)}...` },
+              { id: "desde", header: "Desde", meta: { className: "text-sm" }, cell: ({ row }) => row.original.created_at ? formatDate(row.original.created_at, "dd MMM yyyy") : "—" },
+              {
+                id: "acc",
+                header: "",
+                meta: { width: "w-20" },
+                cell: ({ row }) => canEdit ? (
+                  <Button variant="ghost" size="sm" onClick={(e) => { e.stopPropagation(); handleRevoke(row.original.id); }} disabled={revokeMutation.isPending}>
                     <Trash2 className="h-4 w-4 text-destructive" />
                   </Button>
-                ) : null },
-            ];
+                ) : null,
+              },
+            ]);
             if (isLoading) {
               return <p className="text-sm text-muted-foreground">Cargando...</p>;
             }

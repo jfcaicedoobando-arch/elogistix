@@ -1,139 +1,134 @@
 /**
- * Columnas del DataTable de proyección mensual de facturación.
+ * Columnas del DataTable de proyección mensual de facturación (Fase 2 —
+ * ColumnDef nativo TanStack).
  */
 import { Package } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import type { DataTableColumn } from "@/components/shared/DataTable";
+import { defineColumns, type ColumnDef } from "@/components/shared/DataTable";
 import type { GrupoProyeccion } from "@/lib/domain/proyeccionFacturacion";
 import { formatCurrency, formatDate, toTitleCase } from "@/lib/formatters";
 import { cn } from "@/lib/utils";
+import { sortByString, sortByNumber, sortByDate } from "@/components/shared/dataTable/sortingFns";
 
-export const proyeccionColumns: DataTableColumn<GrupoProyeccion>[] = [
+export const proyeccionColumns: ColumnDef<GrupoProyeccion, unknown>[] = defineColumns<GrupoProyeccion>([
   {
-    key: "expediente",
+    id: "expediente",
     header: "Expediente",
-    width: "w-[120px]",
-    sticky: true,
-    className: "font-mono font-medium whitespace-nowrap",
-    sortable: true,
-    sortValue: (g) => g.expediente,
-    render: (g) => g.expediente,
+    accessorFn: (g) => g.expediente,
+    enableSorting: true,
+    sortingFn: sortByString<GrupoProyeccion>((g) => g.expediente),
+    meta: { width: "w-[120px]", sticky: true, className: "font-mono font-medium whitespace-nowrap" },
+    cell: ({ row }) => row.original.expediente,
   },
   {
-    key: "cliente",
+    id: "cliente",
     header: "Cliente",
-    width: "min-w-[180px]",
-    className: "max-w-[240px] truncate",
-    sortable: true,
-    sortValue: (g) => g.cliente_nombre,
-    render: (g) => (
-      <span title={toTitleCase(g.cliente_nombre)}>{toTitleCase(g.cliente_nombre)}</span>
+    accessorFn: (g) => g.cliente_nombre,
+    enableSorting: true,
+    sortingFn: sortByString<GrupoProyeccion>((g) => g.cliente_nombre),
+    meta: { width: "min-w-[180px]", className: "max-w-[240px] truncate" },
+    cell: ({ row }) => (
+      <span title={toTitleCase(row.original.cliente_nombre)}>{toTitleCase(row.original.cliente_nombre)}</span>
     ),
   },
   {
-    key: "operador",
+    id: "operador",
     header: "Operador",
-    width: "w-[140px]",
-    className: "truncate text-sm",
-    sortable: true,
-    sortValue: (g) => g.operador,
-    render: (g) => g.operador || <span className="text-muted-foreground">—</span>,
+    accessorFn: (g) => g.operador,
+    enableSorting: true,
+    sortingFn: sortByString<GrupoProyeccion>((g) => g.operador),
+    meta: { width: "w-[140px]", className: "truncate text-sm" },
+    cell: ({ row }) => row.original.operador || <span className="text-muted-foreground">—</span>,
   },
   {
-    key: "eta",
+    id: "eta",
     header: "ETA",
-    width: "w-[100px]",
-    className: "text-xs whitespace-nowrap",
-    sortable: true,
-    sortValue: (g) => g.eta ?? "",
-    render: (g) => (g.eta ? formatDate(g.eta) : "—"),
+    accessorFn: (g) => g.eta ?? "",
+    enableSorting: true,
+    sortingFn: sortByDate<GrupoProyeccion>((g) => g.eta),
+    meta: { width: "w-[100px]", className: "text-xs whitespace-nowrap" },
+    cell: ({ row }) => (row.original.eta ? formatDate(row.original.eta) : "—"),
   },
   {
-    key: "contenedores",
+    id: "contenedores",
     header: "Cont.",
-    width: "w-[70px]",
-    align: "center",
-    render: (g) => (
-      <span className="inline-flex items-center gap-1 text-xs" title={g.contenedores.join(", ")}>
+    meta: { width: "w-[70px]", align: "center" },
+    cell: ({ row }) => (
+      <span className="inline-flex items-center gap-1 text-xs" title={row.original.contenedores.join(", ")}>
         <Package className="h-3 w-3 opacity-60" />
-        <span className="tabular-nums font-medium">{g.totalContenedores || 0}</span>
+        <span className="tabular-nums font-medium">{row.original.totalContenedores || 0}</span>
       </span>
     ),
   },
   {
-    key: "venta_usd",
+    id: "venta_usd",
     header: "Venta USD",
-    width: "w-[130px]",
-    align: "right",
-    className: "tabular-nums whitespace-nowrap",
-    sortable: true,
-    sortValue: (g) => g.ventaUsd,
-    render: (g) => formatCurrency(g.ventaUsd, "USD"),
+    accessorFn: (g) => g.ventaUsd,
+    enableSorting: true,
+    sortingFn: sortByNumber<GrupoProyeccion>((g) => g.ventaUsd),
+    meta: { width: "w-[130px]", align: "right", className: "tabular-nums whitespace-nowrap" },
+    cell: ({ row }) => formatCurrency(row.original.ventaUsd, "USD"),
   },
   {
-    key: "venta",
+    id: "venta",
     header: "Venta MXN",
-    width: "w-[140px]",
-    align: "right",
-    className: "tabular-nums whitespace-nowrap",
-    sortable: true,
-    sortValue: (g) => g.ventaMxn,
-    render: (g) => formatCurrency(g.ventaMxn, "MXN"),
+    accessorFn: (g) => g.ventaMxn,
+    enableSorting: true,
+    sortingFn: sortByNumber<GrupoProyeccion>((g) => g.ventaMxn),
+    meta: { width: "w-[140px]", align: "right", className: "tabular-nums whitespace-nowrap" },
+    cell: ({ row }) => formatCurrency(row.original.ventaMxn, "MXN"),
   },
   {
-    key: "costo",
+    id: "costo",
     header: "Costo MXN",
-    width: "w-[140px]",
-    align: "right",
-    className: "tabular-nums whitespace-nowrap text-muted-foreground",
-    sortable: true,
-    sortValue: (g) => g.costoMxn,
-    render: (g) => formatCurrency(g.costoMxn, "MXN"),
+    accessorFn: (g) => g.costoMxn,
+    enableSorting: true,
+    sortingFn: sortByNumber<GrupoProyeccion>((g) => g.costoMxn),
+    meta: { width: "w-[140px]", align: "right", className: "tabular-nums whitespace-nowrap text-muted-foreground" },
+    cell: ({ row }) => formatCurrency(row.original.costoMxn, "MXN"),
   },
   {
-    key: "profit",
+    id: "profit",
     header: "Profit MXN",
-    width: "w-[150px]",
-    align: "right",
-    className: "tabular-nums font-medium whitespace-nowrap",
-    sortable: true,
-    sortValue: (g) => g.profitMxn,
-    render: (g) => (
-      <span className={cn(g.profitMxn < 0 ? "text-destructive" : "text-success")}>
-        {formatCurrency(g.profitMxn, "MXN")}
+    accessorFn: (g) => g.profitMxn,
+    enableSorting: true,
+    sortingFn: sortByNumber<GrupoProyeccion>((g) => g.profitMxn),
+    meta: { width: "w-[150px]", align: "right", className: "tabular-nums font-medium whitespace-nowrap" },
+    cell: ({ row }) => (
+      <span className={cn(row.original.profitMxn < 0 ? "text-destructive" : "text-success")}>
+        {formatCurrency(row.original.profitMxn, "MXN")}
       </span>
     ),
   },
   {
-    key: "margen",
+    id: "margen",
     header: "%",
-    width: "w-[70px]",
-    align: "right",
-    className: "tabular-nums text-xs",
-    sortable: true,
-    sortValue: (g) => g.margenPct,
-    render: (g) => (
-      <span
-        className={cn(
-          g.margenPct < 0
-            ? "text-destructive"
-            : g.margenPct < 10
-              ? "text-warning"
-              : "text-foreground",
-        )}
-      >
-        {g.margenPct.toFixed(1)}%
-      </span>
-    ),
+    accessorFn: (g) => g.margenPct,
+    enableSorting: true,
+    sortingFn: sortByNumber<GrupoProyeccion>((g) => g.margenPct),
+    meta: { width: "w-[70px]", align: "right", className: "tabular-nums text-xs" },
+    cell: ({ row }) => {
+      const m = row.original.margenPct;
+      return (
+        <span
+          className={cn(
+            m < 0 ? "text-destructive" : m < 10 ? "text-warning" : "text-foreground",
+          )}
+        >
+          {m.toFixed(1)}%
+        </span>
+      );
+    },
   },
   {
-    key: "estado",
+    id: "estado",
     header: "Estado",
-    width: "w-[110px]",
-    sortable: true,
-    sortValue: (g) => g.estado,
-    render: (g) =>
-      g.estado === "Facturado" ? (
+    accessorFn: (g) => g.estado,
+    enableSorting: true,
+    sortingFn: sortByString<GrupoProyeccion>((g) => g.estado),
+    meta: { width: "w-[110px]" },
+    cell: ({ row }) =>
+      row.original.estado === "Facturado" ? (
         <Badge className="bg-success/15 text-success border border-success/30 hover:bg-success/20">
           Facturado
         </Badge>
@@ -143,4 +138,4 @@ export const proyeccionColumns: DataTableColumn<GrupoProyeccion>[] = [
         </Badge>
       ),
   },
-];
+]);

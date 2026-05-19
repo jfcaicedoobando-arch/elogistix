@@ -1,15 +1,17 @@
 /**
- * Definición de columnas JSX del tab de Proformas. Se mantiene fuera del hook
- * controller para respetar la separación lógica/presentación: el hook expone
- * datos + handlers, este builder los compone con celdas visuales.
+ * Definición de columnas JSX del tab de Proformas (Fase 2 — ColumnDef nativo).
+ * Se mantiene fuera del hook controller para respetar la separación
+ * lógica/presentación: el hook expone datos + handlers, este builder los
+ * compone con celdas visuales.
  */
 import { Download, FileCheck2 } from "lucide-react";
 import { FacturaDownloadButton } from "@/components/facturacion/FacturaDownloadButton";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { type DataTableColumn } from "@/components/shared/DataTable";
+import { defineColumns, type ColumnDef } from "@/components/shared/DataTable";
 import { formatCurrency, formatDate, toTitleCase, nombreDesdeEmail, formatDiasCredito } from "@/lib/formatters";
 import type { ProformaConFactura, ProformaRow } from "@/hooks/embarque";
+import { sortByString, sortByNumber, sortByDate } from "@/components/shared/dataTable/sortingFns";
 
 interface BuildArgs {
   descargar: (p: ProformaConFactura) => void;
@@ -21,77 +23,130 @@ export function buildProformasColumns({
   descargar,
   downloadingId,
   onMarcarFacturada,
-}: BuildArgs): DataTableColumn<ProformaConFactura>[] {
-  return [
+}: BuildArgs): ColumnDef<ProformaConFactura, unknown>[] {
+  return defineColumns<ProformaConFactura>([
     {
-      key: "numero", header: "# Proforma", width: "w-[140px]", className: "font-medium whitespace-nowrap",
-      sticky: true, sortable: true, sortValue: (p) => p.numero, render: (p) => p.numero,
+      id: "numero",
+      header: "# Proforma",
+      accessorFn: (p) => p.numero,
+      enableSorting: true,
+      sortingFn: sortByString<ProformaConFactura>((p) => p.numero),
+      meta: { width: "w-[140px]", className: "font-medium whitespace-nowrap", sticky: true },
+      cell: ({ row }) => row.original.numero,
     },
     {
-      key: "expediente", header: "Expediente", width: "w-[120px]", className: "whitespace-nowrap",
-      sortable: true, sortValue: (p) => p.expediente, render: (p) => p.expediente,
+      id: "expediente",
+      header: "Expediente",
+      accessorFn: (p) => p.expediente,
+      enableSorting: true,
+      sortingFn: sortByString<ProformaConFactura>((p) => p.expediente),
+      meta: { width: "w-[120px]", className: "whitespace-nowrap" },
+      cell: ({ row }) => row.original.expediente,
     },
     {
-      key: "bl_master", header: "BL Master", width: "w-[140px]", className: "text-xs font-mono whitespace-nowrap",
-      sortable: true, sortValue: (p) => p.bl_master ?? "",
-      render: (p) => p.bl_master || <span className="text-muted-foreground">—</span>,
+      id: "bl_master",
+      header: "BL Master",
+      accessorFn: (p) => p.bl_master ?? "",
+      enableSorting: true,
+      sortingFn: sortByString<ProformaConFactura>((p) => p.bl_master),
+      meta: { width: "w-[140px]", className: "text-xs font-mono whitespace-nowrap" },
+      cell: ({ row }) => row.original.bl_master || <span className="text-muted-foreground">—</span>,
     },
     {
-      key: "tipo", header: "Tipo", width: "w-[140px]", sortable: true,
-      sortValue: (p) => (p.es_consolidada ? `Consolidada-${p.proformas_origen?.length ?? 0}` : "Individual"),
-      render: (p) => {
+      id: "tipo",
+      header: "Tipo",
+      accessorFn: (p) => (p.es_consolidada ? `Consolidada-${p.proformas_origen?.length ?? 0}` : "Individual"),
+      enableSorting: true,
+      sortingFn: sortByString<ProformaConFactura>((p) =>
+        p.es_consolidada ? `Consolidada-${p.proformas_origen?.length ?? 0}` : "Individual",
+      ),
+      meta: { width: "w-[140px]" },
+      cell: ({ row }) => {
+        const p = row.original;
         if (p.es_consolidada) {
           const n = p.proformas_origen?.length ?? 0;
-          return (
-            <Badge variant="info" className="whitespace-nowrap">Consolidada{n > 0 ? ` (${n})` : ""}</Badge>
-          );
+          return <Badge variant="info" className="whitespace-nowrap">Consolidada{n > 0 ? ` (${n})` : ""}</Badge>;
         }
         return <Badge variant="neutral" className="whitespace-nowrap">Individual</Badge>;
       },
     },
     {
-      key: "cliente", header: "Cliente", width: "min-w-[180px]", className: "max-w-[220px] truncate",
-      sortable: true, sortValue: (p) => p.cliente_nombre,
-      render: (p) => <span title={toTitleCase(p.cliente_nombre)}>{toTitleCase(p.cliente_nombre)}</span>,
+      id: "cliente",
+      header: "Cliente",
+      accessorFn: (p) => p.cliente_nombre,
+      enableSorting: true,
+      sortingFn: sortByString<ProformaConFactura>((p) => p.cliente_nombre),
+      meta: { width: "min-w-[180px]", className: "max-w-[220px] truncate" },
+      cell: ({ row }) => <span title={toTitleCase(row.original.cliente_nombre)}>{toTitleCase(row.original.cliente_nombre)}</span>,
     },
     {
-      key: "operador", header: "Operador", width: "w-[140px]", className: "text-xs whitespace-nowrap",
-      sortable: true, sortValue: (p) => p.operador || "",
-      render: (p) => p.operador ? nombreDesdeEmail(p.operador) : <span className="text-muted-foreground">—</span>,
+      id: "operador",
+      header: "Operador",
+      accessorFn: (p) => p.operador ?? "",
+      enableSorting: true,
+      sortingFn: sortByString<ProformaConFactura>((p) => p.operador),
+      meta: { width: "w-[140px]", className: "text-xs whitespace-nowrap" },
+      cell: ({ row }) => row.original.operador ? nombreDesdeEmail(row.original.operador) : <span className="text-muted-foreground">—</span>,
     },
     {
-      key: "dias_credito", header: "Días Crédito", width: "w-[110px]", className: "text-right text-xs whitespace-nowrap",
-      sortable: true, sortValue: (p) => p.dias_credito ?? -1,
-      render: (p) => formatDiasCredito(p.dias_credito),
+      id: "dias_credito",
+      header: "Días Crédito",
+      accessorFn: (p) => p.dias_credito ?? -1,
+      enableSorting: true,
+      sortingFn: sortByNumber<ProformaConFactura>((p) => p.dias_credito),
+      meta: { width: "w-[110px]", className: "text-right text-xs whitespace-nowrap" },
+      cell: ({ row }) => formatDiasCredito(row.original.dias_credito),
     },
     {
-      key: "monto_usd", header: "Monto USD", width: "w-[130px]", className: "text-right whitespace-nowrap",
-      sortable: true, sortValue: (p) => Number(p.total_usd),
-      render: (p) => (Number(p.total_usd) > 0 ? formatCurrency(Number(p.total_usd), "USD") : "—"),
+      id: "monto_usd",
+      header: "Monto USD",
+      accessorFn: (p) => Number(p.total_usd),
+      enableSorting: true,
+      sortingFn: sortByNumber<ProformaConFactura>((p) => Number(p.total_usd)),
+      meta: { width: "w-[130px]", className: "text-right whitespace-nowrap" },
+      cell: ({ row }) => Number(row.original.total_usd) > 0 ? formatCurrency(Number(row.original.total_usd), "USD") : "—",
     },
     {
-      key: "monto_mxn", header: "Monto MXN", width: "w-[140px]", className: "text-right whitespace-nowrap",
-      sortable: true, sortValue: (p) => Number(p.total_mxn),
-      render: (p) => (Number(p.total_mxn) > 0 ? formatCurrency(Number(p.total_mxn), "MXN") : "—"),
+      id: "monto_mxn",
+      header: "Monto MXN",
+      accessorFn: (p) => Number(p.total_mxn),
+      enableSorting: true,
+      sortingFn: sortByNumber<ProformaConFactura>((p) => Number(p.total_mxn)),
+      meta: { width: "w-[140px]", className: "text-right whitespace-nowrap" },
+      cell: ({ row }) => Number(row.original.total_mxn) > 0 ? formatCurrency(Number(row.original.total_mxn), "MXN") : "—",
     },
     {
-      key: "fecha", header: "Fecha", width: "w-[100px]", className: "text-xs",
-      sortable: true, sortValue: (p) => p.fecha_emision, render: (p) => formatDate(p.fecha_emision),
+      id: "fecha",
+      header: "Fecha",
+      accessorFn: (p) => p.fecha_emision,
+      enableSorting: true,
+      sortingFn: sortByDate<ProformaConFactura>((p) => p.fecha_emision),
+      meta: { width: "w-[100px]", className: "text-xs" },
+      cell: ({ row }) => formatDate(row.original.fecha_emision),
     },
     {
-      key: "estado", header: "Estado", width: "w-[110px]",
-      sortable: true, sortValue: (p) => p.estado_proforma ?? "pendiente",
-      render: (p) => {
-        const estado = p.estado_proforma ?? "pendiente";
+      id: "estado",
+      header: "Estado",
+      accessorFn: (p) => p.estado_proforma ?? "pendiente",
+      enableSorting: true,
+      sortingFn: sortByString<ProformaConFactura>((p) => p.estado_proforma ?? "pendiente"),
+      meta: { width: "w-[110px]" },
+      cell: ({ row }) => {
+        const estado = row.original.estado_proforma ?? "pendiente";
         return estado === "facturada"
           ? <Badge variant="success">Facturada</Badge>
           : <Badge variant="warning">Pendiente</Badge>;
       },
     },
     {
-      key: "folio_factura", header: "Folio Factura", width: "w-[180px]", className: "text-xs",
-      sortable: true, sortValue: (p) => p.folio_factura_externa ?? "",
-      render: (p) => {
+      id: "folio_factura",
+      header: "Folio Factura",
+      accessorFn: (p) => p.folio_factura_externa ?? "",
+      enableSorting: true,
+      sortingFn: sortByString<ProformaConFactura>((p) => p.folio_factura_externa),
+      meta: { width: "w-[180px]", className: "text-xs" },
+      cell: ({ row }) => {
+        const p = row.original;
         if (!p.folio_factura_externa) return <span className="text-muted-foreground">—</span>;
         const pdfUrl = p.facturas?.factura_pdf_url;
         const xmlUrl = p.facturas?.factura_xml_url;
@@ -105,8 +160,11 @@ export function buildProformasColumns({
       },
     },
     {
-      key: "acciones", header: "Acciones", width: "w-[200px]",
-      render: (p) => {
+      id: "acciones",
+      header: "Acciones",
+      meta: { width: "w-[200px]" },
+      cell: ({ row }) => {
+        const p = row.original;
         const facturada = (p.estado_proforma ?? "pendiente") === "facturada";
         return (
           <div className="flex items-center gap-1">
@@ -128,5 +186,5 @@ export function buildProformasColumns({
         );
       },
     },
-  ];
+  ]);
 }

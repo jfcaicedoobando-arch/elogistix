@@ -2,7 +2,7 @@ import { Pencil, Trash2, Loader2, Plus, Users, UserX } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { DataTable, type DataTableColumn } from "@/components/shared/DataTable";
+import { DataTable, defineColumns, type ColumnDef } from "@/components/shared/DataTable";
 import type { Tables, Enums } from "@/types/db";
 import { toTitleCase, correctSpanishPlace } from "@/lib/formatters";
 import EmptyState from "@/components/empty/EmptyState";
@@ -27,26 +27,31 @@ interface Props {
 }
 
 export default function TablaContactos({ contactos, isLoading, canEdit, onAdd, onEdit, onDelete }: Props) {
-  const columns: DataTableColumn<ContactoCliente>[] = [
-    { key: "nombre", header: "Nombre", className: "font-medium", render: (c) => toTitleCase(c.nombre) },
-    { key: "tipo", header: "Tipo", render: (c) => <Badge variant={tipoBadgeVariant(c.tipo)}>{c.tipo}</Badge> },
-    { key: "lugar", header: "País / Ciudad", className: "text-xs", render: (c) => `${correctSpanishPlace(c.pais)}, ${correctSpanishPlace(c.ciudad)}` },
-    { key: "contacto", header: "Contacto", className: "text-xs", render: (c) => toTitleCase(c.contacto) },
-    { key: "email", header: "Email", className: "text-xs", render: (c) => c.email },
+  const columns: ColumnDef<ContactoCliente, unknown>[] = defineColumns<ContactoCliente>([
+    { id: "nombre", header: "Nombre", meta: { className: "font-medium" }, cell: ({ row }) => toTitleCase(row.original.nombre) },
+    { id: "tipo", header: "Tipo", cell: ({ row }) => <Badge variant={tipoBadgeVariant(row.original.tipo)}>{row.original.tipo}</Badge> },
+    { id: "lugar", header: "País / Ciudad", meta: { className: "text-xs" }, cell: ({ row }) => `${correctSpanishPlace(row.original.pais)}, ${correctSpanishPlace(row.original.ciudad)}` },
+    { id: "contacto", header: "Contacto", meta: { className: "text-xs" }, cell: ({ row }) => toTitleCase(row.original.contacto) },
+    { id: "email", header: "Email", meta: { className: "text-xs" }, cell: ({ row }) => row.original.email },
     {
-      key: "acciones", header: "Acciones", width: "w-[80px]",
-      render: (c) => canEdit ? (
-        <div className="flex gap-1">
-          <Button variant="ghost" size="icon" className="h-7 w-7" onClick={(e) => { e.stopPropagation(); onEdit(c); }} aria-label={`Editar contacto ${c.nombre}`}>
-            <Pencil className="h-3.5 w-3.5" />
-          </Button>
-          <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={(e) => { e.stopPropagation(); onDelete(c.id); }} aria-label={`Eliminar contacto ${c.nombre}`}>
-            <Trash2 className="h-3.5 w-3.5" />
-          </Button>
-        </div>
-      ) : null,
+      id: "acciones",
+      header: "Acciones",
+      meta: { width: "w-[80px]" },
+      cell: ({ row }) => {
+        const c = row.original;
+        return canEdit ? (
+          <div className="flex gap-1">
+            <Button variant="ghost" size="icon" className="h-7 w-7" onClick={(e) => { e.stopPropagation(); onEdit(c); }} aria-label={`Editar contacto ${c.nombre}`}>
+              <Pencil className="h-3.5 w-3.5" />
+            </Button>
+            <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={(e) => { e.stopPropagation(); onDelete(c.id); }} aria-label={`Eliminar contacto ${c.nombre}`}>
+              <Trash2 className="h-3.5 w-3.5" />
+            </Button>
+          </div>
+        ) : null;
+      },
     },
-  ];
+  ]);
 
   function renderBody() {
     if (isLoading) {

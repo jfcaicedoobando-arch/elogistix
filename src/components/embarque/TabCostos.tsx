@@ -5,7 +5,7 @@ import { FileText, Receipt } from "lucide-react";
 import { formatCurrency, toTitleCase } from "@/lib/formatters";
 import { getEstadoColor } from "@/lib/ui/uiMappings";
 import EmptyState from "@/components/empty/EmptyState";
-import { DataTable, type DataTableColumn } from "@/components/shared/DataTable";
+import { DataTable, defineColumns, type ColumnDef } from "@/components/shared/DataTable";
 import type { ConceptoVentaRow, ConceptoCostoRow } from "@/hooks/embarque";
 
 interface Props {
@@ -26,21 +26,21 @@ const kpiColors = [
   'border-l-4 border-l-info',
 ];
 
-const ventaColumns: DataTableColumn<ConceptoVentaRow>[] = [
-  { key: "concepto", header: "Concepto", render: (c) => c.descripcion },
-  { key: "cant", header: "Cant.", align: "right", className: "tabular-nums", render: (c) => c.cantidad },
-  { key: "pu", header: "P. Unitario", align: "right", className: "tabular-nums", render: (c) => formatCurrency(Number(c.precio_unitario), c.moneda) },
-  { key: "moneda", header: "Moneda", render: (c) => c.moneda },
-  { key: "total", header: "Total", align: "right", className: "font-medium tabular-nums", render: (c) => formatCurrency(Number(c.total), c.moneda) },
-];
+const ventaColumns: ColumnDef<ConceptoVentaRow, unknown>[] = defineColumns<ConceptoVentaRow>([
+  { id: "concepto", header: "Concepto", cell: ({ row }) => row.original.descripcion },
+  { id: "cant", header: "Cant.", meta: { align: "right", className: "tabular-nums" }, cell: ({ row }) => row.original.cantidad },
+  { id: "pu", header: "P. Unitario", meta: { align: "right", className: "tabular-nums" }, cell: ({ row }) => formatCurrency(Number(row.original.precio_unitario), row.original.moneda) },
+  { id: "moneda", header: "Moneda", cell: ({ row }) => row.original.moneda },
+  { id: "total", header: "Total", meta: { align: "right", className: "font-medium tabular-nums" }, cell: ({ row }) => formatCurrency(Number(row.original.total), row.original.moneda) },
+]);
 
-const costoColumns: DataTableColumn<ConceptoCostoRow>[] = [
-  { key: "proveedor", header: "Proveedor", render: (c) => <span title={c.proveedor_nombre}>{toTitleCase(c.proveedor_nombre)}</span> },
-  { key: "concepto", header: "Concepto", render: (c) => c.concepto },
-  { key: "monto", header: "Monto", align: "right", className: "font-medium tabular-nums", render: (c) => formatCurrency(Number(c.monto), c.moneda) },
-  { key: "moneda", header: "Moneda", render: (c) => c.moneda },
-  { key: "liq", header: "Liquidación", render: (c) => <Badge className={getEstadoColor(c.estado_liquidacion)}>{c.estado_liquidacion}</Badge> },
-];
+const costoColumns: ColumnDef<ConceptoCostoRow, unknown>[] = defineColumns<ConceptoCostoRow>([
+  { id: "proveedor", header: "Proveedor", cell: ({ row }) => <span title={row.original.proveedor_nombre}>{toTitleCase(row.original.proveedor_nombre)}</span> },
+  { id: "concepto", header: "Concepto", cell: ({ row }) => row.original.concepto },
+  { id: "monto", header: "Monto", meta: { align: "right", className: "font-medium tabular-nums" }, cell: ({ row }) => formatCurrency(Number(row.original.monto), row.original.moneda) },
+  { id: "moneda", header: "Moneda", cell: ({ row }) => row.original.moneda },
+  { id: "liq", header: "Liquidación", cell: ({ row }) => <Badge className={getEstadoColor(row.original.estado_liquidacion)}>{row.original.estado_liquidacion}</Badge> },
+]);
 
 export function TabCostos({ conceptosVenta, conceptosCosto, totalVenta, totalCosto, utilidad, margen, embarqueId, canEdit }: Props) {
   const navigate = useNavigate();

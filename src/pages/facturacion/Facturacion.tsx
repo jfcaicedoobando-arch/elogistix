@@ -11,7 +11,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useFacturas } from "@/hooks/facturacion";
 import { formatCurrency, formatDate, toTitleCase } from "@/lib/formatters";
 import { getEstadoColor } from "@/lib/ui/uiMappings";
-import { DataTable, type DataTableColumn } from "@/components/shared/DataTable";
+import { DataTable, defineColumns, type ColumnDef } from "@/components/shared/DataTable";
+import { sortByString, sortByNumber, sortByDate } from "@/components/shared/dataTable/sortingFns";
 import { PageHeader } from "@/components/shared/PageHeader";
 import type { Database } from "@/types/db";
 import { TabProformas } from "@/components/facturacion/TabProformas";
@@ -24,23 +25,60 @@ const ESTADOS_FACTURA: EstadoFactura[] = ['Borrador', 'Emitida', 'Pagada', 'Venc
 
 type Factura = ReturnType<typeof useFacturas>["data"] extends (infer U)[] | undefined ? U : never;
 
-const facturaColumns: DataTableColumn<Factura>[] = [
-  { key: "numero", header: "# Factura", width: "w-[110px]", className: "font-medium whitespace-nowrap", sticky: true, sortable: true, sortValue: (f) => f.numero, render: (f) => f.numero },
-  { key: "expediente", header: "Expediente", width: "w-[110px]", className: "whitespace-nowrap", render: (f) => f.expediente },
+const facturaColumns: ColumnDef<Factura, unknown>[] = defineColumns<Factura>([
   {
-    key: "proforma", header: "Proforma", width: "w-[140px]", className: "text-xs whitespace-nowrap",
-    render: (f) => f.proformas?.numero
-      ? <span className="font-mono">{f.proformas.numero}</span>
+    id: "numero", header: "# Factura",
+    accessorFn: (f) => f.numero, enableSorting: true,
+    sortingFn: sortByString<Factura>((f) => f.numero),
+    meta: { width: "w-[110px]", className: "font-medium whitespace-nowrap", sticky: true },
+    cell: ({ row }) => row.original.numero,
+  },
+  { id: "expediente", header: "Expediente", meta: { width: "w-[110px]", className: "whitespace-nowrap" }, cell: ({ row }) => row.original.expediente },
+  {
+    id: "proforma", header: "Proforma",
+    meta: { width: "w-[140px]", className: "text-xs whitespace-nowrap" },
+    cell: ({ row }) => row.original.proformas?.numero
+      ? <span className="font-mono">{row.original.proformas.numero}</span>
       : <span className="text-muted-foreground">—</span>,
   },
-  { key: "cliente", header: "Cliente", width: "min-w-[160px]", className: "max-w-[200px] truncate", render: (f) => <span title={toTitleCase(f.cliente_nombre)}>{toTitleCase(f.cliente_nombre)}</span> },
-  { key: "monto", header: "Monto", width: "w-[130px]", align: "right", className: "font-medium whitespace-nowrap tabular-nums", sortable: true, sortValue: (f) => f.total, render: (f) => formatCurrency(f.total, f.moneda) },
-  { key: "emision", header: "Emisión", width: "w-[100px]", className: "text-xs whitespace-nowrap", sortable: true, sortValue: (f) => f.fecha_emision, render: (f) => formatDate(f.fecha_emision) },
-  { key: "vencimiento", header: "Vencimiento", width: "w-[100px]", className: "text-xs whitespace-nowrap", sortable: true, sortValue: (f) => f.fecha_vencimiento, render: (f) => formatDate(f.fecha_vencimiento) },
-  { key: "estado", header: "Estado", width: "w-[100px]", sortable: true, sortValue: (f) => f.estado, render: (f) => <Badge className={getEstadoColor(f.estado)}>{f.estado}</Badge> },
   {
-    key: "archivos", header: "Archivos", width: "w-[110px]",
-    render: (f) => {
+    id: "cliente", header: "Cliente",
+    meta: { width: "min-w-[160px]", className: "max-w-[200px] truncate" },
+    cell: ({ row }) => <span title={toTitleCase(row.original.cliente_nombre)}>{toTitleCase(row.original.cliente_nombre)}</span>,
+  },
+  {
+    id: "monto", header: "Monto",
+    accessorFn: (f) => f.total, enableSorting: true,
+    sortingFn: sortByNumber<Factura>((f) => f.total),
+    meta: { width: "w-[130px]", align: "right", className: "font-medium whitespace-nowrap tabular-nums" },
+    cell: ({ row }) => formatCurrency(row.original.total, row.original.moneda),
+  },
+  {
+    id: "emision", header: "Emisión",
+    accessorFn: (f) => f.fecha_emision, enableSorting: true,
+    sortingFn: sortByDate<Factura>((f) => f.fecha_emision),
+    meta: { width: "w-[100px]", className: "text-xs whitespace-nowrap" },
+    cell: ({ row }) => formatDate(row.original.fecha_emision),
+  },
+  {
+    id: "vencimiento", header: "Vencimiento",
+    accessorFn: (f) => f.fecha_vencimiento, enableSorting: true,
+    sortingFn: sortByDate<Factura>((f) => f.fecha_vencimiento),
+    meta: { width: "w-[100px]", className: "text-xs whitespace-nowrap" },
+    cell: ({ row }) => formatDate(row.original.fecha_vencimiento),
+  },
+  {
+    id: "estado", header: "Estado",
+    accessorFn: (f) => f.estado, enableSorting: true,
+    sortingFn: sortByString<Factura>((f) => f.estado),
+    meta: { width: "w-[100px]" },
+    cell: ({ row }) => <Badge className={getEstadoColor(row.original.estado)}>{row.original.estado}</Badge>,
+  },
+  {
+    id: "archivos", header: "Archivos",
+    meta: { width: "w-[110px]" },
+    cell: ({ row }) => {
+      const f = row.original;
       if (!f.factura_pdf_url && !f.factura_xml_url) return <span className="text-muted-foreground text-xs">—</span>;
       return (
         <div className="flex items-center gap-1">
@@ -50,7 +88,7 @@ const facturaColumns: DataTableColumn<Factura>[] = [
       );
     },
   },
-];
+]);
 
 export default function Facturacion() {
   const {

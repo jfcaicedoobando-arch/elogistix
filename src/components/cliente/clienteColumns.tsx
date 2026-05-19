@@ -1,5 +1,5 @@
 import { Badge } from "@/components/ui/badge";
-import type { DataTableColumn } from "@/components/shared/DataTable";
+import { defineColumns, type ColumnDef } from "@/components/shared/DataTable";
 import { formatDate, formatCurrency, shortName, getOrigen, getDestino } from "@/lib/formatters";
 import { getEstadoColor } from "@/lib/ui/uiMappings";
 
@@ -30,20 +30,20 @@ export type CotizacionCliente = {
   created_at: string;
 };
 
-export const embarqueColumns: DataTableColumn<EmbarqueCliente>[] = [
-  { key: "expediente", header: "Expediente", width: "w-[110px]", className: "font-medium", render: (e) => e.expediente },
-  { key: "modo", header: "Modo", width: "w-[90px]", className: "text-xs", render: (e) => e.modo },
-  { key: "ruta", header: "Origen → Destino", width: "min-w-[160px]", className: "text-xs", render: (e) => `${shortName(getOrigen(e))} → ${shortName(getDestino(e))}` },
-  { key: "estado", header: "Estado", width: "w-[100px]", render: (e) => <Badge variant="secondary" className={`text-xs ${getEstadoColor(e.estado)}`}>{e.estado}</Badge> },
-  { key: "etd", header: "ETD", width: "w-[90px]", className: "text-xs", render: (e) => formatDate(e.etd || "") },
-  { key: "eta", header: "ETA", width: "w-[90px]", className: "text-xs", render: (e) => formatDate(e.eta || "") },
-];
+export const embarqueColumns: ColumnDef<EmbarqueCliente, unknown>[] = defineColumns<EmbarqueCliente>([
+  { id: "expediente", header: "Expediente", meta: { width: "w-[110px]", className: "font-medium" }, cell: ({ row }) => row.original.expediente },
+  { id: "modo", header: "Modo", meta: { width: "w-[90px]", className: "text-xs" }, cell: ({ row }) => row.original.modo },
+  { id: "ruta", header: "Origen → Destino", meta: { width: "min-w-[160px]", className: "text-xs" }, cell: ({ row }) => `${shortName(getOrigen(row.original))} → ${shortName(getDestino(row.original))}` },
+  { id: "estado", header: "Estado", meta: { width: "w-[100px]" }, cell: ({ row }) => <Badge variant="secondary" className={`text-xs ${getEstadoColor(row.original.estado)}`}>{row.original.estado}</Badge> },
+  { id: "etd", header: "ETD", meta: { width: "w-[90px]", className: "text-xs" }, cell: ({ row }) => formatDate(row.original.etd || "") },
+  { id: "eta", header: "ETA", meta: { width: "w-[90px]", className: "text-xs" }, cell: ({ row }) => formatDate(row.original.eta || "") },
+]);
 
-export const cotizacionColumns: DataTableColumn<CotizacionCliente>[] = [
-  { key: "folio", header: "Folio", width: "w-[100px]", className: "font-medium", render: (c) => c.folio },
-  { key: "modo", header: "Modo", width: "w-[80px]", className: "text-xs", render: (c) => c.modo },
-  { key: "ruta", header: "Origen → Destino", width: "min-w-[160px]", className: "text-xs", render: (c) => `${c.origen || "-"} → ${c.destino || "-"}` },
-  { key: "subtotal", header: "Subtotal", width: "w-[110px]", align: "right", className: "text-xs tabular-nums", render: (c) => formatCurrency(c.subtotal, c.moneda) },
-  { key: "estado", header: "Estado", width: "w-[100px]", render: (c) => <Badge variant="secondary" className={`text-xs ${getEstadoColor(c.estado)}`}>{c.estado}</Badge> },
-  { key: "fecha", header: "Fecha", width: "w-[100px]", className: "text-xs", render: (c) => formatDate(c.created_at) },
-];
+export const cotizacionColumns: ColumnDef<CotizacionCliente, unknown>[] = defineColumns<CotizacionCliente>([
+  { id: "folio", header: "Folio", meta: { width: "w-[100px]", className: "font-medium" }, cell: ({ row }) => row.original.folio },
+  { id: "modo", header: "Modo", meta: { width: "w-[80px]", className: "text-xs" }, cell: ({ row }) => row.original.modo },
+  { id: "ruta", header: "Origen → Destino", meta: { width: "min-w-[160px]", className: "text-xs" }, cell: ({ row }) => `${row.original.origen || "-"} → ${row.original.destino || "-"}` },
+  { id: "subtotal", header: "Subtotal", meta: { width: "w-[110px]", align: "right", className: "text-xs tabular-nums" }, cell: ({ row }) => formatCurrency(row.original.subtotal, row.original.moneda) },
+  { id: "estado", header: "Estado", meta: { width: "w-[100px]" }, cell: ({ row }) => <Badge variant="secondary" className={`text-xs ${getEstadoColor(row.original.estado)}`}>{row.original.estado}</Badge> },
+  { id: "fecha", header: "Fecha", meta: { width: "w-[100px]", className: "text-xs" }, cell: ({ row }) => formatDate(row.original.created_at) },
+]);

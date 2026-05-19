@@ -8,7 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { DataTable, type DataTableColumn } from "@/components/shared/DataTable";
+import { DataTable, defineColumns, type ColumnDef } from "@/components/shared/DataTable";
 import { formatCurrency, toTitleCase, formatPhoneMx, formatDate } from "@/lib/formatters";
 import { getEstadoColor } from "@/lib/ui/uiMappings";
 import EditarProveedorDialog from "@/components/proveedor/EditarProveedorDialog";
@@ -147,16 +147,20 @@ export default function ProveedorDetalle() {
           {(() => {
             type Op = typeof operaciones[number] & { __idx?: number };
             const opsConId: Op[] = operaciones.map((o, i) => ({ ...o, __idx: i }));
-            const opCols: DataTableColumn<Op>[] = [
-              { key: "exp", header: "Expediente", render: (o) => (
-                <Link to={`/embarques/${o.embarqueId}`} className="text-primary hover:underline font-medium text-xs" onClick={(e) => e.stopPropagation()}>{o.expediente}</Link>
-              ) },
-              { key: "cliente", header: "Cliente", className: "text-xs", render: (o) => <span title={o.clienteNombre}>{toTitleCase(o.clienteNombre)}</span> },
-              { key: "concepto", header: "Concepto", className: "text-xs", render: (o) => toTitleCase(o.concepto) },
-              { key: "monto", header: "Monto", align: "right", className: "text-xs font-medium tabular-nums", render: (o) => formatCurrency(o.monto, o.moneda) },
-              { key: "estado", header: "Estado", render: (o) => <Badge className={`text-xs ${getEstadoColor(o.estadoLiquidacion)}`}>{o.estadoLiquidacion}</Badge> },
-              { key: "venc", header: "Vencimiento", className: "text-xs", render: (o) => o.fechaVencimiento ? formatDate(o.fechaVencimiento) : '—' },
-            ];
+            const opCols: ColumnDef<Op, unknown>[] = defineColumns<Op>([
+              {
+                id: "exp",
+                header: "Expediente",
+                cell: ({ row }) => (
+                  <Link to={`/embarques/${row.original.embarqueId}`} className="text-primary hover:underline font-medium text-xs" onClick={(e) => e.stopPropagation()}>{row.original.expediente}</Link>
+                ),
+              },
+              { id: "cliente", header: "Cliente", meta: { className: "text-xs" }, cell: ({ row }) => <span title={row.original.clienteNombre}>{toTitleCase(row.original.clienteNombre)}</span> },
+              { id: "concepto", header: "Concepto", meta: { className: "text-xs" }, cell: ({ row }) => toTitleCase(row.original.concepto) },
+              { id: "monto", header: "Monto", meta: { align: "right", className: "text-xs font-medium tabular-nums" }, cell: ({ row }) => formatCurrency(row.original.monto, row.original.moneda) },
+              { id: "estado", header: "Estado", cell: ({ row }) => <Badge className={`text-xs ${getEstadoColor(row.original.estadoLiquidacion)}`}>{row.original.estadoLiquidacion}</Badge> },
+              { id: "venc", header: "Vencimiento", meta: { className: "text-xs" }, cell: ({ row }) => row.original.fechaVencimiento ? formatDate(row.original.fechaVencimiento) : '—' },
+            ]);
             return (
               <DataTable
                 columns={opCols}

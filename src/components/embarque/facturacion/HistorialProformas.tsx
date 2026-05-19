@@ -4,7 +4,7 @@ import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { DataTable, type DataTableColumn } from "@/components/shared/DataTable";
+import { DataTable, defineColumns, type ColumnDef } from "@/components/shared/DataTable";
 import { formatCurrency, formatDate, formatDiasCredito } from "@/lib/formatters";
 import type { ProformaConFactura } from "@/services/proforma";
 
@@ -43,22 +43,43 @@ export function HistorialProformas({ proformas, canEdit, isDeleting, onDescargar
     );
   };
 
-  const columns: DataTableColumn<ProformaConFactura>[] = [
-    { key: "numero", header: "Número", className: "font-medium", render: (p) => p.numero },
-    { key: "fecha", header: "Fecha", render: (p) => formatDate(p.fecha_emision) },
-    { key: "operador", header: "Operador", className: "text-sm", render: (p) => p.operador || <span className="text-muted-foreground">—</span> },
-    { key: "credito", header: "Días Crédito", align: "right", className: "text-sm",
-      render: (p) => formatDiasCredito(p.dias_credito) },
-    { key: "usd", header: "Total USD", align: "right",
-      render: (p) => Number(p.total_usd) > 0 ? formatCurrency(Number(p.total_usd), "USD") : "—" },
-    { key: "mxn", header: "Total MXN", align: "right",
-      render: (p) => Number(p.total_mxn) > 0 ? formatCurrency(Number(p.total_mxn), "MXN") : "—" },
-    { key: "estado", header: "Estado", render: renderEstado },
-    { key: "folio", header: "Folio Factura", className: "text-xs",
-      render: (p) => p.folio_factura_externa ? <span className="font-mono">{p.folio_factura_externa}</span> : <span className="text-muted-foreground">—</span> },
+  const columns: ColumnDef<ProformaConFactura, unknown>[] = defineColumns<ProformaConFactura>([
+    { id: "numero", header: "Número", meta: { className: "font-medium" }, cell: ({ row }) => row.original.numero },
+    { id: "fecha", header: "Fecha", cell: ({ row }) => formatDate(row.original.fecha_emision) },
+    { id: "operador", header: "Operador", meta: { className: "text-sm" }, cell: ({ row }) => row.original.operador || <span className="text-muted-foreground">—</span> },
     {
-      key: "acciones", header: "Acciones", align: "right",
-      render: (p) => {
+      id: "credito",
+      header: "Días Crédito",
+      meta: { align: "right", className: "text-sm" },
+      cell: ({ row }) => formatDiasCredito(row.original.dias_credito),
+    },
+    {
+      id: "usd",
+      header: "Total USD",
+      meta: { align: "right" },
+      cell: ({ row }) => Number(row.original.total_usd) > 0 ? formatCurrency(Number(row.original.total_usd), "USD") : "—",
+    },
+    {
+      id: "mxn",
+      header: "Total MXN",
+      meta: { align: "right" },
+      cell: ({ row }) => Number(row.original.total_mxn) > 0 ? formatCurrency(Number(row.original.total_mxn), "MXN") : "—",
+    },
+    { id: "estado", header: "Estado", cell: ({ row }) => renderEstado(row.original) },
+    {
+      id: "folio",
+      header: "Folio Factura",
+      meta: { className: "text-xs" },
+      cell: ({ row }) => row.original.folio_factura_externa
+        ? <span className="font-mono">{row.original.folio_factura_externa}</span>
+        : <span className="text-muted-foreground">—</span>,
+    },
+    {
+      id: "acciones",
+      header: "Acciones",
+      meta: { align: "right" },
+      cell: ({ row }) => {
+        const p = row.original;
         const facturada = (p.estado_proforma ?? "pendiente") === "facturada";
         return (
           <div className="flex items-center justify-end gap-1">
@@ -86,7 +107,7 @@ export function HistorialProformas({ proformas, canEdit, isDeleting, onDescargar
         );
       },
     },
-  ];
+  ]);
 
   return (
     <Card>
