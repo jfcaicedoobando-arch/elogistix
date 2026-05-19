@@ -38,27 +38,33 @@ export function EmbarquesRelacionadosCard({ embarqueId, blMaster, relacionados }
         </p>
       </CardHeader>
       <CardContent className="p-0">
-        <DataTable
-          columns={[
-            { key: "expediente", header: "Expediente", className: "font-medium", render: (r: RelacionadoRow) => (
-              <span className="inline-flex items-center gap-2">
-                {r.expediente}
-                {r.id === embarqueId && <Badge variant="outline" className="text-[10px] px-1.5 py-0">Actual</Badge>}
-              </span>
+        <DataTable<RelacionadoRow>
+          columns={defineColumns<RelacionadoRow>([
+            { id: "expediente", header: "Expediente", meta: { className: "font-medium" }, cell: ({ row }) => {
+              const r = row.original;
+              return (
+                <span className="inline-flex items-center gap-2">
+                  {r.expediente}
+                  {r.id === embarqueId && <Badge variant="outline" className="text-[10px] px-1.5 py-0">Actual</Badge>}
+                </span>
+              );
+            } },
+            { id: "bl_house", header: "BL House", meta: { className: "text-xs" }, cell: ({ row }) => row.original.bl_house || '-' },
+            { id: "contenedor", header: "Contenedor", meta: { className: "text-xs" }, cell: ({ row }) => {
+              const r = row.original;
+              return r.contenedor ? `${r.contenedor}${r.tipo_contenedor ? ` (${r.tipo_contenedor})` : ''}` : '-';
+            } },
+            { id: "peso", header: "Peso", meta: { className: "text-right text-xs tabular-nums", headerClassName: "text-right" },
+              cell: ({ row }) => formatNumber(Number(row.original.peso_kg), { suffix: "kg" }) },
+            { id: "volumen", header: "Volumen", meta: { className: "text-right text-xs tabular-nums", headerClassName: "text-right" },
+              cell: ({ row }) => formatNumber(Number(row.original.volumen_m3), { decimals: 2, suffix: "m³" }) },
+            { id: "piezas", header: "Piezas", meta: { className: "text-right text-xs tabular-nums", headerClassName: "text-right" },
+              cell: ({ row }) => formatNumber(row.original.piezas) },
+            { id: "estado", header: "Estado", cell: ({ row }) => (
+              <Badge variant="secondary" className={`text-xs ${getEstadoColor(row.original.estado)}`}>{row.original.estado}</Badge>
             ) },
-            { key: "bl_house", header: "BL House", className: "text-xs", render: (r: RelacionadoRow) => r.bl_house || '-' },
-            { key: "contenedor", header: "Contenedor", className: "text-xs", render: (r: RelacionadoRow) =>
-              r.contenedor ? `${r.contenedor}${r.tipo_contenedor ? ` (${r.tipo_contenedor})` : ''}` : '-' },
-            { key: "peso", header: "Peso", align: "right", className: "text-xs tabular-nums", render: (r: RelacionadoRow) =>
-              formatNumber(Number(r.peso_kg), { suffix: "kg" }) },
-            { key: "volumen", header: "Volumen", align: "right", className: "text-xs tabular-nums", render: (r: RelacionadoRow) =>
-              formatNumber(Number(r.volumen_m3), { decimals: 2, suffix: "m³" }) },
-            { key: "piezas", header: "Piezas", align: "right", className: "text-xs tabular-nums", render: (r: RelacionadoRow) =>
-              formatNumber(r.piezas) },
-            { key: "estado", header: "Estado", render: (r: RelacionadoRow) => (
-              <Badge variant="secondary" className={`text-xs ${getEstadoColor(r.estado)}`}>{r.estado}</Badge>
-            ) },
-          ]}
+          ]) as ColumnDef<RelacionadoRow, unknown>[]}
+
           data={ordenados}
           rowKey={(r) => r.id}
           density="compact"
