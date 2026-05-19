@@ -118,9 +118,9 @@ describe("DataTable — server-side sort (patrón Embarques/Cotizaciones)", () =
       />,
     );
 
-    // 1er click: null → asc
-    fireEvent.click(totalHeader());
-    expect(onSortChange).toHaveBeenLastCalledWith("total", "asc");
+    // 1er click: null → asc (string column, sortDescFirst=false por default en TanStack)
+    fireEvent.click(screen.getByRole("columnheader", { name: /Cliente/ }));
+    expect(onSortChange).toHaveBeenLastCalledWith("cliente", "asc");
 
     rerender(
       <DataTable
