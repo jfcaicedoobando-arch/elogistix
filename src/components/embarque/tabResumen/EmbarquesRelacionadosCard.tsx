@@ -4,7 +4,7 @@ import { Link } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { formatNumber } from "@/lib/formatters";
 import { getEstadoColor } from "@/lib/ui/uiMappings";
-import { DataTable } from "@/components/shared/DataTable";
+import { DataTable, defineColumns, type ColumnDef } from "@/components/shared/DataTable";
 // eslint-disable-next-line no-restricted-imports -- render row custom para sub-tabla de embarques relacionados
 import { TableRow, TableCell } from "@/components/ui/table";
 import { useEmbarquesRelacionados } from "@/hooks/embarque";
