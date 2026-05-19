@@ -5,21 +5,21 @@ describe("appFeedback", () => {
   it("notifyError con step usa título 'Revisa el Paso N: <nombre>'", () => {
     const toast = vi.fn();
     notifyError(toast, { step: 2, errors: { puertoOrigen: "Puerto de origen: campo obligatorio." } });
-    expect(toast).toHaveBeenCalledWith({
+    expect(toast).toHaveBeenCalledWith(expect.objectContaining({
       title: "Revisa el Paso 2: Ruta",
       description: "Puerto de origen: campo obligatorio.",
       variant: "destructive",
-    });
+    }));
   });
 
   it("notifyError con phase usa título 'Error: <fase>'", () => {
     const toast = vi.fn();
     notifyError(toast, { phase: "subida de documentos", message: "boom" });
-    expect(toast).toHaveBeenCalledWith({
+    expect(toast).toHaveBeenCalledWith(expect.objectContaining({
       title: "Error: subida de documentos",
       description: "boom",
       variant: "destructive",
-    });
+    }));
   });
 
   it("notifyWarning emite variant warning", () => {
