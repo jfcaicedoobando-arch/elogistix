@@ -114,8 +114,8 @@ export function useEmbarquesPageState() {
     filterEstado: "todos",
     filterCliente,
     filterOperador,
-    filterProforma,
     page,
+
     pageSize,
     fechaDesde,
     fechaHasta,
