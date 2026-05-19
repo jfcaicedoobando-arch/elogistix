@@ -1,64 +1,56 @@
 /**
- * Definición de columnas para la tabla de Cotizaciones.
- * Extraído de `pages/cotizaciones/Cotizaciones.tsx` (v8.100.1) para separar
- * lógica de presentación de filas (badges, tonos de vigencia, menú de acciones)
- * del ensamblado de la página.
- *
- * v8.150.0 — `renderEstadoVigencia` y `renderAcciones` movidos a
- * `columnsParts/` para mantener este archivo ≤200 líneas (Power of 10 §20.4).
+ * Definición de columnas para la tabla de Cotizaciones (Fase 2 — ColumnDef
+ * nativo TanStack). En `Cotizaciones.tsx` se usa con `sortMode="server"`,
+ * por lo que `enableSorting` actúa como flag visual y el orden real lo
+ * resuelve el RPC.
  */
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import type { DataTableColumn } from "@/components/shared/DataTable";
+import { defineColumns, type ColumnDef } from "@/components/shared/DataTable";
 import { formatDate, formatCurrency, toTitleCase } from "@/lib/formatters";
 import type { CotizacionListItem } from "@/hooks/cotizacion";
 import { renderEstadoVigencia } from "./columnsParts/estadoVigenciaCell";
 import { renderAcciones, type AccionesParams } from "./columnsParts/accionesCell";
+import { sortByString, sortByNumber, sortByDate } from "@/components/shared/dataTable/sortingFns";
 
 interface BuildParams extends AccionesParams {
   canEdit: boolean;
 }
 
-/**
- * Construye el array de columnas para `<DataTable>`.
- * Mantener este builder puro: cualquier estado/contexto se inyecta vía `params`.
- */
-export function buildCotizacionesColumns(params: BuildParams): DataTableColumn<CotizacionListItem>[] {
-  const cols: DataTableColumn<CotizacionListItem>[] = [
+export function buildCotizacionesColumns(params: BuildParams): ColumnDef<CotizacionListItem, unknown>[] {
+  const cols: ColumnDef<CotizacionListItem, unknown>[] = [
     {
-      key: "folio",
+      id: "folio",
       header: "Folio",
-      width: "w-[120px]",
-      className: "font-medium whitespace-nowrap",
-      sticky: true,
-      sortable: true,
-      sortValue: (r) => r.folio,
-      render: (r) => r.folio,
+      accessorFn: (r) => r.folio,
+      enableSorting: true,
+      sortingFn: sortByString<CotizacionListItem>((r) => r.folio),
+      meta: { width: "w-[120px]", className: "font-medium whitespace-nowrap", sticky: true },
+      cell: ({ row }) => row.original.folio,
     },
     {
-      key: "cliente",
+      id: "cliente",
       header: "Cliente",
-      width: "min-w-[160px]",
-      className: "max-w-[180px] truncate",
-      sortable: true,
-      sortValue: (r) => r.cliente_nombre,
-      render: (r) => {
-        const nombre = toTitleCase(r.cliente_nombre);
+      accessorFn: (r) => r.cliente_nombre,
+      enableSorting: true,
+      sortingFn: sortByString<CotizacionListItem>((r) => r.cliente_nombre),
+      meta: { width: "min-w-[160px]", className: "max-w-[180px] truncate" },
+      cell: ({ row }) => {
+        const nombre = toTitleCase(row.original.cliente_nombre);
         return <span title={nombre} className="block truncate">{nombre}</span>;
       },
     },
     {
-      key: "modo",
+      id: "modo",
       header: "Modo",
-      width: "w-[80px]",
-      className: "text-xs whitespace-nowrap",
-      render: (r) => r.modo,
+      meta: { width: "w-[80px]", className: "text-xs whitespace-nowrap" },
+      cell: ({ row }) => row.original.modo,
     },
     {
-      key: "ruta",
+      id: "ruta",
       header: "Origen → Destino",
-      width: "min-w-[160px]",
-      className: "text-xs max-w-[200px]",
-      render: (r) => {
+      meta: { width: "min-w-[160px]", className: "text-xs max-w-[200px]" },
+      cell: ({ row }) => {
+        const r = row.original;
         const ruta = `${r.origen || "-"} → ${r.destino || "-"}`;
         return (
           <Tooltip delayDuration={300}>
@@ -71,47 +63,46 @@ export function buildCotizacionesColumns(params: BuildParams): DataTableColumn<C
       },
     },
     {
-      key: "subtotal",
+      id: "subtotal",
       header: "Subtotal",
-      width: "w-[110px]",
-      align: "right",
-      className: "text-xs whitespace-nowrap tabular-nums",
-      sortable: true,
-      sortValue: (r) => r.subtotal,
-      render: (r) => formatCurrency(r.subtotal, r.moneda),
+      accessorFn: (r) => r.subtotal,
+      enableSorting: true,
+      sortingFn: sortByNumber<CotizacionListItem>((r) => r.subtotal),
+      meta: { width: "w-[110px]", align: "right", className: "text-xs whitespace-nowrap tabular-nums" },
+      cell: ({ row }) => formatCurrency(row.original.subtotal, row.original.moneda),
     },
     {
-      key: "estado_vigencia",
+      id: "estado_vigencia",
       header: "Estado",
-      width: "w-[180px]",
-      sortable: true,
-      sortValue: (r) => r.estado,
-      render: renderEstadoVigencia,
+      accessorFn: (r) => r.estado,
+      enableSorting: true,
+      sortingFn: sortByString<CotizacionListItem>((r) => r.estado),
+      meta: { width: "w-[180px]" },
+      cell: ({ row }) => renderEstadoVigencia(row.original),
     },
     {
-      key: "fecha",
+      id: "fecha",
       header: "Fecha",
-      width: "w-[130px]",
-      className: "text-xs whitespace-nowrap",
-      sortable: true,
-      sortValue: (r) => r.created_at,
-      render: (r) => formatDate(r.created_at, "dd/MM/yyyy HH:mm"),
+      accessorFn: (r) => r.created_at,
+      enableSorting: true,
+      sortingFn: sortByDate<CotizacionListItem>((r) => r.created_at),
+      meta: { width: "w-[130px]", className: "text-xs whitespace-nowrap" },
+      cell: ({ row }) => formatDate(row.original.created_at, "dd/MM/yyyy HH:mm"),
     },
   ];
 
   if (params.canEdit) {
     cols.push({
-      key: "acciones",
+      id: "acciones",
       header: "",
-      headerClassName: "w-[60px]",
-      render: (r) =>
-        renderAcciones(r, {
+      meta: { headerClassName: "w-[60px]" },
+      cell: ({ row }) =>
+        renderAcciones(row.original, {
           onEditar: params.onEditar,
           onEliminar: params.onEliminar,
         }),
     });
   }
-
 
   return cols;
 }
