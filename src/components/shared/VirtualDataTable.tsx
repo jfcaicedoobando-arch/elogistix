@@ -1,17 +1,18 @@
 /**
  * VirtualDataTable — Tabla virtualizada para listas largas (cientos/miles de filas).
  *
- * No usa `<table>` HTML para permitir virtualización con alturas variables
- * (medidas en runtime vía `measureElement`). Reutiliza el contrato
- * `DataTableColumn<T>` del DataTable estándar para compartir columnas.
+ * Refactor 9.1.0:
+ *  - El modelo de filas viene de `@tanstack/react-table` (`useTableInstance`)
+ *    para que el orden y la visibilidad sean responsabilidad de TanStack,
+ *    no de un `useMemo` paralelo.
+ *  - La virtualización (`@tanstack/react-virtual`) se conecta a
+ *    `table.getRowModel().rows`, no al array `data` crudo.
+ *  - Sin ordenamiento client por default (las virtualizadas suelen venir
+ *    pre-ordenadas del servidor); se puede activar pasando `sortMode="client"`
+ *    en una próxima iteración.
  *
- * Úsala cuando:
- *  - El usuario puede paginar a 100+ filas y la fila puede expandirse
- *    (payloads, notas largas, etc.).
- *  - No necesitas footer, sticky columns ni ordenamiento client-side.
- *
- * Para tablas comunes (≤50 filas, paginadas, con sort/footer) sigue usando
- * `DataTable`.
+ * Úsala cuando el usuario puede paginar a 100+ filas y la altura por fila es
+ * variable (payloads, notas largas). Para tablas comunes sigue usando `DataTable`.
  */
 import { useRef } from "react";
 import { useVirtualizer } from "@tanstack/react-virtual";
@@ -19,15 +20,20 @@ import { cn } from "@/lib/utils";
 import PaginationControls from "@/components/shared/PaginationControls";
 import { VirtualRow } from "@/components/shared/VirtualRow";
 import { VirtualHeaderRow, SkeletonRows, EmptyState } from "@/components/shared/VirtualTableParts";
+import { useTableInstance } from "@/components/shared/dataTable/useTableInstance";
 import {
   DENSITY_CELL,
   type DataTableColumn,
   type DataTablePagination,
   type TableDensity,
 } from "@/components/shared/dataTable/types";
+import type { ColumnDef, Table } from "@tanstack/react-table";
 
-function buildGridTemplate<T>(columns: DataTableColumn<T>[]): string {
-  return columns.map((c) => c.width ?? "minmax(0,1fr)").join(" ");
+function buildGridTemplate<T>(table: Table<T>): string {
+  return table
+    .getAllLeafColumns()
+    .map((c) => c.columnDef.meta?.width ?? "minmax(0,1fr)")
+    .join(" ");
 }
 
 function pickMeasureElement(estimateRowHeight: number): ((el: HTMLElement) => number) | undefined {
@@ -37,7 +43,7 @@ function pickMeasureElement(estimateRowHeight: number): ((el: HTMLElement) => nu
 }
 
 interface VirtualDataTableProps<T> {
-  columns: DataTableColumn<T>[];
+  columns: ReadonlyArray<DataTableColumn<T> | ColumnDef<T, unknown>>;
   data: T[];
   isLoading?: boolean;
   emptyMessage?: string;
@@ -58,68 +64,36 @@ interface VirtualDataTableProps<T> {
   className?: string;
 }
 
-interface VirtualBodyProps<T> {
-  data: T[];
-  isLoading: boolean;
-  emptyMessage: string;
-  skeletonRows: number;
-  columns: DataTableColumn<T>[];
-  gridTemplate: string;
-  cellPad: string;
-  virtualizer: ReturnType<typeof useVirtualizer>;
-  striped: boolean;
-  hoverable: boolean;
-  rowKey: (item: T) => string;
-  rowClassName?: (item: T) => string;
-  onRowClick?: (item: T) => void;
-}
-
-function VirtualBody<T>({ data, isLoading, emptyMessage, skeletonRows, columns, gridTemplate, cellPad, virtualizer, striped, hoverable, rowKey, rowClassName, onRowClick }: VirtualBodyProps<T>) {
-  if (isLoading) {
-    return <SkeletonRows count={skeletonRows} columns={columns} gridTemplate={gridTemplate} cellPad={cellPad} />;
-  }
-  if (data.length === 0) {
-    return <EmptyState message={emptyMessage} />;
-  }
-  const items = virtualizer.getVirtualItems();
-  return (
-    <div style={{ height: virtualizer.getTotalSize(), width: "100%", position: "relative" }}>
-      {items.map((vi) => (
-        <VirtualRow
-          key={rowKey(data[vi.index])}
-          item={data[vi.index]}
-          index={vi.index}
-          start={vi.start}
-          columns={columns}
-          cellPad={cellPad}
-          gridTemplate={gridTemplate}
-          striped={striped}
-          hoverable={hoverable}
-          onRowClick={onRowClick}
-          rowClassName={rowClassName}
-          measureRef={virtualizer.measureElement}
-        />
-      ))}
-    </div>
-  );
-}
-
 export function VirtualDataTable<T>(props: VirtualDataTableProps<T>) {
   const {
     columns, data, isLoading = false, emptyMessage = "Sin resultados", skeletonRows = 8,
     rowKey, rowClassName, onRowClick, density = "comfortable", striped = true, hoverable = true,
     estimateRowHeight = 44, maxHeight = 600, overscan = 8, pagination, className,
   } = props;
+
+  const table = useTableInstance<T>({
+    data,
+    columns,
+    sortMode: "client",
+    enableSorting: false,
+    getRowId: (row, index) => rowKey(row) ?? String(index),
+  });
+
   const parentRef = useRef<HTMLDivElement | null>(null);
   const cellPad = DENSITY_CELL[density];
-  const gridTemplate = buildGridTemplate(columns);
+  const gridTemplate = buildGridTemplate(table);
+  const rows = table.getRowModel().rows;
+
   const virtualizer = useVirtualizer({
-    count: data.length,
+    count: rows.length,
     getScrollElement: () => parentRef.current,
     estimateSize: () => estimateRowHeight,
     overscan,
     measureElement: pickMeasureElement(estimateRowHeight),
   });
+
+  const virtualItems = virtualizer.getVirtualItems();
+  const showBody = !isLoading && rows.length > 0;
 
   return (
     <div className={cn("flex flex-col", className)}>
@@ -128,22 +102,30 @@ export function VirtualDataTable<T>(props: VirtualDataTableProps<T>) {
         className="relative w-full overflow-auto rounded-md border [scrollbar-width:thin]"
         style={{ maxHeight }}
       >
-        <VirtualHeaderRow columns={columns} gridTemplate={gridTemplate} />
-        <VirtualBody
-          data={data}
-          isLoading={isLoading}
-          emptyMessage={emptyMessage}
-          skeletonRows={skeletonRows}
-          columns={columns}
-          gridTemplate={gridTemplate}
-          cellPad={cellPad}
-          virtualizer={virtualizer}
-          striped={striped}
-          hoverable={hoverable}
-          rowKey={rowKey}
-          rowClassName={rowClassName}
-          onRowClick={onRowClick}
-        />
+        <VirtualHeaderRow table={table} gridTemplate={gridTemplate} />
+        {isLoading && (
+          <SkeletonRows count={skeletonRows} table={table} gridTemplate={gridTemplate} cellPad={cellPad} />
+        )}
+        {!isLoading && rows.length === 0 && <EmptyState message={emptyMessage} />}
+        {showBody && (
+          <div style={{ height: virtualizer.getTotalSize(), width: "100%", position: "relative" }}>
+            {virtualItems.map((vi) => (
+              <VirtualRow
+                key={rows[vi.index].id}
+                row={rows[vi.index]}
+                index={vi.index}
+                start={vi.start}
+                cellPad={cellPad}
+                gridTemplate={gridTemplate}
+                striped={striped}
+                hoverable={hoverable}
+                onRowClick={onRowClick}
+                rowClassName={rowClassName}
+                measureRef={virtualizer.measureElement}
+              />
+            ))}
+          </div>
+        )}
       </div>
 
       {pagination && (
