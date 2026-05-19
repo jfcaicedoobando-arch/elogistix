@@ -2,6 +2,14 @@ import type { ChangelogEntry } from "../../../changelogData";
 
 export const chunk0: ChangelogEntry[] = [
   {
+    version: "9.1.2",
+    date: "2026-05-19",
+    type: "patch",
+    title: "Documentación interna de DataTable actualizada",
+    summary: "docs/tables.md ahora describe la arquitectura interna sobre @tanstack/react-table, el adapter de DataTableColumn<T> → ColumnDef<T> y cómo usar defineColumns para escribir columnas nativas en código nuevo.",
+    description: "Se reescribió docs/tables.md para reflejar el refactor 9.1.0: nueva sección 'Arquitectura interna' (useTableInstance, columnAdapter, columnMeta, defineColumns, render con flexRender), API pública dual (legacy DataTableColumn<T>[] y ColumnDef<T>[] nativo), tabla de equivalencias adapter, ejemplo con defineColumns<T>, nota sobre no mezclar ambas formas en un mismo arreglo, aclaración de sort cliente vs server (manualSorting + controlledSort/onSortChange) y sección de virtualización conectada al rowModel de TanStack. APP_VERSION 9.1.2.",
+  },
+  {
     version: "9.1.1",
     date: "2026-05-19",
     type: "patch",
