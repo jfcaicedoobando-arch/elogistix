@@ -4,7 +4,9 @@
  */
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
+import type { User } from "@supabase/supabase-js";
 import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
 import {
   asignarResponsableHallazgo,
   deleteAuditoriaRevision,
@@ -13,6 +15,19 @@ import {
 } from "@/services/auditoria";
 import { insertBitacora } from "@/services/bitacora";
 import type { AuditoriaRevision, HallazgoAuditoria } from "@/types/auditoria";
+
+/**
+ * Resuelve el usuario autenticado tolerando ventanas de carrera en el
+ * hidratado del AuthContext: si `ctxUser` aún no llegó del React state,
+ * cae a `supabase.auth.getUser()` (fuente de verdad). Sólo si ambos fallan
+ * lanza "Sesión no válida".
+ */
+async function resolveAuthUser(ctxUser: User | null): Promise<User> {
+  if (ctxUser) return ctxUser;
+  const { data, error } = await supabase.auth.getUser();
+  if (error || !data.user) throw new Error("Sesión no válida");
+  return data.user;
+}
 
 const REVISIONES_KEY = ["auditoria", "revisiones"] as const;
 
