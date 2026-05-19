@@ -1,7 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { DataTable, type DataTableColumn } from "@/components/shared/DataTable";
+import { DataTable, defineColumns, type ColumnDef } from "@/components/shared/DataTable";
 import { formatCurrency, toTitleCase } from "@/lib/formatters";
 
 export type SortField = "profit_usd" | "venta_usd" | "costo_usd" | "margen";
@@ -35,15 +35,15 @@ const SORT_KEYS: SortField[] = ["venta_usd", "costo_usd", "profit_usd", "margen"
 export default function ReportesTablaClientes({ data, isLoading, sortField, sortDir, onSort }: Props) {
   const navigate = useNavigate();
 
-  const columns: DataTableColumn<ClienteRow>[] = [
-    { key: "cliente", header: "Cliente", className: "font-medium max-w-[200px] truncate",
-      render: (c) => <span title={toTitleCase(c.cliente_nombre)}>{toTitleCase(c.cliente_nombre)}</span> },
-    { key: "embarques", header: "Embarques", align: "center", render: (c) => c.total_embarques },
-    { key: "venta_usd", header: "Venta USD", align: "right", className: "tabular-nums", sortable: true, render: (c) => formatCurrency(c.venta_usd, "USD") },
-    { key: "costo_usd", header: "Costo USD", align: "right", className: "tabular-nums", sortable: true, render: (c) => formatCurrency(c.costo_usd, "USD") },
-    { key: "profit_usd", header: "Profit USD", align: "right", className: "tabular-nums font-semibold", sortable: true, render: (c) => formatCurrency(c.profit_usd, "USD") },
-    { key: "margen", header: "Margen", align: "center", sortable: true, render: (c) => margenBadge(c.margen) },
-  ];
+  const columns: ColumnDef<ClienteRow, unknown>[] = defineColumns<ClienteRow>([
+    { id: "cliente", header: "Cliente", meta: { className: "font-medium max-w-[200px] truncate" },
+      cell: ({ row }) => <span title={toTitleCase(row.original.cliente_nombre)}>{toTitleCase(row.original.cliente_nombre)}</span> },
+    { id: "embarques", header: "Embarques", meta: { align: "center" }, cell: ({ row }) => row.original.total_embarques },
+    { id: "venta_usd", header: "Venta USD", enableSorting: true, meta: { align: "right", className: "tabular-nums" }, cell: ({ row }) => formatCurrency(row.original.venta_usd, "USD") },
+    { id: "costo_usd", header: "Costo USD", enableSorting: true, meta: { align: "right", className: "tabular-nums" }, cell: ({ row }) => formatCurrency(row.original.costo_usd, "USD") },
+    { id: "profit_usd", header: "Profit USD", enableSorting: true, meta: { align: "right", className: "tabular-nums font-semibold" }, cell: ({ row }) => formatCurrency(row.original.profit_usd, "USD") },
+    { id: "margen", header: "Margen", enableSorting: true, meta: { align: "center" }, cell: ({ row }) => margenBadge(row.original.margen) },
+  ]);
 
   return (
     <Card className="rounded-2xl shadow-sm border-0 bg-card">

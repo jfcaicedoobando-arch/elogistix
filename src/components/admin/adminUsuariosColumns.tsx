@@ -8,7 +8,8 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import type { DataTableColumn } from "@/components/shared/DataTable";
+import { defineColumns, type ColumnDef } from "@/components/shared/DataTable";
+import { sortByString } from "@/components/shared/dataTable/sortingFns";
 import type { GlobalUserRow } from "@/hooks/admin";
 import { getRoleLabel } from "@/lib/ui/uiMappings";
 
@@ -24,73 +25,79 @@ const initialsFor = (email: string) => email.slice(0, 2).toUpperCase();
 
 export function buildAdminUsuariosColumns(
   onDelete: (u: GlobalUserRow) => void,
-): DataTableColumn<GlobalUserRow>[] {
-  return [
+): ColumnDef<GlobalUserRow, unknown>[] {
+  return defineColumns<GlobalUserRow>([
     {
-      key: "email",
+      id: "email",
       header: "Usuario",
-      width: "min-w-[260px]",
-      className: "font-medium",
-      sortable: true,
-      sortValue: (u) => u.email,
-      render: (u) => (
-        <div className="flex items-center gap-2">
-          <div className="h-7 w-7 rounded-full bg-primary/10 text-primary flex items-center justify-center text-[10px] font-semibold shrink-0">
-            {initialsFor(u.email)}
+      accessorFn: (u) => u.email,
+      enableSorting: true,
+      sortingFn: sortByString<GlobalUserRow>((u) => u.email),
+      meta: { width: "min-w-[260px]", className: "font-medium" },
+      cell: ({ row }) => {
+        const u = row.original;
+        return (
+          <div className="flex items-center gap-2">
+            <div className="h-7 w-7 rounded-full bg-primary/10 text-primary flex items-center justify-center text-[10px] font-semibold shrink-0">
+              {initialsFor(u.email)}
+            </div>
+            <span className="truncate" title={u.email}>{u.email}</span>
           </div>
-          <span className="truncate" title={u.email}>{u.email}</span>
-        </div>
-      ),
+        );
+      },
     },
     {
-      key: "org",
+      id: "org",
       header: "Organización",
-      width: "w-[200px]",
-      sortable: true,
-      sortValue: (u) => u.org_nombre,
-      render: (u) => u.org_nombre,
+      accessorFn: (u) => u.org_nombre,
+      enableSorting: true,
+      sortingFn: sortByString<GlobalUserRow>((u) => u.org_nombre),
+      meta: { width: "w-[200px]" },
+      cell: ({ row }) => row.original.org_nombre,
     },
     {
-      key: "role",
+      id: "role",
       header: "Rol",
-      width: "w-[120px]",
-      render: (u) => (
-        <Badge className={ROLE_BADGE[u.role] ?? ""} variant="outline">
-          {getRoleLabel(u.role)}
+      meta: { width: "w-[120px]" },
+      cell: ({ row }) => (
+        <Badge className={ROLE_BADGE[row.original.role] ?? ""} variant="outline">
+          {getRoleLabel(row.original.role)}
         </Badge>
       ),
     },
     {
-      key: "actions",
+      id: "actions",
       header: "",
-      width: "w-[60px]",
-      align: "right",
-      render: (u) => (
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button
-              variant="ghost"
-              size="icon"
-              aria-label={`Acciones para ${u.email}`}
-              onClick={(e) => e.stopPropagation()}
-            >
-              <MoreHorizontal className="h-4 w-4" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
-            <DropdownMenuItem disabled>
-              <ShieldOff className="h-4 w-4 mr-2" /> Cambiar rol
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem
-              className="text-destructive focus:text-destructive"
-              onClick={() => onDelete(u)}
-            >
-              <Trash2 className="h-4 w-4 mr-2" /> Eliminar usuario
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      ),
+      meta: { width: "w-[60px]", align: "right" },
+      cell: ({ row }) => {
+        const u = row.original;
+        return (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                aria-label={`Acciones para ${u.email}`}
+                onClick={(e) => e.stopPropagation()}
+              >
+                <MoreHorizontal className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
+              <DropdownMenuItem disabled>
+                <ShieldOff className="h-4 w-4 mr-2" /> Cambiar rol
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem
+                className="text-destructive focus:text-destructive"
+                onClick={() => onDelete(u)}
+              >
+                <Trash2 className="h-4 w-4 mr-2" /> Eliminar usuario
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        );
+      },
     },
-  ];
+  ]);
 }

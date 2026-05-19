@@ -3,7 +3,7 @@ import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
-import { DataTable, type DataTableColumn } from "@/components/shared/DataTable";
+import { DataTable, defineColumns, type ColumnDef } from "@/components/shared/DataTable";
 import { usePortalDocumentDownload } from "@/hooks/portal";
 import type { Tables } from "@/types/db";
 
@@ -22,9 +22,11 @@ interface Props {
 export function PortalEmbarqueDocumentos({ documentos }: Props) {
   const { downloadingId, handleDownload } = usePortalDocumentDownload();
 
-  const columns: DataTableColumn<Doc>[] = [
+  const columns: ColumnDef<Doc, unknown>[] = defineColumns<Doc>([
     {
-      key: "doc", header: "Documento", render: (doc) => {
+      id: "doc", header: "Documento",
+      cell: ({ row }) => {
+        const doc = row.original;
         const info = DOC_ESTADO_ICON[doc.estado] || DOC_ESTADO_ICON.Pendiente;
         const Icon = info.icon;
         return (
@@ -35,21 +37,25 @@ export function PortalEmbarqueDocumentos({ documentos }: Props) {
         );
       },
     },
-    { key: "estado", header: "Estado", render: (doc) => <Badge variant="secondary" className="text-xs">{doc.estado}</Badge> },
+    { id: "estado", header: "Estado", cell: ({ row }) => <Badge variant="secondary" className="text-xs">{row.original.estado}</Badge> },
     {
-      key: "accion", header: "Acción", align: "right", width: "w-24",
-      render: (doc) => doc.archivo ? (
-        <Button
-          variant="ghost"
-          size="sm"
-          disabled={downloadingId === doc.id}
-          onClick={(e) => { e.stopPropagation(); handleDownload(doc.archivo!, doc.id); }}
-        >
-          {downloadingId === doc.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
-        </Button>
-      ) : <span className="text-xs text-muted-foreground">—</span>,
+      id: "accion", header: "Acción",
+      meta: { align: "right", width: "w-24" },
+      cell: ({ row }) => {
+        const doc = row.original;
+        return doc.archivo ? (
+          <Button
+            variant="ghost"
+            size="sm"
+            disabled={downloadingId === doc.id}
+            onClick={(e) => { e.stopPropagation(); handleDownload(doc.archivo!, doc.id); }}
+          >
+            {downloadingId === doc.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
+          </Button>
+        ) : <span className="text-xs text-muted-foreground">—</span>;
+      },
     },
-  ];
+  ]);
 
   return (
     <Card>

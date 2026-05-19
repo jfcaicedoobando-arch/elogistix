@@ -2,7 +2,7 @@
  * Columnas de la tabla de `/admin/diagnostico`.
  */
 import { Badge } from "@/components/ui/badge";
-import type { DataTableColumn } from "@/components/shared/DataTable";
+import { defineColumns, type ColumnDef } from "@/components/shared/DataTable";
 import type { AppLogRow } from "@/hooks/admin";
 
 const levelVariant: Record<string, "default" | "secondary" | "destructive" | "outline"> = {
@@ -32,78 +32,79 @@ function fmtTs(ts: string): string {
   }
 }
 
-export const diagnosticoColumns: DataTableColumn<AppLogRow>[] = [
+export const diagnosticoColumns: ColumnDef<AppLogRow, unknown>[] = defineColumns<AppLogRow>([
   {
-    key: "ts",
+    id: "ts",
     header: "Fecha",
-    width: "180px",
-    render: (r) => <span className="text-xs tabular-nums">{fmtTs(r.ts)}</span>,
+    meta: { width: "180px" },
+    cell: ({ row }) => <span className="text-xs tabular-nums">{fmtTs(row.original.ts)}</span>,
   },
   {
-    key: "level",
+    id: "level",
     header: "Nivel",
-    width: "90px",
-    render: (r) => (
-      <Badge variant={levelVariant[r.level] ?? "secondary"} className="text-[10px]">
-        {levelLabel[r.level] ?? r.level}
+    meta: { width: "90px" },
+    cell: ({ row }) => (
+      <Badge variant={levelVariant[row.original.level] ?? "secondary"} className="text-[10px]">
+        {levelLabel[row.original.level] ?? row.original.level}
       </Badge>
     ),
   },
   {
-    key: "fn",
+    id: "fn",
     header: "Función",
-    width: "160px",
-    render: (r) => <span className="font-mono text-xs">{r.fn}</span>,
+    meta: { width: "160px" },
+    cell: ({ row }) => <span className="font-mono text-xs">{row.original.fn}</span>,
   },
   {
-    key: "status_code",
+    id: "status_code",
     header: "Status",
-    width: "70px",
-    align: "right",
-    render: (r) => (
+    meta: { width: "70px", align: "right" },
+    cell: ({ row }) => (
       <span className="font-mono text-xs tabular-nums">
-        {r.status_code ?? "—"}
+        {row.original.status_code ?? "—"}
       </span>
     ),
   },
   {
-    key: "latency_ms",
+    id: "latency_ms",
     header: "ms",
-    width: "70px",
-    align: "right",
-    render: (r) => (
+    meta: { width: "70px", align: "right" },
+    cell: ({ row }) => (
       <span className="font-mono text-xs tabular-nums">
-        {r.latency_ms != null ? r.latency_ms : "—"}
+        {row.original.latency_ms != null ? row.original.latency_ms : "—"}
       </span>
     ),
   },
   {
-    key: "msg",
+    id: "msg",
     header: "Mensaje",
-    render: (r) => (
-      <div className="max-w-xl">
-        <p className="text-sm">{r.msg}</p>
-        {r.payload != null && (
-          <details className="mt-1">
-            <summary className="text-[10px] text-muted-foreground cursor-pointer hover:text-foreground">
-              payload
-            </summary>
-            <pre className="mt-1 text-[10px] bg-muted rounded p-2 overflow-x-auto max-h-40">
-              {JSON.stringify(r.payload, null, 2)}
-            </pre>
-          </details>
-        )}
-      </div>
-    ),
+    cell: ({ row }) => {
+      const r = row.original;
+      return (
+        <div className="max-w-xl">
+          <p className="text-sm">{r.msg}</p>
+          {r.payload != null && (
+            <details className="mt-1">
+              <summary className="text-[10px] text-muted-foreground cursor-pointer hover:text-foreground">
+                payload
+              </summary>
+              <pre className="mt-1 text-[10px] bg-muted rounded p-2 overflow-x-auto max-h-40">
+                {JSON.stringify(r.payload, null, 2)}
+              </pre>
+            </details>
+          )}
+        </div>
+      );
+    },
   },
   {
-    key: "request_id",
+    id: "request_id",
     header: "Request",
-    width: "120px",
-    render: (r) => (
+    meta: { width: "120px" },
+    cell: ({ row }) => (
       <span className="font-mono text-[10px] text-muted-foreground">
-        {r.request_id ? r.request_id.slice(0, 8) : "—"}
+        {row.original.request_id ? row.original.request_id.slice(0, 8) : "—"}
       </span>
     ),
   },
-];
+]);

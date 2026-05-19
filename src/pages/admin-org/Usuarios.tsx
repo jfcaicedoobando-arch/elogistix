@@ -6,7 +6,8 @@ import { useToast } from "@/hooks/use-toast";
 import { ShieldCheck, UserPlus, Trash2 } from "lucide-react";
 import { getErrorMessage } from "@/lib/errors";
 import NuevoUsuarioDialog from "@/components/usuario/NuevoUsuarioDialog";
-import { DataTable, type DataTableColumn } from "@/components/shared/DataTable";
+import { DataTable, defineColumns, type ColumnDef } from "@/components/shared/DataTable";
+import { sortByString, sortByDate } from "@/components/shared/dataTable/sortingFns";
 import { useUsuarios, useUpdateUserRole, useDeleteUser, type UserRow } from "@/hooks/usuario";
 import DoubleConfirmDeleteDialog from "@/components/shared/DoubleConfirmDeleteDialog";
 import { PageHeader } from "@/components/shared/PageHeader";
@@ -72,31 +73,55 @@ export default function Usuarios() {
     }
   };
 
-  const columns: DataTableColumn<UserRow>[] = [
-    { key: "email", header: "Email", width: "min-w-[200px]", className: "font-medium", sortable: true, sortValue: (u) => u.email, render: (u) => u.email },
-    { key: "created_at", header: "Fecha de registro", width: "w-[140px]", className: "text-xs text-muted-foreground", sortable: true, sortValue: (u) => u.created_at, render: (u) => formatDate(u.created_at) },
-    { key: "role", header: "Rol actual", width: "w-[120px]", sortable: true, sortValue: (u) => u.role, render: (u) => <Badge className={roleBadge[u.role]}>{getRoleLabel(u.role)}</Badge> },
+  const columns: ColumnDef<UserRow, unknown>[] = defineColumns<UserRow>([
     {
-      key: "change_role", header: "Cambiar rol", width: "w-[160px]", render: (u) => (
-        <Select
-          value={u.role}
-          onValueChange={(val) => {
-            const newRole = val as AppRole;
-            if (newRole === u.role) return;
-            setPendingRole({ user: u, newRole });
-          }}
-        >
-          <SelectTrigger className="w-[140px]"><SelectValue /></SelectTrigger>
-          <SelectContent>
-            <SelectItem value="admin">Admin</SelectItem>
-            <SelectItem value="operador">Operador</SelectItem>
-            <SelectItem value="viewer">Visor</SelectItem>
-          </SelectContent>
-        </Select>
-      ),
+      id: "email", header: "Email",
+      accessorFn: (u) => u.email, enableSorting: true,
+      sortingFn: sortByString<UserRow>((u) => u.email),
+      meta: { width: "min-w-[200px]", className: "font-medium" },
+      cell: ({ row }) => row.original.email,
     },
     {
-      key: "actions", header: "", width: "w-[50px]", render: (u) => {
+      id: "created_at", header: "Fecha de registro",
+      accessorFn: (u) => u.created_at, enableSorting: true,
+      sortingFn: sortByDate<UserRow>((u) => u.created_at),
+      meta: { width: "w-[140px]", className: "text-xs text-muted-foreground" },
+      cell: ({ row }) => formatDate(row.original.created_at),
+    },
+    {
+      id: "role", header: "Rol actual",
+      accessorFn: (u) => u.role, enableSorting: true,
+      sortingFn: sortByString<UserRow>((u) => u.role),
+      meta: { width: "w-[120px]" },
+      cell: ({ row }) => <Badge className={roleBadge[row.original.role]}>{getRoleLabel(row.original.role)}</Badge>,
+    },
+    {
+      id: "change_role", header: "Cambiar rol", meta: { width: "w-[160px]" },
+      cell: ({ row }) => {
+        const u = row.original;
+        return (
+          <Select
+            value={u.role}
+            onValueChange={(val) => {
+              const newRole = val as AppRole;
+              if (newRole === u.role) return;
+              setPendingRole({ user: u, newRole });
+            }}
+          >
+            <SelectTrigger className="w-[140px]"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="admin">Admin</SelectItem>
+              <SelectItem value="operador">Operador</SelectItem>
+              <SelectItem value="viewer">Visor</SelectItem>
+            </SelectContent>
+          </Select>
+        );
+      },
+    },
+    {
+      id: "actions", header: "", meta: { width: "w-[50px]" },
+      cell: ({ row }) => {
+        const u = row.original;
         const isSelf = u.user_id === user?.id;
         if (isSelf) return null;
         return (
@@ -112,7 +137,7 @@ export default function Usuarios() {
         );
       },
     },
-  ];
+  ]);
 
   return (
     <div className="space-y-6">

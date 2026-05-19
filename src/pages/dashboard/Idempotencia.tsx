@@ -7,7 +7,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { DataTable, type DataTableColumn } from "@/components/shared/DataTable";
+import { DataTable, defineColumns, type ColumnDef } from "@/components/shared/DataTable";
 import { usePermissions } from "@/hooks/shared";
 import { useToast } from "@/hooks/use-toast";
 import { listIdempotencyLog, type IdempotenciaRow } from "@/services/admin";
@@ -68,54 +68,58 @@ export default function Idempotencia() {
     }
   };
 
-  const columns: DataTableColumn<IdemRow>[] = [
+  const columns: ColumnDef<IdemRow, unknown>[] = defineColumns<IdemRow>([
     {
-      key: "created_at",
+      id: "created_at",
       header: "Fecha",
-      render: (r) => <span className="text-sm tabular-nums">{dtf.format(new Date(r.created_at))}</span>,
+      cell: ({ row }) => <span className="text-sm tabular-nums">{dtf.format(new Date(row.original.created_at))}</span>,
     },
     {
-      key: "fn",
+      id: "fn",
       header: "Operación",
-      render: (r) => <span className="text-sm">{FN_LABEL[r.fn] ?? r.fn}</span>,
+      cell: ({ row }) => <span className="text-sm">{FN_LABEL[row.original.fn] ?? row.original.fn}</span>,
     },
     {
-      key: "key",
+      id: "key",
       header: "requestId",
-      render: (r) => (
-        <div className="flex items-center gap-1">
-          <code className="text-xs font-mono text-muted-foreground">{r.key.slice(0, 8)}…{r.key.slice(-4)}</code>
-          <Button size="icon" variant="ghost" className="h-6 w-6" onClick={() => copyKey(r.key)} title="Copiar requestId completo">
-            <Copy className="h-3 w-3" />
-          </Button>
-        </div>
-      ),
+      cell: ({ row }) => {
+        const r = row.original;
+        return (
+          <div className="flex items-center gap-1">
+            <code className="text-xs font-mono text-muted-foreground">{r.key.slice(0, 8)}…{r.key.slice(-4)}</code>
+            <Button size="icon" variant="ghost" className="h-6 w-6" onClick={() => copyKey(r.key)} title="Copiar requestId completo">
+              <Copy className="h-3 w-3" />
+            </Button>
+          </div>
+        );
+      },
     },
     {
-      key: "user_email",
+      id: "user_email",
       header: "Usuario",
-      render: (r) => <span className="text-sm text-muted-foreground">{r.user_email ?? (r.user_id ? r.user_id.slice(0, 8) : "—")}</span>,
+      cell: ({ row }) => <span className="text-sm text-muted-foreground">{row.original.user_email ?? (row.original.user_id ? row.original.user_id.slice(0, 8) : "—")}</span>,
     },
     {
-      key: "hits",
+      id: "hits",
       header: "Reintentos",
-      align: "right",
-      render: (r) => (
-        <span className={`text-sm tabular-nums ${r.hits > 0 ? "font-semibold text-amber-600" : "text-muted-foreground"}`}>
-          {r.hits}
+      meta: { align: "right" },
+      cell: ({ row }) => (
+        <span className={`text-sm tabular-nums ${row.original.hits > 0 ? "font-semibold text-amber-600" : "text-muted-foreground"}`}>
+          {row.original.hits}
         </span>
       ),
     },
     {
-      key: "result",
+      id: "result",
       header: "Resultado",
-      render: (r) => {
+      cell: ({ row }) => {
+        const r = row.original;
         if (r.pending) return <Badge variant="outline">Pendiente</Badge>;
         if (r.hits === 0) return <Badge variant="success">Creado</Badge>;
         return <Badge variant="warning">Respuesta cacheada</Badge>;
       },
     },
-  ];
+  ]);
 
   const totalCreados = rows.filter((r) => !r.pending && r.hits === 0).length;
   const totalCacheados = rows.filter((r) => !r.pending && r.hits > 0).length;

@@ -1,6 +1,5 @@
 /**
  * useTableInstance — wrapper de `useReactTable` que centraliza:
- *   - Conversión legacy ↔ ColumnDef.
  *   - Sort controlado vs. interno, sin `useState` ni `useMemo` paralelos.
  *   - Modo server (`manualSorting: true`) cuando el caller pasa
  *     `controlledSort` + `onSortChange` (la fuente de verdad vive en
@@ -21,8 +20,7 @@ import {
   type SortingState,
   type Updater,
 } from "@tanstack/react-table";
-import { toColumnDefs } from "./columnAdapter";
-import type { DataTableColumn, SortDir } from "./types";
+import type { SortDir } from "./types";
 
 export interface ControlledSort {
   key: string | null;
@@ -31,7 +29,7 @@ export interface ControlledSort {
 
 interface Args<T> {
   data: T[];
-  columns: ReadonlyArray<DataTableColumn<T> | ColumnDef<T, unknown>>;
+  columns: ReadonlyArray<ColumnDef<T, unknown>>;
   sortMode: "client" | "server";
   controlledSort?: ControlledSort;
   onSortChange?: (key: string | null, dir: SortDir) => void;
@@ -62,7 +60,10 @@ export function useTableInstance<T>({
 }: Args<T>) {
   const isServer = sortMode === "server";
 
-  const columnDefs = useMemo(() => toColumnDefs(columns), [columns]);
+  // Estabilizar identidad — los callers definen el arreglo a nivel de módulo
+  // o lo memorizan; este useMemo es defensivo para evitar recrear el motor
+  // si el caller redefine el arreglo por render.
+  const columnDefs = useMemo(() => columns as ColumnDef<T, unknown>[], [columns]);
 
   const sortingState = useMemo(
     () => (isServer ? fromControlled(controlledSort) : undefined),
