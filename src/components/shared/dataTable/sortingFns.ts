@@ -2,16 +2,17 @@
  * Helpers de ordenamiento reutilizables para columnas nativas de TanStack
  * (`ColumnDef<T>` + `defineColumns`).
  *
- * Replican exactamente el comportamiento que el adapter legacy aplicaba
- * detrás de `sortValue` (ver `columnAdapter.ts`):
- *   - Strings → `Intl.Collator("es-MX", { sensitivity: "base" })`
+ * Contrato uniforme para todas las columnas del ERP:
+ *   - Strings → `Intl.Collator("es-MX", { sensitivity: "base" })` para que
+ *     acentos y mayúsculas no afecten el orden (esperado en es-MX).
  *   - Números → resta directa.
- *   - Fechas (ISO o Date) → comparación numérica de timestamps.
- *   - `null`/`undefined` siempre van al final, sin importar la dirección.
+ *   - Fechas (ISO o `Date`) → comparación numérica de timestamps;
+ *     strings inválidos se tratan como null.
+ *   - `null` / `undefined` van **siempre al final**, sin importar la
+ *     dirección (asc o desc). Cualquier desviación rompe la UX del listado.
  *
- * Mantenerlos centralizados garantiza que la Fase 2 (migración a
- * `ColumnDef` nativo) NO introduzca divergencias de orden vs. la versión
- * legacy mientras ambos coexistan.
+ * Si alguna columna necesita un sort exótico, escribe un `SortingFn<T>`
+ * ad-hoc pero **mantén el contrato null-last**.
  */
 import type { Row, SortingFn } from "@tanstack/react-table";
 
