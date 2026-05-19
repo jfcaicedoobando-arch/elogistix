@@ -2,6 +2,14 @@ import type { ChangelogEntry } from "../../../changelogData";
 
 export const chunk0: ChangelogEntry[] = [
   {
+    version: "10.1.3",
+    date: "2026-05-19",
+    type: "patch",
+    title: "Cierre del refactor a TanStack: limpieza de JSDoc legacy + resumen step-by-step",
+    summary: "Se removieron las menciones a la API legacy (DataTableColumn<T>, columnAdapter.ts, sortValue, useDataTableSort) de los JSDoc de DataTable.tsx, useTableInstance.ts, columnMeta.ts, sortingFns.ts y embarqueColumns.tsx. Nuevo docs/refactor-tanstack-summary.md con la bitácora completa.",
+    description: "Cierre formal del refactor de tablas a @tanstack/react-table + @tanstack/react-virtual. (1) Limpieza de comentarios: DataTable.tsx, embarqueColumns.tsx, sortingFns.ts, useTableInstance.ts y columnMeta.ts ya no citan símbolos que dejaron de existir (DataTableColumn<T>, SortValue, columnAdapter.ts, useDataTableSort, 'Fase 1/Fase 2'); ahora describen el contrato actual (TanStack como única fuente de verdad, server-side via controlledSort+onSortChange, null-last, colación es-MX). (2) Nuevo docs/refactor-tanstack-summary.md con resumen step-by-step en 8 pasos: adapter intermedio, helpers de orden, migración total, useTableInstance, virtualización, integración Supabase, tests anti-regresión y documentación; incluye las decisiones explícitas de NO hacer (getFilteredRowModel cliente, wrapper sobre ColumnDef, compatibilidad legacy). (3) Verificación: no quedan menciones de la API legacy en src/ fuera de docs/ y src/content/changelog/; no quedan reordenamientos manuales sobre data en componentes de tabla. Sin cambios de runtime, comportamiento ni UI. APP_VERSION 10.1.3.",
+  },
+  {
     version: "10.1.2",
     date: "2026-05-19",
     type: "patch",
