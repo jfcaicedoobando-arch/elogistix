@@ -1,6 +1,8 @@
 /**
  * Selector + traversal helpers para el picker de feedback.
  */
+import { finder } from "@medv/finder";
+
 
 const MEANINGFUL_TAGS = new Set([
   "BUTTON", "A", "TR", "LI", "LABEL", "INPUT", "SELECT", "TEXTAREA",
@@ -40,40 +42,24 @@ export function pickMeaningfulAncestor(el: Element | null): Element | null {
 }
 
 /**
- * Genera un selector CSS único y razonablemente estable.
- * Preferencias: [data-testid] > #id > [aria-label] > path acotado con :nth-of-type.
+ * Genera un selector CSS único y estable usando @medv/finder.
+ * finder prioriza id, data-testid, aria-label y clases estables;
+ * sólo cae a :nth-child cuando no hay otra opción.
  */
 export function buildSelector(el: Element | null): string {
   if (!el) return "";
-  const testid = el.getAttribute("data-testid");
-  if (testid) return `[data-testid="${cssEscape(testid)}"]`;
-  if (el.id) return `#${cssEscape(el.id)}`;
-  const aria = el.getAttribute("aria-label");
-  if (aria) return `${el.tagName.toLowerCase()}[aria-label="${cssEscape(aria)}"]`;
-
-  const parts: string[] = [];
-  let cur: Element | null = el;
-  let depth = 0;
-  while (cur && cur.nodeType === 1 && depth < 6 && cur !== document.body) {
-    const tag = cur.tagName.toLowerCase();
-    const parent: Element | null = cur.parentElement;
-    if (!parent) { parts.unshift(tag); break; }
-    const tagName = cur.tagName;
-    const sameTag = Array.from(parent.children).filter((c: Element) => c.tagName === tagName);
-    if (sameTag.length === 1) parts.unshift(tag);
-    else {
-      const idx = sameTag.indexOf(cur) + 1;
-      parts.unshift(`${tag}:nth-of-type(${idx})`);
-    }
-    cur = parent;
-    depth++;
+  try {
+    return finder(el as HTMLElement, {
+      seedMinLength: 1,
+      optimizedMinLength: 2,
+      threshold: 800,
+      timeoutMs: 200,
+    });
+  } catch {
+    // Fallback minimal si finder no logra resolver (ej. nodos huérfanos)
+    const tag = el.tagName.toLowerCase();
+    return el.id ? `#${el.id}` : tag;
   }
-  return parts.join(" > ").slice(0, 300);
-}
-
-function cssEscape(s: string): string {
-  if (typeof CSS !== "undefined" && typeof CSS.escape === "function") return CSS.escape(s);
-  return s.replace(/([^\w-])/g, "\\$1");
 }
 
 export function elementText(el: Element | null): string {
