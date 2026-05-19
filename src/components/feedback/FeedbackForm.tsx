@@ -139,7 +139,7 @@ export function FeedbackForm({ initialUrl, submitting, onSubmit, onCancel, onPic
 
       <div>
         <Label className="mb-1.5 block">Imágenes (opcional)</Label>
-        <FeedbackImageUploader value={imagenes} onChange={setImagenes} enabled={!picker.active} />
+        <FeedbackImageUploader value={imagenes} onChange={setImagenes} enabled={!picker.active} onCapture={handleCapture} />
       </div>
 
       {error && <p className="text-sm text-destructive">{error}</p>}
