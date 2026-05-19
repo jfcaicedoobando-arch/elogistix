@@ -22,6 +22,14 @@ export interface ChangelogEntry {
  */
 export const recentChangelog: ChangelogEntry[] = [
   {
+    version: "10.1.3",
+    date: "2026-05-19",
+    type: "patch",
+    title: "Cierre del refactor a TanStack: limpieza de JSDoc legacy + resumen step-by-step",
+    summary: "JSDoc de DataTable.tsx, useTableInstance.ts, columnMeta.ts, sortingFns.ts y embarqueColumns.tsx ya no citan símbolos eliminados. Nuevo docs/refactor-tanstack-summary.md con la bitácora completa del refactor.",
+    description: "Cierre formal del refactor de tablas a @tanstack/react-table + @tanstack/react-virtual. Limpieza de comentarios obsoletos, nuevo documento step-by-step en 8 pasos (adapter intermedio → migración total → virtualización → integración Supabase → tests) y verificación de que no queden menciones legacy ni reordenamientos manuales en componentes de tabla. Sin cambios de runtime, comportamiento ni UI. APP_VERSION 10.1.3.",
+  },
+  {
     version: "10.1.2",
     date: "2026-05-19",
     type: "patch",
