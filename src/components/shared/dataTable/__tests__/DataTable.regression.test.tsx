@@ -16,7 +16,6 @@ import { describe, it, expect, vi } from "vitest";
 import { render, screen, fireEvent, within } from "@testing-library/react";
 import { DataTable, defineColumns, type ColumnDef } from "@/components/shared/DataTable";
 import { VirtualDataTable } from "@/components/shared/VirtualDataTable";
-import type { DataTableColumn } from "@/components/shared/dataTable/types";
 import { sortByString, sortByNumber, sortByDate, esCollator } from "@/components/shared/dataTable/sortingFns";
 
 // ---------- Fixtures que imitan el shape de Embarques/Cotizaciones --------
@@ -46,17 +45,18 @@ const cotizaciones: CotizacionRow[] = [
   { id: "c2", folio: "COT-101", cliente: "Globex", monto: 800 },
 ];
 
-const embarqueColumns: DataTableColumn<EmbarqueRow>[] = [
-  { key: "numero", header: "Número", sortable: true, sortValue: (r) => r.numero, render: (r) => r.numero },
-  { key: "cliente", header: "Cliente", sortable: true, sortValue: (r) => r.cliente, render: (r) => r.cliente },
-  { key: "total", header: "Total", sortable: true, sortValue: (r) => r.total, align: "right", render: (r) => r.total },
-];
+const embarqueColumns: ColumnDef<EmbarqueRow, unknown>[] = defineColumns<EmbarqueRow>([
+  { id: "numero", header: "Número", enableSorting: true, accessorFn: (r) => r.numero, sortingFn: sortByString<EmbarqueRow>("numero"), cell: ({ row }) => row.original.numero },
+  { id: "cliente", header: "Cliente", enableSorting: true, accessorFn: (r) => r.cliente, sortingFn: sortByString<EmbarqueRow>("cliente"), cell: ({ row }) => row.original.cliente },
+  { id: "total", header: "Total", enableSorting: true, accessorFn: (r) => r.total, sortingFn: sortByNumber<EmbarqueRow>("total"), meta: { className: "text-right", headerClassName: "text-right" }, cell: ({ row }) => row.original.total },
+]) as ColumnDef<EmbarqueRow, unknown>[];
 
-const cotizacionColumns: DataTableColumn<CotizacionRow>[] = [
-  { key: "folio", header: "Folio", sortable: true, sortValue: (r) => r.folio, render: (r) => r.folio },
-  { key: "cliente", header: "Cliente", render: (r) => r.cliente },
-  { key: "monto", header: "Monto", sortable: true, sortValue: (r) => r.monto, align: "right", render: (r) => r.monto },
-];
+const cotizacionColumns: ColumnDef<CotizacionRow, unknown>[] = defineColumns<CotizacionRow>([
+  { id: "folio", header: "Folio", enableSorting: true, accessorFn: (r) => r.folio, sortingFn: sortByString<CotizacionRow>("folio"), cell: ({ row }) => row.original.folio },
+  { id: "cliente", header: "Cliente", cell: ({ row }) => row.original.cliente },
+  { id: "monto", header: "Monto", enableSorting: true, accessorFn: (r) => r.monto, sortingFn: sortByNumber<CotizacionRow>("monto"), meta: { className: "text-right", headerClassName: "text-right" }, cell: ({ row }) => row.original.monto },
+]) as ColumnDef<CotizacionRow, unknown>[];
+
 
 // ---------- DataTable: render + server sort ----------
 
