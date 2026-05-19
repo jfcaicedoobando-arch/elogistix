@@ -78,6 +78,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       role: profile.role ?? null,
       effectiveRole: effectiveRole ?? null,
     });
+    // Sincronizar el contexto de usuario en Sentry para que los reportes
+    // de feedback y errores lleguen etiquetados por org + rol.
+    syncSentryUser({
+      userId: user?.id ?? null,
+      email: user?.email ?? null,
+      organizationId: profile.organizationId ?? null,
+      effectiveRole: effectiveRole ?? null,
+    });
   }, [user, profile.organizationId, profile.organization, profile.role, effectiveRole]);
 
   const signOut = async () => {

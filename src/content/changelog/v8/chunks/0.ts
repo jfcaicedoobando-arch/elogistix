@@ -2,6 +2,14 @@ import type { ChangelogEntry } from "../../../changelogData";
 
 export const chunk0: ChangelogEntry[] = [
   {
+    version: "9.0.0",
+    date: "2026-05-19",
+    type: "major",
+    title: "Reportes de bug — migración a Sentry User Feedback",
+    summary: "Se eliminó el módulo casero de reportes y se reemplazó por el widget oficial de Sentry. Los reportes ahora se gestionan en sentry.io con captura de pantalla anotable, breadcrumbs automáticos, stack traces y release tagging.",
+    description: "Se instaló @sentry/react y se inicializa en src/lib/sentry.ts con feedbackIntegration (autoInject:false, traducido a español: 'Reportar bug o sugerencia', 'Agregar captura', 'Enviar reporte', etc.) y browserTracingIntegration (tracesSampleRate 0.1). Cada usuario se asocia automáticamente con Sentry.setUser + tags organization_id y effective_role desde AuthContext, manteniendo la trazabilidad multi-tenant. FeedbackButton.tsx ahora dispara Sentry.getFeedback().createForm() y se reduce a ~50 líneas. ELIMINADOS: FeedbackDialog/Form/ImageUploader/MisReportes/ValidationAlert, useElementPicker, useReportesFeedback, breadcrumbsBuffer, consoleBuffer, elementSelector, screenshot.ts, services/feedback, types/feedback, AdminReportes y AdminReporteDetalle. Dependencias removidas: @medv/finder y modern-screenshot. Migración SQL: drop tablas reportes_feedback + reportes_feedback_comentarios, enums tipo_reporte_feedback + estado_reporte_feedback, bucket reportes-feedback. Ruta /admin/reportes ya no existe y el item se removió del AdminSidebar. APP_VERSION 9.0.0.",
+  },
+  {
     version: "8.230.0",
     date: "2026-05-19",
     type: "minor",

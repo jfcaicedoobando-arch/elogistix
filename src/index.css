@@ -184,16 +184,6 @@
   }
 }
 
-/* Feedback element picker: force crosshair cursor and hide app tooltips/popovers
-   while the picker is active. Do NOT set pointer-events:none globally — it breaks
-   document.elementFromPoint() and the picker can no longer detect what's under the cursor. */
-html.feedback-picker-active,
-html.feedback-picker-active * {
-  cursor: crosshair !important;
-}
-html.feedback-picker-active [data-radix-tooltip-content],
-html.feedback-picker-active [data-radix-popper-content-wrapper],
-html.feedback-picker-active [data-state="delayed-open"][role="tooltip"] {
-  display: none !important;
-}
+
+
 
