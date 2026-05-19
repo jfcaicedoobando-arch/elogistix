@@ -26,13 +26,14 @@ export default function Embarques() {
 
 
   const {
-    search, filterModo, filterEstado, filterCliente, filterOperador, filterProforma,
+    search, filterModo, filterEstado, filterCliente, filterOperador,
     fechaDesde, fechaHasta, page, pageSize,
     sortKey, sortDir, handleSortChange,
-    setSearch, setFilterModo, setFilterEstado, setFilterCliente, setFilterOperador, setFilterProforma,
+    setSearch, setFilterModo, setFilterEstado, setFilterCliente, setFilterOperador,
     setFechaDesde, setFechaHasta, setPage, setPageSize,
     filtered, expedientesCount, contenedoresCount, totalPages,
   } = state;
+
 
   const goNuevo = () => navigate("/embarques/nuevo");
   const headerDescription = buildDescription(contenedoresCount, expedientesCount, filterEstado !== "todos");
