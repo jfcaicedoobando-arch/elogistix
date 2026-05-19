@@ -2,6 +2,14 @@ import type { ChangelogEntry } from "../../../changelogData";
 
 export const chunk0: ChangelogEntry[] = [
   {
+    version: "8.227.3",
+    date: "2026-05-19",
+    type: "patch",
+    title: "Selector de elemento del reporte — vuelve a responder",
+    summary: "Se elimina el blur del modal durante la selección y se corrige la captura del cursor que dejaba el picker 'muerto'.",
+    description: "FeedbackDialog ahora se compone con primitivas Radix y omite el DialogOverlay mientras pickerActive es true, eliminando el backdrop-blur que oscurecía la app. En index.css se removió la regla global 'html.feedback-picker-active body * { pointer-events: none }' porque rompía document.elementFromPoint (siempre devolvía body y nada se podía resaltar); se mantiene únicamente el bloqueo de tooltips/popovers de Radix y un cursor crosshair global. useElementPicker ahora resuelve el target con document.elementsFromPoint filtrando overlays propios, body y html, y mueve los listeners a window para asegurar la captura. APP_VERSION 8.227.3.",
+  },
+  {
     version: "8.227.2",
     date: "2026-05-19",
     type: "patch",

@@ -88,8 +88,11 @@ export function useElementPicker(onPicked: (el: PickedElement | null) => void) {
     };
 
     const resolveFromPoint = (x: number, y: number): Element | null => {
-      const el = document.elementFromPoint(x, y);
-      if (!el || isOurs(el)) return hovered;
+      // elementsFromPoint devuelve la pila completa; filtramos nuestros propios overlays
+      // y cualquier elemento "no útil" para evitar resaltar body/html.
+      const stack = document.elementsFromPoint(x, y);
+      const el = stack.find((n) => !isOurs(n) && n !== document.body && n !== document.documentElement);
+      if (!el) return hovered;
       return altDown ? el : pickMeaningfulAncestor(el);
     };
 
@@ -179,18 +182,18 @@ export function useElementPicker(onPicked: (el: PickedElement | null) => void) {
       }
     };
 
-    document.addEventListener("mousemove", onMove, true);
-    document.addEventListener("click", onClick, true);
-    document.addEventListener("contextmenu", onContextMenu, true);
-    document.addEventListener("keydown", onKeyDown, true);
-    document.addEventListener("keyup", onKeyUp, true);
+    window.addEventListener("mousemove", onMove, true);
+    window.addEventListener("click", onClick, true);
+    window.addEventListener("contextmenu", onContextMenu, true);
+    window.addEventListener("keydown", onKeyDown, true);
+    window.addEventListener("keyup", onKeyUp, true);
 
     return () => {
-      document.removeEventListener("mousemove", onMove, true);
-      document.removeEventListener("click", onClick, true);
-      document.removeEventListener("contextmenu", onContextMenu, true);
-      document.removeEventListener("keydown", onKeyDown, true);
-      document.removeEventListener("keyup", onKeyUp, true);
+      window.removeEventListener("mousemove", onMove, true);
+      window.removeEventListener("click", onClick, true);
+      window.removeEventListener("contextmenu", onContextMenu, true);
+      window.removeEventListener("keydown", onKeyDown, true);
+      window.removeEventListener("keyup", onKeyUp, true);
       if (rafId) cancelAnimationFrame(rafId);
       document.body.style.cursor = "";
       document.documentElement.classList.remove(ACTIVE_CLASS);
