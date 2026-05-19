@@ -30,8 +30,6 @@ export interface EmbarquesFiltrosCamposProps {
   onFilterClienteChange: (v: string) => void;
   filterOperador: string;
   onFilterOperadorChange: (v: string) => void;
-  filterProforma: string;
-  onFilterProformaChange: (v: string) => void;
   fechaDesde: string;
   onFechaDesdeChange: (v: string) => void;
   fechaHasta: string;
@@ -45,13 +43,14 @@ export interface EmbarquesFiltrosCamposProps {
 export function EmbarquesFiltrosCampos(props: EmbarquesFiltrosCamposProps) {
   const {
     search, onSearchChange,
-    filterModo, filterEstado, filterCliente, filterOperador, filterProforma,
+    filterModo, filterEstado, filterCliente, filterOperador,
     fechaDesde, fechaHasta,
     onFilterModoChange, onFilterEstadoChange, onFilterClienteChange,
-    onFilterOperadorChange, onFilterProformaChange,
+    onFilterOperadorChange,
     onFechaDesdeChange, onFechaHastaChange,
     clientes, operadores, layout,
   } = props;
+
 
   const ModoSelect = (
     <Select value={filterModo} onValueChange={onFilterModoChange}>
