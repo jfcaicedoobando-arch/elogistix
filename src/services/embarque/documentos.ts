@@ -145,11 +145,27 @@ export async function uploadDocumentoEmbarque(
   return { path, fileName: file.name, cached: false };
 }
 
-export async function deleteDocumentoEmbarque(docId: string, _archivoPath?: string): Promise<void> {
-  // Soft delete (A.2.2): mantenemos el archivo en storage por si se restaura desde papelera.
-  const { error } = await supabase.rpc('soft_delete_record', {
-    _table: 'documentos_embarque',
-    _id: docId,
-  });
+export async function deleteDocumentoEmbarque(docId: string, archivoPath?: string): Promise<void> {
+  // Desadjuntar: limpiamos el archivo y reseteamos estado a 'Pendiente' para
+  // conservar el renglón del checklist y permitir un nuevo upload. La fila no
+  // debe eliminarse (soft delete) — sólo se elimina el adjunto en sí.
+  const { data: updated, error } = await supabase
+    .from('documentos_embarque')
+    .update({ archivo: null, estado: 'Pendiente' as DocumentoEstado })
+    .eq('id', docId)
+    .select('id');
   if (error) throw error;
+  if (!updated || updated.length === 0) {
+    throw new Error('No se pudo eliminar el adjunto (sin permisos o el documento ya no existe).');
+  }
+
+  // Limpieza best-effort del blob en storage: si falla no bloqueamos la UI.
+  if (archivoPath) {
+    try {
+      const { deleteFile } = await import('@/services/storage/index');
+      await deleteFile(archivoPath);
+    } catch {
+      // Ignorado: el objeto puede no existir o ya estar huérfano.
+    }
+  }
 }
