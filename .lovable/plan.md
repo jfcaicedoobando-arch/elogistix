@@ -1,93 +1,138 @@
-## Diagnóstico
+## Objetivo
 
-Dos bugs reales hacen que el picker no responda:
+Reemplazar piezas hechas a mano del módulo de reportar bugs con librerías open-source maduras, sin sacar los datos de Lovable Cloud. Resultado esperado: menos código propio que mantener, reportes con más contexto técnico, y mejor UX (captura de pantalla automática + selectores estables + replay opcional).
 
-### 1. La pantalla queda borrosa (overlay del Dialog visible)
+## Dependencias a añadir
 
-La regla CSS en `src/index.css` apunta a `[data-radix-dialog-overlay]`, pero Radix **no** emite ese atributo. El overlay real es un `<div>` con `bg-foreground/40 backdrop-blur-sm` (ver `src/components/ui/dialog.tsx:22`). Por eso al activar el picker el overlay sigue ahí: la pantalla se ve oscura y borrosa, y aunque los clicks "pasan" visualmente confunde al usuario.
+```
+bun add @medv/finder modern-screenshot rrweb rrweb-player @sentry/react
+```
 
-### 2. Es imposible seleccionar nada
+Peso estimado en bundle: ~25 KB de `@medv/finder` + `modern-screenshot`, el resto se carga **bajo demanda** (lazy import) sólo cuando el usuario abre el modal de feedback o ocurre un error → 0 KB en el shell autenticado normal.
 
-En `src/index.css:195` aplicamos:
+---
 
-```css
-html.feedback-picker-active body *:not(#feedback-picker-overlay)... {
-  pointer-events: none !important;
+## Cambios por pieza
+
+### 1. Selector de elemento → `@medv/finder` (reemplaza `buildSelector`)
+
+`src/lib/feedback/elementSelector.ts`:
+
+- Quitar `buildSelector`, `cssEscape` y el path con `:nth-of-type` casero (~50 líneas menos).
+- Mantener `pickMeaningfulAncestor`, `elementText`, `shortLabel`, `isMeaningful`.
+- Re-exportar:
+  ```ts
+  import { finder } from "@medv/finder";
+  export const buildSelector = (el: Element | null): string =>
+    el ? finder(el, { seedMinLength: 1, optimizedMinLength: 2, threshold: 800 }) : "";
+  ```
+- `finder` ya prioriza `id`, `data-testid`, `aria-label`, clases estables y evita `:nth-child` cuando puede. Sin cambios en consumidores.
+
+### 2. Captura de pantalla automática → `modern-screenshot`
+
+Nuevo helper `src/lib/feedback/screenshot.ts`:
+
+```ts
+import { domToBlob } from "modern-screenshot";
+export async function captureViewport(): Promise<Blob> {
+  return domToBlob(document.documentElement, {
+    scale: window.devicePixelRatio,
+    backgroundColor: getComputedStyle(document.body).backgroundColor,
+    filter: (n) => !(n instanceof Element) || !["feedback-picker-overlay","feedback-picker-label","feedback-picker-hint"].includes(n.id),
+  });
 }
 ```
 
-`document.elementFromPoint()` **ignora elementos con `pointer-events:none`** y devuelve el primero "alcanzable" debajo, que casi siempre termina siendo `<body>`. El hook descarta body/html en `paint()`, así que el highlight nunca aparece sobre nada útil y el click captura `<body>`. El picker queda "muerto".
+En `FeedbackForm.tsx`:
 
-## Cambios
+- Nuevo botón "📷 Capturar pantalla" junto a "Adjuntar imagen".
+- Antes de capturar: cerrar/ocultar el modal con `pickerActive` (ya reusable) ~200ms, capturar, convertir a `File` y añadir a `imagenes`.
+- Mantiene Ctrl+V y file picker actuales.
 
-### A. `src/components/feedback/FeedbackDialog.tsx` — eliminar el overlay durante el picker
+### 3. Session replay opcional → `rrweb`
 
-Reemplazar `Dialog/DialogContent` por una composición con primitivas Radix (`DialogPrimitive.Root`, `Portal`, `Content`) y condicionar el render del `DialogOverlay` a `!pickerActive`. Mantener el `<DialogContent>` montado (con `opacity:0` como ya está) para preservar el estado del `FeedbackForm`.
+Nuevo helper `src/lib/feedback/sessionReplay.ts`:
 
-Alternativa más simple y suficiente: aplicar `style={{ opacity: 0, pointerEvents: 'none' }}` directamente sobre el overlay vía un wrapper que use Radix primitives. Implementación concreta:
+- Buffer circular en memoria de los **últimos 15 segundos** de eventos rrweb (config `recordCanvas: false`, `maskAllInputs: true` para no capturar passwords/PII).
+- API: `startReplayBuffer()`, `stopReplayBuffer()`, `getReplaySnapshot(): RrwebEvent[]`.
+- `installReplayBuffer()` se llama en `main.tsx` tras `installConsoleBuffer()`.
+- Lazy: `await import("rrweb")` la primera vez.
 
-- Importar `* as DialogPrimitive from "@radix-ui/react-dialog"`.
-- Componer manualmente:
+En `crearReporte` → `metadata.sessionReplay` recibe los eventos serializados (gzip vía `CompressionStream`) y se guardan en columna `metadata jsonb` o, si pesa >100 KB, como adjunto en el bucket `reportes-feedback/{reporteId}/replay.json.gz`.
+
+En `AdminReporteDetalle.tsx`: si existe replay, renderizar `rrweb-player` con controles play/pause/speed.
+
+**Privacidad**: por defecto sólo se graba mientras el modal está abierto + 15s previos. NO se graba continuamente para todos los usuarios.
+
+### 4. Stack traces y breadcrumbs de errores → `@sentry/react` en modo local
+
+- **NO** usamos DSN externo. Inicializamos Sentry sólo para que capture errores y mantenga breadcrumbs en memoria (clicks, navegación, fetch, console, XHR) — todo se queda en el cliente.
+- En `main.tsx`:
+  ```ts
+  Sentry.init({
+    dsn: undefined,            // no envía a ningún backend
+    integrations: [Sentry.browserTracingIntegration(), Sentry.breadcrumbsIntegration()],
+    beforeSend: () => null,    // belt-and-suspenders
+    maxBreadcrumbs: 50,
+  });
   ```
-  <DialogPrimitive.Root>
-    <DialogPrimitive.Portal>
-      {!pickerActive && <DialogOverlay/>}
-      <DialogPrimitive.Content className={cn(... contentBaseClasses, pickerActive && "opacity-0 pointer-events-none")}>
-        ...header, tabs, form...
-        <DialogPrimitive.Close ... />
-      </DialogPrimitive.Content>
-    </DialogPrimitive.Portal>
-  </DialogPrimitive.Root>
-  ```
-- Copiar las clases que ya usaba `DialogContent` para que se vea igual.
+- Al enviar un reporte: `Sentry.getCurrentScope().getBreadcrumbs()` se incluye en `metadata.breadcrumbs`.
+- Si hay un error JS reciente sin manejar: `Sentry.getLastEventId()` y `Sentry.getCurrentScope()._eventProcessors`... más simple: mantener un `lastError` propio con `window.addEventListener("error")` y `unhandledrejection` (ya casi-trivial, sin dependencia). **Decisión**: si sólo queremos breadcrumbs, podemos saltar Sentry y escribir 40 líneas a mano. Pero por mantenimiento y robustez (timing, dedupe, integración con React errorBoundary, source maps en dev), Sentry vale la pena.
 
-Resultado: cuando `pickerActive`, no hay overlay ni blur; la página vuelve a verse nítida.
+### 5. Selector de elemento — pulido extra con `@medv/finder`
 
-### B. `src/index.css` — quitar el bloqueo global de pointer-events
+`useElementPicker.ts` no cambia su lógica; sólo `buildSelector` interno mejora. La etiqueta flotante (`shortLabel`) sigue siendo nuestra.
 
-- Borrar la regla `html.feedback-picker-active body *:not(...) { pointer-events: none !important; }` (rompe `elementFromPoint`).
-- Borrar también el bloque ahora inútil de `[data-radix-dialog-overlay]`.
-- Conservar **solo** el bloqueo de tooltips/popovers (Radix) para que la app no muestre tooltips fantasma mientras se hace pick:
-  ```css
-  html.feedback-picker-active [data-radix-tooltip-content],
-  html.feedback-picker-active [data-radix-popper-content-wrapper],
-  html.feedback-picker-active [data-state="delayed-open"][role="tooltip"] {
-    display: none !important;
-  }
-  ```
-- Añadir un cursor global mientras el picker está activo:
-  ```css
-  html.feedback-picker-active, html.feedback-picker-active * { cursor: crosshair !important; }
-  ```
+---
 
-### C. `src/hooks/feedback/useElementPicker.ts` — resolver target con `elementsFromPoint`
+## Base de datos
 
-Aunque al quitar la regla de pointer-events `elementFromPoint` ya funciona, blindamos el picker para que no devuelva nuestros propios overlays:
+Tabla `reportes_feedback` no cambia de esquema; todo va en `metadata jsonb`. Sólo crear (si se aprueba replay) política RLS extra en el bucket para los archivos `*/replay.json.gz` (heredan la actual del bucket `reportes-feedback`, no requiere migración).
 
-- Cambiar `resolveFromPoint` para usar `document.elementsFromPoint(x, y)` y tomar el primer elemento que **no** sea `#feedback-picker-overlay`, `#feedback-picker-label`, `#feedback-picker-hint`, ni `body`/`html`.
-- Aplicar la lógica híbrida (Alt = exacto, default = `pickMeaningfulAncestor`) sobre ese resultado.
-- Como red de seguridad, antes de hacer hit-test ocultar momentáneamente nuestros overlays con `style.pointerEvents = 'none'` (ya lo tienen) y `style.visibility` no es necesario porque `elementsFromPoint` los filtramos por id.
-- Mover los listeners (`mousemove`, `click`, `contextmenu`, `keydown`, `keyup`) a `window` con `capture: true` para asegurar que se reciben aunque algún elemento intercepte.
+---
 
-### D. Versionado y changelog
+## Archivos modificados / nuevos
 
-- `src/constants/appVersion.ts` → `8.227.3`.
-- `src/content/changelog/v8/chunks/0.ts` → entrada patch `8.227.3`: "Picker de elemento del reporte: se elimina el blur del modal mientras se selecciona y se corrige la captura de clicks que dejaba el cursor 'muerto' sobre la página".
+**Nuevos:**
+
+- `src/lib/feedback/screenshot.ts` — wrapper de `modern-screenshot`.
+- `src/lib/feedback/sessionReplay.ts` — buffer rrweb circular.
+- `src/lib/feedback/sentryInit.ts` — init local-only de Sentry.
+
+**Modificados:**
+
+- `src/lib/feedback/elementSelector.ts` — `buildSelector` ahora delega a `@medv/finder`.
+- `src/components/feedback/FeedbackForm.tsx` — botón "Capturar pantalla".
+- `src/components/feedback/FeedbackDialog.tsx` — incluir `breadcrumbs` y `sessionReplay` en `metadata` al enviar.
+- `src/pages/admin/AdminReporteDetalle.tsx` — visor `rrweb-player` cuando exista replay.
+- `src/main.tsx` — `installReplayBuffer()` + `initSentryLocal()`.
+- `package.json` — nuevas deps.
+- `src/constants/appVersion.ts` → `8.228.0`.
+- `src/content/changelog/v8/chunks/0.ts` — entrada minor `8.228.0`.
+
+---
+
+## Plan por fases (puedes ejecutar parcialmente)
+
+
+| Fase                              | Esfuerzo           | Valor                                                  | Dependencia             |
+| --------------------------------- | ------------------ | ------------------------------------------------------ | ----------------------- |
+| **A. `@medv/finder**`             | 10 min, 1 archivo  | Selectores más estables y -50 LOC                      | `@medv/finder`          |
+| **B. `modern-screenshot**`        | 30 min, 2 archivos | Botón "capturar pantalla" — gran UX win                | `modern-screenshot`     |
+| **C. Sentry local + breadcrumbs** | 45 min, 3 archivos | Reportes con historia de clicks/fetch/console          | `@sentry/react`         |
+| **D. rrweb replay**               | 2-3 h, 5 archivos  | "Video" del bug; el visor más útil para el super admin | `rrweb`, `rrweb-player` |
+
+
+Recomiendo **A + B + C** ahora como una sola release `8.228.0`, y **D (rrweb)** como `8.229.0` separado por su tamaño y consideraciones de privacidad.
 
 ## Verificación
 
-1. Abrir modal de reportar bug → click **Seleccionar elemento**.
-2. La pantalla deja de estar borrosa/oscura: se ve la app nítida con el outline azul y la etiqueta flotante.
-3. Mover el mouse sobre cualquier botón / fila / card: el outline se actualiza y la etiqueta muestra `tag — texto`.
-4. Click sobre el elemento → modal reaparece con `selector` y `texto` poblados.
-5. `Alt` cambia a granularidad exacta; `↑/↓` navega padre/hijo; `Enter` confirma; `Esc` y click derecho cancelan.
-6. Pasar el mouse sobre el sidebar **no** abre tooltips ni el menú colapsado mientras el picker está activo.
-7. Tras cerrar el picker, los tooltips y el overlay del Dialog vuelven a la normalidad.
+1. **A**: abrir picker, seleccionar el botón "Nuevo embarque" → el selector capturado es `button[data-testid="..."]` o equivalente estable, no `nav > div:nth-of-type(2) > button:nth-of-type(3)`.
+2. **B**: clic en "Capturar pantalla" → adjunta un PNG del viewport actual; el modal/overlay no aparecen en la captura.
+3. **C**: hacer 3-4 clicks por la app, abrir feedback, enviar → `metadata.breadcrumbs` contiene los clicks/navegaciones con timestamps.
+4. **D**: enviar reporte → en `/admin/reportes/:id` aparece un player con scrubbing; los inputs de password aparecen enmascarados.
+5. Build production sin warnings de tree-shaking; bundle inicial no crece (>1 KB) — verificar con `bunx vite-bundle-visualizer`.
 
-## Archivos modificados
+## Pregunta abierta
 
-- `src/components/feedback/FeedbackDialog.tsx` — composición con primitivas Radix, overlay condicional.
-- `src/index.css` — eliminar regla global de pointer-events y la regla muerta del overlay; mantener bloqueo de tooltips; añadir cursor.
-- `src/hooks/feedback/useElementPicker.ts` — `elementsFromPoint` con filtrado, listeners en `window`.
-- `src/constants/appVersion.ts` — `8.227.3`.
-- `src/content/changelog/v8/chunks/0.ts` — entrada `8.227.3`.
+¿Quieres que arranque con las 3 fases (A+B+C) o sólo A+B para ir incremental? Solo A, vamos a ir en pasos. También: ¿está OK habilitar rrweb sabiendo que graba interacciones (sin passwords) mientras el modal está abierto? Si, adelante.
