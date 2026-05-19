@@ -142,10 +142,11 @@ export function useDesmarcarRevisado() {
       await deleteAuditoriaRevision(revisionId);
 
       try {
-        if (user) {
+        const u = await resolveAuthUser(user).catch(() => null);
+        if (u) {
           await insertBitacora({
-            usuarioId: user.id,
-            usuarioEmail: user.email ?? "",
+            usuarioId: u.id,
+            usuarioEmail: u.email ?? "",
             accion: "desmarcar_hallazgo_revisado",
             modulo: "auditoria",
             entidadId: null,
