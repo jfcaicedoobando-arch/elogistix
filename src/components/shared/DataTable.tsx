@@ -1,9 +1,10 @@
 import React from "react";
+import type { ColumnDef } from "@tanstack/react-table";
 import { Table, TableFooter } from "@/components/ui/table";
 import PaginationControls from "@/components/shared/PaginationControls";
 import { DataTableHeaderRow } from "@/components/shared/dataTable/DataTableHeaderRow";
 import { DataTableBody } from "@/components/shared/dataTable/DataTableBody";
-import { useDataTableSort } from "@/components/shared/dataTable/useDataTableSort";
+import { useTableInstance } from "@/components/shared/dataTable/useTableInstance";
 import type {
   DataTableColumn,
   DataTablePagination,
@@ -11,10 +12,14 @@ import type {
   SortDir,
 } from "@/components/shared/dataTable/types";
 
-export type { DataTableColumn, DataTablePagination, TableDensity, ColumnAlign } from "@/components/shared/dataTable/types";
+export type { DataTableColumn, DataTablePagination, TableDensity, ColumnAlign, SortDir } from "@/components/shared/dataTable/types";
+export { defineColumns } from "@/components/shared/dataTable/defineColumns";
+export type { ColumnDef } from "@tanstack/react-table";
 
 interface DataTableProps<T> {
-  columns: DataTableColumn<T>[];
+  /** Acepta la API legacy (`DataTableColumn<T>[]`) o `ColumnDef<T>[]` nativo
+   *  de TanStack. El motor convierte la primera vía `columnAdapter`. */
+  columns: ReadonlyArray<DataTableColumn<T> | ColumnDef<T, unknown>>;
   data: T[];
   isLoading?: boolean;
   emptyMessage?: string;
@@ -62,32 +67,27 @@ function DataTableInner<T>({
   pagination,
   className,
 }: DataTableProps<T>) {
-  const { sortKey, sortDir, handleSort, sortedData } = useDataTableSort({
+  const table = useTableInstance<T>({
     data,
     columns,
     sortMode,
     controlledSort,
     onSortChange,
+    getRowId: (row, index) => rowKey(row) ?? String(index),
   });
 
+  // Footer recibe el set ya ordenado/visible según TanStack.
+  const orderedData = table.getRowModel().rows.map((r) => r.original);
   const renderedFooter =
-    typeof footer === "function" ? (footer as (d: T[]) => React.ReactNode)(sortedData) : footer;
+    typeof footer === "function" ? (footer as (d: T[]) => React.ReactNode)(orderedData) : footer;
 
   return (
     <div className={className}>
       <div className="relative w-full overflow-x-auto rounded-md [scrollbar-width:thin]">
         <Table>
-          <DataTableHeaderRow
-            columns={columns}
-            striped={striped}
-            bordered={bordered}
-            sortKey={sortKey}
-            sortDir={sortDir}
-            onSort={handleSort}
-          />
+          <DataTableHeaderRow table={table} striped={striped} bordered={bordered} />
           <DataTableBody
-            columns={columns}
-            data={sortedData}
+            table={table}
             isLoading={isLoading}
             skeletonRows={skeletonRows}
             density={density}
@@ -98,12 +98,11 @@ function DataTableInner<T>({
             emptyHint={emptyHint}
             emptyIcon={emptyIcon}
             emptyState={emptyState}
-            rowKey={rowKey}
             rowClassName={rowClassName}
             onRowClick={onRowClick}
             onRowMouseEnter={onRowMouseEnter}
           />
-          {renderedFooter && !isLoading && sortedData.length > 0 && (
+          {renderedFooter && !isLoading && orderedData.length > 0 && (
             <TableFooter>{renderedFooter}</TableFooter>
           )}
         </Table>
@@ -123,8 +122,14 @@ function DataTableInner<T>({
 }
 
 /**
- * DataTable — componente genérico de tabla.
- * Refactorizado en sub-componentes: DataTableHeaderRow, DataTableBody y
- * useDataTableSort. Mantiene compatibilidad con la API previa.
+ * DataTable — tabla genérica del ERP.
+ *
+ * Refactor 9.1.0: el motor interno corre 100% sobre `@tanstack/react-table`.
+ * La API pública (`DataTableColumn<T>`, `controlledSort`, `sortMode`, etc.)
+ * sigue intacta vía adapter para no romper los ~40 call-sites legacy. Para
+ * código nuevo, pasar `ColumnDef<T>[]` directo (usar `defineColumns`).
+ *
+ * Sin `useDataTableSort`, sin `useMemo` que ordena arreglos, sin `useEffect`
+ * que sincronice estados paralelos.
  */
 export const DataTable = DataTableInner;
