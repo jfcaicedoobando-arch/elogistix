@@ -110,18 +110,7 @@ export function EmbarquesFiltrosCampos(props: EmbarquesFiltrosCamposProps) {
     </Select>
   );
 
-  const ProformaSelect = (
-    <Select value={filterProforma} onValueChange={onFilterProformaChange}>
-      <SelectTrigger className="w-full md:w-[190px] md:min-w-[180px]" title="Filtrar por estado de proforma" aria-label="Proforma">
-        <SelectValue placeholder="Proforma" className="truncate" />
-      </SelectTrigger>
-      <SelectContent>
-        <SelectItem value="todos">Todas las proformas</SelectItem>
-        <SelectItem value="con">Con proforma</SelectItem>
-        <SelectItem value="sin">Sin proforma</SelectItem>
-      </SelectContent>
-    </Select>
-  );
+
 
   const FechaDesde = (
     <DatePickerMx
