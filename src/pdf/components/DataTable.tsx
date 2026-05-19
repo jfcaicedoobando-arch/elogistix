@@ -24,7 +24,7 @@ interface Props<T> {
  * (no <table> HTML). Cada fila puede romperse entre páginas si es muy alta,
  * pero la descripción se envuelve dentro de la celda sin desbordar.
  */
-export function DataTable<T extends Record<string, unknown>>({ columns, rows, renderSubrow }: Props<T>) {
+export function DataTable<T>({ columns, rows, renderSubrow }: Props<T>) {
   return (
     <View style={styles.table}>
       <View style={styles.tableHeader} fixed>
@@ -41,7 +41,7 @@ export function DataTable<T extends Record<string, unknown>>({ columns, rows, re
             <View style={styles.tableRow} wrap={false}>
               {columns.map((col) => (
                 <Text key={col.key} style={[styles.td, ...flat(col.cellStyle)]}>
-                  {col.render ? col.render(row) : String(row[col.key] ?? "")}
+                  {col.render ? col.render(row) : String((row as Record<string, unknown>)[col.key] ?? "")}
                 </Text>
               ))}
             </View>
