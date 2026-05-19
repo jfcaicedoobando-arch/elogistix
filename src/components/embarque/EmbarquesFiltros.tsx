@@ -35,8 +35,6 @@ interface Props {
   onFilterClienteChange: (v: string) => void;
   filterOperador: string;
   onFilterOperadorChange: (v: string) => void;
-  filterProforma: string;
-  onFilterProformaChange: (v: string) => void;
   fechaDesde: string;
   onFechaDesdeChange: (v: string) => void;
   fechaHasta: string;
@@ -44,6 +42,7 @@ interface Props {
   clientes: ClienteOption[];
   operadores: string[];
 }
+
 
 export default function EmbarquesFiltros(props: Props) {
   const [sheetOpen, setSheetOpen] = useState(false);
