@@ -1,138 +1,136 @@
 ## Objetivo
 
-Reemplazar piezas hechas a mano del módulo de reportar bugs con librerías open-source maduras, sin sacar los datos de Lovable Cloud. Resultado esperado: menos código propio que mantener, reportes con más contexto técnico, y mejor UX (captura de pantalla automática + selectores estables + replay opcional).
+Añadir un botón **"Capturar pantalla"** dentro del modal de reportar bug/mejora que tome un screenshot del viewport actual y lo adjunte como una imagen más del reporte, usando la librería [`modern-screenshot`](https://github.com/qq15725/modern-screenshot).
 
-## Dependencias a añadir
+## Dependencia
 
 ```
-bun add @medv/finder modern-screenshot rrweb rrweb-player @sentry/react
+bun add modern-screenshot
 ```
 
-Peso estimado en bundle: ~25 KB de `@medv/finder` + `modern-screenshot`, el resto se carga **bajo demanda** (lazy import) sólo cuando el usuario abre el modal de feedback o ocurre un error → 0 KB en el shell autenticado normal.
+~30 KB minified+gzip. Importación lazy (`await import("modern-screenshot")`) — sólo se carga cuando el usuario hace clic en el botón, no en el bundle inicial.
 
----
+## Cambios
 
-## Cambios por pieza
-
-### 1. Selector de elemento → `@medv/finder` (reemplaza `buildSelector`)
-
-`src/lib/feedback/elementSelector.ts`:
-
-- Quitar `buildSelector`, `cssEscape` y el path con `:nth-of-type` casero (~50 líneas menos).
-- Mantener `pickMeaningfulAncestor`, `elementText`, `shortLabel`, `isMeaningful`.
-- Re-exportar:
-  ```ts
-  import { finder } from "@medv/finder";
-  export const buildSelector = (el: Element | null): string =>
-    el ? finder(el, { seedMinLength: 1, optimizedMinLength: 2, threshold: 800 }) : "";
-  ```
-- `finder` ya prioriza `id`, `data-testid`, `aria-label`, clases estables y evita `:nth-child` cuando puede. Sin cambios en consumidores.
-
-### 2. Captura de pantalla automática → `modern-screenshot`
-
-Nuevo helper `src/lib/feedback/screenshot.ts`:
+### 1. Nuevo helper `src/lib/feedback/screenshot.ts`
 
 ```ts
-import { domToBlob } from "modern-screenshot";
-export async function captureViewport(): Promise<Blob> {
-  return domToBlob(document.documentElement, {
-    scale: window.devicePixelRatio,
-    backgroundColor: getComputedStyle(document.body).backgroundColor,
-    filter: (n) => !(n instanceof Element) || !["feedback-picker-overlay","feedback-picker-label","feedback-picker-hint"].includes(n.id),
+import { APP_VERSION } from "@/constants/appVersion";
+
+const PICKER_IDS = new Set([
+  "feedback-picker-overlay",
+  "feedback-picker-label",
+  "feedback-picker-hint",
+]);
+
+export async function captureViewport(): Promise<File> {
+  const { domToBlob } = await import("modern-screenshot");
+  const blob = await domToBlob(document.documentElement, {
+    scale: Math.min(window.devicePixelRatio, 2),
+    backgroundColor: getComputedStyle(document.body).backgroundColor || "#fff",
+    filter: (node) => {
+      if (!(node instanceof Element)) return true;
+      if (PICKER_IDS.has(node.id)) return false;
+      // Excluir el modal del feedback para no fotografiar el form encima
+      if (node.closest?.("[data-feedback-modal]")) return false;
+      return true;
+    },
   });
+  const ts = new Date().toISOString().replace(/[:.]/g, "-");
+  return new File([blob], `captura-${ts}.png`, { type: "image/png" });
 }
 ```
 
-En `FeedbackForm.tsx`:
+### 2. Marcar el modal con `data-feedback-modal`
 
-- Nuevo botón "📷 Capturar pantalla" junto a "Adjuntar imagen".
-- Antes de capturar: cerrar/ocultar el modal con `pickerActive` (ya reusable) ~200ms, capturar, convertir a `File` y añadir a `imagenes`.
-- Mantiene Ctrl+V y file picker actuales.
+En `src/components/feedback/FeedbackDialog.tsx`, añadir el atributo al `DialogPrimitive.Content` para que el filtro lo excluya:
 
-### 3. Session replay opcional → `rrweb`
+```tsx
+<DialogPrimitive.Content data-feedback-modal ...>
+```
 
-Nuevo helper `src/lib/feedback/sessionReplay.ts`:
+### 3. Botón "Capturar pantalla" en `FeedbackImageUploader.tsx`
 
-- Buffer circular en memoria de los **últimos 15 segundos** de eventos rrweb (config `recordCanvas: false`, `maskAllInputs: true` para no capturar passwords/PII).
-- API: `startReplayBuffer()`, `stopReplayBuffer()`, `getReplaySnapshot(): RrwebEvent[]`.
-- `installReplayBuffer()` se llama en `main.tsx` tras `installConsoleBuffer()`.
-- Lazy: `await import("rrweb")` la primera vez.
+Añadir un segundo `Button` junto a "Adjuntar imagen". Necesita:
 
-En `crearReporte` → `metadata.sessionReplay` recibe los eventos serializados (gzip vía `CompressionStream`) y se guardan en columna `metadata jsonb` o, si pesa >100 KB, como adjunto en el bucket `reportes-feedback/{reporteId}/replay.json.gz`.
+- Aceptar prop opcional `onCapture?: () => Promise<File | null>` (la lógica de ocultar el modal vive arriba, en `FeedbackForm`, para tener acceso a `onPickerActiveChange`).
+- Estado interno `capturing` para deshabilitar y mostrar "Capturando…".
 
-En `AdminReporteDetalle.tsx`: si existe replay, renderizar `rrweb-player` con controles play/pause/speed.
+```tsx
+{onCapture && (
+  <Button
+    type="button"
+    variant="outline"
+    size="sm"
+    disabled={value.length >= MAX_IMAGES || capturing}
+    onClick={async () => {
+      setCapturing(true);
+      try {
+        const file = await onCapture();
+        if (file) addFiles([file]);
+      } finally {
+        setCapturing(false);
+      }
+    }}
+  >
+    <Camera className="h-4 w-4 mr-1.5" />
+    {capturing ? "Capturando…" : "Capturar pantalla"}
+  </Button>
+)}
+```
 
-**Privacidad**: por defecto sólo se graba mientras el modal está abierto + 15s previos. NO se graba continuamente para todos los usuarios.
+### 4. Orquestar en `FeedbackForm.tsx`
 
-### 4. Stack traces y breadcrumbs de errores → `@sentry/react` en modo local
+Pasar `onCapture` al uploader. La función:
 
-- **NO** usamos DSN externo. Inicializamos Sentry sólo para que capture errores y mantenga breadcrumbs en memoria (clicks, navegación, fetch, console, XHR) — todo se queda en el cliente.
-- En `main.tsx`:
-  ```ts
-  Sentry.init({
-    dsn: undefined,            // no envía a ningún backend
-    integrations: [Sentry.browserTracingIntegration(), Sentry.breadcrumbsIntegration()],
-    beforeSend: () => null,    // belt-and-suspenders
-    maxBreadcrumbs: 50,
-  });
-  ```
-- Al enviar un reporte: `Sentry.getCurrentScope().getBreadcrumbs()` se incluye en `metadata.breadcrumbs`.
-- Si hay un error JS reciente sin manejar: `Sentry.getLastEventId()` y `Sentry.getCurrentScope()._eventProcessors`... más simple: mantener un `lastError` propio con `window.addEventListener("error")` y `unhandledrejection` (ya casi-trivial, sin dependencia). **Decisión**: si sólo queremos breadcrumbs, podemos saltar Sentry y escribir 40 líneas a mano. Pero por mantenimiento y robustez (timing, dedupe, integración con React errorBoundary, source maps en dev), Sentry vale la pena.
+1. Llama `onPickerActiveChange?.(true)` para ocultar el modal (reusa la lógica que ya teníamos para el picker: `opacity:0 pointer-events-none` + sin overlay).
+2. `await new Promise(r => setTimeout(r, 250))` para que el DOM repinte sin el modal.
+3. `const file = await captureViewport()`.
+4. `onPickerActiveChange?.(false)` para restaurar el modal.
+5. Si falla, mostrar toast de error y devolver `null`.
 
-### 5. Selector de elemento — pulido extra con `@medv/finder`
+```tsx
+const handleCapture = useCallback(async (): Promise<File | null> => {
+  onPickerActiveChange?.(true);
+  try {
+    await new Promise((r) => setTimeout(r, 250));
+    return await captureViewport();
+  } catch (e) {
+    toast({ title: "No se pudo capturar la pantalla", description: (e as Error).message, variant: "destructive" });
+    return null;
+  } finally {
+    onPickerActiveChange?.(false);
+  }
+}, [onPickerActiveChange, toast]);
+```
 
-`useElementPicker.ts` no cambia su lógica; sólo `buildSelector` interno mejora. La etiqueta flotante (`shortLabel`) sigue siendo nuestra.
+### 5. Versionado
 
----
+- `src/constants/appVersion.ts` → `8.229.0`.
+- `src/content/changelog/v8/chunks/0.ts` — entrada minor `8.229.0`.
 
-## Base de datos
+## Verificación
 
-Tabla `reportes_feedback` no cambia de esquema; todo va en `metadata jsonb`. Sólo crear (si se aprueba replay) política RLS extra en el bucket para los archivos `*/replay.json.gz` (heredan la actual del bucket `reportes-feedback`, no requiere migración).
-
----
+1. Abrir modal → clic **Capturar pantalla** → el modal desaparece ~250 ms, se toma la captura, vuelve a aparecer con el PNG adjunto en la grilla.
+2. La captura **no** muestra el modal ni los overlays del picker.
+3. Funciona en /embarques, /facturacion y demás rutas (incluye contenido scrolleado visible en el viewport).
+4. Si se llega a 3 imágenes, el botón queda deshabilitado.
+5. Bundle inicial no aumenta significativamente (verificable con devtools network: `modern-screenshot` aparece sólo al hacer clic).
 
 ## Archivos modificados / nuevos
 
 **Nuevos:**
-
-- `src/lib/feedback/screenshot.ts` — wrapper de `modern-screenshot`.
-- `src/lib/feedback/sessionReplay.ts` — buffer rrweb circular.
-- `src/lib/feedback/sentryInit.ts` — init local-only de Sentry.
+- `src/lib/feedback/screenshot.ts`
 
 **Modificados:**
+- `src/components/feedback/FeedbackDialog.tsx` — añadir `data-feedback-modal`.
+- `src/components/feedback/FeedbackForm.tsx` — `handleCapture` + pasar `onCapture` al uploader.
+- `src/components/feedback/FeedbackImageUploader.tsx` — botón "Capturar pantalla" (opcional via prop).
+- `package.json` — `modern-screenshot`.
+- `src/constants/appVersion.ts` → `8.229.0`.
+- `src/content/changelog/v8/chunks/0.ts` — entrada `8.229.0`.
 
-- `src/lib/feedback/elementSelector.ts` — `buildSelector` ahora delega a `@medv/finder`.
-- `src/components/feedback/FeedbackForm.tsx` — botón "Capturar pantalla".
-- `src/components/feedback/FeedbackDialog.tsx` — incluir `breadcrumbs` y `sessionReplay` en `metadata` al enviar.
-- `src/pages/admin/AdminReporteDetalle.tsx` — visor `rrweb-player` cuando exista replay.
-- `src/main.tsx` — `installReplayBuffer()` + `initSentryLocal()`.
-- `package.json` — nuevas deps.
-- `src/constants/appVersion.ts` → `8.228.0`.
-- `src/content/changelog/v8/chunks/0.ts` — entrada minor `8.228.0`.
+## Notas
 
----
-
-## Plan por fases (puedes ejecutar parcialmente)
-
-
-| Fase                              | Esfuerzo           | Valor                                                  | Dependencia             |
-| --------------------------------- | ------------------ | ------------------------------------------------------ | ----------------------- |
-| **A. `@medv/finder**`             | 10 min, 1 archivo  | Selectores más estables y -50 LOC                      | `@medv/finder`          |
-| **B. `modern-screenshot**`        | 30 min, 2 archivos | Botón "capturar pantalla" — gran UX win                | `modern-screenshot`     |
-| **C. Sentry local + breadcrumbs** | 45 min, 3 archivos | Reportes con historia de clicks/fetch/console          | `@sentry/react`         |
-| **D. rrweb replay**               | 2-3 h, 5 archivos  | "Video" del bug; el visor más útil para el super admin | `rrweb`, `rrweb-player` |
-
-
-Recomiendo **A + B + C** ahora como una sola release `8.228.0`, y **D (rrweb)** como `8.229.0` separado por su tamaño y consideraciones de privacidad.
-
-## Verificación
-
-1. **A**: abrir picker, seleccionar el botón "Nuevo embarque" → el selector capturado es `button[data-testid="..."]` o equivalente estable, no `nav > div:nth-of-type(2) > button:nth-of-type(3)`.
-2. **B**: clic en "Capturar pantalla" → adjunta un PNG del viewport actual; el modal/overlay no aparecen en la captura.
-3. **C**: hacer 3-4 clicks por la app, abrir feedback, enviar → `metadata.breadcrumbs` contiene los clicks/navegaciones con timestamps.
-4. **D**: enviar reporte → en `/admin/reportes/:id` aparece un player con scrubbing; los inputs de password aparecen enmascarados.
-5. Build production sin warnings de tree-shaking; bundle inicial no crece (>1 KB) — verificar con `bunx vite-bundle-visualizer`.
-
-## Pregunta abierta
-
-¿Quieres que arranque con las 3 fases (A+B+C) o sólo A+B para ir incremental? Solo A, vamos a ir en pasos. También: ¿está OK habilitar rrweb sabiendo que graba interacciones (sin passwords) mientras el modal está abierto? Si, adelante.
+- El picker visual y la captura comparten el patrón "ocultar modal + restaurar"; no se duplica lógica.
+- `modern-screenshot` captura sólo el viewport visible (no `scrollHeight` completo) porque pasamos `document.documentElement` con el scroll actual. Si más adelante queremos página completa, basta cambiar a `domToBlob(document.documentElement, { height: document.documentElement.scrollHeight })`.
