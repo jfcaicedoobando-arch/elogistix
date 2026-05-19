@@ -1,6 +1,6 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { ImagePlus, X } from "lucide-react";
+import { Camera, ImagePlus, X } from "lucide-react";
 import { useToast } from "@/hooks/shared/useToast";
 
 const MAX_IMAGES = 3;
@@ -11,11 +11,24 @@ interface Props {
   value: File[];
   onChange: (files: File[]) => void;
   enabled?: boolean;
+  onCapture?: () => Promise<File | null>;
 }
 
-export function FeedbackImageUploader({ value, onChange, enabled = true }: Props) {
+export function FeedbackImageUploader({ value, onChange, enabled = true, onCapture }: Props) {
   const inputRef = useRef<HTMLInputElement | null>(null);
   const { toast } = useToast();
+  const [capturing, setCapturing] = useState(false);
+
+  const handleCaptureClick = async () => {
+    if (!onCapture) return;
+    setCapturing(true);
+    try {
+      const file = await onCapture();
+      if (file) addFiles([file]);
+    } finally {
+      setCapturing(false);
+    }
+  };
 
   const addFiles = (files: File[]) => {
     const valid: File[] = [];
@@ -70,11 +83,23 @@ export function FeedbackImageUploader({ value, onChange, enabled = true }: Props
           variant="outline"
           size="sm"
           onClick={() => inputRef.current?.click()}
-          disabled={value.length >= MAX_IMAGES}
+          disabled={value.length >= MAX_IMAGES || capturing}
         >
           <ImagePlus className="h-4 w-4 mr-1.5" />
           Adjuntar imagen
         </Button>
+        {onCapture && (
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={handleCaptureClick}
+            disabled={value.length >= MAX_IMAGES || capturing}
+          >
+            <Camera className="h-4 w-4 mr-1.5" />
+            {capturing ? "Capturando…" : "Capturar pantalla"}
+          </Button>
+        )}
         <span className="text-xs text-muted-foreground">
           {value.length}/{MAX_IMAGES} · también puedes pegar con Ctrl+V
         </span>
