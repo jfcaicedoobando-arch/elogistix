@@ -1,3 +1,4 @@
+import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { FileText, Receipt } from "lucide-react";
@@ -14,6 +15,8 @@ interface Props {
   totalCosto: number;
   utilidad: number;
   margen: number;
+  embarqueId?: string;
+  canEdit?: boolean;
 }
 
 const kpiColors = [
