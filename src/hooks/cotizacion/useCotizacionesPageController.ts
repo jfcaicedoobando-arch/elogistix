@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { useListPageState } from "@/hooks/shared/useListPageState";
 import { useCotizaciones, useDeleteCotizacion, usePrefetchCotizacion } from "@/hooks/cotizacion/useCotizaciones";
-import { useDuplicarCotizacion } from "@/hooks/cotizacion/mutations/useDuplicarCotizacion";
+
 import { useClientesForSelect } from "@/hooks/cliente/useClientes";
 import { usePermissions } from "@/hooks/shared/usePermissions";
 import { getErrorMessage } from "@/lib/errors";
@@ -34,7 +34,7 @@ export function useCotizacionesPageController() {
   const { data: clientes = [] } = useClientesForSelect();
   const prefetchCotizacion = usePrefetchCotizacion();
   const deleteCotizacion = useDeleteCotizacion();
-  const duplicarCotizacion = useDuplicarCotizacion();
+
 
   const [cotizacionAEliminar, setCotizacionAEliminar] = useState<string | null>(null);
 
@@ -74,16 +74,6 @@ export function useCotizacionesPageController() {
   const irAEditar = (id: string) => navigate(`/cotizaciones/${id}/editar`);
   const irADetalle = (id: string) => navigate(`/cotizaciones/${id}`);
 
-  const duplicar = (id: string) => {
-    duplicarCotizacion.mutate(id, {
-      onSuccess: (data) => {
-        notifySuccess(toast, { title: "Cotización duplicada", description: `Se creó ${data.folio} como Borrador.` });
-      },
-      onError: (err) => {
-        notifyError(toast, { title: "Error al duplicar", description: getErrorMessage(err)});
-      },
-    });
-  };
 
   const confirmarEliminar = async () => {
     if (!cotizacionAEliminar) return;
@@ -139,7 +129,7 @@ export function useCotizacionesPageController() {
     setCotizacionAEliminar,
     confirmarEliminar,
     isDeleting: deleteCotizacion.isPending,
-    duplicar,
+    
     exportar,
     irANueva,
     irAEditar,

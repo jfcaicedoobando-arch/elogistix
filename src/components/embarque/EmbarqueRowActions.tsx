@@ -1,4 +1,4 @@
-import { MoreHorizontal, Pencil, Copy, Trash2 } from "lucide-react";
+import { MoreHorizontal, Pencil, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger,
@@ -8,11 +8,10 @@ import type { EmbarqueRow } from "@/hooks/embarque";
 interface Props {
   embarque: EmbarqueRow;
   onEditar: (e: EmbarqueRow) => void;
-  onDuplicar: (e: EmbarqueRow) => void;
   onEliminar: (e: EmbarqueRow) => void;
 }
 
-export default function EmbarqueRowActions({ embarque, onEditar, onDuplicar, onEliminar }: Props) {
+export default function EmbarqueRowActions({ embarque, onEditar, onEliminar }: Props) {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild onClick={(ev) => ev.stopPropagation()}>
@@ -23,9 +22,6 @@ export default function EmbarqueRowActions({ embarque, onEditar, onDuplicar, onE
       <DropdownMenuContent align="end">
         <DropdownMenuItem onClick={(ev) => { ev.stopPropagation(); onEditar(embarque); }}>
           <Pencil className="mr-2 h-4 w-4" /> Editar
-        </DropdownMenuItem>
-        <DropdownMenuItem onClick={(ev) => { ev.stopPropagation(); onDuplicar(embarque); }}>
-          <Copy className="mr-2 h-4 w-4" /> Duplicar
         </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem

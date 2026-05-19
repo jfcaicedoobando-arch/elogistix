@@ -1,4 +1,4 @@
-import { MoreHorizontal, Pencil, Copy, Trash2 } from "lucide-react";
+import { MoreHorizontal, Pencil, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -11,7 +11,6 @@ import type { CotizacionListItem } from "@/hooks/cotizacion";
 
 export interface AccionesParams {
   onEditar: (id: string) => void;
-  onDuplicar: (id: string) => void;
   onEliminar: (id: string) => void;
 }
 
@@ -31,9 +30,6 @@ export function renderAcciones(r: CotizacionListItem, params: AccionesParams) {
       <DropdownMenuContent align="end">
         <DropdownMenuItem onClick={(e) => { e.stopPropagation(); params.onEditar(r.id); }}>
           <Pencil className="mr-2 h-4 w-4" /> Editar
-        </DropdownMenuItem>
-        <DropdownMenuItem onClick={(e) => { e.stopPropagation(); params.onDuplicar(r.id); }}>
-          <Copy className="mr-2 h-4 w-4" /> Duplicar
         </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem

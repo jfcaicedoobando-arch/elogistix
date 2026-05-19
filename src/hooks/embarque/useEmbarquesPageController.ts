@@ -37,8 +37,8 @@ export function useEmbarquesPageController() {
   const { isLoading, isEmptyState, contenedoresPorExpediente, extras } = state;
 
   const [embarqueAEliminar, setEmbarqueAEliminar] = useState<EmbarqueRow | null>(null);
-  const [embarqueADuplicar, setEmbarqueADuplicar] = useState<EmbarqueRow | null>(null);
   const [exportandoCsv, setExportandoCsv] = useState(false);
+
   const { organizationId } = useOrgFilter();
 
   const { data: operadoresUnicos = [] } = useOperadoresDistintos();
@@ -70,11 +70,11 @@ export function useEmbarquesPageController() {
       liquidacionMap,
       contenedoresPorExpediente,
       onEditar: (e) => navigate(`/embarques/${e.id}/editar`),
-      onDuplicar: setEmbarqueADuplicar,
       onEliminar: setEmbarqueAEliminar,
     }),
     [canEdit, liquidacionMap, docsMap, contenedoresPorExpediente, navigate],
   );
+
 
   const exportarCsv = useCallback(async () => {
     setExportandoCsv(true);
@@ -183,9 +183,8 @@ export function useEmbarquesPageController() {
     // dialogs
     embarqueAEliminar,
     setEmbarqueAEliminar,
-    embarqueADuplicar,
-    setEmbarqueADuplicar,
     // handlers
+
     handleEliminar,
     exportarCsv,
     exportandoCsv,

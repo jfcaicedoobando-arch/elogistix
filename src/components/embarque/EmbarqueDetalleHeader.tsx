@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router-dom";
-import { Edit, Printer, ChevronRight, Copy, Trash2, Share2, MoreHorizontal } from "lucide-react";
+import { Edit, Printer, ChevronRight, Trash2, Share2, MoreHorizontal } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -25,15 +25,15 @@ interface Props {
   embarqueId: string;
   onAvanzarEstado: () => void;
   onCompartirTracking: () => void;
-  onAbrirDuplicar: () => void;
   onAbrirEliminar: () => void;
 }
 
 export function EmbarqueDetalleHeader({
   embarque, estadoVisual, siguienteEstado, canEdit, avanzandoEstado,
   trackingPending, embarqueId, onAvanzarEstado, onCompartirTracking,
-  onAbrirDuplicar, onAbrirEliminar,
+  onAbrirEliminar,
 }: Props) {
+
   const navigate = useNavigate();
 
   return (
@@ -92,11 +92,6 @@ export function EmbarqueDetalleHeader({
             {canEdit && siguienteEstado && (
               <DropdownMenuItem onClick={() => navigate(`/embarques/${embarqueId}/editar`)}>
                 <Edit className="h-4 w-4 mr-2" /> Editar
-              </DropdownMenuItem>
-            )}
-            {canEdit && (
-              <DropdownMenuItem onClick={onAbrirDuplicar}>
-                <Copy className="h-4 w-4 mr-2" /> Duplicar
               </DropdownMenuItem>
             )}
             <DropdownMenuItem onClick={() => window.print()}>
