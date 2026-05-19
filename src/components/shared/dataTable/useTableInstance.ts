@@ -7,8 +7,9 @@
  *     en los RPC de Supabase). En modo client, TanStack ordena con
  *     `getSortedRowModel`.
  *
- * Sin `useDataTableSort`, sin `useMemo([...data].sort(...))`, sin `useEffect`
- * que rehidrate el orden. TanStack es la única fuente de verdad.
+ * Regla del proyecto: TanStack es la única fuente de verdad del orden.
+ * No reintroducir `useMemo` que ordene `data` ni `useEffect` que rehidrate
+ * el estado de sort desde fuera del page-state.
  */
 import { useMemo } from "react";
 import {
