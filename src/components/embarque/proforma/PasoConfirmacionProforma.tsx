@@ -1,5 +1,5 @@
 import { Badge } from "@/components/ui/badge";
-import { DataTable } from "@/components/shared/DataTable";
+import { DataTable, defineColumns, type ColumnDef } from "@/components/shared/DataTable";
 import { CheckCircle2 } from "lucide-react";
 import { formatCurrency, formatDiasCredito } from "@/lib/formatters";
 import type { Tables } from "@/types/db";
