@@ -22,6 +22,14 @@ export interface ChangelogEntry {
  */
 export const recentChangelog: ChangelogEntry[] = [
   {
+    version: "10.2.0",
+    date: "2026-05-19",
+    type: "minor",
+    title: "PDFs migrados a @react-pdf/renderer (Document/Page/View/Text)",
+    summary: "Cotización, Proforma (normal + consolidada) y Rentabilidad ahora se generan como PDFs binarios con @react-pdf/renderer + StyleSheet centralizado. Adiós a window.print(); nueva ruta /dev/pdf-preview/cotizacion/:id con PDFViewer.",
+    description: "Nuevo paquete src/pdf/ (theme/styles, components Flexbox, documents y render). Adaptadores en src/generators/*Pdf.tsx preservan las firmas — CotizacionDetalle, useDescargarProformaPdf, useDialogGenerarProformaController y useReportesPageController no requieren cambios. Helpers HTML legacy eliminados (pdfShell, dimensiones, proforma/{styles,header,consolidada}). APP_VERSION 10.2.0.",
+  },
+  {
     version: "10.1.4",
     date: "2026-05-19",
     type: "patch",

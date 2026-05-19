@@ -37,6 +37,7 @@ const Cotizaciones = lazy(() => import("./pages/cotizaciones/Cotizaciones"));
 const NuevaCotizacion = lazy(() => import("./pages/cotizaciones/NuevaCotizacion"));
 const CotizacionDetalle = lazy(() => import("./pages/cotizaciones/CotizacionDetalle"));
 const EditarCotizacion = lazy(() => import("./pages/cotizaciones/EditarCotizacion"));
+const PdfPreviewCotizacion = lazy(() => import("./pages/dev/PdfPreviewCotizacion"));
 
 const Clientes = lazy(() => import("./pages/clientes/Clientes"));
 const ClienteDetalle = lazy(() => import("./pages/clientes/ClienteDetalle"));
@@ -186,6 +187,7 @@ const App = () => (
               <Route path="/cotizaciones/nueva" element={<NuevaCotizacion />} />
               <Route path="/cotizaciones/:id" element={<CotizacionDetalle />} />
               <Route path="/cotizaciones/:id/editar" element={<EditarCotizacion />} />
+              <Route path="/dev/pdf-preview/cotizacion/:id" element={<PdfPreviewCotizacion />} />
               <Route path="/reportes/rentabilidad" element={<Reportes />} />
               <Route path="/reportes" element={<Navigate to="/reportes/rentabilidad" replace />} />
               <Route path="/rentabilidad" element={<Navigate to="/reportes/rentabilidad" replace />} />
