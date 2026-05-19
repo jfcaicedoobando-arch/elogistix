@@ -67,7 +67,6 @@ function safeSelector(el: Element): string | undefined {
     return finder(el as HTMLElement, {
       seedMinLength: 1,
       optimizedMinLength: 2,
-      threshold: 400,
       timeoutMs: 80,
     });
   } catch {
