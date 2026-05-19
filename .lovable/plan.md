@@ -1,38 +1,33 @@
-# Eliminar opción "Duplicar" en embarques y cotizaciones
+## Problema
 
-## Alcance
+En `ELIMP00216 → Editar`, los selects **Shipper (Exportador)** y **Consignatario** salen vacíos aunque el embarque ya tiene datos guardados.
 
-Quitar todos los puntos de entrada en UI para duplicar embarques y cotizaciones, para todos los usuarios (sin tocar la lógica del backend ni los servicios, para evitar regresiones en otras pantallas y permitir reactivarlo si más adelante se decide).
+**Causa raíz:** en la BD `embarques.shipper` y `embarques.consignatario` se guardan como **string con el nombre resuelto** (ej. `"HEBEI LONGDA... — Proveedor (CHINA)"` o `"INDIMEX TRADING"` para "mismo cliente"), pero los `<Select>` del wizard esperan como `value` un **`contacto.id`**, `"__cliente__"` o `"__otro__"`. El mapper `mapEmbarqueRowToFormValues` copia el string crudo, que no coincide con ningún `SelectItem`, así que el control se ve vacío.
 
-## Cambios por archivo
+## Solución (solo frontend)
 
-### Embarques
+Agregar una resolución inversa una sola vez, después de que carguen los contactos del cliente y el embarque, en `useEditarEmbarqueWizard.ts`:
 
-1. **`src/components/embarque/EmbarqueRowActions.tsx`** — quitar el `DropdownMenuItem` "Duplicar" y la prop `onDuplicar`.
-2. **`src/components/embarque/embarqueColumns.tsx`** — quitar la prop/uso `onDuplicar` que se pasa a `EmbarqueRowActions`.
-3. **`src/hooks/embarque/useEmbarquesPageController.ts`** — quitar el state `embarqueADuplicar`/`setEmbarqueADuplicar`, eliminar `onDuplicar` del armado de columnas y dejar de exportarlos.
-4. **`src/pages/embarques/Embarques.tsx`** — quitar el import y render de `DialogDuplicarEmbarque` y las referencias `embarqueADuplicar`/`setEmbarqueADuplicar`.
-5. **`src/components/embarque/EmbarqueDetalleHeader.tsx`** — quitar el `DropdownMenuItem` "Duplicar" y la prop `onAbrirDuplicar`.
-6. **`src/pages/embarques/EmbarqueDetalle.tsx`** — quitar el state `dialogDuplicarAbierto`, el render de `DialogDuplicarEmbarque` y la prop pasada al header.
+1. Nueva utilidad `resolverValorContactoDesdeTexto(stored, contactos, clienteNombre, opciones)` en `src/lib/contacto/index.ts`:
+   - Si `stored` está vacío → devolver `{ value: '', manual: '' }`.
+   - Si `opciones.permitirCliente` y `stored === clienteNombre` → `{ value: '__cliente__', manual: '' }`.
+   - Buscar contacto donde `${nombre} — ${tipo} (${pais}) === stored` (o como fallback, `nombre === stored`) → `{ value: contacto.id, manual: '' }`.
+   - En cualquier otro caso → `{ value: '__otro__', manual: stored }`.
 
-### Cotizaciones
+2. En `useEditarEmbarqueWizard`, nuevo `useEffect` con guard `hidratoContactos` (state) que dispara cuando `initialized && contactos.length >= 0 && embarque` y resuelve:
+   - `shipper`/`shipperManual` con `permitirCliente: false`.
+   - `consignatario`/`consignatarioManual` con `permitirCliente: true` usando `selectedCliente?.nombre`.
+   - Usar `methods.setValue(campo, valor, { shouldDirty: false })` para no marcar el form como modificado.
+   - Marcar `hidratoContactos = true` y no volver a correr.
 
-7. **`src/components/cotizacion/columnsParts/accionesCell.tsx`** — quitar el `DropdownMenuItem` "Duplicar" y la prop `onDuplicar`.
-8. **`src/components/cotizacion/cotizacionesColumns.tsx`** — quitar el cableo `onDuplicar: c.duplicar` y dependencia del `useMemo`.
-9. **`src/hooks/cotizacion/useCotizacionesPageController.ts`** — quitar el `useDuplicarCotizacion`, la función `duplicar` y su export en el retorno del hook.
+3. Test unitario para `resolverValorContactoDesdeTexto` en `src/lib/contacto/__tests__/` cubriendo los 4 casos (vacío, cliente, contacto match, otro).
 
-### Versionado y changelog
+## Verificación
 
-10. **`src/constants/appVersion.ts`** → bump a **8.223.0**.
-11. **`src/content/changelog/v8/chunks/0.ts`** y **`src/content/changelogData.ts`** → entrada 8.223.0 explicando la eliminación.
+- Entrar a `/embarques/30525762-…/editar` y confirmar que Shipper muestra "HEBEI LONGDA… — Proveedor (CHINA)" y Consignatario muestra "Mismo cliente (INDIMEX TRADING)".
+- Probar con un embarque cuyo shipper sea texto libre (caer en "Otro" con el manual prellenado).
+- Guardar sin tocar nada y verificar que `cambiosEmbarque` (diff) no reporta cambios en `shipper`/`consignatario`.
 
-## Lo que NO se toca
+## Changelog
 
-- `src/components/embarque/DialogDuplicarEmbarque.tsx`, `src/services/embarque/mutations.ts` (función `duplicarEmbarque`), `src/services/cotizacion/conversiones/duplicar.ts` y `src/hooks/cotizacion/mutations/useDuplicarCotizacion.ts` quedan en el repo como código muerto, sin imports activos. Esto deja la puerta abierta a reactivarlo sin reimplementar nada y evita un refactor profundo en esta iteración.
-- RLS, RPCs y demás lógica de servidor no cambian.
-
-## Validación
-
-- `/embarques`: menú de acciones por fila ya no muestra "Duplicar"; detalle del embarque tampoco.
-- `/cotizaciones`: menú de acciones por fila ya no muestra "Duplicar".
-- Build sin warnings de imports faltantes; TypeScript verde.
+Bump a **8.224.0** con entrada "Editar embarque: precargar Shipper y Consignatario con los valores ya guardados."
