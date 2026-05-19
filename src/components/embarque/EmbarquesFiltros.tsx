@@ -52,7 +52,6 @@ export default function EmbarquesFiltros(props: Props) {
     filterEstado: props.filterEstado,
     filterCliente: props.filterCliente,
     filterOperador: props.filterOperador,
-    filterProforma: props.filterProforma,
     fechaDesde: props.fechaDesde,
     fechaHasta: props.fechaHasta,
   });
@@ -62,10 +61,10 @@ export default function EmbarquesFiltros(props: Props) {
     props.onFilterEstadoChange("todos");
     props.onFilterClienteChange("todos");
     props.onFilterOperadorChange("todos");
-    props.onFilterProformaChange("todos");
     props.onFechaDesdeChange("");
     props.onFechaHastaChange("");
   };
+
 
   return (
     <>
