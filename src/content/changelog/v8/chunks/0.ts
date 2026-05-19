@@ -2,6 +2,14 @@ import type { ChangelogEntry } from "../../../changelogData";
 
 export const chunk0: ChangelogEntry[] = [
   {
+    version: "10.1.2",
+    date: "2026-05-19",
+    type: "patch",
+    title: "Auditoría de rendimiento de DataTable/VirtualDataTable",
+    summary: "Nueva suite DataTable.perf.test.tsx (6 benchmarks) y reporte docs/datatable-perf-audit.md. VirtualDataTable monta 10.000 filas en 124ms y rerender de 5k con data estable en 1.7ms. No se requieren optimizaciones nuevas.",
+    description: "Se añadió src/components/shared/dataTable/__tests__/DataTable.perf.test.tsx con presupuestos automáticos para DataTable (50 filas) y VirtualDataTable (1k/5k/10k filas y rerender con data por referencia). Mediciones obtenidas en jsdom: DataTable mount 50 → 73ms, rerender → 13.5ms. VirtualDataTable mount 1k → 20ms, 5k → 74ms, 10k → 124ms (escalado sublinear: 20 µs/fila a 12 µs/fila gracias a amortización del overhead fijo). Rerender de 5k filas con misma referencia de data → 1.7ms, confirmando que React.memo(VirtualRow) + identidad estable del rowModel + gridTemplate/measureElement/estimateSize/getRowId memoizados (introducidos en 9.1.3) están haciendo su trabajo. Nuevo docs/datatable-perf-audit.md con tabla de mediciones, explicación del escalado, garantías invariantes que NO deben romperse (data/columns/rowKey/onRowClick estables, no reintroducir useMemo que ordena, no agregar getSortedRowModel a VirtualDataTable), criterios de elección entre DataTable y VirtualDataTable y próximos pasos opcionales. Sin cambios de código en componentes. APP_VERSION 10.1.2.",
+  },
+  {
     version: "10.1.1",
     date: "2026-05-19",
     type: "patch",
