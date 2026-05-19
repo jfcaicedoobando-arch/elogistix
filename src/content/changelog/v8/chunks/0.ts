@@ -2,6 +2,14 @@ import type { ChangelogEntry } from "../../../changelogData";
 
 export const chunk0: ChangelogEntry[] = [
   {
+    version: "8.224.0",
+    date: "2026-05-19",
+    type: "patch",
+    title: "Editar embarque — precargar Shipper y Consignatario",
+    summary: "Los selects de Shipper y Consignatario ahora muestran el valor ya guardado al entrar a editar.",
+    description: "En BD embarques.shipper y embarques.consignatario se guardan como string resuelto ('Nombre — Tipo (País)' o el nombre del cliente cuando se eligió 'Mismo cliente'), pero los <Select> del wizard esperan contacto.id, '__cliente__' o '__otro__'. En ELIMP00216 (y cualquier embarque editado), los selects salían vacíos. Se agregó la utilidad resolverValorContactoDesdeTexto en src/lib/contacto y un effect en useEditarEmbarqueWizard que, una sola vez tras cargar el embarque y los contactos del cliente, hace la resolución inversa y rellena shipper/shipperManual/consignatario/consignatarioManual con setValue (sin marcar dirty). APP_VERSION 8.224.0.",
+  },
+  {
     version: "8.223.0",
     date: "2026-05-18",
     type: "minor",

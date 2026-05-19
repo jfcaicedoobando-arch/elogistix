@@ -22,6 +22,14 @@ export interface ChangelogEntry {
  */
 export const recentChangelog: ChangelogEntry[] = [
   {
+    version: "8.224.0",
+    date: "2026-05-19",
+    type: "patch",
+    title: "Editar embarque — precargar Shipper y Consignatario",
+    summary: "Los selects de Shipper y Consignatario ahora muestran el valor ya guardado al entrar a editar.",
+    description: "Se agregó resolución inversa en useEditarEmbarqueWizard para mapear el string guardado en BD al value que esperan los <Select> del wizard (contacto.id, __cliente__ o __otro__). APP_VERSION 8.224.0.",
+  },
+  {
     version: "8.223.0",
     date: "2026-05-18",
     type: "minor",
