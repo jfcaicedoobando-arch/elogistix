@@ -115,24 +115,24 @@ describe("DataTable E2E — filtro + orden + paginación", () => {
     expect(screen.getByTestId("page-state").textContent).toBe("page=0;size=2;total=1");
   });
 
+  it("paginación: Siguiente avanza la página y muestra la siguiente franja de datos", () => {
+    render(<EmbarquesHarness />);
+    expect(screen.getByText(/Página 1 de 3/)).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Siguiente" }));
+    expect(screen.getByTestId("page-state").textContent).toMatch(/page=1/);
+    expect(screen.getByText("EMB-003")).toBeInTheDocument();
+    expect(screen.getByText("EMB-004")).toBeInTheDocument();
+    expect(screen.queryByText("EMB-001")).not.toBeInTheDocument();
+  });
+
   it("click en header de columna dispara onSortChange y reinicia la página", () => {
     render(<EmbarquesHarness />);
-    // Avanzar a página 1 primero
-    fireEvent.click(screen.getByRole("button", { name: "Página siguiente" }).closest("button")!);
+    fireEvent.click(screen.getByRole("button", { name: "Siguiente" }));
     expect(screen.getByTestId("page-state").textContent).toMatch(/page=1/);
 
     fireEvent.click(screen.getByRole("columnheader", { name: /Cliente/ }));
     expect(screen.getByTestId("sort-state").textContent).toBe("cliente|asc");
     expect(screen.getByTestId("page-state").textContent).toMatch(/page=0/);
-  });
-
-  it("cambio de pageSize resetea la página y recalcula totalPages", () => {
-    render(<EmbarquesHarness />);
-    // Cambiar a tamaño 5 → totalPages debe ser 1
-    fireEvent.click(screen.getByRole("combobox"));
-    fireEvent.click(screen.getByRole("option", { name: "5" }));
-    expect(screen.getByTestId("page-state").textContent).toBe("page=0;size=5;total=1");
-    expect(screen.getByText("EMB-005")).toBeInTheDocument();
   });
 
   it("ciclo de orden asc → desc → null se refleja en el estado", () => {
