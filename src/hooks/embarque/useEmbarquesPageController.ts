@@ -13,7 +13,7 @@ import { getOrigen, getDestino } from "@/lib/formatters";
 import { useEmbarquesPageState } from "@/hooks/embarque/useEmbarquesPageState";
 import { buildEmbarqueColumns } from "@/components/embarque/embarqueColumns";
 import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
-import { fetchEmbarquesParaExport, fetchEmbarquesListExtras } from "@/services/embarque";
+import { fetchEmbarquesParaExport } from "@/services/embarque";
 import { useOrgFilter } from "@/hooks/shared/useOrgFilter";
 
 /**
