@@ -2,6 +2,14 @@ import type { ChangelogEntry } from "../../../changelogData";
 
 export const chunk0: ChangelogEntry[] = [
   {
+    version: "10.2.0",
+    date: "2026-05-19",
+    type: "minor",
+    title: "PDFs migrados a @react-pdf/renderer (Document/Page/View/Text)",
+    summary: "Cotización, Proforma (normal + consolidada) y Rentabilidad ahora se generan como PDFs binarios con @react-pdf/renderer. Adiós a window.print() y a los shells de HTML. StyleSheet centralizado en src/pdf/theme/styles.ts; nueva ruta /dev/pdf-preview/cotizacion/:id con PDFViewer.",
+    description: "Refactor arquitectónico de los 3 generadores PDF. (1) Nuevo paquete src/pdf/ con theme/styles.ts (StyleSheet centralizado: COLORS, FONTS, page, header, h1/h3/h4, gridRow+gridCell{2,3,4}, table/tableHeader/tableRow/th/td, cellDesc/cellNum/cellQty, totalBox, subtotalBlock, kpiCard, warningBox, containerBlock, footer fixed), components/ (KeyValueGrid Flexbox 2-3-4 columnas con wrap, DataTable genérico <View>-based con header fixed y subrow de notas, ResumenBox, Footer fijo con número de página), documents/ (CotizacionDocument, ProformaDocument, ProformaConsolidadaDocument, RentabilidadDocument), render/ (descargarPdf que usa pdf().toBlob() + <a download>, PdfPreview wrapper de <PDFViewer>). (2) Adaptadores delgados: src/generators/cotizacionPdf.tsx, proformaPdf.tsx y rentabilidadPdf.tsx conservan las firmas exactas (generarPdfCotizacion / generarPdfProforma / generarRentabilidadPdf) — CotizacionDetalle, useDescargarProformaPdf, useDialogGenerarProformaController y useReportesPageController no requieren cambios. (3) Eliminado el flujo legacy: cotizacion/pdfShell.ts, cotizacion/dimensiones.ts, proforma/styles.ts (openPdfWindow), proforma/header.ts y proforma/consolidada.ts borrados; gridCellsHtml + buildUsdTable/buildMxnTable HTML eliminados de cotizacion/datosGenerales.ts y conceptosTables.ts (sólo quedan las funciones puras buildDatosGenerales/buildMercancia/calcularTotales/splitConceptos consumidas por los Documents). (4) Nueva ruta dev /dev/pdf-preview/cotizacion/:id que monta CotizacionDocument dentro de <PDFViewer showToolbar> para validar layout, wrap de descripciones largas y paginación antes de cualquier descarga en producción. (5) Sin jsPDF, sin html2canvas, sin coordenadas X/Y (nunca existieron); el medio de salida cambió de impresión HTML del navegador a PDF binario nativo. (6) Cambio de UX: en lugar de abrir tab + dialog de impresión, los botones descargan directamente el .pdf. APP_VERSION 10.2.0.",
+  },
+  {
     version: "10.1.4",
     date: "2026-05-19",
     type: "patch",
