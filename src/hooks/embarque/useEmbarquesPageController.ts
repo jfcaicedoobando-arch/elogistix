@@ -99,15 +99,6 @@ export function useEmbarquesPageController() {
         return;
       }
 
-      // Trae estados de costos (liquidación) en chunks de 1000 IDs en paralelo.
-      const ids = filtradosPorEstado.map((e) => e.id);
-      const liqMap: Record<string, { total: number; pagados: number }> = {};
-      const CHUNK = 1000;
-      const slices: string[][] = [];
-      for (let i = 0; i < ids.length; i += CHUNK) slices.push(ids.slice(i, i + CHUNK));
-      const extrasList = await Promise.all(slices.map((s) => fetchEmbarquesListExtras(s)));
-      for (const extras of extrasList) Object.assign(liqMap, extras.liquidacion);
-
       exportToCsv(
         `embarques_${new Date().toISOString().slice(0, 10)}.csv`,
         [
@@ -127,33 +118,27 @@ export function useEmbarquesPageController() {
           { key: "descripcion_mercancia", label: "Descripción Mercancía" },
           { key: "tipo_cambio_usd", label: "T/C USD" },
           { key: "tipo_cambio_eur", label: "T/C EUR" },
-          { key: "liquidacion", label: "Estado Costos" },
           { key: "created_at", label: "Fecha Creación" },
         ],
-        filtradosPorEstado.map((e) => {
-          const liq = liqMap[e.id];
-          const estadoLiq = !liq || liq.total === 0 ? "—" : liq.pagados === liq.total ? "Pagado" : liq.pagados > 0 ? "Parcial" : "Pendiente";
-          return {
-            expediente: e.expediente,
-            bl_master: e.bl_master || "",
-            cliente_nombre: e.cliente_nombre,
-            modo: e.modo,
-            tipo: e.tipo,
-            origen: getOrigen(e),
-            destino: getDestino(e),
-            estado: calcularEstadoEmbarque(e.modo, e.tipo, e.etd, e.eta, e.estado),
-            etd: e.etd || "",
-            eta: e.eta || "",
-            operador: e.operador || "",
-            contenedor: e.contenedor || "",
-            tipo_contenedor: e.tipo_contenedor || "",
-            descripcion_mercancia: e.descripcion_mercancia || "",
-            tipo_cambio_usd: e.tipo_cambio_usd ?? "",
-            tipo_cambio_eur: e.tipo_cambio_eur ?? "",
-            liquidacion: estadoLiq,
-            created_at: e.created_at ? new Date(e.created_at).toLocaleDateString("es-MX") : "",
-          };
-        }),
+        filtradosPorEstado.map((e) => ({
+          expediente: e.expediente,
+          bl_master: e.bl_master || "",
+          cliente_nombre: e.cliente_nombre,
+          modo: e.modo,
+          tipo: e.tipo,
+          origen: getOrigen(e),
+          destino: getDestino(e),
+          estado: calcularEstadoEmbarque(e.modo, e.tipo, e.etd, e.eta, e.estado),
+          etd: e.etd || "",
+          eta: e.eta || "",
+          operador: e.operador || "",
+          contenedor: e.contenedor || "",
+          tipo_contenedor: e.tipo_contenedor || "",
+          descripcion_mercancia: e.descripcion_mercancia || "",
+          tipo_cambio_usd: e.tipo_cambio_usd ?? "",
+          tipo_cambio_eur: e.tipo_cambio_eur ?? "",
+          created_at: e.created_at ? new Date(e.created_at).toLocaleDateString("es-MX") : "",
+        })),
       );
 
       notifySuccess(toast, {
