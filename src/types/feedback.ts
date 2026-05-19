@@ -1,4 +1,5 @@
 import type { Database } from "@/integrations/supabase/types";
+import type { Breadcrumb } from "@/lib/feedback/breadcrumbsBuffer";
 
 export type TipoReporteFeedback = Database["public"]["Enums"]["tipo_reporte_feedback"];
 export type EstadoReporteFeedback = Database["public"]["Enums"]["estado_reporte_feedback"];
@@ -11,6 +12,7 @@ export interface ReporteFeedbackMetadata {
   timezone?: string;
   route?: string;
   consoleLogs?: string[];
+  breadcrumbs?: Breadcrumb[];
 }
 
 export interface ReporteFeedback {

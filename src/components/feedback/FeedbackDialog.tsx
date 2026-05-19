@@ -10,6 +10,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { crearReporte } from "@/services/feedback";
 import { APP_VERSION } from "@/constants/appVersion";
 import { getConsoleSnapshot } from "@/lib/feedback/consoleBuffer";
+import { getBreadcrumbsSnapshot } from "@/lib/feedback/breadcrumbsBuffer";
 import { FeedbackForm, type FeedbackFormValues } from "./FeedbackForm";
 import { FeedbackMisReportes } from "./FeedbackMisReportes";
 
@@ -50,6 +51,7 @@ export function FeedbackDialog({ open, onOpenChange }: Props) {
           timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
           route: currentUrl,
           consoleLogs: getConsoleSnapshot(),
+          breadcrumbs: getBreadcrumbsSnapshot(),
         },
         imagenes: v.imagenes,
         usuarioId: user.id,
