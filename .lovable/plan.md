@@ -1,41 +1,38 @@
-# Fix: cambio de estado del embarque rompe por cast text → enum
+# Eliminar opción "Duplicar" en embarques y cotizaciones
 
-## Diagnóstico
+## Alcance
 
-Al avanzar el estado del embarque, el frontend llama al RPC `public.avanzar_estado_embarque(...)`. Dentro de esa función:
+Quitar todos los puntos de entrada en UI para duplicar embarques y cotizaciones, para todos los usuarios (sin tocar la lógica del backend ni los servicios, para evitar regresiones en otras pantallas y permitir reactivarlo si más adelante se decide).
 
-```sql
-INSERT INTO eventos_embarque (embarque_id, tipo, descripcion, ...)
-VALUES (p_embarque_id, p_tipo_evento, p_descripcion_evento, ...);
-```
+## Cambios por archivo
 
-`p_tipo_evento` es `text`, pero `eventos_embarque.tipo` es del enum `tipo_evento_tracking`. PostgreSQL no hace cast implícito entre `text` y un enum custom en un INSERT, por lo que lanza:
+### Embarques
 
-> column "tipo" is of type tipo_evento_tracking but expression is of type text
+1. **`src/components/embarque/EmbarqueRowActions.tsx`** — quitar el `DropdownMenuItem` "Duplicar" y la prop `onDuplicar`.
+2. **`src/components/embarque/embarqueColumns.tsx`** — quitar la prop/uso `onDuplicar` que se pasa a `EmbarqueRowActions`.
+3. **`src/hooks/embarque/useEmbarquesPageController.ts`** — quitar el state `embarqueADuplicar`/`setEmbarqueADuplicar`, eliminar `onDuplicar` del armado de columnas y dejar de exportarlos.
+4. **`src/pages/embarques/Embarques.tsx`** — quitar el import y render de `DialogDuplicarEmbarque` y las referencias `embarqueADuplicar`/`setEmbarqueADuplicar`.
+5. **`src/components/embarque/EmbarqueDetalleHeader.tsx`** — quitar el `DropdownMenuItem` "Duplicar" y la prop `onAbrirDuplicar`.
+6. **`src/pages/embarques/EmbarqueDetalle.tsx`** — quitar el state `dialogDuplicarAbierto`, el render de `DialogDuplicarEmbarque` y la prop pasada al header.
 
-La línea de `notas_embarque` tampoco está casteada (`'cambio_estado'` literal funciona por coerción de literal, pero conviene blindarla también).
+### Cotizaciones
 
-## Solución
+7. **`src/components/cotizacion/columnsParts/accionesCell.tsx`** — quitar el `DropdownMenuItem` "Duplicar" y la prop `onDuplicar`.
+8. **`src/components/cotizacion/cotizacionesColumns.tsx`** — quitar el cableo `onDuplicar: c.duplicar` y dependencia del `useMemo`.
+9. **`src/hooks/cotizacion/useCotizacionesPageController.ts`** — quitar el `useDuplicarCotizacion`, la función `duplicar` y su export en el retorno del hook.
 
-Migración que vuelve a crear `public.avanzar_estado_embarque` con casts explícitos:
+### Versionado y changelog
 
-- `p_tipo_evento::tipo_evento_tracking` al insertar en `eventos_embarque`.
-- `'cambio_estado'::tipo_nota` al insertar en `notas_embarque` (defensivo).
+10. **`src/constants/appVersion.ts`** → bump a **8.223.0**.
+11. **`src/content/changelog/v8/chunks/0.ts`** y **`src/content/changelogData.ts`** → entrada 8.223.0 explicando la eliminación.
 
-El resto de la función (idempotencia, validación de organización, UPDATE de estado, respuesta JSON) queda igual.
+## Lo que NO se toca
 
-### Archivos a tocar
-
-1. **Nueva migración** `supabase/migrations/<timestamp>_fix_avanzar_estado_embarque_cast.sql` con el `CREATE OR REPLACE FUNCTION` corregido.
-2. **`src/constants/appVersion.ts`** → bump a `8.222.0`.
-3. **`src/content/changelog/v8/chunks/0.ts`** y **`src/content/changelogData.ts`** → entrada `8.222.0`.
+- `src/components/embarque/DialogDuplicarEmbarque.tsx`, `src/services/embarque/mutations.ts` (función `duplicarEmbarque`), `src/services/cotizacion/conversiones/duplicar.ts` y `src/hooks/cotizacion/mutations/useDuplicarCotizacion.ts` quedan en el repo como código muerto, sin imports activos. Esto deja la puerta abierta a reactivarlo sin reimplementar nada y evita un refactor profundo en esta iteración.
+- RLS, RPCs y demás lógica de servidor no cambian.
 
 ## Validación
 
-- Desde la sesión de Valeria, avanzar el estado del embarque `30525762…`: la operación debe completar sin error y registrar la nota + evento.
-- Verificar en DB que se creó la fila en `eventos_embarque` con `tipo` correcto y la nota en `notas_embarque`.
-
-## Detalles técnicos
-
-- Sólo cambia el cuerpo del RPC; firma, permisos y `SECURITY DEFINER` se conservan.
-- No se requiere cambiar `src/services/embarque/mutations.ts` ni el hook que llama el RPC: siguen mandando `tipo_evento` como string.
+- `/embarques`: menú de acciones por fila ya no muestra "Duplicar"; detalle del embarque tampoco.
+- `/cotizaciones`: menú de acciones por fila ya no muestra "Duplicar".
+- Build sin warnings de imports faltantes; TypeScript verde.
