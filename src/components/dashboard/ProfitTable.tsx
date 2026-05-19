@@ -4,7 +4,8 @@ import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { DataTable, type DataTableColumn } from "@/components/shared/DataTable";
+import { DataTable, defineColumns, type ColumnDef } from "@/components/shared/DataTable";
+import { sortByNumber } from "@/components/shared/dataTable/sortingFns";
 import { formatCurrency, toTitleCase } from "@/lib/formatters";
 import type { EmbarqueConProfit } from "@/hooks/dashboard";
 
@@ -40,30 +41,37 @@ function MoneyWithBreakdown({ e, value }: { e: EmbarqueConProfit; value: number 
   );
 }
 
-const columns: DataTableColumn<EmbarqueConProfit>[] = [
-  { key: "expediente", header: "Expediente", className: "font-medium", render: (e) => e.expediente },
-  { key: "cliente", header: "Cliente", className: "max-w-[240px] truncate", render: (e) => <span title={e.cliente_nombre}>{toTitleCase(e.cliente_nombre)}</span> },
-  { key: "venta", header: "Venta MXN", className: "text-right tabular-nums", headerClassName: "text-right", render: (e) => formatCurrency(e.ventaMXN, "MXN") },
-  { key: "costo", header: "Costo MXN", className: "text-right tabular-nums", headerClassName: "text-right", render: (e) => formatCurrency(e.costoMXN, "MXN") },
+const columns: ColumnDef<EmbarqueConProfit, unknown>[] = defineColumns<EmbarqueConProfit>([
+  { id: "expediente", header: "Expediente", meta: { className: "font-medium" }, cell: ({ row }) => row.original.expediente },
+  { id: "cliente", header: "Cliente", meta: { className: "max-w-[240px] truncate" }, cell: ({ row }) => <span title={row.original.cliente_nombre}>{toTitleCase(row.original.cliente_nombre)}</span> },
+  { id: "venta", header: "Venta MXN", meta: { className: "text-right tabular-nums", headerClassName: "text-right" }, cell: ({ row }) => formatCurrency(row.original.ventaMXN, "MXN") },
+  { id: "costo", header: "Costo MXN", meta: { className: "text-right tabular-nums", headerClassName: "text-right" }, cell: ({ row }) => formatCurrency(row.original.costoMXN, "MXN") },
   {
-    key: "profit", header: "Profit MXN", className: "text-right font-semibold tabular-nums", headerClassName: "text-right",
-    sortable: true, sortValue: (e) => e.profitMXN,
-    render: (e) => <MoneyWithBreakdown e={e} value={e.profitMXN} />,
+    id: "profit", header: "Profit MXN",
+    accessorFn: (e) => e.profitMXN, enableSorting: true,
+    sortingFn: sortByNumber<EmbarqueConProfit>((e) => e.profitMXN),
+    meta: { className: "text-right font-semibold tabular-nums", headerClassName: "text-right" },
+    cell: ({ row }) => <MoneyWithBreakdown e={row.original} value={row.original.profitMXN} />,
   },
   {
-    key: "margen", header: "Margen", className: "text-right", headerClassName: "text-right",
-    sortable: true, sortValue: (e) => e.margenMXN,
-    render: (e) => (
-      <Badge className={`text-[10px] ${
-        e.margenMXN > 15 ? "bg-success/15 text-success border-success/30"
-          : e.margenMXN > 0 ? "bg-warning/15 text-warning border-warning/30"
-          : "bg-destructive/15 text-destructive border-destructive/30"
-      }`}>
-        {e.margenMXN.toFixed(1)}%
-      </Badge>
-    ),
+    id: "margen", header: "Margen",
+    accessorFn: (e) => e.margenMXN, enableSorting: true,
+    sortingFn: sortByNumber<EmbarqueConProfit>((e) => e.margenMXN),
+    meta: { className: "text-right", headerClassName: "text-right" },
+    cell: ({ row }) => {
+      const e = row.original;
+      return (
+        <Badge className={`text-[10px] ${
+          e.margenMXN > 15 ? "bg-success/15 text-success border-success/30"
+            : e.margenMXN > 0 ? "bg-warning/15 text-warning border-warning/30"
+            : "bg-destructive/15 text-destructive border-destructive/30"
+        }`}>
+          {e.margenMXN.toFixed(1)}%
+        </Badge>
+      );
+    },
   },
-];
+]);
 
 export const ProfitTable = memo(function ProfitTable({ embarques, isLoading }: Props) {
   const navigate = useNavigate();

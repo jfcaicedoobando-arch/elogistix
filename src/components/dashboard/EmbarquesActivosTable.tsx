@@ -1,7 +1,8 @@
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { DataTable, type DataTableColumn } from "@/components/shared/DataTable";
+import { DataTable, defineColumns, type ColumnDef } from "@/components/shared/DataTable";
+import { sortByString, sortByNumber, sortByDate } from "@/components/shared/dataTable/sortingFns";
 import { formatDate, formatCurrency, getOrigen, getDestino, toTitleCase } from "@/lib/formatters";
 import { getEstadoColor } from "@/lib/ui/uiMappings";
 import { ModoIcon } from "@/components/shared/ModoIcon";
@@ -16,58 +17,90 @@ interface Props {
   isLoading: boolean;
 }
 
-const columns: DataTableColumn<EmbarqueMesSiguiente>[] = [
-  { key: "expediente", header: "Expediente", className: "font-medium", sticky: true, sortable: true, sortValue: (e) => e.expediente, render: (e) => e.expediente },
-  { key: "cliente", header: "Cliente", className: "max-w-[180px] truncate", sortable: true, sortValue: (e) => e.cliente_nombre, render: (e) => <span title={e.cliente_nombre}>{toTitleCase(e.cliente_nombre)}</span> },
+const columns: ColumnDef<EmbarqueMesSiguiente, unknown>[] = defineColumns<EmbarqueMesSiguiente>([
   {
-    key: "modo", header: "Modo", render: (e) => (
+    id: "expediente", header: "Expediente",
+    accessorFn: (e) => e.expediente, enableSorting: true,
+    sortingFn: sortByString<EmbarqueMesSiguiente>((e) => e.expediente),
+    meta: { className: "font-medium", sticky: true },
+    cell: ({ row }) => row.original.expediente,
+  },
+  {
+    id: "cliente", header: "Cliente",
+    accessorFn: (e) => e.cliente_nombre, enableSorting: true,
+    sortingFn: sortByString<EmbarqueMesSiguiente>((e) => e.cliente_nombre),
+    meta: { className: "max-w-[180px] truncate" },
+    cell: ({ row }) => <span title={row.original.cliente_nombre}>{toTitleCase(row.original.cliente_nombre)}</span>,
+  },
+  {
+    id: "modo", header: "Modo",
+    cell: ({ row }) => (
       <span className="flex items-center gap-1.5">
-        <ModoIcon modo={e.modo} size={14} />
-        <span className="text-xs">{e.modo}</span>
+        <ModoIcon modo={row.original.modo} size={14} />
+        <span className="text-xs">{row.original.modo}</span>
       </span>
     ),
   },
   {
-    key: "ruta", header: "Origen → Destino", className: "text-xs max-w-[180px] truncate", render: (e) => `${getOrigen(e)} → ${getDestino(e)}`,
+    id: "ruta", header: "Origen → Destino",
+    meta: { className: "text-xs max-w-[180px] truncate" },
+    cell: ({ row }) => `${getOrigen(row.original)} → ${getDestino(row.original)}`,
   },
   {
-    key: "contenedor", header: "Contenedor", className: "text-xs font-mono whitespace-nowrap", sortable: true,
-    sortValue: (e) => e.contenedor || "",
-    render: (e) => e.contenedor || <span className="text-muted-foreground">-</span>,
+    id: "contenedor", header: "Contenedor",
+    accessorFn: (e) => e.contenedor, enableSorting: true,
+    sortingFn: sortByString<EmbarqueMesSiguiente>((e) => e.contenedor),
+    meta: { className: "text-xs font-mono whitespace-nowrap" },
+    cell: ({ row }) => row.original.contenedor || <span className="text-muted-foreground">-</span>,
   },
-  { key: "eta", header: "ETA", className: "text-xs", sortable: true, sortValue: (e) => e.eta || "", render: (e) => e.eta ? formatDate(e.eta) : "-" },
   {
-    key: "estado", header: "Estado", sortable: true, sortValue: (e) => e.estadoReal, render: (e) => (
-      <Badge variant="secondary" className={`text-xs ${getEstadoColor(e.estadoReal)}`}>
-        {e.estadoReal}
+    id: "eta", header: "ETA",
+    accessorFn: (e) => e.eta, enableSorting: true,
+    sortingFn: sortByDate<EmbarqueMesSiguiente>((e) => e.eta),
+    meta: { className: "text-xs" },
+    cell: ({ row }) => row.original.eta ? formatDate(row.original.eta) : "-",
+  },
+  {
+    id: "estado", header: "Estado",
+    accessorFn: (e) => e.estadoReal, enableSorting: true,
+    sortingFn: sortByString<EmbarqueMesSiguiente>((e) => e.estadoReal),
+    cell: ({ row }) => (
+      <Badge variant="secondary" className={`text-xs ${getEstadoColor(row.original.estadoReal)}`}>
+        {row.original.estadoReal}
       </Badge>
     ),
   },
   {
-    key: "profit", header: "Profit MXN", className: "text-right tabular-nums", headerClassName: "text-right",
-    sortable: true, sortValue: (e) => e.profitMXN,
-    render: (e) => (
-      <span
-        className={`text-xs font-medium ${e.profitMXN >= 0 ? "text-success" : "text-destructive"}`}
-        title={`Venta ${formatCurrency(e.ventaMXN, "MXN")} · Costo ${formatCurrency(e.costoMXN, "MXN")} (TC USD ${e.tipoCambioUSD.toFixed(2)})`}
-      >
-        {formatCurrency(e.profitMXN, "MXN")}
-      </span>
-    ),
+    id: "profit", header: "Profit MXN",
+    accessorFn: (e) => e.profitMXN, enableSorting: true,
+    sortingFn: sortByNumber<EmbarqueMesSiguiente>((e) => e.profitMXN),
+    meta: { className: "text-right tabular-nums", headerClassName: "text-right" },
+    cell: ({ row }) => {
+      const e = row.original;
+      return (
+        <span
+          className={`text-xs font-medium ${e.profitMXN >= 0 ? "text-success" : "text-destructive"}`}
+          title={`Venta ${formatCurrency(e.ventaMXN, "MXN")} · Costo ${formatCurrency(e.costoMXN, "MXN")} (TC USD ${e.tipoCambioUSD.toFixed(2)})`}
+        >
+          {formatCurrency(e.profitMXN, "MXN")}
+        </span>
+      );
+    },
   },
   {
-    key: "facturado", header: "Facturado", className: "text-center", headerClassName: "text-center",
-    render: (e) => (
+    id: "facturado", header: "Facturado",
+    meta: { className: "text-center", headerClassName: "text-center" },
+    cell: ({ row }) => (
       <Badge variant="secondary" className={`text-[10px] ${
-        e.facturado
+        row.original.facturado
           ? "bg-success/15 text-success border-success/30"
           : "bg-muted text-muted-foreground"
       }`}>
-        {e.facturado ? "Sí" : "No"}
+        {row.original.facturado ? "Sí" : "No"}
       </Badge>
     ),
   },
-];
+]);
 
 export function EmbarquesActivosTable({ embarques, resumen, isLoading }: Props) {
   const navigate = useNavigate();
