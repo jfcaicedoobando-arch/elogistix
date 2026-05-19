@@ -105,6 +105,8 @@ describe("DataTable — render", () => {
 describe("DataTable — server-side sort (patrón Embarques/Cotizaciones)", () => {
   it("Embarques: click en header sortable dispara onSortChange asc → desc → null", () => {
     const onSortChange = vi.fn();
+    const totalHeader = () => screen.getByRole("columnheader", { name: /Total/ });
+
     const { rerender } = render(
       <DataTable
         columns={embarqueColumns}
@@ -117,10 +119,9 @@ describe("DataTable — server-side sort (patrón Embarques/Cotizaciones)", () =
     );
 
     // 1er click: null → asc
-    fireEvent.click(screen.getByText("Total"));
+    fireEvent.click(totalHeader());
     expect(onSortChange).toHaveBeenLastCalledWith("total", "asc");
 
-    // Simulamos que el page state aplica el sort y re-renderiza
     rerender(
       <DataTable
         columns={embarqueColumns}
@@ -133,7 +134,7 @@ describe("DataTable — server-side sort (patrón Embarques/Cotizaciones)", () =
     );
 
     // 2do click: asc → desc
-    fireEvent.click(screen.getByText("Total"));
+    fireEvent.click(totalHeader());
     expect(onSortChange).toHaveBeenLastCalledWith("total", "desc");
 
     rerender(
@@ -148,7 +149,7 @@ describe("DataTable — server-side sort (patrón Embarques/Cotizaciones)", () =
     );
 
     // 3er click: desc → null (TanStack cicla a unsorted)
-    fireEvent.click(screen.getByText("Total"));
+    fireEvent.click(totalHeader());
     expect(onSortChange).toHaveBeenLastCalledWith(null, "asc");
   });
 
