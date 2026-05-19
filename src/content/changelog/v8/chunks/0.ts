@@ -2,6 +2,14 @@ import type { ChangelogEntry } from "../../../changelogData";
 
 export const chunk0: ChangelogEntry[] = [
   {
+    version: "10.1.1",
+    date: "2026-05-19",
+    type: "patch",
+    title: "Guía de autoría de tablas — ColumnDef nativo documentada",
+    summary: "Nueva guía docs/datatable-columndef-guide.md con la receta canónica (defineColumns + sortingFns + meta), mapeo 1:1 desde la API legacy, anti-patrones y checklist de PR para que el equipo migre futuras tablas sin errores.",
+    description: "Se agregó docs/datatable-columndef-guide.md como contrato único para autorías y migraciones de tablas a partir de 10.0.0. Cubre: (1) receta TL;DR con el patrón completo (id obligatorio, accessorFn con dato crudo, formato sólo en cell, enableSorting explícito, meta para look & feel); (2) reglas de sort server-side con onSortChange + reseteo de página; (3) cuándo usar VirtualDataTable y sus constraints (estimateRowHeight, gridTemplate, sin sort cliente); (4) tabla de mapeo 1:1 DataTableColumn → ColumnDef (key→id, render→cell, sortable→enableSorting, sortValue→accessorFn+sortingFn, align/className/width/sticky→meta); (5) 8 anti-patrones a rechazar en review (useMemo que ordena, accessorKey+accessorFn, formato en accessorFn, any en ColumnDef, sort cliente en datasets paginados, onSortChange sin reset de page, CSS suelto en cell, archivos >200 líneas); (6) tests mínimos exigidos por tabla nueva; (7) checklist de PR. Sin cambios de código ni de UI. APP_VERSION 10.1.1.",
+  },
+  {
     version: "10.1.0",
     date: "2026-05-19",
     type: "minor",
