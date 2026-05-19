@@ -32,11 +32,11 @@ export default function Cotizaciones() {
       buildCotizacionesColumns({
         canEdit: c.canEdit,
         onEditar: c.irAEditar,
-        onDuplicar: c.duplicar,
         onEliminar: c.setCotizacionAEliminar,
       }),
-    [c.canEdit, c.irAEditar, c.duplicar, c.setCotizacionAEliminar],
+    [c.canEdit, c.irAEditar, c.setCotizacionAEliminar],
   );
+
 
   const [filtersOpen, setFiltersOpen] = useState(false);
   const activeFilterCount =

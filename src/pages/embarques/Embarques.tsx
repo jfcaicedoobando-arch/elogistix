@@ -4,7 +4,7 @@ import { DataTable } from "@/components/shared/DataTable";
 import DoubleConfirmDeleteDialog from "@/components/shared/DoubleConfirmDeleteDialog";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { FloatingActionButton } from "@/components/shared/FloatingActionButton";
-import DialogDuplicarEmbarque from "@/components/embarque/DialogDuplicarEmbarque";
+
 import EmbarquesFiltros from "@/components/embarque/EmbarquesFiltros";
 import { EmbarquesEmptyState } from "@/components/embarque/EmbarquesEmptyState";
 import { EmbarquesSortIndicator } from "@/components/embarque/EmbarquesSortIndicator";
@@ -21,10 +21,11 @@ function buildDescription(contenedoresCount: number, expedientesCount: number, e
 export default function Embarques() {
   const {
     state, clientes, operadoresUnicos, columns, isLoading, isEmptyState, canEdit,
-    embarqueAEliminar, setEmbarqueAEliminar, embarqueADuplicar, setEmbarqueADuplicar,
+    embarqueAEliminar, setEmbarqueAEliminar,
     handleEliminar, exportarCsv, exportandoCsv, eliminarEmbarquePending,
     navigate, prefetchEmbarque,
   } = useEmbarquesPageController();
+
 
   const {
     search, filterModo, filterEstado, filterCliente, filterOperador, filterProforma,
@@ -126,13 +127,6 @@ export default function Embarques() {
         onConfirm={handleEliminar}
         isPending={eliminarEmbarquePending}
       />
-      {embarqueADuplicar ? (
-        <DialogDuplicarEmbarque
-          embarque={embarqueADuplicar}
-          open
-          onOpenChange={(open) => { if (!open) setEmbarqueADuplicar(null); }}
-        />
-      ) : null}
 
       {canEdit && !isEmptyState ? (
         <FloatingActionButton

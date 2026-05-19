@@ -107,11 +107,11 @@ export function buildCotizacionesColumns(params: BuildParams): DataTableColumn<C
       render: (r) =>
         renderAcciones(r, {
           onEditar: params.onEditar,
-          onDuplicar: params.onDuplicar,
           onEliminar: params.onEliminar,
         }),
     });
   }
+
 
   return cols;
 }

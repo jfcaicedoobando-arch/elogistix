@@ -22,9 +22,9 @@ export interface BuildColumnsParams {
   liquidacionMap: Record<string, LiquidacionInfo>;
   contenedoresPorExpediente?: Record<string, number>;
   onEditar: (e: EmbarqueRow) => void;
-  onDuplicar: (e: EmbarqueRow) => void;
   onEliminar: (e: EmbarqueRow) => void;
 }
+
 
 function LiquidacionBadge({ info }: { info?: LiquidacionInfo }) {
   if (!info || info.total === 0) return <span className="text-xs text-muted-foreground">—</span>;
@@ -38,8 +38,9 @@ function LiquidacionBadge({ info }: { info?: LiquidacionInfo }) {
 }
 
 export function buildEmbarqueColumns({
-  canEdit, docsMap, liquidacionMap, contenedoresPorExpediente = {}, onEditar, onDuplicar, onEliminar,
+  canEdit, docsMap, liquidacionMap, contenedoresPorExpediente = {}, onEditar, onEliminar,
 }: BuildColumnsParams): DataTableColumn<EmbarqueRow>[] {
+
   const base: DataTableColumn<EmbarqueRow>[] = [
     {
       key: "expediente", header: "Expediente", width: "w-[130px]", className: "font-medium whitespace-nowrap",
@@ -123,10 +124,10 @@ export function buildEmbarqueColumns({
         <EmbarqueRowActions
           embarque={e}
           onEditar={onEditar}
-          onDuplicar={onDuplicar}
           onEliminar={onEliminar}
         />
       ),
+
     });
   }
 

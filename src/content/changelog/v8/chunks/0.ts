@@ -2,6 +2,14 @@ import type { ChangelogEntry } from "../../../changelogData";
 
 export const chunk0: ChangelogEntry[] = [
   {
+    version: "8.223.0",
+    date: "2026-05-18",
+    type: "minor",
+    title: "Eliminada la opción 'Duplicar' en embarques y cotizaciones",
+    summary: "Por solicitud de operación: la acción Duplicar ya no aparece en ningún menú para ningún usuario.",
+    description: "Se retiró el ítem 'Duplicar' del menú de acciones de fila en /embarques y /cotizaciones, y del menú '…' en el detalle de embarque. Se removieron también el estado y el diálogo DialogDuplicarEmbarque del listado y del detalle, y la mutación useDuplicarCotizacion del controller. La lógica de servicio (duplicarEmbarque, duplicarCotizacion) y el componente DialogDuplicarEmbarque permanecen en el repo como código muerto para poder reactivar la función a futuro sin reimplementar. APP_VERSION 8.223.0.",
+  },
+  {
     version: "8.222.0",
     date: "2026-05-18",
     type: "patch",
