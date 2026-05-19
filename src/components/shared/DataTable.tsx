@@ -123,11 +123,15 @@ function DataTableInner<T>({
 /**
  * DataTable — tabla genérica del ERP.
  *
- * Refactor 10.0.0: API única `ColumnDef<T, unknown>[]`. El adapter legacy
- * `DataTableColumn<T>` fue eliminado tras migrar los ~30 call-sites a
- * `defineColumns` + helpers `sortByString/Number/Date`.
+ * API única: `ColumnDef<T, unknown>[]` de `@tanstack/react-table` v8.
+ * Construir columnas con `defineColumns<T>([...])` para conservar la
+ * augmentación de `meta` (`LibreCargaColumnMeta`: width, align, sticky,
+ * className, headerClassName).
  *
- * Sin `useDataTableSort`, sin `useMemo` que ordena arreglos, sin `useEffect`
- * que sincronice estados paralelos — TanStack es la única fuente de verdad.
+ * Sort: `sortMode="server"` (default real de los call-sites) delega el
+ * orden al RPC vía `controlledSort` + `onSortChange`; `sortMode="client"`
+ * usa `getSortedRowModel` de TanStack. En ningún caso debe reaparecer un
+ * `useMemo([...data].sort(...))` ni un `useEffect` que rehidrate orden:
+ * TanStack es la única fuente de verdad.
  */
 export const DataTable = DataTableInner;
