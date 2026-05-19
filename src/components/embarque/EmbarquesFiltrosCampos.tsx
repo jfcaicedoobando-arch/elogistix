@@ -30,8 +30,6 @@ export interface EmbarquesFiltrosCamposProps {
   onFilterClienteChange: (v: string) => void;
   filterOperador: string;
   onFilterOperadorChange: (v: string) => void;
-  filterProforma: string;
-  onFilterProformaChange: (v: string) => void;
   fechaDesde: string;
   onFechaDesdeChange: (v: string) => void;
   fechaHasta: string;
@@ -45,13 +43,14 @@ export interface EmbarquesFiltrosCamposProps {
 export function EmbarquesFiltrosCampos(props: EmbarquesFiltrosCamposProps) {
   const {
     search, onSearchChange,
-    filterModo, filterEstado, filterCliente, filterOperador, filterProforma,
+    filterModo, filterEstado, filterCliente, filterOperador,
     fechaDesde, fechaHasta,
     onFilterModoChange, onFilterEstadoChange, onFilterClienteChange,
-    onFilterOperadorChange, onFilterProformaChange,
+    onFilterOperadorChange,
     onFechaDesdeChange, onFechaHastaChange,
     clientes, operadores, layout,
   } = props;
+
 
   const ModoSelect = (
     <Select value={filterModo} onValueChange={onFilterModoChange}>
@@ -111,18 +110,7 @@ export function EmbarquesFiltrosCampos(props: EmbarquesFiltrosCamposProps) {
     </Select>
   );
 
-  const ProformaSelect = (
-    <Select value={filterProforma} onValueChange={onFilterProformaChange}>
-      <SelectTrigger className="w-full md:w-[190px] md:min-w-[180px]" title="Filtrar por estado de proforma" aria-label="Proforma">
-        <SelectValue placeholder="Proforma" className="truncate" />
-      </SelectTrigger>
-      <SelectContent>
-        <SelectItem value="todos">Todas las proformas</SelectItem>
-        <SelectItem value="con">Con proforma</SelectItem>
-        <SelectItem value="sin">Sin proforma</SelectItem>
-      </SelectContent>
-    </Select>
-  );
+
 
   const FechaDesde = (
     <DatePickerMx
@@ -157,8 +145,8 @@ export function EmbarquesFiltrosCampos(props: EmbarquesFiltrosCamposProps) {
         {EstadoSelect}
         {ClienteSelect}
         {OperadorSelect}
-        {ProformaSelect}
         {FechaDesde}
+
         {FechaHasta}
       </div>
     );
@@ -171,7 +159,7 @@ export function EmbarquesFiltrosCampos(props: EmbarquesFiltrosCamposProps) {
       <FieldGroup label="Estado">{EstadoSelect}</FieldGroup>
       <FieldGroup label="Cliente">{ClienteSelect}</FieldGroup>
       <FieldGroup label="Operador">{OperadorSelect}</FieldGroup>
-      <FieldGroup label="Proforma">{ProformaSelect}</FieldGroup>
+
       <FieldGroup label="ETD desde">{FechaDesde}</FieldGroup>
       <FieldGroup label="ETA hasta">{FechaHasta}</FieldGroup>
     </div>

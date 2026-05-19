@@ -75,7 +75,7 @@ function resolveExtras(
 function buildFullSetFilters(i: {
   organizationId: string | null | undefined;
   search: string | null;
-  filterModo: string; filterCliente: string; filterOperador: string; filterProforma: string;
+  filterModo: string; filterCliente: string; filterOperador: string;
   fechaDesde: string; fechaHasta: string;
 }) {
   return {
@@ -84,11 +84,11 @@ function buildFullSetFilters(i: {
     filterModo: i.filterModo,
     filterCliente: i.filterCliente,
     filterOperador: i.filterOperador,
-    filterProforma: i.filterProforma,
     fechaDesde: i.fechaDesde || undefined,
     fechaHasta: i.fechaHasta || undefined,
   };
 }
+
 
 export function useEmbarquesPageState() {
   const { organizationId } = useOrgFilter();
@@ -99,8 +99,9 @@ export function useEmbarquesPageState() {
   } = useEmbarquesFilters();
 
   const { modo: filterModo, estado: filterEstado, cliente: filterCliente,
-    operador: filterOperador, proforma: filterProforma,
+    operador: filterOperador,
     fechaDesde, fechaHasta } = filters;
+
 
   const estadoFilterActivo = filterEstado !== "todos";
 
@@ -113,8 +114,8 @@ export function useEmbarquesPageState() {
     filterEstado: "todos",
     filterCliente,
     filterOperador,
-    filterProforma,
     page,
+
     pageSize,
     fechaDesde,
     fechaHasta,
@@ -126,7 +127,8 @@ export function useEmbarquesPageState() {
   const fullSetFilters = buildFullSetFilters({
     organizationId,
     search: debouncedSearch,
-    filterModo, filterCliente, filterOperador, filterProforma,
+    filterModo, filterCliente, filterOperador,
+
     fechaDesde, fechaHasta,
   });
   const { data: resultadoFull, isLoading: loadingFull } = useQuery({
@@ -213,7 +215,7 @@ export function useEmbarquesPageState() {
 
   const sinFiltros =
     !debouncedSearch &&
-    [filterModo, filterEstado, filterCliente, filterOperador, filterProforma].every(
+    [filterModo, filterEstado, filterCliente, filterOperador].every(
       (v) => v === "todos",
     ) &&
     !fechaDesde &&
@@ -223,7 +225,7 @@ export function useEmbarquesPageState() {
   return {
     // values
     search,
-    filterModo, filterEstado, filterCliente, filterOperador, filterProforma,
+    filterModo, filterEstado, filterCliente, filterOperador,
     fechaDesde, fechaHasta, page, pageSize, debouncedSearch,
     sortKey, sortDir,
     // setters
@@ -232,7 +234,7 @@ export function useEmbarquesPageState() {
     setFilterEstado: (v: string) => setFilter("estado", v, "todos"),
     setFilterCliente: (v: string) => setFilter("cliente", v, "todos"),
     setFilterOperador: (v: string) => setFilter("operador", v, "todos"),
-    setFilterProforma: (v: string) => setFilter("proforma", v, "todos"),
+
     setFechaDesde: (v: string) => setFilter("fechaDesde", v, ""),
     setFechaHasta: (v: string) => setFilter("fechaHasta", v, ""),
     setPage: (p: number) => setPageRaw(p === 0 ? null : p),

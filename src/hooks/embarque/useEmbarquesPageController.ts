@@ -58,10 +58,10 @@ export function useEmbarquesPageController() {
         filterModo: state.filterModo,
         filterCliente: state.filterCliente,
         filterOperador: state.filterOperador,
-        filterProforma: state.filterProforma,
         fechaDesde: state.fechaDesde || undefined,
         fechaHasta: state.fechaHasta || undefined,
       });
+
 
       // Filtro de estado se calcula client-side (no es columna directa de DB).
       const filtradosPorEstado = state.filterEstado === "todos"
@@ -124,7 +124,7 @@ export function useEmbarquesPageController() {
     } finally {
       setExportandoCsv(false);
     }
-  }, [organizationId, state.debouncedSearch, state.filterModo, state.filterCliente, state.filterOperador, state.filterProforma, state.filterEstado, state.fechaDesde, state.fechaHasta, toast]);
+  }, [organizationId, state.debouncedSearch, state.filterModo, state.filterCliente, state.filterOperador, state.filterEstado, state.fechaDesde, state.fechaHasta, toast]);
 
   return {
     state,

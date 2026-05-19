@@ -2,6 +2,15 @@ import type { ChangelogEntry } from "../../../changelogData";
 
 export const chunk0: ChangelogEntry[] = [
   {
+    version: "9.0.3",
+    date: "2026-05-19",
+    type: "patch",
+    title: "Listado de embarques — se retira el filtro de Proforma",
+    summary: "El filtro 'Proforma' (con/sin) se eliminó del listado general de embarques. La gestión de proformas vive en la sección de Facturación, que es donde tiene contexto operativo.",
+    description: "Se removió el SelectItem 'Proforma' de EmbarquesFiltrosCampos y su prop/handler de EmbarquesFiltros y Embarques.tsx. useEmbarquesPageState ya no expone filterProforma/setFilterProforma ni mantiene el query-param 'proforma' (nuqs). countActiveEmbarqueFilters y el export CSV dejaron de leer ese flag. El RPC embarques_listado sigue aceptando p_proforma para compatibilidad: en services/embarque/queries/listado.ts el campo filterProforma quedó opcional. APP_VERSION 9.0.3.",
+  },
+  {
+
     version: "9.0.2",
     date: "2026-05-19",
     type: "patch",

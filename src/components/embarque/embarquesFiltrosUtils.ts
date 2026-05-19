@@ -9,7 +9,6 @@ export interface ActiveFiltersInput {
   filterEstado: string;
   filterCliente: string;
   filterOperador: string;
-  filterProforma: string;
   fechaDesde: string;
   fechaHasta: string;
 }
@@ -20,8 +19,8 @@ export function countActiveEmbarqueFilters(f: ActiveFiltersInput): number {
   if (f.filterEstado && f.filterEstado !== "todos") n++;
   if (f.filterCliente && f.filterCliente !== "todos") n++;
   if (f.filterOperador && f.filterOperador !== "todos") n++;
-  if (f.filterProforma && f.filterProforma !== "todos") n++;
   if (f.fechaDesde) n++;
   if (f.fechaHasta) n++;
   return n;
 }
+
