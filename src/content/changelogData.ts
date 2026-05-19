@@ -22,6 +22,14 @@ export interface ChangelogEntry {
  */
 export const recentChangelog: ChangelogEntry[] = [
   {
+    version: "10.1.1",
+    date: "2026-05-19",
+    type: "patch",
+    title: "Guía de autoría de tablas — ColumnDef nativo documentada",
+    summary: "Nueva docs/datatable-columndef-guide.md con la receta canónica (defineColumns + sortingFns + meta), mapeo desde la API legacy, anti-patrones y checklist de PR.",
+    description: "Contrato único para futuras tablas a partir de 10.0.0. Incluye receta TL;DR, reglas server-side, mapeo 1:1 desde DataTableColumn, 8 anti-patrones a rechazar en review, tests mínimos y checklist de PR. Sin cambios de código ni UI. APP_VERSION 10.1.1.",
+  },
+  {
     version: "10.1.0",
     date: "2026-05-19",
     type: "minor",
