@@ -2,6 +2,14 @@ import type { ChangelogEntry } from "../../../changelogData";
 
 export const chunk0: ChangelogEntry[] = [
   {
+    version: "8.226.0",
+    date: "2026-05-19",
+    type: "minor",
+    title: "Sistema de reportes de bugs y mejoras",
+    summary: "Nuevo botón en el header permite a cualquier usuario reportar bugs o sugerir mejoras; el super admin los gestiona en /admin/reportes.",
+    description: "Se agregó un botón (icono MessageSquarePlus) junto a la búsqueda global en Layout, AdminLayout y PortalHeader. Abre un modal con tabs 'Nuevo reporte' y 'Mis reportes'. El formulario captura tipo (bug/mejora), título, descripción, URL actual, picker visual de elementos (highlight + click para capturar selector CSS y texto), hasta 3 imágenes desde archivo o pegadas con Ctrl+V, y metadata automática (versión, userAgent, viewport, timezone, últimos 50 logs de consola vía installConsoleBuffer en main.tsx). Nuevas tablas reportes_feedback y reportes_feedback_comentarios con RLS: el usuario sólo ve sus reportes, el super admin ve y gestiona todos. Bucket privado reportes-feedback. Nueva ruta /admin/reportes (lista con filtros tipo/estado/búsqueda + paginación servidor) y /admin/reportes/:id (detalle con imágenes signed URL, metadata técnica colapsable, cambio de estado y hilo de comentarios). APP_VERSION 8.226.0.",
+  },
+  {
     version: "8.225.0",
     date: "2026-05-19",
     type: "minor",
