@@ -137,6 +137,8 @@ export default function EmbarqueDetalle() {
             totalCosto={totalCosto}
             utilidad={utilidad}
             margen={margen}
+            embarqueId={id!}
+            canEdit={canEdit}
           />
         </TabsContent>
 
