@@ -12,7 +12,7 @@ export interface ChangelogEntry {
 }
 
 /**
- * `recentChangelog` mantiene SÓLO las entradas más recientes (top 5) para
+ * `recentChangelog` mantiene SÓLO las entradas más recientes (top 10) para
  * minimizar el bundle del lazy-chunk de Changelog. NO es la fuente de verdad
  * de v8: chunk0.ts contiene la lista completa. Los loaders deduplican por
  * `version` para que el solapamiento (intencional) no genere repetidos en UI.
