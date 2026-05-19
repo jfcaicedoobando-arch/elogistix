@@ -1,4 +1,5 @@
-import { useParams } from "react-router-dom";
+import { useEffect } from "react";
+import { useParams, useSearchParams } from "react-router-dom";
 import { FormProvider } from "react-hook-form";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
@@ -18,11 +19,21 @@ import { useRegisterBreadcrumbLabel } from "@/contexts/BreadcrumbContext";
 
 export default function EditarEmbarque() {
   const { id } = useParams();
+  const [searchParams] = useSearchParams();
   const {
     embarque, isLoading, methods, currentStep, setCurrentStep,
     clientes, proveedoresDb, contactos, selectedCliente,
     handleMsdsUpload, handleSave, isPending, navigate, conceptosForm,
   } = useEditarEmbarqueWizard(id);
+  useRegisterBreadcrumbLabel(id, embarque?.expediente);
+
+  useEffect(() => {
+    const raw = searchParams.get("step");
+    const n = raw ? Number(raw) : NaN;
+    if (Number.isInteger(n) && n >= 1 && n <= 3) setCurrentStep(n);
+    // Solo al montar / cambiar el query param.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams]);
   useRegisterBreadcrumbLabel(id, embarque?.expediente);
 
   const {

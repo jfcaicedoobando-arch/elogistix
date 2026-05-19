@@ -2,6 +2,14 @@ import type { ChangelogEntry } from "../../../changelogData";
 
 export const chunk0: ChangelogEntry[] = [
   {
+    version: "8.225.0",
+    date: "2026-05-19",
+    type: "minor",
+    title: "Detalle de embarque — cargar costos desde el tab vacío",
+    summary: "Cuando un embarque no tiene costos, el círculo del estado vacío en el tab Costos abre el wizard de edición en el paso de costos.",
+    description: "En el tab Costos del detalle, los EmptyState de 'Sin conceptos de venta' y 'Sin conceptos de costo' ahora son accionables: el ícono circular y un botón 'Cargar costos' navegan a /embarques/:id/editar?step=3, abriendo el wizard directamente en el paso 3 (Costos y Pricing). EditarEmbarque ahora lee el query param step (1-3) para posicionar el wizard al montar. EmptyState recibió un tratamiento de cursor/hover/focus cuando hay primaryAction. Solo aparece cuando canEdit es true. APP_VERSION 8.225.0.",
+  },
+  {
     version: "8.224.0",
     date: "2026-05-19",
     type: "patch",

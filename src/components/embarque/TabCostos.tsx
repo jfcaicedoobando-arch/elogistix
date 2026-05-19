@@ -1,3 +1,4 @@
+import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { FileText, Receipt } from "lucide-react";
@@ -14,6 +15,8 @@ interface Props {
   totalCosto: number;
   utilidad: number;
   margen: number;
+  embarqueId?: string;
+  canEdit?: boolean;
 }
 
 const kpiColors = [
@@ -39,13 +42,18 @@ const costoColumns: DataTableColumn<ConceptoCostoRow>[] = [
   { key: "liq", header: "Liquidación", render: (c) => <Badge className={getEstadoColor(c.estado_liquidacion)}>{c.estado_liquidacion}</Badge> },
 ];
 
-export function TabCostos({ conceptosVenta, conceptosCosto, totalVenta, totalCosto, utilidad, margen }: Props) {
+export function TabCostos({ conceptosVenta, conceptosCosto, totalVenta, totalCosto, utilidad, margen, embarqueId, canEdit }: Props) {
+  const navigate = useNavigate();
   const kpis = [
     { label: 'Total Venta', value: formatCurrency(totalVenta), color: '' },
     { label: 'Total Costo', value: formatCurrency(totalCosto), color: '' },
     { label: 'Utilidad', value: formatCurrency(utilidad), color: utilidad >= 0 ? 'text-success' : 'text-destructive' },
     { label: 'Margen', value: `${margen.toFixed(1)}%`, color: margen >= 0 ? 'text-success' : 'text-destructive' },
   ];
+
+  const irACargarCostos = canEdit && embarqueId
+    ? { label: "Cargar costos", onClick: () => navigate(`/embarques/${embarqueId}/editar?step=3`) }
+    : undefined;
 
   return (
     <div className="space-y-6">
@@ -70,7 +78,12 @@ export function TabCostos({ conceptosVenta, conceptosCosto, totalVenta, totalCos
             density="compact"
             emptyState={
               <div className="p-6">
-                <EmptyState icon={Receipt} title="Sin conceptos de venta" description="Aún no se han registrado conceptos de venta para este embarque." />
+                <EmptyState
+                  icon={Receipt}
+                  title="Sin conceptos de venta"
+                  description={irACargarCostos ? "Haz clic en el ícono o en el botón para capturar los conceptos de venta." : "Aún no se han registrado conceptos de venta para este embarque."}
+                  primaryAction={irACargarCostos}
+                />
               </div>
             }
           />
@@ -87,7 +100,12 @@ export function TabCostos({ conceptosVenta, conceptosCosto, totalVenta, totalCos
             density="compact"
             emptyState={
               <div className="p-6">
-                <EmptyState icon={FileText} title="Sin conceptos de costo" description="Aún no se han registrado conceptos de costo para este embarque." />
+                <EmptyState
+                  icon={FileText}
+                  title="Sin conceptos de costo"
+                  description={irACargarCostos ? "Haz clic en el ícono o en el botón para capturar los costos del embarque." : "Aún no se han registrado conceptos de costo para este embarque."}
+                  primaryAction={irACargarCostos}
+                />
               </div>
             }
           />
