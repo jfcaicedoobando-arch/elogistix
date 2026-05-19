@@ -58,10 +58,10 @@ export function useEmbarquesPageController() {
         filterModo: state.filterModo,
         filterCliente: state.filterCliente,
         filterOperador: state.filterOperador,
-        filterProforma: state.filterProforma,
         fechaDesde: state.fechaDesde || undefined,
         fechaHasta: state.fechaHasta || undefined,
       });
+
 
       // Filtro de estado se calcula client-side (no es columna directa de DB).
       const filtradosPorEstado = state.filterEstado === "todos"
