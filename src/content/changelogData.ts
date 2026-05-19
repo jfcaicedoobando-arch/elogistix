@@ -22,6 +22,14 @@ export interface ChangelogEntry {
  */
 export const recentChangelog: ChangelogEntry[] = [
   {
+    version: "10.1.2",
+    date: "2026-05-19",
+    type: "patch",
+    title: "Auditoría de rendimiento de DataTable/VirtualDataTable",
+    summary: "Nuevos benchmarks (DataTable.perf.test.tsx) y reporte docs/datatable-perf-audit.md. 10k filas montan en 124ms; rerender de 5k con data estable en 1.7ms.",
+    description: "6 benchmarks automatizados con presupuestos: DataTable 50 filas (73ms), VirtualDataTable 1k/5k/10k (20/74/124ms, escalado sublinear) y rerender 5k con data por referencia (1.7ms). El reporte confirma que la memoización introducida en 9.1.3 sigue trabajando y documenta las invariantes que no deben romperse. Sin cambios de código. APP_VERSION 10.1.2.",
+  },
+  {
     version: "10.1.1",
     date: "2026-05-19",
     type: "patch",
