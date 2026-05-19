@@ -1,29 +1,49 @@
 ## Problema
 
-Al hacer clic en eliminar un documento adjunto en el tab "Documentos" del detalle de embarque, además del archivo desaparece la fila completa del checklist, lo que impide volver a subir ese mismo tipo de documento desde el listado.
+Al pulsar "Seleccionar elemento" dentro del modal de reportar bug/mejora, la app queda inutilizable: no se puede seleccionar nada y, al cerrar, los clics dejan de responder.
 
 ## Causa
 
-`deleteDocumentoEmbarque` (en `src/services/embarque/documentos.ts`) ejecuta un soft-delete sobre `documentos_embarque` vía `soft_delete_record`. La RPC `get_embarque_full` filtra filas con `deleted_at`, por lo que la fila del checklist desaparece tras eliminar el archivo.
+En `src/components/feedback/FeedbackDialog.tsx` el `Dialog` se controla con:
 
-La intención al pulsar el ícono de basurero en `PortalEmbarqueDocumentos` / `EmbarqueDocumentosTab` es desadjuntar el archivo (regresar el slot a estado "Pendiente"), no eliminar el requisito documental.
+```tsx
+<Dialog open={open && !pickerActive} ...>
+```
+
+Cuando el picker se activa, `pickerActive` pasa a `true` y el `Dialog` **se desmonta**. Al desmontarse:
+
+1. `FeedbackForm` se desmonta y con él el hook `useElementPicker`, cuyo cleanup elimina los listeners de `mousemove/click/keydown` que acaban de instalarse. El picker nunca llega a capturar nada.
+2. Radix Dialog deja por unos instantes `pointer-events: none` en `body` durante su animación de cierre, bloqueando clicks en toda la página.
+3. Los datos del formulario (título, descripción, imágenes) se pierden porque el componente se desmonta.
+
+Además el overlay/contenido del Dialog tienen z-index alto y, aunque el picker tiene `z-index: 2147483646/7`, el overlay sigue interceptando eventos cuando el Dialog está abierto.
 
 ## Cambio
 
-Modificar `deleteDocumentoEmbarque(docId, archivoPath?)` en `src/services/embarque/documentos.ts` para que:
+En `src/components/feedback/FeedbackDialog.tsx`:
 
-1. Haga `UPDATE documentos_embarque SET archivo = NULL, estado = 'Pendiente' WHERE id = docId` (con `.select('id')` para detectar 0 filas afectadas igual que el upload).
-2. Si se recibe `archivoPath`, intente borrar el blob de storage (`deleteFile(archivoPath)`) y trague el error (log silencioso) para no bloquear la limpieza de la fila si el objeto ya no existe.
-3. No invoque `soft_delete_record`: la fila del checklist debe permanecer visible para permitir un nuevo upload.
+1. Mantener el `Dialog` **siempre montado** mientras `open` sea `true` (no cerrarlo por `pickerActive`).
+2. Cuando `pickerActive` sea `true`, ocultar visualmente el contenido y dejarlo pasar clics:
+   - Añadir clase condicional al `DialogContent`: `pickerActive && "opacity-0 pointer-events-none"`.
+   - Forzar que el overlay de Radix también deje pasar clics: pasar `data-picker-active` al `DialogContent` y agregar en `src/index.css` (o estilo inline vía un wrapper) una regla que ponga `pointer-events: none` sobre `[data-radix-dialog-overlay]` mientras el picker esté activo. Alternativa más simple y autocontenida: setear desde el componente `document.body.style.pointerEvents = ''` y aplicar `pointer-events: auto` solo al overlay del picker (que ya lo es porque es un div suelto en `body`); para anular el overlay del dialog, usar un `useEffect` que mientras `pickerActive` añada al `body` una clase `feedback-picker-active` y en `src/index.css` declarar:
+     ```css
+     body.feedback-picker-active [data-radix-dialog-overlay],
+     body.feedback-picker-active [role="dialog"] { pointer-events: none !important; opacity: 0 !important; }
+     ```
+3. No tocar la lógica del hook `useElementPicker` ni `FeedbackForm`: con el Dialog montado, los listeners persisten y el estado del formulario se conserva.
+4. Al terminar el picker (click o Esc), `onPickerActiveChange(false)` ya restaura la visibilidad del Dialog.
 
-No se modifica la firma del servicio ni los hooks consumidores (`useEmbarqueDocumentosActions`, `useDeleteDocumentoEmbarque`); la invalidación de queries existente refrescará la lista mostrando el slot en estado "Pendiente".
+Mantener el guard de `onOpenChange` para no permitir cerrar el dialog mientras `mutation.isPending`.
 
 ## Verificación
 
-- Subir un documento, eliminarlo y confirmar que la fila sigue en la tabla con estado "Pendiente" y botón "Adjuntar" disponible.
-- Confirmar que el archivo previo deja de existir en storage (probar descargando — debe fallar) o queda huérfano si la limpieza falla, pero la UI sigue funcional.
-- Verificar que la bitácora sigue registrando `eliminar_documento`.
+- Abrir el modal, llenar título/descr, pulsar "Seleccionar elemento": el modal desaparece visualmente, el hint "Click para seleccionar · Esc para cancelar" aparece, el cursor es crosshair y el outline azul sigue al mouse.
+- Hacer click en cualquier elemento de la página: el modal reaparece con el selector capturado y los textos del formulario intactos.
+- Pulsar Esc durante el picker: el modal reaparece sin selección y la página vuelve a responder a clics normales.
+- Repetir el flujo varias veces sin recargar.
 
 ## Changelog
 
-Agregar entrada `8.227.0` (patch) en `src/content/changelog/v8/chunks/0.ts` con fecha 19/05/2026: "Fix: eliminar un documento adjunto del embarque ya no borra el renglón del checklist; el slot queda en Pendiente y permite volver a subir el archivo".
+Agregar entrada `8.227.1` (patch) en `src/content/changelog/v8/chunks/0.ts` con fecha 19/05/2026: "Fix: el selector de elemento del reporte de bug/mejora ya no congela la app; el modal se oculta mientras seleccionas y vuelve con la selección capturada".
+
+Actualizar `APP_VERSION` en `src/constants/appVersion.ts` a `8.227.1`.

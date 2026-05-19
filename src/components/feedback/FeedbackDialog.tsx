@@ -1,5 +1,6 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { cn } from "@/lib/utils/cn";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/shared/useToast";
@@ -63,9 +64,16 @@ export function FeedbackDialog({ open, onOpenChange }: Props) {
     },
   });
 
+  useEffect(() => {
+    if (!pickerActive) return;
+    document.body.classList.add("feedback-picker-active");
+    return () => { document.body.classList.remove("feedback-picker-active"); };
+  }, [pickerActive]);
+
   return (
-    <Dialog open={open && !pickerActive} onOpenChange={(v) => { if (!mutation.isPending) onOpenChange(v); }}>
-      <DialogContent className="max-w-xl max-h-[90vh] overflow-y-auto">
+    <Dialog open={open} onOpenChange={(v) => { if (!mutation.isPending && !pickerActive) onOpenChange(v); }}>
+      <DialogContent className={cn("max-w-xl max-h-[90vh] overflow-y-auto", pickerActive && "opacity-0 pointer-events-none")}>
+
         <DialogHeader>
           <DialogTitle>Reportar bug o sugerir mejora</DialogTitle>
           <DialogDescription>
