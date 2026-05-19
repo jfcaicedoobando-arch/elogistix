@@ -2,6 +2,14 @@ import type { ChangelogEntry } from "../../../changelogData";
 
 export const chunk0: ChangelogEntry[] = [
   {
+    version: "8.230.0",
+    date: "2026-05-19",
+    type: "minor",
+    title: "Reporte de bug — breadcrumbs de acciones recientes",
+    summary: "Cada reporte de feedback ahora adjunta los últimos 50 breadcrumbs del usuario (clicks, navegación, llamadas fetch/XHR y errores) y el panel de admin los muestra como timeline legible.",
+    description: "Se añadió src/lib/feedback/breadcrumbsBuffer.ts (ring buffer idéntico a consoleBuffer) que registra: clicks globales con tag + texto + selector vía @medv/finder; navegación parcheando history.pushState/replaceState y popstate; llamadas window.fetch y XMLHttpRequest con método, path sanitizado, status y duración; errores no controlados (window.error y unhandledrejection). Sanitiza signed URLs de Supabase Storage y reemplaza tokens en query strings por '***'. Se instala en main.tsx, se adjunta en ReporteFeedbackMetadata.breadcrumbs desde FeedbackDialog y se renderiza en AdminReporteDetalle como una sección 'Acciones recientes' con iconos por categoría. Se descartó la opción de @sentry/react por costo (~80 KB) frente a las ~80 líneas que controlamos directamente. APP_VERSION 8.230.0.",
+  },
+  {
     version: "8.229.0",
     date: "2026-05-19",
     type: "minor",
