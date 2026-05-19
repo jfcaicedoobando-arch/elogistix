@@ -1,5 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import * as DialogPrimitive from "@radix-ui/react-dialog";
+import { X } from "lucide-react";
+import { DialogOverlay, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils/cn";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from "@/contexts/AuthContext";
@@ -15,6 +17,9 @@ interface Props {
   open: boolean;
   onOpenChange: (v: boolean) => void;
 }
+
+const CONTENT_CLASSES =
+  "fixed left-[50%] top-[50%] z-50 grid w-full max-w-xl max-h-[90vh] overflow-y-auto translate-x-[-50%] translate-y-[-50%] gap-4 border bg-background p-6 shadow-overlay duration-200 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 sm:rounded-xl";
 
 export function FeedbackDialog({ open, onOpenChange }: Props) {
   const { user, effectiveRole, organizationId } = useAuth();
@@ -71,34 +76,42 @@ export function FeedbackDialog({ open, onOpenChange }: Props) {
   }, [pickerActive]);
 
   return (
-    <Dialog open={open} onOpenChange={(v) => { if (!mutation.isPending && !pickerActive) onOpenChange(v); }}>
-      <DialogContent className={cn("max-w-xl max-h-[90vh] overflow-y-auto", pickerActive && "opacity-0 pointer-events-none")}>
-
-        <DialogHeader>
-          <DialogTitle>Reportar bug o sugerir mejora</DialogTitle>
-          <DialogDescription>
-            Tu reporte llega directo al equipo de Libre Carga junto con el contexto técnico necesario.
-          </DialogDescription>
-        </DialogHeader>
-        <Tabs defaultValue="nuevo">
-          <TabsList className="grid grid-cols-2">
-            <TabsTrigger value="nuevo">Nuevo reporte</TabsTrigger>
-            <TabsTrigger value="mios">Mis reportes</TabsTrigger>
-          </TabsList>
-          <TabsContent value="nuevo" className="mt-4">
-            <FeedbackForm
-              initialUrl={currentUrl}
-              submitting={mutation.isPending}
-              onSubmit={(v) => mutation.mutate(v)}
-              onCancel={() => onOpenChange(false)}
-              onPickerActiveChange={setPickerActive}
-            />
-          </TabsContent>
-          <TabsContent value="mios" className="mt-4">
-            {user && <FeedbackMisReportes usuarioId={user.id} />}
-          </TabsContent>
-        </Tabs>
-      </DialogContent>
-    </Dialog>
+    <DialogPrimitive.Root open={open} onOpenChange={(v) => { if (!mutation.isPending && !pickerActive) onOpenChange(v); }}>
+      <DialogPrimitive.Portal>
+        {!pickerActive && <DialogOverlay />}
+        <DialogPrimitive.Content
+          className={cn(CONTENT_CLASSES, pickerActive && "opacity-0 pointer-events-none")}
+        >
+          <DialogHeader>
+            <DialogTitle>Reportar bug o sugerir mejora</DialogTitle>
+            <DialogDescription>
+              Tu reporte llega directo al equipo de Libre Carga junto con el contexto técnico necesario.
+            </DialogDescription>
+          </DialogHeader>
+          <Tabs defaultValue="nuevo">
+            <TabsList className="grid grid-cols-2">
+              <TabsTrigger value="nuevo">Nuevo reporte</TabsTrigger>
+              <TabsTrigger value="mios">Mis reportes</TabsTrigger>
+            </TabsList>
+            <TabsContent value="nuevo" className="mt-4">
+              <FeedbackForm
+                initialUrl={currentUrl}
+                submitting={mutation.isPending}
+                onSubmit={(v) => mutation.mutate(v)}
+                onCancel={() => onOpenChange(false)}
+                onPickerActiveChange={setPickerActive}
+              />
+            </TabsContent>
+            <TabsContent value="mios" className="mt-4">
+              {user && <FeedbackMisReportes usuarioId={user.id} />}
+            </TabsContent>
+          </Tabs>
+          <DialogPrimitive.Close className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2">
+            <X className="h-4 w-4" />
+            <span className="sr-only">Cerrar</span>
+          </DialogPrimitive.Close>
+        </DialogPrimitive.Content>
+      </DialogPrimitive.Portal>
+    </DialogPrimitive.Root>
   );
 }
