@@ -43,7 +43,6 @@ export function useEmbarquesPageController() {
 
   const { data: operadoresUnicos = [] } = useOperadoresDistintos();
 
-  const liquidacionMap = extras.liquidacion;
   const docsMap = extras.docs;
 
   const handleEliminar = useCallback(async () => {
@@ -67,12 +66,11 @@ export function useEmbarquesPageController() {
     () => buildEmbarqueColumns({
       canEdit,
       docsMap,
-      liquidacionMap,
       contenedoresPorExpediente,
       onEditar: (e) => navigate(`/embarques/${e.id}/editar`),
       onEliminar: setEmbarqueAEliminar,
     }),
-    [canEdit, liquidacionMap, docsMap, contenedoresPorExpediente, navigate],
+    [canEdit, docsMap, contenedoresPorExpediente, navigate],
   );
 
 
