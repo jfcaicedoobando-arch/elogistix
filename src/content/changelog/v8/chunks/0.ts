@@ -2,6 +2,15 @@ import type { ChangelogEntry } from "../../../changelogData";
 
 export const chunk0: ChangelogEntry[] = [
   {
+    version: "9.1.0",
+    date: "2026-05-19",
+    type: "minor",
+    title: "DataTable y VirtualDataTable migrados a @tanstack/react-table",
+    summary: "El motor interno de las tablas ahora corre 100% sobre @tanstack/react-table + @tanstack/react-virtual. Se eliminó toda la lógica custom de ordenamiento (useDataTableSort, useMemo que clonaba y ordenaba arreglos). La API pública DataTableColumn<T> se conserva vía adapter, por lo que los ~40 callers existentes (Embarques, Cotizaciones, Clientes, Proveedores, Facturación, etc.) siguen funcionando sin cambios.",
+    description: "Fase 1 de refactor de tablas. Se instaló @tanstack/react-table v8. Nuevos módulos en src/components/shared/dataTable/: columnAdapter.ts (DataTableColumn<T> → ColumnDef<T>), useTableInstance.ts (useReactTable con sort controlado/server vía manualSorting y onSortingChange ↔ controlledSort/onSortChange), defineColumns.ts (helper tipado para columnas nativas) y columnMeta.ts (augmentación del ColumnMeta de TanStack para llevar width/align/sticky/className tipados). DataTableHeaderRow y DataTableBody se reescribieron sobre table.getHeaderGroups() y table.getRowModel().rows con flexRender. VirtualDataTable y VirtualRow conectan la virtualización al rowModel de TanStack (no al array data crudo). Se eliminó useDataTableSort.ts. DataTable ahora acepta tanto DataTableColumn<T>[] (legacy) como ColumnDef<T>[] (nativo). Fase 2 pendiente: migrar los ~38 archivos de columnas restantes a ColumnDef nativo con defineColumns y eventualmente borrar el adapter. Filtros server-side de Supabase (controllers de página) no se tocaron. APP_VERSION 9.1.0.",
+  },
+  {
+
     version: "9.0.3",
     date: "2026-05-19",
     type: "patch",
