@@ -103,9 +103,9 @@ describe("DataTable — render", () => {
 });
 
 describe("DataTable — server-side sort (patrón Embarques/Cotizaciones)", () => {
-  it("Embarques: click en header sortable dispara onSortChange asc → desc → null", () => {
+  it("Embarques: ciclo completo asc → desc → null vía onSortChange (columna string)", () => {
     const onSortChange = vi.fn();
-    const totalHeader = () => screen.getByRole("columnheader", { name: /Total/ });
+    const clienteHeader = () => screen.getByRole("columnheader", { name: /Cliente/ });
 
     const { rerender } = render(
       <DataTable
@@ -118,8 +118,8 @@ describe("DataTable — server-side sort (patrón Embarques/Cotizaciones)", () =
       />,
     );
 
-    // 1er click: null → asc (string column, sortDescFirst=false por default en TanStack)
-    fireEvent.click(screen.getByRole("columnheader", { name: /Cliente/ }));
+    // 1er click: null → asc
+    fireEvent.click(clienteHeader());
     expect(onSortChange).toHaveBeenLastCalledWith("cliente", "asc");
 
     rerender(
@@ -128,14 +128,14 @@ describe("DataTable — server-side sort (patrón Embarques/Cotizaciones)", () =
         data={embarques}
         rowKey={(r) => r.id}
         sortMode="server"
-        controlledSort={{ key: "total", dir: "asc" }}
+        controlledSort={{ key: "cliente", dir: "asc" }}
         onSortChange={onSortChange}
       />,
     );
 
     // 2do click: asc → desc
-    fireEvent.click(totalHeader());
-    expect(onSortChange).toHaveBeenLastCalledWith("total", "desc");
+    fireEvent.click(clienteHeader());
+    expect(onSortChange).toHaveBeenLastCalledWith("cliente", "desc");
 
     rerender(
       <DataTable
@@ -143,14 +143,30 @@ describe("DataTable — server-side sort (patrón Embarques/Cotizaciones)", () =
         data={embarques}
         rowKey={(r) => r.id}
         sortMode="server"
-        controlledSort={{ key: "total", dir: "desc" }}
+        controlledSort={{ key: "cliente", dir: "desc" }}
         onSortChange={onSortChange}
       />,
     );
 
-    // 3er click: desc → null (TanStack cicla a unsorted)
-    fireEvent.click(totalHeader());
+    // 3er click: desc → null (TanStack cicla a unsorted y devolvemos key=null)
+    fireEvent.click(clienteHeader());
     expect(onSortChange).toHaveBeenLastCalledWith(null, "asc");
+  });
+
+  it("Embarques: columna numérica usa sortDescFirst (primer click → desc)", () => {
+    const onSortChange = vi.fn();
+    render(
+      <DataTable
+        columns={embarqueColumns}
+        data={embarques}
+        rowKey={(r) => r.id}
+        sortMode="server"
+        controlledSort={{ key: null, dir: "asc" }}
+        onSortChange={onSortChange}
+      />,
+    );
+    fireEvent.click(screen.getByRole("columnheader", { name: /Total/ }));
+    expect(onSortChange).toHaveBeenLastCalledWith("total", "desc");
   });
 
   it("Cotizaciones: header no sortable NO dispara onSortChange", () => {
