@@ -4,20 +4,6 @@ export type ColumnAlign = "left" | "right" | "center";
 export type TableDensity = "compact" | "comfortable" | "spacious";
 export type SortDir = "asc" | "desc";
 
-export interface DataTableColumn<T> {
-  key: string;
-  header: string;
-  className?: string;
-  headerClassName?: string;
-  width?: string;
-  align?: ColumnAlign;
-  sortable?: boolean;
-  sortValue?: (item: T) => string | number | null;
-  sticky?: boolean;
-  stickyRight?: boolean;
-  render: (item: T) => React.ReactNode;
-}
-
 export interface DataTablePagination {
   page: number;
   totalPages: number;
@@ -38,3 +24,6 @@ export const ALIGN_CLASS: Record<ColumnAlign, string> = {
   right: "text-right",
   center: "text-center",
 };
+
+// React import preserved for downstream callers that re-export shared types.
+export type _ReactKept = React.ReactNode;

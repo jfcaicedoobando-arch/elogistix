@@ -23,7 +23,6 @@ import { VirtualHeaderRow, SkeletonRows, EmptyState } from "@/components/shared/
 import { useTableInstance } from "@/components/shared/dataTable/useTableInstance";
 import {
   DENSITY_CELL,
-  type DataTableColumn,
   type DataTablePagination,
   type TableDensity,
 } from "@/components/shared/dataTable/types";
@@ -38,7 +37,7 @@ function measureByBoundingRect(el: HTMLElement): number {
 }
 
 interface VirtualDataTableProps<T> {
-  columns: ReadonlyArray<DataTableColumn<T> | ColumnDef<T, unknown>>;
+  columns: ReadonlyArray<ColumnDef<T, unknown>>;
   data: T[];
   isLoading?: boolean;
   emptyMessage?: string;

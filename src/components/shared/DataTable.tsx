@@ -6,20 +6,19 @@ import { DataTableHeaderRow } from "@/components/shared/dataTable/DataTableHeade
 import { DataTableBody } from "@/components/shared/dataTable/DataTableBody";
 import { useTableInstance } from "@/components/shared/dataTable/useTableInstance";
 import type {
-  DataTableColumn,
   DataTablePagination,
   TableDensity,
   SortDir,
 } from "@/components/shared/dataTable/types";
 
-export type { DataTableColumn, DataTablePagination, TableDensity, ColumnAlign, SortDir } from "@/components/shared/dataTable/types";
+export type { DataTablePagination, TableDensity, ColumnAlign, SortDir } from "@/components/shared/dataTable/types";
 export { defineColumns } from "@/components/shared/dataTable/defineColumns";
 export type { ColumnDef } from "@tanstack/react-table";
 
 interface DataTableProps<T> {
-  /** Acepta la API legacy (`DataTableColumn<T>[]`) o `ColumnDef<T>[]` nativo
-   *  de TanStack. El motor convierte la primera vía `columnAdapter`. */
-  columns: ReadonlyArray<DataTableColumn<T> | ColumnDef<T, unknown>>;
+  /** API única: `ColumnDef<T, unknown>[]` de TanStack. Construir con
+   *  `defineColumns<T>([...])` para autocompletado del `meta` extendido. */
+  columns: ReadonlyArray<ColumnDef<T, unknown>>;
   data: T[];
   isLoading?: boolean;
   emptyMessage?: string;
@@ -124,12 +123,11 @@ function DataTableInner<T>({
 /**
  * DataTable — tabla genérica del ERP.
  *
- * Refactor 9.1.0: el motor interno corre 100% sobre `@tanstack/react-table`.
- * La API pública (`DataTableColumn<T>`, `controlledSort`, `sortMode`, etc.)
- * sigue intacta vía adapter para no romper los ~40 call-sites legacy. Para
- * código nuevo, pasar `ColumnDef<T>[]` directo (usar `defineColumns`).
+ * Refactor 10.0.0: API única `ColumnDef<T, unknown>[]`. El adapter legacy
+ * `DataTableColumn<T>` fue eliminado tras migrar los ~30 call-sites a
+ * `defineColumns` + helpers `sortByString/Number/Date`.
  *
  * Sin `useDataTableSort`, sin `useMemo` que ordena arreglos, sin `useEffect`
- * que sincronice estados paralelos.
+ * que sincronice estados paralelos — TanStack es la única fuente de verdad.
  */
 export const DataTable = DataTableInner;
