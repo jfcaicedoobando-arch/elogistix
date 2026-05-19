@@ -72,36 +72,40 @@ export function ResumenConceptosVenta({ conceptos, tasaIva, canEdit, onGenerarPr
         ) : (
           <>
             <DataTable<ConceptoVenta>
-              columns={[
+              columns={defineColumns<ConceptoVenta>([
                 {
-                  key: "descripcion", header: "Descripción", className: "font-medium",
-                  render: (c) => (
-                    <>
-                      {c.descripcion}
-                      {c.moneda === "USD" && c.aplica_iva && (
-                        <Badge variant="warning" className="ml-2 text-xs">+IVA</Badge>
-                      )}
-                    </>
-                  ),
+                  id: "descripcion", header: "Descripción", meta: { className: "font-medium" },
+                  cell: ({ row }) => {
+                    const c = row.original;
+                    return (
+                      <>
+                        {c.descripcion}
+                        {c.moneda === "USD" && c.aplica_iva && (
+                          <Badge variant="warning" className="ml-2 text-xs">+IVA</Badge>
+                        )}
+                      </>
+                    );
+                  },
                 },
-                { key: "cant", header: "Cantidad", align: "right", className: "tabular-nums", render: (c) => c.cantidad },
-                { key: "pu", header: "P. Unitario", align: "right", className: "tabular-nums", render: (c) => formatCurrency(Number(c.precio_unitario), c.moneda) },
-                { key: "total", header: "Total", align: "right", className: "font-semibold tabular-nums",
-                  render: (c) => formatCurrency(Number(c.cantidad) * Number(c.precio_unitario), c.moneda) },
-                { key: "moneda", header: "Moneda", render: (c) => c.moneda },
+                { id: "cant", header: "Cantidad", meta: { className: "text-right tabular-nums", headerClassName: "text-right" }, cell: ({ row }) => row.original.cantidad },
+                { id: "pu", header: "P. Unitario", meta: { className: "text-right tabular-nums", headerClassName: "text-right" }, cell: ({ row }) => formatCurrency(Number(row.original.precio_unitario), row.original.moneda) },
+                { id: "total", header: "Total", meta: { className: "text-right font-semibold tabular-nums", headerClassName: "text-right" },
+                  cell: ({ row }) => formatCurrency(Number(row.original.cantidad) * Number(row.original.precio_unitario), row.original.moneda) },
+                { id: "moneda", header: "Moneda", cell: ({ row }) => row.original.moneda },
                 {
-                  key: "estado", header: "Estado",
-                  render: (c) => c.estado_facturacion === "en_proforma" ? (
+                  id: "estado", header: "Estado",
+                  cell: ({ row }) => row.original.estado_facturacion === "en_proforma" ? (
                     <Badge variant="success"><CheckCircle2 className="h-3 w-3 mr-1" /> En proforma</Badge>
                   ) : (
                     <Badge variant="neutral"><Clock className="h-3 w-3 mr-1" /> Pendiente</Badge>
                   ),
                 },
-              ]}
+              ]) as ColumnDef<ConceptoVenta, unknown>[]}
               data={conceptos}
               rowKey={(c) => c.id}
               density="compact"
             />
+
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3 p-4 border-t bg-muted/30">
               <div className="rounded-md border bg-background p-3">
