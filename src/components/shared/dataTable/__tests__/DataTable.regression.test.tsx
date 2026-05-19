@@ -46,15 +46,15 @@ const cotizaciones: CotizacionRow[] = [
 ];
 
 const embarqueColumns: DataTableColumn<EmbarqueRow>[] = [
-  { key: "numero", header: "Número", sortable: true, render: (r) => r.numero },
-  { key: "cliente", header: "Cliente", sortable: true, render: (r) => r.cliente },
-  { key: "total", header: "Total", sortable: true, align: "right", render: (r) => r.total },
+  { key: "numero", header: "Número", sortable: true, sortValue: (r) => r.numero, render: (r) => r.numero },
+  { key: "cliente", header: "Cliente", sortable: true, sortValue: (r) => r.cliente, render: (r) => r.cliente },
+  { key: "total", header: "Total", sortable: true, sortValue: (r) => r.total, align: "right", render: (r) => r.total },
 ];
 
 const cotizacionColumns: DataTableColumn<CotizacionRow>[] = [
-  { key: "folio", header: "Folio", sortable: true, render: (r) => r.folio },
+  { key: "folio", header: "Folio", sortable: true, sortValue: (r) => r.folio, render: (r) => r.folio },
   { key: "cliente", header: "Cliente", render: (r) => r.cliente },
-  { key: "monto", header: "Monto", sortable: true, align: "right", render: (r) => r.monto },
+  { key: "monto", header: "Monto", sortable: true, sortValue: (r) => r.monto, align: "right", render: (r) => r.monto },
 ];
 
 // ---------- DataTable: render + server sort ----------
