@@ -4,6 +4,7 @@ import { AdminSidebar } from "./AdminSidebar";
 import { ErrorBoundary } from "@/components/shared/ErrorBoundary";
 import { ThemeToggle } from "@/components/layout/ThemeToggle";
 import { ChevronRight, Home } from "lucide-react";
+import { FeedbackButton } from "@/components/feedback/FeedbackButton";
 
 const labels: Record<string, string> = {
   admin: "Admin",
@@ -51,7 +52,8 @@ export function AdminLayout() {
           <header className="h-14 flex items-center border-b bg-card px-4 shrink-0 gap-3">
             <SidebarTrigger className="mr-1" aria-label="Alternar barra lateral" />
             <Breadcrumbs />
-            <div className="ml-auto">
+            <div className="ml-auto flex items-center gap-2">
+              <FeedbackButton />
               <ThemeToggle />
             </div>
           </header>

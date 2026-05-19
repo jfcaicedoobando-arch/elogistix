@@ -2020,6 +2020,101 @@ export type Database = {
         }
         Relationships: []
       }
+      reportes_feedback: {
+        Row: {
+          created_at: string
+          descripcion: string
+          elemento_selector: string | null
+          elemento_texto: string | null
+          estado: Database["public"]["Enums"]["estado_reporte_feedback"]
+          id: string
+          imagenes: string[]
+          metadata: Json
+          organization_id: string | null
+          rol_reportero: string | null
+          tipo: Database["public"]["Enums"]["tipo_reporte_feedback"]
+          titulo: string
+          updated_at: string
+          url: string | null
+          usuario_email: string
+          usuario_id: string
+        }
+        Insert: {
+          created_at?: string
+          descripcion: string
+          elemento_selector?: string | null
+          elemento_texto?: string | null
+          estado?: Database["public"]["Enums"]["estado_reporte_feedback"]
+          id?: string
+          imagenes?: string[]
+          metadata?: Json
+          organization_id?: string | null
+          rol_reportero?: string | null
+          tipo: Database["public"]["Enums"]["tipo_reporte_feedback"]
+          titulo: string
+          updated_at?: string
+          url?: string | null
+          usuario_email?: string
+          usuario_id: string
+        }
+        Update: {
+          created_at?: string
+          descripcion?: string
+          elemento_selector?: string | null
+          elemento_texto?: string | null
+          estado?: Database["public"]["Enums"]["estado_reporte_feedback"]
+          id?: string
+          imagenes?: string[]
+          metadata?: Json
+          organization_id?: string | null
+          rol_reportero?: string | null
+          tipo?: Database["public"]["Enums"]["tipo_reporte_feedback"]
+          titulo?: string
+          updated_at?: string
+          url?: string | null
+          usuario_email?: string
+          usuario_id?: string
+        }
+        Relationships: []
+      }
+      reportes_feedback_comentarios: {
+        Row: {
+          autor_email: string
+          autor_es_admin: boolean
+          autor_id: string
+          contenido: string
+          created_at: string
+          id: string
+          reporte_id: string
+        }
+        Insert: {
+          autor_email?: string
+          autor_es_admin?: boolean
+          autor_id: string
+          contenido: string
+          created_at?: string
+          id?: string
+          reporte_id: string
+        }
+        Update: {
+          autor_email?: string
+          autor_es_admin?: boolean
+          autor_id?: string
+          contenido?: string
+          created_at?: string
+          id?: string
+          reporte_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reportes_feedback_comentarios_reporte_id_fkey"
+            columns: ["reporte_id"]
+            isOneToOne: false
+            referencedRelation: "reportes_feedback"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       tipos_contenedor: {
         Row: {
           activo: boolean
@@ -2768,6 +2863,11 @@ export type Database = {
       estado_hallazgo_revision: "pendiente" | "en_progreso" | "revisado"
       estado_liquidacion: "Pendiente" | "Pagado"
       estado_proforma: "Pendiente" | "Facturada" | "Cancelada"
+      estado_reporte_feedback:
+        | "nuevo"
+        | "en_revision"
+        | "resuelto"
+        | "descartado"
       incoterm:
         | "EXW"
         | "FOB"
@@ -2814,6 +2914,7 @@ export type Database = {
         | "Almacenes"
         | "Acondicionamiento de Carga"
         | "Materiales Peligrosos"
+      tipo_reporte_feedback: "bug" | "mejora"
       tipo_servicio_maritimo: "FCL" | "LCL"
     }
     CompositeTypes: {
@@ -2970,6 +3071,12 @@ export const Constants = {
       estado_hallazgo_revision: ["pendiente", "en_progreso", "revisado"],
       estado_liquidacion: ["Pendiente", "Pagado"],
       estado_proforma: ["Pendiente", "Facturada", "Cancelada"],
+      estado_reporte_feedback: [
+        "nuevo",
+        "en_revision",
+        "resuelto",
+        "descartado",
+      ],
       incoterm: [
         "EXW",
         "FOB",
@@ -3020,6 +3127,7 @@ export const Constants = {
         "Acondicionamiento de Carga",
         "Materiales Peligrosos",
       ],
+      tipo_reporte_feedback: ["bug", "mejora"],
       tipo_servicio_maritimo: ["FCL", "LCL"],
     },
   },
