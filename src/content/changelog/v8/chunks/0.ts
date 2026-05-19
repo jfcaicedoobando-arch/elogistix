@@ -2,6 +2,14 @@ import type { ChangelogEntry } from "../../../changelogData";
 
 export const chunk0: ChangelogEntry[] = [
   {
+    version: "8.222.0",
+    date: "2026-05-18",
+    type: "patch",
+    title: "Cambio de estado del embarque — cast explícito a enums",
+    summary: "Avanzar el estado ya no falla con 'column tipo is of type tipo_evento_tracking but expression is of type text'.",
+    description: "El RPC public.avanzar_estado_embarque insertaba p_tipo_evento (text) directamente en eventos_embarque.tipo, una columna del enum tipo_evento_tracking. PostgreSQL no hace cast implícito text→enum custom y la operación abortaba en producción para la sesión de Valeria al cambiar de estado el embarque 30525762-…f68f. Se recreó la función con casts explícitos: p_tipo_evento::tipo_evento_tracking en eventos_embarque y 'cambio_estado'::tipo_nota en notas_embarque (defensivo). Sin cambios en el frontend ni en la firma del RPC. APP_VERSION 8.222.0.",
+  },
+  {
     version: "8.221.0",
     date: "2026-05-18",
     type: "patch",
