@@ -183,3 +183,9 @@
     background: hsl(var(--muted-foreground) / 0.5);
   }
 }
+
+/* Feedback element picker: hide dialog overlay so the page is clickable */
+body.feedback-picker-active [data-radix-dialog-overlay] {
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
