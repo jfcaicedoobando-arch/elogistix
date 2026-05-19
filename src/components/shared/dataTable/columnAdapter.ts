@@ -31,26 +31,36 @@ function makeSortingFn<T>(extract: (item: T) => string | number | null): Sorting
 export function legacyToColumnDef<T>(col: DataTableColumn<T>): ColumnDef<T, unknown> {
   const sortable = !!col.sortable;
   const extract = col.sortValue;
-  const def: ColumnDef<T, unknown> = {
+  const meta = {
+    className: col.className,
+    headerClassName: col.headerClassName,
+    width: col.width,
+    align: col.align,
+    sticky: col.sticky,
+    stickyRight: col.stickyRight,
+  };
+
+  if (sortable && extract) {
+    return {
+      id: col.key,
+      accessorFn: (row: T) => extract(row),
+      header: col.header,
+      enableSorting: true,
+      cell: ({ row }) => col.render(row.original),
+      sortingFn: makeSortingFn(extract),
+      meta,
+    };
+  }
+
+  return {
     id: col.key,
     header: col.header,
     enableSorting: sortable,
     cell: ({ row }) => col.render(row.original),
-    meta: {
-      className: col.className,
-      headerClassName: col.headerClassName,
-      width: col.width,
-      align: col.align,
-      sticky: col.sticky,
-      stickyRight: col.stickyRight,
-    },
+    meta,
   };
-  if (sortable && extract) {
-    def.accessorFn = (row) => extract(row);
-    def.sortingFn = makeSortingFn(extract);
-  }
-  return def;
 }
+
 
 /**
  * Heurística para detectar si un arreglo viene en forma legacy (con `render`)
