@@ -1,33 +1,33 @@
-## Problema
+# Cargar costos desde el tab Costos vacío
 
-En `ELIMP00216 → Editar`, los selects **Shipper (Exportador)** y **Consignatario** salen vacíos aunque el embarque ya tiene datos guardados.
+## Objetivo
+En el detalle del embarque, dentro del tab **Costos**, cuando no hay conceptos cargados el usuario verá el `EmptyState` (icono circular con archivo). Hacer clic en ese estado vacío debe llevar directamente al wizard de edición posicionado en el paso 3 (Costos y Pricing) para capturar los costos.
 
-**Causa raíz:** en la BD `embarques.shipper` y `embarques.consignatario` se guardan como **string con el nombre resuelto** (ej. `"HEBEI LONGDA... — Proveedor (CHINA)"` o `"INDIMEX TRADING"` para "mismo cliente"), pero los `<Select>` del wizard esperan como `value` un **`contacto.id`**, `"__cliente__"` o `"__otro__"`. El mapper `mapEmbarqueRowToFormValues` copia el string crudo, que no coincide con ningún `SelectItem`, así que el control se ve vacío.
+## Alcance
+- Solo afecta el detalle de embarque → `TabCostos` y `EditarEmbarque`.
+- Sin cambios de lógica de negocio ni de BD.
 
-## Solución (solo frontend)
+## Cambios
 
-Agregar una resolución inversa una sola vez, después de que carguen los contactos del cliente y el embarque, en `useEditarEmbarqueWizard.ts`:
+### 1. `src/components/embarque/TabCostos.tsx`
+- Aceptar dos nuevos props opcionales: `embarqueId: string` y `canEdit: boolean`.
+- Convertir el `EmptyState` de **Conceptos de Costo** (y, por consistencia, el de **Conceptos de Venta**) en accionable cuando `canEdit`:
+  - Agregar `primaryAction={{ label: "Cargar costos", onClick: () => navigate(\`/embarques/${embarqueId}/editar?step=3\`) }}`.
+  - El icono `FileText`/`Receipt` ya actúa como el "círculo con icono de archivos" del EmptyState; el botón primario queda inmediatamente debajo. Adicionalmente envolver el icono con `role="button"` + handler para que también sea clickeable directamente.
 
-1. Nueva utilidad `resolverValorContactoDesdeTexto(stored, contactos, clienteNombre, opciones)` en `src/lib/contacto/index.ts`:
-   - Si `stored` está vacío → devolver `{ value: '', manual: '' }`.
-   - Si `opciones.permitirCliente` y `stored === clienteNombre` → `{ value: '__cliente__', manual: '' }`.
-   - Buscar contacto donde `${nombre} — ${tipo} (${pais}) === stored` (o como fallback, `nombre === stored`) → `{ value: contacto.id, manual: '' }`.
-   - En cualquier otro caso → `{ value: '__otro__', manual: stored }`.
+### 2. `src/pages/embarques/EditarEmbarque.tsx`
+- Leer `step` de `useSearchParams`. Si viene un valor válido (1, 2, 3), inicializar `currentStep` con ese valor mediante un `useEffect` que corre una sola vez tras montar.
 
-2. En `useEditarEmbarqueWizard`, nuevo `useEffect` con guard `hidratoContactos` (state) que dispara cuando `initialized && contactos.length >= 0 && embarque` y resuelve:
-   - `shipper`/`shipperManual` con `permitirCliente: false`.
-   - `consignatario`/`consignatarioManual` con `permitirCliente: true` usando `selectedCliente?.nombre`.
-   - Usar `methods.setValue(campo, valor, { shouldDirty: false })` para no marcar el form como modificado.
-   - Marcar `hidratoContactos = true` y no volver a correr.
+### 3. `src/pages/embarques/EmbarqueDetalle.tsx`
+- Pasar `embarqueId={id!}` y `canEdit` a `<TabCostos />`.
 
-3. Test unitario para `resolverValorContactoDesdeTexto` en `src/lib/contacto/__tests__/` cubriendo los 4 casos (vacío, cliente, contacto match, otro).
+### 4. Versionado y changelog
+- Bump a **8.225.0** en `src/constants/appVersion.ts`.
+- Nueva entrada en `src/content/changelog/v8/chunks/0.ts` y `src/content/changelogData.ts` describiendo la acción rápida para cargar costos desde el tab.
 
-## Verificación
+## Validaciones
+- Sin permiso de edición, el EmptyState se queda informativo (sin acción), respetando RLS de UI.
+- El deep-link `?step=3` no rompe la navegación si el valor es inválido (fallback a 1).
 
-- Entrar a `/embarques/30525762-…/editar` y confirmar que Shipper muestra "HEBEI LONGDA… — Proveedor (CHINA)" y Consignatario muestra "Mismo cliente (INDIMEX TRADING)".
-- Probar con un embarque cuyo shipper sea texto libre (caer en "Otro" con el manual prellenado).
-- Guardar sin tocar nada y verificar que `cambiosEmbarque` (diff) no reporta cambios en `shipper`/`consignatario`.
-
-## Changelog
-
-Bump a **8.224.0** con entrada "Editar embarque: precargar Shipper y Consignatario con los valores ya guardados."
+## Fuera de alcance
+- No se cambia el flujo de captura de costos ni se añade un editor inline en el detalle.
