@@ -2,6 +2,14 @@ import type { ChangelogEntry } from "../../../changelogData";
 
 export const chunk0: ChangelogEntry[] = [
   {
+    version: "8.228.0",
+    date: "2026-05-19",
+    type: "minor",
+    title: "Picker de elemento — selectores estables con @medv/finder",
+    summary: "buildSelector ahora usa la librería @medv/finder para generar selectores CSS únicos y resistentes a cambios de estructura.",
+    description: "Se reemplazó el buildSelector casero (path con :nth-of-type y aria-label) por @medv/finder, una librería battle-tested que prioriza id, data-testid, aria-label y clases estables, y sólo cae a :nth-child cuando no hay otra opción. Se eliminaron ~50 líneas en src/lib/feedback/elementSelector.ts (cssEscape y traversal manual). El picker visual y la lógica de pickMeaningfulAncestor / shortLabel no cambian. APP_VERSION 8.228.0.",
+  },
+  {
     version: "8.227.3",
     date: "2026-05-19",
     type: "patch",
