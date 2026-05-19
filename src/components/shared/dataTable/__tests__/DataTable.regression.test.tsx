@@ -14,9 +14,10 @@
  */
 import { describe, it, expect, vi } from "vitest";
 import { render, screen, fireEvent, within } from "@testing-library/react";
-import { DataTable } from "@/components/shared/DataTable";
+import { DataTable, defineColumns, type ColumnDef } from "@/components/shared/DataTable";
 import { VirtualDataTable } from "@/components/shared/VirtualDataTable";
 import type { DataTableColumn } from "@/components/shared/dataTable/types";
+import { sortByString, sortByNumber, sortByDate, esCollator } from "@/components/shared/dataTable/sortingFns";
 
 // ---------- Fixtures que imitan el shape de Embarques/Cotizaciones --------
 
@@ -243,5 +244,123 @@ describe("VirtualDataTable — render vía rowModel de TanStack", () => {
       />,
     );
     expect(screen.getByText("Sin datos")).toBeInTheDocument();
+  });
+});
+
+// ---------- Fase 2: ColumnDef nativo + sortingFns ----------
+
+describe("DataTable — ColumnDef nativo (Fase 2)", () => {
+  const nativeColumns: ColumnDef<EmbarqueRow, unknown>[] = defineColumns<EmbarqueRow>([
+    {
+      id: "numero", header: "Número",
+      accessorFn: (r) => r.numero, enableSorting: true,
+      sortingFn: sortByString<EmbarqueRow>((r) => r.numero),
+      meta: { width: "w-[120px]", sticky: true, className: "font-medium" },
+      cell: ({ row }) => row.original.numero,
+    },
+    {
+      id: "cliente", header: "Cliente",
+      accessorFn: (r) => r.cliente, enableSorting: true,
+      sortingFn: sortByString<EmbarqueRow>((r) => r.cliente),
+      meta: { align: "left" },
+      cell: ({ row }) => row.original.cliente,
+    },
+    {
+      id: "total", header: "Total",
+      accessorFn: (r) => r.total, enableSorting: true,
+      sortingFn: sortByNumber<EmbarqueRow>((r) => r.total),
+      meta: { align: "right", width: "w-[100px]" },
+      cell: ({ row }) => row.original.total,
+    },
+  ]);
+
+  it("renderiza ColumnDef<T>[] nativo sin pasar por adapter", () => {
+    render(
+      <DataTable
+        columns={nativeColumns}
+        data={embarques}
+        rowKey={(r) => r.id}
+      />,
+    );
+    expect(screen.getByText("Número")).toBeInTheDocument();
+    expect(screen.getByText("EMB-001")).toBeInTheDocument();
+    expect(screen.getByText("EMB-002")).toBeInTheDocument();
+    expect(screen.getByText("EMB-003")).toBeInTheDocument();
+  });
+
+  it("dispara onSortChange con id de columna nativo", () => {
+    const onSortChange = vi.fn();
+    render(
+      <DataTable
+        columns={nativeColumns}
+        data={embarques}
+        rowKey={(r) => r.id}
+        sortMode="server"
+        controlledSort={{ key: null, dir: "asc" }}
+        onSortChange={onSortChange}
+      />,
+    );
+    fireEvent.click(screen.getByRole("columnheader", { name: /Cliente/ }));
+    expect(onSortChange).toHaveBeenLastCalledWith("cliente", "asc");
+  });
+});
+
+describe("sortingFns — colación es-MX y nulls al final", () => {
+  interface SR { v: string | null }
+  interface NR { n: number | null }
+  interface DR { d: string | null }
+  // Stub mínimo del Row<T> de TanStack — sólo usamos .original.
+  const mkS = (v: string | null) =>
+    ({ original: { v } } as unknown as import("@tanstack/react-table").Row<SR>);
+  const mkN = (n: number | null) =>
+    ({ original: { n } } as unknown as import("@tanstack/react-table").Row<NR>);
+  const mkD = (d: string | null) =>
+    ({ original: { d } } as unknown as import("@tanstack/react-table").Row<DR>);
+
+  it("colación es-MX (acentos y mayúsculas insensibles)", () => {
+    expect(esCollator.compare("árbol", "banana")).toBeLessThan(0);
+    expect(esCollator.compare("ARBOL", "arbol")).toBe(0);
+
+    const fn = sortByString<SR>((r) => r.v);
+    expect(fn(mkS("árbol"), mkS("banana"), "v")).toBeLessThan(0);
+    expect(fn(mkS("ARBOL"), mkS("arbol"), "v")).toBe(0);
+  });
+
+  it("sortByString manda null/undefined al final", () => {
+    const fn = sortByString<SR>((r) => r.v);
+    expect(fn(mkS(null), mkS("a"), "v")).toBeGreaterThan(0);
+    expect(fn(mkS("a"), mkS(null), "v")).toBeLessThan(0);
+    expect(fn(mkS(null), mkS(null), "v")).toBe(0);
+  });
+
+  it("sortByNumber respeta nulls al final", () => {
+    const fn = sortByNumber<NR>((r) => r.n);
+    expect(fn(mkN(10), mkN(null), "n")).toBeLessThan(0);
+    expect(fn(mkN(null), mkN(10), "n")).toBeGreaterThan(0);
+    expect(fn(mkN(1), mkN(2), "n")).toBeLessThan(0);
+  });
+
+  it("sortByDate compara timestamps y trata strings inválidos como nulls", () => {
+    const fn = sortByDate<DR>((r) => r.d);
+    expect(fn(mkD("2024-01-01"), mkD("2025-01-01"), "d")).toBeLessThan(0);
+    expect(fn(mkD("no-es-fecha"), mkD("2024-01-01"), "d")).toBeGreaterThan(0);
+  });
+});
+
+describe("DataTable — meta visual aplicado al header", () => {
+  it("meta.width / meta.align / meta.sticky se proyectan a la columna", () => {
+    const cols: ColumnDef<EmbarqueRow, unknown>[] = defineColumns<EmbarqueRow>([
+      {
+        id: "numero", header: "Número",
+        meta: { width: "w-[120px]", align: "right", sticky: true, className: "tabular-nums" },
+        cell: ({ row }) => row.original.numero,
+      },
+    ]);
+    render(<DataTable columns={cols} data={embarques} rowKey={(r) => r.id} />);
+    const header = screen.getByRole("columnheader", { name: /Número/ });
+    const cls = header.className;
+    expect(cls).toContain("w-[120px]");
+    expect(cls).toMatch(/text-right|justify-end/);
+    expect(cls).toMatch(/sticky/);
   });
 });

@@ -1,85 +1,52 @@
-# Fase 2 — Migración de columnas a ColumnDef nativo (tablas core)
+# Cierre Fase 2 — Migración a ColumnDef nativo
 
-## Alcance acordado
+Continuación del trabajo ya iniciado. Quedan 4 pasos para dejar la Fase 2 completa y el build verde.
 
-**Migrar ahora** (tablas core de operación):
+## 1. Arreglar `Facturacion.tsx` (build roto)
 
-1. `src/components/embarque/embarqueColumns.tsx` → `EmbarqueRow`
-2. `src/components/cotizacion/cotizacionesColumns.tsx` → `Cotizacion`
-3. `src/components/cliente/clienteColumns.tsx` + `TablaContactos.tsx` + `TabPortalCliente.tsx`
-4. `src/pages/proveedores/Proveedores.tsx` (columnas inline) + `ProveedorDetalle.tsx`
-5. `src/components/facturacion/proformasColumns.tsx`
-6. `src/components/facturacion/proyeccionColumns.tsx`
-7. `src/components/facturacion/huecoFacturacionColumns.tsx`
-8. `src/components/embarque/facturacion/HistorialProformas.tsx`
-9. `src/components/embarque/facturacion/HistorialFacturas.tsx`
-10. `src/components/embarque/TabCostos.tsx`
-11. `src/components/embarque/TabDocumentos.tsx`
-12. `src/pages/clientes/Clientes.tsx` (columnas inline)
-13. `src/pages/facturacion/Facturacion.tsx` (columnas inline)
-
-**Diferir al ticket** (`docs/migracion-tabla-fase2.md`): dashboard, configuración, admin, portal, auditoría, papelera, reportes, idempotencia.
-
-## Patrón de migración
-
-Cada archivo cambia de:
-
-```text
-DataTableColumn<T>[] con { key, header, render, sortable, sortValue, width, align, sticky, className }
-```
-
-a:
-
-```text
-defineColumns<T>([
-  { id, header, accessorFn?, cell: ({ row }) => ...,
-    enableSorting?, sortingFn?, sortDescFirst?,
-    meta: { width, align, sticky, stickyRight, className, headerClassName } }
-])
-```
-
-Equivalencias mecánicas (ya documentadas en `docs/tables.md`):
+Migrar `gastoColumns` al formato nativo `ColumnDef<Gasto>[]` siguiendo el mismo patrón ya aplicado a `facturaColumns` en el mismo archivo:
 
 - `key` → `id`
-- `sortValue: r => r.x` → `accessorFn: r => r.x` (+ `sortingFn` automático del adapter; se replica con `localeCompare("es-MX", { sensitivity: "base" })` para strings)
-- `render` → `cell: ({ row }) => ...(row.original)`
-- estilos visuales → `meta`
+- `header` string → `header`
+- `sortValue` → `accessorFn` + `sortingFn` (usar helpers de `sortingFns.ts`: `sortByString` / `sortByNumber` / `sortByDate` según tipo)
+- `render` → `cell: ({ row }) => ...`
+- `width`, `align`, `sticky`, `className` → `meta`
+- Eliminar import residual de `DataTableColumn` si quedó.
 
-## Pasos
+## 2. Ampliar regresión
 
-1. **Crear helpers compartidos** en `src/components/shared/dataTable/`:
-   - `sortingFns.ts` — `esCollator` (locale "es-MX", sensitivity "base") + `sortByString<T>()`, `sortByDate<T>()`, `sortByNumber<T>()` reutilizables. Replican el comportamiento del adapter para que cada call-site no escriba comparadores ad-hoc.
-2. **Migrar `embarqueColumns.tsx`** (referencia para el resto). Validar contra `Embarques.tsx` con su `sortMode="server"` + `controlledSort`.
-3. **Migrar `cotizacionesColumns.tsx`** y verificar `Cotizaciones.tsx` (también server-side).
-4. **Migrar bloques de cliente** (3 archivos). Estos son sort cliente.
-5. **Migrar Proveedores** (`Proveedores.tsx` + `ProveedorDetalle.tsx`). Mover columnas inline a archivos dedicados `proveedoresColumns.tsx` y `proveedorDetalleColumns.tsx` para mantener el patrón.
-6. **Migrar facturación**: `proformasColumns`, `proyeccionColumns`, `huecoFacturacionColumns`, `HistorialProformas`, `HistorialFacturas`, columnas inline de `Facturacion.tsx`.
-7. **Migrar `TabCostos.tsx` y `TabDocumentos.tsx`** del detalle de embarque.
-8. **Migrar columnas inline de `Clientes.tsx`** a `clienteColumns.tsx` (ya existente).
-9. **Ampliar pruebas de regresión** en `src/components/shared/dataTable/__tests__/DataTable.regression.test.tsx`:
-   - Caso usando un arreglo `ColumnDef<T>[]` nativo (no legacy) para confirmar que la rama `isLegacyColumns=false` funciona.
-   - Caso de sort client-side con `accessorFn` + `sortingFn` para validar que el sort por defecto del adapter sigue ordenando igual que la ruta nativa.
-10. **Crear `docs/migracion-tabla-fase2.md`** con:
-    - Resumen del refactor 9.1.0–9.1.x.
-    - Tabla de equivalencias `DataTableColumn` ↔ `ColumnDef`.
-    - Lista de archivos **migrados** (cerrados) y **pendientes** (con prioridad: P1 admin/configuración, P2 dashboard/reportes, P3 portal/papelera/auditoría/idempotencia).
-    - Criterio de cierre: cuando la lista esté vacía, eliminar `columnAdapter.ts`, `isLegacyColumns`, `legacyToColumnDef`, el tipo `DataTableColumn<T>`, y la rama `toColumnDefs` que decide entre legacy/nativo. Mantener únicamente `ColumnDef<T>[]` + `defineColumns`.
-11. **Versionar**: `APP_VERSION` → `9.2.0` (cambio minor: migración masiva de columnas, sin breaking change público porque el adapter sigue activo).
-12. **Changelog**: nueva entrada `9.2.0` describiendo qué archivos se migraron, helpers nuevos, doc creado y la promesa de eliminar el adapter al cerrar el ticket.
+En `src/components/shared/dataTable/__tests__/DataTable.regression.test.tsx` agregar casos:
 
-## Lo que NO entra
+- Render con `ColumnDef<T>[]` nativo (sin pasar por adapter).
+- Orden cliente con `sortByString` validando colación es-MX (acentos, mayúsculas).
+- Orden con valores `null`/`undefined` cayendo al final.
+- `meta.sticky` / `meta.align` / `meta.width` aplicando clases correctas.
 
-- Eliminar el adapter / `DataTableColumn<T>` (se hace cuando el ticket cierre).
-- Tocar RPCs, filtros server-side, paginación o el motor de virtualización.
-- Migrar archivos diferidos al ticket (admin, configuración, dashboard, reportes, portal, auditoría, papelera, idempotencia).
-- Cambios visuales — el render debe quedar pixel-equivalente.
+## 3. Documentar Fase 2
 
-## Riesgos y mitigación
+Crear `docs/migracion-tabla-fase2.md` con:
 
-- **Sort divergente entre legacy y nativo**: mitigado con helpers `sortByString/Date/Number` que replican exactamente el `localeCompare("es-MX")` del adapter, más un test de regresión que compara ambos caminos.
-- **Identidad de columnas memoizadas**: cada `defineColumns(...)` debe vivir fuera del render o dentro de `useMemo` con deps explícitas (igual que hoy). Sin cambios de patrón.
-- **`accessorFn` vs `cell`**: cuando el render NO depende del valor crudo (badges, componentes complejos), igual usar `accessorFn` para que el sort cliente funcione; el `cell` ignora el valor y usa `row.original`.
+- Resumen del alcance ejecutado (13 archivos core).
+- Tabla de equivalencias `DataTableColumn` ↔ `ColumnDef` (key/header/render/sortValue/width/align/sticky/className → id/header/cell/accessorFn+sortingFn/meta.*).
+- Lista de archivos migrados.
+- Lista de archivos pendientes diferidos al ticket (dashboard, configuración, admin, portal, auditoría, papelera, reportes, idempotencia) con prioridad P1–P3.
+- Criterio de cierre del adapter: eliminar `columnAdapter.ts` y el tipo `DataTableColumn<T>` cuando se cierre el ticket pendiente.
+- Patrón recomendado para nuevas tablas (usar `defineColumns<T>` + helpers de `sortingFns.ts`).
 
-## Tamaño estimado
+## 4. Versionado y changelog
 
-13 archivos migrados + 1 doc nuevo + 1 archivo de helpers + 2 tests nuevos + versionado. Sin cambios en hooks, controllers ni servicios.
+- `src/constants/appVersion.ts` → `9.2.0` (minor; sin breaking change, adapter sigue activo).
+- Nueva entrada al inicio de `src/pages/Changelog.tsx` (fecha de hoy, 19/05/2026) describiendo Fase 2: 13 tablas core migradas a `ColumnDef` nativo, helpers de sorting es-MX, doc de migración y plan de eliminación de adapter.
+- Chunk del changelog v9 actualizado en `src/content/changelog/v9/chunks/` si aplica el patrón existente.
+
+## Fuera de alcance
+
+- No tocar RPCs, filtros server-side, paginación, virtualización.
+- No eliminar todavía `columnAdapter.ts` ni `DataTableColumn<T>` (se cierran junto al ticket pendiente).
+- No migrar archivos diferidos (dashboard/admin/configuración/portal/auditoría/papelera/reportes).
+
+## Archivos afectados
+
+Editar: `src/pages/facturacion/Facturacion.tsx`, `src/components/shared/dataTable/__tests__/DataTable.regression.test.tsx`, `src/constants/appVersion.ts`, `src/pages/Changelog.tsx`, (changelog chunk v9 si existe).
+
+Crear: `docs/migracion-tabla-fase2.md`.

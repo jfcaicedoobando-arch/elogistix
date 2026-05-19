@@ -104,21 +104,52 @@ export default function Facturacion() {
 
   type GastoPendiente = (typeof gastosPendientes)[number];
 
-  const gastoColumns: DataTableColumn<GastoPendiente>[] = [
-    { key: "proveedor", header: "Proveedor", width: "min-w-[180px]", className: "max-w-[220px] truncate", sortable: true, sortValue: (g) => g.proveedor_nombre, render: (g) => <span title={toTitleCase(g.proveedor_nombre)}>{toTitleCase(g.proveedor_nombre)}</span> },
-    { key: "expediente", header: "Expediente", width: "w-[110px]", className: "font-medium whitespace-nowrap", render: (g) => (g.embarques as { expediente: string } | null)?.expediente || "-" },
-    { key: "concepto", header: "Concepto", width: "min-w-[140px]", render: (g) => g.concepto },
-    { key: "monto", header: "Monto", width: "w-[140px]", align: "right", className: "font-medium whitespace-nowrap tabular-nums", sortable: true, sortValue: (g) => g.monto, render: (g) => formatCurrency(g.monto, g.moneda) },
-    { key: "vencimiento", header: "Vencimiento", width: "w-[100px]", className: "text-xs whitespace-nowrap", sortable: true, sortValue: (g) => g.fecha_vencimiento || "", render: (g) => g.fecha_vencimiento ? formatDate(g.fecha_vencimiento) : "-" },
-    { key: "estado", header: "Estado", width: "w-[100px]", render: () => <Badge className={getEstadoColor("Pendiente")}>Pendiente</Badge> },
+  const gastoColumns: ColumnDef<GastoPendiente, unknown>[] = defineColumns<GastoPendiente>([
     {
-      key: "acciones", header: "Acciones", render: (g) => canEdit ? (
-        <Button variant="outline" size="sm" disabled={marcarPagadoPending} onClick={() => handleMarcarPagado(g.id)}>
+      id: "proveedor", header: "Proveedor",
+      accessorFn: (g) => g.proveedor_nombre, enableSorting: true,
+      sortingFn: sortByString<GastoPendiente>((g) => g.proveedor_nombre),
+      meta: { width: "min-w-[180px]", className: "max-w-[220px] truncate" },
+      cell: ({ row }) => <span title={toTitleCase(row.original.proveedor_nombre)}>{toTitleCase(row.original.proveedor_nombre)}</span>,
+    },
+    {
+      id: "expediente", header: "Expediente",
+      meta: { width: "w-[110px]", className: "font-medium whitespace-nowrap" },
+      cell: ({ row }) => (row.original.embarques as { expediente: string } | null)?.expediente || "-",
+    },
+    {
+      id: "concepto", header: "Concepto",
+      meta: { width: "min-w-[140px]" },
+      cell: ({ row }) => row.original.concepto,
+    },
+    {
+      id: "monto", header: "Monto",
+      accessorFn: (g) => g.monto, enableSorting: true,
+      sortingFn: sortByNumber<GastoPendiente>((g) => g.monto),
+      meta: { width: "w-[140px]", align: "right", className: "font-medium whitespace-nowrap tabular-nums" },
+      cell: ({ row }) => formatCurrency(row.original.monto, row.original.moneda),
+    },
+    {
+      id: "vencimiento", header: "Vencimiento",
+      accessorFn: (g) => g.fecha_vencimiento, enableSorting: true,
+      sortingFn: sortByDate<GastoPendiente>((g) => g.fecha_vencimiento),
+      meta: { width: "w-[100px]", className: "text-xs whitespace-nowrap" },
+      cell: ({ row }) => row.original.fecha_vencimiento ? formatDate(row.original.fecha_vencimiento) : "-",
+    },
+    {
+      id: "estado", header: "Estado",
+      meta: { width: "w-[100px]" },
+      cell: () => <Badge className={getEstadoColor("Pendiente")}>Pendiente</Badge>,
+    },
+    {
+      id: "acciones", header: "Acciones",
+      cell: ({ row }) => canEdit ? (
+        <Button variant="outline" size="sm" disabled={marcarPagadoPending} onClick={() => handleMarcarPagado(row.original.id)}>
           Marcar Pagado
         </Button>
       ) : null,
     },
-  ];
+  ]);
 
   return (
     <div className="space-y-6">

@@ -22,6 +22,14 @@ export interface ChangelogEntry {
  */
 export const recentChangelog: ChangelogEntry[] = [
   {
+    version: "9.2.0",
+    date: "2026-05-19",
+    type: "minor",
+    title: "Fase 2 — 13 tablas core migradas a ColumnDef nativo",
+    summary: "Embarques, Cotizaciones, Clientes, Proveedores y Facturación ahora usan ColumnDef<T> nativo de TanStack + helpers sortByString/Number/Date con colación es-MX.",
+    description: "Migración de 13 archivos del core operativo a defineColumns + ColumnDef nativo. Nuevo sortingFns.ts (null-safe, Intl.Collator es-MX). Tests ampliados con casos de colación, nulls y meta visual. Doc docs/migracion-tabla-fase2.md con equivalencias y pendientes. Adapter legacy sigue activo hasta cerrar el ticket. APP_VERSION 9.2.0.",
+  },
+  {
     version: "8.225.0",
     date: "2026-05-19",
     type: "minor",

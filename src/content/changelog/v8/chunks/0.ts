@@ -2,6 +2,14 @@ import type { ChangelogEntry } from "../../../changelogData";
 
 export const chunk0: ChangelogEntry[] = [
   {
+    version: "9.2.0",
+    date: "2026-05-19",
+    type: "minor",
+    title: "Fase 2 — 13 tablas core migradas a ColumnDef nativo",
+    summary: "Embarques, Cotizaciones, Clientes, Proveedores y Facturación ahora usan ColumnDef<T> de TanStack nativo (defineColumns + helpers sortByString/Number/Date con colación es-MX). El adapter legacy sigue activo para el resto de los call-sites y se retirará al cerrar el ticket pendiente.",
+    description: "Se migraron 13 archivos del core operativo: embarqueColumns, cotizacionesColumns, clienteColumns + TablaContactos + TabPortalCliente, Proveedores + ProveedorDetalle, proformasColumns, proyeccionColumns, huecoFacturacionColumns, HistorialProformas, HistorialFacturas, TabCostos, TabDocumentos y las columnas inline de Clientes.tsx y Facturacion.tsx (facturaColumns + gastoColumns). Nuevo helper src/components/shared/dataTable/sortingFns.ts con sortByString (Intl.Collator es-MX, sensitivity base), sortByNumber y sortByDate, todos null-safe (nulls al final). Se ampliaron las pruebas de regresión: render con ColumnDef nativo, onSortChange con id nativo, colación es-MX (acentos y mayúsculas), nulls al final en string/number/date, y proyección de meta.width/align/sticky al header. Nueva doc docs/migracion-tabla-fase2.md con tabla de equivalencias DataTableColumn ↔ ColumnDef, lista de archivos migrados, pendientes diferidos (dashboard, configuración, admin, portal, auditoría, papelera, reportes, idempotencia) con prioridad P1–P3, y criterio de cierre del adapter. Sin cambios en RPCs, filtros server-side, paginación ni virtualización. APP_VERSION 9.2.0.",
+  },
+  {
     version: "9.1.3",
     date: "2026-05-19",
     type: "patch",
