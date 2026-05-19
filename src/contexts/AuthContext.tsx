@@ -7,6 +7,7 @@ import { useAuthProfile, type CachedOrganization } from "./auth/useAuthProfile";
 import { useLoginAudit } from "./auth/useLoginAudit";
 import { fromDb } from "@/lib/supabase/cast";
 import { setAuthSnapshot } from "@/lib/ui/authSnapshot";
+import { syncSentryUser } from "@/lib/sentry";
 
 export type { CachedOrganization } from "./auth/useAuthProfile";
 
