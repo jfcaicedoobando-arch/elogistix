@@ -188,7 +188,7 @@ export function useAsignarResponsable() {
       fechaLimite: string | null;
       tomar?: boolean;
     }) => {
-      if (!user) throw new Error("Sesión no válida");
+      const u = await resolveAuthUser(user);
       const { hallazgo, responsableId, responsableEmail, fechaLimite, tomar } = params;
       const detalleHash = hallazgoHash(hallazgo);
 
@@ -199,16 +199,16 @@ export function useAsignarResponsable() {
         detalle: hallazgo.detalle,
         responsable_id: responsableId,
         responsable_email: responsableEmail,
-        asignado_por: user.id,
-        asignado_por_email: user.email ?? "",
+        asignado_por: u.id,
+        asignado_por_email: u.email ?? "",
         fecha_limite: fechaLimite,
         estado_revision: tomar ? "en_progreso" : "pendiente",
       });
 
       try {
         await insertBitacora({
-          usuarioId: user.id,
-          usuarioEmail: user.email ?? "",
+          usuarioId: u.id,
+          usuarioEmail: u.email ?? "",
           accion: tomar ? "tomar_hallazgo" : "asignar_hallazgo",
           modulo: "auditoria",
           entidadId: hallazgo.embarque_id,
