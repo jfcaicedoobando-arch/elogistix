@@ -99,8 +99,9 @@ export function useEmbarquesPageState() {
   } = useEmbarquesFilters();
 
   const { modo: filterModo, estado: filterEstado, cliente: filterCliente,
-    operador: filterOperador, proforma: filterProforma,
+    operador: filterOperador,
     fechaDesde, fechaHasta } = filters;
+
 
   const estadoFilterActivo = filterEstado !== "todos";
 
