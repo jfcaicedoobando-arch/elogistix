@@ -2,6 +2,14 @@ import type { ChangelogEntry } from "../../../changelogData";
 
 export const chunk0: ChangelogEntry[] = [
   {
+    version: "8.227.1",
+    date: "2026-05-19",
+    type: "patch",
+    title: "Reporte de feedback — picker de elemento no congela la app",
+    summary: "Al usar 'Seleccionar elemento' en el modal de reportar bug/mejora, el modal se oculta sin desmontarse y la página vuelve a ser clickeable.",
+    description: "FeedbackDialog ya no cierra el Dialog cuando pickerActive es true (causaba que useElementPicker se desmontara borrando sus listeners y que Radix dejara pointer-events:none en body). Ahora el Dialog permanece montado, se oculta con opacity-0 + pointer-events-none, y una clase body.feedback-picker-active anula el overlay de Radix. El estado del formulario se preserva durante la selección. APP_VERSION 8.227.1.",
+  },
+  {
     version: "8.227.0",
     date: "2026-05-19",
     type: "patch",
