@@ -215,7 +215,7 @@ export function useEmbarquesPageState() {
 
   const sinFiltros =
     !debouncedSearch &&
-    [filterModo, filterEstado, filterCliente, filterOperador, filterProforma].every(
+    [filterModo, filterEstado, filterCliente, filterOperador].every(
       (v) => v === "todos",
     ) &&
     !fechaDesde &&
@@ -225,7 +225,7 @@ export function useEmbarquesPageState() {
   return {
     // values
     search,
-    filterModo, filterEstado, filterCliente, filterOperador, filterProforma,
+    filterModo, filterEstado, filterCliente, filterOperador,
     fechaDesde, fechaHasta, page, pageSize, debouncedSearch,
     sortKey, sortDir,
     // setters
@@ -234,7 +234,7 @@ export function useEmbarquesPageState() {
     setFilterEstado: (v: string) => setFilter("estado", v, "todos"),
     setFilterCliente: (v: string) => setFilter("cliente", v, "todos"),
     setFilterOperador: (v: string) => setFilter("operador", v, "todos"),
-    setFilterProforma: (v: string) => setFilter("proforma", v, "todos"),
+
     setFechaDesde: (v: string) => setFilter("fechaDesde", v, ""),
     setFechaHasta: (v: string) => setFilter("fechaHasta", v, ""),
     setPage: (p: number) => setPageRaw(p === 0 ? null : p),
