@@ -184,16 +184,12 @@
   }
 }
 
-/* Feedback element picker: hide dialog overlay so the page is clickable */
-body.feedback-picker-active [data-radix-dialog-overlay],
-html.feedback-picker-active [data-radix-dialog-overlay] {
-  opacity: 0 !important;
-  pointer-events: none !important;
-}
-
-/* Block app hovers/tooltips while the picker is active so they don't interfere */
-html.feedback-picker-active body *:not(#feedback-picker-overlay):not(#feedback-picker-label):not(#feedback-picker-hint) {
-  pointer-events: none !important;
+/* Feedback element picker: force crosshair cursor and hide app tooltips/popovers
+   while the picker is active. Do NOT set pointer-events:none globally — it breaks
+   document.elementFromPoint() and the picker can no longer detect what's under the cursor. */
+html.feedback-picker-active,
+html.feedback-picker-active * {
+  cursor: crosshair !important;
 }
 html.feedback-picker-active [data-radix-tooltip-content],
 html.feedback-picker-active [data-radix-popper-content-wrapper],
