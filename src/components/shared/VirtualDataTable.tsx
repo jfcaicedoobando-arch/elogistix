@@ -27,14 +27,8 @@ import {
   type DataTablePagination,
   type TableDensity,
 } from "@/components/shared/dataTable/types";
-import type { ColumnDef, Table } from "@tanstack/react-table";
+import type { ColumnDef } from "@tanstack/react-table";
 
-function buildGridTemplate<T>(table: Table<T>): string {
-  return table
-    .getAllLeafColumns()
-    .map((c) => c.columnDef.meta?.width ?? "minmax(0,1fr)")
-    .join(" ");
-}
 
 const isFirefox =
   typeof navigator !== "undefined" && navigator.userAgent.indexOf("Firefox") !== -1;
