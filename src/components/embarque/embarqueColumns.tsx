@@ -90,10 +90,6 @@ export function buildEmbarqueColumns({
       },
     },
     {
-      key: "liquidacion", header: "Costos", width: "w-[90px]",
-      render: (e) => <LiquidacionBadge info={liquidacionMap[e.id]} />,
-    },
-    {
       key: "proforma", header: "Proforma", width: "w-[180px]",
       render: (e) => <ProformaBadge tieneProforma={e.tiene_proforma} size="sm" />,
     },
