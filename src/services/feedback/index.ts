@@ -42,7 +42,7 @@ export async function crearReporte(input: CrearReporteInput): Promise<ReporteFee
 
   const { data, error } = await supabase
     .from("reportes_feedback")
-    .insert({
+    .insert([{
       id: reporteId,
       tipo: input.tipo,
       titulo: input.titulo,
@@ -50,13 +50,13 @@ export async function crearReporte(input: CrearReporteInput): Promise<ReporteFee
       url: input.url,
       elemento_selector: input.elementoSelector,
       elemento_texto: input.elementoTexto,
-      metadata: input.metadata,
+      metadata: input.metadata as never,
       imagenes: paths,
       usuario_id: input.usuarioId,
       usuario_email: input.usuarioEmail,
       organization_id: input.organizationId,
       rol_reportero: input.rolReportero,
-    })
+    }])
     .select()
     .single();
   if (error) throw error;

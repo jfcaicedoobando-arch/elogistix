@@ -13,9 +13,10 @@ export function buildSelector(el: Element | null): string {
   let depth = 0;
   while (cur && cur.nodeType === 1 && depth < 6 && cur !== document.body) {
     const tag = cur.tagName.toLowerCase();
-    const parent = cur.parentElement;
+    const parent: Element | null = cur.parentElement;
     if (!parent) { parts.unshift(tag); break; }
-    const sameTag = Array.from(parent.children).filter((c) => c.tagName === cur!.tagName);
+    const tagName = cur.tagName;
+    const sameTag = Array.from(parent.children).filter((c: Element) => c.tagName === tagName);
     if (sameTag.length === 1) parts.unshift(tag);
     else {
       const idx = sameTag.indexOf(cur) + 1;
