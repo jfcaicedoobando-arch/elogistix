@@ -75,7 +75,7 @@ function resolveExtras(
 function buildFullSetFilters(i: {
   organizationId: string | null | undefined;
   search: string | null;
-  filterModo: string; filterCliente: string; filterOperador: string; filterProforma: string;
+  filterModo: string; filterCliente: string; filterOperador: string;
   fechaDesde: string; fechaHasta: string;
 }) {
   return {
@@ -84,11 +84,11 @@ function buildFullSetFilters(i: {
     filterModo: i.filterModo,
     filterCliente: i.filterCliente,
     filterOperador: i.filterOperador,
-    filterProforma: i.filterProforma,
     fechaDesde: i.fechaDesde || undefined,
     fechaHasta: i.fechaHasta || undefined,
   };
 }
+
 
 export function useEmbarquesPageState() {
   const { organizationId } = useOrgFilter();
