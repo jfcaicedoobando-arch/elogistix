@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -8,6 +8,8 @@ import { Badge } from "@/components/ui/badge";
 import { Bug, Lightbulb, MousePointerClick, X } from "lucide-react";
 import { FeedbackImageUploader } from "./FeedbackImageUploader";
 import { useElementPicker, type PickedElement } from "@/hooks/feedback/useElementPicker";
+import { captureViewport } from "@/lib/feedback/screenshot";
+import { useToast } from "@/hooks/shared/useToast";
 import type { TipoReporteFeedback } from "@/types/feedback";
 
 export interface FeedbackFormValues {
@@ -34,6 +36,8 @@ export function FeedbackForm({ initialUrl, submitting, onSubmit, onCancel, onPic
   const [imagenes, setImagenes] = useState<File[]>([]);
   const [error, setError] = useState<string | null>(null);
 
+  const { toast } = useToast();
+
   const picker = useElementPicker((el) => {
     setElemento(el);
     onPickerActiveChange?.(false);
@@ -43,6 +47,23 @@ export function FeedbackForm({ initialUrl, submitting, onSubmit, onCancel, onPic
     onPickerActiveChange?.(true);
     picker.start();
   };
+
+  const handleCapture = useCallback(async (): Promise<File | null> => {
+    onPickerActiveChange?.(true);
+    try {
+      await new Promise((r) => setTimeout(r, 250));
+      return await captureViewport();
+    } catch (e) {
+      toast({
+        title: "No se pudo capturar la pantalla",
+        description: (e as Error).message,
+        variant: "destructive",
+      });
+      return null;
+    } finally {
+      onPickerActiveChange?.(false);
+    }
+  }, [onPickerActiveChange, toast]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -118,7 +139,7 @@ export function FeedbackForm({ initialUrl, submitting, onSubmit, onCancel, onPic
 
       <div>
         <Label className="mb-1.5 block">Imágenes (opcional)</Label>
-        <FeedbackImageUploader value={imagenes} onChange={setImagenes} enabled={!picker.active} />
+        <FeedbackImageUploader value={imagenes} onChange={setImagenes} enabled={!picker.active} onCapture={handleCapture} />
       </div>
 
       {error && <p className="text-sm text-destructive">{error}</p>}

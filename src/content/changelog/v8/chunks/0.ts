@@ -2,6 +2,14 @@ import type { ChangelogEntry } from "../../../changelogData";
 
 export const chunk0: ChangelogEntry[] = [
   {
+    version: "8.229.0",
+    date: "2026-05-19",
+    type: "minor",
+    title: "Reporte de bug — botón Capturar pantalla",
+    summary: "El modal de reportar bug/mejora ahora incluye un botón que toma un screenshot automático del viewport y lo adjunta al reporte.",
+    description: "Se añadió la dependencia modern-screenshot (lazy import, ~30 KB sólo cuando se usa) y un helper captureViewport en src/lib/feedback/screenshot.ts que genera un PNG del documento actual, excluyendo el propio modal (marcado con data-feedback-modal) y los overlays del element picker. FeedbackImageUploader recibe la prop opcional onCapture y muestra un segundo botón 'Capturar pantalla' junto a 'Adjuntar imagen'. FeedbackForm orquesta el flujo: oculta el modal con onPickerActiveChange(true), espera 250 ms para que el DOM repinte, captura, y restaura el modal. Si falla muestra un toast. APP_VERSION 8.229.0.",
+  },
+  {
     version: "8.228.0",
     date: "2026-05-19",
     type: "minor",

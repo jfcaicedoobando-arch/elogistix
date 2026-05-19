@@ -80,6 +80,7 @@ export function FeedbackDialog({ open, onOpenChange }: Props) {
       <DialogPrimitive.Portal>
         {!pickerActive && <DialogOverlay />}
         <DialogPrimitive.Content
+          data-feedback-modal
           className={cn(CONTENT_CLASSES, pickerActive && "opacity-0 pointer-events-none")}
         >
           <DialogHeader>
