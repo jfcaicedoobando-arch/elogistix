@@ -127,7 +127,8 @@ export function useEmbarquesPageState() {
   const fullSetFilters = buildFullSetFilters({
     organizationId,
     search: debouncedSearch,
-    filterModo, filterCliente, filterOperador, filterProforma,
+    filterModo, filterCliente, filterOperador,
+
     fechaDesde, fechaHasta,
   });
   const { data: resultadoFull, isLoading: loadingFull } = useQuery({
