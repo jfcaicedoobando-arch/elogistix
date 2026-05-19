@@ -46,16 +46,17 @@ const cotizaciones: CotizacionRow[] = [
 ];
 
 const embarqueColumns: ColumnDef<EmbarqueRow, unknown>[] = defineColumns<EmbarqueRow>([
-  { id: "numero", header: "Número", enableSorting: true, accessorFn: (r) => r.numero, sortingFn: sortByString<EmbarqueRow>("numero"), cell: ({ row }) => row.original.numero },
-  { id: "cliente", header: "Cliente", enableSorting: true, accessorFn: (r) => r.cliente, sortingFn: sortByString<EmbarqueRow>("cliente"), cell: ({ row }) => row.original.cliente },
-  { id: "total", header: "Total", enableSorting: true, accessorFn: (r) => r.total, sortingFn: sortByNumber<EmbarqueRow>("total"), meta: { className: "text-right", headerClassName: "text-right" }, cell: ({ row }) => row.original.total },
+  { id: "numero", header: "Número", enableSorting: true, accessorFn: (r) => r.numero, sortingFn: sortByString<EmbarqueRow>((r) => r.numero), cell: ({ row }) => row.original.numero },
+  { id: "cliente", header: "Cliente", enableSorting: true, accessorFn: (r) => r.cliente, sortingFn: sortByString<EmbarqueRow>((r) => r.cliente), cell: ({ row }) => row.original.cliente },
+  { id: "total", header: "Total", enableSorting: true, accessorFn: (r) => r.total, sortingFn: sortByNumber<EmbarqueRow>((r) => r.total), meta: { className: "text-right", headerClassName: "text-right" }, cell: ({ row }) => row.original.total },
 ]) as ColumnDef<EmbarqueRow, unknown>[];
 
 const cotizacionColumns: ColumnDef<CotizacionRow, unknown>[] = defineColumns<CotizacionRow>([
-  { id: "folio", header: "Folio", enableSorting: true, accessorFn: (r) => r.folio, sortingFn: sortByString<CotizacionRow>("folio"), cell: ({ row }) => row.original.folio },
+  { id: "folio", header: "Folio", enableSorting: true, accessorFn: (r) => r.folio, sortingFn: sortByString<CotizacionRow>((r) => r.folio), cell: ({ row }) => row.original.folio },
   { id: "cliente", header: "Cliente", cell: ({ row }) => row.original.cliente },
-  { id: "monto", header: "Monto", enableSorting: true, accessorFn: (r) => r.monto, sortingFn: sortByNumber<CotizacionRow>("monto"), meta: { className: "text-right", headerClassName: "text-right" }, cell: ({ row }) => row.original.monto },
+  { id: "monto", header: "Monto", enableSorting: true, accessorFn: (r) => r.monto, sortingFn: sortByNumber<CotizacionRow>((r) => r.monto), meta: { className: "text-right", headerClassName: "text-right" }, cell: ({ row }) => row.original.monto },
 ]) as ColumnDef<CotizacionRow, unknown>[];
+
 
 
 // ---------- DataTable: render + server sort ----------
