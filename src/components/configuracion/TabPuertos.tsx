@@ -7,7 +7,7 @@ import { Switch } from "@/components/ui/switch";
 import { Plus, Trash2 } from "lucide-react";
 import { useAllPuertos, useAdminPuertos } from "@/hooks/catalogos";
 import SearchInput from "@/components/selects/SearchInput";
-import { DataTable, type DataTableColumn } from "@/components/shared/DataTable";
+import { DataTable, defineColumns, type ColumnDef } from "@/components/shared/DataTable";
 
 type Puerto = { id: string; code: string; name: string; country: string; activo: boolean };
 
@@ -33,23 +33,25 @@ export default function TabPuertos() {
     return p.code.toLowerCase().includes(q) || p.name.toLowerCase().includes(q) || p.country.toLowerCase().includes(q);
   });
 
-  const columns: DataTableColumn<Puerto>[] = [
-    { key: "code", header: "Código", className: "font-mono text-xs", render: (p) => p.code },
-    { key: "name", header: "Nombre", render: (p) => p.name },
-    { key: "country", header: "País", render: (p) => p.country },
+  const columns: ColumnDef<Puerto, unknown>[] = defineColumns<Puerto>([
+    { id: "code", header: "Código", meta: { className: "font-mono text-xs" }, cell: ({ row }) => row.original.code },
+    { id: "name", header: "Nombre", cell: ({ row }) => row.original.name },
+    { id: "country", header: "País", cell: ({ row }) => row.original.country },
     {
-      key: "activo", header: "Activo", headerClassName: "text-center", className: "text-center",
-      render: (p) => <Switch checked={p.activo} onCheckedChange={(checked) => toggleActivo.mutate({ id: p.id, activo: checked })} />,
+      id: "activo", header: "Activo",
+      meta: { className: "text-center", headerClassName: "text-center" },
+      cell: ({ row }) => <Switch checked={row.original.activo} onCheckedChange={(checked) => toggleActivo.mutate({ id: row.original.id, activo: checked })} />,
     },
     {
-      key: "eliminar", header: "", headerClassName: "w-12",
-      render: (p) => (
-        <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:text-destructive" onClick={() => eliminarPuerto.mutate(p.id)} aria-label={`Eliminar puerto ${p.name}`}>
+      id: "eliminar", header: "",
+      meta: { headerClassName: "w-12" },
+      cell: ({ row }) => (
+        <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:text-destructive" onClick={() => eliminarPuerto.mutate(row.original.id)} aria-label={`Eliminar puerto ${row.original.name}`}>
           <Trash2 className="h-4 w-4" />
         </Button>
       ),
     },
-  ];
+  ]);
 
   return (
     <Card>

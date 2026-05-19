@@ -6,7 +6,7 @@ import { CheckCircle2, ExternalLink, UserPlus, UserCheck, AlertTriangle } from "
 import { useNavigate } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { DataTable, type DataTableColumn } from "@/components/shared/DataTable";
+import { DataTable, defineColumns, type ColumnDef } from "@/components/shared/DataTable";
 import { cn } from "@/lib/utils";
 import { revisionKey } from "@/hooks/auditoria";
 import type { AuditoriaRevision, HallazgoAuditoria } from "@/types/auditoria";
@@ -37,43 +37,50 @@ export function HallazgosTabla({ visibles, start, revisiones, currentUserId, onM
 
   const getRevision = (h: HallazgoAuditoria) => revisiones?.get(revisionKey(h)) ?? null;
 
-  const cols: DataTableColumn<HallazgoAuditoria>[] = [
-    { key: "sev", header: "Severidad", width: "w-[100px]",
-      render: (h) => {
-        const sev = severidadConfig[h.severidad];
+  const cols: ColumnDef<HallazgoAuditoria, unknown>[] = defineColumns<HallazgoAuditoria>([
+    { id: "sev", header: "Severidad", meta: { width: "w-[100px]" },
+      cell: ({ row }) => {
+        const sev = severidadConfig[row.original.severidad];
         return <Badge variant="outline" className={cn("text-[10px]", sev.className)}>{sev.label}</Badge>;
       } },
-    { key: "exp", header: "Expediente", width: "w-[130px]", className: "font-medium tabular-nums text-xs",
-      render: (h) => (
-        <button
-          type="button"
-          onClick={(e) => { e.stopPropagation(); navigate(`/embarques/${h.embarque_id}?tab=${reglaToTab[h.regla]}`); }}
-          className="text-primary hover:underline focus:outline-none focus:underline"
-          title={`Abrir embarque ${h.expediente}`}
-        >
-          {h.expediente}
-        </button>
-      ) },
-    { key: "regla", header: "Regla", width: "w-[160px]", className: "text-xs text-muted-foreground", render: (h) => reglaLabel[h.regla] },
-    { key: "cliente", header: "Cliente", className: "truncate max-w-[180px] text-xs",
-      render: (h) => <span title={h.cliente_nombre}>{h.cliente_nombre || "—"}</span> },
-    { key: "estado", header: "Estado", width: "w-[110px]", className: "text-xs text-muted-foreground", render: (h) => h.estado },
-    { key: "eta", header: "ETA", width: "w-[100px]", className: "text-xs tabular-nums text-muted-foreground", render: (h) => formatEta(h.eta) },
-    { key: "detalle", header: "Detalle", className: "text-xs",
-      render: (h) => (
-        <>
-          <div>{h.detalle}</div>
-          {h.documentos_faltantes && h.documentos_faltantes.length > 0 && (
-            <div className="mt-1 flex flex-wrap gap-1">
-              {h.documentos_faltantes.map((doc) => (
-                <Badge key={doc} variant="secondary" className="text-[10px] font-normal">{doc}</Badge>
-              ))}
-            </div>
-          )}
-        </>
-      ) },
-    { key: "resp", header: "Responsable", width: "w-[170px]", className: "text-xs",
-      render: (h) => {
+    { id: "exp", header: "Expediente", meta: { width: "w-[130px]", className: "font-medium tabular-nums text-xs" },
+      cell: ({ row }) => {
+        const h = row.original;
+        return (
+          <button
+            type="button"
+            onClick={(e) => { e.stopPropagation(); navigate(`/embarques/${h.embarque_id}?tab=${reglaToTab[h.regla]}`); }}
+            className="text-primary hover:underline focus:outline-none focus:underline"
+            title={`Abrir embarque ${h.expediente}`}
+          >
+            {h.expediente}
+          </button>
+        );
+      } },
+    { id: "regla", header: "Regla", meta: { width: "w-[160px]", className: "text-xs text-muted-foreground" }, cell: ({ row }) => reglaLabel[row.original.regla] },
+    { id: "cliente", header: "Cliente", meta: { className: "truncate max-w-[180px] text-xs" },
+      cell: ({ row }) => <span title={row.original.cliente_nombre}>{row.original.cliente_nombre || "—"}</span> },
+    { id: "estado", header: "Estado", meta: { width: "w-[110px]", className: "text-xs text-muted-foreground" }, cell: ({ row }) => row.original.estado },
+    { id: "eta", header: "ETA", meta: { width: "w-[100px]", className: "text-xs tabular-nums text-muted-foreground" }, cell: ({ row }) => formatEta(row.original.eta) },
+    { id: "detalle", header: "Detalle", meta: { className: "text-xs" },
+      cell: ({ row }) => {
+        const h = row.original;
+        return (
+          <>
+            <div>{h.detalle}</div>
+            {h.documentos_faltantes && h.documentos_faltantes.length > 0 && (
+              <div className="mt-1 flex flex-wrap gap-1">
+                {h.documentos_faltantes.map((doc) => (
+                  <Badge key={doc} variant="secondary" className="text-[10px] font-normal">{doc}</Badge>
+                ))}
+              </div>
+            )}
+          </>
+        );
+      } },
+    { id: "resp", header: "Responsable", meta: { width: "w-[170px]", className: "text-xs" },
+      cell: ({ row }) => {
+        const h = row.original;
         const revision = getRevision(h);
         const responsable = revision?.responsable_id ? revision : null;
         const vencida = isVencida(revision?.fecha_limite ?? null) && revision?.estado_revision !== "revisado";
@@ -105,8 +112,9 @@ export function HallazgosTabla({ visibles, start, revisiones, currentUserId, onM
           </button>
         );
       } },
-    { key: "rev", header: "Revisión", width: "w-[150px]",
-      render: (h) => {
+    { id: "rev", header: "Revisión", meta: { width: "w-[150px]" },
+      cell: ({ row }) => {
+        const h = row.original;
         const revision = getRevision(h);
         if (revision?.estado_revision === "revisado") {
           return (
@@ -137,16 +145,19 @@ export function HallazgosTabla({ visibles, start, revisiones, currentUserId, onM
           </Button>
         );
       } },
-    { key: "open", header: "", width: "w-[50px]",
-      render: (h) => (
-        <Button size="icon" variant="ghost" className="h-7 w-7"
-          onClick={(e) => { e.stopPropagation(); navigate(`/embarques/${h.embarque_id}?tab=${reglaToTab[h.regla]}`); }}
-          aria-label="Abrir embarque" title={`Abrir embarque ${h.expediente}`}
-        >
-          <ExternalLink className="h-3.5 w-3.5" />
-        </Button>
-      ) },
-  ];
+    { id: "open", header: "", meta: { width: "w-[50px]" },
+      cell: ({ row }) => {
+        const h = row.original;
+        return (
+          <Button size="icon" variant="ghost" className="h-7 w-7"
+            onClick={(e) => { e.stopPropagation(); navigate(`/embarques/${h.embarque_id}?tab=${reglaToTab[h.regla]}`); }}
+            aria-label="Abrir embarque" title={`Abrir embarque ${h.expediente}`}
+          >
+            <ExternalLink className="h-3.5 w-3.5" />
+          </Button>
+        );
+      } },
+  ]);
 
   return (
     <div className="rounded-md border overflow-hidden">
