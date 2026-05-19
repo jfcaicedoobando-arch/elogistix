@@ -22,6 +22,14 @@ export interface ChangelogEntry {
  */
 export const recentChangelog: ChangelogEntry[] = [
   {
+    version: "8.222.0",
+    date: "2026-05-18",
+    type: "patch",
+    title: "Cambio de estado del embarque — cast explícito a enums",
+    summary: "Avanzar el estado ya no falla con 'column tipo is of type tipo_evento_tracking but expression is of type text'.",
+    description: "El RPC avanzar_estado_embarque insertaba p_tipo_evento (text) en eventos_embarque.tipo (enum tipo_evento_tracking) sin cast, y PostgreSQL abortaba la operación. Se recreó la función con casts explícitos a tipo_evento_tracking y tipo_nota. Sin cambios en el frontend. APP_VERSION 8.222.0.",
+  },
+  {
     version: "8.221.0",
     date: "2026-05-18",
     type: "patch",
