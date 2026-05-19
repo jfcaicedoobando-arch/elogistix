@@ -1,67 +1,86 @@
-# Refactor de tablas a TanStack — estado real y plan de cierre
+## Objetivo
 
-## Punto de partida (importante)
+Refactorizar los 3 módulos financieros para realizar toda la aritmética con `currency.js`, eliminando errores de punto flotante sin alterar firmas ni romper consumidores (`CotizacionDetalle`, `ResumenTotalesCotizacion`, `useEmbarqueFinancials`, generadores de PDF, etc.).
 
-Este refactor **ya se ejecutó** en mensajes anteriores de esta sesión y la app está en `APP_VERSION 10.1.2`. Verifiqué el código en vivo y los directivos del mensaje ya se cumplen:
+## Paso 0 — Dependencia
 
-| Directiva                                                          | Estado actual                                                                                  |
-|--------------------------------------------------------------------|-----------------------------------------------------------------------------------------------|
-| Eliminar lógica custom de orden/filtros/virtualización             | Hecho. `columnAdapter.ts` borrado, `DataTableColumn<T>`/`SortValue` removidos.                |
-| Re-implementar tabla con `@tanstack/react-table` + `@tanstack/react-virtual` | Hecho. `DataTable.tsx`, `VirtualDataTable.tsx`, `useTableInstance.ts` consumen exclusivamente el API nativo. |
-| Integración limpia con Supabase                                    | Hecho. Patrón `sortMode="server" + controlledSort + onSortChange` mapea 1:1 a `.range()`/`order()` en RPCs. |
-| Cero `useEffect` que ordene arrays                                 | Verificado: `rg "\.sort\("` en `src/components/shared/dataTable/` sólo encuentra menciones en comentarios. |
+- `bun add currency.js` (no está instalada actualmente).
+- Convención de uso interno:
+  ```ts
+  import currency from "currency.js";
+  const c = (n: number) => currency(n, { precision: 4 }); // 4 decimales internos para no perder precisión en %
+  ```
+  La precisión se eleva a 4 para `calcularMargen` (porcentaje) y se mantiene en 2 por defecto para montos. Cuando una función deba devolver "monto monetario", se usará `precision: 2`; cuando devuelva razón/porcentaje, `precision: 4`. **No** se usa `.toFixed()` ni `Math.round`; se confía en el redondeo interno de currency.js (`.value`).
 
-Además ya existen: suite de regresión (16 tests), suite E2E (10 tests), benchmark de perf (6 tests, 10k filas en 124ms), `docs/datatable-columndef-guide.md` y `docs/datatable-perf-audit.md`.
+## Archivo 1 — `src/lib/financial/financialUtils.ts`
 
-**Por eso este plan NO re-ejecuta el refactor.** Propongo una pasada de verificación y limpieza para dejar el trabajo formalmente cerrado y eliminar el ruido residual de la API legacy.
+Reemplazos uno a uno, preservando firmas y tipos exactos:
 
-## Lo que sí queda por hacer
+| Función | Implementación nueva |
+|---|---|
+| `calcularSubtotal(cantidad, precioUnitario)` | `currency(precioUnitario).multiply(cantidad).value` |
+| `calcularIVA(monto, tasa=TASA_IVA)` | `currency(monto).multiply(tasa).value` |
+| `calcularTotalConIVA(monto, tasa=TASA_IVA)` | `currency(monto).add(currency(monto).multiply(tasa)).value` (equivale a `monto * (1 + tasa)` sin desbordes) |
+| `calcularMargen(venta, costo)` | early-return `0` si `venta === 0`; luego `currency(venta, {precision:4}).subtract(costo).divide(venta).multiply(100).value` |
+| `calcularUtilidad(venta, costo)` | `currency(venta).subtract(costo).value` |
+| `convertirAMXN(monto, moneda, tcUSD, tcEUR)` | `USD → currency(monto).multiply(tcUSD).value`; `EUR → currency(monto).multiply(tcEUR).value`; `MXN → monto` (sin tocar) |
+| `convertirAUSD(monto, moneda, tcUSD, tcEUR)` | `MXN → currency(monto).divide(tcUSD).value`; `EUR → currency(monto).multiply(tcEUR).divide(tcUSD).value`; `USD → monto` |
 
-### 1. Limpieza de menciones legacy en comentarios
+Notas:
+- `TASA_IVA = 0.16` y el tipo `Moneda` se mantienen exportados sin cambios.
+- Para `MXN`/`USD` "passthrough" se devuelve el input tal cual para que los tests que usan `.toBe(500)` y `.toBe(100)` sigan pasando.
 
-Tres archivos siguen citando símbolos que ya no existen (`DataTableColumn<T>`, `columnAdapter.ts`, `sortValue`). Son sólo bloques de documentación interna, pero confunden a quien lee el código por primera vez:
+## Archivo 2 — `src/lib/financial/profitUtils.ts`
 
-- `src/components/shared/DataTable.tsx` (líneas 127, 130) — actualizar el JSDoc para que describa el estado actual, no la migración histórica.
-- `src/components/embarque/embarqueColumns.tsx` (líneas 24-25) — quitar la referencia a "Fase 1 en `columnAdapter.ts`".
-- `src/components/shared/dataTable/sortingFns.ts` (línea 6) — el comentario "replican lo que el adapter legacy aplicaba detrás de `sortValue`" ya no aporta; reescribir explicando el contrato actual (null-last, colación es-MX) sin referencia al pasado.
+`calcularTotalesPL(filas)` se reescribe acumulando con currency.js:
 
-### 2. Verificación de cumplimiento end-to-end
+```ts
+const totalCostoC = filas.reduce(
+  (acc, f) => acc.add(currency(f.costo_unitario).multiply(f.cantidad)),
+  currency(0),
+);
+const totalVentaC = filas.reduce(
+  (acc, f) => acc.add(currency(f.precio_venta).multiply(f.cantidad)),
+  currency(0),
+);
+const totalCosto = totalCostoC.value;
+const totalVenta = totalVentaC.value;
+const profit = calcularUtilidad(totalVenta, totalCosto);
+const porcentaje = calcularMargen(totalVenta, totalCosto);
+```
 
-Correr la suite completa (`bun run ci:local` o equivalente: lint + tests + build) y reportar:
+Firma `TotalesPL` y export por defecto **no cambian**.
 
-- 26+ tests de DataTable pasan.
-- 6 benchmarks pasan dentro del presupuesto.
-- `rg "\.sort\(" src/components` no encuentra reordenamientos manuales sobre `data` en componentes de tabla.
-- `rg "DataTableColumn|sortValue|columnAdapter|useDataTableSort" src/` sólo encuentra menciones en `src/content/changelog/**` (histórico, intocable).
+## Archivo 3 — `src/lib/financial/costosUSD.ts`
 
-### 3. Resumen ejecutivo "step-by-step" para el equipo
+- `aUSD(monto, moneda, tcUSD, tcEUR)`: delega en el nuevo `convertirAUSD` (ya está con currency.js). Sin cambios de firma.
+- `sumarEnUSD(items, tcUSD, tcEUR)`: se reescribe la reducción para acumular en currency:
 
-Generar un anexo en `docs/datatable-columndef-guide.md` (o un archivo nuevo `docs/refactor-tanstack-summary.md`) que describa, paso a paso y en orden cronológico, qué se hizo en cada fase y por qué. Sirve como referencia única cuando alguien pregunte "¿qué pasó con `DataTableColumn`?" o "¿por qué `VirtualDataTable` no tiene sort cliente?".
+```ts
+return items
+  .reduce(
+    (acc, item) => acc.add(convertirAUSD(item.monto, item.moneda as Moneda, tcUSD, tcEUR)),
+    currency(0),
+  )
+  .value;
+```
 
-Contenido propuesto (uno a uno):
+Esto evita el clásico drift `0.1 + 0.2` al sumar muchos conceptos.
 
-1. **Fase 1 — Adapter intermedio.** Se introdujo `columnAdapter.ts` para que call-sites legacy y nativos coexistieran. Decisión: migrar a `@tanstack/react-table` v8 nativo en lugar de mantener nuestra propia capa.
-2. **Fase 2 — Helpers de orden.** Se creó `sortingFns.ts` con `sortByString` (`Intl.Collator("es-MX")`), `sortByNumber` y `sortByDate`, todos null-last, para reemplazar `sortValue` sin perder colación mexicana ni el manejo de nulos.
-3. **Fase 3 — Migración total y borrado del adapter.** Los ~30 call-sites se reescribieron a `defineColumns<T>` + `ColumnDef<T, unknown>`. Se eliminó `columnAdapter.ts` y los tipos `DataTableColumn<T>`/`SortValue`. `useTableInstance` quedó como único orquestador (sort server-side vs. cliente, sin `useState` paralelos).
-4. **Virtualización.** `VirtualDataTable` consume `table.getRowModel().rows` (no `data` crudo) y conecta `useVirtualizer` con `measureElement`, `estimateSize`, `gridTemplate` y `getRowId` memoizados, más `React.memo(VirtualRow)` con comparador propio. Resultado: rerender de 5k filas en ~2ms.
-5. **Integración con Supabase.** Patrón canónico: estado local `{ key, dir }` y `page`, pasados a un hook que llama Supabase con `.order(key, { ascending: dir==="asc" }).range(...)`. `onSortChange` actualiza el estado y resetea `page=0`; el componente no reordena nada en cliente (`sortMode="server"` implica `manualSorting: true`).
-6. **Tests.** Regresión (16) + E2E (10) + perf (6) bloquean cualquier reintroducción de `useMemo([...data].sort(...))`, `useEffect` que rehidrate orden o pérdida de identidad del `rowModel`.
-7. **Documentación.** `docs/datatable-columndef-guide.md` (receta + checklist de PR) y `docs/datatable-perf-audit.md` (presupuestos y garantías invariantes).
+## Validación
 
-### 4. Versionado y changelog
+1. Ejecutar `bunx vitest run src/lib/financial` — los tests existentes (`financialUtils.test.ts`, `financialUtils.edge.test.ts`, `profitUtils.test.tsx`) deben pasar sin tocar aserciones.
+2. Verificar smoke en consumidores: `ResumenTotalesCotizacion`, `useEmbarqueFinancials`, `conceptosTables.ts`, `services/cliente/financials.ts`. Como las firmas y los tipos de retorno (`number`) se conservan, no se requieren cambios en estos archivos.
+3. `rg "Math\.round\(|\.toFixed\("` dentro de `src/lib/financial/` debe devolver vacío.
 
-Subir `APP_VERSION` a `10.1.3` con entrada `patch` en `chunk0.ts` y `changelogData.ts`: "Limpieza de menciones legacy en JSDoc y resumen step-by-step del refactor a TanStack".
+## Versionado / Changelog
 
-## Lo que NO voy a hacer (y por qué)
+- Bump `APP_VERSION` a `10.1.4` (patch).
+- Entrada en `src/content/changelog/v8/chunks/0.ts` + `src/content/changelogData.ts` + `src/pages/dashboard/Changelog.tsx`: "Aritmética financiera migrada a currency.js para eliminar errores de punto flotante (sin cambios de API)".
 
-- **No re-ejecutar la migración**: ya está hecha. Volver a tocar `DataTable.tsx`/`VirtualDataTable.tsx` sin caso de uso nuevo es riesgo gratuito sobre ~30 call-sites estables.
-- **No cambiar el patrón server-side a `getFilteredRowModel` cliente**: los datasets reales del ERP (embarques, cotizaciones, audit log) llegan paginados de Supabase. Forzar filtro cliente rompería la paginación server y la perf que ya medimos.
-- **No introducir un wrapper "amigable"** sobre `ColumnDef`: ya tenemos `defineColumns<T>` + helpers `sortByString/Number/Date`. Añadir otra capa volvería a reabrir la deuda que acabamos de cerrar.
+## Lo que NO se hace
 
-## Detalles técnicos para implementar después de aprobar
-
-- Archivos a editar: `DataTable.tsx`, `embarqueColumns.tsx`, `sortingFns.ts` (sólo JSDoc), `appVersion.ts`, `changelogData.ts`, `chunk0.ts`, opcional `docs/refactor-tanstack-summary.md` nuevo.
-- Comandos de verificación: `bunx vitest run src/components/shared/dataTable/__tests__/` y `rg -n "DataTableColumn|sortValue|columnAdapter" src/components/ src/pages/`.
-- Sin cambios en runtime, sin cambios visuales, sin cambios en RPCs.
-
-Si prefieres que en vez de cerrar formalmente, busque algún módulo concreto donde sospechas que el patrón TanStack no está bien aplicado, dímelo y ajusto el plan.
+- No se cambian firmas, nombres, ni tipos exportados.
+- No se modifican consumidores aguas arriba.
+- No se introduce `toFixed`/`Math.round`.
+- No se altera la semántica del passthrough MXN/USD.
