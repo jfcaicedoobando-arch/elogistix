@@ -57,6 +57,8 @@ const AdminOrgDetalle = lazy(() => import("./pages/admin/AdminOrgDetalle"));
 const AdminUsuarios = lazy(() => import("./pages/admin/AdminUsuarios"));
 const AdminConfiguracion = lazy(() => import("./pages/admin/AdminConfiguracion"));
 const AdminDiagnostico = lazy(() => import("./pages/admin/Diagnostico"));
+const AdminReportes = lazy(() => import("./pages/admin/AdminReportes"));
+const AdminReporteDetalle = lazy(() => import("./pages/admin/AdminReporteDetalle"));
 
 // Portal pages
 
@@ -161,6 +163,8 @@ const App = () => (
               <Route path="/admin/usuarios" element={<AdminUsuarios />} />
               <Route path="/admin/configuracion" element={<AdminConfiguracion />} />
               <Route path="/admin/diagnostico" element={<AdminDiagnostico />} />
+              <Route path="/admin/reportes" element={<AdminReportes />} />
+              <Route path="/admin/reportes/:id" element={<AdminReporteDetalle />} />
             </Route>
 
             {/* Regular app routes */}

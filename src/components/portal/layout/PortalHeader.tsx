@@ -5,6 +5,7 @@ import { PORTAL_NAV_ITEMS, isPortalNavItemActive } from "./portalNav";
 import { PortalMobileNav } from "./PortalMobileNav";
 import { PortalUserMenu } from "./PortalUserMenu";
 import { PortalNotificationsBell } from "./PortalNotificationsBell";
+import { FeedbackButton } from "@/components/feedback/FeedbackButton";
 
 interface Props {
   pathname: string;
@@ -82,6 +83,7 @@ export function PortalHeader({
 
         <div className="flex items-center gap-1 sm:gap-2 shrink-0">
           <ThemeToggle />
+          <FeedbackButton />
           <PortalNotificationsBell />
           <PortalUserMenu
             initials={initials}

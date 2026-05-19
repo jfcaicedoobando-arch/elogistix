@@ -4,6 +4,9 @@ import "./index.css";
 import { AuthProvider } from "./contexts/AuthContext";
 import { OrganizationProvider } from "./contexts/OrganizationContext";
 import { ThemeProvider } from "./contexts/ThemeContext";
+import { installConsoleBuffer } from "./lib/feedback/consoleBuffer";
+
+installConsoleBuffer();
 
 const CHUNK_ERROR_RELOAD_KEY = "chunk-error-auto-reload";
 
