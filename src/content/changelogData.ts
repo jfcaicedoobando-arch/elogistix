@@ -101,22 +101,6 @@ export const recentChangelog: ChangelogEntry[] = [
     summary: "Cuando un embarque no tiene costos, el círculo del estado vacío en el tab Costos abre el wizard de edición en el paso de costos.",
     description: "Los EmptyState del tab Costos ahora navegan a /embarques/:id/editar?step=3 al hacer clic en el ícono o en 'Cargar costos'. EditarEmbarque respeta el query param step. APP_VERSION 8.225.0.",
   },
-  {
-    version: "8.224.0",
-    date: "2026-05-19",
-    type: "patch",
-    title: "Editar embarque — precargar Shipper y Consignatario",
-    summary: "Los selects de Shipper y Consignatario ahora muestran el valor ya guardado al entrar a editar.",
-    description: "Se agregó resolución inversa en useEditarEmbarqueWizard para mapear el string guardado en BD al value que esperan los <Select> del wizard (contacto.id, __cliente__ o __otro__). APP_VERSION 8.224.0.",
-  },
-  {
-    version: "8.223.0",
-    date: "2026-05-18",
-    type: "minor",
-    title: "Eliminada la opción 'Duplicar' en embarques y cotizaciones",
-    summary: "Por solicitud de operación: la acción Duplicar ya no aparece en ningún menú para ningún usuario.",
-    description: "Se retiró el ítem 'Duplicar' del menú de acciones de fila en /embarques y /cotizaciones, y del menú '…' en el detalle de embarque. Servicios y diálogo permanecen en el repo como código muerto para poder reactivar la función en el futuro. APP_VERSION 8.223.0.",
-  },
 ];
 
 /** Deduplica por version conservando la primera ocurrencia (recentChangelog gana). */
