@@ -2,6 +2,14 @@ import type { ChangelogEntry } from "../../../changelogData";
 
 export const chunk0: ChangelogEntry[] = [
   {
+    version: "8.227.0",
+    date: "2026-05-19",
+    type: "patch",
+    title: "Documentos de embarque — eliminar adjunto preserva el renglón",
+    summary: "Al eliminar un documento adjunto del embarque, el renglón del checklist permanece visible en estado Pendiente para poder volver a subirlo.",
+    description: "deleteDocumentoEmbarque dejó de hacer soft delete sobre documentos_embarque (que ocultaba el renglón porque get_embarque_full filtra deleted_at). Ahora hace UPDATE archivo=NULL, estado='Pendiente' y, best-effort, borra el blob de storage. La firma del servicio y los hooks consumidores no cambian. APP_VERSION 8.227.0.",
+  },
+  {
     version: "8.226.0",
     date: "2026-05-19",
     type: "minor",
