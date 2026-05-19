@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { ArrowLeft, Bug, Lightbulb, Trash2, ExternalLink } from "lucide-react";
+import { ArrowLeft, Bug, Lightbulb, Trash2, ExternalLink, MousePointer, Navigation, Network, AlertCircle, Activity } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -100,6 +100,46 @@ export default function AdminReporteDetalle() {
                     </a>
                   ))}
                 </div>
+              )}
+
+              {reporte.metadata?.breadcrumbs && reporte.metadata.breadcrumbs.length > 0 && (
+                <details className="text-xs" open>
+                  <summary className="cursor-pointer text-muted-foreground hover:text-foreground flex items-center gap-1.5">
+                    <Activity className="h-3.5 w-3.5" />
+                    Acciones recientes ({reporte.metadata.breadcrumbs.length})
+                  </summary>
+                  <div className="mt-2 rounded-md border bg-muted/30 overflow-hidden">
+                    <ul className="divide-y divide-border/50">
+                      {reporte.metadata.breadcrumbs.map((b, i) => {
+                        const Icon =
+                          b.category === "click" ? MousePointer
+                          : b.category === "nav" ? Navigation
+                          : b.category === "error" ? AlertCircle
+                          : Network;
+                        const tone =
+                          b.category === "error" ? "text-destructive"
+                          : b.category === "nav" ? "text-primary"
+                          : "text-muted-foreground";
+                        return (
+                          <li key={i} className="flex items-start gap-2 px-2 py-1.5 text-[11px] font-mono">
+                            <span className="text-muted-foreground tabular-nums whitespace-nowrap">{b.ts.slice(0, 8)}</span>
+                            <Icon className={`h-3.5 w-3.5 mt-0.5 shrink-0 ${tone}`} />
+                            <span className="uppercase text-[9px] tracking-wide text-muted-foreground w-10 shrink-0 mt-0.5">{b.category}</span>
+                            <span className="flex-1 break-all">
+                              {b.message}
+                              {b.data?.selector && (
+                                <span className="block text-muted-foreground/70 text-[10px] mt-0.5">{String(b.data.selector)}</span>
+                              )}
+                              {b.data?.at && (
+                                <span className="block text-muted-foreground/70 text-[10px] mt-0.5">{String(b.data.at)}</span>
+                              )}
+                            </span>
+                          </li>
+                        );
+                      })}
+                    </ul>
+                  </div>
+                </details>
               )}
 
               <details className="text-xs">
