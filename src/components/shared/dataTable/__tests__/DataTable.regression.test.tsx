@@ -14,9 +14,10 @@
  */
 import { describe, it, expect, vi } from "vitest";
 import { render, screen, fireEvent, within } from "@testing-library/react";
-import { DataTable } from "@/components/shared/DataTable";
+import { DataTable, defineColumns, type ColumnDef } from "@/components/shared/DataTable";
 import { VirtualDataTable } from "@/components/shared/VirtualDataTable";
 import type { DataTableColumn } from "@/components/shared/dataTable/types";
+import { sortByString, sortByNumber, sortByDate, esCollator } from "@/components/shared/dataTable/sortingFns";
 
 // ---------- Fixtures que imitan el shape de Embarques/Cotizaciones --------
 
