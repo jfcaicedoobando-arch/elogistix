@@ -36,6 +36,7 @@ export function useEditarEmbarqueWizard(id: string | undefined) {
   const registrarActividad = useRegistrarActividad();
 
   const [initialized, setInitialized] = useState(false);
+  const [hidratoContactos, setHidratoContactos] = useState(false);
   const [currentStep, setCurrentStep] = useState(1);
 
   const {
@@ -89,6 +90,26 @@ export function useEditarEmbarqueWizard(id: string | undefined) {
   }, [conceptosCostoDb, initialized]);
 
   const selectedCliente = clientes.find(c => c.id === clienteId);
+
+  // Resolución inversa de shipper/consignatario: en BD se guardan como string
+  // ("Nombre — Tipo (País)" o el nombre del cliente), pero los <Select> del
+  // wizard esperan contacto.id, '__cliente__' o '__otro__'. Corre una sola vez
+  // tras inicializar el form y tener disponibles los contactos del cliente.
+  useEffect(() => {
+    if (!initialized || hidratoContactos || !embarque) return;
+    const shipperResuelto = resolverValorContactoDesdeTexto(
+      embarque.shipper, contactos, selectedCliente?.nombre,
+    );
+    const consigResuelto = resolverValorContactoDesdeTexto(
+      embarque.consignatario, contactos, selectedCliente?.nombre, { permitirCliente: true },
+    );
+    methods.setValue('shipper', shipperResuelto.value, { shouldDirty: false });
+    methods.setValue('shipperManual', shipperResuelto.manual, { shouldDirty: false });
+    methods.setValue('consignatario', consigResuelto.value, { shouldDirty: false });
+    methods.setValue('consignatarioManual', consigResuelto.manual, { shouldDirty: false });
+    setHidratoContactos(true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialized, hidratoContactos, embarque, contactos, selectedCliente]);
 
   const handleSave = async () => {
     if (!id || !embarque) return;
