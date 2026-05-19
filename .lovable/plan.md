@@ -1,52 +1,101 @@
-# Cierre Fase 2 — Migración a ColumnDef nativo
+# Fase 3 — TanStack puro, sin adapter
 
-Continuación del trabajo ya iniciado. Quedan 4 pasos para dejar la Fase 2 completa y el build verde.
+## Estado actual (importante)
 
-## 1. Arreglar `Facturacion.tsx` (build roto)
+El motor de tablas **ya corre 100% sobre `@tanstack/react-table` + `@tanstack/react-virtual`** desde la Fase 1 (v9.1.0):
 
-Migrar `gastoColumns` al formato nativo `ColumnDef<Gasto>[]` siguiendo el mismo patrón ya aplicado a `facturaColumns` en el mismo archivo:
+- No existe `useDataTableSort`.
+- No hay `useMemo([...data].sort(...))` ni `useEffect` que ordene arreglos en `DataTable` / `VirtualDataTable` / `DataTableBody` / `DataTableHeaderRow` (comentarios en código lo declaran explícitamente).
+- El estado de orden vive en `useReactTable` (`getSortedRowModel` en cliente, `manualSorting` en server).
+- La virtualización pasa por `useVirtualizer` sobre `table.getRowModel().rows`, no sobre `data` cruda.
+- Fase 2 (v9.2.0) migró 13 archivos del core (Embarques, Cotizaciones, Clientes, Proveedores, Facturación) a `ColumnDef<T>` nativo con `defineColumns` + helpers `sortByString/Number/Date` (colación es-MX).
 
-- `key` → `id`
-- `header` string → `header`
-- `sortValue` → `accessorFn` + `sortingFn` (usar helpers de `sortingFns.ts`: `sortByString` / `sortByNumber` / `sortByDate` según tipo)
-- `render` → `cell: ({ row }) => ...`
-- `width`, `align`, `sticky`, `className` → `meta`
-- Eliminar import residual de `DataTableColumn` si quedó.
+Lo único que **incumple la directiva "estrictamente TanStack"** hoy es el **adapter `DataTableColumn<T> → ColumnDef<T>`** que sigue activo para 18 archivos legacy. Esta Fase 3 lo elimina.
 
-## 2. Ampliar regresión
+## Objetivo
 
-En `src/components/shared/dataTable/__tests__/DataTable.regression.test.tsx` agregar casos:
+Dejar `DataTable` / `VirtualDataTable` aceptando **exclusivamente** `ColumnDef<T>[]` y borrar todo rastro de la API legacy.
 
-- Render con `ColumnDef<T>[]` nativo (sin pasar por adapter).
-- Orden cliente con `sortByString` validando colación es-MX (acentos, mayúsculas).
-- Orden con valores `null`/`undefined` cayendo al final.
-- `meta.sticky` / `meta.align` / `meta.width` aplicando clases correctas.
+## Pasos
 
-## 3. Documentar Fase 2
+### 1. Migrar los 18 archivos restantes a `ColumnDef<T>` nativo
 
-Crear `docs/migracion-tabla-fase2.md` con:
+Mismo patrón ya documentado en `docs/migracion-tabla-fase2.md` (`key`→`id`, `render`→`cell`, `sortValue`→`accessorFn`+`sortingFn`, props visuales→`meta`).
 
-- Resumen del alcance ejecutado (13 archivos core).
-- Tabla de equivalencias `DataTableColumn` ↔ `ColumnDef` (key/header/render/sortValue/width/align/sticky/className → id/header/cell/accessorFn+sortingFn/meta.*).
-- Lista de archivos migrados.
-- Lista de archivos pendientes diferidos al ticket (dashboard, configuración, admin, portal, auditoría, papelera, reportes, idempotencia) con prioridad P1–P3.
-- Criterio de cierre del adapter: eliminar `columnAdapter.ts` y el tipo `DataTableColumn<T>` cuando se cierre el ticket pendiente.
-- Patrón recomendado para nuevas tablas (usar `defineColumns<T>` + helpers de `sortingFns.ts`).
+Agrupados por módulo:
 
-## 4. Versionado y changelog
+- **Dashboard**: `ProfitTable.tsx`, `EmbarquesActivosTable.tsx`.
+- **Admin global**: `adminUsuariosColumns.tsx`, `adminOrganizacionesColumns.tsx`, `diagnosticoColumns.tsx`, `TabPlanes.tsx`, `org-detalle/OrgMembersCard.tsx`.
+- **Admin org**: `pages/admin-org/Usuarios.tsx`.
+- **Configuración**: `TabTiposContenedor.tsx`, `TabPuertos.tsx`, `TabNavieras.tsx`.
+- **Auditoría**: `HallazgosTabla.tsx`, `HallazgoTabla.tsx`.
+- **Portal cliente**: `PortalEmbarqueDocumentos.tsx`.
+- **Reportes**: `ReportesTablaClientes.tsx`.
+- **Papelera / Idempotencia**: `pages/dashboard/Papelera.tsx`, `pages/dashboard/Idempotencia.tsx`.
+- **Limpieza**: import muerto de `DataTableColumn` en `embarqueColumns.tsx`.
 
-- `src/constants/appVersion.ts` → `9.2.0` (minor; sin breaking change, adapter sigue activo).
-- Nueva entrada al inicio de `src/pages/Changelog.tsx` (fecha de hoy, 19/05/2026) describiendo Fase 2: 13 tablas core migradas a `ColumnDef` nativo, helpers de sorting es-MX, doc de migración y plan de eliminación de adapter.
-- Chunk del changelog v9 actualizado en `src/content/changelog/v9/chunks/` si aplica el patrón existente.
+### 2. Eliminar la API legacy
+
+- Borrar `src/components/shared/dataTable/columnAdapter.ts`.
+- Quitar el tipo `DataTableColumn<T>` y `SortValue` de `src/components/shared/dataTable/types.ts` (conservar `ColumnAlign`, `SortDirection`, etc. que sigue usando `LibreCargaColumnMeta`).
+- Simplificar la detección dual en `DataTable.tsx`, `VirtualDataTable.tsx` y `useTableInstance.ts`: la prop `columns` pasa a ser `ColumnDef<T, unknown>[]` directo, sin rama de `isLegacy`.
+
+### 3. Ajustar tests
+
+- En `DataTable.regression.test.tsx`, reemplazar los fixtures que usan `DataTableColumn<T>` por `defineColumns<T>` (manteniendo los mismos asserts).
+- Conservar los 4 tests de Fase 2 (ColumnDef nativo, colación es-MX, nulls al final, meta visual).
+
+### 4. Documentación
+
+- Actualizar `docs/tables.md`: eliminar la sección de API legacy y la tabla de equivalencias adapter; dejar como única API `ColumnDef<T>` + `defineColumns` + `sortingFns`.
+- Actualizar `docs/migracion-tabla-fase2.md` marcando el ticket como cerrado y enlazando al commit de borrado del adapter.
+- Nuevo `docs/migracion-tabla-fase3.md` con el listado de los 18 archivos migrados y la nota de que el adapter quedó eliminado.
+
+### 5. Versionado y changelog
+
+- `APP_VERSION` → **`10.0.0`** (major, breaking change en la API pública del componente).
+- Entrada nueva al inicio de `src/content/changelog/v8/chunks/0.ts` y `recentChangelog` describiendo: adapter eliminado, 18 archivos migrados, `DataTable` ahora exige `ColumnDef<T>[]`.
 
 ## Fuera de alcance
 
-- No tocar RPCs, filtros server-side, paginación, virtualización.
-- No eliminar todavía `columnAdapter.ts` ni `DataTableColumn<T>` (se cierran junto al ticket pendiente).
-- No migrar archivos diferidos (dashboard/admin/configuración/portal/auditoría/papelera/reportes).
+- No tocar RPCs, filtros server-side, paginación ni virtualización (el motor ya es puro TanStack).
+- No cambiar el comportamiento visual ni de orden de ninguna tabla — sólo migración de forma.
+- No introducir filtros client-side nuevos: las tablas que filtran lo siguen haciendo en su controlador (Supabase + RPC).
+
+## Detalle técnico (referencia)
+
+Equivalencias (recordatorio):
+
+```text
+key          → id
+header       → header
+render(row)  → cell: ({ row }) => …row.original…
+sortable     → enableSorting
+sortValue    → accessorFn + sortingFn (sortByString/Number/Date)
+width        → meta.width
+align        → meta.align
+sticky       → meta.sticky / meta.stickyRight
+className    → meta.className
+headerClass  → meta.headerClassName
+```
+
+Para sort server-side se mantiene la API: `sortMode="server"` + `controlledSort={{ key, dir }}` + `onSortChange(key, dir)` — el `key` es el `id` declarado en el `ColumnDef`.
 
 ## Archivos afectados
 
-Editar: `src/pages/facturacion/Facturacion.tsx`, `src/components/shared/dataTable/__tests__/DataTable.regression.test.tsx`, `src/constants/appVersion.ts`, `src/pages/Changelog.tsx`, (changelog chunk v9 si existe).
+**Editar** (18 callers + 5 internos):
+- los 18 archivos listados en el paso 1
+- `src/components/shared/DataTable.tsx`
+- `src/components/shared/VirtualDataTable.tsx`
+- `src/components/shared/dataTable/useTableInstance.ts`
+- `src/components/shared/dataTable/types.ts`
+- `src/components/shared/dataTable/__tests__/DataTable.regression.test.tsx`
+- `src/constants/appVersion.ts`
+- `src/content/changelog/v8/chunks/0.ts`, `src/content/changelogData.ts`
+- `docs/tables.md`, `docs/migracion-tabla-fase2.md`
 
-Crear: `docs/migracion-tabla-fase2.md`.
+**Eliminar**:
+- `src/components/shared/dataTable/columnAdapter.ts`
+
+**Crear**:
+- `docs/migracion-tabla-fase3.md`
