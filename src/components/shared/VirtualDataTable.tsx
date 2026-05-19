@@ -14,7 +14,7 @@
  * Úsala cuando el usuario puede paginar a 100+ filas y la altura por fila es
  * variable (payloads, notas largas). Para tablas comunes sigue usando `DataTable`.
  */
-import { useRef } from "react";
+import { useCallback, useMemo, useRef } from "react";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { cn } from "@/lib/utils";
 import PaginationControls from "@/components/shared/PaginationControls";
@@ -36,10 +36,11 @@ function buildGridTemplate<T>(table: Table<T>): string {
     .join(" ");
 }
 
-function pickMeasureElement(estimateRowHeight: number): ((el: HTMLElement) => number) | undefined {
-  if (typeof window === "undefined") return undefined;
-  if (navigator.userAgent.indexOf("Firefox") !== -1) return undefined;
-  return (el) => el?.getBoundingClientRect().height ?? estimateRowHeight;
+const isFirefox =
+  typeof navigator !== "undefined" && navigator.userAgent.indexOf("Firefox") !== -1;
+
+function measureByBoundingRect(el: HTMLElement): number {
+  return el?.getBoundingClientRect().height ?? 0;
 }
 
 interface VirtualDataTableProps<T> {
@@ -71,29 +72,58 @@ export function VirtualDataTable<T>(props: VirtualDataTableProps<T>) {
     estimateRowHeight = 44, maxHeight = 600, overscan = 8, pagination, className,
   } = props;
 
+  // getRowId estable: si `rowKey` cambia de identidad por render, TanStack
+  // no recrea filas porque el id resultante es el mismo. Pero estabilizamos
+  // la función para evitar trabajo extra en useReactTable.
+  const getRowId = useCallback(
+    (row: T, index: number) => rowKey(row) ?? String(index),
+    [rowKey],
+  );
+
   const table = useTableInstance<T>({
     data,
     columns,
     sortMode: "client",
     enableSorting: false,
-    getRowId: (row, index) => rowKey(row) ?? String(index),
+    getRowId,
   });
 
   const parentRef = useRef<HTMLDivElement | null>(null);
   const cellPad = DENSITY_CELL[density];
-  const gridTemplate = buildGridTemplate(table);
   const rows = table.getRowModel().rows;
+
+  // gridTemplate sólo cambia si cambia el set de columnas o sus widths.
+  // Memoizar evita re-string concat por scroll y, sobre todo, mantiene la
+  // identidad de la prop para que `React.memo(VirtualRow)` ahorre re-renders.
+  const leafColumns = table.getAllLeafColumns();
+  const gridTemplate = useMemo(
+    () => leafColumns.map((c) => c.columnDef.meta?.width ?? "minmax(0,1fr)").join(" "),
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- leafColumns es la dep real
+    [leafColumns.length, leafColumns.map((c) => c.columnDef.meta?.width).join("|")],
+  );
+
+  // measureElement debe tener identidad estable: useVirtualizer la lee en
+  // cada opción y una función nueva por render dispara trabajo de re-medición
+  // (resize observer churn). Firefox tiene bug conocido con sub-pixel sizes,
+  // por eso se omite.
+  const measureElement = useMemo(
+    () => (isFirefox ? undefined : measureByBoundingRect),
+    [],
+  );
+
+  const estimateSize = useCallback(() => estimateRowHeight, [estimateRowHeight]);
 
   const virtualizer = useVirtualizer({
     count: rows.length,
     getScrollElement: () => parentRef.current,
-    estimateSize: () => estimateRowHeight,
+    estimateSize,
     overscan,
-    measureElement: pickMeasureElement(estimateRowHeight),
+    measureElement,
   });
 
   const virtualItems = virtualizer.getVirtualItems();
   const showBody = !isLoading && rows.length > 0;
+
 
   return (
     <div className={cn("flex flex-col", className)}>
