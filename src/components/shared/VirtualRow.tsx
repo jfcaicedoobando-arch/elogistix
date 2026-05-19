@@ -1,3 +1,4 @@
+import { memo, useCallback } from "react";
 import { cn } from "@/lib/utils";
 import { flexRender, type Row } from "@tanstack/react-table";
 import { ALIGN_CLASS, type ColumnAlign } from "@/components/shared/dataTable/types";
@@ -20,14 +21,24 @@ interface VirtualRowProps<T> {
  * Fila individual de `VirtualDataTable`. Recibe una `Row<T>` de TanStack y
  * delega cada celda en `flexRender`. No itera columnas manualmente — el
  * orden y la visibilidad los controla la instancia de tabla.
+ *
+ * Perf (9.1.3): el componente está envuelto en `React.memo` con comparador
+ * superficial sobre las props que realmente afectan el render (row, start,
+ * gridTemplate, cellPad, striped, hoverable). Al hacer scroll, el parent
+ * re-renderiza con un nuevo `virtualItems`, pero las filas cuyo `start` e
+ * `id` no cambiaron NO se re-montan. Para que la memo sea efectiva los
+ * callers deben memoizar `onRowClick` y `rowClassName` (se pasan por
+ * referencia).
  */
-export function VirtualRow<T>({
+function VirtualRowInner<T>({
   row, index, start, cellPad, gridTemplate,
   striped, hoverable, onRowClick, rowClassName, measureRef,
 }: VirtualRowProps<T>) {
   const item = row.original;
   const zebra = striped && index % 2 === 1 ? "bg-muted/30" : "";
-  const handleClick = onRowClick ? () => onRowClick(item) : undefined;
+  const handleClick = useCallback(() => {
+    if (onRowClick) onRowClick(item);
+  }, [onRowClick, item]);
   return (
     <div
       ref={measureRef}
@@ -48,7 +59,7 @@ export function VirtualRow<T>({
         transform: `translateY(${start}px)`,
         gridTemplateColumns: gridTemplate,
       }}
-      onClick={handleClick}
+      onClick={onRowClick ? handleClick : undefined}
     >
       {row.getVisibleCells().map((cell) => {
         const meta = cell.column.columnDef.meta ?? {};
@@ -66,3 +77,23 @@ export function VirtualRow<T>({
     </div>
   );
 }
+
+function areEqual<T>(prev: VirtualRowProps<T>, next: VirtualRowProps<T>): boolean {
+  return (
+    prev.row === next.row &&
+    prev.index === next.index &&
+    prev.start === next.start &&
+    prev.cellPad === next.cellPad &&
+    prev.gridTemplate === next.gridTemplate &&
+    prev.striped === next.striped &&
+    prev.hoverable === next.hoverable &&
+    prev.onRowClick === next.onRowClick &&
+    prev.rowClassName === next.rowClassName &&
+    prev.measureRef === next.measureRef
+  );
+}
+
+// React.memo no preserva genéricos: casteo controlado al tipo público.
+export const VirtualRow = memo(VirtualRowInner, areEqual) as <T>(
+  props: VirtualRowProps<T>,
+) => ReturnType<typeof VirtualRowInner<T>>;
