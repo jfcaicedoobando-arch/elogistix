@@ -1,8 +1,10 @@
 /**
  * Helpers para totalizar listas de conceptos en USD.
- * Pura conversión de moneda — sin React, sin formato.
+ * Conversión y suma se delegan a currency.js (vía convertirAUSD) para
+ * evitar errores de punto flotante. Sin React, sin formato.
  */
 
+import currency from "currency.js";
 import { convertirAUSD, type Moneda } from "@/lib/financial/financialUtils";
 
 interface MontoEnMoneda {
@@ -21,10 +23,12 @@ export function sumarEnUSD(
   tcUSD: number,
   tcEUR: number,
 ): number {
-  return items.reduce(
-    (acc, item) => acc + convertirAUSD(item.monto, item.moneda as Moneda, tcUSD, tcEUR),
-    0,
-  );
+  return items
+    .reduce(
+      (acc, item) => acc.add(convertirAUSD(item.monto, item.moneda as Moneda, tcUSD, tcEUR)),
+      currency(0, { precision: 2 }),
+    )
+    .value;
 }
 
 /** Convierte un monto único a USD (wrapper conveniente). */
