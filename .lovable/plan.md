@@ -1,44 +1,41 @@
-# Refrescar tabla de documentos tras subir/eliminar/agregar archivos
+# Fix: cambio de estado del embarque rompe por cast text → enum
 
 ## Diagnóstico
 
-La página `EmbarqueDetalle` lee los documentos vía `useEmbarqueDetalleData` → `useEmbarqueFull`, cuya clave de React Query es:
+Al avanzar el estado del embarque, el frontend llama al RPC `public.avanzar_estado_embarque(...)`. Dentro de esa función:
 
-```
-['embarques', 'full', id]
-```
-
-Pero las mutaciones de documentos en `src/hooks/embarque/mutations/useUpdateEmbarque.ts` (`useUploadDocumentoEmbarque`, `useDeleteDocumentoEmbarque`, `useCreateDocumentoEmbarque`) sólo invalidan:
-
-```
-queryKeys.embarques.documentos(embarqueId) === ['documentos_embarque', id]
+```sql
+INSERT INTO eventos_embarque (embarque_id, tipo, descripcion, ...)
+VALUES (p_embarque_id, p_tipo_evento, p_descripcion_evento, ...);
 ```
 
-Esa clave **no existe en esta página** (la lista de documentos viene dentro de la RPC `get_embarque_full`), así que React Query no refetchea y la UI sigue mostrando `Pendiente` hasta recargar manualmente. Por eso el estado parece "atorado" después de la subida exitosa.
+`p_tipo_evento` es `text`, pero `eventos_embarque.tipo` es del enum `tipo_evento_tracking`. PostgreSQL no hace cast implícito entre `text` y un enum custom en un INSERT, por lo que lanza:
+
+> column "tipo" is of type tipo_evento_tracking but expression is of type text
+
+La línea de `notas_embarque` tampoco está casteada (`'cambio_estado'` literal funciona por coerción de literal, pero conviene blindarla también).
 
 ## Solución
 
-Hacer que las tres mutaciones de documentos también invaliden la query "full" del embarque. La forma más segura y mantenible es invalidar `queryKeys.embarques.all` (prefijo `['embarques']`), que cubre `['embarques', 'full', id]`, `['embarques', 'list', …]` y `['embarques', id]` sin tener que añadir una clave nueva al factory.
+Migración que vuelve a crear `public.avanzar_estado_embarque` con casts explícitos:
+
+- `p_tipo_evento::tipo_evento_tracking` al insertar en `eventos_embarque`.
+- `'cambio_estado'::tipo_nota` al insertar en `notas_embarque` (defensivo).
+
+El resto de la función (idempotencia, validación de organización, UPDATE de estado, respuesta JSON) queda igual.
 
 ### Archivos a tocar
 
-1. **`src/hooks/embarque/mutations/useUpdateEmbarque.ts`**
-   - `useUploadDocumentoEmbarque.onSuccess`: añadir `queryClient.invalidateQueries({ queryKey: queryKeys.embarques.all })` además de la invalidación existente.
-   - `useDeleteDocumentoEmbarque.onSuccess`: lo mismo.
-   - `useCreateDocumentoEmbarque.onSuccess`: lo mismo (para que al crear un nuevo slot aparezca de inmediato).
-
-2. **`src/constants/appVersion.ts`** → bump a `8.221.0`.
-
-3. **`src/content/changelog/v8/chunks/0.ts`** y **`src/content/changelogData.ts`** → nueva entrada `8.221.0` describiendo el fix de refresco.
+1. **Nueva migración** `supabase/migrations/<timestamp>_fix_avanzar_estado_embarque_cast.sql` con el `CREATE OR REPLACE FUNCTION` corregido.
+2. **`src/constants/appVersion.ts`** → bump a `8.222.0`.
+3. **`src/content/changelog/v8/chunks/0.ts`** y **`src/content/changelogData.ts`** → entrada `8.222.0`.
 
 ## Validación
 
-- Subir un archivo a un documento: la fila debe pasar a `Recibido` sin recargar.
-- Eliminar un documento subido: la fila debe volver a `Pendiente` (o desaparecer si fue agregada manualmente).
-- Agregar un nuevo documento con "Agregar documento": debe aparecer en la tabla al instante.
+- Desde la sesión de Valeria, avanzar el estado del embarque `30525762…`: la operación debe completar sin error y registrar la nota + evento.
+- Verificar en DB que se creó la fila en `eventos_embarque` con `tipo` correcto y la nota en `notas_embarque`.
 
 ## Detalles técnicos
 
-- No hace falta tocar `useEmbarqueFullQuery` ni `queryKeys`. Sólo ampliar la invalidación.
-- La invalidación es de prefijo, así que un único `invalidateQueries({ queryKey: ['embarques'] })` cubre la query full y cualquier lista de embarques que pueda mostrar contador de documentos.
-- Mantengo también las invalidaciones específicas a `documentos_embarque` por si en el futuro algún hook las consume directamente.
+- Sólo cambia el cuerpo del RPC; firma, permisos y `SECURITY DEFINER` se conservan.
+- No se requiere cambiar `src/services/embarque/mutations.ts` ni el hook que llama el RPC: siguen mandando `tipo_evento` como string.
