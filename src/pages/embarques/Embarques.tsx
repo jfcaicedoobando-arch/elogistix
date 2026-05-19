@@ -72,8 +72,7 @@ export default function Embarques() {
                 onFilterClienteChange={setFilterCliente}
                 filterOperador={filterOperador}
                 onFilterOperadorChange={setFilterOperador}
-                filterProforma={filterProforma}
-                onFilterProformaChange={setFilterProforma}
+
                 fechaDesde={fechaDesde}
                 onFechaDesdeChange={setFechaDesde}
                 fechaHasta={fechaHasta}
