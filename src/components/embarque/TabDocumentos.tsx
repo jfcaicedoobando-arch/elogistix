@@ -15,7 +15,7 @@ import { Textarea } from "@/components/ui/textarea";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
-import { DataTable, type DataTableColumn } from "@/components/shared/DataTable";
+import { DataTable, defineColumns, type ColumnDef } from "@/components/shared/DataTable";
 import type { DocumentoEmbarqueRow } from "@/hooks/embarque";
 import { useCreateDocumentoEmbarque } from "@/hooks/embarque";
 import { getDocsForMode } from "@/constants/embarqueConstants";
@@ -78,69 +78,76 @@ export function TabDocumentos({
     }
   };
 
-  const columns = useMemo<DataTableColumn<DocumentoEmbarqueRow>[]>(() => [
-    { key: "nombre", header: "Documento", className: "font-medium", render: (d) => d.nombre },
+  const columns = useMemo<ColumnDef<DocumentoEmbarqueRow, unknown>[]>(() => defineColumns<DocumentoEmbarqueRow>([
+    { id: "nombre", header: "Documento", meta: { className: "font-medium" }, cell: ({ row }) => row.original.nombre },
     {
-      key: "estado", header: "Estado", render: (d) => (
+      id: "estado",
+      header: "Estado",
+      cell: ({ row }) => (
         <div className="flex items-center gap-2">
-          <div className={`h-3 w-3 rounded-full ${getDocEstadoColorClass(d.estado)}`} />
-          <span className="text-sm">{d.estado}</span>
+          <div className={`h-3 w-3 rounded-full ${getDocEstadoColorClass(row.original.estado)}`} />
+          <span className="text-sm">{row.original.estado}</span>
         </div>
       ),
     },
-    { key: "notas", header: "Notas", className: "text-sm text-muted-foreground", render: (d) => d.notas || '-' },
+    { id: "notas", header: "Notas", meta: { className: "text-sm text-muted-foreground" }, cell: ({ row }) => row.original.notas || '-' },
     {
-      key: "acciones", header: "Acciones", render: (doc) => (
-        <div className="flex gap-2">
-          {canEdit && (
-            <Button
-              variant="outline"
-              size="sm"
-              disabled={uploadingDocId === doc.id}
-              onClick={(e) => {
-                e.stopPropagation();
-                const input = document.createElement("input");
-                input.type = "file";
-                input.onchange = (ev) => {
-                  const file = (ev.target as HTMLInputElement).files?.[0];
-                  if (file) onUpload(doc.id, file);
-                };
-                input.click();
-              }}
-            >
-              {uploadingDocId === doc.id ? <Loader2 className="h-3.5 w-3.5 animate-spin mr-1" /> : <Upload className="h-3.5 w-3.5 mr-1" />}
-              Subir
-            </Button>
-          )}
-          {doc.archivo && (
-            <>
+      id: "acciones",
+      header: "Acciones",
+      cell: ({ row }) => {
+        const doc = row.original;
+        return (
+          <div className="flex gap-2">
+            {canEdit && (
               <Button
-                variant="ghost"
+                variant="outline"
                 size="sm"
-                disabled={downloadingDocId === doc.id}
-                onClick={(e) => { e.stopPropagation(); onDownload(doc.archivo!, doc.id); }}
+                disabled={uploadingDocId === doc.id}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  const input = document.createElement("input");
+                  input.type = "file";
+                  input.onchange = (ev) => {
+                    const file = (ev.target as HTMLInputElement).files?.[0];
+                    if (file) onUpload(doc.id, file);
+                  };
+                  input.click();
+                }}
               >
-                {downloadingDocId === doc.id ? <Loader2 className="h-3.5 w-3.5 animate-spin mr-1" /> : <Download className="h-3.5 w-3.5 mr-1" />}
-                Descargar
+                {uploadingDocId === doc.id ? <Loader2 className="h-3.5 w-3.5 animate-spin mr-1" /> : <Upload className="h-3.5 w-3.5 mr-1" />}
+                Subir
               </Button>
-              {canEdit && onDelete && (
+            )}
+            {doc.archivo && (
+              <>
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="text-destructive hover:text-destructive hover:bg-destructive/10"
-                  disabled={deletingDocId === doc.id}
-                  onClick={(e) => { e.stopPropagation(); setDocToDelete(doc); }}
+                  disabled={downloadingDocId === doc.id}
+                  onClick={(e) => { e.stopPropagation(); onDownload(doc.archivo!, doc.id); }}
                 >
-                  {deletingDocId === doc.id ? <Loader2 className="h-3.5 w-3.5 animate-spin mr-1" /> : <Trash2 className="h-3.5 w-3.5 mr-1" />}
-                  Eliminar
+                  {downloadingDocId === doc.id ? <Loader2 className="h-3.5 w-3.5 animate-spin mr-1" /> : <Download className="h-3.5 w-3.5 mr-1" />}
+                  Descargar
                 </Button>
-              )}
-            </>
-          )}
-        </div>
-      ),
+                {canEdit && onDelete && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                    disabled={deletingDocId === doc.id}
+                    onClick={(e) => { e.stopPropagation(); setDocToDelete(doc); }}
+                  >
+                    {deletingDocId === doc.id ? <Loader2 className="h-3.5 w-3.5 animate-spin mr-1" /> : <Trash2 className="h-3.5 w-3.5 mr-1" />}
+                    Eliminar
+                  </Button>
+                )}
+              </>
+            )}
+          </div>
+        );
+      },
     },
-  ], [canEdit, uploadingDocId, downloadingDocId, deletingDocId, onUpload, onDownload, onDelete]);
+  ]), [canEdit, uploadingDocId, downloadingDocId, deletingDocId, onUpload, onDownload, onDelete]);
 
   return (
     <>
