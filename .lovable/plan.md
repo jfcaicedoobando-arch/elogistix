@@ -1,158 +1,34 @@
-## Reemplazo total del módulo de feedback por Sentry User Feedback
+## Objetivo
 
-Sentry tiene un widget oficial (`@sentry/react` con la integración `feedbackIntegration`) que cubre por defecto lo que nos tomó 6 versiones armar:
+Quitar la columna **Costos** (estado de liquidación) del listado de embarques porque hoy no refleja la realidad operativa — los `conceptos_costo` se quedan en `Pendiente` indefinidamente — y limpiar los datos históricos para que cuando reintroduzcamos un flujo real de conciliación, la base esté consistente.
 
-- Botón flotante o disparable por código.
-- Modal pulido, animado, accesible, dark-mode aware, traducible.
-- Screenshot del viewport con anotaciones (cajas, flechas, blur) — incluido en la integración `feedbackScreenshotIntegration` desde SDK v8.
-- Adjunta automáticamente: stack trace si hay error reciente, breadcrumbs (clicks, nav, fetch, console, XHR), release/version, OS, navegador, viewport, replay opcional.
-- Tags arbitrarios: `organization_id`, `effective_role`, `email`.
-- Panel admin: Issues + Feedback dentro de sentry.io, con asignación, estados, comentarios, integraciones con Slack/Linear.
+## Cambios en UI (frontend)
 
-Vamos a quitar todo el módulo casero y dejar Sentry como única vía.
+1. `src/components/embarque/embarqueColumns.tsx`
+   - Eliminar `LiquidacionBadge`, la columna `liquidacion` (header "Costos") y los tipos `LiquidacionInfo` / `liquidacionMap` del `BuildColumnsParams`.
+2. `src/hooks/embarque/useEmbarquesPageController.ts`
+   - Dejar de leer y pasar `liquidacionMap` a `buildEmbarqueColumns`. Quitar también la columna sintética `liquidacion` que se inyecta para el export CSV.
+3. `src/generators/exportCsv.ts` (si hace falta) — verificar que ninguna columna exportada dependa de liquidación; si la había, removerla.
+4. Revisar consumidores del campo en `useEmbarquesListData` / `useEmbarquesLiquidacion` y mantener el hook solo si lo usa el detalle de embarque (Tab Costos). En el listado dejamos de consumirlo.
 
-## 1. Setup de Sentry (lado usuario)
+> Nota: el RPC `embarques_listado` seguirá devolviendo `costos_total` / `costos_pagados`. No tocamos la firma para no romper otros consumidores; simplemente se ignoran en el listado.
 
-Necesitas:
+## Backfill de datos históricos
 
-1. Cuenta en **sentry.io** (free tier: 5K errores + 50 feedback/mes — suficiente).
-2. Crear un proyecto tipo **React**.
-3. Copiar el **DSN** (formato `https://xxx@oXXX.ingest.sentry.io/XXX`). Es un valor público, pensado para ir en el bundle del frontend.
+Reglas acordadas para marcar `conceptos_costo.estado_liquidacion = 'Pagado'`:
 
-Cuando confirmes que ya tienes el DSN, lo agrego como `VITE_SENTRY_DSN` con la herramienta de secrets.
+- El concepto tiene `fecha_pago IS NOT NULL` **o** `referencia_pago` no vacía, **o**
+- El embarque asociado está en estado `Cerrado` (operación terminada → se asume liquidada).
 
-## 2. Instalación y arranque
+Sólo afecta filas con `deleted_at IS NULL` y `estado_liquidacion = 'Pendiente'`. Se ejecuta como UPDATE puntual (no migración de esquema) usando el tool de inserción/datos.
 
-- `bun add @sentry/react`.
-- Nuevo `src/lib/sentry.ts` que llama a `Sentry.init`:
+Previo a ejecutar mostraré conteos de cuántas filas se actualizarían por cada criterio para validar contigo antes de aplicar.
 
-```ts
-Sentry.init({
-  dsn: import.meta.env.VITE_SENTRY_DSN,
-  release: APP_VERSION,
-  environment: import.meta.env.MODE,
-  integrations: [
-    Sentry.browserTracingIntegration(),
-    Sentry.feedbackIntegration({
-      colorScheme: "light",
-      showBranding: false,
-      autoInject: false, // controlamos nosotros el botón
-      triggerLabel: "Reportar bug o sugerencia",
-      formTitle: "Reportar bug o sugerencia",
-      submitButtonLabel: "Enviar reporte",
-      messagePlaceholder: "Cuéntanos qué pasó. Incluye pasos para reproducirlo.",
-      successMessageText: "Gracias, recibimos tu reporte.",
-      // Integración separada de screenshot+anotaciones
-    }),
-    Sentry.feedbackScreenshotIntegration(),
-  ],
-  tracesSampleRate: 0.1,
-});
-```
+## Changelog
 
-- Invocar `init` en `src/main.tsx` **antes** del `createRoot`.
+Entrada nueva en `src/pages/Changelog.tsx` (patch, e.g. `9.0.1`): "Se retira la columna Estado Costos del listado de embarques mientras se rediseña el flujo de conciliación; se normalizan conceptos históricos."
 
-## 3. Identificar al usuario y al tenant
+## Fuera de alcance
 
-En `AuthContext` (o donde ya tengamos el usuario resuelto), después del login:
-
-```ts
-Sentry.setUser({ id: user.id, email: user.email });
-Sentry.setTags({
-  organization_id: organizationId ?? "none",
-  effective_role: effectiveRole ?? "none",
-});
-```
-
-Y `Sentry.setUser(null)` al logout. Esto hace que cada reporte llegue ya etiquetado por organización y rol — lo que cubre la parte de "multi-tenant" que perdimos al salir de nuestra DB.
-
-## 4. Botón disparador
-
-`FeedbackButton.tsx` se reduce a ~15 líneas: trae la instancia del widget y dispara `openForm()` en el click.
-
-```tsx
-const feedback = Sentry.getFeedback();
-const onClick = async () => {
-  const form = await feedback?.createForm();
-  form?.appendToDom();
-  form?.open();
-};
-```
-
-Conservamos el lugar y el ícono actuales en `Layout.tsx`, sólo cambia el handler.
-
-## 5. Borrado del módulo casero
-
-**Archivos a eliminar:**
-
-```text
-src/components/feedback/FeedbackDialog.tsx
-src/components/feedback/FeedbackForm.tsx
-src/components/feedback/FeedbackImageUploader.tsx
-src/components/feedback/FeedbackMisReportes.tsx
-src/components/feedback/ValidationAlert.tsx
-src/hooks/feedback/useElementPicker.ts
-src/hooks/admin/useReportesFeedback.ts
-src/lib/feedback/breadcrumbsBuffer.ts
-src/lib/feedback/consoleBuffer.ts
-src/lib/feedback/elementSelector.ts
-src/lib/feedback/screenshot.ts
-src/services/feedback/index.ts
-src/types/feedback.ts
-src/pages/admin/AdminReportes.tsx
-src/pages/admin/AdminReporteDetalle.tsx
-```
-
-**Dependencias a quitar** (`bun remove`):
-- `@medv/finder`
-- `modern-screenshot`
-
-**Limpieza en código existente:**
-- `src/main.tsx`: borrar imports de `installConsoleBuffer` e `installBreadcrumbsBuffer`. Reemplazar por `import "./lib/sentry"`.
-- `src/components/feedback/FeedbackButton.tsx`: rewrite a la versión mínima del paso 4.
-- `src/App.tsx`: quitar el `lazy` y el `<Route path="/admin/reportes" ...>`.
-- `src/components/layout/AppSidebar.tsx` o equivalente: quitar el ítem de menú "Reportes" del admin si existe.
-- `src/index.css`: quitar las reglas `.feedback-picker-active`, `#feedback-picker-overlay`, etc.
-
-## 6. Migración DB y storage
-
-Migración SQL:
-
-```sql
-drop table if exists public.reportes_feedback_comentarios cascade;
-drop table if exists public.reportes_feedback cascade;
-drop type  if exists public.tipo_reporte_feedback;
-drop type  if exists public.estado_reporte_feedback;
--- limpiar bucket (vacío hoy):
-delete from storage.buckets where id = 'reportes-feedback';
-```
-
-Como `src/integrations/supabase/types.ts` se regenera, no requiere edición manual; sólo hay que asegurar que ningún archivo siga importando los tipos eliminados (cubierto por borrar `types/feedback.ts` y los servicios).
-
-## 7. Versionado y changelog
-
-- `src/constants/appVersion.ts` → **`9.0.0`** (major, porque eliminamos el módulo entero y rompemos la ruta `/admin/reportes`).
-- Entrada en `src/content/changelog/v9/chunks/0.ts` (crear el chunk si no existe) describiendo el reemplazo y dónde ver ahora los reportes (sentry.io).
-
-## 8. Verificación
-
-1. Build pasa sin referencias colgantes a tipos/archivos borrados.
-2. Click en el botón "Reportar bug o sugerencia" abre el modal de Sentry con campos Nombre/Email prellenados (gracias a `setUser`).
-3. Click en "Add a screenshot" permite recortar y anotar con cajas/flechas/blur.
-4. Enviar el reporte → aparece en sentry.io > Feedback con tags `organization_id` y `effective_role`, breadcrumbs, viewport y release `9.0.0`.
-5. Forzar un error de JS desde la consola → aparece como Issue en Sentry, ligado al feedback si se reporta en el mismo session.
-6. `/admin/reportes` ya no existe (404 esperado).
-
-## Riesgos y mitigaciones
-
-- **Bundle**: `@sentry/react` con Feedback + Screenshot pesa ~85 KB gzipped. Aceptable; eliminamos `@medv/finder` (~3 KB) y `modern-screenshot` (~30 KB) que ya no necesitamos.
-- **Tabla `reportes_feedback`**: hoy está vacía o casi (datos de prueba), por eso un `drop cascade` es seguro. Si quieres conservarlos como respaldo, exportamos a CSV antes con un `psql \copy`. Avísame si lo quieres.
-- **Conversaciones admin↔usuario**: en Sentry se hacen vía email automático cuando respondes el feedback, no en la app. Si más adelante quieres conversación dentro de tu app, se puede webhook después.
-
-## Archivos creados / modificados / eliminados
-
-**Nuevos:** `src/lib/sentry.ts`, `src/content/changelog/v9/chunks/0.ts` (si aplica).
-
-**Modificados:** `src/main.tsx`, `src/components/feedback/FeedbackButton.tsx`, `src/App.tsx`, `src/contexts/AuthContext.tsx` (setUser/setTags), `src/index.css`, `src/constants/appVersion.ts`, `package.json`, eventual sidebar admin.
-
-**Eliminados:** todo lo listado en §5 + migración SQL del §6.
+- No tocamos el detalle del embarque (Tab Costos) ni el RPC.
+- No introducimos una nueva fuente de verdad todavía; eso se planeará cuando se defina el flujo real de conciliación con facturas de proveedor.
