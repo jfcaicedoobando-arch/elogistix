@@ -2,6 +2,14 @@ import type { ChangelogEntry } from "../../../changelogData";
 
 export const chunk0: ChangelogEntry[] = [
   {
+    version: "8.227.2",
+    date: "2026-05-19",
+    type: "patch",
+    title: "Selector de elemento del reporte — UX pulida",
+    summary: "El picker resalta el componente útil por defecto, no brinca entre hijos, muestra etiqueta flotante y se navega con teclado.",
+    description: "useElementPicker reescrito: granularidad híbrida (Alt = elemento exacto), throttle con requestAnimationFrame + transform para movimiento suave, etiqueta flotante con tag y snippet de texto, navegación con ↑↓ para padre/hijo, Enter confirma, click derecho cancela. Se bloquean hovers y tooltips de la app mientras el picker está activo. buildSelector ahora prefiere aria-label. APP_VERSION 8.227.2.",
+  },
+  {
     version: "8.227.1",
     date: "2026-05-19",
     type: "patch",

@@ -185,7 +185,19 @@
 }
 
 /* Feedback element picker: hide dialog overlay so the page is clickable */
-body.feedback-picker-active [data-radix-dialog-overlay] {
+body.feedback-picker-active [data-radix-dialog-overlay],
+html.feedback-picker-active [data-radix-dialog-overlay] {
   opacity: 0 !important;
   pointer-events: none !important;
 }
+
+/* Block app hovers/tooltips while the picker is active so they don't interfere */
+html.feedback-picker-active body *:not(#feedback-picker-overlay):not(#feedback-picker-label):not(#feedback-picker-hint) {
+  pointer-events: none !important;
+}
+html.feedback-picker-active [data-radix-tooltip-content],
+html.feedback-picker-active [data-radix-popper-content-wrapper],
+html.feedback-picker-active [data-state="delayed-open"][role="tooltip"] {
+  display: none !important;
+}
+
