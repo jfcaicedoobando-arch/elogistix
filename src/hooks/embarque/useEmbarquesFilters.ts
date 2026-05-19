@@ -22,7 +22,7 @@ export function useEmbarquesFilters() {
     estado: parseAsString.withDefault("todos"),
     cliente: parseAsString.withDefault("todos"),
     operador: parseAsString.withDefault("todos"),
-    proforma: parseAsString.withDefault("todos"),
+    
     fechaDesde: parseAsString.withDefault(""),
     fechaHasta: parseAsString.withDefault(""),
   });
