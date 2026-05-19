@@ -38,12 +38,19 @@ export function useAuthSession(): AuthSession {
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((eventoAuth, newSession) => {
-      if (eventoAuth === "TOKEN_REFRESHED" || eventoAuth === "INITIAL_SESSION") {
+      // Sólo TOKEN_REFRESHED es 100% silencioso (rota ~60s y no debe invalidar
+      // React Query ni recolocar el árbol). INITIAL_SESSION es el evento
+      // canónico de arranque y DEBE hidratar user+session+loading, igual que
+      // SIGNED_IN / SIGNED_OUT / USER_UPDATED. Antes lo tratábamos como
+      // silencioso y dejaba `user=null` con `session!=null` durante una
+      // ventana de carrera (ver fix 10.2.2).
+      if (eventoAuth === "TOKEN_REFRESHED") {
         handleSilentRefresh(newSession);
         return;
       }
       setSession(newSession);
       setUser(newSession?.user ?? null);
+      setLoading(false);
       if (
         eventoAuth === "SIGNED_IN" ||
         eventoAuth === "SIGNED_OUT" ||
@@ -51,15 +58,15 @@ export function useAuthSession(): AuthSession {
       ) {
         setLastEvent(eventoAuth);
       }
-      setLoading(false);
     });
 
-    // Hidratación inicial
+    // Red de seguridad: si por alguna razón INITIAL_SESSION no llegara,
+    // hidratamos desde getSession() una sola vez.
     if (!initialized.current) {
       initialized.current = true;
       supabase.auth.getSession().then(({ data: { session: existing } }) => {
-        setSession(existing);
-        setUser(existing?.user ?? null);
+        setSession((prev) => prev ?? existing);
+        setUser((prev) => prev ?? existing?.user ?? null);
         setLoading(false);
       });
     }
