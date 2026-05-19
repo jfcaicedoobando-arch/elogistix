@@ -20,11 +20,10 @@ export interface BuildColumnsParams {
 }
 
 /**
- * Columnas nativas TanStack (`ColumnDef<EmbarqueRow>`). Fase 2 del refactor —
- * fueron migradas desde la API legacy `DataTableColumn<T>` (ver Fase 1 en
- * `columnAdapter.ts`). En `Embarques.tsx` se usan con `sortMode="server"`,
- * por eso `enableSorting` actúa sólo como flag visual: el orden real lo
- * resuelve el RPC `embarques_listado` vía `controlledSort`/`onSortChange`.
+ * Columnas nativas TanStack (`ColumnDef<EmbarqueRow>`) usadas por
+ * `Embarques.tsx` con `sortMode="server"`: `enableSorting` actúa sólo como
+ * flag visual (cursor + icono); el orden real lo resuelve el RPC
+ * `embarques_listado` vía `controlledSort`/`onSortChange`.
  */
 export function buildEmbarqueColumns({
   docsMap, contenedoresPorExpediente = {},
