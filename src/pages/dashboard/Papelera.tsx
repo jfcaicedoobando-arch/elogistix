@@ -5,7 +5,7 @@ import { PageHeader } from "@/components/shared/PageHeader";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { DataTable, type DataTableColumn } from "@/components/shared/DataTable";
+import { DataTable, defineColumns, type ColumnDef } from "@/components/shared/DataTable";
 import { usePermissions } from "@/hooks/shared";
 import { useToast } from "@/hooks/use-toast";
 import { Navigate } from "react-router-dom";
@@ -71,56 +71,62 @@ export default function Papelera() {
 
   if (!isAdmin) return <Navigate to="/" replace />;
 
-  const columns: DataTableColumn<TrashRow>[] = [
+  const columns: ColumnDef<TrashRow, unknown>[] = defineColumns<TrashRow>([
     {
-      key: "label",
+      id: "label",
       header: "Registro",
-      render: (r) => <span className="font-medium truncate block max-w-[280px]">{r.label}</span>,
+      cell: ({ row }) => <span className="font-medium truncate block max-w-[280px]">{row.original.label}</span>,
     },
     {
-      key: "deleted_at",
+      id: "deleted_at",
       header: "Eliminado",
-      render: (r) => <span className="text-sm text-muted-foreground">{dtf.format(new Date(r.deleted_at))}</span>,
+      cell: ({ row }) => <span className="text-sm text-muted-foreground">{dtf.format(new Date(row.original.deleted_at))}</span>,
     },
     {
-      key: "deleted_by_email",
+      id: "deleted_by_email",
       header: "Usuario",
-      render: (r) => (
-        <span className="text-sm text-muted-foreground">
-          {r.deleted_by_email ?? (r.deleted_by ? r.deleted_by.slice(0, 8) : "—")}
-        </span>
-      ),
+      cell: ({ row }) => {
+        const r = row.original;
+        return (
+          <span className="text-sm text-muted-foreground">
+            {r.deleted_by_email ?? (r.deleted_by ? r.deleted_by.slice(0, 8) : "—")}
+          </span>
+        );
+      },
     },
     {
-      key: "acciones",
+      id: "acciones",
       header: "Acciones",
-      align: "right",
-      render: (r) => (
-        <div className="flex justify-end gap-2">
-          <Button
-            size="sm"
-            variant="outline"
-            onClick={() => restore.mutate(r.id)}
-            disabled={restore.isPending || purge.isPending}
-          >
-            <RotateCcw className="h-3.5 w-3.5 mr-1" /> Restaurar
-          </Button>
-          <Button
-            size="sm"
-            variant="destructive"
-            onClick={() => {
-              if (window.confirm("¿Eliminar definitivamente? Esta acción no se puede deshacer.")) {
-                purge.mutate(r.id);
-              }
-            }}
-            disabled={restore.isPending || purge.isPending}
-          >
-            <X className="h-3.5 w-3.5 mr-1" /> Purgar
-          </Button>
-        </div>
-      ),
+      meta: { align: "right" },
+      cell: ({ row }) => {
+        const r = row.original;
+        return (
+          <div className="flex justify-end gap-2">
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => restore.mutate(r.id)}
+              disabled={restore.isPending || purge.isPending}
+            >
+              <RotateCcw className="h-3.5 w-3.5 mr-1" /> Restaurar
+            </Button>
+            <Button
+              size="sm"
+              variant="destructive"
+              onClick={() => {
+                if (window.confirm("¿Eliminar definitivamente? Esta acción no se puede deshacer.")) {
+                  purge.mutate(r.id);
+                }
+              }}
+              disabled={restore.isPending || purge.isPending}
+            >
+              <X className="h-3.5 w-3.5 mr-1" /> Purgar
+            </Button>
+          </div>
+        );
+      },
     },
-  ];
+  ]);
 
   const rows = data ?? [];
 

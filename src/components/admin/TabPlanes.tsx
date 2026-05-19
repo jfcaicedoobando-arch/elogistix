@@ -7,7 +7,7 @@ import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { Save, Pencil } from "lucide-react";
 import { usePlanes, useUpdatePlan, type Plan } from "@/hooks/admin";
-import { DataTable, type DataTableColumn } from "@/components/shared/DataTable";
+import { DataTable, defineColumns, type ColumnDef } from "@/components/shared/DataTable";
 import { formatCurrency, formatNumber } from "@/lib/formatters";
 
 export default function TabPlanes() {
@@ -34,23 +34,27 @@ export default function TabPlanes() {
     );
   };
 
-  const columns: DataTableColumn<Plan>[] = [
+  const columns: ColumnDef<Plan, unknown>[] = defineColumns<Plan>([
     {
-      key: "nombre",
+      id: "nombre",
       header: "Plan",
-      render: (p) => (
-        <div className="flex items-center gap-2">
-          <span className="font-semibold capitalize">{p.nombre}</span>
-          {!p.activo && <Badge variant="secondary">Inactivo</Badge>}
-        </div>
-      ),
+      cell: ({ row }) => {
+        const p = row.original;
+        return (
+          <div className="flex items-center gap-2">
+            <span className="font-semibold capitalize">{p.nombre}</span>
+            {!p.activo && <Badge variant="secondary">Inactivo</Badge>}
+          </div>
+        );
+      },
     },
     {
-      key: "max_usuarios",
+      id: "max_usuarios",
       header: "Máx. Usuarios",
-      className: "text-right tabular-nums",
-      render: (p) =>
-        editingId === p.id ? (
+      meta: { className: "text-right tabular-nums" },
+      cell: ({ row }) => {
+        const p = row.original;
+        return editingId === p.id ? (
           <Input
             type="number"
             className="w-20 text-right"
@@ -59,14 +63,16 @@ export default function TabPlanes() {
           />
         ) : (
           formatNumber(p.max_usuarios)
-        ),
+        );
+      },
     },
     {
-      key: "max_embarques",
+      id: "max_embarques",
       header: "Máx. Embarques/Mes",
-      className: "text-right tabular-nums",
-      render: (p) =>
-        editingId === p.id ? (
+      meta: { className: "text-right tabular-nums" },
+      cell: ({ row }) => {
+        const p = row.original;
+        return editingId === p.id ? (
           <Input
             type="number"
             className="w-24 text-right"
@@ -75,14 +81,16 @@ export default function TabPlanes() {
           />
         ) : (
           formatNumber(p.max_embarques_mes)
-        ),
+        );
+      },
     },
     {
-      key: "almacenamiento",
+      id: "almacenamiento",
       header: "Almacenamiento",
-      className: "text-right tabular-nums",
-      render: (p) =>
-        editingId === p.id ? (
+      meta: { className: "text-right tabular-nums" },
+      cell: ({ row }) => {
+        const p = row.original;
+        return editingId === p.id ? (
           <Input
             type="number"
             className="w-24 text-right"
@@ -91,14 +99,16 @@ export default function TabPlanes() {
           />
         ) : (
           formatNumber(p.almacenamiento_mb, { suffix: "MB" })
-        ),
+        );
+      },
     },
     {
-      key: "precio",
+      id: "precio",
       header: "Precio/Mes",
-      className: "text-right tabular-nums",
-      render: (p) =>
-        editingId === p.id ? (
+      meta: { className: "text-right tabular-nums" },
+      cell: ({ row }) => {
+        const p = row.original;
+        return editingId === p.id ? (
           <Input
             type="number"
             className="w-24 text-right"
@@ -107,26 +117,27 @@ export default function TabPlanes() {
           />
         ) : (
           formatCurrency(Number(p.precio_mensual), "MXN")
-        ),
+        );
+      },
     },
     {
-      key: "activo",
+      id: "activo",
       header: "Activo",
-      headerClassName: "text-center",
-      className: "text-center",
-      render: (p) => (
+      meta: { headerClassName: "text-center", className: "text-center" },
+      cell: ({ row }) => (
         <Switch
-          checked={p.activo}
-          onCheckedChange={(checked) => updatePlan.mutate({ id: p.id, activo: checked })}
+          checked={row.original.activo}
+          onCheckedChange={(checked) => updatePlan.mutate({ id: row.original.id, activo: checked })}
         />
       ),
     },
     {
-      key: "acciones",
+      id: "acciones",
       header: "",
-      headerClassName: "w-20",
-      render: (p) =>
-        editingId === p.id ? (
+      meta: { headerClassName: "w-20" },
+      cell: ({ row }) => {
+        const p = row.original;
+        return editingId === p.id ? (
           <div className="flex gap-1">
             <Button size="sm" onClick={saveEdit} disabled={updatePlan.isPending}>
               <Save className="h-3 w-3" />
@@ -139,9 +150,10 @@ export default function TabPlanes() {
           <Button size="sm" variant="ghost" onClick={() => startEdit(p)}>
             <Pencil className="h-3 w-3" />
           </Button>
-        ),
+        );
+      },
     },
-  ];
+  ]);
 
   return (
     <Card>
