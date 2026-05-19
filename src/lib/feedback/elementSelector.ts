@@ -52,7 +52,6 @@ export function buildSelector(el: Element | null): string {
     return finder(el as HTMLElement, {
       seedMinLength: 1,
       optimizedMinLength: 2,
-      threshold: 800,
       timeoutMs: 200,
     });
   } catch {
