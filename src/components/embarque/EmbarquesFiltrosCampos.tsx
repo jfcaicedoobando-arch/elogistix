@@ -145,8 +145,8 @@ export function EmbarquesFiltrosCampos(props: EmbarquesFiltrosCamposProps) {
         {EstadoSelect}
         {ClienteSelect}
         {OperadorSelect}
-        {ProformaSelect}
         {FechaDesde}
+
         {FechaHasta}
       </div>
     );
