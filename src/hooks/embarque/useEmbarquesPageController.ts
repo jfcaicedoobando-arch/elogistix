@@ -1,12 +1,10 @@
 import { useState, useMemo, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { exportToCsv } from "@/generators/exportCsv";
-import { useEliminarEmbarque, calcularEstadoEmbarque, usePrefetchEmbarque } from "@/hooks/embarque/useEmbarques";
-import type { EmbarqueRow } from "@/hooks/embarque/useEmbarques";
+import { calcularEstadoEmbarque, usePrefetchEmbarque } from "@/hooks/embarque/useEmbarques";
 import { useOperadoresDistintos } from "@/hooks/catalogos/useOperadoresDistintos";
 import { useClientesForSelect } from "@/hooks/cliente/useClientes";
 import { usePermissions } from "@/hooks/shared/usePermissions";
-import { useRegistrarActividad } from "@/hooks/shared/useBitacora";
 import { useToast } from "@/hooks/use-toast";
 import { getErrorMessage } from "@/lib/errors";
 import { getOrigen, getDestino } from "@/lib/formatters";
@@ -20,23 +18,19 @@ import { useOrgFilter } from "@/hooks/shared/useOrgFilter";
  * Controller que centraliza estado, queries y handlers de la página de Embarques.
  * Mantiene la página enfocada únicamente en JSX/composición.
  *
- * v8.173.0 (Ola B.4): extras (liquidación + docs) vienen embebidos en el RPC
- * `embarques_listado`, exposed via `state.extras`. Se eliminó la llamada
- * independiente a `useEmbarquesListExtras` para reducir round-trips.
+ * v9.0.2: se eliminaron las acciones inline de editar/eliminar del listado;
+ * la edición sólo está disponible desde el detalle del embarque.
  */
 export function useEmbarquesPageController() {
   const navigate = useNavigate();
   const { data: clientes = [] } = useClientesForSelect();
   const { canEdit } = usePermissions();
   const { toast } = useToast();
-  const eliminarEmbarque = useEliminarEmbarque();
-  const registrarActividad = useRegistrarActividad();
   const prefetchEmbarque = usePrefetchEmbarque();
 
   const state = useEmbarquesPageState();
   const { isLoading, isEmptyState, contenedoresPorExpediente, extras } = state;
 
-  const [embarqueAEliminar, setEmbarqueAEliminar] = useState<EmbarqueRow | null>(null);
   const [exportandoCsv, setExportandoCsv] = useState(false);
 
   const { organizationId } = useOrgFilter();
@@ -45,32 +39,12 @@ export function useEmbarquesPageController() {
 
   const docsMap = extras.docs;
 
-  const handleEliminar = useCallback(async () => {
-    if (!embarqueAEliminar) return;
-    const { id, expediente, cliente_nombre, modo } = embarqueAEliminar;
-    try {
-      await eliminarEmbarque.mutateAsync(id);
-      registrarActividad.mutate({
-        accion: 'eliminar', modulo: 'embarques',
-        entidad_id: id, entidad_nombre: expediente,
-        detalles: { cliente: cliente_nombre, modo },
-      });
-      notifySuccess(toast, { title: "Embarque eliminado", description: `${expediente} fue eliminado permanentemente.` });
-    } catch (err: unknown) {
-      notifyError(toast, { title: "Error al eliminar", description: getErrorMessage(err)});
-    }
-    setEmbarqueAEliminar(null);
-  }, [embarqueAEliminar, eliminarEmbarque, registrarActividad, toast]);
-
   const columns = useMemo(
     () => buildEmbarqueColumns({
-      canEdit,
       docsMap,
       contenedoresPorExpediente,
-      onEditar: (e) => navigate(`/embarques/${e.id}/editar`),
-      onEliminar: setEmbarqueAEliminar,
     }),
-    [canEdit, docsMap, contenedoresPorExpediente, navigate],
+    [docsMap, contenedoresPorExpediente],
   );
 
 
@@ -153,26 +127,15 @@ export function useEmbarquesPageController() {
   }, [organizationId, state.debouncedSearch, state.filterModo, state.filterCliente, state.filterOperador, state.filterProforma, state.filterEstado, state.fechaDesde, state.fechaHasta, toast]);
 
   return {
-    // estado de filtros y paginación
     state,
-    // datos
     clientes,
     operadoresUnicos,
     columns,
     isLoading,
     isEmptyState,
-    // permisos
     canEdit,
-    // dialogs
-    embarqueAEliminar,
-    setEmbarqueAEliminar,
-    // handlers
-
-    handleEliminar,
     exportarCsv,
     exportandoCsv,
-    eliminarEmbarquePending: eliminarEmbarque.isPending,
-    // navegación
     navigate,
     prefetchEmbarque,
   };

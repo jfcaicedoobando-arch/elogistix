@@ -10,24 +10,19 @@ import type { EmbarqueRow } from "@/hooks/embarque";
 import { formatDate, getOrigen, getDestino, shortName, toTitleCase } from "@/lib/formatters";
 import { getEstadoColor } from "@/lib/ui/uiMappings";
 import { ModoIcon } from "@/components/shared/ModoIcon";
-import EmbarqueRowActions from "./EmbarqueRowActions";
-import { ProformaBadge } from "./ProformaBadge";
 
 export interface DocsInfo { pendientes: number; total: number }
 
 export interface BuildColumnsParams {
-  canEdit: boolean;
   docsMap: Record<string, DocsInfo>;
   contenedoresPorExpediente?: Record<string, number>;
-  onEditar: (e: EmbarqueRow) => void;
-  onEliminar: (e: EmbarqueRow) => void;
 }
 
 export function buildEmbarqueColumns({
-  canEdit, docsMap, contenedoresPorExpediente = {}, onEditar, onEliminar,
+  docsMap, contenedoresPorExpediente = {},
 }: BuildColumnsParams): DataTableColumn<EmbarqueRow>[] {
 
-  const base: DataTableColumn<EmbarqueRow>[] = [
+  return [
     {
       key: "expediente", header: "Expediente", width: "w-[130px]", className: "font-medium whitespace-nowrap",
       sticky: true, sortable: true, sortValue: (e) => e.expediente,
@@ -89,29 +84,5 @@ export function buildEmbarqueColumns({
         return <Badge variant="secondary" className={`text-xs whitespace-nowrap ${getEstadoColor(estado)}`}>{estado}</Badge>;
       },
     },
-    {
-      key: "proforma", header: "Proforma", width: "w-[180px]",
-      render: (e) => <ProformaBadge tieneProforma={e.tiene_proforma} size="sm" />,
-    },
   ];
-
-  if (canEdit) {
-    base.push({
-      key: "acciones",
-      header: "",
-      width: "w-12",
-      className: "w-12",
-      stickyRight: true,
-      render: (e) => (
-        <EmbarqueRowActions
-          embarque={e}
-          onEditar={onEditar}
-          onEliminar={onEliminar}
-        />
-      ),
-
-    });
-  }
-
-  return base;
 }
