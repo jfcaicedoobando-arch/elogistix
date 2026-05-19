@@ -20,7 +20,6 @@
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",
-    "@medv/finder": "^4.0.2",
     "@radix-ui/react-accordion": "^1.2.11",
     "@radix-ui/react-alert-dialog": "^1.1.14",
     "@radix-ui/react-avatar": "^1.1.10",
@@ -40,6 +39,7 @@
     "@radix-ui/react-toast": "^1.2.14",
     "@radix-ui/react-toggle-group": "^1.1.10",
     "@radix-ui/react-tooltip": "^1.2.7",
+    "@sentry/react": "^10.53.1",
     "@supabase/supabase-js": "^2.98.0",
     "@tanstack/query-sync-storage-persister": "^5.100.6",
     "@tanstack/react-query": "^5.83.0",
@@ -54,7 +54,6 @@
     "jszip": "^3.10.1",
     "libphonenumber-js": "^1.13.2",
     "lucide-react": "^0.462.0",
-    "modern-screenshot": "^4.7.0",
     "nuqs": "^2.8.9",
     "react": "^18.3.1",
     "react-day-picker": "^8.10.1",
