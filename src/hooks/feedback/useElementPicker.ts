@@ -88,8 +88,11 @@ export function useElementPicker(onPicked: (el: PickedElement | null) => void) {
     };
 
     const resolveFromPoint = (x: number, y: number): Element | null => {
-      const el = document.elementFromPoint(x, y);
-      if (!el || isOurs(el)) return hovered;
+      // elementsFromPoint devuelve la pila completa; filtramos nuestros propios overlays
+      // y cualquier elemento "no útil" para evitar resaltar body/html.
+      const stack = document.elementsFromPoint(x, y);
+      const el = stack.find((n) => !isOurs(n) && n !== document.body && n !== document.documentElement);
+      if (!el) return hovered;
       return altDown ? el : pickMeaningfulAncestor(el);
     };
 
