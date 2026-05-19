@@ -1,35 +1,44 @@
 import { cn } from "@/lib/utils";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Inbox } from "lucide-react";
-import { ALIGN_CLASS, type DataTableColumn } from "@/components/shared/dataTable/types";
+import { flexRender, type Table } from "@tanstack/react-table";
+import { ALIGN_CLASS, type ColumnAlign } from "@/components/shared/dataTable/types";
+import "@/components/shared/dataTable/columnMeta";
 
-export function VirtualHeaderRow<T>({ columns, gridTemplate }: { columns: DataTableColumn<T>[]; gridTemplate: string }) {
+export function VirtualHeaderRow<T>({ table, gridTemplate }: { table: Table<T>; gridTemplate: string }) {
   return (
     <div
       className="sticky top-0 z-10 grid bg-muted/60 backdrop-blur-sm text-xs font-medium text-muted-foreground border-b"
       style={{ gridTemplateColumns: gridTemplate }}
       role="row"
     >
-      {columns.map((c) => (
-        <div
-          key={c.key}
-          className={cn("px-3 py-2 truncate", ALIGN_CLASS[c.align ?? "left"], c.headerClassName)}
-          role="columnheader"
-        >
-          {c.header}
-        </div>
-      ))}
+      {table.getHeaderGroups().map((hg) =>
+        hg.headers.map((header) => {
+          const meta = header.column.columnDef.meta ?? {};
+          const align: ColumnAlign = meta.align ?? "left";
+          return (
+            <div
+              key={header.id}
+              className={cn("px-3 py-2 truncate", ALIGN_CLASS[align], meta.headerClassName)}
+              role="columnheader"
+            >
+              {flexRender(header.column.columnDef.header, header.getContext())}
+            </div>
+          );
+        }),
+      )}
     </div>
   );
 }
 
-export function SkeletonRows<T>({ count, columns, gridTemplate, cellPad }: { count: number; columns: DataTableColumn<T>[]; gridTemplate: string; cellPad: string }) {
+export function SkeletonRows<T>({ count, table, gridTemplate, cellPad }: { count: number; table: Table<T>; gridTemplate: string; cellPad: string }) {
+  const cols = table.getAllLeafColumns();
   return (
     <div>
       {Array.from({ length: count }).map((_, i) => (
         <div key={`sk-${i}`} className="grid border-b" style={{ gridTemplateColumns: gridTemplate }}>
-          {columns.map((c) => (
-            <div key={c.key} className={cn("px-3", cellPad)}>
+          {cols.map((c) => (
+            <div key={c.id} className={cn("px-3", cellPad)}>
               <Skeleton className="h-4 w-full" />
             </div>
           ))}
