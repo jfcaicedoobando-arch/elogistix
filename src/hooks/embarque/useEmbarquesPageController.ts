@@ -124,7 +124,7 @@ export function useEmbarquesPageController() {
     } finally {
       setExportandoCsv(false);
     }
-  }, [organizationId, state.debouncedSearch, state.filterModo, state.filterCliente, state.filterOperador, state.filterProforma, state.filterEstado, state.fechaDesde, state.fechaHasta, toast]);
+  }, [organizationId, state.debouncedSearch, state.filterModo, state.filterCliente, state.filterOperador, state.filterEstado, state.fechaDesde, state.fechaHasta, toast]);
 
   return {
     state,
