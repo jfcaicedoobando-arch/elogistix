@@ -159,7 +159,7 @@ export function EmbarquesFiltrosCampos(props: EmbarquesFiltrosCamposProps) {
       <FieldGroup label="Estado">{EstadoSelect}</FieldGroup>
       <FieldGroup label="Cliente">{ClienteSelect}</FieldGroup>
       <FieldGroup label="Operador">{OperadorSelect}</FieldGroup>
-      <FieldGroup label="Proforma">{ProformaSelect}</FieldGroup>
+
       <FieldGroup label="ETD desde">{FechaDesde}</FieldGroup>
       <FieldGroup label="ETA hasta">{FechaHasta}</FieldGroup>
     </div>
