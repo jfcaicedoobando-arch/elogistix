@@ -1,54 +1,44 @@
-# Bug: Subir el mismo archivo en otro slot deja el documento en "Pendiente"
+# Refrescar tabla de documentos tras subir/eliminar/agregar archivos
 
 ## Diagnóstico
 
-Verifiqué en la base de datos el embarque `18d1590b…`:
+La página `EmbarqueDetalle` lee los documentos vía `useEmbarqueDetalleData` → `useEmbarqueFull`, cuya clave de React Query es:
 
-- **Bill of Lading (BL House)** (`3657da20…`): `archivo = NULL`, `estado = Pendiente` ← lo que Valeria acaba de "subir".
-- **Certificado de Origen** (`a5c96ba7…`): tiene asignado el archivo `…SZSD25120685_OHBL_COPY_2.pdf` (de una prueba anterior).
-- En `idempotency_keys` existe una entrada `fn = upload_documento_embarque` con `hits = 14` cuyo `response.path` apunta al docId de **Certificado de Origen**.
-
-### Causa
-
-En `src/services/embarque/documentos.ts`, la clave de idempotencia se calcula así:
-
-```ts
-const hash = await sha256Hex(file);         // depende SOLO del contenido
-const requestId = hexToUuid(hash);          // misma clave para el mismo archivo
-const { data: claim } = await supabase.rpc('idempotency_claim', { _key: requestId, ... });
+```
+['embarques', 'full', id]
 ```
 
-Como la clave depende únicamente del contenido del archivo, al reutilizar el mismo PDF en otro slot (BL House vs Certificado de Origen), `idempotency_claim` devuelve la **respuesta cacheada del docId anterior**, la función retorna `cached: true` con el path viejo y **nunca toca la fila del nuevo documento**. El toast verde aparece porque no hubo error, pero BL House sigue en `Pendiente`.
+Pero las mutaciones de documentos en `src/hooks/embarque/mutations/useUpdateEmbarque.ts` (`useUploadDocumentoEmbarque`, `useDeleteDocumentoEmbarque`, `useCreateDocumentoEmbarque`) sólo invalidan:
 
-Esto también explica por qué el archivo "ya estaba en Storage": el path es `embarques/{embarqueId}/{docIdViejo}/…` y no choca con el path del nuevo docId.
+```
+queryKeys.embarques.documentos(embarqueId) === ['documentos_embarque', id]
+```
+
+Esa clave **no existe en esta página** (la lista de documentos viene dentro de la RPC `get_embarque_full`), así que React Query no refetchea y la UI sigue mostrando `Pendiente` hasta recargar manualmente. Por eso el estado parece "atorado" después de la subida exitosa.
 
 ## Solución
 
-Hacer que la clave de idempotencia identifique **(embarque + documento + contenido)**, no sólo el contenido:
+Hacer que las tres mutaciones de documentos también invaliden la query "full" del embarque. La forma más segura y mantenible es invalidar `queryKeys.embarques.all` (prefijo `['embarques']`), que cubre `['embarques', 'full', id]`, `['embarques', 'list', …]` y `['embarques', id]` sin tener que añadir una clave nueva al factory.
 
-1. **`src/services/embarque/documentos.ts`**
-   - Cambiar el cálculo de `requestId` para combinar `embarqueId`, `docId` y el hash del archivo antes de derivar el UUID (por ejemplo, `sha256Hex` sobre `${embarqueId}:${docId}:${hash}` y luego `hexToUuid`).
-   - Añadir el parámetro `embarqueId` a la firma de `uploadDocumentoEmbarque` (ya disponible en el hook que la invoca).
-   - Como salvaguarda, después del `update`, usar `.select('id').single()` para detectar 0 filas afectadas y lanzar un error claro ("no se pudo actualizar el documento") en vez de devolver éxito silencioso.
+### Archivos a tocar
 
-2. **`src/hooks/embarque/useEmbarques.ts`** (o donde esté `useUploadDocumentoEmbarque`)
-   - Pasar `embarqueId` al llamar `uploadDocumentoEmbarque(embarqueId, docId, file)`. El hook ya recibe `embarqueId` en `mutateAsync({ embarqueId, docId, file })`.
+1. **`src/hooks/embarque/mutations/useUpdateEmbarque.ts`**
+   - `useUploadDocumentoEmbarque.onSuccess`: añadir `queryClient.invalidateQueries({ queryKey: queryKeys.embarques.all })` además de la invalidación existente.
+   - `useDeleteDocumentoEmbarque.onSuccess`: lo mismo.
+   - `useCreateDocumentoEmbarque.onSuccess`: lo mismo (para que al crear un nuevo slot aparezca de inmediato).
 
-3. **Limpieza puntual de datos** (migración SQL)
-   - Borrar la entrada huérfana en `idempotency_keys` con `key = '5c737f3c-747d-f24c-8e99-68f2bc44fdaa'` para que Valeria pueda volver a subir el mismo PDF a BL House sin tropezar con el caché viejo.
-   - Limpiar el archivo asignado por error a "Certificado de Origen" (`a5c96ba7…`): poner `archivo = NULL`, `estado = 'Pendiente'`. El objeto en Storage puede dejarse o borrarse manualmente.
+2. **`src/constants/appVersion.ts`** → bump a `8.221.0`.
 
-4. **Versión y changelog**
-   - Bump a `8.220.0` en `src/constants/appVersion.ts`.
-   - Entrada en `src/content/changelog/v8/chunks/0.ts` y `src/content/changelogData.ts` describiendo el fix.
+3. **`src/content/changelog/v8/chunks/0.ts`** y **`src/content/changelogData.ts`** → nueva entrada `8.221.0` describiendo el fix de refresco.
 
 ## Validación
 
-- Verificar con una subida real de Valeria que: el PDF se sube, BL House pasa a `Recibido` con el `archivo` correcto, y volver a subir el mismo PDF al mismo slot sigue siendo idempotente (no duplica).
-- Verificar que subir el mismo PDF a otro slot también funciona y actualiza la fila correcta.
+- Subir un archivo a un documento: la fila debe pasar a `Recibido` sin recargar.
+- Eliminar un documento subido: la fila debe volver a `Pendiente` (o desaparecer si fue agregada manualmente).
+- Agregar un nuevo documento con "Agregar documento": debe aparecer en la tabla al instante.
 
-## Detalles técnicos relevantes
+## Detalles técnicos
 
-- `idempotency_keys` no tiene UPDATE/DELETE vía RLS para usuarios; la limpieza debe ir como migración SQL.
-- `supabase.update(...).eq('id', docId)` sin `.select()` no devuelve error cuando afecta 0 filas; por eso conviene el `.select().single()` defensivo.
-- El path en Storage seguirá conteniendo el hash, así que sigue siendo estable y deduplicado por contenido dentro del mismo `(embarque, docId)`.
+- No hace falta tocar `useEmbarqueFullQuery` ni `queryKeys`. Sólo ampliar la invalidación.
+- La invalidación es de prefijo, así que un único `invalidateQueries({ queryKey: ['embarques'] })` cubre la query full y cualquier lista de embarques que pueda mostrar contador de documentos.
+- Mantengo también las invalidaciones específicas a `documentos_embarque` por si en el futuro algún hook las consume directamente.

@@ -110,6 +110,7 @@ export function useUploadDocumentoEmbarque() {
       uploadDocumentoEmbarque(embarqueId, docId, file),
     onSuccess: (_r, vars) => {
       queryClient.invalidateQueries({ queryKey: queryKeys.embarques.documentos(vars.embarqueId) });
+      queryClient.invalidateQueries({ queryKey: queryKeys.embarques.all });
     },
   });
 }
@@ -121,6 +122,7 @@ export function useDeleteDocumentoEmbarque() {
       deleteDocumentoEmbarque(docId, archivoPath),
     onSuccess: (_r, vars) => {
       queryClient.invalidateQueries({ queryKey: queryKeys.embarques.documentos(vars.embarqueId) });
+      queryClient.invalidateQueries({ queryKey: queryKeys.embarques.all });
     },
   });
 }
@@ -152,6 +154,7 @@ export function useCreateDocumentoEmbarque() {
     },
     onSuccess: (_r, vars) => {
       queryClient.invalidateQueries({ queryKey: queryKeys.embarques.documentos(vars.embarqueId) });
+      queryClient.invalidateQueries({ queryKey: queryKeys.embarques.all });
     },
   });
 }

@@ -22,6 +22,14 @@ export interface ChangelogEntry {
  */
 export const recentChangelog: ChangelogEntry[] = [
   {
+    version: "8.221.0",
+    date: "2026-05-18",
+    type: "patch",
+    title: "Documentos de embarque — refresco automático tras subir/eliminar/agregar",
+    summary: "La tabla de documentos se actualiza al instante; ya no se queda en Pendiente hasta recargar.",
+    description: "Las mutaciones de documentos sólo invalidaban ['documentos_embarque', id], pero la página de detalle lee desde la RPC get_embarque_full con la clave ['embarques', 'full', id]. Ahora también se invalida el prefijo queryKeys.embarques.all para refrescar la tabla al instante tras subir, eliminar o agregar un documento. APP_VERSION 8.221.0.",
+  },
+  {
     version: "8.220.0",
     date: "2026-05-18",
     type: "patch",
