@@ -2,6 +2,14 @@ import type { ChangelogEntry } from "../../../changelogData";
 
 export const chunk0: ChangelogEntry[] = [
   {
+    version: "8.221.0",
+    date: "2026-05-18",
+    type: "patch",
+    title: "Documentos de embarque — refresco automático tras subir/eliminar/agregar",
+    summary: "La tabla de documentos se actualiza al instante; ya no se queda en Pendiente hasta recargar.",
+    description: "Las mutaciones useUploadDocumentoEmbarque, useDeleteDocumentoEmbarque y useCreateDocumentoEmbarque sólo invalidaban la clave ['documentos_embarque', id], pero la página de detalle lee los documentos vía la RPC get_embarque_full con la clave ['embarques', 'full', id], así que React Query no refetcheaba y la fila seguía mostrando 'Pendiente' tras una subida exitosa. Ahora las tres mutaciones también invalidan el prefijo queryKeys.embarques.all, que cubre la query full y cualquier listado dependiente. APP_VERSION 8.221.0.",
+  },
+  {
     version: "8.220.0",
     date: "2026-05-18",
     type: "patch",
