@@ -33,25 +33,27 @@ export function PasoConfirmacionProforma({
           <h4 className="text-sm font-semibold">Conceptos incluidos ({conceptosSeleccionados.length})</h4>
         </div>
         <DataTable<ConceptoVenta>
-          columns={[
-            { key: "desc", header: "Descripción", className: "font-medium", render: (c) => c.descripcion },
-            { key: "cant", header: "Cant.", align: "right", className: "tabular-nums", render: (c) => c.cantidad },
-            { key: "pu", header: "P. Unit.", align: "right", className: "tabular-nums", render: (c) => formatCurrency(Number(c.precio_unitario), c.moneda) },
-            { key: "sub", header: "Subtotal", align: "right", className: "font-semibold tabular-nums",
-              render: (c) => formatCurrency(Number(c.cantidad) * Number(c.precio_unitario), c.moneda) },
-            { key: "moneda", header: "Moneda", render: (c) => c.moneda },
-            { key: "iva", header: "IVA", align: "center",
-              render: (c) => {
+          columns={defineColumns<ConceptoVenta>([
+            { id: "desc", header: "Descripción", meta: { className: "font-medium" }, cell: ({ row }) => row.original.descripcion },
+            { id: "cant", header: "Cant.", meta: { className: "text-right tabular-nums", headerClassName: "text-right" }, cell: ({ row }) => row.original.cantidad },
+            { id: "pu", header: "P. Unit.", meta: { className: "text-right tabular-nums", headerClassName: "text-right" }, cell: ({ row }) => formatCurrency(Number(row.original.precio_unitario), row.original.moneda) },
+            { id: "sub", header: "Subtotal", meta: { className: "text-right font-semibold tabular-nums", headerClassName: "text-right" },
+              cell: ({ row }) => formatCurrency(Number(row.original.cantidad) * Number(row.original.precio_unitario), row.original.moneda) },
+            { id: "moneda", header: "Moneda", cell: ({ row }) => row.original.moneda },
+            { id: "iva", header: "IVA", meta: { className: "text-center", headerClassName: "text-center" },
+              cell: ({ row }) => {
+                const c = row.original;
                 const aplica = c.moneda === "MXN" ? true : !!ivaPorConcepto[c.id];
                 return aplica
                   ? <Badge variant="success" className="text-xs"><CheckCircle2 className="h-3 w-3 mr-0.5" /> Sí</Badge>
                   : <Badge variant="secondary" className="text-xs">No</Badge>;
               } },
-          ]}
+          ]) as ColumnDef<ConceptoVenta, unknown>[]}
           data={conceptosSeleccionados}
           rowKey={(c) => c.id}
           density="compact"
         />
+
       </div>
 
       <div className="grid grid-cols-2 gap-3 text-sm">
