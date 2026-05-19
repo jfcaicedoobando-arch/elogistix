@@ -1,49 +1,77 @@
 ## Problema
 
-Al pulsar "Seleccionar elemento" dentro del modal de reportar bug/mejora, la app queda inutilizable: no se puede seleccionar nada y, al cerrar, los clics dejan de responder.
+El picker actual de "Seleccionar elemento" (en el modal de reportar bug/mejora) brinca entre nodos hijos (spans, icons, svg dentro de un botón), el outline se mueve de forma abrupta, no se ve qué se está por capturar y un click accidental termina la selección con un nodo poco útil.
 
-## Causa
+## Cambios
 
-En `src/components/feedback/FeedbackDialog.tsx` el `Dialog` se controla con:
+Refinar `src/hooks/feedback/useElementPicker.ts` y `src/lib/feedback/elementSelector.ts`. Sin tocar `FeedbackForm`, `FeedbackDialog` ni la base de datos.
 
-```tsx
-<Dialog open={open && !pickerActive} ...>
-```
+### 1. Granularidad híbrida (componente por defecto, exacto con Alt)
 
-Cuando el picker se activa, `pickerActive` pasa a `true` y el `Dialog` **se desmonta**. Al desmontarse:
+- Nuevo helper `pickMeaningfulAncestor(el)` en `elementSelector.ts`: sube por `parentElement` hasta encontrar el primer "componente útil":
+  - `[data-testid]`, `[role="button"]`, `<button>`, `<a>`, `<tr>`, `<li>`, `<label>`, `<input>`, `<select>`, `<textarea>`, `[data-feedback-target]`, o elementos con `aria-label`.
+  - Tope: máximo 6 niveles arriba o hasta que el rect supere el 80% del viewport (evita seleccionar `<main>`/`<body>`).
+- Mientras el mouse se mueve, el target resaltado es el ancestro útil. Si el usuario mantiene `Alt` (o `Shift`), se usa el elemento exacto bajo el cursor. Al soltar, vuelve al ancestro.
 
-1. `FeedbackForm` se desmonta y con él el hook `useElementPicker`, cuyo cleanup elimina los listeners de `mousemove/click/keydown` que acaban de instalarse. El picker nunca llega a capturar nada.
-2. Radix Dialog deja por unos instantes `pointer-events: none` en `body` durante su animación de cierre, bloqueando clicks en toda la página.
-3. Los datos del formulario (título, descripción, imágenes) se pierden porque el componente se desmonta.
+### 2. Estabilidad visual
 
-Además el overlay/contenido del Dialog tienen z-index alto y, aunque el picker tiene `z-index: 2147483646/7`, el overlay sigue interceptando eventos cuando el Dialog está abierto.
+- Throttle del `mousemove` con `requestAnimationFrame` (descartar el último pendiente al recibir uno nuevo) en lugar de actualizar el style en cada evento.
+- En el overlay: cambiar `transition: all 60ms ease` por `transition: transform 90ms ease, width 90ms ease, height 90ms ease, opacity 120ms ease` y posicionar con `transform: translate(x,y)` en vez de `left/top` (evita re-layout y suaviza el movimiento).
+- Si el nuevo target es el mismo nodo que el anterior, no actualizar.
 
-## Cambio
+### 3. Etiqueta flotante con tag + texto
 
-En `src/components/feedback/FeedbackDialog.tsx`:
+- Crear un segundo div `label` flotante que muestre: `tagName.classToken` (ej. `button.primary`) y, si hay, un snippet ≤40 chars del `innerText`.
+- Se posiciona arriba del rect del target (o debajo si no cabe), pegado al borde izquierdo, con el mismo z-index del overlay.
+- Mientras se mantiene `Alt`, la etiqueta agrega el sufijo `· exacto`.
 
-1. Mantener el `Dialog` **siempre montado** mientras `open` sea `true` (no cerrarlo por `pickerActive`).
-2. Cuando `pickerActive` sea `true`, ocultar visualmente el contenido y dejarlo pasar clics:
-   - Añadir clase condicional al `DialogContent`: `pickerActive && "opacity-0 pointer-events-none"`.
-   - Forzar que el overlay de Radix también deje pasar clics: pasar `data-picker-active` al `DialogContent` y agregar en `src/index.css` (o estilo inline vía un wrapper) una regla que ponga `pointer-events: none` sobre `[data-radix-dialog-overlay]` mientras el picker esté activo. Alternativa más simple y autocontenida: setear desde el componente `document.body.style.pointerEvents = ''` y aplicar `pointer-events: auto` solo al overlay del picker (que ya lo es porque es un div suelto en `body`); para anular el overlay del dialog, usar un `useEffect` que mientras `pickerActive` añada al `body` una clase `feedback-picker-active` y en `src/index.css` declarar:
-     ```css
-     body.feedback-picker-active [data-radix-dialog-overlay],
-     body.feedback-picker-active [role="dialog"] { pointer-events: none !important; opacity: 0 !important; }
-     ```
-3. No tocar la lógica del hook `useElementPicker` ni `FeedbackForm`: con el Dialog montado, los listeners persisten y el estado del formulario se conserva.
-4. Al terminar el picker (click o Esc), `onPickerActiveChange(false)` ya restaura la visibilidad del Dialog.
+### 4. Bloquear hovers/tooltips de la app
 
-Mantener el guard de `onOpenChange` para no permitir cerrar el dialog mientras `mutation.isPending`.
+- Mientras el picker esté activo:
+  - Añadir clase `feedback-picker-active` en `<html>` (ya se hace en `body` para ocultar el dialog overlay; ampliar el alcance).
+  - En `src/index.css`, agregar reglas que mientras esa clase esté presente:
+    - Anulen `pointer-events` sobre los hijos directos: `html.feedback-picker-active *:not(#feedback-picker-overlay):not(#feedback-picker-label):not(#feedback-picker-hint) { pointer-events: none !important; }` — esto evita que botones/links disparen hover, tooltips de Radix, abran menús, etc. El picker captura el click en captura phase con `document` así que sigue funcionando.
+    - Oculten Radix tooltips/popovers nuevos: `html.feedback-picker-active [data-radix-tooltip-content], html.feedback-picker-active [data-radix-popper-content-wrapper] { display: none !important; }`.
+
+### 5. Cancelar con click derecho + navegar con flechas
+
+- Añadir handler global `contextmenu` (captura): `preventDefault()` + cierra el picker con `onPicked(null)`.
+- Añadir handlers de `keydown` para:
+  - `ArrowUp`: sube al `parentElement` válido (saltando body/html) y rehace el highlight.
+  - `ArrowDown`: vuelve al hijo previo recordado en un stack (cada `ArrowUp` empuja al hijo actual al stack).
+  - `Enter`: confirma la selección del target resaltado actual.
+  - `Esc`: cancela (ya existe).
+- El estado del target navegado se guarda en un `useRef` (`currentTarget`); cualquier `mousemove` lo resetea al elemento bajo el cursor (con su lógica híbrida).
+
+### 6. Hint actualizado
+
+Cambiar el texto del hint a una sola línea legible:
+
+`Click: seleccionar · Alt: exacto · ↑↓: padre/hijo · Enter: confirmar · Esc/Click derecho: cancelar`
+
+### 7. Selector más estable
+
+En `buildSelector`:
+- Si hay `[data-testid]`, retornarlo (ya existe).
+- Si no, y el elemento tiene `aria-label`, retornar `tag[aria-label="..."]`.
+- Mantener el fallback de `:nth-of-type`.
 
 ## Verificación
 
-- Abrir el modal, llenar título/descr, pulsar "Seleccionar elemento": el modal desaparece visualmente, el hint "Click para seleccionar · Esc para cancelar" aparece, el cursor es crosshair y el outline azul sigue al mouse.
-- Hacer click en cualquier elemento de la página: el modal reaparece con el selector capturado y los textos del formulario intactos.
-- Pulsar Esc durante el picker: el modal reaparece sin selección y la página vuelve a responder a clics normales.
-- Repetir el flujo varias veces sin recargar.
+- Abrir modal, pulsar "Seleccionar elemento", mover el mouse sobre un botón con icono y texto: el outline rodea el botón completo (no salta al `<svg>` ni al `<span>` interno) y se queda estable mientras se mueve dentro de él.
+- Mantener `Alt`: el outline cae al hijo exacto (svg, span); la etiqueta muestra `… · exacto`.
+- Pasar el mouse sobre filas de tabla: se resalta el `<tr>` completo, no la `<td>`.
+- Hover sobre el sidebar no dispara tooltips ni abre el menú colapsado.
+- Pulsar `↑` selecciona el contenedor padre, `↓` vuelve al elemento original; `Enter` confirma.
+- Click derecho en cualquier lugar cancela y restaura los hovers normales.
+- El movimiento del outline es suave (sin flicker visible a 60Hz).
+- Tras seleccionar, el modal reaparece con el selector capturado y los datos intactos.
 
-## Changelog
+## Archivos modificados
 
-Agregar entrada `8.227.1` (patch) en `src/content/changelog/v8/chunks/0.ts` con fecha 19/05/2026: "Fix: el selector de elemento del reporte de bug/mejora ya no congela la app; el modal se oculta mientras seleccionas y vuelve con la selección capturada".
-
-Actualizar `APP_VERSION` en `src/constants/appVersion.ts` a `8.227.1`.
+- `src/hooks/feedback/useElementPicker.ts` — lógica nueva (throttle rAF, alt-key, flechas, contextmenu, label flotante, ids únicos en overlay/hint/label).
+- `src/lib/feedback/elementSelector.ts` — `pickMeaningfulAncestor`, mejora de `buildSelector` con aria-label.
+- `src/index.css` — reglas para `html.feedback-picker-active` (bloqueo de hovers y tooltips).
+- `src/components/feedback/FeedbackDialog.tsx` — aplicar la clase en `<html>` además de `<body>` (una línea).
+- `src/constants/appVersion.ts` — `8.227.2`.
+- `src/content/changelog/v8/chunks/0.ts` — entrada patch `8.227.2`: "Selector de elemento del reporte: granularidad híbrida (componente por defecto, Alt = exacto), movimiento suave, etiqueta flotante con tag y texto, navegación con ↑↓, cancelar con click derecho, y se bloquean hovers/tooltips de la app durante la selección".
