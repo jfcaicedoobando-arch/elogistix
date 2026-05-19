@@ -22,6 +22,14 @@ export interface ChangelogEntry {
  */
 export const recentChangelog: ChangelogEntry[] = [
   {
+    version: "10.1.4",
+    date: "2026-05-19",
+    type: "patch",
+    title: "Aritmética financiera migrada a currency.js",
+    summary: "financialUtils, profitUtils y costosUSD ahora usan currency.js para toda la aritmética monetaria, eliminando errores de punto flotante sin tocar firmas ni consumidores.",
+    description: "Se reemplazaron los operadores nativos (+, -, *, /) por currency().add/.subtract/.multiply/.divide en los tres módulos financieros centrales. Sin Math.round ni toFixed: el redondeo lo maneja currency.js (precision:2 para montos, precision:4 para el % de margen). Firmas y tipos exportados intactos. 43/43 tests verdes. APP_VERSION 10.1.4.",
+  },
+  {
     version: "10.1.3",
     date: "2026-05-19",
     type: "patch",

@@ -2,6 +2,14 @@ import type { ChangelogEntry } from "../../../changelogData";
 
 export const chunk0: ChangelogEntry[] = [
   {
+    version: "10.1.4",
+    date: "2026-05-19",
+    type: "patch",
+    title: "Aritmética financiera migrada a currency.js",
+    summary: "financialUtils.ts, profitUtils.ts y costosUSD.ts ahora ejecutan toda la aritmética (sumas, restas, multiplicaciones, divisiones y conversión de divisas) con currency.js, eliminando errores de punto flotante sin cambiar firmas ni romper consumidores.",
+    description: "Se reemplazó la aritmética nativa de JavaScript (+, -, *, /) por currency.js en los tres módulos financieros centrales. (1) src/lib/financial/financialUtils.ts: calcularSubtotal, calcularIVA, calcularTotalConIVA, calcularUtilidad, convertirAMXN y convertirAUSD usan currency(...).multiply/.add/.subtract/.divide con precision:2 para montos; calcularMargen usa precision:4 para no perder dígitos en el cálculo porcentual y mantiene el early-return cuando venta=0. Los passthrough MXN→MXN y USD→USD devuelven el input tal cual para preservar igualdad estricta. (2) src/lib/financial/profitUtils.ts: calcularTotalesPL acumula totalCosto y totalVenta vía currency(0).add(...) en lugar de Number.reduce, evitando drift al sumar muchas filas. (3) src/lib/financial/costosUSD.ts: sumarEnUSD acumula con currency(0).add(convertirAUSD(...)); aUSD sigue delegando en convertirAUSD. No se introdujo Math.round ni toFixed en ningún punto — el redondeo lo maneja currency.js internamente. Firmas, nombres, tipos exportados (Moneda, TASA_IVA, TotalesPL) y valores de retorno (number) intactos: ResumenTotalesCotizacion, useEmbarqueFinancials, conceptosTables y services/cliente/financials no requirieron cambios. 43/43 tests verdes (financialUtils.test.ts, financialUtils.edge.test.ts, profitUtils.test.tsx). APP_VERSION 10.1.4.",
+  },
+  {
     version: "10.1.3",
     date: "2026-05-19",
     type: "patch",
