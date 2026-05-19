@@ -24,11 +24,11 @@ export default defineConfig(({ mode }) => ({
       brotliSize: true,
       open: false,
     }),
-    mode === "production" && process.env.SENTRY_AUTH_TOKEN && sentryVitePlugin({
+    mode === "production" && process.env.SENTRY_AUTH_TOKEN ? sentryVitePlugin({
       org: "elogistix",
       project: "javascript-react",
       authToken: process.env.SENTRY_AUTH_TOKEN,
-    }),
+    }) : null,
   ].filter(Boolean),
   resolve: {
     alias: {
