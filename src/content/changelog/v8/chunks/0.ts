@@ -2,6 +2,14 @@ import type { ChangelogEntry } from "../../../changelogData";
 
 export const chunk0: ChangelogEntry[] = [
   {
+    version: "10.0.0",
+    date: "2026-05-19",
+    type: "major",
+    title: "Fase 3 — DataTable 100% TanStack nativo; adapter legacy eliminado",
+    summary: "Se completó la migración: 21 archivos restantes pasaron a ColumnDef<T> nativo con defineColumns, se eliminó columnAdapter.ts y los tipos DataTableColumn<T>/SortValue del API público. DataTable, VirtualDataTable y useTableInstance ahora aceptan exclusivamente ColumnDef<T, unknown>[].",
+    description: "Breaking change en la API pública de @/components/shared/DataTable: ya no se acepta el shape legacy { key, render, sortable, sortValue, align, className }. Todo call-site debe usar { id, cell, enableSorting, accessorFn + sortingFn, meta: { className, headerClassName } }. Archivos migrados en Fase 3: ProfitTable, EmbarquesActivosTable, adminUsuariosColumns, adminOrganizacionesColumns, diagnosticoColumns, TabPlanes, OrgMembersCard, Usuarios (admin-org), TabTiposContenedor, TabPuertos, TabNavieras, HallazgosTabla, HallazgoTabla, PortalEmbarqueDocumentos, ReportesTablaClientes, Papelera, Idempotencia, ResumenConceptosVenta, PasoConfirmacionProforma, EmbarquesRelacionadosCard, y los fixtures de DataTable.regression.test.tsx. Se borró src/components/shared/dataTable/columnAdapter.ts, se removieron DataTableColumn<T> y SortValue de types.ts, y se simplificaron useTableInstance/DataTable/VirtualDataTable para aceptar sólo ColumnDef<T, unknown>[]. Sin cambios visuales ni de comportamiento: sorting, paginación, virtualización y filtros server-side intactos. APP_VERSION 10.0.0.",
+  },
+  {
     version: "9.2.0",
     date: "2026-05-19",
     type: "minor",

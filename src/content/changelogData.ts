@@ -22,6 +22,14 @@ export interface ChangelogEntry {
  */
 export const recentChangelog: ChangelogEntry[] = [
   {
+    version: "10.0.0",
+    date: "2026-05-19",
+    type: "major",
+    title: "Fase 3 — DataTable 100% TanStack nativo; adapter legacy eliminado",
+    summary: "21 archivos migrados a ColumnDef<T> nativo. Se eliminó columnAdapter.ts y los tipos DataTableColumn<T>/SortValue. DataTable acepta sólo ColumnDef<T, unknown>[].",
+    description: "Breaking change en la API pública de DataTable: el shape legacy { key, render, sortable, sortValue, align, className } ya no se acepta. Todo call-site usa ahora { id, cell, enableSorting, accessorFn + sortingFn, meta }. Se borró columnAdapter.ts, se simplificaron useTableInstance/DataTable/VirtualDataTable, y se migraron los 21 archivos restantes. Sin cambios visuales ni de comportamiento. APP_VERSION 10.0.0.",
+  },
+  {
     version: "9.2.0",
     date: "2026-05-19",
     type: "minor",
