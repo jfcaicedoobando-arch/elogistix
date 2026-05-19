@@ -2,6 +2,14 @@ import type { ChangelogEntry } from "../../../changelogData";
 
 export const chunk0: ChangelogEntry[] = [
   {
+    version: "9.1.3",
+    date: "2026-05-19",
+    type: "patch",
+    title: "VirtualDataTable — auditoría de rendimiento y memoización",
+    summary: "Se redujo el costo de scroll en VirtualDataTable memoizando VirtualRow, estabilizando gridTemplate, measureElement, estimateSize y getRowId. Las filas visibles cuyo start/id no cambian ya no se re-renderizan al hacer scroll.",
+    description: "Hallazgos: (1) VirtualRow re-renderizaba en cada scroll porque el parent producía un nuevo virtualItems y la prop measureRef cambiaba de identidad — ahora va envuelto en React.memo con comparador propio sobre row/index/start/cellPad/gridTemplate/striped/hoverable/onRowClick/rowClassName/measureRef; (2) measureElement era una función nueva por render → useVirtualizer disparaba ResizeObserver churn — se promovió a constante de módulo (con bypass para Firefox por bug de sub-pixel sizes); (3) gridTemplate se reconstruía por scroll, además rompía la identidad de prop para la memo de VirtualRow — ahora useMemo con deps sobre el set de widths de columnas; (4) estimateSize y getRowId envueltos en useCallback para no recrear cierres por render. Sin cambios de comportamiento ni API. APP_VERSION 9.1.3.",
+  },
+  {
     version: "9.1.2",
     date: "2026-05-19",
     type: "patch",
