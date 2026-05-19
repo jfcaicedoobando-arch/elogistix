@@ -2,6 +2,14 @@ import type { ChangelogEntry } from "../../../changelogData";
 
 export const chunk0: ChangelogEntry[] = [
   {
+    version: "9.0.1",
+    date: "2026-05-19",
+    type: "patch",
+    title: "Listado de embarques — se retira la columna Estado Costos",
+    summary: "La columna 'Costos' del listado mostraba 'Pendiente' para casi todos los embarques porque el flag se quedaba en el default. Se elimina del listado y del export CSV mientras se rediseña el flujo real de conciliación.",
+    description: "Se removió la columna 'liquidacion' (badge Pagado/Parcial/Pendiente) de buildEmbarqueColumns y del exportToCsv en useEmbarquesPageController. El RPC embarques_listado sigue devolviendo costos_total/costos_pagados para no romper otros consumidores. Backfill: se marcaron como Pagado los conceptos_costo de embarques en estado 'Cerrado' que estaban en Pendiente (≈283 filas), asignándoles fecha_pago = hoy si no la tenían. APP_VERSION 9.0.1.",
+  },
+  {
     version: "9.0.0",
     date: "2026-05-19",
     type: "major",
