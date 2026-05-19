@@ -1,14 +1,12 @@
 import { cn } from "@/lib/utils";
-import {
-  ALIGN_CLASS,
-  type DataTableColumn,
-} from "@/components/shared/dataTable/types";
+import { flexRender, type Row } from "@tanstack/react-table";
+import { ALIGN_CLASS, type ColumnAlign } from "@/components/shared/dataTable/types";
+import "@/components/shared/dataTable/columnMeta";
 
 interface VirtualRowProps<T> {
-  item: T;
+  row: Row<T>;
   index: number;
   start: number;
-  columns: DataTableColumn<T>[];
   cellPad: string;
   gridTemplate: string;
   striped: boolean;
@@ -18,10 +16,16 @@ interface VirtualRowProps<T> {
   measureRef: (el: HTMLElement | null) => void;
 }
 
+/**
+ * Fila individual de `VirtualDataTable`. Recibe una `Row<T>` de TanStack y
+ * delega cada celda en `flexRender`. No itera columnas manualmente — el
+ * orden y la visibilidad los controla la instancia de tabla.
+ */
 export function VirtualRow<T>({
-  item, index, start, columns, cellPad, gridTemplate,
+  row, index, start, cellPad, gridTemplate,
   striped, hoverable, onRowClick, rowClassName, measureRef,
 }: VirtualRowProps<T>) {
+  const item = row.original;
   const zebra = striped && index % 2 === 1 ? "bg-muted/30" : "";
   const handleClick = onRowClick ? () => onRowClick(item) : undefined;
   return (
@@ -46,15 +50,19 @@ export function VirtualRow<T>({
       }}
       onClick={handleClick}
     >
-      {columns.map((c) => (
-        <div
-          key={c.key}
-          className={cn("px-3 min-w-0", cellPad, ALIGN_CLASS[c.align ?? "left"], c.className)}
-          role="cell"
-        >
-          {c.render(item)}
-        </div>
-      ))}
+      {row.getVisibleCells().map((cell) => {
+        const meta = cell.column.columnDef.meta ?? {};
+        const align: ColumnAlign = meta.align ?? "left";
+        return (
+          <div
+            key={cell.id}
+            className={cn("px-3 min-w-0", cellPad, ALIGN_CLASS[align], meta.className)}
+            role="cell"
+          >
+            {flexRender(cell.column.columnDef.cell, cell.getContext())}
+          </div>
+        );
+      })}
     </div>
   );
 }
