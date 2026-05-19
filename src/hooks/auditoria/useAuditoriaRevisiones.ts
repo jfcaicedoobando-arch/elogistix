@@ -73,7 +73,7 @@ export function useMarcarRevisado() {
       const { hallazgo, accionTomada } = params;
       const detalleHash = hallazgoHash(hallazgo);
 
-      if (!user) throw new Error("Sesión no válida");
+      const u = await resolveAuthUser(user);
 
       const data = await upsertAuditoriaRevision({
         embarque_id: hallazgo.embarque_id,
@@ -81,15 +81,15 @@ export function useMarcarRevisado() {
         detalle_hash: detalleHash,
         detalle: hallazgo.detalle,
         accion_tomada: accionTomada,
-        revisado_por: user.id,
-        revisado_por_email: user.email ?? "",
+        revisado_por: u.id,
+        revisado_por_email: u.email ?? "",
       });
 
       // Bitácora — best effort, no bloquea el éxito.
       try {
         await insertBitacora({
-          usuarioId: user.id,
-          usuarioEmail: user.email ?? "",
+          usuarioId: u.id,
+          usuarioEmail: u.email ?? "",
           accion: "marcar_hallazgo_revisado",
           modulo: "auditoria",
           entidadId: hallazgo.embarque_id,
