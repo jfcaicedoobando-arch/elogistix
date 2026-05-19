@@ -5,7 +5,7 @@
  * resuelve el RPC.
  */
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { defineColumns, type ColumnDef } from "@/components/shared/DataTable";
+import { type ColumnDef } from "@/components/shared/DataTable";
 import { formatDate, formatCurrency, toTitleCase } from "@/lib/formatters";
 import type { CotizacionListItem } from "@/hooks/cotizacion";
 import { renderEstadoVigencia } from "./columnsParts/estadoVigenciaCell";
