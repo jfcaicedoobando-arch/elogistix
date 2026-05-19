@@ -22,6 +22,14 @@ export interface ChangelogEntry {
  */
 export const recentChangelog: ChangelogEntry[] = [
   {
+    version: "10.1.0",
+    date: "2026-05-19",
+    type: "minor",
+    title: "Pruebas E2E de DataTable: filtros, orden y paginación",
+    summary: "Nueva suite DataTable.e2e.test.tsx (10 pruebas) que valida el flujo completo de filtrado externo, ciclo de orden, paginación controlada y virtualización. 26/26 verdes.",
+    description: "Se agregó src/components/shared/dataTable/__tests__/DataTable.e2e.test.tsx con un harness <EmbarquesHarness/> que reproduce el patrón real: filtro + DataTable server-sort + paginación controlada. Cubre: filtro que resetea a página 0, Siguiente avanza la franja, header dispara onSortChange con id nativo, ciclo asc→desc→null, respeto del orden server-side, empty state, isLoading, y montaje del rowModel virtualizado. Sin cambios funcionales ni de UI. APP_VERSION 10.1.0.",
+  },
+  {
     version: "10.0.0",
     date: "2026-05-19",
     type: "major",

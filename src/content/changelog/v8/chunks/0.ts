@@ -2,6 +2,14 @@ import type { ChangelogEntry } from "../../../changelogData";
 
 export const chunk0: ChangelogEntry[] = [
   {
+    version: "10.1.0",
+    date: "2026-05-19",
+    type: "minor",
+    title: "Pruebas E2E de DataTable: filtros, orden y paginación",
+    summary: "Se añadió la suite DataTable.e2e.test.tsx (10 pruebas) que cubre filtrado externo, ciclo de orden asc/desc/null, paginación controlada, cambio de página, respeto del orden server-side, empty state y montaje del rowModel virtualizado. 26/26 pruebas verdes.",
+    description: "Nuevo archivo src/components/shared/dataTable/__tests__/DataTable.e2e.test.tsx con un harness <EmbarquesHarness/> que reproduce el patrón real de Embarques: input de filtro + DataTable en sortMode='server' con controlledSort + paginación controlada con onPageChange/onPageSizeChange. Casos cubiertos: (1) filtro reduce filas y resetea a página 0; (2) botón 'Siguiente' avanza y cambia la franja de datos visible; (3) click en header dispara onSortChange con id nativo y resetea la página; (4) ciclo de orden asc→desc→null sobre la misma columna; (5) DataTable no re-ordena `data` cuando sortMode='server' (respeta lo que vino del RPC); (6) empty state ante filtro sin coincidencias; (7) isLoading muestra skeletons y oculta el cuerpo; (8) VirtualDataTable monta header + paginación controlada; (9) VirtualDataTable empty state; (10) VirtualDataTable no rompe ante rerender con `data` filtrada. Sin cambios funcionales ni de UI. APP_VERSION 10.1.0.",
+  },
+  {
     version: "10.0.0",
     date: "2026-05-19",
     type: "major",
