@@ -2,6 +2,14 @@ import type { ChangelogEntry } from "../../../changelogData";
 
 export const chunk0: ChangelogEntry[] = [
   {
+    version: "9.1.1",
+    date: "2026-05-19",
+    type: "patch",
+    title: "Pruebas de regresión para DataTable y VirtualDataTable",
+    summary: "Se agregaron 9 pruebas de regresión que validan render, click en filas, ciclo completo de sort server-side (asc → desc → null) y que el componente NO reordena en cliente cuando sortMode='server', usando fixtures con el shape de Embarques y Cotizaciones.",
+    description: "Nuevo archivo src/components/shared/dataTable/__tests__/DataTable.regression.test.tsx (vitest + @testing-library/react). Cubre: (1) render de headers y filas, (2) empty state, (3) onRowClick con la fila correcta, (4) ciclo asc → desc → null en columna string vía controlledSort + onSortChange + rerender (patrón useEmbarquesPageState/useCotizacionesPageState), (5) sortDescFirst en columna numérica (primer click → desc), (6) headers no-sortable no disparan onSortChange, (7) cuando sortMode='server' el componente respeta el orden del array data sin re-ordenar internamente, (8) VirtualDataTable monta headers desde table.getHeaderGroups() confirmando que el motor TanStack está activo (jsdom no calcula layout, así que las filas virtualizadas no se montan — el assert se enfoca en el rowModel/headerModel). Las pruebas blindan el refactor 9.1.0 contra regresiones futuras al migrar los ~38 archivos de columnas restantes en la fase 2. APP_VERSION 9.1.1.",
+  },
+  {
     version: "9.1.0",
     date: "2026-05-19",
     type: "minor",
