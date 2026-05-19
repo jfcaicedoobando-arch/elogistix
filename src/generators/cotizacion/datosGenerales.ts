@@ -1,6 +1,5 @@
 import type { CotizacionRow } from '@/types/cotizacion';
 import { formatCurrency, formatDate } from '@/lib/formatters';
-import { escapeHtml as esc } from '@/lib/utils';
 
 function rowsMaritimo(c: CotizacionRow): [string, string][] {
   if (c.modo !== 'Marítimo') return [];
@@ -60,8 +59,3 @@ export function buildMercancia(c: CotizacionRow): [string, string][] {
   return m;
 }
 
-export function gridCellsHtml(items: [string, string][]): string {
-  return items
-    .map(([l, v]) => `<div class="cell"><span class="label">${esc(l)}</span><span class="value">${esc(v)}</span></div>`)
-    .join('');
-}
