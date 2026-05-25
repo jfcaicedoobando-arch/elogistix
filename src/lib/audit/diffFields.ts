@@ -38,7 +38,7 @@ function equal(a: unknown, b: unknown): boolean {
 export function diffFields<T extends object>(
   before: T | Partial<T> | null | undefined,
   after: Partial<T>,
-  fields?: ReadonlyArray<keyof T & string>,
+  fields?: ReadonlyArray<string>,
 ): FieldDiff[] {
   if (!before) return [];
   const beforeRec = before as Record<string, unknown>;
