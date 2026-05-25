@@ -21,8 +21,11 @@ export async function bootstrapQueryPersister(client: QueryClient): Promise<void
   started = true;
   try {
     const { persistQueryClient } = await import("@tanstack/react-query-persist-client");
+    // Cast: react-query-persist-client trae su propia copia tipada de
+    // QueryClient (sub-dependencia de query-core). En runtime es el mismo
+    // objeto; el cast evita el conflicto de tipos de la marca privada.
     persistQueryClient({
-      queryClient: client,
+      queryClient: client as unknown as Parameters<typeof persistQueryClient>[0]["queryClient"],
       persister: queryPersister,
       maxAge: 24 * 60 * 60 * 1000, // 24h
       dehydrateOptions: {

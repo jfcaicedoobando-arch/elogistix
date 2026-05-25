@@ -57,6 +57,18 @@ export default defineConfig(({ mode }) => ({
           ) {
             return "pdf-vendor";
           }
+          // Sentry: cargado dinámicamente desde main.tsx en requestIdleCallback.
+          if (/node_modules\/@sentry/.test(id)) {
+            return "sentry-vendor";
+          }
+          // React Query persister: cargado dinámicamente en main.tsx.
+          if (
+            /node_modules\/@tanstack\/(react-query-persist-client|query-sync-storage-persister|query-persist-client-core)/.test(
+              id,
+            )
+          ) {
+            return "query-persist-vendor";
+          }
           if (/node_modules\/(react|react-dom|react-router-dom|@remix-run)/.test(id)) {
             return "react-vendor";
           }

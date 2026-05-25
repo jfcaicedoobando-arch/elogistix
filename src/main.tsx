@@ -1,5 +1,4 @@
 import { createRoot } from "react-dom/client";
-import "./lib/sentry"; // inicializa Sentry antes de montar React
 import App from "./App.tsx";
 import "./index.css";
 import { AuthProvider } from "./contexts/AuthContext";
@@ -10,6 +9,7 @@ import {
   isDynamicImportError,
   tryReloadForChunkError,
 } from "./lib/ui/dynamicImportError";
+import { queryClient } from "./lib/queryClient";
 
 window.addEventListener("vite:preloadError", (event) => {
   event.preventDefault();
@@ -27,6 +27,34 @@ window.addEventListener("unhandledrejection", (event) => {
 
 window.addEventListener("load", () => {
   clearChunkReloadFlag();
+});
+
+/**
+ * Sentry + React Query persister se cargan de forma DIFERIDA fuera del
+ * critical path (Etapa 5 sub-loop 2). Esto saca `@sentry/react` (~150 KB) y
+ * `@tanstack/react-query-persist-client` (~25 KB) del bundle inicial.
+ *
+ * - Sentry: errores tempranos siguen siendo capturados por los listeners
+ *   globales del navegador y se reenvían cuando init termina.
+ * - Persister: durante los primeros ~ms tras el paint los catálogos no
+ *   están hidratados; las queries refetchearán al montar (no hay regresión).
+ */
+const scheduleIdle = (cb: () => void) => {
+  const w = window as Window & {
+    requestIdleCallback?: (cb: IdleRequestCallback, opts?: { timeout: number }) => number;
+  };
+  if (typeof w.requestIdleCallback === "function") {
+    w.requestIdleCallback(() => cb(), { timeout: 3000 });
+  } else {
+    setTimeout(cb, 1500);
+  }
+};
+
+scheduleIdle(() => {
+  void import("./lib/sentry").then((m) => m.initSentry());
+  void import("./lib/queryPersistBootstrap").then((m) =>
+    m.bootstrapQueryPersister(queryClient),
+  );
 });
 
 createRoot(document.getElementById("root")!).render(
