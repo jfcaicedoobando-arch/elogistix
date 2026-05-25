@@ -2,6 +2,14 @@ import type { ChangelogEntry } from "../../../changelogData";
 
 export const chunk0: ChangelogEntry[] = [
   {
+    version: "11.15.0",
+    date: "2026-05-25",
+    type: "minor",
+    title: "Auditoría loop 3 — hooks JSONCargo, dashboard CRM y tracking live <200 LOC",
+    summary: "useJsonCargoTracking (250→110), useCrmDashboard (213→170), useTrackingLiveCard (209→100). Lógica pura extraída + 3 archivos de tests / 17 casos nuevos.",
+    description: "Tercera tanda de la auditoría P1 (Power of 10): hooks > 200 líneas. (1) useJsonCargoTracking.ts (250) reducido a 110: extractSummary + PrefixMismatchError + tipo JsonCargoSummary movidos a lib/jsoncargo/summary.ts; buildFechasUpdate, shouldAvanzarArribo y registrarEventoArribo a services/embarque/jsoncargoFechas.ts. Re-exports preservan API pública. (2) useCrmDashboard.ts (213→170): agregaciones puras (computePipelinePonderado, computeTopDeals, computeEmbudo, isoDaysFromNow) a lib/crm/dashboardAggregates.ts. (3) useTrackingLiveCard.ts (209→100): jsoncargoDateToYmd, computeFechasPropuestas, derivePrefixState, buildApplyFechasArgs, handleSyncResult, handleSyncError a lib/jsoncargo/trackingLiveHelpers.ts. Tests nuevos (17 casos): dashboardAggregates.test.ts (4), summary.test.ts (5: extractSummary con ETD efectivo, fallback, ATA inferida, PrefixMismatchError), trackingLiveHelpers.test.ts (8: parser fechas, diffs ETA, args, prefix mismatch). Bonus: arreglo de test pre-existente en ejecutivoAgregados (umbrales reales 90/75/60). Suite verde. APP_VERSION 11.15.0.",
+  },
+  {
     version: "11.14.0",
     date: "2026-05-25",
     type: "minor",

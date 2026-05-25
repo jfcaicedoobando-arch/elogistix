@@ -1,10 +1,20 @@
 /**
- * Hooks consolidados para el Dashboard del CRM (Sprint A — 11.3.0).
- * Reemplaza el placeholder "Próximas fases" con widgets accionables.
+ * Hooks consolidados para el Dashboard del CRM.
+ * Agregaciones puras en `lib/crm/dashboardAggregates.ts`.
  */
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import {
+  isoDaysFromNow,
+  computePipelinePonderado,
+  computeTopDeals,
+  computeEmbudo,
+  type OpRow,
+  type EtapaRow,
+  type TopDeal,
+  type EmbudoRow,
+} from "@/lib/crm/dashboardAggregates";
 
 export interface CrmDashboardData {
   kpis: {
@@ -37,22 +47,8 @@ export interface CrmDashboardData {
     fuente: string;
     created_at: string;
   }>;
-  topDeals: Array<{
-    id: string;
-    nombre: string;
-    cliente_nombre: string;
-    monto_estimado: number;
-    moneda: string;
-    probabilidad: number;
-    ponderado: number;
-  }>;
-  embudo: Array<{ etapa_id: string; nombre: string; color: string; tipo: string; count: number; monto: number }>;
-}
-
-function isoDaysFromNow(d: number): string {
-  const t = new Date();
-  t.setDate(t.getDate() + d);
-  return t.toISOString().slice(0, 10);
+  topDeals: TopDeal[];
+  embudo: EmbudoRow[];
 }
 
 export function useCrmDashboardData() {
@@ -109,50 +105,15 @@ export function useCrmDashboardData() {
         supabase.from("crm_etapas_pipeline").select("id, nombre, color, tipo, orden").eq("activa", true).order("orden", { ascending: true }),
       ]);
 
-      type OpRow = {
-        id: string; nombre: string; cliente_nombre: string;
-        monto_estimado: number; moneda: string; probabilidad: number;
-        fecha_estimada_cierre: string | null; etapa_id: string;
-      };
       const opsAbiertas = (opsAbiertasQ.data ?? []) as OpRow[];
-      const pipelinePonderado = opsAbiertas.reduce(
-        (s, o) => s + Number(o.monto_estimado ?? 0) * (Number(o.probabilidad ?? 0) / 100),
-        0,
-      );
-
-      const topDeals = [...opsAbiertas]
-        .map((o) => ({
-          id: o.id,
-          nombre: o.nombre,
-          cliente_nombre: o.cliente_nombre,
-          monto_estimado: Number(o.monto_estimado ?? 0),
-          moneda: o.moneda,
-          probabilidad: Number(o.probabilidad ?? 0),
-          ponderado: Number(o.monto_estimado ?? 0) * (Number(o.probabilidad ?? 0) / 100),
-        }))
-        .sort((a, b) => b.ponderado - a.ponderado)
-        .slice(0, 5);
-
-      type EtapaRow = { id: string; nombre: string; color: string; tipo: string };
       const etapas = (etapasQ.data ?? []) as EtapaRow[];
-      const embudo = etapas.map((et) => {
-        const ops = opsAbiertas.filter((o) => o.etapa_id === et.id);
-        return {
-          etapa_id: et.id,
-          nombre: et.nombre,
-          color: et.color,
-          tipo: et.tipo,
-          count: ops.length,
-          monto: ops.reduce((s, o) => s + Number(o.monto_estimado ?? 0), 0),
-        };
-      });
 
       return {
         kpis: {
           leads: leadsCountQ.count ?? 0,
           oportunidadesAbiertas: opsAbiertas.length,
           actividadesPendientes: actsPendQ.count ?? 0,
-          pipelinePonderado,
+          pipelinePonderado: computePipelinePonderado(opsAbiertas),
         },
         misActividadesHoy: (misActsQ.data ?? []) as CrmDashboardData["misActividadesHoy"],
         cerrandoEstaSemana: (cerrandoQ.data ?? []).map((o: { id: string; nombre: string; cliente_nombre: string; monto_estimado: number; moneda: string; fecha_estimada_cierre: string | null; probabilidad: number }) => ({
@@ -161,8 +122,8 @@ export function useCrmDashboardData() {
           fecha_estimada_cierre: o.fecha_estimada_cierre, probabilidad: Number(o.probabilidad ?? 0),
         })),
         leadsSinContactar: (leadsViejosQ.data ?? []) as CrmDashboardData["leadsSinContactar"],
-        topDeals,
-        embudo,
+        topDeals: computeTopDeals(opsAbiertas, 5),
+        embudo: computeEmbudo(opsAbiertas, etapas),
       };
     },
     staleTime: 60_000,
@@ -210,4 +171,3 @@ export function useActividadesVencidasList(limit = 5) {
     staleTime: 60_000,
   });
 }
-
