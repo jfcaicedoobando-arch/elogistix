@@ -46,6 +46,27 @@ export default function CrmDashboard() {
         icon={<Target className="h-6 w-6 text-primary" />}
       />
 
+      {vencidas.length > 0 && (
+        <Card className="border-destructive/40 bg-destructive/5">
+          <CardContent className="p-4 flex items-center justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <AlertCircle className="h-5 w-5 text-destructive shrink-0" />
+              <div>
+                <p className="text-sm font-medium">
+                  Tienes {vencidas.length === 5 ? "5+" : vencidas.length} actividad{vencidas.length === 1 ? "" : "es"} vencida{vencidas.length === 1 ? "" : "s"}
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  Próxima: {vencidas[0].asunto} · {vencidas[0].fecha_programada ? new Date(vencidas[0].fecha_programada).toLocaleDateString("es-MX") : "—"}
+                </p>
+              </div>
+            </div>
+            <Button asChild size="sm" variant="destructive">
+              <Link to="/crm/actividades?filtro=vencidas">Ver vencidas</Link>
+            </Button>
+          </CardContent>
+        </Card>
+      )}
+
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <KpiCard icon={Users} label="Leads" value={isLoading ? "…" : d?.kpis.leads ?? 0} />
         <KpiCard icon={Target} label="Oportunidades abiertas" value={isLoading ? "…" : d?.kpis.oportunidadesAbiertas ?? 0} />
