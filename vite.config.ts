@@ -38,12 +38,26 @@ export default defineConfig(({ mode }) => ({
   build: {
     sourcemap: true,
     minify: "terser",
+    // Excluir chunks pesados que SÓLO se cargan vía import() dinámico
+    // (pdf, sentry, charts, phone, query-persist) del modulepreload del
+    // entry. Sin esto, Vite genera <link rel="modulepreload"> que fuerza
+    // ~700 KB de descargas innecesarias en /login y rutas iniciales.
+    modulePreload: {
+      resolveDependencies: (_filename, deps) =>
+        deps.filter(
+          (dep) =>
+            !/(pdf-vendor|sentry-vendor|charts-vendor|phone-vendor|query-persist-vendor)-[\w-]+\.js$/.test(
+              dep,
+            ),
+        ),
+    },
     terserOptions: {
       compress: {
         drop_console: mode === "production",
         drop_debugger: mode === "production",
       },
     },
+
     rollupOptions: {
       output: {
         manualChunks: (id: string) => {
