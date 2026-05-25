@@ -9,7 +9,7 @@ export type CrmEtapaRow = Database["public"]["Tables"]["crm_etapas_pipeline"]["R
 export type CrmEtapaTipo = Database["public"]["Enums"]["crm_etapa_tipo"];
 
 const COLS =
-  "id, nombre, orden, tipo, color, probabilidad_default, activa, organization_id, created_at, updated_at";
+  "id, nombre, orden, tipo, color, probabilidad_default, activa, crea_tarea_seguimiento, dias_seguimiento, organization_id, created_at, updated_at";
 
 export function useEtapasPipeline() {
   return useQuery<CrmEtapaRow[]>({
@@ -34,7 +34,7 @@ export function useActualizarEtapa() {
       patch,
     }: {
       id: string;
-      patch: Partial<Pick<CrmEtapaRow, "nombre" | "orden" | "tipo" | "color" | "probabilidad_default" | "activa">>;
+      patch: Partial<Pick<CrmEtapaRow, "nombre" | "orden" | "tipo" | "color" | "probabilidad_default" | "activa" | "crea_tarea_seguimiento" | "dias_seguimiento">>;
     }) => {
       const { error } = await supabase.from("crm_etapas_pipeline").update(patch).eq("id", id);
       if (error) throw error;

@@ -1,17 +1,25 @@
 /**
- * Renderiza email/teléfono accionables: link mailto:/tel: + botón copiar al clipboard.
+ * Renderiza email/teléfono accionables: link mailto:/tel: + botón copiar + (opcional) PlantillaSelector.
  */
 import { Copy, Mail, Phone } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { notifySuccess } from "@/lib/ui/appFeedback";
+import PlantillaSelector from "@/components/crm/PlantillaSelector";
+
+interface PlantillaCtx {
+  entidadTipo: "lead" | "oportunidad";
+  entidadId: string;
+  vars: Record<string, string | number | null | undefined>;
+}
 
 interface Props {
   email?: string | null;
   telefono?: string | null;
+  plantillaCtx?: PlantillaCtx;
 }
 
-export default function ContactActions({ email, telefono }: Props) {
+export default function ContactActions({ email, telefono, plantillaCtx }: Props) {
   const { toast } = useToast();
   const copy = (v: string, label: string) => {
     if (!v) return;
@@ -20,7 +28,7 @@ export default function ContactActions({ email, telefono }: Props) {
 
   return (
     <div className="flex flex-col gap-2 text-sm">
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-2 flex-wrap">
         <Mail className="h-4 w-4 text-muted-foreground shrink-0" />
         {email ? (
           <>
@@ -28,12 +36,21 @@ export default function ContactActions({ email, telefono }: Props) {
             <Button size="icon" variant="ghost" className="h-6 w-6" onClick={() => copy(email, "Email")} title="Copiar email">
               <Copy className="h-3 w-3" />
             </Button>
+            {plantillaCtx && (
+              <PlantillaSelector
+                canal="email"
+                destino={email}
+                vars={plantillaCtx.vars}
+                entidadTipo={plantillaCtx.entidadTipo}
+                entidadId={plantillaCtx.entidadId}
+              />
+            )}
           </>
         ) : (
           <span className="text-muted-foreground">—</span>
         )}
       </div>
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-2 flex-wrap">
         <Phone className="h-4 w-4 text-muted-foreground shrink-0" />
         {telefono ? (
           <>
@@ -41,6 +58,15 @@ export default function ContactActions({ email, telefono }: Props) {
             <Button size="icon" variant="ghost" className="h-6 w-6" onClick={() => copy(telefono, "Teléfono")} title="Copiar teléfono">
               <Copy className="h-3 w-3" />
             </Button>
+            {plantillaCtx && (
+              <PlantillaSelector
+                canal="whatsapp"
+                destino={telefono}
+                vars={plantillaCtx.vars}
+                entidadTipo={plantillaCtx.entidadTipo}
+                entidadId={plantillaCtx.entidadId}
+              />
+            )}
           </>
         ) : (
           <span className="text-muted-foreground">—</span>

@@ -1,5 +1,6 @@
 /**
  * Editor de etapas del pipeline. Edición inline + guardar por fila.
+ * Sprint C: incluye `crea_tarea_seguimiento` + `dias_seguimiento` para automatizaciones.
  */
 import { useEffect, useState } from "react";
 import { ArrowDown, ArrowUp, Loader2, Save } from "lucide-react";
@@ -22,6 +23,7 @@ const TIPOS: CrmEtapaTipo[] = ["abierta", "ganada", "perdida"];
 interface RowState {
   nombre: string; tipo: CrmEtapaTipo; color: string;
   probabilidad_default: number; orden: number; activa: boolean;
+  crea_tarea_seguimiento: boolean; dias_seguimiento: number;
 }
 
 function toState(e: CrmEtapaRow): RowState {
@@ -29,6 +31,8 @@ function toState(e: CrmEtapaRow): RowState {
     nombre: e.nombre, tipo: e.tipo as CrmEtapaTipo, color: e.color ?? "#888",
     probabilidad_default: e.probabilidad_default ?? 0,
     orden: e.orden, activa: e.activa,
+    crea_tarea_seguimiento: e.crea_tarea_seguimiento ?? false,
+    dias_seguimiento: e.dias_seguimiento ?? 3,
   };
 }
 
@@ -49,7 +53,9 @@ export default function EtapasPipelineEditor() {
     return (
       orig.nombre !== d.nombre || orig.tipo !== d.tipo || orig.color !== d.color ||
       (orig.probabilidad_default ?? 0) !== d.probabilidad_default ||
-      orig.orden !== d.orden || orig.activa !== d.activa
+      orig.orden !== d.orden || orig.activa !== d.activa ||
+      (orig.crea_tarea_seguimiento ?? false) !== d.crea_tarea_seguimiento ||
+      (orig.dias_seguimiento ?? 3) !== d.dias_seguimiento
     );
   };
 
@@ -76,7 +82,13 @@ export default function EtapasPipelineEditor() {
 
   return (
     <Card>
-      <CardHeader><CardTitle className="text-base">Etapas del pipeline</CardTitle></CardHeader>
+      <CardHeader>
+        <CardTitle className="text-base">Etapas del pipeline</CardTitle>
+        <p className="text-xs text-muted-foreground">
+          Configura nombre, tipo, probabilidad, color y orden. Activa "Crear tarea" para auto-generar
+          una tarea de seguimiento al mover una oportunidad a esta etapa.
+        </p>
+      </CardHeader>
       <CardContent>
         {isLoading && <p className="text-sm text-muted-foreground">Cargando…</p>}
         <div className="space-y-2">
@@ -84,15 +96,16 @@ export default function EtapasPipelineEditor() {
             const d = draft[e.id]; if (!d) return null;
             return (
               <div key={e.id} className="grid grid-cols-12 gap-2 items-center p-2 border rounded">
-                <Input className="col-span-3" value={d.nombre} onChange={(ev) => set(e.id, { nombre: ev.target.value })} />
+                <Input className="col-span-2" value={d.nombre} onChange={(ev) => set(e.id, { nombre: ev.target.value })} />
                 <Select value={d.tipo} onValueChange={(v) => set(e.id, { tipo: v as CrmEtapaTipo })}>
-                  <SelectTrigger className="col-span-2"><SelectValue /></SelectTrigger>
+                  <SelectTrigger className="col-span-1"><SelectValue /></SelectTrigger>
                   <SelectContent>
                     {TIPOS.map((t) => <SelectItem key={t} value={t}>{t}</SelectItem>)}
                   </SelectContent>
                 </Select>
                 <Input
                   type="number" min={0} max={100} className="col-span-1"
+                  title="Probabilidad %"
                   value={d.probabilidad_default}
                   onChange={(ev) => set(e.id, { probabilidad_default: Math.max(0, Math.min(100, Number(ev.target.value) || 0)) })}
                 />
@@ -106,16 +119,27 @@ export default function EtapasPipelineEditor() {
                     <ArrowDown className="h-3 w-3" />
                   </Button>
                 </div>
-                <div className="col-span-1 flex justify-center">
+                <div className="col-span-1 flex flex-col items-center gap-0.5" title="Activa">
                   <Switch checked={d.activa} onCheckedChange={(v) => set(e.id, { activa: v })} />
+                  <span className="text-[9px] text-muted-foreground">Activa</span>
                 </div>
+                <div className="col-span-1 flex flex-col items-center gap-0.5" title="Crear tarea de seguimiento al entrar a esta etapa">
+                  <Switch checked={d.crea_tarea_seguimiento} onCheckedChange={(v) => set(e.id, { crea_tarea_seguimiento: v })} />
+                  <span className="text-[9px] text-muted-foreground">Tarea</span>
+                </div>
+                <Input
+                  type="number" min={1} max={30} className="col-span-1"
+                  title="Días para seguimiento"
+                  disabled={!d.crea_tarea_seguimiento}
+                  value={d.dias_seguimiento}
+                  onChange={(ev) => set(e.id, { dias_seguimiento: Math.max(1, Math.min(30, Number(ev.target.value) || 1)) })}
+                />
                 <Button
-                  size="sm" className="col-span-2"
+                  size="sm" className="col-span-1"
                   onClick={() => save(e.id)}
                   disabled={!isDirty(e.id) || actualizar.isPending}
                 >
-                  {actualizar.isPending ? <Loader2 className="h-3 w-3 mr-1 animate-spin" /> : <Save className="h-3 w-3 mr-1" />}
-                  Guardar
+                  {actualizar.isPending ? <Loader2 className="h-3 w-3" /> : <Save className="h-3 w-3" />}
                 </Button>
               </div>
             );

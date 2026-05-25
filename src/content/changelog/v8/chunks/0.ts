@@ -2,6 +2,14 @@ import type { ChangelogEntry } from "../../../changelogData";
 
 export const chunk0: ChangelogEntry[] = [
   {
+    version: "11.5.0",
+    date: "2026-05-25",
+    type: "minor",
+    title: "CRM Sprint C: automatizaciones, notificaciones y plantillas",
+    summary: "Tareas automáticas al cambiar etapa, notificaciones in-app (campanita), plantillas de email/WhatsApp, banner de actividades vencidas y auto-creación de actividad al crear lead/oportunidad.",
+    description: "Migración: crm_etapas_pipeline.crea_tarea_seguimiento + dias_seguimiento; tablas crm_notificaciones y crm_plantillas_mensaje con RLS. Hooks nuevos: useAutomatizacionesEtapa (ganada→tarea de cotización, perdida→cancela pendientes, seguimiento configurable), useCrmNotificaciones, usePlantillasMensaje + renderPlantilla, useActividadesVencidasList. UI: CrmNotificacionesBell en header CRM, EtapasPipelineEditor con switch 'Crear tarea' + días, tab 'Plantillas' en /crm/configuracion con PlantillasMensajeEditor, PlantillaSelector integrado en ContactActions de LeadDetalle (mailto:/wa.me con variables {{contacto}}, {{empresa}}, {{vendedor}}, {{etapa}}), banner de vencidas en CrmDashboard con CTA → /crm/actividades?filtro=vencidas, checkbox 'Crear actividad de seguimiento' en NuevoLeadDialog (llamada) y NuevaOportunidadDialog (tarea). APP_VERSION 11.5.0.",
+  },
+  {
     version: "11.4.0",
     date: "2026-05-25",
     type: "minor",

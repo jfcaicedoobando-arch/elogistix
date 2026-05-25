@@ -22,6 +22,14 @@ export interface ChangelogEntry {
  */
 export const recentChangelog: ChangelogEntry[] = [
   {
+    version: "11.5.0",
+    date: "2026-05-25",
+    type: "minor",
+    title: "CRM Sprint C: automatizaciones, notificaciones y plantillas",
+    summary: "Tareas automáticas al cambiar etapa, notificaciones in-app, plantillas de email/WhatsApp, banner de vencidas y auto-creación de actividad inicial.",
+    description: "Migración crm_etapas_pipeline.crea_tarea_seguimiento + dias_seguimiento; tablas crm_notificaciones y crm_plantillas_mensaje con RLS. Hooks useAutomatizacionesEtapa, useCrmNotificaciones, usePlantillasMensaje, useActividadesVencidasList. UI: CrmNotificacionesBell, EtapasPipelineEditor con tarea+días, tab Plantillas en /crm/configuracion, PlantillaSelector en ContactActions con variables, banner de vencidas en dashboard → /crm/actividades?filtro=vencidas, checkbox 'Crear actividad de seguimiento' en alta de leads y oportunidades. APP_VERSION 11.5.0.",
+  },
+  {
     version: "11.4.0",
     date: "2026-05-25",
     type: "minor",

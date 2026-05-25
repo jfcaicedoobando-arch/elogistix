@@ -188,3 +188,26 @@ export function useActividadesVencidasCount() {
     staleTime: 60_000,
   });
 }
+
+/** Lista de actividades vencidas (top 5) para banner del dashboard. */
+export function useActividadesVencidasList(limit = 5) {
+  const { user } = useAuth();
+  return useQuery({
+    queryKey: ["crm", "actividades", "vencidas-list", user?.id, limit],
+    enabled: !!user?.id,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("crm_actividades")
+        .select("id, asunto, tipo, fecha_programada, entidad_tipo, entidad_id")
+        .is("fecha_completada", null)
+        .lt("fecha_programada", new Date().toISOString())
+        .eq("responsable_id", user!.id)
+        .order("fecha_programada", { ascending: true })
+        .limit(limit);
+      if (error) throw error;
+      return data ?? [];
+    },
+    staleTime: 60_000,
+  });
+}
+

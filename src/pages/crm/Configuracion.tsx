@@ -1,10 +1,12 @@
 /**
- * /crm/configuracion — Etapas del pipeline y motivos de pérdida.
+ * /crm/configuracion — Etapas, motivos de pérdida y plantillas de mensaje.
  */
 import { Settings } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { PageHeader } from "@/components/shared/PageHeader";
 import EtapasPipelineEditor from "@/components/crm/EtapasPipelineEditor";
 import MotivosPerdidaEditor from "@/components/crm/MotivosPerdidaEditor";
+import PlantillasMensajeEditor from "@/components/crm/PlantillasMensajeEditor";
 import { usePermissions } from "@/hooks/shared";
 
 export default function CrmConfiguracion() {
@@ -17,10 +19,24 @@ export default function CrmConfiguracion() {
       <PageHeader
         icon={<Settings className="h-6 w-6 text-primary" />}
         title="Configuración del CRM"
-        description="Ajusta las etapas del pipeline y los motivos de pérdida."
+        description="Etapas del pipeline, motivos de pérdida y plantillas de mensajes."
       />
-      <EtapasPipelineEditor />
-      <MotivosPerdidaEditor />
+      <Tabs defaultValue="pipeline" className="w-full">
+        <TabsList>
+          <TabsTrigger value="pipeline">Pipeline</TabsTrigger>
+          <TabsTrigger value="motivos">Motivos de pérdida</TabsTrigger>
+          <TabsTrigger value="plantillas">Plantillas</TabsTrigger>
+        </TabsList>
+        <TabsContent value="pipeline" className="space-y-4 mt-4">
+          <EtapasPipelineEditor />
+        </TabsContent>
+        <TabsContent value="motivos" className="space-y-4 mt-4">
+          <MotivosPerdidaEditor />
+        </TabsContent>
+        <TabsContent value="plantillas" className="space-y-4 mt-4">
+          <PlantillasMensajeEditor />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }
