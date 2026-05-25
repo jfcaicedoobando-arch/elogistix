@@ -5,7 +5,7 @@ import { createLogger } from "../_shared/logger.ts";
 
 const VALID_ROLES = ["admin", "operador", "viewer"] as const;
 
-function validatePayload(body: { email?: string; password?: string }): string | null {
+export function validatePayload(body: { email?: string; password?: string }): string | null {
   if (!body.email || !body.password) return "Email y contraseña son requeridos";
   if (body.password.length < 6) return "La contraseña debe tener al menos 6 caracteres";
   return null;

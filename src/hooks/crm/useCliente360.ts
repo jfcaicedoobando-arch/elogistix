@@ -4,6 +4,8 @@
  */
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { computeCliente360Totals } from "@/lib/crm/cliente360";
+import type { EtapaTipo } from "@/lib/crm/forecast";
 
 export interface Cliente360Oportunidad {
   id: string;
@@ -59,15 +61,14 @@ export function useCliente360(clienteId: string | undefined) {
       if (embR.error) throw embR.error;
       if (etapasR.error) throw etapasR.error;
 
-      const tipoEtapa = new Map((etapasR.data ?? []).map((e) => [e.id, e.tipo]));
-      let totalAbierto = 0;
-      let totalGanado = 0;
+      const tipoEtapa = new Map(
+        (etapasR.data ?? []).map((e) => [e.id, e.tipo as EtapaTipo]),
+      );
       const oportunidades = (opsR.data ?? []) as Cliente360Oportunidad[];
-      for (const o of oportunidades) {
-        const t = tipoEtapa.get(o.etapa_id);
-        if (t === "abierta") totalAbierto += Number(o.monto_estimado ?? 0);
-        if (t === "ganada") totalGanado += Number(o.valor_real ?? o.monto_estimado ?? 0);
-      }
+      const { totalAbierto, totalGanado } = computeCliente360Totals(
+        oportunidades,
+        tipoEtapa,
+      );
 
       return {
         oportunidades,

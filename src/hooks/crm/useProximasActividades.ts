@@ -5,6 +5,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
+import { buildProximasMap } from "@/lib/crm/proximasActividades";
 
 type CrmEntidadTipo = Database["public"]["Enums"]["crm_entidad_tipo"];
 
@@ -39,11 +40,8 @@ export function useProximasActividades(
         .order("fecha_programada", { ascending: true, nullsFirst: false })
         .limit(500);
       if (error) throw error;
-      const map = new Map<string, ProximaActividad>();
-      for (const row of (data ?? []) as ProximaActividad[]) {
-        if (!map.has(row.entidad_id)) map.set(row.entidad_id, row);
-      }
-      return map;
+      return buildProximasMap((data ?? []) as ProximaActividad[]);
     },
   });
 }
+
