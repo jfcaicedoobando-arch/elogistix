@@ -1,7 +1,11 @@
 /**
- * Tipos de dominio puros para Operaciones.
- * Re-exportados por `hooks/operaciones/useOperacionesData` para preservar
- * la API existente y permitir consumo desde `lib/operaciones/*` sin invertir capas.
+ * Tipos de dominio puros para Operaciones (capa neutra).
+ * Definidos aquí para permitir consumo desde `lib/operaciones/*` sin
+ * invertir la jerarquía Pages→Hooks→Services→Lib.
+ *
+ * `hooks/operaciones/useOperacionesData` y `services/operaciones` mantienen
+ * sus propios tipos más ricos (incluyen `CargaRiesgo` con dependencias UI).
+ * Aquí exponemos sólo el subconjunto estructural que necesita la lógica pura.
  */
 
 export interface DesgloseEstados {
@@ -12,43 +16,11 @@ export interface DesgloseEstados {
   Cerrado: number;
 }
 
-export interface ClienteCarga {
+/**
+ * Subconjunto estructural mínimo de OperadorData que requiere la lógica pura
+ * de gráficos. Aceptamos cualquier objeto con estos dos campos.
+ */
+export interface OperadorBase {
   nombre: string;
-  cantidad: number;
   desgloseEstados: DesgloseEstados;
-}
-
-export interface CargaRiesgo {
-  embarque_id: string;
-  expediente: string;
-  cliente: string;
-  motivo: string;
-  diasRestantes?: number;
-}
-
-export interface EmbarquesPorEstado {
-  Confirmado: number;
-  "En Tránsito": number;
-  Llegada: number;
-  "En Proceso": number;
-  Cerrado: number;
-}
-
-export interface OperadorData {
-  nombre: string;
-  cargasActivas: number;
-  contenedores: number;
-  cargasEsteMes: number;
-  profit: number;
-  demoras: number;
-  criticos: number;
-  enPuerto: number;
-  porArribar: number;
-  clientes: string[];
-  clientesDesglose: ClienteCarga[];
-  desgloseEstados: DesgloseEstados;
-  cargasEnRiesgo: CargaRiesgo[];
-  historicoCreadosPorMes: { mes: string; valor: number }[];
-  historicoLlegadosPorMes: { mes: string; valor: number }[];
-  embarquesPorEstado: EmbarquesPorEstado;
 }
