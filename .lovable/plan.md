@@ -1,68 +1,56 @@
-# Auditoría de código y tests faltantes
+# Cierre de cobertura P2
 
-## Estado actual
+Continuamos con lo que quedó pendiente del audit (Tanda C parcial + edge functions sin tests).
 
-- **Fuentes** (src, sin tests): ~732 archivos `.ts/.tsx`
-- **Tests Vitest**: 69 archivos
-- **Tests Deno (edge functions)**: 2 archivos sobre 11 funciones
-- **Cobertura estimada**: ~9% por archivo (alta en `lib/*`, baja en `hooks/*`, `services/*` y `supabase/functions/*`)
+## Alcance
 
-### Bien cubierto
+### Edge functions Deno (sin tests hoy)
 
-`lib/domain` (15/17), `lib/financial`, `lib/mappers`, `lib/parsers`, `lib/csv`, `lib/jsoncargo`, `lib/audit`, `lib/formatters`, `lib/ui`, `lib/validation`, `lib/storage`, `lib/supabase`, `lib/crm`, `hooks/auditoria`, `DataTable`, `permissions`, `changelog`.
+1. `supabase/functions/parse-csf` — validación de payload + parsing CSF
+2. `supabase/functions/exchange-rates` — cache 1h, fallback Frankfurter
+3. `supabase/functions/jsoncargo-track` — auth + shape de respuesta
+4. `supabase/functions/tracking-public` — endpoint público, sin PII sensible
+5. `supabase/functions/invite-client-user` — validación de input + roles
+6. `supabase/functions/client-error-log` — sanitización de payload
+7. `supabase/functions/auditoria-snapshot-daily` — agregación
+8. `supabase/functions/auditoria-weekly-digest` — agregación
+9. `supabase/functions/list-users` — autorización admin (regresión 403)
+10. `supabase/functions/delete-user` — autorización admin
 
-### Gaps identificados
+Cada uno tendrá su `*_test.ts` con casos: CORS preflight, payload inválido (400), auth faltante (401), happy path básico mockeando fetch/supabase.
 
-**P0 — Riesgo alto / lógica financiera/operativa crítica sin tests**
+### Hooks P1 restantes (extracción + test puro)
 
-1. `services/facturas/huecoFacturacion.ts` — detección de huecos en numeración de facturas (compliance SAT).
-2. `services/facturas/proyeccion.ts` — proyección de facturación (KPIs financieros).
-3. `services/proforma/consolidar.ts` y `facturar.ts` — consolidación y conversión a factura.
-4. `services/cliente/financials.ts` — saldos/estado de cuenta por cliente.
-5. `services/admin/idempotencia.ts` — claves de idempotencia (riesgo de duplicación).
-6. `lib/domain/embarque.ts` ya tiene tests, pero `services/embarque/queries/*` y `services/embarque/contenedor.ts` (BIC/grouping) no.
-7. `supabase/functions/list-users` y `delete-user` — autorización admin (regresión reciente del 403).
+11. `useEmbarqueSubmitOrchestrator` → extraer pipeline a `src/lib/embarque/submitPipeline.ts`
+12. `useEmbarquesFilters` → extraer derivaciones a `src/lib/embarque/filtros.ts`
+13. `useAdminOrgKpis` → extraer agregación a `src/lib/admin/orgKpis.ts`
+14. `useJsonCargoBolLookup` → extraer normalización a `src/lib/jsoncargo/bolLookup.ts`
 
-**P1 — Hooks orquestadores con lógica pura extraíble**
-8. `hooks/embarque/useEmbarqueSubmitOrchestrator.ts` — pipeline de creación (estado→inserción→eventos→docs).
-9. `hooks/embarque/useEmbarquesFilters.ts` — filtros/derivaciones de lista.
-10. `hooks/cotizacion/useCotizacionPL.ts` — P&L de cotización (margen, utilidad).
-11. `hooks/facturacion/useHuecoFacturacion.ts` — pareja del servicio P0 #1.
-12. `hooks/embarque/useTrackingLinks.ts` / `useJsonCargoBolLookup.ts` — construcción de enlaces externos.
-13. `hooks/admin/useAdminOrgKpis.ts` — KPIs por organización.
+### Utilidades P2 menores
 
-**P2 — Utilidades menores y edge functions restantes**
-14. `services/portal/queries.ts` y `columns.ts` (cliente final).
-15. `services/observability/logClientError.ts`.
-16. `supabase/functions/parse-csf`, `exchange-rates`, `jsoncargo-track`, `tracking-public`, `invite-client-user`, `client-error-log`, `auditoria-snapshot-daily`, `auditoria-weekly-digest`.
-
-## Plan de ejecución sugerido
-
-Tres tandas, cada una termina con `bunx vitest run` + bump de `APP_VERSION` + entrada en `changelogData.ts`.
-
-
-| Tanda                                  | Alcance                                                                                                                                                           | Archivos test     |
-| -------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------- |
-| **A — P0 servicios + edge**            | huecoFacturacion, proyeccion, consolidar/facturar proforma, cliente/financials, admin/idempotencia, services/embarque/contenedor, list-users + delete-user (Deno) | 8                 |
-| **B — P1 hooks con extracción**        | extraer lógica pura de submitOrchestrator, useEmbarquesFilters, useCotizacionPL, useHuecoFacturacion, useTrackingLinks, useAdminOrgKpis                           | 6 + 6 libs nuevos |
-| **C — P2 utilidades y edge restantes** | portal/queries, observability, parse-csf, exchange-rates, jsoncargo-track, tracking-public, invite-client-user                                                    | 7-8               |
-
-
-**Recomendación**: ejecutar **Tanda A** primero (mayor ROI, sin refactors) y luego decidir si seguimos con B y C.
+15. `src/lib/io/zipDownload.ts` — generación zip
+16. `src/generators/exportCsv.ts` — encoding/escape
+17. `src/lib/sentry.ts` — guard de init
 
 ## Detalles técnicos
 
-- Vitest corre cada archivo en su propio worker (paralelismo ilimitado en la práctica).
-- Tests Deno se ejecutan con `supabase--test_edge_functions` (`*_test.ts`).
-- Para P1 se requiere extraer funciones puras a `src/lib/<dominio>/` siguiendo el patrón ya usado en `embarqueKpis.ts` y `desempenoChart.ts` — sin tocar UI ni features.
-- Sin tocar `src/integrations/supabase/*`, `index.css`, `tailwind.config.ts`.
+- Vitest para TS/TSX puro, reutilizando `_supabaseChainMock.ts` cuando aplique.
+- Deno tests con `*_test.ts` junto a cada `index.ts`, mockeando `fetch` global y usando los helpers de `_shared/`.
+- Para hooks orquestadores, extraer SOLO funciones puras (sin tocar comportamiento React/Query); el hook queda como wrapper delgado.
+- Cero cambios en UI, RLS, schema o `src/integrations/supabase/*`.
+
+## Verificación
+
+- `bunx vitest run` (target: 583 → ~650+ tests pasando).
+- `supabase--test_edge_functions` para los Deno suites nuevos.
+- Bump `APP_VERSION` a `11.12.0`, entrada en `changelogData.ts` y chunk activo, manteniendo 10 entradas más recientes.
 
 ## Fuera de alcance
 
-E2E Playwright, snapshot tests de UI, refactors fuera de extracciones mínimas para P1.
+E2E Playwright (ya existen specs), tests de componentes React/UI, refactors fuera de extracciones mínimas.
 
-## Pregunta para el usuario
+## Pregunta
 
-¿Arrancamos con **Tanda A**, **A + B**, o **las tres tandas** en este loop?
+¿Lo hago **todo en un loop** (17 ítems, ~10-12 archivos nuevos + 4 extracciones), o lo parto en **Edge functions primero** y luego hooks/utilidades? Haz todo en un loop
 
-Las 3 tandas
+&nbsp;

@@ -19,7 +19,7 @@ import { createLogger } from "../_shared/logger.ts";
 
 const MAX_BYTES = 5 * 1024 * 1024; // 5 MB
 
-function validateFile(file: File | null): string | null {
+export function validateFile(file: File | null): string | null {
   if (!file) return "No se envió archivo PDF";
   if (file.type !== "application/pdf") return "Solo se aceptan archivos PDF";
   if (file.size > MAX_BYTES) return "El archivo excede el límite de 5 MB";

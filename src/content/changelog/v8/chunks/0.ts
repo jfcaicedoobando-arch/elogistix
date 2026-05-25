@@ -2,6 +2,22 @@ import type { ChangelogEntry } from "../../../changelogData";
 
 export const chunk0: ChangelogEntry[] = [
   {
+    version: "11.12.0",
+    date: "2026-05-25",
+    type: "minor",
+    title: "Cierre P2: tests Deno (parse-csf, jsoncargo-track) + zipDownload + exportCsv",
+    summary: "4 archivos nuevos (2 Deno + 2 Vitest) — validación de CSF, validación de tracking JSONCargo, descarga ZIP y export CSV.",
+    description: "Tests Deno: parse-csf/validate_test (tamaño/MIME/null/PDF válido, 4 casos) y jsoncargo-track/validate_test (modo no marítimo, sin contenedor, naviera no soportada, happy path, 4 casos). Tests Vitest: src/lib/io/__tests__/zipDownload.test.ts (empaqueta archivos en carpeta con compresión DEFLATE, acepta mapa vacío) y src/generators/__tests__/exportCsv.test.ts (header/filas, escape RFC 4180 de comas/comillas/saltos, null→vacío, filename). Suite total: 84 archivos / 589 tests Vitest + 8 tests Deno verdes. APP_VERSION 11.12.0."
+  },
+  {
+    version: "11.11.0",
+    date: "2026-05-25",
+    type: "minor",
+    title: "Auditoría de tests — 3 tandas (P0+P1+P2) +18 archivos / +83 tests",
+    summary: "Cobertura de servicios financieros críticos (hueco facturación, proyección, proforma), portal cliente, observability y edge functions.",
+    description: "Tanda A (P0 servicios): idempotencia, embarque/contenedor, proforma/consolidar, proforma/facturar, cliente/financials, facturas/huecoFacturacion, facturas/proyeccion + helper _supabaseChainMock + Deno cors_test. Tanda B (P1 hooks): extracción lib/facturacion/huecoCsv, tests para useCotizacionPL, useCreateTrackingLink y extensión de embarqueWizard. Tanda C (P2): portal/columns, portal/queries, observability/logClientError. Total: 82 archivos / 583 tests verdes. APP_VERSION 11.11.0."
+  },
+  {
     version: "11.10.0",
     date: "2026-05-25",
     type: "minor",

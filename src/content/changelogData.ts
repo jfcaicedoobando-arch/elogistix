@@ -22,6 +22,14 @@ export interface ChangelogEntry {
  */
 export const recentChangelog: ChangelogEntry[] = [
   {
+    version: "11.12.0",
+    date: "2026-05-25",
+    type: "minor",
+    title: "Cierre P2: tests Deno (parse-csf, jsoncargo-track) + zipDownload + exportCsv",
+    summary: "4 archivos nuevos (2 Deno + 2 Vitest): validación de CSF, validación de tracking JSONCargo, descarga ZIP y export CSV.",
+    description: "Tests Deno: parse-csf/validate_test (tamaño/MIME/null) y jsoncargo-track/validate_test (modo, contenedor, naviera soportada, happy path). Tests Vitest: zipDownload empaqueta archivos en carpeta y dispara descarga; exportCsv escapa comas/comillas/saltos, trata null como vacío y respeta filename. Suite: 84 archivos / 589 tests Vitest + 8 Deno verdes. APP_VERSION 11.12.0.",
+  },
+  {
     version: "11.11.0",
     date: "2026-05-25",
     type: "minor",
@@ -92,14 +100,6 @@ export const recentChangelog: ChangelogEntry[] = [
     title: "CRM Sprint D: integración comercial y vista 360° del cliente",
     summary: "Cotizaciones y comentarios en oportunidad, tab CRM en ClienteDetalle, valor real al ganar y leaderboard de vendedores.",
     description: "Migración valor_real en crm_oportunidades + tabla crm_comentarios_oportunidad con RLS y triggers (registra valor real al aceptar cotización ligada; notifica al vendedor cuando otro usuario comenta). Hooks useComentariosOportunidad y useCliente360. Componentes ComentariosOportunidad, OportunidadCotizacionesList, LeaderboardVendedores y Cliente360Panel. OportunidadDetalle muestra valor real, cotizaciones vinculadas y comentarios; al crear cotización mueve la oportunidad a 'Cotizando'. ClienteDetalle suma tab CRM. Reportes incluye leaderboard mensual con cuota vs. cerrado. APP_VERSION 11.6.0.",
-  },
-  {
-    version: "11.5.0",
-    date: "2026-05-25",
-    type: "minor",
-    title: "CRM Sprint C: automatizaciones, notificaciones y plantillas",
-    summary: "Tareas automáticas al cambiar etapa, notificaciones in-app, plantillas de email/WhatsApp, banner de vencidas y auto-creación de actividad inicial.",
-    description: "Migración crm_etapas_pipeline.crea_tarea_seguimiento + dias_seguimiento; tablas crm_notificaciones y crm_plantillas_mensaje con RLS. Hooks useAutomatizacionesEtapa, useCrmNotificaciones, usePlantillasMensaje, useActividadesVencidasList. UI: CrmNotificacionesBell, EtapasPipelineEditor con tarea+días, tab Plantillas en /crm/configuracion, PlantillaSelector en ContactActions con variables, banner de vencidas en dashboard → /crm/actividades?filtro=vencidas, checkbox 'Crear actividad de seguimiento' en alta de leads y oportunidades. APP_VERSION 11.5.0.",
   },
 ];
 
