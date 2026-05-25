@@ -2,6 +2,14 @@ import type { ChangelogEntry } from "../../../changelogData";
 
 export const chunk0: ChangelogEntry[] = [
   {
+    version: "11.27.0",
+    date: "2026-05-25",
+    type: "minor",
+    title: "Eliminación de eslint-disable (parte 2): exhaustive-deps complejos resueltos",
+    summary: "8 directivas más removidas (19→11): useEditarEmbarqueWizard×4, useListPageState, useCotizacionWizardSteps, VirtualDataTable, sustituidas por causas raíz (useCallback estables, useRef snapshot, widthsKey derivado).",
+    description: "Segunda tanda del plan de limpieza. (1) useConceptosForm: inicializarVenta/inicializarCosto envueltos en useCallback estables, lo que permitió añadirlos a las deps de los 3 useEffect de hidratación en useEditarEmbarqueWizard + el 4° effect de resolución inversa shipper/consignatario ahora declara methods. (2) useListPageState: defaultFilters capturado vía useRef al montar (snapshot inmutable), eliminando el disable del useMemo de filterParsers. (3) useCotizacionWizardSteps: handlePaso1/2/3 ahora son useCallback con sus deps reales; handleSiguiente sólo depende de currentStep + los 3 callbacks (deps drásticamente reducidas). (4) VirtualDataTable: gridTemplate ahora se deriva directamente de widthsKey (que ya contiene cada width o el sentinel default unidos por \\u0001), eliminando la captura de leafColumns inestable y respetando exhaustive-deps sin disable. 626 tests verdes. APP_VERSION 11.27.0.",
+  },
+  {
     version: "11.26.0",
     date: "2026-05-25",
     type: "minor",
