@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [11.36.0] - 2026-05-25
+- **Auditoría calidad — Etapa 4 sub-loop 2 (cobertura)**: +15 tests cubriendo 2 módulos puros adicionales. `lib/mappers/cotizacionForm` (9 tests: defaults, mapeo snake→camel, dimensiones LCL/Aérea con fallback, parsing de validez_propuesta a Date, fallbacks de null, costos iniciales con defaults). `services/facturas/proyeccion/buildFilas` (6 tests: indexarPorEmbarque agrupando por id/columna, fallback MXN/0, buildFilasProyeccion con conversión USD↔MXN, flag tiene_factura_pdf, TC=1 cuando null). Total: 648 → 663 tests verdes (99 files).
+
 ## [11.35.0] - 2026-05-25
 - **Auditoría calidad — Etapa 4 sub-loop 1 (cobertura)**: +25 tests cubriendo 5 módulos puros críticos sin test previo. `lib/mappers/_helpers` (6 tests: str/num/numStr/bool/nullable/emptyToNull). `lib/parsers/dashboardProfit` (7 tests: numOr0, numOrCompute con 0 válido, safeMargen con división por cero, parse con/sin profit explícito). `services/embarque/jsoncargoFechas.buildFechasUpdate` (5 tests: ata seteando eta cuando falta, sin sobrescribir, null/undefined ignorados). `lib/mappers/embarqueCotizacion` (3 tests: vincular con defaults, desvincular reset incoterm=FOB). `services/cotizacion/mutations/payloadBuilders` (4 tests: folio + cliente vs prospecto + defaults de mercancía). Total: 623 → 648 tests verdes.
 
