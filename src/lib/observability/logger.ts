@@ -19,20 +19,20 @@ function fmt(scope: string, args: unknown[]): unknown[] {
 export const logger = {
   debug(scope: string, ...args: unknown[]): void {
     if (isProd) return;
-    // eslint-disable-next-line no-console
+     
     console.debug(...fmt(scope, args));
   },
   info(scope: string, ...args: unknown[]): void {
     if (isProd) return;
-    // eslint-disable-next-line no-console
+     
     console.info(...fmt(scope, args));
   },
   warn(scope: string, ...args: unknown[]): void {
-    // eslint-disable-next-line no-console
+     
     console.warn(...fmt(scope, args));
   },
   error(scope: string, ...args: unknown[]): void {
-    // eslint-disable-next-line no-console
+     
     console.error(...fmt(scope, args));
     try {
       const first = args.find((a) => a instanceof Error) as Error | undefined;

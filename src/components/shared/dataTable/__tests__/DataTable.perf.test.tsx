@@ -60,7 +60,7 @@ function measure(label: string, fn: () => void): number {
   fn();
   const t1 = performance.now();
   const ms = t1 - t0;
-  // eslint-disable-next-line no-console
+   
   console.log(`[perf] ${label}: ${ms.toFixed(1)}ms`);
   return ms;
 }
