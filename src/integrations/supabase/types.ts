@@ -872,6 +872,7 @@ export type Database = {
           notas: string | null
           num_contenedores: number
           operador: string
+          oportunidad_id: string | null
           organization_id: string
           origen: string
           peso_kg: number
@@ -928,6 +929,7 @@ export type Database = {
           notas?: string | null
           num_contenedores?: number
           operador?: string
+          oportunidad_id?: string | null
           organization_id?: string
           origen?: string
           peso_kg?: number
@@ -984,6 +986,7 @@ export type Database = {
           notas?: string | null
           num_contenedores?: number
           operador?: string
+          oportunidad_id?: string | null
           organization_id?: string
           origen?: string
           peso_kg?: number
@@ -1033,6 +1036,342 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      crm_actividades: {
+        Row: {
+          asunto: string
+          created_at: string
+          created_by: string | null
+          deleted_at: string | null
+          deleted_by: string | null
+          descripcion: string
+          duracion_min: number | null
+          entidad_id: string
+          entidad_tipo: Database["public"]["Enums"]["crm_entidad_tipo"]
+          fecha_completada: string | null
+          fecha_programada: string | null
+          id: string
+          organization_id: string
+          responsable_email: string
+          responsable_id: string | null
+          resultado: string
+          tipo: Database["public"]["Enums"]["crm_actividad_tipo"]
+          updated_at: string
+        }
+        Insert: {
+          asunto: string
+          created_at?: string
+          created_by?: string | null
+          deleted_at?: string | null
+          deleted_by?: string | null
+          descripcion?: string
+          duracion_min?: number | null
+          entidad_id: string
+          entidad_tipo: Database["public"]["Enums"]["crm_entidad_tipo"]
+          fecha_completada?: string | null
+          fecha_programada?: string | null
+          id?: string
+          organization_id?: string
+          responsable_email?: string
+          responsable_id?: string | null
+          resultado?: string
+          tipo: Database["public"]["Enums"]["crm_actividad_tipo"]
+          updated_at?: string
+        }
+        Update: {
+          asunto?: string
+          created_at?: string
+          created_by?: string | null
+          deleted_at?: string | null
+          deleted_by?: string | null
+          descripcion?: string
+          duracion_min?: number | null
+          entidad_id?: string
+          entidad_tipo?: Database["public"]["Enums"]["crm_entidad_tipo"]
+          fecha_completada?: string | null
+          fecha_programada?: string | null
+          id?: string
+          organization_id?: string
+          responsable_email?: string
+          responsable_id?: string | null
+          resultado?: string
+          tipo?: Database["public"]["Enums"]["crm_actividad_tipo"]
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      crm_cuotas_vendedor: {
+        Row: {
+          anio: number
+          created_at: string
+          cuota_monto: number
+          id: string
+          mes: number
+          moneda: string
+          organization_id: string
+          updated_at: string
+          vendedor_email: string
+          vendedor_id: string
+        }
+        Insert: {
+          anio: number
+          created_at?: string
+          cuota_monto?: number
+          id?: string
+          mes: number
+          moneda?: string
+          organization_id?: string
+          updated_at?: string
+          vendedor_email?: string
+          vendedor_id: string
+        }
+        Update: {
+          anio?: number
+          created_at?: string
+          cuota_monto?: number
+          id?: string
+          mes?: number
+          moneda?: string
+          organization_id?: string
+          updated_at?: string
+          vendedor_email?: string
+          vendedor_id?: string
+        }
+        Relationships: []
+      }
+      crm_etapas_pipeline: {
+        Row: {
+          activa: boolean
+          color: string
+          created_at: string
+          deleted_at: string | null
+          deleted_by: string | null
+          id: string
+          nombre: string
+          orden: number
+          organization_id: string
+          probabilidad_default: number
+          tipo: Database["public"]["Enums"]["crm_etapa_tipo"]
+          updated_at: string
+        }
+        Insert: {
+          activa?: boolean
+          color?: string
+          created_at?: string
+          deleted_at?: string | null
+          deleted_by?: string | null
+          id?: string
+          nombre: string
+          orden?: number
+          organization_id?: string
+          probabilidad_default?: number
+          tipo?: Database["public"]["Enums"]["crm_etapa_tipo"]
+          updated_at?: string
+        }
+        Update: {
+          activa?: boolean
+          color?: string
+          created_at?: string
+          deleted_at?: string | null
+          deleted_by?: string | null
+          id?: string
+          nombre?: string
+          orden?: number
+          organization_id?: string
+          probabilidad_default?: number
+          tipo?: Database["public"]["Enums"]["crm_etapa_tipo"]
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      crm_leads: {
+        Row: {
+          ciudad: string
+          cliente_convertido_id: string | null
+          contacto: string
+          created_at: string
+          created_by: string | null
+          deleted_at: string | null
+          deleted_by: string | null
+          email: string
+          empresa: string
+          estado: Database["public"]["Enums"]["crm_lead_estado"]
+          fuente: Database["public"]["Enums"]["crm_lead_fuente"]
+          id: string
+          interes_modo: string
+          notas: string
+          oportunidad_convertida_id: string | null
+          organization_id: string
+          pais: string
+          score: number
+          telefono: string
+          updated_at: string
+          vendedor_email: string
+          vendedor_id: string | null
+        }
+        Insert: {
+          ciudad?: string
+          cliente_convertido_id?: string | null
+          contacto?: string
+          created_at?: string
+          created_by?: string | null
+          deleted_at?: string | null
+          deleted_by?: string | null
+          email?: string
+          empresa: string
+          estado?: Database["public"]["Enums"]["crm_lead_estado"]
+          fuente?: Database["public"]["Enums"]["crm_lead_fuente"]
+          id?: string
+          interes_modo?: string
+          notas?: string
+          oportunidad_convertida_id?: string | null
+          organization_id?: string
+          pais?: string
+          score?: number
+          telefono?: string
+          updated_at?: string
+          vendedor_email?: string
+          vendedor_id?: string | null
+        }
+        Update: {
+          ciudad?: string
+          cliente_convertido_id?: string | null
+          contacto?: string
+          created_at?: string
+          created_by?: string | null
+          deleted_at?: string | null
+          deleted_by?: string | null
+          email?: string
+          empresa?: string
+          estado?: Database["public"]["Enums"]["crm_lead_estado"]
+          fuente?: Database["public"]["Enums"]["crm_lead_fuente"]
+          id?: string
+          interes_modo?: string
+          notas?: string
+          oportunidad_convertida_id?: string | null
+          organization_id?: string
+          pais?: string
+          score?: number
+          telefono?: string
+          updated_at?: string
+          vendedor_email?: string
+          vendedor_id?: string | null
+        }
+        Relationships: []
+      }
+      crm_motivos_perdida: {
+        Row: {
+          activa: boolean
+          created_at: string
+          deleted_at: string | null
+          deleted_by: string | null
+          id: string
+          nombre: string
+          organization_id: string
+        }
+        Insert: {
+          activa?: boolean
+          created_at?: string
+          deleted_at?: string | null
+          deleted_by?: string | null
+          id?: string
+          nombre: string
+          organization_id?: string
+        }
+        Update: {
+          activa?: boolean
+          created_at?: string
+          deleted_at?: string | null
+          deleted_by?: string | null
+          id?: string
+          nombre?: string
+          organization_id?: string
+        }
+        Relationships: []
+      }
+      crm_oportunidades: {
+        Row: {
+          cliente_id: string | null
+          cliente_nombre: string
+          created_at: string
+          created_by: string | null
+          deleted_at: string | null
+          deleted_by: string | null
+          destino: string
+          etapa_id: string
+          fecha_cierre_real: string | null
+          fecha_estimada_cierre: string | null
+          id: string
+          lead_id: string | null
+          modo: string
+          moneda: string
+          monto_estimado: number
+          motivo_perdida_id: string | null
+          nombre: string
+          notas: string
+          organization_id: string
+          origen: string
+          probabilidad: number
+          tipo_carga: string
+          updated_at: string
+          vendedor_email: string
+          vendedor_id: string | null
+        }
+        Insert: {
+          cliente_id?: string | null
+          cliente_nombre?: string
+          created_at?: string
+          created_by?: string | null
+          deleted_at?: string | null
+          deleted_by?: string | null
+          destino?: string
+          etapa_id: string
+          fecha_cierre_real?: string | null
+          fecha_estimada_cierre?: string | null
+          id?: string
+          lead_id?: string | null
+          modo?: string
+          moneda?: string
+          monto_estimado?: number
+          motivo_perdida_id?: string | null
+          nombre: string
+          notas?: string
+          organization_id?: string
+          origen?: string
+          probabilidad?: number
+          tipo_carga?: string
+          updated_at?: string
+          vendedor_email?: string
+          vendedor_id?: string | null
+        }
+        Update: {
+          cliente_id?: string | null
+          cliente_nombre?: string
+          created_at?: string
+          created_by?: string | null
+          deleted_at?: string | null
+          deleted_by?: string | null
+          destino?: string
+          etapa_id?: string
+          fecha_cierre_real?: string | null
+          fecha_estimada_cierre?: string | null
+          id?: string
+          lead_id?: string | null
+          modo?: string
+          moneda?: string
+          monto_estimado?: number
+          motivo_perdida_id?: string | null
+          nombre?: string
+          notas?: string
+          organization_id?: string
+          origen?: string
+          probabilidad?: number
+          tipo_carga?: string
+          updated_at?: string
+          vendedor_email?: string
+          vendedor_id?: string | null
+        }
+        Relationships: []
       }
       documentos_embarque: {
         Row: {
@@ -2744,6 +3083,22 @@ export type Database = {
         | "super_admin"
         | "cliente"
         | "vendedor"
+      crm_actividad_tipo: "llamada" | "email" | "reunion" | "tarea" | "nota"
+      crm_entidad_tipo: "lead" | "oportunidad" | "cliente" | "contacto"
+      crm_etapa_tipo: "abierta" | "ganada" | "perdida"
+      crm_lead_estado:
+        | "Nuevo"
+        | "Contactado"
+        | "Calificado"
+        | "Descalificado"
+        | "Convertido"
+      crm_lead_fuente:
+        | "Web"
+        | "Referido"
+        | "Campaña"
+        | "Llamada en frío"
+        | "Evento"
+        | "Otro"
       estado_cotizacion:
         | "Borrador"
         | "Enviada"
@@ -2955,6 +3310,24 @@ export const Constants = {
         "super_admin",
         "cliente",
         "vendedor",
+      ],
+      crm_actividad_tipo: ["llamada", "email", "reunion", "tarea", "nota"],
+      crm_entidad_tipo: ["lead", "oportunidad", "cliente", "contacto"],
+      crm_etapa_tipo: ["abierta", "ganada", "perdida"],
+      crm_lead_estado: [
+        "Nuevo",
+        "Contactado",
+        "Calificado",
+        "Descalificado",
+        "Convertido",
+      ],
+      crm_lead_fuente: [
+        "Web",
+        "Referido",
+        "Campaña",
+        "Llamada en frío",
+        "Evento",
+        "Otro",
       ],
       estado_cotizacion: [
         "Borrador",
