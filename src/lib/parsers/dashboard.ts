@@ -15,6 +15,7 @@ import {
   type EmbarqueMesSiguiente,
   type EstadoFiltro,
   type ResumenFacturacion,
+} from "./dashboardTypes";
 import { numOr0 } from "./dashboardProfit";
 
 export * from "./dashboardTypes";
