@@ -5,9 +5,9 @@ export const chunk0: ChangelogEntry[] = [
     version: "11.12.0",
     date: "2026-05-25",
     type: "minor",
-    title: "Cierre P2: tests edge functions + zipDownload + exportCsv",
-    summary: "7 archivos nuevos (5 Deno + 2 Vitest) cubriendo parse-csf, jsoncargo-track, invite-client-user, client-error-log, auditoria-weekly-digest, zipDownload y exportCsv.",
-    description: "Refactor mínimo: se exportan helpers puros (validateFile, validateEmbarqueForTracking, parseBodyId, parseBody, truncate, tryExtractUserId, esc, buildHtml) en sus respectivos index.ts de edge functions. Tests Deno cubren validación de tamaño/MIME del CSF, naviera/modo/contenedor para JSONCargo, payload de invitación de cliente, sanitización + extracción de userId desde JWT, y HTML del digest semanal (escape, ordenamiento por monto, filtro de hallazgos sin monto). Tests Vitest: zipDownload empaqueta archivos en carpeta y dispara descarga; exportCsv escapa comas/comillas/saltos, trata null como vacío y respeta filename. Suite: 84 archivos / ~595 tests. APP_VERSION 11.12.0.",
+    title: "Cierre P2: tests Deno (parse-csf, jsoncargo-track) + zipDownload + exportCsv",
+    summary: "4 archivos nuevos (2 Deno + 2 Vitest) — validación de CSF, validación de tracking JSONCargo, descarga ZIP y export CSV.",
+    description: "Tests Deno: parse-csf/validate_test (tamaño/MIME/null/PDF válido, 4 casos) y jsoncargo-track/validate_test (modo no marítimo, sin contenedor, naviera no soportada, happy path, 4 casos). Tests Vitest: src/lib/io/__tests__/zipDownload.test.ts (empaqueta archivos en carpeta con compresión DEFLATE, acepta mapa vacío) y src/generators/__tests__/exportCsv.test.ts (header/filas, escape RFC 4180 de comas/comillas/saltos, null→vacío, filename). Suite total: 84 archivos / 589 tests Vitest + 8 tests Deno verdes. APP_VERSION 11.12.0."
   },
   {
     version: "11.11.0",

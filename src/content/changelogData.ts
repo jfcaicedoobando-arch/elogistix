@@ -25,9 +25,9 @@ export const recentChangelog: ChangelogEntry[] = [
     version: "11.12.0",
     date: "2026-05-25",
     type: "minor",
-    title: "Cierre P2: tests edge functions + zipDownload + exportCsv",
-    summary: "7 archivos nuevos (5 Deno + 2 Vitest): parse-csf, jsoncargo-track, invite-client-user, client-error-log, auditoria-weekly-digest, zipDownload, exportCsv.",
-    description: "Helpers puros exportados en edge functions y suite Vitest extendida. Total ~595 tests verdes. APP_VERSION 11.12.0.",
+    title: "Cierre P2: tests Deno (parse-csf, jsoncargo-track) + zipDownload + exportCsv",
+    summary: "4 archivos nuevos (2 Deno + 2 Vitest): validación de CSF, validación de tracking JSONCargo, descarga ZIP y export CSV.",
+    description: "Tests Deno: parse-csf/validate_test (tamaño/MIME/null) y jsoncargo-track/validate_test (modo, contenedor, naviera soportada, happy path). Tests Vitest: zipDownload empaqueta archivos en carpeta y dispara descarga; exportCsv escapa comas/comillas/saltos, trata null como vacío y respeta filename. Suite: 84 archivos / 589 tests Vitest + 8 Deno verdes. APP_VERSION 11.12.0.",
   },
   {
     version: "11.11.0",
