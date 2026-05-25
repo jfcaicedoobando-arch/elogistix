@@ -22,12 +22,20 @@ export interface ChangelogEntry {
  */
 export const recentChangelog: ChangelogEntry[] = [
   {
+    version: "11.9.0",
+    date: "2026-05-25",
+    type: "minor",
+    title: "Cobertura Vitest +12 archivos / +62 tests (P0+P1)",
+    summary: "Tests puros para lógica crítica financiera, XSS, wizard de embarques, mappers de cotización y utilidades compartidas.",
+    description: "Nuevos tests vitest: costosUSD, htmlEscape (XSS), embarqueWizardCostos, embarqueWizardDocumentos, validationFormat, errorCatalog, auth/resolveLandingRoute, io/csv (RFC 4180), containerPrefixes (BIC + leasing pool), useDebounce (fake timers), mappers/buildPaso1Data (FCL/LCL/Aéreo/Terrestre), auditoriaCsv. 12 archivos / 62 casos, todos verdes. APP_VERSION 11.9.0.",
+  },
+  {
     version: "11.8.0",
     date: "2026-05-25",
     type: "minor",
     title: "Sprint T1+T2: tests del CRM y de edge functions",
-    summary: "Cobertura: 24 tests nuevos en CRM (forecast/reportes, próximas actividades, cliente360, renderPlantilla) y 7 tests Deno (checkAdminAccess, validatePayload).",
-    description: "Extracción de lógica pura: src/lib/crm/forecast.ts (computeForecast + computeReportesCRM + mesKey/mesLabel), src/lib/crm/proximasActividades.ts (buildProximasMap + esVencida/esHoy), src/lib/crm/cliente360.ts (computeCliente360Totals). Los hooks useForecast/useReportesCRM/useProximasActividades/useCliente360 ahora delegan en estos helpers. Tests vitest: 4 archivos / 24 casos cubriendo etapas abiertas/ganadas/perdidas, fallback 'Sin asignar'/'Sin fecha', strings numéricos, ordenamiento por ponderado, tasa de conversión por fuente, top-5 motivos de pérdida, deduplicación por entidad_id, vencidas/hoy con fecha local, render con espacios y null/undefined. Tests Deno en supabase/functions: _shared/auth_test.ts (3 casos para checkAdminAccess con SupabaseClient mockeado) y create-user/validate_test.ts (4 casos para validatePayload). validatePayload se exportó desde create-user/index.ts para hacerlo testeable. APP_VERSION 11.8.0.",
+    summary: "Cobertura: 24 tests nuevos en CRM y 7 tests Deno (checkAdminAccess, validatePayload).",
+    description: "Extracción de lógica pura a src/lib/crm/ (forecast, proximasActividades, cliente360) y tests vitest+Deno. APP_VERSION 11.8.0.",
   },
   {
     version: "11.7.3",
