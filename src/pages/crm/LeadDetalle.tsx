@@ -254,6 +254,8 @@ export default function LeadDetalle() {
         </CardContent>
       </Card>
 
+      <LeadLineageCard leadId={lead.id} />
+
       <ConvertirLeadDialog open={convertirOpen} onOpenChange={setConvertirOpen} lead={lead} />
 
       <DoubleConfirmDeleteDialog
