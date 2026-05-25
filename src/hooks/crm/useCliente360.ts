@@ -4,6 +4,8 @@
  */
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { computeCliente360Totals } from "@/lib/crm/cliente360";
+import type { EtapaTipo } from "@/lib/crm/forecast";
 
 export interface Cliente360Oportunidad {
   id: string;
