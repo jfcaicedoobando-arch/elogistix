@@ -26,7 +26,7 @@ export const recentChangelog: ChangelogEntry[] = [
     date: "2026-05-25",
     type: "minor",
     title: "Eliminación de eslint-disable (parte 2): exhaustive-deps complejos",
-    summary: "8 directivas más removidas (19→11): useEditarEmbarqueWizard×4, useListPageState, useCotizacionWizardSteps, VirtualDataTable — fixes por causa raíz (useCallback estable, useRef snapshot, widthsKey derivado).",
+    summary: "10 directivas más removidas (19→9): useEditarEmbarqueWizard×4, useListPageState, useCotizacionWizardSteps, VirtualDataTable — fixes por causa raíz (useCallback estable, useRef snapshot, widthsKey derivado).",
     description: "Segunda tanda del plan. (1) useConceptosForm.inicializarVenta/Costo → useCallback, lo que permite añadirlos como deps en los 3 effects de hidratación de useEditarEmbarqueWizard + el 4° effect declara methods. (2) useListPageState: defaultFilters capturado vía useRef al montar (snapshot inmutable). (3) useCotizacionWizardSteps: handlePaso1/2/3 envueltos en useCallback con sus deps reales; handleSiguiente depende sólo de currentStep + los 3 callbacks. (4) VirtualDataTable: gridTemplate se deriva directamente de widthsKey (split/join con sentinel \\u0001), eliminando captura de leafColumns inestable. 626 tests verdes. APP_VERSION 11.27.0.",
   },
   {
