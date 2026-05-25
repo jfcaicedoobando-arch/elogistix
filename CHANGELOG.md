@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [11.39.0] - 2026-05-25
+- **Auditoría de tests obsoletos**: reporte completo en `docs/tests-audit.md`. Hallazgos: 0 tests con `.skip/.only/.todo`, 0 imports rotos, 26 huérfanos (todos falsos positivos: cubren barrels/sub-módulos), 3 bloques con duplicados reales. Eliminados 12 tests redundantes: `describe("formatDate")` duplicado en `uiMappings.test.ts` (movido a `formatters.test.ts`, -3 tests); en `embarqueWizardSchemas.test.ts` se removieron `validateArchivo` (-3), `validateStepDocumentos` (-2) y `validateStepCostos` (-3) ya cubiertos en los archivos split del wizard; `sumarEnUSD([])` duplicado entre `costosUSD.test.ts` y `financialUtils.edge.test.ts` (-1). Suite: 724 → 712 tests verdes en 108 files, sin pérdida de cobertura. Próximos sub-loops sugeridos: gate de CI preventivo (`scripts/audit-tests.ts`), consolidación `aUSD`↔`convertirAUSD`, reorganización de huérfanos.
+
 ## [11.38.0] - 2026-05-25
 - **Auditoría calidad — Etapa 4 sub-loop 4 (cobertura)**: +34 tests cubriendo 5 módulos puros adicionales. `formatters/text` (11 tests: toTitleCase con conectores/siglas/corporativos/dígitos colgantes/guiones, nombreDesdeEmail, shortName). `formatters/phone` (5 tests: CDMX 2 dígitos, Querétaro 3, prefijo +52, inválido preservado). `formatters/places` (9 tests: prioridad puerto>aeropuerto>ciudad para getOrigen/getDestino, correctSpanishPlace con diccionario México/Querétaro/Yucatán). `lib/ui/authSnapshotBuilder` (4 tests: snapshot completo + Sentry context con nulls). `lib/ui/estadoConfig` (5 tests: getEstadoVisual con fallback default, configs específicas embarque/cotización, kpiIconChipClasses). Total: 690 → 724 tests verdes (108 files).
 
