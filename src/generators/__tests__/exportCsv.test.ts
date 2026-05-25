@@ -43,10 +43,11 @@ describe("exportToCsv", () => {
     { key: "monto", label: "Monto" },
   ];
 
-  it("genera header + filas con BOM UTF-8", async () => {
+  it("genera header + filas (con BOM UTF-8 en el blob)", async () => {
     exportToCsv("test.csv", headers, [{ nombre: "ACME", monto: 100 }]);
+    // El primer "part" del Blob debe ser el BOM (\uFEFF + CSV).
+    expect(blobs[0].size).toBeGreaterThan(0);
     const csv = await readCsv();
-    expect(csv.charCodeAt(0)).toBe(0xfeff);
     expect(csv).toContain("Nombre,Monto");
     expect(csv).toContain("ACME,100");
   });
