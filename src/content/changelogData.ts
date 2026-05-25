@@ -22,6 +22,14 @@ export interface ChangelogEntry {
  */
 export const recentChangelog: ChangelogEntry[] = [
   {
+    version: "11.10.0",
+    date: "2026-05-25",
+    type: "minor",
+    title: "Cobertura Vitest +6 archivos / +33 tests (P2 + extracciones)",
+    summary: "Tests para columnas de embarque, tracking externo, configuración, idempotency, KPIs de embarque y chart de desempeño.",
+    description: "Nuevos tests: services/embarque/columns, lib/jsoncargo/externalTracking, lib/domain/configuracion, lib/idempotency (newRequestId + useStableRequestId), lib/financial/embarqueKpis (extraído de useEmbarqueFinancials), lib/operaciones/desempenoChart (extraído de useDesempenoChartData). 6 archivos / 33 casos verdes. APP_VERSION 11.10.0.",
+  },
+  {
     version: "11.9.0",
     date: "2026-05-25",
     type: "minor",
