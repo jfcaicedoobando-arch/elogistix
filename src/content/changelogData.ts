@@ -22,6 +22,14 @@ export interface ChangelogEntry {
  */
 export const recentChangelog: ChangelogEntry[] = [
   {
+    version: "11.7.3",
+    date: "2026-05-25",
+    type: "patch",
+    title: "Fix edge function list-users: permitir miembros de la organización",
+    summary: "Operadores y vendedores ya no reciben 403 al cargar /crm/oportunidades ni selects de vendedor/responsable.",
+    description: "list-users ahora permite a cualquier miembro de la org listar usuarios de su propia organización (respuesta filtrada por organization_members). create-user/delete-user/invite-client-user mantienen check estricto de admin. APP_VERSION 11.7.3.",
+  },
+  {
     version: "11.7.2",
     date: "2026-05-25",
     type: "patch",
