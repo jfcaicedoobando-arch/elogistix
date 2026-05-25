@@ -77,6 +77,15 @@ export default tseslint.config(
     },
   },
   {
+    // Tests-only: console.log para perf benchmarks y regex de control para
+    // validar sanitización de paths son patrones legítimos en specs.
+    files: ["**/*.test.ts", "**/*.test.tsx"],
+    rules: {
+      "no-console": "off",
+      "no-control-regex": "off",
+    },
+  },
+  {
     // Contexts y barrels: re-exportan helpers/hooks junto al Provider.
     // El componente raíz de cada contexto rara vez se edita; el warning
     // de Fast Refresh es ruido para esta convención del proyecto.
