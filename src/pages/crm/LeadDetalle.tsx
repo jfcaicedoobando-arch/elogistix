@@ -258,9 +258,9 @@ export default function LeadDetalle() {
       <DoubleConfirmDeleteDialog
         open={deleteOpen}
         onOpenChange={setDeleteOpen}
-        itemName={lead.empresa}
+        entityName={lead.empresa}
         onConfirm={handleDelete}
-        isDeleting={eliminar.isPending}
+        isPending={eliminar.isPending}
       />
     </div>
   );
