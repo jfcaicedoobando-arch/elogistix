@@ -22,6 +22,14 @@ export interface ChangelogEntry {
  */
 export const recentChangelog: ChangelogEntry[] = [
   {
+    version: "11.7.3",
+    date: "2026-05-25",
+    type: "patch",
+    title: "Fix edge function list-users: permitir miembros de la organización",
+    summary: "Operadores y vendedores ya no reciben 403 al cargar /crm/oportunidades ni selects de vendedor/responsable.",
+    description: "list-users ahora permite a cualquier miembro de la org listar usuarios de su propia organización (respuesta filtrada por organization_members). create-user/delete-user/invite-client-user mantienen check estricto de admin. APP_VERSION 11.7.3.",
+  },
+  {
     version: "11.7.2",
     date: "2026-05-25",
     type: "patch",
@@ -92,14 +100,6 @@ export const recentChangelog: ChangelogEntry[] = [
     title: "CRM: navegación interna por tabs",
     summary: "Sidebar muestra un solo item 'CRM'; las secciones internas (Dashboard, Leads, Oportunidades, Actividades, Forecast, Reportes) viven en tabs dentro del módulo.",
     description: "Nuevo CrmLayout con tabs (NavLink) y rutas anidadas bajo /crm. SIDEBAR_CRM_ITEMS reducido a un único enlace. APP_VERSION 11.2.1.",
-  },
-  {
-    version: "11.2.0",
-    date: "2026-05-25",
-    type: "minor",
-    title: "CRM Fases 3-6: Oportunidades, Actividades, Forecast y Reportes",
-    summary: "Kanban con drag&drop, timeline de actividades, forecast ponderado, reportes y conversión de oportunidad a cotización.",
-    description: "Hooks useOportunidades/useEtapasPipeline/useActividades/useForecastReportes. UI OportunidadKanban (@dnd-kit), ActividadTimeline, NuevaOportunidadDialog. Pantallas /crm/oportunidades (Kanban/Tabla), /crm/oportunidades/:id (con 'Crear cotización' que enlaza oportunidad_id), /crm/actividades, /crm/forecast, /crm/reportes. Vendedor: sidebar enfocada (CRM + Clientes + Ayuda). APP_VERSION 11.2.0.",
   },
 ];
 
