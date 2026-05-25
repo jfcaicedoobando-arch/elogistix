@@ -1,96 +1,85 @@
-# Plan: Segunda ola de reducción de fricción CRM
 
-La v11.49.0 limpió el chrome (header, dashboard, tabs). Esta ola ataca la fricción que queda **dentro de los flujos** (crear, mover, cerrar, dar seguimiento). Objetivo: que un vendedor cierre el día sin abrir un solo modal innecesario.
+# Plan v11.51 — Cierre de pendientes anti-fricción
 
-## Diagnóstico restante
+## Contexto
 
-1. **Crear Lead/Oportunidad/Actividad** sigue siendo un modal de 8–12 campos. La mayoría se llena con 2 datos (nombre + teléfono / título + cliente).
-2. **Mover etapa** en Kanban abre modal de confirmación incluso cuando no hay cambios de estado críticos.
-3. **Completar actividad** abre diálogo con notas obligatorias — debería ser un check inline.
-4. **Detalle de oportunidad** tiene 5 tabs (Resumen, Cotizaciones, Actividades, Notas, Historial) — Notas e Historial casi nunca se usan; Resumen duplica datos del header.
-5. **Detalle de lead** pide convertir a oportunidad en pantalla aparte, perdiendo contexto.
-6. **No hay vista "Mi día"**: el vendedor entra al dashboard pero tiene que saltar entre Actividades, NBA y Leads para saber qué hacer.
-7. **Búsqueda**: no hay forma rápida de saltar a un lead/oportunidad por nombre desde el CRM (Ctrl+K global existe pero no prioriza entidades CRM cuando estás en /crm).
-8. **Toasts ruidosos**: cada cambio de estado/etapa dispara toast verde — satura.
+Tras revisar el código vivo, varios pendientes del plan v11.50 **ya están implementados**:
 
-## Cambios propuestos
+- ✅ `OportunidadDetalleContent` ya tiene 3 tabs (Resumen / Comunicación / Trazabilidad), no 5.
+- ✅ `ActividadRowActions` ya permite completar inline + posponer con menú rápido.
 
-### 1. Quick-create de 2 campos
-- `QuickAddMenu` abre **popover inline** (no Dialog) con solo:
-  - Lead: Nombre + Teléfono/Email
-  - Oportunidad: Título + Cliente
-  - Actividad: Título + Fecha (default hoy 17:00)
-- Botón "Más campos →" abre el dialog completo solo si se necesita.
-- Reduce creación de ~20s a ~3s.
+Quedan **3 pendientes reales** del plan anterior, más una mejora de consistencia.
 
-### 2. Kanban sin fricción
-- Drag & drop entre etapas: **sin modal**, optimistic update + toast con "Deshacer" (5s).
-- Modal de confirmación solo al mover a **Ganada** (pide cotización ganadora) o **Perdida** (pide motivo).
+---
 
-### 3. Actividades inline
-- Checkbox en lista/dashboard completa la actividad directo (sin pedir notas).
-- Si el usuario quiere agregar nota, click en la fila abre panel lateral (`Sheet`), no modal full-screen.
-- Reprogramar con menú contextual rápido: "Mañana", "En 3 días", "Próx. semana".
+## Alcance v11.51
 
-### 4. Tabs de OportunidadDetalle: 5 → 3
-- **Resumen + Notas + Historial** → unificados en una sola columna scrolleable "Resumen".
-- Quedan: **Resumen** | **Cotizaciones** | **Actividades**.
-- Header conserva banner ganada/perdida.
+### 1. Conversión Lead → Oportunidad sin navegación (Sheet)
 
-### 5. Convertir Lead → Oportunidad inline
-- Botón "Convertir" en `LeadDetalle` abre `Sheet` con campos mínimos (cliente, valor estimado, etapa inicial). No navega fuera.
-- Al guardar: cierra sheet, navega a oportunidad nueva.
+**Hoy:** `ConvertirLeadDialog` es un `Dialog` modal grande con varios campos y, al confirmar, navega a `/crm/oportunidades/:id` (se pierde el contexto del lead).
 
-### 6. Vista "Mi día" como pestaña inicial
-- Nueva ruta `/crm/mi-dia` (default landing si el usuario tiene rol vendedor).
-- 3 secciones colapsables:
-  1. **Hoy** (actividades del día + NBA top 3)
-  2. **Esta semana** (oportunidades cerrando ≤7d + cotizaciones sin respuesta)
-  3. **Pipeline** (mini stat strip)
-- Dashboard actual se renombra a "Resumen" (para admins/supervisores).
+**Cambio:**
+- Crear `ConvertirLeadSheet.tsx` (variante `Sheet` lateral) con **solo 3 campos**: nombre de oportunidad (prefilled), monto estimado, modo. Checkbox "Crear cliente" colapsable.
+- Al confirmar: ejecutar conversión, mostrar toast con acción **"Abrir oportunidad →"** y **quedarse en `/crm/leads/:id`** (el lead ya pasa a estado convertido y la card muestra los IDs resultantes — ya existe esa lógica).
+- "Más campos →" sigue abriendo el `ConvertirLeadDialog` actual.
+- Reemplazar en `LeadHeaderActions.tsx` el trigger actual por el nuevo Sheet.
 
-### 7. Búsqueda contextual CRM
-- `Cmd/Ctrl+P` dentro de /crm abre `Command` palette que busca **solo entidades CRM** (leads, oportunidades, actividades, cotizaciones vinculadas). Más rápido que el global.
+### 2. Notas inline de actividad (Sheet ligero)
 
-### 8. Toasts silenciados
-- Cambios inline (estado lead, completar actividad, mover etapa) → toast minimalista bottom-right con auto-dismiss 2s + acción "Deshacer".
-- Eliminar toasts de éxito redundantes en operaciones que ya muestran feedback visual (badge cambia, fila se tacha, etc.).
+**Hoy:** completar actividad NO pide notas (bien), pero si el vendedor quiere añadir resultado/notas tiene que abrir la actividad completa.
 
-## Archivos
+**Cambio:**
+- Añadir un tercer botón en `ActividadRowActions`: ícono "lápiz" → abre `ActividadNotasSheet` (Sheet derecho) con un solo `Textarea` de "Resultado / notas" y botón Guardar.
+- Hook nuevo `useActualizarActividadNotas` (mutation pequeña que hace `update` sobre `crm_actividades.notas` o campo equivalente — verificar nombre real en types.ts antes de implementar).
 
-### Nuevos
-- `src/components/crm/quickCreate/QuickCreateLeadPopover.tsx`
-- `src/components/crm/quickCreate/QuickCreateOportunidadPopover.tsx`
-- `src/components/crm/quickCreate/QuickCreateActividadPopover.tsx`
-- `src/components/crm/actividades/ActividadQuickReschedule.tsx`
-- `src/components/crm/actividades/ActividadSidePanel.tsx` (Sheet)
-- `src/components/crm/leadDetalle/ConvertirLeadSheet.tsx`
-- `src/components/crm/CrmCommandPalette.tsx`
-- `src/pages/crm/MiDia.tsx`
-- `src/hooks/crm/useUndoToast.ts`
-- `src/hooks/crm/useCrmSearch.ts`
+### 3. Toasts silenciados y consistentes
 
-### Modificados
-- `QuickAddMenu.tsx` → invoca popovers en lugar de dialogs
-- `OportunidadKanban.tsx` / `useMoverEtapa.ts` → optimistic + undo, modal solo en Ganada/Perdida
-- `OportunidadDetalleContent.tsx` → 3 tabs, mergea Resumen+Notas+Historial
-- `LeadDetalle.tsx` → botón convertir abre Sheet
-- `CrmLayout.tsx` → agrega tab "Mi día", reordena, registra `Cmd+P`
-- `useCrmHotkeys.ts` → agrega `Cmd+P`, atajos de reprogramar (`T`, `3`, `W`)
-- `Actividades.tsx` / columnas → checkbox inline + menú reprogramar
-- `appVersion.ts` → `11.50.0`
-- `CHANGELOG.md`
+**Hoy:** Se usa `notifySuccess(toast, {...})` en todo el CRM. Genera toasts shadcn tipo "card" con título + descripción, persisten ~5s, ocupan mucho espacio.
 
-### Sin tocar
-- Lógica de scoring NBA, triggers Supabase, RLS, permisos, estructura de cotizaciones/embarques.
+**Cambio:**
+- Crear `src/lib/crm/crmToast.ts` con helpers `crmToast.success(msg)`, `crmToast.error(msg, err?)`, `crmToast.undo(msg, onUndo)` — todos usando `sonner` directamente con `duration: 2000` y posición `bottom-right`.
+- Refactor superficial en el módulo CRM (`src/pages/crm/**`, `src/components/crm/**`, `src/hooks/crm/**`): reemplazar `notifySuccess(toast, { title: X })` → `crmToast.success(X)`.
+- **NO tocar** `notifyError` con `error/context/step` (se conservan para flujos con panel de debug copiable — embarques, wizard, etc.). Sólo migrar los success/info simples del CRM.
+- Mantener `showUndoToast` (ya usa sonner) y unificarlo dentro de `crmToast.undo`.
+
+### 4. Verificación / cleanup
+
+- Confirmar que `OportunidadDetalleContent` no tiene tabs muertas referenciadas en otro lado.
+- Eliminar `OportunidadGanadaBanner` import si quedó huérfano tras consolidación (verificar primero).
+
+---
 
 ## Detalles técnicos
 
-- **Optimistic updates**: usar `queryClient.setQueryData` antes del `mutate`, rollback en `onError`. Patrón ya usado en `useActualizarLead`.
-- **Undo**: `useUndoToast` guarda snapshot pre-cambio en ref, sonner toast con action button que dispara mutación inversa antes de invalidate.
-- **Cmd+P**: listener en `CrmLayout`, abre `<Command>` shadcn con `useCrmSearch` (debounced 200ms, `.or()` query sobre leads + oportunidades + actividades, limit 8 c/u).
-- **Mi día default**: en `CrmLayout`, si `pathname === '/crm'` y rol == vendedor → redirect a `/crm/mi-dia`. Admins van a `/crm/inicio` (resumen).
-- **Power of 10**: cada componente nuevo ≤200 líneas, sin `any`, cleanup en effects de listeners de teclado.
+**Archivos nuevos**
+- `src/components/crm/ConvertirLeadSheet.tsx` (~150 líneas, usa `Sheet` de shadcn)
+- `src/components/crm/actividades/ActividadNotasSheet.tsx`
+- `src/hooks/crm/useActualizarActividadNotas.ts`
+- `src/lib/crm/crmToast.ts`
 
-## Fuera de alcance
-- Cambios de schema, nuevos campos forwarder-specific, permisos, integraciones email/calendar, automatizaciones de workflow.
+**Archivos modificados**
+- `src/components/crm/leadDetalle/LeadHeaderActions.tsx` — usar Sheet nuevo
+- `src/components/crm/ActividadRowActions.tsx` — añadir botón notas
+- `src/hooks/crm/useUndoToast.ts` — reexportar desde `crmToast` o consolidar
+- ~15-20 archivos del módulo CRM para migrar `notifySuccess` → `crmToast.success`
+- `src/hooks/crm/index.ts` — exportar nuevo hook
+- `src/constants/appVersion.ts` → `11.51.0`
+- `CHANGELOG.md` — entrada nueva
+- `src/pages/Changelog.tsx` — nueva entrada al inicio del array
+
+**Fuera de alcance (decidir después)**
+- Permisos/ownership por vendedor
+- Importación CSV de leads
+- Razones de pérdida tipificadas
+- Notificaciones push/email
+- Integración Oportunidad ganada → embarque automático
+- Reasignación masiva
+- Métricas por vendedor en Analítica
+
+Estos los abordamos en v11.52+ una vez que decidas cuáles son must-have para abrir al equipo.
+
+---
+
+## Resultado esperado
+
+Al terminar v11.51, los 4 pendientes del plan anterior quedan cerrados y el CRM está listo para un **piloto controlado** (2 vendedores, 1 semana) mientras decidimos los gaps funcionales reales.
