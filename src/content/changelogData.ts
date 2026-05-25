@@ -101,14 +101,6 @@ export const recentChangelog: ChangelogEntry[] = [
     summary: "Sidebar muestra un solo item 'CRM'; las secciones internas (Dashboard, Leads, Oportunidades, Actividades, Forecast, Reportes) viven en tabs dentro del módulo.",
     description: "Nuevo CrmLayout con tabs (NavLink) y rutas anidadas bajo /crm. SIDEBAR_CRM_ITEMS reducido a un único enlace. APP_VERSION 11.2.1.",
   },
-  {
-    version: "11.2.0",
-    date: "2026-05-25",
-    type: "minor",
-    title: "CRM Fases 3-6: Oportunidades, Actividades, Forecast y Reportes",
-    summary: "Kanban con drag&drop, timeline de actividades, forecast ponderado, reportes y conversión de oportunidad a cotización.",
-    description: "Hooks useOportunidades/useEtapasPipeline/useActividades/useForecastReportes. UI OportunidadKanban (@dnd-kit), ActividadTimeline, NuevaOportunidadDialog. Pantallas /crm/oportunidades (Kanban/Tabla), /crm/oportunidades/:id (con 'Crear cotización' que enlaza oportunidad_id), /crm/actividades, /crm/forecast, /crm/reportes. Vendedor: sidebar enfocada (CRM + Clientes + Ayuda). APP_VERSION 11.2.0.",
-  },
 ];
 
 /** Deduplica por version conservando la primera ocurrencia (recentChangelog gana). */
