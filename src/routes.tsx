@@ -14,7 +14,7 @@ const Dashboard = lazy(() => import("./pages/dashboard/Dashboard"));
 const Operaciones = lazy(() => import("./pages/dashboard/Operaciones"));
 const Reportes = lazy(() => import("./pages/dashboard/Reportes"));
 const Bitacora = lazy(() => import("./pages/dashboard/Bitacora"));
-const Changelog = lazy(() => import("./pages/dashboard/Changelog"));
+
 const Papelera = lazy(() => import("./pages/dashboard/Papelera"));
 const Idempotencia = lazy(() => import("./pages/dashboard/Idempotencia"));
 const Auditoria = lazy(() => import("./pages/Auditoria"));
@@ -132,7 +132,6 @@ export const AppRoutes = () => (
       <Route path="/reportes" element={<Navigate to="/reportes/rentabilidad" replace />} />
       <Route path="/rentabilidad" element={<Navigate to="/reportes/rentabilidad" replace />} />
 
-      <Route path="/changelog" element={<Changelog />} />
       <Route path="/ayuda" element={<Ayuda />} />
       <Route path="/sentry" element={<SentryDiagnostico />} />
       <Route path="/crm" element={<CrmLayout />}>

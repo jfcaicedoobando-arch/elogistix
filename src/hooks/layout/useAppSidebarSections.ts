@@ -39,7 +39,7 @@ export function useAppSidebarSections(): SidebarSection[] {
     return [
       { label: "CRM", items: crmItems },
       { label: "Directorio", items: SIDEBAR_DIRECTORIO_ITEMS.filter((it) => it.url === "/clientes") },
-      { label: "Sistema", items: sistemaItems.filter((it) => it.url === "/ayuda" || it.url === "/changelog") },
+      { label: "Sistema", items: sistemaItems.filter((it) => it.url === "/ayuda") },
     ];
   }
 

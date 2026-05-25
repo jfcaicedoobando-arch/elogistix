@@ -19,7 +19,7 @@ const SEGMENT_LABELS: Record<string, string> = {
   operaciones: "Operaciones",
   reportes: "Reportes",
   rentabilidad: "Rentabilidad",
-  changelog: "Changelog",
+  
   bitacora: "Bitácora",
   usuarios: "Usuarios",
   configuracion: "Configuración",
