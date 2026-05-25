@@ -12,11 +12,9 @@ import type {
 } from "@/components/shared/dataTable/types";
 
 // API pública estable: re-exports de tipos/helpers consumidos por todo el proyecto.
-// eslint-disable-next-line react-refresh/only-export-components
 export type { DataTablePagination, TableDensity, ColumnAlign, SortDir } from "@/components/shared/dataTable/types";
 // eslint-disable-next-line react-refresh/only-export-components
 export { defineColumns } from "@/components/shared/dataTable/defineColumns";
-// eslint-disable-next-line react-refresh/only-export-components
 export type { ColumnDef } from "@tanstack/react-table";
 
 interface DataTableProps<T> {
