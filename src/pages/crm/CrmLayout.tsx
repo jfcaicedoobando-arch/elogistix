@@ -17,6 +17,9 @@ const TABS_BASE = [
 
 export default function CrmLayout() {
   const { data: vencidas = 0 } = useActividadesVencidasCount();
+  const { canEditCrm } = usePermissions();
+  const TABS = TABS_BASE.filter((t) => !t.adminOnly || canEditCrm);
+
 
   return (
     <div className="flex flex-col h-full">
