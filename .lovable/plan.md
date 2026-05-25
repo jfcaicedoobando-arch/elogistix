@@ -1,71 +1,83 @@
-## Etapa 5 — Sub-loop 3: lazy charts + chunk de libphonenumber
+## Objetivo
 
-### Diagnóstico
+Cerrar de un solo golpe todos los pendientes de **bajo riesgo** que quedan en el roadmap arquitectónico. Sin cambios funcionales, sin refactors invasivos, sin migraciones. Foco en blindar lo que ya está limpio y completar deuda de baja superficie.
 
-**recharts (`charts-vendor`, 348 KB gzip ~95 KB)**: hoy entra al primer paint de cualquiera de estas 5 rutas — `Reportes`, `Operaciones`, `AdminDashboard`, `Auditoria` (tab ejecutivo) y `DiagnosticoHealth` — porque los componentes que lo usan se importan estáticamente desde la página. El chunk ya está aislado, pero bloquea el TTI de esas rutas. Charts en tabs ocultos o debajo del fold cargan sin necesidad.
+## Alcance
 
-**libphonenumber-js/min (~118 KB / ~30 KB gzip)**: lo arrastra `src/lib/formatters/phone.ts`. Sólo lo usan **3 archivos reales**:
+### 1. Eliminar duplicados de `hooks/` raíz (P2.10)
 
-- `src/pages/proveedores/ProveedorDetalle.tsx`
-- `src/components/cliente/detalle/ClienteInformacionCard.tsx`
-- `src/pages/clientes/Clientes.tsx` (columna de tabla)
+Hoy existen **dos copias** del mismo hook:
+- `src/hooks/use-toast.ts` ←→ `src/hooks/shared/useToast.ts`
+- `src/hooks/use-mobile.tsx` ←→ `src/hooks/shared/useIsMobile.ts`
 
-El resto importa otros formatters del barrel `@/lib/formatters`; con `sideEffects: false` debería tree-shakearse, pero conviene aislarlo en chunk propio para garantizarlo y permitir caching cross-route.
+73 archivos importan desde la versión raíz. Acciones:
+- Verificar que ambas implementaciones son equivalentes (si no, dejar la de `shared/` como única fuente y migrar diferencias).
+- Reescribir `src/hooks/use-toast.ts` y `src/hooks/use-mobile.tsx` como **re-exports** del canónico en `hooks/shared/` (compat temporal).
+- Migrar los 73 imports a `@/hooks/shared/useToast` y `@/hooks/shared/useIsMobile` (codemod con `sed`/`rg`).
+- Borrar los archivos raíz.
+- Re-correr suite (709 tests) + lint.
 
-### Cambios
+### 2. Mover Supabase fuera de `pages/dev/PdfPreviewCotizacion.tsx`
 
-**1. Lazy de componentes de chart (7 archivos)**
+Última llamada directa a Supabase fuera de `services/`. Extraer el query a `services/cotizacion/queries.ts` (o usar el que ya exista) y consumirlo desde el sandbox.
 
-Convertir cada uno de estos imports estáticos en `React.lazy` con `<Suspense>` y un skeleton del mismo alto:
+### 3. Refactor de complejidad — edge function `list-users`
 
-| Página/contenedor | Componente a lazy-cargar |
+`supabase/functions/list-users/index.ts` arroja warning de complexity 17. Extraer 2-3 helpers internos (parse de query params, build del filtro, mapeo de respuesta) para bajar a ≤15 sin tocar el contrato HTTP.
+
+### 4. Endurecer ESLint (P2.12)
+
+Aprovechar que las métricas están en cero:
+- `complexity`: `max: 15` → `max: 12` en `src/` (sigue como `warn`).
+- `no-restricted-imports` en los globs donde es `warn`: subir a `error` (ya está en cero, evita regresiones).
+- Añadir glob de excepción para `supabase/functions/**/*_test.ts` con `@typescript-eslint/ban-ts-comment: off` para silenciar los 5 errores actuales de `@ts-nocheck` en tests Deno (son intencionales).
+
+### 5. Documento `docs/architecture-map.md` (P2.11)
+
+Crear archivo nuevo con tabla **dominio → pages → hooks → services → lib** para los dominios principales (embarques, cotizaciones, clientes, facturación, auditoría, portal, admin). Sirve para onboarding y como ancla viva del roadmap. ~150-250 líneas.
+
+### 6. Refrescar `mem://audit/pendings`
+
+Marcar P2.10, P2.11, P2.12 + limpieza Supabase + edge function como cerrados. Reducir el memo a los 3-4 pendientes reales restantes (P1.5, P1.6, P1.7, P3.13).
+
+### 7. Versionado
+
+- `APP_VERSION` → `11.45.0`.
+- Entrada nueva en `CHANGELOG.md` con resumen por sub-loop.
+
+## Fuera de alcance (NO se tocan en este loop)
+
+- **P1.5** — unificar `utils/` (alto riesgo, requiere coordinar imports masivos).
+- **P1.6** — partir servicios "god" (medio riesgo, decisiones de diseño).
+- **P1.7** — schemas zod en boundary Supabase para embarques/facturas/cotizaciones (alto esfuerzo, lo posponemos a su propio loop).
+- **P3.13** — nuevos specs E2E (conciliación, portal, export ZIP) — alto esfuerzo de diseño de fixtures.
+- Conversión de imágenes a WebP / preconnect a Google Fonts (era 5.6 de la etapa de performance, no de Track B).
+
+## Verificación
+
+1. `bun run audit:tests` — gate de higiene limpio.
+2. `bun run test` — 709/709 verdes.
+3. `bunx eslint src/` — 0 errors, 0 warnings con el nuevo umbral 12.
+4. `bun run build` — chunks sin regresión de tamaño.
+5. `rg "@/hooks/use-toast|@/hooks/use-mobile" src/ -l | wc -l` → 0.
+6. `rg -l "from ['\"]@/integrations/supabase/client['\"]" src/pages src/components | wc -l` → 0.
+
+## Detalles técnicos
+
+- El re-export temporal de `use-toast.ts` / `use-mobile.tsx` se hace en el mismo commit que la migración para que no quede deuda transitoria.
+- Para subir `complexity` a 12 antes hay que correr `eslint` y, si aparecen warnings nuevos en `src/`, **bajar el alcance**: en ese caso quedarse en 14 y dejar el salto a 12 como TODO en el memo. No introducimos refactors no planeados.
+- El `architecture-map.md` se genera leyendo la estructura real, no inventando. Si un dominio no calza limpio en la tabla, se documenta el desvío.
+
+## Esfuerzo estimado
+
+| Sub-loop | Esfuerzo |
 |---|---|
-| `pages/dashboard/Reportes.tsx` | `ReportesTopChart` |
-| `pages/dashboard/Operaciones.tsx` | el bloque `recharts` interno → extraer a `OperacionesChart.tsx` y `lazy()` |
-| `pages/admin/AdminDashboard.tsx` | extraer el chart inline a `AdminDashboardChart.tsx` y `lazy()` |
-| `components/auditoria/AuditoriaEjecutivoTab.tsx` | `AuditoriaTendenciaChart` |
-| `components/admin/DiagnosticoHealthPanel.tsx` | `HealthTopErrorsChart` + `HealthTimelineChart` |
-| `components/operaciones/DesempenoOperadores.tsx` | si es el componente raíz de un tab, hacer lazy desde el tab; si es siempre visible, dejar y sólo crear skeleton |
+| 1. Eliminar duplicados hooks | Medio (codemod + revisar 73 imports) |
+| 2. Supabase fuera de PdfPreview | Bajo |
+| 3. Edge function list-users | Bajo |
+| 4. Endurecer ESLint | Bajo |
+| 5. architecture-map.md | Medio |
+| 6. Refresh memoria | Bajo |
+| 7. Versionado + changelog | Bajo |
 
-Skeleton estándar: `<div className="h-[300px] w-full rounded-md bg-muted/40 animate-pulse" />` (altura ajustada por chart para evitar CLS).
-
-Resultado: `charts-vendor` se descarga **después** del primer paint de cada ruta, no antes. Mejora directa en TTI de Reportes/Operaciones/AdminDashboard.
-
-**2. Aislar `libphonenumber-js` en chunk propio**
-
-En `vite.config.ts` añadir regla:
-
-```ts
-if (/node_modules\/libphonenumber-js/.test(id)) {
-  return "phone-vendor";
-}
-```
-
-Sólo se descarga cuando una de las 3 rutas que renderizan `formatPhoneMx` se monta. Cacheable independientemente.
-
-**3. Verificación**
-
-- `bun run audit:tests` → 0 violaciones.
-- `bun run test` → 709/709.
-- Smoke manual: abrir Reportes y Operaciones, ver skeleton breve, luego chart real; AdminDashboard idem.
-- Bundle: `ANALYZE=true bun run build` y comparar tamaños — esperar:
-  - `index.js` igual (los charts ya estaban fuera).
-  - `charts-vendor` se descarga **lazy** (verificable en Network tab: aparece sólo al renderizar chart).
-  - Aparece nuevo `phone-vendor-*.js` (~30 KB gzip).
-
-**4. Versionado y memoria**
-
-- `APP_VERSION` → `11.43.0`.
-- Entrada en `CHANGELOG.md` raíz.
-- Sin cambios de memoria de proyecto.
-
-### Fuera de alcance
-
-- Tree-shake de `lucide-react` (sub-loop 5.5).
-- LCP/imágenes + `vite-imagetools` (sub-loop 5.6).
-- Medición Web Vitals antes/después con `browser--performance_profile` (sub-loop 5.7).
-
-### Riesgos
-
-- **CLS**: si el skeleton no respeta la altura final del chart, hay shift de layout. Mitigación: skeleton con altura fija idéntica (`ResponsiveContainer` usa `height={300}` en la mayoría de casos).
-- **Tabs ocultos**: si el chart está en un tab no-default, lazy + Suspense funciona perfecto. Si el chart es el primer contenido visible, el usuario verá el skeleton ~150–300 ms.
+Total: 1 loop de tamaño normal. Todo verificable con la suite existente, sin migraciones de DB, sin cambios visibles para el usuario final.
