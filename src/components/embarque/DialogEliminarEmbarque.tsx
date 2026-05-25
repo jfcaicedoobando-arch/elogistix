@@ -4,7 +4,7 @@ import {
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
-import { useToast } from "@/hooks/use-toast";
+import { useToast } from "@/hooks/shared";
 import { useNavigate } from "react-router-dom";
 import { useEliminarEmbarque, type EmbarqueRow } from "@/hooks/embarque";
 import { useRegistrarActividad } from "@/hooks/shared";

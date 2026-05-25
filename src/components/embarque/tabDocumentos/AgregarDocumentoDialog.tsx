@@ -13,7 +13,7 @@ import {
 import type { DocumentoEmbarqueRow } from "@/hooks/embarque";
 import { useCreateDocumentoEmbarque } from "@/hooks/embarque";
 import { getDocsForMode } from "@/constants/embarqueConstants";
-import { useToast } from "@/hooks/use-toast";
+import { useToast } from "@/hooks/shared";
 import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 import { getErrorMessage } from "@/lib/errors";
 

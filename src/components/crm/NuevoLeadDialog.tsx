@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import {
   Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle,
 } from "@/components/ui/dialog";
-import { useToast } from "@/hooks/use-toast";
+import { useToast } from "@/hooks/shared";
 import { notifySuccess, notifyError } from "@/lib/ui/appFeedback";
 import { useAuth } from "@/contexts/AuthContext";
 import { useCrearLead } from "@/hooks/crm";

@@ -12,7 +12,7 @@ import { PageHeader } from "@/components/shared/PageHeader";
 import { DataTable, defineColumns, type ColumnDef } from "@/components/shared/DataTable";
 import { useDebounce, usePermissions } from "@/hooks/shared";
 import { FloatingActionButton } from "@/components/shared/FloatingActionButton";
-import { useToast } from "@/hooks/use-toast";
+import { useToast } from "@/hooks/shared";
 import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 import { formatCurrencyCompact } from "@/lib/formatters";
 import OportunidadKanban from "@/components/crm/OportunidadKanban";

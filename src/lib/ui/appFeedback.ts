@@ -11,14 +11,14 @@
  * `wizardFeedback.ts` cuya naming sugería uso exclusivo del wizard.
  *
  * El parámetro `toast` se tipa de forma muy permisiva (`AnyToastFn`) para
- * aceptar tanto el `toast` de `@/hooks/use-toast` (con variantes shadcn que
+ * aceptar tanto el `toast` de `@/hooks/shared` (con variantes shadcn que
  * incluyen warning/success) como el de sonner u otros wrappers.
  */
 import { STEP_LABELS } from "@/lib/domain/embarqueWizardSchemas";
 import { buildErrorReport } from "@/lib/ui/errorReport";
 
 /**
- * Firma laxa común a `@/hooks/use-toast` (shadcn) y wrappers tipo sonner.
+ * Firma laxa común a `@/hooks/shared` (shadcn) y wrappers tipo sonner.
  * Las claves extra (`debug`, etc.) se aceptan vía índice `unknown`.
  */
 export type AnyToastFn = (props: Record<string, unknown>) => unknown;

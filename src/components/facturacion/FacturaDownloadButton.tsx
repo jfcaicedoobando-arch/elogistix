@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { FileText, FileCode2 } from "lucide-react";
 import { openFacturaInNewTab } from "@/services/storage";
-import { toast } from "@/hooks/use-toast";
+import { toast } from "@/hooks/shared";
 
 interface Props {
   stored: string;

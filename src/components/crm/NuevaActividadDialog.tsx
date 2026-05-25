@@ -14,7 +14,7 @@ import {
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
-import { useToast } from "@/hooks/use-toast";
+import { useToast } from "@/hooks/shared";
 import { notifySuccess, notifyError } from "@/lib/ui/appFeedback";
 import {
   ACTIVIDAD_TIPOS, useCrearActividad,

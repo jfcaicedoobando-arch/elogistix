@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { useToast } from "@/hooks/use-toast";
+import { useToast } from "@/hooks/shared";
 import { notifySuccess, notifyError } from "@/lib/ui/appFeedback";
 import {
   useCompletarActividad, usePosponerActividad, type CrmActividadRow,

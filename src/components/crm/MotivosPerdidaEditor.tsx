@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
-import { useToast } from "@/hooks/use-toast";
+import { useToast } from "@/hooks/shared";
 import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 import {
   useMotivosPerdida, useActualizarMotivoPerdida, useCrearMotivoPerdida,

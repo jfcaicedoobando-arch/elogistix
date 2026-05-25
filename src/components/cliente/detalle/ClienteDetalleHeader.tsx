@@ -1,7 +1,7 @@
 import { ArrowLeft, Pencil, FileText, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { generarEstadoCuentaPdf } from "@/generators/estadoCuentaPdf";
-import { useToast } from "@/hooks/use-toast";
+import { useToast } from "@/hooks/shared";
 import { notifyError } from "@/lib/ui/appFeedback";
 import { getErrorMessage } from "@/lib/errors";
 

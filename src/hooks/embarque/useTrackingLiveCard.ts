@@ -4,7 +4,7 @@
  * Lógica pura extraída a `lib/jsoncargo/trackingLiveHelpers.ts`.
  */
 import { useState } from "react";
-import { useToast } from "@/hooks/use-toast";
+import { useToast } from "@/hooks/shared";
 import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 import { mapNavieraToJsonCargo } from "@/lib/jsoncargo/navieras";
 import { extractSummary } from "@/lib/jsoncargo/summary";

@@ -1,5 +1,5 @@
 import { useState, useCallback } from "react";
-import { useToast } from "@/hooks/use-toast";
+import { useToast } from "@/hooks/shared";
 import { getErrorMessage } from "@/lib/errors";
 import { useResponderCotizacion } from "@/hooks/cotizacion/mutations/usePortalCotizacionMutations";
 import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";

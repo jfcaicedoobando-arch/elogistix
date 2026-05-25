@@ -12,7 +12,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useTiposContenedor } from "@/hooks/catalogos";
 import { getErrorMessage } from "@/lib/errors";
-import { useToast } from "@/hooks/use-toast";
+import { useToast } from "@/hooks/shared";
 import { useDuplicarEmbarque, type EmbarqueRow } from "@/hooks/embarque/useEmbarques";
 import { useStableRequestId } from "@/lib/idempotency";
 

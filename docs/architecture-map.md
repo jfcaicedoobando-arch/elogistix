@@ -1,93 +1,84 @@
-# Mapa de arquitectura — Libre Carga ERP
+# Architecture Map — Libre Carga
 
-Actualizado: 8.195.0 (mayo 2026)
+Documento vivo (P2.11, generado en 11.45.0). Tabla de dominio →
+pages → hooks → services → lib para los dominios principales.
+Sirve para onboarding y como ancla del roadmap arquitectónico.
 
-Este documento mapea cada dominio funcional a las capas que lo implementan,
-para que cualquier ajuste sepa rápidamente dónde tocar.
-
-## Capas y direcciones de import
+Jerarquía obligatoria (enforz. por `eslint.config.js`):
 
 ```
-pages/        → hooks/<dominio>      (controllers que componen UI)
-hooks/        → services/<dominio>   (acceso a datos + react-query)
-services/     → integrations/supabase (única capa con cliente SDK)
-lib/          ← (puro, sin React)    (mappers, dominio, formatters, validation, io, utils)
-components/   ← presentación pura    (consumen hooks; no llaman a supabase)
+Pages / Components
+        ↓
+      Hooks
+        ↓
+     Services  (única capa con acceso Supabase)
+        ↓
+       Lib  (puro, sin React, sin Supabase)
 ```
 
-Reglas duras (ESLint `no-restricted-imports`):
-- Pages/components importan SIEMPRE desde el barrel del dominio: `@/hooks/<dominio>` o `@/services/<dominio>`.
-- Tablas siempre via `<DataTable />` salvo allowlist documentada en `eslint.config.js`.
-- Sin `as any` (excepto changelogs estáticos).
-- 0 llamadas a `supabase` desde `components/` o `pages/`.
+Regla clave: ningún archivo bajo `lib/` o `services/` puede importar
+de `hooks/`, `components/`, `pages/` o `contexts/`.
 
-## Mapa dominio → archivos
+## Tabla por dominio
 
-| Dominio | Pages | Hooks (controllers) | Services | Lib / domain |
-|---------|-------|---------------------|----------|--------------|
-| Embarques | `pages/embarques/*` | `hooks/embarque/*` | `services/embarque/{queries,mutations,eventos,documentos,contenedor,columns}` | `lib/mappers/embarque{FromDb,ToDb,Cotizacion}` · `lib/domain/embarque*` |
-| Cotizaciones | `pages/cotizaciones/*` | `hooks/cotizacion/*` | `services/cotizacion/{queries,mutations,costos,wizard,conversiones/}` | `lib/mappers/{cotizacion,cotizacionForm}` |
-| Facturación / Proformas | `pages/facturacion/*` | `hooks/facturacion/*` | `services/facturas/{proyeccion,huecoFacturacion,snapshots}` | `lib/domain/proyeccionFacturacion` |
-| Clientes | `pages/clientes/*` | `hooks/cliente/*` | `services/cliente/*` | `lib/mappers/cliente*` |
-| Proveedores | `pages/proveedores/*` | `hooks/proveedor/*` | `services/proveedor/*` | — |
-| Auditoría | `pages/Auditoria.tsx` | `hooks/auditoria/*` | `services/auditoria/*` | `lib/ui/auditoriaConfig` |
-| Operaciones | `pages/dashboard/Operaciones.tsx` | `hooks/operaciones/*` | (lee de embarque/queries) | — |
-| Reportes | `pages/dashboard/Reportes.tsx` | `hooks/reportes/*` | (compone embarque + cliente) | `lib/financial/profitUtils` |
-| Dashboard | `pages/dashboard/Dashboard.tsx` | `hooks/dashboard/*` | (agregaciones) | — |
-| Portal cliente | `pages/portal/*` + `components/portal/*` | `hooks/portal/*` | RPCs públicas | — |
-| Configuración | `pages/admin-org/Configuracion.tsx` | `hooks/configuracion/*` | `services/configuracion/*` + `services/admin/exportOrg` | `lib/io/{csv,zipDownload}` |
-| Admin global | `pages/admin/*` | `hooks/admin/*` | `services/admin/{papelera,idempotencia,exportOrg,...}` | — |
-| Catálogos | (inline en formularios) | `hooks/catalogos/*` | `services/catalogos/*` | — |
-| Observabilidad | `components/shared/ErrorBoundary` | (sin hook) | `services/observability/logClientError` | — |
-| Trazabilidad pública | `pages/auth/TrackingPublico.tsx` | — | edge function `tracking-public` | `lib/jsoncargo/*` |
+| Dominio | Pages | Hooks | Services | Lib |
+|---|---|---|---|---|
+| Embarques | `pages/embarques/*`, `pages/embarque/*` | `hooks/embarque/*` | `services/embarque/{queries,mutations,documentos,tracking}` | `lib/mappers/{embarqueFromDb,embarqueToDb}`, `lib/domain/embarque` |
+| Cotizaciones | `pages/cotizaciones/*`, `pages/dev/PdfPreviewCotizacion` | `hooks/cotizacion/*` | `services/cotizacion/{queries,mutations,costos}` | `lib/mappers/{cotizacion,cotizacionForm,embarqueCotizacion}`, `pdf/documents/CotizacionDocument` |
+| Clientes | `pages/clientes/*`, `pages/cliente/*` | `hooks/cliente/*` | `services/cliente/*` | `lib/domain/cliente`, `lib/formatters` |
+| Facturación | `pages/facturacion/*` | `hooks/facturacion/*` | `services/facturas/{queries,proyeccion,huecoFacturacion}`, `services/proforma/*` | `lib/financialUtils`, `lib/domain/facturas` |
+| CRM (Leads/Oportunidades) | `pages/crm/*` | `hooks/crm/*` | `services/crm/*` | `lib/domain/crm` |
+| Portal cliente | `pages/portal/*`, `components/portal/*` | `hooks/portal/*` | `services/portal/*` (RPCs SECURITY DEFINER) | `lib/domain/portal` |
+| Auditoría / Bitácora | `pages/admin/Auditoria*`, `pages/admin/Bitacora` | `hooks/auditoria/*`, `hooks/shared/useBitacora` | `services/auditoria/*`, `services/observability/*` | `lib/domain/auditoria` (con tests) |
+| Admin (orgs, usuarios) | `pages/admin/*`, `pages/admin-org/*` | `hooks/admin/*` | `services/admin/*` + edge functions (`list-users`, `create-user`, `delete-user`, `invite-client-user`) | `lib/domain/admin` |
+| Proveedores | `pages/proveedores/*` | `hooks/proveedor/*` | `services/proveedor/*` | `lib/formatters/phone` |
+| Catálogos (puertos, navieras, IVA) | n/a (selects) | `hooks/catalogos/*` | `services/catalogos/*` | `lib/domain/catalogos` |
+| Configuración | `pages/Configuracion`, `pages/admin/AdminConfiguracion` | `hooks/configuracion/*` | `services/configuracion/*` | — |
+| Operaciones / Dashboard | `pages/dashboard/*`, `pages/dashboard/Operaciones` | `hooks/operaciones/*`, `hooks/dashboard/*` | `services/operaciones/*` | `lib/domain/operaciones` |
+| Reportes / Analítica | `pages/dashboard/Reportes`, `pages/admin/DesempenoOperadores` | `hooks/reportes/*` | `services/reportes/*` | `lib/financialUtils`, `lib/domain/reportes` |
 
-## Utilidades transversales (`src/lib/`)
+## Hooks compartidos (`hooks/shared/`)
 
-| Carpeta | Contenido |
-|---------|-----------|
-| `lib/utils/` | `cn()`, `escapeHtml()` — primitivas sin estado, importar como `@/lib/utils`. |
-| `lib/io/` | CSV (RFC 4180) y descarga ZIP (JSZip + FileSaver). |
-| `lib/formatters/` | Moneda MXN/USD/EUR, fechas DD/MM/YYYY (es-MX). |
-| `lib/financial/` | Cálculos contables (IVA dinámico, profit, costos USD). |
-| `lib/mappers/` | BD ↔ formularios. Helpers compartidos en `_helpers.ts`. |
-| `lib/parsers/` | JSON ↔ tipos de UI (cotización detalle, dashboard). |
-| `lib/csv/` | Importación CSV con zod (`importSchemas.ts`). |
-| `lib/validation/` | Schemas zod para mutaciones críticas. |
-| `lib/audit/` | `diffFields()` para bitácora. |
-| `lib/contacto/` | Resolución de contactos cliente. |
-| `lib/storage/` | URLs y paths de Supabase Storage. |
-| `lib/supabase/cast.ts` | `fromDb<T>()`, `toDbJson()` — frontera de tipado. |
-| `lib/ui/` | Tokens visuales, mappings de estado/feedback. |
-| `lib/query/` | Configuración de react-query (gcTime, staleTime). |
-| `lib/jsoncargo/` | Cliente y mappings de la API externa de tracking. |
-| `lib/errors/` | Clases de error tipadas. |
-| `lib/domain/` | Reglas de negocio puras por dominio. |
+Barrel único: `@/hooks/shared` re-exporta todos. **No** importar
+archivos internos (`@/hooks/shared/useToast` está restringido por
+`no-restricted-imports`).
 
-## Patrones obligatorios
+- `useToast`, `toast` — sistema de toasts (shadcn).
+- `useIsMobile` — breakpoint mobile <768px.
+- `useDebounce` — debounce reusable.
+- `useBitacora` — registro de actividad.
+- `useGlobalSearch` — atajo Ctrl+K.
+- `useListPageState` — estado de tablas paginadas server-side.
+- `useOrgFilter` — filtro por org en queries.
+- `usePermissions` — chequeo de roles efectivos.
+- `useSidebarAlerts` — badges del sidebar.
+- `useTabsParam` — sync tab activa ↔ URL.
 
-- **Cleanup en effects**: cada `useEffect` con `supabase.channel`, `onAuthStateChange`, `addEventListener`, `setTimeout/setInterval` retorna cleanup. Para canales realtime usar `supabase.removeChannel(channel)`.
-- **Estado local primero**: solo elevar a contexto/store cuando hay >1 consumidor.
-- **Mappers puros**: nada de fetch dentro de `lib/mappers/*`.
-- **Servicios sin React**: no `useEffect` ni `useState` en `services/*`.
-- **Power of 10**: componentes ≤200 LOC, sin `any`, paginación en listas, complejidad ciclomática ≤15.
+## Convenciones invariables
 
-## Convenciones de nombres
+- **Imports**: siempre desde el barrel del dominio (`@/hooks/<x>`,
+  `@/services/<x>`). Archivos internos restringidos como `error`.
+- **Supabase**: sólo en `services/` y `integrations/supabase`. 0
+  llamadas directas en pages/components al 11.45.0.
+- **Tests**: `*.test.ts(x)` co-localizados o en `__tests__/`. 18
+  suites en `services/` (meta ≥10), 107 totales / 709 tests.
+- **Versionado**: bump `APP_VERSION` + entrada en `CHANGELOG.md`
+  raíz en cada cambio. No existe ruta `/changelog` ni
+  `src/content/changelog/`.
+- **Cleanup en effects**: todo `useEffect` con canales Supabase /
+  listeners / timers debe retornar cleanup. Power of 10.
+- **Componentes ≤200 líneas**, sin `any`, paginación en listas,
+  manejar `error` de Supabase. Power of 10 (mem://principles/power-of-10).
 
-| Patrón | Uso |
-|--------|-----|
-| `use<Recurso>` | Query simple (`useEmbarques`, `useCotizacion`). |
-| `use<Recurso>Mutations` | Conjunto de mutations (`useCotizacionMutations`). |
-| `use<Pantalla>Controller` | Composición de hooks para una página (`useEmbarquesPageController`). |
-| `use<Pantalla>State` | Estado local complejo de una pantalla. |
-| `fetch<Recurso>` | Función async pura en `services/`. |
-| `build<X>Payload` | Mapper form → BD. |
-| `map<X>RowToFormValues` | Mapper BD → form. |
+## Bundle / lazy loading (etapa 5)
 
-## Cómo sumar un dominio nuevo
+Chunks lazy (no entran al primer load):
+- `pdf-vendor` (475 KB) — `@react-pdf/renderer` + transitivas.
+- `sentry-vendor` (151 KB) — init en `requestIdleCallback`.
+- `charts-vendor` (92 KB) — `recharts` vía `React.lazy` + Suspense.
+- `phone-vendor` (29 KB) — `libphonenumber-js` aislado.
+- `query-persist-vendor` — persister de React Query.
 
-1. `services/<dominio>/{queries,mutations,index.ts}` — single source of truth con Supabase.
-2. `hooks/<dominio>/{useX,useXMutations,index.ts}` — barrel obligatorio.
-3. `lib/mappers/<dominio>.ts` si la forma de BD difiere del form.
-4. `pages/<dominio>/*` y `components/<dominio>/*` consumen sólo barrels.
-5. Tests mínimos: 1 suite en `services/__tests__` y 1 en `lib/mappers/__tests__`.
-6. Agregar entrada al barrel correspondiente y al `mem://index.md` si aplica.
+`build.modulePreload.resolveDependencies` en `vite.config.ts`
+filtra estos chunks del `<link rel="modulepreload">` del entry
+(ahorro ~700 KB en /login).

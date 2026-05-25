@@ -1,6 +1,6 @@
 import { useParams, useNavigate, Navigate } from "react-router-dom";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useToast } from "@/hooks/use-toast";
+import { useToast } from "@/hooks/shared";
 import { useClientesForSelect } from "@/hooks/cliente";
 import { useCotizacion, useUpdateCotizacion, useCreateCotizacion } from "@/hooks/cotizacion";
 import { useCotizacionCostos, useUpsertCotizacionCostos } from "@/hooks/cotizacion";
@@ -57,7 +57,7 @@ function EditarCotizacionForm({
   costos: CostoCotizacion[];
   clientes: { id: string; nombre: string }[];
   navigate: NavigateFunction;
-  toast: ReturnType<typeof import("@/hooks/use-toast").useToast>["toast"];
+  toast: ReturnType<typeof import("@/hooks/shared").useToast>["toast"];
   userEmail: string;
 }) {
   const w = useCotizacionWizardForm({
