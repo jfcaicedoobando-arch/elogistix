@@ -59,7 +59,7 @@ export default function NuevaOportunidadDialog({ open, onOpenChange, oportunidad
   const isEdit = !!oportunidad;
   const [form, setForm] = useState(EMPTY);
   const { data: etapas = [] } = useEtapasPipeline();
-  const { data: clientes = [] } = useClientes();
+  const { data: clientes = [] } = useClientesForSelect();
   const crear = useCrearOportunidad();
   const actualizar = useActualizarOportunidad();
   const { toast } = useToast();
