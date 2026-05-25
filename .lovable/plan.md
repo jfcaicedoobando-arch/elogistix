@@ -1,89 +1,104 @@
-# Plan — CRM v11.48.0: Cierre de ciclo (B) + Next Best Actions (D)
 
-Implementa los dos bloques de mayor ROI inmediato del análisis previo, sin migraciones de esquema mayores. Sólo se agregan **2 columnas** opcionales en `crm_oportunidades` y **1 trigger**.
+# Plan — CRM: menos bloatware, menos fricción
 
----
+Objetivo: que un vendedor abra el CRM y en 1 clic sepa qué hacer y lo haga, sin saltar entre pestañas, modales y vistas que repiten lo mismo.
 
-## Bloque B — Cierre automático del ciclo
+## Diagnóstico (qué sobra hoy)
 
-### Objetivo
-Que cuando una cotización vinculada a una oportunidad se acepte o se convierta en embarque, la oportunidad se mueva sola a "Ganada" con fecha y monto reales. Y que el vendedor vea claramente qué cotizaciones llevan días sin respuesta del cliente.
+**Duplicaciones detectadas:**
+1. **Botón "Nuevo X" repetido 3 veces** — `QuickAddMenu` global (header CRM) + botón en cada página (`Nuevo lead`, `Nueva oportunidad`) + `FloatingActionButton`. Triple ruido.
+2. **Vencidas aparece en 3 lugares** — Badge en tab Actividades, `VencidasAlert` en dashboard y como regla #5 dentro de `NextBestActionsCard`. Solapamiento total.
+3. **Títulos redundantes** — Sidebar "CRM" + tab "Inicio" + `PageHeader "Inicio"` dentro de `CrmDashboard`. Ocupa 3 franjas verticales antes del contenido útil.
+4. **Filtros siempre visibles en Oportunidades** — `SearchInput` + `OportunidadesFiltersBar` (5 filtros) ocupando ~160px arriba aunque el usuario sólo quiera ver el Kanban.
+5. **Analítica con 4 sub-tabs** — Forecast y Embudo cuentan lo mismo desde dos ángulos; Pérdidas es un solo widget que cabe junto al embudo.
+6. **Configuración con 3 sub-tabs** — pipeline + motivos + plantillas son listas cortas que caben acordeones en una sola página.
+7. **Dashboard sobrecargado** — `NBA` + `VencidasAlert` + `ActividadesHoyCard` + 4 cards grandes en grid + 4 KPIs = 11 bloques visibles al cargar.
 
-### Cambios de datos (migration)
-1. `crm_oportunidades`: agregar columnas opcionales
-   - `cotizacion_ganadora_id uuid` (referencia lógica a `cotizaciones.id`)
-   - `embarque_ganador_id uuid` (referencia lógica a `embarques.id`)
-2. `crm_etapas_pipeline`: helper SQL `get_etapa_ganada(org_id)` que devuelve la primera etapa `tipo='ganada'`.
-3. Trigger `trg_cotizacion_cierra_oportunidad` en `cotizaciones`:
-   - Si `NEW.oportunidad_id IS NOT NULL` y `NEW.estado` pasa a `'Aceptada'` o `'En operación'`, y la oportunidad sigue en etapa `abierta`:
-     - Mover oportunidad a etapa ganada (de la propia org).
-     - `probabilidad = 100`, `fecha_cierre_real = CURRENT_DATE`, `valor_real = NEW.subtotal`, `cotizacion_ganadora_id = NEW.id`.
-     - Si `NEW.embarque_id IS NOT NULL`, también `embarque_ganador_id = NEW.embarque_id`.
-   - Insertar fila en `bitacora_actividad` (módulo `crm`, acción `oportunidad_ganada_auto`).
-   - Insertar `crm_notificaciones` para el `vendedor_id` de la oportunidad.
-
-### Cambios de UI
-- `OportunidadDetalle.tsx`: si la oportunidad tiene `cotizacion_ganadora_id` / `embarque_ganador_id`, mostrar un banner verde "Ganada con cotización FOLIO → embarque FOLIO" con links.
-- `OportunidadCotizacionesList.tsx`: badge "Esperando respuesta · N días" cuando `estado = 'Enviada'` y `created_at` > 5 días.
-- Nueva card en Inicio del CRM (`CrmDashboard`): **"Cotizaciones sin respuesta > 5 días"** (top 5, link al detalle). Va junto a `CerrandoSemanaCard`.
-- Nuevo hook `useCotizacionesSinRespuesta(diasUmbral=5)` en `hooks/crm/`.
+**Fricción detectada:**
+- Cualquier acción rápida (completar actividad, mover etapa, registrar llamada, cambiar responsable) abre **diálogo modal**. No hay edición inline.
+- Para marcar "lead contactado" hay que entrar al detalle.
+- Convertir lead → diálogo separado de cambiar etapa.
+- Importar CSV ocupa botón fijo en la barra aunque se use 1 vez al mes.
 
 ---
 
-## Bloque D — Next Best Actions para el vendedor
+## Cambios propuestos
 
-### Objetivo
-Que al entrar a `/crm` el vendedor vea 5 acciones priorizadas para hacer ahora, sin tener que recorrer 4 pantallas para decidir.
+### 1. Header CRM colapsado a una franja
+- Eliminar `<h1>CRM</h1>` y descripción de `CrmLayout`. La sidebar ya dice "CRM".
+- Tabs + `QuickAddMenu` en una sola franja (`h-12`). Engranaje a la derecha.
+- Eliminar `PageHeader` de `CrmDashboard`, `Leads`, `Oportunidades`, `Actividades`, `Analitica` (el tab activo + el contexto ya son suficientes). Mantener sólo un subtítulo dinámico ligero con el contador (ej. `"127 leads · 12 nuevos esta semana"`) alineado a la derecha.
 
-### Reglas de priorización (puras, testables)
-Nuevo archivo `src/lib/crm/nextBestActions.ts` con función `computeNextBestActions(input)` que toma: leads, oportunidades, actividades, cotizaciones, etapas. Devuelve hasta 5 items ordenados por score:
+### 2. Un único punto de creación
+- **Quitar** los botones "Nuevo lead" / "Nueva oportunidad" de `Leads.tsx` y `Oportunidades.tsx`.
+- **Quitar** todos los `FloatingActionButton` del CRM.
+- Conservar **solo** `QuickAddMenu` del header (lo más visible y siempre disponible).
+- Agregar atajo de teclado `N` para abrir el QuickAddMenu y `L/O/A` para crear lead/oportunidad/actividad directamente.
 
-| Regla | Score | Mensaje |
-|---|---|---|
-| Lead nuevo sin contactar > 24h | 100 | "Contactar a {empresa} — lleva {h}h sin atención" |
-| Cotización enviada sin respuesta > 5 días | 90 | "Dar seguimiento a cotización {folio} de {cliente}" |
-| Oportunidad con cierre estimado en ≤ 3 días y sin actividad reciente | 85 | "Cerrar {nombre} — fecha estimada {fecha}" |
-| Oportunidad sin actividad > 7 días | 70 | "{nombre} lleva {d} días sin movimiento" |
-| Actividad vencida | 60 | "Completar: {asunto}" |
+### 3. Vencidas: un solo lugar
+- **Eliminar** `VencidasAlert` del dashboard (la regla "Actividad vencida" de NBA ya lo cubre con prioridad 60).
+- Subir la regla "vencidas" al score 110 en `nextBestActions.ts` para que aparezca primero cuando exista.
+- Mantener el badge rojo en el tab Actividades como único indicador secundario.
 
-Cada item: `{ id, regla, titulo, subtitulo, href, score, icono }`.
+### 4. Dashboard re-priorizado (de 11 bloques a 6)
+Nuevo orden:
+1. `NextBestActionsCard` (top 5 cosas a hacer hoy) — única fila destacada.
+2. Grid 2 cols: `ActividadesHoyCard` · `CerrandoSemanaCard`.
+3. Grid 2 cols: `CotizacionesSinRespuestaCard` · `LeadsSinContactarCard`.
+4. **Quitar** `TopDealsCard` del dashboard (vive ya en Oportunidades ordenadas por monto).
+5. KPIs: pasar de 4 cards grandes a una sola fila compacta tipo `stat strip` (h-14) con los 4 números pequeños.
 
-### Cambios de UI
-- Nuevo componente `src/components/crm/crmDashboard/NextBestActionsCard.tsx`. Va arriba del todo en `CrmDashboard`, encima de `VencidasAlert`.
-- Cada fila: icono + título + subtítulo + botón "Ir →". Hover con sombra suave.
-- Tests unitarios en `src/lib/crm/__tests__/nextBestActions.test.ts` cubriendo las 5 reglas y el orden por score.
+### 5. Oportunidades — filtros colapsables
+- Mostrar por defecto sólo `SearchInput` + chip "Filtros (0)".
+- `OportunidadesFiltersBar` se expande on-demand en un `Collapsible`. El badge muestra cuántos filtros activos.
+- Persistir el estado expandido/colapsado en `useListPageState`.
+- Mover "Importar CSV" en Leads a un item del menú contextual del header (engranaje o `…`) — ya no botón principal.
 
-### Hook
-`useNextBestActions()` en `hooks/crm/`: combina datos ya cargados (reutiliza `useCrmDashboardData` + nuevo `useCotizacionesSinRespuesta` + leads sin contactar) y aplica `computeNextBestActions`.
+### 6. Analítica — de 4 sub-tabs a 1 vista
+- Página única scrollable con secciones: **Pipeline & Forecast** (cards de totales + tabla por mes/vendedor), **Embudo + Pérdidas** lado a lado, **Vendedores** (sólo si `canEdit`).
+- Eliminar `Tabs` y `?tab=` query param (mantener redirect para no romper links viejos).
+
+### 7. Configuración — una sola página con acordeones
+- Sustituir los 3 `TabsTrigger` por 3 `Accordion` items (Pipeline / Motivos / Plantillas). El primero abierto por default.
+- Quita un nivel de navegación.
+
+### 8. Acciones inline (reducción de modales)
+- **Leads (tabla):** columna "Estado" editable inline con `Select` (Nuevo → Contactado → Calificado → Convertido). Sin abrir detalle ni modal.
+- **Actividades (tabla):** checkbox a la izquierda para `marcar completada` con optimistic update + toast con "deshacer".
+- **Oportunidades (kanban):** quick edit de monto con doble-clic en la card (input inline). Ya soporta DnD de etapa.
+
+### 9. Limpieza de componentes
+- `VencidasAlert.tsx` → eliminar.
+- `TopDealsCard` y `LeadsSinContactarCard` se mantienen pero pasan a un patrón `CompactListCard` compartido (menos estilos custom).
+- `QuickAddMenu` añade item "Importar leads CSV" para no perder esa función.
 
 ---
 
 ## Detalles técnicos
 
-**Archivos nuevos**
-- `supabase/migrations/<timestamp>_crm_cierre_ciclo.sql`
-- `src/lib/crm/nextBestActions.ts` + test
-- `src/components/crm/crmDashboard/NextBestActionsCard.tsx`
-- `src/components/crm/crmDashboard/CotizacionesSinRespuestaCard.tsx`
-- `src/hooks/crm/useCotizacionesSinRespuesta.ts`
-- `src/hooks/crm/useNextBestActions.ts`
-- `src/services/crm/cotizacionesSinRespuesta.ts`
+- **Atajos de teclado**: nuevo hook `useCrmHotkeys()` montado en `CrmLayout` con `useEffect` + listener `keydown` + cleanup. Ignora cuando hay input/textarea enfocado.
+- **Edición inline de estado en Leads**: nueva mutación `useUpdateLeadEstado` (PATCH sólo `estado`) + `Select` celda dentro de `leadsColumns.tsx`; usar `e.stopPropagation()` en `onClick` para no disparar `onRowClick`.
+- **Edición inline monto en Kanban**: handler `onMontoChange` en `OportunidadKanban`, reutiliza `useActualizarOportunidad`.
+- **Filtros colapsables**: usar `Collapsible` de shadcn; estado `filtersOpen` persistido vía `useListPageState({ extras: { filtersOpen: false } })`.
+- **NBA prioridad**: cambiar `OVERDUE_SCORE` a 110 en `src/lib/crm/nextBestActions.ts` y actualizar test correspondiente.
+- **Quitar `VencidasAlert`** del bundle: eliminar archivo y import. El hook `useActividadesVencidas` queda en uso por el badge del tab.
+- **PageHeader**: reemplazar por componente nuevo `CrmSubheader` compacto (h-10, sólo contador a la derecha) o eliminarlo cuando no aporta.
+- **Versionado**: `APP_VERSION` → `11.49.0` (minor por reducción de superficie). Entrada en `CHANGELOG.md` y en `src/pages/Changelog.tsx` (entrada al inicio del array, formato existente).
 
-**Archivos editados**
-- `src/pages/crm/CrmDashboard.tsx` — insertar NBA card y "cotizaciones sin respuesta"
-- `src/hooks/crm/useCrmInicioVM.ts` — exponer nuevos datos
-- `src/pages/crm/OportunidadDetalle.tsx` — banner de ganada
-- `src/components/crm/OportunidadCotizacionesList.tsx` — badge días sin respuesta
-- `src/hooks/crm/index.ts` — barrel
-- `src/constants/appVersion.ts` → `11.48.0`
-- `CHANGELOG.md` — entrada `[11.48.0]`
+## Fuera de alcance
+- No tocar lógica de negocio del trigger `trg_cotizacion_cierra_oportunidad` (ya entregado en 11.48.0).
+- No agregar campos forwarder DNA (modalidad/lane/commodity) — eso es bloque A pendiente.
+- No tocar permisos ni RLS.
+- No tocar el detalle de oportunidad/lead (sólo se afinarán cuando haya señal del usuario).
 
-**Fuera de alcance**
-- Cadencias/secuencias automáticas (D avanzado).
-- Modalidad/lane/commodity en oportunidades (bloque A — requiere otra migración).
-- Vista del supervisor (bloque C).
-- Email/WhatsApp inbox.
+## Archivos a tocar (estimado)
+- **Editar (~10):** `CrmLayout.tsx`, `CrmDashboard.tsx`, `Leads.tsx`, `Oportunidades.tsx`, `Actividades.tsx`, `Analitica.tsx`, `Configuracion.tsx`, `leadsColumns.tsx`, `OportunidadKanban.tsx`, `nextBestActions.ts` (+ test), `QuickAddMenu.tsx`, `CHANGELOG.md`, `Changelog.tsx`, `appVersion.ts`.
+- **Crear (~3):** `useCrmHotkeys.ts`, `CrmSubheader.tsx`, `useUpdateLeadEstado.ts`.
+- **Eliminar (1):** `VencidasAlert.tsx`.
 
-**Compatibilidad**
-- Las nuevas columnas son nullable; oportunidades existentes no se tocan.
-- El trigger sólo dispara cuando hay `oportunidad_id` y la etapa actual es `abierta`, así que oportunidades ya cerradas a mano no se sobrescriben.
+## Resultado esperado
+- De ~11 bloques en dashboard a 6.
+- De 3 botones de creación visibles a 1 (+ atajos).
+- De 4 sub-tabs en Analítica a 0.
+- De 3 sub-tabs en Configuración a 0.
+- 2 acciones que antes eran modales (cambiar estado de lead, completar actividad) ahora son 1 clic en la tabla.
