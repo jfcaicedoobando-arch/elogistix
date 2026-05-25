@@ -69,9 +69,9 @@ describe("sumarEnUSD / aUSD", () => {
     expect(total).toBeCloseTo(100 + 100 + 1900 / 17.5);
   });
 
-  it("retorna 0 con lista vacía", () => {
-    expect(sumarEnUSD([], 17.5, 19)).toBe(0);
-  });
+  // "retorna 0 con lista vacía" se cubre en costosUSD.test.ts (eliminado aquí en v11.39.0).
+
+
 
   it("aUSD es wrapper de convertirAUSD", () => {
     expect(aUSD(1750, "MXN", 17.5, 19)).toBeCloseTo(100);
