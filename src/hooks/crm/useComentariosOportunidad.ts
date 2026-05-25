@@ -53,7 +53,7 @@ export function useCrearComentarioOportunidad() {
       if (error) throw error;
     },
     onSuccess: (_v, vars) => {
-      qc.invalidateQueries({ queryKey: ["crm", "comentarios-op", vars.oportunidadId], exact: false });
+      qc.invalidateQueries({ queryKey: queryKeys.crm.comentarios.byOportunidadAll(vars.oportunidadId) });
     },
   });
 }

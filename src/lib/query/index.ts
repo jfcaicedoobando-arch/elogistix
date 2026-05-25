@@ -182,6 +182,8 @@ export const queryKeys = {
       all: ['crm', 'comentarios-op'] as const,
       byOportunidad: (oportunidadId: string, limit?: number) =>
         ['crm', 'comentarios-op', oportunidadId, limit] as const,
+      byOportunidadAll: (oportunidadId: string) =>
+        ['crm', 'comentarios-op', oportunidadId] as const,
     },
     lineage: {
       lead: (leadId: string) => ['crm', 'lineage', 'lead', leadId] as const,

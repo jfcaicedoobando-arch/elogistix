@@ -6,6 +6,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { logger } from "@/lib/observability/logger";
+import { queryKeys } from "@/lib/query";
 import {
   fetchEtapa,
   fetchOportunidad,
@@ -50,10 +51,10 @@ export function useMoverEtapaConAutomatizacion() {
       return { id: params.id };
     },
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["crm", "oportunidades"] });
-      qc.invalidateQueries({ queryKey: ["crm", "actividades"] });
-      qc.invalidateQueries({ queryKey: ["crm", "notificaciones"] });
-      qc.invalidateQueries({ queryKey: ["crm", "dashboard"] });
+      qc.invalidateQueries({ queryKey: queryKeys.crm.oportunidades.all });
+      qc.invalidateQueries({ queryKey: queryKeys.crm.actividades.all });
+      qc.invalidateQueries({ queryKey: queryKeys.crm.notificaciones.all });
+      qc.invalidateQueries({ queryKey: queryKeys.crm.dashboardAll });
     },
   });
 }

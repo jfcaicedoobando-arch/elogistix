@@ -4,10 +4,11 @@ import {
   computeLeaderboard,
   type LeaderboardRow,
 } from "@/services/crm";
+import { queryKeys } from "@/lib/query";
 
 export function useLeaderboardVendedores() {
   return useQuery<LeaderboardRow[]>({
-    queryKey: ["crm", "leaderboard-vendedores"],
+    queryKey: queryKeys.crm.leaderboard,
     queryFn: async () => {
       const ahora = new Date();
       const inicioMes = new Date(ahora.getFullYear(), ahora.getMonth(), 1)

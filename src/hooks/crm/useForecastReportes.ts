@@ -11,6 +11,7 @@ import {
   type ForecastResumen,
   type ReportesCRM,
 } from "@/lib/crm/forecast";
+import { queryKeys } from "@/lib/query";
 
 export type { ForecastResumen, ReportesCRM };
 
@@ -24,7 +25,7 @@ async function fetchEtapaTipos(): Promise<Map<string, EtapaTipo>> {
 
 export function useForecast(desde?: string, hasta?: string) {
   return useQuery<ForecastResumen>({
-    queryKey: ["crm", "forecast", desde, hasta],
+    queryKey: queryKeys.crm.forecast(desde ?? "", hasta ?? ""),
     queryFn: async () => {
       const etapaTipos = await fetchEtapaTipos();
       let q = supabase
@@ -41,7 +42,7 @@ export function useForecast(desde?: string, hasta?: string) {
 
 export function useReportesCRM() {
   return useQuery<ReportesCRM>({
-    queryKey: ["crm", "reportes"],
+    queryKey: queryKeys.crm.reportes,
     queryFn: async () => {
       const [leadsR, opsR, motivosR, etapasR] = await Promise.all([
         supabase.from("crm_leads").select("estado, fuente"),

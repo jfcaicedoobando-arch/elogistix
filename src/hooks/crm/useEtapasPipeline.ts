@@ -4,6 +4,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
+import { queryKeys } from "@/lib/query";
 
 export type CrmEtapaRow = Database["public"]["Tables"]["crm_etapas_pipeline"]["Row"];
 export type CrmEtapaTipo = Database["public"]["Enums"]["crm_etapa_tipo"];
@@ -13,7 +14,7 @@ const COLS =
 
 export function useEtapasPipeline() {
   return useQuery<CrmEtapaRow[]>({
-    queryKey: ["crm", "etapas"],
+    queryKey: queryKeys.crm.etapas.all,
     queryFn: async () => {
       const { data, error } = await supabase
         .from("crm_etapas_pipeline")
@@ -39,13 +40,13 @@ export function useActualizarEtapa() {
       const { error } = await supabase.from("crm_etapas_pipeline").update(patch).eq("id", id);
       if (error) throw error;
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["crm", "etapas"] }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.crm.etapas.all }),
   });
 }
 
 export function useMotivosPerdida(soloActivos = true) {
   return useQuery({
-    queryKey: ["crm", "motivos", soloActivos],
+    queryKey: queryKeys.crm.motivos.list(soloActivos),
     queryFn: async () => {
       let q = supabase.from("crm_motivos_perdida").select("id, nombre, activa").order("nombre");
       if (soloActivos) q = q.eq("activa", true);
@@ -59,7 +60,7 @@ export function useMotivosPerdida(soloActivos = true) {
 /** Lista TODAS las etapas (activas e inactivas) para pantalla de configuración. */
 export function useEtapasPipelineAll() {
   return useQuery<CrmEtapaRow[]>({
-    queryKey: ["crm", "etapas", "all"],
+    queryKey: queryKeys.crm.etapas.todas,
     queryFn: async () => {
       const { data, error } = await supabase
         .from("crm_etapas_pipeline")
@@ -78,7 +79,7 @@ export function useActualizarMotivoPerdida() {
       const { error } = await supabase.from("crm_motivos_perdida").update(patch).eq("id", id);
       if (error) throw error;
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["crm", "motivos"] }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.crm.motivos.all }),
   });
 }
 
@@ -89,7 +90,7 @@ export function useCrearMotivoPerdida() {
       const { error } = await supabase.from("crm_motivos_perdida").insert({ nombre, activa: true });
       if (error) throw error;
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["crm", "motivos"] }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.crm.motivos.all }),
   });
 }
 

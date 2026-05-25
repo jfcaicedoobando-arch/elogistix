@@ -5,6 +5,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { logger } from "@/lib/observability/logger";
+import { queryKeys } from "@/lib/query";
 
 export interface CrmNotificacionRow {
   id: string;
@@ -23,7 +24,7 @@ const COLS = "id, user_id, organization_id, tipo, titulo, mensaje, link, leida_a
 export function useCrmNotificaciones(limit = 20) {
   const { user } = useAuth();
   return useQuery<CrmNotificacionRow[]>({
-    queryKey: ["crm", "notificaciones", user?.id, limit],
+    queryKey: queryKeys.crm.notificaciones.list(user?.id, limit),
     enabled: !!user?.id,
     queryFn: async () => {
       const { data, error } = await supabase
@@ -42,7 +43,7 @@ export function useCrmNotificaciones(limit = 20) {
 export function useCrmNotificacionesNoLeidasCount() {
   const { user } = useAuth();
   return useQuery({
-    queryKey: ["crm", "notificaciones", "unread-count", user?.id],
+    queryKey: queryKeys.crm.notificaciones.unreadCount(user?.id),
     enabled: !!user?.id,
     queryFn: async () => {
       const { count, error } = await supabase
@@ -72,7 +73,7 @@ export function useMarcarNotificacionesLeidas() {
       if (error) throw error;
     },
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["crm", "notificaciones"] });
+      qc.invalidateQueries({ queryKey: queryKeys.crm.notificaciones.all });
     },
   });
 }

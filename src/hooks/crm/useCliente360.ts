@@ -6,6 +6,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { computeCliente360Totals } from "@/lib/crm/cliente360";
 import type { EtapaTipo } from "@/lib/crm/forecast";
+import { queryKeys } from "@/lib/query";
 
 export interface Cliente360Oportunidad {
   id: string;
@@ -30,7 +31,7 @@ export interface Cliente360Resumen {
 
 export function useCliente360(clienteId: string | undefined) {
   return useQuery<Cliente360Resumen>({
-    queryKey: ["crm", "cliente-360", clienteId],
+    queryKey: queryKeys.crm.cliente360(clienteId ?? ""),
     enabled: !!clienteId,
     queryFn: async () => {
       const [opsR, cotR, embR, etapasR] = await Promise.all([
