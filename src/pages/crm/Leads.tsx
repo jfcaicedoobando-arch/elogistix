@@ -1,22 +1,18 @@
 /**
- * /crm/leads — Listado de leads con búsqueda, filtros, selección múltiple e import CSV.
+ * /crm/leads — Listado de leads con búsqueda, filtros y selección múltiple.
+ * Sin botón "Nuevo lead" propio (vive en QuickAddMenu del header global).
  */
 import { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { Users, Plus, Upload } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import SearchInput from "@/components/selects/SearchInput";
-import { PageHeader } from "@/components/shared/PageHeader";
 import { DataTable } from "@/components/shared/DataTable";
 import { useDebounce, useListPageState, usePermissions } from "@/hooks/shared";
-import { FloatingActionButton } from "@/components/shared/FloatingActionButton";
-import NuevoLeadDialog from "@/components/crm/NuevoLeadDialog";
+import { CrmSubheader } from "@/components/crm/CrmSubheader";
 import LeadsBulkBar from "@/components/crm/LeadsBulkBar";
-import ImportarLeadsCsvDialog from "@/components/crm/ImportarLeadsCsvDialog";
 import {
   LEAD_ESTADOS, LEAD_FUENTES, useLeads,
   type CrmLeadEstado, type CrmLeadFuente, type CrmLeadRow,
@@ -25,9 +21,7 @@ import { makeLeadsColumns } from "./leadsColumns";
 
 export default function Leads() {
   const navigate = useNavigate();
-  const { canEdit, canEditCrm } = usePermissions();
-  const [dialogOpen, setDialogOpen] = useState(false);
-  const [importOpen, setImportOpen] = useState(false);
+  const { canEditCrm } = usePermissions();
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const { search, setSearch, page, setPage, pageSize, setPageSize } = useListPageState({});
   const debounced = useDebounce(search, 300);
@@ -53,33 +47,15 @@ export default function Leads() {
   const columns = useMemo(() => makeLeadsColumns(selected, toggle, toggleAll, leads), [selected, leads]);
 
   return (
-    <div className="space-y-6 p-6">
-      <PageHeader
-        icon={<Users className="h-6 w-6 text-accent" />}
-        title="Leads"
-        description={`${totalCount} leads en cartera`}
-        actions={
-          canEdit ? (
-            <div className="flex gap-2">
-              {canEditCrm && (
-                <Button variant="outline" onClick={() => setImportOpen(true)} className="hidden md:flex">
-                  <Upload className="h-4 w-4 mr-1" /> Importar CSV
-                </Button>
-              )}
-              <Button onClick={() => setDialogOpen(true)} className="hidden md:flex">
-                <Plus className="h-4 w-4 mr-1" /> Nuevo lead
-              </Button>
-            </div>
-          ) : null
-        }
-      />
+    <div className="space-y-4 p-6">
+      <CrmSubheader context={`${totalCount} leads en cartera`} />
 
       {canEditCrm && selected.size > 0 && (
         <LeadsBulkBar ids={Array.from(selected)} onClear={clearSel} onDone={clearSel} />
       )}
 
       <Card>
-        <CardContent className="p-4 flex flex-col md:flex-row gap-3">
+        <CardContent className="p-3 flex flex-col md:flex-row gap-3">
           <SearchInput
             value={search}
             onChange={setSearch}
@@ -122,22 +98,6 @@ export default function Leads() {
           />
         </CardContent>
       </Card>
-
-      <NuevoLeadDialog
-        open={dialogOpen}
-        onOpenChange={setDialogOpen}
-        onCreated={(id) => navigate(`/crm/leads/${id}`)}
-      />
-
-      <ImportarLeadsCsvDialog open={importOpen} onOpenChange={setImportOpen} />
-
-      {canEdit && (
-        <FloatingActionButton
-          icon={<Plus className="h-6 w-6" />}
-          label="Nuevo lead"
-          onClick={() => setDialogOpen(true)}
-        />
-      )}
     </div>
   );
 }

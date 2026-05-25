@@ -1,22 +1,25 @@
 /**
  * /crm/oportunidades — Pipeline con vista Kanban (DnD) y tabla.
+ * Filtros avanzados colapsables para ganar espacio vertical.
  */
 import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Target, Plus } from "lucide-react";
+import { ChevronDown, ChevronRight } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Collapsible, CollapsibleContent, CollapsibleTrigger,
+} from "@/components/ui/collapsible";
 import SearchInput from "@/components/selects/SearchInput";
-import { PageHeader } from "@/components/shared/PageHeader";
+import { CrmSubheader } from "@/components/crm/CrmSubheader";
 import { DataTable, defineColumns, type ColumnDef } from "@/components/shared/DataTable";
-import { useDebounce, usePermissions } from "@/hooks/shared";
-import { FloatingActionButton } from "@/components/shared/FloatingActionButton";
+import { useDebounce } from "@/hooks/shared";
 import { useToast } from "@/hooks/shared";
 import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 import { formatCurrencyCompact } from "@/lib/formatters";
 import OportunidadKanban from "@/components/crm/OportunidadKanban";
-import NuevaOportunidadDialog from "@/components/crm/NuevaOportunidadDialog";
 import OportunidadesFiltersBar from "@/components/crm/OportunidadesFiltersBar";
 import {
   FILTROS_DEFAULT,
@@ -44,13 +47,22 @@ const columns: ColumnDef<CrmOportunidadRow, unknown>[] = defineColumns<CrmOportu
   { id: "vendedor", header: "Vendedor", meta: { className: "text-xs" }, cell: ({ row }) => row.original.vendedor_email || "—" },
 ]);
 
+function activosFiltros(f: OportunidadesFiltros): number {
+  let n = 0;
+  if (f.etapaId !== "todas") n++;
+  if (f.vendedorId !== "todos") n++;
+  if (f.cierreDesde) n++;
+  if (f.cierreHasta) n++;
+  if (f.montoMin) n++;
+  return n;
+}
+
 export default function Oportunidades() {
   const navigate = useNavigate();
-  const { canEdit } = usePermissions();
   const { toast } = useToast();
   const [search, setSearch] = useState("");
-  const [dialogOpen, setDialogOpen] = useState(false);
   const [filtros, setFiltros] = useState<OportunidadesFiltros>(FILTROS_DEFAULT);
+  const [filtersOpen, setFiltersOpen] = useState(false);
   const debounced = useDebounce(search, 300);
 
   const { data: etapas = [] } = useEtapasPipeline();
@@ -65,7 +77,6 @@ export default function Oportunidades() {
   const { data, isLoading } = useOportunidades({ search: debounced, pageSize: 500 });
   const opsRaw = useMemo(() => data?.data ?? [], [data]);
 
-  // Filtros cliente-side
   const ops = useMemo(() => {
     return opsRaw.filter((o) => {
       if (filtros.etapaId !== "todas" && o.etapa_id !== filtros.etapaId) return false;
@@ -81,7 +92,6 @@ export default function Oportunidades() {
   }, [opsRaw, filtros]);
 
   const mover = useMoverEtapaConAutomatizacion();
-
   const handleMover = async (id: string, etapaId: string, prob: number) => {
     try {
       await mover.mutateAsync({ id, etapa_id: etapaId, probabilidad: prob });
@@ -94,30 +104,47 @@ export default function Oportunidades() {
     }
   };
 
+  const activos = activosFiltros(filtros);
+  const totalPipeline = ops.reduce((s, o) => s + Number(o.monto_estimado ?? 0), 0);
+
   return (
-    <div className="space-y-6 p-6">
-      <PageHeader
-        icon={<Target className="h-6 w-6 text-primary" />}
-        title="Oportunidades"
-        description={`${ops.length} de ${opsRaw.length} oportunidades · pipeline ${formatCurrencyCompact(ops.reduce((s, o) => s + Number(o.monto_estimado ?? 0), 0))}`}
-        actions={
-          canEdit ? (
-            <Button onClick={() => setDialogOpen(true)} className="hidden md:flex">
-              <Plus className="h-4 w-4 mr-1" /> Nueva oportunidad
-            </Button>
-          ) : null
-        }
-      />
+    <div className="space-y-4 p-6">
+      <CrmSubheader context={`${ops.length} de ${opsRaw.length} oportunidades · pipeline ${formatCurrencyCompact(totalPipeline)}`} />
 
       <Card>
-        <CardContent className="p-4 space-y-3">
-          <SearchInput value={search} onChange={setSearch} placeholder="Buscar por nombre o cliente..." />
-          <OportunidadesFiltersBar
-            etapas={etapas as CrmEtapaRow[]}
-            vendedores={vendedores}
-            value={filtros}
-            onChange={setFiltros}
-          />
+        <CardContent className="p-3 space-y-3">
+          <div className="flex flex-col md:flex-row gap-2 items-stretch md:items-center">
+            <div className="flex-1">
+              <SearchInput value={search} onChange={setSearch} placeholder="Buscar por nombre o cliente..." />
+            </div>
+            <Collapsible open={filtersOpen} onOpenChange={setFiltersOpen}>
+              <CollapsibleTrigger asChild>
+                <Button variant="outline" size="sm" className="gap-1">
+                  {filtersOpen ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+                  Filtros
+                  {activos > 0 && <Badge variant="secondary" className="ml-1 h-5 px-1.5 text-[10px]">{activos}</Badge>}
+                </Button>
+              </CollapsibleTrigger>
+              <CollapsibleContent className="md:hidden mt-2">
+                <OportunidadesFiltersBar
+                  etapas={etapas as CrmEtapaRow[]}
+                  vendedores={vendedores}
+                  value={filtros}
+                  onChange={setFiltros}
+                />
+              </CollapsibleContent>
+            </Collapsible>
+          </div>
+          {filtersOpen && (
+            <div className="hidden md:block">
+              <OportunidadesFiltersBar
+                etapas={etapas as CrmEtapaRow[]}
+                vendedores={vendedores}
+                value={filtros}
+                onChange={setFiltros}
+              />
+            </div>
+          )}
         </CardContent>
       </Card>
 
@@ -154,20 +181,6 @@ export default function Oportunidades() {
           </Card>
         </TabsContent>
       </Tabs>
-
-      <NuevaOportunidadDialog
-        open={dialogOpen}
-        onOpenChange={setDialogOpen}
-        onSaved={(id) => navigate(`/crm/oportunidades/${id}`)}
-      />
-
-      {canEdit && (
-        <FloatingActionButton
-          icon={<Plus className="h-6 w-6" />}
-          label="Nueva oportunidad"
-          onClick={() => setDialogOpen(true)}
-        />
-      )}
     </div>
   );
 }
