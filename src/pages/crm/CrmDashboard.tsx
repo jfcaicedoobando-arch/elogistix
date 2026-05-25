@@ -1,7 +1,7 @@
 /**
  * /crm — Inicio del CRM.
- * Enfoque "lo que tengo que hacer hoy": actividades de hoy y vencidas arriba,
- * ops por cerrar y leads sin contactar al centro, KPIs al final.
+ * Enfoque "lo que tengo que hacer hoy": Next Best Actions arriba,
+ * actividades y ops por cerrar al centro, KPIs al final.
  */
 import { Activity, Target, TrendingUp, Users } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -11,6 +11,8 @@ import { useCrmInicioVM } from "@/hooks/crm";
 import { VencidasAlert } from "@/components/crm/crmDashboard/VencidasAlert";
 import { ActividadesHoyCard } from "@/components/crm/crmDashboard/ActividadesHoyCard";
 import { CerrandoSemanaCard, LeadsSinContactarCard, TopDealsCard } from "@/components/crm/crmDashboard/DealsCards";
+import { NextBestActionsCard } from "@/components/crm/crmDashboard/NextBestActionsCard";
+import { CotizacionesSinRespuestaCard } from "@/components/crm/crmDashboard/CotizacionesSinRespuestaCard";
 
 function KpiCard({ icon: Icon, label, value }: { icon: typeof Target; label: string; value: string | number }) {
   return (
@@ -43,11 +45,13 @@ export default function CrmDashboard() {
         icon={<Target className="h-6 w-6 text-primary" />}
       />
 
+      <NextBestActionsCard items={vm.nba} isLoading={vm.nbaLoading} />
       <VencidasAlert vencidas={vm.vencidas} />
       <ActividadesHoyCard items={vm.actividadesHoy} />
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <CerrandoSemanaCard items={vm.cerrandoSemana} />
+        <CotizacionesSinRespuestaCard items={vm.cotsSinResp} />
         <LeadsSinContactarCard items={vm.leadsSinContactar} />
         <TopDealsCard items={vm.topDeals} />
       </div>
