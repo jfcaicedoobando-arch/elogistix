@@ -22,6 +22,14 @@ export interface ChangelogEntry {
  */
 export const recentChangelog: ChangelogEntry[] = [
   {
+    version: "11.22.0",
+    date: "2026-05-25",
+    type: "patch",
+    title: "Auditoría loop 10 — ESLint a 0 warnings",
+    summary: "Resueltos 3 react-refresh/only-export-components, 1 no-empty-object-type y 5 unused-disable. ESLint queda en 0 warnings/errors.",
+    description: "Extraídos a archivos dedicados: oportunidadesFiltersTypes.ts (FILTROS_DEFAULT + OportunidadesFiltros tipos) y proveedorTableColumns.tsx (proveedorColumns). columnMeta.ts: ColumnMeta declara marker readonly opcional para evitar interface vacía. DataTable.tsx mantiene re-export de defineColumns con disable acotado a esa línea. Logger y DataTable.perf.test: removidos eslint-disable obsoletos. 626 tests verdes. APP_VERSION 11.22.0.",
+  },
+  {
     version: "11.21.0",
     date: "2026-05-25",
     type: "minor",

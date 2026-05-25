@@ -2,6 +2,14 @@ import type { ChangelogEntry } from "../../../changelogData";
 
 export const chunk0: ChangelogEntry[] = [
   {
+    version: "11.22.0",
+    date: "2026-05-25",
+    type: "patch",
+    title: "Auditoría loop 10 — cierre de react-refresh y empty interface",
+    summary: "ESLint a 0 warnings/errors. Resueltos 3 react-refresh/only-export-components, 1 no-empty-object-type y 5 unused-disable directives.",
+    description: "Extraídos a archivos dedicados: oportunidadesFiltersTypes.ts (FILTROS_DEFAULT + OportunidadesFiltros) y proveedorTableColumns.tsx (proveedorColumns). columnMeta.ts: ColumnMeta ahora declara un marker readonly opcional para evitar interface vacía. DataTable.tsx: defineColumns mantiene re-export con disable acotado a esa línea. Logger y test perf: removidos eslint-disable obsoletos. 626 tests verdes. APP_VERSION 11.22.0.",
+  },
+  {
     version: "11.21.0",
     date: "2026-05-25",
     type: "minor",
