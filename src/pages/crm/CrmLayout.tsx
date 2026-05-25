@@ -1,16 +1,18 @@
 import { NavLink, Outlet } from "react-router-dom";
-import { Target, Users, Activity, BarChart3, LineChart, LayoutDashboard } from "lucide-react";
+import { Target, Users, Activity, BarChart3, LineChart, LayoutDashboard, Settings } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { useActividadesVencidasCount } from "@/hooks/crm/useCrmDashboard";
+import { usePermissions } from "@/hooks/shared";
 
-const TABS = [
-  { to: "/crm", label: "Dashboard", icon: LayoutDashboard, end: true },
-  { to: "/crm/leads", label: "Leads", icon: Users, end: false },
-  { to: "/crm/oportunidades", label: "Oportunidades", icon: Target, end: false },
-  { to: "/crm/actividades", label: "Actividades", icon: Activity, end: false },
-  { to: "/crm/forecast", label: "Forecast", icon: LineChart, end: false },
-  { to: "/crm/reportes", label: "Reportes", icon: BarChart3, end: false },
+const TABS_BASE = [
+  { to: "/crm", label: "Dashboard", icon: LayoutDashboard, end: true, adminOnly: false },
+  { to: "/crm/leads", label: "Leads", icon: Users, end: false, adminOnly: false },
+  { to: "/crm/oportunidades", label: "Oportunidades", icon: Target, end: false, adminOnly: false },
+  { to: "/crm/actividades", label: "Actividades", icon: Activity, end: false, adminOnly: false },
+  { to: "/crm/forecast", label: "Forecast", icon: LineChart, end: false, adminOnly: false },
+  { to: "/crm/reportes", label: "Reportes", icon: BarChart3, end: false, adminOnly: false },
+  { to: "/crm/configuracion", label: "Configuración", icon: Settings, end: false, adminOnly: true },
 ];
 
 export default function CrmLayout() {
