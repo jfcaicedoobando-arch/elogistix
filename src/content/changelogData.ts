@@ -101,14 +101,6 @@ export const recentChangelog: ChangelogEntry[] = [
     summary: "Operadores y vendedores ya no reciben 403 al cargar /crm/oportunidades ni selects de vendedor/responsable.",
     description: "list-users ahora permite a cualquier miembro de la org listar usuarios de su propia organización (respuesta filtrada por organization_members). create-user/delete-user/invite-client-user mantienen check estricto de admin. APP_VERSION 11.7.3.",
   },
-  {
-    version: "11.7.2",
-    date: "2026-05-25",
-    type: "patch",
-    title: "Fix cron de alertas: columnas correctas en app_logs",
-    summary: "Fix cron de alertas: usa columnas reales fn/ts/status_code de app_logs en vez de inexistentes.",
-    description: "Migración recrea detectar_alertas_app_logs() con los nombres correctos de columna. El cron ahora agrupa errores 5xx y genera alertas sin abortar. APP_VERSION 11.7.2.",
-  },
 ];
 
 /** Deduplica por version conservando la primera ocurrencia (recentChangelog gana). */
