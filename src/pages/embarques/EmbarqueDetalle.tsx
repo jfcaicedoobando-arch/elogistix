@@ -22,6 +22,7 @@ import { TabNotas } from "@/components/embarque/TabNotas";
 import { TabTracking } from "@/components/embarque/TabTracking";
 
 import DialogEliminarEmbarque from "@/components/embarque/DialogEliminarEmbarque";
+import DialogDuplicarEmbarque from "@/components/embarque/DialogDuplicarEmbarque";
 import { EmbarqueDetalleHeader } from "@/components/embarque/EmbarqueDetalleHeader";
 
 import { useRegisterBreadcrumbLabel } from "@/contexts/BreadcrumbContext";
@@ -62,6 +63,7 @@ export default function EmbarqueDetalle() {
   useRegisterBreadcrumbLabel(id, embarque?.expediente);
 
   const [dialogEliminarAbierto, setDialogEliminarAbierto] = useState(false);
+  const [dialogDuplicarAbierto, setDialogDuplicarAbierto] = useState(false);
 
   const { handleCompartirTracking, isPending: trackingPending } = useEmbarqueDetalleTracking(id);
 
@@ -95,9 +97,11 @@ export default function EmbarqueDetalle() {
         onAvanzarEstado={handleAvanzarEstado}
         onCompartirTracking={handleCompartirTracking}
         onAbrirEliminar={() => setDialogEliminarAbierto(true)}
+        onAbrirDuplicar={() => setDialogDuplicarAbierto(true)}
       />
 
       <DialogEliminarEmbarque embarque={embarque} open={dialogEliminarAbierto} onOpenChange={setDialogEliminarAbierto} />
+      <DialogDuplicarEmbarque embarque={embarque} open={dialogDuplicarAbierto} onOpenChange={setDialogDuplicarAbierto} />
 
 
       <Tabs value={activeTab} onValueChange={setActiveTab}>
