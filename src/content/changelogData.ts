@@ -22,6 +22,14 @@ export interface ChangelogEntry {
  */
 export const recentChangelog: ChangelogEntry[] = [
   {
+    version: "11.10.0",
+    date: "2026-05-25",
+    type: "minor",
+    title: "Cobertura Vitest +6 archivos / +33 tests (P2 + extracciones)",
+    summary: "Tests para columnas de embarque, tracking externo, configuración, idempotency, KPIs de embarque y chart de desempeño.",
+    description: "Nuevos tests: services/embarque/columns, lib/jsoncargo/externalTracking, lib/domain/configuracion, lib/idempotency (newRequestId + useStableRequestId), lib/financial/embarqueKpis (extraído de useEmbarqueFinancials), lib/operaciones/desempenoChart (extraído de useDesempenoChartData). 6 archivos / 33 casos verdes. APP_VERSION 11.10.0.",
+  },
+  {
     version: "11.9.0",
     date: "2026-05-25",
     type: "minor",
@@ -92,14 +100,6 @@ export const recentChangelog: ChangelogEntry[] = [
     title: "CRM Sprint B: configuración, filtros, bulk y CSV",
     summary: "Pestaña Configuración del CRM, filtros avanzados en Oportunidades, selección múltiple en Leads, import CSV y datos accionables (mailto/tel + copiar).",
     description: "EtapasPipelineEditor y MotivosPerdidaEditor en /crm/configuracion. OportunidadesFiltersBar (etapa/vendedor/cierre/monto) filtra Kanban y Tabla. LeadsBulkBar permite cambiar estado, reasignar vendedor o eliminar selección múltiple. ImportarLeadsCsvDialog con preview y batches de 100. ContactActions (mailto/tel + copiar) en LeadDetalle. APP_VERSION 11.4.0.",
-  },
-  {
-    version: "11.3.1",
-    date: "2026-05-25",
-    type: "patch",
-    title: "CRM Sprint A cierre: linaje, badges y acciones rápidas",
-    summary: "Linaje visible Lead↔Oportunidad↔Cotización↔Embarque, badges de actividades vencidas y botones Completar/Posponer inline.",
-    description: "LineageCard en LeadDetalle y OportunidadDetalle. Badge de vencidas en tab Actividades (CrmLayout) y en item CRM del sidebar. Columna de acciones inline (Completar / Posponer +1d/+3d/+1sem) en /crm/actividades para roles con canEditCrm. APP_VERSION 11.3.1.",
   },
 ];
 

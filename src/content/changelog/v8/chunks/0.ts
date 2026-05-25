@@ -2,6 +2,14 @@ import type { ChangelogEntry } from "../../../changelogData";
 
 export const chunk0: ChangelogEntry[] = [
   {
+    version: "11.10.0",
+    date: "2026-05-25",
+    type: "minor",
+    title: "Cobertura Vitest +6 archivos / +33 tests (P2 + extracciones)",
+    summary: "Más tests puros: columnas de embarque, tracking externo, agrupación de configuración, idempotency, KPIs de embarque y chart de desempeño.",
+    description: "Tests vitest nuevos: services/embarque/columns (LIST/DETAIL, sin duplicados, superset), lib/jsoncargo/externalTracking (URLs oficiales por naviera con match exacto/inclusión, fallback track-trace, encode URL), lib/domain/configuracion (agruparConfigPorCategoria), lib/idempotency (newRequestId con fallback crypto + useStableRequestId estable/reset), lib/financial/embarqueKpis (computeEmbarqueKpis, extraído de useEmbarqueFinancials), lib/operaciones/desempenoChart (shortNameFromEmail + buildDesempenoChartRows, extraído de useDesempenoChartData). Hooks refactorizados para delegar en helpers puros. 33 casos, todos verdes. APP_VERSION 11.10.0."
+  },
+  {
     version: "11.9.0",
     date: "2026-05-25",
     type: "minor",
