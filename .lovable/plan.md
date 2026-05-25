@@ -1,73 +1,71 @@
-## Objetivo
+## Etapa 5 — Sub-loop 3: lazy charts + chunk de libphonenumber
 
-Identificar tests obsoletos, redundantes o de bajo valor dentro de los 724 tests actuales (108 archivos) y limpiarlos para que la suite refleje cobertura real, no inflada.
+### Diagnóstico
 
-## Definición de "test obsoleto"
+**recharts (`charts-vendor`, 348 KB gzip ~95 KB)**: hoy entra al primer paint de cualquiera de estas 5 rutas — `Reportes`, `Operaciones`, `AdminDashboard`, `Auditoria` (tab ejecutivo) y `DiagnosticoHealth` — porque los componentes que lo usan se importan estáticamente desde la página. El chunk ya está aislado, pero bloquea el TTI de esas rutas. Charts en tabs ocultos o debajo del fold cargan sin necesidad.
 
-Un test es candidato a eliminar si cumple **al menos uno**:
+**libphonenumber-js/min (~118 KB / ~30 KB gzip)**: lo arrastra `src/lib/formatters/phone.ts`. Sólo lo usan **3 archivos reales**:
 
-1. **Huérfano duro**: importa un módulo/symbol que ya no existe (compilación falla o se silencia con cast).
-2. **Duplicado**: misma aserción (mismo `describe` + `it` + mismo input/expectativa) en otro archivo, sin aportar caso adicional.
-3. **Trivial**: solo verifica `expect(true).toBe(true)`, snapshot vacío, o re-exporta de un barrel sin lógica.
-4. **Skipped/Todo abandonado**: `.skip`, `.todo`, `xit`, `xdescribe` sin issue/ticket asociado y >30 días sin tocar.
-5. **Cobertura redundante**: el mismo branch/línea ya está cubierto por otro test más completo (medible con `--coverage` por archivo).
-6. **Mocks rotos**: el mock no coincide ya con la firma real del módulo mockeado (la función cambió de aridad o retorno).
+- `src/pages/proveedores/ProveedorDetalle.tsx`
+- `src/components/cliente/detalle/ClienteInformacionCard.tsx`
+- `src/pages/clientes/Clientes.tsx` (columna de tabla)
 
-## Plan de auditoría — 4 sub-tareas
+El resto importa otros formatters del barrel `@/lib/formatters`; con `sideEffects: false` debería tree-shakearse, pero conviene aislarlo en chunk propio para garantizarlo y permitir caching cross-route.
 
-### 1. Auditoría automática (read-only, ~15 min)
+### Cambios
 
-Generar un reporte `docs/tests-audit.md` con 5 secciones:
+**1. Lazy de componentes de chart (7 archivos)**
 
-- **Tests huérfanos** ya detectados (26 archivos). Para cada uno, clasificar:
-  - *Falso positivo* (cubre múltiples archivos, sub-módulo, integración) → mantener.
-  - *Real* (el source desapareció) → eliminar.
-- **Skipped/Todo/Only**: `rg "\.(skip|todo|only)\(|xdescribe|xit\("` (actualmente 0, pero dejar el chequeo en CI).
-- **Duplicados de descripción**: usar `grep | uniq -cd` (ya detectados 14 títulos repetidos — la mayoría son legítimos en archivos distintos, pero hay que revisar uno por uno).
-- **Mocks rotos**: `bunx tsc --noEmit` solo sobre `**/*.test.ts` con `skipLibCheck=false`, detectar errores de tipo.
-- **Cobertura redundante**: `bunx vitest run --coverage --reporter=json` → identificar tests cuyo único impacto en `coverage` ya está al 100% sin ellos (técnica: ejecutar suite excluyendo el archivo y comparar `% covered`).
+Convertir cada uno de estos imports estáticos en `React.lazy` con `<Suspense>` y un skeleton del mismo alto:
 
-### 2. Revisión manual de los 26 huérfanos
+| Página/contenedor | Componente a lazy-cargar |
+|---|---|
+| `pages/dashboard/Reportes.tsx` | `ReportesTopChart` |
+| `pages/dashboard/Operaciones.tsx` | el bloque `recharts` interno → extraer a `OperacionesChart.tsx` y `lazy()` |
+| `pages/admin/AdminDashboard.tsx` | extraer el chart inline a `AdminDashboardChart.tsx` y `lazy()` |
+| `components/auditoria/AuditoriaEjecutivoTab.tsx` | `AuditoriaTendenciaChart` |
+| `components/admin/DiagnosticoHealthPanel.tsx` | `HealthTopErrorsChart` + `HealthTimelineChart` |
+| `components/operaciones/DesempenoOperadores.tsx` | si es el componente raíz de un tab, hacer lazy desde el tab; si es siempre visible, dejar y sólo crear skeleton |
 
-Para cada uno decidir:
-- **Mantener** con comentario `// @cubre: <ruta>` arriba del archivo (explicar qué cubre y por qué no tiene par 1:1).
-- **Renombrar** para que matchee el source (ej. `useEmbarquesListData.test.ts` → mover junto a `useEmbarquesListData.ts` si existe).
-- **Eliminar** si el source ya no existe.
+Skeleton estándar: `<div className="h-[300px] w-full rounded-md bg-muted/40 animate-pulse" />` (altura ajustada por chart para evitar CLS).
 
-### 3. Eliminar duplicados confirmados
+Resultado: `charts-vendor` se descarga **después** del primer paint de cada ruta, no antes. Mejora directa en TTI de Reportes/Operaciones/AdminDashboard.
 
-De los 14 títulos repetidos, conservar solo el caso más completo (con mejor cobertura de edge-cases). Documentar la decisión en el changelog.
+**2. Aislar `libphonenumber-js` en chunk propio**
 
-### 4. Gate en CI (preventivo)
+En `vite.config.ts` añadir regla:
 
-Añadir un script `scripts/audit-tests.ts` que falle el build si:
-- Aparece nuevo `.only`, `.skip` o `.todo` sin comentario `// TODO(#issue):`.
-- Aparece test huérfano nuevo (source no existe).
-- Aparece import roto en archivo de test.
+```ts
+if (/node_modules\/libphonenumber-js/.test(id)) {
+  return "phone-vendor";
+}
+```
 
-Ejecutar en `.github/workflows/ci.yml` como step adicional.
+Sólo se descarga cuando una de las 3 rutas que renderizan `formatPhoneMx` se monta. Cacheable independientemente.
 
-## Entregables
+**3. Verificación**
 
-- `docs/tests-audit.md` con tabla por categoría y decisión por test.
-- PR de limpieza (eliminaciones + renombres) con `CHANGELOG.md` listando exactamente qué se quitó y por qué.
-- `scripts/audit-tests.ts` + step de CI.
-- Suite final con N tests reales, sin pérdida de cobertura medible (`% lines/branches` igual o mayor).
+- `bun run audit:tests` → 0 violaciones.
+- `bun run test` → 709/709.
+- Smoke manual: abrir Reportes y Operaciones, ver skeleton breve, luego chart real; AdminDashboard idem.
+- Bundle: `ANALYZE=true bun run build` y comparar tamaños — esperar:
+  - `index.js` igual (los charts ya estaban fuera).
+  - `charts-vendor` se descarga **lazy** (verificable en Network tab: aparece sólo al renderizar chart).
+  - Aparece nuevo `phone-vendor-*.js` (~30 KB gzip).
 
-## Detalles técnicos
+**4. Versionado y memoria**
 
-- Tooling: `bunx vitest run --coverage`, `grep`, `rg`, `tsc --noEmit`, `knip` (ya configurado).
-- No tocar: `src/integrations/supabase/types.ts`, `components/ui/*`, `e2e/*` (Playwright, no Vitest).
-- Bump `APP_VERSION` patch por cada sub-tarea entregada (ej. 11.39.0 = reporte; 11.39.1 = limpieza; 11.39.2 = CI gate).
-- Tests E2E (`e2e/specs/*.spec.ts`) quedan fuera de este alcance — son Playwright, no Vitest.
+- `APP_VERSION` → `11.43.0`.
+- Entrada en `CHANGELOG.md` raíz.
+- Sin cambios de memoria de proyecto.
 
-## Hallazgos preliminares (señales tempranas)
+### Fuera de alcance
 
-- 26 tests "huérfanos" sin source 1:1 — mayoría son falsos positivos (integración, edge-cases, architecture.test.ts), pero hay que confirmar uno por uno.
-- 0 tests con `.skip/.only/.todo` ahora mismo (buena señal).
-- 14 títulos `describe`/`it` repetidos exactos — algunos legítimos (mismo título en módulos distintos), otros podrían ser duplicación accidental.
-- Suite actual: 108 archivos / 724 tests / ~45s end-to-end.
+- Tree-shake de `lucide-react` (sub-loop 5.5).
+- LCP/imágenes + `vite-imagetools` (sub-loop 5.6).
+- Medición Web Vitals antes/después con `browser--performance_profile` (sub-loop 5.7).
 
-## ¿Continúo?
+### Riesgos
 
-Si apruebas, ejecuto sub-tarea 1 (reporte automático) y te traigo el `docs/tests-audit.md` con tabla por test antes de borrar nada.
+- **CLS**: si el skeleton no respeta la altura final del chart, hay shift de layout. Mitigación: skeleton con altura fija idéntica (`ResponsiveContainer` usa `height={300}` en la mayoría de casos).
+- **Tabs ocultos**: si el chart está en un tab no-default, lazy + Suspense funciona perfecto. Si el chart es el primer contenido visible, el usuario verá el skeleton ~150–300 ms.

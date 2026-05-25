@@ -2,8 +2,9 @@
  * DiagnosticoHealthPanel — KPIs + tendencia + top funciones con errores.
  * Subcomponentes en `diagnosticoHealth/`.
  */
-import { useState } from "react";
+import { lazy, Suspense, useState } from "react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { ChartSkeleton } from "@/components/shared/ChartSkeleton";
 import {
   computeKpis,
   useAppLogsHealthSummary,
@@ -11,9 +12,16 @@ import {
   type HealthSummaryRow,
 } from "@/hooks/admin";
 import HealthKpisRow from "@/components/admin/diagnosticoHealth/HealthKpisRow";
-import HealthTimelineChart from "@/components/admin/diagnosticoHealth/HealthTimelineChart";
-import HealthTopErrorsChart from "@/components/admin/diagnosticoHealth/HealthTopErrorsChart";
 import HealthSlowestTable from "@/components/admin/diagnosticoHealth/HealthSlowestTable";
+
+// Lazy: difiere recharts fuera del TTI del panel de diagnóstico.
+const HealthTimelineChart = lazy(
+  () => import("@/components/admin/diagnosticoHealth/HealthTimelineChart"),
+);
+const HealthTopErrorsChart = lazy(
+  () => import("@/components/admin/diagnosticoHealth/HealthTopErrorsChart"),
+);
+
 
 const RANGE_OPTIONS: Array<{ label: string; hours: number; buckets: number }> = [
   { label: "Última hora", hours: 1, buckets: 12 },
@@ -85,10 +93,14 @@ export function DiagnosticoHealthPanel() {
         rangeLabel={range.label}
       />
 
-      <HealthTimelineChart loading={loading} data={timeline} />
+      <Suspense fallback={<ChartSkeleton height={260} />}>
+        <HealthTimelineChart loading={loading} data={timeline} />
+      </Suspense>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        <HealthTopErrorsChart loading={loading} data={top5} />
+        <Suspense fallback={<ChartSkeleton height={260} />}>
+          <HealthTopErrorsChart loading={loading} data={top5} />
+        </Suspense>
         <HealthSlowestTable loading={loading} data={slowest} />
       </div>
     </div>

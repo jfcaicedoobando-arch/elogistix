@@ -1,21 +1,16 @@
+import { lazy, Suspense } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Users } from "lucide-react";
-import {
-  ResponsiveContainer,
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip as RechartsTooltip,
-  Legend,
-} from "recharts";
+import { ChartSkeleton } from "@/components/shared/ChartSkeleton";
 import type { OperadorData } from "@/hooks/operaciones";
-import { useDesempenoChartData, ESTADOS_KEYS } from "@/hooks/operaciones";
-import { ESTADO_COLOR } from "./desempenoVisuals";
+import { useDesempenoChartData } from "@/hooks/operaciones";
 import { OperadorCard } from "./OperadorCard";
+
+// Lazy: difiere recharts fuera del TTI de la página Operaciones.
+const DesempenoOperadoresChart = lazy(() => import("./DesempenoOperadoresChart"));
+
 
 interface Props {
   operadores: OperadorData[];
@@ -81,41 +76,11 @@ export function DesempenoOperadores({ operadores, isLoading }: Props) {
           <p className="text-xs font-semibold text-muted-foreground mb-2 uppercase tracking-wide">
             Comparativa de carga de trabajo
           </p>
-          <ResponsiveContainer width="100%" height={320}>
-            <BarChart data={chartData} margin={{ top: 10, right: 20, left: 0, bottom: 30 }}>
-              <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
-              <XAxis
-                dataKey="nombre"
-                tick={{ fontSize: 11 }}
-                interval={0}
-                height={40}
-              />
-              <YAxis allowDecimals={false} tick={{ fontSize: 11 }} />
-              <RechartsTooltip
-                contentStyle={{
-                  background: "hsl(var(--card))",
-                  border: "1px solid hsl(var(--border))",
-                  borderRadius: 8,
-                  fontSize: 12,
-                }}
-              />
-              <Legend
-                verticalAlign="top"
-                align="right"
-                wrapperStyle={{ fontSize: 11, paddingBottom: 8 }}
-              />
-              {ESTADOS_KEYS.map((estado) => (
-                <Bar
-                  key={estado}
-                  dataKey={estado}
-                  stackId="estados"
-                  fill={ESTADO_COLOR[estado]}
-                  radius={estado === "Cerrado" ? [4, 4, 0, 0] : 0}
-                />
-              ))}
-            </BarChart>
-          </ResponsiveContainer>
+          <Suspense fallback={<ChartSkeleton height={320} />}>
+            <DesempenoOperadoresChart data={chartData} />
+          </Suspense>
         </div>
+
 
         {/* Tarjetas por operador */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
