@@ -199,4 +199,14 @@ export default tseslint.config(
       "no-restricted-imports": "off",
     },
   },
+  {
+    // Tests de edge functions Deno (`supabase/functions/**/*_test.ts`):
+    // requieren `@ts-nocheck` porque importan desde URLs Deno
+    // (`https://deno.land/...`) que el TS local del proyecto no resuelve.
+    // Es intencional — silenciamos la regla en este glob.
+    files: ["supabase/functions/**/*_test.ts"],
+    rules: {
+      "@typescript-eslint/ban-ts-comment": "off",
+    },
+  },
 );
