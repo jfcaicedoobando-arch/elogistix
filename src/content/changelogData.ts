@@ -22,6 +22,14 @@ export interface ChangelogEntry {
  */
 export const recentChangelog: ChangelogEntry[] = [
   {
+    version: "11.26.0",
+    date: "2026-05-25",
+    type: "minor",
+    title: "Eliminación de eslint-disable (parte 1/2): 11 directivas removidas",
+    summary: "Tests (no-console, no-control-regex) movidos a override de config; Dimensiones*/EmbarquesRelacionadosCard a allowlist; exhaustive-deps corregidos en AuthContext, EditarEmbarque, DialogBolContainers, useAuditoriaSnapshots, useEmbarqueEstadoActions, usePortalEmbarquesController.",
+    description: "Primera tanda del plan de limpieza de eslint-disable (30→19). (1) eslint.config.js: nuevo override para **/*.test.{ts,tsx} con no-console y no-control-regex en off (justifica perf logs + tests de sanitización). Allowlist de tablas extendida con DimensionesLCLTable, DimensionesAereasTable y EmbarquesRelacionadosCard. (2) Causa raíz aplicada en deps: AuthContext.signOut envuelto en useCallback estable; EditarEmbarque incluye setCurrentStep en deps; useDialogBolContainers memoiza reset con useCallback y DialogBolContainers lo declara dep; useAuditoriaSnapshots desestructura mutate (estable); useEmbarqueEstadoActions captura las 6 primitivas de embarque + syncEstado.mutate; usePortalEmbarquesController usa setState funcional para evitar dep faltante. Pendiente loop 2: useEditarEmbarqueWizard×4, useListPageState, useCotizacionWizardSteps, VirtualDataTable, no-explicit-any×4, complexity×5, DataTable.tsx barrel. 626 tests verdes. APP_VERSION 11.26.0.",
+  },
+  {
     version: "11.25.0",
     date: "2026-05-25",
     type: "minor",
