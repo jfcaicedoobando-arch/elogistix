@@ -1,12 +1,17 @@
+/**
+ * Tests del barrel `embarqueWizardSchemas` enfocados ÚNICAMENTE en funciones
+ * que NO tienen archivo dedicado: validateStepDatosGenerales, validateStepRuta, sugerirETA.
+ *
+ * validateArchivo, validateStepDocumentos y validateStepCostos están cubiertos en:
+ *   - embarqueWizardDocumentos.test.ts
+ *   - embarqueWizardCostos.test.ts
+ * (duplicados eliminados en v11.39.0).
+ */
 import { describe, it, expect } from "vitest";
 import {
   validateStepDatosGenerales,
   validateStepRuta,
-  validateStepDocumentos,
-  validateStepCostos,
-  validateArchivo,
   sugerirETA,
-  MAX_FILE_SIZE_BYTES,
 } from "../embarqueWizardSchemas";
 
 describe("validateStepDatosGenerales", () => {
@@ -89,66 +94,6 @@ describe("validateStepRuta", () => {
   });
 });
 
-describe("validateArchivo", () => {
-  it("acepta PDF dentro del límite", () => {
-    expect(validateArchivo({ nombre: "x", size: 1024, type: "application/pdf" })).toBeNull();
-  });
-  it("rechaza archivo muy grande", () => {
-    const r = validateArchivo({ nombre: "x", size: MAX_FILE_SIZE_BYTES + 1, type: "application/pdf" });
-    expect(r).toMatch(/excede/);
-  });
-  it("rechaza tipo no permitido", () => {
-    const r = validateArchivo({ nombre: "x", size: 100, type: "application/x-msdownload" });
-    expect(r).toMatch(/formato/i);
-  });
-});
-
-describe("validateStepDocumentos", () => {
-  it("vacío es válido (todos opcionales)", () => {
-    expect(validateStepDocumentos({})).toEqual({});
-  });
-  it("detecta archivo inválido", () => {
-    const errors = validateStepDocumentos({
-      "BL Master": { size: MAX_FILE_SIZE_BYTES + 1, type: "application/pdf" },
-    });
-    expect(errors["BL Master"]).toBeDefined();
-  });
-});
-
-describe("validateStepCostos", () => {
-  const baseTC = { tipoCambioUSD: "17.5", tipoCambioEUR: "19" };
-
-  it("válido con al menos un concepto", () => {
-    const errors = validateStepCostos({
-      ...baseTC,
-      conceptosVenta: [{ id: 1, concepto: "Flete", cantidad: 1, precioUnitario: 100, moneda: "USD" }],
-      conceptosCosto: [{ id: 1, proveedorId: "p1", concepto: "Flete", monto: 50, moneda: "USD" }],
-    });
-    expect(errors).toEqual({});
-  });
-
-  it("rechaza tipo de cambio ≤ 0", () => {
-    const errors = validateStepCostos({
-      tipoCambioUSD: "0",
-      tipoCambioEUR: "-1",
-      conceptosVenta: [{ id: 1, concepto: "x", cantidad: 1, precioUnitario: 100, moneda: "USD" }],
-      conceptosCosto: [{ id: 1, proveedorId: "p1", concepto: "x", monto: 1, moneda: "USD" }],
-    });
-    expect(errors.tipoCambioUSD).toBeDefined();
-    expect(errors.tipoCambioEUR).toBeDefined();
-  });
-
-  it("exige al menos un concepto válido de venta y costo", () => {
-    const errors = validateStepCostos({
-      ...baseTC,
-      conceptosVenta: [{ id: 1, concepto: "", cantidad: 1, precioUnitario: 0, moneda: "USD" }],
-      conceptosCosto: [{ id: 1, proveedorId: "", concepto: "", monto: 0, moneda: "USD" }],
-    });
-    expect(errors.conceptosVenta).toBeDefined();
-    expect(errors.conceptosCosto).toBeDefined();
-  });
-});
-
 describe("sugerirETA", () => {
   it("suma días de tránsito al ETD", () => {
     expect(sugerirETA("2026-05-01", 19)).toBe("2026-05-20");
@@ -158,3 +103,4 @@ describe("sugerirETA", () => {
     expect(sugerirETA("2026-05-01", 0)).toBeNull();
   });
 });
+
