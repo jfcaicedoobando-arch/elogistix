@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { createSupabaseMock } from "@/services/__tests__/_supabaseChainMock";
 
-const mock = createSupabaseMock();
+const { mock } = vi.hoisted(() => ({ mock: createSupabaseMock() }));
 vi.mock("@/integrations/supabase/client", () => ({ supabase: mock.supabase }));
 
 import { fetchHuecoFacturacion } from "@/services/facturas/huecoFacturacion";
