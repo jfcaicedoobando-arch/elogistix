@@ -125,7 +125,6 @@ describe("Perf — DataTable (paginado, ~50 filas por vista)", () => {
     }
     rerenderSamples.sort((a, b) => a - b);
     const medianRerender = rerenderSamples[2];
-    // eslint-disable-next-line no-console
     console.log(`[perf] DataTable rerender same-data: median=${medianRerender.toFixed(1)}ms`);
 
     // Lo importante: rerender ≤ 50% del mount. Si TanStack pierde memoización,
