@@ -25,7 +25,7 @@ export function buildOportunidadInsertPayload(
   const defaults = {
     cliente_nombre: "",
     monto_estimado: 0,
-    moneda: "MXN",
+    moneda: "MXN" as const,
     probabilidad: 0,
     modo: "",
     tipo_carga: "",
