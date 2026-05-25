@@ -1,12 +1,13 @@
 /**
- * /crm/leads — Listado de leads con búsqueda, filtros y creación rápida (Fase 2).
+ * /crm/leads — Listado de leads con búsqueda, filtros, selección múltiple e import CSV.
  */
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { Users, Plus } from "lucide-react";
+import { Users, Plus, Upload } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Select,
   SelectContent,
@@ -26,6 +27,8 @@ import { useDebounce, useListPageState, usePermissions } from "@/hooks/shared";
 import { FloatingActionButton } from "@/components/shared/FloatingActionButton";
 import { toTitleCase } from "@/lib/formatters";
 import NuevoLeadDialog from "@/components/crm/NuevoLeadDialog";
+import LeadsBulkBar from "@/components/crm/LeadsBulkBar";
+import ImportarLeadsCsvDialog from "@/components/crm/ImportarLeadsCsvDialog";
 import {
   LEAD_ESTADOS,
   LEAD_FUENTES,
@@ -43,70 +46,71 @@ const ESTADO_VARIANT: Record<CrmLeadEstado, "default" | "secondary" | "outline" 
   Convertido: "outline",
 };
 
-const columns: ColumnDef<CrmLeadRow, unknown>[] = defineColumns<CrmLeadRow>([
-  {
-    id: "empresa",
-    header: "Empresa",
-    accessorFn: (l) => l.empresa,
-    enableSorting: true,
-    sortingFn: sortByString<CrmLeadRow>((l) => l.empresa),
-    meta: { width: "min-w-[180px]", className: "font-medium" },
-    cell: ({ row }) => toTitleCase(row.original.empresa),
-  },
-  {
-    id: "contacto",
-    header: "Contacto",
-    meta: { width: "w-[160px]", className: "text-xs" },
-    cell: ({ row }) => toTitleCase(row.original.contacto ?? ""),
-  },
-  {
-    id: "email",
-    header: "Email",
-    meta: { width: "w-[200px]", className: "text-xs truncate" },
-    cell: ({ row }) => row.original.email ?? "",
-  },
-  {
-    id: "fuente",
-    header: "Fuente",
-    meta: { width: "w-[120px]", className: "text-xs" },
-    cell: ({ row }) => row.original.fuente,
-  },
-  {
-    id: "estado",
-    header: "Estado",
-    meta: { width: "w-[120px]" },
-    cell: ({ row }) => (
-      <Badge variant={ESTADO_VARIANT[row.original.estado]}>{row.original.estado}</Badge>
-    ),
-  },
-  {
-    id: "score",
-    header: "Score",
-    meta: { width: "w-[60px]", className: "text-center text-xs" },
-    cell: ({ row }) => row.original.score,
-  },
-]);
+function makeColumns(
+  selected: Set<string>,
+  toggle: (id: string) => void,
+  toggleAll: (rows: CrmLeadRow[]) => void,
+  allRows: CrmLeadRow[],
+): ColumnDef<CrmLeadRow, unknown>[] {
+  const allSelected = allRows.length > 0 && allRows.every((r) => selected.has(r.id));
+  return defineColumns<CrmLeadRow>([
+    {
+      id: "sel", header: () => (
+        <Checkbox checked={allSelected} onCheckedChange={() => toggleAll(allRows)} aria-label="Seleccionar todos" />
+      ),
+      meta: { width: "w-[40px]" },
+      cell: ({ row }) => (
+        <div onClick={(e) => e.stopPropagation()}>
+          <Checkbox checked={selected.has(row.original.id)} onCheckedChange={() => toggle(row.original.id)} />
+        </div>
+      ),
+    },
+    {
+      id: "empresa", header: "Empresa",
+      accessorFn: (l) => l.empresa, enableSorting: true,
+      sortingFn: sortByString<CrmLeadRow>((l) => l.empresa),
+      meta: { width: "min-w-[180px]", className: "font-medium" },
+      cell: ({ row }) => toTitleCase(row.original.empresa),
+    },
+    { id: "contacto", header: "Contacto", meta: { width: "w-[160px]", className: "text-xs" }, cell: ({ row }) => toTitleCase(row.original.contacto ?? "") },
+    { id: "email", header: "Email", meta: { width: "w-[200px]", className: "text-xs truncate" }, cell: ({ row }) => row.original.email ?? "" },
+    { id: "fuente", header: "Fuente", meta: { width: "w-[120px]", className: "text-xs" }, cell: ({ row }) => row.original.fuente },
+    {
+      id: "estado", header: "Estado", meta: { width: "w-[120px]" },
+      cell: ({ row }) => <Badge variant={ESTADO_VARIANT[row.original.estado]}>{row.original.estado}</Badge>,
+    },
+    { id: "score", header: "Score", meta: { width: "w-[60px]", className: "text-center text-xs" }, cell: ({ row }) => row.original.score },
+  ]);
+}
 
 export default function Leads() {
   const navigate = useNavigate();
-  const { canEdit } = usePermissions();
+  const { canEdit, canEditCrm } = usePermissions();
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [importOpen, setImportOpen] = useState(false);
+  const [selected, setSelected] = useState<Set<string>>(new Set());
   const { search, setSearch, page, setPage, pageSize, setPageSize } = useListPageState({});
   const debounced = useDebounce(search, 300);
   const [estado, setEstado] = useState<CrmLeadEstado | "todos">("todos");
   const [fuente, setFuente] = useState<CrmLeadFuente | "todos">("todos");
 
-  const { data, isLoading } = useLeads({
-    search: debounced,
-    estado,
-    fuente,
-    page,
-    pageSize,
-  });
-
+  const { data, isLoading } = useLeads({ search: debounced, estado, fuente, page, pageSize });
   const leads = data?.data ?? [];
   const totalCount = data?.count ?? 0;
   const totalPages = Math.ceil(totalCount / pageSize);
+
+  const toggle = (id: string) => setSelected((s) => {
+    const n = new Set(s); if (n.has(id)) n.delete(id); else n.add(id); return n;
+  });
+  const toggleAll = (rows: CrmLeadRow[]) => setSelected((s) => {
+    const allHere = rows.every((r) => s.has(r.id));
+    const n = new Set(s);
+    if (allHere) rows.forEach((r) => n.delete(r.id));
+    else rows.forEach((r) => n.add(r.id));
+    return n;
+  });
+  const clearSel = () => setSelected(new Set());
+  const columns = useMemo(() => makeColumns(selected, toggle, toggleAll, leads), [selected, leads]);
 
   return (
     <div className="space-y-6 p-6">
@@ -116,12 +120,23 @@ export default function Leads() {
         description={`${totalCount} leads en cartera`}
         actions={
           canEdit ? (
-            <Button onClick={() => setDialogOpen(true)} className="hidden md:flex">
-              <Plus className="h-4 w-4 mr-1" /> Nuevo lead
-            </Button>
+            <div className="flex gap-2">
+              {canEditCrm && (
+                <Button variant="outline" onClick={() => setImportOpen(true)} className="hidden md:flex">
+                  <Upload className="h-4 w-4 mr-1" /> Importar CSV
+                </Button>
+              )}
+              <Button onClick={() => setDialogOpen(true)} className="hidden md:flex">
+                <Plus className="h-4 w-4 mr-1" /> Nuevo lead
+              </Button>
+            </div>
           ) : null
         }
       />
+
+      {canEditCrm && selected.size > 0 && (
+        <LeadsBulkBar ids={Array.from(selected)} onClear={clearSel} onDone={clearSel} />
+      )}
 
       <Card>
         <CardContent className="p-4 flex flex-col md:flex-row gap-3">
