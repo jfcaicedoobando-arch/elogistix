@@ -142,8 +142,8 @@ export default function Ayuda() {
             o al super-admin del sistema para reportar un problema o sugerir mejoras.
           </p>
           <p>
-            El registro completo de cambios y nuevas funcionalidades está en{" "}
-            <a href="/changelog" className="text-primary underline">Changelog</a>.
+            El registro completo de cambios y nuevas funcionalidades vive en el archivo{" "}
+            <code>CHANGELOG.md</code> del repositorio.
           </p>
         </CardContent>
       </Card>

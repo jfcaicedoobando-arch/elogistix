@@ -1,5 +1,6 @@
 /**
- * Versión actual de la app — string literal para evitar arrastrar el bundle
- * completo del changelog (chunk0, ~66 KB) en el shell autenticado.
+ * Versión actual de la app. String literal mantenido aquí para que Sentry,
+ * observability, el sidebar y el portal puedan consumirlo sin importar nada
+ * pesado. El historial de cambios vive en CHANGELOG.md (root del repo).
  */
-export const APP_VERSION = "11.29.0";
+export const APP_VERSION = "11.30.0";

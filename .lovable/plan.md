@@ -1,66 +1,67 @@
-# Wrapper único para Browser Storage
+# Eliminar módulo de Changelog (UI + chunks TS) → migrar a `CHANGELOG.md`
 
-## Inventario actual (6 consumidores)
+## Objetivo
 
-| # | Archivo | API | Claves |
-|---|---------|-----|--------|
-| 1 | `src/contexts/ThemeContext.tsx` | localStorage get/set | `librecarga-theme` |
-| 2 | `src/contexts/OrganizationContext.tsx` | localStorage get/set | `sa_active_org` |
-| 3 | `src/lib/queryClient.ts` | localStorage (ref para persister) | `lc-query-cache-v1` (managed por TanStack) |
-| 4 | `src/contexts/auth/useLoginAudit.ts` | sessionStorage get/set/remove | `lc:login-logged:{userId}` |
-| 5 | `src/main.tsx` | sessionStorage get/set/remove | `chunk-error-auto-reload` |
-| 6 | `src/components/shared/ErrorBoundary.tsx` | sessionStorage get/set | `chunk-error-auto-reload` (mismo que main.tsx) |
+Reducir el costo por loop ~20% eliminando la página `/changelog`, sus chunks TypeScript, controller, tests de integridad y la sidebar entry. Reemplazar todo por un único `CHANGELOG.md` en el root que se actualiza con una sola línea por release.
 
-Excluido: `src/integrations/supabase/client.ts` (auto-generado, no se edita).
+## Inventario
 
-## Diseño del wrapper
+### Archivos a ELIMINAR
 
-Crear `src/lib/browserStorage/index.ts` con:
+| Path | Motivo |
+|------|--------|
+| `src/pages/dashboard/Changelog.tsx` | Página UI |
+| `src/components/dashboard/ChangelogEntryCard.tsx` | Card de cada entrada |
+| `src/hooks/dashboard/useChangelogController.ts` | Controller (filtros/paginación/anclas) |
+| `src/content/changelogData.ts` | `recentChangelog`, `dedupeByVersion`, loaders |
+| `src/content/changelog/` (carpeta completa) | `legacy.ts`, `v1.ts` … `v8.ts`, `v4/chunks/0-3.ts`, `v8/chunks/0-6.ts` (~9.5k líneas total) |
+| `src/content/__tests__/changelog.test.ts` | Tests de integridad del módulo |
 
-- **`safeLocalStorage`** y **`safeSessionStorage`**: objetos con `getItem / setItem / removeItem` que:
-  - Devuelven `null` / hacen no-op si `typeof window === "undefined"` (SSR-safe).
-  - Envuelven cada operación en `try/catch` (cuota llena, modo privado Safari, storage deshabilitado) y reportan vía `console.warn` sin propagar.
-  - Aceptan tipos estrictos (`string` en/out, sin `any`).
-- **`getStorageRef(kind: "local" | "session")`**: devuelve la referencia cruda `Storage | undefined` para librerías que requieren el objeto nativo (TanStack persister).
-- **`STORAGE_KEYS`** const con las 4 claves del proyecto, tipado como literal union para evitar typos:
-  ```ts
-  export const STORAGE_KEYS = {
-    theme: "librecarga-theme",
-    superAdminActiveOrg: "sa_active_org",
-    chunkErrorReload: "chunk-error-auto-reload",
-    queryCache: "lc-query-cache-v1",
-    loginLoggedPrefix: "lc:login-logged:",
-  } as const;
-  ```
-  El prefix `lc:login-logged:` expone un helper `loginLoggedKey(userId)`.
+### Archivos a EDITAR
 
-## Migraciones
+| Path | Cambio |
+|------|--------|
+| `src/routes.tsx` | Quitar `const Changelog = lazy(...)` (línea 17) y `<Route path="/changelog" element={<Changelog />} />` (línea 135) |
+| `src/components/layout/sidebarItems.ts` | Eliminar el item `{ title: "Changelog", url: "/changelog", icon: ScrollText }` (línea 50) |
+| `src/components/layout/Breadcrumbs.tsx` | Eliminar `changelog: "Changelog"` del mapa (línea 22) |
+| `src/hooks/layout/useAppSidebarSections.ts` | Reemplazar `it.url === "/ayuda" || it.url === "/changelog"` por sólo `it.url === "/ayuda"` (línea 42) |
+| `src/hooks/dashboard/index.ts` | Quitar `export * from './useChangelogController';` |
+| `src/pages/dashboard/Ayuda.tsx` | Quitar el `<p>` con el link a `/changelog` (líneas 144-147) |
+| `src/constants/appVersion.ts` | Mantener `APP_VERSION` (lo usan Sentry, observability, portal, sidebar) pero actualizar el comentario (ya no se refiere al chunk0). |
 
-1. **ThemeContext.tsx** → `safeLocalStorage.getItem(STORAGE_KEYS.theme)` / `setItem`. Eliminar try/catch local.
-2. **OrganizationContext.tsx** → `safeLocalStorage.getItem(STORAGE_KEYS.superAdminActiveOrg)` / `setItem`.
-3. **queryClient.ts** → `storage: getStorageRef("local")`. La constante `lc-query-cache-v1` queda referenciada como `STORAGE_KEYS.queryCache`.
-4. **useLoginAudit.ts** → `safeSessionStorage.getItem(loginLoggedKey(user.id))` / `setItem` / `removeItem`. Eliminar los 3 try/catch + guards `typeof sessionStorage`.
-5. **main.tsx** → helpers `markChunkReloadAttempted() / hasChunkReloadBeenAttempted() / clearChunkReloadFlag()` exportados desde el wrapper para no duplicar lógica con ErrorBoundary.
-6. **ErrorBoundary.tsx** → consume los mismos 3 helpers de paso 5.
+### Archivos a CREAR
 
-## Tests
+| Path | Contenido |
+|------|-----------|
+| `CHANGELOG.md` (root) | Formato [Keep a Changelog](https://keepachangelog.com/), encabezado breve + lista descendente. Se siembra con las **10 entradas actuales de `recentChangelog`** convertidas a Markdown (un `## [version] - YYYY-MM-DD` por entrada + bullet con summary; el descriptivo largo queda como párrafo). El resto del histórico (v1–v8 completos) NO se migra — quien lo necesite mira el git history. |
 
-- Nuevo `src/lib/browserStorage/__tests__/browserStorage.test.ts`:
-  - Mock `window.localStorage` con un `Map` para verificar get/set/remove.
-  - Caso "storage lanza QuotaExceededError" → `setItem` no propaga; `console.warn` es llamado una vez.
-  - Caso SSR (`window === undefined`) → `getItem` devuelve `null`, `setItem` no-op.
-  - Caso `chunkErrorReload` helpers → flujo set→has→clear.
+## Política nueva de mantenimiento
+
+Cada cambio del agente que antes editaba 3 archivos (`APP_VERSION.ts` + `chunks/0.ts` + `changelogData.ts`) ahora hace **una sola edición**:
+
+1. Bump `APP_VERSION` en `src/constants/appVersion.ts`.
+2. Insertar una entrada nueva al inicio de `CHANGELOG.md`:
+   ```md
+   ## [11.30.0] - 2026-05-25
+   - **Eliminación del módulo Changelog**: UI + chunks TS removidos, migrado a CHANGELOG.md. Ahorro ~20% por loop.
+   ```
+3. Sin description larga obligatoria — un bullet por cambio basta. Detalles técnicos opcionales como sub-bullets sólo si son críticos.
 
 ## Verificación
 
-- `bunx tsc --noEmit` limpio.
-- `bunx eslint src --max-warnings=0` sin nuevos warnings.
-- `bunx vitest run` con los nuevos tests pasa (target ~630).
-- `rg "(localStorage|sessionStorage)\." src` devuelve sólo los archivos del wrapper + `integrations/supabase/client.ts`.
-- Smoke manual: tema persiste entre refresh; super-admin recuerda org activa; reload tras chunk error sólo ocurre una vez.
+- `bunx tsc --noEmit` limpio (sin imports rotos a `@/content/changelogData` ni `@/hooks/dashboard/useChangelogController`).
+- `bunx eslint src --max-warnings=0` sin warnings.
+- `bunx vitest run` pasa — el conteo bajará de **633 a ~622** (11 tests del archivo `changelog.test.ts` removidos).
+- `rg "useChangelogController|recentChangelog|loadChangelogMajor|loadLegacyChangelog|dedupeByVersion|ChangelogEntry|ChangelogEntryCard" src` → 0 resultados.
+- `rg "/changelog" src` → 0 resultados.
+- Navegar manualmente a `/changelog` debe dar 404 (NotFound route existente).
+- Sidebar ya no muestra "Changelog"; "Ayuda" sigue visible.
 
-## Memoria + changelog
+## Memoria
 
-- Nueva entrada `mem://technical/browser-storage` apuntando al wrapper como única vía.
-- Changelog `11.29.0` en `chunks/0.ts` + `recentChangelog` (manteniendo top 10).
-- Bump `APP_VERSION` a `11.29.0`.
+- **Core (`mem://index.md`)**: cambiar la línea "Record all changes chronologically in `src/pages/Changelog.tsx`" por "Append a single entry to `CHANGELOG.md` (root) + bump `APP_VERSION`. Format: `## [vX.Y.Z] - YYYY-MM-DD` + bullet."
+- **`mem://instructions/changelog-updates`**: reescribir con el nuevo procedimiento de 2 pasos; eliminar referencias a chunks, top-10, dedupe.
+
+## Primer commit del nuevo flujo
+
+Al final del refactor, agregar la entrada `11.30.0` en `CHANGELOG.md` documentando esta migración. Total: **bump `APP_VERSION` 11.29.0 → 11.30.0** + 1 línea en MD.
