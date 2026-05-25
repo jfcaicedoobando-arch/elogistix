@@ -1,8 +1,11 @@
 /**
  * /crm/configuracion — Etapas, motivos de pérdida y plantillas de mensaje.
+ * Una sola vista con acordeones (sin sub-tabs).
  */
 import { Settings } from "lucide-react";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Accordion, AccordionContent, AccordionItem, AccordionTrigger,
+} from "@/components/ui/accordion";
 import { PageHeader } from "@/components/shared/PageHeader";
 import EtapasPipelineEditor from "@/components/crm/EtapasPipelineEditor";
 import MotivosPerdidaEditor from "@/components/crm/MotivosPerdidaEditor";
@@ -21,22 +24,26 @@ export default function CrmConfiguracion() {
         title="Configuración del CRM"
         description="Etapas del pipeline, motivos de pérdida y plantillas de mensajes."
       />
-      <Tabs defaultValue="pipeline" className="w-full">
-        <TabsList>
-          <TabsTrigger value="pipeline">Pipeline</TabsTrigger>
-          <TabsTrigger value="motivos">Motivos de pérdida</TabsTrigger>
-          <TabsTrigger value="plantillas">Plantillas</TabsTrigger>
-        </TabsList>
-        <TabsContent value="pipeline" className="space-y-4 mt-4">
-          <EtapasPipelineEditor />
-        </TabsContent>
-        <TabsContent value="motivos" className="space-y-4 mt-4">
-          <MotivosPerdidaEditor />
-        </TabsContent>
-        <TabsContent value="plantillas" className="space-y-4 mt-4">
-          <PlantillasMensajeEditor />
-        </TabsContent>
-      </Tabs>
+      <Accordion type="single" collapsible defaultValue="pipeline" className="w-full space-y-2">
+        <AccordionItem value="pipeline" className="border rounded-md bg-card px-4">
+          <AccordionTrigger className="text-sm font-semibold">Pipeline (etapas)</AccordionTrigger>
+          <AccordionContent className="pt-2 pb-4">
+            <EtapasPipelineEditor />
+          </AccordionContent>
+        </AccordionItem>
+        <AccordionItem value="motivos" className="border rounded-md bg-card px-4">
+          <AccordionTrigger className="text-sm font-semibold">Motivos de pérdida</AccordionTrigger>
+          <AccordionContent className="pt-2 pb-4">
+            <MotivosPerdidaEditor />
+          </AccordionContent>
+        </AccordionItem>
+        <AccordionItem value="plantillas" className="border rounded-md bg-card px-4">
+          <AccordionTrigger className="text-sm font-semibold">Plantillas de mensaje</AccordionTrigger>
+          <AccordionContent className="pt-2 pb-4">
+            <PlantillasMensajeEditor />
+          </AccordionContent>
+        </AccordionItem>
+      </Accordion>
     </div>
   );
 }
