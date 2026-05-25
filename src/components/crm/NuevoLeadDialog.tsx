@@ -35,6 +35,7 @@ import {
   type CrmLeadEstado,
   type CrmLeadFuente,
 } from "@/hooks/crm/useLeads";
+import { useCrearActividad } from "@/hooks/crm/useActividades";
 
 interface Props {
   open: boolean;
