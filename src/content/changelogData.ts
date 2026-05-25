@@ -22,12 +22,12 @@ export interface ChangelogEntry {
  */
 export const recentChangelog: ChangelogEntry[] = [
   {
-    version: "11.19.0",
+    version: "11.20.0",
     date: "2026-05-25",
     type: "minor",
-    title: "Auditoría loop 7 — App.tsx, barriles services y libs >200 LOC",
-    summary: "App.tsx (265→43), services/crm (228→9 barrel), services/embarque/queries/listado (223→17), services/auditoria (205→11), lib/formatters (243→6), lib/parsers/dashboard, lib/domain/proyeccionFacturacion, lib/csv/importSchemas, useNuevoEmbarqueWizard (230→139), useHallazgosTablaState (213→158).",
-    description: "Power of 10 — todos los archivos del proyecto bajo 200 LOC. App.tsx → routes.tsx + lib/queryClient.ts. services/crm/index.ts → oportunidadCotizaciones+lineage+leaderboard+cotizacionDesdeOportunidad. services/embarque/queries/listado.ts → paginados+exportListado+extras. services/auditoria/index.ts → reporte+revisiones+comentarios+snooze+snapshots. lib/formatters/index.ts → numbers+dates+text+phone+places. lib/parsers/dashboard.ts → dashboardTypes. lib/domain/proyeccionFacturacion.ts → types+conversion+agrupar+kpis+meses. lib/csv/importSchemas.ts → importSchemasShared+importSchemaCliente+importSchemaProveedor. useNuevoEmbarqueWizard.ts → useNuevoEmbarqueExpediente + useNuevoEmbarqueCotVinculada. useHallazgosTablaState.ts → hallazgosTablaFilters. Sin cambios funcionales — todos los barrels preservan API pública. 626 tests verdes. APP_VERSION 11.19.0.",
+    title: "Auditoría loop 8 — barrel violations (0) y complejidad ciclomática",
+    summary: "no-restricted-imports: 53→0. Barrel hooks/crm/index.ts. Complejidad reducida: OportunidadDetalle (33→<15), CrmDashboard (27→<15), useAutomatizacionesEtapa (26→<15), useConvertirLead (27→<15).",
+    description: "P0.1 cerrado: creado src/hooks/crm/index.ts y reemplazados 53 imports a archivos internos por imports al barrel del dominio (53→0). P0.3 (mappers) actualizado: los archivos originalmente reportados ya estaban bajo 200 LOC; el verdadero hot spot eran 4 funciones con complejidad >25. Refactor: OportunidadDetalle.tsx dividido en guard + OportunidadDetalleContent + OportunidadKpisCards + DatosComercialesCard + ContactoRapidoCard + useOportunidadDetalleActions. CrmDashboard.tsx → VencidasAlert + ActividadesHoyCard + CerrandoSemanaCard + LeadsSinContactarCard + TopDealsCard. useAutomatizacionesEtapa.ts → automatizacionesEtapaActions (notifyVendedorMovido, crearTareaGanada, cancelarActividadesPerdida, crearTareaSeguimiento). useConvertirLead.ts → convertirHelpers (resolveClienteForConversion, fetchPrimeraEtapaAbierta). 626 tests verdes. APP_VERSION 11.20.0.",
   },
   {
     version: "11.17.0",
