@@ -16,8 +16,10 @@ import {
   useActividades, ACTIVIDAD_TIPOS,
   type CrmActividadRow, type CrmActividadTipo,
 } from "@/hooks/crm/useActividades";
+import ActividadRowActions from "@/components/crm/ActividadRowActions";
+import { usePermissions } from "@/hooks/shared";
 
-const columns: ColumnDef<CrmActividadRow, unknown>[] = defineColumns<CrmActividadRow>([
+const baseColumns: ColumnDef<CrmActividadRow, unknown>[] = defineColumns<CrmActividadRow>([
   { id: "tipo", header: "Tipo", meta: { width: "w-[100px]" }, cell: ({ row }) => <Badge variant="outline">{row.original.tipo}</Badge> },
   { id: "asunto", header: "Asunto", meta: { className: "font-medium" }, cell: ({ row }) => row.original.asunto },
   { id: "entidad", header: "Entidad", meta: { className: "text-xs" }, cell: ({ row }) => row.original.entidad_tipo },
@@ -33,6 +35,11 @@ const columns: ColumnDef<CrmActividadRow, unknown>[] = defineColumns<CrmActivida
     cell: ({ row }) => row.original.fecha_programada ? new Date(row.original.fecha_programada).toLocaleString("es-MX") : "—",
   },
 ]);
+
+const actionColumn: ColumnDef<CrmActividadRow, unknown> = {
+  id: "acciones", header: "", meta: { width: "w-[110px]" },
+  cell: ({ row }) => <ActividadRowActions actividad={row.original} />,
+};
 
 export default function Actividades() {
   const [search, setSearch] = useState("");
