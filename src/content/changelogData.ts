@@ -101,14 +101,6 @@ export const recentChangelog: ChangelogEntry[] = [
     summary: "useJsonCargoTracking (250→110), useCrmDashboard (213→170), useTrackingLiveCard (209→100). Lógica pura extraída + 17 tests nuevos.",
     description: "Power of 10: useJsonCargoTracking (250) → 110 con extractSummary y PrefixMismatchError en lib/jsoncargo/summary.ts; buildFechasUpdate/shouldAvanzarArribo/registrarEventoArribo en services/embarque/jsoncargoFechas.ts. useCrmDashboard (213→170) con computePipelinePonderado/computeTopDeals/computeEmbudo en lib/crm/dashboardAggregates.ts. useTrackingLiveCard (209→100) con jsoncargoDateToYmd/computeFechasPropuestas/derivePrefixState/buildApplyFechasArgs/handleSyncResult/handleSyncError en lib/jsoncargo/trackingLiveHelpers.ts. Re-exports preservan API pública en los 3 hooks. 3 archivos de tests nuevos (17 casos). Suite verde. APP_VERSION 11.15.0.",
   },
-  {
-    version: "11.14.0",
-    date: "2026-05-25",
-    type: "minor",
-    title: "Auditoría loop 2 — split useAuditoriaRevisiones + extracción de helpers puros",
-    summary: "useAuditoriaRevisiones (259) → barrel de 11 líneas; useAuditoriaEjecutivo (256→94); useEmbarquesPageState (256→178); useNuevoEmbarqueWizard (260→230). +3 archivos de tests.",
-    description: "useAuditoriaRevisiones.ts (259) dividido en revisiones/{hash,query,marcar,desmarcar,asignar}.ts; barrel preserva API. lib/auditoria/ejecutivoAgregados.ts (182 líneas) extraído de useAuditoriaEjecutivo (256→94). lib/embarque/embarquesPageHelpers.ts (105) extraído de useEmbarquesPageState (256→178). lib/domain/embarqueWizardStepValidator.ts (59) extraído de useNuevoEmbarqueWizard (260→230). 3 tests nuevos (15 casos): ejecutivoAgregados, embarquesPageHelpers, embarqueWizardStepValidator. Suite: 85 archivos / 592 tests verdes. APP_VERSION 11.14.0.",
-  },
 ];
 
 /** Deduplica por version conservando la primera ocurrencia (recentChangelog gana). */
