@@ -6,10 +6,11 @@
  * accionables. La pestaña "Detalle operativo" sigue conservando el desglose
  * tradicional para los operadores.
  */
+import { lazy, Suspense } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { ChartSkeleton } from "@/components/shared/ChartSkeleton";
 import type { AuditoriaEjecutivoData } from "@/hooks/auditoria";
 import { useAutoCapturarSnapshot } from "@/hooks/auditoria";
-import { AuditoriaTendenciaChart } from "./AuditoriaTendenciaChart";
 import { AuditoriaOperadoresCard } from "./AuditoriaOperadoresCard";
 import { AuditoriaRiesgoFinancieroCard } from "./AuditoriaRiesgoFinancieroCard";
 import { EjecutivoScoreCard } from "./ejecutivo/EjecutivoScoreCard";
@@ -17,6 +18,12 @@ import { EjecutivoAtencionCard } from "./ejecutivo/EjecutivoAtencionCard";
 import { EjecutivoAlertasUrgencia } from "./ejecutivo/EjecutivoAlertasUrgencia";
 import { EjecutivoDistribucionRow } from "./ejecutivo/EjecutivoDistribucionRow";
 import { EjecutivoPorReglaGrid } from "./ejecutivo/EjecutivoPorReglaGrid";
+
+// Lazy: difiere recharts (~95 KB gzip) fuera del TTI de la pestaña ejecutiva.
+const AuditoriaTendenciaChart = lazy(() =>
+  import("./AuditoriaTendenciaChart").then((m) => ({ default: m.AuditoriaTendenciaChart })),
+);
+
 
 interface Props {
   data: AuditoriaEjecutivoData;
@@ -73,7 +80,9 @@ export function AuditoriaEjecutivoTab({ data, onDrillDown }: Props) {
           total={data.riesgoFinancieroMxn}
           porRegla={data.riesgoPorRegla}
         />
-        <AuditoriaTendenciaChart />
+        <Suspense fallback={<ChartSkeleton height={300} />}>
+          <AuditoriaTendenciaChart />
+        </Suspense>
       </div>
 
       <AuditoriaOperadoresCard

@@ -1,19 +1,22 @@
+import { lazy, Suspense } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import { TrendingUp, AlertTriangle, Package, Container, Ship } from "lucide-react";
-import {
-  LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip,
-  ResponsiveContainer,
-} from "recharts";
+import { ChartSkeleton } from "@/components/shared/ChartSkeleton";
 import { MAX_CONTENEDORES, type PeriodoFiltro } from "@/hooks/operaciones";
 import { formatCurrency, formatCurrencyCompact } from "@/lib/formatters";
 import { KpiCard } from "@/components/operaciones/KpiCard";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { DesempenoOperadores } from "@/components/operaciones/DesempenoOperadores";
 import { useOperacionesPageController } from "@/hooks/operaciones";
+
+// Lazy: difiere recharts (~95 KB gzip) fuera del TTI.
+const OperacionesTendenciaChart = lazy(
+  () => import("@/components/operaciones/OperacionesTendenciaChart"),
+);
 
 export default function Operaciones() {
   const {
@@ -28,18 +31,12 @@ export default function Operaciones() {
   function renderTendenciaChart() {
     if (isLoading) return <Skeleton className="h-[260px] w-full" />;
     return (
-      <ResponsiveContainer width="100%" height={260}>
-        <LineChart data={chartData} margin={{ top: 20, right: 20, left: 0, bottom: 0 }}>
-          <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
-          <XAxis dataKey="mes" tick={{ fontSize: 12 }} />
-          <YAxis allowDecimals={false} tick={{ fontSize: 12 }} />
-          <RechartsTooltip />
-          <Line type="monotone" dataKey="creadas" name="Por ETD" stroke="hsl(var(--kpi-info))" strokeWidth={2} dot={{ r: 4, fill: "hsl(var(--kpi-info))" }} />
-          <Line type="monotone" dataKey="llegadas" name="Llegadas" stroke="hsl(var(--kpi-success))" strokeWidth={2} dot={{ r: 4, fill: "hsl(var(--kpi-success))" }} />
-        </LineChart>
-      </ResponsiveContainer>
+      <Suspense fallback={<ChartSkeleton height={260} />}>
+        <OperacionesTendenciaChart data={chartData} />
+      </Suspense>
     );
   }
+
 
   return (
     <div className="space-y-6">

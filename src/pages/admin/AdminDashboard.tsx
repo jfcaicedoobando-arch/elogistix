@@ -1,23 +1,21 @@
+import { lazy, Suspense } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Building2, Users, Ship, FileText, ArrowRight } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Skeleton } from "@/components/ui/skeleton";
-import {
-  ResponsiveContainer,
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  Tooltip as RTooltip,
-  Legend,
-  CartesianGrid,
-} from "recharts";
+import { ChartSkeleton } from "@/components/shared/ChartSkeleton";
 import {
   useAdminDashboardStats,
   useAdminOrgActivity,
   useAdminRecentOrgs,
 } from "@/hooks/admin";
 import { formatDate } from "@/lib/formatters";
+
+// Lazy: difiere recharts fuera del TTI.
+const AdminDashboardActivityChart = lazy(
+  () => import("@/components/admin/AdminDashboardActivityChart"),
+);
+
 
 export default function AdminDashboard() {
   const navigate = useNavigate();
@@ -107,26 +105,9 @@ export default function AdminDashboard() {
                 Sin datos disponibles.
               </div>
             ) : (
-              <div className="h-[260px]">
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={activity} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                    <XAxis dataKey="nombre" stroke="hsl(var(--muted-foreground))" fontSize={12} />
-                    <YAxis stroke="hsl(var(--muted-foreground))" fontSize={12} allowDecimals={false} />
-                    <RTooltip
-                      contentStyle={{
-                        background: "hsl(var(--popover))",
-                        border: "1px solid hsl(var(--border))",
-                        borderRadius: 8,
-                        fontSize: 12,
-                      }}
-                    />
-                    <Legend wrapperStyle={{ fontSize: 12 }} />
-                    <Bar dataKey="embarques" name="Embarques" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
-                    <Bar dataKey="cotizaciones" name="Cotizaciones" fill="hsl(var(--info))" radius={[4, 4, 0, 0]} />
-                  </BarChart>
-                </ResponsiveContainer>
-              </div>
+              <Suspense fallback={<ChartSkeleton height={260} />}>
+                <AdminDashboardActivityChart data={activity} />
+              </Suspense>
             )}
           </CardContent>
         </Card>
