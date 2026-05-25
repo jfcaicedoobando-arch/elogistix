@@ -117,9 +117,34 @@ export default tseslint.config(
   {
     // Hooks y services pueden hacer imports internos a su propio árbol
     // (composición intra-dominio, sub-barrels, helpers privados).
-    files: ["src/hooks/**", "src/services/**", "src/lib/**"],
+    files: ["src/hooks/**", "src/services/**"],
     rules: {
       "no-restricted-imports": "off",
+    },
+  },
+  {
+    // `src/lib/**` es la capa más baja: NO puede depender de hooks ni de
+    // componentes (eso invierte la jerarquía Pages→Hooks→Services→Lib).
+    // Tipos compartidos viven en `src/types/`.
+    files: ["src/lib/**"],
+    ignores: ["src/lib/**/__tests__/**"],
+    rules: {
+      "no-restricted-imports": ["error", {
+        patterns: [
+          {
+            group: ["@/hooks/*", "@/hooks/**"],
+            message: "lib/ no puede importar de hooks/. Mueve el tipo a src/types/ o invierte la dependencia.",
+          },
+          {
+            group: ["@/components/*", "@/components/**"],
+            message: "lib/ no puede importar de components/. lib/ es puro (sin React).",
+          },
+          {
+            group: ["@/pages/*", "@/pages/**"],
+            message: "lib/ no puede importar de pages/.",
+          },
+        ],
+      }],
     },
   },
   {
