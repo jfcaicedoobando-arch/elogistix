@@ -8,6 +8,7 @@
  */
 import * as Sentry from "@sentry/react";
 import { APP_VERSION } from "@/constants/appVersion";
+import { isDynamicImportErrorMessage } from "@/lib/ui/dynamicImportError";
 
 const DSN = "https://e44f92892772533298354b89d9ef3ddb@o4511415732404224.ingest.us.sentry.io/4511415734108160";
 
@@ -16,6 +17,18 @@ Sentry.init({
   release: `libre-carga@${APP_VERSION}`,
   environment: import.meta.env.MODE,
   tracesSampleRate: 0.1,
+  beforeSend(event, hint) {
+    // Filtrar errores transitorios de carga de chunks (Vite): la app se
+    // auto-recupera con un reload, no aportan señal a Sentry.
+    const originalMsg =
+      (hint?.originalException as Error | undefined)?.message ??
+      (typeof hint?.originalException === "string" ? hint.originalException : undefined);
+    if (isDynamicImportErrorMessage(originalMsg)) return null;
+    if (isDynamicImportErrorMessage(event.message)) return null;
+    const values = event.exception?.values;
+    if (values && values.some((v) => isDynamicImportErrorMessage(v.value))) return null;
+    return event;
+  },
   integrations: [
     Sentry.browserTracingIntegration(),
     Sentry.feedbackIntegration({
