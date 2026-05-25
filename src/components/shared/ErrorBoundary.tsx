@@ -55,6 +55,14 @@ export class ErrorBoundary extends React.Component<Props, State> {
       tryReloadForChunkError();
       return;
     }
+    // Reporte a Sentry con el componentStack como contexto adicional.
+    Sentry.withScope((scope) => {
+      scope.setTag("source", "react-error-boundary");
+      if (errorInfo.componentStack) {
+        scope.setContext("react", { componentStack: errorInfo.componentStack });
+      }
+      Sentry.captureException(error);
+    });
     // Reporte a app_logs vía servicio dedicado. Fire-and-forget; nunca debe romper la UI.
     logClientError({
       message: error.message,
