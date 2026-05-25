@@ -9,6 +9,7 @@ interface FiltrosRentabilidad {
   modo?: string;
 }
 
+import type { RentabilidadCliente } from "@/types/rentabilidad";
 export type { RentabilidadCliente } from "@/types/rentabilidad";
 
 /**
