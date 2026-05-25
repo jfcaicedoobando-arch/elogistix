@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import { calcularUtilidad } from '@/lib/financial/financialUtils';
 import type { ConceptoVentaLocal, ConceptoCostoLocal } from "@/types/concepto";
 
