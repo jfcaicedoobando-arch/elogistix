@@ -2,6 +2,14 @@ import type { ChangelogEntry } from "../../../changelogData";
 
 export const chunk0: ChangelogEntry[] = [
   {
+    version: "11.2.1",
+    date: "2026-05-25",
+    type: "patch",
+    title: "CRM: navegación interna por tabs",
+    summary: "El sidebar global muestra un único item 'CRM'; al entrar se navega entre Dashboard, Leads, Oportunidades, Actividades, Forecast y Reportes mediante tabs.",
+    description: "Nuevo layout src/pages/crm/CrmLayout.tsx con header + tabs (NavLink) para las 6 secciones del módulo. App.tsx ahora monta /crm como ruta padre con rutas anidadas (index, leads, leads/:id, oportunidades, oportunidades/:id, actividades, forecast, reportes). SIDEBAR_CRM_ITEMS reducido a un solo enlace 'CRM' → /crm. APP_VERSION 11.2.1.",
+  },
+  {
     version: "11.2.0",
     date: "2026-05-25",
     type: "minor",

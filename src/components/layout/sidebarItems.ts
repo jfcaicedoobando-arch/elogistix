@@ -17,7 +17,6 @@ import {
   HelpCircle,
   Bug,
   Target,
-  Users,
 } from "lucide-react";
 import type { SidebarItem } from "@/components/layout/SidebarGroupBlock";
 

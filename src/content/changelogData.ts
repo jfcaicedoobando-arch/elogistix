@@ -22,6 +22,14 @@ export interface ChangelogEntry {
  */
 export const recentChangelog: ChangelogEntry[] = [
   {
+    version: "11.2.1",
+    date: "2026-05-25",
+    type: "patch",
+    title: "CRM: navegación interna por tabs",
+    summary: "Sidebar muestra un solo item 'CRM'; las secciones internas (Dashboard, Leads, Oportunidades, Actividades, Forecast, Reportes) viven en tabs dentro del módulo.",
+    description: "Nuevo CrmLayout con tabs (NavLink) y rutas anidadas bajo /crm. SIDEBAR_CRM_ITEMS reducido a un único enlace. APP_VERSION 11.2.1.",
+  },
+  {
     version: "11.2.0",
     date: "2026-05-25",
     type: "minor",
