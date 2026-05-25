@@ -2,6 +2,14 @@ import type { ChangelogEntry } from "../../../changelogData";
 
 export const chunk0: ChangelogEntry[] = [
   {
+    version: "11.7.2",
+    date: "2026-05-25",
+    type: "patch",
+    title: "Fix cron de alertas: columnas correctas en app_logs",
+    summary: "La función detectar_alertas_app_logs() fallaba cada 5 min con 'column function_name does not exist'.",
+    description: "Migración: recrea public.detectar_alertas_app_logs() usando los nombres reales de columna de public.app_logs (fn, ts, status_code) en vez de los inexistentes function_name/created_at/status. El cron job ahora puede agrupar errores 5xx por función y generar correctamente entradas en alertas_sistema sin abortar. Detectado al revisar postgres_logs (ERROR recurrente cada ~5 min). Sin cambios frontend. APP_VERSION 11.7.2."
+  },
+  {
     version: "11.7.1",
     date: "2026-05-25",
     type: "patch",
