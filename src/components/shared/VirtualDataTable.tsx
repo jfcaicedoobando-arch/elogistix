@@ -73,10 +73,10 @@ const DEFAULTS = {
 /** Aplica defaults a las props del componente sin un bloque grande de
  *  destructuring (que disparaba `complexity > 15`). */
 function withDefaults<T>(props: VirtualDataTableProps<T>) {
-  const cleaned: Partial<VirtualDataTableProps<T>> = {};
-  for (const key in props) {
-    const v = (props as Record<string, unknown>)[key];
-    if (v !== undefined) (cleaned as Record<string, unknown>)[key] = v;
+  const src = props as unknown as Record<string, unknown>;
+  const cleaned: Record<string, unknown> = {};
+  for (const key in src) {
+    if (src[key] !== undefined) cleaned[key] = src[key];
   }
   return { ...DEFAULTS, ...cleaned } as VirtualDataTableProps<T> &
     Required<Pick<typeof DEFAULTS, keyof typeof DEFAULTS>>;

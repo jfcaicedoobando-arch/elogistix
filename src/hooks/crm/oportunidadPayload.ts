@@ -38,6 +38,10 @@ export function buildOportunidadInsertPayload(
   return {
     ...defaults,
     ...stripUndefined(input),
+    // Campos requeridos por el schema: los reafirmamos para que TS no los
+    // pierda al pasar por `Partial<T>` del helper.
+    nombre: input.nombre,
+    etapa_id: input.etapa_id,
     vendedor_id: hasExplicitVendedor ? input.vendedor_id : (user?.id ?? null),
     created_by: user?.id ?? null,
   };
