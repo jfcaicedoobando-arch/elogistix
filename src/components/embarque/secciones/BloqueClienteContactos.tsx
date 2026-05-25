@@ -4,7 +4,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import type { EmbarqueFormValues } from "@/hooks/embarque";
 import { MODOS, TIPOS, INCOTERMS } from "@/constants/wizardConstants";
-import type { EmbarqueValidationErrors } from "../StepDatosGenerales";
+import type { EmbarqueValidationErrors } from "@/types/embarque";
 
 interface Contacto {
   id: string;

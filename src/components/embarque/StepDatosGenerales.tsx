@@ -20,12 +20,8 @@ interface Cliente {
   nombre: string;
 }
 
-export interface EmbarqueValidationErrors {
-  modo?: string;
-  tipo?: string;
-  clienteId?: string;
-  descripcionMercancia?: string;
-}
+export type { EmbarqueValidationErrors } from "@/types/embarque";
+import type { EmbarqueValidationErrors } from "@/types/embarque";
 
 interface Props {
   clientes: Cliente[];
