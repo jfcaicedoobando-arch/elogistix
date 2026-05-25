@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import type { Tables, TablesInsert } from "@/integrations/supabase/types";
+import type { TablesInsert } from "@/integrations/supabase/types";
 import { queryKeys } from "@/lib/query";
 import { useOrgFilter } from "@/hooks/shared/useOrgFilter";
 import {
@@ -15,9 +15,9 @@ import {
   fetchEmbarquesCliente,
   fetchCotizacionesCliente,
 } from "@/services/cliente";
+import type { Cliente, ContactoCliente } from "@/types/cliente";
 
-export type Cliente = Tables<"clientes">;
-export type ContactoCliente = Tables<"contactos_cliente">;
+export type { Cliente, ContactoCliente } from "@/types/cliente";
 
 // --- Hook paginado server-side para la vista de lista ---
 

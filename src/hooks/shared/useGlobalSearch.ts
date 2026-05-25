@@ -1,13 +1,8 @@
 import { useCallback } from "react";
 import { buscarGlobal } from "@/services/search";
+import type { GlobalSearchResult } from "@/types/search";
 
-export interface GlobalSearchResult {
-  id: string;
-  label: string;
-  sublabel?: string;
-  type: "embarque" | "cliente" | "proveedor" | "factura" | "cotizacion";
-  url: string;
-}
+export type { GlobalSearchResult } from "@/types/search";
 
 /**
  * Hook para búsqueda global. Delega el I/O al search service.
