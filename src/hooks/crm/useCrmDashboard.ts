@@ -5,6 +5,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { queryKeys } from "@/lib/query";
 import {
   isoDaysFromNow,
   computePipelinePonderado,
@@ -54,7 +55,7 @@ export interface CrmDashboardData {
 export function useCrmDashboardData() {
   const { user } = useAuth();
   return useQuery<CrmDashboardData>({
-    queryKey: ["crm", "dashboard", user?.id],
+    queryKey: queryKeys.crm.dashboard(user?.id),
     queryFn: async () => {
       const hoyInicio = new Date(); hoyInicio.setHours(0, 0, 0, 0);
       const hoyFin = new Date(); hoyFin.setHours(23, 59, 59, 999);
@@ -134,7 +135,7 @@ export function useCrmDashboardData() {
 export function useActividadesVencidasCount() {
   const { user } = useAuth();
   return useQuery({
-    queryKey: ["crm", "actividades", "vencidas-count", user?.id],
+    queryKey: queryKeys.crm.actividades.vencidasCount(user?.id),
     enabled: !!user?.id,
     queryFn: async () => {
       const { count, error } = await supabase
@@ -154,7 +155,7 @@ export function useActividadesVencidasCount() {
 export function useActividadesVencidasList(limit = 5) {
   const { user } = useAuth();
   return useQuery({
-    queryKey: ["crm", "actividades", "vencidas-list", user?.id, limit],
+    queryKey: queryKeys.crm.actividades.vencidasList(user?.id, limit),
     enabled: !!user?.id,
     queryFn: async () => {
       const { data, error } = await supabase

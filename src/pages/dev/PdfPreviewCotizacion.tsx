@@ -10,12 +10,13 @@ import { useTasaIVA } from "@/hooks/catalogos";
 import type { CotizacionRow } from "@/types/cotizacion";
 import { PdfPreview } from "@/pdf/render/PdfPreview";
 import { CotizacionDocument } from "@/pdf/documents/CotizacionDocument";
+import { queryKeys } from "@/lib/query";
 
 export default function PdfPreviewCotizacionPage() {
   const { id } = useParams<{ id: string }>();
   const tasaIva = useTasaIVA();
   const { data, isLoading, error } = useQuery({
-    queryKey: ["pdf-preview-cotizacion", id],
+    queryKey: queryKeys.pdfPreviewCotizacion(id ?? ""),
     enabled: !!id,
     queryFn: async () => {
       const { data, error } = await supabase

@@ -6,6 +6,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
 import { buildProximasMap } from "@/lib/crm/proximasActividades";
+import { queryKeys } from "@/lib/query";
 
 type CrmEntidadTipo = Database["public"]["Enums"]["crm_entidad_tipo"];
 
@@ -26,7 +27,7 @@ export function useProximasActividades(
 ) {
   const ids = [...entidadIds].sort();
   return useQuery({
-    queryKey: ["crm", "proximas-actividades", entidadTipo, ids],
+    queryKey: queryKeys.crm.proximasActividades(entidadTipo, ids),
     enabled: ids.length > 0,
     staleTime: 60_000,
     queryFn: async (): Promise<Map<string, ProximaActividad>> => {

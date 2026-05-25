@@ -5,6 +5,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { fetchOrgMembers, type OrgMemberRow } from "@/services/admin/members";
 import { useOrganization } from "@/contexts/OrganizationContext";
+import { queryKeys } from "@/lib/query";
 
 export interface ResponsableOption {
   id: string;
@@ -15,7 +16,7 @@ export interface ResponsableOption {
 export function useOrgMembersAsignables() {
   const { organizationId } = useOrganization();
   return useQuery({
-    queryKey: ["auditoria", "asignables", organizationId],
+    queryKey: queryKeys.auditoria.asignables(organizationId),
     enabled: !!organizationId,
     staleTime: 5 * 60_000,
     queryFn: async (): Promise<ResponsableOption[]> => {

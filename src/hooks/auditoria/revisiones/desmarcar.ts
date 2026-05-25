@@ -6,6 +6,7 @@ import { insertBitacora } from "@/services/bitacora";
 import { logger } from "@/lib/observability/logger";
 import { AUDITORIA_REVISIONES_KEY } from "./hash";
 import { resolveAuthUser } from "./query";
+import { queryKeys } from "@/lib/query";
 
 export function useDesmarcarRevisado() {
   const queryClient = useQueryClient();
@@ -34,7 +35,7 @@ export function useDesmarcarRevisado() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: AUDITORIA_REVISIONES_KEY });
-      queryClient.invalidateQueries({ queryKey: ["auditoria", "embarques"] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.auditoria.embarques });
       toast.success("Marca de revisión eliminada");
     },
     onError: (err: Error) => {

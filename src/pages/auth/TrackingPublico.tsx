@@ -10,6 +10,7 @@ import { fetchTrackingPublico, type TrackingPublicoData } from "@/services/track
 import { TrackingPublicoErrorCard } from "@/components/tracking/TrackingPublicoErrorCard";
 import { TrackingPublicoLoading } from "@/components/tracking/TrackingPublicoLoading";
 import { TrackingPublicoTimeline } from "@/components/tracking/TrackingPublicoTimeline";
+import { queryKeys } from "@/lib/query";
 
 function transporteLabel(e: TrackingPublicoData["embarque"]): string {
   return e.naviera || e.aerolinea || e.transportista || "—";
@@ -19,7 +20,7 @@ export default function TrackingPublico() {
   const { token } = useParams<{ token: string }>();
 
   const { data, isLoading, error } = useQuery<TrackingPublicoData>({
-    queryKey: ["tracking-public", token],
+    queryKey: queryKeys.trackingPublico(token ?? ""),
     queryFn: () => fetchTrackingPublico(token!),
     enabled: !!token,
     retry: false,

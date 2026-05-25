@@ -79,7 +79,7 @@ export function useSyncJsonCargo() {
       return data!;
     },
     onSuccess: (_r, args) => {
-      qc.invalidateQueries({ queryKey: ["tracking_externo", "jsoncargo", args.embarqueId] });
+      qc.invalidateQueries({ queryKey: queryKeys.jsonCargo.byEmbarque(args.embarqueId) });
       qc.invalidateQueries({ queryKey: queryKeys.embarques.eventos(args.embarqueId) });
       qc.invalidateQueries({ queryKey: queryKeys.embarques.detail(args.embarqueId) });
     },

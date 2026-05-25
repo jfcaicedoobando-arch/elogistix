@@ -22,6 +22,14 @@ export interface ChangelogEntry {
  */
 export const recentChangelog: ChangelogEntry[] = [
   {
+    version: "11.24.0",
+    date: "2026-05-25",
+    type: "minor",
+    title: "Centralización de query keys (P2)",
+    summary: "110 literales queryKey migrados a factories en lib/query (crm, auditoria, appLogs, facturacion, misc).",
+    description: "queryKeys ampliado con dominios crm/auditoria/appLogs/facturacion/misc. 44 archivos migrados (hooks/crm, hooks/auditoria, hooks/admin/logs, hooks/facturacion, hooks/embarque/useJsonCargoTracking, pages Papelera/Idempotencia/TrackingPublico/PdfPreviewCotizacion). Invalidaciones usan el prefijo más amplio (queryKeys.crm.X.all, dashboardAll). 0 strings hardcodeados de queryKey fuera de lib/query. 626 tests verdes. APP_VERSION 11.24.0.",
+  },
+  {
     version: "11.23.0",
     date: "2026-05-25",
     type: "minor",

@@ -1,6 +1,7 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { queryKeys } from "@/lib/query";
 import type { LeadInput } from "./constants";
 import { buildLeadInsertPayload } from "./leadPayload";
 
@@ -15,8 +16,8 @@ export function useActualizarLeadsBulk() {
       return { updated: ids.length };
     },
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["crm", "leads"] });
-      qc.invalidateQueries({ queryKey: ["crm", "dashboard"] });
+      qc.invalidateQueries({ queryKey: queryKeys.crm.leads.all });
+      qc.invalidateQueries({ queryKey: queryKeys.crm.dashboardAll });
     },
   });
 }
@@ -36,8 +37,8 @@ export function useEliminarLeadsBulk() {
       return { deleted: ids.length };
     },
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["crm", "leads"] });
-      qc.invalidateQueries({ queryKey: ["crm", "dashboard"] });
+      qc.invalidateQueries({ queryKey: queryKeys.crm.leads.all });
+      qc.invalidateQueries({ queryKey: queryKeys.crm.dashboardAll });
     },
   });
 }
@@ -63,8 +64,8 @@ export function useCrearLeadsBulk() {
       return { inserted };
     },
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["crm", "leads"] });
-      qc.invalidateQueries({ queryKey: ["crm", "dashboard"] });
+      qc.invalidateQueries({ queryKey: queryKeys.crm.leads.all });
+      qc.invalidateQueries({ queryKey: queryKeys.crm.dashboardAll });
     },
   });
 }

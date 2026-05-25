@@ -3,6 +3,7 @@
  */
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { queryKeys } from "@/lib/query";
 
 export type PlantillaCanal = "email" | "whatsapp";
 
@@ -22,7 +23,7 @@ const COLS = "id, organization_id, nombre, canal, asunto, cuerpo, activa, create
 
 export function usePlantillasMensaje(canal?: PlantillaCanal, soloActivas = true) {
   return useQuery<PlantillaMensajeRow[]>({
-    queryKey: ["crm", "plantillas", canal ?? "all", soloActivas],
+    queryKey: queryKeys.crm.plantillas.list(canal, soloActivas),
     queryFn: async () => {
       let q = supabase.from("crm_plantillas_mensaje").select(COLS).order("nombre");
       if (canal) q = q.eq("canal", canal);
@@ -56,7 +57,7 @@ export function useCrearPlantilla() {
       });
       if (error) throw error;
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["crm", "plantillas"] }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.crm.plantillas.all }),
   });
 }
 
@@ -67,7 +68,7 @@ export function useActualizarPlantilla() {
       const { error } = await supabase.from("crm_plantillas_mensaje").update(patch).eq("id", id);
       if (error) throw error;
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["crm", "plantillas"] }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.crm.plantillas.all }),
   });
 }
 
@@ -81,7 +82,7 @@ export function useEliminarPlantilla() {
         .eq("id", id);
       if (error) throw error;
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["crm", "plantillas"] }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.crm.plantillas.all }),
   });
 }
 

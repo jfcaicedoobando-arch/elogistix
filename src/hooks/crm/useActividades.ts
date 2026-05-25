@@ -10,6 +10,7 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
 import { useAuth } from "@/contexts/AuthContext";
+import { queryKeys } from "@/lib/query";
 
 export type CrmActividadRow = Database["public"]["Tables"]["crm_actividades"]["Row"];
 export type CrmActividadTipo = Database["public"]["Enums"]["crm_actividad_tipo"];
@@ -52,7 +53,7 @@ export function useActividades(f: ActividadFiltros = {}) {
     pageSize = 25,
   } = f;
   return useQuery({
-    queryKey: ["crm", "actividades", { search, tipo, estado, responsable, entidadTipo, entidadId, page, pageSize, uid: user?.id }],
+    queryKey: queryKeys.crm.actividades.list({ search, tipo, estado, responsable, entidadTipo, entidadId, page, pageSize, uid: user?.id }),
     placeholderData: keepPreviousData,
     queryFn: async () => {
       let q = supabase
@@ -107,8 +108,8 @@ export function useCrearActividad() {
       return data;
     },
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["crm", "actividades"] });
-      qc.invalidateQueries({ queryKey: ["crm", "kpis"] });
+      qc.invalidateQueries({ queryKey: queryKeys.crm.actividades.all });
+      qc.invalidateQueries({ queryKey: queryKeys.crm.kpis });
     },
   });
 }
@@ -124,8 +125,8 @@ export function useCompletarActividad() {
       if (error) throw error;
     },
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["crm", "actividades"] });
-      qc.invalidateQueries({ queryKey: ["crm", "dashboard"] });
+      qc.invalidateQueries({ queryKey: queryKeys.crm.actividades.all });
+      qc.invalidateQueries({ queryKey: queryKeys.crm.dashboardAll });
     },
   });
 }
@@ -144,8 +145,8 @@ export function usePosponerActividad() {
       if (error) throw error;
     },
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["crm", "actividades"] });
-      qc.invalidateQueries({ queryKey: ["crm", "dashboard"] });
+      qc.invalidateQueries({ queryKey: queryKeys.crm.actividades.all });
+      qc.invalidateQueries({ queryKey: queryKeys.crm.dashboardAll });
     },
   });
 }
@@ -161,6 +162,6 @@ export function useEliminarActividad() {
         .eq("id", id);
       if (error) throw error;
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["crm", "actividades"] }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.crm.actividades.all }),
   });
 }

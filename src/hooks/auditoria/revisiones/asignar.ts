@@ -7,6 +7,7 @@ import type { HallazgoAuditoria } from "@/types/auditoria";
 import { logger } from "@/lib/observability/logger";
 import { hallazgoHash, AUDITORIA_REVISIONES_KEY } from "./hash";
 import { resolveAuthUser } from "./query";
+import { queryKeys } from "@/lib/query";
 
 /**
  * Asigna o reasigna un responsable (operador/encargado) a un hallazgo.
@@ -67,7 +68,7 @@ export function useAsignarResponsable() {
     },
     onSuccess: (_data, vars) => {
       queryClient.invalidateQueries({ queryKey: AUDITORIA_REVISIONES_KEY });
-      queryClient.invalidateQueries({ queryKey: ["auditoria", "embarques"] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.auditoria.embarques });
       toast.success(
         vars.tomar ? "Hallazgo tomado" : vars.responsableId ? "Responsable asignado" : "Asignación removida",
       );

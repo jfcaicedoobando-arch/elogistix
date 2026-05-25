@@ -11,6 +11,7 @@ import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
 import { useAuth } from "@/contexts/AuthContext";
 import { buildOportunidadInsertPayload } from "./oportunidadPayload";
+import { queryKeys } from "@/lib/query";
 
 export type CrmOportunidadRow = Database["public"]["Tables"]["crm_oportunidades"]["Row"];
 export type Moneda = "MXN" | "USD" | "EUR";
@@ -29,7 +30,7 @@ export interface OportunidadFiltros {
 export function useOportunidades(f: OportunidadFiltros = {}) {
   const { search = "", etapaId = "todas", vendedorId = "todos", page = 0, pageSize = 50 } = f;
   return useQuery({
-    queryKey: ["crm", "oportunidades", { search, etapaId, vendedorId, page, pageSize }],
+    queryKey: queryKeys.crm.oportunidades.list({ search, etapaId, vendedorId, page, pageSize }),
     placeholderData: keepPreviousData,
     queryFn: async () => {
       let q = supabase
@@ -53,7 +54,7 @@ export function useOportunidades(f: OportunidadFiltros = {}) {
 
 export function useOportunidad(id: string | undefined) {
   return useQuery<CrmOportunidadRow | null>({
-    queryKey: ["crm", "oportunidades", "detail", id],
+    queryKey: queryKeys.crm.oportunidades.detail(id ?? ""),
     enabled: !!id,
     queryFn: async () => {
       const { data, error } = await supabase
@@ -101,9 +102,9 @@ export function useCrearOportunidad() {
       return data;
     },
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["crm", "oportunidades"] });
-      qc.invalidateQueries({ queryKey: ["crm", "kpis"] });
-      qc.invalidateQueries({ queryKey: ["crm", "dashboard"] });
+      qc.invalidateQueries({ queryKey: queryKeys.crm.oportunidades.all });
+      qc.invalidateQueries({ queryKey: queryKeys.crm.kpis });
+      qc.invalidateQueries({ queryKey: queryKeys.crm.dashboardAll });
     },
   });
 }
@@ -116,9 +117,9 @@ export function useActualizarOportunidad() {
       if (error) throw error;
     },
     onSuccess: (_d, vars) => {
-      qc.invalidateQueries({ queryKey: ["crm", "oportunidades"] });
-      qc.invalidateQueries({ queryKey: ["crm", "oportunidades", "detail", vars.id] });
-      qc.invalidateQueries({ queryKey: ["crm", "kpis"] });
+      qc.invalidateQueries({ queryKey: queryKeys.crm.oportunidades.all });
+      qc.invalidateQueries({ queryKey: queryKeys.crm.oportunidades.detail(vars.id) });
+      qc.invalidateQueries({ queryKey: queryKeys.crm.kpis });
     },
   });
 }
@@ -132,7 +133,7 @@ export function useMoverEtapa() {
       const { error } = await supabase.from("crm_oportunidades").update(patch).eq("id", id);
       if (error) throw error;
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["crm", "oportunidades"] }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.crm.oportunidades.all }),
   });
 }
 
@@ -147,6 +148,6 @@ export function useEliminarOportunidad() {
         .eq("id", id);
       if (error) throw error;
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["crm", "oportunidades"] }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.crm.oportunidades.all }),
   });
 }

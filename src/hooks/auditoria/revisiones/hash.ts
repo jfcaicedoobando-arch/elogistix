@@ -21,4 +21,6 @@ export function revisionKey(
   return `${h.embarque_id}|${h.regla}|${hallazgoHash(h)}`;
 }
 
-export const AUDITORIA_REVISIONES_KEY = ["auditoria", "revisiones"] as const;
+// Re-export como factory para retro-compatibilidad con el resto del módulo.
+import { queryKeys } from "@/lib/query";
+export const AUDITORIA_REVISIONES_KEY = queryKeys.auditoria.revisiones;

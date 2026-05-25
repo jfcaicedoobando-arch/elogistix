@@ -10,11 +10,12 @@ import {
 } from "@/services/auditoria";
 import type { AuditoriaSnapshot } from "@/types/auditoria";
 import { logger } from "@/lib/observability/logger";
+import { queryKeys } from "@/lib/query";
 
 
 export function useAuditoriaSnapshots(dias = 30) {
   return useQuery({
-    queryKey: ["auditoria", "snapshots", dias] as const,
+    queryKey: queryKeys.auditoria.snapshots(dias),
     queryFn: (): Promise<AuditoriaSnapshot[]> => fetchAuditoriaSnapshots(dias),
     staleTime: 5 * 60_000,
   });
@@ -25,7 +26,7 @@ export function useCapturarSnapshotAuditoria() {
   return useMutation({
     mutationFn: capturarSnapshotAuditoria,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["auditoria", "snapshots"] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.auditoria.snapshotsAll });
     },
   });
 }
