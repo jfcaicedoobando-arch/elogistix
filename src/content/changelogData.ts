@@ -22,12 +22,20 @@ export interface ChangelogEntry {
  */
 export const recentChangelog: ChangelogEntry[] = [
   {
+    version: "11.9.0",
+    date: "2026-05-25",
+    type: "minor",
+    title: "Cobertura Vitest +12 archivos / +62 tests (P0+P1)",
+    summary: "Tests puros para lógica crítica financiera, XSS, wizard de embarques, mappers de cotización y utilidades compartidas.",
+    description: "Nuevos tests vitest: costosUSD, htmlEscape (XSS), embarqueWizardCostos, embarqueWizardDocumentos, validationFormat, errorCatalog, auth/resolveLandingRoute, io/csv (RFC 4180), containerPrefixes (BIC + leasing pool), useDebounce (fake timers), mappers/buildPaso1Data (FCL/LCL/Aéreo/Terrestre), auditoriaCsv. 12 archivos / 62 casos, todos verdes. APP_VERSION 11.9.0.",
+  },
+  {
     version: "11.8.0",
     date: "2026-05-25",
     type: "minor",
     title: "Sprint T1+T2: tests del CRM y de edge functions",
-    summary: "Cobertura: 24 tests nuevos en CRM (forecast/reportes, próximas actividades, cliente360, renderPlantilla) y 7 tests Deno (checkAdminAccess, validatePayload).",
-    description: "Extracción de lógica pura: src/lib/crm/forecast.ts (computeForecast + computeReportesCRM + mesKey/mesLabel), src/lib/crm/proximasActividades.ts (buildProximasMap + esVencida/esHoy), src/lib/crm/cliente360.ts (computeCliente360Totals). Los hooks useForecast/useReportesCRM/useProximasActividades/useCliente360 ahora delegan en estos helpers. Tests vitest: 4 archivos / 24 casos cubriendo etapas abiertas/ganadas/perdidas, fallback 'Sin asignar'/'Sin fecha', strings numéricos, ordenamiento por ponderado, tasa de conversión por fuente, top-5 motivos de pérdida, deduplicación por entidad_id, vencidas/hoy con fecha local, render con espacios y null/undefined. Tests Deno en supabase/functions: _shared/auth_test.ts (3 casos para checkAdminAccess con SupabaseClient mockeado) y create-user/validate_test.ts (4 casos para validatePayload). validatePayload se exportó desde create-user/index.ts para hacerlo testeable. APP_VERSION 11.8.0.",
+    summary: "Cobertura: 24 tests nuevos en CRM y 7 tests Deno (checkAdminAccess, validatePayload).",
+    description: "Extracción de lógica pura a src/lib/crm/ (forecast, proximasActividades, cliente360) y tests vitest+Deno. APP_VERSION 11.8.0.",
   },
   {
     version: "11.7.3",
@@ -92,14 +100,6 @@ export const recentChangelog: ChangelogEntry[] = [
     title: "CRM Sprint A cierre: linaje, badges y acciones rápidas",
     summary: "Linaje visible Lead↔Oportunidad↔Cotización↔Embarque, badges de actividades vencidas y botones Completar/Posponer inline.",
     description: "LineageCard en LeadDetalle y OportunidadDetalle. Badge de vencidas en tab Actividades (CrmLayout) y en item CRM del sidebar. Columna de acciones inline (Completar / Posponer +1d/+3d/+1sem) en /crm/actividades para roles con canEditCrm. APP_VERSION 11.3.1.",
-  },
-  {
-    version: "11.3.0",
-    date: "2026-05-25",
-    type: "minor",
-    title: "CRM Sprint A: Dashboard real + asignación de vendedor",
-    summary: "Dashboard CRM con widgets accionables y selector de vendedor en leads/oportunidades.",
-    description: "useCrmDashboard.ts + nuevo CrmDashboard con Mis actividades de hoy, Cerrando esta semana, Leads sin contactar >7 días, Top 5 deals, Mini-embudo. VendedorSelect (admin/operador) en alta de leads/oportunidades. usePosponerActividad y useActividadesVencidasCount añadidos. canEditCrm incluye rol vendedor. APP_VERSION 11.3.0.",
   },
 ];
 

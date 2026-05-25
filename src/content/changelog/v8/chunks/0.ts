@@ -2,6 +2,14 @@ import type { ChangelogEntry } from "../../../changelogData";
 
 export const chunk0: ChangelogEntry[] = [
   {
+    version: "11.9.0",
+    date: "2026-05-25",
+    type: "minor",
+    title: "Cobertura Vitest +12 archivos / +62 tests (P0+P1)",
+    summary: "Tests puros para lógica crítica financiera, XSS, wizard de embarques, mappers de cotización y utilidades compartidas.",
+    description: "Tests vitest nuevos: costosUSD (sumarEnUSD/aUSD, precisión currency.js), htmlEscape (XSS, null/undefined, números), embarqueWizardCostos (validateStepCostos: TC, mínimos, errores individuales), embarqueWizardDocumentos (validateArchivo/validateStepDocumentos: tamaño 10MB, MIME), validationFormat (formatValidationMessage), errorCatalog (msg/getMessage estático y dinámico), auth (resolveLandingRoute), io/csv (toCSV con escape RFC 4180, null, headers heterogéneos), containerPrefixes (extractPrefix, validatePrefixMatchesNaviera con leasing pool, carrierLabel), useDebounce (timers fake, cancelación), buildPaso1Data (prospecto/cliente, FCL/LCL/Aéreo/Terrestre, vigencia, seguro), auditoriaCsv (export de hallazgos con fecha ISO y normalización de nulos). Total: 12 nuevos archivos de test, 62 casos, todos verdes. APP_VERSION 11.9.0."
+  },
+  {
     version: "11.8.0",
     date: "2026-05-25",
     type: "minor",
