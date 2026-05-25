@@ -1,88 +1,68 @@
-# Auditoría de cobertura Vitest
+# Auditoría de código y tests faltantes
 
 ## Estado actual
 
-- **51 archivos de test** sobre ~730 fuentes (~7%).
-- **Bien cubierto:** `lib/domain`, `lib/financial`, `lib/mappers`, `lib/parsers`, `lib/csv`, `lib/audit`, `lib/formatters`, `lib/ui`, `lib/validation`, `lib/storage`, `lib/supabase`, `lib/jsoncargo`, auditoría (hooks), DataTable, permisos, changelog, 3 hooks crm puros recién añadidos.
-- **Gaps reales (lógica pura sin tests):**
+- **Fuentes** (src, sin tests): ~732 archivos `.ts/.tsx`
+- **Tests Vitest**: 69 archivos
+- **Tests Deno (edge functions)**: 2 archivos sobre 11 funciones
+- **Cobertura estimada**: ~9% por archivo (alta en `lib/*`, baja en `hooks/*`, `services/*` y `supabase/functions/*`)
 
-### `src/lib` sin cobertura
-- `lib/domain/auditoriaCsv.ts` — generación CSV (alto riesgo de regresión).
-- `lib/domain/auth.ts` — snapshot/rol.
-- `lib/domain/configuracion.ts` — defaults y merges.
-- `lib/domain/embarqueWizardCostos.ts` — cálculos de costos del wizard.
-- `lib/domain/embarqueWizardDocumentos.ts` — validación checklist 11 docs.
-- `lib/domain/errorCatalog.ts` — mapeo de errores.
-- `lib/domain/validationFormat.ts` — formateo RFC/CURP/email.
-- `lib/financial/costosUSD.ts` — conversiones FX (crítico, ya tuvimos bugs aquí).
-- `lib/io/csv.ts`, `lib/io/zipDownload.ts`.
-- `lib/jsoncargo/containerPrefixes.ts`, `lib/jsoncargo/externalTracking.ts`.
-- `lib/mappers/cotizacion.ts`, `lib/mappers/cotizacionForm.ts`, `lib/mappers/embarqueCotizacion.ts` (sólo `embarque` y `cotizacionPaso1` están cubiertos).
-- `lib/utils/htmlEscape.ts` — XSS surface, ¡crítico!
-- `lib/idempotency.ts` — sólo integration test, falta unit.
+### Bien cubierto
 
-### `src/services` sin cobertura
-- `services/embarque/columns.ts` (puro), `services/embarque/contenedor.ts`, `services/embarque/eventos.ts`.
-- `services/facturas/huecoFacturacion.ts` — lógica de hueco fiscal.
-- `services/cotizacion/costos.ts` — cálculos.
-- `services/admin/exportOrg.ts`, `services/admin/papelera.ts`.
+`lib/domain` (15/17), `lib/financial`, `lib/mappers`, `lib/parsers`, `lib/csv`, `lib/jsoncargo`, `lib/audit`, `lib/formatters`, `lib/ui`, `lib/validation`, `lib/storage`, `lib/supabase`, `lib/crm`, `hooks/auditoria`, `DataTable`, `permissions`, `changelog`.
 
-### `src/hooks` sin cobertura (lógica derivable a puros)
-- `hooks/embarque/useEmbarqueFinancials.ts` — KPIs financieros.
-- `hooks/embarque/useEmbarquesFilters.ts` — lógica de filtros.
-- `hooks/facturacion/useTabProyeccionController.ts` — proyección facturación.
-- `hooks/facturacion/useHuecoFacturacion.ts`.
-- `hooks/cotizacion/useCotizacionPL.ts` — P&L.
-- `hooks/cotizacion/useCotizacionConversions.ts`.
-- `hooks/operaciones/useDesempenoChartData.ts` — derivaciones para gráficas.
-- `hooks/portal/usePortalDashboardKpis.ts`.
-- `hooks/shared/useSidebarAlerts.ts` — cálculo demurrage.
-- `hooks/shared/useDebounce.ts` — trivial pero útil.
-- `hooks/admin/useAlertasSistema.ts`.
-- `hooks/crm/useCrmDashboard.ts`, `hooks/crm/useAutomatizacionesEtapa.ts`.
+### Gaps identificados
 
-## Priorización (ROI vs. esfuerzo)
+**P0 — Riesgo alto / lógica financiera/operativa crítica sin tests**
 
-**P0 — Crítico** (lógica financiera/seguridad, bugs ya documentados):
-1. `lib/financial/costosUSD.ts`
-2. `lib/utils/htmlEscape.ts`
-3. `lib/domain/embarqueWizardCostos.ts`
-4. `lib/domain/embarqueWizardDocumentos.ts`
-5. `services/facturas/huecoFacturacion.ts` (extraer puro si hace falta)
-6. `hooks/embarque/useEmbarqueFinancials.ts` (extraer cálculos a `lib/financial/embarqueKpis.ts`)
+1. `services/facturas/huecoFacturacion.ts` — detección de huecos en numeración de facturas (compliance SAT).
+2. `services/facturas/proyeccion.ts` — proyección de facturación (KPIs financieros).
+3. `services/proforma/consolidar.ts` y `facturar.ts` — consolidación y conversión a factura.
+4. `services/cliente/financials.ts` — saldos/estado de cuenta por cliente.
+5. `services/admin/idempotencia.ts` — claves de idempotencia (riesgo de duplicación).
+6. `lib/domain/embarque.ts` ya tiene tests, pero `services/embarque/queries/*` y `services/embarque/contenedor.ts` (BIC/grouping) no.
+7. `supabase/functions/list-users` y `delete-user` — autorización admin (regresión reciente del 403).
 
-**P1 — Alto valor** (lógica de derivación visible al usuario):
-7. `lib/domain/auditoriaCsv.ts`
-8. `lib/domain/validationFormat.ts` (RFC/CURP/email)
-9. `lib/mappers/cotizacion.ts` + `cotizacionForm.ts`
-10. `hooks/cotizacion/useCotizacionPL.ts` (extraer puros)
-11. `hooks/operaciones/useDesempenoChartData.ts` (extraer puros)
-12. `hooks/shared/useSidebarAlerts.ts` (extraer puro de demurrage)
+**P1 — Hooks orquestadores con lógica pura extraíble**
+8. `hooks/embarque/useEmbarqueSubmitOrchestrator.ts` — pipeline de creación (estado→inserción→eventos→docs).
+9. `hooks/embarque/useEmbarquesFilters.ts` — filtros/derivaciones de lista.
+10. `hooks/cotizacion/useCotizacionPL.ts` — P&L de cotización (margen, utilidad).
+11. `hooks/facturacion/useHuecoFacturacion.ts` — pareja del servicio P0 #1.
+12. `hooks/embarque/useTrackingLinks.ts` / `useJsonCargoBolLookup.ts` — construcción de enlaces externos.
+13. `hooks/admin/useAdminOrgKpis.ts` — KPIs por organización.
 
-**P2 — Útil pero menor riesgo:**
-13. `lib/domain/errorCatalog.ts`, `lib/domain/configuracion.ts`, `lib/domain/auth.ts`
-14. `lib/io/csv.ts`, `lib/io/zipDownload.ts`
-15. `lib/jsoncargo/containerPrefixes.ts`
-16. `services/embarque/columns.ts`
-17. `hooks/shared/useDebounce.ts`, `hooks/embarque/useEmbarquesFilters.ts`
+**P2 — Utilidades menores y edge functions restantes**
+14. `services/portal/queries.ts` y `columns.ts` (cliente final).
+15. `services/observability/logClientError.ts`.
+16. `supabase/functions/parse-csf`, `exchange-rates`, `jsoncargo-track`, `tracking-public`, `invite-client-user`, `client-error-log`, `auditoria-snapshot-daily`, `auditoria-weekly-digest`.
 
-## Ejecución en paralelo
+## Plan de ejecución sugerido
 
-Vitest corre cada archivo en su propio worker — **no hay límite práctico de paralelismo entre archivos**. Lo que importa es no compartir estado mutable entre tests (todos son puros aquí).
+Tres tandas, cada una termina con `bunx vitest run` + bump de `APP_VERSION` + entrada en `changelogData.ts`.
 
-Para **generar** los archivos en una sola pasada: puedo escribir **hasta ~10 archivos en paralelo** por llamada de herramientas (límite práctico del agente). Propongo:
 
-- **Tanda 1 (P0, 6 archivos):** `costosUSD`, `htmlEscape`, `embarqueWizardCostos`, `embarqueWizardDocumentos`, `huecoFacturacion` (con extracción), `embarqueKpis` (con extracción desde `useEmbarqueFinancials`).
-- **Tanda 2 (P1, 6 archivos):** `auditoriaCsv`, `validationFormat`, `mappers/cotizacion`, `cotizacionPL` (extracción), `desempenoChart` (extracción), `sidebarAlerts` (extracción demurrage).
-- **Tanda 3 (P2, opcional, ~8 archivos):** resto.
+| Tanda                                  | Alcance                                                                                                                                                           | Archivos test     |
+| -------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------- |
+| **A — P0 servicios + edge**            | huecoFacturacion, proyeccion, consolidar/facturar proforma, cliente/financials, admin/idempotencia, services/embarque/contenedor, list-users + delete-user (Deno) | 8                 |
+| **B — P1 hooks con extracción**        | extraer lógica pura de submitOrchestrator, useEmbarquesFilters, useCotizacionPL, useHuecoFacturacion, useTrackingLinks, useAdminOrgKpis                           | 6 + 6 libs nuevos |
+| **C — P2 utilidades y edge restantes** | portal/queries, observability, parse-csf, exchange-rates, jsoncargo-track, tracking-public, invite-client-user                                                    | 7-8               |
 
-Cada tanda termina con `bunx vitest run` para validar verde, bump de `APP_VERSION`, entrada en `changelogData.ts` y chunk `v8/0.ts`.
 
-## Lo que NO entra
-- E2E Playwright (ya existe en `/e2e/`, fuera de Vitest).
-- Tests de UI/snapshot de componentes grandes (frágiles).
-- Refactors no necesarios para testear.
+**Recomendación**: ejecutar **Tanda A** primero (mayor ROI, sin refactors) y luego decidir si seguimos con B y C.
 
-## Pregunta para ti
+## Detalles técnicos
 
-¿Voy con **Tanda 1 (P0)** solamente, **P0 + P1**, o **las 3 tandas**? Mi recomendación: **P0 + P1 (12 tests nuevos)** en este loop — máximo ROI, sin tocar features.
+- Vitest corre cada archivo en su propio worker (paralelismo ilimitado en la práctica).
+- Tests Deno se ejecutan con `supabase--test_edge_functions` (`*_test.ts`).
+- Para P1 se requiere extraer funciones puras a `src/lib/<dominio>/` siguiendo el patrón ya usado en `embarqueKpis.ts` y `desempenoChart.ts` — sin tocar UI ni features.
+- Sin tocar `src/integrations/supabase/*`, `index.css`, `tailwind.config.ts`.
+
+## Fuera de alcance
+
+E2E Playwright, snapshot tests de UI, refactors fuera de extracciones mínimas para P1.
+
+## Pregunta para el usuario
+
+¿Arrancamos con **Tanda A**, **A + B**, o **las tres tandas** en este loop?
+
+Las 3 tandas
