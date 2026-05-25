@@ -23,9 +23,9 @@ import OportunidadesFiltersBar, {
 } from "@/components/crm/OportunidadesFiltersBar";
 import {
   useOportunidades,
-  useMoverEtapa,
   type CrmOportunidadRow,
 } from "@/hooks/crm/useOportunidades";
+import { useMoverEtapaConAutomatizacion } from "@/hooks/crm/useAutomatizacionesEtapa";
 import { useEtapasPipeline, type CrmEtapaRow } from "@/hooks/crm/useEtapasPipeline";
 import { useUsuarios } from "@/hooks/usuario";
 
