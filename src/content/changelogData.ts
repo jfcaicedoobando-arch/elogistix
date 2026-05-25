@@ -22,6 +22,14 @@ export interface ChangelogEntry {
  */
 export const recentChangelog: ChangelogEntry[] = [
   {
+    version: "11.3.1",
+    date: "2026-05-25",
+    type: "patch",
+    title: "CRM Sprint A cierre: linaje, badges y acciones rápidas",
+    summary: "Linaje visible Lead↔Oportunidad↔Cotización↔Embarque, badges de actividades vencidas y botones Completar/Posponer inline.",
+    description: "LineageCard en LeadDetalle y OportunidadDetalle. Badge de vencidas en tab Actividades (CrmLayout) y en item CRM del sidebar. Columna de acciones inline (Completar / Posponer +1d/+3d/+1sem) en /crm/actividades para roles con canEditCrm. APP_VERSION 11.3.1.",
+  },
+  {
     version: "11.3.0",
     date: "2026-05-25",
     type: "minor",
