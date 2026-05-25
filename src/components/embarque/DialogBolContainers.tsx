@@ -36,10 +36,10 @@ export function DialogBolContainers({
     onClose: () => onOpenChange(false),
   });
 
+  const { reset } = ctrl;
   useEffect(() => {
-    if (open) ctrl.reset();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open, contenedorActual]);
+    if (open) reset();
+  }, [open, contenedorActual, reset]);
 
   const containers = ctrl.result?.ok ? ctrl.result.associated_container_numbers ?? [] : [];
 
