@@ -1,10 +1,5 @@
-import { ArrowLeft, Pencil, Building2, Loader2, FileText } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { generarEstadoCuentaPdf } from "@/generators/estadoCuentaPdf";
-import { useToast } from "@/hooks/use-toast";
-import { notifyError } from "@/lib/ui/appFeedback";
-import { getErrorMessage } from "@/lib/errors";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useParams } from "react-router-dom";
+import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 import TabPortalCliente from "@/components/cliente/TabPortalCliente";
@@ -14,14 +9,17 @@ import { embarqueColumns, cotizacionColumns } from "@/components/cliente/cliente
 import TablaContactos from "@/components/cliente/TablaContactos";
 import ClienteSummaryCards from "@/components/cliente/ClienteSummaryCards";
 import { ClienteDetalleDialogs } from "@/components/cliente/detalle/ClienteDetalleDialogs";
+import {
+  ClienteDetalleHeader,
+  ClienteLoadingState,
+  ClienteNotFoundState,
+} from "@/components/cliente/detalle/ClienteDetalleHeader";
+import { ClienteInformacionCard } from "@/components/cliente/detalle/ClienteInformacionCard";
 import { useClienteDetalleController } from "@/hooks/cliente";
-import { toTitleCase, formatPhoneMx, correctSpanishPlace } from "@/lib/formatters";
-import { useParams } from "react-router-dom";
 import { useRegisterBreadcrumbLabel } from "@/contexts/BreadcrumbContext";
 
 export default function ClienteDetalle() {
   const { id } = useParams<{ id: string }>();
-  const { toast } = useToast();
   const {
     navigate,
     cliente,
@@ -53,59 +51,24 @@ export default function ClienteDetalle() {
   } = useClienteDetalleController();
   useRegisterBreadcrumbLabel(id, cliente?.nombre);
 
-  if (loadingCliente) {
-    return (
-      <div className="flex items-center justify-center py-20">
-        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-      </div>
-    );
-  }
-
-  if (!cliente) {
-    return (
-      <div className="flex flex-col items-center justify-center py-20 space-y-4">
-        <p className="text-muted-foreground">Cliente no encontrado</p>
-        <Button variant="outline" onClick={() => navigate("/clientes")}>Volver a Clientes</Button>
-      </div>
-    );
-  }
+  if (loadingCliente) return <ClienteLoadingState />;
+  if (!cliente) return <ClienteNotFoundState onBack={() => navigate("/clientes")} />;
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center gap-4">
-        <Button variant="ghost" size="icon" onClick={() => navigate("/clientes")} aria-label="Volver a clientes">
-          <ArrowLeft className="h-5 w-5" />
-        </Button>
-        <div className="flex-1">
-          <h1 className="text-2xl font-bold">{cliente.nombre}</h1>
-          <p className="text-sm text-muted-foreground">{cliente.rfc}</p>
-        </div>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={async () => {
-            try {
-              await generarEstadoCuentaPdf({
-                id: cliente.id,
-                nombre: cliente.nombre,
-                rfc: cliente.rfc,
-                direccion: cliente.direccion,
-                ciudad: cliente.ciudad,
-                estado: cliente.estado,
-              });
-            } catch (err) {
-              notifyError(toast, { title: "No se pudo generar el estado de cuenta", description: getErrorMessage(err) });
-            }
-          }}
-        >
-          <FileText className="h-4 w-4 mr-1" /> Estado de cuenta
-        </Button>
-        {canEdit && (
-          <Button variant="outline" size="sm" onClick={() => setEditClienteOpen(true)}>
-            <Pencil className="h-4 w-4 mr-1" /> Editar
-          </Button>
-        )}
-      </div>
+      <ClienteDetalleHeader
+        cliente={{
+          id: cliente.id,
+          nombre: cliente.nombre,
+          rfc: cliente.rfc,
+          direccion: cliente.direccion,
+          ciudad: cliente.ciudad,
+          estado: cliente.estado,
+        }}
+        canEdit={canEdit}
+        onBack={() => navigate("/clientes")}
+        onEdit={() => setEditClienteOpen(true)}
+      />
 
       <ClienteSummaryCards
         embarques={embarquesCliente.length}
@@ -126,22 +89,15 @@ export default function ClienteDetalle() {
         </TabsList>
 
         <TabsContent value="informacion" className="space-y-6">
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm flex items-center gap-2">
-                <Building2 className="h-4 w-4" />Información General
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="text-sm space-y-1">
-              <p>{cliente.direccion}</p>
-              <p>{correctSpanishPlace(cliente.ciudad)}, {correctSpanishPlace(cliente.estado)} {cliente.cp}</p>
-              <div className="pt-2 border-t mt-2 space-y-1">
-                <p><span className="text-muted-foreground">Contacto:</span> {toTitleCase(cliente.contacto)}</p>
-                <p><span className="text-muted-foreground">Email:</span> {cliente.email}</p>
-                <p><span className="text-muted-foreground">Tel:</span> {formatPhoneMx(cliente.telefono)}</p>
-              </div>
-            </CardContent>
-          </Card>
+          <ClienteInformacionCard
+            direccion={cliente.direccion}
+            ciudad={cliente.ciudad}
+            estado={cliente.estado}
+            cp={cliente.cp}
+            contacto={cliente.contacto}
+            email={cliente.email}
+            telefono={cliente.telefono}
+          />
 
           <TablaContactos
             contactos={contactos}

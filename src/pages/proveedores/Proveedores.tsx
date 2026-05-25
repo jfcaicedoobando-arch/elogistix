@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Truck, Plus, Upload } from "lucide-react";
 import { FloatingActionButton } from "@/components/shared/FloatingActionButton";
@@ -6,26 +6,20 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import SearchInput from "@/components/selects/SearchInput";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useProveedoresPaginados, useProveedorMutations } from "@/hooks/proveedor";
-import type { ProveedorListItem } from "@/hooks/proveedor";
+import { useProveedorMutations } from "@/hooks/proveedor";
 import NuevoProveedorDialog from "@/components/proveedor/NuevoProveedorDialog";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { useToast } from "@/hooks/use-toast";
-import { usePermissions } from "@/hooks/shared";
-import { useRegistrarActividad } from "@/hooks/shared";
-import { useDebounce } from "@/hooks/shared";
-import { DataTable, defineColumns, type ColumnDef } from "@/components/shared/DataTable";
-import { sortByString } from "@/components/shared/dataTable/sortingFns";
-import { useListPageState } from "@/hooks/shared";
+import { usePermissions, useRegistrarActividad, useOrgFilter } from "@/hooks/shared";
 import type { Tables, Enums } from "@/types/db";
 import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
-import { toTitleCase } from "@/lib/formatters";
 import { BulkImportDialog } from "@/components/shared/BulkImportDialog";
 import { PROVEEDOR_TEMPLATE_HEADERS, mapProveedorRows } from "@/lib/csv/importSchemas";
-import { useOrgFilter } from "@/hooks/shared";
 import { insertProveedor } from "@/services/proveedor";
 import { useQueryClient } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/query";
+import { ProveedorTable } from "./ProveedorTable";
+
 type TipoProveedor = Enums<'tipo_proveedor'>;
 type Proveedor = Tables<'proveedores'>;
 
@@ -41,57 +35,6 @@ const TABS: { label: string; tipo: TipoProveedor }[] = [
   { label: 'Acondicionamiento', tipo: 'Acondicionamiento de Carga' },
   { label: 'Mat. Peligrosos', tipo: 'Materiales Peligrosos' },
 ];
-
-const proveedorColumns: ColumnDef<ProveedorListItem, unknown>[] = defineColumns<ProveedorListItem>([
-  { id: "nombre", header: "Nombre", accessorFn: (p) => p.nombre, enableSorting: true, sortingFn: sortByString<ProveedorListItem>((p) => p.nombre), meta: { width: "min-w-[180px]", className: "font-medium" }, cell: ({ row }) => <span title={row.original.nombre}>{toTitleCase(row.original.nombre)}</span> },
-  { id: "rfc", header: "RFC", accessorFn: (p) => p.rfc, enableSorting: true, sortingFn: sortByString<ProveedorListItem>((p) => p.rfc), meta: { width: "w-[130px]", className: "text-xs font-mono" }, cell: ({ row }) => row.original.rfc },
-  { id: "contacto", header: "Contacto", meta: { width: "w-[140px]", className: "text-xs" }, cell: ({ row }) => row.original.contacto ? <span title={row.original.contacto}>{toTitleCase(row.original.contacto)}</span> : null },
-  { id: "moneda", header: "Moneda", meta: { width: "w-[80px]", className: "text-xs" }, cell: ({ row }) => row.original.moneda_preferida },
-]);
-
-function ProveedorTable({ tipo, search, onSelect }: { tipo: TipoProveedor; search: string; onSelect: (id: string) => void }) {
-  const { page, setPage, pageSize, setPageSize, resetPage } = useListPageState({});
-  const debouncedSearch = useDebounce(search, 300);
-
-  // Reset a página 0 cuando cambia el término de búsqueda debounced.
-  useEffect(() => {
-    resetPage();
-  }, [debouncedSearch, resetPage]);
-
-  const { data: resultado, isLoading } = useProveedoresPaginados({
-    tipo,
-    search: debouncedSearch,
-    page,
-    pageSize,
-  });
-
-  const proveedores = resultado?.data ?? [];
-  const totalCount = resultado?.count ?? 0;
-  const totalPages = Math.ceil(totalCount / pageSize);
-
-  return (
-    <Card>
-      <CardContent className="p-0">
-        <DataTable
-          columns={proveedorColumns}
-          data={proveedores}
-          isLoading={isLoading && proveedores.length === 0}
-          emptyMessage="Sin proveedores registrados"
-          onRowClick={(p) => onSelect(p.id)}
-          rowKey={(p) => p.id}
-          density="comfortable"
-          pagination={{
-            page,
-            totalPages,
-            onPageChange: setPage,
-            pageSize,
-            onPageSizeChange: (s) => { setPageSize(s); setPage(0); },
-          }}
-        />
-      </CardContent>
-    </Card>
-  );
-}
 
 export default function Proveedores() {
   const [search, setSearch] = useState("");

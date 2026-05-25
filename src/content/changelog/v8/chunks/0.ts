@@ -2,6 +2,14 @@ import type { ChangelogEntry } from "../../../changelogData";
 
 export const chunk0: ChangelogEntry[] = [
   {
+    version: "11.18.0",
+    date: "2026-05-25",
+    type: "minor",
+    title: "Auditoría loop 6 — 6 componentes/páginas >200 LOC",
+    summary: "ClienteDetalle (225→181), NuevoLeadDialog (216→114), Proveedores (210→153), Usuarios (204→101), ProveedorDetalle (203→168), Leads (203→143).",
+    description: "Sexta tanda Power of 10 (>200 LOC). (1) ClienteDetalle.tsx (225→181): ClienteDetalleHeader + ClienteLoadingState + ClienteNotFoundState + ClienteInformacionCard. (2) NuevoLeadDialog.tsx (216→114): NuevoLeadForm en components/crm/nuevoLead/. (3) Proveedores.tsx (210→153): ProveedorTable + proveedorColumns a archivo dedicado. (4) Usuarios.tsx (204→101): useUsuarioColumns + RoleChangeAlertDialog. (5) ProveedorDetalle.tsx (203→168): ProveedorOperacionesTable (extrae IIFE de columnas). (6) Leads.tsx (203→143): makeLeadsColumns en pages/crm/leadsColumns.tsx. Sin cambios funcionales. Suite: 91 archivos / 626 tests verdes. APP_VERSION 11.18.0.",
+  },
+  {
     version: "11.17.0",
     date: "2026-05-25",
     type: "minor",

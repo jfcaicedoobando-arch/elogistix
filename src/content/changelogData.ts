@@ -22,12 +22,20 @@ export interface ChangelogEntry {
  */
 export const recentChangelog: ChangelogEntry[] = [
   {
+    version: "11.18.0",
+    date: "2026-05-25",
+    type: "minor",
+    title: "Auditoría loop 6 — 6 componentes/páginas >200 LOC",
+    summary: "ClienteDetalle (225→181), NuevoLeadDialog (216→114), Proveedores (210→153), Usuarios (204→101), ProveedorDetalle (203→168), Leads (203→143).",
+    description: "Power of 10: ClienteDetalle → ClienteDetalleHeader + ClienteInformacionCard. NuevoLeadDialog → NuevoLeadForm. Proveedores → ProveedorTable + proveedorColumns. Usuarios → useUsuarioColumns + RoleChangeAlertDialog. ProveedorDetalle → ProveedorOperacionesTable. Leads → leadsColumns. Sin cambios funcionales. 91 archivos / 626 tests verdes. APP_VERSION 11.18.0.",
+  },
+  {
     version: "11.17.0",
     date: "2026-05-25",
     type: "minor",
     title: "Auditoría loop 5 — componentes >200 LOC: TabDocumentos, BitacoraActividad, Facturacion, DashboardStatusCards",
     summary: "TabDocumentos (257→81), BitacoraActividad (253→47), Facturacion (242→117), DashboardStatusCards (230→24). Subcomponentes y columns extraídos.",
-    description: "Power of 10: TabDocumentos.tsx → AgregarDocumentoDialog + useDocumentoColumns. BitacoraActividad.tsx → bitacora/{constants,FilaEntrada,VirtualTimeline}. Facturacion.tsx → facturacionColumns.tsx (facturaColumns + buildGastoColumns). DashboardStatusCards.tsx → statusCards/{TimelineEstadosCard,ArribosCard}. Sin cambios funcionales. 91 archivos / 626 tests verdes. APP_VERSION 11.17.0.",
+    description: "Power of 10: TabDocumentos.tsx → AgregarDocumentoDialog + useDocumentoColumns. BitacoraActividad.tsx → bitacora/{constants,FilaEntrada,VirtualTimeline}. Facturacion.tsx → facturacionColumns.tsx (facturaColumns + buildGastoColumns). DashboardStatusCards.tsx → statusCards/{TimelineEstadosCard,ArribosCard}. Sin cambios funcionales. APP_VERSION 11.17.0.",
   },
   {
     version: "11.16.0",
@@ -92,22 +100,6 @@ export const recentChangelog: ChangelogEntry[] = [
     title: "Fix edge function list-users: permitir miembros de la organización",
     summary: "Operadores y vendedores ya no reciben 403 al cargar /crm/oportunidades ni selects de vendedor/responsable.",
     description: "list-users ahora permite a cualquier miembro de la org listar usuarios de su propia organización (respuesta filtrada por organization_members). create-user/delete-user/invite-client-user mantienen check estricto de admin. APP_VERSION 11.7.3.",
-  },
-  {
-    version: "11.7.2",
-    date: "2026-05-25",
-    type: "patch",
-    title: "Fix cron de alertas: columnas correctas en app_logs",
-    summary: "Fix cron de alertas: usa columnas reales fn/ts/status_code de app_logs en vez de inexistentes.",
-    description: "Migración recrea detectar_alertas_app_logs() con los nombres correctos de columna. El cron ahora agrupa errores 5xx y genera alertas sin abortar. APP_VERSION 11.7.2.",
-  },
-  {
-    version: "11.7.1",
-    date: "2026-05-25",
-    type: "patch",
-    title: "Fix CRM Dashboard: relaciones faltantes en crm_oportunidades",
-    summary: "Fix CRM Dashboard: llaves foráneas faltantes en crm_oportunidades.",
-    description: "Migración agrega FKs hacia crm_etapas_pipeline, clientes, crm_leads y crm_motivos_perdida para que PostgREST resuelva los embeds inner del dashboard. Índices nuevos para joins. APP_VERSION 11.7.1.",
   },
 ];
 
