@@ -19,7 +19,6 @@ export interface LibreCargaColumnMeta {
 }
 
 declare module "@tanstack/react-table" {
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   interface ColumnMeta<TData extends RowData, TValue> extends LibreCargaColumnMeta {
     /** Marker para que la augmentación no quede vacía. */
     readonly __libreCargaMeta?: true;
