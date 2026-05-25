@@ -5,6 +5,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
+import { buildProximasMap } from "@/lib/crm/proximasActividades";
 
 type CrmEntidadTipo = Database["public"]["Enums"]["crm_entidad_tipo"];
 
