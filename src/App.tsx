@@ -215,6 +215,7 @@ const App = () => (
                 <Route path="actividades" element={<ActividadesCrm />} />
                 <Route path="forecast" element={<ForecastCrm />} />
                 <Route path="reportes" element={<ReportesCrm />} />
+                <Route path="configuracion" element={<CrmConfiguracion />} />
               </Route>
               <Route path="/bitacora" element={<Bitacora />} />
               <Route
