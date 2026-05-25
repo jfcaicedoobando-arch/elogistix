@@ -23,7 +23,7 @@ export interface Cliente360Resumen {
   totalAbierto: number;
   totalGanado: number;
   ultimaCotizacion: { id: string; folio: string; estado: string; subtotal: number; created_at: string } | null;
-  ultimoEmbarque: { id: string; folio: string; estado: string; created_at: string } | null;
+  ultimoEmbarque: { id: string; expediente: string; estado: string; created_at: string } | null;
 }
 
 export function useCliente360(clienteId: string | undefined) {
@@ -48,7 +48,7 @@ export function useCliente360(clienteId: string | undefined) {
           .limit(1),
         supabase
           .from("embarques")
-          .select("id, folio, estado, created_at")
+          .select("id, expediente, estado, created_at")
           .eq("cliente_id", clienteId!)
           .order("created_at", { ascending: false })
           .limit(1),

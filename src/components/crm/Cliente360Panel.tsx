@@ -100,7 +100,7 @@ export default function Cliente360Panel({ clienteId }: Props) {
             {d.ultimoEmbarque ? (
               <div className="space-y-1 text-sm">
                 <div className="flex justify-between">
-                  <span className="font-medium">{d.ultimoEmbarque.folio}</span>
+                  <span className="font-medium">{d.ultimoEmbarque.expediente}</span>
                   <Badge variant="outline">{d.ultimoEmbarque.estado}</Badge>
                 </div>
                 <Button size="sm" variant="ghost" onClick={() => navigate(`/embarques/${d.ultimoEmbarque!.id}`)}>Ver embarque</Button>
