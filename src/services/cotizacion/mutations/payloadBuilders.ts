@@ -1,15 +1,12 @@
 /**
- * Cotizaciones — Mutations (crear / actualizar / eliminar / cambiar estado).
+ * Builders puros del payload de inserción para `cotizaciones`.
+ * Sin I/O. Aislados para mantener cada operación de mutación pequeña.
  */
-import { supabase } from "@/integrations/supabase/client";
 import type { TablesInsert } from "@/integrations/supabase/types";
-import type { CotizacionRow, CreateCotizacionInput } from "@/types/cotizacion";
-import { fromDb, toDbJson } from "@/lib/supabase/cast";
-import { cotizacionInputSchema, parseOrThrow } from "@/lib/validation/mutationSchemas";
-import { generarFolioCotizacion } from "./queries";
+import type { CreateCotizacionInput } from "@/types/cotizacion";
+import { toDbJson } from "@/lib/supabase/cast";
 
 type CotizacionInsert = TablesInsert<"cotizaciones">;
-type CotizacionUpdate = Partial<CotizacionInsert>;
 
 function partesClienteInsert(input: CreateCotizacionInput) {
   return {
@@ -68,7 +65,7 @@ function partesComercialInsert(input: CreateCotizacionInput) {
   };
 }
 
-function buildCotizacionInsertPayload(
+export function buildCotizacionInsertPayload(
   input: CreateCotizacionInput,
   folio: string,
   fechaVigenciaIso: string,
@@ -82,56 +79,4 @@ function buildCotizacionInsertPayload(
   };
 }
 
-export async function crearCotizacion(input: CreateCotizacionInput): Promise<CotizacionRow> {
-  parseOrThrow(cotizacionInputSchema, input, "Cotización");
-  const folio = await generarFolioCotizacion();
-  const fechaVigencia = new Date();
-  fechaVigencia.setDate(fechaVigencia.getDate() + input.vigencia_dias);
-  const payload = buildCotizacionInsertPayload(
-    input,
-    folio,
-    fechaVigencia.toISOString().split("T")[0],
-  );
-
-  const { data, error } = await supabase
-    .from("cotizaciones")
-    .insert(payload)
-    .select()
-    .single();
-  if (error) throw error;
-  return fromDb<CotizacionRow>(data);
-}
-
-export async function updateCotizacion(
-  id: string,
-  data: Partial<CreateCotizacionInput>,
-): Promise<void> {
-  const updatePayload = fromDb<CotizacionUpdate>({ ...data });
-  if (data.conceptos_venta) updatePayload.conceptos_venta = toDbJson(data.conceptos_venta);
-  if (data.dimensiones_lcl) updatePayload.dimensiones_lcl = toDbJson(data.dimensiones_lcl);
-  if (data.dimensiones_aereas)
-    updatePayload.dimensiones_aereas = toDbJson(data.dimensiones_aereas);
-  if (data.modo) updatePayload.modo = data.modo as CotizacionInsert["modo"];
-  if (data.tipo) updatePayload.tipo = data.tipo as CotizacionInsert["tipo"];
-  if (data.incoterm) updatePayload.incoterm = data.incoterm as CotizacionInsert["incoterm"];
-  if (data.moneda) updatePayload.moneda = data.moneda as CotizacionInsert["moneda"];
-  const { error } = await supabase.from("cotizaciones").update(updatePayload).eq("id", id);
-  if (error) throw error;
-}
-
-export async function deleteCotizacion(id: string): Promise<void> {
-  // Soft delete vía RPC (A.2.2). El registro queda en papelera y deja de listarse.
-  const { error } = await supabase.rpc("soft_delete_record", {
-    _table: "cotizaciones",
-    _id: id,
-  });
-  if (error) throw error;
-}
-
-export async function updateEstadoCotizacion(id: string, estado: string): Promise<void> {
-  const { error } = await supabase
-    .from("cotizaciones")
-    .update({ estado: estado as CotizacionInsert["estado"] })
-    .eq("id", id);
-  if (error) throw error;
-}
+export type { CotizacionInsert };
