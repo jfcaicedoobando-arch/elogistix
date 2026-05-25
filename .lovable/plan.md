@@ -1,97 +1,73 @@
-# Plan: 5 auditorías de calidad post-arquitectura
+## Objetivo
 
-Continuación de la auditoría arquitectónica (v11.31.0–11.32.0). Cada etapa es un loop independiente, ejecutable por separado y verificable con tests + lint.
+Identificar tests obsoletos, redundantes o de bajo valor dentro de los 724 tests actuales (108 archivos) y limpiarlos para que la suite refleje cobertura real, no inflada.
 
-## Hallazgos preliminares (validación rápida)
+## Definición de "test obsoleto"
 
-- `services/`: **0 imports** a `@/hooks`, `@/components`, `@/pages` → capa ya limpia.
-- `components/` >200 líneas: solo `ui/sidebar.tsx` (637, código upstream de shadcn) y archivos de test. **Componentes propios ya cumplen Power of 10.**
-- `as unknown as` restantes: **37 totales**, mayoría en tests (`_supabaseChainMock`, fixtures). Solo ~5 en código de producción.
-- Hooks/lib sin test directo: ~193 archivos (incluye barrels, índices y helpers triviales — el número real de "críticos sin test" es menor).
+Un test es candidato a eliminar si cumple **al menos uno**:
 
-Esto reordena las prioridades. El plan refleja el peso real, no el percibido inicialmente.
+1. **Huérfano duro**: importa un módulo/symbol que ya no existe (compilación falla o se silencia con cast).
+2. **Duplicado**: misma aserción (mismo `describe` + `it` + mismo input/expectativa) en otro archivo, sin aportar caso adicional.
+3. **Trivial**: solo verifica `expect(true).toBe(true)`, snapshot vacío, o re-exporta de un barrel sin lógica.
+4. **Skipped/Todo abandonado**: `.skip`, `.todo`, `xit`, `xdescribe` sin issue/ticket asociado y >30 días sin tocar.
+5. **Cobertura redundante**: el mismo branch/línea ya está cubierto por otro test más completo (medible con `--coverage` por archivo).
+6. **Mocks rotos**: el mock no coincide ya con la firma real del módulo mockeado (la función cambió de aridad o retorno).
 
----
+## Plan de auditoría — 4 sub-tareas
 
-## Etapa 1 — Auditoría de `services/` (🟢 baja, validación)
+### 1. Auditoría automática (read-only, ~15 min)
 
-**Objetivo:** confirmar que la capa de servicios mantiene separación estricta (solo Supabase + utils, sin lógica de negocio compleja ni dependencias a capas superiores).
+Generar un reporte `docs/tests-audit.md` con 5 secciones:
 
-- Verificar que ningún `services/*` importa de `@/hooks`, `@/components`, `@/pages`, `@/contexts`.
-- Añadir bloque ESLint `no-restricted-imports` para `src/services/**` (espejo del que ya existe en `lib/`).
-- Extender `src/lib/__tests__/architecture.test.ts` para cubrir también `src/services/**`.
-- Buscar servicios >200 líneas → si los hay, dividir por responsabilidad (queries / mutations / mappers).
+- **Tests huérfanos** ya detectados (26 archivos). Para cada uno, clasificar:
+  - *Falso positivo* (cubre múltiples archivos, sub-módulo, integración) → mantener.
+  - *Real* (el source desapareció) → eliminar.
+- **Skipped/Todo/Only**: `rg "\.(skip|todo|only)\(|xdescribe|xit\("` (actualmente 0, pero dejar el chequeo en CI).
+- **Duplicados de descripción**: usar `grep | uniq -cd` (ya detectados 14 títulos repetidos — la mayoría son legítimos en archivos distintos, pero hay que revisar uno por uno).
+- **Mocks rotos**: `bunx tsc --noEmit` solo sobre `**/*.test.ts` con `skipLibCheck=false`, detectar errores de tipo.
+- **Cobertura redundante**: `bunx vitest run --coverage --reporter=json` → identificar tests cuyo único impacto en `coverage` ya está al 100% sin ellos (técnica: ejecutar suite excluyendo el archivo y comparar `% covered`).
 
-**Entregable:** ESLint rule + test ampliado. Sin cambios de código si la capa ya está limpia.
+### 2. Revisión manual de los 26 huérfanos
 
----
+Para cada uno decidir:
+- **Mantener** con comentario `// @cubre: <ruta>` arriba del archivo (explicar qué cubre y por qué no tiene par 1:1).
+- **Renombrar** para que matchee el source (ej. `useEmbarquesListData.test.ts` → mover junto a `useEmbarquesListData.ts` si existe).
+- **Eliminar** si el source ya no existe.
 
-## Etapa 2 — Auditoría de `components/` (🟢 baja, validación)
+### 3. Eliminar duplicados confirmados
 
-**Objetivo:** confirmar que componentes propios cumplen Power of 10 y no tienen lógica de negocio mal ubicada.
+De los 14 títulos repetidos, conservar solo el caso más completo (con mejor cobertura de edge-cases). Documentar la decisión en el changelog.
 
-- Excluir `components/ui/*` (shadcn upstream) del análisis.
-- Buscar componentes con `useQuery`/`useMutation` directos (debería ir vía hook controller).
-- Buscar componentes con cálculos financieros, parseo o lógica de dominio inline → mover a `lib/`.
-- Verificar que la regla `max-lines: 250` ya cubre el resto.
+### 4. Gate en CI (preventivo)
 
-**Entregable:** lista de violaciones reales + refactor solo de las críticas. Probablemente loop corto.
+Añadir un script `scripts/audit-tests.ts` que falle el build si:
+- Aparece nuevo `.only`, `.skip` o `.todo` sin comentario `// TODO(#issue):`.
+- Aparece test huérfano nuevo (source no existe).
+- Aparece import roto en archivo de test.
 
----
+Ejecutar en `.github/workflows/ci.yml` como step adicional.
 
-## Etapa 3 — Reducir `as unknown as` (🟡 media)
+## Entregables
 
-**Objetivo:** bajar de 37 a <10 ocurrencias, todas justificadas.
-
-- **Producción (~5):** caso por caso. Candidatos: `lib/supabase/cast.ts` (intencional, encapsula la conversión), `services/embarque/queries/*`, `services/facturas/*`, `pages/dev/PdfPreviewCotizacion.tsx`.
-- **Tests (~32):** la mayoría vienen de `_supabaseChainMock.ts`. Crear helper tipado `mockSupabaseChain<T>()` que elimine el cast en cada test.
-- Documentar las restantes con comentario `// SAFE-CAST:` explicando por qué no se puede tipar mejor.
-- Añadir ESLint rule custom o regex en CI que advierta si aparecen nuevos sin el comentario.
-
-**Entregable:** count <10 + helper de mocking + convención `SAFE-CAST`.
-
----
-
-## Etapa 4 — Cobertura de tests (🟠 alta, mayor esfuerzo)
-
-**Objetivo:** subir cobertura de los módulos críticos sin tests.
-
-- Generar reporte de cobertura real con `vitest run --coverage` (no solo "tiene archivo .test.ts").
-- Identificar los **20 archivos más críticos** sin cobertura: probablemente en `lib/financial/`, `lib/domain/`, `services/cotizacion/`, `services/embarque/`.
-- Escribir tests para cada uno priorizando: cálculos financieros (IVA, tipo cambio), validación (`embarqueWizardSchemas`), mappers de Supabase.
-- Meta: pasar de 622 → ~720 tests, con cobertura >80% en `lib/` y `services/`.
-
-**Entregable:** +100 tests aproximados, reporte de cobertura adjunto al CHANGELOG. **Este es el loop más largo — probablemente 2 sub-loops.**
-
----
-
-## Etapa 5 — Performance audit (🟠 alta, requiere medición)
-
-**Objetivo:** identificar costos reales antes de optimizar (no premature optimization).
-
-- **Bundle size:** correr `vite build` con `--mode=analyze`, identificar los 5 chunks más pesados. Candidatos a lazy-load: `@react-pdf/renderer` (PDFs), `recharts` (dashboard), módulos de auditoría.
-- **Queries N+1:** auditar `services/embarque/` y `services/cliente/` por queries en bucle. Convertir a `.in()` o joins de Supabase.
-- **React Query GC time:** revisar si hay queries con `staleTime: Infinity` que deberían refrescar.
-- **DataTable:** ya tiene tests de performance (mount 10k <90ms). Validar que se usa `VirtualDataTable` en listas >100 filas.
-- **Lighthouse audit** del dashboard principal y portal cliente.
-
-**Entregable:** reporte `docs/performance-audit.md` con top 5 mejoras priorizadas + lazy-loading de los chunks gordos.
-
----
-
-## Orden de ejecución sugerido
-
-1. **Etapa 1** (services audit) — quick win, refuerza guardrails ya establecidos.
-2. **Etapa 2** (components audit) — quick win, valida Power of 10.
-3. **Etapa 3** (casts) — mejora puntual de tipo-seguridad.
-4. **Etapa 5** (performance) — alto impacto visible para el usuario final.
-5. **Etapa 4** (cobertura) — el más largo, mejor al final con base ya estable.
-
-Cada etapa = 1 release patch/minor (`11.33.x` → `11.37.x`), CHANGELOG individual, sin acumular cambios.
+- `docs/tests-audit.md` con tabla por categoría y decisión por test.
+- PR de limpieza (eliminaciones + renombres) con `CHANGELOG.md` listando exactamente qué se quitó y por qué.
+- `scripts/audit-tests.ts` + step de CI.
+- Suite final con N tests reales, sin pérdida de cobertura medible (`% lines/branches` igual o mayor).
 
 ## Detalles técnicos
 
-- **No tocar:** `components/ui/*` (shadcn), `integrations/supabase/types.ts` (auto-gen), `lib/supabase/cast.ts` (intencional).
-- **Convención SAFE-CAST:** `// SAFE-CAST: razón concreta` justo encima del cast permitido.
-- **Tests de arquitectura:** patrón replicable — copiar `lib/__tests__/architecture.test.ts` adaptando el path raíz.
-- Cada etapa debe mantener: lint 0/0, typecheck 0/0, todos los tests verdes.
+- Tooling: `bunx vitest run --coverage`, `grep`, `rg`, `tsc --noEmit`, `knip` (ya configurado).
+- No tocar: `src/integrations/supabase/types.ts`, `components/ui/*`, `e2e/*` (Playwright, no Vitest).
+- Bump `APP_VERSION` patch por cada sub-tarea entregada (ej. 11.39.0 = reporte; 11.39.1 = limpieza; 11.39.2 = CI gate).
+- Tests E2E (`e2e/specs/*.spec.ts`) quedan fuera de este alcance — son Playwright, no Vitest.
+
+## Hallazgos preliminares (señales tempranas)
+
+- 26 tests "huérfanos" sin source 1:1 — mayoría son falsos positivos (integración, edge-cases, architecture.test.ts), pero hay que confirmar uno por uno.
+- 0 tests con `.skip/.only/.todo` ahora mismo (buena señal).
+- 14 títulos `describe`/`it` repetidos exactos — algunos legítimos (mismo título en módulos distintos), otros podrían ser duplicación accidental.
+- Suite actual: 108 archivos / 724 tests / ~45s end-to-end.
+
+## ¿Continúo?
+
+Si apruebas, ejecuto sub-tarea 1 (reporte automático) y te traigo el `docs/tests-audit.md` con tabla por test antes de borrar nada.
