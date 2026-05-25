@@ -22,12 +22,20 @@ export interface ChangelogEntry {
  */
 export const recentChangelog: ChangelogEntry[] = [
   {
+    version: "11.18.0",
+    date: "2026-05-25",
+    type: "minor",
+    title: "Auditoría loop 6 — 6 componentes/páginas >200 LOC",
+    summary: "ClienteDetalle (225→181), NuevoLeadDialog (216→114), Proveedores (210→153), Usuarios (204→101), ProveedorDetalle (203→168), Leads (203→143).",
+    description: "Power of 10: ClienteDetalle → ClienteDetalleHeader + ClienteInformacionCard. NuevoLeadDialog → NuevoLeadForm. Proveedores → ProveedorTable + proveedorColumns. Usuarios → useUsuarioColumns + RoleChangeAlertDialog. ProveedorDetalle → ProveedorOperacionesTable. Leads → leadsColumns. Sin cambios funcionales. 91 archivos / 626 tests verdes. APP_VERSION 11.18.0.",
+  },
+  {
     version: "11.17.0",
     date: "2026-05-25",
     type: "minor",
     title: "Auditoría loop 5 — componentes >200 LOC: TabDocumentos, BitacoraActividad, Facturacion, DashboardStatusCards",
     summary: "TabDocumentos (257→81), BitacoraActividad (253→47), Facturacion (242→117), DashboardStatusCards (230→24). Subcomponentes y columns extraídos.",
-    description: "Power of 10: TabDocumentos.tsx → AgregarDocumentoDialog + useDocumentoColumns. BitacoraActividad.tsx → bitacora/{constants,FilaEntrada,VirtualTimeline}. Facturacion.tsx → facturacionColumns.tsx (facturaColumns + buildGastoColumns). DashboardStatusCards.tsx → statusCards/{TimelineEstadosCard,ArribosCard}. Sin cambios funcionales. 91 archivos / 626 tests verdes. APP_VERSION 11.17.0.",
+    description: "Power of 10: TabDocumentos.tsx → AgregarDocumentoDialog + useDocumentoColumns. BitacoraActividad.tsx → bitacora/{constants,FilaEntrada,VirtualTimeline}. Facturacion.tsx → facturacionColumns.tsx (facturaColumns + buildGastoColumns). DashboardStatusCards.tsx → statusCards/{TimelineEstadosCard,ArribosCard}. Sin cambios funcionales. APP_VERSION 11.17.0.",
   },
   {
     version: "11.16.0",
