@@ -31,6 +31,11 @@ const SentryDiagnostico = lazy(() => import("./pages/dashboard/SentryDiagnostico
 const CrmDashboard = lazy(() => import("./pages/crm/CrmDashboard"));
 const Leads = lazy(() => import("./pages/crm/Leads"));
 const LeadDetalle = lazy(() => import("./pages/crm/LeadDetalle"));
+const Oportunidades = lazy(() => import("./pages/crm/Oportunidades"));
+const OportunidadDetalle = lazy(() => import("./pages/crm/OportunidadDetalle"));
+const ActividadesCrm = lazy(() => import("./pages/crm/Actividades"));
+const ForecastCrm = lazy(() => import("./pages/crm/Forecast"));
+const ReportesCrm = lazy(() => import("./pages/crm/Reportes"));
 
 const Embarques = lazy(() => import("./pages/embarques/Embarques"));
 const EmbarqueDetalle = lazy(() => import("./pages/embarques/EmbarqueDetalle"));
