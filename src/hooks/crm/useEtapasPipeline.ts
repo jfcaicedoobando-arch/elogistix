@@ -34,7 +34,7 @@ export function useActualizarEtapa() {
       patch,
     }: {
       id: string;
-      patch: Partial<Pick<CrmEtapaRow, "nombre" | "orden" | "tipo" | "color" | "probabilidad_default" | "activa">>;
+      patch: Partial<Pick<CrmEtapaRow, "nombre" | "orden" | "tipo" | "color" | "probabilidad_default" | "activa" | "crea_tarea_seguimiento" | "dias_seguimiento">>;
     }) => {
       const { error } = await supabase.from("crm_etapas_pipeline").update(patch).eq("id", id);
       if (error) throw error;
