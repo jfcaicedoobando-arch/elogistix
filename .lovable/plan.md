@@ -1,60 +1,107 @@
-## Loop 9 — Cierre final de auditoría
+# Auditoría arquitectónica — Reporte (lectura)
 
-Al medir el estado real con ESLint el panorama cambió:
+## TL;DR
 
-- **Barrel violations: 0** (P0.1 ✅ ya cerrado)
-- **Mappers `embarque*` / `cotizacion*`: complejidad ≤12** (P0.3 ✅ ya cerrado en loops anteriores; la memoria está desactualizada)
-- **Lo que queda: 14 warnings de `complexity > 15` y 2 `react-hooks/exhaustive-deps`**
+La arquitectura está **muy sana**. Las grandes batallas (capas, barrels, Power of 10, `any`, complejidad, perf tests) ya están ganadas. Lo que queda son **refactors quirúrgicos** y **endurecimientos** del linter/tests, no rescates de deuda crítica.
 
-Este loop cierra esos 16 warnings para poder endurecer ESLint (P2.12).
+## Métricas actuales (medidas, no estimadas)
 
-### Alcance
+| Métrica | Valor | Estado |
+|---|---|---|
+| Archivos `> 200` LOC (excluyendo generados/changelog/sidebar shadcn) | **0** | ✅ |
+| `any` en `src/` | **0** | ✅ |
+| `console.log/error/warn` (uso de `logger`) | **0** | ✅ |
+| TODO / FIXME / HACK | **0** | ✅ |
+| `supabase.from(...)` en pages/components | **0** | ✅ |
+| Imports `from '@/services/*'` en pages/components | **0** | ✅ |
+| Barrels de dominio | **38** | ✅ |
+| `eslint-disable` restantes | **33** | ⚠️ revisar |
+| `queryKey: [...]` inline fuera de `lib/query` | **110** | ⚠️ centralizar |
+| Archivos en `src/` | 930 (202 hooks · 347 components · 59 pages) | ✅ granular |
 
-**A. Reducir complejidad (14 funciones, todas >15):**
+Archivos legítimamente grandes (no son violación):
+- `integrations/supabase/types.ts` (3567) — generado
+- `content/changelog/**` — datos
+- `components/ui/sidebar.tsx` (637) — shadcn vendored
 
-| Archivo | Función | Complejidad | Estrategia |
-|---|---|---|---|
-| `hooks/crm/useOportunidadForm.ts` | arrow L56 | 23 | Extraer `buildOportunidadPayload()` + `resolveDefaults()` |
-| `lib/parsers/dashboard.ts` | `parseEmbarqueConProfitRaw` | 23 | Partir en `parseHeader` + `parseProfit` + `parseFechas` |
-| `lib/ui/errorReport.ts` | `formatReportMarkdown` | 22 | Una función por sección (`fmtError`, `fmtContext`, `fmtBreadcrumbs`) |
-| `hooks/crm/useLeadEditForm.ts` | arrow L73 | 20 | Extraer normalizadores a `leadEditHelpers.ts` |
-| `hooks/crm/leads/mutations.ts` | `mutationFn` L10 | 20 | Extraer `buildLeadInsertPayload()` |
-| `hooks/crm/leads/bulk.ts` | arrow L51 | 19 | Extraer `applyBulkPatch()` |
-| `hooks/crm/useOportunidades.ts` | `mutationFn` L92 | 19 | Extraer `buildOportunidadUpdate()` |
-| `lib/ui/errorReport.ts` | `extractErrorDetails` | 18 | Separar `extractStack` + `extractCause` |
-| `pages/dashboard/SentryDiagnostico.tsx` | comp | 17 | Mover handlers a hook `useSentryDiagnostico` |
-| `contexts/AuthContext.tsx` | arrow L73 | 16 | Extraer `resolveEffectiveRole()` |
-| `components/shared/VirtualDataTable.tsx` | comp | 16 | Extraer `useVirtualRows()` |
-| `lib/crm/forecast.ts` | `computeForecast` | 16 | Extraer `bucketByMonth()` |
-| `lib/parsers/dashboard.ts` | `parseArribosEsteMes` | 16 | Extraer filtro por mes a helper |
-| `pages/crm/CrmDashboard.tsx` | comp | 16 | Mover cálculo de KPIs vencidas a hook |
+## Hallazgos por categoría
 
-Meta: **todas ≤12** (umbral objetivo de P2.12).
+### 1. Separación de capas (pages → hooks → services → lib) — ✅ Excelente
+- 0 fugas de Supabase a UI.
+- 0 imports de `services/*` desde pages/components.
+- Pages típicas (Cotizaciones, Embarques, Clientes…) ≤ 200 LOC y son compositores delgados sobre controllers.
+- Mappers e I/O están bien aislados en `lib/mappers/` y `services/<dominio>/`.
 
-**B. Resolver exhaustive-deps (2):**
+### 2. Modularidad por dominio — ✅ Sólida
+- `hooks/<dominio>/index.ts` + sub-módulos (`queries`, `mutations`, `bulk`, `convertir`) es el patrón consistente: `embarque`, `cotizacion`, `crm/leads`, `auditoria/revisiones`, `admin`, etc.
+- Barrels reales (sólo re-export), sin lógica oculta.
 
-- `pages/crm/Leads.tsx` L38 → envolver `leads` en `useMemo`.
-- `pages/crm/Oportunidades.tsx` L65 → envolver `opsRaw` en `useMemo`.
+### 3. Acoplamientos / olores remanentes — ⚠️ Menor
+- **Query keys dispersas**: 110 `queryKey:[...]` literales fuera de `lib/query/index.ts`. Riesgo de invalidaciones desincronizadas.
+- **`eslint-disable` (33)**: la mayoría justificadas (re-exports estables, deps de hooks), pero conviene auditar 1×1 que ninguna esconda un bug latente.
+- **`localStorage` directo en 6 archivos** (`ThemeContext`, `OrganizationContext`, `useLoginAudit`, `ErrorBoundary`, `main.tsx`). Funciona, pero un wrapper tipado en `lib/storage` evitaría typos de claves y facilitaría tests/SSR.
+- **`services/*` con pocos tests** (~2 suites): la red de seguridad vive casi toda en `lib/` y hooks.
 
-**C. Verificación:**
+### 4. Pendientes formales heredados (`mem://audit/pendings`)
+Quedan abiertos los items: **P1.5 → P2.12** (P0.x todos ✅).
 
-1. `bunx vitest run` → 626+ tests verdes.
-2. `bunx eslint src` → 0 `complexity` y 0 `exhaustive-deps`.
-3. Mantener Power of 10 (componentes ≤200 LOC, sin `any`).
+---
 
-**D. Cierre administrativo:**
+## Plan recomendado — ordenado de mayor a menor impacto
 
-- `APP_VERSION` → **11.21.0**
-- Nueva entrada en `src/content/changelog/v8/chunks/0.ts` y `changelogData.ts`.
-- Actualizar `mem://audit/pendings`: marcar ✅ P0.1, P0.3, P0.4, y dejar como únicos pendientes P1.5–P1.8 y P2.9–P2.12.
+### 🔴 Crítico (1)
 
-### Fuera de alcance
+**1. P1.6 — Romper los "god services" (≤ 200 LOC + complexity ≤ 12)**
+Targets: `services/facturas/proyeccion.ts`, `services/cotizacion/mutations.ts`, `services/facturas/huecoFacturacion.ts`.
+Estrategia: subcarpeta por operación + barrel (mismo patrón que `services/embarque/`). Mantiene API pública.
 
-- `react-refresh/only-export-components` (3) → trivial, lo arrastro si surge.
-- `no-explicit-any` en `__tests__/embarqueRoundtrip.test.ts` → lo limpio si está en el camino.
-- P1.5/1.6/1.7/1.8, P2.10/11/12 → quedan para próximos loops.
-- Edge functions, RLS, `integrations/supabase/*` → intactos.
+### 🟠 Alto (2-4)
 
-### Riesgo
+**2. Centralizar query keys (110 → 0 fuera de `lib/query`)**
+Mover todas las `queryKey: [...]` literales a fábricas en `lib/query/index.ts` (`queryKeys.<dominio>.<recurso>(...args)`). Beneficio: invalidaciones consistentes y refactors guiados por el compilador.
 
-Bajo. Todas las extracciones son refactors puros sin cambio de comportamiento; los tests de mappers/CRM (626 suites) son la red de seguridad.
+**3. P1.7 — Schemas zod para respuestas Supabase críticas**
+Reemplazar `fromDb<T>()` por `parse()` en: `embarques`, `facturas`, `cotizaciones`, `clientes`. Convierte errores de forma en errores de borde en lugar de crashes en UI.
+
+**4. P1.8 — Subir cobertura de `services/` a ≥ 10 suites**
+Hoy ~2. Priorizar: `services/facturas/*`, `services/embarque/mutations`, `services/cotizacion/mutations`. Tests de contrato con mock del cliente Supabase.
+
+### 🟡 Medio (5-7)
+
+**5. P2.12 — Endurecer ESLint**
+- `complexity` 15 → **12** (ya 0 warnings hoy, listo para bajarlo).
+- `no-restricted-imports` `warn` → **error** (barrels ya en 0).
+- Auditar y eliminar `eslint-disable` redundantes (~10 candidatos).
+
+**6. Wrapper tipado de `localStorage`**
+`lib/storage/keys.ts` con namespace + parse seguro. Migrar los 6 consumidores.
+
+**7. P1.5 — Unificar utils**
+Consolidar `src/utils/` + `src/lib/utils.ts` + `src/lib/utils/` en un único `lib/utils/` (+ `lib/io/`).
+
+### 🟢 Opcional (8-11)
+
+**8. P2.9 — Resolver últimos `react-refresh/only-export-components`** (HMR DX).
+**9. P2.10 — Mover `hooks/use-toast.ts` y `use-mobile.tsx` a `hooks/shared/`** cuando se refactorice sidebar.
+**10. P2.11 — Generar `docs/architecture-map.md` automatizado** (tabla dominio → pages → hooks → services → lib).
+**11. P3.13-16 — Más E2E (conciliación, portal, export ZIP); patrón `Result<T,E>` en services**.
+
+---
+
+## Riesgos / cosas que NO hace falta tocar
+
+- `src/components/ui/*` (shadcn vendored) — no refactorizar.
+- `src/integrations/supabase/types.ts` — auto-generado.
+- `src/content/changelog/**` — datos cronológicos, ya particionados.
+- RLS / edge functions — fuera del alcance de auditoría de frontend.
+
+## Verificación sugerida después de cada paso
+
+1. `bunx vitest run` (626 tests verdes).
+2. `bunx eslint src` (0 errors, 0 warnings).
+3. `bunx tsc --noEmit` (sin errores).
+4. Smoke manual: Login → Embarques → Cotización → Factura → CRM.
+
+---
+
+**Siguiente paso sugerido**: arrancar con **P1.6** (god services) porque es el último foco de complejidad ciclomática alta y desbloquea bajar el umbral de ESLint a 12 en el paso 5.
