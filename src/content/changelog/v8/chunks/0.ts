@@ -2,6 +2,14 @@ import type { ChangelogEntry } from "../../../changelogData";
 
 export const chunk0: ChangelogEntry[] = [
   {
+    version: "11.17.0",
+    date: "2026-05-25",
+    type: "minor",
+    title: "Auditoría loop 5 — componentes >200 LOC: TabDocumentos, BitacoraActividad, Facturacion, DashboardStatusCards",
+    summary: "TabDocumentos (257→81), BitacoraActividad (253→47), Facturacion (242→117), DashboardStatusCards (230→24). Subcomponentes y columnas extraídos.",
+    description: "Quinta tanda de la auditoría P1 (Power of 10): componentes > 200 líneas. (1) TabDocumentos.tsx (257→81): AgregarDocumentoDialog (123) + useDocumentoColumns (91) en components/embarque/tabDocumentos/; el archivo original queda como contenedor del Card+AlertDialog. (2) BitacoraActividad.tsx (253→47): constants.ts (52, ICONOS/COLORES/RUTAS/tiempoRelativo), FilaEntrada.tsx (90, con EstadoBadge inline) y VirtualTimeline.tsx (61) en components/shared/bitacora/. (3) Facturacion.tsx (242→117): facturaColumns y buildGastoColumns extraídos a pages/facturacion/facturacionColumns.tsx (126). (4) DashboardStatusCards.tsx (230→24): TimelineEstadosCard (69) y ArribosCard (123) en components/dashboard/statusCards/. Sin cambios funcionales. Suite: 91 archivos / 626 tests verdes. APP_VERSION 11.17.0.",
+  },
+  {
     version: "11.16.0",
     date: "2026-05-25",
     type: "minor",
