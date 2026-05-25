@@ -1,18 +1,10 @@
 import { describe, it, expect } from "vitest";
-import { formatDate } from "@/lib/formatters";
 import { getEstadoColor, getModoIcon } from "@/lib/ui/uiMappings";
 
-describe("formatDate", () => {
-  it("devuelve '-' para cadena vacía", () => {
-    expect(formatDate("")).toBe("-");
-  });
-  it("formatea fecha ISO correctamente", () => {
-    expect(formatDate("2026-03-01")).toBe("01/03/2026");
-  });
-  it("parsea cadena parcial (YYYY-MM) como primer día del mes", () => {
-    expect(formatDate("2026-03")).toBe("01/03/2026");
-  });
-});
+// Nota: tests de formatDate viven en src/lib/formatters/__tests__/formatters.test.ts
+// (eliminados de aquí en v11.39.0 — eran duplicado textual).
+
+
 
 describe("getEstadoColor", () => {
   it("retorna clase correcta para cada estado conocido", () => {
