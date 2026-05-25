@@ -2,6 +2,14 @@ import type { ChangelogEntry } from "../../../changelogData";
 
 export const chunk0: ChangelogEntry[] = [
   {
+    version: "11.25.0",
+    date: "2026-05-25",
+    type: "minor",
+    title: "P2 — Promoción de spreads de queryKeys a factory methods",
+    summary: "Eliminados los 15 spreads `[...queryKeys.X, …]` inline; ahora se accede vía métodos tipados (embarques.full, dashboard.statsSummary, clientes.selectByOrg, etc.).",
+    description: "Cierre de la centralización de query keys: el factory en src/lib/query/index.ts ahora expone embarques.{full, fullForEstadoFilter, extrasBranchB, expedientesCliente}, dashboard.{statsSummary, statsDetails}, clientes.selectByOrg, proveedores.selectByOrg, facturas.byOrg, cotizaciones.{byOrg, aceptadas}, admin.{organizationsStats, allUsersOptions, recentOrgsList}. Migrados consumidores en hooks/embarque, hooks/dashboard, hooks/cliente, hooks/cotizacion, hooks/facturacion y hooks/admin. 0 spreads `[...queryKeys.` fuera de lib/query. 626 tests verdes. APP_VERSION 11.25.0.",
+  },
+  {
     version: "11.24.0",
     date: "2026-05-25",
     type: "minor",
