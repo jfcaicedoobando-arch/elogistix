@@ -76,11 +76,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     syncSentryUser(buildSentryUserContext(user, profile, effectiveRole));
   }, [user, profile, effectiveRole]);
 
-  const signOut = async () => {
-    clearLoginAudit(user?.id);
+  const userId = user?.id;
+  const signOut = useCallback(async () => {
+    clearLoginAudit(userId);
     await supabase.auth.signOut();
     resetProfile();
-  };
+  }, [userId, clearLoginAudit, resetProfile]);
 
   const value = useMemo<AuthContextType>(
     () => ({
@@ -94,9 +95,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       loading,
       signOut,
     }),
-    // signOut es estable en términos prácticos (closures dependen de user que ya está en deps)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [user, session, profile, effectiveRole, loading],
+    [user, session, profile, effectiveRole, loading, signOut],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
