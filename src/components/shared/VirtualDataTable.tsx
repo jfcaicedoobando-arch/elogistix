@@ -109,14 +109,15 @@ export function VirtualDataTable<T>(props: VirtualDataTableProps<T>) {
   // gridTemplate sólo cambia si cambia el set de columnas o sus widths.
   // Memoizar evita re-string concat por scroll y, sobre todo, mantiene la
   // identidad de la prop para que `React.memo(VirtualRow)` ahorre re-renders.
-  // Usamos una ref para `leafColumns` porque su identidad cambia cada render,
-  // pero su forma efectiva (longitud + widths) está resumida en `widthsKey`.
+  // `widthsKey` resume cada width (o el sentinel default) en un string estable;
+  // calculamos gridTemplate directamente desde él para evitar capturar la
+  // referencia inestable de `leafColumns` dentro del memo.
   const leafColumns = table.getAllLeafColumns();
-  const widthsKey = leafColumns.map((c) => c.columnDef.meta?.width ?? "").join("|");
-  const leafColumnsRef = useRef(leafColumns);
-  leafColumnsRef.current = leafColumns;
+  const widthsKey = leafColumns
+    .map((c) => c.columnDef.meta?.width ?? "minmax(0,1fr)")
+    .join("\u0001");
   const gridTemplate = useMemo(
-    () => leafColumnsRef.current.map((c) => c.columnDef.meta?.width ?? "minmax(0,1fr)").join(" "),
+    () => widthsKey.split("\u0001").join(" "),
     [widthsKey],
   );
 
