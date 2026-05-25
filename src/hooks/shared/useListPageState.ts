@@ -15,7 +15,7 @@
  * Patrones más complejos (Embarques con 7+ filtros + fechas) tienen su propio
  * controller (`useEmbarquesPageState`).
  */
-import { useCallback, useMemo } from "react";
+import { useCallback, useMemo, useRef } from "react";
 import {
   useQueryState,
   useQueryStates,
