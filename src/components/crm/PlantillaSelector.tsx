@@ -7,7 +7,7 @@ import {
   DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
 import { usePlantillasMensaje, renderPlantilla, type PlantillaCanal } from "@/hooks/crm/usePlantillasMensaje";
-import { registrarBitacora } from "@/hooks/shared/useBitacora";
+import { insertBitacora } from "@/services/bitacora";
 import { useAuth } from "@/contexts/AuthContext";
 
 interface Props {
