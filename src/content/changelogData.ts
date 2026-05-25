@@ -101,14 +101,6 @@ export const recentChangelog: ChangelogEntry[] = [
     summary: "Linaje visible Lead↔Oportunidad↔Cotización↔Embarque, badges de actividades vencidas y botones Completar/Posponer inline.",
     description: "LineageCard en LeadDetalle y OportunidadDetalle. Badge de vencidas en tab Actividades (CrmLayout) y en item CRM del sidebar. Columna de acciones inline (Completar / Posponer +1d/+3d/+1sem) en /crm/actividades para roles con canEditCrm. APP_VERSION 11.3.1.",
   },
-  {
-    version: "11.3.0",
-    date: "2026-05-25",
-    type: "minor",
-    title: "CRM Sprint A: Dashboard real + asignación de vendedor",
-    summary: "Dashboard CRM con widgets accionables y selector de vendedor en leads/oportunidades.",
-    description: "useCrmDashboard.ts + nuevo CrmDashboard con Mis actividades de hoy, Cerrando esta semana, Leads sin contactar >7 días, Top 5 deals, Mini-embudo. VendedorSelect (admin/operador) en alta de leads/oportunidades. usePosponerActividad y useActividadesVencidasCount añadidos. canEditCrm incluye rol vendedor. APP_VERSION 11.3.0.",
-  },
 ];
 
 /** Deduplica por version conservando la primera ocurrencia (recentChangelog gana). */
