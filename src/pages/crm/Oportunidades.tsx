@@ -1,12 +1,11 @@
 /**
  * /crm/oportunidades — Pipeline con vista Kanban (DnD) y tabla.
  */
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Target, Plus } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-// removed unused Badge import
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import SearchInput from "@/components/selects/SearchInput";
 import { PageHeader } from "@/components/shared/PageHeader";
@@ -18,12 +17,17 @@ import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 import { formatCurrencyCompact } from "@/lib/formatters";
 import OportunidadKanban from "@/components/crm/OportunidadKanban";
 import NuevaOportunidadDialog from "@/components/crm/NuevaOportunidadDialog";
+import OportunidadesFiltersBar, {
+  FILTROS_DEFAULT,
+  type OportunidadesFiltros,
+} from "@/components/crm/OportunidadesFiltersBar";
 import {
   useOportunidades,
   useMoverEtapa,
   type CrmOportunidadRow,
 } from "@/hooks/crm/useOportunidades";
 import { useEtapasPipeline, type CrmEtapaRow } from "@/hooks/crm/useEtapasPipeline";
+import { useUsuarios } from "@/hooks/usuario";
 
 const columns: ColumnDef<CrmOportunidadRow, unknown>[] = defineColumns<CrmOportunidadRow>([
   { id: "nombre", header: "Oportunidad", meta: { className: "font-medium" }, cell: ({ row }) => row.original.nombre },
@@ -45,11 +49,35 @@ export default function Oportunidades() {
   const { toast } = useToast();
   const [search, setSearch] = useState("");
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [filtros, setFiltros] = useState<OportunidadesFiltros>(FILTROS_DEFAULT);
   const debounced = useDebounce(search, 300);
 
   const { data: etapas = [] } = useEtapasPipeline();
+  const { data: usuarios = [] } = useUsuarios();
+  const vendedores = useMemo(
+    () =>
+      usuarios
+        .filter((u) => ["admin", "operador", "vendedor", "super_admin"].includes(u.role))
+        .map((u) => ({ id: u.user_id, email: u.email })),
+    [usuarios],
+  );
   const { data, isLoading } = useOportunidades({ search: debounced, pageSize: 500 });
-  const ops = data?.data ?? [];
+  const opsRaw = data?.data ?? [];
+
+  // Filtros cliente-side
+  const ops = useMemo(() => {
+    return opsRaw.filter((o) => {
+      if (filtros.etapaId !== "todas" && o.etapa_id !== filtros.etapaId) return false;
+      if (filtros.vendedorId !== "todos" && o.vendedor_id !== filtros.vendedorId) return false;
+      if (filtros.cierreDesde && (!o.fecha_estimada_cierre || o.fecha_estimada_cierre < filtros.cierreDesde)) return false;
+      if (filtros.cierreHasta && (!o.fecha_estimada_cierre || o.fecha_estimada_cierre > filtros.cierreHasta)) return false;
+      if (filtros.montoMin) {
+        const min = Number(filtros.montoMin);
+        if (Number.isFinite(min) && Number(o.monto_estimado ?? 0) < min) return false;
+      }
+      return true;
+    });
+  }, [opsRaw, filtros]);
 
   const mover = useMoverEtapa();
 
@@ -70,7 +98,7 @@ export default function Oportunidades() {
       <PageHeader
         icon={<Target className="h-6 w-6 text-primary" />}
         title="Oportunidades"
-        description={`${ops.length} oportunidades · pipeline ${formatCurrencyCompact(ops.reduce((s, o) => s + Number(o.monto_estimado ?? 0), 0))}`}
+        description={`${ops.length} de ${opsRaw.length} oportunidades · pipeline ${formatCurrencyCompact(ops.reduce((s, o) => s + Number(o.monto_estimado ?? 0), 0))}`}
         actions={
           canEdit ? (
             <Button onClick={() => setDialogOpen(true)} className="hidden md:flex">
@@ -81,8 +109,14 @@ export default function Oportunidades() {
       />
 
       <Card>
-        <CardContent className="p-4">
+        <CardContent className="p-4 space-y-3">
           <SearchInput value={search} onChange={setSearch} placeholder="Buscar por nombre o cliente..." />
+          <OportunidadesFiltersBar
+            etapas={etapas as CrmEtapaRow[]}
+            vendedores={vendedores}
+            value={filtros}
+            onChange={setFiltros}
+          />
         </CardContent>
       </Card>
 
