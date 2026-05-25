@@ -1,0 +1,1 @@
+REVOKE EXECUTE ON FUNCTION public.crm_cierra_oportunidad_desde_cotizacion() FROM PUBLIC, anon, authenticated;
