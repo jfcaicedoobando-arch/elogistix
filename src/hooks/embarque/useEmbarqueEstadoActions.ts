@@ -39,7 +39,8 @@ export function useEmbarqueEstadoActions(embarque: EmbarqueRow | undefined, id: 
   const { mutate: syncEstadoMutate } = syncEstado;
   useEffect(() => {
     if (!embarqueId || !modo || !estado) return;
-    const estadoCalculado = calcularEstadoEmbarque(modo, tipo, etd, eta, estado);
+    if (!tipo) return;
+    const estadoCalculado = calcularEstadoEmbarque(modo, tipo, etd ?? null, eta ?? null, estado);
     if (estadoCalculado !== estado) {
       syncEstadoMutate({ embarqueId, nuevoEstado: estadoCalculado });
     }
