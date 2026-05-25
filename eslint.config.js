@@ -86,6 +86,15 @@ export default tseslint.config(
     },
   },
   {
+    // Registro central de query keys: catálogo plano (un literal por línea)
+    // por dominio. Dividirlo en archivos rompería el patrón "una sola fuente
+    // de verdad" que enforz el guardrail no-restricted-syntax.
+    files: ["src/lib/query/index.ts"],
+    rules: {
+      "max-lines": "off",
+    },
+  },
+  {
     // Contexts y barrels: re-exportan helpers/hooks junto al Provider.
     // El componente raíz de cada contexto rara vez se edita; el warning
     // de Fast Refresh es ruido para esta convención del proyecto.
