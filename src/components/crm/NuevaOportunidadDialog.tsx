@@ -35,6 +35,7 @@ import {
 } from "@/hooks/crm/useOportunidades";
 import { useEtapasPipeline } from "@/hooks/crm/useEtapasPipeline";
 import { useClientesForSelect } from "@/hooks/cliente";
+import { useCrearActividad } from "@/hooks/crm/useActividades";
 
 interface Props {
   open: boolean;
