@@ -2,29 +2,14 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import type { LeadInput } from "./constants";
+import { buildLeadInsertPayload } from "./leadPayload";
 
 export function useCrearLead() {
   const qc = useQueryClient();
   const { user } = useAuth();
   return useMutation({
     mutationFn: async (input: LeadInput) => {
-      const payload = {
-        empresa: input.empresa,
-        contacto: input.contacto ?? "",
-        email: input.email ?? "",
-        telefono: input.telefono ?? "",
-        ciudad: input.ciudad ?? "",
-        pais: input.pais ?? "",
-        fuente: input.fuente ?? "Otro",
-        estado: input.estado ?? "Nuevo",
-        score: input.score ?? 3,
-        interes_modo: input.interes_modo ?? "",
-        notas: input.notas ?? "",
-        vendedor_id:
-          input.vendedor_id !== undefined ? input.vendedor_id : (user?.id ?? null),
-        vendedor_email: input.vendedor_email ?? user?.email ?? "",
-        created_by: user?.id ?? null,
-      };
+      const payload = buildLeadInsertPayload(input, user);
       const { data, error } = await supabase
         .from("crm_leads")
         .insert(payload)

@@ -2,7 +2,7 @@
  * Pure parsers for the `dashboard_stats()` JSONB RPC payload.
  * Extracted from useDashboardData to keep the hook focused on query+state.
  */
-import { fromDb } from "@/lib/supabase/cast";
+
 import {
   EMPTY_ARRIBOS,
   EMPTY_CONTEO,
@@ -67,44 +67,9 @@ export function parseResumenMesSiguiente(stats: DashboardStats): ResumenFacturac
   };
 }
 
-/**
- * Normaliza un embarque con datos de profit (USD legacy + MXN homologado).
- */
-function parseEmbarqueConProfitRaw(r: Record<string, unknown>): EmbarqueConProfit {
-  const ventaUSD = Number(r.ventaUSD ?? 0);
-  const costoUSD = Number(r.costoUSD ?? 0);
-  const profit = r.profit !== undefined && r.profit !== null ? Number(r.profit) : ventaUSD - costoUSD;
-  const margen = r.margen !== undefined && r.margen !== null
-    ? Number(r.margen)
-    : ventaUSD > 0 ? (profit / ventaUSD) * 100 : 0;
-  const ventaMXN = Number(r.ventaMXN ?? 0);
-  const costoMXN = Number(r.costoMXN ?? 0);
-  const profitMXN = r.profitMXN !== undefined && r.profitMXN !== null
-    ? Number(r.profitMXN)
-    : ventaMXN - costoMXN;
-  const margenMXN = r.margenMXN !== undefined && r.margenMXN !== null
-    ? Number(r.margenMXN)
-    : ventaMXN > 0 ? (profitMXN / ventaMXN) * 100 : 0;
-  return {
-    ...(fromDb<EmbarqueConProfit>(r)),
-    ventaUSD,
-    costoUSD,
-    profit,
-    margen,
-    ventaMXN,
-    costoMXN,
-    profitMXN,
-    margenMXN,
-    tipoCambioUSD: Number(r.tipoCambioUSD ?? 0),
-    tipoCambioEUR: Number(r.tipoCambioEUR ?? 0),
-    ventaMxnFromUsd: Number(r.ventaMxnFromUsd ?? 0),
-    costoMxnFromUsd: Number(r.costoMxnFromUsd ?? 0),
-    ventaMxnFromEur: Number(r.ventaMxnFromEur ?? 0),
-    costoMxnFromEur: Number(r.costoMxnFromEur ?? 0),
-    ventaMxnNative: Number(r.ventaMxnNative ?? 0),
-    costoMxnNative: Number(r.costoMxnNative ?? 0),
-  };
-}
+// Re-export para no romper consumidores existentes
+export { parseEmbarqueConProfitRaw } from "./dashboardProfit";
+import { parseEmbarqueConProfitRaw } from "./dashboardProfit";
 
 export function parseEmbarquesMesSiguiente(stats: DashboardStats): EmbarqueMesSiguiente[] {
   const raw = (stats?.embarquesMesSiguiente as Array<Record<string, unknown>>) ?? [];
