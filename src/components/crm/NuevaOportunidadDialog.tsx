@@ -260,6 +260,18 @@ export default function NuevaOportunidadDialog({ open, onOpenChange, oportunidad
             <Label>Notas</Label>
             <Textarea rows={3} value={form.notas} onChange={(e) => set("notas", e.target.value)} />
           </div>
+          {!isEdit && (
+            <div className="sm:col-span-2 flex items-center gap-2 pt-1">
+              <Checkbox
+                id="auto-act-op"
+                checked={autoActividad}
+                onCheckedChange={(v) => setAutoActividad(v === true)}
+              />
+              <Label htmlFor="auto-act-op" className="text-xs cursor-pointer">
+                Crear actividad de seguimiento (tarea, mañana 9:00)
+              </Label>
+            </div>
+          )}
         </div>
 
         <DialogFooter>
