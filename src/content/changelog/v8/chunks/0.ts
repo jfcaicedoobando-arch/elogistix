@@ -9,6 +9,15 @@ export const chunk0: ChangelogEntry[] = [
     summary: "7 archivos nuevos (5 Deno + 2 Vitest) cubriendo parse-csf, jsoncargo-track, invite-client-user, client-error-log, auditoria-weekly-digest, zipDownload y exportCsv.",
     description: "Refactor mínimo: se exportan helpers puros (validateFile, validateEmbarqueForTracking, parseBodyId, parseBody, truncate, tryExtractUserId, esc, buildHtml) en sus respectivos index.ts de edge functions. Tests Deno cubren validación de tamaño/MIME del CSF, naviera/modo/contenedor para JSONCargo, payload de invitación de cliente, sanitización + extracción de userId desde JWT, y HTML del digest semanal (escape, ordenamiento por monto, filtro de hallazgos sin monto). Tests Vitest: zipDownload empaqueta archivos en carpeta y dispara descarga; exportCsv escapa comas/comillas/saltos, trata null como vacío y respeta filename. Suite: 84 archivos / ~595 tests. APP_VERSION 11.12.0.",
   },
+  {
+    version: "11.11.0",
+    date: "2026-05-25",
+    type: "minor",
+    title: "Auditoría de tests — 3 tandas (P0+P1+P2) +18 archivos / +83 tests",
+    summary: "Cobertura de servicios financieros críticos (hueco facturación, proyección, proforma), portal cliente, observability y edge functions.",
+    description: "Tanda A (P0 servicios): idempotencia, embarque/contenedor, proforma/consolidar, proforma/facturar, cliente/financials, facturas/huecoFacturacion, facturas/proyeccion + helper _supabaseChainMock + Deno cors_test. Tanda B (P1 hooks): extracción lib/facturacion/huecoCsv, tests para useCotizacionPL, useCreateTrackingLink y extensión de embarqueWizard. Tanda C (P2): portal/columns, portal/queries, observability/logClientError. Total: 82 archivos / 583 tests verdes. APP_VERSION 11.11.0."
+  },
+  {
     version: "11.10.0",
     date: "2026-05-25",
     type: "minor",
