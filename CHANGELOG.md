@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [11.35.0] - 2026-05-25
+- **Auditoría calidad — Etapa 4 sub-loop 1 (cobertura)**: +25 tests cubriendo 5 módulos puros críticos sin test previo. `lib/mappers/_helpers` (6 tests: str/num/numStr/bool/nullable/emptyToNull). `lib/parsers/dashboardProfit` (7 tests: numOr0, numOrCompute con 0 válido, safeMargen con división por cero, parse con/sin profit explícito). `services/embarque/jsoncargoFechas.buildFechasUpdate` (5 tests: ata seteando eta cuando falta, sin sobrescribir, null/undefined ignorados). `lib/mappers/embarqueCotizacion` (3 tests: vincular con defaults, desvincular reset incoterm=FOB). `services/cotizacion/mutations/payloadBuilders` (4 tests: folio + cliente vs prospecto + defaults de mercancía). Total: 623 → 648 tests verdes.
+
 ## [11.34.0] - 2026-05-25
 - **Auditoría calidad — Etapa 3 (`as unknown as`)**: producción de 9 casts → 3 sin documentar + 4 con convención `// SAFE-CAST:`. `PdfPreviewCotizacion` y `services/facturas/snapshots.ts` ahora usan el helper `fromDb<T>()` de `lib/supabase/cast.ts` (boundary centralizado, listo para validación runtime con Zod). Los 4 casts restantes en producción (`exportListado.ts` ×2, `useHuecoFacturacion.ts`, `ImportarLeadsCsvDialog.tsx`, `VirtualDataTable.tsx`) llevan ahora comentario `// SAFE-CAST: <razón concreta>` que justifica por qué TS no puede tiparlos mejor (PostgREST generics, asignación dinámica por clave, iteración runtime). Tests sin cambios (los casts en `__tests__/` son mocks de `ReturnType<typeof hook>` y `typeof fetch` — patrón estándar Vitest). 623/623 tests verdes.
 
