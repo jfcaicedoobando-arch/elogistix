@@ -17,6 +17,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import NuevaOportunidadDialog from "@/components/crm/NuevaOportunidadDialog";
 import ActividadTimeline from "@/components/crm/ActividadTimeline";
+import { OportunidadLineageCard } from "@/components/crm/LineageCard";
 import { useOportunidad, useEliminarOportunidad } from "@/hooks/crm/useOportunidades";
 import { useEtapasPipeline } from "@/hooks/crm/useEtapasPipeline";
 import { generarFolioCotizacion } from "@/services/cotizacion/queries";
@@ -134,6 +135,8 @@ export default function OportunidadDetalle() {
           <div className="col-span-2 md:col-span-3"><div className="text-muted-foreground text-xs">Notas</div>{op.notas || "—"}</div>
         </CardContent>
       </Card>
+
+      <OportunidadLineageCard oportunidadId={op.id} leadId={op.lead_id ?? null} />
 
       <ActividadTimeline entidadTipo="oportunidad" entidadId={op.id} />
 

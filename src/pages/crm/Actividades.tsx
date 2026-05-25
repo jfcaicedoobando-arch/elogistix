@@ -16,8 +16,10 @@ import {
   useActividades, ACTIVIDAD_TIPOS,
   type CrmActividadRow, type CrmActividadTipo,
 } from "@/hooks/crm/useActividades";
+import ActividadRowActions from "@/components/crm/ActividadRowActions";
+import { usePermissions } from "@/hooks/shared";
 
-const columns: ColumnDef<CrmActividadRow, unknown>[] = defineColumns<CrmActividadRow>([
+const baseColumns: ColumnDef<CrmActividadRow, unknown>[] = defineColumns<CrmActividadRow>([
   { id: "tipo", header: "Tipo", meta: { width: "w-[100px]" }, cell: ({ row }) => <Badge variant="outline">{row.original.tipo}</Badge> },
   { id: "asunto", header: "Asunto", meta: { className: "font-medium" }, cell: ({ row }) => row.original.asunto },
   { id: "entidad", header: "Entidad", meta: { className: "text-xs" }, cell: ({ row }) => row.original.entidad_tipo },
@@ -34,7 +36,13 @@ const columns: ColumnDef<CrmActividadRow, unknown>[] = defineColumns<CrmActivida
   },
 ]);
 
+const actionColumn: ColumnDef<CrmActividadRow, unknown> = {
+  id: "acciones", header: "", meta: { width: "w-[110px]" },
+  cell: ({ row }) => <ActividadRowActions actividad={row.original} />,
+};
+
 export default function Actividades() {
+  const { canEditCrm } = usePermissions();
   const [search, setSearch] = useState("");
   const [tipo, setTipo] = useState<CrmActividadTipo | "todos">("todos");
   const [estado, setEstado] = useState<"pendientes" | "completadas" | "todas">("pendientes");
@@ -46,6 +54,7 @@ export default function Actividades() {
   const { data, isLoading } = useActividades({ search: debounced, tipo, estado, responsable, page, pageSize });
   const items = data?.data ?? [];
   const totalPages = Math.ceil((data?.count ?? 0) / pageSize);
+  const columns = canEditCrm ? [...baseColumns, actionColumn] : baseColumns;
 
   return (
     <div className="space-y-6 p-6">

@@ -1,91 +1,41 @@
 
-## Objetivo
+# Sprint A — Cierre (CRM 11.3.x)
 
-Convertir el CRM de "conjunto de pantallas" a un **workflow comercial real**, atacando primero lo crítico (dashboard útil, asignación de owner, linaje, recordatorios) y luego configuración + bulk + visualizaciones.
+Continuamos con los 3 puntos pendientes que dejamos listos a nivel de hooks pero sin UI.
 
-Se propone en 3 sprints. Cada uno es entregable de forma independiente — el usuario decide cuáles ejecutar y en qué orden.
+## 1. Linaje visible en detalles (Lead → Oportunidad → Cotización → Embarque)
 
----
+- En `src/pages/crm/LeadDetalle.tsx`: agregar tarjeta "Oportunidades generadas" listando oportunidades cuyo `lead_id` coincide, con link a `/crm/oportunidades/:id`.
+- En `src/pages/crm/OportunidadDetalle.tsx`: agregar tarjeta "Origen y conversiones":
+  - Link al lead origen (si `lead_id` existe).
+  - Cotizaciones vinculadas (`cotizaciones` por `oportunidad_id` si existe la columna; si no, por `cliente_id` filtrado por fecha posterior a creación de la oportunidad) con link a `/cotizaciones/:id`.
+  - Embarques vinculados (vía cotización → embarque) con link a `/embarques/:id`.
+- Reusar `useCotizaciones` / `useEmbarques` existentes; no nuevas tablas.
 
-## Sprint A — Dashboard real + workflow básico (alto impacto, bajo riesgo)
+## 2. Badges de actividades vencidas
 
-**1. CRM Dashboard real**
-- Eliminar tarjeta "Próximas fases".
-- Nuevos widgets: *Mis actividades de hoy*, *Oportunidades a cerrar esta semana*, *Leads sin contactar > 7 días*, *Top 5 deals abiertos*, *Mini-embudo* (conteo por etapa).
-- KPIs existentes se mantienen.
+- En `src/pages/crm/CrmLayout.tsx`: leer `useActividadesVencidasCount()` y mostrar badge rojo junto al tab "Actividades" cuando `count > 0`.
+- En `src/components/layout/sidebarItems.ts` / componente que renderiza el item "CRM": mostrar el mismo badge junto al icono cuando `count > 0` (sólo para roles con `canEditCrm`).
+- Badge: pill `bg-destructive text-destructive-foreground` con el número (99+ si excede).
 
-**2. Asignación automática de owner**
-- Al crear un lead/oportunidad sin `vendedor_id`, default = usuario actual si tiene rol vendedor o admin.
-- En el form de NuevoLead/NuevaOportunidad agregar selector "Vendedor asignado" (admin/operador puede asignar a otros).
+## 3. Acciones inline en lista de actividades
 
-**3. Linaje visible**
-- En `OportunidadDetalle`: card con "Lead origen" (link) si `lead_id` existe, y lista de cotizaciones con `oportunidad_id = self` (estado + monto + link).
-- En `LeadDetalle`: card "Oportunidad convertida" (link) si existe.
+En `src/pages/crm/Actividades.tsx` (y la tabla que use), agregar por fila:
+- Botón "Completar" → `useCompletarActividad` (ya existe o se añade mínimo wrapper sobre update `estado='completada'`, `completada_en=now()`).
+- Menú "Posponer" con opciones rápidas (+1h, +1 día, mañana 9am, +1 semana) usando `usePosponerActividad` ya creado.
+- Toast de confirmación + invalidación de queries (`actividades`, `actividades-vencidas-count`, `crm-dashboard`).
+- Respetar `e.stopPropagation()` en los botones para no disparar el row click.
 
-**4. Recordatorios / actividades vencidas**
-- Badge rojo en el tab "Actividades" del CrmLayout cuando hay vencidas para el usuario.
-- Badge en sidebar global junto a "CRM".
-- En `Actividades.tsx`, fila pintada en rojo claro si `fecha_programada < now()` y no completada.
+## Versionado y changelog
 
-**5. Acciones inline en actividad**
-- Botón "Completar" en cada fila (one-click).
-- Botón "Posponer 1 día" / "Posponer 1 semana".
+- Bump `APP_VERSION` a `11.3.1`.
+- Entrada nueva en `src/content/changelog/v8/chunks/0.ts` y `src/content/changelogData.ts` describiendo: linaje visible, badges de vencidas, acciones rápidas en actividades.
 
-**Impacto:** el módulo ya se siente "vivo" — el vendedor sabe qué hacer al entrar.
+## Detalles técnicos
 
----
+- Sin cambios de schema. Todo se resuelve con queries existentes.
+- Si `cotizaciones.oportunidad_id` no existe, se omite ese vínculo y se documenta en notas para Sprint C (ya está en el roadmap como "mejor pre-fill de cotización").
+- Cumplir Power of 10: componentes ≤200 líneas (se extraen `LineageCard`, `ActividadRowActions`), sin `any`, cleanup en effects, manejo de `error` de Supabase.
+- Permisos: acciones inline sólo visibles si `canEditCrm`.
 
-## Sprint B — Configuración + bulk + filtros (poder operativo)
-
-**6. Configuración de pipeline (UI admin)**
-- Nueva ruta `/crm/configuracion` (oculta para vendedor): CRUD de etapas (nombre, orden, color, probabilidad default, tipo abierta/ganada/perdida), motivos de pérdida y cuotas mensuales por vendedor.
-
-**7. Bulk actions en Leads**
-- Selección múltiple en la tabla.
-- Acciones: reasignar vendedor, cambiar estado, eliminar (con doble confirmación).
-
-**8. Filtros en Oportunidades**
-- Filtros por: vendedor, etapa, rango de cierre, rango de monto.
-- Persistir en URL vía nuqs (consistente con Embarques/Cotizaciones).
-
-**9. Importación CSV de leads**
-- Botón "Importar" en `/crm/leads` con upload + preview + validación + inserción en bloque.
-
-**10. Datos accionables en detalle**
-- Email → `mailto:`, teléfono → `tel:`, botón copiar.
-
----
-
-## Sprint C — Visualización + automatizaciones (refinamiento)
-
-**11. Gráficos**
-- Forecast: barras stacked por mes (pipeline / ponderado / ganado) con Recharts.
-- Reportes: embudo de conversión, donut de motivos de pérdida, ranking de vendedores vs. cuota.
-
-**12. Eventos del sistema como actividades**
-- Trigger DB que inserta una `crm_actividades` tipo "nota" cuando:
-  - Una oportunidad cambia de etapa.
-  - Un lead se convierte.
-  - Se crea una cotización desde una oportunidad.
-
-**13. Pre-llenado mejorado al crear cotización**
-- Copiar origen/destino/modo/tipo_carga de la oportunidad → cotización.
-
-**14. Búsqueda global (Ctrl+K)**
-- Extender `useGlobalSearch` para incluir leads y oportunidades.
-
-**15. Notas con historial en oportunidad**
-- Sub-tabla `crm_oportunidad_notas` (o usar `crm_actividades` tipo "nota") con timeline cronológica en el detalle.
-
----
-
-## Notas técnicas
-
-- Sin cambios destructivos de schema; sólo se agregaría una columna/trigger en Sprint C.
-- Todo respeta RLS existentes (`Vendedor own crm_*` ya filtra por `vendedor_id`).
-- Componentes ≤200 líneas, sin `any`, paginación servidor donde aplique (regla Power of 10).
-- Versionado: Sprint A → 11.3.0, B → 11.4.0, C → 11.5.0.
-
-## Pregunta
-
-¿Ejecutamos sólo **Sprint A** ahora (lo más urgente y visible) o quieres definir un orden distinto / agregar/quitar puntos?
+¿Procedo con la implementación?

@@ -2,6 +2,14 @@ import type { ChangelogEntry } from "../../../changelogData";
 
 export const chunk0: ChangelogEntry[] = [
   {
+    version: "11.3.1",
+    date: "2026-05-25",
+    type: "patch",
+    title: "CRM Sprint A cierre: linaje, badges de vencidas y acciones rápidas",
+    summary: "Linaje Lead↔Oportunidad↔Cotización↔Embarque visible en detalles, badges de actividades vencidas en sidebar y tab, y botones Completar/Posponer en la lista de actividades.",
+    description: "Nuevo componente src/components/crm/LineageCard.tsx con LeadLineageCard (oportunidades del lead) y OportunidadLineageCard (lead origen + cotizaciones por oportunidad_id + embarques derivados). Integrado en LeadDetalle y OportunidadDetalle. CrmLayout muestra badge destructivo con el conteo de actividades vencidas junto al tab Actividades; el sidebar global también pinta el badge en el item CRM consumiendo useActividadesVencidasCount. Nueva tabla Actividades con columna 'Acciones' (sólo para canEditCrm): botón Completar (useCompletarActividad) y menú Posponer (+1 día, +3 días, +1 semana) usando usePosponerActividad, con stopPropagation. APP_VERSION 11.3.1.",
+  },
+  {
     version: "11.3.0",
     date: "2026-05-25",
     type: "minor",
