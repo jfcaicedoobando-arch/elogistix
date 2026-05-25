@@ -22,6 +22,14 @@ export interface ChangelogEntry {
  */
 export const recentChangelog: ChangelogEntry[] = [
   {
+    version: "11.2.0",
+    date: "2026-05-25",
+    type: "minor",
+    title: "CRM Fases 3-6: Oportunidades, Actividades, Forecast y Reportes",
+    summary: "Kanban con drag&drop, timeline de actividades, forecast ponderado, reportes y conversión de oportunidad a cotización.",
+    description: "Hooks useOportunidades/useEtapasPipeline/useActividades/useForecastReportes. UI OportunidadKanban (@dnd-kit), ActividadTimeline, NuevaOportunidadDialog. Pantallas /crm/oportunidades (Kanban/Tabla), /crm/oportunidades/:id (con 'Crear cotización' que enlaza oportunidad_id), /crm/actividades, /crm/forecast, /crm/reportes. Vendedor: sidebar enfocada (CRM + Clientes + Ayuda). APP_VERSION 11.2.0.",
+  },
+  {
     version: "11.1.0",
     date: "2026-05-25",
     type: "minor",
