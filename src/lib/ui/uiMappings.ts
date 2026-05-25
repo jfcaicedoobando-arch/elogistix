@@ -56,6 +56,7 @@ export const roleLabels: Record<string, string> = {
   super_admin: "Super Admin",
   admin: "Admin",
   operador: "Operador",
+  vendedor: "Vendedor",
   viewer: "Visor",
   cliente: "Cliente",
 };
