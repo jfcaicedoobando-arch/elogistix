@@ -22,6 +22,14 @@ export interface ChangelogEntry {
  */
 export const recentChangelog: ChangelogEntry[] = [
   {
+    version: "10.2.3",
+    date: "2026-05-25",
+    type: "patch",
+    title: "ErrorBoundary conectado a Sentry",
+    summary: "Los errores atrapados por ErrorBoundary ahora también se reportan a Sentry con componentStack como contexto.",
+    description: "src/components/shared/ErrorBoundary.tsx agrega Sentry.withScope + captureException (tag source=react-error-boundary, context react.componentStack) además del logClientError a app_logs. APP_VERSION 10.2.3.",
+  },
+  {
     version: "10.2.2",
     date: "2026-05-19",
     type: "patch",
