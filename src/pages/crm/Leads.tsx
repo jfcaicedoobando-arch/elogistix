@@ -1,12 +1,13 @@
 /**
- * /crm/leads — Listado de leads con búsqueda, filtros y creación rápida (Fase 2).
+ * /crm/leads — Listado de leads con búsqueda, filtros, selección múltiple e import CSV.
  */
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { Users, Plus } from "lucide-react";
+import { Users, Plus, Upload } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Select,
   SelectContent,
@@ -26,6 +27,8 @@ import { useDebounce, useListPageState, usePermissions } from "@/hooks/shared";
 import { FloatingActionButton } from "@/components/shared/FloatingActionButton";
 import { toTitleCase } from "@/lib/formatters";
 import NuevoLeadDialog from "@/components/crm/NuevoLeadDialog";
+import LeadsBulkBar from "@/components/crm/LeadsBulkBar";
+import ImportarLeadsCsvDialog from "@/components/crm/ImportarLeadsCsvDialog";
 import {
   LEAD_ESTADOS,
   LEAD_FUENTES,
