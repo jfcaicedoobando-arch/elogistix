@@ -86,7 +86,6 @@ function measureMedian(
   const min = samples[0];
   const max = samples[runs - 1];
 
-  // eslint-disable-next-line no-console
   console.log(
     `[perf] ${label}: median=${median.toFixed(1)}ms min=${min.toFixed(1)} max=${max.toFixed(1)} (n=${runs})`,
   );
