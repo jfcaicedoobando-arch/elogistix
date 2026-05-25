@@ -1,66 +1,33 @@
-## Diagnóstico
+## Objetivo
+Crear una nueva pantalla `/sentry` que muestre el estado de Sentry, la versión del release, el usuario autenticado y la organización activa. Útil para verificar en runtime que el reporte de errores está funcionando.
 
-El botón "Marcar revisado" parece no hacer nada porque la mutación aborta antes de llegar a Supabase con `throw new Error("Sesión no válida")`. El log confirma:
+## Cambios
 
-```
-[useMarcarRevisado] error: Error: Sesión no válida
-  at mutationFn (useAuditoriaRevisiones.ts:45:30)
-```
+### 1. Nueva página — `src/pages/dashboard/SentryDiagnostico.tsx`
+Una pantalla de solo lectura con tarjetas de información:
+- **Estado de Sentry**: activo/inactivo (detectado vía `Sentry.getClient()`), con indicador visual verde/rojo.
+- **Release**: `libre-carga@${APP_VERSION}`.
+- **Environment**: `import.meta.env.MODE` (development/production).
+- **DSN**: mostrado parcialmente enmascarado por seguridad (solo el host y los últimos 6 caracteres del key).
+- **Sample rate**: `tracesSampleRate`.
+- **Usuario actual**: email, id, rol efectivo.
+- **Organización actual**: nombre, id.
+- **Acción**: botón "Enviar error de prueba" que dispara `Sentry.captureException(new Error("Error de prueba — Sentry Diagnóstico"))` y muestra confirmación con toast.
 
-Causas combinadas:
+Estilo: reutilizando `PageHeader`, `Card`, `CardContent` y layout de grid (2 cols en desktop, 1 en mobile) para mantener consistencia con el panel de salud en `/admin/diagnostico`.
 
-1. **Carrera en `useAuthSession`**: el listener `onAuthStateChange` recibe `INITIAL_SESSION` y lo trata como refresh silencioso (`handleSilentRefresh`), que **solo actualiza `session` y nunca `user`**. El `user` queda hidratado por la promesa paralela `supabase.auth.getSession()`, lo que abre una ventana donde el contexto puede tener `session != null` pero `user == null`.
-2. **Validación frágil en las mutaciones**: `useMarcarRevisado`, `useDesmarcarRevisado` y `useAsignarResponsable` confían 100% en `user` del contexto. Si está `null` por la carrera de arriba — o por una invalidación transitoria — abortan sin caer a la fuente de verdad (`supabase.auth.getUser()`).
+### 2. Ruta — `src/App.tsx`
+Agregar lazy import y ruta `/sentry` dentro del bloque de rutas regulares (`<ProtectedRoute><Layout /></ProtectedRoute>`).
 
-## Cambios propuestos
+### 3. Sidebar — `src/components/layout/sidebarItems.ts`
+Agregar item `"Sentry"` con url `/sentry` e icono `Bug` en `SIDEBAR_SISTEMA_ITEMS`, junto a Changelog y Ayuda.
 
-### 1. `src/contexts/auth/useAuthSession.ts` — hidratar `user` en INITIAL_SESSION
+### 4. Changelog — bump a v10.2.5
+Actualizar `appVersion.ts`, `changelogData.ts` y `v8/chunks/0.ts` con entrada:
+> v10.2.5 — Agrega pantalla de diagnóstico de Sentry (`/sentry`) para verificar estado del SDK, release, usuario y organización en runtime.
 
-`INITIAL_SESSION` es el evento canónico de arranque; debe poblar `user` y bajar `loading` igual que `getSession()`. Separar la rama de "token refresh silencioso" (que sí debe seguir evitando re-renders) de la rama de "primera sesión conocida".
-
-```ts
-if (eventoAuth === "TOKEN_REFRESHED") {
-  handleSilentRefresh(newSession);
-  return;
-}
-// INITIAL_SESSION, SIGNED_IN, SIGNED_OUT, USER_UPDATED → hidratan user+session
-setSession(newSession);
-setUser(newSession?.user ?? null);
-setLoading(false);
-if (eventoAuth === "SIGNED_IN" || eventoAuth === "SIGNED_OUT" || eventoAuth === "USER_UPDATED") {
-  setLastEvent(eventoAuth);
-}
-```
-
-El fallback `getSession().then(...)` se mantiene como red de seguridad (no daña, deduplicado por shallow compare opcional).
-
-### 2. `src/hooks/auditoria/useAuditoriaRevisiones.ts` — fallback a `supabase.auth.getUser()`
-
-En las 3 mutaciones (`useMarcarRevisado`, `useDesmarcarRevisado`, `useAsignarResponsable`), reemplazar el guard estricto por un helper que primero intenta `user` del contexto y, si está null, consulta `supabase.auth.getUser()`. Solo si **ambos** fallan, lanzar `"Sesión no válida"`. Esto elimina la dependencia del estado de React para una decisión que ya es asíncrona.
-
-```ts
-async function resolveAuthUser(ctxUser: User | null) {
-  if (ctxUser) return ctxUser;
-  const { data, error } = await supabase.auth.getUser();
-  if (error || !data.user) throw new Error("Sesión no válida");
-  return data.user;
-}
-```
-
-Las 3 mutationFn cambian `if (!user) throw ...` por `const u = await resolveAuthUser(user)` y usan `u.id` / `u.email` para `revisado_por`, `asignado_por`, bitácora, etc.
-
-### 3. Verificación
-
-- Recargar `/auditoria`, abrir el diálogo y hacer clic en "Marcar revisado" antes de que el contexto termine de hidratarse → debe persistir y cerrar el diálogo.
-- Vitest: `bunx vitest run` debe seguir en 406/406 (no hay tests específicos de estas mutaciones; los de auditoría existentes no tocan auth context).
-
-### 4. Changelog
-
-- `APP_VERSION` → `10.2.2` (patch).
-- Entrada en `chunk0.ts` + `recentChangelog` describiendo el fix de carrera de hidratación y el fallback `getUser()`.
-
-## Lo que NO se hace
-
-- No se cambia la lógica de revisiones, bitácora ni RLS — el problema es exclusivamente del guard cliente.
-- No se toca `useAuthProfile` ni `AuthContext` (solo `useAuthSession`).
-- No se introducen nuevas dependencias.
+## Técnico
+- Se consume `useAuth()` y `useOrganization()` para usuario/org.
+- Se importa `* as Sentry` para leer el cliente y disparar el test error.
+- Se importa `APP_VERSION` de `@/constants/appVersion`.
+- No se requieren cambios de backend ni RLS.

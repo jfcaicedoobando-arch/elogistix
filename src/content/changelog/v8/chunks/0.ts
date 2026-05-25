@@ -2,6 +2,14 @@ import type { ChangelogEntry } from "../../../changelogData";
 
 export const chunk0: ChangelogEntry[] = [
   {
+    version: "10.2.5",
+    date: "2026-05-25",
+    type: "minor",
+    title: "Pantalla de diagnóstico de Sentry",
+    summary: "Nueva ruta /sentry que muestra el estado del SDK, release, environment, DSN enmascarado, usuario y organización, con botones para enviar un error/mensaje de prueba.",
+    description: "src/pages/dashboard/SentryDiagnostico.tsx lee Sentry.getClient().getOptions() y combina con useAuth/useOrganization para mostrar el contexto real con el que viajan los reportes. Se agregó la ruta en App.tsx y el item 'Sentry' (icono Bug) en SIDEBAR_SISTEMA_ITEMS. APP_VERSION 10.2.5.",
+  },
+  {
     version: "10.2.4",
     date: "2026-05-25",
     type: "patch",
