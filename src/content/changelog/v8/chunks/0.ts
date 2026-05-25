@@ -2,6 +2,14 @@ import type { ChangelogEntry } from "../../../changelogData";
 
 export const chunk0: ChangelogEntry[] = [
   {
+    version: "11.4.0",
+    date: "2026-05-25",
+    type: "minor",
+    title: "CRM Sprint B: configuración del pipeline, filtros avanzados, bulk y CSV",
+    summary: "Nueva pestaña Configuración del CRM, filtros avanzados en Oportunidades, selección múltiple + acciones bulk en Leads, importación CSV y datos accionables (mailto/tel + copiar).",
+    description: "Nueva ruta /crm/configuracion (solo canEditCrm) con EtapasPipelineEditor (nombre, tipo, probabilidad default, color, orden ↑/↓, activa) y MotivosPerdidaEditor (alta + activar/desactivar). Hooks añadidos: useEtapasPipelineAll, useActualizarMotivoPerdida, useCrearMotivoPerdida. Oportunidades incorpora OportunidadesFiltersBar (etapa, vendedor, rango de cierre, monto mínimo, limpiar) con filtrado cliente-side sobre el dataset cargado, afectando Kanban y Tabla. Leads soporta selección múltiple por checkbox + LeadsBulkBar (cambiar estado, reasignar vendedor con VendedorSelect, eliminar con doble confirmación) usando useActualizarLeadsBulk/useEliminarLeadsBulk. Nuevo botón Importar CSV en /crm/leads abre ImportarLeadsCsvDialog con parser RFC4180 simple, mapeo automático por encabezado (empresa/contacto/email/telefono/ciudad/pais/fuente/estado/score/notas), preview de 50 filas con badges de válidas/errores y commit por batches de 100 vía useCrearLeadsBulk. LeadDetalle muestra card 'Contacto rápido' con ContactActions (mailto:/tel: + botón copiar al clipboard). APP_VERSION 11.4.0.",
+  },
+  {
     version: "11.3.1",
     date: "2026-05-25",
     type: "patch",

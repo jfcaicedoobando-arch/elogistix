@@ -24,6 +24,7 @@ import { notifySuccess, notifyError } from "@/lib/ui/appFeedback";
 import { usePermissions } from "@/hooks/shared";
 import ConvertirLeadDialog from "@/components/crm/ConvertirLeadDialog";
 import { LeadLineageCard } from "@/components/crm/LineageCard";
+import ContactActions from "@/components/crm/ContactActions";
 import {
   LEAD_ESTADOS,
   LEAD_FUENTES,
@@ -173,6 +174,15 @@ export default function LeadDetalle() {
           </div>
         }
       />
+
+      <Card>
+        <CardHeader className="pb-2">
+          <CardTitle className="text-base">Contacto rápido</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <ContactActions email={lead.email} telefono={lead.telefono} />
+        </CardContent>
+      </Card>
 
       <Card>
         <CardHeader>

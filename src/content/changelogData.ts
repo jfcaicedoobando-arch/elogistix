@@ -22,6 +22,14 @@ export interface ChangelogEntry {
  */
 export const recentChangelog: ChangelogEntry[] = [
   {
+    version: "11.4.0",
+    date: "2026-05-25",
+    type: "minor",
+    title: "CRM Sprint B: configuración, filtros, bulk y CSV",
+    summary: "Pestaña Configuración del CRM, filtros avanzados en Oportunidades, selección múltiple en Leads, import CSV y datos accionables (mailto/tel + copiar).",
+    description: "EtapasPipelineEditor y MotivosPerdidaEditor en /crm/configuracion. OportunidadesFiltersBar (etapa/vendedor/cierre/monto) filtra Kanban y Tabla. LeadsBulkBar permite cambiar estado, reasignar vendedor o eliminar selección múltiple. ImportarLeadsCsvDialog con preview y batches de 100. ContactActions (mailto/tel + copiar) en LeadDetalle. APP_VERSION 11.4.0.",
+  },
+  {
     version: "11.3.1",
     date: "2026-05-25",
     type: "patch",
