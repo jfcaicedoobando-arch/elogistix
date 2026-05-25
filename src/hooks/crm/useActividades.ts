@@ -123,7 +123,30 @@ export function useCompletarActividad() {
         .eq("id", id);
       if (error) throw error;
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["crm", "actividades"] }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["crm", "actividades"] });
+      qc.invalidateQueries({ queryKey: ["crm", "dashboard"] });
+    },
+  });
+}
+
+/** Pospone una actividad N días desde la fecha programada (o hoy si no tiene). */
+export function usePosponerActividad() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, dias, fechaProgramada }: { id: string; dias: number; fechaProgramada: string | null }) => {
+      const base = fechaProgramada ? new Date(fechaProgramada) : new Date();
+      base.setDate(base.getDate() + dias);
+      const { error } = await supabase
+        .from("crm_actividades")
+        .update({ fecha_programada: base.toISOString() })
+        .eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["crm", "actividades"] });
+      qc.invalidateQueries({ queryKey: ["crm", "dashboard"] });
+    },
   });
 }
 

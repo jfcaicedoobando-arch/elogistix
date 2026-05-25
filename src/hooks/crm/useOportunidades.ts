@@ -81,6 +81,8 @@ export type OportunidadInput = {
   origen?: string;
   destino?: string;
   notas?: string;
+  vendedor_id?: string | null;
+  vendedor_email?: string;
 };
 
 export function useCrearOportunidad() {
@@ -101,8 +103,8 @@ export function useCrearOportunidad() {
           origen: input.origen ?? "",
           destino: input.destino ?? "",
           notas: input.notas ?? "",
-          vendedor_id: user?.id ?? null,
-          vendedor_email: user?.email ?? "",
+          vendedor_id: input.vendedor_id !== undefined ? input.vendedor_id : (user?.id ?? null),
+          vendedor_email: input.vendedor_email ?? user?.email ?? "",
           created_by: user?.id ?? null,
         })
         .select("id")
@@ -113,6 +115,7 @@ export function useCrearOportunidad() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["crm", "oportunidades"] });
       qc.invalidateQueries({ queryKey: ["crm", "kpis"] });
+      qc.invalidateQueries({ queryKey: ["crm", "dashboard"] });
     },
   });
 }
