@@ -29,7 +29,8 @@ beforeEach(() => {
 });
 
 async function readCsv(): Promise<string> {
-  return await blobs[0].text();
+  const buf = await blobs[0].arrayBuffer();
+  return new TextDecoder("utf-8").decode(buf);
 }
 
 describe("exportToCsv", () => {
