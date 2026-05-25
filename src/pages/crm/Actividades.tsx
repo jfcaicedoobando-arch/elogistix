@@ -1,10 +1,13 @@
 /**
  * /crm/actividades — Lista global de actividades CRM con filtros.
+ * Soporta query param `?filtro=vencidas` que limita a vencidas del usuario.
  */
-import { useState } from "react";
-import { Activity } from "lucide-react";
+import { useEffect, useState } from "react";
+import { useSearchParams } from "react-router-dom";
+import { Activity, X } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
