@@ -4,11 +4,11 @@
  * v8.153.2 — Cuando hay filtro por estado, se trae el set COMPLETO (sin paginar
  * server-side) porque el estado real se calcula client-side a partir de
  * etd/eta/estado. Sobre ese set se filtra, se agrupa por expediente, se
- * ordena y se pagina. Esto garantiza que:
- *  - Los conteos del dashboard (contenedores) cuadren con el listado.
- *  - El expediente no "desaparezca" al cambiar el tamaño de página.
+ * ordena y se pagina.
  *
- * Sin filtro de estado se mantiene la paginación server-side original.
+ * 11.14.0: helpers puros (compareBy, computeCounts, resolveExtras,
+ * buildFullSetFilters, dedupePorExpediente, contenedoresPorExpediente)
+ * movidos a `lib/embarque/embarquesPageHelpers`.
  */
 import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
@@ -19,76 +19,18 @@ import { SORT_KEY_TO_COLUMN } from "@/services/embarque/queries";
 import { fetchEmbarquesParaExport, fetchEmbarquesListExtras } from "@/services/embarque";
 import { useOrgFilter } from "@/hooks/shared/useOrgFilter";
 import { queryKeys } from "@/lib/query";
-import { useEmbarquesFilters, type SortDir } from "@/hooks/embarque/useEmbarquesFilters";
+import { useEmbarquesFilters } from "@/hooks/embarque/useEmbarquesFilters";
+import {
+  compareBy,
+  computeCounts,
+  resolveExtras,
+  buildFullSetFilters,
+  dedupePorExpediente,
+  contenedoresPorExpediente as computeContenedoresPorExpediente,
+  type SortDir,
+} from "@/lib/embarque/embarquesPageHelpers";
 
 export type { SortDir };
-
-const SORT_GETTERS: Record<string, (e: EmbarqueRow) => string> = {
-  expediente: (e) => e.expediente ?? "",
-  cliente: (e) => e.cliente_nombre ?? "",
-  modo: (e) => e.modo ?? "",
-  estado: (e) => e.estado ?? "",
-  etd: (e) => e.etd ?? "",
-  eta: (e) => e.eta ?? "",
-  operador: (e) => e.operador ?? "",
-  created_at: (e) => e.created_at ?? "",
-};
-
-function compareBy(a: EmbarqueRow, b: EmbarqueRow, sortKey: string | null, dir: SortDir): number {
-  const mult = dir === "asc" ? 1 : -1;
-  const getVal = SORT_GETTERS[sortKey ?? "expediente"] ?? SORT_GETTERS.expediente;
-  const va = getVal(a);
-  const vb = getVal(b);
-  if (va < vb) return -1 * mult;
-  if (va > vb) return 1 * mult;
-  return 0;
-}
-
-interface CountsInput {
-  estadoFilterActivo: boolean;
-  dedupedAll: EmbarqueRow[];
-  containersForView: EmbarqueRow[];
-  sortedAll: EmbarqueRow[];
-  pageSize: number;
-  totalCountServer: number;
-}
-function computeCounts(i: CountsInput) {
-  const sourceForPages = i.estadoFilterActivo ? i.sortedAll.length : i.totalCountServer;
-  return {
-    totalCountServer: i.totalCountServer,
-    expedientesCount: i.estadoFilterActivo ? i.dedupedAll.length : i.totalCountServer,
-    contenedoresCount: i.estadoFilterActivo ? i.containersForView.length : i.totalCountServer,
-    totalPages: Math.max(1, Math.ceil(sourceForPages / i.pageSize)),
-  };
-}
-
-import type { EmbarqueListExtras } from "@/services/embarque/queries";
-function resolveExtras(
-  estadoActivo: boolean,
-  branchB: EmbarqueListExtras | undefined,
-  branchA: EmbarqueListExtras | undefined,
-): EmbarqueListExtras {
-  const empty: EmbarqueListExtras = { liquidacion: {}, docs: {} };
-  return (estadoActivo ? branchB : branchA) ?? empty;
-}
-
-function buildFullSetFilters(i: {
-  organizationId: string | null | undefined;
-  search: string | null;
-  filterModo: string; filterCliente: string; filterOperador: string;
-  fechaDesde: string; fechaHasta: string;
-}) {
-  return {
-    organizationId: i.organizationId ?? null,
-    search: i.search ?? "",
-    filterModo: i.filterModo,
-    filterCliente: i.filterCliente,
-    filterOperador: i.filterOperador,
-    fechaDesde: i.fechaDesde || undefined,
-    fechaHasta: i.fechaHasta || undefined,
-  };
-}
-
 
 export function useEmbarquesPageState() {
   const { organizationId } = useOrgFilter();
@@ -98,14 +40,19 @@ export function useEmbarquesPageState() {
     setPageRaw, setPageSizeRaw, setSortKeyRaw, setSortDirRaw,
   } = useEmbarquesFilters();
 
-  const { modo: filterModo, estado: filterEstado, cliente: filterCliente,
+  const {
+    modo: filterModo,
+    estado: filterEstado,
+    cliente: filterCliente,
     operador: filterOperador,
-    fechaDesde, fechaHasta } = filters;
-
+    fechaDesde,
+    fechaHasta,
+  } = filters;
 
   const estadoFilterActivo = filterEstado !== "todos";
-
-  const sortBy: SortableEmbarqueColumn | undefined = sortKey ? SORT_KEY_TO_COLUMN[sortKey] : undefined;
+  const sortBy: SortableEmbarqueColumn | undefined = sortKey
+    ? SORT_KEY_TO_COLUMN[sortKey]
+    : undefined;
 
   // ---------- Rama A: sin filtro de estado → paginación server-side ----------
   const { data: resultadoServer, isLoading: loadingServer } = useEmbarquesPaginados({
@@ -115,7 +62,6 @@ export function useEmbarquesPageState() {
     filterCliente,
     filterOperador,
     page,
-
     pageSize,
     fechaDesde,
     fechaHasta,
@@ -128,7 +74,6 @@ export function useEmbarquesPageState() {
     organizationId,
     search: debouncedSearch,
     filterModo, filterCliente, filterOperador,
-
     fechaDesde, fechaHasta,
   });
   const { data: resultadoFull, isLoading: loadingFull } = useQuery({
@@ -140,7 +85,6 @@ export function useEmbarquesPageState() {
 
   const isLoading = estadoFilterActivo ? loadingFull : loadingServer;
 
-  // Set de contenedores que alimenta los conteos y la paginación visual.
   const containersForView: EmbarqueRow[] = useMemo(() => {
     if (!estadoFilterActivo) return resultadoServer?.data ?? [];
     const all = resultadoFull ?? [];
@@ -149,31 +93,16 @@ export function useEmbarquesPageState() {
     );
   }, [estadoFilterActivo, resultadoServer, resultadoFull, filterEstado]);
 
-  // Conteo de contenedores por expediente sobre el set visible/filtrado.
-  const contenedoresPorExpediente = useMemo(() => {
-    const map: Record<string, number> = {};
-    for (const e of containersForView) {
-      if (!e.expediente) continue;
-      map[e.expediente] = (map[e.expediente] ?? 0) + 1;
-    }
-    return map;
-  }, [containersForView]);
+  const contenedoresPorExpediente = useMemo(
+    () => computeContenedoresPorExpediente(containersForView),
+    [containersForView],
+  );
 
-  // Dedupe a una fila por expediente (mantiene primer registro).
-  const dedupedAll = useMemo(() => {
-    const seen = new Set<string>();
-    const out: EmbarqueRow[] = [];
-    for (const e of containersForView) {
-      const key = e.expediente ?? e.id;
-      if (seen.has(key)) continue;
-      seen.add(key);
-      out.push(e);
-    }
-    return out;
-  }, [containersForView]);
+  const dedupedAll = useMemo(
+    () => dedupePorExpediente(containersForView),
+    [containersForView],
+  );
 
-  // Orden + paginación: client-side cuando hay filtro de estado (porque el set
-  // completo ya vive en memoria); server-side en el caso por defecto.
   const sortedAll = useMemo(() => {
     if (!estadoFilterActivo) return dedupedAll;
     return [...dedupedAll].sort((a, b) => compareBy(a, b, sortKey, sortDir));
@@ -189,7 +118,6 @@ export function useEmbarquesPageState() {
   });
   const { expedientesCount, contenedoresCount, totalPages, totalCountServer } = counts;
 
-  // Filas visibles en la página actual.
   const filtered = useMemo(() => {
     if (!estadoFilterActivo) return dedupedAll;
     const from = page * pageSize;
@@ -215,26 +143,21 @@ export function useEmbarquesPageState() {
 
   const sinFiltros =
     !debouncedSearch &&
-    [filterModo, filterEstado, filterCliente, filterOperador].every(
-      (v) => v === "todos",
-    ) &&
+    [filterModo, filterEstado, filterCliente, filterOperador].every((v) => v === "todos") &&
     !fechaDesde &&
     !fechaHasta;
   const isEmptyState = !isLoading && containersForView.length === 0 && sinFiltros;
 
   return {
-    // values
     search,
     filterModo, filterEstado, filterCliente, filterOperador,
     fechaDesde, fechaHasta, page, pageSize, debouncedSearch,
     sortKey, sortDir,
-    // setters
     setSearch,
     setFilterModo: (v: string) => setFilter("modo", v, "todos"),
     setFilterEstado: (v: string) => setFilter("estado", v, "todos"),
     setFilterCliente: (v: string) => setFilter("cliente", v, "todos"),
     setFilterOperador: (v: string) => setFilter("operador", v, "todos"),
-
     setFechaDesde: (v: string) => setFilter("fechaDesde", v, ""),
     setFechaHasta: (v: string) => setFilter("fechaHasta", v, ""),
     setPage: (p: number) => setPageRaw(p === 0 ? null : p),
@@ -247,7 +170,6 @@ export function useEmbarquesPageState() {
       setSortDirRaw(dir === "desc" ? null : dir);
       setPageRaw(null);
     },
-    // data
     embarques, filtered, totalCount: totalCountServer, displayCount,
     expedientesCount, contenedoresCount, totalPages, isLoading, isEmptyState,
     contenedoresPorExpediente,
