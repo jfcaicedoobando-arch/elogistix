@@ -13,7 +13,7 @@ import { Button } from "@/components/ui/button";
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Popover, PopoverAnchor, PopoverContent } from "@/components/ui/popover";
 import NuevoLeadDialog from "@/components/crm/NuevoLeadDialog";
 import NuevaOportunidadDialog from "@/components/crm/NuevaOportunidadDialog";
 import NuevaActividadDialog from "@/components/crm/NuevaActividadDialog";
@@ -53,15 +53,14 @@ export default function QuickAddMenu({ openTrigger, dialogTrigger }: QuickAddMen
   return (
     <>
       <Popover open={quick !== null} onOpenChange={(o) => { if (!o) setQuick(null); }}>
-        <DropdownMenu open={menuOpen} onOpenChange={setMenuOpen}>
-          <PopoverTrigger asChild>
+        <PopoverAnchor asChild>
+          <DropdownMenu open={menuOpen} onOpenChange={setMenuOpen}>
             <DropdownMenuTrigger asChild>
               <Button size="sm" className="gap-1">
                 <Plus className="h-4 w-4" /> Nuevo
               </Button>
             </DropdownMenuTrigger>
-          </PopoverTrigger>
-          <DropdownMenuContent align="end" className="w-56">
+            <DropdownMenuContent align="end" className="w-56">
             <DropdownMenuItem onClick={() => setQuick("lead")}>
               <Users className="h-4 w-4 mr-2" /> Nuevo lead <span className="ml-auto text-[10px] text-muted-foreground">L</span>
             </DropdownMenuItem>
