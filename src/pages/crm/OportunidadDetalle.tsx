@@ -146,7 +146,6 @@ export default function OportunidadDetalle() {
         open={delOpen}
         onOpenChange={setDelOpen}
         onConfirm={handleEliminar}
-        entityLabel="oportunidad"
         entityName={op.nombre}
       />
     </div>
