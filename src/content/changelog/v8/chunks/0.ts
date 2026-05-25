@@ -2,6 +2,14 @@ import type { ChangelogEntry } from "../../../changelogData";
 
 export const chunk0: ChangelogEntry[] = [
   {
+    version: "10.2.4",
+    date: "2026-05-25",
+    type: "patch",
+    title: "Fix validateDOMNesting en HallazgoSummary",
+    summary: "Se reemplazó DialogDescription por <div> para evitar el warning de div dentro de <p> en el diálogo de marcar revisado.",
+    description: "src/components/auditoria/marcarRevisado/HallazgoSummary.tsx: DialogDescription (renderiza como <p> por defecto) contenía <div> internos, lo que generaba el warning validateDOMNesting de React. Se cambió el wrapper a <div className='text-xs space-y-1 pt-1 text-muted-foreground'> y se eliminó el import de DialogDescription. APP_VERSION 10.2.4.",
+  },
+  {
     version: "10.2.3",
     date: "2026-05-25",
     type: "patch",

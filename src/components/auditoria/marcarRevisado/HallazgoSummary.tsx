@@ -1,5 +1,4 @@
 import { Badge } from "@/components/ui/badge";
-import { DialogDescription } from "@/components/ui/dialog";
 import type { AuditoriaRevision, HallazgoAuditoria } from "@/types/auditoria";
 
 interface Props {
@@ -10,7 +9,7 @@ interface Props {
 
 export function HallazgoSummary({ hallazgo, revisionExistente, snoozeActivo }: Props) {
   return (
-    <DialogDescription className="text-xs space-y-1 pt-1">
+    <div className="text-xs space-y-1 pt-1 text-muted-foreground">
       <div>
         <span className="font-medium text-foreground">Expediente:</span>{" "}
         <span className="tabular-nums">{hallazgo.expediente}</span>
@@ -37,6 +36,6 @@ export function HallazgoSummary({ hallazgo, revisionExistente, snoozeActivo }: P
           )}
         </div>
       )}
-    </DialogDescription>
+    </div>
   );
 }
