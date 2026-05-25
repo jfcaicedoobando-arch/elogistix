@@ -28,7 +28,7 @@ export default tseslint.config(
       // Hard cap at 300 LOC; soft warning at 250 to encourage early splitting.
       "max-lines": ["warn", { max: 250, skipBlankLines: true, skipComments: true }],
       "max-lines-per-function": ["warn", { max: 200, skipBlankLines: true, skipComments: true, IIFEs: true }],
-      "complexity": ["warn", { max: 15 }],
+      "complexity": ["warn", { max: 12 }],
       "max-depth": ["warn", 4],
       "max-params": ["warn", 5],
       // Architectural guardrail — barrel imports for hooks/services
@@ -36,7 +36,7 @@ export default tseslint.config(
       // del dominio (`@/hooks/<dominio>` o `@/services/<dominio>`), no desde
       // archivos internos. Las importaciones internas dentro del propio
       // dominio están exentas (ver bloque siguiente).
-      "no-restricted-imports": ["warn", {
+      "no-restricted-imports": ["error", {
         patterns: [
           {
             group: ["@/hooks/*/*"],
