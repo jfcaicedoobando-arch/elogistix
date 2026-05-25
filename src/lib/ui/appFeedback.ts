@@ -17,8 +17,11 @@
 import { STEP_LABELS } from "@/lib/domain/embarqueWizardSchemas";
 import { buildErrorReport } from "@/lib/ui/errorReport";
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export type AnyToastFn = (props: any) => unknown;
+/**
+ * Firma laxa común a `@/hooks/use-toast` (shadcn) y wrappers tipo sonner.
+ * Las claves extra (`debug`, etc.) se aceptan vía índice `unknown`.
+ */
+export type AnyToastFn = (props: Record<string, unknown>) => unknown;
 
 export interface ErrorNotifyOptions {
   /** Número de paso del wizard (1..4). Genera título "Revisa el Paso N: <nombre>". */

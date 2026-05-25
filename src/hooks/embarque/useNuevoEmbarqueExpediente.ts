@@ -1,12 +1,16 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import type { UseFormReturn } from "react-hook-form";
+import type { FieldValues, UseFormReturn } from "react-hook-form";
 import type { ExpedienteCliente } from "@/hooks/embarque/useEmbarques";
 
 type ModoExpediente = "nuevo" | "existente";
 
+/**
+ * El wizard usa varios esquemas (`NuevoEmbarqueValues`, `EditarEmbarqueValues`)
+ * y este hook sólo necesita escribir `blMaster`. `FieldValues` de RHF es el
+ * supertipo correcto para aceptar cualquiera de ellos sin recurrir a `any`.
+ */
 interface Params {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  methods: UseFormReturn<any>;
+  methods: UseFormReturn<FieldValues>;
   clienteId: string | undefined | null;
 }
 
