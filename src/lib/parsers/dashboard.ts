@@ -15,7 +15,7 @@ import {
   type EmbarqueMesSiguiente,
   type EstadoFiltro,
   type ResumenFacturacion,
-} from "./dashboardTypes";
+import { numOr0 } from "./dashboardProfit";
 
 export * from "./dashboardTypes";
 
@@ -35,19 +35,19 @@ export function parseArribosEsteMes(stats: DashboardStats): ArribosEsteMes {
   if (!stats?.arribosEsteMes) return EMPTY_ARRIBOS;
   const raw = stats.arribosEsteMes as Record<string, number>;
   return {
-    total: Number(raw.total ?? 0),
-    yaLlegaron: Number(raw.yaLlegaron ?? 0),
-    enCamino: Number(raw.enCamino ?? 0),
-    profitUSD: Number(raw.profitUSD ?? 0),
-    ventaMXN: Number(raw.ventaMXN ?? 0),
-    costoMXN: Number(raw.costoMXN ?? 0),
-    profitMXN: Number(raw.profitMXN ?? 0),
-    ventaMxnFromUsd: Number(raw.ventaMxnFromUsd ?? 0),
-    costoMxnFromUsd: Number(raw.costoMxnFromUsd ?? 0),
-    ventaMxnFromEur: Number(raw.ventaMxnFromEur ?? 0),
-    costoMxnFromEur: Number(raw.costoMxnFromEur ?? 0),
-    ventaMxnNative: Number(raw.ventaMxnNative ?? 0),
-    costoMxnNative: Number(raw.costoMxnNative ?? 0),
+    total: numOr0(raw.total),
+    yaLlegaron: numOr0(raw.yaLlegaron),
+    enCamino: numOr0(raw.enCamino),
+    profitUSD: numOr0(raw.profitUSD),
+    ventaMXN: numOr0(raw.ventaMXN),
+    costoMXN: numOr0(raw.costoMXN),
+    profitMXN: numOr0(raw.profitMXN),
+    ventaMxnFromUsd: numOr0(raw.ventaMxnFromUsd),
+    costoMxnFromUsd: numOr0(raw.costoMxnFromUsd),
+    ventaMxnFromEur: numOr0(raw.ventaMxnFromEur),
+    costoMxnFromEur: numOr0(raw.costoMxnFromEur),
+    ventaMxnNative: numOr0(raw.ventaMxnNative),
+    costoMxnNative: numOr0(raw.costoMxnNative),
   };
 }
 
