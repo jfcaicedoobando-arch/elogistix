@@ -38,15 +38,17 @@ export default function PlantillaSelector({ canal, destino, vars, entidadTipo, e
       window.open(`https://wa.me/${tel}?text=${encodeURIComponent(cuerpoR)}`, "_blank", "noopener");
     }
     // Bitácora best-effort
-    registrarBitacora({
-      usuario_id: user?.id,
-      usuario_email: user?.email,
-      modulo: "crm",
-      accion: "plantilla_enviada",
-      entidad_id: entidadId,
-      entidad_nombre: `${entidadTipo}:${plantillaId}`,
-      detalles: { canal, plantilla: nombre },
-    }).catch(() => undefined);
+    if (user?.id) {
+      insertBitacora({
+        usuarioId: user.id,
+        usuarioEmail: user.email ?? "",
+        accion: "plantilla_enviada",
+        modulo: "crm",
+        entidadId: entidadId,
+        entidadNombre: `${entidadTipo}:${nombre}`,
+        detalles: { canal, plantilla: nombre },
+      }).catch(() => undefined);
+    }
   };
 
   if (!destino || data.length === 0) return null;
