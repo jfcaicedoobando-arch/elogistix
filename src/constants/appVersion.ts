@@ -3,4 +3,4 @@
  * observability, el sidebar y el portal puedan consumirlo sin importar nada
  * pesado. El historial de cambios vive en CHANGELOG.md (root del repo).
  */
-export const APP_VERSION = "11.41.0";
+export const APP_VERSION = "11.42.0";
