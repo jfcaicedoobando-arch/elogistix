@@ -5,37 +5,15 @@
 import { useState } from "react";
 import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Textarea } from "@/components/ui/textarea";
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
+  Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle,
 } from "@/components/ui/dialog";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { notifySuccess, notifyError } from "@/lib/ui/appFeedback";
-import VendedorSelect from "@/components/crm/VendedorSelect";
 import { useAuth } from "@/contexts/AuthContext";
-import {
-  LEAD_ESTADOS,
-  LEAD_FUENTES,
-  useCrearLead,
-  type CrmLeadEstado,
-  type CrmLeadFuente,
-} from "@/hooks/crm/useLeads";
+import { useCrearLead } from "@/hooks/crm/useLeads";
 import { useCrearActividad } from "@/hooks/crm/useActividades";
+import { NuevoLeadForm, type LeadFormState } from "./nuevoLead/NuevoLeadForm";
 
 interface Props {
   open: boolean;
@@ -43,31 +21,30 @@ interface Props {
   onCreated?: (id: string) => void;
 }
 
-const EMPTY = {
+const EMPTY: LeadFormState = {
   empresa: "",
   contacto: "",
   email: "",
   telefono: "",
   ciudad: "",
   pais: "México",
-  fuente: "Otro" as CrmLeadFuente,
-  estado: "Nuevo" as CrmLeadEstado,
+  fuente: "Otro",
+  estado: "Nuevo",
   interes_modo: "",
   notas: "",
-  vendedor_id: null as string | null,
+  vendedor_id: null,
   vendedor_email: "",
 };
 
 export default function NuevoLeadDialog({ open, onOpenChange, onCreated }: Props) {
   const { user } = useAuth();
-  const [form, setForm] = useState(() => ({ ...EMPTY, vendedor_id: user?.id ?? null, vendedor_email: user?.email ?? "" }));
+  const [form, setForm] = useState<LeadFormState>(() => ({
+    ...EMPTY, vendedor_id: user?.id ?? null, vendedor_email: user?.email ?? "",
+  }));
   const [autoActividad, setAutoActividad] = useState(true);
   const crear = useCrearLead();
   const crearActividad = useCrearActividad();
   const { toast } = useToast();
-
-  const set = <K extends keyof typeof EMPTY>(k: K, v: (typeof EMPTY)[K]) =>
-    setForm((f) => ({ ...f, [k]: v }));
 
   const handleSubmit = async () => {
     if (!form.empresa.trim()) {
@@ -117,91 +94,12 @@ export default function NuevoLeadDialog({ open, onOpenChange, onCreated }: Props
           </DialogDescription>
         </DialogHeader>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <div className="sm:col-span-2 space-y-1">
-            <Label>Empresa *</Label>
-            <Input value={form.empresa} onChange={(e) => set("empresa", e.target.value)} />
-          </div>
-          <div className="space-y-1">
-            <Label>Contacto</Label>
-            <Input value={form.contacto} onChange={(e) => set("contacto", e.target.value)} />
-          </div>
-          <div className="space-y-1">
-            <Label>Email</Label>
-            <Input type="email" value={form.email} onChange={(e) => set("email", e.target.value)} />
-          </div>
-          <div className="space-y-1">
-            <Label>Teléfono</Label>
-            <Input value={form.telefono} onChange={(e) => set("telefono", e.target.value)} />
-          </div>
-          <div className="space-y-1">
-            <Label>Ciudad</Label>
-            <Input value={form.ciudad} onChange={(e) => set("ciudad", e.target.value)} />
-          </div>
-          <div className="space-y-1">
-            <Label>País</Label>
-            <Input value={form.pais} onChange={(e) => set("pais", e.target.value)} />
-          </div>
-          <div className="space-y-1">
-            <Label>Interés (modo)</Label>
-            <Input
-              placeholder="Marítimo / Aéreo / Terrestre…"
-              value={form.interes_modo}
-              onChange={(e) => set("interes_modo", e.target.value)}
-            />
-          </div>
-          <div className="space-y-1">
-            <Label>Fuente</Label>
-            <Select value={form.fuente} onValueChange={(v) => set("fuente", v as CrmLeadFuente)}>
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {LEAD_FUENTES.map((f) => (
-                  <SelectItem key={f} value={f}>{f}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="space-y-1">
-            <Label>Estado</Label>
-            <Select value={form.estado} onValueChange={(v) => set("estado", v as CrmLeadEstado)}>
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {LEAD_ESTADOS.filter((s) => s !== "Convertido").map((s) => (
-                  <SelectItem key={s} value={s}>{s}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="sm:col-span-2">
-            <VendedorSelect
-              value={form.vendedor_id}
-              email={form.vendedor_email}
-              onChange={(id, email) => setForm((f) => ({ ...f, vendedor_id: id, vendedor_email: email }))}
-            />
-          </div>
-          <div className="sm:col-span-2 space-y-1">
-            <Label>Notas</Label>
-            <Textarea
-              rows={3}
-              value={form.notas}
-              onChange={(e) => set("notas", e.target.value)}
-            />
-          </div>
-          <div className="sm:col-span-2 flex items-center gap-2 pt-1">
-            <Checkbox
-              id="auto-act-lead"
-              checked={autoActividad}
-              onCheckedChange={(v) => setAutoActividad(v === true)}
-            />
-            <Label htmlFor="auto-act-lead" className="text-xs cursor-pointer">
-              Crear actividad de seguimiento (llamada, mañana 9:00)
-            </Label>
-          </div>
-        </div>
+        <NuevoLeadForm
+          form={form}
+          setForm={setForm}
+          autoActividad={autoActividad}
+          setAutoActividad={setAutoActividad}
+        />
 
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>
