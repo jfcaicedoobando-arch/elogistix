@@ -148,7 +148,9 @@ export const queryKeys = {
   },
   admin: {
     organizations: ['admin-organizations'] as const,
+    organizationsStats: ['admin-organizations', 'stats'] as const,
     allUsers: ['admin-all-users'] as const,
+    allUsersOptions: ['admin-all-users', 'options'] as const,
     org: (id: string) => ['admin-org', id] as const,
     orgMembers: (id: string) => ['admin-org-members', id] as const,
     orgCountMembers: (id: string) => ['admin-org-count-members', id] as const,
@@ -158,6 +160,7 @@ export const queryKeys = {
     organizationsList: ['admin', 'organizations-list'] as const,
     orgActivity: ['admin', 'org-activity'] as const,
     recentOrgs: ['admin', 'recent-orgs'] as const,
+    recentOrgsList: (limit: number) => ['admin', 'recent-orgs', limit] as const,
   },
   crm: {
     all: ['crm'] as const,
