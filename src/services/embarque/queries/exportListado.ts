@@ -17,8 +17,16 @@ export async function fetchEmbarquesParaExport(
 ): Promise<EmbarqueRow[]> {
   const PAGE = 1000;
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const applyFilters = (q: any): any => {
+  // Tipo mínimo del builder de PostgREST que usamos aquí. Mantenerlo local
+  // evita arrastrar las generics de Database<…> y elimina el uso de `any`.
+  interface QueryLike {
+    eq(col: string, val: unknown): QueryLike;
+    or(s: string): QueryLike;
+    gte(col: string, val: unknown): QueryLike;
+    lte(col: string, val: unknown): QueryLike;
+  }
+
+  const applyFilters = (q: QueryLike): QueryLike => {
     let query = q;
     if (f.organizationId) query = query.eq("organization_id", f.organizationId);
     if (f.search) {
@@ -41,7 +49,9 @@ export async function fetchEmbarquesParaExport(
   const countQueryBase = supabase
     .from("embarques")
     .select(EMBARQUE_LIST_COLUMNS, { count: "exact", head: true });
-  const { count, error: countErr } = await applyFilters(countQueryBase);
+  const { count, error: countErr } = await (applyFilters(
+    countQueryBase as unknown as QueryLike,
+  ) as unknown as typeof countQueryBase);
   if (countErr) throw countErr;
   const total = (count as number | null) ?? 0;
   if (total === 0) return [];
@@ -56,7 +66,7 @@ export async function fetchEmbarquesParaExport(
         .select(EMBARQUE_LIST_COLUMNS)
         .order("created_at", { ascending: false })
         .range(from, to);
-      const { data, error } = await applyFilters(base);
+      const { data, error } = await (applyFilters(base as unknown as QueryLike) as unknown as typeof base);
       if (error) throw error;
       return (data ?? []) as EmbarqueRow[];
     }),
