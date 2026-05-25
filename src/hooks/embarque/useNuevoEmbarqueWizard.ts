@@ -29,13 +29,8 @@ import {
   mapConceptosVentaFromCotizacion,
   mapConceptosCostoFromCotizacion,
 } from "@/lib/domain/embarqueWizard";
-import {
-  validateStepDatosGenerales,
-  validateStepRuta,
-  validateStepDocumentos,
-  validateStepCostos,
-  type StepValidationErrors,
-} from "@/lib/domain/embarqueWizardSchemas";
+import type { StepValidationErrors } from "@/lib/domain/embarqueWizardSchemas";
+import { validateWizardStep } from "@/lib/domain/embarqueWizardStepValidator";
 import { notifyError } from "@/lib/ui/appFeedback";
 
 type ModoExpediente = "nuevo" | "existente";
@@ -135,38 +130,13 @@ export function useNuevoEmbarqueWizard() {
   const validateStep = useCallback(
     (step: number): boolean => {
       const values = methods.getValues();
-      let errors: StepValidationErrors = {};
-
-      if (step === 1) {
-        errors = validateStepDatosGenerales(values);
-      } else if (step === 2) {
-        errors = validateStepRuta(values);
-      } else if (step === 3) {
-        const archivos: Record<string, { size: number; type: string }> = {};
-        for (const [nombre, file] of Object.entries(form.documentosArchivos)) {
-          archivos[nombre] = { size: file.size, type: file.type };
-        }
-        errors = validateStepDocumentos(archivos);
-      } else if (step === 4) {
-        errors = validateStepCostos({
-          conceptosVenta: conceptos.conceptosVenta.map((v) => ({
-            id: v.id,
-            concepto: v.concepto,
-            cantidad: v.cantidad,
-            precioUnitario: v.precioUnitario,
-            moneda: v.moneda,
-          })),
-          conceptosCosto: conceptos.conceptosCosto.map((c) => ({
-            id: c.id,
-            proveedorId: c.proveedorId,
-            concepto: c.concepto,
-            monto: c.monto,
-            moneda: c.moneda,
-          })),
-          tipoCambioUSD: values.tipoCambioUSD,
-          tipoCambioEUR: values.tipoCambioEUR,
-        });
-      }
+      const errors: StepValidationErrors = validateWizardStep({
+        step,
+        values,
+        documentosArchivos: form.documentosArchivos,
+        conceptosVenta: conceptos.conceptosVenta,
+        conceptosCosto: conceptos.conceptosCosto,
+      });
 
       setValidationErrors((prev) => ({ ...prev, [step]: errors }));
 
