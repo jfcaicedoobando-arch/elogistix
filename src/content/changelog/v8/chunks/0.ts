@@ -2,6 +2,14 @@ import type { ChangelogEntry } from "../../../changelogData";
 
 export const chunk0: ChangelogEntry[] = [
   {
+    version: "11.7.1",
+    date: "2026-05-25",
+    type: "patch",
+    title: "Fix CRM Dashboard: relaciones faltantes en crm_oportunidades",
+    summary: "Corrige errores 400 (PGRST200) del Dashboard del CRM al embeber crm_etapas_pipeline en crm_oportunidades.",
+    description: "Migración: agrega llaves foráneas faltantes en crm_oportunidades hacia crm_etapas_pipeline (etapa_id), clientes (cliente_id), crm_leads (lead_id) y crm_motivos_perdida (motivo_perdida_id) — necesarias para que PostgREST resuelva los embeds inner usados por useCrmDashboard (widgets 'Pipeline por etapa' y 'Cierres esta semana'). Se agregan índices idx_crm_oportunidades_etapa_id/cliente_id/lead_id para acelerar joins y filtros. Sin cambios en código frontend. APP_VERSION 11.7.1."
+  },
+  {
     version: "11.7.0",
     date: "2026-05-25",
     type: "minor",

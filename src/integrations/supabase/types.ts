@@ -1455,7 +1455,36 @@ export type Database = {
           vendedor_email?: string
           vendedor_id?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "crm_oportunidades_cliente_id_fkey"
+            columns: ["cliente_id"]
+            isOneToOne: false
+            referencedRelation: "clientes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "crm_oportunidades_etapa_id_fkey"
+            columns: ["etapa_id"]
+            isOneToOne: false
+            referencedRelation: "crm_etapas_pipeline"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "crm_oportunidades_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "crm_leads"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "crm_oportunidades_motivo_perdida_id_fkey"
+            columns: ["motivo_perdida_id"]
+            isOneToOne: false
+            referencedRelation: "crm_motivos_perdida"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       crm_plantillas_mensaje: {
         Row: {
