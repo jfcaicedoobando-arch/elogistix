@@ -42,6 +42,7 @@ const actionColumn: ColumnDef<CrmActividadRow, unknown> = {
 };
 
 export default function Actividades() {
+  const { canEditCrm } = usePermissions();
   const [search, setSearch] = useState("");
   const [tipo, setTipo] = useState<CrmActividadTipo | "todos">("todos");
   const [estado, setEstado] = useState<"pendientes" | "completadas" | "todas">("pendientes");
@@ -53,6 +54,7 @@ export default function Actividades() {
   const { data, isLoading } = useActividades({ search: debounced, tipo, estado, responsable, page, pageSize });
   const items = data?.data ?? [];
   const totalPages = Math.ceil((data?.count ?? 0) / pageSize);
+  const columns = canEditCrm ? [...baseColumns, actionColumn] : baseColumns;
 
   return (
     <div className="space-y-6 p-6">
