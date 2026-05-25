@@ -2,6 +2,14 @@ import type { ChangelogEntry } from "../../../changelogData";
 
 export const chunk0: ChangelogEntry[] = [
   {
+    version: "11.20.0",
+    date: "2026-05-25",
+    type: "minor",
+    title: "Auditoría loop 8 — barrel violations (53→0) y complejidad ciclomática",
+    summary: "no-restricted-imports 53→0 (barrel hooks/crm). Complejidad reducida en OportunidadDetalle (33), CrmDashboard (27), useAutomatizacionesEtapa (26) y useConvertirLead (27), todas ahora <15.",
+    description: "P0.1 cerrado: creado src/hooks/crm/index.ts y reemplazados 53 imports a archivos internos por imports al barrel (`@/hooks/crm`). P0.3 ajustado al estado real: los mappers ya estaban bajo control; el hot spot eran 4 funciones con complejidad >25. Refactor: (1) OportunidadDetalle.tsx → guard + OportunidadDetalleContent + OportunidadKpisCards + DatosComercialesCard + ContactoRapidoCard + useOportunidadDetalleActions. (2) CrmDashboard.tsx → VencidasAlert + ActividadesHoyCard + CerrandoSemanaCard + LeadsSinContactarCard + TopDealsCard. (3) useAutomatizacionesEtapa.ts → automatizacionesEtapaActions (4 helpers). (4) useConvertirLead → convertirHelpers (resolveClienteForConversion, fetchPrimeraEtapaAbierta). 626 tests verdes. APP_VERSION 11.20.0.",
+  },
+  {
     version: "11.19.0",
     date: "2026-05-25",
     type: "minor",
