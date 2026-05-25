@@ -4,7 +4,7 @@
  */
 import { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
-import { Activity, X } from "lucide-react";
+import { X } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -12,7 +12,7 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import SearchInput from "@/components/selects/SearchInput";
-import { PageHeader } from "@/components/shared/PageHeader";
+import { CrmSubheader } from "@/components/crm/CrmSubheader";
 import { DataTable, defineColumns, type ColumnDef } from "@/components/shared/DataTable";
 import { useDebounce } from "@/hooks/shared";
 import {
@@ -58,7 +58,6 @@ export default function Actividades() {
   const [pageSize, setPageSize] = useState(25);
   const debounced = useDebounce(search, 300);
 
-  // Cuando llega ?filtro=vencidas, forzar estado/responsable acordes.
   useEffect(() => {
     if (vencidasOnly) {
       setEstado("pendientes");
@@ -83,21 +82,17 @@ export default function Actividades() {
   };
 
   return (
-    <div className="space-y-6 p-6">
-      <PageHeader
-        icon={<Activity className="h-6 w-6 text-primary" />}
-        title="Actividades"
-        description={`${data?.count ?? 0} actividades`}
-        actions={
-          vencidasOnly ? (
-            <Button variant="outline" size="sm" onClick={limpiarFiltro}>
-              <X className="h-3 w-3 mr-1" /> Filtro: Vencidas
-            </Button>
-          ) : undefined
-        }
+    <div className="space-y-4 p-6">
+      <CrmSubheader
+        context={`${data?.count ?? 0} actividades`}
+        actions={vencidasOnly ? (
+          <Button variant="outline" size="sm" onClick={limpiarFiltro} className="h-7">
+            <X className="h-3 w-3 mr-1" /> Filtro: Vencidas
+          </Button>
+        ) : undefined}
       />
       <Card>
-        <CardContent className="p-4 flex flex-col md:flex-row gap-3">
+        <CardContent className="p-3 flex flex-col md:flex-row gap-3">
           <SearchInput value={search} onChange={setSearch} placeholder="Buscar por asunto..." />
           <Select value={tipo} onValueChange={(v) => { setTipo(v as typeof tipo); setPage(0); }}>
             <SelectTrigger className="md:w-[140px]"><SelectValue /></SelectTrigger>

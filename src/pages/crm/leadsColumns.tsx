@@ -1,9 +1,14 @@
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
+import {
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+} from "@/components/ui/select";
 import { defineColumns, type ColumnDef } from "@/components/shared/DataTable";
 import { sortByString } from "@/components/shared/dataTable/sortingFns";
 import { toTitleCase } from "@/lib/formatters";
-import type { CrmLeadEstado, CrmLeadRow } from "@/hooks/crm";
+import { useToast } from "@/hooks/shared";
+import { notifyError } from "@/lib/ui/appFeedback";
+import { LEAD_ESTADOS, useActualizarLead, type CrmLeadEstado, type CrmLeadRow } from "@/hooks/crm";
 
 const ESTADO_VARIANT: Record<CrmLeadEstado, "default" | "secondary" | "outline" | "destructive"> = {
   Nuevo: "default",
@@ -12,6 +17,39 @@ const ESTADO_VARIANT: Record<CrmLeadEstado, "default" | "secondary" | "outline" 
   Descalificado: "destructive",
   Convertido: "outline",
 };
+
+function EstadoCell({ lead }: { lead: CrmLeadRow }) {
+  const actualizar = useActualizarLead();
+  const { toast } = useToast();
+  if (lead.estado === "Convertido") {
+    return <Badge variant={ESTADO_VARIANT[lead.estado]}>{lead.estado}</Badge>;
+  }
+  return (
+    <div onClick={(e) => e.stopPropagation()}>
+      <Select
+        value={lead.estado}
+        onValueChange={async (v) => {
+          if (v === lead.estado) return;
+          try {
+            await actualizar.mutateAsync({ id: lead.id, patch: { estado: v as CrmLeadEstado } });
+          } catch (err) {
+            notifyError(toast, { title: "No se pudo actualizar", description: err instanceof Error ? err.message : undefined });
+          }
+        }}
+        disabled={actualizar.isPending}
+      >
+        <SelectTrigger className="h-7 text-xs px-2 w-full max-w-[140px]">
+          <SelectValue />
+        </SelectTrigger>
+        <SelectContent>
+          {LEAD_ESTADOS.filter((s) => s !== "Convertido").map((s) => (
+            <SelectItem key={s} value={s}>{s}</SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+    </div>
+  );
+}
 
 export function makeLeadsColumns(
   selected: Set<string>,
@@ -43,8 +81,8 @@ export function makeLeadsColumns(
     { id: "email", header: "Email", meta: { width: "w-[200px]", className: "text-xs truncate" }, cell: ({ row }) => row.original.email ?? "" },
     { id: "fuente", header: "Fuente", meta: { width: "w-[120px]", className: "text-xs" }, cell: ({ row }) => row.original.fuente },
     {
-      id: "estado", header: "Estado", meta: { width: "w-[120px]" },
-      cell: ({ row }) => <Badge variant={ESTADO_VARIANT[row.original.estado]}>{row.original.estado}</Badge>,
+      id: "estado", header: "Estado", meta: { width: "w-[160px]" },
+      cell: ({ row }) => <EstadoCell lead={row.original} />,
     },
     { id: "score", header: "Score", meta: { width: "w-[60px]", className: "text-center text-xs" }, cell: ({ row }) => row.original.score },
   ]);

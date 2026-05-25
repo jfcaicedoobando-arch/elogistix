@@ -144,17 +144,20 @@ export function computeNextBestActions(input: NbaInput, limit = 5): NbaItem[] {
     });
   }
 
-  // 5) Actividades vencidas
+  // 5) Actividades vencidas (máxima prioridad — son compromisos ya rotos)
   for (const a of input.actividadesVencidas) {
+    const diasVencida = a.fecha_programada
+      ? Math.max(0, Math.floor((nowMs - new Date(a.fecha_programada).getTime()) / DIA))
+      : 0;
     items.push({
       id: `act:${a.id}`,
       regla: "actividad_vencida",
       titulo: `Completar: ${a.asunto}`,
       subtitulo: a.fecha_programada
-        ? `Vencida desde ${new Date(a.fecha_programada).toLocaleDateString("es-MX")}`
+        ? `Vencida hace ${diasVencida} día${diasVencida === 1 ? "" : "s"}`
         : "Vencida",
       href: entidadHref(a.entidad_tipo, a.entidad_id),
-      score: 60,
+      score: 110 + Math.min(20, diasVencida),
       icono: "actividad",
     });
   }

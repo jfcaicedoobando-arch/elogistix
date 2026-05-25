@@ -75,6 +75,7 @@ describe("computeNextBestActions", () => {
     );
     expect(items).toHaveLength(2);
     expect(items[0].score).toBeGreaterThanOrEqual(items[1].score);
-    expect(items[0].regla).toBe("lead_sin_contactar");
+    // Vencidas ahora son prioridad máxima (score ≥ 110)
+    expect(items[0].regla).toBe("actividad_vencida");
   });
 });
