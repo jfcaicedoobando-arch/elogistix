@@ -31,6 +31,11 @@ const SentryDiagnostico = lazy(() => import("./pages/dashboard/SentryDiagnostico
 const CrmDashboard = lazy(() => import("./pages/crm/CrmDashboard"));
 const Leads = lazy(() => import("./pages/crm/Leads"));
 const LeadDetalle = lazy(() => import("./pages/crm/LeadDetalle"));
+const Oportunidades = lazy(() => import("./pages/crm/Oportunidades"));
+const OportunidadDetalle = lazy(() => import("./pages/crm/OportunidadDetalle"));
+const ActividadesCrm = lazy(() => import("./pages/crm/Actividades"));
+const ForecastCrm = lazy(() => import("./pages/crm/Forecast"));
+const ReportesCrm = lazy(() => import("./pages/crm/Reportes"));
 
 const Embarques = lazy(() => import("./pages/embarques/Embarques"));
 const EmbarqueDetalle = lazy(() => import("./pages/embarques/EmbarqueDetalle"));
@@ -202,6 +207,11 @@ const App = () => (
               <Route path="/crm" element={<CrmDashboard />} />
               <Route path="/crm/leads" element={<Leads />} />
               <Route path="/crm/leads/:id" element={<LeadDetalle />} />
+              <Route path="/crm/oportunidades" element={<Oportunidades />} />
+              <Route path="/crm/oportunidades/:id" element={<OportunidadDetalle />} />
+              <Route path="/crm/actividades" element={<ActividadesCrm />} />
+              <Route path="/crm/forecast" element={<ForecastCrm />} />
+              <Route path="/crm/reportes" element={<ReportesCrm />} />
               <Route path="/bitacora" element={<Bitacora />} />
               <Route
                 path="/papelera"
