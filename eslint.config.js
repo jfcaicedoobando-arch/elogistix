@@ -115,6 +115,11 @@ export default tseslint.config(
       "src/components/cotizacion/TablaConceptosGenerico.tsx",
       "src/components/cotizacion/TablaCostosDetalle.tsx",
       "src/components/embarque/DialogDuplicarEmbarque.tsx",
+      // Sub-tablas read-only estáticas (sin sort/paginación) — no requieren DataTable:
+      "src/components/cotizacion/seccionMercancia/DimensionesLCLTable.tsx",
+      "src/components/cotizacion/seccionMercancia/DimensionesAereasTable.tsx",
+      // Render row custom para fila "ver detalle" debajo del DataTable principal:
+      "src/components/embarque/tabResumen/EmbarquesRelacionadosCard.tsx",
     ],
     rules: {
       "no-restricted-imports": "off",
