@@ -78,8 +78,9 @@ export default function QuickAddMenu({ openTrigger, dialogTrigger }: QuickAddMen
                 </DropdownMenuItem>
               </>
             )}
-          </DropdownMenuContent>
-        </DropdownMenu>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </PopoverAnchor>
         <PopoverContent align="end" className="p-3">
           {quick === "lead" && (
             <QuickCreateLeadPopover
