@@ -22,20 +22,19 @@ export default function CrmLayout() {
   const [openTrigger, setOpenTrigger] = useState(0);
   const [dialogTrigger, setDialogTrigger] = useState<{ kind: "lead" | "oportunidad" | "actividad"; n: number } | undefined>(undefined);
 
+  const noop = useCallback(() => {}, []);
   const handlers = useMemo(
-    () => ({
-      onOpenQuick: () => setOpenTrigger((n) => n + 1),
-      onNewLead: () => setDialogTrigger((p) => ({ kind: "lead", n: (p?.n ?? 0) + 1 })),
-      onNewOportunidad: () => setDialogTrigger((p) => ({ kind: "oportunidad", n: (p?.n ?? 0) + 1 })),
-      onNewActividad: () => setDialogTrigger((p) => ({ kind: "actividad", n: (p?.n ?? 0) + 1 })),
-    }),
-    [],
+    () => canEdit
+      ? {
+        onOpenQuick: () => setOpenTrigger((n) => n + 1),
+        onNewLead: () => setDialogTrigger((p) => ({ kind: "lead" as const, n: (p?.n ?? 0) + 1 })),
+        onNewOportunidad: () => setDialogTrigger((p) => ({ kind: "oportunidad" as const, n: (p?.n ?? 0) + 1 })),
+        onNewActividad: () => setDialogTrigger((p) => ({ kind: "actividad" as const, n: (p?.n ?? 0) + 1 })),
+      }
+      : { onOpenQuick: noop, onNewLead: noop, onNewOportunidad: noop, onNewActividad: noop },
+    [canEdit, noop],
   );
-  useCrmHotkeys(canEdit ? handlers : useMemo(() => ({
-    onOpenQuick: () => {}, onNewLead: () => {}, onNewOportunidad: () => {}, onNewActividad: () => {},
-  }), []));
-  // satisfy linter: avoid unused
-  void useCallback;
+  useCrmHotkeys(handlers);
 
   return (
     <div className="flex flex-col h-full">
