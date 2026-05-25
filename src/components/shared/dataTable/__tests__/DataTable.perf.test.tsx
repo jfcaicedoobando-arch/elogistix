@@ -237,7 +237,6 @@ describe("Perf — VirtualDataTable (datasets grandes, escalado lineal)", () => 
     }
     rerenderSamples.sort((a, b) => a - b);
     const medianRerender = rerenderSamples[2];
-    // eslint-disable-next-line no-console
     console.log(`[perf] VirtualDataTable rerender 5k same-data: median=${medianRerender.toFixed(1)}ms`);
 
     // ≤40% del mount: si memo se rompe, el rerender se acerca al mount.
