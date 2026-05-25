@@ -7,29 +7,23 @@ import { useNavigate, useParams } from "react-router-dom";
 import { ArrowLeft, Edit, FileText, Loader2, Trash2 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { PageHeader } from "@/components/shared/PageHeader";
 import DoubleConfirmDeleteDialog from "@/components/shared/DoubleConfirmDeleteDialog";
-import { useToast } from "@/hooks/use-toast";
-import { notifySuccess, notifyError } from "@/lib/ui/appFeedback";
 import { usePermissions } from "@/hooks/shared";
-import { formatCurrencyCompact } from "@/lib/formatters";
 import NuevaOportunidadDialog from "@/components/crm/NuevaOportunidadDialog";
 import ActividadTimeline from "@/components/crm/ActividadTimeline";
 import ComentariosOportunidad from "@/components/crm/ComentariosOportunidad";
 import OportunidadCotizacionesList from "@/components/crm/OportunidadCotizacionesList";
 import { OportunidadLineageCard } from "@/components/crm/LineageCard";
-import ContactActions from "@/components/crm/ContactActions";
-import { useOportunidad, useEliminarOportunidad } from "@/hooks/crm";
-import { useEtapasPipeline } from "@/hooks/crm";
+import { OportunidadKpisCards } from "@/components/crm/oportunidadDetalle/OportunidadKpisCards";
+import { ContactoRapidoCard } from "@/components/crm/oportunidadDetalle/ContactoRapidoCard";
+import { useOportunidad, useEtapasPipeline, useOportunidadDetalleActions } from "@/hooks/crm";
 import { useContactosCliente } from "@/hooks/cliente";
-import { useCrearCotizacionDesdeOportunidad } from "@/hooks/crm";
 
 export default function OportunidadDetalle() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { toast } = useToast();
   const { canEdit } = usePermissions();
   const [editOpen, setEditOpen] = useState(false);
   const [delOpen, setDelOpen] = useState(false);
@@ -37,50 +31,25 @@ export default function OportunidadDetalle() {
   const { data: op, isLoading } = useOportunidad(id);
   const { data: etapas = [] } = useEtapasPipeline();
   const { data: contactos = [] } = useContactosCliente(op?.cliente_id ?? undefined);
-  const eliminar = useEliminarOportunidad();
-  const crearCot = useCrearCotizacionDesdeOportunidad();
-
   const contactoPrincipal = useMemo(() => contactos[0], [contactos]);
+
+  const actions = useOportunidadDetalleActions(
+    {
+      id: op?.id ?? "",
+      cliente_id: op?.cliente_id,
+      cliente_nombre: op?.cliente_nombre,
+      origen: op?.origen,
+      destino: op?.destino,
+      etapa_id: op?.etapa_id ?? "",
+      modo: op?.modo ?? "",
+    },
+    etapas,
+  );
 
   if (isLoading) return <div className="p-8 text-center text-sm text-muted-foreground">Cargando…</div>;
   if (!op) return <div className="p-8 text-center text-sm text-muted-foreground">Oportunidad no encontrada</div>;
 
   const etapa = etapas.find((e) => e.id === op.etapa_id);
-
-  const handleEliminar = async () => {
-    try {
-      await eliminar.mutateAsync(op.id);
-      notifySuccess(toast, { title: "Oportunidad eliminada" });
-      navigate("/crm/oportunidades");
-    } catch (e) {
-      notifyError(toast, { title: "Error", description: e instanceof Error ? e.message : undefined });
-    }
-  };
-
-  const crearCotizacion = async () => {
-    try {
-      const cotizandoEtapa = etapas.find(
-        (e) => /cotizando|cotizaci/i.test(e.nombre) && e.tipo === "abierta",
-      );
-      const result = await crearCot.mutateAsync({
-        oportunidad: {
-          id: op.id,
-          cliente_id: op.cliente_id,
-          cliente_nombre: op.cliente_nombre,
-          origen: op.origen,
-          destino: op.destino,
-          etapa_id: op.etapa_id,
-          modo: op.modo,
-        },
-        etapaCotizandoId: cotizandoEtapa?.id,
-        etapaCotizandoProbabilidad: cotizandoEtapa?.probabilidad_default ?? 0,
-      });
-      notifySuccess(toast, { title: "Cotización creada", description: `Folio ${result.folio}` });
-      navigate(`/cotizaciones/${result.id}/editar`);
-    } catch (e) {
-      notifyError(toast, { title: "No se pudo crear", description: e instanceof Error ? e.message : undefined });
-    }
-  };
 
   return (
     <div className="space-y-6 p-6">
@@ -91,8 +60,8 @@ export default function OportunidadDetalle() {
         actions={
           canEdit ? (
             <div className="flex gap-2">
-              <Button variant="outline" onClick={crearCotizacion} disabled={crearCot.isPending}>
-                {crearCot.isPending ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <FileText className="h-4 w-4 mr-1" />}
+              <Button variant="outline" onClick={actions.crearCotizacion} disabled={actions.crearCotPending}>
+                {actions.crearCotPending ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <FileText className="h-4 w-4 mr-1" />}
                 Crear cotización
               </Button>
               <Button variant="outline" onClick={() => setEditOpen(true)}>
@@ -106,24 +75,13 @@ export default function OportunidadDetalle() {
         }
       />
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Card><CardHeader className="pb-2"><CardTitle className="text-sm">Etapa</CardTitle></CardHeader>
-          <CardContent><Badge style={{ backgroundColor: etapa?.color }}>{etapa?.nombre ?? "—"}</Badge></CardContent>
-        </Card>
-        <Card><CardHeader className="pb-2"><CardTitle className="text-sm">Monto estimado</CardTitle></CardHeader>
-          <CardContent className="text-2xl font-bold">{formatCurrencyCompact(Number(op.monto_estimado ?? 0), op.moneda)}</CardContent>
-        </Card>
-        <Card><CardHeader className="pb-2"><CardTitle className="text-sm">{op.valor_real != null ? "Valor real" : "Ponderado"}</CardTitle></CardHeader>
-          <CardContent className="text-2xl font-bold">
-            {op.valor_real != null
-              ? formatCurrencyCompact(Number(op.valor_real), op.moneda)
-              : formatCurrencyCompact(Number(op.monto_estimado ?? 0) * (op.probabilidad / 100), op.moneda)}
-            <div className="text-xs text-muted-foreground">
-              {op.valor_real != null ? "Cerrado" : `${op.probabilidad}% probabilidad`}
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+      <OportunidadKpisCards
+        etapa={etapa}
+        montoEstimado={Number(op.monto_estimado ?? 0)}
+        valorReal={op.valor_real != null ? Number(op.valor_real) : null}
+        probabilidad={op.probabilidad}
+        moneda={op.moneda}
+      />
 
       <Tabs defaultValue="resumen">
         <TabsList>
@@ -149,32 +107,15 @@ export default function OportunidadDetalle() {
 
         <TabsContent value="comunicacion" className="mt-4 space-y-4">
           {op.cliente_id && (
-            <Card>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm">Contacto rápido</CardTitle>
-              </CardHeader>
-              <CardContent>
-                {contactoPrincipal ? (
-                  <ContactActions
-                    email={contactoPrincipal.email}
-                    telefono={contactoPrincipal.telefono}
-                    plantillaCtx={{
-                      entidadTipo: "oportunidad",
-                      entidadId: op.id,
-                      vars: {
-                        contacto: contactoPrincipal.nombre || op.cliente_nombre || "",
-                        empresa: op.cliente_nombre || "",
-                        vendedor: op.vendedor_email,
-                        etapa: etapa?.nombre ?? "",
-                        monto: formatCurrencyCompact(Number(op.monto_estimado ?? 0), op.moneda),
-                      },
-                    }}
-                  />
-                ) : (
-                  <p className="text-sm text-muted-foreground">El cliente no tiene contactos registrados.</p>
-                )}
-              </CardContent>
-            </Card>
+            <ContactoRapidoCard
+              contacto={contactoPrincipal}
+              oportunidadId={op.id}
+              clienteNombre={op.cliente_nombre}
+              vendedorEmail={op.vendedor_email}
+              etapaNombre={etapa?.nombre}
+              montoEstimado={Number(op.monto_estimado ?? 0)}
+              moneda={op.moneda}
+            />
           )}
           <ComentariosOportunidad oportunidadId={op.id} canEdit={canEdit} />
           <ActividadTimeline entidadTipo="oportunidad" entidadId={op.id} />
@@ -189,7 +130,7 @@ export default function OportunidadDetalle() {
       <DoubleConfirmDeleteDialog
         open={delOpen}
         onOpenChange={setDelOpen}
-        onConfirm={handleEliminar}
+        onConfirm={actions.handleEliminar}
         entityName={op.nombre}
       />
     </div>
