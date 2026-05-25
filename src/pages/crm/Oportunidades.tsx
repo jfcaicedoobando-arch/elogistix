@@ -79,7 +79,7 @@ export default function Oportunidades() {
     });
   }, [opsRaw, filtros]);
 
-  const mover = useMoverEtapa();
+  const mover = useMoverEtapaConAutomatizacion();
 
   const handleMover = async (id: string, etapaId: string, prob: number) => {
     try {
