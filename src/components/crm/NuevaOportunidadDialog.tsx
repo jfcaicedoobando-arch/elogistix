@@ -31,7 +31,7 @@ import {
   type Moneda,
 } from "@/hooks/crm/useOportunidades";
 import { useEtapasPipeline } from "@/hooks/crm/useEtapasPipeline";
-import { useClientes } from "@/hooks/cliente";
+import { useClientesForSelect } from "@/hooks/cliente";
 
 interface Props {
   open: boolean;
