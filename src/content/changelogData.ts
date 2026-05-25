@@ -22,6 +22,14 @@ export interface ChangelogEntry {
  */
 export const recentChangelog: ChangelogEntry[] = [
   {
+    version: "11.11.0",
+    date: "2026-05-25",
+    type: "minor",
+    title: "Auditoría de tests — 3 tandas (P0+P1+P2) +18 archivos / +83 tests",
+    summary: "Cobertura de servicios financieros críticos (hueco facturación, proyección, proforma), portal cliente, observability y edge functions.",
+    description: "Tanda A (P0 servicios): idempotencia, embarque/contenedor, proforma/consolidar, proforma/facturar, cliente/financials, facturas/huecoFacturacion, facturas/proyeccion + helper _supabaseChainMock + Deno cors_test. Tanda B (P1 hooks): extracción lib/facturacion/huecoCsv, tests para useCotizacionPL, useCreateTrackingLink y extensión de embarqueWizard (resolveExpedienteForSubmit + buildBitacoraDetalles). Tanda C (P2): portal/columns, portal/queries, observability/logClientError. Total: 82 archivos / 583 tests verdes. APP_VERSION 11.11.0.",
+  },
+  {
     version: "11.10.0",
     date: "2026-05-25",
     type: "minor",
