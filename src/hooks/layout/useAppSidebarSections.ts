@@ -1,6 +1,7 @@
 import { useAuth } from "@/contexts/AuthContext";
 import { useAuditoriaCount } from "@/hooks/auditoria";
 import { useAlertasPendingCount } from "@/hooks/admin";
+import { useActividadesVencidasCount } from "@/hooks/crm/useCrmDashboard";
 import {
   SIDEBAR_DASHBOARD_ITEMS,
   SIDEBAR_GESTION_ITEMS,
@@ -21,12 +22,16 @@ export function useAppSidebarSections(): SidebarSection[] {
   const { role, effectiveRole } = useAuth();
   const { data: auditoriaCount = 0 } = useAuditoriaCount();
   const { count: alertasSistemaCount } = useAlertasPendingCount();
+  const { data: crmVencidas = 0 } = useActividadesVencidasCount();
 
   const sistemaItems = SIDEBAR_SISTEMA_ITEMS.map((it) =>
     it.url === "/auditoria" ? { ...it, badgeCount: auditoriaCount } : it,
   );
   const superAdminItems = SIDEBAR_SUPER_ADMIN_ITEMS.map((it) =>
     it.url === "/admin" ? { ...it, badgeCount: alertasSistemaCount } : it,
+  );
+  const crmItems = SIDEBAR_CRM_ITEMS.map((it) =>
+    it.url === "/crm" ? { ...it, badgeCount: crmVencidas } : it,
   );
 
   // El rol "vendedor" tiene una vista enfocada: sólo CRM + Directorio (clientes) + ayuda.
