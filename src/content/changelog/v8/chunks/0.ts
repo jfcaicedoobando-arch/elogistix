@@ -2,6 +2,14 @@ import type { ChangelogEntry } from "../../../changelogData";
 
 export const chunk0: ChangelogEntry[] = [
   {
+    version: "11.1.0",
+    date: "2026-05-25",
+    type: "minor",
+    title: "CRM Fase 2: CRUD de Leads y conversión",
+    summary: "Listado, alta, edición y eliminación de leads, con conversión opcional a cliente + oportunidad inicial.",
+    description: "Nuevos archivos: src/hooks/crm/useLeads.ts (paginación servidor, filtros por estado/fuente, hooks useCrearLead/useActualizarLead/useEliminarLead/useConvertirLead). UI: src/pages/crm/Leads.tsx (DataTable con badges, búsqueda debounced 300 ms, filtros), src/pages/crm/LeadDetalle.tsx (edición en línea con detección dirty, eliminación con doble confirmación), src/components/crm/NuevoLeadDialog.tsx, src/components/crm/ConvertirLeadDialog.tsx (crea cliente opcional + oportunidad en la primera etapa abierta del pipeline; marca el lead como Convertido y guarda los IDs). Rutas /crm/leads y /crm/leads/:id en App.tsx. Sidebar CRM ahora incluye 'Leads' (icono Users). APP_VERSION 11.1.0.",
+  },
+  {
     version: "11.0.0",
     date: "2026-05-25",
     type: "major",
