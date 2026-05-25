@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { useToast } from "@/hooks/use-toast";
+import { useToast } from "@/hooks/shared/useToast";
 import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 import { useAdminOrganizations, useCreateOrganization } from "@/hooks/admin/useAdminData";
 

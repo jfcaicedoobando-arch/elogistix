@@ -9,7 +9,7 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { useToast } from "@/hooks/use-toast";
+import { useToast } from "@/hooks/shared/useToast";
 import { notifySuccess, notifyError } from "@/lib/ui/appFeedback";
 import {
   LEAD_ESTADOS, LEAD_FUENTES, useCrearLeadsBulk,

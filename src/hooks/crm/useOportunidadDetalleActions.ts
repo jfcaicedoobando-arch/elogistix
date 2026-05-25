@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router-dom";
-import { useToast } from "@/hooks/use-toast";
+import { useToast } from "@/hooks/shared/useToast";
 import { notifySuccess, notifyError } from "@/lib/ui/appFeedback";
 import { useEliminarOportunidad, useCrearCotizacionDesdeOportunidad } from "@/hooks/crm";
 

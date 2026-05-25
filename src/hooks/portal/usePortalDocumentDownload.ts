@@ -1,5 +1,5 @@
 import { useState, useCallback } from "react";
-import { useToast } from "@/hooks/use-toast";
+import { useToast } from "@/hooks/shared/useToast";
 import { createDocumentoSignedUrl } from "@/services/search";
 import { notifyError } from "@/lib/ui/appFeedback";
 

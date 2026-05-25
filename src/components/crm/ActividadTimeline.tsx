@@ -11,7 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
-import { useToast } from "@/hooks/use-toast";
+import { useToast } from "@/hooks/shared/useToast";
 import { notifySuccess, notifyError } from "@/lib/ui/appFeedback";
 import {
   useActividades, useCrearActividad, useCompletarActividad,

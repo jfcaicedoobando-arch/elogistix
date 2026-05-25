@@ -1,5 +1,5 @@
 // Implementación canónica del hook `useToast` (convención shadcn).
-// Antes vivía en `@/hooks/use-toast`; movida a hooks/shared en 11.45.0
+// Antes vivía en `@/hooks/shared/useToast`; movida a hooks/shared en 11.45.0
 // para unificar la jerarquía (P2.10 de la auditoría arquitectónica).
 import * as React from "react";
 

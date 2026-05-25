@@ -13,7 +13,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { useToast } from "@/hooks/use-toast";
+import { useToast } from "@/hooks/shared/useToast";
 import { notifySuccess, notifyError } from "@/lib/ui/appFeedback";
 import { useAuth } from "@/contexts/AuthContext";
 import {

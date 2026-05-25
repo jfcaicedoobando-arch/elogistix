@@ -4,7 +4,7 @@ import { exportToCsv } from "@/generators/exportCsv";
 import { exportarLayoutContable } from "@/generators/layoutContable";
 import { useFacturas, useGastosPendientes, useMarcarCostoPagado } from "@/hooks/facturacion/useFacturas";
 import { useRegistrarActividad } from "@/hooks/shared/useBitacora";
-import { useToast } from "@/hooks/use-toast";
+import { useToast } from "@/hooks/shared/useToast";
 import { usePermissions } from "@/hooks/shared/usePermissions";
 import { useProformasPendientes } from "@/hooks/embarque/useProformas";
 import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";

@@ -13,7 +13,7 @@ import {
 } from "@/hooks/cliente/useClientes";
 import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 import { useClienteFinancials } from "@/hooks/cliente/useClienteFinancials";
-import { useToast } from "@/hooks/use-toast";
+import { useToast } from "@/hooks/shared/useToast";
 import { usePermissions } from "@/hooks/shared/usePermissions";
 import { useRegistrarActividad } from "@/hooks/shared/useBitacora";
 import { diffFields, SENSITIVE_FIELDS } from "@/lib/audit/diffFields";

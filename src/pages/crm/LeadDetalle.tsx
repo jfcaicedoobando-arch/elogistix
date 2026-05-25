@@ -9,7 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { PageHeader } from "@/components/shared/PageHeader";
 import DoubleConfirmDeleteDialog from "@/components/shared/DoubleConfirmDeleteDialog";
-import { useToast } from "@/hooks/use-toast";
+import { useToast } from "@/hooks/shared/useToast";
 import { notifySuccess, notifyError } from "@/lib/ui/appFeedback";
 import { usePermissions } from "@/hooks/shared";
 import ConvertirLeadDialog from "@/components/crm/ConvertirLeadDialog";

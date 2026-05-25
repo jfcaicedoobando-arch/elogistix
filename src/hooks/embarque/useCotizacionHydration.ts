@@ -8,7 +8,7 @@
  */
 import { useEffect, useRef } from "react";
 import { useLocation } from "react-router-dom";
-import { useToast } from "@/hooks/use-toast";
+import { useToast } from "@/hooks/shared/useToast";
 import { useCotizacion, type CotizacionRow } from "@/hooks/cotizacion/useCotizaciones";
 import { notifySuccess } from "@/lib/ui/appFeedback";
 

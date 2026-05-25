@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { useToast } from "@/hooks/use-toast";
+import { useToast } from "@/hooks/shared/useToast";
 import { ShieldCheck, UserPlus } from "lucide-react";
 import { getErrorMessage } from "@/lib/errors";
 import NuevoUsuarioDialog from "@/components/usuario/NuevoUsuarioDialog";

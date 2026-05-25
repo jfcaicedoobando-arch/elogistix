@@ -1,6 +1,6 @@
 import { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { useToast } from "@/hooks/use-toast";
+import { useToast } from "@/hooks/shared/useToast";
 import { useListPageState } from "@/hooks/shared/useListPageState";
 import { useCotizaciones, useDeleteCotizacion, usePrefetchCotizacion } from "@/hooks/cotizacion/useCotizaciones";
 

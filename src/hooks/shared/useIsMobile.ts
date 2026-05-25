@@ -1,5 +1,5 @@
 // Implementación canónica de `useIsMobile`. Antes vivía en
-// `@/hooks/use-mobile`; movida a hooks/shared en 11.45.0 para unificar
+// `@/hooks/shared/useIsMobile`; movida a hooks/shared en 11.45.0 para unificar
 // la jerarquía (P2.10 de la auditoría arquitectónica).
 import * as React from "react";
 

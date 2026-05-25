@@ -5,7 +5,7 @@ import { calcularEstadoEmbarque, usePrefetchEmbarque } from "@/hooks/embarque/us
 import { useOperadoresDistintos } from "@/hooks/catalogos/useOperadoresDistintos";
 import { useClientesForSelect } from "@/hooks/cliente/useClientes";
 import { usePermissions } from "@/hooks/shared/usePermissions";
-import { useToast } from "@/hooks/use-toast";
+import { useToast } from "@/hooks/shared/useToast";
 import { getErrorMessage } from "@/lib/errors";
 import { getOrigen, getDestino } from "@/lib/formatters";
 import { useEmbarquesPageState } from "@/hooks/embarque/useEmbarquesPageState";
