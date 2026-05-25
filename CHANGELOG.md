@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [11.37.0] - 2026-05-25
+- **Auditoría calidad — Etapa 4 sub-loop 3 (cobertura)**: +27 tests cubriendo 4 módulos puros adicionales. `lib/ui/dynamicImportError` (4 tests: detección de firmas Vite/chunk, null/string/Error/objeto). `lib/ui/errorDetailsExtract` (8 tests: null, string, Error, Postgrest code/status, objeto plano, fallbacks, descarte de tipos incorrectos). `lib/ui/errorReportFormat` (10 tests: header con/sin opcionales, fallbacks "—", bloque de error con detalles técnicos, context JSON, stack markdown). `lib/crm/forecastBuckets` (5 tests: classifyEtapa, makeBucket inicial en 0, applyDelta acumulando pipeline/ponderado/ganado). Total: 663 → 690 tests verdes (103 files).
+
 ## [11.36.0] - 2026-05-25
 - **Auditoría calidad — Etapa 4 sub-loop 2 (cobertura)**: +15 tests cubriendo 2 módulos puros adicionales. `lib/mappers/cotizacionForm` (9 tests: defaults, mapeo snake→camel, dimensiones LCL/Aérea con fallback, parsing de validez_propuesta a Date, fallbacks de null, costos iniciales con defaults). `services/facturas/proyeccion/buildFilas` (6 tests: indexarPorEmbarque agrupando por id/columna, fallback MXN/0, buildFilasProyeccion con conversión USD↔MXN, flag tiene_factura_pdf, TC=1 cuando null). Total: 648 → 663 tests verdes (99 files).
 
