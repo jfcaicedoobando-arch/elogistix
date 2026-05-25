@@ -1,19 +1,17 @@
 /**
  * OportunidadKanban — vista Kanban con drag & drop entre etapas.
+ * Muestra la próxima actividad pendiente por oportunidad.
  */
 import { useMemo } from "react";
 import {
-  DndContext,
-  PointerSensor,
-  useSensor,
-  useSensors,
-  useDraggable,
-  useDroppable,
-  type DragEndEvent,
+  DndContext, PointerSensor, useSensor, useSensors,
+  useDraggable, useDroppable, type DragEndEvent,
 } from "@dnd-kit/core";
+import { Calendar } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { formatCurrencyCompact } from "@/lib/formatters";
+import { useProximasActividades, type ProximaActividad } from "@/hooks/crm/useProximasActividades";
 
 const fmtMxn = (n: number) => formatCurrencyCompact(n, "MXN");
 import type { CrmOportunidadRow } from "@/hooks/crm/useOportunidades";
@@ -26,13 +24,26 @@ interface Props {
   onClickCard: (id: string) => void;
 }
 
-function OpCard({ op, onClick }: { op: CrmOportunidadRow; onClick: () => void }) {
+function formatProx(prox: ProximaActividad | undefined): string {
+  if (!prox) return "Sin próxima acción";
+  if (!prox.fecha_programada) return prox.asunto;
+  const d = new Date(prox.fecha_programada);
+  const hoy = new Date();
+  const diff = Math.floor((d.getTime() - hoy.getTime()) / 86_400_000);
+  if (diff < 0) return `Vencida · ${prox.asunto}`;
+  if (diff === 0) return `Hoy · ${prox.asunto}`;
+  if (diff === 1) return `Mañana · ${prox.asunto}`;
+  return `${d.toLocaleDateString("es-MX")} · ${prox.asunto}`;
+}
+
+function OpCard({ op, onClick, proxima }: { op: CrmOportunidadRow; onClick: () => void; proxima?: ProximaActividad }) {
   const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({ id: op.id });
   const style: React.CSSProperties = {
     transform: transform ? `translate3d(${transform.x}px, ${transform.y}px, 0)` : undefined,
     opacity: isDragging ? 0.4 : 1,
     cursor: "grab",
   };
+  const vencida = proxima?.fecha_programada && new Date(proxima.fecha_programada) < new Date();
   return (
     <Card
       ref={setNodeRef}
@@ -55,22 +66,22 @@ function OpCard({ op, onClick }: { op: CrmOportunidadRow; onClick: () => void })
           <span className="text-xs font-semibold">{fmtMxn(Number(op.monto_estimado ?? 0))}</span>
           <Badge variant="secondary" className="text-[10px] h-5 px-1.5">{op.probabilidad}%</Badge>
         </div>
-        {op.vendedor_email ? (
-          <div className="text-[10px] text-muted-foreground truncate">{op.vendedor_email}</div>
-        ) : null}
+        <div className={`text-[10px] flex items-center gap-1 truncate pt-1 border-t border-border/40 mt-1 ${vencida ? "text-destructive" : "text-muted-foreground"}`}>
+          <Calendar className="h-3 w-3 shrink-0" />
+          <span className="truncate">{formatProx(proxima)}</span>
+        </div>
       </CardContent>
     </Card>
   );
 }
 
 function Columna({
-  etapa,
-  ops,
-  onClickCard,
+  etapa, ops, onClickCard, proximasMap,
 }: {
   etapa: CrmEtapaRow;
   ops: CrmOportunidadRow[];
   onClickCard: (id: string) => void;
+  proximasMap: Map<string, ProximaActividad>;
 }) {
   const { setNodeRef, isOver } = useDroppable({ id: etapa.id });
   const total = ops.reduce((s, o) => s + Number(o.monto_estimado ?? 0), 0);
@@ -90,7 +101,7 @@ function Columna({
         className={`flex-1 p-2 space-y-2 min-h-[200px] transition-colors ${isOver ? "bg-primary/5" : ""}`}
       >
         {ops.map((op) => (
-          <OpCard key={op.id} op={op} onClick={() => onClickCard(op.id)} />
+          <OpCard key={op.id} op={op} onClick={() => onClickCard(op.id)} proxima={proximasMap.get(op.id)} />
         ))}
         {ops.length === 0 && (
           <div className="text-center text-xs text-muted-foreground py-8">Sin oportunidades</div>
@@ -102,6 +113,8 @@ function Columna({
 
 export default function OportunidadKanban({ etapas, oportunidades, onMover, onClickCard }: Props) {
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 6 } }));
+  const ids = useMemo(() => oportunidades.map((o) => o.id), [oportunidades]);
+  const { data: proximasMap } = useProximasActividades("oportunidad", ids);
 
   const porEtapa = useMemo(() => {
     const m = new Map<string, CrmOportunidadRow[]>();
@@ -127,7 +140,13 @@ export default function OportunidadKanban({ etapas, oportunidades, onMover, onCl
     <DndContext sensors={sensors} onDragEnd={handleDragEnd}>
       <div className="flex gap-3 overflow-x-auto pb-3">
         {etapas.map((e) => (
-          <Columna key={e.id} etapa={e} ops={porEtapa.get(e.id) ?? []} onClickCard={onClickCard} />
+          <Columna
+            key={e.id}
+            etapa={e}
+            ops={porEtapa.get(e.id) ?? []}
+            onClickCard={onClickCard}
+            proximasMap={proximasMap ?? new Map()}
+          />
         ))}
       </div>
     </DndContext>
