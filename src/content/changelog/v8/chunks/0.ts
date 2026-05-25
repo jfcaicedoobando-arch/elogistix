@@ -2,6 +2,14 @@ import type { ChangelogEntry } from "../../../changelogData";
 
 export const chunk0: ChangelogEntry[] = [
   {
+    version: "11.22.1",
+    date: "2026-05-25",
+    type: "patch",
+    title: "Perf tests estabilizados para CI",
+    summary: "DataTable.perf.test.tsx ahora usa warmup + mediana de N corridas + umbrales relativos (linealidad vs baseline 1k, rerender vs mount).",
+    description: "Helper measureMedian(label, fn, runs) ejecuta 1 warmup descartado + N mediciones con cleanup() y tryGc() entre cada corrida. Umbrales mixtos: ceiling absoluto generoso (~2× del observado) + linealidad relativa (5k ≤ baseline1k×8, 10k ≤ baseline1k×15) + rerenders comparados contra su propio mount (≤50–60%). Esto elimina los 2 falsos positivos por jitter sin perder capacidad de detectar regresiones (O(n²) o pérdida de memo). Validado con 5 corridas consecutivas verdes. 626 tests verdes. APP_VERSION 11.22.1.",
+  },
+  {
     version: "11.22.0",
     date: "2026-05-25",
     type: "patch",

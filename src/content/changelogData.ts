@@ -22,6 +22,14 @@ export interface ChangelogEntry {
  */
 export const recentChangelog: ChangelogEntry[] = [
   {
+    version: "11.22.1",
+    date: "2026-05-25",
+    type: "patch",
+    title: "Perf tests estabilizados para CI",
+    summary: "DataTable.perf.test.tsx con warmup + mediana de N corridas + umbrales relativos. 0 flakes en 5 corridas consecutivas.",
+    description: "Helper measureMedian ejecuta 1 warmup + N mediciones con cleanup() y tryGc() entre cada una. Umbrales: ceiling absoluto generoso + linealidad relativa (5k ≤ baseline1k×8, 10k ≤ baseline1k×15) + rerenders ≤50-60% del mount. Mantiene capacidad de detectar regresiones reales (O(n²), pérdida de memo). 626 tests verdes. APP_VERSION 11.22.1.",
+  },
+  {
     version: "11.22.0",
     date: "2026-05-25",
     type: "patch",
