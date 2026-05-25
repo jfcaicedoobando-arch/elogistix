@@ -114,9 +114,9 @@ export function useEditarEmbarqueWizard(id: string | undefined) {
 
       // Diff de campos sensibles ANTES de mutar (Bloque 3.6 ext).
       const cambiosEmbarque = diffFields(
-        embarque as unknown as Record<string, unknown>,
-        nuevoEmbarquePayload as unknown as Record<string, unknown>,
-        SENSITIVE_FIELDS.embarque as unknown as ReadonlyArray<string>,
+        embarque,
+        nuevoEmbarquePayload,
+        SENSITIVE_FIELDS.embarque,
       );
       const cambiosVenta = diffConceptos(conceptosVentaDb, nuevosVenta);
       const cambiosCosto = diffConceptos(conceptosCostoDb, nuevosCosto);
