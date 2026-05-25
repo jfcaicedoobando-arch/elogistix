@@ -136,6 +136,8 @@ export default function OportunidadDetalle() {
         </CardContent>
       </Card>
 
+      <OportunidadLineageCard oportunidadId={op.id} leadId={op.lead_id ?? null} />
+
       <ActividadTimeline entidadTipo="oportunidad" entidadId={op.id} />
 
       <NuevaOportunidadDialog
