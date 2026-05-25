@@ -31,7 +31,7 @@ describe("computeFechasPropuestas", () => {
   it("detecta diferencia en ETA", () => {
     const out = computeFechasPropuestas({
       readOnly: false,
-      summary: { eta_final_destination: "2026-01-10" },
+      summary: { eta_final_destination: "2026-01-10 12:00" },
       trackingStatus: "ok", fechasDismissed: false,
       eta: "2026-01-05", etd: null, ata: null,
     });
@@ -41,7 +41,7 @@ describe("computeFechasPropuestas", () => {
   it("retorna null cuando no hay diferencias", () => {
     const out = computeFechasPropuestas({
       readOnly: false,
-      summary: { eta_final_destination: "2026-01-10" },
+      summary: { eta_final_destination: "2026-01-10 00:00" },
       trackingStatus: "ok", fechasDismissed: false,
       eta: "2026-01-10", etd: null, ata: null,
     });
