@@ -4,12 +4,13 @@
  * leads sin contactar, top 5 deals y mini-embudo del pipeline.
  */
 import { Link } from "react-router-dom";
-import { Activity, Target, TrendingUp, Users, AlertTriangle, Clock } from "lucide-react";
+import { Activity, Target, TrendingUp, Users, AlertTriangle, Clock, AlertCircle } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { formatCurrencyCompact } from "@/lib/formatters";
-import { useCrmDashboardData } from "@/hooks/crm/useCrmDashboard";
+import { useCrmDashboardData, useActividadesVencidasList } from "@/hooks/crm/useCrmDashboard";
 
 function KpiCard({ icon: Icon, label, value }: { icon: typeof Target; label: string; value: string | number }) {
   return (
