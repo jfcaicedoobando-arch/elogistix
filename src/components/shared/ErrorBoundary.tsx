@@ -5,30 +5,9 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { logClientError } from "@/services/observability";
 import {
-  hasChunkReloadBeenAttempted,
-  markChunkReloadAttempted,
-} from "@/lib/browserStorage";
-
-const isDynamicImportError = (error: Error | null) => {
-  if (!error) return false;
-
-  const message = error.message.toLowerCase();
-  return (
-    message.includes("failed to fetch dynamically imported module") ||
-    message.includes("importing a module script failed") ||
-    message.includes("dynamically imported module") ||
-    message.includes("loading chunk") ||
-    message.includes("chunkloaderror")
-  );
-};
-
-const tryReloadForChunkError = () => {
-  if (typeof window === "undefined") return false;
-  if (hasChunkReloadBeenAttempted()) return false;
-  markChunkReloadAttempted();
-  window.location.reload();
-  return true;
-};
+  isDynamicImportError,
+  tryReloadForChunkError,
+} from "@/lib/ui/dynamicImportError";
 
 interface Props {
   children: React.ReactNode;
