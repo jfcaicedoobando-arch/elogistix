@@ -37,12 +37,7 @@ export const SIDEBAR_REPORTES_ITEMS: SidebarItem[] = [
 ];
 
 export const SIDEBAR_CRM_ITEMS: SidebarItem[] = [
-  { title: "Dashboard CRM", url: "/crm", icon: Target },
-  { title: "Leads", url: "/crm/leads", icon: Users },
-  { title: "Oportunidades", url: "/crm/oportunidades", icon: Target },
-  { title: "Actividades", url: "/crm/actividades", icon: Activity },
-  { title: "Forecast", url: "/crm/forecast", icon: BarChart3 },
-  { title: "Reportes CRM", url: "/crm/reportes", icon: BarChart3 },
+  { title: "CRM", url: "/crm", icon: Target },
 ];
 
 export const SIDEBAR_DIRECTORIO_ITEMS: SidebarItem[] = [

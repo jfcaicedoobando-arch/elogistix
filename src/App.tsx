@@ -36,6 +36,7 @@ const OportunidadDetalle = lazy(() => import("./pages/crm/OportunidadDetalle"));
 const ActividadesCrm = lazy(() => import("./pages/crm/Actividades"));
 const ForecastCrm = lazy(() => import("./pages/crm/Forecast"));
 const ReportesCrm = lazy(() => import("./pages/crm/Reportes"));
+const CrmLayout = lazy(() => import("./pages/crm/CrmLayout"));
 
 const Embarques = lazy(() => import("./pages/embarques/Embarques"));
 const EmbarqueDetalle = lazy(() => import("./pages/embarques/EmbarqueDetalle"));
@@ -204,14 +205,16 @@ const App = () => (
               <Route path="/changelog" element={<Changelog />} />
               <Route path="/ayuda" element={<Ayuda />} />
               <Route path="/sentry" element={<SentryDiagnostico />} />
-              <Route path="/crm" element={<CrmDashboard />} />
-              <Route path="/crm/leads" element={<Leads />} />
-              <Route path="/crm/leads/:id" element={<LeadDetalle />} />
-              <Route path="/crm/oportunidades" element={<Oportunidades />} />
-              <Route path="/crm/oportunidades/:id" element={<OportunidadDetalle />} />
-              <Route path="/crm/actividades" element={<ActividadesCrm />} />
-              <Route path="/crm/forecast" element={<ForecastCrm />} />
-              <Route path="/crm/reportes" element={<ReportesCrm />} />
+              <Route path="/crm" element={<CrmLayout />}>
+                <Route index element={<CrmDashboard />} />
+                <Route path="leads" element={<Leads />} />
+                <Route path="leads/:id" element={<LeadDetalle />} />
+                <Route path="oportunidades" element={<Oportunidades />} />
+                <Route path="oportunidades/:id" element={<OportunidadDetalle />} />
+                <Route path="actividades" element={<ActividadesCrm />} />
+                <Route path="forecast" element={<ForecastCrm />} />
+                <Route path="reportes" element={<ReportesCrm />} />
+              </Route>
               <Route path="/bitacora" element={<Bitacora />} />
               <Route
                 path="/papelera"
