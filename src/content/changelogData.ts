@@ -101,14 +101,6 @@ export const recentChangelog: ChangelogEntry[] = [
     summary: "Tareas automáticas al cambiar etapa, notificaciones in-app, plantillas de email/WhatsApp, banner de vencidas y auto-creación de actividad inicial.",
     description: "Migración crm_etapas_pipeline.crea_tarea_seguimiento + dias_seguimiento; tablas crm_notificaciones y crm_plantillas_mensaje con RLS. Hooks useAutomatizacionesEtapa, useCrmNotificaciones, usePlantillasMensaje, useActividadesVencidasList. UI: CrmNotificacionesBell, EtapasPipelineEditor con tarea+días, tab Plantillas en /crm/configuracion, PlantillaSelector en ContactActions con variables, banner de vencidas en dashboard → /crm/actividades?filtro=vencidas, checkbox 'Crear actividad de seguimiento' en alta de leads y oportunidades. APP_VERSION 11.5.0.",
   },
-  {
-    version: "11.4.0",
-    date: "2026-05-25",
-    type: "minor",
-    title: "CRM Sprint B: configuración, filtros, bulk y CSV",
-    summary: "Pestaña Configuración del CRM, filtros avanzados en Oportunidades, selección múltiple en Leads, import CSV y datos accionables (mailto/tel + copiar).",
-    description: "EtapasPipelineEditor y MotivosPerdidaEditor en /crm/configuracion. OportunidadesFiltersBar (etapa/vendedor/cierre/monto) filtra Kanban y Tabla. LeadsBulkBar permite cambiar estado, reasignar vendedor o eliminar selección múltiple. ImportarLeadsCsvDialog con preview y batches de 100. ContactActions (mailto/tel + copiar) en LeadDetalle. APP_VERSION 11.4.0.",
-  },
 ];
 
 /** Deduplica por version conservando la primera ocurrencia (recentChangelog gana). */
