@@ -2,6 +2,14 @@ import type { ChangelogEntry } from "../../../changelogData";
 
 export const chunk0: ChangelogEntry[] = [
   {
+    version: "11.3.0",
+    date: "2026-05-25",
+    type: "minor",
+    title: "CRM Sprint A: Dashboard real + asignación de vendedor",
+    summary: "Reemplazado el placeholder 'Próximas fases' por widgets accionables y agregado selector de vendedor en alta de leads/oportunidades.",
+    description: "Nuevo hook useCrmDashboard.ts con widgets: Mis actividades de hoy, Oportunidades cerrando esta semana, Leads sin contactar >7 días, Top 5 deals abiertos, Mini-embudo por etapa. Nuevo componente VendedorSelect (visible para admin/operador) integrado en NuevoLeadDialog y NuevaOportunidadDialog para asignar owner explícitamente. Hooks useCrearLead/useCrearOportunidad ahora aceptan vendedor_id/vendedor_email opcionales. Nuevo hook usePosponerActividad y useActividadesVencidasCount. usePermissions expone canEditCrm (incluye rol vendedor). APP_VERSION 11.3.0. Pendiente del Sprint A: linaje en detalles, badges de vencidas en sidebar/tab, acciones inline en lista de actividades.",
+  },
+  {
     version: "11.2.1",
     date: "2026-05-25",
     type: "patch",

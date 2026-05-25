@@ -232,6 +232,13 @@ export default function NuevaOportunidadDialog({ open, onOpenChange, oportunidad
             <Label>Destino</Label>
             <Input value={form.destino} onChange={(e) => set("destino", e.target.value)} />
           </div>
+          <div className="sm:col-span-2">
+            <VendedorSelect
+              value={form.vendedor_id}
+              email={form.vendedor_email}
+              onChange={(id, email) => setForm((f) => ({ ...f, vendedor_id: id, vendedor_email: email }))}
+            />
+          </div>
           <div className="sm:col-span-2 space-y-1">
             <Label>Notas</Label>
             <Textarea rows={3} value={form.notas} onChange={(e) => set("notas", e.target.value)} />
