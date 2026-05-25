@@ -92,17 +92,16 @@ export default function OportunidadDetalle() {
         </TabsList>
 
         <TabsContent value="resumen" className="mt-4 space-y-4">
-          <Card>
-            <CardHeader><CardTitle className="text-sm">Datos comerciales</CardTitle></CardHeader>
-            <CardContent className="grid grid-cols-2 md:grid-cols-3 gap-3 text-sm">
-              <div><div className="text-muted-foreground text-xs">Vendedor</div>{op.vendedor_email || "—"}</div>
-              <div><div className="text-muted-foreground text-xs">Modo</div>{op.modo || "—"}</div>
-              <div><div className="text-muted-foreground text-xs">Cierre estimado</div>{op.fecha_estimada_cierre || "—"}</div>
-              <div><div className="text-muted-foreground text-xs">Origen</div>{op.origen || "—"}</div>
-              <div><div className="text-muted-foreground text-xs">Destino</div>{op.destino || "—"}</div>
-              <div className="col-span-2 md:col-span-3"><div className="text-muted-foreground text-xs">Notas</div>{op.notas || "—"}</div>
-            </CardContent>
-          </Card>
+          <DatosComercialesCard
+            fields={[
+              { label: "Vendedor", value: op.vendedor_email },
+              { label: "Modo", value: op.modo },
+              { label: "Cierre estimado", value: op.fecha_estimada_cierre },
+              { label: "Origen", value: op.origen },
+              { label: "Destino", value: op.destino },
+              { label: "Notas", value: op.notas, colSpan: true },
+            ]}
+          />
           <OportunidadCotizacionesList oportunidadId={op.id} />
         </TabsContent>
 
