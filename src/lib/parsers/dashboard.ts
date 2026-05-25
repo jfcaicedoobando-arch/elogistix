@@ -2,7 +2,7 @@
  * Pure parsers for the `dashboard_stats()` JSONB RPC payload.
  * Extracted from useDashboardData to keep the hook focused on query+state.
  */
-import { fromDb } from "@/lib/supabase/cast";
+
 import {
   EMPTY_ARRIBOS,
   EMPTY_CONTEO,
@@ -16,6 +16,7 @@ import {
   type EstadoFiltro,
   type ResumenFacturacion,
 } from "./dashboardTypes";
+import { numOr0 } from "./dashboardProfit";
 
 export * from "./dashboardTypes";
 
@@ -35,19 +36,19 @@ export function parseArribosEsteMes(stats: DashboardStats): ArribosEsteMes {
   if (!stats?.arribosEsteMes) return EMPTY_ARRIBOS;
   const raw = stats.arribosEsteMes as Record<string, number>;
   return {
-    total: Number(raw.total ?? 0),
-    yaLlegaron: Number(raw.yaLlegaron ?? 0),
-    enCamino: Number(raw.enCamino ?? 0),
-    profitUSD: Number(raw.profitUSD ?? 0),
-    ventaMXN: Number(raw.ventaMXN ?? 0),
-    costoMXN: Number(raw.costoMXN ?? 0),
-    profitMXN: Number(raw.profitMXN ?? 0),
-    ventaMxnFromUsd: Number(raw.ventaMxnFromUsd ?? 0),
-    costoMxnFromUsd: Number(raw.costoMxnFromUsd ?? 0),
-    ventaMxnFromEur: Number(raw.ventaMxnFromEur ?? 0),
-    costoMxnFromEur: Number(raw.costoMxnFromEur ?? 0),
-    ventaMxnNative: Number(raw.ventaMxnNative ?? 0),
-    costoMxnNative: Number(raw.costoMxnNative ?? 0),
+    total: numOr0(raw.total),
+    yaLlegaron: numOr0(raw.yaLlegaron),
+    enCamino: numOr0(raw.enCamino),
+    profitUSD: numOr0(raw.profitUSD),
+    ventaMXN: numOr0(raw.ventaMXN),
+    costoMXN: numOr0(raw.costoMXN),
+    profitMXN: numOr0(raw.profitMXN),
+    ventaMxnFromUsd: numOr0(raw.ventaMxnFromUsd),
+    costoMxnFromUsd: numOr0(raw.costoMxnFromUsd),
+    ventaMxnFromEur: numOr0(raw.ventaMxnFromEur),
+    costoMxnFromEur: numOr0(raw.costoMxnFromEur),
+    ventaMxnNative: numOr0(raw.ventaMxnNative),
+    costoMxnNative: numOr0(raw.costoMxnNative),
   };
 }
 
@@ -67,44 +68,9 @@ export function parseResumenMesSiguiente(stats: DashboardStats): ResumenFacturac
   };
 }
 
-/**
- * Normaliza un embarque con datos de profit (USD legacy + MXN homologado).
- */
-function parseEmbarqueConProfitRaw(r: Record<string, unknown>): EmbarqueConProfit {
-  const ventaUSD = Number(r.ventaUSD ?? 0);
-  const costoUSD = Number(r.costoUSD ?? 0);
-  const profit = r.profit !== undefined && r.profit !== null ? Number(r.profit) : ventaUSD - costoUSD;
-  const margen = r.margen !== undefined && r.margen !== null
-    ? Number(r.margen)
-    : ventaUSD > 0 ? (profit / ventaUSD) * 100 : 0;
-  const ventaMXN = Number(r.ventaMXN ?? 0);
-  const costoMXN = Number(r.costoMXN ?? 0);
-  const profitMXN = r.profitMXN !== undefined && r.profitMXN !== null
-    ? Number(r.profitMXN)
-    : ventaMXN - costoMXN;
-  const margenMXN = r.margenMXN !== undefined && r.margenMXN !== null
-    ? Number(r.margenMXN)
-    : ventaMXN > 0 ? (profitMXN / ventaMXN) * 100 : 0;
-  return {
-    ...(fromDb<EmbarqueConProfit>(r)),
-    ventaUSD,
-    costoUSD,
-    profit,
-    margen,
-    ventaMXN,
-    costoMXN,
-    profitMXN,
-    margenMXN,
-    tipoCambioUSD: Number(r.tipoCambioUSD ?? 0),
-    tipoCambioEUR: Number(r.tipoCambioEUR ?? 0),
-    ventaMxnFromUsd: Number(r.ventaMxnFromUsd ?? 0),
-    costoMxnFromUsd: Number(r.costoMxnFromUsd ?? 0),
-    ventaMxnFromEur: Number(r.ventaMxnFromEur ?? 0),
-    costoMxnFromEur: Number(r.costoMxnFromEur ?? 0),
-    ventaMxnNative: Number(r.ventaMxnNative ?? 0),
-    costoMxnNative: Number(r.costoMxnNative ?? 0),
-  };
-}
+// Re-export para no romper consumidores existentes
+export { parseEmbarqueConProfitRaw } from "./dashboardProfit";
+import { parseEmbarqueConProfitRaw } from "./dashboardProfit";
 
 export function parseEmbarquesMesSiguiente(stats: DashboardStats): EmbarqueMesSiguiente[] {
   const raw = (stats?.embarquesMesSiguiente as Array<Record<string, unknown>>) ?? [];

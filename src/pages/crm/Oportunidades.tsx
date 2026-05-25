@@ -62,7 +62,7 @@ export default function Oportunidades() {
     [usuarios],
   );
   const { data, isLoading } = useOportunidades({ search: debounced, pageSize: 500 });
-  const opsRaw = data?.data ?? [];
+  const opsRaw = useMemo(() => data?.data ?? [], [data]);
 
   // Filtros cliente-side
   const ops = useMemo(() => {

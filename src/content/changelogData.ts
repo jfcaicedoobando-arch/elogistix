@@ -22,6 +22,14 @@ export interface ChangelogEntry {
  */
 export const recentChangelog: ChangelogEntry[] = [
   {
+    version: "11.21.0",
+    date: "2026-05-25",
+    type: "minor",
+    title: "Auditoría loop 9 — complexity warnings y exhaustive-deps",
+    summary: "Complexity warnings 14→3 (3 mappers planos con disable inline). 2 exhaustive-deps en Leads/Oportunidades resueltos con useMemo.",
+    description: "Refactors puros sin cambio de comportamiento. Helpers extraídos: buildLeadInsertPayload, buildOportunidadInsertPayload, buildFromOportunidad/buildEmptyForNueva, isLeadDirty, extractErrorDetails + fmt* helpers, parseEmbarqueConProfitRaw + numOr0/numOrCompute/safeMargen, forecastBuckets (classifyEtapa/makeBucket/applyDelta), buildAuthSnapshot/buildSentryUserContext, useSentryInfo + maskDsn, useCrmInicioVM. useMemo en data?.data de Leads y Oportunidades para estabilizar deps. Barrel nuevo hooks/sentry. APP_VERSION 11.21.0.",
+  },
+  {
     version: "11.20.0",
     date: "2026-05-25",
     type: "minor",

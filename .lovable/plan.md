@@ -1,47 +1,60 @@
-# Loop 8 — Auditoría arquitectónica: barrels + mappers
+## Loop 9 — Cierre final de auditoría
 
-Con el "Power of 10" (≤200 LOC) ya cerrado, este loop ataca los dos siguientes pendientes de mayor ROI del backlog en `mem://audit/pendings`.
+Al medir el estado real con ESLint el panorama cambió:
 
-## Objetivos
+- **Barrel violations: 0** (P0.1 ✅ ya cerrado)
+- **Mappers `embarque*` / `cotizacion*`: complejidad ≤12** (P0.3 ✅ ya cerrado en loops anteriores; la memoria está desactualizada)
+- **Lo que queda: 14 warnings de `complexity > 15` y 2 `react-hooks/exhaustive-deps`**
 
-### P0.1 — Cerrar barrel violations (`no-restricted-imports`)
-Hoy hay ~203 imports que apuntan a archivos internos en vez de al barrel del dominio. Esto rompe encapsulación y dificulta refactors futuros.
+Este loop cierra esos 16 warnings para poder endurecer ESLint (P2.12).
 
-**Plan de ataque:**
-1. Auditar `eslint` y agrupar las violaciones por dominio (`hooks/crm`, `hooks/embarque`, `services/embarque`, `services/auditoria`, `services/crm`, `lib/formatters`, `lib/csv`, etc.).
-2. En cada dominio, asegurar que `index.ts` re-exporte la API pública completa (sin filtrar tipos ni utilidades que estén siendo consumidas).
-3. Reemplazo mecánico de imports (`@/hooks/crm/leads/queries` → `@/hooks/crm`, `@/services/embarque/queries/paginados` → `@/services/embarque`, etc.).
-4. Cuando un símbolo es estrictamente interno de un dominio, marcarlo como no exportado en el barrel y eliminar consumidores externos.
-5. Subir `no-restricted-imports` de `warn` → `error` en `eslint.config.js` una vez en 0 (se anota para P2.12, no se hace aquí).
+### Alcance
 
-### P0.3 — Refactor de mappers de alta complejidad
-Cuatro archivos con complejidad ciclomática crítica:
-- `src/lib/mappers/embarqueFromDb.ts` (46)
-- `src/lib/mappers/embarqueToDb.ts` (41)
-- `src/lib/mappers/cotizacionForm.ts` (35)
-- `src/lib/mappers/cotizacion.ts` (33)
+**A. Reducir complejidad (14 funciones, todas >15):**
 
-**Patrón a aplicar en cada uno:**
-1. `parseDb()` — valida la fila cruda de Supabase con un schema zod (tipos correctos + nullables).
-2. `mapDbToDomain()` — función pura de transformación 1:1, sin lógica condicional defensiva (los nulls ya quedaron normalizados arriba).
-3. `applyDefaults()` — defaults de negocio (estado inicial, moneda base, etc.), extraído a su propio módulo testeable.
-4. Tests unitarios por cada función pura (input → output esperado) en `__tests__/`.
+| Archivo | Función | Complejidad | Estrategia |
+|---|---|---|---|
+| `hooks/crm/useOportunidadForm.ts` | arrow L56 | 23 | Extraer `buildOportunidadPayload()` + `resolveDefaults()` |
+| `lib/parsers/dashboard.ts` | `parseEmbarqueConProfitRaw` | 23 | Partir en `parseHeader` + `parseProfit` + `parseFechas` |
+| `lib/ui/errorReport.ts` | `formatReportMarkdown` | 22 | Una función por sección (`fmtError`, `fmtContext`, `fmtBreadcrumbs`) |
+| `hooks/crm/useLeadEditForm.ts` | arrow L73 | 20 | Extraer normalizadores a `leadEditHelpers.ts` |
+| `hooks/crm/leads/mutations.ts` | `mutationFn` L10 | 20 | Extraer `buildLeadInsertPayload()` |
+| `hooks/crm/leads/bulk.ts` | arrow L51 | 19 | Extraer `applyBulkPatch()` |
+| `hooks/crm/useOportunidades.ts` | `mutationFn` L92 | 19 | Extraer `buildOportunidadUpdate()` |
+| `lib/ui/errorReport.ts` | `extractErrorDetails` | 18 | Separar `extractStack` + `extractCause` |
+| `pages/dashboard/SentryDiagnostico.tsx` | comp | 17 | Mover handlers a hook `useSentryDiagnostico` |
+| `contexts/AuthContext.tsx` | arrow L73 | 16 | Extraer `resolveEffectiveRole()` |
+| `components/shared/VirtualDataTable.tsx` | comp | 16 | Extraer `useVirtualRows()` |
+| `lib/crm/forecast.ts` | `computeForecast` | 16 | Extraer `bucketByMonth()` |
+| `lib/parsers/dashboard.ts` | `parseArribosEsteMes` | 16 | Extraer filtro por mes a helper |
+| `pages/crm/CrmDashboard.tsx` | comp | 16 | Mover cálculo de KPIs vencidas a hook |
 
-Cada archivo final ≤200 LOC, complejidad ≤12, con tests verdes.
+Meta: **todas ≤12** (umbral objetivo de P2.12).
 
-## Out of scope
-- P0.4 (disables de `exhaustive-deps`), P1.x (unificación utils, romper services god, schemas zod en queries), P2/P3 — quedan para loops siguientes.
-- No tocar RLS, edge functions, ni `integrations/supabase/*`.
+**B. Resolver exhaustive-deps (2):**
 
-## Versionado
-- `APP_VERSION` → **11.20.0** (cambios arquitectónicos significativos sin breaking changes funcionales).
-- Entrada en `changelogData.ts` + `chunks/0.ts` manteniendo el límite de 10 recientes.
-- Actualizar `mem://audit/pendings` marcando P0.1 y P0.3 como ✅.
+- `pages/crm/Leads.tsx` L38 → envolver `leads` en `useMemo`.
+- `pages/crm/Oportunidades.tsx` L65 → envolver `opsRaw` en `useMemo`.
 
-## Verificación
-- `bunx vitest run` (objetivo: 626+ tests, todos verdes; nuevos tests de mappers sumando ≥8).
-- `bun lint` con 0 violaciones `no-restricted-imports` (vs 203 actuales).
-- Build automático del harness.
+**C. Verificación:**
 
-## Riesgo
-Cambios mecánicos extensos en imports → riesgo bajo pero amplio. Si el lote de barrels resulta demasiado grande para un solo loop, lo dividimos por dominio (CRM primero, luego embarque, luego el resto) y dejamos P0.3 para el siguiente.
+1. `bunx vitest run` → 626+ tests verdes.
+2. `bunx eslint src` → 0 `complexity` y 0 `exhaustive-deps`.
+3. Mantener Power of 10 (componentes ≤200 LOC, sin `any`).
+
+**D. Cierre administrativo:**
+
+- `APP_VERSION` → **11.21.0**
+- Nueva entrada en `src/content/changelog/v8/chunks/0.ts` y `changelogData.ts`.
+- Actualizar `mem://audit/pendings`: marcar ✅ P0.1, P0.3, P0.4, y dejar como únicos pendientes P1.5–P1.8 y P2.9–P2.12.
+
+### Fuera de alcance
+
+- `react-refresh/only-export-components` (3) → trivial, lo arrastro si surge.
+- `no-explicit-any` en `__tests__/embarqueRoundtrip.test.ts` → lo limpio si está en el camino.
+- P1.5/1.6/1.7/1.8, P2.10/11/12 → quedan para próximos loops.
+- Edge functions, RLS, `integrations/supabase/*` → intactos.
+
+### Riesgo
+
+Bajo. Todas las extracciones son refactors puros sin cambio de comportamiento; los tests de mappers/CRM (626 suites) son la red de seguridad.

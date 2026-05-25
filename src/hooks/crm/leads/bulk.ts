@@ -2,6 +2,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import type { LeadInput } from "./constants";
+import { buildLeadInsertPayload } from "./leadPayload";
 
 /** Actualiza un campo (estado o vendedor) sobre múltiples leads. */
 export function useActualizarLeadsBulk() {
@@ -48,22 +49,7 @@ export function useCrearLeadsBulk() {
   return useMutation({
     mutationFn: async (inputs: LeadInput[]) => {
       if (inputs.length === 0) return { inserted: 0 };
-      const payloads = inputs.map((input) => ({
-        empresa: input.empresa,
-        contacto: input.contacto ?? "",
-        email: input.email ?? "",
-        telefono: input.telefono ?? "",
-        ciudad: input.ciudad ?? "",
-        pais: input.pais ?? "",
-        fuente: input.fuente ?? "Otro",
-        estado: input.estado ?? "Nuevo",
-        score: input.score ?? 3,
-        interes_modo: input.interes_modo ?? "",
-        notas: input.notas ?? "",
-        vendedor_id: input.vendedor_id ?? user?.id ?? null,
-        vendedor_email: input.vendedor_email ?? user?.email ?? "",
-        created_by: user?.id ?? null,
-      }));
+      const payloads = inputs.map((input) => buildLeadInsertPayload(input, user));
       // batch de 100
       let inserted = 0;
       for (let i = 0; i < payloads.length; i += 100) {

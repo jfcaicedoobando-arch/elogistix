@@ -35,7 +35,7 @@ export default function Leads() {
   const [fuente, setFuente] = useState<CrmLeadFuente | "todos">("todos");
 
   const { data, isLoading } = useLeads({ search: debounced, estado, fuente, page, pageSize });
-  const leads = data?.data ?? [];
+  const leads = useMemo(() => data?.data ?? [], [data]);
   const totalCount = data?.count ?? 0;
   const totalPages = Math.ceil(totalCount / pageSize);
 

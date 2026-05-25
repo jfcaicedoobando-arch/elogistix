@@ -10,6 +10,7 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
 import { useAuth } from "@/contexts/AuthContext";
+import { buildOportunidadInsertPayload } from "./oportunidadPayload";
 
 export type CrmOportunidadRow = Database["public"]["Tables"]["crm_oportunidades"]["Row"];
 export type Moneda = "MXN" | "USD" | "EUR";
@@ -90,23 +91,10 @@ export function useCrearOportunidad() {
   const { user } = useAuth();
   return useMutation({
     mutationFn: async (input: OportunidadInput) => {
+      const payload = buildOportunidadInsertPayload(input, user);
       const { data, error } = await supabase
         .from("crm_oportunidades")
-        .insert({
-          ...input,
-          cliente_nombre: input.cliente_nombre ?? "",
-          monto_estimado: input.monto_estimado ?? 0,
-          moneda: input.moneda ?? "MXN",
-          probabilidad: input.probabilidad ?? 0,
-          modo: input.modo ?? "",
-          tipo_carga: input.tipo_carga ?? "",
-          origen: input.origen ?? "",
-          destino: input.destino ?? "",
-          notas: input.notas ?? "",
-          vendedor_id: input.vendedor_id !== undefined ? input.vendedor_id : (user?.id ?? null),
-          vendedor_email: input.vendedor_email ?? user?.email ?? "",
-          created_by: user?.id ?? null,
-        })
+        .insert(payload)
         .select("id")
         .single();
       if (error) throw error;

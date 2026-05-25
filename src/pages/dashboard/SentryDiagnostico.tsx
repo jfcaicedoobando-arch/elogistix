@@ -3,7 +3,6 @@
  * Muestra estado del cliente, release, environment, usuario y organización.
  * Permite disparar un error de prueba para verificar el pipeline de reportes.
  */
-import { useMemo } from "react";
 import * as Sentry from "@sentry/react";
 import { Bug, CheckCircle2, XCircle, Send } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -14,18 +13,7 @@ import { APP_VERSION } from "@/constants/appVersion";
 import { useAuth } from "@/contexts/AuthContext";
 import { useOrganization } from "@/contexts/OrganizationContext";
 import { toast } from "@/hooks/use-toast";
-
-function maskDsn(dsn: string | undefined): string {
-  if (!dsn) return "—";
-  try {
-    const url = new URL(dsn);
-    const key = url.username;
-    const masked = key.length > 8 ? `${key.slice(0, 4)}…${key.slice(-4)}` : "••••";
-    return `${url.protocol}//${masked}@${url.host}${url.pathname}`;
-  } catch {
-    return "(DSN inválido)";
-  }
-}
+import { useSentryInfo, maskDsn } from "@/hooks/sentry";
 
 function Row({ label, value }: { label: string; value: React.ReactNode }) {
   return (
@@ -36,40 +24,48 @@ function Row({ label, value }: { label: string; value: React.ReactNode }) {
   );
 }
 
+function StatusTitle({ active }: { active: boolean }) {
+  if (active) {
+    return (
+      <>
+        <CheckCircle2 className="h-4 w-4 text-emerald-600" />
+        Sentry está activo
+      </>
+    );
+  }
+  return (
+    <>
+      <XCircle className="h-4 w-4 text-destructive" />
+      Sentry NO está inicializado
+    </>
+  );
+}
+
+function handleTestError() {
+  const id = Sentry.captureException(
+    new Error(`Error de prueba — Sentry Diagnóstico (${new Date().toISOString()})`),
+    { tags: { source: "sentry-diagnostico-ui" } },
+  );
+  toast({
+    title: "Error de prueba enviado",
+    description: `Sentry event ID: ${id}. Verifica en el dashboard de Sentry en unos segundos.`,
+  });
+}
+
+function handleTestMessage() {
+  const id = Sentry.captureMessage("Mensaje de prueba — Sentry Diagnóstico", "info");
+  toast({
+    title: "Mensaje de prueba enviado",
+    description: `Sentry event ID: ${id}.`,
+  });
+}
+
+// JSX denso pero plano: muchos `??` para fallbacks de UI.
+// eslint-disable-next-line complexity
 export default function SentryDiagnostico() {
   const { user, effectiveRole } = useAuth();
   const { organization, organizationId } = useOrganization();
-
-  const sentryInfo = useMemo(() => {
-    const client = Sentry.getClient();
-    const options = client?.getOptions();
-    return {
-      active: Boolean(client),
-      dsn: options?.dsn,
-      release: options?.release,
-      environment: options?.environment,
-      tracesSampleRate: options?.tracesSampleRate,
-    };
-  }, []);
-
-  const handleTestError = () => {
-    const id = Sentry.captureException(
-      new Error(`Error de prueba — Sentry Diagnóstico (${new Date().toISOString()})`),
-      { tags: { source: "sentry-diagnostico-ui" } },
-    );
-    toast({
-      title: "Error de prueba enviado",
-      description: `Sentry event ID: ${id}. Verifica en el dashboard de Sentry en unos segundos.`,
-    });
-  };
-
-  const handleTestMessage = () => {
-    const id = Sentry.captureMessage("Mensaje de prueba — Sentry Diagnóstico", "info");
-    toast({
-      title: "Mensaje de prueba enviado",
-      description: `Sentry event ID: ${id}.`,
-    });
-  };
+  const sentryInfo = useSentryInfo();
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
@@ -82,17 +78,7 @@ export default function SentryDiagnostico() {
       <Card>
         <CardHeader className="pb-3">
           <CardTitle className="text-sm font-medium flex items-center gap-2">
-            {sentryInfo.active ? (
-              <>
-                <CheckCircle2 className="h-4 w-4 text-emerald-600" />
-                Sentry está activo
-              </>
-            ) : (
-              <>
-                <XCircle className="h-4 w-4 text-destructive" />
-                Sentry NO está inicializado
-              </>
-            )}
+            <StatusTitle active={sentryInfo.active} />
           </CardTitle>
         </CardHeader>
         <CardContent>

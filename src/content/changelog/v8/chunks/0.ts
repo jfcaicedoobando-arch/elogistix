@@ -2,6 +2,14 @@ import type { ChangelogEntry } from "../../../changelogData";
 
 export const chunk0: ChangelogEntry[] = [
   {
+    version: "11.21.0",
+    date: "2026-05-25",
+    type: "minor",
+    title: "Auditoría loop 9 — cierre de complexity warnings y exhaustive-deps",
+    summary: "Complexity warnings 14→3 (sólo mappers planos suprimidos inline) y 2 exhaustive-deps resueltos en Leads/Oportunidades vía useMemo.",
+    description: "Refactors puros sin cambio de comportamiento: extraídos buildLeadInsertPayload, buildOportunidadInsertPayload, buildFromOportunidad/buildEmptyForNueva, isLeadDirty, extractErrorDetails + format helpers (fmtHeader/fmtErrorBlock/fmtContextBlock/fmtStackBlock), parseEmbarqueConProfitRaw + numOr0/numOrCompute/safeMargen, forecastBuckets (classifyEtapa/makeBucket/applyDelta), buildAuthSnapshot/buildSentryUserContext, useSentryInfo + maskDsn, useCrmInicioVM. Wrap useMemo en leads/opsRaw para estabilizar deps. Barrels nuevos: hooks/sentry, useCrmInicioVM en hooks/crm. APP_VERSION 11.21.0.",
+  },
+  {
     version: "11.20.0",
     date: "2026-05-25",
     type: "minor",

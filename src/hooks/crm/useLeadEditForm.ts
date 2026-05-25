@@ -4,6 +4,7 @@
  */
 import { useEffect, useMemo, useState } from "react";
 import type { CrmLeadEstado, CrmLeadFuente } from "@/hooks/crm/useLeads";
+import { isLeadDirty } from "./leadEditDirty";
 
 export interface LeadEditForm {
   empresa: string;
@@ -72,19 +73,7 @@ export function useLeadEditForm(lead: LeadLike | undefined | null) {
 
   const dirty = useMemo(() => {
     if (!lead) return false;
-    return (
-      lead.empresa !== form.empresa ||
-      (lead.contacto ?? "") !== form.contacto ||
-      (lead.email ?? "") !== form.email ||
-      (lead.telefono ?? "") !== form.telefono ||
-      (lead.ciudad ?? "") !== form.ciudad ||
-      (lead.pais ?? "") !== form.pais ||
-      lead.fuente !== form.fuente ||
-      lead.estado !== form.estado ||
-      (lead.score ?? 3) !== form.score ||
-      (lead.interes_modo ?? "") !== form.interes_modo ||
-      (lead.notas ?? "") !== form.notas
-    );
+    return isLeadDirty(lead, form);
   }, [lead, form]);
 
   return { form, set, dirty };

@@ -58,11 +58,32 @@ interface VirtualDataTableProps<T> {
   className?: string;
 }
 
+const DEFAULTS = {
+  isLoading: false,
+  emptyMessage: "Sin resultados",
+  skeletonRows: 8,
+  density: "comfortable" as TableDensity,
+  striped: true,
+  hoverable: true,
+  estimateRowHeight: 44,
+  maxHeight: 600,
+  overscan: 8,
+};
+
+// Destructura ~10 defaults: complejidad alta pero plana.
+// eslint-disable-next-line complexity
 export function VirtualDataTable<T>(props: VirtualDataTableProps<T>) {
   const {
-    columns, data, isLoading = false, emptyMessage = "Sin resultados", skeletonRows = 8,
-    rowKey, rowClassName, onRowClick, density = "comfortable", striped = true, hoverable = true,
-    estimateRowHeight = 44, maxHeight = 600, overscan = 8, pagination, className,
+    columns, data, rowKey, rowClassName, onRowClick, pagination, className,
+    isLoading = DEFAULTS.isLoading,
+    emptyMessage = DEFAULTS.emptyMessage,
+    skeletonRows = DEFAULTS.skeletonRows,
+    density = DEFAULTS.density,
+    striped = DEFAULTS.striped,
+    hoverable = DEFAULTS.hoverable,
+    estimateRowHeight = DEFAULTS.estimateRowHeight,
+    maxHeight = DEFAULTS.maxHeight,
+    overscan = DEFAULTS.overscan,
   } = props;
 
   // getRowId estable: si `rowKey` cambia de identidad por render, TanStack
