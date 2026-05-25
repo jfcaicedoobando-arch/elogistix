@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [11.31.0] - 2026-05-25
+- **Auditoría arquitectónica (etapas 1–6)**: roto el ciclo `lib/ → hooks/` y `lib/ → components/`. Tipos de dominio (`EmbarqueRow`, `CotizacionRow`, `EmbarqueValidationErrors`, `EntradaBitacora`, `FiltrosBitacora`, `Cliente`, `ContactoCliente`, `NotificacionCliente`, `GlobalSearchResult`, `RentabilidadCliente`, `OperadorBase`, `DesgloseEstados`) movidos a `src/types/*` con re-export desde los hooks/services para preservar la API pública. `lib/jsoncargo/trackingLiveHelpers.ts` ya no depende de `useToast` (usa `AnyToastFn` de `lib/ui/appFeedback`). Nuevo bloque ESLint en `lib/**` que bloquea imports a `@/hooks`, `@/components` y `@/pages`. Creados barrels `lib/financial`, `lib/parsers`, `lib/mappers`. `Papelera`, `Idempotencia` y `SentryDiagnostico` movidos de `pages/dashboard/` a `pages/admin/`. `src/content/` disuelto (`ayudaContent.ts` co-localizado en `pages/dashboard/`). Lint 0/0, typecheck 0/0, 621/621 tests verdes.
+
 ## [11.30.1] - 2026-05-25
 - **Sentry: silenciado ruido de chunk-load errors**: nuevo `src/lib/ui/dynamicImportError.ts` centraliza la detección. `lib/sentry.ts` filtra estos eventos en `beforeSend` (devuelve `null`). `main.tsx` añade listener global `unhandledrejection` que dispara la misma auto-recarga que ya existe para `vite:preloadError` (cubre el caso de `React.lazy()` cuando Vite no emite preloadError). `ErrorBoundary` reutiliza el helper compartido. Resuelve issue Sentry `JAVASCRIPT-REACT-5` (201 eventos).
 
