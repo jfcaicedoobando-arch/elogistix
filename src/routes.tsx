@@ -15,11 +15,11 @@ const Operaciones = lazy(() => import("./pages/dashboard/Operaciones"));
 const Reportes = lazy(() => import("./pages/dashboard/Reportes"));
 const Bitacora = lazy(() => import("./pages/dashboard/Bitacora"));
 
-const Papelera = lazy(() => import("./pages/dashboard/Papelera"));
-const Idempotencia = lazy(() => import("./pages/dashboard/Idempotencia"));
+const Papelera = lazy(() => import("./pages/admin/Papelera"));
+const Idempotencia = lazy(() => import("./pages/admin/Idempotencia"));
 const Auditoria = lazy(() => import("./pages/Auditoria"));
 const Ayuda = lazy(() => import("./pages/dashboard/Ayuda"));
-const SentryDiagnostico = lazy(() => import("./pages/dashboard/SentryDiagnostico"));
+const SentryDiagnostico = lazy(() => import("./pages/admin/SentryDiagnostico"));
 const CrmDashboard = lazy(() => import("./pages/crm/CrmDashboard"));
 const Leads = lazy(() => import("./pages/crm/Leads"));
 const LeadDetalle = lazy(() => import("./pages/crm/LeadDetalle"));

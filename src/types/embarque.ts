@@ -9,3 +9,11 @@ export type ConceptoVentaRow = Tables<"conceptos_venta">;
 export type ConceptoCostoRow = Tables<"conceptos_costo">;
 export type DocumentoEmbarqueRow = Tables<"documentos_embarque">;
 export type NotaEmbarqueRow = Tables<"notas_embarque">;
+
+/** Errores de validación del paso 1 del wizard de embarques. */
+export interface EmbarqueValidationErrors {
+  modo?: string;
+  tipo?: string;
+  clienteId?: string;
+  descripcionMercancia?: string;
+}

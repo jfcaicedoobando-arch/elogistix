@@ -9,7 +9,7 @@ import {
 } from "@/components/ui/accordion";
 import { Badge } from "@/components/ui/badge";
 import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
-import { GLOSARIO, MODULOS } from "@/content/ayudaContent";
+import { GLOSARIO, MODULOS } from "./ayudaContent";
 
 /**
  * Página /ayuda — onboarding y referencia rápida para operadores.

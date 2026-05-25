@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { describirEntrada } from "@/lib/domain/bitacoraDescripcion";
-import type { EntradaBitacora } from "@/hooks/shared/useBitacora";
+import type { EntradaBitacora } from "@/types/bitacora";
 
 const base = (overrides: Partial<EntradaBitacora>): EntradaBitacora => ({
   id: "1",

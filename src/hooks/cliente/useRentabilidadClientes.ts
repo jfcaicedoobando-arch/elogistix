@@ -9,15 +9,8 @@ interface FiltrosRentabilidad {
   modo?: string;
 }
 
-export interface RentabilidadCliente {
-  cliente_id: string;
-  cliente_nombre: string;
-  total_embarques: number;
-  venta_usd: number;
-  costo_usd: number;
-  profit_usd: number;
-  margen: number;
-}
+import type { RentabilidadCliente } from "@/types/rentabilidad";
+export type { RentabilidadCliente } from "@/types/rentabilidad";
 
 /**
  * v8.173.0 (Ola B.4): consume el RPC `reportes_resumen` que devuelve filas +

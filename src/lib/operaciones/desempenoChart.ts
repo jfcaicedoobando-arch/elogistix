@@ -2,7 +2,7 @@
  * Lógica pura para construir el gráfico de desempeño por operador.
  * Extraído de useDesempenoChartData para test sin React.
  */
-import type { OperadorData, DesgloseEstados } from "@/hooks/operaciones/useOperacionesData";
+import type { OperadorBase, DesgloseEstados } from "@/types/operaciones";
 
 export const ESTADOS_KEYS: (keyof DesgloseEstados)[] = [
   "Confirmado",
@@ -32,7 +32,7 @@ export function shortNameFromEmail(raw: string): string {
     .join(" ");
 }
 
-export function buildDesempenoChartRows(operadores: OperadorData[]): ChartRow[] {
+export function buildDesempenoChartRows(operadores: OperadorBase[]): ChartRow[] {
   return operadores.map((op) => ({
     nombre: shortNameFromEmail(op.nombre),
     Confirmado: op.desgloseEstados.Confirmado,

@@ -5,8 +5,7 @@
 import type { JsonCargoShippingLine } from "@/lib/jsoncargo/navieras";
 import { validatePrefixMatchesNaviera } from "@/lib/jsoncargo/containerPrefixes";
 import { PrefixMismatchError, type JsonCargoSummary } from "@/lib/jsoncargo/summary";
-import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
-import type { useToast } from "@/hooks/use-toast";
+import { notifyError, notifySuccess, type AnyToastFn } from "@/lib/ui/appFeedback";
 
 /** Parse "YYYY-MM-DD HH:MM" o ISO desde JSONCargo y devuelve "YYYY-MM-DD". */
 export function jsoncargoDateToYmd(value: string | null | undefined): string | null {
@@ -51,7 +50,7 @@ export function computeFechasPropuestas(input: ComputeFechasInput): FechasPropue
   return { etaPropuesta, etdPropuesta, ataPropuesta, etaDifiere, etdDifiere, ataDifiere };
 }
 
-type ToastFn = ReturnType<typeof useToast>["toast"];
+type ToastFn = AnyToastFn;
 export type SyncResult = {
   throttled?: boolean;
   message?: string;

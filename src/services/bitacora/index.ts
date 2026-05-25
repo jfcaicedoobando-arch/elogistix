@@ -5,29 +5,8 @@
 import { supabase } from "@/integrations/supabase/client";
 import type { Json } from "@/integrations/supabase/types";
 
-export interface EntradaBitacora {
-  id: string;
-  usuario_id: string;
-  usuario_email: string;
-  accion: string;
-  modulo: string;
-  entidad_id: string | null;
-  entidad_nombre: string;
-  detalles: Record<string, unknown>;
-  created_at: string;
-}
-
-export interface FiltrosBitacora {
-  modulo?: string;
-  usuarioId?: string;
-  fechaDesde?: string;
-  fechaHasta?: string;
-  limite?: number;
-  pagina?: number;
-  excluirLogin?: boolean;
-  /** Filtra por una o varias acciones (OR). */
-  acciones?: string[];
-}
+export type { EntradaBitacora, FiltrosBitacora } from "@/types/bitacora";
+import type { EntradaBitacora, FiltrosBitacora } from "@/types/bitacora";
 
 const BITACORA_COLUMNS =
   "id, usuario_id, usuario_email, accion, modulo, entidad_id, entidad_nombre, detalles, created_at" as const;

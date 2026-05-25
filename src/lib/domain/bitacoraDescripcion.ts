@@ -3,7 +3,7 @@
  * Función pura: a partir de `accion + modulo + detalles` devuelve un título
  * descriptivo y un contexto secundario opcional.
  */
-import type { EntradaBitacora } from "@/hooks/shared/useBitacora";
+import type { EntradaBitacora } from "@/types/bitacora";
 import { formatCurrency } from "@/lib/formatters";
 
 export interface DescripcionBitacora {
