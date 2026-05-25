@@ -17,6 +17,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import NuevaOportunidadDialog from "@/components/crm/NuevaOportunidadDialog";
 import ActividadTimeline from "@/components/crm/ActividadTimeline";
+import ComentariosOportunidad from "@/components/crm/ComentariosOportunidad";
+import OportunidadCotizacionesList from "@/components/crm/OportunidadCotizacionesList";
 import { OportunidadLineageCard } from "@/components/crm/LineageCard";
 import { useOportunidad, useEliminarOportunidad } from "@/hooks/crm/useOportunidades";
 import { useEtapasPipeline } from "@/hooks/crm/useEtapasPipeline";
@@ -76,6 +78,16 @@ export default function OportunidadDetalle() {
         .select("id")
         .single();
       if (error) throw error;
+
+      // Si la oportunidad está en una etapa anterior a "Cotizando", muévela.
+      const cotizandoEtapa = etapas.find((e) => /cotizando|cotizaci/i.test(e.nombre) && e.tipo === "abierta");
+      if (cotizandoEtapa && op.etapa_id !== cotizandoEtapa.id) {
+        await supabase
+          .from("crm_oportunidades")
+          .update({ etapa_id: cotizandoEtapa.id, probabilidad: cotizandoEtapa.probabilidad_default })
+          .eq("id", op.id);
+      }
+
       notifySuccess(toast, { title: "Cotización creada", description: `Folio ${folio}` });
       navigate(`/cotizaciones/${data.id}/editar`);
     } catch (e) {
@@ -116,10 +128,14 @@ export default function OportunidadDetalle() {
         <Card><CardHeader className="pb-2"><CardTitle className="text-sm">Monto estimado</CardTitle></CardHeader>
           <CardContent className="text-2xl font-bold">{formatCurrencyCompact(Number(op.monto_estimado ?? 0), op.moneda)}</CardContent>
         </Card>
-        <Card><CardHeader className="pb-2"><CardTitle className="text-sm">Ponderado</CardTitle></CardHeader>
+        <Card><CardHeader className="pb-2"><CardTitle className="text-sm">{op.valor_real != null ? "Valor real" : "Ponderado"}</CardTitle></CardHeader>
           <CardContent className="text-2xl font-bold">
-            {formatCurrencyCompact(Number(op.monto_estimado ?? 0) * (op.probabilidad / 100), op.moneda)}
-            <div className="text-xs text-muted-foreground">{op.probabilidad}% probabilidad</div>
+            {op.valor_real != null
+              ? formatCurrencyCompact(Number(op.valor_real), op.moneda)
+              : formatCurrencyCompact(Number(op.monto_estimado ?? 0) * (op.probabilidad / 100), op.moneda)}
+            <div className="text-xs text-muted-foreground">
+              {op.valor_real != null ? "Cerrado" : `${op.probabilidad}% probabilidad`}
+            </div>
           </CardContent>
         </Card>
       </div>
@@ -135,6 +151,10 @@ export default function OportunidadDetalle() {
           <div className="col-span-2 md:col-span-3"><div className="text-muted-foreground text-xs">Notas</div>{op.notas || "—"}</div>
         </CardContent>
       </Card>
+
+      <OportunidadCotizacionesList oportunidadId={op.id} />
+
+      <ComentariosOportunidad oportunidadId={op.id} canEdit={canEdit} />
 
       <OportunidadLineageCard oportunidadId={op.id} leadId={op.lead_id ?? null} />
 
