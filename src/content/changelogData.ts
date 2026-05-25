@@ -22,6 +22,14 @@ export interface ChangelogEntry {
  */
 export const recentChangelog: ChangelogEntry[] = [
   {
+    version: "11.25.0",
+    date: "2026-05-25",
+    type: "minor",
+    title: "Spreads de queryKeys promovidos a factory methods",
+    summary: "15 spreads `[...queryKeys.X, …]` eliminados; factory expone métodos tipados (embarques.full, dashboard.statsSummary, clientes.selectByOrg, etc.).",
+    description: "Cierre de la centralización de query keys: nuevos métodos en lib/query/index.ts (embarques.{full, fullForEstadoFilter, extrasBranchB, expedientesCliente}, dashboard.{statsSummary, statsDetails}, clientes.selectByOrg, proveedores.selectByOrg, facturas.byOrg, cotizaciones.{byOrg, aceptadas}, admin.{organizationsStats, allUsersOptions, recentOrgsList}). Migrados consumidores en hooks/embarque, hooks/dashboard, hooks/cliente, hooks/cotizacion, hooks/facturacion y hooks/admin. 0 spreads de queryKeys fuera de lib/query. 626 tests verdes. APP_VERSION 11.25.0.",
+  },
+  {
     version: "11.24.0",
     date: "2026-05-25",
     type: "minor",
