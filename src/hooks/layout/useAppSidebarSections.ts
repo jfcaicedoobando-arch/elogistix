@@ -37,7 +37,7 @@ export function useAppSidebarSections(): SidebarSection[] {
   // El rol "vendedor" tiene una vista enfocada: sólo CRM + Directorio (clientes) + ayuda.
   if (effectiveRole === "vendedor") {
     return [
-      { label: "CRM", items: SIDEBAR_CRM_ITEMS },
+      { label: "CRM", items: crmItems },
       { label: "Directorio", items: SIDEBAR_DIRECTORIO_ITEMS.filter((it) => it.url === "/clientes") },
       { label: "Sistema", items: sistemaItems.filter((it) => it.url === "/ayuda" || it.url === "/changelog") },
     ];
@@ -46,7 +46,7 @@ export function useAppSidebarSections(): SidebarSection[] {
   const sections: SidebarSection[] = [
     { label: "Dashboards", items: SIDEBAR_DASHBOARD_ITEMS },
     { label: "Gestión", items: SIDEBAR_GESTION_ITEMS },
-    { label: "CRM", items: SIDEBAR_CRM_ITEMS },
+    { label: "CRM", items: crmItems },
     { label: "Reportes", items: SIDEBAR_REPORTES_ITEMS },
     { label: "Directorio", items: SIDEBAR_DIRECTORIO_ITEMS },
     { label: "Sistema", items: sistemaItems },
