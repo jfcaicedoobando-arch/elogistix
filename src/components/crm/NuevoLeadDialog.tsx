@@ -191,6 +191,16 @@ export default function NuevoLeadDialog({ open, onOpenChange, onCreated }: Props
               onChange={(e) => set("notas", e.target.value)}
             />
           </div>
+          <div className="sm:col-span-2 flex items-center gap-2 pt-1">
+            <Checkbox
+              id="auto-act-lead"
+              checked={autoActividad}
+              onCheckedChange={(v) => setAutoActividad(v === true)}
+            />
+            <Label htmlFor="auto-act-lead" className="text-xs cursor-pointer">
+              Crear actividad de seguimiento (llamada, mañana 9:00)
+            </Label>
+          </div>
         </div>
 
         <DialogFooter>
