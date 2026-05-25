@@ -1,31 +1,3 @@
-# Fix: errores recurrentes en `detectar_alertas_app_logs()`
-
-## Diagnóstico
-Revisé los logs de Postgres y la app **sí está registrando un error recurrente** (cada ~5 min, ejecutado por cron):
-
-```
-ERROR: column "function_name" does not exist
-QUERY: SELECT public.detectar_alertas_app_logs();
-```
-
-No hay errores en consola del cliente ni 4xx/5xx en network — solo en la base de datos.
-
-### Causa raíz
-La función `public.detectar_alertas_app_logs()` consulta columnas que **no existen** en `public.app_logs`. Los nombres reales de la tabla son distintos:
-
-| Usado en la función | Columna real en `app_logs` |
-|---|---|
-| `function_name` | `fn` |
-| `created_at` | `ts` |
-| `status` | `status_code` |
-
-Por eso la función falla en cada ejecución del cron, sin generar alertas.
-
-## Plan (1 sola migración SQL)
-
-Recrear la función con los nombres de columna correctos. Sin cambios de frontend.
-
-```sql
 CREATE OR REPLACE FUNCTION public.detectar_alertas_app_logs()
 RETURNS integer
 LANGUAGE plpgsql
@@ -73,12 +45,3 @@ BEGIN
   RETURN v_inserted;
 END;
 $function$;
-```
-
-## Versionado
-- Bump `APP_VERSION` → `11.7.2` en `src/constants/appVersion.ts`.
-- Entrada patch en el changelog (`src/content/changelog/v8/chunks/0.ts`): "Fix cron `detectar_alertas_app_logs`: columnas `fn/ts/status_code` corregidas".
-
-## Fuera de alcance
-- Cambios de UI o de hooks.
-- Rediseño del sistema de alertas.
