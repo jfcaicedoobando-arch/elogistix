@@ -24,6 +24,8 @@ import {
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { notifySuccess, notifyError } from "@/lib/ui/appFeedback";
+import VendedorSelect from "@/components/crm/VendedorSelect";
+import { useAuth } from "@/contexts/AuthContext";
 import {
   useCrearOportunidad,
   useActualizarOportunidad,
@@ -53,10 +55,13 @@ const EMPTY = {
   origen: "",
   destino: "",
   notas: "",
+  vendedor_id: null as string | null,
+  vendedor_email: "",
 };
 
 export default function NuevaOportunidadDialog({ open, onOpenChange, oportunidad, onSaved }: Props) {
   const isEdit = !!oportunidad;
+  const { user } = useAuth();
   const [form, setForm] = useState(EMPTY);
   const { data: etapas = [] } = useEtapasPipeline();
   const { data: clientes = [] } = useClientesForSelect() as { data: { id: string; nombre: string }[] | undefined };
@@ -79,12 +84,20 @@ export default function NuevaOportunidadDialog({ open, onOpenChange, oportunidad
         origen: oportunidad.origen ?? "",
         destino: oportunidad.destino ?? "",
         notas: oportunidad.notas ?? "",
+        vendedor_id: oportunidad.vendedor_id ?? null,
+        vendedor_email: oportunidad.vendedor_email ?? "",
       });
     } else if (open) {
       const primera = etapas[0];
-      setForm({ ...EMPTY, etapa_id: primera?.id ?? "", probabilidad: primera?.probabilidad_default ?? 0 });
+      setForm({
+        ...EMPTY,
+        etapa_id: primera?.id ?? "",
+        probabilidad: primera?.probabilidad_default ?? 0,
+        vendedor_id: user?.id ?? null,
+        vendedor_email: user?.email ?? "",
+      });
     }
-  }, [oportunidad, open, etapas]);
+  }, [oportunidad, open, etapas, user]);
 
   const set = <K extends keyof typeof EMPTY>(k: K, v: (typeof EMPTY)[K]) =>
     setForm((f) => ({ ...f, [k]: v }));
