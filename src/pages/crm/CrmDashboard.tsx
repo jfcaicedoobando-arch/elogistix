@@ -7,7 +7,7 @@ import { Activity, Target, TrendingUp, Users } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { formatCurrencyCompact } from "@/lib/formatters";
-import { useCrmDashboardData, useActividadesVencidasList } from "@/hooks/crm";
+import { useCrmInicioVM } from "@/hooks/crm/useCrmInicioVM";
 import { VencidasAlert } from "@/components/crm/crmDashboard/VencidasAlert";
 import { ActividadesHoyCard } from "@/components/crm/crmDashboard/ActividadesHoyCard";
 import { CerrandoSemanaCard, LeadsSinContactarCard, TopDealsCard } from "@/components/crm/crmDashboard/DealsCards";
@@ -32,8 +32,8 @@ function kpiVal(loading: boolean, val: number | undefined): string | number {
 }
 
 export default function CrmDashboard() {
-  const { data, isLoading } = useCrmDashboardData();
-  const { data: vencidas = [] } = useActividadesVencidasList(5);
+  const vm = useCrmInicioVM();
+  const { isLoading } = vm;
 
   return (
     <div className="space-y-6 p-6">
@@ -43,23 +43,23 @@ export default function CrmDashboard() {
         icon={<Target className="h-6 w-6 text-primary" />}
       />
 
-      <VencidasAlert vencidas={vencidas} />
-      <ActividadesHoyCard items={data?.misActividadesHoy ?? []} />
+      <VencidasAlert vencidas={vm.vencidas} />
+      <ActividadesHoyCard items={vm.actividadesHoy} />
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        <CerrandoSemanaCard items={data?.cerrandoEstaSemana ?? []} />
-        <LeadsSinContactarCard items={data?.leadsSinContactar ?? []} />
-        <TopDealsCard items={data?.topDeals ?? []} />
+        <CerrandoSemanaCard items={vm.cerrandoSemana} />
+        <LeadsSinContactarCard items={vm.leadsSinContactar} />
+        <TopDealsCard items={vm.topDeals} />
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <KpiCard icon={Users} label="Leads" value={kpiVal(isLoading, data?.kpis.leads)} />
-        <KpiCard icon={Target} label="Oportunidades abiertas" value={kpiVal(isLoading, data?.kpis.oportunidadesAbiertas)} />
-        <KpiCard icon={Activity} label="Actividades pendientes" value={kpiVal(isLoading, data?.kpis.actividadesPendientes)} />
+        <KpiCard icon={Users} label="Leads" value={kpiVal(isLoading, vm.kpis.leads)} />
+        <KpiCard icon={Target} label="Oportunidades abiertas" value={kpiVal(isLoading, vm.kpis.oportunidadesAbiertas)} />
+        <KpiCard icon={Activity} label="Actividades pendientes" value={kpiVal(isLoading, vm.kpis.actividadesPendientes)} />
         <KpiCard
           icon={TrendingUp}
           label="Pipeline ponderado"
-          value={isLoading ? "…" : formatCurrencyCompact(data?.kpis.pipelinePonderado ?? 0, "MXN")}
+          value={isLoading ? "…" : formatCurrencyCompact(vm.kpis.pipelinePonderado, "MXN")}
         />
       </div>
     </div>
