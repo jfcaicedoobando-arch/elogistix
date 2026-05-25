@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { getErrorMessage } from "@/lib/errors";
-import { useToast } from "@/hooks/shared/useToast";
+import { useToast } from "@/hooks/shared";
 import { useCreateCliente } from "@/hooks/cliente/useClientes";
 import { useRegistrarActividad } from "@/hooks/shared/useBitacora";
 import { parseCsf } from "@/services/csf";

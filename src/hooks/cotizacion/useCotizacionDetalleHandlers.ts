@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useToast } from "@/hooks/shared/useToast";
+import { useToast } from "@/hooks/shared";
 import { getErrorMessage } from "@/lib/errors";
 import {
   useUpdateEstadoCotizacion,

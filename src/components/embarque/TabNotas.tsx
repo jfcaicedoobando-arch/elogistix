@@ -9,7 +9,7 @@ import { usePermissions } from "@/hooks/shared";
 import { useCreateNotaEmbarque } from "@/hooks/embarque";
 import { useRegistrarActividad } from "@/hooks/shared";
 import { getErrorMessage } from "@/lib/errors";
-import { useToast } from "@/hooks/shared/useToast";
+import { useToast } from "@/hooks/shared";
 import type { NotaEmbarqueRow } from "@/hooks/embarque";
 import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 import { formatDate, nombreDesdeEmail } from "@/lib/formatters";

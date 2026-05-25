@@ -7,7 +7,7 @@ import {
   MAX_FILE_SIZE_MB,
   type StepValidationErrors,
 } from "@/lib/domain/embarqueWizardSchemas";
-import { useToast } from "@/hooks/shared/useToast";
+import { useToast } from "@/hooks/shared";
 import { notifyError } from "@/lib/ui/appFeedback";
 
 interface Props {

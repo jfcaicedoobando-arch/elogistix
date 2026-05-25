@@ -12,7 +12,7 @@ import { PageHeader } from "@/components/shared/PageHeader";
 import { APP_VERSION } from "@/constants/appVersion";
 import { useAuth } from "@/contexts/AuthContext";
 import { useOrganization } from "@/contexts/OrganizationContext";
-import { toast } from "@/hooks/shared/useToast";
+import { toast } from "@/hooks/shared";
 import { useSentryInfo, maskDsn } from "@/hooks/sentry";
 
 function Row({ label, value }: { label: string; value: React.ReactNode }) {

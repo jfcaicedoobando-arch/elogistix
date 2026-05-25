@@ -9,7 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useProveedorMutations } from "@/hooks/proveedor";
 import NuevoProveedorDialog from "@/components/proveedor/NuevoProveedorDialog";
 import { PageHeader } from "@/components/shared/PageHeader";
-import { useToast } from "@/hooks/shared/useToast";
+import { useToast } from "@/hooks/shared";
 import { usePermissions, useRegistrarActividad, useOrgFilter } from "@/hooks/shared";
 import type { Tables, Enums } from "@/types/db";
 import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";

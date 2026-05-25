@@ -1,6 +1,6 @@
 import { useEffect, useCallback, useState } from "react";
 import { useForm } from "react-hook-form";
-import { useToast } from "@/hooks/shared/useToast";
+import { useToast } from "@/hooks/shared";
 import { uploadFile } from "@/services/storage/index";
 import { useExchangeRates } from "@/hooks/catalogos/useExchangeRates";
 import { getDocsForMode } from "@/constants/embarqueConstants";

@@ -9,7 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { DataTable, defineColumns, type ColumnDef } from "@/components/shared/DataTable";
 import { usePermissions } from "@/hooks/shared";
-import { useToast } from "@/hooks/shared/useToast";
+import { useToast } from "@/hooks/shared";
 import { listIdempotencyLog, type IdempotenciaRow } from "@/services/admin";
 import { queryKeys } from "@/lib/query";
 

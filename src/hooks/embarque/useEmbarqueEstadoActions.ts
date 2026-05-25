@@ -1,4 +1,4 @@
-import { useToast } from "@/hooks/shared/useToast";
+import { useToast } from "@/hooks/shared";
 import { useAuth } from "@/contexts/AuthContext";
 import { useRegistrarActividad } from "@/hooks/shared/useBitacora";
 import { getErrorMessage } from "@/lib/errors";

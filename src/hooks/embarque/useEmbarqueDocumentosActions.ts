@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useToast } from "@/hooks/shared/useToast";
+import { useToast } from "@/hooks/shared";
 import { useRegistrarActividad } from "@/hooks/shared/useBitacora";
 import { getSignedUrl } from "@/services/storage/index";
 import { getErrorMessage } from "@/lib/errors";

@@ -1,5 +1,5 @@
 import { useCreateTrackingLink } from "@/hooks/embarque/useTrackingLinks";
-import { useToast } from "@/hooks/shared/useToast";
+import { useToast } from "@/hooks/shared";
 import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 
 /**

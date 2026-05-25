@@ -3,7 +3,7 @@
  */
 import { Copy, Mail, Phone } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useToast } from "@/hooks/shared/useToast";
+import { useToast } from "@/hooks/shared";
 import { notifySuccess } from "@/lib/ui/appFeedback";
 import PlantillaSelector from "@/components/crm/PlantillaSelector";
 

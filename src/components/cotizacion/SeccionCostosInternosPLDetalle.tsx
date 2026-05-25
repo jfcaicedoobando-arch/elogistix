@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { DollarSign, Banknote, Save, Pencil, X } from "lucide-react";
-import { useToast } from "@/hooks/shared/useToast";
+import { useToast } from "@/hooks/shared";
 import { getErrorMessage } from "@/lib/errors";
 import { usePermissions } from "@/hooks/shared";
 import {

@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useCreateEventoEmbarque, TIPOS_EVENTO_TRACKING } from "@/hooks/embarque";
 import { ICONO_EVENTO } from "@/constants/embarqueConstants";
 import { useAuth } from "@/contexts/AuthContext";
-import { useToast } from "@/hooks/shared/useToast";
+import { useToast } from "@/hooks/shared";
 import { getErrorMessage } from "@/lib/errors";
 import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 

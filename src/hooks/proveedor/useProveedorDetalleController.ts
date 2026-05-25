@@ -1,7 +1,7 @@
 import { useState, useCallback } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useProveedor, useProveedorMutations, useProveedorOperaciones } from "@/hooks/proveedor/useProveedores";
-import { useToast } from "@/hooks/shared/useToast";
+import { useToast } from "@/hooks/shared";
 import { usePermissions } from "@/hooks/shared/usePermissions";
 import { useRegistrarActividad } from "@/hooks/shared/useBitacora";
 import { diffFields, SENSITIVE_FIELDS } from "@/lib/audit/diffFields";

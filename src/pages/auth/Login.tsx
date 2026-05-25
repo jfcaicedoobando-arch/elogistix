@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Loader2 } from "lucide-react";
-import { useToast } from "@/hooks/shared/useToast";
+import { useToast } from "@/hooks/shared";
 import { BrandLockup } from "@/components/layout/BrandLockup";
 import { BRAND } from "@/lib/ui/brand";
 import { notifyError } from "@/lib/ui/appFeedback";

@@ -9,7 +9,7 @@
  * Vinculación con cotización + hidratación → `useNuevoEmbarqueCotVinculada`.
  */
 import { useCallback, useState } from "react";
-import { useToast } from "@/hooks/shared/useToast";
+import { useToast } from "@/hooks/shared";
 import {
   useProveedoresForSelect,
 } from "@/hooks/embarque/useEmbarques";
