@@ -27,10 +27,10 @@ export function useDialogBolContainers({ embarqueId, naviera, contenedorActual, 
   const [selected, setSelected] = useState<string | null>(contenedorActual ?? null);
   const [saving, setSaving] = useState(false);
 
-  const reset = () => {
+  const reset = useCallback(() => {
     setResult(null);
     setSelected(contenedorActual ?? null);
-  };
+  }, [contenedorActual]);
 
   const handleBuscar = async () => {
     try {
