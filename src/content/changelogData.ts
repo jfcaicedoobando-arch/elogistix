@@ -101,14 +101,6 @@ export const recentChangelog: ChangelogEntry[] = [
     summary: "TabDocumentos (257→81), BitacoraActividad (253→47), Facturacion (242→117), DashboardStatusCards (230→24). Subcomponentes y columns extraídos.",
     description: "Power of 10: TabDocumentos.tsx → AgregarDocumentoDialog + useDocumentoColumns. BitacoraActividad.tsx → bitacora/{constants,FilaEntrada,VirtualTimeline}. Facturacion.tsx → facturacionColumns.tsx (facturaColumns + buildGastoColumns). DashboardStatusCards.tsx → statusCards/{TimelineEstadosCard,ArribosCard}. Sin cambios funcionales. APP_VERSION 11.17.0.",
   },
-  {
-    version: "11.16.0",
-    date: "2026-05-25",
-    type: "minor",
-    title: "Auditoría loop 4 — componentes >200 LOC",
-    summary: "LeadDetalle (296→150), NuevaOportunidadDialog (287→132), DiagnosticoHealthPanel (258→96).",
-    description: "Power of 10: componentes >200. LeadDetalle.tsx → useLeadEditForm + LeadDatosCard + LeadHeaderActions. NuevaOportunidadDialog.tsx → useOportunidadForm + OportunidadFormFields. DiagnosticoHealthPanel.tsx → HealthKpisRow/HealthTimelineChart/HealthTopErrorsChart/HealthSlowestTable. Sin cambios funcionales. 91 archivos / 626 tests verdes. APP_VERSION 11.16.0.",
-  },
 ];
 
 /** Deduplica por version conservando la primera ocurrencia (recentChangelog gana). */
