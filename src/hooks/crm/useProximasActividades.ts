@@ -39,11 +39,8 @@ export function useProximasActividades(
         .order("fecha_programada", { ascending: true, nullsFirst: false })
         .limit(500);
       if (error) throw error;
-      const map = new Map<string, ProximaActividad>();
-      for (const row of (data ?? []) as ProximaActividad[]) {
-        if (!map.has(row.entidad_id)) map.set(row.entidad_id, row);
-      }
-      return map;
+      return buildProximasMap((data ?? []) as ProximaActividad[]);
     },
   });
 }
+
