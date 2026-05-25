@@ -1,10 +1,8 @@
 /**
  * Atajos de teclado del CRM.
- * - `n` → abre QuickAddMenu (callback `onOpenQuick`)
+ * - `n` → abre QuickAddMenu
  * - `l` / `o` / `a` → atajo directo a crear lead / oportunidad / actividad
- *
- * Ignora cuando el foco está en input, textarea, [contenteditable] o un
- * Radix menu/dialog abierto (data-state="open").
+ * - `Cmd/Ctrl+P` → abre command palette CRM
  */
 import { useEffect } from "react";
 
@@ -13,6 +11,7 @@ export interface CrmHotkeyHandlers {
   onNewLead: () => void;
   onNewOportunidad: () => void;
   onNewActividad: () => void;
+  onOpenPalette?: () => void;
 }
 
 function isTypingTarget(el: EventTarget | null): boolean {
@@ -26,9 +25,14 @@ function isTypingTarget(el: EventTarget | null): boolean {
 export function useCrmHotkeys(handlers: CrmHotkeyHandlers): void {
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
+      const k = e.key.toLowerCase();
+      if ((e.metaKey || e.ctrlKey) && k === "p" && handlers.onOpenPalette) {
+        e.preventDefault();
+        handlers.onOpenPalette();
+        return;
+      }
       if (e.metaKey || e.ctrlKey || e.altKey) return;
       if (isTypingTarget(e.target)) return;
-      const k = e.key.toLowerCase();
       if (k === "n") { e.preventDefault(); handlers.onOpenQuick(); return; }
       if (k === "l") { e.preventDefault(); handlers.onNewLead(); return; }
       if (k === "o") { e.preventDefault(); handlers.onNewOportunidad(); return; }

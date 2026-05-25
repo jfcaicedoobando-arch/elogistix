@@ -1,15 +1,17 @@
 import { useState, useCallback, useMemo } from "react";
 import { NavLink, Outlet } from "react-router-dom";
-import { Target, Users, Activity, BarChart3, LayoutDashboard, Settings } from "lucide-react";
+import { Target, Users, Activity, BarChart3, LayoutDashboard, Settings, Sun } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { useActividadesVencidasCount } from "@/hooks/crm";
 import { useCrmHotkeys } from "@/hooks/crm/useCrmHotkeys";
 import { usePermissions } from "@/hooks/shared";
 import QuickAddMenu from "@/components/crm/QuickAddMenu";
+import CrmCommandPalette from "@/components/crm/CrmCommandPalette";
 
 const TABS = [
-  { to: "/crm", label: "Inicio", icon: LayoutDashboard, end: true },
+  { to: "/crm/mi-dia", label: "Mi día", icon: Sun, end: false },
+  { to: "/crm", label: "Resumen", icon: LayoutDashboard, end: true },
   { to: "/crm/leads", label: "Leads", icon: Users, end: false },
   { to: "/crm/oportunidades", label: "Oportunidades", icon: Target, end: false },
   { to: "/crm/actividades", label: "Actividades", icon: Activity, end: false },
@@ -21,17 +23,17 @@ export default function CrmLayout() {
   const { canEditCrm, canEdit } = usePermissions();
   const [openTrigger, setOpenTrigger] = useState(0);
   const [dialogTrigger, setDialogTrigger] = useState<{ kind: "lead" | "oportunidad" | "actividad"; n: number } | undefined>(undefined);
+  const [paletteOpen, setPaletteOpen] = useState(false);
 
   const noop = useCallback(() => {}, []);
   const handlers = useMemo(
-    () => canEdit
-      ? {
-        onOpenQuick: () => setOpenTrigger((n) => n + 1),
-        onNewLead: () => setDialogTrigger((p) => ({ kind: "lead" as const, n: (p?.n ?? 0) + 1 })),
-        onNewOportunidad: () => setDialogTrigger((p) => ({ kind: "oportunidad" as const, n: (p?.n ?? 0) + 1 })),
-        onNewActividad: () => setDialogTrigger((p) => ({ kind: "actividad" as const, n: (p?.n ?? 0) + 1 })),
-      }
-      : { onOpenQuick: noop, onNewLead: noop, onNewOportunidad: noop, onNewActividad: noop },
+    () => ({
+      onOpenQuick: canEdit ? () => setOpenTrigger((n) => n + 1) : noop,
+      onNewLead: canEdit ? () => setDialogTrigger((p) => ({ kind: "lead" as const, n: (p?.n ?? 0) + 1 })) : noop,
+      onNewOportunidad: canEdit ? () => setDialogTrigger((p) => ({ kind: "oportunidad" as const, n: (p?.n ?? 0) + 1 })) : noop,
+      onNewActividad: canEdit ? () => setDialogTrigger((p) => ({ kind: "actividad" as const, n: (p?.n ?? 0) + 1 })) : noop,
+      onOpenPalette: () => setPaletteOpen(true),
+    }),
     [canEdit, noop],
   );
   useCrmHotkeys(handlers);
@@ -91,6 +93,7 @@ export default function CrmLayout() {
       <div className="flex-1 overflow-auto">
         <Outlet />
       </div>
+      <CrmCommandPalette open={paletteOpen} onOpenChange={setPaletteOpen} />
     </div>
   );
 }

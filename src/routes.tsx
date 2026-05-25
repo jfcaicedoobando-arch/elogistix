@@ -28,6 +28,7 @@ const OportunidadDetalle = lazy(() => import("./pages/crm/OportunidadDetalle"));
 const ActividadesCrm = lazy(() => import("./pages/crm/Actividades"));
 const AnaliticaCrm = lazy(() => import("./pages/crm/Analitica"));
 const CrmLayout = lazy(() => import("./pages/crm/CrmLayout"));
+const CrmMiDia = lazy(() => import("./pages/crm/MiDia"));
 const CrmConfiguracion = lazy(() => import("./pages/crm/Configuracion"));
 
 const Embarques = lazy(() => import("./pages/embarques/Embarques"));
@@ -136,6 +137,7 @@ export const AppRoutes = () => (
       <Route path="/sentry" element={<SentryDiagnostico />} />
       <Route path="/crm" element={<CrmLayout />}>
         <Route index element={<CrmDashboard />} />
+        <Route path="mi-dia" element={<CrmMiDia />} />
         <Route path="leads" element={<Leads />} />
         <Route path="leads/:id" element={<LeadDetalle />} />
         <Route path="oportunidades" element={<Oportunidades />} />
