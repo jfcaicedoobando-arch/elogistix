@@ -2,6 +2,14 @@ import type { ChangelogEntry } from "../../../changelogData";
 
 export const chunk0: ChangelogEntry[] = [
   {
+    version: "11.2.0",
+    date: "2026-05-25",
+    type: "minor",
+    title: "CRM Fases 3-6: Oportunidades, Actividades, Forecast y Reportes",
+    summary: "Kanban de oportunidades con drag&drop, timeline de actividades, forecast ponderado, reportes comerciales y conversión a cotización.",
+    description: "Hooks: src/hooks/crm/useOportunidades.ts, useEtapasPipeline.ts, useActividades.ts (polimórfica leads/oportunidades/clientes), useForecastReportes.ts (embudo + proyección de ingresos calculados en memoria). UI: OportunidadKanban.tsx (drag&drop con @dnd-kit), ActividadTimeline.tsx (timeline reusable de interacciones), NuevaOportunidadDialog.tsx. Pantallas: /crm/oportunidades (toggle Kanban/Tabla), /crm/oportunidades/:id (con botón 'Crear cotización' que pre-llena folio/modo/cliente y enlaza oportunidad_id), /crm/actividades, /crm/forecast, /crm/reportes. Sidebar: el rol 'vendedor' ahora ve una vista enfocada — sólo CRM + Clientes + Ayuda/Changelog. APP_VERSION 11.2.0.",
+  },
+  {
     version: "11.1.0",
     date: "2026-05-25",
     type: "minor",
