@@ -12,6 +12,7 @@ import ComentariosOportunidad from "@/components/crm/ComentariosOportunidad";
 import OportunidadCotizacionesList from "@/components/crm/OportunidadCotizacionesList";
 import { OportunidadLineageCard } from "@/components/crm/LineageCard";
 import { OportunidadKpisCards } from "./OportunidadKpisCards";
+import { OportunidadGanadaBanner } from "./OportunidadGanadaBanner";
 import { DatosComercialesCard } from "./DatosComercialesCard";
 import { ContactoRapidoCard } from "./ContactoRapidoCard";
 import { useOportunidadDetalleActions } from "@/hooks/crm";
@@ -76,6 +77,11 @@ export function OportunidadDetalleContent({ op, etapas }: Props) {
             </Button>
           </div>
         ) : null}
+      />
+
+      <OportunidadGanadaBanner
+        cotizacionGanadoraId={op.cotizacion_ganadora_id ?? null}
+        embarqueGanadorId={op.embarque_ganador_id ?? null}
       />
 
       <OportunidadKpisCards
