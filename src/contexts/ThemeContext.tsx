@@ -1,4 +1,5 @@
 import { createContext, useContext, useEffect, useState, ReactNode, useCallback } from "react";
+import { safeLocalStorage, STORAGE_KEYS } from "@/lib/browserStorage";
 
 type Theme = "light" | "dark";
 
@@ -8,20 +9,14 @@ interface ThemeContextValue {
   setTheme: (theme: Theme) => void;
 }
 
-const STORAGE_KEY = "librecarga-theme";
-
 const ThemeContext = createContext<ThemeContextValue | undefined>(undefined);
 
 function getInitialTheme(): Theme {
+  const stored = safeLocalStorage.getItem(STORAGE_KEYS.theme);
+  if (stored === "light" || stored === "dark") return stored;
   if (typeof window === "undefined") return "light";
-  try {
-    const stored = window.localStorage.getItem(STORAGE_KEY);
-    if (stored === "light" || stored === "dark") return stored;
-    const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
-    return prefersDark ? "dark" : "light";
-  } catch {
-    return "light";
-  }
+  const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+  return prefersDark ? "dark" : "light";
 }
 
 function applyThemeToDocument(theme: Theme) {
@@ -39,11 +34,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     applyThemeToDocument(theme);
-    try {
-      window.localStorage.setItem(STORAGE_KEY, theme);
-    } catch {
-      /* ignore storage errors */
-    }
+    safeLocalStorage.setItem(STORAGE_KEYS.theme, theme);
   }, [theme]);
 
   const setTheme = useCallback((next: Theme) => setThemeState(next), []);
