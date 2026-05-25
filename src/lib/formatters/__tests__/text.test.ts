@@ -22,7 +22,7 @@ describe("toTitleCase", () => {
   });
 
   it("preserva S.A. con puntos internos", () => {
-    expect(toTitleCase("acme S.A. de C.V.")).toBe("Acme S.A. DE C.V.");
+    expect(toTitleCase("acme S.A. de C.V.")).toBe("Acme S.A. de C.V.");
   });
 
   it("capitaliza después de guion interno", () => {
