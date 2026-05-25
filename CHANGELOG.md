@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [11.30.1] - 2026-05-25
+- **Sentry: silenciado ruido de chunk-load errors**: nuevo `src/lib/ui/dynamicImportError.ts` centraliza la detección. `lib/sentry.ts` filtra estos eventos en `beforeSend` (devuelve `null`). `main.tsx` añade listener global `unhandledrejection` que dispara la misma auto-recarga que ya existe para `vite:preloadError` (cubre el caso de `React.lazy()` cuando Vite no emite preloadError). `ErrorBoundary` reutiliza el helper compartido. Resuelve issue Sentry `JAVASCRIPT-REACT-5` (201 eventos).
+
 ## [11.30.0] - 2026-05-25
 - **Eliminación del módulo Changelog (UI + chunks TS)**: removidos `src/pages/dashboard/Changelog.tsx`, `ChangelogEntryCard`, `useChangelogController`, `src/content/changelogData.ts`, toda la carpeta `src/content/changelog/` (~9.5k líneas) y `changelog.test.ts`. Sidebar entry, ruta `/changelog`, breadcrumb y link desde Ayuda eliminados. Reemplazado por este único `CHANGELOG.md`. Ahorro estimado ~20% por loop del agente (antes 3 archivos editados por release; ahora 2: `APP_VERSION` + esta entrada). `APP_VERSION` se mantiene como string standalone (lo consumen Sentry, observability, portal y sidebar).
 
