@@ -2,6 +2,14 @@ import type { ChangelogEntry } from "../../../changelogData";
 
 export const chunk0: ChangelogEntry[] = [
   {
+    version: "11.19.0",
+    date: "2026-05-25",
+    type: "minor",
+    title: "Auditoría loop 7 — App.tsx, services barriles y libs >200 LOC",
+    summary: "App.tsx (265→43), services/crm (228), services/embarque/queries/listado (223), services/auditoria (205), lib/formatters (243), lib/parsers/dashboard (277), lib/domain/proyeccionFacturacion (239), lib/csv/importSchemas (203), useNuevoEmbarqueWizard (230→139), useHallazgosTablaState (213→158).",
+    description: "Séptima tanda Power of 10. App.tsx (265→43) → routes.tsx + lib/queryClient.ts. Barriles divididos por dominio (preservando API): services/crm/index → oportunidadCotizaciones+lineage+leaderboard+cotizacionDesdeOportunidad; services/embarque/queries/listado → paginados+exportListado+extras; services/auditoria/index → reporte+revisiones+comentarios+snooze+snapshots. Libs: lib/formatters/index → numbers+dates+text+phone+places; lib/parsers/dashboard → dashboardTypes; lib/domain/proyeccionFacturacion → types+conversion+agrupar+kpis+meses; lib/csv/importSchemas → importSchemasShared+importSchemaCliente+importSchemaProveedor. Hooks: useNuevoEmbarqueWizard → useNuevoEmbarqueExpediente + useNuevoEmbarqueCotVinculada; useHallazgosTablaState → hallazgosTablaFilters (predicados puros). Sin cambios funcionales. 626 tests verdes. APP_VERSION 11.19.0.",
+  },
+  {
     version: "11.18.0",
     date: "2026-05-25",
     type: "minor",
