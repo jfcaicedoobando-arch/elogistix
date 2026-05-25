@@ -7,6 +7,7 @@
  */
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { queryKeys } from "@/lib/query";
 
 export interface HealthSummaryRow {
   fn: string;
@@ -36,7 +37,7 @@ export interface HealthKpis {
 
 export function useAppLogsHealthSummary(hours: number) {
   return useQuery({
-    queryKey: ["app_logs_health_summary", hours],
+    queryKey: queryKeys.appLogs.healthSummary(hours),
     staleTime: 30_000,
     refetchInterval: 60_000,
     queryFn: async (): Promise<HealthSummaryRow[]> => {
@@ -58,7 +59,7 @@ export function useAppLogsHealthSummary(hours: number) {
 
 export function useAppLogsHealthTimeline(hours: number, buckets = 24) {
   return useQuery({
-    queryKey: ["app_logs_health_timeline", hours, buckets],
+    queryKey: queryKeys.appLogs.healthTimeline(hours, buckets),
     staleTime: 30_000,
     refetchInterval: 60_000,
     queryFn: async (): Promise<HealthTimelinePoint[]> => {

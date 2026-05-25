@@ -7,6 +7,7 @@ import type { HallazgoAuditoria } from "@/types/auditoria";
 import { logger } from "@/lib/observability/logger";
 import { hallazgoHash, AUDITORIA_REVISIONES_KEY } from "./hash";
 import { resolveAuthUser } from "./query";
+import { queryKeys } from "@/lib/query";
 
 export function useMarcarRevisado() {
   const queryClient = useQueryClient();
@@ -55,7 +56,7 @@ export function useMarcarRevisado() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: AUDITORIA_REVISIONES_KEY });
-      queryClient.invalidateQueries({ queryKey: ["auditoria", "embarques"] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.auditoria.embarques });
       toast.success("Hallazgo marcado como revisado");
     },
     onError: (err: unknown) => {

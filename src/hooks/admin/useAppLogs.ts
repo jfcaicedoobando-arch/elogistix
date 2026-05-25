@@ -8,6 +8,7 @@
 import { useQuery, keepPreviousData } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
+import { queryKeys } from "@/lib/query";
 
 export type AppLogLevel = "info" | "warn" | "error";
 export type AppLogRow = Database["public"]["Tables"]["app_logs"]["Row"];
@@ -39,7 +40,7 @@ export function useAppLogs(args: UseAppLogsArgs): UseAppLogsResult {
   const { page, pageSize, level, fn, search, from, to } = args;
 
   const query = useQuery({
-    queryKey: ["app_logs", { page, pageSize, level, fn, search, from, to }],
+    queryKey: queryKeys.appLogs.list({ page, pageSize, level, fn, search, from, to }),
     placeholderData: keepPreviousData,
     staleTime: 15_000,
     queryFn: async () => {
@@ -83,7 +84,7 @@ export function useAppLogs(args: UseAppLogsArgs): UseAppLogsResult {
  */
 export function useAppLogsFnList() {
   return useQuery({
-    queryKey: ["app_logs", "fn_list"],
+    queryKey: queryKeys.appLogs.fnList,
     staleTime: 60_000,
     queryFn: async () => {
       const { data, error } = await supabase
