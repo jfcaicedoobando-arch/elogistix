@@ -41,6 +41,7 @@ export const queryKeys = {
     list: (filters: Record<string, unknown>) => ['clientes', 'list', filters] as const,
     detail: (id: string) => ['clientes', id] as const,
     select: ['clientes', 'select'] as const,
+    selectByOrg: (organizationId?: string | null) => ['clientes', 'select', organizationId] as const,
     contactos: (id: string) => ['contactos_cliente', id] as const,
     clientUsers: (id: string) => ['client_users', id] as const,
     embarques: (id: string) => ['clientes', 'embarques', id] as const,
@@ -50,6 +51,7 @@ export const queryKeys = {
   },
   facturas: {
     all: ['facturas'] as const,
+    byOrg: (organizationId?: string | null) => ['facturas', organizationId] as const,
     gastosPendientes: ['gastos_pendientes'] as const,
   },
   proveedores: {
