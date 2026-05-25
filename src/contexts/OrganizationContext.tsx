@@ -2,6 +2,7 @@ import { createContext, useContext, useEffect, useState, ReactNode, useCallback,
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { fromDb } from "@/lib/supabase/cast";
+import { safeLocalStorage, STORAGE_KEYS } from "@/lib/browserStorage";
 
 export interface Organization {
   id: string;
