@@ -7,3 +7,4 @@ export * from "./oportunidadCotizaciones";
 export * from "./lineage";
 export * from "./leaderboard";
 export * from "./cotizacionDesdeOportunidad";
+export * from "./cotizacionesSinRespuesta";

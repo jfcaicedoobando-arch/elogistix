@@ -1374,11 +1374,13 @@ export type Database = {
         Row: {
           cliente_id: string | null
           cliente_nombre: string
+          cotizacion_ganadora_id: string | null
           created_at: string
           created_by: string | null
           deleted_at: string | null
           deleted_by: string | null
           destino: string
+          embarque_ganador_id: string | null
           etapa_id: string
           fecha_cierre_real: string | null
           fecha_estimada_cierre: string | null
@@ -1402,11 +1404,13 @@ export type Database = {
         Insert: {
           cliente_id?: string | null
           cliente_nombre?: string
+          cotizacion_ganadora_id?: string | null
           created_at?: string
           created_by?: string | null
           deleted_at?: string | null
           deleted_by?: string | null
           destino?: string
+          embarque_ganador_id?: string | null
           etapa_id: string
           fecha_cierre_real?: string | null
           fecha_estimada_cierre?: string | null
@@ -1430,11 +1434,13 @@ export type Database = {
         Update: {
           cliente_id?: string | null
           cliente_nombre?: string
+          cotizacion_ganadora_id?: string | null
           created_at?: string
           created_by?: string | null
           deleted_at?: string | null
           deleted_by?: string | null
           destino?: string
+          embarque_ganador_id?: string | null
           etapa_id?: string
           fecha_cierre_real?: string | null
           fecha_estimada_cierre?: string | null

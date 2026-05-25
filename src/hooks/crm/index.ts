@@ -19,3 +19,5 @@ export * from './useOportunidades';
 export * from './usePlantillasMensaje';
 export * from './useProximasActividades';
 export * from './useCrmInicioVM';
+export * from './useCotizacionesSinRespuesta';
+export * from './useNextBestActions';

@@ -42,30 +42,45 @@ export default function OportunidadCotizacionesList({ oportunidadId }: Props) {
               </tr>
             </thead>
             <tbody>
-              {data.map((c) => (
-                <tr
-                  key={c.id}
-                  className="border-b hover:bg-muted/50 cursor-pointer"
-                  onClick={() => navigate(`/cotizaciones/${c.id}`)}
-                >
-                  <td className="py-1 font-medium">{c.folio}</td>
-                  <td><Badge variant="outline">{c.estado}</Badge></td>
-                  <td className="text-right">{formatCurrencyCompact(Number(c.subtotal ?? 0), c.moneda)}</td>
-                  <td className="text-center">
-                    {c.embarque_id ? (
-                      <button
-                        type="button"
-                        className="inline-flex items-center gap-1 text-primary hover:underline"
-                        onClick={(e) => { e.stopPropagation(); navigate(`/embarques/${c.embarque_id}`); }}
-                      >
-                        <Ship className="h-3 w-3" /> Ver
-                      </button>
-                    ) : (
-                      <span className="text-xs text-muted-foreground">—</span>
-                    )}
-                  </td>
-                </tr>
-              ))}
+              {data.map((c) => {
+                const diasEnviada =
+                  c.estado === "Enviada"
+                    ? Math.floor((Date.now() - new Date(c.created_at).getTime()) / 86_400_000)
+                    : 0;
+                return (
+                  <tr
+                    key={c.id}
+                    className="border-b hover:bg-muted/50 cursor-pointer"
+                    onClick={() => navigate(`/cotizaciones/${c.id}`)}
+                  >
+                    <td className="py-1 font-medium">{c.folio}</td>
+                    <td>
+                      <div className="flex items-center gap-1.5">
+                        <Badge variant="outline">{c.estado}</Badge>
+                        {c.estado === "Enviada" && diasEnviada > 5 && (
+                          <Badge variant="destructive" className="text-[10px]">
+                            Sin respuesta · {diasEnviada}d
+                          </Badge>
+                        )}
+                      </div>
+                    </td>
+                    <td className="text-right">{formatCurrencyCompact(Number(c.subtotal ?? 0), c.moneda)}</td>
+                    <td className="text-center">
+                      {c.embarque_id ? (
+                        <button
+                          type="button"
+                          className="inline-flex items-center gap-1 text-primary hover:underline"
+                          onClick={(e) => { e.stopPropagation(); navigate(`/embarques/${c.embarque_id}`); }}
+                        >
+                          <Ship className="h-3 w-3" /> Ver
+                        </button>
+                      ) : (
+                        <span className="text-xs text-muted-foreground">—</span>
+                      )}
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         )}
