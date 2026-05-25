@@ -1100,6 +1100,45 @@ export type Database = {
         }
         Relationships: []
       }
+      crm_comentarios_oportunidad: {
+        Row: {
+          autor_email: string
+          autor_id: string
+          created_at: string
+          deleted_at: string | null
+          deleted_by: string | null
+          id: string
+          oportunidad_id: string
+          organization_id: string
+          texto: string
+          updated_at: string
+        }
+        Insert: {
+          autor_email?: string
+          autor_id: string
+          created_at?: string
+          deleted_at?: string | null
+          deleted_by?: string | null
+          id?: string
+          oportunidad_id: string
+          organization_id?: string
+          texto: string
+          updated_at?: string
+        }
+        Update: {
+          autor_email?: string
+          autor_id?: string
+          created_at?: string
+          deleted_at?: string | null
+          deleted_by?: string | null
+          id?: string
+          oportunidad_id?: string
+          organization_id?: string
+          texto?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       crm_cuotas_vendedor: {
         Row: {
           anio: number
@@ -1356,6 +1395,7 @@ export type Database = {
           probabilidad: number
           tipo_carga: string
           updated_at: string
+          valor_real: number | null
           vendedor_email: string
           vendedor_id: string | null
         }
@@ -1383,6 +1423,7 @@ export type Database = {
           probabilidad?: number
           tipo_carga?: string
           updated_at?: string
+          valor_real?: number | null
           vendedor_email?: string
           vendedor_id?: string | null
         }
@@ -1410,6 +1451,7 @@ export type Database = {
           probabilidad?: number
           tipo_carga?: string
           updated_at?: string
+          valor_real?: number | null
           vendedor_email?: string
           vendedor_id?: string | null
         }

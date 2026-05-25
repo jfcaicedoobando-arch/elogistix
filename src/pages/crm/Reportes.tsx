@@ -1,13 +1,16 @@
 /**
- * /crm/reportes — Embudo, conversión por fuente y motivos de pérdida.
+ * /crm/reportes — Embudo, conversión por fuente, motivos de pérdida y leaderboard de vendedores.
  */
 import { BarChart3 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { useReportesCRM } from "@/hooks/crm/useForecastReportes";
+import LeaderboardVendedores from "@/components/crm/LeaderboardVendedores";
+import { usePermissions } from "@/hooks/shared";
 
 export default function ReportesCRM() {
   const { data, isLoading } = useReportesCRM();
+  const { canEdit } = usePermissions();
   const r = data ?? { embudo: [], porFuente: [], motivosPerdida: [] };
 
   return (
@@ -60,6 +63,12 @@ export default function ReportesCRM() {
             {r.motivosPerdida.length === 0 && <p className="text-sm text-muted-foreground">Sin oportunidades perdidas</p>}
           </CardContent>
         </Card>
+
+        {canEdit && (
+          <div className="md:col-span-2">
+            <LeaderboardVendedores />
+          </div>
+        )}
       </div>
     </div>
   );

@@ -6,4 +6,4 @@
  * `src/content/changelog/v8/chunks/0.ts` y `src/content/changelogData.ts`.
  * El script `npm run changelog:add` lo actualiza automáticamente.
  */
-export const APP_VERSION = "11.5.0";
+export const APP_VERSION = "11.6.0";
