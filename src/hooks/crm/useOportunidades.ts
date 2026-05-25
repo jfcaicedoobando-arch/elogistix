@@ -15,7 +15,7 @@ export type CrmOportunidadRow = Database["public"]["Tables"]["crm_oportunidades"
 export type Moneda = "MXN" | "USD" | "EUR";
 
 const COLS =
-  "id, nombre, cliente_id, cliente_nombre, lead_id, vendedor_id, vendedor_email, etapa_id, monto_estimado, moneda, probabilidad, fecha_estimada_cierre, fecha_cierre_real, motivo_perdida_id, modo, tipo_carga, origen, destino, notas, created_at, updated_at";
+  "id, nombre, cliente_id, cliente_nombre, lead_id, vendedor_id, vendedor_email, etapa_id, monto_estimado, valor_real, moneda, probabilidad, fecha_estimada_cierre, fecha_cierre_real, motivo_perdida_id, modo, tipo_carga, origen, destino, notas, created_at, updated_at";
 
 export interface OportunidadFiltros {
   search?: string;
