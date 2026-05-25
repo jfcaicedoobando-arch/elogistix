@@ -22,7 +22,6 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { useToast } from "@/hooks/shared";
 import { useDuplicarEmbarque } from "@/hooks/embarque";
 import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
@@ -37,7 +36,7 @@ interface Props {
 }
 
 function defaultNumContenedor(origen: EmbarqueRow, idx: number): string {
-  const base = origen.num_contenedor?.trim() ?? "";
+  const base = origen.contenedor?.trim() ?? "";
   if (!base) return "";
   return `${base}-COPIA${idx + 1}`;
 }
@@ -119,37 +118,35 @@ export default function DialogDuplicarEmbarque({ embarque, open, onOpenChange }:
           </DialogDescription>
         </DialogHeader>
 
-        <ScrollArea className="max-h-72 pr-3">
-          <div className="space-y-3">
-            {contenedores.map((valor, idx) => (
-              <div key={idx} className="space-y-1">
-                <Label htmlFor={`copia-${idx}`} className="text-xs text-muted-foreground">
-                  Copia {idx + 1}
-                </Label>
-                <div className="flex gap-2">
-                  <Input
-                    id={`copia-${idx}`}
-                    value={valor}
-                    onChange={(e) => handleCambiar(idx, e.target.value)}
-                    placeholder="Número de contenedor"
-                    autoComplete="off"
-                  />
-                  {contenedores.length > 1 && (
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => handleQuitar(idx)}
-                      aria-label={`Quitar copia ${idx + 1}`}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  )}
-                </div>
+        <div className="max-h-72 overflow-y-auto pr-1 space-y-3">
+          {contenedores.map((valor, idx) => (
+            <div key={idx} className="space-y-1">
+              <Label htmlFor={`copia-${idx}`} className="text-xs text-muted-foreground">
+                Copia {idx + 1}
+              </Label>
+              <div className="flex gap-2">
+                <Input
+                  id={`copia-${idx}`}
+                  value={valor}
+                  onChange={(e) => handleCambiar(idx, e.target.value)}
+                  placeholder="Número de contenedor"
+                  autoComplete="off"
+                />
+                {contenedores.length > 1 && (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => handleQuitar(idx)}
+                    aria-label={`Quitar copia ${idx + 1}`}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                )}
               </div>
-            ))}
-          </div>
-        </ScrollArea>
+            </div>
+          ))}
+        </div>
 
         <Button
           type="button"
