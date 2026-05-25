@@ -2,6 +2,14 @@ import type { ChangelogEntry } from "../../../changelogData";
 
 export const chunk0: ChangelogEntry[] = [
   {
+    version: "11.8.0",
+    date: "2026-05-25",
+    type: "minor",
+    title: "Sprint T1+T2: tests del CRM y de edge functions",
+    summary: "24 tests vitest nuevos en CRM + 7 tests Deno en edge functions.",
+    description: "Extracción de lógica pura a src/lib/crm/ (forecast, proximasActividades, cliente360) y refactor de hooks para delegar. Tests vitest: forecast.test.ts (12), proximasActividades.test.ts (5), cliente360.test.ts (2), renderPlantilla.test.ts (5). Tests Deno: supabase/functions/_shared/auth_test.ts (3 casos checkAdminAccess) y create-user/validate_test.ts (4 casos validatePayload, ahora exportado). APP_VERSION 11.8.0."
+  },
+  {
     version: "11.7.3",
     date: "2026-05-25",
     type: "patch",
