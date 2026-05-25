@@ -12,7 +12,7 @@ describe("exportHallazgosCsv", () => {
       {
         severidad: "alta",
         expediente: "EXP-1",
-        regla: "doc_faltante",
+        regla: "docs_faltantes",
         cliente_nombre: "ACME",
         modo: "Marítimo",
         estado: "abierto",
@@ -40,7 +40,7 @@ describe("exportHallazgosCsv", () => {
       {
         severidad: "baja",
         expediente: "EXP-2",
-        regla: "x",
+        regla: "fechas",
         cliente_nombre: null,
         modo: "Aéreo",
         estado: "cerrado",
