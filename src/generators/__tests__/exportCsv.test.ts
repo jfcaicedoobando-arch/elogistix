@@ -28,9 +28,13 @@ beforeEach(() => {
   }) as never);
 });
 
-async function readCsv(): Promise<string> {
-  const buf = await blobs[0].arrayBuffer();
-  return new TextDecoder("utf-8").decode(buf);
+function readCsv(): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const r = new FileReader();
+    r.onload = () => resolve(r.result as string);
+    r.onerror = () => reject(r.error);
+    r.readAsText(blobs[0], "utf-8");
+  });
 }
 
 describe("exportToCsv", () => {
