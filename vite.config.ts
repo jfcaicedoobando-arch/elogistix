@@ -78,6 +78,11 @@ export default defineConfig(({ mode }) => ({
           if (/node_modules\/recharts/.test(id)) {
             return "charts-vendor";
           }
+          // libphonenumber-js (~30 KB gzip) sólo lo necesitan 3 rutas
+          // (Clientes, ClienteDetalle, ProveedorDetalle) vía formatPhoneMx.
+          if (/node_modules\/libphonenumber-js/.test(id)) {
+            return "phone-vendor";
+          }
           if (/node_modules\/lucide-react/.test(id)) {
             return "icons-vendor";
           }
