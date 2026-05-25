@@ -22,6 +22,14 @@ export interface ChangelogEntry {
  */
 export const recentChangelog: ChangelogEntry[] = [
   {
+    version: "11.23.0",
+    date: "2026-05-25",
+    type: "minor",
+    title: "P1.6 — Split de god services (cotización + facturas)",
+    summary: "3 services divididos en subcarpetas (mutations/{crear,update,delete,estado}; proyeccion/{fetchSources,buildFilas}; huecoFacturacion/{fetchSources,buildFilas}). API pública intacta.",
+    description: "Refactor estructural sin cambio de comportamiento. services/cotizacion/mutations.ts (137) → mutations/ con una operación por archivo + payloadBuilders puros. services/facturas/proyeccion.ts (111) y huecoFacturacion.ts (165) → carpetas con fetchSources (I/O Supabase) + buildFilas (agregaciones puras) + index (orquestador). Mismo patrón que services/embarque/. Imports históricos siguen funcionando vía resolución a index.ts. 626 tests verdes. APP_VERSION 11.23.0.",
+  },
+  {
     version: "11.22.1",
     date: "2026-05-25",
     type: "patch",

@@ -2,6 +2,14 @@ import type { ChangelogEntry } from "../../../changelogData";
 
 export const chunk0: ChangelogEntry[] = [
   {
+    version: "11.23.0",
+    date: "2026-05-25",
+    type: "minor",
+    title: "P1.6 — Split de god services (cotización + facturas)",
+    summary: "services/cotizacion/mutations.ts (137) → mutations/{crear,update,delete,estado,payloadBuilders}.ts. services/facturas/proyeccion.ts (111) y huecoFacturacion.ts (165) → carpetas con fetchSources + buildFilas + index (orquestador).",
+    description: "Refactor estructural sin cambio de comportamiento ni de API pública. (1) services/cotizacion/mutations/ — una operación por archivo, payloadBuilders aislados (partesCliente/Mercancia/Comercial). (2) services/facturas/proyeccion/ — fetchSources (I/O Supabase) + buildFilas (agregaciones puras) + index (orquesta rangoMes → fetch → buildFilas). (3) services/facturas/huecoFacturacion/ — misma división (fetchSources + buildFilas con diasDesde/indexarVentas/construirFilaHueco + index). Mismo patrón que services/embarque/. Los imports históricos `@/services/cotizacion/mutations`, `@/services/facturas/proyeccion`, `@/services/facturas/huecoFacturacion` siguen funcionando vía resolución a index.ts. 626 tests verdes. APP_VERSION 11.23.0.",
+  },
+  {
     version: "11.22.1",
     date: "2026-05-25",
     type: "patch",
