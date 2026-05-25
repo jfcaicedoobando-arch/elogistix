@@ -49,6 +49,9 @@ export async function fetchEmbarquesParaExport(
   const countQueryBase = supabase
     .from("embarques")
     .select(EMBARQUE_LIST_COLUMNS, { count: "exact", head: true });
+  // SAFE-CAST: el builder de PostgREST tiene generics complejas que TS no puede
+  // estrechar tras aplicar filtros condicionales. `QueryLike` es un subset
+  // estructural verificado del builder real (mismos métodos, misma firma).
   const { count, error: countErr } = await (applyFilters(
     countQueryBase as unknown as QueryLike,
   ) as unknown as typeof countQueryBase);
@@ -66,6 +69,7 @@ export async function fetchEmbarquesParaExport(
         .select(EMBARQUE_LIST_COLUMNS)
         .order("created_at", { ascending: false })
         .range(from, to);
+      // SAFE-CAST: ver comentario arriba — mismo patrón para query paginada.
       const { data, error } = await (applyFilters(base as unknown as QueryLike) as unknown as typeof base);
       if (error) throw error;
       return (data ?? []) as EmbarqueRow[];
