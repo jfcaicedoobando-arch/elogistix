@@ -4,6 +4,7 @@ import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { useActividadesVencidasCount } from "@/hooks/crm/useCrmDashboard";
 import { usePermissions } from "@/hooks/shared";
+import CrmNotificacionesBell from "@/components/crm/CrmNotificacionesBell";
 
 const TABS_BASE = [
   { to: "/crm", label: "Dashboard", icon: LayoutDashboard, end: true, adminOnly: false },
