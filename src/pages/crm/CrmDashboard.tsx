@@ -35,6 +35,7 @@ function entidadHref(tipo: string, id: string): string {
 
 export default function CrmDashboard() {
   const { data, isLoading } = useCrmDashboardData();
+  const { data: vencidas = [] } = useActividadesVencidasList(5);
   const d = data;
 
   return (
