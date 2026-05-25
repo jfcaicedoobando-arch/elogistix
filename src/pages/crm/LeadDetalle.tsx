@@ -180,7 +180,20 @@ export default function LeadDetalle() {
           <CardTitle className="text-base">Contacto rápido</CardTitle>
         </CardHeader>
         <CardContent>
-          <ContactActions email={lead.email} telefono={lead.telefono} />
+          <ContactActions
+            email={lead.email}
+            telefono={lead.telefono}
+            plantillaCtx={{
+              entidadTipo: "lead",
+              entidadId: lead.id,
+              vars: {
+                contacto: lead.contacto || lead.empresa,
+                empresa: lead.empresa,
+                vendedor: lead.vendedor_email,
+                etapa: lead.estado,
+              },
+            }}
+          />
         </CardContent>
       </Card>
 
