@@ -2,6 +2,14 @@ import type { ChangelogEntry } from "../../../changelogData";
 
 export const chunk0: ChangelogEntry[] = [
   {
+    version: "11.16.0",
+    date: "2026-05-25",
+    type: "minor",
+    title: "Auditoría loop 4 — componentes >200 LOC: LeadDetalle, NuevaOportunidadDialog, DiagnosticoHealthPanel",
+    summary: "LeadDetalle (296→150), NuevaOportunidadDialog (287→132), DiagnosticoHealthPanel (258→96). Subcomponentes y hooks extraídos.",
+    description: "Cuarta tanda de la auditoría P1 (Power of 10): componentes > 200 líneas. (1) LeadDetalle.tsx (296→150): nuevo hook useLeadEditForm (91) con estado + dirty + sincronización con el lead remoto; subcomponentes LeadDatosCard (117) y LeadHeaderActions (34) en components/crm/leadDetalle/. (2) NuevaOportunidadDialog.tsx (287→132): hook useOportunidadForm (90) con EMPTY_OPORTUNIDAD + sincronización por modo edit/create; subcomponente OportunidadFormFields (153) en components/crm/nuevaOportunidad/. (3) DiagnosticoHealthPanel.tsx (258→96): 4 subcomponentes en components/admin/diagnosticoHealth/ — HealthKpisRow (78) absorbe el KpiCard interno, HealthTimelineChart (56), HealthTopErrorsChart (52) y HealthSlowestTable (63, con formatMs propio). Sin cambios funcionales. Suite: 91 archivos / 626 tests verdes. APP_VERSION 11.16.0.",
+  },
+  {
     version: "11.15.0",
     date: "2026-05-25",
     type: "minor",

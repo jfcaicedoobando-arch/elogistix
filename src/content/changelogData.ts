@@ -22,6 +22,14 @@ export interface ChangelogEntry {
  */
 export const recentChangelog: ChangelogEntry[] = [
   {
+    version: "11.16.0",
+    date: "2026-05-25",
+    type: "minor",
+    title: "Auditoría loop 4 — componentes >200 LOC",
+    summary: "LeadDetalle (296→150), NuevaOportunidadDialog (287→132), DiagnosticoHealthPanel (258→96).",
+    description: "Power of 10: componentes >200. LeadDetalle.tsx → useLeadEditForm + LeadDatosCard + LeadHeaderActions. NuevaOportunidadDialog.tsx → useOportunidadForm + OportunidadFormFields. DiagnosticoHealthPanel.tsx → HealthKpisRow/HealthTimelineChart/HealthTopErrorsChart/HealthSlowestTable. Sin cambios funcionales. 91 archivos / 626 tests verdes. APP_VERSION 11.16.0.",
+  },
+  {
     version: "11.15.0",
     date: "2026-05-25",
     type: "minor",
@@ -92,14 +100,6 @@ export const recentChangelog: ChangelogEntry[] = [
     title: "Fix CRM Dashboard: relaciones faltantes en crm_oportunidades",
     summary: "Fix CRM Dashboard: llaves foráneas faltantes en crm_oportunidades.",
     description: "Migración agrega FKs hacia crm_etapas_pipeline, clientes, crm_leads y crm_motivos_perdida para que PostgREST resuelva los embeds inner del dashboard. Índices nuevos para joins. APP_VERSION 11.7.1.",
-  },
-  {
-    version: "11.7.0",
-    date: "2026-05-25",
-    type: "minor",
-    title: "CRM Sprint G: pulido UX — menos pestañas, más foco",
-    summary: "7 → 5 pestañas (Forecast+Reportes fusionados en Analítica), Quick-Add global, próxima actividad en Kanban, contacto rápido en oportunidad y timeline en lead.",
-    description: "CrmLayout reducido + Configuración como icono; Analitica.tsx con sub-tabs Forecast/Embudo/Pérdidas/Vendedores; Dashboard renombrado Inicio y reordenado; QuickAddMenu (lead/oportunidad/actividad); NuevaActividadDialog; ActividadTimeline en LeadDetalle; OportunidadDetalle con tabs Resumen/Comunicación/Trazabilidad y ContactActions con plantillas; useProximasActividades batch; Kanban muestra próxima acción por card. APP_VERSION 11.7.0.",
   },
 ];
 
