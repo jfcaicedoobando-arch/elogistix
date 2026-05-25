@@ -23,6 +23,7 @@ import { useToast } from "@/hooks/use-toast";
 import { notifySuccess, notifyError } from "@/lib/ui/appFeedback";
 import { usePermissions } from "@/hooks/shared";
 import ConvertirLeadDialog from "@/components/crm/ConvertirLeadDialog";
+import { LeadLineageCard } from "@/components/crm/LineageCard";
 import {
   LEAD_ESTADOS,
   LEAD_FUENTES,
