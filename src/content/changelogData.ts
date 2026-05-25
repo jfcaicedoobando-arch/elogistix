@@ -101,14 +101,6 @@ export const recentChangelog: ChangelogEntry[] = [
     summary: "7 → 5 pestañas (Forecast+Reportes fusionados en Analítica), Quick-Add global, próxima actividad en Kanban, contacto rápido en oportunidad y timeline en lead.",
     description: "CrmLayout reducido + Configuración como icono; Analitica.tsx con sub-tabs Forecast/Embudo/Pérdidas/Vendedores; Dashboard renombrado Inicio y reordenado; QuickAddMenu (lead/oportunidad/actividad); NuevaActividadDialog; ActividadTimeline en LeadDetalle; OportunidadDetalle con tabs Resumen/Comunicación/Trazabilidad y ContactActions con plantillas; useProximasActividades batch; Kanban muestra próxima acción por card. APP_VERSION 11.7.0.",
   },
-  {
-    version: "11.6.0",
-    date: "2026-05-25",
-    type: "minor",
-    title: "CRM Sprint D: integración comercial y vista 360° del cliente",
-    summary: "Cotizaciones y comentarios en oportunidad, tab CRM en ClienteDetalle, valor real al ganar y leaderboard de vendedores.",
-    description: "Migración valor_real en crm_oportunidades + tabla crm_comentarios_oportunidad con RLS y triggers (registra valor real al aceptar cotización ligada; notifica al vendedor cuando otro usuario comenta). Hooks useComentariosOportunidad y useCliente360. Componentes ComentariosOportunidad, OportunidadCotizacionesList, LeaderboardVendedores y Cliente360Panel. OportunidadDetalle muestra valor real, cotizaciones vinculadas y comentarios; al crear cotización mueve la oportunidad a 'Cotizando'. ClienteDetalle suma tab CRM. Reportes incluye leaderboard mensual con cuota vs. cerrado. APP_VERSION 11.6.0.",
-  },
 ];
 
 /** Deduplica por version conservando la primera ocurrencia (recentChangelog gana). */
