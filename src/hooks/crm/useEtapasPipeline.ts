@@ -43,17 +43,53 @@ export function useActualizarEtapa() {
   });
 }
 
-export function useMotivosPerdida() {
+export function useMotivosPerdida(soloActivos = true) {
   return useQuery({
-    queryKey: ["crm", "motivos"],
+    queryKey: ["crm", "motivos", soloActivos],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("crm_motivos_perdida")
-        .select("id, nombre, activa")
-        .eq("activa", true)
-        .order("nombre");
+      let q = supabase.from("crm_motivos_perdida").select("id, nombre, activa").order("nombre");
+      if (soloActivos) q = q.eq("activa", true);
+      const { data, error } = await q;
       if (error) throw error;
       return data ?? [];
     },
   });
 }
+
+/** Lista TODAS las etapas (activas e inactivas) para pantalla de configuración. */
+export function useEtapasPipelineAll() {
+  return useQuery<CrmEtapaRow[]>({
+    queryKey: ["crm", "etapas", "all"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("crm_etapas_pipeline")
+        .select(COLS)
+        .order("orden", { ascending: true });
+      if (error) throw error;
+      return (data ?? []) as CrmEtapaRow[];
+    },
+  });
+}
+
+export function useActualizarMotivoPerdida() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, patch }: { id: string; patch: { nombre?: string; activa?: boolean } }) => {
+      const { error } = await supabase.from("crm_motivos_perdida").update(patch).eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["crm", "motivos"] }),
+  });
+}
+
+export function useCrearMotivoPerdida() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (nombre: string) => {
+      const { error } = await supabase.from("crm_motivos_perdida").insert({ nombre, activa: true });
+      if (error) throw error;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["crm", "motivos"] }),
+  });
+}
+
