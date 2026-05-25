@@ -2,12 +2,12 @@ import type { ChangelogEntry } from "../../../changelogData";
 
 export const chunk0: ChangelogEntry[] = [
   {
-    version: "11.12.0",
+    version: "11.13.0",
     date: "2026-05-25",
     type: "minor",
-    title: "Cierre P2: tests Deno (parse-csf, jsoncargo-track) + zipDownload + exportCsv",
-    summary: "4 archivos nuevos (2 Deno + 2 Vitest) — validación de CSF, validación de tracking JSONCargo, descarga ZIP y export CSV.",
-    description: "Tests Deno: parse-csf/validate_test (tamaño/MIME/null/PDF válido, 4 casos) y jsoncargo-track/validate_test (modo no marítimo, sin contenedor, naviera no soportada, happy path, 4 casos). Tests Vitest: src/lib/io/__tests__/zipDownload.test.ts (empaqueta archivos en carpeta con compresión DEFLATE, acepta mapa vacío) y src/generators/__tests__/exportCsv.test.ts (header/filas, escape RFC 4180 de comas/comillas/saltos, null→vacío, filename). Suite total: 84 archivos / 589 tests Vitest + 8 tests Deno verdes. APP_VERSION 11.12.0."
+    title: "Auditoría P0+P1+P2 — capa de datos CRM, split useLeads, logger centralizado",
+    summary: "UI de CRM ya no toca Supabase; useLeads (382 líneas) dividido en 5 módulos; nuevo logger reemplaza 11 console.* productivos.",
+    description: "P0 (capa de datos CRM) — Nuevo src/services/crm/index.ts con 9 funciones (fetchOportunidadCotizaciones, fetchLeadLineage, fetchOportunidadCotsLineage, fetchEmbarquesByIds, fetchLeadResumen, fetchLeaderboardRaw + computeLeaderboard puro/testeable, insertCotizacionDesdeOportunidad, actualizarEtapaOportunidad). Nuevos hooks: useOportunidadCotizaciones, useLineage (lead + op), useLeaderboardVendedores, useCrearCotizacionDesdeOportunidad. Refactor de OportunidadCotizacionesList, LineageCard, LeaderboardVendedores y OportunidadDetalle — 0 imports de @/integrations/supabase/client en components/crm/** y pages/crm/**. P1 (Power of 10) — useLeads.ts (382 líneas) dividido en src/hooks/crm/leads/{constants,queries,mutations,bulk,convertir}.ts (cada uno < 105 líneas); el archivo original queda como barrel re-export, los 7 consumidores siguen intactos. P2 (observability) — Nuevo lib/observability/logger.ts: debug/info silenciados en producción, warn a consola con prefijo [scope], error a consola + logClientError automático. Reemplazadas 11 ocurrencias de console.warn|error productivos (services/search, pages/auth/NotFound, useSnoozeHallazgo, useAuditoriaSnapshots, useAuditoriaRevisiones, useUpdateEmbarque, useAuditoriaComentarios, useCrmNotificaciones, useAutomatizacionesEtapa). ErrorBoundary intacto (ya usa logClientError directo, no duplicar). APP_VERSION 11.13.0.",
   },
   {
     version: "11.11.0",
