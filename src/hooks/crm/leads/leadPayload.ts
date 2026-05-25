@@ -9,6 +9,8 @@ export interface AuthLite {
   email?: string | null;
 }
 
+// Mapper plano (sin branching real, sólo defaults `??`): aceptamos complexity alta.
+// eslint-disable-next-line complexity
 export function buildLeadInsertPayload(input: LeadInput, user: AuthLite | null) {
   return {
     empresa: input.empresa,

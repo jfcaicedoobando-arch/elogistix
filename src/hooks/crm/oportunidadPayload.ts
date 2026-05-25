@@ -5,6 +5,8 @@
 import type { OportunidadInput } from "./useOportunidades";
 import type { AuthLite } from "./leads/leadPayload";
 
+// Mapper plano (sin branching real, sólo defaults `??`): aceptamos complexity alta.
+// eslint-disable-next-line complexity
 export function buildOportunidadInsertPayload(
   input: OportunidadInput,
   user: AuthLite | null,

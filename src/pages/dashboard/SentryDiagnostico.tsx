@@ -13,7 +13,7 @@ import { APP_VERSION } from "@/constants/appVersion";
 import { useAuth } from "@/contexts/AuthContext";
 import { useOrganization } from "@/contexts/OrganizationContext";
 import { toast } from "@/hooks/use-toast";
-import { useSentryInfo, maskDsn } from "@/hooks/sentry/useSentryInfo";
+import { useSentryInfo, maskDsn } from "@/hooks/sentry";
 
 function Row({ label, value }: { label: string; value: React.ReactNode }) {
   return (
@@ -60,6 +60,8 @@ function handleTestMessage() {
   });
 }
 
+// JSX denso pero plano: muchos `??` para fallbacks de UI.
+// eslint-disable-next-line complexity
 export default function SentryDiagnostico() {
   const { user, effectiveRole } = useAuth();
   const { organization, organizationId } = useOrganization();

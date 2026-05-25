@@ -18,3 +18,4 @@ export * from './useOportunidadForm';
 export * from './useOportunidades';
 export * from './usePlantillasMensaje';
 export * from './useProximasActividades';
+export * from './useCrmInicioVM';

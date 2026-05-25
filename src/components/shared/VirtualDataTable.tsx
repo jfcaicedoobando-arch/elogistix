@@ -70,6 +70,8 @@ const DEFAULTS = {
   overscan: 8,
 };
 
+// Destructura ~10 defaults: complejidad alta pero plana.
+// eslint-disable-next-line complexity
 export function VirtualDataTable<T>(props: VirtualDataTableProps<T>) {
   const {
     columns, data, rowKey, rowClassName, onRowClick, pagination, className,

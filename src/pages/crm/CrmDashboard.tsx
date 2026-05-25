@@ -7,7 +7,7 @@ import { Activity, Target, TrendingUp, Users } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { formatCurrencyCompact } from "@/lib/formatters";
-import { useCrmInicioVM } from "@/hooks/crm/useCrmInicioVM";
+import { useCrmInicioVM } from "@/hooks/crm";
 import { VencidasAlert } from "@/components/crm/crmDashboard/VencidasAlert";
 import { ActividadesHoyCard } from "@/components/crm/crmDashboard/ActividadesHoyCard";
 import { CerrandoSemanaCard, LeadsSinContactarCard, TopDealsCard } from "@/components/crm/crmDashboard/DealsCards";
