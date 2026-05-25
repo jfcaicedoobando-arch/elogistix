@@ -24,7 +24,7 @@ interface ClientErrorPayload {
   app_version?: unknown;
 }
 
-function tryExtractUserId(req: Request): string | null {
+export function tryExtractUserId(req: Request): string | null {
   try {
     const auth = req.headers.get("Authorization") ?? "";
     const token = auth.replace(/^Bearer\s+/i, "");
@@ -36,7 +36,7 @@ function tryExtractUserId(req: Request): string | null {
   }
 }
 
-function truncate(value: unknown, max: number): string | null {
+export function truncate(value: unknown, max: number): string | null {
   if (value == null) return null;
   const s = typeof value === "string" ? value : JSON.stringify(value);
   return s.length > max ? s.slice(0, max) : s;

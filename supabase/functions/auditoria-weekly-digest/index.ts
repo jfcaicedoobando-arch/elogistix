@@ -24,14 +24,14 @@ interface ReporteRow {
   }>;
 }
 
-function esc(s: string): string {
+export function esc(s: string): string {
   return s
     .replace(/&/g, "&amp;")
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;");
 }
 
-function buildHtml(orgNombre: string, reporte: ReporteRow): string {
+export function buildHtml(orgNombre: string, reporte: ReporteRow): string {
   const sev = reporte.por_severidad ?? {};
   const top = (reporte.hallazgos ?? [])
     .filter((h) => typeof h.monto_mxn === "number" && (h.monto_mxn ?? 0) > 0)

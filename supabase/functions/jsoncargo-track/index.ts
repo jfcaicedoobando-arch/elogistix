@@ -24,7 +24,7 @@ import {
 interface RequestBody { embarqueId?: string }
 const THROTTLE_MS = 10 * 60 * 1000;
 
-async function parseBodyId(req: Request): Promise<string | null> {
+export async function parseBodyId(req: Request): Promise<string | null> {
   try {
     const body: RequestBody = await req.json();
     return typeof body.embarqueId === "string" ? body.embarqueId : null;
@@ -33,7 +33,7 @@ async function parseBodyId(req: Request): Promise<string | null> {
   }
 }
 
-function validateEmbarqueForTracking(
+export function validateEmbarqueForTracking(
   emb: EmbarqueRow,
 ): { errorCode: string; status: number; message: string } | { ok: true; shippingLine: string } {
   if (emb.modo !== "Marítimo") return { errorCode: "not_maritimo", status: 422, message: "Solo embarques marítimos" };

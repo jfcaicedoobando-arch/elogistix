@@ -7,7 +7,7 @@ import { createLogger } from "../_shared/logger.ts";
 
 interface InviteBody { email: string; cliente_id: string; organization_id: string; }
 
-function parseBody(raw: unknown): InviteBody | null {
+export function parseBody(raw: unknown): InviteBody | null {
   if (!raw || typeof raw !== "object") return null;
   const r = raw as Record<string, unknown>;
   if (typeof r.email !== "string" || typeof r.cliente_id !== "string" || typeof r.organization_id !== "string") {
