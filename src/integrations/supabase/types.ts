@@ -1143,9 +1143,11 @@ export type Database = {
         Row: {
           activa: boolean
           color: string
+          crea_tarea_seguimiento: boolean
           created_at: string
           deleted_at: string | null
           deleted_by: string | null
+          dias_seguimiento: number
           id: string
           nombre: string
           orden: number
@@ -1157,9 +1159,11 @@ export type Database = {
         Insert: {
           activa?: boolean
           color?: string
+          crea_tarea_seguimiento?: boolean
           created_at?: string
           deleted_at?: string | null
           deleted_by?: string | null
+          dias_seguimiento?: number
           id?: string
           nombre: string
           orden?: number
@@ -1171,9 +1175,11 @@ export type Database = {
         Update: {
           activa?: boolean
           color?: string
+          crea_tarea_seguimiento?: boolean
           created_at?: string
           deleted_at?: string | null
           deleted_by?: string | null
+          dias_seguimiento?: number
           id?: string
           nombre?: string
           orden?: number
@@ -1289,6 +1295,42 @@ export type Database = {
         }
         Relationships: []
       }
+      crm_notificaciones: {
+        Row: {
+          created_at: string
+          id: string
+          leida_at: string | null
+          link: string | null
+          mensaje: string
+          organization_id: string
+          tipo: string
+          titulo: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          leida_at?: string | null
+          link?: string | null
+          mensaje?: string
+          organization_id?: string
+          tipo: string
+          titulo: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          leida_at?: string | null
+          link?: string | null
+          mensaje?: string
+          organization_id?: string
+          tipo?: string
+          titulo?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       crm_oportunidades: {
         Row: {
           cliente_id: string | null
@@ -1370,6 +1412,48 @@ export type Database = {
           updated_at?: string
           vendedor_email?: string
           vendedor_id?: string | null
+        }
+        Relationships: []
+      }
+      crm_plantillas_mensaje: {
+        Row: {
+          activa: boolean
+          asunto: string
+          canal: string
+          created_at: string
+          cuerpo: string
+          deleted_at: string | null
+          deleted_by: string | null
+          id: string
+          nombre: string
+          organization_id: string
+          updated_at: string
+        }
+        Insert: {
+          activa?: boolean
+          asunto?: string
+          canal: string
+          created_at?: string
+          cuerpo?: string
+          deleted_at?: string | null
+          deleted_by?: string | null
+          id?: string
+          nombre: string
+          organization_id?: string
+          updated_at?: string
+        }
+        Update: {
+          activa?: boolean
+          asunto?: string
+          canal?: string
+          created_at?: string
+          cuerpo?: string
+          deleted_at?: string | null
+          deleted_by?: string | null
+          id?: string
+          nombre?: string
+          organization_id?: string
+          updated_at?: string
         }
         Relationships: []
       }

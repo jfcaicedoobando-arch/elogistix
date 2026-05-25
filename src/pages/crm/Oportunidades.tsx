@@ -23,9 +23,9 @@ import OportunidadesFiltersBar, {
 } from "@/components/crm/OportunidadesFiltersBar";
 import {
   useOportunidades,
-  useMoverEtapa,
   type CrmOportunidadRow,
 } from "@/hooks/crm/useOportunidades";
+import { useMoverEtapaConAutomatizacion } from "@/hooks/crm/useAutomatizacionesEtapa";
 import { useEtapasPipeline, type CrmEtapaRow } from "@/hooks/crm/useEtapasPipeline";
 import { useUsuarios } from "@/hooks/usuario";
 
@@ -79,7 +79,7 @@ export default function Oportunidades() {
     });
   }, [opsRaw, filtros]);
 
-  const mover = useMoverEtapa();
+  const mover = useMoverEtapaConAutomatizacion();
 
   const handleMover = async (id: string, etapaId: string, prob: number) => {
     try {
