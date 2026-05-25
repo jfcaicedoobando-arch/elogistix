@@ -9,22 +9,10 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import type { CrmEtapaRow } from "@/hooks/crm";
+import { FILTROS_DEFAULT, type OportunidadesFiltros } from "./oportunidadesFiltersTypes";
 
-export interface OportunidadesFiltros {
-  etapaId: string;        // "todas" | etapa.id
-  vendedorId: string;     // "todos" | vendedor_id
-  cierreDesde: string;    // "" | yyyy-mm-dd
-  cierreHasta: string;
-  montoMin: string;       // "" o número como string
-}
-
-export const FILTROS_DEFAULT: OportunidadesFiltros = {
-  etapaId: "todas",
-  vendedorId: "todos",
-  cierreDesde: "",
-  cierreHasta: "",
-  montoMin: "",
-};
+export { FILTROS_DEFAULT };
+export type { OportunidadesFiltros };
 
 interface Props {
   etapas: CrmEtapaRow[];
