@@ -25,6 +25,8 @@ import {
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { notifySuccess, notifyError } from "@/lib/ui/appFeedback";
+import VendedorSelect from "@/components/crm/VendedorSelect";
+import { useAuth } from "@/contexts/AuthContext";
 import {
   LEAD_ESTADOS,
   LEAD_FUENTES,
@@ -50,10 +52,13 @@ const EMPTY = {
   estado: "Nuevo" as CrmLeadEstado,
   interes_modo: "",
   notas: "",
+  vendedor_id: null as string | null,
+  vendedor_email: "",
 };
 
 export default function NuevoLeadDialog({ open, onOpenChange, onCreated }: Props) {
-  const [form, setForm] = useState(EMPTY);
+  const { user } = useAuth();
+  const [form, setForm] = useState(() => ({ ...EMPTY, vendedor_id: user?.id ?? null, vendedor_email: user?.email ?? "" }));
   const crear = useCrearLead();
   const { toast } = useToast();
 
@@ -153,6 +158,13 @@ export default function NuevoLeadDialog({ open, onOpenChange, onCreated }: Props
                 ))}
               </SelectContent>
             </Select>
+          </div>
+          <div className="sm:col-span-2">
+            <VendedorSelect
+              value={form.vendedor_id}
+              email={form.vendedor_email}
+              onChange={(id, email) => setForm((f) => ({ ...f, vendedor_id: id, vendedor_email: email }))}
+            />
           </div>
           <div className="sm:col-span-2 space-y-1">
             <Label>Notas</Label>

@@ -118,6 +118,8 @@ export type LeadInput = {
   score?: number;
   interes_modo?: string;
   notas?: string;
+  vendedor_id?: string | null;
+  vendedor_email?: string;
 };
 
 export function useCrearLead() {
@@ -137,8 +139,8 @@ export function useCrearLead() {
         score: input.score ?? 3,
         interes_modo: input.interes_modo ?? "",
         notas: input.notas ?? "",
-        vendedor_id: user?.id ?? null,
-        vendedor_email: user?.email ?? "",
+        vendedor_id: input.vendedor_id !== undefined ? input.vendedor_id : (user?.id ?? null),
+        vendedor_email: input.vendedor_email ?? user?.email ?? "",
         created_by: user?.id ?? null,
       };
       const { data, error } = await supabase
@@ -152,6 +154,7 @@ export function useCrearLead() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["crm", "leads"] });
       qc.invalidateQueries({ queryKey: ["crm", "kpis"] });
+      qc.invalidateQueries({ queryKey: ["crm", "dashboard"] });
     },
   });
 }

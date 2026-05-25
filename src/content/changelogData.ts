@@ -22,6 +22,14 @@ export interface ChangelogEntry {
  */
 export const recentChangelog: ChangelogEntry[] = [
   {
+    version: "11.3.0",
+    date: "2026-05-25",
+    type: "minor",
+    title: "CRM Sprint A: Dashboard real + asignación de vendedor",
+    summary: "Dashboard CRM con widgets accionables y selector de vendedor en leads/oportunidades.",
+    description: "useCrmDashboard.ts + nuevo CrmDashboard con Mis actividades de hoy, Cerrando esta semana, Leads sin contactar >7 días, Top 5 deals, Mini-embudo. VendedorSelect (admin/operador) en alta de leads/oportunidades. usePosponerActividad y useActividadesVencidasCount añadidos. canEditCrm incluye rol vendedor. APP_VERSION 11.3.0.",
+  },
+  {
     version: "11.2.1",
     date: "2026-05-25",
     type: "patch",

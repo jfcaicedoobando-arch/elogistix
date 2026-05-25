@@ -7,5 +7,7 @@ export function usePermissions() {
   const canEdit = roleStr === "admin" || roleStr === "operador" || roleStr === "super_admin";
   const isAdmin = roleStr === "admin" || roleStr === "super_admin";
   const isSuperAdmin = (role as AppRole) === "super_admin";
-  return { canEdit, isAdmin, isSuperAdmin, role: effectiveRole };
+  /** Permite editar en módulo CRM: incluye al rol vendedor además de los staff. */
+  const canEditCrm = canEdit || roleStr === "vendedor";
+  return { canEdit, canEditCrm, isAdmin, isSuperAdmin, role: effectiveRole };
 }
