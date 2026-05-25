@@ -24,7 +24,7 @@ export function usePlantillasMensaje(canal?: PlantillaCanal, soloActivas = true)
   return useQuery<PlantillaMensajeRow[]>({
     queryKey: ["crm", "plantillas", canal ?? "all", soloActivas],
     queryFn: async () => {
-      let q = supabase.from("crm_plantillas_mensaje" as never).select(COLS).order("nombre");
+      let q = supabase.from("crm_plantillas_mensaje").select(COLS).order("nombre");
       if (canal) q = q.eq("canal", canal);
       if (soloActivas) q = q.eq("activa", true);
       const { data, error } = await q;
@@ -47,7 +47,7 @@ export function useCrearPlantilla() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async (input: PlantillaInput) => {
-      const { error } = await supabase.from("crm_plantillas_mensaje" as never).insert({
+      const { error } = await supabase.from("crm_plantillas_mensaje").insert({
         nombre: input.nombre,
         canal: input.canal,
         asunto: input.asunto ?? "",
@@ -64,7 +64,7 @@ export function useActualizarPlantilla() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async ({ id, patch }: { id: string; patch: Partial<PlantillaInput> }) => {
-      const { error } = await supabase.from("crm_plantillas_mensaje" as never).update(patch).eq("id", id);
+      const { error } = await supabase.from("crm_plantillas_mensaje").update(patch).eq("id", id);
       if (error) throw error;
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["crm", "plantillas"] }),
@@ -76,7 +76,7 @@ export function useEliminarPlantilla() {
   return useMutation({
     mutationFn: async (id: string) => {
       const { error } = await supabase
-        .from("crm_plantillas_mensaje" as never)
+        .from("crm_plantillas_mensaje")
         .update({ deleted_at: new Date().toISOString() })
         .eq("id", id);
       if (error) throw error;

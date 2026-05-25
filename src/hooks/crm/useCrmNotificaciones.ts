@@ -26,7 +26,7 @@ export function useCrmNotificaciones(limit = 20) {
     enabled: !!user?.id,
     queryFn: async () => {
       const { data, error } = await supabase
-        .from("crm_notificaciones" as never)
+        .from("crm_notificaciones")
         .select(COLS)
         .eq("user_id", user!.id)
         .order("created_at", { ascending: false })
@@ -45,7 +45,7 @@ export function useCrmNotificacionesNoLeidasCount() {
     enabled: !!user?.id,
     queryFn: async () => {
       const { count, error } = await supabase
-        .from("crm_notificaciones" as never)
+        .from("crm_notificaciones")
         .select("id", { count: "exact", head: true })
         .eq("user_id", user!.id)
         .is("leida_at", null);
@@ -62,7 +62,7 @@ export function useMarcarNotificacionesLeidas() {
   return useMutation({
     mutationFn: async (ids?: string[]) => {
       let q = supabase
-        .from("crm_notificaciones" as never)
+        .from("crm_notificaciones")
         .update({ leida_at: new Date().toISOString() })
         .eq("user_id", user!.id)
         .is("leida_at", null);
@@ -87,7 +87,7 @@ export interface CrearNotificacionInput {
 /** Inserta una notificación. Falla silenciosamente — nunca debe romper la acción principal. */
 export async function crearNotificacionSilencioso(input: CrearNotificacionInput): Promise<void> {
   try {
-    await supabase.from("crm_notificaciones" as never).insert({
+    await supabase.from("crm_notificaciones").insert({
       user_id: input.user_id,
       tipo: input.tipo,
       titulo: input.titulo,
