@@ -101,14 +101,6 @@ export const recentChangelog: ChangelogEntry[] = [
     summary: "Cotizaciones y comentarios en oportunidad, tab CRM en ClienteDetalle, valor real al ganar y leaderboard de vendedores.",
     description: "Migración valor_real en crm_oportunidades + tabla crm_comentarios_oportunidad con RLS y triggers (registra valor real al aceptar cotización ligada; notifica al vendedor cuando otro usuario comenta). Hooks useComentariosOportunidad y useCliente360. Componentes ComentariosOportunidad, OportunidadCotizacionesList, LeaderboardVendedores y Cliente360Panel. OportunidadDetalle muestra valor real, cotizaciones vinculadas y comentarios; al crear cotización mueve la oportunidad a 'Cotizando'. ClienteDetalle suma tab CRM. Reportes incluye leaderboard mensual con cuota vs. cerrado. APP_VERSION 11.6.0.",
   },
-  {
-    version: "11.5.0",
-    date: "2026-05-25",
-    type: "minor",
-    title: "CRM Sprint C: automatizaciones, notificaciones y plantillas",
-    summary: "Tareas automáticas al cambiar etapa, notificaciones in-app, plantillas de email/WhatsApp, banner de vencidas y auto-creación de actividad inicial.",
-    description: "Migración crm_etapas_pipeline.crea_tarea_seguimiento + dias_seguimiento; tablas crm_notificaciones y crm_plantillas_mensaje con RLS. Hooks useAutomatizacionesEtapa, useCrmNotificaciones, usePlantillasMensaje, useActividadesVencidasList. UI: CrmNotificacionesBell, EtapasPipelineEditor con tarea+días, tab Plantillas en /crm/configuracion, PlantillaSelector en ContactActions con variables, banner de vencidas en dashboard → /crm/actividades?filtro=vencidas, checkbox 'Crear actividad de seguimiento' en alta de leads y oportunidades. APP_VERSION 11.5.0.",
-  },
 ];
 
 /** Deduplica por version conservando la primera ocurrencia (recentChangelog gana). */
