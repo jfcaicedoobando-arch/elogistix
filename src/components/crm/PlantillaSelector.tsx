@@ -27,7 +27,7 @@ export default function PlantillaSelector({ canal, destino, vars, entidadTipo, e
   const { user } = useAuth();
   const Icon = canal === "email" ? Mail : MessageSquare;
 
-  const handleUsar = (plantillaId: string, asunto: string, cuerpo: string, nombre: string) => {
+  const handleUsar = (_plantillaId: string, asunto: string, cuerpo: string, nombre: string) => {
     const asuntoR = renderPlantilla(asunto, vars);
     const cuerpoR = renderPlantilla(cuerpo, vars);
     if (canal === "email") {
