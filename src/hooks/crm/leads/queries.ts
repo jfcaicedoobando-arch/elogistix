@@ -1,5 +1,6 @@
 import { useQuery, keepPreviousData } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { queryKeys } from "@/lib/query";
 import {
   LEAD_COLUMNS,
   type LeadFiltros,
@@ -17,7 +18,7 @@ export function useLeads(filtros: LeadFiltros = {}) {
   } = filtros;
 
   return useQuery<LeadsResultado>({
-    queryKey: ["crm", "leads", { search, estado, fuente, page, pageSize }],
+    queryKey: queryKeys.crm.leads.list({ search, estado, fuente, page, pageSize }),
     placeholderData: keepPreviousData,
     queryFn: async () => {
       let q = supabase
@@ -47,7 +48,7 @@ export function useLeads(filtros: LeadFiltros = {}) {
 
 export function useLead(id: string | undefined) {
   return useQuery<CrmLeadRow | null>({
-    queryKey: ["crm", "leads", "detail", id],
+    queryKey: queryKeys.crm.leads.detail(id ?? ""),
     enabled: !!id,
     queryFn: async () => {
       const { data, error } = await supabase

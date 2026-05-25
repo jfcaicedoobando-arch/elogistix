@@ -1,6 +1,7 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { queryKeys } from "@/lib/query";
 import type { CrmLeadRow } from "./constants";
 import { resolveClienteForConversion, fetchPrimeraEtapaAbierta } from "./convertirHelpers";
 
@@ -62,9 +63,9 @@ export function useConvertirLead() {
       return { clienteId, oportunidadId: opNueva.id };
     },
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["crm", "leads"] });
-      qc.invalidateQueries({ queryKey: ["crm", "kpis"] });
-      qc.invalidateQueries({ queryKey: ["clientes"] });
+      qc.invalidateQueries({ queryKey: queryKeys.crm.leads.all });
+      qc.invalidateQueries({ queryKey: queryKeys.crm.kpis });
+      qc.invalidateQueries({ queryKey: queryKeys.clientes.all });
     },
   });
 }

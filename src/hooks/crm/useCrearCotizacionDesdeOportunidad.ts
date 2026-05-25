@@ -6,6 +6,7 @@ import {
 } from "@/services/crm";
 import { generarFolioCotizacion } from "@/services/cotizacion/queries";
 import { useAuth } from "@/contexts/AuthContext";
+import { queryKeys } from "@/lib/query";
 
 interface UseCrearCotizacionDesdeOpInput {
   oportunidad: CrearCotizacionDesdeOpInput["oportunidad"] & {
@@ -49,8 +50,8 @@ export function useCrearCotizacionDesdeOportunidad() {
       return { id: cot.id, folio };
     },
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["crm", "oportunidades"] });
-      qc.invalidateQueries({ queryKey: ["crm", "op-cotizaciones"] });
+      qc.invalidateQueries({ queryKey: queryKeys.crm.oportunidades.all });
+      qc.invalidateQueries({ queryKey: queryKeys.crm.opCotizaciones.all });
     },
   });
 }

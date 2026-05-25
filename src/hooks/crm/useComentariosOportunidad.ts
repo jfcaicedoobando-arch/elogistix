@@ -6,6 +6,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { queryKeys } from "@/lib/query";
 
 const COLS = "id, oportunidad_id, autor_id, autor_email, texto, created_at";
 
@@ -20,7 +21,7 @@ export interface ComentarioRow {
 
 export function useComentariosOportunidad(oportunidadId: string | undefined, limit = 50) {
   return useQuery<ComentarioRow[]>({
-    queryKey: ["crm", "comentarios-op", oportunidadId, limit],
+    queryKey: queryKeys.crm.comentarios.byOportunidad(oportunidadId ?? "", limit),
     enabled: !!oportunidadId,
     queryFn: async () => {
       const { data, error } = await supabase
@@ -52,7 +53,7 @@ export function useCrearComentarioOportunidad() {
       if (error) throw error;
     },
     onSuccess: (_v, vars) => {
-      qc.invalidateQueries({ queryKey: ["crm", "comentarios-op", vars.oportunidadId] });
+      qc.invalidateQueries({ queryKey: ["crm", "comentarios-op", vars.oportunidadId], exact: false });
     },
   });
 }
