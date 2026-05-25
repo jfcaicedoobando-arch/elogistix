@@ -12,11 +12,11 @@ import {
   Tooltip as RechartsTooltip,
   Legend,
 } from "recharts";
-import { ESTADOS_KEYS } from "@/hooks/operaciones";
+import { ESTADOS_KEYS, type ChartRow } from "@/hooks/operaciones";
 import { ESTADO_COLOR } from "./desempenoVisuals";
 
 interface Props {
-  data: Array<Record<string, number | string>>;
+  data: ChartRow[];
 }
 
 export default function DesempenoOperadoresChart({ data }: Props) {

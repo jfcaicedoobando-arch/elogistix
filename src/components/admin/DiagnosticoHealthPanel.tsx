@@ -93,10 +93,14 @@ export function DiagnosticoHealthPanel() {
         rangeLabel={range.label}
       />
 
-      <HealthTimelineChart loading={loading} data={timeline} />
+      <Suspense fallback={<ChartSkeleton height={260} />}>
+        <HealthTimelineChart loading={loading} data={timeline} />
+      </Suspense>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        <HealthTopErrorsChart loading={loading} data={top5} />
+        <Suspense fallback={<ChartSkeleton height={260} />}>
+          <HealthTopErrorsChart loading={loading} data={top5} />
+        </Suspense>
         <HealthSlowestTable loading={loading} data={slowest} />
       </div>
     </div>
