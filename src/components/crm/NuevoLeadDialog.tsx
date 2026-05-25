@@ -61,7 +61,9 @@ const EMPTY = {
 export default function NuevoLeadDialog({ open, onOpenChange, onCreated }: Props) {
   const { user } = useAuth();
   const [form, setForm] = useState(() => ({ ...EMPTY, vendedor_id: user?.id ?? null, vendedor_email: user?.email ?? "" }));
+  const [autoActividad, setAutoActividad] = useState(true);
   const crear = useCrearLead();
+  const crearActividad = useCrearActividad();
   const { toast } = useToast();
 
   const set = <K extends keyof typeof EMPTY>(k: K, v: (typeof EMPTY)[K]) =>
@@ -74,6 +76,19 @@ export default function NuevoLeadDialog({ open, onOpenChange, onCreated }: Props
     }
     try {
       const r = await crear.mutateAsync(form);
+      if (autoActividad) {
+        const manana = new Date();
+        manana.setDate(manana.getDate() + 1);
+        manana.setHours(9, 0, 0, 0);
+        await crearActividad.mutateAsync({
+          tipo: "llamada",
+          asunto: `Primer contacto: ${form.empresa}`,
+          descripcion: "Actividad creada automáticamente al alta del lead.",
+          entidad_tipo: "lead",
+          entidad_id: r.id,
+          fecha_programada: manana.toISOString(),
+        }).catch(() => undefined);
+      }
       notifySuccess(toast, { title: "Lead creado" });
       setForm(EMPTY);
       onOpenChange(false);
