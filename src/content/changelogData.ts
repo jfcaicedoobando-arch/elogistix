@@ -22,6 +22,14 @@ export interface ChangelogEntry {
  */
 export const recentChangelog: ChangelogEntry[] = [
   {
+    version: "10.2.4",
+    date: "2026-05-25",
+    type: "patch",
+    title: "Fix validateDOMNesting en HallazgoSummary",
+    summary: "Se reemplazó DialogDescription por <div> para evitar el warning de div dentro de <p> en el diálogo de marcar revisado.",
+    description: "src/components/auditoria/marcarRevisado/HallazgoSummary.tsx: DialogDescription (renderiza como <p> por defecto) contenía <div> internos, lo que generaba el warning validateDOMNesting de React. Se cambió el wrapper a <div className='text-xs space-y-1 pt-1 text-muted-foreground'> y se eliminó el import de DialogDescription. APP_VERSION 10.2.4.",
+  },
+  {
     version: "10.2.3",
     date: "2026-05-25",
     type: "patch",
@@ -92,14 +100,6 @@ export const recentChangelog: ChangelogEntry[] = [
     title: "Fase 3 — DataTable 100% TanStack nativo; adapter legacy eliminado",
     summary: "21 archivos migrados a ColumnDef<T> nativo. Se eliminó columnAdapter.ts y los tipos DataTableColumn<T>/SortValue. DataTable acepta sólo ColumnDef<T, unknown>[].",
     description: "Breaking change en la API pública de DataTable: el shape legacy { key, render, sortable, sortValue, align, className } ya no se acepta. Todo call-site usa ahora { id, cell, enableSorting, accessorFn + sortingFn, meta }. Se borró columnAdapter.ts, se simplificaron useTableInstance/DataTable/VirtualDataTable, y se migraron los 21 archivos restantes. Sin cambios visuales ni de comportamiento. APP_VERSION 10.0.0.",
-  },
-  {
-    version: "9.2.0",
-    date: "2026-05-19",
-    type: "minor",
-    title: "Fase 2 — 13 tablas core migradas a ColumnDef nativo",
-    summary: "Embarques, Cotizaciones, Clientes, Proveedores y Facturación ahora usan ColumnDef<T> nativo de TanStack + helpers sortByString/Number/Date con colación es-MX.",
-    description: "Migración de 13 archivos del core operativo a defineColumns + ColumnDef nativo. Nuevo sortingFns.ts (null-safe, Intl.Collator es-MX). Tests ampliados con casos de colación, nulls y meta visual. Doc docs/migracion-tabla-fase2.md con equivalencias y pendientes. Adapter legacy sigue activo hasta cerrar el ticket. APP_VERSION 9.2.0.",
   },
 ];
 
