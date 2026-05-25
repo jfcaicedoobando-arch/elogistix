@@ -17,6 +17,7 @@ import {
   HelpCircle,
   Bug,
   Target,
+  Users,
 } from "lucide-react";
 import type { SidebarItem } from "@/components/layout/SidebarGroupBlock";
 
@@ -37,6 +38,7 @@ export const SIDEBAR_REPORTES_ITEMS: SidebarItem[] = [
 
 export const SIDEBAR_CRM_ITEMS: SidebarItem[] = [
   { title: "Dashboard CRM", url: "/crm", icon: Target },
+  { title: "Leads", url: "/crm/leads", icon: Users },
 ];
 
 export const SIDEBAR_DIRECTORIO_ITEMS: SidebarItem[] = [

@@ -29,6 +29,8 @@ const Auditoria = lazy(() => import("./pages/Auditoria"));
 const Ayuda = lazy(() => import("./pages/dashboard/Ayuda"));
 const SentryDiagnostico = lazy(() => import("./pages/dashboard/SentryDiagnostico"));
 const CrmDashboard = lazy(() => import("./pages/crm/CrmDashboard"));
+const Leads = lazy(() => import("./pages/crm/Leads"));
+const LeadDetalle = lazy(() => import("./pages/crm/LeadDetalle"));
 
 const Embarques = lazy(() => import("./pages/embarques/Embarques"));
 const EmbarqueDetalle = lazy(() => import("./pages/embarques/EmbarqueDetalle"));
@@ -198,6 +200,8 @@ const App = () => (
               <Route path="/ayuda" element={<Ayuda />} />
               <Route path="/sentry" element={<SentryDiagnostico />} />
               <Route path="/crm" element={<CrmDashboard />} />
+              <Route path="/crm/leads" element={<Leads />} />
+              <Route path="/crm/leads/:id" element={<LeadDetalle />} />
               <Route path="/bitacora" element={<Bitacora />} />
               <Route
                 path="/papelera"

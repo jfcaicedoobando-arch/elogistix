@@ -22,6 +22,14 @@ export interface ChangelogEntry {
  */
 export const recentChangelog: ChangelogEntry[] = [
   {
+    version: "11.1.0",
+    date: "2026-05-25",
+    type: "minor",
+    title: "CRM Fase 2: CRUD de Leads y conversión",
+    summary: "Listado, alta, edición y eliminación de leads, con conversión opcional a cliente + oportunidad inicial.",
+    description: "Nuevos hooks src/hooks/crm/useLeads.ts (paginación servidor, filtros estado/fuente, crear/actualizar/eliminar/convertir). Pantallas /crm/leads y /crm/leads/:id; diálogos NuevoLeadDialog y ConvertirLeadDialog (crea cliente opcional + oportunidad en la primera etapa abierta, marca lead como Convertido). Sidebar CRM agrega 'Leads'. APP_VERSION 11.1.0.",
+  },
+  {
     version: "11.0.0",
     date: "2026-05-25",
     type: "major",
