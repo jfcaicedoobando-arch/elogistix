@@ -2,6 +2,14 @@ import type { ChangelogEntry } from "../../../changelogData";
 
 export const chunk0: ChangelogEntry[] = [
   {
+    version: "11.6.0",
+    date: "2026-05-25",
+    type: "minor",
+    title: "CRM Sprint D: integración comercial, vista 360° del cliente y leaderboard",
+    summary: "Oportunidades muestran cotizaciones y comentarios; tab CRM en ClienteDetalle con pipeline/embarques/cotizaciones; valor real al ganar; leaderboard mensual de vendedores en Reportes.",
+    description: "Migración: nuevo campo valor_real en crm_oportunidades; tabla crm_comentarios_oportunidad con RLS (lectura por org, escritura admin/operador/super_admin y el vendedor responsable). Triggers: crm_set_valor_real_on_aceptada registra el subtotal y fecha_cierre_real al aceptar una cotización ligada; crm_notify_comentario_oportunidad crea una notificación in-app al vendedor cuando alguien más comenta su oportunidad. Hooks nuevos: useComentariosOportunidad (lectura + alta), useCliente360 (oportunidades del cliente + última cotización + último embarque + totales abierto/ganado). Componentes nuevos (≤200 líneas, sin any): ComentariosOportunidad, OportunidadCotizacionesList (folio/estado/monto + link al embarque ligado), LeaderboardVendedores (cuota mensual vs. cerrado con barra de progreso), Cliente360Panel. UI: OportunidadDetalle muestra valor_real en la 3ª tarjeta cuando existe, lista de cotizaciones vinculadas, sección de comentarios internos, y al crear cotización mueve automáticamente la oportunidad a la etapa 'Cotizando' (si existe). ClienteDetalle agrega tab 'CRM' con Cliente360Panel + ActividadTimeline. Reportes incluye tarjeta de leaderboard de vendedores (sólo staff). APP_VERSION 11.6.0.",
+  },
+  {
     version: "11.5.0",
     date: "2026-05-25",
     type: "minor",
