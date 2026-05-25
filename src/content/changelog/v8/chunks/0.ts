@@ -2,6 +2,14 @@ import type { ChangelogEntry } from "../../../changelogData";
 
 export const chunk0: ChangelogEntry[] = [
   {
+    version: "11.7.0",
+    date: "2026-05-25",
+    type: "minor",
+    title: "CRM Sprint G: pulido UX — menos pestañas, más foco",
+    summary: "Pestañas reducidas de 7 a 5 (Inicio · Leads · Oportunidades · Actividades · Analítica), botón Quick-Add global, próxima actividad visible en Kanban, contacto rápido en oportunidades y timeline de actividades en leads.",
+    description: "CrmLayout: tabs reducidos (Forecast + Reportes fusionados en /crm/analitica con sub-tabs Forecast/Embudo/Pérdidas/Vendedores); Configuración separada a la derecha con sólo icono. Rutas legacy /crm/forecast y /crm/reportes redirigen a /crm/analitica?tab=…. Dashboard renombrado 'Inicio' con orden enfocado en hoy: banner de vencidas, Mis actividades de hoy a ancho completo, Cerrando esta semana + Leads sin contactar, Top 5 deals; KPIs al final y mini-embudo eliminado (vive en Analítica). Nuevo QuickAddMenu en header del CRM con accesos directos a Nuevo lead, Nueva oportunidad y Nueva actividad sin cambiar de pestaña. Nuevo NuevaActividadDialog (entidad lead/oportunidad + tipo + fecha programada). LeadDetalle agrega ActividadTimeline (lo soporta el esquema crm_actividades.entidad_tipo='lead'). OportunidadDetalle reorganizado en tabs internas Resumen / Comunicación / Trazabilidad; tab Comunicación incluye ContactActions con PlantillaSelector usando el contacto principal del cliente (variables contacto/empresa/vendedor/etapa/monto). Nuevo hook useProximasActividades (batch query por entidad). OportunidadKanban pinta la próxima actividad pendiente bajo cada card (vencida en rojo). APP_VERSION 11.7.0."
+  },
+  {
     version: "11.6.0",
     date: "2026-05-25",
     type: "minor",

@@ -25,6 +25,7 @@ import { usePermissions } from "@/hooks/shared";
 import ConvertirLeadDialog from "@/components/crm/ConvertirLeadDialog";
 import { LeadLineageCard } from "@/components/crm/LineageCard";
 import ContactActions from "@/components/crm/ContactActions";
+import ActividadTimeline from "@/components/crm/ActividadTimeline";
 import {
   LEAD_ESTADOS,
   LEAD_FUENTES,
@@ -278,6 +279,8 @@ export default function LeadDetalle() {
       </Card>
 
       <LeadLineageCard leadId={lead.id} />
+
+      <ActividadTimeline entidadTipo="lead" entidadId={lead.id} />
 
       <ConvertirLeadDialog open={convertirOpen} onOpenChange={setConvertirOpen} lead={lead} />
 

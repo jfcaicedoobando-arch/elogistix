@@ -34,8 +34,7 @@ const LeadDetalle = lazy(() => import("./pages/crm/LeadDetalle"));
 const Oportunidades = lazy(() => import("./pages/crm/Oportunidades"));
 const OportunidadDetalle = lazy(() => import("./pages/crm/OportunidadDetalle"));
 const ActividadesCrm = lazy(() => import("./pages/crm/Actividades"));
-const ForecastCrm = lazy(() => import("./pages/crm/Forecast"));
-const ReportesCrm = lazy(() => import("./pages/crm/Reportes"));
+const AnaliticaCrm = lazy(() => import("./pages/crm/Analitica"));
 const CrmLayout = lazy(() => import("./pages/crm/CrmLayout"));
 const CrmConfiguracion = lazy(() => import("./pages/crm/Configuracion"));
 
@@ -213,8 +212,9 @@ const App = () => (
                 <Route path="oportunidades" element={<Oportunidades />} />
                 <Route path="oportunidades/:id" element={<OportunidadDetalle />} />
                 <Route path="actividades" element={<ActividadesCrm />} />
-                <Route path="forecast" element={<ForecastCrm />} />
-                <Route path="reportes" element={<ReportesCrm />} />
+                <Route path="analitica" element={<AnaliticaCrm />} />
+                <Route path="forecast" element={<Navigate to="/crm/analitica?tab=forecast" replace />} />
+                <Route path="reportes" element={<Navigate to="/crm/analitica?tab=embudo" replace />} />
                 <Route path="configuracion" element={<CrmConfiguracion />} />
               </Route>
               <Route path="/bitacora" element={<Bitacora />} />

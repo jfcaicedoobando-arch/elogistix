@@ -1,12 +1,14 @@
 /**
- * /crm/oportunidades/:id — Detalle de oportunidad con edición y conversión a cotización.
+ * /crm/oportunidades/:id — Detalle de oportunidad con tabs internas.
+ * Resumen / Comunicación / Trazabilidad para reducir scroll.
  */
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { ArrowLeft, Edit, FileText, Loader2, Trash2 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { PageHeader } from "@/components/shared/PageHeader";
 import DoubleConfirmDeleteDialog from "@/components/shared/DoubleConfirmDeleteDialog";
 import { useToast } from "@/hooks/use-toast";
@@ -20,8 +22,10 @@ import ActividadTimeline from "@/components/crm/ActividadTimeline";
 import ComentariosOportunidad from "@/components/crm/ComentariosOportunidad";
 import OportunidadCotizacionesList from "@/components/crm/OportunidadCotizacionesList";
 import { OportunidadLineageCard } from "@/components/crm/LineageCard";
+import ContactActions from "@/components/crm/ContactActions";
 import { useOportunidad, useEliminarOportunidad } from "@/hooks/crm/useOportunidades";
 import { useEtapasPipeline } from "@/hooks/crm/useEtapasPipeline";
+import { useContactosCliente } from "@/hooks/cliente/useClientes";
 import { generarFolioCotizacion } from "@/services/cotizacion/queries";
 
 export default function OportunidadDetalle() {
@@ -36,7 +40,10 @@ export default function OportunidadDetalle() {
 
   const { data: op, isLoading } = useOportunidad(id);
   const { data: etapas = [] } = useEtapasPipeline();
+  const { data: contactos = [] } = useContactosCliente(op?.cliente_id ?? undefined);
   const eliminar = useEliminarOportunidad();
+
+  const contactoPrincipal = useMemo(() => contactos[0], [contactos]);
 
   if (isLoading) return <div className="p-8 text-center text-sm text-muted-foreground">Cargando…</div>;
   if (!op) return <div className="p-8 text-center text-sm text-muted-foreground">Oportunidad no encontrada</div>;
@@ -64,13 +71,10 @@ export default function OportunidadDetalle() {
       const { data, error } = await supabase
         .from("cotizaciones")
         .insert({
-          folio,
-          modo,
-          tipo: "Importación",
+          folio, modo, tipo: "Importación",
           cliente_id: op.cliente_id,
           cliente_nombre: op.cliente_nombre || "",
-          origen: op.origen || "",
-          destino: op.destino || "",
+          origen: op.origen || "", destino: op.destino || "",
           oportunidad_id: op.id,
           operador: user?.email ?? "",
           es_prospecto: !op.cliente_id,
@@ -79,7 +83,6 @@ export default function OportunidadDetalle() {
         .single();
       if (error) throw error;
 
-      // Si la oportunidad está en una etapa anterior a "Cotizando", muévela.
       const cotizandoEtapa = etapas.find((e) => /cotizando|cotizaci/i.test(e.nombre) && e.tipo === "abierta");
       if (cotizandoEtapa && op.etapa_id !== cotizandoEtapa.id) {
         await supabase
@@ -140,31 +143,67 @@ export default function OportunidadDetalle() {
         </Card>
       </div>
 
-      <Card>
-        <CardHeader><CardTitle className="text-sm">Datos comerciales</CardTitle></CardHeader>
-        <CardContent className="grid grid-cols-2 md:grid-cols-3 gap-3 text-sm">
-          <div><div className="text-muted-foreground text-xs">Vendedor</div>{op.vendedor_email || "—"}</div>
-          <div><div className="text-muted-foreground text-xs">Modo</div>{op.modo || "—"}</div>
-          <div><div className="text-muted-foreground text-xs">Cierre estimado</div>{op.fecha_estimada_cierre || "—"}</div>
-          <div><div className="text-muted-foreground text-xs">Origen</div>{op.origen || "—"}</div>
-          <div><div className="text-muted-foreground text-xs">Destino</div>{op.destino || "—"}</div>
-          <div className="col-span-2 md:col-span-3"><div className="text-muted-foreground text-xs">Notas</div>{op.notas || "—"}</div>
-        </CardContent>
-      </Card>
+      <Tabs defaultValue="resumen">
+        <TabsList>
+          <TabsTrigger value="resumen">Resumen</TabsTrigger>
+          <TabsTrigger value="comunicacion">Comunicación</TabsTrigger>
+          <TabsTrigger value="trazabilidad">Trazabilidad</TabsTrigger>
+        </TabsList>
 
-      <OportunidadCotizacionesList oportunidadId={op.id} />
+        <TabsContent value="resumen" className="mt-4 space-y-4">
+          <Card>
+            <CardHeader><CardTitle className="text-sm">Datos comerciales</CardTitle></CardHeader>
+            <CardContent className="grid grid-cols-2 md:grid-cols-3 gap-3 text-sm">
+              <div><div className="text-muted-foreground text-xs">Vendedor</div>{op.vendedor_email || "—"}</div>
+              <div><div className="text-muted-foreground text-xs">Modo</div>{op.modo || "—"}</div>
+              <div><div className="text-muted-foreground text-xs">Cierre estimado</div>{op.fecha_estimada_cierre || "—"}</div>
+              <div><div className="text-muted-foreground text-xs">Origen</div>{op.origen || "—"}</div>
+              <div><div className="text-muted-foreground text-xs">Destino</div>{op.destino || "—"}</div>
+              <div className="col-span-2 md:col-span-3"><div className="text-muted-foreground text-xs">Notas</div>{op.notas || "—"}</div>
+            </CardContent>
+          </Card>
+          <OportunidadCotizacionesList oportunidadId={op.id} />
+        </TabsContent>
 
-      <ComentariosOportunidad oportunidadId={op.id} canEdit={canEdit} />
+        <TabsContent value="comunicacion" className="mt-4 space-y-4">
+          {op.cliente_id && (
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm">Contacto rápido</CardTitle>
+              </CardHeader>
+              <CardContent>
+                {contactoPrincipal ? (
+                  <ContactActions
+                    email={contactoPrincipal.email}
+                    telefono={contactoPrincipal.telefono}
+                    plantillaCtx={{
+                      entidadTipo: "oportunidad",
+                      entidadId: op.id,
+                      vars: {
+                        contacto: contactoPrincipal.nombre || op.cliente_nombre || "",
+                        empresa: op.cliente_nombre || "",
+                        vendedor: op.vendedor_email,
+                        etapa: etapa?.nombre ?? "",
+                        monto: formatCurrencyCompact(Number(op.monto_estimado ?? 0), op.moneda),
+                      },
+                    }}
+                  />
+                ) : (
+                  <p className="text-sm text-muted-foreground">El cliente no tiene contactos registrados.</p>
+                )}
+              </CardContent>
+            </Card>
+          )}
+          <ComentariosOportunidad oportunidadId={op.id} canEdit={canEdit} />
+          <ActividadTimeline entidadTipo="oportunidad" entidadId={op.id} />
+        </TabsContent>
 
-      <OportunidadLineageCard oportunidadId={op.id} leadId={op.lead_id ?? null} />
+        <TabsContent value="trazabilidad" className="mt-4">
+          <OportunidadLineageCard oportunidadId={op.id} leadId={op.lead_id ?? null} />
+        </TabsContent>
+      </Tabs>
 
-      <ActividadTimeline entidadTipo="oportunidad" entidadId={op.id} />
-
-      <NuevaOportunidadDialog
-        open={editOpen}
-        onOpenChange={setEditOpen}
-        oportunidad={op}
-      />
+      <NuevaOportunidadDialog open={editOpen} onOpenChange={setEditOpen} oportunidad={op} />
       <DoubleConfirmDeleteDialog
         open={delOpen}
         onOpenChange={setDelOpen}
