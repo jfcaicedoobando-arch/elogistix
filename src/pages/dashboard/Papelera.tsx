@@ -10,6 +10,7 @@ import { usePermissions } from "@/hooks/shared";
 import { useToast } from "@/hooks/use-toast";
 import { Navigate } from "react-router-dom";
 import { listTrash, restoreRecord, purgeRecord, type SoftTable as SoftTableSvc, type TrashRow as TrashRowSvc } from "@/services/admin";
+import { queryKeys } from "@/lib/query";
 
 type SoftTable = SoftTableSvc;
 type TrashRow = TrashRowSvc;
@@ -46,7 +47,7 @@ export default function Papelera() {
   const [tabla, setTabla] = useState<SoftTable>("embarques");
 
   const { data, isLoading } = useQuery({
-    queryKey: ["papelera", tabla],
+    queryKey: queryKeys.papelera(tabla),
     queryFn: () => listTrash(tabla, 200, 0),
     enabled: isAdmin,
   });
@@ -55,7 +56,7 @@ export default function Papelera() {
     mutationFn: (id: string) => restoreRecord(tabla, id),
     onSuccess: () => {
       toast({ title: "Registro restaurado" });
-      qc.invalidateQueries({ queryKey: ["papelera", tabla] });
+      qc.invalidateQueries({ queryKey: queryKeys.papelera(tabla) });
     },
     onError: (e: Error) => toast({ title: "Error al restaurar", description: e.message, variant: "destructive" }),
   });
@@ -64,7 +65,7 @@ export default function Papelera() {
     mutationFn: (id: string) => purgeRecord(tabla, id),
     onSuccess: () => {
       toast({ title: "Registro eliminado definitivamente" });
-      qc.invalidateQueries({ queryKey: ["papelera", tabla] });
+      qc.invalidateQueries({ queryKey: queryKeys.papelera(tabla) });
     },
     onError: (e: Error) => toast({ title: "Error al purgar", description: e.message, variant: "destructive" }),
   });

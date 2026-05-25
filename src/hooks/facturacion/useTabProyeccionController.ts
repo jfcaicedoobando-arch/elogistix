@@ -18,6 +18,7 @@ import {
 } from "@/lib/domain/proyeccionFacturacion";
 import { exportToCsv } from "@/generators/exportCsv";
 import { formatDate } from "@/lib/formatters";
+import { queryKeys } from "@/lib/query";
 
 type FiltroEstado = "todos" | EstadoProyeccion;
 
@@ -59,7 +60,7 @@ export function useTabProyeccionController() {
   const [filtroEstado, setFiltroEstado] = useState<FiltroEstado>("todos");
 
   const { data: filas = [], isLoading } = useQuery({
-    queryKey: ["facturacion", "proyeccion", organizationId, mesActual.key],
+    queryKey: queryKeys.facturacion.proyeccion(organizationId, mesActual.key),
     queryFn: () =>
       fetchProyeccionMes({
         organizationId: organizationId ?? null,

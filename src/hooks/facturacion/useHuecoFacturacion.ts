@@ -11,6 +11,7 @@ import {
   type HuecoFacturacionResult,
 } from "@/services/facturas/huecoFacturacion";
 import { exportToCsv } from "@/generators/exportCsv";
+import { queryKeys } from "@/lib/query";
 import {
   HUECO_CSV_HEADERS,
   buildHuecoCsvFilename,
@@ -23,7 +24,7 @@ export function useHuecoFacturacion() {
   const { organizationId } = useOrgFilter();
 
   const { data, isLoading } = useQuery({
-    queryKey: ["facturacion", "hueco", organizationId],
+    queryKey: queryKeys.facturacion.hueco(organizationId),
     queryFn: () => fetchHuecoFacturacion({ organizationId: organizationId ?? null }),
     staleTime: 60_000,
   });

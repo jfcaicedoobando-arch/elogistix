@@ -11,6 +11,7 @@ import { DataTable, defineColumns, type ColumnDef } from "@/components/shared/Da
 import { usePermissions } from "@/hooks/shared";
 import { useToast } from "@/hooks/use-toast";
 import { listIdempotencyLog, type IdempotenciaRow } from "@/services/admin";
+import { queryKeys } from "@/lib/query";
 
 type IdemRow = IdempotenciaRow;
 
@@ -50,7 +51,7 @@ export default function Idempotencia() {
   const [filtroFn, setFiltroFn] = useState<FnFilter>("todos");
 
   const { data, isLoading, isFetching, refetch } = useQuery({
-    queryKey: ["idempotencia-log"],
+    queryKey: queryKeys.idempotenciaLog,
     queryFn: () => listIdempotencyLog(200, 0),
     enabled: isAdmin,
   });
