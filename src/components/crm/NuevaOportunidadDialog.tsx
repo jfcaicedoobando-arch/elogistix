@@ -119,6 +119,8 @@ export default function NuevaOportunidadDialog({ open, onOpenChange, oportunidad
         origen: form.origen,
         destino: form.destino,
         notas: form.notas,
+        vendedor_id: form.vendedor_id,
+        vendedor_email: form.vendedor_email,
       };
       if (isEdit && oportunidad) {
         await actualizar.mutateAsync({ id: oportunidad.id, patch: payload });
