@@ -41,8 +41,12 @@ jobs:
         continue-on-error: true
         run: bun run lint:unused:strict
 
+      - name: Test hygiene (no skip/only/todo, no duplicate titles)
+        run: bun run audit:tests
+
       - name: Tests
         run: bun run test
+
 
       - name: Build
         run: bun run build
