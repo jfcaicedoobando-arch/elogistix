@@ -1,84 +1,11 @@
-# Fix: errores recurrentes en `detectar_alertas_app_logs()`
+# Ejecutar la suite de tests
 
-## Diagnóstico
-Revisé los logs de Postgres y la app **sí está registrando un error recurrente** (cada ~5 min, ejecutado por cron):
-
-```
-ERROR: column "function_name" does not exist
-QUERY: SELECT public.detectar_alertas_app_logs();
-```
-
-No hay errores en consola del cliente ni 4xx/5xx en network — solo en la base de datos.
-
-### Causa raíz
-La función `public.detectar_alertas_app_logs()` consulta columnas que **no existen** en `public.app_logs`. Los nombres reales de la tabla son distintos:
-
-| Usado en la función | Columna real en `app_logs` |
-|---|---|
-| `function_name` | `fn` |
-| `created_at` | `ts` |
-| `status` | `status_code` |
-
-Por eso la función falla en cada ejecución del cron, sin generar alertas.
-
-## Plan (1 sola migración SQL)
-
-Recrear la función con los nombres de columna correctos. Sin cambios de frontend.
-
-```sql
-CREATE OR REPLACE FUNCTION public.detectar_alertas_app_logs()
-RETURNS integer
-LANGUAGE plpgsql
-SECURITY DEFINER
-SET search_path TO 'public'
-AS $function$
-DECLARE
-  v_inserted INTEGER := 0;
-  v_row RECORD;
-  v_dedupe TEXT;
-BEGIN
-  FOR v_row IN
-    SELECT
-      fn AS function_name,
-      COUNT(*) AS errores,
-      MAX(ts) AS last_error_at
-    FROM public.app_logs
-    WHERE ts > now() - INTERVAL '5 minutes'
-      AND status_code >= 500
-    GROUP BY fn
-    HAVING COUNT(*) >= 5
-  LOOP
-    v_dedupe := 'app_logs:' || v_row.function_name || ':' ||
-                to_char(date_trunc('hour', now()), 'YYYY-MM-DD-HH24');
-
-    INSERT INTO public.alertas_sistema (severity, source, message, payload, dedupe_key)
-    VALUES (
-      CASE WHEN v_row.errores >= 20 THEN 'critical' ELSE 'error' END,
-      'app_logs',
-      format('Función %s: %s errores en los últimos 5 minutos',
-             v_row.function_name, v_row.errores),
-      jsonb_build_object(
-        'function_name', v_row.function_name,
-        'errores', v_row.errores,
-        'last_error_at', v_row.last_error_at
-      ),
-      v_dedupe
-    )
-    ON CONFLICT (dedupe_key) WHERE acknowledged_at IS NULL AND dedupe_key IS NOT NULL
-    DO NOTHING;
-
-    GET DIAGNOSTICS v_inserted = ROW_COUNT;
-  END LOOP;
-
-  RETURN v_inserted;
-END;
-$function$;
-```
-
-## Versionado
-- Bump `APP_VERSION` → `11.7.2` en `src/constants/appVersion.ts`.
-- Entrada patch en el changelog (`src/content/changelog/v8/chunks/0.ts`): "Fix cron `detectar_alertas_app_logs`: columnas `fn/ts/status_code` corregidas".
+## Pasos
+1. Verificar que existe configuración de Vitest (`vitest.config.ts`, `src/test/setup.ts`).
+2. Si falta algo del setup, instalarlo siguiendo la guía estándar (vitest + @testing-library + jsdom).
+3. Ejecutar `bunx vitest run` y reportar resultados (pass/fail, archivos cubiertos).
+4. Si hay fallos, listarlos sin modificar código todavía — esperar instrucción para arreglar.
 
 ## Fuera de alcance
-- Cambios de UI o de hooks.
-- Rediseño del sistema de alertas.
+- Escribir tests nuevos.
+- Arreglar fallos detectados (se reportan primero).
