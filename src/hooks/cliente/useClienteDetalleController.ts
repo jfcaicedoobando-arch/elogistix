@@ -18,7 +18,7 @@ import { usePermissions } from "@/hooks/shared/usePermissions";
 import { useRegistrarActividad } from "@/hooks/shared/useBitacora";
 import { diffFields, SENSITIVE_FIELDS } from "@/lib/audit/diffFields";
 import { getErrorMessage } from "@/lib/errors";
-import type { Tables, Enums, Json } from "@/integrations/supabase/types";
+import type { Tables, Enums } from "@/integrations/supabase/types";
 
 type ContactoCliente = Tables<"contactos_cliente">;
 type TipoContacto = Enums<"tipo_contacto">;
