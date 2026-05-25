@@ -101,14 +101,6 @@ export const recentChangelog: ChangelogEntry[] = [
     summary: "Dashboard CRM con widgets accionables y selector de vendedor en leads/oportunidades.",
     description: "useCrmDashboard.ts + nuevo CrmDashboard con Mis actividades de hoy, Cerrando esta semana, Leads sin contactar >7 días, Top 5 deals, Mini-embudo. VendedorSelect (admin/operador) en alta de leads/oportunidades. usePosponerActividad y useActividadesVencidasCount añadidos. canEditCrm incluye rol vendedor. APP_VERSION 11.3.0.",
   },
-  {
-    version: "11.2.1",
-    date: "2026-05-25",
-    type: "patch",
-    title: "CRM: navegación interna por tabs",
-    summary: "Sidebar muestra un solo item 'CRM'; las secciones internas (Dashboard, Leads, Oportunidades, Actividades, Forecast, Reportes) viven en tabs dentro del módulo.",
-    description: "Nuevo CrmLayout con tabs (NavLink) y rutas anidadas bajo /crm. SIDEBAR_CRM_ITEMS reducido a un único enlace. APP_VERSION 11.2.1.",
-  },
 ];
 
 /** Deduplica por version conservando la primera ocurrencia (recentChangelog gana). */
