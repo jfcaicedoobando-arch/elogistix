@@ -3,9 +3,9 @@ import { renderHook } from "@testing-library/react";
 import { useCotizacionPL } from "../useCotizacionPL";
 
 const filas = [
-  { id: "1", cantidad: 2, costo_unitario: 100, precio_venta: 150, moneda: "USD" as const, proveedor_id: "p1", concepto: "Flete" },
-  { id: "2", cantidad: 1, costo_unitario: 50, precio_venta: 80, moneda: "USD" as const, proveedor_id: "p1", concepto: "THC" },
-  { id: "3", cantidad: 3, costo_unitario: 200, precio_venta: 300, moneda: "MXN" as const, proveedor_id: "p2", concepto: "Maniobras" },
+  { concepto: "Flete", moneda: "USD" as const, proveedor: "P1", cantidad: 2, costo_unitario: 100, precio_venta: 150, unidad_medida: "und" },
+  { concepto: "THC", moneda: "USD" as const, proveedor: "P1", cantidad: 1, costo_unitario: 50, precio_venta: 80, unidad_medida: "und" },
+  { concepto: "Maniobras", moneda: "MXN" as const, proveedor: "P2", cantidad: 3, costo_unitario: 200, precio_venta: 300, unidad_medida: "und" },
 ];
 
 describe("useCotizacionPL", () => {
