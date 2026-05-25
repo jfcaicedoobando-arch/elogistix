@@ -8,6 +8,7 @@ import { useLoginAudit } from "./auth/useLoginAudit";
 import { fromDb } from "@/lib/supabase/cast";
 import { setAuthSnapshot } from "@/lib/ui/authSnapshot";
 import { syncSentryUser } from "@/lib/sentry";
+import { buildAuthSnapshot, buildSentryUserContext } from "@/lib/ui/authSnapshotBuilder";
 
 export type { CachedOrganization } from "./auth/useAuthProfile";
 
@@ -71,23 +72,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   // Snapshot global de la sesión para consumirla fuera del árbol React (errorReport).
   useEffect(() => {
-    setAuthSnapshot({
-      userId: user?.id ?? null,
-      email: user?.email ?? null,
-      organizationId: profile.organizationId ?? null,
-      organizationName: profile.organization?.nombre ?? null,
-      role: profile.role ?? null,
-      effectiveRole: effectiveRole ?? null,
-    });
-    // Sincronizar el contexto de usuario en Sentry para que los reportes
-    // de feedback y errores lleguen etiquetados por org + rol.
-    syncSentryUser({
-      userId: user?.id ?? null,
-      email: user?.email ?? null,
-      organizationId: profile.organizationId ?? null,
-      effectiveRole: effectiveRole ?? null,
-    });
-  }, [user, profile.organizationId, profile.organization, profile.role, effectiveRole]);
+    setAuthSnapshot(buildAuthSnapshot(user, profile, effectiveRole));
+    syncSentryUser(buildSentryUserContext(user, profile, effectiveRole));
+  }, [user, profile, effectiveRole]);
 
   const signOut = async () => {
     clearLoginAudit(user?.id);

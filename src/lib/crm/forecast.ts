@@ -2,6 +2,7 @@
  * Lógica pura del forecast/reportes del CRM, extraída de `useForecastReportes`
  * para poder testearla sin tocar Supabase.
  */
+import { applyDelta, classifyEtapa, makeBucket } from "./forecastBuckets";
 
 export type EtapaTipo = "abierta" | "ganada" | "perdida";
 
@@ -62,8 +63,8 @@ export function computeForecast(
     const prob = (Number(r.probabilidad ?? 0) || 0) / 100;
     const ponderado = monto * prob;
     const tipo = r.etapa_id ? etapaTipos.get(r.etapa_id) : undefined;
-    const ganada = tipo === "ganada";
-    const abierta = tipo === "abierta";
+    const { abierta, ganada } = classifyEtapa(tipo);
+    const delta = { abierta, ganada, monto, ponderado };
 
     if (abierta) {
       totalPipeline += monto;
@@ -72,21 +73,13 @@ export function computeForecast(
     if (ganada) totalGanado += monto;
 
     const mk = mesKey(r.fecha_estimada_cierre);
-    const mb = mes.get(mk) ?? {
-      key: mk, label: mesLabel(mk), pipeline: 0, ponderado: 0, ganado: 0, count: 0,
-    };
-    mb.count += 1;
-    if (abierta) { mb.pipeline += monto; mb.ponderado += ponderado; }
-    if (ganada) mb.ganado += monto;
+    const mb = mes.get(mk) ?? makeBucket(mk, mesLabel(mk));
+    applyDelta(mb, delta);
     mes.set(mk, mb);
 
     const vk = r.vendedor_email || "Sin asignar";
-    const vb = vend.get(vk) ?? {
-      key: vk, label: vk, pipeline: 0, ponderado: 0, ganado: 0, count: 0,
-    };
-    vb.count += 1;
-    if (abierta) { vb.pipeline += monto; vb.ponderado += ponderado; }
-    if (ganada) vb.ganado += monto;
+    const vb = vend.get(vk) ?? makeBucket(vk, vk);
+    applyDelta(vb, delta);
     vend.set(vk, vb);
   }
 
