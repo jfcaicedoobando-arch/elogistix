@@ -101,14 +101,6 @@ export const recentChangelog: ChangelogEntry[] = [
     summary: "Embarques, Cotizaciones, Clientes, Proveedores y Facturación ahora usan ColumnDef<T> nativo de TanStack + helpers sortByString/Number/Date con colación es-MX.",
     description: "Migración de 13 archivos del core operativo a defineColumns + ColumnDef nativo. Nuevo sortingFns.ts (null-safe, Intl.Collator es-MX). Tests ampliados con casos de colación, nulls y meta visual. Doc docs/migracion-tabla-fase2.md con equivalencias y pendientes. Adapter legacy sigue activo hasta cerrar el ticket. APP_VERSION 9.2.0.",
   },
-  {
-    version: "8.225.0",
-    date: "2026-05-19",
-    type: "minor",
-    title: "Detalle de embarque — cargar costos desde el tab vacío",
-    summary: "Cuando un embarque no tiene costos, el círculo del estado vacío en el tab Costos abre el wizard de edición en el paso de costos.",
-    description: "Los EmptyState del tab Costos ahora navegan a /embarques/:id/editar?step=3 al hacer clic en el ícono o en 'Cargar costos'. EditarEmbarque respeta el query param step. APP_VERSION 8.225.0.",
-  },
 ];
 
 /** Deduplica por version conservando la primera ocurrencia (recentChangelog gana). */
