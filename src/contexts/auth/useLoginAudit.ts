@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import type { User } from "@supabase/supabase-js";
+import { safeSessionStorage, loginLoggedKey } from "@/lib/browserStorage";
 
 /**
  * Registra la actividad de login en bitácora una sola vez por sesión por usuario,
@@ -30,17 +31,13 @@ export function useLoginAudit(
 
   useEffect(() => {
     if (lastEvent !== "SIGNED_IN" || !user || hasLoggedLogin.current) return;
-    const loginKey = `lc:login-logged:${user.id}`;
-    if (typeof sessionStorage !== "undefined" && sessionStorage.getItem(loginKey)) {
+    const key = loginLoggedKey(user.id);
+    if (safeSessionStorage.getItem(key)) {
       hasLoggedLogin.current = true;
       return;
     }
     hasLoggedLogin.current = true;
-    try {
-      sessionStorage?.setItem(loginKey, "1");
-    } catch {
-      /* noop */
-    }
+    safeSessionStorage.setItem(key, "1");
     const t = setTimeout(() => registrarLogin(user.id, user.email ?? ""), 100);
     return () => clearTimeout(t);
   }, [lastEvent, user, registrarLogin]);
@@ -48,13 +45,7 @@ export function useLoginAudit(
   const clearLoginAudit = useCallback((userId: string | undefined) => {
     hasLoggedLogin.current = false;
     if (!userId) return;
-    try {
-      if (typeof sessionStorage !== "undefined") {
-        sessionStorage.removeItem(`lc:login-logged:${userId}`);
-      }
-    } catch {
-      /* noop */
-    }
+    safeSessionStorage.removeItem(loginLoggedKey(userId));
   }, []);
 
   return { clearLoginAudit };

@@ -1,5 +1,6 @@
 import { QueryClient } from "@tanstack/react-query";
 import { createSyncStoragePersister } from "@tanstack/query-sync-storage-persister";
+import { getStorageRef, STORAGE_KEYS } from "@/lib/browserStorage";
 
 export const queryClient = new QueryClient({
   defaultOptions: {
@@ -29,8 +30,8 @@ const CATALOG_KEYS = new Set([
 ]);
 
 export const queryPersister = createSyncStoragePersister({
-  storage: typeof window !== "undefined" ? window.localStorage : undefined,
-  key: "lc-query-cache-v1",
+  storage: getStorageRef("local"),
+  key: STORAGE_KEYS.queryCache,
   throttleTime: 1000,
 });
 

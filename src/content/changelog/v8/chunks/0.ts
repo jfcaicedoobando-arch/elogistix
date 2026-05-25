@@ -2,6 +2,14 @@ import type { ChangelogEntry } from "../../../changelogData";
 
 export const chunk0: ChangelogEntry[] = [
   {
+    version: "11.29.0",
+    date: "2026-05-25",
+    type: "minor",
+    title: "Wrapper único para Browser Storage (local + session)",
+    summary: "Nuevo src/lib/browserStorage centraliza acceso a local/sessionStorage con guard SSR + try/catch + catálogo de claves. 6 consumidores migrados; 0 accesos directos restantes (excepto integrations/supabase/client.ts autogenerado).",
+    description: "Refactor estructural: src/lib/browserStorage/index.ts expone safeLocalStorage / safeSessionStorage (getItem/setItem/removeItem con guard SSR + try/catch que reporta vía console.warn sin propagar), getStorageRef('local'|'session') para librerías que requieren la instancia nativa (TanStack persister), STORAGE_KEYS con las 4 claves del proyecto (theme, superAdminActiveOrg, chunkErrorReload, queryCache) + prefix loginLoggedPrefix con helper loginLoggedKey(userId), y 3 helpers de alto nivel para el flujo chunk-error reload (hasChunkReloadBeenAttempted / markChunkReloadAttempted / clearChunkReloadFlag) consumidos por main.tsx + ErrorBoundary.tsx (antes duplicaban la constante 'chunk-error-auto-reload'). Migrados: ThemeContext, OrganizationContext, lib/queryClient (storage del persister), useLoginAudit, main.tsx, ErrorBoundary. Eliminados todos los try/catch + guards 'typeof sessionStorage' inline. Nuevo test src/lib/browserStorage/__tests__/browserStorage.test.ts cubre round-trip, QuotaExceededError sin propagación, SSR sin window, prefijo de login y helpers de chunk reload. 633/633 tests verdes (+7). APP_VERSION 11.29.0.",
+  },
+  {
     version: "11.28.0",
     date: "2026-05-25",
     type: "minor",

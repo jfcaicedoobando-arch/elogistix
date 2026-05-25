@@ -4,8 +4,10 @@ import { AlertTriangle, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { logClientError } from "@/services/observability";
-
-const CHUNK_ERROR_RELOAD_KEY = "chunk-error-auto-reload";
+import {
+  hasChunkReloadBeenAttempted,
+  markChunkReloadAttempted,
+} from "@/lib/browserStorage";
 
 const isDynamicImportError = (error: Error | null) => {
   if (!error) return false;
@@ -22,9 +24,8 @@ const isDynamicImportError = (error: Error | null) => {
 
 const tryReloadForChunkError = () => {
   if (typeof window === "undefined") return false;
-  if (window.sessionStorage.getItem(CHUNK_ERROR_RELOAD_KEY) === "1") return false;
-
-  window.sessionStorage.setItem(CHUNK_ERROR_RELOAD_KEY, "1");
+  if (hasChunkReloadBeenAttempted()) return false;
+  markChunkReloadAttempted();
   window.location.reload();
   return true;
 };

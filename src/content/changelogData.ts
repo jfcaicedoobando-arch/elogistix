@@ -22,6 +22,14 @@ export interface ChangelogEntry {
  */
 export const recentChangelog: ChangelogEntry[] = [
   {
+    version: "11.29.0",
+    date: "2026-05-25",
+    type: "minor",
+    title: "Wrapper único para Browser Storage (local + session)",
+    summary: "src/lib/browserStorage centraliza accesos a local/sessionStorage con guard SSR + try/catch + catálogo de claves. 6 consumidores migrados; 0 accesos directos en src/ (excepto integrations/supabase/client.ts autogenerado).",
+    description: "Nuevo módulo src/lib/browserStorage/index.ts: safeLocalStorage / safeSessionStorage (getItem/setItem/removeItem con guard SSR + try/catch que reporta vía console.warn sin propagar QuotaExceededError ni errores de modo privado Safari), getStorageRef('local'|'session') para librerías que requieren la instancia nativa (TanStack persister), STORAGE_KEYS catálogo tipado de las 4 claves del proyecto + prefix loginLoggedPrefix con helper loginLoggedKey(userId), y 3 helpers compartidos para el flujo chunk-error reload (hasChunkReloadBeenAttempted / markChunkReloadAttempted / clearChunkReloadFlag) consumidos por main.tsx + ErrorBoundary.tsx (antes ambos duplicaban la constante). Migrados los 6 consumidores: ThemeContext, OrganizationContext, lib/queryClient (storage del persister), useLoginAudit, main.tsx, ErrorBoundary. Test nuevo cubre round-trip, QuotaExceededError, SSR sin window, prefijo de login y helpers de chunk reload. 633/633 tests verdes (+7). APP_VERSION 11.29.0.",
+  },
+  {
     version: "11.28.0",
     date: "2026-05-25",
     type: "minor",
@@ -92,14 +100,6 @@ export const recentChangelog: ChangelogEntry[] = [
     title: "Auditoría loop 9 — complexity warnings y exhaustive-deps",
     summary: "Complexity warnings 14→3 (3 mappers planos con disable inline). 2 exhaustive-deps en Leads/Oportunidades resueltos con useMemo.",
     description: "Refactors puros sin cambio de comportamiento. Helpers extraídos: buildLeadInsertPayload, buildOportunidadInsertPayload, buildFromOportunidad/buildEmptyForNueva, isLeadDirty, extractErrorDetails + fmt* helpers, parseEmbarqueConProfitRaw + numOr0/numOrCompute/safeMargen, forecastBuckets (classifyEtapa/makeBucket/applyDelta), buildAuthSnapshot/buildSentryUserContext, useSentryInfo + maskDsn, useCrmInicioVM. useMemo en data?.data de Leads y Oportunidades para estabilizar deps. Barrel nuevo hooks/sentry. APP_VERSION 11.21.0.",
-  },
-  {
-    version: "11.20.0",
-    date: "2026-05-25",
-    type: "minor",
-    title: "Auditoría loop 8 — barrel violations (0) y complejidad ciclomática",
-    summary: "no-restricted-imports: 53→0. Barrel hooks/crm/index.ts. Complejidad reducida: OportunidadDetalle (33→<15), CrmDashboard (27→<15), useAutomatizacionesEtapa (26→<15), useConvertirLead (27→<15).",
-    description: "P0.1 cerrado: creado src/hooks/crm/index.ts y reemplazados 53 imports a archivos internos por imports al barrel del dominio (53→0). P0.3 (mappers) actualizado: los archivos originalmente reportados ya estaban bajo 200 LOC; el verdadero hot spot eran 4 funciones con complejidad >25. Refactor: OportunidadDetalle.tsx dividido en guard + OportunidadDetalleContent + OportunidadKpisCards + DatosComercialesCard + ContactoRapidoCard + useOportunidadDetalleActions. CrmDashboard.tsx → VencidasAlert + ActividadesHoyCard + CerrandoSemanaCard + LeadsSinContactarCard + TopDealsCard. useAutomatizacionesEtapa.ts → automatizacionesEtapaActions (notifyVendedorMovido, crearTareaGanada, cancelarActividadesPerdida, crearTareaSeguimiento). useConvertirLead.ts → convertirHelpers (resolveClienteForConversion, fetchPrimeraEtapaAbierta). 626 tests verdes. APP_VERSION 11.20.0.",
   },
 ];
 

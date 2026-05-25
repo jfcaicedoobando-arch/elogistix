@@ -2,6 +2,7 @@ import { createContext, useContext, useEffect, useState, ReactNode, useCallback,
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { fromDb } from "@/lib/supabase/cast";
+import { safeLocalStorage, STORAGE_KEYS } from "@/lib/browserStorage";
 
 export interface Organization {
   id: string;
@@ -54,7 +55,7 @@ export function OrganizationProvider({ children }: { children: ReactNode }) {
       if (cancelled) return;
       const orgList = fromDb<Organization[]>(orgs ?? []);
       setSuperAdminOrgs(orgList);
-      const stored = localStorage.getItem("sa_active_org");
+      const stored = safeLocalStorage.getItem(STORAGE_KEYS.superAdminActiveOrg);
       const activeId = stored && orgList.find(o => o.id === stored)
         ? stored
         : orgList[0]?.id ?? null;
@@ -67,7 +68,7 @@ export function OrganizationProvider({ children }: { children: ReactNode }) {
   const setActiveOrganization = useCallback((id: string) => {
     if (isSuperAdmin) {
       setSuperAdminActiveId(id);
-      localStorage.setItem("sa_active_org", id);
+      safeLocalStorage.setItem(STORAGE_KEYS.superAdminActiveOrg, id);
     }
   }, [isSuperAdmin]);
 

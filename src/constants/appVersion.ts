@@ -2,4 +2,4 @@
  * Versión actual de la app — string literal para evitar arrastrar el bundle
  * completo del changelog (chunk0, ~66 KB) en el shell autenticado.
  */
-export const APP_VERSION = "11.28.0";
+export const APP_VERSION = "11.29.0";
