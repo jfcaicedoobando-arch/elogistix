@@ -46,22 +46,56 @@ const actionColumn: ColumnDef<CrmActividadRow, unknown> = {
 
 export default function Actividades() {
   const { canEditCrm } = usePermissions();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const filtroParam = searchParams.get("filtro");
+  const vencidasOnly = filtroParam === "vencidas";
+
   const [search, setSearch] = useState("");
   const [tipo, setTipo] = useState<CrmActividadTipo | "todos">("todos");
-  const [estado, setEstado] = useState<"pendientes" | "completadas" | "todas">("pendientes");
-  const [responsable, setResponsable] = useState<"mias" | "todos">("todos");
+  const [estado, setEstado] = useState<"pendientes" | "completadas" | "todas">(vencidasOnly ? "pendientes" : "pendientes");
+  const [responsable, setResponsable] = useState<"mias" | "todos">(vencidasOnly ? "mias" : "todos");
   const [page, setPage] = useState(0);
   const [pageSize, setPageSize] = useState(25);
   const debounced = useDebounce(search, 300);
 
+  // Cuando llega ?filtro=vencidas, forzar estado/responsable acordes.
+  useEffect(() => {
+    if (vencidasOnly) {
+      setEstado("pendientes");
+      setResponsable("mias");
+      setPage(0);
+    }
+  }, [vencidasOnly]);
+
   const { data, isLoading } = useActividades({ search: debounced, tipo, estado, responsable, page, pageSize });
-  const items = data?.data ?? [];
+  const itemsRaw = data?.data ?? [];
+  const now = Date.now();
+  const items = vencidasOnly
+    ? itemsRaw.filter((a) => a.fecha_programada && new Date(a.fecha_programada).getTime() < now)
+    : itemsRaw;
   const totalPages = Math.ceil((data?.count ?? 0) / pageSize);
   const columns = canEditCrm ? [...baseColumns, actionColumn] : baseColumns;
 
+  const limpiarFiltro = () => {
+    const next = new URLSearchParams(searchParams);
+    next.delete("filtro");
+    setSearchParams(next);
+  };
+
   return (
     <div className="space-y-6 p-6">
-      <PageHeader icon={<Activity className="h-6 w-6 text-primary" />} title="Actividades" description={`${data?.count ?? 0} actividades`} />
+      <PageHeader
+        icon={<Activity className="h-6 w-6 text-primary" />}
+        title="Actividades"
+        description={`${data?.count ?? 0} actividades`}
+        actions={
+          vencidasOnly ? (
+            <Button variant="outline" size="sm" onClick={limpiarFiltro}>
+              <X className="h-3 w-3 mr-1" /> Filtro: Vencidas
+            </Button>
+          ) : undefined
+        }
+      />
       <Card>
         <CardContent className="p-4 flex flex-col md:flex-row gap-3">
           <SearchInput value={search} onChange={setSearch} placeholder="Buscar por asunto..." />
