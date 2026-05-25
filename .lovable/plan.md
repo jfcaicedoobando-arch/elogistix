@@ -1,107 +1,92 @@
-# Centralizar Query Keys en `lib/query`
+# Eliminar los `eslint-disable` restantes (causa raíz)
 
-## Objetivo
+## Inventario
 
-Eliminar los **94 literales `queryKey: ["..."]`** y **16 spreads** dispersos en el código, moviéndolos al factory central `src/lib/query/index.ts`. Resultado esperado: **0 strings hardcodeados de queryKey fuera de `lib/query`**, e invalidaciones consistentes via factories.
+Auditoría: **30 directivas reales** en `src/**` + 1 doble entrada en `useEditarEmbarqueWizard` (las menciones en `changelogData.ts` y `chunks/0.ts` son strings de historial, no se cuentan). Distribución por regla:
 
-## Diagnóstico
+| Regla | # | Archivos |
+|---|---|---|
+| `react-hooks/exhaustive-deps` | 14 | AuthContext, EditarEmbarque, useListPageState, useEmbarqueEstadoActions, useEditarEmbarqueWizard (×4), usePortalEmbarquesController, useAuditoriaSnapshots, useCotizacionWizardSteps, DialogBolContainers, VirtualDataTable |
+| `complexity` | 5 | SentryDiagnostico, oportunidadPayload, leadPayload, VirtualDataTable |
+| `@typescript-eslint/no-explicit-any` | 4 | appFeedback, useNuevoEmbarqueExpediente, exportListado, embarqueRoundtrip.test |
+| `no-restricted-imports` | 3 | EmbarquesRelacionadosCard, DimensionesLCLTable, DimensionesAereasTable |
+| `no-console` | 3 | DataTable.perf.test |
+| `react-refresh/only-export-components` | 1 | DataTable.tsx |
+| `no-control-regex` | 1 | storageUtils.test |
 
-- `src/lib/query/index.ts` ya existe con ~22 dominios cubiertos (embarques, clientes, facturas, etc.).
-- Literales restantes (44 archivos, 110 ocurrencias):
-  - **CRM** (~50): `["crm", "actividades", ...]`, `["crm", "leads", ...]`, `["crm", "oportunidades", ...]`, dashboard, lineage, comentarios, plantillas, notificaciones, motivos, forecast, leaderboard, cliente-360, etapas, reportes.
-  - **Auditoría** (~5): `["auditoria", "revisiones" | "snapshots" | "asignables" | "embarques"]`.
-  - **Admin/Logs** (~4): `["app_logs", ...]`, `["app_logs_health_summary"|"timeline"]`.
-  - **Facturación** (~2): `["facturacion", "hueco" | "proyeccion"]`.
-  - **Misc** (~4): `["idempotencia-log"]`, `["papelera", tabla]`, `["pdf-preview-cotizacion", id]`, `["tracking-public", token]`, `["tracking_externo", "jsoncargo", ...]` (este último ya tiene factory `queryKeys.jsonCargo` pero no se usa).
-- 16 spreads `[...queryKeys.X, ...]` ya consumen factories; se pueden promover a métodos para evitar el spread inline.
-- Hay **157 llamadas a `invalidateQueries`** que pueden beneficiarse del prefijo correcto (usar `queryKeys.crm.actividades.all` invalida todo el subárbol).
+Objetivo: dejar **0 disables inline** salvo los justificados por reglas estructurales (que pasan a `eslint.config.js` con override por carpeta o a allowlists).
 
-## Estrategia
+## Estrategia por categoría
 
-Para mantener PRs revisables y tests verdes en cada paso, dividir por dominio. Cada paso = un commit/loop.
+### A. `exhaustive-deps` (14 ocurrencias)
 
-### Estructura propuesta de factories nuevos
+Causa raíz casi siempre: **inicialización idempotente** (`if (initialized) return; ...; setInitialized(true)`) o **sync de URL/prop a estado** donde la setter o el callback son estables.
 
-Agregar al `queryKeys` central, agrupados por dominio:
+Fixes por caso (cada uno root-cause, sin volver a disable):
 
-```ts
-crm: {
-  all: ['crm'] as const,
-  actividades: {
-    all: ['crm','actividades'] as const,
-    list: (filters) => ['crm','actividades', filters] as const,
-    vencidasCount: (uid?: string) => ['crm','actividades','vencidas-count', uid] as const,
-    vencidasList: (uid?: string, limit?: number) => [...],
-  },
-  leads: {
-    all: ['crm','leads'] as const,
-    list: (filters) => ['crm','leads', filters] as const,
-    detail: (id: string) => ['crm','leads','detail', id] as const,
-  },
-  oportunidades: { all, list, detail, cotizaciones(opId) },
-  dashboard: (uid?) => ['crm','dashboard', uid] as const,
-  comentarios: (opId, limit?) => [...],
-  lineage: { lead, opCots, opEmbs, opLead },
-  plantillas: (canal?, soloActivas?) => [...],
-  notificaciones: { all, unreadCount(uid), list(uid, limit) },
-  motivos: (soloActivos?) => [...],
-  forecast: (desde, hasta) => [...],
-  leaderboard: ['crm','leaderboard-vendedores'] as const,
-  cliente360: (clienteId) => [...],
-  etapas: { all, todas },
-  reportes: ['crm','reportes'] as const,
-  proximasActividades: (entidadTipo, ids) => [...],
-  kpis: ['crm','kpis'] as const,
-},
-auditoria: {
-  all: ['auditoria'] as const,
-  revisiones: ['auditoria','revisiones'] as const,
-  embarques: ['auditoria','embarques'] as const,
-  snapshots: (dias?) => ['auditoria','snapshots', ...(dias ? [dias] : [])] as const,
-  asignables: (orgId) => ['auditoria','asignables', orgId] as const,
-},
-appLogs: {
-  all: ['app_logs'] as const,
-  list: (filters) => ['app_logs', filters] as const,
-  fnList: ['app_logs','fn_list'] as const,
-  healthSummary: (hours) => ['app_logs_health_summary', hours] as const,
-  healthTimeline: (hours, buckets) => ['app_logs_health_timeline', hours, buckets] as const,
-},
-facturacion: {
-  hueco: (orgId) => ['facturacion','hueco', orgId] as const,
-  proyeccion: (orgId, mesKey) => ['facturacion','proyeccion', orgId, mesKey] as const,
-},
-papelera: (tabla) => ['papelera', tabla] as const,
-idempotenciaLog: ['idempotencia-log'] as const,
-pdfPreviewCotizacion: (id) => ['pdf-preview-cotizacion', id] as const,
-trackingPublico: (token) => ['tracking-public', token] as const,
-```
+1. **`useEditarEmbarqueWizard.ts` (×4)** — patrón "init-once-per-id". Reescribir con `useRef<string|null>(null)` que guarda el `embarque.id` ya inicializado; el efecto compara `ref.current === embarque.id`. Las deps quedan en `[embarque, conceptosVentaDb, conceptosCostoDb, contactos, selectedCliente, inicializarVenta, inicializarCosto, methods]` honestas. Los inicializadores se obtienen de un `useStableCallbacks` (memoizados con `useCallback` en el origen — verificar `useConceptosForm`).
+2. **`useEmbarqueEstadoActions.ts`** — deps actuales `[embarque?.id, embarque?.etd, embarque?.eta]` omiten `embarque.modo/tipo/estado` y `syncEstado`. Solución: capturar las 5 primitivas (`modo`, `tipo`, `etd`, `eta`, `estado`, `id`) como deps y agregar `syncEstado` (es estable porque `useMutation` devuelve la misma identidad por render).
+3. **`useAuditoriaSnapshots.ts`** — `capturar` viene de `useCapturarSnapshotAuditoria()`. Igual que arriba: `mutate` es estable, agregarlo a deps; o usar `capturar.mutate` directamente (estable entre renders de un mismo mount).
+4. **`usePortalEmbarquesController.ts`** — al sincronizar `searchParams` se omite `filtroEstado`. Usar el valor leído (`searchParams.get('estado')`) y comparar contra el estado vía la forma funcional de `setFiltroEstadoState((prev) => …)`. Elimina la dep faltante.
+5. **`useListPageState.ts`** — el `useMemo([], …)` construye un mapa derivado de `defaultFilters`. Reemplazar por `useMemo(() => buildFilterParsers(defaultFilters), [JSON.stringify(Object.keys(defaultFilters).sort())])` o (mejor) extraer la construcción fuera del componente y memoizar por referencia de `defaultFilters` con `useRef` capturando la referencia inicial — eso satisface la regla.
+6. **`EditarEmbarque.tsx`** — agregar `setCurrentStep` a deps (es estable de `useState`).
+7. **`DialogBolContainers.tsx`** — añadir `ctrl.reset` a deps (extraer `const { reset } = ctrl` arriba para tener referencia estable; `reset` ya viene memoizado del hook controller).
+8. **`useCotizacionWizardSteps.ts`** — convertir `handleSiguiente` en un `switch` que llame helpers ya memoizados con `useCallback`. Las deps reales son sólo `currentStep`, `handlePaso1`, `handlePaso2`, `handlePaso3`; envolver los `handlePasoN` en `useCallback` y reducir la lista.
+9. **`VirtualDataTable.tsx`** (deps `[leafColumns.length, leafColumns.map(...).join('|')]`) — extraer ambas expresiones a `const` arriba del `useMemo` (`const widthsKey = leafColumns.map(...).join('|')`) y declarar `[widthsKey]` como dep. Satisface la regla con la misma semántica.
+10. **`AuthContext.tsx`** — el comentario dice "signOut es estable". Si `signOut` viene de `useCallback`, basta con incluirlo en deps (no cuesta nada). Si no, envolver con `useCallback([])`.
 
-También promover los 16 spreads a métodos del factory existente (ej. `queryKeys.embarques.full(id)`, `queryKeys.dashboard.statsSummary`, `queryKeys.clientes.selectByOrg(orgId)`, etc.) para eliminar `[...queryKeys.X, ...]` inline.
+### B. `complexity` (5)
 
-## Pasos (ordenados, un loop cada uno)
+11. **`oportunidadPayload.ts` y `leadPayload.ts`** — son mappers con ~10 `??` planos. Extraer `applyDefaults(input, defaults)` puro (1 línea reduce-fold) y eliminar el branching aparente. La complejidad cae <5 sin cambiar comportamiento. +tests unitarios mínimos.
+12. **`SentryDiagnostico.tsx`** — partir JSX en `<SdkStatusCard />`, `<AuthContextCard />`, `<TestActionsCard />` (3 subcomponentes en `pages/dashboard/sentry/`). El render principal queda lineal (<15).
+13. **`VirtualDataTable.tsx`** (la complejidad del cuerpo de la función) — extraer `withDefaults(props)` puro que devuelve el objeto desestructurado completo (1 sola sentencia). El componente queda con setup limpio.
 
-1. **Extender factory en `lib/query/index.ts`** con los nuevos dominios listados arriba (sin tocar consumidores aún). Añadir comentarios JSDoc breves. **Verificación:** `tsc --noEmit` verde.
-2. **Migrar CRM** (~22 archivos en `hooks/crm/`). Reemplazar literales por `queryKeys.crm.*`. Ajustar `invalidateQueries` para usar el prefijo más amplio cuando aplique. **Verificación:** `vitest run hooks/crm` + smoke CRM.
-3. **Migrar Auditoría** (`hooks/auditoria/*`). Mismo patrón.
-4. **Migrar Admin/Logs** (`hooks/admin/useAppLogs*`, `useAlertasSistema`, `useOrgMembers*`).
-5. **Migrar Facturación + misc** (`useHuecoFacturacion`, `useTabProyeccionController`, `Papelera.tsx`, `Idempotencia.tsx`, `PdfPreviewCotizacion.tsx`, `TrackingPublico.tsx`, `useJsonCargoTracking.ts`).
-6. **Promover los 16 spreads** a métodos del factory (embarques.full, dashboard.statsSummary, etc.) y reemplazar usos.
-7. **Guardrail ESLint:** añadir regla `no-restricted-syntax` que prohíba `Literal[value=/^queryKey$/]` con array literal hijo fuera de `src/lib/query/**`. Permite detectar regresiones en CI.
-8. **Verificación final + changelog:**
-   - `rg "queryKey:\s*\[\"" src` → 0 resultados fuera de `lib/query`.
-   - `bunx vitest run` (626 verdes).
-   - `bunx tsc --noEmit` + `bunx eslint src` sin errores.
-   - Bump `APP_VERSION` minor (12.0.0) y entrada en `Changelog.tsx` + `changelogData.ts` + chunk activo (respetando límite de 10 entradas).
+### C. `no-explicit-any` (4)
+
+14. **`lib/ui/appFeedback.ts`** — `AnyToastFn = (props: any) => unknown`. Causa raíz: aceptar dos firmas (shadcn `useToast` y sonner). Tipar como `type AnyToastFn = (props: { title?: string; description?: string; variant?: string; [k: string]: unknown }) => unknown`. Ya no es `any`.
+15. **`hooks/embarque/useNuevoEmbarqueExpediente.ts`** — `methods: UseFormReturn<any>`. Restringir a la única forma usada: `UseFormReturn<{ blMaster: string }>` (`setValue('blMaster', …)`). Los call sites pasan `methods` cuyo form schema incluye `blMaster` — compatible.
+16. **`services/embarque/queries/exportListado.ts`** — `applyFilters: (q: any) => any`. Tipar con `PostgrestFilterBuilder` de `@supabase/postgrest-js` parametrizado por el row schema (`Database['public']['Tables']['embarques']['Row']`). Patrón que ya usamos en `services/embarque/queries/listado.ts`.
+17. **`lib/mappers/__tests__/embarqueRoundtrip.test.ts`** — cast de `any` para spying. Cambiar a `as unknown as Partial<EmbarqueDb>` o tipar el objeto de fixture explícitamente.
+
+### D. `no-restricted-imports` (3)
+
+18. **`DimensionesLCLTable.tsx` + `DimensionesAereasTable.tsx`** — tablas estáticas read-only. Mover ambas a la **allowlist** del bloque "Allowlist de tablas" en `eslint.config.js`. Elimina 2 disables inline; queda 1 punto central documentado.
+19. **`EmbarquesRelacionadosCard.tsx`** — usa `TableRow/TableCell` para render row custom. Refactor real: el sub-array de relacionados se renderiza ya con `DataTable` arriba; el `TableRow` adicional es para una fila "ver detalle". Reemplazar por un `<button>` flex en celda `cell:` de la `defineColumns`, eliminando los imports primitivos. Si la refactor toca diseño, alternativa intermedia: añadirlo a la allowlist como las dos anteriores.
+
+### E. `no-console` (3) y `no-control-regex` (1) — sólo tests
+
+20. Añadir bloque en `eslint.config.js` para `**/*.test.{ts,tsx}` con:
+    ```js
+    "no-console": "off",
+    "no-control-regex": "off",
+    ```
+    Justificación: los logs de perf y los regex de control son patrones legítimos sólo en tests. Elimina 4 disables inline con 1 override.
+
+### F. `react-refresh/only-export-components` (1)
+
+21. **`src/components/shared/DataTable.tsx`** — re-exporta `defineColumns` y tipos junto al componente. Fix root-cause: dejar el componente *solo* en `DataTable.tsx`, y crear `src/components/shared/dataTable/index.ts` (barrel sin JSX) con los re-exports (`DataTable`, `defineColumns`, tipos). Codemod (~80 archivos) cambia `from "@/components/shared/DataTable"` → `from "@/components/shared/dataTable"` (mismo nombre, otra cápsula). Sin disable.
+
+## Pasos ordenados (un loop cada uno)
+
+1. **Tests overrides en eslint.config.js** (paso E) — 1 archivo de config, elimina 4 disables. Trivial, gran ROI.
+2. **Allowlist `DimensionesLCLTable/AereasTable`** (paso D parcial) — 1 archivo de config + 2 archivos editados, elimina 2 disables.
+3. **`AuthContext.tsx` + `EditarEmbarque.tsx` + `DialogBolContainers.tsx`** (paso A simples) — 3 disables eliminados con cambios mínimos en deps.
+4. **`useAuditoriaSnapshots`, `useEmbarqueEstadoActions`, `usePortalEmbarquesController`** (paso A medios) — 3 disables, root-cause via deps honestas o forma funcional.
+5. **`useEditarEmbarqueWizard.ts` ×4 + `useListPageState` + `useCotizacionWizardSteps` + `VirtualDataTable` exhaustive-deps** (paso A complejos) — 7 disables, refactor a `useRef` por id o extracción de key.
+6. **`no-explicit-any` (×4)** — tipados estrictos en `appFeedback`, `useNuevoEmbarqueExpediente`, `exportListado`, `embarqueRoundtrip.test`.
+7. **`complexity` (×5)** — extracción de `applyDefaults`, split de `SentryDiagnostico` y `withDefaults` en `VirtualDataTable`. +tests.
+8. **`EmbarquesRelacionadosCard.tsx`** — eliminar `TableRow/TableCell` primitivos refactorizando a celda `cell:` o fallback a allowlist documentada.
+9. **`react-refresh` en `DataTable.tsx`** — crear barrel `components/shared/dataTable/index.ts`, codemod ~80 imports, eliminar `DataTable.tsx` re-exports. Verificar build y HMR.
+10. **Verificación final + changelog** — `bunx eslint src --max-warnings=0`, `bunx vitest run`, `bunx tsc --noEmit`. Confirmar `rg "eslint-disable" src` devuelve sólo menciones en strings del changelog. Bump `APP_VERSION` a 11.26.0 y entrada en `Changelog.tsx`/`changelogData.ts`/chunk activo (respetando límite 10).
+
+## Riesgos y mitigaciones
+
+- **Cambios de deps en `useEffect`/`useMemo` pueden disparar bucles**: validar manualmente cada caso corriendo el flujo (editar embarque, snapshot auditoría, portal). Tests + smoke en preview.
+- **Codemod del DataTable barrel (paso 9)** es el más invasivo; aislarlo en el último paso para no contaminar PRs anteriores. Si rompe HMR/preload se revierte sólo ese loop.
+- **Cambios de tipo en `exportListado`** pueden cascadear: trabajar dentro del archivo y mantener API pública intacta.
 
 ## Fuera de alcance
 
-- Refactor de la lógica de fetch dentro de los hooks.
-- Cambios de tipo `Result<T,E>` (paso P3 del plan general).
-- Tocar `src/integrations/supabase/types.ts` o `components/ui/*`.
-
-## Riesgos
-
-- **Invalidaciones que dependían del shape exacto del array.** Mitigación: revisar cada `invalidateQueries` migrado y mantener el mismo prefijo; los tests existentes cubren los flujos principales.
-- **Spreads con argumentos opcionales (`undefined`).** React Query distingue keys con `undefined` vs sin el elemento; preservar comportamiento exacto en factories.
-- **Volumen (44 archivos).** Mitigado dividiendo por dominio en 5 loops independientes.
+- Refactor funcional de hooks (sólo se tocan deps/extracciones puras).
+- Reemplazo del sistema de toasts.
+- Migración completa de tablas estáticas a `<DataTable />` (sólo las dos `Dimensiones*` quedan documentadas en allowlist).

@@ -22,6 +22,14 @@ export interface ChangelogEntry {
  */
 export const recentChangelog: ChangelogEntry[] = [
   {
+    version: "11.26.0",
+    date: "2026-05-25",
+    type: "minor",
+    title: "Eliminación de eslint-disable (parte 1/2): 11 directivas removidas",
+    summary: "Tests (no-console, no-control-regex) movidos a override de config; Dimensiones*/EmbarquesRelacionadosCard a allowlist; exhaustive-deps corregidos en AuthContext, EditarEmbarque, DialogBolContainers, useAuditoriaSnapshots, useEmbarqueEstadoActions, usePortalEmbarquesController.",
+    description: "Primera tanda del plan de limpieza de eslint-disable (30→19). (1) eslint.config.js: nuevo override para **/*.test.{ts,tsx} con no-console y no-control-regex en off (justifica perf logs + tests de sanitización). Allowlist de tablas extendida con DimensionesLCLTable, DimensionesAereasTable y EmbarquesRelacionadosCard. (2) Causa raíz aplicada en deps: AuthContext.signOut envuelto en useCallback estable; EditarEmbarque incluye setCurrentStep en deps; useDialogBolContainers memoiza reset con useCallback y DialogBolContainers lo declara dep; useAuditoriaSnapshots desestructura mutate (estable); useEmbarqueEstadoActions captura las 6 primitivas de embarque + syncEstado.mutate; usePortalEmbarquesController usa setState funcional para evitar dep faltante. Pendiente loop 2: useEditarEmbarqueWizard×4, useListPageState, useCotizacionWizardSteps, VirtualDataTable, no-explicit-any×4, complexity×5, DataTable.tsx barrel. 626 tests verdes. APP_VERSION 11.26.0.",
+  },
+  {
     version: "11.25.0",
     date: "2026-05-25",
     type: "minor",
@@ -92,14 +100,6 @@ export const recentChangelog: ChangelogEntry[] = [
     title: "Auditoría loop 4 — componentes >200 LOC",
     summary: "LeadDetalle (296→150), NuevaOportunidadDialog (287→132), DiagnosticoHealthPanel (258→96).",
     description: "Power of 10: componentes >200. LeadDetalle.tsx → useLeadEditForm + LeadDatosCard + LeadHeaderActions. NuevaOportunidadDialog.tsx → useOportunidadForm + OportunidadFormFields. DiagnosticoHealthPanel.tsx → HealthKpisRow/HealthTimelineChart/HealthTopErrorsChart/HealthSlowestTable. Sin cambios funcionales. 91 archivos / 626 tests verdes. APP_VERSION 11.16.0.",
-  },
-  {
-    version: "11.15.0",
-    date: "2026-05-25",
-    type: "minor",
-    title: "Auditoría loop 3 — hooks JSONCargo, dashboard CRM y tracking live <200 LOC",
-    summary: "useJsonCargoTracking (250→110), useCrmDashboard (213→170), useTrackingLiveCard (209→100). Lógica pura extraída + 17 tests nuevos.",
-    description: "Power of 10: useJsonCargoTracking (250) → 110 con extractSummary y PrefixMismatchError en lib/jsoncargo/summary.ts; buildFechasUpdate/shouldAvanzarArribo/registrarEventoArribo en services/embarque/jsoncargoFechas.ts. useCrmDashboard (213→170) con computePipelinePonderado/computeTopDeals/computeEmbudo en lib/crm/dashboardAggregates.ts. useTrackingLiveCard (209→100) con jsoncargoDateToYmd/computeFechasPropuestas/derivePrefixState/buildApplyFechasArgs/handleSyncResult/handleSyncError en lib/jsoncargo/trackingLiveHelpers.ts. Re-exports preservan API pública en los 3 hooks. 3 archivos de tests nuevos (17 casos). Suite verde. APP_VERSION 11.15.0.",
   },
 ];
 

@@ -95,7 +95,6 @@ describe("buildEmbarqueDocPath", () => {
 
   it("no contiene caracteres no-ASCII en el resultado", () => {
     const path = buildEmbarqueDocPath("提单", "中文", "文件.pdf");
-    // eslint-disable-next-line no-control-regex
     expect(/[^\x00-\x7F]/.test(path)).toBe(false);
   });
 });

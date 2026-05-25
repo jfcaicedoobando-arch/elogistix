@@ -46,8 +46,7 @@ export function usePortalEmbarquesController() {
   // Si llega un nuevo deep-link mientras la página está montada, sincroniza.
   useEffect(() => {
     const fromUrl = searchParams.get("estado") || "todos";
-    if (fromUrl !== filtroEstado) setFiltroEstadoState(fromUrl);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    setFiltroEstadoState((prev) => (prev === fromUrl ? prev : fromUrl));
   }, [searchParams]);
 
   const { estados, modos } = useMemo(() => {

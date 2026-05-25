@@ -31,9 +31,7 @@ export default function EditarEmbarque() {
     const raw = searchParams.get("step");
     const n = raw ? Number(raw) : NaN;
     if (Number.isInteger(n) && n >= 1 && n <= 3) setCurrentStep(n);
-    // Solo al montar / cambiar el query param.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [searchParams]);
+  }, [searchParams, setCurrentStep]);
   useRegisterBreadcrumbLabel(id, embarque?.expediente);
 
   const {

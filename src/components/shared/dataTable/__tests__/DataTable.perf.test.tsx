@@ -86,7 +86,6 @@ function measureMedian(
   const min = samples[0];
   const max = samples[runs - 1];
 
-  // eslint-disable-next-line no-console
   console.log(
     `[perf] ${label}: median=${median.toFixed(1)}ms min=${min.toFixed(1)} max=${max.toFixed(1)} (n=${runs})`,
   );
@@ -126,7 +125,6 @@ describe("Perf — DataTable (paginado, ~50 filas por vista)", () => {
     }
     rerenderSamples.sort((a, b) => a - b);
     const medianRerender = rerenderSamples[2];
-    // eslint-disable-next-line no-console
     console.log(`[perf] DataTable rerender same-data: median=${medianRerender.toFixed(1)}ms`);
 
     // Lo importante: rerender ≤ 50% del mount. Si TanStack pierde memoización,
@@ -239,7 +237,6 @@ describe("Perf — VirtualDataTable (datasets grandes, escalado lineal)", () => 
     }
     rerenderSamples.sort((a, b) => a - b);
     const medianRerender = rerenderSamples[2];
-    // eslint-disable-next-line no-console
     console.log(`[perf] VirtualDataTable rerender 5k same-data: median=${medianRerender.toFixed(1)}ms`);
 
     // ≤40% del mount: si memo se rompe, el rerender se acerca al mount.

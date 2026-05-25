@@ -77,6 +77,15 @@ export default tseslint.config(
     },
   },
   {
+    // Tests-only: console.log para perf benchmarks y regex de control para
+    // validar sanitización de paths son patrones legítimos en specs.
+    files: ["**/*.test.ts", "**/*.test.tsx"],
+    rules: {
+      "no-console": "off",
+      "no-control-regex": "off",
+    },
+  },
+  {
     // Contexts y barrels: re-exportan helpers/hooks junto al Provider.
     // El componente raíz de cada contexto rara vez se edita; el warning
     // de Fast Refresh es ruido para esta convención del proyecto.
@@ -106,6 +115,11 @@ export default tseslint.config(
       "src/components/cotizacion/TablaConceptosGenerico.tsx",
       "src/components/cotizacion/TablaCostosDetalle.tsx",
       "src/components/embarque/DialogDuplicarEmbarque.tsx",
+      // Sub-tablas read-only estáticas (sin sort/paginación) — no requieren DataTable:
+      "src/components/cotizacion/seccionMercancia/DimensionesLCLTable.tsx",
+      "src/components/cotizacion/seccionMercancia/DimensionesAereasTable.tsx",
+      // Render row custom para fila "ver detalle" debajo del DataTable principal:
+      "src/components/embarque/tabResumen/EmbarquesRelacionadosCard.tsx",
     ],
     rules: {
       "no-restricted-imports": "off",

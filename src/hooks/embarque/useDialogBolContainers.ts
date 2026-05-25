@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { useQueryClient } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/query";
@@ -27,10 +27,10 @@ export function useDialogBolContainers({ embarqueId, naviera, contenedorActual, 
   const [selected, setSelected] = useState<string | null>(contenedorActual ?? null);
   const [saving, setSaving] = useState(false);
 
-  const reset = () => {
+  const reset = useCallback(() => {
     setResult(null);
     setSelected(contenedorActual ?? null);
-  };
+  }, [contenedorActual]);
 
   const handleBuscar = async () => {
     try {

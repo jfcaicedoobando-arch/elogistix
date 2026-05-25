@@ -37,13 +37,13 @@ export function useCapturarSnapshotAuditoria() {
  */
 export function useAutoCapturarSnapshot(enabled: boolean) {
   const capturar = useCapturarSnapshotAuditoria();
+  const { mutate } = capturar;
   useEffect(() => {
     if (!enabled) return;
-    capturar.mutate(undefined, {
+    mutate(undefined, {
       onError: (err) => {
         logger.warn("[useAutoCapturarSnapshot] no se pudo capturar:", err);
       },
     });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [enabled]);
+  }, [enabled, mutate]);
 }

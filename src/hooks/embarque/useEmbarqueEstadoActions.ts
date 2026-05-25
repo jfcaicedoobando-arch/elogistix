@@ -29,17 +29,22 @@ export function useEmbarqueEstadoActions(embarque: EmbarqueRow | undefined, id: 
   const avanzarEstado = useAvanzarEstadoEmbarque();
   const syncEstado = useSyncEstadoEmbarque();
 
-  // Auto-sync estado calculado a BD
+  // Auto-sync estado calculado a BD. Sólo recalcula si cambian inputs reales.
+  const embarqueId = embarque?.id;
+  const modo = embarque?.modo;
+  const tipo = embarque?.tipo;
+  const etd = embarque?.etd;
+  const eta = embarque?.eta;
+  const estado = embarque?.estado;
+  const { mutate: syncEstadoMutate } = syncEstado;
   useEffect(() => {
-    if (!embarque) return;
-    const estadoCalculado = calcularEstadoEmbarque(
-      embarque.modo, embarque.tipo, embarque.etd, embarque.eta, embarque.estado,
-    );
-    if (estadoCalculado !== embarque.estado) {
-      syncEstado.mutate({ embarqueId: embarque.id, nuevoEstado: estadoCalculado });
+    if (!embarqueId || !modo || !estado) return;
+    if (!tipo) return;
+    const estadoCalculado = calcularEstadoEmbarque(modo, tipo, etd ?? null, eta ?? null, estado);
+    if (estadoCalculado !== estado) {
+      syncEstadoMutate({ embarqueId, nuevoEstado: estadoCalculado });
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [embarque?.id, embarque?.etd, embarque?.eta]);
+  }, [embarqueId, modo, tipo, etd, eta, estado, syncEstadoMutate]);
 
   const handleAvanzarEstado = async () => {
     if (!embarque || !id) return;
