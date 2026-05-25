@@ -13,7 +13,9 @@ import {
 } from "@dnd-kit/core";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { fmtMxn } from "@/lib/formatters";
+import { formatCurrencyCompact } from "@/lib/formatters";
+
+const fmtMxn = (n: number) => formatCurrencyCompact(n, "MXN");
 import type { CrmOportunidadRow } from "@/hooks/crm/useOportunidades";
 import type { CrmEtapaRow } from "@/hooks/crm/useEtapasPipeline";
 
