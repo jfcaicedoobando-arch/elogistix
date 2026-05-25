@@ -159,6 +159,13 @@ export default function NuevoLeadDialog({ open, onOpenChange, onCreated }: Props
               </SelectContent>
             </Select>
           </div>
+          <div className="sm:col-span-2">
+            <VendedorSelect
+              value={form.vendedor_id}
+              email={form.vendedor_email}
+              onChange={(id, email) => setForm((f) => ({ ...f, vendedor_id: id, vendedor_email: email }))}
+            />
+          </div>
           <div className="sm:col-span-2 space-y-1">
             <Label>Notas</Label>
             <Textarea
