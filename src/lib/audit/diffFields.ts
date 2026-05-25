@@ -35,21 +35,23 @@ function equal(a: unknown, b: unknown): boolean {
  * `updated_at`, etc.). Si `fields` se omite, se comparan todas las claves de
  * `after`.
  */
-export function diffFields<T extends Record<string, unknown>>(
-  before: Partial<T> | null | undefined,
+export function diffFields<T extends object>(
+  before: T | Partial<T> | null | undefined,
   after: Partial<T>,
-  fields?: ReadonlyArray<keyof T>,
+  fields?: ReadonlyArray<string>,
 ): FieldDiff[] {
   if (!before) return [];
-  const keys = (fields ?? (Object.keys(after) as Array<keyof T>)) as Array<keyof T>;
+  const beforeRec = before as Record<string, unknown>;
+  const afterRec = after as Record<string, unknown>;
+  const keys = (fields ?? (Object.keys(after) as Array<keyof T & string>)) as ReadonlyArray<string>;
   const out: FieldDiff[] = [];
   for (const k of keys) {
-    const a = before[k];
-    const b = after[k];
+    const a = beforeRec[k];
+    const b = afterRec[k];
     if (b === undefined) continue; // no se intentó actualizar
     if (equal(a, b)) continue;
     out.push({
-      campo: String(k),
+      campo: k,
       antes: normalize(a) as FieldDiff["antes"],
       despues: normalize(b) as FieldDiff["despues"],
     });

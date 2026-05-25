@@ -6,7 +6,6 @@ import { usePermissions } from "@/hooks/shared/usePermissions";
 import { useRegistrarActividad } from "@/hooks/shared/useBitacora";
 import { diffFields, SENSITIVE_FIELDS } from "@/lib/audit/diffFields";
 import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
-import type { Json } from "@/integrations/supabase/types";
 
 /**
  * Controller para la página de detalle de proveedor.
@@ -35,9 +34,9 @@ export function useProveedorDetalleController() {
     try {
       const cambios = proveedor
         ? diffFields(
-            proveedor as unknown as Record<string, unknown>,
+            proveedor,
             data,
-            SENSITIVE_FIELDS.proveedor as unknown as ReadonlyArray<string>,
+            SENSITIVE_FIELDS.proveedor,
           )
         : [];
       await updateProveedor(provId, data);
@@ -46,7 +45,7 @@ export function useProveedorDetalleController() {
         modulo: "proveedores",
         entidad_id: provId,
         entidad_nombre: (data.nombre as string) ?? proveedor?.nombre ?? "",
-        detalles: cambios.length > 0 ? { cambios: cambios as unknown as Json } : undefined,
+        detalles: cambios.length > 0 ? { cambios } : undefined,
       });
       notifySuccess(toast, { title: "Proveedor actualizado" });
     } catch {

@@ -51,7 +51,7 @@ export async function insertBitacora(entrada: {
   modulo: string;
   entidadId?: string | null;
   entidadNombre?: string;
-  detalles?: Record<string, Json>;
+  detalles?: Record<string, unknown>;
 }): Promise<void> {
   const { error } = await supabase.from("bitacora_actividad").insert([
     {

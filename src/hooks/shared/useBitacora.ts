@@ -7,7 +7,7 @@ import {
   type EntradaBitacora,
   type FiltrosBitacora,
 } from "@/services/bitacora";
-import type { Json } from "@/integrations/supabase/types";
+
 
 export type { EntradaBitacora };
 
@@ -30,7 +30,7 @@ export function useRegistrarActividad() {
       modulo: string;
       entidad_id?: string | null;
       entidad_nombre?: string;
-      detalles?: Record<string, Json>;
+      detalles?: Record<string, unknown>;
     }) => {
       if (!user) return;
       await insertBitacora({
