@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [11.40.0] - 2026-05-25
+- **CI gate de higiene de tests**: nuevo `scripts/audit-tests.ts` ejecutado en CI vía `bun run audit:tests` antes de la suite de Vitest. Bloquea (exit 1) si aparece (a) `.skip/.only/.todo`, `xdescribe`, `xit` sin un comentario adyacente `// TODO(#issue):` o `// FIXME(#issue):`, o (b) bloque `describe`/`it`/`test` con título idéntico en otro archivo de test (con `DUPLICATE_ALLOWLIST` para casos legítimos como `vacío/null → ''` o `convierte MXN a USD`). Detectó y eliminó un duplicado adicional no visto en v11.39.0: `embarqueCotizacion.test.ts` cubría exactamente los mismos `buildVincularCotizacionUpdates`/`buildDesvincularCotizacionUpdates` que `embarque.test.ts` (más completo) — archivo removido. Workflow `.github/workflows/ci.yml` actualizado con el step "Test hygiene". Suite: 712 → 709 tests verdes en 107 files.
+
 ## [11.39.0] - 2026-05-25
 - **Auditoría de tests obsoletos**: reporte completo en `docs/tests-audit.md`. Hallazgos: 0 tests con `.skip/.only/.todo`, 0 imports rotos, 26 huérfanos (todos falsos positivos: cubren barrels/sub-módulos), 3 bloques con duplicados reales. Eliminados 12 tests redundantes: `describe("formatDate")` duplicado en `uiMappings.test.ts` (movido a `formatters.test.ts`, -3 tests); en `embarqueWizardSchemas.test.ts` se removieron `validateArchivo` (-3), `validateStepDocumentos` (-2) y `validateStepCostos` (-3) ya cubiertos en los archivos split del wizard; `sumarEnUSD([])` duplicado entre `costosUSD.test.ts` y `financialUtils.edge.test.ts` (-1). Suite: 724 → 712 tests verdes en 108 files, sin pérdida de cobertura. Próximos sub-loops sugeridos: gate de CI preventivo (`scripts/audit-tests.ts`), consolidación `aUSD`↔`convertirAUSD`, reorganización de huérfanos.
 
