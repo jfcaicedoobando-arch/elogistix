@@ -17,6 +17,7 @@ import ComentariosOportunidad from "@/components/crm/ComentariosOportunidad";
 import OportunidadCotizacionesList from "@/components/crm/OportunidadCotizacionesList";
 import { OportunidadLineageCard } from "@/components/crm/LineageCard";
 import { OportunidadKpisCards } from "@/components/crm/oportunidadDetalle/OportunidadKpisCards";
+import { DatosComercialesCard } from "@/components/crm/oportunidadDetalle/DatosComercialesCard";
 import { ContactoRapidoCard } from "@/components/crm/oportunidadDetalle/ContactoRapidoCard";
 import { useOportunidad, useEtapasPipeline, useOportunidadDetalleActions } from "@/hooks/crm";
 import { useContactosCliente } from "@/hooks/cliente";
