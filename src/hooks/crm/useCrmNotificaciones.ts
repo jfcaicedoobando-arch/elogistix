@@ -4,6 +4,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { logger } from "@/lib/observability/logger";
 
 export interface CrmNotificacionRow {
   id: string;
@@ -95,6 +96,6 @@ export async function crearNotificacionSilencioso(input: CrearNotificacionInput)
       link: input.link ?? null,
     });
   } catch (e) {
-    console.warn("[crm_notificaciones] insert falló:", e);
+    logger.warn("[crm_notificaciones] insert falló:", e);
   }
 }

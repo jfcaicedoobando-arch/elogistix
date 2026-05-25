@@ -2,12 +2,13 @@ import { useLocation, Link } from "react-router-dom";
 import { useEffect } from "react";
 import { Compass, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { logger } from "@/lib/observability/logger";
 
 const NotFound = () => {
   const location = useLocation();
 
   useEffect(() => {
-    console.error("404: Ruta inexistente solicitada:", location.pathname);
+    logger.error("404: Ruta inexistente solicitada:", location.pathname);
   }, [location.pathname]);
 
   return (

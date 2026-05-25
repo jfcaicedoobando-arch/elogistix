@@ -9,6 +9,7 @@ import {
   fetchAuditoriaSnapshots,
 } from "@/services/auditoria";
 import type { AuditoriaSnapshot } from "@/types/auditoria";
+import { logger } from "@/lib/observability/logger";
 
 
 export function useAuditoriaSnapshots(dias = 30) {
@@ -39,7 +40,7 @@ export function useAutoCapturarSnapshot(enabled: boolean) {
     if (!enabled) return;
     capturar.mutate(undefined, {
       onError: (err) => {
-        console.warn("[useAutoCapturarSnapshot] no se pudo capturar:", err);
+        logger.warn("[useAutoCapturarSnapshot] no se pudo capturar:", err);
       },
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps

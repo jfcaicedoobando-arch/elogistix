@@ -13,6 +13,7 @@ import {
 import { insertBitacora } from "@/services/bitacora";
 import { hallazgoHash } from "@/hooks/auditoria/useAuditoriaRevisiones";
 import type { HallazgoAuditoria } from "@/types/auditoria";
+import { logger } from "@/lib/observability/logger";
 
 export function useSnoozeHallazgo() {
   const queryClient = useQueryClient();
@@ -52,7 +53,7 @@ export function useSnoozeHallazgo() {
           },
         });
       } catch (e) {
-        console.warn("No se pudo registrar en bitácora:", e);
+        logger.warn("No se pudo registrar en bitácora:", e);
       }
       return data;
     },
@@ -62,7 +63,7 @@ export function useSnoozeHallazgo() {
       toast.success("Hallazgo silenciado");
     },
     onError: (err: Error) => {
-      console.error("[useSnoozeHallazgo] error:", err);
+      logger.error("[useSnoozeHallazgo] error:", err);
       toast.error("No se pudo silenciar el hallazgo", { description: err.message });
     },
   });

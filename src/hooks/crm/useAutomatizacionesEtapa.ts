@@ -12,6 +12,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { crearNotificacionSilencioso } from "@/hooks/crm/useCrmNotificaciones";
+import { logger } from "@/lib/observability/logger";
 
 function isoDaysFromNow(d: number): string {
   const t = new Date();
@@ -127,7 +128,7 @@ export function useMoverEtapaConAutomatizacion() {
           });
         }
       } catch (e) {
-        console.warn("[useMoverEtapaConAutomatizacion] automatizaciones fallaron:", e);
+        logger.warn("[useMoverEtapaConAutomatizacion] automatizaciones fallaron:", e);
       }
       return { id: params.id };
     },

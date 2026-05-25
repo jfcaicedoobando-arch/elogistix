@@ -15,6 +15,7 @@ import {
 } from "@/services/auditoria";
 import { insertBitacora } from "@/services/bitacora";
 import type { AuditoriaRevision, HallazgoAuditoria } from "@/types/auditoria";
+import { logger } from "@/lib/observability/logger";
 
 /**
  * Resuelve el usuario autenticado tolerando ventanas de carrera en el
@@ -104,7 +105,7 @@ export function useMarcarRevisado() {
           },
         });
       } catch (e) {
-        console.warn("No se pudo registrar en bitácora:", e);
+        logger.warn("No se pudo registrar en bitácora:", e);
       }
 
       return data;
@@ -115,7 +116,7 @@ export function useMarcarRevisado() {
       toast.success("Hallazgo marcado como revisado");
     },
     onError: (err: unknown) => {
-      console.error("[useMarcarRevisado] error:", err);
+      logger.error("[useMarcarRevisado] error:", err);
       const e = err as { code?: string; message?: string };
       const isPermiso =
         e?.code === "42501" || /row-level security/i.test(e?.message ?? "");
@@ -155,7 +156,7 @@ export function useDesmarcarRevisado() {
           });
         }
       } catch (e) {
-        console.warn("No se pudo registrar en bitácora:", e);
+        logger.warn("No se pudo registrar en bitácora:", e);
       }
     },
     onSuccess: () => {
@@ -164,7 +165,7 @@ export function useDesmarcarRevisado() {
       toast.success("Marca de revisión eliminada");
     },
     onError: (err: Error) => {
-      console.error("[useDesmarcarRevisado] error:", err);
+      logger.error("[useDesmarcarRevisado] error:", err);
       toast.error("Error al eliminar marca", { description: err.message });
     },
   });
@@ -224,7 +225,7 @@ export function useAsignarResponsable() {
           },
         });
       } catch (e) {
-        console.warn("No se pudo registrar en bitácora:", e);
+        logger.warn("No se pudo registrar en bitácora:", e);
       }
 
       return data;
@@ -237,7 +238,7 @@ export function useAsignarResponsable() {
       );
     },
     onError: (err: unknown) => {
-      console.error("[useAsignarResponsable] error:", err);
+      logger.error("[useAsignarResponsable] error:", err);
       const e = err as { code?: string; message?: string };
       const isPermiso =
         e?.code === "42501" || /row-level security/i.test(e?.message ?? "");

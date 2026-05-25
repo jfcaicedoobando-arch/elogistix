@@ -1,4 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
+import { logger } from "@/lib/observability/logger";
 
 export interface GlobalSearchRpcRow {
   id: string;
@@ -15,7 +16,7 @@ export async function buscarGlobal(
   if (!termino.trim()) return [];
   const { data, error } = await supabase.rpc("busqueda_global", { termino, limite });
   if (error) {
-    console.error("Error en búsqueda global:", error);
+    logger.error("Error en búsqueda global:", error);
     return [];
   }
   return (data ?? []) as GlobalSearchRpcRow[];

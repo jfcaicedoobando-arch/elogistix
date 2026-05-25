@@ -20,6 +20,7 @@ import {
 } from '@/lib/domain/embarque';
 import { mapNavieraToJsonCargo } from '@/lib/jsoncargo/navieras';
 import { newRequestId } from '@/lib/idempotency';
+import { logger } from "@/lib/observability/logger";
 
 type EmbarqueRow = Tables<'embarques'>;
 
@@ -41,7 +42,7 @@ export function useUpdateEmbarque() {
       const e = input.embarque;
       if (e.modo === 'Marítimo' && e.contenedor && mapNavieraToJsonCargo(e.naviera ?? null)) {
         supabase.functions.invoke('jsoncargo-track', { body: { embarqueId: input.id } })
-          .catch((err) => console.warn('jsoncargo-track auto-sync:', err));
+          .catch((err) => logger.warn('jsoncargo-track auto-sync:', err));
       }
       return { id: input.id } as EmbarqueRow;
     },
