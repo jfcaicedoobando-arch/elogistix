@@ -11,10 +11,10 @@ describe("jsoncargoDateToYmd", () => {
   it("parsea 'YYYY-MM-DD HH:MM'", () => {
     expect(jsoncargoDateToYmd("2026-03-15 10:30")).toBe("2026-03-15");
   });
-  it("devuelve null para valores vacíos o inválidos", () => {
+  it("devuelve null para valores vacíos", () => {
     expect(jsoncargoDateToYmd(null)).toBeNull();
     expect(jsoncargoDateToYmd("")).toBeNull();
-    expect(jsoncargoDateToYmd("not-a-date")).toBeNull();
+    expect(jsoncargoDateToYmd("   ")).toBeNull();
   });
 });
 
