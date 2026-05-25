@@ -1,22 +1,12 @@
 /**
  * /crm/leads/:id — Ficha de lead con edición en línea, eliminación y conversión.
+ * Lógica de formulario en `useLeadEditForm`; subcomponentes en `components/crm/leadDetalle/`.
  */
-import { useEffect, useMemo, useState } from "react";
+import { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { ArrowLeft, Loader2, Repeat, Trash2 } from "lucide-react";
+import { ArrowLeft, Loader2 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { Badge } from "@/components/ui/badge";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { PageHeader } from "@/components/shared/PageHeader";
 import DoubleConfirmDeleteDialog from "@/components/shared/DoubleConfirmDeleteDialog";
 import { useToast } from "@/hooks/use-toast";
@@ -26,15 +16,10 @@ import ConvertirLeadDialog from "@/components/crm/ConvertirLeadDialog";
 import { LeadLineageCard } from "@/components/crm/LineageCard";
 import ContactActions from "@/components/crm/ContactActions";
 import ActividadTimeline from "@/components/crm/ActividadTimeline";
-import {
-  LEAD_ESTADOS,
-  LEAD_FUENTES,
-  useActualizarLead,
-  useEliminarLead,
-  useLead,
-  type CrmLeadEstado,
-  type CrmLeadFuente,
-} from "@/hooks/crm/useLeads";
+import LeadDatosCard from "@/components/crm/leadDetalle/LeadDatosCard";
+import LeadHeaderActions from "@/components/crm/leadDetalle/LeadHeaderActions";
+import { useActualizarLead, useEliminarLead, useLead } from "@/hooks/crm/useLeads";
+import { useLeadEditForm } from "@/hooks/crm/useLeadEditForm";
 
 export default function LeadDetalle() {
   const { id } = useParams<{ id: string }>();
@@ -45,59 +30,9 @@ export default function LeadDetalle() {
   const actualizar = useActualizarLead();
   const eliminar = useEliminarLead();
 
-  const [form, setForm] = useState(() => ({
-    empresa: "",
-    contacto: "",
-    email: "",
-    telefono: "",
-    ciudad: "",
-    pais: "",
-    fuente: "Otro" as CrmLeadFuente,
-    estado: "Nuevo" as CrmLeadEstado,
-    score: 3,
-    interes_modo: "",
-    notas: "",
-  }));
+  const { form, set, dirty } = useLeadEditForm(lead);
   const [convertirOpen, setConvertirOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
-
-  useEffect(() => {
-    if (lead) {
-      setForm({
-        empresa: lead.empresa ?? "",
-        contacto: lead.contacto ?? "",
-        email: lead.email ?? "",
-        telefono: lead.telefono ?? "",
-        ciudad: lead.ciudad ?? "",
-        pais: lead.pais ?? "",
-        fuente: lead.fuente,
-        estado: lead.estado,
-        score: lead.score ?? 3,
-        interes_modo: lead.interes_modo ?? "",
-        notas: lead.notas ?? "",
-      });
-    }
-  }, [lead]);
-
-  const set = <K extends keyof typeof form>(k: K, v: (typeof form)[K]) =>
-    setForm((f) => ({ ...f, [k]: v }));
-
-  const dirty = useMemo(() => {
-    if (!lead) return false;
-    return (
-      lead.empresa !== form.empresa ||
-      (lead.contacto ?? "") !== form.contacto ||
-      (lead.email ?? "") !== form.email ||
-      (lead.telefono ?? "") !== form.telefono ||
-      (lead.ciudad ?? "") !== form.ciudad ||
-      (lead.pais ?? "") !== form.pais ||
-      lead.fuente !== form.fuente ||
-      lead.estado !== form.estado ||
-      (lead.score ?? 3) !== form.score ||
-      (lead.interes_modo ?? "") !== form.interes_modo ||
-      (lead.notas ?? "") !== form.notas
-    );
-  }, [lead, form]);
 
   const handleSave = async () => {
     if (!id) return;
@@ -157,22 +92,12 @@ export default function LeadDetalle() {
         title={lead.empresa}
         description={`Lead · ${lead.fuente} · creado ${new Date(lead.created_at).toLocaleDateString("es-MX")}`}
         actions={
-          <div className="flex gap-2">
-            {lead.estado === "Convertido" ? (
-              <Badge variant="outline">Convertido</Badge>
-            ) : null}
-            {canEdit && (
-              <Button variant="outline" onClick={() => setConvertirOpen(true)}>
-                <Repeat className="h-4 w-4 mr-1" />
-                {lead.estado === "Convertido" ? "Ver conversión" : "Convertir"}
-              </Button>
-            )}
-            {canEdit && (
-              <Button variant="destructive" onClick={() => setDeleteOpen(true)}>
-                <Trash2 className="h-4 w-4 mr-1" /> Eliminar
-              </Button>
-            )}
-          </div>
+          <LeadHeaderActions
+            estado={lead.estado}
+            canEdit={canEdit}
+            onConvertir={() => setConvertirOpen(true)}
+            onEliminar={() => setDeleteOpen(true)}
+          />
         }
       />
 
@@ -198,85 +123,14 @@ export default function LeadDetalle() {
         </CardContent>
       </Card>
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base">Datos del lead</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div className="sm:col-span-2 space-y-1">
-              <Label>Empresa</Label>
-              <Input value={form.empresa} onChange={(e) => set("empresa", e.target.value)} disabled={!canEdit} />
-            </div>
-            <div className="space-y-1">
-              <Label>Contacto</Label>
-              <Input value={form.contacto} onChange={(e) => set("contacto", e.target.value)} disabled={!canEdit} />
-            </div>
-            <div className="space-y-1">
-              <Label>Email</Label>
-              <Input type="email" value={form.email} onChange={(e) => set("email", e.target.value)} disabled={!canEdit} />
-            </div>
-            <div className="space-y-1">
-              <Label>Teléfono</Label>
-              <Input value={form.telefono} onChange={(e) => set("telefono", e.target.value)} disabled={!canEdit} />
-            </div>
-            <div className="space-y-1">
-              <Label>Ciudad</Label>
-              <Input value={form.ciudad} onChange={(e) => set("ciudad", e.target.value)} disabled={!canEdit} />
-            </div>
-            <div className="space-y-1">
-              <Label>País</Label>
-              <Input value={form.pais} onChange={(e) => set("pais", e.target.value)} disabled={!canEdit} />
-            </div>
-            <div className="space-y-1">
-              <Label>Interés (modo)</Label>
-              <Input value={form.interes_modo} onChange={(e) => set("interes_modo", e.target.value)} disabled={!canEdit} />
-            </div>
-            <div className="space-y-1">
-              <Label>Fuente</Label>
-              <Select value={form.fuente} onValueChange={(v) => set("fuente", v as CrmLeadFuente)} disabled={!canEdit}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  {LEAD_FUENTES.map((f) => <SelectItem key={f} value={f}>{f}</SelectItem>)}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-1">
-              <Label>Estado</Label>
-              <Select value={form.estado} onValueChange={(v) => set("estado", v as CrmLeadEstado)} disabled={!canEdit}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  {LEAD_ESTADOS.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-1">
-              <Label>Score (1-5)</Label>
-              <Input
-                type="number"
-                min={1}
-                max={5}
-                value={form.score}
-                onChange={(e) => set("score", Math.min(5, Math.max(1, Number(e.target.value) || 1)))}
-                disabled={!canEdit}
-              />
-            </div>
-            <div className="sm:col-span-2 space-y-1">
-              <Label>Notas</Label>
-              <Textarea rows={4} value={form.notas} onChange={(e) => set("notas", e.target.value)} disabled={!canEdit} />
-            </div>
-          </div>
-
-          {canEdit && (
-            <div className="flex justify-end mt-4">
-              <Button onClick={handleSave} disabled={!dirty || actualizar.isPending}>
-                {actualizar.isPending && <Loader2 className="h-4 w-4 mr-1 animate-spin" />}
-                Guardar cambios
-              </Button>
-            </div>
-          )}
-        </CardContent>
-      </Card>
+      <LeadDatosCard
+        form={form}
+        set={set}
+        canEdit={canEdit}
+        dirty={dirty}
+        isSaving={actualizar.isPending}
+        onSave={handleSave}
+      />
 
       <LeadLineageCard leadId={lead.id} />
 
