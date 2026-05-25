@@ -8,7 +8,7 @@ import { DataTable } from "@/components/shared/DataTable";
 import { useUsuarios, useUpdateUserRole, useDeleteUser, type UserRow } from "@/hooks/usuario";
 import DoubleConfirmDeleteDialog from "@/components/shared/DoubleConfirmDeleteDialog";
 import { PageHeader } from "@/components/shared/PageHeader";
-import type { AppRole } from "@/types/appRole";
+
 import { useAuth } from "@/contexts/AuthContext";
 import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 import { getRoleLabel } from "@/lib/ui/uiMappings";
