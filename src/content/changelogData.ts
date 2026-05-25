@@ -22,6 +22,14 @@ export interface ChangelogEntry {
  */
 export const recentChangelog: ChangelogEntry[] = [
   {
+    version: "11.12.0",
+    date: "2026-05-25",
+    type: "minor",
+    title: "Cierre P2: tests edge functions + zipDownload + exportCsv",
+    summary: "7 archivos nuevos (5 Deno + 2 Vitest): parse-csf, jsoncargo-track, invite-client-user, client-error-log, auditoria-weekly-digest, zipDownload, exportCsv.",
+    description: "Helpers puros exportados en edge functions y suite Vitest extendida. Total ~595 tests verdes. APP_VERSION 11.12.0.",
+  },
+  {
     version: "11.11.0",
     date: "2026-05-25",
     type: "minor",

@@ -2,6 +2,13 @@ import type { ChangelogEntry } from "../../../changelogData";
 
 export const chunk0: ChangelogEntry[] = [
   {
+    version: "11.12.0",
+    date: "2026-05-25",
+    type: "minor",
+    title: "Cierre P2: tests edge functions + zipDownload + exportCsv",
+    summary: "7 archivos nuevos (5 Deno + 2 Vitest) cubriendo parse-csf, jsoncargo-track, invite-client-user, client-error-log, auditoria-weekly-digest, zipDownload y exportCsv.",
+    description: "Refactor mínimo: se exportan helpers puros (validateFile, validateEmbarqueForTracking, parseBodyId, parseBody, truncate, tryExtractUserId, esc, buildHtml) en sus respectivos index.ts de edge functions. Tests Deno cubren validación de tamaño/MIME del CSF, naviera/modo/contenedor para JSONCargo, payload de invitación de cliente, sanitización + extracción de userId desde JWT, y HTML del digest semanal (escape, ordenamiento por monto, filtro de hallazgos sin monto). Tests Vitest: zipDownload empaqueta archivos en carpeta y dispara descarga; exportCsv escapa comas/comillas/saltos, trata null como vacío y respeta filename. Suite: 84 archivos / ~595 tests. APP_VERSION 11.12.0.",
+  },
     version: "11.10.0",
     date: "2026-05-25",
     type: "minor",
