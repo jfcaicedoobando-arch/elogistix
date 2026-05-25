@@ -189,6 +189,8 @@ export default function Leads() {
         onCreated={(id) => navigate(`/crm/leads/${id}`)}
       />
 
+      <ImportarLeadsCsvDialog open={importOpen} onOpenChange={setImportOpen} />
+
       {canEdit && (
         <FloatingActionButton
           icon={<Plus className="h-6 w-6" />}
