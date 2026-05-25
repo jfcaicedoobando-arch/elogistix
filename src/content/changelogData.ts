@@ -22,6 +22,14 @@ export interface ChangelogEntry {
  */
 export const recentChangelog: ChangelogEntry[] = [
   {
+    version: "11.7.0",
+    date: "2026-05-25",
+    type: "minor",
+    title: "CRM Sprint G: pulido UX — menos pestañas, más foco",
+    summary: "7 → 5 pestañas (Forecast+Reportes fusionados en Analítica), Quick-Add global, próxima actividad en Kanban, contacto rápido en oportunidad y timeline en lead.",
+    description: "CrmLayout reducido + Configuración como icono; Analitica.tsx con sub-tabs Forecast/Embudo/Pérdidas/Vendedores; Dashboard renombrado Inicio y reordenado; QuickAddMenu (lead/oportunidad/actividad); NuevaActividadDialog; ActividadTimeline en LeadDetalle; OportunidadDetalle con tabs Resumen/Comunicación/Trazabilidad y ContactActions con plantillas; useProximasActividades batch; Kanban muestra próxima acción por card. APP_VERSION 11.7.0.",
+  },
+  {
     version: "11.6.0",
     date: "2026-05-25",
     type: "minor",
