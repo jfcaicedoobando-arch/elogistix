@@ -17,6 +17,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import NuevaOportunidadDialog from "@/components/crm/NuevaOportunidadDialog";
 import ActividadTimeline from "@/components/crm/ActividadTimeline";
+import { OportunidadLineageCard } from "@/components/crm/LineageCard";
 import { useOportunidad, useEliminarOportunidad } from "@/hooks/crm/useOportunidades";
 import { useEtapasPipeline } from "@/hooks/crm/useEtapasPipeline";
 import { generarFolioCotizacion } from "@/services/cotizacion/queries";
