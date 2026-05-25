@@ -14,6 +14,7 @@ import { insertBitacora } from "@/services/bitacora";
 import { hallazgoHash } from "@/hooks/auditoria/useAuditoriaRevisiones";
 import type { HallazgoAuditoria } from "@/types/auditoria";
 import { logger } from "@/lib/observability/logger";
+import { queryKeys } from "@/lib/query";
 
 export function useSnoozeHallazgo() {
   const queryClient = useQueryClient();
@@ -58,8 +59,8 @@ export function useSnoozeHallazgo() {
       return data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["auditoria", "revisiones"] });
-      queryClient.invalidateQueries({ queryKey: ["auditoria", "embarques"] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.auditoria.revisiones });
+      queryClient.invalidateQueries({ queryKey: queryKeys.auditoria.embarques });
       toast.success("Hallazgo silenciado");
     },
     onError: (err: Error) => {
@@ -74,8 +75,8 @@ export function useQuitarSnooze() {
   return useMutation({
     mutationFn: clearSnoozeRevision,
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["auditoria", "revisiones"] });
-      queryClient.invalidateQueries({ queryKey: ["auditoria", "embarques"] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.auditoria.revisiones });
+      queryClient.invalidateQueries({ queryKey: queryKeys.auditoria.embarques });
       toast.success("Snooze removido");
     },
     onError: (err: Error) => {
