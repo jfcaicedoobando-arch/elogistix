@@ -1,67 +1,54 @@
-# Eliminar módulo de Changelog (UI + chunks TS) → migrar a `CHANGELOG.md`
+# Fix: ruido de Sentry por "Failed to fetch dynamically imported module"
 
-## Objetivo
+## Contexto
 
-Reducir el costo por loop ~20% eliminando la página `/changelog`, sus chunks TypeScript, controller, tests de integridad y la sidebar entry. Reemplazar todo por un único `CHANGELOG.md` en el root que se actualiza con una sola línea por release.
+Issue Sentry `JAVASCRIPT-REACT-5` — 201 eventos, 2 usuarios, regresado. Es el error transitorio que ocurre cuando una pestaña vieja intenta cargar un chunk de página (`Cotizaciones.tsx`, `Facturacion.tsx`, `Embarques.tsx`, etc.) cuyo hash ya cambió tras un nuevo build. La app **ya se auto-recupera** (vía `vite:preloadError` y `ErrorBoundary`), pero:
 
-## Inventario
+1. El rechazo también se reporta a Sentry como `unhandledrejection`, generando ruido (199 de las 201 ocurrencias).
+2. En algunos casos el evento `vite:preloadError` no se dispara (el fallo viene del `import()` de `React.lazy`, no del preload), así que dependemos solo del ErrorBoundary para recargar — y eso requiere que React llegue a renderizar el error.
 
-### Archivos a ELIMINAR
+## Cambios
 
-| Path | Motivo |
-|------|--------|
-| `src/pages/dashboard/Changelog.tsx` | Página UI |
-| `src/components/dashboard/ChangelogEntryCard.tsx` | Card de cada entrada |
-| `src/hooks/dashboard/useChangelogController.ts` | Controller (filtros/paginación/anclas) |
-| `src/content/changelogData.ts` | `recentChangelog`, `dedupeByVersion`, loaders |
-| `src/content/changelog/` (carpeta completa) | `legacy.ts`, `v1.ts` … `v8.ts`, `v4/chunks/0-3.ts`, `v8/chunks/0-6.ts` (~9.5k líneas total) |
-| `src/content/__tests__/changelog.test.ts` | Tests de integridad del módulo |
+### 1. `src/lib/sentry.ts` — filtrar chunk errors en `beforeSend`
 
-### Archivos a EDITAR
+Agregar `beforeSend` que descarte eventos cuyo `exception.values[*].value` o `message` contenga las firmas conocidas:
 
-| Path | Cambio |
-|------|--------|
-| `src/routes.tsx` | Quitar `const Changelog = lazy(...)` (línea 17) y `<Route path="/changelog" element={<Changelog />} />` (línea 135) |
-| `src/components/layout/sidebarItems.ts` | Eliminar el item `{ title: "Changelog", url: "/changelog", icon: ScrollText }` (línea 50) |
-| `src/components/layout/Breadcrumbs.tsx` | Eliminar `changelog: "Changelog"` del mapa (línea 22) |
-| `src/hooks/layout/useAppSidebarSections.ts` | Reemplazar `it.url === "/ayuda" || it.url === "/changelog"` por sólo `it.url === "/ayuda"` (línea 42) |
-| `src/hooks/dashboard/index.ts` | Quitar `export * from './useChangelogController';` |
-| `src/pages/dashboard/Ayuda.tsx` | Quitar el `<p>` con el link a `/changelog` (líneas 144-147) |
-| `src/constants/appVersion.ts` | Mantener `APP_VERSION` (lo usan Sentry, observability, portal, sidebar) pero actualizar el comentario (ya no se refiere al chunk0). |
+- `Failed to fetch dynamically imported module`
+- `Importing a module script failed`
+- `error loading dynamically imported module`
+- `Loading chunk` / `ChunkLoadError`
 
-### Archivos a CREAR
+Devolver `null` para esos eventos. No afecta otros errores ni el widget de feedback.
 
-| Path | Contenido |
-|------|-----------|
-| `CHANGELOG.md` (root) | Formato [Keep a Changelog](https://keepachangelog.com/), encabezado breve + lista descendente. Se siembra con las **10 entradas actuales de `recentChangelog`** convertidas a Markdown (un `## [version] - YYYY-MM-DD` por entrada + bullet con summary; el descriptivo largo queda como párrafo). El resto del histórico (v1–v8 completos) NO se migra — quien lo necesite mira el git history. |
+### 2. `src/main.tsx` — listener global `unhandledrejection`
 
-## Política nueva de mantenimiento
+Agregar un listener que reuse la misma lógica que ya tiene `vite:preloadError`:
 
-Cada cambio del agente que antes editaba 3 archivos (`APP_VERSION.ts` + `chunks/0.ts` + `changelogData.ts`) ahora hace **una sola edición**:
+- Si `event.reason` es un Error cuyo mensaje matchea las firmas de chunk-load → `event.preventDefault()`, marcar flag, `window.location.reload()` (una sola vez gracias a `hasChunkReloadBeenAttempted`).
 
-1. Bump `APP_VERSION` en `src/constants/appVersion.ts`.
-2. Insertar una entrada nueva al inicio de `CHANGELOG.md`:
-   ```md
-   ## [11.30.0] - 2026-05-25
-   - **Eliminación del módulo Changelog**: UI + chunks TS removidos, migrado a CHANGELOG.md. Ahorro ~20% por loop.
-   ```
-3. Sin description larga obligatoria — un bullet por cambio basta. Detalles técnicos opcionales como sub-bullets sólo si son críticos.
+Reutilizar el helper `isDynamicImportError` que ya existe en `ErrorBoundary.tsx` extrayéndolo a `src/lib/ui/dynamicImportError.ts` para no duplicar lógica.
+
+### 3. `src/components/shared/ErrorBoundary.tsx`
+
+Reemplazar la copia local de `isDynamicImportError` por el import del helper compartido. Sin cambios de comportamiento.
+
+### 4. Resolver el issue en Sentry
+
+Tras el deploy, marcar `JAVASCRIPT-REACT-5` como `resolvedInNextRelease` vía `update_issue`.
+
+### 5. Changelog
+
+Bump `APP_VERSION` a `11.30.1` (patch) + entrada en `CHANGELOG.md` raíz:
+`Sentry: filtradas excepciones transitorias de carga de chunks; auto-recarga reforzada en unhandledrejection.`
+
+## Lo que NO se cambia
+
+- Sigue habiendo recarga automática real (el usuario nunca queda atascado).
+- No tocamos config de Vite, manualChunks, ni el flujo de `React.lazy`.
+- No suprimimos ningún otro tipo de error en Sentry.
 
 ## Verificación
 
-- `bunx tsc --noEmit` limpio (sin imports rotos a `@/content/changelogData` ni `@/hooks/dashboard/useChangelogController`).
-- `bunx eslint src --max-warnings=0` sin warnings.
-- `bunx vitest run` pasa — el conteo bajará de **633 a ~622** (11 tests del archivo `changelog.test.ts` removidos).
-- `rg "useChangelogController|recentChangelog|loadChangelogMajor|loadLegacyChangelog|dedupeByVersion|ChangelogEntry|ChangelogEntryCard" src` → 0 resultados.
-- `rg "/changelog" src` → 0 resultados.
-- Navegar manualmente a `/changelog` debe dar 404 (NotFound route existente).
-- Sidebar ya no muestra "Changelog"; "Ayuda" sigue visible.
-
-## Memoria
-
-- **Core (`mem://index.md`)**: cambiar la línea "Record all changes chronologically in `src/pages/Changelog.tsx`" por "Append a single entry to `CHANGELOG.md` (root) + bump `APP_VERSION`. Format: `## [vX.Y.Z] - YYYY-MM-DD` + bullet."
-- **`mem://instructions/changelog-updates`**: reescribir con el nuevo procedimiento de 2 pasos; eliminar referencias a chunks, top-10, dedupe.
-
-## Primer commit del nuevo flujo
-
-Al final del refactor, agregar la entrada `11.30.0` en `CHANGELOG.md` documentando esta migración. Total: **bump `APP_VERSION` 11.29.0 → 11.30.0** + 1 línea en MD.
+- `npm run lint` → 0 warnings.
+- `vitest run` → 621/621 verdes.
+- Confirmar en `/sentry` que el panel sigue funcionando y que un error de prueba (`Enviar error de prueba`) **sí** llega a Sentry (el filtro solo aplica a chunk-load).
