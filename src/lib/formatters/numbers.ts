@@ -1,0 +1,62 @@
+/** Formatos numéricos y de moneda. */
+
+export const formatCurrency = (amount: number, currency: string = 'MXN'): string => {
+  const formatter = new Intl.NumberFormat('es-MX', { style: 'currency', currency, minimumFractionDigits: 2 });
+  const formatted = formatter.format(amount);
+  // Intl con MXN devuelve "$57,000.00" (sin código). Forzamos el prefijo "MXN " para
+  // mantener consistencia con USD/EUR y evitar ambigüedad entre USD y MXN.
+  if (currency === 'MXN' && !formatted.startsWith('MXN')) {
+    return `MXN ${formatted.replace(/^\$\s?/, '')}`;
+  }
+  return formatted;
+};
+
+/**
+ * Formato de moneda compacto para KPIs/tarjetas estrechas.
+ *
+ * Usa `Intl.NumberFormat` con `notation: "compact"` para evitar truncamiento
+ * tipo "USD 1,234,5…" en columnas angostas.
+ */
+export const formatCurrencyCompact = (amount: number, currency: string = "MXN"): string => {
+  const safe = Number.isFinite(amount) ? amount : 0;
+  const formatted = new Intl.NumberFormat("en-US", {
+    notation: "compact",
+    maximumFractionDigits: 1,
+    minimumFractionDigits: 0,
+  }).format(safe);
+  return `${currency} ${formatted}`;
+};
+
+/** Formatea un número entero/decimal con separadores de miles mexicanos. */
+export const formatNumber = (
+  value: number | null | undefined,
+  options: { decimals?: number; suffix?: string } = {}
+): string => {
+  if (value === null || value === undefined || Number.isNaN(value)) return "—";
+  const { decimals, suffix } = options;
+  const formatted = new Intl.NumberFormat("es-MX", {
+    minimumFractionDigits: decimals ?? 0,
+    maximumFractionDigits: decimals ?? (Number.isInteger(value) ? 0 : 2),
+  }).format(value);
+  return suffix ? `${formatted} ${suffix}` : formatted;
+};
+
+/** Sufijo de pluralización mexicana ("" para 1, "s" para cualquier otro). */
+export const pluralS = (n: number): string => (n === 1 ? "" : "s");
+
+/**
+ * Formatea el campo "días de crédito" de proformas/facturas.
+ * - null/undefined/"" → "—"
+ * - 0 → "Contado"
+ * - N → "N días"
+ */
+export const formatDiasCredito = (
+  d: number | string | null | undefined,
+): string => {
+  if (d === null || d === undefined) return "—";
+  if (typeof d === "string" && d.trim() === "") return "—";
+  const n = Number(d);
+  if (!Number.isFinite(n)) return "—";
+  if (n === 0) return "Contado";
+  return `${n} días`;
+};
