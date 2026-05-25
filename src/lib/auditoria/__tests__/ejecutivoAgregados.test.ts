@@ -33,7 +33,8 @@ describe("ejecutivoAgregados", () => {
   it("calcularScore traduce a estados cualitativos", () => {
     expect(calcularScore(0, 0).score).toBe(100);
     expect(calcularScore(0, 0).scoreEstado).toBe("excelente");
-    expect(calcularScore(3, 5).scoreEstado).toBe("bueno"); // 100-6=94 → excelente actually. Let me recalc.
+    expect(calcularScore(10, 5).scoreEstado).toBe("bueno"); // 100-20=80 → bueno
+    expect(calcularScore(20, 5).scoreEstado).toBe("regular"); // 100-40=60 → regular
   });
 
   it("calcularScore: penalización 0 con pendientes = 100", () => {
