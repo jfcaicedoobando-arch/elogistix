@@ -16,6 +16,7 @@ import {
   Repeat2,
   HelpCircle,
   Bug,
+  Target,
 } from "lucide-react";
 import type { SidebarItem } from "@/components/layout/SidebarGroupBlock";
 
@@ -32,6 +33,10 @@ export const SIDEBAR_GESTION_ITEMS: SidebarItem[] = [
 
 export const SIDEBAR_REPORTES_ITEMS: SidebarItem[] = [
   { title: "Rentabilidad", url: "/reportes/rentabilidad", icon: BarChart3 },
+];
+
+export const SIDEBAR_CRM_ITEMS: SidebarItem[] = [
+  { title: "Dashboard CRM", url: "/crm", icon: Target },
 ];
 
 export const SIDEBAR_DIRECTORIO_ITEMS: SidebarItem[] = [

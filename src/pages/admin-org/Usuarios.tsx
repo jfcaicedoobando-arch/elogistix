@@ -30,6 +30,7 @@ const roleBadge: Record<AppRole, string> = {
   super_admin: "bg-primary text-primary-foreground",
   admin: "bg-destructive text-destructive-foreground",
   operador: "bg-info text-info-foreground",
+  vendedor: "bg-success text-success-foreground",
   viewer: "bg-muted text-muted-foreground",
   cliente: "bg-accent text-accent-foreground",
 };

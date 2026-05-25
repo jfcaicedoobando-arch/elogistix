@@ -22,6 +22,14 @@ export interface ChangelogEntry {
  */
 export const recentChangelog: ChangelogEntry[] = [
   {
+    version: "11.0.0",
+    date: "2026-05-25",
+    type: "major",
+    title: "Módulo CRM nativo — Fase 1: fundación",
+    summary: "Base de datos del nuevo módulo CRM (leads, oportunidades, actividades, etapas configurables, motivos de pérdida, cuotas), nuevo rol 'vendedor', sidebar y dashboard.",
+    description: "Migraciones: nuevo rol 'vendedor' en app_role; tablas crm_etapas_pipeline, crm_motivos_perdida, crm_leads, crm_oportunidades, crm_actividades (polimórfica), crm_cuotas_vendedor con RLS multi-tenant y soft-delete. Vendedor ve sólo lo suyo; admin/operador/super_admin ven todo de su organización. cotizaciones.oportunidad_id + trigger que marca la oportunidad como ganada al aceptar la cotización vinculada. Seed de 5 etapas y 6 motivos default por organización. Nueva sección CRM en sidebar y dashboard /crm con KPIs base. Fases 2-6 pendientes. APP_VERSION 11.0.0.",
+  },
+  {
     version: "10.2.5",
     date: "2026-05-25",
     type: "minor",

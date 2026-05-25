@@ -5,6 +5,7 @@ import {
   SIDEBAR_DASHBOARD_ITEMS,
   SIDEBAR_GESTION_ITEMS,
   SIDEBAR_REPORTES_ITEMS,
+  SIDEBAR_CRM_ITEMS,
   SIDEBAR_DIRECTORIO_ITEMS,
   SIDEBAR_SISTEMA_ITEMS,
   SIDEBAR_ADMIN_ITEMS,
@@ -31,6 +32,7 @@ export function useAppSidebarSections(): SidebarSection[] {
   const sections: SidebarSection[] = [
     { label: "Dashboards", items: SIDEBAR_DASHBOARD_ITEMS },
     { label: "Gestión", items: SIDEBAR_GESTION_ITEMS },
+    { label: "CRM", items: SIDEBAR_CRM_ITEMS },
     { label: "Reportes", items: SIDEBAR_REPORTES_ITEMS },
     { label: "Directorio", items: SIDEBAR_DIRECTORIO_ITEMS },
     { label: "Sistema", items: sistemaItems },
