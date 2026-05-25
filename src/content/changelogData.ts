@@ -101,14 +101,6 @@ export const recentChangelog: ChangelogEntry[] = [
     summary: "Complexity warnings 14→3 (3 mappers planos con disable inline). 2 exhaustive-deps en Leads/Oportunidades resueltos con useMemo.",
     description: "Refactors puros sin cambio de comportamiento. Helpers extraídos: buildLeadInsertPayload, buildOportunidadInsertPayload, buildFromOportunidad/buildEmptyForNueva, isLeadDirty, extractErrorDetails + fmt* helpers, parseEmbarqueConProfitRaw + numOr0/numOrCompute/safeMargen, forecastBuckets (classifyEtapa/makeBucket/applyDelta), buildAuthSnapshot/buildSentryUserContext, useSentryInfo + maskDsn, useCrmInicioVM. useMemo en data?.data de Leads y Oportunidades para estabilizar deps. Barrel nuevo hooks/sentry. APP_VERSION 11.21.0.",
   },
-  {
-    version: "11.20.0",
-    date: "2026-05-25",
-    type: "minor",
-    title: "Auditoría loop 8 — barrel violations (0) y complejidad ciclomática",
-    summary: "no-restricted-imports: 53→0. Barrel hooks/crm/index.ts. Complejidad reducida: OportunidadDetalle (33→<15), CrmDashboard (27→<15), useAutomatizacionesEtapa (26→<15), useConvertirLead (27→<15).",
-    description: "P0.1 cerrado: creado src/hooks/crm/index.ts y reemplazados 53 imports a archivos internos por imports al barrel del dominio (53→0). P0.3 (mappers) actualizado: los archivos originalmente reportados ya estaban bajo 200 LOC; el verdadero hot spot eran 4 funciones con complejidad >25. Refactor: OportunidadDetalle.tsx dividido en guard + OportunidadDetalleContent + OportunidadKpisCards + DatosComercialesCard + ContactoRapidoCard + useOportunidadDetalleActions. CrmDashboard.tsx → VencidasAlert + ActividadesHoyCard + CerrandoSemanaCard + LeadsSinContactarCard + TopDealsCard. useAutomatizacionesEtapa.ts → automatizacionesEtapaActions (notifyVendedorMovido, crearTareaGanada, cancelarActividadesPerdida, crearTareaSeguimiento). useConvertirLead.ts → convertirHelpers (resolveClienteForConversion, fetchPrimeraEtapaAbierta). 626 tests verdes. APP_VERSION 11.20.0.",
-  },
 ];
 
 /** Deduplica por version conservando la primera ocurrencia (recentChangelog gana). */
