@@ -1,12 +1,16 @@
+import { lazy, Suspense } from "react";
 import { Download, FileText } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { PageHeader } from "@/components/shared/PageHeader";
+import { ChartSkeleton } from "@/components/shared/ChartSkeleton";
 import ReportesFiltros from "@/components/reportes/ReportesFiltros";
 import ReportesKpiCards from "@/components/reportes/ReportesKpiCards";
-import ReportesTopChart from "@/components/reportes/ReportesTopChart";
 import ReportesTablaClientes from "@/components/reportes/ReportesTablaClientes";
 import { useReportesPageController } from "@/hooks/reportes";
+
+// Lazy: difiere recharts (~95 KB gzip) fuera del TTI de la página.
+const ReportesTopChart = lazy(() => import("@/components/reportes/ReportesTopChart"));
 
 export default function Reportes() {
   const {
@@ -56,7 +60,9 @@ export default function Reportes() {
 
       <ReportesKpiCards kpis={kpis} isLoading={isLoading} />
 
-      <ReportesTopChart data={top10} isLoading={isLoading} />
+      <Suspense fallback={<ChartSkeleton height={300} />}>
+        <ReportesTopChart data={top10} isLoading={isLoading} />
+      </Suspense>
       <ReportesTablaClientes
         data={sorted}
         isLoading={isLoading}
