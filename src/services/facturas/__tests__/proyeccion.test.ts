@@ -1,7 +1,8 @@
 import { describe, it, expect, vi } from "vitest";
-import { createSupabaseMock } from "@/services/__tests__/_supabaseChainMock";
-
-const { mock } = vi.hoisted(() => ({ mock: createSupabaseMock() }));
+const mock = await vi.hoisted(async () => {
+  const { createSupabaseMock } = await import("@/services/__tests__/_supabaseChainMock");
+  return createSupabaseMock();
+});
 vi.mock("@/integrations/supabase/client", () => ({ supabase: mock.supabase }));
 
 import { fetchProyeccionMes } from "@/services/facturas/proyeccion";
