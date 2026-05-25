@@ -37,6 +37,7 @@ const ActividadesCrm = lazy(() => import("./pages/crm/Actividades"));
 const ForecastCrm = lazy(() => import("./pages/crm/Forecast"));
 const ReportesCrm = lazy(() => import("./pages/crm/Reportes"));
 const CrmLayout = lazy(() => import("./pages/crm/CrmLayout"));
+const CrmConfiguracion = lazy(() => import("./pages/crm/Configuracion"));
 
 const Embarques = lazy(() => import("./pages/embarques/Embarques"));
 const EmbarqueDetalle = lazy(() => import("./pages/embarques/EmbarqueDetalle"));
