@@ -5,12 +5,13 @@
  * Lógica pura → `lib/domain/embarqueWizard.ts`.
  * Hidratación inicial → `useCotizacionHydration`.
  * Orquestación del submit → `useEmbarqueSubmitOrchestrator`.
+ * Expediente (modo nuevo/existente) → `useNuevoEmbarqueExpediente`.
+ * Vinculación con cotización + hidratación → `useNuevoEmbarqueCotVinculada`.
  */
-import { useState, useCallback, useEffect, useRef } from "react";
+import { useCallback, useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import {
   useProveedoresForSelect,
-  type ExpedienteCliente,
 } from "@/hooks/embarque/useEmbarques";
 import {
   useClientesForSelect,
@@ -18,40 +19,24 @@ import {
 } from "@/hooks/cliente/useClientes";
 import { useConceptosForm } from "@/hooks/cotizacion/wizard/useConceptosForm";
 import { useEmbarqueForm } from "@/hooks/embarque/useEmbarqueForm";
-import { useCotizacionHydration } from "@/hooks/embarque/useCotizacionHydration";
 import { useEmbarqueSubmitOrchestrator } from "@/hooks/embarque/useEmbarqueSubmitOrchestrator";
-import {
-  useCotizacionesAceptadas,
-  type CotizacionRow,
-} from "@/hooks/cotizacion/useCotizaciones";
-import { fetchCotizacionCostosForEmbarque } from "@/services/cotizacion";
-import {
-  mapConceptosVentaFromCotizacion,
-  mapConceptosCostoFromCotizacion,
-} from "@/lib/domain/embarqueWizard";
+import { useCotizacionesAceptadas } from "@/hooks/cotizacion/useCotizaciones";
 import type { StepValidationErrors } from "@/lib/domain/embarqueWizardSchemas";
 import { validateWizardStep } from "@/lib/domain/embarqueWizardStepValidator";
 import { notifyError } from "@/lib/ui/appFeedback";
-
-type ModoExpediente = "nuevo" | "existente";
+import { useNuevoEmbarqueExpediente } from "./useNuevoEmbarqueExpediente";
+import { useNuevoEmbarqueCotVinculada } from "./useNuevoEmbarqueCotVinculada";
 
 export function useNuevoEmbarqueWizard() {
   const { toast } = useToast();
 
-  // ── Catálogos ──────────────────────────────────────────────
   const { data: clientes = [] } = useClientesForSelect();
   const { data: proveedoresDb = [] } = useProveedoresForSelect();
   const { data: cotizacionesAceptadas = [] } = useCotizacionesAceptadas();
 
-  // ── Estado local del wizard ────────────────────────────────
   const [currentStep, setCurrentStep] = useState(1);
   const [validationErrors, setValidationErrors] = useState<Record<number, StepValidationErrors>>({});
-  const [cotizacionVinculada, setCotizacionVinculada] = useState<CotizacionRow | null>(null);
-  const [modoExpediente, setModoExpediente] = useState<ModoExpediente>("nuevo");
-  const [expedienteSeleccionado, setExpedienteSeleccionado] =
-    useState<ExpedienteCliente | null>(null);
 
-  // ── Form principal del embarque ────────────────────────────
   const form = useEmbarqueForm();
   const { methods } = form;
 
@@ -59,72 +44,18 @@ export function useNuevoEmbarqueWizard() {
   const modo = methods.watch("modo");
   const { data: contactos = [] } = useContactosCliente(clienteId || undefined);
 
-  // ── Conceptos venta/costo ──────────────────────────────────
   const conceptos = useConceptosForm();
-  const { setConceptosVenta, setConceptosCosto } = conceptos;
-
   const selectedCliente = clientes.find((c) => c.id === clienteId);
 
-  // ── Hidratación desde cotización ───────────────────────────
-  const hidratarConceptosDesdeCotizacion = useCallback(
-    async (cot: CotizacionRow) => {
-      const ventas = mapConceptosVentaFromCotizacion(cot);
-      if (ventas.length > 0) setConceptosVenta(ventas);
+  const expediente = useNuevoEmbarqueExpediente({ methods, clienteId });
 
-      const costos = await fetchCotizacionCostosForEmbarque(cot.id);
-      if (costos.length > 0) {
-        setConceptosCosto(mapConceptosCostoFromCotizacion(costos, proveedoresDb));
-      }
-    },
-    [setConceptosVenta, setConceptosCosto, proveedoresDb],
-  );
-
-  const handleVincularCotizacion = useCallback(
-    (cot: CotizacionRow) => {
-      setCotizacionVinculada(cot);
-      form.vincularCotizacion(cot);
-      void hidratarConceptosDesdeCotizacion(cot);
-    },
-    [form, hidratarConceptosDesdeCotizacion],
-  );
-
-  const handleDesvincularCotizacion = useCallback(() => {
-    setCotizacionVinculada(null);
-    form.desvincularCotizacion();
-    setModoExpediente("nuevo");
-    setExpedienteSeleccionado(null);
-  }, [form]);
-
-  useCotizacionHydration({ onPrevincular: handleVincularCotizacion });
-
-  // ── Reset del expediente al cambiar de cliente ─────────────
-  const prevClienteRef = useRef(clienteId);
-  useEffect(() => {
-    if (clienteId !== prevClienteRef.current) {
-      prevClienteRef.current = clienteId;
-      setModoExpediente("nuevo");
-      setExpedienteSeleccionado(null);
-    }
-  }, [clienteId]);
-
-  const handleModoExpedienteChange = useCallback(
-    (nuevoModo: ModoExpediente) => {
-      setModoExpediente(nuevoModo);
-      if (nuevoModo === "nuevo") {
-        setExpedienteSeleccionado(null);
-        methods.setValue("blMaster", "");
-      }
-    },
-    [methods],
-  );
-
-  const handleSeleccionarExpediente = useCallback(
-    (exp: ExpedienteCliente) => {
-      setExpedienteSeleccionado(exp);
-      methods.setValue("blMaster", exp.bl_master || "");
-    },
-    [methods],
-  );
+  const cotVinc = useNuevoEmbarqueCotVinculada({
+    form,
+    setConceptosVenta: conceptos.setConceptosVenta,
+    setConceptosCosto: conceptos.setConceptosCosto,
+    proveedoresDb,
+    onClearExpediente: expediente.clearExpediente,
+  });
 
   // ── Validación por paso (zod) ──────────────────────────────
   const validateStep = useCallback(
@@ -156,7 +87,6 @@ export function useNuevoEmbarqueWizard() {
   const orchestrator = useEmbarqueSubmitOrchestrator();
 
   const handleFinish = async () => {
-    // Validar todos los pasos antes de enviar
     for (const step of [1, 2, 3, 4]) {
       if (!validateStep(step)) {
         setCurrentStep(step);
@@ -166,9 +96,9 @@ export function useNuevoEmbarqueWizard() {
 
     await orchestrator.submit({
       values: methods.getValues(),
-      modoExpediente,
-      expedienteSeleccionado,
-      cotizacionVinculada,
+      modoExpediente: expediente.modoExpediente,
+      expedienteSeleccionado: expediente.expedienteSeleccionado,
+      cotizacionVinculada: cotVinc.cotizacionVinculada,
       contactos,
       selectedClienteNombre: selectedCliente?.nombre || "",
       proveedoresDb,
@@ -183,35 +113,28 @@ export function useNuevoEmbarqueWizard() {
   };
 
   return {
-    // Form
     methods,
-    // Estado wizard
     currentStep,
     setCurrentStep,
     validationErrors,
     validateStep,
     validateStep1,
-    // Catálogos / contactos
     clientes,
     proveedoresDb,
     cotizacionesAceptadas,
     contactos,
     selectedCliente,
     modo,
-    // Vinculación con cotización
-    cotizacionVinculada,
-    handleVincularCotizacion,
-    handleDesvincularCotizacion,
-    // Expediente
-    modoExpediente,
-    expedienteSeleccionado,
-    handleModoExpedienteChange,
-    handleSeleccionarExpediente,
-    // Documentos
+    cotizacionVinculada: cotVinc.cotizacionVinculada,
+    handleVincularCotizacion: cotVinc.handleVincularCotizacion,
+    handleDesvincularCotizacion: cotVinc.handleDesvincularCotizacion,
+    modoExpediente: expediente.modoExpediente,
+    expedienteSeleccionado: expediente.expedienteSeleccionado,
+    handleModoExpedienteChange: expediente.handleModoExpedienteChange,
+    handleSeleccionarExpediente: expediente.handleSeleccionarExpediente,
     handleMsdsUpload: form.handleMsdsUpload,
     setDocumentoArchivo: form.setDocumentoArchivo,
     getDocumentosChecklist: form.getDocumentosChecklist,
-    // Conceptos
     conceptosVenta: conceptos.conceptosVenta,
     conceptosCosto: conceptos.conceptosCosto,
     updateConceptoVenta: conceptos.updateConceptoVenta,
@@ -223,7 +146,6 @@ export function useNuevoEmbarqueWizard() {
     subtotalVenta: conceptos.subtotalVenta,
     totalCosto: conceptos.totalCosto,
     utilidadEstimada: conceptos.utilidadEstimada,
-    // Submit
     handleFinish,
     isPending: orchestrator.isPending,
   };

@@ -22,12 +22,12 @@ export interface ChangelogEntry {
  */
 export const recentChangelog: ChangelogEntry[] = [
   {
-    version: "11.18.0",
+    version: "11.19.0",
     date: "2026-05-25",
     type: "minor",
-    title: "Auditoría loop 6 — 6 componentes/páginas >200 LOC",
-    summary: "ClienteDetalle (225→181), NuevoLeadDialog (216→114), Proveedores (210→153), Usuarios (204→101), ProveedorDetalle (203→168), Leads (203→143).",
-    description: "Power of 10: ClienteDetalle → ClienteDetalleHeader + ClienteInformacionCard. NuevoLeadDialog → NuevoLeadForm. Proveedores → ProveedorTable + proveedorColumns. Usuarios → useUsuarioColumns + RoleChangeAlertDialog. ProveedorDetalle → ProveedorOperacionesTable. Leads → leadsColumns. Sin cambios funcionales. 91 archivos / 626 tests verdes. APP_VERSION 11.18.0.",
+    title: "Auditoría loop 7 — App.tsx, barriles services y libs >200 LOC",
+    summary: "App.tsx (265→43), services/crm (228→9 barrel), services/embarque/queries/listado (223→17), services/auditoria (205→11), lib/formatters (243→6), lib/parsers/dashboard, lib/domain/proyeccionFacturacion, lib/csv/importSchemas, useNuevoEmbarqueWizard (230→139), useHallazgosTablaState (213→158).",
+    description: "Power of 10 — todos los archivos del proyecto bajo 200 LOC. App.tsx → routes.tsx + lib/queryClient.ts. services/crm/index.ts → oportunidadCotizaciones+lineage+leaderboard+cotizacionDesdeOportunidad. services/embarque/queries/listado.ts → paginados+exportListado+extras. services/auditoria/index.ts → reporte+revisiones+comentarios+snooze+snapshots. lib/formatters/index.ts → numbers+dates+text+phone+places. lib/parsers/dashboard.ts → dashboardTypes. lib/domain/proyeccionFacturacion.ts → types+conversion+agrupar+kpis+meses. lib/csv/importSchemas.ts → importSchemasShared+importSchemaCliente+importSchemaProveedor. useNuevoEmbarqueWizard.ts → useNuevoEmbarqueExpediente + useNuevoEmbarqueCotVinculada. useHallazgosTablaState.ts → hallazgosTablaFilters. Sin cambios funcionales — todos los barrels preservan API pública. 626 tests verdes. APP_VERSION 11.19.0.",
   },
   {
     version: "11.17.0",
@@ -92,14 +92,6 @@ export const recentChangelog: ChangelogEntry[] = [
     title: "Sprint T1+T2: tests del CRM y de edge functions",
     summary: "Cobertura: 24 tests nuevos en CRM y 7 tests Deno (checkAdminAccess, validatePayload).",
     description: "Extracción de lógica pura a src/lib/crm/ (forecast, proximasActividades, cliente360) y tests vitest+Deno. APP_VERSION 11.8.0.",
-  },
-  {
-    version: "11.7.3",
-    date: "2026-05-25",
-    type: "patch",
-    title: "Fix edge function list-users: permitir miembros de la organización",
-    summary: "Operadores y vendedores ya no reciben 403 al cargar /crm/oportunidades ni selects de vendedor/responsable.",
-    description: "list-users ahora permite a cualquier miembro de la org listar usuarios de su propia organización (respuesta filtrada por organization_members). create-user/delete-user/invite-client-user mantienen check estricto de admin. APP_VERSION 11.7.3.",
   },
 ];
 

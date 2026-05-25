@@ -1,21 +1,23 @@
 /**
  * Hook de estado para la tabla paginada de hallazgos de auditoría.
- * Aísla filtros, paginación y derivaciones del componente UI.
+ * Aísla filtros, paginación y derivaciones del componente UI. Los predicados
+ * puros viven en `hallazgosTablaFilters.ts`.
  */
 import { useMemo, useState } from "react";
-import {
-  useAuditoriaRevisiones,
-  revisionKey,
-} from "@/hooks/auditoria/useAuditoriaRevisiones";
+import { useAuditoriaRevisiones } from "@/hooks/auditoria/useAuditoriaRevisiones";
 import { useAuth } from "@/contexts/AuthContext";
 import type {
   HallazgoAuditoria,
   ReglaAuditoria,
   SeveridadAuditoria,
 } from "@/types/auditoria";
+import {
+  matchHallazgo,
+  type FiltroResponsable,
+  type FiltroRevision,
+} from "./hallazgosTablaFilters";
 
-export type FiltroRevision = "todos" | "pendientes" | "revisados" | "en_progreso";
-export type FiltroResponsable = "todos" | "mios" | "sin_asignar" | "vencidos";
+export type { FiltroRevision, FiltroResponsable } from "./hallazgosTablaFilters";
 
 export interface UseHallazgosTablaStateOptions {
   /** Severidad inicial (drill-down desde KPIs ejecutivos). */
@@ -30,77 +32,12 @@ export interface UseHallazgosTablaStateOptions {
   initialResponsable?: FiltroResponsable;
 }
 
-interface MatchCtx {
-  q: string;
-  desde: string | null;
-  hasta: string | null;
-  today: string;
-  filtroRegla: ReglaAuditoria | "todas";
-  filtroSev: SeveridadAuditoria | "todas";
-  filtroCliente: string;
-  filtroRevision: FiltroRevision;
-  filtroResponsable: FiltroResponsable;
-  userId: string | undefined;
-  revisiones: Map<string, { estado_revision?: string; responsable_id?: string | null; fecha_limite?: string | null }> | undefined;
-}
-
-const BASE_PREDICATES: Array<(h: HallazgoAuditoria, c: MatchCtx) => boolean> = [
-  (h, c) => !c.q || !!h.expediente?.toLowerCase().includes(c.q),
-  (h, c) => c.filtroRegla === "todas" || h.regla === c.filtroRegla,
-  (h, c) => c.filtroSev === "todas" || h.severidad === c.filtroSev,
-  (h, c) => c.filtroCliente === "todos" || h.cliente_nombre === c.filtroCliente,
-  (h, c) => !c.desde || (!!h.eta && h.eta >= c.desde),
-  (h, c) => !c.hasta || (!!h.eta && h.eta <= c.hasta),
-];
-
-function matchBase(h: HallazgoAuditoria, c: MatchCtx): boolean {
-  return BASE_PREDICATES.every((p) => p(h, c));
-}
-
-function matchRevision(estado: string, tieneRev: boolean, filtro: FiltroRevision): boolean {
-  if (filtro === "todos") return true;
-  if (filtro === "revisados") return estado === "revisado";
-  if (filtro === "en_progreso") return estado === "en_progreso";
-  if (filtro === "pendientes") return !(tieneRev && estado === "revisado");
-  return true;
-}
-
-function matchResponsable(
-  rev: { responsable_id?: string | null; fecha_limite?: string | null } | null,
-  estado: string,
-  filtro: FiltroResponsable,
-  userId: string | undefined,
-  today: string,
-): boolean {
-  if (filtro === "todos") return true;
-  if (filtro === "mios") return rev?.responsable_id === userId;
-  if (filtro === "sin_asignar") return !rev?.responsable_id;
-  if (filtro === "vencidos") {
-    if (!rev?.fecha_limite) return false;
-    if (rev.fecha_limite >= today) return false;
-    if (estado === "revisado") return false;
-    return true;
-  }
-  return true;
-}
-
-function matchHallazgo(h: HallazgoAuditoria, c: MatchCtx): boolean {
-  if (!matchBase(h, c)) return false;
-  const rev = c.revisiones?.get(revisionKey(h)) ?? null;
-  const estado = rev?.estado_revision ?? "pendiente";
-  if (!matchRevision(estado, !!rev, c.filtroRevision)) return false;
-  if (!matchResponsable(rev, estado, c.filtroResponsable, c.userId, c.today)) return false;
-  return true;
-}
-
 export function useHallazgosTablaState(
   hallazgos: HallazgoAuditoria[],
   mostrarRevisadosDefault = false,
   opts: UseHallazgosTablaStateOptions = {},
 ) {
-  const defaultRevision: FiltroRevision = mostrarRevisadosDefault
-    ? "todos"
-    : "pendientes";
+  const defaultRevision: FiltroRevision = mostrarRevisadosDefault ? "todos" : "pendientes";
 
   const [search, setSearch] = useState(opts.initialSearch ?? "");
   const [filtroRegla, setFiltroRegla] = useState<ReglaAuditoria | "todas">("todas");
@@ -135,7 +72,11 @@ export function useHallazgosTablaState(
       desde: etaDesde ? etaDesde.toISOString().slice(0, 10) : null,
       hasta: etaHasta ? etaHasta.toISOString().slice(0, 10) : null,
       today: new Date().toISOString().slice(0, 10),
-      filtroRegla, filtroSev, filtroCliente, filtroRevision, filtroResponsable,
+      filtroRegla,
+      filtroSev,
+      filtroCliente,
+      filtroRevision,
+      filtroResponsable,
       userId: user?.id,
       revisiones,
     };
@@ -177,7 +118,6 @@ export function useHallazgosTablaState(
   };
 
   return {
-    // estado
     search,
     filtroRegla,
     filtroSev,
@@ -190,14 +130,12 @@ export function useHallazgosTablaState(
     currentPage,
     totalPages,
     start,
-    // datos
     revisiones,
     clientes,
     filtrados,
     visibles,
     hayFiltros,
     totalHallazgos: hallazgos.length,
-    // acciones (con reset de paginación implícito)
     setSearch: wrap(setSearch),
     setFiltroRegla: wrap(setFiltroRegla),
     setFiltroSev: wrap(setFiltroSev),

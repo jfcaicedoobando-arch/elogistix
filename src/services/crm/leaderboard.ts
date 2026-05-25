@@ -1,0 +1,70 @@
+import { supabase } from "@/integrations/supabase/client";
+
+export interface LeaderboardRow {
+  vendedor: string;
+  cuota: number;
+  cerrado: number;
+  avance: number;
+}
+
+export interface LeaderboardRawData {
+  cuotas: Array<{ vendedor_email: string | null; cuota_monto: number | null }>;
+  ops: Array<{
+    vendedor_email: string | null;
+    valor_real: number | null;
+    monto_estimado: number | null;
+    etapa_id: string;
+  }>;
+  etapas: Array<{ id: string; tipo: string }>;
+}
+
+export async function fetchLeaderboardRaw(
+  anio: number,
+  mes: number,
+  inicioMesISO: string,
+): Promise<LeaderboardRawData> {
+  const [cuotasR, opsR, etapasR] = await Promise.all([
+    supabase
+      .from("crm_cuotas_vendedor")
+      .select("vendedor_email, cuota_monto, anio, mes")
+      .eq("anio", anio)
+      .eq("mes", mes),
+    supabase
+      .from("crm_oportunidades")
+      .select("vendedor_email, valor_real, monto_estimado, etapa_id, fecha_cierre_real")
+      .gte("fecha_cierre_real", inicioMesISO),
+    supabase.from("crm_etapas_pipeline").select("id, tipo"),
+  ]);
+  if (cuotasR.error) throw cuotasR.error;
+  if (opsR.error) throw opsR.error;
+  if (etapasR.error) throw etapasR.error;
+  return {
+    cuotas: (cuotasR.data ?? []) as LeaderboardRawData["cuotas"],
+    ops: (opsR.data ?? []) as LeaderboardRawData["ops"],
+    etapas: (etapasR.data ?? []) as LeaderboardRawData["etapas"],
+  };
+}
+
+/** Lógica pura, testeable: agrega cuotas/ops por vendedor y calcula avance. */
+export function computeLeaderboard(raw: LeaderboardRawData): LeaderboardRow[] {
+  const tipoEtapa = new Map(raw.etapas.map((e) => [e.id, e.tipo]));
+  const cerradoMap = new Map<string, number>();
+  for (const o of raw.ops) {
+    if (tipoEtapa.get(o.etapa_id) !== "ganada") continue;
+    const k = o.vendedor_email || "Sin asignar";
+    const monto = Number(o.valor_real ?? o.monto_estimado ?? 0);
+    cerradoMap.set(k, (cerradoMap.get(k) ?? 0) + monto);
+  }
+  const cuotaMap = new Map<string, number>();
+  for (const c of raw.cuotas) {
+    cuotaMap.set(c.vendedor_email || "Sin asignar", Number(c.cuota_monto ?? 0));
+  }
+  const todos = new Set<string>([...cerradoMap.keys(), ...cuotaMap.keys()]);
+  const filas: LeaderboardRow[] = Array.from(todos).map((vendedor) => {
+    const cuota = cuotaMap.get(vendedor) ?? 0;
+    const cerrado = cerradoMap.get(vendedor) ?? 0;
+    const avance = cuota > 0 ? Math.min(100, Math.round((cerrado / cuota) * 100)) : 0;
+    return { vendedor, cuota, cerrado, avance };
+  });
+  return filas.sort((a, b) => b.cerrado - a.cerrado);
+}
