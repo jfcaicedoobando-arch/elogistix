@@ -93,14 +93,6 @@ export const recentChangelog: ChangelogEntry[] = [
     summary: "useAuditoriaRevisiones (259) → barrel de 11 líneas; useAuditoriaEjecutivo (256→94); useEmbarquesPageState (256→178); useNuevoEmbarqueWizard (260→230). +3 archivos de tests.",
     description: "useAuditoriaRevisiones.ts (259) dividido en revisiones/{hash,query,marcar,desmarcar,asignar}.ts; barrel preserva API. lib/auditoria/ejecutivoAgregados.ts (182 líneas) extraído de useAuditoriaEjecutivo (256→94). lib/embarque/embarquesPageHelpers.ts (105) extraído de useEmbarquesPageState (256→178). lib/domain/embarqueWizardStepValidator.ts (59) extraído de useNuevoEmbarqueWizard (260→230). 3 tests nuevos (15 casos): ejecutivoAgregados, embarquesPageHelpers, embarqueWizardStepValidator. Suite: 85 archivos / 592 tests verdes. APP_VERSION 11.14.0.",
   },
-  {
-    version: "11.11.0",
-    date: "2026-05-25",
-    type: "minor",
-    title: "Auditoría de tests — 3 tandas (P0+P1+P2) +18 archivos / +83 tests",
-    summary: "Cobertura de servicios financieros críticos (hueco facturación, proyección, proforma), portal cliente, observability y edge functions.",
-    description: "Tanda A (P0 servicios): idempotencia, embarque/contenedor, proforma/consolidar, proforma/facturar, cliente/financials, facturas/huecoFacturacion, facturas/proyeccion + helper _supabaseChainMock + Deno cors_test. Tanda B (P1 hooks): extracción lib/facturacion/huecoCsv, tests para useCotizacionPL, useCreateTrackingLink y extensión de embarqueWizard (resolveExpedienteForSubmit + buildBitacoraDetalles). Tanda C (P2): portal/columns, portal/queries, observability/logClientError. Total: 82 archivos / 583 tests verdes. APP_VERSION 11.11.0.",
-  },
 ];
 
 /** Deduplica por version conservando la primera ocurrencia (recentChangelog gana). */
