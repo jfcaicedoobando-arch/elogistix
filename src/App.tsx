@@ -28,6 +28,7 @@ const Idempotencia = lazy(() => import("./pages/dashboard/Idempotencia"));
 const Auditoria = lazy(() => import("./pages/Auditoria"));
 const Ayuda = lazy(() => import("./pages/dashboard/Ayuda"));
 const SentryDiagnostico = lazy(() => import("./pages/dashboard/SentryDiagnostico"));
+const CrmDashboard = lazy(() => import("./pages/crm/CrmDashboard"));
 
 const Embarques = lazy(() => import("./pages/embarques/Embarques"));
 const EmbarqueDetalle = lazy(() => import("./pages/embarques/EmbarqueDetalle"));
@@ -196,6 +197,7 @@ const App = () => (
               <Route path="/changelog" element={<Changelog />} />
               <Route path="/ayuda" element={<Ayuda />} />
               <Route path="/sentry" element={<SentryDiagnostico />} />
+              <Route path="/crm" element={<CrmDashboard />} />
               <Route path="/bitacora" element={<Bitacora />} />
               <Route
                 path="/papelera"
