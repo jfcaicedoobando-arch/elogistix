@@ -61,7 +61,7 @@ export default function CrmNotificacionesBell() {
             </Button>
           )}
         </div>
-        <ScrollArea className="max-h-[360px]">
+        <div className="max-h-[360px] overflow-y-auto">
           {items.length === 0 ? (
             <div className="py-8 text-center text-xs text-muted-foreground">Sin notificaciones</div>
           ) : (
@@ -99,7 +99,7 @@ export default function CrmNotificacionesBell() {
               })}
             </ul>
           )}
-        </ScrollArea>
+        </div>
       </PopoverContent>
     </Popover>
   );
