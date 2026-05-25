@@ -32,13 +32,12 @@ describe("browserStorage wrapper", () => {
 
   it("setItem no propaga errores (QuotaExceeded) y reporta vía console.warn", () => {
     const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined);
-    const original = window.localStorage.setItem;
-    window.localStorage.setItem = () => {
+    const spy = vi.spyOn(Storage.prototype, "setItem").mockImplementation(() => {
       throw new DOMException("Quota", "QuotaExceededError");
-    };
+    });
     expect(() => safeLocalStorage.setItem("x", "y")).not.toThrow();
     expect(warn).toHaveBeenCalledTimes(1);
-    window.localStorage.setItem = original;
+    spy.mockRestore();
     warn.mockRestore();
   });
 
