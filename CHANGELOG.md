@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [11.33.0] - 2026-05-25
+- **Auditoría calidad — Etapas 1 y 2 (services + components)**: validación arquitectónica de las dos capas restantes. `src/services/**`: 0 imports a `@/hooks`, `@/components`, `@/pages` o `@/contexts` (capa ya limpia), ningún servicio >200 LOC. `src/components/**`: 0 componentes propios usan `useQuery`/`useMutation` directos (todo va vía hook controller), 0 cálculos financieros inline (todo en `lib/financial`). Único archivo >200 líneas es `ui/sidebar.tsx` (shadcn upstream). Guardrails añadidos: bloque ESLint `no-restricted-imports` para `src/services/**` (espejo del que ya existe en `lib/`), y `architecture.test.ts` extendido para cubrir también services. 623/623 tests verdes.
+
 ## [11.32.0] - 2026-05-25
 - **Auditoría arquitectónica (etapas 7–12)**: `src/generators/*` confirmado como capa fina de adaptadores que delegan en `src/pdf/*` (no hay duplicación real, el split es intencional: `generators/` = API pública para páginas, `pdf/` = composición React-PDF). Eliminados los 9 `as unknown as` en controladores de cliente, proveedor y embarque: `diffFields<T extends object>` ahora acepta entidades tipadas de Supabase directamente y `fields` es `ReadonlyArray<string>`. `detalles?` de `insertBitacora` y `useRegistrarActividad` relajado a `Record<string, unknown>` (el cast a `Json` queda encapsulado en la capa de servicio). Nuevo test `src/lib/__tests__/architecture.test.ts` que verifica que ningún archivo en `src/lib/**` importa `@/hooks`, `@/components` o `@/pages` (red de seguridad ante eliminaciones del ESLint rule). Lint 0/0, 622/622 tests verdes.
 
