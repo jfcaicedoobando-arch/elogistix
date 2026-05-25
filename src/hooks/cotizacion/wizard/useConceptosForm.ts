@@ -60,15 +60,15 @@ export function useConceptosForm(opciones: UseConceptosFormOptions = {}) {
     [subtotalVenta, totalCosto]
   );
 
-  const inicializarVenta = (items: ConceptoVentaLocal[]) => {
+  const inicializarVenta = useCallback((items: ConceptoVentaLocal[]) => {
     setConceptosVenta(items);
     setNextVentaId(items.length + 1);
-  };
+  }, []);
 
-  const inicializarCosto = (items: ConceptoCostoLocal[]) => {
+  const inicializarCosto = useCallback((items: ConceptoCostoLocal[]) => {
     setConceptosCosto(items);
     setNextCostoId(items.length + 1);
-  };
+  }, []);
 
   return {
     conceptosVenta,
