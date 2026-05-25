@@ -77,7 +77,7 @@ export function useEmbarquesPageState() {
     fechaDesde, fechaHasta,
   });
   const { data: resultadoFull, isLoading: loadingFull } = useQuery({
-    queryKey: [...queryKeys.embarques.all, "full-for-estado-filter", fullSetFilters],
+    queryKey: queryKeys.embarques.fullForEstadoFilter(fullSetFilters),
     queryFn: () => fetchEmbarquesParaExport(fullSetFilters),
     enabled: estadoFilterActivo,
     staleTime: 60_000,
@@ -132,7 +132,7 @@ export function useEmbarquesPageState() {
   // ---------- Extras (liquidación + docs) ----------
   const visibleIds = useMemo(() => embarques.map((e) => e.id), [embarques]);
   const { data: extrasBranchB } = useQuery({
-    queryKey: [...queryKeys.embarques.all, "extras-branch-b", visibleIds],
+    queryKey: queryKeys.embarques.extrasBranchB(visibleIds),
     queryFn: () => fetchEmbarquesListExtras(visibleIds),
     enabled: estadoFilterActivo && visibleIds.length > 0,
     staleTime: 30_000,

@@ -7,7 +7,7 @@ import { addOrgMember, fetchAvailableUsers } from "@/services/admin";
  */
 export function useAvailableUsers(enabled = true) {
   return useQuery({
-    queryKey: [...queryKeys.admin.allUsers, "options"],
+    queryKey: queryKeys.admin.allUsersOptions,
     queryFn: fetchAvailableUsers,
     enabled,
   });

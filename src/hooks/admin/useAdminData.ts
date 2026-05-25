@@ -19,7 +19,7 @@ export type { AdminOrgStats, AdminOrgActivity, AdminRecentOrg, GlobalUserRow, Or
 // ─── Dashboard Stats ─────────────────────────────────────
 export function useAdminDashboardStats() {
   return useQuery({
-    queryKey: [...queryKeys.admin.organizations, 'stats'],
+    queryKey: queryKeys.admin.organizationsStats,
     queryFn: fetchAdminDashboardStats,
   });
 }
@@ -51,7 +51,7 @@ export function useAdminOrgActivity() {
 // ─── Últimas organizaciones creadas ──────────────────────
 export function useAdminRecentOrgs(limit = 5) {
   return useQuery({
-    queryKey: [...queryKeys.admin.recentOrgs, limit],
+    queryKey: queryKeys.admin.recentOrgsList(limit),
     queryFn: () => fetchAdminRecentOrgs(limit),
   });
 }

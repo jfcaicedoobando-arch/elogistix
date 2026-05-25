@@ -110,7 +110,7 @@ export function useApplyJsonCargoFechas() {
       qc.invalidateQueries({ queryKey: queryKeys.embarques.detail(args.embarqueId) });
       qc.invalidateQueries({ queryKey: queryKeys.embarques.all });
       qc.invalidateQueries({ queryKey: queryKeys.embarques.eventos(args.embarqueId) });
-      qc.invalidateQueries({ queryKey: [...queryKeys.embarques.all, "full", args.embarqueId] });
+      qc.invalidateQueries({ queryKey: queryKeys.embarques.full(args.embarqueId) });
     },
   });
 }
