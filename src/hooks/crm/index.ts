@@ -13,6 +13,7 @@ export * from './useLeaderboardVendedores';
 export * from './useLeads';
 export * from './useLineage';
 export * from './useOportunidadCotizaciones';
+export * from './useOportunidadDetalleActions';
 export * from './useOportunidadForm';
 export * from './useOportunidades';
 export * from './usePlantillasMensaje';
