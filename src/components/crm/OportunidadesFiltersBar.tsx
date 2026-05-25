@@ -9,10 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import type { CrmEtapaRow } from "@/hooks/crm";
-import { FILTROS_DEFAULT, type OportunidadesFiltros } from "./oportunidadesFiltersTypes";
-
-export { FILTROS_DEFAULT };
-export type { OportunidadesFiltros };
+import type { OportunidadesFiltros } from "./oportunidadesFiltersTypes";
 
 interface Props {
   etapas: CrmEtapaRow[];

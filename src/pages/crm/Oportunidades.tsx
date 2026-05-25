@@ -17,10 +17,11 @@ import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 import { formatCurrencyCompact } from "@/lib/formatters";
 import OportunidadKanban from "@/components/crm/OportunidadKanban";
 import NuevaOportunidadDialog from "@/components/crm/NuevaOportunidadDialog";
-import OportunidadesFiltersBar, {
+import OportunidadesFiltersBar from "@/components/crm/OportunidadesFiltersBar";
+import {
   FILTROS_DEFAULT,
   type OportunidadesFiltros,
-} from "@/components/crm/OportunidadesFiltersBar";
+} from "@/components/crm/oportunidadesFiltersTypes";
 import {
   useOportunidades,
   type CrmOportunidadRow,
