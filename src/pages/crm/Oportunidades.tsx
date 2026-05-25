@@ -17,7 +17,7 @@ import { CrmSubheader } from "@/components/crm/CrmSubheader";
 import { DataTable, defineColumns, type ColumnDef } from "@/components/shared/DataTable";
 import { useDebounce } from "@/hooks/shared";
 import { useToast } from "@/hooks/shared";
-import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
+import { notifyError } from "@/lib/ui/appFeedback";
 import { formatCurrencyCompact } from "@/lib/formatters";
 import OportunidadKanban from "@/components/crm/OportunidadKanban";
 import OportunidadesFiltersBar from "@/components/crm/OportunidadesFiltersBar";
@@ -93,9 +93,16 @@ export default function Oportunidades() {
 
   const mover = useMoverEtapaConAutomatizacion();
   const handleMover = async (id: string, etapaId: string, prob: number) => {
+    const op = opsRaw.find((o) => o.id === id);
+    const etapaPrev = op?.etapa_id;
+    const probPrev = op?.probabilidad ?? 0;
     try {
       await mover.mutateAsync({ id, etapa_id: etapaId, probabilidad: prob });
-      notifySuccess(toast, { title: "Etapa actualizada" });
+      const { showUndoToast } = await import("@/hooks/crm/useUndoToast");
+      showUndoToast("Etapa actualizada", async () => {
+        if (!etapaPrev) return;
+        await mover.mutateAsync({ id, etapa_id: etapaPrev, probabilidad: probPrev });
+      });
     } catch (e) {
       notifyError(toast, {
         title: "No se pudo mover",
