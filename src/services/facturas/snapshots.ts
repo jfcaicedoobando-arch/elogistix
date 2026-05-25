@@ -7,6 +7,7 @@
  */
 import { supabase } from "@/integrations/supabase/client";
 import type { Json } from "@/integrations/supabase/types";
+import { fromDb } from "@/lib/supabase/cast";
 
 export interface FacturaSnapshot {
   version: number;
@@ -52,7 +53,7 @@ export interface ProformaSnapshot {
 
 function asObject<T>(value: Json | null): T | null {
   if (value == null || typeof value !== "object" || Array.isArray(value)) return null;
-  return value as unknown as T;
+  return fromDb<T>(value);
 }
 
 export async function fetchFacturaSnapshot(facturaId: string): Promise<FacturaSnapshot | null> {

@@ -92,6 +92,8 @@ function mapRows(matrix: string[][]): ParsedRow[] {
       } else if (field === "estado") {
         r.estado = (LEAD_ESTADOS as string[]).includes(val) ? (val as CrmLeadEstado) : "Nuevo";
       } else {
+        // SAFE-CAST: asignación dinámica por campo CSV. `field` proviene de
+        // un mapping validado contra las claves de ParsedRow.
         (r as unknown as Record<string, string>)[field] = val;
       }
     });

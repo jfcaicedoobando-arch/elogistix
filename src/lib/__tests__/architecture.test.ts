@@ -1,15 +1,15 @@
 /**
  * Test de arquitectura — protege la jerarquía de capas:
- *   src/lib/** NO puede importar de @/hooks/*, @/components/* ni @/pages/*.
+ *   - `src/lib/**` NO puede importar de @/hooks, @/components ni @/pages.
+ *   - `src/services/**` NO puede importar de @/hooks, @/components,
+ *     @/pages ni @/contexts.
  *
- * Duplica la regla ESLint `no-restricted-imports` definida en eslint.config.js
- * como red de seguridad ante eliminaciones accidentales del lint rule.
+ * Duplica las reglas ESLint `no-restricted-imports` definidas en
+ * eslint.config.js como red de seguridad ante eliminaciones accidentales.
  */
 import { describe, it, expect } from "vitest";
 import { readFileSync, readdirSync, statSync } from "node:fs";
 import { join } from "node:path";
-
-const FORBIDDEN = /from\s+["']@\/(hooks|components|pages)\//;
 
 function walk(dir: string, out: string[] = []): string[] {
   for (const entry of readdirSync(dir)) {
@@ -21,14 +21,25 @@ function walk(dir: string, out: string[] = []): string[] {
   return out;
 }
 
-describe("Arquitectura: src/lib no depende de capas superiores", () => {
-  it("ningún archivo en src/lib importa @/hooks, @/components o @/pages", () => {
-    const files = walk("src/lib");
-    const violators: string[] = [];
-    for (const f of files) {
-      const src = readFileSync(f, "utf8");
-      if (FORBIDDEN.test(src)) violators.push(f);
-    }
-    expect(violators, `Violaciones de capa:\n${violators.join("\n")}`).toEqual([]);
+function findViolators(root: string, pattern: RegExp): string[] {
+  const violators: string[] = [];
+  for (const f of walk(root)) {
+    const src = readFileSync(f, "utf8");
+    if (pattern.test(src)) violators.push(f);
+  }
+  return violators;
+}
+
+describe("Arquitectura: jerarquía de capas Pages→Hooks→Services→Lib", () => {
+  it("src/lib no importa @/hooks, @/components o @/pages", () => {
+    const pattern = /from\s+["']@\/(hooks|components|pages)\//;
+    const violators = findViolators("src/lib", pattern);
+    expect(violators, `Violaciones en lib/:\n${violators.join("\n")}`).toEqual([]);
+  });
+
+  it("src/services no importa @/hooks, @/components, @/pages o @/contexts", () => {
+    const pattern = /from\s+["']@\/(hooks|components|pages|contexts)\//;
+    const violators = findViolators("src/services", pattern);
+    expect(violators, `Violaciones en services/:\n${violators.join("\n")}`).toEqual([]);
   });
 });

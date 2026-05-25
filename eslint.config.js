@@ -148,6 +148,35 @@ export default tseslint.config(
     },
   },
   {
+    // `src/services/**` es la capa de acceso a datos: solo puede tocar
+    // Supabase + utils de `lib/`. NO puede importar hooks, componentes,
+    // páginas ni contexts (eso invierte la jerarquía).
+    files: ["src/services/**"],
+    ignores: ["src/services/**/__tests__/**"],
+    rules: {
+      "no-restricted-imports": ["error", {
+        patterns: [
+          {
+            group: ["@/hooks/*", "@/hooks/**"],
+            message: "services/ no puede importar de hooks/. Invierte la dependencia: el hook llama al service.",
+          },
+          {
+            group: ["@/components/*", "@/components/**"],
+            message: "services/ no puede importar de components/. services/ es puro (sin React).",
+          },
+          {
+            group: ["@/pages/*", "@/pages/**"],
+            message: "services/ no puede importar de pages/.",
+          },
+          {
+            group: ["@/contexts/*", "@/contexts/**"],
+            message: "services/ no puede importar de contexts/. Pasa el dato como parámetro.",
+          },
+        ],
+      }],
+    },
+  },
+  {
     // Allowlist de tablas: el propio DataTable y tablas editables/excepcionales
     // que aún no migran a DataTable. Documentar caso a caso.
     files: [

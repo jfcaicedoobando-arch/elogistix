@@ -1,54 +1,97 @@
-# Fix: ruido de Sentry por "Failed to fetch dynamically imported module"
+# Plan: 5 auditorías de calidad post-arquitectura
 
-## Contexto
+Continuación de la auditoría arquitectónica (v11.31.0–11.32.0). Cada etapa es un loop independiente, ejecutable por separado y verificable con tests + lint.
 
-Issue Sentry `JAVASCRIPT-REACT-5` — 201 eventos, 2 usuarios, regresado. Es el error transitorio que ocurre cuando una pestaña vieja intenta cargar un chunk de página (`Cotizaciones.tsx`, `Facturacion.tsx`, `Embarques.tsx`, etc.) cuyo hash ya cambió tras un nuevo build. La app **ya se auto-recupera** (vía `vite:preloadError` y `ErrorBoundary`), pero:
+## Hallazgos preliminares (validación rápida)
 
-1. El rechazo también se reporta a Sentry como `unhandledrejection`, generando ruido (199 de las 201 ocurrencias).
-2. En algunos casos el evento `vite:preloadError` no se dispara (el fallo viene del `import()` de `React.lazy`, no del preload), así que dependemos solo del ErrorBoundary para recargar — y eso requiere que React llegue a renderizar el error.
+- `services/`: **0 imports** a `@/hooks`, `@/components`, `@/pages` → capa ya limpia.
+- `components/` >200 líneas: solo `ui/sidebar.tsx` (637, código upstream de shadcn) y archivos de test. **Componentes propios ya cumplen Power of 10.**
+- `as unknown as` restantes: **37 totales**, mayoría en tests (`_supabaseChainMock`, fixtures). Solo ~5 en código de producción.
+- Hooks/lib sin test directo: ~193 archivos (incluye barrels, índices y helpers triviales — el número real de "críticos sin test" es menor).
 
-## Cambios
+Esto reordena las prioridades. El plan refleja el peso real, no el percibido inicialmente.
 
-### 1. `src/lib/sentry.ts` — filtrar chunk errors en `beforeSend`
+---
 
-Agregar `beforeSend` que descarte eventos cuyo `exception.values[*].value` o `message` contenga las firmas conocidas:
+## Etapa 1 — Auditoría de `services/` (🟢 baja, validación)
 
-- `Failed to fetch dynamically imported module`
-- `Importing a module script failed`
-- `error loading dynamically imported module`
-- `Loading chunk` / `ChunkLoadError`
+**Objetivo:** confirmar que la capa de servicios mantiene separación estricta (solo Supabase + utils, sin lógica de negocio compleja ni dependencias a capas superiores).
 
-Devolver `null` para esos eventos. No afecta otros errores ni el widget de feedback.
+- Verificar que ningún `services/*` importa de `@/hooks`, `@/components`, `@/pages`, `@/contexts`.
+- Añadir bloque ESLint `no-restricted-imports` para `src/services/**` (espejo del que ya existe en `lib/`).
+- Extender `src/lib/__tests__/architecture.test.ts` para cubrir también `src/services/**`.
+- Buscar servicios >200 líneas → si los hay, dividir por responsabilidad (queries / mutations / mappers).
 
-### 2. `src/main.tsx` — listener global `unhandledrejection`
+**Entregable:** ESLint rule + test ampliado. Sin cambios de código si la capa ya está limpia.
 
-Agregar un listener que reuse la misma lógica que ya tiene `vite:preloadError`:
+---
 
-- Si `event.reason` es un Error cuyo mensaje matchea las firmas de chunk-load → `event.preventDefault()`, marcar flag, `window.location.reload()` (una sola vez gracias a `hasChunkReloadBeenAttempted`).
+## Etapa 2 — Auditoría de `components/` (🟢 baja, validación)
 
-Reutilizar el helper `isDynamicImportError` que ya existe en `ErrorBoundary.tsx` extrayéndolo a `src/lib/ui/dynamicImportError.ts` para no duplicar lógica.
+**Objetivo:** confirmar que componentes propios cumplen Power of 10 y no tienen lógica de negocio mal ubicada.
 
-### 3. `src/components/shared/ErrorBoundary.tsx`
+- Excluir `components/ui/*` (shadcn upstream) del análisis.
+- Buscar componentes con `useQuery`/`useMutation` directos (debería ir vía hook controller).
+- Buscar componentes con cálculos financieros, parseo o lógica de dominio inline → mover a `lib/`.
+- Verificar que la regla `max-lines: 250` ya cubre el resto.
 
-Reemplazar la copia local de `isDynamicImportError` por el import del helper compartido. Sin cambios de comportamiento.
+**Entregable:** lista de violaciones reales + refactor solo de las críticas. Probablemente loop corto.
 
-### 4. Resolver el issue en Sentry
+---
 
-Tras el deploy, marcar `JAVASCRIPT-REACT-5` como `resolvedInNextRelease` vía `update_issue`.
+## Etapa 3 — Reducir `as unknown as` (🟡 media)
 
-### 5. Changelog
+**Objetivo:** bajar de 37 a <10 ocurrencias, todas justificadas.
 
-Bump `APP_VERSION` a `11.30.1` (patch) + entrada en `CHANGELOG.md` raíz:
-`Sentry: filtradas excepciones transitorias de carga de chunks; auto-recarga reforzada en unhandledrejection.`
+- **Producción (~5):** caso por caso. Candidatos: `lib/supabase/cast.ts` (intencional, encapsula la conversión), `services/embarque/queries/*`, `services/facturas/*`, `pages/dev/PdfPreviewCotizacion.tsx`.
+- **Tests (~32):** la mayoría vienen de `_supabaseChainMock.ts`. Crear helper tipado `mockSupabaseChain<T>()` que elimine el cast en cada test.
+- Documentar las restantes con comentario `// SAFE-CAST:` explicando por qué no se puede tipar mejor.
+- Añadir ESLint rule custom o regex en CI que advierta si aparecen nuevos sin el comentario.
 
-## Lo que NO se cambia
+**Entregable:** count <10 + helper de mocking + convención `SAFE-CAST`.
 
-- Sigue habiendo recarga automática real (el usuario nunca queda atascado).
-- No tocamos config de Vite, manualChunks, ni el flujo de `React.lazy`.
-- No suprimimos ningún otro tipo de error en Sentry.
+---
 
-## Verificación
+## Etapa 4 — Cobertura de tests (🟠 alta, mayor esfuerzo)
 
-- `npm run lint` → 0 warnings.
-- `vitest run` → 621/621 verdes.
-- Confirmar en `/sentry` que el panel sigue funcionando y que un error de prueba (`Enviar error de prueba`) **sí** llega a Sentry (el filtro solo aplica a chunk-load).
+**Objetivo:** subir cobertura de los módulos críticos sin tests.
+
+- Generar reporte de cobertura real con `vitest run --coverage` (no solo "tiene archivo .test.ts").
+- Identificar los **20 archivos más críticos** sin cobertura: probablemente en `lib/financial/`, `lib/domain/`, `services/cotizacion/`, `services/embarque/`.
+- Escribir tests para cada uno priorizando: cálculos financieros (IVA, tipo cambio), validación (`embarqueWizardSchemas`), mappers de Supabase.
+- Meta: pasar de 622 → ~720 tests, con cobertura >80% en `lib/` y `services/`.
+
+**Entregable:** +100 tests aproximados, reporte de cobertura adjunto al CHANGELOG. **Este es el loop más largo — probablemente 2 sub-loops.**
+
+---
+
+## Etapa 5 — Performance audit (🟠 alta, requiere medición)
+
+**Objetivo:** identificar costos reales antes de optimizar (no premature optimization).
+
+- **Bundle size:** correr `vite build` con `--mode=analyze`, identificar los 5 chunks más pesados. Candidatos a lazy-load: `@react-pdf/renderer` (PDFs), `recharts` (dashboard), módulos de auditoría.
+- **Queries N+1:** auditar `services/embarque/` y `services/cliente/` por queries en bucle. Convertir a `.in()` o joins de Supabase.
+- **React Query GC time:** revisar si hay queries con `staleTime: Infinity` que deberían refrescar.
+- **DataTable:** ya tiene tests de performance (mount 10k <90ms). Validar que se usa `VirtualDataTable` en listas >100 filas.
+- **Lighthouse audit** del dashboard principal y portal cliente.
+
+**Entregable:** reporte `docs/performance-audit.md` con top 5 mejoras priorizadas + lazy-loading de los chunks gordos.
+
+---
+
+## Orden de ejecución sugerido
+
+1. **Etapa 1** (services audit) — quick win, refuerza guardrails ya establecidos.
+2. **Etapa 2** (components audit) — quick win, valida Power of 10.
+3. **Etapa 3** (casts) — mejora puntual de tipo-seguridad.
+4. **Etapa 5** (performance) — alto impacto visible para el usuario final.
+5. **Etapa 4** (cobertura) — el más largo, mejor al final con base ya estable.
+
+Cada etapa = 1 release patch/minor (`11.33.x` → `11.37.x`), CHANGELOG individual, sin acumular cambios.
+
+## Detalles técnicos
+
+- **No tocar:** `components/ui/*` (shadcn), `integrations/supabase/types.ts` (auto-gen), `lib/supabase/cast.ts` (intencional).
+- **Convención SAFE-CAST:** `// SAFE-CAST: razón concreta` justo encima del cast permitido.
+- **Tests de arquitectura:** patrón replicable — copiar `lib/__tests__/architecture.test.ts` adaptando el path raíz.
+- Cada etapa debe mantener: lint 0/0, typecheck 0/0, todos los tests verdes.

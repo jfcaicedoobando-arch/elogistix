@@ -11,6 +11,7 @@ import type { CotizacionRow } from "@/types/cotizacion";
 import { PdfPreview } from "@/pdf/render/PdfPreview";
 import { CotizacionDocument } from "@/pdf/documents/CotizacionDocument";
 import { queryKeys } from "@/lib/query";
+import { fromDb } from "@/lib/supabase/cast";
 
 export default function PdfPreviewCotizacionPage() {
   const { id } = useParams<{ id: string }>();
@@ -25,7 +26,7 @@ export default function PdfPreviewCotizacionPage() {
         .eq("id", id!)
         .maybeSingle();
       if (error) throw error;
-      return data as unknown as CotizacionRow | null;
+      return fromDb<CotizacionRow | null>(data);
     },
   });
 

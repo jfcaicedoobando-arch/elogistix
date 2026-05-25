@@ -38,6 +38,8 @@ export function useHuecoFacturacion() {
     if (filas.length === 0) return;
     exportToCsv(
       buildHuecoCsvFilename(),
+      // SAFE-CAST: HUECO_CSV_HEADERS es `readonly` con `key` tipado como
+      // literal union; exportToCsv requiere `string`. El shape es idéntico.
       HUECO_CSV_HEADERS as unknown as { key: string; label: string }[],
       buildHuecoCsvRows(filas),
     );
