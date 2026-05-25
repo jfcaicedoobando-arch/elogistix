@@ -1,83 +1,100 @@
-## Objetivo
+# Auditoría fresca — Bloatware y eficiencia (v11.46.0)
 
-Cerrar de un solo golpe todos los pendientes de **bajo riesgo** que quedan en el roadmap arquitectónico. Sin cambios funcionales, sin refactors invasivos, sin migraciones. Foco en blindar lo que ya está limpio y completar deuda de baja superficie.
+Corrí build + knip + análisis de bundle. La app está sana arquitectónicamente, pero hay **bloat real** muy concreto, mayormente en el bundle y en assets.
 
-## Alcance
+## Hallazgos principales
 
-### 1. Eliminar duplicados de `hooks/` raíz (P2.10)
+### A. Bundle JS (lo más impactante)
 
-Hoy existen **dos copias** del mismo hook:
-- `src/hooks/use-toast.ts` ←→ `src/hooks/shared/useToast.ts`
-- `src/hooks/use-mobile.tsx` ←→ `src/hooks/shared/useIsMobile.ts`
+| Chunk | Tamaño | Gzip | Diagnóstico |
+|---|---|---|---|
+| `pdf-vendor` (@react-pdf/renderer) | **1,441 KB** | 475 KB | Pesa más que todo el resto junto. Hoy se carga al entrar a cualquier página que importe `descargarPdf` (Facturación, Cotizaciones, Proformas). |
+| `sentry-vendor` | 475 KB | 151 KB | Carga eager en `main.tsx`. Muy grande para un proyecto demo. |
+| `index` (main) | 405 KB | 112 KB | Razonable, pero arrastra cosas que podrían ser lazy. |
+| `charts-vendor` (recharts) | 348 KB | 92 KB | Se carga aunque el usuario nunca abra Dashboard/Operaciones/Auditoría. |
+| `react-vendor` | 257 KB | 82 KB | Normal, no se toca. |
+| `radix-vendor` | 135 KB | 40 KB | Normal. |
+| `phone-vendor` (libphonenumber-js) | 118 KB | 29 KB | Solo se usa en `lib/formatters/phone.ts`. Variante `/min` pesa ~75% menos. |
 
-73 archivos importan desde la versión raíz. Acciones:
-- Verificar que ambas implementaciones son equivalentes (si no, dejar la de `shared/` como única fuente y migrar diferencias).
-- Reescribir `src/hooks/use-toast.ts` y `src/hooks/use-mobile.tsx` como **re-exports** del canónico en `hooks/shared/` (compat temporal).
-- Migrar los 73 imports a `@/hooks/shared/useToast` y `@/hooks/shared/useIsMobile` (codemod con `sed`/`rg`).
-- Borrar los archivos raíz.
-- Re-correr suite (709 tests) + lint.
+### B. Código muerto (knip)
 
-### 2. Mover Supabase fuera de `pages/dev/PdfPreviewCotizacion.tsx`
+- **9 archivos no usados**: `CrmNotificacionesBell`, `DialogDuplicarEmbarque`, `EmbarqueRowActions`, `useDuplicarCotizacion`, `lib/financial/index.ts`, `lib/mappers/index.ts`, `lib/parsers/index.ts`, `pages/crm/Forecast.tsx`, `pages/crm/Reportes.tsx`.
+- **14 exports no usados** en hooks de CRM/embarques/cotizaciones/servicios.
+- **3 tipos exportados no usados**.
+- **2 deps no usadas**: `@dnd-kit/sortable`, `@dnd-kit/utilities` (solo `@dnd-kit/core` se usa).
+- **1 dep no listada**: `@react-pdf/types` (usado pero no declarado).
 
-Última llamada directa a Supabase fuera de `services/`. Extraer el query a `services/cotizacion/queries.ts` (o usar el que ya exista) y consumirlo desde el sandbox.
+### C. Assets (public/ + src/assets)
 
-### 3. Refactor de complejidad — edge function `list-users`
+- `librecarga-logo.png` **duplicado** en `public/` y `src/assets/` — mismo MD5, 157 KB cada uno (314 KB total).
+- `favicon.png` 134 KB — debería ser <10 KB.
+- `public/changelog.json` 280 KB — se sirve completo; podría paginar o generar al build.
+- Ya existe `librecarga-logo.svg` (668 B) — usar SVG donde se pueda.
 
-`supabase/functions/list-users/index.ts` arroja warning de complexity 17. Extraer 2-3 helpers internos (parse de query params, build del filtro, mapeo de respuesta) para bajar a ≤15 sin tocar el contrato HTTP.
+### D. Lo que **NO** es bloat
 
-### 4. Endurecer ESLint (P2.12)
+- `src/components/ui/sidebar.tsx` (637 LOC) es shadcn standard, no tocar.
+- 332 componentes / 199 hooks / 109 servicios suena mucho, pero la mayoría son <150 LOC y bien factorizados. La auditoría arquitectónica anterior ya cerró Track B.
+- `radix-vendor` y `react-vendor` están en el rango esperado.
 
-Aprovechar que las métricas están en cero:
-- `complexity`: `max: 15` → `max: 12` en `src/` (sigue como `warn`).
-- `no-restricted-imports` en los globs donde es `warn`: subir a `error` (ya está en cero, evita regresiones).
-- Añadir glob de excepción para `supabase/functions/**/*_test.ts` con `@typescript-eslint/ban-ts-comment: off` para silenciar los 5 errores actuales de `@ts-nocheck` en tests Deno (son intencionales).
+---
 
-### 5. Documento `docs/architecture-map.md` (P2.11)
+## Plan de cambios (v11.46.0)
 
-Crear archivo nuevo con tabla **dominio → pages → hooks → services → lib** para los dominios principales (embarques, cotizaciones, clientes, facturación, auditoría, portal, admin). Sirve para onboarding y como ancla viva del roadmap. ~150-250 líneas.
+### Sub-loop 1 — Lazy del PDF (mayor ROI, ~475 KB gzip diferidos)
 
-### 6. Refrescar `mem://audit/pendings`
+Convertir `descargarPdf` y `PdfPreview` a import dinámico:
 
-Marcar P2.10, P2.11, P2.12 + limpieza Supabase + edge function como cerrados. Reducir el memo a los 3-4 pendientes reales restantes (P1.5, P1.6, P1.7, P3.13).
+```ts
+// services/pdf/lazy.ts (nuevo)
+export const descargarPdf = async (...args) => {
+  const mod = await import("@/pdf/render/descargarPdf");
+  return mod.descargarPdf(...args);
+};
+```
 
-### 7. Versionado
+Migrar 4–6 call sites (`FacturaDownloadButton`, `useDescargarProformaPdf`, etc.). El chunk `pdf-vendor` deja de bajarse al cargar páginas de Facturación/Cotizaciones hasta que el usuario haga click en "Descargar".
 
-- `APP_VERSION` → `11.45.0`.
-- Entrada nueva en `CHANGELOG.md` con resumen por sub-loop.
+### Sub-loop 2 — Recortar libs pesadas
 
-## Fuera de alcance (NO se tocan en este loop)
+- **libphonenumber-js** → cambiar imports a `libphonenumber-js/min` (mismo API, sin metadata de países raros). Ahorro ~90 KB.
+- **recharts**: ya está en su propio vendor chunk, pero las 7 páginas que lo usan no son críticas. Hacer `React.lazy` de `OperacionesTendenciaChart`, `AuditoriaTendenciaChart`, `HealthTimelineChart` (los demás ya están en páginas lazy). Ahorro percibido en first paint.
+- **Sentry**: dejarlo cargado (es importante), pero pasarlo a `replay: { sessionSampleRate: 0 }` si no está ya, para evitar bajar el replay bundle. Verificar `lib/sentry.ts`.
 
-- **P1.5** — unificar `utils/` (alto riesgo, requiere coordinar imports masivos).
-- **P1.6** — partir servicios "god" (medio riesgo, decisiones de diseño).
-- **P1.7** — schemas zod en boundary Supabase para embarques/facturas/cotizaciones (alto esfuerzo, lo posponemos a su propio loop).
-- **P3.13** — nuevos specs E2E (conciliación, portal, export ZIP) — alto esfuerzo de diseño de fixtures.
-- Conversión de imágenes a WebP / preconnect a Google Fonts (era 5.6 de la etapa de performance, no de Track B).
+### Sub-loop 3 — Eliminar dead code
 
-## Verificación
+- Borrar los 9 archivos no usados.
+- Borrar los 14 exports y 3 tipos no usados (o convertir a internal).
+- `bun remove @dnd-kit/sortable @dnd-kit/utilities`.
+- `bun add -D @react-pdf/types` (declarar la dep faltante).
 
-1. `bun run audit:tests` — gate de higiene limpio.
-2. `bun run test` — 709/709 verdes.
-3. `bunx eslint src/` — 0 errors, 0 warnings con el nuevo umbral 12.
-4. `bun run build` — chunks sin regresión de tamaño.
-5. `rg "@/hooks/use-toast|@/hooks/use-mobile" src/ -l | wc -l` → 0.
-6. `rg -l "from ['\"]@/integrations/supabase/client['\"]" src/pages src/components | wc -l` → 0.
+### Sub-loop 4 — Assets
 
-## Detalles técnicos
+- Borrar `src/assets/librecarga-logo.png`, migrar imports al SVG (`/librecarga-logo.svg`) o al de `public/`.
+- Re-generar `favicon.png` <10 KB (sólo 32×32 / 64×64).
+- Verificar si `changelog.json` se puede generar bajo demanda o paginar (no urgente; postergar si requiere refactor del script).
 
-- El re-export temporal de `use-toast.ts` / `use-mobile.tsx` se hace en el mismo commit que la migración para que no quede deuda transitoria.
-- Para subir `complexity` a 12 antes hay que correr `eslint` y, si aparecen warnings nuevos en `src/`, **bajar el alcance**: en ese caso quedarse en 14 y dejar el salto a 12 como TODO en el memo. No introducimos refactors no planeados.
-- El `architecture-map.md` se genera leyendo la estructura real, no inventando. Si un dominio no calza limpio en la tabla, se documenta el desvío.
+### Sub-loop 5 — Versionado + verificación
 
-## Esfuerzo estimado
+- `APP_VERSION` → `11.46.0`, `CHANGELOG.md`, `src/pages/Changelog.tsx`.
+- `bun run ci:local` (lint + knip + tests + build) y comparar tamaños antes/después.
 
-| Sub-loop | Esfuerzo |
-|---|---|
-| 1. Eliminar duplicados hooks | Medio (codemod + revisar 73 imports) |
-| 2. Supabase fuera de PdfPreview | Bajo |
-| 3. Edge function list-users | Bajo |
-| 4. Endurecer ESLint | Bajo |
-| 5. architecture-map.md | Medio |
-| 6. Refresh memoria | Bajo |
-| 7. Versionado + changelog | Bajo |
+---
 
-Total: 1 loop de tamaño normal. Todo verificable con la suite existente, sin migraciones de DB, sin cambios visibles para el usuario final.
+## Resultado esperado
+
+| Métrica | Antes | Después (estimado) |
+|---|---|---|
+| First load (gzip, sin entrar a PDF) | ~600 KB | **~150 KB** |
+| `pdf-vendor` (sólo bajo demanda) | eager | lazy |
+| Archivos en `src/` | 946 | ~937 |
+| Deps en `package.json` | 60 | 58 |
+| Assets duplicados | 2× logo | 0 |
+
+## Fuera de alcance
+
+- Reemplazar `recharts` por algo más liviano (sería un refactor mayor).
+- Reemplazar `@react-pdf/renderer` por otro generador (mucho riesgo, todos los PDFs ya funcionan).
+- P1.5 / P1.6 / P1.7 del audit anterior (siguen pendientes pero son arquitectura, no bloat).
+
+¿Apruebas el plan?

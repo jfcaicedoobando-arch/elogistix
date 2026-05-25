@@ -1,6 +1,8 @@
 import { cn } from "@/lib/utils";
 import { BRAND } from "@/lib/ui/brand";
-import librecargaLogo from "@/assets/librecarga-logo.png";
+
+// Servido desde public/ — evita duplicar 157 KB en el bundle.
+const librecargaLogo = "/librecarga-logo.png";
 
 type Variant = "icon" | "horizontal" | "stacked";
 type Size = "sm" | "md" | "lg";
