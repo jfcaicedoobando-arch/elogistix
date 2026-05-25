@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import {
   DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
-import { usePlantillasMensaje, renderPlantilla, type PlantillaCanal } from "@/hooks/crm/usePlantillasMensaje";
+import { usePlantillasMensaje, renderPlantilla, type PlantillaCanal } from "@/hooks/crm";
 import { insertBitacora } from "@/services/bitacora";
 import { useAuth } from "@/contexts/AuthContext";
 

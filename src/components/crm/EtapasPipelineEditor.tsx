@@ -16,7 +16,7 @@ import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 import {
   useActualizarEtapa, useEtapasPipelineAll,
   type CrmEtapaRow, type CrmEtapaTipo,
-} from "@/hooks/crm/useEtapasPipeline";
+} from "@/hooks/crm";
 
 const TIPOS: CrmEtapaTipo[] = ["abierta", "ganada", "perdida"];
 

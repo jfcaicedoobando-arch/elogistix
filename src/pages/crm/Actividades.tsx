@@ -18,7 +18,7 @@ import { useDebounce } from "@/hooks/shared";
 import {
   useActividades, ACTIVIDAD_TIPOS,
   type CrmActividadRow, type CrmActividadTipo,
-} from "@/hooks/crm/useActividades";
+} from "@/hooks/crm";
 import ActividadRowActions from "@/components/crm/ActividadRowActions";
 import { usePermissions } from "@/hooks/shared";
 

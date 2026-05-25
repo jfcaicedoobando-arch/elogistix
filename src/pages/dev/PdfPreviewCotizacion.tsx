@@ -6,7 +6,7 @@
 import { useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { useTasaIVA } from "@/hooks/catalogos/useTasaIVA";
+import { useTasaIVA } from "@/hooks/catalogos";
 import type { CotizacionRow } from "@/types/cotizacion";
 import { PdfPreview } from "@/pdf/render/PdfPreview";
 import { CotizacionDocument } from "@/pdf/documents/CotizacionDocument";

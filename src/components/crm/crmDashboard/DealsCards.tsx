@@ -1,0 +1,116 @@
+import { Link } from "react-router-dom";
+import { Target, AlertTriangle, TrendingUp } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { formatCurrencyCompact } from "@/lib/formatters";
+
+interface DealItem {
+  id: string;
+  nombre: string;
+  cliente_nombre?: string | null;
+  monto_estimado: number;
+  moneda: string;
+  probabilidad: number;
+  fecha_estimada_cierre?: string | null;
+  ponderado?: number;
+}
+
+interface LeadItem {
+  id: string;
+  empresa: string;
+  contacto?: string | null;
+  fuente: string;
+  created_at: string;
+}
+
+function ListEmpty({ msg }: { msg: string }) {
+  return <p className="text-sm text-muted-foreground text-center py-4">{msg}</p>;
+}
+
+export function CerrandoSemanaCard({ items }: { items: DealItem[] }) {
+  return (
+    <Card>
+      <CardHeader className="pb-2">
+        <CardTitle className="text-sm flex items-center gap-2">
+          <Target className="h-4 w-4 text-primary" /> Cerrando esta semana
+        </CardTitle>
+      </CardHeader>
+      <CardContent>
+        {items.length === 0 ? <ListEmpty msg="Sin oportunidades por cerrar" /> : (
+          <ul className="space-y-1.5">
+            {items.map((o) => (
+              <li key={o.id} className="flex items-center justify-between text-sm py-1 border-b last:border-0">
+                <Link to={`/crm/oportunidades/${o.id}`} className="flex flex-col hover:underline truncate">
+                  <span className="font-medium truncate max-w-[260px]">{o.nombre}</span>
+                  <span className="text-xs text-muted-foreground">{o.cliente_nombre || "Sin cliente"}</span>
+                </Link>
+                <div className="text-right">
+                  <div className="text-xs tabular-nums font-semibold">{formatCurrencyCompact(o.monto_estimado, o.moneda)}</div>
+                  <div className="text-[10px] text-muted-foreground">{o.fecha_estimada_cierre} · {o.probabilidad}%</div>
+                </div>
+              </li>
+            ))}
+          </ul>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
+export function LeadsSinContactarCard({ items }: { items: LeadItem[] }) {
+  return (
+    <Card>
+      <CardHeader className="pb-2">
+        <CardTitle className="text-sm flex items-center gap-2">
+          <AlertTriangle className="h-4 w-4 text-destructive" /> Leads sin contactar (&gt; 7 días)
+        </CardTitle>
+      </CardHeader>
+      <CardContent>
+        {items.length === 0 ? <ListEmpty msg="Todos los leads nuevos están atendidos" /> : (
+          <ul className="space-y-1.5">
+            {items.map((l) => (
+              <li key={l.id} className="flex items-center justify-between text-sm py-1 border-b last:border-0">
+                <Link to={`/crm/leads/${l.id}`} className="flex flex-col hover:underline truncate">
+                  <span className="font-medium truncate max-w-[260px]">{l.empresa}</span>
+                  <span className="text-xs text-muted-foreground">{l.contacto || "Sin contacto"} · {l.fuente}</span>
+                </Link>
+                <span className="text-xs text-muted-foreground">
+                  {new Date(l.created_at).toLocaleDateString("es-MX")}
+                </span>
+              </li>
+            ))}
+          </ul>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
+export function TopDealsCard({ items }: { items: DealItem[] }) {
+  return (
+    <Card className="lg:col-span-2">
+      <CardHeader className="pb-2">
+        <CardTitle className="text-sm flex items-center gap-2">
+          <TrendingUp className="h-4 w-4 text-primary" /> Top 5 deals abiertos
+        </CardTitle>
+      </CardHeader>
+      <CardContent>
+        {items.length === 0 ? <ListEmpty msg="Sin oportunidades abiertas" /> : (
+          <ul className="space-y-1.5">
+            {items.map((o) => (
+              <li key={o.id} className="flex items-center justify-between text-sm py-1 border-b last:border-0">
+                <Link to={`/crm/oportunidades/${o.id}`} className="flex flex-col hover:underline truncate">
+                  <span className="font-medium truncate max-w-[420px]">{o.nombre}</span>
+                  <span className="text-xs text-muted-foreground">{o.cliente_nombre || "Sin cliente"}</span>
+                </Link>
+                <div className="text-right">
+                  <div className="text-xs tabular-nums font-semibold">{formatCurrencyCompact(o.ponderado ?? 0, o.moneda)}</div>
+                  <div className="text-[10px] text-muted-foreground">{formatCurrencyCompact(o.monto_estimado, o.moneda)} · {o.probabilidad}%</div>
+                </div>
+              </li>
+            ))}
+          </ul>
+        )}
+      </CardContent>
+    </Card>
+  );
+}

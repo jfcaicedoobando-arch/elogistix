@@ -4,7 +4,7 @@
 import { BarChart3 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { PageHeader } from "@/components/shared/PageHeader";
-import { useReportesCRM } from "@/hooks/crm/useForecastReportes";
+import { useReportesCRM } from "@/hooks/crm";
 import LeaderboardVendedores from "@/components/crm/LeaderboardVendedores";
 import { usePermissions } from "@/hooks/shared";
 

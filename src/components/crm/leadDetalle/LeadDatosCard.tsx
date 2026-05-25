@@ -20,8 +20,8 @@ import {
   LEAD_FUENTES,
   type CrmLeadEstado,
   type CrmLeadFuente,
-} from "@/hooks/crm/useLeads";
-import type { LeadEditForm } from "@/hooks/crm/useLeadEditForm";
+} from "@/hooks/crm";
+import type { LeadEditForm } from "@/hooks/crm";
 
 interface Props {
   form: LeadEditForm;

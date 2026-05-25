@@ -2,6 +2,17 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import type { CrmLeadRow } from "./constants";
+import { resolveClienteForConversion, fetchPrimeraEtapaAbierta } from "./convertirHelpers";
+
+interface ConvertirParams {
+  lead: CrmLeadRow;
+  crearCliente: boolean;
+  clienteIdExistente?: string | null;
+  nombreOportunidad: string;
+  montoEstimado: number;
+  moneda: "MXN" | "USD" | "EUR";
+  fechaEstimadaCierre?: string | null;
+}
 
 /**
  * Convierte un lead en (opcional) cliente y oportunidad nueva.
@@ -13,52 +24,9 @@ export function useConvertirLead() {
   const qc = useQueryClient();
   const { user } = useAuth();
   return useMutation({
-    mutationFn: async (params: {
-      lead: CrmLeadRow;
-      crearCliente: boolean;
-      clienteIdExistente?: string | null;
-      nombreOportunidad: string;
-      montoEstimado: number;
-      moneda: "MXN" | "USD" | "EUR";
-      fechaEstimadaCierre?: string | null;
-    }) => {
-      let clienteId = params.clienteIdExistente ?? null;
-      let clienteNombre = "";
-
-      if (params.crearCliente && !clienteId) {
-        const { data: clienteNuevo, error: errCli } = await supabase
-          .from("clientes")
-          .insert({
-            nombre: params.lead.empresa,
-            email: params.lead.email ?? "",
-            telefono: params.lead.telefono ?? "",
-            ciudad: params.lead.ciudad ?? "",
-            contacto: params.lead.contacto ?? "",
-          })
-          .select("id, nombre")
-          .single();
-        if (errCli) throw errCli;
-        clienteId = clienteNuevo.id;
-        clienteNombre = clienteNuevo.nombre;
-      } else if (clienteId) {
-        const { data: existente } = await supabase
-          .from("clientes")
-          .select("nombre")
-          .eq("id", clienteId)
-          .maybeSingle();
-        clienteNombre = existente?.nombre ?? params.lead.empresa;
-      }
-
-      const { data: etapa, error: errEt } = await supabase
-        .from("crm_etapas_pipeline")
-        .select("id, probabilidad_default")
-        .eq("tipo", "abierta")
-        .eq("activa", true)
-        .order("orden", { ascending: true })
-        .limit(1)
-        .maybeSingle();
-      if (errEt) throw errEt;
-      if (!etapa) throw new Error("No hay etapas abiertas configuradas en el pipeline.");
+    mutationFn: async (params: ConvertirParams) => {
+      const { clienteId, clienteNombre } = await resolveClienteForConversion(params);
+      const etapa = await fetchPrimeraEtapaAbierta();
 
       const { data: opNueva, error: errOp } = await supabase
         .from("crm_oportunidades")

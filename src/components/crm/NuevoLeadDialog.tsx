@@ -11,8 +11,8 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { notifySuccess, notifyError } from "@/lib/ui/appFeedback";
 import { useAuth } from "@/contexts/AuthContext";
-import { useCrearLead } from "@/hooks/crm/useLeads";
-import { useCrearActividad } from "@/hooks/crm/useActividades";
+import { useCrearLead } from "@/hooks/crm";
+import { useCrearActividad } from "@/hooks/crm";
 import { NuevoLeadForm, type LeadFormState } from "./nuevoLead/NuevoLeadForm";
 
 interface Props {

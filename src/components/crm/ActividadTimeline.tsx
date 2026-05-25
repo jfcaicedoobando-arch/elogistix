@@ -16,7 +16,7 @@ import { notifySuccess, notifyError } from "@/lib/ui/appFeedback";
 import {
   useActividades, useCrearActividad, useCompletarActividad,
   ACTIVIDAD_TIPOS, type CrmActividadTipo, type CrmEntidadTipo,
-} from "@/hooks/crm/useActividades";
+} from "@/hooks/crm";
 
 interface Props {
   entidadTipo: CrmEntidadTipo;

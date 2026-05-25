@@ -20,11 +20,11 @@ import {
   useCrearOportunidad,
   useActualizarOportunidad,
   type CrmOportunidadRow,
-} from "@/hooks/crm/useOportunidades";
-import { useEtapasPipeline } from "@/hooks/crm/useEtapasPipeline";
+} from "@/hooks/crm";
+import { useEtapasPipeline } from "@/hooks/crm";
 import { useClientesForSelect } from "@/hooks/cliente";
-import { useCrearActividad } from "@/hooks/crm/useActividades";
-import { useOportunidadForm } from "@/hooks/crm/useOportunidadForm";
+import { useCrearActividad } from "@/hooks/crm";
+import { useOportunidadForm } from "@/hooks/crm";
 import OportunidadFormFields from "@/components/crm/nuevaOportunidad/OportunidadFormFields";
 
 interface Props {

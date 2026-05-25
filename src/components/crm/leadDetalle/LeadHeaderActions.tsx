@@ -5,7 +5,7 @@
 import { Repeat, Trash2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import type { CrmLeadEstado } from "@/hooks/crm/useLeads";
+import type { CrmLeadEstado } from "@/hooks/crm";
 
 interface Props {
   estado: CrmLeadEstado;

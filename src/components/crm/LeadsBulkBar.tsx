@@ -13,7 +13,7 @@ import { notifySuccess, notifyError } from "@/lib/ui/appFeedback";
 import VendedorSelect from "@/components/crm/VendedorSelect";
 import {
   LEAD_ESTADOS, useActualizarLeadsBulk, useEliminarLeadsBulk, type CrmLeadEstado,
-} from "@/hooks/crm/useLeads";
+} from "@/hooks/crm";
 
 interface Props {
   ids: string[];

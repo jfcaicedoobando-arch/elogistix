@@ -5,7 +5,7 @@ import { TrendingUp } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { formatCurrencyCompact } from "@/lib/formatters";
-import { useForecast } from "@/hooks/crm/useForecastReportes";
+import { useForecast } from "@/hooks/crm";
 
 const fmt = (n: number) => formatCurrencyCompact(n, "MXN");
 

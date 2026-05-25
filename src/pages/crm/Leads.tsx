@@ -20,7 +20,7 @@ import ImportarLeadsCsvDialog from "@/components/crm/ImportarLeadsCsvDialog";
 import {
   LEAD_ESTADOS, LEAD_FUENTES, useLeads,
   type CrmLeadEstado, type CrmLeadFuente, type CrmLeadRow,
-} from "@/hooks/crm/useLeads";
+} from "@/hooks/crm";
 import { makeLeadsColumns } from "./leadsColumns";
 
 export default function Leads() {
