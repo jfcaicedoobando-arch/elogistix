@@ -2,6 +2,14 @@ import type { ChangelogEntry } from "../../../changelogData";
 
 export const chunk0: ChangelogEntry[] = [
   {
+    version: "10.2.3",
+    date: "2026-05-25",
+    type: "patch",
+    title: "ErrorBoundary conectado a Sentry",
+    summary: "Los errores atrapados por ErrorBoundary ahora se reportan también a Sentry con componentStack como contexto.",
+    description: "src/components/shared/ErrorBoundary.tsx: en componentDidCatch se agrega Sentry.withScope + captureException con tag source=react-error-boundary y context react.componentStack. Sigue ejecutándose logClientError hacia app_logs (doble destino). Los errores de chunk dinámico siguen disparando reload sin reporte. APP_VERSION 10.2.3.",
+  },
+  {
     version: "10.2.2",
     date: "2026-05-19",
     type: "patch",
