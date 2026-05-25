@@ -2,6 +2,14 @@ import type { ChangelogEntry } from "../../../changelogData";
 
 export const chunk0: ChangelogEntry[] = [
   {
+    version: "11.24.0",
+    date: "2026-05-25",
+    type: "minor",
+    title: "Centralización de query keys (P2)",
+    summary: "Los 110 literales queryKey dispersos migrados a factories en src/lib/query (crm, auditoria, appLogs, facturacion, papelera, idempotenciaLog, pdfPreviewCotizacion, trackingPublico, jsonCargo).",
+    description: "queryKeys ampliado con dominios crm (oportunidades, leads, actividades, dashboard, lineage, plantillas, notificaciones, motivos, etapas, comentarios, opCotizaciones, forecast, reportes, leaderboard, cliente360, proximasActividades, kpis), auditoria, appLogs, facturacion y misc. 44 archivos migrados: 22 hooks/crm, 4 hooks/auditoria (incluyendo revisiones/{marcar,desmarcar,asignar} via hash.ts), 2 hooks/admin (logs), hooks/facturacion (hueco + proyeccion), hooks/embarque/useJsonCargoTracking, y pages (Papelera, Idempotencia, TrackingPublico, PdfPreviewCotizacion). Invalidaciones consistentes: ahora se usa el prefijo más amplio (queryKeys.crm.oportunidades.all, queryKeys.crm.dashboardAll) en lugar de literales. 0 strings hardcodeados de queryKey fuera de lib/query. 626 tests verdes. APP_VERSION 11.24.0.",
+  },
+  {
     version: "11.23.0",
     date: "2026-05-25",
     type: "minor",
@@ -72,14 +80,6 @@ export const chunk0: ChangelogEntry[] = [
     title: "Auditoría loop 4 — componentes >200 LOC: LeadDetalle, NuevaOportunidadDialog, DiagnosticoHealthPanel",
     summary: "LeadDetalle (296→150), NuevaOportunidadDialog (287→132), DiagnosticoHealthPanel (258→96). Subcomponentes y hooks extraídos.",
     description: "Cuarta tanda de la auditoría P1 (Power of 10): componentes > 200 líneas. (1) LeadDetalle.tsx (296→150): nuevo hook useLeadEditForm (91) con estado + dirty + sincronización con el lead remoto; subcomponentes LeadDatosCard (117) y LeadHeaderActions (34) en components/crm/leadDetalle/. (2) NuevaOportunidadDialog.tsx (287→132): hook useOportunidadForm (90) con EMPTY_OPORTUNIDAD + sincronización por modo edit/create; subcomponente OportunidadFormFields (153) en components/crm/nuevaOportunidad/. (3) DiagnosticoHealthPanel.tsx (258→96): 4 subcomponentes en components/admin/diagnosticoHealth/ — HealthKpisRow (78) absorbe el KpiCard interno, HealthTimelineChart (56), HealthTopErrorsChart (52) y HealthSlowestTable (63, con formatMs propio). Sin cambios funcionales. Suite: 91 archivos / 626 tests verdes. APP_VERSION 11.16.0.",
-  },
-  {
-    version: "11.15.0",
-    date: "2026-05-25",
-    type: "minor",
-    title: "Auditoría loop 3 — hooks JSONCargo, dashboard CRM y tracking live <200 LOC",
-    summary: "useJsonCargoTracking (250→110), useCrmDashboard (213→170), useTrackingLiveCard (209→100). Lógica pura extraída + 3 archivos de tests / 17 casos nuevos.",
-    description: "Tercera tanda de la auditoría P1 (Power of 10): hooks > 200 líneas. (1) useJsonCargoTracking.ts (250) reducido a 110: extractSummary + PrefixMismatchError + tipo JsonCargoSummary movidos a lib/jsoncargo/summary.ts; buildFechasUpdate, shouldAvanzarArribo y registrarEventoArribo a services/embarque/jsoncargoFechas.ts. Re-exports preservan API pública. (2) useCrmDashboard.ts (213→170): agregaciones puras (computePipelinePonderado, computeTopDeals, computeEmbudo, isoDaysFromNow) a lib/crm/dashboardAggregates.ts. (3) useTrackingLiveCard.ts (209→100): jsoncargoDateToYmd, computeFechasPropuestas, derivePrefixState, buildApplyFechasArgs, handleSyncResult, handleSyncError a lib/jsoncargo/trackingLiveHelpers.ts. Tests nuevos (17 casos): dashboardAggregates.test.ts (4), summary.test.ts (5: extractSummary con ETD efectivo, fallback, ATA inferida, PrefixMismatchError), trackingLiveHelpers.test.ts (8: parser fechas, diffs ETA, args, prefix mismatch). Bonus: arreglo de test pre-existente en ejecutivoAgregados (umbrales reales 90/75/60). Suite verde. APP_VERSION 11.15.0.",
   },
   {
     version: "11.14.0",
