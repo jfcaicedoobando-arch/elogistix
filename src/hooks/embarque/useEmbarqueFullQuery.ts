@@ -17,7 +17,7 @@ export type { EmbarqueFullData } from "@/services/embarque";
 
 export function useEmbarqueFull(id: string | undefined) {
   return useQuery({
-    queryKey: [...queryKeys.embarques.all, "full", id],
+    queryKey: queryKeys.embarques.full(id),
     queryFn: () => fetchEmbarqueFull(id!),
     enabled: !!id,
     staleTime: 30_000,

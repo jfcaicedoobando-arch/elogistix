@@ -97,7 +97,7 @@ export type { ExpedienteCliente } from '@/services/embarque';
 export function useExpedientesCliente(clienteId: string | undefined) {
   const { organizationId } = useOrgFilter();
   return useQuery({
-    queryKey: [...queryKeys.embarques.all, 'expedientes-cliente', clienteId, organizationId],
+    queryKey: queryKeys.embarques.expedientesCliente(clienteId, organizationId),
     staleTime: 60_000,
     queryFn: () => (clienteId ? fetchExpedientesCliente(clienteId) : Promise.resolve([])),
     enabled: !!clienteId,
@@ -107,7 +107,7 @@ export function useExpedientesCliente(clienteId: string | undefined) {
 export function useProveedoresForSelect() {
   const { organizationId } = useOrgFilter();
   return useQuery({
-    queryKey: [...queryKeys.proveedores.select, organizationId],
+    queryKey: queryKeys.proveedores.selectByOrg(organizationId),
     queryFn: () => fetchProveedoresForSelect(organizationId),
     staleTime: 5 * 60_000,
   });

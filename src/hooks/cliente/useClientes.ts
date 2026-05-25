@@ -96,7 +96,7 @@ export function useDeleteContacto() {
 export function useClientesForSelect() {
   const { organizationId } = useOrgFilter();
   return useQuery({
-    queryKey: [...queryKeys.clientes.select, organizationId],
+    queryKey: queryKeys.clientes.selectByOrg(organizationId),
     queryFn: () => fetchClientesForSelect(organizationId),
   });
 }

@@ -12,7 +12,7 @@ import {
 export function useCotizacionesAceptadas() {
   const { organizationId } = useOrgFilter();
   return useQuery({
-    queryKey: [...queryKeys.cotizaciones.all, 'aceptadas', organizationId] as const,
+    queryKey: queryKeys.cotizaciones.aceptadas(organizationId),
     queryFn: () => fetchCotizacionesAceptadas(organizationId),
   });
 }
@@ -20,7 +20,7 @@ export function useCotizacionesAceptadas() {
 export function useCotizaciones() {
   const { organizationId } = useOrgFilter();
   return useQuery({
-    queryKey: [...queryKeys.cotizaciones.all, organizationId],
+    queryKey: queryKeys.cotizaciones.byOrg(organizationId),
     queryFn: () => fetchCotizaciones(organizationId),
   });
 }

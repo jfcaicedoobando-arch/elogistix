@@ -38,7 +38,7 @@ export type {
 export function useDashboardData() {
   // Summary: KPIs + conteos + resumen mensual — payload pequeño, carga eager
   const { data: summary, isLoading } = useQuery({
-    queryKey: [...queryKeys.dashboard.stats, "summary"],
+    queryKey: queryKeys.dashboard.statsSummary,
     queryFn: fetchDashboardSummary,
     staleTime: 5 * 60_000,
     gcTime: 10 * 60_000,
@@ -47,7 +47,7 @@ export function useDashboardData() {
   // Details: listas largas — corre EN PARALELO con summary (no esperamos a que summary
   // termine). HTTP/2 multiplexa ambas peticiones sobre la misma conexión, mejorando TTI.
   const { data: details } = useQuery({
-    queryKey: [...queryKeys.dashboard.stats, "details"],
+    queryKey: queryKeys.dashboard.statsDetails,
     queryFn: fetchDashboardDetails,
     staleTime: 5 * 60_000,
     gcTime: 10 * 60_000,

@@ -14,7 +14,7 @@ export type { FacturaRow, FacturaListItem };
 export function useFacturas() {
   const { organizationId } = useOrgFilter();
   return useQuery({
-    queryKey: [...queryKeys.facturas.all, organizationId],
+    queryKey: queryKeys.facturas.byOrg(organizationId),
     queryFn: () => fetchFacturas(organizationId ?? null),
   });
 }

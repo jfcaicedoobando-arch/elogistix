@@ -7,6 +7,12 @@ export const queryKeys = {
     all: ['embarques'] as const,
     list: (filters: Record<string, unknown>) => ['embarques', 'list', filters] as const,
     detail: (id: string) => ['embarques', id] as const,
+    full: (id?: string) => ['embarques', 'full', id] as const,
+    fullForEstadoFilter: (filters: Record<string, unknown>) =>
+      ['embarques', 'full-for-estado-filter', filters] as const,
+    extrasBranchB: (visibleIds: string[]) => ['embarques', 'extras-branch-b', visibleIds] as const,
+    expedientesCliente: (clienteId?: string | null, organizationId?: string | null) =>
+      ['embarques', 'expedientes-cliente', clienteId, organizationId] as const,
     conceptosVenta: (id: string) => ['conceptos_venta', id] as const,
     conceptosCosto: (id: string) => ['conceptos_costo', id] as const,
     documentos: (id: string) => ['documentos_embarque', id] as const,
@@ -24,6 +30,8 @@ export const queryKeys = {
   },
   cotizaciones: {
     all: ['cotizaciones'] as const,
+    byOrg: (organizationId?: string | null) => ['cotizaciones', organizationId] as const,
+    aceptadas: (organizationId?: string | null) => ['cotizaciones', 'aceptadas', organizationId] as const,
     detail: (id: string) => ['cotizaciones', id] as const,
     costos: (id: string) => ['cotizacion_costos', id] as const,
     embarquesVinculados: (id: string) => ['embarques', 'cotizacion', id] as const,
@@ -33,6 +41,7 @@ export const queryKeys = {
     list: (filters: Record<string, unknown>) => ['clientes', 'list', filters] as const,
     detail: (id: string) => ['clientes', id] as const,
     select: ['clientes', 'select'] as const,
+    selectByOrg: (organizationId?: string | null) => ['clientes', 'select', organizationId] as const,
     contactos: (id: string) => ['contactos_cliente', id] as const,
     clientUsers: (id: string) => ['client_users', id] as const,
     embarques: (id: string) => ['clientes', 'embarques', id] as const,
@@ -42,6 +51,7 @@ export const queryKeys = {
   },
   facturas: {
     all: ['facturas'] as const,
+    byOrg: (organizationId?: string | null) => ['facturas', organizationId] as const,
     gastosPendientes: ['gastos_pendientes'] as const,
   },
   proveedores: {
@@ -49,6 +59,7 @@ export const queryKeys = {
     list: (filters: Record<string, unknown>) => ['proveedores', 'list', filters] as const,
     detail: (id: string) => ['proveedores', id] as const,
     select: ['proveedores', 'select'] as const,
+    selectByOrg: (organizationId?: string | null) => ['proveedores', 'select', organizationId] as const,
     operaciones: (id: string) => ['proveedores', 'operaciones', id] as const,
   },
   configuracion: {
@@ -79,6 +90,8 @@ export const queryKeys = {
   },
   dashboard: {
     stats: ['dashboard-stats'] as const,
+    statsSummary: ['dashboard-stats', 'summary'] as const,
+    statsDetails: ['dashboard-stats', 'details'] as const,
     ventasUSD: ['dashboard-ventas-usd'] as const,
     costosUSD: ['dashboard-costos-usd'] as const,
     profitAggregated: ['dashboard-profit-aggregated'] as const,
@@ -135,7 +148,9 @@ export const queryKeys = {
   },
   admin: {
     organizations: ['admin-organizations'] as const,
+    organizationsStats: ['admin-organizations', 'stats'] as const,
     allUsers: ['admin-all-users'] as const,
+    allUsersOptions: ['admin-all-users', 'options'] as const,
     org: (id: string) => ['admin-org', id] as const,
     orgMembers: (id: string) => ['admin-org-members', id] as const,
     orgCountMembers: (id: string) => ['admin-org-count-members', id] as const,
@@ -145,6 +160,7 @@ export const queryKeys = {
     organizationsList: ['admin', 'organizations-list'] as const,
     orgActivity: ['admin', 'org-activity'] as const,
     recentOrgs: ['admin', 'recent-orgs'] as const,
+    recentOrgsList: (limit: number) => ['admin', 'recent-orgs', limit] as const,
   },
   crm: {
     all: ['crm'] as const,
