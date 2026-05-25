@@ -103,9 +103,9 @@ export function useClienteDetalleController() {
     if (!cliente) return;
     try {
       const cambios = diffFields(
-        cliente as unknown as Record<string, unknown>,
-        data as unknown as Record<string, unknown>,
-        SENSITIVE_FIELDS.cliente as unknown as ReadonlyArray<string>,
+        cliente,
+        data,
+        SENSITIVE_FIELDS.cliente,
       );
       await updateCliente.mutateAsync({ id: cliente.id, ...data });
       registrarActividad.mutate({
@@ -113,7 +113,7 @@ export function useClienteDetalleController() {
         modulo: "clientes",
         entidad_id: cliente.id,
         entidad_nombre: data.nombre,
-        detalles: cambios.length > 0 ? { cambios: cambios as unknown as Json } : undefined,
+        detalles: cambios.length > 0 ? { cambios } : undefined,
       });
       notifySuccess(toast, { title: "Cliente actualizado" });
       setEditClienteOpen(false);
