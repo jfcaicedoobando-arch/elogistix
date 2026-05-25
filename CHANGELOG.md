@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [11.38.0] - 2026-05-25
+- **Auditoría calidad — Etapa 4 sub-loop 4 (cobertura)**: +34 tests cubriendo 5 módulos puros adicionales. `formatters/text` (11 tests: toTitleCase con conectores/siglas/corporativos/dígitos colgantes/guiones, nombreDesdeEmail, shortName). `formatters/phone` (5 tests: CDMX 2 dígitos, Querétaro 3, prefijo +52, inválido preservado). `formatters/places` (9 tests: prioridad puerto>aeropuerto>ciudad para getOrigen/getDestino, correctSpanishPlace con diccionario México/Querétaro/Yucatán). `lib/ui/authSnapshotBuilder` (4 tests: snapshot completo + Sentry context con nulls). `lib/ui/estadoConfig` (5 tests: getEstadoVisual con fallback default, configs específicas embarque/cotización, kpiIconChipClasses). Total: 690 → 724 tests verdes (108 files).
+
 ## [11.37.0] - 2026-05-25
 - **Auditoría calidad — Etapa 4 sub-loop 3 (cobertura)**: +27 tests cubriendo 4 módulos puros adicionales. `lib/ui/dynamicImportError` (4 tests: detección de firmas Vite/chunk, null/string/Error/objeto). `lib/ui/errorDetailsExtract` (8 tests: null, string, Error, Postgrest code/status, objeto plano, fallbacks, descarte de tipos incorrectos). `lib/ui/errorReportFormat` (10 tests: header con/sin opcionales, fallbacks "—", bloque de error con detalles técnicos, context JSON, stack markdown). `lib/crm/forecastBuckets` (5 tests: classifyEtapa, makeBucket inicial en 0, applyDelta acumulando pipeline/ponderado/ganado). Total: 663 → 690 tests verdes (103 files).
 
