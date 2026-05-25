@@ -1,0 +1,60 @@
+/**
+ * Agregaciones puras (sin I/O) para el "Hueco de Facturación".
+ */
+import { sumarConceptosEnMxn, sumarConceptosEnUsd } from "@/lib/domain/proyeccionFacturacion";
+import type { EmbarqueHuecoRow } from "./fetchSources";
+
+export interface FilaHueco {
+  embarque_id: string;
+  expediente: string;
+  cliente_nombre: string;
+  operador: string;
+  etd: string;
+  eta: string | null;
+  bl_master: string | null;
+  bl_house: string | null;
+  diasDesdeEtd: number;
+  ventaMxn: number;
+  ventaUsd: number;
+}
+
+export function diasDesde(fechaIso: string, hoy: Date): number {
+  const d = new Date(fechaIso + "T00:00:00");
+  return Math.floor((hoy.getTime() - d.getTime()) / (1000 * 60 * 60 * 24));
+}
+
+export function indexarVentas(
+  rows: { embarque_id: string; total: number | null; moneda: string | null }[],
+) {
+  const map = new Map<string, { monto: number; moneda: string }[]>();
+  for (const v of rows) {
+    const list = map.get(v.embarque_id) ?? [];
+    list.push({ monto: Number(v.total ?? 0), moneda: String(v.moneda ?? "MXN") });
+    map.set(v.embarque_id, list);
+  }
+  return map;
+}
+
+export function construirFilaHueco(
+  e: EmbarqueHuecoRow,
+  ventasMap: Map<string, { monto: number; moneda: string }[]>,
+  hoy: Date,
+): FilaHueco | null {
+  if (!e.etd) return null;
+  const tcUsd = Number(e.tipo_cambio_usd ?? 1);
+  const tcEur = Number(e.tipo_cambio_eur ?? 1);
+  const ventas = ventasMap.get(e.id) ?? [];
+  return {
+    embarque_id: e.id,
+    expediente: e.expediente ?? "",
+    cliente_nombre: e.cliente_nombre ?? "",
+    operador: e.operador ?? "",
+    etd: e.etd,
+    eta: e.eta,
+    bl_master: e.bl_master ?? null,
+    bl_house: e.bl_house ?? null,
+    diasDesdeEtd: diasDesde(e.etd, hoy),
+    ventaMxn: sumarConceptosEnMxn(ventas, tcUsd, tcEur),
+    ventaUsd: sumarConceptosEnUsd(ventas, tcUsd, tcEur),
+  };
+}
