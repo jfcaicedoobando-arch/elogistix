@@ -3,6 +3,19 @@ import { jsonResponse, errorResponse } from "../_shared/response.ts";
 import { authenticate, checkAdminAccess } from "../_shared/auth.ts";
 import { createLogger } from "../_shared/logger.ts";
 
+// Tipo mínimo del admin client de Supabase usado por estos helpers. Evitamos
+// `any` para cumplir con el guardrail `no-explicit-any`; sólo declaramos los
+// métodos que tocamos (subset estructural seguro).
+type AdminClient = {
+  from: (table: string) => {
+    select: (cols: string) => {
+      eq: (col: string, val: string) => {
+        limit: (n: number) => { maybeSingle: () => Promise<{ data: { organization_id?: string } | null }> };
+      } & Promise<{ data: Array<{ user_id: string }> | null }>;
+    };
+  };
+};
+
 /**
  * Resuelve la organización efectiva del usuario:
  * - Si es global admin → usa la org del helper checkAdminAccess (puede ser null).
@@ -10,8 +23,7 @@ import { createLogger } from "../_shared/logger.ts";
  * Lanza "403:Sin organización" si el usuario no-admin no tiene membresía.
  */
 async function resolveOrgScope(
-  // deno-lint-ignore no-explicit-any
-  adminClient: any,
+  adminClient: AdminClient,
   userId: string,
   isGlobalAdmin: boolean,
   adminOrgId: string | null,
@@ -33,8 +45,7 @@ async function resolveOrgScope(
  * Para global admins (orgId puede ser null) devuelve todos los users.
  */
 async function filterUsersByOrg<T extends { id: string }>(
-  // deno-lint-ignore no-explicit-any
-  adminClient: any,
+  adminClient: AdminClient,
   users: T[],
   isGlobalAdmin: boolean,
   orgId: string | null,
