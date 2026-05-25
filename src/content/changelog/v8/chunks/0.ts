@@ -2,12 +2,12 @@ import type { ChangelogEntry } from "../../../changelogData";
 
 export const chunk0: ChangelogEntry[] = [
   {
-    version: "11.13.0",
+    version: "11.14.0",
     date: "2026-05-25",
     type: "minor",
-    title: "Auditoría P0+P1+P2 — capa de datos CRM, split useLeads, logger centralizado",
-    summary: "UI de CRM ya no toca Supabase; useLeads (382 líneas) dividido en 5 módulos; nuevo logger reemplaza 11 console.* productivos.",
-    description: "P0 (capa de datos CRM) — Nuevo src/services/crm/index.ts con 9 funciones (fetchOportunidadCotizaciones, fetchLeadLineage, fetchOportunidadCotsLineage, fetchEmbarquesByIds, fetchLeadResumen, fetchLeaderboardRaw + computeLeaderboard puro/testeable, insertCotizacionDesdeOportunidad, actualizarEtapaOportunidad). Nuevos hooks: useOportunidadCotizaciones, useLineage (lead + op), useLeaderboardVendedores, useCrearCotizacionDesdeOportunidad. Refactor de OportunidadCotizacionesList, LineageCard, LeaderboardVendedores y OportunidadDetalle — 0 imports de @/integrations/supabase/client en components/crm/** y pages/crm/**. P1 (Power of 10) — useLeads.ts (382 líneas) dividido en src/hooks/crm/leads/{constants,queries,mutations,bulk,convertir}.ts (cada uno < 105 líneas); el archivo original queda como barrel re-export, los 7 consumidores siguen intactos. P2 (observability) — Nuevo lib/observability/logger.ts: debug/info silenciados en producción, warn a consola con prefijo [scope], error a consola + logClientError automático. Reemplazadas 11 ocurrencias de console.warn|error productivos (services/search, pages/auth/NotFound, useSnoozeHallazgo, useAuditoriaSnapshots, useAuditoriaRevisiones, useUpdateEmbarque, useAuditoriaComentarios, useCrmNotificaciones, useAutomatizacionesEtapa). ErrorBoundary intacto (ya usa logClientError directo, no duplicar). APP_VERSION 11.13.0.",
+    title: "Auditoría loop 2 — split useAuditoriaRevisiones + extracción de helpers puros",
+    summary: "useAuditoriaRevisiones (259) → barrel de 11 líneas; useAuditoriaEjecutivo (256→94); useEmbarquesPageState (256→178); useNuevoEmbarqueWizard (260→230). +3 archivos de tests / +15 casos.",
+    description: "Continuación de la auditoría P1 (Power of 10): hooks > 200 líneas. (1) useAuditoriaRevisiones.ts (259) dividido en src/hooks/auditoria/revisiones/{hash,query,marcar,desmarcar,asignar}.ts; el archivo original queda como barrel re-export (11 líneas). (2) lib/auditoria/ejecutivoAgregados.ts (182 líneas) con PESOS, REGLAS_FINANCIERAS, agregarPendientes, calcularScore, agruparPorEtapaYCliente, calcularVencimientos, calcularRanking — extraído de useAuditoriaEjecutivo (256→94 líneas). (3) lib/embarque/embarquesPageHelpers.ts (105) con compareBy, computeCounts, resolveExtras, buildFullSetFilters, dedupePorExpediente, contenedoresPorExpediente — extraído de useEmbarquesPageState (256→178). (4) lib/domain/embarqueWizardStepValidator.ts (59) con dispatcher por paso — extraído de useNuevoEmbarqueWizard (260→230). Tests nuevos (15 casos): ejecutivoAgregados.test.ts (7 casos: agregación, score, agrupación, vencimientos, ranking+MTTR), embarquesPageHelpers.test.ts (6 casos: orden, dedupe, conteos, extras, filtros), embarqueWizardStepValidator.test.ts (4 casos). Suite: 85 archivos / 592 tests verdes. APP_VERSION 11.14.0.",
   },
   {
     version: "11.11.0",

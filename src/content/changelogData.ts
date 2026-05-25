@@ -22,12 +22,12 @@ export interface ChangelogEntry {
  */
 export const recentChangelog: ChangelogEntry[] = [
   {
-    version: "11.13.0",
+    version: "11.14.0",
     date: "2026-05-25",
     type: "minor",
-    title: "Auditoría P0+P1+P2 — capa de datos CRM, split useLeads, logger centralizado",
-    summary: "UI de CRM ya no toca Supabase; useLeads (382 líneas) dividido en 5 módulos; nuevo logger reemplaza 11 console.* productivos.",
-    description: "P0 — Nuevo src/services/crm/index.ts con fetchOportunidadCotizaciones, fetchLeadLineage, fetchOportunidadCotsLineage, fetchEmbarquesByIds, fetchLeadResumen, fetchLeaderboardRaw + computeLeaderboard (puro), insertCotizacionDesdeOportunidad y actualizarEtapaOportunidad. Nuevos hooks useOportunidadCotizaciones, useLineage, useLeaderboardVendedores y useCrearCotizacionDesdeOportunidad. Refactor de OportunidadCotizacionesList, LineageCard, LeaderboardVendedores y OportunidadDetalle: 0 imports de @/integrations/supabase/client en components/crm/** y pages/crm/**. P1 — useLeads.ts (382 líneas) dividido en leads/{constants,queries,mutations,bulk,convertir}.ts; el archivo original queda como barrel re-export para no tocar los 7 consumidores. P2 — Nuevo lib/observability/logger.ts (debug/info silenciados en prod, warn a consola, error a consola + logClientError). Reemplazadas 11 ocurrencias de console.warn|error productivos en services/search, pages/auth/NotFound, useSnoozeHallazgo, useAuditoriaSnapshots, useAuditoriaRevisiones, useUpdateEmbarque, useAuditoriaComentarios, useCrmNotificaciones y useAutomatizacionesEtapa. APP_VERSION 11.13.0.",
+    title: "Auditoría loop 2 — split useAuditoriaRevisiones + extracción de helpers puros",
+    summary: "useAuditoriaRevisiones (259) → barrel de 11 líneas; useAuditoriaEjecutivo (256→94); useEmbarquesPageState (256→178); useNuevoEmbarqueWizard (260→230). +3 archivos de tests.",
+    description: "useAuditoriaRevisiones.ts (259) dividido en revisiones/{hash,query,marcar,desmarcar,asignar}.ts; barrel preserva API. lib/auditoria/ejecutivoAgregados.ts (182 líneas) extraído de useAuditoriaEjecutivo (256→94). lib/embarque/embarquesPageHelpers.ts (105) extraído de useEmbarquesPageState (256→178). lib/domain/embarqueWizardStepValidator.ts (59) extraído de useNuevoEmbarqueWizard (260→230). 3 tests nuevos (15 casos): ejecutivoAgregados, embarquesPageHelpers, embarqueWizardStepValidator. Suite: 85 archivos / 592 tests verdes. APP_VERSION 11.14.0.",
   },
   {
     version: "11.11.0",
