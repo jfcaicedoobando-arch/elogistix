@@ -3,7 +3,7 @@ import * as Sentry from "@sentry/react";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { useAuth } from "@/contexts/AuthContext";
-import { useToast } from "@/hooks/shared/useToast";
+import { useToast } from "@/hooks/shared";
 
 interface Props {
   variant?: "ghost" | "outline";

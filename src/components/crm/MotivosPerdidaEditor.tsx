@@ -11,7 +11,7 @@ import { useToast } from "@/hooks/use-toast";
 import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 import {
   useMotivosPerdida, useActualizarMotivoPerdida, useCrearMotivoPerdida,
-} from "@/hooks/crm/useEtapasPipeline";
+} from "@/hooks/crm";
 
 export default function MotivosPerdidaEditor() {
   const { toast } = useToast();

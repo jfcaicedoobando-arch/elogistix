@@ -21,10 +21,10 @@ import ComentariosOportunidad from "@/components/crm/ComentariosOportunidad";
 import OportunidadCotizacionesList from "@/components/crm/OportunidadCotizacionesList";
 import { OportunidadLineageCard } from "@/components/crm/LineageCard";
 import ContactActions from "@/components/crm/ContactActions";
-import { useOportunidad, useEliminarOportunidad } from "@/hooks/crm/useOportunidades";
-import { useEtapasPipeline } from "@/hooks/crm/useEtapasPipeline";
-import { useContactosCliente } from "@/hooks/cliente/useClientes";
-import { useCrearCotizacionDesdeOportunidad } from "@/hooks/crm/useCrearCotizacionDesdeOportunidad";
+import { useOportunidad, useEliminarOportunidad } from "@/hooks/crm";
+import { useEtapasPipeline } from "@/hooks/crm";
+import { useContactosCliente } from "@/hooks/cliente";
+import { useCrearCotizacionDesdeOportunidad } from "@/hooks/crm";
 
 export default function OportunidadDetalle() {
   const { id } = useParams<{ id: string }>();

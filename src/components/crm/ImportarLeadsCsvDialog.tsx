@@ -14,7 +14,7 @@ import { notifySuccess, notifyError } from "@/lib/ui/appFeedback";
 import {
   LEAD_ESTADOS, LEAD_FUENTES, useCrearLeadsBulk,
   type CrmLeadEstado, type CrmLeadFuente,
-} from "@/hooks/crm/useLeads";
+} from "@/hooks/crm";
 
 interface Props {
   open: boolean;

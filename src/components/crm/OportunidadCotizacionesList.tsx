@@ -7,7 +7,7 @@ import { FileText, Ship } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { formatCurrencyCompact } from "@/lib/formatters";
-import { useOportunidadCotizaciones } from "@/hooks/crm/useOportunidadCotizaciones";
+import { useOportunidadCotizaciones } from "@/hooks/crm";
 
 interface Props {
   oportunidadId: string;

@@ -8,7 +8,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import type { CrmEtapaRow } from "@/hooks/crm/useEtapasPipeline";
+import type { CrmEtapaRow } from "@/hooks/crm";
 
 export interface OportunidadesFiltros {
   etapaId: string;        // "todas" | etapa.id

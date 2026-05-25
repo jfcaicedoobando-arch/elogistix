@@ -19,9 +19,9 @@ import { notifySuccess, notifyError } from "@/lib/ui/appFeedback";
 import {
   ACTIVIDAD_TIPOS, useCrearActividad,
   type CrmActividadTipo, type CrmEntidadTipo,
-} from "@/hooks/crm/useActividades";
-import { useLeads } from "@/hooks/crm/useLeads";
-import { useOportunidades } from "@/hooks/crm/useOportunidades";
+} from "@/hooks/crm";
+import { useLeads } from "@/hooks/crm";
+import { useOportunidades } from "@/hooks/crm";
 
 interface Props {
   open: boolean;

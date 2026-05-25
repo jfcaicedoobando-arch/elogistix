@@ -8,7 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { formatCurrencyCompact } from "@/lib/formatters";
-import { useForecast, useReportesCRM } from "@/hooks/crm/useForecastReportes";
+import { useForecast, useReportesCRM } from "@/hooks/crm";
 import LeaderboardVendedores from "@/components/crm/LeaderboardVendedores";
 import { usePermissions } from "@/hooks/shared";
 

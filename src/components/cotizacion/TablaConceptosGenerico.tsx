@@ -2,7 +2,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { formatCurrency } from "@/lib/formatters";
 import { calcularSubtotal, calcularIVA } from "@/lib/financial/financialUtils";
-import { useTasaIVA } from "@/hooks/catalogos/useTasaIVA";
+import { useTasaIVA } from "@/hooks/catalogos";
 import type { ConceptoVentaCotizacion } from "@/hooks/cotizacion/useCotizaciones";
 
 interface Props {

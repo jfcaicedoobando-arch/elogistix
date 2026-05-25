@@ -24,9 +24,9 @@ import OportunidadesFiltersBar, {
 import {
   useOportunidades,
   type CrmOportunidadRow,
-} from "@/hooks/crm/useOportunidades";
-import { useMoverEtapaConAutomatizacion } from "@/hooks/crm/useAutomatizacionesEtapa";
-import { useEtapasPipeline, type CrmEtapaRow } from "@/hooks/crm/useEtapasPipeline";
+} from "@/hooks/crm";
+import { useMoverEtapaConAutomatizacion } from "@/hooks/crm";
+import { useEtapasPipeline, type CrmEtapaRow } from "@/hooks/crm";
 import { useUsuarios } from "@/hooks/usuario";
 
 const columns: ColumnDef<CrmOportunidadRow, unknown>[] = defineColumns<CrmOportunidadRow>([

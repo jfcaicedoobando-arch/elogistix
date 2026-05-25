@@ -11,7 +11,7 @@ import {
   useCrmNotificaciones,
   useCrmNotificacionesNoLeidasCount,
   useMarcarNotificacionesLeidas,
-} from "@/hooks/crm/useCrmNotificaciones";
+} from "@/hooks/crm";
 
 function timeAgo(iso: string): string {
   const diff = (Date.now() - new Date(iso).getTime()) / 1000;

@@ -3,7 +3,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { defineColumns, type ColumnDef } from "@/components/shared/DataTable";
 import { sortByString } from "@/components/shared/dataTable/sortingFns";
 import { toTitleCase } from "@/lib/formatters";
-import type { CrmLeadEstado, CrmLeadRow } from "@/hooks/crm/useLeads";
+import type { CrmLeadEstado, CrmLeadRow } from "@/hooks/crm";
 
 const ESTADO_VARIANT: Record<CrmLeadEstado, "default" | "secondary" | "outline" | "destructive"> = {
   Nuevo: "default",

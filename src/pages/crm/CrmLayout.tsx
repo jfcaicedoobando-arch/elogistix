@@ -2,7 +2,7 @@ import { NavLink, Outlet } from "react-router-dom";
 import { Target, Users, Activity, BarChart3, LayoutDashboard, Settings } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
-import { useActividadesVencidasCount } from "@/hooks/crm/useCrmDashboard";
+import { useActividadesVencidasCount } from "@/hooks/crm";
 import { usePermissions } from "@/hooks/shared";
 import QuickAddMenu from "@/components/crm/QuickAddMenu";
 

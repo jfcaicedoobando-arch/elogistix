@@ -26,7 +26,7 @@ import {
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { notifySuccess, notifyError } from "@/lib/ui/appFeedback";
-import { useConvertirLead, type CrmLeadRow } from "@/hooks/crm/useLeads";
+import { useConvertirLead, type CrmLeadRow } from "@/hooks/crm";
 
 interface Props {
   open: boolean;

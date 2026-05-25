@@ -12,7 +12,7 @@ import { getErrorMessage } from "@/lib/errors";
 import {
   useComentariosOportunidad,
   useCrearComentarioOportunidad,
-} from "@/hooks/crm/useComentariosOportunidad";
+} from "@/hooks/crm";
 
 interface Props {
   oportunidadId: string;

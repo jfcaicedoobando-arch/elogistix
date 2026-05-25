@@ -10,7 +10,7 @@ import {
 import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useTiposContenedor } from "@/hooks/catalogos/useTiposContenedor";
+import { useTiposContenedor } from "@/hooks/catalogos";
 import { getErrorMessage } from "@/lib/errors";
 import { useToast } from "@/hooks/use-toast";
 import { useDuplicarEmbarque, type EmbarqueRow } from "@/hooks/embarque/useEmbarques";

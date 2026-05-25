@@ -6,7 +6,7 @@ import { Trophy } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { formatCurrencyCompact } from "@/lib/formatters";
-import { useLeaderboardVendedores } from "@/hooks/crm/useLeaderboardVendedores";
+import { useLeaderboardVendedores } from "@/hooks/crm";
 
 export default function LeaderboardVendedores() {
   const { data = [], isLoading } = useLeaderboardVendedores();

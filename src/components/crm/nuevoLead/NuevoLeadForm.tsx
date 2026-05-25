@@ -8,7 +8,7 @@ import {
 import VendedorSelect from "@/components/crm/VendedorSelect";
 import {
   LEAD_ESTADOS, LEAD_FUENTES, type CrmLeadEstado, type CrmLeadFuente,
-} from "@/hooks/crm/useLeads";
+} from "@/hooks/crm";
 
 export interface LeadFormState {
   empresa: string;

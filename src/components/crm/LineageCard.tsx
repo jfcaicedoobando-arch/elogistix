@@ -9,7 +9,7 @@ import { ExternalLink, FileText, Ship, Target, UserPlus } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { formatCurrencyCompact } from "@/lib/formatters";
-import { useLeadLineage, useOportunidadLineage } from "@/hooks/crm/useLineage";
+import { useLeadLineage, useOportunidadLineage } from "@/hooks/crm";
 
 function Empty({ text }: { text: string }) {
   return <p className="text-xs text-muted-foreground">{text}</p>;

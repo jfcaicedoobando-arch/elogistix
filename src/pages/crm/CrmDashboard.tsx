@@ -10,7 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { formatCurrencyCompact } from "@/lib/formatters";
-import { useCrmDashboardData, useActividadesVencidasList } from "@/hooks/crm/useCrmDashboard";
+import { useCrmDashboardData, useActividadesVencidasList } from "@/hooks/crm";
 
 function KpiCard({ icon: Icon, label, value }: { icon: typeof Target; label: string; value: string | number }) {
   return (

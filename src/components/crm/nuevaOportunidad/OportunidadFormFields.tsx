@@ -14,8 +14,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import VendedorSelect from "@/components/crm/VendedorSelect";
-import type { Moneda } from "@/hooks/crm/useOportunidades";
-import type { OportunidadFormState } from "@/hooks/crm/useOportunidadForm";
+import type { Moneda } from "@/hooks/crm";
+import type { OportunidadFormState } from "@/hooks/crm";
 
 interface Etapa {
   id: string;

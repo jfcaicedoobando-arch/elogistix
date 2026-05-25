@@ -18,8 +18,8 @@ import ContactActions from "@/components/crm/ContactActions";
 import ActividadTimeline from "@/components/crm/ActividadTimeline";
 import LeadDatosCard from "@/components/crm/leadDetalle/LeadDatosCard";
 import LeadHeaderActions from "@/components/crm/leadDetalle/LeadHeaderActions";
-import { useActualizarLead, useEliminarLead, useLead } from "@/hooks/crm/useLeads";
-import { useLeadEditForm } from "@/hooks/crm/useLeadEditForm";
+import { useActualizarLead, useEliminarLead, useLead } from "@/hooks/crm";
+import { useLeadEditForm } from "@/hooks/crm";
 
 export default function LeadDetalle() {
   const { id } = useParams<{ id: string }>();

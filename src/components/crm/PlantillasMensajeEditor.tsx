@@ -20,7 +20,7 @@ import {
   useActualizarPlantilla,
   useEliminarPlantilla,
   type PlantillaCanal,
-} from "@/hooks/crm/usePlantillasMensaje";
+} from "@/hooks/crm";
 
 const VARIABLES = ["{{contacto}}", "{{empresa}}", "{{vendedor}}", "{{monto}}", "{{moneda}}", "{{etapa}}"];
 

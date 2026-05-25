@@ -7,7 +7,7 @@ import { Briefcase, FileText, Ship } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { useCliente360 } from "@/hooks/crm/useCliente360";
+import { useCliente360 } from "@/hooks/crm";
 import { formatCurrencyCompact } from "@/lib/formatters";
 import ActividadTimeline from "@/components/crm/ActividadTimeline";
 

@@ -10,7 +10,7 @@ import { useToast } from "@/hooks/use-toast";
 import { notifySuccess, notifyError } from "@/lib/ui/appFeedback";
 import {
   useCompletarActividad, usePosponerActividad, type CrmActividadRow,
-} from "@/hooks/crm/useActividades";
+} from "@/hooks/crm";
 
 interface Props { actividad: CrmActividadRow }
 

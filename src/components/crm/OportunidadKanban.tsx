@@ -11,11 +11,11 @@ import { Calendar } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { formatCurrencyCompact } from "@/lib/formatters";
-import { useProximasActividades, type ProximaActividad } from "@/hooks/crm/useProximasActividades";
+import { useProximasActividades, type ProximaActividad } from "@/hooks/crm";
 
 const fmtMxn = (n: number) => formatCurrencyCompact(n, "MXN");
-import type { CrmOportunidadRow } from "@/hooks/crm/useOportunidades";
-import type { CrmEtapaRow } from "@/hooks/crm/useEtapasPipeline";
+import type { CrmOportunidadRow } from "@/hooks/crm";
+import type { CrmEtapaRow } from "@/hooks/crm";
 
 interface Props {
   etapas: CrmEtapaRow[];
