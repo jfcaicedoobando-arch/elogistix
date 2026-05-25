@@ -85,24 +85,32 @@ function makeColumns(
 
 export default function Leads() {
   const navigate = useNavigate();
-  const { canEdit } = usePermissions();
+  const { canEdit, canEditCrm } = usePermissions();
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [importOpen, setImportOpen] = useState(false);
+  const [selected, setSelected] = useState<Set<string>>(new Set());
   const { search, setSearch, page, setPage, pageSize, setPageSize } = useListPageState({});
   const debounced = useDebounce(search, 300);
   const [estado, setEstado] = useState<CrmLeadEstado | "todos">("todos");
   const [fuente, setFuente] = useState<CrmLeadFuente | "todos">("todos");
 
-  const { data, isLoading } = useLeads({
-    search: debounced,
-    estado,
-    fuente,
-    page,
-    pageSize,
-  });
-
+  const { data, isLoading } = useLeads({ search: debounced, estado, fuente, page, pageSize });
   const leads = data?.data ?? [];
   const totalCount = data?.count ?? 0;
   const totalPages = Math.ceil(totalCount / pageSize);
+
+  const toggle = (id: string) => setSelected((s) => {
+    const n = new Set(s); if (n.has(id)) n.delete(id); else n.add(id); return n;
+  });
+  const toggleAll = (rows: CrmLeadRow[]) => setSelected((s) => {
+    const allHere = rows.every((r) => s.has(r.id));
+    const n = new Set(s);
+    if (allHere) rows.forEach((r) => n.delete(r.id));
+    else rows.forEach((r) => n.add(r.id));
+    return n;
+  });
+  const clearSel = () => setSelected(new Set());
+  const columns = useMemo(() => makeColumns(selected, toggle, toggleAll, leads), [selected, leads]);
 
   return (
     <div className="space-y-6 p-6">
@@ -112,12 +120,23 @@ export default function Leads() {
         description={`${totalCount} leads en cartera`}
         actions={
           canEdit ? (
-            <Button onClick={() => setDialogOpen(true)} className="hidden md:flex">
-              <Plus className="h-4 w-4 mr-1" /> Nuevo lead
-            </Button>
+            <div className="flex gap-2">
+              {canEditCrm && (
+                <Button variant="outline" onClick={() => setImportOpen(true)} className="hidden md:flex">
+                  <Upload className="h-4 w-4 mr-1" /> Importar CSV
+                </Button>
+              )}
+              <Button onClick={() => setDialogOpen(true)} className="hidden md:flex">
+                <Plus className="h-4 w-4 mr-1" /> Nuevo lead
+              </Button>
+            </div>
           ) : null
         }
       />
+
+      {canEditCrm && selected.size > 0 && (
+        <LeadsBulkBar ids={Array.from(selected)} onClear={clearSel} onDone={clearSel} />
+      )}
 
       <Card>
         <CardContent className="p-4 flex flex-col md:flex-row gap-3">
