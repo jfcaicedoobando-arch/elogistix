@@ -11,10 +11,23 @@ Deno.serve(async (req) => {
 
   try {
     const { userId, adminClient } = await authenticate(req);
-    const { isGlobalAdmin, orgId } = await checkAdminAccess(adminClient, userId);
+    const { isGlobalAdmin, orgId: adminOrgId } = await checkAdminAccess(adminClient, userId);
+
+    // Permitir a cualquier miembro de la organización listar usuarios de su propia
+    // org (necesario para selects de vendedor/responsable en CRM, auditoría, etc.).
+    let orgId = adminOrgId;
     if (!isGlobalAdmin && !orgId) {
-      log.finish(403, "not_admin", { user_id: userId });
-      return errorResponse("Solo administradores", 403, cors);
+      const { data: membership } = await adminClient
+        .from("organization_members")
+        .select("organization_id")
+        .eq("user_id", userId)
+        .limit(1)
+        .maybeSingle();
+      orgId = membership?.organization_id ?? null;
+      if (!orgId) {
+        log.finish(403, "no_org_membership", { user_id: userId });
+        return errorResponse("Sin organización", 403, cors);
+      }
     }
 
     const { data: { users }, error } = await adminClient.auth.admin.listUsers();
