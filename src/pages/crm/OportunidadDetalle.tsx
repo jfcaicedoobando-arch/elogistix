@@ -15,8 +15,6 @@ import { useToast } from "@/hooks/use-toast";
 import { notifySuccess, notifyError } from "@/lib/ui/appFeedback";
 import { usePermissions } from "@/hooks/shared";
 import { formatCurrencyCompact } from "@/lib/formatters";
-import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/contexts/AuthContext";
 import NuevaOportunidadDialog from "@/components/crm/NuevaOportunidadDialog";
 import ActividadTimeline from "@/components/crm/ActividadTimeline";
 import ComentariosOportunidad from "@/components/crm/ComentariosOportunidad";
@@ -26,22 +24,21 @@ import ContactActions from "@/components/crm/ContactActions";
 import { useOportunidad, useEliminarOportunidad } from "@/hooks/crm/useOportunidades";
 import { useEtapasPipeline } from "@/hooks/crm/useEtapasPipeline";
 import { useContactosCliente } from "@/hooks/cliente/useClientes";
-import { generarFolioCotizacion } from "@/services/cotizacion/queries";
+import { useCrearCotizacionDesdeOportunidad } from "@/hooks/crm/useCrearCotizacionDesdeOportunidad";
 
 export default function OportunidadDetalle() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { toast } = useToast();
   const { canEdit } = usePermissions();
-  const { user } = useAuth();
   const [editOpen, setEditOpen] = useState(false);
   const [delOpen, setDelOpen] = useState(false);
-  const [creandoCot, setCreandoCot] = useState(false);
 
   const { data: op, isLoading } = useOportunidad(id);
   const { data: etapas = [] } = useEtapasPipeline();
   const { data: contactos = [] } = useContactosCliente(op?.cliente_id ?? undefined);
   const eliminar = useEliminarOportunidad();
+  const crearCot = useCrearCotizacionDesdeOportunidad();
 
   const contactoPrincipal = useMemo(() => contactos[0], [contactos]);
 
@@ -61,42 +58,27 @@ export default function OportunidadDetalle() {
   };
 
   const crearCotizacion = async () => {
-    setCreandoCot(true);
     try {
-      const folio = await generarFolioCotizacion();
-      const modoMap: Record<string, "Marítimo" | "Aéreo" | "Terrestre" | "Multimodal"> = {
-        "Marítimo": "Marítimo", "Aéreo": "Aéreo", "Terrestre": "Terrestre", "Multimodal": "Multimodal",
-      };
-      const modo = modoMap[op.modo] ?? "Marítimo";
-      const { data, error } = await supabase
-        .from("cotizaciones")
-        .insert({
-          folio, modo, tipo: "Importación",
+      const cotizandoEtapa = etapas.find(
+        (e) => /cotizando|cotizaci/i.test(e.nombre) && e.tipo === "abierta",
+      );
+      const result = await crearCot.mutateAsync({
+        oportunidad: {
+          id: op.id,
           cliente_id: op.cliente_id,
-          cliente_nombre: op.cliente_nombre || "",
-          origen: op.origen || "", destino: op.destino || "",
-          oportunidad_id: op.id,
-          operador: user?.email ?? "",
-          es_prospecto: !op.cliente_id,
-        })
-        .select("id")
-        .single();
-      if (error) throw error;
-
-      const cotizandoEtapa = etapas.find((e) => /cotizando|cotizaci/i.test(e.nombre) && e.tipo === "abierta");
-      if (cotizandoEtapa && op.etapa_id !== cotizandoEtapa.id) {
-        await supabase
-          .from("crm_oportunidades")
-          .update({ etapa_id: cotizandoEtapa.id, probabilidad: cotizandoEtapa.probabilidad_default })
-          .eq("id", op.id);
-      }
-
-      notifySuccess(toast, { title: "Cotización creada", description: `Folio ${folio}` });
-      navigate(`/cotizaciones/${data.id}/editar`);
+          cliente_nombre: op.cliente_nombre,
+          origen: op.origen,
+          destino: op.destino,
+          etapa_id: op.etapa_id,
+          modo: op.modo,
+        },
+        etapaCotizandoId: cotizandoEtapa?.id,
+        etapaCotizandoProbabilidad: cotizandoEtapa?.probabilidad_default ?? 0,
+      });
+      notifySuccess(toast, { title: "Cotización creada", description: `Folio ${result.folio}` });
+      navigate(`/cotizaciones/${result.id}/editar`);
     } catch (e) {
       notifyError(toast, { title: "No se pudo crear", description: e instanceof Error ? e.message : undefined });
-    } finally {
-      setCreandoCot(false);
     }
   };
 
@@ -109,8 +91,8 @@ export default function OportunidadDetalle() {
         actions={
           canEdit ? (
             <div className="flex gap-2">
-              <Button variant="outline" onClick={crearCotizacion} disabled={creandoCot}>
-                {creandoCot ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <FileText className="h-4 w-4 mr-1" />}
+              <Button variant="outline" onClick={crearCotizacion} disabled={crearCot.isPending}>
+                {crearCot.isPending ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <FileText className="h-4 w-4 mr-1" />}
                 Crear cotización
               </Button>
               <Button variant="outline" onClick={() => setEditOpen(true)}>

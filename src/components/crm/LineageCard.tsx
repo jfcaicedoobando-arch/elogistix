@@ -2,42 +2,21 @@
  * Tarjetas de linaje del CRM:
  *  - LeadLineageCard:        Lead → Oportunidades generadas
  *  - OportunidadLineageCard: Oportunidad → Lead origen + Cotizaciones + Embarques
- * Sin nuevas tablas; usa queries directas a Supabase.
+ * 11.13.0: las queries se mueven a `useLineage` (servicio CRM).
  */
-import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
 import { ExternalLink, FileText, Ship, Target, UserPlus } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { supabase } from "@/integrations/supabase/client";
 import { formatCurrencyCompact } from "@/lib/formatters";
+import { useLeadLineage, useOportunidadLineage } from "@/hooks/crm/useLineage";
 
 function Empty({ text }: { text: string }) {
   return <p className="text-xs text-muted-foreground">{text}</p>;
 }
 
-interface OpRow {
-  id: string;
-  nombre: string;
-  monto_estimado: number | null;
-  moneda: string;
-  probabilidad: number | null;
-  fecha_estimada_cierre: string | null;
-}
-
 export function LeadLineageCard({ leadId }: { leadId: string }) {
-  const { data = [], isLoading } = useQuery({
-    queryKey: ["crm", "lineage", "lead", leadId],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("crm_oportunidades")
-        .select("id, nombre, monto_estimado, moneda, probabilidad, fecha_estimada_cierre")
-        .eq("lead_id", leadId)
-        .order("created_at", { ascending: false });
-      if (error) throw error;
-      return (data ?? []) as OpRow[];
-    },
-  });
+  const { data = [], isLoading } = useLeadLineage(leadId);
 
   return (
     <Card>
@@ -71,72 +50,13 @@ export function LeadLineageCard({ leadId }: { leadId: string }) {
   );
 }
 
-interface CotRow {
-  id: string;
-  folio: string;
-  estado: string;
-  modo: string;
-  embarque_id: string | null;
-  created_at: string;
-}
-interface EmbRow {
-  id: string;
-  expediente: string;
-  estado: string;
-  modo: string;
-}
-
 interface OpLineageProps {
   oportunidadId: string;
   leadId: string | null;
 }
 
 export function OportunidadLineageCard({ oportunidadId, leadId }: OpLineageProps) {
-  const cotsQ = useQuery({
-    queryKey: ["crm", "lineage", "op", oportunidadId, "cots"],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("cotizaciones")
-        .select("id, folio, estado, modo, embarque_id, created_at")
-        .eq("oportunidad_id", oportunidadId)
-        .is("deleted_at", null)
-        .order("created_at", { ascending: false });
-      if (error) throw error;
-      return (data ?? []) as CotRow[];
-    },
-  });
-
-  const embarqueIds = (cotsQ.data ?? []).map((c) => c.embarque_id).filter((x): x is string => !!x);
-  const embsQ = useQuery({
-    queryKey: ["crm", "lineage", "op", oportunidadId, "embs", embarqueIds.sort().join(",")],
-    enabled: embarqueIds.length > 0,
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("embarques")
-        .select("id, expediente, estado, modo")
-        .in("id", embarqueIds)
-        .is("deleted_at", null);
-      if (error) throw error;
-      return (data ?? []) as EmbRow[];
-    },
-  });
-
-  const leadQ = useQuery({
-    queryKey: ["crm", "lineage", "op", oportunidadId, "lead", leadId],
-    enabled: !!leadId,
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("crm_leads")
-        .select("id, empresa, estado")
-        .eq("id", leadId!)
-        .maybeSingle();
-      if (error) throw error;
-      return data;
-    },
-  });
-
-  const cots = cotsQ.data ?? [];
-  const embs = embsQ.data ?? [];
+  const { cots, embs, lead, isLoadingCots } = useOportunidadLineage(oportunidadId, leadId);
 
   return (
     <Card>
@@ -150,10 +70,10 @@ export function OportunidadLineageCard({ oportunidadId, leadId }: OpLineageProps
           <div className="text-xs font-semibold text-muted-foreground mb-1 flex items-center gap-1">
             <UserPlus className="h-3 w-3" /> Lead de origen
           </div>
-          {leadId && leadQ.data ? (
+          {leadId && lead ? (
             <Link to={`/crm/leads/${leadId}`} className="flex items-center justify-between gap-2 p-2 rounded border hover:bg-muted/50">
-              <div className="text-sm font-medium truncate">{leadQ.data.empresa}</div>
-              <Badge variant="outline">{leadQ.data.estado}</Badge>
+              <div className="text-sm font-medium truncate">{lead.empresa}</div>
+              <Badge variant="outline">{lead.estado}</Badge>
             </Link>
           ) : (
             <Empty text="Oportunidad creada directamente (sin lead)." />
@@ -164,8 +84,8 @@ export function OportunidadLineageCard({ oportunidadId, leadId }: OpLineageProps
           <div className="text-xs font-semibold text-muted-foreground mb-1 flex items-center gap-1">
             <FileText className="h-3 w-3" /> Cotizaciones <Badge variant="outline" className="ml-1">{cots.length}</Badge>
           </div>
-          {cotsQ.isLoading && <p className="text-xs text-muted-foreground">Cargando…</p>}
-          {!cotsQ.isLoading && cots.length === 0 && <Empty text="Aún no hay cotizaciones vinculadas." />}
+          {isLoadingCots && <p className="text-xs text-muted-foreground">Cargando…</p>}
+          {!isLoadingCots && cots.length === 0 && <Empty text="Aún no hay cotizaciones vinculadas." />}
           <div className="space-y-1">
             {cots.map((c) => (
               <Link key={c.id} to={`/cotizaciones/${c.id}/editar`} className="flex items-center justify-between gap-2 p-2 rounded border hover:bg-muted/50">
@@ -183,7 +103,7 @@ export function OportunidadLineageCard({ oportunidadId, leadId }: OpLineageProps
           <div className="text-xs font-semibold text-muted-foreground mb-1 flex items-center gap-1">
             <Ship className="h-3 w-3" /> Embarques <Badge variant="outline" className="ml-1">{embs.length}</Badge>
           </div>
-          {embarqueIds.length === 0 && <Empty text="Sin embarques generados todavía." />}
+          {embs.length === 0 && <Empty text="Sin embarques generados todavía." />}
           <div className="space-y-1">
             {embs.map((e) => (
               <Link key={e.id} to={`/embarques/${e.id}`} className="flex items-center justify-between gap-2 p-2 rounded border hover:bg-muted/50">

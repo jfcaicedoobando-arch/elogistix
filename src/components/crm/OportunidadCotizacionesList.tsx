@@ -1,23 +1,13 @@
 /**
  * Lista las cotizaciones vinculadas a una oportunidad (Sprint D).
+ * 11.13.0: la query se mueve a `useOportunidadCotizaciones`.
  */
 import { useNavigate } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
 import { FileText, Ship } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { supabase } from "@/integrations/supabase/client";
 import { formatCurrencyCompact } from "@/lib/formatters";
-
-interface Cot {
-  id: string;
-  folio: string;
-  estado: string;
-  subtotal: number;
-  moneda: string;
-  created_at: string;
-  embarque_id: string | null;
-}
+import { useOportunidadCotizaciones } from "@/hooks/crm/useOportunidadCotizaciones";
 
 interface Props {
   oportunidadId: string;
@@ -25,18 +15,7 @@ interface Props {
 
 export default function OportunidadCotizacionesList({ oportunidadId }: Props) {
   const navigate = useNavigate();
-  const { data = [], isLoading } = useQuery<Cot[]>({
-    queryKey: ["crm", "op-cotizaciones", oportunidadId],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("cotizaciones")
-        .select("id, folio, estado, subtotal, moneda, created_at, embarque_id")
-        .eq("oportunidad_id", oportunidadId)
-        .order("created_at", { ascending: false });
-      if (error) throw error;
-      return (data ?? []) as Cot[];
-    },
-  });
+  const { data = [], isLoading } = useOportunidadCotizaciones(oportunidadId);
 
   return (
     <Card>

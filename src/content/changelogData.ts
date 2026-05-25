@@ -22,12 +22,12 @@ export interface ChangelogEntry {
  */
 export const recentChangelog: ChangelogEntry[] = [
   {
-    version: "11.12.0",
+    version: "11.13.0",
     date: "2026-05-25",
     type: "minor",
-    title: "Cierre P2: tests Deno (parse-csf, jsoncargo-track) + zipDownload + exportCsv",
-    summary: "4 archivos nuevos (2 Deno + 2 Vitest): validación de CSF, validación de tracking JSONCargo, descarga ZIP y export CSV.",
-    description: "Tests Deno: parse-csf/validate_test (tamaño/MIME/null) y jsoncargo-track/validate_test (modo, contenedor, naviera soportada, happy path). Tests Vitest: zipDownload empaqueta archivos en carpeta y dispara descarga; exportCsv escapa comas/comillas/saltos, trata null como vacío y respeta filename. Suite: 84 archivos / 589 tests Vitest + 8 Deno verdes. APP_VERSION 11.12.0.",
+    title: "Auditoría P0+P1+P2 — capa de datos CRM, split useLeads, logger centralizado",
+    summary: "UI de CRM ya no toca Supabase; useLeads (382 líneas) dividido en 5 módulos; nuevo logger reemplaza 11 console.* productivos.",
+    description: "P0 — Nuevo src/services/crm/index.ts con fetchOportunidadCotizaciones, fetchLeadLineage, fetchOportunidadCotsLineage, fetchEmbarquesByIds, fetchLeadResumen, fetchLeaderboardRaw + computeLeaderboard (puro), insertCotizacionDesdeOportunidad y actualizarEtapaOportunidad. Nuevos hooks useOportunidadCotizaciones, useLineage, useLeaderboardVendedores y useCrearCotizacionDesdeOportunidad. Refactor de OportunidadCotizacionesList, LineageCard, LeaderboardVendedores y OportunidadDetalle: 0 imports de @/integrations/supabase/client en components/crm/** y pages/crm/**. P1 — useLeads.ts (382 líneas) dividido en leads/{constants,queries,mutations,bulk,convertir}.ts; el archivo original queda como barrel re-export para no tocar los 7 consumidores. P2 — Nuevo lib/observability/logger.ts (debug/info silenciados en prod, warn a consola, error a consola + logClientError). Reemplazadas 11 ocurrencias de console.warn|error productivos en services/search, pages/auth/NotFound, useSnoozeHallazgo, useAuditoriaSnapshots, useAuditoriaRevisiones, useUpdateEmbarque, useAuditoriaComentarios, useCrmNotificaciones y useAutomatizacionesEtapa. APP_VERSION 11.13.0.",
   },
   {
     version: "11.11.0",

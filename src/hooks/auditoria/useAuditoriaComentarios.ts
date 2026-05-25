@@ -10,6 +10,7 @@ import {
   insertComentario,
 } from "@/services/auditoria";
 import type { AuditoriaComentario } from "@/types/auditoria";
+import { logger } from "@/lib/observability/logger";
 
 const baseKey = (revisionId: string) =>
   ["auditoria", "comentarios", revisionId] as const;
@@ -41,7 +42,7 @@ export function useAgregarComentarioAuditoria() {
       queryClient.invalidateQueries({ queryKey: baseKey(vars.revisionId) });
     },
     onError: (err: Error) => {
-      console.error("[useAgregarComentarioAuditoria] error:", err);
+      logger.error("[useAgregarComentarioAuditoria] error:", err);
       toast.error("No se pudo agregar el comentario", {
         description: err.message,
       });
