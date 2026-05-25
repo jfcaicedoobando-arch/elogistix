@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 import TabPortalCliente from "@/components/cliente/TabPortalCliente";
+import Cliente360Panel from "@/components/crm/Cliente360Panel";
 import { DataTable } from "@/components/shared/DataTable";
 import { embarqueColumns, cotizacionColumns } from "@/components/cliente/clienteColumns";
 import TablaContactos from "@/components/cliente/TablaContactos";
@@ -120,6 +121,7 @@ export default function ClienteDetalle() {
           <TabsTrigger value="informacion">Información</TabsTrigger>
           <TabsTrigger value="embarques">Embarques ({embarquesCliente.length})</TabsTrigger>
           <TabsTrigger value="cotizaciones">Cotizaciones ({cotizacionesCliente.length})</TabsTrigger>
+          <TabsTrigger value="crm">CRM</TabsTrigger>
           <TabsTrigger value="portal">Portal</TabsTrigger>
         </TabsList>
 
@@ -181,6 +183,10 @@ export default function ClienteDetalle() {
               />
             </CardContent>
           </Card>
+        </TabsContent>
+
+        <TabsContent value="crm">
+          <Cliente360Panel clienteId={cliente.id} />
         </TabsContent>
 
         <TabsContent value="portal">
