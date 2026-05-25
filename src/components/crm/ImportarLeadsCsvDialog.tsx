@@ -92,7 +92,7 @@ function mapRows(matrix: string[][]): ParsedRow[] {
       } else if (field === "estado") {
         r.estado = (LEAD_ESTADOS as string[]).includes(val) ? (val as CrmLeadEstado) : "Nuevo";
       } else {
-        (r as Record<string, string>)[field] = val;
+        (r as unknown as Record<string, string>)[field] = val;
       }
     });
     if (!r.empresa) r.__error = "Empresa requerida";
