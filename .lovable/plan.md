@@ -1,78 +1,124 @@
-# Sprint D — Integración comercial CRM ↔ Cotizaciones/Embarques (v11.6.0)
 
-Sprint C (Automatizaciones) está cerrado en v11.5.0. El siguiente paso natural es cerrar el ciclo comercial: que las oportunidades CRM se conecten de forma fluida con cotizaciones, embarques y métricas de vendedor.
+# Sprint G — Pulido UX del CRM (v11.7.0)
 
-## Objetivos
+Auditoría honesta del workflow actual y propuesta para simplificar. El CRM ya tiene piezas potentes (Kanban, automatizaciones, notificaciones, plantillas, leaderboard) pero está disperso en 7 pestañas y duplica información entre Dashboard / Forecast / Reportes. La meta es **menos clics, menos pestañas, más foco en lo que el vendedor tiene que hacer hoy**.
 
-1. Trazabilidad bidireccional oportunidad ↔ cotización ↔ embarque.
-2. Productividad del vendedor: vista 360° del cliente y atajos comerciales.
-3. Métricas de cierre reales (no sólo pipeline ponderado), con comparativo cuota vs. logrado.
+## Diagnóstico — qué le falta y qué sobra
 
-## Alcance
+### Pestañas redundantes
+- **Forecast** y **Reportes** son dos pantallas que cuentan lo mismo desde ángulos diferentes (pipeline / ponderado / ganado vs. embudo / conversión / motivos / leaderboard). Hay overlap visual con el mini-embudo del Dashboard. → **Fusionar en una sola pestaña "Analítica"** con sub-tabs (Forecast · Embudo · Pérdidas · Vendedores).
+- **Dashboard** y **Actividades** se solapan en "Mis actividades de hoy" y "Vencidas". El Dashboard tiene tantos widgets que deja de ser un panel de acción y se vuelve un reporte. → Reorientar Dashboard como **"Inicio"**: lo que tengo que hacer hoy, arriba; KPIs abajo.
 
-### 1. Vista 360° del cliente en CRM
+### Huecos funcionales
+- **LeadDetalle no muestra timeline de actividades** (las oportunidades sí). El esquema lo soporta (`crm_actividades.entidad_tipo='lead'`) pero la UI no lo expone.
+- **OportunidadDetalle no expone plantillas / contacto rápido**. Sólo el lead tiene los botones email/WhatsApp con `PlantillaSelector`. El vendedor abre una oportunidad y no puede escribirle al contacto sin ir al lead.
+- **Próxima actividad** no se muestra en cards de oportunidad ni en filas de lead. Es la información más útil de un CRM ("¿qué sigue?") y hoy hay que entrar al detalle para verla.
+- **Quick-add global ausente**: para crear lead/oportunidad/actividad hay que navegar a la pestaña correspondiente y abrir el dialog.
+- **Bell de notificaciones vive sólo dentro de `/crm`**. Si el vendedor está en `/cotizaciones` o `/clientes` no se entera de comentarios o tareas asignadas.
 
-- Nuevo tab "CRM" dentro de `ClienteDetalle.tsx` (o sección en página existente) que muestre:
-  - Oportunidades abiertas y ganadas del cliente.
-  - Actividades recientes (timeline reutilizando `ActividadTimeline`).
-  - Última cotización y último embarque con link directo.
-- Hook `useCliente360.ts` que agrega los datos en una sola query optimizada.
+### Fricción de uso
+- OportunidadDetalle apila 6 cards verticalmente (Header → KPIs → Datos → Cotizaciones → Comentarios → Lineage → Timeline). Mucho scroll para encontrar el comentario o la próxima actividad.
+- Empty states pasivos ("Sin datos" / "Sin oportunidades"): no hay CTA accionable.
+- Configuración con permiso `admin` es correcta, pero el ícono y el label la hacen verse como tab principal en vez de "ajustes".
 
-### 2. Conversión Oportunidad → Cotización mejorada
+## Cambios propuestos
 
-- Botón "Crear cotización" en `OportunidadDetalle.tsx` ya existe; ampliarlo:
-  - Pre-llenar modo de transporte, cliente, contacto, valor estimado e Incoterm desde la oportunidad.
-  - Al crear, dejar la oportunidad en etapa "Cotizando" automáticamente (configurable en pipeline).
-- Mostrar en `OportunidadDetalle` la lista de cotizaciones vinculadas (`cotizaciones.oportunidad_id`) con estatus y monto.
+### 1. Reducir de 7 → 5 pestañas
 
-### 3. Cierre Oportunidad → Embarque
+```text
+ANTES                          DESPUÉS
+─────────────────────────      ─────────────────────────
+Dashboard                      Inicio
+Leads                          Leads
+Oportunidades                  Oportunidades
+Actividades                    Actividades
+Forecast            ┐
+Reportes            ├─────►    Analítica  (sub-tabs)
+                               Configuración (icono ⚙, derecha)
+```
 
-- Cuando una cotización vinculada a oportunidad se acepta:
-  - Trigger ya marca oportunidad como "Ganada" (existe). Extender para registrar `valor_real` con el monto final de la cotización.
-  - Si se crea un embarque desde la cotización, mostrar el embarque en `OportunidadDetalle`.
-- Nuevo campo `valor_real` (numeric, nullable) en `crm_oportunidades`.
+- `Forecast.tsx` y `Reportes.tsx` se consolidan en `Analitica.tsx` con `Tabs`: Forecast · Embudo · Pérdidas · Vendedores. Los hooks `useForecast` y `useReportesCRM` se mantienen.
+- Ruta legacy `/crm/forecast` y `/crm/reportes` redirigen a `/crm/analitica?tab=forecast|embudo`.
+- "Configuración" se separa visualmente en el `CrmLayout` (alineado a la derecha con ícono solo, sin label), para que las 5 tabs reales no compitan con ella.
 
-### 4. Métricas reales del vendedor
+### 2. "Inicio" enfocado en hoy (rediseño de `CrmDashboard`)
 
-- `useForecastReportes.ts`: agregar bloques de "Cerrado mes" y "Cerrado YTD" usando `valor_real` de oportunidades ganadas.
-- `Reportes.tsx`: tarjeta de cumplimiento de cuota (`crm_cuotas_vendedor` ya existe) con barra de progreso y % vs. meta mensual/trimestral.
-- Tabla de leaderboard de vendedores (admin/operador), oculta para rol vendedor.
+Orden y peso visual:
+1. **Banner de vencidas** (ya existe).
+2. **Mis actividades de hoy** — primera card, ancho completo, con botón inline "Completar" y "Posponer +1d".
+3. **Cerrando esta semana** + **Leads sin contactar** — fila de 2.
+4. **KPIs** (4 tarjetas) — bajan al final como contexto, no como foco.
+5. **Mini-embudo** se elimina del Inicio (queda en Analítica → Embudo) para reducir duplicación.
 
-### 5. Comentarios en oportunidad
+### 3. Quick-add global en el header del CRM
 
-- Nueva tabla `crm_comentarios_oportunidad` (id, oportunidad_id, autor_id, texto, created_at) con RLS multi-tenant.
-- Sección "Comentarios" en `OportunidadDetalle.tsx` con input + listado cronológico.
-- Notificación automática (usa `crm_notificaciones`) al vendedor responsable cuando alguien más comenta.
+Botón `+ Nuevo` con menú desplegable (`DropdownMenu`):
+- Nuevo lead
+- Nueva oportunidad
+- Nueva actividad (abre dialog reusando `useCrearActividad` con selector de entidad)
 
-### 6. Versionado y changelog
+Disponible desde cualquier sub-ruta de `/crm`.
 
-- `APP_VERSION` → `11.6.0`.
-- Entrada nueva en `src/content/changelog/v8/chunks/0.ts` y `src/content/changelogData.ts`.
+### 4. Notificaciones a nivel global
+
+Mover `CrmNotificacionesBell` del header de `CrmLayout` al header global de la app (`AppLayout` o equivalente). Sólo se monta si el rol tiene `canEditCrm`. Así las notificaciones de comentarios y vencidas llegan al vendedor esté donde esté.
+
+### 5. Cerrar huecos en detalles
+
+- **LeadDetalle**: agregar `<ActividadTimeline entidadTipo="lead" entidadId={lead.id} />` debajo de Lineage. Permite ver y crear actividades sobre el lead.
+- **OportunidadDetalle**: agregar `<ContactActions>` con `PlantillaSelector` en el card de "Datos comerciales" (resuelve email/teléfono desde `cliente_id` → `clientes` → contacto principal). Variables de plantilla: `contacto`, `empresa`, `vendedor`, `etapa`, `monto`.
+- **OportunidadDetalle**: reorganizar en **tabs internas**: 
+  - `Resumen` (KPIs + Datos comerciales + Cotizaciones)
+  - `Comunicación` (Contacto rápido + Comentarios + Timeline de actividades)
+  - `Trazabilidad` (Lineage)
+
+### 6. "Próxima actividad" visible sin entrar al detalle
+
+- Nuevo hook `useProximaActividadPorEntidad(entidades: {tipo, id}[])` que en una sola query trae la actividad pendiente más próxima por entidad.
+- En cards Kanban de `OportunidadKanban`: línea inferior con `📅 Llamar mañana 10:00` o `⚠ Sin próxima acción` (link para crear).
+- En tabla de Leads: nueva columna "Próxima" con la misma info.
+
+### 7. Empty states accionables
+
+Pantallas: Leads (vacío), Oportunidades (vacío), Actividades (vacío), Cliente360Panel sin oportunidades, OportunidadCotizacionesList vacía. Pasar de `"Sin datos"` a card con icono + CTA primario ("Crear primer lead" / "Importar CSV" / "Nueva oportunidad").
+
+### 8. Versionado y changelog
+
+- `APP_VERSION` → `11.7.0`.
+- Entrada en `changelog/v8/chunks/0.ts` + `changelogData.ts`.
+
+## Fuera de alcance (no tocar)
+
+- Lógica de RLS / triggers (Sprint D ya los dejó cerrados).
+- Migraciones nuevas (todo es UI/UX sobre datos existentes).
+- Sprint F (Integraciones — Webhooks, OAuth Outlook/Gmail, Calendario): sigue pendiente como acordamos.
+- Refactor del Kanban DnD.
 
 ## Detalles técnicos
 
-- **Migración**: agregar `valor_real numeric` en `crm_oportunidades`; crear `crm_comentarios_oportunidad` con RLS por `organization_id` y `is_vendedor()`.
-- **Trigger**: extender `crm_marcar_oportunidad_ganada` para setear `valor_real = NEW.total` cuando la cotización es aceptada.
-- **Hooks**: `useCliente360.ts`, `useComentariosOportunidad.ts` (paginado), extender `useForecastReportes.ts`.
-- **Componentes nuevos** (≤200 líneas, sin `any`):
-  - `Cliente360Panel.tsx` (vista CRM dentro del cliente)
-  - `OportunidadCotizacionesList.tsx`
-  - `OportunidadEmbarquesList.tsx`
-  - `ComentariosOportunidad.tsx`
-  - `LeaderboardVendedores.tsx`
-- **Reutilización**: `ActividadTimeline`, `DataTable`, `formatCurrency`, `useTasaIVA` cuando aplique.
-- **Performance**: queries con `select` explícito (regla `optimizacion-consultas`); paginación en comentarios y leaderboard.
-- **RLS**: comentarios siguen las mismas reglas de la oportunidad (lectura/escritura por organización y por vendedor responsable).
+- **Archivos nuevos**:
+  - `src/pages/crm/Analitica.tsx` (sustituye Forecast + Reportes).
+  - `src/components/crm/QuickAddMenu.tsx` (botón + menú).
+  - `src/components/crm/NuevaActividadDialog.tsx` (dialog reusable con selector de entidad).
+  - `src/hooks/crm/useProximasActividades.ts` (batch lookup).
+  - `src/components/shared/EmptyState.tsx` (si no existe ya — comprobar antes de crear).
 
-## Fuera de alcance
+- **Archivos editados**:
+  - `src/pages/crm/CrmLayout.tsx` — tabs reducidos a 5 + QuickAdd + Configuración separada.
+  - `src/pages/crm/CrmDashboard.tsx` → renombrar visualmente a "Inicio", reordenar.
+  - `src/pages/crm/OportunidadDetalle.tsx` — tabs internas + ContactActions.
+  - `src/pages/crm/LeadDetalle.tsx` — añadir ActividadTimeline.
+  - `src/components/crm/OportunidadKanban.tsx` — pintar próxima actividad.
+  - `src/pages/crm/Leads.tsx` — columna "Próxima".
+  - `src/App.tsx` — rutas: `/crm/analitica`, redirects legacy de `/crm/forecast` y `/crm/reportes`.
+  - Header global (a localizar — probable `AppLayout` o `AppShell`) para mover el `CrmNotificacionesBell`.
 
-- Workflows visuales tipo BPMN.
-- Edge functions de email/WhatsApp reales (Sprint C ya definió `mailto:`/`wa.me/`).
-- Reportes exportables a Excel/PDF (queda para Sprint E).
+- **Reglas Power of 10**: componentes ≤200 líneas, `select` explícito en hooks, sin `any`, cleanup en effects que abran canales.
 
-## Sprints siguientes (no implementar aún)
+- **Compatibilidad**: ningún componente fuera del CRM se ve afectado salvo el header global (sólo se agrega el bell).
 
-- **Sprint E — Importación masiva y exportes**: importar leads vía CSV avanzado con mapeo de columnas, exporte de reportes a Excel/PDF. Esto no sera necesario. 
-- **Sprint F — Integraciones**: webhooks salientes, integración con Outlook/Gmail vía OAuth.  Explicame mas esto
+## Resultado esperado
 
-¿Procedo a implementar el Sprint D?
+Vendedor abre Lovable → ve campanita global con pendientes → entra a CRM → "Inicio" le dice qué hacer hoy → un click en quick-add para crear lead/oportunidad/actividad → cada oportunidad tiene su "próxima acción" visible → al abrir una oportunidad puede escribirle al contacto sin salir → comentarios y actividades en tabs limpios. Menos pestañas, menos scroll, menos clics.
+
+¿Procedo con Sprint G?
