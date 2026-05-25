@@ -16,8 +16,8 @@ interface OpLite {
   cliente_nombre?: string | null;
   origen?: string | null;
   destino?: string | null;
-  etapa_id?: string | null;
-  modo?: string | null;
+  etapa_id: string;
+  modo: string;
 }
 
 function findCotizandoEtapa(etapas: EtapaLite[]): EtapaLite | undefined {
