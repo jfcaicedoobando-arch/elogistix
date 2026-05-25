@@ -81,8 +81,11 @@ export function useReportesPageController() {
     );
   };
 
-  const handleExportPdf = () => {
-    generarRentabilidadPdf({
+  const handleExportPdf = async () => {
+    const mod: { generarRentabilidadPdf: typeof GenerarRentabilidadPdfFn } = await import(
+      "@/generators/rentabilidadPdf"
+    );
+    mod.generarRentabilidadPdf({
       fechaDesde: filtros.fechaDesde,
       fechaHasta: filtros.fechaHasta,
       modo: filtros.modo,
