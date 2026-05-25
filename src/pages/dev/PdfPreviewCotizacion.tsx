@@ -5,13 +5,11 @@
  */
 import { useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
 import { useTasaIVA } from "@/hooks/catalogos";
-import type { CotizacionRow } from "@/types/cotizacion";
+import { fetchCotizacionById } from "@/services/cotizacion";
 import { PdfPreview } from "@/pdf/render/PdfPreview";
 import { CotizacionDocument } from "@/pdf/documents/CotizacionDocument";
 import { queryKeys } from "@/lib/query";
-import { fromDb } from "@/lib/supabase/cast";
 
 export default function PdfPreviewCotizacionPage() {
   const { id } = useParams<{ id: string }>();
@@ -19,15 +17,7 @@ export default function PdfPreviewCotizacionPage() {
   const { data, isLoading, error } = useQuery({
     queryKey: queryKeys.pdfPreviewCotizacion(id ?? ""),
     enabled: !!id,
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("cotizaciones")
-        .select("*")
-        .eq("id", id!)
-        .maybeSingle();
-      if (error) throw error;
-      return fromDb<CotizacionRow | null>(data);
-    },
+    queryFn: () => fetchCotizacionById(id!),
   });
 
   if (isLoading) return <div className="p-6 text-muted-foreground">Cargando cotización…</div>;
