@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { buildHuecoCsvFilename, buildHuecoCsvRows, HUECO_CSV_HEADERS } from "../huecoCsv";
-import type { FilaHueco } from "@/services/facturas/huecoFacturacion";
+import type { FilaHueco } from "@/services/facturas";
 
 const fila: FilaHueco = {
   embarque_id: "e1",
