@@ -90,6 +90,8 @@ export const queryKeys = {
   },
   dashboard: {
     stats: ['dashboard-stats'] as const,
+    statsSummary: ['dashboard-stats', 'summary'] as const,
+    statsDetails: ['dashboard-stats', 'details'] as const,
     ventasUSD: ['dashboard-ventas-usd'] as const,
     costosUSD: ['dashboard-costos-usd'] as const,
     profitAggregated: ['dashboard-profit-aggregated'] as const,
