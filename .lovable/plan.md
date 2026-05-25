@@ -1,56 +1,62 @@
-# Cierre de cobertura P2
 
-Continuamos con lo que quedó pendiente del audit (Tanda C parcial + edge functions sin tests).
+# Implementación de la auditoría — Loop 1
 
-## Alcance
+Ejecuto en este loop los ítems de mayor impacto. Los 15+ refactors restantes de componentes/hooks grandes quedan en task tracker para loops siguientes (hacerlos todos sin verificar entre lotes es riesgoso).
 
-### Edge functions Deno (sin tests hoy)
+## En este loop
 
-1. `supabase/functions/parse-csf` — validación de payload + parsing CSF
-2. `supabase/functions/exchange-rates` — cache 1h, fallback Frankfurter
-3. `supabase/functions/jsoncargo-track` — auth + shape de respuesta
-4. `supabase/functions/tracking-public` — endpoint público, sin PII sensible
-5. `supabase/functions/invite-client-user` — validación de input + roles
-6. `supabase/functions/client-error-log` — sanitización de payload
-7. `supabase/functions/auditoria-snapshot-daily` — agregación
-8. `supabase/functions/auditoria-weekly-digest` — agregación
-9. `supabase/functions/list-users` — autorización admin (regresión 403)
-10. `supabase/functions/delete-user` — autorización admin
+### P0 — Capa de datos CRM
+- **Nuevo** `src/services/crm/index.ts`: `fetchOportunidadCotizaciones`, `fetchLeadLineage`, `fetchOportunidadCotsLineage`, `fetchEmbarquesByIds`, `fetchLeadResumen`, `fetchLeaderboardRaw`, `computeLeaderboard` (pura), `insertCotizacionDesdeOportunidad`, `actualizarEtapaOportunidad`.
+- **Nuevos hooks** `src/hooks/crm/`: `useOportunidadCotizaciones`, `useLineage` (lead + op), `useLeaderboardVendedores`, `useCrearCotizacionDesdeOportunidad`.
+- **Refactor** (quitar `supabase.from(...)`):
+  - `src/components/crm/OportunidadCotizacionesList.tsx`
+  - `src/components/crm/LineageCard.tsx`
+  - `src/components/crm/LeaderboardVendedores.tsx`
+  - `src/pages/crm/OportunidadDetalle.tsx`
 
-Cada uno tendrá su `*_test.ts` con casos: CORS preflight, payload inválido (400), auth faltante (401), happy path básico mockeando fetch/supabase.
+### P1 — Partir `useLeads.ts` (382 líneas)
+Crear módulo `src/hooks/crm/leads/`:
+- `constants.ts` — `LEAD_ESTADOS`, `LEAD_FUENTES`, tipos, `LEAD_COLUMNS`.
+- `queries.ts` — `useLeads`, `useLead`.
+- `mutations.ts` — `useCrearLead`, `useActualizarLead`, `useEliminarLead`.
+- `bulk.ts` — `useActualizarLeadsBulk`, `useEliminarLeadsBulk`, `useCrearLeadsBulk`.
+- `convertir.ts` — `useConvertirLead` (+ service helper `services/crm/convertirLead.ts` para el flujo cliente/oportunidad).
 
-### Hooks P1 restantes (extracción + test puro)
+`src/hooks/crm/useLeads.ts` queda como **barrel re-export** para no tocar los 7 consumidores existentes. Cada archivo ≤200 líneas.
 
-11. `useEmbarqueSubmitOrchestrator` → extraer pipeline a `src/lib/embarque/submitPipeline.ts`
-12. `useEmbarquesFilters` → extraer derivaciones a `src/lib/embarque/filtros.ts`
-13. `useAdminOrgKpis` → extraer agregación a `src/lib/admin/orgKpis.ts`
-14. `useJsonCargoBolLookup` → extraer normalización a `src/lib/jsoncargo/bolLookup.ts`
+### P2 — Logger estandarizado
+- **Nuevo** `src/lib/observability/logger.ts`: wrapper `logger.warn/error/info/debug` que respeta `import.meta.env.MODE` y reemite a `logClientError` (Supabase) en producción. Estilo prefijo `[modulo]`.
+- Reemplazar las 11 ocurrencias de `console.warn|error` productivos por `logger.*`. (No `console.log`.)
 
-### Utilidades P2 menores
+### Versión + changelog
+- `APP_VERSION` → **11.13.0**.
+- Entrada en `recentChangelog` y `chunk0` (mantener 10 más recientes).
 
-15. `src/lib/io/zipDownload.ts` — generación zip
-16. `src/generators/exportCsv.ts` — encoding/escape
-17. `src/lib/sentry.ts` — guard de init
+### Verificación
+- `bunx vitest run` (esperado: 589+ tests verdes).
+- Build automático del harness.
+
+## Out of scope en este loop (siguientes)
+
+Marcados en task tracker, los abordo en loops separados:
+
+- **P1 — Componentes > 200 líneas** (14 archivos): LeadDetalle, NuevaOportunidadDialog, DiagnosticoHealthPanel, TabDocumentos, BitacoraActividad, Facturacion, DashboardStatusCards, ClienteDetalle, NuevoLeadDialog, Proveedores, Usuarios admin-org, ProveedorDetalle, Leads, LineageCard.
+- **P1 — Hooks > 200 líneas** (7 archivos): `useNuevoEmbarqueWizard`, `useAuditoriaRevisiones`, `useEmbarquesPageState`, `useAuditoriaEjecutivo`, `useJsonCargoTracking`, `useCrmDashboard`, `useTrackingLiveCard`.
+- **P2 — Partir barriles** `services/*/index.ts` grandes (auditoria, proveedor, usuario, facturas, catalogos, reportes).
+- **P2 — Partir libs grandes** (`lib/parsers/dashboard.ts`, `lib/domain/proyeccionFacturacion.ts`, `lib/formatters/index.ts`).
+- **P3 — Tests de componentes React**, extracción de `routes.tsx`.
+- **TODO/FIXME cleanup**: ya verificado — no hay matches reales, los 15 detectados eran falsos positivos (`TODOS` español, `?estado=XXX` placeholder JSDoc, changelogs).
 
 ## Detalles técnicos
 
-- Vitest para TS/TSX puro, reutilizando `_supabaseChainMock.ts` cuando aplique.
-- Deno tests con `*_test.ts` junto a cada `index.ts`, mockeando `fetch` global y usando los helpers de `_shared/`.
-- Para hooks orquestadores, extraer SOLO funciones puras (sin tocar comportamiento React/Query); el hook queda como wrapper delgado.
-- Cero cambios en UI, RLS, schema o `src/integrations/supabase/*`.
+- Cero cambios en RLS, schema, edge functions, `integrations/supabase/*`.
+- `useLeads.ts` queda como barrel; no se requiere tocar páginas/componentes que importan de él.
+- Logger pasa por `logClientError` ya existente (no se duplica observability).
+- En `OportunidadDetalle.tsx` la creación de cotización se mueve a `useCrearCotizacionDesdeOportunidad`; el `toast` queda en la página.
 
-## Verificación
+## Verificación de éxito
 
-- `bunx vitest run` (target: 583 → ~650+ tests pasando).
-- `supabase--test_edge_functions` para los Deno suites nuevos.
-- Bump `APP_VERSION` a `11.12.0`, entrada en `changelogData.ts` y chunk activo, manteniendo 10 entradas más recientes.
-
-## Fuera de alcance
-
-E2E Playwright (ya existen specs), tests de componentes React/UI, refactors fuera de extracciones mínimas.
-
-## Pregunta
-
-¿Lo hago **todo en un loop** (17 ítems, ~10-12 archivos nuevos + 4 extracciones), o lo parto en **Edge functions primero** y luego hooks/utilidades? Haz todo en un loop
-
-&nbsp;
+- 0 ocurrencias de `@/integrations/supabase/client` en `src/components/crm/**` y `src/pages/crm/**` (excepto si el orquestador requiere `useAuth`, que ya vive en context).
+- `src/hooks/crm/useLeads.ts` < 30 líneas (solo re-exports).
+- Cada nuevo archivo < 200 líneas.
+- Vitest verde.
