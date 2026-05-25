@@ -2,7 +2,9 @@ import { useMemo, useState } from "react";
 import { format, startOfMonth, endOfMonth } from "date-fns";
 
 import { exportToCsv } from "@/generators/exportCsv";
-import { generarRentabilidadPdf } from "@/generators/rentabilidadPdf";
+// `generarRentabilidadPdf` se importa dinámicamente dentro de `handleExportPdf`
+// para evitar que @react-pdf/renderer (~1.4 MB) entre al bundle inicial.
+import type { generarRentabilidadPdf as GenerarRentabilidadPdfFn } from "@/generators/rentabilidadPdf";
 import { useRentabilidadClientes } from "@/hooks/cliente/useRentabilidadClientes";
 import { toTitleCase } from "@/lib/formatters";
 import type { SortField } from "@/components/reportes/ReportesTablaClientes";
