@@ -77,12 +77,23 @@ export default tseslint.config(
     },
   },
   {
-    // Tests-only: console.log para perf benchmarks y regex de control para
-    // validar sanitización de paths son patrones legítimos en specs.
+    // Tests-only: console.log para perf benchmarks, regex de control para
+    // validar sanitización de paths, y `as any` para fixtures parciales son
+    // patrones legítimos en specs.
     files: ["**/*.test.ts", "**/*.test.tsx"],
     rules: {
       "no-console": "off",
       "no-control-regex": "off",
+      "@typescript-eslint/no-explicit-any": "off",
+    },
+  },
+  {
+    // Primitiva de UI: re-exporta `defineColumns` + tipos junto al componente
+    // (mismo patrón que `src/components/ui/**`). El warning de Fast Refresh es
+    // ruido para esta convención del proyecto.
+    files: ["src/components/shared/DataTable.tsx"],
+    rules: {
+      "react-refresh/only-export-components": "off",
     },
   },
   {

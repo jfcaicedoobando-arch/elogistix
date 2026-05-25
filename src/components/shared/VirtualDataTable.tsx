@@ -70,21 +70,24 @@ const DEFAULTS = {
   overscan: 8,
 };
 
-// Destructura ~10 defaults: complejidad alta pero plana.
-// eslint-disable-next-line complexity
+/** Aplica defaults a las props del componente sin un bloque grande de
+ *  destructuring (que disparaba `complexity > 15`). */
+function withDefaults<T>(props: VirtualDataTableProps<T>) {
+  const cleaned: Partial<VirtualDataTableProps<T>> = {};
+  for (const key in props) {
+    const v = (props as Record<string, unknown>)[key];
+    if (v !== undefined) (cleaned as Record<string, unknown>)[key] = v;
+  }
+  return { ...DEFAULTS, ...cleaned } as VirtualDataTableProps<T> &
+    Required<Pick<typeof DEFAULTS, keyof typeof DEFAULTS>>;
+}
+
 export function VirtualDataTable<T>(props: VirtualDataTableProps<T>) {
   const {
     columns, data, rowKey, rowClassName, onRowClick, pagination, className,
-    isLoading = DEFAULTS.isLoading,
-    emptyMessage = DEFAULTS.emptyMessage,
-    skeletonRows = DEFAULTS.skeletonRows,
-    density = DEFAULTS.density,
-    striped = DEFAULTS.striped,
-    hoverable = DEFAULTS.hoverable,
-    estimateRowHeight = DEFAULTS.estimateRowHeight,
-    maxHeight = DEFAULTS.maxHeight,
-    overscan = DEFAULTS.overscan,
-  } = props;
+    isLoading, emptyMessage, skeletonRows, density, striped, hoverable,
+    estimateRowHeight, maxHeight, overscan,
+  } = withDefaults(props);
 
   // getRowId estable: si `rowKey` cambia de identidad por render, TanStack
   // no recrea filas porque el id resultante es el mismo. Pero estabilizamos
