@@ -61,15 +61,16 @@ export function useListPageState<TFilters extends Record<string, string>>(
   );
 
   // Construye el mapa de parsers a partir de las claves de defaultFilters.
-  // `useMemo` con dependencia vacía: la forma de los filtros se fija al montar
-  // (igual que el hook anterior con `useState(defaultFilters)`).
+  // La forma de los filtros se fija al montar (snapshot vía ref) para no
+  // recrear los parsers si el caller pasa un objeto inline en cada render.
+  const defaultFiltersRef = useRef(defaultFilters);
   const filterParsers = useMemo(() => {
     const out: Record<string, ParserBuilder<string>> = {};
-    for (const k of Object.keys(defaultFilters)) {
-      out[k] = parseAsString.withDefault(defaultFilters[k]);
+    const snapshot = defaultFiltersRef.current;
+    for (const k of Object.keys(snapshot)) {
+      out[k] = parseAsString.withDefault(snapshot[k]);
     }
     return out;
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const [filters, setFilters] = useQueryStates(filterParsers);
