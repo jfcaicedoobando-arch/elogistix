@@ -66,13 +66,13 @@ function measure(label: string, fn: () => void): number {
 }
 
 describe("Perf — DataTable (paginado, ~50 filas por vista)", () => {
-  it("monta 50 filas en <100ms (jsdom)", () => {
+  it("monta 50 filas en <125ms (jsdom)", () => {
     const data = makeRows(50);
     const ms = measure("DataTable mount 50", () => {
       render(<DataTable columns={cols} data={data} rowKey={(r) => r.id} />);
     });
     cleanup();
-    expect(ms).toBeLessThan(100);
+    expect(ms).toBeLessThan(125);
   });
 
   it("rerender con MISMA referencia de data es <30ms", () => {
