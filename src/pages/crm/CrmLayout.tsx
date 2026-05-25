@@ -24,11 +24,14 @@ export default function CrmLayout() {
   return (
     <div className="flex flex-col h-full">
       <div className="border-b bg-background">
-        <div className="px-6 pt-4">
-          <h1 className="text-2xl font-semibold tracking-tight">CRM</h1>
-          <p className="text-sm text-muted-foreground">
-            Gestión comercial: leads, oportunidades, actividades y forecast.
-          </p>
+        <div className="px-6 pt-4 flex items-start justify-between gap-4">
+          <div>
+            <h1 className="text-2xl font-semibold tracking-tight">CRM</h1>
+            <p className="text-sm text-muted-foreground">
+              Gestión comercial: leads, oportunidades, actividades y forecast.
+            </p>
+          </div>
+          <CrmNotificacionesBell />
         </div>
         <nav className="px-6 mt-3 flex gap-1 overflow-x-auto">
           {TABS.map((t) => {
