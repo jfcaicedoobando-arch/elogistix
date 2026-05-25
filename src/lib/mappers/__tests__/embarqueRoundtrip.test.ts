@@ -95,8 +95,7 @@ describe("embarqueFromDb · mapEmbarqueRowToFormValues", () => {
       eta: null,
       tipo_cambio_usd: 17.5,
       tipo_cambio_eur: 19,
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    } as any);
+    } as unknown as Parameters<typeof mapEmbarqueRowToFormValues>[0]);
     expect(form.tipoCarga).toBe("Carga General");
     expect(form.naviera).toBe("");
     expect(form.etd).toBe("");

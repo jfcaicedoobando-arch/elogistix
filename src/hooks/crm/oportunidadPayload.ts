@@ -5,26 +5,44 @@
 import type { OportunidadInput } from "./useOportunidades";
 import type { AuthLite } from "./leads/leadPayload";
 
-// Mapper plano (sin branching real, sólo defaults `??`): aceptamos complexity alta.
-// eslint-disable-next-line complexity
+/** Quita las claves cuyo valor es `undefined` para no pisar defaults vía spread. */
+function stripUndefined<T extends object>(obj: T): Partial<T> {
+  const out: Partial<T> = {};
+  for (const key in obj) {
+    if (obj[key] !== undefined) out[key] = obj[key];
+  }
+  return out;
+}
+
+/**
+ * Defaults aplanados (sin branching): merge de defaults + input limpio.
+ * Reemplaza la cadena de `??` que disparaba `complexity > 15`.
+ */
 export function buildOportunidadInsertPayload(
   input: OportunidadInput,
   user: AuthLite | null,
 ) {
+  const defaults = {
+    cliente_nombre: "",
+    monto_estimado: 0,
+    moneda: "MXN" as const,
+    probabilidad: 0,
+    modo: "",
+    tipo_carga: "",
+    origen: "",
+    destino: "",
+    notas: "",
+    vendedor_email: user?.email ?? "",
+  };
+  const hasExplicitVendedor = input.vendedor_id !== undefined;
   return {
-    ...input,
-    cliente_nombre: input.cliente_nombre ?? "",
-    monto_estimado: input.monto_estimado ?? 0,
-    moneda: input.moneda ?? "MXN",
-    probabilidad: input.probabilidad ?? 0,
-    modo: input.modo ?? "",
-    tipo_carga: input.tipo_carga ?? "",
-    origen: input.origen ?? "",
-    destino: input.destino ?? "",
-    notas: input.notas ?? "",
-    vendedor_id:
-      input.vendedor_id !== undefined ? input.vendedor_id : (user?.id ?? null),
-    vendedor_email: input.vendedor_email ?? user?.email ?? "",
+    ...defaults,
+    ...stripUndefined(input),
+    // Campos requeridos por el schema: los reafirmamos para que TS no los
+    // pierda al pasar por `Partial<T>` del helper.
+    nombre: input.nombre,
+    etapa_id: input.etapa_id,
+    vendedor_id: hasExplicitVendedor ? input.vendedor_id : (user?.id ?? null),
     created_by: user?.id ?? null,
   };
 }

@@ -60,13 +60,91 @@ function handleTestMessage() {
   });
 }
 
-// JSX denso pero plano: muchos `??` para fallbacks de UI.
-// eslint-disable-next-line complexity
-export default function SentryDiagnostico() {
-  const { user, effectiveRole } = useAuth();
-  const { organization, organizationId } = useOrganization();
-  const sentryInfo = useSentryInfo();
+function RuntimeCard({ sentryInfo }: { sentryInfo: ReturnType<typeof useSentryInfo> }) {
+  const release = sentryInfo.release ?? `libre-carga@${APP_VERSION}`;
+  const environment = sentryInfo.environment ?? import.meta.env.MODE;
+  const tracesRate =
+    sentryInfo.tracesSampleRate !== undefined ? String(sentryInfo.tracesSampleRate) : "—";
+  return (
+    <Card>
+      <CardHeader className="pb-3">
+        <CardTitle className="text-sm font-medium flex items-center gap-2">
+          <StatusTitle active={sentryInfo.active} />
+        </CardTitle>
+      </CardHeader>
+      <CardContent>
+        <Row
+          label="Estado"
+          value={
+            <Badge variant={sentryInfo.active ? "default" : "destructive"}>
+              {sentryInfo.active ? "Activo" : "Inactivo"}
+            </Badge>
+          }
+        />
+        <Row label="Release" value={release} />
+        <Row label="APP_VERSION" value={APP_VERSION} />
+        <Row label="Environment" value={environment} />
+        <Row label="Traces sample rate" value={tracesRate} />
+        <Row label="DSN" value={maskDsn(sentryInfo.dsn)} />
+      </CardContent>
+    </Card>
+  );
+}
 
+function UsuarioCard() {
+  const { user, effectiveRole } = useAuth();
+  return (
+    <Card>
+      <CardHeader className="pb-3">
+        <CardTitle className="text-sm font-medium">Usuario actual</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <Row label="Email" value={user?.email ?? "—"} />
+        <Row label="User ID" value={user?.id ?? "—"} />
+        <Row label="Rol efectivo" value={effectiveRole ?? "—"} />
+      </CardContent>
+    </Card>
+  );
+}
+
+function OrganizacionCard() {
+  const { organization, organizationId } = useOrganization();
+  return (
+    <Card>
+      <CardHeader className="pb-3">
+        <CardTitle className="text-sm font-medium">Organización activa</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <Row label="Nombre" value={organization?.nombre ?? "—"} />
+        <Row label="Org ID" value={organizationId ?? "—"} />
+        <Row label="Plan" value={organization?.plan ?? "—"} />
+      </CardContent>
+    </Card>
+  );
+}
+
+function PipelineCard({ active }: { active: boolean }) {
+  return (
+    <Card>
+      <CardHeader className="pb-3">
+        <CardTitle className="text-sm font-medium">Probar el pipeline</CardTitle>
+      </CardHeader>
+      <CardContent className="flex flex-col sm:flex-row gap-2">
+        <Button onClick={handleTestError} variant="destructive" disabled={!active}>
+          <Send className="h-4 w-4 mr-2" />
+          Enviar error de prueba
+        </Button>
+        <Button onClick={handleTestMessage} variant="outline" disabled={!active}>
+          <Send className="h-4 w-4 mr-2" />
+          Enviar mensaje de prueba
+        </Button>
+      </CardContent>
+    </Card>
+  );
+}
+
+export default function SentryDiagnostico() {
+  const sentryInfo = useSentryInfo();
   return (
     <div className="max-w-4xl mx-auto space-y-6">
       <PageHeader
@@ -74,76 +152,13 @@ export default function SentryDiagnostico() {
         title="Diagnóstico de Sentry"
         description="Estado en runtime del SDK de monitoreo de errores."
       />
-
-      <Card>
-        <CardHeader className="pb-3">
-          <CardTitle className="text-sm font-medium flex items-center gap-2">
-            <StatusTitle active={sentryInfo.active} />
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <Row
-            label="Estado"
-            value={
-              <Badge variant={sentryInfo.active ? "default" : "destructive"}>
-                {sentryInfo.active ? "Activo" : "Inactivo"}
-              </Badge>
-            }
-          />
-          <Row label="Release" value={sentryInfo.release ?? `libre-carga@${APP_VERSION}`} />
-          <Row label="APP_VERSION" value={APP_VERSION} />
-          <Row label="Environment" value={sentryInfo.environment ?? import.meta.env.MODE} />
-          <Row
-            label="Traces sample rate"
-            value={
-              sentryInfo.tracesSampleRate !== undefined
-                ? String(sentryInfo.tracesSampleRate)
-                : "—"
-            }
-          />
-          <Row label="DSN" value={maskDsn(sentryInfo.dsn)} />
-        </CardContent>
-      </Card>
-
+      <RuntimeCard sentryInfo={sentryInfo} />
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium">Usuario actual</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <Row label="Email" value={user?.email ?? "—"} />
-            <Row label="User ID" value={user?.id ?? "—"} />
-            <Row label="Rol efectivo" value={effectiveRole ?? "—"} />
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium">Organización activa</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <Row label="Nombre" value={organization?.nombre ?? "—"} />
-            <Row label="Org ID" value={organizationId ?? "—"} />
-            <Row label="Plan" value={organization?.plan ?? "—"} />
-          </CardContent>
-        </Card>
+        <UsuarioCard />
+        <OrganizacionCard />
       </div>
-
-      <Card>
-        <CardHeader className="pb-3">
-          <CardTitle className="text-sm font-medium">Probar el pipeline</CardTitle>
-        </CardHeader>
-        <CardContent className="flex flex-col sm:flex-row gap-2">
-          <Button onClick={handleTestError} variant="destructive" disabled={!sentryInfo.active}>
-            <Send className="h-4 w-4 mr-2" />
-            Enviar error de prueba
-          </Button>
-          <Button onClick={handleTestMessage} variant="outline" disabled={!sentryInfo.active}>
-            <Send className="h-4 w-4 mr-2" />
-            Enviar mensaje de prueba
-          </Button>
-        </CardContent>
-      </Card>
+      <PipelineCard active={sentryInfo.active} />
     </div>
   );
 }
+

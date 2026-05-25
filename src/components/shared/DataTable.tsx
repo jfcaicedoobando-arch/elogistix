@@ -12,8 +12,9 @@ import type {
 } from "@/components/shared/dataTable/types";
 
 // API pública estable: re-exports de tipos/helpers consumidos por todo el proyecto.
+// Esta convención (componente + helpers en el mismo archivo) está allowlisted
+// en eslint.config.js → react-refresh override, igual que `src/components/ui/**`.
 export type { DataTablePagination, TableDensity, ColumnAlign, SortDir } from "@/components/shared/dataTable/types";
-// eslint-disable-next-line react-refresh/only-export-components
 export { defineColumns } from "@/components/shared/dataTable/defineColumns";
 export type { ColumnDef } from "@tanstack/react-table";
 

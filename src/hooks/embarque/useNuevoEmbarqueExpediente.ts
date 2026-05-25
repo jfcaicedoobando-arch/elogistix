@@ -1,20 +1,30 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import type { UseFormReturn } from "react-hook-form";
+import type { FieldValues, UseFormReturn } from "react-hook-form";
 import type { ExpedienteCliente } from "@/hooks/embarque/useEmbarques";
 
 type ModoExpediente = "nuevo" | "existente";
 
-interface Params {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  methods: UseFormReturn<any>;
+/**
+ * El wizard usa varios esquemas (`NuevoEmbarqueValues`, `EditarEmbarqueValues`)
+ * y este hook sólo necesita escribir `blMaster`. `FieldValues` de RHF es el
+ * supertipo correcto para aceptar cualquiera de ellos sin recurrir a `any`.
+ */
+interface Params<TForm extends FieldValues> {
+  methods: UseFormReturn<TForm>;
   clienteId: string | undefined | null;
 }
 
 /**
  * Estado del expediente del wizard (modo nuevo/existente + selección).
  * Resetea al cambiar de cliente y sincroniza `blMaster` del form.
+ *
+ * Genérico sobre el schema de RHF para soportar tanto el form de nuevo
+ * embarque como el de edición sin recurrir a `any`.
  */
-export function useNuevoEmbarqueExpediente({ methods, clienteId }: Params) {
+export function useNuevoEmbarqueExpediente<TForm extends FieldValues>({
+  methods,
+  clienteId,
+}: Params<TForm>) {
   const [modoExpediente, setModoExpediente] = useState<ModoExpediente>("nuevo");
   const [expedienteSeleccionado, setExpedienteSeleccionado] =
     useState<ExpedienteCliente | null>(null);
@@ -28,23 +38,35 @@ export function useNuevoEmbarqueExpediente({ methods, clienteId }: Params) {
     }
   }, [clienteId]);
 
+  // setValue espera un path tipado de TForm; `blMaster` no es parte de la
+  // unión común a todos los schemas, por lo que escribimos vía cast puntual.
+  const setBlMaster = useCallback(
+    (value: string) => {
+      (methods.setValue as (name: string, value: unknown) => void)(
+        "blMaster",
+        value,
+      );
+    },
+    [methods],
+  );
+
   const handleModoExpedienteChange = useCallback(
     (nuevoModo: ModoExpediente) => {
       setModoExpediente(nuevoModo);
       if (nuevoModo === "nuevo") {
         setExpedienteSeleccionado(null);
-        methods.setValue("blMaster", "");
+        setBlMaster("");
       }
     },
-    [methods],
+    [setBlMaster],
   );
 
   const handleSeleccionarExpediente = useCallback(
     (exp: ExpedienteCliente) => {
       setExpedienteSeleccionado(exp);
-      methods.setValue("blMaster", exp.bl_master || "");
+      setBlMaster(exp.bl_master || "");
     },
-    [methods],
+    [setBlMaster],
   );
 
   const clearExpediente = useCallback(() => {

@@ -2,6 +2,14 @@ import type { ChangelogEntry } from "../../../changelogData";
 
 export const chunk0: ChangelogEntry[] = [
   {
+    version: "11.28.0",
+    date: "2026-05-25",
+    type: "minor",
+    title: "Eliminación de eslint-disable (parte 3/3): 0 directivas restantes en src/",
+    summary: "Removidas las 9 últimas (9→0): no-explicit-any×4, complexity×3, react-refresh×1. Causa raíz: tipos genéricos, stripUndefined+as const, subcomponentes y withDefaults helper.",
+    description: "Cierre del plan de limpieza de eslint-disable. (1) no-explicit-any: appFeedback.AnyToastFn → Record<string, unknown>; useNuevoEmbarqueExpediente ahora es genérico <TForm extends FieldValues> y aísla el cast a setValue('blMaster',…) en un setter local; exportListado.applyFilters tipa el builder vía interfaz mínima QueryLike (eq/or/gte/lte) en lugar de any; embarqueRoundtrip.test usa Parameters<typeof mapEmbarqueRowToFormValues>[0] como cast tipado. (2) complexity: leadPayload y oportunidadPayload eliminan la cadena de `??` aplicando defaults + stripUndefined() vía spread, con `as const` en literales de enums (Moneda/CrmLeadEstado/CrmLeadFuente) y reafirmando campos requeridos (empresa / nombre+etapa_id) tras el spread Partial<T>; VirtualDataTable mueve el destructuring de defaults a withDefaults(props) helper. (3) react-refresh: DataTable.tsx allowlisted en eslint.config.js (mismo patrón que src/components/ui/**). (4) SentryDiagnostico dividido en RuntimeCard + UsuarioCard + OrganizacionCard + PipelineCard. (5) eslint.config.js: override de tests añade no-explicit-any: off (casts en fixtures parciales son legítimos). Resultado: rg \"eslint-disable\" src devuelve sólo strings de changelog; 626/626 tests verdes; bunx tsc --noEmit limpio; bunx eslint src --max-warnings=0 sin warnings. APP_VERSION 11.28.0.",
+  },
+  {
     version: "11.27.0",
     date: "2026-05-25",
     type: "minor",

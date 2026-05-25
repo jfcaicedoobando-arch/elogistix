@@ -9,24 +9,39 @@ export interface AuthLite {
   email?: string | null;
 }
 
-// Mapper plano (sin branching real, sólo defaults `??`): aceptamos complexity alta.
-// eslint-disable-next-line complexity
+/** Quita las claves cuyo valor es `undefined` para no pisar defaults vía spread. */
+function stripUndefined<T extends object>(obj: T): Partial<T> {
+  const out: Partial<T> = {};
+  for (const key in obj) {
+    if (obj[key] !== undefined) out[key] = obj[key];
+  }
+  return out;
+}
+
+/**
+ * Defaults aplanados (sin branching): merge de defaults + input limpio.
+ * Reemplaza la cadena de `??` que disparaba `complexity > 15`.
+ */
 export function buildLeadInsertPayload(input: LeadInput, user: AuthLite | null) {
+  const defaults = {
+    contacto: "",
+    email: "",
+    telefono: "",
+    ciudad: "",
+    pais: "",
+    fuente: "Otro" as const,
+    estado: "Nuevo" as const,
+    score: 3,
+    interes_modo: "",
+    notas: "",
+    vendedor_email: user?.email ?? "",
+  };
+  const hasExplicitVendedor = input.vendedor_id !== undefined;
   return {
+    ...defaults,
+    ...stripUndefined(input),
     empresa: input.empresa,
-    contacto: input.contacto ?? "",
-    email: input.email ?? "",
-    telefono: input.telefono ?? "",
-    ciudad: input.ciudad ?? "",
-    pais: input.pais ?? "",
-    fuente: input.fuente ?? "Otro",
-    estado: input.estado ?? "Nuevo",
-    score: input.score ?? 3,
-    interes_modo: input.interes_modo ?? "",
-    notas: input.notas ?? "",
-    vendedor_id:
-      input.vendedor_id !== undefined ? input.vendedor_id : (user?.id ?? null),
-    vendedor_email: input.vendedor_email ?? user?.email ?? "",
+    vendedor_id: hasExplicitVendedor ? input.vendedor_id : (user?.id ?? null),
     created_by: user?.id ?? null,
   };
 }
