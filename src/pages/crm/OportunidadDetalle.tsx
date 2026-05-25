@@ -43,10 +43,7 @@ export default function OportunidadDetalle() {
   const { data: contactos = [] } = useContactosCliente(op?.cliente_id ?? undefined);
   const eliminar = useEliminarOportunidad();
 
-  const contactoPrincipal = useMemo(
-    () => contactos.find((c) => c.es_principal) ?? contactos[0],
-    [contactos],
-  );
+  const contactoPrincipal = useMemo(() => contactos[0], [contactos]);
 
   if (isLoading) return <div className="p-8 text-center text-sm text-muted-foreground">Cargando…</div>;
   if (!op) return <div className="p-8 text-center text-sm text-muted-foreground">Oportunidad no encontrada</div>;
