@@ -7,6 +7,7 @@
  */
 import { supabase } from "@/integrations/supabase/client";
 import type { Json } from "@/integrations/supabase/types";
+import { fromDb } from "@/lib/supabase/cast";
 
 export interface FacturaSnapshot {
   version: number;
