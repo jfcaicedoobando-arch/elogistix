@@ -60,10 +60,7 @@ export function useEditarEmbarqueWizard(id: string | undefined) {
     if (!embarque || initialized) return;
     inicializarDesdeEmbarque(embarque);
     setInitialized(true);
-    // Inicialización idempotente: corre una sola vez por embarque. Los
-    // inicializadores son setters estables del propio hook.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [embarque, initialized]);
+  }, [embarque, initialized, inicializarDesdeEmbarque]);
 
   useEffect(() => {
     if (!initialized || conceptosVentaDb.length === 0) return;
@@ -74,8 +71,7 @@ export function useEditarEmbarqueWizard(id: string | undefined) {
       precioUnitario: Number(v.precio_unitario),
       moneda: v.moneda,
     })));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [conceptosVentaDb, initialized]);
+  }, [conceptosVentaDb, initialized, inicializarVenta]);
 
   useEffect(() => {
     if (!initialized || conceptosCostoDb.length === 0) return;
@@ -86,8 +82,7 @@ export function useEditarEmbarqueWizard(id: string | undefined) {
       monto: Number(c.monto),
       moneda: c.moneda,
     })));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [conceptosCostoDb, initialized]);
+  }, [conceptosCostoDb, initialized, inicializarCosto]);
 
   const selectedCliente = clientes.find(c => c.id === clienteId);
 
@@ -108,8 +103,7 @@ export function useEditarEmbarqueWizard(id: string | undefined) {
     methods.setValue('consignatario', consigResuelto.value, { shouldDirty: false });
     methods.setValue('consignatarioManual', consigResuelto.manual, { shouldDirty: false });
     setHidratoContactos(true);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [initialized, hidratoContactos, embarque, contactos, selectedCliente]);
+  }, [initialized, hidratoContactos, embarque, contactos, selectedCliente, methods]);
 
   const handleSave = async () => {
     if (!id || !embarque) return;
