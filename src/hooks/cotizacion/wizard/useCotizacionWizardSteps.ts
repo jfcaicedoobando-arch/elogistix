@@ -64,7 +64,7 @@ export function useCotizacionWizardSteps({
     return null;
   };
 
-  const handlePaso1 = async () => {
+  const handlePaso1 = useCallback(async () => {
     const v = form.getValues();
     const err = validatePaso1(v);
     if (err) { notifyError(toast, { title: err }); return; }
@@ -75,9 +75,9 @@ export function useCotizacionWizardSteps({
     } catch (e: unknown) {
       notifyError(toast, { title: "Error al guardar datos generales", description: getErrorMessage(e) });
     }
-  };
+  }, [form, toast, msdsFile, cotizacionId, buildPaso1Data, crearCotizacion, updateCotizacion, setCotizacionId, setCurrentStep]);
 
-  const handlePaso2 = async () => {
+  const handlePaso2 = useCallback(async () => {
     try {
       if (costosInternos.length > 0 && cotizacionId) {
         await savePaso2({ cotizacionId, costosInternos, mutations: { upsertCostos } });
@@ -92,9 +92,9 @@ export function useCotizacionWizardSteps({
     } catch (e: unknown) {
       notifyError(toast, { title: "Error al guardar costos", description: getErrorMessage(e) });
     }
-  };
+  }, [costosInternos, cotizacionId, costosPreLlenados, tasaIva, upsertCostos, setConceptosUSD, setConceptosMXN, setCostosPreLlenados, setCurrentStep, toast]);
 
-  const handlePaso3 = async () => {
+  const handlePaso3 = useCallback(async () => {
     const conceptosUSDValidos = conceptosUSD.filter(c => c.descripcion?.trim());
     const conceptosMXNValidos = conceptosMXN.filter(c => c.descripcion?.trim());
     if (conceptosUSDValidos.length === 0 && conceptosMXNValidos.length === 0) {
@@ -109,19 +109,13 @@ export function useCotizacionWizardSteps({
     } catch (e: unknown) {
       notifyError(toast, { title: "Error al guardar conceptos de venta", description: getErrorMessage(e) });
     }
-  };
+  }, [conceptosUSD, conceptosMXN, cotizacionId, totalUSD, updateCotizacion, setCurrentStep, toast]);
 
   const handleSiguiente = useCallback(async () => {
     if (currentStep === 1) return handlePaso1();
     if (currentStep === 2) return handlePaso2();
     if (currentStep === 3) return handlePaso3();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [
-    currentStep, form, msdsFile, buildPaso1Data, cotizacionId, setCotizacionId, setCurrentStep,
-    updateCotizacion, crearCotizacion, costosInternos, upsertCostos, costosPreLlenados,
-    conceptosUSD, conceptosMXN, totalUSD, toast, tasaIva,
-    setConceptosUSD, setConceptosMXN, setCostosPreLlenados,
-  ]);
+  }, [currentStep, handlePaso1, handlePaso2, handlePaso3]);
 
   const handleGuardar = useCallback(async () => {
     if (!cotizacionId) return;

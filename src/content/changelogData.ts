@@ -22,6 +22,14 @@ export interface ChangelogEntry {
  */
 export const recentChangelog: ChangelogEntry[] = [
   {
+    version: "11.27.0",
+    date: "2026-05-25",
+    type: "minor",
+    title: "Eliminación de eslint-disable (parte 2): exhaustive-deps complejos",
+    summary: "10 directivas más removidas (19→9): useEditarEmbarqueWizard×4, useListPageState, useCotizacionWizardSteps, VirtualDataTable — fixes por causa raíz (useCallback estable, useRef snapshot, widthsKey derivado).",
+    description: "Segunda tanda del plan. (1) useConceptosForm.inicializarVenta/Costo → useCallback, lo que permite añadirlos como deps en los 3 effects de hidratación de useEditarEmbarqueWizard + el 4° effect declara methods. (2) useListPageState: defaultFilters capturado vía useRef al montar (snapshot inmutable). (3) useCotizacionWizardSteps: handlePaso1/2/3 envueltos en useCallback con sus deps reales; handleSiguiente depende sólo de currentStep + los 3 callbacks. (4) VirtualDataTable: gridTemplate se deriva directamente de widthsKey (split/join con sentinel \\u0001), eliminando captura de leafColumns inestable. 626 tests verdes. APP_VERSION 11.27.0.",
+  },
+  {
     version: "11.26.0",
     date: "2026-05-25",
     type: "minor",
@@ -92,14 +100,6 @@ export const recentChangelog: ChangelogEntry[] = [
     title: "Auditoría loop 5 — componentes >200 LOC: TabDocumentos, BitacoraActividad, Facturacion, DashboardStatusCards",
     summary: "TabDocumentos (257→81), BitacoraActividad (253→47), Facturacion (242→117), DashboardStatusCards (230→24). Subcomponentes y columns extraídos.",
     description: "Power of 10: TabDocumentos.tsx → AgregarDocumentoDialog + useDocumentoColumns. BitacoraActividad.tsx → bitacora/{constants,FilaEntrada,VirtualTimeline}. Facturacion.tsx → facturacionColumns.tsx (facturaColumns + buildGastoColumns). DashboardStatusCards.tsx → statusCards/{TimelineEstadosCard,ArribosCard}. Sin cambios funcionales. APP_VERSION 11.17.0.",
-  },
-  {
-    version: "11.16.0",
-    date: "2026-05-25",
-    type: "minor",
-    title: "Auditoría loop 4 — componentes >200 LOC",
-    summary: "LeadDetalle (296→150), NuevaOportunidadDialog (287→132), DiagnosticoHealthPanel (258→96).",
-    description: "Power of 10: componentes >200. LeadDetalle.tsx → useLeadEditForm + LeadDatosCard + LeadHeaderActions. NuevaOportunidadDialog.tsx → useOportunidadForm + OportunidadFormFields. DiagnosticoHealthPanel.tsx → HealthKpisRow/HealthTimelineChart/HealthTopErrorsChart/HealthSlowestTable. Sin cambios funcionales. 91 archivos / 626 tests verdes. APP_VERSION 11.16.0.",
   },
 ];
 
