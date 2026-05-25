@@ -132,6 +132,19 @@ export default function NuevaOportunidadDialog({ open, onOpenChange, oportunidad
         onSaved?.(oportunidad.id);
       } else {
         const r = await crear.mutateAsync(payload);
+        if (autoActividad) {
+          const manana = new Date();
+          manana.setDate(manana.getDate() + 1);
+          manana.setHours(9, 0, 0, 0);
+          await crearActividad.mutateAsync({
+            tipo: "tarea",
+            asunto: `Preparar propuesta: ${form.nombre}`,
+            descripcion: "Actividad creada automáticamente al alta de la oportunidad.",
+            entidad_tipo: "oportunidad",
+            entidad_id: r.id,
+            fecha_programada: manana.toISOString(),
+          }).catch(() => undefined);
+        }
         notifySuccess(toast, { title: "Oportunidad creada" });
         onSaved?.(r.id);
       }
