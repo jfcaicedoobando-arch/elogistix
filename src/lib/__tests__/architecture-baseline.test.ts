@@ -33,10 +33,7 @@ const BASELINE: ReadonlySet<string> = new Set([
   // hooks/auditoria (0 — migrado en 11.54.0 a services/auth.getCurrentUser)
   // hooks/crm (0 — migrados en 11.57.0: leads/*, automatizaciones y forecast a services/crm)
 
-  // hooks/embarque (3)
-  "src/hooks/embarque/mutations/useUpdateEmbarque.ts",
-  "src/hooks/embarque/useJsonCargoBolLookup.ts",
-  "src/hooks/embarque/useJsonCargoTracking.ts",
+  // hooks/embarque (0 — migrados en 11.58.0 a services/embarque/jsoncargo)
   // hooks/portal (0 — migrado en 11.54.0 a services/portal/notificaciones)
 ]);
 

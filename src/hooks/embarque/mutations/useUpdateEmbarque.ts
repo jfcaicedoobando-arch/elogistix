@@ -4,7 +4,6 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import type { Tables, TablesInsert } from '@/integrations/supabase/types';
 import { queryKeys } from '@/lib/query';
-import { supabase } from '@/integrations/supabase/client';
 import {
   actualizarEmbarqueRpc,
   actualizarEstadoEmbarque,
@@ -13,6 +12,8 @@ import {
   insertEventoEmbarque,
   uploadDocumentoEmbarque,
   deleteDocumentoEmbarque,
+  invokeJsonCargoTrackBackground,
+  createDocumentoEmbarqueRow,
 } from '@/services/embarque';
 import {
   tipoEventoParaEstado,
@@ -41,7 +42,7 @@ export function useUpdateEmbarque() {
       // Auto-sync JSONCargo si aplica (fire-and-forget)
       const e = input.embarque;
       if (e.modo === 'Marítimo' && e.contenedor && mapNavieraToJsonCargo(e.naviera ?? null)) {
-        supabase.functions.invoke('jsoncargo-track', { body: { embarqueId: input.id } })
+        invokeJsonCargoTrackBackground(input.id)
           .catch((err) => logger.warn('jsoncargo-track auto-sync:', err));
       }
       return { id: input.id } as EmbarqueRow;
@@ -147,12 +148,8 @@ export function useCreateNotaEmbarque() {
 export function useCreateDocumentoEmbarque() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async ({ embarqueId, nombre, notas }: { embarqueId: string; nombre: string; notas?: string }) => {
-      const { error } = await supabase
-        .from('documentos_embarque')
-        .insert({ embarque_id: embarqueId, nombre, estado: 'Pendiente', notas: notas ?? null });
-      if (error) throw error;
-    },
+    mutationFn: ({ embarqueId, nombre, notas }: { embarqueId: string; nombre: string; notas?: string }) =>
+      createDocumentoEmbarqueRow({ embarqueId, nombre, notas }),
     onSuccess: (_r, vars) => {
       queryClient.invalidateQueries({ queryKey: queryKeys.embarques.documentos(vars.embarqueId) });
       queryClient.invalidateQueries({ queryKey: queryKeys.embarques.all });
