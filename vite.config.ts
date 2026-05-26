@@ -125,7 +125,7 @@ export default defineConfig(({ mode }) => ({
           // MISMO chunk: tienen imports circulares internos que rompen con
           // "Cannot access 'n' before initialization" si se separan.
           if (
-            /node_modules\/(recharts|victory-vendor|d3-array|d3-scale|d3-shape|d3-path|d3-time|d3-time-format|d3-format|d3-interpolate|d3-color|internmap|react-smooth|fast-equals|decimal\.js-light)/.test(
+            /node_modules\/(recharts|victory-vendor|d3-array|d3-scale|d3-shape|d3-path|d3-time|d3-time-format|d3-format|d3-interpolate|d3-color|d3-ease|internmap|react-smooth|fast-equals|decimal\.js-light|recharts-scale|react-is|eventemitter3|tiny-invariant|lodash)/.test(
               id,
             )
           ) {
