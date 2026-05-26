@@ -110,16 +110,6 @@ export async function crearTareaSeguimiento(ctx: AutomationCtx): Promise<void> {
   });
 }
 
-export async function moverEtapaOportunidad(params: {
-  id: string;
-  etapa_id: string;
-  probabilidad?: number;
-}): Promise<void> {
-  const patch: Record<string, unknown> = { etapa_id: params.etapa_id };
-  if (typeof params.probabilidad === "number") patch.probabilidad = params.probabilidad;
-  const { error } = await supabase.from("crm_oportunidades").update(patch).eq("id", params.id);
-  if (error) throw error;
-}
 
 export async function runAutomatizaciones(
   etapaId: string,
