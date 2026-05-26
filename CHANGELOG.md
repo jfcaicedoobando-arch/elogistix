@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [11.53.0] - 2026-05-26
+- **Auditoría arquitectónica + guardrails de no-regresión**: nuevo script `bun run audit:arch` (`scripts/audit-architecture.ts`) que lista (1) hooks/contexts que importan `@/integrations/supabase/client` directamente, (2) components/pages con la misma violación, (3) archivos productivos >200 líneas (con allowlist para shadcn `sidebar.tsx` y catálogo plano `lib/query/index.ts`). Nuevo test `src/lib/__tests__/architecture-baseline.test.ts` que congela el baseline actual (33 archivos: 5 contexts + 28 hooks) y falla la CI si aparece una violación nueva, si components/pages introducen imports directos al cliente Supabase, o si una entrada del baseline ya se limpió pero quedó listada. La deuda existente (CRM, auth contexts, admin/portal/embarque) queda registrada en `mem://audit/pendings` para migración posterior a `services/`.
+
 ## [11.52.4] - 2026-05-26
 - **Fix pantalla en blanco — eliminado `manualChunks` completo en `vite.config.ts`**: agrupar paquetes con imports circulares internos (`recharts`, `@react-pdf/renderer`, `@sentry/*`) en chunks vendor monolíticos rompía el orden de inicialización en producción con `Cannot access 'n' before initialization` (primero en `Layer.js` de recharts, luego en `pdf-vendor`). Quitamos también el `modulePreload.resolveDependencies` (sin chunks personalizados ya no aplica). Vite ahora genera chunks automáticos por ruta lazy; el bundle inicial crece un poco pero la app deja de quedarse en blanco. **Requiere republicar.**
 

@@ -1,51 +1,104 @@
+# Auditoría arquitectónica — Libre Carga
 
-# Plan — Manual de uso CRM (PDF condensado-completo, 12-20 págs)
+Audité los ~960 archivos `.ts/.tsx` bajo `src/`. **El estado general es muy bueno**: cero `any`, cero `console.log`, cero `TODO/FIXME`, sólo 3 archivos rompen el límite Power-of-10 (≤200 líneas), y la jerarquía `Pages → Hooks → Services → Lib` está protegida por ESLint + test (`src/lib/__tests__/architecture.test.ts`). El bundle ya tiene lazy chunks (pdf, sentry, recharts, phone, query-persist).
 
-## Estructura
+Aun así, hay **deuda concreta en 3 dominios** (CRM, Auth/Contexts, un par de componentes oversized) y oportunidades de pulido. Abajo el desglose, **sin tocar código**.
 
-**Portada** (1 pág) — Título, versión 11.51.0, fecha, logo.
+---
 
-**Parte 1 · Vendedor** (~9 págs)
-1. Visión general y navegación (sidebar, subheader, atajos N/L/O/A, Cmd+P)
-2. **Mi Día** — flujo recomendado (NBA, Hoy, Esta semana, Pipeline)
-3. **Leads** — crear (Popover N→L), tabla con edición inline, importar CSV, conversión a oportunidad (Sheet rápido + Más campos)
-4. **Oportunidades** — lista vs Kanban, mover etapas con Undo (5s), filtros colapsables, ganar/perder
-5. **Detalle de oportunidad** — Resumen / Comunicación / Trazabilidad, contacto rápido, cotizaciones
-6. **Actividades** — quick-create, completar inline, posponer 1d/3d/1sem, notas en Sheet, vencidas
-7. **Analítica** — embudo, conversión, pérdidas, forecast, leaderboard
-8. **Atajos y trucos** — tabla de hotkeys, búsqueda global, tips de productividad
+## 1. Diagnóstico por capa
 
-**Parte 2 · Admin** (~6 págs)
-9. Roles y permisos (membresía organizacional)
-10. **Configuración → Pipeline** — etapas, probabilidades, automatizaciones
-11. **Configuración → Motivos de pérdida** — alta/baja
-12. **Configuración → Plantillas de mensaje** — variables, contextos
-13. **Importación CSV** de leads (formato, validaciones)
-14. Bitácora / auditoría
+### 1.1 Capa `services/` — ✅ sana
+- Estructura folder-style coherente (`queries`, `mutations`, `subdominios`, barrels).
+- 25 subdominios, todos con barrel `index.ts`.
+- 18 suites de tests (meta ≥10 cumplida).
+- **Gap**: `services/crm/` existe pero está **infrapoblado** (6 archivos) vs. `hooks/crm/` con **40 archivos**, muchos haciendo Supabase directo (ver 1.2).
 
-**Cierre** (1 pág) — FAQ breve, soporte, changelog resumido.
+### 1.2 Capa `hooks/` — ⚠️ violaciones de capa en CRM y dominios menores
+**28 hooks importan `@/integrations/supabase/client` directamente** (deberían ir vía `services/`):
+- **CRM (mayor ofensor, 17 archivos)**: `useOportunidades`, `useActividades`, `useCliente360`, `useCrmDashboard`, `useEtapasPipeline`, `useForecastReportes`, `useNextBestActions`, `usePlantillasMensaje`, `useComentariosOportunidad`, `useCrmSearch`, `useCrmNotificaciones`, `useProximasActividades`, `useActualizarActividadNotas`, `useAutomatizacionesEtapa`, `automatizacionesEtapaActions`, `leads/{queries,mutations,bulk,convertir,convertirHelpers}`.
+- **Otros**: `portal/useNotificacionesCliente`, `auditoria/revisiones/query`, `admin/{useAppLogs, useAppLogsHealth, useAlertasSistema}`, `embarque/{mutations/useUpdateEmbarque, useJsonCargoTracking, useJsonCargoBolLookup}`.
+- Impacto: rompe el contrato del `architecture-map.md`, dificulta testear con mocks de `services/`, y bloquea futura migración a otro backend.
 
-## Capturas
+### 1.3 Capa `contexts/` — ⚠️ acceso directo a Supabase aceptado pero centralizar
+5 archivos en `contexts/` y `contexts/auth/` llaman a `supabase` directamente (`AuthContext`, `OrganizationContext`, `useAuthSession`, `useAuthProfile`, `useLoginAudit`). Es un patrón común en auth, pero conviene moverlo a `services/auth/` (ya existe la carpeta) para mantener la regla "sólo services tocan Supabase".
 
-Tomar 8-10 screenshots clave del preview en https://id-preview--341dfc00-0308-4aba-9246-e4b2041e31f1.lovable.app:
-- `/crm/mi-dia`, `/crm` (Resumen), `/crm/leads`, `/crm/oportunidades` (lista + kanban), Detalle oportunidad, `/crm/actividades`, `/crm/analitica`, `/crm/configuracion`, Quick-create popover abierto, Cmd+P palette.
+### 1.4 Capa `components/` — ✅ casi limpia
+- **1 sola violación**: `src/components/embarque/TabTracking.tsx` importa `@/integrations/supabase`. Mover lógica a `services/embarque/tracking` (que ya existe).
+- 25 instancias de `style={{…}}` inline (bajo, pero auditar si alguno debería ser token Tailwind/semántico).
 
-Las capturas se enmarcarán con bordes finos y leyenda; sin product-shot porque agrega peso.
+### 1.5 Capa `pages/` — ✅ limpia
+- **Cero** páginas importan Supabase directamente. Excelente.
 
-## Implementación técnica
+---
 
-- Generador: **ReportLab** (Python) — control fino de layout, tablas, badges y portada.
-- Tipografía: Helvetica (built-in). Tamaños: H1 22pt, H2 16pt, body 10.5pt, caption 8.5pt.
-- Paleta: Primario `#1B2B4B`, Accent `#2563EB`, gris `#64748B`, fondo cards `#F8FAFC`.
-- Tamaño: US Letter, márgenes 1.8cm.
-- Cada sección arranca con un mini-banner navy + título blanco para identidad visual.
-- Tablas para "Atajos", "Próximos pasos", "Reglas de Next Best Actions".
-- Footer con número de página y "Libre Carga CRM · v11.51.0".
-- Salida: `/mnt/documents/manual-crm-libre-carga-v11.51.0.pdf`.
-- QA: convertir a JPGs (`pdftoppm -r 150`) e inspeccionar cada página antes de entregar; iterar fixes si hay overflow/clipping.
+## 2. Archivos sobre límite Power-of-10 (>200 líneas)
 
-## Fuera de alcance
+| Archivo | Líneas | Acción |
+|---|---|---|
+| `src/components/ui/sidebar.tsx` | 637 | shadcn base — **exento**, pero documentar excepción. |
+| `src/lib/query/index.ts` | 256 | Partir en `queryClient.ts` + `persister.ts` + `keys.ts`. |
+| `src/components/crm/ImportarLeadsCsvDialog.tsx` | 201 | Extraer hook `useImportarLeadsCsv` + sub-componente de preview. |
 
-- Traducción a inglés (es-MX único).
-- Embeber video o GIFs.
-- Versiones por organización (manual genérico de producto).
+Justo en el borde (180–200) y a vigilar: `BulkImportDialog`, `embarqueWizardSchemas`, `VirtualDataTable`, `HallazgosFiltros`, `Bitacora`, `Oportunidades`, `useToast`, `useClienteDetalleController`, `proformasColumns`, `routes.tsx`.
+
+---
+
+## 3. Acoplamientos y duplicados
+
+- **Nombres duplicados** (no es bug, pero genera fricción en búsquedas): `Configuracion.tsx` aparece en `pages/`, `pages/admin/`, `pages/admin-org/`, `pages/crm/`; `TabFacturacion.tsx` en dos dominios. Considerar prefijo (`AdminConfiguracion`, `CrmConfiguracion`) ya aplicado a algunos — homogeneizar.
+- **`hooks/crm/leads/`** tiene 6 archivos (queries, mutations, bulk, convertir, helpers, payload, constants) — la lógica de "convertir lead → cliente/oportunidad" debería vivir en `services/crm/leadsConversiones/`, no en `hooks/`.
+- **`routes.tsx`** (188 líneas) acumula todas las rutas. Sigue siendo manejable, pero podría dividirse por dominio (`routes/admin.tsx`, `routes/portal.tsx`, …) con lazy split natural.
+
+---
+
+## 4. Otras observaciones
+
+- ✅ Cero `any`, cero `console.*`, cero `TODO`. Disciplina ejemplar.
+- ✅ Cleanup en effects respetado (memoria Core).
+- ✅ Bundle splitting agresivo ya implementado.
+- ⚠️ Algunos hooks bajo `hooks/crm/` no empiezan con `use…` (`automatizacionesEtapaActions.ts`, `leadEditDirty.ts`, `oportunidadFormHelpers.ts`, `oportunidadPayload.ts`). Si son helpers puros, deben ir a `lib/domain/crm/` para que el nombre no engañe.
+- ⚠️ ESLint tiene dos overrides con `"no-restricted-imports": "off"` — revisar que no estén apagando la regla justo en `hooks/crm/` o `contexts/`.
+
+---
+
+## 5. Plan recomendado (de más crítico → opcional)
+
+### Bloque A — Crítico (deuda arquitectónica)
+1. **Crear `services/crm/` completo** y migrar las 17 llamadas `supabase.*` de `hooks/crm/*` a ese subdominio (`oportunidades`, `actividades`, `leads`, `pipeline`, `automatizaciones`, `comentarios`, `plantillas`, `notificaciones`, `forecast`, `cliente360`, `search`, `nextBestActions`).
+2. **Migrar lógica pura de `hooks/crm/leads/{convertir,convertirHelpers,leadPayload}` y `hooks/crm/oportunidad{FormHelpers,Payload,FormState}`** a `lib/domain/crm/` y dejar sólo el `use*` orquestador en hooks.
+3. **Mover `components/embarque/TabTracking.tsx`** a usar `services/embarque/tracking` (eliminar import directo a Supabase).
+4. **Centralizar Supabase de `contexts/auth/*` y `OrganizationContext`** en `services/auth/` (sesión, perfil, login audit, org switching).
+
+### Bloque B — Alto (Power-of-10 y barrels)
+5. **Romper `src/lib/query/index.ts`** (256 líneas) en `queryClient.ts` + `persister.ts` + `keys.ts` + `gc.ts`.
+6. **Refactor `ImportarLeadsCsvDialog.tsx`** (201) → hook `useImportarLeadsCsv` + sub-componentes de preview/errores.
+7. **Documentar excepción `components/ui/sidebar.tsx`** en `docs/power10-baseline.md` (es shadcn base).
+8. **Verificar y endurecer ESLint**: revisar los dos `no-restricted-imports: "off"` y limitar el override a archivos shadcn/legacy con justificación.
+
+### Bloque C — Medio (consistencia)
+9. **Renombrar helpers no-hook** en `hooks/crm/` (`*Actions.ts`, `*Helpers.ts`, `*Payload.ts`) o moverlos a `lib/`.
+10. **Auditar 25 `style={{…}}` inline** en `components/` y `pages/` — convertir a clases Tailwind / tokens semánticos cuando aplique.
+11. **Homogeneizar prefijos** en archivos duplicados por nombre (`Configuracion.tsx`, `TabFacturacion.tsx`) para mejorar navegación.
+
+### Bloque D — Opcional (calidad de vida)
+12. **Dividir `routes.tsx`** en `routes/{admin,portal,crm,public}.tsx` con barrel.
+13. **Vigilar archivos 180-200 líneas** (lista arriba) y refactorizar antes de que crucen el umbral.
+14. **Agregar test arquitectónico adicional** que falle si `hooks/` o `contexts/` importan `@/integrations/supabase/client` directamente (complemento al test existente).
+15. **Generar reporte automático** (script en `scripts/`) que liste violaciones de capa y archivos >200 líneas en CI, para que no se acumule deuda.
+
+---
+
+## Métricas baseline (post-auditoría)
+
+| Métrica | Valor actual | Meta |
+|---|---|---|
+| Hooks con Supabase directo | 28 | 0 |
+| Components con Supabase directo | 1 | 0 |
+| Contexts con Supabase directo | 5 | 0 (vía `services/auth`) |
+| Archivos >200 líneas (no shadcn) | 2 | 0 |
+| `any` en código productivo | 0 | 0 ✅ |
+| `console.*` en código productivo | 0 | 0 ✅ |
+| Tests de arquitectura | 1 | 2 (añadir guard de hooks) |
+
+Cuando aprobés el plan, lo ejecuto bloque por bloque (recomiendo empezar por A1 + A3, que son los de mayor ROI), con bump de `APP_VERSION` y entrada en `CHANGELOG.md` por bloque.
