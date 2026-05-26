@@ -54,7 +54,7 @@ export default function LeadDetalle() {
     if (!id) return;
     try {
       await eliminar.mutateAsync(id);
-      notifySuccess(toast, { title: "Lead eliminado" });
+      crmToast.success("Lead eliminado");
       navigate("/crm/leads");
     } catch (e) {
       notifyError(toast, {
@@ -98,7 +98,7 @@ export default function LeadDetalle() {
           <LeadHeaderActions
             estado={lead.estado}
             canEdit={canEdit}
-            onConvertir={() => setConvertirOpen(true)}
+            onConvertir={() => setConvertirSheetOpen(true)}
             onEliminar={() => setDeleteOpen(true)}
           />
         }
@@ -139,7 +139,13 @@ export default function LeadDetalle() {
 
       <ActividadTimeline entidadTipo="lead" entidadId={lead.id} />
 
-      <ConvertirLeadDialog open={convertirOpen} onOpenChange={setConvertirOpen} lead={lead} />
+      <ConvertirLeadSheet
+        open={convertirSheetOpen}
+        onOpenChange={setConvertirSheetOpen}
+        lead={lead}
+        onAbrirAvanzado={() => setConvertirAvanzadoOpen(true)}
+      />
+      <ConvertirLeadDialog open={convertirAvanzadoOpen} onOpenChange={setConvertirAvanzadoOpen} lead={lead} />
 
       <DoubleConfirmDeleteDialog
         open={deleteOpen}
