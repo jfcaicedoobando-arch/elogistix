@@ -1,7 +1,6 @@
 import { createContext, useContext, useEffect, useState, ReactNode, useCallback, useMemo } from "react";
-import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-import { fromDb } from "@/lib/supabase/cast";
+import { listActiveOrganizations } from "@/services/organization";
 import { safeLocalStorage, STORAGE_KEYS } from "@/lib/browserStorage";
 
 export interface Organization {
@@ -47,13 +46,8 @@ export function OrganizationProvider({ children }: { children: ReactNode }) {
     let cancelled = false;
     setLoadingSA(true);
     (async () => {
-      const { data: orgs } = await supabase
-        .from("organizations")
-        .select("*")
-        .eq("activo", true)
-        .order("nombre");
+      const orgList = await listActiveOrganizations<Organization>();
       if (cancelled) return;
-      const orgList = fromDb<Organization[]>(orgs ?? []);
       setSuperAdminOrgs(orgList);
       const stored = safeLocalStorage.getItem(STORAGE_KEYS.superAdminActiveOrg);
       const activeId = stored && orgList.find(o => o.id === stored)

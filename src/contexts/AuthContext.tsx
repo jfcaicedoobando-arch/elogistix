@@ -1,10 +1,10 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, ReactNode } from "react";
-import { supabase } from "@/integrations/supabase/client";
 import type { User, Session } from "@supabase/supabase-js";
 import type { AppRole } from "@/types/appRole";
 import { useAuthSession } from "./auth/useAuthSession";
 import { useAuthProfile, type CachedOrganization } from "./auth/useAuthProfile";
 import { useLoginAudit } from "./auth/useLoginAudit";
+import { signOutCurrentSession } from "@/services/auth/session";
 import { fromDb } from "@/lib/supabase/cast";
 import { setAuthSnapshot } from "@/lib/ui/authSnapshot";
 import { syncSentryUser } from "@/lib/sentryUser";
@@ -79,7 +79,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const userId = user?.id;
   const signOut = useCallback(async () => {
     clearLoginAudit(userId);
-    await supabase.auth.signOut();
+    await signOutCurrentSession();
     resetProfile();
   }, [userId, clearLoginAudit, resetProfile]);
 

@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef } from "react";
-import { supabase } from "@/integrations/supabase/client";
 import type { User } from "@supabase/supabase-js";
 import { safeSessionStorage, loginLoggedKey } from "@/lib/browserStorage";
+import { insertLoginAudit } from "@/services/auth/loginAudit";
 
 /**
  * Registra la actividad de login en bitácora una sola vez por sesión por usuario,
@@ -13,22 +13,6 @@ export function useLoginAudit(
 ) {
   const hasLoggedLogin = useRef(false);
 
-  const registrarLogin = useCallback(async (userId: string, email: string) => {
-    try {
-      await supabase.from("bitacora_actividad").insert([
-        {
-          usuario_id: userId,
-          usuario_email: email,
-          accion: "login",
-          modulo: "auth",
-          entidad_nombre: email,
-        },
-      ]);
-    } catch {
-      // No bloquear login si falla el registro
-    }
-  }, []);
-
   useEffect(() => {
     if (lastEvent !== "SIGNED_IN" || !user || hasLoggedLogin.current) return;
     const key = loginLoggedKey(user.id);
@@ -38,9 +22,9 @@ export function useLoginAudit(
     }
     hasLoggedLogin.current = true;
     safeSessionStorage.setItem(key, "1");
-    const t = setTimeout(() => registrarLogin(user.id, user.email ?? ""), 100);
+    const t = setTimeout(() => insertLoginAudit(user.id, user.email ?? ""), 100);
     return () => clearTimeout(t);
-  }, [lastEvent, user, registrarLogin]);
+  }, [lastEvent, user]);
 
   const clearLoginAudit = useCallback((userId: string | undefined) => {
     hasLoggedLogin.current = false;
