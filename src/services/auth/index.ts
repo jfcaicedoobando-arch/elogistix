@@ -1,8 +1,19 @@
 import { supabase } from "@/integrations/supabase/client";
+import type { User } from "@supabase/supabase-js";
 import type { PostLoginRole } from "@/lib/domain/auth";
 
 export { resolveLandingRoute } from "@/lib/domain/auth";
 export type { PostLoginRole } from "@/lib/domain/auth";
+
+/**
+ * Devuelve el usuario autenticado actual. Lanza si no hay sesión válida.
+ * Útil como fallback cuando el AuthContext aún no hidrató.
+ */
+export async function getCurrentUser(): Promise<User> {
+  const { data, error } = await supabase.auth.getUser();
+  if (error || !data.user) throw new Error("Sesión no válida");
+  return data.user;
+}
 
 export interface SignInResult {
   userId: string | null;

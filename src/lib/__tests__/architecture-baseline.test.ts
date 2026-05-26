@@ -29,13 +29,9 @@ const BASELINE: ReadonlySet<string> = new Set([
   "src/contexts/auth/useAuthProfile.ts",
   "src/contexts/auth/useAuthSession.ts",
   "src/contexts/auth/useLoginAudit.ts",
-  // hooks/admin (3)
-  "src/hooks/admin/useAlertasSistema.ts",
-  "src/hooks/admin/useAppLogs.ts",
-  "src/hooks/admin/useAppLogsHealth.ts",
-  // hooks/auditoria (1)
-  "src/hooks/auditoria/revisiones/query.ts",
-  // hooks/crm (17)
+  // hooks/admin (0 — migrados en 11.54.0 a services/admin/observability)
+  // hooks/auditoria (0 — migrado en 11.54.0 a services/auth.getCurrentUser)
+  // hooks/crm (12 — bajó de 17 en 11.54.0 al migrar 5 a services/crm)
   "src/hooks/crm/automatizacionesEtapaActions.ts",
   "src/hooks/crm/leads/bulk.ts",
   "src/hooks/crm/leads/convertir.ts",
@@ -43,25 +39,19 @@ const BASELINE: ReadonlySet<string> = new Set([
   "src/hooks/crm/leads/mutations.ts",
   "src/hooks/crm/leads/queries.ts",
   "src/hooks/crm/useActividades.ts",
-  "src/hooks/crm/useActualizarActividadNotas.ts",
   "src/hooks/crm/useAutomatizacionesEtapa.ts",
   "src/hooks/crm/useCliente360.ts",
-  "src/hooks/crm/useComentariosOportunidad.ts",
   "src/hooks/crm/useCrmDashboard.ts",
-  "src/hooks/crm/useCrmNotificaciones.ts",
   "src/hooks/crm/useCrmSearch.ts",
-  "src/hooks/crm/useEtapasPipeline.ts",
   "src/hooks/crm/useForecastReportes.ts",
   "src/hooks/crm/useNextBestActions.ts",
   "src/hooks/crm/useOportunidades.ts",
-  "src/hooks/crm/usePlantillasMensaje.ts",
   "src/hooks/crm/useProximasActividades.ts",
   // hooks/embarque (3)
   "src/hooks/embarque/mutations/useUpdateEmbarque.ts",
   "src/hooks/embarque/useJsonCargoBolLookup.ts",
   "src/hooks/embarque/useJsonCargoTracking.ts",
-  // hooks/portal (1)
-  "src/hooks/portal/useNotificacionesCliente.ts",
+  // hooks/portal (0 — migrado en 11.54.0 a services/portal/notificaciones)
 ]);
 
 function walk(dir: string, out: string[] = []): string[] {

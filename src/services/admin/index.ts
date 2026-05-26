@@ -10,3 +10,4 @@ export * from "./members";
 export * from "./papelera";
 export * from "./idempotencia";
 export * from "./exportOrg";
+export * from "./observability";
