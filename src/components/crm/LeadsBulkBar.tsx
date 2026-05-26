@@ -31,7 +31,7 @@ export default function LeadsBulkBar({ ids, onClear, onDone }: Props) {
   const handleEstado = async (estado: CrmLeadEstado) => {
     try {
       const { updated } = await actualizar.mutateAsync({ ids, patch: { estado } });
-      notifySuccess(toast, { title: `${updated} leads actualizados`, description: `Estado: ${estado}` });
+      crmToast.success(`${updated} leads → ${estado}`);
       onDone();
     } catch (e) {
       notifyError(toast, { title: "Error", description: e instanceof Error ? e.message : undefined });

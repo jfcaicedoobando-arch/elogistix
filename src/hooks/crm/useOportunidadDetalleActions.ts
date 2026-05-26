@@ -57,7 +57,7 @@ export function useOportunidadDetalleActions(op: OpLite, etapas: EtapaLite[]) {
         etapaCotizandoId: cotizandoEtapa?.id,
         etapaCotizandoProbabilidad: cotizandoEtapa?.probabilidad_default ?? 0,
       });
-      notifySuccess(toast, { title: "Cotización creada", description: `Folio ${result.folio}` });
+      crmToast.success(`Cotización creada · ${result.folio}`);
       navigate(`/cotizaciones/${result.id}/editar`);
     } catch (e) {
       notifyError(toast, { title: "No se pudo crear", description: e instanceof Error ? e.message : undefined });
