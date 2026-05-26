@@ -4,6 +4,8 @@ import type { PostLoginRole } from "@/lib/domain/auth";
 
 export { resolveLandingRoute } from "@/lib/domain/auth";
 export type { PostLoginRole } from "@/lib/domain/auth";
+export * from "./session";
+export * from "./loginAudit";
 
 /**
  * Devuelve el usuario autenticado actual. Lanza si no hay sesión válida.
