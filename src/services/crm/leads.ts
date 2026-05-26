@@ -8,8 +8,8 @@ import {
   type LeadFiltros,
   type LeadsResultado,
   type LeadInput,
-} from "@/hooks/crm/leads/constants";
-import { buildLeadInsertPayload, type AuthLite } from "@/hooks/crm/leads/leadPayload";
+} from "@/lib/crm/leads/constants";
+import { buildLeadInsertPayload, type AuthLite } from "@/lib/crm/leads/leadPayload";
 
 export async function listLeads(filtros: LeadFiltros): Promise<LeadsResultado> {
   const {
