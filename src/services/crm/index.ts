@@ -14,3 +14,7 @@ export * from "./comentarios";
 export * from "./plantillas";
 export * from "./etapas";
 export * from "./notificaciones";
+export * from "./cliente360";
+export * from "./search";
+export * from "./proximasActividades";
+export * from "./nbaSignals";
