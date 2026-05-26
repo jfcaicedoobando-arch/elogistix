@@ -60,6 +60,7 @@ export default defineConfig(({ mode }) => ({
       project: "javascript-react",
       authToken: process.env.SENTRY_AUTH_TOKEN,
     }) : null,
+    mode === "production" && verifyHtmlBundlePlugin(),
   ].filter(Boolean),
   resolve: {
     alias: {
