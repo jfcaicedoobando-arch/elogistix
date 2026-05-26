@@ -18,3 +18,7 @@ export * from "./cliente360";
 export * from "./search";
 export * from "./proximasActividades";
 export * from "./nbaSignals";
+export * from "./leads";
+export * from "./automatizacionesEtapa";
+export * from "./forecast";
+
