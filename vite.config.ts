@@ -70,86 +70,18 @@ export default defineConfig(({ mode }) => ({
   build: {
     sourcemap: true,
     minify: "terser",
-    // Excluir chunks pesados que SÓLO se cargan vía import() dinámico
-    // (pdf, sentry, charts, phone, query-persist) del modulepreload del
-    // entry. Sin esto, Vite genera <link rel="modulepreload"> que fuerza
-    // ~700 KB de descargas innecesarias en /login y rutas iniciales.
-    modulePreload: {
-      resolveDependencies: (_filename, deps) =>
-        deps.filter(
-          (dep) =>
-            !/(pdf-vendor|sentry-vendor|charts-vendor|phone-vendor|query-persist-vendor)-[\w-]+\.js$/.test(
-              dep,
-            ),
-        ),
-    },
     terserOptions: {
       compress: {
         drop_console: mode === "production",
         drop_debugger: mode === "production",
       },
     },
-
-    rollupOptions: {
-      output: {
-        manualChunks: (id: string) => {
-          // Aislar @react-pdf/renderer + toda su dependencia transitiva
-          // (fontkit, yoga-layout, pako, brotli, @noble/ciphers, etc.) en un
-          // chunk separado para que sólo se cargue al descargar un PDF.
-          if (
-            /node_modules\/(@react-pdf|fontkit|yoga-layout|restructure|brotli|pako|jay-peg|unicode-properties|unicode-trie|dfa|tiny-inflate|hyphen|media-engine|@noble\/ciphers|js-md5)/.test(
-              id,
-            )
-          ) {
-            return "pdf-vendor";
-          }
-          // Sentry: cargado dinámicamente desde main.tsx en requestIdleCallback.
-          if (/node_modules\/@sentry/.test(id)) {
-            return "sentry-vendor";
-          }
-          // React Query persister: cargado dinámicamente en main.tsx.
-          if (
-            /node_modules\/@tanstack\/(react-query-persist-client|query-sync-storage-persister|query-persist-client-core)/.test(
-              id,
-            )
-          ) {
-            return "query-persist-vendor";
-          }
-          if (/node_modules\/(react|react-dom|react-router-dom|@remix-run)/.test(id)) {
-            return "react-vendor";
-          }
-          if (/node_modules\/@tanstack\/react-query/.test(id)) {
-            return "query-vendor";
-          }
-          // NOTA: recharts NO se agrupa manualmente. Tiene imports
-          // circulares internos que rompen con "Cannot access 'n' before
-          // initialization" cuando se separa en un chunk vendor compartido.
-          // Dejamos que Vite/Rollup lo coloque en los chunks de las rutas
-          // que lo usan (Reportes, Operaciones, AdminDashboard, Auditoria),
-          // evitando además que se cargue en /login.
-          // libphonenumber-js (~30 KB gzip) sólo lo necesitan 3 rutas
-          // (Clientes, ClienteDetalle, ProveedorDetalle) vía formatPhoneMx.
-          if (/node_modules\/libphonenumber-js/.test(id)) {
-            return "phone-vendor";
-          }
-          if (/node_modules\/lucide-react/.test(id)) {
-            return "icons-vendor";
-          }
-          if (/node_modules\/(react-hook-form|@hookform|zod)/.test(id)) {
-            return "forms-vendor";
-          }
-          if (/node_modules\/(date-fns|clsx|tailwind-merge|class-variance-authority)/.test(id)) {
-            return "utils-vendor";
-          }
-          if (/node_modules\/(cmdk|sonner)/.test(id)) {
-            return "ui-vendor";
-          }
-          if (/node_modules\/@radix-ui/.test(id)) {
-            return "radix-vendor";
-          }
-          return undefined;
-        },
-      },
-    },
+    // NOTA: se eliminó `rollupOptions.output.manualChunks` por completo.
+    // Agrupar paquetes con imports circulares internos (recharts, @react-pdf,
+    // sentry, etc.) en chunks vendor monolíticos rompe el orden de
+    // inicialización en producción con `Cannot access 'n' before
+    // initialization`. Dejamos que Vite/Rollup genere chunks por ruta
+    // (lazy-loaded en routes.tsx) — el costo de bundle inicial es aceptable
+    // y la app deja de quedarse en pantalla en blanco.
   },
 }));

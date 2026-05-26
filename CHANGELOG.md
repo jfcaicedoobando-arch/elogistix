@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [11.52.4] - 2026-05-26
+- **Fix pantalla en blanco — eliminado `manualChunks` completo en `vite.config.ts`**: agrupar paquetes con imports circulares internos (`recharts`, `@react-pdf/renderer`, `@sentry/*`) en chunks vendor monolíticos rompía el orden de inicialización en producción con `Cannot access 'n' before initialization` (primero en `Layer.js` de recharts, luego en `pdf-vendor`). Quitamos también el `modulePreload.resolveDependencies` (sin chunks personalizados ya no aplica). Vite ahora genera chunks automáticos por ruta lazy; el bundle inicial crece un poco pero la app deja de quedarse en blanco. **Requiere republicar.**
+
 ## [11.52.3] - 2026-05-26
 - **Fix definitivo pantalla en blanco (`Cannot access 'n' before initialization` en charts-vendor)**: eliminado el `manualChunks` de `recharts` en `vite.config.ts`. El chunk `charts-vendor` agrupado disparaba un error de inicialización por imports circulares internos de recharts/`react-smooth`/`d3-*`, y peor aún se cargaba en `/login` (donde no se usa recharts) porque Rollup hoisteaba deps compartidas dentro del chunk vendor. Ahora Vite coloca recharts dentro de los chunks de las rutas que efectivamente lo usan (Reportes, Operaciones, AdminDashboard, Auditoría), evitando que se cargue en login y rompiendo el ciclo de inicialización. **Requiere republicar la app.**
 
