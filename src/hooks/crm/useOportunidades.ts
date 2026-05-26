@@ -1,5 +1,5 @@
 /**
- * Hooks de Oportunidades CRM (Fase 3).
+ * Hooks de Oportunidades CRM (Fase 3). I/O delegada a `services/crm/oportunidades`.
  */
 import {
   useQuery,
@@ -7,17 +7,21 @@ import {
   useQueryClient,
   keepPreviousData,
 } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
-import type { Database } from "@/integrations/supabase/types";
 import { useAuth } from "@/contexts/AuthContext";
-import { buildOportunidadInsertPayload } from "./oportunidadPayload";
 import { queryKeys } from "@/lib/query";
+import {
+  listOportunidades,
+  getOportunidad,
+  crearOportunidad,
+  actualizarOportunidad,
+  moverEtapaOportunidad,
+  eliminarOportunidad,
+  type CrmOportunidadRow,
+  type OportunidadInput as ServiceOportunidadInput,
+} from "@/services/crm/oportunidades";
 
-export type CrmOportunidadRow = Database["public"]["Tables"]["crm_oportunidades"]["Row"];
-export type Moneda = "MXN" | "USD" | "EUR";
-
-const COLS =
-  "id, nombre, cliente_id, cliente_nombre, lead_id, vendedor_id, vendedor_email, etapa_id, monto_estimado, valor_real, moneda, probabilidad, fecha_estimada_cierre, fecha_cierre_real, motivo_perdida_id, modo, tipo_carga, origen, destino, notas, cotizacion_ganadora_id, embarque_ganador_id, created_at, updated_at";
+export type { CrmOportunidadRow, Moneda } from "@/services/crm/oportunidades";
+export type OportunidadInput = ServiceOportunidadInput;
 
 export interface OportunidadFiltros {
   search?: string;
@@ -32,23 +36,7 @@ export function useOportunidades(f: OportunidadFiltros = {}) {
   return useQuery({
     queryKey: queryKeys.crm.oportunidades.list({ search, etapaId, vendedorId, page, pageSize }),
     placeholderData: keepPreviousData,
-    queryFn: async () => {
-      let q = supabase
-        .from("crm_oportunidades")
-        .select(COLS, { count: "exact" })
-        .order("created_at", { ascending: false });
-      if (search.trim()) {
-        const t = `%${search.trim()}%`;
-        q = q.or(`nombre.ilike.${t},cliente_nombre.ilike.${t}`);
-      }
-      if (etapaId !== "todas") q = q.eq("etapa_id", etapaId);
-      if (vendedorId !== "todos") q = q.eq("vendedor_id", vendedorId);
-      const from = page * pageSize;
-      q = q.range(from, from + pageSize - 1);
-      const { data, count, error } = await q;
-      if (error) throw error;
-      return { data: (data ?? []) as CrmOportunidadRow[], count: count ?? 0 };
-    },
+    queryFn: () => listOportunidades({ search, etapaId, vendedorId, page, pageSize }),
   });
 }
 
@@ -56,51 +44,15 @@ export function useOportunidad(id: string | undefined) {
   return useQuery<CrmOportunidadRow | null>({
     queryKey: queryKeys.crm.oportunidades.detail(id ?? ""),
     enabled: !!id,
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("crm_oportunidades")
-        .select(COLS)
-        .eq("id", id!)
-        .maybeSingle();
-      if (error) throw error;
-      return (data ?? null) as CrmOportunidadRow | null;
-    },
+    queryFn: () => getOportunidad(id!),
   });
 }
-
-export type OportunidadInput = {
-  nombre: string;
-  cliente_id?: string | null;
-  cliente_nombre?: string;
-  lead_id?: string | null;
-  etapa_id: string;
-  monto_estimado?: number;
-  moneda?: Moneda;
-  probabilidad?: number;
-  fecha_estimada_cierre?: string | null;
-  modo?: string;
-  tipo_carga?: string;
-  origen?: string;
-  destino?: string;
-  notas?: string;
-  vendedor_id?: string | null;
-  vendedor_email?: string;
-};
 
 export function useCrearOportunidad() {
   const qc = useQueryClient();
   const { user } = useAuth();
   return useMutation({
-    mutationFn: async (input: OportunidadInput) => {
-      const payload = buildOportunidadInsertPayload(input, user);
-      const { data, error } = await supabase
-        .from("crm_oportunidades")
-        .insert(payload)
-        .select("id")
-        .single();
-      if (error) throw error;
-      return data;
-    },
+    mutationFn: (input: OportunidadInput) => crearOportunidad(input, user),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: queryKeys.crm.oportunidades.all });
       qc.invalidateQueries({ queryKey: queryKeys.crm.kpis });
@@ -112,10 +64,7 @@ export function useCrearOportunidad() {
 export function useActualizarOportunidad() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async ({ id, patch }: { id: string; patch: Partial<OportunidadInput & { motivo_perdida_id?: string | null; fecha_cierre_real?: string | null }> }) => {
-      const { error } = await supabase.from("crm_oportunidades").update(patch).eq("id", id);
-      if (error) throw error;
-    },
+    mutationFn: actualizarOportunidad,
     onSuccess: (_d, vars) => {
       qc.invalidateQueries({ queryKey: queryKeys.crm.oportunidades.all });
       qc.invalidateQueries({ queryKey: queryKeys.crm.oportunidades.detail(vars.id) });
@@ -127,12 +76,7 @@ export function useActualizarOportunidad() {
 export function useMoverEtapa() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async ({ id, etapa_id, probabilidad }: { id: string; etapa_id: string; probabilidad?: number }) => {
-      const patch: Record<string, unknown> = { etapa_id };
-      if (typeof probabilidad === "number") patch.probabilidad = probabilidad;
-      const { error } = await supabase.from("crm_oportunidades").update(patch).eq("id", id);
-      if (error) throw error;
-    },
+    mutationFn: moverEtapaOportunidad,
     onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.crm.oportunidades.all }),
   });
 }
@@ -141,13 +85,7 @@ export function useEliminarOportunidad() {
   const qc = useQueryClient();
   const { user } = useAuth();
   return useMutation({
-    mutationFn: async (id: string) => {
-      const { error } = await supabase
-        .from("crm_oportunidades")
-        .update({ deleted_at: new Date().toISOString(), deleted_by: user?.id ?? null })
-        .eq("id", id);
-      if (error) throw error;
-    },
+    mutationFn: (id: string) => eliminarOportunidad(id, user?.id ?? null),
     onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.crm.oportunidades.all }),
   });
 }
