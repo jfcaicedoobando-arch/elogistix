@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [11.52.2] - 2026-05-26
+- **Fix pantalla en blanco recharts (continuación)**: agregadas al `charts-vendor` chunk las dependencias restantes de `recharts` 2.15.4 según su `package.json` (`recharts-scale`, `react-is`, `eventemitter3`, `tiny-invariant`, `lodash`, `d3-ease`). Sin éstas, lodash/react-is quedaban en chunks separados y `react-smooth` / utilidades internas de recharts disparaban `Cannot access 'n' before initialization` en `Layer.js` al inicializarse fuera de orden. **Requiere republicar la app.**
+
 ## [11.52.1] - 2026-05-26
 - **Fix pantalla en blanco en producción (`Cannot access 'n' before initialization` en `Layer.js`)**: las dependencias transitivas de `recharts` (`victory-vendor`, `d3-array`, `d3-scale`, `d3-shape`, `d3-path`, `d3-time`, `d3-time-format`, `d3-format`, `d3-interpolate`, `d3-color`, `internmap`, `react-smooth`, `fast-equals`, `decimal.js-light`) ahora se agrupan en el mismo `charts-vendor` chunk. Antes quedaban dispersas en otros chunks y los imports circulares internos de recharts se inicializaban en orden incorrecto, rompiendo la app al cargar.
 
