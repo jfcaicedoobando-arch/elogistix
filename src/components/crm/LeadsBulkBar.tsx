@@ -9,7 +9,8 @@ import {
 } from "@/components/ui/select";
 import DoubleConfirmDeleteDialog from "@/components/shared/DoubleConfirmDeleteDialog";
 import { useToast } from "@/hooks/shared";
-import { notifySuccess, notifyError } from "@/lib/ui/appFeedback";
+import { notifyError } from "@/lib/ui/appFeedback";
+import { crmToast } from "@/lib/crm/crmToast";
 import VendedorSelect from "@/components/crm/VendedorSelect";
 import {
   LEAD_ESTADOS, useActualizarLeadsBulk, useEliminarLeadsBulk, type CrmLeadEstado,
@@ -30,7 +31,7 @@ export default function LeadsBulkBar({ ids, onClear, onDone }: Props) {
   const handleEstado = async (estado: CrmLeadEstado) => {
     try {
       const { updated } = await actualizar.mutateAsync({ ids, patch: { estado } });
-      notifySuccess(toast, { title: `${updated} leads actualizados`, description: `Estado: ${estado}` });
+      crmToast.success(`${updated} leads → ${estado}`);
       onDone();
     } catch (e) {
       notifyError(toast, { title: "Error", description: e instanceof Error ? e.message : undefined });
@@ -43,7 +44,7 @@ export default function LeadsBulkBar({ ids, onClear, onDone }: Props) {
         ids,
         patch: { vendedor_id, vendedor_email },
       });
-      notifySuccess(toast, { title: `${updated} leads reasignados` });
+      crmToast.success(`${updated} leads reasignados`);
       onDone();
     } catch (e) {
       notifyError(toast, { title: "Error", description: e instanceof Error ? e.message : undefined });
@@ -53,7 +54,7 @@ export default function LeadsBulkBar({ ids, onClear, onDone }: Props) {
   const handleEliminar = async () => {
     try {
       const { deleted } = await eliminar.mutateAsync(ids);
-      notifySuccess(toast, { title: `${deleted} leads eliminados` });
+      crmToast.success(`${deleted} leads eliminados`);
       onDone();
     } catch (e) {
       notifyError(toast, { title: "Error", description: e instanceof Error ? e.message : undefined });

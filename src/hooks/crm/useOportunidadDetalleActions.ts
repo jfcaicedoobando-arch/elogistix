@@ -1,6 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/shared";
-import { notifySuccess, notifyError } from "@/lib/ui/appFeedback";
+import { notifyError } from "@/lib/ui/appFeedback";
+import { crmToast } from "@/lib/crm/crmToast";
 import { useEliminarOportunidad, useCrearCotizacionDesdeOportunidad } from "@/hooks/crm";
 
 interface EtapaLite {
@@ -33,7 +34,7 @@ export function useOportunidadDetalleActions(op: OpLite, etapas: EtapaLite[]) {
   const handleEliminar = async () => {
     try {
       await eliminar.mutateAsync(op.id);
-      notifySuccess(toast, { title: "Oportunidad eliminada" });
+      crmToast.success("Oportunidad eliminada");
       navigate("/crm/oportunidades");
     } catch (e) {
       notifyError(toast, { title: "Error", description: e instanceof Error ? e.message : undefined });
@@ -56,7 +57,7 @@ export function useOportunidadDetalleActions(op: OpLite, etapas: EtapaLite[]) {
         etapaCotizandoId: cotizandoEtapa?.id,
         etapaCotizandoProbabilidad: cotizandoEtapa?.probabilidad_default ?? 0,
       });
-      notifySuccess(toast, { title: "Cotización creada", description: `Folio ${result.folio}` });
+      crmToast.success(`Cotización creada · ${result.folio}`);
       navigate(`/cotizaciones/${result.id}/editar`);
     } catch (e) {
       notifyError(toast, { title: "No se pudo crear", description: e instanceof Error ? e.message : undefined });

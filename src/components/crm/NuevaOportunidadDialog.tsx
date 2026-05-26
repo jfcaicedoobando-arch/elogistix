@@ -14,7 +14,8 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/shared";
-import { notifySuccess, notifyError } from "@/lib/ui/appFeedback";
+import { notifyError } from "@/lib/ui/appFeedback";
+import { crmToast } from "@/lib/crm/crmToast";
 import { useAuth } from "@/contexts/AuthContext";
 import {
   useCrearOportunidad,
@@ -69,7 +70,7 @@ export default function NuevaOportunidadDialog({ open, onOpenChange, oportunidad
       };
       if (isEdit && oportunidad) {
         await actualizar.mutateAsync({ id: oportunidad.id, patch: payload });
-        notifySuccess(toast, { title: "Oportunidad actualizada" });
+        crmToast.success("Oportunidad actualizada");
         onSaved?.(oportunidad.id);
       } else {
         const r = await crear.mutateAsync(payload);
@@ -86,7 +87,7 @@ export default function NuevaOportunidadDialog({ open, onOpenChange, oportunidad
             fecha_programada: manana.toISOString(),
           }).catch(() => undefined);
         }
-        notifySuccess(toast, { title: "Oportunidad creada" });
+        crmToast.success("Oportunidad creada");
         onSaved?.(r.id);
       }
       onOpenChange(false);

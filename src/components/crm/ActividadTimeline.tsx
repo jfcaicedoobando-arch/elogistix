@@ -12,7 +12,8 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/shared";
-import { notifySuccess, notifyError } from "@/lib/ui/appFeedback";
+import { notifyError } from "@/lib/ui/appFeedback";
+import { crmToast } from "@/lib/crm/crmToast";
 import {
   useActividades, useCrearActividad, useCompletarActividad,
   ACTIVIDAD_TIPOS, type CrmActividadTipo, type CrmEntidadTipo,
@@ -38,7 +39,7 @@ export default function ActividadTimeline({ entidadTipo, entidadId }: Props) {
     if (!asunto.trim()) return notifyError(toast, { title: "Asunto requerido" });
     try {
       await crear.mutateAsync({ tipo, asunto, descripcion: desc, entidad_tipo: entidadTipo, entidad_id: entidadId });
-      notifySuccess(toast, { title: "Actividad registrada" });
+      crmToast.success("Actividad registrada");
       setAsunto(""); setDesc("");
     } catch (e) {
       notifyError(toast, { title: "Error", description: e instanceof Error ? e.message : undefined });

@@ -15,7 +15,8 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/shared";
-import { notifySuccess, notifyError } from "@/lib/ui/appFeedback";
+import { notifyError } from "@/lib/ui/appFeedback";
+import { crmToast } from "@/lib/crm/crmToast";
 import {
   ACTIVIDAD_TIPOS, useCrearActividad,
   type CrmActividadTipo, type CrmEntidadTipo,
@@ -70,7 +71,7 @@ export default function NuevaActividadDialog({ open, onOpenChange, defaultEntida
         entidad_id: entidadId,
         fecha_programada: fecha ? new Date(fecha).toISOString() : null,
       });
-      notifySuccess(toast, { title: "Actividad creada" });
+      crmToast.success("Actividad creada");
       reset();
       onOpenChange(false);
       onCreated?.(res.id);

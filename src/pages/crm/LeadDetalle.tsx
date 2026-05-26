@@ -10,9 +10,11 @@ import { Button } from "@/components/ui/button";
 import { PageHeader } from "@/components/shared/PageHeader";
 import DoubleConfirmDeleteDialog from "@/components/shared/DoubleConfirmDeleteDialog";
 import { useToast } from "@/hooks/shared";
-import { notifySuccess, notifyError } from "@/lib/ui/appFeedback";
+import { notifyError } from "@/lib/ui/appFeedback";
+import { crmToast } from "@/lib/crm/crmToast";
 import { usePermissions } from "@/hooks/shared";
 import ConvertirLeadDialog from "@/components/crm/ConvertirLeadDialog";
+import ConvertirLeadSheet from "@/components/crm/ConvertirLeadSheet";
 import { LeadLineageCard } from "@/components/crm/LineageCard";
 import ContactActions from "@/components/crm/ContactActions";
 import ActividadTimeline from "@/components/crm/ActividadTimeline";
@@ -31,14 +33,15 @@ export default function LeadDetalle() {
   const eliminar = useEliminarLead();
 
   const { form, set, dirty } = useLeadEditForm(lead);
-  const [convertirOpen, setConvertirOpen] = useState(false);
+  const [convertirSheetOpen, setConvertirSheetOpen] = useState(false);
+  const [convertirAvanzadoOpen, setConvertirAvanzadoOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
 
   const handleSave = async () => {
     if (!id) return;
     try {
       await actualizar.mutateAsync({ id, patch: form });
-      notifySuccess(toast, { title: "Cambios guardados" });
+      crmToast.success("Cambios guardados");
     } catch (e) {
       notifyError(toast, {
         title: "No se pudo guardar",
@@ -51,7 +54,7 @@ export default function LeadDetalle() {
     if (!id) return;
     try {
       await eliminar.mutateAsync(id);
-      notifySuccess(toast, { title: "Lead eliminado" });
+      crmToast.success("Lead eliminado");
       navigate("/crm/leads");
     } catch (e) {
       notifyError(toast, {
@@ -95,7 +98,7 @@ export default function LeadDetalle() {
           <LeadHeaderActions
             estado={lead.estado}
             canEdit={canEdit}
-            onConvertir={() => setConvertirOpen(true)}
+            onConvertir={() => setConvertirSheetOpen(true)}
             onEliminar={() => setDeleteOpen(true)}
           />
         }
@@ -136,7 +139,13 @@ export default function LeadDetalle() {
 
       <ActividadTimeline entidadTipo="lead" entidadId={lead.id} />
 
-      <ConvertirLeadDialog open={convertirOpen} onOpenChange={setConvertirOpen} lead={lead} />
+      <ConvertirLeadSheet
+        open={convertirSheetOpen}
+        onOpenChange={setConvertirSheetOpen}
+        lead={lead}
+        onAbrirAvanzado={() => setConvertirAvanzadoOpen(true)}
+      />
+      <ConvertirLeadDialog open={convertirAvanzadoOpen} onOpenChange={setConvertirAvanzadoOpen} lead={lead} />
 
       <DoubleConfirmDeleteDialog
         open={deleteOpen}

@@ -1,6 +1,8 @@
 /**
- * Acciones del header de la ficha de lead (convertir + eliminar + badge).
- * Extraído de `pages/crm/LeadDetalle.tsx`.
+ * Acciones del header de la ficha de lead.
+ * Soporta dos modos de conversión:
+ *  - Click rápido → onConvertirRapido (Sheet con 3 campos)
+ *  - Menú "Más campos →" dentro del Sheet → onConvertirAvanzado (Dialog clásico)
  */
 import { Repeat, Trash2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
