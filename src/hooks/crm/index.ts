@@ -23,3 +23,4 @@ export * from './useCotizacionesSinRespuesta';
 export * from './useNextBestActions';
 export * from './useUndoToast';
 export * from './useCrmSearch';
+export * from './useActualizarActividadNotas';
