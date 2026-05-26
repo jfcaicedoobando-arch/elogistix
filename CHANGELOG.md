@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [11.54.0] - 2026-05-26
+- **Migración hooks → services (lote 1 de la auditoría 11.53)**: 10 hooks dejan de tocar `@/integrations/supabase/client` directamente, pasando ahora por la capa `services/`. Nuevos módulos: `services/crm/{actividades,comentarios,plantillas,etapas,notificaciones}`, `services/admin/observability` (alertas + app_logs + RPCs health), `services/portal/notificaciones`, `services/auth.getCurrentUser`. Hooks migrados: `useActualizarActividadNotas`, `useComentariosOportunidad`, `usePlantillasMensaje`, `useEtapasPipeline` (+ motivos perdida), `useCrmNotificaciones`, `useAlertasSistema`, `useAppLogs`, `useAppLogsHealth`, `useNotificacionesCliente`, `auditoria/revisiones/query`. Baseline arquitectónico baja de 33 → 18 archivos con import directo. APIs públicas de los hooks intactas (sólo el cuerpo cambió).
+
 ## [11.53.0] - 2026-05-26
 - **Auditoría arquitectónica + guardrails de no-regresión**: nuevo script `bun run audit:arch` (`scripts/audit-architecture.ts`) que lista (1) hooks/contexts que importan `@/integrations/supabase/client` directamente, (2) components/pages con la misma violación, (3) archivos productivos >200 líneas (con allowlist para shadcn `sidebar.tsx` y catálogo plano `lib/query/index.ts`). Nuevo test `src/lib/__tests__/architecture-baseline.test.ts` que congela el baseline actual (33 archivos: 5 contexts + 28 hooks) y falla la CI si aparece una violación nueva, si components/pages introducen imports directos al cliente Supabase, o si una entrada del baseline ya se limpió pero quedó listada. La deuda existente (CRM, auth contexts, admin/portal/embarque) queda registrada en `mem://audit/pendings` para migración posterior a `services/`.
 
