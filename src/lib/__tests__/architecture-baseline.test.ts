@@ -22,20 +22,12 @@ import { join, relative } from "node:path";
 const ROOT = process.cwd();
 const DIRECT_CLIENT_IMPORT = /from\s+["']@\/integrations\/supabase\/client["']/;
 
-const BASELINE: ReadonlySet<string> = new Set([
-  // contexts/ — auth + organization (5)
-  "src/contexts/AuthContext.tsx",
-  "src/contexts/OrganizationContext.tsx",
-  "src/contexts/auth/useAuthProfile.ts",
-  "src/contexts/auth/useAuthSession.ts",
-  "src/contexts/auth/useLoginAudit.ts",
-  // hooks/admin (0 — migrados en 11.54.0 a services/admin/observability)
-  // hooks/auditoria (0 — migrado en 11.54.0 a services/auth.getCurrentUser)
-  // hooks/crm (0 — migrados en 11.57.0: leads/*, automatizaciones y forecast a services/crm)
-
-  // hooks/embarque (0 — migrados en 11.58.0 a services/embarque/jsoncargo)
-  // hooks/portal (0 — migrado en 11.54.0 a services/portal/notificaciones)
+const BASELINE: ReadonlySet<string> = new Set<string>([
+  // 11.59.0 — Baseline VACÍO. Toda la deuda histórica migrada a services/.
+  // Mantener el set vacío hace que cualquier nuevo import directo desde
+  // hooks/ o contexts/ falle la CI de inmediato.
 ]);
+
 
 function walk(dir: string, out: string[] = []): string[] {
   for (const entry of readdirSync(dir)) {
