@@ -1,16 +1,13 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
 import type { Session, User } from "@supabase/supabase-js";
+import {
+  subscribeToAuthChanges,
+  getCurrentSession,
+} from "@/services/auth/session";
 
 /**
  * Maneja exclusivamente la sesión Supabase: usuario, token y listener de
  * cambios de auth. NO carga perfil ni roles — eso vive en `useAuthProfile`.
- *
- * Política de eventos:
- *   - SIGNED_IN / SIGNED_OUT / USER_UPDATED → actualizan user + session.
- *   - TOKEN_REFRESHED / INITIAL_SESSION → actualizan session silenciosamente
- *     (sólo si cambia el access_token) para no disparar re-renders en cascada
- *     ni invalidar React Query cada vez que Supabase rota el token (~60s).
  */
 export interface AuthSession {
   user: User | null;
@@ -35,15 +32,7 @@ export function useAuthSession(): AuthSession {
   }, []);
 
   useEffect(() => {
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((eventoAuth, newSession) => {
-      // Sólo TOKEN_REFRESHED es 100% silencioso (rota ~60s y no debe invalidar
-      // React Query ni recolocar el árbol). INITIAL_SESSION es el evento
-      // canónico de arranque y DEBE hidratar user+session+loading, igual que
-      // SIGNED_IN / SIGNED_OUT / USER_UPDATED. Antes lo tratábamos como
-      // silencioso y dejaba `user=null` con `session!=null` durante una
-      // ventana de carrera (ver fix 10.2.2).
+    const subscription = subscribeToAuthChanges((eventoAuth, newSession) => {
       if (eventoAuth === "TOKEN_REFRESHED") {
         handleSilentRefresh(newSession);
         return;
@@ -60,11 +49,10 @@ export function useAuthSession(): AuthSession {
       }
     });
 
-    // Red de seguridad: si por alguna razón INITIAL_SESSION no llegara,
-    // hidratamos desde getSession() una sola vez.
+    // Red de seguridad: si INITIAL_SESSION no llegara, hidratamos manualmente.
     if (!initialized.current) {
       initialized.current = true;
-      supabase.auth.getSession().then(({ data: { session: existing } }) => {
+      getCurrentSession().then((existing) => {
         setSession((prev) => prev ?? existing);
         setUser((prev) => prev ?? existing?.user ?? null);
         setLoading(false);
