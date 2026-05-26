@@ -121,7 +121,14 @@ export default defineConfig(({ mode }) => ({
           if (/node_modules\/@tanstack\/react-query/.test(id)) {
             return "query-vendor";
           }
-          if (/node_modules\/recharts/.test(id)) {
+          // Recharts + sus deps (victory-vendor / d3-*) deben quedar en el
+          // MISMO chunk: tienen imports circulares internos que rompen con
+          // "Cannot access 'n' before initialization" si se separan.
+          if (
+            /node_modules\/(recharts|victory-vendor|d3-array|d3-scale|d3-shape|d3-path|d3-time|d3-time-format|d3-format|d3-interpolate|d3-color|internmap|react-smooth|fast-equals|decimal\.js-light)/.test(
+              id,
+            )
+          ) {
             return "charts-vendor";
           }
           // libphonenumber-js (~30 KB gzip) sólo lo necesitan 3 rutas

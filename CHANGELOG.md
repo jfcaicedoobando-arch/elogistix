@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [11.52.1] - 2026-05-26
+- **Fix pantalla en blanco en producción (`Cannot access 'n' before initialization` en `Layer.js`)**: las dependencias transitivas de `recharts` (`victory-vendor`, `d3-array`, `d3-scale`, `d3-shape`, `d3-path`, `d3-time`, `d3-time-format`, `d3-format`, `d3-interpolate`, `d3-color`, `internmap`, `react-smooth`, `fast-equals`, `decimal.js-light`) ahora se agrupan en el mismo `charts-vendor` chunk. Antes quedaban dispersas en otros chunks y los imports circulares internos de recharts se inicializaban en orden incorrecto, rompiendo la app al cargar.
+
 ## [11.52.0] - 2026-05-26
 - **Verificación automática del build**: nuevo plugin Vite `verify-html-bundle` que corre en producción (`apply: "build"`). Valida que `dist/index.html` contenga (1) `<div id="root">` y (2) al menos un `<script src="/assets/*.js">` antes de completar el build. Si falta alguno, aborta con error descriptivo para evitar despliegues con página en blanco. Si ambos existen, logea `[verify-html-bundle] OK`.
 
