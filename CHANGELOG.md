@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [11.56.0] - 2026-05-26
+- **Migración hooks → services (lote 3 de la auditoría 11.53)**: 4 hooks más dejan de tocar `@/integrations/supabase/client` directamente. Nuevos módulos en la capa de servicios: `services/crm/cliente360` (`fetchCliente360`), `services/crm/search` (`searchCrm` para el command palette), `services/crm/proximasActividades` (`fetchProximasActividades` batch lookup) y `services/crm/nbaSignals` (señales de leads/oportunidades para Next Best Actions). Hooks refactorizados manteniendo API pública: `useCliente360`, `useCrmSearch`, `useProximasActividades`, `useNextBestActions`. Baseline arquitectónico baja de 20 → 16 archivos con import directo a Supabase.
+
 ## [11.55.0] - 2026-05-26
 - **Migración hooks → services (lote 2 de la auditoría 11.53)**: 3 hooks centrales de CRM dejan de tocar `@/integrations/supabase/client` directamente. Nuevos módulos: `services/crm/oportunidades` (list/get/crear/actualizar/moverEtapa/eliminar), `services/crm/dashboard` (`fetchCrmDashboard`) y ampliación de `services/crm/actividades` (list, crear, completar, posponer, eliminar, count/list vencidas). Hooks refactorizados (API pública intacta): `useActividades` + `useCrear/Completar/Posponer/EliminarActividad`, `useOportunidades` + `useOportunidad` + `useCrear/Actualizar/EliminarOportunidad` + `useMoverEtapa`, `useCrmDashboardData` + `useActividadesVencidasCount/List`. Baseline arquitectónico baja de 23 → 20 archivos con import directo a Supabase.
 
