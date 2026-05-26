@@ -31,7 +31,7 @@ const BASELINE: ReadonlySet<string> = new Set([
   "src/contexts/auth/useLoginAudit.ts",
   // hooks/admin (0 — migrados en 11.54.0 a services/admin/observability)
   // hooks/auditoria (0 — migrado en 11.54.0 a services/auth.getCurrentUser)
-  // hooks/crm (12 — bajó de 17 en 11.54.0 al migrar 5 a services/crm)
+  // hooks/crm (8 — bajó de 12 en 11.56.0 al migrar cliente360/search/proximas/nba)
   "src/hooks/crm/automatizacionesEtapaActions.ts",
   "src/hooks/crm/leads/bulk.ts",
   "src/hooks/crm/leads/convertir.ts",
@@ -39,11 +39,7 @@ const BASELINE: ReadonlySet<string> = new Set([
   "src/hooks/crm/leads/mutations.ts",
   "src/hooks/crm/leads/queries.ts",
   "src/hooks/crm/useAutomatizacionesEtapa.ts",
-  "src/hooks/crm/useCliente360.ts",
-  "src/hooks/crm/useCrmSearch.ts",
   "src/hooks/crm/useForecastReportes.ts",
-  "src/hooks/crm/useNextBestActions.ts",
-  "src/hooks/crm/useProximasActividades.ts",
   // hooks/embarque (3)
   "src/hooks/embarque/mutations/useUpdateEmbarque.ts",
   "src/hooks/embarque/useJsonCargoBolLookup.ts",
