@@ -1,19 +1,14 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/shared";
+import {
+  fetchAlertasPendingCount,
+  fetchAlertasSistema,
+  acknowledgeAlerta,
+  type AlertaSistema,
+} from "@/services/admin";
 
-export interface AlertaSistema {
-  id: string;
-  severity: string;
-  source: string;
-  message: string;
-  payload: Record<string, unknown> | null;
-  dedupe_key: string | null;
-  created_at: string;
-  acknowledged_at: string | null;
-  acknowledged_by: string | null;
-}
+export type { AlertaSistema };
 
 const QK_PENDING = ["alertas-sistema", "pending-count"] as const;
 const QK_LIST = ["alertas-sistema", "list"] as const;
@@ -25,11 +20,7 @@ export function useAlertasPendingCount() {
 
   const { data } = useQuery({
     queryKey: QK_PENDING,
-    queryFn: async () => {
-      const { data, error } = await supabase.rpc("alertas_sistema_pending_count");
-      if (error) throw error;
-      return Number(data ?? 0);
-    },
+    queryFn: fetchAlertasPendingCount,
     enabled,
     staleTime: 60_000,
     refetchInterval: 60_000,
@@ -45,17 +36,7 @@ export function useAlertasSistemaList(includeAcknowledged = false) {
 
   return useQuery({
     queryKey: [...QK_LIST, includeAcknowledged],
-    queryFn: async (): Promise<AlertaSistema[]> => {
-      let query = supabase
-        .from("alertas_sistema")
-        .select("*")
-        .order("created_at", { ascending: false })
-        .limit(200);
-      if (!includeAcknowledged) query = query.is("acknowledged_at", null);
-      const { data, error } = await query;
-      if (error) throw error;
-      return (data ?? []) as AlertaSistema[];
-    },
+    queryFn: () => fetchAlertasSistema(includeAcknowledged),
     enabled,
     staleTime: 30_000,
     refetchInterval: 60_000,
@@ -69,13 +50,7 @@ export function useAcknowledgeAlerta() {
   const { toast } = useToast();
 
   return useMutation({
-    mutationFn: async (id: string) => {
-      const { error } = await supabase
-        .from("alertas_sistema")
-        .update({ acknowledged_at: new Date().toISOString(), acknowledged_by: user?.id ?? null })
-        .eq("id", id);
-      if (error) throw error;
-    },
+    mutationFn: (id: string) => acknowledgeAlerta({ id, userId: user?.id ?? null }),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: QK_PENDING });
       qc.invalidateQueries({ queryKey: QK_LIST });
