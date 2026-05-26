@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [11.59.1] - 2026-05-26
+- **Sentry — filtro robusto de errores de chunk Vite**: se añade `ignoreErrors` en `initSentry()` (regex para "Failed to fetch dynamically imported module", "Importing a module script failed", "Loading chunk N failed", "ChunkLoadError"). Complementa el `beforeSend` existente y cubre también pestañas viejas con releases cacheados (ej. eventos llegando desde `11.28.0`). Estos errores son transitorios — la app se auto-recupera con reload — y no aportan señal a Sentry.
+
 ## [11.59.0] - 2026-05-26
 - **Migración hooks → services (lote 6, FINAL de la auditoría 11.53)**: bloque Auth/Organization cerrado. Los 5 archivos restantes (`AuthContext`, `OrganizationContext`, `useAuthProfile`, `useAuthSession`, `useLoginAudit`) dejan de importar `@/integrations/supabase/client` directamente. Nuevos módulos: `services/auth/session` (`subscribeToAuthChanges`, `getCurrentSession`, `signOutCurrentSession`, `fetchUserContext` + tipo `CachedOrganization`), `services/auth/loginAudit` (`insertLoginAudit`) y `services/organization` (`listActiveOrganizations`). API pública de los contexts intacta. **Baseline arquitectónico = 0**: ningún hook ni context importa Supabase directamente, todo el acceso a datos pasa por `services/`. El test `architecture-baseline` ahora actúa como guardrail estricto contra cualquier regresión futura.
 
