@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [11.52.0] - 2026-05-26
+- **Verificación automática del build**: nuevo plugin Vite `verify-html-bundle` que corre en producción (`apply: "build"`). Valida que `dist/index.html` contenga (1) `<div id="root">` y (2) al menos un `<script src="/assets/*.js">` antes de completar el build. Si falta alguno, aborta con error descriptivo para evitar despliegues con página en blanco. Si ambos existen, logea `[verify-html-bundle] OK`.
+
 ## [11.51.0] - 2026-05-25
 - **CRM — cierre de pendientes anti-fricción**: (1) Conversión Lead→Oportunidad sin perder contexto: nuevo `ConvertirLeadSheet` (Sheet lateral) con sólo 3 campos (nombre prefilled, monto, moneda) + checkbox crear cliente. Al confirmar se queda en `/crm/leads/:id` y muestra toast sonner "Lead convertido" con acción **"Abrir oportunidad →"** (5s). El `ConvertirLeadDialog` clásico sigue disponible vía botón "Más campos →" dentro del Sheet. `LeadDetalle` orquesta ambos modales. (2) Notas inline de actividad: tercer botón (icono `FileText`) en `ActividadRowActions` abre `ActividadNotasSheet` (Sheet derecho con `Textarea` único de "Resultado / notas") — disponible tanto en pendientes como en completadas. Nuevo hook `useActualizarActividadNotas` (update mínimo de `crm_actividades.resultado`). (3) Toasts CRM silenciados: nuevo wrapper `src/lib/crm/crmToast.ts` (`success` 2s, `error` 4s, `info`, `undo` 5s) usando sonner directo. Migrados a `crmToast.success`: `LeadDetalle`, `ConvertirLeadDialog`, `ConvertirLeadSheet`, `ActividadRowActions`, `ActividadNotasSheet`, `NuevoLeadDialog`, `NuevaOportunidadDialog`, `NuevaActividadDialog`, `ComentariosOportunidad`, `ActividadTimeline`, `LeadsBulkBar`, `useOportunidadDetalleActions`. `notifyError` se conserva donde aporta panel de debug copiable.
 
