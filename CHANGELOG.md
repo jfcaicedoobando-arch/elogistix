@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [11.57.0] - 2026-05-26
+- **Migración hooks → services (lote 4 de la auditoría 11.53)**: se cierra el bloque CRM. 8 archivos dejan de importar `@/integrations/supabase/client` directamente. Nuevos módulos: `services/crm/leads` (list/get/create/update/softDelete + bulk + `convertirLead` con `resolveClienteForConversion`/`fetchPrimeraEtapaAbierta`), `services/crm/automatizacionesEtapa` (`fetchEtapa`/`fetchOportunidad`/`runAutomatizaciones` + notify/tareas) y `services/crm/forecast` (`fetchForecast`, `fetchReportesCRM`, `fetchEtapaTipos`). Hooks refactorizados (API pública intacta): `useLeads`/`useLead`, `useCrear/Actualizar/EliminarLead`, `useActualizar/Eliminar/CrearLeadsBulk`, `useConvertirLead`, `useMoverEtapaConAutomatizacion`, `useForecast`/`useReportesCRM`. `automatizacionesEtapaActions.ts` y `leads/convertirHelpers.ts` quedan como re-exports thin para retro-compatibilidad. Baseline arquitectónico baja de 16 → 8 archivos con import directo a Supabase (sólo restan los 5 contexts y 3 hooks de embarque).
+
 ## [11.56.0] - 2026-05-26
 - **Migración hooks → services (lote 3 de la auditoría 11.53)**: 4 hooks más dejan de tocar `@/integrations/supabase/client` directamente. Nuevos módulos en la capa de servicios: `services/crm/cliente360` (`fetchCliente360`), `services/crm/search` (`searchCrm` para el command palette), `services/crm/proximasActividades` (`fetchProximasActividades` batch lookup) y `services/crm/nbaSignals` (señales de leads/oportunidades para Next Best Actions). Hooks refactorizados manteniendo API pública: `useCliente360`, `useCrmSearch`, `useProximasActividades`, `useNextBestActions`. Baseline arquitectónico baja de 20 → 16 archivos con import directo a Supabase.
 

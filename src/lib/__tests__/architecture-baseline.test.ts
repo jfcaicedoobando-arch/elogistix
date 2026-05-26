@@ -31,15 +31,8 @@ const BASELINE: ReadonlySet<string> = new Set([
   "src/contexts/auth/useLoginAudit.ts",
   // hooks/admin (0 — migrados en 11.54.0 a services/admin/observability)
   // hooks/auditoria (0 — migrado en 11.54.0 a services/auth.getCurrentUser)
-  // hooks/crm (8 — bajó de 12 en 11.56.0 al migrar cliente360/search/proximas/nba)
-  "src/hooks/crm/automatizacionesEtapaActions.ts",
-  "src/hooks/crm/leads/bulk.ts",
-  "src/hooks/crm/leads/convertir.ts",
-  "src/hooks/crm/leads/convertirHelpers.ts",
-  "src/hooks/crm/leads/mutations.ts",
-  "src/hooks/crm/leads/queries.ts",
-  "src/hooks/crm/useAutomatizacionesEtapa.ts",
-  "src/hooks/crm/useForecastReportes.ts",
+  // hooks/crm (0 — migrados en 11.57.0: leads/*, automatizaciones y forecast a services/crm)
+
   // hooks/embarque (3)
   "src/hooks/embarque/mutations/useUpdateEmbarque.ts",
   "src/hooks/embarque/useJsonCargoBolLookup.ts",
