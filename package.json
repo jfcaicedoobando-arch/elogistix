@@ -17,6 +17,7 @@
     "changelog:json": "tsx scripts/generate-changelog-json.ts",
     "audit:casts": "tsx scripts/audit-casts.ts",
     "audit:tests": "tsx scripts/audit-tests.ts",
+    "audit:arch": "tsx scripts/audit-architecture.ts",
     "ci:local": "bun run lint && bun run lint:unused && bun run test && bun run build"
   },
   "dependencies": {
