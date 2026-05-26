@@ -9,7 +9,8 @@ import {
   Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle,
 } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/shared";
-import { notifySuccess, notifyError } from "@/lib/ui/appFeedback";
+import { notifyError } from "@/lib/ui/appFeedback";
+import { crmToast } from "@/lib/crm/crmToast";
 import { useAuth } from "@/contexts/AuthContext";
 import { useCrearLead } from "@/hooks/crm";
 import { useCrearActividad } from "@/hooks/crm";
@@ -66,7 +67,7 @@ export default function NuevoLeadDialog({ open, onOpenChange, onCreated }: Props
           fecha_programada: manana.toISOString(),
         }).catch(() => undefined);
       }
-      notifySuccess(toast, { title: "Lead creado" });
+      crmToast.success("Lead creado");
       setForm(EMPTY);
       onOpenChange(false);
       onCreated?.(r.id);

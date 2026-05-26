@@ -7,7 +7,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/shared";
-import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
+import { notifyError } from "@/lib/ui/appFeedback";
+import { crmToast } from "@/lib/crm/crmToast";
 import { getErrorMessage } from "@/lib/errors";
 import {
   useComentariosOportunidad,
@@ -39,7 +40,7 @@ export default function ComentariosOportunidad({ oportunidadId, canEdit }: Props
     try {
       await crear.mutateAsync({ oportunidadId, texto });
       setTexto("");
-      notifySuccess(toast, { title: "Comentario publicado" });
+      crmToast.success("Comentario publicado");
     } catch (e) {
       notifyError(toast, { title: "No se pudo publicar", description: getErrorMessage(e) });
     }

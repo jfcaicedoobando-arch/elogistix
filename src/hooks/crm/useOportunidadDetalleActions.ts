@@ -1,6 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/shared";
-import { notifySuccess, notifyError } from "@/lib/ui/appFeedback";
+import { notifyError } from "@/lib/ui/appFeedback";
+import { crmToast } from "@/lib/crm/crmToast";
 import { useEliminarOportunidad, useCrearCotizacionDesdeOportunidad } from "@/hooks/crm";
 
 interface EtapaLite {
@@ -33,7 +34,7 @@ export function useOportunidadDetalleActions(op: OpLite, etapas: EtapaLite[]) {
   const handleEliminar = async () => {
     try {
       await eliminar.mutateAsync(op.id);
-      notifySuccess(toast, { title: "Oportunidad eliminada" });
+      crmToast.success("Oportunidad eliminada");
       navigate("/crm/oportunidades");
     } catch (e) {
       notifyError(toast, { title: "Error", description: e instanceof Error ? e.message : undefined });
