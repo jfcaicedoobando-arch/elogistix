@@ -8,6 +8,8 @@ export * from "./leaderboard";
 export * from "./cotizacionDesdeOportunidad";
 export * from "./cotizacionesSinRespuesta";
 export * from "./actividades";
+export * from "./oportunidades";
+export * from "./dashboard";
 export * from "./comentarios";
 export * from "./plantillas";
 export * from "./etapas";

@@ -1,9 +1,107 @@
 /**
- * Servicio CRM — Actividades. Mutaciones simples sobre `crm_actividades`.
- * Las queries complejas (listado, vencidas) viven aún en `hooks/crm/useActividades`
- * y se migrarán en lotes posteriores.
+ * Servicio CRM — Actividades. Capa de I/O para `crm_actividades`.
  */
 import { supabase } from "@/integrations/supabase/client";
+import type { Database } from "@/integrations/supabase/types";
+
+export type CrmActividadRow = Database["public"]["Tables"]["crm_actividades"]["Row"];
+export type CrmActividadTipo = Database["public"]["Enums"]["crm_actividad_tipo"];
+export type CrmEntidadTipo = Database["public"]["Enums"]["crm_entidad_tipo"];
+
+const COLS =
+  "id, tipo, asunto, descripcion, entidad_tipo, entidad_id, fecha_programada, fecha_completada, duracion_min, resultado, responsable_id, responsable_email, created_at, updated_at";
+
+export interface ListActividadesParams {
+  search: string;
+  tipo: CrmActividadTipo | "todos";
+  estado: "pendientes" | "completadas" | "todas";
+  responsable: "mias" | "todos";
+  entidadTipo?: CrmEntidadTipo;
+  entidadId?: string;
+  page: number;
+  pageSize: number;
+  userId?: string;
+}
+
+export async function listActividades(p: ListActividadesParams): Promise<{ data: CrmActividadRow[]; count: number }> {
+  let q = supabase
+    .from("crm_actividades")
+    .select(COLS, { count: "exact" })
+    .order("fecha_programada", { ascending: true, nullsFirst: false });
+  if (p.search.trim()) q = q.ilike("asunto", `%${p.search.trim()}%`);
+  if (p.tipo !== "todos") q = q.eq("tipo", p.tipo);
+  if (p.estado === "pendientes") q = q.is("fecha_completada", null);
+  if (p.estado === "completadas") q = q.not("fecha_completada", "is", null);
+  if (p.responsable === "mias" && p.userId) q = q.eq("responsable_id", p.userId);
+  if (p.entidadTipo) q = q.eq("entidad_tipo", p.entidadTipo);
+  if (p.entidadId) q = q.eq("entidad_id", p.entidadId);
+  const from = p.page * p.pageSize;
+  q = q.range(from, from + p.pageSize - 1);
+  const { data, count, error } = await q;
+  if (error) throw error;
+  return { data: (data ?? []) as CrmActividadRow[], count: count ?? 0 };
+}
+
+export type CrearActividadInput = {
+  tipo: CrmActividadTipo;
+  asunto: string;
+  descripcion?: string;
+  entidad_tipo: CrmEntidadTipo;
+  entidad_id: string;
+  fecha_programada?: string | null;
+  duracion_min?: number | null;
+  resultado?: string;
+};
+
+export async function crearActividad(
+  input: CrearActividadInput,
+  user: { id?: string; email?: string } | null,
+): Promise<{ id: string }> {
+  const { data, error } = await supabase
+    .from("crm_actividades")
+    .insert({
+      ...input,
+      descripcion: input.descripcion ?? "",
+      resultado: input.resultado ?? "",
+      responsable_id: user?.id ?? null,
+      responsable_email: user?.email ?? "",
+      created_by: user?.id ?? null,
+    })
+    .select("id")
+    .single();
+  if (error) throw error;
+  return data as { id: string };
+}
+
+export async function completarActividad(input: { id: string; resultado?: string }): Promise<void> {
+  const { error } = await supabase
+    .from("crm_actividades")
+    .update({ fecha_completada: new Date().toISOString(), resultado: input.resultado ?? "" })
+    .eq("id", input.id);
+  if (error) throw error;
+}
+
+export async function posponerActividad(input: {
+  id: string;
+  dias: number;
+  fechaProgramada: string | null;
+}): Promise<void> {
+  const base = input.fechaProgramada ? new Date(input.fechaProgramada) : new Date();
+  base.setDate(base.getDate() + input.dias);
+  const { error } = await supabase
+    .from("crm_actividades")
+    .update({ fecha_programada: base.toISOString() })
+    .eq("id", input.id);
+  if (error) throw error;
+}
+
+export async function eliminarActividad(id: string, userId: string | null): Promise<void> {
+  const { error } = await supabase
+    .from("crm_actividades")
+    .update({ deleted_at: new Date().toISOString(), deleted_by: userId })
+    .eq("id", id);
+  if (error) throw error;
+}
 
 export async function actualizarActividadNotas(input: { id: string; resultado: string }): Promise<void> {
   const { error } = await supabase
@@ -11,4 +109,42 @@ export async function actualizarActividadNotas(input: { id: string; resultado: s
     .update({ resultado: input.resultado })
     .eq("id", input.id);
   if (error) throw error;
+}
+
+export interface ActividadesVencidasParams {
+  userId: string;
+  limit?: number;
+}
+
+export async function countActividadesVencidas(userId: string): Promise<number> {
+  const { count, error } = await supabase
+    .from("crm_actividades")
+    .select("id", { count: "exact", head: true })
+    .is("fecha_completada", null)
+    .lt("fecha_programada", new Date().toISOString())
+    .eq("responsable_id", userId);
+  if (error) throw error;
+  return count ?? 0;
+}
+
+export type ActividadVencida = {
+  id: string;
+  asunto: string;
+  tipo: string;
+  fecha_programada: string | null;
+  entidad_tipo: string;
+  entidad_id: string;
+};
+
+export async function listActividadesVencidas(userId: string, limit: number): Promise<ActividadVencida[]> {
+  const { data, error } = await supabase
+    .from("crm_actividades")
+    .select("id, asunto, tipo, fecha_programada, entidad_tipo, entidad_id")
+    .is("fecha_completada", null)
+    .lt("fecha_programada", new Date().toISOString())
+    .eq("responsable_id", userId)
+    .order("fecha_programada", { ascending: true })
+    .limit(limit);
+  if (error) throw error;
+  return (data ?? []) as ActividadVencida[];
 }
