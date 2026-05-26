@@ -26,6 +26,16 @@ export function initSentry(): void {
     release: `libre-carga@${APP_VERSION}`,
     environment: import.meta.env.MODE,
     tracesSampleRate: 0.1,
+    // Defensa en profundidad: estos errores de Vite (chunk viejo cacheado)
+    // se auto-recuperan con reload y no aportan señal. `ignoreErrors` corre
+    // antes que `beforeSend` y cubre también releases viejos en caché.
+    ignoreErrors: [
+      /Failed to fetch dynamically imported module/i,
+      /Importing a module script failed/i,
+      /error loading dynamically imported module/i,
+      /Loading chunk \d+ failed/i,
+      /ChunkLoadError/i,
+    ],
     beforeSend(event, hint) {
       // Filtrar errores transitorios de carga de chunks (Vite): la app se
       // auto-recupera con un reload, no aportan señal a Sentry.
