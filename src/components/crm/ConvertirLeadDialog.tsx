@@ -25,7 +25,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/shared";
-import { notifySuccess, notifyError } from "@/lib/ui/appFeedback";
+import { notifyError } from "@/lib/ui/appFeedback";
+import { crmToast } from "@/lib/crm/crmToast";
 import { useConvertirLead, type CrmLeadRow } from "@/hooks/crm";
 
 interface Props {
@@ -57,7 +58,7 @@ export default function ConvertirLeadDialog({ open, onOpenChange, lead }: Props)
         moneda,
         fechaEstimadaCierre: fecha || null,
       });
-      notifySuccess(toast, { title: "Lead convertido" });
+      crmToast.success("Lead convertido");
       onOpenChange(false);
       if (r.clienteId) navigate(`/clientes/${r.clienteId}`);
     } catch (e) {
