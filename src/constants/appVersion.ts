@@ -1,4 +1,4 @@
 /**
  * Versión actual de la app.
  */
-export const APP_VERSION = "11.51.0";
+export const APP_VERSION = "11.52.0";
