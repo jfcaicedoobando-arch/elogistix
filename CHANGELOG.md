@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [11.55.0] - 2026-05-26
+- **Migración hooks → services (lote 2 de la auditoría 11.53)**: 3 hooks centrales de CRM dejan de tocar `@/integrations/supabase/client` directamente. Nuevos módulos: `services/crm/oportunidades` (list/get/crear/actualizar/moverEtapa/eliminar), `services/crm/dashboard` (`fetchCrmDashboard`) y ampliación de `services/crm/actividades` (list, crear, completar, posponer, eliminar, count/list vencidas). Hooks refactorizados (API pública intacta): `useActividades` + `useCrear/Completar/Posponer/EliminarActividad`, `useOportunidades` + `useOportunidad` + `useCrear/Actualizar/EliminarOportunidad` + `useMoverEtapa`, `useCrmDashboardData` + `useActividadesVencidasCount/List`. Baseline arquitectónico baja de 23 → 20 archivos con import directo a Supabase.
+
 ## [11.54.0] - 2026-05-26
 - **Migración hooks → services (lote 1 de la auditoría 11.53)**: 10 hooks dejan de tocar `@/integrations/supabase/client` directamente, pasando ahora por la capa `services/`. Nuevos módulos: `services/crm/{actividades,comentarios,plantillas,etapas,notificaciones}`, `services/admin/observability` (alertas + app_logs + RPCs health), `services/portal/notificaciones`, `services/auth.getCurrentUser`. Hooks migrados: `useActualizarActividadNotas`, `useComentariosOportunidad`, `usePlantillasMensaje`, `useEtapasPipeline` (+ motivos perdida), `useCrmNotificaciones`, `useAlertasSistema`, `useAppLogs`, `useAppLogsHealth`, `useNotificacionesCliente`, `auditoria/revisiones/query`. Baseline arquitectónico baja de 33 → 18 archivos con import directo. APIs públicas de los hooks intactas (sólo el cuerpo cambió).
 
