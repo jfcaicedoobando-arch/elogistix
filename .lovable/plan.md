@@ -1,85 +1,51 @@
 
-# Plan v11.51 — Cierre de pendientes anti-fricción
+# Plan — Manual de uso CRM (PDF condensado-completo, 12-20 págs)
 
-## Contexto
+## Estructura
 
-Tras revisar el código vivo, varios pendientes del plan v11.50 **ya están implementados**:
+**Portada** (1 pág) — Título, versión 11.51.0, fecha, logo.
 
-- ✅ `OportunidadDetalleContent` ya tiene 3 tabs (Resumen / Comunicación / Trazabilidad), no 5.
-- ✅ `ActividadRowActions` ya permite completar inline + posponer con menú rápido.
+**Parte 1 · Vendedor** (~9 págs)
+1. Visión general y navegación (sidebar, subheader, atajos N/L/O/A, Cmd+P)
+2. **Mi Día** — flujo recomendado (NBA, Hoy, Esta semana, Pipeline)
+3. **Leads** — crear (Popover N→L), tabla con edición inline, importar CSV, conversión a oportunidad (Sheet rápido + Más campos)
+4. **Oportunidades** — lista vs Kanban, mover etapas con Undo (5s), filtros colapsables, ganar/perder
+5. **Detalle de oportunidad** — Resumen / Comunicación / Trazabilidad, contacto rápido, cotizaciones
+6. **Actividades** — quick-create, completar inline, posponer 1d/3d/1sem, notas en Sheet, vencidas
+7. **Analítica** — embudo, conversión, pérdidas, forecast, leaderboard
+8. **Atajos y trucos** — tabla de hotkeys, búsqueda global, tips de productividad
 
-Quedan **3 pendientes reales** del plan anterior, más una mejora de consistencia.
+**Parte 2 · Admin** (~6 págs)
+9. Roles y permisos (membresía organizacional)
+10. **Configuración → Pipeline** — etapas, probabilidades, automatizaciones
+11. **Configuración → Motivos de pérdida** — alta/baja
+12. **Configuración → Plantillas de mensaje** — variables, contextos
+13. **Importación CSV** de leads (formato, validaciones)
+14. Bitácora / auditoría
 
----
+**Cierre** (1 pág) — FAQ breve, soporte, changelog resumido.
 
-## Alcance v11.51
+## Capturas
 
-### 1. Conversión Lead → Oportunidad sin navegación (Sheet)
+Tomar 8-10 screenshots clave del preview en https://id-preview--341dfc00-0308-4aba-9246-e4b2041e31f1.lovable.app:
+- `/crm/mi-dia`, `/crm` (Resumen), `/crm/leads`, `/crm/oportunidades` (lista + kanban), Detalle oportunidad, `/crm/actividades`, `/crm/analitica`, `/crm/configuracion`, Quick-create popover abierto, Cmd+P palette.
 
-**Hoy:** `ConvertirLeadDialog` es un `Dialog` modal grande con varios campos y, al confirmar, navega a `/crm/oportunidades/:id` (se pierde el contexto del lead).
+Las capturas se enmarcarán con bordes finos y leyenda; sin product-shot porque agrega peso.
 
-**Cambio:**
-- Crear `ConvertirLeadSheet.tsx` (variante `Sheet` lateral) con **solo 3 campos**: nombre de oportunidad (prefilled), monto estimado, modo. Checkbox "Crear cliente" colapsable.
-- Al confirmar: ejecutar conversión, mostrar toast con acción **"Abrir oportunidad →"** y **quedarse en `/crm/leads/:id`** (el lead ya pasa a estado convertido y la card muestra los IDs resultantes — ya existe esa lógica).
-- "Más campos →" sigue abriendo el `ConvertirLeadDialog` actual.
-- Reemplazar en `LeadHeaderActions.tsx` el trigger actual por el nuevo Sheet.
+## Implementación técnica
 
-### 2. Notas inline de actividad (Sheet ligero)
+- Generador: **ReportLab** (Python) — control fino de layout, tablas, badges y portada.
+- Tipografía: Helvetica (built-in). Tamaños: H1 22pt, H2 16pt, body 10.5pt, caption 8.5pt.
+- Paleta: Primario `#1B2B4B`, Accent `#2563EB`, gris `#64748B`, fondo cards `#F8FAFC`.
+- Tamaño: US Letter, márgenes 1.8cm.
+- Cada sección arranca con un mini-banner navy + título blanco para identidad visual.
+- Tablas para "Atajos", "Próximos pasos", "Reglas de Next Best Actions".
+- Footer con número de página y "Libre Carga CRM · v11.51.0".
+- Salida: `/mnt/documents/manual-crm-libre-carga-v11.51.0.pdf`.
+- QA: convertir a JPGs (`pdftoppm -r 150`) e inspeccionar cada página antes de entregar; iterar fixes si hay overflow/clipping.
 
-**Hoy:** completar actividad NO pide notas (bien), pero si el vendedor quiere añadir resultado/notas tiene que abrir la actividad completa.
+## Fuera de alcance
 
-**Cambio:**
-- Añadir un tercer botón en `ActividadRowActions`: ícono "lápiz" → abre `ActividadNotasSheet` (Sheet derecho) con un solo `Textarea` de "Resultado / notas" y botón Guardar.
-- Hook nuevo `useActualizarActividadNotas` (mutation pequeña que hace `update` sobre `crm_actividades.notas` o campo equivalente — verificar nombre real en types.ts antes de implementar).
-
-### 3. Toasts silenciados y consistentes
-
-**Hoy:** Se usa `notifySuccess(toast, {...})` en todo el CRM. Genera toasts shadcn tipo "card" con título + descripción, persisten ~5s, ocupan mucho espacio.
-
-**Cambio:**
-- Crear `src/lib/crm/crmToast.ts` con helpers `crmToast.success(msg)`, `crmToast.error(msg, err?)`, `crmToast.undo(msg, onUndo)` — todos usando `sonner` directamente con `duration: 2000` y posición `bottom-right`.
-- Refactor superficial en el módulo CRM (`src/pages/crm/**`, `src/components/crm/**`, `src/hooks/crm/**`): reemplazar `notifySuccess(toast, { title: X })` → `crmToast.success(X)`.
-- **NO tocar** `notifyError` con `error/context/step` (se conservan para flujos con panel de debug copiable — embarques, wizard, etc.). Sólo migrar los success/info simples del CRM.
-- Mantener `showUndoToast` (ya usa sonner) y unificarlo dentro de `crmToast.undo`.
-
-### 4. Verificación / cleanup
-
-- Confirmar que `OportunidadDetalleContent` no tiene tabs muertas referenciadas en otro lado.
-- Eliminar `OportunidadGanadaBanner` import si quedó huérfano tras consolidación (verificar primero).
-
----
-
-## Detalles técnicos
-
-**Archivos nuevos**
-- `src/components/crm/ConvertirLeadSheet.tsx` (~150 líneas, usa `Sheet` de shadcn)
-- `src/components/crm/actividades/ActividadNotasSheet.tsx`
-- `src/hooks/crm/useActualizarActividadNotas.ts`
-- `src/lib/crm/crmToast.ts`
-
-**Archivos modificados**
-- `src/components/crm/leadDetalle/LeadHeaderActions.tsx` — usar Sheet nuevo
-- `src/components/crm/ActividadRowActions.tsx` — añadir botón notas
-- `src/hooks/crm/useUndoToast.ts` — reexportar desde `crmToast` o consolidar
-- ~15-20 archivos del módulo CRM para migrar `notifySuccess` → `crmToast.success`
-- `src/hooks/crm/index.ts` — exportar nuevo hook
-- `src/constants/appVersion.ts` → `11.51.0`
-- `CHANGELOG.md` — entrada nueva
-- `src/pages/Changelog.tsx` — nueva entrada al inicio del array
-
-**Fuera de alcance (decidir después)**
-- Permisos/ownership por vendedor
-- Importación CSV de leads
-- Razones de pérdida tipificadas
-- Notificaciones push/email
-- Integración Oportunidad ganada → embarque automático
-- Reasignación masiva
-- Métricas por vendedor en Analítica
-
-Estos los abordamos en v11.52+ una vez que decidas cuáles son must-have para abrir al equipo.
-
----
-
-## Resultado esperado
-
-Al terminar v11.51, los 4 pendientes del plan anterior quedan cerrados y el CRM está listo para un **piloto controlado** (2 vendedores, 1 semana) mientras decidimos los gaps funcionales reales.
+- Traducción a inglés (es-MX único).
+- Embeber video o GIFs.
+- Versiones por organización (manual genérico de producto).
