@@ -121,16 +121,12 @@ export default defineConfig(({ mode }) => ({
           if (/node_modules\/@tanstack\/react-query/.test(id)) {
             return "query-vendor";
           }
-          // Recharts + sus deps (victory-vendor / d3-*) deben quedar en el
-          // MISMO chunk: tienen imports circulares internos que rompen con
-          // "Cannot access 'n' before initialization" si se separan.
-          if (
-            /node_modules\/(recharts|victory-vendor|d3-array|d3-scale|d3-shape|d3-path|d3-time|d3-time-format|d3-format|d3-interpolate|d3-color|d3-ease|internmap|react-smooth|fast-equals|decimal\.js-light|recharts-scale|react-is|eventemitter3|tiny-invariant|lodash)/.test(
-              id,
-            )
-          ) {
-            return "charts-vendor";
-          }
+          // NOTA: recharts NO se agrupa manualmente. Tiene imports
+          // circulares internos que rompen con "Cannot access 'n' before
+          // initialization" cuando se separa en un chunk vendor compartido.
+          // Dejamos que Vite/Rollup lo coloque en los chunks de las rutas
+          // que lo usan (Reportes, Operaciones, AdminDashboard, Auditoria),
+          // evitando además que se cargue en /login.
           // libphonenumber-js (~30 KB gzip) sólo lo necesitan 3 rutas
           // (Clientes, ClienteDetalle, ProveedorDetalle) vía formatPhoneMx.
           if (/node_modules\/libphonenumber-js/.test(id)) {
