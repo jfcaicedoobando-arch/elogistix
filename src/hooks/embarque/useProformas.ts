@@ -26,7 +26,6 @@ import {
 import { newRequestId } from "@/lib/idempotency";
 import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 
-import { ERROR_CODES } from "@/lib/domain/errorCatalog";
 // Re-export tipos para que componentes/pages no tengan que importar del service.
 export type { ProformaConFactura, ProformaPendienteConEmbarque, ProformaRow };
 

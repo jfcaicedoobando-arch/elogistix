@@ -3,7 +3,6 @@ import { useToast } from "@/hooks/shared";
 import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 import { useAdminOrganizations, useCreateOrganization } from "@/hooks/admin/useAdminData";
 
-import { ERROR_CODES } from "@/lib/domain/errorCatalog";
 export function useAdminOrganizacionesController() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [nombre, setNombre] = useState("");

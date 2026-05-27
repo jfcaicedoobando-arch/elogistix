@@ -8,7 +8,6 @@ import {
 } from "@/services/configuracion";
 import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 
-import { ERROR_CODES } from "@/lib/domain/errorCatalog";
 export type { ConfigItem };
 
 export function useConfiguracion() {

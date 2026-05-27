@@ -10,7 +10,6 @@ import {
 } from "@/services/catalogos";
 import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 
-import { ERROR_CODES } from "@/lib/domain/errorCatalog";
 export type { Puerto };
 
 /** Puertos activos ordenados por país → nombre */

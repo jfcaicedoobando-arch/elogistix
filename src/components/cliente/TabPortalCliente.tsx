@@ -17,7 +17,6 @@ import {
 } from "@/hooks/cliente";
 import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 
-import { ERROR_CODES } from "@/lib/domain/errorCatalog";
 interface Props {
   clienteId: string;
   organizationId: string;

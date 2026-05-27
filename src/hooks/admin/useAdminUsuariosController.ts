@@ -5,7 +5,6 @@ import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 import { useAdminGlobalUsers, type GlobalUserRow } from "@/hooks/admin/useAdminData";
 import { useDeleteUserAuth as useDeleteUser } from "@/hooks/usuario";
 
-import { ERROR_CODES } from "@/lib/domain/errorCatalog";
 export function useAdminUsuariosController() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<GlobalUserRow | null>(null);

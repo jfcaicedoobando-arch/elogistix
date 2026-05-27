@@ -16,7 +16,6 @@ import {
 } from "@/services/proforma";
 import { notifyError } from "@/lib/ui/appFeedback";
 
-import { ERROR_CODES } from "@/lib/domain/errorCatalog";
 interface ProformaInput {
   id: string;
   embarque_id: string | null;

@@ -4,7 +4,6 @@ import { queryKeys } from "@/lib/query";
 import { fetchPlanes, updatePlan, type Plan } from "@/services/planes";
 import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 
-import { ERROR_CODES } from "@/lib/domain/errorCatalog";
 export type { Plan };
 
 export function usePlanes() {

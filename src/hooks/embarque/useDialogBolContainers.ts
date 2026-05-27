@@ -10,7 +10,6 @@ import {
 import { useSyncJsonCargo, PrefixMismatchError } from "@/hooks/embarque/useJsonCargoTracking";
 import { useActualizarContenedorEmbarque } from "@/hooks/embarque/mutations/useActualizarContenedorEmbarque";
 
-import { ERROR_CODES } from "@/lib/domain/errorCatalog";
 interface Args {
   embarqueId: string;
   naviera: string | null;

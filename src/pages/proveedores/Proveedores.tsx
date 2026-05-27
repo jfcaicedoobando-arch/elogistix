@@ -20,7 +20,6 @@ import { useQueryClient } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/query";
 import { ProveedorTable } from "./ProveedorTable";
 
-import { ERROR_CODES } from "@/lib/domain/errorCatalog";
 type TipoProveedor = Enums<'tipo_proveedor'>;
 type Proveedor = Tables<'proveedores'>;
 

@@ -27,7 +27,6 @@ import { useDuplicarEmbarque } from "@/hooks/embarque";
 import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 import type { EmbarqueRow } from "@/hooks/embarque";
 
-import { ERROR_CODES } from "@/lib/domain/errorCatalog";
 const MAX_COPIAS = 5;
 
 interface Props {
