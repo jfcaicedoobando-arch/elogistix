@@ -1,52 +1,39 @@
-# Auditoría arquitectónica — Libre Carga (estado 11.61.0)
+# Auditoría arquitectónica — Libre Carga (estado 11.62.0)
 
-> **Bloques A y B cerrados.** Diagnóstico original archivado en
-> `mem://audit/pendings`. Este documento refleja el estado **actual** post
-> migración + plan vigente para Bloques C/D.
+> **Bloques A, B, C9, D15 cerrados.** Diagnóstico original archivado en
+> `mem://audit/pendings`.
 
-## 1. Métricas baseline (post Bloques A + B)
+## 1. Métricas baseline (post D15)
 
-| Métrica | 11.45.0 (diagnóstico) | 11.60.0 (actual) | Meta |
+| Métrica | 11.45.0 | 11.62.0 | Meta |
 |---|---:|---:|---:|
-| Hooks con `@/integrations/supabase/client` directo | 28 | **0** ✅ | 0 |
-| Components con Supabase directo | 1 | **0** ✅ | 0 |
-| Contexts con Supabase directo | 5 | **0** ✅ | 0 |
-| Pages con Supabase directo | 0 | **0** ✅ | 0 |
-| Archivos productivos >200 líneas (no shadcn) | 2 | **0** ✅ | 0 |
-| `any` en código productivo | 0 | **0** ✅ | 0 |
-| `console.*` en código productivo | 0 | **0** ✅ | 0 |
-| Suites de tests en `services/` | — | **18** ✅ | ≥10 |
-| Total tests | 709 | **728** | crecer |
-| Subdominios en `services/` | 25 | **29** | — |
-| `as` casts totales | 458 | **720** (37 HIGH) | bajar HIGH |
+| Hooks/Contexts con Supabase directo | 28 | **0** ✅ | 0 |
+| Components/Pages con Supabase directo | 1 | **0** ✅ | 0 |
+| Archivos productivos >200 líneas | 2 | **0** ✅ | 0 |
+| `any` / `console.*` productivos | 0 | **0** ✅ | 0 |
+| Suites en `services/` | — | **18** ✅ | ≥10 |
+| Total tests | 709 | **729** | crecer |
+| Casts HIGH + CRITICAL | — | **37** | 0 |
 
-## 2. Bloque A — ✅ CERRADO (11.54.0 → 11.59.1)
+## 2. Bloques cerrados
 
-33 hooks/contexts migrados a `services/{admin,crm,portal,embarque,auth,organization}/`.
-Detalle por lote en historial de CHANGELOG. Test `architecture-baseline.test.ts`
-con `Set` de excepciones vacío. Lint clean en `src/`.
+- **A (11.54→11.59.1):** 33 hooks/contexts migrados a `services/`.
+- **B (11.60.0):** 0 archivos productivos >200. Split de `services/crm/leads`, `BulkImportDialog`, `ImportarLeadsCsvDialog`, `lib/query/index.ts`.
+- **C9 (11.61.0):** helpers no-hook movidos de `hooks/crm/` a `lib/crm/`.
+- **D15 (11.62.0):** reporte CI consolidado. `scripts/audit-report.ts` agrega arch + casts + tests y CI publica `reports/audit-report.{md,json}` (artifact 30d + step summary en PRs). Lógica compartida extraída a `scripts/lib/{walk,arch,casts,tests}.ts`.
 
-## 3. Bloque B — ✅ CERRADO (11.60.0)
-
-- **B1.** `services/crm/leads.ts` (209) → `services/crm/leads/{queries,mutations,bulk,convertir,index}.ts` (≤106 cada uno).
-- **B2.** `components/crm/ImportarLeadsCsvDialog.tsx` (201→67): parser/mapper a `lib/csv/leadsCsv.ts` (+ tests), hook `useImportarLeadsCsv`, sub-componente `ImportarLeadsCsvPreview`.
-- **B3.** `components/shared/BulkImportDialog.tsx` (200→114): `BulkImportDialogParts.tsx` + `lib/csv/downloadCsvTemplate.ts`.
-- **B4.** `lib/query/index.ts` (256→65): partido por dominio en `lib/query/keys/*.ts` (14 archivos). Test `keys-shape.test.ts` protege la paridad.
-
-## 4. Pendiente — Bloques C/D
+## 3. Pendiente
 
 ### Bloque C — Consistencia
-- **C9.** ✅ CERRADO (11.61.0). `hooks/crm/` ya no contiene archivos no-hook: `oportunidadFormState/Helpers` y `leadEditDirty` migrados a `lib/crm/`; stubs `oportunidadPayload` y `automatizacionesEtapaActions` eliminados.
-- **C10.** Auditar 25 `style={{…}}` inline → tokens Tailwind / semánticos.
-- **C11.** ❌ Descartado. Los duplicados `Configuracion.tsx` y `TabFacturacion.tsx` viven en carpetas de dominio distintas que ya desambiguan el path; renombrar es cosmético con blast radius alto.
+- **C10.** 25 `style={{…}}` inline → tokens Tailwind / semánticos.
+- **C11.** ❌ Descartado (carpetas de dominio desambiguan duplicados).
 
 ### Bloque D — Opcional
 - **D12.** Dividir `routes.tsx` (188) en `routes/{admin,portal,crm,public}.tsx`.
 - **D13.** Vigilar archivos 180–200 líneas (lista en mem://audit/pendings).
-- **D14.** Test arquitectónico que bloquee Supabase directo en `hooks/`/`contexts/`. **YA EXISTE** vía `architecture-baseline.test.ts` + `scripts/audit-architecture.ts`. Pendiente: añadir aserción `archivosProductivosOver200 === 0` como guardrail.
-- **D15.** Reporte CI automático con violaciones de capa y archivos oversized.
-- **D16.** Reducir casts HIGH (37 → 0) migrando boundaries críticos a `fromDb(data, ZodSchema)` (`services/embarque/mutations.ts`, `services/portal/queries.ts`, RPCs).
+- **D14.** Añadir aserción `archivosProductivosOver200 === 0` al `architecture-baseline.test.ts` como guardrail explícito (hoy se reporta pero no se gatea).
+- **D16.** Reducir 37 casts HIGH (`services/embarque/mutations.ts`, `services/portal/queries.ts`, RPCs) a `fromDb(data, ZodSchema)`.
 
-## 5. Orden recomendado
+## 4. Orden recomendado
 
-Mayor ROI ahora: **D16** (casts HIGH, mejora seguridad runtime) o **C9/C11** (cosmético, fácil). Dejar D12/D15 para cuando haya hueco.
+D14 (5 min, gating duro) → D16 (mayor ROI runtime) → C10 → D12.

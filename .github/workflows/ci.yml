@@ -47,6 +47,23 @@ jobs:
       - name: Tests
         run: bun run test
 
+      - name: Architecture & cast report
+        if: always()
+        run: bun run audit:report
+
+      - name: PR summary (audit report)
+        if: always() && github.event_name == 'pull_request'
+        run: cat reports/audit-report.md >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload audit report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: audit-report
+          path: |
+            reports/audit-report.md
+            reports/audit-report.json
+          retention-days: 30
 
       - name: Build
         run: bun run build

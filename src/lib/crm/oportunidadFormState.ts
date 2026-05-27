@@ -2,7 +2,7 @@
  * Tipos y valor vacío del formulario de Oportunidad CRM.
  * Separado del hook para evitar ciclos y mantener Power of 10.
  */
-import type { Moneda } from "@/hooks/crm/useOportunidades";
+import type { Moneda } from "@/services/crm/oportunidades";
 
 export interface OportunidadFormState {
   nombre: string;
