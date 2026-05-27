@@ -1,6 +1,7 @@
 import { describe, it, expect } from "vitest";
 import {
   clienteInsertSchema,
+  cotizacionDraftInputSchema,
   cotizacionInputSchema,
   embarqueInsertSchema,
   notaSchema,
@@ -51,6 +52,9 @@ describe("mutationSchemas", () => {
     });
     it("acepta sin conceptos (borrador Paso 1)", () => {
       expect(cotizacionInputSchema.safeParse({ ...base, conceptos_venta: [] }).success).toBe(true);
+    });
+    it("usa schema de borrador para crear en Paso 1", () => {
+      expect(cotizacionDraftInputSchema.safeParse({ ...base, conceptos_venta: [] }).success).toBe(true);
     });
     it("rechaza vigencia 0", () => {
       expect(cotizacionInputSchema.safeParse({ ...base, vigencia_dias: 0 }).success).toBe(false);
