@@ -18,6 +18,7 @@ export const STORAGE_KEYS = {
   chunkErrorReload: "chunk-error-auto-reload",
   queryCache: "lc-query-cache-v1",
   loginLoggedPrefix: "lc:login-logged:",
+  appVersion: "lc-app-version",
 } as const;
 
 export const loginLoggedKey = (userId: string): string =>
@@ -92,4 +93,16 @@ export function markChunkReloadAttempted(): void {
 
 export function clearChunkReloadFlag(): void {
   safeSessionStorage.removeItem(STORAGE_KEYS.chunkErrorReload);
+}
+
+export function clearPersistedQueryCache(): void {
+  safeLocalStorage.removeItem(STORAGE_KEYS.queryCache);
+}
+
+export function getStoredAppVersion(): string | null {
+  return safeLocalStorage.getItem(STORAGE_KEYS.appVersion);
+}
+
+export function setStoredAppVersion(version: string): void {
+  safeLocalStorage.setItem(STORAGE_KEYS.appVersion, version);
 }

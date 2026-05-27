@@ -4,12 +4,25 @@ import "./index.css";
 import { AuthProvider } from "./contexts/AuthContext";
 import { OrganizationProvider } from "./contexts/OrganizationContext";
 import { ThemeProvider } from "./contexts/ThemeContext";
-import { clearChunkReloadFlag } from "./lib/browserStorage";
+import { APP_VERSION } from "./constants/appVersion";
+import {
+  clearChunkReloadFlag,
+  clearPersistedQueryCache,
+  getStoredAppVersion,
+  setStoredAppVersion,
+} from "./lib/browserStorage";
 import {
   isDynamicImportError,
   tryReloadForChunkError,
 } from "./lib/ui/dynamicImportError";
 import { queryClient } from "./lib/queryClient";
+
+const previousVersion = getStoredAppVersion();
+if (previousVersion !== APP_VERSION) {
+  queryClient.clear();
+  clearPersistedQueryCache();
+  setStoredAppVersion(APP_VERSION);
+}
 
 window.addEventListener("vite:preloadError", (event) => {
   event.preventDefault();
