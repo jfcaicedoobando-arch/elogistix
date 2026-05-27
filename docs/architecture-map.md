@@ -1,8 +1,9 @@
 # Architecture Map — Libre Carga
 
-Documento vivo (P2.11, generado en 11.45.0). Tabla de dominio →
-pages → hooks → services → lib para los dominios principales.
-Sirve para onboarding y como ancla del roadmap arquitectónico.
+Documento vivo (P2.11, actualizado en 11.59.1 tras el cierre del Bloque A
+de auditoría). Tabla de dominio → pages → hooks → services → lib para los
+dominios principales. Sirve para onboarding y como ancla del roadmap
+arquitectónico.
 
 Jerarquía obligatoria (enforz. por `eslint.config.js`):
 
