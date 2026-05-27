@@ -1,9 +1,11 @@
 import { Document, Page, Text, View } from "@react-pdf/renderer";
 import type { Tables } from "@/integrations/supabase/types";
+import { TASA_IVA } from "@/lib/financial/financialUtils";
 import { formatCurrency } from "@/lib/formatters";
 import { styles } from "../theme/styles";
 import { Footer } from "../components/Footer";
 import { DataTable, type PdfColumn } from "../components/DataTable";
+import { TotalesBox } from "../components/TotalesBox";
 import { ProformaHeader } from "./ProformaHeader";
 import {
   formatearDescripcionConcepto,
@@ -19,6 +21,7 @@ interface Props {
   embarque: EmbarqueLite;
   cliente?: ClienteLite;
   conceptosConsolidados: ConceptoConsolidado[];
+  tasaIva?: number;
 }
 
 interface Grupo {
@@ -58,13 +61,10 @@ function columnas(moneda: "USD" | "MXN", hayIva: boolean): PdfColumn<ConceptoCon
 }
 
 function SeccionMoneda({
-  grupos, moneda, conceptos, proforma,
-}: { grupos: Grupo[]; moneda: "USD" | "MXN"; conceptos: ConceptoConsolidado[]; proforma: ProformaRow }) {
+  grupos, moneda, conceptos,
+}: { grupos: Grupo[]; moneda: "USD" | "MXN"; conceptos: ConceptoConsolidado[] }) {
   const haySeccion = conceptos.some((c) => c.moneda === moneda);
   if (!haySeccion) return null;
-  const subtotal = Number(moneda === "USD" ? proforma.subtotal_usd : proforma.subtotal_mxn);
-  const iva = Number(moneda === "USD" ? proforma.iva_usd : proforma.iva_mxn);
-  const total = Number(moneda === "USD" ? proforma.total_usd : proforma.total_mxn);
   return (
     <>
       <Text style={styles.h4}>Conceptos en {moneda}</Text>
@@ -76,7 +76,7 @@ function SeccionMoneda({
         return (
           <View key={`${g.contenedor}-${moneda}`} wrap={false}>
             <Text style={styles.containerBlock}>
-              📦 Contenedor: {g.contenedor}{g.tipo ? `  (${g.tipo})` : ""}
+              Contenedor: {g.contenedor}{g.tipo ? `  ·  ${g.tipo}` : ""}
             </Text>
             <DataTable columns={columnas(moneda, hayIva)} rows={items} />
             <Text style={[styles.subtotalLine, { textAlign: "right", marginTop: 2 }]}>
@@ -85,26 +85,51 @@ function SeccionMoneda({
           </View>
         );
       })}
-      <View style={styles.subtotalBlock} wrap={false}>
-        <Text style={styles.subtotalLine}>Subtotal {moneda}: {formatCurrency(subtotal, moneda)}</Text>
-        {iva > 0 ? (
-          <Text style={styles.subtotalLine}>IVA {moneda}: {formatCurrency(iva, moneda)}</Text>
-        ) : null}
-        <Text style={styles.subtotalEmphasis}>Total {moneda}: {formatCurrency(total, moneda)}</Text>
-      </View>
     </>
   );
 }
 
-export function ProformaConsolidadaDocument({ proforma, embarque, cliente, conceptosConsolidados }: Props) {
+export function ProformaConsolidadaDocument({
+  proforma,
+  embarque,
+  cliente,
+  conceptosConsolidados,
+  tasaIva = TASA_IVA,
+}: Props) {
   const grupos = agrupar(conceptosConsolidados);
+  const tasaPct = Math.round(tasaIva * 100);
+  const hayUSD = conceptosConsolidados.some((c) => c.moneda === "USD");
+  const hayMXN = conceptosConsolidados.some((c) => c.moneda === "MXN");
+
+  const bloquesTotales = [];
+  if (hayUSD) {
+    bloquesTotales.push({
+      moneda: "USD" as const,
+      subtotal: Number(proforma.subtotal_usd),
+      iva: Number(proforma.iva_usd),
+      total: Number(proforma.total_usd),
+      tasaIvaPct: Number(proforma.iva_usd) > 0 ? tasaPct : undefined,
+    });
+  }
+  if (hayMXN) {
+    bloquesTotales.push({
+      moneda: "MXN" as const,
+      subtotal: Number(proforma.subtotal_mxn),
+      iva: Number(proforma.iva_mxn),
+      total: Number(proforma.total_mxn),
+      tasaIvaPct: tasaPct,
+    });
+  }
+
   return (
     <Document title={`${proforma.numero} - Proforma Consolidada`} author="Libre Carga">
       <Page size="LETTER" style={styles.page}>
         <ProformaHeader proforma={proforma} cliente={cliente ?? null} embarque={embarque} esConsolidada={true} />
         <Text style={styles.h3}>Conceptos por Contenedor</Text>
-        <SeccionMoneda grupos={grupos} moneda="USD" conceptos={conceptosConsolidados} proforma={proforma} />
-        <SeccionMoneda grupos={grupos} moneda="MXN" conceptos={conceptosConsolidados} proforma={proforma} />
+        <SeccionMoneda grupos={grupos} moneda="USD" conceptos={conceptosConsolidados} />
+        <SeccionMoneda grupos={grupos} moneda="MXN" conceptos={conceptosConsolidados} />
+
+        <TotalesBox bloques={bloquesTotales} />
 
         {proforma.notas ? (
           <>
@@ -115,9 +140,6 @@ export function ProformaConsolidadaDocument({ proforma, embarque, cliente, conce
           </>
         ) : null}
 
-        <Text style={styles.warningBox}>
-          ⚠ Este documento es una proforma consolidada y no tiene validez fiscal
-        </Text>
         <Footer />
       </Page>
     </Document>
