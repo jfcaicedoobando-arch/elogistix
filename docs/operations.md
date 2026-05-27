@@ -248,3 +248,38 @@ RLS antes de invitar más usuarios.
 - Actualizar la tabla §1 si Lovable Cloud cambia política de retención.
 - Cualquier procedimiento nuevo ejercido en incidente real debe agregarse aquí
   en menos de 7 días post-mortem.
+
+---
+
+## 9. Política de Release Candidate (RC) y code freeze
+
+A partir de la versión **12.0.0**, los cortes mayores siguen un ciclo
+RC → GA con code freeze parcial:
+
+### Code freeze durante RC
+
+Mientras la versión activa sea `X.Y.Z-rc.N`:
+
+- **Permitido**: fixes de bugs marcados como **bloqueante** o **alto** en el
+  checklist QA (`docs/rc-qa-checklist.md`), parches de seguridad HIGH/CRITICAL,
+  ajustes de documentación, release notes.
+- **Prohibido**: nuevas features, refactors no críticos, cambios de schema no
+  forzados por un bug, bumps de dependencias mayores. Esos cambios entran a
+  la rama de desarrollo de `X.(Y+1).0`.
+
+### Flujo del corte
+
+1. Cerrar gaps del checklist (`docs/rc-qa-checklist.md`).
+2. Ejecutar smoke de performance (`docs/rc-perf.md`).
+3. Dry-run de rollback (`docs/backups-rollback.md`).
+4. Bump `APP_VERSION` a `X.Y.Z-rc.1`, entrada en `CHANGELOG.md` y `src/pages/Changelog.tsx`.
+5. Ventana de testing: **5-7 días hábiles**.
+6. Si no hay show-stoppers → bump a `X.Y.Z` (GA). Si hay fix → `-rc.2` y la
+   ventana se recuenta.
+
+### Criterio de aceptación GA
+
+- 0 bugs abiertos en categoría **bloqueante** o **alto**.
+- 0 hallazgos HIGH/CRITICAL del scanner sin justificar en `@security-memory`.
+- Suite de tests verde (`bunx vitest run`).
+- Rollback dry-run exitoso en la ventana RC.
