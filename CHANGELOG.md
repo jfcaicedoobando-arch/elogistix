@@ -6,6 +6,15 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [11.65.0] - 2026-05-27
+- **D12 — Split de `src/routes.tsx`** (188 → 19 líneas) en 4 grupos por guarda + layout:
+  - `src/routes/publicRoutes.tsx` (19): login, tracking, redirects, `*` NotFound.
+  - `src/routes/portalRoutes.tsx` (32): /portal/* bajo `PortalProtectedRoute + PortalLayout`.
+  - `src/routes/adminRoutes.tsx` (32): /admin/* bajo super_admin + `AdminLayout`.
+  - `src/routes/appRoutes.tsx` (131): resto bajo `ProtectedRoute + Layout`, incluye sub-árbol /crm.
+- Orchestrator `src/routes.tsx` reducido a 19 líneas: importa los 4 fragments y los compone dentro de `<Routes>`.
+- Cero cambios visibles: paths, lazy chunks, guardas y layouts idénticos. Solo reorganización estructural.
+
 ## [11.64.0] - 2026-05-27
 - **Fase 2 — D16: casts HIGH = 0 en código productivo** (antes 37 reportados).
 - **Clasificador mejorado** (`scripts/lib/casts.ts`) con 2 reglas de degradación:
