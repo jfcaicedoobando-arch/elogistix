@@ -65,17 +65,19 @@ export function parseArribosEsteMes(stats: DashboardStats): ArribosEsteMes {
 
 export function parseResumenMesSiguiente(stats: DashboardStats): ResumenFacturacion {
   if (!stats?.resumenMesSiguiente) return EMPTY_RESUMEN;
-  const raw = stats.resumenMesSiguiente as Record<string, unknown>;
+  const result = resumenMesSiguienteSchema.safeParse(stats.resumenMesSiguiente);
+  if (!result.success) return EMPTY_RESUMEN;
+  const r = result.data;
   return {
-    totalEmbarques: Number(raw.totalEmbarques ?? 0),
-    ventaUSD: Number(raw.ventaUSD ?? 0),
-    costoUSD: Number(raw.costoUSD ?? 0),
-    profitUSD: Number(raw.profitUSD ?? 0),
-    ventaMXN: Number(raw.ventaMXN ?? 0),
-    costoMXN: Number(raw.costoMXN ?? 0),
-    profitMXN: Number(raw.profitMXN ?? 0),
-    facturados: Number(raw.facturados ?? 0),
-    nombreMes: String(raw.nombreMes ?? ""),
+    totalEmbarques: r.totalEmbarques,
+    ventaUSD: r.ventaUSD,
+    costoUSD: r.costoUSD,
+    profitUSD: r.profitUSD,
+    ventaMXN: r.ventaMXN,
+    costoMXN: r.costoMXN,
+    profitMXN: r.profitMXN,
+    facturados: r.facturados,
+    nombreMes: r.nombreMes,
   };
 }
 
