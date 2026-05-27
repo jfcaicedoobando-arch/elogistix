@@ -92,7 +92,7 @@ describe("Arquitectura — baseline de imports directos a supabase/client", () =
   it("Power of 10: 0 archivos productivos en src/ con > 200 líneas", () => {
     const { oversized } = runArchAudit(ROOT);
     const detalle = oversized
-      .map((o) => `  - ${o.path} (${o.lines} líneas)`)
+      .map((o) => `  - ${o.file} (${o.lines} líneas)`)
       .join("\n");
     expect(
       oversized,
