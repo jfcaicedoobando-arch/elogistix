@@ -71,12 +71,13 @@ export default function Facturacion() {
         </TabsContent>
 
         <TabsContent value="pendientes">
-          <TabProformasPendientes />
+          <TabProformasPendientes isInRange={isInRange} />
         </TabsContent>
 
         <TabsContent value="proformas">
-          <TabProformas />
+          <TabProformas isInRange={isInRange} />
         </TabsContent>
+
 
         <TabsContent value="facturas" className="space-y-4">
           <Card>
