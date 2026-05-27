@@ -8,7 +8,10 @@ import type { ProformaConFactura } from "@/hooks/embarque/useProformas";
 const DEFAULT_PAGE_SIZE = 20;
 export type FiltroEstadoProforma = "todas" | "pendiente" | "facturada";
 
-export function useTabProformasState(proformas: ProformaConFactura[]) {
+export function useTabProformasState(
+  proformas: ProformaConFactura[],
+  isInRange: (fecha: string | null | undefined) => boolean = () => true,
+) {
   const [search, setSearch] = useState("");
   const [filtroEstado, setFiltroEstado] = useState<FiltroEstadoProforma>("todas");
   const [page, setPage] = useState(0);
@@ -18,6 +21,7 @@ export function useTabProformasState(proformas: ProformaConFactura[]) {
     const q = search.trim().toLowerCase();
     return proformas.filter((p) => {
       if (filtroEstado !== "todas" && (p.estado_proforma ?? "pendiente") !== filtroEstado) return false;
+      if (!isInRange(p.fecha_emision)) return false;
       if (!q) return true;
       return (
         p.numero.toLowerCase().includes(q) ||
@@ -26,7 +30,8 @@ export function useTabProformasState(proformas: ProformaConFactura[]) {
         (p.folio_factura_externa ?? "").toLowerCase().includes(q)
       );
     });
-  }, [proformas, search, filtroEstado]);
+  }, [proformas, search, filtroEstado, isInRange]);
+
 
   const counts = useMemo(
     () => ({

@@ -16,7 +16,10 @@ import {
   totalesProformasSeleccionadas,
 } from "@/lib/domain/proforma";
 
-export function useTabProformasPendientesController() {
+export function useTabProformasPendientesController(opts?: {
+  isInRange?: (fecha: string | null | undefined) => boolean;
+}) {
+  const isInRange = opts?.isInRange ?? (() => true);
   const [search, setSearch] = useState("");
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [collapsed, setCollapsed] = useState<Set<string>>(new Set());
@@ -29,15 +32,19 @@ export function useTabProformasPendientesController() {
 
   const filtradas = useMemo(() => {
     const q = search.trim().toLowerCase();
-    if (!q) return proformas;
-    return proformas.filter((p) =>
-      p.expediente.toLowerCase().includes(q) ||
-      p.cliente_nombre.toLowerCase().includes(q) ||
-      (p.bl_master ?? "").toLowerCase().includes(q) ||
-      (p.embarques?.bl_master ?? "").toLowerCase().includes(q) ||
-      p.numero.toLowerCase().includes(q),
-    );
-  }, [proformas, search]);
+    return proformas.filter((p) => {
+      if (!isInRange(p.fecha_emision)) return false;
+      if (!q) return true;
+      return (
+        p.expediente.toLowerCase().includes(q) ||
+        p.cliente_nombre.toLowerCase().includes(q) ||
+        (p.bl_master ?? "").toLowerCase().includes(q) ||
+        (p.embarques?.bl_master ?? "").toLowerCase().includes(q) ||
+        p.numero.toLowerCase().includes(q)
+      );
+    });
+  }, [proformas, search, isInRange]);
+
 
   const grupos = useMemo(
     () => agruparProformasPendientes<ProformaPendienteConEmbarque>(filtradas),
