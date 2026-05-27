@@ -7,6 +7,11 @@ import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
 import { Save } from "lucide-react";
 import { useConfigGlobalCategoria, useUpdateConfiguracionGlobal } from "@/hooks/configuracion";
+import {
+  parseConfigSafe,
+  plataformaConfigSchema,
+  seguridadConfigSchema,
+} from "@/hooks/configuracion/configSchemas";
 
 export default function TabSeguridadGlobal() {
   const config = useConfigGlobalCategoria("seguridad");
@@ -23,12 +28,14 @@ export default function TabSeguridadGlobal() {
   const [emailSoporte, setEmailSoporte] = useState("");
 
   if (Object.keys(config).length > 0 && !initialized) {
-    setAutoConfirmar(config.auto_confirmar_email as boolean ?? false);
-    setLongitudPassword(config.longitud_minima_password as number ?? 8);
-    setExpiracionSesion(config.expiracion_sesion_horas as number ?? 24);
-    setMaxIntentos(config.max_intentos_login as number ?? 5);
-    setRegistroPublico(config.permitir_registro_publico as boolean ?? false);
-    setEmailSoporte((configPlataforma.email_soporte as string) || "");
+    const seg = parseConfigSafe(seguridadConfigSchema, config);
+    const plat = parseConfigSafe(plataformaConfigSchema, configPlataforma);
+    setAutoConfirmar(seg.auto_confirmar_email);
+    setLongitudPassword(seg.longitud_minima_password);
+    setExpiracionSesion(seg.expiracion_sesion_horas);
+    setMaxIntentos(seg.max_intentos_login);
+    setRegistroPublico(seg.permitir_registro_publico);
+    setEmailSoporte(plat.email_soporte);
     setInitialized(true);
   }
 

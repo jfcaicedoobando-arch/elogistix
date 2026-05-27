@@ -6,6 +6,10 @@ import {
   sanitizeStorageKey,
 } from '@/lib/storage';
 import type { TablesInsert } from '@/integrations/supabase/types';
+import {
+  idempotencyClaimSchema,
+  isCachedClaim,
+} from '@/services/embarque/idempotencyClaimSchema';
 
 type DocumentoEstado = TablesInsert<'documentos_embarque'>['estado'];
 
@@ -117,11 +121,10 @@ export async function uploadDocumentoEmbarque(
     _key: requestId,
     _fn: 'upload_documento_embarque',
   });
-  if (claim && typeof claim === 'object' && !Array.isArray(claim)) {
-    const c = claim as Record<string, unknown>;
-    if (!c.__idempotency_pending && typeof c.path === 'string') {
-      return { path: c.path as string, fileName: (c.fileName as string) ?? file.name, cached: true };
-    }
+  const parsedClaim = idempotencyClaimSchema.safeParse(claim);
+  if (parsedClaim.success && isCachedClaim(parsedClaim.data)) {
+    const c = parsedClaim.data;
+    return { path: c.path, fileName: c.fileName ?? file.name, cached: true };
   }
 
   // 3) Upload y update de la fila. Usamos .select() para detectar si el UPDATE
