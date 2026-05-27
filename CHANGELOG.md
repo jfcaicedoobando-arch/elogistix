@@ -6,6 +6,15 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [11.61.0] - 2026-05-27
+- **Bloque C9 — Consistencia hooks/crm**: helpers no-hook movidos a `src/lib/crm/`:
+  - `hooks/crm/oportunidadFormState.ts` → `lib/crm/oportunidadFormState.ts`
+  - `hooks/crm/oportunidadFormHelpers.ts` → `lib/crm/oportunidadFormHelpers.ts`
+  - `hooks/crm/leadEditDirty.ts` → `lib/crm/leadEditDirty.ts`
+  - Eliminados stubs de re-export `hooks/crm/oportunidadPayload.ts` y `hooks/crm/automatizacionesEtapaActions.ts` (sin consumidores externos).
+- `hooks/crm/` queda libre de archivos no-hook: 100% de los `.ts` ahí son hooks `useXxx`.
+- C11 (duplicados `Configuracion.tsx` / `TabFacturacion.tsx`) descartado: las carpetas de dominio (`admin-org`/`crm`, `configuracion`/`embarque`) ya desambiguan; renombrar sería cosmético con alto blast radius.
+
 ## [11.60.0] - 2026-05-27
 - **Bloque B — Power of 10 cerrado**: 0 archivos productivos >200 líneas (antes 3).
   - `services/crm/leads.ts` (209) → carpeta `services/crm/leads/{queries,mutations,bulk,convertir,index}` (≤106 líneas cada uno). API pública intacta vía barrel.
