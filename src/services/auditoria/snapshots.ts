@@ -11,7 +11,8 @@ export async function fetchAuditoriaSnapshots(
     .from("auditoria_snapshots")
     .select("*")
     .gte("fecha", desdeIso)
-    .order("fecha", { ascending: true });
+    .order("fecha", { ascending: true })
+    .limit(2000); // defensivo: cap por org (snapshots diarios → años de margen)
   if (error) throw error;
   return (data ?? []) as AuditoriaSnapshot[];
 }
