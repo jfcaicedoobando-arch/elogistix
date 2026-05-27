@@ -62,16 +62,10 @@ export function isTestFile(rel: string): boolean {
   return /(^|\/)__tests__\//.test(rel) || /\.(test|spec)\.tsx?$/.test(rel);
 }
 
-/** Regla 2: línea con `// SAFE-CAST:` (en la propia línea o la anterior) degrada HIGH → LOW. */
+/** Regla 2: `// SAFE-CAST:` en la propia línea o hasta 6 líneas arriba degrada HIGH → LOW. */
 function hasSafeCastMarker(lines: string[], idx: number): boolean {
-  const cur = lines[idx] ?? "";
-  if (/\/\/\s*SAFE-CAST:/.test(cur)) return true;
-  // Buscar hacia arriba saltando líneas de comentario hasta 4 líneas.
-  for (let k = idx - 1; k >= Math.max(0, idx - 4); k--) {
-    const l = (lines[k] ?? "").trim();
-    if (/\/\/\s*SAFE-CAST:/.test(l)) return true;
-    if (l === "" || l.startsWith("//") || l.startsWith("*")) continue;
-    break;
+  for (let k = idx; k >= Math.max(0, idx - 6); k--) {
+    if (/\/\/\s*SAFE-CAST:/.test(lines[k] ?? "")) return true;
   }
   return false;
 }
