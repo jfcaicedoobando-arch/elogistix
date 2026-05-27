@@ -56,7 +56,7 @@ export function useDescargarProformaPdf() {
         }
 
         const { generarPdfProforma } = await import("@/generators/proformaPdf");
-        generarPdfProforma({
+        await generarPdfProforma({
           proforma,
           embarque,
           conceptos,

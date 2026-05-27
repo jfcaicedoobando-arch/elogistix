@@ -23,7 +23,7 @@ import { useRegisterBreadcrumbLabel } from "@/contexts/BreadcrumbContext";
 // Lazy-loaded PDF generator (jsPDF + autotable are heavy; only load on demand)
 const handleExportarPdf = async (cotizacion: Parameters<typeof import("@/generators/cotizacionPdf").generarPdfCotizacion>[0], tasaIva: number) => {
   const { generarPdfCotizacion } = await import("@/generators/cotizacionPdf");
-  generarPdfCotizacion(cotizacion, tasaIva);
+  await generarPdfCotizacion(cotizacion, tasaIva);
 };
 
 export default function CotizacionDetalle() {
