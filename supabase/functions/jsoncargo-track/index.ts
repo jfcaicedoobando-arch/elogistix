@@ -162,5 +162,12 @@ Deno.serve(async (req) => {
     return errorResponse(msg.replace(/^401:/, ""), 401, cors);
   }
 
+  // SEC pre-RC: solo operadores/admins pueden gastar cuota del proveedor.
+  const { isGlobalAdmin, orgId } = await checkAdminAccess(auth.adminClient, auth.userId);
+  if (!isGlobalAdmin && !orgId) {
+    log.finish(403, "role_denied", { user_id: auth.userId });
+    return errorResponse("Solo operadores pueden sincronizar tracking", 403, cors);
+  }
+
   return runSync({ req, auth, apiKey, log, cors });
 });
