@@ -1,0 +1,74 @@
+{
+  "version": "11.62.0",
+  "generatedAt": "2026-05-27T03:59:59.330Z",
+  "arch": {
+    "hooksContextsDirectImports": [],
+    "componentsPagesDirectImports": [],
+    "oversized": []
+  },
+  "casts": {
+    "total": 751,
+    "bySeverity": {
+      "SAFE": 296,
+      "LOW": 7,
+      "MEDIUM": 411,
+      "HIGH": 37,
+      "CRITICAL": 0
+    },
+    "topFiles": [
+      {
+        "file": "src/services/embarque/queries/exportListado.ts",
+        "total": 7,
+        "weight": 18
+      },
+      {
+        "file": "src/lib/parsers/dashboard.ts",
+        "total": 7,
+        "weight": 14
+      },
+      {
+        "file": "src/components/shared/dataTable/__tests__/DataTable.regression.test.tsx",
+        "total": 5,
+        "weight": 13
+      },
+      {
+        "file": "src/components/admin/TabSeguridadGlobal.tsx",
+        "total": 6,
+        "weight": 12
+      },
+      {
+        "file": "src/lib/audit/diffFields.ts",
+        "total": 12,
+        "weight": 12
+      },
+      {
+        "file": "src/lib/mappers/embarqueToDb.ts",
+        "total": 6,
+        "weight": 12
+      },
+      {
+        "file": "src/services/__tests__/tracking.test.ts",
+        "total": 4,
+        "weight": 12
+      },
+      {
+        "file": "src/services/embarque/documentos.ts",
+        "total": 6,
+        "weight": 12
+      },
+      {
+        "file": "src/lib/csv/leadsCsv.ts",
+        "total": 5,
+        "weight": 11
+      },
+      {
+        "file": "src/components/auditoria/HallazgosFiltros.tsx",
+        "total": 5,
+        "weight": 10
+      }
+    ]
+  },
+  "tests": {
+    "violations": []
+  }
+}
