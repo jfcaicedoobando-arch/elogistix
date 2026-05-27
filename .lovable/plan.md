@@ -1,52 +1,91 @@
-# Auditoría arquitectónica — Libre Carga (estado 11.61.0)
 
-> **Bloques A y B cerrados.** Diagnóstico original archivado en
-> `mem://audit/pendings`. Este documento refleja el estado **actual** post
-> migración + plan vigente para Bloques C/D.
+# Bloque D15 — Reporte CI de violaciones (v11.62.0)
 
-## 1. Métricas baseline (post Bloques A + B)
+## Objetivo
 
-| Métrica | 11.45.0 (diagnóstico) | 11.60.0 (actual) | Meta |
-|---|---:|---:|---:|
-| Hooks con `@/integrations/supabase/client` directo | 28 | **0** ✅ | 0 |
-| Components con Supabase directo | 1 | **0** ✅ | 0 |
-| Contexts con Supabase directo | 5 | **0** ✅ | 0 |
-| Pages con Supabase directo | 0 | **0** ✅ | 0 |
-| Archivos productivos >200 líneas (no shadcn) | 2 | **0** ✅ | 0 |
-| `any` en código productivo | 0 | **0** ✅ | 0 |
-| `console.*` en código productivo | 0 | **0** ✅ | 0 |
-| Suites de tests en `services/` | — | **18** ✅ | ≥10 |
-| Total tests | 709 | **728** | crecer |
-| Subdominios en `services/` | 25 | **29** | — |
-| `as` casts totales | 458 | **720** (37 HIGH) | bajar HIGH |
+Generar un **reporte único consolidado** (Markdown + JSON) que el CI publique en cada PR/push, agregando violaciones de capa, archivos oversized, casts HIGH/CRITICAL y tests skipeados. Hoy estas señales existen sueltas (`audit:arch`, `audit:casts`, `audit:tests`) pero no se publican como artefacto ni se resumen en un único lugar.
 
-## 2. Bloque A — ✅ CERRADO (11.54.0 → 11.59.1)
+## Alcance
 
-33 hooks/contexts migrados a `services/{admin,crm,portal,embarque,auth,organization}/`.
-Detalle por lote en historial de CHANGELOG. Test `architecture-baseline.test.ts`
-con `Set` de excepciones vacío. Lint clean en `src/`.
+1. Nuevo script `scripts/audit-report.ts` que:
+   - Reutiliza la lógica de `audit-architecture.ts` (imports directos a `@/integrations/supabase/client` en hooks/contexts/components/pages + oversized >200 líneas).
+   - Reutiliza la lógica de `audit-casts.ts` (cuenta HIGH + CRITICAL y top-10 archivos por peso).
+   - Reutiliza la lógica de `audit-tests.ts` (skip/only/todo sin issue, títulos duplicados).
+   - Refactor mínimo: extraer las funciones `walk`, `findDirectClientImports`, `findOversized`, `scan` (casts) y `audit` (tests) a módulos puros bajo `scripts/lib/` para que sean importables sin ejecutar side-effects. Los 3 scripts existentes siguen funcionando como CLIs (delgados, < 50 líneas cada uno).
+   - Escribe dos artefactos en `reports/`:
+     - `reports/audit-report.md` — resumen humano (tablas + top issues).
+     - `reports/audit-report.json` — máquina-legible: `{ arch: {...}, casts: {...}, tests: {...}, generatedAt, version }`.
+   - Exit code 0 siempre (es informativo; los gates duros viven en `architecture-baseline.test.ts` y `audit:tests`).
 
-## 3. Bloque B — ✅ CERRADO (11.60.0)
+2. Nuevo script auxiliar `scripts/audit-summary.ts` que imprime el resumen en consola para usarlo como step de CI legible.
 
-- **B1.** `services/crm/leads.ts` (209) → `services/crm/leads/{queries,mutations,bulk,convertir,index}.ts` (≤106 cada uno).
-- **B2.** `components/crm/ImportarLeadsCsvDialog.tsx` (201→67): parser/mapper a `lib/csv/leadsCsv.ts` (+ tests), hook `useImportarLeadsCsv`, sub-componente `ImportarLeadsCsvPreview`.
-- **B3.** `components/shared/BulkImportDialog.tsx` (200→114): `BulkImportDialogParts.tsx` + `lib/csv/downloadCsvTemplate.ts`.
-- **B4.** `lib/query/index.ts` (256→65): partido por dominio en `lib/query/keys/*.ts` (14 archivos). Test `keys-shape.test.ts` protege la paridad.
+3. Tests:
+   - `scripts/__tests__/audit-report.test.ts` que ejecuta el reporte contra `src/` y valida shape JSON, conteos básicos (hooksContextsDirectImports === 0, oversized === 0, sin tests skipeados) y que ambos archivos se generan.
 
-## 4. Pendiente — Bloques C/D
+4. `package.json`:
+   - Añadir `"audit:report": "tsx scripts/audit-report.ts"`.
+   - Añadir `"audit:all": "bun run audit:arch && bun run audit:casts && bun run audit:tests && bun run audit:report"`.
 
-### Bloque C — Consistencia
-- **C9.** ✅ CERRADO (11.61.0). `hooks/crm/` ya no contiene archivos no-hook: `oportunidadFormState/Helpers` y `leadEditDirty` migrados a `lib/crm/`; stubs `oportunidadPayload` y `automatizacionesEtapaActions` eliminados.
-- **C10.** Auditar 25 `style={{…}}` inline → tokens Tailwind / semánticos.
-- **C11.** ❌ Descartado. Los duplicados `Configuracion.tsx` y `TabFacturacion.tsx` viven en carpetas de dominio distintas que ya desambiguan el path; renombrar es cosmético con blast radius alto.
+5. `.github/workflows/ci.yml`:
+   - Nuevo step **"Architecture & cast report"** después de Tests, ejecuta `bun run audit:report`.
+   - Step **"Upload audit report"** con `actions/upload-artifact@v4` subiendo `reports/audit-report.md` y `reports/audit-report.json` (retención 30 días).
+   - Step **"PR summary"** sólo en `pull_request`: appendea `reports/audit-report.md` a `$GITHUB_STEP_SUMMARY` para que aparezca en la pestaña Summary del run.
 
-### Bloque D — Opcional
-- **D12.** Dividir `routes.tsx` (188) en `routes/{admin,portal,crm,public}.tsx`.
-- **D13.** Vigilar archivos 180–200 líneas (lista en mem://audit/pendings).
-- **D14.** Test arquitectónico que bloquee Supabase directo en `hooks/`/`contexts/`. **YA EXISTE** vía `architecture-baseline.test.ts` + `scripts/audit-architecture.ts`. Pendiente: añadir aserción `archivosProductivosOver200 === 0` como guardrail.
-- **D15.** Reporte CI automático con violaciones de capa y archivos oversized.
-- **D16.** Reducir casts HIGH (37 → 0) migrando boundaries críticos a `fromDb(data, ZodSchema)` (`services/embarque/mutations.ts`, `services/portal/queries.ts`, RPCs).
+6. `.gitignore`: añadir `reports/` (artefactos generados, no versionados).
 
-## 5. Orden recomendado
+7. Docs:
+   - `CHANGELOG.md` → entrada `[11.62.0]` con bullet del nuevo reporte CI.
+   - `src/constants/appVersion.ts` → `11.62.0`.
+   - `.lovable/plan.md` → marcar **D15 ✅ CERRADO** y dejar pendientes D12, D14 (guardrail), D16.
+   - `docs/auditoria.md` → sección nueva "Reporte CI automático" explicando dónde descargar el artefacto y qué contiene.
 
-Mayor ROI ahora: **D16** (casts HIGH, mejora seguridad runtime) o **C9/C11** (cosmético, fácil). Dejar D12/D15 para cuando haya hueco.
+## Detalles técnicos
+
+- Estructura `scripts/lib/`:
+  ```
+  scripts/lib/walk.ts            // walk() compartido
+  scripts/lib/arch.ts            // findDirectClientImports + findOversized
+  scripts/lib/casts.ts           // scan() + classify*
+  scripts/lib/tests.ts           // audit() de tests
+  ```
+- Los 3 scripts CLI existentes pasan a importar de `./lib/*` (cambio interno, salida idéntica).
+- Cada módulo < 200 líneas; el script orquestador `audit-report.ts` < 150 líneas.
+- Schema JSON del reporte:
+  ```json
+  {
+    "version": "11.62.0",
+    "generatedAt": "2026-05-27T...",
+    "arch": {
+      "hooksContextsDirectImports": [],
+      "componentsPagesDirectImports": [],
+      "oversized": [{ "file": "...", "lines": 0 }]
+    },
+    "casts": {
+      "total": 720,
+      "bySeverity": { "SAFE": 0, "LOW": 0, "MEDIUM": 0, "HIGH": 37, "CRITICAL": 0 },
+      "topFiles": [{ "file": "...", "weight": 0, "total": 0 }]
+    },
+    "tests": {
+      "violations": []
+    }
+  }
+  ```
+
+## Out of scope
+
+- No se reduce el conteo de casts HIGH (eso es D16).
+- No se parte `routes.tsx` (D12).
+- No se añade la aserción `archivosProductivosOver200 === 0` al test de arquitectura (D14 — separado, breve).
+- No se publica en PR como comment-bot (sólo `$GITHUB_STEP_SUMMARY` y artifact); abrir bot/Octokit es overhead innecesario.
+
+## Validación
+
+- `bun run audit:report` localmente produce `reports/audit-report.md` y `.json` con los conteos esperados (0 violations de capa, 0 oversized, ~37 HIGH casts, 0 test hygiene issues).
+- `bun run test` sigue verde (728 + 1 nuevo).
+- Lint clean en `scripts/`.
+
+## Versión / changelog
+
+- `APP_VERSION = "11.62.0"`.
+- `CHANGELOG.md` entrada nueva.
+- `.lovable/plan.md` actualizado.
