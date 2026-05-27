@@ -97,7 +97,7 @@ const conceptoVentaSchema = z.object({
   total: z.number().nonnegative("Total: no puede ser negativo."),
 }).passthrough();
 
-export const cotizacionInputSchema = z.object({
+const cotizacionBaseSchema = z.object({
   cliente_nombre: nonEmpty("Cliente", 200),
   es_prospecto: z.boolean(),
   cliente_id: uuidSchema.nullable().optional(),
@@ -114,9 +114,14 @@ export const cotizacionInputSchema = z.object({
     .min(1, "Vigencia: mínimo 1 día.")
     .max(365, "Vigencia: máximo 365 días."),
   subtotal: z.number().nonnegative("Subtotal: no puede ser negativo."),
+}).passthrough();
+
+export const cotizacionDraftInputSchema = cotizacionBaseSchema.extend({
   // Permitido vacío al crear el borrador en Paso 1; los conceptos se capturan en Paso 3.
   conceptos_venta: z.array(conceptoVentaSchema),
 }).passthrough();
+
+export const cotizacionInputSchema = cotizacionDraftInputSchema;
 
 // ── Embarque ──────────────────────────────────────────────────────────
 
