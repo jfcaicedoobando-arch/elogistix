@@ -9,8 +9,9 @@ import { formatCurrency, formatDate, toTitleCase } from "@/lib/formatters";
 import { montoPrincipalProforma } from "@/lib/domain/proforma";
 import { useTabProformasPendientesController } from "@/hooks/facturacion";
 
-export function TabProformasPendientes() {
-  const c = useTabProformasPendientesController();
+export function TabProformasPendientes({ isInRange }: { isInRange?: (fecha: string | null | undefined) => boolean }) {
+  const c = useTabProformasPendientesController({ isInRange });
+
 
   function renderGrupos() {
     if (c.isLoading) {

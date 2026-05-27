@@ -12,14 +12,17 @@ import { useTabProformasState, type FiltroEstadoProforma } from "./useTabProform
 
 export type { FiltroEstadoProforma };
 
-export function useTabProformasController() {
+export function useTabProformasController(opts?: {
+  isInRange?: (fecha: string | null | undefined) => boolean;
+}) {
   const [proformaAFacturar, setProformaAFacturar] = useState<ProformaRow | null>(null);
 
   const { data: proformas = [], isLoading } = useProformas();
   const { descargar, downloadingId } = useDescargarProformaPdf();
 
-  const state = useTabProformasState(proformas);
+  const state = useTabProformasState(proformas, opts?.isInRange);
   const { filtered, paginated, counts, totalPages, search, filtroEstado, page, pageSize } = state;
+
 
   const csvColumns = [
     { key: "numero", label: "# Proforma" },
