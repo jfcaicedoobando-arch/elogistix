@@ -6,6 +6,14 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [11.60.0] - 2026-05-27
+- **Bloque B — Power of 10 cerrado**: 0 archivos productivos >200 líneas (antes 3).
+  - `services/crm/leads.ts` (209) → carpeta `services/crm/leads/{queries,mutations,bulk,convertir,index}` (≤106 líneas cada uno). API pública intacta vía barrel.
+  - `components/crm/ImportarLeadsCsvDialog.tsx` (201 → 67): parser/mapper extraídos a `lib/csv/leadsCsv.ts` (puro + tests `leadsCsv.test.ts`), orquestación a `hooks/crm/useImportarLeadsCsv.ts`, preview a `components/crm/ImportarLeadsCsvPreview.tsx`.
+  - `components/shared/BulkImportDialog.tsx` (200 → 114): `BulkImportBody`/`BulkImportFooter` movidos a `BulkImportDialogParts.tsx` y `downloadCsvTemplate` a `lib/csv/downloadCsvTemplate.ts`.
+  - `lib/query/index.ts` (256 → 65): query-key factory partido por dominio en `lib/query/keys/{embarques,proformas,cotizaciones,clientes,facturas,proveedores,catalogos,dashboard,admin,crm,portal,auditoria,facturacion,misc}` (≤66 líneas cada uno). Nuevo test `keys-shape.test.ts` valida paridad de dominios y firmas.
+- Suite: 111 archivos / 728 tests (+2 archivos, +12 tests).
+
 ## [11.59.2] - 2026-05-27
 - **Docs refresh post Bloque A**: actualizados `.lovable/plan.md`, `ARCHITECTURE.md`, `docs/architecture-map.md`, `docs/auditoria.md`, `docs/power10-baseline.md`, `docs/tests-audit.md`, `docs/cast-audit.md` (regenerado: 720 casts, 37 HIGH) y `docs/strict-mode-roadmap.md`. Reflejan el nuevo baseline: **0** hooks/contexts/components/pages con import directo a `@/integrations/supabase/client`, 18 suites en `services/`, 109 archivos / 716 tests, 3 archivos productivos >200 líneas (leads.ts 210, ImportarLeadsCsvDialog 202, BulkImportDialog 201). Plan vigente: Bloques B/C/D.
 
