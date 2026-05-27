@@ -14,6 +14,7 @@ Para el histórico anterior a `11.21.0` consultar el git history del repositorio
   - `client-error-log`: rate-limit aplazado por ausencia de primitivas de backend (ver `<no-backend-rate-limiting>`); el endpoint sigue siendo público intencionalmente para capturar crashes pre-auth. Documentado en `@security-memory` como riesgo aceptado.
 - **Versión**: bump a `12.0.0-rc.1` (semver pre-release). Próxima ventana de 5-7 días para QA; sin show-stoppers → GA `12.0.0`.
 - **Docs**: `docs/rc-qa-checklist.md §L` actualizado con 3 ✅ adicionales; `docs/release-notes-12.0.md` ajustado.
+- **Tooling de corte GA**: nuevo `scripts/ga-gate.sh` (gate automatizado: tests + lint + versión exacta + checklist sin pendientes + perf sin placeholders), `docs/ga-cutover.md` (procedimiento paso a paso con smoke negativo/positivo + ventana de hipercuidado 48h), `docs/templates/ga-announcement.md` (comunicado es-MX listo para rellenar). El gate **bloquea** cortes prematuros: con la versión actual `12.0.0-rc.1` falla en el check #3 hasta que se haga el bump manual a `12.0.0`.
 
 ## [11.71.0] - 2026-05-27
 - **Preparación Release Candidate (paso 1 de 2).** Cierre de gaps pre-RC antes de cortar `12.0.0-rc.1`.
