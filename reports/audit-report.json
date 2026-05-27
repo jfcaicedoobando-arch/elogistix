@@ -1,17 +1,17 @@
 {
   "version": "11.62.0",
-  "generatedAt": "2026-05-27T03:59:59.330Z",
+  "generatedAt": "2026-05-27T04:03:50.477Z",
   "arch": {
     "hooksContextsDirectImports": [],
     "componentsPagesDirectImports": [],
     "oversized": []
   },
   "casts": {
-    "total": 751,
+    "total": 753,
     "bySeverity": {
-      "SAFE": 296,
+      "SAFE": 297,
       "LOW": 7,
-      "MEDIUM": 411,
+      "MEDIUM": 412,
       "HIGH": 37,
       "CRITICAL": 0
     },

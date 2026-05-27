@@ -1,6 +1,6 @@
 # Audit Report — 11.62.0
 
-Generado: 2026-05-27T03:59:59.330Z
+Generado: 2026-05-27T04:03:50.477Z
 
 ## Resumen
 
@@ -9,7 +9,7 @@ Generado: 2026-05-27T03:59:59.330Z
 | Capa (Supabase directo en hooks/contexts) | ✅ | 0 archivos |
 | Capa (Supabase directo en components/pages) | ✅ | 0 archivos |
 | Power-of-10 (>200 líneas) | ✅ | 0 archivos |
-| Casts HIGH + CRITICAL | ⚠️ | 37 / 751 |
+| Casts HIGH + CRITICAL | ⚠️ | 37 / 753 |
 | Higiene de tests | ✅ | 0 violaciones |
 
 ## Arquitectura
@@ -25,13 +25,13 @@ Generado: 2026-05-27T03:59:59.330Z
 
 ## Casts
 
-Total: **751** — HIGH: **37**, CRITICAL: **0**
+Total: **753** — HIGH: **37**, CRITICAL: **0**
 
 | Severidad | Cantidad |
 |---|---:|
-| SAFE | 296 |
+| SAFE | 297 |
 | LOW | 7 |
-| MEDIUM | 411 |
+| MEDIUM | 412 |
 | HIGH | 37 |
 | CRITICAL | 0 |
 
