@@ -49,8 +49,8 @@ describe("mutationSchemas", () => {
     it("acepta input completo", () => {
       expect(cotizacionInputSchema.safeParse(base).success).toBe(true);
     });
-    it("rechaza sin conceptos", () => {
-      expect(cotizacionInputSchema.safeParse({ ...base, conceptos_venta: [] }).success).toBe(false);
+    it("acepta sin conceptos (borrador Paso 1)", () => {
+      expect(cotizacionInputSchema.safeParse({ ...base, conceptos_venta: [] }).success).toBe(true);
     });
     it("rechaza vigencia 0", () => {
       expect(cotizacionInputSchema.safeParse({ ...base, vigencia_dias: 0 }).success).toBe(false);
