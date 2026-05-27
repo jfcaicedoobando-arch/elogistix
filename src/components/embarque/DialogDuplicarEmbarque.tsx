@@ -107,7 +107,7 @@ export default function DialogDuplicarEmbarque({ embarque, open, onOpenChange }:
         error,
         context: { embarqueOrigenId: embarque.id, copias: copias.length },
         error: error,
-        method: "CATCH",
+        method: "HANDLE_CONFIRMAR",
       });
     }
   };

@@ -47,7 +47,7 @@ export default function LeadDetalle() {
         title: "No se pudo guardar",
         description: e instanceof Error ? e.message : undefined,
         error: e,
-        method: "CATCH",
+        method: "HANDLE_SAVE",
       });
     }
   };
@@ -63,7 +63,7 @@ export default function LeadDetalle() {
         title: "No se pudo eliminar",
         description: e instanceof Error ? e.message : undefined,
         error: e,
-        method: "CATCH",
+        method: "HANDLE_DELETE",
       });
     }
   };

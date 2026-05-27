@@ -28,7 +28,7 @@ export function StepDocumentos({ documentos, onFileChange, errors = {} }: Props)
     if (file) {
       const err = validateArchivo({ nombre, size: file.size, type: file.type });
       if (err) {
-        notifyError(toast, { title: "Documento rechazado", message: err, method: "IF", errorCode: ERROR_CODES.VALIDATION_FAILED });
+        notifyError(toast, { title: "Documento rechazado", message: err, method: "HANDLE_FILE_CHANGE", errorCode: ERROR_CODES.VALIDATION_FAILED });
         return;
       }
     }

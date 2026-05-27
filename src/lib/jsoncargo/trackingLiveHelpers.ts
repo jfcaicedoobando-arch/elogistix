@@ -74,7 +74,7 @@ export function handleSyncResult(res: SyncResult, toast: ToastFn): void {
     });
     return;
   }
-  notifyError(toast, { title: "No se pudo sincronizar", description: res.error ?? "Error desconocido", method: "IF", errorCode: ERROR_CODES.VALIDATION_FAILED });
+  notifyError(toast, { title: "No se pudo sincronizar", description: res.error ?? "Error desconocido", method: "HANDLE_SYNC_RESULT", errorCode: ERROR_CODES.VALIDATION_FAILED });
 }
 
 export function handleSyncError(err: unknown, toast: ToastFn, naviera: string | null): void {
@@ -85,7 +85,7 @@ export function handleSyncError(err: unknown, toast: ToastFn, naviera: string | 
     });
     return;
   }
-  notifyError(toast, { title: "Error de tracking", description: err instanceof Error ? err.message : "Error", method: "IF", errorCode: ERROR_CODES.VALIDATION_FAILED });
+  notifyError(toast, { title: "Error de tracking", description: err instanceof Error ? err.message : "Error", method: "HANDLE_SYNC_ERROR", errorCode: ERROR_CODES.VALIDATION_FAILED });
 }
 
 export function buildApplyFechasArgs(embarqueId: string, f: FechasPropuestas) {

@@ -66,7 +66,7 @@ export default function ConvertirLeadDialog({ open, onOpenChange, lead }: Props)
         title: "No se pudo convertir el lead",
         description: e instanceof Error ? e.message : undefined,
         error: e,
-        method: "CATCH",
+        method: "HANDLE",
       });
     }
   };

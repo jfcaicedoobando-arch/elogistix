@@ -50,7 +50,7 @@ export function useImportarLeadsCsv({ onDone }: UseImportarLeadsCsvOptions) {
         title: "Error al importar",
         description: e instanceof Error ? e.message : undefined,
         error: e,
-        method: "CATCH",
+        method: "USE_IMPORTAR_LEADS_CSV",
       });
     }
   }, [crearBulk, validRows, errorCount, toast, reset, onDone]);

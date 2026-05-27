@@ -77,7 +77,7 @@ export default function NuevoLeadDialog({ open, onOpenChange, onCreated }: Props
         title: "No se pudo crear el lead",
         description: e instanceof Error ? e.message : undefined,
         error: e,
-        method: "CATCH",
+        method: "HANDLE_SUBMIT",
       });
     }
   };

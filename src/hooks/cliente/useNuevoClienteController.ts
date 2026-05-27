@@ -93,7 +93,7 @@ export function useNuevoClienteController(onClose: () => void) {
         title: "Error al crear cliente",
         description: getErrorMessage(error),
         error: error,
-        method: "CATCH",
+        method: "HANDLE_SAVE",
       });
     }
   };
@@ -106,7 +106,7 @@ export function useNuevoClienteController(onClose: () => void) {
       notifyError(toast, {
         title: "Archivo inválido",
         description: "Solo se aceptan archivos PDF.",
-        method: "IF",
+        method: "HANDLE_CSF_UPLOAD",
         errorCode: ERROR_CODES.VALIDATION_FAILED,
       });
       return;
@@ -134,7 +134,7 @@ export function useNuevoClienteController(onClose: () => void) {
         title: "Error al leer CSF",
         description: getErrorMessage(error),
         error: error,
-        method: "CATCH",
+        method: "HANDLE_CSF_UPLOAD",
       });
     } finally {
       setParsingCsf(false);

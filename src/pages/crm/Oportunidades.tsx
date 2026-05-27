@@ -108,7 +108,7 @@ export default function Oportunidades() {
         title: "No se pudo mover",
         description: e instanceof Error ? e.message : undefined,
         error: e,
-        method: "CATCH",
+        method: "HANDLE_MOVER",
       });
     }
   };

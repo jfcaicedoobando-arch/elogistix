@@ -34,7 +34,7 @@ export function useCotizacionDetalleHandlers(cotizacion: CotizacionRow | undefin
       await actualizarEstado.mutateAsync({ id: cotizacion.id, estado });
       notifySuccess(toast, { title: `Estado actualizado a "${estado}"` });
     } catch (err: unknown) {
-      notifyError(toast, { title: "Error", description: getErrorMessage(err), error: err, method: "CATCH" });
+      notifyError(toast, { title: "Error", description: getErrorMessage(err), error: err, method: "HANDLE_CAMBIAR_ESTADO" });
     }
   };
 
@@ -63,7 +63,7 @@ export function useCotizacionDetalleHandlers(cotizacion: CotizacionRow | undefin
       notifySuccess(toast, { title: `Cliente "${cliente.nombre}" creado exitosamente` });
       setShowConvertir(false);
     } catch (err: unknown) {
-      notifyError(toast, { title: "Error al convertir prospecto", description: getErrorMessage(err), error: err, method: "CATCH" });
+      notifyError(toast, { title: "Error al convertir prospecto", description: getErrorMessage(err), error: err, method: "HANDLE_CONVERTIR" });
     }
   };
 
@@ -74,7 +74,7 @@ export function useCotizacionDetalleHandlers(cotizacion: CotizacionRow | undefin
       notifySuccess(toast, { title: `Se generaron ${cotizacion.num_contenedores} embarques exitosamente` });
       setShowConfirmarConvertir(false);
     } catch (err: unknown) {
-      notifyError(toast, { title: "Error al generar embarques", description: getErrorMessage(err), error: err, method: "CATCH" });
+      notifyError(toast, { title: "Error al generar embarques", description: getErrorMessage(err), error: err, method: "HANDLE_GENERAR_EMBARQUES" });
     }
   };
 

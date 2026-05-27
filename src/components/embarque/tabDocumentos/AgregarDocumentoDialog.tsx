@@ -49,7 +49,7 @@ export function AgregarDocumentoDialog({ open, onOpenChange, embarqueId, modo, d
   const handleCrear = async () => {
     const nombreFinal = nombreSel === OTRO_VALUE ? nombreLibre.trim() : nombreSel.trim();
     if (!nombreFinal) {
-      notifyError(toast, { title: "Nombre requerido", description: "Selecciona o escribe el nombre del documento.", method: "IF", errorCode: ERROR_CODES.VALIDATION_FAILED });
+      notifyError(toast, { title: "Nombre requerido", description: "Selecciona o escribe el nombre del documento.", method: "HANDLE_CREAR", errorCode: ERROR_CODES.VALIDATION_FAILED });
       return;
     }
     try {
@@ -58,7 +58,7 @@ export function AgregarDocumentoDialog({ open, onOpenChange, embarqueId, modo, d
       resetForm();
       onOpenChange(false);
     } catch (err) {
-      notifyError(toast, { title: "No se pudo agregar el documento", description: getErrorMessage(err), error: err, method: "CATCH" });
+      notifyError(toast, { title: "No se pudo agregar el documento", description: getErrorMessage(err), error: err, method: "HANDLE_CREAR" });
     }
   };
 

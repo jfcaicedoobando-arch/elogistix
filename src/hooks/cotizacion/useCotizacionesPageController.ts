@@ -81,7 +81,7 @@ export function useCotizacionesPageController() {
       await deleteCotizacion.mutateAsync(cotizacionAEliminar);
       notifySuccess(toast, { title: "Cotización eliminada correctamente" });
     } catch (err: unknown) {
-      notifyError(toast, { title: "Error al eliminar", description: getErrorMessage(err), error: err, method: "CATCH" });
+      notifyError(toast, { title: "Error al eliminar", description: getErrorMessage(err), error: err, method: "CONFIRMAR_ELIMINAR" });
     }
     setCotizacionAEliminar(null);
   };

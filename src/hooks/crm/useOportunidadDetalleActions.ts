@@ -37,7 +37,7 @@ export function useOportunidadDetalleActions(op: OpLite, etapas: EtapaLite[]) {
       crmToast.success("Oportunidad eliminada");
       navigate("/crm/oportunidades");
     } catch (e) {
-      notifyError(toast, { title: "Error", description: e instanceof Error ? e.message : undefined, error: e, method: "CATCH" });
+      notifyError(toast, { title: "Error", description: e instanceof Error ? e.message : undefined, error: e, method: "HANDLE_ELIMINAR" });
     }
   };
 
@@ -60,7 +60,7 @@ export function useOportunidadDetalleActions(op: OpLite, etapas: EtapaLite[]) {
       crmToast.success(`Cotización creada · ${result.folio}`);
       navigate(`/cotizaciones/${result.id}/editar`);
     } catch (e) {
-      notifyError(toast, { title: "No se pudo crear", description: e instanceof Error ? e.message : undefined, error: e, method: "CATCH" });
+      notifyError(toast, { title: "No se pudo crear", description: e instanceof Error ? e.message : undefined, error: e, method: "CREAR_COTIZACION" });
     }
   };
 

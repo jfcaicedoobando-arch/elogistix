@@ -52,7 +52,7 @@ export function useEmbarqueDocumentosActions(embarque: EmbarqueRow | undefined, 
           fileType: file.type,
           bucket: "documentos",
         },
-        method: "CATCH",
+        method: "HANDLE_UPLOAD",
       });
     }
   };
@@ -74,7 +74,7 @@ export function useEmbarqueDocumentosActions(embarque: EmbarqueRow | undefined, 
         description: getErrorMessage(err),
         error: err,
         context: { embarqueId: id, documentoId: doc.id, archivoPath: doc.archivo, documentoNombre: doc.nombre },
-        method: "CATCH",
+        method: "HANDLE_DELETE_DOC",
       });
     }
   };
@@ -96,7 +96,7 @@ export function useEmbarqueDocumentosActions(embarque: EmbarqueRow | undefined, 
       document.body.removeChild(a);
       URL.revokeObjectURL(blobUrl);
     } catch (err: unknown) {
-      notifyError(toast, { title: "Error al descargar", description: getErrorMessage(err), error: err, method: "CATCH" });
+      notifyError(toast, { title: "Error al descargar", description: getErrorMessage(err), error: err, method: "HANDLE_DOWNLOAD" });
     } finally {
       setDownloadingDocId(null);
     }

@@ -27,7 +27,7 @@ export default function Login() {
       navigate(resolveLandingRoute(role), { replace: true });
     } catch (err) {
       const message = err instanceof Error ? err.message : "Error desconocido";
-      notifyError(toast, { title: "Error al iniciar sesión", description: message, error: err, method: "CATCH" });
+      notifyError(toast, { title: "Error al iniciar sesión", description: message, error: err, method: "HANDLE_SUBMIT" });
     } finally {
       setLoading(false);
     }

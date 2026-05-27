@@ -52,7 +52,7 @@ export function useDescargarProformaPdf() {
         ]);
 
         if (!embarque) {
-          notifyError(toast, { title: "No se pudo cargar el embarque asociado", method: "IF", errorCode: ERROR_CODES.VALIDATION_FAILED });
+          notifyError(toast, { title: "No se pudo cargar el embarque asociado", method: "USE_DESCARGAR_PROFORMA_PDF", errorCode: ERROR_CODES.VALIDATION_FAILED });
           return;
         }
 
@@ -66,7 +66,7 @@ export function useDescargarProformaPdf() {
           conceptosConsolidados: consolidados,
         });
       } catch (e) {
-        notifyError(toast, { title: "Error al generar PDF: " + (e as Error).message, error: e, method: "CATCH" });
+        notifyError(toast, { title: "Error al generar PDF: " + (e as Error).message, error: e, method: "USE_DESCARGAR_PROFORMA_PDF" });
       } finally {
         setDownloadingId(null);
       }

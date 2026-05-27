@@ -82,7 +82,7 @@ export function useTrackingLiveCard({
         title: "No se pudieron actualizar las fechas",
         description: err instanceof Error ? err.message : "Error",
         error: err,
-        method: "CATCH",
+        method: "ON_APLICAR_FECHAS",
       });
     }
   };

@@ -44,7 +44,7 @@ export default function PlantillasMensajeEditor() {
       notifySuccess(toast, { title: "Plantilla creada" });
       setNuevo({ nombre: "", canal: nuevo.canal, asunto: "", cuerpo: "" });
     } catch (e) {
-      notifyError(toast, { title: "No se pudo crear", description: e instanceof Error ? e.message : undefined, error: e, method: "CATCH" });
+      notifyError(toast, { title: "No se pudo crear", description: e instanceof Error ? e.message : undefined, error: e, method: "HANDLE_CREAR" });
     }
   };
 

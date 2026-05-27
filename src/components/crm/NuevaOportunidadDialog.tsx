@@ -97,7 +97,7 @@ export default function NuevaOportunidadDialog({ open, onOpenChange, oportunidad
         title: "No se pudo guardar",
         description: e instanceof Error ? e.message : undefined,
         error: e,
-        method: "CATCH",
+        method: "HANDLE_SUBMIT",
       });
     }
   };

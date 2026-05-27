@@ -77,7 +77,7 @@ export default function NuevaActividadDialog({ open, onOpenChange, defaultEntida
       onOpenChange(false);
       onCreated?.(res.id);
     } catch (e) {
-      notifyError(toast, { title: "No se pudo crear", description: e instanceof Error ? e.message : undefined, error: e, method: "CATCH" });
+      notifyError(toast, { title: "No se pudo crear", description: e instanceof Error ? e.message : undefined, error: e, method: "HANDLE_SUBMIT" });
     }
   };
 

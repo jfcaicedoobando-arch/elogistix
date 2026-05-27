@@ -46,7 +46,7 @@ export function ClienteDetalleHeader({ cliente, canEdit, onBack, onEdit }: Props
               estado: cliente.estado,
             });
           } catch (err) {
-            notifyError(toast, { title: "No se pudo generar el estado de cuenta", description: getErrorMessage(err), error: err, method: "CATCH" });
+            notifyError(toast, { title: "No se pudo generar el estado de cuenta", description: getErrorMessage(err), error: err, method: "CLIENTE_DETALLE_HEADER" });
           }
         }}
       >

@@ -88,7 +88,7 @@ export function useEmbarqueSubmitOrchestrator() {
           title: "Error: generación de expediente",
           description: getErrorMessage(err),
           error: err,
-          method: "CATCH",
+          method: "USE_EMBARQUE_SUBMIT_ORCHESTRATOR",
         });
         return false;
       }
@@ -106,7 +106,7 @@ export function useEmbarqueSubmitOrchestrator() {
           title: "Error: subida de documentos",
           description: getErrorMessage(err),
           error: err,
-          method: "CATCH",
+          method: "USE_EMBARQUE_SUBMIT_ORCHESTRATOR",
         });
         return false;
       }
@@ -128,7 +128,7 @@ export function useEmbarqueSubmitOrchestrator() {
         });
         reqId.reset();
       } catch (err: unknown) {
-        notifyError(toast, { phase: "guardado del embarque", message: getErrorMessage(err), error: err, method: "CATCH" });
+        notifyError(toast, { phase: "guardado del embarque", message: getErrorMessage(err), error: err, method: "USE_EMBARQUE_SUBMIT_ORCHESTRATOR" });
         return false;
       }
 

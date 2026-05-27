@@ -41,7 +41,7 @@ export function useDialogBolContainers({ embarqueId, naviera, contenedorActual, 
         notifyError(toast, {
           title: "No se pudo consultar BL",
           description: res.error ?? "Error desconocido",
-          method: "IF",
+          method: "HANDLE_BUSCAR",
           errorCode: ERROR_CODES.VALIDATION_FAILED,
         });
         return;
@@ -56,7 +56,7 @@ export function useDialogBolContainers({ embarqueId, naviera, contenedorActual, 
         title: "Error en consulta BL",
         description: err instanceof Error ? err.message : "Error desconocido",
         error: err,
-        method: "CATCH",
+        method: "HANDLE_BUSCAR",
       });
     }
   };
@@ -96,7 +96,7 @@ export function useDialogBolContainers({ embarqueId, naviera, contenedorActual, 
           notifyError(toast, {
             title: "Contenedor guardado, error al sincronizar",
             description: syncErr instanceof Error ? syncErr.message : "Error",
-            method: "IF",
+            method: "HANDLE_GUARDAR",
             errorCode: ERROR_CODES.VALIDATION_FAILED,
           });
         }
@@ -110,7 +110,7 @@ export function useDialogBolContainers({ embarqueId, naviera, contenedorActual, 
         title: "No se pudo guardar el contenedor",
         description: err instanceof Error ? err.message : "Error",
         error: err,
-        method: "CATCH",
+        method: "HANDLE_GUARDAR",
       });
     } finally {
       setSaving(false);

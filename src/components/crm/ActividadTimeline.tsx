@@ -43,7 +43,7 @@ export default function ActividadTimeline({ entidadTipo, entidadId }: Props) {
       crmToast.success("Actividad registrada");
       setAsunto(""); setDesc("");
     } catch (e) {
-      notifyError(toast, { title: "Error", description: e instanceof Error ? e.message : undefined, error: e, method: "CATCH" });
+      notifyError(toast, { title: "Error", description: e instanceof Error ? e.message : undefined, error: e, method: "HANDLE_CREAR" });
     }
   };
 

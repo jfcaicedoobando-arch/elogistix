@@ -34,11 +34,11 @@ export default function NuevoUsuarioDialog({ open, onOpenChange, onCreated, show
     e.preventDefault();
     if (!email || !password) return;
     if (showOrgSelector && !orgId) {
-      notifyError(toast, { title: "Error", description: "Selecciona una organización", method: "IF", errorCode: ERROR_CODES.VALIDATION_FAILED });
+      notifyError(toast, { title: "Error", description: "Selecciona una organización", method: "HANDLE_SUBMIT", errorCode: ERROR_CODES.VALIDATION_FAILED });
       return;
     }
     if (password.length < 6) {
-      notifyError(toast, { title: "Error", description: "La contraseña debe tener al menos 6 caracteres", method: "IF", errorCode: ERROR_CODES.VALIDATION_FAILED });
+      notifyError(toast, { title: "Error", description: "La contraseña debe tener al menos 6 caracteres", method: "HANDLE_SUBMIT", errorCode: ERROR_CODES.VALIDATION_FAILED });
       return;
     }
 

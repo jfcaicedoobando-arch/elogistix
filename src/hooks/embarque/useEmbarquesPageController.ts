@@ -70,7 +70,7 @@ export function useEmbarquesPageController() {
         : todos.filter((e) => calcularEstadoEmbarque(e.modo, e.tipo, e.etd, e.eta, e.estado) === state.filterEstado);
 
       if (filtradosPorEstado.length === 0) {
-        notifyError(toast, { title: "Sin datos para exportar", description: "Los filtros actuales no devuelven embarques.", method: "IF", errorCode: ERROR_CODES.VALIDATION_FAILED });
+        notifyError(toast, { title: "Sin datos para exportar", description: "Los filtros actuales no devuelven embarques.", method: "USE_EMBARQUES_PAGE_CONTROLLER", errorCode: ERROR_CODES.VALIDATION_FAILED });
         return;
       }
 
@@ -121,7 +121,7 @@ export function useEmbarquesPageController() {
         description: `${filtradosPorEstado.length} embarques exportados con los filtros actuales.`,
       });
     } catch (err: unknown) {
-      notifyError(toast, { title: "Error al exportar", description: getErrorMessage(err), error: err, method: "CATCH" });
+      notifyError(toast, { title: "Error al exportar", description: getErrorMessage(err), error: err, method: "USE_EMBARQUES_PAGE_CONTROLLER" });
     } finally {
       setExportandoCsv(false);
     }
