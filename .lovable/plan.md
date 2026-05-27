@@ -1,61 +1,53 @@
-# Backlog de auditoría — estado al 11.68.0
+## Objetivo
 
-## Cerrados
+Sincronizar los MDs de auditoría con el estado real de 11.68.0 y ejecutar una **auditoría desde cero** (cleanslate) que sirva de baseline definitivo antes de empezar nuevos módulos.
 
-- ✅ **D14** (11.63.0) — Guardrail `oversized > 200` en `architecture-baseline.test.ts`.
-- ✅ **C10** (11.63.0) — Quick wins inline styles + política en `mem://principles/inline-styles`.
-- ✅ **D16** (11.64.0) — 0 casts HIGH/CRITICAL productivos. Clasificador + guardrail.
-- ✅ **D12** (11.65.0) — Split de `routes.tsx` en 4 grupos por guarda+layout (188→19 líneas).
-- ✅ **P1.5** (11.66.0) — `src/lib/utils/` único con barrel.
-- ✅ **P1.6** (11.66.0) — Ningún servicio supera 200 líneas.
+## Fase 1 — Actualizar archivos MD
 
-## Pendientes
+Refrescar a la versión 11.68.0:
 
-| ID | Tarea | Esfuerzo | Riesgo |
-|----|-------|----------|--------|
-| D13 | Vigilar archivos 180-200 líneas (preventivo, continuo) | XS | Nulo |
-| P1.7* | Extender Zod a boundaries restantes (6 hotspots cubiertos en 11.66+11.67) | S | Bajo |
-| Cx* | Bajar complejidad src/ a CC ≤ 12 (2/13 cubiertos en 11.68; 4 edge functions sin tocar) | M | Medio |
+1. `docs/power10-baseline.md` — regenerar contadores (archivos >200, `any`, useEffect sin cleanup, queries sin paginar) con datos actuales.
+2. `docs/cast-audit.md` — regenerar vía `bun scripts/audit-casts.ts` (refleja el estado tras P1.7).
+3. `docs/auditoria.md` — actualizar fecha/versión de revisión y referenciar cierres de D12/D14/D16/P1.5/P1.6 + parciales P1.7 y Cx.
+4. `docs/tests-audit.md` — regenerar conteo de suites/tests (770 actualmente).
+5. `docs/architecture-map.md` — verificar que los renombres (`lib/parsers`, `lib/mappers`, schemas Zod nuevos, helpers NBA, etc.) estén reflejados.
+6. `.lovable/plan.md` — marcar entrada de auditoría cleanslate como "en curso" y consolidar pendientes.
 
-## P1.7 — Estado parcial
+## Fase 2 — Auditoría cleanslate
 
-Cubiertos en 11.66.0:
-- `lib/parsers/dashboard.ts` (peso 14) → `dashboardSchemas.ts`
-- `lib/mappers/embarqueToDb.ts` (peso 12) → `embarquePayloadSchemas.ts`
-- `services/embarque/queries/exportListado.ts` (peso 10) → `embarqueRowSchema.ts`
+Ejecutar en orden, recolectando outputs:
 
-Cubiertos en 11.67.0:
-- `components/admin/TabSeguridadGlobal.tsx` (peso 12) → `hooks/configuracion/configSchemas.ts`
-- `services/embarque/documentos.ts` (peso 12) → `services/embarque/idempotencyClaimSchema.ts`
-- `components/auditoria/HallazgosFiltros.tsx` (peso 10) → `components/auditoria/hallazgosFiltrosSchemas.ts`
+1. **Casts** — `bun scripts/audit-casts.ts` → confirmar 0 HIGH/CRITICAL productivos (guardrail D16).
+2. **Power of 10** — `bun scripts/audit-power10.ts` → archivos >200, `any`, effects sin cleanup, queries sin paginar.
+3. **Tests** — `bun scripts/audit-tests.ts` + `bunx vitest run` → suite completa verde y conteo actualizado.
+4. **Arquitectura** — `bun scripts/audit-architecture.ts` → guardrails (oversized, capas, etc.).
+5. **Complejidad** — `bunx eslint 'src/**/*.{ts,tsx}' --rule '{complexity: ["error", 12]}' --no-eslintrc -c eslint.config.js` para listar ofensores restantes (CC>12).
+6. **Build/typecheck** — confirmado automáticamente por el harness.
+7. **Reporte agregado** — `bun scripts/audit-report.ts` si aplica, o consolidar manualmente en una sección nueva.
 
-Descartados:
-- `lib/audit/diffFields.ts` (peso 12) — genericidad estructural, no boundary.
+## Fase 3 — Reporte consolidado
 
-## Cx — Estado parcial
+Crear `docs/audit-cleanslate-11.69.0.md` con:
 
-Cubiertos en 11.68.0:
-- `lib/crm/nextBestActions.ts` — `computeNextBestActions` CC 20 → 3 (5 helpers extraídos).
-- `lib/csv/leadsCsv.ts` — arrow de `mapLeadCsvRows` CC 18 → 4 (parsers + setters table).
+- Snapshot por categoría (Power10, casts, tests, complejidad, arquitectura).
+- Tabla de pendientes restantes con prioridad sugerida (Cx fase 2, P1.7 hotspots residuales, edge functions CC>12).
+- Recomendación: qué cerrar antes de tocar módulos nuevos vs qué puede esperar.
+- Riesgos detectados (si surgen durante el cleanslate).
 
-Pendientes (todos CC 15 con umbral objetivo 12; orden libre):
-- `components/cotizacion/conceptos/ConceptoRowUSD.tsx:22` (`ConceptoRowUSD`)
-- `hooks/auditoria/useAsignarResponsableController.ts:49` (arrow async)
-- `hooks/operaciones/useOperacionesData.ts:146` (arrow)
-- `lib/crm/forecast.ts:111` (`computeReportesCRM`)
-- `lib/csv/parseCsv.ts:44` (`parseCsv`)
-- `lib/domain/bitacoraDescripcion.ts:108` (`describirEntrada`)
-- `pages/admin/AdminDashboard.tsx:20` (`AdminDashboard`)
-- `pages/crm/Oportunidades.tsx:81` (arrow)
-- `pages/portal/PortalCotizacionDetalle.tsx:18` (`PortalCotizacionDetalle`)
-- `services/bitacora/index.ts:14` (`fetchBitacora`)
-- `services/embarque/queries/paginados.ts:53` (`fetchEmbarquesPaginados`)
-- `services/proforma/facturar.ts:17` (`marcarProformaFacturada`)
+## Versionado
 
-Edge functions (no auditadas aquí — fase posterior): 4 con CC > 12.
+- `APP_VERSION` → `11.69.0` (minor: refleja cierre de auditoría + nueva baseline).
+- Entrada en `CHANGELOG.md` raíz y en `src/pages/Changelog.tsx`.
 
-Cuando el contador llegue a 0, bajar `complexity` en `eslint.config.js` de 15 a 12.
+## Fuera de alcance
 
-## Próximo paso
+- No se refactoriza código en este loop. Solo documentación + ejecución de auditoría.
+- Edge functions con CC>12 quedan listadas, no tocadas.
+- Bajar umbral ESLint de 15→12 espera a Cx fase 2.
 
-Continuar **Cx fase 2** sobre 2-3 ofensores de CC 15 (sugerencia: empezar por funciones puras de `lib/` antes que componentes UI o hooks de Supabase).
+## Entregables
+
+1. 5-6 MDs de auditoría actualizados.
+2. `docs/audit-cleanslate-11.69.0.md` nuevo.
+3. `.lovable/plan.md`, `CHANGELOG.md`, `appVersion.ts`, `Changelog.tsx` actualizados.
+4. Confirmación de que toda la suite (770+ tests) sigue verde.
