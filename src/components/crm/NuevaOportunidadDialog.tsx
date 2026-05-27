@@ -28,6 +28,7 @@ import { useCrearActividad } from "@/hooks/crm";
 import { useOportunidadForm } from "@/hooks/crm";
 import OportunidadFormFields from "@/components/crm/nuevaOportunidad/OportunidadFormFields";
 
+import { ERROR_CODES } from "@/lib/domain/errorCatalog";
 interface Props {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -49,8 +50,8 @@ export default function NuevaOportunidadDialog({ open, onOpenChange, oportunidad
   const [autoActividad, setAutoActividad] = useState(true);
 
   const handleSubmit = async () => {
-    if (!form.nombre.trim()) return notifyError(toast, { title: "Nombre es obligatorio" });
-    if (!form.etapa_id) return notifyError(toast, { title: "Selecciona una etapa" });
+    if (!form.nombre.trim()) return notifyError(toast, { title: "Nombre es obligatorio", method: "HANDLE_SUBMIT", errorCode: ERROR_CODES.VALIDATION_FAILED });
+    if (!form.etapa_id) return notifyError(toast, { title: "Selecciona una etapa", method: "HANDLE_SUBMIT", errorCode: ERROR_CODES.VALIDATION_FAILED });
     try {
       const payload = {
         nombre: form.nombre,
@@ -95,6 +96,8 @@ export default function NuevaOportunidadDialog({ open, onOpenChange, oportunidad
       notifyError(toast, {
         title: "No se pudo guardar",
         description: e instanceof Error ? e.message : undefined,
+        error: e,
+        method: "HANDLE_SUBMIT",
       });
     }
   };

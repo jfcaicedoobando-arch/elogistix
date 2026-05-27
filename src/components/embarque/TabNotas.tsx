@@ -47,7 +47,7 @@ export function TabNotas({ notas, embarqueId, creadoPor, creadoEn }: Props) {
       setTexto("");
       notifySuccess(toast, { title: "Nota agregada" });
     } catch (err: unknown) {
-      notifyError(toast, { title: "Error al agregar nota", description: getErrorMessage(err)});
+      notifyError(toast, { title: "Error al agregar nota", description: getErrorMessage(err), error: err, method: "HANDLE_SUBMIT" });
     }
   };
 

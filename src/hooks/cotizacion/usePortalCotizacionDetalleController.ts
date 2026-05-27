@@ -4,6 +4,7 @@ import { getErrorMessage } from "@/lib/errors";
 import { useResponderCotizacion } from "@/hooks/cotizacion/mutations/usePortalCotizacionMutations";
 import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 
+import { ERROR_CODES } from "@/lib/domain/errorCatalog";
 export type RespuestaCotizacion = "Aceptada" | "Rechazada";
 
 /**
@@ -38,7 +39,9 @@ export function usePortalCotizacionDetalleController(cotizacionId: string | unde
         onError: (err: unknown) => {
           notifyError(toast, {
             title: "Error",
-            description: getErrorMessage(err)
+            description: getErrorMessage(err),
+            method: "ON_ERROR",
+            errorCode: ERROR_CODES.VALIDATION_FAILED,
           });
           reset();
         },

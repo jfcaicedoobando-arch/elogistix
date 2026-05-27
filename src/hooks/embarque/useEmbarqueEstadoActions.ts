@@ -63,7 +63,7 @@ export function useEmbarqueEstadoActions(embarque: EmbarqueRow | undefined, id: 
       });
       notifySuccess(toast, { title: `Estado actualizado a "${siguiente}"` });
     } catch (err: unknown) {
-      notifyError(toast, { title: "Error al cambiar estado", description: getErrorMessage(err)});
+      notifyError(toast, { title: "Error al cambiar estado", description: getErrorMessage(err), error: err, method: "HANDLE_AVANZAR_ESTADO" });
     }
   };
 

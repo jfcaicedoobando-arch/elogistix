@@ -31,7 +31,7 @@ export default function Usuarios() {
       await updateRole.mutateAsync({ userId: pendingRole.user.user_id, newRole: pendingRole.newRole });
       notifySuccess(toast, { title: "Rol actualizado", description: `${pendingRole.user.email} ahora es ${getRoleLabel(pendingRole.newRole)}.` });
     } catch (err: unknown) {
-      notifyError(toast, { title: "Error al cambiar rol", description: getErrorMessage(err) });
+      notifyError(toast, { title: "Error al cambiar rol", description: getErrorMessage(err), error: err, method: "CONFIRM_ROLE_CHANGE" });
     } finally {
       setPendingRole(null);
     }
@@ -43,7 +43,7 @@ export default function Usuarios() {
       await deleteUser.mutateAsync(deleteTarget.user_id);
       notifySuccess(toast, { title: "Usuario eliminado", description: `${deleteTarget.email} fue eliminado del sistema.` });
     } catch (err: unknown) {
-      notifyError(toast, { title: "Error al eliminar usuario", description: getErrorMessage(err)});
+      notifyError(toast, { title: "Error al eliminar usuario", description: getErrorMessage(err), error: err, method: "HANDLE_DELETE" });
     }
   };
 

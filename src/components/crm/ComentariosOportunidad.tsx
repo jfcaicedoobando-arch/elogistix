@@ -42,7 +42,7 @@ export default function ComentariosOportunidad({ oportunidadId, canEdit }: Props
       setTexto("");
       crmToast.success("Comentario publicado");
     } catch (e) {
-      notifyError(toast, { title: "No se pudo publicar", description: getErrorMessage(e) });
+      notifyError(toast, { title: "No se pudo publicar", description: getErrorMessage(e), error: e, method: "ENVIAR" });
     }
   };
 

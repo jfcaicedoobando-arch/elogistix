@@ -20,6 +20,7 @@ import { notifyError } from "@/lib/ui/appFeedback";
 import type { Tables } from "@/integrations/supabase/types";
 import type { ConceptoVentaLocal, ConceptoCostoLocal } from "@/types/concepto";
 
+import { ERROR_CODES } from "@/lib/domain/errorCatalog";
 // Re-exports para compatibilidad con consumidores existentes
 export type { EmbarqueFormValues } from "@/lib/mappers/embarque";
 
@@ -52,7 +53,7 @@ export function useEmbarqueForm() {
       await uploadFile(ruta, archivo);
       methods.setValue("msdsArchivo", ruta);
     } catch {
-      notifyError(toast, { title: "Error al subir MSDS"});
+      notifyError(toast, { title: "Error al subir MSDS", method: "HANDLE_MSDS_UPLOAD", errorCode: ERROR_CODES.VALIDATION_FAILED });
     } finally {
       methods.setValue("subiendoMsds", false);
     }

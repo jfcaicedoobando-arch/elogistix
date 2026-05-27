@@ -46,6 +46,8 @@ export default function LeadDetalle() {
       notifyError(toast, {
         title: "No se pudo guardar",
         description: e instanceof Error ? e.message : undefined,
+        error: e,
+        method: "HANDLE_SAVE",
       });
     }
   };
@@ -60,6 +62,8 @@ export default function LeadDetalle() {
       notifyError(toast, {
         title: "No se pudo eliminar",
         description: e instanceof Error ? e.message : undefined,
+        error: e,
+        method: "HANDLE_DELETE",
       });
     }
   };

@@ -33,7 +33,7 @@ function EstadoCell({ lead }: { lead: CrmLeadRow }) {
           try {
             await actualizar.mutateAsync({ id: lead.id, patch: { estado: v as CrmLeadEstado } });
           } catch (err) {
-            notifyError(toast, { title: "No se pudo actualizar", description: err instanceof Error ? err.message : undefined });
+            notifyError(toast, { title: "No se pudo actualizar", description: err instanceof Error ? err.message : undefined, error: err, method: "ESTADO_CELL" });
           }
         }}
         disabled={actualizar.isPending}

@@ -31,7 +31,7 @@ export function usePortalDocumentDownload() {
         window.open(signedUrl, "_blank");
       }
     } catch {
-      notifyError(toast, { title: "Error al descargar"});
+      notifyError(toast, { title: "Error al descargar", method: "USE_PORTAL_DOCUMENT_DOWNLOAD", errorCode: ERROR_CODES.VALIDATION_FAILED });
     } finally {
       setDownloadingId(null);
     }

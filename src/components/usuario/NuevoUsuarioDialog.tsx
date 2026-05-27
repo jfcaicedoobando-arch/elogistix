@@ -12,6 +12,7 @@ import { useCreateUser } from "@/hooks/usuario";
 import { useOrganizationsList } from "@/hooks/admin";
 import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 
+import { ERROR_CODES } from "@/lib/domain/errorCatalog";
 interface Props {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -33,11 +34,11 @@ export default function NuevoUsuarioDialog({ open, onOpenChange, onCreated, show
     e.preventDefault();
     if (!email || !password) return;
     if (showOrgSelector && !orgId) {
-      notifyError(toast, { title: "Error", description: "Selecciona una organización"});
+      notifyError(toast, { title: "Error", description: "Selecciona una organización", method: "HANDLE_SUBMIT", errorCode: ERROR_CODES.VALIDATION_FAILED });
       return;
     }
     if (password.length < 6) {
-      notifyError(toast, { title: "Error", description: "La contraseña debe tener al menos 6 caracteres"});
+      notifyError(toast, { title: "Error", description: "La contraseña debe tener al menos 6 caracteres", method: "HANDLE_SUBMIT", errorCode: ERROR_CODES.VALIDATION_FAILED });
       return;
     }
 
@@ -54,7 +55,7 @@ export default function NuevoUsuarioDialog({ open, onOpenChange, onCreated, show
           onCreated();
         },
         onError: (err: unknown) => {
-          notifyError(toast, { title: "Error", description: getErrorMessage(err)});
+          notifyError(toast, { title: "Error", description: getErrorMessage(err), method: "ON_ERROR", errorCode: ERROR_CODES.VALIDATION_FAILED });
         },
       }
     );

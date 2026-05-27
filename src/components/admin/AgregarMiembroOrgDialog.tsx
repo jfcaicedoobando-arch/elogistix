@@ -43,7 +43,7 @@ export default function AgregarMiembroOrgDialog({ open, onOpenChange, organizati
       onOpenChange(false);
       onAdded();
     } catch (err: unknown) {
-      notifyError(toast, { title: "Error", description: getErrorMessage(err)});
+      notifyError(toast, { title: "Error", description: getErrorMessage(err), error: err, method: "HANDLE_SUBMIT" });
     }
   };
 

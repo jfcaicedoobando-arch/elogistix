@@ -72,6 +72,8 @@ export default function DialogDuplicarEmbarque({ embarque, open, onOpenChange }:
       notifyError(toast, {
         title: "Faltan números de contenedor",
         description: "Captura el número de contenedor para cada copia.",
+        method: "HANDLE_CONFIRMAR",
+        errorCode: ERROR_CODES.VALIDATION_FAILED,
       });
       return;
     }
@@ -103,6 +105,7 @@ export default function DialogDuplicarEmbarque({ embarque, open, onOpenChange }:
         phase: "duplicación de embarque",
         error,
         context: { embarqueOrigenId: embarque.id, copias: copias.length },
+        method: "HANDLE_CONFIRMAR",
       });
     }
   };

@@ -9,6 +9,7 @@ import { usePermissions } from "@/hooks/shared/usePermissions";
 import { useProformasPendientes } from "@/hooks/embarque/useProformas";
 import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 
+import { ERROR_CODES } from "@/lib/domain/errorCatalog";
 /**
  * Controller para la página de Pre-Facturación.
  * Encapsula filtros, búsqueda, paginación, mutaciones y export CSV.
@@ -62,7 +63,7 @@ export function useFacturacionPageController(opts?: {
         });
         notifySuccess(toast, { title: "Gasto marcado como pagado" });
       },
-      onError: () => notifyError(toast, { title: "Error al marcar como pagado"}),
+      onError: () => notifyError(toast, { title: "Error al marcar como pagado", method: "ON_ERROR", errorCode: ERROR_CODES.VALIDATION_FAILED }),
     });
   }, [marcarPagado, registrarActividad, toast]);
 
@@ -103,7 +104,7 @@ export function useFacturacionPageController(opts?: {
       });
       notifySuccess(toast, { title: "Layout contable generado" });
     } catch {
-      notifyError(toast, { title: "Error al generar layout contable" });
+      notifyError(toast, { title: "Error al generar layout contable", method: "ON_ERROR", errorCode: ERROR_CODES.VALIDATION_FAILED });
     }
   }, [filtered, registrarActividad, toast]);
 

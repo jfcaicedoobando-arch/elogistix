@@ -154,7 +154,7 @@ export function useEditarEmbarqueWizard(id: string | undefined) {
       notifySuccess(toast, { title: "Embarque actualizado", description: `${embarque.expediente} guardado correctamente.` });
       navigate(`/embarques/${id}`);
     } catch (err: unknown) {
-      notifyError(toast, { title: "Error al actualizar", description: getErrorMessage(err)});
+      notifyError(toast, { title: "Error al actualizar", description: getErrorMessage(err), error: err, method: "HANDLE_SAVE" });
     }
   };
 

@@ -47,7 +47,7 @@ export default function TabPortalCliente({ clienteId, organizationId, canEdit }:
           setInviteEmail("");
         },
         onError: (err: unknown) => {
-          notifyError(toast, { title: "Error", description: getErrorMessage(err)});
+          notifyError(toast, { title: "Error", description: getErrorMessage(err), method: "ON_ERROR", errorCode: ERROR_CODES.VALIDATION_FAILED });
         },
       }
     );
@@ -56,7 +56,7 @@ export default function TabPortalCliente({ clienteId, organizationId, canEdit }:
   const handleRevoke = (id: string) => {
     revokeMutation.mutate(id, {
       onSuccess: () => notifySuccess(toast, { title: "Acceso revocado" }),
-      onError: (err: unknown) => notifyError(toast, { title: "Error", description: getErrorMessage(err)}),
+      onError: (err: unknown) => notifyError(toast, { title: "Error", description: getErrorMessage(err), method: "ON_ERROR", errorCode: ERROR_CODES.VALIDATION_FAILED }),
     });
   };
 

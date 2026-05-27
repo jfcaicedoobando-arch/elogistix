@@ -63,7 +63,7 @@ export function TrackingNuevoEventoForm({ embarqueId, onClose }: Props) {
       reset(defaultEventoValues());
       onClose();
     } catch (err: unknown) {
-      notifyError(toast, { title: "Error al registrar evento", description: getErrorMessage(err) });
+      notifyError(toast, { title: "Error al registrar evento", description: getErrorMessage(err), error: err, method: "TRACKING_NUEVO_EVENTO_FORM" });
     }
   });
 

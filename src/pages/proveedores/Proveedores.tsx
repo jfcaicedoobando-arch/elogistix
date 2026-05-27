@@ -60,7 +60,7 @@ export default function Proveedores() {
       });
       notifySuccess(toast, { title: "Proveedor creado correctamente" });
     } catch {
-      notifyError(toast, { title: "Error al crear proveedor"});
+      notifyError(toast, { title: "Error al crear proveedor", method: "HANDLE_ADD", errorCode: ERROR_CODES.VALIDATION_FAILED });
     }
   };
 

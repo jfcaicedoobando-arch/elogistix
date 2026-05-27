@@ -46,7 +46,7 @@ export function useAdminUsuariosController() {
         setDeleteTarget(null);
       },
       onError: (err: unknown) => {
-        notifyError(toast, { title: "Error", description: getErrorMessage(err) });
+        notifyError(toast, { title: "Error", description: getErrorMessage(err), method: "ON_ERROR", errorCode: ERROR_CODES.VALIDATION_FAILED });
         setDeleteTarget(null);
       },
     });

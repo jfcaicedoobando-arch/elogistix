@@ -7,6 +7,7 @@ import { parseCsf } from "@/services/csf";
 import type { DocumentoChecklist } from "@/components/shared/DocumentChecklist";
 import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 
+import { ERROR_CODES } from "@/lib/domain/errorCatalog";
 export const EMPTY_CLIENTE = {
   nombre: "", rfc: "", direccion: "", ciudad: "", estado: "", cp: "", contacto: "", email: "", telefono: "",
 };
@@ -90,7 +91,9 @@ export function useNuevoClienteController(onClose: () => void) {
     } catch (error: unknown) {
       notifyError(toast, {
         title: "Error al crear cliente",
-        description: getErrorMessage(error)
+        description: getErrorMessage(error),
+        error: error,
+        method: "HANDLE_SAVE",
       });
     }
   };
@@ -102,7 +105,9 @@ export function useNuevoClienteController(onClose: () => void) {
     if (file.type !== "application/pdf") {
       notifyError(toast, {
         title: "Archivo inválido",
-        description: "Solo se aceptan archivos PDF."
+        description: "Solo se aceptan archivos PDF.",
+        method: "HANDLE_CSF_UPLOAD",
+        errorCode: ERROR_CODES.VALIDATION_FAILED,
       });
       return;
     }
@@ -127,7 +132,9 @@ export function useNuevoClienteController(onClose: () => void) {
     } catch (error: unknown) {
       notifyError(toast, {
         title: "Error al leer CSF",
-        description: getErrorMessage(error)
+        description: getErrorMessage(error),
+        error: error,
+        method: "HANDLE_CSF_UPLOAD",
       });
     } finally {
       setParsingCsf(false);

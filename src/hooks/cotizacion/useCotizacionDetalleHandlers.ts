@@ -10,6 +10,7 @@ import {
 import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 import type { ClienteFormData } from "@/types/clienteForm";
 
+import { ERROR_CODES } from "@/lib/domain/errorCatalog";
 /**
  * Hook focalizado en las acciones (mutations + handlers + diálogos) del detalle de cotización.
  * Separado del state de queries/totales para favorecer la testabilidad.
@@ -33,7 +34,7 @@ export function useCotizacionDetalleHandlers(cotizacion: CotizacionRow | undefin
       await actualizarEstado.mutateAsync({ id: cotizacion.id, estado });
       notifySuccess(toast, { title: `Estado actualizado a "${estado}"` });
     } catch (err: unknown) {
-      notifyError(toast, { title: "Error", description: getErrorMessage(err)});
+      notifyError(toast, { title: "Error", description: getErrorMessage(err), error: err, method: "HANDLE_CAMBIAR_ESTADO" });
     }
   };
 
@@ -51,7 +52,7 @@ export function useCotizacionDetalleHandlers(cotizacion: CotizacionRow | undefin
 
   const handleConvertir = async () => {
     if (!cotizacion || !clienteForm.nombre.trim()) {
-      notifyError(toast, { title: "El nombre es obligatorio"});
+      notifyError(toast, { title: "El nombre es obligatorio", method: "HANDLE_CONVERTIR", errorCode: ERROR_CODES.VALIDATION_FAILED });
       return;
     }
     try {
@@ -62,7 +63,7 @@ export function useCotizacionDetalleHandlers(cotizacion: CotizacionRow | undefin
       notifySuccess(toast, { title: `Cliente "${cliente.nombre}" creado exitosamente` });
       setShowConvertir(false);
     } catch (err: unknown) {
-      notifyError(toast, { title: "Error al convertir prospecto", description: getErrorMessage(err)});
+      notifyError(toast, { title: "Error al convertir prospecto", description: getErrorMessage(err), error: err, method: "HANDLE_CONVERTIR" });
     }
   };
 
@@ -73,7 +74,7 @@ export function useCotizacionDetalleHandlers(cotizacion: CotizacionRow | undefin
       notifySuccess(toast, { title: `Se generaron ${cotizacion.num_contenedores} embarques exitosamente` });
       setShowConfirmarConvertir(false);
     } catch (err: unknown) {
-      notifyError(toast, { title: "Error al generar embarques", description: getErrorMessage(err)});
+      notifyError(toast, { title: "Error al generar embarques", description: getErrorMessage(err), error: err, method: "HANDLE_GENERAR_EMBARQUES" });
     }
   };
 

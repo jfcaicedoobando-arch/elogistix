@@ -1,56 +1,49 @@
-## Mejora: Filtro de rango de fechas en Pre-Facturación
 
-Agregar un selector unificado **Desde / Hasta** que aplique a las 5 pestañas del módulo (`/facturacion`): Proyección, Pendientes, Proformas, Facturas y Liquidación de Gastos. El filtro será sobre la **fecha de emisión** de cada documento (o equivalente para gastos / proyección).
+## Objetivo
 
-### UX
+Hacer que **todas** las llamadas a `notifyError` aprovechen el reporte estructurado introducido en `12.0.0-rc.7` (requestId, errorCode, validationErrors de Zod, method). Hoy solo el wizard de cotización lo hace; los otros ~115 call sites solo pasan `title` + `description` (string), por lo que el extractor no puede derivar `errorCode` ni `validationErrors`.
 
-- Barra de filtros en la parte superior de la página, **arriba de los Tabs**, para que el rango persista al cambiar entre pestañas.
-- Componente `DateRangeFilter` con dos `Popover` + `Calendar` shadcn (locale es-MX, formato DD/MM/YYYY).
-- Presets rápidos como chips: **Hoy · Esta semana · Este mes · Mes anterior · Año actual · Limpiar**.
-- Badge contador mostrando el rango activo (ej. "01/05/2026 – 27/05/2026") con botón ✕ para limpiar.
-- Por defecto: **mes en curso** (1 del mes actual → hoy).
-- El estado se sincroniza en la URL (`?desde=YYYY-MM-DD&hasta=YYYY-MM-DD`) para poder compartir vistas y sobrevivir recargas.
+## Alcance
 
-### Campos de fecha por pestaña
+120 call sites de `notifyError` distribuidos en `src/hooks/**`, `src/components/**`, `src/pages/**` y `src/lib/**`.
 
-| Pestaña | Campo filtrado |
-|---|---|
-| Proyección | `fecha_estimada_cierre` (o ETA del embarque) |
-| Pendientes | `fecha_emision` de la proforma |
-| Proformas | `fecha_emision` |
-| Facturas | `fecha_emision` |
-| Liquidación de Gastos | `fecha` del gasto |
+## Cambios por call site
 
-### Cambios técnicos
+Para cada `notifyError(toast, { ... })` dentro de un `catch (err) { ... }`:
 
-1. **Nuevo componente** `src/components/facturacion/DateRangeFilter.tsx` (~150 líneas):
-   - Props: `value: { desde?: Date; hasta?: Date }`, `onChange`, presets opcionales.
-   - Usa `Popover` + `Calendar` de shadcn con `pointer-events-auto`.
-   - Valida `desde <= hasta` y deshabilita días fuera de rango en el segundo calendario.
-   - Locale `es` de `date-fns` para los nombres de meses/días.
+1. Añadir `error: err` (objeto crudo — habilita extracción Zod / Postgrest / `errorCode`).
+2. Añadir `method: "<VERBO_SEMÁNTICO>"` (ej. `DELETE_COTIZACION`, `UPDATE_PROVEEDOR`, `CONVERT_PROSPECT`, `IMPORT_LEADS_CSV`). Convención: `VERBO_RECURSO` en MAYÚSCULAS_SNAKE.
+3. Mantener `title` y `description` actuales (UX no cambia).
 
-2. **Nuevo hook** `src/hooks/facturacion/useFacturacionDateRange.ts`:
-   - Lee/escribe los query params `desde` y `hasta` con `useSearchParams`.
-   - Devuelve `{ desde, hasta, setRango, isInRange(dateString) }`.
-   - Default: primer día del mes actual → hoy.
+Para `notifyError` que **no** vienen de un `catch` (validaciones inline tipo "Agrega al menos un concepto"):
+- Añadir solo `errorCode: ERROR_CODES.VALIDATION_FAILED` y `method: "<VALIDATE_...>"`. No hay `error` raw que pasar.
 
-3. **`src/pages/facturacion/Facturacion.tsx`**: insertar `<DateRangeFilter>` arriba de `<Tabs>` y pasar el rango (vía hook) a los 5 controllers.
+## Agrupación de archivos (por módulo)
 
-4. **Controllers** (cambios pequeños, sólo agregar el filtro al `useMemo` que ya filtra por search/estado):
-   - `useFacturacionPageController` — facturas + gastos.
-   - `useTabProformasController` — proformas.
-   - `useTabProformasPendientesController` — pendientes.
-   - `useTabProyeccionController` — proyección.
+Se editarán en lotes paralelos por módulo para mantener PRs lógicos:
 
-   Cada uno acepta `{ desde, hasta }` como argumento y filtra el array en memoria (los datos ya se traen completos; no requiere cambio en queries Supabase).
+- **Cotización** (8 archivos): `wizard/*` ya hecho; faltan `useCotizacionDetalleHandlers`, `useCotizacionesPageController`, `usePortalCotizacionDetalleController`, mutations.
+- **Embarque** (13 archivos): `useProformas`, `useDialogBolContainers`, `useEmbarqueSubmitOrchestrator`, `useEmbarqueDocumentosActions`, `useEmbarquesPageController`, `useDescargarProformaPdf`, `useNuevoEmbarqueWizard`, `useEditarEmbarqueWizard`, `useEmbarqueForm`, `useEmbarqueEstadoActions`, `useEmbarqueDetalleTracking`, `useTrackingLiveCard`, dialogs.
+- **Cliente / Proveedor** (5 archivos).
+- **CRM** (10 archivos): leads, oportunidades, actividades, plantillas, etapas, motivos.
+- **Catálogos** (3 archivos): puertos, navieras, tipos de contenedor.
+- **Facturación / Admin / Configuración / Portal / Usuarios / Auth** (~10 archivos).
+- **Lib** (`trackingLiveHelpers.ts`).
 
-5. **Exportaciones CSV** (CSV de facturas, layout contable, CSV de proformas, CSV de huecos): respetan el rango activo automáticamente porque exportan `filtered`, no el dataset completo.
+## Verificación
 
-6. **Changelog + versión**: bump `APP_VERSION` a `12.0.1` y entrada en `CHANGELOG.md`.
+- `bunx vitest run src/lib/ui/__tests__/errorDetailsExtract.test.ts` debe seguir verde.
+- `rg "notifyError\(" src -t ts -A6 | rg -B1 "error:" | wc -l` cerca del total de catches.
+- Spot-check: provocar un error en CRM y revisar payload JSON con `requestId` + `errorCode`.
 
-### Lo que NO se toca
+## Versionado
 
-- Estructura de Tabs, columnas de las tablas, lógica de marcado de pagado/facturada.
-- Filtros existentes (search, estado, toggle pendiente/facturada) — siguen funcionando en combinación con el rango.
-- Queries a Supabase: el filtrado es client-side sobre los datos ya cacheados por React Query.
-- Otros filtros (cliente, moneda, monto) — quedan fuera de scope por decisión explícita.
+- Bump `APP_VERSION` → `12.0.0-rc.8`.
+- Entrada en `CHANGELOG.md`:
+  > Reporte de errores estructurado aplicado globalmente: todas las notificaciones de error ahora incluyen `requestId`, `errorCode` y `method`, y extraen `validationErrors` de errores Zod.
+
+## Fuera de alcance
+
+- No se cambia UI ni textos de toasts.
+- No se tocan `notifySuccess` / `notifyWarning`.
+- No se refactoriza `appFeedback.ts` ni `errorReport.ts` (ya soportan los nuevos campos).

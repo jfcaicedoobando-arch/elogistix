@@ -22,6 +22,7 @@ import {
   type PlantillaCanal,
 } from "@/hooks/crm";
 
+import { ERROR_CODES } from "@/lib/domain/errorCatalog";
 const VARIABLES = ["{{contacto}}", "{{empresa}}", "{{vendedor}}", "{{monto}}", "{{moneda}}", "{{etapa}}"];
 
 export default function PlantillasMensajeEditor() {
@@ -35,7 +36,7 @@ export default function PlantillasMensajeEditor() {
 
   const handleCrear = async () => {
     if (!nuevo.nombre.trim() || !nuevo.cuerpo.trim()) {
-      notifyError(toast, { title: "Nombre y cuerpo son obligatorios" });
+      notifyError(toast, { title: "Nombre y cuerpo son obligatorios", method: "HANDLE_CREAR", errorCode: ERROR_CODES.VALIDATION_FAILED });
       return;
     }
     try {
@@ -43,7 +44,7 @@ export default function PlantillasMensajeEditor() {
       notifySuccess(toast, { title: "Plantilla creada" });
       setNuevo({ nombre: "", canal: nuevo.canal, asunto: "", cuerpo: "" });
     } catch (e) {
-      notifyError(toast, { title: "No se pudo crear", description: e instanceof Error ? e.message : undefined });
+      notifyError(toast, { title: "No se pudo crear", description: e instanceof Error ? e.message : undefined, error: e, method: "HANDLE_CREAR" });
     }
   };
 

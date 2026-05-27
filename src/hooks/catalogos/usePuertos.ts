@@ -42,7 +42,7 @@ export function useAdminPuertos() {
       notifySuccess(toast, { title: "Puerto agregado" });
     },
     onError: (e: Error) => {
-      notifyError(toast, { title: "Error al agregar puerto", description: e.message});
+      notifyError(toast, { title: "Error al agregar puerto", description: e.message, method: "ON_ERROR", errorCode: ERROR_CODES.VALIDATION_FAILED });
     },
   });
 
@@ -50,7 +50,7 @@ export function useAdminPuertos() {
     mutationFn: ({ id, activo }: { id: string; activo: boolean }) => setPuertoActivo(id, activo),
     onSuccess: () => invalidate(),
     onError: (e: Error) => {
-      notifyError(toast, { title: "Error al actualizar", description: e.message});
+      notifyError(toast, { title: "Error al actualizar", description: e.message, method: "ON_ERROR", errorCode: ERROR_CODES.VALIDATION_FAILED });
     },
   });
 
@@ -61,7 +61,7 @@ export function useAdminPuertos() {
       notifySuccess(toast, { title: "Puerto eliminado" });
     },
     onError: (e: Error) => {
-      notifyError(toast, { title: "Error al eliminar", description: e.message});
+      notifyError(toast, { title: "Error al eliminar", description: e.message, method: "ON_ERROR", errorCode: ERROR_CODES.VALIDATION_FAILED });
     },
   });
 

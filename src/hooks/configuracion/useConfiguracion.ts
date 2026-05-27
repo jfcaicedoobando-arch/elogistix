@@ -39,7 +39,7 @@ export function useUpdateConfiguracion() {
       notifySuccess(toast, { title: "Configuración guardada" });
     },
     onError: (error: Error) => {
-      notifyError(toast, { title: "Error al guardar", description: error.message});
+      notifyError(toast, { title: "Error al guardar", description: error.message, method: "ON_ERROR", errorCode: ERROR_CODES.VALIDATION_FAILED });
     },
   });
 }

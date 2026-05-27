@@ -110,7 +110,7 @@ export default function SeccionCostosInternosPLDetalle({ cotizacionId, conceptos
       notifySuccess(toast, { title: "Costos guardados correctamente" });
       setEditMode(false);
     } catch (err: unknown) {
-      notifyError(toast, { title: "Error al guardar", description: getErrorMessage(err)});
+      notifyError(toast, { title: "Error al guardar", description: getErrorMessage(err), error: err, method: "HANDLE_GUARDAR" });
     }
   };
 

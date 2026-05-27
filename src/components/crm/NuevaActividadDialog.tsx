@@ -24,6 +24,7 @@ import {
 import { useLeads } from "@/hooks/crm";
 import { useOportunidades } from "@/hooks/crm";
 
+import { ERROR_CODES } from "@/lib/domain/errorCatalog";
 interface Props {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -60,8 +61,8 @@ export default function NuevaActividadDialog({ open, onOpenChange, defaultEntida
   };
 
   const handleSubmit = async () => {
-    if (!entidadId) return notifyError(toast, { title: "Selecciona la entidad" });
-    if (!asunto.trim()) return notifyError(toast, { title: "Asunto requerido" });
+    if (!entidadId) return notifyError(toast, { title: "Selecciona la entidad", method: "HANDLE_SUBMIT", errorCode: ERROR_CODES.VALIDATION_FAILED });
+    if (!asunto.trim()) return notifyError(toast, { title: "Asunto requerido", method: "HANDLE_SUBMIT", errorCode: ERROR_CODES.VALIDATION_FAILED });
     try {
       const res = await crear.mutateAsync({
         tipo,
@@ -76,7 +77,7 @@ export default function NuevaActividadDialog({ open, onOpenChange, defaultEntida
       onOpenChange(false);
       onCreated?.(res.id);
     } catch (e) {
-      notifyError(toast, { title: "No se pudo crear", description: e instanceof Error ? e.message : undefined });
+      notifyError(toast, { title: "No se pudo crear", description: e instanceof Error ? e.message : undefined, error: e, method: "HANDLE_SUBMIT" });
     }
   };
 

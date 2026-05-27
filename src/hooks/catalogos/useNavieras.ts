@@ -42,7 +42,7 @@ export function useAdminNavieras() {
       notifySuccess(toast, { title: "Naviera agregada" });
     },
     onError: (e: Error) => {
-      notifyError(toast, { title: "Error al agregar naviera", description: e.message});
+      notifyError(toast, { title: "Error al agregar naviera", description: e.message, method: "ON_ERROR", errorCode: ERROR_CODES.VALIDATION_FAILED });
     },
   });
 
@@ -50,7 +50,7 @@ export function useAdminNavieras() {
     mutationFn: ({ id, activo }: { id: string; activo: boolean }) => setNavieraActivo(id, activo),
     onSuccess: () => invalidate(),
     onError: (e: Error) => {
-      notifyError(toast, { title: "Error al actualizar", description: e.message});
+      notifyError(toast, { title: "Error al actualizar", description: e.message, method: "ON_ERROR", errorCode: ERROR_CODES.VALIDATION_FAILED });
     },
   });
 
@@ -61,7 +61,7 @@ export function useAdminNavieras() {
       notifySuccess(toast, { title: "Naviera eliminada" });
     },
     onError: (e: Error) => {
-      notifyError(toast, { title: "Error al eliminar", description: e.message});
+      notifyError(toast, { title: "Error al eliminar", description: e.message, method: "ON_ERROR", errorCode: ERROR_CODES.VALIDATION_FAILED });
     },
   });
 
