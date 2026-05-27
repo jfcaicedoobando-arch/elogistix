@@ -4,33 +4,25 @@
 
 | Bucket | # | Significado |
 |--------|--:|-------------|
-| OK | 126 | Filtro por PK/FK, count-only, o ya pagina. |
+| OK | 134 | Filtro por PK/FK, count-only, o ya pagina. |
 | CATALOG | 29 | Tabla de catálogo acotado (allowlist). |
-| RISK | 19 | Sin paginar y sin filtro acotante — candidato a .range/.limit. |
+| RISK | 11 | Sin paginar y sin filtro acotante — candidato a .range/.limit. |
 
 ## RISK — detalle
 
 | Archivo:línea | Tabla | Snippet |
 |---------------|-------|---------|
-| `src/services/admin/observability.ts:71` | `app_logs` | `.from("app_logs") .select("*", { count: "exact" }) .order("ts", { ascending: false });` |
 | `src/services/admin/stats.ts:30` | `embarques` | `.from("embarques").select("organization_id"), supabase.from("cotizaciones").select("organization_id"), ]);` |
 | `src/services/admin/stats.ts:31` | `cotizaciones` | `.from("cotizaciones").select("organization_id"), ]);` |
 | `src/services/auditoria/revisiones.ts:6` | `auditoria_revisiones` | `.from("auditoria_revisiones") .select("*") .order("created_at", { ascending: false });` |
 | `src/services/auditoria/snapshots.ts:11` | `auditoria_snapshots` | `.from("auditoria_snapshots") .select("*") .gte("fecha", desdeIso) .order("fecha", { ascending: true });` |
-| `src/services/cliente/crud.ts:110` | `clientes` | `.from("clientes") .select("id, nombre") .order("nombre");` |
-| `src/services/cotizacion/queries.ts:37` | `cotizaciones` | `.from("cotizaciones") .select(COTIZACION_LIST_COLUMNS) .order("created_at", { ascending: false });` |
-| `src/services/cotizacion/queries.ts:48` | `cotizaciones` | `.from("cotizaciones") .select(COTIZACION_ACEPTADA_COLUMNS) .eq("estado", "Aceptada") .order("created_at", { ascending: false });` |
-| `src/services/crm/actividades.ts:28` | `crm_actividades` | `.from("crm_actividades") .select(COLS, { count: "exact" }) .order("fecha_programada", { ascending: true, nullsFirst: false });` |
 | `src/services/crm/forecast.ts:27` | `crm_oportunidades` | `.from("crm_oportunidades") .select("id, monto_estimado, probabilidad, fecha_estimada_cierre, vendedor_email, etapa_id");` |
 | `src/services/crm/forecast.ts:38` | `crm_leads` | `.from("crm_leads").select("estado, fuente"), supabase.from("crm_oportunidades").select("motivo_perdida_id, etapa_id"), supabase.from("crm_mo` |
 | `src/services/crm/forecast.ts:39` | `crm_oportunidades` | `.from("crm_oportunidades").select("motivo_perdida_id, etapa_id"), supabase.from("crm_motivos_perdida").select("id, nombre"), supabase.from("` |
 | `src/services/crm/leaderboard.ts:33` | `crm_oportunidades` | `.from("crm_oportunidades") .select("vendedor_email, valor_real, monto_estimado, etapa_id, fecha_cierre_real") .gte("fecha_cierre_real", inic` |
 | `src/services/crm/oportunidades.ts:24` | `crm_oportunidades` | `.from("crm_oportunidades") .select(COLS, { count: "exact" }) .order("created_at", { ascending: false });` |
 | `src/services/crm/leads/queries.ts:22` | `crm_leads` | `.from("crm_leads") .select(LEAD_COLUMNS, { count: "exact" }) .order("created_at", { ascending: false });` |
-| `src/services/facturas/huecoFacturacion/fetchSources.ts:24` | `embarques` | `.from("embarques") .select( "id, expediente, cliente_nombre, operador, etd, eta, bl_master, bl_house, tipo_cambio_usd, tipo_cambio_eur", ) .` |
 | `src/services/facturas/index.ts:115` | `conceptos_costo` | `.from("conceptos_costo") .select("*, embarques!conceptos_costo_embarque_id_fkey(expediente)") .eq("estado_liquidacion", "Pendiente") .order(` |
-| `src/services/facturas/proyeccion/fetchSources.ts:25` | `embarques` | `.from("embarques") .select( "id, expediente, cliente_nombre, operador, eta, contenedor, tipo_cambio_usd, tipo_cambio_eur, tiene_proforma", )` |
-| `src/services/proforma/facturar.ts:88` | `facturas` | `.from("facturas") .insert(facturasACrear) .select("id");` |
 
 ## CATALOG — detalle
 
@@ -70,19 +62,20 @@
 - `src/services/proforma/queries.ts` — 7
 - `src/services/crm/dashboard.ts` — 6
 - `src/services/admin/stats.ts` — 5
-- `src/services/cliente/crud.ts` — 4
+- `src/services/cliente/crud.ts` — 5
+- `src/services/cotizacion/queries.ts` — 5
+- `src/services/crm/actividades.ts` — 4
 - `src/services/crm/lineage.ts` — 4
 - `src/services/crm/leads/convertir.ts` — 4
+- `src/services/facturas/proyeccion/fetchSources.ts` — 4
+- `src/services/admin/observability.ts` — 3
 - `src/services/cotizacion/conversiones/duplicar.ts` — 3
-- `src/services/cotizacion/queries.ts` — 3
-- `src/services/crm/actividades.ts` — 3
 - `src/services/crm/cliente360.ts` — 3
 - `src/services/crm/search.ts` — 3
 - `src/services/embarque/documentos.ts` — 3
 - `src/services/facturas/exports.ts` — 3
-- `src/services/facturas/proyeccion/fetchSources.ts` — 3
+- `src/services/facturas/huecoFacturacion/fetchSources.ts` — 3
 - `src/services/proveedor/index.ts` — 3
-- `src/services/admin/observability.ts` — 2
 - `src/services/auditoria/comentarios.ts` — 2
 - `src/services/auditoria/revisiones.ts` — 2
 - `src/services/cliente/contactos.ts` — 2
@@ -98,9 +91,9 @@
 - `src/services/embarque/queries/conceptos.ts` — 2
 - `src/services/embarque/queries/detalle.ts` — 2
 - `src/services/embarque/queries/exportListado.ts` — 2
-- `src/services/facturas/huecoFacturacion/fetchSources.ts` — 2
 - `src/services/facturas/snapshots.ts` — 2
 - `src/services/proforma/crud.ts` — 2
+- `src/services/proforma/facturar.ts` — 2
 - `src/services/admin/organizations.ts` — 1
 - `src/services/auditoria/snooze.ts` — 1
 - `src/services/auth/index.ts` — 1
@@ -119,5 +112,4 @@
 - `src/services/embarque/queries/expedientes.ts` — 1
 - `src/services/embarque/queries/extras.ts` — 1
 - `src/services/portal/notificaciones.ts` — 1
-- `src/services/proforma/facturar.ts` — 1
 - `src/services/tracking/index.ts` — 1
