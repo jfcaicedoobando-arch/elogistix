@@ -1,50 +1,25 @@
 {
-  "version": "11.64.0",
-  "generatedAt": "2026-05-27T04:29:31.609Z",
+  "version": "11.68.0",
+  "generatedAt": "2026-05-27T05:14:28.353Z",
   "arch": {
     "hooksContextsDirectImports": [],
     "componentsPagesDirectImports": [],
     "oversized": []
   },
   "casts": {
-    "total": 750,
+    "total": 730,
     "bySeverity": {
       "SAFE": 297,
       "LOW": 12,
-      "MEDIUM": 441,
+      "MEDIUM": 421,
       "HIGH": 0,
       "CRITICAL": 0
     },
     "topFiles": [
       {
-        "file": "src/lib/parsers/dashboard.ts",
-        "total": 7,
-        "weight": 14
-      },
-      {
-        "file": "src/components/admin/TabSeguridadGlobal.tsx",
-        "total": 6,
-        "weight": 12
-      },
-      {
         "file": "src/lib/audit/diffFields.ts",
         "total": 12,
         "weight": 12
-      },
-      {
-        "file": "src/lib/mappers/embarqueToDb.ts",
-        "total": 6,
-        "weight": 12
-      },
-      {
-        "file": "src/services/embarque/documentos.ts",
-        "total": 6,
-        "weight": 12
-      },
-      {
-        "file": "src/components/auditoria/HallazgosFiltros.tsx",
-        "total": 5,
-        "weight": 10
       },
       {
         "file": "src/components/shared/dataTable/__tests__/DataTable.regression.test.tsx",
@@ -63,6 +38,31 @@
       },
       {
         "file": "src/components/proveedor/EditarProveedorDialog.tsx",
+        "total": 4,
+        "weight": 8
+      },
+      {
+        "file": "src/components/proveedor/NuevoProveedorDialog.tsx",
+        "total": 4,
+        "weight": 8
+      },
+      {
+        "file": "src/generators/__tests__/exportCsv.test.ts",
+        "total": 4,
+        "weight": 8
+      },
+      {
+        "file": "src/hooks/cotizacion/mutations/useCotizacionMutations.ts",
+        "total": 4,
+        "weight": 8
+      },
+      {
+        "file": "src/lib/csv/leadsCsv.ts",
+        "total": 4,
+        "weight": 8
+      },
+      {
+        "file": "src/lib/embarque/__tests__/embarquesPageHelpers.test.ts",
         "total": 4,
         "weight": 8
       }

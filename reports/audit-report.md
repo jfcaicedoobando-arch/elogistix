@@ -1,6 +1,6 @@
-# Audit Report — 11.64.0
+# Audit Report — 11.68.0
 
-Generado: 2026-05-27T04:29:31.609Z
+Generado: 2026-05-27T05:14:28.353Z
 
 ## Resumen
 
@@ -9,7 +9,7 @@ Generado: 2026-05-27T04:29:31.609Z
 | Capa (Supabase directo en hooks/contexts) | ✅ | 0 archivos |
 | Capa (Supabase directo en components/pages) | ✅ | 0 archivos |
 | Power-of-10 (>200 líneas) | ✅ | 0 archivos |
-| Casts HIGH + CRITICAL | ✅ | 0 / 750 |
+| Casts HIGH + CRITICAL | ✅ | 0 / 730 |
 | Higiene de tests | ✅ | 0 violaciones |
 
 ## Arquitectura
@@ -25,13 +25,13 @@ Generado: 2026-05-27T04:29:31.609Z
 
 ## Casts
 
-Total: **750** — HIGH: **0**, CRITICAL: **0**
+Total: **730** — HIGH: **0**, CRITICAL: **0**
 
 | Severidad | Cantidad |
 |---|---:|
 | SAFE | 297 |
 | LOW | 12 |
-| MEDIUM | 441 |
+| MEDIUM | 421 |
 | HIGH | 0 |
 | CRITICAL | 0 |
 
@@ -39,16 +39,16 @@ Total: **750** — HIGH: **0**, CRITICAL: **0**
 
 | # | Archivo | Total | Peso |
 |---|---|---:|---:|
-| 1 | `src/lib/parsers/dashboard.ts` | 7 | 14 |
-| 2 | `src/components/admin/TabSeguridadGlobal.tsx` | 6 | 12 |
-| 3 | `src/lib/audit/diffFields.ts` | 12 | 12 |
-| 4 | `src/lib/mappers/embarqueToDb.ts` | 6 | 12 |
-| 5 | `src/services/embarque/documentos.ts` | 6 | 12 |
-| 6 | `src/components/auditoria/HallazgosFiltros.tsx` | 5 | 10 |
-| 7 | `src/components/shared/dataTable/__tests__/DataTable.regression.test.tsx` | 5 | 10 |
-| 8 | `src/hooks/embarque/useProformas.ts` | 5 | 10 |
-| 9 | `src/services/embarque/queries/exportListado.ts` | 7 | 10 |
-| 10 | `src/components/proveedor/EditarProveedorDialog.tsx` | 4 | 8 |
+| 1 | `src/lib/audit/diffFields.ts` | 12 | 12 |
+| 2 | `src/components/shared/dataTable/__tests__/DataTable.regression.test.tsx` | 5 | 10 |
+| 3 | `src/hooks/embarque/useProformas.ts` | 5 | 10 |
+| 4 | `src/services/embarque/queries/exportListado.ts` | 7 | 10 |
+| 5 | `src/components/proveedor/EditarProveedorDialog.tsx` | 4 | 8 |
+| 6 | `src/components/proveedor/NuevoProveedorDialog.tsx` | 4 | 8 |
+| 7 | `src/generators/__tests__/exportCsv.test.ts` | 4 | 8 |
+| 8 | `src/hooks/cotizacion/mutations/useCotizacionMutations.ts` | 4 | 8 |
+| 9 | `src/lib/csv/leadsCsv.ts` | 4 | 8 |
+| 10 | `src/lib/embarque/__tests__/embarquesPageHelpers.test.ts` | 4 | 8 |
 
 ## Tests
 
