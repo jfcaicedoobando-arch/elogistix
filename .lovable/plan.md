@@ -1,39 +1,64 @@
-# Auditoría arquitectónica — Libre Carga (estado 11.62.0)
 
-> **Bloques A, B, C9, D15 cerrados.** Diagnóstico original archivado en
-> `mem://audit/pendings`.
+# Plan: cierre ordenado del backlog de auditoría
 
-## 1. Métricas baseline (post D15)
+## Pendientes y dependencias
 
-| Métrica | 11.45.0 | 11.62.0 | Meta |
-|---|---:|---:|---:|
-| Hooks/Contexts con Supabase directo | 28 | **0** ✅ | 0 |
-| Components/Pages con Supabase directo | 1 | **0** ✅ | 0 |
-| Archivos productivos >200 líneas | 2 | **0** ✅ | 0 |
-| `any` / `console.*` productivos | 0 | **0** ✅ | 0 |
-| Suites en `services/` | — | **18** ✅ | ≥10 |
-| Total tests | 709 | **729** | crecer |
-| Casts HIGH + CRITICAL | — | **37** | 0 |
+| ID | Tarea | Esfuerzo | Riesgo | Depende de |
+|----|-------|----------|--------|------------|
+| D14 | Guardrail `archivosProductivosOver200 === 0` en test baseline | XS (5 min) | Nulo | — |
+| D16 | Reducir 37 casts HIGH (`as any`, `as unknown as`) | L | Medio (runtime) | D14 |
+| C10 | Migrar 25 `style={{…}}` inline a tokens Tailwind | M | Bajo (visual) | — |
+| D12 | Dividir `routes.tsx` (188 líneas) en `routes/{admin,portal,crm,public}.tsx` | S | Bajo | D14 activo |
+| D13 | Vigilar archivos 180-200 líneas (preventivo) | XS continuo | Nulo | D14, D12 |
+| P1.5 | Unificar `utils/` + `lib/utils.ts` + `lib/utils/` | M | Medio (imports masivos) | D14, D16 |
+| P1.6 | Romper servicios "god" (facturas/proyeccion, cotizacion/mutations, huecoFacturacion) | L | Alto (lógica financiera) | D16, P1.5 |
+| P1.7 | Schemas Zod en boundary Supabase (embarques/facturas/cotizaciones) | L | Medio | P1.6 |
+| Cx  | Bajar complejidad 13 funciones src/ + 4 edge functions a ≤12 | M | Medio | P1.6 |
 
-## 2. Bloques cerrados
+## Orden óptimo y justificación
 
-- **A (11.54→11.59.1):** 33 hooks/contexts migrados a `services/`.
-- **B (11.60.0):** 0 archivos productivos >200. Split de `services/crm/leads`, `BulkImportDialog`, `ImportarLeadsCsvDialog`, `lib/query/index.ts`.
-- **C9 (11.61.0):** helpers no-hook movidos de `hooks/crm/` a `lib/crm/`.
-- **D15 (11.62.0):** reporte CI consolidado. `scripts/audit-report.ts` agrega arch + casts + tests y CI publica `reports/audit-report.{md,json}` (artifact 30d + step summary en PRs). Lógica compartida extraída a `scripts/lib/{walk,arch,casts,tests}.ts`.
+```text
+Fase 1 — Blindaje (sin riesgo)
+  1. D14  guardrail test                            ← evita regresiones desde día 0
+  2. C10  inline styles → tokens                    ← UI-only, no toca lógica
 
-## 3. Pendiente
+Fase 2 — Limpieza tipos y rutas
+  3. D16  casts HIGH (en tandas de ~10)             ← destapa bugs ocultos antes de refactors grandes
+  4. D12  split routes.tsx                          ← rápido, mejora DX para Fase 3
 
-### Bloque C — Consistencia
-- **C10.** 25 `style={{…}}` inline → tokens Tailwind / semánticos.
-- **C11.** ❌ Descartado (carpetas de dominio desambiguan duplicados).
+Fase 3 — Reorganización estructural
+  5. P1.5 unificar utils/                           ← prerequisito real para romper servicios
+  6. D13  pasada preventiva 180-200 líneas          ← aprovecha el momentum
 
-### Bloque D — Opcional
-- **D12.** Dividir `routes.tsx` (188) en `routes/{admin,portal,crm,public}.tsx`.
-- **D13.** Vigilar archivos 180–200 líneas (lista en mem://audit/pendings).
-- **D14.** Añadir aserción `archivosProductivosOver200 === 0` al `architecture-baseline.test.ts` como guardrail explícito (hoy se reporta pero no se gatea).
-- **D16.** Reducir 37 casts HIGH (`services/embarque/mutations.ts`, `services/portal/queries.ts`, RPCs) a `fromDb(data, ZodSchema)`.
+Fase 4 — Refactors de dominio (alto riesgo, requieren tests verdes)
+  7. P1.6 romper servicios god                      ← necesita tipos limpios (D16) y utils unificados (P1.5)
+  8. P1.7 Zod en boundary Supabase                  ← se inserta natural al partir los servicios
+  9. Cx   reducir complejidad ≤12 + activar guardrail
 
-## 4. Orden recomendado
+```
 
-D14 (5 min, gating duro) → D16 (mayor ROI runtime) → C10 → D12.
+### Por qué este orden
+
+- **D14 primero**: 5 minutos, cero riesgo, congela el avance ganado. Si algo crece >200 líneas en pasos posteriores, CI lo frena.
+- **C10 antes que refactors**: es puramente visual, no interfiere con tipos ni servicios, y deja el CSS coherente antes de mover archivos.
+- **D16 antes que P1.5/P1.6**: los `as any` ocultan contratos rotos; arreglarlos primero hace que mover utils y partir servicios revele errores reales del compilador, no falsos verdes.
+- **D12 después de D14**: el guardrail activo garantiza que el split de rutas no reintroduzca un archivo gigante; además mejora la navegación para los refactors siguientes.
+- **P1.5 antes de P1.6**: romper servicios "god" implica mover helpers; tener `lib/utils/` + `lib/io/` ya unificado evita doble trabajo de imports.
+- **P1.7 acoplado a P1.6**: insertar Zod en el mismo momento que partes el servicio es 1 PR en vez de 2, y aprovecha que ya estás tocando los boundaries.
+- **Complejidad al final**: muchas de las 13 funciones bajarán de complejidad "gratis" al partir los servicios god (P1.6) y unificar utils (P1.5). Atacarlas antes sería trabajo perdido.
+
+## Entregables por fase
+
+- **Fase 1** → 11.63.0 (D14) + 11.64.0 (C10)
+- **Fase 2** → 11.65.x (D16 por tandas) + 11.66.0 (D12)
+- **Fase 3** → 11.67.0 (P1.5) + nota D13
+- **Fase 4** → 11.68.0 (P1.6 + P1.7 acoplado) + 11.69.0 (complejidad + guardrail ≤12)
+
+## Fuera de alcance de este plan
+
+- Implementación detallada de cada bloque (se planificará al iniciar cada fase).
+- Cambios funcionales o de UI no listados en la auditoría.
+
+## ¿Por dónde arrancamos?
+
+Recomiendo ejecutar **Fase 1 completa (D14 + C10)** en el siguiente turno: ambos son de bajo riesgo y dejan el repo blindado para los refactors duros.
