@@ -1,5 +1,6 @@
 import { useFormContext } from "react-hook-form";
 import { Input } from "@/components/ui/input";
+import { NumericInput } from "@/components/shared/NumericInput";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -72,19 +73,19 @@ export default function SeccionMercanciaAerea({ msdsFile, setMsdsFile }: Props) 
                 {dimensiones.map((dim, i) => (
                   <TableRow key={i}>
                     <TableCell>
-                      <Input type="number" min={0} value={dim.piezas} onChange={e => actualizarDimension(i, 'piezas', Number(e.target.value))} className="h-8" />
+                      <NumericInput value={dim.piezas} onChange={n => actualizarDimension(i, 'piezas', n)} aria-label="Piezas" />
                     </TableCell>
                     <TableCell>
-                      <Input type="number" min={0} step={0.1} value={dim.alto_cm} onChange={e => actualizarDimension(i, 'alto_cm', Number(e.target.value))} className="h-8" />
+                      <NumericInput value={dim.alto_cm} onChange={n => actualizarDimension(i, 'alto_cm', n)} decimals aria-label="Alto en centímetros" />
                     </TableCell>
                     <TableCell>
-                      <Input type="number" min={0} step={0.1} value={dim.largo_cm} onChange={e => actualizarDimension(i, 'largo_cm', Number(e.target.value))} className="h-8" />
+                      <NumericInput value={dim.largo_cm} onChange={n => actualizarDimension(i, 'largo_cm', n)} decimals aria-label="Largo en centímetros" />
                     </TableCell>
                     <TableCell>
-                      <Input type="number" min={0} step={0.1} value={dim.ancho_cm} onChange={e => actualizarDimension(i, 'ancho_cm', Number(e.target.value))} className="h-8" />
+                      <NumericInput value={dim.ancho_cm} onChange={n => actualizarDimension(i, 'ancho_cm', n)} decimals aria-label="Ancho en centímetros" />
                     </TableCell>
                     <TableCell>
-                      <Input value={dim.peso_volumetrico_kg.toFixed(2)} readOnly className="h-8 bg-muted" />
+                      <Input value={dim.peso_volumetrico_kg.toFixed(2)} readOnly className="h-8 bg-muted text-right tabular-nums" />
                     </TableCell>
                     <TableCell>
                       <Button variant="ghost" size="icon" onClick={() => eliminarFila(i)} disabled={dimensiones.length <= 1} className="h-8 w-8" aria-label="Eliminar fila">

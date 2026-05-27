@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [12.0.0-rc.11] - 2026-05-27
+- **fix(cotizaciones)**: los inputs de dimensiones en carga LCL y aérea (Nueva Cotización) ahora permiten borrar el `0` por defecto, no muestran flechas spinner, no cambian valor con el scroll del mouse y seleccionan el contenido al hacer foco. Nuevo componente compartido `NumericInput` (`src/components/shared/NumericInput.tsx`) usado en `SeccionMercanciaMaritimeLCL` y `SeccionMercanciaAerea`.
+
 ## [12.0.0-rc.10] - 2026-05-27
 - **feat(tablas)**: el selector de filas por página simplificado a **100 / pág** (default) y **Todos** se aplica ahora a todas las tablas principales: Clientes, Proveedores, Cotizaciones, Leads, Actividades, Facturación (Facturas y Proformas). `useListPageState.DEFAULT_PAGE_SIZE` y `useTabProformasState` ajustados a 100. Se conservan sin cambios las tablas de Diagnóstico/Logs (opciones grandes intencionales), Oportunidades (kanban) y Bitácora/Auditoría.
 
