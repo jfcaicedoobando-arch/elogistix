@@ -5,17 +5,17 @@ Auditoría automática de los `as` casts en `src/`. Generado por
 
 ## Resumen
 
-Total de `as` casts detectados: **750**
+Total de `as` casts detectados: **730**
 
 | Categoría | Peso | Cantidad | % |
 |-----------|------|----------|---|
-| SAFE      | 0 | 297     | 39.6% |
-| LOW       | 1 | 9      | 1.2% |
-| MEDIUM    | 2 | 441   | 58.8% |
-| HIGH      | 3 | 3     | 0.4% |
+| SAFE      | 0 | 297     | 40.7% |
+| LOW       | 1 | 12      | 1.6% |
+| MEDIUM    | 2 | 421   | 57.7% |
+| HIGH      | 3 | 0     | 0.0% |
 | CRITICAL  | 4 | 0 | 0.0% |
 
-**Lectura clave:** los casts a accionar son los **HIGH + CRITICAL** = 3 (~0.4%). El resto es seguro o aceptable bajo política.
+**Lectura clave:** los casts a accionar son los **HIGH + CRITICAL** = 0 (~0.0%). El resto es seguro o aceptable bajo política.
 
 ## Definición de categorías
 
@@ -29,42 +29,25 @@ Total de `as` casts detectados: **750**
 
 | # | Archivo | Total | Peso | SAFE | LOW | MED | HIGH | CRIT |
 |---|---------|------:|-----:|-----:|----:|----:|-----:|-----:|
-| 1 | `src/lib/parsers/dashboard.ts` | 7 | 14 | 0 | 0 | 7 | 0 | 0 |
-| 2 | `src/services/embarque/queries/exportListado.ts` | 7 | 14 | 0 | 2 | 3 | 2 | 0 |
-| 3 | `src/components/admin/TabSeguridadGlobal.tsx` | 6 | 12 | 0 | 0 | 6 | 0 | 0 |
-| 4 | `src/lib/audit/diffFields.ts` | 12 | 12 | 6 | 0 | 6 | 0 | 0 |
-| 5 | `src/lib/mappers/embarqueToDb.ts` | 6 | 12 | 0 | 0 | 6 | 0 | 0 |
-| 6 | `src/services/embarque/documentos.ts` | 6 | 12 | 0 | 0 | 6 | 0 | 0 |
-| 7 | `src/components/auditoria/HallazgosFiltros.tsx` | 5 | 10 | 0 | 0 | 5 | 0 | 0 |
-| 8 | `src/components/shared/dataTable/__tests__/DataTable.regression.test.tsx` | 5 | 10 | 0 | 0 | 5 | 0 | 0 |
-| 9 | `src/hooks/embarque/useProformas.ts` | 5 | 10 | 0 | 0 | 5 | 0 | 0 |
-| 10 | `src/components/proveedor/EditarProveedorDialog.tsx` | 4 | 8 | 0 | 0 | 4 | 0 | 0 |
-| 11 | `src/components/proveedor/NuevoProveedorDialog.tsx` | 4 | 8 | 0 | 0 | 4 | 0 | 0 |
-| 12 | `src/generators/__tests__/exportCsv.test.ts` | 4 | 8 | 0 | 0 | 4 | 0 | 0 |
-| 13 | `src/hooks/cotizacion/mutations/useCotizacionMutations.ts` | 4 | 8 | 0 | 0 | 4 | 0 | 0 |
-| 14 | `src/lib/csv/leadsCsv.ts` | 4 | 8 | 0 | 0 | 4 | 0 | 0 |
-| 15 | `src/lib/embarque/__tests__/embarquesPageHelpers.test.ts` | 4 | 8 | 0 | 0 | 4 | 0 | 0 |
+| 1 | `src/lib/audit/diffFields.ts` | 12 | 12 | 6 | 0 | 6 | 0 | 0 |
+| 2 | `src/components/shared/dataTable/__tests__/DataTable.regression.test.tsx` | 5 | 10 | 0 | 0 | 5 | 0 | 0 |
+| 3 | `src/hooks/embarque/useProformas.ts` | 5 | 10 | 0 | 0 | 5 | 0 | 0 |
+| 4 | `src/services/embarque/queries/exportListado.ts` | 7 | 10 | 0 | 4 | 3 | 0 | 0 |
+| 5 | `src/components/proveedor/EditarProveedorDialog.tsx` | 4 | 8 | 0 | 0 | 4 | 0 | 0 |
+| 6 | `src/components/proveedor/NuevoProveedorDialog.tsx` | 4 | 8 | 0 | 0 | 4 | 0 | 0 |
+| 7 | `src/generators/__tests__/exportCsv.test.ts` | 4 | 8 | 0 | 0 | 4 | 0 | 0 |
+| 8 | `src/hooks/cotizacion/mutations/useCotizacionMutations.ts` | 4 | 8 | 0 | 0 | 4 | 0 | 0 |
+| 9 | `src/lib/csv/leadsCsv.ts` | 4 | 8 | 0 | 0 | 4 | 0 | 0 |
+| 10 | `src/lib/embarque/__tests__/embarquesPageHelpers.test.ts` | 4 | 8 | 0 | 0 | 4 | 0 | 0 |
+| 11 | `src/lib/mappers/cotizacion.ts` | 4 | 8 | 0 | 0 | 4 | 0 | 0 |
+| 12 | `src/services/__tests__/tracking.test.ts` | 4 | 8 | 0 | 0 | 4 | 0 | 0 |
+| 13 | `src/services/cotizacion/mutations/payloadBuilders.ts` | 4 | 8 | 0 | 0 | 4 | 0 | 0 |
+| 14 | `src/services/cotizacion/mutations/update.ts` | 4 | 8 | 0 | 0 | 4 | 0 | 0 |
+| 15 | `src/services/crm/cliente360.ts` | 4 | 8 | 0 | 0 | 4 | 0 | 0 |
 
 ## Top-30 casts más riesgosos (HIGH + CRITICAL)
 
-### 1. [HIGH] `src/lib/queryPersistBootstrap.ts:28`
-
-```ts
-queryClient: client as unknown as Parameters<typeof persistQueryClient>[0]["queryClient"],
-```
-
-### 2. [HIGH] `src/services/embarque/queries/exportListado.ts:56`
-
-```ts
-countQueryBase as unknown as QueryLike,
-```
-
-### 3. [HIGH] `src/services/embarque/queries/exportListado.ts:57`
-
-```ts
-) as unknown as typeof countQueryBase);
-```
-
+_Ningún cast HIGH o CRITICAL detectado._
 
 ## Roadmap
 
