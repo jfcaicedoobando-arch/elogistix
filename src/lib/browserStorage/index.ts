@@ -95,6 +95,10 @@ export function clearChunkReloadFlag(): void {
   safeSessionStorage.removeItem(STORAGE_KEYS.chunkErrorReload);
 }
 
+export function clearPersistedQueryCache(): void {
+  safeLocalStorage.removeItem(STORAGE_KEYS.queryCache);
+}
+
 export function getStoredAppVersion(): string | null {
   return safeLocalStorage.getItem(STORAGE_KEYS.appVersion);
 }
