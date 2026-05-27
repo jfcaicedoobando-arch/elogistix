@@ -91,9 +91,7 @@ export function useCrearProforma() {
       invalidateProformaCaches(queryClient, proforma.embarque_id);
     },
     onError: (error: Error) => {
-      notifyError(toast, { title: `Error al generar proforma: ${error.message}`});,
- method: "ON_ERROR",
- errorCode: ERROR_CODES.VALIDATION_FAILED,
+      notifyError(toast, { title: `Error al generar proforma: ${error.message}`, error, method: "CREATE_PROFORMA" });
     },
   });
 }
