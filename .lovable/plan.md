@@ -1,67 +1,36 @@
-# Versión 11.66.0 — Cierre P1.5/P1.6 + P1.7 (Zod boundaries, hotspots)
+# Backlog de auditoría — estado al 11.66.0
 
-## Contexto
+## Cerrados
 
-Al revisar el estado real del código contra `.lovable/plan.md`:
+- ✅ **D14** (11.63.0) — Guardrail `oversized > 200` en `architecture-baseline.test.ts`.
+- ✅ **C10** (11.63.0) — Quick wins inline styles + política en `mem://principles/inline-styles`.
+- ✅ **D16** (11.64.0) — 0 casts HIGH/CRITICAL productivos. Clasificador + guardrail.
+- ✅ **D12** (11.65.0) — Split de `routes.tsx` en 4 grupos por guarda+layout (188→19 líneas).
+- ✅ **P1.5** (11.66.0) — Ya satisfecha en el árbol actual: solo existe `src/lib/utils/` con barrel; resto de utilidades segregadas por dominio.
+- ✅ **P1.6** (11.66.0) — Ya satisfecha: ningún servicio supera 200 líneas; los "god services" citados ya son carpetas modulares.
 
-- **P1.5 (unificar utils)** ya está satisfecha: existe sólo `src/lib/utils/` (con `index.ts` como barrel), no hay `src/utils/` ni `src/lib/utils.ts`. Los demás "utils" están bien segregados por dominio (`formatters/`, `io/`, `parsers/`, `validation/`).
-- **P1.6 (servicios "god")** ya está satisfecha: los archivos citados (`facturas/proyeccion`, `cotizacion/mutations`, `useHuecoFacturacion`) hoy son carpetas modulares o archivos ≤55 líneas. Ningún servicio supera 200 líneas (mayor: `cliente/crud.ts` 174).
-- **P1.7 (Zod en boundary Supabase)** sí tiene trabajo real: `fromDb()` ya acepta schema opcional, pero sólo se usa en 2 lugares (`services/embarque/mutations.ts`, `services/portal/queries.ts`). Los demás boundaries siguen con cast crudo `fromDb<T>()`.
+## Pendientes
 
-Esta versión cierra los dos ítems ya satisfechos (con evidencia) y avanza P1.7 sobre los hotspots de mayor peso de riesgo según `audit-report.md`.
+| ID | Tarea | Esfuerzo | Riesgo |
+|----|-------|----------|--------|
+| D13 | Vigilar archivos 180-200 líneas (preventivo, continuo) | XS | Nulo |
+| P1.7* | Extender Zod a otros boundaries Supabase (parcial: 3 hotspots cubiertos en 11.66.0) | M | Bajo |
+| Cx | Bajar complejidad 13 funciones src/ + 4 edge functions a ≤12 | M | Medio |
 
-## Alcance
+## P1.7 — Estado parcial
 
-### 1. Cierre formal P1.5 y P1.6
+Cubiertos en 11.66.0:
+- `lib/parsers/dashboard.ts` (peso 14) → `dashboardSchemas.ts`
+- `lib/mappers/embarqueToDb.ts` (peso 12) → `embarquePayloadSchemas.ts`
+- `services/embarque/queries/exportListado.ts` (peso 10) → `embarqueRowSchema.ts`
 
-- Actualizar `.lovable/plan.md`: mover P1.5 y P1.6 a "Cerrados" con nota corta de evidencia (sin trabajo de código).
+Pendientes (orden sugerido por peso):
+- `components/admin/TabSeguridadGlobal.tsx` (peso 12)
+- `lib/audit/diffFields.ts` (peso 12)
+- `services/embarque/documentos.ts` (peso 12)
+- `components/auditoria/HallazgosFiltros.tsx` (peso 10)
+- `hooks/embarque/useProformas.ts` (peso 10)
 
-### 2. P1.7 — Zod en 3 hotspots reales
+## Próximo paso
 
-Seleccionados por (a) peso de riesgo en `audit-report.md`, (b) ser boundary Supabase real (lectura → dominio), (c) tener forma estable y acotada:
-
-| Hotspot | Razón |
-|---|---|
-| `src/lib/parsers/dashboard.ts` (peso 14) | Parser que ya hace `fromDb` crudo sobre RPC/joins del dashboard. Schema acotado. |
-| `src/lib/mappers/embarqueToDb.ts` (peso 12) | Mapper bidireccional embarque ↔ row. Validar el shape de retorno endurece el wizard. |
-| `src/services/embarque/queries/exportListado.ts` (peso 10) | Export CSV crítico. Si el shape cambia silenciosamente, el CSV sale corrupto. |
-
-Para cada uno:
-
-1. Definir un Zod schema **mínimo** (sólo campos que el consumidor realmente usa) co-ubicado en `src/lib/domain/` o junto al parser.
-2. Sustituir el `fromDb<T>(data)` crudo por `fromDb(data, schema)`.
-3. Garantizar manejo de `ZodError`: el error existente (toast/log) ya cubre `Error`; añadir test de fallo donde aplique.
-4. Tests unitarios: 1 happy + 1 inválido por schema (3 schemas → ~6 tests).
-
-### 3. Versión + changelog
-
-- `src/constants/appVersion.ts` → `11.66.0`.
-- `CHANGELOG.md`: entrada `[11.66.0]` con bullets de cierre P1.5/P1.6 y los 3 schemas adoptados.
-- `.lovable/plan.md`: cerrar P1.5, P1.6, marcar P1.7 como **parcial** con los 3 hotspots cubiertos y lista de pendientes.
-
-## Fuera de alcance
-
-- No tocar guards/RLS/UI.
-- No reescribir mappers; sólo añadir validación en el `fromDb`.
-- No extender Zod a TODOS los boundaries (P1.7 sigue abierta como parcial — sólo cerramos hotspots).
-- No tocar D13 (continuo) ni Cx (complejidad) — quedan para versiones siguientes.
-
-## Detalles técnicos
-
-- Schemas usan `z.object({...}).passthrough()` cuando el row trae más campos de los que consumimos (evita romper si Supabase añade columnas).
-- Para arrays de filas: `z.array(rowSchema)`.
-- IDs Supabase: `z.string().uuid()` salvo donde el código actual ya tolera strings cortos.
-- Nada de `z.any()` ni `z.unknown()` — derrota el propósito.
-- Reutilizar la infraestructura `fromDb` ya existente (no introducir wrapper nuevo).
-
-## Verificación
-
-- `bun test` (tests nuevos + suite completa).
-- `audit-report.md` debe seguir con 0 HIGH/CRITICAL y 0 oversized.
-- `architecture-baseline.test.ts` y `audit-report.test.ts` en verde.
-
-## Entregables
-
-- 3 schemas nuevos + adopción en 3 hotspots.
-- ~6 tests nuevos.
-- `appVersion.ts`, `CHANGELOG.md`, `.lovable/plan.md` actualizados.
+**Cx** (complejidad) o continuar P1.7 sobre los hotspots restantes. Recomendado P1.7 por continuidad y bajo riesgo.
