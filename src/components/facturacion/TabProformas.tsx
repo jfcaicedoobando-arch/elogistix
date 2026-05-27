@@ -10,8 +10,9 @@ import { buildProformasColumns } from "./proformasColumns";
 import { DialogMarcarFacturada } from "./DialogMarcarFacturada";
 import { useMemo } from "react";
 
-export function TabProformas() {
-  const c = useTabProformasController();
+export function TabProformas({ isInRange }: { isInRange?: (fecha: string | null | undefined) => boolean }) {
+  const c = useTabProformasController({ isInRange });
+
   const columns = useMemo(
     () => buildProformasColumns({
       descargar: c.descargar,
