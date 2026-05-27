@@ -12,7 +12,7 @@ Las heurísticas son conservadoras (prefieren falsos positivos). Validar manualm
 | #5/#10 `any` explícito (excl. tests) | 0 ✅ |
 | #3 `useEffect` sin cleanup | 1 (falso positivo en `AuthContext`) |
 | #2 Queries de lista sin paginar | 68 (heurística — flujos principales ya paginados) |
-| Complejidad ciclomática > 12 | 38 (umbral lint actual: 15; ver cleanslate §5) |
+| Complejidad ciclomática > 12 | 38 (umbral lint actual: 16; CC ≤ 15 aceptable) |
 
 ## Regla #4 — Archivos productivos >200 líneas (0) ✅
 
