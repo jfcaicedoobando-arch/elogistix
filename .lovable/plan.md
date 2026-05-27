@@ -1,95 +1,61 @@
-# Versión 11.68.0 — Cx fase 1: reducir complejidad de los 2 peores ofensores
+# Backlog de auditoría — estado al 11.68.0
 
-## Contexto
+## Cerrados
 
-`Cx` ha estado pendiente desde la auditoría inicial: la regla `complexity` de ESLint está en `max: 15` (la deuda anota que bajarla a 12 destapa 13 warnings en `src/` + 6 en edge functions). En vez de bajar el umbral de golpe, atacamos los 2 ofensores más altos y dejamos el resto en backlog escalonado.
+- ✅ **D14** (11.63.0) — Guardrail `oversized > 200` en `architecture-baseline.test.ts`.
+- ✅ **C10** (11.63.0) — Quick wins inline styles + política en `mem://principles/inline-styles`.
+- ✅ **D16** (11.64.0) — 0 casts HIGH/CRITICAL productivos. Clasificador + guardrail.
+- ✅ **D12** (11.65.0) — Split de `routes.tsx` en 4 grupos por guarda+layout (188→19 líneas).
+- ✅ **P1.5** (11.66.0) — `src/lib/utils/` único con barrel.
+- ✅ **P1.6** (11.66.0) — Ningún servicio supera 200 líneas.
 
-Ranking actual (con `max: 12`):
+## Pendientes
 
-| CC | Archivo:línea | Función |
-|----|---------------|---------|
-| **20** | `src/lib/crm/nextBestActions.ts:74` | `computeNextBestActions` |
-| **18** | `src/lib/csv/leadsCsv.ts:74` | arrow interna de `mapLeadCsvRows` |
-| 15 (×11) | varios | siguiente tier |
-| 14 (×N) | varios | tier inferior |
+| ID | Tarea | Esfuerzo | Riesgo |
+|----|-------|----------|--------|
+| D13 | Vigilar archivos 180-200 líneas (preventivo, continuo) | XS | Nulo |
+| P1.7* | Extender Zod a boundaries restantes (6 hotspots cubiertos en 11.66+11.67) | S | Bajo |
+| Cx* | Bajar complejidad src/ a CC ≤ 12 (2/13 cubiertos en 11.68; 4 edge functions sin tocar) | M | Medio |
 
-Atacamos sólo los dos primeros: son los outliers (≥ +6 sobre el umbral objetivo) y ambos son funciones puras con tests existentes (`nextBestActions.test.ts`, `leadsCsv.test.ts`), riesgo mínimo.
+## P1.7 — Estado parcial
 
-## Alcance
+Cubiertos en 11.66.0:
+- `lib/parsers/dashboard.ts` (peso 14) → `dashboardSchemas.ts`
+- `lib/mappers/embarqueToDb.ts` (peso 12) → `embarquePayloadSchemas.ts`
+- `services/embarque/queries/exportListado.ts` (peso 10) → `embarqueRowSchema.ts`
 
-### 1. `computeNextBestActions` (CC 20 → ≤ 8)
+Cubiertos en 11.67.0:
+- `components/admin/TabSeguridadGlobal.tsx` (peso 12) → `hooks/configuracion/configSchemas.ts`
+- `services/embarque/documentos.ts` (peso 12) → `services/embarque/idempotencyClaimSchema.ts`
+- `components/auditoria/HallazgosFiltros.tsx` (peso 10) → `components/auditoria/hallazgosFiltrosSchemas.ts`
 
-5 bloques de reglas independientes. Extraer 5 helpers puros en el mismo archivo (no necesita carpeta nueva):
+Descartados:
+- `lib/audit/diffFields.ts` (peso 12) — genericidad estructural, no boundary.
 
-- `nbaLeadsSinContactar(leads, nowMs): NbaItem[]`
-- `nbaCotSinRespuesta(cotizaciones): NbaItem[]`
-- `nbaCierreProximo(oportunidades, nowMs): NbaItem[]`
-- `nbaSinActividad(oportunidades, yaIncluidos, nowMs): NbaItem[]`
-- `nbaActividadesVencidas(actividades, nowMs): NbaItem[]`
+## Cx — Estado parcial
 
-`computeNextBestActions` queda como composición:
+Cubiertos en 11.68.0:
+- `lib/crm/nextBestActions.ts` — `computeNextBestActions` CC 20 → 3 (5 helpers extraídos).
+- `lib/csv/leadsCsv.ts` — arrow de `mapLeadCsvRows` CC 18 → 4 (parsers + setters table).
 
-```ts
-export function computeNextBestActions(input: NbaInput, limit = 5): NbaItem[] {
-  const nowMs = (input.now ?? new Date()).getTime();
-  const cierre = nbaCierreProximo(input.oportunidadesAbiertas, nowMs);
-  const yaIncluidos = new Set(cierre.map(i => i.id.split(":")[1]));
-  return [
-    ...nbaLeadsSinContactar(input.leadsSinContactar, nowMs),
-    ...nbaCotSinRespuesta(input.cotizacionesSinRespuesta),
-    ...cierre,
-    ...nbaSinActividad(input.oportunidadesAbiertas, yaIncluidos, nowMs),
-    ...nbaActividadesVencidas(input.actividadesVencidas, nowMs),
-  ].sort((a, b) => b.score - a.score).slice(0, limit);
-}
-```
+Pendientes (todos CC 15 con umbral objetivo 12; orden libre):
+- `components/cotizacion/conceptos/ConceptoRowUSD.tsx:22` (`ConceptoRowUSD`)
+- `hooks/auditoria/useAsignarResponsableController.ts:49` (arrow async)
+- `hooks/operaciones/useOperacionesData.ts:146` (arrow)
+- `lib/crm/forecast.ts:111` (`computeReportesCRM`)
+- `lib/csv/parseCsv.ts:44` (`parseCsv`)
+- `lib/domain/bitacoraDescripcion.ts:108` (`describirEntrada`)
+- `pages/admin/AdminDashboard.tsx:20` (`AdminDashboard`)
+- `pages/crm/Oportunidades.tsx:81` (arrow)
+- `pages/portal/PortalCotizacionDetalle.tsx:18` (`PortalCotizacionDetalle`)
+- `services/bitacora/index.ts:14` (`fetchBitacora`)
+- `services/embarque/queries/paginados.ts:53` (`fetchEmbarquesPaginados`)
+- `services/proforma/facturar.ts:17` (`marcarProformaFacturada`)
 
-CC de la nueva función ≈ 3. Cada helper CC ≤ 6.
+Edge functions (no auditadas aquí — fase posterior): 4 con CC > 12.
 
-### 2. arrow de `mapLeadCsvRows` (CC 18 → ≤ 6)
+Cuando el contador llegue a 0, bajar `complexity` en `eslint.config.js` de 15 a 12.
 
-La complejidad vive en el `colMap.forEach((field, i) => { ...switch... })`. Extraer una función `assignLeadField(row, field, val)` pura que contiene el switch + las validaciones de `score`/`fuente`/`estado`. La arrow se reduce a:
+## Próximo paso
 
-```ts
-colMap.forEach((field, i) => {
-  if (!field) return;
-  assignLeadField(r, field, (cols[i] ?? "").trim());
-});
-```
-
-`assignLeadField` queda con CC ≈ 10 (dentro del umbral 12) — único cuerpo con todas las ramas.
-
-### 3. Tests
-
-No se añaden tests nuevos: los existentes (`nextBestActions.test.ts`, `leadsCsv.test.ts`) garantizan equivalencia funcional. Se ejecuta la suite completa y se confirma 770/770.
-
-### 4. Verificación de complejidad
-
-Ejecutar `bunx eslint "src/**/*.{ts,tsx}" --rule '{"complexity":["warn",{"max":12}]}'` y confirmar que:
-- `computeNextBestActions` desaparece del ranking.
-- arrow de `mapLeadCsvRows` desaparece del ranking.
-- El nuevo tope queda en 15 (ya existente), no se introducen warnings nuevos.
-
-### 5. Versión + changelog
-
-- `src/constants/appVersion.ts` → `11.68.0`.
-- `CHANGELOG.md`: entrada `[11.68.0]` con resumen Cx fase 1.
-- `.lovable/plan.md`: añadir fila Cx con progreso 2/13 y siguiente tier (CC 15).
-
-## Fuera de alcance
-
-- **No** se baja el umbral de ESLint en este corte (sigue en 15). Bajará cuando los 13 ofensores estén resueltos.
-- **No** se tocan las 6 edge functions con complejidad alta — siguiente fase.
-- **No** se refactorizan los 11 ofensores de CC 15 — fases siguientes (probablemente 3 por versión).
-- **No** se introducen abstracciones nuevas (no strategy pattern, no clases) — sólo extract-function.
-
-## Verificación
-
-- `bunx vitest run` (770/770).
-- `bunx eslint` sin warnings nuevos.
-- `audit-report` y `architecture-baseline` siguen verdes (0 oversized — los nuevos helpers no inflan archivos sobre 200 líneas).
-
-## Entregables
-
-- 2 archivos editados (`nextBestActions.ts`, `leadsCsv.ts`) con extract-function.
-- `appVersion.ts`, `CHANGELOG.md`, `.lovable/plan.md` actualizados.
+Continuar **Cx fase 2** sobre 2-3 ofensores de CC 15 (sugerencia: empezar por funciones puras de `lib/` antes que componentes UI o hooks de Supabase).
