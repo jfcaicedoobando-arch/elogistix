@@ -12,5 +12,6 @@ interface Props {
 }
 
 export function ChartSkeleton({ height = 300, className }: Props) {
-  return <Skeleton className={className} style={{ height: `${height}px`, width: "100%" }} />;
+  // C10: width usa Tailwind (`w-full`); height permanece inline porque es un valor dinámico (px exacto) que debe igualar al chart real para evitar CLS.
+  return <Skeleton className={`w-full ${className ?? ""}`} style={{ height: `${height}px` }} />;
 }

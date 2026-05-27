@@ -95,7 +95,7 @@ export default function TablaCostosDetalle({ filas, filasMoneda, moneda, title, 
                     </TableRow>
                     {(canEdit || fila.notas) && (
                       <TableRow>
-                        <TableCell colSpan={6} className="pt-0 pb-2" style={{ borderTop: 'none' }}>
+                        <TableCell colSpan={6} className="pt-0 pb-2 border-t-0">
                           {canEdit ? (
                             <Textarea
                               placeholder="Notas (opcional)"

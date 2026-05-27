@@ -162,7 +162,7 @@ export function VirtualDataTable<T>(props: VirtualDataTableProps<T>) {
         )}
         {!isLoading && rows.length === 0 && <EmptyState message={emptyMessage} />}
         {showBody && (
-          <div style={{ height: virtualizer.getTotalSize(), width: "100%", position: "relative" }}>
+          <div className="relative w-full" style={{ height: virtualizer.getTotalSize() }}>
             {virtualItems.map((vi) => (
               <VirtualRow
                 key={rows[vi.index].id}

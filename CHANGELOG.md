@@ -6,6 +6,16 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [11.63.0] - 2026-05-27
+- **Fase 1 del backlog de auditoría (D14 + C10)** — blindaje sin riesgo previo a refactors grandes.
+- **D14 — Guardrail oversized > 200 líneas**: nueva aserción en `src/lib/__tests__/architecture-baseline.test.ts` que falla la CI si cualquier archivo productivo en `src/` supera 200 líneas. Antes el reporte sólo informaba; ahora frena el merge.
+- **C10 — Inline styles**: migrados 4 casos estáticos a clases Tailwind:
+  - `TablaCostosDetalle.tsx`: `style={{ borderTop: 'none' }}` → `border-t-0`.
+  - `ChartSkeleton.tsx`: `width: '100%'` → `w-full` (height permanece dinámico).
+  - `VirtualDataTable.tsx`: `width: '100%'` + `position: 'relative'` → `relative w-full`.
+  - `VirtualTimeline.tsx`: removido `position: 'relative'` redundante (ya está en `className`).
+- Los 30 `style={{…}}` restantes son excepciones legítimas y documentadas en `mem://principles/inline-styles`: react-pdf (`src/pdf/**`), valores computados por virtualizer (`@tanstack/react-virtual`), anchos `%` dinámicos (progress/profit bars) y colores hex provenientes de DB (CRM kanban, operaciones).
+
 ## [11.62.0] - 2026-05-27
 - **Bloque D15 — Reporte CI consolidado**: nuevo `scripts/audit-report.ts` que agrega violaciones de capa (Supabase directo en hooks/contexts/components/pages), archivos productivos >200 líneas, casts HIGH+CRITICAL (top-10 por peso) y higiene de tests.
 - Genera `reports/audit-report.md` (humano) y `reports/audit-report.json` (CI). El workflow `.github/workflows/ci.yml` añade steps: ejecuta el reporte, lo appendea a `$GITHUB_STEP_SUMMARY` en PRs y lo sube como artifact (retención 30d).

@@ -33,7 +33,7 @@ export function VirtualTimeline({
     >
       <div
         className="relative border-l-2 border-border ml-3 pl-6"
-        style={{ height: virtualizer.getTotalSize(), position: "relative" }}
+        style={{ height: virtualizer.getTotalSize() }}
       >
         {items.map((vi) => {
           const entrada = actividades[vi.index];
