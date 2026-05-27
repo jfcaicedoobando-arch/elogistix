@@ -1,6 +1,6 @@
 # Power of 10 — Baseline
 
-_Generado por `scripts/audit-power10.ts` sobre 982 archivos `.ts/.tsx` de `src/` (11.59.1)._
+_Generado por `scripts/audit-power10.ts` sobre 996 archivos `.ts/.tsx` de `src/` (11.60.0)._
 
 Las heurísticas son conservadoras (prefieren falsos positivos). Validar manualmente antes de refactorizar. Ver ARCHITECTURE.md §20.
 
@@ -8,21 +8,22 @@ Las heurísticas son conservadoras (prefieren falsos positivos). Validar manualm
 
 | Regla | Hallazgos |
 |---|---:|
-| #4 Componentes/archivos productivos >200 líneas | 3 |
+| #4 Componentes/archivos productivos >200 líneas | 0 ✅ |
 | #5/#10 `any` explícito | 0 |
 | #3 `useEffect` sin cleanup | 1 |
 | #2 Queries de lista sin paginar | 68 |
 
-## Regla #4 — Archivos productivos >200 líneas (3)
+## Regla #4 — Archivos productivos >200 líneas (0) ✅
 
-Detectado por `scripts/audit-architecture.ts` (11.59.1):
+Bloque B cerrado en 11.60.0: los 3 archivos que excedían el límite (`services/crm/leads.ts` 210, `ImportarLeadsCsvDialog` 202, `BulkImportDialog` 201) fueron refactorizados.
 
-- 210 — `src/services/crm/leads.ts`
-- 202 — `src/components/crm/ImportarLeadsCsvDialog.tsx`
-- 201 — `src/components/shared/BulkImportDialog.tsx`
+- `services/crm/leads.ts` → carpeta `services/crm/leads/{queries,mutations,bulk,convertir,index}.ts` (≤106 cada uno).
+- `ImportarLeadsCsvDialog.tsx` (67) + `useImportarLeadsCsv` + `ImportarLeadsCsvPreview` + `lib/csv/leadsCsv.ts`.
+- `BulkImportDialog.tsx` (114) + `BulkImportDialogParts.tsx` + `lib/csv/downloadCsvTemplate.ts`.
 
-Refactor sugerido: extraer `use<X>Controller` + subcomponentes, o dividir el
-servicio por sub-acción (queries/mutations/bulk).
+Único oversized documentado como excepción: `src/components/ui/sidebar.tsx` (637, shadcn).
+
+
 
 ## Regla #5/#10 — `any` explícito (0)
 

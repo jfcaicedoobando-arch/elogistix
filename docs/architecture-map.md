@@ -1,7 +1,7 @@
 # Architecture Map — Libre Carga
 
-Documento vivo (P2.11, actualizado en 11.59.1 tras el cierre del Bloque A
-de auditoría). Tabla de dominio → pages → hooks → services → lib para los
+Documento vivo (P2.11, actualizado en 11.60.0 tras el cierre de los Bloques A
+y B de auditoría). Tabla de dominio → pages → hooks → services → lib para los
 dominios principales. Sirve para onboarding y como ancla del roadmap
 arquitectónico.
 
@@ -61,10 +61,12 @@ archivos internos (`@/hooks/shared/useToast` está restringido por
   `@/services/<x>`). Archivos internos restringidos como `error`.
 - **Supabase**: sólo en `services/` y `integrations/supabase`. **0
   llamadas directas** desde hooks, contexts, components o pages al
-  11.59.1 (Bloque A cerrado: migraciones de CRM, embarque, auth,
-  organization a `services/`).
+  11.60.0 (Bloque A cerrado en 11.59.1).
+- **Query keys**: factory partido por dominio en `src/lib/query/keys/*.ts`
+  (14 archivos ≤66 líneas). Importar siempre vía `@/lib/query` →
+  `queryKeys.<dominio>.*`. Bloque B4 cerrado en 11.60.0.
 - **Tests**: `*.test.ts(x)` co-localizados o en `__tests__/`. 18
-  suites en `services/` (meta ≥10), 109 totales / 716 tests.
+  suites en `services/` (meta ≥10), 111 totales / 728 tests.
 - **Versionado**: bump `APP_VERSION` + entrada en `CHANGELOG.md`
   raíz en cada cambio. No existe ruta `/changelog` ni
   `src/content/changelog/`.
