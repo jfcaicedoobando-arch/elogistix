@@ -5,6 +5,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { isLeadDirty } from "@/lib/crm/leadEditDirty";
 import { type LeadEditForm, EMPTY_LEAD_EDIT_FORM as EMPTY_FORM } from "@/types/crm/leadEditForm";
+import type { CrmLeadEstado, CrmLeadFuente } from "@/lib/crm/leads/constants";
 
 export type { LeadEditForm };
 
