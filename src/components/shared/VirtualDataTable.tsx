@@ -17,6 +17,7 @@
 import { useCallback, useMemo, useRef } from "react";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { cn } from "@/lib/utils";
+import { omitUndefined } from "@/lib/utils/omitUndefined";
 import PaginationControls from "@/components/shared/PaginationControls";
 import { VirtualRow } from "@/components/shared/VirtualRow";
 import { VirtualHeaderRow, SkeletonRows, EmptyState } from "@/components/shared/VirtualTableParts";
