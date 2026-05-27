@@ -138,11 +138,11 @@ function auditFile(absPath: string, file: string): Hit[] {
   let m: RegExpExecArray | null;
   while ((m = re.exec(src)) !== null) {
     const table = m[1];
-    const { block } = extractQueryBlock(src, m.index);
+    const { block, lookahead } = extractQueryBlock(src, m.index);
     // Sólo nos interesan los que tienen .select() en el mismo encadenamiento
     if (!/\.select\(/.test(block)) continue;
     const lineNo = src.slice(0, m.index).split("\n").length;
-    const { bucket, reason } = classify(block, table);
+    const { bucket, reason } = classify(block, lookahead, table);
     const snippet = block.replace(/\s+/g, " ").slice(0, 140);
     hits.push({ file, line: lineNo, table, bucket, reason, snippet });
   }
