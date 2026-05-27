@@ -115,7 +115,8 @@ export async function fetchGastosPendientes() {
     .from("conceptos_costo")
     .select("*, embarques!conceptos_costo_embarque_id_fkey(expediente)")
     .eq("estado_liquidacion", "Pendiente")
-    .order("fecha_vencimiento", { ascending: true });
+    .order("fecha_vencimiento", { ascending: true })
+    .limit(2000); // defensivo: pendientes de liquidación por org
   if (error) throw error;
   return data;
 }
