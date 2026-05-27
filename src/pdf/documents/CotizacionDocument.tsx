@@ -1,7 +1,7 @@
 import { Document, Page, Text, View } from "@react-pdf/renderer";
 import type { CotizacionRow, ConceptoVentaCotizacion } from "@/types/cotizacion";
 import { TASA_IVA, calcularIVA } from "@/lib/financial/financialUtils";
-import { formatCurrency } from "@/lib/formatters";
+import { formatCurrency, formatDate } from "@/lib/formatters";
 import {
   calcularTotales,
   splitConceptos,
@@ -9,9 +9,10 @@ import {
 import { styles } from "../theme/styles";
 import { Footer } from "../components/Footer";
 import { DataTable, type PdfColumn } from "../components/DataTable";
-import { ResumenBox } from "../components/ResumenBox";
+import { TotalesBox, type TotalesMoneda } from "../components/TotalesBox";
+import { BrandHeader } from "../components/BrandHeader";
+import { BillToBlock } from "../components/BillToBlock";
 import {
-  HeaderCotizacion,
   SeccionDatosYMercancia,
   SeccionProspecto,
 } from "./cotizacionSections";
@@ -64,10 +65,46 @@ export function CotizacionDocument({ cotizacion, tasaIva = TASA_IVA }: Props) {
   const totales = calcularTotales(cotizacion.conceptos_venta);
   const { usd, mxn } = splitConceptos(cotizacion.conceptos_venta);
   const hayIvaUsd = usd.some((c) => c.aplica_iva);
+  const tasaPct = Math.round(tasaIva * 100);
+  const nombre = cotizacion.es_prospecto
+    ? `${cotizacion.prospecto_empresa} (Prospecto)`
+    : cotizacion.cliente_nombre;
+
+  const bloques: TotalesMoneda[] = [];
+  if (usd.length > 0) {
+    bloques.push({
+      moneda: "USD",
+      subtotal: totales.subtotalUSD,
+      iva: totales.ivaUSD,
+      total: totales.totalUSD,
+      tasaIvaPct: totales.ivaUSD > 0 ? tasaPct : undefined,
+    });
+  }
+  if (mxn.length > 0) {
+    bloques.push({
+      moneda: "MXN",
+      subtotal: totales.subtotalMXN,
+      iva: totales.ivaMXN,
+      total: totales.totalMXN,
+      tasaIvaPct: tasaPct,
+    });
+  }
+
   return (
     <Document title={`${cotizacion.folio} - Cotización`} author="Libre Carga">
       <Page size="LETTER" style={styles.page}>
-        <HeaderCotizacion c={cotizacion} />
+        <BrandHeader
+          tipoDocumento="Cotización"
+          folio={cotizacion.folio}
+          meta={[
+            { label: "Estado", value: cotizacion.estado },
+            { label: "Fecha", value: formatDate(cotizacion.created_at.substring(0, 10)) },
+          ]}
+        />
+        <BillToBlock
+          titulo={cotizacion.es_prospecto ? "Destinatario (Prospecto)" : "Destinatario"}
+          destinatario={{ nombre }}
+        />
         <SeccionProspecto c={cotizacion} />
         <SeccionDatosYMercancia c={cotizacion} />
 
@@ -83,9 +120,6 @@ export function CotizacionDocument({ cotizacion, tasaIva = TASA_IVA }: Props) {
               rows={usd}
               renderSubrow={(r) => r.notas ?? null}
             />
-            <View style={styles.subtotalBlock}>
-              <Text style={styles.subtotalEmphasis}>Total USD: {formatCurrency(totales.totalUSD, "USD")}</Text>
-            </View>
           </>
         ) : null}
 
@@ -97,16 +131,13 @@ export function CotizacionDocument({ cotizacion, tasaIva = TASA_IVA }: Props) {
               rows={mxn}
               renderSubrow={(r) => r.notas ?? null}
             />
-            <View style={styles.subtotalBlock}>
-              <Text style={styles.subtotalLine}>
-                Subtotal MXN: {formatCurrency(totales.subtotalMXN, "MXN")}   ·   IVA: {formatCurrency(totales.ivaMXN, "MXN")}
-              </Text>
-              <Text style={styles.subtotalEmphasis}>Total MXN: {formatCurrency(totales.totalMXN, "MXN")}</Text>
-            </View>
           </>
         ) : null}
 
-        <ResumenBox totales={totales} hayMxn={mxn.length > 0} />
+        <TotalesBox
+          bloques={bloques}
+          nota={hayIvaUsd ? "* Los cargos en destino incluyen IVA" : undefined}
+        />
 
         {cotizacion.notas ? (
           <>
