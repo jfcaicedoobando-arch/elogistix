@@ -7,6 +7,7 @@ import { ThemeProvider } from "./contexts/ThemeContext";
 import { APP_VERSION } from "./constants/appVersion";
 import {
   clearChunkReloadFlag,
+  clearPersistedQueryCache,
   getStoredAppVersion,
   setStoredAppVersion,
 } from "./lib/browserStorage";
@@ -19,6 +20,7 @@ import { queryClient } from "./lib/queryClient";
 const previousVersion = getStoredAppVersion();
 if (previousVersion !== APP_VERSION) {
   queryClient.clear();
+  clearPersistedQueryCache();
   setStoredAppVersion(APP_VERSION);
 }
 
