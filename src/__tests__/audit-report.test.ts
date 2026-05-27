@@ -3,9 +3,9 @@
  * el repo y valida el shape esperado del baseline 11.62.0.
  */
 import { describe, it, expect } from "vitest";
-import { runArchAudit } from "../lib/arch";
-import { scanCasts, summarizeCasts } from "../lib/casts";
-import { auditTests } from "../lib/tests";
+import { runArchAudit } from "../../scripts/lib/arch";
+import { scanCasts, summarizeCasts } from "../../scripts/lib/casts";
+import { auditTests } from "../../scripts/lib/tests";
 
 const ROOT = process.cwd();
 
