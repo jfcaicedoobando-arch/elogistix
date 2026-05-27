@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [11.59.2] - 2026-05-27
+- **Docs refresh post Bloque A**: actualizados `.lovable/plan.md`, `ARCHITECTURE.md`, `docs/architecture-map.md`, `docs/auditoria.md`, `docs/power10-baseline.md`, `docs/tests-audit.md`, `docs/cast-audit.md` (regenerado: 720 casts, 37 HIGH) y `docs/strict-mode-roadmap.md`. Reflejan el nuevo baseline: **0** hooks/contexts/components/pages con import directo a `@/integrations/supabase/client`, 18 suites en `services/`, 109 archivos / 716 tests, 3 archivos productivos >200 líneas (leads.ts 210, ImportarLeadsCsvDialog 202, BulkImportDialog 201). Plan vigente: Bloques B/C/D.
+
 ## [11.59.1] - 2026-05-26
 - **Sentry — filtro robusto de errores de chunk Vite**: se añade `ignoreErrors` en `initSentry()` (regex para "Failed to fetch dynamically imported module", "Importing a module script failed", "Loading chunk N failed", "ChunkLoadError"). Complementa el `beforeSend` existente y cubre también pestañas viejas con releases cacheados (ej. eventos llegando desde `11.28.0`). Estos errores son transitorios — la app se auto-recupera con reload — y no aportan señal a Sentry.
 
