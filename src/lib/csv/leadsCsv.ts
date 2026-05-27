@@ -62,35 +62,37 @@ export function parseLeadsCsv(text: string): string[][] {
   return rows.filter((r) => r.some((v) => v.trim() !== ""));
 }
 
+function parseScore(val: string): number {
+  const n = Number(val);
+  return Number.isFinite(n) && n >= 1 && n <= 5 ? n : 3;
+}
+
+function parseFuente(val: string): CrmLeadFuente {
+  return (LEAD_FUENTES as readonly string[]).includes(val) ? (val as CrmLeadFuente) : "Otro";
+}
+
+function parseEstado(val: string): CrmLeadEstado {
+  return (LEAD_ESTADOS as readonly string[]).includes(val) ? (val as CrmLeadEstado) : "Nuevo";
+}
+
+const LEAD_STRING_FIELDS: ReadonlySet<keyof ParsedLeadRow> = new Set([
+  "empresa", "contacto", "email", "telefono", "ciudad", "pais", "notas",
+]);
+
 function assignLeadField(
   row: ParsedLeadRow,
   field: keyof ParsedLeadRow,
   val: string,
 ): void {
-  if (field === "score") {
-    const n = Number(val);
-    row.score = Number.isFinite(n) && n >= 1 && n <= 5 ? n : 3;
-    return;
-  }
-  if (field === "fuente") {
-    row.fuente = (LEAD_FUENTES as readonly string[]).includes(val) ? (val as CrmLeadFuente) : "Otro";
-    return;
-  }
-  if (field === "estado") {
-    row.estado = (LEAD_ESTADOS as readonly string[]).includes(val) ? (val as CrmLeadEstado) : "Nuevo";
-    return;
-  }
-  // `field` ya está restringido a keyof ParsedLeadRow vía LEAD_CSV_HEADER_ALIASES.
-  switch (field) {
-    case "empresa": row.empresa = val; break;
-    case "contacto": row.contacto = val; break;
-    case "email": row.email = val; break;
-    case "telefono": row.telefono = val; break;
-    case "ciudad": row.ciudad = val; break;
-    case "pais": row.pais = val; break;
-    case "notas": row.notas = val; break;
+  if (field === "score") { row.score = parseScore(val); return; }
+  if (field === "fuente") { row.fuente = parseFuente(val); return; }
+  if (field === "estado") { row.estado = parseEstado(val); return; }
+  if (LEAD_STRING_FIELDS.has(field)) {
+    // Asignación dinámica restringida a campos string conocidos.
+    (row as Record<string, string>)[field] = val;
   }
 }
+
 
 export function mapLeadCsvRows(matrix: string[][]): ParsedLeadRow[] {
   if (matrix.length === 0) return [];
