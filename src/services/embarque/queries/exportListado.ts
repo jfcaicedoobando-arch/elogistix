@@ -73,6 +73,9 @@ export async function fetchEmbarquesParaExport(
       // SAFE-CAST: ver comentario arriba — mismo patrón para query paginada.
       const { data, error } = await (applyFilters(base as unknown as QueryLike) as unknown as typeof base);
       if (error) throw error;
+      // Validación runtime (P1.7): schema con .passthrough() detecta cambios
+      // de shape inesperados antes de generar un CSV corrupto.
+      embarqueListRowsSchema.parse(data ?? []);
       return (data ?? []) as EmbarqueRow[];
     }),
   );
