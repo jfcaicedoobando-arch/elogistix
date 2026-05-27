@@ -7,6 +7,7 @@ import { Footer } from "../components/Footer";
 import { DataTable, type PdfColumn } from "../components/DataTable";
 import { TotalesBox } from "../components/TotalesBox";
 import { ProformaHeader } from "./ProformaHeader";
+import type { EmisorInfo } from "../components/BrandHeader";
 import {
   formatearDescripcionConcepto,
   type ClienteLite,
@@ -22,6 +23,7 @@ interface Props {
   cliente?: ClienteLite;
   conceptosConsolidados: ConceptoConsolidado[];
   tasaIva?: number;
+  emisor?: EmisorInfo;
 }
 
 interface Grupo {
@@ -95,6 +97,7 @@ export function ProformaConsolidadaDocument({
   cliente,
   conceptosConsolidados,
   tasaIva = TASA_IVA,
+  emisor,
 }: Props) {
   const grupos = agrupar(conceptosConsolidados);
   const tasaPct = Math.round(tasaIva * 100);
@@ -122,9 +125,9 @@ export function ProformaConsolidadaDocument({
   }
 
   return (
-    <Document title={`${proforma.numero} - Proforma Consolidada`} author="Libre Carga">
+    <Document title={`${proforma.numero} - Proforma Consolidada`} author={emisor?.razonSocial ?? "Empresa"}>
       <Page size="LETTER" style={styles.page}>
-        <ProformaHeader proforma={proforma} cliente={cliente ?? null} embarque={embarque} esConsolidada={true} />
+        <ProformaHeader proforma={proforma} cliente={cliente ?? null} embarque={embarque} esConsolidada={true} emisor={emisor} />
         <Text style={styles.h3}>Conceptos por Contenedor</Text>
         <SeccionMoneda grupos={grupos} moneda="USD" conceptos={conceptosConsolidados} />
         <SeccionMoneda grupos={grupos} moneda="MXN" conceptos={conceptosConsolidados} />
@@ -140,7 +143,7 @@ export function ProformaConsolidadaDocument({
           </>
         ) : null}
 
-        <Footer />
+        <Footer empresaNombre={emisor?.razonSocial} />
       </Page>
     </Document>
   );

@@ -1,140 +1,89 @@
-# Pulido visual de PDFs generados — sistema unificado "Invoice-grade Libre Carga"
-
-## Diagnóstico (por qué la cotización se ve mejor que la proforma)
-
-Mirando los archivos como diseñador + contador:
-
-
-| Aspecto           | Cotización                                                               | Proforma                                                                                                         | Veredicto                                   |
-| ----------------- | ------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------- | ------------------------------------------- |
-| Header            | `h1` 18pt + folio + badge estado, jerarquía limpia                       | `h1Xl` 26pt con `letterSpacing:2` "PROFORMA" + numero gris, badge warning amarillo + badge info azul lado a lado | Proforma se ve cargada y "ruidosa"          |
-| Cierre de totales | `ResumenBox` con borde corporativo 2pt, jerarquía Subtotal → IVA → Total | Bloque `subtotalBlock` simple a la derecha, sin caja, repetido 2 veces (USD y MXN)                               | Proforma pierde foco visual                 |
-| Branding emisor   | Sin logo (igual)                                                         | Sin logo (igual)                                                                                                 | Falta en ambos: no hay bloque "From/Emisor" |
-| Datos cliente     | N/A (es prospecto)                                                       | 2 columnas razón social + RFC, luego dirección colgada fuera de grid                                             | Inconsistente                               |
-| Iconografía       | Sin emojis                                                               | `📦 Contenedor: …` en consolidada                                                                                | Emoji rompe seriedad                        |
-| Aviso fiscal      | N/A                                                                      | `warningBox` con borde dashed amarillo al final, parece sticker                                                  | Anti-profesional                            |
-| Vigencia / pago   | N/A                                                                      | Sin vigencia, sin datos bancarios, sin método de pago                                                            | Falta contable crítico                      |
-| Footer            | Texto plano centrado                                                     | Texto plano centrado                                                                                             | Sin marca, desperdiciado                    |
-
-
 ## Objetivo
 
-Un solo sistema visual ("Libre Carga Invoice System") aplicado a los 5 PDFs del proyecto:
+Reemplazar el branding "Libre Carga" en todos los PDFs por los datos reales del emisor (hoy: **Elogistix Shipping**) leídos desde la tabla `configuracion` (categoría `empresa`), de modo que el cambio se propague a Cotización, Proforma, Proforma Consolidada y Rentabilidad sin volver a hardcodear ningún nombre.
 
-1. `CotizacionDocument`
-2. `ProformaDocument`
-3. `ProformaConsolidadaDocument`
-4. `RentabilidadDocument`
-5. `estadoCuentaPdf` (si existe en formato @react-pdf)
+## Fuente de verdad
 
-Refinar **componentes compartidos** (`theme/styles.ts`, `components/*`) para que el pulido aplique a todos automáticamente — no rediseño doc por doc.
+Ya existe en BD:
 
-## Cambios propuestos
+```
+configuracion (categoria='empresa') →
+  nombre = "Elogistix Shipping"
+  subtitulo = "Agente de Carga"
+  rfc, direccion_fiscal, email, telefono
+```
 
-### 1. Sistema de marca compartido (nuevo `components/BrandHeader.tsx`)
+No se crea schema nuevo. La pantalla `/configuracion` ya permite editar estos campos vía `useConfiguracionState`, así que cambiar el nombre en el futuro será solo cuestión de editar ahí.
 
-- Banda superior de 4pt color `primary` (acento corporativo en cada hoja).
-- Bloque izquierdo: logo SVG (`public/librecarga-logo.svg`) a 32pt alto + razón social emisora + RFC + dirección + tel/email — leído de `configuracion` (org actual).
-- Bloque derecho: tipo de documento (Cotización / Proforma / etc.) en `h1` 16pt uppercase, número/folio grande debajo, fila de meta (fecha emisión, vigencia, expediente, BL/MAWB) en grid 2 col compacto.
-- Eliminar `h1Xl` 26pt con letterSpacing y la fila de badges sueltos.
+## Cambios
 
-### 2. Paleta y tipografía depuradas (`theme/styles.ts`)
+### 1. Nuevo loader del emisor para PDFs
+- `src/pdf/emisor.ts` (nuevo): función `cargarEmisorEmpresa(): Promise<EmisorInfo>` que consulta `configuracion` (categoría `empresa`) y devuelve `{ razonSocial, subtitulo, rfc, direccion, email, telefono }`. Caché en memoria por sesión (TTL corto, ej. 5 min) para no pegarle a la BD en cada descarga. Fallback seguro si falla la consulta: `razonSocial = "Empresa"`, demás vacíos (nunca "Libre Carga").
 
-- Mantener `primary` (#0F4C81). Retirar `primaryDark` (#1B2B4B) — fuente de inconsistencia: queda solo `ink` para texto y `primary` para acentos.
-- Subir `border` de #DDDDDD → #E5E7EB (Tailwind slate-200, más moderno).
-- `zebra` actual #F8FAFC ya es bueno; aplicar zebra real en filas pares de `DataTable` (hoy no se aplica).
-- Letter-spacing en `h1Xl` baja de 2 → 0.5; tamaño de 26 → 20.
-- Línea base de página: `paddingTop` 32 → 40 para dar aire bajo la banda superior.
+### 2. `BrandHeader` deja de hardcodear marca
+- `src/pdf/components/BrandHeader.tsx`:
+  - Quitar `EMISOR_DEFAULT.razonSocial = "Libre Carga"` y la cadena `"LIBRE CARGA"` del JSX.
+  - `brandMark` = `emisor.razonSocial.toUpperCase()`.
+  - `brandSub` = `emisor.subtitulo` (en lugar del texto fijo "Soluciones logísticas internacionales").
+  - Renderizar RFC / dirección / contacto solo si vienen poblados.
+  - Si no se pasa `emisor`, mostrar placeholder neutro ("Empresa") en vez de "Libre Carga".
+- `EmisorInfo` se amplía con `subtitulo` opcional.
 
-### 3. `DataTable` — refinamiento
+### 3. `Footer` dinámico
+- `src/pdf/components/Footer.tsx`: aceptar prop `empresaNombre` y reemplazar la cadena fija `"LIBRE CARGA"`. Si no se pasa, mostrar "Documento generado electrónicamente" sin nombre.
 
-- Zebra striping real (filas pares con `backgroundColor: COLORS.zebra`).
-- Header con `backgroundColor: primary` y texto blanco (más serio que el gris actual) — o variante "light" para cotización si se prefiere mantener.
-- `borderBottom` de filas a 0.25pt (hoy 0.5, se ve marcado).
-- Numeric cells con tabular-nums (Helvetica ya alinea, pero asegurar paddingRight 8 para que no peguen al borde).
+### 4. Documentos PDF reciben `emisor`
+- `CotizacionDocument`, `ProformaDocument`, `ProformaConsolidadaDocument`, `RentabilidadDocument`:
+  - Aceptan prop `emisor: EmisorInfo` (requerida).
+  - Pasan `emisor` a `BrandHeader` y `emisor.razonSocial` a `Footer`.
+  - `<Document author={emisor.razonSocial}>` en lugar de `"Libre Carga"`.
+- `ProformaHeader.tsx`: mismo tratamiento (recibe `emisor` desde el documento).
 
-### 4. Caja de totales unificada (`components/TotalesBox.tsx` nuevo)
+### 5. Generadores async cargan emisor antes de renderizar
+- `src/generators/cotizacionPdf.tsx`, `proformaPdf.tsx`, `rentabilidadPdf.tsx`:
+  - Hacer la función `async`, llamar a `cargarEmisorEmpresa()` antes de `descargarPdf`, y pasar `emisor` al documento.
+- Callers ya usan `await import(...)` y son async — solo añadir `await generarPdfX(...)`:
+  - `src/pages/cotizaciones/CotizacionDetalle.tsx`
+  - `src/hooks/embarque/useDialogGenerarProformaController.ts`
+  - `src/hooks/embarque/useDescargarProformaPdf.ts`
 
-- Reemplaza `subtotalBlock` + `ResumenBox` por un único componente:
-  - Caja a la derecha (50% ancho), fondo blanco, borde 1pt `primary`.
-  - Filas Subtotal / IVA (XX%) / **TOTAL** — última con fondo `primary` y texto blanco.
-  - Soporta multi-moneda: dos cajas apiladas con separador, o una sola con secciones USD/MXN.
-  - Tipo de cambio aplicado abajo (label pequeño) cuando hay conversión.
+### 6. Preview dev
+- `src/pages/dev/PdfPreviewCotizacion.tsx` (y proforma si existe): cargar emisor con `useQuery` y pasarlo al documento, así QA visual refleja datos reales.
 
-### 5. Bloque "Cliente / Facturar a" estandarizado (`components/BillToBlock.tsx`)
+### 7. Limpieza de strings residuales
+- Reemplazar el comentario `"Libre Carga Invoice System"` en `src/pdf/theme/styles.ts` por algo neutro (`"Sistema visual unificado de facturación"`).
+- Comentarios en `BrandHeader.tsx`.
 
-- Two-column layout: **Emisor** (izquierda) | **Cliente / Facturar a** (derecha).
-- Razón social bold, RFC, dirección completa, contacto.
-- Aplica a Proforma y Cotización (en cotización con prospectos sigue funcionando).
+### 8. Versionado y changelog
+- Bump `APP_VERSION` → `12.0.0-rc.3`.
+- Entrada en `CHANGELOG.md` describiendo el cambio (datos del emisor leídos desde `configuracion.empresa`, eliminación del nombre hardcodeado).
 
-### 6. Bloque "Condiciones de pago" (solo Proforma)
+## Fuera de alcance
+- No se tocan plantillas de email, ni el sidebar/UI de la app (solo PDFs).
+- No se agrega editor de logo ni se sube imagen de marca (se conserva el text-mark tipográfico).
+- No se modifica el gate de GA ni se cierra el RC.
 
-Nuevo bloque obligatorio para que la proforma luzca como documento contable:
-
-- Vigencia (calculada: fecha_emisión + 30 días, o configurable).
-- Método de pago (Transferencia / Contado).
-- Días de crédito.
-- **Datos bancarios** (banco, cuenta, CLABE, beneficiario, SWIFT) — leídos de `configuracion` org.
-- Moneda de pago.
-
-Si no hay datos bancarios capturados en configuración, mostrar placeholder discreto "Solicitar datos al área de cobranza" en vez de ocultar el bloque.
-
-### 7. Aviso "sin validez fiscal" rediseñado
-
-- Quitar la caja dashed amarilla al final.
-- Mover el aviso a una franja delgada bajo el header (3pt de alto, fondo `warningBg` suave, texto centrado 8pt) — visible siempre, no invasivo.
-- Watermark diagonal opcional "PROFORMA" en gris muy claro (8% opacidad) en el centro de la página (sólo proformas).
-
-### 8. Eliminar emojis de PDF
-
-- `📦 Contenedor: …` → reemplazar por chip tipográfico: `[CONTENEDOR]` en small-caps con borde izquierdo `primary` 3pt, fondo `zebra`. Más limpio en impresión y consistente con `h3`.
-
-### 9. Footer con marca
-
-- Reorganizar `Footer.tsx` en 3 columnas:
-  - Izquierda: logo mini (12pt) + "Libre Carga".
-  - Centro: texto legal corto ("Documento generado el …").
-  - Derecha: "Página X de Y".
-- Línea superior 0.5pt `primary` (hoy `border` gris).
-
-### 10. Espaciado y aire
-
-- `h3` margin top 14 → 18, padding-bottom 3 → 5: secciones más respiradas.
-- Subir line-height de page 1.4 → 1.45.
-- Aumentar `paddingHorizontal` de 32 → 36 para que el contenido no toque el borde de impresión.
-
-## Alcance fuera de este plan
-
-- No se tocan los servicios de datos (`services/proforma.ts` etc.) ni los hooks. Cambios sólo en `src/pdf/**`, salvo lectura de configuración org para datos bancarios y emisor (un hook ya existente).
-- No se modifica el formato CSV ni los PDFs de tracking.
-- No se introduce librería de fuentes custom (sigue Helvetica built-in, 0 KB extra) — el pulido se logra por sistema, no por tipografía exótica.
-
-## Validación
-
-1. Renderizar Cotización en `/dev/pdf-preview/cotizacion/:id` y comparar antes/después.
-2. Crear `/dev/pdf-preview/proforma/:id` y `/dev/pdf-preview/proforma-consolidada/:id` (no existen hoy) para QA visual con `PDFViewer`.
-3. Convertir output a PNG (`pdftoppm -r 150`) y revisar página por página: overflow, alineación, colores, contraste. Se inspeccionarán los 5 documentos.
-4. Verificar que tests existentes de `proforma` siguen verdes.
-
-## Opción adicional (recomendada antes de implementar)
-
-Antes de tocar código, puedo **generar 1 PNG de mockup** de la nueva Proforma (usando ReportLab o canvas-design) para que valides el look final. Toma ~2 min y evita iterar sobre el PDF real. Si prefieres ir directo a implementación, también está bien.
+## Verificación
+- `bunx vitest run` y `bunx eslint`.
+- Abrir `/dev/pdf-preview-cotizacion` y descargar una proforma real desde un embarque: el header debe decir **ELOGISTIX SHIPPING** / **Agente de Carga** y el `author` del PDF también.
+- Cambiar `empresa.nombre` en `/configuracion` y verificar que un nuevo PDF refleja el nuevo nombre tras invalidar la caché (recarga o esperar TTL).
 
 ## Archivos a tocar
-
-- `src/pdf/theme/styles.ts` (refactor de tokens + nuevos estilos)
-- `src/pdf/components/BrandHeader.tsx` *(nuevo)*
-- `src/pdf/components/BillToBlock.tsx` *(nuevo)*
-- `src/pdf/components/TotalesBox.tsx` *(nuevo, reemplaza `ResumenBox`)*
-- `src/pdf/components/PaymentTermsBlock.tsx` *(nuevo)*
-- `src/pdf/components/DataTable.tsx` (zebra + header oscuro)
-- `src/pdf/components/Footer.tsx` (3 cols + logo)
-- `src/pdf/documents/CotizacionDocument.tsx` (usa nuevos componentes)
-- `src/pdf/documents/ProformaDocument.tsx` (usa nuevos componentes + payment terms + watermark)
-- `src/pdf/documents/ProformaConsolidadaDocument.tsx` (igual + remover emoji)
-- `src/pdf/documents/ProformaHeader.tsx` (delete: lógica absorbida por BrandHeader + BillToBlock)
-- `src/pdf/documents/RentabilidadDocument.tsx` (aplicar nuevos tokens)
-- `src/pages/dev/PdfPreviewProforma.tsx` *(nuevo, opcional, para QA)*
-- `CHANGELOG.md` + `src/constants/appVersion.ts` (bump patch `12.0.0-rc.1` → `12.0.0-rc.2`, según política de no salir de la ventana RC) + entrada en `src/pages/Changelog.tsx`.
-
-¿Apruebas que primero genere el mockup PNG para validar dirección visual, o prefieres que implemente directo el sistema sobre los 5 documentos?  Implementa directo en sistema. 
+- `src/pdf/emisor.ts` (nuevo)
+- `src/pdf/components/BrandHeader.tsx`
+- `src/pdf/components/Footer.tsx`
+- `src/pdf/documents/CotizacionDocument.tsx`
+- `src/pdf/documents/ProformaDocument.tsx`
+- `src/pdf/documents/ProformaConsolidadaDocument.tsx`
+- `src/pdf/documents/ProformaHeader.tsx`
+- `src/pdf/documents/RentabilidadDocument.tsx`
+- `src/pdf/theme/styles.ts` (solo comentario)
+- `src/generators/cotizacionPdf.tsx`
+- `src/generators/proformaPdf.tsx`
+- `src/generators/rentabilidadPdf.tsx`
+- `src/pages/cotizaciones/CotizacionDetalle.tsx`
+- `src/hooks/embarque/useDialogGenerarProformaController.ts`
+- `src/hooks/embarque/useDescargarProformaPdf.ts`
+- `src/pages/dev/PdfPreviewCotizacion.tsx`
+- `src/constants/appVersion.ts`
+- `CHANGELOG.md`
