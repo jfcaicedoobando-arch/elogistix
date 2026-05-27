@@ -6,6 +6,23 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [11.64.0] - 2026-05-27
+- **Fase 2 — D16: casts HIGH = 0 en código productivo** (antes 37 reportados).
+- **Clasificador mejorado** (`scripts/lib/casts.ts`) con 2 reglas de degradación:
+  - Test files (`__tests__/`, `*.test.{ts,tsx}`, `*.spec.{ts,tsx}`): `HIGH/CRITICAL → MEDIUM`. El mocking con `as unknown as X` es práctica estándar.
+  - Comentario `// SAFE-CAST:` hasta 6 líneas arriba: `HIGH → LOW`. Opt-out documentado.
+  - `CRITICAL` (`as any`, `JSON.parse(x) as Y`) nunca se degrada.
+- **Refactors productivos** (3 casts eliminados, 1 conservado con justificación):
+  - `src/lib/utils/omitUndefined.ts`: helper genérico tipado nuevo.
+  - `VirtualDataTable.tsx`: `props as unknown as Record<string, unknown>` → `omitUndefined(props)`.
+  - `exportCsv.ts`: firma acepta `ReadonlyArray<CsvHeader>` → elimina cast en `useHuecoFacturacion.ts` (compatible con `as const`).
+  - `leadsCsv.ts`: asignación dinámica `(r as unknown as Record<string,string>)[field] = val` → `switch` exhaustivo sobre `keyof ParsedLeadRow`.
+  - `queryPersistBootstrap.ts`: cast inevitable por marca privada de `@tanstack/react-query-persist-client`; comentario renombrado a `SAFE-CAST:` (queda en LOW).
+- **Guardrail nuevo en `src/__tests__/audit-report.test.ts`**: falla CI si `bySeverity.HIGH > 0` o `CRITICAL > 0`.
+- **Nuevo test** `src/__tests__/audit-casts-classifier.test.ts` (13 assertions) valida ambas reglas y los casos límite.
+- Política documentada en `mem://principles/safe-cast`.
+- Reporte regenerado: `750 casts → SAFE 297, LOW 9, MEDIUM 441, HIGH 0, CRITICAL 0`.
+
 ## [11.63.0] - 2026-05-27
 - **Fase 1 del backlog de auditoría (D14 + C10)** — blindaje sin riesgo previo a refactors grandes.
 - **D14 — Guardrail oversized > 200 líneas**: nueva aserción en `src/lib/__tests__/architecture-baseline.test.ts` que falla la CI si cualquier archivo productivo en `src/` supera 200 líneas. Antes el reporte sólo informaba; ahora frena el merge.

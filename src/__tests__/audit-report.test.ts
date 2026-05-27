@@ -31,6 +31,15 @@ describe("audit-report", () => {
     expect(s.topFiles.length).toBeLessThanOrEqual(5);
   });
 
+  // D16 (11.64.0) — guardrail: 0 casts HIGH ni CRITICAL tras aplicar
+  // las reglas de degradación (test files → MEDIUM, SAFE-CAST → LOW).
+  it("casts baseline: 0 HIGH y 0 CRITICAL", () => {
+    const hits = scanCasts(ROOT);
+    const s = summarizeCasts(hits);
+    expect(s.bySeverity.HIGH).toBe(0);
+    expect(s.bySeverity.CRITICAL).toBe(0);
+  });
+
   it("test hygiene baseline: 0 violaciones", () => {
     expect(auditTests(ROOT)).toEqual([]);
   });
