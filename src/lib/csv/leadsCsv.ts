@@ -75,9 +75,15 @@ function parseEstado(val: string): CrmLeadEstado {
   return (LEAD_ESTADOS as readonly string[]).includes(val) ? (val as CrmLeadEstado) : "Nuevo";
 }
 
-const LEAD_STRING_FIELDS: ReadonlySet<keyof ParsedLeadRow> = new Set([
-  "empresa", "contacto", "email", "telefono", "ciudad", "pais", "notas",
-]);
+const LEAD_STRING_SETTERS: Partial<Record<keyof ParsedLeadRow, (r: ParsedLeadRow, v: string) => void>> = {
+  empresa: (r, v) => { r.empresa = v; },
+  contacto: (r, v) => { r.contacto = v; },
+  email: (r, v) => { r.email = v; },
+  telefono: (r, v) => { r.telefono = v; },
+  ciudad: (r, v) => { r.ciudad = v; },
+  pais: (r, v) => { r.pais = v; },
+  notas: (r, v) => { r.notas = v; },
+};
 
 function assignLeadField(
   row: ParsedLeadRow,
@@ -87,11 +93,9 @@ function assignLeadField(
   if (field === "score") { row.score = parseScore(val); return; }
   if (field === "fuente") { row.fuente = parseFuente(val); return; }
   if (field === "estado") { row.estado = parseEstado(val); return; }
-  if (LEAD_STRING_FIELDS.has(field)) {
-    // Asignación dinámica restringida a campos string conocidos.
-    (row as unknown as Record<string, string>)[field] = val;
-  }
+  LEAD_STRING_SETTERS[field]?.(row, val);
 }
+
 
 
 export function mapLeadCsvRows(matrix: string[][]): ParsedLeadRow[] {
