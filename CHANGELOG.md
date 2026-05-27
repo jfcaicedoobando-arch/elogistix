@@ -6,7 +6,12 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [12.0.0-rc.6] - 2026-05-27
+- **feat(facturación)**: nuevo filtro de rango de fechas (Desde / Hasta) en `/facturacion`, persistente en URL (`?desde&hasta`) y compartido entre pestañas. Presets rápidos: Hoy, Esta semana, Este mes, Mes anterior, Año actual, Limpiar. Default: mes en curso (día 1 → hoy). Aplica sobre `fecha_emision` en Pendientes, Proformas y Facturas, y sobre `fecha_vencimiento` en Liquidación de Gastos. Las exportaciones CSV y el Layout Contable respetan el rango activo. Proyección conserva su selector de mes propio (ya filtra por fecha en backend).
+- Nuevos: `src/hooks/facturacion/useFacturacionDateRange.ts`, `src/components/facturacion/DateRangeFilter.tsx`.
+
 ## [12.0.0-rc.5] - 2026-05-27
+
 - **fix(cotizaciones)**: refactor del schema de validación — se introduce `cotizacionDraftInputSchema` (basado en `cotizacionBaseSchema`) que permite `conceptos_venta: []` en la creación del borrador del Paso 1. `crearCotizacion` ahora usa este schema de borrador en lugar del schema final estricto. La validación de al menos un concepto sigue vigente en el Paso 3 antes de finalizar.
 - **chore(cache)**: invalidación automática de caché al detectar cambio de `APP_VERSION` en `main.tsx` (`queryClient.clear()` + `clearPersistedQueryCache()`), para evitar que usuarios queden atrapados en builds antiguos (`rc.3`) con lógica de validación obsoleta. Nuevas utilidades `getStoredAppVersion`/`setStoredAppVersion`/`clearPersistedQueryCache` en `browserStorage` con clave `lc-app-version`.
 
