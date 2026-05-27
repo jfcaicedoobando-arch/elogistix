@@ -6,6 +6,14 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [11.71.0] - 2026-05-27
+- **Preparación Release Candidate (paso 1 de 2).** Cierre de gaps pre-RC antes de cortar `12.0.0-rc.1`.
+  - **Seguridad — 2 hallazgos cerrados**: `invite-client-user` ahora usa allow-list de orígenes (elogistix + preview lovable + localhost) en lugar del header `Origin` arbitrario (cierra open-redirect potencial). `jsoncargo-track` añade `checkAdminAccess` tras `authenticate`: clientes/viewers reciben 403, ya no pueden gastar cuota del proveedor.
+  - **Seguridad — backlog pre-GA documentado**: 3 RLS a endurecer (`auditoria_snapshots`, `bitacora_actividad`, `tracking_intentos` restringir a admin/operador/super_admin) + `client-error-log` necesita validación de firma JWT y rate limit. Trackeados en `docs/rc-qa-checklist.md §L`.
+  - **Seguridad — aceptados**: 62 warns SECURITY DEFINER del linter son el patrón intencional (`mem://technical/security-patterns`) — funciones con `SET search_path = public` que validan internamente con `has_role()` / `current_user_org_id()`. Documentado en `@security-memory`.
+  - **Docs nuevos**: `docs/rc-qa-checklist.md` (checklist A-N con criterio de corte RC/GA), `docs/rc-perf.md` (plantilla de smoke de performance + rollback dry-run), `docs/release-notes-12.0.md` (borrador de release notes en español MX para usuario final).
+  - **Política RC**: nueva §9 en `docs/operations.md` con code freeze, flujo de corte (RC → ventana 5-7 días → GA) y criterios de aceptación.
+
 ## [11.70.0] - 2026-05-27
 - **Auditoría de paginación cerrada** (68 → 0 RISK). Nuevo `scripts/audit-pagination.ts` con heurística refinada (lookahead para chain split, allowlist de catálogos, reconocimiento de `.in()` por FK e `.insert().select()`). Resultado: 174 queries inspeccionadas → 151 OK · 23 CATALOG · **0 RISK**.
 - Caps defensivos `.limit()` aplicados a 6 queries agregadas: `services/auditoria/snapshots.ts` (2000), `services/crm/forecast.ts` (5000 × 3), `services/crm/leaderboard.ts` (5000), `services/facturas/index.ts` `fetchGastosPendientes` (2000). Cuando se rebasen estos topes hay que migrar a RPC server-side.

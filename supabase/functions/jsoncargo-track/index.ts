@@ -4,7 +4,7 @@
 
 import { handlePreflightStrict, buildCors } from "../_shared/cors.ts";
 import { jsonResponse, errorResponse } from "../_shared/response.ts";
-import { authenticate, type AuthContext } from "../_shared/auth.ts";
+import { authenticate, checkAdminAccess, type AuthContext } from "../_shared/auth.ts";
 import { createLogger } from "../_shared/logger.ts";
 import {
   fetchContainerDetails,
@@ -160,6 +160,13 @@ Deno.serve(async (req) => {
     const msg = e instanceof Error ? e.message : "auth error";
     log.finish(401, "auth_failed", { payload: { error: msg } });
     return errorResponse(msg.replace(/^401:/, ""), 401, cors);
+  }
+
+  // SEC pre-RC: solo operadores/admins pueden gastar cuota del proveedor.
+  const { isGlobalAdmin, orgId } = await checkAdminAccess(auth.adminClient, auth.userId);
+  if (!isGlobalAdmin && !orgId) {
+    log.finish(403, "role_denied", { user_id: auth.userId });
+    return errorResponse("Solo operadores pueden sincronizar tracking", 403, cors);
   }
 
   return runSync({ req, auth, apiKey, log, cors });
