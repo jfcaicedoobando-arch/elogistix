@@ -12,7 +12,28 @@
  */
 import { formatValidationMessage } from "./validationFormat";
 
+// ── Códigos estandarizados de error para reportes ─────────────────────
+/**
+ * `errorCode` estable para el JSON de reporte de errores (`errorReport.ts`).
+ * Facilita filtrar en logs, agrupar incidencias en Sentry y disparar
+ * reacciones de UX por tipo. No traducir: son identificadores técnicos.
+ */
+export const ERROR_CODES = {
+  VALIDATION_FAILED: "VALIDATION_FAILED",
+  DB_ERROR: "DB_ERROR",
+  UNAUTHORIZED: "UNAUTHORIZED",
+  FORBIDDEN: "FORBIDDEN",
+  NOT_FOUND: "NOT_FOUND",
+  CONFLICT: "CONFLICT",
+  CLIENT_ERROR: "CLIENT_ERROR",
+  SERVER_ERROR: "SERVER_ERROR",
+  NETWORK_ERROR: "NETWORK_ERROR",
+  UNKNOWN: "UNKNOWN",
+} as const;
+export type AppErrorCode = (typeof ERROR_CODES)[keyof typeof ERROR_CODES];
+
 // ── Etiquetas legibles de campos ───────────────────────────────────────
+
 export const FIELD_LABELS = {
   modo: "Modo de transporte",
   tipo: "Tipo de operación",

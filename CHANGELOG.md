@@ -6,7 +6,14 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [12.0.0-rc.7] - 2026-05-27
+- **feat(observability)**: reporte de errores enriquecido con `requestId` (UUID v4 vía `crypto.randomUUID`), `errorCode` estandarizado (catálogo `ERROR_CODES` en `errorCatalog.ts`: VALIDATION_FAILED, DB_ERROR, FORBIDDEN, CONFLICT, SERVER_ERROR, NETWORK_ERROR…) y `method` / acción semántica (ej. `CREATE_DRAFT_COTIZACION`, `SAVE_CONCEPTOS_VENTA_COTIZACION`). Los códigos se infieren del error si no se pasan.
+- **feat(observability)**: `extractErrorDetails` detecta `ZodError` (directo o vía `.cause`) y emite `errorDetails.validationErrors[]` con `{ path, message, code }`. Resuelve el problema de `errorDetails: {}` vacío en fallas de validación de cotizaciones.
+- **chore(cotizaciones)**: el wizard ahora propaga el error crudo (`error: e`) y un `method` por paso al `notifyError`, para que el extractor pueda inspeccionar el `ZodError` envuelto por `parseOrThrow`.
+- Tests: cobertura de ZodError directo, ZodError en `cause`, y derivación de `errorCode` para RLS, conflicto, 5xx, validación y desconocido.
+
 ## [12.0.0-rc.6] - 2026-05-27
+
 - **feat(facturación)**: nuevo filtro de rango de fechas (Desde / Hasta) en `/facturacion`, persistente en URL (`?desde&hasta`) y compartido entre pestañas. Presets rápidos: Hoy, Esta semana, Este mes, Mes anterior, Año actual, Limpiar. Default: mes en curso (día 1 → hoy). Aplica sobre `fecha_emision` en Pendientes, Proformas y Facturas, y sobre `fecha_vencimiento` en Liquidación de Gastos. Las exportaciones CSV y el Layout Contable respetan el rango activo. Proyección conserva su selector de mes propio (ya filtra por fecha en backend).
 - Nuevos: `src/hooks/facturacion/useFacturacionDateRange.ts`, `src/components/facturacion/DateRangeFilter.tsx`.
 

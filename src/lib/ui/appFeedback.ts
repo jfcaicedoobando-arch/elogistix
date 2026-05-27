@@ -36,15 +36,22 @@ export interface ErrorNotifyOptions {
   description?: string;
   /** Override de título. */
   title?: string;
-  /** Error original (Error, PostgrestError, string...) — habilita panel de detalles. */
+  /** Error original (Error, PostgrestError, ZodError, string...) — habilita panel de detalles. */
   error?: unknown;
   /** Datos arbitrarios que ayudan a reproducir (embarqueId, bucket, path, etc.). */
   context?: Record<string, unknown>;
+  /** Código estandarizado del catálogo. Si no se pasa, se infiere del error. */
+  errorCode?: string;
+  /** Acción/método (HTTP o semántico, ej. "POST", "SAVE_DRAFT_COTIZACION"). */
+  method?: string;
 }
 
 /** Emite un toast bloqueante (variant destructive) con payload de debug copiable. */
 export function notifyError(toast: AnyToastFn, opts: ErrorNotifyOptions) {
-  const { step, phase, errors, message, description: descOpt, title, error, context } = opts;
+  const {
+    step, phase, errors, message, description: descOpt, title, error, context,
+    errorCode, method,
+  } = opts;
   const description = descOpt ?? message ?? (errors ? Object.values(errors)[0] : undefined);
 
   let computedTitle = title;
@@ -66,10 +73,13 @@ export function notifyError(toast: AnyToastFn, opts: ErrorNotifyOptions) {
     step,
     error,
     context,
+    errorCode,
+    method,
   });
 
   toast({ title: computedTitle, description, variant: "destructive", debug });
 }
+
 
 /** Emite un toast de advertencia (no bloquea). */
 export function notifyWarning(
