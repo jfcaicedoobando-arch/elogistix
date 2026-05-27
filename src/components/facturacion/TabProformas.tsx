@@ -70,6 +70,8 @@ export function TabProformas({ isInRange }: { isInRange?: (fecha: string | null 
               onPageChange: c.setPage,
               pageSize: c.pageSize,
               onPageSizeChange: (s) => { c.setPageSize(s); c.setPage(0); },
+              pageSizeOptions: [100, 999999],
+              pageSizeLabels: { 999999: "Todos" },
             }}
           />
         </CardContent>

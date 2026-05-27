@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [12.0.0-rc.10] - 2026-05-27
+- **feat(tablas)**: el selector de filas por página simplificado a **100 / pág** (default) y **Todos** se aplica ahora a todas las tablas principales: Clientes, Proveedores, Cotizaciones, Leads, Actividades, Facturación (Facturas y Proformas). `useListPageState.DEFAULT_PAGE_SIZE` y `useTabProformasState` ajustados a 100. Se conservan sin cambios las tablas de Diagnóstico/Logs (opciones grandes intencionales), Oportunidades (kanban) y Bitácora/Auditoría.
+
 ## [12.0.0-rc.9] - 2026-05-27
 - **feat(embarques)**: el selector de filas por página de la tabla de embarques se simplifica a **100 / pág** (default) y **Todos**. Se eliminan las opciones 10, 20 y 50. `PaginationControls` y `DataTablePagination` ahora aceptan `pageSizeLabels` para etiquetas personalizadas (ej. `999999 → "Todos"`).
 - **fix(observability)**: restaurados imports de `ERROR_CODES` removidos por error en rc.8 en 14 archivos (catálogos, configuración, embarques, portal, admin).
