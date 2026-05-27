@@ -1,3 +1,4 @@
+import { ERROR_CODES } from "@/lib/domain/errorCatalog";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/shared";
 import { queryKeys } from "@/lib/query";

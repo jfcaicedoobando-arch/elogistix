@@ -1,3 +1,4 @@
+import { ERROR_CODES } from "@/lib/domain/errorCatalog";
 import { useState, useCallback } from "react";
 import { useToast } from "@/hooks/shared";
 import { createDocumentoSignedUrl } from "@/services/search";

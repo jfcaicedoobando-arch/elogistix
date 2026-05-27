@@ -1,3 +1,4 @@
+import { ERROR_CODES } from "@/lib/domain/errorCatalog";
 import { useMemo, useState } from "react";
 import { useToast } from "@/hooks/shared";
 import { getErrorMessage } from "@/lib/errors";

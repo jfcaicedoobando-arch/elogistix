@@ -1,3 +1,4 @@
+import { ERROR_CODES } from "@/lib/domain/errorCatalog";
 /**
  * Hook compartido para descargar el PDF de una proforma.
  * Centraliza la carga de embarque + cliente + conceptos (regulares o consolidados)
