@@ -1,6 +1,6 @@
 # Power of 10 — Baseline
 
-_Generado por `scripts/audit-power10.ts` sobre 545 archivos de `src/`._
+_Generado por `scripts/audit-power10.ts` sobre 982 archivos `.ts/.tsx` de `src/` (11.59.1)._
 
 Las heurísticas son conservadoras (prefieren falsos positivos). Validar manualmente antes de refactorizar. Ver ARCHITECTURE.md §20.
 
@@ -8,16 +8,21 @@ Las heurísticas son conservadoras (prefieren falsos positivos). Validar manualm
 
 | Regla | Hallazgos |
 |---|---:|
-| #4 Componentes >200 líneas | 0 |
+| #4 Componentes/archivos productivos >200 líneas | 3 |
 | #5/#10 `any` explícito | 0 |
 | #3 `useEffect` sin cleanup | 1 |
 | #2 Queries de lista sin paginar | 68 |
 
-## Regla #4 — Componentes >200 líneas (0)
+## Regla #4 — Archivos productivos >200 líneas (3)
 
-Componentes y páginas que superan el umbral. Refactor: extraer `use<X>Controller` + subcomponentes.
+Detectado por `scripts/audit-architecture.ts` (11.59.1):
 
-_Sin hallazgos._
+- 210 — `src/services/crm/leads.ts`
+- 202 — `src/components/crm/ImportarLeadsCsvDialog.tsx`
+- 201 — `src/components/shared/BulkImportDialog.tsx`
+
+Refactor sugerido: extraer `use<X>Controller` + subcomponentes, o dividir el
+servicio por sub-acción (queries/mutations/bulk).
 
 ## Regla #5/#10 — `any` explícito (0)
 

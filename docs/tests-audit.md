@@ -1,6 +1,6 @@
-# Auditoría de tests — v11.39.0
+# Auditoría de tests — v11.59.1
 
-Fecha: 25/05/2026 · Estado inicial: **108 archivos / 724 tests**.
+Fecha: 27/05/2026 · Estado actual: **109 archivos / 716 tests** (incluye 18 suites en `services/` tras el Bloque A: crm, embarque, auth, organization). Diagnóstico original sobre 108/724 sigue vigente como histórico.
 
 ## Resumen ejecutivo
 

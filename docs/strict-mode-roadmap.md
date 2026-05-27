@@ -7,8 +7,10 @@ TypeScript sin romper el build. Compañero de [`cast-audit.md`](./cast-audit.md)
 
 - `strict`, `strictNullChecks`, `noImplicitAny` → **off** en `tsconfig.app.json`.
 - `noUnusedLocals`, `noUnusedParameters`, `noFallthroughCasesInSwitch` → **on** (PR-3).
-- ~559 `as` casts. Distribución: 73 HIGH+CRITICAL (~13 %), 316 MEDIUM (mayoría
-  en mappers DB↔dominio), resto SAFE/LOW.
+- ~720 `as` casts (refresh 11.59.1). Distribución: 37 HIGH+CRITICAL (~5.1 %),
+  411 MEDIUM (~57 %, mayoría en mappers DB↔dominio y servicios nuevos del
+  Bloque A), resto SAFE/LOW. El crecimiento vs. 458 (mayo 8) viene de los
+  servicios migrados desde hooks que ahora portan los casts de Tables<>.
 
 ## Por qué no activamos `strictNullChecks` ya
 
