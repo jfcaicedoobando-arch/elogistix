@@ -6,6 +6,8 @@ import type { ErrorReport } from "@/lib/ui/errorReport";
 
 function baseReport(over: Partial<ErrorReport> = {}): ErrorReport {
   return {
+    requestId: "req-test-0001",
+    errorCode: "UNKNOWN",
     title: "Error X",
     version: "1.0.0",
     timestampIso: "2026-05-25T00:00:00.000Z",
@@ -17,6 +19,7 @@ function baseReport(over: Partial<ErrorReport> = {}): ErrorReport {
     ...over,
   };
 }
+
 
 describe("fmtHeader", () => {
   it("incluye todos los campos cuando vienen", () => {
