@@ -11,6 +11,7 @@ export interface DataTablePagination {
   pageSize?: number;
   onPageSizeChange?: (size: number) => void;
   pageSizeOptions?: number[];
+  pageSizeLabels?: Record<number, string>;
 }
 
 export const DENSITY_CELL: Record<TableDensity, string> = {

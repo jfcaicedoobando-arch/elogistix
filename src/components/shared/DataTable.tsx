@@ -117,6 +117,7 @@ function DataTableInner<T>({
           pageSize={pagination.pageSize}
           onPageSizeChange={pagination.onPageSizeChange}
           pageSizeOptions={pagination.pageSizeOptions}
+          pageSizeLabels={pagination.pageSizeLabels}
         />
       )}
     </div>
