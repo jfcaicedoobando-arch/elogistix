@@ -1,6 +1,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import type { Tables, TablesInsert } from "@/integrations/supabase/types";
 import { EMBARQUE_LIST_COLUMNS } from "../columns";
+import { embarqueListRowsSchema } from "./embarqueRowSchema";
 import type { EmbarquesPaginadosFilters } from "./paginados";
 
 type EmbarqueRow = Tables<"embarques">;
