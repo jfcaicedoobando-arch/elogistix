@@ -91,21 +91,19 @@ Cargar dataset realista (≥500 embarques, ≥200 cotizaciones, ≥1000 leads) e
 
 Documentar en `docs/rc-perf.md`.
 
-## L. Backlog pre-RC (no bloqueante para -rc.1, sí para GA)
+## L. Backlog pre-RC — CERRADO en 12.0.0-rc.1
 
-Hallazgos abiertos del último `security--run_security_scan` que deben cerrarse antes de **12.0.0**:
+Hallazgos cerrados en este ciclo (todos los críticos de RLS):
 
-| ID | Categoría | Acción |
-|---|---|---|
-| `client_error_log_abuse` | Edge function | Validar firma JWT con `getClaims` + rate limit por IP |
-| `auditoria_snapshots_viewer_access` | RLS | Restringir SELECT a admin/operador/super_admin |
-| `bitacora_actividad_operador_access` | RLS | Scopear `has_role('admin')` por `organization_id` |
-| `tracking_intentos_no_role_restriction` | RLS | Restringir SELECT/INSERT a admin/operador/super_admin |
+- ✅ `invite_origin_redirect` — allow-list de orígenes en `invite-client-user` (11.71.0).
+- ✅ `jsoncargo_track_authz` — `checkAdminAccess` en `jsoncargo-track` (11.71.0).
+- ✅ `auditoria_snapshots_viewer_access` — SELECT restringido a admin/operador/super_admin (12.0.0-rc.1).
+- ✅ `bitacora_actividad_operador_access` — admin global scopeado por organización (12.0.0-rc.1).
+- ✅ `tracking_intentos_no_role_restriction` — SELECT/INSERT restringidos a staff de la org (12.0.0-rc.1).
 
-Hallazgos ya corregidos en este ciclo:
+Riesgo aceptado documentado en `@security-memory`:
 
-- ✅ `invite_origin_redirect` — allow-list de orígenes en `invite-client-user`.
-- ✅ `jsoncargo_track_authz` — `checkAdminAccess` añadido en `jsoncargo-track`.
+- `client_error_log_abuse` — endpoint público por diseño (captura crashes pre-auth del ErrorBoundary). Rate limit aplazado: backend no tiene primitivas de rate limit aún (ver guía `<no-backend-rate-limiting>`). Mitigación actual: payload truncado, sin secretos en respuesta, usa service role solo para insertar en `app_logs`.
 
 ## M. Rollback dry-run
 

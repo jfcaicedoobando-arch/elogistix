@@ -1,7 +1,8 @@
 # Notas de versión — Libre Carga 12.0
 
-> Borrador para `12.0.0` (GA). Mantener en español MX, tono orientado a usuario final.
-> Actualizar fecha y número de RC al cortar el release.
+> Versión actual: **12.0.0-rc.1** (Release Candidate, 27 de mayo de 2026).
+> Ventana de validación: 5-7 días hábiles. Sin show-stoppers → GA `12.0.0`.
+> Tono orientado a usuario final, español MX.
 
 ## Resumen
 
