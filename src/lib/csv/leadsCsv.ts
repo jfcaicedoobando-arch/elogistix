@@ -62,6 +62,36 @@ export function parseLeadsCsv(text: string): string[][] {
   return rows.filter((r) => r.some((v) => v.trim() !== ""));
 }
 
+function assignLeadField(
+  row: ParsedLeadRow,
+  field: keyof ParsedLeadRow,
+  val: string,
+): void {
+  if (field === "score") {
+    const n = Number(val);
+    row.score = Number.isFinite(n) && n >= 1 && n <= 5 ? n : 3;
+    return;
+  }
+  if (field === "fuente") {
+    row.fuente = (LEAD_FUENTES as readonly string[]).includes(val) ? (val as CrmLeadFuente) : "Otro";
+    return;
+  }
+  if (field === "estado") {
+    row.estado = (LEAD_ESTADOS as readonly string[]).includes(val) ? (val as CrmLeadEstado) : "Nuevo";
+    return;
+  }
+  // `field` ya está restringido a keyof ParsedLeadRow vía LEAD_CSV_HEADER_ALIASES.
+  switch (field) {
+    case "empresa": row.empresa = val; break;
+    case "contacto": row.contacto = val; break;
+    case "email": row.email = val; break;
+    case "telefono": row.telefono = val; break;
+    case "ciudad": row.ciudad = val; break;
+    case "pais": row.pais = val; break;
+    case "notas": row.notas = val; break;
+  }
+}
+
 export function mapLeadCsvRows(matrix: string[][]): ParsedLeadRow[] {
   if (matrix.length === 0) return [];
   const headers = matrix[0].map((h) => h.trim().toLowerCase());
@@ -73,29 +103,10 @@ export function mapLeadCsvRows(matrix: string[][]): ParsedLeadRow[] {
     };
     colMap.forEach((field, i) => {
       if (!field) return;
-      const val = (cols[i] ?? "").trim();
-      if (field === "score") {
-        const n = Number(val);
-        r.score = Number.isFinite(n) && n >= 1 && n <= 5 ? n : 3;
-      } else if (field === "fuente") {
-        r.fuente = (LEAD_FUENTES as readonly string[]).includes(val) ? (val as CrmLeadFuente) : "Otro";
-      } else if (field === "estado") {
-        r.estado = (LEAD_ESTADOS as readonly string[]).includes(val) ? (val as CrmLeadEstado) : "Nuevo";
-      } else {
-        // Asignación tipada por campo string (sin cast). `field` ya está
-        // restringido a `keyof ParsedLeadRow` vía LEAD_CSV_HEADER_ALIASES.
-        switch (field) {
-          case "empresa": r.empresa = val; break;
-          case "contacto": r.contacto = val; break;
-          case "email": r.email = val; break;
-          case "telefono": r.telefono = val; break;
-          case "ciudad": r.ciudad = val; break;
-          case "pais": r.pais = val; break;
-          case "notas": r.notas = val; break;
-        }
-      }
+      assignLeadField(r, field, (cols[i] ?? "").trim());
     });
     if (!r.empresa) r.__error = "Empresa requerida";
     return r;
   });
 }
+
