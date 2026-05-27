@@ -5,17 +5,17 @@ Auditoría automática de los `as` casts en `src/`. Generado por
 
 ## Resumen
 
-Total de `as` casts detectados: **720**
+Total de `as` casts detectados: **753**
 
 | Categoría | Peso | Cantidad | % |
 |-----------|------|----------|---|
-| SAFE      | 0 | 265     | 36.8% |
-| LOW       | 1 | 7      | 1.0% |
-| MEDIUM    | 2 | 411   | 57.1% |
-| HIGH      | 3 | 37     | 5.1% |
+| SAFE      | 0 | 297     | 39.4% |
+| LOW       | 1 | 7      | 0.9% |
+| MEDIUM    | 2 | 412   | 54.7% |
+| HIGH      | 3 | 37     | 4.9% |
 | CRITICAL  | 4 | 0 | 0.0% |
 
-**Lectura clave:** los casts a accionar son los **HIGH + CRITICAL** = 37 (~5.1%). El resto es seguro o aceptable bajo política.
+**Lectura clave:** los casts a accionar son los **HIGH + CRITICAL** = 37 (~4.9%). El resto es seguro o aceptable bajo política.
 
 ## Definición de categorías
 
@@ -37,7 +37,7 @@ Total de `as` casts detectados: **720**
 | 6 | `src/lib/mappers/embarqueToDb.ts` | 6 | 12 | 0 | 0 | 6 | 0 | 0 |
 | 7 | `src/services/__tests__/tracking.test.ts` | 4 | 12 | 0 | 0 | 0 | 4 | 0 |
 | 8 | `src/services/embarque/documentos.ts` | 6 | 12 | 0 | 0 | 6 | 0 | 0 |
-| 9 | `src/components/crm/ImportarLeadsCsvDialog.tsx` | 5 | 11 | 0 | 0 | 4 | 1 | 0 |
+| 9 | `src/lib/csv/leadsCsv.ts` | 5 | 11 | 0 | 0 | 4 | 1 | 0 |
 | 10 | `src/components/auditoria/HallazgosFiltros.tsx` | 5 | 10 | 0 | 0 | 5 | 0 | 0 |
 | 11 | `src/generators/__tests__/exportCsv.test.ts` | 4 | 10 | 0 | 0 | 2 | 2 | 0 |
 | 12 | `src/hooks/embarque/useProformas.ts` | 5 | 10 | 0 | 0 | 5 | 0 | 0 |
@@ -47,106 +47,106 @@ Total de `as` casts detectados: **720**
 
 ## Top-30 casts más riesgosos (HIGH + CRITICAL)
 
-### 1. [HIGH] `src/components/crm/ImportarLeadsCsvDialog.tsx:97`
-
-```ts
-(r as unknown as Record<string, string>)[field] = val;
-```
-
-### 2. [HIGH] `src/components/shared/VirtualDataTable.tsx:78`
+### 1. [HIGH] `src/components/shared/VirtualDataTable.tsx:78`
 
 ```ts
 const src = props as unknown as Record<string, unknown>;
 ```
 
-### 3. [HIGH] `src/components/shared/dataTable/__tests__/DataTable.perf.test.tsx:60`
+### 2. [HIGH] `src/components/shared/dataTable/__tests__/DataTable.perf.test.tsx:60`
 
 ```ts
 const g = globalThis as unknown as { gc?: () => void };
 ```
 
-### 4. [HIGH] `src/components/shared/dataTable/__tests__/DataTable.regression.test.tsx:315`
+### 3. [HIGH] `src/components/shared/dataTable/__tests__/DataTable.regression.test.tsx:315`
 
 ```ts
 ({ original: { v } } as unknown as import("@tanstack/react-table").Row<SR>);
 ```
 
-### 5. [HIGH] `src/components/shared/dataTable/__tests__/DataTable.regression.test.tsx:317`
+### 4. [HIGH] `src/components/shared/dataTable/__tests__/DataTable.regression.test.tsx:317`
 
 ```ts
 ({ original: { n } } as unknown as import("@tanstack/react-table").Row<NR>);
 ```
 
-### 6. [HIGH] `src/components/shared/dataTable/__tests__/DataTable.regression.test.tsx:319`
+### 5. [HIGH] `src/components/shared/dataTable/__tests__/DataTable.regression.test.tsx:319`
 
 ```ts
 ({ original: { d } } as unknown as import("@tanstack/react-table").Row<DR>);
 ```
 
-### 7. [HIGH] `src/generators/__tests__/exportCsv.test.ts:13`
+### 6. [HIGH] `src/generators/__tests__/exportCsv.test.ts:13`
 
 ```ts
 }) as unknown as typeof URL.createObjectURL;
 ```
 
-### 8. [HIGH] `src/generators/__tests__/exportCsv.test.ts:25`
+### 7. [HIGH] `src/generators/__tests__/exportCsv.test.ts:25`
 
 ```ts
 return a as unknown as HTMLElement;
 ```
 
-### 9. [HIGH] `src/hooks/auditoria/__tests__/useAuditoriaEjecutivo.edge.test.tsx:57`
+### 8. [HIGH] `src/hooks/auditoria/__tests__/useAuditoriaEjecutivo.edge.test.tsx:57`
 
 ```ts
 mockUseAud.mockReturnValue({ data, isLoading } as unknown as ReturnType<typeof useAuditoria>);
 ```
 
-### 10. [HIGH] `src/hooks/auditoria/__tests__/useAuditoriaEjecutivo.edge.test.tsx:58`
+### 9. [HIGH] `src/hooks/auditoria/__tests__/useAuditoriaEjecutivo.edge.test.tsx:58`
 
 ```ts
 mockUseRev.mockReturnValue({ data: undefined } as unknown as ReturnType<typeof useAuditoriaRevisiones>);
 ```
 
-### 11. [HIGH] `src/hooks/auditoria/__tests__/useAuditoriaEjecutivo.test.tsx:77`
+### 10. [HIGH] `src/hooks/auditoria/__tests__/useAuditoriaEjecutivo.test.tsx:77`
 
 ```ts
 } as unknown as ReturnType<typeof useAuditoria>);
 ```
 
-### 12. [HIGH] `src/hooks/auditoria/__tests__/useAuditoriaEjecutivo.test.tsx:80`
+### 11. [HIGH] `src/hooks/auditoria/__tests__/useAuditoriaEjecutivo.test.tsx:80`
 
 ```ts
 } as unknown as ReturnType<typeof useAuditoriaRevisiones>);
 ```
 
-### 13. [HIGH] `src/hooks/auditoria/__tests__/useAuditoriaPageController.test.tsx:74`
+### 12. [HIGH] `src/hooks/auditoria/__tests__/useAuditoriaPageController.test.tsx:74`
 
 ```ts
 } as unknown as ReturnType<typeof useAuditoria>);
 ```
 
-### 14. [HIGH] `src/hooks/auditoria/__tests__/useAuditoriaPageController.test.tsx:77`
+### 13. [HIGH] `src/hooks/auditoria/__tests__/useAuditoriaPageController.test.tsx:77`
 
 ```ts
 } as unknown as ReturnType<typeof useAuditoriaRevisiones>);
 ```
 
-### 15. [HIGH] `src/hooks/auditoria/__tests__/useHallazgosTablaState.test.tsx:49`
+### 14. [HIGH] `src/hooks/auditoria/__tests__/useHallazgosTablaState.test.tsx:49`
 
 ```ts
 mockUseRev.mockReturnValue({ data: undefined } as unknown as ReturnType<typeof useAuditoriaRevisiones>);
 ```
 
-### 16. [HIGH] `src/hooks/auditoria/__tests__/useHallazgosTablaState.test.tsx:119`
+### 15. [HIGH] `src/hooks/auditoria/__tests__/useHallazgosTablaState.test.tsx:119`
 
 ```ts
 mockUseRev.mockReturnValue({ data: map } as unknown as ReturnType<typeof useAuditoriaRevisiones>);
 ```
 
-### 17. [HIGH] `src/hooks/facturacion/useHuecoFacturacion.ts:43`
+### 16. [HIGH] `src/hooks/facturacion/useHuecoFacturacion.ts:43`
 
 ```ts
 HUECO_CSV_HEADERS as unknown as { key: string; label: string }[],
+```
+
+### 17. [HIGH] `src/lib/crm/__tests__/forecast.test.ts:119`
+
+```ts
+row({ monto_estimado: "1500" as unknown as number, probabilidad: "40" as unknown as number }),
 ```
 
 ### 18. [HIGH] `src/lib/crm/__tests__/forecast.test.ts:119`
@@ -155,10 +155,10 @@ HUECO_CSV_HEADERS as unknown as { key: string; label: string }[],
 row({ monto_estimado: "1500" as unknown as number, probabilidad: "40" as unknown as number }),
 ```
 
-### 19. [HIGH] `src/lib/crm/__tests__/forecast.test.ts:119`
+### 19. [HIGH] `src/lib/csv/leadsCsv.ts:87`
 
 ```ts
-row({ monto_estimado: "1500" as unknown as number, probabilidad: "40" as unknown as number }),
+(r as unknown as Record<string, string>)[field] = val;
 ```
 
 ### 20. [HIGH] `src/lib/domain/__tests__/auditoriaCsv.test.ts:23`
