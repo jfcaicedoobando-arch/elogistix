@@ -125,6 +125,6 @@ export function buildConceptosCostoPayload(
       proveedor_nombre: proveedoresDb.find((p) => p.id === c.proveedorId)?.nombre || "",
       concepto: c.concepto,
       monto: c.monto,
-      moneda: c.moneda as TablesInsert<"conceptos_costo">["moneda"],
+      moneda: monedaSchema.parse(c.moneda),
     }));
 }
