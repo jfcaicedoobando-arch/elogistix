@@ -5,12 +5,12 @@
 
 | ID | Tarea | Esfuerzo | Riesgo | Depende de |
 |----|-------|----------|--------|------------|
-| D14 | Guardrail `archivosProductivosOver200 === 0` en test baseline | XS (5 min) | Nulo | — |
-| D16 | Reducir 37 casts HIGH (`as any`, `as unknown as`) | L | Medio (runtime) | D14 |
-| C10 | Migrar 25 `style={{…}}` inline a tokens Tailwind | M | Bajo (visual) | — |
-| D12 | Dividir `routes.tsx` (188 líneas) en `routes/{admin,portal,crm,public}.tsx` | S | Bajo | D14 activo |
-| D13 | Vigilar archivos 180-200 líneas (preventivo) | XS continuo | Nulo | D14, D12 |
-| P1.5 | Unificar `utils/` + `lib/utils.ts` + `lib/utils/` | M | Medio (imports masivos) | D14, D16 |
+| ~~D14~~ | ✅ 11.63.0 — Guardrail oversized>200 activo en `architecture-baseline.test.ts` | XS | Nulo | — |
+| ~~C10~~ | ✅ 11.63.0 — Quick wins (4 estáticos migrados) + política documentada en `mem://principles/inline-styles`. 30 restantes son excepciones legítimas (react-pdf, virtualizer, %-dinámico, colores DB). | M | Bajo | — |
+| D16 | Reducir 37 casts HIGH (`as any`, `as unknown as`) | L | Medio (runtime) | D14 ✅ |
+| D12 | Dividir `routes.tsx` (188 líneas) en `routes/{admin,portal,crm,public}.tsx` | S | Bajo | D14 ✅ |
+| D13 | Vigilar archivos 180-200 líneas (preventivo) | XS continuo | Nulo | D14 ✅ |
+| P1.5 | Unificar `utils/` + `lib/utils.ts` + `lib/utils/` | M | Medio (imports masivos) | D16 |
 | P1.6 | Romper servicios "god" (facturas/proyeccion, cotizacion/mutations, huecoFacturacion) | L | Alto (lógica financiera) | D16, P1.5 |
 | P1.7 | Schemas Zod en boundary Supabase (embarques/facturas/cotizaciones) | L | Medio | P1.6 |
 | Cx  | Bajar complejidad 13 funciones src/ + 4 edge functions a ≤12 | M | Medio | P1.6 |
@@ -49,16 +49,16 @@ Fase 4 — Refactors de dominio (alto riesgo, requieren tests verdes)
 
 ## Entregables por fase
 
-- **Fase 1** → 11.63.0 (D14) + 11.64.0 (C10)
-- **Fase 2** → 11.65.x (D16 por tandas) + 11.66.0 (D12)
-- **Fase 3** → 11.67.0 (P1.5) + nota D13
-- **Fase 4** → 11.68.0 (P1.6 + P1.7 acoplado) + 11.69.0 (complejidad + guardrail ≤12)
+- **Fase 1** → ✅ 11.63.0 (D14 + C10 combinados)
+- **Fase 2** → 11.64.x (D16 por tandas) + 11.65.0 (D12)
+- **Fase 3** → 11.66.0 (P1.5) + nota D13
+- **Fase 4** → 11.67.0 (P1.6 + P1.7 acoplado) + 11.68.0 (complejidad + guardrail ≤12)
 
 ## Fuera de alcance de este plan
 
 - Implementación detallada de cada bloque (se planificará al iniciar cada fase).
 - Cambios funcionales o de UI no listados en la auditoría.
 
-## ¿Por dónde arrancamos?
+## Próximo paso
 
-Recomiendo ejecutar **Fase 1 completa (D14 + C10)** en el siguiente turno: ambos son de bajo riesgo y dejan el repo blindado para los refactors duros.
+**Fase 2 — D16**: primera tanda de ~10 casts HIGH (priorizar archivos con mayor cantidad de `as any`).
