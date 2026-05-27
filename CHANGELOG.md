@@ -6,6 +6,13 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [12.0.0-rc.3] - 2026-05-27
+- **Branding de PDFs leído desde `configuracion.empresa`** (hoy: *Elogistix Shipping*). Eliminado el hardcode "Libre Carga" en `BrandHeader`, `Footer` y los metadatos `author` de todos los documentos.
+  - Nuevo `src/pdf/emisor.ts` con caché en memoria (TTL 5 min) que lee `nombre`, `subtitulo`, `rfc`, `direccion_fiscal`, `email` y `teléfono` de la tabla `configuracion`.
+  - `BrandHeader` ahora muestra dinámicamente la razón social en mayúsculas y el subtítulo; `Footer` recibe `empresaNombre` opcional.
+  - Generadores (`cotizacionPdf`, `proformaPdf`, `rentabilidadPdf`) son `async` y cargan el emisor antes de renderizar; todos los call sites ya esperaban `await` (CotizacionDetalle, useDescargarProformaPdf, useDialogGenerarProformaController, useReportesPageController).
+  - Cambiar el nombre en `/configuracion` se refleja en el siguiente PDF generado tras invalidar caché (recarga o esperar TTL).
+
 ## [12.0.0-rc.2] - 2026-05-27
 - **Pulido visual de PDFs ("Libre Carga Invoice System")**. Sistema visual unificado para Cotización, Proforma y Proforma Consolidada.
   - Nuevos componentes compartidos: `BrandHeader` (banda superior corporativa + marca + tipo doc + folio + meta), `BillToBlock` (destinatario consistente), `TotalesBox` (tarjeta de totales con TOTAL en fondo corporativo, multi-moneda en una sola caja), `PaymentTermsBlock` (vigencia + método + datos bancarios) y `Footer` rebranded en 3 columnas con línea superior `primary`.

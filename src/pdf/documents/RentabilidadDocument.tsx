@@ -26,6 +26,7 @@ interface Props {
   modo?: string;
   kpis: RentabilidadKpis;
   clientes: RentabilidadClienteRow[];
+  emisor?: { razonSocial?: string };
 }
 
 const cols: PdfColumn<RentabilidadClienteRow>[] = [
@@ -37,10 +38,10 @@ const cols: PdfColumn<RentabilidadClienteRow>[] = [
   { key: "margen", title: "Margen", cellStyle: styles.cellNum, render: (r) => `${r.margen.toFixed(1)}%` },
 ];
 
-export function RentabilidadDocument({ fechaDesde, fechaHasta, modo, kpis, clientes }: Props) {
+export function RentabilidadDocument({ fechaDesde, fechaHasta, modo, kpis, clientes, emisor }: Props) {
   const rows = [...clientes].sort((a, b) => b.profit_usd - a.profit_usd);
   return (
-    <Document title="Rentabilidad por cliente" author="Libre Carga">
+    <Document title="Rentabilidad por cliente" author={emisor?.razonSocial ?? "Empresa"}>
       <Page size="LETTER" style={styles.page}>
         <View style={styles.header}>
           <View>
@@ -74,7 +75,7 @@ export function RentabilidadDocument({ fechaDesde, fechaHasta, modo, kpis, clien
           <DataTable columns={cols} rows={rows} />
         )}
 
-        <Footer />
+        <Footer empresaNombre={emisor?.razonSocial} />
       </Page>
     </Document>
   );

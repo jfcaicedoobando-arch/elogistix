@@ -1,6 +1,6 @@
 /**
  * StyleSheet centralizado para todos los documentos @react-pdf/renderer.
- * Sistema visual unificado "Libre Carga Invoice System": tokens depurados,
+ * Sistema visual unificado de facturación: tokens depurados,
  * jerarquía calmada, tablas con zebra real, totales como tarjeta.
  *
  * Paleta: primary (#0F4C81) como único acento corporativo, ink para texto.

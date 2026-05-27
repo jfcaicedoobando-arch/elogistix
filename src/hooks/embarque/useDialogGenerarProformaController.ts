@@ -129,7 +129,7 @@ export function useDialogGenerarProformaController(
         aplica_iva: ivaOverrides[c.id],
       }));
       const { generarPdfProforma } = await import("@/generators/proformaPdf");
-      generarPdfProforma({
+      await generarPdfProforma({
         proforma,
         embarque,
         conceptos: conceptosParaPdf,

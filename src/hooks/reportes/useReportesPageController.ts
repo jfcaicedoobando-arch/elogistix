@@ -85,7 +85,7 @@ export function useReportesPageController() {
     const mod: { generarRentabilidadPdf: typeof GenerarRentabilidadPdfFn } = await import(
       "@/generators/rentabilidadPdf"
     );
-    mod.generarRentabilidadPdf({
+    await mod.generarRentabilidadPdf({
       fechaDesde: filtros.fechaDesde,
       fechaHasta: filtros.fechaHasta,
       modo: filtros.modo,
