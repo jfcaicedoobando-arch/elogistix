@@ -319,4 +319,4 @@ cualquier tabla nueva no-trivial, agrega como mínimo:
 - `src/components/shared/dataTable/sortingFns.ts` — `sortByString/Number/Date`.
 - `src/components/shared/dataTable/columnMeta.ts` — augmentación de `meta`.
 - `src/components/shared/dataTable/__tests__/` — suites de regresión y E2E.
-- `docs/migracion-tabla-fase2.md` — historial de migración Fase 2 (archivo).
+- Historia de la migración a `@tanstack/react-table`: ver `CHANGELOG.md` v9.1.0–v10.1.3.
