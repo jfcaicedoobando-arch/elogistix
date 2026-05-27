@@ -3,7 +3,7 @@
  * Valida las dos reglas de degradación: test files y SAFE-CAST opt-out.
  */
 import { describe, it, expect } from "vitest";
-import { classify, applyDowngrades, isTestFile } from "../casts";
+import { classify, applyDowngrades, isTestFile } from "../../scripts/lib/casts";
 
 describe("classify", () => {
   it("`as any` → CRITICAL", () => {
