@@ -6,6 +6,10 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [12.0.0-rc.9] - 2026-05-27
+- **feat(embarques)**: el selector de filas por página de la tabla de embarques se simplifica a **100 / pág** (default) y **Todos**. Se eliminan las opciones 10, 20 y 50. `PaginationControls` y `DataTablePagination` ahora aceptan `pageSizeLabels` para etiquetas personalizadas (ej. `999999 → "Todos"`).
+- **fix(observability)**: restaurados imports de `ERROR_CODES` removidos por error en rc.8 en 14 archivos (catálogos, configuración, embarques, portal, admin).
+
 ## [12.0.0-rc.8] - 2026-05-27
 - **chore(observability)**: el reporte estructurado de errores (`requestId`, `errorCode`, `method`, `validationErrors`) se aplica ahora globalmente. Se actualizaron ~109 llamadas a `notifyError` en ~60 archivos (hooks, componentes y páginas) para propagar el `error` crudo y un `method` semántico (ej. `DELETE_PROFORMA`, `HANDLE_SUBMIT`, `USE_PROVEEDOR_DETALLE_CONTROLLER`). Las validaciones inline sin `error` crudo añaden `errorCode: VALIDATION_FAILED`. UX inalterada; solo cambia el payload de debug.
 
