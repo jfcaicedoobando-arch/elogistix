@@ -57,9 +57,8 @@ interface Hit {
   snippet: string;
 }
 
-function extractQueryBlock(source: string, fromIdx: number): { block: string; endIdx: number } {
-  // Captura desde `.from(` hasta el siguiente `;` o salto doble — suficiente
-  // para que la heurística vea `.eq`, `.range`, `.limit`, etc.
+function extractQueryBlock(source: string, fromIdx: number): { block: string; lookahead: string } {
+  // Captura desde `.from(` hasta el siguiente `;` para el bloque principal.
   let i = fromIdx;
   let depth = 0;
   let block = "";
@@ -68,12 +67,33 @@ function extractQueryBlock(source: string, fromIdx: number): { block: string; en
     block += ch;
     if (ch === "(") depth++;
     else if (ch === ")") depth--;
-    else if (ch === ";" && depth <= 0) break;
+    else if (ch === ";" && depth <= 0) {
+      i++;
+      break;
+    }
     if (block.length > 1500) break;
     i++;
   }
-  return { block, endIdx: i };
+  // Lookahead: si el query fue `let q = supabase.from(...)`, el `.range()`
+  // suele estar 1-30 líneas abajo. Inspeccionamos los siguientes ~2000 chars
+  // sin cruzar el final de la función (heurística: parar en línea con sólo `}`).
+  let j = i;
+  let lookahead = "";
+  while (j < source.length && lookahead.length < 2000) {
+    const ch = source[j];
+    lookahead += ch;
+    if (ch === "}" && (source[j + 1] === "\n" || source[j + 1] === "\r" || source[j + 1] === undefined)) {
+      // posible cierre de función
+      const beforeNewline = lookahead.lastIndexOf("\n", lookahead.length - 2);
+      const lineStart = beforeNewline + 1;
+      const line = lookahead.slice(lineStart).trim();
+      if (line === "}") break;
+    }
+    j++;
+  }
+  return { block, lookahead };
 }
+
 
 function classify(block: string, table: string): { bucket: Bucket; reason: string } {
   if (/\.(range|limit|single|maybeSingle)\s*\(/.test(block)) {
