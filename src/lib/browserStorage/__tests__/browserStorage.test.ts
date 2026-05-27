@@ -7,6 +7,8 @@ import {
   hasChunkReloadBeenAttempted,
   markChunkReloadAttempted,
   clearChunkReloadFlag,
+  getStoredAppVersion,
+  setStoredAppVersion,
   getStorageRef,
 } from "@/lib/browserStorage";
 
@@ -51,6 +53,12 @@ describe("browserStorage wrapper", () => {
     expect(hasChunkReloadBeenAttempted()).toBe(true);
     clearChunkReloadFlag();
     expect(hasChunkReloadBeenAttempted()).toBe(false);
+  });
+
+  it("app version helpers guardan la versión actual", () => {
+    expect(getStoredAppVersion()).toBeNull();
+    setStoredAppVersion("12.0.0-rc.5");
+    expect(getStoredAppVersion()).toBe("12.0.0-rc.5");
   });
 
   it("getStorageRef devuelve la instancia nativa", () => {
