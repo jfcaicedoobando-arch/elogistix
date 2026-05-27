@@ -13,7 +13,10 @@ import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
  * Controller para la página de Pre-Facturación.
  * Encapsula filtros, búsqueda, paginación, mutaciones y export CSV.
  */
-export function useFacturacionPageController() {
+export function useFacturacionPageController(opts?: {
+  isInRange?: (fecha: string | null | undefined) => boolean;
+}) {
+  const isInRange = opts?.isInRange ?? (() => true);
   const {
     search, filters, page, pageSize,
     setSearch, setFilter, setPage, setPageSize, paginate,
@@ -35,9 +38,16 @@ export function useFacturacionPageController() {
         || factura.numero.toLowerCase().includes(s)
         || factura.cliente_nombre.toLowerCase().includes(s);
       const matchEstado = filterEstado === "todos" || factura.estado === filterEstado;
-      return matchSearch && matchEstado;
+      const matchFecha = isInRange(factura.fecha_emision);
+      return matchSearch && matchEstado && matchFecha;
     });
-  }, [search, filterEstado, facturas]);
+  }, [search, filterEstado, facturas, isInRange]);
+
+  const gastosFiltrados = useMemo(
+    () => gastosPendientes.filter((g) => isInRange(g.fecha_vencimiento)),
+    [gastosPendientes, isInRange],
+  );
+
 
   const { items: paginatedFacturas, totalPages } = paginate(filtered);
 
@@ -107,7 +117,7 @@ export function useFacturacionPageController() {
     facturas,
     paginatedFacturas,
     totalPages,
-    gastosPendientes,
+    gastosPendientes: gastosFiltrados,
     proformasPendientes,
     loadingFacturas,
     loadingGastos,
@@ -119,3 +129,4 @@ export function useFacturacionPageController() {
     exportarLayoutContable: exportarLayoutContableHandler,
   };
 }
+
