@@ -12,22 +12,22 @@
  *
  * El diálogo es agnóstico de la entidad: clientes y proveedores lo consumen
  * pasando su mapper y su acción de inserción.
+ *
+ * 11.60.0 (Bloque B3): `BulkImportBody`/`Footer` y `downloadCsvTemplate`
+ * extraídos a archivos hermanos para mantener este componente ≤200 líneas.
  */
-import { Loader2, CheckCircle2 } from "lucide-react";
 import { useBulkImport } from "@/components/shared/useBulkImport";
-import { UploadStep, PreviewStep } from "@/components/shared/BulkImportSteps";
+import { BulkImportBody, BulkImportFooter } from "@/components/shared/BulkImportDialogParts";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogDescription,
-  DialogFooter,
 } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
 import { dialogSize, scrollableDialog } from "@/lib/ui/dialogTokens";
 import { cn } from "@/lib/utils";
-import { toCsv } from "@/lib/csv/parseCsv";
+import { downloadCsvTemplate } from "@/lib/csv/downloadCsvTemplate";
 import type { ImportPreview } from "@/lib/csv/importSchemas";
 
 export interface BulkImportDialogProps<T> {
@@ -42,20 +42,6 @@ export interface BulkImportDialogProps<T> {
   /** Inserta los payloads válidos. Debe lanzar si falla. */
   onCommit: (payloads: T[]) => Promise<void>;
   onSuccess?: (insertedCount: number) => void;
-}
-
-function downloadCsvTemplate(headers: readonly string[], exampleRow: string[] | undefined, fileName: string): void {
-  const rows = exampleRow ? [exampleRow] : [];
-  const csv = toCsv([...headers], rows);
-  const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8" });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = fileName;
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  URL.revokeObjectURL(url);
 }
 
 export function BulkImportDialog<T>({
@@ -80,7 +66,7 @@ export function BulkImportDialog<T>({
     onOpenChange(next);
   };
 
-  const downloadTemplate = (): void => {
+  const onDownloadTemplate = (): void => {
     downloadCsvTemplate(templateHeaders, templateExampleRow, templateFileName);
   };
 
@@ -99,7 +85,7 @@ export function BulkImportDialog<T>({
           error={error}
           insertedCount={insertedCount}
           templateHeaders={templateHeaders}
-          onDownloadTemplate={downloadTemplate}
+          onDownloadTemplate={onDownloadTemplate}
           onPick={() => inputRef.current?.click()}
           onReset={reset}
         />
@@ -126,75 +112,3 @@ export function BulkImportDialog<T>({
     </Dialog>
   );
 }
-
-interface BulkImportBodyProps<T> {
-  step: "upload" | "preview" | "committing" | "done";
-  preview: ImportPreview<T> | null;
-  fileName: string | null;
-  error: string | null;
-  insertedCount: number;
-  templateHeaders: readonly string[];
-  onDownloadTemplate: () => void;
-  onPick: () => void;
-  onReset: () => void;
-}
-
-function BulkImportBody<T>({ step, preview, fileName, error, insertedCount, templateHeaders, onDownloadTemplate, onPick, onReset }: BulkImportBodyProps<T>) {
-  if (step === "upload") {
-    return <UploadStep templateHeaders={templateHeaders} onDownloadTemplate={onDownloadTemplate} onPick={onPick} error={error} />;
-  }
-  if (step === "preview" && preview) {
-    return <PreviewStep fileName={fileName} preview={preview} error={error} onReset={onReset} />;
-  }
-  if (step === "committing") {
-    return (
-      <div className="py-12 text-center text-sm text-muted-foreground flex flex-col items-center gap-3">
-        <Loader2 className="h-8 w-8 animate-spin text-accent" />
-        Importando registros...
-      </div>
-    );
-  }
-  if (step === "done") {
-    return (
-      <div className="py-10 text-center flex flex-col items-center gap-3">
-        <CheckCircle2 className="h-10 w-10 text-green-600" />
-        <p className="text-base font-medium">
-          {insertedCount} registro{insertedCount === 1 ? "" : "s"} importado{insertedCount === 1 ? "" : "s"} correctamente.
-        </p>
-      </div>
-    );
-  }
-  return null;
-}
-
-interface BulkImportFooterProps<T> {
-  step: "upload" | "preview" | "committing" | "done";
-  preview: ImportPreview<T> | null;
-  onReset: () => void;
-  onCommit: () => void;
-  onClose: () => void;
-}
-
-function BulkImportFooter<T>({ step, preview, onReset, onCommit, onClose }: BulkImportFooterProps<T>) {
-  if (step === "preview") {
-    return (
-      <DialogFooter className="gap-2 sm:gap-0">
-        <Button variant="outline" onClick={onReset}>Cambiar archivo</Button>
-        <Button onClick={onCommit} disabled={!preview || preview.valid.length === 0}>
-          Importar {preview?.valid.length ?? 0} válidos
-        </Button>
-      </DialogFooter>
-    );
-  }
-  if (step === "upload" || step === "done") {
-    return (
-      <DialogFooter className="gap-2 sm:gap-0">
-        <Button variant="outline" onClick={onClose}>
-          {step === "done" ? "Cerrar" : "Cancelar"}
-        </Button>
-      </DialogFooter>
-    );
-  }
-  return null;
-}
-
