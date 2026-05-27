@@ -11,7 +11,7 @@ Las heurísticas son conservadoras (prefieren falsos positivos). Validar manualm
 | #4 Componentes/archivos productivos >200 líneas | 0 ✅ (excepción `ui/sidebar.tsx` shadcn) |
 | #5/#10 `any` explícito (excl. tests) | 0 ✅ |
 | #3 `useEffect` sin cleanup | 1 (falso positivo en `AuthContext`) |
-| #2 Queries de lista sin paginar | 68 (heurística — flujos principales ya paginados) |
+| #2 Queries de lista sin paginar | **0 RISK** ✅ (174 inspeccionadas: 151 OK · 23 CATALOG · 0 RISK — ver `docs/pagination-audit.md`) |
 | Complejidad ciclomática > 12 | 38 (umbral lint actual: 16; CC ≤ 15 aceptable) |
 
 ## Regla #4 — Archivos productivos >200 líneas (0) ✅
