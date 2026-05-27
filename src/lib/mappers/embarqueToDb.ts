@@ -51,7 +51,7 @@ function partesMaritimo(v: EmbarqueFormValues) {
     agente: emptyToNull(v.agente),
     bl_master: emptyToNull(v.blMaster),
     bl_house: emptyToNull(v.blHouse),
-    tipo_servicio: (emptyToNull(v.tipoServicio) as EmbarqueInsert["tipo_servicio"]) ?? null,
+    tipo_servicio: tipoServicioMaritimoSchema.optional().nullable().parse(emptyToNull(v.tipoServicio)) ?? null,
     contenedor: emptyToNull(v.contenedor),
     tipo_contenedor: emptyToNull(v.tipoContenedor),
   };
