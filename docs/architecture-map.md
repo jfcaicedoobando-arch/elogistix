@@ -59,10 +59,12 @@ archivos internos (`@/hooks/shared/useToast` está restringido por
 
 - **Imports**: siempre desde el barrel del dominio (`@/hooks/<x>`,
   `@/services/<x>`). Archivos internos restringidos como `error`.
-- **Supabase**: sólo en `services/` y `integrations/supabase`. 0
-  llamadas directas en pages/components al 11.45.0.
+- **Supabase**: sólo en `services/` y `integrations/supabase`. **0
+  llamadas directas** desde hooks, contexts, components o pages al
+  11.59.1 (Bloque A cerrado: migraciones de CRM, embarque, auth,
+  organization a `services/`).
 - **Tests**: `*.test.ts(x)` co-localizados o en `__tests__/`. 18
-  suites en `services/` (meta ≥10), 107 totales / 709 tests.
+  suites en `services/` (meta ≥10), 109 totales / 716 tests.
 - **Versionado**: bump `APP_VERSION` + entrada en `CHANGELOG.md`
   raíz en cada cambio. No existe ruta `/changelog` ni
   `src/content/changelog/`.
