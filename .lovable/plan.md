@@ -1,36 +1,81 @@
-# Backlog de auditoría — estado al 11.66.0
+# Versión 11.67.0 — P1.7 hotspots 4-6 (Zod en boundaries)
 
-## Cerrados
+## Contexto
 
-- ✅ **D14** (11.63.0) — Guardrail `oversized > 200` en `architecture-baseline.test.ts`.
-- ✅ **C10** (11.63.0) — Quick wins inline styles + política en `mem://principles/inline-styles`.
-- ✅ **D16** (11.64.0) — 0 casts HIGH/CRITICAL productivos. Clasificador + guardrail.
-- ✅ **D12** (11.65.0) — Split de `routes.tsx` en 4 grupos por guarda+layout (188→19 líneas).
-- ✅ **P1.5** (11.66.0) — Ya satisfecha en el árbol actual: solo existe `src/lib/utils/` con barrel; resto de utilidades segregadas por dominio.
-- ✅ **P1.6** (11.66.0) — Ya satisfecha: ningún servicio supera 200 líneas; los "god services" citados ya son carpetas modulares.
+Continuación de P1.7. En 11.66.0 cubrimos los 3 hotspots de mayor peso (`dashboard.ts`, `embarqueToDb.ts`, `exportListado.ts`). Ahora avanzamos sobre los siguientes 3 de la lista pendiente, priorizando los que son **boundary real** (no genericidad estructural).
 
-## Pendientes
+Triage de candidatos por peso:
+- `TabSeguridadGlobal.tsx` (peso 12) — **6 casts** sobre el record `config` de `useConfigGlobalCategoria`. Boundary real (JSONB → tipo). ✅ Incluido.
+- `embarque/documentos.ts` (peso 12) — **2 casts** sobre la respuesta de la RPC `idempotency_claim`. Boundary real. ✅ Incluido.
+- `HallazgosFiltros.tsx` (peso 10) — **4 casts** sobre valores de Radix Select hacia uniones literales. Boundary real (UI string → enum dominio). ✅ Incluido.
+- `lib/audit/diffFields.ts` (peso 12) — casts internos de genericidad (`as Record<string, unknown>` para comparar claves). **No es boundary**; Zod no aplicaría sin reescribir la API genérica. ❌ Descartado, queda como deuda aceptada.
 
-| ID | Tarea | Esfuerzo | Riesgo |
-|----|-------|----------|--------|
-| D13 | Vigilar archivos 180-200 líneas (preventivo, continuo) | XS | Nulo |
-| P1.7* | Extender Zod a otros boundaries Supabase (parcial: 3 hotspots cubiertos en 11.66.0) | M | Bajo |
-| Cx | Bajar complejidad 13 funciones src/ + 4 edge functions a ≤12 | M | Medio |
+## Alcance
 
-## P1.7 — Estado parcial
+### 1. `TabSeguridadGlobal.tsx`
 
-Cubiertos en 11.66.0:
-- `lib/parsers/dashboard.ts` (peso 14) → `dashboardSchemas.ts`
-- `lib/mappers/embarqueToDb.ts` (peso 12) → `embarquePayloadSchemas.ts`
-- `services/embarque/queries/exportListado.ts` (peso 10) → `embarqueRowSchema.ts`
+Crear `src/hooks/configuracion/configSchemas.ts`:
 
-Pendientes (orden sugerido por peso):
-- `components/admin/TabSeguridadGlobal.tsx` (peso 12)
-- `lib/audit/diffFields.ts` (peso 12)
-- `services/embarque/documentos.ts` (peso 12)
-- `components/auditoria/HallazgosFiltros.tsx` (peso 10)
-- `hooks/embarque/useProformas.ts` (peso 10)
+- `seguridadConfigSchema`: `{ auto_confirmar_email?: boolean, longitud_minima_password?: number, expiracion_sesion_horas?: number, max_intentos_login?: number, permitir_registro_publico?: boolean }` con defaults.
+- `plataformaConfigSchema`: `{ email_soporte?: string }` con default `""`.
+- Helper `parseConfigSafe(schema, raw)` que retorna `schema.parse(raw)` con fallback a defaults si hay errores (preserva resiliencia del panel admin).
 
-## Próximo paso
+En `TabSeguridadGlobal.tsx` reemplazar los 6 `as X` por una sola lectura via schema:
 
-**Cx** (complejidad) o continuar P1.7 sobre los hotspots restantes. Recomendado P1.7 por continuidad y bajo riesgo.
+```ts
+const seg = seguridadConfigSchema.parse(config);
+const plat = plataformaConfigSchema.parse(configPlataforma);
+setAutoConfirmar(seg.auto_confirmar_email);
+// ...
+```
+
+### 2. `embarque/documentos.ts`
+
+Crear `src/services/embarque/idempotencyClaimSchema.ts`:
+
+- `idempotencyClaimSchema`: discriminated union vía `.passthrough()`:
+  - `{ __idempotency_pending: true }` (pending claim)
+  - `{ path: string, fileName?: string }` (cached response)
+
+Reemplazar el bloque `if (claim && typeof claim === 'object' && !Array.isArray(claim)) { const c = claim as Record<string, unknown>; ... c.path as string }` por `safeParse` del schema.
+
+### 3. `HallazgosFiltros.tsx`
+
+Crear `src/components/auditoria/hallazgosFiltrosSchemas.ts`:
+
+- `reglaAuditoriaFiltroSchema` = `z.enum([...10 reglas, "todas"])`
+- `severidadFiltroSchema` = `z.enum(["critico", "alto", "medio", "todas"])`
+- `filtroRevisionSchema` = `z.enum(["todos", "pendientes", "revisados", "en_progreso"])`
+- `filtroResponsableSchema` = `z.enum(["todos", "mios", "sin_asignar", "vencidos"])`
+
+Reemplazar los 4 `onValueChange={(v) => setFiltroX(v as TipoX)}` por `setFiltroX(filtroXSchema.parse(v))` — Radix garantiza que `v` es uno de los `SelectItem.value` listados, así que el `parse` nunca debería lanzar; si lo hace, indica un bug de coherencia entre opciones y enum.
+
+### 4. Tests
+
+- `configSchemas.test.ts`: 2 schemas × {happy, invalid type} = 4 tests.
+- `idempotencyClaimSchema.test.ts`: 3 casos (pending, cached, garbage).
+- `hallazgosFiltrosSchemas.test.ts`: 1 happy + 1 invalid por schema = 8 tests.
+
+### 5. Versión + changelog
+
+- `src/constants/appVersion.ts` → `11.67.0`.
+- `CHANGELOG.md`: entrada `[11.67.0]`.
+- `.lovable/plan.md`: añadir los 3 hotspots cubiertos a la lista de P1.7.
+
+## Fuera de alcance
+
+- `diffFields.ts` — descartado (no boundary).
+- Otros hotspots de menor peso (peso ≤ 10) — quedan en backlog P1.7.
+- D13, Cx — versiones siguientes.
+
+## Verificación
+
+- `bunx vitest run` (tests nuevos + suite completa).
+- `audit-report.md` debe seguir 0 HIGH/CRITICAL, 0 oversized.
+- `architecture-baseline.test.ts` y `audit-report.test.ts` en verde.
+
+## Entregables
+
+- 3 archivos de schemas + adopción en 3 hotspots.
+- 3 archivos de tests (~15 tests).
+- `appVersion.ts`, `CHANGELOG.md`, `.lovable/plan.md` actualizados.
