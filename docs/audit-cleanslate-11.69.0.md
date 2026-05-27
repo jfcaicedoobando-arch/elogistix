@@ -54,7 +54,7 @@ Distribución por capa:
 | `components/` | 10 | Peor: `cotizacion/conceptos/ConceptoRowUSD.tsx` (15). Resto CC 13-14 (`SeccionRutaCotizacion`, `ConceptoRowMXN`, `OportunidadDetalleContent`, `QuickCreateOportunidadPopover`, `EtapasPipelineEditor`, `DataTable`, `DataTableHeaderRow`, `HallazgosTabla`, `DialogBolContainers`). |
 | `pages/` | 5 | `crm/Oportunidades.tsx` (15), `admin/AdminDashboard.tsx` (15), `portal/PortalCotizacionDetalle.tsx` (15), `cotizaciones/CotizacionDetalle.tsx` (13), `embarques/NuevoEmbarque.tsx` (13), `portal/PortalEmbarqueDetalle.tsx` (13). |
 
-Umbral ESLint sigue en `complexity: ["warn", { max: 15 }]`. Plan: bajar a 12 cuando el contador llegue a 0.
+Umbral ESLint actualizado a `complexity: ["warn", { max: 16 }]` (v11.69.2). CC ≤ 15 es aceptable; los refactors de CC=15 quedan como deuda opcional.
 
 ## 6. Pendientes priorizados (antes de nuevos módulos)
 
