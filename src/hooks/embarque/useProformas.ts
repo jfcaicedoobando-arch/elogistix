@@ -107,9 +107,7 @@ export function useMarcarProformaFacturada() {
       queryClient.invalidateQueries({ queryKey: queryKeys.facturas.all });
     },
     onError: (error: Error) => {
-      notifyError(toast, { title: `Error: ${error.message}`});,
- method: "ON_ERROR",
- errorCode: ERROR_CODES.VALIDATION_FAILED,
+      notifyError(toast, { title: `Error: ${error.message}`, error, method: "MARK_PROFORMA_FACTURADA" });
     },
   });
 }
@@ -124,9 +122,7 @@ export function useEliminarProforma() {
       invalidateProformaCaches(queryClient, params.embarqueId);
     },
     onError: (error: Error) => {
-      notifyError(toast, { title: `Error al eliminar proforma: ${error.message}`});,
- method: "ON_ERROR",
- errorCode: ERROR_CODES.VALIDATION_FAILED,
+      notifyError(toast, { title: `Error al eliminar proforma: ${error.message}`, error, method: "DELETE_PROFORMA" });
     },
   });
 }
@@ -144,9 +140,7 @@ export function useAprobarProformas() {
       invalidateProformaCaches(queryClient);
     },
     onError: (error: Error) => {
-      notifyError(toast, { title: `Error al aprobar: ${error.message}`});,
- method: "ON_ERROR",
- errorCode: ERROR_CODES.VALIDATION_FAILED,
+      notifyError(toast, { title: `Error al aprobar: ${error.message}`, error, method: "APPROVE_PROFORMAS" });
     },
   });
 }
@@ -168,9 +162,7 @@ export function useConsolidarProformas() {
       invalidateProformaCaches(queryClient, nueva.embarque_id);
     },
     onError: (error: Error) => {
-      notifyError(toast, { title: `Error al consolidar: ${error.message}`});,
- method: "ON_ERROR",
- errorCode: ERROR_CODES.VALIDATION_FAILED,
+      notifyError(toast, { title: `Error al consolidar: ${error.message}`, error, method: "CONSOLIDATE_PROFORMAS" });
     },
   });
 }
