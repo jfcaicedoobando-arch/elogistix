@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [12.0.0-rc.8] - 2026-05-27
+- **chore(observability)**: el reporte estructurado de errores (`requestId`, `errorCode`, `method`, `validationErrors`) se aplica ahora globalmente. Se actualizaron ~109 llamadas a `notifyError` en ~60 archivos (hooks, componentes y páginas) para propagar el `error` crudo y un `method` semántico (ej. `DELETE_PROFORMA`, `HANDLE_SUBMIT`, `USE_PROVEEDOR_DETALLE_CONTROLLER`). Las validaciones inline sin `error` crudo añaden `errorCode: VALIDATION_FAILED`. UX inalterada; solo cambia el payload de debug.
+
 ## [12.0.0-rc.7] - 2026-05-27
 - **feat(observability)**: reporte de errores enriquecido con `requestId` (UUID v4 vía `crypto.randomUUID`), `errorCode` estandarizado (catálogo `ERROR_CODES` en `errorCatalog.ts`: VALIDATION_FAILED, DB_ERROR, FORBIDDEN, CONFLICT, SERVER_ERROR, NETWORK_ERROR…) y `method` / acción semántica (ej. `CREATE_DRAFT_COTIZACION`, `SAVE_CONCEPTOS_VENTA_COTIZACION`). Los códigos se infieren del error si no se pasan.
 - **feat(observability)**: `extractErrorDetails` detecta `ZodError` (directo o vía `.cause`) y emite `errorDetails.validationErrors[]` con `{ path, message, code }`. Resuelve el problema de `errorDetails: {}` vacío en fallas de validación de cotizaciones.
