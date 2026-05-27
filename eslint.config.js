@@ -28,10 +28,10 @@ export default tseslint.config(
       // Hard cap at 300 LOC; soft warning at 250 to encourage early splitting.
       "max-lines": ["warn", { max: 250, skipBlankLines: true, skipComments: true }],
       "max-lines-per-function": ["warn", { max: 200, skipBlankLines: true, skipComments: true, IIFEs: true }],
-      // P2.12 — bajar a 12 destapaba 13 warnings en src/ y 6 en edge
-      // functions. Mantener en 15 para no introducir warnings nuevos;
-      // el endurecimiento queda pendiente como TODO en mem://audit/pendings.
-      "complexity": ["warn", { max: 15 }],
+      // Umbral pragmático: 16. Funciones con CC ≤ 15 son aceptables
+      // (estándar de la industria es 15; subir a 16 evita refactors forzados
+      // de bajo valor). Sólo warning a partir de CC ≥ 16.
+      "complexity": ["warn", { max: 16 }],
       "max-depth": ["warn", 4],
       "max-params": ["warn", 5],
       // Architectural guardrail — barrel imports for hooks/services

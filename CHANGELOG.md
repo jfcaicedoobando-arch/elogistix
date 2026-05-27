@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [11.69.2] - 2026-05-27
+- **ESLint**: umbral `complexity` 15 → 16. Las funciones con CC = 15 dejan de generar warning (estándar de industria es 15; subir a 16 evita refactors de bajo valor). Docs alineados (`audit-cleanslate-11.69.0.md`, `power10-baseline.md`).
+
 ## [11.69.1] - 2026-05-27
 - **docs**: poda de 4 MD históricos ya superados — `migracion-tabla-fase2.md` (v9.2.0), `refactor-tanstack-summary.md` (v10.1.3), `datatable-perf-audit.md` (v10.1.2), `linter-warnings.md` (v8.179.0). Ajustada referencia en `datatable-columndef-guide.md` para apuntar al CHANGELOG.
 

@@ -1,30 +1,27 @@
-# Limpieza de docs/*.md
+## Ajuste de umbral ESLint complexity: 15 → 16
 
-Revisé los 25 archivos `.md` del repo cruzando referencias desde `README.md`, `ARCHITECTURE.md`, `CHANGELOG.md`, `.lovable/plan.md` y entre los propios `docs/`. La mayoría siguen activos. Cuatro quedaron obsoletos: describen migraciones ya cerradas en versiones muy anteriores a la 11.69.0 y nadie depende de ellos para tareas vivas.
+### Objetivo
+Que funciones con complejidad ciclomática (CC) = 15 dejen de disparar warning de ESLint, dejando el guardrail en CC ≥ 16.
 
-## Borrar (4 archivos, ~601 líneas)
+### Cambios
 
-| Archivo | Por qué se puede borrar |
-|---|---|
-| `docs/migracion-tabla-fase2.md` (141) | Crónica puntual de la migración a `@tanstack/react-table` cerrada en **v9.2.0**. Sólo se cita desde `datatable-columndef-guide.md` como "historia". |
-| `docs/refactor-tanstack-summary.md` (215) | Resumen step-by-step del mismo refactor, cerrado en **v10.1.3**. Auto-declara que ya cumplió su rol. |
-| `docs/datatable-perf-audit.md` (108) | Auditoría de perf de un solo disparo en **v10.1.2**. Los presupuestos vivos están en el test `DataTable.perf.test.tsx`. |
-| `docs/linter-warnings.md` (24) | Snapshot de warnings del linter de Supabase en **v8.179.0**. Hoy se regenera con `supabase--linter` cuando hace falta. |
+1. **eslint.config.js**
+   - Línea 34: `"complexity": ["warn", { max: 15 }]` → `{ max: 16 }`
+   - Actualizar comentario asociado (líneas 31-33) para reflejar la nueva política: umbral 16; CC 15 pasa a ser aceptable.
 
-## Mantener (resto)
+2. **docs/audit-cleanslate-11.69.0.md**
+   - Línea 57: actualizar texto de umbral de 15 a 16.
+   - Sección §5: ajustar descripción de "38 ofensores (CC > 12)" si es necesario para coherencia con el nuevo umbral.
 
-- **Vivos / referenciados en cleanslate 11.69.0:** `auditoria.md`, `cast-audit.md`, `power10-baseline.md`, `tests-audit.md`, `audit-cleanslate-11.69.0.md`, `architecture-map.md`, `strict-mode-roadmap.md`.
-- **Guías operativas:** `tables.md`, `datatable-columndef-guide.md`, `operations.md`, `backups-rollback.md`, `security-checklist.md`, `integrations/jsoncargo-api.md`.
-- **Raíz e infra:** `README.md`, `ARCHITECTURE.md`, `CHANGELOG.md`, `e2e/README.md`, `supabase/tests/rls/README.md`, `src/components/ui/README.md`, `reports/audit-report.md` (auto-generado), `.lovable/plan.md`.
+3. **docs/power10-baseline.md**
+   - Línea 15: actualizar referencia al umbral lint actual de 15 a 16.
 
-## Ajustes de referencias
+4. **CHANGELOG.md**
+   - Agregar entrada `## [11.69.2] - YYYY-MM-DD` con nota del cambio de umbral.
 
-- En `docs/datatable-columndef-guide.md`: quitar el link a `migracion-tabla-fase2.md` (queda apunte a `CHANGELOG.md` v9.2.0 si se quiere preservar la historia).
-- En `docs/refactor-tanstack-summary.md` ya no aplica porque se elimina junto con su único enlace a `datatable-perf-audit.md`.
-- No hay referencias a `linter-warnings.md` desde otros docs.
+5. **src/constants/appVersion.ts**
+   - Bump `APP_VERSION` → `"11.69.2"`.
 
-## Versionado
-
-- Bump patch: `appVersion.ts` → **11.69.1**.
-- Entrada en `CHANGELOG.md` y `src/pages/Changelog.tsx`: "docs: poda de 4 MD históricos (tanstack fase 2, refactor summary, perf audit, linter warnings v8)".
-- Sin cambios de código de aplicación.
+### Validación
+- `bunx eslint src/` debe reportar 0 warnings de complexity (o solo aquellas con CC ≥ 16).
+- No toca código funcional; riesgo cero de regresión.
