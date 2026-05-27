@@ -10,9 +10,6 @@ import { formatCurrency, formatDate } from "@/lib/formatters";
 import { escapeHtml as esc } from "@/lib/utils";
 import { cargarEmisorEmpresa } from "@/pdf/emisor";
 
-type FacturaCte = EstadoCuentaFactura;
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-type _Unused = FacturaCte;
 
 interface ClienteHeader {
   nombre: string;
