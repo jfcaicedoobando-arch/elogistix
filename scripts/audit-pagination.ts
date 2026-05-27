@@ -86,21 +86,20 @@ function classify(block: string, table: string): { bucket: Bucket; reason: strin
     return { bucket: "CATALOG", reason: `tabla de catálogo acotado (${table})` };
   }
   const eqMatches = [...block.matchAll(/\.eq\(\s*['"]([a-z_]+)['"]/g)];
-  if (eqMatches.length > 0) {
-    const fields = eqMatches.map((m) => m[1]);
-    const hasFk = fields.some((f) => FK_FIELDS.test(f));
+  const inMatches = [...block.matchAll(/\.in\(\s*['"]([a-z_]+)['"]/g)];
+  const allFiltered = [...eqMatches, ...inMatches].map((m) => m[1]);
+  if (allFiltered.length > 0) {
+    const hasFk = allFiltered.some((f) => FK_FIELDS.test(f));
     if (hasFk) {
       return {
         bucket: "OK",
-        reason: `.eq por PK/FK (${fields.join(", ")})`,
+        reason: `filtro por PK/FK (${allFiltered.join(", ")})`,
       };
     }
   }
-  if (/\.in\(\s*['"]id['"]/.test(block)) {
-    return { bucket: "OK", reason: ".in('id', [...]) acotado por lista" };
-  }
   return { bucket: "RISK", reason: "sin .range/.limit ni filtro por PK/FK" };
 }
+
 
 function auditFile(absPath: string, file: string): Hit[] {
   const src = readFileSync(absPath, "utf8");
