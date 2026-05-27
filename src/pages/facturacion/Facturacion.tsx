@@ -13,13 +13,17 @@ import type { Database } from "@/types/db";
 import { TabProformas } from "@/components/facturacion/TabProformas";
 import { TabProformasPendientes } from "@/components/facturacion/TabProformasPendientes";
 import { TabProyeccion } from "@/components/facturacion/TabProyeccion";
+import { DateRangeFilter } from "@/components/facturacion/DateRangeFilter";
 import { useFacturacionPageController } from "@/hooks/facturacion";
+import { useFacturacionDateRange } from "@/hooks/facturacion/useFacturacionDateRange";
 import { facturaColumns, buildGastoColumns } from "./facturacionColumns";
 
 type EstadoFactura = Database["public"]["Enums"]["estado_factura"];
 const ESTADOS_FACTURA: EstadoFactura[] = ['Borrador', 'Emitida', 'Pagada', 'Vencida', 'Cancelada'];
 
 export default function Facturacion() {
+  const { range, setRango, limpiar, isInRange, activo } = useFacturacionDateRange();
+
   const {
     search, setSearch,
     filterEstado, setFilter,
@@ -29,12 +33,13 @@ export default function Facturacion() {
     loadingFacturas, loadingGastos,
     canEdit, marcarPagadoPending,
     handleMarcarPagado, exportarFacturasCsv, exportarLayoutContable,
-  } = useFacturacionPageController();
+  } = useFacturacionPageController({ isInRange });
 
   const gastoColumns = useMemo(
     () => buildGastoColumns({ canEdit, marcarPagadoPending, handleMarcarPagado }),
     [canEdit, marcarPagadoPending, handleMarcarPagado],
   );
+
 
   return (
     <div className="space-y-6">
@@ -42,6 +47,13 @@ export default function Facturacion() {
         title="Pre-Facturación"
         description="Control de proformas, facturas emitidas y gastos por liquidar"
       />
+
+      <Card>
+        <CardContent className="p-3">
+          <DateRangeFilter range={range} onChange={setRango} onClear={limpiar} activo={activo} />
+        </CardContent>
+      </Card>
+
 
       <Tabs defaultValue="proyeccion">
         <TabsList>
