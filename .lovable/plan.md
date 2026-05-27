@@ -1,20 +1,56 @@
-## Problema
+## Mejora: Filtro de rango de fechas en Pre-Facturación
 
-Al guardar el Paso 1 del wizard de nueva cotización, el schema `cotizacionInputSchema` exige `conceptos_venta.min(1)`. Pero en el flujo del wizard, el Paso 1 (Datos Generales) crea la cotización con `conceptos_venta: []` — los conceptos se capturan hasta el Paso 3. Esto rompe la creación desde 12.0.0-rc.x.
+Agregar un selector unificado **Desde / Hasta** que aplique a las 5 pestañas del módulo (`/facturacion`): Proyección, Pendientes, Proformas, Facturas y Liquidación de Gastos. El filtro será sobre la **fecha de emisión** de cada documento (o equivalente para gastos / proyección).
 
-Ver `src/lib/mappers/cotizacion.ts` (`buildPaso1Data` → `conceptos_venta: []`) vs `src/lib/validation/mutationSchemas.ts:117`.
+### UX
 
-## Solución
+- Barra de filtros en la parte superior de la página, **arriba de los Tabs**, para que el rango persista al cambiar entre pestañas.
+- Componente `DateRangeFilter` con dos `Popover` + `Calendar` shadcn (locale es-MX, formato DD/MM/YYYY).
+- Presets rápidos como chips: **Hoy · Esta semana · Este mes · Mes anterior · Año actual · Limpiar**.
+- Badge contador mostrando el rango activo (ej. "01/05/2026 – 27/05/2026") con botón ✕ para limpiar.
+- Por defecto: **mes en curso** (1 del mes actual → hoy).
+- El estado se sincroniza en la URL (`?desde=YYYY-MM-DD&hasta=YYYY-MM-DD`) para poder compartir vistas y sobrevivir recargas.
 
-1. **`src/lib/validation/mutationSchemas.ts`** — Cambiar `conceptos_venta: z.array(conceptoVentaSchema).min(1, ...)` a `z.array(conceptoVentaSchema)` (sin `min(1)`). La regla "al menos un concepto" es de UI/flujo, no de persistencia: el borrador puede existir sin conceptos y se completan en Paso 3. El Paso 3 ya valida en el wizard antes de avanzar.
+### Campos de fecha por pestaña
 
-2. **`src/lib/validation/__tests__/mutationSchemas.test.ts`** — Invertir el test "rechaza sin conceptos" → "acepta sin conceptos (borrador)".
+| Pestaña | Campo filtrado |
+|---|---|
+| Proyección | `fecha_estimada_cierre` (o ETA del embarque) |
+| Pendientes | `fecha_emision` de la proforma |
+| Proformas | `fecha_emision` |
+| Facturas | `fecha_emision` |
+| Liquidación de Gastos | `fecha` del gasto |
 
-3. **`CHANGELOG.md` + `src/constants/appVersion.ts`** — Bump a `12.0.0-rc.4`, entrada: "fix(cotizaciones): permitir crear cotización en Paso 1 sin conceptos_venta (se capturan en Paso 3)".
+### Cambios técnicos
 
-## Archivos a tocar
+1. **Nuevo componente** `src/components/facturacion/DateRangeFilter.tsx` (~150 líneas):
+   - Props: `value: { desde?: Date; hasta?: Date }`, `onChange`, presets opcionales.
+   - Usa `Popover` + `Calendar` de shadcn con `pointer-events-auto`.
+   - Valida `desde <= hasta` y deshabilita días fuera de rango en el segundo calendario.
+   - Locale `es` de `date-fns` para los nombres de meses/días.
 
-- `src/lib/validation/mutationSchemas.ts`
-- `src/lib/validation/__tests__/mutationSchemas.test.ts`
-- `src/constants/appVersion.ts`
-- `CHANGELOG.md`
+2. **Nuevo hook** `src/hooks/facturacion/useFacturacionDateRange.ts`:
+   - Lee/escribe los query params `desde` y `hasta` con `useSearchParams`.
+   - Devuelve `{ desde, hasta, setRango, isInRange(dateString) }`.
+   - Default: primer día del mes actual → hoy.
+
+3. **`src/pages/facturacion/Facturacion.tsx`**: insertar `<DateRangeFilter>` arriba de `<Tabs>` y pasar el rango (vía hook) a los 5 controllers.
+
+4. **Controllers** (cambios pequeños, sólo agregar el filtro al `useMemo` que ya filtra por search/estado):
+   - `useFacturacionPageController` — facturas + gastos.
+   - `useTabProformasController` — proformas.
+   - `useTabProformasPendientesController` — pendientes.
+   - `useTabProyeccionController` — proyección.
+
+   Cada uno acepta `{ desde, hasta }` como argumento y filtra el array en memoria (los datos ya se traen completos; no requiere cambio en queries Supabase).
+
+5. **Exportaciones CSV** (CSV de facturas, layout contable, CSV de proformas, CSV de huecos): respetan el rango activo automáticamente porque exportan `filtered`, no el dataset completo.
+
+6. **Changelog + versión**: bump `APP_VERSION` a `12.0.1` y entrada en `CHANGELOG.md`.
+
+### Lo que NO se toca
+
+- Estructura de Tabs, columnas de las tablas, lógica de marcado de pagado/facturada.
+- Filtros existentes (search, estado, toggle pendiente/facturada) — siguen funcionando en combinación con el rango.
+- Queries a Supabase: el filtrado es client-side sobre los datos ya cacheados por React Query.
+- Otros filtros (cliente, moneda, monto) — quedan fuera de scope por decisión explícita.
