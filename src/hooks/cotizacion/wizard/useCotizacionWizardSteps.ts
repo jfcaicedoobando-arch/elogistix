@@ -73,8 +73,15 @@ export function useCotizacionWizardSteps({
       if (!cotizacionId) setCotizacionId(id);
       setCurrentStep(2);
     } catch (e: unknown) {
-      notifyError(toast, { title: "Error al guardar datos generales", description: getErrorMessage(e) });
+      notifyError(toast, {
+        title: "Error al guardar datos generales",
+        description: getErrorMessage(e),
+        error: e,
+        method: cotizacionId ? "UPDATE_DRAFT_COTIZACION" : "CREATE_DRAFT_COTIZACION",
+        context: { cotizacionId, paso: 1 },
+      });
     }
+
   }, [form, toast, msdsFile, cotizacionId, buildPaso1Data, crearCotizacion, updateCotizacion, setCotizacionId, setCurrentStep]);
 
   const handlePaso2 = useCallback(async () => {
@@ -90,8 +97,15 @@ export function useCotizacionWizardSteps({
       }
       setCurrentStep(3);
     } catch (e: unknown) {
-      notifyError(toast, { title: "Error al guardar costos", description: getErrorMessage(e) });
+      notifyError(toast, {
+        title: "Error al guardar costos",
+        description: getErrorMessage(e),
+        error: e,
+        method: "SAVE_COSTOS_COTIZACION",
+        context: { cotizacionId, paso: 2 },
+      });
     }
+
   }, [costosInternos, cotizacionId, costosPreLlenados, tasaIva, upsertCostos, setConceptosUSD, setConceptosMXN, setCostosPreLlenados, setCurrentStep, toast]);
 
   const handlePaso3 = useCallback(async () => {
@@ -107,8 +121,15 @@ export function useCotizacionWizardSteps({
       }
       setCurrentStep(4);
     } catch (e: unknown) {
-      notifyError(toast, { title: "Error al guardar conceptos de venta", description: getErrorMessage(e) });
+      notifyError(toast, {
+        title: "Error al guardar conceptos de venta",
+        description: getErrorMessage(e),
+        error: e,
+        method: "SAVE_CONCEPTOS_VENTA_COTIZACION",
+        context: { cotizacionId, paso: 3 },
+      });
     }
+
   }, [conceptosUSD, conceptosMXN, cotizacionId, totalUSD, updateCotizacion, setCurrentStep, toast]);
 
   const handleSiguiente = useCallback(async () => {
@@ -128,8 +149,15 @@ export function useCotizacionWizardSteps({
       notifySuccess(toast, { title: isEditMode ? "Cotización actualizada exitosamente" : "Cotización creada exitosamente" });
       navigate(`/cotizaciones/${cotizacionId}`);
     } catch (err: unknown) {
-      notifyError(toast, { title: "Error al finalizar cotización", description: getErrorMessage(err)});
+      notifyError(toast, {
+        title: "Error al finalizar cotización",
+        description: getErrorMessage(err),
+        error: err,
+        method: "FINALIZE_COTIZACION",
+        context: { cotizacionId, isEditMode },
+      });
     }
+
   }, [cotizacionId, updateCotizacion, registrarActividad, toast, navigate, isEditMode]);
 
   const handleBack = useCallback(() => {
