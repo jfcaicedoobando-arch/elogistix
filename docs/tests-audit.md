@@ -1,6 +1,6 @@
-# Auditoría de tests — v11.59.1
+# Auditoría de tests — v11.69.0 (cleanslate)
 
-Fecha: 27/05/2026 · Estado actual: **109 archivos / 716 tests** (incluye 18 suites en `services/` tras el Bloque A: crm, embarque, auth, organization). Diagnóstico original sobre 108/724 sigue vigente como histórico.
+Fecha: 27/05/2026 · Estado actual: **119 archivos / 770 tests verdes / 0 violaciones de higiene**. Histórico previo: 109/716 en 11.59.1 (Bloque A) y 108/724 antes.
 
 ## Resumen ejecutivo
 

@@ -1,17 +1,18 @@
 # Power of 10 — Baseline
 
-_Generado por `scripts/audit-power10.ts` sobre 996 archivos `.ts/.tsx` de `src/` (11.60.0)._
+_Re-generado en cleanslate v11.69.0 sobre **1025 archivos `.ts/.tsx`** (905 productivos) de `src/`._
 
-Las heurísticas son conservadoras (prefieren falsos positivos). Validar manualmente antes de refactorizar. Ver ARCHITECTURE.md §20.
+Las heurísticas son conservadoras (prefieren falsos positivos). Validar manualmente antes de refactorizar. Ver `ARCHITECTURE.md` §20 y `docs/audit-cleanslate-11.69.0.md`.
 
 ## Resumen
 
 | Regla | Hallazgos |
 |---|---:|
-| #4 Componentes/archivos productivos >200 líneas | 0 ✅ |
-| #5/#10 `any` explícito | 0 |
-| #3 `useEffect` sin cleanup | 1 |
-| #2 Queries de lista sin paginar | 68 |
+| #4 Componentes/archivos productivos >200 líneas | 0 ✅ (excepción `ui/sidebar.tsx` shadcn) |
+| #5/#10 `any` explícito (excl. tests) | 0 ✅ |
+| #3 `useEffect` sin cleanup | 1 (falso positivo en `AuthContext`) |
+| #2 Queries de lista sin paginar | 68 (heurística — flujos principales ya paginados) |
+| Complejidad ciclomática > 12 | 38 (umbral lint actual: 15; ver cleanslate §5) |
 
 ## Regla #4 — Archivos productivos >200 líneas (0) ✅
 

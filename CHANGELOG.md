@@ -6,6 +6,16 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [11.69.0] - 2026-05-27
+- **Auditoría cleanslate** previa al desarrollo de nuevos módulos. Reporte agregado en `docs/audit-cleanslate-11.69.0.md`.
+  - Tests: 119 suites / **770/770** verde · higiene 0 violaciones.
+  - Arquitectura: 0 imports prohibidos, 0 archivos productivos >200 líneas (excepción shadcn).
+  - Casts: **0 HIGH / 0 CRITICAL** sobre 730 (vs 750 en 11.59.x).
+  - `any` explícito: 0. Effects sin cleanup: 1 falso positivo (AuthContext).
+  - Complejidad: 38 funciones con CC 13-15 listadas y priorizadas (Cx fase 2: `services/*` + `lib/*` primero).
+- Docs actualizados: `power10-baseline.md`, `tests-audit.md`, `auditoria.md`, `cast-audit.md` (regenerado).
+- `.lovable/plan.md` consolidado con próximos pasos.
+
 ## [11.68.0] - 2026-05-27
 - **Cx fase 1 — Reducir complejidad ciclomática de los 2 peores ofensores** (de 13 detectados con umbral 12).
   - `src/lib/crm/nextBestActions.ts`: `computeNextBestActions` CC 20 → 3. Extraídos 5 helpers puros (`nbaLeadsSinContactar`, `nbaCotSinRespuesta`, `nbaCierreProximo`, `nbaSinActividad`, `nbaActividadesVencidas`), cada uno con CC ≤ 5. La función pública queda como composición + sort.
