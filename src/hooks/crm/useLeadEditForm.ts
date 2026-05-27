@@ -4,7 +4,7 @@
  */
 import { useEffect, useMemo, useState } from "react";
 import type { CrmLeadEstado, CrmLeadFuente } from "@/hooks/crm/useLeads";
-import { isLeadDirty } from "./leadEditDirty";
+import { isLeadDirty } from "@/lib/crm/leadEditDirty";
 
 export interface LeadEditForm {
   empresa: string;

@@ -1,4 +1,4 @@
-# Auditoría arquitectónica — Libre Carga (estado 11.60.0)
+# Auditoría arquitectónica — Libre Carga (estado 11.61.0)
 
 > **Bloques A y B cerrados.** Diagnóstico original archivado en
 > `mem://audit/pendings`. Este documento refleja el estado **actual** post
@@ -36,9 +36,9 @@ con `Set` de excepciones vacío. Lint clean en `src/`.
 ## 4. Pendiente — Bloques C/D
 
 ### Bloque C — Consistencia
-- **C9.** Renombrar helpers no-hook en `hooks/crm/` (`*Actions.ts`, `*Helpers.ts`, `*Payload.ts`) o moverlos a `lib/domain/crm/`. (Parcial: `oportunidadPayload`, `leadPayload` ya en `lib/`.)
+- **C9.** ✅ CERRADO (11.61.0). `hooks/crm/` ya no contiene archivos no-hook: `oportunidadFormState/Helpers` y `leadEditDirty` migrados a `lib/crm/`; stubs `oportunidadPayload` y `automatizacionesEtapaActions` eliminados.
 - **C10.** Auditar 25 `style={{…}}` inline → tokens Tailwind / semánticos.
-- **C11.** Homogeneizar prefijos en duplicados (`Configuracion.tsx`, `TabFacturacion.tsx`).
+- **C11.** ❌ Descartado. Los duplicados `Configuracion.tsx` y `TabFacturacion.tsx` viven en carpetas de dominio distintas que ya desambiguan el path; renombrar es cosmético con blast radius alto.
 
 ### Bloque D — Opcional
 - **D12.** Dividir `routes.tsx` (188) en `routes/{admin,portal,crm,public}.tsx`.
