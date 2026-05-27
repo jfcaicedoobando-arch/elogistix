@@ -6,6 +6,15 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [12.0.0-rc.1] - 2026-05-27
+- **Release Candidate cortado.** Cierre de los 3 hallazgos RLS pendientes del backlog pre-GA antes del corte de RC, dejando 0 hallazgos de seguridad abiertos sin justificar.
+  - `auditoria_snapshots`: SELECT restringido a `admin` / `operador` de la organización (más `super_admin`). Antes cualquier miembro de la org podía leer la auditoría.
+  - `bitacora_actividad`: SELECT del admin global ahora exige también scope por `organization_id` (vía `is_org_admin`), bloqueando que un admin de una org lea bitácoras de otra. `super_admin` mantiene visibilidad total.
+  - `tracking_intentos`: SELECT/INSERT restringidos a `admin` / `operador` / `super_admin`. Viewer y cliente del portal bloqueados.
+  - `client-error-log`: rate-limit aplazado por ausencia de primitivas de backend (ver `<no-backend-rate-limiting>`); el endpoint sigue siendo público intencionalmente para capturar crashes pre-auth. Documentado en `@security-memory` como riesgo aceptado.
+- **Versión**: bump a `12.0.0-rc.1` (semver pre-release). Próxima ventana de 5-7 días para QA; sin show-stoppers → GA `12.0.0`.
+- **Docs**: `docs/rc-qa-checklist.md §L` actualizado con 3 ✅ adicionales; `docs/release-notes-12.0.md` ajustado.
+
 ## [11.71.0] - 2026-05-27
 - **Preparación Release Candidate (paso 1 de 2).** Cierre de gaps pre-RC antes de cortar `12.0.0-rc.1`.
   - **Seguridad — 2 hallazgos cerrados**: `invite-client-user` ahora usa allow-list de orígenes (elogistix + preview lovable + localhost) en lugar del header `Origin` arbitrario (cierra open-redirect potencial). `jsoncargo-track` añade `checkAdminAccess` tras `authenticate`: clientes/viewers reciben 403, ya no pueden gastar cuota del proveedor.
