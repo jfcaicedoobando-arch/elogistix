@@ -1,6 +1,6 @@
 # Módulo Auditoría — Arquitectura y flujo de datos
 
-> Última revisión: **v8.118.4** (Sprint 3 del refactor arquitectónico).
+> Última revisión: **v11.59.1** (post Bloque A de auditoría arquitectónica).
 > Acompaña a `ARCHITECTURE.md` y a `mem://features/seguridad-y-roles`.
 
 Este documento describe **cómo se compone la página de Auditoría**, qué hace
