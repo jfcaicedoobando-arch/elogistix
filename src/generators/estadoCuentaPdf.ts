@@ -8,6 +8,7 @@
 import { fetchEstadoCuentaFacturas, type EstadoCuentaFactura } from "@/services/facturas";
 import { formatCurrency, formatDate } from "@/lib/formatters";
 import { escapeHtml as esc } from "@/lib/utils";
+import { cargarEmisorEmpresa } from "@/pdf/emisor";
 
 type FacturaCte = EstadoCuentaFactura;
 
@@ -40,7 +41,10 @@ function bucketFor(diasVencido: number): string {
 export async function generarEstadoCuentaPdf(
   cliente: ClienteHeader & { id: string },
 ): Promise<void> {
-  const facturas: FacturaCte[] = await fetchEstadoCuentaFacturas(cliente.id);
+  const [facturas, emisor] = await Promise.all([
+    fetchEstadoCuentaFacturas(cliente.id),
+    cargarEmisorEmpresa(),
+  ]);
   const hoy = new Date();
   hoy.setHours(0, 0, 0, 0);
 
@@ -145,7 +149,7 @@ export async function generarEstadoCuentaPdf(
           <div class="aging">${agingHtml}</div>`
     }
 
-    <div class="footer">Libre Carga — documento generado ${new Date().toLocaleString("es-MX")}</div>
+    <div class="footer">${esc(emisor.razonSocial ?? "Empresa")} — documento generado ${new Date().toLocaleString("es-MX")}</div>
   </body></html>`;
 
   const win = window.open("", "_blank");
