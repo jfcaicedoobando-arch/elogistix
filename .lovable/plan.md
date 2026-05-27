@@ -1,79 +1,125 @@
-# Auditoría arquitectónica — Libre Carga (estado 11.59.1)
 
-> **Bloque A cerrado** entre 11.54.0 y 11.59.1. Diagnóstico original archivado
-> en `mem://audit/pendings`. Este documento refleja el estado **actual** post
-> migración + plan vigente para Bloques B/C/D.
+# Bloque B — Power of 10: cerrar los 3 oversized + split del query-keys factory
 
-## 1. Métricas baseline (post Bloque A)
+Objetivo: dejar `0` archivos productivos >200 líneas (hoy hay 3) y reducir
+`src/lib/query/index.ts` (256) a un barrel delgado partido por dominio.
+Cero cambios de comportamiento ni de API pública — sólo movimientos
+internos + tests de paridad.
 
-| Métrica | 11.45.0 (diagnóstico) | 11.59.1 (actual) | Meta |
-|---|---:|---:|---:|
-| Hooks con `@/integrations/supabase/client` directo | 28 | **0** ✅ | 0 |
-| Components con Supabase directo | 1 | **0** ✅ | 0 |
-| Contexts con Supabase directo | 5 | **0** ✅ | 0 |
-| Pages con Supabase directo | 0 | **0** ✅ | 0 |
-| Archivos productivos >200 líneas (no shadcn) | 2 | **3** | 0 |
-| `any` en código productivo | 0 | **0** ✅ | 0 |
-| `console.*` en código productivo | 0 | **0** ✅ | 0 |
-| Suites de tests en `services/` | — | **18** ✅ | ≥10 |
-| Total tests | 709 | **716** | crecer |
-| Subdominios en `services/` | 25 | **29** | — |
-| `as` casts totales | 458 | **720** (37 HIGH) | bajar HIGH |
+## Estado actual
 
-> Los 10 imports restantes de `@/integrations/supabase/types` desde hooks y
-> components son **type-only** (`Tables`, `Enums`, `TablesInsert`,
-> `Database`) — permitidos por contrato, no rompen capas.
+| Archivo | Líneas | Acción |
+|---|---:|---|
+| `src/services/crm/leads.ts` | 209 | Partir por sub-acción en carpeta `services/crm/leads/` |
+| `src/components/crm/ImportarLeadsCsvDialog.tsx` | 201 | Extraer parser/mapper a `lib/csv/leadsCsv.ts` + hook + sub-componente preview |
+| `src/components/shared/BulkImportDialog.tsx` | 200 | Mover `BulkImportBody` y `BulkImportFooter` a archivo hermano |
+| `src/lib/query/index.ts` | 256 | Partir por dominio en `lib/query/keys/*` y dejar `index.ts` como barrel |
 
-## 2. Bloque A — ✅ CERRADO (11.54.0 → 11.59.1)
+## Plan paso a paso
 
-Migrados 33 archivos en 6 lotes a `services/{admin,crm,portal,embarque,auth,organization}/`:
+### B1 — Partir `services/crm/leads.ts` (209)
 
-- **Lote 1 (admin):** `useAppLogs`, `useAppLogsHealth`, `useAlertasSistema`.
-- **Lote 2 (portal/auditoría):** `portal/useNotificacionesCliente`, `auditoria/revisiones/query`.
-- **Lote 3 (CRM core):** `useOportunidades`, `useActividades`, `useCliente360`, `useCrmDashboard`, `useEtapasPipeline`, `useNextBestActions`, `usePlantillasMensaje`, `useComentariosOportunidad`, `useCrmSearch`, `useCrmNotificaciones`, `useProximasActividades`, `useActualizarActividadNotas`.
-- **Lote 4 (CRM leads/forecast/automatizaciones):** `crm/leads/{queries,mutations,bulk,convertir,convertirHelpers}`, `useAutomatizacionesEtapa`, `automatizacionesEtapaActions`, `useForecastReportes`, `oportunidadPayload`, `leadPayload`.
-- **Lote 5 (embarque):** `embarque/mutations/useUpdateEmbarque`, `useJsonCargoTracking`, `useJsonCargoBolLookup`, `TabTracking`.
-- **Lote 6 (auth/org):** `AuthContext`, `OrganizationContext`, `useAuthSession`, `useAuthProfile`, `useLoginAudit` → `services/auth/{session,loginAudit}` + `services/organization`.
+Nueva estructura (carpeta hermana del archivo actual):
 
-Test de arquitectura (`src/lib/__tests__/architecture-baseline.test.ts`) tiene
-el `Set` de excepciones vacío. Lint clean en `src/`.
+```text
+src/services/crm/leads/
+  index.ts        ← barrel: re-exporta todo (API pública intacta)
+  queries.ts      ← listLeads, getLead
+  mutations.ts    ← createLead, updateLead, softDeleteLead
+  bulk.ts         ← bulkCreateLeads, bulkUpdateLeads, bulkSoftDeleteLeads
+  convertir.ts    ← resolveClienteForConversion, fetchPrimeraEtapaAbierta, convertirLead, tipos ConvertirLeadParams/ResolveClienteParams
+```
 
-## 3. Pendiente — Bloques B/C/D
+- `services/crm/leads.ts` se elimina; los consumidores siguen importando
+  `from "@/services/crm/leads"` y resuelven a `leads/index.ts`.
+- Cada archivo nuevo ≤80 líneas.
+- Mantener el suite `services/crm/leads.test.ts` existente; sólo cambia el path interno.
 
-### Bloque B — Power-of-10 y barrels
-- **B5.** Partir `src/lib/query/index.ts` (256 líneas) en
-  `queryClient.ts` + `persister.ts` + `keys.ts` + `gc.ts`.
-- **B6.** Refactor `components/crm/ImportarLeadsCsvDialog.tsx` (202) →
-  hook `useImportarLeadsCsv` + sub-componentes preview/errores.
-- **B6b.** Refactor `components/shared/BulkImportDialog.tsx` (201) en la
-  misma línea (extraer controller + sub-componentes).
-- **B6c.** Refactor `services/crm/leads.ts` (210) — dividir por sub-acción
-  (`queries.ts` + `mutations.ts` + `bulk.ts` ya existen como hooks; mover
-  agrupaciones puras a `lib/domain/crm/leads`).
-- **B7.** Documentar excepción `components/ui/sidebar.tsx` (637, shadcn) en
-  `docs/power10-baseline.md`.
-- **B8.** Auditar los dos `no-restricted-imports: "off"` en `eslint.config.js`
-  y acotar a archivos shadcn/legacy con justificación.
+### B2 — Refactor `ImportarLeadsCsvDialog.tsx` (201 → ~110)
 
-### Bloque C — Consistencia
-- **C9.** Renombrar helpers no-hook en `hooks/crm/` (`*Actions.ts`,
-  `*Helpers.ts`, `*Payload.ts`) o moverlos a `lib/domain/crm/`. (Parcialmente
-  hecho en Lote 4: `oportunidadPayload`, `leadPayload` ya re-exportan desde
-  `lib/`.)
-- **C10.** Auditar 25 `style={{…}}` inline → tokens Tailwind / semánticos.
-- **C11.** Homogeneizar prefijos en duplicados (`Configuracion.tsx`,
-  `TabFacturacion.tsx`).
+Extraer:
 
-### Bloque D — Opcional
-- **D12.** Dividir `routes.tsx` (188) en `routes/{admin,portal,crm,public}.tsx`.
-- **D13.** Vigilar archivos 180–200 líneas (lista en mem://audit/pendings).
-- **D14.** Test arquitectónico adicional que falle si `hooks/` o `contexts/`
-  importan `@/integrations/supabase/client`. **YA EXISTE** vía
-  `architecture-baseline.test.ts` + `scripts/audit-architecture.ts`.
-- **D15.** Reporte CI automático con violaciones de capa y archivos
-  oversized.
+1. **`src/lib/csv/leadsCsv.ts`** (puro, sin React):
+   - `HEADER_ALIASES`, `parseCSV`, `mapRows`, tipo `ParsedRow`.
+   - Tests unitarios `src/lib/csv/__tests__/leadsCsv.test.ts` (parser RFC4180 subset, mapper con/sin headers, validación de `empresa`).
+2. **`src/components/crm/ImportarLeadsCsvPreview.tsx`**:
+   - Sub-componente que recibe `rows` y renderiza el `<table>` (líneas 159-188 actuales).
+3. **`src/hooks/crm/useImportarLeadsCsv.ts`** (cliente-only):
+   - Encapsula `rows`, `fileName`, `handleFile`, `reset`, `handleImport`, `validRows`, `errorCount`.
 
-## 4. Orden recomendado
+El dialog queda como shell (~100 líneas) que orquesta hook + preview.
 
-Mayor ROI: **B6 + B6b + B6c + B5** (los 3 oversized + el split de
-`lib/query`). Después C9/C11 (cosmético) y dejar D para cuando haya hueco.
+### B3 — Refactor `BulkImportDialog.tsx` (200 → ~120)
+
+- Mover `BulkImportBody` y `BulkImportFooter` a
+  `src/components/shared/BulkImportDialogParts.tsx` (~80 líneas).
+- Mover `downloadCsvTemplate` a `src/lib/csv/downloadCsvTemplate.ts` (puro,
+  testeable).
+- `BulkImportDialog.tsx` queda en ~90 líneas, sin lógica de presentación.
+
+### B4 — Partir `src/lib/query/index.ts` (256) por dominio
+
+Nueva estructura:
+
+```text
+src/lib/query/
+  index.ts         ← compone `queryKeys = { ...embarques, ...crm, ... }` y re-exporta
+  keys/
+    embarques.ts
+    proformas.ts
+    cotizaciones.ts
+    clientes.ts
+    facturas.ts
+    proveedores.ts
+    catalogos.ts   ← puertos, navieras, tiposContenedor, exchangeRates, configuracion, configuracionGlobal, configuracionOrg
+    dashboard.ts   ← dashboard, operaciones, operadores, reportes, sidebar
+    admin.ts       ← admin, planes, usuarios, papelera, idempotenciaLog, appLogs
+    crm.ts         ← todo el bloque `crm.*` (~65 líneas, el más grande)
+    portal.ts
+    auditoria.ts
+    facturacion.ts
+    misc.ts        ← trackingLinks, jsonCargo, clienteFinancials, bitacora, pdfPreviewCotizacion, trackingPublico
+```
+
+- Cada `keys/*.ts` ≤60 líneas; `index.ts` ≤30.
+- Firma pública intacta: `import { queryKeys } from "@/lib/query"` sigue
+  funcionando idéntico.
+- Agregar `src/lib/query/__tests__/keys-shape.test.ts` que valide que
+  `queryKeys` después del split tiene exactamente las mismas claves de
+  primer y segundo nivel que la baseline (snapshot del shape).
+
+### B5 — Versionado y documentación
+
+- `src/constants/appVersion.ts` → **`11.60.0`** (minor: refactor estructural sin breaking changes).
+- `CHANGELOG.md`: nueva entrada `## [11.60.0] - 2026-05-27` con bullets por B1-B4.
+- `.lovable/plan.md`: marcar B5/B6/B6b/B6c como ✅ y bajar baseline de archivos >200 a **0**.
+- `docs/power10-baseline.md`: actualizar conteo "3 archivos >200" → **0**.
+- `docs/architecture-map.md`: nota breve del split de `lib/query/keys/*`.
+
+## Verificación
+
+1. `bun scripts/audit-architecture.ts` → 0 violaciones.
+2. `bun scripts/audit-power10.ts` (si existe) → 0 archivos >200 productivos.
+3. Vitest: que pase el suite completo + los 2 nuevos tests
+   (`leadsCsv.test.ts`, `keys-shape.test.ts`).
+4. Build (Vite) sin errores de imports.
+5. Revisar manualmente el preview en `/crm/leads` que el dialog de importar
+   sigue funcionando idéntico.
+
+## Detalles técnicos
+
+- **Sin cambios de API pública**: todos los imports existentes
+  (`@/services/crm/leads`, `@/lib/query`, `@/components/shared/BulkImportDialog`)
+  resuelven al mismo símbolo. Esto evita tocar 50+ call sites.
+- **Sin cambios de tipos**: los tipos exportados (`ConvertirLeadParams`,
+  `ParsedRow`, `BulkImportDialogProps`) se re-exportan desde el barrel.
+- **Power of 10 enforcement**: tras este bloque, podemos sumar al
+  `architecture-baseline.test.ts` una aserción `archivosProductivosOver200 === 0`
+  para que CI bloquee regresiones (lo dejo opcional, marcado en `.lovable/plan.md` para Bloque D).
+- **No tocamos** `components/ui/sidebar.tsx` (637, shadcn — excepción ya documentada).
+
+## Fuera de alcance (siguientes sprints)
+
+- Bloque C (naming + estilos inline).
+- Bloque D (split de `routes.tsx`, CI report).
+- Reducción de casts HIGH (37 actuales).
