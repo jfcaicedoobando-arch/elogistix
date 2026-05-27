@@ -1,5 +1,9 @@
 /**
  * Mapeo desde el formulario de embarque (RHF) hacia payloads de inserción en BD.
+ *
+ * Validación runtime (P1.7): los enums (`modo`, `tipo`, `incoterm`,
+ * `tipoServicio`, `moneda`) se validan con Zod antes de enviar a Supabase
+ * para dar errores claros en vez de propagar valores inválidos al backend.
  */
 
 import { resolverContacto } from "@/lib/contacto";
@@ -7,6 +11,13 @@ import type { Tables, TablesInsert } from "@/integrations/supabase/types";
 import type { ConceptoVentaLocal, ConceptoCostoLocal } from "@/types/concepto";
 import type { EmbarqueFormValues } from "./embarqueFromDb";
 import { emptyToNull } from "./_helpers";
+import {
+  modoEmbarqueSchema,
+  tipoOperacionSchema,
+  incotermSchema,
+  tipoServicioMaritimoSchema,
+  monedaSchema,
+} from "./embarquePayloadSchemas";
 
 type ContactoRow = Pick<Tables<"contactos_cliente">, "id" | "nombre" | "tipo" | "pais">;
 type EmbarqueInsert = Omit<TablesInsert<"embarques">, "expediente">;
@@ -15,14 +26,14 @@ function partesBase(v: EmbarqueFormValues, contactos: ContactoRow[], clienteNomb
   return {
     cliente_id: v.clienteId || null!,
     cliente_nombre: clienteNombre,
-    modo: v.modo as EmbarqueInsert["modo"],
-    tipo: v.tipo as EmbarqueInsert["tipo"],
+    modo: modoEmbarqueSchema.parse(v.modo),
+    tipo: tipoOperacionSchema.parse(v.tipo),
     shipper: resolverContacto(contactos, v.shipper, v.shipperManual),
     consignatario:
       v.consignatario === "__cliente__"
         ? clienteNombre
         : resolverContacto(contactos, v.consignatario, v.consignatarioManual),
-    incoterm: v.incoterm as EmbarqueInsert["incoterm"],
+    incoterm: incotermSchema.parse(v.incoterm),
     descripcion_mercancia: v.descripcionMercancia,
     peso_kg: Number(v.pesoKg),
     volumen_m3: Number(v.volumenM3),
@@ -40,7 +51,7 @@ function partesMaritimo(v: EmbarqueFormValues) {
     agente: emptyToNull(v.agente),
     bl_master: emptyToNull(v.blMaster),
     bl_house: emptyToNull(v.blHouse),
-    tipo_servicio: (emptyToNull(v.tipoServicio) as EmbarqueInsert["tipo_servicio"]) ?? null,
+    tipo_servicio: tipoServicioMaritimoSchema.optional().nullable().parse(emptyToNull(v.tipoServicio)) ?? null,
     contenedor: emptyToNull(v.contenedor),
     tipo_contenedor: emptyToNull(v.tipoContenedor),
   };
@@ -98,7 +109,7 @@ export function buildConceptosVentaPayload(conceptosVenta: ConceptoVentaLocal[])
       descripcion: v.concepto,
       cantidad: v.cantidad,
       precio_unitario: v.precioUnitario,
-      moneda: v.moneda as TablesInsert<"conceptos_venta">["moneda"],
+      moneda: monedaSchema.parse(v.moneda),
       total: v.cantidad * v.precioUnitario,
     }));
 }
@@ -114,6 +125,6 @@ export function buildConceptosCostoPayload(
       proveedor_nombre: proveedoresDb.find((p) => p.id === c.proveedorId)?.nombre || "",
       concepto: c.concepto,
       monto: c.monto,
-      moneda: c.moneda as TablesInsert<"conceptos_costo">["moneda"],
+      moneda: monedaSchema.parse(c.moneda),
     }));
 }

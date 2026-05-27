@@ -6,6 +6,17 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [11.66.0] - 2026-05-27
+- **P1.5 y P1.6 cerradas** (sin código). Verificación contra el árbol actual:
+  - P1.5: ya existe solo `src/lib/utils/` (con `index.ts` como barrel); no hay `src/utils/` ni `src/lib/utils.ts`. Demás utilidades segregadas por dominio (`formatters/`, `io/`, `parsers/`, `validation/`).
+  - P1.6: ningún servicio supera 200 líneas (mayor: `cliente/crud.ts` 174). `useHuecoFacturacion` 55 líneas; `facturas/proyeccion` y `cotizacion/mutations` ya son carpetas modulares.
+- **P1.7 — Zod en 3 hotspots de mayor peso de riesgo**:
+  - `src/lib/parsers/dashboardSchemas.ts` (nuevo): `arribosEsteMesSchema`, `resumenMesSiguienteSchema`, `cargaPorClienteSchema` con coerción numérica y `.passthrough()`. Adoptados en `parsers/dashboard.ts` con `safeParse` + fallback a `EMPTY_*` (preserva resiliencia visual).
+  - `src/lib/mappers/embarquePayloadSchemas.ts` (nuevo): enums `modoEmbarqueSchema`, `tipoOperacionSchema`, `incotermSchema`, `tipoServicioMaritimoSchema`, `monedaSchema`. Reemplazan los `as EmbarqueInsert["…"]` en `embarqueToDb.ts` (errores claros en vez de fallos crípticos de Postgres).
+  - `src/services/embarque/queries/embarqueRowSchema.ts` (nuevo): `embarqueListRowSchema`/`embarqueListRowsSchema` con `.passthrough()`. Validan las filas del export en `exportListado.ts` antes de generar el CSV.
+- **Tests**: 3 archivos nuevos (`dashboardSchemas`, `embarquePayloadSchemas`, `embarqueRowSchema`) con casos happy/inválido por schema.
+- `.lovable/plan.md` actualizado: P1.5/P1.6 cerradas; P1.7 marcada como **parcial** (3 hotspots cubiertos).
+
 ## [11.65.0] - 2026-05-27
 - **D12 — Split de `src/routes.tsx`** (188 → 19 líneas) en 4 grupos por guarda + layout:
   - `src/routes/publicRoutes.tsx` (19): login, tracking, redirects, `*` NotFound.

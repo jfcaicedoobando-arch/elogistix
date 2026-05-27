@@ -1,6 +1,10 @@
 /**
  * Pure parsers for the `dashboard_stats()` JSONB RPC payload.
  * Extracted from useDashboardData to keep the hook focused on query+state.
+ *
+ * Validación runtime (P1.7): usa `safeParse` de los schemas en
+ * `./dashboardSchemas`. Si falla, cae al EMPTY_* correspondiente para
+ * preservar la resiliencia visual del dashboard.
  */
 
 import {
@@ -16,7 +20,12 @@ import {
   type EstadoFiltro,
   type ResumenFacturacion,
 } from "./dashboardTypes";
-import { numOr0 } from "./dashboardProfit";
+
+import {
+  arribosEsteMesSchema,
+  resumenMesSiguienteSchema,
+  cargaPorClienteSchema,
+} from "./dashboardSchemas";
 
 export * from "./dashboardTypes";
 
@@ -34,37 +43,41 @@ export function parseConteoPorEstado(stats: DashboardStats): Record<EstadoFiltro
 
 export function parseArribosEsteMes(stats: DashboardStats): ArribosEsteMes {
   if (!stats?.arribosEsteMes) return EMPTY_ARRIBOS;
-  const raw = stats.arribosEsteMes as Record<string, number>;
+  const result = arribosEsteMesSchema.safeParse(stats.arribosEsteMes);
+  if (!result.success) return EMPTY_ARRIBOS;
+  const r = result.data;
   return {
-    total: numOr0(raw.total),
-    yaLlegaron: numOr0(raw.yaLlegaron),
-    enCamino: numOr0(raw.enCamino),
-    profitUSD: numOr0(raw.profitUSD),
-    ventaMXN: numOr0(raw.ventaMXN),
-    costoMXN: numOr0(raw.costoMXN),
-    profitMXN: numOr0(raw.profitMXN),
-    ventaMxnFromUsd: numOr0(raw.ventaMxnFromUsd),
-    costoMxnFromUsd: numOr0(raw.costoMxnFromUsd),
-    ventaMxnFromEur: numOr0(raw.ventaMxnFromEur),
-    costoMxnFromEur: numOr0(raw.costoMxnFromEur),
-    ventaMxnNative: numOr0(raw.ventaMxnNative),
-    costoMxnNative: numOr0(raw.costoMxnNative),
+    total: r.total,
+    yaLlegaron: r.yaLlegaron,
+    enCamino: r.enCamino,
+    profitUSD: r.profitUSD,
+    ventaMXN: r.ventaMXN,
+    costoMXN: r.costoMXN,
+    profitMXN: r.profitMXN,
+    ventaMxnFromUsd: r.ventaMxnFromUsd,
+    costoMxnFromUsd: r.costoMxnFromUsd,
+    ventaMxnFromEur: r.ventaMxnFromEur,
+    costoMxnFromEur: r.costoMxnFromEur,
+    ventaMxnNative: r.ventaMxnNative,
+    costoMxnNative: r.costoMxnNative,
   };
 }
 
 export function parseResumenMesSiguiente(stats: DashboardStats): ResumenFacturacion {
   if (!stats?.resumenMesSiguiente) return EMPTY_RESUMEN;
-  const raw = stats.resumenMesSiguiente as Record<string, unknown>;
+  const result = resumenMesSiguienteSchema.safeParse(stats.resumenMesSiguiente);
+  if (!result.success) return EMPTY_RESUMEN;
+  const r = result.data;
   return {
-    totalEmbarques: Number(raw.totalEmbarques ?? 0),
-    ventaUSD: Number(raw.ventaUSD ?? 0),
-    costoUSD: Number(raw.costoUSD ?? 0),
-    profitUSD: Number(raw.profitUSD ?? 0),
-    ventaMXN: Number(raw.ventaMXN ?? 0),
-    costoMXN: Number(raw.costoMXN ?? 0),
-    profitMXN: Number(raw.profitMXN ?? 0),
-    facturados: Number(raw.facturados ?? 0),
-    nombreMes: String(raw.nombreMes ?? ""),
+    totalEmbarques: r.totalEmbarques,
+    ventaUSD: r.ventaUSD,
+    costoUSD: r.costoUSD,
+    profitUSD: r.profitUSD,
+    ventaMXN: r.ventaMXN,
+    costoMXN: r.costoMXN,
+    profitMXN: r.profitMXN,
+    facturados: r.facturados,
+    nombreMes: r.nombreMes,
   };
 }
 
@@ -92,21 +105,25 @@ export function parseCargasActivasTotal(stats: DashboardStats): number {
 
 export function parseCargasPorCliente(stats: DashboardStats): CargaPorCliente[] {
   if (!stats?.cargasPorCliente) return [];
-  const raw = stats.cargasPorCliente as Array<Record<string, unknown>>;
-  return raw.map((r) => {
-    const desgloseRaw = (r.desglose as Record<string, number> | undefined) ?? {};
-    return {
+  const raw = stats.cargasPorCliente;
+  if (!Array.isArray(raw)) return [];
+  return raw.flatMap((entry): CargaPorCliente[] => {
+    const result = cargaPorClienteSchema.safeParse(entry);
+    if (!result.success) return [];
+    const r = result.data;
+    const d = r.desglose ?? {};
+    return [{
       clienteId: String(r.clienteId ?? r.cliente_id ?? ""),
       clienteNombre: String(r.clienteNombre ?? r.cliente_nombre ?? "Sin cliente"),
-      total: Number(r.total ?? 0),
+      total: r.total,
       desglose: {
-        Confirmado: Number(desgloseRaw["Confirmado"] ?? 0),
-        "En Tránsito": Number(desgloseRaw["En Tránsito"] ?? 0),
-        Arribo: Number(desgloseRaw["Arribo"] ?? 0),
-        "En Aduana": Number(desgloseRaw["En Aduana"] ?? 0),
-        Entregado: Number(desgloseRaw["Entregado"] ?? 0),
+        Confirmado: Number(d.Confirmado ?? 0),
+        "En Tránsito": Number(d["En Tránsito"] ?? 0),
+        Arribo: Number(d.Arribo ?? 0),
+        "En Aduana": Number(d["En Aduana"] ?? 0),
+        Entregado: Number(d.Entregado ?? 0),
       },
-    };
+    }];
   });
 }
 
