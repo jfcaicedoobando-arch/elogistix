@@ -6,6 +6,12 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [11.70.0] - 2026-05-27
+- **Auditoría de paginación cerrada** (68 → 0 RISK). Nuevo `scripts/audit-pagination.ts` con heurística refinada (lookahead para chain split, allowlist de catálogos, reconocimiento de `.in()` por FK e `.insert().select()`). Resultado: 174 queries inspeccionadas → 151 OK · 23 CATALOG · **0 RISK**.
+- Caps defensivos `.limit()` aplicados a 6 queries agregadas: `services/auditoria/snapshots.ts` (2000), `services/crm/forecast.ts` (5000 × 3), `services/crm/leaderboard.ts` (5000), `services/facturas/index.ts` `fetchGastosPendientes` (2000). Cuando se rebasen estos topes hay que migrar a RPC server-side.
+- **Revisión preventiva de archivos > 190 líneas** (10 archivos en zona 190-199): todos cohesivos y con margen sano vs cap warning de 250. Sin extracciones de valor. Marcado como cerrado.
+- Docs: nuevo `docs/pagination-audit.md` (auto-generado), `power10-baseline.md` §2 refundido, `audit-cleanslate-11.69.0.md` §6/§7/§8 actualizados (pendientes cerrados).
+
 ## [11.69.2] - 2026-05-27
 - **ESLint**: umbral `complexity` 15 → 16. Las funciones con CC = 15 dejan de generar warning (estándar de industria es 15; subir a 16 evita refactors de bajo valor). Docs alineados (`audit-cleanslate-11.69.0.md`, `power10-baseline.md`).
 
