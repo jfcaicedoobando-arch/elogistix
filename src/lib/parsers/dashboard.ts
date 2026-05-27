@@ -105,21 +105,25 @@ export function parseCargasActivasTotal(stats: DashboardStats): number {
 
 export function parseCargasPorCliente(stats: DashboardStats): CargaPorCliente[] {
   if (!stats?.cargasPorCliente) return [];
-  const raw = stats.cargasPorCliente as Array<Record<string, unknown>>;
-  return raw.map((r) => {
-    const desgloseRaw = (r.desglose as Record<string, number> | undefined) ?? {};
-    return {
+  const raw = stats.cargasPorCliente;
+  if (!Array.isArray(raw)) return [];
+  return raw.flatMap((entry): CargaPorCliente[] => {
+    const result = cargaPorClienteSchema.safeParse(entry);
+    if (!result.success) return [];
+    const r = result.data;
+    const d = r.desglose ?? {};
+    return [{
       clienteId: String(r.clienteId ?? r.cliente_id ?? ""),
       clienteNombre: String(r.clienteNombre ?? r.cliente_nombre ?? "Sin cliente"),
-      total: Number(r.total ?? 0),
+      total: r.total,
       desglose: {
-        Confirmado: Number(desgloseRaw["Confirmado"] ?? 0),
-        "En Tránsito": Number(desgloseRaw["En Tránsito"] ?? 0),
-        Arribo: Number(desgloseRaw["Arribo"] ?? 0),
-        "En Aduana": Number(desgloseRaw["En Aduana"] ?? 0),
-        Entregado: Number(desgloseRaw["Entregado"] ?? 0),
+        Confirmado: Number(d.Confirmado ?? 0),
+        "En Tránsito": Number(d["En Tránsito"] ?? 0),
+        Arribo: Number(d.Arribo ?? 0),
+        "En Aduana": Number(d["En Aduana"] ?? 0),
+        Entregado: Number(d.Entregado ?? 0),
       },
-    };
+    }];
   });
 }
 
