@@ -95,18 +95,22 @@ function extractQueryBlock(source: string, fromIdx: number): { block: string; lo
 }
 
 
-function classify(block: string, table: string): { bucket: Bucket; reason: string } {
+function classify(block: string, lookahead: string, table: string): { bucket: Bucket; reason: string } {
+  const combined = block + lookahead;
   if (/\.(range|limit|single|maybeSingle)\s*\(/.test(block)) {
     return { bucket: "OK", reason: "tiene .range/.limit/.single/.maybeSingle" };
   }
-  if (/count:\s*['"](exact|planned|estimated)['"]/.test(block) && /head:\s*true/.test(block)) {
+  if (/\.(range|limit|single|maybeSingle)\s*\(/.test(lookahead)) {
+    return { bucket: "OK", reason: "paginado en chain split (lookahead)" };
+  }
+  if (/count:\s*['"](exact|planned|estimated)['"]/.test(combined) && /head:\s*true/.test(combined)) {
     return { bucket: "OK", reason: "count-only (head:true)" };
   }
   if (CATALOG_TABLES.has(table)) {
     return { bucket: "CATALOG", reason: `tabla de catálogo acotado (${table})` };
   }
-  const eqMatches = [...block.matchAll(/\.eq\(\s*['"]([a-z_]+)['"]/g)];
-  const inMatches = [...block.matchAll(/\.in\(\s*['"]([a-z_]+)['"]/g)];
+  const eqMatches = [...combined.matchAll(/\.eq\(\s*['"]([a-z_]+)['"]/g)];
+  const inMatches = [...combined.matchAll(/\.in\(\s*['"]([a-z_]+)['"]/g)];
   const allFiltered = [...eqMatches, ...inMatches].map((m) => m[1]);
   if (allFiltered.length > 0) {
     const hasFk = allFiltered.some((f) => FK_FIELDS.test(f));
@@ -117,8 +121,14 @@ function classify(block: string, table: string): { bucket: Bucket; reason: strin
       };
     }
   }
+  // `.insert(...).select()` siempre devuelve sólo las filas insertadas.
+  if (/\.insert\(/.test(block)) {
+    return { bucket: "OK", reason: ".insert().select() — sólo filas insertadas" };
+  }
   return { bucket: "RISK", reason: "sin .range/.limit ni filtro por PK/FK" };
 }
+
+
 
 
 function auditFile(absPath: string, file: string): Hit[] {
