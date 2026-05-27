@@ -11,7 +11,7 @@ Las heurísticas son conservadoras (prefieren falsos positivos). Validar manualm
 | #4 Componentes/archivos productivos >200 líneas | 0 ✅ (excepción `ui/sidebar.tsx` shadcn) |
 | #5/#10 `any` explícito (excl. tests) | 0 ✅ |
 | #3 `useEffect` sin cleanup | 1 (falso positivo en `AuthContext`) |
-| #2 Queries de lista sin paginar | 68 (heurística — flujos principales ya paginados) |
+| #2 Queries de lista sin paginar | **0 RISK** ✅ (174 inspeccionadas: 151 OK · 23 CATALOG · 0 RISK — ver `docs/pagination-audit.md`) |
 | Complejidad ciclomática > 12 | 38 (umbral lint actual: 16; CC ≤ 15 aceptable) |
 
 ## Regla #4 — Archivos productivos >200 líneas (0) ✅
@@ -46,98 +46,20 @@ Verificar manualmente: bloques con `.subscribe(`/`setInterval(`/`setTimeout(`/`a
 
 </details>
 
-## Regla #2 — Queries `.from().select()` sin `.range/.limit/.single` (68)
+## Regla #2 — Queries `.from().select()` sin `.range/.limit/.single` (0 RISK ✅)
 
-Aplicable sólo a queries que alimentan listas visibles. Las queries agregadas (KPIs, totales) pueden estar bien sin límite — validar caso por caso.
+Reauditado en v11.70.0 con `scripts/audit-pagination.ts` (heurística refinada que cruza `let q = supabase.from(...)` con `q.range()` en lookahead y reconoce `.in()` por FK, `.insert().select()`, y allowlist de catálogos).
 
-| Dominio | Hallazgos |
-|---|---:|
-| `services/embarque` | 12 |
-| `services/admin` | 8 |
-| `services/cotizacion` | 7 |
-| `services/portal` | 7 |
-| `services/cliente` | 6 |
-| `services/facturas` | 6 |
-| `services/proforma` | 6 |
-| `services/auditoria` | 3 |
-| `services/catalogos` | 3 |
-| `services/configuracion` | 3 |
-| `services/proveedor` | 2 |
-| `hooks/embarque` | 1 |
-| `services/cliente-usuarios` | 1 |
-| `services/planes` | 1 |
-| `services/tracking` | 1 |
-| `services/usuario` | 1 |
+| Bucket | # | Significado |
+|--------|--:|-------------|
+| OK | 151 | Filtro por PK/FK, `.range/.limit/.single`, paginado en chain split, count-only o `.insert().select()`. |
+| CATALOG | 23 | Tabla en allowlist (catálogos estáticos, configuración por org, miembros, etapas CRM, etc.). |
+| RISK | 0 | Sin paginar y sin filtro acotante. ✅ |
 
-<details><summary>Detalle</summary>
+Caps defensivos aplicados en v11.70.0:
+- `services/auditoria/snapshots.ts` — `.limit(2000)` (snapshots por rango de fechas).
+- `services/crm/forecast.ts` — `.limit(5000)` en `fetchForecast` y agregados de `fetchReportesCRM` (leads/oportunidades).
+- `services/crm/leaderboard.ts` — `.limit(5000)` en oportunidades cerradas del mes.
+- `services/facturas/index.ts` — `.limit(2000)` en `fetchGastosPendientes`.
 
-- `src/hooks/embarque/useJsonCargoTracking.ts:220` — .from().select() sin .range/.limit/.single
-- `src/services/admin/members.ts:33` — .from().select() sin .range/.limit/.single
-- `src/services/admin/members.ts:38` — .from().select() sin .range/.limit/.single
-- `src/services/admin/members.ts:64` — .from().select() sin .range/.limit/.single
-- `src/services/admin/organizations.ts:18` — .from().select() sin .range/.limit/.single
-- `src/services/admin/organizations.ts:27` — .from().select() sin .range/.limit/.single
-- `src/services/admin/stats.ts:29` — .from().select() sin .range/.limit/.single
-- `src/services/admin/stats.ts:62` — .from().select() sin .range/.limit/.single
-- `src/services/admin/stats.ts:80` — .from().select() sin .range/.limit/.single
-- `src/services/auditoria/index.ts:23` — .from().select() sin .range/.limit/.single
-- `src/services/auditoria/index.ts:118` — .from().select() sin .range/.limit/.single
-- `src/services/auditoria/index.ts:194` — .from().select() sin .range/.limit/.single
-- `src/services/catalogos/index.ts:44` — .from().select() sin .range/.limit/.single
-- `src/services/catalogos/index.ts:69` — .from().select() sin .range/.limit/.single
-- `src/services/catalogos/index.ts:94` — .from().select() sin .range/.limit/.single
-- `src/services/cliente/contactos.ts:11` — .from().select() sin .range/.limit/.single
-- `src/services/cliente/crud.ts:65` — .from().select() sin .range/.limit/.single
-- `src/services/cliente/crud.ts:76` — .from().select() sin .range/.limit/.single
-- `src/services/cliente/financials.ts:21` — .from().select() sin .range/.limit/.single
-- `src/services/cliente/relacionados.ts:5` — .from().select() sin .range/.limit/.single
-- `src/services/cliente/relacionados.ts:17` — .from().select() sin .range/.limit/.single
-- `src/services/cliente-usuarios/index.ts:11` — .from().select() sin .range/.limit/.single
-- `src/services/configuracion/index.ts:21` — .from().select() sin .range/.limit/.single
-- `src/services/configuracion/index.ts:48` — .from().select() sin .range/.limit/.single
-- `src/services/configuracion/index.ts:83` — .from().select() sin .range/.limit/.single
-- `src/services/cotizacion/conversiones/duplicar.ts:54` — .from().select() sin .range/.limit/.single
-- `src/services/cotizacion/conversiones/embarques.ts:20` — .from().select() sin .range/.limit/.single
-- `src/services/cotizacion/costos.ts:12` — .from().select() sin .range/.limit/.single
-- `src/services/cotizacion/costos.ts:68` — .from().select() sin .range/.limit/.single
-- `src/services/cotizacion/queries.ts:37` — .from().select() sin .range/.limit/.single
-- `src/services/cotizacion/queries.ts:48` — .from().select() sin .range/.limit/.single
-- `src/services/cotizacion/queries.ts:70` — .from().select() sin .range/.limit/.single
-- `src/services/embarque/eventos.ts:17` — .from().select() sin .range/.limit/.single
-- `src/services/embarque/queries/colaterales.ts:12` — .from().select() sin .range/.limit/.single
-- `src/services/embarque/queries/colaterales.ts:21` — .from().select() sin .range/.limit/.single
-- `src/services/embarque/queries/colaterales.ts:31` — .from().select() sin .range/.limit/.single
-- `src/services/embarque/queries/conceptos.ts:12` — .from().select() sin .range/.limit/.single
-- `src/services/embarque/queries/conceptos.ts:23` — .from().select() sin .range/.limit/.single
-- `src/services/embarque/queries/expedientes.ts:15` — .from().select() sin .range/.limit/.single
-- `src/services/embarque/queries/listado.ts:14` — .from().select() sin .range/.limit/.single
-- `src/services/embarque/queries/listado.ts:68` — .from().select() sin .range/.limit/.single
-- `src/services/embarque/queries/listado.ts:141` — .from().select() sin .range/.limit/.single
-- `src/services/embarque/queries/listado.ts:169` — .from().select() sin .range/.limit/.single
-- `src/services/embarque/queries/proveedores.ts:8` — .from().select() sin .range/.limit/.single
-- `src/services/facturas/huecoFacturacion.ts:57` — .from().select() sin .range/.limit/.single
-- `src/services/facturas/huecoFacturacion.ts:80` — .from().select() sin .range/.limit/.single
-- `src/services/facturas/index.ts:25` — .from().select() sin .range/.limit/.single
-- `src/services/facturas/index.ts:48` — .from().select() sin .range/.limit/.single
-- `src/services/facturas/proyeccion.ts:29` — .from().select() sin .range/.limit/.single
-- `src/services/facturas/proyeccion.ts:51` — .from().select() sin .range/.limit/.single
-- `src/services/planes/index.ts:21` — .from().select() sin .range/.limit/.single
-- `src/services/portal/queries.ts:20` — .from().select() sin .range/.limit/.single
-- `src/services/portal/queries.ts:40` — .from().select() sin .range/.limit/.single
-- `src/services/portal/queries.ts:50` — .from().select() sin .range/.limit/.single
-- `src/services/portal/queries.ts:71` — .from().select() sin .range/.limit/.single
-- `src/services/portal/queries.ts:87` — .from().select() sin .range/.limit/.single
-- `src/services/portal/queries.ts:114` — .from().select() sin .range/.limit/.single
-- `src/services/portal/queries.ts:123` — .from().select() sin .range/.limit/.single
-- `src/services/proforma/crud.ts:96` — .from().select() sin .range/.limit/.single
-- `src/services/proforma/queries.ts:12` — .from().select() sin .range/.limit/.single
-- `src/services/proforma/queries.ts:22` — .from().select() sin .range/.limit/.single
-- `src/services/proforma/queries.ts:35` — .from().select() sin .range/.limit/.single
-- `src/services/proforma/queries.ts:72` — .from().select() sin .range/.limit/.single
-- `src/services/proforma/queries.ts:83` — .from().select() sin .range/.limit/.single
-- `src/services/proveedor/index.ts:49` — .from().select() sin .range/.limit/.single
-- `src/services/proveedor/index.ts:99` — .from().select() sin .range/.limit/.single
-- `src/services/tracking/index.ts:59` — .from().select() sin .range/.limit/.single
-- `src/services/usuario/index.ts:29` — .from().select() sin .range/.limit/.single
-
-</details>
+Detalle completo: ver `docs/pagination-audit.md`.

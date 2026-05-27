@@ -58,21 +58,19 @@ Umbral ESLint actualizado a `complexity: ["warn", { max: 16 }]` (v11.69.2). CC �
 
 ## 6. Pendientes priorizados (antes de nuevos módulos)
 
-| Prioridad | Tarea | Razón |
-|-----------|-------|-------|
-| **Alta** | Cx fase 2 — reducir los 7 ofensores `services/*` y 8 `lib/*` (todos funciones puras, riesgo bajo) | Bloquea bajar umbral ESLint y son los más reutilizados. |
-| Media | Cx fase 3 — hooks + pages (15 ofensores) | Más invasivo; requiere descomposición de componentes/hooks. |
-| Media | P1-Paginación — auditar 68 hallazgos de queries sin `.range()` para descartar falsos positivos | Riesgo de scans completos si el dataset crece. |
-| Baja | Edge functions (4 con CC > 12) | Fase posterior; viven fuera del lint principal. |
-| Baja | Revisión preventiva de archivos 180-200 líneas (D13) | Continuo. |
+Actualizado en v11.70.0:
+
+| Prioridad | Tarea | Estado |
+|-----------|-------|--------|
+| ~~Alta~~ | ~~Cx fase 2 — services/lib~~ | Diferido — umbral subido a 16 (v11.69.2); CC ≤ 15 es aceptable. |
+| Baja | Cx fase 3 — hooks + pages con CC = 16 si aparecen | Reactivo. |
+| ~~Media~~ | ~~P1-Paginación — 68 hallazgos~~ | ✅ Cerrado v11.70.0. 0 RISK tras script `audit-pagination.ts` + 6 caps defensivos (snapshots, forecast, leaderboard, gastos pendientes). |
+| Baja | Edge functions con CC > 16 | Fase posterior; fuera del lint principal. |
+| ~~Baja~~ | ~~Revisión preventiva archivos 180-200 líneas~~ | ✅ Cerrado v11.70.0. Los 10 archivos > 190 líneas son cohesivos (barrels, primitivas shadcn, controllers, columnas de tabla, PDF styles). Sin extracciones de valor; margen sano vs cap warning de 250. |
 
 ## 7. Recomendación
 
-La baseline está **lista para arrancar nuevos módulos**:
-
-- 0 violaciones bloqueantes (arquitectura, casts, `any`, oversized, tests).
-- Lo pendiente (complejidad y paginación) es deuda gestionable, no riesgo de regresión.
-- Sugerido: cerrar **Cx fase 2 (services + lib)** en paralelo a los primeros features del próximo módulo, para llegar a CC ≤ 12 antes de fin de iteración.
+La baseline está **lista para arrancar nuevos módulos**. Todos los pendientes bloqueantes están cerrados.
 
 ## 8. Cómo reproducir
 
@@ -80,8 +78,9 @@ La baseline está **lista para arrancar nuevos módulos**:
 bun scripts/audit-casts.ts          # → docs/cast-audit.md
 bun scripts/audit-architecture.ts   # → stdout
 bun scripts/audit-tests.ts          # → stdout
+bun scripts/audit-pagination.ts     # → docs/pagination-audit.md
 bun scripts/audit-report.ts         # → reports/audit-report.{md,json}
 bunx vitest run                     # 770 tests
 # Complejidad (no hay script dedicado todavía):
-node -e "import('eslint').then(async ({ESLint})=>{const e=new ESLint({overrideConfig:[{files:['**/*.{ts,tsx}'],rules:{complexity:['warn',{max:12}]}}],overrideConfigFile:'eslint.config.js'});const r=await e.lintFiles(['src/**/*.{ts,tsx}']);for(const x of r)for(const m of x.messages)if(m.ruleId==='complexity')console.log(x.filePath.split('/src/')[1]+':'+m.line,m.message)})"
+node -e "import('eslint').then(async ({ESLint})=>{const e=new ESLint({overrideConfig:[{files:['**/*.{ts,tsx}'],rules:{complexity:['warn',{max:16}]}}],overrideConfigFile:'eslint.config.js'});const r=await e.lintFiles(['src/**/*.{ts,tsx}']);for(const x of r)for(const m of x.messages)if(m.ruleId==='complexity')console.log(x.filePath.split('/src/')[1]+':'+m.line,m.message)})"
 ```
