@@ -27,6 +27,7 @@ import { notifyError } from "@/lib/ui/appFeedback";
 import { useNuevoEmbarqueExpediente } from "./useNuevoEmbarqueExpediente";
 import { useNuevoEmbarqueCotVinculada } from "./useNuevoEmbarqueCotVinculada";
 
+import { ERROR_CODES } from "@/lib/domain/errorCatalog";
 export function useNuevoEmbarqueWizard() {
   const { toast } = useToast();
 
@@ -72,7 +73,7 @@ export function useNuevoEmbarqueWizard() {
       setValidationErrors((prev) => ({ ...prev, [step]: errors }));
 
       if (Object.keys(errors).length > 0) {
-        notifyError(toast, { step, errors });
+        notifyError(toast, { step, errors, method: "USE_NUEVO_EMBARQUE_WIZARD", errorCode: ERROR_CODES.VALIDATION_FAILED });
         return false;
       }
       return true;

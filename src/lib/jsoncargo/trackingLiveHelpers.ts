@@ -7,6 +7,7 @@ import { validatePrefixMatchesNaviera } from "@/lib/jsoncargo/containerPrefixes"
 import { PrefixMismatchError, type JsonCargoSummary } from "@/lib/jsoncargo/summary";
 import { notifyError, notifySuccess, type AnyToastFn } from "@/lib/ui/appFeedback";
 
+import { ERROR_CODES } from "@/lib/domain/errorCatalog";
 /** Parse "YYYY-MM-DD HH:MM" o ISO desde JSONCargo y devuelve "YYYY-MM-DD". */
 export function jsoncargoDateToYmd(value: string | null | undefined): string | null {
   if (!value) return null;
@@ -73,7 +74,7 @@ export function handleSyncResult(res: SyncResult, toast: ToastFn): void {
     });
     return;
   }
-  notifyError(toast, { title: "No se pudo sincronizar", description: res.error ?? "Error desconocido" });
+  notifyError(toast, { title: "No se pudo sincronizar", description: res.error ?? "Error desconocido", method: "IF", errorCode: ERROR_CODES.VALIDATION_FAILED });
 }
 
 export function handleSyncError(err: unknown, toast: ToastFn, naviera: string | null): void {
@@ -84,7 +85,7 @@ export function handleSyncError(err: unknown, toast: ToastFn, naviera: string | 
     });
     return;
   }
-  notifyError(toast, { title: "Error de tracking", description: err instanceof Error ? err.message : "Error" });
+  notifyError(toast, { title: "Error de tracking", description: err instanceof Error ? err.message : "Error", method: "IF", errorCode: ERROR_CODES.VALIDATION_FAILED });
 }
 
 export function buildApplyFechasArgs(embarqueId: string, f: FechasPropuestas) {

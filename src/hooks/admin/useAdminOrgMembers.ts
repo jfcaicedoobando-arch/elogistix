@@ -13,6 +13,7 @@ import {
 import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 import type { AppRole } from "@/types/appRole";
 
+import { ERROR_CODES } from "@/lib/domain/errorCatalog";
 export type MemberRow = OrgMemberRow;
 
 export function useAdminOrgMembers(id: string | undefined) {
@@ -42,7 +43,7 @@ export function useAdminOrgMembers(id: string | undefined) {
       notifySuccess(toast, { title: "Miembro eliminado de la organización" });
     },
     onError: (error: Error) => {
-      notifyError(toast, { title: "Error al eliminar miembro", description: error.message});
+      notifyError(toast, { title: "Error al eliminar miembro", description: error.message, method: "ON_ERROR", errorCode: ERROR_CODES.VALIDATION_FAILED });
     },
   });
 

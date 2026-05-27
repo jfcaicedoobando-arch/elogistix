@@ -36,7 +36,7 @@ export default function DialogEliminarEmbarque({ embarque, open, onOpenChange }:
       notifySuccess(toast, { title: "Embarque eliminado", description: `${embarque.expediente} fue eliminado permanentemente.` });
       navigate("/embarques");
     } catch (err: unknown) {
-      notifyError(toast, { title: "Error al eliminar", description: getErrorMessage(err)});
+      notifyError(toast, { title: "Error al eliminar", description: getErrorMessage(err), error: err, method: "CATCH" });
     } finally {
       onOpenChange(false);
       setPaso2(false);

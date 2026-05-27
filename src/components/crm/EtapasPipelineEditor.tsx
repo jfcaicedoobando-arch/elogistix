@@ -67,7 +67,7 @@ export default function EtapasPipelineEditor() {
       await actualizar.mutateAsync({ id, patch: draft[id] });
       notifySuccess(toast, { title: "Etapa actualizada" });
     } catch (e) {
-      notifyError(toast, { title: "Error", description: e instanceof Error ? e.message : undefined });
+      notifyError(toast, { title: "Error", description: e instanceof Error ? e.message : undefined, error: e, method: "CATCH" });
     }
   };
 
@@ -76,7 +76,7 @@ export default function EtapasPipelineEditor() {
     try {
       await actualizar.mutateAsync({ id, patch: { orden: d.orden + delta } });
     } catch (e) {
-      notifyError(toast, { title: "Error", description: e instanceof Error ? e.message : undefined });
+      notifyError(toast, { title: "Error", description: e instanceof Error ? e.message : undefined, error: e, method: "CATCH" });
     }
   };
 

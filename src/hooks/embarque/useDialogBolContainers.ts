@@ -10,6 +10,7 @@ import {
 import { useSyncJsonCargo, PrefixMismatchError } from "@/hooks/embarque/useJsonCargoTracking";
 import { useActualizarContenedorEmbarque } from "@/hooks/embarque/mutations/useActualizarContenedorEmbarque";
 
+import { ERROR_CODES } from "@/lib/domain/errorCatalog";
 interface Args {
   embarqueId: string;
   naviera: string | null;
@@ -40,6 +41,8 @@ export function useDialogBolContainers({ embarqueId, naviera, contenedorActual, 
         notifyError(toast, {
           title: "No se pudo consultar BL",
           description: res.error ?? "Error desconocido",
+          method: "IF",
+          errorCode: ERROR_CODES.VALIDATION_FAILED,
         });
         return;
       }
@@ -52,6 +55,8 @@ export function useDialogBolContainers({ embarqueId, naviera, contenedorActual, 
       notifyError(toast, {
         title: "Error en consulta BL",
         description: err instanceof Error ? err.message : "Error desconocido",
+        error: err,
+        method: "CATCH",
       });
     }
   };
@@ -91,6 +96,8 @@ export function useDialogBolContainers({ embarqueId, naviera, contenedorActual, 
           notifyError(toast, {
             title: "Contenedor guardado, error al sincronizar",
             description: syncErr instanceof Error ? syncErr.message : "Error",
+            method: "IF",
+            errorCode: ERROR_CODES.VALIDATION_FAILED,
           });
         }
       }
@@ -102,6 +109,8 @@ export function useDialogBolContainers({ embarqueId, naviera, contenedorActual, 
       notifyError(toast, {
         title: "No se pudo guardar el contenedor",
         description: err instanceof Error ? err.message : "Error",
+        error: err,
+        method: "CATCH",
       });
     } finally {
       setSaving(false);

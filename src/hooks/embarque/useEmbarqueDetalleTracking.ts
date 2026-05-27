@@ -2,6 +2,7 @@ import { useCreateTrackingLink } from "@/hooks/embarque/useTrackingLinks";
 import { useToast } from "@/hooks/shared";
 import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 
+import { ERROR_CODES } from "@/lib/domain/errorCatalog";
 /**
  * Encapsula la creación y copiado al portapapeles del enlace público
  * de tracking para un embarque dado.
@@ -18,7 +19,7 @@ export function useEmbarqueDetalleTracking(embarqueId: string | undefined) {
       await navigator.clipboard.writeText(url);
       notifySuccess(toast, { title: "Enlace copiado", description: "El enlace de tracking fue copiado al portapapeles." });
     } catch {
-      notifyError(toast, { title: "Error al generar enlace"});
+      notifyError(toast, { title: "Error al generar enlace", method: "HANDLE_COMPARTIR_TRACKING", errorCode: ERROR_CODES.VALIDATION_FAILED });
     }
   };
 

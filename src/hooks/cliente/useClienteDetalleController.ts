@@ -95,7 +95,7 @@ export function useClienteDetalleController() {
       setContactDialogOpen(false);
       setEditingContacto(null);
     } catch (err: unknown) {
-      notifyError(toast, { title: "Error", description: getErrorMessage(err)});
+      notifyError(toast, { title: "Error", description: getErrorMessage(err), error: err, method: "CATCH" });
     }
   };
 
@@ -118,7 +118,7 @@ export function useClienteDetalleController() {
       notifySuccess(toast, { title: "Cliente actualizado" });
       setEditClienteOpen(false);
     } catch (err: unknown) {
-      notifyError(toast, { title: "Error", description: getErrorMessage(err)});
+      notifyError(toast, { title: "Error", description: getErrorMessage(err), error: err, method: "CATCH" });
     }
   };
 
@@ -133,7 +133,7 @@ export function useClienteDetalleController() {
       await deleteContacto.mutateAsync({ id: deletingContactoId, cliente_id: cliente.id });
       notifySuccess(toast, { title: "Contacto eliminado" });
     } catch (err: unknown) {
-      notifyError(toast, { title: "Error", description: getErrorMessage(err)});
+      notifyError(toast, { title: "Error", description: getErrorMessage(err), error: err, method: "CATCH" });
     }
   };
 

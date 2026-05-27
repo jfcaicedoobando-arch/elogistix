@@ -10,6 +10,7 @@ import {
 import { useToast } from "@/hooks/shared";
 import { notifyError } from "@/lib/ui/appFeedback";
 
+import { ERROR_CODES } from "@/lib/domain/errorCatalog";
 interface Props {
   documentos: DocumentoChecklist[];
   onFileChange: (docNombre: string, file: File | undefined) => void;
@@ -27,7 +28,7 @@ export function StepDocumentos({ documentos, onFileChange, errors = {} }: Props)
     if (file) {
       const err = validateArchivo({ nombre, size: file.size, type: file.type });
       if (err) {
-        notifyError(toast, { title: "Documento rechazado", message: err });
+        notifyError(toast, { title: "Documento rechazado", message: err, method: "IF", errorCode: ERROR_CODES.VALIDATION_FAILED });
         return;
       }
     }

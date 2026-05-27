@@ -20,6 +20,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/query";
 import { ProveedorTable } from "./ProveedorTable";
 
+import { ERROR_CODES } from "@/lib/domain/errorCatalog";
 type TipoProveedor = Enums<'tipo_proveedor'>;
 type Proveedor = Tables<'proveedores'>;
 
@@ -60,7 +61,7 @@ export default function Proveedores() {
       });
       notifySuccess(toast, { title: "Proveedor creado correctamente" });
     } catch {
-      notifyError(toast, { title: "Error al crear proveedor"});
+      notifyError(toast, { title: "Error al crear proveedor", method: "HANDLE_ADD", errorCode: ERROR_CODES.VALIDATION_FAILED });
     }
   };
 

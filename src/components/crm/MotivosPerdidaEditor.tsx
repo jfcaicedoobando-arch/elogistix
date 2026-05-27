@@ -22,7 +22,7 @@ export default function MotivosPerdidaEditor() {
 
   const toggle = async (id: string, activa: boolean) => {
     try { await actualizar.mutateAsync({ id, patch: { activa } }); }
-    catch (e) { notifyError(toast, { title: "Error", description: e instanceof Error ? e.message : undefined }); }
+    catch (e) { notifyError(toast, { title: "Error", description: e instanceof Error ? e.message : undefined, error: e, method: "CATCH" }); }
   };
 
   const handleCrear = async () => {
@@ -33,7 +33,7 @@ export default function MotivosPerdidaEditor() {
       notifySuccess(toast, { title: "Motivo agregado" });
       setNuevo("");
     } catch (e) {
-      notifyError(toast, { title: "Error", description: e instanceof Error ? e.message : undefined });
+      notifyError(toast, { title: "Error", description: e instanceof Error ? e.message : undefined, error: e, method: "CATCH" });
     }
   };
 

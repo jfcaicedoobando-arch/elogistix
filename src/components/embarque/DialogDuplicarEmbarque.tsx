@@ -27,6 +27,7 @@ import { useDuplicarEmbarque } from "@/hooks/embarque";
 import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 import type { EmbarqueRow } from "@/hooks/embarque";
 
+import { ERROR_CODES } from "@/lib/domain/errorCatalog";
 const MAX_COPIAS = 5;
 
 interface Props {
@@ -72,6 +73,8 @@ export default function DialogDuplicarEmbarque({ embarque, open, onOpenChange }:
       notifyError(toast, {
         title: "Faltan números de contenedor",
         description: "Captura el número de contenedor para cada copia.",
+        method: "HANDLE_CONFIRMAR",
+        errorCode: ERROR_CODES.VALIDATION_FAILED,
       });
       return;
     }
@@ -103,6 +106,8 @@ export default function DialogDuplicarEmbarque({ embarque, open, onOpenChange }:
         phase: "duplicación de embarque",
         error,
         context: { embarqueOrigenId: embarque.id, copias: copias.length },
+        error: error,
+        method: "CATCH",
       });
     }
   };

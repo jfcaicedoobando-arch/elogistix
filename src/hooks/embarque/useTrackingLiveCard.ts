@@ -81,6 +81,8 @@ export function useTrackingLiveCard({
       notifyError(toast, {
         title: "No se pudieron actualizar las fechas",
         description: err instanceof Error ? err.message : "Error",
+        error: err,
+        method: "CATCH",
       });
     }
   };

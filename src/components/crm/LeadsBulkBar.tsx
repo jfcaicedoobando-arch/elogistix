@@ -34,7 +34,7 @@ export default function LeadsBulkBar({ ids, onClear, onDone }: Props) {
       crmToast.success(`${updated} leads → ${estado}`);
       onDone();
     } catch (e) {
-      notifyError(toast, { title: "Error", description: e instanceof Error ? e.message : undefined });
+      notifyError(toast, { title: "Error", description: e instanceof Error ? e.message : undefined, error: e, method: "CATCH" });
     }
   };
 
@@ -47,7 +47,7 @@ export default function LeadsBulkBar({ ids, onClear, onDone }: Props) {
       crmToast.success(`${updated} leads reasignados`);
       onDone();
     } catch (e) {
-      notifyError(toast, { title: "Error", description: e instanceof Error ? e.message : undefined });
+      notifyError(toast, { title: "Error", description: e instanceof Error ? e.message : undefined, error: e, method: "CATCH" });
     }
   };
 
@@ -57,7 +57,7 @@ export default function LeadsBulkBar({ ids, onClear, onDone }: Props) {
       crmToast.success(`${deleted} leads eliminados`);
       onDone();
     } catch (e) {
-      notifyError(toast, { title: "Error", description: e instanceof Error ? e.message : undefined });
+      notifyError(toast, { title: "Error", description: e instanceof Error ? e.message : undefined, error: e, method: "CATCH" });
     }
   };
 

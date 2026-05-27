@@ -8,6 +8,7 @@ import {
 } from "@/services/configuracion";
 import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 
+import { ERROR_CODES } from "@/lib/domain/errorCatalog";
 export type { ConfigItem };
 
 export function useConfiguracion() {
@@ -39,7 +40,7 @@ export function useUpdateConfiguracion() {
       notifySuccess(toast, { title: "Configuración guardada" });
     },
     onError: (error: Error) => {
-      notifyError(toast, { title: "Error al guardar", description: error.message});
+      notifyError(toast, { title: "Error al guardar", description: error.message, method: "ON_ERROR", errorCode: ERROR_CODES.VALIDATION_FAILED });
     },
   });
 }

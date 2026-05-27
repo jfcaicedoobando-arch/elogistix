@@ -19,6 +19,7 @@ import {
   ACTIVIDAD_TIPOS, type CrmActividadTipo, type CrmEntidadTipo,
 } from "@/hooks/crm";
 
+import { ERROR_CODES } from "@/lib/domain/errorCatalog";
 interface Props {
   entidadTipo: CrmEntidadTipo;
   entidadId: string;
@@ -36,13 +37,13 @@ export default function ActividadTimeline({ entidadTipo, entidadId }: Props) {
   const items = data?.data ?? [];
 
   const handleCrear = async () => {
-    if (!asunto.trim()) return notifyError(toast, { title: "Asunto requerido" });
+    if (!asunto.trim()) return notifyError(toast, { title: "Asunto requerido", method: "HANDLE_CREAR", errorCode: ERROR_CODES.VALIDATION_FAILED });
     try {
       await crear.mutateAsync({ tipo, asunto, descripcion: desc, entidad_tipo: entidadTipo, entidad_id: entidadId });
       crmToast.success("Actividad registrada");
       setAsunto(""); setDesc("");
     } catch (e) {
-      notifyError(toast, { title: "Error", description: e instanceof Error ? e.message : undefined });
+      notifyError(toast, { title: "Error", description: e instanceof Error ? e.message : undefined, error: e, method: "CATCH" });
     }
   };
 

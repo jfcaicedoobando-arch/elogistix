@@ -16,6 +16,7 @@ import {
 } from "@/services/proforma";
 import { notifyError } from "@/lib/ui/appFeedback";
 
+import { ERROR_CODES } from "@/lib/domain/errorCatalog";
 interface ProformaInput {
   id: string;
   embarque_id: string | null;
@@ -51,7 +52,7 @@ export function useDescargarProformaPdf() {
         ]);
 
         if (!embarque) {
-          notifyError(toast, { title: "No se pudo cargar el embarque asociado"});
+          notifyError(toast, { title: "No se pudo cargar el embarque asociado", method: "IF", errorCode: ERROR_CODES.VALIDATION_FAILED });
           return;
         }
 
@@ -65,7 +66,7 @@ export function useDescargarProformaPdf() {
           conceptosConsolidados: consolidados,
         });
       } catch (e) {
-        notifyError(toast, { title: "Error al generar PDF: " + (e as Error).message});
+        notifyError(toast, { title: "Error al generar PDF: " + (e as Error).message, error: e, method: "CATCH" });
       } finally {
         setDownloadingId(null);
       }

@@ -16,6 +16,7 @@ import { useCrearLead } from "@/hooks/crm";
 import { useCrearActividad } from "@/hooks/crm";
 import { NuevoLeadForm, type LeadFormState } from "./nuevoLead/NuevoLeadForm";
 
+import { ERROR_CODES } from "@/lib/domain/errorCatalog";
 interface Props {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -49,7 +50,7 @@ export default function NuevoLeadDialog({ open, onOpenChange, onCreated }: Props
 
   const handleSubmit = async () => {
     if (!form.empresa.trim()) {
-      notifyError(toast, { title: "Empresa es obligatoria" });
+      notifyError(toast, { title: "Empresa es obligatoria", method: "HANDLE_SUBMIT", errorCode: ERROR_CODES.VALIDATION_FAILED });
       return;
     }
     try {
@@ -75,6 +76,8 @@ export default function NuevoLeadDialog({ open, onOpenChange, onCreated }: Props
       notifyError(toast, {
         title: "No se pudo crear el lead",
         description: e instanceof Error ? e.message : undefined,
+        error: e,
+        method: "CATCH",
       });
     }
   };

@@ -3,6 +3,7 @@ import { useToast } from "@/hooks/shared";
 import { createDocumentoSignedUrl } from "@/services/search";
 import { notifyError } from "@/lib/ui/appFeedback";
 
+import { ERROR_CODES } from "@/lib/domain/errorCatalog";
 /**
  * Encapsula la descarga de documentos del portal (signed URL + blob fallback).
  */
@@ -31,7 +32,7 @@ export function usePortalDocumentDownload() {
         window.open(signedUrl, "_blank");
       }
     } catch {
-      notifyError(toast, { title: "Error al descargar"});
+      notifyError(toast, { title: "Error al descargar", method: "USE_PORTAL_DOCUMENT_DOWNLOAD", errorCode: ERROR_CODES.VALIDATION_FAILED });
     } finally {
       setDownloadingId(null);
     }

@@ -26,6 +26,7 @@ import {
 import { newRequestId } from "@/lib/idempotency";
 import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 
+import { ERROR_CODES } from "@/lib/domain/errorCatalog";
 // Re-export tipos para que componentes/pages no tengan que importar del service.
 export type { ProformaConFactura, ProformaPendienteConEmbarque, ProformaRow };
 
@@ -90,7 +91,9 @@ export function useCrearProforma() {
       invalidateProformaCaches(queryClient, proforma.embarque_id);
     },
     onError: (error: Error) => {
-      notifyError(toast, { title: `Error al generar proforma: ${error.message}`});
+      notifyError(toast, { title: `Error al generar proforma: ${error.message}`});,
+ method: "ON_ERROR",
+ errorCode: ERROR_CODES.VALIDATION_FAILED,
     },
   });
 }
@@ -106,7 +109,9 @@ export function useMarcarProformaFacturada() {
       queryClient.invalidateQueries({ queryKey: queryKeys.facturas.all });
     },
     onError: (error: Error) => {
-      notifyError(toast, { title: `Error: ${error.message}`});
+      notifyError(toast, { title: `Error: ${error.message}`});,
+ method: "ON_ERROR",
+ errorCode: ERROR_CODES.VALIDATION_FAILED,
     },
   });
 }
@@ -121,7 +126,9 @@ export function useEliminarProforma() {
       invalidateProformaCaches(queryClient, params.embarqueId);
     },
     onError: (error: Error) => {
-      notifyError(toast, { title: `Error al eliminar proforma: ${error.message}`});
+      notifyError(toast, { title: `Error al eliminar proforma: ${error.message}`});,
+ method: "ON_ERROR",
+ errorCode: ERROR_CODES.VALIDATION_FAILED,
     },
   });
 }
@@ -139,7 +146,9 @@ export function useAprobarProformas() {
       invalidateProformaCaches(queryClient);
     },
     onError: (error: Error) => {
-      notifyError(toast, { title: `Error al aprobar: ${error.message}`});
+      notifyError(toast, { title: `Error al aprobar: ${error.message}`});,
+ method: "ON_ERROR",
+ errorCode: ERROR_CODES.VALIDATION_FAILED,
     },
   });
 }
@@ -161,7 +170,9 @@ export function useConsolidarProformas() {
       invalidateProformaCaches(queryClient, nueva.embarque_id);
     },
     onError: (error: Error) => {
-      notifyError(toast, { title: `Error al consolidar: ${error.message}`});
+      notifyError(toast, { title: `Error al consolidar: ${error.message}`});,
+ method: "ON_ERROR",
+ errorCode: ERROR_CODES.VALIDATION_FAILED,
     },
   });
 }

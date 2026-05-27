@@ -7,6 +7,7 @@ import { useRegistrarActividad } from "@/hooks/shared/useBitacora";
 import { diffFields, SENSITIVE_FIELDS } from "@/lib/audit/diffFields";
 import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 
+import { ERROR_CODES } from "@/lib/domain/errorCatalog";
 /**
  * Controller para la página de detalle de proveedor.
  * Encapsula carga, mutaciones, totales, dialogs y handlers.
@@ -49,7 +50,7 @@ export function useProveedorDetalleController() {
       });
       notifySuccess(toast, { title: "Proveedor actualizado" });
     } catch {
-      notifyError(toast, { title: "Error al actualizar"});
+      notifyError(toast, { title: "Error al actualizar", method: "USE_PROVEEDOR_DETALLE_CONTROLLER", errorCode: ERROR_CODES.VALIDATION_FAILED });
     }
   }, [updateProveedor, toast, proveedor, registrarActividad]);
 
@@ -66,7 +67,7 @@ export function useProveedorDetalleController() {
       notifySuccess(toast, { title: "Proveedor eliminado" });
       navigate("/proveedores");
     } catch {
-      notifyError(toast, { title: "Error al eliminar proveedor"});
+      notifyError(toast, { title: "Error al eliminar proveedor", method: "USE_PROVEEDOR_DETALLE_CONTROLLER", errorCode: ERROR_CODES.VALIDATION_FAILED });
     }
   }, [proveedor, deleteProveedor, registrarActividad, toast, navigate]);
 

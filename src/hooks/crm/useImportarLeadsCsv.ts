@@ -49,6 +49,8 @@ export function useImportarLeadsCsv({ onDone }: UseImportarLeadsCsvOptions) {
       notifyError(toast, {
         title: "Error al importar",
         description: e instanceof Error ? e.message : undefined,
+        error: e,
+        method: "CATCH",
       });
     }
   }, [crearBulk, validRows, errorCount, toast, reset, onDone]);

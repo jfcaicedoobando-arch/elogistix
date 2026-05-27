@@ -3,6 +3,7 @@ import { useToast } from "@/hooks/shared";
 import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 import { useAdminOrganizations, useCreateOrganization } from "@/hooks/admin/useAdminData";
 
+import { ERROR_CODES } from "@/lib/domain/errorCatalog";
 export function useAdminOrganizacionesController() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [nombre, setNombre] = useState("");
@@ -40,7 +41,7 @@ export function useAdminOrganizacionesController() {
         setRfc("");
       },
       onError: (err: Error) => {
-        notifyError(toast, { title: "Error", description: err.message });
+        notifyError(toast, { title: "Error", description: err.message, method: "ON_ERROR", errorCode: ERROR_CODES.VALIDATION_FAILED });
       },
     });
   };

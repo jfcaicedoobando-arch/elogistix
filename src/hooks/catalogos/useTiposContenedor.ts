@@ -10,6 +10,7 @@ import {
 } from "@/services/catalogos";
 import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 
+import { ERROR_CODES } from "@/lib/domain/errorCatalog";
 export type { TipoContenedor };
 
 /** Tipos de contenedor activos ordenados por nombre */
@@ -43,7 +44,7 @@ export function useAdminTiposContenedor() {
       notifySuccess(toast, { title: "Tipo de contenedor agregado" });
     },
     onError: (e: Error) => {
-      notifyError(toast, { title: "Error al agregar tipo", description: e.message});
+      notifyError(toast, { title: "Error al agregar tipo", description: e.message, method: "ON_ERROR", errorCode: ERROR_CODES.VALIDATION_FAILED });
     },
   });
 
@@ -52,7 +53,7 @@ export function useAdminTiposContenedor() {
       setTipoContenedorActivo(id, activo),
     onSuccess: () => invalidate(),
     onError: (e: Error) => {
-      notifyError(toast, { title: "Error al actualizar", description: e.message});
+      notifyError(toast, { title: "Error al actualizar", description: e.message, method: "ON_ERROR", errorCode: ERROR_CODES.VALIDATION_FAILED });
     },
   });
 
@@ -63,7 +64,7 @@ export function useAdminTiposContenedor() {
       notifySuccess(toast, { title: "Tipo de contenedor eliminado" });
     },
     onError: (e: Error) => {
-      notifyError(toast, { title: "Error al eliminar", description: e.message});
+      notifyError(toast, { title: "Error al eliminar", description: e.message, method: "ON_ERROR", errorCode: ERROR_CODES.VALIDATION_FAILED });
     },
   });
 

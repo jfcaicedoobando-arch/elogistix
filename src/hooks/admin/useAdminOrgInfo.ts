@@ -12,6 +12,7 @@ import {
 } from "@/services/admin";
 import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 
+import { ERROR_CODES } from "@/lib/domain/errorCatalog";
 export function useAdminOrgInfo(id: string | undefined) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -44,7 +45,7 @@ export function useAdminOrgInfo(id: string | undefined) {
       setEditing(false);
     },
     onError: (error: Error) => {
-      notifyError(toast, { title: "Error al actualizar", description: error.message});
+      notifyError(toast, { title: "Error al actualizar", description: error.message, method: "ON_ERROR", errorCode: ERROR_CODES.VALIDATION_FAILED });
     },
   });
 
@@ -55,7 +56,7 @@ export function useAdminOrgInfo(id: string | undefined) {
       notifySuccess(toast, { title: activo ? "Organización activada" : "Organización desactivada" });
     },
     onError: (error: Error) => {
-      notifyError(toast, { title: "Error", description: error.message});
+      notifyError(toast, { title: "Error", description: error.message, method: "ON_ERROR", errorCode: ERROR_CODES.VALIDATION_FAILED });
     },
   });
 

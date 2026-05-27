@@ -4,6 +4,7 @@ import { queryKeys } from "@/lib/query";
 import { fetchPlanes, updatePlan, type Plan } from "@/services/planes";
 import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 
+import { ERROR_CODES } from "@/lib/domain/errorCatalog";
 export type { Plan };
 
 export function usePlanes() {
@@ -25,7 +26,7 @@ export function useUpdatePlan() {
       notifySuccess(toast, { title: "Plan actualizado" });
     },
     onError: (error: Error) => {
-      notifyError(toast, { title: "Error al actualizar plan", description: error.message});
+      notifyError(toast, { title: "Error al actualizar plan", description: error.message, method: "ON_ERROR", errorCode: ERROR_CODES.VALIDATION_FAILED });
     },
   });
 }
