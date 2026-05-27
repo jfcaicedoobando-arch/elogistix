@@ -17,6 +17,7 @@
 import { useCallback, useMemo, useRef } from "react";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { cn } from "@/lib/utils";
+import { omitUndefined } from "@/lib/utils/omitUndefined";
 import PaginationControls from "@/components/shared/PaginationControls";
 import { VirtualRow } from "@/components/shared/VirtualRow";
 import { VirtualHeaderRow, SkeletonRows, EmptyState } from "@/components/shared/VirtualTableParts";
@@ -73,13 +74,7 @@ const DEFAULTS = {
 /** Aplica defaults a las props del componente sin un bloque grande de
  *  destructuring (que disparaba `complexity > 15`). */
 function withDefaults<T>(props: VirtualDataTableProps<T>) {
-  // SAFE-CAST: iteración dinámica por clave para filtrar `undefined`.
-  // El shape de salida se re-tipa explícitamente al return.
-  const src = props as unknown as Record<string, unknown>;
-  const cleaned: Record<string, unknown> = {};
-  for (const key in src) {
-    if (src[key] !== undefined) cleaned[key] = src[key];
-  }
+  const cleaned = omitUndefined(props);
   return { ...DEFAULTS, ...cleaned } as VirtualDataTableProps<T> &
     Required<Pick<typeof DEFAULTS, keyof typeof DEFAULTS>>;
 }

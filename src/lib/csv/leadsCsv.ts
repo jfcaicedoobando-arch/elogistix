@@ -82,9 +82,17 @@ export function mapLeadCsvRows(matrix: string[][]): ParsedLeadRow[] {
       } else if (field === "estado") {
         r.estado = (LEAD_ESTADOS as readonly string[]).includes(val) ? (val as CrmLeadEstado) : "Nuevo";
       } else {
-        // SAFE-CAST: asignación dinámica por campo CSV. `field` proviene de
-        // un mapping validado contra las claves de ParsedLeadRow.
-        (r as unknown as Record<string, string>)[field] = val;
+        // Asignación tipada por campo string (sin cast). `field` ya está
+        // restringido a `keyof ParsedLeadRow` vía LEAD_CSV_HEADER_ALIASES.
+        switch (field) {
+          case "empresa": r.empresa = val; break;
+          case "contacto": r.contacto = val; break;
+          case "email": r.email = val; break;
+          case "telefono": r.telefono = val; break;
+          case "ciudad": r.ciudad = val; break;
+          case "pais": r.pais = val; break;
+          case "notas": r.notas = val; break;
+        }
       }
     });
     if (!r.empresa) r.__error = "Empresa requerida";

@@ -1,35 +1,25 @@
 {
-  "version": "11.62.0",
-  "generatedAt": "2026-05-27T04:03:50.477Z",
+  "version": "11.63.0",
+  "generatedAt": "2026-05-27T04:24:36.983Z",
   "arch": {
     "hooksContextsDirectImports": [],
     "componentsPagesDirectImports": [],
     "oversized": []
   },
   "casts": {
-    "total": 753,
+    "total": 750,
     "bySeverity": {
       "SAFE": 297,
-      "LOW": 7,
-      "MEDIUM": 412,
-      "HIGH": 37,
+      "LOW": 12,
+      "MEDIUM": 441,
+      "HIGH": 0,
       "CRITICAL": 0
     },
     "topFiles": [
       {
-        "file": "src/services/embarque/queries/exportListado.ts",
-        "total": 7,
-        "weight": 18
-      },
-      {
         "file": "src/lib/parsers/dashboard.ts",
         "total": 7,
         "weight": 14
-      },
-      {
-        "file": "src/components/shared/dataTable/__tests__/DataTable.regression.test.tsx",
-        "total": 5,
-        "weight": 13
       },
       {
         "file": "src/components/admin/TabSeguridadGlobal.tsx",
@@ -47,24 +37,34 @@
         "weight": 12
       },
       {
-        "file": "src/services/__tests__/tracking.test.ts",
-        "total": 4,
-        "weight": 12
-      },
-      {
         "file": "src/services/embarque/documentos.ts",
         "total": 6,
         "weight": 12
       },
       {
-        "file": "src/lib/csv/leadsCsv.ts",
-        "total": 5,
-        "weight": 11
-      },
-      {
         "file": "src/components/auditoria/HallazgosFiltros.tsx",
         "total": 5,
         "weight": 10
+      },
+      {
+        "file": "src/components/shared/dataTable/__tests__/DataTable.regression.test.tsx",
+        "total": 5,
+        "weight": 10
+      },
+      {
+        "file": "src/hooks/embarque/useProformas.ts",
+        "total": 5,
+        "weight": 10
+      },
+      {
+        "file": "src/services/embarque/queries/exportListado.ts",
+        "total": 7,
+        "weight": 10
+      },
+      {
+        "file": "src/components/proveedor/EditarProveedorDialog.tsx",
+        "total": 4,
+        "weight": 8
       }
     ]
   },
