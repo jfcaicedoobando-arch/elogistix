@@ -4,7 +4,7 @@
  */
 import type { CrmOportunidadRow, Moneda } from "@/hooks/crm/useOportunidades";
 import type { User } from "@supabase/supabase-js";
-import { EMPTY_OPORTUNIDAD, type OportunidadFormState } from "./oportunidadFormState";
+import { EMPTY_OPORTUNIDAD, type OportunidadFormState } from "@/lib/crm/oportunidadFormState";
 
 interface Etapa {
   id: string;
