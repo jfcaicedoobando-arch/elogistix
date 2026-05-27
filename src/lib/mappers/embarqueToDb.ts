@@ -109,7 +109,7 @@ export function buildConceptosVentaPayload(conceptosVenta: ConceptoVentaLocal[])
       descripcion: v.concepto,
       cantidad: v.cantidad,
       precio_unitario: v.precioUnitario,
-      moneda: v.moneda as TablesInsert<"conceptos_venta">["moneda"],
+      moneda: monedaSchema.parse(v.moneda),
       total: v.cantidad * v.precioUnitario,
     }));
 }
