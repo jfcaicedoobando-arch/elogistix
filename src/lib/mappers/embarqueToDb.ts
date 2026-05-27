@@ -26,14 +26,14 @@ function partesBase(v: EmbarqueFormValues, contactos: ContactoRow[], clienteNomb
   return {
     cliente_id: v.clienteId || null!,
     cliente_nombre: clienteNombre,
-    modo: v.modo as EmbarqueInsert["modo"],
-    tipo: v.tipo as EmbarqueInsert["tipo"],
+    modo: modoEmbarqueSchema.parse(v.modo),
+    tipo: tipoOperacionSchema.parse(v.tipo),
     shipper: resolverContacto(contactos, v.shipper, v.shipperManual),
     consignatario:
       v.consignatario === "__cliente__"
         ? clienteNombre
         : resolverContacto(contactos, v.consignatario, v.consignatarioManual),
-    incoterm: v.incoterm as EmbarqueInsert["incoterm"],
+    incoterm: incotermSchema.parse(v.incoterm),
     descripcion_mercancia: v.descripcionMercancia,
     peso_kg: Number(v.pesoKg),
     volumen_m3: Number(v.volumenM3),
