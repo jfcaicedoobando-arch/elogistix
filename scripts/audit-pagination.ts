@@ -16,22 +16,35 @@ const ROOT = process.cwd();
 const ROOTS = ["src/services", "src/hooks"];
 
 const CATALOG_TABLES = new Set([
+  // Catálogos estáticos / globales (< ~1000 filas, sin crecimiento operativo)
   "puertos",
   "paises",
   "monedas",
   "incoterms",
   "planes",
   "configuracion",
+  "configuracion_global",
   "organizations",
+  "organization_members",
+  "client_users",
   "catalogos",
+  "navieras",
+  "tipos_contenedor",
+  "proveedores",
+  // CRM — tablas de configuración por org (< 100 filas típicamente)
+  "crm_etapas_pipeline",
+  "crm_motivos_perdida",
+  "crm_plantillas_mensaje",
+  "crm_cuotas_vendedor",
   "etapas_pipeline",
   "etapas_oportunidad",
 ]);
 
 // Patrón de "FK lookup" — campos típicos que limitan a 1..N filas hijas
-// de un padre concreto. Si el .eq() usa alguno de estos, marcamos como OK
-// (el dataset está acotado por la FK).
-const FK_FIELDS = /\b(id|[a-z_]+_id|uuid)\b/;
+// de un padre concreto. Si el .eq() / .in() usa alguno de estos, marcamos
+// como OK (el dataset está acotado por la FK).
+const FK_FIELDS = /\b(id|[a-z_]+_id|uuid|expediente|bl_master|bl_house)\b/;
+
 
 type Bucket = "OK" | "CATALOG" | "RISK";
 
