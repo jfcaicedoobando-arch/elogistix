@@ -10,6 +10,7 @@ interface PaginationControlsProps {
   pageSize?: number;
   onPageSizeChange?: (size: number) => void;
   pageSizeOptions?: number[];
+  pageSizeLabels?: Record<number, string>;
 }
 
 const DEFAULT_OPTIONS = [10, 20, 50];
@@ -17,6 +18,7 @@ const DEFAULT_OPTIONS = [10, 20, 50];
 export default function PaginationControls({
   page, totalPages, onPageChange,
   pageSize, onPageSizeChange, pageSizeOptions = DEFAULT_OPTIONS,
+  pageSizeLabels,
 }: PaginationControlsProps) {
   if (totalPages <= 1 && !onPageSizeChange) return null;
 
@@ -33,12 +35,14 @@ export default function PaginationControls({
               value={String(pageSize)}
               onValueChange={(v) => onPageSizeChange(Number(v))}
             >
-              <SelectTrigger className="h-8 w-[90px] text-xs">
+              <SelectTrigger className="h-8 w-[110px] text-xs">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
                 {pageSizeOptions.map((s) => (
-                  <SelectItem key={s} value={String(s)}>{s} / pág</SelectItem>
+                  <SelectItem key={s} value={String(s)}>
+                    {pageSizeLabels?.[s] ?? `${s} / pág`}
+                  </SelectItem>
                 ))}
               </SelectContent>
             </Select>

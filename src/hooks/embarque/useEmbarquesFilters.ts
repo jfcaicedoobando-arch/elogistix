@@ -13,7 +13,7 @@ import { useDebounce } from "@/hooks/shared/useDebounce";
 
 export type SortDir = "asc" | "desc";
 const SORT_DIR_PARSER = parseAsStringLiteral(["asc", "desc"] as const).withDefault("desc");
-const DEFAULT_PAGE_SIZE = 20;
+const DEFAULT_PAGE_SIZE = 100;
 
 export function useEmbarquesFilters() {
   const [search, setSearchRaw] = useQueryState("q", parseAsString.withDefault(""));

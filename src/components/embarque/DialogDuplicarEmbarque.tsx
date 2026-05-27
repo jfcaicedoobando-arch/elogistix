@@ -1,3 +1,4 @@
+import { ERROR_CODES } from "@/lib/domain/errorCatalog";
 /**
  * Diálogo para duplicar un embarque desde la página de detalle (v11.47.0).
  *

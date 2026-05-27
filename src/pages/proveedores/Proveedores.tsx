@@ -1,3 +1,4 @@
+import { ERROR_CODES } from "@/lib/domain/errorCatalog";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Truck, Plus, Upload } from "lucide-react";
