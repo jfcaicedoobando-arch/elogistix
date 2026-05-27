@@ -1,6 +1,6 @@
 # Power of 10 — Baseline
 
-_Generado por `scripts/audit-power10.ts` sobre 545 archivos de `src/`._
+_Generado por `scripts/audit-power10.ts` sobre 982 archivos `.ts/.tsx` de `src/` (11.59.1)._
 
 Las heurísticas son conservadoras (prefieren falsos positivos). Validar manualmente antes de refactorizar. Ver ARCHITECTURE.md §20.
 
