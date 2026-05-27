@@ -97,7 +97,7 @@ export async function convertirLead(
     .update({
       estado: "Convertido",
       cliente_convertido_id: clienteId,
-      oportunidad_convertida_id: params.lead.id !== undefined ? opNueva.id : opNueva.id,
+      oportunidad_convertida_id: opNueva.id,
     })
     .eq("id", params.lead.id);
   if (errLead) throw errLead;
