@@ -39,6 +39,6 @@ describe("dashboardSchemas", () => {
     });
     expect(r.total).toBe(7);
     expect(r.cliente_id).toBe("abc");
-    expect(r.desglose).toEqual({});
+    expect(r.desglose.Confirmado).toBe(0);
   });
 });
