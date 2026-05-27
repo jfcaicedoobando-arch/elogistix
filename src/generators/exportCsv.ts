@@ -1,10 +1,18 @@
 /**
  * Genera y descarga un archivo CSV desde datos tabulares.
+ *
+ * `headers` es `readonly` para aceptar arreglos `as const` sin necesidad
+ * de casts en el call-site (ver D16 — 11.64.0).
  */
+export interface CsvHeader {
+  readonly key: string;
+  readonly label: string;
+}
+
 export function exportToCsv(
   filename: string,
-  headers: { key: string; label: string }[],
-  rows: Record<string, unknown>[],
+  headers: ReadonlyArray<CsvHeader>,
+  rows: ReadonlyArray<Record<string, unknown>>,
 ) {
   const escape = (val: unknown): string => {
     const str = val == null ? "" : String(val);

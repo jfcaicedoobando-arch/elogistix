@@ -1,6 +1,14 @@
 /**
  * Auditoría de `as` casts. Puro (sin side-effects).
  * Consumido por `scripts/audit-casts.ts` y `scripts/audit-report.ts`.
+ *
+ * Reglas de degradación (D16 — 11.64.0):
+ *   1. Archivos de test (`__tests__/`, `*.test.{ts,tsx}`, `*.spec.{ts,tsx}`):
+ *      HIGH/CRITICAL → MEDIUM. Mocking con `as unknown as X` es práctica
+ *      estándar y no representa riesgo de runtime.
+ *   2. Línea precedida por `// SAFE-CAST:` (justificación documentada):
+ *      HIGH → LOW. Opt-out explícito del desarrollador. Sigue siendo visible
+ *      en el reporte pero no inflama el conteo principal.
  */
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
@@ -49,6 +57,35 @@ export function classify(line: string, target: string): Severity {
   );
 }
 
+/** Regla 1: test files degradan HIGH/CRITICAL → MEDIUM. */
+export function isTestFile(rel: string): boolean {
+  return /(^|\/)__tests__\//.test(rel) || /\.(test|spec)\.tsx?$/.test(rel);
+}
+
+/** Regla 2: línea con `// SAFE-CAST:` (en la propia línea o la anterior) degrada HIGH → LOW. */
+function hasSafeCastMarker(lines: string[], idx: number): boolean {
+  const cur = lines[idx] ?? "";
+  if (/\/\/\s*SAFE-CAST:/.test(cur)) return true;
+  // Buscar hacia arriba saltando líneas de comentario hasta 4 líneas.
+  for (let k = idx - 1; k >= Math.max(0, idx - 4); k--) {
+    const l = (lines[k] ?? "").trim();
+    if (/\/\/\s*SAFE-CAST:/.test(l)) return true;
+    if (l === "" || l.startsWith("//") || l.startsWith("*")) continue;
+    break;
+  }
+  return false;
+}
+
+export function applyDowngrades(
+  sev: Severity,
+  ctx: { isTest: boolean; hasSafeCast: boolean },
+): Severity {
+  let s = sev;
+  if (ctx.isTest && (s === "HIGH" || s === "CRITICAL")) s = "MEDIUM";
+  if (ctx.hasSafeCast && s === "HIGH") s = "LOW";
+  return s;
+}
+
 export function scanCasts(root: string): CastHit[] {
   const hits: CastHit[] = [];
   const re = /\bas\s+([A-Za-z_][A-Za-z0-9_<>[\],.\s|&?]*)/g;
@@ -56,8 +93,9 @@ export function scanCasts(root: string): CastHit[] {
     const rel = relPath(root, file);
     if (rel.includes("integrations/supabase")) continue;
     if (rel.includes("content/changelog")) continue;
-    const lines = readFileSync(file, "utf8").split("\n");
-    lines.forEach((rawLine, i) => {
+    const isTest = isTestFile(rel);
+    const rawLines = readFileSync(file, "utf8").split("\n");
+    rawLines.forEach((rawLine, i) => {
       const line = rawLine
         .replace(/\/\/.*$/, "")
         .replace(/"(?:[^"\\]|\\.)*"/g, '""')
@@ -68,7 +106,9 @@ export function scanCasts(root: string): CastHit[] {
       while ((m = lineRe.exec(line)) !== null) {
         const target = m[1].split(/[\s,;)\]}]/)[0].trim();
         if (!target) continue;
-        const severity = classify(line, target);
+        const base = classify(line, target);
+        const hasSafeCast = hasSafeCastMarker(rawLines, i);
+        const severity = applyDowngrades(base, { isTest, hasSafeCast });
         hits.push({ file: rel, line: i + 1, snippet: rawLine.trim().slice(0, 200), target, severity });
       }
     });
