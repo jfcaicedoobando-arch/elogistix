@@ -11,7 +11,8 @@ Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 - Genera `reports/audit-report.md` (humano) y `reports/audit-report.json` (CI). El workflow `.github/workflows/ci.yml` añade steps: ejecuta el reporte, lo appendea a `$GITHUB_STEP_SUMMARY` en PRs y lo sube como artifact (retención 30d).
 - Refactor: extracción de helpers puros a `scripts/lib/{walk,arch,casts,tests}.ts`. Los 3 CLIs (`audit-architecture`, `audit-casts`, `audit-tests`) quedan delgados (<50 líneas) e importan de `./lib/*`.
 - Nuevos scripts npm: `audit:report` y `audit:all`. `.gitignore` ignora `reports/`.
-- Test `scripts/__tests__/audit-report.test.ts` valida el shape del reporte y el baseline limpio (0 imports directos, 0 oversized, 0 violaciones de tests).
+- Test `src/__tests__/audit-report.test.ts` valida el shape del reporte y el baseline limpio (0 imports directos, 0 oversized, 0 violaciones de tests).
+- **Cleanup C9 follow-up**: `LeadEditForm` movido a `src/types/crm/leadEditForm.ts`; `lib/crm/{leadEditDirty,oportunidadFormState,oportunidadFormHelpers}` ahora importan tipos desde `types/` o `services/crm/oportunidades` (corrige violación lib→hooks detectada por `architecture.test.ts`).
 
 ## [11.61.0] - 2026-05-27
 - **Bloque C9 — Consistencia hooks/crm**: helpers no-hook movidos a `src/lib/crm/`:
