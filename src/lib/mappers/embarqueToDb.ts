@@ -1,5 +1,9 @@
 /**
  * Mapeo desde el formulario de embarque (RHF) hacia payloads de inserción en BD.
+ *
+ * Validación runtime (P1.7): los enums (`modo`, `tipo`, `incoterm`,
+ * `tipoServicio`, `moneda`) se validan con Zod antes de enviar a Supabase
+ * para dar errores claros en vez de propagar valores inválidos al backend.
  */
 
 import { resolverContacto } from "@/lib/contacto";
@@ -7,6 +11,13 @@ import type { Tables, TablesInsert } from "@/integrations/supabase/types";
 import type { ConceptoVentaLocal, ConceptoCostoLocal } from "@/types/concepto";
 import type { EmbarqueFormValues } from "./embarqueFromDb";
 import { emptyToNull } from "./_helpers";
+import {
+  modoEmbarqueSchema,
+  tipoOperacionSchema,
+  incotermSchema,
+  tipoServicioMaritimoSchema,
+  monedaSchema,
+} from "./embarquePayloadSchemas";
 
 type ContactoRow = Pick<Tables<"contactos_cliente">, "id" | "nombre" | "tipo" | "pais">;
 type EmbarqueInsert = Omit<TablesInsert<"embarques">, "expediente">;
