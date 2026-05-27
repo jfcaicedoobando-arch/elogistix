@@ -7,6 +7,7 @@ import { Footer } from "../components/Footer";
 import { DataTable, type PdfColumn } from "../components/DataTable";
 import { TotalesBox } from "../components/TotalesBox";
 import { ProformaHeader } from "./ProformaHeader";
+import type { EmisorInfo } from "../components/BrandHeader";
 import {
   formatearDescripcionConcepto,
   type ClienteLite,
@@ -22,6 +23,7 @@ interface Props {
   conceptos: ConceptoVenta[];
   cliente?: ClienteLite;
   tasaIva?: number;
+  emisor?: EmisorInfo;
 }
 
 function columnasUSD(tasaIva: number, hayIva: boolean): PdfColumn<ConceptoVenta>[] {
@@ -56,7 +58,7 @@ function columnasMXN(): PdfColumn<ConceptoVenta>[] {
   ];
 }
 
-export function ProformaDocument({ proforma, embarque, conceptos, cliente, tasaIva = TASA_IVA }: Props) {
+export function ProformaDocument({ proforma, embarque, conceptos, cliente, tasaIva = TASA_IVA, emisor }: Props) {
   const usd = conceptos.filter((c) => c.moneda === "USD");
   const mxn = conceptos.filter((c) => c.moneda === "MXN");
   const hayIvaUsd = usd.some((c) => c.aplica_iva);
@@ -83,9 +85,9 @@ export function ProformaDocument({ proforma, embarque, conceptos, cliente, tasaI
   }
 
   return (
-    <Document title={`${proforma.numero} - Proforma`} author="Libre Carga">
+    <Document title={`${proforma.numero} - Proforma`} author={emisor?.razonSocial ?? "Empresa"}>
       <Page size="LETTER" style={styles.page}>
-        <ProformaHeader proforma={proforma} cliente={cliente ?? null} embarque={embarque} esConsolidada={false} />
+        <ProformaHeader proforma={proforma} cliente={cliente ?? null} embarque={embarque} esConsolidada={false} emisor={emisor} />
         <Text style={styles.h3}>Conceptos</Text>
 
         {usd.length > 0 ? (
@@ -113,7 +115,7 @@ export function ProformaDocument({ proforma, embarque, conceptos, cliente, tasaI
           </>
         ) : null}
 
-        <Footer />
+        <Footer empresaNombre={emisor?.razonSocial} />
       </Page>
     </Document>
   );

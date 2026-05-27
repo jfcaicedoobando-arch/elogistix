@@ -1,14 +1,15 @@
 /**
- * Header unificado para todos los PDFs del sistema "Libre Carga Invoice".
- * Izquierda: marca tipográfica + datos del emisor (opcionales).
+ * Header unificado para todos los PDFs del sistema.
+ * Izquierda: marca tipográfica + datos del emisor (cargados desde configuracion).
  * Derecha: tipo de documento + folio + metadatos.
- * Banda superior de 4pt en color corporativo en la página.
+ * Banda superior de 4pt en color corporativo.
  */
 import { View, Text } from "@react-pdf/renderer";
 import { styles, COLORS } from "../theme/styles";
 
 export interface EmisorInfo {
   razonSocial?: string;
+  subtitulo?: string;
   rfc?: string;
   direccion?: string;
   contacto?: string;
@@ -26,30 +27,28 @@ interface Props {
   folio: string;
   /** Metadatos a mostrar en columna derecha (fecha, expediente, etc.). */
   meta?: Meta[];
-  /** Datos del emisor (razón social, RFC, etc.). Si se omite usa defaults Libre Carga. */
+  /** Datos del emisor. Si se omite usa placeholder neutro ("Empresa"). */
   emisor?: EmisorInfo;
 }
 
-const EMISOR_DEFAULT: Required<EmisorInfo> = {
-  razonSocial: "Libre Carga",
+const EMISOR_FALLBACK: Required<EmisorInfo> = {
+  razonSocial: "Empresa",
+  subtitulo: "",
   rfc: "",
   direccion: "",
   contacto: "",
 };
 
 export function BrandHeader({ tipoDocumento, folio, meta = [], emisor }: Props) {
-  const e = { ...EMISOR_DEFAULT, ...(emisor ?? {}) };
+  const e = { ...EMISOR_FALLBACK, ...(emisor ?? {}) };
   return (
     <>
       <View style={styles.topBand} fixed />
       <View style={styles.header}>
         <View style={styles.brandBlock}>
-          <Text style={styles.brandMark}>LIBRE CARGA</Text>
-          <Text style={styles.brandSub}>Soluciones logísticas internacionales</Text>
-          {e.razonSocial && e.razonSocial !== "Libre Carga" ? (
-            <Text style={[styles.brandLine, { marginTop: 6, color: COLORS.ink }]}>{e.razonSocial}</Text>
-          ) : null}
-          {e.rfc ? <Text style={styles.brandLine}>RFC: {e.rfc}</Text> : null}
+          <Text style={styles.brandMark}>{e.razonSocial.toUpperCase()}</Text>
+          {e.subtitulo ? <Text style={styles.brandSub}>{e.subtitulo}</Text> : null}
+          {e.rfc ? <Text style={[styles.brandLine, { marginTop: 6 }]}>RFC: {e.rfc}</Text> : null}
           {e.direccion ? <Text style={styles.brandLine}>{e.direccion}</Text> : null}
           {e.contacto ? <Text style={styles.brandLine}>{e.contacto}</Text> : null}
         </View>

@@ -10,7 +10,7 @@ import { styles } from "../theme/styles";
 import { Footer } from "../components/Footer";
 import { DataTable, type PdfColumn } from "../components/DataTable";
 import { TotalesBox, type TotalesMoneda } from "../components/TotalesBox";
-import { BrandHeader } from "../components/BrandHeader";
+import { BrandHeader, type EmisorInfo } from "../components/BrandHeader";
 import { BillToBlock } from "../components/BillToBlock";
 import {
   SeccionDatosYMercancia,
@@ -20,6 +20,7 @@ import {
 interface Props {
   cotizacion: CotizacionRow;
   tasaIva?: number;
+  emisor?: EmisorInfo;
 }
 
 function columnasUSD(tasaIva: number, hayIva: boolean): PdfColumn<ConceptoVentaCotizacion>[] {
@@ -61,7 +62,7 @@ function columnasMXN(tasaIva: number): PdfColumn<ConceptoVentaCotizacion>[] {
   ];
 }
 
-export function CotizacionDocument({ cotizacion, tasaIva = TASA_IVA }: Props) {
+export function CotizacionDocument({ cotizacion, tasaIva = TASA_IVA, emisor }: Props) {
   const totales = calcularTotales(cotizacion.conceptos_venta);
   const { usd, mxn } = splitConceptos(cotizacion.conceptos_venta);
   const hayIvaUsd = usd.some((c) => c.aplica_iva);
@@ -91,11 +92,12 @@ export function CotizacionDocument({ cotizacion, tasaIva = TASA_IVA }: Props) {
   }
 
   return (
-    <Document title={`${cotizacion.folio} - Cotización`} author="Libre Carga">
+    <Document title={`${cotizacion.folio} - Cotización`} author={emisor?.razonSocial ?? "Empresa"}>
       <Page size="LETTER" style={styles.page}>
         <BrandHeader
           tipoDocumento="Cotización"
           folio={cotizacion.folio}
+          emisor={emisor}
           meta={[
             { label: "Estado", value: cotizacion.estado },
             { label: "Fecha", value: formatDate(cotizacion.created_at.substring(0, 10)) },
@@ -148,7 +150,7 @@ export function CotizacionDocument({ cotizacion, tasaIva = TASA_IVA }: Props) {
           </>
         ) : null}
 
-        <Footer />
+        <Footer empresaNombre={emisor?.razonSocial} />
       </Page>
     </Document>
   );

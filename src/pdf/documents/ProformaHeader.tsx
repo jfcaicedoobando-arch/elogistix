@@ -2,7 +2,7 @@ import { View, Text } from "@react-pdf/renderer";
 import { formatDate } from "@/lib/formatters";
 import { styles } from "../theme/styles";
 import { KeyValueGrid } from "../components/KeyValueGrid";
-import { BrandHeader } from "../components/BrandHeader";
+import { BrandHeader, type EmisorInfo } from "../components/BrandHeader";
 import { BillToBlock } from "../components/BillToBlock";
 import { PaymentTermsBlock } from "../components/PaymentTermsBlock";
 import type { ProformaRow, ClienteLite, EmbarqueLite } from "./proformaShared";
@@ -12,6 +12,7 @@ interface Props {
   cliente: ClienteLite;
   embarque: EmbarqueLite;
   esConsolidada: boolean;
+  emisor?: EmisorInfo;
 }
 
 function vigenciaPlus30(fechaEmision: string): string {
@@ -51,7 +52,7 @@ function SeccionEmbarque({ embarque }: { embarque: EmbarqueLite }) {
   );
 }
 
-export function ProformaHeader({ proforma, cliente, embarque, esConsolidada }: Props) {
+export function ProformaHeader({ proforma, cliente, embarque, esConsolidada, emisor }: Props) {
   const direccion = cliente
     ? [cliente.direccion, cliente.ciudad, cliente.estado, cliente.cp].filter(Boolean).join(", ")
     : "";
@@ -75,6 +76,7 @@ export function ProformaHeader({ proforma, cliente, embarque, esConsolidada }: P
         tipoDocumento={esConsolidada ? "Proforma Consolidada" : "Proforma"}
         folio={proforma.numero}
         meta={meta}
+        emisor={emisor}
       />
       <Text style={styles.notice}>Documento sin validez fiscal — uso interno</Text>
       <BillToBlock
