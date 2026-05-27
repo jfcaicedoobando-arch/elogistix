@@ -1,6 +1,10 @@
 /**
  * Pure parsers for the `dashboard_stats()` JSONB RPC payload.
  * Extracted from useDashboardData to keep the hook focused on query+state.
+ *
+ * Validación runtime (P1.7): usa `safeParse` de los schemas en
+ * `./dashboardSchemas`. Si falla, cae al EMPTY_* correspondiente para
+ * preservar la resiliencia visual del dashboard.
  */
 
 import {
@@ -17,6 +21,11 @@ import {
   type ResumenFacturacion,
 } from "./dashboardTypes";
 import { numOr0 } from "./dashboardProfit";
+import {
+  arribosEsteMesSchema,
+  resumenMesSiguienteSchema,
+  cargaPorClienteSchema,
+} from "./dashboardSchemas";
 
 export * from "./dashboardTypes";
 
