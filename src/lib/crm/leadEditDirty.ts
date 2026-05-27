@@ -2,7 +2,7 @@
  * Diff puro entre un lead persistido y su edición en curso.
  * Extraído de `useLeadEditForm.ts` para bajar complejidad.
  */
-import type { LeadEditForm } from "@/hooks/crm/useLeadEditForm";
+import type { LeadEditForm } from "@/types/crm/leadEditForm";
 
 interface LeadLike {
   empresa: string;

@@ -3,36 +3,10 @@
  * Extraído de `pages/crm/LeadDetalle.tsx` (Power of 10: componente ≤200 LOC).
  */
 import { useEffect, useMemo, useState } from "react";
-import type { CrmLeadEstado, CrmLeadFuente } from "@/hooks/crm/useLeads";
 import { isLeadDirty } from "@/lib/crm/leadEditDirty";
+import { type LeadEditForm, EMPTY_LEAD_EDIT_FORM as EMPTY_FORM } from "@/types/crm/leadEditForm";
 
-export interface LeadEditForm {
-  empresa: string;
-  contacto: string;
-  email: string;
-  telefono: string;
-  ciudad: string;
-  pais: string;
-  fuente: CrmLeadFuente;
-  estado: CrmLeadEstado;
-  score: number;
-  interes_modo: string;
-  notas: string;
-}
-
-const EMPTY_FORM: LeadEditForm = {
-  empresa: "",
-  contacto: "",
-  email: "",
-  telefono: "",
-  ciudad: "",
-  pais: "",
-  fuente: "Otro",
-  estado: "Nuevo",
-  score: 3,
-  interes_modo: "",
-  notas: "",
-};
+export type { LeadEditForm };
 
 interface LeadLike {
   empresa: string;
