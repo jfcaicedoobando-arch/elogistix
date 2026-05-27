@@ -21,12 +21,13 @@ import {
 } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { cn } from "@/lib/utils";
-import type {
-  ReglaAuditoria,
-  SeveridadAuditoria,
-} from "@/types/auditoria";
+import type { ReglaAuditoria, SeveridadAuditoria } from "@/types/auditoria";
 import { reglaLabel } from "./hallazgosTablaConfig";
 import type { FiltroRevision, FiltroResponsable } from "@/hooks/auditoria";
+import {
+  filtroResponsableSchema, filtroRevisionSchema,
+  reglaAuditoriaFiltroSchema, severidadFiltroSchema,
+} from "./hallazgosFiltrosSchemas";
 
 interface Props {
   search: string;
@@ -72,7 +73,7 @@ export function HallazgosFiltros(props: Props) {
         />
       </div>
 
-      <Select value={filtroRegla} onValueChange={(v) => setFiltroRegla(v as ReglaAuditoria | "todas")}>
+      <Select value={filtroRegla} onValueChange={(v) => setFiltroRegla(reglaAuditoriaFiltroSchema.parse(v))}>
         <SelectTrigger className="w-[200px] h-8 text-xs">
           <SelectValue placeholder="Regla" />
         </SelectTrigger>
@@ -86,7 +87,7 @@ export function HallazgosFiltros(props: Props) {
         </SelectContent>
       </Select>
 
-      <Select value={filtroSev} onValueChange={(v) => setFiltroSev(v as SeveridadAuditoria | "todas")}>
+      <Select value={filtroSev} onValueChange={(v) => setFiltroSev(severidadFiltroSchema.parse(v))}>
         <SelectTrigger className="w-[130px] h-8 text-xs">
           <SelectValue placeholder="Severidad" />
         </SelectTrigger>
@@ -112,7 +113,7 @@ export function HallazgosFiltros(props: Props) {
         </SelectContent>
       </Select>
 
-      <Select value={filtroRevision} onValueChange={(v) => setFiltroRevision(v as FiltroRevision)}>
+      <Select value={filtroRevision} onValueChange={(v) => setFiltroRevision(filtroRevisionSchema.parse(v))}>
         <SelectTrigger className="w-[150px] h-8 text-xs">
           <SelectValue placeholder="Revisión" />
         </SelectTrigger>
@@ -124,7 +125,7 @@ export function HallazgosFiltros(props: Props) {
         </SelectContent>
       </Select>
 
-      <Select value={filtroResponsable} onValueChange={(v) => setFiltroResponsable(v as FiltroResponsable)}>
+      <Select value={filtroResponsable} onValueChange={(v) => setFiltroResponsable(filtroResponsableSchema.parse(v))}>
         <SelectTrigger className="w-[150px] h-8 text-xs">
           <SelectValue placeholder="Responsable" />
         </SelectTrigger>

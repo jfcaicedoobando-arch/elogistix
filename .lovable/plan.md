@@ -1,4 +1,4 @@
-# Backlog de auditoría — estado al 11.66.0
+# Backlog de auditoría — estado al 11.67.0
 
 ## Cerrados
 
@@ -6,15 +6,15 @@
 - ✅ **C10** (11.63.0) — Quick wins inline styles + política en `mem://principles/inline-styles`.
 - ✅ **D16** (11.64.0) — 0 casts HIGH/CRITICAL productivos. Clasificador + guardrail.
 - ✅ **D12** (11.65.0) — Split de `routes.tsx` en 4 grupos por guarda+layout (188→19 líneas).
-- ✅ **P1.5** (11.66.0) — Ya satisfecha en el árbol actual: solo existe `src/lib/utils/` con barrel; resto de utilidades segregadas por dominio.
-- ✅ **P1.6** (11.66.0) — Ya satisfecha: ningún servicio supera 200 líneas; los "god services" citados ya son carpetas modulares.
+- ✅ **P1.5** (11.66.0) — Ya satisfecha: solo existe `src/lib/utils/` con barrel.
+- ✅ **P1.6** (11.66.0) — Ya satisfecha: ningún servicio supera 200 líneas.
 
 ## Pendientes
 
 | ID | Tarea | Esfuerzo | Riesgo |
 |----|-------|----------|--------|
 | D13 | Vigilar archivos 180-200 líneas (preventivo, continuo) | XS | Nulo |
-| P1.7* | Extender Zod a otros boundaries Supabase (parcial: 3 hotspots cubiertos en 11.66.0) | M | Bajo |
+| P1.7* | Extender Zod a boundaries restantes (6 hotspots cubiertos en 11.66 + 11.67) | S | Bajo |
 | Cx | Bajar complejidad 13 funciones src/ + 4 edge functions a ≤12 | M | Medio |
 
 ## P1.7 — Estado parcial
@@ -24,13 +24,18 @@ Cubiertos en 11.66.0:
 - `lib/mappers/embarqueToDb.ts` (peso 12) → `embarquePayloadSchemas.ts`
 - `services/embarque/queries/exportListado.ts` (peso 10) → `embarqueRowSchema.ts`
 
-Pendientes (orden sugerido por peso):
-- `components/admin/TabSeguridadGlobal.tsx` (peso 12)
-- `lib/audit/diffFields.ts` (peso 12)
-- `services/embarque/documentos.ts` (peso 12)
-- `components/auditoria/HallazgosFiltros.tsx` (peso 10)
-- `hooks/embarque/useProformas.ts` (peso 10)
+Cubiertos en 11.67.0:
+- `components/admin/TabSeguridadGlobal.tsx` (peso 12) → `hooks/configuracion/configSchemas.ts`
+- `services/embarque/documentos.ts` (peso 12) → `services/embarque/idempotencyClaimSchema.ts`
+- `components/auditoria/HallazgosFiltros.tsx` (peso 10) → `components/auditoria/hallazgosFiltrosSchemas.ts`
+
+Descartados (no son boundary real):
+- `lib/audit/diffFields.ts` (peso 12) — genericidad estructural, Zod no aplica sin reescribir API.
+
+Pendientes (peso ≤ 10, orden sugerido):
+- `hooks/embarque/useProformas.ts` (peso 10) — revisar si hay boundary real o sólo aliases.
+- Resto del backlog según prioridad.
 
 ## Próximo paso
 
-**Cx** (complejidad) o continuar P1.7 sobre los hotspots restantes. Recomendado P1.7 por continuidad y bajo riesgo.
+**Cx** (complejidad) o continuar P1.7 sobre los hotspots restantes.

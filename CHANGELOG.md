@@ -6,6 +6,14 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [11.67.0] - 2026-05-27
+- **P1.7 — Zod en 3 hotspots adicionales** (continuación de 11.66.0):
+  - `src/hooks/configuracion/configSchemas.ts` (nuevo): `seguridadConfigSchema` y `plataformaConfigSchema` con defaults; helper `parseConfigSafe()` que cae a defaults ante tipos inválidos sin romper el panel admin. Adoptados en `components/admin/TabSeguridadGlobal.tsx` (6 `as boolean/number/string` eliminados).
+  - `src/services/embarque/idempotencyClaimSchema.ts` (nuevo): unión `pending | cached` con `.passthrough()` + guard `isCachedClaim()`. Adoptado en `services/embarque/documentos.ts` (2 casts a `Record<string, unknown>` / `string` eliminados; rama cacheada ahora valida `path` explícitamente).
+  - `src/components/auditoria/hallazgosFiltrosSchemas.ts` (nuevo): enums Zod para `regla`, `severidad`, `revision`, `responsable`. Adoptados en `HallazgosFiltros.tsx` (4 `as TipoX` en `onValueChange` eliminados; Radix sigue garantizando el dominio pero ahora hay parse explícito).
+- 15 tests nuevos (`configSchemas`, `idempotencyClaimSchema`, `hallazgosFiltrosSchemas`); suite completa 770/770; `audit-report` y `architecture-baseline` en verde (0 HIGH/CRITICAL, 0 oversized).
+- `diffFields.ts` (peso 12) descartado como hotspot Zod: sus casts son intrínsecos a la genericidad de la API, no boundary Supabase. Queda como deuda aceptada.
+
 ## [11.66.0] - 2026-05-27
 - **P1.5 y P1.6 cerradas** (sin código). Verificación contra el árbol actual:
   - P1.5: ya existe solo `src/lib/utils/` (con `index.ts` como barrel); no hay `src/utils/` ni `src/lib/utils.ts`. Demás utilidades segregadas por dominio (`formatters/`, `io/`, `parsers/`, `validation/`).
