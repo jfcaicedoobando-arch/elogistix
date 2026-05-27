@@ -1,6 +1,6 @@
 /**
  * Adaptador thin para el PDF de rentabilidad por cliente.
- * Mantiene la firma usada por useReportesPageController.
+ * Carga los datos del emisor desde `configuracion.empresa`.
  */
 import {
   RentabilidadDocument,
@@ -8,6 +8,7 @@ import {
   type RentabilidadKpis,
 } from "@/pdf/documents/RentabilidadDocument";
 import { descargarPdf } from "@/pdf/render/descargarPdf";
+import { cargarEmisorEmpresa } from "@/pdf/emisor";
 
 export type { RentabilidadClienteRow, RentabilidadKpis };
 
@@ -19,9 +20,10 @@ export interface RentabilidadPdfInput {
   clientes: RentabilidadClienteRow[];
 }
 
-export function generarRentabilidadPdf(input: RentabilidadPdfInput): void {
-  void descargarPdf(
-    <RentabilidadDocument {...input} />,
+export async function generarRentabilidadPdf(input: RentabilidadPdfInput): Promise<void> {
+  const emisor = await cargarEmisorEmpresa();
+  await descargarPdf(
+    <RentabilidadDocument {...input} emisor={emisor} />,
     `rentabilidad-${input.fechaDesde}_${input.fechaHasta}`,
   );
 }
