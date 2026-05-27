@@ -9,6 +9,7 @@ import { useTasaIVA } from "@/hooks/catalogos";
 import { fetchCotizacionById } from "@/services/cotizacion";
 import { PdfPreview } from "@/pdf/render/PdfPreview";
 import { CotizacionDocument } from "@/pdf/documents/CotizacionDocument";
+import { cargarEmisorEmpresa } from "@/pdf/emisor";
 import { queryKeys } from "@/lib/query";
 
 export default function PdfPreviewCotizacionPage() {
@@ -19,6 +20,11 @@ export default function PdfPreviewCotizacionPage() {
     enabled: !!id,
     queryFn: () => fetchCotizacionById(id!),
   });
+  const { data: emisor } = useQuery({
+    queryKey: ["pdf-emisor"],
+    queryFn: () => cargarEmisorEmpresa(),
+    staleTime: 5 * 60 * 1000,
+  });
 
   if (isLoading) return <div className="p-6 text-muted-foreground">Cargando cotización…</div>;
   if (error) return <div className="p-6 text-destructive">Error: {(error as Error).message}</div>;
@@ -26,7 +32,10 @@ export default function PdfPreviewCotizacionPage() {
 
   return (
     <div className="h-screen w-screen bg-muted/30">
-      <PdfPreview doc={<CotizacionDocument cotizacion={data} tasaIva={tasaIva} />} height="100vh" />
+      <PdfPreview
+        doc={<CotizacionDocument cotizacion={data} tasaIva={tasaIva} emisor={emisor} />}
+        height="100vh"
+      />
     </div>
   );
 }
