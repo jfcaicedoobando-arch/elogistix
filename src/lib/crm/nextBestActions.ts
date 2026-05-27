@@ -71,16 +71,12 @@ function entidadHref(tipo: string, id: string): string {
   return "#";
 }
 
-export function computeNextBestActions(input: NbaInput, limit = 5): NbaItem[] {
-  const now = input.now ?? new Date();
-  const nowMs = now.getTime();
-  const items: NbaItem[] = [];
-
-  // 1) Leads nuevos sin contactar > 24h (score 100, restamos días de antigüedad)
-  for (const l of input.leadsSinContactar) {
+function nbaLeadsSinContactar(leads: NbaLead[], nowMs: number): NbaItem[] {
+  const out: NbaItem[] = [];
+  for (const l of leads) {
     const horas = Math.floor((nowMs - new Date(l.created_at).getTime()) / HORA);
     if (horas < 24) continue;
-    items.push({
+    out.push({
       id: `lead:${l.id}`,
       regla: "lead_sin_contactar",
       titulo: `Contactar a ${l.empresa}`,
@@ -90,31 +86,30 @@ export function computeNextBestActions(input: NbaInput, limit = 5): NbaItem[] {
       icono: "lead",
     });
   }
+  return out;
+}
 
-  // 2) Cotizaciones enviadas sin respuesta > 5 días
-  for (const c of input.cotizacionesSinRespuesta) {
-    const href = c.oportunidad_id
-      ? `/crm/oportunidades/${c.oportunidad_id}`
-      : `/cotizaciones/${c.id}`;
-    items.push({
-      id: `cot:${c.id}`,
-      regla: "cot_sin_respuesta",
-      titulo: `Dar seguimiento a cotización ${c.folio}`,
-      subtitulo: `${c.cliente_nombre || "Sin cliente"} · ${c.dias} días sin respuesta`,
-      href,
-      score: 90 - Math.min(20, c.dias - 5),
-      icono: "cotizacion",
-    });
-  }
+function nbaCotSinRespuesta(cots: NbaCotizacionSinRespuesta[]): NbaItem[] {
+  return cots.map((c) => ({
+    id: `cot:${c.id}`,
+    regla: "cot_sin_respuesta",
+    titulo: `Dar seguimiento a cotización ${c.folio}`,
+    subtitulo: `${c.cliente_nombre || "Sin cliente"} · ${c.dias} días sin respuesta`,
+    href: c.oportunidad_id ? `/crm/oportunidades/${c.oportunidad_id}` : `/cotizaciones/${c.id}`,
+    score: 90 - Math.min(20, c.dias - 5),
+    icono: "cotizacion",
+  }));
+}
 
-  // 3) Oportunidades con cierre estimado en ≤ 3 días y sin movimiento reciente
-  for (const o of input.oportunidadesAbiertas) {
+function nbaCierreProximo(ops: NbaOportunidad[], nowMs: number): NbaItem[] {
+  const out: NbaItem[] = [];
+  for (const o of ops) {
     if (!o.fecha_estimada_cierre) continue;
     const diasAlCierre = Math.floor(
       (new Date(o.fecha_estimada_cierre).getTime() - nowMs) / DIA,
     );
     if (diasAlCierre < 0 || diasAlCierre > 3) continue;
-    items.push({
+    out.push({
       id: `cierre:${o.id}`,
       regla: "op_cierre_proximo",
       titulo: `Cerrar ${o.nombre}`,
@@ -124,16 +119,20 @@ export function computeNextBestActions(input: NbaInput, limit = 5): NbaItem[] {
       icono: "cierre",
     });
   }
+  return out;
+}
 
-  // 4) Oportunidades sin actividad > 7 días (sin contar las del cierre próximo)
-  const yaIncluidasOp = new Set(
-    items.filter((i) => i.regla === "op_cierre_proximo").map((i) => i.id.split(":")[1]),
-  );
-  for (const o of input.oportunidadesAbiertas) {
-    if (yaIncluidasOp.has(o.id)) continue;
+function nbaSinActividad(
+  ops: NbaOportunidad[],
+  yaIncluidos: Set<string>,
+  nowMs: number,
+): NbaItem[] {
+  const out: NbaItem[] = [];
+  for (const o of ops) {
+    if (yaIncluidos.has(o.id)) continue;
     const diasSinMov = Math.floor((nowMs - new Date(o.updated_at).getTime()) / DIA);
     if (diasSinMov <= 7) continue;
-    items.push({
+    out.push({
       id: `stale:${o.id}`,
       regla: "op_sin_actividad",
       titulo: `${o.nombre} sin movimiento`,
@@ -143,13 +142,15 @@ export function computeNextBestActions(input: NbaInput, limit = 5): NbaItem[] {
       icono: "stale",
     });
   }
+  return out;
+}
 
-  // 5) Actividades vencidas (máxima prioridad — son compromisos ya rotos)
-  for (const a of input.actividadesVencidas) {
+function nbaActividadesVencidas(actividades: NbaActividadVencida[], nowMs: number): NbaItem[] {
+  return actividades.map((a) => {
     const diasVencida = a.fecha_programada
       ? Math.max(0, Math.floor((nowMs - new Date(a.fecha_programada).getTime()) / DIA))
       : 0;
-    items.push({
+    return {
       id: `act:${a.id}`,
       regla: "actividad_vencida",
       titulo: `Completar: ${a.asunto}`,
@@ -159,8 +160,20 @@ export function computeNextBestActions(input: NbaInput, limit = 5): NbaItem[] {
       href: entidadHref(a.entidad_tipo, a.entidad_id),
       score: 110 + Math.min(20, diasVencida),
       icono: "actividad",
-    });
-  }
-
-  return items.sort((a, b) => b.score - a.score).slice(0, limit);
+    };
+  });
 }
+
+export function computeNextBestActions(input: NbaInput, limit = 5): NbaItem[] {
+  const nowMs = (input.now ?? new Date()).getTime();
+  const cierre = nbaCierreProximo(input.oportunidadesAbiertas, nowMs);
+  const yaIncluidos = new Set(cierre.map((i) => i.id.split(":")[1]));
+  return [
+    ...nbaLeadsSinContactar(input.leadsSinContactar, nowMs),
+    ...nbaCotSinRespuesta(input.cotizacionesSinRespuesta),
+    ...cierre,
+    ...nbaSinActividad(input.oportunidadesAbiertas, yaIncluidos, nowMs),
+    ...nbaActividadesVencidas(input.actividadesVencidas, nowMs),
+  ].sort((a, b) => b.score - a.score).slice(0, limit);
+}
+

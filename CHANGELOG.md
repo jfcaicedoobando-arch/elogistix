@@ -6,6 +6,13 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [11.68.0] - 2026-05-27
+- **Cx fase 1 — Reducir complejidad ciclomática de los 2 peores ofensores** (de 13 detectados con umbral 12).
+  - `src/lib/crm/nextBestActions.ts`: `computeNextBestActions` CC 20 → 3. Extraídos 5 helpers puros (`nbaLeadsSinContactar`, `nbaCotSinRespuesta`, `nbaCierreProximo`, `nbaSinActividad`, `nbaActividadesVencidas`), cada uno con CC ≤ 5. La función pública queda como composición + sort.
+  - `src/lib/csv/leadsCsv.ts`: arrow interna de `mapLeadCsvRows` CC 18 → 4. Extraídos `parseScore`, `parseFuente`, `parseEstado` + `LEAD_STRING_SETTERS` (lookup table tipada que evita el `as Record<string,string>`). `assignLeadField` queda con CC 5.
+  - Tests existentes (`nextBestActions.test.ts` 4, `leadsCsv.test.ts` 8) garantizan equivalencia funcional; 770/770 verde.
+- Umbral ESLint `complexity` se mantiene en 15 (bajará a 12 cuando los 11 ofensores restantes — todos en CC 15 — se hayan reducido en fases siguientes).
+
 ## [11.67.0] - 2026-05-27
 - **P1.7 — Zod en 3 hotspots adicionales** (continuación de 11.66.0):
   - `src/hooks/configuracion/configSchemas.ts` (nuevo): `seguridadConfigSchema` y `plataformaConfigSchema` con defaults; helper `parseConfigSafe()` que cae a defaults ante tipos inválidos sin romper el panel admin. Adoptados en `components/admin/TabSeguridadGlobal.tsx` (6 `as boolean/number/string` eliminados).

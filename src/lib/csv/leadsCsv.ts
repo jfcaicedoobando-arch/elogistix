@@ -62,6 +62,42 @@ export function parseLeadsCsv(text: string): string[][] {
   return rows.filter((r) => r.some((v) => v.trim() !== ""));
 }
 
+function parseScore(val: string): number {
+  const n = Number(val);
+  return Number.isFinite(n) && n >= 1 && n <= 5 ? n : 3;
+}
+
+function parseFuente(val: string): CrmLeadFuente {
+  return (LEAD_FUENTES as readonly string[]).includes(val) ? (val as CrmLeadFuente) : "Otro";
+}
+
+function parseEstado(val: string): CrmLeadEstado {
+  return (LEAD_ESTADOS as readonly string[]).includes(val) ? (val as CrmLeadEstado) : "Nuevo";
+}
+
+const LEAD_STRING_SETTERS: Partial<Record<keyof ParsedLeadRow, (r: ParsedLeadRow, v: string) => void>> = {
+  empresa: (r, v) => { r.empresa = v; },
+  contacto: (r, v) => { r.contacto = v; },
+  email: (r, v) => { r.email = v; },
+  telefono: (r, v) => { r.telefono = v; },
+  ciudad: (r, v) => { r.ciudad = v; },
+  pais: (r, v) => { r.pais = v; },
+  notas: (r, v) => { r.notas = v; },
+};
+
+function assignLeadField(
+  row: ParsedLeadRow,
+  field: keyof ParsedLeadRow,
+  val: string,
+): void {
+  if (field === "score") { row.score = parseScore(val); return; }
+  if (field === "fuente") { row.fuente = parseFuente(val); return; }
+  if (field === "estado") { row.estado = parseEstado(val); return; }
+  LEAD_STRING_SETTERS[field]?.(row, val);
+}
+
+
+
 export function mapLeadCsvRows(matrix: string[][]): ParsedLeadRow[] {
   if (matrix.length === 0) return [];
   const headers = matrix[0].map((h) => h.trim().toLowerCase());
@@ -73,29 +109,10 @@ export function mapLeadCsvRows(matrix: string[][]): ParsedLeadRow[] {
     };
     colMap.forEach((field, i) => {
       if (!field) return;
-      const val = (cols[i] ?? "").trim();
-      if (field === "score") {
-        const n = Number(val);
-        r.score = Number.isFinite(n) && n >= 1 && n <= 5 ? n : 3;
-      } else if (field === "fuente") {
-        r.fuente = (LEAD_FUENTES as readonly string[]).includes(val) ? (val as CrmLeadFuente) : "Otro";
-      } else if (field === "estado") {
-        r.estado = (LEAD_ESTADOS as readonly string[]).includes(val) ? (val as CrmLeadEstado) : "Nuevo";
-      } else {
-        // Asignación tipada por campo string (sin cast). `field` ya está
-        // restringido a `keyof ParsedLeadRow` vía LEAD_CSV_HEADER_ALIASES.
-        switch (field) {
-          case "empresa": r.empresa = val; break;
-          case "contacto": r.contacto = val; break;
-          case "email": r.email = val; break;
-          case "telefono": r.telefono = val; break;
-          case "ciudad": r.ciudad = val; break;
-          case "pais": r.pais = val; break;
-          case "notas": r.notas = val; break;
-        }
-      }
+      assignLeadField(r, field, (cols[i] ?? "").trim());
     });
     if (!r.empresa) r.__error = "Empresa requerida";
     return r;
   });
 }
+
