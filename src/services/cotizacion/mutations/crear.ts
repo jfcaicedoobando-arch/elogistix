@@ -1,12 +1,12 @@
 import { supabase } from "@/integrations/supabase/client";
 import type { CotizacionRow, CreateCotizacionInput } from "@/types/cotizacion";
 import { fromDb } from "@/lib/supabase/cast";
-import { cotizacionInputSchema, parseOrThrow } from "@/lib/validation/mutationSchemas";
+import { cotizacionDraftInputSchema, parseOrThrow } from "@/lib/validation/mutationSchemas";
 import { generarFolioCotizacion } from "../queries";
 import { buildCotizacionInsertPayload } from "./payloadBuilders";
 
 export async function crearCotizacion(input: CreateCotizacionInput): Promise<CotizacionRow> {
-  parseOrThrow(cotizacionInputSchema, input, "Cotización");
+  parseOrThrow(cotizacionDraftInputSchema, input, "Cotización");
   const folio = await generarFolioCotizacion();
   const fechaVigencia = new Date();
   fechaVigencia.setDate(fechaVigencia.getDate() + input.vigencia_dias);
