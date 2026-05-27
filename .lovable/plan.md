@@ -1,105 +1,101 @@
 
-# Backlog de auditoría — estado al 11.64.0
+# Fase 2 cont. — D12: split de `routes.tsx`
 
-## Cerrados
+## Estado actual
 
-- ✅ **D14** (11.63.0) — Guardrail `oversized > 200` en `architecture-baseline.test.ts`.
-- ✅ **C10** (11.63.0) — Quick wins inline styles + política en `mem://principles/inline-styles`.
-- ✅ **D16** (11.64.0) — 0 casts HIGH/CRITICAL productivos. Clasificador degrada test files y `// SAFE-CAST:`. Guardrail en `audit-report.test.ts`.
+`src/routes.tsx` = 188 líneas. Concentra:
+- 60 `lazy()` imports.
+- 4 grupos de rutas con guardas distintas (public, portal, admin, app + CRM anidado).
 
-## Pendientes
+Justo bajo el guardrail Power-of-10 (200). D14 ya frena cualquier crecimiento, pero el archivo es difícil de leer y mezcla responsabilidades.
 
-| ID | Tarea | Esfuerzo | Riesgo |
-|----|-------|----------|--------|
-| D12 | Dividir `routes.tsx` (188 líneas) en `routes/{admin,portal,crm,public}.tsx` | S | Bajo |
-| D13 | Vigilar archivos 180-200 líneas (preventivo, continuo) | XS | Nulo |
-| P1.5 | Unificar `utils/` + `lib/utils.ts` + `lib/utils/` | M | Medio |
-| P1.6 | Romper servicios "god" (facturas/proyeccion, cotizacion/mutations, huecoFacturacion) | L | Alto |
-| P1.7 | Schemas Zod en boundary Supabase (embarques/facturas/cotizaciones) | L | Medio |
-| Cx | Bajar complejidad 13 funciones src/ + 4 edge functions a ≤12 | M | Medio |
+## Estrategia
 
-## Próximo paso
+Dividir por **guarda + layout** (no por dominio), porque cada bloque comparte un `<Route element={<Guard><Layout/></Guard>}>` propio. CRM va dentro de `app.tsx` porque ya está anidado bajo `/crm` → `CrmLayout` dentro del `Layout` principal.
 
-**Fase 2 cont. — D12** (split `routes.tsx`): 188 líneas → 4 archivos `routes/*`. Mejora DX para los refactors siguientes y mantiene el guardrail D14 activo.
+```
+src/
+├─ routes.tsx                  ← orchestrator (~30 líneas)
+└─ routes/
+   ├─ publicRoutes.tsx         ← login, tracking, redirects, 404 (~20 líneas)
+   ├─ portalRoutes.tsx         ← /portal/* bajo PortalProtectedRoute + PortalLayout (~35 líneas)
+   ├─ adminRoutes.tsx          ← /admin/* bajo super_admin guard (~30 líneas)
+   └─ appRoutes.tsx            ← resto bajo ProtectedRoute + Layout, incl. /crm/* (~90 líneas)
+```
 
----
+Cada módulo exporta un `React.Fragment` con sus `<Route>` hijos. `<Routes>` acepta fragments en su árbol (react-router v6+).
 
+### Patrón de cada archivo
 
+```tsx
+// src/routes/adminRoutes.tsx
+import { lazy } from "react";
+import { Route } from "react-router-dom";
+import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
+import { AdminLayout } from "@/components/admin/AdminLayout";
 
-## Hallazgo clave
+const AdminDashboard = lazy(() => import("@/pages/admin/AdminDashboard"));
+// ... resto de lazy() locales al grupo
 
-Auditando los **37 HIGH casts** reportados resulta:
+export const adminRoutes = (
+  <Route
+    element={
+      <ProtectedRoute allowedRoles={["super_admin"]}>
+        <AdminLayout />
+      </ProtectedRoute>
+    }
+  >
+    <Route path="/admin" element={<AdminDashboard />} />
+    {/* ... */}
+  </Route>
+);
+```
 
-| Origen | Cantidad | Tratamiento |
-|---|---:|---|
-| **Tests** (`__tests__/`, `*.test.{ts,tsx}`) | **33** | Mocking legítimo — debe degradarse a MEDIUM |
-| **Productivos** | **4** | Ya tienen comentario `SAFE-CAST:` justificándolos — necesitan API segura |
+### `routes.tsx` final
 
-Los 4 productivos son:
+```tsx
+import { Routes } from "react-router-dom";
+import { publicRoutes } from "./routes/publicRoutes";
+import { portalRoutes } from "./routes/portalRoutes";
+import { adminRoutes } from "./routes/adminRoutes";
+import { appRoutes } from "./routes/appRoutes";
 
-1. `src/components/shared/VirtualDataTable.tsx:78` — iteración dinámica por clave para filtrar `undefined`.
-2. `src/hooks/facturacion/useHuecoFacturacion.ts:43` — `readonly` → `string` para el exportador CSV.
-3. `src/lib/csv/leadsCsv.ts:87` — asignación dinámica por campo CSV.
-4. `src/lib/queryPersistBootstrap.ts:28` — marca privada de TanStack Query persister.
-
-Todos tienen comentario `SAFE-CAST:` explicando por qué el cast es necesario. La auditoría no los distingue de casts inseguros.
-
-## Plan en 2 frentes
-
-### A. Mejorar el clasificador (`scripts/lib/casts.ts`)
-
-Añadir dos reglas en `classify()`:
-
-1. **Archivos de test → degradar HIGH a MEDIUM.** Test files pueden usar `as unknown as X` para mockear sin penalización. Detección: ruta contiene `__tests__/` o termina en `.test.ts(x)` o `.spec.ts(x)`.
-
-2. **Comentario `// SAFE-CAST:` en la línea anterior → degradar HIGH a LOW.** Es un opt-out documentado: el desarrollador asumió la responsabilidad por escrito. Mantenerlo como LOW (no SAFE) permite seguir auditándolos sin alarmar.
-
-### B. Refactor de los 4 productivos para eliminar el cast
-
-Donde sea posible, sustituir el cast por una API tipada:
-
-1. **`VirtualDataTable.tsx`** — Crear helper `omitUndefined<T extends object>(o: T): Partial<T>` en `src/lib/utils/omitUndefined.ts` con tipos genéricos (Object.entries + reduce, sin cast). Reemplazar el bloque.
-
-2. **`useHuecoFacturacion.ts`** — Generalizar `exportToCsv` para aceptar `readonly { key: string; label: string }[]` (cambio en la firma) en vez de mutable. Elimina el cast en TODOS los call-sites.
-
-3. **`leadsCsv.ts`** — Cambiar `field` a `keyof ParsedLeadRow` y usar `r[field] = val` con sobrecarga indexada en `ParsedLeadRow` (`Record<string, string | undefined> & { ... }`). Elimina el cast.
-
-4. **`queryPersistBootstrap.ts`** — Crear wrapper `tipado` en `src/lib/queryClient.ts` que ya emite el `QueryClient` con la marca compatible. Si el conflicto es por versiones distintas de `@tanstack/query-core`, alinear versiones en `package.json` y eliminar el cast.
+export const AppRoutes = () => (
+  <Routes>
+    {publicRoutes}
+    {portalRoutes}
+    {adminRoutes}
+    {appRoutes}
+  </Routes>
+);
+```
 
 ## Tests
 
-- Añadir `scripts/lib/__tests__/casts.test.ts` validando:
-  - `as unknown as X` en `__tests__/foo.test.ts` → severidad ≤ MEDIUM.
-  - `as unknown as X` precedido por `// SAFE-CAST:` → severidad ≤ LOW.
-  - `as unknown as X` en `src/lib/foo.ts` sin SAFE-CAST → HIGH.
-- Actualizar `src/__tests__/audit-report.test.ts`:
-  - Esperar **HIGH casts en productivo = 0** tras los refactors.
-  - Mantener `expect(s.bySeverity.HIGH)` con valor menor (sólo tests degradados a MEDIUM).
+- **Existentes**: el guardrail D14 (`oversized > 200 = 0`) ya verifica que ningún archivo nuevo se pase. No se requieren tests adicionales — los splits son puramente estructurales y las rutas siguen siendo strings idénticos.
+- **Smoke** (opcional, descartado): tests de integración de rutas tomarían >1h y aportan poco vs. el riesgo (cambio cero en paths o elementos).
 
 ## Entregables
 
-- **`scripts/lib/casts.ts`** — clasificador con las 2 reglas nuevas + comentario explicativo.
-- **`scripts/lib/__tests__/casts.test.ts`** — nuevo.
-- **`src/lib/utils/omitUndefined.ts`** — helper tipado.
-- **Refactors**: VirtualDataTable, useHuecoFacturacion, leadsCsv, queryPersistBootstrap.
-- **Cambios de firma**: `exportToCsv` acepta `readonly` headers.
-- **`docs/cast-audit.md`** — regenerado.
-- **`reports/audit-report.{md,json}`** — regenerado.
-- **`CHANGELOG.md` + `appVersion.ts`** → `11.64.0`.
-- **`.lovable/plan.md`** → D16 ✅ cerrado, Fase 3 marcada como próxima.
-- **`mem://principles/safe-cast`** — nueva memoria: cuándo usar `// SAFE-CAST:` y formato esperado.
+- **Nuevos**: `src/routes/{publicRoutes,portalRoutes,adminRoutes,appRoutes}.tsx`.
+- **Modificado**: `src/routes.tsx` → orchestrator ~30 líneas.
+- **`CHANGELOG.md`** entrada `[11.65.0]`.
+- **`src/constants/appVersion.ts`** → `11.65.0`.
+- **`.lovable/plan.md`** → D12 ✅ cerrado.
 
 ## Fuera de alcance
 
-- Tocar los 33 casts en tests (quedan como MEDIUM tras la regla A; son mocks intencionales).
-- Romper APIs públicas de servicios — los refactors son aditivos o de generalización de firma.
-- D12 (split `routes.tsx`), C10 adicional, P1.5+ — son fases posteriores.
+- Renombrar paths de rutas.
+- Tocar guards (`ProtectedRoute`, `PortalProtectedRoute`) ni layouts.
+- Mover archivos de `pages/` ni cambiar lazy chunk grouping.
+- Tests de integración de routing.
 
 ## Criterio de éxito
 
-```
-audit-report.json → casts.bySeverity.HIGH = 4   (sólo tests, todos degradables si se quiere)
-                  → casts.bySeverity.CRITICAL = 0
-productivo HIGH   = 0
-audit-report.test pasa con baseline actualizado
-```
+- `bun run build` ✔ y app navega como antes.
+- `audit-report.json` → `oversized = []` (todos los archivos < 200 líneas, `routes.tsx` ahora ~30, los hijos ~20-90).
+- 0 cambios visibles para el usuario.
+
+## Próximo (post-D12)
+
+Fase 3 — **P1.5** (unificar `utils/`) y **D13** (monitoreo continuo 180-200).
