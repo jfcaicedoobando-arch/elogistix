@@ -5,7 +5,7 @@
  * Soporta multi-moneda (USD y/o MXN) en una sola caja con separador.
  */
 import { View, Text } from "@react-pdf/renderer";
-import { styles, COLORS, FONTS } from "../theme/styles";
+import { COLORS, FONTS } from "../theme/styles";
 import { formatCurrency } from "@/lib/formatters";
 
 export interface TotalesMoneda {
