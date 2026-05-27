@@ -1,37 +1,30 @@
-# Backlog de auditoría — estado al 11.69.0 (cleanslate)
+# Limpieza de docs/*.md
 
-> Baseline definitiva antes de iniciar nuevos módulos. Reporte completo en
-> `docs/audit-cleanslate-11.69.0.md`.
+Revisé los 25 archivos `.md` del repo cruzando referencias desde `README.md`, `ARCHITECTURE.md`, `CHANGELOG.md`, `.lovable/plan.md` y entre los propios `docs/`. La mayoría siguen activos. Cuatro quedaron obsoletos: describen migraciones ya cerradas en versiones muy anteriores a la 11.69.0 y nadie depende de ellos para tareas vivas.
 
-## Cerrados
+## Borrar (4 archivos, ~601 líneas)
 
-- ✅ **D14** (11.63.0) — Guardrail `oversized > 200`.
-- ✅ **C10** (11.63.0) — Inline styles + política `mem://principles/inline-styles`.
-- ✅ **D16** (11.64.0) — 0 casts HIGH/CRITICAL productivos (730 total, confirmado en 11.69.0).
-- ✅ **D12** (11.65.0) — Split de `routes.tsx`.
-- ✅ **P1.5/P1.6** (11.66.0) — `lib/utils/` único; servicios ≤200.
-- ✅ **Cleanslate 11.69.0** — Tests 770/770, 0 violaciones bloqueantes.
+| Archivo | Por qué se puede borrar |
+|---|---|
+| `docs/migracion-tabla-fase2.md` (141) | Crónica puntual de la migración a `@tanstack/react-table` cerrada en **v9.2.0**. Sólo se cita desde `datatable-columndef-guide.md` como "historia". |
+| `docs/refactor-tanstack-summary.md` (215) | Resumen step-by-step del mismo refactor, cerrado en **v10.1.3**. Auto-declara que ya cumplió su rol. |
+| `docs/datatable-perf-audit.md` (108) | Auditoría de perf de un solo disparo en **v10.1.2**. Los presupuestos vivos están en el test `DataTable.perf.test.tsx`. |
+| `docs/linter-warnings.md` (24) | Snapshot de warnings del linter de Supabase en **v8.179.0**. Hoy se regenera con `supabase--linter` cuando hace falta. |
 
-## Pendientes priorizados
+## Mantener (resto)
 
-| ID | Tarea | Esfuerzo | Riesgo |
-|----|-------|----------|--------|
-| **Cx-2** | Reducir CC ≤ 12 en 8 `services/*` + 8 `lib/*` (funciones puras) | M | Bajo |
-| Cx-3 | Reducir CC ≤ 12 en 7 hooks + 10 components + 5 pages | L | Medio |
-| P1.7+ | Revisar hotspots Zod residuales (caso por caso) | S | Bajo |
-| P1-Pag | Auditar 68 hallazgos "query sin paginar" (falsos positivos vs. reales) | S | Bajo |
-| Cx-Edge | 4 edge functions con CC > 12 | S | Bajo |
-| D13 | Vigilar archivos 180-200 líneas | XS | Nulo |
+- **Vivos / referenciados en cleanslate 11.69.0:** `auditoria.md`, `cast-audit.md`, `power10-baseline.md`, `tests-audit.md`, `audit-cleanslate-11.69.0.md`, `architecture-map.md`, `strict-mode-roadmap.md`.
+- **Guías operativas:** `tables.md`, `datatable-columndef-guide.md`, `operations.md`, `backups-rollback.md`, `security-checklist.md`, `integrations/jsoncargo-api.md`.
+- **Raíz e infra:** `README.md`, `ARCHITECTURE.md`, `CHANGELOG.md`, `e2e/README.md`, `supabase/tests/rls/README.md`, `src/components/ui/README.md`, `reports/audit-report.md` (auto-generado), `.lovable/plan.md`.
 
-Cuando Cx-2 + Cx-3 lleguen a 0, bajar `complexity` en `eslint.config.js` de 15 → 12.
+## Ajustes de referencias
 
-## Snapshot 11.69.0
+- En `docs/datatable-columndef-guide.md`: quitar el link a `migracion-tabla-fase2.md` (queda apunte a `CHANGELOG.md` v9.2.0 si se quiere preservar la historia).
+- En `docs/refactor-tanstack-summary.md` ya no aplica porque se elimina junto con su único enlace a `datatable-perf-audit.md`.
+- No hay referencias a `linter-warnings.md` desde otros docs.
 
-- 1025 archivos TS/TSX (905 productivos).
-- 730 casts: 297 SAFE · 12 LOW · 421 MEDIUM (en `lib/mappers/*`) · **0 HIGH / 0 CRITICAL**.
-- 38 ofensores CC > 12 (detalle en cleanslate §5).
-- 119 test suites / 770 tests / 0 fallos.
+## Versionado
 
-## Próximo paso
-
-Iniciar **Cx fase 2** sobre `services/*` y `lib/*` en paralelo con el primer módulo nuevo.
+- Bump patch: `appVersion.ts` → **11.69.1**.
+- Entrada en `CHANGELOG.md` y `src/pages/Changelog.tsx`: "docs: poda de 4 MD históricos (tanstack fase 2, refactor summary, perf audit, linter warnings v8)".
+- Sin cambios de código de aplicación.
