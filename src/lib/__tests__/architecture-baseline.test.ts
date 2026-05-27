@@ -18,6 +18,7 @@
 import { describe, it, expect } from "vitest";
 import { readFileSync, readdirSync, statSync } from "node:fs";
 import { join, relative } from "node:path";
+import { runArchAudit } from "../../../scripts/lib/arch";
 
 const ROOT = process.cwd();
 const DIRECT_CLIENT_IMPORT = /from\s+["']@\/integrations\/supabase\/client["']/;
@@ -82,6 +83,20 @@ describe("Arquitectura — baseline de imports directos a supabase/client", () =
     expect(
       stale,
       `Estos archivos ya no violan la regla. Quítalos de BASELINE en este archivo:\n${stale.join("\n")}`,
+    ).toEqual([]);
+  });
+
+  // D14 — Guardrail explícito de tamaño de archivo (Power of 10 #1).
+  // Falla la CI si CUALQUIER archivo productivo en src/ supera las 200 líneas.
+  // Cubre la regresión silenciosa que el reporte de audit-report.ts sólo informaba.
+  it("Power of 10: 0 archivos productivos en src/ con > 200 líneas", () => {
+    const { oversized } = runArchAudit(ROOT);
+    const detalle = oversized
+      .map((o) => `  - ${o.path} (${o.lines} líneas)`)
+      .join("\n");
+    expect(
+      oversized,
+      `Hay archivos productivos > 200 líneas. Divídelos antes de mergear:\n${detalle}`,
     ).toEqual([]);
   });
 });
