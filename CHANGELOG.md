@@ -6,6 +6,13 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [11.62.0] - 2026-05-27
+- **Bloque D15 — Reporte CI consolidado**: nuevo `scripts/audit-report.ts` que agrega violaciones de capa (Supabase directo en hooks/contexts/components/pages), archivos productivos >200 líneas, casts HIGH+CRITICAL (top-10 por peso) y higiene de tests.
+- Genera `reports/audit-report.md` (humano) y `reports/audit-report.json` (CI). El workflow `.github/workflows/ci.yml` añade steps: ejecuta el reporte, lo appendea a `$GITHUB_STEP_SUMMARY` en PRs y lo sube como artifact (retención 30d).
+- Refactor: extracción de helpers puros a `scripts/lib/{walk,arch,casts,tests}.ts`. Los 3 CLIs (`audit-architecture`, `audit-casts`, `audit-tests`) quedan delgados (<50 líneas) e importan de `./lib/*`.
+- Nuevos scripts npm: `audit:report` y `audit:all`. `.gitignore` ignora `reports/`.
+- Test `scripts/__tests__/audit-report.test.ts` valida el shape del reporte y el baseline limpio (0 imports directos, 0 oversized, 0 violaciones de tests).
+
 ## [11.61.0] - 2026-05-27
 - **Bloque C9 — Consistencia hooks/crm**: helpers no-hook movidos a `src/lib/crm/`:
   - `hooks/crm/oportunidadFormState.ts` → `lib/crm/oportunidadFormState.ts`
