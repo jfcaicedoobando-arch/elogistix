@@ -5,6 +5,7 @@ import { formatCurrency } from "@/lib/formatters";
 import { styles } from "../theme/styles";
 import { Footer } from "../components/Footer";
 import { DataTable, type PdfColumn } from "../components/DataTable";
+import { TotalesBox } from "../components/TotalesBox";
 import { ProformaHeader } from "./ProformaHeader";
 import {
   formatearDescripcionConcepto,
@@ -55,26 +56,32 @@ function columnasMXN(): PdfColumn<ConceptoVenta>[] {
   ];
 }
 
-function BloqueTotales({
-  subtotal, iva, total, moneda, mostrarIva,
-}: { subtotal: number; iva: number; total: number; moneda: "USD" | "MXN"; mostrarIva: boolean }) {
-  return (
-    <View style={styles.subtotalBlock} wrap={false}>
-      <Text style={styles.subtotalLine}>
-        Subtotal {moneda}: {formatCurrency(subtotal, moneda)}
-      </Text>
-      {mostrarIva ? (
-        <Text style={styles.subtotalLine}>IVA {moneda}: {formatCurrency(iva, moneda)}</Text>
-      ) : null}
-      <Text style={styles.subtotalEmphasis}>Total {moneda}: {formatCurrency(total, moneda)}</Text>
-    </View>
-  );
-}
-
 export function ProformaDocument({ proforma, embarque, conceptos, cliente, tasaIva = TASA_IVA }: Props) {
   const usd = conceptos.filter((c) => c.moneda === "USD");
   const mxn = conceptos.filter((c) => c.moneda === "MXN");
   const hayIvaUsd = usd.some((c) => c.aplica_iva);
+  const tasaPct = Math.round(tasaIva * 100);
+
+  const bloquesTotales = [];
+  if (usd.length > 0) {
+    bloquesTotales.push({
+      moneda: "USD" as const,
+      subtotal: Number(proforma.subtotal_usd),
+      iva: Number(proforma.iva_usd),
+      total: Number(proforma.total_usd),
+      tasaIvaPct: Number(proforma.iva_usd) > 0 ? tasaPct : undefined,
+    });
+  }
+  if (mxn.length > 0) {
+    bloquesTotales.push({
+      moneda: "MXN" as const,
+      subtotal: Number(proforma.subtotal_mxn),
+      iva: Number(proforma.iva_mxn),
+      total: Number(proforma.total_mxn),
+      tasaIvaPct: tasaPct,
+    });
+  }
+
   return (
     <Document title={`${proforma.numero} - Proforma`} author="Libre Carga">
       <Page size="LETTER" style={styles.page}>
@@ -85,13 +92,6 @@ export function ProformaDocument({ proforma, embarque, conceptos, cliente, tasaI
           <>
             <Text style={styles.h4}>Conceptos en USD</Text>
             <DataTable columns={columnasUSD(tasaIva, hayIvaUsd)} rows={usd} />
-            <BloqueTotales
-              moneda="USD"
-              subtotal={Number(proforma.subtotal_usd)}
-              iva={Number(proforma.iva_usd)}
-              total={Number(proforma.total_usd)}
-              mostrarIva={Number(proforma.iva_usd) > 0}
-            />
           </>
         ) : null}
 
@@ -99,15 +99,10 @@ export function ProformaDocument({ proforma, embarque, conceptos, cliente, tasaI
           <>
             <Text style={styles.h4}>Conceptos en MXN</Text>
             <DataTable columns={columnasMXN()} rows={mxn} />
-            <BloqueTotales
-              moneda="MXN"
-              subtotal={Number(proforma.subtotal_mxn)}
-              iva={Number(proforma.iva_mxn)}
-              total={Number(proforma.total_mxn)}
-              mostrarIva={true}
-            />
           </>
         ) : null}
+
+        <TotalesBox bloques={bloquesTotales} />
 
         {proforma.notas ? (
           <>
@@ -118,9 +113,6 @@ export function ProformaDocument({ proforma, embarque, conceptos, cliente, tasaI
           </>
         ) : null}
 
-        <Text style={styles.warningBox}>
-          ⚠ Este documento es una proforma y no tiene validez fiscal
-        </Text>
         <Footer />
       </Page>
     </Document>

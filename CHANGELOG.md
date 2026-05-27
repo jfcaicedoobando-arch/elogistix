@@ -6,6 +6,14 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [12.0.0-rc.2] - 2026-05-27
+- **Pulido visual de PDFs ("Libre Carga Invoice System")**. Sistema visual unificado para Cotización, Proforma y Proforma Consolidada.
+  - Nuevos componentes compartidos: `BrandHeader` (banda superior corporativa + marca + tipo doc + folio + meta), `BillToBlock` (destinatario consistente), `TotalesBox` (tarjeta de totales con TOTAL en fondo corporativo, multi-moneda en una sola caja), `PaymentTermsBlock` (vigencia + método + datos bancarios) y `Footer` rebranded en 3 columnas con línea superior `primary`.
+  - `DataTable`: zebra striping real en filas pares, header con fondo corporativo y texto blanco, separadores más sutiles (0.25pt).
+  - `theme/styles.ts` depurado: paleta consolidada en un solo acento (`primary` #0F4C81), tipografía y espaciado calmados (h1Xl 26→18pt sin letterSpacing dramático, h3 más respirado, page padding 32→36/40).
+  - Proforma: aviso "sin validez fiscal" pasa de caja dashed amarilla al pie a banner discreto bajo el header; emoji 📦 de contenedores reemplazado por chip tipográfico; vigencia (emisión + 30d) y bloque de pago añadidos.
+  - Cotización: usa el mismo sistema (BrandHeader + BillToBlock + TotalesBox); conserva sus secciones de prospecto/mercancía/dimensiones.
+
 ## [12.0.0-rc.1] - 2026-05-27
 - **Release Candidate cortado.** Cierre de los 3 hallazgos RLS pendientes del backlog pre-GA antes del corte de RC, dejando 0 hallazgos de seguridad abiertos sin justificar.
   - `auditoria_snapshots`: SELECT restringido a `admin` / `operador` de la organización (más `super_admin`). Antes cualquier miembro de la org podía leer la auditoría.

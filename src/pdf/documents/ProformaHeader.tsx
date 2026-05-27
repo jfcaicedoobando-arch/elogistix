@@ -2,6 +2,9 @@ import { View, Text } from "@react-pdf/renderer";
 import { formatDate } from "@/lib/formatters";
 import { styles } from "../theme/styles";
 import { KeyValueGrid } from "../components/KeyValueGrid";
+import { BrandHeader } from "../components/BrandHeader";
+import { BillToBlock } from "../components/BillToBlock";
+import { PaymentTermsBlock } from "../components/PaymentTermsBlock";
 import type { ProformaRow, ClienteLite, EmbarqueLite } from "./proformaShared";
 
 interface Props {
@@ -11,48 +14,14 @@ interface Props {
   esConsolidada: boolean;
 }
 
-function HeaderProforma({ proforma, esConsolidada }: { proforma: ProformaRow; esConsolidada: boolean }) {
-  return (
-    <View style={styles.header}>
-      <View>
-        <Text style={styles.h1Xl}>PROFORMA{esConsolidada ? " CONSOLIDADA" : ""}</Text>
-        <Text style={styles.numero}>{proforma.numero}</Text>
-      </View>
-      <View style={styles.meta}>
-        <View style={{ flexDirection: "row", gap: 6 }}>
-          <Text style={[styles.badge, styles.badgeWarning]}>SIN VALIDEZ FISCAL</Text>
-          {esConsolidada ? (
-            <Text style={[styles.badge, styles.badgeInfo]}>CONSOLIDADA</Text>
-          ) : null}
-        </View>
-        <Text style={styles.metaLine}>Fecha de emisión: {formatDate(proforma.fecha_emision)}</Text>
-        <Text style={styles.metaLine}>Expediente: {proforma.expediente}</Text>
-        {proforma.bl_master ? <Text style={styles.metaLine}>BL/MAWB: {proforma.bl_master}</Text> : null}
-      </View>
-    </View>
-  );
-}
-
-function SeccionCliente({ proforma, cliente }: { proforma: ProformaRow; cliente: ClienteLite }) {
-  const direccion = cliente
-    ? [cliente.direccion, cliente.ciudad, cliente.estado, cliente.cp].filter(Boolean).join(", ")
-    : "";
-  return (
-    <>
-      <Text style={styles.h3}>Datos del Cliente</Text>
-      <KeyValueGrid
-        columns={2}
-        items={[
-          ["Razón Social", cliente?.nombre || proforma.cliente_nombre],
-          ["RFC", cliente?.rfc || "-"],
-        ]}
-      />
-      <View style={{ marginTop: 2 }}>
-        <Text style={styles.label}>Dirección</Text>
-        <Text style={styles.value}>{direccion || "-"}</Text>
-      </View>
-    </>
-  );
+function vigenciaPlus30(fechaEmision: string): string {
+  try {
+    const d = new Date(fechaEmision);
+    d.setDate(d.getDate() + 30);
+    return formatDate(d.toISOString().substring(0, 10));
+  } catch {
+    return "—";
+  }
 }
 
 function SeccionEmbarque({ embarque }: { embarque: EmbarqueLite }) {
@@ -82,34 +51,46 @@ function SeccionEmbarque({ embarque }: { embarque: EmbarqueLite }) {
   );
 }
 
-function SeccionCondiciones({ proforma }: { proforma: ProformaRow }) {
+export function ProformaHeader({ proforma, cliente, embarque, esConsolidada }: Props) {
+  const direccion = cliente
+    ? [cliente.direccion, cliente.ciudad, cliente.estado, cliente.cp].filter(Boolean).join(", ")
+    : "";
   const credito =
     proforma.dias_credito == null
-      ? "—"
+      ? undefined
       : Number(proforma.dias_credito) === 0
         ? "Contado"
         : `${proforma.dias_credito} días`;
-  return (
-    <>
-      <Text style={styles.h3}>Condiciones Comerciales</Text>
-      <KeyValueGrid
-        columns={2}
-        items={[
-          ["Ejecutivo de Operaciones", proforma.operador || "—"],
-          ["Días de crédito", credito],
-        ]}
-      />
-    </>
-  );
-}
+  const meta = [
+    { label: "Fecha emisión", value: formatDate(proforma.fecha_emision) },
+    { label: "Vigencia", value: vigenciaPlus30(proforma.fecha_emision) },
+    { label: "Expediente", value: proforma.expediente },
+  ];
+  if (proforma.bl_master) meta.push({ label: "BL/MAWB", value: proforma.bl_master });
+  if (proforma.operador) meta.push({ label: "Ejecutivo", value: proforma.operador });
 
-export function ProformaHeader({ proforma, cliente, embarque, esConsolidada }: Props) {
   return (
     <>
-      <HeaderProforma proforma={proforma} esConsolidada={esConsolidada} />
-      <SeccionCliente proforma={proforma} cliente={cliente} />
+      <BrandHeader
+        tipoDocumento={esConsolidada ? "Proforma Consolidada" : "Proforma"}
+        folio={proforma.numero}
+        meta={meta}
+      />
+      <Text style={styles.notice}>Documento sin validez fiscal — uso interno</Text>
+      <BillToBlock
+        titulo="Facturar a"
+        destinatario={{
+          nombre: cliente?.nombre || proforma.cliente_nombre,
+          rfc: cliente?.rfc || undefined,
+          direccion: direccion || undefined,
+        }}
+      />
       {esConsolidada ? null : <SeccionEmbarque embarque={embarque} />}
-      <SeccionCondiciones proforma={proforma} />
+      <PaymentTermsBlock
+        vigencia={vigenciaPlus30(proforma.fecha_emision)}
+        metodoPago="Transferencia electrónica"
+        diasCredito={credito}
+      />
     </>
   );
 }

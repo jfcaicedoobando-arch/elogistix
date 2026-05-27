@@ -21,8 +21,8 @@ interface Props<T> {
 
 /**
  * Tabla genérica para @react-pdf/renderer. Construida con <View> en Flexbox
- * (no <table> HTML). Cada fila puede romperse entre páginas si es muy alta,
- * pero la descripción se envuelve dentro de la celda sin desbordar.
+ * (no <table> HTML). Aplica zebra striping real en filas pares para mejorar
+ * la legibilidad. Cada fila no se rompe entre páginas.
  */
 export function DataTable<T>({ columns, rows, renderSubrow }: Props<T>) {
   return (
@@ -36,9 +36,10 @@ export function DataTable<T>({ columns, rows, renderSubrow }: Props<T>) {
       </View>
       {rows.map((row, i) => {
         const subrow = renderSubrow?.(row);
+        const rowStyle = i % 2 === 1 ? styles.tableRowZebra : styles.tableRow;
         return (
           <Fragment key={i}>
-            <View style={styles.tableRow} wrap={false}>
+            <View style={rowStyle} wrap={false}>
               {columns.map((col) => (
                 <Text key={col.key} style={[styles.td, ...flat(col.cellStyle)]}>
                   {col.render ? col.render(row) : String((row as Record<string, unknown>)[col.key] ?? "")}
@@ -46,8 +47,8 @@ export function DataTable<T>({ columns, rows, renderSubrow }: Props<T>) {
               ))}
             </View>
             {subrow ? (
-              <View style={styles.tableRow} wrap={false}>
-                <Text style={[styles.td, styles.cellDesc, { fontStyle: "italic", color: "#888" }]}>
+              <View style={rowStyle} wrap={false}>
+                <Text style={[styles.td, styles.cellDesc, { fontStyle: "italic", color: "#64748B" }]}>
                   ↳ {subrow}
                 </Text>
               </View>
