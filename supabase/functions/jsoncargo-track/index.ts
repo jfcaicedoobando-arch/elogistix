@@ -4,7 +4,7 @@
 
 import { handlePreflightStrict, buildCors } from "../_shared/cors.ts";
 import { jsonResponse, errorResponse } from "../_shared/response.ts";
-import { authenticate, type AuthContext } from "../_shared/auth.ts";
+import { authenticate, checkAdminAccess, type AuthContext } from "../_shared/auth.ts";
 import { createLogger } from "../_shared/logger.ts";
 import {
   fetchContainerDetails,
