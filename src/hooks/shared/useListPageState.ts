@@ -24,7 +24,7 @@ import {
   type ParserBuilder,
 } from "nuqs";
 
-export const DEFAULT_PAGE_SIZE = 20;
+export const DEFAULT_PAGE_SIZE = 100;
 
 export interface ListPageState<TFilters extends Record<string, string>> {
   // Estado

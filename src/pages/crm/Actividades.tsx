@@ -55,7 +55,7 @@ export default function Actividades() {
   const [estado, setEstado] = useState<"pendientes" | "completadas" | "todas">(vencidasOnly ? "pendientes" : "pendientes");
   const [responsable, setResponsable] = useState<"mias" | "todos">(vencidasOnly ? "mias" : "todos");
   const [page, setPage] = useState(0);
-  const [pageSize, setPageSize] = useState(25);
+  const [pageSize, setPageSize] = useState(100);
   const debounced = useDebounce(search, 300);
 
   useEffect(() => {
@@ -131,6 +131,8 @@ export default function Actividades() {
               page, totalPages, pageSize,
               onPageChange: setPage,
               onPageSizeChange: (s) => { setPageSize(s); setPage(0); },
+              pageSizeOptions: [100, 999999],
+              pageSizeLabels: { 999999: "Todos" },
             }}
           />
         </CardContent>

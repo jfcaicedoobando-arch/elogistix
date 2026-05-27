@@ -130,6 +130,8 @@ export default function Clientes() {
               onPageChange: setPage,
               pageSize,
               onPageSizeChange: (s) => { setPageSize(s); setPage(0); },
+              pageSizeOptions: [100, 999999],
+              pageSizeLabels: { 999999: "Todos" },
             }}
           />
         </CardContent>
