@@ -1,90 +1,66 @@
-## Auditoría de los 68 hallazgos de paginación + revisión preventiva (180-200 líneas)
+# Evaluación RC — Libre Carga 11.70.0
 
-### Parte A — Triaje de los 68 hallazgos sin `.range()/.limit()/.single()`
+## ¿Estamos en estándar RC?
 
-La heurística marca cualquier `.from().select()` sin esos modificadores. La mayoría son falsos positivos (queries por PK, agregados, catálogos acotados). Se clasifican en 3 categorías:
+**Casi.** Técnicamente la baseline está en muy buen estado, pero un RC verdadero exige *code freeze* + validación externa + plan de rollback documentado, y eso aún no lo tenemos formalizado. Resumen:
 
-**Categoría 1 — Falso positivo (no requiere acción)**
-- Queries por `id`/PK que devuelven 0-1 fila pero no usan `.single()` (devuelven array). Ej: `services/cliente/relacionados.ts`, `services/embarque/queries/conceptos.ts`, `services/embarque/queries/colaterales.ts`.
-- Queries hijas de un embarque/cotización/cliente concreto (limitadas por FK). Ej: `services/embarque/eventos.ts`, `services/embarque/queries/expedientes.ts`, `services/embarque/queries/proveedores.ts`, `services/proforma/queries.ts`, `services/portal/queries.ts`.
-- Counts / agregados (`select('id', { count: 'exact' })` o similares). Ej: `services/admin/stats.ts`, `services/auditoria/index.ts` agregados.
-- `.maybeSingle()` (la heurística no lo reconoce). Ej: posibles en `services/configuracion`, `services/cliente-usuarios`.
+| Criterio RC | Estado | Comentario |
+|---|---|---|
+| Tests automatizados verdes | ✅ | 770/770, 119 suites |
+| 0 `any`, 0 casts HIGH/CRITICAL | ✅ | Power of 10 baseline |
+| Arquitectura sin imports prohibidos / archivos >200 líneas | ✅ | Guardrails activos |
+| Paginación acotada | ✅ | 0 RISK tras 11.70.0 |
+| Complejidad ≤ 15 | ✅ | Umbral 16, deuda opcional |
+| Seguridad (RLS, roles, storage) | ⚠️ | No corrimos `security_scan` ni `supabase linter` en esta versión |
+| QA manual end-to-end por humano | ❌ | No hay registro de pase manual de los flujos críticos |
+| Performance bajo carga realista | ⚠️ | Solo benchmarks de tabla virtual; falta perfil con datos de prod-like |
+| Plan de rollback / backup documentado | ⚠️ | Existe `docs/backups-rollback.md`, pero no validado este ciclo |
+| Code freeze declarado | ❌ | Sin política escrita (rama RC, criterio de aceptación de PR) |
+| Versionado RC (`12.0.0-rc.1`) | ❌ | Seguimos en `11.70.0` semver normal |
+| Changelog/release notes para usuarios | ⚠️ | CHANGELOG técnico existe; falta nota de release orientada a usuario |
 
-**Categoría 2 — Catálogo acotado (documentar + tope defensivo opcional)**
-- `services/catalogos/index.ts` (puertos, países, monedas — datasets conocidos < 1k).
-- `services/planes/index.ts` (planes SaaS — < 20 filas).
-- `services/configuracion/index.ts` (config global — 1 fila por org).
-- `services/admin/organizations.ts` (tenants — < 200 esperado).
+## Recomendación
 
-Acción: añadir `.limit(N)` defensivo donde N sea claramente > dataset esperado, sin paginación real.
+Promover a RC en **dos pasos**: primero cerrar los 4 gaps rojos/ámbar, luego cortar `12.0.0-rc.1`.
 
-**Categoría 3 — Riesgo real (requiere `.range()` o `.limit()`)**
-- `services/embarque/queries/listado.ts` líneas 14, 68, 141, 169 — si alguno alimenta lista de UI, debe paginar (el flujo principal ya usa `paginados.ts`; estos pueden ser exports o helpers).
-- `services/admin/members.ts` (miembros por org — puede crecer).
-- `services/facturas/index.ts`, `services/facturas/proyeccion.ts`, `services/facturas/huecoFacturacion.ts` — listas potencialmente largas.
-- `services/cotizacion/queries.ts` — verificar si alimenta dashboard o lista visible.
-- `services/proveedor/index.ts` — listado de proveedores.
-- `services/cliente/crud.ts` líneas 65, 76 — verificar uso.
-- `services/usuario/index.ts:29` — listado de usuarios.
-- `services/tracking/index.ts:59` — tracking events.
-- `hooks/embarque/useJsonCargoTracking.ts:220`.
+### Paso 1 — Cierre pre-RC (1 iteración)
 
-### Entregable Parte A
+1. **Seguridad backend**
+   - Correr `supabase--linter` y `security--run_security_scan`.
+   - Triagear hallazgos: arreglar HIGH/CRITICAL, documentar ignorados en `@security-memory`.
+   - Verificar RLS de tablas nuevas desde 11.60.x (clientes, embarques, CRM, portal).
+2. **QA manual estructurado**
+   - Crear `docs/rc-qa-checklist.md` con los flujos críticos: login (admin/portal/demo), alta de cliente con CSF, wizard de embarque (FCL+LCL), cotización → embarque → factura, portal cliente, bitácora, configuración global, exportaciones CSV/PDF.
+   - Marcar pase/falla por flujo; cualquier falla = bug bloqueante.
+3. **Smoke de performance**
+   - Cargar dataset realista (≥500 embarques, ≥200 cotizaciones) en Test.
+   - Medir tiempos de listado paginado, dashboard dinámico, búsqueda global (Ctrl+K). Documentar en `docs/rc-perf.md`.
+4. **Rollback verificado**
+   - Releer `docs/backups-rollback.md`, ejecutar un dry-run de restore en Test, anotar resultado.
+5. **Política de code freeze**
+   - Sección nueva en `docs/operations.md`: durante RC sólo entran fixes de bugs marcados bloqueantes; features nuevas → 12.1.x.
+6. **Notas de release usuario-final**
+   - Generar `docs/release-notes-12.0.md` (en español MX) destacando: módulos disponibles, limitaciones conocidas, requisitos, contacto soporte.
 
-1. **Nuevo script** `scripts/audit-pagination.ts` que:
-   - Recorra `src/services/**` y `src/hooks/**`.
-   - Detecte `.from('X').select(...)` sin `.range/.limit/.single/.maybeSingle`.
-   - Para cada hit, intente clasificar:
-     - **OK** si la query tiene `.eq('id'|'<x>_id', ...)` o `count: 'exact'` o `count: 'planned'`.
-     - **CATALOG** si la tabla está en una allowlist (`puertos`, `paises`, `monedas`, `planes`, `configuracion`, `organizations`).
-     - **RISK** en cualquier otro caso.
-   - Emita `docs/pagination-audit.md` con tabla + sólo el bucket **RISK** detallado.
-2. **Aplicar correcciones** sólo a los hits **RISK** confirmados manualmente:
-   - Añadir `.limit(500)` defensivo si es lista interna admin/dashboard.
-   - Añadir `.range()` + parámetros de paginación si es lista visible para el usuario.
-3. **Actualizar** `docs/power10-baseline.md` con conteo nuevo (OK / CATALOG / RISK) y enlace al nuevo doc.
+### Paso 2 — Corte RC
 
-### Parte B — Revisión preventiva de archivos 180-200 líneas (D13)
+7. Bump `APP_VERSION` → `12.0.0-rc.1`, agregar entrada en `CHANGELOG.md` y `src/pages/Changelog.tsx`.
+8. Anunciar ventana de testing (sugerido 5-7 días hábiles).
+9. Si en la ventana no hay show-stoppers → `12.0.0` (GA). Si hay fix → `12.0.0-rc.2`, recontar ventana.
 
-Lista actual (20 archivos productivos en el rango):
+## Criterio de aceptación para llamar GA
 
-```
-199 src/lib/domain/embarqueWizardSchemas.ts
-198 src/components/auditoria/HallazgosFiltros.tsx
-195 src/pages/dashboard/Bitacora.tsx
-195 src/lib/audit/diffFields.ts
-194 src/pdf/theme/styles.ts
-193 src/pages/crm/Oportunidades.tsx
-192 src/hooks/shared/useToast.ts
-192 src/components/shared/VirtualDataTable.tsx
-190 src/hooks/cliente/useClienteDetalleController.ts
-190 src/components/facturacion/proformasColumns.tsx
-187 src/pages/clientes/Clientes.tsx
-185 src/components/dashboard/EmbarquesActivosTable.tsx
-184 src/pages/portal/PortalEmbarqueDetalle.tsx
-184 src/pages/admin/Idempotencia.tsx
-183 src/lib/domain/proforma.ts
-182 src/lib/auditoria/ejecutivoAgregados.ts
-181 src/pages/cotizaciones/CotizacionDetalle.tsx
-181 src/pages/clientes/ClienteDetalle.tsx
-```
+- 0 bugs abiertos en categoría **bloqueante** o **alta** del checklist QA.
+- 0 hallazgos HIGH/CRITICAL del scanner sin ignorar justificado.
+- 770/770 tests verdes en el commit congelado.
+- Rollback dry-run exitoso documentado.
 
-Acción:
-- Revisar **sólo** los archivos > 190 líneas (los 10 superiores) en busca de:
-  - Helpers obvios que se pueden extraer sin cambiar comportamiento.
-  - Funciones únicas que aún están "pegadas" (candidatas a sub-archivo).
-- Si la división es trivial → extraer. Si requiere refactor invasivo → marcar como deuda baja en `mem://audit/pendings` y dejarlo.
-- Los archivos 180-189 líneas se ignoran (margen sano vs el cap de 250).
+## Deuda aceptable que NO bloquea RC
 
-### Entregables Parte B
-- 0-5 extracciones quirúrgicas (helpers a `lib/`, sub-componentes, etc.).
-- Nota en `docs/audit-cleanslate-11.69.0.md` §6 actualizada.
+- 38 funciones con CC 13-15 (umbral lo permite).
+- 421 casts MEDIUM en `lib/mappers/*` (política D16).
+- Caps `.limit()` en 6 agregaciones: migrar a RPC cuando se rebasen, no antes.
 
-### Versionado
-- Bump `APP_VERSION` → `11.70.0` (minor: nueva auditoría + script).
-- Entrada CHANGELOG con resumen de buckets (OK / CATALOG / RISK), correcciones aplicadas y extracciones.
+## Salida de este paso
 
-### Validación
-- `bunx vitest run` — 770/770 verde.
-- `bun scripts/audit-pagination.ts` — el conteo RISK debe quedar en 0.
-- Lint sin nuevos warnings.
+Si apruebas, en build mode ejecuto el **Paso 1** (seguridad + checklist + perf smoke + freeze policy + release notes) y dejo todo listo para que tú decidas el corte RC.
