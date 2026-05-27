@@ -43,21 +43,23 @@ export function parseConteoPorEstado(stats: DashboardStats): Record<EstadoFiltro
 
 export function parseArribosEsteMes(stats: DashboardStats): ArribosEsteMes {
   if (!stats?.arribosEsteMes) return EMPTY_ARRIBOS;
-  const raw = stats.arribosEsteMes as Record<string, number>;
+  const result = arribosEsteMesSchema.safeParse(stats.arribosEsteMes);
+  if (!result.success) return EMPTY_ARRIBOS;
+  const r = result.data;
   return {
-    total: numOr0(raw.total),
-    yaLlegaron: numOr0(raw.yaLlegaron),
-    enCamino: numOr0(raw.enCamino),
-    profitUSD: numOr0(raw.profitUSD),
-    ventaMXN: numOr0(raw.ventaMXN),
-    costoMXN: numOr0(raw.costoMXN),
-    profitMXN: numOr0(raw.profitMXN),
-    ventaMxnFromUsd: numOr0(raw.ventaMxnFromUsd),
-    costoMxnFromUsd: numOr0(raw.costoMxnFromUsd),
-    ventaMxnFromEur: numOr0(raw.ventaMxnFromEur),
-    costoMxnFromEur: numOr0(raw.costoMxnFromEur),
-    ventaMxnNative: numOr0(raw.ventaMxnNative),
-    costoMxnNative: numOr0(raw.costoMxnNative),
+    total: r.total,
+    yaLlegaron: r.yaLlegaron,
+    enCamino: r.enCamino,
+    profitUSD: r.profitUSD,
+    ventaMXN: r.ventaMXN,
+    costoMXN: r.costoMXN,
+    profitMXN: r.profitMXN,
+    ventaMxnFromUsd: r.ventaMxnFromUsd,
+    costoMxnFromUsd: r.costoMxnFromUsd,
+    ventaMxnFromEur: r.ventaMxnFromEur,
+    costoMxnFromEur: r.costoMxnFromEur,
+    ventaMxnNative: r.ventaMxnNative,
+    costoMxnNative: r.costoMxnNative,
   };
 }
 
