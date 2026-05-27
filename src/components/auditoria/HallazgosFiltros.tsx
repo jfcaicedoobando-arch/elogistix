@@ -25,10 +25,8 @@ import type { ReglaAuditoria, SeveridadAuditoria } from "@/types/auditoria";
 import { reglaLabel } from "./hallazgosTablaConfig";
 import type { FiltroRevision, FiltroResponsable } from "@/hooks/auditoria";
 import {
-  filtroResponsableSchema,
-  filtroRevisionSchema,
-  reglaAuditoriaFiltroSchema,
-  severidadFiltroSchema,
+  filtroResponsableSchema, filtroRevisionSchema,
+  reglaAuditoriaFiltroSchema, severidadFiltroSchema,
 } from "./hallazgosFiltrosSchemas";
 
 interface Props {
