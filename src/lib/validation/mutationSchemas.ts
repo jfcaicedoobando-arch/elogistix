@@ -114,7 +114,8 @@ export const cotizacionInputSchema = z.object({
     .min(1, "Vigencia: mínimo 1 día.")
     .max(365, "Vigencia: máximo 365 días."),
   subtotal: z.number().nonnegative("Subtotal: no puede ser negativo."),
-  conceptos_venta: z.array(conceptoVentaSchema).min(1, "Conceptos: se requiere al menos uno."),
+  // Permitido vacío al crear el borrador en Paso 1; los conceptos se capturan en Paso 3.
+  conceptos_venta: z.array(conceptoVentaSchema),
 }).passthrough();
 
 // ── Embarque ──────────────────────────────────────────────────────────

@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [12.0.0-rc.4] - 2026-05-27
+- **fix(cotizaciones)**: permitir crear una cotización en el Paso 1 (Datos Generales) sin `conceptos_venta`. El schema `cotizacionInputSchema` exigía `min(1)`, pero los conceptos se capturan hasta el Paso 3 — esto rompía la creación con el error "Conceptos: se requiere al menos uno." La validación de al menos un concepto sigue vigente en la UI del Paso 3 antes de finalizar.
+
 ## [12.0.0-rc.3] - 2026-05-27
 - **Branding de PDFs leído desde `configuracion.empresa`** (hoy: *Elogistix Shipping*). Eliminado el hardcode "Libre Carga" en `BrandHeader`, `Footer` y los metadatos `author` de todos los documentos.
   - Nuevo `src/pdf/emisor.ts` con caché en memoria (TTL 5 min) que lee `nombre`, `subtitulo`, `rfc`, `direccion_fiscal`, `email` y `teléfono` de la tabla `configuracion`.
