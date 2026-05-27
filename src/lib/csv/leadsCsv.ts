@@ -89,7 +89,7 @@ function assignLeadField(
   if (field === "estado") { row.estado = parseEstado(val); return; }
   if (LEAD_STRING_FIELDS.has(field)) {
     // Asignación dinámica restringida a campos string conocidos.
-    (row as Record<string, string>)[field] = val;
+    (row as unknown as Record<string, string>)[field] = val;
   }
 }
 
