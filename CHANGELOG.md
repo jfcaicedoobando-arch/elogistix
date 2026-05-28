@@ -6,6 +6,11 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [12.14.0] - 2026-05-28
+- **feat(proformas/resumen)**: Fase 6 — `ResumenConceptosVenta` muestra ahora un bloque por contenedor (con subtotales por moneda y conteo de pendientes) cuando el embarque tiene ≥2 contenedores activos. Los conceptos sin `contenedor_id` se agrupan al final como "Cargos generales del BL". Para embarques de 1 contenedor se mantiene la vista plana actual. Nuevo subcomponente `GrupoConceptosContenedor`.
+- **feat(proformas/dialogo)**: Atajo "Generar proforma" a nivel de contenedor: cada bloque del resumen tiene su propio botón que abre `DialogGenerarProforma` con `initialFiltroContenedor` ya fijo a ese contenedor y los conceptos visibles preseleccionados. Reduce el riesgo de facturar de más cuando el operador quiere emitir N proformas separadas, una por contenedor. El botón "Generar Proforma" del header sigue abriendo con filtro `todos` y todo seleccionado (sin cambios de comportamiento para el caso simple).
+- **chore**: `APP_VERSION` → 12.14.0.
+
 ## [12.13.1] - 2026-05-28
 - **fix(embarques/huerfanos)**: Hotfix de reconciliación de datos. Backfill de `puerto_origen` / `puerto_destino` e inserción de 5 `conceptos_venta` faltantes en ELIMP00231 desde su cotización origen. Soft-delete de 17 hijos vacíos de `embarque_contenedores` (5 marítimos + 12 aéreos/terrestres) sembrados por la migración inicial de Fase A sin número ni tipo de contenedor. Acción registrada en `bitacora_actividad`.
 - **fix(cotizacion→embarque)**: `convertirCotizacionAEmbarques` ahora también inserta los `conceptos_venta` desde el jsonb de la cotización al crear el embarque (antes sólo insertaba `conceptos_costo`). Previene futuros embarques sin ventas como el caso reportado.
