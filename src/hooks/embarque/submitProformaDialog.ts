@@ -8,6 +8,7 @@ import type { Tables } from "@/integrations/supabase/types";
 import type { calcularTotalesProforma } from "@/lib/domain/proforma";
 import type { FiltroContenedor } from "@/lib/domain/conceptosPorContenedor";
 import type { EmbarqueContenedor } from "@/types/embarque/contenedor";
+import type { ClienteLite } from "@/pdf/documents/proformaShared";
 
 type ConceptoVenta = Tables<"conceptos_venta">;
 type EmbarqueRow = Tables<"embarques">;
@@ -28,7 +29,7 @@ export interface SubmitProformaParams {
   totales: TotalesProforma;
   tasaIva: number;
   crearProformaMutateAsync: (args: CrearProformaArgs) => Promise<Tables<"proformas">>;
-  fetchClienteParaPdfCached: (clienteId: string) => Promise<unknown>;
+  fetchClienteParaPdfCached: (clienteId: string) => Promise<ClienteLite | undefined>;
 }
 
 function construirNotasFinales(
