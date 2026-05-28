@@ -34,6 +34,16 @@ export function useCotizacionDetalleHandlers(cotizacion: CotizacionRow | undefin
     try {
       await actualizarEstado.mutateAsync({ id: cotizacion.id, estado });
       notifySuccess(toast, { title: `Estado actualizado a "${estado}"` });
+      if (cotizacion.oportunidad_id) {
+        try {
+          await sincronizarEtapaPorEstadoCotizacion({
+            oportunidadId: cotizacion.oportunidad_id,
+            estadoCotizacion: estado,
+          });
+        } catch {
+          // No bloquear el cambio de estado de la cotización por una falla CRM.
+        }
+      }
     } catch (err: unknown) {
       notifyError(toast, { title: "Error", description: getErrorMessage(err), error: err, method: "HANDLE_CAMBIAR_ESTADO" });
     }
@@ -62,6 +72,17 @@ export function useCotizacionDetalleHandlers(cotizacion: CotizacionRow | undefin
         clienteData: clienteForm,
       });
       notifySuccess(toast, { title: `Cliente "${cliente.nombre}" creado exitosamente` });
+      if (cotizacion.oportunidad_id) {
+        try {
+          await propagarConversionProspectoCRM({
+            oportunidadId: cotizacion.oportunidad_id,
+            clienteId: cliente.id,
+            clienteNombre: cliente.nombre,
+          });
+        } catch {
+          // No bloquear la conversión de prospecto por una falla CRM.
+        }
+      }
       setShowConvertir(false);
     } catch (err: unknown) {
       notifyError(toast, { title: "Error al convertir prospecto", description: getErrorMessage(err), error: err, method: "HANDLE_CONVERTIR" });
