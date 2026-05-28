@@ -1,112 +1,65 @@
-# Plan: Cerrar pendientes antes del rediseño de proformas — estado
+## Plan: Reconciliación de embarques huérfanos (v12.13.1, hotfix)
 
-**Fase 5 ✅ completada en v12.13.0** (B-1, B-2, B-3, B-4, C-4).
-Pendientes: Fase 6 (visibilidad multi-contenedor + defaults proformas) y Fase 7 (tests + cleanup + docs).
+### Objetivo
+Restaurar los datos mínimos visibles en 12 embarques marítimos que quedaron incompletos. **No** son una regresión de Fase 5; vienen de conversiones cotización→embarque previas al fix 12.10.0 + el seed automático de `embarque_contenedores` de Fase A.
 
-Dos auditorías paralelas (multi-contenedor + módulo proformas) revelaron **8 bugs críticos** y **deuda diferida** que conviene resolver antes de tocar el workflow nuevo. **No, los pendientes del plan anterior NO eran todos**: faltaban bugs de atomicidad, idempotencia y varias vistas que aún leen el campo legacy `embarques.contenedor`.
+### Alcance (estrictamente acotado)
+- 12 embarques con `contenedor` vacío.
+- 4 embarques con `bl_master` vacío (subconjunto del anterior + algún caso aéreo).
+- Embarques con `conceptos_venta` ausentes pero con `cotizacion_id` que sí tiene `conceptos_venta` jsonb.
+- Hijos de `embarque_contenedores` con `numero_contenedor=''` sembrados por la migración Fase A.
 
-## Respuesta corta
+### Pasos
 
-- **Críticos nuevos detectados:** 8 (4 multi-contenedor + 4 proformas).
-- **Importantes:** 12 (vistas con campo legacy, PDF sin contenedores, defaults incorrectos).
-- **Tests faltantes:** 4 suites (Fase 4 original quedó incompleta).
-- **Recomendación:** ejecutar Fases 5, 6 y 7 (abajo) antes de empezar el rediseño de proformas. Total estimado: 3 versiones menores.
+**1. Auditoría detallada (read-only)**
+Script `scripts/audit-embarques-huerfanos.ts` que reporte por embarque:
+- `id`, `expediente`, `cliente_nombre`
+- Campos vacíos en `embarques`: `bl_master`, `contenedor`, `tipo_contenedor`, `puerto_origen`, `puerto_destino`, `naviera`
+- Conteo de hijos `embarque_contenedores` reales vs vacíos
+- ¿Tiene `cotizacion_id`? ¿La cotización origen tiene datos útiles (`tipo_contenedor`, `origen`, `destino`, `conceptos_venta`)?
+- ¿Tiene `conceptos_venta` cargados? ¿La cotización origen los tiene?
 
----
+Output: tabla Markdown a `/mnt/documents/embarques-huerfanos-report.md`.
 
-## Fase 5 (v12.13.0) — Críticos de datos
+**2. Reconciliación automática (script `scripts/reconciliar-embarques-huerfanos.ts`)**
+Para cada embarque huérfano, sólo aplica acciones **seguras y reversibles**:
 
-Bugs que pueden corromper datos hoy mismo. Sin esto, el rediseño hereda problemas.
+| Acción | Condición | Resultado |
+|---|---|---|
+| Backfill `tipo_contenedor` y `tipo_carga` del padre | embarque.tipo_contenedor IS NULL AND cotizacion.tipo_contenedor IS NOT NULL | UPDATE embarques |
+| Backfill `tipo_contenedor` del hijo orphan | hijo.tipo_contenedor='' AND cotizacion.tipo_contenedor IS NOT NULL | UPDATE embarque_contenedores |
+| Backfill `puerto_origen`/`destino` del padre | son NULL AND cotización tiene `origen`/`destino` | UPDATE embarques |
+| Insertar `conceptos_venta` faltantes | conceptos_venta=[] AND cotizacion.conceptos_venta jsonb tiene N>0 | INSERT bulk en `conceptos_venta` (mismas reglas que `convertirCotizacionAEmbarques`) |
+| Soft-delete hijo vacío | hijo.numero_contenedor='' AND hijo.tipo_contenedor='' AND NO se pudo backfillar tipo del cotización | UPDATE embarque_contenedores SET deleted_at=now() |
 
-1. **B-1 · `crearProforma` atómica** (`src/services/proforma/crud.ts:26-74`)
-   - Mover creación a RPC `crear_proforma_atomica` que haga en una transacción: update `aplica_iva` + insert `proformas` + update `proforma_id` en conceptos.
-   - Eliminar el compensador frágil del cliente.
+**Nunca** se inventa `bl_master` ni `numero_contenedor` (datos que sólo el operador conoce). Esos quedan vacíos y el reporte los marca como "requiere captura manual".
 
-2. **B-2 · `marcarProformaFacturada` idempotente + factura USD/MXN huérfana** (`src/services/proforma/facturar.ts:17-104`)
-   - Añadir `requestId` (uuid) y guard `WHERE factura_id IS NULL`.
-   - Cuando hay USD+MXN, persistir ambos IDs (nueva columna `factura_secundaria_id` en `proformas` o tabla puente).
-   - Diferenciar path en Storage por moneda: `${org}/${proforma}/factura-${moneda}.pdf`.
+**3. Verificación post-reconciliación**
+- Re-correr el script de auditoría → confirmar que los embarques que sí tenían fuente quedaron completos.
+- Validar embarque ELIMP00231 en preview: BL Master sigue vacío (no había fuente) PERO el hijo orphan ya está soft-deleted y los conceptos_venta aparecen si la cotización los tiene.
+- Subir reporte final a `/mnt/documents/`.
 
-3. **B-3 · Race condition `tiene_proforma`** (`src/services/proforma/crud.ts:95-107`)
-   - Quitar el `UPDATE embarques SET tiene_proforma = false` del cliente; confiar exclusivamente en el trigger DB `trg_sync_embarque_tiene_proforma`.
+**4. Hardening preventivo (1 cambio mínimo de código)**
+En `convertirCotizacionAEmbarques` (ya parchado en 12.10.0), añadir **assertion defensiva**: si la cotización no tiene `tipo_contenedor` o `conceptos_venta` poblados, **no** sembrar un hijo vacío en `embarque_contenedores` — dejar el embarque sin hijos hasta que el operador capture el contenedor en el wizard. Esto evita que se vuelvan a generar huérfanos en futuras conversiones.
 
-4. **B-4 · `ProformaDocument` sin agrupación por contenedor** (`src/pdf/documents/ProformaDocument.tsx:62-105`)
-   - Replicar el agrupador de `ProformaConsolidadaDocument` (líneas 35-45) pero usando `contenedor_id` real (no campo legacy).
-   - Si la proforma cubre 1 solo contenedor, mantener layout actual; si cubre N, secciones separadas.
+**5. Documentación**
+- `CHANGELOG.md` → `## [12.13.1]` con bullet hotfix y mención del reporte.
+- `APP_VERSION` → `12.13.1`.
 
-5. **C-4 · `sincronizarContenedores` atómica** (`src/services/embarque/contenedores/crud.ts:124-155`)
-   - Mover a RPC DB `sincronizar_contenedores_embarque(embarque_id, contenedores jsonb)` con SAVEPOINT, para evitar perder hijos si falla el INSERT después del soft-delete.
+### Detalles técnicos
 
-## Fase 6 (v12.14.0) — Multi-contenedor en vistas restantes
+- **Sin migración SQL nueva** — todo via `code--exec` + supabase service-role client, porque son UPDATEs/INSERTs de datos.
+- Los UPDATEs van con `WHERE` defensivos (`IS NULL` / `=''`) para que el script sea **idempotente**: re-correrlo no pisa datos que el operador ya capturó.
+- Cada modificación se loguea en `bitacora_actividad` con `accion='reconciliacion_huerfano_v12.13.1'` para trazabilidad.
 
-Lugares donde el código aún lee `embarques.contenedor` (legacy) en vez de `embarque_contenedores`.
+### Out of scope
+- No tocamos embarques aéreos sin BL master (otro fix, otro día).
+- No tocamos el caso ELIMP00219 (N embarques de 1 contenedor — eso ya es la realidad histórica antes del modelo 1+N).
+- No iniciamos Fase 6 — eso sigue después del hotfix.
 
-6. **C-1 · Tracking UI multi-contenedor** (`src/components/embarque/TabTracking.tsx`, `src/hooks/embarque/useTrackingLiveCard.ts`, `src/pages/portal/PortalEmbarqueDetalle.tsx`)
-   - Aceptar lista de contenedores; selector/acordeón por contenedor activo.
-   - Mantener JSONCargo deprecado (no agregar features, sólo no romper).
-
-7. **C-2 · Portal cliente** (`src/hooks/portal/usePortalEmbarquesController.ts:15`, `src/components/portal/EmbarqueCard.tsx:68`, `src/components/portal/embarqueDetalle/PortalEmbarqueResumenTab.tsx:66`)
-   - Búsqueda, card y detalle leen todos los hijos.
-   - Mostrar formato `MSCU123 +2` con tooltip.
-
-8. **C-3 · Limpiar auto-sync JSONCargo basado en campo legacy** (`src/hooks/embarque/mutations/useUpdateEmbarque.ts:52`)
-   - Reemplazar `e.contenedor` por lectura de `embarque_contenedores` (o eliminar del todo si JSONCargo va a salir pronto).
-
-9. **I-1..I-7 · Vistas que muestran sólo contenedor 1:**
-   - `ResumenCards.tsx:17` (detalle operador).
-   - `EmbarquesActivosTable.tsx:51` (dashboard).
-   - `useEmbarquesPageController.ts:115` (export CSV — añadir columna lista o filas por contenedor).
-   - `buildFilas.ts:51` + `agrupar.ts:11-26` (proyección de facturación cuenta mal).
-   - `ProformaConsolidadaDocument.tsx:38` (agrupar por `contenedor_id` real, no string legacy).
-   - `EmbarquesRelacionadosCard.tsx:55`.
-   - Estrategia común: usar `useContenedoresInfoMap` (ya existe desde 12.12.0) y mostrar `primero +N`.
-
-10. **R-1, R-2, R-3, R-5 · Defaults y caches de proformas**
-    - `TASA_IVA` hardcoded en 3 PDFs → leer siempre de `proforma.tasa_iva_aplicada` (sin default).
-    - `HistorialProformas.tsx:22` → default `"pendiente"` no `"aprobada"`.
-    - `aprobarProformas` → guard `WHERE estado_revision = 'pendiente'`.
-    - `useCrearProforma.onSuccess` → invalidar también `queryKeys.facturas.all`.
-
-## Fase 7 (v12.15.0) — Tests + cleanup + docs
-
-11. **Tests faltantes (Fase 4 original incompleta):**
-    - `sincronizarContenedores` (preserve IDs, soft-delete, fallo parcial).
-    - `useEditarEmbarqueWizard` hidratación.
-    - `convertirCotizacionAEmbarques` (1, 3, BL vs Contenedor, `num_contenedores=null`).
-    - `proforma.ts` cobertura completa de `contenedores_lista` y `MULTI_CONTENEDOR`.
-
-12. **Cleanup deuda diferida:**
-    - Split `useDialogGenerarProformaController.ts` (209 líneas) y `proforma.ts` (211).
-    - Quitar `embarqueId!` non-null assertion (`proforma.ts:151`).
-    - Distinguir `contenedor null` vs `""` en `ProformaConsolidadaDocument`.
-    - Eliminar `contenedor, tipo_contenedor` del SELECT de `fetchProformasPendientes` una vez que el fallback ya no se use.
-
-13. **Docs:**
-    - Actualizar `docs/embarques-contenedores.md` (versión, contradicción wizard, tabla de campos legacy).
-    - Nuevo `docs/proformas-pre-rediseño.md` con estado actual y handoff al rediseño.
-
-14. **Versionado:** bump `APP_VERSION` + entrada en `CHANGELOG.md` al cierre de cada fase.
-
-## Fuera de alcance (siguiente milestone)
-
-- **Rediseño del workflow de proformas** propiamente dicho (se aborda después de Fase 7 con base estable).
-- **D-4** Migración de `marcarProformaFacturada` a edge function — pertenece al rediseño.
-- Reemplazo de JSONCargo por proveedor nuevo de tracking.
-- Migración masiva de embarques legacy a `embarque_contenedores`.
-
-## Detalles técnicos
-
-- **RPC atómicas (B-1, C-4):** ambas siguen el patrón `SECURITY DEFINER` + `SET search_path = public` ya estándar en el proyecto. Validar `organization_id` dentro del RPC.
-- **`useContenedoresInfoMap` reuso:** ya bachea queries, pero hoy sólo lo usa el dashboard. Extenderlo al portal requiere pasar `organization_id` cuando el caller es cliente final (RLS lo cubre).
-- **PDF multi-contenedor (B-4):** el grupo "general" (`contenedor_id IS NULL`) debe ir al final, separado, con encabezado "Cargos generales del embarque".
-- **Tests:** usar el patrón existente con `vi.mock("@/integrations/supabase/client", ...)`.
-
-## Orden de ataque sugerido
-
-```text
-v12.13.0 (Fase 5)  → B-1, B-2, B-3, B-4, C-4   [bugs críticos]
-v12.14.0 (Fase 6)  → C-1, C-2, C-3, I-1..I-7, R-1..R-5   [visibilidad + UX]
-v12.15.0 (Fase 7)  → tests + cleanup + docs   [estabilización]
-─────────────────────────────────────────────
-v13.0.0            → rediseño del workflow de proformas
-```
+### Entregables
+1. `scripts/audit-embarques-huerfanos.ts` (read-only).
+2. `scripts/reconciliar-embarques-huerfanos.ts` (idempotente).
+3. Reporte en `/mnt/documents/embarques-huerfanos-report.md`.
+4. 1 cambio en `convertirCotizacionAEmbarques` (assertion defensiva).
+5. Bump versión `12.13.1` + CHANGELOG.
