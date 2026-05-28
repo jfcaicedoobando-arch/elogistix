@@ -91,9 +91,9 @@ export function CotizacionDetalleAcciones({
         </>
       )}
       {esAceptada && esProspecto && (
-        <Button size="sm" variant="secondary" onClick={onAbrirConvertir}>Convertir a Cliente</Button>
+        <Button size="sm" onClick={onAbrirConvertir}>Convertir a Cliente</Button>
       )}
-      {esAceptada && (
+      {esAceptada && !esProspecto && (
         <>
           <Button
             size="sm"
