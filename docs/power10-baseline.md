@@ -16,13 +16,22 @@ Las heurísticas son conservadoras (prefieren falsos positivos). Validar manualm
 
 ## Regla #4 — Archivos productivos >200 líneas (0) ✅
 
-Bloque B cerrado en 11.60.0: los 3 archivos que excedían el límite (`services/crm/leads.ts` 210, `ImportarLeadsCsvDialog` 202, `BulkImportDialog` 201) fueron refactorizados.
+Bloque B cerrado en 11.60.0 y regresiones post-12.0.0 cerradas en 12.1.0 (Fase 1 plan auditoría).
 
+Splits históricos (11.60.0):
 - `services/crm/leads.ts` → carpeta `services/crm/leads/{queries,mutations,bulk,convertir,index}.ts` (≤106 cada uno).
 - `ImportarLeadsCsvDialog.tsx` (67) + `useImportarLeadsCsv` + `ImportarLeadsCsvPreview` + `lib/csv/leadsCsv.ts`.
 - `BulkImportDialog.tsx` (114) + `BulkImportDialogParts.tsx` + `lib/csv/downloadCsvTemplate.ts`.
 
-Único oversized documentado como excepción: `src/components/ui/sidebar.tsx` (637, shadcn).
+Splits en 12.1.0:
+- `SeccionDestinatario.tsx` (321 → 113) + `seccionDestinatario/{ProspectoSection,VinculoChip,BuscadorProspectos,FormularioNuevoProspecto}`.
+- `DialogDuplicarEmbarque.tsx` (265 → 84) + `duplicarEmbarque/{useDuplicarEmbarqueDialog,CopiaContenedorRow,types}`.
+- `useCotizacionWizardSteps.ts` (212 → 163) + `handlePaso1Crm.ts`.
+- `services/crm/vincularCotizacion.ts` (202) → carpeta `vincularCotizacion/{helpers,vincularOCrear,sincronizarEtapa,propagarConversion,index}` (≤76 cada uno).
+
+**Excepciones documentadas (no cuentan como deuda):**
+- `src/components/ui/sidebar.tsx` (637) — código base shadcn/ui sin modificar.
+- `src/pdf/theme/styles.ts` (278) — `StyleSheet.create()` de @react-pdf/renderer: API exige objeto único con todos los estilos del PDF; dividirlo rompería la cohesión del documento. Inline-styles allí están permitidos por `mem://principles/inline-styles`.
 
 
 
