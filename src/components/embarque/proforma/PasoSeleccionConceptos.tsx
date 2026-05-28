@@ -23,6 +23,10 @@ export interface TotalesProforma {
 
 interface Props {
   conceptosPendientes: ConceptoVenta[];
+  conceptosVisibles: ConceptoVenta[];
+  contenedores: EmbarqueContenedor[];
+  filtroContenedor: FiltroContenedor;
+  onFiltroContenedorChange: (v: FiltroContenedor) => void;
   seleccionados: Set<string>;
   ivaPorConcepto: Record<string, boolean>;
   totales: TotalesProforma;
@@ -38,21 +42,37 @@ interface Props {
 }
 
 export function PasoSeleccionConceptos({
-  conceptosPendientes, seleccionados, ivaPorConcepto, totales, tasaIva,
+  conceptosPendientes, conceptosVisibles, contenedores,
+  filtroContenedor, onFiltroContenedorChange,
+  seleccionados, ivaPorConcepto, totales, tasaIva,
   notas, diasCredito, operadorEmbarque,
   onToggle, onToggleAll, onToggleIva, onNotasChange, onDiasCreditoChange,
 }: Props) {
-  const totalSeleccionados = seleccionados.size;
-  const allSelected = totalSeleccionados === conceptosPendientes.length && totalSeleccionados > 0;
+  const visiblesIds = conceptosVisibles.map((c) => c.id);
+  const seleccionadosVisibles = visiblesIds.filter((id) => seleccionados.has(id)).length;
+  const allSelected = visiblesIds.length > 0 && seleccionadosVisibles === visiblesIds.length;
+  const contenedorNumeroById = new Map(
+    contenedores.map((c) => [c.id, c.numero_contenedor || `#${c.orden}`]),
+  );
 
   return (
     <div className="space-y-4">
+      <FiltroContenedorChips
+        contenedores={contenedores}
+        value={filtroContenedor}
+        onChange={onFiltroContenedorChange}
+      />
       <div className="border rounded-md">
         <div className="flex items-center justify-between p-3 bg-muted/50 border-b">
           <div className="flex items-center gap-2">
             <Checkbox checked={allSelected} onCheckedChange={onToggleAll} id="all" />
             <Label htmlFor="all" className="text-sm font-medium cursor-pointer">
-              Seleccionar todos ({totalSeleccionados}/{conceptosPendientes.length})
+              Seleccionar todos ({seleccionadosVisibles}/{conceptosVisibles.length})
+              {filtroContenedor !== 'todos' && (
+                <span className="text-muted-foreground font-normal ml-1">
+                  · {conceptosPendientes.length} totales
+                </span>
+              )}
             </Label>
           </div>
           <span className="text-xs text-muted-foreground">IVA por concepto</span>
