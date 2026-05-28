@@ -98,7 +98,8 @@ export function useTabProformasPendientesController(opts?: {
     const embarqueIds = new Set(sel.map((p) => p.embarque_id));
     const clienteIds = new Set(sel.map((p) => p.cliente_id));
     if (embarqueIds.size > 1 || clienteIds.size > 1) {
-      consolidar.mutate({} as never, { onError: () => undefined });
+      // Caso imposible bajo el agrupado actual, pero falla rápido si cambia.
+      console.warn("[consolidar] selección con embarques/clientes mixtos, abortando");
       return;
     }
     consolidar.mutate(
