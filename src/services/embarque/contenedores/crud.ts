@@ -119,38 +119,28 @@ export async function reemplazarTodos(
 
 /**
  * Sincroniza la lista preservando IDs cuando coinciden.
- * Útil para edición del wizard sin romper FKs de conceptos_*.contenedor_id.
+ * C-4: usa RPC atómica para evitar dejar el embarque sin hijos si falla a media operación.
  */
 export async function sincronizarContenedores(
   embarqueId: string,
   borradores: ContenedorBorrador[],
 ): Promise<EmbarqueContenedor[]> {
-  const actuales = await listarPorEmbarque(embarqueId);
-  const idsConservados = new Set(
-    borradores.map((b) => b.id).filter((id): id is string => Boolean(id)),
-  );
+  const payload = borradores.map((b, i) => ({
+    id: b.id ?? null,
+    numero_contenedor: b.numero_contenedor,
+    tipo_contenedor: b.tipo_contenedor,
+    bl_house: b.bl_house ?? null,
+    peso_kg: b.peso_kg ?? null,
+    volumen_m3: b.volumen_m3 ?? null,
+    piezas: b.piezas ?? null,
+    orden: b.orden || i + 1,
+  }));
 
-  const paraEliminar = actuales
-    .filter((a) => !idsConservados.has(a.id))
-    .map((a) => a.id);
-  if (paraEliminar.length > 0) {
-    const { error } = await supabase
-      .from("embarque_contenedores")
-      .update({ deleted_at: new Date().toISOString() })
-      .in("id", paraEliminar);
-    if (error) throw error;
-  }
-
-  await Promise.all(
-    borradores
-      .filter((b) => b.id)
-      .map((b) => actualizar(b.id!, b)),
-  );
-
-  const nuevos = borradores.filter((b) => !b.id);
-  if (nuevos.length > 0) {
-    await crearMuchos(embarqueId, nuevos);
-  }
-
-  return listarPorEmbarque(embarqueId);
+  const { data, error } = await supabase.rpc("sincronizar_contenedores_embarque", {
+    p_embarque_id: embarqueId,
+    // SAFE-CAST: jsonb param tipado en supabase types como Json
+    p_contenedores: payload as never,
+  });
+  if (error) throw error;
+  return (data ?? []) as EmbarqueContenedor[];
 }

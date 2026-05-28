@@ -93,12 +93,14 @@ export async function fetchEmbarqueParaPdf(embarqueId: string) {
 }
 
 export async function fetchConceptosProforma(proformaId: string): Promise<ConceptoVentaRow[]> {
+  // B-4: incluir info del contenedor real (vía FK conceptos_venta.contenedor_id → embarque_contenedores)
+  // para que el PDF agrupe por contenedor cuando el embarque es multi-contenedor.
   const { data, error } = await supabase
     .from("conceptos_venta")
-    .select("*")
+    .select("*, embarque_contenedores:contenedor_id(id, numero_contenedor, tipo_contenedor)")
     .eq("proforma_id", proformaId);
   if (error) throw error;
-  return data ?? [];
+  return (data ?? []) as unknown as ConceptoVentaRow[];
 }
 
 export async function fetchConceptosConsolidados(

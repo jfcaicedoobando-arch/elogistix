@@ -2379,6 +2379,7 @@ export type Database = {
           estado_revision: string
           expediente: string
           factura_id: string | null
+          factura_secundaria_id: string | null
           fecha_emision: string
           fecha_facturacion: string | null
           folio_factura_externa: string | null
@@ -2416,6 +2417,7 @@ export type Database = {
           estado_revision?: string
           expediente: string
           factura_id?: string | null
+          factura_secundaria_id?: string | null
           fecha_emision?: string
           fecha_facturacion?: string | null
           folio_factura_externa?: string | null
@@ -2453,6 +2455,7 @@ export type Database = {
           estado_revision?: string
           expediente?: string
           factura_id?: string | null
+          factura_secundaria_id?: string | null
           fecha_emision?: string
           fecha_facturacion?: string | null
           folio_factura_externa?: string | null
@@ -2497,6 +2500,13 @@ export type Database = {
           {
             foreignKeyName: "proformas_factura_id_fkey"
             columns: ["factura_id"]
+            isOneToOne: false
+            referencedRelation: "facturas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "proformas_factura_secundaria_id_fkey"
+            columns: ["factura_secundaria_id"]
             isOneToOne: false
             referencedRelation: "facturas"
             referencedColumns: ["id"]
@@ -2973,6 +2983,7 @@ export type Database = {
               estado_revision: string
               expediente: string
               factura_id: string | null
+              factura_secundaria_id: string | null
               fecha_emision: string
               fecha_facturacion: string | null
               folio_factura_externa: string | null
@@ -3031,6 +3042,7 @@ export type Database = {
               estado_revision: string
               expediente: string
               factura_id: string | null
+              factura_secundaria_id: string | null
               fecha_emision: string
               fecha_facturacion: string | null
               folio_factura_externa: string | null
@@ -3096,6 +3108,72 @@ export type Database = {
           p_request_id?: string
         }
         Returns: Json
+      }
+      crear_proforma_atomica: {
+        Args: {
+          p_bl_master: string
+          p_cliente_id: string
+          p_cliente_nombre: string
+          p_concepto_ids: string[]
+          p_dias_credito: number
+          p_embarque_id: string
+          p_expediente: string
+          p_iva_mxn: number
+          p_iva_overrides?: Json
+          p_iva_usd: number
+          p_notas: string
+          p_operador: string
+          p_organization_id: string
+          p_subtotal_mxn: number
+          p_subtotal_usd: number
+          p_tasa_iva: number
+          p_total_mxn: number
+          p_total_usd: number
+        }
+        Returns: {
+          bl_master: string | null
+          cliente_id: string
+          cliente_nombre: string
+          consolidada_en: string | null
+          created_at: string
+          created_by: string | null
+          deleted_at: string | null
+          deleted_by: string | null
+          dias_credito: number | null
+          embarque_id: string | null
+          embarques_ids: string[] | null
+          es_consolidada: boolean
+          estado_aprobacion: string
+          estado_proforma: string
+          estado_revision: string
+          expediente: string
+          factura_id: string | null
+          factura_secundaria_id: string | null
+          fecha_emision: string
+          fecha_facturacion: string | null
+          folio_factura_externa: string | null
+          id: string
+          iva_mxn: number
+          iva_usd: number
+          notas: string | null
+          numero: string
+          operador: string | null
+          organization_id: string
+          proformas_origen: string[] | null
+          snapshot_emision: Json | null
+          subtotal_mxn: number
+          subtotal_usd: number
+          tasa_iva_aplicada: number
+          total_mxn: number
+          total_usd: number
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "proformas"
+          isOneToOne: true
+          isSetofReturn: false
+        }
       }
       current_user_client_ids: { Args: never; Returns: string[] }
       current_user_org_id: { Args: never; Returns: string }
@@ -3368,6 +3446,31 @@ export type Database = {
           embarques_demora: number
           facturas_vencidas: number
         }[]
+      }
+      sincronizar_contenedores_embarque: {
+        Args: { p_contenedores: Json; p_embarque_id: string }
+        Returns: {
+          bl_house: string
+          created_at: string
+          deleted_at: string | null
+          deleted_by: string | null
+          embarque_id: string
+          id: string
+          numero_contenedor: string
+          orden: number
+          organization_id: string
+          peso_kg: number
+          piezas: number
+          tipo_contenedor: string
+          updated_at: string
+          volumen_m3: number
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "embarque_contenedores"
+          isOneToOne: false
+          isSetofReturn: true
+        }
       }
       soft_delete_record: {
         Args: { _id: string; _table: string }

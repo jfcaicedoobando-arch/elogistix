@@ -14,6 +14,11 @@ function addDays(yyyyMmDd: string, days: number): string {
   return d.toISOString().slice(0, 10);
 }
 
+/**
+ * B-2: Marca una proforma como facturada de forma idempotente.
+ * - Si la proforma ya tiene `factura_id`, no hace nada (retorno temprano).
+ * - Cuando hay USD y MXN, crea dos facturas y persiste ambos IDs (`factura_id` + `factura_secundaria_id`).
+ */
 export async function marcarProformaFacturada(params: MarcarFacturadaParams): Promise<void> {
   const { data: proforma, error: errProf } = await supabase
     .from("proformas")
@@ -21,6 +26,11 @@ export async function marcarProformaFacturada(params: MarcarFacturadaParams): Pr
     .eq("id", params.proformaId)
     .single();
   if (errProf) throw errProf;
+
+  // Idempotencia: si ya fue facturada, salir sin tocar nada.
+  if (proforma.factura_id) {
+    return;
+  }
 
   let pdfUrl: string | null = null;
   let xmlUrl: string | null = null;
@@ -83,6 +93,7 @@ export async function marcarProformaFacturada(params: MarcarFacturadaParams): Pr
   }
 
   let primeraFacturaId: string | null = null;
+  let segundaFacturaId: string | null = null;
   if (facturasACrear.length > 0) {
     const { data: facturasCreadas, error: errFact } = await supabase
       .from("facturas")
@@ -90,6 +101,7 @@ export async function marcarProformaFacturada(params: MarcarFacturadaParams): Pr
       .select("id");
     if (errFact) throw new Error(`Error al crear factura: ${errFact.message}`);
     primeraFacturaId = facturasCreadas?.[0]?.id ?? null;
+    segundaFacturaId = facturasCreadas?.[1]?.id ?? null;
   }
 
   const { error: errUpd } = await supabase
@@ -99,7 +111,10 @@ export async function marcarProformaFacturada(params: MarcarFacturadaParams): Pr
       folio_factura_externa: params.folioFacturaExterna,
       fecha_facturacion: params.fechaFacturacion,
       factura_id: primeraFacturaId,
+      factura_secundaria_id: segundaFacturaId,
     })
-    .eq("id", params.proformaId);
+    // Guard de idempotencia a nivel DB: sólo escribir si sigue sin factura_id.
+    .eq("id", params.proformaId)
+    .is("factura_id", null);
   if (errUpd) throw errUpd;
 }
