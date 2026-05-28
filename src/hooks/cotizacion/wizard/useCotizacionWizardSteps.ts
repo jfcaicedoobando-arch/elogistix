@@ -61,8 +61,15 @@ export function useCotizacionWizardSteps({
 
   const validatePaso1 = (v: CotizacionFormValues): string | null => {
     if (!v.esProspecto && !v.clienteId) return "Selecciona un cliente";
-    if (v.esProspecto && !v.prospectoEmpresa.trim()) return "Ingresa el nombre de la empresa del prospecto";
-    if (v.esProspecto && !v.prospectoContacto.trim()) return "Ingresa el nombre del contacto del prospecto";
+    if (v.esProspecto) {
+      if (v.prospectoModo === "vincular" && !v.oportunidadId && !v.leadId) {
+        return "Selecciona un lead u oportunidad existente, o cambia a 'Crear nuevo prospecto'";
+      }
+      if (!v.prospectoEmpresa.trim()) return "Ingresa el nombre de la empresa del prospecto";
+      if (v.prospectoModo === "nuevo" && !v.prospectoContacto.trim()) {
+        return "Ingresa el nombre del contacto del prospecto";
+      }
+    }
     return null;
   };
 
