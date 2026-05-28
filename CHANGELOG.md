@@ -6,6 +6,12 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [12.14.1] - 2026-05-28
+- **feat(embarques/lista)**: Nuevo badge naranja "Datos pendientes" en la columna `Contenedores` que se muestra cuando un embarque marítimo tiene BL Master vacío o contenedores hijos sin número/tipo capturado. Tooltip detalla qué falta. `useContenedoresInfoMap` ahora calcula `incompletos` por embarque. Solo informa, no bloquea.
+- **fix(facturacion/consolidar)**: Mensajes de error claros en español al consolidar proformas (cross-embarque, cross-cliente, ya aprobadas) en lugar del error crudo de Postgres. Guard defensivo en cliente que valida `embarque_id` + `cliente_id` compartidos antes de invocar la RPC.
+- **docs**: Nueva sección "Proformas multi-contenedor" en `docs/embarques-contenedores.md` documentando agrupación, atajo por contenedor, PDFs agrupados y convención `contenedor_id = NULL` = cargo general.
+- **chore**: JSDoc en `useDialogGenerarProformaController` aclarando que días de crédito vacío se persiste como Contado. `APP_VERSION` → 12.14.1.
+
 ## [12.14.0] - 2026-05-28
 - **feat(proformas/resumen)**: Fase 6 — `ResumenConceptosVenta` muestra ahora un bloque por contenedor (con subtotales por moneda y conteo de pendientes) cuando el embarque tiene ≥2 contenedores activos. Los conceptos sin `contenedor_id` se agrupan al final como "Cargos generales del BL". Para embarques de 1 contenedor se mantiene la vista plana actual. Nuevo subcomponente `GrupoConceptosContenedor`.
 - **feat(proformas/dialogo)**: Atajo "Generar proforma" a nivel de contenedor: cada bloque del resumen tiene su propio botón que abre `DialogGenerarProforma` con `initialFiltroContenedor` ya fijo a ese contenedor y los conceptos visibles preseleccionados. Reduce el riesgo de facturar de más cuando el operador quiere emitir N proformas separadas, una por contenedor. El botón "Generar Proforma" del header sigue abriendo con filtro `todos` y todo seleccionado (sin cambios de comportamiento para el caso simple).

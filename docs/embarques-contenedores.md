@@ -98,3 +98,40 @@ Sin este paso, todos los conceptos quedaban como "General" y los chips de filtro
 - Si el embarque tiene 0 o 1 contenedor, la columna se oculta automáticamente (no aporta valor).
 - Si un concepto referencia un contenedor que se eliminó (soft-delete), se trata como "General" al filtrar (`conceptosPorContenedor.ts`).
 - El wizard de creación (`NuevoEmbarque`) **no** muestra esta columna: el embarque aún no existe, así que primero se crea con sus contenedores y luego se editan los conceptos para asignarlos.
+
+## Proformas multi-contenedor (Fase 6, v12.14.0+)
+
+Cuando un embarque tiene ≥2 contenedores activos, el flujo de facturación se
+adapta para evitar errores de sobre-facturación:
+
+- **`ResumenConceptosVenta`** agrupa los conceptos pendientes por contenedor
+  (subcomponente `GrupoConceptosContenedor`) con subtotales por moneda. Los
+  conceptos con `contenedor_id = NULL` se renderizan al final en un bloque
+  "Cargos generales del BL".
+- **Atajo "Generar proforma" por contenedor:** cada bloque tiene su propio
+  botón que abre `DialogGenerarProforma` con `initialFiltroContenedor` ya fijo
+  a ese contenedor y los conceptos visibles preseleccionados.
+- **PDFs (`ProformaDocument`, `ProformaConsolidadaDocument`):** cuando una
+  proforma cubre 2+ contenedores, los conceptos se renderizan agrupados por
+  contenedor con subtotal por grupo. Para 1 contenedor el layout queda plano.
+- **Bucket `__multi__` en `agruparProformasPendientes`:** las proformas que ya
+  consolidaron varios contenedores se muestran como un grupo virtual en la
+  bandeja de pendientes.
+
+### Convenciones
+
+- `contenedor_id = NULL` en `conceptos_venta` / `conceptos_costo` significa
+  "cargo general del BL" — siempre se incluye al generar una proforma por
+  contenedor específico.
+- `consolidar_proformas` (RPC) sólo permite consolidar proformas que comparten
+  `embarque_id` y `cliente_id`. La UI agrupa por expediente para garantizarlo;
+  el cliente añade un guard defensivo (v12.14.1) y los errores cross-embarque
+  / cross-cliente del RPC se mapean a mensajes en español.
+
+### Captura pendiente (v12.14.1)
+
+La lista de embarques (`embarqueColumns.tsx`) muestra un badge naranja
+"Datos pendientes" cuando un embarque marítimo tiene BL Master vacío o
+contenedores hijos sin número/tipo capturado. El badge sólo informa, no
+bloquea ninguna acción. Datos calculados por `useContenedoresInfoMap`
+(`incompletos`).
