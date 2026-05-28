@@ -4,7 +4,8 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import PortSelect from "@/components/selects/PortSelect";
 import NavieraSelect from "@/components/selects/NavieraSelect";
-import { useTiposContenedor } from "@/hooks/catalogos";
+import { ListaContenedoresEditable } from "@/components/embarque/contenedores/ListaContenedoresEditable";
+import { crearContenedorVacio } from "@/types/embarque/contenedor";
 import type { StepValidationErrors } from "@/lib/domain/embarqueWizardSchemas";
 import type { EmbarqueFormValues } from "@/hooks/embarque";
 
@@ -14,10 +15,30 @@ interface Props {
   errors: StepValidationErrors;
 }
 
+/** Filtra errores de filas de contenedores para no duplicar mensajes. */
+function filaErrores(errors: StepValidationErrors, index: number): string[] {
+  const out: string[] = [];
+  const numero = errors[`contenedores.${index}.numero_contenedor`];
+  const tipo = errors[`contenedores.${index}.tipo_contenedor`];
+  if (numero) out.push(numero);
+  if (tipo) out.push(tipo);
+  return out;
+}
+
 export function StepDatosRutaMaritimo({ errors }: Props) {
   const { register, watch, setValue } = useFormContext<EmbarqueFormValues>();
-  const { data: tiposContenedor = [] } = useTiposContenedor();
   const tipoServicio = watch('tipoServicio');
+  const contenedores = watch('contenedores') ?? [];
+
+  const handleTipoServicioChange = (v: string) => {
+    setValue('tipoServicio', v, { shouldValidate: true, shouldDirty: true });
+    if (v === 'LCL') {
+      setValue('tipoContenedor', 'LCL', { shouldValidate: true, shouldDirty: true });
+      setValue('contenedores', [], { shouldValidate: true, shouldDirty: true });
+    } else if (v === 'FCL' && contenedores.length === 0) {
+      setValue('contenedores', [crearContenedorVacio(1)], { shouldValidate: true, shouldDirty: true });
+    }
+  };
 
   return (
     <>
@@ -48,35 +69,42 @@ export function StepDatosRutaMaritimo({ errors }: Props) {
       <div className="space-y-2">
         <Label>Tipo de Servicio *</Label>
         <Controller name="tipoServicio" render={({ field }) => (
-          <Select value={field.value} onValueChange={(v) => { field.onChange(v); if (v === 'LCL') setValue('tipoContenedor', 'LCL'); }}>
+          <Select value={field.value} onValueChange={handleTipoServicioChange}>
             <SelectTrigger><SelectValue placeholder="FCL / LCL" /></SelectTrigger>
             <SelectContent><SelectItem value="FCL">FCL</SelectItem><SelectItem value="LCL">LCL</SelectItem></SelectContent>
           </Select>
         )} />
         {errors.tipoServicio && <p className={errClass}>{errors.tipoServicio}</p>}
       </div>
-      <div className="space-y-2">
-        <Label># Contenedor *</Label>
-        <Input {...register('contenedor')} />
-        {errors.contenedor && <p className={errClass}>{errors.contenedor}</p>}
-      </div>
-      <div className="space-y-2">
-        <Label>Tipo Contenedor *</Label>
-        <Controller name="tipoContenedor" render={({ field }) => (
-          tipoServicio === 'LCL' ? (
-            <Input value="LCL (Carga Consolidada)" disabled />
-          ) : (
-            <Select value={field.value} onValueChange={field.onChange}>
-              <SelectTrigger><SelectValue placeholder="Seleccionar tipo" /></SelectTrigger>
-              <SelectContent>
-                {tiposContenedor.filter(ct => ct.code !== 'LCL').map(ct => (
-                  <SelectItem key={ct.code} value={ct.code}>{ct.name}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          )
-        )} />
-        {errors.tipoContenedor && <p className={errClass}>{errors.tipoContenedor}</p>}
+
+      <div className="space-y-2 md:col-span-2">
+        <Label>Contenedores *</Label>
+        {tipoServicio === 'LCL' ? (
+          <Input value="LCL (Carga Consolidada) — se asigna automáticamente" disabled />
+        ) : (
+          <>
+            <Controller
+              name="contenedores"
+              render={({ field }) => (
+                <ListaContenedoresEditable
+                  value={field.value ?? []}
+                  onChange={field.onChange}
+                  minRows={1}
+                />
+              )}
+            />
+            {errors.contenedores && <p className={errClass}>{errors.contenedores}</p>}
+            {(contenedores ?? []).map((_, i) => {
+              const msgs = filaErrores(errors, i);
+              if (msgs.length === 0) return null;
+              return (
+                <p key={`err-${i}`} className={errClass}>
+                  Contenedor #{i + 1}: {msgs.join(" · ")}
+                </p>
+              );
+            })}
+          </>
+        )}
       </div>
     </>
   );
