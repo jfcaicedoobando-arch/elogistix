@@ -122,9 +122,11 @@ export function buildEmbarquePayload(
     ...partesAereo(values),
     ...partesTerrestre(values),
     ...partesFinancieras(values),
+    ...totalesDesdeContenedores(values),
     operador,
   };
 }
+
 
 export function buildConceptosVentaPayload(conceptosVenta: ConceptoVentaLocal[]) {
   return conceptosVenta
