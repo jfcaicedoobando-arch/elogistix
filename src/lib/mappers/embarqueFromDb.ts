@@ -142,5 +142,9 @@ export function mapEmbarqueRowToFormValues(embarque: EmbarqueRow): EmbarqueFormV
     ...mapAereo(embarque),
     ...mapTerrestre(embarque),
     ...mapFechasFinancieras(embarque),
+    // Hidratación dinámica de `contenedores` queda fuera de alcance:
+    // el detail-view consume `useContenedoresEmbarque` directamente.
+    contenedores: [],
   };
 }
+
