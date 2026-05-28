@@ -38,7 +38,7 @@ export function TabResumen({ embarque }: Props) {
         </Card>
       </div>
 
-      {embarque.modo === "Maritimo" && <SeccionContenedores embarqueId={embarque.id} />}
+      {embarque.modo === "Marítimo" && <SeccionContenedores embarqueId={embarque.id} />}
 
       {relacionados.length > 1 && (
         <EmbarquesRelacionadosCard

@@ -12,7 +12,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import NumericInput from "@/components/shared/NumericInput";
+import { NumericInput } from "@/components/shared/NumericInput";
 import type { ContenedorBorrador } from "@/types/embarque/contenedor";
 import type { TipoContenedor } from "@/hooks/catalogos";
 
@@ -102,7 +102,7 @@ export function FilaContenedor({
           <Label className="text-xs">Peso (kg)</Label>
           <NumericInput
             value={value.peso_kg}
-            onChange={(n) => onChange({ peso_kg: n })}
+            onChange={(n: number) => onChange({ peso_kg: n })}
             decimals
             disabled={disabled}
           />
@@ -112,7 +112,7 @@ export function FilaContenedor({
           <Label className="text-xs">Volumen (m³)</Label>
           <NumericInput
             value={value.volumen_m3}
-            onChange={(n) => onChange({ volumen_m3: n })}
+            onChange={(n: number) => onChange({ volumen_m3: n })}
             decimals
             disabled={disabled}
           />
@@ -122,7 +122,7 @@ export function FilaContenedor({
           <Label className="text-xs">Piezas</Label>
           <NumericInput
             value={value.piezas}
-            onChange={(n) => onChange({ piezas: n })}
+            onChange={(n: number) => onChange({ piezas: n })}
             disabled={disabled}
           />
         </div>
