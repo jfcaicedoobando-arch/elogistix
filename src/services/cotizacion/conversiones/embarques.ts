@@ -122,17 +122,22 @@ export async function convertirCotizacionAEmbarques(
   const ventasJsonb = Array.isArray(cotizacion.conceptos_venta) ? cotizacion.conceptos_venta : [];
   if (ventasJsonb.length > 0) {
     const ventasRows: ConceptoVentaInsert[] = ventasJsonb
-      .filter((v): v is Record<string, unknown> => typeof v === "object" && v !== null)
-      .map((v) => ({
-        embarque_id: embarque.id,
-        descripcion: String(v.descripcion ?? ""),
-        cantidad: Number(v.cantidad ?? 1),
-        precio_unitario: Number(v.precio_unitario ?? 0),
-        moneda: (v.moneda === "USD" ? "USD" : "MXN") as Moneda,
-        aplica_iva: Boolean(v.aplica_iva ?? false),
-        total: Number(v.total ?? 0),
-      }))
-      .filter((v) => v.descripcion.trim().length > 0);
+      .map((raw): ConceptoVentaInsert | null => {
+        const v = raw as Record<string, unknown> | null;
+        if (!v || typeof v !== "object") return null;
+        const descripcion = String(v.descripcion ?? "").trim();
+        if (!descripcion) return null;
+        return {
+          embarque_id: embarque.id,
+          descripcion,
+          cantidad: Number(v.cantidad ?? 1),
+          precio_unitario: Number(v.precio_unitario ?? 0),
+          moneda: (v.moneda === "USD" ? "USD" : "MXN") as Moneda,
+          aplica_iva: Boolean(v.aplica_iva ?? false),
+          total: Number(v.total ?? 0),
+        };
+      })
+      .filter((v): v is ConceptoVentaInsert => v !== null);
     if (ventasRows.length > 0) {
       const { error: errorVentas } = await supabase.from("conceptos_venta").insert(ventasRows);
       if (errorVentas) throw errorVentas;
