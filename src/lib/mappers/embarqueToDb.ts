@@ -137,6 +137,7 @@ export function buildConceptosVentaPayload(conceptosVenta: ConceptoVentaLocal[])
       precio_unitario: v.precioUnitario,
       moneda: monedaSchema.parse(v.moneda),
       total: v.cantidad * v.precioUnitario,
+      contenedor_id: v.contenedorId ?? null,
     }));
 }
 
@@ -152,5 +153,6 @@ export function buildConceptosCostoPayload(
       concepto: c.concepto,
       monto: c.monto,
       moneda: monedaSchema.parse(c.moneda),
+      contenedor_id: c.contenedorId ?? null,
     }));
 }

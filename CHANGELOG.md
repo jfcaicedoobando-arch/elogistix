@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [12.9.0] - 2026-05-28
+- **feat(embarques/conceptos)**: Cierre del pendiente crítico del refactor de contenedores. El wizard de costos (`StepCostosPrecios`) ahora muestra una columna "Contenedor" por cada concepto de costo y venta, sólo cuando el embarque tiene ≥2 contenedores (vía `SelectContenedorConcepto`). El operador puede asignar cada cargo a un contenedor específico o dejarlo como "General". `TabCostos` agrega la misma columna en modo lectura. Los mappers (`buildConceptosVentaPayload` / `buildConceptosCostoPayload`) y la hidratación al editar (`useEditarEmbarqueWizard`) ya leen/escriben `contenedor_id`. Con esto los chips de filtro de `DialogGenerarProforma` por fin separan los conceptos reales por contenedor.
+
 ## [12.8.0] - 2026-05-28
 - **feat(embarques/wizard)**: Fase G parte 2 del refactor contenedores. `StepDatosRutaMaritimo` ahora monta `ListaContenedoresEditable` para FCL (lista dinámica con N filas: número, tipo, BL House, peso, volumen, piezas) en vez de los 5 campos sueltos. En LCL se inyecta un único contenedor "LCL" automático y se muestra un input readonly informativo. La validación zod del paso 2 cambia: FCL exige `contenedores.length >= 1` y que cada fila tenga número + tipo (mensajes nuevos en `errorCatalog`). El submit (`useCreateEmbarque` + orchestrator) inserta los contenedores hijos en `embarque_contenedores` tras crear el embarque; el trigger DB mantiene `embarques.contenedor / tipo_contenedor / peso_kg / volumen_m3 / piezas` como espejo del primer contenedor para reportes y compatibilidad. `buildEmbarquePayload` deriva esos campos legacy del primer contenedor y suma totales (peso/volumen/piezas) de todas las filas.
 

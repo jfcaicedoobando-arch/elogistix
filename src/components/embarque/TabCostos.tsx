@@ -1,3 +1,4 @@
+import { useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -6,6 +7,7 @@ import { formatCurrency, toTitleCase } from "@/lib/formatters";
 import { getEstadoColor } from "@/lib/ui/uiMappings";
 import EmptyState from "@/components/empty/EmptyState";
 import { DataTable, defineColumns, type ColumnDef } from "@/components/shared/DataTable";
+import { useContenedoresEmbarque } from "@/hooks/embarque/useContenedoresEmbarque";
 import type { ConceptoVentaRow, ConceptoCostoRow } from "@/hooks/embarque";
 
 interface Props {
@@ -26,24 +28,49 @@ const kpiColors = [
   'border-l-4 border-l-info',
 ];
 
-const ventaColumns: ColumnDef<ConceptoVentaRow, unknown>[] = defineColumns<ConceptoVentaRow>([
-  { id: "concepto", header: "Concepto", cell: ({ row }) => row.original.descripcion },
-  { id: "cant", header: "Cant.", meta: { align: "right", className: "tabular-nums" }, cell: ({ row }) => row.original.cantidad },
-  { id: "pu", header: "P. Unitario", meta: { align: "right", className: "tabular-nums" }, cell: ({ row }) => formatCurrency(Number(row.original.precio_unitario), row.original.moneda) },
-  { id: "moneda", header: "Moneda", cell: ({ row }) => row.original.moneda },
-  { id: "total", header: "Total", meta: { align: "right", className: "font-medium tabular-nums" }, cell: ({ row }) => formatCurrency(Number(row.original.total), row.original.moneda) },
-]);
-
-const costoColumns: ColumnDef<ConceptoCostoRow, unknown>[] = defineColumns<ConceptoCostoRow>([
-  { id: "proveedor", header: "Proveedor", cell: ({ row }) => <span title={row.original.proveedor_nombre}>{toTitleCase(row.original.proveedor_nombre)}</span> },
-  { id: "concepto", header: "Concepto", cell: ({ row }) => row.original.concepto },
-  { id: "monto", header: "Monto", meta: { align: "right", className: "font-medium tabular-nums" }, cell: ({ row }) => formatCurrency(Number(row.original.monto), row.original.moneda) },
-  { id: "moneda", header: "Moneda", cell: ({ row }) => row.original.moneda },
-  { id: "liq", header: "Liquidación", cell: ({ row }) => <Badge className={getEstadoColor(row.original.estado_liquidacion)}>{row.original.estado_liquidacion}</Badge> },
-]);
-
 export function TabCostos({ conceptosVenta, conceptosCosto, totalVenta, totalCosto, utilidad, margen, embarqueId, canEdit }: Props) {
   const navigate = useNavigate();
+  const { data: contenedores = [] } = useContenedoresEmbarque(embarqueId ?? '');
+  const showContenedorCol = contenedores.length >= 2;
+  const contenedorLabelById = useMemo(() => {
+    const map = new Map<string, string>();
+    contenedores.forEach(c => map.set(c.id, c.numero_contenedor || `Contenedor ${c.orden}`));
+    return map;
+  }, [contenedores]);
+
+  const renderContenedor = (id: string | null | undefined) =>
+    id ? (contenedorLabelById.get(id) ?? 'General') : <span className="text-muted-foreground">General</span>;
+
+  const ventaColumns = useMemo<ColumnDef<ConceptoVentaRow, unknown>[]>(() => {
+    const base: ColumnDef<ConceptoVentaRow, unknown>[] = [
+      { id: "concepto", header: "Concepto", cell: ({ row }) => row.original.descripcion },
+      { id: "cant", header: "Cant.", meta: { align: "right", className: "tabular-nums" }, cell: ({ row }) => row.original.cantidad },
+      { id: "pu", header: "P. Unitario", meta: { align: "right", className: "tabular-nums" }, cell: ({ row }) => formatCurrency(Number(row.original.precio_unitario), row.original.moneda) },
+      { id: "moneda", header: "Moneda", cell: ({ row }) => row.original.moneda },
+    ];
+    if (showContenedorCol) {
+      base.push({ id: "contenedor", header: "Contenedor", cell: ({ row }) => renderContenedor(row.original.contenedor_id) });
+    }
+    base.push({ id: "total", header: "Total", meta: { align: "right", className: "font-medium tabular-nums" }, cell: ({ row }) => formatCurrency(Number(row.original.total), row.original.moneda) });
+    return defineColumns<ConceptoVentaRow>(base);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [showContenedorCol, contenedorLabelById]);
+
+  const costoColumns = useMemo<ColumnDef<ConceptoCostoRow, unknown>[]>(() => {
+    const base: ColumnDef<ConceptoCostoRow, unknown>[] = [
+      { id: "proveedor", header: "Proveedor", cell: ({ row }) => <span title={row.original.proveedor_nombre}>{toTitleCase(row.original.proveedor_nombre)}</span> },
+      { id: "concepto", header: "Concepto", cell: ({ row }) => row.original.concepto },
+      { id: "monto", header: "Monto", meta: { align: "right", className: "font-medium tabular-nums" }, cell: ({ row }) => formatCurrency(Number(row.original.monto), row.original.moneda) },
+      { id: "moneda", header: "Moneda", cell: ({ row }) => row.original.moneda },
+    ];
+    if (showContenedorCol) {
+      base.push({ id: "contenedor", header: "Contenedor", cell: ({ row }) => renderContenedor(row.original.contenedor_id) });
+    }
+    base.push({ id: "liq", header: "Liquidación", cell: ({ row }) => <Badge className={getEstadoColor(row.original.estado_liquidacion)}>{row.original.estado_liquidacion}</Badge> });
+    return defineColumns<ConceptoCostoRow>(base);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [showContenedorCol, contenedorLabelById]);
+
   const kpis = [
     { label: 'Total Venta', value: formatCurrency(totalVenta), color: '' },
     { label: 'Total Costo', value: formatCurrency(totalCosto), color: '' },

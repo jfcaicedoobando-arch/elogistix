@@ -76,3 +76,25 @@ A partir de v12.8.0, el wizard "Nuevo Embarque" usa la lista dinámica de conten
 - **Aéreo / Terrestre**: `contenedores` queda vacío y no se insertan filas hijas.
 
 El submit (`useEmbarqueSubmitOrchestrator` → `useCreateEmbarque`) llama `crearMuchos(embarqueId, contenedores)` después de `crearEmbarqueRpc`. El trigger DB sincroniza `embarques.contenedor`, `tipo_contenedor`, `peso_kg`, `volumen_m3` y `piezas` desde la tabla hija para mantener compatibilidad con reportes y queries legacy.
+
+## Asignar conceptos a un contenedor (v12.9.0)
+
+Al **editar** un embarque con ≥2 contenedores, el paso de Costos del wizard muestra una columna extra "Contenedor" en cada fila de costo y de venta (componente `SelectContenedorConcepto`). Opciones:
+
+- **General (todo el embarque)** → `contenedor_id = null`. Es el default y siempre aparece en cualquier filtro de proforma.
+- **Cualquier contenedor del embarque** → guarda el `id` del contenedor.
+
+`TabCostos` también incluye la columna "Contenedor" en modo lectura.
+
+### Por qué importa
+
+Sin este paso, todos los conceptos quedaban como "General" y los chips de filtro por contenedor en `DialogGenerarProforma` (v12.6.0) no separaban nada. Con la asignación habilitada, generar una "Proforma del Contenedor MSCU123…" trae sólo:
+
+1. Los conceptos asignados a ese contenedor.
+2. Los conceptos generales (aplican a todo el embarque).
+
+### Reglas
+
+- Si el embarque tiene 0 o 1 contenedor, la columna se oculta automáticamente (no aporta valor).
+- Si un concepto referencia un contenedor que se eliminó (soft-delete), se trata como "General" al filtrar (`conceptosPorContenedor.ts`).
+- El wizard de creación (`NuevoEmbarque`) **no** muestra esta columna: el embarque aún no existe, así que primero se crea con sus contenedores y luego se editan los conceptos para asignarlos.

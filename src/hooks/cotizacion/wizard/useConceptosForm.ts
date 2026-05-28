@@ -9,10 +9,10 @@ interface UseConceptosFormOptions {
 
 export function useConceptosForm(opciones: UseConceptosFormOptions = {}) {
   const [conceptosVenta, setConceptosVenta] = useState<ConceptoVentaLocal[]>(
-    opciones.ventaInicial ?? [{ id: 1, concepto: '', cantidad: 1, precioUnitario: 0, moneda: 'MXN' }]
+    opciones.ventaInicial ?? [{ id: 1, concepto: '', cantidad: 1, precioUnitario: 0, moneda: 'MXN', contenedorId: null }]
   );
   const [conceptosCosto, setConceptosCosto] = useState<ConceptoCostoLocal[]>(
-    opciones.costoInicial ?? [{ id: 1, proveedorId: '', concepto: '', monto: 0, moneda: 'MXN' }]
+    opciones.costoInicial ?? [{ id: 1, proveedorId: '', concepto: '', monto: 0, moneda: 'MXN', contenedorId: null }]
   );
   const [nextVentaId, setNextVentaId] = useState(
     (opciones.ventaInicial?.length ?? 1) + 1
@@ -21,12 +21,12 @@ export function useConceptosForm(opciones: UseConceptosFormOptions = {}) {
     (opciones.costoInicial?.length ?? 1) + 1
   );
 
-  const updateConceptoVenta = (id: number, field: keyof ConceptoVentaLocal, value: string | number | boolean) => {
+  const updateConceptoVenta = (id: number, field: keyof ConceptoVentaLocal, value: string | number | boolean | null) => {
     setConceptosVenta(prev => prev.map(c => c.id === id ? { ...c, [field]: value } : c));
   };
 
   const addConceptoVenta = () => {
-    setConceptosVenta(prev => [...prev, { id: nextVentaId, concepto: '', cantidad: 1, precioUnitario: 0, moneda: 'MXN' }]);
+    setConceptosVenta(prev => [...prev, { id: nextVentaId, concepto: '', cantidad: 1, precioUnitario: 0, moneda: 'MXN', contenedorId: null }]);
     setNextVentaId(n => n + 1);
   };
 
@@ -34,12 +34,12 @@ export function useConceptosForm(opciones: UseConceptosFormOptions = {}) {
     setConceptosVenta(prev => prev.filter(c => c.id !== id));
   };
 
-  const updateConceptoCosto = (id: number, field: keyof ConceptoCostoLocal, value: string | number | boolean) => {
+  const updateConceptoCosto = (id: number, field: keyof ConceptoCostoLocal, value: string | number | boolean | null) => {
     setConceptosCosto(prev => prev.map(c => c.id === id ? { ...c, [field]: value } : c));
   };
 
   const addConceptoCosto = () => {
-    setConceptosCosto(prev => [...prev, { id: nextCostoId, proveedorId: '', concepto: '', monto: 0, moneda: 'MXN' }]);
+    setConceptosCosto(prev => [...prev, { id: nextCostoId, proveedorId: '', concepto: '', monto: 0, moneda: 'MXN', contenedorId: null }]);
     setNextCostoId(n => n + 1);
   };
 

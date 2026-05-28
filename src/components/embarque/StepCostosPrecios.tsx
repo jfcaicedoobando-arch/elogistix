@@ -10,6 +10,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { CATALOGO_CONCEPTOS } from "@/constants/embarqueConstants";
 import { ValidationAlert } from "@/components/feedback/ValidationAlert";
 import { NumericInput } from "@/components/shared/NumericInput";
+import { SelectContenedorConcepto } from "@/components/embarque/conceptos/SelectContenedorConcepto";
+import { useContenedoresEmbarque } from "@/hooks/embarque/useContenedoresEmbarque";
 import type { StepValidationErrors } from "@/lib/domain/embarqueWizardSchemas";
 import type { EmbarqueFormValues } from "@/hooks/embarque";
 import type { ConceptoVentaLocal as ConceptoVentaRow, ConceptoCostoLocal as ConceptoCostoRow } from "@/types/concepto";
@@ -26,13 +28,15 @@ interface Props {
   subtotalVenta: number;
   totalCosto: number;
   utilidadEstimada: number;
-  updateConceptoVenta: (id: number, field: keyof ConceptoVentaRow, value: string | number | boolean) => void;
+  updateConceptoVenta: (id: number, field: keyof ConceptoVentaRow, value: string | number | boolean | null) => void;
   addConceptoVenta: () => void;
   removeConceptoVenta: (id: number) => void;
-  updateConceptoCosto: (id: number, field: keyof ConceptoCostoRow, value: string | number | boolean) => void;
+  updateConceptoCosto: (id: number, field: keyof ConceptoCostoRow, value: string | number | boolean | null) => void;
   addConceptoCosto: () => void;
   removeConceptoCosto: (id: number) => void;
   errors?: StepValidationErrors;
+  /** Sólo presente al editar un embarque existente. Habilita la columna "Contenedor". */
+  embarqueId?: string;
 }
 
 export function StepCostosPrecios(props: Props) {
@@ -42,6 +46,7 @@ export function StepCostosPrecios(props: Props) {
     updateConceptoVenta, addConceptoVenta, removeConceptoVenta,
     updateConceptoCosto, addConceptoCosto, removeConceptoCosto,
     errors = {},
+    embarqueId,
   } = props;
 
   const { watch, register } = useFormContext<EmbarqueFormValues>();
@@ -64,6 +69,17 @@ export function StepCostosPrecios(props: Props) {
 
   const hasErrors = Object.keys(errors).length > 0;
 
+  // Sólo en edición: si el embarque tiene ≥2 contenedores, mostramos columna extra.
+  const { data: contenedoresEmb = [] } = useContenedoresEmbarque(embarqueId ?? '');
+  const showContenedorCol = !!embarqueId && contenedoresEmb.length >= 2;
+
+  const costoCols = showContenedorCol
+    ? "grid-cols-[1fr_1fr_120px_90px_140px_110px_40px]"
+    : "grid-cols-[1fr_1fr_120px_90px_110px_40px]";
+  const ventaCols = showContenedorCol
+    ? "grid-cols-[1fr_80px_120px_90px_140px_110px_40px]"
+    : "grid-cols-[1fr_80px_120px_90px_110px_40px]";
+
   return (
     <div className="space-y-6">
       {hasErrors && <ValidationAlert severity="error" errors={errors} />}
@@ -71,13 +87,15 @@ export function StepCostosPrecios(props: Props) {
         <CardHeader><CardTitle className="text-sm">Conceptos de Costo</CardTitle></CardHeader>
         <CardContent>
           <div className="space-y-3">
-            <div className="grid grid-cols-[1fr_1fr_120px_90px_110px_40px] gap-2 text-xs font-medium text-muted-foreground">
-              <span>Proveedor</span><span>Concepto</span><span>Subtotal (sin IVA)</span><span>Moneda</span><span>Total USD</span><span></span>
+            <div className={`grid ${costoCols} gap-2 text-xs font-medium text-muted-foreground`}>
+              <span>Proveedor</span><span>Concepto</span><span>Subtotal (sin IVA)</span><span>Moneda</span>
+              {showContenedorCol && <span>Contenedor</span>}
+              <span>Total USD</span><span></span>
             </div>
             {conceptosCosto.map(costo => {
               const totalUSD = toUSD(costo.monto, costo.moneda);
               return (
-                <div key={costo.id} className="grid grid-cols-[1fr_1fr_120px_90px_110px_40px] gap-2 items-center">
+                <div key={costo.id} className={`grid ${costoCols} gap-2 items-center`}>
                   <Select value={costo.proveedorId} onValueChange={v => updateConceptoCosto(costo.id, 'proveedorId', v)}>
                     <SelectTrigger className="text-sm"><SelectValue placeholder="Proveedor" /></SelectTrigger>
                     <SelectContent>{proveedoresDb.map(p => <SelectItem key={p.id} value={p.id}>{p.nombre.split(' ').slice(0, 2).join(' ')}</SelectItem>)}</SelectContent>
@@ -91,6 +109,14 @@ export function StepCostosPrecios(props: Props) {
                     <SelectTrigger className="text-sm"><SelectValue /></SelectTrigger>
                     <SelectContent><SelectItem value="MXN">MXN</SelectItem><SelectItem value="USD">USD</SelectItem><SelectItem value="EUR">EUR</SelectItem></SelectContent>
                   </Select>
+                  {showContenedorCol && (
+                    <SelectContenedorConcepto
+                      embarqueId={embarqueId!}
+                      value={costo.contenedorId ?? null}
+                      onChange={v => updateConceptoCosto(costo.id, 'contenedorId', v)}
+                      className="text-sm"
+                    />
+                  )}
                   <Input readOnly value={formatCurrency(totalUSD, 'USD')} className="text-sm bg-muted font-semibold" />
                   <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => removeConceptoCosto(costo.id)} disabled={conceptosCosto.length <= 1} aria-label="Eliminar concepto de costo">
                     <Trash2 className="h-4 w-4 text-destructive" />
@@ -109,13 +135,15 @@ export function StepCostosPrecios(props: Props) {
         <CardHeader><CardTitle className="text-sm">Conceptos de Venta</CardTitle></CardHeader>
         <CardContent>
           <div className="space-y-3">
-            <div className="grid grid-cols-[1fr_80px_120px_90px_110px_40px] gap-2 text-xs font-medium text-muted-foreground">
-              <span>Concepto</span><span>Cantidad</span><span>Subtotal (sin IVA)</span><span>Moneda</span><span>Total USD</span><span></span>
+            <div className={`grid ${ventaCols} gap-2 text-xs font-medium text-muted-foreground`}>
+              <span>Concepto</span><span>Cantidad</span><span>Subtotal (sin IVA)</span><span>Moneda</span>
+              {showContenedorCol && <span>Contenedor</span>}
+              <span>Total USD</span><span></span>
             </div>
             {conceptosVenta.map(venta => {
               const totalUSD = toUSD(venta.precioUnitario, venta.moneda);
               return (
-                <div key={venta.id} className="grid grid-cols-[1fr_80px_120px_90px_110px_40px] gap-2 items-center">
+                <div key={venta.id} className={`grid ${ventaCols} gap-2 items-center`}>
                   <Select value={venta.concepto} onValueChange={v => updateConceptoVenta(venta.id, 'concepto', v)}>
                     <SelectTrigger className="text-sm"><SelectValue placeholder="Seleccionar" /></SelectTrigger>
                     <SelectContent>{CATALOGO_CONCEPTOS.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}</SelectContent>
@@ -126,6 +154,14 @@ export function StepCostosPrecios(props: Props) {
                     <SelectTrigger className="text-sm"><SelectValue /></SelectTrigger>
                     <SelectContent><SelectItem value="MXN">MXN</SelectItem><SelectItem value="USD">USD</SelectItem><SelectItem value="EUR">EUR</SelectItem></SelectContent>
                   </Select>
+                  {showContenedorCol && (
+                    <SelectContenedorConcepto
+                      embarqueId={embarqueId!}
+                      value={venta.contenedorId ?? null}
+                      onChange={v => updateConceptoVenta(venta.id, 'contenedorId', v)}
+                      className="text-sm"
+                    />
+                  )}
                   <Input readOnly value={formatCurrency(totalUSD, 'USD')} className="text-sm bg-muted font-semibold" />
                   <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => removeConceptoVenta(venta.id)} disabled={conceptosVenta.length <= 1} aria-label="Eliminar concepto de venta">
                     <Trash2 className="h-4 w-4 text-destructive" />

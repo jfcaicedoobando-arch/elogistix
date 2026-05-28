@@ -104,6 +104,7 @@ export default function EditarEmbarque() {
             updateConceptoCosto={updateConceptoCosto}
             addConceptoCosto={addConceptoCosto}
             removeConceptoCosto={removeConceptoCosto}
+            embarqueId={id}
           />
         )}
       </EmbarqueWizardLayout>
