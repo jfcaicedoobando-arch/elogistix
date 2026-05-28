@@ -1,63 +1,75 @@
-# Estabilización para cierre de 12.0.0
+# Plan: Cerrar pendientes auditoría arquitectónica (12.x)
 
-Objetivo: Pasar de `12.0.0-rc.17` a `12.0.0` final con un único rc de estabilización (`rc.18`) que deje el major listo, sin agregar features.
+Objetivo: liquidar toda la deuda registrada en `mem://audit/pendings`. Se agrupa por fases ordenadas de menor a mayor riesgo, cada una es una versión menor independiente con su propio `CHANGELOG.md` y bump de `APP_VERSION`.
 
-## Alcance
+---
 
-Sólo limpieza, documentación y verificaciones automáticas. No nuevas funcionalidades. No smoke test manual (queda bajo responsabilidad del usuario).
+## Fase 1 — Cosmético / Power of 10 (12.1.0)
+Riesgo bajo, sin cambios de comportamiento.
 
-## Pasos
+- **B6** Split `ImportarLeadsCsvDialog` (202) y `BulkImportDialog` (201): extraer `useImportarLeadsCsv` / `useBulkImport` + subcomponentes (`PreviewTable`, `MappingStep`, `ResultSummary`). Objetivo ≤200 líneas.
+- **B7** Documentar excepción de `components/ui/sidebar.tsx` (shadcn base) en `docs/power10-baseline.md`.
+- **C10** Auditar los 25 `style={{…}}` inline. Reemplazar por clases Tailwind o tokens; dejar SAFE-CAST con justificación en los casos válidos (react-pdf, virtualizer, % dinámico, color desde DB) según `mem://principles/inline-styles`.
+- **C11** Homogeneizar prefijos: renombrar `Configuracion.tsx` → `TabConfiguracion.tsx` (o viceversa según convención dominante) y normalizar pestañas dentro del mismo módulo.
 
-### 1. Revisión de pendientes de auditoría
+## Fase 2 — Reorganización CRM y rutas (12.2.0)
+Renombres puros + reubicación, sin tocar lógica.
 
-Revisar `mem://audit/pendings` y clasificar cada item abierto en:
-- **Bloqueante para 12.0.0** → se aborda en rc.18.
-- **Diferido a 12.x** → se documenta explícitamente como deuda asumida.
+- **C9** Mover/renombrar `hooks/crm/{automatizacionesEtapaActions, leadEditDirty, oportunidadFormHelpers, oportunidadPayload}`:
+  - Shims tras Lote 4 → mover a `lib/crm/` con nombre sin prefijo `use*`.
+  - Los que sí son hooks reales mantenerlos en `hooks/crm/` con nombre `useXxx`.
+- **D12** Dividir `src/routes.tsx` en `routes/{admin,portal,crm,public}.tsx` + `routes/index.tsx` que componga. Mantener lazy-loading y guards actuales.
 
-Estado actual conocido: Bloque A cerrado. Pendientes son cosméticos (B6, B7, C9-C11, D12) + previos (P1.5-1.7, refactor complejidad, P3.13-16, edge functions). Propuesta: **todos diferidos a 12.x**, ninguno bloquea el major. Sólo se actualiza el archivo de pendings para reflejar el corte de versión.
+## Fase 3 — Zod en boundary Supabase (12.3.0)
+- **P1.7** Crear schemas zod para embarques, facturas y cotizaciones en `lib/schemas/`. Reemplazar `fromDb<T>()` por `Schema.parse()` en `services/{embarque,facturas,cotizacion}/queries/*`. Errores de parseo → `console.error` + fallback seguro (no romper UI). Tests por schema con fixture real.
 
-### 2. Linter de Supabase
+## Fase 4 — Romper servicios "god" (12.4.0)
+- **P1.6** Split:
+  - `services/facturas/proyeccion.ts` → `proyeccion/{calculator,grouper,formatter}.ts`.
+  - `services/cotizacion/mutations.ts` → `mutations/{create,update,duplicate,delete,status}.ts`.
+  - `services/facturas/huecoFacturacion.ts` → `huecoFacturacion/{detector,resolver,reporter}.ts`.
+- Mantener API pública vía `index.ts` para evitar cambios en consumidores.
 
-Ejecutar `supabase--linter`. Resolver únicamente hallazgos `ERROR` o `WARN` de seguridad (RLS, search_path, security definer). Hallazgos `INFO` se difieren.
+## Fase 5 — Unificación utils (12.5.0)
+- **P1.5** Consolidar `src/utils/`, `src/lib/utils.ts` y `src/lib/utils/` en:
+  - `lib/utils/` (helpers puros de presentación)
+  - `lib/io/` (parsing, IO, formato)
+- Migración con `git mv` lote por lote + codemod de imports + `bun run audit:arch` verde tras cada lote.
 
-### 3. Changelog consolidado 12.0.0
+## Fase 6 — Bajar complejidad ciclomática (12.6.0)
+- **Refactor complexity** Las 13 funciones en `src/` con complexity 15:
+  - Extraer guards tempranos, mover ramas a helpers en `lib/`.
+  - Una vez todas ≤12, bajar guardrail ESLint `complexity: ["error", 12]`.
+- **Edge functions** Mismo tratamiento en `supabase/functions/{create-user, delete-user, invite-client-user}` (15) y `_shared/jsoncargoSync` (14). Cubrir con tests `supabase--test_edge_functions` antes y después.
 
-Editar `CHANGELOG.md` (root) agregando un bloque nuevo `## [12.0.0] - YYYY-MM-DD` **arriba** de los rc.x, con un resumen narrativo agrupado por área:
+## Fase 7 — Mejora continua (12.7.0)
+- **P3.13** Ampliar suite E2E: flujos CRM→Cotización→Embarque, portal cliente, multi-tenant switch.
+- **P3.14** Convención de nombres hooks: documentar en `docs/conventions.md` + regla ESLint custom (`useXxx` solo si retorna hook real).
+- **P3.15** Split `TrackingPublico` (página pública de tracking) en subcomponentes + hook de datos.
+- **P3.16** Introducir patrón `Result<T,E>` en `lib/result.ts` y migrar 3 services piloto (`embarque/mutations`, `facturas/mutations`, `cotizacion/mutations`).
 
-- **CRM ↔ Cotizaciones**: vincular/crear prospecto, mapeo de etapas, propagación a cliente.
-- **Embarques**: ciclo 7 estados, timeline automático, alertas demurrage, liquidación, docs.
-- **Multi-tenant**: impersonación, demo readonly, unified user management, unified login.
-- **Portal de cliente**: RPCs seguros, layout limpio.
-- **Dashboard operativo**: categorías de riesgo, alerts sidebar.
-- **Cotizaciones**: wizard, prospectos, incoterms estándar, conversión a embarque.
-- **Auditoría arquitectónica**: Power of 10, storage RLS, browser storage wrapper, baseline de imports.
-- **Infraestructura**: tipos de cambio dinámicos, paginación servidor, estandarización de tablas, chunk load recovery.
+---
 
-No se eliminan los bloques `rc.1` a `rc.18`; quedan como historial.
+## Detalles técnicos comunes
 
-### 4. Bump de versión
+- Por cada fase: rama mental → cambios → `bun run audit:arch` → tests → `supabase--linter` (solo si tocó SQL) → bump `APP_VERSION` + bloque en `CHANGELOG.md` (root).
+- Mantener baseline arquitectónico vacío (`architecture-baseline.test.ts` debe seguir verde).
+- Cumplir Power of 10 (`mem://principles/power-of-10`): componentes ≤200, sin `any`, cleanup en effects, manejar `error` de Supabase.
+- Actualizar `mem://audit/pendings` al final de cada fase eliminando los ítems cerrados.
+- Sin cambios visuales salvo C10/C11.
+- Sin nuevas features.
 
-`src/constants/appVersion.ts`: `12.0.0-rc.17` → `12.0.0-rc.18` durante el trabajo, y al final del rc.18 → `12.0.0` (sin sufijo). Cada bump con su entrada en `CHANGELOG.md`.
-
-### 5. Actualización de memorias
-
-Revisar el índice `mem://index.md` y abrir cualquier memoria potencialmente desactualizada por los cambios CRM-Cotización (`mem://features/cotizacion-crm-integration` si existe, `mem://features/standard-incoterms`, `mem://features/multi-tenant-architecture`). Sólo corrección, no expansión.
+## Orden sugerido de ejecución
+1. Fase 1 (rápida, alto valor cosmético).
+2. Fase 2 (renombres, bajo riesgo).
+3. Fase 3 (zod, base para todo lo demás).
+4. Fase 4 (split servicios apoyado en zod).
+5. Fase 5 (utils, requiere fases previas estables).
+6. Fase 6 (complejidad, ya con código más modular).
+7. Fase 7 (mejora continua, opcional/incremental).
 
 ## Fuera de alcance
-
-- Smoke test manual del flujo CRM ↔ Cotización (lo hace el usuario).
-- Cualquier feature nueva.
-- Refactors de los pendientes B/C/D y P1.x (se difieren a 12.x).
-- Cambios visuales.
-
-## Entregables
-
-1. `supabase--linter` sin errores de seguridad.
-2. `CHANGELOG.md` con bloque `## [12.0.0]` narrativo arriba.
-3. `APP_VERSION = "12.0.0"`.
-4. `mem://audit/pendings` actualizado con corte 12.0.0 y lista clara de deuda diferida a 12.x.
-
-## Detalle técnico
-
-- Orden de commits sugerido: (1) linter fixes si aplica, (2) bump a `rc.18` + nota corta, (3) cambios de memoria/pendings, (4) bump final a `12.0.0` con el bloque narrativo consolidado.
-- El bloque `## [12.0.0]` no duplica bullets de los rc; resume por área de producto en lenguaje orientado a usuario final.
+- Nuevas features de producto.
+- Cambios de diseño visual no listados.
+- WARN preexistentes del linter Supabase (extensions in public, SECURITY DEFINER portal) — se mantienen como deuda asumida.
+- Smoke test manual.
