@@ -6,6 +6,11 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [12.12.0] - 2026-05-28
+- **feat(embarques/wizard)**: Fase 2 del refactor multi-contenedor. `useEditarEmbarqueWizard` ahora hidrata `contenedores` desde `embarque_contenedores` al cargar (vía `useContenedoresEmbarque` + `rowAContenedorBorrador`), de modo que el Step de Ruta refleja todos los hijos reales al editar. Al guardar, `useUpdateEmbarque` recibe la lista y la persiste con `sincronizarContenedores` (nuevo servicio que preserva IDs: UPDATE para existentes, INSERT para nuevos, soft-delete para removidos), evitando romper FKs en `conceptos_venta.contenedor_id` / `conceptos_costo.contenedor_id`.
+- **feat(embarques/listado)**: Fase 3 visibilidad. Nuevo hook `useContenedoresInfoMap` consulta en un batch los contenedores hijos de los embarques visibles. La columna "Contenedores" de `embarqueColumns` ahora muestra el primer hijo real y un badge `+N` basado en `embarque_contenedores` cuando existen, con fallback al conteo legacy por expediente y al campo plano. Esto fija el caso de embarques 1↔N donde el listado mostraba "-" o un único contenedor.
+- **chore**: `APP_VERSION` → 12.12.0.
+
 ## [12.10.0] - 2026-05-28
 - **feat(cotización→embarque)**: Fase 1 del cierre del refactor 1↔N. `convertirCotizacionAEmbarques` ahora crea **1 embarque con N contenedores hijos** (en lugar de N embarques de 1 contenedor). Reparte peso/volumen/piezas equitativamente entre los hijos y asigna `contenedor_id` a los costos por unidad "Contenedor"; los costos por unidad "BL" se insertan una sola vez como cargo general. Esto alinea el flujo de aceptación de cotización con el modelo correcto.
 - **fix(proformas/consolidadas)**: La RPC `consolidar_proformas` ahora agrupa los conceptos por el contenedor REAL (`embarque_contenedores.numero_contenedor` vía `conceptos_venta.contenedor_id`) en lugar del campo legacy `embarques.contenedor`. Una proforma consolidada de un embarque con 3 contenedores muestra correctamente las 3 secciones separadas. Fallback al legacy para conceptos sin `contenedor_id` o datos antiguos.
