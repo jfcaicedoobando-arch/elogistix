@@ -166,6 +166,8 @@ export function useDialogGenerarProformaController(
         notasFinal = notasFinal ? `${etiqueta}\n${notasFinal}` : etiqueta;
       }
 
+      // Días de crédito: input vacío → null → se guarda como 0 (Contado) a nivel DB.
+      // Cualquier valor no numérico también degrada a null/Contado en el fallback de abajo.
       const diasCreditoNum = diasCredito.trim() === "" ? null : Number(diasCredito);
       const proforma = await crearProforma.mutateAsync({
         embarqueId: embarque.id,

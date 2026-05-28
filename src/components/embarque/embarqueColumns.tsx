@@ -14,14 +14,17 @@ import { sortByString, sortByDate } from "@/components/shared/dataTable/sortingF
 
 export interface DocsInfo { pendientes: number; total: number }
 
+export interface ContenedorInfo { count: number; primero: string; incompletos?: number }
+
 export interface BuildColumnsParams {
   docsMap: Record<string, DocsInfo>;
   contenedoresPorExpediente?: Record<string, number>;
   /**
    * Map por embarque_id con info real de `embarque_contenedores`
    * (Fase 3 v12.12.0). Cuando existe, tiene prioridad sobre el legacy.
+   * `incompletos` (v12.14.1): contenedores hijos sin número o tipo capturado.
    */
-  contenedoresInfoMap?: Record<string, { count: number; primero: string }>;
+  contenedoresInfoMap?: Record<string, ContenedorInfo>;
 }
 
 /**
@@ -73,22 +76,40 @@ export function buildEmbarqueColumns({
     {
       id: "contenedor",
       header: "Contenedores",
-      meta: { width: "w-[140px]", className: "text-xs font-mono" },
+      meta: { width: "w-[170px]", className: "text-xs font-mono" },
       cell: ({ row }) => {
         const e = row.original;
         const info = contenedoresInfoMap[e.id];
         // Prioridad: hijos reales de embarque_contenedores → conteo legacy → 1
         const count = info?.count ?? contenedoresPorExpediente[e.expediente] ?? 1;
         const primero = info?.primero || e.contenedor || "";
-        if (count > 1) {
-          return (
-            <span className="inline-flex items-center gap-1.5">
-              <span className="truncate max-w-[80px]" title={primero}>{primero || "-"}</span>
+        const incompletos = info?.incompletos ?? 0;
+        const blFalta = e.modo === "Marítimo" && (!e.bl_master || e.bl_master.trim() === "");
+        const pendientes = incompletos > 0 || blFalta;
+        const pendientesTitle = [
+          blFalta ? "BL Master sin capturar" : null,
+          incompletos > 0 ? `${incompletos} contenedor(es) sin número o tipo` : null,
+        ].filter(Boolean).join(" · ");
+        return (
+          <span className="inline-flex items-center gap-1.5 flex-wrap">
+            <span className="truncate max-w-[80px]" title={primero}>{primero || "-"}</span>
+            {count > 1 && (
               <Badge variant="secondary" className="text-[10px] px-1.5 py-0 h-4" title={`${count} contenedores agrupados`}>+{count - 1}</Badge>
-            </span>
-          );
-        }
-        return primero || <span className="text-muted-foreground">-</span>;
+            )}
+            {pendientes && (
+              <TooltipProvider delayDuration={200}>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Badge variant="outline" className="text-[10px] px-1.5 py-0 h-4 border-amber-500 text-amber-600">Datos pendientes</Badge>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p className="text-xs">{pendientesTitle}</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            )}
+          </span>
+        );
       },
     },
     {
