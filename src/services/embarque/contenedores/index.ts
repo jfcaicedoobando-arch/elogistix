@@ -8,4 +8,5 @@ export {
   actualizar,
   eliminar,
   reemplazarTodos,
+  sincronizarContenedores,
 } from "./crud";
