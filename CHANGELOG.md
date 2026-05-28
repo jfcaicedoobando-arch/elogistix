@@ -6,6 +6,14 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [12.1.0] - 2026-05-28
+- **refactor(power-of-10)**: cierre Fase 1 del plan de auditoría 12.x. Split de los 4 archivos productivos que excedían 200 líneas (regresiones detectadas en `mem://audit/pendings` post-12.0.0):
+  - `SeccionDestinatario.tsx` (321 → 113) + carpeta `seccionDestinatario/` (`ProspectoSection`, `VinculoChip`, `BuscadorProspectos`, `FormularioNuevoProspecto`).
+  - `DialogDuplicarEmbarque.tsx` (265 → 84) + carpeta `duplicarEmbarque/` (`useDuplicarEmbarqueDialog`, `CopiaContenedorRow`, `types`).
+  - `useCotizacionWizardSteps.ts` (212 → 163) + `handlePaso1Crm.ts` (validación + vinculación CRM extraídas).
+  - `services/crm/vincularCotizacion.ts` (202) → carpeta `vincularCotizacion/` con barrel (`helpers`, `vincularOCrear`, `sincronizarEtapa`, `propagarConversion`); API pública sin cambios.
+- **docs(power-of-10)**: `docs/power10-baseline.md` actualizado con la excepción `src/pdf/theme/styles.ts` (react-pdf StyleSheet, 278 líneas).
+
 ## [12.0.0] - 2026-05-28
 
 Cierre del major **12.0.0**. Resumen consolidado de lo entregado durante los `rc.1` → `rc.17` (el detalle granular se conserva más abajo).
