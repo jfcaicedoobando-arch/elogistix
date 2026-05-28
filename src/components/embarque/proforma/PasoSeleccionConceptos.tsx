@@ -151,7 +151,7 @@ export function PasoSeleccionConceptos({
             <div className="flex justify-between font-bold text-base pt-1 border-t"><span>Total MXN:</span><span>{formatCurrency(totales.total_mxn, "MXN")}</span></div>
           </div>
         )}
-        {totalSeleccionados === 0 && (
+        {seleccionadosVisibles === 0 && (
           <p className="text-sm text-muted-foreground text-center py-2">Selecciona al menos un concepto</p>
         )}
       </div>
