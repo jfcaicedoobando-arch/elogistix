@@ -16,6 +16,8 @@ type CotizacionInsert = TablesInsert<"cotizaciones">;
 type EmbarqueInsert = TablesInsert<"embarques">;
 type ContenedorInsert = TablesInsert<"embarque_contenedores">;
 type ConceptoCostoInsert = TablesInsert<"conceptos_costo">;
+type ConceptoVentaInsert = TablesInsert<"conceptos_venta">;
+type Moneda = ConceptoVentaInsert["moneda"];
 
 export async function convertirCotizacionAEmbarques(
   cotizacion: CotizacionRow,
@@ -115,7 +117,29 @@ export async function convertirCotizacionAEmbarques(
     }
   }
 
-  // 5) Marcar cotización como "En operación" y vincularla al embarque.
+  // 5) Insertar conceptos_venta desde el jsonb de la cotización (v12.13.1 hardening:
+  //    previene embarques sin ventas como ocurrió con ELIMP00231 antes del fix).
+  const ventasJsonb = Array.isArray(cotizacion.conceptos_venta) ? cotizacion.conceptos_venta : [];
+  if (ventasJsonb.length > 0) {
+    const ventasRows: ConceptoVentaInsert[] = ventasJsonb
+      .filter((v): v is Record<string, unknown> => typeof v === "object" && v !== null)
+      .map((v) => ({
+        embarque_id: embarque.id,
+        descripcion: String(v.descripcion ?? ""),
+        cantidad: Number(v.cantidad ?? 1),
+        precio_unitario: Number(v.precio_unitario ?? 0),
+        moneda: (v.moneda === "USD" ? "USD" : "MXN") as Moneda,
+        aplica_iva: Boolean(v.aplica_iva ?? false),
+        total: Number(v.total ?? 0),
+      }))
+      .filter((v) => v.descripcion.trim().length > 0);
+    if (ventasRows.length > 0) {
+      const { error: errorVentas } = await supabase.from("conceptos_venta").insert(ventasRows);
+      if (errorVentas) throw errorVentas;
+    }
+  }
+
+  // 6) Marcar cotización como "En operación" y vincularla al embarque.
   const { error: errorUpdate } = await supabase
     .from("cotizaciones")
     .update({
