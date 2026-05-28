@@ -10,3 +10,9 @@ export {
   reemplazarTodos,
   sincronizarContenedores,
 } from "./crud";
+export {
+  fetchContenedoresInfoMap,
+  type ContenedoresInfo,
+  type ContenedoresInfoMap,
+} from "./fetchInfoMap";
+

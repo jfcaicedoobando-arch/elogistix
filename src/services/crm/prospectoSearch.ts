@@ -1,0 +1,75 @@
+/**
+ * I/O puro: búsqueda combinada de leads + oportunidades del CRM para
+ * vincular un prospecto desde el wizard de cotizaciones.
+ *
+ * Extraído del hook `useCrmProspectoSearch` para mantener los hooks libres
+ * de imports directos a Supabase (regla de capas).
+ */
+import { supabase } from "@/integrations/supabase/client";
+
+export interface ProspectoMatch {
+  kind: "lead" | "oportunidad";
+  id: string;
+  empresa: string;
+  contacto: string;
+  email: string;
+  telefono: string;
+  leadId?: string | null;
+  etapaNombre?: string;
+}
+
+type OpHit = {
+  id: string;
+  nombre: string;
+  lead_id: string | null;
+  cliente_nombre: string | null;
+  etapa: { nombre: string } | { nombre: string }[] | null;
+};
+
+export async function buscarProspectos(term: string): Promise<ProspectoMatch[]> {
+  const like = `%${term}%`;
+  const [leadsRes, opsRes] = await Promise.all([
+    supabase
+      .from("crm_leads")
+      .select("id, empresa, contacto, email, telefono")
+      .or(`empresa.ilike.${like},contacto.ilike.${like},email.ilike.${like}`)
+      .neq("estado", "Convertido")
+      .limit(8),
+    supabase
+      .from("crm_oportunidades")
+      .select("id, nombre, lead_id, cliente_nombre, etapa:crm_etapas_pipeline!etapa_id(nombre)")
+      .or(`nombre.ilike.${like},cliente_nombre.ilike.${like}`)
+      .is("cliente_id", null)
+      .limit(8),
+  ]);
+  if (leadsRes.error) throw leadsRes.error;
+  if (opsRes.error) throw opsRes.error;
+
+  const hits: ProspectoMatch[] = [];
+  for (const l of leadsRes.data ?? []) {
+    hits.push({
+      kind: "lead",
+      id: l.id,
+      empresa: l.empresa,
+      contacto: l.contacto ?? "",
+      email: l.email ?? "",
+      telefono: l.telefono ?? "",
+    });
+  }
+  // SAFE-CAST: el join `etapa:crm_etapas_pipeline` puede inferirse como objeto o array
+  // según la cardinalidad detectada por PostgREST; ambos shapes son válidos en runtime.
+  for (const o of (opsRes.data ?? []) as unknown as OpHit[]) {
+    const etapaNombre = Array.isArray(o.etapa) ? o.etapa[0]?.nombre : o.etapa?.nombre;
+    hits.push({
+      kind: "oportunidad",
+      id: o.id,
+      empresa: o.cliente_nombre || o.nombre,
+      contacto: "",
+      email: "",
+      telefono: "",
+      leadId: o.lead_id,
+      etapaNombre,
+    });
+  }
+  return hits;
+}

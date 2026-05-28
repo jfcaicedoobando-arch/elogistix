@@ -4,8 +4,12 @@
  * - Vinculación CRM (lead/oportunidad) tras crear la cotización nueva.
  *
  * Extraído de `useCotizacionWizardSteps` en 12.1.0 para cumplir Power of 10.
+ * v12.14.3: la I/O de Supabase vive ahora en `services/cotizacion/wizard/paso1Crm`.
  */
-import { supabase } from "@/integrations/supabase/client";
+import {
+  obtenerUsuarioActual,
+  fetchCotizacionFolio,
+} from "@/services/cotizacion/wizard/paso1Crm";
 import { vincularOCrearOportunidadParaCotizacion } from "@/services/crm/vincularCotizacion";
 import { getErrorMessage } from "@/lib/errors";
 import { notifyError } from "@/lib/ui/appFeedback";
@@ -39,12 +43,11 @@ export async function vincularCrmTrasCrear(
   toast: ToastFn,
 ): Promise<void> {
   try {
-    const { data: { user } } = await supabase.auth.getUser();
-    const { data: cotRow } = await supabase
-      .from("cotizaciones").select("folio").eq("id", cotizacionId).maybeSingle();
+    const user = await obtenerUsuarioActual();
+    const folio = await fetchCotizacionFolio(cotizacionId);
     await vincularOCrearOportunidadParaCotizacion({
       cotizacionId,
-      cotizacionFolio: cotRow?.folio,
+      cotizacionFolio: folio ?? undefined,
       modoTransporte: values.modo,
       oportunidadId: values.oportunidadId || null,
       leadId: values.leadId || null,
@@ -54,7 +57,7 @@ export async function vincularCrmTrasCrear(
         email: values.prospectoEmail,
         telefono: values.prospectoTelefono,
       },
-      user: user ? { id: user.id, email: user.email ?? undefined } : null,
+      user,
     });
   } catch (vinculErr) {
     notifyError(toast, {

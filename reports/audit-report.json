@@ -1,12 +1,8 @@
 {
-  "version": "12.14.1",
-  "generatedAt": "2026-05-28T22:47:09.675Z",
+  "version": "12.14.2",
+  "generatedAt": "2026-05-28T22:52:21.853Z",
   "arch": {
-    "hooksContextsDirectImports": [
-      "src/hooks/cotizacion/wizard/handlePaso1Crm.ts",
-      "src/hooks/crm/useCrmProspectoSearch.ts",
-      "src/hooks/embarque/useContenedoresInfoMap.ts"
-    ],
+    "hooksContextsDirectImports": [],
     "componentsPagesDirectImports": [],
     "oversized": [
       {
@@ -35,9 +31,9 @@
     "total": 753,
     "bySeverity": {
       "SAFE": 307,
-      "LOW": 12,
+      "LOW": 13,
       "MEDIUM": 429,
-      "HIGH": 5,
+      "HIGH": 4,
       "CRITICAL": 0
     },
     "topFiles": [

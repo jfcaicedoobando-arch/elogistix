@@ -6,6 +6,14 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [12.14.3] - 2026-05-28
+- **refactor(arch)**: Cierre de las 3 violaciones de capas detectadas en el reporte 12.14.1. La I/O de Supabase salió de los hooks hacia services dedicados:
+  - `services/embarque/contenedores/fetchInfoMap.ts` ← extraído de `useContenedoresInfoMap` (regresión 12.14.1).
+  - `services/crm/prospectoSearch.ts` ← extraído de `useCrmProspectoSearch`.
+  - `services/cotizacion/wizard/paso1Crm.ts` (`obtenerUsuarioActual`, `fetchCotizacionFolio`) ← extraído de `handlePaso1Crm`.
+- **chore(reports)**: `reports/audit-report.{md,json}` regenerados → 0 import violations, casts HIGH 5→4, 0 CRITICAL. Quedan 5 archivos >200 líneas como deuda para 12.15.x.
+- **chore**: `APP_VERSION` → 12.14.3.
+
 ## [12.14.2] - 2026-05-28
 - **chore(auditoria)**: Hardening del módulo. `useAuditoriaCount` lleva `// SAFE-CAST:` justificado en los casts de `useQueries` + guard defensivo que descarta el reporte si el RPC `auditoria_embarques_org` devuelve un shape inesperado (en vez de explotar en runtime).
 - **docs(auditoria)**: Nueva sección §7 "Dependencias legacy" en `docs/auditoria.md` documentando que la RPC sigue leyendo `embarques.{contenedor, tipo_contenedor, peso, volumen, piezas}` sincronizadas vía trigger desde `embarque_contenedores` (Fase A multi-contenedor). Pendiente registrado en `mem://audit/pendings`.
