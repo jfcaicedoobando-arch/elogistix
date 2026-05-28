@@ -32,6 +32,7 @@ export function useEditarEmbarqueWizard(id: string | undefined) {
   const { data: embarque, isLoading } = useEmbarque(id);
   const { data: conceptosVentaDb = [], isLoading: cargandoVenta } = useEmbarqueConceptosVenta(id);
   const { data: conceptosCostoDb = [], isLoading: cargandoCosto } = useEmbarqueConceptosCosto(id);
+  const { data: contenedoresDb = [], isLoading: cargandoContenedores } = useContenedoresEmbarque(id);
   const { data: clientes = [] } = useClientesForSelect();
   const { data: proveedoresDb = [] } = useProveedoresForSelect();
   const updateEmbarque = useUpdateEmbarque();
@@ -39,6 +40,7 @@ export function useEditarEmbarqueWizard(id: string | undefined) {
 
   const [initialized, setInitialized] = useState(false);
   const [hidratoContactos, setHidratoContactos] = useState(false);
+  const [hidratoContenedores, setHidratoContenedores] = useState(false);
   const [currentStep, setCurrentStep] = useState(1);
 
   const {
