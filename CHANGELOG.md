@@ -6,6 +6,13 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [12.15.0] - 2026-05-28
+- **refactor(power-of-10)**: Limpieza de los 4 casts HIGH y los 5 archivos >200 líneas detectados por la auditoría.
+  - Casts HIGH 4→0: `services/cotizacion/conversiones/embarques.ts` ahora usa type guard + `fromDb`; `services/proforma/crud.ts` mueve el `SAFE-CAST` al sitio correcto (≤6 líneas del cast de RPC) y devuelve la proforma vía `fromDb<ProformaRow>`; `services/proforma/queries.ts` usa `fromDb<ConceptoVentaRow[]>` en lugar de `as unknown as`.
+  - Archivos partidos a ≤200 líneas: `pdf/theme/styles.ts` → `tokens.ts` + `stylesLayout.ts` + `stylesContent.ts`; `lib/domain/embarqueWizardSchemas.ts` → `embarqueWizardRuta.ts`; `hooks/embarque/useDialogGenerarProformaController.ts` → `submitProformaDialog.ts`; `components/embarque/facturacion/ResumenConceptosVenta.tsx` → `ResumenConceptosVentaTotales.tsx`; `lib/domain/proforma.ts` → `proformaAgrupacion.ts`. Re-exports preservados para no romper call-sites.
+- **chore(reports)**: `reports/audit-report.{md,json}` regenerados → 0 import violations, 0 archivos >200, 0 casts HIGH/CRITICAL (de 787).
+- **chore**: `APP_VERSION` → 12.15.0.
+
 ## [12.14.3] - 2026-05-28
 - **refactor(arch)**: Cierre de las 3 violaciones de capas detectadas en el reporte 12.14.1. La I/O de Supabase salió de los hooks hacia services dedicados:
   - `services/embarque/contenedores/fetchInfoMap.ts` ← extraído de `useContenedoresInfoMap` (regresión 12.14.1).

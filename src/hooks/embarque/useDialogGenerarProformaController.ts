@@ -1,6 +1,9 @@
 /**
  * Controller del <DialogGenerarProforma/>: estado del wizard de 2 pasos
  * (selección → confirmación), totales, IVA por concepto y submit.
+ *
+ * El submit completo (crear proforma + generar PDF) vive en
+ * `submitProformaDialog.ts` para mantener este hook bajo Power-of-10 (≤200 líneas).
  */
 import { useState, useMemo, useEffect } from "react";
 import { calcularIVA } from "@/lib/financial/financialUtils";
@@ -15,6 +18,7 @@ import {
   filtrarPorContenedor,
   type FiltroContenedor,
 } from "@/lib/domain/conceptosPorContenedor";
+import { submitProformaDialog } from "./submitProformaDialog";
 
 import type { Tables } from "@/integrations/supabase/types";
 
@@ -79,7 +83,6 @@ export function useDialogGenerarProformaController(
     setSeleccionados((prev) => {
       const next = new Set<string>();
       prev.forEach((id) => { if (visibleIds.has(id)) next.add(id); });
-      // Si la selección quedó vacía, pre-seleccionar todos los visibles
       if (next.size === 0) visibleIds.forEach((id) => next.add(id));
       return next;
     });
@@ -103,19 +106,12 @@ export function useDialogGenerarProformaController(
   const toggleAll = () => {
     const visibleIds = conceptosVisibles.map((c) => c.id);
     const allVisibleSelected = visibleIds.length > 0 && visibleIds.every((id) => seleccionados.has(id));
-    if (allVisibleSelected) {
-      setSeleccionados((prev) => {
-        const next = new Set(prev);
-        visibleIds.forEach((id) => next.delete(id));
-        return next;
-      });
-    } else {
-      setSeleccionados((prev) => {
-        const next = new Set(prev);
-        visibleIds.forEach((id) => next.add(id));
-        return next;
-      });
-    }
+    setSeleccionados((prev) => {
+      const next = new Set(prev);
+      if (allVisibleSelected) visibleIds.forEach((id) => next.delete(id));
+      else visibleIds.forEach((id) => next.add(id));
+      return next;
+    });
   };
 
   const toggleIva = (id: string, moneda: string) => {
@@ -148,53 +144,11 @@ export function useDialogGenerarProformaController(
 
   const handleConfirmar = async () => {
     try {
-      const ivaOverrides: Record<string, boolean> = {};
-      conceptosSeleccionados.forEach((c) => {
-        ivaOverrides[c.id] = c.moneda === "MXN" ? true : !!ivaPorConcepto[c.id];
-      });
-
-      // Prefijo en notas si la proforma está acotada a un contenedor
-      let notasFinal = notas.trim() || null;
-      if (filtroContenedor !== "todos" && filtroContenedor !== "generales") {
-        const cont = contenedores.find((c) => c.id === filtroContenedor);
-        if (cont) {
-          const etiqueta = `Proforma del contenedor ${cont.numero_contenedor || `#${cont.orden}`}`;
-          notasFinal = notasFinal ? `${etiqueta}\n${notasFinal}` : etiqueta;
-        }
-      } else if (filtroContenedor === "generales") {
-        const etiqueta = "Proforma de conceptos generales del embarque";
-        notasFinal = notasFinal ? `${etiqueta}\n${notasFinal}` : etiqueta;
-      }
-
-      // Días de crédito: input vacío → null → se guarda como 0 (Contado) a nivel DB.
-      // Cualquier valor no numérico también degrada a null/Contado en el fallback de abajo.
-      const diasCreditoNum = diasCredito.trim() === "" ? null : Number(diasCredito);
-      const proforma = await crearProforma.mutateAsync({
-        embarqueId: embarque.id,
-        clienteId: embarque.cliente_id,
-        clienteNombre: embarque.cliente_nombre,
-        expediente: embarque.expediente,
-        blMaster: embarque.bl_master,
-        conceptoIds: Array.from(seleccionados),
-        totales,
-        notas: notasFinal,
-        operador: embarque.operador || null,
-        diasCredito: Number.isFinite(diasCreditoNum as number) ? (diasCreditoNum as number) : null,
-        tasaIva,
-        ivaOverrides,
-      });
-      const cliente = await fetchClienteParaPdfCached(embarque.cliente_id);
-      const conceptosParaPdf = conceptosSeleccionados.map((c) => ({
-        ...c,
-        aplica_iva: ivaOverrides[c.id],
-      }));
-      const { generarPdfProforma } = await import("@/generators/proformaPdf");
-      await generarPdfProforma({
-        proforma,
-        embarque,
-        conceptos: conceptosParaPdf,
-        cliente,
-        tasaIva,
+      await submitProformaDialog({
+        embarque, conceptosSeleccionados, seleccionados, ivaPorConcepto,
+        notas, diasCredito, filtroContenedor, contenedores, totales, tasaIva,
+        crearProformaMutateAsync: crearProforma.mutateAsync,
+        fetchClienteParaPdfCached,
       });
       onClose();
     } catch {
@@ -217,3 +171,4 @@ export function useDialogGenerarProformaController(
     totalSeleccionados: seleccionados.size,
   };
 }
+
