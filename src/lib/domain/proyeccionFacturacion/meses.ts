@@ -7,14 +7,14 @@ export function rangoMes(year: number, month: number): { desde: string; hasta: s
   return { desde, hasta };
 }
 
-/** Genera lista de meses [{key:'YYYY-MM', label:'Mes Año', year, month}] desde Abril 2026 hasta hoy + 12. */
+/** Genera lista de meses [{key:'YYYY-MM', label:'Mes Año', year, month}] en ventana relativa: 24 meses atrás a 12 adelante respecto a `hoy`. */
 export function generarMesesDisponibles(hoy = new Date()): {
   key: string;
   label: string;
   year: number;
   month: number;
 }[] {
-  const inicio = new Date(2026, 3, 1); // Abril 2026 (mes index 3)
+  const inicio = new Date(hoy.getFullYear(), hoy.getMonth() - 24, 1);
   const fin = new Date(hoy.getFullYear(), hoy.getMonth() + 12, 1);
   const fmt = new Intl.DateTimeFormat("es-MX", { month: "long", year: "numeric" });
   const out: { key: string; label: string; year: number; month: number }[] = [];
@@ -30,9 +30,7 @@ export function generarMesesDisponibles(hoy = new Date()): {
   return out;
 }
 
-/** Mes actual en formato YYYY-MM (asegurando ≥ Abril 2026). */
+/** Mes actual en formato YYYY-MM. */
 export function mesActualKey(hoy = new Date()): string {
-  const min = new Date(2026, 3, 1);
-  const ref = hoy < min ? min : hoy;
-  return `${ref.getFullYear()}-${String(ref.getMonth() + 1).padStart(2, "0")}`;
+  return `${hoy.getFullYear()}-${String(hoy.getMonth() + 1).padStart(2, "0")}`;
 }
