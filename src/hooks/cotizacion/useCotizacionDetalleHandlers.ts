@@ -8,6 +8,7 @@ import {
   type CotizacionRow,
 } from "@/hooks/cotizacion/useCotizaciones";
 import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
+import { sincronizarEtapaPorEstadoCotizacion, propagarConversionProspectoCRM } from "@/services/crm/vincularCotizacion";
 import type { ClienteFormData } from "@/types/clienteForm";
 
 import { ERROR_CODES } from "@/lib/domain/errorCatalog";
