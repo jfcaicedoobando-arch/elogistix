@@ -6,6 +6,12 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [12.2.0] - 2026-05-28
+- **chore(audit)**: cierre Fase 2 del plan de auditoría 12.x.
+  - **C10 inline-styles**: auditadas las 64 ocurrencias de `style={{…}}` en `src/`. Las 64 caen en categorías exentas (`mem://principles/inline-styles`): 38 react-pdf, 9 virtualizer, 6 `%` dinámico, 3 color desde DB (`etapa.color`), 6 color desde constante runtime indexada por estado (`ESTADO_COLOR[estado]`), 2 dimensión calculada por prop. **0 violaciones**. Detalle en `docs/inline-styles-audit.md`.
+  - **C11 prefijos**: revisado `pages/admin-org/`. `Configuracion.tsx` y `Usuarios.tsx` son **páginas** (rutas lazy en `appRoutes.tsx`), no tabs — el prefijo `Tab*` está reservado para subcomponentes en `components/configuracion/`. **No aplica renombrado**, cerrado como falso positivo.
+- **docs**: `power10-baseline.md` actualizado con fila de inline-styles y referencia al nuevo audit.
+
 ## [12.1.0] - 2026-05-28
 - **refactor(power-of-10)**: cierre Fase 1 del plan de auditoría 12.x. Split de los 4 archivos productivos que excedían 200 líneas (regresiones detectadas en `mem://audit/pendings` post-12.0.0):
   - `SeccionDestinatario.tsx` (321 → 113) + carpeta `seccionDestinatario/` (`ProspectoSection`, `VinculoChip`, `BuscadorProspectos`, `FormularioNuevoProspecto`).
