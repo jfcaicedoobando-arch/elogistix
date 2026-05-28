@@ -8,6 +8,8 @@ import {
   useProveedoresForSelect,
   useUpdateEmbarque,
 } from "@/hooks/embarque/useEmbarques";
+import { useContenedoresEmbarque } from "@/hooks/embarque/useContenedoresEmbarque";
+import { rowAContenedorBorrador } from "@/types/embarque/contenedor";
 import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 import { useClientesForSelect, useContactosCliente } from "@/hooks/cliente/useClientes";
 import { useAuth } from "@/contexts/AuthContext";
