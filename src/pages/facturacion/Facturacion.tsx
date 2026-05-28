@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { Download } from "lucide-react";
+import { Download, Info } from "lucide-react";
 import SearchInput from "@/components/selects/SearchInput";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -7,6 +7,9 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Tooltip, TooltipContent, TooltipProvider, TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { DataTable } from "@/components/shared/DataTable";
 import { PageHeader } from "@/components/shared/PageHeader";
 import type { Database } from "@/types/db";
@@ -14,12 +17,45 @@ import { TabProformas } from "@/components/facturacion/TabProformas";
 import { TabProformasPendientes } from "@/components/facturacion/TabProformasPendientes";
 import { TabProyeccion } from "@/components/facturacion/TabProyeccion";
 import { DateRangeFilter } from "@/components/facturacion/DateRangeFilter";
+import { GuiaPrefacturacion } from "@/components/facturacion/GuiaPrefacturacion";
 import { useFacturacionPageController } from "@/hooks/facturacion";
 import { useFacturacionDateRange } from "@/hooks/facturacion/useFacturacionDateRange";
 import { facturaColumns, buildGastoColumns } from "./facturacionColumns";
 
 type EstadoFactura = Database["public"]["Enums"]["estado_factura"];
 const ESTADOS_FACTURA: EstadoFactura[] = ['Borrador', 'Emitida', 'Pagada', 'Vencida', 'Cancelada'];
+
+type TabDef = { value: string; label: string; hint: string; badge?: number };
+
+function TabTriggerInfo({ tab }: { tab: TabDef }) {
+  return (
+    <TabsTrigger value={tab.value}>
+      <span className="flex items-center gap-1.5">
+        {tab.label}
+        {typeof tab.badge === "number" && tab.badge > 0 && (
+          <span className="ml-0.5">({tab.badge})</span>
+        )}
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <span
+              role="button"
+              tabIndex={0}
+              aria-label={`Info: ${tab.label}`}
+              onClick={(e) => e.stopPropagation()}
+              onKeyDown={(e) => e.stopPropagation()}
+              className="inline-flex"
+            >
+              <Info className="h-3 w-3 opacity-60 hover:opacity-100" />
+            </span>
+          </TooltipTrigger>
+          <TooltipContent side="bottom" className="max-w-[240px] text-xs">
+            {tab.hint}
+          </TooltipContent>
+        </Tooltip>
+      </span>
+    </TabsTrigger>
+  );
+}
 
 export default function Facturacion() {
   const { range, setRango, limpiar, isInRange, activo } = useFacturacionDateRange();
@@ -40,103 +76,112 @@ export default function Facturacion() {
     [canEdit, marcarPagadoPending, handleMarcarPagado],
   );
 
+  const tabs: TabDef[] = [
+    { value: "proyeccion", label: "1. Proyección", hint: "Cuánto vas a facturar este mes según los ETA de los embarques." },
+    { value: "pendientes", label: "2. Por aprobar", hint: "Proformas generadas pendientes de revisión. Consolida y aprueba aquí.", badge: proformasPendientes.length },
+    { value: "proformas", label: "3. Proformas", hint: "Histórico completo de proformas (pendientes y facturadas)." },
+    { value: "facturas", label: "4. Facturas emitidas", hint: "Facturas ya generadas. Export CSV y layout contable para el contador." },
+    { value: "liquidacion", label: "5. Pagos a proveedores", hint: "Costos de proveedores pendientes de pago (cuentas por pagar)." },
+  ];
+
+  const dateBar = (
+    <Card>
+      <CardContent className="p-3">
+        <DateRangeFilter range={range} onChange={setRango} onClear={limpiar} activo={activo} />
+      </CardContent>
+    </Card>
+  );
 
   return (
-    <div className="space-y-6">
-      <PageHeader
-        title="Pre-Facturación"
-        description="Control de proformas, facturas emitidas y gastos por liquidar"
-      />
+    <TooltipProvider delayDuration={150}>
+      <div className="space-y-6">
+        <PageHeader
+          title="Pre-Facturación"
+          description="Control de proformas, facturas emitidas y gastos por liquidar"
+        />
 
-      <Card>
-        <CardContent className="p-3">
-          <DateRangeFilter range={range} onChange={setRango} onClear={limpiar} activo={activo} />
-        </CardContent>
-      </Card>
+        <GuiaPrefacturacion />
 
+        <Tabs defaultValue="proyeccion">
+          <TabsList>
+            {tabs.map((t) => <TabTriggerInfo key={t.value} tab={t} />)}
+          </TabsList>
 
-      <Tabs defaultValue="proyeccion">
-        <TabsList>
-          <TabsTrigger value="proyeccion">Proyección</TabsTrigger>
-          <TabsTrigger value="pendientes">
-            Pendientes{proformasPendientes.length > 0 ? ` (${proformasPendientes.length})` : ''}
-          </TabsTrigger>
-          <TabsTrigger value="proformas">Proformas</TabsTrigger>
-          <TabsTrigger value="facturas">Facturas</TabsTrigger>
-          <TabsTrigger value="liquidacion">Liquidación de Gastos</TabsTrigger>
-        </TabsList>
+          <TabsContent value="proyeccion">
+            <TabProyeccion />
+          </TabsContent>
 
-        <TabsContent value="proyeccion">
-          <TabProyeccion />
-        </TabsContent>
+          <TabsContent value="pendientes" className="space-y-4">
+            {dateBar}
+            <TabProformasPendientes isInRange={isInRange} />
+          </TabsContent>
 
-        <TabsContent value="pendientes">
-          <TabProformasPendientes isInRange={isInRange} />
-        </TabsContent>
+          <TabsContent value="proformas" className="space-y-4">
+            {dateBar}
+            <TabProformas isInRange={isInRange} />
+          </TabsContent>
 
-        <TabsContent value="proformas">
-          <TabProformas isInRange={isInRange} />
-        </TabsContent>
+          <TabsContent value="facturas" className="space-y-4">
+            {dateBar}
+            <Card>
+              <CardContent className="p-4 flex flex-wrap gap-3">
+                <SearchInput value={search} onChange={setSearch} placeholder="Buscar factura o cliente..." className="flex-1 min-w-[200px]" />
+                <Button variant="outline" onClick={exportarFacturasCsv}>
+                  <Download className="h-4 w-4 mr-2" /> Exportar CSV
+                </Button>
+                <Button variant="outline" onClick={exportarLayoutContable} title="Layout contable con RFC, subtotal, IVA y total — para el contador">
+                  <Download className="h-4 w-4 mr-2" /> Layout contable
+                </Button>
+                <Select value={filterEstado} onValueChange={(v) => setFilter("estado", v)}>
+                  <SelectTrigger className="w-[160px]"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="todos">Todos</SelectItem>
+                    {ESTADOS_FACTURA.map(estadoFactura => <SelectItem key={estadoFactura} value={estadoFactura}>{estadoFactura}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </CardContent>
+            </Card>
 
+            <Card>
+              <CardContent className="p-0">
+                <DataTable
+                  columns={facturaColumns}
+                  data={paginatedFacturas}
+                  isLoading={loadingFacturas}
+                  emptyMessage="No se encontraron facturas"
+                  rowKey={(f) => f.id}
+                  density="comfortable"
+                  pagination={{
+                    page,
+                    totalPages,
+                    onPageChange: setPage,
+                    pageSize,
+                    onPageSizeChange: (s) => { setPageSize(s); setPage(0); },
+                    pageSizeOptions: [100, 999999],
+                    pageSizeLabels: { 999999: "Todos" },
+                  }}
+                />
+              </CardContent>
+            </Card>
+          </TabsContent>
 
-        <TabsContent value="facturas" className="space-y-4">
-          <Card>
-            <CardContent className="p-4 flex flex-wrap gap-3">
-              <SearchInput value={search} onChange={setSearch} placeholder="Buscar factura o cliente..." className="flex-1 min-w-[200px]" />
-              <Button variant="outline" onClick={exportarFacturasCsv}>
-                <Download className="h-4 w-4 mr-2" /> Exportar CSV
-              </Button>
-              <Button variant="outline" onClick={exportarLayoutContable} title="Layout contable con RFC, subtotal, IVA y total — para el contador">
-                <Download className="h-4 w-4 mr-2" /> Layout contable
-              </Button>
-              <Select value={filterEstado} onValueChange={(v) => setFilter("estado", v)}>
-                <SelectTrigger className="w-[160px]"><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="todos">Todos</SelectItem>
-                  {ESTADOS_FACTURA.map(estadoFactura => <SelectItem key={estadoFactura} value={estadoFactura}>{estadoFactura}</SelectItem>)}
-                </SelectContent>
-              </Select>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardContent className="p-0">
-              <DataTable
-                columns={facturaColumns}
-                data={paginatedFacturas}
-                isLoading={loadingFacturas}
-                emptyMessage="No se encontraron facturas"
-                rowKey={(f) => f.id}
-                density="comfortable"
-                pagination={{
-                  page,
-                  totalPages,
-                  onPageChange: setPage,
-                  pageSize,
-                  onPageSizeChange: (s) => { setPageSize(s); setPage(0); },
-                  pageSizeOptions: [100, 999999],
-                  pageSizeLabels: { 999999: "Todos" },
-                }}
-              />
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="liquidacion">
-          <Card>
-            <CardContent className="p-0">
-              <DataTable
-                columns={gastoColumns}
-                data={gastosPendientes}
-                isLoading={loadingGastos}
-                emptyMessage="No hay gastos pendientes"
-                rowKey={(g) => g.id}
-                density="comfortable"
-              />
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
-    </div>
+          <TabsContent value="liquidacion" className="space-y-4">
+            {dateBar}
+            <Card>
+              <CardContent className="p-0">
+                <DataTable
+                  columns={gastoColumns}
+                  data={gastosPendientes}
+                  isLoading={loadingGastos}
+                  emptyMessage="No hay gastos pendientes"
+                  rowKey={(g) => g.id}
+                  density="comfortable"
+                />
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
+      </div>
+    </TooltipProvider>
   );
 }

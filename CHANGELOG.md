@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [12.0.0-rc.15] - 2026-05-28
+- **ux(pre-facturación)**: rediseño completo del módulo para reducir confusión. (1) Se elimina la barra global de "Periodo Desde/Hasta": ahora el filtro de rango sólo aparece dentro de las pestañas que lo usan (Por aprobar, Proformas, Facturas, Pagos a proveedores), evitando convivir con el selector de mes de Proyección. (2) Las pestañas se numeran siguiendo el flujo natural: `1. Proyección → 2. Por aprobar → 3. Proformas → 4. Facturas emitidas → 5. Pagos a proveedores`. (3) Cada pestaña lleva un icono `Info` con tooltip describiendo su propósito. (4) Nueva guía colapsable "¿Cómo funciona este módulo?" con mini-diagrama de flujo de 5 pasos y explicación del Hueco de Facturación (`GuiaPrefacturacion.tsx`). (5) El banner del Hueco de Facturación se compacta a una sola fila (~52px vs ~120px) manteniendo la misma información y acción "Ver detalle". Sin cambios en lógica de filtros, RPCs, ni esquemas.
+
 ## [12.0.0-rc.14] - 2026-05-28
 - **feat(embarques)**: el diálogo *Duplicar embarque* ahora permite editar por copia el **tipo de contenedor** (dropdown del catálogo `useTiposContenedor`), **peso (kg)**, **volumen (m³)** y **piezas**, además del número de contenedor. Pre-llena cada copia con los datos del embarque origen para conservar el flujo rápido, pero habilita ajustar contenedores con cargas distintas dentro del mismo shipment. El RPC `duplicar_embarque_completo` ya soportaba estos campos; sólo se exponen en la UI.
 
