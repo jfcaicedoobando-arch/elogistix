@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [12.0.0-rc.14] - 2026-05-28
+- **feat(embarques)**: el diálogo *Duplicar embarque* ahora permite editar por copia el **tipo de contenedor** (dropdown del catálogo `useTiposContenedor`), **peso (kg)**, **volumen (m³)** y **piezas**, además del número de contenedor. Pre-llena cada copia con los datos del embarque origen para conservar el flujo rápido, pero habilita ajustar contenedores con cargas distintas dentro del mismo shipment. El RPC `duplicar_embarque_completo` ya soportaba estos campos; sólo se exponen en la UI.
+
 ## [12.0.0-rc.13] - 2026-05-28
 - **fix(cotizaciones)**: en cotizaciones de prospecto (`es_prospecto = true`) se ocultan los botones "Crear Embarque" y "Generar Embarques" hasta que el prospecto sea convertido a cliente. Esto previene un error de runtime al intentar insertar embarques sin `cliente_id`. Adicionalmente, el botón "Convertir a Cliente" pasa a `variant="default"` (primario) y el banner amarillo del prospecto indica explícitamente que debe convertirse antes de generar embarques.
 
