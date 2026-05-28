@@ -23,55 +23,30 @@ export async function crearProforma(params: CrearProformaParams): Promise<Profor
     throw new Error("Debe seleccionar al menos un concepto");
   }
 
-  if (params.ivaOverrides) {
-    const updates = Object.entries(params.ivaOverrides).map(([id, aplica]) =>
-      supabase.from("conceptos_venta").update({ aplica_iva: aplica }).eq("id", id),
-    );
-    const results = await Promise.all(updates);
-    const firstErr = results.find((r) => r.error);
-    if (firstErr?.error) throw firstErr.error;
-  }
-
-  const { data: numero, error: errNum } = await supabase.rpc("generar_numero_proforma", {
-    p_org_id: params.organizationId,
+  // B-1: RPC atómica — update aplica_iva + insert proforma + vincular conceptos en una sola transacción.
+  const { data, error } = await supabase.rpc("crear_proforma_atomica", {
+    p_organization_id: params.organizationId,
+    p_embarque_id: params.embarqueId,
+    p_cliente_id: params.clienteId,
+    p_cliente_nombre: params.clienteNombre,
+    p_expediente: params.expediente,
+    p_bl_master: params.blMaster,
+    p_concepto_ids: params.conceptoIds,
+    p_subtotal_usd: params.totales.subtotal_usd,
+    p_iva_usd: params.totales.iva_usd,
+    p_total_usd: params.totales.total_usd,
+    p_subtotal_mxn: params.totales.subtotal_mxn,
+    p_iva_mxn: params.totales.iva_mxn,
+    p_total_mxn: params.totales.total_mxn,
+    p_notas: params.notas,
+    p_operador: params.operador,
+    p_dias_credito: params.diasCredito,
+    p_tasa_iva: params.tasaIva,
+    p_iva_overrides: (params.ivaOverrides ?? {}) as never,
   });
-  if (errNum) throw errNum;
-
-  const { data: proforma, error: errProf } = await supabase
-    .from("proformas")
-    .insert({
-      numero: numero as string,
-      embarque_id: params.embarqueId,
-      cliente_id: params.clienteId,
-      cliente_nombre: params.clienteNombre,
-      expediente: params.expediente,
-      bl_master: params.blMaster,
-      subtotal_usd: params.totales.subtotal_usd,
-      iva_usd: params.totales.iva_usd,
-      total_usd: params.totales.total_usd,
-      subtotal_mxn: params.totales.subtotal_mxn,
-      iva_mxn: params.totales.iva_mxn,
-      total_mxn: params.totales.total_mxn,
-      notas: params.notas,
-      operador: params.operador,
-      dias_credito: params.diasCredito,
-      organization_id: params.organizationId,
-      tasa_iva_aplicada: params.tasaIva,
-    })
-    .select()
-    .single();
-  if (errProf) throw errProf;
-
-  const { error: errUpd } = await supabase
-    .from("conceptos_venta")
-    .update({ estado_facturacion: "en_proforma", proforma_id: proforma.id })
-    .in("id", params.conceptoIds);
-  if (errUpd) {
-    await supabase.from("proformas").delete().eq("id", proforma.id);
-    throw errUpd;
-  }
-
-  return proforma as ProformaRow;
+  if (error) throw error;
+  if (!data) throw new Error("No se pudo crear la proforma");
+  return data as unknown as ProformaRow;
 }
 
 export interface EliminarProformaParams {
@@ -92,19 +67,8 @@ export async function eliminarProforma(params: EliminarProformaParams): Promise<
     .eq("id", params.proformaId);
   if (errDel) throw errDel;
 
-  const { count, error: errCount } = await supabase
-    .from("proformas")
-    .select("id", { count: "exact", head: true })
-    .eq("embarque_id", params.embarqueId);
-  if (errCount) throw errCount;
-
-  if ((count ?? 0) === 0) {
-    const { error: errEmb } = await supabase
-      .from("embarques")
-      .update({ tiene_proforma: false })
-      .eq("id", params.embarqueId);
-    if (errEmb) throw errEmb;
-  }
+  // B-3: NO actualizar embarques.tiene_proforma desde el cliente.
+  // El trigger DB `trg_sync_embarque_tiene_proforma` lo maneja automáticamente al eliminar la proforma.
 }
 
 export async function aprobarProformas(proformaIds: string[]): Promise<void> {
