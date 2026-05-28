@@ -5,9 +5,14 @@
  */
 import type { ConceptoVentaCotizacion, DimensionLCL, DimensionAerea } from "@/types/cotizacion";
 
+export type ProspectoVinculacionModo = "vincular" | "nuevo";
+
 export interface CotizacionFormValues {
   esProspecto: boolean;
   clienteId: string;
+  prospectoModo: ProspectoVinculacionModo;
+  oportunidadId: string;
+  leadId: string;
   prospectoEmpresa: string;
   prospectoContacto: string;
   prospectoEmail: string;
@@ -46,6 +51,9 @@ export interface CotizacionFormValues {
 export const COTIZACION_FORM_DEFAULTS: CotizacionFormValues = {
   esProspecto: false,
   clienteId: "",
+  prospectoModo: "nuevo",
+  oportunidadId: "",
+  leadId: "",
   prospectoEmpresa: "",
   prospectoContacto: "",
   prospectoEmail: "",

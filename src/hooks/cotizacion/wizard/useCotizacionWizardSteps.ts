@@ -6,6 +6,8 @@ import type { CreateCotizacionInput, CotizacionRow, ConceptoVentaCotizacion } fr
 import type { FilaCostoLocal } from "@/types/cotizacionPL";
 import type { CotizacionFormValues } from "@/lib/mappers/cotizacionForm";
 import { savePaso1, savePaso2, savePaso3, savePasoFinal, buildConceptosFromCostos } from "@/services/cotizacion";
+import { vincularOCrearOportunidadParaCotizacion } from "@/services/crm/vincularCotizacion";
+import { supabase } from "@/integrations/supabase/client";
 import { getErrorMessage } from "@/lib/errors";
 import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 import { fromDb } from "@/lib/supabase/cast";
@@ -59,8 +61,15 @@ export function useCotizacionWizardSteps({
 
   const validatePaso1 = (v: CotizacionFormValues): string | null => {
     if (!v.esProspecto && !v.clienteId) return "Selecciona un cliente";
-    if (v.esProspecto && !v.prospectoEmpresa.trim()) return "Ingresa el nombre de la empresa del prospecto";
-    if (v.esProspecto && !v.prospectoContacto.trim()) return "Ingresa el nombre del contacto del prospecto";
+    if (v.esProspecto) {
+      if (v.prospectoModo === "vincular" && !v.oportunidadId && !v.leadId) {
+        return "Selecciona un lead u oportunidad existente, o cambia a 'Crear nuevo prospecto'";
+      }
+      if (!v.prospectoEmpresa.trim()) return "Ingresa el nombre de la empresa del prospecto";
+      if (v.prospectoModo === "nuevo" && !v.prospectoContacto.trim()) {
+        return "Ingresa el nombre del contacto del prospecto";
+      }
+    }
     return null;
   };
 
@@ -68,9 +77,43 @@ export function useCotizacionWizardSteps({
     const v = form.getValues();
     const err = validatePaso1(v);
     if (err) { notifyError(toast, { title: err }); return; }
+    const esNueva = !cotizacionId;
     try {
       const id = await savePaso1({ form, msdsFile, cotizacionId, buildPaso1Data, mutations: { crearCotizacion, updateCotizacion } });
       if (!cotizacionId) setCotizacionId(id);
+
+      // Vincular o crear oportunidad CRM si es cotización nueva a prospecto
+      if (esNueva && v.esProspecto) {
+        try {
+          const { data: { user } } = await supabase.auth.getUser();
+          const { data: cotRow } = await supabase
+            .from("cotizaciones").select("folio").eq("id", id).maybeSingle();
+          await vincularOCrearOportunidadParaCotizacion({
+            cotizacionId: id,
+            cotizacionFolio: cotRow?.folio,
+            modoTransporte: v.modo,
+            oportunidadId: v.oportunidadId || null,
+            leadId: v.leadId || null,
+            prospecto: {
+              empresa: v.prospectoEmpresa,
+              contacto: v.prospectoContacto,
+              email: v.prospectoEmail,
+              telefono: v.prospectoTelefono,
+            },
+            user: user ? { id: user.id, email: user.email ?? undefined } : null,
+          });
+        } catch (vinculErr) {
+          // No bloquear el flujo de la cotización si falla CRM; sólo avisar.
+          notifyError(toast, {
+            title: "Cotización guardada, pero falló el vínculo CRM",
+            description: getErrorMessage(vinculErr),
+            error: vinculErr,
+            method: "VINCULAR_OPORTUNIDAD_CRM",
+            context: { cotizacionId: id },
+          });
+        }
+      }
+
       setCurrentStep(2);
     } catch (e: unknown) {
       notifyError(toast, {
