@@ -21,7 +21,7 @@ export function useConceptosForm(opciones: UseConceptosFormOptions = {}) {
     (opciones.costoInicial?.length ?? 1) + 1
   );
 
-  const updateConceptoVenta = (id: number, field: keyof ConceptoVentaLocal, value: string | number | boolean) => {
+  const updateConceptoVenta = (id: number, field: keyof ConceptoVentaLocal, value: string | number | boolean | null) => {
     setConceptosVenta(prev => prev.map(c => c.id === id ? { ...c, [field]: value } : c));
   };
 

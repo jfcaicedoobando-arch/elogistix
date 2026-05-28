@@ -70,6 +70,7 @@ export function useEditarEmbarqueWizard(id: string | undefined) {
       cantidad: v.cantidad,
       precioUnitario: Number(v.precio_unitario),
       moneda: v.moneda,
+      contenedorId: v.contenedor_id ?? null,
     })));
   }, [conceptosVentaDb, initialized, inicializarVenta]);
 
@@ -81,6 +82,7 @@ export function useEditarEmbarqueWizard(id: string | undefined) {
       concepto: c.concepto,
       monto: Number(c.monto),
       moneda: c.moneda,
+      contenedorId: c.contenedor_id ?? null,
     })));
   }, [conceptosCostoDb, initialized, inicializarCosto]);
 
