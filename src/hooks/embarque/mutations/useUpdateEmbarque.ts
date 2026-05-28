@@ -15,6 +15,9 @@ import {
   invokeJsonCargoTrackBackground,
   createDocumentoEmbarqueRow,
 } from '@/services/embarque';
+import { sincronizarContenedores } from '@/services/embarque/contenedores';
+import type { ContenedorBorrador } from '@/types/embarque/contenedor';
+import { CONTENEDORES_QUERY_KEY } from '@/hooks/embarque/useContenedoresEmbarque';
 import {
   tipoEventoParaEstado,
   descripcionEventoCambioEstado,
@@ -30,6 +33,8 @@ interface UpdateEmbarqueInput {
   embarque: Partial<TablesInsert<'embarques'>>;
   conceptosVenta: Omit<TablesInsert<'conceptos_venta'>, 'embarque_id'>[];
   conceptosCosto: Omit<TablesInsert<'conceptos_costo'>, 'embarque_id'>[];
+  /** Lista de contenedores hijos (Fase 2 v12.11.0). Si se omite, no se sincronizan. */
+  contenedores?: ContenedorBorrador[];
   /** Idempotency key (A.3). */
   requestId?: string;
 }
@@ -39,7 +44,10 @@ export function useUpdateEmbarque() {
   return useMutation({
     mutationFn: async (input: UpdateEmbarqueInput) => {
       await actualizarEmbarqueRpc({ ...input, requestId: input.requestId ?? newRequestId() });
-      // Auto-sync JSONCargo si aplica (fire-and-forget)
+      if (input.contenedores !== undefined) {
+        await sincronizarContenedores(input.id, input.contenedores);
+      }
+      // Auto-sync JSONCargo si aplica (fire-and-forget) — deprecado, se removerá.
       const e = input.embarque;
       if (e.modo === 'Marítimo' && e.contenedor && mapNavieraToJsonCargo(e.naviera ?? null)) {
         invokeJsonCargoTrackBackground(input.id)
@@ -53,6 +61,7 @@ export function useUpdateEmbarque() {
       queryClient.invalidateQueries({ queryKey: queryKeys.embarques.conceptosVenta(embarqueActualizado.id) });
       queryClient.invalidateQueries({ queryKey: queryKeys.embarques.conceptosCosto(embarqueActualizado.id) });
       queryClient.invalidateQueries({ queryKey: queryKeys.jsonCargo.byEmbarque(embarqueActualizado.id) });
+      queryClient.invalidateQueries({ queryKey: [CONTENEDORES_QUERY_KEY, embarqueActualizado.id] });
     },
   });
 }

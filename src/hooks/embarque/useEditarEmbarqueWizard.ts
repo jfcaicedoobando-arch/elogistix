@@ -8,6 +8,8 @@ import {
   useProveedoresForSelect,
   useUpdateEmbarque,
 } from "@/hooks/embarque/useEmbarques";
+import { useContenedoresEmbarque } from "@/hooks/embarque/useContenedoresEmbarque";
+import { rowAContenedorBorrador } from "@/types/embarque/contenedor";
 import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 import { useClientesForSelect, useContactosCliente } from "@/hooks/cliente/useClientes";
 import { useAuth } from "@/contexts/AuthContext";
@@ -30,6 +32,7 @@ export function useEditarEmbarqueWizard(id: string | undefined) {
   const { data: embarque, isLoading } = useEmbarque(id);
   const { data: conceptosVentaDb = [], isLoading: cargandoVenta } = useEmbarqueConceptosVenta(id);
   const { data: conceptosCostoDb = [], isLoading: cargandoCosto } = useEmbarqueConceptosCosto(id);
+  const { data: contenedoresDb = [], isLoading: cargandoContenedores } = useContenedoresEmbarque(id);
   const { data: clientes = [] } = useClientesForSelect();
   const { data: proveedoresDb = [] } = useProveedoresForSelect();
   const updateEmbarque = useUpdateEmbarque();
@@ -37,6 +40,7 @@ export function useEditarEmbarqueWizard(id: string | undefined) {
 
   const [initialized, setInitialized] = useState(false);
   const [hidratoContactos, setHidratoContactos] = useState(false);
+  const [hidratoContenedores, setHidratoContenedores] = useState(false);
   const [currentStep, setCurrentStep] = useState(1);
 
   const {
@@ -107,6 +111,17 @@ export function useEditarEmbarqueWizard(id: string | undefined) {
     setHidratoContactos(true);
   }, [initialized, hidratoContactos, embarque, contactos, selectedCliente, methods]);
 
+  // Hidratación de contenedores hijos (Fase 2 v12.11.0). Una vez tras initialized.
+  useEffect(() => {
+    if (!initialized || hidratoContenedores || cargandoContenedores) return;
+    methods.setValue(
+      'contenedores',
+      contenedoresDb.map(rowAContenedorBorrador),
+      { shouldDirty: false },
+    );
+    setHidratoContenedores(true);
+  }, [initialized, hidratoContenedores, cargandoContenedores, contenedoresDb, methods]);
+
   const handleSave = async () => {
     if (!id || !embarque) return;
     try {
@@ -123,11 +138,13 @@ export function useEditarEmbarqueWizard(id: string | undefined) {
       const cambiosVenta = diffConceptos(conceptosVentaDb, nuevosVenta);
       const cambiosCosto = diffConceptos(conceptosCostoDb, nuevosCosto);
 
+      const contenedoresActuales = methods.getValues('contenedores') ?? [];
       await updateEmbarque.mutateAsync({
         id,
         embarque: nuevoEmbarquePayload,
         conceptosVenta: nuevosVenta,
         conceptosCosto: nuevosCosto,
+        contenedores: contenedoresActuales,
       });
 
       const v = methods.getValues();
@@ -162,7 +179,7 @@ export function useEditarEmbarqueWizard(id: string | undefined) {
 
   return {
     embarque,
-    isLoading: isLoading || cargandoVenta || cargandoCosto,
+    isLoading: isLoading || cargandoVenta || cargandoCosto || cargandoContenedores,
     methods,
     currentStep,
     setCurrentStep,

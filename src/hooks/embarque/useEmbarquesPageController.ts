@@ -9,6 +9,7 @@ import { useToast } from "@/hooks/shared";
 import { getErrorMessage } from "@/lib/errors";
 import { getOrigen, getDestino } from "@/lib/formatters";
 import { useEmbarquesPageState } from "@/hooks/embarque/useEmbarquesPageState";
+import { useContenedoresInfoMap } from "@/hooks/embarque/useContenedoresInfoMap";
 import { buildEmbarqueColumns } from "@/components/embarque/embarqueColumns";
 import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 import { fetchEmbarquesParaExport } from "@/services/embarque";
@@ -30,7 +31,10 @@ export function useEmbarquesPageController() {
   const prefetchEmbarque = usePrefetchEmbarque();
 
   const state = useEmbarquesPageState();
-  const { isLoading, isEmptyState, contenedoresPorExpediente, extras } = state;
+  const { isLoading, isEmptyState, contenedoresPorExpediente, extras, embarques } = state;
+
+  const visibleIds = useMemo(() => embarques.map((e) => e.id), [embarques]);
+  const { data: contenedoresInfoMap = {} } = useContenedoresInfoMap(visibleIds);
 
   const [exportandoCsv, setExportandoCsv] = useState(false);
 
@@ -44,8 +48,9 @@ export function useEmbarquesPageController() {
     () => buildEmbarqueColumns({
       docsMap,
       contenedoresPorExpediente,
+      contenedoresInfoMap,
     }),
-    [docsMap, contenedoresPorExpediente],
+    [docsMap, contenedoresPorExpediente, contenedoresInfoMap],
   );
 
 

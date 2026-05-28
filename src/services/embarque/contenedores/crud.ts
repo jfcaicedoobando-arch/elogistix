@@ -101,6 +101,8 @@ export async function eliminar(id: string): Promise<void> {
 /**
  * Reemplaza todos los contenedores del embarque por la lista dada.
  * Patrón delete+insert para sincronizar edición masiva desde UI.
+ * Nota: rompe FKs en conceptos_venta.contenedor_id y conceptos_costo.contenedor_id.
+ * Para edición preservando IDs usar `sincronizarContenedores`.
  */
 export async function reemplazarTodos(
   embarqueId: string,
@@ -113,4 +115,42 @@ export async function reemplazarTodos(
     .is("deleted_at", null);
   if (delError) throw delError;
   return crearMuchos(embarqueId, borradores);
+}
+
+/**
+ * Sincroniza la lista preservando IDs cuando coinciden.
+ * Útil para edición del wizard sin romper FKs de conceptos_*.contenedor_id.
+ */
+export async function sincronizarContenedores(
+  embarqueId: string,
+  borradores: ContenedorBorrador[],
+): Promise<EmbarqueContenedor[]> {
+  const actuales = await listarPorEmbarque(embarqueId);
+  const idsConservados = new Set(
+    borradores.map((b) => b.id).filter((id): id is string => Boolean(id)),
+  );
+
+  const paraEliminar = actuales
+    .filter((a) => !idsConservados.has(a.id))
+    .map((a) => a.id);
+  if (paraEliminar.length > 0) {
+    const { error } = await supabase
+      .from("embarque_contenedores")
+      .update({ deleted_at: new Date().toISOString() })
+      .in("id", paraEliminar);
+    if (error) throw error;
+  }
+
+  await Promise.all(
+    borradores
+      .filter((b) => b.id)
+      .map((b) => actualizar(b.id!, b)),
+  );
+
+  const nuevos = borradores.filter((b) => !b.id);
+  if (nuevos.length > 0) {
+    await crearMuchos(embarqueId, nuevos);
+  }
+
+  return listarPorEmbarque(embarqueId);
 }
