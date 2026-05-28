@@ -1,95 +1,63 @@
+# Estabilización para cierre de 12.0.0
 
-## Integración CRM ↔ Cotizaciones (enfoque híbrido CRM-first con atajo)
+Objetivo: Pasar de `12.0.0-rc.17` a `12.0.0` final con un único rc de estabilización (`rc.18`) que deje el major listo, sin agregar features.
 
-**Principio:** el CRM nunca queda vacío. Toda cotización a prospecto se ancla a un lead + oportunidad. El vendedor puede vincular a uno existente o crearlo en línea desde el wizard.
+## Alcance
 
----
+Sólo limpieza, documentación y verificaciones automáticas. No nuevas funcionalidades. No smoke test manual (queda bajo responsabilidad del usuario).
 
-### Fase 1 — Selector "vincular o crear" en `SeccionDestinatario`
+## Pasos
 
-Al elegir "Prospecto" en `src/components/cotizacion/SeccionDestinatario.tsx`, mostrar tres modos en lugar del formulario plano actual:
+### 1. Revisión de pendientes de auditoría
 
-1. **Vincular a oportunidad existente** (default cuando hay matches)
-   - Combobox con búsqueda debounced (200 ms) que reutilice `useCrmSearch` filtrado a `kind === "oportunidad"` y opcionalmente `kind === "lead"`.
-   - Al seleccionar una oportunidad: precargar `prospectoEmpresa`, `prospectoContacto`, `prospectoEmail`, `prospectoTelefono` desde el lead/oportunidad y guardar `oportunidadId` + `leadId` en el form (campos nuevos).
-   - Mostrar chip "Vinculado a OP-123 · Etapa: Calificación" con botón "Desvincular".
+Revisar `mem://audit/pendings` y clasificar cada item abierto en:
+- **Bloqueante para 12.0.0** → se aborda en rc.18.
+- **Diferido a 12.x** → se documenta explícitamente como deuda asumida.
 
-2. **Vincular a lead existente (aún sin oportunidad)**
-   - Mismo combobox; al seleccionar un lead sin oportunidad, se creará la oportunidad al guardar (Fase 2).
+Estado actual conocido: Bloque A cerrado. Pendientes son cosméticos (B6, B7, C9-C11, D12) + previos (P1.5-1.7, refactor complejidad, P3.13-16, edge functions). Propuesta: **todos diferidos a 12.x**, ninguno bloquea el major. Sólo se actualiza el archivo de pendings para reflejar el corte de versión.
 
-3. **Crear nuevo prospecto** (atajo actual)
-   - Formulario actual (empresa, contacto, email, teléfono).
-   - Banner informativo: *"Se creará un lead y una oportunidad en CRM al guardar la cotización."*
+### 2. Linter de Supabase
 
-**UX guardrail:** mientras el usuario escribe el nombre de empresa en modo "crear nuevo", correr la búsqueda en background; si hay match ≥ 80% por nombre, mostrar aviso inline *"¿Es la misma empresa que [Lead X]? Vincular"* para evitar duplicados.
+Ejecutar `supabase--linter`. Resolver únicamente hallazgos `ERROR` o `WARN` de seguridad (RLS, search_path, security definer). Hallazgos `INFO` se difieren.
 
----
+### 3. Changelog consolidado 12.0.0
 
-### Fase 2 — Lógica de guardado en `useCotizacionWizardForm` / mutations
+Editar `CHANGELOG.md` (root) agregando un bloque nuevo `## [12.0.0] - YYYY-MM-DD` **arriba** de los rc.x, con un resumen narrativo agrupado por área:
 
-Al guardar una cotización con `esProspecto = true`:
+- **CRM ↔ Cotizaciones**: vincular/crear prospecto, mapeo de etapas, propagación a cliente.
+- **Embarques**: ciclo 7 estados, timeline automático, alertas demurrage, liquidación, docs.
+- **Multi-tenant**: impersonación, demo readonly, unified user management, unified login.
+- **Portal de cliente**: RPCs seguros, layout limpio.
+- **Dashboard operativo**: categorías de riesgo, alerts sidebar.
+- **Cotizaciones**: wizard, prospectos, incoterms estándar, conversión a embarque.
+- **Auditoría arquitectónica**: Power of 10, storage RLS, browser storage wrapper, baseline de imports.
+- **Infraestructura**: tipos de cambio dinámicos, paginación servidor, estandarización de tablas, chunk load recovery.
 
-- **Caso A — `oportunidadId` presente:** solo `UPDATE cotizaciones SET oportunidad_id = ...`. No tocar lead/oportunidad.
-- **Caso B — solo `leadId` presente:** crear `crm_oportunidad` en etapa "Cotizando" vinculada al lead, luego asignar a la cotización.
-- **Caso C — nada vinculado (crear nuevo):** crear `crm_lead` (estado "Nuevo", fuente "Otro" o configurable) + `crm_oportunidad` (etapa "Cotizando"), luego asignar a la cotización.
+No se eliminan los bloques `rc.1` a `rc.18`; quedan como historial.
 
-Idempotencia: si la cotización ya tiene `oportunidad_id` (edición), no recrear nada.
+### 4. Bump de versión
 
-Archivos:
-- `src/services/cotizacion/mutations/` — nuevo helper `vincularOCrearOportunidad.ts`.
-- `src/hooks/cotizacion/useCotizacionWizardForm.ts` — invocar el helper antes/después del insert de cotización.
-- `src/types/cotizacionForm.ts` — agregar `oportunidadId?: string`, `leadId?: string`, `modoVinculacion: "existente" | "nuevo"`.
+`src/constants/appVersion.ts`: `12.0.0-rc.17` → `12.0.0-rc.18` durante el trabajo, y al final del rc.18 → `12.0.0` (sin sufijo). Cada bump con su entrada en `CHANGELOG.md`.
 
----
+### 5. Actualización de memorias
 
-### Fase 3 — Sincronización de estados cotización → oportunidad
+Revisar el índice `mem://index.md` y abrir cualquier memoria potencialmente desactualizada por los cambios CRM-Cotización (`mem://features/cotizacion-crm-integration` si existe, `mem://features/standard-incoterms`, `mem://features/multi-tenant-architecture`). Sólo corrección, no expansión.
 
-En `src/hooks/cotizacion/useCotizacionDetalleHandlers.ts`, después de `actualizarEstado.mutateAsync`, si la cotización tiene `oportunidad_id` llamar `actualizarEtapaOportunidad` con mapeo configurable:
+## Fuera de alcance
 
-| Estado cotización | Etapa oportunidad (default) |
-|---|---|
-| Guardada | Cotizando |
-| Enviada | Propuesta enviada |
-| Aceptada | Ganada (prob 100, fecha_cierre = hoy) |
-| Rechazada | Perdida |
-| Convertida a embarque | Ganada + comentario "Operando" |
+- Smoke test manual del flujo CRM ↔ Cotización (lo hace el usuario).
+- Cualquier feature nueva.
+- Refactors de los pendientes B/C/D y P1.x (se difieren a 12.x).
+- Cambios visuales.
 
-Llaves de configuración nuevas en `src/hooks/configuracion/configSchemas.ts`:
-`crm.etapa_cotizando_id`, `crm.etapa_propuesta_id`, `crm.etapa_ganada_id`, `crm.etapa_perdida_id`.
+## Entregables
 
----
+1. `supabase--linter` sin errores de seguridad.
+2. `CHANGELOG.md` con bloque `## [12.0.0]` narrativo arriba.
+3. `APP_VERSION = "12.0.0"`.
+4. `mem://audit/pendings` actualizado con corte 12.0.0 y lista clara de deuda diferida a 12.x.
 
-### Fase 4 — Propagar conversión prospecto → cliente al CRM
+## Detalle técnico
 
-En `src/services/cotizacion/conversiones/prospecto.ts`, después de crear el cliente:
-- Si la cotización tiene `oportunidad_id`: `UPDATE crm_oportunidades SET cliente_id, cliente_nombre`.
-- Si la oportunidad tiene `lead_id`: marcar lead como `Convertido`, llenar `cliente_convertido_id` y `oportunidad_convertida_id`.
-
----
-
-### Fase 5 — Visibilidad cruzada
-
-- `src/pages/cotizaciones/CotizacionDetalle.tsx`: chip "Oportunidad: OP-123" enlazando a `/crm/oportunidades/:id`.
-- `src/pages/crm/OportunidadDetalle.tsx`: ya muestra cotizaciones vía `useOportunidadCotizaciones`; verificar que liste las nuevas creadas desde el wizard.
-
----
-
-### Fase 6 — Backfill (one-shot)
-
-Migración SQL: para `cotizaciones` con `es_prospecto = true` y `oportunidad_id IS NULL`, crear lead + oportunidad por cada una usando `prospecto_empresa/contacto/email/telefono` como datos.
-
----
-
-### Out of scope
-
-- No tocar el flujo inverso (`insertCotizacionDesdeOportunidad`) que ya funciona desde `OportunidadDetalle`.
-- No cambiar permisos/RLS — se asume que quien crea cotizaciones tiene permiso de crear leads/oportunidades.
-- No agregar workflow de aprobación previa a cotizar (queda como Fase futura si se quiere endurecer el proceso a CRM-first puro).
-
----
-
-### Extras obligatorios al implementar
-
-- Bump `APP_VERSION` en `src/constants/appVersion.ts`.
-- Entrada en `CHANGELOG.md` describiendo: vinculación lead/oportunidad desde wizard, sincronización de estados, propagación de conversión.
-- Memoria nueva: `mem://features/cotizacion-crm-integration` con las reglas de vinculación y el mapeo de estados.
+- Orden de commits sugerido: (1) linter fixes si aplica, (2) bump a `rc.18` + nota corta, (3) cambios de memoria/pendings, (4) bump final a `12.0.0` con el bloque narrativo consolidado.
+- El bloque `## [12.0.0]` no duplica bullets de los rc; resume por área de producto en lenguaje orientado a usuario final.
