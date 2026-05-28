@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [12.0.0-rc.12] - 2026-05-28
+- **fix(embarques)**: los campos de Monto/Cantidad en Conceptos de Costo y Venta del wizard de embarques ahora aceptan decimales correctamente (`NumericInput`), sin flechas spinner ni cambios accidentales con scroll. Antes, `Number(e.target.value)` y el locale es-MX impedían escribir `1.5` o `1,5`.
+
 ## [12.0.0-rc.11] - 2026-05-27
 - **fix(cotizaciones)**: los inputs de dimensiones en carga LCL y aérea (Nueva Cotización) ahora permiten borrar el `0` por defecto, no muestran flechas spinner, no cambian valor con el scroll del mouse y seleccionan el contenido al hacer foco. Nuevo componente compartido `NumericInput` (`src/components/shared/NumericInput.tsx`) usado en `SeccionMercanciaMaritimeLCL` y `SeccionMercanciaAerea`.
 

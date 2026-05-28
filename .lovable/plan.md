@@ -1,78 +1,34 @@
-
 ## Problema
 
-En "Nueva Cotización" → carga consolidada (LCL) y aérea, la tabla de dimensiones usa `<Input type="number">` con `value={dim.campo}` (número crudo). Esto causa:
+En el wizard de embarques (`StepCostosPrecios.tsx`), los campos **Subtotal** y **Cantidad** de Conceptos de Costo / Venta usan `<Input type="number" step="0.01">` con `onChange={e => update(..., Number(e.target.value))}`.
 
-1. **No se puede borrar el `0`**: el estado siempre es un número, así que al presionar Delete/Backspace el valor vuelve a renderizarse como `0`. Al teclear `1` el usuario ve `01` (porque escribe antes del 0 que no se borró, o porque el navegador concatena).
-2. **Flechas spinner** arriba/abajo que nadie usa y ocupan espacio.
-3. **Scroll del mouse** sobre el input cambia el valor accidentalmente (bug típico de `type="number"`).
-4. Al hacer foco, no se selecciona el contenido, por lo que hay que borrar manualmente.
+Esto falla con decimales en es-MX porque:
+- El navegador en locale mexicano acepta coma decimal (`1,5`), pero `Number("1,5")` devuelve `NaN` → el campo se vacía.
+- Al escribir `1.` (punto pendiente), `Number("1.")` = `1`, así que el `.` se "come" y nunca puedes seguir tecleando decimales.
+- Las flechas spinner y el scroll-to-change siguen activos (mismo problema que ya arreglamos en cotización LCL/Aérea).
 
-Afecta a:
-- `src/components/cotizacion/SeccionMercanciaMaritimeLCL.tsx` (LCL)
-- `src/components/cotizacion/SeccionMercanciaAerea.tsx` (Aérea)
-
-## Solución
-
-Crear un componente compartido `NumericInput` reutilizable y usarlo en ambas tablas. Características:
-
-- **Estado de string interno**: permite vacío mientras se edita; emite `onChange(number)` al padre cuando es válido (vacío → `0`).
-- **`type="text"` con `inputMode="decimal"`**: teclado numérico en móvil, sin spinners, sin scroll-to-change.
-- **`pattern`** que acepta solo dígitos y un punto decimal opcional (configurable: `integer` vs `decimal`).
-- **Auto-select on focus**: al hacer foco selecciona todo el contenido para que el usuario teclee y reemplace directamente.
-- **Sin leading zero**: al perder foco se normaliza (`01` → `1`, `` → `0`, `.5` → `0.5`).
-- **Alineado a la derecha** (números) y `tabular-nums` para que se vea ordenado.
+Ya existe el componente `src/components/shared/NumericInput.tsx` (creado en 12.0.0-rc.11) que resuelve exactamente esto: estado interno tipo string, `inputMode="decimal"`, normaliza en blur, sin spinners.
 
 ## Cambios
 
-1. **Nuevo**: `src/components/shared/NumericInput.tsx` — wrapper sobre `<Input>` con la lógica anterior. Props: `value: number`, `onChange: (n: number) => void`, `decimals?: boolean`, `min?`, `step?` (solo informativo), `className?`, `aria-label?`.
+1. **`src/components/embarque/StepCostosPrecios.tsx`**
+   - Reemplazar los 3 `<Input type="number">` por `<NumericInput>`:
+     - Conceptos de Costo → `Subtotal` (`decimals`)
+     - Conceptos de Venta → `Cantidad` (entero, `decimals={false}`)
+     - Conceptos de Venta → `Subtotal` (`decimals`)
+   - Mantener clases existentes (`text-sm`) y handlers `updateConceptoCosto / updateConceptoVenta`.
+   - Los campos de Tipo de Cambio USD/EUR también pasan a `NumericInput` (mismo problema, son decimales) usando `setValue` de RHF en lugar de `register`.
 
-2. **Editar** `SeccionMercanciaMaritimeLCL.tsx`: reemplazar los 4 `<Input type="number">` (piezas, alto, largo, ancho) por `<NumericInput>`. `piezas` → `decimals={false}`; las demás `decimals`.
+2. **`src/constants/appVersion.ts`** → bump a `12.0.0-rc.12`.
 
-3. **Editar** `SeccionMercanciaAerea.tsx`: idem.
-
-4. **CSS opcional**: las flechas se eliminan automáticamente al cambiar a `type="text"`. No se requiere modificar `index.css`.
-
-5. **Bitácora**:
-   - `src/constants/appVersion.ts` → `12.0.0-rc.11`.
-   - `CHANGELOG.md` → entrada `## [12.0.0-rc.11]` describiendo el fix de inputs de dimensiones (cotizaciones LCL y aérea).
-
-## Detalles técnicos
-
-```tsx
-// NumericInput.tsx (esencia)
-const [text, setText] = useState(value === 0 ? "" : String(value));
-
-useEffect(() => {
-  // sincronizar si el padre cambia el valor externamente
-  if (Number(text || 0) !== value) setText(value === 0 ? "" : String(value));
-}, [value]);
-
-const re = decimals ? /^\d*\.?\d*$/ : /^\d*$/;
-
-<Input
-  type="text"
-  inputMode={decimals ? "decimal" : "numeric"}
-  value={text}
-  onFocus={(e) => e.currentTarget.select()}
-  onChange={(e) => {
-    const v = e.target.value;
-    if (re.test(v)) {
-      setText(v);
-      onChange(v === "" || v === "." ? 0 : Number(v));
-    }
-  }}
-  onBlur={() => {
-    const n = text === "" || text === "." ? 0 : Number(text);
-    setText(n === 0 ? "" : String(n)); // normaliza "01" → "1"
-    onChange(n);
-  }}
-  className="h-8 text-right tabular-nums"
-/>
-```
-
-Esto resuelve borrar el `0`, quita spinners, evita scroll accidental y mejora la UX de captura rápida.
+3. **`CHANGELOG.md`** → entrada nueva:
+   ```
+   ## [12.0.0-rc.12] - 2026-05-28
+   - Fix: campos de monto/cantidad en Conceptos de Costo y Venta del wizard de embarques ahora aceptan decimales correctamente (NumericInput), sin spinners ni scroll accidental.
+   ```
 
 ## Fuera de alcance
 
-No se cambia la lógica de cálculo (`volumen_m3`, `peso_volumetrico_kg`) ni la estructura de datos. Solo el componente de captura. Si apruebas, después podemos replicar `NumericInput` en otros formularios numéricos (montos, cantidades) en un PR separado.
+- No se toca la lógica de cálculo (`aUSD`, `sumarEnUSD`, `utilidadEstimada`).
+- No se modifican los conceptos de cotización (`ConceptoRowUSD/MXN`) — ya tienen su propio manejo string + regex que sí funciona con decimales.
+- No se cambia el schema ni el form state de RHF.

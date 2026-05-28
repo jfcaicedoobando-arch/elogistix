@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { CATALOGO_CONCEPTOS } from "@/constants/embarqueConstants";
 import { ValidationAlert } from "@/components/feedback/ValidationAlert";
+import { NumericInput } from "@/components/shared/NumericInput";
 import type { StepValidationErrors } from "@/lib/domain/embarqueWizardSchemas";
 import type { EmbarqueFormValues } from "@/hooks/embarque";
 import type { ConceptoVentaLocal as ConceptoVentaRow, ConceptoCostoLocal as ConceptoCostoRow } from "@/types/concepto";
@@ -85,7 +86,7 @@ export function StepCostosPrecios(props: Props) {
                     <SelectTrigger className="text-sm"><SelectValue placeholder="Seleccionar" /></SelectTrigger>
                     <SelectContent>{CATALOGO_CONCEPTOS.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}</SelectContent>
                   </Select>
-                  <Input type="number" min={0} step="0.01" className="text-sm" value={costo.monto || ''} onChange={e => updateConceptoCosto(costo.id, 'monto', Number(e.target.value))} />
+                  <NumericInput decimals value={costo.monto} onChange={n => updateConceptoCosto(costo.id, 'monto', n)} className="text-sm h-10" aria-label="Subtotal costo" />
                   <Select value={costo.moneda} onValueChange={v => updateConceptoCosto(costo.id, 'moneda', v)}>
                     <SelectTrigger className="text-sm"><SelectValue /></SelectTrigger>
                     <SelectContent><SelectItem value="MXN">MXN</SelectItem><SelectItem value="USD">USD</SelectItem><SelectItem value="EUR">EUR</SelectItem></SelectContent>
@@ -119,8 +120,8 @@ export function StepCostosPrecios(props: Props) {
                     <SelectTrigger className="text-sm"><SelectValue placeholder="Seleccionar" /></SelectTrigger>
                     <SelectContent>{CATALOGO_CONCEPTOS.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}</SelectContent>
                   </Select>
-                  <Input type="number" min={1} className="text-sm" value={venta.cantidad} onChange={e => updateConceptoVenta(venta.id, 'cantidad', Number(e.target.value))} />
-                  <Input type="number" min={0} step="0.01" className="text-sm" value={venta.precioUnitario || ''} onChange={e => updateConceptoVenta(venta.id, 'precioUnitario', Number(e.target.value))} />
+                  <NumericInput value={venta.cantidad} onChange={n => updateConceptoVenta(venta.id, 'cantidad', n)} className="text-sm h-10" aria-label="Cantidad venta" />
+                  <NumericInput decimals value={venta.precioUnitario} onChange={n => updateConceptoVenta(venta.id, 'precioUnitario', n)} className="text-sm h-10" aria-label="Subtotal venta" />
                   <Select value={venta.moneda} onValueChange={v => updateConceptoVenta(venta.id, 'moneda', v)}>
                     <SelectTrigger className="text-sm"><SelectValue /></SelectTrigger>
                     <SelectContent><SelectItem value="MXN">MXN</SelectItem><SelectItem value="USD">USD</SelectItem><SelectItem value="EUR">EUR</SelectItem></SelectContent>
