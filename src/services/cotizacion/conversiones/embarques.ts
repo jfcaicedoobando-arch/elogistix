@@ -126,7 +126,7 @@ export async function convertirCotizacionAEmbarques(
         // Type guard sin doble cast: `raw` viene del JSON de la cotización (tipo Json
         // recursivo). Sólo trabajamos con objetos planos no-array; el resto se descarta.
         if (!raw || typeof raw !== "object" || Array.isArray(raw)) return null;
-        const v = raw as Record<string, unknown>;
+        const v = raw as unknown as Record<string, unknown>;
         const descripcion = String(v.descripcion ?? "").trim();
         if (!descripcion) return null;
         return {
