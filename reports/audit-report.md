@@ -1,23 +1,21 @@
-# Audit Report — 12.14.1
+# Audit Report — 12.14.2
 
-Generado: 2026-05-28T22:47:09.675Z
+Generado: 2026-05-28T22:52:21.853Z
 
 ## Resumen
 
 | Sección | Estado | Detalle |
 |---|---|---|
-| Capa (Supabase directo en hooks/contexts) | ❌ | 3 archivos |
+| Capa (Supabase directo en hooks/contexts) | ✅ | 0 archivos |
 | Capa (Supabase directo en components/pages) | ✅ | 0 archivos |
 | Power-of-10 (>200 líneas) | ❌ | 5 archivos |
-| Casts HIGH + CRITICAL | ⚠️ | 5 / 753 |
+| Casts HIGH + CRITICAL | ⚠️ | 4 / 753 |
 | Higiene de tests | ✅ | 0 violaciones |
 
 ## Arquitectura
 
 ### Hooks/Contexts con import directo a Supabase
-- `src/hooks/cotizacion/wizard/handlePaso1Crm.ts`
-- `src/hooks/crm/useCrmProspectoSearch.ts`
-- `src/hooks/embarque/useContenedoresInfoMap.ts`
+✅ Ninguno
 
 ### Components/Pages con import directo a Supabase
 ✅ Ninguno
@@ -31,14 +29,14 @@ Generado: 2026-05-28T22:47:09.675Z
 
 ## Casts
 
-Total: **753** — HIGH: **5**, CRITICAL: **0**
+Total: **753** — HIGH: **4**, CRITICAL: **0**
 
 | Severidad | Cantidad |
 |---|---:|
 | SAFE | 307 |
-| LOW | 12 |
+| LOW | 13 |
 | MEDIUM | 429 |
-| HIGH | 5 |
+| HIGH | 4 |
 | CRITICAL | 0 |
 
 ### Top-10 archivos por peso de riesgo
