@@ -6,6 +6,13 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [12.10.0] - 2026-05-28
+- **feat(cotización→embarque)**: Fase 1 del cierre del refactor 1↔N. `convertirCotizacionAEmbarques` ahora crea **1 embarque con N contenedores hijos** (en lugar de N embarques de 1 contenedor). Reparte peso/volumen/piezas equitativamente entre los hijos y asigna `contenedor_id` a los costos por unidad "Contenedor"; los costos por unidad "BL" se insertan una sola vez como cargo general. Esto alinea el flujo de aceptación de cotización con el modelo correcto.
+- **fix(proformas/consolidadas)**: La RPC `consolidar_proformas` ahora agrupa los conceptos por el contenedor REAL (`embarque_contenedores.numero_contenedor` vía `conceptos_venta.contenedor_id`) en lugar del campo legacy `embarques.contenedor`. Una proforma consolidada de un embarque con 3 contenedores muestra correctamente las 3 secciones separadas. Fallback al legacy para conceptos sin `contenedor_id` o datos antiguos.
+- **fix(proformas/pendientes)**: `fetchProformasPendientes` enriquece cada proforma con `contenedores_lista` (derivada de `conceptos_venta.contenedor_id`). El agrupador `agruparProformasPendientes` bucketiza por contenedor real; proformas que cubren 2+ contenedores caen en bucket `__multi__`. Compat hacia atrás vía fallback al legacy.
+- **test**: nuevos casos en `proforma.test.ts` cubriendo embarques multi-contenedor y bucket `__multi__`.
+- **docs**: `docs/deprecation-jsoncargo.md` con el inventario de remoción del proveedor de tracking (Fase 2 del plan original queda cancelada — se reemplaza por esta deprecación + integración de proveedor futuro).
+
 ## [12.9.0] - 2026-05-28
 - **feat(embarques/conceptos)**: Cierre del pendiente crítico del refactor de contenedores. El wizard de costos (`StepCostosPrecios`) ahora muestra una columna "Contenedor" por cada concepto de costo y venta, sólo cuando el embarque tiene ≥2 contenedores (vía `SelectContenedorConcepto`). El operador puede asignar cada cargo a un contenedor específico o dejarlo como "General". `TabCostos` agrega la misma columna en modo lectura. Los mappers (`buildConceptosVentaPayload` / `buildConceptosCostoPayload`) y la hidratación al editar (`useEditarEmbarqueWizard`) ya leen/escriben `contenedor_id`. Con esto los chips de filtro de `DialogGenerarProforma` por fin separan los conceptos reales por contenedor.
 
