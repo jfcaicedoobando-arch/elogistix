@@ -20,12 +20,16 @@ export interface ProspectoData {
 
 export interface VincularInput {
   cotizacionId: string;
-  cotizacionFolio: string;
+  cotizacionFolio?: string;
   modoTransporte: string;
   oportunidadId?: string | null;
   leadId?: string | null;
   prospecto: ProspectoData;
   user: AuthLite | null;
+}
+
+function buildOpNombre(empresa: string, folio?: string): string {
+  return folio ? `${empresa} — ${folio}` : `Cotización · ${empresa}`;
 }
 
 /**
