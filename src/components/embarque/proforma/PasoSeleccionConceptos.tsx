@@ -78,11 +78,12 @@ export function PasoSeleccionConceptos({
           <span className="text-xs text-muted-foreground">IVA por concepto</span>
         </div>
         <div className="divide-y max-h-[300px] overflow-y-auto">
-          {conceptosPendientes.map(c => {
+          {conceptosVisibles.map(c => {
             const sub = Number(c.cantidad) * Number(c.precio_unitario);
             const isSelected = seleccionados.has(c.id);
             const ivaActivo = ivaPorConcepto[c.id] ?? false;
             const ivaBloqueado = c.moneda === "MXN";
+            const contLabel = c.contenedor_id ? contenedorNumeroById.get(c.contenedor_id) : null;
             return (
               <div key={c.id} className="flex items-start gap-3 p-3 hover:bg-muted/30">
                 <Checkbox
@@ -94,6 +95,12 @@ export function PasoSeleccionConceptos({
                   <div className="flex items-center gap-2 flex-wrap">
                     <span className="font-medium text-sm">{c.descripcion}</span>
                     <Badge variant="outline" className="text-xs">{c.moneda}</Badge>
+                    {contLabel && (
+                      <Badge variant="secondary" className="text-xs">Cont. {contLabel}</Badge>
+                    )}
+                    {!c.contenedor_id && contenedores.length >= 2 && (
+                      <Badge variant="outline" className="text-xs text-muted-foreground">General</Badge>
+                    )}
                   </div>
                   <div className="text-xs text-muted-foreground mt-0.5">
                     {c.cantidad} × {formatCurrency(Number(c.precio_unitario), c.moneda)} = {formatCurrency(sub, c.moneda)}
@@ -118,6 +125,11 @@ export function PasoSeleccionConceptos({
               </div>
             );
           })}
+          {conceptosVisibles.length === 0 && (
+            <div className="p-6 text-center text-sm text-muted-foreground">
+              No hay conceptos en este filtro.
+            </div>
+          )}
         </div>
       </div>
 
