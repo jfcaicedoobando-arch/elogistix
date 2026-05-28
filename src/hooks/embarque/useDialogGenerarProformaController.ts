@@ -10,6 +10,11 @@ import {
   useDiasCreditoCliente,
   useFetchClienteParaPdf,
 } from "@/hooks/embarque/useProformaDialog";
+import { useContenedoresEmbarque } from "@/hooks/embarque/useContenedoresEmbarque";
+import {
+  filtrarPorContenedor,
+  type FiltroContenedor,
+} from "@/lib/domain/conceptosPorContenedor";
 
 import type { Tables } from "@/integrations/supabase/types";
 
