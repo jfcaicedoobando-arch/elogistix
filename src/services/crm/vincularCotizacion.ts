@@ -8,7 +8,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { createLead } from "@/services/crm/leads/mutations";
 import { crearOportunidad } from "@/services/crm/oportunidades";
 import { fetchEtapasPipelineActivas } from "@/services/crm/etapas";
-import type { AuthLite } from "@/lib/crm/leads/leadPayload";
+
+interface AuthLite { id?: string; email?: string }
 
 export interface ProspectoData {
   empresa: string;
