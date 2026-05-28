@@ -31,16 +31,41 @@ export async function fetchProformasAprobadas(organizationId: string): Promise<P
 export async function fetchProformasPendientes(
   organizationId: string,
 ): Promise<ProformaPendienteConEmbarque[]> {
+  // Trae también los conceptos_venta con su contenedor hijo asignado, para que el
+  // agrupador en cliente pueda separar correctamente proformas de embarques con
+  // múltiples contenedores (modelo 1↔N v12.10).
   const { data, error } = await supabase
     .from("proformas")
     .select(
-      "*, embarques:embarque_id(expediente, bl_master, cliente_nombre, contenedor, tipo_contenedor)",
+      "*, embarques:embarque_id(expediente, bl_master, cliente_nombre, contenedor, tipo_contenedor), conceptos_venta(contenedor_id, embarque_contenedores:contenedor_id(numero_contenedor, tipo_contenedor))",
     )
     .eq("organization_id", organizationId)
     .eq("estado_revision", "pendiente")
     .order("created_at", { ascending: false });
   if (error) throw error;
-  return fromDb<ProformaPendienteConEmbarque[]>(data ?? []);
+
+  // Derivar `contenedores_lista` (única por numero_contenedor) por proforma.
+  type RawProforma = ProformaPendienteConEmbarque & {
+    conceptos_venta?: Array<{
+      contenedor_id: string | null;
+      embarque_contenedores: { numero_contenedor: string; tipo_contenedor: string } | null;
+    }> | null;
+  };
+  const enriched = (data ?? []).map((p) => {
+    const raw = p as RawProforma;
+    const seen = new Set<string>();
+    const lista: { numero: string | null; tipo: string | null }[] = [];
+    for (const cv of raw.conceptos_venta ?? []) {
+      const numero = cv.embarque_contenedores?.numero_contenedor?.trim() || null;
+      const tipo = cv.embarque_contenedores?.tipo_contenedor?.trim() || null;
+      const key = numero ?? "__sin__";
+      if (seen.has(key)) continue;
+      seen.add(key);
+      lista.push({ numero, tipo });
+    }
+    return { ...raw, contenedores_lista: lista } as ProformaPendienteConEmbarque;
+  });
+  return fromDb<ProformaPendienteConEmbarque[]>(enriched);
 }
 
 export async function fetchClienteParaPdf(clienteId: string) {
