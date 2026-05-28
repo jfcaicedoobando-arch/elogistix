@@ -35,6 +35,7 @@ import { useStableRequestId } from "@/lib/idempotency";
 import type { Tables } from "@/integrations/supabase/types";
 import type { DocumentoChecklist } from "@/types/documentoChecklist";
 import type { ConceptoVentaLocal, ConceptoCostoLocal } from "@/types/concepto";
+import type { ContenedorBorrador } from "@/types/embarque/contenedor";
 import type { useEmbarqueForm } from "@/hooks/embarque/useEmbarqueForm";
 
 type ContactoRow = Pick<Tables<"contactos_cliente">, "id" | "nombre" | "tipo" | "pais">;
@@ -44,7 +45,7 @@ type EmbarqueFormApi = ReturnType<typeof useEmbarqueForm>;
 
 export interface SubmitOrchestratorParams {
   /** Valores actuales del formulario (RHF.getValues()). */
-  values: { modo: string; tipo: string; blMaster: string };
+  values: { modo: string; tipo: string; blMaster: string; tipoServicio?: string; contenedores?: ContenedorBorrador[] };
   modoExpediente: ModoExpediente;
   expedienteSeleccionado: ExpedienteCliente | null;
   cotizacionVinculada: CotizacionRow | null;
@@ -60,6 +61,7 @@ export interface SubmitOrchestratorParams {
   conceptosVenta: ConceptoVentaLocal[];
   conceptosCosto: ConceptoCostoLocal[];
 }
+
 
 export function useEmbarqueSubmitOrchestrator() {
   const navigate = useNavigate();
