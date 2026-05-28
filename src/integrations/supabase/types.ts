@@ -417,6 +417,7 @@ export type Database = {
       conceptos_costo: {
         Row: {
           concepto: string
+          contenedor_id: string | null
           created_at: string
           deleted_at: string | null
           deleted_by: string | null
@@ -434,6 +435,7 @@ export type Database = {
         }
         Insert: {
           concepto: string
+          contenedor_id?: string | null
           created_at?: string
           deleted_at?: string | null
           deleted_by?: string | null
@@ -451,6 +453,7 @@ export type Database = {
         }
         Update: {
           concepto?: string
+          contenedor_id?: string | null
           created_at?: string
           deleted_at?: string | null
           deleted_by?: string | null
@@ -467,6 +470,13 @@ export type Database = {
           referencia_pago?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "conceptos_costo_contenedor_id_fkey"
+            columns: ["contenedor_id"]
+            isOneToOne: false
+            referencedRelation: "embarque_contenedores"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "conceptos_costo_embarque_id_fkey"
             columns: ["embarque_id"]
@@ -551,6 +561,7 @@ export type Database = {
         Row: {
           aplica_iva: boolean
           cantidad: number
+          contenedor_id: string | null
           created_at: string
           deleted_at: string | null
           deleted_by: string | null
@@ -567,6 +578,7 @@ export type Database = {
         Insert: {
           aplica_iva?: boolean
           cantidad?: number
+          contenedor_id?: string | null
           created_at?: string
           deleted_at?: string | null
           deleted_by?: string | null
@@ -583,6 +595,7 @@ export type Database = {
         Update: {
           aplica_iva?: boolean
           cantidad?: number
+          contenedor_id?: string | null
           created_at?: string
           deleted_at?: string | null
           deleted_by?: string | null
@@ -597,6 +610,13 @@ export type Database = {
           total?: number
         }
         Relationships: [
+          {
+            foreignKeyName: "conceptos_venta_contenedor_id_fkey"
+            columns: ["contenedor_id"]
+            isOneToOne: false
+            referencedRelation: "embarque_contenedores"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "conceptos_venta_embarque_id_fkey"
             columns: ["embarque_id"]
@@ -1584,6 +1604,65 @@ export type Database = {
             columns: ["organization_id"]
             isOneToOne: false
             referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      embarque_contenedores: {
+        Row: {
+          bl_house: string
+          created_at: string
+          deleted_at: string | null
+          deleted_by: string | null
+          embarque_id: string
+          id: string
+          numero_contenedor: string
+          orden: number
+          organization_id: string
+          peso_kg: number
+          piezas: number
+          tipo_contenedor: string
+          updated_at: string
+          volumen_m3: number
+        }
+        Insert: {
+          bl_house?: string
+          created_at?: string
+          deleted_at?: string | null
+          deleted_by?: string | null
+          embarque_id: string
+          id?: string
+          numero_contenedor?: string
+          orden?: number
+          organization_id?: string
+          peso_kg?: number
+          piezas?: number
+          tipo_contenedor?: string
+          updated_at?: string
+          volumen_m3?: number
+        }
+        Update: {
+          bl_house?: string
+          created_at?: string
+          deleted_at?: string | null
+          deleted_by?: string | null
+          embarque_id?: string
+          id?: string
+          numero_contenedor?: string
+          orden?: number
+          organization_id?: string
+          peso_kg?: number
+          piezas?: number
+          tipo_contenedor?: string
+          updated_at?: string
+          volumen_m3?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "embarque_contenedores_embarque_id_fkey"
+            columns: ["embarque_id"]
+            isOneToOne: false
+            referencedRelation: "embarques"
             referencedColumns: ["id"]
           },
         ]

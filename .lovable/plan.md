@@ -1,62 +1,115 @@
-# Plan: Cerrar pendientes reales de auditoría (12.x)
+# Refactor: 1 embarque ↔ N contenedores
 
-Base: `mem://audit/pendings` actualizado 2026-05-28. Solo se atacan ítems vivos. Cada fase = versión menor, con bump `APP_VERSION` + bloque `CHANGELOG.md` y `bun run audit:arch` verde.
+Modelar contenedores como entidad hija real de `embarques`, eliminando el patrón actual de "N embarques hermanos por BL Master".
 
----
+## Objetivo
 
-## Fase 1 — Regresiones Power of 10 (12.1.0)
-Riesgo bajo. Split de los 4 archivos >200 líneas introducidos en esta sesión + excepción documentada.
+Un embarque marítimo FCL pasa a contener **N filas en `embarque_contenedores`**. Cada contenedor tiene su número, tipo, peso/volumen/piezas y BL House propios. Los conceptos financieros pueden ser globales al embarque o asignados a un contenedor específico. Las proformas pueden filtrar conceptos por contenedor.
 
-- **rc.1** `SeccionDestinatario.tsx` (321) → extraer `useSeccionDestinatario` + subcomponentes (`DestinatarioContactoFields`, `DestinatarioDireccionFields`, `DestinatarioFiscalFields`).
-- **rc.2** `DialogDuplicarEmbarque.tsx` (265) → `useDuplicarEmbarque` (lógica de duplicación) + `DuplicarEmbarqueForm` (UI).
-- **rc.3** `useCotizacionWizardSteps.ts` (212) → dividir en `wizardSteps/{definitions,validators,navigation}.ts` + barrel.
-- **rc.4** `services/embarque/vincularCotizacion.ts` (202) → `vincularCotizacion/{mapper,validator,mutator}.ts` + barrel preservando API.
-- **B7** Documentar excepción `components/ui/sidebar.tsx` (shadcn base) en `docs/power10-baseline.md`.
-- **Excepción** `src/pdf/theme/styles.ts` (278) queda registrada como exenta (react-pdf StyleSheet) en `power10-baseline.md`; no se toca.
+## Fases
 
-## Fase 2 — Cosmético / convenciones (12.2.0)
-- **C10** Auditar las 64 ocurrencias de `style={{…}}`. Reemplazar por clases Tailwind/tokens donde aplique; marcar el resto con `// SAFE-CAST:` y razón válida según `mem://principles/inline-styles` (react-pdf, virtualizer, % dinámico, color desde DB). Objetivo: 0 inline no justificados.
-- **C11** Homogeneizar prefijos en `pages/admin-org/`: renombrar `Configuracion.tsx` → `TabConfiguracion.tsx` (convención dominante `Tab*` en el módulo) y actualizar imports.
+### Fase A — Base de datos (migración estructural + datos)
 
-## Fase 3 — Zod en boundary Supabase (12.3.0)
-- **P1.7** Crear schemas zod en `lib/schemas/` para:
-  - `embarqueRowSchema` (extender el existente de queries a row completa).
-  - `facturaRowSchema`, `cotizacionRowSchema`.
-- Reemplazar `fromDb<T>()` por `fromDb(data, schema)` en `services/{embarque,facturas,cotizacion}/queries/*`.
-- Errores de parseo → `console.error` con path del campo + fallback seguro (no romper UI).
-- Tests por schema con fixture real.
+1. **Nueva tabla `embarque_contenedores`**
+   - `id`, `embarque_id` (FK CASCADE), `organization_id`
+   - `numero_contenedor`, `tipo_contenedor`, `bl_house` (opcional)
+   - `peso_kg`, `volumen_m3`, `piezas`
+   - `orden` (int, para ordenamiento estable)
+   - `created_at`, `updated_at`, soft-delete (`deleted_at`, `deleted_by`)
+   - GRANTs estándar + RLS por `organization_id` (espejo de `embarques`)
 
-## Fase 4 — Bajar complejidad ciclomática (12.4.0)
-- **Refactor complexity** Las funciones en `src/` con complejidad 13–16:
-  - Extraer guards tempranos y ramas a helpers en `lib/`.
-  - Una vez todas ≤12, bajar guardrail ESLint `complexity: ["error", 12]`.
-- Edge functions ya están <200 líneas y <15 complexity → no se tocan (cerrado en pendings).
+2. **Conceptos financieros**
+   - Agregar `contenedor_id uuid NULL REFERENCES embarque_contenedores(id) ON DELETE SET NULL` a `conceptos_venta` y `conceptos_costo`.
+   - `NULL` = concepto global del embarque.
 
-## Fase 5 — Mejora continua (12.5.0)
-- **P3.13** Ampliar suite E2E (`e2e/specs/`) con flujos CRM→Cotización→Embarque y multi-tenant switch (los 5 specs actuales se mantienen).
-- **P3.14** Documentar convención `useXxx` en `docs/conventions.md` + regla ESLint custom (hook real vs helper puro).
-- **P3.16** Introducir `Result<T,E>` en `lib/result.ts` y migrar 3 services piloto: `embarque/mutations`, `facturas/mutations`, `cotizacion/mutations`.
+3. **Migración de datos existente**
+   - Para cada `embarques` con `contenedor` o `tipo_contenedor` no nulos: insertar 1 fila en `embarque_contenedores` con esos valores + peso/volumen/piezas del embarque + `orden=1`.
+   - **No** colapsar embarques hermanos automáticamente (riesgo alto). Se ofrece una herramienta manual posterior para consolidar BL Masters duplicados.
 
----
+4. **Compatibilidad temporal**
+   - Mantener columnas `contenedor` y `tipo_contenedor` en `embarques` por ahora (deprecadas). Un trigger las sincroniza con el primer contenedor para que reportes legacy sigan funcionando. Se eliminan en una migración posterior una vez que todo el código consuma la tabla hija.
 
-## Detalles técnicos comunes
-- Por fase: cambios → `bun run audit:arch` → `vitest run` afectados → `supabase--linter` solo si tocó SQL (no aplica en este plan) → bump `APP_VERSION` + bloque `## [X.Y.Z] - YYYY-MM-DD` en `CHANGELOG.md` (root) → actualizar `mem://audit/pendings` cerrando ítems.
-- Power of 10 obligatorio (componentes ≤200, sin `any`, cleanup en effects, manejar `error` de Supabase).
-- Mantener `architecture-baseline.test.ts` verde.
-- Sin cambios visuales salvo C10/C11.
-- Sin nuevas features.
-- `as unknown as T` solo en `src/lib/supabase/cast.ts`.
+5. **RPC actualizadas**
+   - `duplicar_embarque_completo`: copia también los contenedores hijos.
+   - Nueva RPC opcional `agregar_contenedores_embarque(embarque_id, contenedores[])` para inserts masivos transaccionales.
 
-## Orden sugerido
-1. Fase 1 (cierra regresiones recientes, rápido).
-2. Fase 2 (cosmético, bajo riesgo).
-3. Fase 3 (zod, base para robustez).
-4. Fase 4 (complejidad, ya con código más modular).
-5. Fase 5 (mejora continua, incremental).
+### Fase B — Capa de servicios y tipos
 
-## Fuera de alcance
-- Nuevas features de producto.
-- Cambios visuales no listados.
-- WARN preexistentes del linter Supabase (extensions in public, SECURITY DEFINER portal) — deuda asumida.
-- `src/pdf/theme/styles.ts` (react-pdf, exento).
-- Smoke test manual.
+- Nuevo módulo `src/services/embarque/contenedores/` con CRUD: `listarPorEmbarque`, `crear`, `actualizar`, `eliminar`, `reordenar`.
+- Tipos en `src/types/embarque/contenedor.ts` (Zod schema).
+- Hook `useContenedoresEmbarque(embarqueId)` con React Query (cache + invalidación).
+
+### Fase C — Wizard de creación
+
+- **Step 2 (Datos Ruta marítimo)**: reemplazar los inputs únicos `# Contenedor` y `Tipo` por un **componente `ListaContenedoresEditable`** con:
+  - Botón "Agregar contenedor" (sin límite duro; soft-cap de 50 con confirmación).
+  - Por fila: número, tipo (select del catálogo), BL House, peso, volumen, piezas, eliminar.
+  - Validación Zod: mínimo 1 contenedor para FCL; LCL conserva flujo actual (1 fila auto "LCL").
+- El submit del wizard inserta el embarque + N contenedores en una transacción (RPC).
+- `peso_kg`/`volumen_m3`/`piezas` del embarque pasan a ser **derivados** (suma de hijos) — vista calculada o columnas sincronizadas por trigger.
+
+### Fase D — Vista detalle del embarque
+
+- Nuevo subcomponente `SeccionContenedores` dentro de `TabResumen` (o tab propio si el espacio lo pide):
+  - Tabla editable in-line con los N contenedores.
+  - Acciones: agregar, editar inline, eliminar.
+- `EmbarquesRelacionadosCard` se reinterpreta: ahora muestra otros embarques con mismo `bl_master` (caso edge histórico), no múltiples contenedores del mismo embarque.
+- En la **lista principal** (`EmbarquesActivosTable`): nueva columna "# Contenedores" (count), y badge con el primer número + "(+N)" si hay más.
+
+### Fase E — Conceptos financieros y proformas
+
+- En `StepCostosPrecios` y editor de conceptos: agregar selector opcional **"Asignar a contenedor"** (por defecto "Todos / Global").
+- En `DialogGenerarProforma`:
+  - Nuevo filtro inicial "Generar para": Todo el embarque · Contenedor específico · Selección múltiple de contenedores.
+  - Los conceptos globales se prorratean o se incluyen según regla configurable (por defecto: incluir siempre).
+- La consolidación multi-embarque existente se mantiene intacta.
+
+### Fase F — Migración del flujo de duplicación
+
+- `DialogDuplicarEmbarque` **se mantiene** pero cambia de propósito: deja de ser el camino para "más contenedores" y vuelve a ser sólo para duplicar embarques completos distintos (caso real: copiar un embarque viejo como plantilla para uno nuevo).
+- Banner informativo en el diálogo: "¿Quieres más contenedores? Usa el botón 'Agregar contenedor' dentro del embarque".
+
+### Fase G — Limpieza y documentación
+
+- Actualizar `CHANGELOG.md` + `APP_VERSION`.
+- Documento `docs/contenedores-refactor.md` con el modelo nuevo y guía de migración para usuarios.
+- Marcar `embarques.contenedor` y `embarques.tipo_contenedor` como deprecadas en comentarios SQL.
+
+## Estructura técnica
+
+```text
+supabase/migrations/
+  └─ <ts>_contenedores_tabla_hija.sql        # Fase A completa
+
+src/
+  ├─ types/embarque/contenedor.ts
+  ├─ services/embarque/contenedores/
+  │    ├─ index.ts
+  │    ├─ crud.ts
+  │    └─ types.ts
+  ├─ hooks/embarque/useContenedoresEmbarque.ts
+  ├─ components/embarque/contenedores/
+  │    ├─ ListaContenedoresEditable.tsx       # Wizard + detalle
+  │    ├─ FilaContenedor.tsx
+  │    └─ SeccionContenedores.tsx             # Tab detalle
+  └─ components/embarque/StepDatosRutaMaritimo.tsx  # adaptado
+```
+
+## Riesgos y mitigaciones
+
+- **Datos legacy con embarques hermanos por BL Master**: no se tocan automáticamente. Queda una herramienta opcional posterior para que el usuario consolide manualmente si lo desea.
+- **Reportes y vistas existentes** que leen `embarques.contenedor` directo: siguen funcionando gracias al trigger de sincronización con el primer contenedor.
+- **Proformas históricas** ya generadas: no se alteran (usan `snapshot_emision`).
+- **Tamaño del refactor**: se entrega en fases independientes (A→B→C→D→E→F→G), cada una con su PR/commit y release de versión, para poder pausar/validar entre fases.
+
+## Entregables por fase
+
+| Fase | Output | Versión |
+|------|--------|---------|
+| A | Migración SQL + datos migrados | 8.x.0 |
+| B | Servicios + hooks + tipos | 8.x.1 |
+| C | Wizard con N contenedores | 8.x.2 |
+| D | Detalle + lista actualizados | 8.x.3 |
+| E | Conceptos y proformas por contenedor | 8.x.4 |
+| F | Duplicación re-propósito | 8.x.5 |
+| G | Docs + deprecaciones | 8.x.6 |

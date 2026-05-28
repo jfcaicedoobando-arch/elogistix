@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [12.3.0] - 2026-05-28
+- **feat(embarques)**: Fase A del refactor `1 embarque ↔ N contenedores`. Nueva tabla `embarque_contenedores` (número, tipo, BL House, peso, volumen, piezas, orden) con RLS por organización + lectura para clientes propietarios. Columnas `contenedor_id` opcionales en `conceptos_venta` y `conceptos_costo` para asignar conceptos a un contenedor específico. Trigger de sincronización mantiene `embarques.contenedor` / `tipo_contenedor` y los totales `peso_kg`/`volumen_m3`/`piezas` actualizados desde la tabla hija (compat hacia atrás). Migración de datos: cada embarque existente con contenedor pasa a tener su fila hija con `orden=1`.
+
 ## [12.2.0] - 2026-05-28
 - **chore(audit)**: cierre Fase 2 del plan de auditoría 12.x.
   - **C10 inline-styles**: auditadas las 64 ocurrencias de `style={{…}}` en `src/`. Las 64 caen en categorías exentas (`mem://principles/inline-styles`): 38 react-pdf, 9 virtualizer, 6 `%` dinámico, 3 color desde DB (`etapa.color`), 6 color desde constante runtime indexada por estado (`ESTADO_COLOR[estado]`), 2 dimensión calculada por prop. **0 violaciones**. Detalle en `docs/inline-styles-audit.md`.
