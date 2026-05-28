@@ -25,7 +25,7 @@ import { Label } from "@/components/ui/label";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
-import NumericInput from "@/components/shared/NumericInput";
+import { NumericInput } from "@/components/shared/NumericInput";
 import { useToast } from "@/hooks/shared";
 import { useDuplicarEmbarque } from "@/hooks/embarque";
 import { useTiposContenedor } from "@/hooks/catalogos";
