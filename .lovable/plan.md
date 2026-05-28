@@ -1,65 +1,60 @@
-## Plan: Reconciliación de embarques huérfanos (v12.13.1, hotfix)
+## Fase 6 — Proformas multi-contenedor
 
 ### Objetivo
-Restaurar los datos mínimos visibles en 12 embarques marítimos que quedaron incompletos. **No** son una regresión de Fase 5; vienen de conversiones cotización→embarque previas al fix 12.10.0 + el seed automático de `embarque_contenedores` de Fase A.
+Cerrar el modelo 1↔N en el flujo de proformas: que el operador vea de un vistazo qué conceptos pertenecen a qué contenedor, que los defaults sean razonables al abrir el diálogo, y que la proforma generada/consolidada y su PDF reflejen correctamente el desglose por contenedor.
 
-### Alcance (estrictamente acotado)
-- 12 embarques con `contenedor` vacío.
-- 4 embarques con `bl_master` vacío (subconjunto del anterior + algún caso aéreo).
-- Embarques con `conceptos_venta` ausentes pero con `cotizacion_id` que sí tiene `conceptos_venta` jsonb.
-- Hijos de `embarque_contenedores` con `numero_contenedor=''` sembrados por la migración Fase A.
+### Alcance
+Sólo flujo de proformas dentro del embarque (`TabFacturacion`, `DialogGenerarProforma`, servicios `proforma/*`, PDFs `ProformaDocument` / `ProformaConsolidadaDocument`). **No** tocamos facturación CFDI ni cotizaciones.
 
-### Pasos
+### Paso 1 — Resumen de conceptos venta agrupado por contenedor
+En `ResumenConceptosVenta` (hoy plano):
+- Agrupar conceptos por `contenedor_id` cuando el embarque tiene ≥2 contenedores activos.
+- Cabecera por grupo: `Contenedor #N — <numero>` + subtotal del grupo en su(s) moneda(s).
+- Sección "Cargos generales (BL)" para conceptos con `contenedor_id = null`.
+- Si el embarque tiene 1 contenedor, mantener vista plana actual.
 
-**1. Auditoría detallada (read-only)**
-Script `scripts/audit-embarques-huerfanos.ts` que reporte por embarque:
-- `id`, `expediente`, `cliente_nombre`
-- Campos vacíos en `embarques`: `bl_master`, `contenedor`, `tipo_contenedor`, `puerto_origen`, `puerto_destino`, `naviera`
-- Conteo de hijos `embarque_contenedores` reales vs vacíos
-- ¿Tiene `cotizacion_id`? ¿La cotización origen tiene datos útiles (`tipo_contenedor`, `origen`, `destino`, `conceptos_venta`)?
-- ¿Tiene `conceptos_venta` cargados? ¿La cotización origen los tiene?
+### Paso 2 — Defaults del diálogo "Generar proforma"
+En `DialogGenerarProforma` / `useGenerarProformaState`:
+- Si el embarque tiene ≥2 contenedores, abrir con `filtroContenedor = 'todos'` (ya hoy) pero **preseleccionar sólo los conceptos del primer contenedor con pendientes**, en vez de seleccionar todo. Reduce el riesgo de facturar de más cuando el operador quiere una proforma por contenedor.
+- `diasCredito` ya viene del cliente; verificar y dejar comentario explícito si llega vacío → `0` (Contado).
+- IVA: respetar `aplica_iva` del concepto como default (hoy arranca en `false`); arrancar `ivaPorConcepto[id] = c.aplica_iva ?? false` para conceptos MXN obligatorios y USD opcionales.
 
-Output: tabla Markdown a `/mnt/documents/embarques-huerfanos-report.md`.
+### Paso 3 — Acción rápida "Proforma por contenedor"
+En `ResumenConceptosVenta`, junto al botón actual "Generar proforma":
+- Botón secundario "Por contenedor" (sólo visible si ≥2 contenedores con pendientes).
+- Abre el mismo diálogo pero arranca con `filtroContenedor = <id del primer contenedor con pendientes>` y todos sus conceptos preseleccionados. Permite encadenar N proformas rápido sin re-filtrar.
 
-**2. Reconciliación automática (script `scripts/reconciliar-embarques-huerfanos.ts`)**
-Para cada embarque huérfano, sólo aplica acciones **seguras y reversibles**:
+### Paso 4 — PDF de proforma con desglose por contenedor
+En `ProformaDocument` (single) y `ProformaConsolidadaDocument`:
+- Cuando la proforma contiene conceptos de ≥2 contenedores distintos (o mezcla contenedor + BL), agrupar la tabla de conceptos por contenedor con subtotal por grupo.
+- Si todos los conceptos pertenecen a un solo contenedor, agregar línea en el header del PDF: `Contenedor: <numero> (<tipo>)`.
+- Tablas existentes no cambian para proformas mono-contenedor sin desglose.
 
-| Acción | Condición | Resultado |
-|---|---|---|
-| Backfill `tipo_contenedor` y `tipo_carga` del padre | embarque.tipo_contenedor IS NULL AND cotizacion.tipo_contenedor IS NOT NULL | UPDATE embarques |
-| Backfill `tipo_contenedor` del hijo orphan | hijo.tipo_contenedor='' AND cotizacion.tipo_contenedor IS NOT NULL | UPDATE embarque_contenedores |
-| Backfill `puerto_origen`/`destino` del padre | son NULL AND cotización tiene `origen`/`destino` | UPDATE embarques |
-| Insertar `conceptos_venta` faltantes | conceptos_venta=[] AND cotizacion.conceptos_venta jsonb tiene N>0 | INSERT bulk en `conceptos_venta` (mismas reglas que `convertirCotizacionAEmbarques`) |
-| Soft-delete hijo vacío | hijo.numero_contenedor='' AND hijo.tipo_contenedor='' AND NO se pudo backfillar tipo del cotización | UPDATE embarque_contenedores SET deleted_at=now() |
+### Paso 5 — Consolidado: validación cross-contenedor
+En `consolidar.ts`:
+- Permitir consolidar proformas de distintos contenedores del mismo embarque (caso normal).
+- Bloquear consolidación si las proformas pertenecen a embarques distintos con cliente distinto (ya hoy debería; verificar y agregar mensaje claro).
 
-**Nunca** se inventa `bl_master` ni `numero_contenedor` (datos que sólo el operador conoce). Esos quedan vacíos y el reporte los marca como "requiere captura manual".
-
-**3. Verificación post-reconciliación**
-- Re-correr el script de auditoría → confirmar que los embarques que sí tenían fuente quedaron completos.
-- Validar embarque ELIMP00231 en preview: BL Master sigue vacío (no había fuente) PERO el hijo orphan ya está soft-deleted y los conceptos_venta aparecen si la cotización los tiene.
-- Subir reporte final a `/mnt/documents/`.
-
-**4. Hardening preventivo (1 cambio mínimo de código)**
-En `convertirCotizacionAEmbarques` (ya parchado en 12.10.0), añadir **assertion defensiva**: si la cotización no tiene `tipo_contenedor` o `conceptos_venta` poblados, **no** sembrar un hijo vacío en `embarque_contenedores` — dejar el embarque sin hijos hasta que el operador capture el contenedor en el wizard. Esto evita que se vuelvan a generar huérfanos en futuras conversiones.
-
-**5. Documentación**
-- `CHANGELOG.md` → `## [12.13.1]` con bullet hotfix y mención del reporte.
-- `APP_VERSION` → `12.13.1`.
+### Paso 6 — Documentación
+- `CHANGELOG.md` → `## [12.14.0]` con bullets por cada paso.
+- Bump `APP_VERSION` a `12.14.0`.
+- Añadir nota corta en `docs/embarques-contenedores.md` sobre cómo se reflejan los hijos en proformas y PDF.
 
 ### Detalles técnicos
-
-- **Sin migración SQL nueva** — todo via `code--exec` + supabase service-role client, porque son UPDATEs/INSERTs de datos.
-- Los UPDATEs van con `WHERE` defensivos (`IS NULL` / `=''`) para que el script sea **idempotente**: re-correrlo no pisa datos que el operador ya capturó.
-- Cada modificación se loguea en `bitacora_actividad` con `accion='reconciliacion_huerfano_v12.13.1'` para trazabilidad.
+- Sin migraciones SQL — todo es lógica de UI/servicio sobre el modelo ya existente (`conceptos_venta.contenedor_id`, `embarque_contenedores`).
+- Reusar `lib/domain/conceptosPorContenedor.ts` que ya hace el agrupamiento para los filtros del diálogo.
+- Mantener componentes ≤200 líneas (Power of 10): `ResumenConceptosVenta` agrupado probablemente requiere extraer un subcomponente `GrupoConceptosContenedor`.
+- Tipos estrictos: extender `ProformaConcepto` (en `services/proforma/types.ts`) con `contenedor_id` y `contenedor_numero` para que el PDF no tenga que volver a consultar.
 
 ### Out of scope
-- No tocamos embarques aéreos sin BL master (otro fix, otro día).
-- No tocamos el caso ELIMP00219 (N embarques de 1 contenedor — eso ya es la realidad histórica antes del modelo 1+N).
-- No iniciamos Fase 6 — eso sigue después del hotfix.
+- Editar números de contenedor / BL Master desde la UI de proformas (eso vive en EditarEmbarque).
+- Indicador "Datos pendientes de captura" en la lista de embarques (opcional, lo dejamos para 12.14.1 si se decide).
+- Facturación CFDI a partir de proformas multi-contenedor (ya funciona; sólo PDF se mejora visualmente).
 
 ### Entregables
-1. `scripts/audit-embarques-huerfanos.ts` (read-only).
-2. `scripts/reconciliar-embarques-huerfanos.ts` (idempotente).
-3. Reporte en `/mnt/documents/embarques-huerfanos-report.md`.
-4. 1 cambio en `convertirCotizacionAEmbarques` (assertion defensiva).
-5. Bump versión `12.13.1` + CHANGELOG.
+1. `ResumenConceptosVenta` agrupado + nuevo subcomponente `GrupoConceptosContenedor`.
+2. Defaults mejorados en `useGenerarProformaState` (selección y IVA por concepto).
+3. Botón "Por contenedor" en el resumen.
+4. PDF de proforma con desglose por contenedor.
+5. `CHANGELOG.md` + bump versión `12.14.0`.
+6. Actualización breve en `docs/embarques-contenedores.md`.

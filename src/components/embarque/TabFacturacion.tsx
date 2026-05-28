@@ -14,10 +14,12 @@ import { useTasaIVA } from "@/hooks/catalogos";
 import { useEmbarqueConceptosVenta } from "@/hooks/embarque";
 import { useProformasEmbarque, useEliminarProforma } from "@/hooks/embarque";
 import { useDescargarProformaPdf } from "@/hooks/embarque";
+import { useContenedoresEmbarque } from "@/hooks/embarque/useContenedoresEmbarque";
 import { DialogGenerarProforma } from "./DialogGenerarProforma";
 import { ResumenConceptosVenta } from "./facturacion/ResumenConceptosVenta";
 import { HistorialProformas } from "./facturacion/HistorialProformas";
 import { HistorialFacturas } from "./facturacion/HistorialFacturas";
+import type { FiltroContenedor } from "@/lib/domain/conceptosPorContenedor";
 import type { Tables } from "@/types/db";
 
 type EmbarqueRow = Tables<'embarques'>;
@@ -43,7 +45,9 @@ interface Props {
 export function TabFacturacion({ facturas, canEdit, embarque }: Props) {
   const tasaIva = useTasaIVA();
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [dialogInitialFiltro, setDialogInitialFiltro] = useState<FiltroContenedor>('todos');
   const { data: conceptos = [] } = useEmbarqueConceptosVenta(embarque.id);
+  const { data: contenedores = [] } = useContenedoresEmbarque(embarque.id);
   const { data: proformas = [] } = useProformasEmbarque(embarque.id);
   const eliminarProforma = useEliminarProforma();
   const { descargar: descargarProformaPdf } = useDescargarProformaPdf();
@@ -64,9 +68,17 @@ export function TabFacturacion({ facturas, canEdit, embarque }: Props) {
     <div className="space-y-4">
       <ResumenConceptosVenta
         conceptos={conceptos}
+        contenedores={contenedores}
         tasaIva={tasaIva}
         canEdit={canEdit}
-        onGenerarProforma={() => setDialogOpen(true)}
+        onGenerarProforma={() => {
+          setDialogInitialFiltro('todos');
+          setDialogOpen(true);
+        }}
+        onGenerarProformaContenedor={(contenedorId) => {
+          setDialogInitialFiltro(contenedorId);
+          setDialogOpen(true);
+        }}
       />
 
       <HistorialProformas
@@ -84,6 +96,7 @@ export function TabFacturacion({ facturas, canEdit, embarque }: Props) {
         onOpenChange={setDialogOpen}
         embarque={embarque}
         conceptosPendientes={conceptosPendientes}
+        initialFiltroContenedor={dialogInitialFiltro}
       />
 
       <AlertDialog open={!!proformaAEliminar} onOpenChange={(o) => !o && setProformaAEliminar(null)}>

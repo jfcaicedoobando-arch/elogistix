@@ -28,6 +28,7 @@ export function useDialogGenerarProformaController(
   embarque: EmbarqueRow,
   conceptosPendientes: ConceptoVenta[],
   onClose: () => void,
+  initialFiltroContenedor: FiltroContenedor = "todos",
 ) {
   const tasaIva = useTasaIVA();
   const crearProforma = useCrearProforma();
@@ -52,8 +53,15 @@ export function useDialogGenerarProformaController(
   useEffect(() => {
     if (open) {
       setPaso("seleccion");
-      setFiltroContenedor("todos");
-      setSeleccionados(new Set(conceptosPendientes.map((c) => c.id)));
+      setFiltroContenedor(initialFiltroContenedor);
+      // v12.14.0: cuando se abre filtrado a un contenedor concreto, preseleccionar
+      // sólo los conceptos de ese filtro (evita facturar de más al encadenar
+      // proformas por contenedor). En modo 'todos' se mantiene la selección
+      // completa de pendientes.
+      const inicial = initialFiltroContenedor === "todos"
+        ? conceptosPendientes
+        : filtrarPorContenedor(conceptosPendientes, initialFiltroContenedor);
+      setSeleccionados(new Set(inicial.map((c) => c.id)));
       const ivaInit: Record<string, boolean> = {};
       conceptosPendientes.forEach((c) => {
         ivaInit[c.id] = c.moneda === "MXN" ? true : !!c.aplica_iva;
@@ -62,7 +70,7 @@ export function useDialogGenerarProformaController(
       setNotas("");
       setDiasCredito("");
     }
-  }, [open, conceptosPendientes]);
+  }, [open, conceptosPendientes, initialFiltroContenedor]);
 
   // Cuando cambia el filtro, ajustar selección al conjunto visible
   useEffect(() => {
