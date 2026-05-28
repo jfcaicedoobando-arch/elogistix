@@ -73,7 +73,7 @@ export async function vincularOCrearOportunidadParaCotizacion(
   if (input.leadId) {
     const op = await crearOportunidad(
       {
-        nombre: `${input.prospecto.empresa} — ${input.cotizacionFolio}`,
+        nombre: buildOpNombre(input.prospecto.empresa, input.cotizacionFolio),
         lead_id: input.leadId,
         etapa_id: etapa.id,
         probabilidad: etapa.probabilidad,
@@ -98,7 +98,7 @@ export async function vincularOCrearOportunidadParaCotizacion(
   );
   const op = await crearOportunidad(
     {
-      nombre: `${input.prospecto.empresa} — ${input.cotizacionFolio}`,
+      nombre: buildOpNombre(input.prospecto.empresa, input.cotizacionFolio),
       lead_id: lead.id,
       etapa_id: etapa.id,
       probabilidad: etapa.probabilidad,
