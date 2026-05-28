@@ -6,6 +6,8 @@ import type { CreateCotizacionInput, CotizacionRow, ConceptoVentaCotizacion } fr
 import type { FilaCostoLocal } from "@/types/cotizacionPL";
 import type { CotizacionFormValues } from "@/lib/mappers/cotizacionForm";
 import { savePaso1, savePaso2, savePaso3, savePasoFinal, buildConceptosFromCostos } from "@/services/cotizacion";
+import { vincularOCrearOportunidadParaCotizacion } from "@/services/crm/vincularCotizacion";
+import { supabase } from "@/integrations/supabase/client";
 import { getErrorMessage } from "@/lib/errors";
 import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 import { fromDb } from "@/lib/supabase/cast";
