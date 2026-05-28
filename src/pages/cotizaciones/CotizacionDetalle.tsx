@@ -86,7 +86,9 @@ export default function CotizacionDetalle() {
       {cotizacion.es_prospecto && (
         <Card className="border-warning/30 bg-warning/10">
           <CardContent className="p-4">
-            <p className="text-sm font-medium [color:hsl(var(--warning))] mb-2">Datos del Prospecto</p>
+            <p className="text-sm font-medium [color:hsl(var(--warning))] mb-2">
+              Datos del Prospecto — Convierte a cliente primero para poder generar embarques
+            </p>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
               <div><span className="text-muted-foreground">Empresa</span><p className="font-medium">{cotizacion.prospecto_empresa}</p></div>
               <div><span className="text-muted-foreground">Contacto</span><p className="font-medium">{cotizacion.prospecto_contacto}</p></div>
