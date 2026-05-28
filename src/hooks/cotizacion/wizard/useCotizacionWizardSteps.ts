@@ -70,9 +70,43 @@ export function useCotizacionWizardSteps({
     const v = form.getValues();
     const err = validatePaso1(v);
     if (err) { notifyError(toast, { title: err }); return; }
+    const esNueva = !cotizacionId;
     try {
       const id = await savePaso1({ form, msdsFile, cotizacionId, buildPaso1Data, mutations: { crearCotizacion, updateCotizacion } });
       if (!cotizacionId) setCotizacionId(id);
+
+      // Vincular o crear oportunidad CRM si es cotización nueva a prospecto
+      if (esNueva && v.esProspecto) {
+        try {
+          const { data: { user } } = await supabase.auth.getUser();
+          const { data: cotRow } = await supabase
+            .from("cotizaciones").select("folio").eq("id", id).maybeSingle();
+          await vincularOCrearOportunidadParaCotizacion({
+            cotizacionId: id,
+            cotizacionFolio: cotRow?.folio,
+            modoTransporte: v.modo,
+            oportunidadId: v.oportunidadId || null,
+            leadId: v.leadId || null,
+            prospecto: {
+              empresa: v.prospectoEmpresa,
+              contacto: v.prospectoContacto,
+              email: v.prospectoEmail,
+              telefono: v.prospectoTelefono,
+            },
+            user: user ? { id: user.id, email: user.email ?? undefined } : null,
+          });
+        } catch (vinculErr) {
+          // No bloquear el flujo de la cotización si falla CRM; sólo avisar.
+          notifyError(toast, {
+            title: "Cotización guardada, pero falló el vínculo CRM",
+            description: getErrorMessage(vinculErr),
+            error: vinculErr,
+            method: "VINCULAR_OPORTUNIDAD_CRM",
+            context: { cotizacionId: id },
+          });
+        }
+      }
+
       setCurrentStep(2);
     } catch (e: unknown) {
       notifyError(toast, {
