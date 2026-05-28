@@ -166,7 +166,31 @@ componentes nuevos: extender este archivo.
 
 ---
 
-## 7. Archivos clave (referencia rápida)
+## 7. Dependencias legacy
+
+La RPC `auditoria_embarques_org` (y por extensión todo el motor de hallazgos
+operativos) sigue leyendo columnas **legacy** de `public.embarques`:
+
+- `contenedor` (número del primer contenedor),
+- `tipo_contenedor`,
+- `peso`, `volumen`, `piezas`.
+
+Desde la Fase A multi-contenedor (v12.13+) estas columnas se mantienen
+sincronizadas automáticamente vía triggers desde `embarque_contenedores`
+(ver `docs/embarques-contenedores.md`). Mientras el trigger esté activo,
+la auditoría sigue funcionando sin cambios.
+
+**Riesgo a futuro**: si en algún momento se eliminan estas columnas (o se
+apaga el trigger de sync), los hallazgos relacionados con peso / volumen /
+contenedor / tipo dejarán de detectar correctamente. Antes de retirarlos hay
+que migrar la RPC para leer directamente de `embarque_contenedores`
+(agregando por `embarque_id`).
+
+Pendiente registrado en `mem://audit/pendings` bajo "Mejora continua".
+
+---
+
+## 8. Archivos clave (referencia rápida)
 
 | Capa | Archivo |
 |------|---------|
@@ -178,3 +202,4 @@ componentes nuevos: extender este archivo.
 | Tarjetas ejecutivas | `src/components/auditoria/ejecutivo/` |
 | Tabla operativa | `src/components/auditoria/HallazgosTablaPaginada.tsx` |
 | Página | `src/pages/Auditoria.tsx` |
+

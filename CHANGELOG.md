@@ -6,6 +6,12 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [12.14.2] - 2026-05-28
+- **chore(auditoria)**: Hardening del módulo. `useAuditoriaCount` lleva `// SAFE-CAST:` justificado en los casts de `useQueries` + guard defensivo que descarta el reporte si el RPC `auditoria_embarques_org` devuelve un shape inesperado (en vez de explotar en runtime).
+- **docs(auditoria)**: Nueva sección §7 "Dependencias legacy" en `docs/auditoria.md` documentando que la RPC sigue leyendo `embarques.{contenedor, tipo_contenedor, peso, volumen, piezas}` sincronizadas vía trigger desde `embarque_contenedores` (Fase A multi-contenedor). Pendiente registrado en `mem://audit/pendings`.
+- **chore(reports)**: `reports/audit-report.{md,json}` regenerados contra el estado v12.14.1. Hallazgos: 3 imports directos a Supabase desde hooks (regresión nueva en `useContenedoresInfoMap.ts` introducida en 12.14.1), 5 archivos >200 líneas, 5 casts HIGH (sin CRITICAL). Sin refactor en este hotfix, registrado para próximo ciclo.
+- **chore**: `APP_VERSION` → 12.14.2.
+
 ## [12.14.1] - 2026-05-28
 - **feat(embarques/lista)**: Nuevo badge naranja "Datos pendientes" en la columna `Contenedores` que se muestra cuando un embarque marítimo tiene BL Master vacío o contenedores hijos sin número/tipo capturado. Tooltip detalla qué falta. `useContenedoresInfoMap` ahora calcula `incompletos` por embarque. Solo informa, no bloquea.
 - **fix(facturacion/consolidar)**: Mensajes de error claros en español al consolidar proformas (cross-embarque, cross-cliente, ya aprobadas) en lugar del error crudo de Postgres. Guard defensivo en cliente que valida `embarque_id` + `cliente_id` compartidos antes de invocar la RPC.
