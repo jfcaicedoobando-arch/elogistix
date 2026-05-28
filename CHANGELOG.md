@@ -6,7 +6,11 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [12.8.0] - 2026-05-28
+- **feat(embarques/wizard)**: Fase G parte 2 del refactor contenedores. `StepDatosRutaMaritimo` ahora monta `ListaContenedoresEditable` para FCL (lista dinámica con N filas: número, tipo, BL House, peso, volumen, piezas) en vez de los 5 campos sueltos. En LCL se inyecta un único contenedor "LCL" automático y se muestra un input readonly informativo. La validación zod del paso 2 cambia: FCL exige `contenedores.length >= 1` y que cada fila tenga número + tipo (mensajes nuevos en `errorCatalog`). El submit (`useCreateEmbarque` + orchestrator) inserta los contenedores hijos en `embarque_contenedores` tras crear el embarque; el trigger DB mantiene `embarques.contenedor / tipo_contenedor / peso_kg / volumen_m3 / piezas` como espejo del primer contenedor para reportes y compatibilidad. `buildEmbarquePayload` deriva esos campos legacy del primer contenedor y suma totales (peso/volumen/piezas) de todas las filas.
+
 ## [12.7.0] - 2026-05-28
+
 - **feat(embarques)**: Fase F del refactor contenedores. La RPC `duplicar_embarque_completo` ahora copia también los contenedores hijos del embarque origen y re-mapea `contenedor_id` en los conceptos de venta/costo copiados (matching por `orden`). Los conceptos generales (sin contenedor) siguen siendo generales en la copia. `DialogDuplicarEmbarque` actualiza el copy para reflejar el nuevo comportamiento.
 - **feat(embarques)**: Fase G del refactor contenedores. Documentación `docs/embarques-contenedores.md` con modelo de datos, capa de servicios, flujo de proformas filtradas y RPC de duplicación. JSDoc `@deprecated` en `src/types/embarque.ts` marcando los campos legacy de `embarques` (`contenedor`, `tipo_contenedor`, `peso_kg`, `volumen_m3`, `piezas`) que ahora se sincronizan por trigger DB desde la tabla hija.
 
