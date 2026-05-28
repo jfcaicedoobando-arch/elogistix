@@ -1,4 +1,7 @@
-# Plan: Cerrar pendientes antes del rediseño de proformas
+# Plan: Cerrar pendientes antes del rediseño de proformas — estado
+
+**Fase 5 ✅ completada en v12.13.0** (B-1, B-2, B-3, B-4, C-4).
+Pendientes: Fase 6 (visibilidad multi-contenedor + defaults proformas) y Fase 7 (tests + cleanup + docs).
 
 Dos auditorías paralelas (multi-contenedor + módulo proformas) revelaron **8 bugs críticos** y **deuda diferida** que conviene resolver antes de tocar el workflow nuevo. **No, los pendientes del plan anterior NO eran todos**: faltaban bugs de atomicidad, idempotencia y varias vistas que aún leen el campo legacy `embarques.contenedor`.
 
