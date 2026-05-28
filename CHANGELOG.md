@@ -6,6 +6,25 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [12.0.0] - 2026-05-28
+
+Cierre del major **12.0.0**. Resumen consolidado de lo entregado durante los `rc.1` → `rc.17` (el detalle granular se conserva más abajo).
+
+- **CRM ↔ Cotizaciones**: integración bidireccional. El wizard de cotización permite *vincular* a lead/oportunidad existente o *crear* uno nuevo (lead + oportunidad en etapa "Cotizando") automáticamente. Cambios de estado de la cotización propagan a la etapa CRM (Enviada → Negociación, Aceptada → Ganada, Rechazada → Perdida). La conversión Prospecto → Cliente propaga `cliente_id` a la oportunidad y marca el lead como `Convertido`.
+- **Embarques**: ciclo de 7 estados con timeline automático, alertas de demurrage en sidebar, estatus de liquidación (pagados/pendientes), alerta de documentación incompleta, duplicación con override de contenedor/peso/volumen/piezas.
+- **Cotizaciones**: wizard refinado con `NumericInput` (decimales, sin spinner, sin scroll accidental) en LCL/aérea y conceptos de costo/venta; incoterms estándar compartidos; conversión a embarque sólo tras convertir prospecto a cliente.
+- **Pre-facturación**: rediseño completo del módulo en 5 pestañas numeradas (Proyección → Por aprobar → Proformas → Facturas → Pagos), guía colapsable, banner compacto de Hueco de Facturación, ventana relativa de 24 meses atrás / 12 adelante en Proyección.
+- **Multi-tenant**: aislamiento por `organization_id`, impersonación, demo readonly, *unified user management* (admins locales y globales) y *unified login* con ruteo por rol.
+- **Portal de cliente**: RPCs `SECURITY DEFINER` de lectura, gráficas apiladas, layout limpio.
+- **Dashboard operativo**: categorías de riesgo (Crítico, En Puerto), badge dinámico de alertas en sidebar.
+- **Tablas**: estandarización de `DataTable`, zebra striping, paginación servidor con `.range()`, simplificación a `100 / pág` + `Todos` en todas las tablas principales.
+- **Infraestructura**: tipos de cambio dinámicos (Frankfurter.app, caché 1h), `Chunk Load Recovery` automático, observabilidad estructurada (`requestId`, `errorCode`, `method`) en ~109 puntos.
+- **Auditoría arquitectónica**: Bloque A cerrado (33 archivos migrados a `services/{admin,crm,portal,embarque,auth,organization}/`), Power of 10 aplicado, `Storage RLS Paths` validado vía `EXISTS`, `Browser Storage Wrapper` único, `Inline Styles Policy`, marcador `// SAFE-CAST:`, baseline de imports congelado (33 → 0).
+
+**Deuda diferida a 12.x** (no bloqueante): pendientes Bloque B/C/D de auditoría (B6 split de `ImportarLeadsCsvDialog` / `BulkImportDialog`, B7 doc excepción `sidebar.tsx`, C9 renombrar shims en `hooks/crm/`, C10 auditar 25 `style={{…}}` inline, C11 prefijos `Configuracion.tsx` / `TabFacturacion.tsx`, D12 split `routes.tsx`), P1.5-1.7 (unificar `utils/`, romper servicios "god", schemas zod en boundary Supabase), refactor de complejidad para destrabar guardrail a 12, P3.13-16 (más E2E, convención hooks, split `TrackingPublico`, `Result<T,E>`), complejidad de edge functions `create-user` / `delete-user` / `invite-client-user` / `_shared/jsoncargoSync`. WARN preexistentes del linter Supabase (extension in public, SECURITY DEFINER públicos en RPCs de portal) también diferidos.
+
+---
+
 ## [12.0.0-rc.17] - 2026-05-28
 - **feat(crm/cotizaciones)**: integración CRM ↔ Cotizaciones (enfoque híbrido CRM-first con atajo). En el wizard "Nueva Cotización", al elegir **Prospecto** ahora se muestran dos modos: (a) **Vincular a lead u oportunidad existente** — combobox con búsqueda debounced (200 ms) sobre `crm_leads` + `crm_oportunidades` sin cliente, que precarga los datos al seleccionar; (b) **Crear nuevo prospecto** — formulario clásico con banner informando que se creará lead + oportunidad automáticamente. Al guardar el Paso 1 con `es_prospecto = true`, el helper `vincularOCrearOportunidadParaCotizacion` (en `src/services/crm/vincularCotizacion.ts`) decide entre: enlazar oportunidad existente, crear oportunidad sobre lead existente, o crear lead + oportunidad nuevos (etapa "Cotizando"). Es idempotente: en edición no recrea nada. Adicionalmente, los cambios de estado de la cotización propagan a la etapa CRM (`Enviada → Negociación`, `Aceptada/En operación → Ganada` con `fecha_cierre_real`, `Rechazada → Perdida`) y la conversión Prospecto → Cliente propaga `cliente_id`/`cliente_nombre` a la oportunidad y marca el lead como `Convertido` con `cliente_convertido_id` y `oportunidad_convertida_id`. Nuevos archivos: `src/services/crm/vincularCotizacion.ts`, `src/hooks/crm/useCrmProspectoSearch.ts`. Modificados: `SeccionDestinatario.tsx`, `useCotizacionWizardSteps.ts`, `useCotizacionDetalleHandlers.ts`, `CotizacionFormValues`. Fallos del CRM no bloquean el flujo de cotización (sólo registran un toast).
 
