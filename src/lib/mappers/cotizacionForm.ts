@@ -27,6 +27,9 @@ function partesCliente(d: CotizacionInitialData) {
   return {
     esProspecto: d.es_prospecto,
     clienteId: d.cliente_id ?? "",
+    prospectoModo: "nuevo" as const,
+    oportunidadId: "",
+    leadId: "",
     prospectoEmpresa: d.prospecto_empresa ?? "",
     prospectoContacto: d.prospecto_contacto ?? "",
     prospectoEmail: d.prospecto_email ?? "",
