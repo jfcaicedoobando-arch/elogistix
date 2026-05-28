@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [12.4.0] - 2026-05-28
+- **feat(embarques)**: Fase B del refactor contenedores. Nuevos tipos en `src/types/embarque/contenedor.ts` (Zod schemas + helpers), capa de servicios `src/services/embarque/contenedores/` (`listarPorEmbarque`, `crear`, `crearMuchos`, `actualizar`, `eliminar` soft-delete, `reemplazarTodos`), y hook `useContenedoresEmbarque(embarqueId)` con React Query. Sin cambios de UI todavía — sólo capa de datos lista para que el wizard y la vista detalle la consuman.
+
 ## [12.3.0] - 2026-05-28
 - **feat(embarques)**: Fase A del refactor `1 embarque ↔ N contenedores`. Nueva tabla `embarque_contenedores` (número, tipo, BL House, peso, volumen, piezas, orden) con RLS por organización + lectura para clientes propietarios. Columnas `contenedor_id` opcionales en `conceptos_venta` y `conceptos_costo` para asignar conceptos a un contenedor específico. Trigger de sincronización mantiene `embarques.contenedor` / `tipo_contenedor` y los totales `peso_kg`/`volumen_m3`/`piezas` actualizados desde la tabla hija (compat hacia atrás). Migración de datos: cada embarque existente con contenedor pasa a tener su fila hija con `orden=1`.
 
