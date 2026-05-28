@@ -66,3 +66,13 @@ RPC `duplicar_embarque_completo` (v12.7.0) ahora:
 3. Re-mapea `contenedor_id` en los conceptos copiados al `id` del nuevo
    contenedor correspondiente (matching por `orden`). Si el concepto era
    general (`NULL`) sigue siendo general en la copia.
+
+## Flujo wizard (v12.8.0)
+
+A partir de v12.8.0, el wizard "Nuevo Embarque" usa la lista dinámica de contenedores en `StepDatosRutaMaritimo`:
+
+- **FCL**: el operador agrega N contenedores con `ListaContenedoresEditable`. Validación zod en `validateStepRuta` exige `contenedores.length >= 1` y que cada fila tenga `numero_contenedor` y `tipo_contenedor`.
+- **LCL**: el wizard no muestra la lista; al persistir se inyecta automáticamente una única fila con `tipo_contenedor='LCL'`.
+- **Aéreo / Terrestre**: `contenedores` queda vacío y no se insertan filas hijas.
+
+El submit (`useEmbarqueSubmitOrchestrator` → `useCreateEmbarque`) llama `crearMuchos(embarqueId, contenedores)` después de `crearEmbarqueRpc`. El trigger DB sincroniza `embarques.contenedor`, `tipo_contenedor`, `peso_kg`, `volumen_m3` y `piezas` desde la tabla hija para mantener compatibilidad con reportes y queries legacy.
