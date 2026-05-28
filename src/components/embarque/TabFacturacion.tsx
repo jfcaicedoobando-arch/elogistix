@@ -68,9 +68,17 @@ export function TabFacturacion({ facturas, canEdit, embarque }: Props) {
     <div className="space-y-4">
       <ResumenConceptosVenta
         conceptos={conceptos}
+        contenedores={contenedores}
         tasaIva={tasaIva}
         canEdit={canEdit}
-        onGenerarProforma={() => setDialogOpen(true)}
+        onGenerarProforma={() => {
+          setDialogInitialFiltro('todos');
+          setDialogOpen(true);
+        }}
+        onGenerarProformaContenedor={(contenedorId) => {
+          setDialogInitialFiltro(contenedorId);
+          setDialogOpen(true);
+        }}
       />
 
       <HistorialProformas
@@ -88,6 +96,7 @@ export function TabFacturacion({ facturas, canEdit, embarque }: Props) {
         onOpenChange={setDialogOpen}
         embarque={embarque}
         conceptosPendientes={conceptosPendientes}
+        initialFiltroContenedor={dialogInitialFiltro}
       />
 
       <AlertDialog open={!!proformaAEliminar} onOpenChange={(o) => !o && setProformaAEliminar(null)}>
