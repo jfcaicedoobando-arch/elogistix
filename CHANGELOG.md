@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [12.0.0-rc.13] - 2026-05-28
+- **fix(cotizaciones)**: en cotizaciones de prospecto (`es_prospecto = true`) se ocultan los botones "Crear Embarque" y "Generar Embarques" hasta que el prospecto sea convertido a cliente. Esto previene un error de runtime al intentar insertar embarques sin `cliente_id`. Adicionalmente, el botón "Convertir a Cliente" pasa a `variant="default"` (primario) y el banner amarillo del prospecto indica explícitamente que debe convertirse antes de generar embarques.
+
 ## [12.0.0-rc.12] - 2026-05-28
 - **fix(embarques)**: los campos de Monto/Cantidad en Conceptos de Costo y Venta del wizard de embarques ahora aceptan decimales correctamente (`NumericInput`), sin flechas spinner ni cambios accidentales con scroll. Antes, `Number(e.target.value)` y el locale es-MX impedían escribir `1.5` o `1,5`.
 
