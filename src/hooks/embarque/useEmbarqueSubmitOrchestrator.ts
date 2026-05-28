@@ -121,14 +121,24 @@ export function useEmbarqueSubmitOrchestrator() {
           ...(p.cotizacionVinculada ? { cotizacion_id: p.cotizacionVinculada.id } : {}),
         };
 
+        // Derivar contenedores efectivos: en LCL forzar fila auto-LCL.
+        const contenedoresPayload =
+          p.values.modo === "Marítimo"
+            ? p.values.tipoServicio === "LCL"
+              ? [{ numero_contenedor: "", tipo_contenedor: "LCL", bl_house: "", peso_kg: 0, volumen_m3: 0, piezas: 0, orden: 1 }]
+              : p.values.contenedores ?? []
+            : [];
+
         await createEmbarque.mutateAsync({
           embarque: embarquePayload,
           conceptosVenta: p.buildConceptosVentaPayload(p.conceptosVenta),
           conceptosCosto: p.buildConceptosCostoPayload(p.conceptosCosto, p.proveedoresDb),
           documentos: docPayload,
+          contenedores: contenedoresPayload,
           requestId: reqId.get(),
         });
         reqId.reset();
+
       } catch (err: unknown) {
         notifyError(toast, { phase: "guardado del embarque", message: getErrorMessage(err), error: err, method: "USE_EMBARQUE_SUBMIT_ORCHESTRATOR" });
         return false;
