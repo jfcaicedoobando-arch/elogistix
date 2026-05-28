@@ -1,39 +1,39 @@
-## v12.14.2 — Hardening del módulo de auditoría
+## v12.14.3 — Cierre regresiones arquitectónicas
 
-Mitigar los 3 riesgos menores detectados en la revisión end-to-end (sin cambios de comportamiento para el usuario final).
+Limpiar las 3 violaciones de arquitectura (hooks con import directo a Supabase) detectadas en `reports/audit-report.md` v12.14.1. Mover I/O a la capa `services/*` para volver al baseline limpio (0 violaciones).
 
-### 1. Marcar cast de RPC como SAFE-CAST
-En `src/hooks/auditoria/useAuditoria.ts` (línea ~59), el cast `as ReporteAuditoria` sobre el resultado de la RPC `auditoria_embarques_org` está sin marcar.
+### 1. `useContenedoresInfoMap` (regresión introducida en 12.14.1)
+- Crear `src/services/embarque/contenedores/fetchInfoMap.ts` con `fetchContenedoresInfoMap(embarqueIds: string[]): Promise<ContenedoresInfoMap>` que encapsule el `select` + el conteo de `incompletos`.
+- Exportar desde `services/embarque/contenedores/index.ts`.
+- `useContenedoresInfoMap.ts` deja sólo el `useQuery` y delega a `fetchContenedoresInfoMap`. Mantener la misma key y `staleTime`.
 
-- Validar mínimamente el shape antes del cast (verificar que la respuesta sea un objeto con las llaves esperadas: `hallazgos`, `resumen`, etc.).
-- Anotar con `// SAFE-CAST:` + breve justificación apuntando a la firma de la RPC, según `mem://principles/safe-cast`.
-- Si hay otros casts equivalentes en `src/hooks/auditoria/*` (p. ej. `useAuditoriaEjecutivo`, `useAuditoriaRevisiones`), aplicar el mismo tratamiento.
+### 2. `useCrmProspectoSearch`
+- Verificar si `services/crm/search.ts` ya cubre la búsqueda combinada lead+oportunidad. Si sí, reusarlo; si no, extraer la query a `services/crm/prospectoSearch.ts` con firma `searchProspectos(term: string): Promise<...>`.
+- Hook queda sólo con `useQuery` + debounce ya existente.
 
-### 2. Documentar dependencia de columnas legacy de `embarques`
-La RPC de auditoría sigue leyendo columnas legacy (`contenedor`, `peso`, `volumen`, `piezas`) que hoy se mantienen vía triggers de compatibilidad multi-contenedor (v12.13+).
+### 3. `handlePaso1Crm`
+- No es realmente un hook (es helper). Su import a Supabase debe moverse a un service nuevo `services/cotizacion/wizard/paso1Crm.ts` (o reusar uno existente en `services/cotizacion/wizard.ts`).
+- El helper original sólo orquesta la validación y llama al service.
 
-- Añadir nota en `docs/auditoria.md` con sección **"Dependencias legacy"**:
-  - Qué columnas se leen.
-  - Por qué siguen vivas (trigger sync desde `embarque_contenedores`).
-  - Qué pasaría si se eliminan (hallazgos de peso/volumen/contenedor quedarían vacíos).
-  - Acción futura: migrar la RPC a leer directamente de `embarque_contenedores` cuando se decida eliminar las columnas.
-- Registrar este TODO en `mem://audit/pendings` para no perderlo.
+### 4. Verificación
+- Re-ejecutar `bun run audit:arch` y `bun run audit:report`.
+- Esperado: sección "Hooks/Contexts con import directo a Supabase" → ✅ Ninguno.
+- Commit del reporte regenerado.
 
-### 3. Regenerar reportes de auditoría
-`reports/audit-report.md` y `reports/audit-report.json` siguen en v11.68.0.
-
-- Ejecutar `bun run scripts/audit-report.ts` para regenerar contra el estado actual del repo (v12.14.1).
-- Commit del resultado para que el baseline refleje la realidad post Fase 6.
-- Si el script detecta nuevas violaciones (componentes > 200 líneas introducidos en Fase 6 — sospechosos: `TabFacturacion.tsx`, `embarqueColumns.tsx`), listarlas en el mensaje final pero **no refactorizar en este hotfix**; queda para un próximo ciclo.
+### Detalles técnicos
+- Sin migraciones SQL.
+- Mantener la API pública de los hooks intacta para no romper llamadores.
+- Sin tests nuevos (los services se exponen como I/O puro, ya cubiertos indirectamente por los componentes que los consumen).
+- Si algún hook crece >200 líneas al refactor (no debería), partir en sub-archivos siguiendo Power of 10.
 
 ### Entregables
-1. `useAuditoria.ts` (y hooks hermanos si aplica) con cast marcado + validación mínima.
-2. Sección "Dependencias legacy" en `docs/auditoria.md`.
-3. Entrada nueva en `mem://audit/pendings`.
-4. `reports/audit-report.md` + `reports/audit-report.json` regenerados.
-5. `CHANGELOG.md` `## [12.14.2]` + bump `APP_VERSION`.
+1. `services/embarque/contenedores/fetchInfoMap.ts` + hook refactor.
+2. Service nuevo o reusado para `prospectoSearch` + hook refactor.
+3. Service nuevo para `paso1Crm` + helper refactor.
+4. `reports/audit-report.{md,json}` regenerados → 0 violaciones arch.
+5. `CHANGELOG.md` `## [12.14.3]` + bump `APP_VERSION`.
 
 ### Out of scope
-- Migrar la RPC para dejar de leer columnas legacy (requiere coordinar con plan de retiro de triggers).
-- Refactor de archivos que excedan 200 líneas detectados por el reporte regenerado.
-- Cambios funcionales en la UI de auditoría.
+- Bajar los 5 archivos >200 líneas (queda para 12.15.x).
+- Atacar los 5 casts HIGH restantes (queda para revisión caso por caso).
+- Migrar la RPC de auditoría para dejar de leer columnas legacy de `embarques`.
