@@ -45,6 +45,10 @@ export function DialogGenerarProforma({ open, onOpenChange, embarque, conceptosP
         {c.paso === 'seleccion' && (
           <PasoSeleccionConceptos
             conceptosPendientes={conceptosPendientes}
+            conceptosVisibles={c.conceptosVisibles}
+            contenedores={c.contenedores}
+            filtroContenedor={c.filtroContenedor}
+            onFiltroContenedorChange={c.setFiltroContenedor}
             seleccionados={c.seleccionados}
             ivaPorConcepto={c.ivaPorConcepto}
             totales={c.totales}
