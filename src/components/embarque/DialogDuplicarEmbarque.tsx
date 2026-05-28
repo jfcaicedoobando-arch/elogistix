@@ -39,9 +39,9 @@ export default function DialogDuplicarEmbarque({ embarque, open, onOpenChange }:
         <DialogHeader>
           <DialogTitle>Duplicar embarque {embarque.expediente}</DialogTitle>
           <DialogDescription>
-            Se crearán nuevos embarques con los mismos datos (cliente, ruta, conceptos
-            de venta/costo, documentos). Puedes ajustar tipo de contenedor, peso, volumen
-            y piezas para cada copia.
+            Se crearán nuevos embarques con los mismos datos (cliente, ruta, contenedores
+            hijos, conceptos de venta/costo, documentos). Los conceptos asignados a un
+            contenedor específico mantienen su asignación al contenedor copiado.
           </DialogDescription>
         </DialogHeader>
 

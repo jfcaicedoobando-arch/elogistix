@@ -1,66 +1,54 @@
-# Continuación refactor contenedores — Fases B, C, D
+ns: Fases E, F, G del refactor `1 embarque ↔ N contenedores`.
 
-Continuo con las siguientes 3 fases del refactor `1 embarque ↔ N contenedores`. Las dejo en un solo entregable porque B es prerrequisito directo de C, y D consume lo mismo que C.
+## Fase E — Conceptos por contenedor + proformas filtradas (v12.6.0)
 
-## Fase B — Servicios + hooks + tipos (v12.4.0)
+**Objetivo:** permitir asignar cada concepto (venta/costo) a un contenedor específico, y generar proformas filtradas por contenedor.
 
-**Archivos nuevos:**
-- `src/types/embarque/contenedor.ts` — tipo `EmbarqueContenedor` derivado de `Database['public']['Tables']['embarque_contenedores']['Row']` + Zod schema `embarqueContenedorSchema` (validación de campos: número requerido, tipo requerido, peso ≥ 0, etc.).
-- `src/services/embarque/contenedores/crud.ts` — `listarPorEmbarque`, `crear`, `crearMuchos`, `actualizar`, `eliminar` (soft-delete), `reemplazarTodos` (delete+insert para edición masiva).
-- `src/services/embarque/contenedores/index.ts` — barrel.
-- `src/hooks/embarque/useContenedoresEmbarque.ts` — React Query: `useQuery` por `embarqueId` con key `['embarque-contenedores', embarqueId]`, manejo explícito de `error`, `staleTime: 30s`.
+**Tipos / servicios:**
+- Extender `ConceptoVenta` y `ConceptoCosto` (en `src/types/...`) con `contenedor_id: string | null` (ya existe la columna en DB desde Fase A).
+- Actualizar `src/services/embarque/conceptos/*` (crud) para leer/escribir `contenedor_id`. Default `null` = "aplica a todo el embarque".
+- Nuevo helper `src/lib/domain/conceptosPorContenedor.ts`: `agruparPorContenedor(conceptos, contenedorIds)` → devuelve `{ porContenedor: Record<id, Concepto[]>, generales: Concepto[] }`.
 
-Sin cambios de UI todavía. Solo capa de datos.
+**UI conceptos (TabFinanciero / ResumenConceptosVenta):**
+- Nueva columna "Contenedor" (Select) en las filas de conceptos. Opciones: "General (todo el embarque)" + lista de `embarque_contenedores`. Solo visible si el embarque tiene ≥ 2 contenedores; si tiene 1 o 0, se oculta y queda `null`.
+- Componente nuevo `src/components/embarque/conceptos/SelectContenedorConcepto.tsx` (≤120 líneas) — usa `useContenedoresEmbarque`.
 
-## Fase C — Wizard con lista dinámica de contenedores (v12.5.0)
+**Proforma — paso de selección:**
+- `PasoSeleccionConceptos.tsx`: agregar filtro tipo chips "Contenedor" arriba de la tabla. Opciones: "Todos", "Generales", uno por cada contenedor. Persistir selección en estado local del dialog.
+- `DialogGenerarProforma.tsx`: pasar `contenedorIdFiltro?: string | null` al PDF.
+- `generators/proformaPdf.tsx`: si viene `contenedorIdFiltro`, filtra conceptos y agrega subtítulo "Proforma del contenedor [número]". Mantener layout existente.
 
-**StepDatosRutaMaritimo.tsx**: reemplazar los campos únicos `# Contenedor` y `Tipo` por un nuevo componente `ListaContenedoresEditable` cuando `tipo_servicio === 'FCL'`. Para LCL se mantiene el comportamiento actual (un campo fijo "LCL").
+**Cambios DB:** ninguno (la columna `contenedor_id` ya existe).
 
-**Componentes nuevos:**
-- `src/components/embarque/contenedores/ListaContenedoresEditable.tsx` (≤200 líneas):
-  - Recibe `value: ContenedorBorrador[]`, `onChange`, `tiposContenedor`.
-  - Botón "Agregar contenedor" (sin límite duro; soft-cap 50 con `confirm()` si se supera).
-  - Lista de `FilaContenedor`.
-  - Validación local: si la lista queda vacía, mostrar inline error.
-- `src/components/embarque/contenedores/FilaContenedor.tsx` (≤200 líneas):
-  - Inputs: número, tipo (`Select`), BL House, peso, volumen, piezas, botón eliminar.
-  - Reutiliza `NumericInput` para campos numéricos.
+## Fase F — Re-propósito de duplicación (v12.7.0)
 
-**Wizard flow (`useNuevoEmbarqueWizard.ts`)**:
-- Form pasa a tener `contenedores: ContenedorBorrador[]` en lugar de los 5 campos sueltos (`contenedor`, `tipo_contenedor`, `peso_kg`, `volumen_m3`, `piezas`).
-- Default: un contenedor vacío para no romper UX (`[{ numero_contenedor: '', tipo_contenedor: '', ... }]`).
-- Validación Zod (`embarqueWizardSchemas.ts`): para marítimo FCL `contenedores.length >= 1` y cada uno con `numero_contenedor` + `tipo_contenedor` no vacíos.
-- Al submit: insertar embarque + llamar `crearMuchos(embarqueId, contenedores)`. El trigger DB sincroniza los totales legacy.
+**Contexto:** `DialogDuplicarEmbarque` + RPC `duplicar_embarque_completo` hoy crea un embarque hermano para cada contenedor extra. Con el nuevo modelo eso ya no aplica.
 
-**Compat:** los modos aéreo y terrestre siguen usando el modelo viejo (no aplican contenedores). Para LCL, el wizard inserta automáticamente un contenedor "LCL" al guardar.
+**Cambios:**
+- `DialogDuplicarEmbarque.tsx`: cambiar copy a "Duplicar embarque como plantilla" — crea **un** embarque nuevo, copiando contenedores y conceptos (cliente puede editar). Quitar la opción "duplicar N veces".
+- Nueva migración: actualizar RPC `duplicar_embarque_completo` para que copie también filas de `embarque_contenedores` (con nuevos IDs) y re-mapear `contenedor_id` en `conceptos_venta`/`conceptos_costo` copiados. Mantener compatibilidad con embarques legacy (sin contenedores child).
+- Test mínimo en `src/services/embarque/__tests__/duplicar.test.ts` (mock RPC) que valide el mapeo.
 
-## Fase D — Vista detalle del embarque (v12.6.0)
+## Fase G — Wizard parte 2 + docs + deprecaciones (v12.8.0)
 
-**Componente nuevo:**
-- `src/components/embarque/contenedores/SeccionContenedores.tsx` (≤200 líneas):
-  - Tabla editable con los N contenedores del embarque.
-  - Reutiliza `ListaContenedoresEditable` en modo controlado por el hook.
-  - Botón "Guardar cambios" → `reemplazarTodos` (delete soft + insert), invalidando query.
-  - Empty state si no hay contenedores con CTA "Agregar primer contenedor".
-- Se monta dentro de `TabResumen.tsx` justo después de `EmbarquesRelacionadosCard` (solo para marítimo FCL).
+**Wizard (pendiente de Fase C):**
+- Integrar `ListaContenedoresEditable` dentro de `StepDatosRutaMaritimo.tsx` reemplazando los 5 campos sueltos (`contenedor`, `tipo_contenedor`, `peso_kg`, `volumen_m3`, `piezas`) cuando `tipo_servicio === 'FCL'`.
+- `useNuevoEmbarqueWizard.ts`: form pasa a `contenedores: ContenedorBorrador[]`. Default `[]`. Submit: insertar embarque + `crearMuchos`. LCL inserta un contenedor "LCL" automático. Aéreo/terrestre sin cambios.
+- Zod: `contenedores.length >= 1` para FCL.
 
-**Lista principal (`EmbarquesActivosTable.tsx`)**:
-- Nueva columna "Contenedores": muestra el primer número + badge "(+N)" si hay más. Opt-in en density "Cómoda"; oculta en "Compacta" para no agregar scroll horizontal.
-- Conteo viene de un join lateral: extender el SELECT a `embarque_contenedores(count)` o leerlo del campo legacy + count separado (decisión técnica: agregar `select` con relación y mapear).
+**Deprecación legacy:**
+- Marcar `embarques.contenedor`, `tipo_contenedor`, `peso_kg`, `volumen_m3`, `piezas` como deprecated en JSDoc de los tipos derivados (`src/types/embarque.ts`). No eliminar: el trigger DB los sigue sincronizando para reportes y export.
+- Crear `docs/embarques-contenedores.md` con: modelo de datos, flujo wizard, cómo se filtran proformas, plan de remoción futura de campos legacy (no en esta tanda).
 
-**EmbarquesRelacionadosCard**: sin cambios de lógica, sólo se reinterpreta semánticamente (otros embarques con mismo BL Master, caso legacy). Se actualiza copy del card: "Otros embarques con el mismo BL Master" → indica que ahora los contenedores propios viven dentro del embarque.
-
-## Cambios transversales
-
-- `CHANGELOG.md` + `APP_VERSION` se bumpean **una vez por fase** (12.4.0, 12.5.0, 12.6.0).
-- Sin tocar las RPCs `duplicar_embarque_completo` aún (queda para Fase E/F del plan original).
-- Sin cambios en proformas todavía (Fase E del plan original).
+**Changelog/version:** bump independiente por cada fase (12.6.0 / 12.7.0 / 12.8.0).
 
 ## Riesgos
 
-- El `select` con join a `embarque_contenedores` en la lista principal puede tocar paginación server-side existente. Si rompe, fallback: column oculta por defecto y agregar query separado en el hook de la lista.
-- Triggers DB de sync deben tolerar inserts masivos sin race. Si aparece lock, ajustar a `STATEMENT` level en una migración menor.
+- Cambiar la RPC de duplicación puede romper flujos en producción demo: validar con un embarque de prueba antes del merge.
+- Filtro por contenedor en proformas debe respetar conceptos `null` (generales) — siempre incluidos a menos que el usuario filtre explícitamente a "Generales" only.
+- El Select de contenedor en conceptos debe invalidarse si el contenedor se elimina (soft-delete) — fallback a `null` con toast.
 
-## Fuera de alcance de esta tanda
+## Fuera de alcance
 
-- Fases E (conceptos por contenedor + proformas filtradas), F (re-propósito de duplicación), G (docs/deprecaciones) — se entregan después.
+- Remoción real de columnas legacy en `embarques` (futuro).
+- Reportes financieros por contenedor (futuro, requiere agregar dashboard).

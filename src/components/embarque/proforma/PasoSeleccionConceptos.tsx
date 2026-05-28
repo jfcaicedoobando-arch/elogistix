@@ -5,9 +5,12 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { formatCurrency } from "@/lib/formatters";
+import { FiltroContenedorChips } from "./FiltroContenedorChips";
+import type { FiltroContenedor } from "@/lib/domain/conceptosPorContenedor";
 import type { Tables } from "@/types/db";
 
 type ConceptoVenta = Tables<"conceptos_venta">;
+type EmbarqueContenedor = Tables<"embarque_contenedores">;
 
 export interface TotalesProforma {
   subtotal_usd: number;
@@ -20,6 +23,10 @@ export interface TotalesProforma {
 
 interface Props {
   conceptosPendientes: ConceptoVenta[];
+  conceptosVisibles: ConceptoVenta[];
+  contenedores: EmbarqueContenedor[];
+  filtroContenedor: FiltroContenedor;
+  onFiltroContenedorChange: (v: FiltroContenedor) => void;
   seleccionados: Set<string>;
   ivaPorConcepto: Record<string, boolean>;
   totales: TotalesProforma;
@@ -35,31 +42,48 @@ interface Props {
 }
 
 export function PasoSeleccionConceptos({
-  conceptosPendientes, seleccionados, ivaPorConcepto, totales, tasaIva,
+  conceptosPendientes, conceptosVisibles, contenedores,
+  filtroContenedor, onFiltroContenedorChange,
+  seleccionados, ivaPorConcepto, totales, tasaIva,
   notas, diasCredito, operadorEmbarque,
   onToggle, onToggleAll, onToggleIva, onNotasChange, onDiasCreditoChange,
 }: Props) {
-  const totalSeleccionados = seleccionados.size;
-  const allSelected = totalSeleccionados === conceptosPendientes.length && totalSeleccionados > 0;
+  const visiblesIds = conceptosVisibles.map((c) => c.id);
+  const seleccionadosVisibles = visiblesIds.filter((id) => seleccionados.has(id)).length;
+  const allSelected = visiblesIds.length > 0 && seleccionadosVisibles === visiblesIds.length;
+  const contenedorNumeroById = new Map(
+    contenedores.map((c) => [c.id, c.numero_contenedor || `#${c.orden}`]),
+  );
 
   return (
     <div className="space-y-4">
+      <FiltroContenedorChips
+        contenedores={contenedores}
+        value={filtroContenedor}
+        onChange={onFiltroContenedorChange}
+      />
       <div className="border rounded-md">
         <div className="flex items-center justify-between p-3 bg-muted/50 border-b">
           <div className="flex items-center gap-2">
             <Checkbox checked={allSelected} onCheckedChange={onToggleAll} id="all" />
             <Label htmlFor="all" className="text-sm font-medium cursor-pointer">
-              Seleccionar todos ({totalSeleccionados}/{conceptosPendientes.length})
+              Seleccionar todos ({seleccionadosVisibles}/{conceptosVisibles.length})
+              {filtroContenedor !== 'todos' && (
+                <span className="text-muted-foreground font-normal ml-1">
+                  · {conceptosPendientes.length} totales
+                </span>
+              )}
             </Label>
           </div>
           <span className="text-xs text-muted-foreground">IVA por concepto</span>
         </div>
         <div className="divide-y max-h-[300px] overflow-y-auto">
-          {conceptosPendientes.map(c => {
+          {conceptosVisibles.map(c => {
             const sub = Number(c.cantidad) * Number(c.precio_unitario);
             const isSelected = seleccionados.has(c.id);
             const ivaActivo = ivaPorConcepto[c.id] ?? false;
             const ivaBloqueado = c.moneda === "MXN";
+            const contLabel = c.contenedor_id ? contenedorNumeroById.get(c.contenedor_id) : null;
             return (
               <div key={c.id} className="flex items-start gap-3 p-3 hover:bg-muted/30">
                 <Checkbox
@@ -71,6 +95,12 @@ export function PasoSeleccionConceptos({
                   <div className="flex items-center gap-2 flex-wrap">
                     <span className="font-medium text-sm">{c.descripcion}</span>
                     <Badge variant="outline" className="text-xs">{c.moneda}</Badge>
+                    {contLabel && (
+                      <Badge variant="secondary" className="text-xs">Cont. {contLabel}</Badge>
+                    )}
+                    {!c.contenedor_id && contenedores.length >= 2 && (
+                      <Badge variant="outline" className="text-xs text-muted-foreground">General</Badge>
+                    )}
                   </div>
                   <div className="text-xs text-muted-foreground mt-0.5">
                     {c.cantidad} × {formatCurrency(Number(c.precio_unitario), c.moneda)} = {formatCurrency(sub, c.moneda)}
@@ -95,6 +125,11 @@ export function PasoSeleccionConceptos({
               </div>
             );
           })}
+          {conceptosVisibles.length === 0 && (
+            <div className="p-6 text-center text-sm text-muted-foreground">
+              No hay conceptos en este filtro.
+            </div>
+          )}
         </div>
       </div>
 
@@ -116,7 +151,7 @@ export function PasoSeleccionConceptos({
             <div className="flex justify-between font-bold text-base pt-1 border-t"><span>Total MXN:</span><span>{formatCurrency(totales.total_mxn, "MXN")}</span></div>
           </div>
         )}
-        {totalSeleccionados === 0 && (
+        {seleccionadosVisibles === 0 && (
           <p className="text-sm text-muted-foreground text-center py-2">Selecciona al menos un concepto</p>
         )}
       </div>

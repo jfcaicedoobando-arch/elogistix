@@ -6,6 +6,13 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [12.7.0] - 2026-05-28
+- **feat(embarques)**: Fase F del refactor contenedores. La RPC `duplicar_embarque_completo` ahora copia también los contenedores hijos del embarque origen y re-mapea `contenedor_id` en los conceptos de venta/costo copiados (matching por `orden`). Los conceptos generales (sin contenedor) siguen siendo generales en la copia. `DialogDuplicarEmbarque` actualiza el copy para reflejar el nuevo comportamiento.
+- **feat(embarques)**: Fase G del refactor contenedores. Documentación `docs/embarques-contenedores.md` con modelo de datos, capa de servicios, flujo de proformas filtradas y RPC de duplicación. JSDoc `@deprecated` en `src/types/embarque.ts` marcando los campos legacy de `embarques` (`contenedor`, `tipo_contenedor`, `peso_kg`, `volumen_m3`, `piezas`) que ahora se sincronizan por trigger DB desde la tabla hija.
+
+## [12.6.0] - 2026-05-28
+- **feat(embarques/proformas)**: Fase E del refactor contenedores. El paso de selección de `DialogGenerarProforma` añade chips de filtro por contenedor ("Todos" / "Generales" / un chip por cada contenedor) — sólo visible si el embarque tiene ≥ 2 contenedores. Los conceptos generales (`contenedor_id IS NULL`) siempre se incluyen al filtrar por un contenedor específico. Cada concepto muestra badge con su contenedor asignado. La proforma generada registra en `notas` un prefijo `"Proforma del contenedor X"` para que aparezca en el PDF. Nuevos helpers `filtrarPorContenedor` / `agruparPorContenedor` en `src/lib/domain/conceptosPorContenedor.ts` y componente reutilizable `SelectContenedorConcepto`.
+
 ## [12.5.0] - 2026-05-28
 - **feat(embarques)**: Fase C+D del refactor contenedores. Nuevos componentes `FilaContenedor`, `ListaContenedoresEditable` y `SeccionContenedores` en `src/components/embarque/contenedores/`. El detalle de cada embarque marítimo ahora muestra una sección "Contenedores (N)" donde el operador puede agregar, editar y eliminar contenedores en una sola pantalla con "Guardar cambios" (delete-soft + re-insert vía `reemplazarTodos`). Los totales `peso_kg`/`volumen_m3`/`piezas` y los campos legacy `contenedor`/`tipo_contenedor` del embarque se sincronizan automáticamente por trigger DB.
 - **Nota**: el wizard de creación sigue capturando un sólo contenedor inicial; los adicionales se agregan desde el detalle. La integración del wizard con lista dinámica se entrega en versión siguiente.
