@@ -100,7 +100,7 @@ export async function fetchConceptosProforma(proformaId: string): Promise<Concep
     .select("*, embarque_contenedores:contenedor_id(id, numero_contenedor, tipo_contenedor)")
     .eq("proforma_id", proformaId);
   if (error) throw error;
-  return (data ?? []) as unknown as ConceptoVentaRow[];
+  return fromDb<ConceptoVentaRow[]>(data ?? []);
 }
 
 export async function fetchConceptosConsolidados(
