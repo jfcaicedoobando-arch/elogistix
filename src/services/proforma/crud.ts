@@ -24,7 +24,9 @@ export async function crearProforma(params: CrearProformaParams): Promise<Profor
   }
 
   // B-1: RPC atómica — update aplica_iva + insert proforma + vincular conceptos en una sola transacción.
-  const { data, error } = await supabase.rpc("crear_proforma_atomica", {
+  // SAFE-CAST: la RPC acepta NULL en bl_master/notas/operador/dias_credito; los tipos generados
+  // por supabase los exponen como required. Casteamos en bloque al firmar la llamada.
+  const rpcArgs = {
     p_organization_id: params.organizationId,
     p_embarque_id: params.embarqueId,
     p_cliente_id: params.clienteId,
@@ -43,7 +45,8 @@ export async function crearProforma(params: CrearProformaParams): Promise<Profor
     p_dias_credito: params.diasCredito,
     p_tasa_iva: params.tasaIva,
     p_iva_overrides: (params.ivaOverrides ?? {}) as never,
-  });
+  } as unknown as Parameters<typeof supabase.rpc<"crear_proforma_atomica">>[1];
+  const { data, error } = await supabase.rpc("crear_proforma_atomica", rpcArgs);
   if (error) throw error;
   if (!data) throw new Error("No se pudo crear la proforma");
   return data as unknown as ProformaRow;
