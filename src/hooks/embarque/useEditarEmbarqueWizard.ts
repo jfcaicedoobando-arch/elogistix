@@ -111,6 +111,17 @@ export function useEditarEmbarqueWizard(id: string | undefined) {
     setHidratoContactos(true);
   }, [initialized, hidratoContactos, embarque, contactos, selectedCliente, methods]);
 
+  // Hidratación de contenedores hijos (Fase 2 v12.11.0). Una vez tras initialized.
+  useEffect(() => {
+    if (!initialized || hidratoContenedores || cargandoContenedores) return;
+    methods.setValue(
+      'contenedores',
+      contenedoresDb.map(rowAContenedorBorrador),
+      { shouldDirty: false },
+    );
+    setHidratoContenedores(true);
+  }, [initialized, hidratoContenedores, cargandoContenedores, contenedoresDb, methods]);
+
   const handleSave = async () => {
     if (!id || !embarque) return;
     try {
