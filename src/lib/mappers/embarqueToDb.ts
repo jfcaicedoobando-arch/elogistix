@@ -44,6 +44,14 @@ function partesBase(v: EmbarqueFormValues, contactos: ContactoRow[], clienteNomb
 }
 
 function partesMaritimo(v: EmbarqueFormValues) {
+  // v12.8.0: si hay contenedores dinámicos, derivar campos legacy del primero
+  // (el trigger DB después los re-sincroniza, esto sólo cubre el insert inmediato).
+  const primero = v.contenedores?.[0];
+  const numero = primero?.numero_contenedor ?? v.contenedor;
+  const tipo =
+    v.tipoServicio === "LCL"
+      ? "LCL"
+      : primero?.tipo_contenedor ?? v.tipoContenedor;
   return {
     puerto_origen: emptyToNull(v.puertoOrigen),
     puerto_destino: emptyToNull(v.puertoDestino),
@@ -52,10 +60,26 @@ function partesMaritimo(v: EmbarqueFormValues) {
     bl_master: emptyToNull(v.blMaster),
     bl_house: emptyToNull(v.blHouse),
     tipo_servicio: tipoServicioMaritimoSchema.optional().nullable().parse(emptyToNull(v.tipoServicio)) ?? null,
-    contenedor: emptyToNull(v.contenedor),
-    tipo_contenedor: emptyToNull(v.tipoContenedor),
+    contenedor: emptyToNull(numero),
+    tipo_contenedor: emptyToNull(tipo),
   };
 }
+
+function totalesDesdeContenedores(v: EmbarqueFormValues) {
+  // FCL con contenedores dinámicos → suma; caso contrario → usa campos legacy.
+  if (v.modo === "Marítimo" && v.contenedores && v.contenedores.length > 0) {
+    const peso = v.contenedores.reduce((s, c) => s + (Number(c.peso_kg) || 0), 0);
+    const vol = v.contenedores.reduce((s, c) => s + (Number(c.volumen_m3) || 0), 0);
+    const pzs = v.contenedores.reduce((s, c) => s + (Number(c.piezas) || 0), 0);
+    return { peso_kg: peso, volumen_m3: vol, piezas: pzs };
+  }
+  return {
+    peso_kg: Number(v.pesoKg) || 0,
+    volumen_m3: Number(v.volumenM3) || 0,
+    piezas: Number(v.piezas) || 0,
+  };
+}
+
 
 function partesAereo(v: EmbarqueFormValues) {
   return {
@@ -98,9 +122,11 @@ export function buildEmbarquePayload(
     ...partesAereo(values),
     ...partesTerrestre(values),
     ...partesFinancieras(values),
+    ...totalesDesdeContenedores(values),
     operador,
   };
 }
+
 
 export function buildConceptosVentaPayload(conceptosVenta: ConceptoVentaLocal[]) {
   return conceptosVenta

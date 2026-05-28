@@ -67,13 +67,11 @@ const baseRutaFields = z.object({
   eta: z.string().min(1, msg("2.eta.required")),
 });
 
-const maritimoRuta = z.object({
+const maritimoRutaBase = z.object({
   puertoOrigen: z.string().trim().min(1, msg("2.puertoOrigen.required")),
   puertoDestino: z.string().trim().min(1, msg("2.puertoDestino.required")),
   naviera: z.string().trim().min(1, msg("2.naviera.required")),
   tipoServicio: z.string().min(1, msg("2.tipoServicio.required")),
-  contenedor: z.string().trim().min(1, msg("2.contenedor.required")),
-  tipoContenedor: z.string().trim().min(1, msg("2.tipoContenedor.required")),
 });
 
 const aereoRuta = z.object({
@@ -88,6 +86,12 @@ const terrestreRuta = z.object({
   transportista: z.string().trim().min(1, msg("2.transportista.required")),
 });
 
+/** Fila mínima de contenedor para validar el paso 2. */
+interface ContenedorRutaItem {
+  numero_contenedor?: string | null;
+  tipo_contenedor?: string | null;
+}
+
 export interface StepRutaInput {
   modo?: string | null;
   etd?: string | null;
@@ -98,6 +102,7 @@ export interface StepRutaInput {
   tipoServicio?: string | null;
   contenedor?: string | null;
   tipoContenedor?: string | null;
+  contenedores?: ContenedorRutaItem[] | null;
   aeropuertoOrigen?: string | null;
   aeropuertoDestino?: string | null;
   mawb?: string | null;
@@ -106,19 +111,41 @@ export interface StepRutaInput {
   transportista?: string | null;
 }
 
+function validateContenedoresFcl(
+  contenedores: ContenedorRutaItem[],
+): StepValidationErrors {
+  const errors: StepValidationErrors = {};
+  if (contenedores.length === 0) {
+    errors.contenedores = msg("2.contenedores.minOne");
+    return errors;
+  }
+  for (let i = 0; i < contenedores.length; i++) {
+    const c = contenedores[i];
+    if (!c.numero_contenedor || !c.numero_contenedor.trim()) {
+      errors[`contenedores.${i}.numero_contenedor`] = msg("2.contenedores.item.numero");
+    }
+    if (!c.tipo_contenedor || !c.tipo_contenedor.trim()) {
+      errors[`contenedores.${i}.tipo_contenedor`] = msg("2.contenedores.item.tipo");
+    }
+  }
+  return errors;
+}
+
 function validateMaritimoRuta(input: StepRutaInput): StepValidationErrors {
-  const tipoContenedor = input.tipoServicio === "LCL"
-    ? input.tipoContenedor || "LCL"
-    : input.tipoContenedor ?? "";
-  const r = maritimoRuta.safeParse({
+  const base = maritimoRutaBase.safeParse({
     puertoOrigen: input.puertoOrigen ?? "",
     puertoDestino: input.puertoDestino ?? "",
     naviera: input.naviera ?? "",
     tipoServicio: input.tipoServicio ?? "",
-    contenedor: input.contenedor ?? "",
-    tipoContenedor,
   });
-  return r.success ? {} : flattenZodErrors(r.error);
+  const errors: StepValidationErrors = base.success ? {} : flattenZodErrors(base.error);
+
+  // LCL: no se valida contenedores (auto-LCL, opcional el número).
+  if (input.tipoServicio === "LCL") return errors;
+
+  // FCL: lista dinámica de contenedores.
+  Object.assign(errors, validateContenedoresFcl(input.contenedores ?? []));
+  return errors;
 }
 
 function validateAereoRuta(input: StepRutaInput): StepValidationErrors {
@@ -144,6 +171,7 @@ function validateRutaModo(input: StepRutaInput): StepValidationErrors {
   if (input.modo === "Terrestre") return validateTerrestreRuta(input);
   return validateMaritimoRuta(input);
 }
+
 
 export function validateStepRuta(input: StepRutaInput): StepValidationErrors {
   const errors: StepValidationErrors = {};

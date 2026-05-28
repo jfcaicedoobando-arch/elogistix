@@ -80,6 +80,10 @@ const STATIC: Record<string, string> = {
   "2.tipoServicio.required": formatValidationMessage(FIELD_LABELS.tipoServicio, "selecciona FCL o LCL"),
   "2.contenedor.required": formatValidationMessage(FIELD_LABELS.contenedor, "campo obligatorio"),
   "2.tipoContenedor.required": formatValidationMessage(FIELD_LABELS.tipoContenedor, "selecciona una opción"),
+  "2.contenedores.minOne": formatValidationMessage(FIELD_LABELS.contenedor, "agrega al menos un contenedor"),
+  "2.contenedores.item.numero": formatValidationMessage(FIELD_LABELS.contenedor, "todos los contenedores deben tener número"),
+  "2.contenedores.item.tipo": formatValidationMessage(FIELD_LABELS.tipoContenedor, "todos los contenedores deben tener tipo"),
+
 
   // Paso 2 — aéreo
   "2.aeropuertoOrigen.required": formatValidationMessage(FIELD_LABELS.aeropuertoOrigen, "campo obligatorio"),
