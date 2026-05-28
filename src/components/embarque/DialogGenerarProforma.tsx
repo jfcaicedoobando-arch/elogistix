@@ -8,6 +8,7 @@ import { useDialogGenerarProformaController } from "@/hooks/embarque";
 import { PasoSeleccionConceptos } from "./proforma/PasoSeleccionConceptos";
 import { PasoConfirmacionProforma } from "./proforma/PasoConfirmacionProforma";
 import type { Tables } from "@/types/db";
+import type { FiltroContenedor } from "@/lib/domain/conceptosPorContenedor";
 
 type ConceptoVenta = Tables<'conceptos_venta'>;
 type EmbarqueRow = Tables<'embarques'>;
@@ -17,11 +18,14 @@ interface Props {
   onOpenChange: (v: boolean) => void;
   embarque: EmbarqueRow;
   conceptosPendientes: ConceptoVenta[];
+  /** v12.14.0: filtro inicial al abrir (atajo "Por contenedor"). Default 'todos'. */
+  initialFiltroContenedor?: FiltroContenedor;
 }
 
-export function DialogGenerarProforma({ open, onOpenChange, embarque, conceptosPendientes }: Props) {
+export function DialogGenerarProforma({ open, onOpenChange, embarque, conceptosPendientes, initialFiltroContenedor = 'todos' }: Props) {
   const c = useDialogGenerarProformaController(
     open, embarque, conceptosPendientes, () => onOpenChange(false),
+    initialFiltroContenedor,
   );
 
   return (
