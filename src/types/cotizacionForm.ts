@@ -51,6 +51,9 @@ export interface CotizacionFormValues {
 export const COTIZACION_FORM_DEFAULTS: CotizacionFormValues = {
   esProspecto: false,
   clienteId: "",
+  prospectoModo: "nuevo",
+  oportunidadId: "",
+  leadId: "",
   prospectoEmpresa: "",
   prospectoContacto: "",
   prospectoEmail: "",
