@@ -9,6 +9,7 @@ import type { calcularTotalesProforma } from "@/lib/domain/proforma";
 import type { FiltroContenedor } from "@/lib/domain/conceptosPorContenedor";
 import type { EmbarqueContenedor } from "@/types/embarque/contenedor";
 import type { ClienteLite } from "@/pdf/documents/proformaShared";
+import type { useFetchClienteParaPdf } from "@/hooks/embarque/useProformaDialog";
 
 type ConceptoVenta = Tables<"conceptos_venta">;
 type EmbarqueRow = Tables<"embarques">;
@@ -29,7 +30,7 @@ export interface SubmitProformaParams {
   totales: TotalesProforma;
   tasaIva: number;
   crearProformaMutateAsync: (args: CrearProformaArgs) => Promise<Tables<"proformas">>;
-  fetchClienteParaPdfCached: (clienteId: string) => Promise<ClienteLite | undefined>;
+  fetchClienteParaPdfCached: ReturnType<typeof useFetchClienteParaPdf>;
 }
 
 function construirNotasFinales(
@@ -84,7 +85,7 @@ export async function submitProformaDialog(params: SubmitProformaParams): Promis
     ivaOverrides,
   });
 
-  const cliente = await fetchClienteParaPdfCached(embarque.cliente_id);
+  const cliente = (await fetchClienteParaPdfCached(embarque.cliente_id)) as ClienteLite | undefined;
   const conceptosParaPdf = conceptosSeleccionados.map((c) => ({
     ...c,
     aplica_iva: ivaOverrides[c.id],
