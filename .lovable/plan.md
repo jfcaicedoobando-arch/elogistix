@@ -1,115 +1,66 @@
-# Refactor: 1 embarque ↔ N contenedores
+# Continuación refactor contenedores — Fases B, C, D
 
-Modelar contenedores como entidad hija real de `embarques`, eliminando el patrón actual de "N embarques hermanos por BL Master".
+Continuo con las siguientes 3 fases del refactor `1 embarque ↔ N contenedores`. Las dejo en un solo entregable porque B es prerrequisito directo de C, y D consume lo mismo que C.
 
-## Objetivo
+## Fase B — Servicios + hooks + tipos (v12.4.0)
 
-Un embarque marítimo FCL pasa a contener **N filas en `embarque_contenedores`**. Cada contenedor tiene su número, tipo, peso/volumen/piezas y BL House propios. Los conceptos financieros pueden ser globales al embarque o asignados a un contenedor específico. Las proformas pueden filtrar conceptos por contenedor.
+**Archivos nuevos:**
+- `src/types/embarque/contenedor.ts` — tipo `EmbarqueContenedor` derivado de `Database['public']['Tables']['embarque_contenedores']['Row']` + Zod schema `embarqueContenedorSchema` (validación de campos: número requerido, tipo requerido, peso ≥ 0, etc.).
+- `src/services/embarque/contenedores/crud.ts` — `listarPorEmbarque`, `crear`, `crearMuchos`, `actualizar`, `eliminar` (soft-delete), `reemplazarTodos` (delete+insert para edición masiva).
+- `src/services/embarque/contenedores/index.ts` — barrel.
+- `src/hooks/embarque/useContenedoresEmbarque.ts` — React Query: `useQuery` por `embarqueId` con key `['embarque-contenedores', embarqueId]`, manejo explícito de `error`, `staleTime: 30s`.
 
-## Fases
+Sin cambios de UI todavía. Solo capa de datos.
 
-### Fase A — Base de datos (migración estructural + datos)
+## Fase C — Wizard con lista dinámica de contenedores (v12.5.0)
 
-1. **Nueva tabla `embarque_contenedores`**
-   - `id`, `embarque_id` (FK CASCADE), `organization_id`
-   - `numero_contenedor`, `tipo_contenedor`, `bl_house` (opcional)
-   - `peso_kg`, `volumen_m3`, `piezas`
-   - `orden` (int, para ordenamiento estable)
-   - `created_at`, `updated_at`, soft-delete (`deleted_at`, `deleted_by`)
-   - GRANTs estándar + RLS por `organization_id` (espejo de `embarques`)
+**StepDatosRutaMaritimo.tsx**: reemplazar los campos únicos `# Contenedor` y `Tipo` por un nuevo componente `ListaContenedoresEditable` cuando `tipo_servicio === 'FCL'`. Para LCL se mantiene el comportamiento actual (un campo fijo "LCL").
 
-2. **Conceptos financieros**
-   - Agregar `contenedor_id uuid NULL REFERENCES embarque_contenedores(id) ON DELETE SET NULL` a `conceptos_venta` y `conceptos_costo`.
-   - `NULL` = concepto global del embarque.
+**Componentes nuevos:**
+- `src/components/embarque/contenedores/ListaContenedoresEditable.tsx` (≤200 líneas):
+  - Recibe `value: ContenedorBorrador[]`, `onChange`, `tiposContenedor`.
+  - Botón "Agregar contenedor" (sin límite duro; soft-cap 50 con `confirm()` si se supera).
+  - Lista de `FilaContenedor`.
+  - Validación local: si la lista queda vacía, mostrar inline error.
+- `src/components/embarque/contenedores/FilaContenedor.tsx` (≤200 líneas):
+  - Inputs: número, tipo (`Select`), BL House, peso, volumen, piezas, botón eliminar.
+  - Reutiliza `NumericInput` para campos numéricos.
 
-3. **Migración de datos existente**
-   - Para cada `embarques` con `contenedor` o `tipo_contenedor` no nulos: insertar 1 fila en `embarque_contenedores` con esos valores + peso/volumen/piezas del embarque + `orden=1`.
-   - **No** colapsar embarques hermanos automáticamente (riesgo alto). Se ofrece una herramienta manual posterior para consolidar BL Masters duplicados.
+**Wizard flow (`useNuevoEmbarqueWizard.ts`)**:
+- Form pasa a tener `contenedores: ContenedorBorrador[]` en lugar de los 5 campos sueltos (`contenedor`, `tipo_contenedor`, `peso_kg`, `volumen_m3`, `piezas`).
+- Default: un contenedor vacío para no romper UX (`[{ numero_contenedor: '', tipo_contenedor: '', ... }]`).
+- Validación Zod (`embarqueWizardSchemas.ts`): para marítimo FCL `contenedores.length >= 1` y cada uno con `numero_contenedor` + `tipo_contenedor` no vacíos.
+- Al submit: insertar embarque + llamar `crearMuchos(embarqueId, contenedores)`. El trigger DB sincroniza los totales legacy.
 
-4. **Compatibilidad temporal**
-   - Mantener columnas `contenedor` y `tipo_contenedor` en `embarques` por ahora (deprecadas). Un trigger las sincroniza con el primer contenedor para que reportes legacy sigan funcionando. Se eliminan en una migración posterior una vez que todo el código consuma la tabla hija.
+**Compat:** los modos aéreo y terrestre siguen usando el modelo viejo (no aplican contenedores). Para LCL, el wizard inserta automáticamente un contenedor "LCL" al guardar.
 
-5. **RPC actualizadas**
-   - `duplicar_embarque_completo`: copia también los contenedores hijos.
-   - Nueva RPC opcional `agregar_contenedores_embarque(embarque_id, contenedores[])` para inserts masivos transaccionales.
+## Fase D — Vista detalle del embarque (v12.6.0)
 
-### Fase B — Capa de servicios y tipos
+**Componente nuevo:**
+- `src/components/embarque/contenedores/SeccionContenedores.tsx` (≤200 líneas):
+  - Tabla editable con los N contenedores del embarque.
+  - Reutiliza `ListaContenedoresEditable` en modo controlado por el hook.
+  - Botón "Guardar cambios" → `reemplazarTodos` (delete soft + insert), invalidando query.
+  - Empty state si no hay contenedores con CTA "Agregar primer contenedor".
+- Se monta dentro de `TabResumen.tsx` justo después de `EmbarquesRelacionadosCard` (solo para marítimo FCL).
 
-- Nuevo módulo `src/services/embarque/contenedores/` con CRUD: `listarPorEmbarque`, `crear`, `actualizar`, `eliminar`, `reordenar`.
-- Tipos en `src/types/embarque/contenedor.ts` (Zod schema).
-- Hook `useContenedoresEmbarque(embarqueId)` con React Query (cache + invalidación).
+**Lista principal (`EmbarquesActivosTable.tsx`)**:
+- Nueva columna "Contenedores": muestra el primer número + badge "(+N)" si hay más. Opt-in en density "Cómoda"; oculta en "Compacta" para no agregar scroll horizontal.
+- Conteo viene de un join lateral: extender el SELECT a `embarque_contenedores(count)` o leerlo del campo legacy + count separado (decisión técnica: agregar `select` con relación y mapear).
 
-### Fase C — Wizard de creación
+**EmbarquesRelacionadosCard**: sin cambios de lógica, sólo se reinterpreta semánticamente (otros embarques con mismo BL Master, caso legacy). Se actualiza copy del card: "Otros embarques con el mismo BL Master" → indica que ahora los contenedores propios viven dentro del embarque.
 
-- **Step 2 (Datos Ruta marítimo)**: reemplazar los inputs únicos `# Contenedor` y `Tipo` por un **componente `ListaContenedoresEditable`** con:
-  - Botón "Agregar contenedor" (sin límite duro; soft-cap de 50 con confirmación).
-  - Por fila: número, tipo (select del catálogo), BL House, peso, volumen, piezas, eliminar.
-  - Validación Zod: mínimo 1 contenedor para FCL; LCL conserva flujo actual (1 fila auto "LCL").
-- El submit del wizard inserta el embarque + N contenedores en una transacción (RPC).
-- `peso_kg`/`volumen_m3`/`piezas` del embarque pasan a ser **derivados** (suma de hijos) — vista calculada o columnas sincronizadas por trigger.
+## Cambios transversales
 
-### Fase D — Vista detalle del embarque
+- `CHANGELOG.md` + `APP_VERSION` se bumpean **una vez por fase** (12.4.0, 12.5.0, 12.6.0).
+- Sin tocar las RPCs `duplicar_embarque_completo` aún (queda para Fase E/F del plan original).
+- Sin cambios en proformas todavía (Fase E del plan original).
 
-- Nuevo subcomponente `SeccionContenedores` dentro de `TabResumen` (o tab propio si el espacio lo pide):
-  - Tabla editable in-line con los N contenedores.
-  - Acciones: agregar, editar inline, eliminar.
-- `EmbarquesRelacionadosCard` se reinterpreta: ahora muestra otros embarques con mismo `bl_master` (caso edge histórico), no múltiples contenedores del mismo embarque.
-- En la **lista principal** (`EmbarquesActivosTable`): nueva columna "# Contenedores" (count), y badge con el primer número + "(+N)" si hay más.
+## Riesgos
 
-### Fase E — Conceptos financieros y proformas
+- El `select` con join a `embarque_contenedores` en la lista principal puede tocar paginación server-side existente. Si rompe, fallback: column oculta por defecto y agregar query separado en el hook de la lista.
+- Triggers DB de sync deben tolerar inserts masivos sin race. Si aparece lock, ajustar a `STATEMENT` level en una migración menor.
 
-- En `StepCostosPrecios` y editor de conceptos: agregar selector opcional **"Asignar a contenedor"** (por defecto "Todos / Global").
-- En `DialogGenerarProforma`:
-  - Nuevo filtro inicial "Generar para": Todo el embarque · Contenedor específico · Selección múltiple de contenedores.
-  - Los conceptos globales se prorratean o se incluyen según regla configurable (por defecto: incluir siempre).
-- La consolidación multi-embarque existente se mantiene intacta.
+## Fuera de alcance de esta tanda
 
-### Fase F — Migración del flujo de duplicación
-
-- `DialogDuplicarEmbarque` **se mantiene** pero cambia de propósito: deja de ser el camino para "más contenedores" y vuelve a ser sólo para duplicar embarques completos distintos (caso real: copiar un embarque viejo como plantilla para uno nuevo).
-- Banner informativo en el diálogo: "¿Quieres más contenedores? Usa el botón 'Agregar contenedor' dentro del embarque".
-
-### Fase G — Limpieza y documentación
-
-- Actualizar `CHANGELOG.md` + `APP_VERSION`.
-- Documento `docs/contenedores-refactor.md` con el modelo nuevo y guía de migración para usuarios.
-- Marcar `embarques.contenedor` y `embarques.tipo_contenedor` como deprecadas en comentarios SQL.
-
-## Estructura técnica
-
-```text
-supabase/migrations/
-  └─ <ts>_contenedores_tabla_hija.sql        # Fase A completa
-
-src/
-  ├─ types/embarque/contenedor.ts
-  ├─ services/embarque/contenedores/
-  │    ├─ index.ts
-  │    ├─ crud.ts
-  │    └─ types.ts
-  ├─ hooks/embarque/useContenedoresEmbarque.ts
-  ├─ components/embarque/contenedores/
-  │    ├─ ListaContenedoresEditable.tsx       # Wizard + detalle
-  │    ├─ FilaContenedor.tsx
-  │    └─ SeccionContenedores.tsx             # Tab detalle
-  └─ components/embarque/StepDatosRutaMaritimo.tsx  # adaptado
-```
-
-## Riesgos y mitigaciones
-
-- **Datos legacy con embarques hermanos por BL Master**: no se tocan automáticamente. Queda una herramienta opcional posterior para que el usuario consolide manualmente si lo desea.
-- **Reportes y vistas existentes** que leen `embarques.contenedor` directo: siguen funcionando gracias al trigger de sincronización con el primer contenedor.
-- **Proformas históricas** ya generadas: no se alteran (usan `snapshot_emision`).
-- **Tamaño del refactor**: se entrega en fases independientes (A→B→C→D→E→F→G), cada una con su PR/commit y release de versión, para poder pausar/validar entre fases.
-
-## Entregables por fase
-
-| Fase | Output | Versión |
-|------|--------|---------|
-| A | Migración SQL + datos migrados | 8.x.0 |
-| B | Servicios + hooks + tipos | 8.x.1 |
-| C | Wizard con N contenedores | 8.x.2 |
-| D | Detalle + lista actualizados | 8.x.3 |
-| E | Conceptos y proformas por contenedor | 8.x.4 |
-| F | Duplicación re-propósito | 8.x.5 |
-| G | Docs + deprecaciones | 8.x.6 |
+- Fases E (conceptos por contenedor + proformas filtradas), F (re-propósito de duplicación), G (docs/deprecaciones) — se entregan después.

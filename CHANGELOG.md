@@ -6,6 +6,13 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [12.5.0] - 2026-05-28
+- **feat(embarques)**: Fase C+D del refactor contenedores. Nuevos componentes `FilaContenedor`, `ListaContenedoresEditable` y `SeccionContenedores` en `src/components/embarque/contenedores/`. El detalle de cada embarque marítimo ahora muestra una sección "Contenedores (N)" donde el operador puede agregar, editar y eliminar contenedores en una sola pantalla con "Guardar cambios" (delete-soft + re-insert vía `reemplazarTodos`). Los totales `peso_kg`/`volumen_m3`/`piezas` y los campos legacy `contenedor`/`tipo_contenedor` del embarque se sincronizan automáticamente por trigger DB.
+- **Nota**: el wizard de creación sigue capturando un sólo contenedor inicial; los adicionales se agregan desde el detalle. La integración del wizard con lista dinámica se entrega en versión siguiente.
+
+## [12.4.0] - 2026-05-28
+- **feat(embarques)**: Fase B del refactor contenedores. Nuevos tipos en `src/types/embarque/contenedor.ts` (Zod schemas + helpers), capa de servicios `src/services/embarque/contenedores/` (`listarPorEmbarque`, `crear`, `crearMuchos`, `actualizar`, `eliminar` soft-delete, `reemplazarTodos`), y hook `useContenedoresEmbarque(embarqueId)` con React Query. Sin cambios de UI todavía — sólo capa de datos lista para que el wizard y la vista detalle la consuman.
+
 ## [12.3.0] - 2026-05-28
 - **feat(embarques)**: Fase A del refactor `1 embarque ↔ N contenedores`. Nueva tabla `embarque_contenedores` (número, tipo, BL House, peso, volumen, piezas, orden) con RLS por organización + lectura para clientes propietarios. Columnas `contenedor_id` opcionales en `conceptos_venta` y `conceptos_costo` para asignar conceptos a un contenedor específico. Trigger de sincronización mantiene `embarques.contenedor` / `tipo_contenedor` y los totales `peso_kg`/`volumen_m3`/`piezas` actualizados desde la tabla hija (compat hacia atrás). Migración de datos: cada embarque existente con contenedor pasa a tener su fila hija con `orden=1`.
 

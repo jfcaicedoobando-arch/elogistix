@@ -7,6 +7,7 @@ import type { EmbarqueRow } from "@/hooks/embarque";
 import { EstadoProgresoCard } from "./tabResumen/EstadoProgresoCard";
 import { DatosGeneralesCard, RutaTransporteCard } from "./tabResumen/ResumenCards";
 import { EmbarquesRelacionadosCard } from "./tabResumen/EmbarquesRelacionadosCard";
+import { SeccionContenedores } from "./contenedores/SeccionContenedores";
 
 interface Props {
   embarque: EmbarqueRow;
@@ -36,6 +37,8 @@ export function TabResumen({ embarque }: Props) {
           <CardContent className="text-sm text-muted-foreground">{toTitleCase(embarque.consignatario)}</CardContent>
         </Card>
       </div>
+
+      {embarque.modo === "Marítimo" && <SeccionContenedores embarqueId={embarque.id} />}
 
       {relacionados.length > 1 && (
         <EmbarquesRelacionadosCard
