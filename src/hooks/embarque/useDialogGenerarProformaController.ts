@@ -93,10 +93,20 @@ export function useDialogGenerarProformaController(
   };
 
   const toggleAll = () => {
-    if (seleccionados.size === conceptosPendientes.length) {
-      setSeleccionados(new Set());
+    const visibleIds = conceptosVisibles.map((c) => c.id);
+    const allVisibleSelected = visibleIds.length > 0 && visibleIds.every((id) => seleccionados.has(id));
+    if (allVisibleSelected) {
+      setSeleccionados((prev) => {
+        const next = new Set(prev);
+        visibleIds.forEach((id) => next.delete(id));
+        return next;
+      });
     } else {
-      setSeleccionados(new Set(conceptosPendientes.map((c) => c.id)));
+      setSeleccionados((prev) => {
+        const next = new Set(prev);
+        visibleIds.forEach((id) => next.add(id));
+        return next;
+      });
     }
   };
 
@@ -135,6 +145,19 @@ export function useDialogGenerarProformaController(
         ivaOverrides[c.id] = c.moneda === "MXN" ? true : !!ivaPorConcepto[c.id];
       });
 
+      // Prefijo en notas si la proforma está acotada a un contenedor
+      let notasFinal = notas.trim() || null;
+      if (filtroContenedor !== "todos" && filtroContenedor !== "generales") {
+        const cont = contenedores.find((c) => c.id === filtroContenedor);
+        if (cont) {
+          const etiqueta = `Proforma del contenedor ${cont.numero_contenedor || `#${cont.orden}`}`;
+          notasFinal = notasFinal ? `${etiqueta}\n${notasFinal}` : etiqueta;
+        }
+      } else if (filtroContenedor === "generales") {
+        const etiqueta = "Proforma de conceptos generales del embarque";
+        notasFinal = notasFinal ? `${etiqueta}\n${notasFinal}` : etiqueta;
+      }
+
       const diasCreditoNum = diasCredito.trim() === "" ? null : Number(diasCredito);
       const proforma = await crearProforma.mutateAsync({
         embarqueId: embarque.id,
@@ -144,7 +167,7 @@ export function useDialogGenerarProformaController(
         blMaster: embarque.bl_master,
         conceptoIds: Array.from(seleccionados),
         totales,
-        notas: notas.trim() || null,
+        notas: notasFinal,
         operador: embarque.operador || null,
         diasCredito: Number.isFinite(diasCreditoNum as number) ? (diasCreditoNum as number) : null,
         tasaIva,
@@ -175,6 +198,9 @@ export function useDialogGenerarProformaController(
     setNotas, setDiasCredito,
     toggle, toggleAll, toggleIva,
     conceptosSeleccionados,
+    conceptosVisibles,
+    contenedores,
+    filtroContenedor, setFiltroContenedor,
     totales, tasaIva,
     handleConfirmar,
     isPending: crearProforma.isPending,
