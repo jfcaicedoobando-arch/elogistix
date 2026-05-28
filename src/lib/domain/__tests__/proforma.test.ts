@@ -101,6 +101,42 @@ describe("agruparProformasPendientes", () => {
     expect(grupos[0].contenedores[0].proformas).toHaveLength(2);
   });
 
+  it("bucketiza por contenedor REAL (numero_contenedor) cuando hay contenedores_lista", () => {
+    const grupos = agruparProformasPendientes([
+      make({
+        id: "1",
+        expediente: "EXP-001",
+        embarques: { contenedor: null, tipo_contenedor: null },
+        contenedores_lista: [{ numero: "MSCU111", tipo: "40HC" }],
+      }),
+      make({
+        id: "2",
+        expediente: "EXP-001",
+        embarques: { contenedor: null },
+        contenedores_lista: [{ numero: "MSCU222", tipo: "40HC" }],
+      }),
+    ]);
+    expect(grupos[0].contenedores).toHaveLength(2);
+    const nums = grupos[0].contenedores.map((c) => c.contenedor).sort();
+    expect(nums).toEqual(["MSCU111", "MSCU222"]);
+  });
+
+  it("bucketiza como __multi__ cuando una proforma cubre 2+ contenedores distintos", () => {
+    const grupos = agruparProformasPendientes([
+      make({
+        id: "1",
+        expediente: "EXP-001",
+        embarques: { contenedor: null },
+        contenedores_lista: [
+          { numero: "MSCU111", tipo: "40HC" },
+          { numero: "MSCU222", tipo: "40HC" },
+        ],
+      }),
+    ]);
+    expect(grupos[0].contenedores).toHaveLength(1);
+    expect(grupos[0].contenedores[0].contenedor).toBe("__multi__");
+  });
+
   it("toma el blMaster del embarque o del campo plano de la proforma", () => {
     const grupos = agruparProformasPendientes([
       make({ id: "1", expediente: "A", bl_master: "PLANO" }),
