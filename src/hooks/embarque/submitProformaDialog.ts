@@ -8,7 +8,6 @@ import type { Tables } from "@/integrations/supabase/types";
 import type { calcularTotalesProforma } from "@/lib/domain/proforma";
 import type { FiltroContenedor } from "@/lib/domain/conceptosPorContenedor";
 import type { EmbarqueContenedor } from "@/types/embarque/contenedor";
-import type { ClienteLite } from "@/pdf/documents/proformaShared";
 import type { useFetchClienteParaPdf } from "@/hooks/embarque/useProformaDialog";
 
 type ConceptoVenta = Tables<"conceptos_venta">;
@@ -85,7 +84,7 @@ export async function submitProformaDialog(params: SubmitProformaParams): Promis
     ivaOverrides,
   });
 
-  const cliente = (await fetchClienteParaPdfCached(embarque.cliente_id)) as ClienteLite | undefined;
+  const cliente = await fetchClienteParaPdfCached(embarque.cliente_id);
   const conceptosParaPdf = conceptosSeleccionados.map((c) => ({
     ...c,
     aplica_iva: ivaOverrides[c.id],
