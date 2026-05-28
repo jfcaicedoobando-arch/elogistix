@@ -1,39 +1,18 @@
 {
-  "version": "12.14.2",
-  "generatedAt": "2026-05-28T22:52:21.853Z",
+  "version": "12.14.3",
+  "generatedAt": "2026-05-28T23:03:17.743Z",
   "arch": {
     "hooksContextsDirectImports": [],
     "componentsPagesDirectImports": [],
-    "oversized": [
-      {
-        "file": "src/pdf/theme/styles.ts",
-        "lines": 279
-      },
-      {
-        "file": "src/lib/domain/embarqueWizardSchemas.ts",
-        "lines": 228
-      },
-      {
-        "file": "src/hooks/embarque/useDialogGenerarProformaController.ts",
-        "lines": 220
-      },
-      {
-        "file": "src/components/embarque/facturacion/ResumenConceptosVenta.tsx",
-        "lines": 212
-      },
-      {
-        "file": "src/lib/domain/proforma.ts",
-        "lines": 212
-      }
-    ]
+    "oversized": []
   },
   "casts": {
-    "total": 753,
+    "total": 787,
     "bySeverity": {
-      "SAFE": 307,
-      "LOW": 13,
-      "MEDIUM": 429,
-      "HIGH": 4,
+      "SAFE": 342,
+      "LOW": 14,
+      "MEDIUM": 431,
+      "HIGH": 0,
       "CRITICAL": 0
     },
     "topFiles": [
@@ -58,11 +37,6 @@
         "weight": 10
       },
       {
-        "file": "src/services/cotizacion/conversiones/embarques.ts",
-        "total": 4,
-        "weight": 9
-      },
-      {
         "file": "src/components/proveedor/EditarProveedorDialog.tsx",
         "total": 4,
         "weight": 8
@@ -84,6 +58,11 @@
       },
       {
         "file": "src/lib/csv/leadsCsv.ts",
+        "total": 4,
+        "weight": 8
+      },
+      {
+        "file": "src/lib/embarque/__tests__/embarquesPageHelpers.test.ts",
         "total": 4,
         "weight": 8
       }
