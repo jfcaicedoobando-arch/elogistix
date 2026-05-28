@@ -33,17 +33,26 @@ export function useDialogGenerarProformaController(
   const crearProforma = useCrearProforma();
   const fetchClienteParaPdfCached = useFetchClienteParaPdf();
   const { data: diasCreditoDefault } = useDiasCreditoCliente(embarque.cliente_id, open);
+  const { data: contenedores = [] } = useContenedoresEmbarque(embarque.id);
 
   const [paso, setPaso] = useState<PasoProformaDialog>("seleccion");
   const [seleccionados, setSeleccionados] = useState<Set<string>>(new Set());
   const [ivaPorConcepto, setIvaPorConcepto] = useState<Record<string, boolean>>({});
   const [notas, setNotas] = useState("");
   const [diasCredito, setDiasCredito] = useState<string>("");
+  const [filtroContenedor, setFiltroContenedor] = useState<FiltroContenedor>("todos");
+
+  // Conceptos visibles según el filtro de contenedor
+  const conceptosVisibles = useMemo(
+    () => filtrarPorContenedor(conceptosPendientes, filtroContenedor),
+    [conceptosPendientes, filtroContenedor],
+  );
 
   // Reset al abrir
   useEffect(() => {
     if (open) {
       setPaso("seleccion");
+      setFiltroContenedor("todos");
       setSeleccionados(new Set(conceptosPendientes.map((c) => c.id)));
       const ivaInit: Record<string, boolean> = {};
       conceptosPendientes.forEach((c) => {
@@ -54,6 +63,19 @@ export function useDialogGenerarProformaController(
       setDiasCredito("");
     }
   }, [open, conceptosPendientes]);
+
+  // Cuando cambia el filtro, ajustar selección al conjunto visible
+  useEffect(() => {
+    if (!open) return;
+    const visibleIds = new Set(conceptosVisibles.map((c) => c.id));
+    setSeleccionados((prev) => {
+      const next = new Set<string>();
+      prev.forEach((id) => { if (visibleIds.has(id)) next.add(id); });
+      // Si la selección quedó vacía, pre-seleccionar todos los visibles
+      if (next.size === 0) visibleIds.forEach((id) => next.add(id));
+      return next;
+    });
+  }, [open, filtroContenedor, conceptosVisibles]);
 
   // Precarga días de crédito del cliente cuando el query se resuelve
   useEffect(() => {
