@@ -85,6 +85,14 @@ export interface ProformaPendienteLite {
     contenedor?: string | null;
     tipo_contenedor?: string | null;
   } | null;
+  /**
+   * Lista de contenedores reales (hijos en `embarque_contenedores`) a los que
+   * la proforma apunta vía `conceptos_venta.contenedor_id`. Si tiene 1 elemento
+   * único, se usa para bucketizar la proforma; si tiene 2+ distintos, se bucketiza
+   * como "múltiples contenedores"; si está vacía o sólo tiene nulls, fallback al
+   * campo legacy `embarques.contenedor` para compatibilidad con datos antiguos.
+   */
+  contenedores_lista?: Array<{ numero: string | null; tipo: string | null }>;
 }
 
 export interface GrupoContenedor<T extends ProformaPendienteLite = ProformaPendienteLite> {
@@ -103,6 +111,27 @@ export interface GrupoExpediente<T extends ProformaPendienteLite = ProformaPendi
   diasCredito: number | null;
   proformas: T[];
   contenedores: GrupoContenedor<T>[];
+}
+
+/** Sentinel para bucket "múltiples contenedores" (no es un nombre real). */
+export const MULTI_CONTENEDOR = "__multi__" as const;
+
+/**
+ * Decide el contenedor con el que se bucketiza una proforma:
+ * 1) Si `contenedores_lista` tiene 1 sola entrada con numero → usa esa.
+ * 2) Si tiene 2+ entradas distintas con numero → MULTI_CONTENEDOR.
+ * 3) Si está vacía o sólo trae nulls → fallback al legacy `embarques.contenedor`.
+ */
+function resolverBucketContenedor(
+  p: ProformaPendienteLite,
+): { numero: string | null; tipo: string | null } {
+  const lista = (p.contenedores_lista ?? []).filter((c) => c.numero);
+  if (lista.length === 1) return { numero: lista[0].numero, tipo: lista[0].tipo };
+  if (lista.length >= 2) return { numero: MULTI_CONTENEDOR, tipo: null };
+  return {
+    numero: p.embarques?.contenedor ?? null,
+    tipo: p.embarques?.tipo_contenedor ?? null,
+  };
 }
 
 /**
@@ -135,11 +164,10 @@ export function agruparProformasPendientes<T extends ProformaPendienteLite>(
   for (const grupo of porExpediente.values()) {
     const porContenedor = new Map<string, GrupoContenedor<T>>();
     for (const p of grupo.proformas) {
-      const cont = p.embarques?.contenedor ?? null;
-      const tipoCont = p.embarques?.tipo_contenedor ?? null;
-      const key = cont ?? "__sin_contenedor__";
+      const { numero, tipo } = resolverBucketContenedor(p);
+      const key = numero ?? "__sin_contenedor__";
       if (!porContenedor.has(key)) {
-        porContenedor.set(key, { contenedor: cont, tipo_contenedor: tipoCont, proformas: [] });
+        porContenedor.set(key, { contenedor: numero, tipo_contenedor: tipo, proformas: [] });
       }
       porContenedor.get(key)!.proformas.push(p);
     }
