@@ -138,11 +138,13 @@ export function useEditarEmbarqueWizard(id: string | undefined) {
       const cambiosVenta = diffConceptos(conceptosVentaDb, nuevosVenta);
       const cambiosCosto = diffConceptos(conceptosCostoDb, nuevosCosto);
 
+      const contenedoresActuales = methods.getValues('contenedores') ?? [];
       await updateEmbarque.mutateAsync({
         id,
         embarque: nuevoEmbarquePayload,
         conceptosVenta: nuevosVenta,
         conceptosCosto: nuevosCosto,
+        contenedores: contenedoresActuales,
       });
 
       const v = methods.getValues();
