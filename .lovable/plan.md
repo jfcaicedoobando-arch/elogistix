@@ -1,47 +1,39 @@
-## v12.14.1 — Cierre de pendientes Fase 6
+## v12.14.2 — Hardening del módulo de auditoría
 
-Cuatro mejoras pequeñas para cerrar el plan original + indicador visual para los embarques con captura incompleta.
+Mitigar los 3 riesgos menores detectados en la revisión end-to-end (sin cambios de comportamiento para el usuario final).
 
-### 1. Validación cross-embarque en consolidar (verificación + mensajes)
-- Verificar que la RPC `consolidar_proformas` ya bloquea proformas de embarques o clientes distintos. Si no lo hace, agregar guard en el wrapper `consolidarProformas` (cliente) que valide antes del RPC: todas las proformas deben compartir `embarque_id` y `cliente_id`.
-- En `TabProformasPendientes`, el tooltip ya dice "Solo puedes consolidar proformas del mismo expediente". Agregar segundo mensaje contextual si las proformas tienen cliente distinto (caso teórico pero defensivo).
-- Si la RPC retorna error, mapear a un mensaje en español claro en el toast (hoy probablemente sale el error crudo de Postgres).
+### 1. Marcar cast de RPC como SAFE-CAST
+En `src/hooks/auditoria/useAuditoria.ts` (línea ~59), el cast `as ReporteAuditoria` sobre el resultado de la RPC `auditoria_embarques_org` está sin marcar.
 
-### 2. Comentario explícito del fallback de días de crédito
-En `useDialogGenerarProformaController.handleConfirmar`: agregar JSDoc en el cálculo de `diasCreditoNum` para documentar que `'' → null → 0` se interpreta como Contado a nivel DB. Cosmético, una línea.
+- Validar mínimamente el shape antes del cast (verificar que la respuesta sea un objeto con las llaves esperadas: `hallazgos`, `resumen`, etc.).
+- Anotar con `// SAFE-CAST:` + breve justificación apuntando a la firma de la RPC, según `mem://principles/safe-cast`.
+- Si hay otros casts equivalentes en `src/hooks/auditoria/*` (p. ej. `useAuditoriaEjecutivo`, `useAuditoriaRevisiones`), aplicar el mismo tratamiento.
 
-### 3. Documentación
-Actualizar `docs/embarques-contenedores.md` con una sección nueva:
-- Cómo el flujo de proformas refleja el modelo 1↔N (agrupación en `ResumenConceptosVenta`, atajo "Por contenedor", PDFs agrupados).
-- Convención `contenedor_id = null` = cargo general del BL.
-- Bucket `__multi__` en `agruparProformasPendientes`.
+### 2. Documentar dependencia de columnas legacy de `embarques`
+La RPC de auditoría sigue leyendo columnas legacy (`contenedor`, `peso`, `volumen`, `piezas`) que hoy se mantienen vía triggers de compatibilidad multi-contenedor (v12.13+).
 
-### 4. Badge "Datos pendientes" en lista de embarques
-Para los embarques marítimos sin número de contenedor / BL master / naviera capturados (caso ELIMP00231 y los 8 reportados):
+- Añadir nota en `docs/auditoria.md` con sección **"Dependencias legacy"**:
+  - Qué columnas se leen.
+  - Por qué siguen vivas (trigger sync desde `embarque_contenedores`).
+  - Qué pasaría si se eliminan (hallazgos de peso/volumen/contenedor quedarían vacíos).
+  - Acción futura: migrar la RPC a leer directamente de `embarque_contenedores` cuando se decida eliminar las columnas.
+- Registrar este TODO en `mem://audit/pendings` para no perderlo.
 
-**4a. Enriquecer `useContenedoresInfoMap`** para devolver también `incompletos: number` (contenedores con `numero_contenedor` vacío o `tipo_contenedor` vacío).
+### 3. Regenerar reportes de auditoría
+`reports/audit-report.md` y `reports/audit-report.json` siguen en v11.68.0.
 
-**4b. Nueva columna o badge en `embarqueColumns.tsx`** que muestra `Datos pendientes` (badge naranja `warning`) cuando:
-- el embarque es marítimo y
-- `info.incompletos > 0` **o** `bl_master` es null/vacío.
-
-Posición: junto a la columna "Contenedores" o como subbadge debajo del número. Tooltip detallando qué falta (BL, número de contenedor, tipo).
-
-**4c.** No bloquear nada, sólo flag visual para que el operador sepa qué embarques aún requieren captura manual.
-
-### Detalles técnicos
-- Sin migraciones SQL.
-- `useContenedoresInfoMap`: extender el `select` para traer también `tipo_contenedor`; contar en cliente los que tengan strings vacíos.
-- `embarqueColumns`: el badge usa el variant `warning` ya existente del design system.
-- Mantener componentes ≤200 líneas (el archivo `embarqueColumns.tsx` está cerca; si crece >200 al añadir el badge, extraer una mini función `renderContenedorCell`).
+- Ejecutar `bun run scripts/audit-report.ts` para regenerar contra el estado actual del repo (v12.14.1).
+- Commit del resultado para que el baseline refleje la realidad post Fase 6.
+- Si el script detecta nuevas violaciones (componentes > 200 líneas introducidos en Fase 6 — sospechosos: `TabFacturacion.tsx`, `embarqueColumns.tsx`), listarlas en el mensaje final pero **no refactorizar en este hotfix**; queda para un próximo ciclo.
 
 ### Entregables
-1. Guard cliente + mensaje claro en `consolidar.ts` y `TabProformasPendientes`.
-2. JSDoc en `useDialogGenerarProformaController`.
-3. Sección nueva en `docs/embarques-contenedores.md`.
-4. `useContenedoresInfoMap` enriquecido + badge "Datos pendientes" en lista de embarques.
-5. `CHANGELOG.md` `## [12.14.1]` + bump `APP_VERSION`.
+1. `useAuditoria.ts` (y hooks hermanos si aplica) con cast marcado + validación mínima.
+2. Sección "Dependencias legacy" en `docs/auditoria.md`.
+3. Entrada nueva en `mem://audit/pendings`.
+4. `reports/audit-report.md` + `reports/audit-report.json` regenerados.
+5. `CHANGELOG.md` `## [12.14.2]` + bump `APP_VERSION`.
 
 ### Out of scope
-- Editar números de contenedor / BL desde la lista (sigue siendo via EditarEmbarque).
-- Auto-cerrar la entrada de captura: el badge sólo informa.
+- Migrar la RPC para dejar de leer columnas legacy (requiere coordinar con plan de retiro de triggers).
+- Refactor de archivos que excedan 200 líneas detectados por el reporte regenerado.
+- Cambios funcionales en la UI de auditoría.
