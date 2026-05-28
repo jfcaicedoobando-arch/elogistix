@@ -56,8 +56,18 @@ export function useAuditoriaCount() {
       },
     ],
   });
+  // SAFE-CAST: useQueries pierde la inferencia de tipos heterogéneos; ambos
+  // queryFn están tipados arriba (fetchReporteAuditoria → ReporteAuditoria,
+  // y la closure → Map<string, AuditoriaRevision>), así que el shape coincide
+  // en runtime con lo que regresa el cache de React Query.
   const reporte = results[0].data as ReporteAuditoria | undefined;
   const revisiones = results[1].data as Map<string, AuditoriaRevision> | undefined;
+
+  // Guard defensivo: si el RPC cambiara su firma y devolviera algo distinto,
+  // tratamos el reporte como ausente en lugar de explotar en runtime.
+  if (reporte && (!Array.isArray(reporte.hallazgos) || typeof reporte.total_hallazgos !== "number")) {
+    return { data: undefined, isLoading: false };
+  }
 
   if (!reporte) return { data: undefined, isLoading: results[0].isLoading };
 
