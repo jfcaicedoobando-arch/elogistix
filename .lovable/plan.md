@@ -1,60 +1,47 @@
-## Fase 6 — Proformas multi-contenedor
+## v12.14.1 — Cierre de pendientes Fase 6
 
-### Objetivo
-Cerrar el modelo 1↔N en el flujo de proformas: que el operador vea de un vistazo qué conceptos pertenecen a qué contenedor, que los defaults sean razonables al abrir el diálogo, y que la proforma generada/consolidada y su PDF reflejen correctamente el desglose por contenedor.
+Cuatro mejoras pequeñas para cerrar el plan original + indicador visual para los embarques con captura incompleta.
 
-### Alcance
-Sólo flujo de proformas dentro del embarque (`TabFacturacion`, `DialogGenerarProforma`, servicios `proforma/*`, PDFs `ProformaDocument` / `ProformaConsolidadaDocument`). **No** tocamos facturación CFDI ni cotizaciones.
+### 1. Validación cross-embarque en consolidar (verificación + mensajes)
+- Verificar que la RPC `consolidar_proformas` ya bloquea proformas de embarques o clientes distintos. Si no lo hace, agregar guard en el wrapper `consolidarProformas` (cliente) que valide antes del RPC: todas las proformas deben compartir `embarque_id` y `cliente_id`.
+- En `TabProformasPendientes`, el tooltip ya dice "Solo puedes consolidar proformas del mismo expediente". Agregar segundo mensaje contextual si las proformas tienen cliente distinto (caso teórico pero defensivo).
+- Si la RPC retorna error, mapear a un mensaje en español claro en el toast (hoy probablemente sale el error crudo de Postgres).
 
-### Paso 1 — Resumen de conceptos venta agrupado por contenedor
-En `ResumenConceptosVenta` (hoy plano):
-- Agrupar conceptos por `contenedor_id` cuando el embarque tiene ≥2 contenedores activos.
-- Cabecera por grupo: `Contenedor #N — <numero>` + subtotal del grupo en su(s) moneda(s).
-- Sección "Cargos generales (BL)" para conceptos con `contenedor_id = null`.
-- Si el embarque tiene 1 contenedor, mantener vista plana actual.
+### 2. Comentario explícito del fallback de días de crédito
+En `useDialogGenerarProformaController.handleConfirmar`: agregar JSDoc en el cálculo de `diasCreditoNum` para documentar que `'' → null → 0` se interpreta como Contado a nivel DB. Cosmético, una línea.
 
-### Paso 2 — Defaults del diálogo "Generar proforma"
-En `DialogGenerarProforma` / `useGenerarProformaState`:
-- Si el embarque tiene ≥2 contenedores, abrir con `filtroContenedor = 'todos'` (ya hoy) pero **preseleccionar sólo los conceptos del primer contenedor con pendientes**, en vez de seleccionar todo. Reduce el riesgo de facturar de más cuando el operador quiere una proforma por contenedor.
-- `diasCredito` ya viene del cliente; verificar y dejar comentario explícito si llega vacío → `0` (Contado).
-- IVA: respetar `aplica_iva` del concepto como default (hoy arranca en `false`); arrancar `ivaPorConcepto[id] = c.aplica_iva ?? false` para conceptos MXN obligatorios y USD opcionales.
+### 3. Documentación
+Actualizar `docs/embarques-contenedores.md` con una sección nueva:
+- Cómo el flujo de proformas refleja el modelo 1↔N (agrupación en `ResumenConceptosVenta`, atajo "Por contenedor", PDFs agrupados).
+- Convención `contenedor_id = null` = cargo general del BL.
+- Bucket `__multi__` en `agruparProformasPendientes`.
 
-### Paso 3 — Acción rápida "Proforma por contenedor"
-En `ResumenConceptosVenta`, junto al botón actual "Generar proforma":
-- Botón secundario "Por contenedor" (sólo visible si ≥2 contenedores con pendientes).
-- Abre el mismo diálogo pero arranca con `filtroContenedor = <id del primer contenedor con pendientes>` y todos sus conceptos preseleccionados. Permite encadenar N proformas rápido sin re-filtrar.
+### 4. Badge "Datos pendientes" en lista de embarques
+Para los embarques marítimos sin número de contenedor / BL master / naviera capturados (caso ELIMP00231 y los 8 reportados):
 
-### Paso 4 — PDF de proforma con desglose por contenedor
-En `ProformaDocument` (single) y `ProformaConsolidadaDocument`:
-- Cuando la proforma contiene conceptos de ≥2 contenedores distintos (o mezcla contenedor + BL), agrupar la tabla de conceptos por contenedor con subtotal por grupo.
-- Si todos los conceptos pertenecen a un solo contenedor, agregar línea en el header del PDF: `Contenedor: <numero> (<tipo>)`.
-- Tablas existentes no cambian para proformas mono-contenedor sin desglose.
+**4a. Enriquecer `useContenedoresInfoMap`** para devolver también `incompletos: number` (contenedores con `numero_contenedor` vacío o `tipo_contenedor` vacío).
 
-### Paso 5 — Consolidado: validación cross-contenedor
-En `consolidar.ts`:
-- Permitir consolidar proformas de distintos contenedores del mismo embarque (caso normal).
-- Bloquear consolidación si las proformas pertenecen a embarques distintos con cliente distinto (ya hoy debería; verificar y agregar mensaje claro).
+**4b. Nueva columna o badge en `embarqueColumns.tsx`** que muestra `Datos pendientes` (badge naranja `warning`) cuando:
+- el embarque es marítimo y
+- `info.incompletos > 0` **o** `bl_master` es null/vacío.
 
-### Paso 6 — Documentación
-- `CHANGELOG.md` → `## [12.14.0]` con bullets por cada paso.
-- Bump `APP_VERSION` a `12.14.0`.
-- Añadir nota corta en `docs/embarques-contenedores.md` sobre cómo se reflejan los hijos en proformas y PDF.
+Posición: junto a la columna "Contenedores" o como subbadge debajo del número. Tooltip detallando qué falta (BL, número de contenedor, tipo).
+
+**4c.** No bloquear nada, sólo flag visual para que el operador sepa qué embarques aún requieren captura manual.
 
 ### Detalles técnicos
-- Sin migraciones SQL — todo es lógica de UI/servicio sobre el modelo ya existente (`conceptos_venta.contenedor_id`, `embarque_contenedores`).
-- Reusar `lib/domain/conceptosPorContenedor.ts` que ya hace el agrupamiento para los filtros del diálogo.
-- Mantener componentes ≤200 líneas (Power of 10): `ResumenConceptosVenta` agrupado probablemente requiere extraer un subcomponente `GrupoConceptosContenedor`.
-- Tipos estrictos: extender `ProformaConcepto` (en `services/proforma/types.ts`) con `contenedor_id` y `contenedor_numero` para que el PDF no tenga que volver a consultar.
-
-### Out of scope
-- Editar números de contenedor / BL Master desde la UI de proformas (eso vive en EditarEmbarque).
-- Indicador "Datos pendientes de captura" en la lista de embarques (opcional, lo dejamos para 12.14.1 si se decide).
-- Facturación CFDI a partir de proformas multi-contenedor (ya funciona; sólo PDF se mejora visualmente).
+- Sin migraciones SQL.
+- `useContenedoresInfoMap`: extender el `select` para traer también `tipo_contenedor`; contar en cliente los que tengan strings vacíos.
+- `embarqueColumns`: el badge usa el variant `warning` ya existente del design system.
+- Mantener componentes ≤200 líneas (el archivo `embarqueColumns.tsx` está cerca; si crece >200 al añadir el badge, extraer una mini función `renderContenedorCell`).
 
 ### Entregables
-1. `ResumenConceptosVenta` agrupado + nuevo subcomponente `GrupoConceptosContenedor`.
-2. Defaults mejorados en `useGenerarProformaState` (selección y IVA por concepto).
-3. Botón "Por contenedor" en el resumen.
-4. PDF de proforma con desglose por contenedor.
-5. `CHANGELOG.md` + bump versión `12.14.0`.
-6. Actualización breve en `docs/embarques-contenedores.md`.
+1. Guard cliente + mensaje claro en `consolidar.ts` y `TabProformasPendientes`.
+2. JSDoc en `useDialogGenerarProformaController`.
+3. Sección nueva en `docs/embarques-contenedores.md`.
+4. `useContenedoresInfoMap` enriquecido + badge "Datos pendientes" en lista de embarques.
+5. `CHANGELOG.md` `## [12.14.1]` + bump `APP_VERSION`.
+
+### Out of scope
+- Editar números de contenedor / BL desde la lista (sigue siendo via EditarEmbarque).
+- Auto-cerrar la entrada de captura: el badge sólo informa.

@@ -91,6 +91,17 @@ export function useTabProformasPendientesController(opts?: {
     const [expediente, sel] = Array.from(seleccionPorExpediente.entries())[0];
     const grupo = grupos.find((g) => g.expediente === expediente);
     if (!grupo) return;
+    // Guard defensivo (v12.14.1): aunque la agrupación por expediente ya garantiza
+    // mismo embarque + mismo cliente, validamos explícitamente antes de invocar el
+    // RPC para fallar rápido y con mensaje claro si una proforma trae metadata
+    // inconsistente.
+    const embarqueIds = new Set(sel.map((p) => p.embarque_id));
+    const clienteIds = new Set(sel.map((p) => p.cliente_id));
+    if (embarqueIds.size > 1 || clienteIds.size > 1) {
+      // Caso imposible bajo el agrupado actual, pero falla rápido si cambia.
+      console.warn("[consolidar] selección con embarques/clientes mixtos, abortando");
+      return;
+    }
     consolidar.mutate(
       {
         proformaIds: sel.map((p) => p.id),

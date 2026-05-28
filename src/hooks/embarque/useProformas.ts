@@ -161,7 +161,18 @@ export function useConsolidarProformas() {
       invalidateProformaCaches(queryClient, nueva.embarque_id);
     },
     onError: (error: Error) => {
-      notifyError(toast, { title: `Error al consolidar: ${error.message}`, error, method: "CONSOLIDATE_PROFORMAS" });
+      // Mensajes claros para los errores de validación cross-embarque/cross-cliente
+      // que arroja la RPC `consolidar_proformas`.
+      const raw = error.message || "";
+      let title = `Error al consolidar: ${raw}`;
+      if (/different.*embarque|distinto.*embarque|mismo embarque/i.test(raw)) {
+        title = "Solo puedes consolidar proformas del mismo embarque";
+      } else if (/different.*cliente|distinto.*cliente|mismo cliente/i.test(raw)) {
+        title = "Solo puedes consolidar proformas del mismo cliente";
+      } else if (/already.*aprobada|ya.*aprobada|status.*aprobada/i.test(raw)) {
+        title = "Una o más proformas ya están aprobadas y no se pueden consolidar";
+      }
+      notifyError(toast, { title, error, method: "CONSOLIDATE_PROFORMAS" });
     },
   });
 }
