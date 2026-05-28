@@ -4,6 +4,8 @@ export interface ConceptoVentaLocal {
   cantidad: number;
   precioUnitario: number;
   moneda: string;
+  /** Contenedor del embarque al que aplica el concepto (null = General). */
+  contenedorId?: string | null;
 }
 
 export interface ConceptoCostoLocal {
@@ -12,4 +14,6 @@ export interface ConceptoCostoLocal {
   concepto: string;
   monto: number;
   moneda: string;
+  /** Contenedor del embarque al que aplica el costo (null = General). */
+  contenedorId?: string | null;
 }
