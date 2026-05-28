@@ -4,6 +4,7 @@
  */
 
 import type { Tables } from "@/integrations/supabase/types";
+import type { ContenedorBorrador } from "@/types/embarque/contenedor";
 import { str, numStr } from "./_helpers";
 
 type EmbarqueRow = Tables<"embarques">;
@@ -30,6 +31,12 @@ export interface EmbarqueFormValues {
   tipoServicio: string;
   contenedor: string;
   tipoContenedor: string;
+  /**
+   * Lista dinámica de contenedores hijos (Fase G v12.8.0).
+   * En FCL puede tener N filas; en LCL siempre 1 fila auto-LCL.
+   * Para aéreo/terrestre queda vacío.
+   */
+  contenedores: ContenedorBorrador[];
   agente: string;
   blMaster: string;
   blHouse: string;
@@ -55,11 +62,12 @@ export const DEFAULT_EMBARQUE_VALUES: EmbarqueFormValues = {
   pesoKg: "", volumenM3: "", piezas: "", tipoCarga: "Carga General",
   msdsArchivo: null, subiendoMsds: false,
   puertoOrigen: "", puertoDestino: "", naviera: "", agente: "", tipoServicio: "",
-  contenedor: "", tipoContenedor: "", blMaster: "", blHouse: "",
+  contenedor: "", tipoContenedor: "", contenedores: [], blMaster: "", blHouse: "",
   aeropuertoOrigen: "", aeropuertoDestino: "", aerolinea: "", mawb: "", hawb: "",
   ciudadOrigen: "", ciudadDestino: "", transportista: "", cartaPorte: "",
   etd: "", eta: "", tipoCambioUSD: "17.25", tipoCambioEUR: "18.50",
 };
+
 
 // Sub-mappers por sección — extraen los `?? ""` fuera del mapper principal
 // para mantener la complejidad ciclomática <15.
