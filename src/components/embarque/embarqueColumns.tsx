@@ -17,6 +17,11 @@ export interface DocsInfo { pendientes: number; total: number }
 export interface BuildColumnsParams {
   docsMap: Record<string, DocsInfo>;
   contenedoresPorExpediente?: Record<string, number>;
+  /**
+   * Map por embarque_id con info real de `embarque_contenedores`
+   * (Fase 3 v12.12.0). Cuando existe, tiene prioridad sobre el legacy.
+   */
+  contenedoresInfoMap?: Record<string, { count: number; primero: string }>;
 }
 
 /**
@@ -26,7 +31,7 @@ export interface BuildColumnsParams {
  * `embarques_listado` vía `controlledSort`/`onSortChange`.
  */
 export function buildEmbarqueColumns({
-  docsMap, contenedoresPorExpediente = {},
+  docsMap, contenedoresPorExpediente = {}, contenedoresInfoMap = {},
 }: BuildColumnsParams): ColumnDef<EmbarqueRow, unknown>[] {
   return defineColumns<EmbarqueRow>([
     {
@@ -71,16 +76,19 @@ export function buildEmbarqueColumns({
       meta: { width: "w-[140px]", className: "text-xs font-mono" },
       cell: ({ row }) => {
         const e = row.original;
-        const count = contenedoresPorExpediente[e.expediente] ?? 1;
+        const info = contenedoresInfoMap[e.id];
+        // Prioridad: hijos reales de embarque_contenedores → conteo legacy → 1
+        const count = info?.count ?? contenedoresPorExpediente[e.expediente] ?? 1;
+        const primero = info?.primero || e.contenedor || "";
         if (count > 1) {
           return (
             <span className="inline-flex items-center gap-1.5">
-              <span className="truncate max-w-[80px]" title={e.contenedor || ""}>{e.contenedor || "-"}</span>
+              <span className="truncate max-w-[80px]" title={primero}>{primero || "-"}</span>
               <Badge variant="secondary" className="text-[10px] px-1.5 py-0 h-4" title={`${count} contenedores agrupados`}>+{count - 1}</Badge>
             </span>
           );
         }
-        return e.contenedor || <span className="text-muted-foreground">-</span>;
+        return primero || <span className="text-muted-foreground">-</span>;
       },
     },
     {
