@@ -5,9 +5,12 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { formatCurrency } from "@/lib/formatters";
+import { FiltroContenedorChips } from "./FiltroContenedorChips";
+import type { FiltroContenedor } from "@/lib/domain/conceptosPorContenedor";
 import type { Tables } from "@/types/db";
 
 type ConceptoVenta = Tables<"conceptos_venta">;
+type EmbarqueContenedor = Tables<"embarque_contenedores">;
 
 export interface TotalesProforma {
   subtotal_usd: number;
