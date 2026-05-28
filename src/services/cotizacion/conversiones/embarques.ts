@@ -123,7 +123,7 @@ export async function convertirCotizacionAEmbarques(
   if (ventasJsonb.length > 0) {
     const ventasRows: ConceptoVentaInsert[] = ventasJsonb
       .map((raw): ConceptoVentaInsert | null => {
-        const v = raw as Record<string, unknown> | null;
+        const v = raw as unknown as Record<string, unknown> | null;
         if (!v || typeof v !== "object") return null;
         const descripcion = String(v.descripcion ?? "").trim();
         if (!descripcion) return null;
