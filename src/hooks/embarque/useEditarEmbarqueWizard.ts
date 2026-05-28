@@ -179,7 +179,7 @@ export function useEditarEmbarqueWizard(id: string | undefined) {
 
   return {
     embarque,
-    isLoading: isLoading || cargandoVenta || cargandoCosto,
+    isLoading: isLoading || cargandoVenta || cargandoCosto || cargandoContenedores,
     methods,
     currentStep,
     setCurrentStep,
