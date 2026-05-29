@@ -7,7 +7,7 @@ import { PageHeader } from "@/components/shared/PageHeader";
 import { useAdminOrganizacionesController } from "@/hooks/admin";
 import { AdminOrganizacionesFilters } from "@/components/admin/AdminOrganizacionesFilters";
 import { NuevaOrganizacionDialog } from "@/components/admin/NuevaOrganizacionDialog";
-import { buildAdminOrganizacionesColumns } from "@/components/admin/adminOrganizacionesColumns";
+import { buildAdminOrganizacionesColumns } from "@/components/admin/AdminOrganizacionesColumns";
 
 export default function AdminOrganizaciones() {
   const navigate = useNavigate();

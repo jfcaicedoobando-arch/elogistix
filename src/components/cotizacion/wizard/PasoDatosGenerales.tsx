@@ -11,7 +11,7 @@ import SeccionDestinatario from "@/components/cotizacion/SeccionDestinatario";
 import SeccionDatosGeneralesCotizacion from "@/components/cotizacion/SeccionDatosGeneralesCotizacion";
 import SeccionRutaCotizacion from "@/components/cotizacion/SeccionRutaCotizacion";
 import SeccionMercanciaMaritimaFCL from "@/components/cotizacion/SeccionMercanciaMaritimaFCL";
-import SeccionMercanciaMaritimeLCL from "@/components/cotizacion/SeccionMercanciaMaritimeLCL";
+import SeccionMercanciaMaritimaLCL from "@/components/cotizacion/SeccionMercanciaMaritimaLCL";
 import SeccionMercanciaGeneral from "@/components/cotizacion/SeccionMercanciaGeneral";
 import SeccionMercanciaAerea from "@/components/cotizacion/SeccionMercanciaAerea";
 
@@ -54,7 +54,7 @@ export default function PasoDatosGenerales({ w, clientes }: Props) {
             {tipoEmbarque === "FCL" ? (
               <SeccionMercanciaMaritimaFCL msdsFile={w.msdsFile} setMsdsFile={w.setMsdsFile} />
             ) : (
-              <SeccionMercanciaMaritimeLCL msdsFile={w.msdsFile} setMsdsFile={w.setMsdsFile} />
+              <SeccionMercanciaMaritimaLCL msdsFile={w.msdsFile} setMsdsFile={w.setMsdsFile} />
             )}
           </div>
         ) : w.esAereo ? (
