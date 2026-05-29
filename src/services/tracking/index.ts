@@ -42,8 +42,8 @@ export interface TrackingPublicoData {
  */
 export async function fetchTrackingPublico(token: string): Promise<TrackingPublicoData> {
   void supabase;
-  const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
-  const url = `https://${projectId}.supabase.co/functions/v1/tracking-public?token=${encodeURIComponent(token)}`;
+  const baseUrl = import.meta.env.VITE_SUPABASE_URL;
+  const url = `${baseUrl}/functions/v1/tracking-public?token=${encodeURIComponent(token)}`;
   const res = await fetch(url);
   if (!res.ok) {
     const body = await res.json().catch(() => ({}));

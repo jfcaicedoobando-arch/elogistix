@@ -14,12 +14,15 @@ import * as Sentry from "@sentry/react";
 import { APP_VERSION } from "@/constants/appVersion";
 import { isDynamicImportErrorMessage } from "@/lib/ui/dynamicImportError";
 
-const DSN = "https://e44f92892772533298354b89d9ef3ddb@o4511415732404224.ingest.us.sentry.io/4511415734108160";
+// DSN configurable vía VITE_SENTRY_DSN. Sin valor → no se inicializa Sentry
+// (evita ruido de telemetría en entornos de desarrollo / locales).
+const DSN = import.meta.env.VITE_SENTRY_DSN as string | undefined;
 
 let initialized = false;
 
 export function initSentry(): void {
   if (initialized) return;
+  if (!DSN) return;
   initialized = true;
   Sentry.init({
     dsn: DSN,

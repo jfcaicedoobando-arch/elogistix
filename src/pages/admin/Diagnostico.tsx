@@ -15,11 +15,13 @@ import AlertasSistemaPanel from "@/components/admin/AlertasSistemaPanel";
 import { diagnosticoColumns } from "@/components/admin/diagnosticoColumns";
 import { useDebounce } from "@/hooks/shared";
 
-const DEFAULT_PAGE_SIZE = 50;
+// Page size más pequeño que el global (100) porque la bitácora de logs
+// tiene filas más densas y se virtualiza con `VirtualDataTable`.
+const DIAGNOSTICO_PAGE_SIZE = 50;
 
 export default function Diagnostico() {
   const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
+  const [pageSize, setPageSize] = useState(DIAGNOSTICO_PAGE_SIZE);
   const [level, setLevel] = useState<AppLogLevel | "todos">("todos");
   const [fn, setFn] = useState<string | "todos">("todos");
   const [searchInput, setSearchInput] = useState("");

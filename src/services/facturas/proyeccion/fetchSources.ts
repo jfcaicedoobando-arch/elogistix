@@ -3,6 +3,7 @@
  * Solo I/O: trae embarques del mes + sus conceptos/facturas. Sin agregaciones.
  */
 import { supabase } from "@/integrations/supabase/client";
+import { fetchFacturasPorExpedientes } from "@/services/facturas/shared/fetchFacturas";
 
 export interface EmbarqueProyeccionRow {
   id: string;
@@ -36,26 +37,16 @@ export async function fetchEmbarquesMes(
 }
 
 export async function fetchConceptosYFacturas(ids: string[], expedientes: string[]) {
-  const [ventasRes, costosRes, facturasRes] = await Promise.all([
+  const [ventasRes, costosRes, facturas] = await Promise.all([
     supabase.from("conceptos_venta").select("embarque_id, total, moneda").in("embarque_id", ids),
     supabase.from("conceptos_costo").select("embarque_id, monto, moneda").in("embarque_id", ids),
-    expedientes.length > 0
-      ? supabase
-          .from("facturas")
-          .select("expediente, factura_pdf_url")
-          .in("expediente", expedientes)
-          .not("factura_pdf_url", "is", null)
-      : Promise.resolve({
-          data: [] as { expediente: string | null; factura_pdf_url: string | null }[],
-          error: null,
-        }),
+    fetchFacturasPorExpedientes(expedientes),
   ]);
   if (ventasRes.error) throw ventasRes.error;
   if (costosRes.error) throw costosRes.error;
-  if (facturasRes.error) throw facturasRes.error;
   return {
     ventas: ventasRes.data ?? [],
     costos: costosRes.data ?? [],
-    facturas: facturasRes.data ?? [],
+    facturas,
   };
 }

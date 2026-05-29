@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { DataTable, defineColumns, type ColumnDef } from "@/components/shared/DataTable";
 import { formatCurrency, toTitleCase } from "@/lib/formatters";
+import { MARGIN_THRESHOLDS } from "@/constants/reportes";
 
 export type SortField = "profit_usd" | "venta_usd" | "costo_usd" | "margen";
 
@@ -25,8 +26,8 @@ interface Props {
 }
 
 const margenBadge = (m: number) => {
-  if (m >= 20) return <Badge variant="success">{m.toFixed(1)}%</Badge>;
-  if (m >= 10) return <Badge variant="warning">{m.toFixed(1)}%</Badge>;
+  if (m >= MARGIN_THRESHOLDS.GOOD) return <Badge variant="success">{m.toFixed(1)}%</Badge>;
+  if (m >= MARGIN_THRESHOLDS.WARN) return <Badge variant="warning">{m.toFixed(1)}%</Badge>;
   return <Badge variant="destructive">{m.toFixed(1)}%</Badge>;
 };
 
