@@ -29,14 +29,20 @@ async function uploadFacturaFile(
   return path;
 }
 
-type ProformaRow = Awaited<ReturnType<typeof supabase.from<"proformas">["select"]>>;
-
 interface BaseFactura {
   numero: string;
   proforma_id: string;
   embarque_id: string;
-  cliente_id: string | null;
+  cliente_id: string;
   cliente_nombre: string;
+  expediente: string;
+  fecha_emision: string;
+  fecha_vencimiento: string;
+  estado: "Emitida";
+  factura_pdf_url: string | null;
+  factura_xml_url: string | null;
+  organization_id: string;
+}
   expediente: string;
   fecha_emision: string;
   fecha_vencimiento: string;
