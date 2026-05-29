@@ -14,7 +14,6 @@ import {
   generarMesesDisponibles,
   mesActualKey,
   type EstadoProyeccion,
-  type GrupoProyeccion,
 } from "@/lib/domain/proyeccionFacturacion";
 import { exportToCsv } from "@/generators/exportCsv";
 import {
