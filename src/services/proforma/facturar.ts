@@ -43,14 +43,6 @@ interface BaseFactura {
   factura_xml_url: string | null;
   organization_id: string;
 }
-  expediente: string;
-  fecha_emision: string;
-  fecha_vencimiento: string;
-  estado: "Emitida";
-  factura_pdf_url: string | null;
-  factura_xml_url: string | null;
-  organization_id: string;
-}
 
 type FacturaAEmitir = BaseFactura & {
   moneda: "USD" | "MXN"; subtotal: number; iva: number; total: number;
