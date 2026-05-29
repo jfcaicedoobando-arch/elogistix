@@ -27,6 +27,44 @@ export interface BuildColumnsParams {
   contenedoresInfoMap?: Record<string, ContenedorInfo>;
 }
 
+interface ContenedorCellProps {
+  embarque: EmbarqueRow;
+  info?: ContenedorInfo;
+  legacyCount?: number;
+}
+
+function ContenedorCell({ embarque: e, info, legacyCount }: ContenedorCellProps) {
+  const count = info?.count ?? legacyCount ?? 1;
+  const primero = info?.primero || e.contenedor || "";
+  const incompletos = info?.incompletos ?? 0;
+  const blFalta = e.modo === "Marítimo" && (!e.bl_master || e.bl_master.trim() === "");
+  const pendientes = incompletos > 0 || blFalta;
+  const pendientesTitle = [
+    blFalta ? "BL Master sin capturar" : null,
+    incompletos > 0 ? `${incompletos} contenedor(es) sin número o tipo` : null,
+  ].filter(Boolean).join(" · ");
+  return (
+    <span className="inline-flex items-center gap-1.5 flex-wrap">
+      <span className="truncate max-w-[80px]" title={primero}>{primero || "-"}</span>
+      {count > 1 && (
+        <Badge variant="secondary" className="text-[10px] px-1.5 py-0 h-4" title={`${count} contenedores agrupados`}>+{count - 1}</Badge>
+      )}
+      {pendientes && (
+        <TooltipProvider delayDuration={200}>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Badge variant="outline" className="text-[10px] px-1.5 py-0 h-4 border-amber-500 text-amber-600">Datos pendientes</Badge>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p className="text-xs">{pendientesTitle}</p>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+      )}
+    </span>
+  );
+}
+
 /**
  * Columnas nativas TanStack (`ColumnDef<EmbarqueRow>`) usadas por
  * `Embarques.tsx` con `sortMode="server"`: `enableSorting` actúa sólo como
