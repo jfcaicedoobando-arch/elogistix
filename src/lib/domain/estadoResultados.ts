@@ -35,13 +35,18 @@ export interface FilaER {
   total: number;
 }
 
+export interface TotalER {
+  porModo: Record<ModoColumna, number>;
+  total: number;
+}
+
 export interface EstadoResultados {
   ingresos: FilaER[];
   costos: FilaER[];
-  totalIngresos: Record<ModoColumna, number> & { total: number };
-  totalCostos: Record<ModoColumna, number> & { total: number };
-  utilidad: Record<ModoColumna, number> & { total: number };
-  margen: Record<ModoColumna, number> & { total: number };
+  totalIngresos: TotalER;
+  totalCostos: TotalER;
+  utilidad: TotalER;
+  margen: TotalER;
 }
 
 const emptyModos = (): Record<ModoColumna, number> => ({ "Marítimo": 0, "Aéreo": 0, "Terrestre": 0 });
@@ -121,29 +126,34 @@ export function buildEstadoResultados(
   const ingresos = materializar(ingresosMap);
   const cstos = materializar(costosMap);
 
-  const sumar = (rows: FilaER[]) => {
-    const acc = { ...emptyModos(), total: 0 };
+  const sumar = (rows: FilaER[]): TotalER => {
+    const porModo = emptyModos();
+    let total = 0;
     for (const r of rows) {
-      acc["Marítimo"] += r.porModo["Marítimo"];
-      acc["Aéreo"] += r.porModo["Aéreo"];
-      acc["Terrestre"] += r.porModo["Terrestre"];
-      acc.total += r.total;
+      porModo["Marítimo"] += r.porModo["Marítimo"];
+      porModo["Aéreo"] += r.porModo["Aéreo"];
+      porModo["Terrestre"] += r.porModo["Terrestre"];
+      total += r.total;
     }
-    return acc;
+    return { porModo, total };
   };
 
   const totalIngresos = sumar(ingresos);
   const totalCostos = sumar(cstos);
-  const utilidad = {
-    "Marítimo": totalIngresos["Marítimo"] - totalCostos["Marítimo"],
-    "Aéreo": totalIngresos["Aéreo"] - totalCostos["Aéreo"],
-    "Terrestre": totalIngresos["Terrestre"] - totalCostos["Terrestre"],
+  const utilidad: TotalER = {
+    porModo: {
+      "Marítimo": totalIngresos.porModo["Marítimo"] - totalCostos.porModo["Marítimo"],
+      "Aéreo": totalIngresos.porModo["Aéreo"] - totalCostos.porModo["Aéreo"],
+      "Terrestre": totalIngresos.porModo["Terrestre"] - totalCostos.porModo["Terrestre"],
+    },
     total: totalIngresos.total - totalCostos.total,
   };
-  const margen = {
-    "Marítimo": calcularMargen(totalIngresos["Marítimo"], totalCostos["Marítimo"]),
-    "Aéreo": calcularMargen(totalIngresos["Aéreo"], totalCostos["Aéreo"]),
-    "Terrestre": calcularMargen(totalIngresos["Terrestre"], totalCostos["Terrestre"]),
+  const margen: TotalER = {
+    porModo: {
+      "Marítimo": calcularMargen(totalIngresos.porModo["Marítimo"], totalCostos.porModo["Marítimo"]),
+      "Aéreo": calcularMargen(totalIngresos.porModo["Aéreo"], totalCostos.porModo["Aéreo"]),
+      "Terrestre": calcularMargen(totalIngresos.porModo["Terrestre"], totalCostos.porModo["Terrestre"]),
+    },
     total: calcularMargen(totalIngresos.total, totalCostos.total),
   };
 

@@ -22,6 +22,7 @@ import { crm } from "./keys/crm";
 import { portal } from "./keys/portal";
 import { auditoria } from "./keys/auditoria";
 import { facturacion } from "./keys/facturacion";
+import { profit } from "./keys/profit";
 import {
   bitacora, trackingLinks, jsonCargo, clienteFinancials,
   pdfPreviewCotizacion, trackingPublico,
@@ -58,6 +59,7 @@ export const queryKeys = {
   auditoria,
   appLogs,
   facturacion,
+  profit,
   papelera,
   idempotenciaLog,
   pdfPreviewCotizacion,

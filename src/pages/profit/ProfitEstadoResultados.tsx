@@ -7,7 +7,7 @@ import { PageHeader } from "@/components/shared/PageHeader";
 import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
 import { formatCurrency } from "@/lib/formatters";
 import { useEstadoResultados } from "@/hooks/profit";
-import { MODOS_COLUMNAS, type EstadoResultados, type FilaER, type ModoColumna } from "@/lib/domain/estadoResultados";
+import { MODOS_COLUMNAS, type EstadoResultados, type FilaER, type ModoColumna, type TotalER } from "@/lib/domain/estadoResultados";
 import { exportToCsv } from "@/generators/exportCsv";
 
 const CSV_HEADERS = [
@@ -64,12 +64,12 @@ function TotalRow({ label, valores, variant = "muted" }: { label: string; valore
   );
 }
 
-function MargenRow({ margen }: { margen: EstadoResultados["margen"] }) {
+function MargenRow({ margen }: { margen: TotalER }) {
   return (
     <tr className="bg-muted/60 font-semibold text-sm">
       <td className="py-2 px-3">Margen %</td>
       {MODOS_COLUMNAS.map((m) => (
-        <td key={m} className="py-2 px-3 text-right tabular-nums">{pct(margen[m])}</td>
+        <td key={m} className="py-2 px-3 text-right tabular-nums">{pct(margen.porModo[m])}</td>
       ))}
       <td className="py-2 px-3 text-right tabular-nums">{pct(margen.total)}</td>
     </tr>
@@ -94,9 +94,9 @@ function buildCsvRows(data: EstadoResultados) {
   rows.push({
     seccion: "Resultado",
     concepto: "MARGEN %",
-    maritimo: data.margen["Marítimo"].toFixed(2),
-    aereo: data.margen["Aéreo"].toFixed(2),
-    terrestre: data.margen["Terrestre"].toFixed(2),
+    maritimo: data.margen.porModo["Marítimo"].toFixed(2),
+    aereo: data.margen.porModo["Aéreo"].toFixed(2),
+    terrestre: data.margen.porModo["Terrestre"].toFixed(2),
     total: data.margen.total.toFixed(2),
   });
   return rows;
