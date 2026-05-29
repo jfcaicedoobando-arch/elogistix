@@ -14,7 +14,7 @@ describe("useListPageState", () => {
     expect(result.current.search).toBe("");
     expect(result.current.filters).toEqual({ estado: "todos", cliente: "todos" });
     expect(result.current.page).toBe(0);
-    expect(result.current.pageSize).toBe(20);
+    expect(result.current.pageSize).toBe(DEFAULT_PAGE_SIZE);
   });
 
   it("setSearch resetea la página a 0", async () => {
