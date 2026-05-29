@@ -10,7 +10,7 @@ describe("trackingService.fetchTrackingPublico", () => {
   const originalFetch = global.fetch;
 
   beforeEach(() => {
-    vi.stubEnv("VITE_SUPABASE_PROJECT_ID", "testproject");
+    vi.stubEnv("VITE_SUPABASE_URL", "https://testproject.supabase.co");
   });
 
   afterEach(() => {
