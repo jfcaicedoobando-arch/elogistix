@@ -4,3 +4,4 @@ export * from './usePortalDashboardKpis';
 export * from './usePortalData';
 export * from './usePortalDocumentDownload';
 export * from './usePortalEmbarquesController';
+export * from './usePortalPerfil';
