@@ -1,66 +1,49 @@
-# Continuación del plan — Fases 4 (restante) y 5
 
-Las Fases 1-3 y parte de la 4 ya están aplicadas en `12.16.7`. Quedan los ítems de bajo riesgo / cosméticos.
+# Continuación — cierre Fase 4b + Fase 5 (`12.16.9`)
 
----
-
-## Fase 4b — Refactors mecánicos restantes (HIGH)
-
-Bump a **`12.16.8`**.
-
-1. **`FILTER_ALL` constante** — `src/constants/filters.ts`
-   - `export const FILTER_ALL = 'todos' as const;`
-   - Reemplazar literales `'todos'` en filtros de tablas/selects (≈15 call sites). Preservar valor exacto para no romper URLs serializadas.
-2. **Mover `eventoSchema`** de `TrackingNuevoEventoForm.tsx:18` → `src/lib/validation/mutationSchemas.ts`. Form importa el schema.
-3. **Extraer CSV de proyección** — `useTabProyeccionController.ts:89` → `src/lib/facturacion/proyeccionCsv.ts` (espejando `huecoCsv.ts`).
-4. **`CARRIER_TRACKING_URLS`** — `src/constants/carriers.ts`. Mover las 10 URLs hardcoded de `externalTracking.ts`.
-5. **Aplicar `uniqueSorted`** en los 6 call sites pendientes (ya existe la utilidad).
-6. **Controllers para páginas god** (riesgo medio — hacer al final de la fase):
-   - `usePapeleraController` (extrae de `pages/admin/Papelera.tsx`)
-   - `usePortalFacturasController` + `usePortalCotizacionesController` (espejo de `usePortalEmbarquesController`)
-   - Mover `invalidateQueries` de `pages/clientes/Clientes.tsx` al hook de mutation correspondiente
-
-**Verificación:** `bun run lint` + `bunx vitest run` (781 tests deben quedar verdes), revisión manual de filtros en Embarques/Facturación/Portal.
+Quedan los ítems mecánicos diferidos y la limpieza estética. Sin tocar lógica de negocio.
 
 ---
 
-## Fase 5 — Limpieza estética (OK)
+## Bloque A — Migraciones mecánicas restantes (Fase 4b)
 
-Bump a **`12.16.9`**.
+1. **Aplicar `FILTER_ALL`** en los ~15 call sites que aún usan el literal `'todos'` (filtros de Embarques, Facturación, Portal, Cotizaciones, Admin). Conserva el valor exacto → no rompe URLs serializadas.
+2. **`CARRIER_TRACKING_URLS`** → nuevo `src/constants/carriers.ts`. Mover las 10 URLs hardcoded desde `services/.../externalTracking.ts` y consumir el mapa.
+3. **Aplicar `uniqueSorted`** en los 6 call sites pendientes (admin/facturación/portal/auditoría) que aún hacen `Array.from(new Set(...)).filter(Boolean).sort()`.
 
-7. **Renombres a PascalCase** (usar `git mv` case-sensitive):
-   - `adminOrganizacionesColumns.tsx`, `adminUsuariosColumns.tsx`, `diagnosticoColumns.tsx`
-   - `cotizacion/columnsParts/accionesCell.tsx`, `estadoVigenciaCell.tsx`
-8. **`SeccionMercanciaMaritimeLCL.tsx` → `SeccionMercanciaMaritimaLCL.tsx`** (consistencia es-MX).
-9. **Borrar código muerto:**
+## Bloque B — Limpieza estética (Fase 5)
+
+4. **Renombres PascalCase** restantes:
+   - `cotizacion/columnsParts/accionesCell.tsx` → `AccionesCell.tsx`
+   - `cotizacion/columnsParts/estadoVigenciaCell.tsx` → `EstadoVigenciaCell.tsx`
+   - Actualizar imports en `cotizacionesColumns.tsx`.
+5. **Borrar código muerto:**
    - Import comentado en `src/integrations/supabase/client.ts:9`
    - Section headers vacíos en `useTabProformasController.ts:55-67`
-   - Bloques `(legacy)` en `stylesContent.ts` (verificar antes de borrar)
-10. **Header `// @generated`** en `src/integrations/supabase/types.ts` (solo header, sin tocar contenido).
-11. **`src/components/ui/sidebar.tsx` (637 líneas)** — **omitir**: es shadcn vendored, costo > beneficio.
-
-**Verificación:** `bun run lint` + `bunx vitest run`. TS detecta imports rotos automáticamente.
-
----
-
-## Orden y entregables
-
-```text
-Fase 4b (12.16.8)  →  Fase 5 (12.16.9)
-```
-
-- Cada fase: 1 entrada en `CHANGELOG.md` + bump `APP_VERSION`.
-- Mantener Power of 10: componentes ≤200 líneas, no `any`, cleanup en effects.
-- No introducir `style={{...}}` (mem://principles/inline-styles).
-
-## Decisión pendiente
-
-- ¿Aplicar **ambas fases** en un solo turno, o **solo Fase 4b** y dejar Fase 5 para otro pase?
-- ¿Incluir los controllers de páginas god (ítem 6) ahora o diferirlos otra vez? Es el cambio de mayor superficie de la Fase 4b.
+   - Bloques `(legacy)` en `pdf/theme/stylesContent.ts` (verificar 0 referencias antes de borrar)
 
 ## Fuera de alcance (confirmado)
 
-- `supabase/types.ts` salvo el header `@generated`.
-- Renombre de carpeta `org-detalle/`.
-- Split de `sidebar.tsx`.
-- Opción A (migración DB para `embarques_listado` con `p_limit = null`) — Opción B ya quedó implementada en 12.16.7.
+- God-component controllers (`Papelera`, `Portal*`, `Clientes`) — diferidos por riesgo medio; se abordarán en pase dedicado.
+- `supabase/types.ts` (autogenerado).
+- `sidebar.tsx` (shadcn vendored).
+
+## Entregables
+
+- Bump `APP_VERSION` → **`12.16.9`**
+- Entrada en `CHANGELOG.md` con bullets de A y B
+- `bun run lint` limpio y `bunx vitest run` 781/781 verde
+
+```text
+Bloque A (mecánico, bajo riesgo) → Bloque B (cosmético) → verificación
+```
+
+## Detalles técnicos
+
+- `FILTER_ALL`: import `import { FILTER_ALL } from "@/constants/filters"`. Reemplazar tanto en defaults de state como en comparaciones (`=== 'todos'` → `=== FILTER_ALL`). Mantener serialización a URL idéntica.
+- `CARRIER_TRACKING_URLS`: tipo `Record<string, string>` con keys normalizadas (lowercase). El lookup en `externalTracking.ts` queda como `CARRIER_TRACKING_URLS[carrier.toLowerCase()]`.
+- Renombres PascalCase: usar dos pasos (case-insensitive FS safety): rename a `_tmp` y luego al destino, o `git mv` case-sensitive si está disponible vía el tooling de edición.
+
+## Decisión pendiente
+
+¿Aplico **todo el plan en un solo turno** (Bloques A + B juntos) o prefieres **solo Bloque A** y dejar el B para otro pase?
