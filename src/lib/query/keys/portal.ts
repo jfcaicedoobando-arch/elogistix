@@ -9,4 +9,5 @@ export const portal = {
   clientUsers: ['portal', 'client_users'] as const,
   clienteName: ['portal', 'cliente_nombre'] as const,
   orgName: ['portal', 'org_name'] as const,
+  perfil: ['portal', 'perfil'] as const,
 } as const;
