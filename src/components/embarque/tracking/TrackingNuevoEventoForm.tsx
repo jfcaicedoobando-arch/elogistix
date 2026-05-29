@@ -1,6 +1,5 @@
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -12,15 +11,12 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/shared";
 import { getErrorMessage } from "@/lib/errors";
 import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
+import {
+  eventoTrackingSchema,
+  type EventoTrackingFormValues,
+} from "@/lib/validation/mutationSchemas";
 
-const eventoSchema = z.object({
-  tipo: z.string().min(1, "Selecciona un tipo de evento"),
-  fecha: z.string().min(1, "Fecha requerida"),
-  ubicacion: z.string().max(120, "Máximo 120 caracteres").optional().default(""),
-  descripcion: z.string().max(500, "Máximo 500 caracteres").optional().default(""),
-});
-
-type EventoFormValues = z.infer<typeof eventoSchema>;
+type EventoFormValues = EventoTrackingFormValues;
 
 const defaultEventoValues = (): EventoFormValues => ({
   tipo: "",
@@ -28,6 +24,7 @@ const defaultEventoValues = (): EventoFormValues => ({
   ubicacion: "",
   descripcion: "",
 });
+
 
 interface Props {
   embarqueId: string;
