@@ -1,7 +1,6 @@
 /**
  * Tipos para la entidad embarque_contenedores (Fase A del refactor 1 embarque ↔ N).
  */
-import { z } from "zod";
 import type { Database } from "@/integrations/supabase/types";
 
 export type EmbarqueContenedor =
@@ -25,20 +24,7 @@ export interface ContenedorBorrador {
   orden: number;
 }
 
-const contenedorBorradorSchema = z.object({
-  id: z.string().uuid().optional(),
-  numero_contenedor: z
-    .string()
-    .trim()
-    .min(1, "Número de contenedor requerido")
-    .max(20, "Máximo 20 caracteres"),
-  tipo_contenedor: z.string().trim().min(1, "Tipo requerido"),
-  bl_house: z.string().trim().max(50, "Máximo 50 caracteres").default(""),
-  peso_kg: z.number().min(0, "Peso debe ser ≥ 0"),
-  volumen_m3: z.number().min(0, "Volumen debe ser ≥ 0"),
-  piezas: z.number().int().min(0, "Piezas debe ser ≥ 0"),
-  orden: z.number().int().min(1),
-});
+
 
 
 export function crearContenedorVacio(orden: number = 1): ContenedorBorrador {
