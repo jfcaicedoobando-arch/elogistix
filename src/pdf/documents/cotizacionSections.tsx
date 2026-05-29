@@ -1,5 +1,4 @@
 import { View, Text } from "@react-pdf/renderer";
-import { formatDate } from "@/lib/formatters";
 import { styles } from "../theme/styles";
 import type { CotizacionRow, DimensionLCL, DimensionAerea } from "@/types/cotizacion";
 import { buildDatosGenerales, buildMercancia } from "@/generators/cotizacion/datosGenerales";
