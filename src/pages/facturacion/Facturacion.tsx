@@ -15,7 +15,7 @@ import { PageHeader } from "@/components/shared/PageHeader";
 import type { Database } from "@/types/db";
 import { TabProformas } from "@/components/facturacion/TabProformas";
 import { TabProformasPendientes } from "@/components/facturacion/TabProformasPendientes";
-import { TabProyeccion } from "@/components/facturacion/TabProyeccion";
+
 import { DateRangeFilter } from "@/components/facturacion/DateRangeFilter";
 import { GuiaPrefacturacion } from "@/components/facturacion/GuiaPrefacturacion";
 import { useFacturacionPageController } from "@/hooks/facturacion";
@@ -77,11 +77,10 @@ export default function Facturacion() {
   );
 
   const tabs: TabDef[] = [
-    { value: "proyeccion", label: "1. Proyección", hint: "Cuánto vas a facturar este mes según los ETA de los embarques." },
-    { value: "pendientes", label: "2. Por aprobar", hint: "Proformas generadas pendientes de revisión. Consolida y aprueba aquí.", badge: proformasPendientes.length },
-    { value: "proformas", label: "3. Proformas", hint: "Histórico completo de proformas (pendientes y facturadas)." },
-    { value: "facturas", label: "4. Facturas emitidas", hint: "Facturas ya generadas. Export CSV y layout contable para el contador." },
-    { value: "liquidacion", label: "5. Pagos a proveedores", hint: "Costos de proveedores pendientes de pago (cuentas por pagar)." },
+    { value: "pendientes", label: "1. Por aprobar", hint: "Proformas generadas pendientes de revisión. Consolida y aprueba aquí.", badge: proformasPendientes.length },
+    { value: "proformas", label: "2. Proformas", hint: "Histórico completo de proformas (pendientes y facturadas)." },
+    { value: "facturas", label: "3. Facturas emitidas", hint: "Facturas ya generadas. Export CSV y layout contable para el contador." },
+    { value: "liquidacion", label: "4. Pagos a proveedores", hint: "Costos de proveedores pendientes de pago (cuentas por pagar)." },
   ];
 
   const dateBar = (
@@ -102,14 +101,11 @@ export default function Facturacion() {
 
         <GuiaPrefacturacion />
 
-        <Tabs defaultValue="proyeccion">
+        <Tabs defaultValue="pendientes">
           <TabsList>
             {tabs.map((t) => <TabTriggerInfo key={t.value} tab={t} />)}
           </TabsList>
 
-          <TabsContent value="proyeccion">
-            <TabProyeccion />
-          </TabsContent>
 
           <TabsContent value="pendientes" className="space-y-4">
             {dateBar}

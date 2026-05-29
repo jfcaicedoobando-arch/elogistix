@@ -35,6 +35,8 @@ const ClienteDetalle = lazy(() => import("@/pages/clientes/ClienteDetalle"));
 const Proveedores = lazy(() => import("@/pages/proveedores/Proveedores"));
 const ProveedorDetalle = lazy(() => import("@/pages/proveedores/ProveedorDetalle"));
 const Facturacion = lazy(() => import("@/pages/facturacion/Facturacion"));
+const ProfitProyeccion = lazy(() => import("@/pages/profit/ProfitProyeccion"));
+const ProfitEstadoResultados = lazy(() => import("@/pages/profit/ProfitEstadoResultados"));
 
 const Usuarios = lazy(() => import("@/pages/admin-org/Usuarios"));
 const Configuracion = lazy(() => import("@/pages/admin-org/Configuracion"));
@@ -66,6 +68,9 @@ export const appRoutes = (
     <Route path="/embarques/:id" element={<EmbarqueDetalle />} />
     <Route path="/embarques/:id/editar" element={<EditarEmbarque />} />
     <Route path="/facturacion" element={<Facturacion />} />
+    <Route path="/profit" element={<Navigate to="/profit/proyeccion" replace />} />
+    <Route path="/profit/proyeccion" element={<ProfitProyeccion />} />
+    <Route path="/profit/estado-resultados" element={<ProfitEstadoResultados />} />
     <Route path="/clientes" element={<Clientes />} />
     <Route path="/clientes/:id" element={<ClienteDetalle />} />
     <Route path="/proveedores" element={<Proveedores />} />

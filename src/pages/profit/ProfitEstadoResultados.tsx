@@ -1,0 +1,91 @@
+import { ChevronLeft, ChevronRight, Calendar, Download, Info } from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Skeleton } from "@/components/ui/skeleton";
+import { PageHeader } from "@/components/shared/PageHeader";
+import { EmptyStateInline } from "@/components/empty/EmptyStateInline";
+import { useEstadoResultados } from "@/hooks/profit";
+import {
+  EstadoResultadosTable,
+  ESTADO_RESULTADOS_CSV_HEADERS,
+  buildEstadoResultadosCsvRows,
+} from "@/components/profit/EstadoResultadosTable";
+import { exportToCsv } from "@/generators/exportCsv";
+
+export default function ProfitEstadoResultados() {
+  const c = useEstadoResultados();
+  const data = c.data;
+
+  const handleExport = () => {
+    if (!data) return;
+    exportToCsv(
+      `estado-resultados-${c.mesActual.key}.csv`,
+      ESTADO_RESULTADOS_CSV_HEADERS,
+      buildEstadoResultadosCsvRows(data),
+    );
+  };
+
+  const sinDatos = !c.isLoading && data && data.ingresos.length === 0 && data.costos.length === 0;
+
+  return (
+    <div className="space-y-6">
+      <PageHeader
+        title="Estado de Resultados"
+        description="P&G mensual por modo de transporte basado en ETA del embarque"
+      />
+
+      <Card>
+        <CardContent className="p-4 flex flex-wrap items-center gap-3">
+          <div className="flex items-center gap-2">
+            <Calendar className="h-4 w-4 text-muted-foreground" />
+            <Button variant="outline" size="icon" className="h-9 w-9" onClick={c.irMesAnterior} disabled={!c.puedeIrAtras} aria-label="Mes anterior">
+              <ChevronLeft className="h-4 w-4" />
+            </Button>
+            <Select value={c.mesActual.key} onValueChange={c.setMesKey}>
+              <SelectTrigger className="w-[220px] font-medium"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                {c.mesesDisponibles.slice().reverse().map((m) => (
+                  <SelectItem key={m.key} value={m.key}>{m.label}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Button variant="outline" size="icon" className="h-9 w-9" onClick={c.irMesSiguiente} disabled={!c.puedeIrAdelante} aria-label="Mes siguiente">
+              <ChevronRight className="h-4 w-4" />
+            </Button>
+          </div>
+          <div className="flex-1" />
+          <Button variant="outline" onClick={handleExport} disabled={!data || sinDatos === true}>
+            <Download className="h-4 w-4 mr-2" /> Exportar CSV
+          </Button>
+        </CardContent>
+      </Card>
+
+      <p className="text-xs text-muted-foreground flex items-center gap-1.5 px-1">
+        <Info className="h-3 w-3" />
+        Montos en MXN. Conceptos en USD/EUR convertidos con el tipo de cambio del propio embarque. Excluye embarques cancelados y modalidad Multimodal.
+      </p>
+
+      <Card>
+        <CardContent className="p-0">
+          {c.isLoading ? (
+            <div className="p-6 space-y-3">
+              <Skeleton className="h-8 w-full" />
+              <Skeleton className="h-8 w-full" />
+              <Skeleton className="h-8 w-full" />
+              <Skeleton className="h-8 w-full" />
+            </div>
+          ) : sinDatos || !data ? (
+            <EmptyStateInline
+              icon={Calendar}
+              message={`Sin embarques con ETA en ${c.mesActual.label}`}
+              hint="Selecciona otro mes."
+            />
+          ) : (
+            <EstadoResultadosTable data={data} />
+          )}
+        </CardContent>
+      </Card>
+    </div>
+  );
+}

@@ -2,17 +2,16 @@
  * Guía colapsable del módulo de Pre-Facturación.
  * Explica el flujo de 5 pasos y el Hueco de Facturación.
  */
-import { ChevronRight, TrendingUp, CheckCircle2, FileText, Receipt, Wallet, AlertTriangle } from "lucide-react";
+import { ChevronRight, CheckCircle2, FileText, Receipt, Wallet, AlertTriangle } from "lucide-react";
 import {
   Accordion, AccordionContent, AccordionItem, AccordionTrigger,
 } from "@/components/ui/accordion";
 
 const PASOS = [
-  { n: 1, icon: TrendingUp, label: "Proyección", hint: "Ver qué viene" },
-  { n: 2, icon: CheckCircle2, label: "Por aprobar", hint: "Consolidar y aprobar" },
-  { n: 3, icon: FileText, label: "Proformas", hint: "Histórico" },
-  { n: 4, icon: Receipt, label: "Facturas", hint: "Emitidas" },
-  { n: 5, icon: Wallet, label: "Pagos prov.", hint: "Cuentas por pagar" },
+  { n: 1, icon: CheckCircle2, label: "Por aprobar", hint: "Consolidar y aprobar" },
+  { n: 2, icon: FileText, label: "Proformas", hint: "Histórico" },
+  { n: 3, icon: Receipt, label: "Facturas", hint: "Emitidas" },
+  { n: 4, icon: Wallet, label: "Pagos prov.", hint: "Cuentas por pagar" },
 ] as const;
 
 export function GuiaPrefacturacion() {
