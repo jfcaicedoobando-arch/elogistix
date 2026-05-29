@@ -42,7 +42,7 @@ export function TrackingNuevoEventoForm({ embarqueId, onClose }: Props) {
     reset,
     formState: { errors, isValid },
   } = useForm<EventoFormValues>({
-    resolver: zodResolver(eventoSchema),
+    resolver: zodResolver(eventoTrackingSchema),
     defaultValues: defaultEventoValues(),
   });
 
