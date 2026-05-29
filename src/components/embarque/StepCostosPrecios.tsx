@@ -11,7 +11,7 @@ import { CATALOGO_CONCEPTOS } from "@/constants/embarqueConstants";
 import { ValidationAlert } from "@/components/feedback/ValidationAlert";
 import { NumericInput } from "@/components/shared/NumericInput";
 import { SelectContenedorConcepto } from "@/components/embarque/conceptos/SelectContenedorConcepto";
-import { useContenedoresEmbarque } from "@/hooks/embarque/useContenedoresEmbarque";
+import { useContenedoresEmbarque } from "@/hooks/embarque";
 import type { StepValidationErrors } from "@/lib/domain/embarqueWizardSchemas";
 import type { EmbarqueFormValues } from "@/hooks/embarque";
 import type { ConceptoVentaLocal as ConceptoVentaRow, ConceptoCostoLocal as ConceptoCostoRow } from "@/types/concepto";

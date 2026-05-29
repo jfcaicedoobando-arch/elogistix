@@ -8,7 +8,7 @@ import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { useImportarLeadsCsv } from "@/hooks/crm/useImportarLeadsCsv";
+import { useImportarLeadsCsv } from "@/hooks/crm";
 import { ImportarLeadsCsvPreview } from "@/components/crm/ImportarLeadsCsvPreview";
 
 interface Props {

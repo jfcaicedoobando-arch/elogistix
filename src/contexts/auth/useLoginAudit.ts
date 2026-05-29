@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef } from "react";
 import type { User } from "@supabase/supabase-js";
 import { safeSessionStorage, loginLoggedKey } from "@/lib/browserStorage";
-import { insertLoginAudit } from "@/services/auth/loginAudit";
+import { insertLoginAudit } from "@/services/auth";
 
 /**
  * Registra la actividad de login en bitácora una sola vez por sesión por usuario,

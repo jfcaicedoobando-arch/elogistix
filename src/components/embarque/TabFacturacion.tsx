@@ -14,7 +14,7 @@ import { useTasaIVA } from "@/hooks/catalogos";
 import { useEmbarqueConceptosVenta } from "@/hooks/embarque";
 import { useProformasEmbarque, useEliminarProforma } from "@/hooks/embarque";
 import { useDescargarProformaPdf } from "@/hooks/embarque";
-import { useContenedoresEmbarque } from "@/hooks/embarque/useContenedoresEmbarque";
+import { useContenedoresEmbarque } from "@/hooks/embarque";
 import { DialogGenerarProforma } from "./DialogGenerarProforma";
 import { ResumenConceptosVenta } from "./facturacion/ResumenConceptosVenta";
 import { HistorialProformas } from "./facturacion/HistorialProformas";

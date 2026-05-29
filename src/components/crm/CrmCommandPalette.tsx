@@ -9,7 +9,7 @@ import {
   CommandDialog, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList,
 } from "@/components/ui/command";
 import { useDebounce } from "@/hooks/shared";
-import { useCrmSearch } from "@/hooks/crm/useCrmSearch";
+import { useCrmSearch } from "@/hooks/crm";
 
 interface Props {
   open: boolean;

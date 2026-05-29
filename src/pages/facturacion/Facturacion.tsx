@@ -19,7 +19,7 @@ import { TabProyeccion } from "@/components/facturacion/TabProyeccion";
 import { DateRangeFilter } from "@/components/facturacion/DateRangeFilter";
 import { GuiaPrefacturacion } from "@/components/facturacion/GuiaPrefacturacion";
 import { useFacturacionPageController } from "@/hooks/facturacion";
-import { useFacturacionDateRange } from "@/hooks/facturacion/useFacturacionDateRange";
+import { useFacturacionDateRange } from "@/hooks/facturacion";
 import { facturaColumns, buildGastoColumns } from "./facturacionColumns";
 
 type EstadoFactura = Database["public"]["Enums"]["estado_factura"];

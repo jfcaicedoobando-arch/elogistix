@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
-import type { FacturacionDateRange } from "@/hooks/facturacion/useFacturacionDateRange";
+import type { FacturacionDateRange } from "@/hooks/facturacion";
 
 interface Props {
   range: FacturacionDateRange;

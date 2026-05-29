@@ -5,8 +5,8 @@ import { useState, useMemo } from "react";
 import { Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { useDebounce } from "@/hooks/shared/useDebounce";
-import { useCrmProspectoSearch, type ProspectoMatch } from "@/hooks/crm/useCrmProspectoSearch";
+import { useDebounce } from "@/hooks/shared";
+import { useCrmProspectoSearch, type ProspectoMatch } from "@/hooks/crm";
 
 interface Props {
   onSelect: (m: ProspectoMatch) => void;

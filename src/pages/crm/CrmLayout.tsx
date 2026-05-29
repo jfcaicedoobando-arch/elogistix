@@ -4,7 +4,7 @@ import { Target, Users, Activity, BarChart3, LayoutDashboard, Settings, Sun } fr
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { useActividadesVencidasCount } from "@/hooks/crm";
-import { useCrmHotkeys } from "@/hooks/crm/useCrmHotkeys";
+import { useCrmHotkeys } from "@/hooks/crm";
 import { usePermissions } from "@/hooks/shared";
 import QuickAddMenu from "@/components/crm/QuickAddMenu";
 import CrmCommandPalette from "@/components/crm/CrmCommandPalette";
