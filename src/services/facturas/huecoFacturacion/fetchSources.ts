@@ -2,6 +2,7 @@
  * Fuentes de datos (Supabase) para el "Hueco de Facturación". Solo I/O.
  */
 import { supabase } from "@/integrations/supabase/client";
+import { fetchFacturasPorExpedientes } from "@/services/facturas/shared/fetchFacturas";
 
 export interface EmbarqueHuecoRow {
   id: string;
@@ -35,20 +36,10 @@ export async function fetchEmbarquesParaHueco(
 }
 
 export async function fetchVentasYFacturas(ids: string[], expedientes: string[]) {
-  const [ventasRes, facturasRes] = await Promise.all([
+  const [ventasRes, facturas] = await Promise.all([
     supabase.from("conceptos_venta").select("embarque_id, total, moneda").in("embarque_id", ids),
-    expedientes.length > 0
-      ? supabase
-          .from("facturas")
-          .select("expediente, factura_pdf_url")
-          .in("expediente", expedientes)
-          .not("factura_pdf_url", "is", null)
-      : Promise.resolve({
-          data: [] as { expediente: string | null; factura_pdf_url: string | null }[],
-          error: null,
-        }),
+    fetchFacturasPorExpedientes(expedientes),
   ]);
   if (ventasRes.error) throw ventasRes.error;
-  if (facturasRes.error) throw facturasRes.error;
-  return { ventas: ventasRes.data ?? [], facturas: facturasRes.data ?? [] };
+  return { ventas: ventasRes.data ?? [], facturas };
 }
