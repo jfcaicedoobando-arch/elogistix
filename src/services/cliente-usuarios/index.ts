@@ -1,18 +1,25 @@
 /**
- * Servicio de usuarios de cliente (portal): listado, invitación y revocación.
+ * Servicio de usuarios de cliente (portal): listado enriquecido, invitación y revocación.
  */
 import { supabase } from "@/integrations/supabase/client";
-import type { Tables } from "@/integrations/supabase/types";
 
-export type ClientUserRow = Tables<"client_users">;
+export interface ClientUserEnriched {
+  id: string;
+  user_id: string;
+  cliente_id: string;
+  organization_id: string;
+  created_at: string | null;
+  email: string;
+  last_sign_in_at: string | null;
+  email_confirmed_at: string | null;
+}
 
-export async function fetchClientUsers(clienteId: string): Promise<ClientUserRow[]> {
-  const { data, error } = await supabase
-    .from("client_users")
-    .select("*")
-    .eq("cliente_id", clienteId);
+export async function fetchClientUsers(clienteId: string): Promise<ClientUserEnriched[]> {
+  const { data, error } = await supabase.functions.invoke("list-client-users", {
+    body: { cliente_id: clienteId },
+  });
   if (error) throw error;
-  return (data ?? []) as ClientUserRow[];
+  return (data ?? []) as ClientUserEnriched[];
 }
 
 export interface InviteClientUserParams {

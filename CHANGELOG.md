@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [12.18.0] - 2026-05-29
+- **feat(portal)**: 4 mejoras a la gestión de usuarios del portal de cliente (tab Portal del detalle de cliente). (1) Tabla ahora muestra **email real** de cada usuario (antes mostraba `user_id` truncado). (2) Nueva columna **Último acceso** (`last_sign_in_at` formato `dd MMM yyyy HH:mm`, "Nunca" si nulo, gris si >30 días). (3) Columna **Estado** con badge `Activo` / `Pendiente` (sin confirmar email o nunca entró) / `Inactivo` (>60 días sin login). (4) Botón **Reenviar invitación** (icono Mail) condicional cuando el usuario está pendiente — reusa `invite-client-user` que es idempotente. (5) Badge en el header del card mostrando `N usuario(s) con acceso` o `Sin acceso`. Nueva edge function `list-client-users` (service role) que valida que el caller sea super_admin o admin/operador de la organización dueña del cliente, y enriquece `client_users` con `auth.admin.getUserById()`.
+
 ## [12.17.2] - 2026-05-29
 - **feat(portal)**: Habilitada la página **Mi Perfil** (`/portal/perfil`) que antes estaba `disabled` en el menú del portal. Muestra (1) datos personales del usuario (email + rol), (2) empresa vinculada en solo lectura (razón social, RFC, dirección), (3) edición de contacto y teléfono vía RPC `portal_update_contacto` (`SECURITY DEFINER`, revoca PUBLIC, sólo `authenticated` con rol `cliente`, actualiza únicamente `clientes.contacto`/`telefono` del cliente vinculado al `auth.uid()`) y (4) cambio de contraseña vía `supabase.auth.updateUser`. Archivos nuevos: `pages/portal/PortalPerfil.tsx`, `components/portal/perfil/{EditarContactoDialog,CambiarPasswordDialog}.tsx`, `hooks/portal/usePortalPerfil.ts`, key `queryKeys.portal.perfil`. Migración: función `public.portal_update_contacto(text, text)`.
 

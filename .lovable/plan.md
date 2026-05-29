@@ -1,58 +1,58 @@
-## Mi Perfil — Portal del Cliente
+# Plan: 4 mejoras a Acceso al Portal de Cliente
 
-Hoy el ítem "Mi perfil" en `PortalUserMenu` está `disabled` y no existe ninguna página ni ruta para él. Lo voy a construir.
+Versión objetivo: **APP_VERSION → 12.18.0** (feature, no patch).
 
-### Alcance
+## Alcance
 
-Una página `/portal/perfil` con 3 secciones (solo lectura + 2 acciones):
+En `TabPortalCliente` (tab "Portal" del detalle de cliente), enriquecer la tabla de usuarios con acceso al portal y agregar acciones.
 
-1. **Datos personales** (solo lectura)
-   - Email del usuario autenticado
-   - Nombre del cliente vinculado (vía `client_users` → `clientes.nombre`)
-   - Rol: Cliente
+### 1. Mostrar email
+- Hoy la tabla muestra solo `user_id` truncado. Mostrar el **email real** del usuario.
+- Backend: nueva edge function `list-client-users` (service role) que recibe `cliente_id`, valida que el caller sea staff de la organización dueña del cliente (admin/operador/super_admin), lee `client_users` por `cliente_id` y enriquece con `auth.admin.getUserById()` para devolver `{ id, user_id, email, created_at, last_sign_in_at, email_confirmed_at }`.
+- Reemplaza el `useClientUsers` actual (que hace `select * from client_users`) para que llame la edge function vía un nuevo service `fetchClientUsersEnriched`.
 
-2. **Datos fiscales del cliente** (solo lectura)
-   - RFC, dirección, ciudad, estado, CP, teléfono, email del cliente
-   - Tomados de la tabla `clientes` (ya accesible por la policy `Cliente read own clientes`)
+### 2. Último login
+- Mostrar columna **"Último acceso"** con `last_sign_in_at` formateado (`dd MMM yyyy HH:mm`) o "Nunca".
+- Resaltar en `text-muted-foreground` si >30 días o "Nunca" → ayuda a detectar usuarios inactivos.
 
-3. **Editar contacto** (acción)
-   - Nombre del contacto, teléfono
-   - Actualiza `clientes.contacto` y `clientes.telefono` del cliente vinculado
+### 3. Reenviar invitación
+- Botón **"Reenviar invitación"** (icono `Mail`) visible solo cuando `email_confirmed_at IS NULL` **o** `last_sign_in_at IS NULL` (usuario nunca estableció contraseña / nunca entró).
+- Reutiliza la edge function existente `invite-client-user` pasando el mismo email + `cliente_id` + `organization_id`. La función ya maneja "usuario existente" y reenvía link de recovery (ajuste menor: forzar generación de link `recovery` si el usuario ya existe pero no ha confirmado).
 
-4. **Cambiar contraseña** (acción)
-   - Form con contraseña actual + nueva + confirmación
-   - Usa `supabase.auth.updateUser({ password })`
-   - Validación: mínimo 8 caracteres, confirma coincidencia
+### 4. Indicador visual "N usuarios con acceso"
+- En el header del Card (`CardTitle`), badge al lado del título: `<Badge variant="secondary">{count} usuario{s} con acceso</Badge>`.
+- Si `count === 0`, badge `outline` con texto "Sin acceso".
 
-### Cambios técnicos
+## Cambios técnicos
 
-**Backend / RLS**
-- No requiere migración. Las policies existentes ya cubren:
-  - `clientes`: `Cliente read own clientes` (SELECT) — OK
-  - Para que el cliente pueda **editar su propio** `contacto`/`telefono`, agregar una policy UPDATE en `clientes` restringida a `has_role('cliente')` + `id IN current_user_client_ids()` y limitada a esos campos vía trigger o simplemente policy de UPDATE (los demás campos no se exponen en el form).
-  - Alternativa más segura: una RPC `portal_update_contacto(nombre text, telefono text)` `SECURITY DEFINER` que actualice solo esos 2 campos del cliente vinculado al `auth.uid()`. **Esta es la opción recomendada** siguiendo el patrón ya usado en el portal (mem://technical/security-patterns).
+### Backend
+- **Nueva edge function**: `supabase/functions/list-client-users/index.ts`
+  - Body: `{ cliente_id: string }`
+  - Valida JWT, valida que el caller pertenezca a la org dueña del `cliente_id` con rol admin/operador/super_admin.
+  - Devuelve array enriquecido.
+  - CORS estándar, validación con zod.
+- **Edge function existente** `invite-client-user`: pequeño ajuste — si el usuario ya existe pero `email_confirmed_at IS NULL`, generar un `recovery` link y enviarlo (idempotente para "reenviar"). Si ya está confirmado, devolver mensaje claro "Usuario ya activo" sin reenviar.
 
-**Frontend**
-- `src/pages/portal/PortalPerfil.tsx` — página nueva (componente ≤200 líneas, dividida en subcomponentes si crece)
-- `src/components/portal/perfil/PerfilDatosCard.tsx` — datos personales + fiscales (read-only)
-- `src/components/portal/perfil/EditarContactoDialog.tsx` — form de contacto
-- `src/components/portal/perfil/CambiarPasswordDialog.tsx` — form de contraseña
-- `src/hooks/portal/usePortalPerfil.ts` — query del cliente vinculado + mutaciones
-- `src/lib/query/keys/portal.ts` — agregar `perfil` key
-- `src/routes/portalRoutes.tsx` — agregar ruta `/portal/perfil`
-- `src/components/portal/layout/PortalUserMenu.tsx` — quitar `disabled` y convertir en `<Link to="/portal/perfil">`
-- `src/components/portal/layout/PortalMobileNav.tsx` — si tiene el mismo item, igual
+### Frontend
+- `src/services/cliente-usuarios/index.ts`: agregar `fetchClientUsersEnriched(clienteId)` que invoca `list-client-users`, y `resendClientUserInvite(params)` que reusa `inviteClientUser`.
+- `src/hooks/cliente/useClientUsersMutations.ts`: 
+  - Cambiar `useClientUsers` para usar el nuevo fetcher enriquecido.
+  - Agregar `useResendClientUserInvite(clienteId)`.
+  - Exportar tipo `ClientUserEnriched`.
+- `src/components/cliente/TabPortalCliente.tsx`:
+  - Nuevas columnas: Email, Último acceso, Estado (badge "Activo"/"Pendiente"/"Inactivo").
+  - Reemplazar columna `Usuario ID` por `Email`.
+  - Botón "Reenviar invitación" condicional en columna de acciones.
+  - Badge de conteo en el header.
+- Sin cambios en RLS ni migraciones (la edge function usa service role).
 
-**Versionado**
-- `APP_VERSION` → 12.17.2 (patch, feature pequeña)
-- `CHANGELOG.md` → entrada nueva
+### Versionado
+- `APP_VERSION` → `12.18.0`
+- Entrada en `CHANGELOG.md` describiendo las 4 mejoras.
 
-### Diseño
+## Fuera de alcance
+- Revocar/reasignar usuarios entre clientes.
+- Auditoría de logins (ya cubierta por `bitacora_actividad`).
+- Notificaciones por email cuando un usuario del portal entra.
 
-Layout estándar del portal: card con header "Mi Perfil" y secciones apiladas, usando tokens semánticos (`bg-card`, `text-muted-foreground`, `accent`). Sin colores hardcoded.
-
-### Fuera de alcance
-
-- Editar RFC / dirección fiscal (eso lo gestiona el forwarder, no el cliente)
-- Avatar / foto
-- Preferencias de notificaciones (se puede agregar después)
+¿Procedo?
