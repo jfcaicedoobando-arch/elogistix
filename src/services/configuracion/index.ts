@@ -38,13 +38,21 @@ export async function fetchConfiguracion(): Promise<ConfigItem[]> {
   return fromDb<ConfigItem[]>(data ?? []);
 }
 
-export async function updateConfiguracionByCategoriaClave(
+type ConfigTable = "configuracion" | "configuracion_global";
+
+/**
+ * Helper privado: aplica una lista de updates `{ valor }` sobre cualquiera de
+ * las dos tablas de configuración. Encapsula el `Promise.all` y la
+ * propagación del primer error.
+ */
+async function updateConfigItems(
+  table: ConfigTable,
   items: { categoria: string; clave: string; valor: unknown }[],
 ): Promise<void> {
   const results = await Promise.all(
     items.map((item) =>
       supabase
-        .from("configuracion")
+        .from(table)
         .update({ valor: item.valor as Json })
         .eq("categoria", item.categoria)
         .eq("clave", item.clave),
@@ -52,6 +60,12 @@ export async function updateConfiguracionByCategoriaClave(
   );
   const firstError = results.find((r) => r.error);
   if (firstError?.error) throw firstError.error;
+}
+
+export async function updateConfiguracionByCategoriaClave(
+  items: { categoria: string; clave: string; valor: unknown }[],
+): Promise<void> {
+  return updateConfigItems("configuracion", items);
 }
 
 // ── Configuración global (sistema, super-admin) ────────────────────────────
@@ -76,15 +90,5 @@ export async function fetchConfiguracionGlobal(): Promise<ConfigGlobalItem[]> {
 export async function updateConfiguracionGlobalItems(
   items: { categoria: string; clave: string; valor: unknown }[],
 ): Promise<void> {
-  const results = await Promise.all(
-    items.map((item) =>
-      supabase
-        .from("configuracion_global")
-        .update({ valor: JSON.parse(JSON.stringify(item.valor)) })
-        .eq("categoria", item.categoria)
-        .eq("clave", item.clave),
-    ),
-  );
-  const firstError = results.find((r) => r.error);
-  if (firstError?.error) throw firstError.error;
+  return updateConfigItems("configuracion_global", items);
 }
