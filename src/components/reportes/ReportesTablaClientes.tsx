@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { DataTable, defineColumns, type ColumnDef } from "@/components/shared/DataTable";
 import { formatCurrency, toTitleCase } from "@/lib/formatters";
+import { MARGIN_THRESHOLDS } from "@/constants/reportes";
 
 export type SortField = "profit_usd" | "venta_usd" | "costo_usd" | "margen";
 
