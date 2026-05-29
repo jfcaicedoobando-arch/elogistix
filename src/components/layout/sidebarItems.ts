@@ -17,8 +17,15 @@ import {
   HelpCircle,
   Bug,
   Target,
+  TrendingUp,
+  PiggyBank,
 } from "lucide-react";
 import type { SidebarItem } from "@/components/layout/SidebarGroupBlock";
+
+export const SIDEBAR_PROFIT_ITEMS: SidebarItem[] = [
+  { title: "Proyección", url: "/profit/proyeccion", icon: TrendingUp },
+  { title: "Estado de Resultados", url: "/profit/estado-resultados", icon: PiggyBank },
+];
 
 export const SIDEBAR_DASHBOARD_ITEMS: SidebarItem[] = [
   { title: "Principal", url: "/", icon: LayoutDashboard },
