@@ -23,12 +23,16 @@ let initialized = false;
 export function initSentry(): void {
   if (initialized) return;
   if (!DSN) return;
+  // No inicializar en desarrollo: las sesiones locales generan ruido por HMR
+  // (React Refresh, módulos stale) que no representa bugs reales.
+  if (import.meta.env.MODE === "development") return;
   initialized = true;
   Sentry.init({
     dsn: DSN,
     release: `libre-carga@${APP_VERSION}`,
     environment: import.meta.env.MODE,
     tracesSampleRate: 0.1,
+
     // Defensa en profundidad: estos errores de Vite (chunk viejo cacheado)
     // se auto-recuperan con reload y no aportan señal. `ignoreErrors` corre
     // antes que `beforeSend` y cubre también releases viejos en caché.
