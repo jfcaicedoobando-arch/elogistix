@@ -64,6 +64,19 @@ async function ensureClienteRole(adminClient: SupabaseClient, userId: string) {
   }
 }
 
+/** Resuelve el `redirect_to` final aplicando una allow-list contra `Origin` (anti open-redirect). */
+function resolveRedirectTo(rawOrigin: string): string {
+  const ALLOWED_REDIRECT_ORIGINS = new Set<string>([
+    "https://elogistix.lovable.app",
+    "https://id-preview--341dfc00-0308-4aba-9246-e4b2041e31f1.lovable.app",
+  ]);
+  const isLocalhost = /^http:\/\/localhost(:\d+)?$/.test(rawOrigin);
+  const safeOrigin = ALLOWED_REDIRECT_ORIGINS.has(rawOrigin) || isLocalhost
+    ? rawOrigin
+    : "https://elogistix.lovable.app";
+  return `${safeOrigin}/portal/login`;
+}
+
 Deno.serve(async (req) => {
   const preflight = handlePreflightStrict(req);
   if (preflight) return preflight;
