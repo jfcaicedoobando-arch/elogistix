@@ -13,7 +13,7 @@ const EXPECTED_DOMAINS = [
   "clienteFinancials", "puertos", "exchangeRates", "bitacora", "dashboard",
   "operadores", "operaciones", "reportes", "configuracionGlobal", "planes",
   "configuracionOrg", "navieras", "tiposContenedor", "portal", "sidebar",
-  "usuarios", "admin", "crm", "auditoria", "appLogs", "facturacion",
+  "usuarios", "admin", "crm", "auditoria", "appLogs", "facturacion", "profit",
   "papelera", "idempotenciaLog", "pdfPreviewCotizacion", "trackingPublico",
 ] as const;
 
