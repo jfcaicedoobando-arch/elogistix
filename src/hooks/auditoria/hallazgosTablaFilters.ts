@@ -43,11 +43,18 @@ function matchBase(h: HallazgoAuditoria, c: MatchCtx): boolean {
 }
 
 function matchRevision(estado: string, tieneRev: boolean, filtro: FiltroRevision): boolean {
-  if (filtro === "todos") return true;
-  if (filtro === "revisados") return estado === "revisado";
-  if (filtro === "en_progreso") return estado === "en_progreso";
-  if (filtro === "pendientes") return !(tieneRev && estado === "revisado");
-  return true;
+  switch (filtro) {
+    case "todos": return true;
+    case "revisados": return estado === "revisado";
+    case "en_progreso": return estado === "en_progreso";
+    case "pendientes": return !(tieneRev && estado === "revisado");
+    default: {
+      // Exhaustiveness check: añadir un nuevo FiltroRevision sin manejarlo aquí
+      // dispara un error de tipos en compile time.
+      const _exhaustive: never = filtro;
+      return _exhaustive;
+    }
+  }
 }
 
 function matchResponsable(
@@ -57,16 +64,21 @@ function matchResponsable(
   userId: string | undefined,
   today: string,
 ): boolean {
-  if (filtro === "todos") return true;
-  if (filtro === "mios") return rev?.responsable_id === userId;
-  if (filtro === "sin_asignar") return !rev?.responsable_id;
-  if (filtro === "vencidos") {
-    if (!rev?.fecha_limite) return false;
-    if (rev.fecha_limite >= today) return false;
-    if (estado === "revisado") return false;
-    return true;
+  switch (filtro) {
+    case "todos": return true;
+    case "mios": return rev?.responsable_id === userId;
+    case "sin_asignar": return !rev?.responsable_id;
+    case "vencidos": {
+      if (!rev?.fecha_limite) return false;
+      if (rev.fecha_limite >= today) return false;
+      if (estado === "revisado") return false;
+      return true;
+    }
+    default: {
+      const _exhaustive: never = filtro;
+      return _exhaustive;
+    }
   }
-  return true;
 }
 
 export function matchHallazgo(h: HallazgoAuditoria, c: MatchCtx): boolean {

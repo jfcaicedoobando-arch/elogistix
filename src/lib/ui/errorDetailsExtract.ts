@@ -73,17 +73,26 @@ function mapValidationIssues(zod: MaybeZodError): ValidationIssue[] {
   });
 }
 
-/** Busca un ZodError en el error o en su cadena `cause`. */
+/**
+ * Busca un ZodError en el error o en su cadena `cause`.
+ * Guarda objetos visitados en un `WeakSet` para no entrar en bucle infinito
+ * si algún error tiene una referencia cíclica en `cause`.
+ */
 function findZodError(err: unknown): MaybeZodError | null {
+  const seen = new WeakSet<object>();
   let current: unknown = err;
   for (let i = 0; i < 5 && current; i++) {
     const z = asZodError(current);
     if (z) return z;
-    if (typeof current === "object" && current !== null && "cause" in current) {
-      current = (current as { cause?: unknown }).cause;
-    } else {
-      break;
+    if (typeof current === "object" && current !== null) {
+      if (seen.has(current)) break;
+      seen.add(current);
+      if ("cause" in current) {
+        current = (current as { cause?: unknown }).cause;
+        continue;
+      }
     }
+    break;
   }
   return null;
 }
