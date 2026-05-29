@@ -6,6 +6,10 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [12.16.0] - 2026-05-29
+- **refactor(toasts)**: Unificación del sistema de notificaciones a **Sonner**. Se retira el stack shadcn/Radix (`components/ui/toast.tsx`, `components/ui/toaster.tsx`) y se sustituye por `components/ui/sonner.tsx` con theming HSL del design system. `lib/ui/appFeedback.ts` (`notifyError/notifySuccess/notifyWarning`) ahora emite directamente vía sonner conservando el panel copiable "Ver detalles" (`ErrorDetailsDialog`). `hooks/shared/useToast.ts` queda como shim de compatibilidad (~70 call sites siguen funcionando sin tocar). Test de `appFeedback` reescrito con mock de sonner.
+- **chore**: `APP_VERSION` → 12.16.0.
+
 ## [12.15.0] - 2026-05-28
 - **refactor(power-of-10)**: Limpieza de los 4 casts HIGH y los 5 archivos >200 líneas detectados por la auditoría.
   - Casts HIGH 4→0: `services/cotizacion/conversiones/embarques.ts` ahora usa type guard + `fromDb`; `services/proforma/crud.ts` mueve el `SAFE-CAST` al sitio correcto (≤6 líneas del cast de RPC) y devuelve la proforma vía `fromDb<ProformaRow>`; `services/proforma/queries.ts` usa `fromDb<ConceptoVentaRow[]>` en lugar de `as unknown as`.

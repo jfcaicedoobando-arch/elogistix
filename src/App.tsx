@@ -1,5 +1,5 @@
 import { Suspense } from "react";
-import { Toaster } from "@/components/ui/toaster";
+import { Toaster } from "@/components/ui/sonner";
 import { ErrorDetailsDialog } from "@/components/ui/ErrorDetailsDialog";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClientProvider } from "@tanstack/react-query";

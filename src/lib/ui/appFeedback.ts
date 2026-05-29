@@ -1,53 +1,42 @@
 /**
  * Helpers unificados para emitir toasts en TODA la aplicación con severidades
- * consistentes (v8.96.0).
+ * consistentes.
+ *
+ * v12.16.0 — Backend unificado a **Sonner**. Las firmas públicas conservan el
+ * primer parámetro `toast` por compatibilidad con los ~70 call sites previos,
+ * pero internamente se ignora y se emite siempre vía `sonner.toast.*`.
  *
  * Estándar:
- *   - error     → toast destructive (bloqueante / fallo de operación)
- *   - warning   → toast warning (no bloquea pero requiere atención)
- *   - success   → toast success (cualquier "guardado / creado / eliminado / actualizado")
- *
- * Mantiene un único punto de cambio para tono y formato. Reemplaza al antiguo
- * `wizardFeedback.ts` cuya naming sugería uso exclusivo del wizard.
- *
- * El parámetro `toast` se tipa de forma muy permisiva (`AnyToastFn`) para
- * aceptar tanto el `toast` de `@/hooks/shared` (con variantes shadcn que
- * incluyen warning/success) como el de sonner u otros wrappers.
+ *   - error     → sonner.error (persistente si hay debug, con acción "Ver detalles")
+ *   - warning   → sonner.warning
+ *   - success   → sonner.success
  */
+import { toast as sonnerToast } from "sonner";
 import { STEP_LABELS } from "@/lib/domain/embarqueWizardSchemas";
 import { buildErrorReport } from "@/lib/ui/errorReport";
+import { openErrorReport } from "@/lib/ui/errorDetailsStore";
 
 /**
- * Firma laxa común a `@/hooks/shared` (shadcn) y wrappers tipo sonner.
- * Las claves extra (`debug`, etc.) se aceptan vía índice `unknown`.
+ * Firma laxa retenida sólo por compatibilidad con call sites que aún pasan
+ * el `toast` del antiguo shadcn `useToast`. El argumento se ignora.
  */
 export type AnyToastFn = (props: Record<string, unknown>) => unknown;
 
 export interface ErrorNotifyOptions {
-  /** Número de paso del wizard (1..4). Genera título "Revisa el Paso N: <nombre>". */
   step?: number;
-  /** Fase de operación (ej. "subida de documentos"). Genera "Error: <fase>". */
   phase?: string;
-  /** Errores por campo (formato `Campo: razón.`). Toma el primero como descripción. */
   errors?: Record<string, string>;
-  /** Mensaje libre alternativo a `errors` (sinónimo de `description`). */
   message?: string;
-  /** Descripción libre del error (alias preferido para llamadas simples). */
   description?: string;
-  /** Override de título. */
   title?: string;
-  /** Error original (Error, PostgrestError, ZodError, string...) — habilita panel de detalles. */
   error?: unknown;
-  /** Datos arbitrarios que ayudan a reproducir (embarqueId, bucket, path, etc.). */
   context?: Record<string, unknown>;
-  /** Código estandarizado del catálogo. Si no se pasa, se infiere del error. */
   errorCode?: string;
-  /** Acción/método (HTTP o semántico, ej. "POST", "SAVE_DRAFT_COTIZACION"). */
   method?: string;
 }
 
-/** Emite un toast bloqueante (variant destructive) con payload de debug copiable. */
-export function notifyError(toast: AnyToastFn, opts: ErrorNotifyOptions) {
+/** Emite un toast bloqueante (error) con payload de debug copiable. */
+export function notifyError(_toast: AnyToastFn | undefined, opts: ErrorNotifyOptions) {
   const {
     step, phase, errors, message, description: descOpt, title, error, context,
     errorCode, method,
@@ -77,22 +66,28 @@ export function notifyError(toast: AnyToastFn, opts: ErrorNotifyOptions) {
     method,
   });
 
-  toast({ title: computedTitle, description, variant: "destructive", debug });
+  sonnerToast.error(computedTitle, {
+    description,
+    duration: Infinity,
+    action: {
+      label: "Ver detalles",
+      onClick: () => openErrorReport(debug),
+    },
+  });
 }
-
 
 /** Emite un toast de advertencia (no bloquea). */
 export function notifyWarning(
-  toast: AnyToastFn,
+  _toast: AnyToastFn | undefined,
   opts: { title: string; description?: string },
 ) {
-  toast({ title: opts.title, description: opts.description, variant: "warning" });
+  sonnerToast.warning(opts.title, { description: opts.description });
 }
 
-/** Emite un toast de éxito (cualquier confirmación de acción exitosa). */
+/** Emite un toast de éxito. */
 export function notifySuccess(
-  toast: AnyToastFn,
+  _toast: AnyToastFn | undefined,
   opts: { title: string; description?: string },
 ) {
-  toast({ title: opts.title, description: opts.description, variant: "success" });
+  sonnerToast.success(opts.title, { description: opts.description });
 }

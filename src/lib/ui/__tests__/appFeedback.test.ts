@@ -1,36 +1,55 @@
-import { describe, it, expect, vi } from "vitest";
+import { describe, it, expect, vi, beforeEach } from "vitest";
+
+vi.mock("sonner", () => {
+  const error = vi.fn();
+  const success = vi.fn();
+  const warning = vi.fn();
+  const base = vi.fn() as unknown as Record<string, unknown>;
+  base.error = error;
+  base.success = success;
+  base.warning = warning;
+  return { toast: base };
+});
+
+import { toast as sonnerToast } from "sonner";
 import { notifyError, notifyWarning, notifySuccess } from "../appFeedback";
 
-describe("appFeedback", () => {
+const m = sonnerToast as unknown as {
+  error: ReturnType<typeof vi.fn>;
+  success: ReturnType<typeof vi.fn>;
+  warning: ReturnType<typeof vi.fn>;
+};
+
+beforeEach(() => {
+  m.error.mockClear();
+  m.success.mockClear();
+  m.warning.mockClear();
+});
+
+describe("appFeedback (sonner)", () => {
   it("notifyError con step usa título 'Revisa el Paso N: <nombre>'", () => {
-    const toast = vi.fn();
-    notifyError(toast, { step: 2, errors: { puertoOrigen: "Puerto de origen: campo obligatorio." } });
-    expect(toast).toHaveBeenCalledWith(expect.objectContaining({
-      title: "Revisa el Paso 2: Ruta",
-      description: "Puerto de origen: campo obligatorio.",
-      variant: "destructive",
-    }));
+    notifyError(undefined, { step: 2, errors: { puertoOrigen: "Puerto de origen: campo obligatorio." } });
+    expect(m.error).toHaveBeenCalledWith(
+      "Revisa el Paso 2: Ruta",
+      expect.objectContaining({ description: "Puerto de origen: campo obligatorio." }),
+    );
   });
 
   it("notifyError con phase usa título 'Error: <fase>'", () => {
-    const toast = vi.fn();
-    notifyError(toast, { phase: "subida de documentos", message: "boom" });
-    expect(toast).toHaveBeenCalledWith(expect.objectContaining({
-      title: "Error: subida de documentos",
-      description: "boom",
-      variant: "destructive",
-    }));
+    notifyError(undefined, { phase: "subida de documentos", message: "boom" });
+    expect(m.error).toHaveBeenCalledWith(
+      "Error: subida de documentos",
+      expect.objectContaining({ description: "boom" }),
+    );
   });
 
-  it("notifyWarning emite variant warning", () => {
-    const toast = vi.fn();
-    notifyWarning(toast, { title: "Aviso", description: "ok" });
-    expect(toast).toHaveBeenCalledWith({ title: "Aviso", description: "ok", variant: "warning" });
+  it("notifyWarning emite sonner.warning", () => {
+    notifyWarning(undefined, { title: "Aviso", description: "ok" });
+    expect(m.warning).toHaveBeenCalledWith("Aviso", { description: "ok" });
   });
 
-  it("notifySuccess emite variant success", () => {
-    const toast = vi.fn();
-    notifySuccess(toast, { title: "Listo", description: "ok" });
-    expect(toast).toHaveBeenCalledWith({ title: "Listo", description: "ok", variant: "success" });
+  it("notifySuccess emite sonner.success", () => {
+    notifySuccess(undefined, { title: "Listo", description: "ok" });
+    expect(m.success).toHaveBeenCalledWith("Listo", { description: "ok" });
   });
 });
