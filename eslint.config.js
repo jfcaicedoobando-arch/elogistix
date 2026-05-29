@@ -101,6 +101,7 @@ export default tseslint.config(
       "complexity": "off",
     },
   },
+  {
     // Primitiva de UI: re-exporta `defineColumns` + tipos junto al componente
     // (mismo patrón que `src/components/ui/**`). El warning de Fast Refresh es
     // ruido para esta convención del proyecto.
