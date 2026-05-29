@@ -19,6 +19,83 @@ type ConceptoCostoInsert = TablesInsert<"conceptos_costo">;
 type ConceptoVentaInsert = TablesInsert<"conceptos_venta">;
 type Moneda = ConceptoVentaInsert["moneda"];
 
+/** Construye los N contenedores hijos repartiendo peso/volumen/piezas. */
+function construirHijosPayload(
+  embarqueId: string,
+  cotizacion: CotizacionRow,
+  numContenedores: number,
+  pesoTotal: number,
+  volumenTotal: number,
+  piezasTotal: number,
+): ContenedorInsert[] {
+  const pesoPorContenedor = pesoTotal / numContenedores;
+  const volumenPorContenedor = volumenTotal / numContenedores;
+  const piezasBase = Math.floor(piezasTotal / numContenedores);
+  let piezasRestantes = piezasTotal;
+  const out: ContenedorInsert[] = [];
+  for (let i = 0; i < numContenedores; i++) {
+    const esUltimo = i === numContenedores - 1;
+    const piezasEste = esUltimo ? piezasRestantes : piezasBase;
+    piezasRestantes -= piezasEste;
+    out.push({
+      embarque_id: embarqueId,
+      numero_contenedor: "",
+      tipo_contenedor: cotizacion.tipo_contenedor ?? "",
+      bl_house: "",
+      peso_kg: pesoPorContenedor,
+      volumen_m3: volumenPorContenedor,
+      piezas: piezasEste,
+      orden: i + 1,
+    });
+  }
+  return out;
+}
+
+/** Construye filas `conceptos_costo` para BL (general) o Contenedor (por hijo). */
+function construirCostosRows(
+  costos: Tables<"cotizacion_costos">[],
+  embarqueId: string,
+  hijos: Tables<"embarque_contenedores">[],
+): ConceptoCostoInsert[] {
+  const rows: ConceptoCostoInsert[] = [];
+  for (const costo of costos) {
+    const um = costo.unidad_medida ?? "Contenedor";
+    const base = mapCostosACostosEmbarque([costo], embarqueId)[0];
+    if (um === "BL") {
+      rows.push(fromDb<ConceptoCostoInsert>({ ...base, contenedor_id: null }));
+    } else {
+      for (const hijo of hijos) {
+        rows.push(fromDb<ConceptoCostoInsert>({ ...base, contenedor_id: hijo.id }));
+      }
+    }
+  }
+  return rows;
+}
+
+/** Parsea el jsonb `conceptos_venta` de una cotización a filas `conceptos_venta`. */
+function parsearVentasJsonb(
+  ventasJsonb: unknown[],
+  embarqueId: string,
+): ConceptoVentaInsert[] {
+  return ventasJsonb
+    .map((raw): ConceptoVentaInsert | null => {
+      if (!raw || typeof raw !== "object" || Array.isArray(raw)) return null;
+      const v = fromDb<Record<string, unknown>>(raw);
+      const descripcion = String(v.descripcion ?? "").trim();
+      if (!descripcion) return null;
+      return {
+        embarque_id: embarqueId,
+        descripcion,
+        cantidad: Number(v.cantidad ?? 1),
+        precio_unitario: Number(v.precio_unitario ?? 0),
+        moneda: (v.moneda === "USD" ? "USD" : "MXN") as Moneda,
+        aplica_iva: Boolean(v.aplica_iva ?? false),
+        total: Number(v.total ?? 0),
+      };
+    })
+    .filter((v): v is ConceptoVentaInsert => v !== null);
+}
+
 export async function convertirCotizacionAEmbarques(
   cotizacion: CotizacionRow,
 ): Promise<Tables<"embarques">[]> {
@@ -65,30 +142,10 @@ export async function convertirCotizacionAEmbarques(
     .single();
   if (errorEmb) throw errorEmb;
 
-  // 3) Crear los N contenedores hijos repartiendo peso/volumen/piezas equitativamente.
-  // (El operador puede ajustar números, BL House y dimensiones después en el detalle.)
-  const pesoPorContenedor = pesoTotal / numContenedores;
-  const volumenPorContenedor = volumenTotal / numContenedores;
-  const piezasBase = Math.floor(piezasTotal / numContenedores);
-  let piezasRestantes = piezasTotal;
-
-  const hijosPayload: ContenedorInsert[] = [];
-  for (let i = 0; i < numContenedores; i++) {
-    const esUltimo = i === numContenedores - 1;
-    const piezasEste = esUltimo ? piezasRestantes : piezasBase;
-    piezasRestantes -= piezasEste;
-    hijosPayload.push({
-      embarque_id: embarque.id,
-      numero_contenedor: "",
-      tipo_contenedor: cotizacion.tipo_contenedor ?? "",
-      bl_house: "",
-      peso_kg: pesoPorContenedor,
-      volumen_m3: volumenPorContenedor,
-      piezas: piezasEste,
-      orden: i + 1,
-    });
-  }
-
+  // 3) Crear los N contenedores hijos.
+  const hijosPayload = construirHijosPayload(
+    embarque.id, cotizacion, numContenedores, pesoTotal, volumenTotal, piezasTotal,
+  );
   const { data: hijosCreados, error: errorHijos } = await supabase
     .from("embarque_contenedores")
     .insert(hijosPayload)
@@ -96,50 +153,19 @@ export async function convertirCotizacionAEmbarques(
     .order("orden");
   if (errorHijos) throw errorHijos;
 
-  // 4) Insertar costos: "BL" una sola vez (general), "Contenedor"/otros una vez por hijo
-  //    con `contenedor_id` asignado para trazabilidad.
+  // 4) Insertar costos (BL una vez, contenedor por hijo).
   if (costos && costos.length > 0 && hijosCreados && hijosCreados.length > 0) {
-    const rows: ConceptoCostoInsert[] = [];
-    for (const costo of costos) {
-      const um = costo.unidad_medida ?? "Contenedor";
-      const base = mapCostosACostosEmbarque([costo], embarque.id)[0];
-      if (um === "BL") {
-        rows.push(fromDb<ConceptoCostoInsert>({ ...base, contenedor_id: null }));
-      } else {
-        for (const hijo of hijosCreados) {
-          rows.push(fromDb<ConceptoCostoInsert>({ ...base, contenedor_id: hijo.id }));
-        }
-      }
-    }
+    const rows = construirCostosRows(costos, embarque.id, hijosCreados);
     if (rows.length > 0) {
       const { error: errorConceptos } = await supabase.from("conceptos_costo").insert(rows);
       if (errorConceptos) throw errorConceptos;
     }
   }
 
-  // 5) Insertar conceptos_venta desde el jsonb de la cotización (v12.13.1 hardening:
-  //    previene embarques sin ventas como ocurrió con ELIMP00231 antes del fix).
+  // 5) Insertar conceptos_venta desde el jsonb de la cotización (v12.13.1 hardening).
   const ventasJsonb = Array.isArray(cotizacion.conceptos_venta) ? cotizacion.conceptos_venta : [];
   if (ventasJsonb.length > 0) {
-    const ventasRows: ConceptoVentaInsert[] = ventasJsonb
-      .map((raw): ConceptoVentaInsert | null => {
-        // Type guard sin doble cast: `raw` viene del JSON de la cotización (tipo Json
-        // recursivo). Sólo trabajamos con objetos planos no-array; el resto se descarta.
-        if (!raw || typeof raw !== "object" || Array.isArray(raw)) return null;
-        const v = fromDb<Record<string, unknown>>(raw);
-        const descripcion = String(v.descripcion ?? "").trim();
-        if (!descripcion) return null;
-        return {
-          embarque_id: embarque.id,
-          descripcion,
-          cantidad: Number(v.cantidad ?? 1),
-          precio_unitario: Number(v.precio_unitario ?? 0),
-          moneda: (v.moneda === "USD" ? "USD" : "MXN") as Moneda,
-          aplica_iva: Boolean(v.aplica_iva ?? false),
-          total: Number(v.total ?? 0),
-        };
-      })
-      .filter((v): v is ConceptoVentaInsert => v !== null);
+    const ventasRows = parsearVentasJsonb(ventasJsonb, embarque.id);
     if (ventasRows.length > 0) {
       const { error: errorVentas } = await supabase.from("conceptos_venta").insert(ventasRows);
       if (errorVentas) throw errorVentas;
