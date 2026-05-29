@@ -25,7 +25,7 @@ export interface ContenedorBorrador {
   orden: number;
 }
 
-export const contenedorBorradorSchema = z.object({
+const contenedorBorradorSchema = z.object({
   id: z.string().uuid().optional(),
   numero_contenedor: z
     .string()

@@ -95,13 +95,6 @@ export async function posponerActividad(input: {
   if (error) throw error;
 }
 
-export async function eliminarActividad(id: string, userId: string | null): Promise<void> {
-  const { error } = await supabase
-    .from("crm_actividades")
-    .update({ deleted_at: new Date().toISOString(), deleted_by: userId })
-    .eq("id", id);
-  if (error) throw error;
-}
 
 export async function actualizarActividadNotas(input: { id: string; resultado: string }): Promise<void> {
   const { error } = await supabase
