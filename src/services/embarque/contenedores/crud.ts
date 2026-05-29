@@ -21,29 +21,6 @@ export async function listarPorEmbarque(
   return data ?? [];
 }
 
-export async function crear(
-  embarqueId: string,
-  borrador: ContenedorBorrador,
-): Promise<EmbarqueContenedor> {
-  const insert: EmbarqueContenedorInsert = {
-    embarque_id: embarqueId,
-    numero_contenedor: borrador.numero_contenedor,
-    tipo_contenedor: borrador.tipo_contenedor,
-    bl_house: borrador.bl_house,
-    peso_kg: borrador.peso_kg,
-    volumen_m3: borrador.volumen_m3,
-    piezas: borrador.piezas,
-    orden: borrador.orden,
-  };
-  const { data, error } = await supabase
-    .from("embarque_contenedores")
-    .insert(insert)
-    .select()
-    .single();
-  if (error) throw error;
-  return data;
-}
-
 export async function crearMuchos(
   embarqueId: string,
   borradores: ContenedorBorrador[],
@@ -65,37 +42,6 @@ export async function crearMuchos(
     .select();
   if (error) throw error;
   return data ?? [];
-}
-
-export async function actualizar(
-  id: string,
-  cambios: Partial<ContenedorBorrador>,
-): Promise<EmbarqueContenedor> {
-  const { data, error } = await supabase
-    .from("embarque_contenedores")
-    .update({
-      numero_contenedor: cambios.numero_contenedor,
-      tipo_contenedor: cambios.tipo_contenedor,
-      bl_house: cambios.bl_house,
-      peso_kg: cambios.peso_kg,
-      volumen_m3: cambios.volumen_m3,
-      piezas: cambios.piezas,
-      orden: cambios.orden,
-    })
-    .eq("id", id)
-    .select()
-    .single();
-  if (error) throw error;
-  return data;
-}
-
-export async function eliminar(id: string): Promise<void> {
-  // Soft-delete (la policy restrictiva esconde deleted_at NOT NULL).
-  const { error } = await supabase
-    .from("embarque_contenedores")
-    .update({ deleted_at: new Date().toISOString() })
-    .eq("id", id);
-  if (error) throw error;
 }
 
 /**

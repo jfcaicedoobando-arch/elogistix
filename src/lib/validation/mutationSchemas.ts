@@ -147,4 +147,4 @@ export const notaSchema = z.object({
   usuario: nonEmpty("Usuario", 254),
 });
 
-export type NotaInput = z.infer<typeof notaSchema>;
+

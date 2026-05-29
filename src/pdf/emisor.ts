@@ -24,10 +24,6 @@ function toStr(v: unknown): string {
   return String(v);
 }
 
-/** Invalida la caché en memoria. Útil cuando el usuario edita `/configuracion`. */
-export function invalidarEmisorCache(): void {
-  cache = null;
-}
 
 export async function cargarEmisorEmpresa(): Promise<EmisorInfo> {
   const now = Date.now();

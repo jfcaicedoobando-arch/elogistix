@@ -14,7 +14,6 @@ import {
   getOportunidad,
   crearOportunidad,
   actualizarOportunidad,
-  moverEtapaOportunidad,
   eliminarOportunidad,
   type CrmOportunidadRow,
   type OportunidadInput as ServiceOportunidadInput,
@@ -70,14 +69,6 @@ export function useActualizarOportunidad() {
       qc.invalidateQueries({ queryKey: queryKeys.crm.oportunidades.detail(vars.id) });
       qc.invalidateQueries({ queryKey: queryKeys.crm.kpis });
     },
-  });
-}
-
-export function useMoverEtapa() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: moverEtapaOportunidad,
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.crm.oportunidades.all }),
   });
 }
 

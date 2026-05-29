@@ -12,8 +12,6 @@ import type { Tables } from "@/integrations/supabase/types";
 
 export type FacturaRow = Tables<"facturas">;
 
-export { fetchFacturaSnapshot, fetchProformaSnapshot } from "./snapshots";
-export type { FacturaSnapshot, ProformaSnapshot } from "./snapshots";
 export {
   fetchLayoutContableData,
   fetchEstadoCuentaFacturas,

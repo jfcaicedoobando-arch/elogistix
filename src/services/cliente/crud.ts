@@ -8,9 +8,6 @@ import {
 
 export type Cliente = Tables<"clientes">;
 
-/** Columnas necesarias para la tabla de clientes y reportes */
-export const CLIENTE_LIST_COLUMNS =
-  "id, nombre, rfc, ciudad, estado, contacto, telefono" as const;
 
 export const CLIENTE_DETAIL_COLUMNS =
   "id, nombre, rfc, direccion, ciudad, estado, cp, contacto, telefono, email, organization_id, created_at, updated_at" as const;

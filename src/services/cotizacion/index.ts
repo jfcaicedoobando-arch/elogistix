@@ -14,9 +14,7 @@ export {
   fetchCotizacionesAceptadas,
   fetchCotizacionById,
   fetchEmbarquesVinculados,
-  fetchCotizacionesListado,
 } from "./queries";
-export type { CotizacionListadoItem, FetchCotizacionesListadoParams } from "./queries";
 
 // Mutations (escrituras)
 export {
@@ -34,9 +32,8 @@ export {
 } from "./costos";
 export type { CotizacionCostoLookup } from "./costos";
 
-// Conversiones (duplicar / prospecto→cliente / cotización→embarques / portal)
+// Conversiones (prospecto→cliente / cotización→embarques / portal)
 export {
-  duplicarCotizacion,
   convertirProspectoACliente,
   convertirCotizacionAEmbarques,
   portalResponderCotizacion,

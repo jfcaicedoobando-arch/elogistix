@@ -6,7 +6,7 @@ export * from './useComentariosOportunidad';
 export * from './useCrearCotizacionDesdeOportunidad';
 export * from './useCrmDashboard';
 export * from './useCrmHotkeys';
-export * from './useCrmNotificaciones';
+
 export * from './useCrmProspectoSearch';
 export * from './useEtapasPipeline';
 export * from './useForecastReportes';
