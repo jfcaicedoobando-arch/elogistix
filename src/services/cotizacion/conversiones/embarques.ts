@@ -19,19 +19,19 @@ type ConceptoCostoInsert = TablesInsert<"conceptos_costo">;
 type ConceptoVentaInsert = TablesInsert<"conceptos_venta">;
 type Moneda = ConceptoVentaInsert["moneda"];
 
+interface TotalesCarga { pesoTotal: number; volumenTotal: number; piezasTotal: number }
+
 /** Construye los N contenedores hijos repartiendo peso/volumen/piezas. */
 function construirHijosPayload(
   embarqueId: string,
   cotizacion: CotizacionRow,
   numContenedores: number,
-  pesoTotal: number,
-  volumenTotal: number,
-  piezasTotal: number,
+  totales: TotalesCarga,
 ): ContenedorInsert[] {
-  const pesoPorContenedor = pesoTotal / numContenedores;
-  const volumenPorContenedor = volumenTotal / numContenedores;
-  const piezasBase = Math.floor(piezasTotal / numContenedores);
-  let piezasRestantes = piezasTotal;
+  const pesoPorContenedor = totales.pesoTotal / numContenedores;
+  const volumenPorContenedor = totales.volumenTotal / numContenedores;
+  const piezasBase = Math.floor(totales.piezasTotal / numContenedores);
+  let piezasRestantes = totales.piezasTotal;
   const out: ContenedorInsert[] = [];
   for (let i = 0; i < numContenedores; i++) {
     const esUltimo = i === numContenedores - 1;
@@ -49,6 +49,31 @@ function construirHijosPayload(
     });
   }
   return out;
+}
+
+/** Inserta costos en lotes (BL una vez, por contenedor para el resto). */
+async function insertarCostosEmbarque(
+  costos: Tables<"cotizacion_costos">[] | null,
+  embarqueId: string,
+  hijos: Tables<"embarque_contenedores">[] | null,
+): Promise<void> {
+  if (!costos || costos.length === 0 || !hijos || hijos.length === 0) return;
+  const rows = construirCostosRows(costos, embarqueId, hijos);
+  if (rows.length === 0) return;
+  const { error } = await supabase.from("conceptos_costo").insert(rows);
+  if (error) throw error;
+}
+
+/** Inserta conceptos_venta parseando el jsonb de la cotización. */
+async function insertarVentasEmbarque(
+  ventasJsonb: unknown[],
+  embarqueId: string,
+): Promise<void> {
+  if (ventasJsonb.length === 0) return;
+  const ventasRows = parsearVentasJsonb(ventasJsonb, embarqueId);
+  if (ventasRows.length === 0) return;
+  const { error } = await supabase.from("conceptos_venta").insert(ventasRows);
+  if (error) throw error;
 }
 
 /** Construye filas `conceptos_costo` para BL (general) o Contenedor (por hijo). */
