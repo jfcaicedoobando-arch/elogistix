@@ -88,22 +88,6 @@ export const contentStyles = {
   cellNum: { width: 65, textAlign: "right" as const },
   cellNumWide: { width: 80, textAlign: "right" as const },
   cellQty: { width: 38, textAlign: "right" as const },
-  // Totales (legacy)
-  totalBox: {
-    marginTop: 14,
-    padding: 10,
-    borderWidth: 1,
-    borderColor: COLORS.primary,
-    borderRadius: 4,
-  },
-  totalLine: {
-    fontSize: 11,
-    fontFamily: FONTS.bold,
-    color: COLORS.primary,
-    marginVertical: 2,
-    textAlign: "right" as const,
-  },
-  totalNote: { fontSize: 8, color: COLORS.mutedLight, marginTop: 6, textAlign: "right" as const },
   subtotalBlock: { marginTop: 6, alignItems: "flex-end" as const },
   subtotalLine: { fontSize: 10, marginVertical: 1, color: COLORS.muted },
   subtotalEmphasis: {
@@ -141,18 +125,6 @@ export const contentStyles = {
     borderRadius: 4,
     borderLeftWidth: 3,
     borderLeftColor: COLORS.primary,
-  },
-  // Aviso pie legacy
-  warningBox: {
-    marginTop: 18,
-    padding: 8,
-    backgroundColor: COLORS.warningBg,
-    borderRadius: 3,
-    color: COLORS.warningFg,
-    fontFamily: FONTS.bold,
-    fontSize: 9,
-    textAlign: "center" as const,
-    letterSpacing: 0.4,
   },
   // Chip "Contenedor"
   containerBlock: {

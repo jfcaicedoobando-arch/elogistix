@@ -5,6 +5,7 @@ import { getErrorMessage } from "@/lib/errors";
 import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 import { useAdminGlobalUsers, type GlobalUserRow } from "@/hooks/admin/useAdminData";
 import { useDeleteUserAuth as useDeleteUser } from "@/hooks/usuario";
+import { uniqueSorted } from "@/lib/utils/uniqueSorted";
 
 export function useAdminUsuariosController() {
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -16,14 +17,8 @@ export function useAdminUsuariosController() {
   const { data: users = [], isLoading, refetch } = useAdminGlobalUsers();
   const deleteUser = useDeleteUser();
 
-  const orgs = useMemo(
-    () => Array.from(new Set(users.map((u) => u.org_nombre))).sort(),
-    [users],
-  );
-  const roles = useMemo(
-    () => Array.from(new Set(users.map((u) => u.role))).sort(),
-    [users],
-  );
+  const orgs = useMemo(() => uniqueSorted(users, (u) => u.org_nombre), [users]);
+  const roles = useMemo(() => uniqueSorted(users, (u) => u.role), [users]);
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();

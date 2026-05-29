@@ -3,6 +3,7 @@ import { useMemo, useState } from "react";
 import { useToast } from "@/hooks/shared";
 import { notifyError, notifySuccess } from "@/lib/ui/appFeedback";
 import { useAdminOrganizations, useCreateOrganization } from "@/hooks/admin/useAdminData";
+import { uniqueSorted } from "@/lib/utils/uniqueSorted";
 
 export function useAdminOrganizacionesController() {
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -16,10 +17,7 @@ export function useAdminOrganizacionesController() {
   const { data: orgs = [], isLoading } = useAdminOrganizations();
   const createOrg = useCreateOrganization();
 
-  const planes = useMemo(
-    () => Array.from(new Set(orgs.map((o) => o.plan).filter(Boolean))).sort(),
-    [orgs],
-  );
+  const planes = useMemo(() => uniqueSorted(orgs, (o) => o.plan), [orgs]);
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
