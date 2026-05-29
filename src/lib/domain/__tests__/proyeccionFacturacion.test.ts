@@ -157,16 +157,17 @@ describe("rangoMes", () => {
 });
 
 describe("generarMesesDisponibles", () => {
-  it("arranca en abril 2026 y se extiende ~12 meses adelante", () => {
+  it("genera ventana relativa: 24 meses atrás y 12 adelante respecto a hoy", () => {
     const meses = generarMesesDisponibles(new Date(2026, 5, 15));
-    expect(meses[0].key).toBe("2026-04");
-    expect(meses.length).toBeGreaterThanOrEqual(12);
+    expect(meses[0].key).toBe("2024-06");
+    expect(meses[meses.length - 1].key).toBe("2027-06");
+    expect(meses.length).toBe(37);
   });
 });
 
 describe("mesActualKey", () => {
-  it("nunca regresa antes de abril 2026", () => {
-    expect(mesActualKey(new Date(2025, 0, 1))).toBe("2026-04");
+  it("devuelve la fecha indicada en formato YYYY-MM", () => {
+    expect(mesActualKey(new Date(2025, 0, 1))).toBe("2025-01");
   });
   it("respeta la fecha cuando es posterior", () => {
     expect(mesActualKey(new Date(2026, 6, 10))).toBe("2026-07");
