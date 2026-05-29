@@ -25,8 +25,8 @@ interface Props {
 }
 
 const margenBadge = (m: number) => {
-  if (m >= 20) return <Badge variant="success">{m.toFixed(1)}%</Badge>;
-  if (m >= 10) return <Badge variant="warning">{m.toFixed(1)}%</Badge>;
+  if (m >= MARGIN_THRESHOLDS.GOOD) return <Badge variant="success">{m.toFixed(1)}%</Badge>;
+  if (m >= MARGIN_THRESHOLDS.WARN) return <Badge variant="warning">{m.toFixed(1)}%</Badge>;
   return <Badge variant="destructive">{m.toFixed(1)}%</Badge>;
 };
 

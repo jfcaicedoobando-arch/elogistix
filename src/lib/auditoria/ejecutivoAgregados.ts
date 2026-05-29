@@ -8,6 +8,7 @@ import type {
   ReglaAuditoria,
   SeveridadAuditoria,
 } from "@/types/auditoria";
+import { SCORE_THRESHOLDS } from "@/constants/auditoria";
 
 export interface OperadorRanking {
   email: string;
