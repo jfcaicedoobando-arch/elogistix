@@ -5,6 +5,7 @@ import { useActividadesVencidasCount } from "@/hooks/crm/useCrmDashboard";
 import {
   SIDEBAR_DASHBOARD_ITEMS,
   SIDEBAR_GESTION_ITEMS,
+  SIDEBAR_PROFIT_ITEMS,
   SIDEBAR_REPORTES_ITEMS,
   SIDEBAR_CRM_ITEMS,
   SIDEBAR_DIRECTORIO_ITEMS,
@@ -46,6 +47,7 @@ export function useAppSidebarSections(): SidebarSection[] {
   const sections: SidebarSection[] = [
     { label: "Dashboards", items: SIDEBAR_DASHBOARD_ITEMS },
     { label: "Gestión", items: SIDEBAR_GESTION_ITEMS },
+    { label: "Profit", items: SIDEBAR_PROFIT_ITEMS },
     { label: "CRM", items: crmItems },
     { label: "Reportes", items: SIDEBAR_REPORTES_ITEMS },
     { label: "Directorio", items: SIDEBAR_DIRECTORIO_ITEMS },
