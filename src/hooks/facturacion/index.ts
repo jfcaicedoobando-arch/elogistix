@@ -1,4 +1,5 @@
 // Auto-generated barrel for hooks/facturacion
+export * from './useFacturacionDateRange';
 export * from './useFacturacionPageController';
 export * from './useFacturas';
 export * from './useHuecoFacturacion';
