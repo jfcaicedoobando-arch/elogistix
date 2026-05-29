@@ -1,56 +1,63 @@
-# Limpieza completa de calidad de código
+# Plan: Cerrar los 30 warnings de Knip
 
-Objetivo: dejar el repo en verde para `lint`, `lint:unused` y `test` sin tocar comportamiento de producción.
+Objetivo: dejar `bun run lint:unused` en cero, sin tocar lógica de negocio ni romper tests.
 
-## 1. Archivos huérfanos (knip)
-Eliminar:
-- `src/hooks/crm/leads/convertirHelpers.ts` (solo re-exporta `@/services/crm/leads`; sin consumidores).
-- `src/hooks/crm/leads/leadPayload.ts` (solo re-exporta `@/lib/crm/leads/leadPayload`; sin consumidores).
-- `src/pdf/components/ResumenBox.tsx` (no se importa en ningún documento PDF actual).
+## 1. Clasificación de los 30 hallazgos
 
-Verificar con `rg` antes de borrar que no haya import vivo.
+Knip reporta **22 exports** + **8 types** repartidos en 19 archivos. Los agrupo por acción:
 
-## 2. Dependencia sin uso
-- Quitar `@radix-ui/react-toast` de `package.json` (knip lo marca; el proyecto usa `sonner`).
+### A. Borrar (export realmente muerto, sin consumidores ni intención de API pública)
 
-## 3. Exports / tipos sin uso (20 + 10 + 1 duplicado)
-- Ejecutar `bunx knip --reporter json` para obtener la lista exacta.
-- Para cada símbolo:
-  - Si es export interno de un barrel y nadie lo consume → eliminar el `export` (o el símbolo entero si era solo para el barrel).
-  - Si es un tipo público de un dominio pero sin consumidores → eliminar.
-  - Duplicado: dejar una sola fuente y borrar el re-export redundante.
-- No tocar `src/components/ui/**`, `src/integrations/supabase/**`, ni catálogos (`src/data/**`) — ya están en el `ignore` de knip.
 
-## 4. Errores de lint (`no-restricted-imports`, 21 errores)
-Reemplazar imports de archivos internos por el barrel de dominio en:
-- `src/contexts/auth/useAuthSession.ts`
-- `src/contexts/auth/useLoginAudit.ts`
-- `src/pages/crm/CrmLayout.tsx`
-- `src/pages/facturacion/Facturacion.tsx`
+| Archivo                                            | Símbolo                                                                                                                        |
+| -------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
+| `src/services/embarque/mutations.ts`               | `insertarNotaCambioEstado`                                                                                                     |
+| `src/services/facturas/snapshots.ts`               | `fetchFacturaSnapshot`, `fetchProformaSnapshot`                                                                                |
+| `src/services/reportes/index.ts`                   | `fetchProfitPorCliente`                                                                                                        |
+| `src/services/cliente/crud.ts`                     | `CLIENTE_LIST_COLUMNS`                                                                                                         |
+| `src/pdf/emisor.ts`                                | `invalidarEmisorCache`                                                                                                         |
+| `src/components/crm/crmDashboard/DealsCards.tsx`   | `TopDealsCard` (sub-export no montado)                                                                                         |
+| `src/services/cotizacion/queries.ts`               | `fetchCotizacionesListado`                                                                                                     |
+| `src/pdf/documents/cotizacionSections.tsx`         | `HeaderCotizacion`                                                                                                             |
+| `src/hooks/crm/useActividades.ts`                  | `ENTIDAD_TIPOS`, `useEliminarActividad`                                                                                        |
+| `src/hooks/crm/useCrmNotificaciones.ts`            | `useCrmNotificaciones`, `useCrmNotificacionesNoLeidasCount`, `useMarcarNotificacionesLeidas` (archivo completo si queda vacío) |
+| `src/hooks/crm/useOportunidades.ts`                | `useMoverEtapa`                                                                                                                |
+| `src/services/cotizacion/conversiones/duplicar.ts` | `duplicarCotizacion` (eliminar archivo si queda vacío)                                                                         |
+| `src/types/embarque/contenedor.ts`                 | `contenedorBorradorLclSchema`, type `EmbarqueContenedorUpdate`                                                                 |
+| `src/hooks/configuracion/configSchemas.ts`         | types `SeguridadConfig`, `PlataformaConfig`                                                                                    |
+| `src/lib/parsers/dashboardSchemas.ts`              | types `ArribosEsteMesParsed`, `ResumenMesSiguienteParsed`, `CargaPorClienteParsed`                                             |
+| `src/lib/validation/mutationSchemas.ts`            | type `NotaInput`                                                                                                               |
+| `src/services/crm/actividades.ts`                  | type `ActividadesVencidasParams`                                                                                               |
+| `src/hooks/embarque/useEmbarquesFilters.ts`        | type `SortDir`                                                                                                                 |
+| `src/components/shared/dataTable/types.ts`         | type `_ReactKept` (marcador obsoleto)                                                                                          |
 
-Patrón: `@/hooks/<dominio>/archivo` → `@/hooks/<dominio>`; idem `@/services/...`.
 
-## 5. Warnings de lint
-- `exhaustive-deps` en controllers de facturación: agregar deps faltantes o memoizar con `useCallback` si la dep es estable.
-- Complejidad >16 en 5 funciones (`errorDetailsExtract`, `convertirCotizacionAEmbarques`, `marcarProformaFacturada`, edge `invite-client-user`, helper de cotización):
-  - Extraer ramas a helpers privados en el mismo archivo. Sin cambio de comportamiento, solo partición.
-- Mantener Power of 10 (≤200 líneas por archivo nuevo, sin `any`).
+Para cada uno: verificar 0 referencias con `rg` antes de borrar, eliminar export + definición, y si el archivo queda vacío, borrarlo y limpiar barriles que lo re-exporten.
 
-## 6. Verificación final (en este orden)
-1. `bun run lint` → 0 errores, 0 warnings.
-2. `bun run lint:unused` → limpio.
-3. `bun run audit:tests` → 0 violaciones.
-4. `bunx vitest run` → 781/781 verde.
+### B. CRUD que sí pertenece a una API pública
 
-## 7. Versionado y changelog
-- `src/constants/appVersion.ts`: bump a `12.16.2`.
-- `CHANGELOG.md`: entrada `## [12.16.2] - 2026-05-29` con bullets:
-  - Eliminados 3 archivos huérfanos y dependencia `@radix-ui/react-toast` sin uso.
-  - Saneados 21 errores de `no-restricted-imports` (uso de barrels de dominio).
-  - Reducida complejidad >16 en 5 funciones vía extracción de helpers.
-  - Corregidos warnings de `exhaustive-deps` en controllers de facturación.
+`src/services/embarque/contenedores/crud.ts` expone `crear`, `actualizar`, `eliminar`. Estos son métodos de un módulo CRUD consumido vía namespace (`contenedores.crear(...)`). Verificar uso real con `rg "contenedores\\.(crear|actualizar|eliminar)"` y por import directo. Si no hay consumidores, borrar. Si hay consumo por namespace que Knip no detecta, anotar en `knip.json` bajo `ignoreExportsUsedInFile` o `ignore` para ese archivo.
+
+## 2. Verificación post-cambio
+
+```bash
+bun run lint:unused   # esperado: 0 issues
+bun run lint          # 0 errores, 0 warnings
+bunx vitest run       # 781/781
+bun run audit:tests   # 0 violaciones (Power of 10)
+```
+
+## 3. Versionado y changelog
+
+- `src/constants/appVersion.ts` → `12.16.3`
+- `CHANGELOG.md` → `## [12.16.3] - 2026-05-29` con bullet:
+  - "Limpieza de 30 exports/tipos sin consumidores reportados por Knip; eliminados archivos huérfanos resultantes."
 
 ## Notas técnicas
-- Refactors estructurales únicamente; cero cambio de lógica de negocio.
-- Si una extracción para bajar complejidad amenaza con cambiar el contrato público de un hook/servicio, se deja documentado y se omite (preferimos no romper la API).
-- Si knip reporta un export que sí es parte de la API pública del barrel pero nadie consume todavía (p. ej. hook nuevo en CRM), se anota en `knip.json` como esperado en lugar de borrar.
+
+- Cero cambios de comportamiento: solo se eliminan símbolos sin lectores.
+- Antes de cada borrado se corre `rg -n "nombreSimbolo"` para confirmar 0 referencias (excluyendo el archivo origen).
+- Si un símbolo se descubre referenciado dinámicamente (string, namespace import), se mantiene y se añade a `knip.json` con razón documentada.
+- Barriles afectados a revisar tras borrar: `src/hooks/crm/index.ts`, `src/services/embarque/index.ts`, `src/services/facturas/index.ts`, `src/services/cotizacion/index.ts`, `src/services/cliente/index.ts`, `src/types/embarque/index.ts`.
+
+Si hacer esto es más rápido con subagents, úsalos. 
