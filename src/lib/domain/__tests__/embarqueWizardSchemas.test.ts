@@ -46,6 +46,7 @@ describe("validateStepRuta", () => {
       tipoServicio: "FCL",
       contenedor: "ABCD1234567",
       tipoContenedor: "40HC",
+      contenedores: [{ numero_contenedor: "ABCD1234567", tipo_contenedor: "40HC" }],
     });
     expect(errors).toEqual({});
   });
