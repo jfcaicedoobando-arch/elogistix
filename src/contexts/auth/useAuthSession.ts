@@ -3,7 +3,7 @@ import type { Session, User } from "@supabase/supabase-js";
 import {
   subscribeToAuthChanges,
   getCurrentSession,
-} from "@/services/auth/session";
+} from "@/services/auth";
 
 /**
  * Maneja exclusivamente la sesión Supabase: usuario, token y listener de

@@ -131,6 +131,25 @@ export function extractErrorDetails(err: unknown): Details {
   return base;
 }
 
+/** Mapea códigos PostgREST/Postgres → AppErrorCode. */
+function fromPostgrestCode(code: string, status: number | undefined): AppErrorCode {
+  if (code === "42501" || status === 403) return ERROR_CODES.FORBIDDEN;
+  if (status === 401) return ERROR_CODES.UNAUTHORIZED;
+  if (code === "23505") return ERROR_CODES.CONFLICT;
+  return ERROR_CODES.DB_ERROR;
+}
+
+/** Mapea status HTTP → AppErrorCode. */
+function fromHttpStatus(status: number): AppErrorCode | null {
+  if (status === 401) return ERROR_CODES.UNAUTHORIZED;
+  if (status === 403) return ERROR_CODES.FORBIDDEN;
+  if (status === 404) return ERROR_CODES.NOT_FOUND;
+  if (status === 409) return ERROR_CODES.CONFLICT;
+  if (status >= 500) return ERROR_CODES.SERVER_ERROR;
+  if (status >= 400) return ERROR_CODES.CLIENT_ERROR;
+  return null;
+}
+
 /** Deriva un `errorCode` estable a partir de la forma del error. */
 export function deriveErrorCode(err: unknown): AppErrorCode {
   if (err == null) return ERROR_CODES.UNKNOWN;
@@ -140,20 +159,12 @@ export function deriveErrorCode(err: unknown): AppErrorCode {
   const code = e.code;
   const status = typeof e.status === "number" ? e.status : undefined;
 
-  // PostgrestError: code es string tipo "42501", "23505", "PGRST116"…
   if (typeof code === "string" && /^(PGRST|[0-9]{5})/.test(code)) {
-    if (code === "42501" || status === 403) return ERROR_CODES.FORBIDDEN;
-    if (status === 401) return ERROR_CODES.UNAUTHORIZED;
-    if (code === "23505") return ERROR_CODES.CONFLICT;
-    return ERROR_CODES.DB_ERROR;
+    return fromPostgrestCode(code, status);
   }
   if (typeof status === "number") {
-    if (status === 401) return ERROR_CODES.UNAUTHORIZED;
-    if (status === 403) return ERROR_CODES.FORBIDDEN;
-    if (status === 404) return ERROR_CODES.NOT_FOUND;
-    if (status === 409) return ERROR_CODES.CONFLICT;
-    if (status >= 500) return ERROR_CODES.SERVER_ERROR;
-    if (status >= 400) return ERROR_CODES.CLIENT_ERROR;
+    const mapped = fromHttpStatus(status);
+    if (mapped) return mapped;
   }
   if (err instanceof TypeError && /fetch|network/i.test(err.message)) {
     return ERROR_CODES.NETWORK_ERROR;

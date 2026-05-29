@@ -5,4 +5,5 @@ export * from "./mutations";
 export * from "./eventos";
 export * from "./documentos";
 export * from "./contenedor";
+export * from "./contenedores";
 export * from "./jsoncargo";

@@ -121,7 +121,9 @@ export const cotizacionDraftInputSchema = cotizacionBaseSchema.extend({
   conceptos_venta: z.array(conceptoVentaSchema),
 }).passthrough();
 
-export const cotizacionInputSchema = cotizacionDraftInputSchema;
+// Alias por compatibilidad: el "input" completo coincide hoy con el draft.
+// (knip detecta duplicado si se vuelve a `export const`, por eso lo re-exportamos como alias.)
+export { cotizacionDraftInputSchema as cotizacionInputSchema };
 
 // ── Embarque ──────────────────────────────────────────────────────────
 

@@ -11,7 +11,7 @@ import {
   parseConfigSafe,
   plataformaConfigSchema,
   seguridadConfigSchema,
-} from "@/hooks/configuracion/configSchemas";
+} from "@/hooks/configuracion";
 
 export default function TabSeguridadGlobal() {
   const config = useConfigGlobalCategoria("seguridad");

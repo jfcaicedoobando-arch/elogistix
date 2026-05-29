@@ -10,7 +10,7 @@ import { Label } from "@/components/ui/label";
 import { WizardSection } from "@/components/shared/WizardSection";
 import { FormField } from "@/components/shared/FormField";
 import { ProspectoSection } from "./seccionDestinatario/ProspectoSection";
-import type { ProspectoMatch } from "@/hooks/crm/useCrmProspectoSearch";
+import type { ProspectoMatch } from "@/hooks/crm";
 import type { CotizacionFormValues } from "@/hooks/cotizacion";
 
 interface ClienteOption {

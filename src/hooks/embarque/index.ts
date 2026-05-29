@@ -1,5 +1,7 @@
 // Auto-generated barrel for hooks/embarque
 export * from './mutations';
+export * from './useContenedoresEmbarque';
+export * from './useContenedoresInfoMap';
 export * from './useCotizacionHydration';
 export * from './useDescargarProformaPdf';
 export * from './useDialogBolContainers';

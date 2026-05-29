@@ -17,7 +17,8 @@ import { ERROR_CODES } from "@/lib/domain/errorCatalog";
 export function useFacturacionPageController(opts?: {
   isInRange?: (fecha: string | null | undefined) => boolean;
 }) {
-  const isInRange = opts?.isInRange ?? (() => true);
+  const optsIsInRange = opts?.isInRange;
+  const isInRange = useMemo(() => optsIsInRange ?? (() => true), [optsIsInRange]);
   const {
     search, filters, page, pageSize,
     setSearch, setFilter, setPage, setPageSize, paginate,

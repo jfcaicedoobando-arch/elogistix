@@ -30,7 +30,6 @@ function verifyHtmlBundlePlugin(): Plugin {
           "[verify-html-bundle] dist/index.html no contiene <div id=root> o <script src=/assets/*.js>. Publicación abortada para evitar pantalla en blanco.",
         );
       }
-      // eslint-disable-next-line no-console
       console.log("[verify-html-bundle] OK — index.html contiene bundle JS.");
     },
   };

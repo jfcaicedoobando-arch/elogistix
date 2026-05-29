@@ -3,7 +3,7 @@ import { MailQuestion } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { formatCurrencyCompact } from "@/lib/formatters";
-import type { CotizacionSinRespuestaRow } from "@/hooks/crm/useCotizacionesSinRespuesta";
+import type { CotizacionSinRespuestaRow } from "@/hooks/crm";
 
 export function CotizacionesSinRespuestaCard({ items }: { items: CotizacionSinRespuestaRow[] }) {
   return (

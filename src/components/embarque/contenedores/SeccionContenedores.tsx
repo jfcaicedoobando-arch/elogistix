@@ -13,8 +13,8 @@ import { getErrorMessage } from "@/lib/errors";
 import {
   useContenedoresEmbarque,
   CONTENEDORES_QUERY_KEY,
-} from "@/hooks/embarque/useContenedoresEmbarque";
-import { reemplazarTodos } from "@/services/embarque/contenedores";
+} from "@/hooks/embarque";
+import { reemplazarTodos } from "@/services/embarque";
 import {
   rowAContenedorBorrador,
   type ContenedorBorrador,
