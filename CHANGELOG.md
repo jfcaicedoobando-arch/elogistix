@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [12.16.1] - 2026-05-29
+- **test**: Sincronización de 4 tests desactualizados con el comportamiento actual del código (sin tocar producción): `useListPageState` ahora usa `DEFAULT_PAGE_SIZE` (100) en vez del literal `20`; el caso "Marítimo válido" de `validateStepRuta` incluye un contenedor mínimo (el schema exige ≥1 contenedor FCL); `generarMesesDisponibles` y `mesActualKey` se reescribieron para reflejar la ventana relativa (-24/+12 meses respecto a `hoy`) en lugar del piso fijo en abril 2026 que ya no aplica. Resultado: 781/781 tests en verde.
+
 ## [12.16.0] - 2026-05-29
 - **refactor(toasts)**: Unificación del sistema de notificaciones a **Sonner**. Se retira el stack shadcn/Radix (`components/ui/toast.tsx`, `components/ui/toaster.tsx`) y se sustituye por `components/ui/sonner.tsx` con theming HSL del design system. `lib/ui/appFeedback.ts` (`notifyError/notifySuccess/notifyWarning`) ahora emite directamente vía sonner conservando el panel copiable "Ver detalles" (`ErrorDetailsDialog`). `hooks/shared/useToast.ts` queda como shim de compatibilidad (~70 call sites siguen funcionando sin tocar). Test de `appFeedback` reescrito con mock de sonner.
 - **chore**: `APP_VERSION` → 12.16.0.
