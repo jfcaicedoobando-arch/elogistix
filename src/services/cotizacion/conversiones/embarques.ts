@@ -1,10 +1,7 @@
 /**
  * Cotizaciones — Conversión: Cotización → 1 embarque con N contenedores hijos.
- *
- * Modelo 1↔N (v12.10): una cotización con `num_contenedores` = N genera UN embarque
- * con N filas en `embarque_contenedores`. Los costos por unidad "Contenedor"
- * se insertan una vez por hijo (con `contenedor_id`); los costos por unidad "BL"
- * se insertan una sola vez como cargo general (sin `contenedor_id`).
+ * Modelo 1↔N (v12.10): cotización con N contenedores genera UN embarque + N hijos.
+ * Costos "Contenedor" se replican por hijo; "BL" se insertan una vez (general).
  */
 import { supabase } from "@/integrations/supabase/client";
 import type { Tables, TablesInsert } from "@/integrations/supabase/types";
@@ -18,8 +15,8 @@ type ContenedorInsert = TablesInsert<"embarque_contenedores">;
 type ConceptoCostoInsert = TablesInsert<"conceptos_costo">;
 type ConceptoVentaInsert = TablesInsert<"conceptos_venta">;
 type Moneda = ConceptoVentaInsert["moneda"];
-
 interface TotalesCarga { pesoTotal: number; volumenTotal: number; piezasTotal: number }
+
 
 /** Construye los N contenedores hijos repartiendo peso/volumen/piezas. */
 function construirHijosPayload(
