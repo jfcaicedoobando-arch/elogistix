@@ -15,7 +15,6 @@ import {
   crearActividad,
   completarActividad,
   posponerActividad,
-  eliminarActividad,
   type CrmActividadTipo,
   type CrmEntidadTipo,
   type CrearActividadInput,
@@ -31,8 +30,6 @@ export const ACTIVIDAD_TIPOS: CrmActividadTipo[] = [
   "tarea",
   "nota",
 ];
-
-export const ENTIDAD_TIPOS: CrmEntidadTipo[] = ["lead", "oportunidad", "cliente", "contacto"];
 
 export interface ActividadFiltros {
   search?: string;
@@ -97,14 +94,5 @@ export function usePosponerActividad() {
       qc.invalidateQueries({ queryKey: queryKeys.crm.actividades.all });
       qc.invalidateQueries({ queryKey: queryKeys.crm.dashboardAll });
     },
-  });
-}
-
-export function useEliminarActividad() {
-  const qc = useQueryClient();
-  const { user } = useAuth();
-  return useMutation({
-    mutationFn: (id: string) => eliminarActividad(id, user?.id ?? null),
-    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.crm.actividades.all }),
   });
 }

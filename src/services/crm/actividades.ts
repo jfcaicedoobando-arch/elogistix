@@ -111,10 +111,6 @@ export async function actualizarActividadNotas(input: { id: string; resultado: s
   if (error) throw error;
 }
 
-export interface ActividadesVencidasParams {
-  userId: string;
-  limit?: number;
-}
 
 export async function countActividadesVencidas(userId: string): Promise<number> {
   const { count, error } = await supabase

@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { Target, AlertTriangle, TrendingUp } from "lucide-react";
+import { Target, AlertTriangle } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { formatCurrencyCompact } from "@/lib/formatters";
 
@@ -76,36 +76,6 @@ export function LeadsSinContactarCard({ items }: { items: LeadItem[] }) {
                 <span className="text-xs text-muted-foreground">
                   {new Date(l.created_at).toLocaleDateString("es-MX")}
                 </span>
-              </li>
-            ))}
-          </ul>
-        )}
-      </CardContent>
-    </Card>
-  );
-}
-
-export function TopDealsCard({ items }: { items: DealItem[] }) {
-  return (
-    <Card className="lg:col-span-2">
-      <CardHeader className="pb-2">
-        <CardTitle className="text-sm flex items-center gap-2">
-          <TrendingUp className="h-4 w-4 text-primary" /> Top 5 deals abiertos
-        </CardTitle>
-      </CardHeader>
-      <CardContent>
-        {items.length === 0 ? <ListEmpty msg="Sin oportunidades abiertas" /> : (
-          <ul className="space-y-1.5">
-            {items.map((o) => (
-              <li key={o.id} className="flex items-center justify-between text-sm py-1 border-b last:border-0">
-                <Link to={`/crm/oportunidades/${o.id}`} className="flex flex-col hover:underline truncate">
-                  <span className="font-medium truncate max-w-[420px]">{o.nombre}</span>
-                  <span className="text-xs text-muted-foreground">{o.cliente_nombre || "Sin cliente"}</span>
-                </Link>
-                <div className="text-right">
-                  <div className="text-xs tabular-nums font-semibold">{formatCurrencyCompact(o.ponderado ?? 0, o.moneda)}</div>
-                  <div className="text-[10px] text-muted-foreground">{formatCurrencyCompact(o.monto_estimado, o.moneda)} · {o.probabilidad}%</div>
-                </div>
               </li>
             ))}
           </ul>

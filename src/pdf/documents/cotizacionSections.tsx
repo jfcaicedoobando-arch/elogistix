@@ -10,22 +10,6 @@ interface Props {
   c: CotizacionRow;
 }
 
-/** Header propio de cotización: folio + cliente + badge de estado + fecha. */
-function HeaderCotizacion({ c }: Props) {
-  const nombre = c.es_prospecto ? `${c.prospecto_empresa} (Prospecto)` : c.cliente_nombre;
-  return (
-    <View style={styles.header}>
-      <View>
-        <Text style={styles.h1}>{c.folio}</Text>
-        <Text style={{ marginTop: 4, fontSize: 11 }}>{nombre}</Text>
-      </View>
-      <View style={styles.meta}>
-        <Text style={styles.badge}>{c.estado}</Text>
-        <Text style={styles.metaLine}>Fecha: {formatDate(c.created_at.substring(0, 10))}</Text>
-      </View>
-    </View>
-  );
-}
 
 /** Sección "Datos del Prospecto" sólo cuando aplica. */
 function SeccionProspecto({ c }: Props) {
@@ -91,7 +75,7 @@ export function SeccionDimensiones({ c }: Props) {
   return null;
 }
 
-export { HeaderCotizacion, SeccionProspecto };
+export { SeccionProspecto };
 
 /** Sección Datos Generales + Mercancía + descripción adicional + dimensiones. */
 export function SeccionDatosYMercancia({ c }: Props) {

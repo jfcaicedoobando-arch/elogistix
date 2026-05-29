@@ -11,7 +11,7 @@ import {
 } from "nuqs";
 import { useDebounce } from "@/hooks/shared/useDebounce";
 
-export type SortDir = "asc" | "desc";
+type SortDir = "asc" | "desc";
 const SORT_DIR_PARSER = parseAsStringLiteral(["asc", "desc"] as const).withDefault("desc");
 const DEFAULT_PAGE_SIZE = 100;
 

@@ -16,13 +16,13 @@ export const seguridadConfigSchema = z.object({
   permitir_registro_publico: z.boolean().default(false),
 });
 
-export type SeguridadConfig = z.infer<typeof seguridadConfigSchema>;
+
 
 export const plataformaConfigSchema = z.object({
   email_soporte: z.string().default(""),
 });
 
-export type PlataformaConfig = z.infer<typeof plataformaConfigSchema>;
+
 
 /**
  * Parse con fallback: si el record tiene campos con tipo inválido, retorna

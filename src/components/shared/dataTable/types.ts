@@ -1,5 +1,3 @@
-import type React from "react";
-
 export type ColumnAlign = "left" | "right" | "center";
 export type TableDensity = "compact" | "comfortable" | "spacious";
 export type SortDir = "asc" | "desc";
@@ -25,6 +23,3 @@ export const ALIGN_CLASS: Record<ColumnAlign, string> = {
   right: "text-right",
   center: "text-center",
 };
-
-// React import preserved for downstream callers that re-export shared types.
-export type _ReactKept = React.ReactNode;

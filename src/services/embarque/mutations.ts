@@ -121,20 +121,7 @@ export async function actualizarEstadoEmbarque(embarqueId: string, estado: strin
   if (error) throw error;
 }
 
-export async function insertarNotaCambioEstado(
-  embarqueId: string,
-  contenido: string,
-  usuarioEmail: string,
-): Promise<void> {
-  parseOrThrow(notaSchema, { contenido, usuario: usuarioEmail }, "Nota");
-  const { error } = await supabase.from('notas_embarque').insert({
-    embarque_id: embarqueId,
-    contenido,
-    tipo: 'cambio_estado' as const,
-    usuario: usuarioEmail,
-  });
-  if (error) throw error;
-}
+
 
 export async function insertarNotaEmbarque(
   embarqueId: string,

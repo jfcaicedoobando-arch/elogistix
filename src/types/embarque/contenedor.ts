@@ -10,8 +10,6 @@ export type EmbarqueContenedor =
 export type EmbarqueContenedorInsert =
   Database["public"]["Tables"]["embarque_contenedores"]["Insert"];
 
-export type EmbarqueContenedorUpdate =
-  Database["public"]["Tables"]["embarque_contenedores"]["Update"];
 
 /**
  * Borrador editable en formularios (sin id/organization_id; antes de persistir).
@@ -42,10 +40,6 @@ export const contenedorBorradorSchema = z.object({
   orden: z.number().int().min(1),
 });
 
-export const contenedorBorradorLclSchema = contenedorBorradorSchema.extend({
-  // En LCL el número puede venir vacío hasta consolidación, sólo el tipo es obligatorio.
-  numero_contenedor: z.string().trim().max(20).default(""),
-});
 
 export function crearContenedorVacio(orden: number = 1): ContenedorBorrador {
   return {

@@ -75,6 +75,3 @@ export const cargaPorClienteSchema = z
   })
   .passthrough();
 
-export type ArribosEsteMesParsed = z.infer<typeof arribosEsteMesSchema>;
-export type ResumenMesSiguienteParsed = z.infer<typeof resumenMesSiguienteSchema>;
-export type CargaPorClienteParsed = z.infer<typeof cargaPorClienteSchema>;
