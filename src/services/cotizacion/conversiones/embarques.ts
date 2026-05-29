@@ -169,7 +169,8 @@ export async function convertirCotizacionAEmbarques(
 
   // 3) Crear los N contenedores hijos.
   const hijosPayload = construirHijosPayload(
-    embarque.id, cotizacion, numContenedores, pesoTotal, volumenTotal, piezasTotal,
+    embarque.id, cotizacion, numContenedores,
+    { pesoTotal, volumenTotal, piezasTotal },
   );
   const { data: hijosCreados, error: errorHijos } = await supabase
     .from("embarque_contenedores")
@@ -179,23 +180,11 @@ export async function convertirCotizacionAEmbarques(
   if (errorHijos) throw errorHijos;
 
   // 4) Insertar costos (BL una vez, contenedor por hijo).
-  if (costos && costos.length > 0 && hijosCreados && hijosCreados.length > 0) {
-    const rows = construirCostosRows(costos, embarque.id, hijosCreados);
-    if (rows.length > 0) {
-      const { error: errorConceptos } = await supabase.from("conceptos_costo").insert(rows);
-      if (errorConceptos) throw errorConceptos;
-    }
-  }
+  await insertarCostosEmbarque(costos, embarque.id, hijosCreados);
 
   // 5) Insertar conceptos_venta desde el jsonb de la cotización (v12.13.1 hardening).
   const ventasJsonb = Array.isArray(cotizacion.conceptos_venta) ? cotizacion.conceptos_venta : [];
-  if (ventasJsonb.length > 0) {
-    const ventasRows = parsearVentasJsonb(ventasJsonb, embarque.id);
-    if (ventasRows.length > 0) {
-      const { error: errorVentas } = await supabase.from("conceptos_venta").insert(ventasRows);
-      if (errorVentas) throw errorVentas;
-    }
-  }
+  await insertarVentasEmbarque(ventasJsonb, embarque.id);
 
   // 6) Marcar cotización como "En operación" y vincularla al embarque.
   const { error: errorUpdate } = await supabase
