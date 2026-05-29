@@ -7,7 +7,7 @@ import DoubleConfirmDeleteDialog from "@/components/shared/DoubleConfirmDeleteDi
 import { PageHeader } from "@/components/shared/PageHeader";
 import { useAdminUsuariosController } from "@/hooks/admin";
 import { AdminUsuariosFilters } from "@/components/admin/AdminUsuariosFilters";
-import { buildAdminUsuariosColumns } from "@/components/admin/adminUsuariosColumns";
+import { buildAdminUsuariosColumns } from "@/components/admin/AdminUsuariosColumns";
 
 export default function AdminUsuarios() {
   const { state, setters, data, actions } = useAdminUsuariosController();

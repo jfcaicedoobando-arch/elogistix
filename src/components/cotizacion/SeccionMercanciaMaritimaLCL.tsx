@@ -20,7 +20,7 @@ function calcularVolumen(d: DimensionLCL): number {
   return (d.alto_cm * d.largo_cm * d.ancho_cm * d.piezas) / 1_000_000;
 }
 
-export default function SeccionMercanciaMaritimeLCL({ msdsFile, setMsdsFile }: Props) {
+export default function SeccionMercanciaMaritimaLCL({ msdsFile, setMsdsFile }: Props) {
   const { watch, setValue } = useFormContext<CotizacionFormValues>();
   const dimensiones = watch("dimensionesLCL");
 

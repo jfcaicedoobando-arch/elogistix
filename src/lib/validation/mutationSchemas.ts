@@ -147,4 +147,15 @@ export const notaSchema = z.object({
   usuario: nonEmpty("Usuario", 254),
 });
 
+// ── Tracking: nuevo evento de embarque ────────────────────────────────
+
+export const eventoTrackingSchema = z.object({
+  tipo: z.string().min(1, "Selecciona un tipo de evento"),
+  fecha: z.string().min(1, "Fecha requerida"),
+  ubicacion: z.string().max(120, "Máximo 120 caracteres").optional().default(""),
+  descripcion: z.string().max(500, "Máximo 500 caracteres").optional().default(""),
+});
+export type EventoTrackingFormValues = z.infer<typeof eventoTrackingSchema>;
+
+
 

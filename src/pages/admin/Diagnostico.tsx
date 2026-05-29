@@ -12,7 +12,7 @@ import { useAppLogs, useAppLogsFnList, type AppLogLevel } from "@/hooks/admin";
 import { DiagnosticoFilters } from "@/components/admin/DiagnosticoFilters";
 import { DiagnosticoHealthPanel } from "@/components/admin/DiagnosticoHealthPanel";
 import AlertasSistemaPanel from "@/components/admin/AlertasSistemaPanel";
-import { diagnosticoColumns } from "@/components/admin/diagnosticoColumns";
+import { diagnosticoColumns } from "@/components/admin/DiagnosticoColumns";
 import { useDebounce } from "@/hooks/shared";
 
 // Page size más pequeño que el global (100) porque la bitácora de logs

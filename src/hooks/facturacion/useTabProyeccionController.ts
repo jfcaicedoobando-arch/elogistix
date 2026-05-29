@@ -14,10 +14,13 @@ import {
   generarMesesDisponibles,
   mesActualKey,
   type EstadoProyeccion,
-  type GrupoProyeccion,
 } from "@/lib/domain/proyeccionFacturacion";
 import { exportToCsv } from "@/generators/exportCsv";
-import { formatDate } from "@/lib/formatters";
+import {
+  PROYECCION_CSV_HEADERS,
+  buildProyeccionCsvFilename,
+  buildProyeccionCsvRows,
+} from "@/lib/facturacion/proyeccionCsv";
 import { queryKeys } from "@/lib/query";
 
 type FiltroEstado = "todos" | EstadoProyeccion;
@@ -98,37 +101,9 @@ export function useTabProyeccionController() {
 
   const exportarCsv = useCallback(() => {
     exportToCsv(
-      `proyeccion_${mesActual.key}.csv`,
-      [
-        { key: "expediente", label: "Expediente" },
-        { key: "cliente", label: "Cliente" },
-        { key: "operador", label: "Operador" },
-        { key: "eta", label: "ETA" },
-        { key: "contenedores", label: "Contenedores" },
-        { key: "venta_usd", label: "Venta USD" },
-        { key: "venta_mxn", label: "Venta MXN" },
-        { key: "costo_usd", label: "Costo USD" },
-        { key: "costo_mxn", label: "Costo MXN" },
-        { key: "profit_usd", label: "Profit USD" },
-        { key: "profit_mxn", label: "Profit MXN" },
-        { key: "margen", label: "Margen %" },
-        { key: "estado", label: "Estado" },
-      ],
-      gruposFiltrados.map((g: GrupoProyeccion) => ({
-        expediente: g.expediente,
-        cliente: g.cliente_nombre,
-        operador: g.operador,
-        eta: g.eta ? formatDate(g.eta) : "",
-        contenedores: g.totalContenedores,
-        venta_usd: g.ventaUsd.toFixed(2),
-        venta_mxn: g.ventaMxn.toFixed(2),
-        costo_usd: g.costoUsd.toFixed(2),
-        costo_mxn: g.costoMxn.toFixed(2),
-        profit_usd: g.profitUsd.toFixed(2),
-        profit_mxn: g.profitMxn.toFixed(2),
-        margen: g.margenPct.toFixed(1),
-        estado: g.estado,
-      })),
+      buildProyeccionCsvFilename(mesActual.key),
+      PROYECCION_CSV_HEADERS,
+      buildProyeccionCsvRows(gruposFiltrados),
     );
   }, [gruposFiltrados, mesActual.key]);
 
