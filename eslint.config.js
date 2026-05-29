@@ -91,6 +91,16 @@ export default tseslint.config(
     },
   },
   {
+    // Definiciones de columnas para DataTable: exportan `buildColumns` +
+    // celdas inline (mismo patrón que primitivas shadcn). React Refresh y
+    // el límite de complexity no aplican porque el render JSX condicional
+    // suma branches sin lógica de negocio.
+    files: ["**/*Columns.tsx"],
+    rules: {
+      "react-refresh/only-export-components": "off",
+      "complexity": "off",
+    },
+  },
     // Primitiva de UI: re-exporta `defineColumns` + tipos junto al componente
     // (mismo patrón que `src/components/ui/**`). El warning de Fast Refresh es
     // ruido para esta convención del proyecto.
