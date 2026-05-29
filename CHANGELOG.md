@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [12.17.2] - 2026-05-29
+- **feat(portal)**: Habilitada la página **Mi Perfil** (`/portal/perfil`) que antes estaba `disabled` en el menú del portal. Muestra (1) datos personales del usuario (email + rol), (2) empresa vinculada en solo lectura (razón social, RFC, dirección), (3) edición de contacto y teléfono vía RPC `portal_update_contacto` (`SECURITY DEFINER`, revoca PUBLIC, sólo `authenticated` con rol `cliente`, actualiza únicamente `clientes.contacto`/`telefono` del cliente vinculado al `auth.uid()`) y (4) cambio de contraseña vía `supabase.auth.updateUser`. Archivos nuevos: `pages/portal/PortalPerfil.tsx`, `components/portal/perfil/{EditarContactoDialog,CambiarPasswordDialog}.tsx`, `hooks/portal/usePortalPerfil.ts`, key `queryKeys.portal.perfil`. Migración: función `public.portal_update_contacto(text, text)`.
+
 ## [12.17.1] - 2026-05-29
 - **chore(observability)**: Sentry ya no se inicializa cuando `import.meta.env.MODE === "development"`. Las sesiones locales generaban ruido por React Refresh / módulos HMR stale (ej. `Separator is not defined`, `Should have a queue`, `module does not provide an export named 'crear'`) que no representan bugs reales. Producción y previews siguen reportando normalmente. Marcados como `resolved` los 3 issues abiertos en Sentry derivados de este ruido.
 

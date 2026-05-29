@@ -9,6 +9,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { LogOut, User as UserIcon } from "lucide-react";
+import { Link } from "react-router-dom";
 
 interface Props {
   initials: string;
@@ -44,8 +45,10 @@ export function PortalUserMenu({ initials, clienteName, email, onSignOut }: Prop
           </span>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
-        <DropdownMenuItem disabled className="opacity-60">
-          <UserIcon className="h-4 w-4 mr-2" /> Mi perfil
+        <DropdownMenuItem asChild>
+          <Link to="/portal/perfil">
+            <UserIcon className="h-4 w-4 mr-2" /> Mi perfil
+          </Link>
         </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem
