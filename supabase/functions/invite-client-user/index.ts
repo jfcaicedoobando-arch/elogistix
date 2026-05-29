@@ -111,17 +111,7 @@ Deno.serve(async (req) => {
       return errorResponse("Cliente inválido para esa organización", 400, cors);
     }
 
-    // Allow-list de orígenes para evitar open-redirect vía header `Origin` (SEC pre-RC).
-    const ALLOWED_REDIRECT_ORIGINS = new Set<string>([
-      "https://elogistix.lovable.app",
-      "https://id-preview--341dfc00-0308-4aba-9246-e4b2041e31f1.lovable.app",
-    ]);
-    const rawOrigin = req.headers.get("origin") ?? "";
-    const isLocalhost = /^http:\/\/localhost(:\d+)?$/.test(rawOrigin);
-    const safeOrigin = ALLOWED_REDIRECT_ORIGINS.has(rawOrigin) || isLocalhost
-      ? rawOrigin
-      : "https://elogistix.lovable.app";
-    const redirectTo = `${safeOrigin}/portal/login`;
+    const redirectTo = resolveRedirectTo(req.headers.get("origin") ?? "");
     const resolved = await resolveUserId(adminClient, email, redirectTo);
     if ("error" in resolved) {
       console.error("Error inviting user:", resolved.error);
