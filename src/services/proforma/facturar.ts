@@ -32,27 +32,9 @@ export async function marcarProformaFacturada(params: MarcarFacturadaParams): Pr
     return;
   }
 
-  let pdfUrl: string | null = null;
-  let xmlUrl: string | null = null;
   const basePath = `${proforma.organization_id}/${proforma.id}`;
-
-  if (params.pdfFile) {
-    const path = `${basePath}/factura.pdf`;
-    const { error: errUp } = await supabase.storage
-      .from("facturas")
-      .upload(path, params.pdfFile, { upsert: true, contentType: "application/pdf" });
-    if (errUp) throw new Error(`Error al subir PDF: ${errUp.message}`);
-    // Bucket privado: guardamos el path; la UI genera signed URLs on-demand.
-    pdfUrl = path;
-  }
-  if (params.xmlFile) {
-    const path = `${basePath}/factura.xml`;
-    const { error: errUp } = await supabase.storage
-      .from("facturas")
-      .upload(path, params.xmlFile, { upsert: true, contentType: "application/xml" });
-    if (errUp) throw new Error(`Error al subir XML: ${errUp.message}`);
-    xmlUrl = path;
-  }
+  const pdfUrl = await uploadFacturaFile(params.pdfFile, `${basePath}/factura.pdf`, "application/pdf", "PDF");
+  const xmlUrl = await uploadFacturaFile(params.xmlFile, `${basePath}/factura.xml`, "application/xml", "XML");
 
   const dias = proforma.dias_credito ?? 0;
   const fechaVencimiento = addDays(params.fechaFacturacion, dias);
@@ -72,25 +54,7 @@ export async function marcarProformaFacturada(params: MarcarFacturadaParams): Pr
     organization_id: proforma.organization_id,
   };
 
-  const facturasACrear: Array<typeof baseFactura & {
-    moneda: "USD" | "MXN"; subtotal: number; iva: number; total: number;
-  }> = [];
-  if (Number(proforma.total_usd) > 0) {
-    facturasACrear.push({
-      ...baseFactura, moneda: "USD",
-      subtotal: Number(proforma.subtotal_usd),
-      iva: Number(proforma.iva_usd),
-      total: Number(proforma.total_usd),
-    });
-  }
-  if (Number(proforma.total_mxn) > 0) {
-    facturasACrear.push({
-      ...baseFactura, moneda: "MXN",
-      subtotal: Number(proforma.subtotal_mxn),
-      iva: Number(proforma.iva_mxn),
-      total: Number(proforma.total_mxn),
-    });
-  }
+  const facturasACrear = construirFacturasAEmitir(proforma, baseFactura);
 
   let primeraFacturaId: string | null = null;
   let segundaFacturaId: string | null = null;
