@@ -19,7 +19,8 @@ import {
 export function useTabProformasPendientesController(opts?: {
   isInRange?: (fecha: string | null | undefined) => boolean;
 }) {
-  const isInRange = opts?.isInRange ?? (() => true);
+  const optsIsInRange = opts?.isInRange;
+  const isInRange = useMemo(() => optsIsInRange ?? (() => true), [optsIsInRange]);
   const [search, setSearch] = useState("");
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [collapsed, setCollapsed] = useState<Set<string>>(new Set());
