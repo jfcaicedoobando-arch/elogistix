@@ -81,9 +81,9 @@ export function calcularScore(
   const penalizacion = Math.min(100, suma * 2);
   const score = totalPendientes === 0 ? 100 : Math.max(0, Math.round(100 - penalizacion));
   const scoreEstado: ScoreEstado =
-    score >= 90 ? "excelente"
-    : score >= 75 ? "bueno"
-    : score >= 60 ? "regular"
+    score >= SCORE_THRESHOLDS.EXCELENTE ? "excelente"
+    : score >= SCORE_THRESHOLDS.BUENO ? "bueno"
+    : score >= SCORE_THRESHOLDS.REGULAR ? "regular"
     : "malo";
   return { score, scoreEstado };
 }
