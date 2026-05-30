@@ -1,5 +1,6 @@
-// @ts-expect-error Deno remote import
-import { createClient, SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { createClient, SupabaseClient } from "npm:@supabase/supabase-js@2";
+
+declare const Deno: { env: { get(key: string): string | undefined } };
 
 export interface AuthContext {
   userId: string;
@@ -18,11 +19,8 @@ export async function authenticate(req: Request): Promise<AuthContext> {
     throw new Error("401:No autorizado");
   }
 
-  // @ts-expect-error Deno global
   const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
-  // @ts-expect-error Deno global
   const anonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
-  // @ts-expect-error Deno global
   const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
   const anonClient = createClient(supabaseUrl, anonKey, {
