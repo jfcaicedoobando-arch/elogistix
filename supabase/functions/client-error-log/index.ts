@@ -11,7 +11,7 @@
  *    casual y previene el disparo del cron `detectar_alertas_app_logs`.
  *    Para protección dura habría que mover a Upstash/Redis.
  */
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.4";
+import { createClient } from "npm:@supabase/supabase-js@2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -84,7 +84,6 @@ export function truncate(value: unknown, max: number): string | null {
   return s.length > max ? s.slice(0, max) : s;
 }
 
-// @ts-expect-error Deno global
 Deno.serve(async (req: Request) => {
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
@@ -127,11 +126,8 @@ Deno.serve(async (req: Request) => {
   const userAgent = truncate(body.user_agent, 500);
   const appVersion = truncate(body.app_version, 50);
 
-  // @ts-expect-error Deno global
   const url = Deno.env.get("SUPABASE_URL");
-  // @ts-expect-error Deno global
   const anonKey = Deno.env.get("SUPABASE_ANON_KEY");
-  // @ts-expect-error Deno global
   const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? anonKey;
   if (!url || !serviceKey || !anonKey) {
     return new Response(JSON.stringify({ error: "config_missing" }), {
