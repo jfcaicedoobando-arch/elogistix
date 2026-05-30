@@ -6,10 +6,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { usePortalFacturas, usePortalClientUsers } from "@/hooks/portal";
 import { formatCurrency, formatDate } from "@/lib/formatters";
 import { getEstadoColor } from "@/lib/ui/uiMappings";
-import { Search, Receipt, Filter, AlertTriangle } from "lucide-react";
+import { Search, Receipt, Filter, AlertTriangle, ChevronRight } from "lucide-react";
 import EmptyState from "@/components/empty/EmptyState";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { useState, useMemo } from "react";
+import { Link } from "react-router-dom";
 
 export default function PortalFacturas() {
   const { data: clientUsers = [] } = usePortalClientUsers();
