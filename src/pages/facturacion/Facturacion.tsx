@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { Download, Info } from "lucide-react";
 import SearchInput from "@/components/selects/SearchInput";
 import { Card, CardContent } from "@/components/ui/card";
@@ -15,15 +15,17 @@ import { PageHeader } from "@/components/shared/PageHeader";
 import type { Database } from "@/types/db";
 import { TabProformas } from "@/components/facturacion/TabProformas";
 import { TabProformasPendientes } from "@/components/facturacion/TabProformasPendientes";
+import { DialogRegistrarPago } from "@/components/facturacion/DialogRegistrarPago";
+import { DialogHistorialPagos } from "@/components/facturacion/DialogHistorialPagos";
 
 import { DateRangeFilter } from "@/components/facturacion/DateRangeFilter";
 import { GuiaPrefacturacion } from "@/components/facturacion/GuiaPrefacturacion";
 import { useFacturacionPageController } from "@/hooks/facturacion";
 import { useFacturacionDateRange } from "@/hooks/facturacion";
-import { facturaColumns, buildGastoColumns } from "./facturacionColumns";
+import { buildFacturaColumns, buildGastoColumns, type Factura } from "./facturacionColumns";
 
 type EstadoFactura = Database["public"]["Enums"]["estado_factura"];
-const ESTADOS_FACTURA: EstadoFactura[] = ['Borrador', 'Emitida', 'Pagada', 'Vencida', 'Cancelada'];
+const ESTADOS_FACTURA: EstadoFactura[] = ['Borrador', 'Emitida', 'Parcialmente pagada', 'Pagada', 'Vencida', 'Cancelada'];
 
 type TabDef = { value: string; label: string; hint: string; badge?: number };
 
