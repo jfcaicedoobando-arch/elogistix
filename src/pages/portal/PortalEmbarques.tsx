@@ -12,8 +12,10 @@ import EmptyState from "@/components/empty/EmptyState";
 import { PageHeader } from "@/components/shared/PageHeader";
 import { Search, Ship, Filter, Package, ChevronDown } from "lucide-react";
 import { usePortalEmbarquesController } from "@/hooks/portal";
+import { useIsMobile } from "@/hooks/shared";
 
 export default function PortalEmbarques() {
+  const isMobile = useIsMobile();
   const {
     isLoading,
     embarques,
@@ -104,7 +106,7 @@ export default function PortalEmbarques() {
             const firstItem = items[0];
             const ruta = `${getOrigen(firstItem)} → ${getDestino(firstItem)}`;
             return (
-              <Collapsible key={expediente} defaultOpen>
+              <Collapsible key={expediente} defaultOpen={!isMobile}>
                 <Card className="border-dashed bg-muted/30 overflow-hidden">
                   <CollapsibleTrigger className="w-full cursor-pointer group">
                     <CardContent className="p-3 flex items-center justify-between">
