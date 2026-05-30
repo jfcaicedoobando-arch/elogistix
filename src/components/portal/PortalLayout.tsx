@@ -6,6 +6,7 @@ import { usePortalClienteName, usePortalOrgName } from "@/hooks/portal";
 import { APP_VERSION } from "@/constants/appVersion";
 import { PortalHeader } from "./layout/PortalHeader";
 import { PortalBreadcrumbsBar } from "./layout/PortalBreadcrumbsBar";
+import { PortalBottomNav } from "./layout/PortalBottomNav";
 import { usePortalBreadcrumbs } from "./layout/usePortalBreadcrumbs";
 import { getActiveSectionLabel } from "./layout/portalNav";
 
@@ -45,11 +46,11 @@ export default function PortalLayout() {
 
       <PortalBreadcrumbsBar breadcrumbs={breadcrumbs} />
 
-      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
+      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 pb-24 md:pb-6">
         <Outlet />
       </main>
 
-      <footer className="border-t bg-card/40 mt-auto">
+      <footer className="border-t bg-card/40 mt-auto pb-16 md:pb-0">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex flex-col sm:flex-row items-center justify-between gap-1 text-[11px] text-muted-foreground">
           <span>
             © {new Date().getFullYear()} {orgName ?? "Libre Carga"} · Portal de Cliente
@@ -57,6 +58,8 @@ export default function PortalLayout() {
           <span className="tabular-nums">v{APP_VERSION}</span>
         </div>
       </footer>
+
+      <PortalBottomNav />
     </div>
   );
 }

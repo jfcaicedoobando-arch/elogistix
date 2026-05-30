@@ -57,7 +57,7 @@ export function PortalNotificationsBell() {
           )}
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-80 p-0">
+      <DropdownMenuContent align="end" className="w-[min(320px,calc(100vw-24px))] p-0">
         <div className="flex items-center justify-between px-3 py-2 border-b">
           <span className="text-sm font-semibold">Notificaciones</span>
           {noLeidas > 0 && (

@@ -5,6 +5,8 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { DataTable, defineColumns, type ColumnDef } from "@/components/shared/DataTable";
 import { usePortalDocumentDownload } from "@/hooks/portal";
+import { useIsMobile } from "@/hooks/shared";
+import { PortalDocumentoCard } from "./PortalDocumentoCard";
 import type { Tables } from "@/types/db";
 
 type Doc = Tables<"documentos_embarque">;
@@ -20,7 +22,32 @@ interface Props {
 }
 
 export function PortalEmbarqueDocumentos({ documentos }: Props) {
+  const isMobile = useIsMobile();
   const { downloadingId, handleDownload } = usePortalDocumentDownload();
+
+  if (isMobile) {
+    if (documentos.length === 0) {
+      return (
+        <Card>
+          <CardContent className="p-0">
+            <EmptyStateInline icon={FileCheck} message="No hay documentos disponibles." className="py-12" />
+          </CardContent>
+        </Card>
+      );
+    }
+    return (
+      <div className="grid gap-2">
+        {documentos.map((d) => (
+          <PortalDocumentoCard
+            key={d.id}
+            doc={d}
+            downloadingId={downloadingId}
+            onDownload={handleDownload}
+          />
+        ))}
+      </div>
+    );
+  }
 
   const columns: ColumnDef<Doc, unknown>[] = defineColumns<Doc>([
     {

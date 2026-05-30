@@ -50,8 +50,6 @@ export default function PortalDashboard() {
     );
   }
 
-  const hayFacturasPendientes = facturasPendientes.length > 0;
-
   return (
     <div className="space-y-6">
       <PortalWelcomeCard clienteName={clienteName} orgName={orgName} />
@@ -81,7 +79,7 @@ export default function PortalDashboard() {
         />
         <PortalEmbarquesRecientesCard
           embarques={embarquesActivos}
-          className={hayFacturasPendientes ? "lg:col-span-2" : "lg:col-span-3"}
+          className="lg:col-span-2"
         />
       </div>
     </div>

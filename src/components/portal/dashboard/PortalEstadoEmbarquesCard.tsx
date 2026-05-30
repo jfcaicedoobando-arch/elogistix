@@ -11,7 +11,6 @@ interface Props {
 }
 
 export function PortalEstadoEmbarquesCard({ total, distribucion }: Props) {
-  if (total === 0) return null;
   return (
     <Card>
       <CardHeader className="pb-3">
@@ -21,6 +20,11 @@ export function PortalEstadoEmbarquesCard({ total, distribucion }: Props) {
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-3">
+        {total === 0 && (
+          <p className="text-xs text-muted-foreground text-center py-6">
+            Sin embarques activos por ahora.
+          </p>
+        )}
         {distribucion.map(([estado, count]) => (
           <Link
             key={estado}
