@@ -6,6 +6,10 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [12.23.1] - 2026-05-30
+- **security**: `client-error-log` ahora valida la firma del JWT con `auth.getClaims` antes de atribuir `user_id` (antes decodificaba el payload sin verificar firma → permitía spoofing de logs). Se añadió rate limit in-memory por IP (20 req/min, respuesta 429 con `Retry-After`) para mitigar flooding de `app_logs` y disparos falsos del cron de alertas.
+- **security**: `parse-csf` ahora exige rol de admin global o admin de organización tras `authenticate` (antes cualquier usuario autenticado — incluido `cliente` y `viewer` — podía invocarlo y consumir cuota de Gemini vía `LOVABLE_API_KEY`).
+
 ## [12.23.0] - 2026-05-30
 - **feat(portal)**: Nueva página de **detalle de factura** en el portal del cliente (`/portal/facturas/:id`). Las tarjetas de la lista de facturas ahora son clickeables y abren el detalle. La pantalla muestra: encabezado con número, badge de estado y monto total grande; botones para **descargar PDF** y **XML** (cuando estén disponibles) y enlace directo al **embarque** relacionado; tarjeta de datos generales (cliente, expediente, fechas, moneda, tipo de cambio, referencia BL, notas) y desglose de subtotal/IVA/total con resaltado del total; desglose de conceptos cuando la factura los incluye (tabla en desktop, cards en mobile); **historial de pagos** con saldo pendiente calculado y badge "Liquidada" cuando el saldo llega a cero. Nueva política RLS de storage permite a los clientes descargar PDF/XML únicamente de sus propias facturas.
 
