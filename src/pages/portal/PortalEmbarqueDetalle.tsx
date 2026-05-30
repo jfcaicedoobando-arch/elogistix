@@ -11,6 +11,7 @@ import { formatDate, getOrigen, getDestino } from "@/lib/formatters";
 import { PortalEmbarqueTimeline } from "@/components/portal/PortalEmbarqueTimeline";
 import { PortalEmbarqueDocumentos } from "@/components/portal/PortalEmbarqueDocumentos";
 import { PortalEmbarqueResumenTab } from "@/components/portal/embarqueDetalle/PortalEmbarqueResumenTab";
+import { PortalEmbarqueStepper } from "@/components/portal/embarqueDetalle/PortalEmbarqueStepper";
 import { TrackingLiveCard } from "@/components/embarque/TrackingLiveCard";
 import { usePortalEmbarqueDetalleController } from "@/hooks/embarque";
 import { useRegisterBreadcrumbLabel } from "@/contexts/BreadcrumbContext";
@@ -66,54 +67,13 @@ export default function PortalEmbarqueDetalle() {
       </div>
 
       {/* Progress Tracker */}
-      <Card className="overflow-hidden">
-        <CardContent className="p-4 sm:p-6">
-          <div className="flex items-center justify-between relative">
-            <div className="absolute top-5 left-0 right-0 h-0.5 bg-border" />
-            <div
-              className="absolute top-5 left-0 h-0.5 bg-accent transition-all duration-500"
-              style={{ width: `${Math.min(100, (currentStepIndex / (progressSteps.length - 1)) * 100)}%` }}
-            />
+      <PortalEmbarqueStepper
+        progressSteps={progressSteps}
+        currentStepIndex={currentStepIndex}
+        diasParaEta={diasParaEta}
+        eta={embarque.eta}
+      />
 
-            {progressSteps.map((step, i) => {
-              const isCompleted = i < currentStepIndex;
-              const isCurrent = i === currentStepIndex;
-              return (
-                <div key={step.key} className="flex flex-col items-center relative z-10 flex-1">
-                  <div
-                    className={`w-10 h-10 rounded-full flex items-center justify-center text-sm border-2 transition-all ${
-                      isCompleted
-                        ? "bg-accent border-accent text-white"
-                        : isCurrent
-                        ? "bg-accent/10 border-accent text-accent ring-4 ring-accent/20"
-                        : "bg-card border-border text-muted-foreground"
-                    }`}
-                  >
-                    {step.icon}
-                  </div>
-                  <span className={`text-[10px] mt-2 text-center font-medium ${
-                    isCompleted || isCurrent ? "text-foreground" : "text-muted-foreground"
-                  }`}>
-                    {step.label}
-                  </span>
-                </div>
-              );
-            })}
-          </div>
-
-          {/* ETA countdown */}
-          {diasParaEta !== null && diasParaEta > 0 && (
-            <div className="mt-4 text-center">
-              <p className="text-xs text-muted-foreground">
-                Llegada estimada en <span className="font-bold text-accent">{diasParaEta} día{diasParaEta !== 1 ? "s" : ""}</span>
-                {embarque.eta && (
-                  <span> ({formatDate(embarque.eta, "dd 'de' MMMM")})</span>
-                )}
-              </p>
-            </div>
-          )}
-        </CardContent>
-      </Card>
 
       {/* Quick Info Cards */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
