@@ -60,12 +60,14 @@ export function PortalEmbarqueDocumentos({ documentos }: Props) {
   return (
     <Card>
       <CardContent className="p-0">
-        <DataTable
-          columns={columns}
-          data={documentos}
-          rowKey={(d) => d.id}
-          emptyState={<EmptyStateInline icon={FileCheck} message="No hay documentos disponibles." className="py-12" />}
-        />
+        <div className="overflow-x-auto">
+          <DataTable
+            columns={columns}
+            data={documentos}
+            rowKey={(d) => d.id}
+            emptyState={<EmptyStateInline icon={FileCheck} message="No hay documentos disponibles." className="py-12" />}
+          />
+        </div>
       </CardContent>
     </Card>
   );

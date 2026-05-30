@@ -120,13 +120,13 @@ export default function PortalEmbarqueDetalle() {
         <Card>
           <CardContent className="p-3 text-center">
             <p className="text-[10px] text-muted-foreground font-medium">Origen</p>
-            <p className="text-xs font-semibold mt-0.5 truncate">{getOrigen(embarque)}</p>
+            <p className="text-xs font-semibold mt-0.5 truncate" title={getOrigen(embarque)}>{getOrigen(embarque)}</p>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="p-3 text-center">
             <p className="text-[10px] text-muted-foreground font-medium">Destino</p>
-            <p className="text-xs font-semibold mt-0.5 truncate">{getDestino(embarque)}</p>
+            <p className="text-xs font-semibold mt-0.5 truncate" title={getDestino(embarque)}>{getDestino(embarque)}</p>
           </CardContent>
         </Card>
         <Card>

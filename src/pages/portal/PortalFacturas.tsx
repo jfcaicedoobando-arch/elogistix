@@ -84,7 +84,7 @@ export default function PortalFacturas() {
       ) : (
         <div className="grid gap-3">
           {facturas.length > 0 && filtered.map((f) => (
-            <Card key={f.id} className="transition-all hover:shadow-sm">
+            <Card key={f.id}>
               <CardContent className="flex items-center justify-between gap-3 px-4 py-3">
                 <div className="flex items-center gap-3 min-w-0 flex-1">
                   <Badge className={`${getEstadoColor(f.estado)} text-[11px] shrink-0`}>
