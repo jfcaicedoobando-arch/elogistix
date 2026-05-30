@@ -30,6 +30,7 @@ export const portalRoutes = (
     <Route path="/portal/cotizaciones" element={<PortalCotizaciones />} />
     <Route path="/portal/cotizaciones/:id" element={<PortalCotizacionDetalle />} />
     <Route path="/portal/facturas" element={<PortalFacturas />} />
+    <Route path="/portal/facturas/:id" element={<PortalFacturaDetalle />} />
     <Route path="/portal/perfil" element={<PortalPerfil />} />
   </Route>
 );
