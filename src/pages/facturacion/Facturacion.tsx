@@ -191,6 +191,18 @@ export default function Facturacion() {
             </Card>
           </TabsContent>
         </Tabs>
+
+        <DialogRegistrarPago
+          open={!!pagoFactura}
+          onOpenChange={(o) => !o && setPagoFactura(null)}
+          factura={pagoFactura}
+        />
+        <DialogHistorialPagos
+          open={!!historialFactura}
+          onOpenChange={(o) => !o && setHistorialFactura(null)}
+          factura={historialFactura}
+          canEdit={canEdit}
+        />
       </div>
     </TooltipProvider>
   );
