@@ -2245,6 +2245,63 @@ export type Database = {
         }
         Relationships: []
       }
+      pagos_factura: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          deleted_at: string | null
+          deleted_by: string | null
+          factura_id: string
+          fecha_pago: string
+          forma_pago: string
+          id: string
+          moneda: Database["public"]["Enums"]["moneda"]
+          monto: number
+          monto_aplicado_factura: number
+          notas: string
+          organization_id: string
+          referencia: string
+          tipo_cambio: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          deleted_at?: string | null
+          deleted_by?: string | null
+          factura_id: string
+          fecha_pago: string
+          forma_pago?: string
+          id?: string
+          moneda?: Database["public"]["Enums"]["moneda"]
+          monto: number
+          monto_aplicado_factura: number
+          notas?: string
+          organization_id?: string
+          referencia?: string
+          tipo_cambio?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          deleted_at?: string | null
+          deleted_by?: string | null
+          factura_id?: string
+          fecha_pago?: string
+          forma_pago?: string
+          id?: string
+          moneda?: Database["public"]["Enums"]["moneda"]
+          monto?: number
+          monto_aplicado_factura?: number
+          notas?: string
+          organization_id?: string
+          referencia?: string
+          tipo_cambio?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       planes: {
         Row: {
           activo: boolean
