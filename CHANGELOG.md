@@ -6,6 +6,9 @@ Versionado [SemVer](https://semver.org/). Orden descendente (lo más nuevo arrib
 Para el histórico anterior a `11.21.0` consultar el git history del repositorio
 (antes los cambios vivían en `src/content/changelog/`).
 
+## [12.18.1] - 2026-05-30
+- **chore(edge)**: Limpieza de deuda técnica en `supabase/functions/_shared/auth.ts`. Reemplazados los `@ts-expect-error` (que ya no aplicaban con la nueva versión del runtime) por (1) import vía `npm:@supabase/supabase-js@2` en lugar de esm.sh y (2) `declare const Deno` tipado. Resultado: `supabase test_edge_functions` pasa 25/25 sin warnings.
+
 ## [12.18.0] - 2026-05-29
 - **feat(portal)**: 4 mejoras a la gestión de usuarios del portal de cliente (tab Portal del detalle de cliente). (1) Tabla ahora muestra **email real** de cada usuario (antes mostraba `user_id` truncado). (2) Nueva columna **Último acceso** (`last_sign_in_at` formato `dd MMM yyyy HH:mm`, "Nunca" si nulo, gris si >30 días). (3) Columna **Estado** con badge `Activo` / `Pendiente` (sin confirmar email o nunca entró) / `Inactivo` (>60 días sin login). (4) Botón **Reenviar invitación** (icono Mail) condicional cuando el usuario está pendiente — reusa `invite-client-user` que es idempotente. (5) Badge en el header del card mostrando `N usuario(s) con acceso` o `Sin acceso`. Nueva edge function `list-client-users` (service role) que valida que el caller sea super_admin o admin/operador de la organización dueña del cliente, y enriquece `client_users` con `auth.admin.getUserById()`.
 
