@@ -2,7 +2,6 @@ import { Link } from "react-router-dom";
 import { BrandLockup } from "@/components/layout/BrandLockup";
 import { ThemeToggle } from "@/components/layout/ThemeToggle";
 import { PORTAL_NAV_ITEMS, isPortalNavItemActive } from "./portalNav";
-import { PortalMobileNav } from "./PortalMobileNav";
 import { PortalUserMenu } from "./PortalUserMenu";
 import { PortalNotificationsBell } from "./PortalNotificationsBell";
 import { FeedbackButton } from "@/components/feedback/FeedbackButton";
@@ -11,8 +10,6 @@ interface Props {
   pathname: string;
   orgName?: string | null;
   activeSection: string | null;
-  mobileOpen: boolean;
-  setMobileOpen: (open: boolean) => void;
   initials: string;
   clienteName?: string | null;
   email?: string | null;
@@ -23,8 +20,6 @@ export function PortalHeader({
   pathname,
   orgName,
   activeSection,
-  mobileOpen,
-  setMobileOpen,
   initials,
   clienteName,
   email,
@@ -34,14 +29,6 @@ export function PortalHeader({
     <header className="border-b bg-card sticky top-0 z-50 shadow-sm">
       <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 flex items-center justify-between h-14 sm:h-16 gap-2">
         <div className="flex items-center gap-2 min-w-0">
-          <PortalMobileNav
-            open={mobileOpen}
-            onOpenChange={setMobileOpen}
-            pathname={pathname}
-            orgName={orgName}
-            onSignOut={onSignOut}
-          />
-
           <Link to="/portal" className="flex items-center min-w-0">
             <span className="hidden md:flex">
               <BrandLockup
