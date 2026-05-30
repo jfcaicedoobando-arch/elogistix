@@ -8,6 +8,8 @@ import {
   fetchPortalCotizaciones,
   fetchPortalCotizacion,
   fetchPortalFacturas,
+  fetchPortalFactura,
+  fetchPortalPagosFactura,
   fetchPortalClientUsers,
   fetchPortalClienteName,
   fetchPortalOrgName,
