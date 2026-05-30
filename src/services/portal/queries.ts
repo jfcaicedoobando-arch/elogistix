@@ -133,6 +133,26 @@ export async function fetchPortalFacturas(clienteIds: string[]) {
   return data ?? [];
 }
 
+export async function fetchPortalFactura(id: string) {
+  const { data, error } = await supabase
+    .from("facturas")
+    .select(PORTAL_FACTURA_DETAIL_COLUMNS)
+    .eq("id", id)
+    .maybeSingle();
+  if (error) throw error;
+  return data;
+}
+
+export async function fetchPortalPagosFactura(facturaId: string) {
+  const { data, error } = await supabase
+    .from("pagos_factura")
+    .select(PORTAL_PAGO_FACTURA_COLUMNS)
+    .eq("factura_id", facturaId)
+    .order("fecha_pago", { ascending: false });
+  if (error) throw error;
+  return data ?? [];
+}
+
 export async function fetchPortalClientUsers() {
   const { data, error } = await supabase.from("client_users").select("*");
   if (error) throw error;
