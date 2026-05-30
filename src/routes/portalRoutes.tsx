@@ -13,6 +13,7 @@ const PortalEmbarqueDetalle = lazy(() => import("@/pages/portal/PortalEmbarqueDe
 const PortalCotizaciones = lazy(() => import("@/pages/portal/PortalCotizaciones"));
 const PortalCotizacionDetalle = lazy(() => import("@/pages/portal/PortalCotizacionDetalle"));
 const PortalFacturas = lazy(() => import("@/pages/portal/PortalFacturas"));
+const PortalFacturaDetalle = lazy(() => import("@/pages/portal/PortalFacturaDetalle"));
 const PortalPerfil = lazy(() => import("@/pages/portal/PortalPerfil"));
 
 export const portalRoutes = (
