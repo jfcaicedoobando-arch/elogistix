@@ -3532,6 +3532,7 @@ export type Database = {
         | "Pagada"
         | "Vencida"
         | "Cancelada"
+        | "Parcialmente pagada"
       estado_hallazgo_revision: "pendiente" | "en_progreso" | "revisado"
       estado_liquidacion: "Pendiente" | "Pagado"
       estado_proforma: "Pendiente" | "Facturada" | "Cancelada"
@@ -3758,7 +3759,14 @@ export const Constants = {
         "Arribo",
         "EIR",
       ],
-      estado_factura: ["Borrador", "Emitida", "Pagada", "Vencida", "Cancelada"],
+      estado_factura: [
+        "Borrador",
+        "Emitida",
+        "Pagada",
+        "Vencida",
+        "Cancelada",
+        "Parcialmente pagada",
+      ],
       estado_hallazgo_revision: ["pendiente", "en_progreso", "revisado"],
       estado_liquidacion: ["Pendiente", "Pagado"],
       estado_proforma: ["Pendiente", "Facturada", "Cancelada"],
