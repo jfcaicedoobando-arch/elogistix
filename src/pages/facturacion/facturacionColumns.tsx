@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { DollarSign, Eye } from "lucide-react";
@@ -28,7 +29,15 @@ export function buildFacturaColumns(opts: FacturaColumnsOptions): ColumnDef<Fact
       accessorFn: (f) => f.numero, enableSorting: true,
       sortingFn: sortByString<Factura>((f) => f.numero),
       meta: { width: "w-[110px]", className: "font-medium whitespace-nowrap", sticky: true },
-      cell: ({ row }) => row.original.numero,
+      cell: ({ row }) => (
+        <Link
+          to={`/facturacion/${row.original.id}`}
+          onClick={(e) => e.stopPropagation()}
+          className="text-accent hover:underline"
+        >
+          {row.original.numero}
+        </Link>
+      ),
     },
     { id: "expediente", header: "Expediente", meta: { width: "w-[110px]", className: "whitespace-nowrap" }, cell: ({ row }) => row.original.expediente },
     {
