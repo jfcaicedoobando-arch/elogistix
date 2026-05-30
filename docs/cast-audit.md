@@ -1,17 +1,17 @@
-# Cast Audit — generado 2026-05-28
+# Cast Audit — generado 2026-05-30
 
 Auditoría automática de los `as` casts en `src/`. Generado por
 `scripts/audit-casts.ts`. Para regenerar: `bun scripts/audit-casts.ts`.
 
 ## Resumen
 
-Total de `as` casts detectados: **787**
+Total de `as` casts detectados: **793**
 
 | Categoría | Peso | Cantidad | % |
 |-----------|------|----------|---|
-| SAFE      | 0 | 342     | 43.5% |
-| LOW       | 1 | 14      | 1.8% |
-| MEDIUM    | 2 | 431   | 54.8% |
+| SAFE      | 0 | 345     | 43.5% |
+| LOW       | 1 | 7      | 0.9% |
+| MEDIUM    | 2 | 441   | 55.6% |
 | HIGH      | 3 | 0     | 0.0% |
 | CRITICAL  | 4 | 0 | 0.0% |
 
@@ -30,9 +30,9 @@ Total de `as` casts detectados: **787**
 | # | Archivo | Total | Peso | SAFE | LOW | MED | HIGH | CRIT |
 |---|---------|------:|-----:|-----:|----:|----:|-----:|-----:|
 | 1 | `src/lib/audit/diffFields.ts` | 12 | 12 | 6 | 0 | 6 | 0 | 0 |
-| 2 | `src/components/shared/dataTable/__tests__/DataTable.regression.test.tsx` | 5 | 10 | 0 | 0 | 5 | 0 | 0 |
-| 3 | `src/hooks/embarque/useProformas.ts` | 5 | 10 | 0 | 0 | 5 | 0 | 0 |
-| 4 | `src/services/embarque/queries/exportListado.ts` | 7 | 10 | 0 | 4 | 3 | 0 | 0 |
+| 2 | `src/lib/domain/estadoResultados.ts` | 7 | 12 | 1 | 0 | 6 | 0 | 0 |
+| 3 | `src/components/shared/dataTable/__tests__/DataTable.regression.test.tsx` | 5 | 10 | 0 | 0 | 5 | 0 | 0 |
+| 4 | `src/hooks/embarque/useProformas.ts` | 5 | 10 | 0 | 0 | 5 | 0 | 0 |
 | 5 | `src/components/proveedor/EditarProveedorDialog.tsx` | 4 | 8 | 0 | 0 | 4 | 0 | 0 |
 | 6 | `src/components/proveedor/NuevoProveedorDialog.tsx` | 4 | 8 | 0 | 0 | 4 | 0 | 0 |
 | 7 | `src/generators/__tests__/exportCsv.test.ts` | 4 | 8 | 0 | 0 | 4 | 0 | 0 |
