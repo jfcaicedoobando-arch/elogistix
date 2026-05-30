@@ -1,85 +1,83 @@
-# Pagos de facturas a clientes — enfoque completo
+# Plan: Pulir Portal de Cliente (UI/UX, foco mobile)
 
-Permitir registrar pagos (totales y parciales, multi-moneda) sobre facturas emitidas, recalculando automáticamente el saldo y el estado (`Emitida` → `Parcialmente pagada` → `Pagada`).
+Auditoría completada (subagente revisó las 7 rutas: `/portal`, `/embarques`, `/embarques/:id`, `/cotizaciones`, `/cotizaciones/:id`, `/facturas`, `/perfil`). Confirmado que ~78% de los problemas son mobile-only. Propongo 3 fases incrementales, cada una termina en un release con bump de `APP_VERSION` y entrada en `CHANGELOG.md`.
 
-## 1. Base de datos
+---
 
-Nueva tabla `public.pagos_factura`:
+## Fase 1 — Quick Wins (1 commit, ~1h)
 
-- `id`, `factura_id` (FK facturas), `organization_id` (default `current_user_org_id()`)
-- `fecha_pago` (date), `monto` (numeric), `moneda` (enum `moneda`)
-- `tipo_cambio` (numeric, opcional — para pagos en moneda distinta a la factura)
-- `monto_aplicado_factura` (numeric — monto convertido a moneda de la factura)
-- `forma_pago` (text: Transferencia, Cheque, Efectivo, Otro)
-- `referencia` (text), `notas` (text)
-- `created_by`, `created_at`, `deleted_at`, `deleted_by` (soft delete)
+Cambios pequeños, alto ROI, sin refactor:
 
-GRANTs estándar + RLS multi-tenant (mismo patrón que `conceptos_costo`: Tenant CRUD para admin/operador/super_admin, viewer SELECT, hide soft-deleted, cliente puede leer pagos de sus propias facturas para el portal).
+1. **Notificaciones overflow mobile** — `PortalNotificationsBell.tsx`: `w-80` → `w-[min(320px,calc(100vw-24px))]`.
+2. **Facturas card sin acción** — quitar `hover:shadow-sm` engañoso en `PortalFacturas.tsx` (o añadir cursor + tooltip "Sin detalle").
+3. **Tooltips en puertos truncados** — añadir `title` en Origen/Destino de `PortalEmbarqueDetalle.tsx`.
+4. **Perfil padding doble** — eliminar `px-3 sm:px-6` redundante en `PortalPerfil.tsx`.
+5. **Collapsible expedientes** — `defaultOpen={false}` en mobile para `PortalEmbarques.tsx` (con `useIsMobile`).
+6. **Documentos overflow temporal** — envolver `DataTable` con `overflow-x-auto -mx-4 px-4` hasta refactor cards.
+7. **Dashboard layout shift** — `PortalEstadoEmbarquesCard` y `PortalFacturacionPendienteCard`: reemplazar `return null` con empty state inline; fijar colspan de `PortalEmbarquesRecientesCard`.
 
-Nuevo enum value en `estado_factura`: `'Parcialmente pagada'` (si no existe ya).
+**Versión:** 12.20.0
 
-Trigger `recalcular_estado_factura()` que en INSERT/UPDATE/DELETE de `pagos_factura`:
-- suma `monto_aplicado_factura` de pagos no soft-deleted
-- si `suma >= factura.total` → estado `'Pagada'`, `fecha_pago = max(fecha_pago)`
-- si `suma > 0` → `'Parcialmente pagada'`
-- si `suma = 0` → vuelve a `'Emitida'` o `'Vencida'` según `fecha_vencimiento`
+---
 
-Índice en `(factura_id)` y `(organization_id, fecha_pago)`.
+## Fase 2 — Críticos Mobile (2-3 commits)
 
-Registrar en `bitacora_actividad` desde el código (no trigger) para mantener consistencia con el resto.
+### F2.1 — Bottom Navigation Bar (mobile)
+Nuevo `src/components/portal/layout/PortalBottomNav.tsx`:
+- 4 íconos+label: Inicio · Embarques · Cotizaciones · Facturas
+- `fixed bottom-0`, `z-50`, `md:hidden`, `pb-[env(safe-area-inset-bottom)]`
+- Activo: `bg-accent/10 text-accent` (igual patrón que header)
+- Integrar en `PortalLayout.tsx`; añadir `pb-16 md:pb-0` al `<main>` para no tapar contenido
+- Hamburger queda solo para Perfil + Cerrar sesión + Tema
+- Añadir `/portal/perfil` al drawer (bug B1)
 
-## 2. Servicios y hooks
+### F2.2 — Header de Cotización mobile (C1)
+`PortalCotizacionHeader.tsx`: en mobile, mover botones "Rechazar"/"Aceptar" a una **action bar sticky bottom** (`fixed bottom-16` por encima del bottom-nav) con `md:hidden`. En desktop mantener layout actual.
 
-`src/services/pagos-factura/index.ts`:
-- `listarPagosFactura(facturaId)`
-- `registrarPago(input)` con validación: monto > 0, no exceder saldo pendiente
-- `eliminarPago(id)` (soft delete)
+### F2.3 — Documentos como cards en mobile (C2)
+`PortalEmbarqueDocumentos.tsx`: extraer `PortalDocumentoCard.tsx`. En `<md` render lista de cards (nombre, badge estado, botón descarga full-width). En `md+` mantener `DataTable`.
 
-`src/hooks/facturacion/usePagosFactura.ts`:
-- `usePagosFactura(facturaId)` — query
-- `useRegistrarPagoFactura()` — mutation, invalida `facturas` y `pagos_factura`
-- `useEliminarPagoFactura()` — mutation
+### F2.4 — Stepper vertical en mobile (C3)
+`PortalEmbarqueDetalle.tsx` líneas 71-116: extraer a `PortalEmbarqueStepper.tsx`. En `<sm` render vertical (línea izquierda, label completo, paso actual destacado). En `sm+` mantener horizontal.
 
-Invalidar `queryKeys.facturas.byOrg` tras cada mutación para refrescar estado/badge.
+**Versión:** 12.21.0
 
-## 3. UI — Pre-Facturación (`src/pages/facturacion/`)
+---
 
-En `facturacionColumns.tsx`, columna **Acciones** para facturas (no solo gastos):
-- Botón "Registrar pago" (visible si `canEdit` y estado ∈ `Emitida`/`Vencida`/`Parcialmente pagada`)
-- Menú secundario "Ver pagos" para abrir el detalle
+## Fase 3 — Cards y filtros responsive (1-2 commits)
 
-Nuevo componente `DialogRegistrarPago.tsx`:
-- Muestra: total factura, pagado acumulado, saldo pendiente
-- Form (RHF + Zod): fecha, monto, moneda, tipo de cambio (auto si moneda distinta, usando `useExchangeRates`), forma de pago, referencia, notas
-- Validación: no permitir monto que exceda el saldo (con tolerancia 0.01)
-- Confirmación previa antes de guardar
+### F3.1 — `EmbarqueCard` rediseño mobile (A1)
+Eliminar `pl-[52px]` hardcoded. En `<sm`:
+- Row 1: ícono modo + expediente + badge estado
+- Row 2: ruta con `MapPin`, sin indent
+- Row 3: ETD/ETA como dos pills + carrier (truncado si no cabe)
 
-Nuevo componente `DialogHistorialPagos.tsx`:
-- Tabla de pagos con fecha, monto, moneda, forma, referencia
-- Botón eliminar con doble confirmación tipo ELIMINAR (memoria `data-safety-confirmations`)
+### F3.2 — Filtros mobile en lista (M3)
+`PortalEmbarques.tsx`: reutilizar patrón `CotizacionesMobileFilters` (ya existe en `src/components/cotizacion/`) — search input visible + botón "Filtros (n)" que abre `Sheet` con selects.
 
-Badge de estado en la columna existente: `Parcialmente pagada` → color amber (extender `getEstadoColor`).
+### F3.3 — KPI grid horizontal mobile (M1)
+`PortalKpiGrid.tsx`: en mobile `grid-cols-3` compacto (número + label corto) en lugar de stack vertical.
 
-## 4. Portal del Cliente (`src/pages/portal/PortalFacturas.tsx`)
+**Versión:** 12.22.0
 
-- Mostrar columna "Pagado" y "Saldo" cuando aplique
-- Badge `Parcialmente pagada` visible
-- Solo lectura (los pagos los registra el staff)
+---
 
-`PortalFacturacionPendienteCard`: descontar pagos parciales del monto pendiente mostrado.
+## Fuera de alcance (propuestas futuras, no en este plan)
 
-## 5. Tests y changelog
+- **Página de detalle de factura** (E4): nueva ruta, hook, RLS check — requiere decisión de producto (¿hay PDF en `archivo`? ¿qué muestra?).
+- **`TablaConceptosGenerico` responsive** (E5): afecta también vista admin — refactor cross-cutting.
+- **Refactor del header desktop en `md` breakpoint** (M6): bajo impacto, esperar feedback.
 
-- Test unitario del trigger (`supabase/tests/rls/`): pagos parciales → estado correcto.
-- Test del hook `useRegistrarPagoFactura` (validación de saldo).
-- Test del dialog (no permite exceder saldo).
-- Bump `APP_VERSION` (12.19.0) y entrada en `CHANGELOG.md` raíz.
-- Actualizar memoria `mem://features/shipment-liquidation-status` mencionando el nuevo flujo de pagos a clientes.
+---
 
-## Detalles técnicos clave
+## Detalles técnicos
 
-- Conversión multi-moneda usa `useExchangeRates` (Frankfurter, ya integrado).
-- `monto_aplicado_factura` se calcula en el cliente y se valida en el trigger por defensa.
-- Soft delete en lugar de hard delete para auditoría.
-- RLS: cliente lee sus pagos vía `factura_id IN (facturas del cliente)`, igual que el patrón de `conceptos_venta`.
-- Mantener componentes ≤200 líneas (Power of 10): separar form en sub-componente si es necesario.
+- **Sin cambios de backend, RLS, schema, hooks de datos.** Solo capa de presentación.
+- **Cumple Power of 10**: cada componente nuevo ≤200 líneas; extracciones (`PortalDocumentoCard`, `PortalEmbarqueStepper`, `PortalBottomNav`) mantienen archivos padres bajo el límite.
+- **Sin `style={{}}`** salvo `paddingBottom: env(safe-area-inset-bottom)` (excepción dinámica permitida).
+- **Tokens semánticos**: usar `bg-accent`, `text-accent`, `bg-muted`, `border-border` — no colores hardcoded.
+- **Reutilización**: `useIsMobile` de `@/hooks/shared`, patrón `Sheet` de filtros ya existente en cotizaciones, `BrandLockup` ya en uso.
+- **Changelog**: una entrada por fase con bullets visibles para el usuario final (en español MX).
+- **Verificación por fase**: `npm test` (suite actual 781), screenshots manuales en `390x844` y `1366x768`.
+
+¿Procedo con Fase 1 primero, o quieres reordenar prioridades (p.ej. ir directo al bottom nav)?
