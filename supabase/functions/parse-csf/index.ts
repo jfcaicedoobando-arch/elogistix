@@ -14,7 +14,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { handlePreflightStrict, buildCors } from "../_shared/cors.ts";
 import { jsonResponse, errorResponse } from "../_shared/response.ts";
-import { authenticate } from "../_shared/auth.ts";
+import { authenticate, checkAdminAccess } from "../_shared/auth.ts";
 import { createLogger } from "../_shared/logger.ts";
 
 const MAX_BYTES = 5 * 1024 * 1024; // 5 MB
@@ -95,7 +95,13 @@ async function callAiGateway(apiKey: string, fileName: string, base64: string) {
 }
 
 async function processCsf(req: Request, cors: HeadersInit, log: ReturnType<typeof createLogger>) {
-  await authenticate(req);
+  const auth = await authenticate(req);
+  // Sólo admin global o admin de organización pueden invocar (evita drenaje de cuota Gemini).
+  const { isGlobalAdmin, orgId } = await checkAdminAccess(auth.adminClient, auth.userId);
+  if (!isGlobalAdmin && !orgId) {
+    log.warn("acceso denegado a parse-csf", { status_code: 403, user_id: auth.userId });
+    return errorResponse("Solo administradores y operadores pueden usar este servicio", 403, cors);
+  }
   // @ts-expect-error Deno global
   const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
   if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
