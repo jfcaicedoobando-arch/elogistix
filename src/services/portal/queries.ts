@@ -8,6 +8,8 @@ import {
   PORTAL_DOCUMENTO_COLUMNS,
   PORTAL_COTIZACION_LIST_COLUMNS,
   PORTAL_FACTURA_LIST_COLUMNS,
+  PORTAL_FACTURA_DETAIL_COLUMNS,
+  PORTAL_PAGO_FACTURA_COLUMNS,
 } from "./columns";
 
 // Schema reutilizable para joins anidados que devuelven { nombre } o null.
