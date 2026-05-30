@@ -73,10 +73,10 @@ function EmbarqueCardInner({ e }: { e: EmbarqueCardData }) {
             </Badge>
           </div>
 
-          <div className="flex items-center justify-between gap-2 pl-[52px]">
-            <span className="text-xs text-muted-foreground flex items-center gap-1 truncate">
+          <div className="flex items-center justify-between gap-2 sm:pl-[52px]">
+            <span className="text-xs text-muted-foreground flex items-center gap-1 truncate min-w-0">
               <MapPin className="h-3 w-3 flex-shrink-0" />
-              {origen} → {destino}
+              <span className="truncate">{origen} → {destino}</span>
             </span>
             {tipoLabel && (
               <Badge variant="outline" className="text-[10px] px-1.5 py-0 flex-shrink-0 font-normal">
@@ -85,19 +85,17 @@ function EmbarqueCardInner({ e }: { e: EmbarqueCardData }) {
             )}
           </div>
 
-          <div className="flex items-center justify-between gap-4 pl-[52px] flex-wrap">
-            <div className="flex items-center gap-4">
-              {carrier && (() => {
-                const CarrierIcon = getModoLucideIcon(e.modo);
-                return (
-                  <span className="text-xs text-muted-foreground flex items-center gap-1">
-                    <CarrierIcon className="h-3 w-3" />
-                    {carrier}
-                  </span>
-                );
-              })()}
-            </div>
-            <div className="flex items-center gap-4">
+          <div className="flex items-center justify-between gap-3 sm:pl-[52px] flex-wrap">
+            {carrier && (() => {
+              const CarrierIcon = getModoLucideIcon(e.modo);
+              return (
+                <span className="text-xs text-muted-foreground flex items-center gap-1 truncate min-w-0">
+                  <CarrierIcon className="h-3 w-3 flex-shrink-0" />
+                  <span className="truncate">{carrier}</span>
+                </span>
+              );
+            })()}
+            <div className="flex items-center gap-3 ml-auto">
               <span className="text-xs text-muted-foreground flex items-center gap-1 tabular-nums">
                 <CalendarClock className="h-3 w-3 flex-shrink-0" />
                 ETD: {formatDate(e.etd || "", "dd/MM/yy")}
@@ -108,6 +106,7 @@ function EmbarqueCardInner({ e }: { e: EmbarqueCardData }) {
               </span>
             </div>
           </div>
+
         </CardContent>
       </Card>
     </Link>
