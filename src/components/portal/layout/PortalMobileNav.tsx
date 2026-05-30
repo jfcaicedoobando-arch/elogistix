@@ -1,8 +1,8 @@
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import { Menu, LogOut } from "lucide-react";
+import { Menu, LogOut, User as UserIcon } from "lucide-react";
 import { BrandLockup } from "@/components/layout/BrandLockup";
 import { PORTAL_NAV_ITEMS, isPortalNavItemActive } from "./portalNav";
 
@@ -49,6 +49,21 @@ export function PortalMobileNav({ open, onOpenChange, pathname, orgName, onSignO
               </Link>
             );
           })}
+        </nav>
+        <Separator />
+        <nav className="flex flex-col p-2 gap-1">
+          <Link
+            to="/portal/perfil"
+            onClick={() => onOpenChange(false)}
+            className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
+              pathname.startsWith("/portal/perfil")
+                ? "bg-accent/10 text-accent"
+                : "text-muted-foreground hover:text-foreground hover:bg-muted"
+            }`}
+          >
+            <UserIcon className="h-4 w-4" />
+            Mi perfil
+          </Link>
         </nav>
         <Separator />
         <div className="p-4">
